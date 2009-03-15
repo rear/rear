@@ -1,0 +1,259 @@
+Version 1.7.16 - Released 2009-03-02
+------------------------------------
+2009-03-02	GD	* 29_find_required_devices.sh: Added 147 (DRDB cluster) in exclude list
+2009-02-26	GD	* imported rear into SVN at sourceforge
+			* new script contrib/mkvendorrpm to create RPMs from svnroot instead of 
+			  the traditional 'rear mkrpm/mkvendorrpm' commands (although they still work)
+			* updated the Fedora/rear.sourcespec with comments of Bugzilla #468189
+
+Version 1.7.15 - Released 2009-02-06
+------------------------------------
+2009-02-06	GD	* updated man.8 page
+2009-02-05	GD	* _input-output-functions.sh and rear main script: added quiet mode
+			* rear main script: initialize KEEP_BUILD_DIR to cleanup
+			  build dir under /tmp/rear.$$
+2009-02-04	GD	* 01_mk_config_dir_recovery.sh: mode 755 became 750
+			* default.conf: add $VAR_DIR to COPY_AS_IS variable
+			* 40_restore_with_nbu.sh: remove -l -y options from bprestore
+2009-02-02	GD	* 45_check_nbu_client_configured.sh: return warning instead
+			  of quitting with error
+			* introduced VAR_DIR (/var/rear) for moving /etc/rear/recovery
+			  to /var/rear/recovery (system recovery data)
+			* going over all *.sh scripts to modify $CONFIG_DIR/recovery
+			  into $VAR_DIR/recovery
+			* build/default/50_patch_sshd_config.sh: build test around the
+			  sshd_config file update
+			* moved 09_only_include_vg.sh from prep to dr phase
+
+Version 1.7.14 - Released 2009-01-29
+------------------------------------
+2009-01-29	GSS	* finalized hpacucli code (reload cciss)
+			* fixed bonding problem with more than one bonding device
+			* finalized TSM point-in-time restore
+			* added finalize/default/88_check_for_mount_by_id.sh to warn about changed
+			  LUN IDs if mount by-id is in use (we cannot change the LUN IDs of the hardware)
+			* fixed various typos
+			* moved distribution configuration files to $SHARE_DIR/conf, adjusted /usr/sbin/rear
+			  and dump-workflow.sh accordingly
+			* syslog writes /var/log/messages
+2009-01-28	GSS	* added relax-recover-concept-v1.1.odt
+			* rear dump shows BACKUP_PROG* instead of BACKUP_PROG_*
+			* fix typo in prep/ISO/GNU/Linux/32_verify_mkisofs.sh
+			* removed cfg2html from ReaR distribution. Use cfg2html if found on the system
+			  and not disabled with SKIP_CFG2HTML
+			* optionally request Point-In-Time restore parameters from user for 
+			  TSM (TSM_RESTORE_PIT_USE) (contributed by Lars.Pinne@novell.com)
+			* fixed mkdist and ebuild moving when version did not change
+			* added setup Stage for hardware and other setup tasks that should happen before
+			  the actual recovery. This is required because the verify stage should only verify
+			  the environment and decide wether to continue or not.
+			  Scripts in the setup stage must be ready to be run several times without harm beeing
+			  done!
+			* fixed bug with SIMPLIFIED_BONDING (routes not set correctly)
+			* added touch to rescue media (needed by hpacucli)
+2009-01-27	GSS	* added man page rear.8 (thanks to Lars.Pinne@novell.com for contributing it)
+			* adjusted SUSE spec file to include man page
+			* fixed TSM_RESULT_FILE bug
+			* fixed extra ' in compatibiliy_functions.sh (SLES9 no vol_id)
+			* create mkvendorrpm workflow to create RPMs optimized for submission to
+			  Linux vendors. mkrpm workflow stays for non-official RPMs
+			* cleaned up mkdist and mk*rpm workflows to separate according to function
+
+Version 1.7.13 - Released 2009-01-26
+------------------------------------
+2009-01-26	GD	* added lost validate info in $SHARE_DIR/lib/validated
+			* mkrpm-workflow.sh: added '-a' option to tee
+2009-01-23	GD	* moved validated dir to $SHARE_DIR/lib/
+2009-01-20	GD	* linux-functions.sh: added rpmtopdir function
+			* mkdist-workflow.sh: use rpmtopdir function to find %{_topdir}
+2009-01-19	GD	* added COPYING file and code to convert doc files to UTF-8
+
+Version 1.7.12 - Released 2009-01-09
+------------------------------------
+2009-01-09	GD	* skel/default/etc/scripts/run-syslog - #!/bin/sh changed into #!/bin/bash
+			  changed dump-workflow.sh for looking to validated data under doc/validated
+2009-01-08	GD	* changed restore/NBU/default/40_restore_with_nbu.sh for restoring links properly and
+			  to avoid recurse restore under /mnt/local (due to backup of rescue system :)
+2009-01-07	GD	* new script finalize/NBU/default/99_copy_bplogrestorelog.sh
+2009-01-06	GD	* revert back to xinetd mechanism; changed restore/NBU/default/40_restore_with_nbu.sh
+
+Version 1.7.11 - Released 2008-12-30
+------------------------------------
+2008-12-29	GD	* updated restore/DP/default/30_create_dp_restore_fs_list.sh
+			  updated restore/DP/default/40_restore_with_dp.sh
+			  new script restore/DP/default/45_restore_via_gui.sh
+2008-12-26	GD	* added skel/DP structure, new variables in default.conf
+			  new scipt prep/DP/default/40_prep_dp.sh
+			  new scipt rescue/DP/default/45_prepare_omni_xinetd.sh
+			  new script prep/DP/default/45_check_dp_client_configured.sh
+			  new script verify/DP/default/40_verify_dp.sh
+			  new script restore/DP/default/30_create_dp_restore_fs_list.sh
+			  new script restore/DP/default/40_restore_with_dp.sh
+
+Version 1.7.10 - Released 2008-12-18
+------------------------------------
+2008-12-18	GD	* added restore/NBU/default/30_create_nbu_restore_fs_list.sh for NBU
+2008-12-17	GD	* completed restore/NBU/default/40_restore_with_nbu.sh
+2008-12-17	GD	* completed verify/NBU/default/40_verify_nbu.sh script for NBU
+2008-12-16	GD	* added script prep/GNU/Linux/10_only_include_vg.sh; 
+			  and new array definition in default.conf: ONLY_INCLUDE_VG to define VG to backup
+2008-12-15	GD	* remove contrib entry from %%doc line in spec file
+
+Version 1.7.9 - Released 2008-12-01
+-----------------------------------
+2008-12-01	GD	* remove from skel/default the symbolic links sh->bash, bin/init->init
+			  and the empty files etc/mtab, var/log/lastlog and var/lib/nfs/state
+2008-12-01	GD	* add the link sh-bash into file pack/GNU/Linux/00_create_symlinks.sh
+2008-12-01	GD	* add new file pack/GNU/Linux/10_touch_empty_files.sh to create the empty files
+2008-12-01	GD	* add pack/GNU/Linux/20_create_dotfiles.sh and removed .bash_history from skel/default
+2008-12-01	GD	* added intial scripts for rear integration with NetBackup (of Symantec)
+2008-12-01	GD	* copy rear.sourcespec according OS_VENDOR
+2008-12-01	GD	* correct rear.spec file according comment 11 of bugzilla #468189
+
+Version 1.7.8 - Released 2008-10-27
+-----------------------------------
+2008-10-27	GD	* Fix rpmlint error/warnings for Fedora packaging
+2008-10-27	GD	* updated the Summary line and %%install section
+
+Version 1.7.7 - Released 2008-10-24
+-----------------------------------
+2008-10-24	GD	* rewrote rear.spec for Fedora Packaging request
+
+Version 1.7.6 - Released 2008-10-23
+-----------------------------------
+2008-08-20	GD	* added link under pack "ln -s Linux-i386 Linux-ia64"
+2008-08-26	GD	* added efibootmgr and mkfs.vfat to PROGS (Linux-ia64.conf)
+2008-08-27	GD	* added which to required programs (default.conf)
+2008-08-27	GD	* added missing prep/Linux-ia64/20_getty_or_agetty.sh
+2008-08-27	GD	* added NOBOOTLOADER entry in finalize/Linux-ia64/20_install_elilo.sh, new file /etc/templates/EFI_readme.txt
+2008-08-27	GD	* added vfat section in recreate/GNU/Linux/31_create_files systems.sh
+
+Version 1.7.6 - Released 2008-08-14
+-----------------------------------
+2008-08-01	GSS	* Merged usb modules fix for SLES9 (Gerhard Weick)
+			* Added optional /etc/rear/os.conf to manually set 
+			  OS_VENDOR and OS_VERSION variables
+2008-08-05	GSS	* merged latest fixes from Gratien for ia64 
+2008-08-07	GSS	* Added cfg2html (result in /etc/rear/recovery/cfg2html).
+			  Can be disabled with SKIP_CFG2HTML
+2008-08-08	GSS	* Added SIMPLIFY_BONDING to remove bonding support from 
+			  rescue system and use the *first* enslaved device 
+			  instead (Gerhard Weick)
+			* Added validate workflow to submit validation infos
+			* Display validation status in dump workflow
+			* Validation infos kept in /etc/rear/validated
+			* 95_dsmc_save_result_files does not delete TSM_RESULT_FILE_PATH
+			  any more, handle unset TSM_RESULT_FILE_PATH (Gerhard Weick)
+2008-08-14	GSS	* added /var/lib/nfs/statd to rescue system. Somebody reported it
+			  as missing for NFS restore (anonymous via sf.net). BUG ID 2051522
+
+Version 1.7.2
+---------------------------------
+2008-03-XX	GSS	* Internal version for customer (Galaxy ...)
+
+Version 1.6 - Release 2007-12-05
+---------------------------------
+2007-12-05	GSS	* Merged Gratiens ongoing ia64 work
+
+Version 1.5pre8 - Not Released 2007-11-29
+---------------------------------
+2007-11-05	GSS	* Debian 4.0 port
+2007-11-08	GSS	* Ubuntu 7.10 port
+			* Fixed localboot -1 in pxelinux.cfg and isolinux.cfg
+			* Report errors in FindPhysicalDevices back to user
+			  (catch error in 10_describe_physical_devices.sh)
+			* Ignore extra devices during recovery (we only check the
+			  size of all devices from /proc/partitions and don't really
+			  care about missing /dev nodes for extra devices)
+2007-11-22	FBU	* mkdeb workflow to create Debian packages
+		GSS	* /var/lib/nfs/state created as empty file in skeleton
+2007-11-29	GD	* RHEL 5 IA64 port started
+			* /etc/inittab need agetty ttyS[0|1] entry
+
+
+Version 1.5pre3 - Not Released 2007-06-22
+---------------------------------
+2007-06-22	GD	* Port to IA64, not yet complete
+
+Version 1.5pre1 - Released 2007-03-11
+---------------------------------
+2007-02-26	GSS	* Added GuessPhysicalDevice to guess physical devices if the driver
+			  does not provide the device symlink which we rely on (with cciss)
+2007-03-11	GSS	* Removed obsolete / incompatible dependancies on sysfs details
+			  (device link, rd subdir) and replaced with more generic solution.
+			* TSM will add result files to backup (Thanks to Gerhard Weick)
+			* NETFS tar with --sparse (Thanks to Gerhard Weick)
+			* NETFS will exclude /tmp/ by default
+			* bugfix for bonding (Thanks to Markus Brylski)
+2007-03-12	GSS	* Fixed TSM output copy result files module (Thanks to PTB)
+			* Fixed TSM verify module for TSM 5.2 (Thanks to PTB)
+			* Always include /lib/libresolv* for GNU/Linux
+			* sfdisk --force to repartition
+
+Version 1.4 - Released 2007-02-06
+---------------------------------
+2006-12-13	GSS	* started porting to x86_64 by symlinking everything i386 -> x86_64
+			* applied LVM-on-MD patch from Michael Figiel
+			* added -S option for step-by-step processing
+2006-12-15	GSS	* check for lvm vgcfgbackup --file bug
+			(older lvm2 versions did not fill in %s in the resulting file name)
+2006-12-19	GSS	* EXTERNAL backup method (BACKUP=EXTERNAL)
+2007-01-03	GSS	* slight fixes to RAID code
+			* workaround the vgcfgbackup %s bug by doing each VG separately
+2007-01-11	GSS	* finalized new sysfs-based DR code
+			* Added BugError function to report about bugs (like assert())
+			* Source () function shortens logged script name by $SHARE_DIR
+			* Added LC_CTYPE=C LC_LANG=C LC_ALL=C to rear script to force
+			  it to run in C locale and not something funky like french
+			  (try this to understand my point:
+				LC_ALL=fr_FR df -h
+				LC_ALL=C df -h
+			  )
+			* added EXCLUDE_MOUNTPOINT, EXCLUDE_MD, EXCLUDE_VG options
+2007-01-12	GSS	* added internal replacement for vol_id for older systems
+			  that do not have vol_id or udev_volume_id
+			* fixed nasty sysfs grep bug (grep $dev instead of grep ^$dev$ !!)
+2007-01-16	GSS	* added SYSFS_REMOVABLE_DEVICE_SIZE to prevent skipping removable
+			  hard disks (e.g. SCSI hot-plug). I wish somebody would find a way
+			  to do this better (Note: lsscsi works only for SCSI devices, not IDE)
+2007-01-23	GSS	* added RESULT_MAILTO feature
+2007-01-27	GSS	* RESULT_MAILTO works now properly
+2007-01-28	GSS	* Added USB output method
+2007-02-06	GSS	* NETFS saves resulting files to NETFS_URL
+
+Version 1.3 - Released 2006-11-02
+---------------------------------
+2006-11-02	GSS	* populate /mnt/local/dev for udev systems
+			* add --batch to grub script on SUSE_LINUX
+			* make NETFS not bail out on tar errors, they could be harmless
+			* add --ignore-failed-read to tar
+			* remove --absolute-names from tar so that hardlinks will work
+			* introduce NETFS_MOUNTPATH to correctly handle cifs mounts
+			* add hint about including cifs credential file in COPY_AS_IS
+			* add mkbackuponly method
+
+Version 1.2 - Released 2006-09-03
+---------------------------------
+2006-09-01	GD	* Added SELinux suppport for NETFS
+			  Did restore tests with NETFS - see video
+2006-08-31	GSS	* Added NETFS support
+			BACKUP=NETFS
+2006-08-30	GSS	* finally fixed bug in mkrescue-functions.sh about c0d0p0 (DEVwP=1)
+			* Added RHEL ES/AS support
+2006-07-21      GD      * start the NFS/CIFS tar backup-restore cyclus
+                        * added support for Software RAID
+
+Version 1.1 - Released 2006-08-29
+---------------------------------
+2006-08-29	GSS	* Added timesync with NTP or RDATE:
+			TIMESYNC=NTP|RDATE
+			TIMESYNC_SOURCE=<rdate server>
+			* Finish port to CenOS 4.3, should also work on FedoraCore
+			* include termcap and terminfo in rescue system
+			* mkdist workflow (fixes some things in dist archive for proper disribution)
+			* rear.spec included
+2006-08-28	GSS	* Port to CentOS 4.3
+			* Added Tivoli Storage Manager support 
+			BACKUP=TSM
+			* Removed lilo dependancy to write MBR, replaced by dd of original MBR
+			  (CentOS has old lilo 21.x that lacks "lilo -M")

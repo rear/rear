@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# shutdown system
+echo "Killing -TERM all processes"
+killall5 15
+sleep 2
+echo "Killing -KILL all processes"
+killall5 9
+umount -av
+case "$1" in
+	halt)
+		halt -f
+	;;
+	reboot)
+		reboot -f
+	;;
+	*)
+		echo "Unknown shutdown method '$1'"
+	;;
+esac

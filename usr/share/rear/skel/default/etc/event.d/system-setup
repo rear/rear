@@ -1,0 +1,6 @@
+start on system-setup
+
+console output
+pre-start exec initctl emit syslog
+exec /etc/scripts/system-setup
+post-stop exec initctl emit running

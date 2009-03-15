@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# load keymap
+test -s /etc/dumpkeys.out && loadkeys /etc/dumpkeys.out
+
+# load specified modules
+if test -s /etc/modules ; then
+	while read module options ; do
+		case "$module" in
+			\#*|"") : ;;
+			*)	modprobe -v $module $options ;;
+		esac
+	done </etc/modules
+fi
+# setup network
+test -s /etc/network.sh && . /etc/network.sh
+
+# load block device modules, probably not in the right order
+# we load ata drivers after ide drivers to support older systems running in compatibility mode
+# most probably these lines are the cause for most problems with wrong disk order and missing block devices
+#
+# Please submit any better ideas !!
+#
+# Especially how to analyse a running system and load the same drivers and bind them to the same devices in
+# the correct order
+for m in $(find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ide,message,ata} -type f 2>/dev/null) ; do
+	modprobe -q $(basename $m .ko)
+done
+
+modprobe -q dm-mod
+
+# sync time
+if test -s /etc/scripts/timesync ; then
+	. /etc/scripts/timesync
+fi
+
+# xinetd
+if test -s /etc/scripts/xinetd ; then
+	. /etc/scripts/xinetd
+fi

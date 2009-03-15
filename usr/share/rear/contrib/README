@@ -1,0 +1,36 @@
+Here you find useful stuff contributed by ReaR users
+
+svn2tar
+----------------
+Build dist tar archive from local subversion mirror
+
+mkvendorrpm
+----------------
+Build vendor RPM from subversion
+
+rear-1.6.ebuild
+----------------
+
+This is (somehow, I am no Gentoo man) used to build a ReaR package on Gentoo. These
+build steps accompanied it:
+
+--------------------------------- Anleitung ---------------------------------------
+
+1. eigenes portdir-overlay anlegen
+dazu in  /etc/make.conf folgende zeilen einfügen:
+PORTDIR_OVERLAY=/usr/local/portage
+
+2. die notwendige ordnerstruktur anlegen:
+mkdir -p /usr/local/portage/app-admin/rear
+
+3. ebuild in den ordner kopieren und ebuild ausführen
+ebuild rear-1.6.ebuild digest
+
+4. rear installieren und der anleitung folgen:
+
+emerge -av rear
+
+
+----------------------------------------------------------------------------------------
+
+Thanks to Sven Steiner for contributing this.

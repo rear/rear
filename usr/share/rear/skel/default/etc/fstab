@@ -1,0 +1,4 @@
+sysfs                /sys                 sysfs      noauto                0 0
+debugfs              /sys/kernel/debug    debugfs    noauto                0 0
+proc                 /proc                proc       defaults              0 0
+devpts               /dev/pts             devpts     mode=0620,gid=5       0 0

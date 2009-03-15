@@ -1,0 +1,12 @@
+This is the "restore" tree of ReaR
+----------------------------------
+00-09	initialisation, e.g. copy dev-files needed for external backups progs
+10-19	do mounting if necessary (NETFS)
+20-29	user interaction scripts, e.g. do restore via 3th party software
+30-39	exec pre-exec scripts
+40-49	exec the restore itself
+50-59	exec the post-exec scripts
+60-69	reserved
+70-79	umount (NETFS)
+80-89	reserved
+90-99	finalisation scripts

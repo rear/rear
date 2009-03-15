@@ -1,0 +1,7 @@
+start on running
+stop on runlevel 0
+stop on runlevel 6
+
+respawn
+
+exec /sbin/mingetty --noclear tty1

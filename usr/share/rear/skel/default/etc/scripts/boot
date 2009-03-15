@@ -1,0 +1,21 @@
+#!/bin/bash
+# Relax & Recover
+
+# basic mounts
+mount -t proc -n none /proc
+mount -t sysfs none /sys
+mount -t devpts -o gid=5,mode=620 none /dev/pts
+
+cat /proc/mounts >/etc/mtab
+
+# basic loopback net
+ip addr add 127.0.0.1/8 dev lo
+ip link set lo up
+
+# set hostname
+export HOSTNAME="$(cat /etc/HOSTNAME)" # set hostname in THIS shell
+hostname "$HOSTNAME" # set hostname in the system
+
+echo Hostname set to $(uname -n)
+
+

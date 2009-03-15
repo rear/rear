@@ -1,0 +1,9 @@
+start on startup
+stop on runlevel 0
+stop on runlevel 1
+stop on runlevel 6
+
+console output
+
+exec /sbin/logd
+respawn

@@ -1,0 +1,44 @@
+# $Header: names_deny.txt,v 1.2 2002/11/20 00:26:13 $
+#bcpyrght
+#***************************************************************************
+#* $VRTScprght: Copyright 1993 - 2003 VERITAS Software Corporation, All Rights Reserved $ *
+#***************************************************************************
+#ecpyrght
+#
+# Each entry in this file is a line that contains a list of names
+# followed by a colon followed by a list of host name or IP address
+# patterns.
+#
+# The names are usually NetBackup client names.  This file is typically
+# used when NetBackup clients are using DHCP or some other dynamic network
+# addressing scheme where the network host name of the client may not
+# be the same as the client name.
+#
+# The host name or IP address patterns can contain wild card characters.
+#
+# The keyword "ALL" can be used to signify all names or all possible hosts.
+#
+# Empty lines are ignored.  The '#' character and all following characters
+# on a line are ignored.
+#
+# This file is checked to determine if a given host cannot use a given
+# name.  This file is only checked if a matching entry for the name and
+# host does not exist int the names_allow.txt file.  If an entry in this
+# file (names_deny.txt) matches the name and host, the name cannot be used.
+# If no match is found, the name can be used for the host.
+#
+# Examples:
+#
+# The name "fred" cannot be used for hosts in the theircompany.com domain:
+#
+# fred : .theircompany.com
+#
+# No names can be used for hosts in the 123.123.53 network:
+#
+# ALL : 123.123.56.
+#
+# The default (ALL : ALL) is no names can be used for any host.  This
+# means that to be used, a name and host has to be explicitly defined in
+# names_allow.txt.
+#
+ALL : ALL

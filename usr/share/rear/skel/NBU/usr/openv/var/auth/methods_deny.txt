@@ -1,0 +1,43 @@
+# $Header: methods_deny.txt,v 1.2 2002/11/20 00:26:09 $
+#bcpyrght
+#***************************************************************************
+#* $VRTScprght: Copyright 1993 - 2003 VERITAS Software Corporation, All Rights Reserved $ *
+#***************************************************************************
+#ecpyrght
+#
+# Each entry in this file is a line that contains a list of authentication
+# methods followed by a colon followed by a list of host name or IP address
+# patterns.
+#
+# Valid authentication method names can be found in the methods.txt file.
+#
+# The host name or IP address patterns can contain wild card characters.
+#
+# The keyword "ALL" can be used to signify all valid method names or
+# all possible hosts.
+#
+# Empty lines are ignored.  The '#' character and all following characters
+# on a line are ignored.
+#
+# This file is checked to determine if a given host cannot use a given
+# authentication method.  This file is only checked if a matching entry
+# for the method and host does not exist int the methods_allow.txt file.
+# If an entry in this file (methods_deny.txt) matches the method and host,
+# the method cannot be used.  If no match is found, the method can be used
+# for the host.
+#
+# Examples:
+#
+# The vopie method cannot be used for hosts in the theircompany.com domain:
+#
+# vopie : .theircompany.com
+#
+# No methods can be used for hosts in the 123.123.56 network:
+#
+# ALL : 123.123.56.
+#
+# The default (ALL : ALL) is no methods can be used for any host.  This
+# means that to be used, a method and host has to be explicitly defined in
+# methods_allow.txt.
+#
+ALL : ALL

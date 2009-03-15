@@ -1,0 +1,140 @@
+NOTE ! http://rear.sourceforge.net is the latest & greatest documentation !
+-------------------------------------------------------------------------------
+                                Relax & Recover
+-------------------------------------------------------------------------------
+
+Relax and Recover (abbreviated rear) is a highly modular disaster recovery
+framework for GNU/Linux based systems, but can be easily extended to other
+UNIX alike systems. The disaster recovery information (and maybe the backups)
+can be stored via the network, local on hard disks or USB devices, DVD/CD-R,
+tape, etc. The result is also a bootable image that is capable of booting via
+PXE, DVD/CD and tape (OBDR).
+
+The backup can be also integrated with any existing backup software so that
+ReaR utilizes the backup software to restore the files and provides the "glue"
+surrounding the simple file restore to having a full bare metal disaster 
+recovery solution. Support for specific backup software has to be added to
+rear on an individual base and is very simple (look at the existing 
+implementations for further information).
+
+This is work in progress, so some features are not yet implemented.
+
+
+REQUIREMENTS
+-------------------------------------------------------------------------------
+
+rear is written entirely in bash and does not require any external programs.
+However, the rescue system that is created by rear requires some programs that
+are needed to make our rescue system work:
+- mingetty
+- sfdisk
+All other required programs (like sort, dd, grep, etc.) are so common, that we
+don't list them as a requirement.
+
+
+INSTALLATION
+-------------------------------------------------------------------------------
+
+On RPM based systems you should use the rear RPM. Either obtain it from the
+rear homepage or build it yourself from the TAR archive with
+   rpmbuild -ta rear-<version>.tar.gz
+This will create an RPM for your distribution. The RPM is not platform-
+dependant and should work also on other RPM based distributions.
+
+On DEB based systems you should be able to install the RPM with alien. 
+Otherwise use the manual installation (see below) or, even better, contribute
+the DEB package to the project.
+
+To install rear manually, simply copy the etc and usr directories in the source
+distribution to the / of your system.
+
+
+CONFIGURATION
+-------------------------------------------------------------------------------
+
+To configure rear you have to edit the configuration files in /etc/rear. All
+*.conf files there are part of the configuration, but only site.conf and 
+local.conf are intended for the user configuration. All other configuration
+files hold defaults for various distributions and should not be changed.
+
+In /etc/rear/templates there are also some template files which are use by rear
+to create configuration files (mostly for the boot environment). You can use
+these templates to prepend your own configurations to the configuration files
+created by rear, for example you can edit PXE_pxelinux.cfg to add some general
+pxelinux configuration you use (I put there stuff to install Linux over the 
+network).
+
+In almost all circumstances you have to configure two main settings and their
+parameters: The backup method and the output method. 
+
+The backup method defines, how your data was saved and wether rear should 
+backup your data as part of the mkrescue process or wether you use an external
+application, e.g. backup software to archive your data.
+
+The output method defines how the rescue system is written to disk and how you
+plan to boot the failed computer from the rescue system.
+
+See /etc/rear/default.conf for an overview of the possible methods and their
+options. An example to use TSM for backup and PXE for output and would be to add
+these lines to /etc/rear/local.conf:
+-------------
+BACKUP=TSM
+OUTPUT=PXE
+-------------
+And since all your computers use NTP for time synchronisation, you should also
+add these lines to /etc/rear/site.conf:
+-------------
+TIMESYNC=NTP
+-------------
+Don't forget to distribute the site.conf to all your systems.
+
+The resulting PXE files (kernel, initrd and pxelinux configuration) will be
+written to files in /tmp. You can now modify the behaviour by copying the 
+appropriate configuration variables from default.conf to local.conf and
+changing them to suit your environment. 
+
+
+USAGE
+-------------------------------------------------------------------------------
+
+To use rear you always call the main script /usr/sbin/rear:
+# rear
+rear [Options] <command> [command options ...]
+Relax & Recover Version 1.5pre3 / 2007-06-22
+
+
+Copyright (C) 2006-2007
+                Schlomo Schapiro, pro business Berlin AG
+                Gratien D'haese, IT3 Consultants
+Relax & Recover comes with ABSOLUTELY NO WARRANTY; for details 
+see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
+Available Options:
+-V                      version information
+-d                      debug mode
+-D                      debugscript mode
+-S                      Step-by-step mode
+-s                      Simulation mode (shows the scripts included)
+-r a.b.c-xx-yy          kernel version to use (current: 2.6.16.21-0.8-default)
+
+List of commands:
+dump                    Dump configuration and system information
+help                    print out usage
+mkbackup                Create rescue media and backup system.
+mkbackuponly            Backup system without creating a (new) rescue media.
+mkdist                  Create distribution tar archive with this rear version
+mkrescue                Create rescue media only
+mkrpm                   Create RPM packages with this rear version
+mktar                   Create tar archive with this rear installation
+recover                 Recover the system
+
+To view/verify your configuration, run "rear dump". It will print out the
+current settings for BACKUP and OUTPUT methods and some system information.
+
+To create a new rescue environment, simply call "rear mkrescue". Do not forget
+to copy the resulting rescue system away so that you can use it in the case of
+a system failure. Use "rear mkbackup" instead if you are using the builtin 
+backup functions (like NETFS)
+
+To recover your system, start the computer from the rescue system and run 
+"rear recover". Your system will be recovered and you can restart it and 
+continue to use it normally.

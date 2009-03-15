@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# run a syslog daemon
+
+klogd -c 1 -x
+if type -t syslog-ng >/dev/null ; then
+	exec syslog-ng -p /var/run/syslog-ng.pid -f /etc/syslog-ng.conf -F
+else
+	exec syslogd -f /etc/syslog.conf -n 
+fi

@@ -1,0 +1,4 @@
+start on runlevel 6
+stop on runlevel [!6]
+console output
+exec /etc/scripts/do-shutdown reboot

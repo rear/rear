@@ -1,0 +1,299 @@
+#!/bin/bash
+#
+#
+# Relax & Recover
+#
+#    Relax & Recover is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+
+#    Relax & Recover is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+
+#    You should have received a copy of the GNU General Public License
+#    along with Relax & Recover; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+# Authors: 
+# Schlomo Schapiro <rear at schlomo.schapiro.org> [GSS]
+# Gratien D'haese  <gdha at sourceforge.net> [GD]
+
+VERSION="1.7.18"
+
+CHANGES='
+2006-07-09	GSS	Initial Version
+2006-07-09	GD	Merge main code
+2006-07-11	GSS	PXE support, little changes
+2006-07-13	GSS	moved scripts to recreate stage, tuning
+2006-07-17	GSS	moved scripts around to better follow the concept, mkbootloader, lots of improvements
+2006-07-19	GSS	Finalize Galaxy support
+2006-07-20	GSS	Finalize LVM2 support
+2006-07-21	GD	start coding NFS/CIFS tar backup&restore, mdadm
+2006-08-28	GSS	CentOS 4.3 port
+2006-08-29	GSS	TSM bugfixes, timesync, FQDN, RPM
+2006-08-29	GD	merged code of GSS and GD
+2006-08-30	GSS	RHEL support
+2006-08-31	GSS	NETFS backup method
+2006-09-01	GD	add SELinux support with tar
+2006-11-02	GSS	udev support (grub), NETFS fixes
+2006-12-13	GSS	started x86_64 porting
+2006-12-19	GSS	EXTERNAL backup method
+2006-12-28	GSS	simulation mode
+2007-01-03	GSS	bugfixes (ssh, login shell, isolinux.bin search, ...)
+2007-01-11	GSS	finalize new DR code, add exclude options
+2007-01-12	GSS	added internal vol_id replacement for older systems
+2007-01-16	GSS	check size of removable devices before excluding them
+2007-01-23	GSS	added RESULT_MAILTO feature
+2007-01-27	GSS	RESULT_MAILTO works now properly
+2007-01-28	GSS	Added USB output method
+2007-02-06	GSS	Added BACKUP subdirs to output to allow backup stuff after output
+2007-02-06	GSS	NETFS copies resulting files (ISO ...) to NETFS_URL
+2007-02-26	GSS	Added GuessPhysicalDevice for cciss and others like it
+2007-03-11	GSS	Changed FindPhysicalDevices to use queue subdir instead of device link
+2007-03-11	GSS	Changed 21_describe_md.sh to use /proc/mdstat instead of rd subdirs in sysfs
+2007-03-12	GSS	Fixed TSM output copy result files module and other TSM related problems
+2007-06-22	GD	Port to IA64
+2007-09-25	GSS	Start integration ia64 port into mainstream
+2007-11-05	GSS	Debian port (thanks to Sven Steiner) started
+2007-11-06	GSS	Ubuntu 7.10 port started, rear dump shows RESULT_MAILTO
+2007-11-08	GSS	Ubuntu 7.10 port finished, needs more testing
+2007-11-22	FBU	mkdeb workflow added
+2007-11-29	GD	Continue port to IA64
+2007-12-05	GSS	Release 1.6
+2008-04-28	GSS	Start working on 1.7 (Galaxy 7 support)
+2008-04-29	GSS	fixed TSM bug (Thanks to Markus Brylski), finished Galaxy7 implementation, USB autoloading
+2008-08-01	GSS	fixed USB module bug for SLES9, added os.conf to manually set OS_* variables
+2008-08-05	GSS	merged latest ia64 fixes from Gratien
+2008-08-07	GSS	added cfg2html
+2008-08-08	GSS	SIMPLIFY_BONDING, OS_VENDOR_VERSION_ARCH
+2008-08-14	GSS	BUG ID 2051522
+2008-08-20	GD	added link under pack "ln -s Linux-i386 Linux-ia64"
+2008-08-26	GD	added efibootmgr and mkfs.vfat to PROGS (Linux-ia64.conf)
+2008-08-27	GD	added which to required programs (default.conf)
+2008-08-27	GD	added missing prep/Linux-ia64/20_getty_or_agetty.sh
+2008-08-27	GD	added NOBOOTLOADER entry in finalize/Linux-ia64/20_install_elilo.sh, new file /etc/templates/EFI_readme.txt
+2008-08-27	GD	added vfat section in recreate/GNU/Linux/31_create_filesystems.sh
+2008-10-23	GD	apply patch SF#2091169 for RHEL5
+2008-10-23	GD	Changed /etc/rear/default.conf: BACKUP_PROG_EXCLUDE=( '/tmp/*' '/dev/shm/*' )
+2008-10-24	GD	reworked rear.spec for Fedora packaging rules
+2008-10-29	GD	fix rear.spec for Fedora rpmlint syntax error/warnings, dotted cfg2html in dr/GNU/Linux/95_cfg2html.sh (removed execution permission from lib/cfg2html-linux
+2008-11-07	GD	Starting with integrating NetBackup into rear
+2008-11-18	GD	modified mkdist-workflow.sh for OS_VENDOR specific rear.spec file
+2008-12-01	GD	pack/GNU/Linux/00_create_symlinks.sh add link bin/bash to bin/sh
+2008-12-01	GD	pack/GNU/Linux/10_touch_empty_files.sh to create empty files
+2008-12-01	GD	pack/GNU/Linux/20_create_dotfiles.sh and removed .bash_history from skel/default
+2008-12-02	GD	mkdist-workflow.sh: changed the "ln s" to "cp -r"
+2008-12-16	GD	prep/GNU/default/10_only_include_vg.sh; default.conf: new ONLY_INCLUDE_VG array
+2008-12-17	GD	completed verify/NBU/default/40_verify_nbu.sh for NBU
+2008-12-18	GD	added restore/NBU/default/30_create_nbu_restore_fs_list.sh for NBU
+2008-12-24	GD	start with data protector integration
+2008-12-29	GD	data protector integration finished
+2009-01-09	GD	finished NetBackup scripts; moved validated to doc directory
+2009-01-19	GD	added COPYING file and code to convert doc files to UTF-8
+2009-01-20	GD	added function rpmtopdir and use it in mkdist-workflow.sh
+2009-01-27	GSS	Add rear.8 man page and create mkvendorrpm workflow
+2009-01-28	GSS	hpacucli, TSM point-in-time restore
+2009-01-29	GSS	moved distribution config files to $SHARE_DIR/conf
+2009-02-02	GD	update Fedora spec file; 45_check_nbu_client_configured.sh: print warning instead of exit with error
+2009-02-04	GD	introduced VAR_DIR for moving recovery data from /etc to /var
+2009-02-05	GD	added option -q (QUIET) for less verbose (progress bar)
+2009-02-06	GD	updated rear.8 man page
+2009-02-26	GD	added contrib/mkvendorrpm script; prepare rear for SVN upload
+2009-03-02	GD	fix 29_find_required_devices.sh: Added 147 (DRDB cluster) in exclude list
+2009-03-13	GD	updated spec file for Fedora - remove man page from doc directory
+2009-03-14	GSS	updated main spec file (lib/rear.spec) for openSUSE 11.1, updated portmap starting for openSUSE 11.1 (rpcbind)
+2009-03-15	GSS	added support to load block modules in drivers/ata for SATA support
+'
+
+COPYRIGHT="Copyright (C) 2006-2009
+	Schlomo Schapiro, Immobilien Scout GmbH
+	Gratien D'haese, IT3 Consultants"
+STARTTIME=$SECONDS
+
+# Versioning
+RELEASE="$(echo "$CHANGES" | tail -n 2 | cut -c 1-10)"
+PRODUCT="Relax & Recover"
+
+# Program directories - they must be set here. Everything else is then dynamic
+
+SHARE_DIR="/usr/share/rear"
+CONFIG_DIR="/etc/rear"
+VAR_DIR="/var/rear"
+BUILD_DIR=/tmp/rear.$$
+ROOTFS_DIR=$BUILD_DIR/rootfs
+TMP_DIR=$BUILD_DIR/tmp
+
+
+case $- in
+	*i*) BATCHMODE=true  ;;
+	  *) BATCHMODE=false ;;
+esac
+
+# make sure that we use only english
+export LC_CTYPE=C LC_ALL=C LANG=C
+
+# Calculate a unique build number by taking the md5sum over our script directories
+BUILDNR="$(
+	FILES=( $(find $SHARE_DIR -type f -and -not -name \*~) ) ; ( echo ${FILES[@]} ; cat "${FILES[@]}" ) | md5sum | cut -d " " -f 1
+	)"
+
+# Calculate a unique config build number
+CONFIGBUILDNR="$(
+	FILES=( $(find $CONFIG_DIR -type f -and -not -name \*~) ) ; ( echo ${FILES[@]} ; cat "${FILES[@]}" ) | md5sum | cut -d " " -f 1
+	)"
+
+# include default config
+. $SHARE_DIR/conf/default.conf
+
+# set the logfile for error logs
+LOGFILE="/tmp/rear.log"
+test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old # keep old log file
+exec 2>"$LOGFILE" || Error "Could not create $LOGFILE"
+
+# include functions
+for script in $SHARE_DIR/lib/*.sh ; do
+	. $script
+done
+
+USAGE="$( basename "$0") [Options] <command> [command options ...]"'
+'"$PRODUCT Version $VERSION / $RELEASE"'
+Build: '"$BUILDNR"'
+'"$COPYRIGHT"'
+'"$PRODUCT"' comes with ABSOLUTELY NO WARRANTY; for details 
+see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
+
+Available Options:
+-V			version information
+-d			debug mode
+-D			debugscript mode
+-S			Step-by-step mode
+-s			Simulation mode (shows the scripts included)
+-q			Quiet mode
+-r a.b.c-xx-yy		kernel version to use (current: '"$KERNEL_VERSION"')
+
+List of commands:
+'"$(
+for w in ${WORKFLOWS[@]} ; do
+	description=WORKFLOW_${w}_DESCRIPTION
+	test "${!description}" && printf "%-24s%s\n" $w "${!description}"
+done
+)"
+
+test $# -eq 0 -o "${*//*--help*/--help}" == "--help" && Usage
+
+STEPBYSTEP=
+SIMULATE=
+QUIET=
+
+# Parse options
+while getopts "VhdDSsqr:" Option
+do
+	case $Option in
+	h ) Usage ;;
+	V ) Print "$PRODUCT Version $VERSION / $RELEASE\nBuild: $BUILDNR\nConfig: $CONFIGBUILDNR\nLast changes:\n$(echo "$CHANGES" | tail -n 10)" ; exit 0 ;;
+	v ) VERBOSE=1 ;;
+	d ) DEBUG=1 ; VERBOSE=1 ; kill -PWR $ProgressPID ;;
+	D ) DEBUGSCRIPTS=1 ;;
+	s ) SIMULATE=1 ;;
+	S ) STEPBYSTEP=1 ;;
+	q ) QUIET=1 ;;
+	r ) KERNEL_VERSION="$OPTARG" ;;
+	* ) Error "Unknown Option $Option specified." ;;
+	esac
+done
+shift $(($OPTIND - 1))
+# Move argument pointer to next.
+
+WORKFLOW=$1 ; shift # not "$1" to get rid of compound commands
+
+ARGS=( "$@" )
+
+test "$WORKFLOW" ||  Usage }
+
+v=""
+verbose=""
+# Prepare stuff
+if test "$VERBOSE" ; then
+	v="-v"
+	verbose="--verbose"
+fi
+
+
+LogPrint "$PRODUCT Version $VERSION / $RELEASE"
+test "$SIMULATE" && LogPrint "Simulation mode activated, ReaR base directory: $SHARE_DIR"
+
+shopt -s nullglob extglob
+
+# All workflows need to read the configurations first.
+# Combine configuration files
+Log "Combining configuration files"
+Source "$CONFIG_DIR/os.conf"	# use this file to manually override the OS detection
+Source "$CONFIG_DIR/$WORKFLOW.conf"
+SetOSVendorAndVersion
+# distribution configuration files
+for config in "$ARCH" "$OS" "$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
+	Source $SHARE_DIR/conf/"$config".conf
+done
+# user configuration files
+for config in site local ; do
+	Source $CONFIG_DIR/"$config".conf
+done
+
+
+# change some options in debug mode
+if test "$DEBUG"; then
+	KEEP_BUILD_DIR=1
+else
+	KEEP_BUILD_DIR=
+fi
+
+# check for requirements
+# are we root ?
+if [ `id --user` -ne 0 ]; then
+	Error  "$PRODUCT needs ROOT priviledges!"
+fi
+# do we have all required binaries ?
+for f in "${REQUIRED_PROGS[@]}" ; do
+	type -p "$f" >/dev/null|| Error "cannot find required program '$f'"
+done
+
+VERSION_INFO="
+$PRODUCT Version $VERSION / $RELEASE
+$(: Build: $BUILDNR)
+$(: Config: $CONFIGBUILDNR)
+$COPYRIGHT
+$PRODUCT comes with ABSOLUTELY NO WARRANTY; for details
+see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
+
+Host $(uname -n) using Backup $BACKUP and Output $OUTPUT
+Build date: $(date -R)
+"
+
+# create build area
+Log "Creating build area '$BUILD_DIR'"
+mkdir -p -m 0700 $BUILD_DIR || Error "Could not create $BUILD_DIR"
+mkdir -p $ROOTFS_DIR || Error "Could not create $ROOTFS_DIR"
+mkdir -p $TMP_DIR || Error "Could not create $TMP_DIR"
+
+# Check for and run the requested workflow
+if type -t WORKFLOW_$WORKFLOW >/dev/null ; then
+	Log "Running $WORKFLOW workflow"
+	WORKFLOW_$WORKFLOW
+	Log "Finished running $WORKFLOW workflow"
+else
+	LogPrint "ERROR: The specified command '$WORKFLOW' does not exist !"
+	exit 10
+fi
+
+# Cleanup build area
+echo "Finished in $((SECONDS-STARTTIME)) seconds."
+if test "$KEEP_BUILD_DIR" ; then
+	LogPrint "You should also rm -Rf $BUILD_DIR"
+else
+	Log "Removing build area $BUILD_DIR"
+	rm -Rf $BUILD_DIR
+fi
+Log "End of program reached"

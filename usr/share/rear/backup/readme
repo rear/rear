@@ -1,0 +1,10 @@
+00-09: initialization
+10-19: mount NETFS
+20-29: create prefix dir, etc.
+30-39: specials like SELinux (stop)
+40-49: create include/exclude files for backup
+50-59: backup itself
+60-69: specials like SELinux (start)
+70-79: umount NETFS
+80-89:
+90-99:

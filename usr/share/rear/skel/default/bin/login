@@ -1,0 +1,2 @@
+#!/bin/bash
+exec -a -bash /bin/bash

@@ -1,0 +1,5 @@
+start on startup
+
+console output
+exec /etc/scripts/boot
+post-stop exec initctl emit system-setup

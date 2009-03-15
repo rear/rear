@@ -1,0 +1,4 @@
+Submitted:	Gratien D'haese
+Date:		2009-02-03
+Features:	LVM, NETFS, ISO
+Comment:	out of the box

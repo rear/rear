@@ -1,0 +1,4 @@
+start on runlevel 0
+stop on runlevel [!0]
+console output
+exec /etc/scripts/do-shutdown halt
