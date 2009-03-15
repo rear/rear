@@ -1,0 +1,5 @@
+Usage information for ISO images:
+---------------------------------
+
+To recover your system you have to write the attached ISO image onto a CD/DVD
+(as image, not create a CD with the ISO file on it !).

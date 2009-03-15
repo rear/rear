@@ -1,0 +1,14 @@
+How to recovery your system:
+----------------------------
+
+You have to put the attached files onto your TFTP server that will be used
+for PXE booting.
+
+If the computer that needs to be recovered uses a different network card than
+when the attached ReaR files where created (e.g. you replaced the broken computer
+with a new one), then you also will have to adapt the files in pxelinux.cfg to
+match the new MAC address or adapt your DHCP server to serve the same IP address
+to the new MAC address.
+
+YMMV
+
