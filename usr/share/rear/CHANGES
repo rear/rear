@@ -1,3 +1,15 @@
+Version 1.7.18 - Released 2009-03-15
+------------------------------------
+2009-03-14	GSS	* updated main spec file (lib/rear.spec) for openSUSE 11.1
+			* updated portmap starting for openSUSE 11.1 (rpcbind)
+2009-03-15	GSS	* added support to load block modules in drivers/ata for SATA support
+
+Version 1.7.17 - Not Released
+------------------------------------
+2009-03-13	GD	* (Fedora) do not gzip man page in spec file - rpmbuild will do this for us
+			* (Fedora) added extra %%doc line for excluding man page from doc itself
+
+
 Version 1.7.16 - Released 2009-03-02
 ------------------------------------
 2009-03-02	GD	* 29_find_required_devices.sh: Added 147 (DRDB cluster) in exclude list
