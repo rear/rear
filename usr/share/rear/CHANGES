@@ -1,3 +1,10 @@
+Version 1.7.19 - Released 2009-03-18
+------------------------------------
+2009-03-18	GD	* updated conf/GNU/Linux.conf: added nsl_utf8 to the
+			  modules and logd and initctl to programs (for f10)
+2009-03-16	GD	* updated usr/share/rear/contrib/mkvendor to make it 
+			  branch relocatable
+
 Version 1.7.18 - Released 2009-03-15
 ------------------------------------
 2009-03-14	GSS	* updated main spec file (lib/rear.spec) for openSUSE 11.1
