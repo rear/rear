@@ -42,7 +42,7 @@ mkdir -vp \
 	$RPM_BUILD_ROOT%{_datadir} \
 	$RPM_BUILD_ROOT%{_sysconfdir} \
 	$RPM_BUILD_ROOT%{_sbindir} \
-	$RPM_BUILD_ROOT%{_localstatedir}/rear
+	$RPM_BUILD_ROOT%{_localstatedir}/lib/rear
 
 # copy rear components into directories
 cp -av usr/share/rear $RPM_BUILD_ROOT%{_datadir}/
@@ -52,7 +52,7 @@ cp -av etc/rear $RPM_BUILD_ROOT%{_sysconfdir}/
 # patch rear main script with correct locations for rear components
 sed -i	-e 's#^CONFIG_DIR=.*#CONFIG_DIR="%{_sysconfdir}/rear"#' \
 	-e 's#^SHARE_DIR=.*#SHARE_DIR="%{_datadir}/rear"#' \
-	-e 's#^VAR_DIR=.*#VAR_DIR="%{_localstatedir}/rear"#' \
+	-e 's#^VAR_DIR=.*#VAR_DIR="%{_localstatedir}/lib/rear"#' \
 	$RPM_BUILD_ROOT%{_sbindir}/rear
 
 # update man page with correct locations
@@ -78,12 +78,15 @@ rm -rf $RPM_BUILD_ROOT
 %doc doc/README.doc doc/relax-recover-*
 %{_sbindir}/rear
 %{_datadir}/rear
-%{_localstatedir}/rear
+%{_localstatedir}/lib/rear
 %{_mandir}/man8/*
 %config(noreplace) %{_sysconfdir}/rear
 
 
 %changelog
+* Thu Apr 02 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.20-1
+- update %%_localstatedir/rear to %%_localstatedir/lib/rear
+
 * Mon Mar 16 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.19-1
 - updated description, made the spec file a bit more readable
 - changed BuildArchives in BuildArch
@@ -97,7 +100,6 @@ rm -rf $RPM_BUILD_ROOT
 
 * Thu Feb 26 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.16-1
 - make the spec better readable and removed not spec related items in changelog
-- prepare for SVN import and new mkvendorrpm script to build from svnroot
 
 * Tue Feb 04 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.15-1
 - update the Fedora spec file with the 1.7.14 items
@@ -108,8 +110,6 @@ rm -rf $RPM_BUILD_ROOT
 
 * Tue Jan 20 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.13-1
 - add COPYING license file
-- linux-functions.sh: added rpmtopdir function; 
-- mkdist-workflow.sh: updated with rpmtopdir function; convert doc files to UTF-8
 
 * Wed Dec 17 2008 Gratien D'haese <gdha at sourceforge.net> - 1.7.10-1
 - remove contrib entry from %%doc line in spec file

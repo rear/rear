@@ -1,3 +1,8 @@
+Version 1.7.20 - Released 2009-04-02
+------------------------------------
+2009-04-2	GD	* (Fedora) updated rear.spec file for %%localstatedir/lib/rear
+			* update sbin/rear VAR_DIR
+
 Version 1.7.19 - Released 2009-03-18
 ------------------------------------
 2009-03-18	GD	* updated conf/GNU/Linux.conf: added nsl_utf8 to the
