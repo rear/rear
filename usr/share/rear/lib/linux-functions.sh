@@ -42,7 +42,7 @@ LibCopyTo() {
 	for k in "$@" ; do
 		test -z "$k" && continue # ignore blanks
 		test -r "$k" || Error "[LibCopyTo] Source $k is not readable"
-		if ! cmp "$TARGET/$(basename "$k")" "$k"
+		if ! cmp "$TARGET/$(basename "$k")" "$k" 2>/dev/null
 		then
 			cp -v -a "$k" "$TARGET" || Error "[LipCopyTo] Could not copy '$k' to '$TARGET'"
 		fi
