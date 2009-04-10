@@ -108,6 +108,7 @@ CHANGES='
 2009-03-15	GSS	added support to load block modules in drivers/ata for SATA support
 2009-03-18	GD	conf/GNU/Linux.conf updated for logd, initctl, nls_utf8
 2009-04-02	GD	update rear.sourcespec for localstatedir/lib/rear (VAR_DIR)
+2009-04-10	GD	linux-functions.sh:LibCopyTo:add cmp test to avoid duplicates
 '
 
 COPYRIGHT="Copyright (C) 2006-2009
