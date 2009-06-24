@@ -27,15 +27,23 @@ fi
 }
 
 ##################### M A I N ####################
+EXITcode=0
 
 echo "
 ******************************************
-**	mkvendorrpm script for rear	**
+**	`basename $0` script for rear	**
 ******************************************
 "
+# find the full path to this script
+ME="$(cd $(dirname "$0") ; pwd)/$(basename "$0")"
 # Find the svnroot path for the initial tar-ball
-rear_root=`pwd|sed -e 's/contrib//'`
+rear_root="${ME%/usr/share/rear/contrib/mkvendorrpm}"
 echo The root of rear SVN directory is $rear_root
+
+if [ ! -d $rear_root ]; then
+	EXITcode=1
+	exit $EXITcode
+fi
 
 # extract version number from rear script
 VERSION=`grep ^VERSION= ${rear_root}/usr/sbin/rear | cut -d= -f2 | sed -e 's/"//g'`
@@ -51,9 +59,12 @@ echo "Will be using a temporary BUILD_DIR=${BUILD_DIR}"
 
 echo "Creating archive '$distarchive'"
 # use tar to copy the current rear while excluding development and obsolete files
+cd $rear_root
 tar --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
      		 --exclude=\*.rpmnew\* --exclude=.\*.swp --exclude .svn -c \
 		 . | tar -C $BUILD_DIR/$prod_ver -x 
+
+cd -
 
 # cleaning up the $BUILD_DIR/$prod_ver directory before starting rpmbuild
 echo Getting the $BUILD_DIR/$prod_ver directory ready for rpmbuild
@@ -83,7 +94,6 @@ OS_VENDOR="$(lsb_release -i -s | tr -s " \t" _)"
 cp .$SHARE_DIR/lib/spec/$OS_VENDOR/rear.sourcespec .$SHARE_DIR/lib/rear.spec
 sed -i -e "s/Version:.*/Version: $VERSION/" .$SHARE_DIR/lib/rear.spec
 chmod 644 .$SHARE_DIR/lib/rear.spec
-cp -fp .$SHARE_DIR/lib/rear.spec $SHARE_DIR/lib/rear.spec
 
 
 # write out standard site.conf and local.conf and templates
@@ -127,10 +137,17 @@ tar -C $BUILD_DIR -czf $distarchive $prod_ver
 
 # ready for the rpmbuild
 RPM_TopDir=`rpmtopdir`	# find rpmbuild %{_topdir} path
-cp -fpv $SHARE_DIR/lib/rear.spec ${RPM_TopDir}/SPECS/rear.spec
+cp -fpv $BUILD_DIR/$prod_ver/usr/share/rear/lib/rear.spec ${RPM_TopDir}/SPECS/rear.spec
 chmod 644 ${RPM_TopDir}/SPECS/rear.spec
 cp -fpv $distarchive ${RPM_TopDir}/SOURCES/
 rpmbuild -ba -v ${RPM_TopDir}/SPECS/rear.spec 2>&1 > /tmp/rpmbuild.log
+EXITcode=$?
 
 echo The rpmbuild output has been saved in the file /tmp/rpmbuild.log
+# write the target RPMs build to the output
 grep Wrote: /tmp/rpmbuild.log
+
+if [ $EXITcode -eq 0 ]; then
+	rm -rf $BUILD_DIR	# remove the build directory
+fi
+exit $EXITcode

@@ -21,7 +21,7 @@
 # Schlomo Schapiro <rear at schlomo.schapiro.org> [GSS]
 # Gratien D'haese  <gdha at sourceforge.net> [GD]
 
-VERSION="1.7.18"
+VERSION="1.7.20"
 
 CHANGES='
 2006-07-09	GSS	Initial Version
@@ -106,6 +106,9 @@ CHANGES='
 2009-03-13	GD	updated spec file for Fedora - remove man page from doc directory
 2009-03-14	GSS	updated main spec file (lib/rear.spec) for openSUSE 11.1, updated portmap starting for openSUSE 11.1 (rpcbind)
 2009-03-15	GSS	added support to load block modules in drivers/ata for SATA support
+2009-03-18	GD	conf/GNU/Linux.conf updated for logd, initctl, nls_utf8
+2009-04-02	GD	update rear.sourcespec for localstatedir/lib/rear (VAR_DIR)
+2009-04-10	GD	linux-functions.sh:LibCopyTo:add cmp test to avoid duplicates
 '
 
 COPYRIGHT="Copyright (C) 2006-2009
@@ -121,7 +124,7 @@ PRODUCT="Relax & Recover"
 
 SHARE_DIR="/usr/share/rear"
 CONFIG_DIR="/etc/rear"
-VAR_DIR="/var/rear"
+VAR_DIR="/var/lib/rear"
 BUILD_DIR=/tmp/rear.$$
 ROOTFS_DIR=$BUILD_DIR/rootfs
 TMP_DIR=$BUILD_DIR/tmp
