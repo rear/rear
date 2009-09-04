@@ -35,7 +35,7 @@ echo "Will be using a temporary BUILD_DIR=${BUILD_DIR}"
 # use tar to copy the current rear while excluding development and obsolete files
 tar --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
      		 --exclude=\*.rpmnew\* --exclude=.\*.swp --exclude .svn \
-		 -c -C $rear_root . | tar -C $BUILD_DIR/$prod_ver -x 
+		 -c -C $rear_root usr etc | tar -C $BUILD_DIR/$prod_ver -x 
 
 # cleaning up the $BUILD_DIR/$prod_ver directory before starting rpmbuild
 pushd $BUILD_DIR/$prod_ver >/dev/null
