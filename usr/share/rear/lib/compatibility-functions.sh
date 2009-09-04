@@ -51,6 +51,22 @@ elif $(type -p udev_volume_id >/dev/null) ; then
 			-e "s/^N:\(.*\)/ID_FS_LABEL_SAFE='\1'/" \
 			-e "s/^U:\(.*\)/ID_FS_UUID='\1'/" | grep =
 	}
+elif $(type -p blkid >/dev/null) ; then
+	# since udev 142 vol_id was removed and udev depends on blkid
+	# blkid -o udev returns the same output as vol_id used to
+	#
+	# NOTE: The vol_id compatible output was added to blkid at version 
+	function vol_id {
+		blkid -o udev -p "$1"
+	}
+	
+	# BIG WARNING! I added this to support openSUSE 11.2 which removed vol_id between m2 and m6 (!!) by updating udev
+	#
+	# SADLY blkid on Fedora 10 (for example) behaves totally different. Additionally I found out that on Fedora 10 blkid comes
+	# from e2fsprogs and on openSUSE 11.2m6 blkid comes from util-linux (which is util-linux-ng !)
+	#
+	# Just in case we do a sanity check here to make sure that *this* system sports a suitable blkid
+	blkid -o udev 2>/dev/null >/dev/null || BugError "Incompatible 'blkid' on this system"
 else
 	test "$WARN_MISSING_VOL_ID" && \
 	LogPrint "Required udev program 'udev_volume_id' or 'vol_id' could not be found !

@@ -21,7 +21,7 @@
 # Schlomo Schapiro <rear at schlomo.schapiro.org> [GSS]
 # Gratien D'haese  <gdha at sourceforge.net> [GD]
 
-VERSION="1.7.20"
+VERSION="0.0.0"
 
 CHANGES='
 2006-07-09	GSS	Initial Version
@@ -109,10 +109,11 @@ CHANGES='
 2009-03-18	GD	conf/GNU/Linux.conf updated for logd, initctl, nls_utf8
 2009-04-02	GD	update rear.sourcespec for localstatedir/lib/rear (VAR_DIR)
 2009-04-10	GD	linux-functions.sh:LibCopyTo:add cmp test to avoid duplicates
+2009-09-04	GSS	Added blkid support for systems that have udev>=142 and miss vol_id
 '
 
 COPYRIGHT="Copyright (C) 2006-2009
-	Schlomo Schapiro, Immobilien Scout GmbH
+	Schlomo Schapiro
 	Gratien D'haese, IT3 Consultants"
 STARTTIME=$SECONDS
 
