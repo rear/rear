@@ -110,6 +110,7 @@ CHANGES='
 2009-04-02	GD	update rear.sourcespec for localstatedir/lib/rear (VAR_DIR)
 2009-04-10	GD	linux-functions.sh:LibCopyTo:add cmp test to avoid duplicates
 2009-09-04	GSS	Added blkid support for systems that have udev>=142 and miss vol_id
+2009-09-06	GSS	Added rsyslogd and ext4 support
 '
 
 COPYRIGHT="Copyright (C) 2006-2009

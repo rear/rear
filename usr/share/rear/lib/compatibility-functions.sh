@@ -16,6 +16,7 @@ if $(type -p vol_id >/dev/null) ; then
       # nothing
 	:
 elif $(type -p udev_volume_id >/dev/null) ; then
+	Log "Using 'udev_volume_id' for vol_id"
 	# vol_id does not exist, but the older udev_volume_id is available
 	# we write a little wrapper to map udev_volume_id to vol_id
 	
@@ -52,6 +53,7 @@ elif $(type -p udev_volume_id >/dev/null) ; then
 			-e "s/^U:\(.*\)/ID_FS_UUID='\1'/" | grep =
 	}
 elif $(type -p blkid >/dev/null) ; then
+	Log "Using 'blkid' for vol_id"
 	# since udev 142 vol_id was removed and udev depends on blkid
 	# blkid -o udev returns the same output as vol_id used to
 	#
@@ -68,6 +70,7 @@ elif $(type -p blkid >/dev/null) ; then
 	# Just in case we do a sanity check here to make sure that *this* system sports a suitable blkid
 	blkid -o udev 2>/dev/null >/dev/null || BugError "Incompatible 'blkid' on this system"
 else
+	Log "Using internal version of vol_id"
 	test "$WARN_MISSING_VOL_ID" && \
 	LogPrint "Required udev program 'udev_volume_id' or 'vol_id' could not be found !
 Activating a very primitive builtin replacement that supports 

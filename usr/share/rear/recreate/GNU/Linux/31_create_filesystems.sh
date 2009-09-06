@@ -40,14 +40,14 @@ while read file ; do
 			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -l "$ID_FS_LABEL" )
 			CMD=( "${CMD[@]}" "$device" )
 			;;
-		ext2)
+        # The following rule works for ext2, ext3, ext4 and probably also for ext4dev
+        # we use mkfs.extXXX with the same extension as the filesystem had, so that
+        # for ext2 we use mkfs.ext2 and for ext4dev we use mkfs.ext4dev
+        # This works well since all these filesystems are created by the same mkfs binary
+        # from the e2fsprogs package which looks at the mkfs. extension to determine the
+        # filesystem type requested.
+		ext*)
 			CMD=(mkfs.ext2 -F )
-			test "$ID_FS_UUID" && CMD2=( tune2fs -U "$ID_FS_UUID" "$device")
-			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -L "$ID_FS_LABEL" )
-			CMD=( "${CMD[@]}" "$device" )
-			;;
-		ext3)
-			CMD=(mkfs.ext3 -F )
 			test "$ID_FS_UUID" && CMD2=( tune2fs -U "$ID_FS_UUID" "$device")
 			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -L "$ID_FS_LABEL" )
 			CMD=( "${CMD[@]}" "$device" )
