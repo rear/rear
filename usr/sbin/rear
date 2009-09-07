@@ -21,7 +21,7 @@
 # Schlomo Schapiro <rear at schlomo.schapiro.org> [GSS]
 # Gratien D'haese  <gdha at sourceforge.net> [GD]
 
-VERSION="1.7.21"
+VERSION="0.0.0"
 
 CHANGES='
 2006-07-09	GSS	Initial Version
