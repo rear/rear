@@ -21,7 +21,7 @@
 # Schlomo Schapiro <rear at schlomo.schapiro.org> [GSS]
 # Gratien D'haese  <gdha at sourceforge.net> [GD]
 
-VERSION="0.0.0"
+VERSION="1.7.21"
 
 CHANGES='
 2006-07-09	GSS	Initial Version
@@ -111,6 +111,7 @@ CHANGES='
 2009-04-10	GD	linux-functions.sh:LibCopyTo:add cmp test to avoid duplicates
 2009-09-04	GSS	Added blkid support for systems that have udev>=142 and miss vol_id
 2009-09-06	GSS	Added rsyslogd and ext4 support
+2009-09-07	GSS	Added dmesg -n1 to rescue system
 '
 
 COPYRIGHT="Copyright (C) 2006-2009

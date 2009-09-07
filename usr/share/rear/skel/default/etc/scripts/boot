@@ -1,6 +1,9 @@
 #!/bin/bash
 # Relax & Recover
 
+# disable console logging for kernel messages
+dmesg -n1
+
 # basic mounts
 mount -t proc -n none /proc
 mount -t sysfs none /sys

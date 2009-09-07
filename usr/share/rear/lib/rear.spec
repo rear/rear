@@ -1,5 +1,5 @@
 Name: rear
-Version: 1.7.18
+Version: 1.7.20
 Release: 1%{?dist}
 Summary: Relax and Recover (ReaR) is a Linux Disaster Recovery framework
 
@@ -10,8 +10,9 @@ Source0: http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
-# all RPM based systems seem to have this
-Requires:       mingetty binutils iputils tar gzip
+# all RPM based systems seem to have this and call it the same
+Requires:       mingetty binutils iputils tar gzip ethtool syslinux
+
 # if SuSE
 %if 0%{?suse_version} != 0
 Requires:       iproute2 lsb
@@ -21,16 +22,63 @@ Requires:       genisoimage nfs-client
 %else
 Requires:       mkisofs
 %endif
-# openSUSE from 11.1 uses rpcbind instead of portmap
+# openSUSE from 11.1 and SLES from 11 uses rpcbind instead of portmap
 %if %{suse_version} >= 1110
 Requires:	rpcbind
 %else
 Requires:       portmap
 %endif
-# end SuSE, start non-SUSE distros
-%else
-Requires:       portmap
+# end SuSE
 %endif
+
+# if Mandriva
+%if 0%{?mandriva_version} != 0
+Requires:	iproute2 lsb
+# Mandriva switched from 2008 away from mkisofs, and as a specialty call the package cdrkit-genisoimage!
+%if %{mandriva_version} >= 2008
+Requires:	cdrkit-genisoimage rpcbind
+%else
+Requires:	mkisofs portmap
+%endif
+# end Mandriva
+%endif
+
+# all Red Hat compatible, Scientific Linux and other clones are not yet supported by openSUSE
+# Build Server, add more RHEL clones as needed. To make the boolean expression simpler I copy
+# this section for each Red Hat OS
+%if 0%{?centos_version} != 0
+Requires:	iproute redhat-lsb
+# Red Hat moved from CentOS/RHEL/SL 6 and Fedora 9 away from mkisofs
+%if %{centos_version} >= 600
+Requires:	genisoimage rpcbind
+%else
+Requires:	mkisofs portmap
+%endif
+# end CentOS
+%endif
+
+%if 0%{?rhel_version} != 0
+Requires:	iproute redhat-lsb
+# Red Hat moved from CentOS/RHEL/SL 6 and Fedora 9 away from mkisofs
+%if %{rhel_version} >= 600 
+Requires:	genisoimage rpcbind
+%else
+Requires:	mkisofs portmap
+%endif
+# end Red Hat Enterprise Linux
+%endif
+
+%if 0%{?fedora_version} != 0
+Requires:	iproute redhat-lsb
+# Red Hat moved from CentOS/RHEL/SL 6 and Fedora 9 away from mkisofs
+%if %{fedora_version} >= 9
+Requires:	genisoimage rpcbind
+%else
+Requires:	mkisofs portmap
+%endif
+# end Fedora
+%endif
+
 %description
 Relax and Recover (abbreviated rear) is a highly modular disaster recovery
 framework for GNU/Linux based systems, but can be easily extended to other
@@ -42,9 +90,6 @@ PXE, DVD/CD and USB media.
 Relax and Recover integrates with other backup software and provides integrated
 bare metal disaster recovery abilities to the compatible backup software.
 
-This is work in progress, so some features are not yet implemented.
-
-
 %prep
 %setup -q
  
@@ -52,8 +97,6 @@ This is work in progress, so some features are not yet implemented.
 # no code to compile - all bash scripts
 
 %install
-# SuSe recommends (rpmlint) no to remove buildroot - rpm will take care of this
-#rm -rf $RPM_BUILD_ROOT
 
 # create directories
 mkdir -vp \
@@ -61,7 +104,7 @@ mkdir -vp \
 	$RPM_BUILD_ROOT%{_datadir} \
 	$RPM_BUILD_ROOT%{_sysconfdir} \
 	$RPM_BUILD_ROOT%{_sbindir} \
-	$RPM_BUILD_ROOT%{_localstatedir}/rear
+	$RPM_BUILD_ROOT%{_localstatedir}/lib/rear
 
 # copy rear components into directories
 cp -av usr/share/rear $RPM_BUILD_ROOT%{_datadir}/
@@ -71,7 +114,7 @@ cp -av etc/rear $RPM_BUILD_ROOT%{_sysconfdir}/
 # patch rear main script with correct locations for rear components
 sed -i  -e 's#^CONFIG_DIR=.*#CONFIG_DIR="%{_sysconfdir}/rear"#' \
 	-e 's#^SHARE_DIR=.*#SHARE_DIR="%{_datadir}/rear"#' \
-	-e 's#^VAR_DIR=.*#VAR_DIR="%{_localstatedir}/rear"#' \
+	-e 's#^VAR_DIR=.*#VAR_DIR="%{_localstatedir}/lib/rear"#' \
 	$RPM_BUILD_ROOT%{_sbindir}/rear
 
 # update man page with correct locations
@@ -79,8 +122,7 @@ sed     -e 's#/etc#%{_sysconfdir}#' \
 	-e 's#/usr/sbin#%{_sbindir}#' \
 	-e 's#/usr/share#%{_datadir}#' \
 	-e 's#/usr/share/doc/packages#%{_docdir}#' \
-	doc/rear.8 |\
-	gzip -9 >$RPM_BUILD_ROOT%{_mandir}/man8/rear.8.gz
+	doc/rear.8 >$RPM_BUILD_ROOT%{_mandir}/man8/rear.8
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -91,12 +133,27 @@ rm -rf $RPM_BUILD_ROOT
 %doc COPYING CHANGES README doc/*
 %{_sbindir}/rear
 %{_datadir}/rear
-%{_localstatedir}/rear
+%{_localstatedir}/lib/rear
 %{_mandir}/man8/rear*
 %config(noreplace) %{_sysconfdir}/rear
 
 
 %changelog
+* Sun Jun 28 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.20-1
+- updated spec file to build on SUSE/RHEL/Fedora/Mandriva and clones and use
+  the correct dependencies
+
+* Mon May 18 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.18
+- added ethtool and syslinux to dependancy list
+
+* Thu Mar 26 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.18
+- did http://lists.opensuse.org/opensuse-packaging/2007-02/msg00005.html
+  (fix RPM_BUILD_ROOT behaviour)
+
+* Wed Mar 18 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.18
+- moved /var/rear to /var/lib/rear
+- removed man page gzip
+
 * Sun Mar 15 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.18
 - updated spec file to support openSUSE 11.1
 - added support for rpcbind
