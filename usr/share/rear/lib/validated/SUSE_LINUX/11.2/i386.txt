@@ -1,0 +1,4 @@
+Submitted:	Schlomo Schapiro <rear@schlomo.schapiro.org>
+Date:		2008-09-07
+Features:	LVM, NETFS, ISO, EMAIL
+Comment:	Checked on Milestone 6
