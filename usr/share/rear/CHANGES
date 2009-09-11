@@ -1,7 +1,15 @@
+Version 1.7.22 - Released 2009-
+------------------------------------
+2009-09-11	GD	* recreate/GNU/Linux/22_create_lvm2_devices.sh
+			  move lvm vgchange -a y  in loop to avoid old VGs
+			  to activate
+
 Version 1.7.21 - Released 2009-09-07
+------------------------------------
 2009-09-07	GSS	* Added dmesg -n1 to rescue system
-2009-09-06	GSS * Add support for rsyslogd and ext4
-2009-09-04	GSS * Add support for blkid to supplement vol_id which was removed from udev since udev 142
+2009-09-06	GSS	* Add support for rsyslogd and ext4
+2009-09-04	GSS	* Add support for blkid to supplement vol_id which was
+			  removed from udev since udev 142
 
 Version 1.7.20 - Released 2009-04-10
 ------------------------------------
