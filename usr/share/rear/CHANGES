@@ -1,8 +1,9 @@
-Version 1.7.22 - Released 2009-
+Version 1.7.22 - Not Yet Released
 ------------------------------------
+2009-09-23	GSS	* backup/NETFS/default/40_create_include_exclude_files.sh
+			  fixed variable name for excluded mountpoints to actually read EXCLUDE_MOUNTPOINTS
 2009-09-11	GD	* recreate/GNU/Linux/22_create_lvm2_devices.sh
-			  move lvm vgchange -a y  in loop to avoid old VGs
-			  to activate
+			  move lvm vgchange -a y  in loop to avoid old VGs to activate
 
 Version 1.7.21 - Released 2009-09-07
 ------------------------------------
@@ -247,7 +248,7 @@ Version 1.4 - Released 2007-02-06
 				LC_ALL=fr_FR df -h
 				LC_ALL=C df -h
 			  )
-			* added EXCLUDE_MOUNTPOINT, EXCLUDE_MD, EXCLUDE_VG options
+			* added EXCLUDE_MOUNTPOINTS, EXCLUDE_MD, EXCLUDE_VG options
 2007-01-12	GSS	* added internal replacement for vol_id for older systems
 			  that do not have vol_id or udev_volume_id
 			* fixed nasty sysfs grep bug (grep $dev instead of grep ^$dev$ !!)

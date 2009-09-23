@@ -13,7 +13,7 @@ for k in "${BACKUP_PROG_EXCLUDE[@]}" ; do
 	test "$k" && echo "$k"
 done > $BUILD_DIR/backup-exclude.txt
 # add also the excluded mount points to the backup exclude list
-for k in "${MOUNTPOINT_EXCLUDE[@]}" ; do
+for k in "${EXCLUDE_MOUNTPOINTS[@]}" ; do
 	test "$k" && echo "$k/"
 done >> $BUILD_DIR/backup-exclude.txt
 
