@@ -77,6 +77,8 @@ if test -d /proc/net/bonding ; then
 				echo "ip link set dev $dev up" >>$netscript
 				# enslave slave interfaces which we read from the /proc status file
 				ifslaves=($(cat /proc/net/bonding/$dev | grep "Slave Interface:" | cut -d : -f 2))
+				#
+				# NOTE: [*] is used here on purpose !
 				echo "ifenslave $dev ${ifslaves[*]}" >>$netscript
 				echo "sleep 5" >>$netscript
 				for addr in $(ip a show dev $dev | grep inet\ | tr -s " " | cut -d " " -f 3) ; do

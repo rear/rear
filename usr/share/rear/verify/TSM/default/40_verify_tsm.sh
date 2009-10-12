@@ -1,4 +1,12 @@
 #
+#
+# NOTE: In this script we use '"${TSM_FILESPACE_NUMS[*]}"' (instead of [@]) and it seems to be intentionally
+# usually this is a cause for trouble but apparently here it was done on purpose.
+# If this code doesn't work then please try with [@] instead
+#
+# 2009-10-12 Schlomo as part of a code review to fix all occurences of [*]
+#
+#
 # read TSM vars from TSM config files
 # read dsm.sys
 while read KEY VALUE ; do echo "$KEY" | grep -q '*' && continue ; test -z "$KEY" && continue ; KEY="$(echo "$KEY" | tr a-z A-Z)" ; export TSM_SYS_$KEY="${VALUE//\"}" ; done </opt/tivoli/tsm/client/ba/bin/dsm.sys
