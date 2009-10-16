@@ -1,5 +1,7 @@
 Version 1.7.22 - Not Yet Released
 ------------------------------------
+2009-10-12	GSS	* Fixed all wrong occurences of [*] with [@]. 
+			  See https://sourceforge.net/tracker/?func=detail&atid=859452&aid=2877091&group_id=171835
 2009-09-23	GSS	* backup/NETFS/default/40_create_include_exclude_files.sh
 			  fixed variable name for excluded mountpoints to actually read EXCLUDE_MOUNTPOINTS
 2009-09-11	GD	* recreate/GNU/Linux/22_create_lvm2_devices.sh
