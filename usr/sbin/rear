@@ -24,7 +24,7 @@
 # Versioning
 PRODUCT="Relax & Recover"
 VERSION="0.0.0"
-RELEASE_DATE="2009-09-23"
+RELEASE_DATE="2009-11-15"
 
 COPYRIGHT="Copyright (C) 2006-2009
 	Schlomo Schapiro
@@ -51,7 +51,11 @@ export LC_CTYPE=C LC_ALL=C LANG=C
 
 # Calculate a unique build number by taking the md5sum over our script directories
 BUILDNR="$(
-	FILES=( $(find $SHARE_DIR -type f -and -not -name \*~) ) ; ( echo ${FILES[@]} ; cat "${FILES[@]}" ) | md5sum | cut -d " " -f 1
+		find $SHARE_DIR -type f -and -not -name \*~ |\
+		while read ; do
+			echo $REPLY
+			cat "$REPLY"
+		done | md5sum | cut -d " " -f 1
 	)"
 
 # Calculate a unique config build number
