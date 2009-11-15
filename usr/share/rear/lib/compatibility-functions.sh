@@ -12,10 +12,13 @@ done
 
 export PATH
 
-if $(type -p vol_id >/dev/null) ; then
+if type -p vol_id >/dev/null ; then
       # nothing
 	:
-elif $(type -p udev_volume_id >/dev/null) ; then
+# NOTE: THE FOLLOWING elif IS PERMANENTLY DISABLED, WE WANT TO SEE WHO COMPLAINS ABOUT IT
+# AND BASICALLY GET RID OF THE udev_volume_id SUPPORT. IN ANY CASE IT IS ONLY FOR SOME VERY EARLY
+# Linux 2.6 SYSTEMS AND THE INTERNAL vol_id SEEMS TO WORK JUST FINE FOR THOSE. (Schlomo 2009-11-15)
+elif test "" && type -p udev_volume_id >/dev/null ; then
 	Log "Using 'udev_volume_id' for vol_id"
 	# vol_id does not exist, but the older udev_volume_id is available
 	# we write a little wrapper to map udev_volume_id to vol_id
@@ -52,23 +55,29 @@ elif $(type -p udev_volume_id >/dev/null) ; then
 			-e "s/^N:\(.*\)/ID_FS_LABEL_SAFE='\1'/" \
 			-e "s/^U:\(.*\)/ID_FS_UUID='\1'/" | grep =
 	}
-elif $(type -p blkid >/dev/null) ; then
+# NOTE: THE NEGATIVE CHECK FOR udev_volume_id IS THERE TO MAKE SURE THAT SYSTEMS HAVING udev_volume_id AND blkid FALL
+# THROUGH TO USE THE internal vol_id FUNCTION BELOW !! (Schlomo 2009-11-15)
+elif type -p blkid >/dev/null && ! type -p udev_volume_id >/dev/null ; then
 	Log "Using 'blkid' for vol_id"
 	# since udev 142 vol_id was removed and udev depends on blkid
 	# blkid -o udev returns the same output as vol_id used to
 	#
-	# NOTE: The vol_id compatible output was added to blkid at version 
+	# NOTE: The vol_id compatible output was added to blkid at version ? (FIXME)
 	function vol_id {
 		blkid -o udev -p "$1"
 	}
 	
 	# BIG WARNING! I added this to support openSUSE 11.2 which removed vol_id between m2 and m6 (!!) by updating udev
 	#
-	# SADLY blkid on Fedora 10 (for example) behaves totally different. Additionally I found out that on Fedora 10 blkid comes
-	# from e2fsprogs and on openSUSE 11.2m6 blkid comes from util-linux (which is util-linux-ng !)
+	# SADLY blkid on Fedora 10 and openSUSE 11.1 (for example) behaves totally different. Additionally I found out 
+	# that on Fedora 10 and openSUSE 11.1 blkid comes from e2fsprogs and on openSUSE 11.2m6 blkid comes from 
+	# util-linux (which is util-linux-ng !)
+	#
+	# IT REMAINS TO BE OBSERVED how this story continues and whether all systems that do NOT have vol_id DO have
+	# a suitable blkid installed.
 	#
 	# Just in case we do a sanity check here to make sure that *this* system sports a suitable blkid
-	blkid -o udev 2>/dev/null >/dev/null || BugError "Incompatible 'blkid' on this system"
+	blkid -o udev 2>/dev/null >/dev/null || BugError "Incompatible 'blkid' on this system."
 else
 	Log "Using internal version of vol_id"
 	test "$WARN_MISSING_VOL_ID" && \
@@ -86,16 +95,18 @@ WARNING ! This replacement has been tested ONLY ON i386 !!
 		*ext*filesystem*)
 			echo "ID_FS_USAGE='filesystem'"
 			while IFS=: read key val junk ; do
-				val="${val#* }"
+				val="${val##*( )}"
 				case "$key" in
 				*features*)
-					if expr match "$val" has_journal >/dev/null ; then
+					if expr match "$val" ".*journal.*" >/dev/null ; then
 						echo "ID_FS_TYPE='ext3'"
 					else
 						echo "ID_FS_TYPE='ext2'"
 					fi
 					;;
 				*name*)
+					# <none> denotes an EMPTY label, so don't set one!
+					test "$val" = "<none>" && val=
 					echo "ID_FS_LABEL='$val'"
 					;;
 				*UUID*)

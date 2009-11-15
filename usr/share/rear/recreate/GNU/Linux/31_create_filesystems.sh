@@ -5,7 +5,7 @@
 
 ProgressStart "Creating file systems"
 while read file ; do
-	# file looks like dev/md/0/vol_id
+	# file looks like dev/md/0/fs_vol_id
 	device="/${file%%/fs_vol_id}" # /dev/md/0
 	
 	test -s $VAR_DIR/recovery/$file
@@ -37,7 +37,7 @@ while read file ; do
 		reiserfs)
 			CMD=(mkreiserfs -f -f)
 			test "$ID_FS_UUID" && CMD=( "${CMD[@]}" -u "$ID_FS_UUID" )
-			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -l "$ID_FS_LABEL" )
+			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -l "'$ID_FS_LABEL'" )
 			CMD=( "${CMD[@]}" "$device" )
 			;;
         # The following rule works for ext2, ext3, ext4 and probably also for ext4dev
@@ -47,21 +47,22 @@ while read file ; do
         # from the e2fsprogs package which looks at the mkfs. extension to determine the
         # filesystem type requested.
 		ext*)
-			CMD=(mkfs.ext2 -F )
+			CMD=(mkfs.$ID_FS_TYPE -F )
 			test "$ID_FS_UUID" && CMD2=( tune2fs -U "$ID_FS_UUID" "$device")
-			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -L "$ID_FS_LABEL" )
+			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -L "'$ID_FS_LABEL'" )
 			CMD=( "${CMD[@]}" "$device" )
 			;;
 		xfs)
 			CMD=(mkfs.xfs -f)
 			test "$ID_FS_UUID" && CMD2=( xfs_admin -U "$ID_FS_UUID" "$device")
-			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -L "$ID_FS_LABEL" )
+			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -L "'$ID_FS_LABEL'" )
 			CMD=( "${CMD[@]}" "$device" )
 			;;
 		jfs)
 			CMD=(mkfs.jfs -q)
+			
 			test "$ID_FS_UUID" && CMD2=( jfs_tune -U "$ID_FS_UUID" "$device")
-			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -L "$ID_FS_LABEL" )
+			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -L "'$ID_FS_LABEL'" )
 			CMD=( "${CMD[@]}" "$device" )
 			;;
 		vfat)
@@ -69,7 +70,7 @@ while read file ; do
 			CMD=(mkfs.vfat -F 16 )
 			VOLUME_ID="`echo $ID_FS_UUID | sed -e 's/-//'`"
 			test "$ID_FS_UUID" && CMD=( "${CMD[@]}" -i "$VOLUME_ID" )
-			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -n "$ID_FS_LABEL" )
+			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -n "'$ID_FS_LABEL'" )
 			CMD=( "${CMD[@]}" "$device" )
 			;;
 		*)
