@@ -6,6 +6,12 @@ Version 1.7.22 - Not Yet Released
 			  fixed variable name for excluded mountpoints to actually read EXCLUDE_MOUNTPOINTS
 2009-09-11	GD	* recreate/GNU/Linux/22_create_lvm2_devices.sh
 			  move lvm vgchange -a y  in loop to avoid old VGs to activate
+2009-11-15	GSS	* removed the usage of udev_volume_id (for RHEL4) in favour of internal vol_id
+			* fixed internal vol_id to correctly strip leading spaces from the values
+			* fixed 31_create_filesystems.sh to actually correctly create ext* and support FS labels
+			* with < or > in them (https://sourceforge.net/tracker/?func=detail&aid=2891970&group_id=171835&atid=859452)
+			* added usleep and mktemp
+
 
 Version 1.7.21 - Released 2009-09-07
 ------------------------------------
