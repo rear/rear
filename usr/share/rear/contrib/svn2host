@@ -1,0 +1,96 @@
+#!/bin/bash
+# Script: svn2host
+# Script that creates a dist tar (via svn2tar), copies it to the specified hosts(s), builds it there and installs it there. Basically a very very simple continuous integration.
+# Author: Schlomo Schapiro
+# License: see COPYING file
+# Last Update: $Id$
+
+##################### M A I N ####################
+
+case "$*" in
+	--help|"")
+		echo "Usage: $0 <host> ..."
+		exit 1
+esac
+
+
+echo "
+******************************************
+**	svn2host script for rear      	**
+******************************************
+" 1>&2
+
+# find the full path to this script
+ME="$(cd $(dirname "$0") ; pwd)/$(basename "$0")"
+# Find the svnroot path for the initial tar-ball
+rear_root="${ME%/usr/share/rear/contrib/svn2host}"
+### echo The root of rear SVN directory is $rear_root
+
+# building dist tar
+distarchive=$($rear_root/usr/share/rear/contrib/svn2tar)
+
+RESULTS=()
+FAILED=()
+
+for h in "$@" ; do
+
+	# check remote host access
+	if ! err=$(ssh $h /bin/true 2>&1) ; then
+		echo "ERROR Cannot access host '$h' via SSH:"
+		echo "$err"
+		FAILED=( "${FAILED[@]}" "$h -> Could not access via SSH: $err")
+		continue
+	else
+		echo "BUILDING ON $h"
+	fi
+
+	# copy dist archive to host
+	scp "$distarchive" $h:$distarchive
+
+	if ssh $h type -p rpmbuild >/dev/null ; then
+	# this is an RPM type host, build it
+
+		# call rpmbuild
+		RPMFILE=
+		while read -r ; do
+			echo "$h: $REPLY"
+			case "$REPLY" in
+				*noarch.rpm*) RPMFILE="${REPLY##* }" # assume that RPM file name is last word on this line!!!
+			esac
+		done < <(
+			ssh $h rpmbuild -tb $distarchive 2>&1
+			)
+		# verify existance of built RPM
+		if ! ssh $h test -s "$RPMFILE" ; then
+			echo "ERROR Could not build RPM on '$h'"
+			FAILED=( "${FAILED[@]}" "$h -> Could not build RPM")
+			continue
+		fi
+
+		# install RPM
+		if ! ssh $h rpm -U --force "$RPMFILE" ; then
+			echo "ERROR Could not install RPM oin '$h'"
+			FAILED=( "${FAILED[@]}" "$h -> Could not install RPM")
+			continue
+		else
+			echo "INSTALLED RPM '$RPMFILE' on '$h'"
+			RESULTS=( "${RESULTS[@]}" "$h -> $RPMFILE" )
+		fi
+
+	else
+		echo "ERROR Unsupported host type '$h'. Maybe you need to install rpmbuild?"
+		FAILED=( "${FAILED[@]}" "$h -> Could not determine host type. Maybe you need to install rpmbuild?")
+		continue
+	fi
+
+done
+
+if test "$RESULTS" ; then
+	echo -e "\n\n * * *   I N S T A L L E D  H O S T S   * * *\n"
+	for l in "${RESULTS[@]}" ; do echo "$l" ; done
+fi
+
+if test "$FAILED" ; then
+	echo -e "\n\n * * *   F A I L E D  H O S T S   * * *\n"
+	for l in "${FAILED[@]}" ; do echo "$l" ; done
+fi

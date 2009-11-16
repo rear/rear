@@ -31,12 +31,16 @@ c=0
 while : ; do
 	dev=eth$c
 	if test -d /sys/class/net/$dev ; then
-		driver=$(ethtool -i $dev 2>/dev/null | grep driver: | cut -d : -f 2)
+		driver=$(ethtool -i $dev 2>/dev/null | grep driver: | cut -d : -f 2 | tr -d " ")
 		if test -z "$driver" ; then
 			LogPrint "WARNING: Could not determine network driver for '$dev'. Please make 
 WARNING:   sure that it loads automatically or add it to MODULES_LOAD !"
 		else
 			echo "modprobe $driver" >>$netscript
+			if test "$driver" = vmxnet ; then
+				# for vmxnet we also try to load the pcnet32 driver
+				echo 'test $? -gt 0 && modprobe pcnet32' >>$netscript
+			fi
 		fi
 		if ip link show dev $dev | grep -q UP ; then
 		# link is up

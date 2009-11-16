@@ -11,17 +11,32 @@ echo "
 ******************************************
 **	svn2tar script for rear      	**
 ******************************************
-"
+" 1>&2
 # find the full path to this script
 ME="$(cd $(dirname "$0") ; pwd)/$(basename "$0")"
 # Find the svnroot path for the initial tar-ball
 rear_root="${ME%/usr/share/rear/contrib/svn2tar}"
-echo The root of rear SVN directory is $rear_root
+### echo The root of rear SVN directory is $rear_root
 
+# set -x
+
+SHARE_DIR=/usr/share/rear
+CONFIG_DIR=/etc/rear
+VAR_DIR=/var/rear
+prod_ver="rear-$VERSION"
+distarchive="/tmp/${prod_ver}.tar.gz"
+
+BUILD_DIR=/tmp/rear.$$
+trap "rm -rf $BUILD_DIR" 0
 
 # extract version number from rear script
 VERSION=$(grep ^VERSION= ${rear_root}/usr/sbin/rear | cut -d= -f2 | sed -e 's/"//g')
-echo Building dist tar for rear VERSION $VERSION
+
+# source required ReaR components
+## *mkdist* functions
+. "$rear_root$SHARE_DIR/lib/mkdist-workflow.sh"
+## Progress* functions, the < hack disables the fancy progress stuff
+. "$rear_root$SHARE_DIR/lib/_input-output-functions.sh" </dev/null
 
 prod_ver="rear-$VERSION"
 distarchive="/tmp/${prod_ver}.tar.gz"
@@ -30,72 +45,24 @@ BUILD_DIR=/tmp/rear.$$
 trap "rm -rf $BUILD_DIR" 0
 
 mkdir -p $BUILD_DIR/$prod_ver 
-echo "Will be using a temporary BUILD_DIR=${BUILD_DIR}"
+echo "Will be using a temporary BUILD_DIR=${BUILD_DIR}" 1>&2
+
+ProgressStart "Building dist tar for rear $VERSION" 1>&2
+
 
 # use tar to copy the current rear while excluding development and obsolete files
 tar --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
      		 --exclude=\*.rpmnew\* --exclude=.\*.swp --exclude .svn \
-		 -c -C $rear_root usr etc | tar -C $BUILD_DIR/$prod_ver -x 
+		 -c -C $rear_root usr etc | tar -C $BUILD_DIR/$prod_ver -x -v 1>&8
 
 # cleaning up the $BUILD_DIR/$prod_ver directory before starting rpmbuild
 pushd $BUILD_DIR/$prod_ver >/dev/null
 
-# following variables are the base directories of rear
-SHARE_DIR=/usr/share/rear
-CONFIG_DIR=/etc/rear
-VAR_DIR=/var/rear
-
-# move gentoo build file to correct version
-test -s .$SHARE_DIR/contrib/rear-$VERSION.ebuild ||\
-	mv .$SHARE_DIR/contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild
-# copy doc files
-cp -r .$SHARE_DIR/{COPYING,CHANGES,README,doc,contrib}  .
-
-# I want the generic spec file to be in the dist tar (Schlomo, 2009-03-15)
-### grab the correct rear.spec file according the OS_VENDOR we running this script on
-## OS_VENDOR="$(lsb_release -i -s | tr -s " \t" _)"
-## cp .$SHARE_DIR/lib/spec/$OS_VENDOR/rear.sourcespec .$SHARE_DIR/lib/rear.spec
-
-# patch correct rear version into spec file
-sed -i -e "s/Version:.*/Version: $VERSION/" .$SHARE_DIR/lib/rear.spec
-chmod 644 .$SHARE_DIR/lib/rear.spec
-
-
-# write out standard site.conf and local.conf and templates
-
-cat >./$CONFIG_DIR/site.conf <<EOF
-# site.conf
-# another config file that is sourced BEFORE local.conf
-# could be used to set site-wite settings
-# you could then distribute the site.conf from a central location while you keep
-# the machine-local settings in local.conf
-EOF
-
-cat >./$CONFIG_DIR/local.conf <<EOF
-# sample local configuration
-
-# Create ReaR rescue media as ISO image
-OUTPUT=ISO
-
-# optionally set your backup software
-# BACKUP=TSM
-
-# the following is required on older VMware VMs
-MODULES_LOAD=( vmxnet )
-EOF
-	
-tee ./$CONFIG_DIR/templates/{PXE_pxelinux.cfg,ISO_isolinux.cfg,USB_syslinux.cfg} >/dev/null <<EOF
-default hd
-prompt 1
-timeout 100
-
-label hd
-localboot -1
-say ENTER - boot local hard disk
-say --------------------------------------------------------------------------------
-EOF
+WORKFLOW_mkdist_postprocess 1>&2
 
 popd >/dev/null
+ProgressStop 1>&2
 
-echo Creating final $distarchive of rear version $prod_ver
+echo Creating final $distarchive of rear version $prod_ver 1>&2
 tar -C $BUILD_DIR -czf $distarchive $prod_ver 
+echo $distarchive

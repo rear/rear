@@ -11,6 +11,13 @@ Version 1.7.22 - Not Yet Released
 			* fixed 31_create_filesystems.sh to actually correctly create ext* and support FS labels
 			* with < or > in them (https://sourceforge.net/tracker/?func=detail&aid=2891970&group_id=171835&atid=859452)
 			* added usleep and mktemp
+2009-11-16	GSS	* moved some misplaced scripts from pack to build
+			* added contrib/svn2hosts (continuous integration script)
+			* fixed up mkdist-workflow.sh and contrib/svn2tar to share more code
+			* removed the UTF-8 conversion (IMHO should be only done manually)
+			* removed the overwriting of the generic spec file with vendor specific spec file
+			* fixed the copying of /dev/shm/* by adding it to COPY_AS_IS_EXCLUDE
+			* support open-vm-tools and loading of vmxnet
 
 
 Version 1.7.21 - Released 2009-09-07
