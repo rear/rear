@@ -11,10 +11,13 @@ BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 # all RPM based systems seem to have this
-Requires: mingetty binutils portmap iputils
-Requires: iproute
-Requires: /usr/bin/mkisofs
-Requires: tar
+Requires: mingetty binutils iputils tar gzip ethtool syslinux
+Requires: iproute redhat-lsb
+%if 0%{?fedora_version} >= 9
+Requires: genisoimage rpcbind
+%else
+Requires: mkisofs portmap
+%endif
 
 
 %description
@@ -84,6 +87,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Nov 16 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.22-1
+- Changed Requires fields for Fedora 10 and higher
+
 * Thu Apr 02 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.20-1
 - update %%_localstatedir/rear to %%_localstatedir/lib/rear
 
