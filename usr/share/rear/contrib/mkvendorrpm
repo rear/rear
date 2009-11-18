@@ -26,6 +26,20 @@ fi
 [ -d ${RPM_TopDir} ] && echo ${RPM_TopDir} || echo /usr/src/redhat
 }
 
+function getVERSION () {
+# extract version number from rear script
+VERSION=`grep ^VERSION= ${rear_root}/usr/sbin/rear | cut -d= -f2 | sed -e 's/"//g'`
+if [ "${VERSION}" = "0.0.0" ]; then
+	# 0.0.0 is the version nr of the trunk; extract the version nr from CHANGES and VERSION files
+	if [ -f $rear_root/usr/share/rear/VERSION ]; then
+		VERSION1=`cat $rear_root/usr/share/rear/VERSION`
+	else
+		VERSION1="0.0.0"
+	fi
+	VERSION2=`grep -i ^version $rear_root/usr/share/rear/CHANGES | head -1 | awk '{print $2}'`
+	VERSION=`echo -e ${VERSION1}'\n'${VERSION2} | sort -n | tail -1`
+fi
+}
 ##################### M A I N ####################
 EXITcode=0
 
@@ -45,8 +59,8 @@ if [ ! -d $rear_root ]; then
 	exit $EXITcode
 fi
 
-# extract version number from rear script
-VERSION=`grep ^VERSION= ${rear_root}/usr/sbin/rear | cut -d= -f2 | sed -e 's/"//g'`
+# get VERSION nr of rear (via function call)
+getVERSION
 echo Building RPMs for rear VERSION $VERSION
 
 prod_ver="rear-$VERSION"
@@ -75,19 +89,23 @@ pushd $BUILD_DIR/$prod_ver
 SHARE_DIR=/usr/share/rear
 CONFIG_DIR=/etc/rear
 VAR_DIR=/var/rear
+SBIN_DIR=/usr/sbin
 
 # gentoo build file
 test -s .$SHARE_DIR/contrib/rear-$VERSION.ebuild ||\
-	mv -v ".$SHARE_DIR/contrib/rear-*.ebuild" .$SHARE_DIR/contrib/rear-$VERSION.ebuild
+	mv -v .$SHARE_DIR/contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild
 # copy doc files
 cp -rv .$SHARE_DIR/{COPYING,CHANGES,README,doc,contrib}  .
 # convert files to UTF-8 if possible
-for file in COPYING CHANGES README `find doc -type f` ; do
-	mv "$file" timestamp
-	iconv -f ISO-8859-1 -t UTF-8 -o $file timestamp
-	touch -r timestamp $file
+for file in COPYING CHANGES README "`find doc -type f`" ; do
+	mv "${file}" timestamp
+	iconv -f ISO-8859-1 -t UTF-8 -o "${file}" timestamp
+	touch -r timestamp "${file}"
 done
 rm -f timestamp
+
+# insert correct vesion nr into main rear script
+sed -i -e "s/^VERSION=\".*\"/VERSION=\"$VERSION\"/" .$SBIN_DIR/rear
 
 # grab the correct rear.spec file according the OS_VENDOR we running this script on
 OS_VENDOR="$(lsb_release -i -s | tr -s " \t" _)"
