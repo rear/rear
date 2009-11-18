@@ -19,11 +19,16 @@ test -s /etc/network.sh && . /etc/network.sh
 # we load ata drivers after ide drivers to support older systems running in compatibility mode
 # most probably these lines are the cause for most problems with wrong disk order and missing block devices
 #
+# UPDATE 2009-11-16 Schlomo: After problems on ICH6 systems (e.g. VirtualBox) I reversed the order to first
+# load ata and then ide to try out wether this will give us less trouble.
+#
+# The actual problem was that piix would "catch" the controller and ata_piix would not see anything.
+#
 # Please submit any better ideas !!
 #
 # Especially how to analyse a running system and load the same drivers and bind them to the same devices in
 # the correct order
-for m in $(find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ide,message,ata} -type f 2>/dev/null) ; do
+for m in $(find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ata,message,ide} -type f 2>/dev/null) ; do
 	modprobe -q $(basename $m .ko)
 done
 
