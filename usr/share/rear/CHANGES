@@ -1,5 +1,11 @@
 Version 1.7.22 - Not Yet Released
 ------------------------------------
+2009-11-19	GD	* updated rear.spec, rear.sourcespec of SUSE and FEDORA
+2009-11-18	GD	* updated contrib/mkvendorrp to pull version nr from rear, CHANGED
+			* updated lib/spec/Fedora/rear.sourcespec Require field and doc/
+2009-11-17	GSS	* updated skel/default/etc/scripts/system-setup to improve loading modules
+			* updated finalize/default/88_check_for_mount_by_id.sh
+			* added prep/GNU/Linux/28_include_vmware_tools.sh
 2009-11-16	GSS	* moved some misplaced scripts from pack to build
 			* added contrib/svn2hosts (continuous integration script)
 			* fixed up mkdist-workflow.sh and contrib/svn2tar to share more code

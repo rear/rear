@@ -17,13 +17,13 @@ Requires:       mingetty binutils iputils tar gzip ethtool syslinux
 %if 0%{?suse_version} != 0
 Requires:       iproute2 lsb
 # recent SuSE versions have an extra nfs-client package and switched to genisoimage/wodim
-%if %{suse_version} >= 1020
+%if 0%{?suse_version} >= 1020
 Requires:       genisoimage nfs-client
 %else
 Requires:       mkisofs
 %endif
 # openSUSE from 11.1 and SLES from 11 uses rpcbind instead of portmap
-%if %{suse_version} >= 1110
+%if 0%{?suse_version} >= 1110
 Requires:	rpcbind
 %else
 Requires:       portmap
@@ -35,7 +35,7 @@ Requires:       portmap
 %if 0%{?mandriva_version} != 0
 Requires:	iproute2 lsb
 # Mandriva switched from 2008 away from mkisofs, and as a specialty call the package cdrkit-genisoimage!
-%if %{mandriva_version} >= 2008
+%if 0%{?mandriva_version} >= 2008
 Requires:	cdrkit-genisoimage rpcbind
 %else
 Requires:	mkisofs portmap
@@ -49,7 +49,7 @@ Requires:	mkisofs portmap
 %if 0%{?centos_version} != 0
 Requires:	iproute redhat-lsb
 # Red Hat moved from CentOS/RHEL/SL 6 and Fedora 9 away from mkisofs
-%if %{centos_version} >= 600
+%if 0%{?centos_version} >= 600
 Requires:	genisoimage rpcbind
 %else
 Requires:	mkisofs portmap
@@ -60,7 +60,7 @@ Requires:	mkisofs portmap
 %if 0%{?rhel_version} != 0
 Requires:	iproute redhat-lsb
 # Red Hat moved from CentOS/RHEL/SL 6 and Fedora 9 away from mkisofs
-%if %{rhel_version} >= 600 
+%if 0%{?rhel_version} >= 600 
 Requires:	genisoimage rpcbind
 %else
 Requires:	mkisofs portmap
@@ -71,7 +71,7 @@ Requires:	mkisofs portmap
 %if 0%{?fedora_version} != 0
 Requires:	iproute redhat-lsb
 # Red Hat moved from CentOS/RHEL/SL 6 and Fedora 9 away from mkisofs
-%if %{fedora_version} >= 9
+%if 0%{?fedora_version} >= 9
 Requires:	genisoimage rpcbind
 %else
 Requires:	mkisofs portmap
@@ -156,8 +156,6 @@ rm -rf $RPM_BUILD_ROOT
 
 * Sun Mar 15 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.18
 - updated spec file to support openSUSE 11.1
-- added support for rpcbind
-- added support for SATA on openSUSE (ata_piix not loading)
 
 * Fri Mar 13 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.17-1
 - do not gzip man page in spec file - rpmbuild will do this for us
@@ -169,36 +167,18 @@ rm -rf $RPM_BUILD_ROOT
 
 * Thu Jan 29 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.14-1
 - added man page
-- fixed TSM bug with result files
 - patch rear binary to point to correct _datadir and _sysconfdir
 - move distribution config files to /usr/share/rear/conf
-- add hpacucli support
-- TSM point-in-time restore
-- fix bonding for multiple bonding devices
 
 * Tue Jan 20 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.13-1
 - add COPYING license file
 - linux-functions.sh: added rpmtopdir function; 
 - mkdist-workflow.sh: updated with rpmtopdir function; convert doc files to UTF-8
 
-* Fri Jan 09 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.12-1
-- NetBackup integration completed
-- moved validation from /etc/rear to doc directory
-
-* Tue Dec 30 2008 Gratien D'haese <gdha at sourceforge.net> - 1.7.11-1
-- added scriptfor Data Protector and NetBackup integration
-
 * Wed Dec 17 2008 Gratien D'haese <gdha at sourceforge.net> - 1.7.10-1
-- completed verify/NBU/default/40_verify_nbu.sh script for NBU
 - remove contrib entry from %%doc line in spec file
 
 * Mon Dec 01 2008 Gratien D'haese <gdha at sourceforge.net> - 1.7.9-1
-- remove from skel/default the symbolic links sh->bash, bin/init->init
-  and the empty files etc/mtab, var/log/lastlog and var/lib/nfs/state
-- add the link sh-bash into file pack/GNU/Linux/00_create_symlinks.sh
-- add new file pack/GNU/Linux/10_touch_empty_files.sh to create the empty files
-- add pack/GNU/Linux/20_create_dotfiles.sh and removed .bash_history from skel/default
-- Added intial scripts for rear integration with NetBackup (of Symantec)
 - copy rear.sourcespec according OS_VENDOR
 - correct rear.spec file according comment 11 of bugzilla #468189
 

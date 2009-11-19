@@ -16,13 +16,13 @@ Requires:       mingetty binutils iputils tar gzip
 %if 0%{?suse_version} != 0
 Requires:       iproute2 lsb
 # recent SuSE versions have an extra nfs-client package and switched to genisoimage/wodim
-%if %{suse_version} >= 1020
+%if 0%{?suse_version} >= 1020
 Requires:       genisoimage nfs-client
 %else
 Requires:       mkisofs
 %endif
 # openSUSE from 11.1 uses rpcbind instead of portmap
-%if %{suse_version} >= 1110
+%if 0%{?suse_version} >= 1110
 Requires:	rpcbind
 %else
 Requires:       portmap
@@ -31,6 +31,7 @@ Requires:       portmap
 %else
 Requires:       portmap
 %endif
+
 %description
 Relax and Recover (abbreviated rear) is a highly modular disaster recovery
 framework for GNU/Linux based systems, but can be easily extended to other
