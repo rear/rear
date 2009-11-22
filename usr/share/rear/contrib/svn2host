@@ -45,7 +45,12 @@ for h in "$@" ; do
 	fi
 
 	# copy dist archive to host
-	scp "$distarchive" $h:$distarchive
+	if ! err=$(scp "$distarchive" $h:$distarchive 2>&1) ; then
+		echo "ERROR Could not scp rear dist archive to '$h':"
+		echo "$err"
+		FAILED=( "${FAILED[@]}" "$h -> Could not scp dist archive: $err")
+		continue
+	fi
 
 	if ssh $h type -p rpmbuild >/dev/null ; then
 	# this is an RPM type host, build it

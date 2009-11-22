@@ -1,5 +1,7 @@
 Version 1.7.22 - Not Yet Released
 ------------------------------------
+2009-11-21	GSS	* added -L to stat call to read real device in 29_find_required_devices.sh
+			* make svn2host report scp errors
 2009-11-19	GD	* updated rear.spec, rear.sourcespec of SUSE and FEDORA
 2009-11-18	GD	* updated contrib/mkvendorrp to pull version nr from rear, CHANGED
 			* updated lib/spec/Fedora/rear.sourcespec Require field and doc/

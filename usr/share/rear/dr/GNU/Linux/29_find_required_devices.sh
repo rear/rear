@@ -7,12 +7,14 @@
 # 2007-11-06	GSS	Added major 254 to exclude list as it seems to
 #			be the device-mapper device on newer 2.6 kernels
 # 2009-03-02	GD	Added 147 (DRDB cluster) in exclude list
+# 2009-11-21	GSS	Added -L to stat call
 
 REQUIRED_DEVICES=()
 
 while read device junk ; do
 	# device=/dev/sdc2 or /dev/mapper/vg1-lv1 or /dev/md0 ...
-	eval $(stat -c 'dev="$((0x%t)):$((0x%T))"' $device )
+	# since device could be a symlink we use -L to query the real device
+	eval $(stat -L -c 'dev="$((0x%t)):$((0x%T))"' $device )
 	# dev=MAJOR:MINOR in DECIMAL, e.g. dev=8:32
 
 	# Here we have to filter out well-known virtual devices, mostly dm and md
