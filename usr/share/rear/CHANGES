@@ -1,4 +1,4 @@
-Version 1.7.22 - Not Yet Released
+Version 1.7.22 - Released 2009-12-02
 ------------------------------------
 2009-11-21	GSS	* added -L to stat call to read real device in 29_find_required_devices.sh
 			* make svn2host report scp errors
