@@ -1,5 +1,5 @@
 Name: rear
-Version: 1.7.20
+Version: 1.7.22
 Release: 1%{?dist}
 Summary: Relax and Recover (ReaR) is a Linux Disaster Recovery framework
 
@@ -139,6 +139,11 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Dec 02 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.22
+- updated spec file to be more cross-platform compliant
+- many bug fixes
+- update to latest from SVN
+
 * Sun Jun 28 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.20-1
 - updated spec file to build on SUSE/RHEL/Fedora/Mandriva and clones and use
   the correct dependencies
