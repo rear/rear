@@ -23,7 +23,10 @@ WORKFLOW_mkdist_postprocess () {
 	ProgressStopIfError $? "Could not mv rear-*.ebuild"
 
 
-	cp -rv .$SHARE_DIR/{COPYING,CHANGES,README,doc,contrib}  .  1>&8
+	# reverted back to symlinking because we put more MegaByte into doc and should not package it twice
+	ln -s .$SHARE_DIR/{doc,contrib}  .  1>&8
+	# to prevent RPMs from installing symlinks into the doc area we actually copy the text files
+	cp -r .$SHARE_DIR/{COPYING,CHANGES,README}  .  1>&8
 	ProgressStopIfError $? "Could not copy .$SHARE_DIR/{COPYING,CHANGES,README,doc,contrib}"
 	
 

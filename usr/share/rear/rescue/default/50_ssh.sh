@@ -32,10 +32,13 @@ if type -p sshd >/dev/null ; then
 	)
 	)
 
+	# copy ssh user
 	if PASSWD_SSH=$(grep ssh /etc/passwd) ; then
 	# sshd:x:71:65:SSH daemon:/var/lib/sshd:/bin/false
 		echo "$PASSWD_SSH" >>$ROOTFS_DIR/etc/passwd
-		IFS=: read user ex uid gid gecos homedir junk < <(echo "$PASSWD_SSH")
+		IFS=: read user ex uid gid gecos homedir junk <<<"$PASSWD_SSH"
+		# add ssh group to be collected later
+		CLONE_GROUPS=( "${CLONE_GROUPS[@]}" "$gid" )
 		mkdir -m 0700 -p "$ROOTFS_DIR$homedir"
 		chown root.root "$ROOTFS_DIR$homedir"
 	fi

@@ -1,3 +1,13 @@
+Version 1.7.23 - Released 2009-12-09
+------------------------------------
+2009-12-09	GSS	* some bugfixing
+			* added validation info for openSUSE 11.2 i386 and x86_64
+2009-12-05	GSS	* improved library collection for 64bit Linux (e.g. /lib*/libnss*)
+			* symlink doc and contrib in the dist archive to reduce the size
+			* clone required system users/groups to rescue system (daemon and rpc)
+
+NOTE: 1.7.22 was released to early and should not be used! Sorry for the inconvenience.
+
 Version 1.7.22 - Released 2009-12-02
 ------------------------------------
 2009-11-21	GSS	* added -L to stat call to read real device in 29_find_required_devices.sh
