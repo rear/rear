@@ -55,9 +55,8 @@ elif test "" && type -p udev_volume_id >/dev/null ; then
 			-e "s/^N:\(.*\)/ID_FS_LABEL_SAFE='\1'/" \
 			-e "s/^U:\(.*\)/ID_FS_UUID='\1'/" | grep =
 	}
-# NOTE: THE NEGATIVE CHECK FOR udev_volume_id IS THERE TO MAKE SURE THAT SYSTEMS HAVING udev_volume_id AND blkid FALL
-# THROUGH TO USE THE internal vol_id FUNCTION BELOW !! (Schlomo 2009-11-15)
-elif type -p blkid >/dev/null && ! type -p udev_volume_id >/dev/null ; then
+# NOTE: We use blkid ONLY if it is a newer one and reports information back in udev-style
+elif type -p blkid >/dev/null && blkid -o udev 2>/dev/null >/dev/null ; then
 	Log "Using 'blkid' for vol_id"
 	# since udev 142 vol_id was removed and udev depends on blkid
 	# blkid -o udev returns the same output as vol_id used to
@@ -76,12 +75,11 @@ elif type -p blkid >/dev/null && ! type -p udev_volume_id >/dev/null ; then
 	# IT REMAINS TO BE OBSERVED how this story continues and whether all systems that do NOT have vol_id DO have
 	# a suitable blkid installed.
 	#
-	# Just in case we do a sanity check here to make sure that *this* system sports a suitable blkid
-	blkid -o udev 2>/dev/null >/dev/null || BugError "Incompatible 'blkid' on this system."
+# everybody else gets to use our built-in vol_id 
 else
 	Log "Using internal version of vol_id"
 	test "$WARN_MISSING_VOL_ID" && \
-	LogPrint "Required udev program 'udev_volume_id' or 'vol_id' could not be found !
+	LogPrint "Required udev program 'vol_id' or a suitable 'blkid' could not be found !
 Activating a very primitive builtin replacement that supports 
 ext2/3:   LABEL and UUID
 reiserfs: LABEL
