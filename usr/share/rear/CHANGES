@@ -1,6 +1,8 @@
 Version 1.7.24 - Not Released
 ------------------------------------
 
+2010-01-16	GSS	* Added rsyslog script for RHEL5. See https://sourceforge.net/tracker/?func=detail&atid=859452&aid=2932730&group_id=171835
+
 Version 1.7.23 - Released 2009-12-09
 ------------------------------------
 2009-12-09	GSS	* some bugfixing
