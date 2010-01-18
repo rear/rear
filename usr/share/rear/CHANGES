@@ -1,6 +1,7 @@
 Version 1.7.24 - Not Released
 ------------------------------------
-
+2010-01-18	GD	* restore/DP/default/30_create_dp_restore_fs_list.sh (bugfix ID 2932754)
+			  restore/DP/default/40_restore_with_dp.sh (bugfix ID 2932768)
 2010-01-16	GSS	* Added rsyslog script for RHEL5. See https://sourceforge.net/tracker/?func=detail&atid=859452&aid=2932730&group_id=171835
 
 Version 1.7.23 - Released 2009-12-09
@@ -11,7 +12,7 @@ Version 1.7.23 - Released 2009-12-09
 			* symlink doc and contrib in the dist archive to reduce the size
 			* clone required system users/groups to rescue system (daemon and rpc)
 
-NOTE: 1.7.22 was released to early and should not be used! Sorry for the inconvenience.
+NOTE: 1.7.22 was released too early and should not be used! Sorry for the inconvenience.
 
 Version 1.7.22 - Released 2009-12-02
 ------------------------------------
