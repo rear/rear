@@ -4,7 +4,7 @@
 # $ /opt/omni/bin/omnidb -filesystem | grep $(hostname)
 # test.internal.it3.be:/ '/'                                      FileSystem
 
-/opt/omni/bin/omnidb -filesystem | grep $(hostname) | awk '{print $1, $2}' > /tmp/list_of_fs_objects
+/opt/omni/bin/omnidb -filesystem | grep $(hostname) | cut -d"'" -f -2 > /tmp/list_of_fs_objects
 test -s /tmp/list_of_fs_objects || Error "Data Protector did not find any file system objects for $(hostname)"
 
 # check if we need to exclude a file system - exclude fs list =  $VAR_DIR/recovery/exclude_mountpoints

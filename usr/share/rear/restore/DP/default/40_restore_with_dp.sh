@@ -18,7 +18,7 @@
 #	Backup ID          : n/a     
 #	Copy ID            : 20 (Orig) 
 
-# The list of file systems to retsore is listed in file /tmp/list_of_fs_objects
+# The list of file systems to restore is listed in file /tmp/list_of_fs_objects
 # per line we have something like: test.internal.it3.be:/ '/'
 
 rm -f /tmp/DP_RESTORE_FAILED # make sure the flag of failed restore does not exist
@@ -26,27 +26,29 @@ rm -f /tmp/DP_RESTORE_FAILED # make sure the flag of failed restore does not exi
 # we will loop over all objects listed in /tmp/list_of_fs_objects
 cat /tmp/list_of_fs_objects | while read object
 do
-	ProgressStart "Restore filesystem ${object}"
 	host_fs=`echo ${object} | awk '{print $1}'`
 	fs=`echo ${object} | awk '{print $1}' | cut -d: -f 2`
-	label=`echo ${object} | cut -d"'" -f 2`
+	label=`echo "${object}" | cut -d"'" -f 2`
 	# only retain the latest backup which was completed successfully
-	SessionID=`/opt/omni/bin/omnidb -filesystem ${host_fs} "${label}" | grep Completed | head -n 1 | awk '{print $1}'`
-	if [ -z ${SessionID} ]; then
-		Log "No Session-ID found for object $object"
-		> /tmp/DP_RESTORE_FAILED
-		break # get out of the loop and try ask for manual restore
-	fi
-	# session-id found - grab the backup device
-	Device=`/opt/omni/bin/omnidb -session ${SessionID} -detail | grep Device | sort -u | tail -n 1 | awk '{print $4}'`
-	/opt/omni/bin/omnir -filesystem ${host_fs} "${label}" -session ${SessionID} -tree ${fs} -into /mnt/local -device ${Device} -log 1>&8
-	case $? in
-		0)  Log "Restore of ${fs} was successful." ;;
-		10) Log "Restore of ${fs} finished with warnings." ;;
-		*)  LogPrint "Restore of ${fs} failed."
+	if grep "^${fs} " ${VAR_DIR}/recovery/mountpoint_device 2>&1 >/dev/null; then
+		ProgressStart "Restore filesystem ${object}"
+		SessionID=`/opt/omni/bin/omnidb -filesystem ${host_fs} "${label}" | grep Completed | head -n 1 | awk '{print $1}'`
+		if [ -z ${SessionID} ]; then
+			Log "No Session-ID found for object $object"
 			> /tmp/DP_RESTORE_FAILED
-			break # get out of the loop
-			;;
-	esac
-	ProgressStop
+			break # get out of the loop and try ask for manual restore
+		fi
+		# session-id found - grab the backup device
+		Device=`/opt/omni/bin/omnidb -session ${SessionID} -detail | grep Device | sort -u | tail -n 1 | awk '{print $4}'`
+		/opt/omni/bin/omnir -filesystem ${host_fs} "${label}" -session ${SessionID} -tree ${fs} -into /mnt/local -device ${Device} -log 1>&8
+		case $? in
+			0)  Log "Restore of ${fs} was successful." ;;
+			10) Log "Restore of ${fs} finished with warnings." ;;
+			*)  LogPrint "Restore of ${fs} failed."
+				> /tmp/DP_RESTORE_FAILED
+				break # get out of the loop
+				;;
+		esac
+		ProgressStop
+	fi # if grep "^${fs}
 done 
