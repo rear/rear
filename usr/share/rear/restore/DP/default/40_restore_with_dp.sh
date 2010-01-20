@@ -40,7 +40,7 @@ do
 		fi
 		# session-id found - grab the backup device
 		Device=`/opt/omni/bin/omnidb -session ${SessionID} -detail | grep Device | sort -u | tail -n 1 | awk '{print $4}'`
-		/opt/omni/bin/omnir -filesystem ${host_fs} "${label}" -session ${SessionID} -tree ${fs} -into /mnt/local -device ${Device} -log 1>&8
+		/opt/omni/bin/omnir -filesystem ${host_fs} "${label}" -full -session ${SessionID} -tree ${fs} -into /mnt/local -device ${Device} -log 1>&8
 		case $? in
 			0)  Log "Restore of ${fs} was successful." ;;
 			10) Log "Restore of ${fs} finished with warnings." ;;
