@@ -34,6 +34,8 @@ for vg in `echo "${EXCLUDE_VG[@]}"`; do
 done
 Log "Excluded Mount Points : " "${EXCLUDE_MOUNTPOINTS[@]}"
 # save a copy of file systems to be excluded from restore (e.g. with an external solution)
-test ${#EXCLUDE_MOUNTPOINTS[@]} -gt 0 && {
+if test ${#EXCLUDE_MOUNTPOINTS[@]} -gt 0 ; then
 	echo "${EXCLUDE_MOUNTPOINTS[@]}" | tr ' ' '\n' | sort -u > $VAR_DIR/recovery/exclude_mountpoints
-}
+fi
+
+true
