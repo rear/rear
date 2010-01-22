@@ -84,6 +84,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Sep 07 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.21-1
+- blkid, ext4, rsyslogd support added
+
 * Thu Apr 02 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.20-1
 - update %%_localstatedir/rear to %%_localstatedir/lib/rear
 
