@@ -78,7 +78,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc COPYING CHANGES README
-%doc doc/README.doc doc/relax-recover-* doc/ReaR*
+%doc doc/README.doc doc/relax-recover-*
 %{_sbindir}/rear
 %{_datadir}/rear
 %{_localstatedir}/lib/rear
@@ -87,6 +87,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Jan 09 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.23-1
+- added release entry
+
 * Mon Nov 16 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.22-1
 - Changed Requires fields for Fedora 10 and higher
 
