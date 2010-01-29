@@ -32,7 +32,7 @@ done < <(
 				cut -d " " -f 1,3 | \
 				sort -k 2 -t " "
 			) <(
-				grep -v noauto /etc/fstab | \
+				grep -v -E '(noauto|nfs)' /etc/fstab | \
 				grep -E '(reiserfs|xfs|ext|jfs|vfat)' | \
 				grep -v '^#' | tr -s ' \t' ' ' | \
 				cut -s -d ' ' -f 1,2,3 | \
