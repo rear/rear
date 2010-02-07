@@ -1,5 +1,6 @@
 Version 1.7.24 - Not Released
 ------------------------------------
+2010-02-07	GD	* finalize/Linux-ppc64/20_install_yaboot.sh (fix PowerPC support - ID: 2906613)
 2010-01-29	GD	* updated dr/GN/Linux/11_describe_mountpoint_device.sh to explicit exclude
 			  NFS mounted file systems
 2010-01-22	GD	* added Linux-ppc64 support. See https://sourceforge.net/tracker/index.php?func=detail&aid=2906613&group_id=171835&atid=859455

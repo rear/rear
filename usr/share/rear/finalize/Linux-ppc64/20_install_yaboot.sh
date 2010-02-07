@@ -7,17 +7,18 @@ if test -f /mnt/local/etc/yaboot.conf; then
 
   if [ -n "$part" ]; then
     LogPrint "Boot partion found: $part"
-    chroot /mnt/local /bin/bash --login -c "mkofboot -b $part --filesystem raw"
+    chroot /mnt/local /bin/bash --login -c "/sbin/mkofboot -b $part --filesystem raw -f"
     bootdev=`echo $part | sed -e 's/[0-9]*$//'`
     LogPrint "Boot device is $bootdev."
     bootlist -m normal $bootdev
+    NOBOOTLOADER=
   else
     bootparts=`sfdisk -l 2>/dev/null | awk '/PPC PReP Boot/ {print $1}'`
     LogPrint "Boot partitions found: $bootparts."
     for part in $bootparts
     do
       LogPrint "Initializing boot partition $part."
-      chroot /mnt/local /bin/bash --login -c "mkofboot -b $part --filesystem raw"
+      chroot /mnt/local /bin/bash --login -c "/sbin/mkofboot -b $part --filesystem raw -f"
     done
     bootdev=`for part in $bootparts
              do
@@ -25,6 +26,7 @@ if test -f /mnt/local/etc/yaboot.conf; then
              done | sort | uniq`
     LogPrint "Boot device list is $bootdev."
     bootlist -m normal $bootdev
+    NOBOOTLOADER=
   fi
 else
   LogPrint "No bootloader configuration found. Install boot partition manually!"
