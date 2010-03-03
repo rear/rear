@@ -19,9 +19,9 @@
 #
 
 # define the filenames
-USB_KERNEL=kernel.$(uname -n)
-USB_INITRD=initrd.$(uname -n)
-USB_MESSAGE=message.$(uname -n)
+USB_KERNEL=kernel
+USB_INITRD=initrd.sys
+USB_MESSAGE=message.txt
 
 if ! test -d "$USB_DIR" ; then
 	mkdir -vp "$USB_DIR" || Error "Could not create USB dir [$USB_DIR] !"
