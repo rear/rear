@@ -32,13 +32,18 @@ mdadm --detail --scan --config=partitions | while read ARRAY mddev options ; do
 		continue
 	fi
 	
+
+	mkdir -p $VAR_DIR/recovery/$mddev
+	
 	mddevname="$(basename "$mddev")" # /dev/md0 -> md0
 	DEVICES=()
 
-	read -a md <<<"$(grep "$mddevname" /proc/mdstat )"
+	read -a md < <(grep "$mddevname" /proc/mdstat )
 	# $md looks now like this:
 	# md1 : active raid1 sdb2[0] sdc2[1]
 
+	# store the RAID level
+	echo "${md[3]}" >$VAR_DIR/recovery/$mddev/md.level
 	# walk through $md from index 4 and get the devices (this WILL fail on missing devices !)
 	c=4
 	while test "${md[c]}" ; do
@@ -48,8 +53,7 @@ mdadm --detail --scan --config=partitions | while read ARRAY mddev options ; do
 		DEVICES=( "${DEVICES[@]}" "$(DeviceNameToNode "$devname")" ) # sda -> /dev/sda
 	done
 	
-	mkdir -p $VAR_DIR/recovery/$mddev
-
+	
 	# store the raid devices
 	echo "${DEVICES[@]}" >$VAR_DIR/recovery/$mddev/md.devices
 	
@@ -57,17 +61,18 @@ mdadm --detail --scan --config=partitions | while read ARRAY mddev options ; do
 	# TODO: Check for further dependancies like RAID-on-LVM ...
 	echo "${DEVICES[@]}" | tr ' ' "\n" >$VAR_DIR/recovery/$mddev/depends
 
-	# parse options, they look like level=1 num-devices=2 UUID=...                            
-	MD_OPTION_level=""                                                                                                  
-	MD_OPTION_num_devices=""                                                                                            
+	# parse options, they look like level=1 num-devices=2 UUID=...
+	# sadly, different Linux versions/distros sport different levels of information here...
+	# therefore we can only save what we get and hope for the best
 	for opt in $options ; do
 		key="${opt%%=*}"
 		val="${opt##*=}"
-		declare MD_OPTION_${key//-/_}="$val"
-	done
+		# I don't remember what for we need the variable defined here
+		# So I take it out and wait who cries...
+		### Schlomo removed ### declare MD_OPTION_${key//-/_}="$val"
+		echo "MD_OPTION_${key//-/_}='$val'"
+	done >>$VAR_DIR/recovery/$mddev/md.options
 
-	echo "$MD_OPTION_level" >$VAR_DIR/recovery/$mddev/md.level
-	echo "$MD_OPTION_num_devices" >$VAR_DIR/recovery/$mddev/md.num_devices
 done
 # if the mdadm before the | above fails then we will know it here
 test $PIPESTATUS -gt 0 && Error "mdadm scan failed: $PIPESTATUS"

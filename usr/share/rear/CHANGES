@@ -1,6 +1,10 @@
 Version 1.7.24 - Not Released
 ------------------------------------
-2010-03-22	GSS	* Change filenames of resulting files for OUTPUT=USB to be 8.3 compatible.
+2010-03-03	GSS	* Improve SW RAID code to work with SLES11SP1
+			  - recreate UUID, metadata version, name
+			  - fall back to "old" style MD creation
+			  - handle missing num-devices from mdadm -E --scan --config=partitions output
+2010-03-02	GSS	* Change filenames of resulting files for OUTPUT=USB to be 8.3 compatible.
 			  See http://sourceforge.net/tracker/?func=detail&aid=2949491&group_id=171835&atid=859452
 2010-03-01	GSS	* include /lib*/firmware by default
 2010-02-07	GD	* finalize/Linux-ppc64/20_install_yaboot.sh (fix PowerPC support - ID: 2906613)
