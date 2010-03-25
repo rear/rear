@@ -18,11 +18,6 @@
 #
 #
 
-# sane_recovery_check purpose is abort recover process when no vital info found
-
-# disabled by GSS because this doesn't do anything (in case that no such file is found it lists /usr/share/rear ...)
-# and clobbers up the log file
-#
-#	ls "$VAR_DIR"/recovery/partitions.* 1>&2 || \
-#		Error "No disk information - abort recovery"
+# make sure that we are on a recovery system
+test -s /etc/scripts/system-setup || Error "This it not a ReaR rescue system."
 #

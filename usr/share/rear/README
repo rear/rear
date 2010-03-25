@@ -17,8 +17,8 @@ recovery solution. Support for specific backup software has to be added to
 rear on an individual base and is very simple (look at the existing 
 implementations for further information).
 
-This is work in progress, so some features are not yet implemented.
-
+ReaR is rapidly developing, please contact the ReaR maintainers if something is 
+missing.
 
 REQUIREMENTS
 -------------------------------------------------------------------------------
