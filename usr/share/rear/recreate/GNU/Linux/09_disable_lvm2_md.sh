@@ -1,5 +1,9 @@
+# skip if no LVM installed
+
+type -p lvm || return 0
 
 # just in case, disable LVM and MD
+
 lvm vgchange -a n -v 1>&8
 
 while read device junk ; do

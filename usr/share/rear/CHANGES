@@ -1,5 +1,10 @@
 Version 1.7.24 - Not Released
 ------------------------------------
+2010-03-25	GSS	* Added check for rescue system to prevent "rear recover" from trashing a live system
+			  See https://sourceforge.net/tracker/?func=detail&aid=2976517&group_id=171835&atid=859452
+			* svn2host does no rpm --nodeps
+			* fix lvm error message in recovery if no LVM installed
+			* Removed work in progress note from README
 2010-03-03	GSS	* Improve SW RAID code to work with SLES11SP1
 			  - recreate UUID, metadata version, name
 			  - fall back to "old" style MD creation
