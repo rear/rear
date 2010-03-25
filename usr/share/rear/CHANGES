@@ -5,6 +5,7 @@ Version 1.7.24 - Not Released
 			* svn2host does no rpm --nodeps
 			* fix lvm error message in recovery if no LVM installed
 			* Removed work in progress note from README
+			* Add xen/blkfront to list of driver paths to autoload in rescue system
 2010-03-03	GSS	* Improve SW RAID code to work with SLES11SP1
 			  - recreate UUID, metadata version, name
 			  - fall back to "old" style MD creation

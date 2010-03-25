@@ -28,7 +28,7 @@ test -s /etc/network.sh && . /etc/network.sh
 #
 # Especially how to analyse a running system and load the same drivers and bind them to the same devices in
 # the correct order
-for m in $(find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ata,message,ide} -type f 2>/dev/null) ; do
+for m in $(find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ata,message,ide,xen/blkfront} -type f 2>/dev/null) ; do
 	modprobe -q $(basename $m .ko)
 done
 
