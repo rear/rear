@@ -1,5 +1,6 @@
 Version 1.7.24 - Not Released
 ------------------------------------
+2010-04-08	GD	* conf/default.conf: COPY_AS_IS_EXCLUDED added /dev/shm
 2010-03-25	GSS	* Added check for rescue system to prevent "rear recover" from trashing a live system
 			  See https://sourceforge.net/tracker/?func=detail&aid=2976517&group_id=171835&atid=859452
 			* svn2host does no rpm --nodeps
