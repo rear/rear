@@ -1,5 +1,7 @@
 Version 1.7.24 - Not Released
 ------------------------------------
+2010-04-21	GD	* mkrescue-functions.sh: removed obsolete function FindPhysicalDevice
+2010-04-21	GD	* /usr/sbin/rear: put the root check at the top of script
 2010-04-14	GD	* /usr/sbin/rear: fix error output when running as non-root
 2010-04-08	GD	* conf/default.conf: COPY_AS_IS_EXCLUDED added /dev/shm
 2010-03-25	GSS	* Added check for rescue system to prevent "rear recover" from trashing a live system

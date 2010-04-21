@@ -24,7 +24,7 @@
 # Versioning
 PRODUCT="Relax & Recover"
 VERSION="0.0.0"
-RELEASE_DATE="2010-04-14"
+RELEASE_DATE="2010-04-21"
 
 COPYRIGHT="Copyright (C) 2006-2010
 	Schlomo Schapiro
@@ -40,6 +40,11 @@ BUILD_DIR=/tmp/rear.$$
 ROOTFS_DIR=$BUILD_DIR/rootfs
 TMP_DIR=$BUILD_DIR/tmp
 
+# are we root ?
+if [ `id --user` -ne 0 ]; then
+	echo  "** ERROR **	$PRODUCT needs ROOT priviledges!"
+	exit 1
+fi
 
 case $- in
 	*i*) BATCHMODE=true  ;;
@@ -71,10 +76,11 @@ for script in $SHARE_DIR/lib/*.sh ; do
 	. $script
 done
 
+
 # set the logfile for error logs
 LOGFILE="/tmp/rear.log"
 test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
-exec 2>"$LOGFILE" || Error "Could not create $LOGFILE - are you root? User executing rear is $(whoami)"
+exec 2>"$LOGFILE" || Error "Could not create $LOGFILE"
 
 
 USAGE="$( basename "$0") [Options] <command> [command options ...]"'
@@ -170,10 +176,6 @@ else
 fi
 
 # check for requirements
-# are we root ?
-if [ `id --user` -ne 0 ]; then
-	Error  "$PRODUCT needs ROOT priviledges!"
-fi
 # do we have all required binaries ?
 for f in "${REQUIRED_PROGS[@]}" ; do
 	type -p "$f" >/dev/null|| Error "cannot find required program '$f'"

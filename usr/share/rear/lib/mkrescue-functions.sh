@@ -21,48 +21,6 @@ if [ -f ${dev}  ]; then
         esac
 }
 
-FindPhysicalDevice () {
-Log "FindPhysicalDevice called with '$@'"
-##################
-# Purpose is to find physical device underneath a meta device or lvm
-# input: /dev/hda1, /dev/vg00/lvol1, /dev/md0 (arg1), MD, LVM, NORMAL (arg2)
-# output: /dev/hda, /dev/sdb, /dev/cciss/c0d1
-local mdline
-local VG
-case "${2}" in
-	"NORMAL")	# IDE, SCSI, RAID disk
-		# input=$1, output=$Dev (hda1)
-		ParseDevice ${1} || Error "Parsing device failed: $1"
-		# input=$Dev, output=$dsk
-		ParseDisk $Dev || Error "Parsing disk failed: $Dev"
-		echo "/dev/$dsk"
-		;;
-	"MD")		# software Raid - find disks under /dev/md?
-		ParseDevice ${1} || Error "Parsing device failed: $1"
-		cat /proc/mdstat | grep "${Dev}" | cut -d" "  -f 5- | tr " "  "\n" | \
-		while read mdline
-		do
-			local Dev=`echo "${mdline}" | sed -e 's;\[.*;;'`
-			ParseDisk ${Dev} || Error "Parsing disk failed: $Dev"
-			echo "/dev/${dsk}"
-		done
-		;;
-	"LVM")		# LVM - find disks under /dev/vg??/lvol??
-		[ -c /dev/mapper/control ] || Error "LVM version 1 not supported"
-		for disk in $(lvm vgdisplay -v 2>/dev/null | awk -F\ + '/PV Name/ {print $4}');
-		do
-			local devcat=$(CategoriseDev ${disk})
-        		if [ ${devcat} = 'NORMAL' ]; then
-				ParseDisk ${disk} || Error "Parsing disk ${disk} failed"
-			else
-				FindPhysicalDevice ${disk} ${devcat}
-			fi
-			echo "${dsk}"
-		done
-		;;
-esac	
-}
-
 ParseDevice () {
 ###########
 # input $1 is a line containing as 1st argument a file system devive, eg.
