@@ -28,7 +28,7 @@ WORKFLOW_mktar () {
 	"
 	
 	ProgressStart "Creating archive '$ARGS'"
-	tar -C / --exclude=\*~ -cvzf "$ARGS" "$SHARE_DIR" "$CONFIG_DIR" "$(which "$0")" 1>&2
+	tar -C / --exclude=\*~ -cvzf "$ARGS" "$SHARE_DIR" "$CONFIG_DIR" "$(type -p "$0")" 1>&2
 	ProgressStopOrError $? "Could not create archive"
 	
 }

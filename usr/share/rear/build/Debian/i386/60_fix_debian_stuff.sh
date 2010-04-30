@@ -1,12 +1,12 @@
 #
 # debian has to do everything different from all other Linux systems ...
 
-test -x "$(which lilo.real)" && {
-	cp -af "$(which lilo.real)" $ROOTFS_DIR/bin/lilo
+test -x "$(type -p lilo.real)" && {
+	cp -af "$(type -p lilo.real)" $ROOTFS_DIR/bin/lilo
 	cp -a /lib/libdevmapper* $ROOTFS_DIR/lib/
 }
 
-test -x "$(which lvmiopversion)" && {
+test -x "$(type -p lvmiopversion)" && {
 	cp -af /lib/lvm-* $ROOTFS_DIR/lib/
 	cp -af /sbin/lvm* $ROOTFS_DIR/bin/
 }

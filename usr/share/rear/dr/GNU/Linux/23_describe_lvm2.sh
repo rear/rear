@@ -9,7 +9,7 @@
 # 2007-01-04	GSS	Added general vgcfgbackup
 
 # silently skip the script if lvm is not available
-test -c /dev/mapper/control -a -x "$(which lvm)" || return	# silently skip
+test -c /dev/mapper/control -a -x "$(type -p lvm)" || return	# silently skip
 
 PROGS=( "${PROGS[@]}"
 lvm
