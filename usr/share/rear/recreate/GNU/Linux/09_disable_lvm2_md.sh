@@ -1,6 +1,6 @@
 # skip if no LVM installed
 
-type -p lvm || return 0
+type -p lvm >/dev/null || return 0
 
 # just in case, disable LVM and MD
 
