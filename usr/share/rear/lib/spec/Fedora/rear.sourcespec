@@ -11,14 +11,16 @@ BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 # all RPM based systems seem to have this
-Requires: mingetty binutils iputils tar gzip ethtool syslinux
+Requires: mingetty binutils iputils tar gzip ethtool
 Requires: iproute redhat-lsb
 %if 0%{?fedora_version} >= 9
 Requires: genisoimage rpcbind
 %else
 Requires: mkisofs portmap
 %endif
-
+%ifarch %ix86 x86_64 amd64
+Requires: syslinux
+%endif
 
 %description
 Relax and Recover (abbreviated rear) is a highly modular disaster recovery
@@ -87,6 +89,13 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Jun 04 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.25-1
+- added the %%ifarch part for syslinux to avoid warning on ppc/ppc64
+- fixed bugzilla 600217 (missing Fedora links)
+
+* Mon May 09 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.24-1
+- added release entry
+
 * Fri Jan 09 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.23-1
 - added release entry
 
