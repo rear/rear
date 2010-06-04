@@ -87,6 +87,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon May 09 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.24-1
+- added release entry
+
 * Fri Jan 09 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.23-1
 - added release entry
 

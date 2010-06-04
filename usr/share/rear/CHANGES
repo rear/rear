@@ -1,5 +1,5 @@
-Version 1.7.24 - Not Released
-------------------------------------
+Version 1.7.24 - 2010-05-31
+---------------------------
 2010-04-29	GSS	* replaces all occurences of "which" with "type -p" and replaced which with bash in REQUIRED_PROGS
 			(really silly to depend on bash but not require it...)
 2010-04-21	GD	* mkrescue-functions.sh: removed obsolete function FindPhysicalDevice
