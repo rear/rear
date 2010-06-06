@@ -24,6 +24,44 @@ Usage() {
 	echo "$USAGE" 
 	exit 1
 }
+# collect exit tasks in this array
+EXIT_TASKS=()
+# add $* as a task to be done at the end
+AddExitTask() {
+	EXIT_TASKS=( "${EXIT_TASKS[@]}" "$*" ) # I use $* on purpose because I want to get one string from all args!
+	Log "Added '$*' as an exit task"
+}
+QuietAddExitTask() {
+	EXIT_TASKS=( "${EXIT_TASKS[@]}" "$*" ) # I use $* on purpose because I want to get one string from all args!
+}
+
+# remove $* from the task list
+RemoveExitTask() {
+	local removed=""
+	for (( c=0 ; c<${#EXIT_TASKS[@]} ; c++ )) ; do
+		if test "${EXIT_TASKS[c]}" == "$*" ; then
+			unset 'EXIT_TASKS[c]' 
+			# the ' ' protect from bash expansion, however unlikely to have a file named EXIT_TASKS in pwd...
+			removed=yes
+			Log "Removed '$*' from the list of exit tasks"
+		fi
+	done
+	test "$removed" == "yes" || Log "Could not remove exit task '$*' (not found). Exit Tasks:
+$(
+	for task in "${EXIT_TASKS[@]}" ; do
+		echo "$task"
+	done
+)"
+}
+			
+# do all exit tasks
+DoExitTasks() {
+	for task in "${EXIT_TASKS[@]}" ; do
+		eval "$task"
+	done
+}
+# activate the trap function
+trap "DoExitTasks" 0
 
 Error() {
 	Log ERROR "$*"
@@ -123,7 +161,7 @@ if tty -s ; then
 	}
 				
 	exec 8> >(ProgressThread) # start ProgressPipe listening at fd 8
-	trap "exec 8>&-" 0 # close fd 8 at exit
+	QuietAddExitTask "exec 8>&-" # new method
 	# we need the PID of the process thread to be able to signal it
 	ProgressPID=$!
 	

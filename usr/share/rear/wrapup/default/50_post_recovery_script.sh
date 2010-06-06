@@ -1,0 +1,4 @@
+if test "$POST_RECOVERY_SCRIPT" ; then
+	Log "Running POST_REVOVERY_SCRIPT '${POST_RECOVERY_SCRIPT[@]}'"
+	eval "${POST_RECOVERY_SCRIPT[@]}"
+fi

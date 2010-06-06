@@ -23,6 +23,7 @@ pushd $ROOTFS_DIR >/dev/null
 	ln -sf bin/init init
 	ln -sf bin sbin
 	ln -sf bin/bash bin/sh
+	ln -sf true bin/pam_console_apply # RH/Fedora with udev needs this
 	pushd usr >/dev/null
 		ln -sf /bin bin
 		ln -sf /lib lib

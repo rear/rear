@@ -1,6 +1,6 @@
-# #40_kernel_modules.sh
+# global-functions.sh
 #
-# find kernel and modules for Relax & Recover
+# global functions for Relax & Recover
 #
 #    Relax & Recover is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -18,15 +18,10 @@
 #
 #
 
-# collect running kernel modules
-MODULES=( ${MODULES[@]}
-$(lsmod | grep -v '^Modul' | cut -d " " -f 1)
-)
+function read_and_strip_file () {
+# extracts content from config files. In other words: strips the comments and new lines
+	if test -s "$1" ; then
+		sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$1"
+	fi
+}
 
-
-
-COPY_AS_IS=( "${COPY_AS_IS[@]}"
-/lib/modules/$KERNEL_VERSION/modules.*
-/etc/modules*
-/etc/modprobe*
-)

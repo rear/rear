@@ -1,0 +1,81 @@
+# verify that all required components for udev are present
+#
+
+# skip this script if udev is not part of the rescue system
+test -d $ROOTFS_DIR/etc/udev/rules.d || return 0
+
+ProgressStart "Checking udev"
+# check that all external programs used by udev are available
+while read file location ; do
+	# check for file in ROOTFS_DIR (if full path) or in lib/udev or in bin (if name without path)
+	if test -x $ROOTFS_DIR/$file -o \
+		-x $ROOTFS_DIR/lib/udev/$file -o \
+		-x $ROOTFS_DIR/bin/$file ; then
+		# everything is fine
+		# Log "matched external call to $file in $location"
+		echo "matched external call to $file in $location" 1>&8
+	else
+		ProgressStep
+		Log "WARNING: unmatched external call to '$file' in $location"
+	fi
+done < <(
+
+	# get list of external files called in PROGRAM= or RUN= statements. The result is filtered
+	# for files (no $env{...} or socket: stuff) and looks like this:
+
+        # /bin/sed etc/udev/rules.d/56-sane-backends-autoconfig.rules:289
+        # ata_id etc/udev/rules.d/60-persistent-storage.rules:39
+        # /sbin/kpartx etc/udev/rules.d/70-kpartx.rules:38
+        # /sbin/kpartx etc/udev/rules.d/70-kpartx.rules:40
+        # /sbin/kpartx etc/udev/rules.d/70-kpartx.rules:42
+        # write_cd_rules etc/udev/rules.d/75-cd-aliases-generator.rules:4
+        # write_cd_rules etc/udev/rules.d/75-cd-aliases-generator.rules:6
+        # ipw3945d.sh etc/udev/rules.d/77-network.rules:3
+        # /sbin/ifup etc/udev/rules.d/77-network.rules:12
+        # /sbin/ifdown etc/udev/rules.d/77-network.rules:13
+        # /sbin/modprobe etc/udev/rules.d/80-drivers.rules:8
+        # /sbin/modprobe etc/udev/rules.d/80-drivers.rules:9
+        # /sbin/modprobe etc/udev/rules.d/80-drivers.rules:10
+        # /sbin/modprobe etc/udev/rules.d/80-drivers.rules:11
+        # /sbin/modprobe etc/udev/rules.d/80-drivers.rules:12
+        # /sbin/modprobe etc/udev/rules.d/80-drivers.rules:13
+        # /sbin/modprobe etc/udev/rules.d/80-drivers.rules:14
+        # /usr/sbin/pcscd etc/udev/rules.d/99-pcsc_lite.rules:4
+        # /usr/bin/killall etc/udev/rules.d/kino.rules:11
+
+	# the files without a path name are supposed to be in /lib/udev
+
+	cd  $ROOTFS_DIR
+	grep -nE '(PROGRAM|RUN)' etc/udev/rules.d/* lib/udev/rules.d/* | \
+		sed -ne 's#\(^.*:[0-9]\+\):.*\(PROGRAM\|RUN\)[+!]\?="\([^"%\$ ]\+\).*#\3 \1#p' | \
+		grep -v ^socket: | \
+		uniq
+	)
+
+# insert our module auto-loading rule
+# the big and stupid problem is that some older udev versions, which we still want to support, use SYSFS{} instead of
+# ATTRS{} so we have to find out how to write the rule:
+
+# get some sysfs path with modalias in it (the printf prints it without the /sys ...)
+sysfs_modalias_paths=( $(find /sys -type f -name modalias -printf "/%P\n" | sed -e 's#/modalias$##') )
+# the result looks like this:
+# /devices/pci0000:00/0000:00:00.0
+# /devices/platform/i8042/serio1
+# /devices/platform/i8042/serio0
+
+# query the first sysfs path and choose ATTRS or SYSFS according to what *this* udev gives us
+# I check for ATTR and not ATTRS because it might be either one of the two, depends on the 
+# sysfs path I query here and I don't predict that
+if my_udevinfo -a -p $sysfs_modalias_paths | grep '{modalias}' | grep -q ATTR ; then
+	echo 'ACTION=="add", ATTRS{modalias}=="?*", RUN+="/bin/modprobe -v $attr{modalias}"'
+else
+	echo 'ACTION=="add", SYSFS{modalias}=="?*", RUN+="/bin/modprobe -v $sysfs{modalias}"'
+fi >>$ROOTFS_DIR/etc/udev/rules.d/00-rear.rules
+ProgressStep
+
+# udev requires certain standard groups, add them to the rescue system
+# the groups and users are in rescue/default/15_users_and_groups.sh
+
+
+ProgressStop
+

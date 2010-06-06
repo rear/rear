@@ -5,7 +5,8 @@
 #
 # to help the user we check for this situation and print out a current list of LUN IDs
 #
-if grep -q by-id $VAR_DIR/recovery/fstab ; then
+# Note: we ignore swap here because we treat it specially somewhere else!
+if grep -v swap $VAR_DIR/recovery/fstab | grep -q by-id ; then
 	LogPrint ""
 	LogPrint "WARNING ! You are mounting some devices by ID. Please be aware that the IDs"
 	LogPrint "are hardware dependant and that you might have to adjust your fstab to match"

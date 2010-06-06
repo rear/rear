@@ -1,3 +1,16 @@
+Version 1.9.0  - not released
+---------------------------
+2010-06-05	GSS	* Merged P2V patch from Heinlein Support with the following included changes:
+					* Migrate disk and network configuration if HW changed
+					* Adjust drivers and initrd/initramfs
+					* Adjust swap space with by-id mounting (only swap ATM)
+					* Read mapping files in /etc/rear/mapping with answers instead of asking during recovery
+					* Run PRE_RECOVERY_SCRIPT and POST_RECOVERY_SCRIPT scripts as a hook for user-supplied stuff
+					* Changed the rescue system startup code to be a directory of shell snippets (/etc/scripts/system-setup.d)
+					* recreate some FS attributes for ext*
+					* recreate vfat
+
+
 Version 1.7.25 - 2010-06-04
 ---------------------------
 2010-06-04	GD	* Bug 600217 - Fedora link missing in restore, pack and finalize sub-directories

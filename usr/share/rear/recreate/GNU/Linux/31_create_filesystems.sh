@@ -33,6 +33,7 @@ while read file ; do
 	# NOTE: We use an array to better preserve quotes in the arguments
 	CMD=()
 	CMD2=() # in case another command has to be run
+	CMD3=() # in case yet another command has to be run
 	case $ID_FS_TYPE in
 		reiserfs)
 			CMD=(mkreiserfs -f -f)
@@ -49,7 +50,10 @@ while read file ; do
 		ext*)
 			CMD=(mkfs.$ID_FS_TYPE -F )
 			test "$ID_FS_UUID" && CMD2=( tune2fs -U "$ID_FS_UUID" "$device")
-			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -L "'$ID_FS_LABEL'" )
+			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -L "$ID_FS_LABEL" )
+			test -r $VAR_DIR/recovery$device/fs_parameters && . $VAR_DIR/recovery$device/fs_parameters
+			test "$FS_RESERVED_BLOCKS" && test "$FS_MAX_MOUNTS" && test "$FS_CHECK_INTERVAL" && \
+				CMD3=( tune2fs -r "$FS_RESERVED_BLOCKS" -c "$FS_MAX_MOUNTS" -i "$FS_CHECK_INTERVAL" "$device" )
 			CMD=( "${CMD[@]}" "$device" )
 			;;
 		xfs)
@@ -67,7 +71,8 @@ while read file ; do
 			;;
 		vfat)
 			# vfat is used for EFI file system only (IA64)
-			CMD=(mkfs.vfat -F 16 )
+			# changed mkfs.vfat cmd -- according to the man-page mkfs.vfat should autodetect the needed size 
+			CMD=(mkfs.vfat)
 			VOLUME_ID="`echo $ID_FS_UUID | sed -e 's/-//'`"
 			test "$ID_FS_UUID" && CMD=( "${CMD[@]}" -i "$VOLUME_ID" )
 			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -n "'$ID_FS_LABEL'" )
@@ -106,6 +111,18 @@ while read file ; do
 
 	fi
 
+	# should we run another command (CMD3) ?
+	if test "${#CMD3[@]}" -ge 2 ; then
+
+		# check that CMD3 exists
+		test -x "$( type -p $CMD3)"
+		ProgressStopIfError $? "Filesystem manipulation command '$CMD3' not found !"
+		
+		# run CMD3
+		eval "${CMD3[@]}" 1>&8
+		ProgressStopIfError $? "Could not '$CMD3' filesystem ($ID_FS_TYPE) on '$device'"
+
+	fi
 done < <(
 	cd $VAR_DIR/recovery
 	find . -name fs_vol_id -printf "%P\n" 

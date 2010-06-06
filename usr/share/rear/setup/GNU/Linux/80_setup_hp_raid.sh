@@ -3,8 +3,8 @@
 #
 #
 
-# skip script if nothing to do
-test -d $VAR_DIR/recovery/hpacucli || return 0
+# only run script if cciss driver is loaded
+test -d $VAR_DIR/recovery/hpacucli && grep -q cciss < <(lsmod) ||return 0
 
 for SLOTDIR in $VAR_DIR/recovery/hpacucli/Slot_* ; do
 

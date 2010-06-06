@@ -24,36 +24,62 @@
 # BUG: Should read YOUR bonding configuration instead of assuming mode=1
 
 # where to build networking configuration
-netscript=$ROOTFS_DIR/etc/network.sh
+netscript=$ROOTFS_DIR/etc/scripts/system-setup.d/60-network-devices.sh
 
-# go over ethX and record information
-c=0
-while : ; do
-	dev=eth$c
-	if test -d /sys/class/net/$dev ; then
-		driver=$(ethtool -i $dev 2>/dev/null | grep driver: | cut -d : -f 2 | tr -d " ")
-		if test -z "$driver" ; then
-			LogPrint "WARNING: Could not determine network driver for '$dev'. Please make 
-WARNING:   sure that it loads automatically or add it to MODULES_LOAD !"
-		else
-			echo "modprobe $driver" >>$netscript
-			if test "$driver" = vmxnet ; then
-				# for vmxnet we also try to load the pcnet32 driver
-				echo 'test $? -gt 0 && modprobe pcnet32' >>$netscript
-			fi
-		fi
-		if ip link show dev $dev | grep -q UP ; then
-		# link is up
-			for addr in $(ip a show dev $dev | grep inet\ | tr -s " " | cut -d " " -f 3) ; do
-				echo "ip addr add $addr dev $dev" >>$netscript
-			done
-			echo "ip link set dev $dev up" >>$netscript
-		fi
+# go over the network devices and record information
+# and, BTW, interfacenames luckily do not allow spaces :-)
+for sysfspath in /sys/class/net/* ; do
+	dev=${sysfspath##*/}
+	# skip well-known non-physical interfaces
+	case $dev in
+		lo|pan*|sit*|tun*|tap*|vboxnet*|vmnet*) continue ;; # skip all kind of internal devices
+		vlan*) Error "$PRODUCT does not yet support 802.1q, please sponsor it!" ;;
+	esac
+
+	# get mac address
+	mac="$(cat $sysfspath/address)" || BugError "Could not read a MAC address from '$sysfspath/address'!"
+
+	# skip fake interfaces without MAC address
+	test "$mac" == "00:00:00:00:00:00" && continue
+
+	# TODO: skip bonding (and other dependent) devices from recording their MAC address in /etc/mac-addresses
+	# because such devices mirror the MAC address of (usually the first) real NIC.
+	# I lack experience with bonding setups to write this blindly, so please contribute better code
+	#
+	# keep mac address information for rescue system
+	echo "$dev $mac">>$ROOTFS_DIR/etc/mac-addresses
+
+	# take information only from UP devices, we don't care about non-working devices.
+	ip link show dev $dev | grep -q UP || continue
+
+	# link is up
+	# determine the driver to load, relevant only for non-udev environments
+	driver=$(ethtool -i $dev 2>/dev/null | grep driver: | cut -d : -f 2)
+	if test -z "$driver" ; then
+		LogPrint "WARNING:   Could not determine network driver for '$dev'. Please make 
+WARNING:   sure that it loads automatically (e.g. via udev) or add 
+WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
 	else
-		break # while loop
+		echo "$driver" >>$ROOTFS_DIR/etc/modules
 	fi
-	let c++
-done
+	test -d $TMP_DIR/mappings || mkdir $TMP_DIR/mappings
+	test -f $CONFIG_DIR/mappings/ip_addresses && read_and_strip_file $CONFIG_DIR/mappings/ip_addresses > $TMP_DIR/mappings/ip_addresses
+	
+	if test -s $TMP_DIR/mappings/ip_addresses ; then
+		
+		while read network_device ip_address junk ; do
+			Log "New IP-address will be $network_device $ip_address"
+			echo "ip addr add $ip_address dev $dev" >>$netscript
+			echo "ip link set dev $dev up" >>$netscript
+		done < $TMP_DIR/mappings/ip_addresses
+	else
+
+		for addr in $(ip a show dev $dev | grep inet\ | tr -s " " | cut -d " " -f 3) ; do
+			echo "ip addr add $addr dev $dev" >>$netscript
+		done
+		echo "ip link set dev $dev up" >>$netscript
+	fi
+done # for dev in /sys/class/net/*
 
 # the following is only used for bonding setups
 if test -d /proc/net/bonding ; then

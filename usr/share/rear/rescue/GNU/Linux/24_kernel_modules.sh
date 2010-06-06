@@ -1,6 +1,6 @@
-# recover-workflow.sh
+# #40_kernel_modules.sh
 #
-# recover workflow for Relax & Recover
+# find kernel and modules for Relax & Recover
 #
 #    Relax & Recover is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -18,19 +18,19 @@
 #
 #
 
-WORKFLOW_recover_DESCRIPTION="Recover the system"
-WORKFLOWS=( ${WORKFLOWS[@]} recover )
-WORKFLOW_recover () {
-	
-	SourceStage "setup"
+# Note: The STORAGE_DRIVERS and NETWORK_DRIVERS variables are filled in in the
+# previous script !
 
-	SourceStage "verify"
-	
-	SourceStage "recreate"
-	
-	SourceStage "restore"
-	
-	SourceStage "finalize"
-	SourceStage "wrapup"
-	
-}
+# 1. take all kernel modules for network and storage devices
+# 2. collect running kernel modules
+MODULES=( ${MODULES[@]} ${STORAGE_DRIVERS[@]} ${NETWORK_DRIVERS[@]}
+$(lsmod | grep -v '^Modul' | cut -d " " -f 1)
+)
+
+
+
+COPY_AS_IS=( "${COPY_AS_IS[@]}"
+/lib/modules/$KERNEL_VERSION/modules.*
+/etc/modules*
+/etc/modprobe*
+)

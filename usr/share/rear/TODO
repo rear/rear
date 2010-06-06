@@ -1,0 +1,9 @@
+* finalize/Fedora/i386/17_rebuild_initramfs.sh
+- needs to be written, seems like RH builds rich initramfs with all modules included
+
+* finalize/Gentoo/i386/17_rebuild_initramfs.sh
+- needs to be written, I have no idea what should be done here (since I don't have Gentoo)
+
+* write network migration code for all other distributions
+
+* support dhcp for network migration

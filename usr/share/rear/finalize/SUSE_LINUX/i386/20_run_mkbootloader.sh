@@ -3,6 +3,16 @@
 LogPrint "Restoring the bootloader (SuSE style)"
 if bootloader="$(cat $VAR_DIR/recovery/mkbootloader)"  ; then
 	mount -t proc none /mnt/local/proc
+	# if the device.map contains /dev/disk/by-id... we move the file and
+	# hope for the best
+	if grep -q "/dev/disk/by-id"  /mnt/local/boot/grub/device.map ; then
+		LogPrint "WARNING !
+			Your system.map contains a reference to a disk by UUID, which does 
+			not work at the moment. I will copy the file to device.map.rear and try 
+			to autoprobe the correct device. If this fails you might have to manually 
+			reinstall your bootloader"
+		mv /mnt/local/boot/grub/device.map /mnt/local/boot/grub/device.map.rear 
+	fi
 	Log "Running chroot '$bootloader'"
 	if chroot /mnt/local /bin/bash --login -c "$bootloader"  1>&2 ; then
 		NOBOOTLOADER=

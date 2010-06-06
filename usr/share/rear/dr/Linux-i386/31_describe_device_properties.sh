@@ -12,6 +12,10 @@ while read device junk ; do
 	dd if=$device of=$VAR_DIR/recovery$device/mbr bs=446 count=1 >/dev/null || Error \
 		"Could not store MBR for '$device'"
 
+        # if we have udev collect also the drivers required for this device 
+        FindDrivers $device >$VAR_DIR/recovery/$device/drivers || Error "Could not determine the required drivers for '$device'" 
+        # NOTE: The result can be empty if we simply don't know! 
+         
 done <$VAR_DIR/recovery/required_devices
 
 

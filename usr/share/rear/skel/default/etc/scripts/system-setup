@@ -1,45 +1,15 @@
 #!/bin/bash
 
-# load keymap
-test -s /etc/dumpkeys.out && loadkeys /etc/dumpkeys.out
+# system-setup has been split into scripts under /etc/scripts/system-setup.d
+# the purpose is to have different skel areas contribute different scripts into
+# the system-setup stage
 
-# load specified modules
-if test -s /etc/modules ; then
-	while read module options ; do
-		case "$module" in
-			\#*|"") : ;;
-			*)	modprobe -v $module $options ;;
-		esac
-	done </etc/modules
-fi
-# setup network
-test -s /etc/network.sh && . /etc/network.sh
+# set null globbing, we need this for our scripts
+shopt -s nullglob
 
-# load block device modules, probably not in the right order
-# we load ata drivers after ide drivers to support older systems running in compatibility mode
-# most probably these lines are the cause for most problems with wrong disk order and missing block devices
-#
-# UPDATE 2009-11-16 Schlomo: After problems on ICH6 systems (e.g. VirtualBox) I reversed the order to first
-# load ata and then ide to try out wether this will give us less trouble.
-#
-# The actual problem was that piix would "catch" the controller and ata_piix would not see anything.
-#
-# Please submit any better ideas !!
-#
-# Especially how to analyse a running system and load the same drivers and bind them to the same devices in
-# the correct order
-for m in $(find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ata,message,ide,xen/blkfront} -type f 2>/dev/null) ; do
-	modprobe -q $(basename $m .ko)
+echo "* * * Configuring Rescue System * * *"
+for s in /etc/scripts/system-setup.d/*.sh ; do
+	echo "Running $(basename $s)..."
+	source $s
 done
-
-modprobe -q dm-mod
-
-# sync time
-if test -s /etc/scripts/timesync ; then
-	. /etc/scripts/timesync
-fi
-
-# xinetd
-if test -s /etc/scripts/xinetd ; then
-	. /etc/scripts/xinetd
-fi
+echo "* * * Rescue System is ready * * *"

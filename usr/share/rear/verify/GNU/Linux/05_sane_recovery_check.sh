@@ -19,5 +19,5 @@
 #
 
 # make sure that we are on a recovery system
-test -s /etc/scripts/system-setup || Error "This it not a ReaR rescue system."
+test -s /etc/scripts/system-setup || Error "This it not a $PRODUCT rescue system."
 #

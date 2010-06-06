@@ -18,9 +18,77 @@
 #
 #
 
-				
-	
-	
+# check if udev is available in a sufficiently recent version			
+have_udev() {
+	RELPATH="$1" ; shift
+	if 	test -d $RELPATH/etc/udev/rules.d && \
+		{ type -p udevadm || type -p udevtrigger ; } >/dev/null ; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+# call udevtrigger
+my_udevtrigger() {
+	if type -p udevadm >/dev/null ; then
+		udevadm trigger $@ 
+	else
+		udevtrigger $@
+	fi
+}
+
+# call udevsettle
+my_udevsettle() {
+	if type -p udevadm >/dev/null ; then
+		udevadm settle $@
+	else
+		udevsettle $@
+	fi
+}
+
+# call udevinfo
+my_udevinfo() {
+        if type -p udevadm >/dev/null ; then
+		udevadm info "$@"
+	else
+		udevinfo "$@"
+	fi
+}
+
+# find the drivers for a device
+FindDrivers() {
+	have_udev || return 0
+	device="$1" ; shift # device is /dev/sda 
+	my_udevinfo -a -p $(my_udevinfo -q path -n "$device") | \
+		sed -ne '/DRIVER/!d;s/.*"\(.*\)".*/\1/;/^.\+/p' | \
+		# 1. filter all lines not containing DRIVER
+		# 2. cut out everything between the ""
+		# 3. filter empty lines
+		# cool, eh :-)
+		sed -e "/PIIX_IDE/d;"
+		# filter out unwanted modules
+		# could be added to the previous sed, but like this
+		# it is easier to read
+	return $PIPESTATUS # return the status of the main udevinfo call instead
+}
+
+# find out which are the storage drivers to use on this system
+# returns a list of storage drivers on STDOUT
+# optionally $1 specifies the directory where to search for
+# drivers files
+FindStorageDrivers() {
+	test "$STORAGE_DRIVERS" || Error "FindStorageDrivers called but STORAGE_DRIVERS is empty"
+	{ 
+		while read module junk ; do 
+			IsInArray "$module" "${STORAGE_DRIVERS[@]}" && echo $module 
+		done < <(lsmod) 
+		find ${1:-$VAR_DIR/recovery} -name drivers -exec cat '{}' \;
+	} | sort -u | grep -v -E '(loop)'
+	# blacklist some more stuff here that came in the way on some systems
+	return 0
+	# always return 0 as the grep return code is meaningless
+}
 
 # Copy binaries given in $* to $1, stripping them on the way
 BinCopyTo() {

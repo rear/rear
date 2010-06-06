@@ -29,7 +29,7 @@ else
     _u="\u@\h"
     _p=">"
 fi
-PS1="${_t}${_u}:\w${_p} "
+PS1="RESCUE ${_t}${_u}:\w${_p} "
 unset _u _p _t
 alias dir='ls -l'
 alias ll='ls -l'
@@ -40,6 +40,7 @@ alias md='mkdir -p'
 alias which='type -p'
 alias rehash='hash -r'
 
-test -s /etc/motd && cat /etc/motd
+# print motd for interactive shells
+tty -s && test -s /etc/motd && cat /etc/motd
 
 true

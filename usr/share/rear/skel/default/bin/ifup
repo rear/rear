@@ -1,0 +1,3 @@
+#!/bin/bash
+logger -t ifup "not implemented ($*)"
+exit 0

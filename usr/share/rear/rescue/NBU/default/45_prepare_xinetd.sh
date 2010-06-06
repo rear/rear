@@ -4,8 +4,8 @@
 
 PROGS=( "${PROGS[@]}" xinetd )
 COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/xinetd.conf /etc/xinetd.d/bpcd /etc/xinetd.d/vnetd /etc/xinetd.d/vopied )
-cat >$ROOTFS_DIR/etc/scripts/xinetd <<-EOF
+cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-xinetd.sh <<-EOF
 echo "Starting a minimal xinetd daemon ..."
 xinetd
 EOF
-chmod +x $ROOTFS_DIR/etc/scripts/xinetd
+chmod +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-xinetd.sh
