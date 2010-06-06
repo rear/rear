@@ -20,12 +20,14 @@
 
 pushd $ROOTFS_DIR >/dev/null
 	
-	ln -sf bin/init init
-	ln -sf bin sbin
-	ln -sf bin/bash bin/sh
-	ln -sf true bin/pam_console_apply # RH/Fedora with udev needs this
+	ln -sfv bin/init init 1>&2
+	ln -sfv bin sbin 1>&2
+	pushd bin >/dev/null
+		ln -sfv bash sh 1>&2
+		ln -sfv true pam_console_apply 1>&2 # RH/Fedora with udev needs this
+	popd >/dev/null
 	pushd usr >/dev/null
-		ln -sf /bin bin
-		ln -sf /lib lib
+		ln -sfv /bin bin 1>&2
+		ln -sfv /lib lib 1>&2
 	popd >/dev/null
 popd >/dev/null

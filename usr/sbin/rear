@@ -71,16 +71,17 @@ CONFIGBUILDNR="$(
 # include default config
 . $SHARE_DIR/conf/default.conf
 
+# set the logfile for error logs
+LOGFILE="/tmp/rear.log"
+test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
+exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
+
+
 # include functions
 for script in $SHARE_DIR/lib/*.sh ; do
 	. $script
 done
 
-
-# set the logfile for error logs
-LOGFILE="/tmp/rear.log"
-test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
-exec 2>"$LOGFILE" || Error "Could not create $LOGFILE"
 
 
 USAGE="$( basename "$0") [Options] <command> [command options ...]"'

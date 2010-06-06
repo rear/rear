@@ -12,7 +12,7 @@ alias rehash='hash -r'
 shopt -s nullglob extglob
 
 # setup the rear environment
-test -p $SHELL_VARS_FIFO || Error "Could not access the SHELL_VARS_FIFO!"
+test -p $SHELL_VARS_FIFO || echo "ERROR: Could not access the SHELL_VARS_FIFO!"
 eval "$(cat <$SHELL_VARS_FIFO)" 2>/dev/null
 
 # source in ReaR functions

@@ -1,6 +1,6 @@
 Version 1.9.0  - not released
 ---------------------------
-2010-06-05	GSS	* Merged P2V patch from Heinlein Support with the following included changes:
+2010-06-06	GSS	* Merged P2V patch from Heinlein Support with the following included changes:
 					* Migrate disk and network configuration if HW changed
 					* Adjust drivers and initrd/initramfs
 					* Adjust swap space with by-id mounting (only swap ATM)
@@ -9,6 +9,15 @@ Version 1.9.0  - not released
 					* Changed the rescue system startup code to be a directory of shell snippets (/etc/scripts/system-setup.d)
 					* recreate some FS attributes for ext*
 					* recreate vfat
+			* added several if have_udev to make it work again on older 2.6 Linux
+			* fix symlink loop on Fedora & clones
+			* make all Fedora derivates symlink to Fedora
+			* support Scientific Linux, yet another RHEL clone
+			* set LOGFILE before loading lib/*sh functions, makes rear -d work again
+			* new shell workflow, allows one to enter into ReaR internals and try out stuff
+
+* * * PLEASE NOTE ! THIS IS THE FIRST RELEASE WITH THE NEW P2V CODE * * *
+* * * PLEASE EXPECT BUGS, GLITCHES AND GENERAL DATA LOSS !!! * * *
 
 
 Version 1.7.25 - 2010-06-04

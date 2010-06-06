@@ -74,7 +74,7 @@ for h in "$@" ; do
 
 		# install RPM
 		if ! ssh $h rpm -U --force --nodeps "$RPMFILE" ; then
-			echo "ERROR Could not install RPM oin '$h'"
+			echo "ERROR Could not install RPM on '$h'"
 			FAILED=( "${FAILED[@]}" "$h -> Could not install RPM")
 			continue
 		else

@@ -16,8 +16,8 @@ for vgfile in "${VAR_DIR}/recovery/lvm/"vgcfgbackup.* ; do
 	lvm vgcfgrestore -v --file "$vgfile" "$VG" 1>&8
 	ProgressStopIfError $? "Could not restore VG configuration for '$VG'"
 	lvm vgchange -v -a y "$VG" 1>&8
-	ProgressStopOrError $? "Could not activate '$VG'"
+	ProgressStopIfError $? "Could not activate '$VG'"
 done
-
+ProgressStop
 
 # that's it :-)
