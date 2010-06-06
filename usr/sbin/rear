@@ -24,7 +24,7 @@
 # Versioning
 PRODUCT="Relax & Recover"
 VERSION="0.0.0"
-RELEASE_DATE="2010-05-03"
+RELEASE_DATE="2010-06-06"
 
 COPYRIGHT="Copyright (C) 2006-2010
 	Schlomo Schapiro
@@ -41,7 +41,7 @@ ROOTFS_DIR=$BUILD_DIR/rootfs
 TMP_DIR=$BUILD_DIR/tmp
 
 # are we root ?
-if [ `id --user` -ne 0 ]; then
+if [ $(id --user) -ne 0 ]; then
 	echo  "** ERROR **	$PRODUCT needs ROOT priviledges!"
 	exit 1
 fi
