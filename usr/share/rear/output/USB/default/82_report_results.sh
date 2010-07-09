@@ -12,7 +12,7 @@ Log "Copied ${USB_FILES[@]} to $BUILD_DIR/netfs"
 # Make the USB bootable
 syslinux -s ${USB_DEVICE}
 # Write the USB boot sector
-dd if=/usr/lib/syslinux/mbr.bin of=${USB_DEVNODE}
+dd if=$(dirname ${ISO_ISOLINUX_BIN})/mbr.bin of=${USB_DEVNODE}
 # Need to flush the buffer for the USB boot sector.
 sync; sync
 
