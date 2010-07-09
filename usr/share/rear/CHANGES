@@ -1,5 +1,7 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-07-09	GD	* Merged USBFS patch from delson. See the details in
+			  https://sourceforge.net/tracker/?func=detail&aid=2963804&group_id=171835&atid=859454
 2010-06-06	GSS	* Merged P2V patch from Heinlein Support with the following included changes:
 					* Migrate disk and network configuration if HW changed
 					* Adjust drivers and initrd/initramfs
