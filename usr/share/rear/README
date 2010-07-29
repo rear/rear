@@ -8,7 +8,7 @@ framework for GNU/Linux based systems, but can be easily extended to other
 UNIX alike systems. The disaster recovery information (and maybe the backups)
 can be stored via the network, local on hard disks or USB devices, DVD/CD-R,
 tape, etc. The result is also a bootable image that is capable of booting via
-PXE, DVD/CD and tape (OBDR).
+PXE, DVD/CD.
 
 The backup can be also integrated with any existing backup software so that
 ReaR utilizes the backup software to restore the files and provides the "glue"
@@ -74,7 +74,7 @@ application, e.g. backup software to archive your data.
 The output method defines how the rescue system is written to disk and how you
 plan to boot the failed computer from the rescue system.
 
-See /etc/rear/default.conf for an overview of the possible methods and their
+See /usr/share/rear/conf/default.conf for an overview of the possible methods and their
 options. An example to use TSM for backup and PXE for output and would be to add
 these lines to /etc/rear/local.conf:
 -------------
