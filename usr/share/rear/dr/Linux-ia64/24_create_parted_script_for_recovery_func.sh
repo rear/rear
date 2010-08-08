@@ -5,9 +5,9 @@
 
 create_parted_script_for_recovery () {
 # DESCRIPTION:this function allows to create a script which partitions the disk with parted
-SCRIPT_FILE=$1  # the file in which the script will be saved ( ex : parted.sda )
-DEV=`echo $2 | sed -e 's;_;/;g'` # the device the scripts will format (cciss_c0d0 => cciss/c0d0)
-DEVICE_PARTITION_FILE=$3         # the file containing the partition description of the device ( ex : partition.sda)
+SCRIPT_FILE=$1  # the file in which the script will be saved ( ex : parted )
+DEV=$2		# device, e.g. /dev/sda
+DEVICE_PARTITION_FILE=$3         # the file containing the partition description of the device ( ex : partitions)
 
 
 # check old/new version of parted
@@ -15,7 +15,7 @@ Log "parted version: `/sbin/parted -v`"
 grep -q ^Number ${DEVICE_PARTITION_FILE} && Parted_layout=NEW || Parted_layout=OLD
 
 echo "[ -f /tmp/parted.${2}.done ] && exit" > ${SCRIPT_FILE}
-echo "parted -i /dev/${DEV} mklabel gpt" >> ${SCRIPT_FILE}
+echo "parted -i ${DEV} mklabel gpt" >> ${SCRIPT_FILE}
 
 NB_LINE=`cat ${DEVICE_PARTITION_FILE} | sed -e '/^$/d' | egrep -vi '^(Model|Disk|Minor|Partition|Sector|Number)' | wc -l`
 
@@ -47,12 +47,12 @@ do
 
         #and we create the partition
 
-        echo "parted /dev/${DEV} mkpart primary ${START} ${END}" >> ${SCRIPT_FILE}
+        echo "parted ${DEV} mkpart primary ${START} ${END}" >> ${SCRIPT_FILE}
 
         # then we set its name if there is one
 
         if [ ! -z "${NAME}" ]; then
-                echo "parted /dev/${DEV} name ${MINOR} ${NAME}" >> ${SCRIPT_FILE}
+                echo "parted ${DEV} name ${MINOR} ${NAME}" >> ${SCRIPT_FILE}
         fi
 
         # and finally we set all the flags of the partition:
@@ -60,7 +60,7 @@ do
         FLAGS_=`echo $FLAGS | tr ',' ' '`      #(ex: FLAGS_="lvm lba boot" )
         for CURRENT_FLAG in $FLAGS
         do
-                echo "parted /dev/${DEV} set ${MINOR} ${CURRENT_FLAG} on" >> ${SCRIPT_FILE}
+                echo "parted ${DEV} set ${MINOR} ${CURRENT_FLAG} on" >> ${SCRIPT_FILE}
         done
         let a=$[ $a + 1 ]
 done
