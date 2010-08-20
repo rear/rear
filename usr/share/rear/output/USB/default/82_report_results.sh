@@ -10,11 +10,11 @@ cp "${USB_FILES[@]}" "$BUILD_DIR/netfs"
 Log "Copied ${USB_FILES[@]} to $BUILD_DIR/netfs"
 
 # Make the USB bootable
-syslinux -s ${USB_DEVICE}
+#syslinux -s ${USB_DEVICE}
 # Write the USB boot sector
-dd if=$(dirname ${ISO_ISOLINUX_BIN})/mbr.bin of=${USB_DEVNODE}
+#dd if=$(dirname ${ISO_ISOLINUX_BIN})/mbr.bin of=${USB_DEVNODE}
 # Need to flush the buffer for the USB boot sector.
-sync; sync
+#sync; sync
 
 # Add to RESULT_FILES for emailing it
 RESULT_FILES=( "${RESULT_FILES[@]}" "${USB_FILES[@]}" )
