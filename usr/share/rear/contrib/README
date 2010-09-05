@@ -2,7 +2,12 @@ Here you find useful stuff contributed by ReaR users
 
 svn2tar
 ----------------
-Build dist tar archive from local subversion mirror
+Build dist tar archive from local subversion mirror. Set VERSION, prod_name and DEST to modify
+the result.
+
+svn2obs
+----------------
+My cron job for the nightly SVN snapshot builds in OBS.
 
 mkvendorrpm
 ----------------
