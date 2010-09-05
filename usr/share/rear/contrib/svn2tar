@@ -13,7 +13,7 @@ echo "
 ******************************************
 " 1>&2
 # find the full path to this script
-ME="$(cd $(dirname "$0") ; pwd)/$(basename "$0")"
+ME="$(readlink -f "$0")"
 # Find the svnroot path for the initial tar-ball
 rear_root="${ME%/usr/share/rear/contrib/svn2tar}"
 ### echo The root of rear SVN directory is $rear_root
@@ -23,14 +23,14 @@ rear_root="${ME%/usr/share/rear/contrib/svn2tar}"
 SHARE_DIR=/usr/share/rear
 CONFIG_DIR=/etc/rear
 VAR_DIR=/var/rear
-prod_ver="rear-$VERSION"
-distarchive="/tmp/${prod_ver}.tar.gz"
 
 BUILD_DIR=/tmp/rear.$$
 trap "rm -rf $BUILD_DIR" 0
 
-# extract version number from rear script
-VERSION=$(grep ^VERSION= ${rear_root}/usr/sbin/rear | cut -d= -f2 | sed -e 's/"//g')
+# extract version number from rear script or use the one given
+if ! test "$VERSION" ; then
+	VERSION=$(grep ^VERSION= ${rear_root}/usr/sbin/rear | cut -d= -f2 | sed -e 's/"//g')
+fi
 
 # source required ReaR components
 ## *mkdist* functions
@@ -39,7 +39,7 @@ VERSION=$(grep ^VERSION= ${rear_root}/usr/sbin/rear | cut -d= -f2 | sed -e 's/"/
 . "$rear_root$SHARE_DIR/lib/_input-output-functions.sh" </dev/null
 
 prod_ver="rear-$VERSION"
-distarchive="/tmp/${prod_ver}.tar.gz"
+distarchive="${DESTDIR:-/tmp}/${prod_ver}.tar.gz"
 
 BUILD_DIR=/tmp/rear.$$
 trap "rm -rf $BUILD_DIR" 0
