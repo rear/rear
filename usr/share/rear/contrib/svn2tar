@@ -38,7 +38,7 @@ fi
 ## Progress* functions, the < hack disables the fancy progress stuff
 . "$rear_root$SHARE_DIR/lib/_input-output-functions.sh" </dev/null
 
-prod_ver="rear-$VERSION"
+prod_ver="${prod_name:-rear}-$VERSION"
 distarchive="${DESTDIR:-/tmp}/${prod_ver}.tar.gz"
 
 BUILD_DIR=/tmp/rear.$$
