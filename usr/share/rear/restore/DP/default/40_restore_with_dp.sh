@@ -32,15 +32,9 @@ do
 	# only retain the latest backup which was completed successfully
 	if grep "^${fs} " ${VAR_DIR}/recovery/mountpoint_device 2>&1 >/dev/null; then
 		ProgressStart "Restore filesystem ${object}"
-		SessionID=`/opt/omni/bin/omnidb -filesystem ${host_fs} "${label}" | grep Completed | head -n 1 | awk '{print $1}'`
-		if [ -z ${SessionID} ]; then
-			Log "No Session-ID found for object $object"
-			> /tmp/DP_RESTORE_FAILED
-			break # get out of the loop and try ask for manual restore
-		fi
-		# session-id found - grab the backup device
+		SessionID=`cat /tmp/dp_recovery_session`
 		Device=`/opt/omni/bin/omnidb -session ${SessionID} -detail | grep Device | sort -u | tail -n 1 | awk '{print $4}'`
-		/opt/omni/bin/omnir -filesystem ${host_fs} "${label}" -full -session ${SessionID} -tree ${fs} -into /mnt/local -device ${Device} -log 1>&8
+		/opt/omni/bin/omnir -filesystem ${host_fs} "${label}" -full -session ${SessionID} -tree ${fs} -into /mnt/local -device ${Device} -target `hostname` -log 1>&8
 		case $? in
 			0)  Log "Restore of ${fs} was successful." ;;
 			10) Log "Restore of ${fs} finished with warnings." ;;
