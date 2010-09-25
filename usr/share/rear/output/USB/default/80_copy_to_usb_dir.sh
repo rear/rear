@@ -20,7 +20,7 @@
 
 # define the filenames
 USB_KERNEL=kernel
-USB_INITRD=initrd.sys
+USB_INITRD=initrd.cgz
 USB_MESSAGE=message.txt
 
 if ! test -d "$USB_DIR" ; then
@@ -28,7 +28,7 @@ if ! test -d "$USB_DIR" ; then
 fi
 
 cp -a "$BUILD_DIR"/kernel "$USB_DIR/$USB_KERNEL"
-cp -a "$BUILD_DIR"/initrd "$USB_DIR/$USB_INITRD"
+cp -a "$BUILD_DIR"/initrd.cgz "$USB_DIR/$USB_INITRD"
 
 echo "$VERSION_INFO" >"$USB_DIR/$USB_MESSAGE"
 

@@ -23,7 +23,7 @@
 
 mkdir $BUILD_DIR/mnt/boot
 cp -L "$ELILO_BIN" $BUILD_DIR/mnt/boot || Error "Could not find $ELILO_BIN"
-cp $BUILD_DIR/initrd $BUILD_DIR/mnt/boot
+cp $BUILD_DIR/initrd.cgz $BUILD_DIR/mnt/boot
 
 #VMLINUX_KERNEL=`find / -xdev -name "vmlinu*-${KERNEL_VERSION}"`
 #cp "${VMLINUX_KERNEL}" $BUILD_DIR/mnt/boot/kernel
@@ -39,7 +39,7 @@ timeout=50
 
 image=kernel
 	label=rear
-	initrd=initrd
+	initrd=initrd.cgz
 	read-only
 	append="ramdisk=512000 $CONSOLE  rhgb selinux=0"
 EOF

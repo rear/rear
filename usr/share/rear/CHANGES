@@ -1,6 +1,8 @@
 Version 1.9.0  - not released
 ---------------------------
-2010-09-10	GD	* Merged patch of DataProtector select datalist via menu (SF#29354880
+2010-09-25	GD	* Applied patch "Increase syslinux bootloader timeout from 10sec to 30 sec" (SF#3073227)
+			* Applied patch "Rename initrd and initrd.sys to initrd.cgz for more consistency" (SF#3073233)
+2010-09-10	GD	* Merged patch of DataProtector select datalist via menu (SF#29354880)
 			* added into SVN the missing usb scripts (see 2010-08-20)
 2010-08-20	GD	* new library script output-functions.sh
 			* new script output/USB/85_make_USB_bootable.sh (added syslinux part)

@@ -21,7 +21,7 @@
 # check that we have mkisofs
 test -x "$ISO_MKISOFS_BIN" || Error "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executabel !"
 
-ISO_FILES=( ${ISO_FILES[@]} kernel initrd )
+ISO_FILES=( ${ISO_FILES[@]} kernel initrd.cgz )
 Log "Starting '$ISO_MKISOFS_BIN'"
 ProgressStart "Making ISO image"
 test -d "$ISO_DIR" || mkdir -p "$ISO_DIR" 1>&8 

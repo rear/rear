@@ -39,7 +39,7 @@ default=ReaR
 
 image=kernel
 	label=ReaR
-	initrd=initrd
+	initrd=initrd.cgz
 	append=" root=/dev/ram0 $KERNEL_CMDLINE"
 
 EOF

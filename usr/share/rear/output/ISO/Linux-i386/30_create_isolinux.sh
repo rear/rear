@@ -32,7 +32,7 @@ say rear = disaster recover this system with Relax & Recover
 
 label rear
 	kernel kernel
-	append initrd=initrd root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
+	append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 EOF
 
 ISO_FILES=( "${ISO_FILES[@]}" message isolinux.bin isolinux.cfg )

@@ -66,7 +66,7 @@ EOF
 	tee ./$CONFIG_DIR/templates/{PXE_pxelinux.cfg,ISO_isolinux.cfg,USB_syslinux.cfg} >/dev/null <<EOF
 default hd
 prompt 1
-timeout 100
+timeout 300
 
 label hd
 localboot -1

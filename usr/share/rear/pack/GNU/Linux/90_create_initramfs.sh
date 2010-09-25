@@ -24,7 +24,7 @@ pushd "$ROOTFS_DIR" >/dev/null
 find . ! -name "*~"  |\
 	tee /dev/fd/8  |\
 	cpio -H newc --create --quiet  |\
-	gzip -9 > "$BUILD_DIR/initrd" 
+	gzip -9 > "$BUILD_DIR/initrd.cgz" 
 ProgressStopOrError "${PIPESTATUS[2]}" "Could not create initramfs archive"
 popd >/dev/null
 
