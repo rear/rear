@@ -18,4 +18,6 @@ t3:3:respawn:/sbin/mingetty --noclear tty3
 t4:3:respawn:/sbin/mingetty --noclear tty4
 t5:3:respawn:/sbin/mingetty --noclear tty5
 
+s0:2345:respawn:/sbin/agetty 115200 ttyS0 vt100
+s1:2345:respawn:/sbin/agetty 115200 ttyS1 vt100
 

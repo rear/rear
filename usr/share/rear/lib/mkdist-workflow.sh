@@ -45,7 +45,7 @@ WORKFLOW_mkdist_postprocess () {
 	cat >./$CONFIG_DIR/site.conf <<EOF
 # site.conf
 # another config file that is sourced BEFORE local.conf
-# could be used to set site-wite settings
+# could be used to set site-wide settings
 # you could then distribute the site.conf from a central location while you keep
 # the machine-local settings in local.conf
 EOF
@@ -55,11 +55,14 @@ EOF
 # Create ReaR rescue media as ISO image
 OUTPUT=ISO
 
-# optionally set your backup software
+# optionally define (non-default) backup software, e.g. TSM, NBU, DP
 # BACKUP=TSM
 
 # the following is required on older VMware VMs
 MODULES_LOAD=( vmxnet )
+
+# to see boot messages on the serial console (uncomment next line)
+# KERNEL_CMDLINE="console=tty0 console=ttyS1"
 EOF
 	
 	# this little hack writes the same content into all these files...

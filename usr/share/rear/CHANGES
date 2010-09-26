@@ -4,6 +4,8 @@ Version 1.9.0  - not released
 			* Applied patch "Add hostname to logfile/ISO and include logfile in initrd" (SF#3073242)
 			* Applied patch "Skip the bonding_masters entry in sysfs /sys/class/net/" (SF#3073246)
 			* Applied patch "Make subsequent 'rear recover' work when disks are remapped" (SF#3073248)
+			* Added missing link - see bug report SF#3042967 
+			* Added support for serial console - see feature request SF#3043037
 2010-09-25	GD	* Applied patch "Increase syslinux bootloader timeout from 10sec to 30 sec" (SF#3073227)
 			* Applied patch "Rename initrd and initrd.sys to initrd.cgz for more consistency" (SF#3073233)
 2010-09-10	GD	* Merged patch of DataProtector select datalist via menu (SF#29354880)
