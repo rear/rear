@@ -89,8 +89,8 @@ while read old_device new_device size ; do
 	# do the main devices first
 	mkdir -p $TMP_DIR/new_devices/$(dirname $new_device) || \
 		Error "Could not create '$TMP_DIR/new_devices/$(dirname $new_device)'" # could be /dev or /dev/cciss
-	mv -v $VAR_DIR/recovery/$old_device $TMP_DIR/new_devices/$new_device 1>&2 || \
-		Error "Could not mv '$VAR_DIR/recovery/$old_device' '$TMP_DIR/new_devices/$new_device'" 
+	cp -v $VAR_DIR/recovery/$old_device $TMP_DIR/new_devices/$new_device 1>&2 || \
+		Error "Could not cp '$VAR_DIR/recovery/$old_device' '$TMP_DIR/new_devices/$new_device'" 
 		# e.g. ../dev/sda -> ../dev/cciss/c0d0
 
 	# for the dependant devices we might have to add something between the main device and the partitions,

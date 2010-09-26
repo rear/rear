@@ -23,6 +23,7 @@ pushd $ROOTFS_DIR >/dev/null
 # create a simple bash history file
 cat > .bash_history <<EOF
 : : : : : : WHAT ELSE WOULD YOU HAVE EXPECTED HERE ON A RAMDISK ?
+loadkeys -d
 rear recover
 EOF
 chmod 644 .bash_history

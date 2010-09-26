@@ -1,4 +1,4 @@
-# #31_network_devices.sh
+# 31_network_devices.sh
 #
 # record network device configuration for Relax & Recover
 #
@@ -32,7 +32,7 @@ for sysfspath in /sys/class/net/* ; do
 	dev=${sysfspath##*/}
 	# skip well-known non-physical interfaces
 	case $dev in
-		lo|pan*|sit*|tun*|tap*|vboxnet*|vmnet*) continue ;; # skip all kind of internal devices
+		bonding_masters|lo|pan*|sit*|tun*|tap*|vboxnet*|vmnet*) continue ;; # skip all kind of internal devices
 		vlan*) Error "$PRODUCT does not yet support 802.1q, please sponsor it!" ;;
 	esac
 
