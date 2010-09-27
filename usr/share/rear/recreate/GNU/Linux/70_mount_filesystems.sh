@@ -4,7 +4,7 @@
 while read mountpoint device mountby filesystem junk ; do
 	mkdir -p "/mnt/local$mountpoint" || \
 		Error "Could not create mountpoint '/mnt/local$mountpoint'"
-	mount "$device"  "/mnt/local$mountpoint" -t "$filesystem"  || \
+	mount -o noatime "$device"  "/mnt/local$mountpoint" -t "$filesystem"  || \
 		Error "Mount failed of $device on /mnt/local$mountpoint type $filesystem"
 done < "${VAR_DIR}/recovery/mountpoint_device"
 
