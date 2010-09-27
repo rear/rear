@@ -57,7 +57,7 @@ Killing the backup program and aborting. "
 done 
 printf "\r%-62s\r" " "
 size="$(stat -c "%s" "$backuparchive")"
-let transfertime=SECONDS-startime
+let transfertime=SECONDS-starttime
 
 sleep 1
 test "$(cat $BUILD_DIR/retval)" -gt 0 && LogPrint "WARNING !
