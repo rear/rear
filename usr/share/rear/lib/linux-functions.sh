@@ -49,7 +49,7 @@ my_udevsettle() {
 
 # call udevinfo
 my_udevinfo() {
-        if type -p udevadm >/dev/null ; then
+	if type -p udevadm >/dev/null ; then
 		udevadm info "$@"
 	else
 		udevinfo "$@"
@@ -60,7 +60,11 @@ my_udevinfo() {
 FindDrivers() {
 	have_udev || return 0
 	device="$1" ; shift # device is /dev/sda 
-	my_udevinfo -a -p $(my_udevinfo -q path -n "$device") | \
+	path="$(my_udevinfo -q path -n "$device")"
+	if [ -z "$path" ]; then
+		return 0
+	fi
+	my_udevinfo -a -p $path | \
 		sed -ne '/DRIVER/!d;s/.*"\(.*\)".*/\1/;/^.\+/p' | \
 		# 1. filter all lines not containing DRIVER
 		# 2. cut out everything between the ""
