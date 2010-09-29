@@ -7,3 +7,6 @@
 * write network migration code for all other distributions
 
 * support dhcp for network migration
+
+* prep/Linux-ia64/20_getty_or_agetty.sh might be obsolete after the USE_SERIAL_CONSOLE piece has been added and tested successfully
+
