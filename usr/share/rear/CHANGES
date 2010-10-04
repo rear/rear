@@ -1,10 +1,13 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-10-04	GD	* updated rescue/GNU/Linux/50_clone_keyboard_mappings.sh with US kbd layout path
+			  for SLES, RHEL and Ubuntu flavour
 2010-09-29	GD	* new script rescue/GNU/Linux/40_use_serial_console.sh (for serial console support)
 2010-09-28	GD	* new script prep/GNU/Linux/20_include_agetty.sh (for serial console support)
 			  So that feature request SF#3043037 does not break rear in cases where agetty is not found
 			  Introduced new variable: USE_SERIAL_CONSOLE to enable/disable serial support
-2010-09-26	GD	* Applied patch "Add default US keyboard mapping and command to reset to shell history" (#SF3073235)
+2010-09-26	GD	* Applied patch "Add default US keyboard mapping and command to reset to shell history"
+			  (#SF3073235)
 			* Applied patch "Add hostname to logfile/ISO and include logfile in initrd" (SF#3073242)
 			* Applied patch "Skip the bonding_masters entry in sysfs /sys/class/net/" (SF#3073246)
 			* Applied patch "Make subsequent 'rear recover' work when disks are remapped" (SF#3073248)

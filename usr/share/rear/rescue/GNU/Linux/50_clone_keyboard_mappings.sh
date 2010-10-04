@@ -2,4 +2,5 @@
 dumpkeys -f1 >$ROOTFS_DIR/etc/dumpkeys.out
 
 # Also include the US keyboard mappings
-COPY_AS_IS=( "${COPY_AS_IS[@]}" /lib/kbd/keymaps/i386/qwerty/defkeymap.map.gz )
+# Adding RHEL, SLES and Ubuntu qwerty flavours
+COPY_AS_IS=( "${COPY_AS_IS[@]}" /lib/k?d/keymaps/i386/qwerty/defkeymap.map.gz /usr/share/k?d/keymaps/i386/qwerty/defkeymap.map.gz /usr/share/keymaps/i386/qwerty/defkeymap.map.gz )
