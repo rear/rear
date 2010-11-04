@@ -1,5 +1,7 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-11-04	GD	* added bacula patch from Geoff Steer
+			* customized the scripts of the Bacula patch to rear standards
 2010-10-04	GD	* updated rescue/GNU/Linux/50_clone_keyboard_mappings.sh with US kbd layout path
 			  for SLES, RHEL and Ubuntu flavour
 2010-09-29	GD	* new script rescue/GNU/Linux/40_use_serial_console.sh (for serial console support)

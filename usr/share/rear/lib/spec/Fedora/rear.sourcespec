@@ -27,7 +27,7 @@ Relax and Recover (abbreviated rear) is a highly modular disaster recovery
 framework for GNU/Linux based systems, but can be easily extended to other
 UNIX alike systems. The disaster recovery information (and maybe the backups)
 can be stored via the network, local on hard disks or USB devices, DVD/CD-R,
-tape, etc. The result is also a bootable image that is capable of booting via
+tape, etc. The result is also a boot-able image that is capable of booting via
 PXE, DVD/CD and USB media.
 
 Relax and Recover integrates with other backup software and provides integrated
@@ -89,12 +89,15 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Nov  4 2010 Gratien D'haese <gdha at sourceforge.net> - 1.9.0
+- New development release with P2V, V2V functionality, and more
+
 * Fri Jun 04 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.25-1
 - added the %%ifarch part for syslinux to avoid warning on ppc/ppc64
 - fixed bugzilla 600217 (missing Fedora links)
 
-* Mon May 09 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.24-1
-- added release entry
+* Wed Feb 24 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.24-1
+- update spec file for fedora12
 
 * Fri Jan 09 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.23-1
 - added release entry
@@ -125,9 +128,6 @@ rm -rf $RPM_BUILD_ROOT
 
 * Thu Jan 29 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.14-1
 - added man page
-
-* Tue Jan 20 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.13-1
-- add COPYING license file
 
 * Wed Dec 17 2008 Gratien D'haese <gdha at sourceforge.net> - 1.7.10-1
 - remove contrib entry from %%doc line in spec file
