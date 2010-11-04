@@ -24,7 +24,7 @@ fi
 BACULA_CLIENT=`grep $(hostname) /etc/bacula/bacula-fd.conf | grep "\-fd" | awk '{print $3}' | cut -d"-" -f1`
 [ -z "${BACULA_CLIENT}" ] && ProgressStopIfError 1 "Client $(hostname) not defined in /etc/bacula/bacula-fd.conf"
 
-BACULA_RESULT=( `echo -e " status client=$BACULA_CLIENT" | bconsole |grep Connect ` )
+BACULA_RESULT=( `echo -e " status client=${BACULA_CLIENT}-fd" | bconsole |grep Connect ` )
 
 director=${BACULA_RESULT[3]}
 client=${BACULA_RESULT[9]}
@@ -34,7 +34,7 @@ if test -z "$director" ; then
 elif test -z "$client" ;  then
 	ProgressStopIfError 1 "Bacula client status unknown on director."
 else
-	echo "director = $director, client = $client"
+	Log "Bacula director = $director, client = $client"
 fi
 
 
