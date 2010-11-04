@@ -7,8 +7,10 @@
 #
 
 # executables
-which bacula-fd 2>/dev/null >/dev/null || ProgressStopIfError 1 "Bacula File Daemon is missing"
-which bconsole 2>/dev/null >/dev/null || ProgressStopIfError 1 "Bacula console executable is missing"
+type -p bacula-fd 2>/dev/null >/dev/null 
+ProgressStopIfError $? "Bacula File Daemon is missing"
+type -p bconsole 2>/dev/null >/dev/null
+ProgressStopIfError $? "Bacula console executable is missing"
 # Configuration files
 if test ! -s /etc/bacula/bacula-fd.conf  -a ! -s /etc/bacula/bconsole.conf; then
 	 ProgressStopIfError 1  "Bacula configuration files missing [/etc/bacula/]"
