@@ -30,4 +30,5 @@ pushd $ROOTFS_DIR >/dev/null
 		ln -sfv /bin bin 1>&2
 		ln -sfv /lib lib 1>&2
 	popd >/dev/null
+	ln -sfv bin/true etc/sysconfig/network-scripts/net.hotplug 1>&2
 popd >/dev/null
