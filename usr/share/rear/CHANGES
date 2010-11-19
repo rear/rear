@@ -1,5 +1,10 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-11-19	GD	* sbin/rear: added /tmp/.rear.lock and writing cmd options to logfile
+			* conf/default.conf: added flock and KEEP_NETFS_COPY variable (to keep previous backup)
+			* backup/NETFS/default/15_save_copy_of_prefix_dir.sh (to keep previous backup)
+			* backup/NETFS/default/25_create_lock.sh : to prevent unexpected move by 15_save...
+			* output/NETFS/default/97_remove_lock.sh : rm lock
 2010-11-10	GD	* etc/sysconfig/network-scripts/net.hotplug ln added to build/GNU/Linux/00_create_symlinks.sh
 2010-11-04	GD	* added bacula patch from Geoff Steer
 			* customized the scripts of the Bacula patch to rear standards

@@ -24,11 +24,11 @@
 # Versioning
 PRODUCT="Relax & Recover"
 VERSION="0.0.0"
-RELEASE_DATE="2010-07-25"
+RELEASE_DATE="2010-11-19"
 
 COPYRIGHT="Copyright (C) 2006-2010
-	Schlomo Schapiro
-	Gratien D'haese, IT3 Consultants"
+        Schlomo Schapiro
+        Gratien D'haese, IT3 Consultants"
 STARTTIME=$SECONDS
 
 # Program directories - they must be set here. Everything else is then dynamic
@@ -39,6 +39,8 @@ VAR_DIR="/var/lib/rear"
 BUILD_DIR=/tmp/rear.$$
 ROOTFS_DIR=$BUILD_DIR/rootfs
 TMP_DIR=$BUILD_DIR/tmp
+CMD_OPTS="$*"
+REAR_LOCK="/tmp/.rear.lock"
 
 # are we root ?
 if [ $(id --user) -ne 0 ]; then
@@ -71,13 +73,15 @@ CONFIGBUILDNR="$(
 # include default config
 . $SHARE_DIR/conf/default.conf
 
-# set the logfile for error logs
-if [ -z "$LOGFILE" ]; then
-    LOGFILE="/tmp/rear.log"
+# before writing something to the LOGFILE check if another rear process still holds it
+exec 9>"$REAR_LOCK"
+if flock -n -x 9 ; then
+	test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
+	exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
+else
+	echo "ERROR: rear is currently running - to avoid conflicts we quit!"
+	exit 1
 fi
-test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
-exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
-
 
 # include functions
 for script in $SHARE_DIR/lib/*.sh ; do
@@ -152,6 +156,7 @@ fi
 
 LogPrint "$PRODUCT Version $VERSION / $RELEASE_DATE"
 test "$SIMULATE" && LogPrint "Simulation mode activated, ReaR base directory: $SHARE_DIR"
+Log "Command line options: $0 $CMD_OPTS"
 
 shopt -s nullglob extglob
 
@@ -221,3 +226,6 @@ else
 	rm -Rf $BUILD_DIR
 fi
 Log "End of program reached"
+# unlock fd 9
+flock -u 9
+rm -f "$REAR_LOCK"

@@ -89,7 +89,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Thu Nov  4 2010 Gratien D'haese <gdha at sourceforge.net> - 1.9.0
+* Thu Nov 19 2010 Gratien D'haese <gdha at sourceforge.net> - 1.9.0-1
 - New development release with P2V, V2V functionality, and more
 
 * Fri Jun 04 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.25-1
