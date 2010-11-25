@@ -1,3 +1,7 @@
+Version 1.7.26 - 2010-11-25
+---------------------------
+2010-11-25	GD	* Bug 657174 - Rescue image freezes during the boot while executing init
+
 Version 1.7.25 - 2010-06-04
 ---------------------------
 2010-06-04	GD	* Bug 600217 - Fedora link missing in restore, pack and finalize sub-directories

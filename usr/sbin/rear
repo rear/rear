@@ -23,8 +23,8 @@
 
 # Versioning
 PRODUCT="Relax & Recover"
-VERSION="1.7.25"
-RELEASE_DATE="2010-06-04"
+VERSION="1.7.26"
+RELEASE_DATE="2010-11-25"
 
 COPYRIGHT="Copyright (C) 2006-2010
 	Schlomo Schapiro

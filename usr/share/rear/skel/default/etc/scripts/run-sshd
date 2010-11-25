@@ -1,0 +1,5 @@
+#!/bin/bash
+# check inittab for "ssh:23:respawn:/bin/sshd -D"
+if $(grep -q ^ssh: /etc/inittab) ; then
+	exec /bin/sshd -D
+fi

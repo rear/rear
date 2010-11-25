@@ -100,32 +100,36 @@ USAGE
 To use rear you always call the main script /usr/sbin/rear:
 # rear
 rear [Options] <command> [command options ...]
-Relax & Recover Version 1.5pre3 / 2007-06-22
-
-
-Copyright (C) 2006-2007
-                Schlomo Schapiro, pro business Berlin AG
-                Gratien D'haese, IT3 Consultants
-Relax & Recover comes with ABSOLUTELY NO WARRANTY; for details 
+Relax & Recover Version 1.9.0 / 2010-11-19
+Build: 61da7c0f0a63776d42385f085fb92930
+Copyright (C) 2006-2010
+        Schlomo Schapiro
+        Gratien D'haese, IT3 Consultants
+Relax & Recover comes with ABSOLUTELY NO WARRANTY; for details
 see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
+
 Available Options:
 -V                      version information
 -d                      debug mode
 -D                      debugscript mode
 -S                      Step-by-step mode
 -s                      Simulation mode (shows the scripts included)
--r a.b.c-xx-yy          kernel version to use (current: 2.6.16.21-0.8-default)
+-q                      Quiet mode
+-r a.b.c-xx-yy          kernel version to use (current: 2.6.35.6-48.fc14.i686.PAE)
 
 List of commands:
 dump                    Dump configuration and system information
 help                    print out usage
 mkbackup                Create rescue media and backup system.
 mkbackuponly            Backup system without creating a (new) rescue media.
+mkdeb                   Create DEB packages with this rear version
 mkdist                  Create distribution tar archive with this rear version
 mkrescue                Create rescue media only
 mkrpm                   Create RPM packages with this rear version
 mktar                   Create tar archive with this rear installation
+mkvendorrpm             Create vendor RPM with this rear version
 recover                 Recover the system
+validate                Submit validation information
 
 To view/verify your configuration, run "rear dump". It will print out the
 current settings for BACKUP and OUTPUT methods and some system information.

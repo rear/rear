@@ -1,0 +1,10 @@
+#!/bin/bash
+# check inittab for:
+#s0:2345:respawn:/sbin/agetty 115200 ttyS0 vt100
+#s1:2345:respawn:/sbin/agetty 115200 ttyS1 vt100
+if $(grep -q ^s0: /etc/inittab) ; then
+	/sbin/agetty 115200 ttyS0 vt100
+fi
+if $(grep -q ^s1: /etc/inittab) ; then
+	/sbin/agetty 115200 ttyS1 vt100
+fi
