@@ -10,20 +10,16 @@ while read -r ; do
 	Log " $REPLY"
 done < $BUILD_DIR/backup-exclude.txt
 
+mkdir -p "${BUILD_DIR}/netfs/${NETFS_PREFIX}"
 
 Log "Creating archive '$backuparchive'"
 Print "Creating archive '$displayarchive'"
-counter=1
-lasttime=$SECONDS
-starttime=$lasttime
-lastsize=0
-speed=unknown
-echo -n "Backing up"
+echo -n "Preparing archive operation"
 (
 case "$BACKUP_PROG" in
 	# tar compatible programs here
 	tar)
-		$BACKUP_PROG --sparse --verbose --no-wildcards-match-slash --one-file-system --ignore-failed-read \
+		$BACKUP_PROG --sparse --block-number --totals --verbose --no-wildcards-match-slash --one-file-system --ignore-failed-read \
 			$BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS \
 			-X $BUILD_DIR/backup-exclude.txt -C / -c -f "$backuparchive" \
 			$(cat $BUILD_DIR/backup-include.txt) $LOGFILE
@@ -39,28 +35,39 @@ esac >"${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.txt"
 echo $? >$BUILD_DIR/retval
 ) &
 BackupPID=$!
+starttime=$SECONDS
 
 sleep 1 # Give the backup software a good chance to start working
 
 # while the backup runs in a sub-process, display some progress information to the user
-while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
-	size="$(stat -c "%s" "$backuparchive")" || {
-		kill -9 $BackupPID
-		. $SHARE_DIR/backup/NETFS/default/71_umount_NETFS_dir.sh
-		Error "The backup program did not create the archive file !
-Killing the backup program and aborting. "
-	}
-	#let size=size/1024/1024
-	let speed=size-lastsize # / 1 second
-	let lastsize=size
-	printf "\r%-60s" "Archive size is $((size/1024/1024)) MB [$((speed/1024)) KB/sec]"
-done 
-printf "\r%-62s\r" " "
-size="$(stat -c "%s" "$backuparchive")"
-let transfertime=SECONDS-starttime
+case "$BACKUP_PROG" in
+	tar)
+		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+			blocks="$(tail -1 ${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.txt | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
+			size="$((blocks*512))"
+			echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+		done
+		echo -en "\e[2K\r"
+		;;
+	*)
+		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+			size="$(stat -c "%s" "$backuparchive")" || {
+				kill -9 $BackupPID
+				. $SHARE_DIR/backup/NETFS/default/71_umount_NETFS_dir.sh
+				Error "The backup program did not create the archive file !"
+				Error "Killing the backup program and aborting."
+			}
+			echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+		done
+		echo -en "\e[2K\r"
+		;;
+esac
+
+transfertime="$((SECONDS-starttime))"
+tar_rc="$(cat $BUILD_DIR/retval)"
 
 sleep 1
-test "$(cat $BUILD_DIR/retval)" -gt 0 && LogPrint "WARNING !
+test "$tar_rc" -gt 0 && LogPrint "WARNING !
 There was an error (Nr. $(cat $BUILD_DIR/retval)) during archive creation.
 Please check the archive and see '$LOGFILE' for more information.
 
@@ -70,5 +77,9 @@ verify the backup yourself before trusting it !
 
 "
 
-LogPrint "Transferred $((size/1024/1024)) MB in $((transfertime)) seconds [$((size/transfertime/1024)) KB/sec]"
-
+tar_message="$(tac $LOGFILE | grep -m1 '^Total bytes written: ')"
+if [ $tar_rc -eq 0 -a "$tar_message" ] ; then
+	LogPrint "$tar_message in $transfertime seconds."
+elif [ "$size" ]; then
+	LogPrint "Archived $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"
+fi
