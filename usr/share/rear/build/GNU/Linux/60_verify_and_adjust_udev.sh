@@ -15,9 +15,9 @@ while read file location ; do
 		# Log "matched external call to $file in $location"
 		echo "matched external call to $file in $location" 1>&8
 	else
-		ProgressStep
 		Log "WARNING: unmatched external call to '$file' in $location"
 	fi
+	ProgressStep
 done < <(
 
 	# get list of external files called in PROGRAM= or RUN= statements. The result is filtered
