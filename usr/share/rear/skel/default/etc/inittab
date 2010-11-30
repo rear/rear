@@ -12,8 +12,8 @@ re:6:wait:/etc/scripts/do-shutdown reboot
 
 sy:23:respawn:/etc/scripts/run-syslog
 
-t1:3:respawn:/sbin/mingetty --noclear tty1
-t2:3:respawn:/sbin/mingetty --noclear tty2
-t3:3:respawn:/sbin/mingetty --noclear tty3
-t4:3:respawn:/sbin/mingetty --noclear tty4
-t5:3:respawn:/sbin/mingetty --noclear tty5
+t1:3:respawn:/sbin/mingetty --noclear --autologin root tty1
+t2:3:respawn:/sbin/mingetty --noclear --autologin root tty2
+t3:3:respawn:/sbin/mingetty --noclear --autologin root tty3
+t4:3:respawn:/sbin/mingetty --noclear --autologin root tty4
+t5:3:respawn:/sbin/mingetty --noclear --autologin root tty5
