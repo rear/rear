@@ -26,14 +26,14 @@ case "$BACKUP_PROG" in
 		$BACKUP_PROG --sparse --verbose --no-wildcards-match-slash --one-file-system --ignore-failed-read \
 			$BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS \
 			-X $BUILD_DIR/backup-exclude.txt -C / -c -f "$backuparchive" \
-			$(cat $BUILD_DIR/backup-include.txt)
+			$(cat $BUILD_DIR/backup-include.txt) $LOGFILE
 	;;
 	*)
 		Log "Using unsupported backup program '$BACKUP_PROG'"
 		$BACKUP_PROG $BACKUP_PROG_COMPRESS_OPTIONS \
 			$BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $BUILD_DIR/backup-exclude.txt \
 			$BACKUP_PROG_OPTIONS $backuparchive \
-			$(cat $BUILD_DIR/backup-include.txt) > $backuparchive
+			$(cat $BUILD_DIR/backup-include.txt) $LOGFILE > $backuparchive
 	;;
 esac >"${BUILD_DIR}/netfs/${BACKUP_PROG_ARCHIVE}.txt"
 echo $? >$BUILD_DIR/retval
