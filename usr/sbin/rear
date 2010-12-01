@@ -40,7 +40,8 @@ BUILD_DIR=/tmp/rear.$$
 ROOTFS_DIR=$BUILD_DIR/rootfs
 TMP_DIR=$BUILD_DIR/tmp
 CMD_OPTS="$*"
-REAR_LOCK="/tmp/.rear.lock"
+LOCKDIR="/tmp/.rear.lock"
+PIDFILE="${LOCKDIR}/rear.pid"
 
 # are we root ?
 if [ $(id --user) -ne 0 ]; then
@@ -73,15 +74,66 @@ CONFIGBUILDNR="$(
 # include default config
 . $SHARE_DIR/conf/default.conf
 
-# before writing something to the LOGFILE check if another rear process still holds it
-exec 9>"$REAR_LOCK"
-if flock -n -x 9 ; then
-	test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
-	exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
+# ==== locking mechanism ====
+# exit codes and text for them - additional features nobody needs :-)
+ENO_SUCCESS=0; ETXT[0]="ENO_SUCCESS"
+ENO_GENERAL=1; ETXT[1]="ENO_GENERAL"
+ENO_LOCKFAIL=2; ETXT[2]="ENO_LOCKFAIL"
+ENO_RECVSIG=3; ETXT[3]="ENO_RECVSIG"
+
+###
+### start locking attempt
+###
+ 
+trap 'ECODE=$?; echo "[rear] Exit: ${ETXT[ECODE]}($ECODE)" >&2' 0
+echo -n "[rear] Locking: " >&2
+ 
+if mkdir "${LOCKDIR}" &>/dev/null; then
+ 
+    # lock succeeded, install signal handlers before storing the PID just in case 
+    # storing the PID fails
+    trap 'ECODE=$?;
+          echo "[rear] Removing lock. Exit: ${ETXT[ECODE]}($ECODE)" >&2
+          rm -rf "${LOCKDIR}"' 0
+    echo "$$" >"${PIDFILE}" 
+    # the following handler will exit the script on receiving these signals
+    # the trap on "0" (EXIT) from above will be triggered by this trap's "exit" command!
+    trap 'echo "[rear] Killed by a signal." >&2
+          exit ${ENO_RECVSIG}' 1 2 3 15
+    echo "success, installed signal handlers"
+ 
 else
-	echo "ERROR: rear is currently running - to avoid conflicts we quit!"
-	exit 1
+ 
+    # lock failed, now check if the other PID is alive
+    OTHERPID="$(cat "${PIDFILE}")"
+ 
+    # if cat wasn't able to read the file anymore, another instance probably is
+    # about to remove the lock -- exit, we're *still* locked
+    #  Thanks to Grzegorz Wierzowiecki for pointing this race condition out on
+    #  http://wiki.grzegorz.wierzowiecki.pl/code:mutex-in-bash
+    if [ $? != 0 ]; then
+      echo "lock failed, PID ${OTHERPID} is active" >&2
+      exit ${ENO_LOCKFAIL}
+    fi
+ 
+    if ! kill -0 $OTHERPID &>/dev/null; then
+        # lock is stale, remove it and restart
+        echo "removing stale lock of nonexistant PID ${OTHERPID}" >&2
+        rm -rf "${LOCKDIR}"
+        echo "[rear] restarting myself" >&2
+        #exec "$0" "$@"
+	DIR=$(cd $(dirname "$0"); pwd)
+	exec $DIR/`basename $0` "$@"
+    else
+        # lock is valid and OTHERPID is active - exit, we're locked!
+        echo "lock failed, PID ${OTHERPID} is active" >&2
+        exit ${ENO_LOCKFAIL}
+    fi
+ 
 fi
+
+test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
+exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
 
 # include functions
 for script in $SHARE_DIR/lib/*.sh ; do
@@ -228,6 +280,3 @@ else
 	rm -Rf $BUILD_DIR
 fi
 Log "End of program reached"
-# unlock fd 9
-flock -u 9
-rm -f "$REAR_LOCK"

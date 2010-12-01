@@ -14,4 +14,5 @@ echo "$VERSION_INFO" >"${BUILD_DIR}/netfs/${NETFS_PREFIX}/VERSION"
 ProgressStopIfError $? "Could not create VERSION file on network location"
 cp -v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "${BUILD_DIR}/netfs/${NETFS_PREFIX}/README" 1>&8
 ProgressStopOrError $? "Could not copy usage file to network location"
-
+cat $LOGFILE  >"${BUILD_DIR}/netfs/${NETFS_PREFIX}/rear-$(date -Iseconds).log"
+ProgressStopOrError $? "Could not copy $LOGFILE to network location"

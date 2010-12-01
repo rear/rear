@@ -8,8 +8,12 @@ Version 1.9.0  - not released
 			* SF Patch #3122174 - add extra/ and weak-updates/ modules
 			* SF Patch #3122158 - automatically login as root into rescue system
 			* SF Patch #3122149 - progress info of tar based on block numbers
+2010-11-30	GD	* /usr/sbin/rear: added locking mechanism (from http://wiki.bash-hackers.org/howto/mutex)
+2010-11-26	GD	* conf/GNU/Linux.conf: 'usbmuxd' to CLONE_USERS
+			* NETFS/default/95_copy_result_files.sh: cat logfile to destination dir
+2010-11-25	GD	* fix buzilla 657174: Rescue image freezes during the boot while executing init (F13/F14)
 2010-11-19	GD	* sbin/rear: added /tmp/.rear.lock and writing cmd options to logfile
-			* conf/default.conf: added flock and KEEP_NETFS_COPY variable (to keep previous backup)
+			* conf/default.conf: added KEEP_NETFS_COPY variable (to keep previous backup)
 			* backup/NETFS/default/15_save_copy_of_prefix_dir.sh (to keep previous backup)
 			* backup/NETFS/default/25_create_lock.sh : to prevent unexpected move by 15_save...
 			* output/NETFS/default/97_remove_lock.sh : rm lock
@@ -44,14 +48,14 @@ Version 1.9.0  - not released
 2010-07-09	GD	* Merged USBFS patch from delson. See the details in
 			  https://sourceforge.net/tracker/?func=detail&aid=2963804&group_id=171835&atid=859454
 2010-06-06	GSS	* Merged P2V patch from Heinlein Support with the following included changes:
-					* Migrate disk and network configuration if HW changed
-					* Adjust drivers and initrd/initramfs
-					* Adjust swap space with by-id mounting (only swap ATM)
-					* Read mapping files in /etc/rear/mapping with answers instead of asking during recovery
-					* Run PRE_RECOVERY_SCRIPT and POST_RECOVERY_SCRIPT scripts as a hook for user-supplied stuff
-					* Changed the rescue system startup code to be a directory of shell snippets (/etc/scripts/system-setup.d)
-					* recreate some FS attributes for ext*
-					* recreate vfat
+				* Migrate disk and network configuration if HW changed
+				* Adjust drivers and initrd/initramfs
+				* Adjust swap space with by-id mounting (only swap ATM)
+				* Read mapping files in /etc/rear/mapping with answers instead of asking during recovery
+				* Run PRE_RECOVERY_SCRIPT and POST_RECOVERY_SCRIPT scripts as a hook for user-supplied stuff
+				* Changed the rescue system startup code to be a directory of shell snippets (/etc/scripts/system-setup.d)
+				* recreate some FS attributes for ext*
+				* recreate vfat
 			* added several if have_udev to make it work again on older 2.6 Linux
 			* fix symlink loop on Fedora & clones
 			* make all Fedora derivates symlink to Fedora
