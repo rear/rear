@@ -1,5 +1,13 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-12-01	GSS	Add hash -r to rear to make sure that type -p works properly (thanks to Dag Wieers for suggesting this)
+2010-11-30	GSS	The following patches have been developed by Dag Wieers <dag@wieers.com> for the Belgian Federal Police:
+			* SF Patch #3122176 - add $LOGFILE to rescue system as /$LOGFILE
+			* SF Patch #3122163 - add $LOGFILE to backup archive for USBFS
+			* SF Patch #3122161 - better progress report for udev processing
+			* SF Patch #3122174 - add extra/ and weak-updates/ modules
+			* SF Patch #3122158 - automatically login as root into rescue system
+			* SF Patch #3122149 - progress info of tar based on block numbers
 2010-11-19	GD	* sbin/rear: added /tmp/.rear.lock and writing cmd options to logfile
 			* conf/default.conf: added flock and KEEP_NETFS_COPY variable (to keep previous backup)
 			* backup/NETFS/default/15_save_copy_of_prefix_dir.sh (to keep previous backup)
