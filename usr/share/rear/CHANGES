@@ -1,5 +1,6 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-12-02	GD	Tweak contrib/mkvendorrpm a bit
 2010-12-01	GSS	Add hash -r to rear to make sure that type -p works properly (thanks to Dag Wieers for suggesting this)
 2010-11-30	GSS	The following patches have been developed by Dag Wieers <dag@wieers.com> for the Belgian Federal Police:
 			* SF Patch #3122176 - add $LOGFILE to rescue system as /$LOGFILE

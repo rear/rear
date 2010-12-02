@@ -88,16 +88,16 @@ pushd $BUILD_DIR/$prod_ver
 # following variables are the base directories of rear
 SHARE_DIR=/usr/share/rear
 CONFIG_DIR=/etc/rear
-VAR_DIR=/var/rear
+VAR_DIR=/var/lib/rear
 SBIN_DIR=/usr/sbin
 
 # gentoo build file
 test -s .$SHARE_DIR/contrib/rear-$VERSION.ebuild ||\
 	mv -v .$SHARE_DIR/contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild
 # copy doc files
-cp -rv .$SHARE_DIR/{COPYING,CHANGES,README,doc,contrib}  .
+cp -rv .$SHARE_DIR/{COPYING,CHANGES,README,AUTHORS,TODO,doc,contrib}  .
 # convert files to UTF-8 if possible
-for file in COPYING CHANGES README "`find doc -type f`" ; do
+for file in COPYING CHANGES README AUTHORS TODO `echo doc/*` ; do
 	mv "${file}" timestamp
 	iconv -f ISO-8859-1 -t UTF-8 -o "${file}" timestamp
 	touch -r timestamp "${file}"
