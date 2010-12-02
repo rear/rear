@@ -74,7 +74,7 @@ application, e.g. backup software to archive your data.
 The output method defines how the rescue system is written to disk and how you
 plan to boot the failed computer from the rescue system.
 
-See /etc/rear/default.conf for an overview of the possible methods and their
+See /usr/share/rear/conf/default.conf for an overview of the possible methods and their
 options. An example to use TSM for backup and PXE for output and would be to add
 these lines to /etc/rear/local.conf:
 -------------

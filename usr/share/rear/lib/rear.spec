@@ -130,7 +130,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc COPYING CHANGES README doc/*
+%doc COPYING CHANGES README AUTHORS TODO doc/*
 %{_sbindir}/rear
 %{_datadir}/rear
 %{_localstatedir}/lib/rear
@@ -139,6 +139,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Dec 02 2010 Gratien D'haese <gdha at sourceforge.net> - 1.9.0-1
+- added AUTHORS and TODO to %%doc
+
 * Wed Dec 02 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.22
 - updated spec file to be more cross-platform compliant
 - many bug fixes

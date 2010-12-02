@@ -13,7 +13,7 @@ Version 1.9.0  - not released
 			* NETFS/default/95_copy_result_files.sh: cat logfile to destination dir
 2010-11-25	GD	* fix buzilla 657174: Rescue image freezes during the boot while executing init (F13/F14)
 2010-11-19	GD	* sbin/rear: added /tmp/.rear.lock and writing cmd options to logfile
-			* conf/default.conf: added KEEP_NETFS_COPY variable (to keep previous backup)
+			* conf/default.conf: added NETFS_KEEP_COPY variable (to keep previous backup)
 			* backup/NETFS/default/15_save_copy_of_prefix_dir.sh (to keep previous backup)
 			* backup/NETFS/default/25_create_lock.sh : to prevent unexpected move by 15_save...
 			* output/NETFS/default/97_remove_lock.sh : rm lock
@@ -66,6 +66,10 @@ Version 1.9.0  - not released
 * * * PLEASE NOTE ! THIS IS THE FIRST RELEASE WITH THE NEW P2V CODE * * *
 * * * PLEASE EXPECT BUGS, GLITCHES AND GENERAL DATA LOSS !!! * * *
 
+
+Version 1.7.26 - 2010-11-25
+---------------------------
+2010-11-25	GD	* fix buzilla 657174: Rescue image freezes during the boot while executing init (F13/F14)
 
 Version 1.7.25 - 2010-06-04
 ---------------------------

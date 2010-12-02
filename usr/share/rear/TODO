@@ -1,5 +1,6 @@
 * finalize/Fedora/i386/17_rebuild_initramfs.sh
 - needs to be written, seems like RH builds rich initramfs with all modules included
+- be aware, recent Fedora uses dracut instead of mkinitrd
 
 * finalize/Gentoo/i386/17_rebuild_initramfs.sh
 - needs to be written, I have no idea what should be done here (since I don't have Gentoo)

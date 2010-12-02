@@ -89,7 +89,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc COPYING CHANGES README doc/*
+%doc COPYING CHANGES README AUTHORS TODO doc/*
 %{_sbindir}/rear
 %{_datadir}/rear
 %{_localstatedir}/lib/rear
@@ -98,6 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Dec 02 2010 Gratien D'haese <gdha at sourceforge.net> - 1.9.0-1
+- added AUTHORS and TODO to %%doc
+
 * Thu Apr 02 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.20-1
 - update %%_localstatedir/rear to %%_localstatedir/lib/rear
 
