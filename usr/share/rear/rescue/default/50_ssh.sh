@@ -1,4 +1,4 @@
-# #50_ssh.sh
+# 50_ssh.sh
 #
 # take ssh for Relax & Recover
 #
@@ -17,7 +17,6 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-
 if type -p sshd >/dev/null ; then
 
 	# assume that we have openssh with configs in /etc/ssh
@@ -45,4 +44,8 @@ if type -p sshd >/dev/null ; then
 
 	echo "ssh:23:respawn:/bin/sshd -D" >>$ROOTFS_DIR/etc/inittab
 
+	# print a warning if there is no authorized_keys file for root
+	if test ! -f "/root/.ssh/authorized_keys" ; then
+		LogPrint "WARNING: To login as root via ssh you need to setup an authorized_keys file in /root/.ssh"
+	fi
 fi

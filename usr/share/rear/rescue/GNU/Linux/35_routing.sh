@@ -1,4 +1,4 @@
-# #35_routing.sh
+# 35_routing.sh
 #
 # record routing configuration for Relax & Recover
 #
@@ -58,7 +58,7 @@ else # use original routes
 	do
 		ip route list table $table |\
 			grep -Ev 'scope (link|host)' |\
-			while read destination via gateway dev device ;
+			while read destination via gateway dev device junk;
 		do
 			if test "$SIMPLIFY_BONDING" -a -r /proc/net/bonding/$device ; then
 				# if this is a bond we need to simplify then we substitute the route through the bond

@@ -39,6 +39,8 @@ alias ls-l='ls -l'
 alias md='mkdir -p'
 alias which='type -p'
 alias rehash='hash -r'
+alias more='less'
+export TERM=ansi
 
 # print motd for interactive shells
 tty -s && test -s /etc/motd && cat /etc/motd

@@ -1,5 +1,10 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-12-03	GD	* add warning for missing authorized_keys file in rescue/default/50_ssh.sh
+			* fix a bug in rescue/GNU/Linux/35_routing.sh (capture junk)
+			* skel/default/etc/profile - add alias for more and define TERM=ansi
+			* skel/default/etc/scripts/system-setup.d/55-migrate-network-devices.sh -
+			  added code to capture device renaming
 2010-12-02	GD	Tweak contrib/mkvendorrpm a bit
 2010-12-01	GSS	Add hash -r to rear to make sure that type -p works properly (thanks to Dag Wieers for suggesting this)
 2010-11-30	GSS	The following patches have been developed by Dag Wieers <dag@wieers.com> for the Belgian Federal Police:
