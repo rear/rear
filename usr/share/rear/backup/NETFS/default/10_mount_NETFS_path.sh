@@ -1,6 +1,11 @@
 # create mount point
 mkdir -p "$BUILD_DIR/netfs" || Error "Could not mkdir '$BUILD_DIR/netfs'"
 
+# don't mount anything for tape backups
+if [ "$NETFS_PROTO" == "tape" -o "$NETFS_PROTO" == "obdr" ]; then
+	return 0
+fi
+
 # mount the network filesystem
 
 # default option is rw, but it is just a dummy filler

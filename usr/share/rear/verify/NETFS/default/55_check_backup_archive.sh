@@ -1,6 +1,11 @@
 # check wether the archive is actually there
 
-if ! test -s "$backuparchive" ; then
+# Don't check when backup is on a tape device
+if [ "$NETFS_PROTO" == "tape" -o "$NETFS_PROTO" == "obdr" ]; then
+	return
+fi
+
+if [ ! -s "$backuparchive" ]; then
 	Error "Backup archive '$displayarchive' not found !"
 else
 	read size file < <(du -h "$backuparchive")

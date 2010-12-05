@@ -1,6 +1,11 @@
 #
 # copy resulting files to network backup location
 
+# do not do this for tapes
+if [ "$NETFS_PROTO" == "tape" -o "$NETFS_PROTO" == "obdr" ]; then
+	return 0
+fi
+
 test ${#RESULT_FILES[@]} -gt 0 || Error "No files to copy (RESULT_FILES is empty)" 
 
 test -d "${BUILD_DIR}/netfs/${NETFS_PREFIX}" || Error "'${BUILD_DIR}/netfs/${NETFS_PREFIX}/' not a directory !"

@@ -27,12 +27,12 @@ else
 	case "$NETFS_PROTO" in
 		cifs)
 			NETFS_MOUNTPATH="//$NETFS_HOST/$NETFS_SHARE" ;;
-		*)	;;
+		*) ;;
 	esac
 
 	# check if host is reachable
 	if test "$PING" ; then
-		ping -c 2 "$NETFS_HOST" 1>&8  
+		ping -c 2 "$NETFS_HOST" 1>&8
 		ProgressStopIfError $? "Backup host [$NETFS_HOST] not reachable."
 	else
 		Log "Skipping ping test"
@@ -41,7 +41,15 @@ else
 fi
 
 # set archive names
-backuparchive="${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}"
+case "$TAPE_DEVICE:$NETFS_PROTO" in
+	(:*)
+		backuparchive="${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}" ;;
+	(*:obdr)
+		backuparchive="${TAPE_DEVICE}" ;;
+	(*:tape)
+		backuparchive="${TAPE_DEVICE}" ;;
+esac
+
 if test "$NETFS_MOUNTCMD" -a "$NETFS_UMOUNTCMD" ; then
 	displayarchive="$backuparchive"
 else
