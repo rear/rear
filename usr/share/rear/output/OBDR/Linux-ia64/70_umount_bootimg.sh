@@ -1,3 +1,1 @@
-# 90_umount_bootimg.sh
-umount "$BUILD_DIR"/tmp/boot.img
-#rm -f "$BUILD_DIR"/tmp/boot.img
+../../ISO/Linux-ia64/70_umount_bootimg.sh
