@@ -1,5 +1,6 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-12-10	GD	* Added DHCP client support (use variable USE_DHCLIENT=y to activate)
 2010-12-05	GD	* Applied the OBDR patch developed by Jeroen Hoekx and Dag Wieers for the
 			  Belgian Federal Police - SF Patch # 3122233
 2010-12-03	GD	* add warning for missing authorized_keys file in rescue/default/50_ssh.sh

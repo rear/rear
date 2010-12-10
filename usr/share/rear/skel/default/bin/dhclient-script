@@ -1,0 +1,205 @@
+#!/bin/bash
+#
+# dhclient-script: Network interface configuration script run by
+#                  dhclient based on DHCP client communication
+#
+
+SAVEDIR=/var/lib/dhclient
+ETCDIR="/etc"
+LOGFACILITY="local7"
+LOGLEVEL="notice"
+
+. /usr/share/rear/lib/network-functions.sh
+
+logmessage() {
+    msg="${1}"
+    logger -p ${LOGFACILITY}.${LOGLEVEL} -t "NET" "dhclient: ${msg}"
+}
+
+save_previous() {
+    origfile="${1}"
+    savefile="${SAVEDIR}/${origfile##*/}.predhclient.${interface}"
+
+    if [ ! -d ${SAVEDIR} ]; then
+        mkdir -p ${SAVEDIR}
+    fi
+
+    if [ -e ${origfile} ]; then
+        contents="$(< ${origfile})"
+        echo "${contents}" > ${savefile}
+        rm -f ${origfile}
+    else
+        echo > ${savefile}
+    fi
+
+}
+
+## MAIN
+#
+
+new_prefix="$(get_prefix ${new_ip_address} ${new_subnet_mask})"
+old_prefix="$(get_prefix ${old_ip_address} ${old_subnet_mask})"
+alias_prefix="$(get_prefix ${alias_ip_address} ${alias_subnet_mask})"
+
+case "${reason}" in
+    MEDIUM)
+        # Linux doesn't handle mediums (media)
+        exit_with_hooks 0
+        ;;
+
+    PREINIT)
+        if [ -n "${alias_ip_address}" ]; then
+            # Bring down alias interface, its routes will disappear too.
+            ip link set ${interface}:0 down
+        fi
+
+        if [ "${keep_old_ip}" = "yes" ]; then
+            ip link set ${interface} up
+        else
+            ip -4 addr flush dev ${interface} >/dev/null 2>&1
+            ip link set ${interface} up
+        fi
+
+        if [ -n "${DHCLIENT_DELAY}" ] && [ ${DHCLIENT_DELAY} -gt 0 ]; then
+            sleep ${DHCLIENT_DELAY}
+        fi
+
+        exit_with_hooks 0
+        ;;
+   PREINIT6)
+        # ensure interface is up
+        ip link set ${interface} up
+
+        # remove any stale addresses from aborted clients
+        ip -6 addr flush dev ${interface} scope global permanent
+
+        exit_with_hooks 0
+        ;;
+
+    ARPCHECK|ARPSEND)
+        if [ -z "${new_ip_address}" ] || [ -z "${interface}" ] ||
+           arping -q -f -c 2 -w 3 -D -I ${interface} ${new_ip_address}; then
+            exit_with_hooks 0
+        else
+            exit_with_hooks 1
+        fi
+        ;;
+
+    BOUND|RENEW|REBIND|REBOOT)
+        dhconfig
+        exit_with_hooks 0
+        ;;
+
+    BOUND6|RENEW6|REBIND6|DEPREF6)
+        dh6config
+        exit_with_hooks 0
+        ;;
+
+    EXPIRE6|RELEASE6|STOP6)
+        if [ -z "${old_ip6_address}" ] || [ -z "${old_ip6_prefixlen}" ]; then
+            exit_with_hooks 2
+        fi
+
+        ip -6 addr del ${old_ip6_address}/${old_ip6_prefixlen} \
+            dev ${interface}
+
+        # execute any additional client side configuration scripts we have
+        if [ -d ${ETCDIR}/dhclient.d ]; then
+            for f in ${ETCDIR}/dhclient.d/*.sh ; do
+                if [ -x ${f} ]; then
+                    subsystem="${f%.sh}"
+                    subsystem="${subsystem##*/}"
+                    . ${f}
+                    "${subsystem}_restore"
+                fi
+            done
+        fi
+
+        if [ -x ${ETCDIR}/dhclient-${interface}-down-hooks ]; then
+            . ${ETCDIR}/dhclient-${interface}-down-hooks
+        elif [ -x ${ETCDIR}/dhclient-down-hooks ]; then
+            . ${ETCDIR}/dhclient-down-hooks
+        fi
+
+        exit_with_hooks 0
+        ;;
+
+    EXPIRE|FAIL|RELEASE|STOP)
+        # only restore config files if there are no other dhclient processes
+        # running (#306381)
+        any_other_clients="$(ps -eo pid,ppid,comm | grep dhclient | grep -v ${PPID})"
+        if [ -n "${any_other_clients}" ]; then
+            if [ -f ${SAVEDIR}/resolv.conf.predhclient.${interface} ]; then
+                change_resolv_conf ${SAVEDIR}/resolv.conf.predhclient.${interface}
+                rm -f ${SAVEDIR}/resolv.conf.predhclient.${interface}
+            fi
+
+            if [ -n "${DHCP_TIME_OFFSET_SETS_TIMEZONE}" ] &&
+               [[ "${DHCP_TIME_OFFSET_SETS_TIMEZONE}" = [yY1]* ]]; then
+                if [ -e ${SAVEDIR}/localtime.predhclient.${interface} ]; then
+                    rm -f /etc/localtime
+                    contents="$(< ${SAVEDIR}/localtime.predhclient.${interface})"
+                    echo "${contents}" > /etc/localtime
+                    rm -f ${SAVEDIR}/localtime.predhclient.${interface}
+                    touch /etc/localtime
+                fi
+            fi
+        fi
+
+        # execute any additional client side configuration scripts we have
+        if [ -d ${ETCDIR}/dhclient.d ]; then
+            for f in ${ETCDIR}/dhclient.d/*.sh ; do
+                if [ -x ${f} ]; then
+                    subsystem="${f%.sh}"
+                    subsystem="${subsystem##*/}"
+                    . ${f}
+                    "${subsystem}_restore"
+                fi
+            done
+        fi
+        if [ -n "${alias_ip_address}" ]; then
+            # Turn off alias interface
+            ip link set ${interface}:0 down
+        fi
+
+        if [ -n "${old_ip_address}" ]; then
+            # Delete addresses/routes/arp cache.
+            flush_dev ${interface}
+        fi
+
+        if [ -n "${alias_ip_address}" ]; then
+            ip -4 addr add ${alias_ip_address}/${alias_prefix} dev ${interface}:0
+            ip -4 route replace ${alias_ip_address}/32 ${interface}:0
+        fi
+
+        exit_with_hooks 0
+        ;;
+
+    TIMEOUT)
+        if [ -n "${new_routers}" ]; then
+            if [ -n "${alias_ip_address}" ]; then
+                ip -4 addr flush dev ${interface}:0 >/dev/null 2>&1
+            fi
+
+            ip -4 addr add ${new_ip_address}/${new_prefix} broadcast ${new_broadcast_address} dev ${interface}
+            set ${new_routers}
+
+            if ping -q -c 1 -w 10 -I ${interface} ${1}; then
+                dhconfig
+                exit_with_hooks 0
+            fi
+
+            flush_dev ${interface}
+            exit_with_hooks 1
+        else
+            exit_with_hooks 1
+        fi
+        ;;
+
+    *)
+        logmessage "unhandled state: ${reason}"
+        exit_with_hooks 1
+        ;;
+esac
+
+exit_with_hooks 0

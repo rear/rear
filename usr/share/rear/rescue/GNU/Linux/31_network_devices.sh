@@ -26,6 +26,9 @@
 # where to build networking configuration
 netscript=$ROOTFS_DIR/etc/scripts/system-setup.d/60-network-devices.sh
 
+# add a line at the top of netscript to skip if dhclient will be used
+echo "[ -x /bin/dhclient ] && return" > $netscript
+
 # go over the network devices and record information
 # and, BTW, interfacenames luckily do not allow spaces :-)
 for sysfspath in /sys/class/net/* ; do
