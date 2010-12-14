@@ -1,5 +1,9 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-12-14	GD	* lib/network-functions.sh: added my_ipcalc replacement for ipcalc (only standard in RHEL/Fedora)
+			* minor fixes in skel/default/bin/dhclient-script
+			* skel/default/etc/scripts/system-setup.d/58-start-dhclient.sh loop over valid interfaces
+			* prep/BACULA/default/50_check_BACULA_bconsole_results.sh: use short hostname as suggested by Dag
 2010-12-10	GD	* Added DHCP client support (use variable USE_DHCLIENT=y to activate)
 2010-12-05	GD	* Applied the OBDR patch developed by Jeroen Hoekx and Dag Wieers for the
 			  Belgian Federal Police - SF Patch # 3122233

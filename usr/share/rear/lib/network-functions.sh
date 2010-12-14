@@ -2,7 +2,20 @@
 # of dhclient-script, but these can/could be used by other
 # scripts as well
 #
-# Most of the functions are coming from the fedora dhclient-script
+# Most of the functions are coming from the fedora-14 dhclient-script
+
+readonly -a MASKS=( 
+        0
+        2147483648 3221225472 3758096384 4026531840
+        4160749568 4227858432 4261412864 4278190080
+        4286578688 4290772992 4292870144 4293918720
+        4294443008 4294705152 4294836224 4294901760
+        4294934528 4294950912 4294959104 4294963200
+        4294965248 4294966272 4294966784 4294967040
+        4294967168 4294967232 4294967264 4294967280
+        4294967288 4294967292 4294967294 4294967295
+        -1
+)
 
 exit_with_hooks() {
     exit_status="${1}"
@@ -14,30 +27,36 @@ exit_with_hooks() {
     exit ${exit_status}
 }
 
+logmessage() {
+    msg="${1}"
+    logger -p ${LOGFACILITY}.${LOGLEVEL} -t "NET" "dhclient: ${msg}"
+}
+
+save_previous() {
+    origfile="${1}"
+    savefile="${SAVEDIR}/${origfile##*/}.predhclient.${interface}"
+
+    if [ ! -d ${SAVEDIR} ]; then
+        mkdir -p ${SAVEDIR}
+    fi
+
+    if [ -e ${origfile} ]; then
+        contents="$(< ${origfile})"
+        echo "${contents}" > ${savefile}
+        rm -f ${origfile}
+    else
+        echo > ${savefile}
+    fi
+
+}
+
 eventually_add_hostnames_domain_to_search() {
 # For the case when hostname for this machine has a domain that is not in domain_search list
-# 1) get a hostname with `ipcalc --hostname` or `hostname`
-# 2) get the domain from this hostname
-# 3) add this domain to search line in resolv.conf if it's not already
+# 1) get the domain from this hostname
+# 2) add this domain to search line in resolv.conf if it's not already
 #    there (domain list that we have recently added there is a parameter of this function)
-# We can't do this directly when generating resolv.conf in make_resolv_conf(), because
-# we need to first save the resolv.conf with obtained values before we can call `ipcalc --hostname`.
-# See bug 637763
     search="${1}"
-    if need_hostname; then
-        status=1
-        if [ -n "${new_ip_address}" ]; then
-            eval $(/bin/ipcalc --silent --hostname ${new_ip_address} ; echo "status=$?")
-        elif [ -n "${new_ip6_address}" ]; then
-            eval $(/bin/ipcalc --silent --hostname ${new_ip6_address} ; echo "status=$?")
-        fi
-
-        if [ ${status} -eq 0 ]; then
-            domain=$(echo $HOSTNAME | cut -s -d "." -f 2-)
-        fi
-    else
-          domain=$(hostname 2>/dev/null | cut -s -d "." -f 2-)
-    fi
+    domain=$(hostname 2>/dev/null | cut -s -d "." -f 2-)
 
     if [ -n "${domain}" ] &&
        [ ! "${domain}" = "localdomain" ] &&
@@ -182,6 +201,24 @@ change_resolv_conf ()
     return $r;
 }
 
+my_ipcalc() {
+    declare -i BITS ADDRESS="$(ip2num "$1")"
+
+    if [[ "$2" ]]; then
+        declare -i DEC MASK="$(ip2num "$2")"
+        for BITS in ${!MASKS[@]}; do
+                DEC=${MASKS[$BITS]}
+                (( MASK == DEC )) && break
+        done
+        (( DEC < 0 )) && Error "Main: netmask [$2] seems to be invalid."
+        NETADDR=$(num2ip "$(( ADDRESS & MASK ))")
+    else
+        NETADDR=$(num2ip "$ADDRESS")
+        BITS=32
+    fi
+    echo "$NETADDR/$BITS"
+}
+
 quad2num() {
     if [ $# -eq 4 ]; then
         let n="${1} << 24 | ${2} << 16 | ${3} << 8 | ${4}"
@@ -194,7 +231,8 @@ quad2num() {
 }
 
 ip2num() {
-    IFS="." quad2num ${1}
+	IFS="."
+	quad2num ${1}
 }
 
 num2ip() {
@@ -213,11 +251,17 @@ get_network_address() {
 
     if [ -n "${ip}" -a -n "${nm}" ]; then
         if [[ "${nm}" = *.* ]]; then
-            ipcalc -s -n ${ip} ${nm} | cut -d '=' -f 2
+            :
         else
-            ipcalc -s -n ${ip}/${nm} | cut -d '=' -f 2
+	    nm=`prefix2netmask ${nm}`
         fi
+	my_ipcalc ${ip} ${nm} | cut -d '/' -f 2
     fi
+}
+
+prefix2netmask() {
+	pf="${1}"
+	echo $(num2ip "${MASKS[$BITS]}")
 }
 
 get_prefix() {
@@ -226,7 +270,7 @@ get_prefix() {
     nm="${2}"
 
     if [ -n "${ip}" -a -n "${nm}" ]; then
-        ipcalc -s -p ${ip} ${nm} | cut -d '=' -f 2
+        my_ipcalc ${ip} ${nm} | cut -d '/' -f 2
     fi
 }
 
@@ -633,7 +677,7 @@ check_default_route ()
 find_gateway_dev ()
 {
     if [ -n "${GATEWAY}" -a "${GATEWAY}" != "none" ] ; then
-        dev=$(LC_ALL=C /sbin/ip route get to "${GATEWAY}" 2>/dev/null | \
+        dev=$(LC_ALL=C /bin/ip route get to "${GATEWAY}" 2>/dev/null | \
             sed -n 's/.* dev \([[:alnum:]]*\) .*/\1/p')
         if [ -n "$dev" ]; then
             GATEWAYDEV="$dev"
@@ -649,14 +693,14 @@ add_default_route ()
                 "${GATEWAY}" != "none" ]; then
         if ! check_device_down $1; then
             if [ "$GATEWAY" = "0.0.0.0" ]; then
-                /sbin/ip route add default dev ${GATEWAYDEV}
+                /bin/ip route add default dev ${GATEWAYDEV}
             else
-                /sbin/ip route add default via ${GATEWAY}
+                /bin/ip route add default via ${GATEWAY}
             fi
         fi
     elif [ -f /etc/default-routes ]; then
         while read spec; do
-            /sbin/ip route add $spec
+            /bin/ip route add $spec
         done < /etc/default-routes
         rm -f /etc/default-routes
     fi

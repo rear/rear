@@ -9,30 +9,8 @@ ETCDIR="/etc"
 LOGFACILITY="local7"
 LOGLEVEL="notice"
 
+# read the network related functions
 . /usr/share/rear/lib/network-functions.sh
-
-logmessage() {
-    msg="${1}"
-    logger -p ${LOGFACILITY}.${LOGLEVEL} -t "NET" "dhclient: ${msg}"
-}
-
-save_previous() {
-    origfile="${1}"
-    savefile="${SAVEDIR}/${origfile##*/}.predhclient.${interface}"
-
-    if [ ! -d ${SAVEDIR} ]; then
-        mkdir -p ${SAVEDIR}
-    fi
-
-    if [ -e ${origfile} ]; then
-        contents="$(< ${origfile})"
-        echo "${contents}" > ${savefile}
-        rm -f ${origfile}
-    else
-        echo > ${savefile}
-    fi
-
-}
 
 ## MAIN
 #
