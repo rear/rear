@@ -1,7 +1,10 @@
 Version 1.9.0  - not released
 ---------------------------
-2010-12-15	GD	* add DRBD support patch of Dag/Jeroen (sponsored by Belgian Federal Police #3124341)
+2010-12-16	GD	* aligned mkdist-workflow.sh and mkvendorrpm
+			* added patch of Jeroen Hoeckx to check- and savelayout workflows
+			  (SF #3124343, sponsored by Belgian Federal Police)
 			* doc/configuration-examples.txt added for the beginners.
+2010-12-15	GD	* add DRBD support patch of Dag/Jeroen (sponsored by Belgian Federal Police #3124341)
 2010-12-14	GD	* lib/network-functions.sh: added my_ipcalc replacement for ipcalc (only standard in RHEL/Fedora)
 			* minor fixes in skel/default/bin/dhclient-script
 			* skel/default/etc/scripts/system-setup.d/58-start-dhclient.sh loop over valid interfaces
