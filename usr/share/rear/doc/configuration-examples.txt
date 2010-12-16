@@ -1,0 +1,46 @@
+Configuration examples for /etc/rear/{local|site}.conf files:
+------------------------------------------------------------
+There are 2 very important variables to define, OUTPUT and BACKUP. The OUTPUT variable defines
+where the rescue image should be send to. The BACKUP setting defines our backup/restore strategy.
+Possible OUTPUT setting are:
+	- OUTPUT=ISO	: creates a bootable ISO9660 image on disk as rear-$(hostname).iso
+	- OUTPUT=PXE	: creates on a remote PXE/NFS server the required files (such as
+			  configuration file, kernel and initrd image
+	- OUTPUT=TSM	: use IBM Tivoli Storage Manager programs
+	- OUTPUT=DP	: use HP DataProtector programs
+	- OUTPUT=NBU	: use Symantec NetBackup programs
+	- OUTPUT=BACULA	: use Bacula programs
+	- OUTPUT=OBDR	: create a bootable OBDR tape including the backup archive
+
+* To backup to a local disk, NFS, CIFS or USB disk and gave an ISO image created one can define:
+OUTPUT=ISO
+BACKUP=NETFS
+and the NETFS_URL setting depends on the type of disk:
+	- local disk:	NETFS_URL=file:///directory/path/
+	- NFS disk:	NETFS_URL=nfs://nfs-server-name/directort/path
+	- CIFS disk:	NETFS_URL=cifs://cifs-server-name/directort/path
+			NETFS_OPTIONS="cred=/etc/rear/.cifs"
+			is handy to pass along the:
+				username=<username>
+				password=<secret password>
+				domain=<domain>
+NETFS_KEEP_OLD_BACKUP_COPY=y (if you want to keep the previous backup archive)
+
+
+The One Button Disaster Recovery (OBDR) process is a bit special:
+# rear mkobdr
+is required to use the correct work-flow (an ISO image has to be made before
+writing it on tape) and the following variables need to be defined:
+
+For example, if you want an OBDR image on tape, and use GNU tar
+for recovery, you would use:
+OUTPUT=OBDR
+BACKUP=NETFS
+NETFS_URL=tape:///dev/nst0
+
+The usage of bextract command (of Bacula) is still under discussion how to
+implement this, so it can/will change:
+OUTPUT=OBDR
+ISO_URL=obdr:///dev/nst0
+BACKUP=BEXTRACT
+
