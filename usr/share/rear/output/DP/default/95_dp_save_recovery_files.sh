@@ -3,7 +3,7 @@
 
 ProgressStart "Saving recovery files for DP"
 
-test -z "$DP_RECOVERY_FILE_PATH" && DP_RECOVERY_FILE_PATH=/etc/rear/DP
+test -z "$DP_RECOVERY_FILE_PATH" && DP_RECOVERY_FILE_PATH="$CONFIG_DIR/DP"
 
 if test -d "$DP_RECOVERY_FILE_PATH" ; then
   rm -rf "$DP_RECOVERY_FILE_PATH"

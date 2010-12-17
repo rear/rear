@@ -33,7 +33,7 @@ while read ; do
 done < <(hpacucli ctrl all show)
 
 # do nothing if no supported controllers installed
-if ! test "${SLOTS[@]}" ; then
+if [ ${#SLOTS[@]} -eq 0 ] ; then
 	Log "No compatible HP RAID controllers found or configured"
 	return 0
 fi

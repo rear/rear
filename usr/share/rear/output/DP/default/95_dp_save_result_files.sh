@@ -9,7 +9,7 @@ DP_RESULT_FILES=()
 # decide where to put the result files for saving them with DP
 # if DP_RESULT_FILE_PATH is unset, then save the result files where they are
 # NOTE: Make sure that your DP installation will not silently skip files in /tmp !
-test -z "$DP_RESULT_FILE_PATH" && DP_RESULT_FILE_PATH=/etc/rear/DP
+test -z "$DP_RESULT_FILE_PATH" && DP_RESULT_FILE_PATH="$CONFIG_DIR/DP"
 
 if ! test -d "$DP_RESULT_FILE_PATH" ; then
 	 mkdir -v -p "$DP_RESULT_FILE_PATH" 1>&8
@@ -41,6 +41,3 @@ cp -r "$VAR_DIR/recovery" "$DP_RESULT_FILE_PATH"
 
 ret=0
 ProgressStopOrError $ret "Could not save result files with dataprotector"
-
-#set +x
-

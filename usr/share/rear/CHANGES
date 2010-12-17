@@ -1,6 +1,8 @@
 Version 1.9.0  - not released
 ---------------------------
-2010-12-17	GD	* 80_setup_hp_raid.sh - HP RAID reassembly fails for empty controllers - SF#3131505 of Jeroen
+2010-12-17	GD	* 95_collect_hpacucli.sh - Test for HP smart array controllers is wrong 
+			  SF#3132182 (reported by Filip Bouljon and Dag)
+			* 80_setup_hp_raid.sh - HP RAID reassembly fails for empty controllers - SF#3131505 of Jeroen
 2010-12-16	GD	* aligned mkdist-workflow.sh and mkvendorrpm
 			* added patch of Jeroen Hoeckx to check- and savelayout workflows
 			  (SF #3124343, sponsored by Belgian Federal Police)
