@@ -8,9 +8,16 @@ test -d $VAR_DIR/recovery/hpacucli && grep -q cciss < <(lsmod) ||return 0
 
 for SLOTDIR in $VAR_DIR/recovery/hpacucli/Slot_* ; do
 
+	SLOT="${SLOTDIR##*Slot_}" # remove leading path to extract slot number
+
 	# little sanity check
-	test -s "$SLOTDIR"/config.txt -a -s "$SLOTDIR"/hpacucli-commands.sh ||\
-       		Error "config.txt or hpacucli-commands.sh missing from '$SLOTDIR'"
+	if ! [ -s "$SLOTDIR"/config.txt -a -s "$SLOTDIR"/hpacucli-commands.sh ] ; then
+		LogPrint "Error reading controller configuration:"
+		LogPrint "config.txt or hpacucli-commands.sh missing from '$SLOTDIR'"
+		read 2>&1 -p "Please configure controller $SLOT manually and press any key..."
+		continue
+	fi
+
 	LogPrint "Found HP RAID controller configuration:"
 	LogPrint "$(cat "$SLOTDIR"/config.txt)"
 	Print ""
@@ -20,8 +27,6 @@ for SLOTDIR in $VAR_DIR/recovery/hpacucli/Slot_* ; do
 	Print ""
 	read 2>&1 -t 60 -p "Type exactly 'Yes' to restore RAID or press Enter to skip [60secs] "
 	test "$REPLY" = Yes || continue # require YES
-
-	SLOT="${SLOTDIR##*Slot_}" # remove leading path to extract slot number
 
 	# prepare list of commands to run
 	command_list="hpacucli ctrl slot=$SLOT delete forced
