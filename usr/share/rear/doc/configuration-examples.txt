@@ -11,6 +11,7 @@ Possible OUTPUT setting are:
 	- OUTPUT=NBU	: use Symantec NetBackup programs
 	- OUTPUT=BACULA	: use Bacula programs
 	- OUTPUT=OBDR	: create a bootable OBDR tape including the backup archive
+	- OUTPUT=USB	: create a bootable USB disk (with syslinux)
 
 * To backup to a local disk, NFS, CIFS or USB disk and gave an ISO image created one can define:
 OUTPUT=ISO
@@ -24,6 +25,9 @@ and the NETFS_URL setting depends on the type of disk:
 				username=<username>
 				password=<secret password>
 				domain=<domain>
+	- USB disk:	NETFS_URL=usb:///dev/sdb1  (whatever device your USB disk has)
+			(together with OUTPUT=USB everything is on an USB device)
+
 NETFS_KEEP_OLD_BACKUP_COPY=y (if you want to keep the previous backup archive)
 
 

@@ -82,7 +82,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc COPYING CHANGES README AUTHORS TODO
-%doc doc/README.doc doc/relax-recover-*
+%doc doc/README.doc doc/configuration-examples.txt
 %{_sbindir}/rear
 %{_datadir}/rear
 %{_localstatedir}/lib/rear
@@ -91,7 +91,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Thu Dec 02 2010 Gratien D'haese <gdha at sourceforge.net> - 1.9.0-1
+* Tue Dec 21 2010 Gratien D'haese <gdha at sourceforge.net> - 1.9.0-1
 - New development release with P2V, V2V functionality, and more
 - added AUTHORS, TODO to %%doc and rm from datadir
 
