@@ -1,5 +1,7 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-12-21	GD	* add auto dhclient detection in prep/GNU/Linux/21_include_dhclient.sh and
+			  fixed a typo and moved some PROGS to Linux.conf
 2010-12-17	GD	* 95_collect_hpacucli.sh - Test for HP smart array controllers is wrong 
 			  SF#3132182 (reported by Filip Bouljon and Dag)
 			* 80_setup_hp_raid.sh - HP RAID reassembly fails for empty controllers - SF#3131505 of Jeroen
