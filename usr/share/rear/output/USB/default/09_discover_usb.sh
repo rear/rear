@@ -1,1 +1,0 @@
-../../../backup/USBFS/default/09_discover_usb.sh

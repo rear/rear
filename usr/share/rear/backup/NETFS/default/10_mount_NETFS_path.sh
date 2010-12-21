@@ -18,8 +18,17 @@ if test "$NETFS_MOUNTCMD" ; then
 	$NETFS_MOUNTCMD "$BUILD_DIR/netfs" 1>&2 || \
 		Error "Your NETFS mount command '$NETFS_MOUNTCMD' failed."
 else
-	Log "Running 'mount -t $NETFS_PROTO -o $NETFS_OPTIONS $NETFS_MOUNTPATH $BUILD_DIR/netfs'"
-	mount -t $NETFS_PROTO -o "$NETFS_OPTIONS" \
+	case "$NETFS_PROTO" in
+	usb ) 	Log "Running 'mount -o $NETFS_OPTIONS $NETFS_MOUNTPATH $BUILD_DIR/netfs'"
+		mount -o "$NETFS_OPTIONS" \
+			"$NETFS_MOUNTPATH" "$BUILD_DIR/netfs" 1>&2 || \
+		Error "Mounting '$NETFS_SHARE' [$NETFS_PROTO] failed."
+		;;
+	* )
+		Log "Running 'mount -t $NETFS_PROTO -o $NETFS_OPTIONS $NETFS_MOUNTPATH $BUILD_DIR/netfs'"
+		mount -t $NETFS_PROTO -o "$NETFS_OPTIONS" \
 			"$NETFS_MOUNTPATH" "$BUILD_DIR/netfs" 1>&2 || \
 		Error "Mounting '$NETFS_HOST:/$NETFS_SHARE' [$NETFS_PROTO] failed."
+		;;
+	esac
 fi

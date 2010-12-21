@@ -1,1 +1,0 @@
-../../../backup/USBFS/default/98_umount_USB.sh
