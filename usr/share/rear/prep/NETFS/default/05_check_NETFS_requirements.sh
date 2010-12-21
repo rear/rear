@@ -1,6 +1,9 @@
 # NETFS_URL=[proto]://[host]/[share]
 # example: nfs://lucky/temp/backup
 # example: cifs://lucky/temp
+# example: usb:///dev/sdb1
+# example: tape:///dev/nst0
+# example: obdr:///dev/nst0
 
 NETFS_PROTO=
 NETFS_HOST=
@@ -27,6 +30,11 @@ else
 	case "$NETFS_PROTO" in
 		cifs)
 			NETFS_MOUNTPATH="//$NETFS_HOST/$NETFS_SHARE" ;;
+		usb )
+			NETFS_MOUNTPATH="/$NETFS_SHARE"
+			NETFS_HOST=localhost	# otherwise, ping could fail
+			USB_DEVICE="/$NETFS_SHARE"
+			;;
 		*) ;;
 	esac
 
