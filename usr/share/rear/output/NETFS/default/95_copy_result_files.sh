@@ -21,5 +21,10 @@ cp -v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "${BUILD_DIR}/netfs/${NETFS
 ProgressStopOrError $? "Could not copy usage file to network location"
 if [ -e "$LOGFILE" ]; then
 	contents="$(< $LOGFILE)"
-	echo "${contents}" > "${BUILD_DIR}/netfs/${NETFS_PREFIX}/rear-$(date -Iseconds).log"
+	case $NETFS_PROTO in
+		usb ) echo "${contents}" | tee 1>&8 "${BUILD_DIR}/netfs/${NETFS_PREFIX}/rear.log"
+		      Log "Saved $LOGFILE as ${NETFS_PREFIX}/rear.log" ;;
+		  * ) echo "${contents}" | tee 1>&8 "${BUILD_DIR}/netfs/${NETFS_PREFIX}/rear-$(date -Iseconds).log"
+		      Log "Saved $LOGFILE as ${NETFS_PREFIX}/rear-$(date -Iseconds).log" ;;
+	esac
 fi

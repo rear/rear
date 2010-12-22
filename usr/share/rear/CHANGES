@@ -1,5 +1,7 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-12-22	GD	* fix bug in 85_make_USB_bootable.sh
+			* 95_copy_result_files.sh: for usb output limit 8.3 style filenames
 2010-12-21	GD	* add auto dhclient detection in prep/GNU/Linux/21_include_dhclient.sh and
 			  fixed a typo and moved some PROGS to Linux.conf
 			* cleaned up the doc/ dir
