@@ -16,7 +16,7 @@ if [ "$NETFS_URL" ]; then
     scheme="${NETFS_URL%%://*}"
     case "$scheme" in
         (tape|obdr)
-            tempdevice="${NETFS##*://}"
+            tempdevice="${NETFS_URL##*://}"
             # Complain when both are specified, but don't match
             if [ "$TAPE_DEVICE" -a "$TAPE_DEVICE" != "$tempdevice" ]; then
                 Error "Tape device in $NETFS_URL and $ISO_URL is not the same"

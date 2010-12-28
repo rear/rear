@@ -1,5 +1,6 @@
 Version 1.9.0  - not released
 ---------------------------
+2010-12-28	GD	* fix bugs in OBDR code (04_set_tape_device.sh and 70_write_OBDR_header.sh)
 2010-12-22	GD	* fix bug in 85_make_USB_bootable.sh
 			* 95_copy_result_files.sh: for usb output limit 8.3 style filenames
 2010-12-21	GD	* add auto dhclient detection in prep/GNU/Linux/21_include_dhclient.sh and
