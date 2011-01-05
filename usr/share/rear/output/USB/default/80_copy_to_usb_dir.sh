@@ -27,11 +27,13 @@ if ! test -d "$USB_DIR" ; then
 	mkdir -vp "$USB_DIR" || Error "Could not create USB dir [$USB_DIR] !"
 fi
 
-cp -a "$BUILD_DIR"/kernel "$USB_DIR/$USB_KERNEL"
-cp -a "$BUILD_DIR"/initrd.cgz "$USB_DIR/$USB_INITRD"
+cp -av "$BUILD_DIR"/kernel "$USB_DIR/$USB_KERNEL" 1>&8
+ProgressStopIfError $? "Could not create $USB_DIR/$USB_KERNEL"
+cp -av "$BUILD_DIR"/initrd.cgz "$USB_DIR/$USB_INITRD" 1>&8
+ProgressStopIfError $? "Could not create $USB_DIR/$USB_INITRD"
 
 echo "$VERSION_INFO" >"$USB_DIR/$USB_MESSAGE"
-
+ProgressStep
 Log "Copied $USB_KERNEL and $USB_INITRD to $USB_DIR"
 
 # Add to USB_FILES

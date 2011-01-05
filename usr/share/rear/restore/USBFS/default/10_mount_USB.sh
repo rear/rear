@@ -1,1 +1,0 @@
-../../../backup/USBFS/default/10_mount_USB.sh

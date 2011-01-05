@@ -24,9 +24,9 @@
 # Versioning
 PRODUCT="Relax & Recover"
 VERSION="0.0.0"
-RELEASE_DATE="2010-12-01"
+RELEASE_DATE="2011-01-04"
 
-COPYRIGHT="Copyright (C) 2006-2010
+COPYRIGHT="Copyright (C) 2006-2011
         Schlomo Schapiro
         Gratien D'haese, IT3 Consultants"
 STARTTIME=$SECONDS
@@ -86,7 +86,7 @@ ENO_RECVSIG=3; ETXT[3]="ENO_RECVSIG"
 ###
  
 trap 'ECODE=$?; echo "[rear] Exit: ${ETXT[ECODE]}($ECODE)" >&2' 0
-echo -n "[rear] Locking: " >&2
+#echo -n "[rear] Locking: " >&2
  
 if mkdir "${LOCKDIR}" &>/dev/null; then
  
@@ -100,7 +100,7 @@ if mkdir "${LOCKDIR}" &>/dev/null; then
     # the trap on "0" (EXIT) from above will be triggered by this trap's "exit" command!
     trap 'echo "[rear] Killed by a signal." >&2
           exit ${ENO_RECVSIG}' 1 2 3 15
-    echo "success, installed signal handlers"
+    #echo "success, installed signal handlers"
  
 else
  
@@ -118,9 +118,9 @@ else
  
     if ! kill -0 $OTHERPID &>/dev/null; then
         # lock is stale, remove it and restart
-        echo "removing stale lock of nonexistant PID ${OTHERPID}" >&2
+        #echo "removing stale lock of nonexistant PID ${OTHERPID}" >&2
         rm -rf "${LOCKDIR}"
-        echo "[rear] restarting myself" >&2
+        #echo "[rear] restarting myself" >&2
         #exec "$0" "$@"
 	DIR=$(cd $(dirname "$0"); pwd)
 	exec $DIR/`basename $0` "$@"
