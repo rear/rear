@@ -1,5 +1,6 @@
 Version 1.9.0  - not released
 ---------------------------
+2011-01-12	GD	* 29_find_required_devices.sh: add 252 to virtual device list (SF#3153027)
 2011-01_06	GD	* 51_rewind_tape_drive.sh: add sleep to avoid tape busy errors
 2011-01-04	GD	* update date in rear
 			* 85_make_USB_bootable.sh: added better error capture

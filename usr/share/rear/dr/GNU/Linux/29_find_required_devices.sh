@@ -8,6 +8,7 @@
 #			be the device-mapper device on newer 2.6 kernels
 # 2009-03-02	GD	Added 147 (DRDB cluster) in exclude list
 # 2009-11-21	GSS	Added -L to stat call
+# 2011-01-12	GD	Added 252 (vda virtual disks) to skipping list
 
 REQUIRED_DEVICES=()
 
@@ -19,7 +20,7 @@ while read device junk ; do
 
 	# Here we have to filter out well-known virtual devices, mostly dm and md
 	case "$dev" in
-		147:*|253:*|254:*|9:*)
+		147:*|252:*|253:*|254:*|9:*)
 			Log "Skipping dependancy tracking for DRDB/device mapper/mdp/softraid device '$device' [$dev]"
 			continue
 			;;
