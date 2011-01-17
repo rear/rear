@@ -17,3 +17,5 @@
 	- ia64 architecture will not support Linux anymore in future? Dropped off the list in RHEL6.
 
 * Can we drop the mkvendorrpm workflow?
+
+* Support dhcpcd (SLES11) in addition to dhclient
