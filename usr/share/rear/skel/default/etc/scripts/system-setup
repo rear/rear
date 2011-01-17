@@ -7,9 +7,29 @@
 # set null globbing, we need this for our scripts
 shopt -s nullglob
 
+function debug() {
+	read -r </proc/cmdline
+	case "$REPLY" in
+		(*debug*) return 0 ;;
+		(*) return 1;;
+	esac
+}
+
+if debug ; then
+	echo "---> DEBUG MODE ENABLED, starting shell on tty9 <---"
+	echo
+	/bin/bash </dev/tty9 >/dev/tty9 2>&1 &
+fi
+
 echo "* * * Configuring Rescue System * * *"
 for s in /etc/scripts/system-setup.d/*.sh ; do
-	echo "Running $(basename $s)..."
+	if debug ; then
+		read -p "Press ENTER to run $(basename $s) "
+		set -x
+	else
+		echo "Running $(basename $s)..."
+	fi
 	source $s
+	set +x
 done
 echo "* * * Rescue System is ready * * *"
