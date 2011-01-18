@@ -1,5 +1,7 @@
 Version 1.9.0  - not released
 ---------------------------
+2011-01-18	GSS	* _input-output-functions.sh: EXIT_TASKS is now LIFO and not FIFO. This should allow us to support 
+			   stacked mounts and other ugly things in exit tasks. And I need to test the SVN commit mails in rear-users
 2011-01-18	GD	* _input-output-functions.sh: new spinners added (contribution from Dag)
 2011-01-17	GSS	* Add Jeroen to AUTHORS, welcome to the team!
 2011-01-16	GSS	* add debug support to system-setup.d scripts (add "debug" to kernel command line)

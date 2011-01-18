@@ -28,11 +28,9 @@ Usage() {
 EXIT_TASKS=()
 # add $* as a task to be done at the end
 AddExitTask() {
-	EXIT_TASKS=( "${EXIT_TASKS[@]}" "$*" ) # I use $* on purpose because I want to get one string from all args!
+	# NOTE: we add the task at the beginning to make sure that they are executed in reverse order
+	EXIT_TASKS=( "$*" "${EXIT_TASKS[@]}" ) # I use $* on purpose because I want to get one string from all args!
 	Log "Added '$*' as an exit task"
-}
-QuietAddExitTask() {
-	EXIT_TASKS=( "${EXIT_TASKS[@]}" "$*" ) # I use $* on purpose because I want to get one string from all args!
 }
 
 # remove $* from the task list
@@ -40,8 +38,7 @@ RemoveExitTask() {
 	local removed=""
 	for (( c=0 ; c<${#EXIT_TASKS[@]} ; c++ )) ; do
 		if test "${EXIT_TASKS[c]}" == "$*" ; then
-			unset 'EXIT_TASKS[c]' 
-			# the ' ' protect from bash expansion, however unlikely to have a file named EXIT_TASKS in pwd...
+			unset 'EXIT_TASKS[c]' # the ' ' protect from bash expansion, however unlikely to have a file named EXIT_TASKS in pwd...
 			removed=yes
 			Log "Removed '$*' from the list of exit tasks"
 		fi
