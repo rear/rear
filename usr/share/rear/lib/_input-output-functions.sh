@@ -110,26 +110,6 @@ LogIfError() {
 }
 
 if tty -s ; then
-	ProgressStopOrError() {
-		test $# -le 0 && Error "ProgressStopOrError called without return code to check !"
-		if test "$1" -gt 0 ; then
-			shift
-			ProgressError
-			Log "ERROR: $@"
-			Error "$@"
-		else
-			ProgressStop
-		fi
-	}
-	
-	ProgressStopIfError() {
-		test $# -le 0 && Error "ProgressStopIfError called without return code to check !"
-		test "$1" -gt 0 || return 0
-		shift
-		ProgressError
-		Error "$@"
-	}
-		
 	######################## BEGIN Progress Indicator
 	# ProgressPipe uses fd 8 as a communication pipe
 	
@@ -142,20 +122,39 @@ if tty -s ; then
 		trap "progress_counter=0" USR2
 		trap "debugoutput=1" PWR
 		progress_counter=-1
-		progress_chars=( \\ \| / - )
+		### A set of spinners coming from Alpine
+#		progress_chars=( '<|>' '</>' '<->' '<\>' )
+#		progress_chars=( '--|-(o)-|--' '--/-(o)-\--' '----(o)----' '--\-(o)-/--' )
+#		progress_chars=( '<|>' '<\>' '<->' '</>' )
+#		progress_chars=( '|  ' ' / ' ' _ ' '  \ ' '  |' '  |' ' \ ' ' _ ' ' / ' '|  ')
+#		progress_chars=( '.' '..' '...' '....' '...' '..' )
+#		progress_chars=( ' . ' ' o ' ' O ' ' o ' )
+#		progress_chars=( '....' ' ...' '. ..' '.. .' '... ' )
+#		progress_chars=( '.   ' ' .  ' '  . ' '   .' '  . ' ' .  ' )
+#		progress_chars=( '.oOo' 'oOo.' 'Oo.o' 'o.oO' )
+#		progress_chars=( '.     .' ' .   . ' '  . .  ' '   .   ' '   +   ' '   *   ' '   X   ' '   #   ' '       ')
+#		progress_chars=( '. O' 'o o' 'O .' 'o o' )
+#		progress_chars=( ' / ' ' _ ' ' \ ' ' | ' ' \ ' ' _ ' )
+#		progress_chars=( '    ' '*   ' '-*  ' '--* ' ' --*' '  --' '   -' )
+#		progress_chars=( '\/\/' '/\/\' )
+#		progress_chars=( '\|/|' '|\|/' '/|\|' '|/|\' )
+		progress_chars=( '\' '|' '/' '-' )
 		while read command text ; do
-			test "$debugoutput" -eq 1 && echo "PROGRESS: $command $text" 1>&3
-			if [[ "$command" == START ]] ; then
-				echo -en "$text  "
+			if [ $debugoutput -eq 1 ] ; then
+				echo "PROGRESS: $command $text" 1>&3
+			fi
+			if [ "$command" == "START" ] ; then
+				echo -en "\e[2K\r$text  \e7${progress_chars[0]}"
 				progress_counter=0
+			elif [ "$command" == "INFO" ] ; then
+				echo
+				echo -en "\e[2K\r$text  \e7"
 			fi
-			if [ "$command" = "INFO" ] ; then
-				echo -en "\r$text  "
-			fi
-			if [[ "$progress_counter" -gt -1 ]] ; then
+			if [ $progress_counter -gt -1 ] ; then
 				let progress_counter++
-				test "$progress_counter" -gt 3 && progress_counter=0
-				echo -en "\b""${progress_chars[progress_counter]}"
+				test $progress_counter -ge ${#progress_chars[@]} && progress_counter=0
+				echo -en "\e8${progress_chars[progress_counter]}"
+
 			fi
 		done
 	}
@@ -166,18 +165,18 @@ if tty -s ; then
 	ProgressPID=$!
 	
 	ProgressStart() {
-		echo -n "$*  "
+		echo -en "\e[2K\r$*  \e7"
 		test "$QUIET" || kill -USR2 $ProgressPID
 	}
 	
 	ProgressStop() {
 		test "$QUIET" || kill -USR1 $ProgressPID
-		echo -e "\bOK"
+		echo -e "\e8\e[KOK"
 	}
 	
 	ProgressError() {
 		kill -USR1 $ProgressPID
-		echo -e "\bFAILED"
+		echo -e "\e8\e[KFAILED"
 	}
 	
 	ProgressStep() {
@@ -187,32 +186,12 @@ if tty -s ; then
 	ProgressStepSingleChar() {
 		while read -rn 1 ; do
 			echo noop 1>&8
-			test -z "$REPLY" && echo 1>&2 || echo -n "$REPLY" 1>&2
+			echo -n "$REPLY" 1>&2
 		done
 	}
 else
 	# no tty, disable progress display altogether
-	ProgressStopOrError() {
-		test $# -le 0 && Error "ProgressStopOrError called without return code to check !"
-		if test $1 -gt 0 ; then
-			shift
-			ProgressError
-			Log "ERROR: $@"
-			Error "$@"
-		else
-			ProgressStop
-		fi
-	}
 	
-	ProgressStopIfError() {
-		test $# -le 0 && Error "ProgressStopIfError called without return code to check !"
-		test $1 -gt 0 || return 0
-		shift
-		ProgressError
-		Log "ERROR: $@"
-		Error "$@"
-	}
-		
 	exec 8>/dev/null # start ProgressPipe listening at fd 8
 	trap "exec 8>&-" 0 # close fd 8 at exit
 	
@@ -240,3 +219,23 @@ else
 fi
 ####################### END Progress Indicator
 
+ProgressStopOrError() {
+	test $# -le 0 && Error "ProgressStopOrError called without return code to check !"
+	if test "$1" -gt 0 ; then
+		shift
+		ProgressError
+		Log "ERROR: $@"
+		Error "$@"
+	else
+		ProgressStop
+	fi
+}
+
+ProgressStopIfError() {
+	test $# -le 0 && Error "ProgressStopIfError called without return code to check !"
+	test "$1" -gt 0 || return 0
+	shift
+	ProgressError
+	Log "ERROR: $@"
+	Error "$@"
+}
