@@ -1,6 +1,13 @@
 # Check that bacula is installed and configured
 #
 # are all  the files/directories present?
+
+if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
+
+   ### Bacule restore using bextract, no need for a director
+   return
+fi
+
 #
 # See if we can ping the director
 #
@@ -36,5 +43,3 @@ elif test -z "$client" ;  then
 else
 	Log "Bacula director = $director, client = $client"
 fi
-
-

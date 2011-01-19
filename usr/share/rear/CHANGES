@@ -1,5 +1,6 @@
 Version 1.9.0  - not released
 ---------------------------
+2011-01-19	GD	* Merge BEXTRACT/BACULA for tape and disk support - SF#3158159
 2011-01-18	GSS	* _input-output-functions.sh: EXIT_TASKS is now LIFO and not FIFO. This should allow us to support 
 			   stacked mounts and other ugly things in exit tasks. And I need to test the SVN commit mails in rear-users
 2011-01-18	GD	* _input-output-functions.sh: new spinners added (contribution from Dag)
