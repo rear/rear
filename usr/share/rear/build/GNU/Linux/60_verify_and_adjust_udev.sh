@@ -69,7 +69,7 @@ sysfs_modalias_paths=( $(find /sys -type f -name modalias -printf "/%P\n" | sed 
 if my_udevinfo -a -p $sysfs_modalias_paths | grep '{modalias}' | grep -q ATTR ; then
 	#echo 'ACTION=="add", ATTRS{modalias}=="?*", RUN+="/bin/modprobe -v $attr{modalias}"'
 	# fix for https://bugzilla.novell.com/show_bug.cgi?id=581292 as suggested by Kay Sievers
-	echo 'ENV{MODALIAS}=="?*", RUN+="/sbin/modprobe -bv $env{MODALIAS}"'
+	echo 'ENV{MODALIAS}=="?*", RUN+="/bin/modprobe -bv $env{MODALIAS}"'
 else
 	echo 'ACTION=="add", SYSFS{modalias}=="?*", RUN+="/bin/modprobe -v $sysfs{modalias}"'
 fi >>$ROOTFS_DIR/etc/udev/rules.d/00-rear.rules
