@@ -27,5 +27,5 @@ for dev in `get_device_by_hwaddr` ; do
 		ISALIAS=no
 	fi
 
-	dhclient -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.pid -cf /etc/dhclient.conf -v ${DEVICE}
+	dhclient -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.pid -cf /etc/dhclient.conf ${DEVICE}
 done

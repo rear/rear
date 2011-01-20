@@ -1,4 +1,4 @@
-# Extract the tape device fril ISO_URL or NETFS_URL
+# Extract the tape device from ISO_URL or NETFS_URL
 # Either variable can be used, but if both are, they must be the same value
 
 TAPE_DEVICE=

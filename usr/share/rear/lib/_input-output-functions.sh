@@ -236,3 +236,16 @@ ProgressStopIfError() {
 	Log "ERROR: $@"
 	Error "$@"
 }
+
+SpinnerSleep() {
+	if test $# -le 0 ; then
+		sec=1
+	else
+		sec=$1
+	fi
+	for i in `seq 1 $sec`
+	do
+		sleep 1
+		ProgressStep
+	done
+}
