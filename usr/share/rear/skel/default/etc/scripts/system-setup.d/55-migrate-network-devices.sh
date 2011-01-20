@@ -8,12 +8,11 @@
 #
 # NOTE: We don't do anything on systems that do not manage the persistent network names
 # through udev rules
+
 # get the rule files (though it should be only one)
 RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net}.rules )
-NETW_FILES=( /etc/scripts/system-setup.d/60-network-devices.sh /etc/scripts/system-setup.d/62-routing.sh )
 ORIG_MACS_FILE=/etc/mac-addresses
 MAC_MAPPING_FILE=/etc/rear/mappings/mac
-DEV_MAPPING_FILE=/etc/rear/mappings/dev
 MANUAL_MAC_MAPPING=
 
 test "$RULE_FILES" || return 0 # skip this process if we don't have any udev rule files
@@ -107,7 +106,6 @@ if ! test $MANUAL_MAC_MAPPING ; then
 			# remember the old_mac->new_mac mapping for later use
 			test -d /etc/rear/mappings || mkdir -p /etc/rear/mappings
 			echo "$old_mac $new_mac $old_dev" >>$MAC_MAPPING_FILE
-			echo "$old_dev  ${vars[0]}" >>$DEV_MAPPING_FILE
 			# remove the "wrong" line with the new mac address and
 			# replace the old mac address with the new mac address
 			sed -i -e "/$new_mac/d" -e "s#$old_mac#$new_mac#g" "${RULE_FILES[@]}"
@@ -119,9 +117,7 @@ else # valid mac mapping available
 		sed -i -e "/$new_mac/d" -e "s#$old_mac#$new_mac#g" "${RULE_FILES[@]}"
 	done < <( read_and_strip_file $MAC_MAPPING_FILE )
 fi
-while read old_dev new_dev junk ; do
-	sed -i -e "s#$old_dev#$new_dev#g" "${NETW_FILES[@]}"
-done < <( read_and_strip_file $DEV_MAPPING_FILE )
+
 # reload udev if we have MAC mappings
 if test -s /etc/rear/mappings/mac ; then
 	echo -n "Reloading udev ... "
