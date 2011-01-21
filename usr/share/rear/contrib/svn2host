@@ -82,6 +82,32 @@ for h in "$@" ; do
 			RESULTS=( "${RESULTS[@]}" "$h -> $RPMFILE" )
 		fi
 
+	elif ssh $h type -p dpkg >/dev/null ; then
+	# this is an DEB type host, just throw ReaR on top
+	# TODO: built proper DEB
+		distdir=$(basename $distarchive)
+		distdir=${distdir%.tar.gz}
+		if ! ssh $h -- rm -Rf $distdir ; then
+			FAILED=( "${FAILED[@]}" "$h -> Could not remove $distdir")
+			continue
+		fi
+		if ! ssh $h -- tar -xzf $distarchive ; then
+			FAILED=( "${FAILED[@]}" "$h -> Could not unpack $distarchive")
+			continue
+		fi
+		if ! ssh $h -- rm -Rf /usr/sbin/rear /usr/share/rear ; then
+			FAILED=( "${FAILED[@]}" "$h -> Could not remove /usr/sbin/rear /usr/share/rear")
+			continue
+		fi
+		if ! ssh $h -- tar -C $distdir -c usr \| tar -C / -x --totals ; then
+			FAILED=( "${FAILED[@]}" "$h -> Could not copy $distdir/usr to / with tar")
+			continue
+		else
+			echo "COPIED FILES TO '$h'"
+			RESULTS=( "${RESULTS[@]}" "$h -> manual copy" )
+		fi
+
+
 	else
 		echo "ERROR Unsupported host type '$h'. Maybe you need to install rpmbuild?"
 		FAILED=( "${FAILED[@]}" "$h -> Could not determine host type. Maybe you need to install rpmbuild?")
