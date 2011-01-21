@@ -52,11 +52,11 @@ DeviceNameToNode () {
 # OUT: list of device nodes in /dev
 #
 FindPhysicalDevices () {
-	# all phsical devices have queue subdirectory in /sys/block/* to adjust the
-	# IO scheduling. Logical devices (DM, MD, RAM, ...) don't have it
+	# all phsical devices have device link in /sys/block/*. 
+	# Logical devices (DM, MD, RAM, ...) don't have it
 	#
-	# we use the queue subdir to find out the physical devices from the logical ones
-	for d in $(ls -d /sys/block/*/queue) ; do
+	# we use the device link to find out the physical devices from the logical ones
+	for d in $(ls -d /sys/block/*/device) ; do
 		case "$d" in
 			.) continue ;;
 		esac

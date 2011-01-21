@@ -1,8 +1,15 @@
-Version 1.9.0  - not released
+Version 1.9  - not released
 ---------------------------
+2011-01-21	GSS	* Add /*/terminfo if available as some systems install /usr/share/terminfo as a symlink
+			* mkdr-functions.sh: limit FindPhysicalDevices to really find only physical devices as 
+			  indicated by device symlink in sysfs
+			* 42_migrate_network_configuration_files.sh now for all systems, not only 
+			  SUSE_LINUX. Add more files to patch with MAC changes here.
+			* Add more groups and users to clone
+			* 21_migrate_recovery_configuration.sh: Fixed a bug (cp -r instead of cp) that prevented this from working
 2011-01-20	GD	* Apply patch 'Protect tapes from being scratched' SF#3162557
 			  New workflow: rear labeltape
-			  Sponsored by Belgian Federal Police by Dag and Jeroen
+			  Sponsored by Belgian Federal Police by Dagand Jeroen
 			* 58-start-dhclient.sh: removed the "-v" (bug report SF#3157282)
 			* _input-output-functions.sh: new SpinnerSleep function
 2011-01-19	GD	* Merge BEXTRACT/BACULA for tape and disk support - SF#3158159
