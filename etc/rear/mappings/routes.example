@@ -1,0 +1,3 @@
+# destination 	router	device
+default 213.203.238.1 eth0
+192.168.33.0/24 213.203.238.45 eth0

@@ -1,0 +1,2 @@
+# old device	new device
+/dev/cciss/c0d0 /dev/sda
