@@ -30,7 +30,7 @@ and the NETFS_URL setting depends on the type of disk:
 
 NETFS_KEEP_OLD_BACKUP_COPY=y (if you want to keep the previous backup archive)
 
-
+------------------------------------------------------------------------------
 The One Button Disaster Recovery (OBDR) process is a bit special:
 # rear mkobdr
 is required to use the correct work-flow (an ISO image has to be made before
@@ -42,8 +42,8 @@ OUTPUT=OBDR
 BACKUP=NETFS
 NETFS_URL=tape:///dev/nst0
 
-The usage of bextract command (of Bacula) is still under discussion how to
-implement this, so it can/will change:
+The usage of bextract command (of Bacula) is also implemented to restore
+a Bacula archive (without a bacula server being active):
 OUTPUT=OBDR
 ISO_URL=obdr:///dev/nst0
 BACKUP=BEXTRACT
