@@ -139,20 +139,15 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Tue Dec 02 2010 Gratien D'haese <gdha at sourceforge.net> - 1.9.0-1
+* Mon Jan 24 2011 Gratien D'haese <gdha at sourceforge.net> - 1.9-1
 - added AUTHORS and TODO to %%doc
 
 * Wed Dec 02 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.22
 - updated spec file to be more cross-platform compliant
-- many bug fixes
-- update to latest from SVN
 
 * Sun Jun 28 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.20-1
 - updated spec file to build on SUSE/RHEL/Fedora/Mandriva and clones and use
   the correct dependencies
-
-* Mon May 18 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.18
-- added ethtool and syslinux to dependancy list
 
 * Thu Mar 26 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.18
 - did http://lists.opensuse.org/opensuse-packaging/2007-02/msg00005.html
@@ -180,8 +175,6 @@ rm -rf $RPM_BUILD_ROOT
 
 * Tue Jan 20 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.13-1
 - add COPYING license file
-- linux-functions.sh: added rpmtopdir function; 
-- mkdist-workflow.sh: updated with rpmtopdir function; convert doc files to UTF-8
 
 * Wed Dec 17 2008 Gratien D'haese <gdha at sourceforge.net> - 1.7.10-1
 - remove contrib entry from %%doc line in spec file

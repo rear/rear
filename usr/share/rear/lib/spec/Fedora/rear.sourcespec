@@ -91,19 +91,15 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Tue Dec 21 2010 Gratien D'haese <gdha at sourceforge.net> - 1.9.0-1
+* Mon Jan 24 2011 Gratien D'haese <gdha at sourceforge.net> - 1.9-1
 - New development release with P2V, V2V functionality, and more
 - added AUTHORS, TODO to %%doc and rm from datadir
 
 * Fri Jun 04 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.25-1
 - added the %%ifarch part for syslinux to avoid warning on ppc/ppc64
-- fixed bugzilla 600217 (missing Fedora links)
 
 * Wed Feb 24 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.24-1
 - update spec file for fedora12
-
-* Fri Jan 09 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.23-1
-- added release entry
 
 * Mon Nov 16 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.22-1
 - Changed Requires fields for Fedora 10 and higher
@@ -115,15 +111,9 @@ rm -rf $RPM_BUILD_ROOT
 - updated description, made the spec file a bit more readable
 - changed BuildArchives in BuildArch
 
-* Sun Mar 15 2009 Schlomo Schapiro <rear at schlomo.schapiro.org> - 1.7.18-1
-- updated spec file to support openSUSE 11.1
-
 * Fri Mar 13 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.17-1
 - do not gzip man page in spec file - rpmbuild will do this for us
 - added extra %%doc line for excluding man page from doc itself
-
-* Thu Feb 26 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.16-1
-- make the spec better readable and removed not spec related items in changelog
 
 * Tue Feb 04 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.15-1
 - update the Fedora spec file with the 1.7.14 items

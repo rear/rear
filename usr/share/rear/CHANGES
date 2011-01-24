@@ -1,5 +1,6 @@
 Version 1.9  - not released
 ---------------------------
+2011-01-24	GD	* alligned the different rear.spec files for the upcoming 1.9 release
 2011-01-21	GSS	* Add /*/terminfo if available as some systems install /usr/share/terminfo as a symlink
 			* mkdr-functions.sh: limit FindPhysicalDevices to really find only physical devices as 
 			  indicated by device symlink in sysfs

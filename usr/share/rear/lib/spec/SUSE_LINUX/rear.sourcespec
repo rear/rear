@@ -98,7 +98,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Thu Dec 02 2010 Gratien D'haese <gdha at sourceforge.net> - 1.9.0-1
+* Mon Jan 24 2011 Gratien D'haese <gdha at sourceforge.net> - 1.9-1
 - added AUTHORS and TODO to %%doc
 
 * Thu Apr 02 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.20-1
