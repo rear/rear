@@ -25,7 +25,11 @@ read_and_strip_file $CONFIG_DIR/mappings/routes > $TMP_DIR/mappings/routes
 netscript=$ROOTFS_DIR/etc/scripts/system-setup.d/62-routing.sh
 
 # add a line at the top of netscript to skip if dhclient will be used
-echo "[ -x /bin/dhclient ] && return" > $netscript
+cat - <<EOT > $netscript
+if [ ! -z "\$DHCLIENT_BIN" -o ! -z "\$DHCLIENT6_BIN" ]; then
+	return
+fi
+EOT
 
 # route mapping is available
 if test -s $TMP_DIR/mappings/routes ; then

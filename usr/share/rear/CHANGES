@@ -1,5 +1,14 @@
 Version 1.9  - not released
 ---------------------------
+2011-01-25	GD	* 21_include_dhclient.sh: make it IPv4/IPv6 aware and look for other DHCP clients such as
+			  dhclient, dhcpcd, dhclient6, dhcp6c, or user defined via DHCLIENT_BIN or DHCLIENT6_BIN
+			  variables
+			* skel/default/bin/dhcpcd.sh added (only basic script as an example)
+			* some script were modified to work in the recovery mode for dhcp such as
+			  system-setup, system-setup.d/58-start-dhclient.sh, 31_networking-devices.sh and
+			  35_routing.sh
+			**** Be aware: defining USE_DHCLIENT=yes is sufficient to enable DHCP in rescue mode ****
+			**** However, defining DHCLIENT_BIN or DHCLIENT6_BIN implicit means enable DHCP too  ****
 2011-01-24	GD	* alligned the different rear.spec files for the upcoming 1.9 release
 2011-01-21	GSS	* Add /*/terminfo if available as some systems install /usr/share/terminfo as a symlink
 			* mkdr-functions.sh: limit FindPhysicalDevices to really find only physical devices as 

@@ -1,9 +1,11 @@
 # start dhclient daemon script
 #
 ## check if we have the executable, if not then we run 60/62 scripts
-[ ! -x /bin/dhclient ] && return
+if [ -z "$DHCLIENT_BIN" -a -z "$DHCLIENT6_BIN" ]; then
+	return
+fi
 
-echo "Start dhclient daemon..."
+echo "Attempting to start the DHCP client daemon"
 
 . /usr/share/rear/lib/network-functions.sh
 
@@ -27,5 +29,19 @@ for dev in `get_device_by_hwaddr` ; do
 		ISALIAS=no
 	fi
 
-	dhclient -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.pid -cf /etc/dhclient.conf ${DEVICE}
+	# IPv4 DHCP clients
+	case $DHCLIENT_BIN in
+	dhclient) 
+	dhclient -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.pid -cf /etc/dhclient.conf ${DEVICE} ;;
+	dhcpcd)
+	dhcpcd -c /bin/dhcpcd.sh ${DEVICE} ;;
+	esac
+
+	# IPv6 DHCP clients
+	case $DHCLIENT6_BIN in
+	dhclient6)
+	dhclient6 -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.pid -cf /etc/dhclient.conf ${DEVICE} ;;
+	dhcp6c)
+	dhcp6c  ${DEVICE} ;;
+	esac
 done
