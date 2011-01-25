@@ -32,6 +32,9 @@ AddExitTask() {
 	EXIT_TASKS=( "$*" "${EXIT_TASKS[@]}" ) # I use $* on purpose because I want to get one string from all args!
 	Log "Added '$*' as an exit task"
 }
+QuietAddExitTask() {
+	EXIT_TASKS=( "$*" "${EXIT_TASKS[@]}" ) # I use $* on purpose because I want to get one string from all args!
+}
 
 # remove $* from the task list
 RemoveExitTask() {
