@@ -1,6 +1,9 @@
-Version 1.9  - not released
----------------------------
+Version 1.9.1  - Not yet released
+---------------------------------
 2011-01-30	GSS	* Add /etc/localtime to COPY_AS_IS
+
+Version 1.9  - 2011-01-26
+-------------------------
 2011-01-25	GD	* 21_include_dhclient.sh: make it IPv4/IPv6 aware and look for other DHCP clients such as
 			  dhclient, dhcpcd, dhclient6, dhcp6c, or user defined via DHCLIENT_BIN or DHCLIENT6_BIN
 			  variables
