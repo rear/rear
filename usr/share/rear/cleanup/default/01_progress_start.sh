@@ -1,1 +1,0 @@
-ProgressStart "The cleanup phase"

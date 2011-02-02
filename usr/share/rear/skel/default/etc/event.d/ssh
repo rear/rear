@@ -1,8 +1,0 @@
-start on running
-stop on runlevel 0
-stop on runlevel 6
-
-console output
-respawn
-
-exec /sbin/sshd -D

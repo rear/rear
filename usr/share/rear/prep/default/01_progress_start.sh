@@ -1,2 +1,0 @@
-ProgressStart "The preparation phase"
-

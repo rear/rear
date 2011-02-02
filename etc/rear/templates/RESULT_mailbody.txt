@@ -1,2 +1,0 @@
-This is a Relax & Recover disaster recovery boot environment
-

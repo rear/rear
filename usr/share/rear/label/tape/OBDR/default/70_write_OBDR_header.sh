@@ -1,1 +1,0 @@
-../../../../prep/OBDR/default/70_write_OBDR_header.sh

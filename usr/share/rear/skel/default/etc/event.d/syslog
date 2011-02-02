@@ -1,8 +1,0 @@
-start on syslog
-stop on runlevel 0
-stop on runlevel 6
-
-console output
-respawn
-
-exec /etc/scripts/run-syslog

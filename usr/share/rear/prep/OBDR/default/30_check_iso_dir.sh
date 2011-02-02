@@ -1,1 +1,0 @@
-../../ISO/default/30_check_iso_dir.sh
