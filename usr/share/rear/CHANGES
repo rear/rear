@@ -3,7 +3,8 @@ Version 1.10  - Not yet released
 2011-02-09	GD	* add link under finalize from RedHatEnterpriseClient to Fedora as pointed out by
 			  Olivier KALOUDOFF
 			* 85_make_USB_bootable.sh: applied patch from Jeroen and Dag (SF#3170685)
-
+			* setting blocksize to 2048 for OBDR tapes - patch SF#3169791 (from Dag Wieers)
+			  These scripts live under output/OBDR/default/
 
 Version 1.9.0  - 2011-02-02
 ---------------------------
