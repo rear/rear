@@ -1,8 +1,12 @@
 Version 1.10  - Not yet released
 ---------------------------------
+2011-02-09	GD	* add link under finalize from RedHatEnterpriseClient to Fedora as pointed out by
+			  Olivier KALOUDOFF
+			* 85_make_USB_bootable.sh: applied patch from Jeroen and Dag (SF#3170685)
 
-Version 1.9  - 2011-02-02
--------------------------
+
+Version 1.9.0  - 2011-02-02
+---------------------------
 2011-01-30	GSS	* Add /etc/localtime to COPY_AS_IS
 2011-01-25	GD	* 21_include_dhclient.sh: make it IPv4/IPv6 aware and look for other DHCP clients such as
 			  dhclient, dhcpcd, dhclient6, dhcp6c, or user defined via DHCLIENT_BIN or DHCLIENT6_BIN
@@ -24,7 +28,7 @@ Version 1.9  - 2011-02-02
 			* svn2host: handle also DEB style machines by copying stuff into /usr. TODO: build DEB packages.
 2011-01-20	GD	* Apply patch 'Protect tapes from being scratched' SF#3162557
 			  New workflow: rear labeltape
-			  Sponsored by Belgian Federal Police by Dagand Jeroen
+			  Sponsored by Belgian Federal Police (Dag and Jeroen)
 			* 58-start-dhclient.sh: removed the "-v" (bug report SF#3157282)
 			* _input-output-functions.sh: new SpinnerSleep function
 2011-01-19	GD	* Merge BEXTRACT/BACULA for tape and disk support - SF#3158159
