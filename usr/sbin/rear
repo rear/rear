@@ -24,7 +24,7 @@
 # Versioning
 PRODUCT="Relax & Recover"
 VERSION="0.0.0"
-RELEASE_DATE="2011-02-02"
+RELEASE_DATE="2011-02-16"
 
 COPYRIGHT="Copyright (C) 2006-2011
         Schlomo Schapiro
@@ -221,8 +221,12 @@ Source "$CONFIG_DIR/os.conf"	# use this file to manually override the OS detecti
 Source "$CONFIG_DIR/$WORKFLOW.conf"
 SetOSVendorAndVersion
 # distribution configuration files
-for config in "$ARCH" "$OS" "$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
-	Source $SHARE_DIR/conf/"$config".conf
+for config in "$ARCH" "$OS" \
+		"$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
+		"$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
+		if test "$config" ; then
+			Source $SHARE_DIR/conf/"$config".conf
+		fi
 done
 # user configuration files
 for config in site local ; do

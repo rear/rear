@@ -20,8 +20,14 @@
 
 ProgressStart "Creating root FS layout"
 pushd $SHARE_DIR/skel >/dev/null
-for dir in default "$ARCH" "$OS" "$OS_VENDOR/default" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$BACKUP" "$OUTPUT" ; do
-	if test -s "$dir".tar.gz ; then
+for dir in default "$ARCH" "$OS" \
+		"$OS_MASTER_VENDOR/default" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" \
+		"$OS_VENDOR/default" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" \
+		"$BACKUP" "$OUTPUT" ; do
+	if test -z "$dir" ; then
+		# silently skip if $dir it empty, e.g. if OS_MASTER_* is empty
+		continue
+	elif test -s "$dir".tar.gz ; then
 		Log "Adding '$dir.tar.gz'"
 		tar -C $ROOTFS_DIR -xvzf "$dir".tar.gz 1>&8
 	elif test -d "$dir" ; then

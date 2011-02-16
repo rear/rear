@@ -50,4 +50,33 @@ SetOSVendorAndVersion () {
 	OS_VENDOR_ARCH="$OS_VENDOR/$MACHINE"
 	OS_VENDOR_VERSION_ARCH="$OS_VENDOR/$OS_VERSION/$MACHINE"
 
+	# add OS_MASTER_* vars in case this is a derived OS
+	case "$OS_VENDOR_VERSION" in
+		(*CentOS*|*FedoraCore*|*RedHat*|*ScientificSL*)
+			OS_MASTER_VENDOR="Fedora"
+			case "$OS_VERSION" in
+				(5.*)
+					# map all RHEL 5.x and clones to Fedora/5
+					# this is safe because FedoraCore 5 never existed
+					OS_MASTER_VERSION="5"
+					;;
+				(*)
+				OS_MASTER_VERSION="$OS_VERSION"
+				;;
+			esac
+			;;
+		(*Ubuntu*|*LinuxMint*)
+			OS_MASTER_VENDOR="Debian"
+			OS_MASTER_VERSION="$OS_VERSION"
+			;;
+	esac
+
+	# combined stuff for OS_MASTER_*
+	if [ "$OS_MASTER_VENDOR" ] ; then
+		OS_MASTER_VENDOR_VERSION="$OS_MASTER_VENDOR/$OS_MASTER_VERSION"
+		OS_MASTER_VENDOR_ARCH="$OS_MASTER_VENDOR/$MACHINE"
+		OS_MASTER_VENDOR_VERSION_ARCH="$OS_MASTER_VENDOR/$OS_MASTER_VERSION/$MACHINE"
+	fi
+		
+
 }

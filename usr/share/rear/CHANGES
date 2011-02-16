@@ -1,5 +1,11 @@
-Version 1.10  - Not yet released
+Version 1.10.0  - Not yet released
 ---------------------------------
+2011-02-16	GSS	* add OS_MASTER_* variables to map distros to their upstream distros
+			* remove all distro symlinks (e.g. CentOS -> Fedora)
+			* reorganize some wrong subdirectories, e.g. Ubuntu instead of Debian
+			* adjust all ReaR mechanics to support OS_MASTER_* stuff and also manage if these
+			  are empty.
+			* log the automatic switch to USE_DHCLIENT
 2011-02-09	GD	* add link under finalize from RedHatEnterpriseClient to Fedora as pointed out by
 			  Olivier KALOUDOFF
 			* 85_make_USB_bootable.sh: applied patch from Jeroen and Dag (SF#3170685)

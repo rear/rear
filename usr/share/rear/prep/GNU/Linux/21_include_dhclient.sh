@@ -27,6 +27,7 @@ dhcp_interfaces_active() {
 	if [ $? -eq 0 ]; then
 		# if we find a dhcp client being active we automatically
 		# include DHCP CLIENT support in ReaR
+		Log "Running DHCP client found, enabling USE_DHCLIENT"
 		USE_DHCLIENT=yes
 	fi
 }

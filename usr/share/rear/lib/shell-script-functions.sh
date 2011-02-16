@@ -20,6 +20,10 @@
 
 # source a file given in $1
 Source () {
+	# skip empty
+	if test -z "$1" ; then
+		return
+	fi
 	if test -d "$1" ; then
 		Error "$1 is a directory, cannot source"
 	fi
@@ -54,10 +58,10 @@ SourceStage() {
 		cd $SHARE_DIR/$stage ; 
 		# We always source scripts in the same subdirectory structure. The {..,..,..} way of writing
 		# it is just a shell shortcut that expands as intended.
-		ls -d	{default,"$ARCH","$OS","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
-			"$BACKUP"/{default,"$ARCH","$OS","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
-			"$OUTPUT"/{default,"$ARCH","$OS","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
-			"$OUTPUT"/"$BACKUP"/{default,"$ARCH","$OS","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
+		ls -d	{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
+			"$BACKUP"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
+			"$OUTPUT"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
+			"$OUTPUT"/"$BACKUP"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
 		| sed -e 's#/\([0-9][0-9]\)_#/!\1!_#g' | sort -t \! -k 2 | tr -d \! 
 		)
 		# This sed hack is neccessary to sort the scripts by their 2-digit number INSIDE indepentand of the

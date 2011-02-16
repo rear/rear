@@ -24,15 +24,21 @@ WORKFLOW_dump () {
 	LogPrint "Dumping out configuration and system information"
 
 	LogPrint "System definition:"
-	for var in "ARCH" "OS" "OS_VENDOR" "OS_VERSION" "OS_VENDOR_ARCH" "OS_VENDOR_VERSION" "OS_VENDOR_VERSION_ARCH"; do
+	for var in "ARCH" "OS" \
+		"OS_MASTER_VENDOR" "OS_MASTER_VERSION" "OS_MASTER_VENDOR_ARCH" "OS_MASTER_VENDOR_VERSION" "OS_MASTER_VENDOR_VERSION_ARCH" \
+		"OS_VENDOR" "OS_VERSION" "OS_VENDOR_ARCH" "OS_VENDOR_VERSION" "OS_VENDOR_VERSION_ARCH"; do
 		LogPrint "$( printf "%40s = %s" "$var" "${!var}" )"	
 	done
 
 	LogPrint "Configuration tree:"
-	for config in "$ARCH" "$OS" "$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
-		LogPrint "$( printf "%40s : %s" "$config".conf "$(
-								test -s $SHARE_DIR/conf/"$config".conf && echo OK || echo missing/empty
-								)" )"
+	for config in "$ARCH" "$OS" \
+		"$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
+		"$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH"; do
+		if [ "$config" ] ; then
+			LogPrint "$( printf "%40s : %s" "$config".conf "$(
+									test -s $SHARE_DIR/conf/"$config".conf && echo OK || echo missing/empty
+									)" )"
+		fi
 	done
 	for config in site local ; do
 		LogPrint "$( printf "%40s : %s" "$config".conf "$(
@@ -71,6 +77,14 @@ WORKFLOW_dump () {
 		LogPrint "Your system is not yet validated. Please carefully check all functions"
 		LogPrint "and create a validation record with '$0 validate'. This will help others"
 		LogPrint "to know about the validation status of $PRODUCT on this system."
+		# if the master OS is validated print out a suitable hint
+		if test -s "$SHARE_DIR/lib/validated/$OS_MASTER_VENDOR_VERSION_ARCH.txt" ; then
+			LogPrint ""
+			LogPrint "Your system is derived from $OS_MASTER_VENDOR_VERSION which is validated:"
+			while read -r ; do
+				LogPrint "$REPLY"
+			done <"$SHARE_DIR/lib/validated/$OS_MASTER_VENDOR_VERSION_ARCH.txt"
+		fi
 	fi
 
 }
