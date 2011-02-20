@@ -60,6 +60,11 @@ SetOSVendorAndVersion () {
 					# this is safe because FedoraCore 5 never existed
 					OS_MASTER_VERSION="5"
 					;;
+				(6.*)
+					# map all RHEL 5.x and clones to Fedora/5
+					# this is safe because FedoraCore 5 never existed
+					OS_MASTER_VERSION="6"
+					;;
 				(*)
 				OS_MASTER_VERSION="$OS_VERSION"
 				;;
