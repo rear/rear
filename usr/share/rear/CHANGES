@@ -1,3 +1,7 @@
+Version 1.11.0 not yet released
+-------------------------------
+
+
 Version 1.10.0 - 2011-02-20
 ---------------------------
 2011-02-20	GSS	* removed all Linux-x86_64 symlinks and map it to Linux-i386 instead
