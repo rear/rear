@@ -272,7 +272,6 @@ if type -t WORKFLOW_$WORKFLOW >/dev/null ; then
 	Log "Finished running $WORKFLOW workflow"
 else
 	LogPrint "ERROR: The specified command '$WORKFLOW' does not exist !"
-	exit 10
 fi
 
 # Cleanup build area
