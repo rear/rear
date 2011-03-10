@@ -9,5 +9,5 @@ if [ ! -s "$backuparchive" ]; then
 	Error "Backup archive '$displayarchive' not found !"
 else
 	read size file < <(du -h "$backuparchive")
-	LogPrint "Backup archive size is $size"
+	LogPrint "Backup archive size is $size${BACKUP_PROG_COMPRESS_SUFFIX:+ (compressed)}"
 fi
