@@ -1,18 +1,51 @@
 # Attempt to find the real USB device by trying its parent
 # Return a proper short device name using udev
-TEMP_USB_DEVICE=$(dirname $(my_udevinfo -q path -n "$USB_DEVICE"))
-if [[ -d "/sys/$TEMP_USB_DEVICE" && "$TEMP_USB_DEVICE" =~ "^/block/" ]]; then
+REAL_USB_DEVICE=$(readlink -f $USB_DEVICE)
+
+[[ "$REAL_USB_DEVICE" && -b "$REAL_USB_DEVICE" ]]
+ProgressStopIfError $? "Unable to determine real USB device based on $USB_DEVICE"
+
+# We cannot use the layout dependency code in the backup phase (yet)
+#RAW_USB_DEVICE=$(find_disk $REAL_USB_DEVICE)
+
+# Try to find the parent device (as we don't want to write MBR to a partition)
+TEMP_USB_DEVICE=$(basename $(dirname $(my_udevinfo -q path -n "$REAL_USB_DEVICE")))
+if [[ "$TEMP_USB_DEVICE" && -b "/dev/$TEMP_USB_DEVICE" ]]; then
+    RAW_USB_DEVICE="/dev/$(my_udevinfo -q name -n "$TEMP_USB_DEVICE")"
+elif [[ "$TEMP_USB_DEVICE" && -d "/sys/block/$TEMP_USB_DEVICE" ]]; then
     RAW_USB_DEVICE="/dev/$(my_udevinfo -q name -p "$TEMP_USB_DEVICE")"
+elif [[ -z "$TEMP_USB_DEVICE" ]]; then
+    RAW_USB_DEVICE="/dev/$(my_udevinfo -q name -n "$REAL_USB_DEVICE")"
 else
-    RAW_USB_DEVICE="/dev/$(my_udevinfo -q name -n "$USB_DEVICE")"
+    BugError "Unable to determine raw USB device for $REAL_USB_DEVICE"
 fi
 
+[[ "$RAW_USB_DEVICE" && -b "$RAW_USB_DEVICE" ]]
+ProgressStopIfError $? "Unable to determine raw USB device for $REAL_USB_DEVICE"
+
 # Make the USB bootable
-syslinux  $USB_DEVICE
-ProgressStopIfError $? "Problem with syslinux  $USB_DEVICE"
+usb_filesystem="$(grep -P "^$REAL_USB_DEVICE\\s" /proc/mounts | cut -d' ' -f3)"
+case "$usb_filesystem" in
+    (ext?)
+        extlinux -i "${BUILD_DIR}/netfs"
+        ProgressStopIfError $? "Problem with extlinux -i ${BUILD_DIR}/netfs"
+        ;;
+    (vfat)
+        syslinux $REAL_USB_DEVICE
+        ProgressStopIfError $? "Problem with syslinux on $REAL_USB_DEVICE"
+        ;;
+    ("")
+        # This should never happen
+        BugError "Filesystem for device $REAL_USB_DEVICE could not be found"
+        ;;
+    (*)
+        Error "Filesystem $usb_filesystem is not supported by syslinux."
+        ;;
+esac
 ProgressStep
 
 # Write the USB boot sector
+LogPrint "Writing MBR to $RAW_USB_DEVICE"
 dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE
 ProgressStopIfError $? "Problem with writing the mbr.bin to $RAW_USB_DEVICE"
 ProgressStep
