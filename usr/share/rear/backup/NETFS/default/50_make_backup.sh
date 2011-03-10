@@ -20,7 +20,7 @@ case "$BACKUP_PROG" in
 	# tar compatible programs here
 	tar)
 		$BACKUP_PROG --sparse --block-number --totals --verbose --no-wildcards-match-slash --one-file-system --ignore-failed-read \
-			$BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS \
+			$BACKUP_PROG_OPTIONS ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} $BACKUP_PROG_COMPRESS_OPTIONS \
 			-X $BUILD_DIR/backup-exclude.txt -C / -c -f "$backuparchive" \
 			$(cat $BUILD_DIR/backup-include.txt) $LOGFILE
 	;;
@@ -31,7 +31,7 @@ case "$BACKUP_PROG" in
 			$BACKUP_PROG_OPTIONS $backuparchive \
 			$(cat $BUILD_DIR/backup-include.txt) $LOGFILE > $backuparchive
 	;;
-esac >"${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.txt"
+esac >"${BUILD_DIR}/tmp/${BACKUP_PROG_ARCHIVE}.log"
 echo $? >$BUILD_DIR/retval
 ) &
 BackupPID=$!
@@ -43,7 +43,7 @@ sleep 1 # Give the backup software a good chance to start working
 case "$BACKUP_PROG" in
 	tar)
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
-			blocks="$(tail -1 ${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.txt | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
+			blocks="$(tail -1 ${BUILD_DIR}/tmp/${BACKUP_PROG_ARCHIVE}.log | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
 			size="$((blocks*512))"
 			echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 		done
@@ -83,3 +83,6 @@ if [ $tar_rc -eq 0 -a "$tar_message" ] ; then
 elif [ "$size" ]; then
 	LogPrint "Archived $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"
 fi
+
+### Move progress log to backup media
+mv "${BUILD_DIR}/tmp/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log"
