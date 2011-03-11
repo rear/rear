@@ -14,7 +14,7 @@ LogPrint "Installing GRUB boot loader"
 mount -t proc none /mnt/local/proc
 ProgressStep
 
-if [[ "$LAYOUT_FILE" && -r "$LAYOUT_FILE" ]]; then
+if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
 
     # Check if we find GRUB stage 2 where we expect it
     [[ -d "/mnt/local/boot" ]]
