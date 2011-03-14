@@ -1,6 +1,11 @@
 Version 1.11.0 not yet released
 -------------------------------
-
+2011-03-14	GD	* added patch SF#3192697 (from John Baldwin) conc. restoring point in time
+			  with NBU
+2011-03-11	DAG	* several minor fixes in 95_copy_result_files.sh, 85_make_USB_bootable.sh,
+			  i386/20_install_grub.sh, 55_check_backup_archive.sh, 50_make_backup.sh,
+			  33_find_isolinux.sh. Removed OBDR/default/55_set_tape_blocksize.sh and
+			  added OBDR/default/55_set_obdr_blocksize.sh
 
 Version 1.10.0 - 2011-02-20
 ---------------------------

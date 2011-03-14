@@ -47,21 +47,21 @@ echo "${mm}/${dd}/${yyyy}"
 
 LogPrint "NetBackup: restoring / into /mnt/local"
 
-j=1
 # $TMP_DIR/restore_fs_list was made by 30_create_nbu_restore_fs_list.sh
-for fs in `cat $TMP_DIR/restore_fs_list`
-do
-	echo "change / to /mnt/local" >/tmp/nbu_change_file.${j}
-	> /tmp/bplog.restore.${j}
-	sdate=`Get_Start_Date ${fs}`
-	ARGS="-B -H -L /tmp/bplog.restore.${j} -8 -R /tmp/nbu_change_file.${j} -t 0 -w 0 -s ${sdate} ${fs} "
-	[ "${fs}" = "/" ] && {
-	  # prohibit to restore /mnt/local recursively
-	  ARGS="-B -H -L /tmp/bplog.restore.${j} -8 -R /tmp/nbu_change_file.${j} -t 0 -w 0 -s ${sdate} ${fs} !/mnt/local"
-	}
-	LogPrint "RUN: /usr/openv/netbackup/bin/bprestore ${ARGS}"
-	LogPrint "Restore progress: see /tmp/bplog.restore.${j}"
-	LANG=C /usr/openv/netbackup/bin/bprestore ${ARGS} || Error "bprestore of ${fs} failed"
-	j=$((j+1))
-done
 
+echo "change / to /mnt/local" >/tmp/nbu_change_file
+
+FIRSTFS=( $( cat $TMP_DIR/restore_fs_list ) ) 
+sdate=`Get_Start_Date ${FIRSTFS}`
+
+if [ ${#NBU_ENDTIME[@]} -gt 0 ]
+then
+   edate="${NBU_ENDTIME[@]}"
+   ARGS="-B -H -L /tmp/bplog.restore -8 -R /tmp/nbu_change_file -t 0 -w 0 -e ${edate} -f $TMP_DIR/restore_fs_list"
+else
+   ARGS="-B -H -L /tmp/bplog.restore -8 -R /tmp/nbu_change_file -t 0 -w 0 -s ${sdate} -f $TMP_DIR/restore_fs_list"
+fi
+
+LogPrint "RUN: /usr/openv/netbackup/bin/bprestore ${ARGS}"
+LogPrint "Restore progress: see /tmp/bplog.restore"
+LANG=C /usr/openv/netbackup/bin/bprestore ${ARGS} || Error "bprestore failed"
