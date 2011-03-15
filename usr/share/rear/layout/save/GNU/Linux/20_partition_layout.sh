@@ -4,39 +4,129 @@ LogPrint "Saving disk partitions."
 
 (
     # Disk sizes
-    # format: disk <disk> <sectors>
+    # format: disk <disk> <sectors> <partition label type>
     devices=()
     for disk in /sys/block/* ; do
         case $(basename $disk) in
-            hd*|sd*|cciss*)
+            hd*|sd*|cciss*|vd*)
                 if [ "$(cat $disk/removable)" = "1" ] ; then
+                    Log "Skipping removable device $disk"
                     continue
                 fi
                 
                 # fix cciss
                 devname=$(basename $disk | tr '!' '/')
                 devsize=$(cat $disk/size)
-                echo "disk $devname $devsize"
+                
+                disktype=$(parted -s /dev/$devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
+                
+                if [ -z "$disktype" ] ; then
+                    Log "No disk label detected on disk /dev/$devname."
+                    continue
+                fi
+                
+                echo "disk /dev/$devname $devsize $disktype"
                 
                 devices=( "${devices[@]}" "$devname" )
                 ;;
         esac
     done
 
+    # This uses parted. Old versions of parted produce different output than newer versions.
+    if ! [ -e /dev/${devices[0]} ] ; then
+        LogPrint "No devices found... Check your layout description."
+        return
+    fi
+    parted -s "/dev/${devices[0]}" print > $TMP_DIR/parted
+    if grep -q "^Minor" $TMP_DIR/parted ; then
+        oldparted="yes"
+        Log "Old version of parted detected."
+    fi
+
     # Partitions
-    # format : part <partition size(sectors)> <partition id> 
+    # Partitions are read from sysfs. Extra information is collected using parted
+    # format : part <partition size(bytes)> <partition type|name> <flags> /dev/<partition>
     for device in "${devices[@]}" ; do
         if [ -e /dev/$device ] ; then
-            while read line ; do
-                if [ -z "$(echo $line | grep start)" ] ; then
+            
+            sysfsname=${device/\//\!} # sysfs name
+            
+            # Check for old version of parted.
+            # Parted on RHEL 4 outputs differently 
+            # - header names: minor instead of number,
+            # - no support for units (we use sysfs for sizes)
+            if [ -z "$oldparted" ] ; then
+                parted -s /dev/$device unit B print > $TMP_DIR/parted
+                numberfield="number"
+            else
+                parted -s /dev/$device print > $TMP_DIR/parted
+                numberfield="minor"
+            fi
+            
+            disktype=$(grep -E "Partition Table|Disk label" $TMP_DIR/parted | cut -d ":" -f "2" | tr -d " ")
+
+            # Difference between gpt and msdos: type|name
+            case $disktype in
+                msdos)
+                    typefield="type"
+                    ;;
+                gpt)
+                    typefield="name"
+                    ;;
+                *)
+                    Log "Unsupported disk label $disktype on $device."
                     continue
+            esac
+            
+            init_columns "$(grep "Flags" $TMP_DIR/parted)"
+            while read line ; do
+                # read throws away leading spaces
+                number=${line%% *}
+                if [ "$number" -lt 10 ] ; then
+                    line=" $line"
                 fi
                 
-                psize=$(echo $line | cut -d "," -f 2 | cut -d "=" -f 2 | tr -d " ")
-                pid=$(echo $line | cut -d "," -f 3 | cut -d "=" -f 2 | tr -d " ")
+                pnumber=$(get_columns "$line" "$numberfield" | tr -d " " | tr -d ";")
+                ptype=$(get_columns "$line" "$typefield" | tr -d " " | tr -d ";")
+                pflags=$(get_columns "$line" "flags" | tr -d "," |tr -d ";")
                 
-                echo "part $device $psize $pid"
-            done < <(sfdisk -uS -d /dev/$device)
+                case $device in
+                    *cciss*)
+                        pname="p${pnumber}"
+                        ;;
+                    *)
+                        pname="${pnumber}"
+                        ;;
+                esac
+                
+                # Only newer kernels have an interface to get the block size
+                if [ -e /sys/block/$sysfsname/queue/logical_block_size ] ; then
+                    blocksize=$(cat /sys/block/$sysfsname/queue/logical_block_size)
+                else
+                    blocksize=512
+                fi
+                
+                psize=$(cat /sys/block/$sysfsname/${sysfsname}${pname}/size)
+                if [ -z "$psize" ] ; then
+                    BugError "Could not determine size of partition ${sysfsname}${pname}, please file a bug."
+                fi
+                let psize=$psize\*$blocksize
+                
+                flags=""
+                for flag in $pflags ; do
+                    case $flag in
+                        boot|root|swap|hidden|raid|lvm|lba|palo)
+                            flags="$flags$flag,"
+                            ;;
+                    esac
+                done
+                if [ -z "$flags" ] ; then
+                    flags="none"
+                fi
+                
+                echo "part /dev/$device $psize $ptype ${flags%,} /dev/${device}${pname}"
+            done < <(grep -E '^[ ]*[0-9]' $TMP_DIR/parted)
+
         fi
     done
 

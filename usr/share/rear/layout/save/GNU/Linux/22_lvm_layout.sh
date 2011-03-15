@@ -1,5 +1,9 @@
 # Save LVM layout
 
+if ! type lvm &>/dev/null ; then
+    return 0
+fi
+
 LogPrint "Saving LVM layout."
 
 (
@@ -11,7 +15,7 @@ LogPrint "Saving LVM layout."
         size=$(echo $line | cut -d ":" -f "3")
         uuid=$(echo $line | cut -d ":" -f "12")
         
-        echo "lvmdev $vgrp $pdev $uuid $size"
+        echo "lvmdev /dev/$vgrp $pdev $uuid $size"
     done
 
     ## Get the volume group configuration
@@ -22,7 +26,7 @@ LogPrint "Saving LVM layout."
         extentsize=$(echo $line | cut -d ":" -f "13")
         nrextents=$(echo $line | cut -d ":" -f "14")
 
-        echo "lvmgrp $vgrp $extentsize $nrextents $size"
+        echo "lvmgrp /dev/$vgrp $extentsize $nrextents $size"
     done
 
     ## Get all logical volumes
@@ -33,6 +37,6 @@ LogPrint "Saving LVM layout."
         size=$(echo $line | cut -d ":" -f "7")
         extents=$(echo $line | cut -d ":" -f "8")
         
-        echo "lvmvol $vgrp $lvol $extents $size "
+        echo "lvmvol /dev/$vgrp $lvol $extents $size "
     done
 ) >> $DISKLAYOUT_FILE
