@@ -11,13 +11,6 @@
 # silently skip the script if lvm is not available
 test -c /dev/mapper/control -a -x "$(type -p lvm)" || return	# silently skip
 
-PROGS=( "${PROGS[@]}"
-lvm
-dmsetup
-)
-COPY_AS_IS=( "${COPY_AS_IS[@]}"
-/etc/lvm
-)
 mkdir -p "${VAR_DIR}/recovery/lvm" || Error "Creating directory ${VAR_DIR}/recovery/lvm"
 
 # first we do a general VG backup to the system default location, just in case it might be needed

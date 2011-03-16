@@ -7,13 +7,6 @@
 # we check for 'blocks' and not for 'raid' to also cover the md type devices
 grep -q blocks /proc/mdstat || return
 
-PROGS=( "${PROGS[@]}"
-mdadm
-)
-COPY_AS_IS=( "${COPY_AS_IS[@]}"
-/etc/mdadm.conf
-)
-
 mkdir -p ${VAR_DIR}/recovery/proc
 cat /proc/mdstat > "${VAR_DIR}/recovery/proc/mdstat" ||\
 	Error "Saving /proc/mdstat failed: $?"
