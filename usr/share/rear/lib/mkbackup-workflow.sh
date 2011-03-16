@@ -15,6 +15,8 @@ WORKFLOW_mkbackup () {
 	
 	SourceStage "dr"
 	
+	SourceStage "layout/save"
+	
 	SourceStage "rescue"
 	
 	SourceStage "build"

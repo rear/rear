@@ -32,6 +32,8 @@ WORKFLOW_mkrescue () {
 	
 	SourceStage "dr"
 	
+	SourceStage "layout/save"
+	
 	SourceStage "rescue"
 	
 	SourceStage "build"
