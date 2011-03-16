@@ -1,5 +1,11 @@
 # migrate disk device mappings
 
+# Only run this if not in layout mode.
+# TODO: provide similar functionality for the layout branch.
+if [ -n "$USE_LAYOUT" ] ; then
+    return 0
+fi
+
 # skip if no mappings
 test -s $TMP_DIR/mappings/disk_devices || return 0
 

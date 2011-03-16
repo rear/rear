@@ -1,6 +1,12 @@
 #
 # describe the device sizes of the physical devices.
 #
+
+# Only run this if not in layout mode.
+if [ -n "$USE_LAYOUT" ] ; then
+    return 0
+fi
+
 while read device junk ; do
 	# device is something like /dev/sda or /dev/cciss/c0d0
 	mkdir -p $TMP_DIR$device || Error "Could not mkdir '$TMP_DIR$device'"

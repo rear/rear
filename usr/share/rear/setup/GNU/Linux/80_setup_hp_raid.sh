@@ -3,6 +3,11 @@
 #
 #
 
+# Only run this if not in layout mode.
+if [ -n "$USE_LAYOUT" ] ; then
+    return 0
+fi
+
 # only run script if cciss driver is loaded
 test -d $VAR_DIR/recovery/hpacucli && grep -q cciss < <(lsmod) ||return 0
 

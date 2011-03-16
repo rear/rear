@@ -2,6 +2,11 @@
 # create swap files and partitions
 #
 
+# Only run this if not in layout mode.
+if [ -n "$USE_LAYOUT" ] ; then
+    return 0
+fi
+
 ProgressStart "Creating swap files and partitions"
 
 # most backup software will ignore swap files

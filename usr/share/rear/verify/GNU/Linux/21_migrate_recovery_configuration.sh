@@ -1,5 +1,9 @@
 # patch the $VAR_DIR/recovery data to match changed disk configurations
 
+# Only run this if not in layout mode.
+if [ -n "$USE_LAYOUT" ] ; then
+    return 0
+fi
 
 test -d $TMP_DIR/mappings || mkdir $TMP_DIR/mappings
 read_and_strip_file /etc/rear/mappings/disk_devices > $TMP_DIR/mappings/disk_devices

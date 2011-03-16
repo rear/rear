@@ -16,6 +16,11 @@
 # then, if there was any difference, force the user to map ALL devices, also those that
 # accidentially matched the original devices.
 
+# Only run this if not in layout mode.
+if [ -n "$USE_LAYOUT" ] ; then
+    return 0
+fi
+
 # create temporary list of available devices and their sizes
 # contains lines like "/dev/sda 4194304"
 available_devices="$(
