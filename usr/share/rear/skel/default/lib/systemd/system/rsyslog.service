@@ -1,0 +1,7 @@
+[Unit]
+Description=ReaR run-syslog script
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/etc/scripts/run-syslog

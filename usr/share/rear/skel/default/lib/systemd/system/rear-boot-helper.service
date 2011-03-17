@@ -1,0 +1,7 @@
+[Unit]
+Description=ReaR boot script
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/etc/scripts/boot

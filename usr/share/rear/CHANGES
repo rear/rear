@@ -1,5 +1,12 @@
 Version 1.11.0 not yet released
 -------------------------------
+2011-03-17	GD	* Added systemd code to bootstrap rear with Fedora15 and other distro's with systemd
+2011-03-16	JH	* Enable the use of the layout code when the USE_LAYOUT flag is specified.
+			  Prevent several scripts from running during a restore when the USE_LAYOUT flag is specified
+			  Move LVM and MD tools inclusion to prep/ from dr/
+			  Introduce a flag to control the use of the layout code (USE_LAYOUT="y") to use new
+			  layout method, otherwise the old dr method is still used.
+			*** Be aware: give feedback on mailing list with your results
 2011-03-14	GD	* added patch SF#3192697 (from John Baldwin) conc. restoring point in time
 			  with NBU
 2011-03-11	DAG	* several minor fixes in 95_copy_result_files.sh, 85_make_USB_bootable.sh,
