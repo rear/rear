@@ -29,6 +29,9 @@ case "$usb_filesystem" in
     (ext?)
         extlinux -i "${BUILD_DIR}/netfs"
         ProgressStopIfError $? "Problem with extlinux -i ${BUILD_DIR}/netfs"
+	# add symlink for extlinux.conf
+	ln -sf syslinux.cfg "${BUILD_DIR}/netfs/extlinux.conf"
+	ProgressStopIfError $? "Could not create symlinks for extlinux.conf"
         ;;
     (vfat)
         syslinux $REAL_USB_DEVICE
@@ -44,11 +47,15 @@ case "$usb_filesystem" in
 esac
 ProgressStep
 
-# Write the USB boot sector
-LogPrint "Writing MBR to $RAW_USB_DEVICE"
-dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE
-ProgressStopIfError $? "Problem with writing the mbr.bin to $RAW_USB_DEVICE"
-ProgressStep
+if [ "$REAL_USB_DEVICE" != "$RAW_USB_DEVICE" ] ; then
+	# Write the USB boot sector
+	LogPrint "Writing MBR to $RAW_USB_DEVICE"
+	dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE
+	ProgressStopIfError $? "Problem with writing the mbr.bin to $RAW_USB_DEVICE"
+	ProgressStep
+else
+	Log "Not writing MBR to $RAW_USB_DEVICE"
+fi
 
 # Need to flush the buffer for the USB boot sector.
 sync; sync

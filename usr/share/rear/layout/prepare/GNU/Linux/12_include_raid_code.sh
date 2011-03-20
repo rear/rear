@@ -49,7 +49,7 @@ create_raid() {
 
 cat <<EOF >> $LAYOUT_CODE
 LogPrint "Creating software RAID $device"
-mdadm --stop $device
+test -b $device && mdadm --stop $device
 
 $mdadmcmd 1>&2
 EOF

@@ -49,7 +49,7 @@ while read file ; do
 
 	# test RAID level
 	case "$MD_OPTION_level" in
-		linear|stripe|mirror|multipath|md|faulty|0|1|4|5|6|raid0|raid1|raid4|raid5|raid6)
+		linear|stripe|mirror|multipath|md|faulty|0|1|4|5|6|10|raid0|raid1|raid4|raid5|raid6|raid10)
 		:
 		;;
 		*)

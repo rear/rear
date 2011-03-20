@@ -19,6 +19,22 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 
 	mount -t proc none /mnt/local/proc
 	mount -t sysfs none /mnt/local/sys
+	# handle mdadm.conf Debian style
+	if [ -r /proc/mdstat -a -r /mnt/local/etc/mdadm/mdadm.conf -a -x /mnt/local/usr/share/mdadm/mkconf ] ; then
+		if chroot /mnt/local /bin/bash --login -c "/usr/share/mdadm/mkconf >/etc/mdadm/mdadm.conf" ; then
+			LogPrint "Updated '/etc/mdadm/mdadm.conf'"
+		else
+			LogPrint "WARNING !!!
+Could not update /etc/mdadm/mdadm.conf with the new MD Array information.
+Your system might not boot if the MD Arrays are required for booting due
+to changed MD Array UUIDs or other details.
+
+Please 'chroot /mnt/local' and try to fix this. You should also run
+update-initramfs afterwards to update the initramfs with the new mdadm.conf
+"
+		fi
+	fi
+
 	if chroot /mnt/local /bin/bash --login -c "update-initramfs -v -u -k all" 1>&2 ; then
          	LogPrint "Updated initramfs with new drivers for this system."
 	else

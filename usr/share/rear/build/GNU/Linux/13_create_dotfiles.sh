@@ -20,13 +20,15 @@
 
 pushd $ROOTFS_DIR >/dev/null
 
-# create a simple bash history file
-cat > .bash_history <<EOF
-: : : : : : WHAT ELSE WOULD YOU HAVE EXPECTED HERE ON A RAMDISK ?
-loadkeys -d
-rear recover
+# create a simple bash history file, use this ruler to make sure that
+# the comments stay in a single line :-)
+#---------------------------------------------------------------------------80-|
+cat > root/.bash_history <<EOF
+: : : : : :              WHAT ELSE WOULD YOU HAVE EXPECTED HERE ON A RAMDISK ?
+loadkeys -d              # this will load a default keyboard layout (usually US)
+rear recover             # this will recovery your system
 EOF
-chmod 644 .bash_history
+chmod 644 root/.bash_history
 
 # any other dot files should be listed below
 

@@ -1,5 +1,10 @@
 Version 1.11.0 not yet released
 -------------------------------
+2011-03-20	GSS	* add extlinux.conf for ext? USB media
+			* improved configuration-examples.txt
+			* moved .bash_history to correct /root location in rescue media
+			* write MBR to USB media only if partitions are in use
+			* add mdadm mkconf to Debian iniramfs updating code
 2011-03-17	GD	* Added systemd code to bootstrap rear with Fedora15 and other distro's with systemd
 2011-03-16	JH	* Enable the use of the layout code when the USE_LAYOUT flag is specified.
 			  Prevent several scripts from running during a restore when the USE_LAYOUT flag is specified
