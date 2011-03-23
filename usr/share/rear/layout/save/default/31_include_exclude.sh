@@ -22,8 +22,8 @@
 
 for md in "${EXCLUDE_MD[@]}" ; do
     LogPrint "Excluding RAID $md."
-    mark_as_done "$md"
-    mark_tree_as_done "$md"
+    mark_as_done "/dev/$md"
+    mark_tree_as_done "/dev/$md"
 done
 
 for vg in "${EXCLUDE_VG[@]}" ; do
@@ -55,17 +55,9 @@ remove_second_component() {
 # Remove lines in the LAYOUT_FILE
 while read done name type junk ; do
     case $type in 
-        raid)
-            name=${name#/dev/}
-            remove_component $type $name
-            ;;
         lvmdev)
             name=${name#pv:}
             remove_second_component $type $name
-            ;;
-        lvmgrp)
-            name=${name#/dev/}
-            remove_component $type $name
             ;;
         lvmvol)
             name=${name#/dev/mapper/*-}
@@ -79,10 +71,6 @@ while read done name type junk ; do
             name=${name#swap:}
             remove_component $type $name
             ;;
-        crypt)
-            name=${name#/dev/mapper/}
-            remove_component $type $name
-            ;;
         *)
             remove_component $type $name
             ;;
@@ -91,6 +79,5 @@ done < <(grep "^done" $LAYOUT_TODO)
 
 # Remove all LVM PVs of excluded VGs
 while read status name junk ; do
-    name=${name#/dev/}
     remove_component "lvmdev" "$name"
 done < <(grep -E "^done [^ ]+ lvmgrp"  $LAYOUT_TODO)
