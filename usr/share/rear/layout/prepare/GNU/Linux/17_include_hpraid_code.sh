@@ -2,8 +2,12 @@
 
 create_smartarray() {
     read sa slotnr junk < $1
-    echo "LogPrint \"Clearing HP SmartArray controller $slotnr\"" >> $LAYOUT_CODE
-    echo "hpacucli ctrl slot=$slotnr delete forced" >> $LAYOUT_CODE
+    cat <<EOF >>$LAYOUT_CODE
+LogPrint "Clearing HP SmartArray controller $slotnr"
+if ! hpacucli ctrl slot=$slotnr delete forced; then
+    LogPrint "Failed to clear HP SmartArray controller $slotnr, this is not necessarily fatal."
+fi
+EOF
 }
 
 create_logicaldrive() {
