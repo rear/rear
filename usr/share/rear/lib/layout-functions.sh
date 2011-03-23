@@ -217,17 +217,19 @@ get_disk_size() {
     local disk_name=$(get_sysfs_name $1)
     
     # Only newer kernels have an interface to get the block size
-    if [ -e /sys/block/$disk_name/queue/logical_block_size ] ; then
+    if [ -r /sys/block/$disk_name/queue/logical_block_size ] ; then
         local block_size=$(cat /sys/block/$disk_name/queue/logical_block_size)
     else
         local block_size=512
     fi
     
-    local nr_blocks=$(cat /sys/block/$disk_name/size)
-    if [ -z "$nr_blocks" ] ; then
+    if [ -r /sys/block/$disk_name/size ] ; then
+        local nr_blocks=$(cat /sys/block/$disk_name/size)
+    else
         BugError "Could not determine size of disk $disk_name, please file a bug."
     fi
-    let local disk_size=$nr_blocks\*$block_size
+    local disk_size=$(( nr_blocks * block_size ))
     
-    echo "$disk_size"
+    ### Make sure we always return a number
+    echo $(( disk_size ))
 }

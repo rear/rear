@@ -36,6 +36,10 @@ partition_disk() {
     
     # Find out the actual disk size
     disk_size=$( get_disk_size "$disk" )
+    
+    if [ $disk_size -eq 0 ]; then
+        Error "Disk $disk has size 0, unable to continue."
+    fi
 
     cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating partitions for disk $disk ($label)"
