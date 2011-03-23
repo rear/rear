@@ -27,7 +27,7 @@ create_lvmdev() {
     uuidopt=""
     restorefileopt=""
     
-    if [ -z "$MIGRATION_MODE" ] ; then
+    if [ -z "$MIGRATION_MODE" ] && [ -e $VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg ] ; then
         # we have a restore file
         restorefileopt=" --restorefile $VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg"
     else

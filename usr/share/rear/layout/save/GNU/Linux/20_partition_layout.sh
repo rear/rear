@@ -20,11 +20,6 @@ LogPrint "Saving disk partitions."
                 
                 disktype=$(parted -s /dev/$devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
                 
-                if [ -z "$disktype" ] ; then
-                    Log "No disk label detected on disk /dev/$devname."
-                    continue
-                fi
-                
                 echo "disk /dev/$devname $devsize $disktype"
                 
                 devices=( "${devices[@]}" "$devname" )

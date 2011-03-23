@@ -29,7 +29,8 @@ partition_disk() {
     read component disk size label junk <$1
 
     if [ -z "$label" ] ; then
-        BugError "No disk label information for disk $disk."
+        # LVM on whole disk can lead to no label available.
+        Log "No disk label information for disk $disk."
         return 0
     fi
     

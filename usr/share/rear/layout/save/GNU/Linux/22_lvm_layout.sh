@@ -11,6 +11,12 @@ LogPrint "Saving LVM layout."
     # format: lvmdev <volume_group> <device> [<uuid>] [<size(bytes)>]
     lvm pvdisplay -c | while read line ; do
         pdev=$(echo $line | cut -d ":" -f "1")
+        
+        if [ "${pdev#/}" = "$pdev" ] ; then
+            # Skip lines that are not describing physical devices
+            continue
+        fi
+        
         vgrp=$(echo $line | cut -d ":" -f "2")
         size=$(echo $line | cut -d ":" -f "3")
         uuid=$(echo $line | cut -d ":" -f "12")
