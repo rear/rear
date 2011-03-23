@@ -58,15 +58,28 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
         bootdisk=$(find_disk "$part")
         partnr=${part#$bootdisk}
         partnr=${partnr#p}
-        partnr=$((partnr + 1))
-
-        chroot /mnt/local grub --batch --no-floppy 1>&2 <<EOF
+        partnr=$((partnr - 1))
+        
+        if [[ "$bootdisk" == "$disk" ]]; then
+            # Best case scenario is to have /boot on disk with MBR booted
+            chroot /mnt/local grub --batch --no-floppy 1>&2 <<EOF
+device (hd0) $disk
+root (hd0,$partnr)
+setup --stage2=/boot/grub/stage2 --prefix=$grub_prefix (hd0)
+quit
+EOF
+        else
+            # hd1 is a best effort guess, we cannot predict how numbering 
+            # changes when a disk fails.
+            chroot /mnt/local grub --batch --no-floppy 1>&2 <<EOF
 device (hd0) $disk
 device (hd1) $bootdisk
 root (hd1,$partnr)
 setup --stage2=/boot/grub/stage2 --prefix=$grub_prefix (hd0)
 quit
 EOF
+        fi
+
         if (( $? == 0 )); then
             NOBOOTLOADER=
         fi
