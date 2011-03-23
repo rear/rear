@@ -8,6 +8,8 @@ if ! test -z "${NETFS_KEEP_OLD_BACKUP_COPY}"; then
 			mv -f "${BUILD_DIR}/netfs/${NETFS_PREFIX}" "${BUILD_DIR}/netfs/${NETFS_PREFIX}.old" || \
 				Error "Could not move '${BUILD_DIR}/netfs/${NETFS_PREFIX}'"
 		fi
+	else
+		Log "Lockfile '${BUILD_DIR}/netfs/${NETFS_PREFIX}/.lockfile' found. Not keeping old backup data."
 	fi
 fi
 # the ${BUILD_DIR}/netfs/${NETFS_PREFIX} will be created by output/NETFS/default/20_make_prefix_dir.sh
