@@ -17,7 +17,7 @@ LogPrint "Saving HP SmartArray configuration."
 hpacucli ctrl all show detail > $TMP_DIR/hpraid-detail.tmp
 grep 'Controller Status:' $TMP_DIR/hpraid-detail.tmp | grep -v 'Controller Status: OK'
 if (( $? != 1 )); then
-    LogPrint "WARNING: One or more HP SmartArray controllers have errors, this may impact a successful disaster recovery."
+    Error "One or more HP SmartArray controllers have errors, fix this first !"
 fi
 
 hpacucli ctrl all show config > $TMP_DIR/hpraid-config.tmp
