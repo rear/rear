@@ -5,7 +5,7 @@ create_smartarray() {
     cat <<EOF >>$LAYOUT_CODE
 LogPrint "Clearing HP SmartArray controller $slotnr"
 if ! hpacucli ctrl slot=$slotnr delete forced; then
-    LogPrint "Failed to clear HP SmartArray controller $slotnr, this is not necessarily fatal."
+    Log "Failed to clear HP SmartArray controller $slotnr, this is not necessarily fatal."
 fi
 EOF
 }
