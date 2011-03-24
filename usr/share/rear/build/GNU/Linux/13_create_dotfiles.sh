@@ -18,18 +18,15 @@
 #
 #
 
-pushd $ROOTFS_DIR >/dev/null
-
 # create a simple bash history file, use this ruler to make sure that
 # the comments stay in a single line :-)
 #---------------------------------------------------------------------------80-|
-cat > root/.bash_history <<EOF
-: : : : : :              WHAT ELSE WOULD YOU HAVE EXPECTED HERE ON A RAMDISK ?
-loadkeys -d              # this will load a default keyboard layout (usually US)
-rear recover             # this will recovery your system
+cat <<EOF > $ROOTFS_DIR/.bash_history
+less $LOGFILE            # view ReaR's log file
+loadkeys -d              # load a default keyboard layout (usually US)
+rear recover             # recovery your system
 EOF
-chmod 644 root/.bash_history
+chmod 644 $ROOTFS_DIR/.bash_history
+ln -sf ../.bash_history $ROOTFS_DIR/root/.bash_history
 
 # any other dot files should be listed below
-
-popd >/dev/null
