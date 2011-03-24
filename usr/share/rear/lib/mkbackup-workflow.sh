@@ -13,7 +13,9 @@ WORKFLOW_mkbackup () {
 
 	SourceStage "prep"
 	
-	SourceStage "dr"
+	if [[ -z "$USE_LAYOUT" ]]; then
+		SourceStage "dr"
+	if
 	
 	SourceStage "layout/save"
 	

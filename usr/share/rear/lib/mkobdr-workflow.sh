@@ -13,7 +13,9 @@ WORKFLOW_mkobdr () {
 
 	SourceStage "prep"
 
-	SourceStage "dr"
+	if [[ -z "$USE_LAYOUT" ]]; then
+		SourceStage "dr"
+	fi
 
 	SourceStage "rescue"
 
