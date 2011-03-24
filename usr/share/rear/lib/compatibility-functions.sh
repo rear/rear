@@ -78,8 +78,9 @@ elif type -p blkid >/dev/null && blkid -o udev 2>/dev/null >/dev/null ; then
 # everybody else gets to use our built-in vol_id 
 else
 	Log "Using internal version of vol_id"
-	test "$WARN_MISSING_VOL_ID" && \
-	LogPrint "Required udev program 'vol_id' or a suitable 'blkid' could not be found !
+	if [[ -z "$USE_LAYOUT" ]]; then
+		test "$WARN_MISSING_VOL_ID" && \
+		LogPrint "Required udev program 'vol_id' or a suitable 'blkid' could not be found !
 Activating a very primitive builtin replacement that supports 
 ext2/3:   LABEL and UUID
 reiserfs: LABEL
@@ -88,6 +89,7 @@ swap:     LABEL
 
 WARNING ! This replacement has been tested ONLY ON i386 !!
 "
+	fi
 	function vol_id {
 		case "$(file -sbL "$1")" in
 		*ext*filesystem*)
