@@ -140,7 +140,7 @@ MODULES_LOAD=( vmxnet )
 # KERNEL_CMDLINE="console=tty0 console=ttyS1"
 EOF
 	
-tee ./$CONFIG_DIR/templates/{PXE_pxelinux.cfg,ISO_isolinux.cfg,USB_syslinux.cfg} >/dev/null <<EOF
+tee ./$CONFIG_DIR/templates/{PXE_pxelinux.cfg,ISO_isolinux.cfg} >/dev/null <<EOF
 default hd
 prompt 1
 timeout 100
