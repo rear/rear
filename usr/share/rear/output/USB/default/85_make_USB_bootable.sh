@@ -24,7 +24,7 @@ fi
 ProgressStopIfError $? "Unable to determine raw USB device for $REAL_USB_DEVICE"
 
 # Make the USB bootable
-usb_filesystem="$(grep -P "^$REAL_USB_DEVICE\\s" /proc/mounts | cut -d' ' -f3)"
+usb_filesystem="$(grep -P "^$REAL_USB_DEVICE\\s" /proc/mounts | cut -d' ' -f3 | tail -1)"
 case "$usb_filesystem" in
     (ext?)
         extlinux -i "${BUILD_DIR}/netfs"
@@ -50,7 +50,7 @@ ProgressStep
 if [ "$REAL_USB_DEVICE" != "$RAW_USB_DEVICE" ] ; then
 	# Write the USB boot sector
 	LogPrint "Writing MBR to $RAW_USB_DEVICE"
-	dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE
+	dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE bs=440 count=1
 	ProgressStopIfError $? "Problem with writing the mbr.bin to $RAW_USB_DEVICE"
 	ProgressStep
 else
