@@ -18,23 +18,15 @@
 #
 #
 
-# define the filenames
-USB_KERNEL=kernel
-USB_INITRD=initrd.cgz
-USB_MESSAGE=message.txt
-
-if ! test -d "$USB_DIR" ; then
-	mkdir -vp "$USB_DIR" || Error "Could not create USB dir [$USB_DIR] !"
-fi
-
-cp -av "$BUILD_DIR"/kernel "$USB_DIR/$USB_KERNEL" 1>&8
-ProgressStopIfError $? "Could not create $USB_DIR/$USB_KERNEL"
-cp -av "$BUILD_DIR"/initrd.cgz "$USB_DIR/$USB_INITRD" 1>&8
-ProgressStopIfError $? "Could not create $USB_DIR/$USB_INITRD"
-
-echo "$VERSION_INFO" >"$USB_DIR/$USB_MESSAGE"
+cp -v "$BUILD_DIR"/kernel "$USB_DIR/kernel" 1>&8
+ProgressStopIfError $? "Could not create $USB_DIR/kernel"
 ProgressStep
-Log "Copied $USB_KERNEL and $USB_INITRD to $USB_DIR"
 
-# Add to USB_FILES
-USB_FILES=( "${USB_FILES[@]}" "$USB_DIR/$USB_KERNEL" "$USB_DIR/$USB_INITRD" "$USB_DIR/$USB_MESSAGE" )
+cp -v "$BUILD_DIR"/initrd.cgz "$USB_DIR/initrd.cgz" 1>&8
+ProgressStopIfError $? "Could not create $USB_DIR/initrd.cgz"
+ProgressStep
+
+Log "Copied kernel and initrd.cgz to $USB_DIR"
+
+# Add to RESULT_FILES for emailing it
+RESULT_FILES=( "${USB_FILES[@]}" "$USB_DIR/kernel" "$USB_DIR/initrd.cgz" )

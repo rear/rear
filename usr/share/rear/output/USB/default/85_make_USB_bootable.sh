@@ -34,7 +34,7 @@ case "$usb_filesystem" in
 	ProgressStopIfError $? "Could not create symlinks for extlinux.conf"
         ;;
     (vfat)
-        syslinux $REAL_USB_DEVICE
+        syslinux -d /boot/syslinux $REAL_USB_DEVICE
         ProgressStopIfError $? "Problem with syslinux on $REAL_USB_DEVICE"
         ;;
     ("")
@@ -42,7 +42,7 @@ case "$usb_filesystem" in
         BugError "Filesystem for device $REAL_USB_DEVICE could not be found"
         ;;
     (*)
-        Error "Filesystem $usb_filesystem is not supported by syslinux."
+        Error "Filesystem $usb_filesystem is not (yet) supported by syslinux."
         ;;
 esac
 ProgressStep
