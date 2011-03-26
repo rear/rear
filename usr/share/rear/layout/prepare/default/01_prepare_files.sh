@@ -5,6 +5,13 @@ LAYOUT_DEPS="$VAR_DIR/layout/diskdeps.conf"
 LAYOUT_TODO="$VAR_DIR/layout/disktodo.conf"
 LAYOUT_CODE="$VAR_DIR/layout/diskrestore.sh"
 
+# Touchfiles for layout recreation.
+LAYOUT_TOUCHDIR="$TMP_DIR/touch"
+if [ -e $LAYOUT_TOUCHDIR ] ; then
+    rm -rf $LAYOUT_TOUCHDIR
+fi
+mkdir -p $LAYOUT_TOUCHDIR
+
 if [ -e $LAYOUT_FILE ] ; then
     backup_file $LAYOUT_FILE
 fi

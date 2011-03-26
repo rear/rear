@@ -23,6 +23,9 @@ create_device() {
     device=$1
     type=$2
     
+    cat <<EOF >> $LAYOUT_CODE
+if create_component "$device" ; then
+EOF
     echo "# Create $device ($type)">> $LAYOUT_CODE
     case "$type" in
         disk)
@@ -76,13 +79,37 @@ create_device() {
             create_logicaldrive <(grep "^logicaldrive $name" $LAYOUT_FILE)
             ;;
     esac
-    echo >> $LAYOUT_CODE
+    cat <<EOF >> $LAYOUT_CODE
+component_created "$device"
+else
+    LogPrint "Skipping $device ($type) as it has already been created."
+fi
+
+EOF
 }
 
 abort_recreate() {
     Log "Error detected during restore."
     Log "Restoring backup of $LAYOUT_FILE"
     restore_backup "$LAYOUT_FILE"
+}
+
+# Test and log if a component $1 (type $2) needs to be recreated.
+create_component() {
+    # if a touchfile already exists, no need to recreate this component
+    touchfile=${1//\//-}
+    if [ -e $LAYOUT_TOUCHDIR/$touchfile ] ; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+# Mark a component as created
+component_created() {
+    # Create a touchfile
+    touchfile=${1//\//-}
+    touch $LAYOUT_TOUCHDIR/$touchfile
 }
 
 # Mark device $1 as done.
