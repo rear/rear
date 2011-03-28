@@ -8,7 +8,6 @@ if [[ ! -d "$USB_SYSLINUX_DIR" ]]; then
     mkdir -vp "$USB_SYSLINUX_DIR" >&8 || Error "Could not create USB syslinux dir [$USB_SYSLINUX_DIR] !"
 fi
 
-
 ### We generate a main syslinux.cfg in /boot/syslinux that consist of all
 ### default functionality
 Log "Create boot/syslinux/syslinux.cfg"
@@ -91,22 +90,14 @@ label bootnext
 
 EOF
 
-### FIXME: Find a suitable memtest on the system instead of this
-    if [[ -r "/boot/memtest86+-4.10" ]]; then
-        cp -v "/boot/memtest86+-4.10" "$USB_SYSLINUX_DIR/memtest" >&8
-        cat <<EOF >&4
-label memtest
-    menu label ^Memory test
-    text help
-    Test your memory for problems
-    endtext
-    kernel memtest
-
-EOF
-    fi
-
     if [[ -r "$SYSLINUX_DIR/hdt.c32" ]]; then
         cp -v "$SYSLINUX_DIR/hdt.c32" "$USB_SYSLINUX_DIR/hdt.c32" >&8
+        if [[ -r "/usr/share/hwdata/pci.ids" ]]; then
+            cp -v "/usr/share/hwdata/pci.ids" "$USB_SYSLINUX_DIR/pci.ids" >&8
+        fi
+        if [[ -r "/lib/modules/$(uname -r)/modules.alias" ]]; then
+            cp -v "/lib/modules/$(uname -r)/modules.alias" "$USB_SYSLINUX_DIR/modules.alias" >&8
+        fi
         cat <<EOF >&4
 label hdt
     menu label Hardware ^Detection tool
@@ -118,7 +109,34 @@ label hdt
 EOF
     fi
 
+    # You need the memtest86+ package installed for this to work
+    MEMTEST_BIN=$(ls -d /boot/memtest86+-* | tail -1)
+    if [[ -r "$MEMTEST_BIN" ]]; then
+        cp -v "$MEMTEST_BIN" "$USB_SYSLINUX_DIR/memtest" >&8
+        cat <<EOF >&4
+label memtest
+    menu label ^Memory test
+    text help
+    Test your memory for problems
+    endtext
+    kernel memtest
+
+EOF
+    fi
+
 #    echo -e "label -\n    menu label ^Exit menu\n    menu quit\n" >&4
+
+    if [[ -r "$SYSLINUX_DIR/reboot.c32" ]]; then
+        cp -v "$SYSLINUX_DIR/reboot.c32" "$USB_SYSLINUX_DIR/reboot.c32" >&8
+        cat <<EOF >&4
+label reboot
+    menu label ^Reboot system
+    text help
+    Reboot the system now
+    endtext
+    kernel reboot.c32
+EOF
+    fi
 
     if [[ -r "$SYSLINUX_DIR/poweroff.com" ]]; then
         cp -v "$SYSLINUX_DIR/poweroff.com" "$USB_SYSLINUX_DIR/poweroff.com" >&8
@@ -154,12 +172,13 @@ EOF
 
 ### Clean up older images of a given system
 for system in $(ls -d $BUILD_DIR/netfs/rear/*); do
-    entries=$(ls -d $system/* | wc -l)
+    entries=$(ls -d $system/????????.???? | wc -l)
+    Log "DEBUG: $entries vs $RETAIN_BACKUP_NR"
     if (( $entries <= $RETAIN_BACKUP_NR )); then
         continue
     fi
     for entry in $(seq 1 $((entries - RETAIN_BACKUP_NR))); do
-        dir=$(ls -dt $system/* | head -1)
+        dir=$(ls -dt $system/????????.???? | tail -1)
         Log "Remove older directory $dir"
         rm -rvf $dir >&8
     done
