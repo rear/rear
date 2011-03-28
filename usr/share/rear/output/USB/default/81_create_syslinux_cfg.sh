@@ -25,20 +25,14 @@ fi
 Log "Create boot/syslinux/syslinux.cfg"
 (
 
-    cat <<EOF >&4
-serial 0 115200
-timeout 300
-#noescape 1
-F1 /boot/syslinux/rear.help
-include custom.cfg
-menu title Relax and Recover v$VERSION
+    if [[ "$USE_SERIAL_CONSOLE" ]]; then
+        echo "serial 0 115200" >&4
+    fi
 
-### Include generated configuration
-include rear.cfg
-
-menu separator
-
-EOF
+    if [[ -r "$CONFIG_DIR/templates/rear.help" ]]; then
+        cp "$CONFIG_DIR/templates/rear.help" "$USB_SYSLINUX_DIR/rear.help"
+        echo "F1 /boot/syslinux/rear.help" >&4
+    fi
 
     # Use menu system, if menu.c32 is available
     if [[ -r "$SYSLINUX_DIR/menu.c32" ]]; then
@@ -46,15 +40,27 @@ EOF
         echo "default menu.c32" >&4
     fi
 
-    cp "$CONFIG_DIR/templates/rear.help" "$USB_SYSLINUX_DIR/rear.help"
     cat <<EOF >&4
+timeout 300
+#noescape 1
+
+menu title Relax and Recover v$VERSION
+
+### Add custom items to your configuration by creating custom.cfg
+include custom.cfg
+
+### Include generated configuration
+include rear.cfg
+
+menu separator
+
 label -
     menu label Other actions
     menu disable
 
 EOF
 
-    if [[ "$FEATURE_SYSLINUX_MENU_HELP" ]]; then
+    if [[ "$FEATURE_SYSLINUX_MENU_HELP" && -r "$CONFIG_DIR/templates/rear.help" ]]; then
         cat <<EOF >&4
 label help
     menu label ^Help for Relax and Recover
@@ -105,6 +111,7 @@ label bootlocal
 
 EOF
     fi
+
     cat <<EOF >&4
 label bootnext
     menu label Boot ^Next device
@@ -160,6 +167,7 @@ label reboot
     Reboot the system now
     endtext
     kernel reboot.c32
+
 EOF
     fi
 
@@ -172,6 +180,7 @@ label poweroff
     Power off the system now
     endtext
     kernel poweroff.com
+
 EOF
     fi
 
@@ -181,6 +190,7 @@ if [[ ! -d "$USB_REAR_DIR" ]]; then
     mkdir -vp "$USB_REAR_DIR" >&8 || Error "Could not create USB rear dir [$USB_REAR_DIR] !"
 fi
 
+### FIXME: Make sure we also support the case where NETFS_PREFIX does not conform to hostname/timestamp
 ### We generate a single syslinux.cfg for the current system
 Log "Create $NETFS_PREFIX/syslinux.cfg"
 time=$(basename $USB_REAR_DIR)
@@ -188,8 +198,8 @@ cat <<EOF >$USB_REAR_DIR/syslinux.cfg
 label $(uname -n)-$time
     menu label ${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2}
     text help
-    ReaR rescue image for $(uname -n) at ${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2}
-    Config BACKUP=$BACKUP and OUTPUT=$OUTPUT using kernel $(uname -r)
+ReaR rescue image using kernel $(uname -r) ${IPADDR:+on $IPADDR}
+${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${NETFS_URL:+NETFS_URL=$NETFS_URL}
     endtext
     kernel /$NETFS_PREFIX/kernel
     append initrd=/$NETFS_PREFIX/initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
@@ -230,7 +240,15 @@ Log "Create boot/syslinux/rear.cfg"
             fi
 
             # Begin submenu
-            echo -e "\nmenu begin $system\n    menu label $system\n" >&4
+            cat <<EOF >&4
+
+menu begin $system
+    menu label $system
+    text help
+    Recover backup of $system to this system.
+    endtext
+
+EOF
         fi
 
         # Include entry
