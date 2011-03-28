@@ -31,7 +31,7 @@ case "$BACKUP_PROG" in
 			$BACKUP_PROG_OPTIONS $backuparchive \
 			$(cat $BUILD_DIR/backup-include.txt) $LOGFILE > $backuparchive
 	;;
-esac >"${BUILD_DIR}/tmp/${BACKUP_PROG_ARCHIVE}.log"
+esac >"${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log"
 echo $? >$BUILD_DIR/retval
 ) &
 BackupPID=$!
@@ -43,7 +43,7 @@ sleep 1 # Give the backup software a good chance to start working
 case "$BACKUP_PROG" in
 	tar)
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
-			blocks="$(tail -1 ${BUILD_DIR}/tmp/${BACKUP_PROG_ARCHIVE}.log | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
+			blocks="$(tail -1 ${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
 			size="$((blocks*512))"
 			echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 		done
@@ -85,4 +85,4 @@ elif [ "$size" ]; then
 fi
 
 ### Move progress log to backup media
-mv "${BUILD_DIR}/tmp/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log"
+mv "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log"
