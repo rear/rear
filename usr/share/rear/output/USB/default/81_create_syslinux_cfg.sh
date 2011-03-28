@@ -13,7 +13,6 @@ elif version_newer "$syslinux_version" 4.0 ; then
     FEATURE_SYSLINUX_MENU_HELP="y"
 fi
 
-NETFS_PREFIX=rear/$(uname -n)/$(date +%Y%m%d.%H%M)
 USB_SYSLINUX_DIR=$BUILD_DIR/netfs/boot/syslinux
 USB_REAR_DIR=$BUILD_DIR/netfs/$NETFS_PREFIX
 
