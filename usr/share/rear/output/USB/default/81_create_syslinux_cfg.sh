@@ -69,31 +69,39 @@ EOF
     # Use chain booting for booting disk, if chain.c32 is available
     if [[ -r "$SYSLINUX_DIR/chain.c32" ]]; then
         cp -v "$SYSLINUX_DIR/chain.c32" "$USB_SYSLINUX_DIR/chain.c32" >&8
+
+        # When booting from USB disk, local disk is likely the second disk
+        if [[ "$OUTPUT" == "USB" ]]; then
+            localdisk="hd1"
+            localbios="0x81"
+            localopts="swap"
+        else
+            localdisk="hd0"
+            localbios="0x80"
+        fi
+
         cat <<EOF >&4
-ontimeout boothd0
-label boothd0
-    menu label ^Boot local disk hd0
+ontimeout boot$localdisk
+label boot$localdisk
+    menu label Boot ^Local disk ($localdisk)
     menu default
     kernel chain.c32
-    append hd0
+    append $localdisk $localopts
 
 label bootlocal
-    menu label Boot ^First BIOS disk
+    menu label Boot Boot ^BIOS disk ($localbios)
     text help
-    Use this when booting from local disk hd0 does not work !
+    Use this when booting from local disk $localdisk does not work !
     endtext
-    localboot 0x80
+    localboot $localbios
 
 EOF
     else
         cat <<EOF >&4
 ontimeout bootlocal
 label bootlocal
-    menu label Boot ^First BIOS disk
-    text help
-    Use this when booting from local disk hd0 does not work !
-    endtext
-    localboot 0x80
+    menu label Boot ^Boot BIOS disk ($localbios)
+    localboot $localbios
 
 EOF
     fi
