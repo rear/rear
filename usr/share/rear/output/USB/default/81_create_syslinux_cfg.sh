@@ -100,7 +100,7 @@ label memtest
     text help
     Test your memory for problems
     endtext
-    kernel memtest\n
+    kernel memtest
 
 EOF
     fi
