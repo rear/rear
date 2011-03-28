@@ -1,12 +1,13 @@
 # Create a suitable syslinux configuration based on capabilities
 
-NETFS_PREFIX=rear/$(uname -n)/$(date +%Y%m%d.%H%S)
+NETFS_PREFIX=rear/$(uname -n)/$(date +%Y%m%d.%H%M)
 USB_SYSLINUX_DIR=$BUILD_DIR/netfs/boot/syslinux
 USB_REAR_DIR=$BUILD_DIR/netfs/$NETFS_PREFIX
 
 if [[ ! -d "$USB_SYSLINUX_DIR" ]]; then
     mkdir -vp "$USB_SYSLINUX_DIR" >&8 || Error "Could not create USB syslinux dir [$USB_SYSLINUX_DIR] !"
 fi
+
 
 ### We generate a main syslinux.cfg in /boot/syslinux that consist of all
 ### default functionality
@@ -29,10 +30,12 @@ menu separator
 EOF
 
     # Use menu system, if menu.c32 is available
-    if [[ -r "$USB_SYSLINUX_DIR/menu.c32" ]]; then
+    if [[ -r "$SYSLINUX_DIR/menu.c32" ]]; then
+        cp -v "$SYSLINUX_DIR/menu.c32" "$USB_SYSLINUX_DIR/menu.c32" >&8
         echo "default menu.c32" >&4
     fi
 
+    cp "$CONFIG_DIR/templates/rear.help" "$USB_SYSLINUX_DIR/rear.help"
     cat <<EOF >&4
 label -
     menu label Other actions
@@ -40,12 +43,16 @@ label -
 
 label help
     menu label ^Help for Relax and Recover
+    text help
+    More information about ReaR and the steps for recovering your system
+    endtext
     menu help rear.help
 
 EOF
 
     # Use chain booting for booting disk, if chain.c32 is available
-    if [[ -r "$USB_SYSLINUX_DIR/chain.c32" ]]; then
+    if [[ -r "$SYSLINUX_DIR/chain.c32" ]]; then
+        cp -v "$SYSLINUX_DIR/chain.c32" "$USB_SYSLINUX_DIR/chain.c32" >&8
         cat <<EOF >&4
 ontimeout boothd0
 label boothd0
@@ -84,18 +91,45 @@ label bootnext
 
 EOF
 
-    if [[ -r "$USB_SYSLINUX_DIR/memtest" ]]; then
-        echo -e "label memtest\n    menu label ^Memory test\n    kernel memtest\n" >&4
+### FIXME: Find a suitable memtest on the system instead of this
+    if [[ -r "/boot/memtest86+-4.10" ]]; then
+        cp -v "/boot/memtest86+-4.10" "$USB_SYSLINUX_DIR/memtest" >&8
+        cat <<EOF >&4
+label memtest
+    menu label ^Memory test
+    text help
+    Test your memory for problems
+    endtext
+    kernel memtest\n
+
+EOF
     fi
 
-    if [[ -r "$USB_SYSLINUX_DIR/hdt.c32" ]]; then
-        echo -e "label hdt\n    menu label Hardware ^Detection tool\n    kernel hdt.c32\n" >&4
+    if [[ -r "$SYSLINUX_DIR/hdt.c32" ]]; then
+        cp -v "$SYSLINUX_DIR/hdt.c32" "$USB_SYSLINUX_DIR/hdt.c32" >&8
+        cat <<EOF >&4
+label hdt
+    menu label Hardware ^Detection tool
+    text help
+    Information about your current hardware configuration
+    endtext
+    kernel hdt.c32
+
+EOF
     fi
 
 #    echo -e "label -\n    menu label ^Exit menu\n    menu quit\n" >&4
 
-    if [[ -r "$USB_SYSLINUX_DIR/poweroff.com" ]]; then
-        echo -e " label poweroff\n menu label ^Power off system\n kernel poweroff.com\n" >&4
+    if [[ -r "$SYSLINUX_DIR/poweroff.com" ]]; then
+        cp -v "$SYSLINUX_DIR/poweroff.com" "$USB_SYSLINUX_DIR/poweroff.com" >&8
+        cat <<EOF >&4
+label poweroff
+    menu label ^Power off system
+    text help
+    Power off the system now
+    endtext
+    kernel poweroff.com
+EOF
     fi
 
 ) 4>$USB_SYSLINUX_DIR/syslinux.cfg
@@ -118,12 +152,25 @@ label $(uname -n)-$time
     append initrd=/$NETFS_PREFIX/initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 EOF
 
+### Clean up older images of a given system
+for system in $(ls -d $BUILD_DIR/netfs/rear/*); do
+    entries=$(ls -d $system/* | wc -l)
+    if (( $entries <= $RETAIN_BACKUP_NR )); then
+        continue
+    fi
+    for entry in $(seq 1 $((entries - RETAIN_BACKUP_NR))); do
+        dir=$(ls -dt $system/* | head -1)
+        Log "Remove older directory $dir"
+        rm -rvf $dir >&8
+    done
+done
+
 ### We generate a rear.cfg based on existing rear syslinux.cfg files.
 Log "Create boot/syslinux/rear.cfg"
 (
 
     oldsystem=
-    for file in $(cd $BUILD_DIR/netfs; ls rear/*/????????.????/syslinux.cfg); do
+    for file in $(cd $BUILD_DIR/netfs; ls -d rear/*/????????.????/syslinux.cfg); do
         dir=$(dirname $file)
         time=$(basename $dir)
         system=$(basename $(dirname $dir))
@@ -149,13 +196,22 @@ Log "Create boot/syslinux/rear.cfg"
 
     if [[ "$oldsystem" ]]; then
         # Close last submenu
-        echo -e "\n    menu separator\n" >&4
-        echo -e "    label -\n        menu label ^Back\n        menu default\n        menu exit\n" >&4
-        echo "menu end" >&4
+        cat <<EOF >&4
+
+    menu separator
+
+    label -
+        menu label ^Back
+        menu default
+        help text
+    Return to the main ReaR menu
+        endtext
+        menu exit
+
+menu end
+EOF
     fi
 
 ) 4>$USB_SYSLINUX_DIR/rear.cfg
-
-echo "Placeholder for Relax and Recover HELP" >$USB_SYSLINUX_DIR/rear.help
 
 Log "Created syslinux configuration"

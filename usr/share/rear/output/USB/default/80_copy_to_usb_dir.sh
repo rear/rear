@@ -18,11 +18,11 @@
 #
 #
 
-cp -v "$BUILD_DIR"/kernel "$USB_DIR/kernel" 1>&8
+cp -v "$BUILD_DIR/kernel" "$USB_DIR/kernel" >&8
 ProgressStopIfError $? "Could not create $USB_DIR/kernel"
 ProgressStep
 
-cp -v "$BUILD_DIR"/initrd.cgz "$USB_DIR/initrd.cgz" 1>&8
+cp -v "$BUILD_DIR/initrd.cgz" "$USB_DIR/initrd.cgz" >&8
 ProgressStopIfError $? "Could not create $USB_DIR/initrd.cgz"
 ProgressStep
 

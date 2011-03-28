@@ -1,0 +1,18 @@
+09ReaR recovery mode07
+01~~~~~~~~~~~~~~~~~~07
+0fRelax and Recover07 (ReaR) is a disaster recovery and system migration tool.
+
+This help is part of the rescue image, you are here because you plan to recover
+or migrate a previously made backup of your system, including the disk layout
+as it was when the rescue environment was created.
+
+The menu gives an overview of the various system rescue environments stored on
+the boot media you used for booting this screen (either USB, PXE or ISO). For
+each of the systems one or more rescue environments are stored, when browsing
+through the images more information is shown below the menu.
+
+Once you boot into one of the rescue images, you can start recover the system.
+You can do this by typing: 0erear recover07
+
+cfCAUTION:0f Once you start recovery, it is likely the actions cannot be undone and
+         you may loose anything stored on the physical disks of the system.07

@@ -65,7 +65,7 @@ sed	-e 's#/etc#%{_sysconfdir}#' \
 	-e 's#/usr/sbin#%{_sbindir}#' \
 	-e 's#/usr/share#%{_datadir}#' \
 	-e 's#/usr/share/doc/packages#%{_docdir}#' \
-	usr/share/rear/doc/rear.8 >$RPM_BUILD_ROOT%{_mandir}/man8/rear.8
+	doc/rear.8 >$RPM_BUILD_ROOT%{_mandir}/man8/rear.8
 
 # remove doc files under  $RPM_BUILD_ROOT/usr/share/rear
 rm -f $RPM_BUILD_ROOT%{_datadir}/rear/README

@@ -13,5 +13,9 @@ fi
 [[ -s "$ISO_ISOLINUX_BIN" ]]
 ProgressStopIfError $? "Could not find 'isolinux.bin'. Maybe you have to set ISO_ISOLINUX_BIN [$ISO_ISOLINUX_BIN] or install the syslinux package ?"
 
-[[ -s "$(dirname $ISO_ISOLINUX_BIN)/mbr.bin" ]]
-ProgressStopIfError $? "Could not find 'mbr.bin' in $(dirname $ISO_ISOLINUX_BIN). Maybe syslinux version is too old ?"
+# Define the syslinux directory for later usage
+SYSLINUX_DIR=$(dirname $ISO_ISOLINUX_BIN)
+
+[[ -s "$SYSLINUX_DIR/mbr.bin" ]]
+ProgressStopIfError $? "Could not find 'mbr.bin' in $SYSLINUX_DIR. Maybe syslinux version is too old ?"
+
