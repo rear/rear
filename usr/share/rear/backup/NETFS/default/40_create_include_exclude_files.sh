@@ -5,7 +5,9 @@ for k in "${BACKUP_PROG_INCLUDE[@]}" ; do
 done > $BUILD_DIR/backup-include.txt
 # add the mountpoints that will be recovered to the backup include list
 while read mountpoint device junk ; do
-	echo "$mountpoint"
+	if ! IsInArray "$mountpoint" "${EXCLUDE_MOUNTPOINTS[@]}" ; then
+		echo "$mountpoint"
+	fi
 done <"$VAR_DIR/recovery/mountpoint_device" >> $BUILD_DIR/backup-include.txt
 
 # exclude list
