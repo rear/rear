@@ -13,7 +13,7 @@ LogPrint "Saving HP SmartArray configuration."
 
 ### In case we have a controller problem, the hpacucli output may not reflect
 ### the actual configuration of the system, and hence the layout output could
-### be incorrect ! Fail this is the case !
+### be incorrect ! Fail if this is the case !
 hpacucli ctrl all show detail > $TMP_DIR/hpraid-detail.tmp
 grep 'Controller Status:' $TMP_DIR/hpraid-detail.tmp | grep -v 'Controller Status: OK'
 if (( $? != 1 )); then
