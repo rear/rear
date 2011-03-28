@@ -1,5 +1,18 @@
 # Create a suitable syslinux configuration based on capabilities
 
+# Test for features in syslinux
+# true if syslinux supports MENU HELP directive
+FEATURE_SYSLINUX_MENU_HELP=
+
+# Test for the syslinux version
+syslinux_version=$(get_version syslinux --version)
+
+if [ -z "$syslinux_version" ]; then
+    BugError "Function get_version could not detect syslinux version."
+elif version_newer "$syslinux_version" 4.0 ; then
+    FEATURE_SYSLINUX_MENU_HELP="y"
+fi
+
 NETFS_PREFIX=rear/$(uname -n)/$(date +%Y%m%d.%H%M)
 USB_SYSLINUX_DIR=$BUILD_DIR/netfs/boot/syslinux
 USB_REAR_DIR=$BUILD_DIR/netfs/$NETFS_PREFIX
@@ -40,6 +53,10 @@ label -
     menu label Other actions
     menu disable
 
+EOF
+
+    if [[ "$FEATURE_SYSLINUX_MENU_HELP" ]]; then
+        cat <<EOF >&4
 label help
     menu label ^Help for Relax and Recover
     text help
@@ -48,6 +65,7 @@ label help
     menu help rear.help
 
 EOF
+    fi
 
     # Use chain booting for booting disk, if chain.c32 is available
     if [[ -r "$SYSLINUX_DIR/chain.c32" ]]; then
