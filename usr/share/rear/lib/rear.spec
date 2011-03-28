@@ -122,7 +122,7 @@ sed     -e 's#/etc#%{_sysconfdir}#' \
 	-e 's#/usr/sbin#%{_sbindir}#' \
 	-e 's#/usr/share#%{_datadir}#' \
 	-e 's#/usr/share/doc/packages#%{_docdir}#' \
-	usr/share/doc/rear.8 >$RPM_BUILD_ROOT%{_mandir}/man8/rear.8
+	doc/rear.8 >$RPM_BUILD_ROOT%{_mandir}/man8/rear.8
 
 %clean
 rm -rf $RPM_BUILD_ROOT
