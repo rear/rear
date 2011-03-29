@@ -26,7 +26,7 @@ WORKFLOW_mkdist_postprocess () {
 	# reverted back to symlinking because we put more MegaByte into doc and should not package it twice
 	ln -s .$SHARE_DIR/{doc,contrib}  .  1>&8
 	# to prevent RPMs from installing symlinks into the doc area we actually copy the text files
-	cp -r .$SHARE_DIR/{COPYINGREADME,AUTHORS,TODO}  .  1>&8
+	cp -r .$SHARE_DIR/{COPYING,README,AUTHORS,TODO}  .  1>&8
 	ProgressStopIfError $? "Could not copy .$SHARE_DIR/{COPYING,README,AUTHORS,TODO,doc,contrib}"
 	
 
