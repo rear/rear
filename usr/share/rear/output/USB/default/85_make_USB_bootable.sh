@@ -27,7 +27,7 @@ ProgressStopIfError $? "Unable to determine raw USB device for $REAL_USB_DEVICE"
 usb_filesystem="$(grep -P "^$REAL_USB_DEVICE\\s" /proc/mounts | cut -d' ' -f3 | tail -1)"
 case "$usb_filesystem" in
     (ext?)
-        extlinux -i "${BUILD_DIR}/netfs"
+        extlinux -i "${BUILD_DIR}/netfs/boot/syslinux"
         ProgressStopIfError $? "Problem with extlinux -i ${BUILD_DIR}/netfs"
         # add symlink for extlinux.conf
         ln -sf syslinux.cfg "${BUILD_DIR}/netfs/boot/syslinux/extlinux.conf"
