@@ -5,9 +5,7 @@ LogPrint "Comparing disks."
 MIGRATION_MODE=${MIGRATION_MODE-""}
 
 while read disk dev size junk ; do
-    if [ "${dev#cciss}" != "$dev" ] ; then
-        dev=${dev/\//!}
-    fi
+    dev=$( get_sysfs_name $dev )
     
     Log "Looking for $dev..."
     
@@ -21,6 +19,9 @@ while read disk dev size junk ; do
             LogPrint "Device $dev has size $newsize, $size expected"
             MIGRATION_MODE="true"
         fi
+    else
+        LogPrint "Device $dev does not exist."
+        MIGRATION_MODE="true"
     fi
 done < <(grep "^disk" $LAYOUT_FILE)
 

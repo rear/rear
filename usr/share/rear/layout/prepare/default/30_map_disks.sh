@@ -41,6 +41,16 @@ while read disk dev size junk ; do
         continue
     fi
     
+    # first, try to find if the disk of the same name has the same size
+    if [ -e /sys/block/$(get_sysfs_name "$dev")/size ] ; then
+        newsize=$(cat /sys/block/$(get_sysfs_name "$dev")/size)
+        if [ "$size" -eq "$newsize" ] ; then
+            add_mapping "$dev" "$dev"
+            continue
+        fi
+    fi
+    
+    # else, loop over all disks to find one of the same size
     for path in $(ls -d /sys/block/* 2>/dev/null) ; do
         if [ ! -r $path/size ] || [ ! -d $path/queue ] ; then
             continue
@@ -62,7 +72,7 @@ while read -u 3 disk dev size junk ; do
     # Allow the user to select from the set of unmapped disks
     possible_targets=()
     for path in $(ls -d /sys/block/* 2>/dev/null) ; do
-        if ! reverse_mapping_exists $(get_device_name $path) && [ -d $path/queue ] ; then
+        if ! reverse_mapping_exists "/dev/$(get_device_name $path)" && [ -d $path/queue ] ; then
             possible_targets=("${possible_targets[@]}" "$(get_device_name $path)")
         fi
     done
