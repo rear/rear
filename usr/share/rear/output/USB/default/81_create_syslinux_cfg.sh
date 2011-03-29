@@ -32,6 +32,7 @@ Log "Create boot/syslinux/syslinux.cfg"
     if [[ -r "$CONFIG_DIR/templates/rear.help" ]]; then
         cp "$CONFIG_DIR/templates/rear.help" "$USB_SYSLINUX_DIR/rear.help"
         echo "F1 /boot/syslinux/rear.help" >&4
+	echo "MENU TABMSG Press [Tab] to edit options or [F1] for ReaR help" >&4
     fi
 
     # Use menu system, if menu.c32 is available
@@ -126,6 +127,8 @@ EOF
         cp -v "$SYSLINUX_DIR/hdt.c32" "$USB_SYSLINUX_DIR/hdt.c32" >&8
         if [[ -r "/usr/share/hwdata/pci.ids" ]]; then
             cp -v "/usr/share/hwdata/pci.ids" "$USB_SYSLINUX_DIR/pci.ids" >&8
+        elif [[ -r "/usr/share/pci.ids" ]]; then
+            cp -v "/usr/share/pci.ids" "$USB_SYSLINUX_DIR/pci.ids" >&8
         fi
         if [[ -r "/lib/modules/$(uname -r)/modules.alias" ]]; then
             cp -v "/lib/modules/$(uname -r)/modules.alias" "$USB_SYSLINUX_DIR/modules.alias" >&8
@@ -208,10 +211,10 @@ EOF
 ### Clean up older images of a given system
 for system in $(ls -d $BUILD_DIR/netfs/rear/*); do
     entries=$(ls -d $system/????????.???? | wc -l)
-    if (( $entries <= $RETAIN_BACKUP_NR )); then
+    if (( $entries <= $USB_KEEP_OLD_BACKUP_NR )); then
         continue
     fi
-    for entry in $(seq 1 $((entries - RETAIN_BACKUP_NR))); do
+    for entry in $(seq 1 $((entries - USB_KEEP_OLD_BACKUP_NR))); do
         dir=$(ls -dt $system/????????.???? | tail -1)
         Log "Remove older directory $dir"
         rm -rvf $dir >&8

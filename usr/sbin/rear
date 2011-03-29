@@ -235,6 +235,8 @@ done
 for config in site local ; do
 	Source $CONFIG_DIR/"$config".conf
 done
+# last thing is to overwrite variables if we are in the rescue system
+Source "$CONFIG_DIR/rescue.conf" # set by rescue Stage
 
 
 # change some options in debug mode

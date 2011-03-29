@@ -6,6 +6,8 @@
 
 test -d $ROOTFS_DIR$CONFIG_DIR || mkdir -p $ROOTFS_DIR$CONFIG_DIR
 
-# the following line is probably deep legacy and should be removed when I don't remember what it is for
-rm -f $CONFIG_DIR/{dump,recover}.conf # so that the file in the ROOTFS_DIR won't be overwritten
+# we can write stuff to $CONFIG_DIR/rescue.conf if we want to preserve some dynamic variables
+# so that they stay static in the rescue system. static means they stay the same as when the
+# rescue system was created.
+rm -f $ROOTFS_DIR$CONFIG_DIR/rescue.conf
 
