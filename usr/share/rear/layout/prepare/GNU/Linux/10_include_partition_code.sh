@@ -48,7 +48,7 @@ EOF
     
     let start=32768 # start after one cylinder 63*512 + multiple of 4k = 64*512
     let end=0
-    while read part odisk size type flags name junk; do
+    while read part odisk size parttype flags name junk; do
         
         # calculate the end of the partition.
         let end=$start+$size
@@ -60,13 +60,13 @@ EOF
         fi
         
         # extended partitions run to the end of disk...
-        if [ "$type" = "extended" ] ; then
+        if [ "$parttype" = "extended" ] ; then
             let end=$disk_size
         fi
         
         if [ -n "$FEATURE_PARTED_ANYUNIT" ] ; then
 cat <<EOF >> $LAYOUT_CODE
-parted -s $disk mkpart $type ${start}B $(($end-1))B 1>&2
+parted -s $disk mkpart $parttype ${start}B $(($end-1))B 1>&2
 EOF
         else
             # Old versions of parted accept only sizes in megabytes...
@@ -77,7 +77,7 @@ EOF
             fi
             let end_mb=$end/1024/1024
 cat <<EOF >> $LAYOUT_CODE
-parted -s $disk mkpart $type $start_mb $end_mb 1>&2
+parted -s $disk mkpart $parttype $start_mb $end_mb 1>&2
 EOF
         fi
 

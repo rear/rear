@@ -1,12 +1,12 @@
 # Code to recreate filesystems.
 
 create_fs() {
-    read fs device mp type uuid label options < $1
+    read fs device mp fstype uuid label options < $1
 
     label=${label#label=}
     uuid=${uuid#uuid=}
 
-    case $type in
+    case $fstype in
         ext*)
             # File system parameters.
             blocksize=""
@@ -34,8 +34,8 @@ create_fs() {
                 esac
             done
 cat >> $LAYOUT_CODE <<EOF
-LogPrint "Creating $type-filesystem $mp on $device"
-mkfs -t ${type}${blocksize}${fragmentsize} $device 1>&2
+LogPrint "Creating $fstype-filesystem $mp on $device"
+mkfs -t ${fstype}${blocksize}${fragmentsize} $device 1>&2
 EOF
             if [ -n "$label" ] ; then
                 echo "tune2fs -L $label $device 1>&2" >> $LAYOUT_CODE
@@ -51,8 +51,8 @@ EOF
             ;;
         xfs)
 cat >> $LAYOUT_CODE <<EOF
-LogPrint "Creating $type-filesystem $mp on $device"
-mkfs -t $type $device
+LogPrint "Creating $fstype-filesystem $mp on $device"
+mkfs -t $fstype $device
 EOF
             if [ -n "$label" ] ; then
                 echo "xfs_admin -L $label $device 1>&2" >> $LAYOUT_CODE
@@ -63,8 +63,8 @@ EOF
             ;;
         reiserfs)
 cat >> $LAYOUT_CODE <<EOF
-LogPrint "Creating $type-filesystem $mp on $device"
-mkfs -t $type -q $device
+LogPrint "Creating $fstype-filesystem $mp on $device"
+mkfs -t $fstype -q $device
 EOF
             if [ -n "$label" ] ; then
                 echo "reiserfstune --label $label $device 1>&2" >> $LAYOUT_CODE
@@ -75,8 +75,8 @@ EOF
             ;;
         *)
 cat >> $LAYOUT_CODE <<EOF
-LogPrint "Creating filesystem ($type) $mp on $device"
-mkfs -t $type $device 1>&2
+LogPrint "Creating filesystem ($fstype) $mp on $device"
+mkfs -t $fstype $device 1>&2
 EOF
             ;;
     esac
