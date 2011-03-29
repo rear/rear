@@ -12,19 +12,25 @@ done < $BUILD_DIR/backup-exclude.txt
 
 mkdir -p "${BUILD_DIR}/netfs/${NETFS_PREFIX}"
 
-Log "Creating archive '$backuparchive'"
-Print "Creating archive '$displayarchive'"
+LogPrint "Creating archive '$backuparchive'"
 echo -n "Preparing archive operation"
 (
 case "$BACKUP_PROG" in
 	# tar compatible programs here
-	tar)
+	(tar)
 		$BACKUP_PROG --sparse --block-number --totals --verbose --no-wildcards-match-slash --one-file-system --ignore-failed-read \
 			$BACKUP_PROG_OPTIONS ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} $BACKUP_PROG_COMPRESS_OPTIONS \
 			-X $BUILD_DIR/backup-exclude.txt -C / -c -f "$backuparchive" \
 			$(cat $BUILD_DIR/backup-include.txt) $LOGFILE
 	;;
-	*)
+	(rsync)
+		# make sure that the target is a directory
+		mkdir -vp "$backuparchive" 1>&2
+		$BACKUP_PROG --sparse --archive --hard-links --one-file-system --verbose --delete \
+			--exclude-from=$BUILD_DIR/backup-exclude.txt --delete-excluded \
+			$(cat $BUILD_DIR/backup-include.txt) "$backuparchive"
+	;;
+	(*)
 		Log "Using unsupported backup program '$BACKUP_PROG'"
 		$BACKUP_PROG $BACKUP_PROG_COMPRESS_OPTIONS \
 			$BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $BUILD_DIR/backup-exclude.txt \
@@ -45,6 +51,19 @@ case "$BACKUP_PROG" in
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			blocks="$(tail -1 ${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
 			size="$((blocks*512))"
+			echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+		done
+		echo -en "\e[2K\r"
+		;;
+	rsync)
+		# since we do not want to do a $(du -s) run every second we count disk usage instead
+		# this obviously leads to wrong results in case something else is writing to the same
+		# disk at the same time as is very likely with a networked file system. For local disks
+		# this should be good enough and in any case this is only some eye candy.
+		# TODO: Find a fast way to count the actual transfer data, preferrable getting the info from rsync.
+		let old_disk_used="$(get_disk_used "$backuparchive")"
+		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+			let disk_used="$(get_disk_used "$backuparchive")" size=disk_used-old_disk_used
 			echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 		done
 		echo -en "\e[2K\r"

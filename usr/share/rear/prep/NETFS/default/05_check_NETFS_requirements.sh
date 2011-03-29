@@ -48,6 +48,17 @@ else
 
 fi
 
+# some backup progs require a different backuparchive name
+case "$BACKUP_PROG" in
+	(rsync)
+		# rsync creates a target directory instead of a file
+		BACKUP_PROG_SUFFIX=
+		BACKUP_PROG_COMPRESS_SUFFIX=
+		;;
+	(*)	:
+		;;
+esac
+
 # set archive names
 case "$TAPE_DEVICE:$NETFS_PROTO" in
 	(:*)
