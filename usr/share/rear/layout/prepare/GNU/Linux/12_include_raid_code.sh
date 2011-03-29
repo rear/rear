@@ -20,7 +20,7 @@ fi
 create_raid() {
     read raid device options < $1
 
-    mdadmcmd="mdadm --create $device"
+    mdadmcmd="mdadm --create $device --force"
 
     devices=""
     for option in $options ; do
@@ -45,7 +45,7 @@ create_raid() {
         esac
     done
     # Try to make mdadm non-interactive...
-    mdadmcmd="echo \"Y\" | $mdadmcmd --force $devices"
+    mdadmcmd="echo \"Y\" | $mdadmcmd $devices"
 
 cat <<EOF >> $LAYOUT_CODE
 LogPrint "Creating software RAID $device"
