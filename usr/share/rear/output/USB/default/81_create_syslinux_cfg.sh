@@ -208,7 +208,6 @@ EOF
 ### Clean up older images of a given system
 for system in $(ls -d $BUILD_DIR/netfs/rear/*); do
     entries=$(ls -d $system/????????.???? | wc -l)
-    Log "DEBUG: $entries vs $RETAIN_BACKUP_NR"
     if (( $entries <= $RETAIN_BACKUP_NR )); then
         continue
     fi
@@ -265,7 +264,7 @@ EOF
     label -
         menu label ^Back
         menu default
-        help text
+        text help
     Return to the main ReaR menu
         endtext
         menu exit
