@@ -22,7 +22,6 @@ WORKFLOW_mkdeb () {
 	ProgressStopIfError $? "Could not mkdir '$TMP_DIR/$prod_ver/DEBIAN/'"
 	
 	rm $TMP_DIR/$prod_ver/doc
-	rm $TMP_DIR/$prod_ver/CHANGES
 	rm $TMP_DIR/$prod_ver/README
 	ProgressStopIfError $? "Could not delete symlinks in'$TMP_DIR/$prod_ver/'"
 

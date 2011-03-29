@@ -69,7 +69,6 @@ sed	-e 's#/etc#%{_sysconfdir}#' \
 
 # remove doc files under  $RPM_BUILD_ROOT/usr/share/rear
 rm -f $RPM_BUILD_ROOT%{_datadir}/rear/README
-rm -f $RPM_BUILD_ROOT%{_datadir}/rear/CHANGES
 rm -f $RPM_BUILD_ROOT%{_datadir}/rear/COPYING
 rm -f $RPM_BUILD_ROOT%{_datadir}/rear/AUTHORS
 rm -f $RPM_BUILD_ROOT%{_datadir}/rear/TODO
@@ -81,7 +80,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc COPYING CHANGES README AUTHORS TODO
+%doc COPYING README AUTHORS TODO
 %doc doc/README.doc doc/configuration-examples.txt
 %{_sbindir}/rear
 %{_datadir}/rear
