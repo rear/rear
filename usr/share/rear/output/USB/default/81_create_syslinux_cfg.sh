@@ -80,7 +80,7 @@ EOF
         if [[ "$OUTPUT" == "USB" ]]; then
             localdisk="hd1"
             localbios="0x81"
-            localopts="swap"
+#            localopts="swap"
         else
             localdisk="hd0"
             localbios="0x80"
@@ -95,7 +95,7 @@ label boot$localdisk
     append $localdisk $localopts
 
 label bootlocal
-    menu label Boot Boot ^BIOS disk ($localbios)
+    menu label Boot ^BIOS disk ($localbios)
     text help
     Use this when booting from local disk $localdisk does not work !
     endtext
