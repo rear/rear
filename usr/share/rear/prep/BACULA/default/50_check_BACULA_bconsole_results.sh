@@ -12,7 +12,7 @@ fi
 # See if we can ping the director
 #
 # is the director server present? Fetch from /etc/bacula/bconsole.conf file
-BACULA_DIRECTOR=`grep address /etc/bacula/bconsole.conf | awk '{print $3}'`
+BACULA_DIRECTOR=$(grep -i address /etc/bacula/bconsole.conf | awk '{ print $3 }')
 [ -z "${BACULA_DIRECTOR}" ] && ProgressStopIfError 1 "Director not defined in /etc/bacula/bconsole.conf"
 
 if test "$PING"; then
