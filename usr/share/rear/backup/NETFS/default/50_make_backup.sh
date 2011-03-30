@@ -47,7 +47,7 @@ sleep 1 # Give the backup software a good chance to start working
 
 # while the backup runs in a sub-process, display some progress information to the user
 case "$BACKUP_PROG" in
-	tar)
+	(tar)
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			blocks="$(tail -1 ${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
 			size="$((blocks*512))"
@@ -55,7 +55,7 @@ case "$BACKUP_PROG" in
 		done
 		echo -en "\e[2K\r"
 		;;
-	rsync)
+	(rsync)
 		# since we do not want to do a $(du -s) run every second we count disk usage instead
 		# this obviously leads to wrong results in case something else is writing to the same
 		# disk at the same time as is very likely with a networked file system. For local disks
@@ -68,7 +68,7 @@ case "$BACKUP_PROG" in
 		done
 		echo -en "\e[2K\r"
 		;;
-	*)
+	(*)
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			size="$(stat -c "%s" "$backuparchive")" || {
 				kill -9 $BackupPID

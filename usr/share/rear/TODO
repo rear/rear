@@ -19,3 +19,8 @@
 * Can we drop the mkvendorrpm workflow?
 
 * Support dhcpcd (SLES11) in addition to dhclient
+
+* make sure that the new NETFS_PREFIX stuff does not brake existing setups, e.g. by putting the backup in a different location
+  - leave the default as it was before $(uname -n) to support existing setups
+  - make the code robust enought to handle all kind of static and dynamic NETFS_PREFIX scenarios, regardless of how the path looks
+  - write documentation how users can enable advanced stuff through setting a smarter NETFS_PREFIX, provide examples
