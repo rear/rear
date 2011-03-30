@@ -24,7 +24,7 @@ create_device() {
     type=$2
     
     cat <<EOF >> $LAYOUT_CODE
-if create_component "$device" ; then
+if create_component "$device" "$type" ; then
 EOF
     echo "# Create $device ($type)">> $LAYOUT_CODE
     case "$type" in
@@ -80,7 +80,7 @@ EOF
             ;;
     esac
     cat <<EOF >> $LAYOUT_CODE
-component_created "$device"
+component_created "$device" "$type"
 else
     LogPrint "Skipping $device ($type) as it has already been created."
 fi
@@ -96,8 +96,10 @@ abort_recreate() {
 
 # Test and log if a component $1 (type $2) needs to be recreated.
 create_component() {
+    local device=$1
+    local type=$2
     # if a touchfile already exists, no need to recreate this component
-    touchfile=${1//\//-}
+    local touchfile=${device//\//-}
     if [ -e $LAYOUT_TOUCHDIR/$touchfile ] ; then
         return 1
     else
@@ -107,8 +109,10 @@ create_component() {
 
 # Mark a component as created
 component_created() {
+    local device=$1
+    local type=$2
     # Create a touchfile
-    touchfile=${1//\//-}
+    local touchfile=${device//\//-}
     touch $LAYOUT_TOUCHDIR/$touchfile
 }
 
