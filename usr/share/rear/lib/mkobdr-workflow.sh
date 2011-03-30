@@ -17,6 +17,8 @@ WORKFLOW_mkobdr () {
 		SourceStage "dr"
 	fi
 
+	SourceStage "layout/save"
+
 	SourceStage "rescue"
 
 	SourceStage "build"
