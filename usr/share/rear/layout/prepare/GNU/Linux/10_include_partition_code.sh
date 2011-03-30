@@ -37,8 +37,10 @@ partition_disk() {
     # Find out the actual disk size
     disk_size=$( get_disk_size "$disk" )
     
-    if [ $disk_size -eq 0 ]; then
-        Error "Disk $disk has size 0, unable to continue."
+    if [ -z "$disk_size" ]; then
+        BugError "Could not determine size of disk $disk, please file a bug."
+    elif [ $disk_size -le 0 ]; then
+        Error "Disk $disk has size $disk_size, unable to continue."
     fi
 
     cat >> $LAYOUT_CODE <<EOF
