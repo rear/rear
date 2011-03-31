@@ -37,16 +37,23 @@ cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
 mkfs -t ${fstype}${blocksize}${fragmentsize} $device 1>&2
 EOF
+
+            local tunefs="tune2fs"
+            # on RHEL 5, tune2fs does not work on ext4
+            if [ "$fstype" = "ext4" ] && type tune4fs &>/dev/null ; then
+                tunefs="tune4fs"
+            fi
+
             if [ -n "$label" ] ; then
-                echo "tune2fs -L $label $device 1>&2" >> $LAYOUT_CODE
+                echo "$tunefs -L $label $device 1>&2" >> $LAYOUT_CODE
             fi
             if [ -n "$uuid" ] ; then
-                echo "tune2fs -U $uuid $device 1>&2" >> $LAYOUT_CODE
+                echo "$tunefs -U $uuid $device 1>&2" >> $LAYOUT_CODE
             fi
             
             tune2fsopts="${reserved_blocks}${max_mounts}${check_interval}"
             if [ -n "$tune2fsopts" ] ; then
-                echo "tune2fs $tune2fsopts $device 1>&2" >> $LAYOUT_CODE
+                echo "$tunefs $tune2fsopts $device 1>&2" >> $LAYOUT_CODE
             fi
             ;;
         xfs)

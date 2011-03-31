@@ -22,14 +22,22 @@ LogPrint "Saving Filesystem layout."
         echo -n "fs $device $mountpoint $fstype "
         case "$fstype" in 
             ext*)
-                uuid=$(tune2fs -l $device | grep UUID | cut -d ":" -f 2 | tr -d " ")
+                tunefs="tune2fs"
+                # on RHEL 5 tune2fs does not work on ext4, needs tune4fs
+                if [ "$fstype" = "ext4" ] ; then
+                    if ! tune2fs -l $device &>/dev/null ; then
+                        tunefs="tune4fs"
+                    fi
+                fi
+            
+                uuid=$($tunefs -l $device | grep UUID | cut -d ":" -f 2 | tr -d " ")
                 label=$(e2label $device)
                 
                 # options: blocks, fragments, max_mount, check_interval, reserved blocks
-                blocksize=$(tune2fs -l $device | grep "Block size" | tr -d " " | cut -d ":" -f "2")
-                max_mounts=$(tune2fs -l $device | grep "Maximum mount count" | tr -d " " | cut -d ":" -f "2")
-                check_interval=$(tune2fs -l $device | grep "Check interval" | cut -d "(" -f 1 | tr -d " " | cut -d ":" -f "2")
-                reserved_blocks=$(tune2fs -l $device | grep "Reserved block count" | tr -d " " | cut -d ":" -f "2")
+                blocksize=$($tunefs -l $device | grep "Block size" | tr -d " " | cut -d ":" -f "2")
+                max_mounts=$($tunefs -l $device | grep "Maximum mount count" | tr -d " " | cut -d ":" -f "2")
+                check_interval=$($tunefs -l $device | grep "Check interval" | cut -d "(" -f 1 | tr -d " " | cut -d ":" -f "2")
+                reserved_blocks=$($tunefs -l $device | grep "Reserved block count" | tr -d " " | cut -d ":" -f "2")
                 
                 # translate check_interval from seconds to days
                 let check_interval=$check_interval/86400
