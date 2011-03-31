@@ -112,6 +112,7 @@ WARNING ! This replacement has been tested ONLY ON i386 !!
 					echo "ID_FS_UUID='$val'"
 					;;
 				esac
+			# FIXME: What about RHEL5 using tune4fs instead of tune2fs for ext4?
 			done < <(tune2fs -l "$1")
 			;;
 		*ReiserFS*)

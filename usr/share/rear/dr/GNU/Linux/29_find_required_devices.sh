@@ -20,7 +20,7 @@ while read device junk ; do
 
 	# Here we have to filter out well-known virtual devices, mostly dm and md
 	case "$dev" in
-		147:*|252:*|253:*|254:*|9:*)
+		147:*|251:*|252:*|253:*|254:*|9:*)
 			Log "Skipping dependancy tracking for DRDB/device mapper/mdp/softraid device '$device' [$dev]"
 			continue
 			;;
