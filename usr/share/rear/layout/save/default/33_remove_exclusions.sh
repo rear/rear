@@ -14,6 +14,13 @@ remove_second_component() {
 # Remove lines in the LAYOUT_FILE
 while read done name type junk ; do
     case $type in 
+        part)
+            name=$( echo "$name" | sed -r 's/(.*)[0-9]$/\1/')
+            if [ "${name/cciss/}" != "$name" ] ; then
+                name=${name%p}
+            fi
+            remove_component $type $name
+            ;;
         lvmdev)
             name=${name#pv:}
             remove_second_component $type $name

@@ -32,12 +32,12 @@ for vg in "${EXCLUDE_VG[@]}" ; do
     mark_tree_as_done "/dev/$vg"
 done
 
-if [ ${#INCLUDE_VG[@]} -gt 0 ] ; then
+if [ ${#ONLY_INCLUDE_VG[@]} -gt 0 ] ; then
     while read lvmgrp name junk ; do
-        if ! IsInArray "$name" "${INCLUDE_VG[@]}" ; then
-            LogPrint "Excluding Volume Group $name"
-            mark_as_done "/dev/$name"
-            mark_tree_as_done "/dev/$name"
+        if ! IsInArray "${name#/dev/}" "${ONLY_INCLUDE_VG[@]}" ; then
+            LogPrint "Excluding Volume Group ${name#/dev/}"
+            mark_as_done "$name"
+            mark_tree_as_done "$name"
         fi
     done < <(grep ^lvmgrp $LAYOUT_FILE)
 fi
