@@ -25,10 +25,10 @@ WORKFLOW_mkbackup () {
 	
 	SourceStage "pack"
 	
-	SourceStage "backup"
-	
 	SourceStage "output"
-	
+
+	SourceStage "backup"
+		
 	SourceStage "cleanup"
 	
 }
