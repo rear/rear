@@ -1,2 +1,6 @@
 #!/bin/bash
+# setup standard environment for root user
+# ATM root is the only user who can logon at the rescue system
+export HOME=/root
+cd $HOME
 exec -a -bash /bin/bash

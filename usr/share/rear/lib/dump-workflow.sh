@@ -48,7 +48,7 @@ WORKFLOW_dump () {
 	
 	LogPrint "Backup with $BACKUP"
 	for opt in $(eval echo '${!'"$BACKUP"'_*}') ; do
-		LogPrint "$( printf "%40s = %s" "$opt" "${!opt}" )"
+		LogPrint "$( printf "%40s = %s" "$opt" "$(eval 'echo "${'"$opt"'[@]}"')" )"
 	done
 
 	case "$BACKUP" in
