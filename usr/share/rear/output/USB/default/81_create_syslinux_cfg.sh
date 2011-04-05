@@ -124,7 +124,7 @@ EOF
         cat <<EOF >&4
 ontimeout bootlocal
 label bootlocal
-    menu label Boot ^Boot BIOS disk ($localbios)
+    menu label Boot ^BIOS disk ($localbios)
     localboot $localbios
 
 EOF
