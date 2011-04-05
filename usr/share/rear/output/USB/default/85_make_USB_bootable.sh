@@ -29,13 +29,14 @@ case "$usb_filesystem" in
     (ext?)
         extlinux -i "${BUILD_DIR}/netfs/boot/syslinux"
         ProgressStopIfError $? "Problem with extlinux -i ${BUILD_DIR}/netfs/boot/syslinux"
-        # add symlink for extlinux.conf
-        ln -sf syslinux.cfg "${BUILD_DIR}/netfs/boot/syslinux/extlinux.conf"
-        ProgressStopIfError $? "Could not create symlinks for extlinux.conf"
+        if [[ -z "$FEATURE_SYSLINUX_GENERIC_CFG" ]]; then
+            # add symlink for extlinux.conf
+            ln -sf syslinux.cfg "${BUILD_DIR}/netfs/boot/syslinux/extlinux.conf"
+            ProgressStopIfError $? "Could not create symlinks for extlinux.conf"
+        fi
         ;;
-    (vfat)
-        syslinux -d /boot/syslinux $REAL_USB_DEVICE
-        ProgressStopIfError $? "Problem with syslinux on $REAL_USB_DEVICE"
+    (ntfs|vfat)
+        Error "Filesystem $usb_filesystem will not be supported."
         ;;
     ("")
         # This should never happen
