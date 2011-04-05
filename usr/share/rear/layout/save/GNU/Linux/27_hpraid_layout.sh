@@ -22,9 +22,16 @@ fi
 
 hpacucli ctrl all show config > $TMP_DIR/hpraid-config.tmp
 
+# a list of all non-empty controllers
+controllers=()
+
 write_logicaldrive() {
     if [ -n "$drives" ] ; then
         echo "logicaldrive $devname $slotnr|$arrayname|$ldname raid=$raidlevel drives=$drives spares=$spares sectors=$sectors stripesize=$stripesize" >> $DISKLAYOUT_FILE
+        # We only want controllers that have a logical drive in the layout file.
+        if ! IsInArray "$slotnr" "${controllers[@]}" ; then
+            controllers=( "${controllers[@]}" "$slotnr" )
+        fi
     fi
     drives=""
     spares=""
@@ -36,7 +43,6 @@ while read line ; do
     case $line in
         *Slot*)
             nextslotnr=$(echo "$line" | sed -r 's/.*Slot ([0-9]).*/\1/')
-            echo "smartarray $nextslotnr" >> $DISKLAYOUT_FILE
             ;;
         *array*)
             nextarrayname=$(echo "$line" | sed -r 's/.*array ([A-Z]).*/\1/')
@@ -74,3 +80,7 @@ while read line ; do
     esac
 done < $TMP_DIR/hpraid-config.tmp
 write_logicaldrive
+
+for controller in "${controllers[@]}" ; do
+    echo "smartarray $controller" >> $DISKLAYOUT_FILE
+done
