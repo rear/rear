@@ -10,11 +10,13 @@ for host in /proc/driver/cciss/cciss?; do
     echo engage scsi >$host
 done
 
+sleep 2
+
 # find CCISS tape host device
 CDROM_DEVICE="$(lsscsi | awk '/ +cd\/dvd +HP +Ultrium/ { print $7; exit }')"
 
 # disable OBDR mode
-if [ "$CDROM_DEVICE" -a -b $CDROM_DEVICE ]; then
+if [[ "$CDROM_DEVICE" && -b $CDROM_DEVICE ]]; then
     Log "Disable OBDR mode for device $CDROM_DEVICE"
     sg_wr_mode -f -p 3eh -c 3e,2,0,0 $CDROM_DEVICE
     sleep 2
@@ -24,7 +26,7 @@ fi
 HCIL="$(lsscsi | awk 'BEGIN {FS=""} / +cd\/dvd +HP +Ultrium/ { print $2, $4, $6, $8; exit }')"
 
 # rescan device to turn cdrom into tape device
-if [ "$HCIL" ]; then
+if [[ "$HCIL" ]]; then
     Log "Rescan single device using $HCIL"
     echo "scsi remove-single-device $HCIL" >/proc/scsi/scsi
     sleep 2
