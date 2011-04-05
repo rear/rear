@@ -1,6 +1,10 @@
 # Create a suitable syslinux configuration based on capabilities
 
 # Test for features in syslinux
+# true if syslinux supports booting from /boot/syslinux
+FEATURE_SYSLINUX_BOOT_SYSLINUX=
+# true if syslinux supports generic syslinux.cfg
+FEATURE_SYSLINUX_GENERIC_CFG=
 # true if syslinux supports MENU HELP directive
 FEATURE_SYSLINUX_MENU_HELP=
 
@@ -9,11 +13,22 @@ syslinux_version=$(get_version extlinux --version)
 
 if [ -z "$syslinux_version" ]; then
     BugError "Function get_version could not detect syslinux version."
-elif version_newer "$syslinux_version" 4.0 ; then
+elif version_newer "$syslinux_version" 4.02 ; then
+    FEATURE_SYSLINUX_BOOT_SYSLINUX="y"
+    FEATURE_SYSLINUX_GENERIC_CFG="y"
     FEATURE_SYSLINUX_MENU_HELP="y"
+elif version_newer "$syslinux_version" 4.00 ; then
+    FEATURE_SYSLINUX_BOOT_SYSLINUX="y"
+    FEATURE_SYSLINUX_MENU_HELP="y"
+elif version_newer "$syslinux_version" 3.35; then
+    FEATURE_SYSLINUX_BOOT_SYSLINUX="y"
 fi
 
-USB_SYSLINUX_DIR=$BUILD_DIR/netfs/boot/syslinux
+if [[ "$FEATURE_SYSLINUX_BOOT_SYSLINUX" ]]; then
+    USB_SYSLINUX_DIR=$BUILD_DIR/netfs/boot/syslinux
+else
+    USB_SYSLINUX_DIR=$BUILD_DIR/netfs
+fi
 USB_REAR_DIR=$BUILD_DIR/netfs/$NETFS_PREFIX
 
 if [[ ! -d "$USB_SYSLINUX_DIR" ]]; then
