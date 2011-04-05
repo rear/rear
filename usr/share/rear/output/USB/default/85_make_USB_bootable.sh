@@ -28,7 +28,7 @@ usb_filesystem="$(grep -P "^$REAL_USB_DEVICE\\s" /proc/mounts | cut -d' ' -f3 | 
 case "$usb_filesystem" in
     (ext?)
         extlinux -i "${BUILD_DIR}/netfs/boot/syslinux"
-        ProgressStopIfError $? "Problem with extlinux -i ${BUILD_DIR}/netfs"
+        ProgressStopIfError $? "Problem with extlinux -i ${BUILD_DIR}/netfs/boot/syslinux"
         # add symlink for extlinux.conf
         ln -sf syslinux.cfg "${BUILD_DIR}/netfs/boot/syslinux/extlinux.conf"
         ProgressStopIfError $? "Could not create symlinks for extlinux.conf"

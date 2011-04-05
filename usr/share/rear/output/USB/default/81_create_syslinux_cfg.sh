@@ -23,8 +23,7 @@ fi
 ### We generate a main syslinux.cfg in /boot/syslinux that consist of all
 ### default functionality
 Log "Create boot/syslinux/syslinux.cfg"
-(
-
+{
     if [[ "$USE_SERIAL_CONSOLE" ]]; then
         echo "serial 0 115200" >&4
     fi
@@ -32,7 +31,7 @@ Log "Create boot/syslinux/syslinux.cfg"
     if [[ -r "$CONFIG_DIR/templates/rear.help" ]]; then
         cp "$CONFIG_DIR/templates/rear.help" "$USB_SYSLINUX_DIR/rear.help"
         echo "F1 /boot/syslinux/rear.help" >&4
-	echo "MENU TABMSG Press [Tab] to edit options or [F1] for ReaR help" >&4
+        echo "MENU TABMSG Press [Tab] to edit options or [F1] for ReaR help" >&4
     fi
 
     # Use menu system, if menu.c32 is available
@@ -47,11 +46,14 @@ timeout 300
 
 menu title Relax and Recover v$VERSION
 
-### Add custom items to your configuration by creating custom.cfg
-include custom.cfg
-
-### Include generated configuration
-include rear.cfg
+label rear
+    menu label Relax and Recover
+    text help
+ReaR rescue image using kernel $(uname -r) ${IPADDR:+on $IPADDR}
+${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${NETFS_URL:+NETFS_URL=$NETFS_URL}
+    endtext
+    kernel /$NETFS_PREFIX/kernel
+    append initrd=/$NETFS_PREFIX/initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 
 menu separator
 
@@ -66,7 +68,7 @@ EOF
 label help
     menu label ^Help for Relax and Recover
     text help
-    More information about ReaR and the steps for recovering your system
+More information about ReaR and the steps for recovering your system
     endtext
     menu help rear.help
 
@@ -98,7 +100,7 @@ label boot$localdisk
 label bootlocal
     menu label Boot ^BIOS disk ($localbios)
     text help
-    Use this when booting from local disk $localdisk does not work !
+Use this when booting from local disk $localdisk does not work !
     endtext
     localboot $localbios
 
@@ -117,7 +119,7 @@ EOF
 label bootnext
     menu label Boot ^Next device
     text help
-    Boot from the next device in the BIOS boot order list.
+Boot from the next device in the BIOS boot order list.
     endtext
     localboot -1
 
@@ -130,14 +132,14 @@ EOF
         elif [[ -r "/usr/share/pci.ids" ]]; then
             cp -v "/usr/share/pci.ids" "$USB_SYSLINUX_DIR/pci.ids" >&8
         fi
-        if [[ -r "/lib/modules/$(uname -r)/modules.alias" ]]; then
-            cp -v "/lib/modules/$(uname -r)/modules.alias" "$USB_SYSLINUX_DIR/modules.alias" >&8
+        if [[ -r "/lib/modules/$(uname -r)/modules.pcimap" ]]; then
+            cp -v "/lib/modules/$(uname -r)/modules.pcimap" "$USB_SYSLINUX_DIR/modules.pcimap" >&8
         fi
         cat <<EOF >&4
 label hdt
     menu label Hardware ^Detection tool
     text help
-    Information about your current hardware configuration
+Information about your current hardware configuration
     endtext
     kernel hdt.c32
 
@@ -152,9 +154,10 @@ EOF
 label memtest
     menu label ^Memory test
     text help
-    Test your memory for problems
+Test your memory for problems
     endtext
     kernel memtest
+    append -
 
 EOF
     fi
@@ -167,7 +170,7 @@ EOF
 label reboot
     menu label ^Reboot system
     text help
-    Reboot the system now
+Reboot the system now
     endtext
     kernel reboot.c32
 
@@ -180,102 +183,17 @@ EOF
 label poweroff
     menu label ^Power off system
     text help
-    Power off the system now
+Power off the system now
     endtext
     kernel poweroff.com
 
 EOF
     fi
 
-) 4>$USB_SYSLINUX_DIR/syslinux.cfg
+} 4>$USB_SYSLINUX_DIR/syslinux.cfg
 
 if [[ ! -d "$USB_REAR_DIR" ]]; then
     mkdir -vp "$USB_REAR_DIR" >&8 || Error "Could not create USB rear dir [$USB_REAR_DIR] !"
 fi
-
-### FIXME: Make sure we also support the case where NETFS_PREFIX does not conform to hostname/timestamp
-### We generate a single syslinux.cfg for the current system
-Log "Create $NETFS_PREFIX/syslinux.cfg"
-time=$(basename $USB_REAR_DIR)
-cat <<EOF >$USB_REAR_DIR/syslinux.cfg
-label $(uname -n)-$time
-    menu label ${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2}
-    text help
-ReaR rescue image using kernel $(uname -r) ${IPADDR:+on $IPADDR}
-${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${NETFS_URL:+NETFS_URL=$NETFS_URL}
-    endtext
-    kernel /$NETFS_PREFIX/kernel
-    append initrd=/$NETFS_PREFIX/initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
-EOF
-
-### Clean up older images of a given system
-for system in $(ls -d $BUILD_DIR/netfs/rear/*); do
-    entries=$(ls -d $system/????????.???? | wc -l)
-    if (( $entries <= $USB_KEEP_OLD_BACKUP_NR )); then
-        continue
-    fi
-    for entry in $(seq 1 $((entries - USB_KEEP_OLD_BACKUP_NR))); do
-        dir=$(ls -dt $system/????????.???? | tail -1)
-        Log "Remove older directory $dir"
-        rm -rvf $dir >&8
-    done
-done
-
-### We generate a rear.cfg based on existing rear syslinux.cfg files.
-Log "Create boot/syslinux/rear.cfg"
-(
-
-    oldsystem=
-    for file in $(cd $BUILD_DIR/netfs; ls -d rear/*/????????.????/syslinux.cfg); do
-        dir=$(dirname $file)
-        time=$(basename $dir)
-        system=$(basename $(dirname $dir))
-
-        Log "Processing $file"
-        if [[ "$system" != "$oldsystem" ]]; then
-            if [[ "$oldsystem" ]]; then
-                # Close previous submenu
-                echo "menu end" >&4
-            else
-                # Begin recovery header at top
-                echo -e "label -\n    menu label Recovery images\n    menu disable" >&4
-            fi
-
-            # Begin submenu
-            cat <<EOF >&4
-
-menu begin $system
-    menu label $system
-    text help
-    Recover backup of $system to this system.
-    endtext
-
-EOF
-        fi
-
-        # Include entry
-        echo "    include /$file" >&4
-        oldsystem=$system
-    done
-
-    if [[ "$oldsystem" ]]; then
-        # Close last submenu
-        cat <<EOF >&4
-
-    menu separator
-
-    label -
-        menu label ^Back
-        menu default
-        text help
-    Return to the main ReaR menu
-        endtext
-        menu exit
-
-menu end
-EOF
-    fi
-
-) 4>$USB_SYSLINUX_DIR/rear.cfg
 
 Log "Created syslinux configuration"
