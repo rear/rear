@@ -234,13 +234,13 @@ get_friendly_name() {
 get_sysfs_name() {
     local name=${1#/dev/}
     name=${name#/sys/block/}
-    echo "${name//\//\!}"
+    echo "${name//\//!}"
 }
 
 # Translate a sysfs name to a device name.
 get_device_name() {
     local name=$(get_sysfs_name $1)
-    echo "${name//\!//}"
+    echo "${name//!//}"
 }
 
 # Get the size in bytes of a block device.
