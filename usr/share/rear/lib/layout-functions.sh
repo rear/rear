@@ -20,9 +20,10 @@ restore_backup() {
 # generate code to restore a device $1 of type $2
 # Note that we do not handle partitioning here.
 create_device() {
-    device=$1
-    type=$2
-    
+    local device=$1
+    local type=$2
+    local name # used to extract the actual name of the device
+
     cat <<EOF >> $LAYOUT_CODE
 if create_component "$device" "$type" ; then
 EOF
@@ -99,7 +100,7 @@ create_component() {
     local device=$1
     local type=$2
     # if a touchfile already exists, no need to recreate this component
-    local touchfile=${device//\//-}
+    local touchfile=$type-${device//\//-}
     if [ -e $LAYOUT_TOUCHDIR/$type-$touchfile ] ; then
         return 1
     else
@@ -112,7 +113,7 @@ component_created() {
     local device=$1
     local type=$2
     # Create a touchfile
-    local touchfile=${device//\//-}
+    local touchfile=$type-${device//\//-}
     touch $LAYOUT_TOUCHDIR/$type-$touchfile
 }
 
@@ -124,7 +125,7 @@ mark_as_done() {
 
 # Mark all devices that depend on $1 as done.
 mark_tree_as_done() {
-    devlist="$1 "
+    local devlist="$1 "
     while [ -n "$devlist" ] ; do
         testdev=$(echo "$devlist" | cut -d " " -f "1")
         while read dev on junk ; do
@@ -151,8 +152,9 @@ find_partition() {
 # Find all disk devices component $1 resides on.
 # Can/will contain multiples.
 get_parent_components() {
-    components=$(get_parent_component $2)
-    
+    local component type
+    local components=$(get_parent_component $2)
+
     for component in $components ; do
         type=$(get_component_type $component)
         if [ "$type" = "$1" ] ; then
@@ -184,6 +186,7 @@ version_newer() {
     max=${#v2list[@]}
   fi
 
+  local pos
   for pos in $(seq 0 $(( max -1 ))); do
     ### Arithmetic comparison
     if (( 10#0${v1list[$pos]} >= 0 && 10#0${v2list[$pos]} >=0 )) 2>/dev/null; then
@@ -219,6 +222,7 @@ get_friendly_name() {
         BugError "Unknown device..."
     fi
 
+    local device
     for device in /dev/mapper/* ; do
         local test=$(stat -L -c "%t:%T" $device)
         if [ "$test" = "$number" ] ; then
