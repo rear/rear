@@ -76,15 +76,15 @@ while read -u 3 disk dev size junk ; do
             possible_targets=("${possible_targets[@]}" "$(get_device_name $path)")
         fi
     done
-    
-    LogPrint "Disk ${dev#/dev/} does not exist in the target system. Please choose the appropriate replacement."
+
+    LogPrint "Disk $(get_device_name $dev) does not exist in the target system. Please choose the appropriate replacement."
     select choice in "${possible_targets[@]}" "Do not map disk." ; do
         n=( $REPLY ) # trim blanks from reply
         let n-- # because bash arrays count from 0
         if [ "$n" = "${#possible_targets[@]}" ] || [ "$n" -lt 0 ] || [ "$n" -ge "${#possible_targets[@]}" ] ; then
-            LogPrint "Disk ${dev#/dev/} not automatically replaced."
+            LogPrint "Disk $(get_device_name $dev) not automatically replaced."
         else
-            LogPrint "Disk $choice chosen as replacement for ${dev#/dev/}."
+            LogPrint "Disk $choice chosen as replacement for $(get_device_name $dev)."
             add_mapping "$dev" "/dev/$choice"
         fi
         break
@@ -112,6 +112,7 @@ has_replacement() {
 }
 
 get_replacement() {
+    local item replacement junk
     read item replacement junk < <(grep "^$1 " $replacement_file)
     echo "$replacement"
 }
