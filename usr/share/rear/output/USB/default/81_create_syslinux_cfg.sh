@@ -44,7 +44,7 @@ Log "Create boot/syslinux/syslinux.cfg"
     fi
 
     if [[ -r "$CONFIG_DIR/templates/rear.help" ]]; then
-        cp "$CONFIG_DIR/templates/rear.help" "$USB_SYSLINUX_DIR/rear.help"
+        cp -v "$CONFIG_DIR/templates/rear.help" "$USB_SYSLINUX_DIR/rear.help" >&8
         echo "F1 /boot/syslinux/rear.help" >&4
         echo "MENU TABMSG Press [Tab] to edit options or [F1] for ReaR help" >&4
     fi
