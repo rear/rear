@@ -23,10 +23,13 @@
 #---------------------------------------------------------------------------80-|
 cat <<EOF > $ROOTFS_DIR/root/.bash_history
 : : : : : WHAT ELSE WOULD YOU HAVE EXPECTED ON A RESCUE SYSTEM? Please tell us!
-less $LOGFILE            # view ReaR's log file
-loadkeys -d              # load a default keyboard layout (usually US)
-rear recover             # recovery your system
+less /var/lib/rear/layout/diskrestore.sh   # View disk restore script
+less /var/lib/rear/layout/disklayout.conf  # View disk layout configuration
+less $LOGFILE                              # View ReaR's log file
+loadkeys -d                                # Load default keyboard layout (US)
+rear recover                               # Recover your system
 EOF
 chmod 0644 $ROOTFS_DIR/root/.bash_history
+ln -sf root/.bash_history $ROOTFS_DIR/.bash_history
 
 # any other dot files should be listed below
