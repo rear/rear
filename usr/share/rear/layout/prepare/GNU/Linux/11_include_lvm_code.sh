@@ -20,13 +20,14 @@ fi
 
 # Create a new PV
 create_lvmdev() {
+    local lvmdev vgrp device uuid junk
     read lvmdev vgrp device uuid junk < $1
-    
+
     (
     echo "LogPrint \"Creating LVM PV $device\""
     uuidopt=""
     restorefileopt=""
-    
+
     if [ -z "$MIGRATION_MODE" ] && [ -e $VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg ] ; then
         # we have a restore file
         restorefileopt=" --restorefile $VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg"
@@ -35,7 +36,7 @@ create_lvmdev() {
             restorefileopt=" --norestorefile"
         fi
     fi
-    
+
     if [ -n "$uuid" ] ; then
         uuidopt=" --uuid \"$uuid\""
     fi
@@ -45,10 +46,11 @@ create_lvmdev() {
 
 # Create a new VG
 create_lvmgrp() {
+    local lvmgrp vgrp extentsize junk
     read lvmgrp vgrp extentsize junk < $1
-    
+
     devices=($(grep "^lvmdev $vgrp" $LAYOUT_FILE | cut -d " " -f 3))
-    
+
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating LVM VG ${vgrp#/dev/}"
 if [ -e $vgrp ] ; then
@@ -61,6 +63,7 @@ EOF
 
 # Restore a VG from a backup
 restore_lvmgrp() {
+    local lvmgrp vgrp extentsize junk
     read lvmgrp vgrp extentsize junk < $1
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Restoring LVM VG ${vgrp#/dev/}"
@@ -74,8 +77,9 @@ EOF
 
 # Create a LV
 create_lvmvol() {
+    local lvmvol bgrp lvname nrextents junk
     read lvmvol vgrp lvname nrextents junk < $1
-    
+
     (
     echo "LogPrint \"Creating LVM volume ${vgrp#/dev/}/$lvname\""
     echo "lvm lvcreate -l $nrextents -n ${lvname} ${vgrp#/dev/} 1>&2"

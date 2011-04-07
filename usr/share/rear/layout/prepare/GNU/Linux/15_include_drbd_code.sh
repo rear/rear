@@ -2,6 +2,7 @@
 
 # this requires DRBD configuration present!
 create_drbd() {
+    local drbd disk resource device junk
     read drbd disk resource device junk < $1
     
     cat >> $LAYOUT_CODE <<EOF

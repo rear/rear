@@ -1,6 +1,7 @@
 # Code to recreate HP SmartArray controllers
 
 create_smartarray() {
+    local sa slotnr junk
     read sa slotnr junk < $1
     cat <<EOF >>$LAYOUT_CODE
 LogPrint "Clearing HP SmartArray controller $slotnr"
@@ -11,17 +12,15 @@ EOF
 }
 
 create_logicaldrive() {
+    local ld disk path options
     read ld disk path options < $1
     
-    slotnr=${path%%|*}
-    arrayname=${path%|*}
+    local slotnr=${path%%|*}
+    local arrayname=${path%|*}
     arrayname=${arrayname#*|}
     
-    raid=""
-    drives=""
-    spares=""
-    sectors=""
-    stripesize=""
+    local raid="" drives="" spares="" sectors="" stripesize=""
+    local option key value
     for option in $options ; do
         key=${option%=*}
         value=${option#*=}

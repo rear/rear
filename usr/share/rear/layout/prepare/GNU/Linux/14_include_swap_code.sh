@@ -1,6 +1,7 @@
 # Code to recreate a swap volume
 
 create_swap() {
+    local swap device uuid label junk
     read swap device uuid label junk < $1
     
     if [ -n "${uuid#uuid=}" ] ; then

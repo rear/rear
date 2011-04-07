@@ -1,6 +1,7 @@
 # Code to recreate filesystems.
 
 create_fs() {
+    local fs device mp fstype uuid label options
     read fs device mp fstype uuid label options < $1
 
     label=${label#label=}
@@ -9,15 +10,13 @@ create_fs() {
     case $fstype in
         ext*)
             # File system parameters.
-            blocksize=""
-            reserved_blocks=""
-            max_mounts=""
-            check_interval=""
-            
+            local blocksize="" reserved_blocks="" max_mounts="" check_interval=""
+
+            local option name value
             for option in $options ; do
                 name=${option%=*}
                 value=${option#*=}
-                
+
                 case $name in
                     blocksize)
                         blocksize=" -b $value"

@@ -26,6 +26,7 @@ fi
 
 # Partition a disk
 partition_disk() {
+    local component disk size label junk
     read component disk size label junk <$1
 
     if [ -z "$label" ] ; then
@@ -33,10 +34,10 @@ partition_disk() {
         Log "No disk label information for disk $disk."
         return 0
     fi
-    
+
     # Find out the actual disk size
-    disk_size=$( get_disk_size "$disk" )
-    
+    local disk_size=$( get_disk_size "$disk" )
+
     if [ -z "$disk_size" ]; then
         BugError "Could not determine size of disk $disk, please file a bug."
     elif [ $disk_size -le 0 ]; then
@@ -47,9 +48,12 @@ partition_disk() {
 LogPrint "Creating partitions for disk $disk ($label)"
 parted -s $disk mklabel $label 1>&2
 EOF
-    
+
+    local start end start_mb end_mb
     let start=32768 # start after one cylinder 63*512 + multiple of 4k = 64*512
     let end=0
+
+    local part odisk size parttype flags name junk
     while read part odisk size parttype flags name junk; do
         
         # calculate the end of the partition.
@@ -93,9 +97,10 @@ EOF
         start=$( echo "$start" | awk '{print $1+4096-($1%4096);}')
         
         # Get the partition number from the name
-        number=$(echo "$name" | grep -o -E "[0-9]+$")
+        local number=$(echo "$name" | grep -o -E "[0-9]+$")
         
-        flags="$(echo $flags | tr ',' ' ')"
+        local flags="$(echo $flags | tr ',' ' ')"
+        local flag
         for flag in $flags ; do
             if [ "$flag" = "none" ] ; then
                 continue
@@ -106,7 +111,7 @@ EOF
 
 cat >> $LAYOUT_CODE <<EOF
 # Wait some time before advancing
-sleep 20
+sleep 6
 
 EOF
 }

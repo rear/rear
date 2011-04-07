@@ -18,11 +18,13 @@ elif version_newer "$mdadm_version" 2.0 ; then
 fi
 
 create_raid() {
+    local raid device options
     read raid device options < $1
 
-    mdadmcmd="mdadm --create $device --force"
+    local mdadmcmd="mdadm --create $device --force"
 
-    devices=""
+    local devices=""
+    local option
     for option in $options ; do
         case "$option" in
             (devices=*)

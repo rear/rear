@@ -1,15 +1,13 @@
 # Code to recreate LUKS volumes
 
 create_crypt() {
+    local crypt device encdevice options
     read crypt device encdevice options < $1
     
-    name=${device#/dev/mapper/}
+    local name=${device#/dev/mapper/}
     
-    cipher=""
-    hash=""
-    uuid=""
-    keyfile=""
-    password=""
+    local cipher="" hash="" uuid="" keyfile="" password=""
+    local option key value
     for option in $options ; do
         key=${option%=*}
         value=${option#*=}
