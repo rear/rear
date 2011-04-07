@@ -66,7 +66,7 @@ MODULES_LOAD=( vmxnet )
 EOF
 	
 	# this little hack writes the same content into all these files...
-	tee ./$CONFIG_DIR/templates/{PXE_pxelinux.cfg,ISO_isolinux.cfg} >/dev/null <<EOF
+	tee ./$CONFIG_DIR/templates/PXE_pxelinux.cfg >/dev/null <<EOF
 default hd
 prompt 1
 timeout 300

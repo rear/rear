@@ -139,8 +139,8 @@ MODULES_LOAD=( vmxnet )
 # to see boot messages on the serial console (uncomment next line)
 # KERNEL_CMDLINE="console=tty0 console=ttyS1"
 EOF
-	
-tee ./$CONFIG_DIR/templates/{PXE_pxelinux.cfg,ISO_isolinux.cfg} >/dev/null <<EOF
+
+tee ./$CONFIG_DIR/templates/PXE_pxelinux.cfg >/dev/null <<EOF
 default hd
 prompt 1
 timeout 100
