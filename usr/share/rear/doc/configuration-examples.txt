@@ -54,21 +54,15 @@ Notes about USB disk
 With USB disk we refer to all kinds of external storage, like USB keys or disks, eSATA disks, 
 ZIP disks etc. So far the best approach seems to be to
 * create a partition on the device
-* format it with vfat or ext3
-* use ext3 for larger devices, Schlomo had trouble with vfat on a 1G eSATA hard disk
+* format it with ext3 or ext4
 
 Special handling for bootable tape drives (OBDR)
 ------------------------------------------------
 
-The One Button Disaster Recovery (OBDR) process is a bit special:
-# rear mkobdr
-is required to use the correct work-flow (an ISO image has to be made before
-writing it on tape) and the following variables need to be defined:
-
 For example, if you want an OBDR image on tape, and use GNU tar
 for recovery, you would use:
-OUTPUT=OBDR
 BACKUP=NETFS
+OUTPUT=OBDR
 NETFS_URL=tape:///dev/nst0
 
 Special handling for bootable tape drives (OBDR) and bare-metal recovery of Bacula server
@@ -76,8 +70,8 @@ Special handling for bootable tape drives (OBDR) and bare-metal recovery of Bacu
 
 The usage of bextract command (of Bacula) is also implemented to restore
 a Bacula archive (without a bacula server being active):
+BACKUP=BEXTRACT
 OUTPUT=OBDR
 ISO_URL=obdr:///dev/nst0
-BACKUP=BEXTRACT
 
 
