@@ -4,4 +4,4 @@ stop on runlevel 6
 
 respawn
 
-exec /sbin/mingetty --noclear tty1
+exec /sbin/mingetty --noclear --autologin root tty1
