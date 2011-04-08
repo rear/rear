@@ -1,6 +1,6 @@
 # create mountpoint_device table
 # this table gives the disk device for each mountpoint
-# This is only to normalize mount by label or uuid
+# This is to normalize mount by label or uuid and to remember the mount options
 
 # truncate output file
 echo -n "" >$VAR_DIR/recovery/mountpoint_device
@@ -17,10 +17,11 @@ while read -a entry ; do
 		Log "Skipping mountpoint '$entry' on excluded MD device '${entry[1]}' (${entry[@]:2})"
 		continue
 	fi
-	# fail on all lines that have only 3 or less entries
+	# fail on all lines that have only 4 or less entries
 	# NOTE: the entries are not expected to have BLANKS in them !!!
-	if test "${#entry[@]}" -ne 4 ; then
-	       Error "The filesystem '$entry' is not mounted. I cannot determine
+	if test "${#entry[@]}" -lt 4 ; then
+		Log "Bad mountpoint_device entry: ${#entry[@]}"
+		Error "The filesystem '$entry' is not mounted. I cannot determine
 the corresponding device. Please either mount or exclude it."
 	fi
 
@@ -35,7 +36,7 @@ done < <(
 				grep -v -E '(noauto|nfs)' /etc/fstab | \
 				grep -E '(reiserfs|xfs|ext|jfs|vfat)' | \
 				grep -v '^#' | tr -s ' \t' ' ' | \
-				cut -s -d ' ' -f 1,2,3 | \
+				cut -s -d ' ' -f 1,2,3,4 | \
 				sort -k 2
 			)
 	)	
