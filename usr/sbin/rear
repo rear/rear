@@ -27,10 +27,10 @@ VERSION="0.0.0"
 RELEASE_DATE='$Date$'
 # remove SVN related junk from release date
 RELEASE_DATE="${RELEASE_DATE#\$Date: }"
-RELEASE_DATE="${RELEASE_DATE% \$}"
+RELEASE_DATE="${RELEASE_DATE% (}"
 
 COPYRIGHT="Copyright (C) 2006-2011
-        Schlomo Schapiro
+        Schlomo Schapiro, Immobilien Scout GmbH
         Gratien D'haese, IT3 Consultants"
 STARTTIME=$SECONDS
 
@@ -39,18 +39,28 @@ STARTTIME=$SECONDS
 SHARE_DIR="/usr/share/rear"
 CONFIG_DIR="/etc/rear"
 VAR_DIR="/var/lib/rear"
-BUILD_DIR=/tmp/rear.$$
-ROOTFS_DIR=$BUILD_DIR/rootfs
-TMP_DIR=$BUILD_DIR/tmp
-CMD_OPTS="$*"
-LOCKDIR="/tmp/.rear.lock"
-PIDFILE="${LOCKDIR}/rear.pid"
+CMD_OPTS=( "$@" )
 
 # are we root ?
 if [ $(id --user) -ne 0 ]; then
 	echo  "** ERROR **	$PRODUCT needs ROOT privileges!"
 	exit 1
 fi
+
+# get full path to main script
+SCRIPT_FILE="$(type -p "$0" || readlink -f "$0")"
+ 
+
+if ! type -p pidof >/dev/null ; then
+	echo 1>&2 "** ERROR **        Required program 'pidof' missing"
+	exit 1
+fi
+# do not run if another instance is running. pidof -x will always report at least $$
+if [ $$ != "$(pidof -x "$SCRIPT_FILE")" ] ; then
+        echo 1>&2 "** ERROR **        $SCRIPT_FILE is already running, not starting again"
+        exit 1
+fi
+
 
 case $- in
 	*i*) BATCHMODE=true  ;;
@@ -60,80 +70,8 @@ esac
 # make sure that we use only english
 export LC_CTYPE=C LC_ALL=C LANG=C
 
-# Calculate a unique build number by taking the md5sum over our script directories
-BUILDNR="$(
-		find $SHARE_DIR -type f -and -not -name \*~ |\
-		while read ; do
-			echo $REPLY
-			cat "$REPLY"
-		done | md5sum | cut -d " " -f 1
-	)"
-
-# Calculate a unique config build number
-CONFIGBUILDNR="$(
-	FILES=( $(find $CONFIG_DIR -type f -and -not -name \*~) ) ; ( echo ${FILES[@]} ; cat "${FILES[@]}" ) | md5sum | cut -d " " -f 1
-	)"
-
 # include default config
 . $SHARE_DIR/conf/default.conf
-
-# ==== locking mechanism ====
-# exit codes and text for them - additional features nobody needs :-)
-ENO_SUCCESS=0; ETXT[0]="ENO_SUCCESS"
-ENO_GENERAL=1; ETXT[1]="ENO_GENERAL"
-ENO_LOCKFAIL=2; ETXT[2]="ENO_LOCKFAIL"
-ENO_RECVSIG=3; ETXT[3]="ENO_RECVSIG"
-
-###
-### start locking attempt
-###
- 
-trap 'ECODE=$?; echo "[rear] Exit: ${ETXT[ECODE]}($ECODE)" >&2' 0
-#echo -n "[rear] Locking: " >&2
- 
-if mkdir "${LOCKDIR}" &>/dev/null; then
- 
-    # lock succeeded, install signal handlers before storing the PID just in case 
-    # storing the PID fails
-    trap 'ECODE=$?;
-          echo "[rear] Removing lock. Exit: ${ETXT[ECODE]}($ECODE)" >&2
-          rm -rf "${LOCKDIR}"' 0
-    echo "$$" >"${PIDFILE}" 
-    # the following handler will exit the script on receiving these signals
-    # the trap on "0" (EXIT) from above will be triggered by this trap's "exit" command!
-    trap 'echo "[rear] Killed by a signal." >&2
-          exit ${ENO_RECVSIG}' 1 2 3 15
-    #echo "success, installed signal handlers"
- 
-else
- 
-    # lock failed, now check if the other PID is alive
-    OTHERPID="$(cat "${PIDFILE}")"
- 
-    # if cat wasn't able to read the file anymore, another instance probably is
-    # about to remove the lock -- exit, we're *still* locked
-    #  Thanks to Grzegorz Wierzowiecki for pointing this race condition out on
-    #  http://wiki.grzegorz.wierzowiecki.pl/code:mutex-in-bash
-    if [ $? != 0 ]; then
-      echo "lock failed, PID ${OTHERPID} is active" >&2
-      exit ${ENO_LOCKFAIL}
-    fi
- 
-    if ! kill -0 $OTHERPID &>/dev/null; then
-        # lock is stale, remove it and restart
-        #echo "removing stale lock of nonexistant PID ${OTHERPID}" >&2
-        rm -rf "${LOCKDIR}"
-        #echo "[rear] restarting myself" >&2
-        #exec "$0" "$@"
-	DIR=$(cd $(dirname "$0"); pwd)
-	exec $DIR/`basename $0` "$@"
-    else
-        # lock is valid and OTHERPID is active - exit, we're locked!
-        echo "lock failed, PID ${OTHERPID} is active" >&2
-        exit ${ENO_LOCKFAIL}
-    fi
- 
-fi
 
 test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
@@ -147,7 +85,6 @@ done
 
 USAGE="$( basename "$0") [Options] <command> [command options ...]"'
 '"$PRODUCT Version $VERSION / $RELEASE_DATE"'
-Build: '"$BUILDNR"'
 '"$COPYRIGHT"'
 '"$PRODUCT"' comes with ABSOLUTELY NO WARRANTY; for details 
 see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
@@ -180,7 +117,7 @@ while getopts "VhdDSsqr:" Option
 do
 	case $Option in
 	h ) Usage ;;
-	V ) Print "$PRODUCT Version $VERSION / $RELEASE_DATE\nBuild: $BUILDNR\nConfig: $CONFIGBUILDNR\nLast changes:\n$(head -n 20 $SHARE_DIR/CHANGES)\n... See $SHARE_DIR/CHANGES for full list" ; exit 0 ;;
+	V ) Print "$PRODUCT Version $VERSION / $RELEASE_DATE\n" ; exit 0 ;;
 	v ) VERBOSE=1 ;;
 	d ) DEBUG=1 ; VERBOSE=1 ; kill -PWR $ProgressPID ;;
 	D ) DEBUGSCRIPTS=1 ;;
@@ -198,7 +135,7 @@ WORKFLOW=$1 ; shift # not "$1" to get rid of compound commands
 
 ARGS=( "$@" )
 
-test "$WORKFLOW" ||  Usage }
+test "$WORKFLOW" ||  Usage 
 
 v=""
 verbose=""
@@ -211,7 +148,7 @@ fi
 
 LogPrint "$PRODUCT Version $VERSION / $RELEASE_DATE"
 test "$SIMULATE" && LogPrint "Simulation mode activated, ReaR base directory: $SHARE_DIR"
-Log "Command line options: $0 $CMD_OPTS"
+Log "Command line options: $0 ${CMD_OPTS[@]}"
 
 # set some bash options
 shopt -s nullglob extglob
@@ -254,8 +191,6 @@ done
 
 VERSION_INFO="
 $PRODUCT Version $VERSION / $RELEASE_DATE
-$(: Build: $BUILDNR)
-$(: Config: $CONFIGBUILDNR)
 $COPYRIGHT
 $PRODUCT comes with ABSOLUTELY NO WARRANTY; for details
 see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
@@ -264,27 +199,22 @@ Host $(uname -n) using Backup $BACKUP and Output $OUTPUT
 Build date: $(date -R)
 "
 
-# create build area
-Log "Creating build area '$BUILD_DIR'"
-mkdir -p -m 0700 $BUILD_DIR || Error "Could not create $BUILD_DIR"
+# create temporary work area and register removal exit task
+BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX)" || Error "Could not create build area '$BUILD_DIR'"
+QuietAddExitTask cleanup_build_area_and_end_program
+Log "Using build area '$BUILD_DIR'"
+ROOTFS_DIR=$BUILD_DIR/rootfs
+TMP_DIR=$BUILD_DIR/tmp
 mkdir -p $ROOTFS_DIR || Error "Could not create $ROOTFS_DIR"
 mkdir -p $TMP_DIR || Error "Could not create $TMP_DIR"
 
 # Check for and run the requested workflow
 if type -t WORKFLOW_$WORKFLOW >/dev/null ; then
 	Log "Running $WORKFLOW workflow"
-	WORKFLOW_$WORKFLOW
+	WORKFLOW_$WORKFLOW "${ARGS[@]}"
 	Log "Finished running $WORKFLOW workflow"
 else
 	LogPrint "ERROR: The specified command '$WORKFLOW' does not exist !"
 fi
 
-# Cleanup build area
-echo "Finished in $((SECONDS-STARTTIME)) seconds."
-if test "$KEEP_BUILD_DIR" ; then
-	LogPrint "You should also rm -Rf $BUILD_DIR"
-else
-	Log "Removing build area $BUILD_DIR"
-	rm -Rf $BUILD_DIR
-fi
-Log "End of program reached"
+

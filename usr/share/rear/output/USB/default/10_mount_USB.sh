@@ -16,3 +16,5 @@ else
 	mount "$USB_DEVICE" "$BUILD_DIR/netfs" 1>&2 || \
 		Error "Mounting '$USB_DEVICE' '$BUILD_DIR/netfs' failed."
 fi
+
+AddExitTask "umount -fv '$BUILD_DIR/netfs' 1>&2"

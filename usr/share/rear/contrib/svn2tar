@@ -24,9 +24,6 @@ SHARE_DIR=/usr/share/rear
 CONFIG_DIR=/etc/rear
 VAR_DIR=/var/rear
 
-BUILD_DIR=/tmp/rear.$$
-trap "rm -rf $BUILD_DIR" 0
-
 # extract version number from rear script or use the one given
 if ! test "$VERSION" ; then
 	VERSION=$(grep ^VERSION= ${rear_root}/usr/sbin/rear | cut -d= -f2 | sed -e 's/"//g')
@@ -41,8 +38,9 @@ fi
 prod_ver="${prod_name:-rear}-$VERSION"
 distarchive="${DESTDIR:-/tmp}/${prod_ver}.tar.gz"
 
+
 BUILD_DIR=/tmp/rear.$$
-trap "rm -rf $BUILD_DIR" 0
+AddExitTask "rm -rf $BUILD_DIR"
 
 mkdir -p $BUILD_DIR/$prod_ver 
 echo "Will be using a temporary BUILD_DIR=${BUILD_DIR}" 1>&2

@@ -9,17 +9,21 @@ echo -n "Preparing restore operation"
 (
 case "$BACKUP_PROG" in
 	# tar compatible programs here
-	tar)
+	(tar)
 		$BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS \
 			-C /mnt/local/ -x -f "$backuparchive"
 	;;
-	*)
+	(rsync)
+		$BACKUP_PROG --sparse --archive --hard-links --verbose $BACKUP_PROG_OPTIONS \
+			"$backuparchive"/ /mnt/local/
+	;;
+	(*)
 		Log "Using unsupported backup program '$BACKUP_PROG'"
 		$BACKUP_PROG $BACKUP_PROG_COMPRESS_OPTIONS \
 			$BACKUP_PROG_OPTIONS_RESTORE_ARCHIVE /mnt/local \
 			$BACKUP_PROG_OPTIONS $backuparchive
 	;;
-esac >"${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.txt"
+esac >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log"
 echo $? >$BUILD_DIR/retval
 ) &
 BackupPID=$!
@@ -31,7 +35,7 @@ sleep 1 # Give the backup software a good chance to start working
 case "$BACKUP_PROG" in
 	tar)
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
-			blocks="$(tail -1 "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.txt" | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
+			blocks="$(tail -1 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
 			size="$((blocks*512))"
 			echo -en "\e[2K\rRestored $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 		done

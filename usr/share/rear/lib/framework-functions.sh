@@ -19,7 +19,7 @@
 #
 
 # source a file given in $1
-Source () {
+function Source() {
 	# skip empty
 	if test -z "$1" ; then
 		return
@@ -48,7 +48,7 @@ Source () {
 # collect scripts given in $1 in the standard subdirectories and
 # sort them by their script file name and
 # source them
-SourceStage() {
+function SourceStage() {
 	stage="$1"
 	shift
 	STARTSTAGE=$SECONDS
@@ -81,4 +81,17 @@ SourceStage() {
 	else
 		Log "Finished running empty '$stage' stage"
 	fi
+}
+
+
+function cleanup_build_area_and_end_program() {
+	# Cleanup build area
+	LogPrint "Finished in $((SECONDS-STARTTIME)) seconds."
+	if test "$KEEP_BUILD_DIR" ; then
+		LogPrint "You should also rm -Rf $BUILD_DIR"
+	else
+		Log "Removing build area $BUILD_DIR"
+		rm -Rf $BUILD_DIR
+	fi
+	Log "End of program reached"
 }

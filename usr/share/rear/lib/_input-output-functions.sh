@@ -1,5 +1,8 @@
 # input-output-functions.sh
 #
+# NOTE: This is the first file to be sourced (because of _ in the name) which is why
+#	it contains some special stuff like EXIT_TASKS that I want to be available everywhere
+
 # input-output functions for Relax & Recover
 #
 #    Relax & Recover is free software; you can redistribute it and/or modify
@@ -56,17 +59,23 @@ $(
 			
 # do all exit tasks
 DoExitTasks() {
+	Log "Running exit tasks."
 	for task in "${EXIT_TASKS[@]}" ; do
+		Log "Exit task '$task'"
 		eval "$task"
 	done
 }
 # activate the trap function
 trap "DoExitTasks" 0
+# make sure nobody else can use trap
+function trap () {
+	BugError "Forbidden use of trap with '$@'"
+}
 
+MASTER_PID=$$
 Error() {
-	Log ERROR "$*"
-	echo "ERROR: $*" 
-	exit 1
+	LogPrint "ERROR: $*"
+	kill $MASTER_PID # make sure that Error exits the master process, even if called from child processes :-)
 }
 
 BugError() {
@@ -75,7 +84,7 @@ BugError() {
 }
 
 Verbose() {
-	test "$VERBOSE" && echo "$*"
+	test "$VERBOSE" && Print "$@"
 }
 
 Print() {
@@ -118,9 +127,9 @@ if tty -s ; then
 	ProgressThread() {
 		exec 3>&2- # open fd 3 to real stderr
 		debugoutput=0
-		trap "progress_counter=-1" USR1
-		trap "progress_counter=0" USR2
-		trap "debugoutput=1" PWR
+		builtin trap "progress_counter=-1" USR1
+		builtin trap "progress_counter=0" USR2
+		builtin trap "debugoutput=1" PWR
 		progress_counter=-1
 		### A set of spinners coming from Alpine
 #		progress_chars=( '<|>' '</>' '<->' '<\>' )
@@ -193,7 +202,7 @@ else
 	# no tty, disable progress display altogether
 	
 	exec 8>/dev/null # start ProgressPipe listening at fd 8
-	trap "exec 8>&-" 0 # close fd 8 at exit
+	QuietAddExitTask "exec 8>&-" # new method, close fd 8 at exit
 	
 	ProgressStart() {
 		echo -n "$*  "

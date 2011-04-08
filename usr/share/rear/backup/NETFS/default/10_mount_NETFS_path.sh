@@ -32,3 +32,4 @@ else
 		;;
 	esac
 fi
+AddExitTask "umount -fv '$BUILD_DIR/netfs' 1>&2"

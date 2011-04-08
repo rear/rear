@@ -14,14 +14,14 @@ test -c /dev/mapper/control -a -x "$(type -p lvm)" || return	# silently skip
 mkdir -p "${VAR_DIR}/recovery/lvm" || Error "Creating directory ${VAR_DIR}/recovery/lvm"
 
 # first we do a general VG backup to the system default location, just in case it might be needed
-vgcfgbackup 1>&2 8>/dev/null
+vgcfgbackup 1>&2 8>&-
 
-for vg in $(lvm vgs --noheadings -o vg_name) ; do
+for vg in $(lvm vgs --noheadings -o vg_name 8>&- ) ; do
 	if IsInArray $vg "${EXCLUDE_VG[@]}" ; then
 		Log "Skipping excluded volume group '$vg'"
 		continue
 	fi
-	lvm vgcfgbackup --file "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" $vg 1>&2 ||\
+	lvm vgcfgbackup --file "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" $vg 1>&2 8>&- ||\
 	Error "vgcfgbackup failed for '$vg': $?"
 	test -s "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" || Error "vgcfgbackup created an empty file!"
 done
@@ -30,7 +30,7 @@ done
 echo -n "" >${VAR_DIR}/recovery/lvm/pv_list
 
 # create pv_list, a list of PV and their VGs/UUIDs
-lvm pvs -o pv_name,vg_name,pv_uuid --noheadings 8>/dev/null | while read pv vg uuid junk ; do
+lvm pvs -o pv_name,vg_name,pv_uuid --noheadings 8>&- | while read pv vg uuid junk ; do
 	# skip PV of excluded VGs
 	if IsInArray  $vg "${EXCLUDE_VG[@]}" ; then
 		Log "Skipping PV '$pv' of excluded VG '$vg'"

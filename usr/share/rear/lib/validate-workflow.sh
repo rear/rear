@@ -106,7 +106,7 @@ the two lines into an email to rear@schlomo.schapiro.org. Please feel free to
 add anything else you want to tell us about $PRODUCT.
 
 ----------------------------------8<------------------------------------------
-$PRODUCT Version $VERSION / $RELEASE
+$PRODUCT Version $VERSION / $RELEASE_DATE
 Validation:	$OS_VENDOR_VERSION_ARCH
 Submitted:	$SUBMITTED_BY
 Date:		$(date +"%Y-%m-%d")
@@ -116,7 +116,7 @@ Comment:	$COMMENTS
 (you find this information also in /tmp/rear-validate.txt)
 
 	"
-	echo "$PRODUCT Version $VERSION / $RELEASE
+	echo "$PRODUCT Version $VERSION / $RELEASE_DATE
 Validation:	$OS_VENDOR_VERSION_ARCH
 Submitted:	$SUBMITTED_BY
 Date:		$(date +"%Y-%m-%d")

@@ -8,3 +8,6 @@ if test "$USB_UMOUNTCMD" ; then
 else
 	umount "${BUILD_DIR}/netfs"
 fi || Error "Could not unmount directory ${BUILD_DIR}/netfs"
+
+# argument to RemoveExitTask must be identical to AddExitTask
+RemoveExitTask "umount -fv '$BUILD_DIR/netfs' 1>&2"
