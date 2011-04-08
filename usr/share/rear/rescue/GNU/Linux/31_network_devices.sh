@@ -38,9 +38,10 @@ EOT
 for sysfspath in /sys/class/net/* ; do
 	dev=${sysfspath##*/}
 	# skip well-known non-physical interfaces
+	# FIXME: This guess is name-based and will fail horribly on renamed interfaces like I like to use them :-(
 	case $dev in
-		bonding_masters|lo|pan*|sit*|tun*|tap*|vboxnet*|vmnet*) continue ;; # skip all kind of internal devices
-		vlan*) Error "$PRODUCT does not yet support 802.1q, please sponsor it!" ;;
+		(bonding_masters|lo|pan*|sit*|tun*|tap*|vboxnet*|vmnet*) continue ;; # skip all kind of internal devices
+		(vlan*) Error "$PRODUCT does not yet support 802.1q, please sponsor it!" ;;
 	esac
 
 	# get mac address
@@ -62,6 +63,12 @@ for sysfspath in /sys/class/net/* ; do
 	# link is up
 	# determine the driver to load, relevant only for non-udev environments
 	driver=$(ethtool -i $dev 2>/dev/null | grep driver: | cut -d : -f 2)
+	if test -z "$driver" && grep -q xennet /proc/modules ; then
+		# this is a XEN PV system, check if this device is XEN related
+		if ls -l $sysfspath/device/ | grep -q xen ; then
+			driver=xennet
+		fi
+	fi
 	if test -z "$driver" ; then
 		LogPrint "WARNING:   Could not determine network driver for '$dev'. Please make 
 WARNING:   sure that it loads automatically (e.g. via udev) or add 
