@@ -15,7 +15,8 @@ elif [ -f /sbin/agetty ]; then
 	GETTY=agetty
 else
 	# being desperate (not sure this is the best choice?)
-	GETTY=mingetty
+	BugError "Could not find a suitable (a)getty for serial console. Please fix
+$SHARE_DIR/prep/GNU/Linux/20_include_agetty.sh" 
 fi
 Log "Serial Console support requested - adding required program $GETTY"
 
