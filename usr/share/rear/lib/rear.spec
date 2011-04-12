@@ -11,7 +11,7 @@ BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 # all RPM based systems seem to have this and call it the same
-Requires:       mingetty binutils iputils tar gzip ethtool syslinux
+Requires:       mingetty binutils iputils tar gzip ethtool syslinux parted
 
 # if SuSE
 %if 0%{?suse_version} != 0

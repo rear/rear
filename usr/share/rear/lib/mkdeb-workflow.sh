@@ -32,7 +32,7 @@ WORKFLOW_mkdeb () {
 	Section: misc
 	Priority: optional
 	Essential: no
-	Depends: mingetty, nfs-common, syslinux, mkisofs, binutils
+	Depends: mingetty, syslinux, ethtool, libc6, lsb-release, portmap, genisoimage, iproute, iputils-ping, nfs-client, binutils, parted
 	Installed-Size: 1740
 	Maintainer: Fridtjof Busse <fridtjof@fbunet.de>
 	Provides: rear
