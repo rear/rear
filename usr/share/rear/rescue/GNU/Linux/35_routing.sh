@@ -77,5 +77,17 @@ else # use original routes
 				echo "ip route add $destination $via $gateway $dev $device table $table" >>$netscript
 			fi
 		done
+		ip -6 route list table $table |\
+			grep -Ev 'unreachable|::/96|fe80::' | grep via |\
+			while read destination via gateway dev device junk;
+		do
+			if test "$SIMPLIFY_BONDING" -a -r /proc/net/bonding/$device ; then
+				ifslaves=($(cat /proc/net/bonding/$device | grep "Slave Interface:" | cut -d : -f 2))
+				Log "X${ifslaves[@]}X"
+				echo "ip route add $destination $via $gateway $dev ${ifslaves[0]} table $table" >>$netscript
+			else
+				echo "ip route add $destination $via $gateway $dev $device table $table" >>$netscript
+			fi
+		done
 	done
 fi

@@ -38,10 +38,9 @@ EOT
 for sysfspath in /sys/class/net/* ; do
 	dev=${sysfspath##*/}
 	# skip well-known non-physical interfaces
-	# FIXME: This guess is name-based and will fail horribly on renamed interfaces like I like to use them :-(
 	case $dev in
-		(bonding_masters|lo|pan*|sit*|tun*|tap*|vboxnet*|vmnet*) continue ;; # skip all kind of internal devices
-		(vlan*) Error "$PRODUCT does not yet support 802.1q, please sponsor it!" ;;
+		bonding_masters|lo|pan*|sit*|tun*|tap*|vboxnet*|vmnet*) continue ;; # skip all kind of internal devices
+		vlan*) Error "$PRODUCT does not yet support 802.1q, please sponsor it!" ;;
 	esac
 
 	# get mac address
@@ -63,12 +62,6 @@ for sysfspath in /sys/class/net/* ; do
 	# link is up
 	# determine the driver to load, relevant only for non-udev environments
 	driver=$(ethtool -i $dev 2>/dev/null | grep driver: | cut -d : -f 2)
-	if test -z "$driver" && grep -q xennet /proc/modules ; then
-		# this is a XEN PV system, check if this device is XEN related
-		if ls -l $sysfspath/device/ | grep -q xen ; then
-			driver=xennet
-		fi
-	fi
 	if test -z "$driver" ; then
 		LogPrint "WARNING:   Could not determine network driver for '$dev'. Please make 
 WARNING:   sure that it loads automatically (e.g. via udev) or add 
@@ -88,7 +81,7 @@ WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
 		done < $TMP_DIR/mappings/ip_addresses
 	else
 
-		for addr in $(ip a show dev $dev | grep inet\ | tr -s " " | cut -d " " -f 3) ; do
+		for addr in $(ip a show dev $dev scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
 			echo "ip addr add $addr dev $dev" >>$netscript
 		done
 		echo "ip link set dev $dev up" >>$netscript
@@ -125,7 +118,7 @@ if test -d /proc/net/bonding ; then
 				# NOTE: [*] is used here on purpose !
 				echo "ifenslave $dev ${ifslaves[*]}" >>$netscript
 				echo "sleep 5" >>$netscript
-				for addr in $(ip a show dev $dev | grep inet\ | tr -s " " | cut -d " " -f 3) ; do
+				for addr in $(ip a show dev $dev scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
 					echo "ip addr add $addr dev $dev" >>$netscript
 				done
 			fi
@@ -151,7 +144,7 @@ if test -d /proc/net/bonding ; then
 				if ip link show dev $dev | grep -q UP ; then
 				# link is up
 					ifslaves=($(cat /proc/net/bonding/$dev | grep "Slave Interface:" | cut -d : -f 2))
-					for addr in $(ip a show dev $dev | grep inet\ | tr -s " " | cut -d " " -f 3) ; do
+					for addr in $(ip a show dev $dev scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
 						# ise ifslaves[0] instead of bond$c to copy IP address from bonding device
 						# to the first enslaved device
 						echo "ip addr add $addr dev ${ifslaves[0]}" >>$netscript
