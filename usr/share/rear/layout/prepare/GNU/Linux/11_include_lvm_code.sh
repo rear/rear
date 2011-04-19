@@ -25,8 +25,8 @@ create_lvmdev() {
 
     (
     echo "LogPrint \"Creating LVM PV $device\""
-    uuidopt=""
-    restorefileopt=""
+    local uuidopt=""
+    local restorefileopt=""
 
     if [ -z "$MIGRATION_MODE" ] && [ -e $VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg ] ; then
         # we have a restore file
@@ -49,7 +49,7 @@ create_lvmgrp() {
     local lvmgrp vgrp extentsize junk
     read lvmgrp vgrp extentsize junk < $1
 
-    devices=($(grep "^lvmdev $vgrp" $LAYOUT_FILE | cut -d " " -f 3))
+    local devices=($(grep "^lvmdev $vgrp" $LAYOUT_FILE | cut -d " " -f 3))
 
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating LVM VG ${vgrp#/dev/}"
