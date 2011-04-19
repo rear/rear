@@ -77,7 +77,7 @@ EOF
 
 # Create a LV
 create_lvmvol() {
-    local lvmvol bgrp lvname nrextents junk
+    local lvmvol vgrp lvname nrextents junk
     read lvmvol vgrp lvname nrextents junk < $1
 
     (
