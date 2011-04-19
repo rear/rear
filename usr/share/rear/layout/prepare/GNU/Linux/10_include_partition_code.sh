@@ -111,7 +111,7 @@ EOF
 
 cat >> $LAYOUT_CODE <<EOF
 # Wait some time before advancing
-sleep 6
+sleep 10
 
 EOF
 }
