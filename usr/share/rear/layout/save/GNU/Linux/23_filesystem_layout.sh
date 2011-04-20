@@ -5,14 +5,10 @@ LogPrint "Saving Filesystem layout."
 (
     # Filesystems
     # format: fs <device> <mountpoint> <filesystem> [uuid=<uuid>] [label=<label>] [<attributes>]
-    while read line ; do
-        if [ "${line#/}" = "$line" ] ; then
+    while read device on mountpoint type fstype options junk; do
+        if [ "${device#/}" = "$device" ] ; then
             continue
         fi
-        
-        device=$(echo $line | cut -d " " -f 1)
-        mountpoint=$(echo $line | cut -d " " -f 3)
-        fstype=$(echo $line | cut -d " " -f 5)
         
         if [ ! -b "$device" ] ; then
             Log "$device is not a block device, skipping."
@@ -57,6 +53,10 @@ LogPrint "Saving Filesystem layout."
                 echo -n "uuid=$uuid label=$label"
                 ;;
         esac
+        
+        options=${options#(}
+        options=${options%)}
+        echo -n " options=$options"
         
         echo
     done < <(mount)

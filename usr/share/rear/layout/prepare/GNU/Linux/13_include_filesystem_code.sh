@@ -86,10 +86,27 @@ mkfs -t $fstype $device 1>&2
 EOF
             ;;
     esac
+    
+    # Extract mount options
+    local option mountopts
+    for option in $options ; do
+        name=${option%=*}
+        value=${option#*=}
+        
+        case $name in
+            options)
+                mountopts=$value
+                ;;
+        esac
+    done
+    
+    if [ -n "$mountopts" ] ; then
+        mountopts=" -o $mountopts"
+    fi
 
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Mounting filesystem $mp"
 mkdir -p /mnt/local$mp
-mount $device /mnt/local$mp
+mount$mountopts $device /mnt/local$mp
 EOF
 }
