@@ -151,7 +151,7 @@ EOF
     fi
 
     # You need the memtest86+ package installed for this to work
-    MEMTEST_BIN=$(ls -d /boot/memtest86+-* | tail -1)
+    MEMTEST_BIN="$(find /boot -name "memtest*" -type f -printf '%p %A@\n' | sort -n -k2 | tail -1 | cut -d " " -f1)"
     if [[ -r "$MEMTEST_BIN" ]]; then
         cp -v "$MEMTEST_BIN" "$BUILD_DIR/memtest" >&8
         ISO_FILES=( "${ISO_FILES[@]}" memtest )
