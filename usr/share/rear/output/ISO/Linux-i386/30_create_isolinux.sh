@@ -9,7 +9,7 @@ FEATURE_SYSLINUX_GENERIC_CFG=
 FEATURE_SYSLINUX_MENU_HELP=
 
 # Test for the syslinux version
-syslinux_version=$(get_version extlinux --version)
+syslinux_version=$(get_version syslinux --version)
 
 if [ -z "$syslinux_version" ]; then
     BugError "Function get_version could not detect syslinux version."

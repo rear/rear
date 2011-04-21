@@ -12,7 +12,7 @@ FEATURE_SYSLINUX_MENU_HELP=
 syslinux_version=$(get_version extlinux --version)
 
 if [ -z "$syslinux_version" ]; then
-    BugError "Function get_version could not detect syslinux version."
+    BugError "Function get_version could not detect extlinux version."
 elif version_newer "$syslinux_version" 4.02 ; then
     FEATURE_SYSLINUX_BOOT_SYSLINUX="y"
     FEATURE_SYSLINUX_GENERIC_CFG="y"
