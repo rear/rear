@@ -43,7 +43,6 @@ END {
     print "\tpassword REAR"
     print "\tkernel /rear-kernel $KERNEL_CMDLINE"
     print "\tinitrd /rear-initrd.cgz"
-    print ""
 }
 EOF
 
