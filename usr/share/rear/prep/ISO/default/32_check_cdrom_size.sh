@@ -11,4 +11,4 @@ do
 	*)
 	;;
 	esac
-done < <(df -P "${ISO_DIR}")
+done < <(df -kP "${ISO_DIR}")
