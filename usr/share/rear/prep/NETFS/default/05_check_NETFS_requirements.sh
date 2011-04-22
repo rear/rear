@@ -34,6 +34,7 @@ else
 			NETFS_MOUNTPATH="/$NETFS_SHARE"
 			NETFS_HOST=localhost	# otherwise, ping could fail
 			USB_DEVICE="/$NETFS_SHARE"
+			NETFS_SKIP_WARNING=1
 			;;
 		*) ;;
 	esac
@@ -62,11 +63,12 @@ esac
 # set archive names
 case "$TAPE_DEVICE:$NETFS_PROTO" in
 	(:*)
-		backuparchive="${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}" ;;
-	(*:obdr)
-		backuparchive="${TAPE_DEVICE}" ;;
-	(*:tape)
-		backuparchive="${TAPE_DEVICE}" ;;
+		backuparchive="${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}" 
+		;;
+	(*:obdr|*:tape)
+		backuparchive="${TAPE_DEVICE}" 
+		NETFS_SKIP_WARNING=1
+		;;
 esac
 
 if test "$NETFS_MOUNTCMD" -a "$NETFS_UMOUNTCMD" ; then
