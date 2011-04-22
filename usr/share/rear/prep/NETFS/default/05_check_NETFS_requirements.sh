@@ -55,6 +55,7 @@ case "$BACKUP_PROG" in
 		# rsync creates a target directory instead of a file
 		BACKUP_PROG_SUFFIX=
 		BACKUP_PROG_COMPRESS_SUFFIX=
+		NETFS_SKIP_WARNING=1
 		;;
 	(*)	:
 		;;
