@@ -61,21 +61,24 @@ for sysfspath in /sys/class/net/* ; do
 	ip link show dev $dev | grep -q UP || continue
 
 	# link is up
-	# determine the driver to load, relevant only for non-udev environments
-	driver=$(ethtool -i $dev 2>/dev/null | grep driver: | cut -d : -f 2)
-	if test -z "$driver" && grep -q xennet /proc/modules ; then
-		# this is a XEN PV system, check if this device is XEN related
-		if ls -l $sysfspath/device/ | grep -q xen ; then
-			driver=xennet
-		fi
-	fi
-	if test -z "$driver" ; then
-		LogPrint "WARNING:   Could not determine network driver for '$dev'. Please make 
+    # determine the driver to load, relevant only for non-udev environments
+    if [[ -z "$driver" && -f "$sysfspath/device/driver" ]]; then
+        # this should work for virtio_net, xennet and vmxnet on recent kernels
+        driver=$(basename $(readlink $sysfspath/device/driver))
+    elif [[ -z "$driver" && -f "$sysfspath/driver" ]]; then
+        # this should work for virtio_net, xennet and vmxnet on older kernels (2.6.18)
+        driver=$(basename $(readlink $sysfspath/device/driver))
+    fi
+    if [[ "$driver" ]]; then
+        if ! grep -q $driver /proc/modules; then
+            LogPrint "WARNING: Driver $driver currently not loaded ?"
+        fi
+        echo "$driver" >>$ROOTFS_DIR/etc/modules
+    else
+        LogPrint "WARNING:   Could not determine network driver for '$dev'. Please make 
 WARNING:   sure that it loads automatically (e.g. via udev) or add 
 WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
-	else
-		echo "$driver" >>$ROOTFS_DIR/etc/modules
-	fi
+    fi
 	test -d $TMP_DIR/mappings || mkdir $TMP_DIR/mappings
 	test -f $CONFIG_DIR/mappings/ip_addresses && read_and_strip_file $CONFIG_DIR/mappings/ip_addresses > $TMP_DIR/mappings/ip_addresses
 	
