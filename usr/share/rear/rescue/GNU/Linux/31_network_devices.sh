@@ -62,10 +62,10 @@ for sysfspath in /sys/class/net/* ; do
 
 	# link is up
     # determine the driver to load, relevant only for non-udev environments
-    if [[ -z "$driver" && -f "$sysfspath/device/driver" ]]; then
+    if [[ -z "$driver" && -e "$sysfspath/device/driver" ]]; then
         # this should work for virtio_net, xennet and vmxnet on recent kernels
         driver=$(basename $(readlink $sysfspath/device/driver))
-    elif [[ -z "$driver" && -f "$sysfspath/driver" ]]; then
+    elif [[ -z "$driver" && -e "$sysfspath/driver" ]]; then
         # this should work for virtio_net, xennet and vmxnet on older kernels (2.6.18)
         driver=$(basename $(readlink $sysfspath/device/driver))
     fi
