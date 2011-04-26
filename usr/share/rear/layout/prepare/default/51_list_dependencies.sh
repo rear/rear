@@ -43,8 +43,12 @@ while read type remainder ; do
         lvmvol)
             vgrp=$(echo "$remainder" | cut -d " " -f "1")
             name=$(echo "$remainder" | cut -d " " -f "2")
-            add_dependency "/dev/mapper/${vgrp#/dev/}-$name" "$vgrp"
-            add_component "/dev/mapper/${vgrp#/dev/}-$name" "lvmvol"
+            
+            # Volume groups containing - in their name have a double dash in DM
+            dm_vgrp=${vgrp/-/--}
+            
+            add_dependency "/dev/mapper/${dm_vgrp#/dev/}-$name" "$vgrp"
+            add_component "/dev/mapper/${dm_vgrp#/dev/}-$name" "lvmvol"
             ;;
         raid)
             name=$(echo "$remainder" | cut -d " " -f "1")

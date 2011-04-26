@@ -49,8 +49,10 @@ EOF
         lvmvol)
             if [ -n "$MIGRATION_MODE" ] ; then
                 name=${device#/dev/mapper/}
-                vg=$( echo "$name" | cut -d"-" -f 1)
-                lv=$( echo "$name" | cut -d"-" -f 2)
+                dm_vg=${name%-*}
+                # Device mapper doubles dashes
+                vg=${dm_vg/--/-}
+                lv=${name##*-}
                 create_lvmvol <(grep "^lvmvol /dev/$vg $lv" $LAYOUT_FILE)
             fi
             ;;
