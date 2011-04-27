@@ -88,7 +88,9 @@ Verbose() {
 }
 
 Print() {
-	echo -e "$*"
+	if [[ -z "$QUIET" ]]; then
+		echo -e "$*"
+	fi
 }
 
 Stamp() {
