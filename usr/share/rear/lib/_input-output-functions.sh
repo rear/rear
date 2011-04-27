@@ -121,7 +121,7 @@ LogIfError() {
 	Error "$@"
 }
 
-if tty -s ; then
+if tty -s && [[ -z "$QUIET" ]]; then
 	######################## BEGIN Progress Indicator
 	# ProgressPipe uses fd 8 as a communication pipe
 	
@@ -178,11 +178,11 @@ if tty -s ; then
 	
 	ProgressStart() {
 		echo -en "\e[2K\r$*  \e7"
-		test "$QUIET" || kill -USR2 $ProgressPID
+		kill -USR2 $ProgressPID
 	}
 	
 	ProgressStop() {
-		test "$QUIET" || kill -USR1 $ProgressPID
+		kill -USR1 $ProgressPID
 		echo -e "\e8\e[KOK"
 	}
 	
@@ -201,7 +201,7 @@ if tty -s ; then
 			echo -n "$REPLY" 1>&2
 		done
 	}
-else
+elif [[ -z "$QUIET" ]]; then
 	# no tty, disable progress display altogether
 	
 	exec 8>/dev/null # start ProgressPipe listening at fd 8
@@ -227,6 +227,25 @@ else
 		while read -n 1 ; do
 			: ;
 		done
+	}
+else
+	exec 8>/dev/null # start ProgressPipe listening at fd 8
+	QuietAddExitTask "exec 8>&-" # new method, close fd 8 at exit
+
+	ProgressStart() {
+		: ;
+	}
+	ProgressStop() {
+		: ;
+	}
+	ProgressError() {
+		: ;
+	}
+	ProgressStep() {
+		: ;
+	}
+	ProgressStepSingleChar() {
+		: ;
 	}
 fi
 ####################### END Progress Indicator

@@ -86,13 +86,6 @@ export LC_CTYPE=C LC_ALL=C LANG=C
 test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
 
-# include functions
-for script in $SHARE_DIR/lib/*.sh ; do
-	. $script
-done
-
-
-
 USAGE="$( basename "$0") [Options] <command> [command options ...]"'
 '"$PRODUCT Version $VERSION / $RELEASE_DATE"'
 '"$COPYRIGHT"'
@@ -155,6 +148,10 @@ if test "$VERBOSE" ; then
 	verbose="--verbose"
 fi
 
+# include functions
+for script in $SHARE_DIR/lib/*.sh ; do
+	. $script
+done
 
 LogPrint "$PRODUCT Version $VERSION / $RELEASE_DATE"
 test "$SIMULATE" && LogPrint "Simulation mode activated, ReaR base directory: $SHARE_DIR"
