@@ -48,8 +48,7 @@ if [ $(id --user) -ne 0 ]; then
 fi
 
 # get full path to main script
-SCRIPT_FILE="$(type -p "$0" || readlink -f "$0")"
- 
+SCRIPT_FILE="$(readlink -f $(type -p "$0" || echo "$0"))"
 
 if ! type -p pidof >/dev/null ; then
 	echo 1>&2 "** ERROR **        Required program 'pidof' missing"
