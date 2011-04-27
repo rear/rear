@@ -44,6 +44,14 @@ CONFIG_DIR="/etc/rear"
 VAR_DIR="/var/lib/rear"
 CMD_OPTS=( "$@" )
 
+# Make sure we have the necessary paths (eg. in cron)
+for path in /usr/bin /bin /usr/sbin /sbin; do
+    case ":$PATH:" in
+        (*:"$path":*) ;;
+        (*) PATH=$path:$PATH;;
+    esac
+done
+
 # are we root ?
 if [ $(id --user) -ne 0 ]; then
 	echo  "** ERROR **	$PRODUCT needs ROOT privileges!"
