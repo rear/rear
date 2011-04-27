@@ -1,3 +1,12 @@
+# Automatically exclude multipath devices
+if [ -n "$AUTOEXCLUDE_MULTIPATH" ] ; then
+    while read multipath device devices junk ; do
+        Log "Automatically excluding multipath device $device."
+        mark_as_done "$device"
+        mark_tree_as_done "$device"
+    done < <(grep ^multipath $LAYOUT_FILE)
+fi
+
 # Automatically exclude disks that do not have filesystems mounted.
 if [ -n "$AUTOEXCLUDE_DISKS" ] ; then
     used_disks=()

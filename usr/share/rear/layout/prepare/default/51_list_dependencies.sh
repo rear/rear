@@ -88,5 +88,14 @@ while read type remainder ; do
             add_dependency "$name" "$device"
             add_component "$name" "crypt"
             ;;
+        multipath)
+            name=$(echo "$remainder" | cut -d " " -f "1")
+            disks=$(echo "$remainder" | cut -d " " -f "2" | tr "," " ")
+            
+            for disk in $disks ; do
+                add_dependency "$name" "$disk"
+                add_component "$name" "multipath"
+            done
+            ;;
     esac
 done < <(cat $LAYOUT_FILE)
