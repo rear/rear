@@ -74,6 +74,7 @@ function trap () {
 
 MASTER_PID=$$
 Error() {
+	EXIT_CODE=1
 	LogPrint "ERROR: $*"
 	kill $MASTER_PID # make sure that Error exits the master process, even if called from child processes :-)
 }
