@@ -42,7 +42,10 @@ cat > $LAYOUT_CODE <<EOF
 LogPrint "Start system layout restoration."
 
 mkdir -p /mnt/local
-lvm vgchange -a n > /dev/null
+if create_component "vgchange" "rear" ; then
+    lvm vgchange -a n > /dev/null
+    component_created "vgchange" "rear"
+fi
 
 set -e
 set -x
