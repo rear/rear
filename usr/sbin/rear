@@ -34,6 +34,9 @@ COPYRIGHT="Copyright (C) 2006-2011
         Gratien D'haese, IT3 Consultants"
 STARTTIME=$SECONDS
 
+# Allow workflows to set the exit code to a different value.
+EXIT_CODE=0
+
 # Program directories - they must be set here. Everything else is then dynamic
 
 SHARE_DIR="/usr/share/rear"
@@ -214,6 +217,7 @@ if type -t WORKFLOW_$WORKFLOW >/dev/null ; then
 	Log "Finished running $WORKFLOW workflow"
 else
 	LogPrint "ERROR: The specified command '$WORKFLOW' does not exist !"
+	EXIT_CODE=1
 fi
 
-
+exit $EXIT_CODE

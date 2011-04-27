@@ -7,4 +7,5 @@ if [ $? -eq 0 ] ; then
 else
     LogPrint "Disk layout has changed."
     diff -u $ORIG_LAYOUT $TEMP_LAYOUT >&2
+    EXIT_CODE=1
 fi
