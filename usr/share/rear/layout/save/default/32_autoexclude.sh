@@ -35,7 +35,7 @@ if [ -n "$AUTOEXCLUDE_DISKS" ] ; then
     # Find out which disks were not in the list and remove them.
     while read disk name junk ; do
         if ! IsInArray "$name" "${used_disks[@]}" ; then
-            LogPrint "Disk $name is not used by any mounted filesystem. Excluding."
+            Log "Disk $name is not used by any mounted filesystem. Excluding."
             mark_as_done "$name"
             mark_tree_as_done "$name"
         fi
