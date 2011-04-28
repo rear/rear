@@ -1,16 +1,5 @@
 # put all disaster recovery related functions here
 
-# on some systems the udev binaries are hidden in special directories, check for
-# some commonly used ones and include them in the path
-#
-# Debian 3.1 uses /lib/udev
-#
-
-for d in /lib/udev ; do
-	test -d "$d" && PATH=$PATH:$d
-done
-
-export PATH
 
 if type -p vol_id >/dev/null ; then
       # nothing
