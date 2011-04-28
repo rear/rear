@@ -48,7 +48,7 @@ CMD_OPTS=( "$@" )
 for path in /usr/bin /bin /usr/sbin /sbin; do
     case ":$PATH:" in
         (*:"$path":*) ;;
-        (*) PATH=$path:$PATH;;
+        (*) if [[ -d "$path" ]]; then PATH=$path:$PATH; fi ;;
     esac
 done
 
