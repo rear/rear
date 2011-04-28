@@ -65,9 +65,10 @@ DoExitTasks() {
 trap "DoExitTasks" 0
 # make sure nobody else can use trap
 function trap () {
-	BugError "Forbidden use of trap with '$@'"
+	BugError "Forbidden use of trap with '$@'. Use AddExitTask instead."
 }
 
+# keep PID of main process
 MASTER_PID=$$
 Error() {
 	EXIT_CODE=1
