@@ -50,6 +50,13 @@ if ! test -s "$KERNEL_FILE" ; then
 		else
 			Error "Could not find a matching kernel in /boot/efi/efi/debian !"
 		fi
+	elif test -f /etc/arch-release ; then
+		if [ -f "/boot/vmlinuz26" ] ; then
+			KERNEL_FILE="/boot/vmlinuz26"
+			Verbose "Found kernel $KERNEL_FILE"
+		else
+			Error "Could not find Arch kernel /boot/vmlinuz26"
+		fi
 	else
 		Error "Could not find a matching kernel in /boot !"
 	fi
