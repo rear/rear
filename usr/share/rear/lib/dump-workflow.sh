@@ -23,6 +23,10 @@ WORKFLOWS=( ${WORKFLOWS[@]} dump )
 WORKFLOW_dump () {
 	LogPrint "Dumping out configuration and system information"
 
+	if [ "$ARCH" != "$REAL_ARCH" ] ; then
+		LogPrint "This is a '$REAL_ARCH' system, compatible with '$ARCH'."
+	fi
+
 	LogPrint "System definition:"
 	for var in "ARCH" "OS" \
 		"OS_MASTER_VENDOR" "OS_MASTER_VERSION" "OS_MASTER_VENDOR_ARCH" "OS_MASTER_VENDOR_VERSION" "OS_MASTER_VENDOR_VERSION_ARCH" \
