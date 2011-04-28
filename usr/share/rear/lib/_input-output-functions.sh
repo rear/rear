@@ -23,10 +23,6 @@
 
 LF="
 "
-Usage() {
-	echo "$USAGE" 
-	exit 1
-}
 # collect exit tasks in this array
 EXIT_TASKS=()
 # add $* as a task to be done at the end

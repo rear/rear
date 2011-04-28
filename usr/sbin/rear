@@ -109,6 +109,11 @@ for w in ${WORKFLOWS[@]} ; do
 done
 )"
 
+Usage() {
+	echo "$USAGE" 
+	exit 1
+}
+
 test $# -eq 0 -o "${*//*--help*/--help}" == "--help" && Usage
 
 STEPBYSTEP=
