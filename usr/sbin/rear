@@ -125,7 +125,7 @@ while getopts "VhdDSsqr:" Option
 do
 	case $Option in
 	h ) Usage ;;
-	V ) Print "$PRODUCT Version $VERSION / $RELEASE_DATE\n" ; exit 0 ;;
+	V ) echo -e "$PRODUCT Version $VERSION / $RELEASE_DATE\n" ; exit 0 ;;
 	v ) VERBOSE=1 ;;
 	d ) DEBUG=1 ; VERBOSE=1 ; kill -PWR $ProgressPID ;;
 	D ) DEBUGSCRIPTS=1 ;;
@@ -133,7 +133,7 @@ do
 	S ) STEPBYSTEP=1 ;;
 	q ) QUIET=1 ;;
 	r ) KERNEL_VERSION="$OPTARG" ;;
-	* ) Error "Unknown Option $Option specified." ;;
+	* ) echo "ERROR: Unknown Option $Option specified." ;;
 	esac
 done
 shift $(($OPTIND - 1))
