@@ -17,7 +17,14 @@ case "$NETFS_PROTO" in
 		fi
 
 		# check that portmapper is running
-		rpcinfo -p localhost >/dev/null || Error "portmapper is not running, even though we started it"
+		# note: on some systems portmap can take a second or two, to be accessible. Hence the loop.
+		max_portmap_checks=5
+		until rpcinfo -p localhost >/dev/null ; do
+			test $max_portmap_checks -gt 0 || Error "portmapper is not running, even though we started it"
+			let max_portmap_checks--
+			sleep 1
+		done
+
 		# start stat daemon if found, some Linux distros use a kernel-based stat daemon
 		if type -p rpc.statd >/dev/null ; then
 			# statd should be started only once, check with rpcinfo if it is already there
