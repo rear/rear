@@ -75,7 +75,7 @@ reiserfs: LABEL
 xfs:      LABEL and UUID
 swap:     LABEL
 
-WARNING ! This replacement has been tested ONLY ON i386 !!
+WARNING ! This replacement has been tested on i386/x86_64 ONLY !!
 "
 	fi
 	function vol_id {
