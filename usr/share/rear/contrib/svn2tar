@@ -45,13 +45,19 @@ AddExitTask "rm -rf $BUILD_DIR"
 mkdir -p $BUILD_DIR/$prod_ver 
 echo "Will be using a temporary BUILD_DIR=${BUILD_DIR}" 1>&2
 
-ProgressStart "Building dist tar for rear $VERSION" 1>&2
 
 
 # use tar to copy the current rear while excluding development and obsolete files
-tar --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
+if type -p svn >/dev/null && test -d $rear_root/.svn && svn info $rear_root >/dev/null ; then
+	# use svn export
+	ProgressStart "Building dist tar for rear $VERSION using svn export" 1>&2
+	svn export --force $rear_root $BUILD_DIR/$prod_ver 1>&8
+else
+	ProgressStart "Building dist tar for rear $VERSION" 1>&2
+	tar --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
      		 --exclude=\*.rpmnew\* --exclude=.\*.swp --exclude .svn \
 		 -c -C $rear_root usr etc | tar -C $BUILD_DIR/$prod_ver -x -v 1>&8
+fi
 
 # cleaning up the $BUILD_DIR/$prod_ver directory before starting rpmbuild
 pushd $BUILD_DIR/$prod_ver >/dev/null
