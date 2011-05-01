@@ -25,12 +25,12 @@
 if ! test -s "$KERNEL_FILE" ; then
 	if test -r "/boot/vmlinuz-$KERNEL_VERSION" ; then
 		KERNEL_FILE="/boot/vmlinuz-$KERNEL_VERSION"
-		Verbose "Using kernel $KERNEL_FILE"
+		Print "Using kernel $KERNEL_FILE"
 	elif test "$(type -p get_kernel_version)" ; then
 		for k in /boot/* ; do
 			if VER=$(get_kernel_version "$k") && test "$VER" == "$KERNEL_VERSION" ; then
 				KERNEL_FILE="$k"
-				Verbose "Found kernel $KERNEL_FILE"
+				Print "Found kernel $KERNEL_FILE"
 				break
 			fi
 		done
@@ -39,21 +39,21 @@ if ! test -s "$KERNEL_FILE" ; then
 		# check under /boot/efi/efi/redhat (for Red Hat)
 		if [ -f "/boot/efi/efi/redhat/vmlinuz-$KERNEL_VERSION" ] ; then
 			KERNEL_FILE="/boot/efi/efi/redhat/vmlinuz-$KERNEL_VERSION"
-			Verbose "Found kernel $KERNEL_FILE"
+			Print "Found kernel $KERNEL_FILE"
 		else
 			Error "Could not find a matching kernel in /boot/efi/efi/redhat !"
 		fi
 	elif test -f /etc/debian_version ; then
 		if [ -f "/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION" ] ; then
 			KERNEL_FILE="/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION"
-			Verbose "Found kernel $KERNEL_FILE"
+			Print "Found kernel $KERNEL_FILE"
 		else
 			Error "Could not find a matching kernel in /boot/efi/efi/debian !"
 		fi
 	elif test -f /etc/arch-release ; then
 		if [ -f "/boot/vmlinuz26" ] ; then
 			KERNEL_FILE="/boot/vmlinuz26"
-			Verbose "Found kernel $KERNEL_FILE"
+			Print "Found kernel $KERNEL_FILE"
 		else
 			Error "Could not find Arch kernel /boot/vmlinuz26"
 		fi

@@ -44,6 +44,54 @@ CONFIG_DIR="/etc/rear"
 VAR_DIR="/var/lib/rear"
 CMD_OPTS=( "$@" )
 
+# initialize defaults
+STEPBYSTEP=
+SIMULATE=
+VEROSE=
+DEBUG=
+KEEP_BUILD_DIR=
+
+# special test for long help option
+test "${*//*--help*/--help}" == "--help" && WORKFLOW=help
+
+# Parse options
+while getopts "VvhdDSsqr:" Option
+do
+	case $Option in
+	h ) WORKFLOW=help ;;
+	V ) echo -e "$PRODUCT Version $VERSION / $RELEASE_DATE\n" ; exit 0 ;;
+	v ) VERBOSE=1 ;;
+	d ) DEBUG=1 ; VERBOSE=1 ;;
+	D ) DEBUGSCRIPTS=1 ;;
+	s ) SIMULATE=1 ;;
+	S ) STEPBYSTEP=1 ;;
+	q ) QUIET=1 ;;
+	r ) KERNEL_VERSION="$OPTARG" ;;
+	* ) echo "ERROR: Unknown Option $Option specified." ;;
+	esac
+done
+shift $(($OPTIND - 1))
+# Move argument pointer to next.
+
+# set workflow to first command line argument or to usage
+if test -z "$WORKFLOW" ; then
+	if test "$1" ; then
+		WORKFLOW=$1 ; shift # not "$1" to get rid of compound commands
+	else
+		WORKFLOW=help
+	fi
+fi
+
+# keep the remaining command line arguments to feed to the workflow
+ARGS=( "$@" )
+
+# the following workflows are always verbose
+case "$WORKFLOW" in
+	(help|dump|mkdist|mktar|mk*rpm|mkdeb|shell|recover)
+		VERBOSE=1
+	;;
+esac
+
 # Make sure we have the necessary paths (eg. in cron), /sbin will be the first path to search.
 # some needed binaries are in /lib/udev
 for path in /usr/bin /bin /lib/udev /usr/sbin /sbin; do
@@ -63,9 +111,10 @@ fi
 SCRIPT_FILE="$(readlink -f $(type -p "$0" || echo "$0"))"
 
 if ! type -p pidof >/dev/null ; then
-	echo 1>&2 "** ERROR **        Required program 'pidof' missing"
+	echo 1>&2 "** ERROR **        Required program 'pidof' missing, please check your PATH"
 	exit 1
 fi
+
 # do not run if another instance is running. pidof -x will always report at least $$
 if [ $$ != "$(pidof -x "$SCRIPT_FILE")" ] ; then
         echo 1>&2 "** ERROR **        $SCRIPT_FILE is already running, not starting again"
@@ -73,86 +122,15 @@ if [ $$ != "$(pidof -x "$SCRIPT_FILE")" ] ; then
 fi
 
 
-case $- in
-	*i*) BATCHMODE=true  ;;
-	  *) BATCHMODE=false ;;
-esac
-
 # make sure that we use only english
 export LC_CTYPE=C LC_ALL=C LANG=C
 
 # include default config
 . $SHARE_DIR/conf/default.conf
 
+
 test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
-
-USAGE="$( basename "$0") [Options] <command> [command options ...]"'
-'"$PRODUCT Version $VERSION / $RELEASE_DATE"'
-'"$COPYRIGHT"'
-'"$PRODUCT"' comes with ABSOLUTELY NO WARRANTY; for details 
-see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
-
-Available Options:
--V			version information
--d			debug mode
--D			debugscript mode
--S			Step-by-step mode
--s			Simulation mode (shows the scripts included)
--q			Quiet mode
--r a.b.c-xx-yy		kernel version to use (current: '"$KERNEL_VERSION"')
-
-List of commands:
-'"$(
-for w in ${WORKFLOWS[@]} ; do
-	description=WORKFLOW_${w}_DESCRIPTION
-	test "${!description}" && printf "%-24s%s\n" $w "${!description}"
-done
-)"
-
-Usage() {
-	echo "$USAGE" 
-	exit 1
-}
-
-test $# -eq 0 -o "${*//*--help*/--help}" == "--help" && Usage
-
-STEPBYSTEP=
-SIMULATE=
-QUIET=
-
-# Parse options
-while getopts "VhdDSsqr:" Option
-do
-	case $Option in
-	h ) Usage ;;
-	V ) echo -e "$PRODUCT Version $VERSION / $RELEASE_DATE\n" ; exit 0 ;;
-	v ) VERBOSE=1 ;;
-	d ) DEBUG=1 ; VERBOSE=1 ; kill -PWR $ProgressPID ;;
-	D ) DEBUGSCRIPTS=1 ;;
-	s ) SIMULATE=1 ;;
-	S ) STEPBYSTEP=1 ;;
-	q ) QUIET=1 ;;
-	r ) KERNEL_VERSION="$OPTARG" ;;
-	* ) echo "ERROR: Unknown Option $Option specified." ;;
-	esac
-done
-shift $(($OPTIND - 1))
-# Move argument pointer to next.
-
-WORKFLOW=$1 ; shift # not "$1" to get rid of compound commands
-
-ARGS=( "$@" )
-
-test "$WORKFLOW" ||  Usage 
-
-v=""
-verbose=""
-# Prepare stuff
-if test "$VERBOSE" ; then
-	v="-v"
-	verbose="--verbose"
-fi
 
 # include functions
 for script in $SHARE_DIR/lib/*.sh ; do
@@ -160,8 +138,28 @@ for script in $SHARE_DIR/lib/*.sh ; do
 done
 
 LogPrint "$PRODUCT Version $VERSION / $RELEASE_DATE"
-test "$SIMULATE" && LogPrint "Simulation mode activated, ReaR base directory: $SHARE_DIR"
 Log "Command line options: $0 ${CMD_OPTS[@]}"
+
+
+
+v=""
+verbose=""
+# enable progress subsystem only in verbose mode, set some stuff that others can use
+if test "$VERBOSE" ; then
+	source $SHARE_DIR/lib/progresssubsystem.nosh
+	v="-v"
+	verbose="--verbose"
+fi
+
+# enable debug output of the progress pipe
+if test "$DEBUG" ; then
+        if test "$ProgressPID" ; then
+                kill -WINCH $ProgressPID || BugError "Could not kill -PWR ProgressPID"
+	fi
+	KEEP_BUILD_DIR=1
+fi
+
+test "$SIMULATE" && LogPrint "Simulation mode activated, ReaR base directory: $SHARE_DIR"
 
 # set some bash options
 shopt -s nullglob extglob
@@ -170,37 +168,33 @@ hash -r
 # All workflows need to read the configurations first.
 # Combine configuration files
 Log "Combining configuration files"
-Source "$CONFIG_DIR/os.conf"	# use this file to manually override the OS detection
+Source "$CONFIG_DIR/os.conf"   # use this file to manually override the OS detection
 Source "$CONFIG_DIR/$WORKFLOW.conf"
 SetOSVendorAndVersion
 # distribution configuration files
 for config in "$ARCH" "$OS" \
-		"$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
-		"$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
-		if test "$config" ; then
-			Source $SHARE_DIR/conf/"$config".conf
-		fi
+               "$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
+               "$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
+               if test "$config" ; then
+                       Source $SHARE_DIR/conf/"$config".conf
+               fi
 done
 # user configuration files
 for config in site local ; do
-	Source $CONFIG_DIR/"$config".conf
+       Source $CONFIG_DIR/"$config".conf
 done
 # last thing is to overwrite variables if we are in the rescue system
 Source "$CONFIG_DIR/rescue.conf" # set by rescue Stage
 
-
-# change some options in debug mode
-if test "$DEBUG"; then
-	KEEP_BUILD_DIR=1
-else
-	KEEP_BUILD_DIR=
-fi
-
 # check for requirements
 # do we have all required binaries ?
+MISSING_PROGRS=()
 for f in "${REQUIRED_PROGS[@]}" ; do
-	type -p "$f" >/dev/null|| Error "cannot find required program '$f'"
+	if ! type -p "$f" >/dev/null ; then
+		MISSING_PROGS=( "${MISSING_PROGS[@]}" "$f" )
+	fi
 done
+test "$MISSING_PROGS" &&  Error "cannot find required programs: ${MISSING_PROGS[@]}"
 
 VERSION_INFO="
 $PRODUCT Version $VERSION / $RELEASE_DATE

@@ -32,13 +32,13 @@ if ! test -s "$KERNEL_FILE" ; then
 	if test -r "/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION" ; then
 		# guess kernel
 		KERNEL_FILE="/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION"
-		Verbose "Using kernel $KERNEL_FILE"
+		Print "Using kernel $KERNEL_FILE"
 	elif type -p get_kernel_version >/dev/null ; then
 		# if we have get_kernel_version, search for probably matching kernel file
 		for k in $(find /boot -type f) ; do
 			if VER=$(get_kernel_version "$k") && test "$VER" == "$KERNEL_VERSION" ; then
 				KERNEL_FILE="$k"
-				Verbose "Found kernel $KERNEL_FILE"
+				Print "Found kernel $KERNEL_FILE"
 				break
 			fi
 		done

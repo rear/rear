@@ -29,7 +29,7 @@ EXIT_TASKS=()
 AddExitTask() {
 	# NOTE: we add the task at the beginning to make sure that they are executed in reverse order
 	EXIT_TASKS=( "$*" "${EXIT_TASKS[@]}" ) # I use $* on purpose because I want to get one string from all args!
-	Log "Added '$*' as an exit task"
+	Debug "Added '$*' as an exit task"
 }
 QuietAddExitTask() {
 	EXIT_TASKS=( "$*" "${EXIT_TASKS[@]}" ) # I use $* on purpose because I want to get one string from all args!
@@ -42,7 +42,7 @@ RemoveExitTask() {
 		if test "${EXIT_TASKS[c]}" == "$*" ; then
 			unset 'EXIT_TASKS[c]' # the ' ' protect from bash expansion, however unlikely to have a file named EXIT_TASKS in pwd...
 			removed=yes
-			Log "Removed '$*' from the list of exit tasks"
+			Debug "Removed '$*' from the list of exit tasks"
 		fi
 	done
 	test "$removed" == "yes" || Log "Could not remove exit task '$*' (not found). Exit Tasks:
@@ -57,7 +57,7 @@ $(
 DoExitTasks() {
 	Log "Running exit tasks."
 	for task in "${EXIT_TASKS[@]}" ; do
-		Log "Exit task '$task'"
+		Debug "Exit task '$task'"
 		eval "$task"
 	done
 }
@@ -77,6 +77,7 @@ function trap () {
 }
 
 Error() {
+	VERBOSE=1
 	EXIT_CODE=1
 	LogPrint "ERROR: $*"
 	kill -USR1 $MASTER_PID # make sure that Error exits the master process, even if called from child processes :-)
@@ -87,14 +88,12 @@ BugError() {
 	Please report this as a bug to the authors of $PRODUCT"
 }
 
-Verbose() {
-	test "$VERBOSE" && Print "$@"
+Debug() {
+	test "$DEBUG" && Log "$@"
 }
 
 Print() {
-	if [[ -z "$QUIET" ]]; then
-		echo -e "$*" 1>&7
-	fi
+	test "$VERBOSE" && echo -e "$*" 1>&7
 }
 
 Stamp() {
@@ -124,134 +123,27 @@ LogIfError() {
 	Error "$@"
 }
 
-if tty -s && [[ -z "$QUIET" ]]; then
-	######################## BEGIN Progress Indicator
-	# ProgressPipe uses fd 8 as a communication pipe
-	
-	# The ProgressThread listens on stdin and writes out progress chars for each line
-	# The signals USR2 and USR1 start and stop the process character printing
-	ProgressThread() {
-		exec 3>&2- # open fd 3 to real stderr
-		debugoutput=0
-		builtin trap "progress_counter=-1" USR1
-		builtin trap "progress_counter=0" USR2
-		builtin trap "debugoutput=1" PWR
-		progress_counter=-1
-		### A set of spinners coming from Alpine
-#		progress_chars=( '<|>' '</>' '<->' '<\>' )
-#		progress_chars=( '--|-(o)-|--' '--/-(o)-\--' '----(o)----' '--\-(o)-/--' )
-#		progress_chars=( '<|>' '<\>' '<->' '</>' )
-#		progress_chars=( '|  ' ' / ' ' _ ' '  \ ' '  |' '  |' ' \ ' ' _ ' ' / ' '|  ')
-#		progress_chars=( '.' '..' '...' '....' '...' '..' )
-#		progress_chars=( ' . ' ' o ' ' O ' ' o ' )
-#		progress_chars=( '....' ' ...' '. ..' '.. .' '... ' )
-#		progress_chars=( '.   ' ' .  ' '  . ' '   .' '  . ' ' .  ' )
-#		progress_chars=( '.oOo' 'oOo.' 'Oo.o' 'o.oO' )
-#		progress_chars=( '.     .' ' .   . ' '  . .  ' '   .   ' '   +   ' '   *   ' '   X   ' '   #   ' '       ')
-#		progress_chars=( '. O' 'o o' 'O .' 'o o' )
-#		progress_chars=( ' / ' ' _ ' ' \ ' ' | ' ' \ ' ' _ ' )
-#		progress_chars=( '    ' '*   ' '-*  ' '--* ' ' --*' '  --' '   -' )
-#		progress_chars=( '\/\/' '/\/\' )
-#		progress_chars=( '\|/|' '|\|/' '/|\|' '|/|\' )
-		progress_chars=( "\\" '|' '/' '-' )
-		while read command text ; do
-			if [ $debugoutput -eq 1 ] ; then
-				echo "PROGRESS: $command $text" 1>&3
-			fi
-			if [ "$command" == "START" ] ; then
-				echo -en "\e[2K\r$text  \e7${progress_chars[0]}"
-				progress_counter=0
-			elif [ "$command" == "INFO" ] ; then
-				echo
-				echo -en "\e[2K\r$text  \e7"
-			fi
-			if [ $progress_counter -gt -1 ] ; then
-				let progress_counter++
-				test $progress_counter -ge ${#progress_chars[@]} && progress_counter=0
-				echo -en "\e8${progress_chars[progress_counter]}"
+# setup dummy progress subsystem as a default
+# not VEROSE, Progress stuff replaced by dummy/noop
+exec 8>/dev/null # start ProgressPipe listening at fd 8
+QuietAddExitTask "exec 8>&-" # new method, close fd 8 at exit
 
-			fi
-		done
-	}
-				
-	exec 8> >(ProgressThread) # start ProgressPipe listening at fd 8
-	QuietAddExitTask "exec 8>&-" # new method
-	# we need the PID of the process thread to be able to signal it
-	ProgressPID=$!
-	
-	ProgressStart() {
-		echo -en "\e[2K\r$*  \e7"
-		kill -USR2 $ProgressPID
-	}
-	
-	ProgressStop() {
-		kill -USR1 $ProgressPID
-		echo -e "\e8\e[KOK"
-	}
-	
-	ProgressError() {
-		kill -USR1 $ProgressPID
-		echo -e "\e8\e[KFAILED"
-	}
-	
-	ProgressStep() {
-		echo noop 1>&8
-	}
+ProgressStart() {
+	: ;
+}
+ProgressStop() {
+	: ;
+}
+ProgressError() {
+	: ;
+}
+ProgressStep() {
+	: ;
+}
+ProgressStepSingleChar() {
+	: ;
+}
 
-	ProgressStepSingleChar() {
-		while read -rn 1 ; do
-			echo noop 1>&8
-			echo -n "$REPLY" 1>&2
-		done
-	}
-elif [[ -z "$QUIET" ]]; then
-	# no tty, disable progress display altogether
-	
-	exec 8>/dev/null # start ProgressPipe listening at fd 8
-	QuietAddExitTask "exec 8>&-" # new method, close fd 8 at exit
-	
-	ProgressStart() {
-		echo -n "$*  "
-	}
-	
-	ProgressStop() {
-		echo -e "OK"
-	}
-	
-	ProgressError() {
-		echo -e "FAILED"
-	}
-	
-	ProgressStep() {
-		: ;
-	}
-
-	ProgressStepSingleChar() {
-		while read -n 1 ; do
-			: ;
-		done
-	}
-else
-	exec 8>/dev/null # start ProgressPipe listening at fd 8
-	QuietAddExitTask "exec 8>&-" # new method, close fd 8 at exit
-
-	ProgressStart() {
-		: ;
-	}
-	ProgressStop() {
-		: ;
-	}
-	ProgressError() {
-		: ;
-	}
-	ProgressStep() {
-		: ;
-	}
-	ProgressStepSingleChar() {
-		: ;
-	}
-fi
-####################### END Progress Indicator
 
 ProgressStopOrError() {
 	test $# -le 0 && Error "ProgressStopOrError called without return code to check !"

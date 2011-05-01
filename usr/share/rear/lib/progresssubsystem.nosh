@@ -1,0 +1,110 @@
+# call StartProgressSubsystem to get more detailed progress reports
+if tty -s ; then
+	######################## BEGIN Progress Indicator
+	# ProgressPipe uses fd 8 as a communication pipe
+	
+	# The ProgressThread listens on stdin and writes out progress chars for each line
+	# The signals USR2 and USR1 start and stop the process character printing
+	ProgressThread() {
+		exec 3>&2- # open fd 3 to real stderr
+		debugoutput=0
+		builtin trap "progress_counter=-1" USR1
+		builtin trap "progress_counter=0" USR2
+		builtin trap "debugoutput=1" WINCH
+		progress_counter=-1
+		### A set of spinners coming from Alpine
+#		progress_chars=( '<|>' '</>' '<->' '<\>' )
+#		progress_chars=( '--|-(o)-|--' '--/-(o)-\--' '----(o)----' '--\-(o)-/--' )
+#		progress_chars=( '<|>' '<\>' '<->' '</>' )
+#		progress_chars=( '|  ' ' / ' ' _ ' '  \ ' '  |' '  |' ' \ ' ' _ ' ' / ' '|  ')
+#		progress_chars=( '.' '..' '...' '....' '...' '..' )
+#		progress_chars=( ' . ' ' o ' ' O ' ' o ' )
+#		progress_chars=( '....' ' ...' '. ..' '.. .' '... ' )
+#		progress_chars=( '.   ' ' .  ' '  . ' '   .' '  . ' ' .  ' )
+#		progress_chars=( '.oOo' 'oOo.' 'Oo.o' 'o.oO' )
+#		progress_chars=( '.     .' ' .   . ' '  . .  ' '   .   ' '   +   ' '   *   ' '   X   ' '   #   ' '       ')
+#		progress_chars=( '. O' 'o o' 'O .' 'o o' )
+#		progress_chars=( ' / ' ' _ ' ' \ ' ' | ' ' \ ' ' _ ' )
+#		progress_chars=( '    ' '*   ' '-*  ' '--* ' ' --*' '  --' '   -' )
+#		progress_chars=( '\/\/' '/\/\' )
+#		progress_chars=( '\|/|' '|\|/' '/|\|' '|/|\' )
+		progress_chars=( "\\" '|' '/' '-' )
+		while read command text ; do
+			if [ $debugoutput -eq 1 ] ; then
+				echo "PROGRESS: $command $text" 1>&3
+			fi
+			if [ "$command" == "START" ] ; then
+				echo -en "\e[2K\r$text  \e7${progress_chars[0]}"
+				progress_counter=0
+			elif [ "$command" == "INFO" ] ; then
+				echo -en "\e[2K\r$text  \e7"
+			fi
+			if [ $progress_counter -gt -1 ] ; then
+				let progress_counter++
+				test $progress_counter -ge ${#progress_chars[@]} && progress_counter=0
+				echo -en "\e8${progress_chars[progress_counter]}"
+
+			fi
+		done
+	}
+
+	exec 8>&- # first close, then open
+	exec 8> >(ProgressThread) # start ProgressPipe listening at fd 8
+	# we need the PID of the process thread to be able to signal it
+	export ProgressPID=$!
+	
+	ProgressStart() {
+		echo -en "\e[2K\r$*  \e7"
+		kill -USR2 $ProgressPID
+	}
+	
+	ProgressStop() {
+		kill -USR1 $ProgressPID
+		echo -e "\e8\e[KOK"
+	}
+	
+	ProgressError() {
+		kill -USR1 $ProgressPID
+		echo -e "\e8\e[KFAILED"
+	}
+	
+	ProgressStep() {
+		echo noop 1>&8
+	}
+
+	ProgressStepSingleChar() {
+		while read -rn 1 ; do
+			echo noop 1>&8
+			echo -n "$REPLY" 1>&2
+		done
+	}
+else
+	# no tty, disable progress animated display altogether
+
+	exec 8>&- # first close, then open
+	exec 8>/dev/null # start ProgressPipe listening at fd 8
+	
+	ProgressStart() {
+		echo -n "$*  "
+	}
+	
+	ProgressStop() {
+		echo -e "OK"
+	}
+	
+	ProgressError() {
+		echo -e "FAILED"
+	}
+	
+	ProgressStep() {
+		: ;
+	}
+
+	ProgressStepSingleChar() {
+		while read -n 1 ; do
+			: ;
+		done
+	}
+fi
+####################### END Progress Indicator
+

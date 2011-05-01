@@ -14,7 +14,7 @@ test -c /dev/mapper/control -a -x "$(type -p lvm)" || return	# silently skip
 mkdir -p "${VAR_DIR}/recovery/lvm" || Error "Creating directory ${VAR_DIR}/recovery/lvm"
 
 # first we do a general VG backup to the system default location, just in case it might be needed
-vgcfgbackup 1>&2 8>&- 7>&-
+vgcfgbackup 1>&2 8>&- 7>&- 63>&-
 
 for vg in $(lvm vgs --noheadings -o vg_name 8>&- 7>&- ) ; do
 	if IsInArray $vg "${EXCLUDE_VG[@]}" ; then
