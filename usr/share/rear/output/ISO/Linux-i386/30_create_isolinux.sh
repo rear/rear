@@ -62,7 +62,7 @@ menu title Relax and Recover v$VERSION
 label rear
     menu label Relax and Recover
     text help
-ReaR rescue image using kernel $(uname -r) ${IPADDR:+on $IPADDR}
+ReaR rescue image using kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR}
 ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${NETFS_URL:+NETFS_URL=$NETFS_URL}
     endtext
     kernel /kernel
@@ -139,8 +139,8 @@ EOF
             cp -v "/usr/share/pci.ids" "$BUILD_DIR/pci.ids" >&8
             ISO_FILES=( "${ISO_FILES[@]}" pci.ids )
         fi
-        if [[ -r "/lib/modules/$(uname -r)/modules.pcimap" ]]; then
-            cp -v "/lib/modules/$(uname -r)/modules.pcimap" "$BUILD_DIR/modules.pcimap" >&8
+        if [[ -r "/lib/modules/$KERNEL_VERSION/modules.pcimap" ]]; then
+            cp -v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BUILD_DIR/modules.pcimap" >&8
             ISO_FILES=( "${ISO_FILES[@]}" modules.pcimap )
         fi
         cat <<EOF >&4
