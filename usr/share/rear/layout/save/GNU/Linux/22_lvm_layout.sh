@@ -1,6 +1,6 @@
 # Save LVM layout
 
-if ! type lvm &>/dev/null ; then
+if ! type -p lvm &>/dev/null ; then
     return 0
 fi
 
@@ -9,7 +9,7 @@ LogPrint "Saving LVM layout."
 (
     ## Get physical_device configuration
     # format: lvmdev <volume_group> <device> [<uuid>] [<size(bytes)>]
-    lvm pvdisplay -c | while read line ; do
+    lvm 8>&- 7>&- pvdisplay -c | while read line ; do
         pdev=$(echo $line | cut -d ":" -f "1")
         
         if [ "${pdev#/}" = "$pdev" ] ; then
@@ -26,7 +26,7 @@ LogPrint "Saving LVM layout."
 
     ## Get the volume group configuration
     # format: lvmgrp <volume_group> <extentsize> [<size(extents)>] [<size(bytes)>] 
-    lvm vgdisplay -c | while read line ; do
+    lvm 8>&- 7>&- vgdisplay -c | while read line ; do
         vgrp=$(echo $line | cut -d ":" -f "1")
         size=$(echo $line | cut -d ":" -f "12")
         extentsize=$(echo $line | cut -d ":" -f "13")
@@ -37,7 +37,7 @@ LogPrint "Saving LVM layout."
 
     ## Get all logical volumes
     # format: lvmvol <volume_group> <name> <size(extents)> [<size(bytes)>]
-    lvm lvdisplay -c | while read line ; do
+    lvm 8>&- 7>&- lvdisplay -c | while read line ; do
         lvol=$(echo $line | cut -d ":" -f "1" | cut -d "/" -f "4")
         vgrp=$(echo $line | cut -d ":" -f "2")
         size=$(echo $line | cut -d ":" -f "7")

@@ -62,18 +62,24 @@ DoExitTasks() {
 	done
 }
 # activate the trap function
-trap "DoExitTasks" 0
+builtin trap "DoExitTasks" 0
+# keep PID of main process
+MASTER_PID=$$
+# duplication STDOUT to fd7 to use for Print
+exec 7>&1
+QuietAddExitTask "exec 7>&-"
+# USR1 is used to abort on errors, not using Print to always print to the original STDOUT, even if quiet
+builtin trap "echo 'ABORTING DUE TO AN ERROR, CHECK $LOGFILE FOR DETAILS' 1>&7 ; kill $MASTER_PID" USR1
+
 # make sure nobody else can use trap
 function trap () {
 	BugError "Forbidden use of trap with '$@'. Use AddExitTask instead."
 }
 
-# keep PID of main process
-MASTER_PID=$$
 Error() {
 	EXIT_CODE=1
 	LogPrint "ERROR: $*"
-	kill $MASTER_PID # make sure that Error exits the master process, even if called from child processes :-)
+	kill -USR1 $MASTER_PID # make sure that Error exits the master process, even if called from child processes :-)
 }
 
 BugError() {
@@ -87,7 +93,7 @@ Verbose() {
 
 Print() {
 	if [[ -z "$QUIET" ]]; then
-		echo -e "$*"
+		echo -e "$*" 1>&7
 	fi
 }
 
@@ -147,7 +153,7 @@ if tty -s && [[ -z "$QUIET" ]]; then
 #		progress_chars=( '    ' '*   ' '-*  ' '--* ' ' --*' '  --' '   -' )
 #		progress_chars=( '\/\/' '/\/\' )
 #		progress_chars=( '\|/|' '|\|/' '/|\|' '|/|\' )
-		progress_chars=( '\' '|' '/' '-' )
+		progress_chars=( "\\" '|' '/' '-' )
 		while read command text ; do
 			if [ $debugoutput -eq 1 ] ; then
 				echo "PROGRESS: $command $text" 1>&3
