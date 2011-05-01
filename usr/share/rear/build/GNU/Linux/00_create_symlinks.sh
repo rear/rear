@@ -18,17 +18,11 @@
 #
 #
 
-pushd $ROOTFS_DIR 1>&2
-	
-	ln -sfv bin/init init 1>&2
-	ln -sfv bin sbin 1>&2
-	pushd bin 1>&2
-		ln -sfv bash sh 1>&2
-		ln -sfv true pam_console_apply 1>&2 # RH/Fedora with udev needs this
-	popd >/dev/null
-	pushd usr 1>&2
-		ln -sfv /bin bin 1>&2
-		ln -sfv /bin sbin 1>&2
-	popd >/dev/null
-	test -d etc/sysconfig/network-scripts && ln -sfv /bin/true etc/sysconfig/network-scripts/net.hotplug 1>&2
-popd >/dev/null
+
+ln -sfv bin/init $ROOTFS_DIR/init 1>&2
+ln -sfv bin $ROOTFS_DIR/sbin  1>&2
+ln -sfv bash $ROOTFS_DIR/bin/sh  1>&2
+ln -sfv true $ROOTFS_DIR/bin/pam_console_apply  1>&2 # RH/Fedora with udev needs this
+ln -sfv ../bin $ROOTFS_DIR/usr/bin  1>&2
+ln -sfv ../bin $ROOTFS_DIR/usr/sbin 1>&2
+test -d $ROOTFS_DIR/etc/sysconfig/network-scripts && ln -sfv /bin/true $ROOTFS_DIR/etc/sysconfig/network-scripts/net.hotplug  1>&2
