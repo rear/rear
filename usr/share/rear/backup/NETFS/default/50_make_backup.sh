@@ -12,8 +12,8 @@ done < $BUILD_DIR/backup-exclude.txt
 
 mkdir -p "${BUILD_DIR}/netfs/${NETFS_PREFIX}"
 
-LogPrint "Creating archive '$backuparchive'"
-echo -n "Preparing archive operation"
+LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
+ProgressStart "Preparing archive operation"
 (
 case "$BACKUP_PROG" in
 	# tar compatible programs here
@@ -26,7 +26,7 @@ case "$BACKUP_PROG" in
 	(rsync)
 		# make sure that the target is a directory
 		mkdir -vp "$backuparchive" 1>&2
-		$BACKUP_PROG --sparse --archive --hard-links --one-file-system --verbose --delete \
+		$BACKUP_PROG --sparse --archive --hard-links --one-file-system --verbose --delete --numeric-ids \
 			--exclude-from=$BUILD_DIR/backup-exclude.txt --delete-excluded \
 			$(cat $BUILD_DIR/backup-include.txt) "$backuparchive"
 	;;
@@ -45,15 +45,20 @@ starttime=$SECONDS
 
 sleep 1 # Give the backup software a good chance to start working
 
+# return disk usage in bytes
+function get_disk_used() {
+	let "$(stat -f -c 'used=(%b-%f)*%S' $1)"
+	echo $used
+}
 # while the backup runs in a sub-process, display some progress information to the user
 case "$BACKUP_PROG" in
 	(tar)
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			blocks="$(tail -1 ${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
 			size="$((blocks*512))"
-			echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" 1>&8
 		done
-		echo -en "\e[2K\r"
 		;;
 	(rsync)
 		# since we do not want to do a $(du -s) run every second we count disk usage instead
@@ -64,29 +69,30 @@ case "$BACKUP_PROG" in
 		let old_disk_used="$(get_disk_used "$backuparchive")"
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			let disk_used="$(get_disk_used "$backuparchive")" size=disk_used-old_disk_used
-			echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" 1>&8
 		done
-		echo -en "\e[2K\r"
 		;;
 	(*)
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			size="$(stat -c "%s" "$backuparchive")" || {
 				kill -9 $BackupPID
-				. $SHARE_DIR/backup/NETFS/default/71_umount_NETFS_dir.sh
-				Error "The backup program did not create the archive file !"
-				Error "Killing the backup program and aborting."
+				ProgressError 
+				Error "The backup program did not create the archive file !
+Killed the backup program and aborting."
 			}
-			echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" 1>&8
 		done
-		echo -en "\e[2K\r"
 		;;
 esac
-
+ProgressStop
 transfertime="$((SECONDS-starttime))"
 tar_rc="$(cat $BUILD_DIR/retval)"
 
 sleep 1
-test "$tar_rc" -gt 0 && LogPrint "WARNING !
+# everyone should see this warning, even if not verbose
+test "$tar_rc" -gt 0 && VERBOSE=1 LogPrint "WARNING !
 There was an error (Nr. $(cat $BUILD_DIR/retval)) during archive creation.
 Please check the archive and see '$LOGFILE' for more information.
 

@@ -3,9 +3,9 @@
 
 mkdir -p "${BUILD_DIR}/netfs/${NETFS_PREFIX}"
 
-Log "Restoring archive '$backuparchive'"
+Log "Restoring $BACKUP_PROG archive '$backuparchive'"
 Print "Restoring from '$displayarchive'"
-echo -n "Preparing restore operation"
+ProgressStart "Preparing restore operation"
 (
 case "$BACKUP_PROG" in
 	# tar compatible programs here
@@ -14,7 +14,7 @@ case "$BACKUP_PROG" in
 			-C /mnt/local/ -x -f "$backuparchive"
 	;;
 	(rsync)
-		$BACKUP_PROG --sparse --archive --hard-links --verbose $BACKUP_PROG_OPTIONS \
+		$BACKUP_PROG --numeric-ids --sparse --archive --hard-links --verbose $BACKUP_PROG_OPTIONS \
 			"$backuparchive"/ /mnt/local/
 	;;
 	(*)
@@ -37,17 +37,17 @@ case "$BACKUP_PROG" in
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			blocks="$(tail -1 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
 			size="$((blocks*512))"
-			echo -en "\e[2K\rRestored $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+			echo "INFO Restored $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" 1>&8
 		done
-		echo -en "\e[2K\r"
 		;;
 	*)
-		ProgressStart "Restoring archive"
+		echo "INFO Restoring" 1>&8
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			ProgressStep
 		done
 		;;
 esac
+ProgressStop
 
 transfertime="$((SECONDS-starttime))"
 tar_rc="$(cat $BUILD_DIR/retval)"
