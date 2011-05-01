@@ -11,17 +11,18 @@ alias rehash='hash -r'
 # very important for our scripts to work!
 shopt -s nullglob extglob
 
-# setup the rear environment
-test -p $SHELL_VARS_FIFO || echo "ERROR: Could not access the SHELL_VARS_FIFO!"
-eval "$(cat <$SHELL_VARS_FIFO)" 2>/dev/null
+eval "$REAR_EVAL" &>/dev/null
+
+VERBOSE=1
 
 # source in ReaR functions
 for script in $SHARE_DIR/lib/*functions.sh ; do source $script ; done
+source $SHARE_DIR/lib/progresssubsystem.nosh
 
 echo "
 WARNING! This is the interactive shell within $PRODUCT. It
 is intended for development and testing purposed only and
-comes without warranty. The typical usage szenario is to
+comes without warranty. The typical usage scenario is to
 source scriptlets into this shell to test their behaviour.
 
 SHARE_DIR=$SHARE_DIR BUILD_DIR=$BUILD_DIR
