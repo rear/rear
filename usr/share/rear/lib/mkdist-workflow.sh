@@ -41,27 +41,19 @@ WORKFLOW_mkdist_postprocess () {
 	# remove current recovery information (pre-1.7.15)
 	rm -Rf .$CONFIG_DIR/recovery
 
-	# write out standard site.conf and local.conf and templates
-	cat >./$CONFIG_DIR/site.conf <<EOF
-# site.conf
-# another config file that is sourced BEFORE local.conf
-# could be used to set site-wide settings
-# you could then distribute the site.conf from a central location while you keep
-# the machine-local settings in local.conf
-EOF
 	cat >./$CONFIG_DIR/local.conf <<EOF
 # sample local configuration
 
 # Create ReaR rescue media as ISO image
-OUTPUT=ISO
+# OUTPUT=ISO
 
 # optionally define (non-default) backup software, e.g. TSM, NBU, DP, BACULA
 # BACKUP=TSM
 
-# the following is required on older VMware VMs
-MODULES_LOAD=( vmxnet )
+# extra modules to load, the following is required on older VMware VMs
+# MODULES_LOAD=( vmxnet )
 
-# to see boot messages on the serial console (uncomment next line)
+# extra kernel command line, to see boot messages on the serial console (uncomment next line)
 # KERNEL_CMDLINE="console=tty0 console=ttyS1"
 EOF
 	

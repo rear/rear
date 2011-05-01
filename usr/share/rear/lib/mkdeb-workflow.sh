@@ -41,7 +41,6 @@ WORKFLOW_mkdeb () {
 
 	cat > $TMP_DIR/$prod_ver/DEBIAN/conffiles <<-EOF
 	/etc/rear/local.conf
-	/etc/rear/site.conf
 	EOF
 
 	dpkg -b "$TMP_DIR/$prod_ver" /tmp/$prod_ver.deb 2>&1 | tee /dev/fd/8 /dev/fd/2|grep '\.deb$' >$TMP_DIR/rpmbuild
