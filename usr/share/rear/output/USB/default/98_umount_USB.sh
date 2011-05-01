@@ -1,13 +1,12 @@
 # umount USB mountpoint if not yet done by NETFS method
 
-df -P | grep -q "${BUILD_DIR}/netfs" || return 0	# already umounted
-
 if test "$USB_UMOUNTCMD" ; then
-	Log "Running '$USB_UMOUNTCMD ${BUILD_DIR}/netfs'"
-	$USB_UMOUNTCMD "${BUILD_DIR}/netfs"
+	Log "Running '$USB_UMOUNTCMD ${BUILD_DIR}/usbfs'"
+	$USB_UMOUNTCMD "${BUILD_DIR}/usbfs"
 else
-	umount "${BUILD_DIR}/netfs"
-fi || Error "Could not unmount directory ${BUILD_DIR}/netfs"
+	Log "Running 'umount -f ${BUILD_DIR}/usbfs'"
+	umount -f "${BUILD_DIR}/usbfs"
+fi || Error "Could not unmount directory ${BUILD_DIR}/usbfs"
 
 # argument to RemoveExitTask must be identical to AddExitTask
-RemoveExitTask "umount -fv '$BUILD_DIR/netfs' 1>&2"
+RemoveExitTask "umount -fv '$BUILD_DIR/usbfs' 1>&2"

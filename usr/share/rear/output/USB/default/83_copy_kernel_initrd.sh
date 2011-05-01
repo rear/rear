@@ -18,15 +18,16 @@
 #
 #
 
-cp -v "$BUILD_DIR/kernel" "$USB_DIR/kernel" >&8
-ProgressStopIfError $? "Could not create $USB_DIR/kernel"
+cp -v "$BUILD_DIR/kernel" "$BUILD_DIR/usbfs/$USB_SYSLINUX_PREFIX/kernel" >&8
+ProgressStopIfError $? "Could not create $BUILD_DIR/usbfs/$USB_SYSLINUX_PREFIX/kernel"
 ProgressStep
 
-cp -v "$BUILD_DIR/initrd.cgz" "$USB_DIR/initrd.cgz" >&8
-ProgressStopIfError $? "Could not create $USB_DIR/initrd.cgz"
+cp -v "$BUILD_DIR/initrd.cgz" "$BUILD_DIR/usbfs/$USB_SYSLINUX_PREFIX/initrd.cgz" >&8
+ProgressStopIfError $? "Could not create $BUILD_DIR/usbfs/$USB_SYSLINUX_PREFIX/initrd.cgz"
 ProgressStep
 
-Log "Copied kernel and initrd.cgz to $USB_DIR"
+Log "Copied kernel and initrd.cgz to $BUILD_DIR/usbfs/$USB_SYSLINUX_PREFIX/"
 
 # Add to RESULT_FILES for emailing it
-RESULT_FILES=( "${USB_FILES[@]}" "$USB_DIR/kernel" "$USB_DIR/initrd.cgz" )
+# FIXME: This is meaningless ATM, RESULT_FILES should be put somewhere reliable and not on a temporary mounted media.
+#RESULT_FILES=( "${USB_FILES[@]}" "$USB_DIR/kernel" "$USB_DIR/initrd.cgz" )
