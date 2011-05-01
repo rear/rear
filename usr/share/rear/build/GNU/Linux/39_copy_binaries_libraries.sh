@@ -41,22 +41,42 @@ ProgressStopIfError $PIPESTATUS "Could not copy binaries"
 # split libs into lib and lib64 paths
 # I know, our modular design demands to split this into multiple files
 # but I prefer to do that when a 3rd variety has to be dealt with.
+LIBS=()
 LIBS32=()
 LIBS64=()
 for lib in ${LIBS[@]} $(SharedObjectFiles "${BINARIES[@]}" | sed -e 's#^#/#' ) ; do
-	if test "${lib/lib64\//xxxxx/}" = "$lib" ; then
-		# lib64/ was NOT part of $lib
-		LIBS32=( ${LIBS32[@]} $lib )
-	else
-		LIBS64=( ${LIBS64[@]} $lib )
-	fi
+	# this is a list of library filenames like this:
+	# /lib/libc-2.11.1.so
+	# /lib64/ld-2.11.1.so
+	# /lib32/libc-2.11.1.so
+	# /usr/lib/libgthread-2.0.so.0
+	#
+	# we sort that into LIBS, LIBS32 and LIBS64 accordingly
+	ldir="${lib%/*}" # dirname
+	ldir="${ldir##*/}" # basename
+	case "$ldir" in
+		(lib)	LIBS=( ${LIBS[@]} $lib ) ;;
+		(lib32)	LIBS32=( ${LIBS32[@]} $lib ) ;;
+		(lib64)	LIBS64=( ${LIBS64[@]} $lib ) ;;
+		(*)	BugError "Unkown library type '$ldir' encountered" ;;
+	esac
 done
+
+Log "Libraries: ${LIBS[@]}"
+if test "$LIBS" ; then
+	LibCopyTo "$ROOTFS_DIR/lib" ${LIBS[@]} 1>&8 
+	ProgressStopIfError $PIPESTATUS "Could not copy libraries"
+fi
 Log "Libraries(32): ${LIBS32[@]}"
-LibCopyTo "$ROOTFS_DIR/lib" ${LIBS32[@]} 1>&8 
-ProgressStopIfError $PIPESTATUS "Could not copy libraries"
+if test "$LIBS32" ; then
+	LibCopyTo "$ROOTFS_DIR/lib32" ${LIBS32[@]} 1>&8 
+	ProgressStopIfError $PIPESTATUS "Could not copy 32bit libraries"
+fi
 Log "Libraries(64): ${LIBS64[@]}"
-LibCopyTo "$ROOTFS_DIR/lib64" ${LIBS64[@]} 1>&8
-ProgressStopIfError $PIPESTATUS "Could not copy 64bit libraries"
+if test "$LIBS64" ; then
+	LibCopyTo "$ROOTFS_DIR/lib64" ${LIBS64[@]} 1>&8
+	ProgressStopIfError $PIPESTATUS "Could not copy 64bit libraries"
+fi
 ldconfig $v -r "$ROOTFS_DIR" 1>&8 
 ProgressStopOrError $PIPESTATUS "Could not configure libraries with ldconfig"
 

@@ -18,20 +18,17 @@
 #
 #
 
-pushd $ROOTFS_DIR >/dev/null
+pushd $ROOTFS_DIR 1>&2
 	
 	ln -sfv bin/init init 1>&2
 	ln -sfv bin sbin 1>&2
-	pushd bin >/dev/null
+	pushd bin 1>&2
 		ln -sfv bash sh 1>&2
 		ln -sfv true pam_console_apply 1>&2 # RH/Fedora with udev needs this
 	popd >/dev/null
-	pushd usr >/dev/null
+	pushd usr 1>&2
 		ln -sfv /bin bin 1>&2
-		ln -sfv /lib lib 1>&2
-		if [[ -d "$ROOTFS_DIR/lib64" ]]; then
-			ln -sfv /lib64 lib64
-		fi
+		ln -sfv /bin sbin 1>&2
 	popd >/dev/null
-	ln -sfv /bin/true etc/sysconfig/network-scripts/net.hotplug 1>&2
+	test -d etc/sysconfig/network-scripts && ln -sfv /bin/true etc/sysconfig/network-scripts/net.hotplug 1>&2
 popd >/dev/null
