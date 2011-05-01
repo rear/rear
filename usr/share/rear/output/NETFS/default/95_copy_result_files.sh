@@ -6,7 +6,10 @@ if [ "$NETFS_PROTO" == "tape" -o "$NETFS_PROTO" == "obdr" ]; then
 	return 0
 fi
 
-test ${#RESULT_FILES[@]} -gt 0 || Error "No files to copy (RESULT_FILES is empty)"
+# if called as mkbackuponly then we just don't have any result files.
+if test ${#RESULT_FILES[@]} -eq 0 ; then
+	return 0
+fi
 
 Log "Copying files '${RESULT_FILES[@]}' to $NETFS_PROTO location"
 
