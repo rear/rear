@@ -34,7 +34,6 @@ else
 			NETFS_MOUNTPATH="/$NETFS_SHARE"
 			NETFS_HOST=localhost	# otherwise, ping could fail
 			USB_DEVICE="/$NETFS_SHARE"
-			NETFS_SKIP_WARNING=1
 			;;
 		*) ;;
 	esac
@@ -55,7 +54,6 @@ case "$BACKUP_PROG" in
 		# rsync creates a target directory instead of a file
 		BACKUP_PROG_SUFFIX=
 		BACKUP_PROG_COMPRESS_SUFFIX=
-		NETFS_SKIP_WARNING=1
 		;;
 	(*)	:
 		;;
@@ -68,7 +66,6 @@ case "$TAPE_DEVICE:$NETFS_PROTO" in
 		;;
 	(*:obdr|*:tape)
 		backuparchive="${TAPE_DEVICE}" 
-		NETFS_SKIP_WARNING=1
 		;;
 esac
 
