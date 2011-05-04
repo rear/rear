@@ -49,7 +49,7 @@ create_lvmgrp() {
     local lvmgrp vgrp extentsize junk
     read lvmgrp vgrp extentsize junk < $1
 
-    local devices=($(grep "^lvmdev $vgrp" $LAYOUT_FILE | cut -d " " -f 3))
+    local -a devices=($(grep "^lvmdev $vgrp" $LAYOUT_FILE | cut -d " " -f 3))
 
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating LVM VG ${vgrp#/dev/}"
