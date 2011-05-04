@@ -23,5 +23,5 @@ fi
 [[ "$RAW_USB_DEVICE" && -b "$RAW_USB_DEVICE" ]]
 ProgressStopIfError $? "Unable to determine raw USB device for $REAL_USB_DEVICE"
 
-parted "$RAW_USB_DEVICE" print 2>/dev/null | grep primary | grep -qE '(ntfs|fat)'
-[[ $? -eq 0 ]] && Error "USB device $RAW_USB_DEVICE must be formatted with ext3/4 file system"
+parted "$RAW_USB_DEVICE" print 2>/dev/null | grep primary | grep -qE '(btr|ext)'
+[[ $? -eq 0 ]] || Error "USB device $RAW_USB_DEVICE must be formatted with ext2/3/4 or btrfs file system"
