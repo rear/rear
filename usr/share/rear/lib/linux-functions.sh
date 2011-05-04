@@ -22,7 +22,7 @@
 have_udev() {
 	RELPATH="$1" ; shift
 	if 	test -d $RELPATH/etc/udev/rules.d && \
-		{ type -p udevadm || type -p udevtrigger ; } >/dev/null ; then
+		{ type -p udevadm || type -p udevtrigger || type -p udevstart ; } >/dev/null ; then
 		return 0
 	else
 		return 1
@@ -33,8 +33,15 @@ have_udev() {
 my_udevtrigger() {
 	if type -p udevadm >/dev/null ; then
 		udevadm trigger $@ 
-	else
+	elif type -p udevtrigger >/dev/null ; then
 		udevtrigger $@
+	else
+		# do what start_udev does on RHEL 4
+		local pid=$(pidof -x udevd)
+		if [ -n "$pid" ] ; then
+			kill $pid
+		fi
+		udevstart </dev/null >/dev/null 2>&1
 	fi
 }
 
@@ -42,8 +49,17 @@ my_udevtrigger() {
 my_udevsettle() {
 	if type -p udevadm >/dev/null ; then
 		udevadm settle $@
-	else
+	elif type -p udevsettle >/dev/null ; then
 		udevsettle $@
+	elif [ -e /sys/kernel/uevent_seqnum ] && [ -e /dev/.udev/uevent_seqnum ] ; then
+		# re-implement udevsettle for older systems
+		local tries=0
+		while [ "$(cat /sys/kernel/uevent_seqnum)" = "$(cat /dev/.udev/uevent_seqnum)" ] && [ "$tries" -lt 10 ]; do
+			sleep 1
+			let tries=tries+1
+		done
+	else
+		sleep 10
 	fi
 }
 

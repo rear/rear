@@ -5,7 +5,7 @@ create_smartarray() {
     read sa slotnr junk < $1
     cat <<EOF >>$LAYOUT_CODE
 LogPrint "Clearing HP SmartArray controller $slotnr"
-if ! hpacucli ctrl slot=$slotnr delete forced; then
+if ! hpacucli ctrl slot=$slotnr delete forced >&8; then
     Log "Failed to clear HP SmartArray controller $slotnr, this is not necessarily fatal."
 fi
 EOF
@@ -57,6 +57,10 @@ sleep 1 ; ProgressStep ; sleep 1
 modprobe cciss
 sleep 1 ; ProgressStep ; sleep 1
 ProgressStop
+
+# Make sure device nodes are visible (eg. in RHEL4)
+my_udevtrigger
+my_udevsettle
 EOF
     echo "" >> $LAYOUT_CODE
 }

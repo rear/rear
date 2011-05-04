@@ -15,10 +15,13 @@ path_id
 scsi_id
 usb_id
 vol_id
+udev
 udevadm
 udevcontrol
 udevd
 udevsettle
+udevstart
+udevtest
 udevtrigger
 udevinfo
 kpartx

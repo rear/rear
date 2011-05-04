@@ -113,5 +113,8 @@ cat >> $LAYOUT_CODE <<EOF
 # Wait some time before advancing
 sleep 10
 
+# Make sure device nodes are visible (eg. in RHEL4)
+my_udevtrigger
+my_udevsettle
 EOF
 }
