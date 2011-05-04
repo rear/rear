@@ -21,7 +21,7 @@ Do not exit bextract until all files are restored.
 "
       read -p "Press ENTER to start bextract" 2>&1
 
-      bextract -V $BEXTRACT_VOLUME /backup /mnt/local
+      bextract -V$BEXTRACT_VOLUME /backup /mnt/local
 
       echo "
 If you've exited bextract; it's because the restore has been completed.
@@ -37,10 +37,10 @@ correct files have not been restored.
 
       LogPrint "The bextract command looks like:
 
-   bextract -V $BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/local
+   bextract -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/local
 
 Where \"$BEXTRACT_VOLUME\" is the required Volume name of the tape,
-alternatively, use * if you don't know the volume,
+alternatively, use '*' if you don't know the volume,
 and \"$BEXTRACT_DEVICE\" is the Bacula device name of the tape drive."
 
       LogPrint "After you reboot, you can restore your Bacula mysql database manually.
