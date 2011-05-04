@@ -102,7 +102,7 @@ create_component() {
     local device=$1
     local type=$2
     # if a touchfile already exists, no need to recreate this component
-    local touchfile=$type-${device//\//-}
+    local touchfile="$type-${device//\//-}"
     if [ -e $LAYOUT_TOUCHDIR/$touchfile ] ; then
         return 1
     else
@@ -115,7 +115,7 @@ component_created() {
     local device=$1
     local type=$2
     # Create a touchfile
-    local touchfile=$type-${device//\//-}
+    local touchfile="$type-${device//\//-}"
     touch $LAYOUT_TOUCHDIR/$touchfile
 }
 
