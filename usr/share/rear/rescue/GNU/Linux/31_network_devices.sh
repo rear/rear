@@ -67,7 +67,9 @@ for sysfspath in /sys/class/net/* ; do
         driver=$(basename $(readlink $sysfspath/device/driver))
     elif [[ -z "$driver" && -e "$sysfspath/driver" ]]; then
         # this should work for virtio_net, xennet and vmxnet on older kernels (2.6.18)
-        driver=$(basename $(readlink $sysfspath/device/driver))
+        driver=$(basename $(readlink $sysfspath/driver))
+    elif [[ -z "$driver" ]] && type -p ethtool >/dev/null; then
+        driver=$(ethtool -i $dev 2>/dev/null | grep driver: | cut -d: -f2)
     fi
     if [[ "$driver" ]]; then
         if ! grep -q $driver /proc/modules; then
