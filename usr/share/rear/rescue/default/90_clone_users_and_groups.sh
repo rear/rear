@@ -15,7 +15,7 @@ for u in "${CLONE_USERS[@]}" ; do
 		# add gid to groups to collect
 		CLONE_GROUPS=( "${CLONE_GROUPS[@]}" "$gid" )
 	else
-		Log "WARNING: Could not collect user info for '$u'"
+		Debug "WARNING: Could not collect user info for '$u'"
 	fi
 done
 
@@ -29,7 +29,7 @@ for g in "${CLONE_GROUPS[@]}" ; do
 		grep -q "^$grp" $ROOTFS_DIR/etc/group && continue
 		echo "$grp" >>$ROOTFS_DIR/etc/group
 	else
-		Log "WARNING: Could not collect group info for '$g'"
+		Debug "WARNING: Could not collect group info for '$g'"
 	fi
 done
 
