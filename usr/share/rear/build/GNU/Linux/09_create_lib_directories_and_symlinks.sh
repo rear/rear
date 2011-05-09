@@ -3,8 +3,9 @@ for libdir in /lib* ; do
 	# $libdir always contains a leading / !
 	if [ -L $libdir ] ; then
 		[ -d ROOTFS_DIR/$libdir ] && BugError "Cannot create symlink $libdir instead of directory"
-		linktarget=$(readlink $libdir)
+		linktarget=$(readlink -f $libdir)
 		linktarget="${linktarget#/}" # strip leading / to make symlink a relative one
+		mkdir -p -v "$ROOTFS_DIR/$linktarget" 1>&2 || Error "Could not mkdir '$ROOTFS_DIR/$linktarget'"
 		ln -s -v "$linktarget" $ROOTFS_DIR$libdir 1>&2 || Error "Could not create symlink '$ROOTFS_DIR$libdir'"
 	elif [ -d $libdir ] ; then
 		[ -L $ROOTFS_DIR$libdir ] && BugError "Cannot create directory $libdir instead of symlink"
