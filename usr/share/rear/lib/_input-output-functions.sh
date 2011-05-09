@@ -77,6 +77,9 @@ function trap () {
 }
 
 Error() {
+	# Print stack strace on error
+	let c=0 ; while caller $c ; do let c++ ; done | sed 's/^/Trace: /' 1>&2 ; unset c
+
 	VERBOSE=1
 	EXIT_CODE=1
 	LogPrint "ERROR: $*"
@@ -119,7 +122,6 @@ LogIfError() {
 	test $# -le 0 && Error "LogIfError called without return code to check !"
 	test $1 -gt 0 || return 0
 	shift
-	Log "ERROR: $@"
 	Error "$@"
 }
 
@@ -150,7 +152,6 @@ ProgressStopOrError() {
 	if test "$1" -gt 0 ; then
 		shift
 		ProgressError
-		Log "ERROR: $@"
 		Error "$@"
 	else
 		ProgressStop
@@ -162,7 +163,6 @@ ProgressStopIfError() {
 	test "$1" -gt 0 || return 0
 	shift
 	ProgressError
-	Log "ERROR: $@"
 	Error "$@"
 }
 

@@ -118,7 +118,7 @@ BinCopyTo() {
 		test -z "$k" && continue # ignore blanks
 		test -x "$k" || Error "[BinCopyTo] Source $k is not an executable"
 		cp -v -a -L "$k" "$TARGET" || Error "[BinCopyTo] Could not copy '$k' to '$TARGET'"
-		strip -s "$TARGET/$(basename "$k")"
+		strip -s "$TARGET/$(basename "$k")" 2>/dev/null
 	done
 }
 
