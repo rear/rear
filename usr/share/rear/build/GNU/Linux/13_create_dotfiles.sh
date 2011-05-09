@@ -20,14 +20,14 @@
 
 # create a simple bash history file, use this ruler to make sure that
 # the comments stay in a single line :-)
-#---------------------------------------------------------------------------80-|
+#-------------------------------------------------------80-|
 cat <<EOF > $ROOTFS_DIR/root/.bash_history
-: : : : : WHAT ELSE WOULD YOU HAVE EXPECTED ON A RESCUE SYSTEM? Please tell us!
+: : : : : WHAT ELSE WOULD YOU HAVE EXPECTED HERE?
 less /var/lib/rear/layout/diskrestore.sh   # View disk restore script
 less /var/lib/rear/layout/disklayout.conf  # View disk layout configuration
-less $LOGFILE                              # View ReaR's log file
-loadkeys -d                                # Load default keyboard layout (US)
-rear recover                               # Recover your system
+less $LOGFILE   # View ReaR's log file
+loadkeys -d             # Load default keyboard layout (US)
+rear recover                          # Recover your system
 EOF
 chmod 0644 $ROOTFS_DIR/root/.bash_history
 

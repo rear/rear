@@ -15,7 +15,9 @@ Possible BACKUP settings are:
 	- BACKUP=DP	: use HP DataProtector programs
 	- BACKUP=NBU	: use Symantec NetBackup programs
 	- BACKUP=BACULA	: use Bacula programs
-	- BACKUP=NETFS	: use ReaR internal backup with tar (or similar)
+	- BACKUP=GALAXY : use CommVault Galaxy (5, probably 6)
+	- BACKUP=GALAXY7: use CommVault Galaxy (7 and probably newer)
+	- BACKUP=NETFS	: use ReaR internal backup with tar or rsync (or similar)
 	- BACKUP=REQUEST_RESTORE : no backup, just ask user to somehow restore the filesystems
 	- BACKUP=EXTERNAL : provide custom backup and restore commands
 
@@ -46,6 +48,9 @@ target location through the NETFS_URL variable:
 	- USB disk:	NETFS_URL=usb:///dev/sdb1  (whatever device your USB disk has)
 			(together with OUTPUT=USB everything is on an USB device)
 
+Optional settings:
+
+BACKUP_PROG=rsync (if you want to use rsync instead of tar)
 NETFS_KEEP_OLD_BACKUP_COPY=y (if you want to keep the previous backup archive)
 
 Notes about USB disk

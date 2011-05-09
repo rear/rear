@@ -9,6 +9,7 @@ if test "$USB_MOUNTCMD" ; then
 	$USB_MOUNTCMD "$BUILD_DIR/usbfs" 1>&2 || \
 		Error "Your USB mount command '$USB_MOUNTCMD' failed."
 else
+	[ "$USB_DEVICE" ] || Error $? "USB device (\$USB_DEVICE) is not set."
 	Log "Running 'mount $USB_DEVICE $BUILD_DIR/usbfs'"
 	mount "$USB_DEVICE" "$BUILD_DIR/usbfs" 1>&2 || \
 		Error "Mounting '$USB_DEVICE' '$BUILD_DIR/usbfs' failed."
