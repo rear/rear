@@ -25,6 +25,7 @@ else
 	osc del rear-snapshot/*.tar.gz
 	prod_name=rear-snapshot VERSION=0.0.$REV DESTDIR=rear-snapshot svn/usr/share/rear/contrib/svn2tar
 	osc add rear-snapshot/*.tar.gz
-	sed -i -e "/^Version:/s/^Version.*$/Version: 0.0.$REV/" rear-snapshot/rear-snapshot.dsc rear-snapshot/rear-snapshot.spec
+	sed -i -e "/^Version:/s/^Version.*$/Version: 0.0.$REV/" rear-snapshot/rear-snapshot.dsc rear-snapshot/rear-snapshot.spec rear-snapshot/debian.control
+	sed -i -e "/rear-snapshot/s/0.0.[0-9]*/0.0.$REV/g" rear-snapshot/debian.changelog
 	osc ci -m "SVN -> OBS rev $REV" rear-snapshot
 fi
