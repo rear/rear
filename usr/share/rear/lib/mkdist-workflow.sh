@@ -23,6 +23,12 @@ WORKFLOW_mkdist_postprocess () {
 	ProgressStopIfError $? "Could not mv rear-*.ebuild"
 
 
+	version_string="VERSION=\"$VERSION\""
+	if ! grep '$version_string' usr/sbin/rear ; then
+		Log "Patching version $version_string in $(pwd)/usr/sbin/rear"
+		sed -i -e 's/^VERSION=.*$/VERSION="'"$VERSION"'"/' usr/sbin/rear
+	fi
+
 	# reverted back to symlinking because we put more MegaByte into doc and should not package it twice
 	ln -s .$SHARE_DIR/{doc,contrib}  .  1>&8
 	# to prevent RPMs from installing symlinks into the doc area we actually copy the text files
@@ -31,9 +37,6 @@ WORKFLOW_mkdist_postprocess () {
 	
 
 # I want the generic SPEC file to be always shipped 2009-11-16 Schlomo
-#	# copy rear.spec according OS_VENDOR and patch version into RPM spec file
-#	cp .$SHARE_DIR/lib/spec/$OS_VENDOR/rear.sourcespec .$SHARE_DIR/lib/rear.spec 1>&8
-#	ProgressStopIfError $? "Could not copy $OS_VENDOR specific rear.spec file"
 	sed -i -e "s/Version:.*/Version: $VERSION/" .$SHARE_DIR/lib/rear.spec
 	chmod 644 .$SHARE_DIR/lib/rear.spec
 #	cp -fp .$SHARE_DIR/lib/rear.spec $SHARE_DIR/lib/rear.spec

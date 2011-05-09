@@ -1,6 +1,7 @@
 #!/bin/bash
 # Script: svn2tar
 # Script that creates distribution tar from the local svnroot instead via the normal "rear mkdist"
+# We build our dist releases from that!
 # Author: Schlomo Schapiro
 # License: see COPYING file
 # Last Update: $Id$
@@ -27,6 +28,14 @@ VAR_DIR=/var/rear
 # extract version number from rear script or use the one given
 if ! test "$VERSION" ; then
 	VERSION=$(grep ^VERSION= ${rear_root}/usr/sbin/rear | cut -d= -f2 | sed -e 's/"//g')
+fi
+
+if [ "$VERSION" = 0.0.0 -a -d "$rear_root/.svn" ] ; then
+	# try to set version from SVN
+	svn up "$reat_root" >&/dev/null
+	read junk rev < <(svn info ../../../ | grep ^Revision)
+	VERSION="0.0.$rev"
+
 fi
 
 # source required ReaR components
