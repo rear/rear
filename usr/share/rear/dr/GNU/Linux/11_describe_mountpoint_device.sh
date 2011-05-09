@@ -19,7 +19,7 @@ while read -a entry ; do
 	fi
 	# fail on all lines that have only 4 or less entries
 	# NOTE: the entries are not expected to have BLANKS in them !!!
-	if test "${#entry[@]}" -lt 4 ; then
+	if test "${#entry[@]}" -lt 5 ; then
 		Log "Bad mountpoint_device entry: ${#entry[@]}"
 		Error "The filesystem '$entry' is not mounted. I cannot determine
 the corresponding device. Please either mount or exclude it."
@@ -44,6 +44,7 @@ done < <(
 # a last check to be sure
 test -s $VAR_DIR/recovery/mountpoint_device || Error "$VAR_DIR/recovery/mountpoint_device is missing"
 
+# FIXME In case a filesystem mentioned in fstab is not mounted this fails horribly
 
 # NOTE: this list might be faulty, e.g. if a device that is in the fstab is NOT mounted, then 
 #       there are only 3 entries and not 4.
