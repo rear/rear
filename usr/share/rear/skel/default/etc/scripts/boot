@@ -9,7 +9,7 @@ mount -t proc -n none /proc
 mount -t sysfs none /sys
 mount -t devpts -o gid=5,mode=620 none /dev/pts
 
-cat /proc/mounts >/etc/mtab
+cat /proc/mounts >/etc/mtab 2>/dev/null
 
 # basic loopback net
 ip addr add 127.0.0.1/8 dev lo

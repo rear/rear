@@ -1,3 +1,6 @@
+* reboot on Ubuntu rescue media broken
+	- Probably we miss some script or config for upstart
+
 * 33_find_isolinux.sh
 	- currently used also to determine the SYSLINUX_DIR
 	- also for OUTPUT=USB

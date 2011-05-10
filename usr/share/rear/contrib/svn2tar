@@ -32,7 +32,7 @@ fi
 
 if [ "$VERSION" = 0.0.0 -a -d "$rear_root/.svn" ] ; then
 	# try to set version from SVN
-	svn up "$reat_root" >&/dev/null
+	svn up "$rear_root" >&/dev/null
 	read junk rev < <(svn info ../../../ | grep ^Revision)
 	VERSION="0.0.$rev"
 
