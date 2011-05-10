@@ -16,7 +16,7 @@ if [ -z "$syslinux_version" ]; then
     syslinux_version=$(get_version extlinux --version)
 fi
 if [ -z "$syslinux_version" ]; then
-    BugError "Function get_version could not detect syslinux version."
+    Log "Function get_version could not detect syslinux version, assuming a very old one."
 elif version_newer "$syslinux_version" 4.02 ; then
     FEATURE_SYSLINUX_BOOT_SYSLINUX="y"
     FEATURE_SYSLINUX_GENERIC_CFG="y"
