@@ -199,7 +199,7 @@ function make_syslinux_config {
 		fi
 		echo "say hdt - Hardware Detection Tool"
 		echo "label hdt"
-		syslinux_menu "Information about your current hardware configuration"
+		syslinux_menu "LABEL Information about your current hardware configuration"
 	    	echo "kernel hdt.c32"
 		echo ""
 	fi
