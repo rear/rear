@@ -19,7 +19,7 @@ if [ "$NETFS_URL" ]; then
             tempdevice="${NETFS_URL##*://}"
             # Complain when both are specified, but don't match
             if [ "$TAPE_DEVICE" -a "$TAPE_DEVICE" != "$tempdevice" ]; then
-                Error "Tape device in $NETFS_URL and $ISO_URL is not the same"
+                Error "Tape device in NETFS_URL '$NETFS_URL' and ISO_URL '$ISO_URL' is not the same"
             fi
             TAPE_DEVICE="$tempdevice"
             ;;

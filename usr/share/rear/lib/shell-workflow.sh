@@ -1,3 +1,5 @@
+WORKFLOW_shell_DESCRIPTION="Start a Bash within ReaR (development tool)"
+WORKFLOWS=( "${WORKFLOWS[@]}" shell )                                           
 WORKFLOW_shell () {
 	for arg in "${ARGS[@]}" ; do
 		key=OPT_"${arg%%=*}"

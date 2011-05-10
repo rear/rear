@@ -56,6 +56,12 @@ $(
 # do all exit tasks
 DoExitTasks() {
 	Log "Running exit tasks."
+	# kill all running jobs
+	JOBS=( $(jobs -p) )
+	if test "$JOBS" ; then
+		kill -9 "${JOBS[@]}"
+		sleep 1 # allow system to clean up after killed jobs
+	fi
 	for task in "${EXIT_TASKS[@]}" ; do
 		Debug "Exit task '$task'"
 		eval "$task"
