@@ -48,8 +48,8 @@ LogPrint "Saving Filesystem layout."
                 echo -n "uuid=$uuid label=$label "
                 ;;
             reiserfs)
-                uuid=$(reiserfstune $device | grep "UUID" | cut -d":" -f "2" | tr -d " ")
-                label=$(reiserfstune $device | grep "LABEL" | cut -d":" -f "2" | tr -d " ")
+                uuid=$(debugreiserfs $device | grep "UUID" | cut -d":" -f "2" | tr -d " ")
+                label=$(debugreiserfs $device | grep "LABEL" | cut -d":" -f "2" | tr -d " ")
                 echo -n "uuid=$uuid label=$label"
                 ;;
         esac
