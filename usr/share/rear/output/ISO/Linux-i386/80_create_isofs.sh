@@ -21,19 +21,18 @@
 # check that we have mkisofs
 test -x "$ISO_MKISOFS_BIN" || Error "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executabel !"
 
-ISO_FILES=( ${ISO_FILES[@]} kernel initrd.cgz )
+ISO_FILES=( ${ISO_FILES[@]} $BUILD_DIR/kernel $BUILD_DIR/initrd.cgz )
 Log "Starting '$ISO_MKISOFS_BIN'"
 ProgressStart "Making ISO image"
 test -d "$ISO_DIR" || mkdir -p "$ISO_DIR" 1>&8 
 ProgressStopIfError $? "Could not create ISO ouput directory ($ISO_DIR)"
-pushd $BUILD_DIR 1>&8 # so that relative paths will work
 $ISO_MKISOFS_BIN -quiet -o "$ISO_DIR/$ISO_PREFIX.iso" -b isolinux.bin -c boot.cat \
 	-no-emul-boot -boot-load-size 4 -boot-info-table \
 	-R -J -volid "$ISO_VOLID" -v "${ISO_FILES[@]}"  1>&8
 ProgressStopOrError $? "Could not create ISO image"
 ISO_IMAGES=( "${ISO_IMAGES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
-popd >/dev/null
-LogPrint "Wrote ISO Image $ISO_DIR/$ISO_PREFIX.iso ($(du -h "$ISO_DIR/$ISO_PREFIX.iso"| tr -s " \t" " " | cut -d " " -f 1))"
+iso_image_size=( $(du -h "$ISO_DIR/$ISO_PREFIX.iso") )
+LogPrint "Wrote ISO Image $ISO_DIR/$ISO_PREFIX.iso ($iso_image_size)"
 
 # Add ISO image to result files
 RESULT_FILES=( "${RESULT_FILES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )

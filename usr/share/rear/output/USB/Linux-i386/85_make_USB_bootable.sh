@@ -1,10 +1,11 @@
 # we assume that REAL_USB_DEVICE and RAW_USB_DEVICE are both set from the script
 # in prep/USB/Linux-i386/35_check_usb_disk.sh
 
-[ "$RAW_USB_DEVICE" -a "$REAL_USB_DEVICE" ] || Error "BUG BUG BUG RAW_USB_DEVICE and REAL_USB_DEVICE should be already set"
+[ "$RAW_USB_DEVICE" -a "$REAL_USB_DEVICE" ] || BugError "RAW_USB_DEVICE and REAL_USB_DEVICE should be already set"
 
+[ -r "$BUILD_DIR/usbfs/$USB_BOOT_PREFIX/extlinux.conf" ] ||  BugError "$BUILD_DIR/usbfs/$USB_BOOT_PREFIX/extlinux.conf should already exists"
 # ATM we support only extlinux as boot loader
-extlinux -i "${BUILD_DIR}/usbfs/$USB_BOOT_PREFIX" 1>&2 || Error "Problem with extlinux -i ${BUILD_DIR}/usbfs/$USB_BOOT_PREFIX"
+extlinux -i "$BUILD_DIR/usbfs/$USB_BOOT_PREFIX" 1>&2 || Error "Problem with extlinux -i ${BUILD_DIR}/usbfs/$USB_BOOT_PREFIX"
 
 if [ "$REAL_USB_DEVICE" != "$RAW_USB_DEVICE" ] ; then
 	# Write the USB boot sector if the filesystem is not the entire disk
