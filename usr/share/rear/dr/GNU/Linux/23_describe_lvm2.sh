@@ -14,14 +14,14 @@ test -c /dev/mapper/control -a -x "$(type -p lvm)" || return	# silently skip
 mkdir -p "${VAR_DIR}/recovery/lvm" || Error "Creating directory ${VAR_DIR}/recovery/lvm"
 
 # first we do a general VG backup to the system default location, just in case it might be needed
-vgcfgbackup 1>&2 8>&- 7>&- 63>&-
+vgcfgbackup 1>&2 8>&- 7>&-
 
-for vg in $(lvm vgs --noheadings -o vg_name 8>&- 7>&- ) ; do
+for vg in $(lvm vgs --noheadings -o vg_name 8>&- 7>&-  ) ; do
 	if IsInArray $vg "${EXCLUDE_VG[@]}" ; then
 		Log "Skipping excluded volume group '$vg'"
 		continue
 	fi
-	lvm vgcfgbackup --file "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" $vg 1>&2 8>&- 7>&- ||\
+	lvm vgcfgbackup --file "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" $vg 1>&2 8>&- 7>&-  ||\
 	Error "vgcfgbackup failed for '$vg': $?"
 	test -s "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" || Error "vgcfgbackup created an empty file!"
 done
