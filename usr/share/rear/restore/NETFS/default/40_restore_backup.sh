@@ -31,6 +31,8 @@ starttime=$SECONDS
 
 sleep 1 # Give the backup software a good chance to start working
 
+# make sure that we don't fall for an old size info
+unset size
 # while the backup runs in a sub-process, display some progress information to the user
 case "$BACKUP_PROG" in
 	tar)
@@ -58,6 +60,8 @@ There was an error (Nr. $(cat $BUILD_DIR/retval)) while restoring the archive.
 Please check '$LOGFILE' for more information. You should also
 manually check the restored system to see wether it is complete.
 "
+
+# TODO if size is not given then calculate it from backuparchive_size
 
 tar_message="$(tac $LOGFILE | grep -m1 '^Total bytes written: ')"
 if [ $tar_rc -eq 0 -a "$tar_message" ] ; then
