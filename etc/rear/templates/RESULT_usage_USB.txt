@@ -1,7 +1,7 @@
 How to recover your system:
 ---------------------------
 
-you have to prepare a bootable USB stick with syslinux on it (look also
+you have to prepare a bootable USB stick with extlinux on it (look also
 at http://syslinux.zytor.com/usbkey.php for further explanations on this
 topic).
 

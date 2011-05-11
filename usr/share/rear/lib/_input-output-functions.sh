@@ -83,8 +83,10 @@ function trap () {
 }
 
 Error() {
-	# Print stack strace on error
-	let c=0 ; while caller $c ; do let c++ ; done | sed 's/^/Trace: /' 1>&2 ; unset c
+	if type caller &>/dev/null ; then
+		# Print stack strace on error
+		let c=0 ; while caller $c ; do let c++ ; done | sed 's/^/Trace: /' 1>&2 ; unset c
+	fi
 
 	VERBOSE=1
 	EXIT_CODE=1

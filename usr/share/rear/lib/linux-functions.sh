@@ -119,6 +119,7 @@ BinCopyTo() {
 		test -x "$k" || Error "[BinCopyTo] Source $k is not an executable"
 		cp -v -a -L "$k" "$TARGET" || Error "[BinCopyTo] Could not copy '$k' to '$TARGET'"
 		strip -s "$TARGET/$(basename "$k")" 2>/dev/null
+		: # make sure that a failed strip won't fail the BinCopyTo
 	done
 }
 
