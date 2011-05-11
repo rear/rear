@@ -94,12 +94,13 @@ esac
 
 # Make sure we have the necessary paths (eg. in cron), /sbin will be the first path to search.
 # some needed binaries are in /lib/udev
-for path in /lib/udev /usr/bin /bin /usr/sbin /sbin; do
+for path in /usr/bin /bin /usr/sbin /sbin; do
     case ":$PATH:" in
         (*:"$path":*) ;;
         (*) if [[ -d "$path" ]]; then PATH=$path:$PATH; fi ;;
     esac
 done
+PATH=$PATH:/lib/udev
 
 # are we root ?
 if [ $(id --user) -ne 0 ]; then
