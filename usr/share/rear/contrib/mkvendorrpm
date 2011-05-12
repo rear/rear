@@ -27,8 +27,20 @@ fi
 }
 
 function getVERSION () {
-# extract version number from rear script
-VERSION=`grep ^VERSION= ${rear_root}/usr/sbin/rear | cut -d= -f2 | sed -e 's/"//g'`
+# extract version number from rear script or use the one given (via the environment)
+if ! test "$VERSION" ; then
+	VERSION=$(grep ^VERSION= ${rear_root}/usr/sbin/rear | cut -d= -f2 | sed -e 's/"//g')
+fi
+
+# If VERSION is 0.0.0 then we are dealing with the trunk; try to extract current svn version
+if [ "$VERSION" = 0.0.0 -a -d "$rear_root/.svn" ] ; then
+	# try to set version from SVN
+	svn up "$rear_root" >&/dev/null
+	read junk rev < <(svn info ../../../ | grep ^Revision)
+	VERSION="0.0.$rev"
+fi
+
+# If VERSION is still 0.0.0 then we will try to check some local files
 if [ "${VERSION}" = "0.0.0" ]; then
 	# 0.0.0 is the version nr of the trunk; extract the version nr from CHANGES or VERSION files
 	if [ -f $rear_root/usr/share/rear/VERSION ]; then
@@ -118,13 +130,13 @@ chmod 644 .$SHARE_DIR/lib/rear.spec
 
 # write out standard site.conf and local.conf and templates
 
-cat >./$CONFIG_DIR/site.conf <<EOF
+#cat >./$CONFIG_DIR/site.conf <<EOF
 # site.conf
 # another config file that is sourced BEFORE local.conf
 # could be used to set site-wite settings
 # you could then distribute the site.conf from a central location while you keep
 # the machine-local settings in local.conf
-EOF
+#EOF
 
 cat >./$CONFIG_DIR/local.conf <<EOF
 # sample local configuration
