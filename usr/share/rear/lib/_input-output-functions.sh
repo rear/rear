@@ -59,7 +59,9 @@ DoExitTasks() {
 	# kill all running jobs
 	JOBS=( $(jobs -p) )
 	if test "$JOBS" ; then
-		kill -9 "${JOBS[@]}"
+                Log "The following jobs are still active:"
+                jobs -l 1>&2
+		kill -9 "${JOBS[@]}" &>/dev/null
 		sleep 1 # allow system to clean up after killed jobs
 	fi
 	for task in "${EXIT_TASKS[@]}" ; do

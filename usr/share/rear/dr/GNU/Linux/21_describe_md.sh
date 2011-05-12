@@ -5,7 +5,7 @@
 
 # silently skip the script if mdstat shows no raid configured
 # we check for 'blocks' and not for 'raid' to also cover the md type devices
-grep -q blocks /proc/mdstat || return
+grep -q blocks /proc/mdstat &>/dev/null || return
 
 mkdir -p ${VAR_DIR}/recovery/proc
 cat /proc/mdstat > "${VAR_DIR}/recovery/proc/mdstat" ||\

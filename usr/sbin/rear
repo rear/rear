@@ -63,7 +63,7 @@ do
 	v ) VERBOSE=1 ;;
 	d ) DEBUG=1 ; VERBOSE=1 ;;
 	D ) DEBUGSCRIPTS=1 ;;
-	s ) SIMULATE=1 ;;
+	s ) SIMULATE=1 ; VEROSE=1 ;;
 	S ) STEPBYSTEP=1 ;;
 	q ) QUIET=1 ;;
 	r ) KERNEL_VERSION="$OPTARG" ;;
