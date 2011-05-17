@@ -40,7 +40,7 @@ awk -f- $grub_conf >$TMP_DIR/menu.lst <<EOF
 
 END {
     print "title Relax and Recover"
-    print "\tpassword REAR"
+    print "\tpassword $GRUB_RESCUE_PASSWORD"
     print "\tkernel /rear-kernel $KERNEL_CMDLINE"
     print "\tinitrd /rear-initrd.cgz"
 }
