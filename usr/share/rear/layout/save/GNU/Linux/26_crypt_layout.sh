@@ -9,7 +9,7 @@ LogPrint "Saving Encrypted volumes."
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" cryptsetup )
 
 for device in /dev/mapper/* ; do
-    if ! cryptsetup isLuks $device 2>/dev/null; then
+    if ! cryptsetup isLuks $device &>/dev/null; then
         continue
     fi
     
