@@ -6,7 +6,7 @@ fi
 
 # Test for features in parted
 
-# true if parted accepts values in units other than megabytes
+# true if parted accepts values in units other than mebibytes
 FEATURE_PARTED_ANYUNIT=
 # true if parted can align partitions
 FEATURE_PARTED_ALIGNMENT=
@@ -20,7 +20,7 @@ elif version_newer "$parted_version" 2.0 ; then
     # All features supported
     FEATURE_PARTED_ANYUNIT="y"
     FEATURE_PARTED_ALIGNMENT="y"
-elif version_newer "$parted_version" 1.8 ; then
+elif version_newer "$parted_version" 1.6.23 ; then
     FEATURE_PARTED_ANYUNIT="y"
 fi
 
