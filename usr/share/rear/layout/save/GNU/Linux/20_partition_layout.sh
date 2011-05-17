@@ -51,13 +51,12 @@ LogPrint "Saving disk partitions."
             # - header names: minor instead of number,
             # - no support for units (we use sysfs for sizes)
             if [ -z "$oldparted" ] ; then
-                parted -s /dev/$device unit B print > $TMP_DIR/parted
                 numberfield="number"
             else
-                parted -s /dev/$device print > $TMP_DIR/parted
                 numberfield="minor"
             fi
             
+            parted -s /dev/$device print > $TMP_DIR/parted
             disktype=$(grep -E "Partition Table|Disk label" $TMP_DIR/parted | cut -d ":" -f "2" | tr -d " ")
 
             # Difference between gpt and msdos: type|name
