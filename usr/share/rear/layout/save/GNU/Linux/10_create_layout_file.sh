@@ -3,6 +3,7 @@
 Log "Preparing layout directory."
 mkdir -p $VAR_DIR/layout
 mkdir -p $VAR_DIR/recovery
+mkdir -p $VAR_DIR/layout/config
 
 DISKLAYOUT_FILE=${DISKLAYOUT_FILE:-$VAR_DIR/layout/disklayout.conf}
 
