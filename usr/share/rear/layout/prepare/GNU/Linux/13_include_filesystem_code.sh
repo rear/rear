@@ -76,7 +76,7 @@ EOF
                 echo "reiserfstune --label $label $device 1>&2" >> $LAYOUT_CODE
             fi
             if [ -n "$uuid" ] ; then
-                echo "reiserfstune -uuid $uuid $device 1>&2" >> $LAYOUT_CODE
+                echo "reiserfstune --uuid $uuid $device 1>&2" >> $LAYOUT_CODE
             fi
             ;;
         *)
