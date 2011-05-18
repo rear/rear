@@ -25,4 +25,5 @@ ln -sfv bash $ROOTFS_DIR/bin/sh  1>&2
 ln -sfv true $ROOTFS_DIR/bin/pam_console_apply  1>&2 # RH/Fedora with udev needs this
 ln -sfv ../bin $ROOTFS_DIR/usr/bin  1>&2
 ln -sfv ../bin $ROOTFS_DIR/usr/sbin 1>&2
+ln -sfv /proc/self/mounts $ROOTFS_DIR/etc/mtab 1>&2
 test -d $ROOTFS_DIR/etc/sysconfig/network-scripts && ln -sfv /bin/true $ROOTFS_DIR/etc/sysconfig/network-scripts/net.hotplug  1>&2
