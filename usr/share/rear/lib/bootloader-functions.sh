@@ -7,7 +7,7 @@ function set_syslinux_features {
 	# true if syslinux and extlinux support localboot
 	FEATURE_SYSLINUX_EXTLINUX_WITH_LOCALBOOT=
 
-	local syslinux_vesion
+	local syslinux_version
 
 	# Test for the syslinux version
 	if type -p extlinux >/dev/null; then
