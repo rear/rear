@@ -65,6 +65,10 @@ for sysfspath in /sys/class/net/* ; do
     if [[ -z "$driver" && -e "$sysfspath/device/driver" ]]; then
         # this should work for virtio_net, xennet and vmxnet on recent kernels
         driver=$(basename $(readlink $sysfspath/device/driver))
+	if test "$driver" -a "$driver" = vif ; then
+		# xennet driver announces itself as vif :-(
+		driver=xennet
+	fi
     elif [[ -z "$driver" && -e "$sysfspath/driver" ]]; then
         # this should work for virtio_net, xennet and vmxnet on older kernels (2.6.18)
         driver=$(basename $(readlink $sysfspath/driver))

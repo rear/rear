@@ -87,7 +87,7 @@ ARGS=( "$@" )
 
 # the following workflows are always verbose
 case "$WORKFLOW" in
-	(help|dump|mkdist|mktar|mk*rpm|mkdeb|shell|recover)
+	(validate|help|dump|mkdist|mktar|mk*rpm|mkdeb|shell|recover)
 		VERBOSE=1
 	;;
 esac
