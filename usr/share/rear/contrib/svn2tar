@@ -13,6 +13,7 @@ echo "
 **	svn2tar script for rear      	**
 ******************************************
 " 1>&2
+
 # find the full path to this script
 ME="$(readlink -f "$0")"
 # Find the svnroot path for the initial tar-ball
@@ -23,7 +24,7 @@ rear_root="${ME%/usr/share/rear/contrib/svn2tar}"
 
 SHARE_DIR=/usr/share/rear
 CONFIG_DIR=/etc/rear
-VAR_DIR=/var/rear
+VAR_DIR=/var/lib/rear
 
 # extract version number from rear script or use the one given
 if ! test "$VERSION" ; then
@@ -33,7 +34,11 @@ fi
 if [ "$VERSION" = 0.0.0 -a -d "$rear_root/.svn" ] ; then
 	# try to set version from SVN
 	svn up "$rear_root" >&/dev/null
-	read junk rev < <(svn info ../../../ | grep ^Revision)
+	read junk rev < <(svn info "$rear_root" | grep ^Revision)
+	if ! test "$rev" -a "$rev" -gt 0 ; then
+		echo 1>&2 "ERROR: Could not determine version from svn".
+		exit 1
+	fi
 	VERSION="0.0.$rev"
 
 fi
