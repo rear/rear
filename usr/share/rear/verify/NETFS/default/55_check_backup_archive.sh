@@ -11,7 +11,8 @@ else
 	ProgressStart "Calculating backup archive size"
 	du -sh "$backuparchive" >$TMP_DIR/backuparchive_size &
 	while kill -0 $! &>/dev/null ; do ProgressStep ; sleep 1 ; done
-	ProgressStop
+	wait $! # harvest return code
+	ProgressStopOrError $? "Failed to determine backup archive size."
 	read backuparchive_size junk <$TMP_DIR/backuparchive_size
 	LogPrint "Backup archive size is $backuparchive_size${BACKUP_PROG_COMPRESS_SUFFIX:+ (compressed)}"
 fi
