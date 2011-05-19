@@ -38,7 +38,8 @@ case "$BACKUP_PROG" in
 			$(cat $BUILD_DIR/backup-include.txt) $LOGFILE > $backuparchive
 	;;
 esac >"${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log"
-echo $? >$BUILD_DIR/retval
+# important trick: the backup prog is the last in each case entry and the case .. esac is the last command
+# in the (..) subshell. As a result the return code of the subshell is the return code of the backup prog!
 ) &
 BackupPID=$!
 starttime=$SECONDS
@@ -88,12 +89,16 @@ Killed the backup program and aborting."
 esac
 ProgressStop
 transfertime="$((SECONDS-starttime))"
-tar_rc="$(cat $BUILD_DIR/retval)"
+
+# harvest return code from background job. The kill -0 $BackupPID loop above should
+# have made sure that this wait won't do any real "waiting" :-)
+wait $BackupPID
+backup_prog_rc=$?
 
 sleep 1
 # everyone should see this warning, even if not verbose
-test "$tar_rc" -gt 0 && VERBOSE=1 LogPrint "WARNING !
-There was an error (Nr. $(cat $BUILD_DIR/retval)) during archive creation.
+test "$backup_prog_rc" -gt 0 && VERBOSE=1 LogPrint "WARNING !
+There was an error (Nr. $backup_prog_rc) during archive creation.
 Please check the archive and see '$LOGFILE' for more information.
 
 Since errors are oftenly related to files that cannot be saved by
@@ -103,11 +108,11 @@ verify the backup yourself before trusting it !
 "
 
 tar_message="$(tac $LOGFILE | grep -m1 '^Total bytes written: ')"
-if [ $tar_rc -eq 0 -a "$tar_message" ] ; then
+if [ $backup_prog_rc -eq 0 -a "$tar_message" ] ; then
 	LogPrint "$tar_message in $transfertime seconds."
 elif [ "$size" ]; then
 	LogPrint "Archived $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"
 fi
 
-### Move progress log to backup media
-mv "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log"
+### Copy progress log to backup media
+cp "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log"

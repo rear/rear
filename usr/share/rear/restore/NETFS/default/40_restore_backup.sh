@@ -24,7 +24,8 @@ case "$BACKUP_PROG" in
 			$BACKUP_PROG_OPTIONS $backuparchive
 	;;
 esac >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log"
-echo $? >$BUILD_DIR/retval
+# important trick: the backup prog is the last in each case entry and the case .. esac is the last command
+# in the (..) subshell. As a result the return code of the subshell is the return code of the backup prog!
 ) &
 BackupPID=$!
 starttime=$SECONDS
@@ -52,11 +53,16 @@ esac
 ProgressStop
 
 transfertime="$((SECONDS-starttime))"
-tar_rc="$(cat $BUILD_DIR/retval)"
+
+
+# harvest return code from background job. The kill -0 $BackupPID loop above should
+# have made sure that this wait won't do any real "waiting" :-)
+wait $BackupPID
+backup_prog_rc=$?
 
 sleep 1
-test "$tar_rc" -gt 0 && LogPrint "WARNING !
-There was an error (Nr. $(cat $BUILD_DIR/retval)) while restoring the archive. 
+test "$backup_prog_rc" -gt 0 && LogPrint "WARNING !
+There was an error (Nr. $backup_prog_rc) while restoring the archive. 
 Please check '$LOGFILE' for more information. You should also
 manually check the restored system to see wether it is complete.
 "
@@ -64,7 +70,7 @@ manually check the restored system to see wether it is complete.
 # TODO if size is not given then calculate it from backuparchive_size
 
 tar_message="$(tac $LOGFILE | grep -m1 '^Total bytes written: ')"
-if [ $tar_rc -eq 0 -a "$tar_message" ] ; then
+if [ $backup_prog_rc -eq 0 -a "$tar_message" ] ; then
 	LogPrint "$tar_message in $transfertime seconds."
 elif [ "$size" ]; then
 	LogPrint "Restored $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"

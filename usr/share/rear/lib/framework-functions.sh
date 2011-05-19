@@ -28,17 +28,19 @@ function Source() {
 		Error "$1 is a directory, cannot source"
 	fi
 	if test -s "$1" ; then
+		local relname="${1##$SHARE_DIR/}"
 		if test "$SIMULATE" && expr "$1" : "$SHARE_DIR" >/dev/null ; then
 			# simulate sourcing the scripts in $SHARE_DIR
-			LogPrint "Source ${1##$SHARE_DIR/}"
+			LogPrint "Source $relname"
 		else
-			# step-by-step mode if needed
-			test "$STEPBYSTEP" && read -p "Press ENTER to include '$1' ..." 2>&1
+			# step-by-step mode or brakepoint if needed
+			[[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == @($BREAKPOINT) ) ]] && read -p "Press ENTER to include '$1' ..." 2>&1
 
 			Log "Including ${1##$SHARE_DIR/}"
 			test "$DEBUGSCRIPTS" && set -x
 			. "$1"
 			test "$DEBUGSCRIPTS" && set +x
+			[[ "$BREAKPOINT" && "$relname" == @($BREAKPOINT) ]] && read -p "Press ENTER to continue ..." 2>&1
 		fi
 	else
 		Log "Skipping $1 (file not found or empty)"
