@@ -179,6 +179,10 @@ get_component_type() {
 
 # Function returns 0 when v1 is greater or equal than v2
 version_newer() {
+	[ "$1" = "$2" ] || [[ "$1" > "$2" ]]
+}
+
+broken_version_newer() {
   local v1list=( ${1//[-.]/ } )
   local v2list=( ${2//[-.]/ } )
 
