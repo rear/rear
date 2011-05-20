@@ -60,6 +60,11 @@ mdadm --detail --scan --config=partitions | while read ARRAY mddev options ; do
 	for opt in $options ; do
 		key="${opt%%=*}"
 		val="${opt##*=}"
+		# work around some known mdadm bugs:
+		if test "$key" = metadata -a "$val" = 00.90 ; then
+			# mdadm gives us 00.90 but expects 0.90 back :-(
+			val=0.90
+		fi
 		# I don't remember what for we need the variable defined here
 		# So I take it out and wait who cries...
 		### Schlomo removed ### declare MD_OPTION_${key//-/_}="$val"
