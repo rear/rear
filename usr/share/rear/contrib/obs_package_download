@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# download all binaries from obs
+#
+# params:
+# $1 = rear version
+# $2 = destination dir
+#
+# in the destination dir we build a directory structure like this:
+# <version>/<distro>/<arch>
+
+OBS_PROJECT=home:sschapiro
+OBS_PACKAGE=ReaR
+
+die() {
+	echo 1>&2 "ERROR: $@"
+	exit 1
+}
+
+test "$1" -a "$2" -a -d "$2" || die "wrong args. Usage: $0 <version> <dest-dir>"
+
+DEST_DIR="$2/$1"
+
+mkdir -p "$DEST_DIR" || die "Could not mkdir $DEST_DIR"
+
+while read REPO ARCH junk ; do
+	test "$REPO" -a "$ARCH" || die "could not read distro and arch: '$REPO $ARCH $junk'"
+	mkdir -p "$DEST_DIR/$REPO/$ARCH"
+	osc getbinaries -d "$DEST_DIR/$REPO/$ARCH" $OBS_PROJECT $OBS_PACKAGE $REPO $ARCH || die "Could not fetch binaries for $OBS_PROJECT $OBS_PACKAGE $REPO $ARCH"
+done < <(osc repos $OBS_PROJECT)
+
