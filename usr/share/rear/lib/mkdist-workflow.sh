@@ -44,6 +44,9 @@ WORKFLOW_mkdist_postprocess () {
 	# remove current recovery information (pre-1.7.15)
 	rm -Rf .$CONFIG_DIR/recovery
 
+	# remove development files
+	rm -Rf .project .settings .externalToolBuilders
+
 	cat >./$CONFIG_DIR/local.conf <<EOF
 # sample local configuration
 

@@ -23,7 +23,7 @@
 
 # Versioning
 PRODUCT="Relax & Recover"
-VERSION="0.0.0"
+VERSION="1.11.0"
 RELEASE_DATE='$Date$'
 # remove SVN related junk from release date
 RELEASE_DATE="${RELEASE_DATE#\$Date: }"
