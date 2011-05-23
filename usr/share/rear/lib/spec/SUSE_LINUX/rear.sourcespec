@@ -98,6 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon May 23 2011 Gratien D'haese <gdha at sourceforge.net> - 1.11.0-1
+- placeholder for release
+
 * Mon Jan 24 2011 Gratien D'haese <gdha at sourceforge.net> - 1.9-1
 - added AUTHORS and TODO to %%doc
 

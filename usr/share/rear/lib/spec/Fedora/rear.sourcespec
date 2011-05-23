@@ -90,18 +90,15 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon May 23 2011 Gratien D'haese <gdha at sourceforge.net> - 1.11.0-1
+- placeholder for release
+
 * Mon Jan 24 2011 Gratien D'haese <gdha at sourceforge.net> - 1.9-1
 - New development release with P2V, V2V functionality, and more
 - added AUTHORS, TODO to %%doc and rm from datadir
 
 * Fri Jun 04 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.25-1
 - added the %%ifarch part for syslinux to avoid warning on ppc/ppc64
-
-* Wed Feb 24 2010 Gratien D'haese <gdha at sourceforge.net> - 1.7.24-1
-- update spec file for fedora12
-
-* Mon Nov 16 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.22-1
-- Changed Requires fields for Fedora 10 and higher
 
 * Thu Apr 02 2009 Gratien D'haese <gdha at sourceforge.net> - 1.7.20-1
 - update %%_localstatedir/rear to %%_localstatedir/lib/rear
