@@ -17,6 +17,21 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
             layout=$( grep "Layout" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
             chunksize=$( grep "Chunk Size" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2" | sed -r 's/^([0-9]+).+/\1/')
             
+            # fix up layout for RAID10:
+            # > near=2,far=1 -> n2
+            if [ "$level" = "raid10" ] ; then
+                OIFS=$IFS
+                IFS=","
+                for param in "$layout" ; do
+                    copies=${layout%=*}
+                    number=${layout#*=}
+                    if [ "$number" -gt 1 ] ; then
+                        layout="${copies:0:1}$number"
+                    fi
+                done
+                IFS=$OIFS
+            fi
+            
             ndevices=$( grep "Raid Devices" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
             totaldevices=$( grep "Total Devices" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
             let sparedevices=$totaldevices-$ndevices
