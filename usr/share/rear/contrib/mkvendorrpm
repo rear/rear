@@ -36,22 +36,8 @@ fi
 if [ "$VERSION" = 0.0.0 -a -d "$rear_root/.svn" ] ; then
 	# try to set version from SVN
 	svn up "$rear_root" >&/dev/null
-	read junk rev < <(svn info .. | grep ^Revision)
+	read junk rev < <(svn info "$rear_root" | grep ^Revision)
 	VERSION="0.0.$rev"
-fi
-
-# If VERSION is still 0.0.0 then we will try to check some local files
-if [ "${VERSION}" = "0.0.0" ]; then
-	# 0.0.0 is the version nr of the trunk; extract the version nr from CHANGES or VERSION files
-	if [ -f $rear_root/usr/share/rear/VERSION ]; then
-		VERSION1=`cat $rear_root/usr/share/rear/VERSION`
-	else
-		VERSION1="0.0.0"
-	fi
-	if [ -f $rear_root/usr/share/rear/CHANGES ]; then
-		VERSION2=`grep -i ^version $rear_root/usr/share/rear/CHANGES | head -1 | awk '{print $2}'`
-		VERSION=`echo -e ${VERSION1}'\n'${VERSION2} | sort -n | tail -1`
-	fi
 fi
 }
 ##################### M A I N ####################
