@@ -14,6 +14,7 @@ case "$LOADER_TYPE" in
 	have to restore the boot loader MANUALLY after the restore !!!
 "
 		echo "grub --batch </etc/grub.conf"
+		COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/grub.conf )
 		Log "Using boot loader GRUB"
 	;;
 	LILO|lilo)

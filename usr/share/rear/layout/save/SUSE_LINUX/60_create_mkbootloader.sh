@@ -1,0 +1,1 @@
+../../../dr/SUSE_LINUX/60_create_mkbootloader.sh
