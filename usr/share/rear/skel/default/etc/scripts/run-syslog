@@ -4,11 +4,20 @@
 
 if type -p rsyslogd >/dev/null ; then
         exec rsyslogd -c3 -n -i /var/run/rsyslogd.pid -f /etc/rsyslog.conf -M /lib$(test -s /lib64/imklog.so && echo 64)
-else
+elif type -p syslog-ng >/dev/null ; then
+    # need get_version and version_newer functions
+    . /usr/share/rear/lib/layout-functions.sh
+
+    ng_version=$(get_version syslog-ng --version)
+    if version_newer "$ng_version" "3" ; then
+        # /var/empty needs to be owned by root
+        chown root:root /var/empty
+        exec syslog-ng -p /var/run/syslog-ng.pid -f /etc/syslog-ng-v3.conf -F --no-caps
+    else
         klogd -c 1 -x
-        if type -p syslog-ng >/dev/null ; then
-                exec syslog-ng -p /var/run/syslog-ng.pid -f /etc/syslog-ng.conf -F
-        else
-                exec syslogd -f /etc/syslog.conf -n 
-        fi
+        exec syslog-ng -p /var/run/syslog-ng.pid -f /etc/syslog-ng.conf -F
+    fi
+elif type -p syslogd >/dev/null ; then
+    klogd -c 1 -x
+    exec syslogd -f /etc/syslog.conf -n 
 fi
