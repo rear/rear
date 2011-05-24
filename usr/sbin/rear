@@ -122,6 +122,9 @@ if [ $$ != "$(pidof -x "$SCRIPT_FILE")" ] ; then
         exit 1
 fi
 
+# set some bash options
+shopt -s nullglob extglob
+hash -r
 
 # make sure that we use only english
 export LC_CTYPE=C LC_ALL=C LANG=C
@@ -161,10 +164,6 @@ if test "$DEBUG" ; then
 fi
 
 test "$SIMULATE" && LogPrint "Simulation mode activated, ReaR base directory: $SHARE_DIR"
-
-# set some bash options
-shopt -s nullglob extglob
-hash -r
 
 # All workflows need to read the configurations first.
 # Combine configuration files
