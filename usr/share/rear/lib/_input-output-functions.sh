@@ -77,7 +77,7 @@ MASTER_PID=$$
 exec 7>&1
 QuietAddExitTask "exec 7>&-"
 # USR1 is used to abort on errors, not using Print to always print to the original STDOUT, even if quiet
-builtin trap "echo 'ABORTING DUE TO AN ERROR, CHECK $LOGFILE FOR DETAILS' 1>&7 ; kill $MASTER_PID" USR1
+builtin trap "echo 'Aborting due to an error, check $LOGFILE for details' 1>&7 ; kill $MASTER_PID" USR1
 
 # make sure nobody else can use trap
 function trap () {
@@ -89,16 +89,42 @@ Error() {
 		# Print stack strace on error
 		let c=0 ; while caller $c ; do let c++ ; done | sed 's/^/Trace: /' 1>&2 ; unset c
 	fi
-
+	# If first argument is numerical, use it as exit code
+	if [ $1 -eq $1 ] 2>/dev/null; then
+		EXIT_CODE=$1
+		shift
+	else
+		EXIT_CODE=1
+	fi
 	VERBOSE=1
-	EXIT_CODE=1
 	LogPrint "ERROR: $*"
 	kill -USR1 $MASTER_PID # make sure that Error exits the master process, even if called from child processes :-)
 }
 
+StopIfError() {
+	# If return code is non-zero, bail out
+	if (( $? != 0 )); then
+		Error "$@"
+	fi
+}
+
 BugError() {
+	# If first argument is numerical, use it as exit code
+	if [ $1 -eq $1 ] 2>/dev/null; then
+		EXIT_CODE=$1
+		shift
+	else
+		EXIT_CODE=1
+	fi
 	Error "BUG BUG BUG! " "$@" "
 	Please report this as a bug to the authors of $PRODUCT"
+}
+
+BugIfError() {
+	# If return code is non-zero, bail out
+	if (( $? != 0 )); then
+		BugError "$@"
+	fi
 }
 
 Debug() {
@@ -107,6 +133,14 @@ Debug() {
 
 Print() {
 	test "$VERBOSE" && echo -e "$*" 1>&7
+}
+
+# print if there is an error
+PrintIfError() {
+	# If return code is non-zero, bail out
+	if (( $? != 0 )); then
+		Print "$@"
+	fi
 }
 
 Stamp() {
@@ -121,18 +155,25 @@ Log() {
 	fi 1>&2
 }
 
+# log if there is an error
+LogIfError() {
+	# If return code is non-zero, bail out
+	if (( $? != 0 )); then
+		Log "$@"
+	fi
+}
+
 LogPrint() {
 	Log "$@"
 	Print "$@"
 }
 
-# log if there is an error and exit
-# $1 = return code to check
-LogIfError() {
-	test $# -le 0 && Error "LogIfError called without return code to check !"
-	test $1 -gt 0 || return 0
-	shift
-	Error "$@"
+# log/print if there is an error
+LogPrintIfError() {
+	# If return code is non-zero, bail out
+	if (( $? != 0 )); then
+		LogPrint "$@"
+	fi
 }
 
 # setup dummy progress subsystem as a default
