@@ -6,7 +6,8 @@ if test "$USB_UMOUNTCMD" ; then
 else
 	Log "Running 'umount -f ${BUILD_DIR}/usbfs'"
 	umount -f "${BUILD_DIR}/usbfs"
-fi || Error "Could not unmount directory ${BUILD_DIR}/usbfs"
+fi
+StopIfError "Could not unmount directory ${BUILD_DIR}/usbfs"
 
 # argument to RemoveExitTask must be identical to AddExitTask
 RemoveExitTask "umount -fv '$BUILD_DIR/usbfs' 1>&2"

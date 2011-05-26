@@ -1,30 +1,95 @@
+function get_syslinux_version {
+       local syslinux_version
+
+       # Test for the syslinux version
+       syslinux_version=$(get_version extlinux --version)
+       if [[ -z "$syslinux_version" ]]; then
+               syslinux_version=$(get_version syslinux --version)
+       fi
+
+       if [[ -z "$syslinux_version" ]]; then
+               syslinux_version=$(strings $SYSLINUX_DIR/isolinux.bin | grep ISOLINUX | he ad -1 | cut -d' ' -f2)
+       fi
+
+       if [[ -z "$syslinux_version" ]]; then
+               Log "Could not detect syslinux version, assuming it is old"
+       fi
+
+       echo "$syslinux_version"
+}
+
 function set_syslinux_features {
 	# Test for features in syslinux
 	# true if syslinux supports booting from /boot or only from / of the USB media
 	FEATURE_SYSLINUX_BOOT_SYSLINUX=
-	# true if syslinux supports MENU HELP directive
-	FEATURE_SYSLINUX_MENU_HELP=
 	# true if syslinux and extlinux support localboot
 	FEATURE_SYSLINUX_EXTLINUX_WITH_LOCALBOOT=
+	# true if extlinux supports the -i option
+	FEATURE_SYSLINUX_EXTLINUX_INSTALL=
+	# true if syslinux supports INCLUDE directive
+	FEATURE_SYSLINUX_INCLUDE=
+	# true if syslinux supports MENU DEFAULT directive
+	FEATURE_SYSLINUX_MENU_DEFAULT=
+	# true if syslinux supports MENU HELP directive
+	FEATURE_SYSLINUX_MENU_HELP=
+	# true if syslinux supports MENU BEGIN/MENU END/MENU QUIT directives
+	FEATURE_SYSLINUX_SUBMENU=
+	# true if syslinux supports MENU HIDDEN directive
+	FEATURE_SYSLINUX_MENU_HIDDEN=
+	# true if syslinux supports TEXT HELP directive
+	FEATURE_SYSLINUX_TEXT_HELP=
 
-	local syslinux_version
-
-	# Test for the syslinux version
-	if type -p extlinux >/dev/null; then
-		syslinux_version=$(get_version extlinux --version) || Log "Could not detect extlinux version, assuming it is old"
-	else
-		syslinux_version=$(get_version syslinux --version) || Log "Could not detect syslinux version, assuming it is old"
+	# Define the syslinux directory for later usage
+	if [[ -z "$SYSLINUX_DIR" ]]; then
+		for file in /usr/{share,lib,libexec}/*/isolinux.bin ; do
+			if [[ -s "$file" ]]; then
+				SYSLINUX_DIR="$(dirname $file)"
+				break # for loop
+			fi
+		done
 	fi
+	[[ "$SYSLINUX_DIR" ]]
+	StopIfError "Could not find a working syslinux path."
 
-	if version_newer "$syslinux_version" 4.00 ; then
-	    FEATURE_SYSLINUX_MENU_HELP="y"
+	local syslinux_version=$(get_syslinux_version)
+	if [[ "$1" ]] && version_newer "$1" "$syslinux_version"; then
+		syslinux_version="$1"
 	fi
-	if version_newer "$syslinux_version" 3.70 ; then
-		FEATURE_SYSLINUX_EXTLINUX_WITH_LOCALBOOT=1
+	Log "Features based on syslinux version: $syslinux_version"
+
+	if version_newer "$syslinux_version" 4.00; then
+		FEATURE_SYSLINUX_MENU_HELP="y"
+	fi
+	if version_newer "$syslinux_version" 3.72; then
+		FEATURE_SYSLINUX_MENU_DEFAULT="y"
+	fi
+	if version_newer "$syslinux_version" 3.70; then
+		FEATURE_SYSLINUX_EXTLINUX_WITH_LOCALBOOT="y"
+	fi
+	if version_newer "$syslinux_version" 3.62; then
+		FEATURE_SYSLINUX_SUBMENU="y"
+	fi
+	if version_newer "$syslinux_version" 3.52; then
+		FEATURE_SYSLINUX_MENU_HIDDEN="y"
+	fi
+	if version_newer "$syslinux_version" 3.50; then
+		FEATURE_SYSLINUX_INCLUDE="y"
+		FEATURE_SYSLINUX_TEXT_HELP="y"
 	fi
 	if version_newer "$syslinux_version" 3.35; then
-	    FEATURE_SYSLINUX_BOOT_SYSLINUX="y"
+		FEATURE_SYSLINUX_BOOT_SYSLINUX="y"
 	fi
+	if version_newer "$syslinux_version" 3.20; then
+		FEATURE_SYSLINUX_EXTLINUX_INSTALL="y"
+	fi
+
+	if [[ "$FEATURE_SYSLINUX_BOOT_SYSLINUX" ]]; then
+		SYSLINUX_PREFIX="boot/syslinux"
+	else
+		SYSLINUX_PREFIX=
+	fi
+	Log "Using syslinux prefix: $SYSLINUX_PREFIX"
+
 
 	FEATURE_SYSLINUX_IS_SET=1
 }
@@ -36,9 +101,12 @@ function set_syslinux_features {
 # binaries will be copied to
 # the optional second argment is the target flavour and defaults to isolinux
 function make_syslinux_config {
-	[ -d "$1" ] || BugError "Required argument for BOOT_DIR is missing"
-	[ -d "$SYSLINUX_DIR" ] || BugError "Required environment SYSLINUX_DIR ($SYSLINX_DIR) is not set or not a directory"
-	[ "$FEATURE_SYSLINUX_IS_SET" ] || BugError "You must call set_syslinux_features before"
+	[[ -d "$1" ]]
+	BugIfError "Required argument for BOOT_DIR is missing"
+	[[ -d "$SYSLINUX_DIR" ]]
+	BugIfError "Required environment SYSLINUX_DIR ($SYSLINX_DIR) is not set or not a d irectory"
+	[[ "$FEATURE_SYSLINUX_IS_SET" ]]
+	BugIfError "You must call set_syslinux_features before"
 
 	local BOOT_DIR="$1" ; shift
 	local flavour="${1:-isolinux}" ; shift

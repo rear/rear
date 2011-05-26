@@ -1,14 +1,15 @@
 [ "$USB_DEVICE" ]
 ProgressStopIfError $? "USB device (\$USB_DEVICE) is not set."
-[ -b "$USB_DEVICE" ]
-ProgressStopIfError $? "USB device '$USB_DEVICE' is not a block device"
 
 # Attempt to find the real USB device by trying its parent
 # Return a proper short device name using udev
 REAL_USB_DEVICE=$(readlink -f $USB_DEVICE)
 
-[ "$REAL_USB_DEVICE" -a -b "$REAL_USB_DEVICE" ]
-ProgressStopIfError $? "Unable to determine real USB device based on USB device '$USB_DEVICE'."
+[ -b "$REAL_USB_DEVICE" ]
+ProgressStopIfError $? "USB device '$USB_DEVICE' is not a block device"
+
+! grep -q "^$REAL_USB_DEVICE " /proc/mounts
+ProgressStopIfError $? "USB device '$USB_DEVICE' is already mounted on $(grep -P "^$REAL_USB_DEVICE\\s" /proc/mounts | cut -d' ' -f2 |tail -1)"
 
 # We cannot use the layout dependency code in the backup phase (yet)
 #RAW_USB_DEVICE=$(find_disk $REAL_USB_DEVICE)
@@ -29,9 +30,3 @@ fi
 
 [ "$RAW_USB_DEVICE" -a -b "$RAW_USB_DEVICE" ]
 ProgressStopIfError $? "Unable to determine raw USB device for $REAL_USB_DEVICE"
-
-ID_FS_TYPE=
-eval $(vol_id "$REAL_USB_DEVICE")
-ProgressStopIfError $? "Could not determine filesystem info for '$REAL_USB_DEVICE'"
-[[ "$ID_FS_TYPE" == @(btr*|ext*) ]]
-ProgressStopIfError $? "USB device $REAL_USB_DEVICE must be formatted with ext2/3/4 or btrfs file system"
