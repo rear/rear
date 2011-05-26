@@ -26,7 +26,7 @@ while read done name type junk ; do
             remove_second_component $type $name
             ;;
         lvmvol)
-            name=${name#/dev/mapper/*-}
+            name=${name##/dev/mapper/*-}
             remove_second_component $type $name
             ;;
         fs)
