@@ -179,10 +179,6 @@ get_component_type() {
 
 # Function returns 0 when v1 is greater or equal than v2
 version_newer() {
-	[ "$1" = "$2" ] || [[ "$1" > "$2" ]]
-}
-
-broken_version_newer() {
   local v1list=( ${1//[-.]/ } )
   local v2list=( ${2//[-.]/ } )
 
@@ -195,16 +191,20 @@ broken_version_newer() {
   local pos
   for pos in $(seq 0 $(( max -1 ))); do
     ### Arithmetic comparison
-    if (( 10#0${v1list[$pos]} >= 0 && 10#0${v2list[$pos]} >=0 )) 2>/dev/null; then
+    if (( 10#0${v1list[$pos]} >= 0 && 10#0${v2list[$pos]} >= 0 )) 2>/dev/null; then
 #      echo "pos $pos: arithm ${v1list[$pos]} vs ${v2list[$pos]}"
       if (( 10#0${v1list[$pos]} < 10#0${v2list[$pos]} )); then
         return 1
+      elif (( 10#0${v1list[$pos]} > 10#0${v2list[$pos]} )); then
+        return 0
       fi
     ### String comparison
     else
 #      echo "pos $pos: string ${v1list[$pos]} vs ${v2list[$pos]}"
       if [[ "${v1list[$pos]}" < "${v2list[$pos]}" ]]; then
         return 1
+      elif [[ "${v1list[$pos]}" > "${v2list[$pos]}" ]]; then
+        return 0
       fi
     fi
   done
