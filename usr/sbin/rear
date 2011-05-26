@@ -158,12 +158,14 @@ fi
 # enable debug output of the progress pipe
 if test "$DEBUG" ; then
         if test "$ProgressPID" ; then
-                kill -WINCH $ProgressPID || BugError "Could not kill -PWR ProgressPID"
+                kill -WINCH $ProgressPID
+                BugIfError "Could not kill -PWR ProgressPID"
 	fi
 	KEEP_BUILD_DIR=1
 fi
 
-test "$SIMULATE" && LogPrint "Simulation mode activated, ReaR base directory: $SHARE_DIR"
+[[ -z "$SIMULATE" ]]
+LogPrintIfError "Simulation mode activated, ReaR base directory: $SHARE_DIR"
 
 # All workflows need to read the configurations first.
 # Combine configuration files
@@ -194,7 +196,8 @@ for f in "${REQUIRED_PROGS[@]}" ; do
 		MISSING_PROGS=( "${MISSING_PROGS[@]}" "$f" )
 	fi
 done
-test "$MISSING_PROGS" &&  Error "cannot find required programs: ${MISSING_PROGS[@]}"
+[[ -z "$MISSING_PROGS" ]]
+StopIfError "cannot find required programs: ${MISSING_PROGS[@]}"
 
 VERSION_INFO="
 $PRODUCT Version $VERSION / $RELEASE_DATE
@@ -207,13 +210,16 @@ Build date: $(date -R)
 "
 
 # create temporary work area and register removal exit task
-BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX)" || Error "Could not create build area '$BUILD_DIR'"
+BUILD_DIR="$(mktemp -d -t rear.XXXXXXXXXXXXXXX)"
+StopIfError "Could not create build area '$BUILD_DIR'"
 QuietAddExitTask cleanup_build_area_and_end_program
 Log "Using build area '$BUILD_DIR'"
 ROOTFS_DIR=$BUILD_DIR/rootfs
 TMP_DIR=$BUILD_DIR/tmp
-mkdir -p $ROOTFS_DIR || Error "Could not create $ROOTFS_DIR"
-mkdir -p $TMP_DIR || Error "Could not create $TMP_DIR"
+mkdir -p $ROOTFS_DIR
+StopIfError "Could not create $ROOTFS_DIR"
+mkdir -p $TMP_DIR
+StopIfError "Could not create $TMP_DIR"
 
 # Check for and run the requested workflow
 if type -t WORKFLOW_$WORKFLOW >/dev/null ; then
