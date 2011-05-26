@@ -5,20 +5,21 @@ if [[ -z "$GRUB_RESCUE" ]]; then
     return
 fi
 
-if [[ ! -r "$BUILD_DIR/kernel" ]]; then
-    Error "Failed to find kernel, updating GRUB failed."
-fi
+[[ -r "$BUILD_DIR/kernel" ]]
+StopIfError "Failed to find kernel, updating GRUB failed."
 
-if [[ ! -r "$BUILD_DIR/initrd.cgz" ]]; then
-    Error "Failed to find initrd.cgz, updating GRUB failed."
-fi
+[[ -r "$BUILD_DIR/initrd.cgz" ]]
+StopIfError "Failed to find initrd.cgz, updating GRUB failed."
 
-cp -av $BUILD_DIR/kernel /boot/rear-kernel >&2
-cp -av $BUILD_DIR/initrd.cgz /boot/rear-initrd.cgz >&2
+cp -af $BUILD_DIR/kernel /boot/rear-kernel >&2
+cp -af $BUILD_DIR/initrd.cgz /boot/rear-initrd.cgz >&2
 
 grub_conf=$(readlink -f /boot/grub/menu.lst)
-if [[ ! -w "$grub_conf" ]]; then
-    Error "GRUB configuration cannot be modified."
+[[ -w "$grub_conf" ]]
+StopIfError "GRUB configuration cannot be modified."
+
+if [[ "${GRUB_RESCUE_PASSWORD:0:3}" == '$1$' ]]; then
+    GRUB_RESCUE_PASSWORD="--md5 $GRUB_RESCUE_PASSWORD"
 fi
 
 awk -f- $grub_conf >$TMP_DIR/menu.lst <<EOF
@@ -46,10 +47,11 @@ END {
 }
 EOF
 
-if [[ ! -s $grub_conf ]]; then
-    BugError "Mofified GRUB is empty"
-elif ! diff -u $grub_conf $TMP_DIR/menu.lst >&2; then
+[[ -s $grub_conf ]]
+BugIfError "Mofified GRUB is empty !"
+
+if ! diff -u $grub_conf $TMP_DIR/menu.lst >&2; then
     LogPrint "Modifying local GRUB configuration"
-    cp -av $grub_conf $grub_conf.old >&2
+    cp -af $grub_conf $grub_conf.old >&2
     cat $TMP_DIR/menu.lst >$grub_conf
 fi
