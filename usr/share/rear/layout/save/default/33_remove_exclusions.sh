@@ -3,12 +3,12 @@
 
 # Component in position 2
 remove_component() {
-    sed -i "\,^$1 $2,d" $LAYOUT_FILE
+    sed -i "s|^$1 $2 |\# $1 $2 |" $LAYOUT_FILE
 }
 
 # Component in position 3
 remove_second_component() {
-    sed -i -r "\,^$1 [^ ]+ $2,d" $LAYOUT_FILE
+    sed -i -r "s|^$1 ([^ ]+) $2 |\# $1 \1 $2 |" $LAYOUT_FILE
 }
 
 # Remove lines in the LAYOUT_FILE
