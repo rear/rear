@@ -24,9 +24,8 @@ function Source() {
 	if test -z "$1" ; then
 		return
 	fi
-	if test -d "$1" ; then
-		Error "$1 is a directory, cannot source"
-	fi
+	[[ ! -d "$1" ]]
+	StopIfError "$1 is a directory, cannot source"
 	if test -s "$1" ; then
 		local relname="${1##$SHARE_DIR/}"
 		if test "$SIMULATE" && expr "$1" : "$SHARE_DIR" >/dev/null ; then

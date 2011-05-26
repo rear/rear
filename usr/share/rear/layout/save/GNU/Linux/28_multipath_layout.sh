@@ -11,9 +11,8 @@ while read dm_name junk ; do
     # we try to find the sysfs name
     name=$(get_sysfs_name $dev_name)
     
-    if [ ! -e /sys/block/$name ] ; then
-        Log "Did not find sysfs name for device $dm_name (/sys/block/$name)"
-    fi
+    [[ -e /sys/block/$name ]]
+    LogIfError "Did not find sysfs name for device $dm_name (/sys/block/$name)"
     
     slaves=""
     for slave in /sys/block/$name/slaves/* ; do
