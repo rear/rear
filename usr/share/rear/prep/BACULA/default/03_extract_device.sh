@@ -13,3 +13,7 @@ if [[ -z "$ISO_URL" ]]; then
     fi
     ISO_URL=obdr://${tape_device//\/st/\/nst}
 fi
+
+if [[ -z "$TAPE_DEVICE" ]]; then
+    TAPE_DEVICE=$tape_device
+fi

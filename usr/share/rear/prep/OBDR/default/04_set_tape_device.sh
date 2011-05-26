@@ -1,8 +1,6 @@
 # Extract the tape device from ISO_URL or NETFS_URL
 # Either variable can be used, but if both are, they must be the same value
 
-TAPE_DEVICE=
-
 # First, test ISO_URL
 if [ "$ISO_URL" ]; then
     scheme="${ISO_URL%%://*}"
