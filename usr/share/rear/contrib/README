@@ -39,3 +39,11 @@ emerge -av rear
 ----------------------------------------------------------------------------------------
 
 Thanks to Sven Steiner for contributing this.
+
+PKGBUILD
+----------------
+Arch Linux PKGBUILD to create the rear-svn package of trunk/
+$ mkdir -p ~/tmp/rear-svn
+$ cd ~/tmp/rear-svn
+$ makepkg
+# pacman -U rear-svn-$REVNO-1-any.pkg.tar.xz

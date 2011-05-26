@@ -1,0 +1,33 @@
+# Maintainer: Jeroen Hoekx <jeroen.hoekx AT hamok DOT be>
+pkgname=rear-svn
+pkgver=494
+pkgrel=1
+pkgdesc="Linux Disaster Recovery"
+arch=(any)
+url="http://rear.sourceforge.net/"
+license=('GPL')
+depends=(nfs-utils lsb-release iproute2 parted mingetty cdrkit cpio)
+makedepends=('subversion')
+backup=('etc/rear/local.conf')
+source=()
+md5sums=()
+
+_svntrunk=https://rear.svn.sourceforge.net/svnroot/rear/trunk
+_svnmod=trunk
+
+build() {
+  cd "$srcdir"
+
+  if [ -d $_svnmod/.svn ]; then
+    (cd $_svnmod && svn up -r $pkgver)
+  else
+    svn co $_svntrunk --config-dir ./ -r $pkgver $_svnmod
+  fi
+
+  msg "SVN checkout done or server timeout"
+}
+
+package() {
+  cp -a "$srcdir/$_svnmod/"* "$pkgdir/"
+  rm -rf $(find "$pkgdir" -type d -name ".svn")
+}
