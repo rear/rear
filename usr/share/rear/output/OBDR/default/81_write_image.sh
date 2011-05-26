@@ -1,8 +1,8 @@
 # Write the ISO image to the tape
 
-if [ ! -r "$ISO_DIR/$ISO_PREFIX.iso" ]; then
-    Error "The ISO image $ISO_DIR/$ISO_PREFIX.iso was not found or could not be read."
-fi
+[[ -r "$ISO_DIR/$ISO_PREFIX.iso" ]]
+ProgressStopIfError $? "The ISO image $ISO_DIR/$ISO_PREFIX.iso was not found or could not be read."
+ProgressStep
 
 dd if=$ISO_DIR/$ISO_PREFIX.iso of=${TAPE_DEVICE} ${OBDR_BLOCKSIZE:+bs=$OBDR_BLOCKSIZE}
 ProgressStopIfError $? "ISO image could not be written to ${TAPE_DEVICE}"
