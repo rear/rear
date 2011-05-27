@@ -66,7 +66,15 @@ while read type remainder ; do
             
             # find dependencies on other filesystems
             while read fs bd nmp junk; do
-                if [ "${mp#$nmp}" != "$mp" ] && [ "$mp" != "$nmp" ]; then
+                if [ "$nmp" != "/" ] ; then
+                    # make sure we only match complete paths
+                    # e.g. not /data as a parent of /data1
+                    temp_nmp="$nmp/"
+                else
+                    temp_nmp="$nmp"
+                fi
+
+                if [ "${mp#$temp_nmp}" != "${mp}" ] && [ "$mp" != "$nmp" ]; then
                     add_dependency "fs:$mp" "fs:$nmp"
                 fi
             done < <(grep "^fs" $LAYOUT_FILE)
