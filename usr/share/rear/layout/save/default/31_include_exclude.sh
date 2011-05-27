@@ -41,3 +41,9 @@ if [ ${#ONLY_INCLUDE_VG[@]} -gt 0 ] ; then
         fi
     done < <(grep ^lvmgrp $LAYOUT_FILE)
 fi
+
+for component in "${EXCLUDE_COMPONENTS[@]}" ; do
+    LogPrint "Excluding component $component."
+    mark_as_done "$component"
+    mark_tree_as_done "$component"
+done
