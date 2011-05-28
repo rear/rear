@@ -8,7 +8,7 @@ function get_syslinux_version {
        fi
 
        if [[ -z "$syslinux_version" ]]; then
-               syslinux_version=$(strings $SYSLINUX_DIR/isolinux.bin | grep ISOLINUX | he ad -1 | cut -d' ' -f2)
+               syslinux_version=$(strings $SYSLINUX_DIR/isolinux.bin | grep ISOLINUX | head -1 | cut -d' ' -f2)
        fi
 
        if [[ -z "$syslinux_version" ]]; then
