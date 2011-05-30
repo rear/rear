@@ -1,7 +1,13 @@
-# Add the rescue kernel and initrd to the current GRUB
+# Add the rescue kernel and initrd to the local GRUB Legacy
 
 # Only do when explicitely enabled
-if [[ -z "$GRUB_RESCUE" ]]; then
+if [[ ! "$GRUB_RESCUE" =~ '^[yY1]' ]]; then
+    return
+fi
+
+# Only do when system has GRUB Legacy
+grub_version=$(get_version "grub --version")
+if version_newer "$grub_version" 1.0; then
     return
 fi
 
