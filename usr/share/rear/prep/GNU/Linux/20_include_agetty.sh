@@ -1,10 +1,18 @@
 # For serial support we need to include the agetty binary, but Debian distro's
 # use getty instead of agetty.
 
-# if the variable is not set or defined as n/N then we do nothing
-[ -z "$USE_SERIAL_CONSOLE" ] && return
-if [ "x${USE_SERIAL_CONSOLE}" = "xN" ] || [ "x${USE_SERIAL_CONSOLE}" = "xn" ]; then 
-	return
+# Enable serial console if possible, when not specified
+if [[ -z "$USE_SERIAL_CONSOLE" ]]; then
+    for devnode in $(ls /dev/ttyS[0-9]* | sort); do
+        if stty -F $devnode &>/dev/null; then
+            USE_SERIAL_CONSOLE=y
+        fi
+    done
+fi
+
+# Unless explicitly disabled
+if [[ ! "$USE_SERIAL_CONSOLE" =~ '^[yY1]' ]]; then
+    return
 fi
 
 if [ -f /sbin/getty ]; then

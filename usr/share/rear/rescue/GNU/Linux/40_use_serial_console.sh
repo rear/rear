@@ -1,12 +1,27 @@
-# if the variable is not set or defined as n/N then we do nothing
-[ -z "$USE_SERIAL_CONSOLE" ] && return
-if [ "x${USE_SERIAL_CONSOLE}" = "xN" ] || [ "x${USE_SERIAL_CONSOLE}" = "xn" ]; then 
-	return
+# Enable serial console, unless explicitly disabled
+if [[ ! "$USE_SERIAL_CONSOLE" =~ '^[yY1]' ]]; then
+    return
 fi
 
-echo "
-s0:2345:respawn:/sbin/$GETTY 115200 ttyS0 vt100
-s1:2345:respawn:/sbin/$GETTY 115200 ttyS1 vt100
+# Add serial console to /etc/inittab and kernel cmdline
+cmdline=
+for param in $KERNEL_CMDLINE; do
+    case "$param" in
+        (console=*) ;;
+        (*) cmdline="$cmdline$param ";;
+    esac
+done
 
-" >>$ROOTFS_DIR/etc/inittab
-Log "Serial Console support requested - adding required entries for $GETTY in inittab"
+for devnode in $(ls /dev/ttyS[0-9]* | sort); do
+    speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
+    if [ "$speed" ]; then
+        echo "s${devnode##/dev/ttyS}:2345:respawn:/sbin/$GETTY $speed ${devnode##/dev/} vt100" >>$ROOTFS_DIR/etc/inittab
+        cmdline="${cmdline}console=${devnode##/dev/},$speed "
+    fi
+done
+
+# Default to standard console (can be changed in syslinux menu at boot-time)
+KERNEL_CMDLINE="${cmdline}console=tty"
+
+Log "Serial Console support enabled - adding required entries for $GETTY in inittab"
+Log "Modified kernel commandline to: $KERNEL_CMDLINE"

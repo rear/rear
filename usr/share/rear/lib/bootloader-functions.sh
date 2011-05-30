@@ -111,9 +111,15 @@ function make_syslinux_config {
 	local BOOT_DIR="$1" ; shift
 	local flavour="${1:-isolinux}" ; shift
 
-	if [ "$USE_SERIAL_CONSOLE" ]; then
-		echo "serial 0 115200" 
-	fi
+    # Enable serial console, unless explicitly disabled
+    if [[ "$USE_SERIAL_CONSOLE" =~ '^[yY1]' ]]; then
+        for devnode in $(ls /dev/ttyS[0-9]* | sort); do
+            speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
+            if [ "$speed" ]; then
+                echo "serial ${devnode##/dev/ttyS} $speed"
+            fi
+        done
+    fi
 
 	# if we have the menu.c32 available we use it. if not we make sure that there will be no menu lines in the result
 	# so that we don't confuse older syslinux
