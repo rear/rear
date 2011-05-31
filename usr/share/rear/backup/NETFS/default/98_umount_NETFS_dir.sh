@@ -1,7 +1,7 @@
 # umount NETFS mountpoint
 
 # don't mount anything for tape backups
-if [ "$NETFS_PROTO" == "tape" -o "$NETFS_PROTO" == "obdr" ]; then
+if [ "$NETFS_PROTO" == "tape" ]; then
 	return 0
 fi
 

@@ -3,7 +3,6 @@
 # example: cifs://lucky/temp
 # example: usb:///dev/sdb1
 # example: tape:///dev/nst0
-# example: obdr:///dev/nst0
 
 NETFS_PROTO=
 NETFS_HOST=
@@ -64,7 +63,7 @@ case "$TAPE_DEVICE:$NETFS_PROTO" in
 	(:*)
 		backuparchive="${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}" 
 		;;
-	(*:obdr|*:tape)
+	(*:tape)
 		backuparchive="${TAPE_DEVICE}" 
 		;;
 esac

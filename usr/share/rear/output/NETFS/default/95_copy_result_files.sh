@@ -2,7 +2,7 @@
 # copy resulting files to network backup location
 
 # do not do this for tapes
-if [ "$NETFS_PROTO" == "tape" -o "$NETFS_PROTO" == "obdr" -o "$NETFS_PROTO" == "usb" ]; then
+if [ "$NETFS_PROTO" == "tape" -o "$NETFS_PROTO" == "usb" ]; then
 	return 0
 fi
 

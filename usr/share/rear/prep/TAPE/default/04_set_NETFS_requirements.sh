@@ -2,7 +2,7 @@
 
 if [[ -z "$NETFS_URL" ]]; then
     if [[ "$TAPE_DEVICE" ]]; then
-        NETFS_URL="obdr://$TAPE_DEVICE"
+        NETFS_URL="tape://$TAPE_DEVICE"
     else
         Error "You must specify either NETFS_URL or TAPE_DEVICE !"
     fi

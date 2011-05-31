@@ -1,7 +1,7 @@
 # check wether the archive is actually there
 
 # Don't check when backup is on a tape device
-if [ "$NETFS_PROTO" == "tape" -o "$NETFS_PROTO" == "obdr" ]; then
+if [ "$NETFS_PROTO" == "tape" ]; then
 	return
 fi
 

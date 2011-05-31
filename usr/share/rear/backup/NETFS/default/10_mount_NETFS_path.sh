@@ -2,7 +2,7 @@
 mkdir -p "$BUILD_DIR/netfs" || Error "Could not mkdir '$BUILD_DIR/netfs'"
 
 # don't mount anything for tape backups
-if [ "$NETFS_PROTO" == "tape" -o "$NETFS_PROTO" == "obdr" ]; then
+if [ "$NETFS_PROTO" == "tape" ]; then
 	return 0
 fi
 
