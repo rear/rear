@@ -1,9 +1,8 @@
 # This script copies the ISO image to the target location in ISO_URL
 
 # Check if ISO image is available
-if [[ ! -s "$ISO_DIR/$ISO_PREFIX.iso" ]]; then
-    Error "Image $ISO_DIR/$ISO_PREFIX.iso is missing or empty."
-fi
+[[ -s "$ISO_DIR/$ISO_PREFIX.iso" ]]
+StopIfError "Image $ISO_DIR/$ISO_PREFIX.iso is missing or empty."
 
 # Check if we have a target location ISO_URL
 if [[ -z "$ISO_URL" ]]; then
