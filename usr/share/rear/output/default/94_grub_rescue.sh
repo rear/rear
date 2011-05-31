@@ -17,8 +17,20 @@ StopIfError "Failed to find kernel, updating GRUB failed."
 [[ -r "$BUILD_DIR/initrd.cgz" ]]
 StopIfError "Failed to find initrd.cgz, updating GRUB failed."
 
-cp -af $BUILD_DIR/kernel /boot/rear-kernel >&2
-cp -af $BUILD_DIR/initrd.cgz /boot/rear-initrd.cgz >&2
+function total_filesize {
+    stat --printf '%s\n' $@ 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
+}
+
+available_space=$(df -Pk /boot | awk 'END { print $4 * 1024 }')
+used_space=$(total_filesize /boot/rear-kernel /boot/rear-initrd.cgz)
+required_space=$(total_filesize $BUILD_DIR/kernel $BUILD_DIR/initrd.cgz)
+
+if (( available_space + used_space < required_space )); then
+    LogPrint "WARNING: Not enough disk space available in /boot for GRUB rescue image"
+    LogPrint "           Required: $(( required_space / 1024 / 1024 )) MiB /" \
+             "Available: $(( ( available_space + used_space ) / 1024 / 1024 )) MiB"
+    return
+fi
 
 grub_conf=$(readlink -f /boot/grub/menu.lst)
 [[ -w "$grub_conf" ]]
@@ -61,3 +73,9 @@ if ! diff -u $grub_conf $TMP_DIR/menu.lst >&2; then
     cp -af $grub_conf $grub_conf.old >&2
     cat $TMP_DIR/menu.lst >$grub_conf
 fi
+
+cp -af $BUILD_DIR/kernel /boot/rear-kernel >&2
+BugIfError "Unable to copy '$BUILD_DIR/kernel' to /boot"
+
+cp -af $BUILD_DIR/initrd.cgz /boot/rear-initrd.cgz >&2
+BugIfError "Unable to copy '$BUILD_DIR/initrd.cgz' to /boot"
