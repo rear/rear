@@ -101,7 +101,7 @@ if [ ! -d "$USB_REAR_DIR" ]; then
     StopIfError "Could not create USB rear dir [$USB_REAR_DIR] !"
 fi
 
-### We generate a single syslinux.cfg for the current system
+# We generate a single syslinux.cfg for the current system
 Log "Creating $USB_PREFIX/syslinux.cfg"
 time=$(basename $USB_REAR_DIR)
 syslinux_write <<EOF 4>"$USB_REAR_DIR/syslinux.cfg"
@@ -117,20 +117,28 @@ ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${NETFS_URL:+NETFS_URL=$NETF
 
 EOF
 
-### Clean up older images of a given system
-for system in $(ls -d $BUILD_DIR/usbfs/rear/*); do
-    entries=$(ls -d $system/*/ | wc -l)
-    if (( $entries <= $USB_RETAIN_BACKUP_NR )); then
-        continue
+# Clean up older images of a given system, but keep USB_RETAIN_BACKUP_NR
+# entries for backup and rescue
+backup_count=${USB_RETAIN_BACKUP_NR:-2}
+rescue_count=${USB_RETAIN_BACKUP_NR:-2}
+for rear_run in $(ls -dt $BUILD_DIR/netfs/rear/$(uname -n)/*); do
+    backup_name=$rear_run/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
+    if [[ -e $backup_name ]] ; then
+        backup_count=$((backup_count - 1))
+        if (( backup_count < 0 )); then
+            Log "Remove older backup directory $rear_run"
+            rm -rvf $rear_run >&8
+        fi
+    else
+        rescue_count=$((rescue_count - 1))
+        if (( rescue_count < 0 )); then
+            Log "Remove older rescue directory $rear_run"
+            rm -rvf $rear_run >&8
+        fi
     fi
-    for entry in $(seq 1 $((entries - USB_RETAIN_BACKUP_NR))); do
-        dir=$(ls -dt $system/*/ | tail -1)
-        Log "Remove older directory $dir"
-        rm -rvf $dir >&8
-    done
 done
 
-### We generate a rear syslinux.cfg based on existing rear syslinux.cfg files.
+# We generate a rear syslinux.cfg based on existing rear syslinux.cfg files.
 Log "Creating /rear/syslinux.cfg"
 {
     syslinux_write <<EOF
@@ -211,12 +219,12 @@ fi
 
 echo "$VERSION_INFO" >$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/message
 
-### We generate a main extlinux.conf in /boot/syslinux that consist of all
-### default functionality
+# We generate a main extlinux.conf in /boot/syslinux that consist of all
+# default functionality
 Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
 {
     # Enable serial console, unless explicitly disabled
-    if [[ "$USE_SERIAL_CONSOLE" =~ '^[yY1]' ]]; then
+    if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
         for devnode in $(ls /dev/ttyS[0-9]* | sort); do
             speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
             if [ "$speed" ]; then
