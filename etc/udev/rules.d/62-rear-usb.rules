@@ -1,0 +1,1 @@
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="REAR-000", RUN+="/usr/sbin/rear udev"
