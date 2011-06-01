@@ -1,5 +1,5 @@
 # call StartProgressSubsystem to get more detailed progress reports
-if tty -s ; then
+if tty -s <&1; then
 	######################## BEGIN Progress Indicator
 	# ProgressPipe uses fd 8 as a communication pipe
 	
