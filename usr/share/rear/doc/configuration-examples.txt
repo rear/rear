@@ -1,82 +1,130 @@
-Configuration examples for /etc/rear/{local|site}.conf files:
-------------------------------------------------------------
-There are 2 very important variables to define, OUTPUT and BACKUP. The OUTPUT variable defines
-where the rescue image should be send to. The BACKUP setting defines our backup/restore strategy.
+= Configuration examples
 
-Possible OUTPUT setting are:
-	- OUTPUT=ISO	: creates a bootable ISO9660 image on disk as rear-$(hostname).iso
-	- OUTPUT=PXE	: creates on a remote PXE/NFS server the required files (such as
-			  configuration file, kernel and initrd image
-	- OUTPUT=OBDR	: create a bootable OBDR tape including the backup archive
-	- OUTPUT=USB	: create a bootable USB disk (with syslinux or extlinux)
+This document explains the various use-cases and how to configure them in
+ReaR. The configuration is performed by changing _/etc/rear/local.conf_ or
+_/etc/rear/site.conf_.
 
-Possible BACKUP settings are:
-	- BACKUP=TSM	: use IBM Tivoli Storage Manager programs
-	- BACKUP=DP	: use HP DataProtector programs
-	- BACKUP=NBU	: use Symantec NetBackup programs
-	- BACKUP=BACULA	: use Bacula programs
-	- BACKUP=GALAXY : use CommVault Galaxy (5, probably 6)
-	- BACKUP=GALAXY7: use CommVault Galaxy (7 and probably newer)
-	- BACKUP=NETFS	: use ReaR internal backup with tar or rsync (or similar)
-	- BACKUP=REQUEST_RESTORE : no backup, just ask user to somehow restore the filesystems
-	- BACKUP=EXTERNAL : provide custom backup and restore commands
+There are two important variables that influence ReaR and the ReaR rescue
+image. Set +OUTPUT+ to your preferred boot method and define +BACKUP+ for your
+favorite +BACKUP+ strategy. 
 
-Common Scenarios
-================
+In most cases only these two settings are required.
 
-Backup with 3rd party software, ReaR used for bare-metal disaster recovery
---------------------------------------------------------------------------
 
-Set BACKUP to the software you are using and OUTPUT to your preferred boot method. In most cases
-only these two settings are required
+== Rescue media (OUTPUT)
+The +OUTPUT+ variable defines where the rescue image should be send to.
 
-Backup with ReaR, ReaR used for bare-metal disaster recovery
-------------------------------------------------------------
+Possible +OUTPUT+ setting are:
 
-Set BACKUP=NETFS and OUTPUT to your preferred boot method. You must provide the backup
-target location through the NETFS_URL variable:
-	- local disk:	NETFS_URL=file:///directory/path/
-	- NFS disk:	NETFS_URL=nfs://nfs-server-name/share/path
-	- TAPE drive:	NETFS_URL=tape:///dev/nst0
-	- CIFS disk:	NETFS_URL=cifs://cifs-server-name/share/path
-			To provide credentials for CIFS mounting use a credentials file:
-			NETFS_OPTIONS="cred=/etc/rear/.cifs"
-			is handy to pass along the:
-				username=<username>
-				password=<secret password>
-				domain=<domain>
-	- USB disk:	NETFS_URL=usb:///dev/sdb1  (whatever device your USB disk has)
-			(together with OUTPUT=USB everything is on an USB device)
+OUTPUT=ISO::
+Create a bootable ISO9660 image on disk as _rear-$(hostname).iso_
+
+OUTPUT=PXE::
+Create on a remote PXE/NFS server the required files (such as configuration
+file, kernel and initrd image
+
+OUTPUT=OBDR::
+Create a bootable OBDR tape including the backup archive. Specify the OBDR
+tape device by using +TAPE_DEVICE+.
+
+OUTPUT=USB::
+Create a bootable USB disk (using extlinux). Specify the USB storage device by
+using +USB_DEVICE+.
+
+
+== Backup/Restore strategy (BACKUP)
+The +BACKUP+ setting defines our backup/restore strategy.
+
+Possible +BACKUP+ settings are:
+
+BACKUP=TSM::
+Use IBM Tivoli Storage Manager programs
+
+BACKUP=DP::
+Use HP DataProtector programs
+
+BACKUP=NBU::
+Use Symantec NetBackup programs
+
+BACKUP=BACULA::
+Use Bacula programs
+
+BACKUP=GALAXY::
+Use CommVault Galaxy (5, probably 6)
+
+BACKUP=GALAXY7::
+Use CommVault Galaxy (7 and probably newer)
+
+BACKUP=NETFS::
+Use ReaR internal backup with tar or rsync (or similar)
+
+BACKUP=REQUEST_RESTORE::
+No backup, just ask user to somehow restore the filesystems
+
+BACKUP=EXTERNAL::
+Use a custom strategy by providing backup and restore commands
+
+== Using NETFS as backup strategy
+Set +BACKUP=NETFS+ and +OUTPUT+ to your preferred boot method. You must
+provide the backup target location through the +NETFS_URL+ variable:
+
+NETFS_URL=file://::
+To backup to local disk, use +NETFS_URL=file:///directory/path/+
+
+NETFS_URL=nfs://::
+To backup to NFS disk, use +NETFS_URL=nfs://nfs-server-name/share/path+
+
+NETFS_URL=tape://::
+To backup to tape device, use +NETFS_URL=tape:///dev/nst0+ or alternatively,
+simply define +TAPE_DEVICE=/dev/nst0+
+
+NETFS_URL=cifs://::
+To backup to a Samba share (CIFS), use
++NETFS_URL=cifs://cifs-server-name/share/path+. To provide credentials for
+CIFS mounting use a _/etc/rear/.cifs_ credentials file and define
++NETFS_OPTIONS="cred=/etc/rear/.cifs"+ and pass along:
++
+----
+username=_username_
+password=_secret password_
+domain=_domain_
+----
+
+NETFS_URL=usb://::
+To backup to USB storage device, use +NETFS=usb:///dev/disk/by-path/REAR-000+
+or use a real device node or a specific filesystem label. Alternatively, you
+can specify the device using +USB_DEVICE=/dev/disk/by-path/REAR-000+.
++
+If you combine this with +OUTPUT=USB+ you will end up with a bootable USB device.
 
 Optional settings:
 
-BACKUP_PROG=rsync (if you want to use rsync instead of tar)
-NETFS_KEEP_OLD_BACKUP_COPY=y (if you want to keep the previous backup archive)
+BACKUP_PROG=rsync::
+if you want to use rsync instead of tar
 
-Notes about USB disk
-- - - - - - - - - -
+NETFS_KEEP_OLD_BACKUP_COPY=y::
+if you want to keep the previous backup archive
 
-With USB disk we refer to all kinds of external storage, like USB keys or disks, eSATA disks, 
-ZIP disks etc. So far the best approach seems to be to
-* create a partition on the device
-* format it with ext3 or ext4
+NOTE: With +USB+ we refer to all kinds of external storage devices, like USB
+keys, USB disks, eSATA disks, ZIP drives, etc...
 
-Special handling for bootable tape drives (OBDR)
-------------------------------------------------
-
+== Special handling for bootable tape drives (OBDR)
 For example, if you want an OBDR image on tape, and use GNU tar
 for recovery, you would use:
+
+----
 BACKUP=NETFS
 OUTPUT=OBDR
-NETFS_URL=tape:///dev/nst0
+TAPE_DEVICE=/dev/nst0
+----
 
-Special handling for bootable tape drives (OBDR) and bare-metal recovery of Bacula server
------------------------------------------------------------------------------------------
-
+== Special handling for bootable tape drives (OBDR) and bare-metal recovery of Bacula server
 The usage of bextract command (of Bacula) is also implemented to restore
 a Bacula archive (without a bacula server being active):
+
+----
 BACKUP=BEXTRACT
 OUTPUT=OBDR
-ISO_URL=obdr:///dev/nst0
-
+TAPE_DEVICE=/dev/nst0
+----
 
