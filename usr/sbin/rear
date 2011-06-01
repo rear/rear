@@ -103,7 +103,7 @@ PATH=$PATH:/lib/udev
 
 # are we root ?
 if [ $(id --user) -ne 0 ]; then
-	echo  "** ERROR **	$PRODUCT needs ROOT privileges!"
+	echo "ERROR: $PRODUCT needs ROOT privileges!" >&2
 	exit 1
 fi
 
@@ -111,14 +111,14 @@ fi
 SCRIPT_FILE="$(readlink -f $(type -p "$0" || echo "$0"))"
 
 if ! type -p pidof >/dev/null ; then
-	echo 1>&2 "** ERROR **        Required program 'pidof' missing, please check your PATH"
+	echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
 	exit 1
 fi
 
 # do not run if another instance is running. pidof -x will always report at least $$
 if [ $$ != "$(pidof -x "$SCRIPT_FILE")" ] ; then
-        echo 1>&2 "** ERROR **        $SCRIPT_FILE is already running, not starting again"
-        exit 1
+	echo "ERROR: $SCRIPT_FILE is already running, not starting again" >&2
+	exit 1
 fi
 
 # set some bash options
