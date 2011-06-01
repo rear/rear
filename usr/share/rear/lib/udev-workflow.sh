@@ -46,11 +46,11 @@ WORKFLOW_udev () {
     fi
 
     # If udev workflow does not exist, bail out loudly
-    IsInArray "$UDEV_WORKFLOW" "${WORKFLOWS[@]}"
+    ! type -t WORKFLOW_$WORKFLOW >/dev/null
     StopIfError "Udev workflow '$UDEV_WORKFLOW' does not exist"
 
     # Run udev workflow
-    WORKFLOW_$UDEV_WORKFLOW
+    WORKFLOW_$UDEV_WORKFLOW "${ARGS[@]}"
 
     # Beep distinctively
     if [[ "$UDEV_BEEP" =~ ^[yY1] ]]; then
