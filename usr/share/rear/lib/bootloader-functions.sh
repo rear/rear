@@ -20,7 +20,9 @@ function get_syslinux_version {
 
 function set_syslinux_features {
 	# Test for features in syslinux
-	# true if syslinux supports booting from /boot or only from / of the USB media
+	# true if isolinux supports booting from /boot/syslinux, /boot or only from / of the ISO
+	FEATURE_ISOLINUX_BOOT_SYSLINUX=
+	# true if syslinux supports booting from /boot/syslinux, /boot or only from / of the USB media
 	FEATURE_SYSLINUX_BOOT_SYSLINUX=
 	# true if syslinux and extlinux support localboot
 	FEATURE_SYSLINUX_EXTLINUX_WITH_LOCALBOOT=
@@ -28,6 +30,8 @@ function set_syslinux_features {
 	FEATURE_SYSLINUX_EXTLINUX_INSTALL=
 	# true if syslinux supports INCLUDE directive
 	FEATURE_SYSLINUX_INCLUDE=
+	# true if syslinux supports advanced label names (eg. linux-2.6.18)
+	FEATURE_SYSLINUX_LABEL_NAMES=
 	# true if syslinux supports MENU DEFAULT directive
 	FEATURE_SYSLINUX_MENU_DEFAULT=
 	# true if syslinux supports MENU HELP directive
@@ -59,6 +63,7 @@ function set_syslinux_features {
 
 	if version_newer "$syslinux_version" 4.00; then
 		FEATURE_SYSLINUX_MENU_HELP="y"
+		FEATURE_ISOLINUX_BOOT_SYSLINUX="y"
 	fi
 	if version_newer "$syslinux_version" 3.72; then
 		FEATURE_SYSLINUX_MENU_DEFAULT="y"
@@ -78,6 +83,7 @@ function set_syslinux_features {
 	fi
 	if version_newer "$syslinux_version" 3.35; then
 		FEATURE_SYSLINUX_BOOT_SYSLINUX="y"
+		FEATURE_SYSLINUX_LABEL_NAMES="y"
 	fi
 	if version_newer "$syslinux_version" 3.20; then
 		FEATURE_SYSLINUX_EXTLINUX_INSTALL="y"
@@ -112,7 +118,7 @@ function make_syslinux_config {
 	local flavour="${1:-isolinux}" ; shift
 
     # Enable serial console, unless explicitly disabled
-    if [[ "$USE_SERIAL_CONSOLE" =~ '^[yY1]' ]]; then
+    if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
         for devnode in $(ls /dev/ttyS[0-9]* | sort); do
             speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
             if [ "$speed" ]; then
