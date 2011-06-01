@@ -11,7 +11,7 @@ if [[ -z "$USE_SERIAL_CONSOLE" ]]; then
 fi
 
 # Unless explicitly disabled
-if [[ ! "$USE_SERIAL_CONSOLE" =~ '^[yY1]' ]]; then
+if [[ ! "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
     return
 fi
 

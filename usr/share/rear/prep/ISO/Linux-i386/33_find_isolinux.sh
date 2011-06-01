@@ -10,9 +10,9 @@ if [[ ! -s "$ISO_ISOLINUX_BIN" ]]; then
 	done
 
 fi
+
 [[ -s "$ISO_ISOLINUX_BIN" ]]
-ProgressStopIfError $? "Could not find 'isolinux.bin'. Maybe you have to set ISO_ISOLINUX_BIN [$ISO_ISOLINUX_BIN] or install the syslinux package ?"
+StopIfError "Could not find 'isolinux.bin'. Maybe you have to set ISO_ISOLINUX_BIN [$ISO_ISOLINUX_BIN] or install the syslinux package ?"
 
 # Define the syslinux directory for later usage
 SYSLINUX_DIR=$(dirname $ISO_ISOLINUX_BIN)
-

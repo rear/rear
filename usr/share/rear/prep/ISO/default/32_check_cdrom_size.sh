@@ -5,7 +5,7 @@ do
 	*/*)	
 		let available=available/1024 # convert k-blocks to MBytes
 		test "${available}" -gt "${CDROM_SIZE}"
-		ProgressStopIfError $? "Not enough space in ${ISO_DIR} [$DEV]: only ${available} MB free, need ${CDROM_SIZE} MB"
+		StopIfError "Not enough space in ${ISO_DIR} [$DEV]: only ${available} MB free, need ${CDROM_SIZE} MB"
 		Log "ISO Directory '${ISO_DIR}' [$DEV] has $available MB free space"
 	;;
 	*)

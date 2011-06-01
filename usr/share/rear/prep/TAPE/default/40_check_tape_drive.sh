@@ -9,18 +9,15 @@ fi
 
 # Is a tape device provided
 [[ "${TAPE_DEVICE}" ]]
-ProgressStopIfError $? "No tape device (TAPE_DEVICE) defined."
-ProgressStep
+StopIfError "No tape device (TAPE_DEVICE) defined."
 
 # Write out tape status
 mt -f "${TAPE_DEVICE}" status >"$TMP_DIR/tape_status" 1>&2
-ProgressStopIfError $PIPESTATUS "Problem with reading tape device '${TAPE_DEVICE}'."
-ProgressStep
+StopIfError "Problem with reading tape device '${TAPE_DEVICE}'."
 
 # Log tape status
 cat $TMP_DIR/tape_status
 
 # Check if tape is not write protected
 ! grep -q WR_PROT "$TMP_DIR/tape_status"
-ProgressStopIfError $? "Tape in device '${TAPE_DEVICE}' is write protected."
-ProgressStep
+StopIfError "Tape in device '${TAPE_DEVICE}' is write protected."

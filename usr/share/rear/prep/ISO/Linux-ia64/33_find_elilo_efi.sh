@@ -10,5 +10,6 @@ if ! test -s "$ELILO_BIN" ; then
 	done
 
 fi
-test -s "$ELILO_BIN" 
-ProgressStopIfError $? "Could not find 'elilo.efi'. Maybe you have to set ELILO_BIN [$ELILO_BIN] ?"
+
+[ -s "$ELILO_BIN" ]
+StopIfError "Could not find 'elilo.efi'. Maybe you have to set ELILO_BIN [$ELILO_BIN] ?"
