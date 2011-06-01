@@ -13,7 +13,6 @@ In most cases only these two settings are required.
 
 == Rescue media (OUTPUT)
 The +OUTPUT+ variable defines where the rescue image should be send to.
-
 Possible +OUTPUT+ setting are:
 
 OUTPUT=ISO::
@@ -31,10 +30,40 @@ OUTPUT=USB::
 Create a bootable USB disk (using extlinux). Specify the USB storage device by
 using +USB_DEVICE+.
 
+=== Using ISO as output method
+When using +OUTPUT=ISO+ you should provide the backup target location through
+the +ISO_URL+ variable. Possible +ISO_URL+ settings are:
+
+ISO_URL=file://::
+Write the ISO image to disk. The default is in _/tmp_.
+
+ISO_URL=fish//::
+Write the ISO image using +lftp+ and the FISH protocol.
+
+ISO_URL=ftp://::
+Write the ISO image using +lftp+ and the FTP protocol.
+
+ISO_URL=ftps://::
+Write the ISO image using +lftp+ and the FTPS protocol.
+
+ISO_URL=hftp://::
+Write the ISO image using +lftp+ and the HFTP protocol.
+
+ISO_URL=http://::
+Write the ISO image using +lftp+ and the HTTP (PUT) procotol.
+
+ISO_URL=https://::
+Write the ISO image using +lftp+ and the HTTPS (PUT) protocol.
+
+ISO_URL=sftp://::
+Write the ISO image using +lftp+ and the secure FTP (SFTP) protocol.
+
+ISO_URL=rsync://::
+Write the ISO image using +rsync+ and the RSYNC protocol.
+
 
 == Backup/Restore strategy (BACKUP)
 The +BACKUP+ setting defines our backup/restore strategy.
-
 Possible +BACKUP+ settings are:
 
 BACKUP=TSM::
@@ -64,9 +93,9 @@ No backup, just ask user to somehow restore the filesystems
 BACKUP=EXTERNAL::
 Use a custom strategy by providing backup and restore commands
 
-== Using NETFS as backup strategy
-Set +BACKUP=NETFS+ and +OUTPUT+ to your preferred boot method. You must
-provide the backup target location through the +NETFS_URL+ variable:
+=== Using NETFS as backup strategy
+When using +BACKUP=NETFS+ you should provide the backup target location through
+the +NETFS_URL+ variable. Possible +NETFS_URL+ settings are:
 
 NETFS_URL=file://::
 To backup to local disk, use +NETFS_URL=file:///directory/path/+
@@ -108,9 +137,30 @@ if you want to keep the previous backup archive
 NOTE: With +USB+ we refer to all kinds of external storage devices, like USB
 keys, USB disks, eSATA disks, ZIP drives, etc...
 
-== Special handling for bootable tape drives (OBDR)
-For example, if you want an OBDR image on tape, and use GNU tar
-for recovery, you would use:
+
+== Example: Bootable ISO
+If you simply want a bootable ISO on a central server, you would do:
+
+----
+OUTPUT=ISO
+ISO_URL=http://server/path-to-push/
+----
+
+
+== Example: Bootable USB device with backup to USB
+If you want a bootable USB device with a (tar) backup to USB as well, you
+would use:
+
+----
+BACKUP=NETFS
+OUTPUT=USB
+USB_DEVICE=/dev/disk/by-label/REAR-000
+----
+
+
+== Example: Bootable tape drive (OBDR) with backup to tape
+If you want an OBDR image and backup on tape, and use GNU tar for
+backup/restore, you would use:
 
 ----
 BACKUP=NETFS
@@ -118,13 +168,13 @@ OUTPUT=OBDR
 TAPE_DEVICE=/dev/nst0
 ----
 
-== Special handling for bootable tape drives (OBDR) and bare-metal recovery of Bacula server
-The usage of bextract command (of Bacula) is also implemented to restore
-a Bacula archive (without a bacula server being active):
+
+== Example: Bootable tape drive (OBDR) and Bacula restore
+If you want an OBDR image on tape, and the Bacula tools to recover your
+backup, use:
 
 ----
-BACKUP=BEXTRACT
+BACKUP=BACULA
 OUTPUT=OBDR
 TAPE_DEVICE=/dev/nst0
 ----
-
