@@ -1,5 +1,5 @@
 # Enable serial console, unless explicitly disabled
-if [[ ! "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
+if [[ "$USE_SERIAL_CONSOLE" && ! "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
     return
 fi
 
@@ -21,7 +21,9 @@ for devnode in $(ls /dev/ttyS[0-9]* | sort); do
 done
 
 # Default to standard console (can be changed in syslinux menu at boot-time)
-KERNEL_CMDLINE="${cmdline}console=tty"
+if [[ "$cmdline" != "$KERNEL_CMDLINE" ]]; then
+    KERNEL_CMDLINE="${cmdline}console=tty0"
+fi
 
 Log "Serial Console support enabled - adding required entries for $GETTY in inittab"
 Log "Modified kernel commandline to: $KERNEL_CMDLINE"
