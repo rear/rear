@@ -23,11 +23,10 @@
 
 # Versioning
 PRODUCT="Relax & Recover"
-VERSION="0.0.0"
-RELEASE_DATE='$Date$'
-# remove SVN related junk from release date
-RELEASE_DATE="${RELEASE_DATE#\$Date: }"
-RELEASE_DATE="${RELEASE_DATE% (*}"
+# Using a revision is easier to compare than a date string
+REVISION=$(echo '$Revision$' | awk '{print $2}')
+VERSION="1.12.0svn$REVISION"
+RELEASE_DATE=$(echo '$Date$' | awk '{print $2" "$3}')
 
 COPYRIGHT="Copyright (C) 2006-2011
         Schlomo Schapiro, Immobilien Scout GmbH
