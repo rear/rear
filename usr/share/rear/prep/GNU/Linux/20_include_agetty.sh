@@ -15,18 +15,18 @@ if [[ ! "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
     return
 fi
 
-if [ -f /sbin/getty ]; then
-	# Debian, Ubuntu,...
-	GETTY=getty
-elif [ -f /sbin/agetty ]; then
-	# Fedora, RHEL, SLES,...
-	GETTY=agetty
+if type -p getty &>/dev/null; then
+    # Debian, Ubuntu,...
+    GETTY=getty
+elif type -p agetty &>/dev/null; then
+    # Fedora, RHEL, SLES,...
+    GETTY=agetty
 else
-	# being desperate (not sure this is the best choice?)
-	BugError "Could not find a suitable (a)getty for serial console. Please fix
-$SHARE_DIR/prep/GNU/Linux/20_include_agetty.sh" 
+    # being desperate (not sure this is the best choice?)
+    BugError "Could not find a suitable (a)getty for serial console. Please fix
+$SHARE_DIR/prep/GNU/Linux/20_include_agetty.sh"
 fi
-Log "Serial Console support requested - adding required program $GETTY"
+Log "Serial Console support requested - adding required program '$GETTY'"
 
 REQUIRED_PROGS=(
 "${REQUIRED_PROGS[@]}"

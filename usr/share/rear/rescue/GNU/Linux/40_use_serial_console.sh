@@ -21,9 +21,9 @@ for devnode in $(ls /dev/ttyS[0-9]* | sort); do
 done
 
 # Default to standard console (can be changed in syslinux menu at boot-time)
-if [[ "$cmdline" != "$KERNEL_CMDLINE" ]]; then
+if [[ " $cmdline" != "$KERNEL_CMDLINE " ]]; then
     KERNEL_CMDLINE="${cmdline}console=tty0"
 fi
 
-Log "Serial Console support enabled - adding required entries for $GETTY in inittab"
-Log "Modified kernel commandline to: $KERNEL_CMDLINE"
+Log "Serial Console support enabled - adding required entries for '$GETTY' in inittab"
+Log "Modified kernel commandline to: '$KERNEL_CMDLINE'"
