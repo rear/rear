@@ -22,10 +22,10 @@ fi
 Log "Collecting general system information (cfg2html)"
 
 # cfg2html recommend to keep the result private
-mkdir -v -p -m0750 $VAR_DIR/recovery/cfg2html
+mkdir -p -m0750 $VAR_DIR/recovery/cfg2html
 StopIfError "Could not create '$VAR_DIR/recovery/cfg2html' directory"
 
-cfg2html -o $VAR_DIR/recovery/cfg2html
+cfg2html -px -o $VAR_DIR/recovery/cfg2html >&8
 StopIfError "An error occured when running cfg2html"
 
 # Add HTML part of cfg2html to result files
