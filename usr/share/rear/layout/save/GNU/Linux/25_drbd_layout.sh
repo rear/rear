@@ -1,7 +1,7 @@
 # DRBD configuration
 
 if [ -e /proc/drbd ] ; then
-    LogPrint "Saving DRBD configuration."
+    Log "Saving DRBD configuration."
 
     for resource in $(drbdadm sh-resources) ; do
         dev=$(drbdadm sh-dev $resource)

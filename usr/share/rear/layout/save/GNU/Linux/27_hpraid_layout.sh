@@ -1,7 +1,7 @@
 # Collect HP Smartarray information
 
 if ! type hpacucli &>/dev/null ; then
-    return 0
+    return
 fi
 
 # Add hpacucli to the rescue image
@@ -9,7 +9,7 @@ PROGS=( "${PROGS[@]}" hpacucli )
 eval $(grep ON_DIR= $(type -p hpacucli))
 COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR" )
 
-LogPrint "Saving HP SmartArray configuration."
+Log "Saving HP SmartArray configuration."
 
 ### In case we have a controller problem, the hpacucli output may not reflect
 ### the actual configuration of the system, and hence the layout output could

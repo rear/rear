@@ -1,6 +1,6 @@
 # Save the partition layout
 
-LogPrint "Saving disk partitions."
+Log "Saving disk partitions."
 
 (
     # Disk sizes

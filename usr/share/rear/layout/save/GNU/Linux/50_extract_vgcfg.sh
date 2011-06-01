@@ -1,7 +1,7 @@
 # Use vgcfgbackup to copy the current LVM setup exactly
 
 if ! type -p lvm &>/dev/null ; then
-    return 0
+    return
 fi
 
 mkdir -p $VAR_DIR/layout/lvm

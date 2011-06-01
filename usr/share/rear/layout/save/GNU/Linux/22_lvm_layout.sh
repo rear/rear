@@ -1,10 +1,10 @@
 # Save LVM layout
 
 if ! type -p lvm &>/dev/null ; then
-    return 0
+    return
 fi
 
-LogPrint "Saving LVM layout."
+Log "Saving LVM layout."
 
 (
     ## Get physical_device configuration

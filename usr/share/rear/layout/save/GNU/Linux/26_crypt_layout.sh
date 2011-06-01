@@ -2,10 +2,10 @@
 # We use /etc/crypttab and cryptsetup for information
 
 if ! type cryptsetup &>/dev/null ; then
-    return 0
+    return
 fi
 
-LogPrint "Saving Encrypted volumes."
+Log "Saving Encrypted volumes."
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" cryptsetup )
 
 for device in /dev/mapper/* ; do

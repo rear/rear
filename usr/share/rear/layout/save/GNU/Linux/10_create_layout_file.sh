@@ -1,5 +1,6 @@
 # Create the layout file
 
+LogPrint "Creating disk layout."
 Log "Preparing layout directory."
 mkdir -p $VAR_DIR/layout
 mkdir -p $VAR_DIR/recovery

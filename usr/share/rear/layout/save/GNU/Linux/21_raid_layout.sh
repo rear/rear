@@ -1,7 +1,7 @@
 # Save the Software RAID layout
 
 if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
-    LogPrint "Saving Software RAID configuration."
+    Log "Saving Software RAID configuration."
     (
         while read array device junk ; do
             if [ "$array" != "ARRAY" ] ; then

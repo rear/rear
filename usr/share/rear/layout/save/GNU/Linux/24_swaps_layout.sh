@@ -1,6 +1,6 @@
 # Save swaps
 
-LogPrint "Saving Swap information."
+Log "Saving Swap information."
 
 (
     while read filename type junk ; do

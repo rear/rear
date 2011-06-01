@@ -1,6 +1,6 @@
 # Save Filesystem layout
 
-LogPrint "Saving Filesystem layout."
+Log "Saving Filesystem layout."
 
 (
     # Filesystems
