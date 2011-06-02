@@ -46,7 +46,7 @@ WORKFLOW_udev () {
     fi
 
     # If udev workflow does not exist, bail out loudly
-    ! type -t WORKFLOW_$WORKFLOW >/dev/null
+    type -t WORKFLOW_$WORKFLOW >/dev/null
     StopIfError "Udev workflow '$UDEV_WORKFLOW' does not exist"
 
     # Run udev workflow

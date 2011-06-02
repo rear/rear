@@ -1,5 +1,5 @@
 # Enable serial console, unless explicitly disabled
-if [[ "$USE_SERIAL_CONSOLE" && ! "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
+if [[ ! "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
     return
 fi
 
