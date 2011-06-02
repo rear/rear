@@ -23,10 +23,11 @@
 
 # Versioning
 PRODUCT="Relax & Recover"
-# Using a revision is easier to compare than a date string
-REVISION=$(echo '$Revision$' | awk '{print $2}')
-VERSION="1.12.0svn$REVISION"
-RELEASE_DATE=$(echo '$Date$' | awk '{print $2" "$3}')
+VERSION="0.0.0"
+RELEASE_DATE='$Date$'
+# remove SVN related junk from release date
+RELEASE_DATE="${RELEASE_DATE#\$Date: }"
+RELEASE_DATE="${RELEASE_DATE% (*}"
 
 COPYRIGHT="Copyright (C) 2006-2011
         Schlomo Schapiro, Immobilien Scout GmbH
@@ -51,26 +52,28 @@ DEBUG=
 KEEP_BUILD_DIR=
 
 # special test for long help option
-test "${*//*--help*/--help}" == "--help" && WORKFLOW=help
-
-# Parse options
-while getopts "VvhdDSsqr:" Option
-do
-	case $Option in
-	h ) WORKFLOW=help ;;
-	V ) echo -e "$PRODUCT Version $VERSION / $RELEASE_DATE\n" ; exit 0 ;;
-	v ) VERBOSE=1 ;;
-	d ) DEBUG=1 ; VERBOSE=1 ;;
-	D ) DEBUGSCRIPTS=1 ;;
-	s ) SIMULATE=1 ; VERBOSE=1 ;;
-	S ) STEPBYSTEP=1 ;;
-	q ) QUIET=1 ;;
-	r ) KERNEL_VERSION="$OPTARG" ;;
-	* ) echo "ERROR: Unknown Option $Option specified." ;;
-	esac
-done
-shift $(($OPTIND - 1))
-# Move argument pointer to next.
+if test "${*//*--help*/--help}" == "--help" ; then
+	WORKFLOW=help
+else
+	# Parse options
+	while getopts "VvhdDSsqr:" Option
+	do
+		case $Option in
+		h ) WORKFLOW=help ;;
+		V ) echo -e "$PRODUCT Version $VERSION / $RELEASE_DATE\n" ; exit 0 ;;
+		v ) VERBOSE=1 ;;
+		d ) DEBUG=1 ; VERBOSE=1 ;;
+		D ) DEBUGSCRIPTS=1 ;;
+		s ) SIMULATE=1 ; VERBOSE=1 ;;
+		S ) STEPBYSTEP=1 ;;
+		q ) QUIET=1 ;;
+		r ) KERNEL_VERSION="$OPTARG" ;;
+		* ) echo "ERROR: Unknown Option $Option specified." ;;
+		esac
+	done
+	shift $(($OPTIND - 1))
+	# Move argument pointer to next.
+fi
 
 # set workflow to first command line argument or to usage
 if test -z "$WORKFLOW" ; then
