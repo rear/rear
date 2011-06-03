@@ -3,13 +3,11 @@
 
 # If USE_CFG2HTML is disabled, skip this script
 if [[ ! "$USE_CFG2HTML" =~ ^[yY1] ]]; then
-    Log "USE_CFG2HTML not enabled ($CFG2HTML)"
     return
 fi
 
 # If SKIP_CFG2HTML is enabled, skip this script (backward compatibility)
 if [[ -z "$USE_CFG2HTML" && -z "$SKIP_CFG2HTML" ]]; then
-    Log "SKIP_CFG2HTML not disabled ($SKIP_CFG2HTML)"
     return
 fi
 
