@@ -18,23 +18,17 @@ case "$scheme" in
     (file)
         LogPrint "Transferring ISO image to $path"
         cp -a "$ISO_DIR/$ISO_PREFIX.iso" $path
-        if (( $? != 0 )); then
-            Error "Problem transferring ISO image to $ISO_URL"
-        fi
+        StopIfError "Problem transferring ISO image to $ISO_URL"
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
         LogPrint "Transferring ISO image to $ISO_URL"
         lftp -c "open $ISO_URL; mkdir $path; mput -O $path $ISO_DIR/$ISO_PREFIX.iso"
-        if (( $? != 0 )); then
-            Error "Problem transferring ISO image to $ISO_URL"
-        fi
+        StopIfError "Problem transferring ISO image to $ISO_URL"
         ;;
     (rsync)
         LogPrint "Transferring ISO image to $ISO_URL"
         rsync -a "$ISO_DIR/$ISO_PREFIX.iso" "$server:$path"
-        if (( $? != 0 )); then
-            Error "Problem transferring ISO image to $server:$path"
-        fi
+        StopIfError "Problem transferring ISO image to $server:$path"
         ;;
     (*) BugError "Support for $scheme is not implemented yet.";;
 esac

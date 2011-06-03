@@ -12,12 +12,11 @@ cat <<EOF > $LAYOUT_CODE
 set -e
 
 # Unload CCISS module to make sure nothing is using it
-if ! rmmod cciss; then
-    Error "CCISS failed to unload, something is still using it !"
-else
-    modprobe cciss
-    sleep 2
-fi
+rmmod cciss
+StopIfError "CCISS failed to unload, something is still using it !"
+
+modprobe cciss
+sleep 2
 EOF
 
 restored_controllers=()
@@ -44,9 +43,6 @@ echo "set +e" >> $LAYOUT_CODE
 (
 . $LAYOUT_CODE
 )
-
-if [ $? -ne 0 ] ; then
-    Error "Could not configure the HP SmartArray controllers. Please see $LOGFILE for details."
-fi
+BugIfError "Could not configure the HP SmartArray controllers. Please see $LOGFILE for details."
 
 LAYOUT_CODE=$ORIG_LAYOUT_CODE

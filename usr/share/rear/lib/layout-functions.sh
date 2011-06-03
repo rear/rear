@@ -224,9 +224,8 @@ get_friendly_name() {
 
     # Compare device numbers on the input device and the mapper devices
     local number=$(stat -L -c "%t:%T" /dev/$search )
-    if [ -z "$number" ] ; then
-        BugError "Unknown device..."
-    fi
+    [ "$number" ]
+    BugIfError "Unknown device..."
 
     local device
     for device in /dev/mapper/* ; do
@@ -264,11 +263,10 @@ get_disk_size() {
         local block_size=512
     fi
     
-    if [ -r /sys/block/$disk_name/size ] ; then
-        local nr_blocks=$(cat /sys/block/$disk_name/size)
-    else
-        BugError "Could not determine size of disk $disk_name, please file a bug."
-    fi
+    [ -r /sys/block/$disk_name/size ]
+    BugIfError "Could not determine size of disk $disk_name, please file a bug."
+
+    local nr_blocks=$(cat /sys/block/$disk_name/size)
     local disk_size=$(( nr_blocks * block_size ))
     
     ### Make sure we always return a number

@@ -14,9 +14,8 @@ done
 # The user has to choose the backup
 LogPrint "Select a backup archive."
 select choice in "${backup_times[@]}" "Abort"; do
-    if [ "$choice" = "Abort" ] ; then
-        Error "User chose to abort recovery."
-    fi
+    [ "$choice" != "Abort" ]
+    StopIfError "User chose to abort recovery."
     n=( $REPLY ) # trim blanks from reply
     let n-- # because bash arrays count from 0
     if [ "$n" -lt 0 ] || [ "$n" -ge "${#backup_times[@]}" ] ; then

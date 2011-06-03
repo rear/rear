@@ -101,9 +101,9 @@ Log "Saving disk partitions."
                 fi
                 
                 psize=$(cat /sys/block/$sysfsname/${sysfsname}${pname}/size)
-                if [ -z "$psize" ] ; then
-                    BugError "Could not determine size of partition ${sysfsname}${pname}, please file a bug."
-                fi
+                [ "$psize" ]
+                BugIfError "Could not determine size of partition ${sysfsname}${pname}, please file a bug."
+
                 let psize=$psize\*$blocksize
                 
                 flags=""

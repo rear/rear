@@ -12,9 +12,10 @@ FEATURE_LVM_RESTOREFILE=
 
 lvm_version=$(get_version lvm version)
 
-if [ -z "$lvm_version" ] ; then
-    BugError "Function get_version could not detect lvm version."
-elif version_newer "$lvm_version" 2.02.73 ; then
+[ "$lvm_version" ]
+BugIfError "Function get_version could not detect lvm version."
+
+if version_newer "$lvm_version" 2.02.73 ; then
     FEATURE_LVM_RESTOREFILE="y"
 fi
 

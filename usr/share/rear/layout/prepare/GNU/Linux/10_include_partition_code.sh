@@ -14,9 +14,10 @@ FEATURE_PARTED_ALIGNMENT=
 # Test by using the parted version numbers...
 parted_version=$(get_version parted -v)
 
-if [ -z "$parted_version" ] ; then
-    BugError "Function get_version could not detect parted version."
-elif version_newer "$parted_version" 2.0 ; then
+[ "$parted_version" ]
+BugIfError "Function get_version could not detect parted version."
+
+if version_newer "$parted_version" 2.0 ; then
     # All features supported
     FEATURE_PARTED_ANYUNIT="y"
     FEATURE_PARTED_ALIGNMENT="y"
@@ -38,11 +39,11 @@ partition_disk() {
     # Find out the actual disk size
     local disk_size=$( get_disk_size "$disk" )
 
-    if [ -z "$disk_size" ]; then
-        BugError "Could not determine size of disk $disk, please file a bug."
-    elif [ $disk_size -le 0 ]; then
-        Error "Disk $disk has size $disk_size, unable to continue."
-    fi
+    [ "$disk_size" ]
+    BugIfError "Could not determine size of disk $disk, please file a bug."
+
+    [ $disk_size -gt 0 ]
+    StopIfError "Disk $disk has size $disk_size, unable to continue."
 
     cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating partitions for disk $disk ($label)"

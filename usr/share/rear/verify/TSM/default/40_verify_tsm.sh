@@ -18,11 +18,10 @@ while read KEY VALUE ; do echo "$KEY" | grep -q '*' && continue ; test -z "$KEY"
 StopIfError "TSM Server not set in dsm.sys (TCPSERVERADDRESS) !"
 
 if test "$PING" ; then
-	if ping -c 1 "${TSM_SYS_TCPSERVERADDRESS}" >/dev/null 2>&1 ; then
-	   Log "TSM Server ${TSM_SYS_TCPSERVERADDRESS} seems to be up and running."
-	else
-	   Error "Sorry, but cannot reach TSM Server ${TSM_SYS_TCPSERVERADDRESS}"
-	fi
+	ping -c 1 "${TSM_SYS_TCPSERVERADDRESS}" >/dev/null 2>&1
+	StopIfError "Sorry, but cannot reach TSM Server ${TSM_SYS_TCPSERVERADDRESS}"
+
+	Log "TSM Server ${TSM_SYS_TCPSERVERADDRESS} seems to be up and running."
 else
 	Log "Skipping ping test"
 fi

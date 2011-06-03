@@ -11,9 +11,10 @@ FEATURE_MDADM_UUID=
 # Test for the mdadm version, version gets printed on stderr
 mdadm_version=$(get_version mdadm --version)
 
-if [ -z "$mdadm_version" ]; then
-    BugError "Function get_version could not detect mdadm version."
-elif version_newer "$mdadm_version" 2.0 ; then
+[ "$mdadm_version" ]
+BugIfError "Function get_version could not detect mdadm version."
+
+if version_newer "$mdadm_version" 2.0 ; then
     FEATURE_MDADM_UUID="y"
 fi
 

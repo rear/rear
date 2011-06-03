@@ -19,17 +19,12 @@ else
         NBU_ENDTIME_DATE=$( date -d "$REPLY" +%m/%d/%Y 2>/dev/null ) || BAD_ENDTIME=1
         # validate time
         NBU_ENDTIME_TIME=$( date -d "$REPLY" +%T 2>/dev/null ) || BAD_ENDTIME=1
-        if [ ${BAD_ENDTIME} -eq 1 ]
-        then
-             Error "Incorrect date and/or time definition used: ${REPLY} Ending NetBackup Restore Attempt..." 
-             exit 1
+        [ ${BAD_ENDTIME} -ne 1 ]
+        BugIfError "Incorrect date and/or time definition used: ${REPLY} Ending NetBackup Restore Attempt..." 
+        if test "$NBU_ENDTIME_TIME" = "00:00:00"; then
+            NBU_ENDTIME=( "${NBU_ENDTIME_DATE}" )
         else
-             if test "$NBU_ENDTIME_TIME" = "00:00:00" 
-             then
-                 NBU_ENDTIME=( "${NBU_ENDTIME_DATE}" )
-             else
-                 NBU_ENDTIME=( "${NBU_ENDTIME_DATE}" "${NBU_ENDTIME_TIME}" )
-             fi
+            NBU_ENDTIME=( "${NBU_ENDTIME_DATE}" "${NBU_ENDTIME_TIME}" )
         fi
 
         LogPrint "Restoring all filespaces from backup at or before ${NBU_ENDTIME[@]}"
