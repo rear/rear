@@ -18,7 +18,6 @@
 #
 #
 
-Log "Copy program files & libraries"
 LogPrint "Copy program files & libraries"
 {
 # calculate binaries from needed progs
