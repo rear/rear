@@ -45,7 +45,8 @@ for sysfspath in /sys/class/net/* ; do
 	esac
 
 	# get mac address
-	mac="$(cat $sysfspath/address)" || BugError "Could not read a MAC address from '$sysfspath/address'!"
+	mac="$(cat $sysfspath/address)"
+	BugIfError "Could not read a MAC address from '$sysfspath/address'!"
 
 	# skip fake interfaces without MAC address
 	test "$mac" == "00:00:00:00:00:00" && continue
@@ -85,7 +86,7 @@ for sysfspath in /sys/class/net/* ; do
 WARNING:   sure that it loads automatically (e.g. via udev) or add 
 WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
     fi
-	test -d $TMP_DIR/mappings || mkdir $TMP_DIR/mappings
+	mkdir -p $TMP_DIR/mappings
 	test -f $CONFIG_DIR/mappings/ip_addresses && read_and_strip_file $CONFIG_DIR/mappings/ip_addresses > $TMP_DIR/mappings/ip_addresses
 	
 	if test -s $TMP_DIR/mappings/ip_addresses ; then

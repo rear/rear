@@ -10,37 +10,25 @@ if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
       BEXTRACT_VOLUME=*
    fi
 
-   if [ ! -x /usr/sbin/bextract ]; then
-      ProgressStopIfError 1  "Bacula executable (bextract) missing or not executable"
-      exit
-   fi
+   [ -x /usr/sbin/bextract ]
+   StopIfError "Bacula executable (bextract) missing or not executable"
 
-   if [ ! -s /etc/bacula/bacula-sd.conf ]; then
-      ProgressStopIfError 1  "Bacula configuration file (bacula-sd.conf) missing"
-      exit
-   fi
+   [ -s /etc/bacula/bacula-sd.conf ]
+   StopIfError "Bacula configuration file (bacula-sd.conf) missing"
 
 else
 
    ### Bacula support using bconsole
-   if [ ! -x /usr/sbin/bacula-fd ]; then
-      ProgressStopIfError 1  "Bacula executable (bacula-fd) missing or not executable"
-      exit
-   fi
+   [ -x /usr/sbin/bacula-fd ]
+   StopIfError "Bacula executable (bacula-fd) missing or not executable"
 
-   if [ ! -s /etc/bacula/bacula-fd.conf ]; then
-      ProgressStopIfError 1  "Bacula configuration file (bacula-fd.conf) missing"
-      exit
-   fi
+   [ -s /etc/bacula/bacula-fd.conf ]
+   StopIfError "Bacula configuration file (bacula-fd.conf) missing"
 
-   if [ ! -x /usr/sbin/bconsole ]; then
-      ProgressStopIfError 1  "Bacula executable (bconsole) missing or not executable"
-      exit
-   fi
+   [ -x /usr/sbin/bconsole ]
+   StopIfError "Bacula executable (bconsole) missing or not executable"
 
-   if [ ! -s /etc/bacula/bconsole.conf ]; then
-      ProgressStopIfError 1  "Bacula configuration file (bconsole.conf) missing"
-      exit
-   fi
+   [ -s /etc/bacula/bconsole.conf ]
+   StopIfError 1  "Bacula configuration file (bconsole.conf) missing"
 
 fi

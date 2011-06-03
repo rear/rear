@@ -11,7 +11,8 @@
 # silently skip the script if lvm is not available
 test -c /dev/mapper/control -a -x "$(type -p lvm)" || return	# silently skip
 
-mkdir -p "${VAR_DIR}/recovery/lvm" || Error "Creating directory ${VAR_DIR}/recovery/lvm"
+mkdir -p "${VAR_DIR}/recovery/lvm"
+StopIfError "Creating directory ${VAR_DIR}/recovery/lvm"
 
 # first we do a general VG backup to the system default location, just in case it might be needed
 vgcfgbackup 1>&2 8>&- 7>&-
@@ -21,9 +22,12 @@ for vg in $(lvm vgs --noheadings -o vg_name 8>&- 7>&-  ) ; do
 		Log "Skipping excluded volume group '$vg'"
 		continue
 	fi
-	lvm vgcfgbackup --file "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" $vg 1>&2 8>&- 7>&-  ||\
-	Error "vgcfgbackup failed for '$vg': $?"
-	test -s "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" || Error "vgcfgbackup created an empty file!"
+
+	lvm vgcfgbackup --file "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" $vg 1>&2 8>&- 7>&-
+	StopIfError "vgcfgbackup failed for '$vg': $?"
+
+	[ -s "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" ]
+	StopIfError "vgcfgbackup created an empty file!"
 done
 
 # truncate pv_list
@@ -47,7 +51,8 @@ YOU MUST MAKE SURE TO ALSO EXCLUDE THE CORRESPONDING MOUNT POINTS !!!"
 	echo $pv >>${VAR_DIR}/recovery/lvm/depends
 done
 # if the lvm before the while fails, then we notice it here.
-test "$PIPESTATUS" -gt 0 && Error "pvs failed: $PIPESTATUS"
+[ "$PIPESTATUS" -eq 0 ]
+StopIfError "pvs failed: $PIPESTATUS"
 
 # test if pv_list is empty (=no LVM in use) and remove the lvm directory to reduce the confusion
 # of the recovery part.

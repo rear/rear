@@ -3,7 +3,7 @@
 
 test -s $VAR_DIR/recovery/proc/mdstat || return # nothing to do here
 
-ProgressStart "Creating Software RAID devices"
+LogPrint "Creating Software RAID devices"
 # search for all md.devices files in our recovery data and work on them
 while read file ; do
 	# md device name
@@ -11,14 +11,14 @@ while read file ; do
 	
 	# just in case, stop the md device
 	mdadm --stop $device
-	ProgressStep
 
 	# check for required files
 	for f in md.level; do
-		test -s $VAR_DIR/recovery$device/$f
-		ProgressStopIfError $? "Required MD config file '$VAR_DIR/recovery$device/$f' is missing or empty"
+		[ -s $VAR_DIR/recovery$device/$f ]
+		StopIfError "Required MD config file '$VAR_DIR/recovery$device/$f' is missing or empty"
+
 		declare MD_OPTION_${f##md.}="$( cat $VAR_DIR/recovery$device/$f )"
-		ProgressStopIfError $? "Could not read '$VAR_DIR/recovery$device/$f'"
+		StopIfError "Could not read '$VAR_DIR/recovery$device/$f'"
 	done
 
 	# read in remaining MD options
@@ -28,20 +28,17 @@ while read file ; do
 	fi
 
 	# Check that we have some devices
-	test -s $VAR_DIR/recovery$device/md.devices
-	ProgressStopIfError $? "The '$VAR_DIR/recovery$device/md.devices' file is empty !"
-	ProgressStep
+	[ -s $VAR_DIR/recovery$device/md.devices ]
+	StopIfError "The '$VAR_DIR/recovery$device/md.devices' file is empty !"
 
 	# RAID devices
 	DEVICES=( $(cat $VAR_DIR/recovery$device/md.devices) )
-	ProgressStopIfError $? "Could not read '$VAR_DIR/recovery$device/md.devices' !"
-	ProgressStep
+	StopIfError "Could not read '$VAR_DIR/recovery$device/md.devices' !"
 
 	# test number of RAID devices if we have this information from md.options
 	if test "$MD_OPTION_num_devices" ; then
-		test "$MD_OPTION_num_devices" -eq "${#DEVICES[@]}"
-		ProgressStopIfError $? "Number of RAID devices for '$device' differs between md.num_devices ($MD_OPTION_num_devices) and md.devices (${#DEVICES[@]}) !"
-		ProgressStep
+		[ "$MD_OPTION_num_devices" -eq "${#DEVICES[@]}" ]
+		StopIfError "Number of RAID devices for '$device' differs between md.num_devices ($MD_OPTION_num_devices) and md.devices (${#DEVICES[@]}) !"
 	else 
 		# num_devices was not given, calculate it from the DEVICES array
 		MD_OPTION_num_devices=${#DEVICES[@]}
@@ -53,7 +50,7 @@ while read file ; do
 		:
 		;;
 		*)
-		ProgressStopIfError 1 "Invalid RAID level '$MD_OPTION_level' specified for '$device'"
+		Error "Invalid RAID level '$MD_OPTION_level' specified for '$device'"
 		;;
 	esac
 
@@ -71,18 +68,14 @@ while read file ; do
 			echo "--$optname ${!var} "
 		done
 		) --verbose 1>&2 <<<y ; then
-			ProgressStep
 	else
 		# now the old style
 		Log "Fancy mdadm failed, trying plain old style"
 		mdadm --create $device --level=$MD_OPTION_level --raid-devices=$MD_OPTION_num_devices --force "${DEVICES[@]}" <<<y
-		ProgressStopIfError $? "Could not create the MD device '$device'"
-		ProgressStep
+		StopIfError "Could not create the MD device '$device'"
 	fi
 
 done < <(
 	cd $VAR_DIR/recovery
 	find . -name md.devices -printf "%P\n" 
 	)
-
-ProgressStop

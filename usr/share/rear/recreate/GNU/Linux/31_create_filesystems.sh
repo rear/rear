@@ -3,14 +3,13 @@
 #
 # every vol_id file in recovery/dev represents a filesystem
 
-ProgressStart "Creating file systems"
+LogPrint "Creating file systems"
 while read file ; do
 	# file looks like dev/md/0/fs_vol_id
 	device="/${file%%/fs_vol_id}" # /dev/md/0
 	
-	test -s $VAR_DIR/recovery/$file
-	ProgressStopIfError $? "Description file '$VAR_DIR/recovery/$file' is empty."
-	ProgressStep
+	[ -s $VAR_DIR/recovery/$file ]
+	StopIfError "Description file '$VAR_DIR/recovery/$file' is empty."
 	
 	# initialize variables
 	ID_FS_USAGE=""
@@ -79,35 +78,32 @@ while read file ; do
 			CMD=( "${CMD[@]}" "$device" )
 			;;
 		*)
-			ProgressStopIfError 1 "File system '$ID_FS_TYPE' is not supported. You should file a bug."
+			Error "File system '$ID_FS_TYPE' is not supported. You should file a bug."
 			;;
 	esac
-	ProgressStep
 
 	# check that command has enough words
-	test "${#CMD[@]}" -ge 3
-	ProgressStopIfError $? "Invalid filesystem creation command: '${CMD[@]}'"
-	ProgressStep
+	[ "${#CMD[@]}" -ge 3 ]
+	StopIfError "Invalid filesystem creation command: '${CMD[@]}'"
 	
 	# check that command exists
-	test -x "$(type -p $CMD)"
-	ProgressStopIfError $? "Filesystem creation command '$CMD' not found !"
-	ProgressStep
+	[ -x "$(type -p $CMD)" ]
+	StopIfError "Filesystem creation command '$CMD' not found !"
 
 	# run command
 	eval "${CMD[@]}" 1>&8
-	ProgressStopIfError $? "Could not create filesystem ($ID_FS_TYPE) on '$device'"
+	StopIfError "Could not create filesystem ($ID_FS_TYPE) on '$device'"
 	
 	# should we run another command (CMD2) ?
 	if test "${#CMD2[@]}" -ge 2 ; then
 
 		# check that CMD2 exists
-		test -x "$( type -p $CMD2)"
-		ProgressStopIfError $? "Filesystem manipulation command '$CMD2' not found !"
+		[ -x "$( type -p $CMD2)" ]
+		StopIfError "Filesystem manipulation command '$CMD2' not found !"
 		
 		# run CMD2
 		eval "${CMD2[@]}" 1>&8
-		ProgressStopIfError $? "Could not '$CMD2' filesystem ($ID_FS_TYPE) on '$device'"
+		StopIfError "Could not '$CMD2' filesystem ($ID_FS_TYPE) on '$device'"
 
 	fi
 
@@ -115,17 +111,15 @@ while read file ; do
 	if test "${#CMD3[@]}" -ge 2 ; then
 
 		# check that CMD3 exists
-		test -x "$( type -p $CMD3)"
-		ProgressStopIfError $? "Filesystem manipulation command '$CMD3' not found !"
+		[ test -x "$( type -p $CMD3)" ]
+		StopIfError "Filesystem manipulation command '$CMD3' not found !"
 		
 		# run CMD3
 		eval "${CMD3[@]}" 1>&8
-		ProgressStopIfError $? "Could not '$CMD3' filesystem ($ID_FS_TYPE) on '$device'"
+		StopIfError "Could not '$CMD3' filesystem ($ID_FS_TYPE) on '$device'"
 
 	fi
 done < <(
 	cd $VAR_DIR/recovery
 	find . -name fs_vol_id -printf "%P\n" 
 	)
-
-ProgressStop

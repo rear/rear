@@ -1,19 +1,15 @@
 # recreate the partitions
 # install a blank default MBR on each disk
 
-ProgressStart "Creating partitions"
+LogPrint "Creating partitions"
 pushd "$VAR_DIR/recovery" >/dev/null
-test -d /boot || mkdir /boot
-for f in $( find dev -type f -name parted )
-do
+mkdir -p /boot
+for f in $( find dev -type f -name parted ); do
 	device="$(dirname "$f")"
 	Log "Partitioning '${device}'"
-	dd if=/dev/zero of=/${device} bs=1M count=1 1>&2 || \
-		Error "Could not write blank MBR onto ${device}"
-	ProgressStep
-	"$f"  1>&2 || \
-		Error "Repartioning of ${device} failed"
-	ProgressStep
+	dd if=/dev/zero of=/${device} bs=1M count=1 1>&2
+	StopIfError "Could not write blank MBR onto ${device}"
+	"$f"  1>&2
+	StopIfError "Repartioning of ${device} failed"
 done
-ProgressStop
 popd >/dev/null

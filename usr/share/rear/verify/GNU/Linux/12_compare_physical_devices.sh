@@ -18,7 +18,7 @@
 
 # Only run this if not in layout mode.
 if [ -n "$USE_LAYOUT" ] ; then
-    return 0
+    return
 fi
 
 # create temporary list of available devices and their sizes
@@ -32,7 +32,7 @@ available_devices="$(
 # check if a valid mapping files exists and if the mapped devices are big enough
 DISK_MAPPING_COUNT=0
 
-test -d $TMP_DIR/mappings || mkdir $TMP_DIR/mappings
+mkdir -p $TMP_DIR/mappings
 test -f $CONFIG_DIR/mappings/disk_devices && read_and_strip_file $CONFIG_DIR/mappings/disk_devices > $TMP_DIR/mappings/disk_devices
 
 if test -s $TMP_DIR/mappings/disk_devices ; then
@@ -87,31 +87,30 @@ for device in $(cat $VAR_DIR/recovery/required_devices) ; do
 WARNING! The original device $device [$display_original_size GB] is not available
 or too small$(test $size -gt 0 && echo " [$display_size GB]")."
 
-		if test "$DEVICE_LIST" ; then
-			# we have alternatives, offer them
-			LogPrint "Please select another device to replace '$device' from this list:"
-			PS3="
+		[ "$DEVICE_LIST" ]
+		StopIfError "Required physical device '$device' could not be found and no suitable alternative available!"
+
+		# we have alternatives, offer them
+		LogPrint "Please select another device to replace '$device' from this list:"
+		PS3="
 Enter a number to choose: "
-			select choice in "${DEVICE_LIST[@]}" "Cancel selection and abort recovery" ; do
-				n=( $REPLY ) # trim blanks from reply
-				let n-- # because bash arrays count from 0
-				if test "$n" == "${#DEVICE_LIST[@]}" -o "$n" -lt 0 -o "$n" -ge "${#DEVICE_LIST[@]}"; then
-					Error "Recovery aborted by user."
-				fi
-				break
-			done 2>&1 # to get the prompt, otherwise it would go to the logfile
+		select choice in "${DEVICE_LIST[@]}" "Cancel selection and abort recovery" ; do
+			n=( $REPLY ) # trim blanks from reply
+			let n-- # because bash arrays count from 0
+			if test "$n" == "${#DEVICE_LIST[@]}" -o "$n" -lt 0 -o "$n" -ge "${#DEVICE_LIST[@]}"; then
+				Error "Recovery aborted by user."
+			fi
+			break
+		done 2>&1 # to get the prompt, otherwise it would go to the logfile
 
-			# write out mapping file
-			mkdir -p /etc/rear/mappings
-			echo "$device $choice" >>/etc/rear/mappings/disk_devices
-			# remember that choice contains something like "/dev/sda 4 GB" :-)
+		# write out mapping file
+		mkdir -p /etc/rear/mappings
+		echo "$device $choice" >>/etc/rear/mappings/disk_devices
+		# remember that choice contains something like "/dev/sda 4 GB" :-)
 
-			chosen_device=( $choice ) # get first word
-			# remove this choice from the list of $available_devices
-			available_devices="$(grep -v $chosen_device <<<"$available_devices")"
-		else
-			Error "Required physical device '$device' could not be found and no suitable alternative available!"
-		fi
+		chosen_device=( $choice ) # get first word
+		# remove this choice from the list of $available_devices
+		available_devices="$(grep -v $chosen_device <<<"$available_devices")"
 	else
 		Error "No more devices available. This script is not able to
 change the amount or size of the disk devices, only replace one device

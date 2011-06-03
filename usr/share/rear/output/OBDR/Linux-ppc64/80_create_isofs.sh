@@ -19,17 +19,20 @@
 #
 
 # check that we have mkisofs
-test -x "$ISO_MKISOFS_BIN" || Error "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executable !"
+[ -x "$ISO_MKISOFS_BIN" ]
+StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executable !"
 
 ISO_FILES=( ${ISO_FILES[@]} kernel initrd.cgz )
 Log "Starting '$ISO_MKISOFS_BIN'"
-ProgressStart "Making ISO image"
-test -d "$ISO_DIR" || mkdir -p "$ISO_DIR" 1>&8 
-ProgressStopIfError $? "Could not create ISO ouput directory ($ISO_DIR)"
+LogPrint "Making ISO image"
+
+mkdir -p "$ISO_DIR" 1>&8 
+StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
+
 pushd $BUILD_DIR 1>&8 # so that relative paths will work
 $ISO_MKISOFS_BIN -o "$ISO_DIR/$ISO_PREFIX.iso" -U -chrp-boot \
 	-R -J -volid "$ISO_VOLID" -v -graft-points "${ISO_FILES[@]}"  1>&8
-ProgressStopOrError $? "Could not create ISO image"
+StopIfError "Could not create ISO image"
 ISO_IMAGES=( "${ISO_IMAGES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
 popd >/dev/null
 Print "Wrote ISO Image $ISO_DIR/$ISO_PREFIX.iso ($(du -h "$ISO_DIR/$ISO_PREFIX.iso"| tr -s " \t" " " | cut -d " " -f 1))"

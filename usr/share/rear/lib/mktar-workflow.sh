@@ -22,13 +22,14 @@ WORKFLOW_mktar_DESCRIPTION="Create tar archive with this rear installation"
 WORKFLOWS=( ${WORKFLOWS[@]} mktar )
 WORKFLOW_mktar () {
 	
-	test "$ARGS" || Error "You must provide the filename for the archive,
+	[ "$ARGS" ]
+	StopIfError "You must provide the filename for the archive,
 	e.g. my-rear-archive.tar.gz
 	The Archive will be a tar.gz archive.
 	"
 	
-	ProgressStart "Creating archive '$ARGS'"
+	LogPrint "Creating archive '$ARGS'"
 	tar -C / --exclude=\*~ -cvzf "$ARGS" "$SHARE_DIR" "$CONFIG_DIR" "$(type -p "$0")" 1>&2
-	ProgressStopOrError $? "Could not create archive"
+	StopIfError "Could not create archive"
 	
 }

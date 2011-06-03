@@ -19,7 +19,7 @@
 #
 
 Log "Copy program files & libraries"
-ProgressStart "Copy program files & libraries"
+LogPrint "Copy program files & libraries"
 {
 # calculate binaries from needed progs
 declare -a BINARIES
@@ -36,7 +36,8 @@ done
 # copy binaries
 Log "Binaries: ${BINARIES[@]}"
 BinCopyTo "$ROOTFS_DIR/bin" "${BINARIES[@]}"  1>&8
-ProgressStopIfError $PIPESTATUS "Could not copy binaries"
+[ $PIPESTATUS -eq 0 ]
+StopIfError "Could not copy binaries"
 
 # split libs into lib and lib64 paths
 # I know, our modular design demands to split this into multiple files
@@ -61,20 +62,24 @@ done
 
 Log "Libraries: ${REAL_LIBS[@]}"
 if test "$REAL_LIBS" ; then
-	LibCopyTo "$ROOTFS_DIR/lib" ${REAL_LIBS[@]} 1>&8 
-	ProgressStopIfError $PIPESTATUS "Could not copy libraries"
+	LibCopyTo "$ROOTFS_DIR/lib" ${REAL_LIBS[@]} 1>&8
+	[ $PIPESTATUS -eq 0 ]
+	StopIfError "Could not copy libraries"
 fi
 Log "Libraries(32): ${REAL_LIBS32[@]}"
 if test "$REAL_LIBS32" ; then
-	LibCopyTo "$ROOTFS_DIR/lib32" ${REAL_LIBS32[@]} 1>&8 
-	ProgressStopIfError $PIPESTATUS "Could not copy 32bit libraries"
+	LibCopyTo "$ROOTFS_DIR/lib32" ${REAL_LIBS32[@]} 1>&8
+	[ $PIPESTATUS -eq 0 ]
+	StopIfError "Could not copy 32bit libraries"
 fi
 Log "Libraries(64): ${REAL_LIBS64[@]}"
 if test "$REAL_LIBS64" ; then
 	LibCopyTo "$ROOTFS_DIR/lib64" ${REAL_LIBS64[@]} 1>&8
-	ProgressStopIfError $PIPESTATUS "Could not copy 64bit libraries"
+	[ $PIPESTATUS -eq 0 ]
+	StopIfError "Could not copy 64bit libraries"
 fi
-ldconfig $v -r "$ROOTFS_DIR" 1>&8 
-ProgressStopOrError $PIPESTATUS "Could not configure libraries with ldconfig"
+ldconfig $v -r "$ROOTFS_DIR" 1>&8
+[ $PIPESTATUS -eq 0 ]
+StopIfError "Could not configure libraries with ldconfig"
 
 

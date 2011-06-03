@@ -3,7 +3,8 @@
 #
 
 # verify that we have a backupset
-test "$GALAXY7_BACKUPSET" || Error "Galaxy Backup Set not defined [GALAXY7_BACKUPSET=]."
+[ "$GALAXY7_BACKUPSET" ]
+StopIfError "Galaxy Backup Set not defined [GALAXY7_BACKUPSET=]."
 
 # create argument file
 cat <<EOF >$TMP_DIR/galaxy.restore.options
@@ -38,8 +39,8 @@ if jobid=$(qoperation restore -af $TMP_DIR/galaxy.restore.options) ; then
 		# Pending  
 		# the array gets rid of the line breaks :-)
 
-		jobdetails=( $(qlist job -co s -j $jobid) ) || \
-			Error "Could not receive job details. Check log file."
+		jobdetails=( $(qlist job -co s -j $jobid) )
+		StopIfError "Could not receive job details. Check log file."
 
 		jobstatus="${jobdetails[2]}"
 		
@@ -72,6 +73,6 @@ fi
 # create missing directories
 pushd /mnt/local >/dev/null
 for dir in opt/galaxy/Base/Temp opt/galaxy/Updates opt/galaxy/iDataAgent/jobResults ; do
-	test -d "$dir" || mkdir -p "$dir"
+	mkdir -p "$dir"
 done
 popd >/dev/null

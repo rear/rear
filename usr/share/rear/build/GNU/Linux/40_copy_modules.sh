@@ -19,18 +19,19 @@
 #
 
 Log "Collecting modules for kernel version $KERNEL_VERSION"
-ProgressStart "Copy kernel modules"
+LogPrint "Copy kernel modules"
 MODFILES=(
 $( ResolveModules "$KERNEL_VERSION" "${MODULES[@]}" "${MODULES_LOAD[@]}"  )
 )
-ProgressStopIfError $? "Could not resolve kernel module dependancies"
+StopIfError "Could not resolve kernel module dependancies"
 
 # copy modules & depmod
 Log "Copying kernel modules"
 ModulesCopyTo "$ROOTFS_DIR" "${MODFILES[@]}" 1>&8 
-ProgressStopIfError $? "Could not copy kernel modules"
+StopIfError "Could not copy kernel modules"
+
 depmod -avb "$ROOTFS_DIR" "$KERNEL_VERSION" 1>&8 
-ProgressStopOrError $? "Could not configure modules with depmod"
+StopIfError "Could not configure modules with depmod"
 
 for m in "${MODULES_LOAD[@]}" ; do
 	echo $m

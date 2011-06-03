@@ -3,7 +3,7 @@ do
 	# device = /dev/sda
 	#ParseDevice ${device}	# $Dev=sda
 	#ParseDisk ${Dev}	# ${dsk}=sda & ${_dsk}=sda
-	test -d "$VAR_DIR/recovery${device}" || mkdir -p "$VAR_DIR/recovery${device}"
+	mkdir -p "$VAR_DIR/recovery${device}"
 
 	parted -s ${device} print > "$VAR_DIR/recovery${device}/partitions" || \
 		Error "Print partition list failed for device ${device}"

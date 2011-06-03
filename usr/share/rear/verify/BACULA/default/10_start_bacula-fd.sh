@@ -7,13 +7,13 @@ if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
    if [ -b "$BEXTRACT_DEVICE" ]; then
       mkdir -p /backup
       mount $BEXTRACT_DEVICE /backup
-      ProgressStopIfError $? "Could not mount Bacula device $BACULA_DEVICE at /backup"
+      StopIfError "Could not mount Bacula device $BACULA_DEVICE at /backup"
    fi
 
 else
 
    ### Bacula support using bconsole
    bacula-fd -u root -g bacula -c /etc/bacula/bacula-fd.conf
-   ProgressStopIfError $?  "Cannot start bacula-fd file daemon"
+   StopIfError "Cannot start bacula-fd file daemon"
 
 fi

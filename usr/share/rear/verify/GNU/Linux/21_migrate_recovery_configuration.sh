@@ -2,14 +2,16 @@
 
 # Only run this if not in layout mode.
 if [ -n "$USE_LAYOUT" ] ; then
-    return 0
+    return
 fi
 
-test -d $TMP_DIR/mappings || mkdir $TMP_DIR/mappings
+mkdir -p $TMP_DIR/mappings
 read_and_strip_file /etc/rear/mappings/disk_devices > $TMP_DIR/mappings/disk_devices
 
 # skip if disk devices have not changed
-test -s $TMP_DIR/mappings/disk_devices || return 0
+if [ ! -s $TMP_DIR/mappings/disk_devices ]; then
+    return
+fi
 
 # which files to patch
 PATCH_FILES=( $(find $VAR_DIR/recovery -type f ) )
@@ -72,7 +74,8 @@ DISK_DEVICE_MAPPINGS_SED_SCRIPT="$DISK_DEVICE_MAPPINGS_SED_SCRIPT;: SEDMNTID;"
 
 
 # step 1 - edit data in the files
-sed -i -e "$DISK_DEVICE_MAPPINGS_SED_SCRIPT" "${PATCH_FILES[@]}" || LogPrint "WARNING! There was an error patching the recovery configuration files!"
+sed -i -e "$DISK_DEVICE_MAPPINGS_SED_SCRIPT" "${PATCH_FILES[@]}"
+LogPrintIfError "WARNING! There was an error patching the recovery configuration files!"
 
 
 # We're adding our rules BEFORE the existing sed-script without ";t" to allow double-replacements in 
@@ -82,7 +85,8 @@ while read mountpoint real_device device_id filesystem ; do
 done < <(grep -v /dev/mapper $VAR_DIR/recovery/mountpoint_device)
 
 # step 1 - edit data in the files
-sed -i -e "$DISK_DEVICE_MAPPINGS_SED_SCRIPT" "${PATCH_FILES[@]}" || LogPrint "WARNING! There was an error patching the recovery configuration files!"
+sed -i -e "$DISK_DEVICE_MAPPINGS_SED_SCRIPT" "${PATCH_FILES[@]}"
+LogPrintIfError "WARNING! There was an error patching the recovery configuration files!"
 
 # step 2 - rename the device directories
 # rename the directories that contain the device information
@@ -91,10 +95,11 @@ sed -i -e "$DISK_DEVICE_MAPPINGS_SED_SCRIPT" "${PATCH_FILES[@]}" || LogPrint "WA
 mkdir -p $TMP_DIR/new_devices
 while read old_device new_device size ; do
 	# do the main devices first
-	mkdir -p $TMP_DIR/new_devices/$(dirname $new_device) || \
-		Error "Could not create '$TMP_DIR/new_devices/$(dirname $new_device)'" # could be /dev or /dev/cciss
-	cp -rv $VAR_DIR/recovery/$old_device $TMP_DIR/new_devices/$new_device 1>&2 || \
-		Error "Could not cp '$VAR_DIR/recovery/$old_device' '$TMP_DIR/new_devices/$new_device'" 
+	mkdir -p $TMP_DIR/new_devices/$(dirname $new_device)
+	StopIfError "Could not create '$TMP_DIR/new_devices/$(dirname $new_device)'" # could be /dev or /dev/cciss
+
+	cp -rv $VAR_DIR/recovery/$old_device $TMP_DIR/new_devices/$new_device 1>&2
+	StopIfError "Could not cp '$VAR_DIR/recovery/$old_device' '$TMP_DIR/new_devices/$new_device'" 
 		# e.g. ../dev/sda -> ../dev/cciss/c0d0
 
 	# for the dependant devices we might have to add something between the main device and the partitions,
@@ -119,18 +124,19 @@ while read old_device new_device size ; do
 		new_dir=${old_dir/$old_device/$new_device} # substitute new device, e.g. /dev/sda2 -> /dev/cciss/c0d0p2
 								# here we make use of the added 'p' in the step before!
 		# do only something if old and new dir differ!
-		if test "$old_dir" == "$new_dir" ; then
-			Error "Failed to migrate '$old_dir': Directory name unchanged after substitution"
-		else
-			# now move the data
-			mkdir -p $TMP_DIR/new_devices/$(dirname $new_dir) || \
-				Error "Could not create '$TMP_DIR/new_devices/$(dirname $new_dir)'"
-			mv -v $VAR_DIR/recovery/$old_dir $TMP_DIR/new_devices/$new_dir 1>&2 || \
-				Error "Could not mv '$VAR_DIR/recovery/$old_dir' '$TMP_DIR/new_devices/$new_dir'"
-				# e.g. ../dev/sda2 -> ../dev/cciss/c0d0p2
-		fi
+		[ "$old_dir" != "$new_dir" ]
+		StopIfError "Failed to migrate '$old_dir': Directory name unchanged after substitution"
+
+		# now move the data
+		mkdir -p $TMP_DIR/new_devices/$(dirname $new_dir)
+		StopIfError "Could not create '$TMP_DIR/new_devices/$(dirname $new_dir)'"
+
+		mv -v $VAR_DIR/recovery/$old_dir $TMP_DIR/new_devices/$new_dir 1>&2
+		StopIfError "Could not mv '$VAR_DIR/recovery/$old_dir' '$TMP_DIR/new_devices/$new_dir'"
+		# e.g. ../dev/sda2 -> ../dev/cciss/c0d0p2
 	done
 
 done < $TMP_DIR/mappings/disk_devices
 
-cp -rv $TMP_DIR/new_devices/dev $VAR_DIR/recovery/ 1>&2 || Error "Could not copy updated device information"
+cp -rv $TMP_DIR/new_devices/dev $VAR_DIR/recovery/ 1>&2
+StopIfError "Could not copy updated device information"

@@ -12,7 +12,7 @@ NETFS_MOUNTPATH=
 # check for complete information, we need either NETFS_URL or NETFS_MOUNTCMD/UMOUNTCMD
 if test -z "$NETFS_URL" ; then
 	if ! test "$NETFS_MOUNTCMD" -a "$NETFS_UMOUNTCMD" ; then
-		ProgressStopIfError 1 "You must specify either NETFS_URL or NETFS_MOUNTCMD and NETFS_UMOUNTCMD !"
+		Error "You must specify either NETFS_URL or NETFS_MOUNTCMD and NETFS_UMOUNTCMD !"
 	fi
 else
 	# we have an URL, break it into parts
@@ -40,7 +40,7 @@ else
 	# check if host is reachable
 	if test "$PING" ; then
 		ping -c 2 "$NETFS_HOST" 1>&8
-		ProgressStopIfError $? "Backup host [$NETFS_HOST] not reachable."
+		StopIfError "Backup host [$NETFS_HOST] not reachable."
 	else
 		Log "Skipping ping test"
 	fi
@@ -87,7 +87,7 @@ rpcinfo
 mount
 mount.$NETFS_PROTO
 umount.$NETFS_PROTO
-$( 
+$(
 test "$NETFS_MOUNTCMD" && echo "${NETFS_MOUNTCMD%% *}"
 test "$NETFS_UMOUNTCMD" && echo "${NETFS_UMOUNTCMD%% *}"
 )

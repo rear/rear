@@ -18,14 +18,12 @@
 #
 #
 
-ProgressStart "Create initramfs"
+LogPrint "Create initramfs"
 
 pushd "$ROOTFS_DIR" >/dev/null
 find . ! -name "*~"  |\
 	tee /dev/fd/8  |\
 	cpio -H newc --create --quiet  |\
 	gzip > "$BUILD_DIR/initrd.cgz"
-ProgressStopOrError "${PIPESTATUS[2]}" "Could not create initramfs archive"
+StopIfError "Could not create initramfs archive"
 popd >/dev/null
-
-

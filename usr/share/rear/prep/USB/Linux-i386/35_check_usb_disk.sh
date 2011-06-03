@@ -1,15 +1,15 @@
 [ "$USB_DEVICE" ]
-ProgressStopIfError $? "USB device (\$USB_DEVICE) is not set."
+StopIfError "USB device (\$USB_DEVICE) is not set."
 
 # Attempt to find the real USB device by trying its parent
 # Return a proper short device name using udev
 REAL_USB_DEVICE=$(readlink -f $USB_DEVICE)
 
 [ -b "$REAL_USB_DEVICE" ]
-ProgressStopIfError $? "USB device '$USB_DEVICE' is not a block device"
+StopIfError "USB device '$USB_DEVICE' is not a block device"
 
 ! grep -q "^$REAL_USB_DEVICE " /proc/mounts
-ProgressStopIfError $? "USB device '$USB_DEVICE' is already mounted on $(grep -P "^$REAL_USB_DEVICE\\s" /proc/mounts | cut -d' ' -f2 |tail -1)"
+StopIfError "USB device '$USB_DEVICE' is already mounted on $(grep -P "^$REAL_USB_DEVICE\\s" /proc/mounts | cut -d' ' -f2 |tail -1)"
 
 # We cannot use the layout dependency code in the backup phase (yet)
 #RAW_USB_DEVICE=$(find_disk $REAL_USB_DEVICE)
@@ -29,4 +29,4 @@ else
 fi
 
 [ "$RAW_USB_DEVICE" -a -b "$RAW_USB_DEVICE" ]
-ProgressStopIfError $? "Unable to determine raw USB device for $REAL_USB_DEVICE"
+StopIfError "Unable to determine raw USB device for $REAL_USB_DEVICE"

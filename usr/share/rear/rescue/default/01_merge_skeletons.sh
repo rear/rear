@@ -18,7 +18,7 @@
 #
 #
 
-ProgressStart "Creating root FS layout"
+LogPrint "Creating root FS layout"
 pushd $SHARE_DIR/skel >/dev/null
 for dir in default "$ARCH" "$OS" \
 		"$OS_MASTER_VENDOR/default" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" \
@@ -38,4 +38,3 @@ for dir in default "$ARCH" "$OS" \
 	fi
 done
 popd >/dev/null
-ProgressStop

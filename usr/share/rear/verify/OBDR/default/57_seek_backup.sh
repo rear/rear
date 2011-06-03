@@ -7,5 +7,4 @@ StopIfError "Problem with rewinding tape in drive '$TAPE_DEVICE'"
 
 # The tar starts at the third marker (zeros, iso, tar)
 mt -f ${TAPE_DEVICE} fsf 3
-ProgressStopIfError $? "Could not forward tape device '$TAPE_DEVICE' to marker 3"
-ProgressStep
+StopIfError "Could not forward tape device '$TAPE_DEVICE' to marker 3"

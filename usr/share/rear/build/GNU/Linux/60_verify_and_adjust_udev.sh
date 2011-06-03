@@ -4,7 +4,7 @@
 # skip this script if udev is not part of the rescue system
 test -d $ROOTFS_DIR/etc/udev/rules.d || return 0
 
-ProgressStart "Checking udev"
+LogPrint "Checking udev"
 # check that all external programs used by udev are available
 while read file location ; do
 	# check for file in ROOTFS_DIR (if full path) or in lib/udev or in bin (if name without path)
@@ -17,7 +17,6 @@ while read file location ; do
 	else
 		Log "WARNING: unmatched external call to '$file' in $location"
 	fi
-	ProgressStep
 done < <(
 
 	# get list of external files called in PROGRAM= or RUN= statements. The result is filtered
@@ -73,11 +72,7 @@ if [[ "$sysfs_modalias_paths" ]] && my_udevinfo -a -p $sysfs_modalias_paths | gr
 else
 	echo 'ACTION=="add", SYSFS{modalias}=="?*", RUN+="/bin/modprobe -v $sysfs{modalias}"'
 fi >>$ROOTFS_DIR/etc/udev/rules.d/00-rear.rules
-ProgressStep
 
 # udev requires certain standard groups, add them to the rescue system
 # the groups and users are in rescue/default/15_users_and_groups.sh
-
-
-ProgressStop
 

@@ -50,13 +50,12 @@ create_logicaldrive() {
         echo "hpacucli ctrl slot=$slotnr array $arrayname add${spares}" >> $LAYOUT_CODE
     fi
 cat >> $LAYOUT_CODE <<EOF
-ProgressStart "Configuration restored successfully, reloading CCISS driver..."
-sleep 1 ; ProgressStep ; sleep 1
+LogPrint "Configuration restored successfully, reloading CCISS driver..."
+sleep 2
 rmmod cciss
-sleep 1 ; ProgressStep ; sleep 1
+sleep 2
 modprobe cciss
-sleep 1 ; ProgressStep ; sleep 1
-ProgressStop
+sleep 2
 
 # Make sure device nodes are visible (eg. in RHEL4)
 my_udevtrigger

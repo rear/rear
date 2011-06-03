@@ -41,15 +41,15 @@ $(cat "$SLOTDIR"/hpacucli-commands.sh)"
 	# run each command from the list and report on the success
 	while read ; do
 		Log "Running '$REPLY'"
-		eval "$REPLY" || Error "Command failed with $?"
+		eval "$REPLY"
+		StopIfError "Command failed with $?"
 	done <<<"$command_list"
 
-	ProgressStart "Configuration restored successfully, reloading CCISS driver..."
-	sleep 1 ; ProgressStep ; sleep 1
+	LogPrint "Configuration restored successfully, reloading CCISS driver..."
+	sleep 2
 	rmmod cciss
-	sleep 1 ; ProgressStep ; sleep 1
+	sleep 2
 	modprobe cciss
-	sleep 1 ; ProgressStep ; sleep 1
-	ProgressStop
+	sleep 2
 	
 done # for SLOTDIR

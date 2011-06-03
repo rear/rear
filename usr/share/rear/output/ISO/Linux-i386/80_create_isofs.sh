@@ -19,17 +19,21 @@
 #
 
 # check that we have mkisofs
-test -x "$ISO_MKISOFS_BIN" || Error "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executabel !"
+[ -x "$ISO_MKISOFS_BIN" ]
+StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executabel !"
 
 ISO_FILES=( ${ISO_FILES[@]} $BUILD_DIR/kernel $BUILD_DIR/initrd.cgz )
 Log "Starting '$ISO_MKISOFS_BIN'"
-ProgressStart "Making ISO image"
-test -d "$ISO_DIR" || mkdir -p "$ISO_DIR" 1>&8 
-ProgressStopIfError $? "Could not create ISO ouput directory ($ISO_DIR)"
+LogPrint "Making ISO image"
+
+mkdir -p "$ISO_DIR" 1>&8
+StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
+
 $ISO_MKISOFS_BIN -quiet -o "$ISO_DIR/$ISO_PREFIX.iso" -b isolinux.bin -c boot.cat \
 	-no-emul-boot -boot-load-size 4 -boot-info-table \
 	-R -J -volid "$ISO_VOLID" -v "${ISO_FILES[@]}"  1>&8
-ProgressStopOrError $? "Could not create ISO image"
+StopIfError "Could not create ISO image"
+
 ISO_IMAGES=( "${ISO_IMAGES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
 iso_image_size=( $(du -h "$ISO_DIR/$ISO_PREFIX.iso") )
 LogPrint "Wrote ISO Image $ISO_DIR/$ISO_PREFIX.iso ($iso_image_size)"

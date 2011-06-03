@@ -48,9 +48,8 @@ DPChooseBackup() {
   else
     HOST="`hostname`"
   fi 1>&2
-  ProgressStart "Scanning for DP backups for Host ${HOST}"
+  LogPrint "Scanning for DP backups for Host ${HOST}"
   DPGetBackupList $HOST > /tmp/backup.list
-  ProgressStop
   >/tmp/backup.list.part
 
   SESSION=$(head -1 /tmp/backup.list | cut -f 1)

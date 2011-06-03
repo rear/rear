@@ -20,7 +20,7 @@ WORKFLOW_mkdist_postprocess () {
 	# rename ebuild to current version if it does not have the current version
 	test -s .$SHARE_DIR/contrib/rear-$VERSION.ebuild ||\
 		mv -v .$SHARE_DIR/contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild 1>&8
-	ProgressStopIfError $? "Could not mv rear-*.ebuild"
+	StopIfError "Could not mv rear-*.ebuild"
 
 
 	version_string="VERSION=\"$VERSION\""
@@ -33,7 +33,7 @@ WORKFLOW_mkdist_postprocess () {
 	ln -s .$SHARE_DIR/{doc,contrib}  .  1>&8
 	# to prevent RPMs from installing symlinks into the doc area we actually copy the text files
 	cp -r .$SHARE_DIR/{COPYING,README,AUTHORS,TODO}  .  1>&8
-	ProgressStopIfError $? "Could not copy .$SHARE_DIR/{COPYING,README,AUTHORS,TODO,doc,contrib}"
+	StopIfError "Could not copy .$SHARE_DIR/{COPYING,README,AUTHORS,TODO,doc,contrib}"
 	
 
 # I want the generic SPEC file to be always shipped 2009-11-16 Schlomo
@@ -82,10 +82,10 @@ WORKFLOW_mkdist () {
 	
 	prod_ver="$(basename "$0")-$VERSION"
 	distarchive="/tmp/$prod_ver.tar.gz"
-	ProgressStart "Creating archive '$distarchive'"
+	LogPrint "Creating archive '$distarchive'"
 
 	mkdir $BUILD_DIR/$prod_ver -v 1>&8
-	ProgressStopIfError $? "Could not mkdir $BUILD_DIR/$prod_ver" 
+	StopIfError "Could not mkdir $BUILD_DIR/$prod_ver"
 
 	# use tar to copy the current rear while excluding development and obsolete files
 	tar -C / --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
@@ -94,15 +94,15 @@ WORKFLOW_mkdist () {
 			"$CONFIG_DIR" \
 			"$(type -p "$0")" |\
 		tar -C $BUILD_DIR/$prod_ver -x 1>&8
-	ProgressStopIfError $? "Could not copy files to $BUILD_DIR/$prod_ver"
+	StopIfError "Could not copy files to $BUILD_DIR/$prod_ver"
 	
 	pushd $BUILD_DIR/$prod_ver 1>&8
-	ProgressStopIfError $? "Could not pushd $BUILD_DIR/$prod_ver"
+	StopIfError "Could not pushd $BUILD_DIR/$prod_ver"
 
 	WORKFLOW_mkdist_postprocess
 
 	popd 1>&8
 	tar -C $BUILD_DIR -cvzf $distarchive $prod_ver 1>&8
-	ProgressStopOrError $? "Could not create $distarchive"
+	StopIfError "Could not create $distarchive"
 
 }

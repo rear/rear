@@ -59,11 +59,12 @@
 
 	"
 	fi
-) || Error "Galaxy aborted"
+)
+StopIfError "Galaxy aborted"
 
 # create missing directories
 pushd /mnt/local >/dev/null
 for dir in opt/galaxy/Base/Temp opt/galaxy/Updates opt/galaxy/iDataAgent/jobResults ; do
-	test -d "$dir" || mkdir -p "$dir"
+	mkdir -p "$dir"
 done
 popd >/dev/null

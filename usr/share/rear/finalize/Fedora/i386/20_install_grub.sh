@@ -12,17 +12,16 @@
 
 LogPrint "Installing GRUB boot loader"
 mount -t proc none /mnt/local/proc
-ProgressStep
 
 if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
 
     # Check if we find GRUB stage 2 where we expect it
     [[ -d "/mnt/local/boot" ]]
-    ProgressStopIfError $? "Could not find directory /boot"
+    StopIfError "Could not find directory /boot"
     [[ -d "/mnt/local/boot/grub" ]]
-    ProgressStopIfError $? "Could not find directory /boot/grub"
+    StopIfError "Could not find directory /boot/grub"
     [[ -r "/mnt/local/boot/grub/stage2" ]]
-    ProgressStopIfError $? "Unable to find /boot/grub/stage2."
+    StopIfError "Unable to find /boot/grub/stage2."
 
     # Find exclusive partitions belonging to /boot (subtract root partitions from deps)
     bootparts=$( (find_partition fs:/boot; find_partition fs:/) | sort | uniq -u )
@@ -32,14 +31,13 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
         grub_prefix=/boot/grub
     fi
     # Should never happen
-    if [[ -z "$bootparts" ]]; then
-        BugError "Unable to find any /boot partitions"
-    fi
+    [[ "$bootparts" ]]
+    BugIfError "Unable to find any /boot partitions"
 
     # Find the disks that need a new GRUB MBR
     disks=$(grep '^disk ' $LAYOUT_FILE | cut -d' ' -f2)
     [[ "$disks" ]]
-    ProgressStopIfError $? "Unable to find any disks"
+    StopIfError "Unable to find any disks"
 
     for disk in $disks; do
         # Use first boot partition by default
@@ -59,7 +57,7 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
         partnr=${part#$bootdisk}
         partnr=${partnr#p}
         partnr=$((partnr - 1))
-        
+
         if [[ "$bootdisk" == "$disk" ]]; then
             # Best case scenario is to have /boot on disk with MBR booted
             chroot /mnt/local grub --batch --no-floppy 1>&2 <<EOF
@@ -83,7 +81,6 @@ EOF
         if (( $? == 0 )); then
             NOBOOTLOADER=
         fi
-        ProgressStep
     done
 fi
 
@@ -91,8 +88,6 @@ if [[ "$NOBOOTLOADER" ]]; then
     if chroot /mnt/local grub-install '(hd0)' 1>&2 ; then
         NOBOOTLOADER=
     fi
-    ProgressStep
 fi
 
 umount /mnt/local/proc
-ProgressStep

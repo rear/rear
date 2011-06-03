@@ -4,7 +4,9 @@
 #
 
 # do nothing unless we have hpacucli in our path
-type -p hpacucli >/dev/null || return
+if ! type -p hpacucli >/dev/null; then
+    return
+fi
 
 # add hpacucli to rescue media
 PROGS=( "${PROGS[@]}" hpacucli )
@@ -35,7 +37,7 @@ done < <(hpacucli ctrl all show)
 # do nothing if no supported controllers installed
 if [ ${#SLOTS[@]} -eq 0 ] ; then
 	Log "No compatible HP RAID controllers found or configured"
-	return 0
+	return
 fi
 
 
@@ -58,9 +60,12 @@ function write_build_array() {
 		# AFTER we re-create the logical drives from scratch in the order that 
 		# they exist now. Please submit a bug if this does not work for you.
 		#
-		ARRAY="$(find_array_from_drive $SLOT ${PHYSICALDRIVES%%,*})" ||\
-			Error "Could not determine array for newly created logical drive"
-		test "$ARRAY" || Error "Could not determine array for newly created logical drive"
+		ARRAY="$(find_array_from_drive $SLOT ${PHYSICALDRIVES%%,*})"
+		StopIfError "Could not determine array for newly created logical drive"
+
+		test "$ARRAY"
+		StopIfError "Could not determine array for newly created logical drive"
+
 		echo "hpacucli ctrl slot=$SLOT array $ARRAY add spares=$SPAREDRIVES"
 	fi
 	
@@ -77,12 +82,12 @@ for SLOT in "${SLOTS[@]}" ; do
 	SPAREDRIVES=""
 	ARRAY=""
 
-	mkdir -p $VAR_DIR/recovery/hpacucli/"Slot_$SLOT" ||\
-       		Error "Could not mkdir '$VAR_DIR/recovery/hpacucli/Slot_$SLOT'"
+	mkdir -p $VAR_DIR/recovery/hpacucli/"Slot_$SLOT"
+	StopIfError "Could not mkdir '$VAR_DIR/recovery/hpacucli/Slot_$SLOT'"
 	
 	# store complete config for each controller (=SLOT)
-	hpacucli ctrl slot="$SLOT" show config >"$VAR_DIR/recovery/hpacucli/Slot_$SLOT/config.txt" ||\
-		Error "Could not read read hpacucli configuration for slot $SLOT"
+	hpacucli ctrl slot="$SLOT" show config >"$VAR_DIR/recovery/hpacucli/Slot_$SLOT/config.txt"
+	StopIfError "Could not read read hpacucli configuration for slot $SLOT"
 		
 	while read ; do
 		# output is like
@@ -142,8 +147,8 @@ EOF
 				Log "Found Controller $SLOT Array $ARRAY Logical Drive $LOGICALDRIVE RAID $RAIDLEVEL"
 
 				# retrieve detailed configuration for logical drive and store in LD_ variables
-				hpacucli ctrl slot=$SLOT ld $LOGICALDRIVE show detail >"$VAR_DIR/recovery/hpacucli/Slot_$SLOT/ARRAY_$ARRAY-LOGICALDRIVE_$LOGICALDRIVE-detail.txt" ||\
-					Error "Could not read logical drive details with hpacucli"
+				hpacucli ctrl slot=$SLOT ld $LOGICALDRIVE show detail >"$VAR_DIR/recovery/hpacucli/Slot_$SLOT/ARRAY_$ARRAY-LOGICALDRIVE_$LOGICALDRIVE-detail.txt"
+				StopIfError "Could not read logical drive details with hpacucli"
 					
 				# parse logical drive detail information into environment variables
 				

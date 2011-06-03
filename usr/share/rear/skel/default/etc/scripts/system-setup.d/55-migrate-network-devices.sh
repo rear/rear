@@ -104,7 +104,7 @@ if ! test $MANUAL_MAC_MAPPING ; then
 			vars=( $choice ) # word splitting
 			new_mac=${vars[1]} # vars = "dev mac driver ..."
 			# remember the old_mac->new_mac mapping for later use
-			test -d /etc/rear/mappings || mkdir -p /etc/rear/mappings
+			mkdir -p /etc/rear/mappings
 			echo "$old_mac $new_mac $old_dev" >>$MAC_MAPPING_FILE
 			# remove the "wrong" line with the new mac address and
 			# replace the old mac address with the new mac address

@@ -31,7 +31,7 @@ do
 	label=`echo "${object}" | cut -d"'" -f 2`
 	# only retain the latest backup which was completed successfully
 	if grep "^${fs} " ${VAR_DIR}/recovery/mountpoint_device 2>&1 >/dev/null; then
-		ProgressStart "Restore filesystem ${object}"
+		LogPrint "Restore filesystem ${object}"
 		SessionID=`cat /tmp/dp_recovery_session`
 		Device=`/opt/omni/bin/omnidb -session ${SessionID} -detail | grep Device | sort -u | tail -n 1 | awk '{print $4}'`
 		/opt/omni/bin/omnir -filesystem ${host_fs} "${label}" -full -session ${SessionID} -tree ${fs} -into /mnt/local -device ${Device} -target `hostname` -log 1>&8
@@ -43,6 +43,5 @@ do
 				break # get out of the loop
 				;;
 		esac
-		ProgressStop
 	fi # if grep "^${fs}
 done 
