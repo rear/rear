@@ -8,8 +8,8 @@
 grep -q blocks /proc/mdstat &>/dev/null || return
 
 mkdir -p ${VAR_DIR}/recovery/proc
-cat /proc/mdstat > "${VAR_DIR}/recovery/proc/mdstat" ||\
-	Error "Saving /proc/mdstat failed: $?"
+cat /proc/mdstat > "${VAR_DIR}/recovery/proc/mdstat"
+StopIfError "Saving /proc/mdstat failed: $?"
 
 # now we have to determine the RAID devices for each raid
 mdadm --detail --scan --config=partitions | while read ARRAY mddev options ; do
@@ -17,7 +17,8 @@ mdadm --detail --scan --config=partitions | while read ARRAY mddev options ; do
 	test "$ARRAY" = ARRAY || continue
 	
 	# sanity check, the block device must exist
-	test -b $mddev || Error "The MD block device '$mddev' does not exist / is not a block device"
+	[ -b $mddev ]
+	StopIfError "The MD block device '$mddev' does not exist / is not a block device"
 
 	# exclude MD devices here
 	if IsInArray "$mddev" "${EXCLUDE_MD[@]}" ; then
@@ -73,5 +74,5 @@ mdadm --detail --scan --config=partitions | while read ARRAY mddev options ; do
 
 done
 # if the mdadm before the | above fails then we will know it here
-test $PIPESTATUS -gt 0 && Error "mdadm scan failed: $PIPESTATUS"
-
+[ $PIPESTATUS -eq 0 ]
+StopIfError "mdadm scan failed: $PIPESTATUS"

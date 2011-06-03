@@ -210,7 +210,8 @@ my_ipcalc() {
                 DEC=${MASKS[$BITS]}
                 (( MASK == DEC )) && break
         done
-        (( DEC < 0 )) && Error "Main: netmask [$2] seems to be invalid."
+        (( DEC >= 0 ))
+        StopIfError "Main: netmask [$2] seems to be invalid."
         NETADDR=$(num2ip "$(( ADDRESS & MASK ))")
     else
         NETADDR=$(num2ip "$ADDRESS")

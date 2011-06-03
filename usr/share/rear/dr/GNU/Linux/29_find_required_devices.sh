@@ -34,7 +34,8 @@ while read device junk ; do
 	sysfspath=( $(grep -rl "^$dev\$" /sys/block/*/dev /sys/block/*/*/dev) )
 
 	# If there is no match or too many matches, just bail out
-	test ${#sysfspath[@]} -ne 1 && BugError "There is more than one device in /sysfs for '$dev':
+	[ ${#sysfspath[@]} -eq 1 ]
+	BugIfError "There is more than one device in /sysfs for '$dev':
 ${sysfspath[@]}
 Please file a bug with complete info about your system, e.g. (fake) RAID, LVM, MD, ..."
 
@@ -59,7 +60,8 @@ Please file a bug with complete info about your system, e.g. (fake) RAID, LVM, M
 	#
 	# Check the result, which of the 2 exit conditions above exited the while loop
 	if test "$checkpath" = /sys ; then
-		physical_device="$(GuessPhysicalDevice "$device")" || Error "Could not guess physical device for '$device' [$dev] in '$sysfspath'.
+		physical_device="$(GuessPhysicalDevice "$device")"
+		StopIfError "Could not guess physical device for '$device' [$dev] in '$sysfspath'.
 This is probably a bug in your kernel or in $PRODUCT, 
 so please file a bug report about this."
 		if test -b "$physical_device" ; then

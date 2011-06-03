@@ -14,7 +14,8 @@ while read KEY VALUE ; do echo "$KEY" | grep -q '*' && continue ; test -z "$KEY"
 while read KEY VALUE ; do echo "$KEY" | grep -q '*' && continue ; test -z "$KEY" && continue ; KEY="$(echo "$KEY" | tr a-z A-Z)" ; export TSM_OPT_$KEY="${VALUE//\"}" ; done </opt/tivoli/tsm/client/ba/bin/dsm.opt
 
 # check that TSM server is actually available (ping)
-test "${TSM_SYS_TCPSERVERADDRESS}" || Error "TSM Server not set in dsm.sys (TCPSERVERADDRESS) !"
+[ "${TSM_SYS_TCPSERVERADDRESS}" ]
+StopIfError "TSM Server not set in dsm.sys (TCPSERVERADDRESS) !"
 
 if test "$PING" ; then
 	if ping -c 1 "${TSM_SYS_TCPSERVERADDRESS}" >/dev/null 2>&1 ; then
@@ -31,7 +32,8 @@ fi
 dsmc query filespace -date=2 -time=1 | grep -A 10000 'File' >$TMP_DIR/tsm_filespaces
 # Error code 8 can be ignored, see bug report at
 # https://sourceforge.net/tracker/?func=detail&atid=859452&aid=1942895&group_id=171835
-test $PIPESTATUS -gt 0 -a $PIPESTATUS -ne 8 && Error "'dsmc query filespace' failed !"
+[ $PIPESTATUS -eq 0 -o $PIPESTATUS -eq 8 ]
+StopIfError "'dsmc query filespace' failed !"
 TSM_FILESPACE_TEXT="$(cat $TMP_DIR/tsm_filespaces)"
 TSM_FILESPACES=()
 TSM_FILESPACE_NUMS=( )
@@ -57,7 +59,9 @@ fi
 # remove extra spaces
 TSM_RESTORE_FILESPACE_NUMS="$(echo "$TSM_RESTORE_FILESPACE_NUMS" |tr -s " ")"
 
-test "${#TSM_RESTORE_FILESPACE_NUMS}" -gt 0 || Error "No filespaces selected !"
+[ "${#TSM_RESTORE_FILESPACE_NUMS}" -gt 0 ]
+StopIfError "No filespaces selected !"
+
 LogPrint "We will now restore the following filesystems:"
 for num in $TSM_RESTORE_FILESPACE_NUMS ; do
         LogPrint "${TSM_FILESPACES[$num]}"

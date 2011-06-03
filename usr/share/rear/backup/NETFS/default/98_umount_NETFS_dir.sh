@@ -2,7 +2,7 @@
 
 # don't mount anything for tape backups
 if [ "$NETFS_PROTO" == "tape" ]; then
-	return 0
+	return
 fi
 
 if test "$NETFS_UMOUNTCMD" ; then
@@ -11,7 +11,8 @@ if test "$NETFS_UMOUNTCMD" ; then
 else
 	Log "Running 'umount -f ${BUILD_DIR}/netfs'"
 	umount -f "${BUILD_DIR}/netfs"
-fi || Error "Could not unmount directory ${BUILD_DIR}/netfs"
+fi
+StopIfError "Could not unmount directory ${BUILD_DIR}/netfs"
 
 # the argument to RemoveExitTask has to be identical to the one given to AddExitTask
 RemoveExitTask "umount -fv '$BUILD_DIR/netfs' 1>&2"

@@ -11,7 +11,8 @@ test -s $TMP_DIR/mappings/disk_devices || return 0
 
 Log "TAG-15-migrate: $DISK_DEVICE_MAPPINGS_SED_SCRIPT"
 
-test "$DISK_DEVICE_MAPPINGS_SED_SCRIPT" || BugError "The sed script for the disk device mappings
+[ "$DISK_DEVICE_MAPPINGS_SED_SCRIPT" ]
+BugIfError "The sed script for the disk device mappings
 is missing, it should be defined in verify/GNU/Linux/21_migrate_recovery_configuration.sh."
 
 # now run sed
@@ -41,8 +42,8 @@ for file in 	[b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/{gr
 		fi
 	fi
 
-	sed -i "$DISK_DEVICE_MAPPINGS_SED_SCRIPT" "$file" ||\
-		Error "Patching '$file' with sed failed."
+	sed -i "$DISK_DEVICE_MAPPINGS_SED_SCRIPT" "$file"
+	StopIfError "Patching '$file' with sed failed."
 done
 
 # we still need to modify the swap entries in /etc/fstab if byid mounting is used

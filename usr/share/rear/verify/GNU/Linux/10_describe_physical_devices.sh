@@ -5,6 +5,7 @@ if [ -n "$USE_LAYOUT" ] ; then
     return 0
 fi
 
-FindPhysicalDevices >$TMP_DIR/physical_devices || Error "Abnormal error occured. Please check $LOGFILE for details."
+FindPhysicalDevices >$TMP_DIR/physical_devices
+StopIfError "Abnormal error occured. Please check $LOGFILE for details."
 
 # TODO: Exclude physical devices !!

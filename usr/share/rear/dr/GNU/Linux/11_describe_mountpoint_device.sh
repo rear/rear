@@ -42,7 +42,8 @@ done < <(
 	)	
 
 # a last check to be sure
-test -s $VAR_DIR/recovery/mountpoint_device || Error "$VAR_DIR/recovery/mountpoint_device is missing"
+[ -s $VAR_DIR/recovery/mountpoint_device ]
+StopIfError "$VAR_DIR/recovery/mountpoint_device is missing"
 
 # FIXME In case a filesystem mentioned in fstab is not mounted this fails horribly
 

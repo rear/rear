@@ -13,7 +13,8 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 	#      could be done better, but might not be worth the risk
 
 	# set INITRD_MODULES from recovered system
-	source /mnt/local/etc/sysconfig/kernel || Error "Could not source '/mnt/local/etc/sysconfig/kernel'"
+	source /mnt/local/etc/sysconfig/kernel
+	StopIfError "Could not source '/mnt/local/etc/sysconfig/kernel'"
 
 	Log "Original INITRD_MODULES='$INITRD_MODULES'"
 	OLD_INITRD_MODULES=( $INITRD_MODULES ) # use array to split into words

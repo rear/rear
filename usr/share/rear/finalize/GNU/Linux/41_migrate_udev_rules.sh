@@ -29,6 +29,7 @@ for rule in "${RULE_FILES[@]}" ; do
 	if test -s "$rule" && ! diff -q "$rule" /mnt/local/"$rule" >/dev/null ; then
 		LogPrint "Updating udev configuration ($rulefile)"
 		cp /mnt/local/"$rule" /mnt/local/root/rear-"$rulefile".old
-		cp "$rule" /mnt/local/"$rule" || Error "Could not copy '$rule' -> '/mnt/local/$rule'"
+		cp "$rule" /mnt/local/"$rule"
+		StopIfError "Could not copy '$rule' -> '/mnt/local/$rule'"
 	fi
 done

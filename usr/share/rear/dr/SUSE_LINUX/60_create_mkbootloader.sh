@@ -8,7 +8,8 @@
 
 case "$LOADER_TYPE" in
 	GRUB|grub)
-		test -s /etc/grub.conf || LogPrint "GRUB selected as boot loader in '/etc/sysconfig/bootloader',
+		[ -s /etc/grub.conf ]
+		LogPrintIfError "GRUB selected as boot loader in '/etc/sysconfig/bootloader',
 	but '/etc/grub.conf' doesn't contain any data !
 	I don't know how to restore the boot loader on your system. You will
 	have to restore the boot loader MANUALLY after the restore !!!

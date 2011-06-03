@@ -33,7 +33,8 @@ label rear
 	append initrd=$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 EOF
 
-pushd "$PXE_LOCAL_PATH" >/dev/null || Error "PXE_CONFIG_PATH [$PXE_CONFIG_PATH] does not exist !"
+pushd "$PXE_LOCAL_PATH" >/dev/null
+StopIfError "PXE_CONFIG_PATH [$PXE_CONFIG_PATH] does not exist !"
 if test "$PXE_CREATE_LINKS" -a "$PXE_REMOVE_OLD_LINKS" ; then
 	# remove old links
 	find . -maxdepth 1 -type l | \

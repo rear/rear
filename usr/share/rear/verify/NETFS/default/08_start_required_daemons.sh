@@ -6,12 +6,13 @@ case "$NETFS_PROTO" in
 		# newer Linux distros use rpcbind instead of portmap
 		if type -p portmap >/dev/null ; then
 			# note: portmap can be called multiple times without harm!
-			portmap || Error "Could not start port mapper [portmap] !"
+			portmap
+			StopIfError "Could not start port mapper [portmap] !"
 		elif type -p rpcbind >/dev/null ; then
 			# rpcbind cannot be called multiple times, so start it only if
 			# it is not yet running
-			rpcinfo -p localhost >/dev/null 2>&1 ||	rpcbind || \
-				Error "Could not start port mapper [rpcbind] !"
+			rpcinfo -p localhost >/dev/null 2>&1 ||	rpcbind
+			StopIfError "Could not start port mapper [rpcbind] !"
 		else
 			Error "Could not find any portmapper (tried portmap and rpcbind) !"
 		fi
@@ -20,7 +21,8 @@ case "$NETFS_PROTO" in
 		# note: on some systems portmap can take a second or two, to be accessible. Hence the loop.
 		max_portmap_checks=5
 		until rpcinfo -p localhost >/dev/null ; do
-			test $max_portmap_checks -gt 0 || Error "portmapper is not running, even though we started it"
+			[ $max_portmap_checks -gt 0 ]
+			StopIfError "portmapper is not running, even though we started it"
 			let max_portmap_checks--
 			sleep 1
 		done
@@ -31,7 +33,8 @@ case "$NETFS_PROTO" in
 			if rpcinfo -p localhost | grep -q status ; then
 				: noop, status is running
 			else
-				rpc.statd || Error "Could not start rpc.statd !"
+				rpc.statd
+				StopIfError "Could not start rpc.statd !"
 			fi
 		fi
 	;;

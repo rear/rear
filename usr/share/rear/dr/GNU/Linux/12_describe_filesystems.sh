@@ -3,16 +3,16 @@
 
 while read mountpoint device mountby filesystem junk ; do
 	mkdir -p $VAR_DIR/recovery$device
-	vol_id $device >$VAR_DIR/recovery$device/fs_vol_id || \
-		Error "Cannot determine filesystem info on '$device'
+	vol_id $device >$VAR_DIR/recovery$device/fs_vol_id
+	StopIfError "Cannot determine filesystem info on '$device'
 Your udev implementation (vol_id or blkid) does not recognize it."
 	echo "$device" >$VAR_DIR/recovery$device/depends
 	case $filesystem in
 		ext*)
-			tmp_fs_parameters=$(mktemp $TMP_DIR/fs_parameters.XXXXXX) || \
-				Error "Failed creating a temporary file in $TMP_DIR."
-			tune2fs -l $device > $tmp_fs_parameters || \
-				Error "Could not run tune2fs or failed to write to $tmp_fs_parameters."
+			tmp_fs_parameters=$(mktemp $TMP_DIR/fs_parameters.XXXXXX)
+			StopIfError "Failed creating a temporary file in $TMP_DIR."
+			tune2fs -l $device > $tmp_fs_parameters
+			StopIfError "Could not run tune2fs or failed to write to $tmp_fs_parameters."
 			FS_RESERVED_BLOCKS=$(grep "Reserved block count" $tmp_fs_parameters | sed -e 's/^.*: \+\([0123456789]\+\).*$/\1/g')
 			FS_MAX_MOUNTS=$(grep "Maximum mount count" $tmp_fs_parameters | sed -e 's/^.*: \+\([-0123456789]\+\).*$/\1/g')
 			FS_CHECK_INTERVAL=$(grep "Check interval" $tmp_fs_parameters | sed -e 's/^.*: \+\([0123456789]\+\).*$/\1/g')
@@ -22,7 +22,8 @@ Your udev implementation (vol_id or blkid) does not recognize it."
 			(( FS_CHECK_INTERVAL = FS_CHECK_INTERVAL / 86400 ))
 			rm  $tmp_fs_parameters
 			fs_parameters=$VAR_DIR/recovery$device/fs_parameters
-			> $fs_parameters || Error "Could not write to $fs_parameters"
+			> $fs_parameters
+			StopIfError "Could not write to $fs_parameters"
 			echo "FS_RESERVED_BLOCKS=$FS_RESERVED_BLOCKS" > $fs_parameters
 			echo "FS_MAX_MOUNTS=$FS_MAX_MOUNTS" >> $fs_parameters
 			echo "FS_CHECK_INTERVAL=$FS_CHECK_INTERVAL" >> $fs_parameters

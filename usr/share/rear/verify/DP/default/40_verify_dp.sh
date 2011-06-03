@@ -3,7 +3,8 @@
 CELL_SERVER="`cat /etc/opt/omni/client/cell_server`"
 
 # check that cell server is actually available (ping)
-test "${CELL_SERVER}" || Error "DP Cell Server not set in /etc/opt/omni/client/cell_server (TCPSERVERADDRESS) !"
+test "${CELL_SERVER}"
+StopIfError "DP Cell Server not set in /etc/opt/omni/client/cell_server (TCPSERVERADDRESS) !"
 
 if test "$PING" ; then
 	if ping -c 1 "${CELL_SERVER}" >/dev/null 2>&1 ; then

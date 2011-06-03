@@ -45,7 +45,8 @@ RemoveExitTask() {
 			Debug "Removed '$*' from the list of exit tasks"
 		fi
 	done
-	test "$removed" == "yes" || Log "Could not remove exit task '$*' (not found). Exit Tasks:
+	[ "$removed" == "yes" ]
+	LogIfError "Could not remove exit task '$*' (not found). Exit Tasks:
 $(
 	for task in "${EXIT_TASKS[@]}" ; do
 		echo "$task"

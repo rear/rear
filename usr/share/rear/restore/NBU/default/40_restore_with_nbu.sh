@@ -19,7 +19,8 @@ Get_Start_Date ()
 # Recent_Month_Hour="Nov 12 20:45" is a possible output
 Recent_Month_Hour=""	# make it empty to start with
 Recent_Month_Hour=`LANG=C /usr/openv/netbackup/bin/bplist -l -s \`date -d "-5 days" "+%m/%d/%Y"\` $1 2>/dev/null | head -n 1 | awk '{print $5,$6,$7}'`
-test -z "${Recent_Month_Hour}" && Error "Netbackup bplist cannot get last backup timestamp of $1"
+[ "${Recent_Month_Hour}" ]
+StopIfError "Netbackup bplist cannot get last backup timestamp of $1"
 
 # bplist -s date_format is mm/dd/yyyy hh:mm
 yyyy=`date +%Y`                                         # 2008
@@ -51,7 +52,7 @@ LogPrint "NetBackup: restoring / into /mnt/local"
 
 echo "change / to /mnt/local" >/tmp/nbu_change_file
 
-FIRSTFS=( $( cat $TMP_DIR/restore_fs_list ) ) 
+FIRSTFS=( $( cat $TMP_DIR/restore_fs_list ) )
 sdate=`Get_Start_Date ${FIRSTFS}`
 
 if [ ${#NBU_ENDTIME[@]} -gt 0 ]
@@ -64,4 +65,5 @@ fi
 
 LogPrint "RUN: /usr/openv/netbackup/bin/bprestore ${ARGS}"
 LogPrint "Restore progress: see /tmp/bplog.restore"
-LANG=C /usr/openv/netbackup/bin/bprestore ${ARGS} || Error "bprestore failed"
+LANG=C /usr/openv/netbackup/bin/bprestore ${ARGS}
+StopIfError "bprestore failed"

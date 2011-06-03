@@ -19,5 +19,6 @@
 #
 
 # make sure that we are on a recovery system
-test -s /etc/scripts/system-setup || Error "This it not a $PRODUCT rescue system."
+[ -s /etc/scripts/system-setup ]
+StopIfError "This it not a $PRODUCT rescue system."
 #

@@ -98,7 +98,8 @@ FindDrivers() {
 # optionally $1 specifies the directory where to search for
 # drivers files
 FindStorageDrivers() {
-	test "$STORAGE_DRIVERS" || Error "FindStorageDrivers called but STORAGE_DRIVERS is empty"
+	[ "$STORAGE_DRIVERS" ]
+	StopIfError "FindStorageDrivers called but STORAGE_DRIVERS is empty"
 	{ 
 		while read module junk ; do 
 			IsInArray "$module" "${STORAGE_DRIVERS[@]}" && echo $module 
@@ -112,32 +113,38 @@ FindStorageDrivers() {
 
 # Copy binaries given in $* to $1, stripping them on the way
 BinCopyTo() {
-	TARGET="$1" ; shift 
-	test -d "$TARGET" || Error "[BinCopyTo] Target $TARGET not a directory"
+	TARGET="$1" ; shift
+	[ -d "$TARGET" ]
+	StopIfError "[BinCopyTo] Target $TARGET not a directory"
 	for k in "$@" ; do
 		test -z "$k" && continue # ignore blanks
-		test -x "$k" || Error "[BinCopyTo] Source $k is not an executable"
-		cp -v -a -L "$k" "$TARGET" || Error "[BinCopyTo] Could not copy '$k' to '$TARGET'"
+		[ -x "$k" ]
+		StopIfError "[BinCopyTo] Source $k is not an executable"
+		cp -v -a -L "$k" "$TARGET"
+		StopIfError "[BinCopyTo] Could not copy '$k' to '$TARGET'"
 		strip -s "$TARGET/$(basename "$k")" 2>/dev/null
-		: # make sure that a failed strip won't fail the BinCopyTo
 	done
+	: # make sure that a failed strip won't fail the BinCopyTo
 }
 
 # Copy libraries given in $* to $1, stripping them on the way
 # like BinCopyTo, but copy symlinks as such, since some libraries
 LibCopyTo() {
-	TARGET="$1" ; shift 
-	test -d "$TARGET" || Error "[LibCopyTo] Target $TARGET not a directory"
+	TARGET="$1" ; shift
+	[ -d "$TARGET" ]
+	StopIfError "[LibCopyTo] Target $TARGET not a directory"
 	for k in "$@" ; do
 		test -z "$k" && continue # ignore blanks
-		test -r "$k" || Error "[LibCopyTo] Source $k is not readable"
+		[ -r "$k" ]
+		StopIfError "[LibCopyTo] Source $k is not readable"
 		if ! cmp "$TARGET/$(basename "$k")" "$k" 2>/dev/null
 		then
-			cp -v -a "$k" "$TARGET" || Error "[LipCopyTo] Could not copy '$k' to '$TARGET'"
+			cp -v -a "$k" "$TARGET"
+			StopIfError "[LipCopyTo] Could not copy '$k' to '$TARGET'"
 		fi
 		test ! -L "$TARGET/$(basename "$k")" && strip -s "$TARGET/$(basename "$k")"
 	done
-	true
+	: # make sure that a failed strip won't fail the BinCopyTo
 }
 
 # Copy Modules given in $* to $1
@@ -145,7 +152,7 @@ ModulesCopyTo() {
 	TARGET="$1" ; shift
 	for k in "$@" ; do
 		dir="$(dirname "$k")"
-		test -d "$TARGET/$dir" || mkdir -p $v "$TARGET/$dir"
+		mkdir -p $v "$TARGET/$dir"
 		cp -a -L -v "/$k" "$TARGET/$dir"
 	done
 }

@@ -4,9 +4,11 @@
 
 test -z "$RESULT_MAILTO" && return
 
-test ${#RESULT_FILES[@]} -gt 0 || Error "No files to send (RESULT_FILES is empty)"
+[ ${#RESULT_FILES[@]} -gt 0 ]
+StopIfError "No files to send (RESULT_FILES is empty)"
 
-test -x "$RESULT_SENDMAIL" || Error "No mailer [$RESULT_SENDMAIL] found !"
+[ -x "$RESULT_SENDMAIL" ]
+StopIfError "No mailer [$RESULT_SENDMAIL] found !"
 
 Log "Sending Email from $RESULT_MAILFROM to ${RESULT_MAILTO[@]}"
 Log "Attaching files: ${RESULT_FILES[@]}"
@@ -32,4 +34,5 @@ test -z "$RESULT_MAILSUBJECT" && RESULT_MAILSUBJECT="ReaR $HOSTNAME ($OUTPUT)"
 MAIL_SIZE=( $(du -h $BUILD_DIR/email.bin) )
 
 LogPrint "Mailing resulting files ($MAIL_SIZE) to ${RESULT_MAILTO[@]}"
-$RESULT_SENDMAIL "${RESULT_SENDMAIL_OPTIONS[@]}" <$BUILD_DIR/email.bin || LogPrint "WARNING ! Sending Email with '$RESULT_SENDMAIL "${RESULT_SENDMAIL_OPTIONS[@]}"' failed."
+$RESULT_SENDMAIL "${RESULT_SENDMAIL_OPTIONS[@]}" <$BUILD_DIR/email.bin
+LogPrintIfError "WARNING ! Sending Email with '$RESULT_SENDMAIL "${RESULT_SENDMAIL_OPTIONS[@]}"' failed."

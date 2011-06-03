@@ -32,28 +32,34 @@ local VG
 case "${2}" in
 	"NORMAL")	# IDE, SCSI, RAID disk
 		# input=$1, output=$Dev (hda1)
-		ParseDevice ${1} || Error "Parsing device failed: $1"
+		ParseDevice ${1}
+		StopIfError "Parsing device failed: $1"
 		# input=$Dev, output=$dsk
-		ParseDisk $Dev || Error "Parsing disk failed: $Dev"
+		ParseDisk $Dev
+		StopIfError "Parsing disk failed: $Dev"
 		echo "/dev/$dsk"
 		;;
 	"MD")		# software Raid - find disks under /dev/md?
-		ParseDevice ${1} || Error "Parsing device failed: $1"
+		ParseDevice ${1}
+		StopIfError "Parsing device failed: $1"
 		cat /proc/mdstat | grep "${Dev}" | cut -d" "  -f 5- | tr " "  "\n" | \
 		while read mdline
 		do
 			local Dev=`echo "${mdline}" | sed -e 's;\[.*;;'`
-			ParseDisk ${Dev} || Error "Parsing disk failed: $Dev"
+			ParseDisk ${Dev}
+			StopIfError "Parsing disk failed: $Dev"
 			echo "/dev/${dsk}"
 		done
 		;;
 	"LVM")		# LVM - find disks under /dev/vg??/lvol??
-		[ -c /dev/mapper/control ] || Error "LVM version 1 not supported"
+		[ -c /dev/mapper/control ]
+		StopIfError "LVM version 1 not supported"
 		for disk in $(lvm vgdisplay -v 2>/dev/null | awk -F\ + '/PV Name/ {print $4}');
 		do
 			local devcat=$(CategoriseDev ${disk})
-        		if [ ${devcat} = 'NORMAL' ]; then
-				ParseDisk ${disk} || Error "Parsing disk ${disk} failed"
+			if [ ${devcat} = 'NORMAL' ]; then
+				ParseDisk ${disk}
+				StopIfError "Parsing disk ${disk} failed"
 			else
 				FindPhysicalDevice ${disk} ${devcat}
 			fi

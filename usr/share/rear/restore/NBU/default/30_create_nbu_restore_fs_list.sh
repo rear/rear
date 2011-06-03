@@ -2,7 +2,8 @@
 ##################################
 
 # Part 1: create the restore file system list file
-[ -f $VAR_DIR/recovery/mountpoint_device ] || Error "Cannot start restore as $VAR_DIR/recovery/mountpoint_device is missing"
+[ -f $VAR_DIR/recovery/mountpoint_device ]
+StopIfError "Cannot start restore as $VAR_DIR/recovery/mountpoint_device is missing"
 cat $VAR_DIR/recovery/mountpoint_device | awk '{print $1}' | sort -u > $TMP_DIR/restore_fs_list
 
 # Part 2: check if $VAR_DIR/recovery/exclude_mountpoints exist

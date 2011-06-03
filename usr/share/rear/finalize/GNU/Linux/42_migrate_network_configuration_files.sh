@@ -9,7 +9,8 @@ test $PATCH_FILES || return 0
 
 # strip all comments and empty lines from the mapping files and copy
 # the results to a temporary directory
-mkdir -p $TMP_DIR/mappings || Error "Could not create $TMP_DIR/mappings"
+mkdir -p $TMP_DIR/mappings
+StopIfError "Could not create $TMP_DIR/mappings"
 for mapping_file in mac ip_addresses routes ; do
 	read_and_strip_file $CONFIG_DIR/mappings/$mapping_file > $TMP_DIR/mappings/$mapping_file
 done
@@ -30,7 +31,8 @@ if test -s $TMP_DIR/mappings/mac ; then
 	#		separate things and do the replacement case-sensitive
 	
 	Log "SED_SCRIPT: '$SED_SCRIPT'"
-	sed -i -e "$SED_SCRIPT" "${PATCH_FILES[@]}" || LogPrint "WARNING! There was an error patching the network configuration files!"
+	sed -i -e "$SED_SCRIPT" "${PATCH_FILES[@]}"
+	LogPrintIfError "WARNING! There was an error patching the network configuration files!"
 	
 	# rename files
 	for file in "${PATCH_FILES[@]}"; do
@@ -60,14 +62,16 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
 		for network_file in /mnt/local/etc/sysconfig/*/ifcfg-*${new_mac}* /mnt/local/etc/sysconfig/*/ifcfg-*${dev}*; do
 			SED_SCRIPT="s#^IPADDR=.*#IPADDR='$new_ip'#g;s#^NETMASK=.*#NETMASK=''#g;s#^NETWORK=.*#NETWORK=''#g;s#^BROADCAST=.*#BROADCAST=''#g;s#^BOOTPROTO=.*#BOOTPROTO='static'#g;s#STARTMODE='[mo].*#STARTMODE='auto'#g;/^IPADDR_/d;/^LABEL_/d;/^NETMASK_/d"
 			Log "SED_SCRIPT: '$SED_SCRIPT'"
-			sed -i -e "$SED_SCRIPT" "$network_file" || LogPrint "WARNING! There was an error patching the network configuration files!"
+			sed -i -e "$SED_SCRIPT" "$network_file"
+			LogPrintIfError "WARNING! There was an error patching the network configuration files!"
 		done
 	done
 fi
 
 # set the new routes if a mapping file is available
 if test -s $TMP_DIR/mappings/routes ; then
-	> /mnt/local/etc/sysconfig/network/routes || Error "Could not write to '/mnt/local/etc/sysconfig/network/routes'"
+	> /mnt/local/etc/sysconfig/network/routes
+	StopIfError "Could not write to '/mnt/local/etc/sysconfig/network/routes'"
 	while read destination gateway device junk ; do
 		echo "$destination $gateway - $device" >> /mnt/local/etc/sysconfig/network/routes
 	done < $TMP_DIR/mappings/routes
