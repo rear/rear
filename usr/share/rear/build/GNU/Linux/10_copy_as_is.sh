@@ -15,7 +15,7 @@ Log "Finished copying COPY_AS_IS"
 
 COPY_AS_IS_EXELIST=()
 while read -r ; do
-	if test ! -d "$REPLY" -a -x "$REPLY" ; then
+	if [[ ! -d "$REPLY" && -x "$REPLY" ]]; then
 		COPY_AS_IS_EXELIST=( "${COPY_AS_IS_EXELIST[@]}" "$REPLY" )
 	fi
 	echo "$REPLY" >&8
@@ -25,7 +25,7 @@ Log "Checking COPY_AS_IS_EXELIST"
 # add required libraries to LIBS, skip libraries that are part of the copied files.
 while read -r ; do
 	lib="$REPLY"
-#	if ! grep -q "$lib" <<<"${COPY_AS_IS_EXELIST[@]}" ; then
+#	if ! grep -q "$lib" <<<"${COPY_AS_IS_EXELIST[@]}"; then
 	if ! IsInArray "$lib" "${COPY_AS_IS_EXELIST[@]}"; then
 		# if $lib is NOT part of the copy-as-is fileset, then add it to the global libs
 		LIBS=( ${LIBS[@]} $lib )
