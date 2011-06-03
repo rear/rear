@@ -2,12 +2,9 @@
 
 # return wether $1 equals one of the remaining arguments
 function IsInArray() {
-	search="$1"
-	shift
-	while test $# -gt 0 ; do
-		test "$search" = "$1" && return 0
-		shift
+	local needle="$1"
+	while shift; do
+		[[ "$needle" == "$1" ]] && return 0
 	done
 	return 1
 }
-
