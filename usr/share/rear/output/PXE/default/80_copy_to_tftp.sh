@@ -25,14 +25,14 @@ PXE_INITRD="${PXE_TFTP_PREFIX}initrd.cgz"
 PXE_MESSAGE="${PXE_TFTP_PREFIX}message"
 
 
-cp -a "$BUILD_DIR"/kernel "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL"
+cp -pL "$KERNEL_FILE" "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL"
 cp -a "$BUILD_DIR"/initrd.cgz "$PXE_TFTP_LOCAL_PATH/$PXE_INITRD"
 
 echo "$VERSION_INFO" >"$PXE_TFTP_LOCAL_PATH/$PXE_MESSAGE"
 
 # TODO: umount remote TFTP path
 
-LogPrint "Copied kernel+initrd ($(du -shc "$BUILD_DIR"/{kernel,initrd.cgz} | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 )) to $PXE_TFTP_PATH"
+LogPrint "Copied kernel+initrd ($(du -shc $KERNEL_FILE "$BUILD_DIRinitrd.cgz"} | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 )) to $PXE_TFTP_PATH"
 
 # Add to result files
 RESULT_FILES=( "${RESULT_FILES[@]}" "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL" "$PXE_TFTP_LOCAL_PATH/$PXE_INITRD" "$PXE_TFTP_LOCAL_PATH/$PXE_MESSAGE" )

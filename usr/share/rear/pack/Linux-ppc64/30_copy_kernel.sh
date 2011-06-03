@@ -22,40 +22,37 @@
 # we only try to find the currently running kernel
 # Using another kernel is a TODO for now
 
-if ! test -s "$KERNEL_FILE" ; then
-	if test -r "/boot/vmlinuz-$KERNEL_VERSION" ; then
+if [ ! -s "$KERNEL_FILE" ]; then
+	if [ -r "/boot/vmlinuz-$KERNEL_VERSION" ]; then
 		KERNEL_FILE="/boot/vmlinuz-$KERNEL_VERSION"
-		Print "Using kernel $KERNEL_FILE"
-	elif test "$(type -p get_kernel_version)" ; then
-		for k in /boot/* ; do
-			if VER=$(get_kernel_version "$k") && test "$VER" == "$KERNEL_VERSION" ; then
-				KERNEL_FILE="$k"
-				Print "Found kernel $KERNEL_FILE"
+	elif type -p get_kernel_version &>/dev/null; then
+		for src in /boot/* ; do
+			if VER=$(get_kernel_version "$src") && test "$VER" == "$KERNEL_VERSION" ; then
+				KERNEL_FILE="$src"
 				break
 			fi
 		done
-	elif test -f /etc/redhat-release ; then
+	elif [ -f /etc/redhat-release ]; then
 		# GD - kernel not found under /boot - 19/May/2008
 		# check under /boot/efi/efi/redhat (for Red Hat)
-		if [ -f "/boot/efi/efi/redhat/vmlinuz-$KERNEL_VERSION" ] ; then
-			KERNEL_FILE="/boot/efi/efi/redhat/vmlinuz-$KERNEL_VERSION"
-			Print "Found kernel $KERNEL_FILE"
-		else
-			Error "Could not find a matching kernel in /boot/efi/efi/redhat !"
-		fi
-	elif test -f /etc/debian_version ; then
-		if [ -f "/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION" ] ; then
-			KERNEL_FILE="/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION"
-			Print "Found kernel $KERNEL_FILE"
-		else
-			Error "Could not find a matching kernel in /boot/efi/efi/debian !"
-		fi
+		[ -f "/boot/efi/efi/redhat/vmlinuz-$KERNEL_VERSION" ]
+		StopIfError "Could not find a matching kernel in /boot/efi/efi/redhat !"
+		KERNEL_FILE="/boot/efi/efi/redhat/vmlinuz-$KERNEL_VERSION"
+	elif [ -f /etc/debian_version ]; then
+		[ -f "/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION" ]
+		StopIfError "Could not find a matching kernel in /boot/efi/efi/debian !"
+		KERNEL_FILE="/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION"
 	else
 		Error "Could not find a matching kernel in /boot !"
 	fi
 fi
-if ! test -s "$KERNEL_FILE" ; then
-	Error "Could not find a suitable kernel. Maybe you have to set KERNEL_FILE [$KERNEL_FILE] ?"
-fi
-cp -aL "$KERNEL_FILE" "$BUILD_DIR/kernel" 
 
+[ -s "$KERNEL_FILE" ]
+StopIfError "Could not find a suitable kernel. Maybe you have to set KERNEL_FILE [$KERNEL_FILE] ?"
+
+if [ -L $KERNEL_FILE ]; then
+    KERNEL_FILE=$(readlink -f $KERNEL_FILE)
+fi
+
+Log "Found kernel $KERNEL_FILE"
+#cp -aL "$KERNEL_FILE" "$BUILD_DIR/kernel"

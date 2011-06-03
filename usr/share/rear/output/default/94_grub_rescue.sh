@@ -11,10 +11,10 @@ if version_newer "$grub_version" 1.0; then
     return
 fi
 
-[[ -r "$BUILD_DIR/kernel" ]]
+[[ -r "$KERNEL_FILE" ]]
 StopIfError "Failed to find kernel, updating GRUB failed."
 
-[[ -r "$BUILD_DIR/initrd.cgz" ]]
+[[ -r "$KERNEL_FILE" ]]
 StopIfError "Failed to find initrd.cgz, updating GRUB failed."
 
 function total_filesize {
@@ -23,7 +23,7 @@ function total_filesize {
 
 available_space=$(df -Pk /boot | awk 'END { print $4 * 1024 }')
 used_space=$(total_filesize /boot/rear-kernel /boot/rear-initrd.cgz)
-required_space=$(total_filesize $BUILD_DIR/kernel $BUILD_DIR/initrd.cgz)
+required_space=$(total_filesize $KERNEL_FILE $BUILD_DIR/initrd.cgz)
 
 if (( available_space + used_space < required_space )); then
     LogPrint "WARNING: Not enough disk space available in /boot for GRUB rescue image"
@@ -74,8 +74,17 @@ if ! diff -u $grub_conf $TMP_DIR/menu.lst >&2; then
     cat $TMP_DIR/menu.lst >$grub_conf
 fi
 
-cp -af $BUILD_DIR/kernel /boot/rear-kernel >&2
-BugIfError "Unable to copy '$BUILD_DIR/kernel' to /boot"
+if [[ $(stat -L -c '%d' $KERNEL_FILE) == $(stat -L -c '%d' /boot/) ]]; then
+    # Hardlink file, if possible
+    cp -pLlf $KERNEL_FILE /boot/rear-kernel >&2
+elif [[ $(stat -L -c '%s %Y' $KERNEL_FILE) == $(stat -L -c '%s %Y' /boot/rear-kernel &>/dev/null) ]]; then
+    # If existing file has exact same size and modification time, assume the same
+    :
+else
+    # In all other cases, replace
+    cp -pLf $KERNEL_FILE /boot/rear-kernel >&2
+fi
+BugIfError "Unable to copy '$KERNEL_FILE' to /boot"
 
 cp -af $BUILD_DIR/initrd.cgz /boot/rear-initrd.cgz >&2
 BugIfError "Unable to copy '$BUILD_DIR/initrd.cgz' to /boot"

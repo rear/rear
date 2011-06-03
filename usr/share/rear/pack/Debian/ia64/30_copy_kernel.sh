@@ -28,17 +28,15 @@
 #
 
 # if KERNEL_FILE is not a file, search for a kernel under /boot
-if ! test -s "$KERNEL_FILE" ; then
-	if test -r "/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION" ; then
+if [ ! -s "$KERNEL_FILE" ]; then
+	if [ -r "/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION" ]; then
 		# guess kernel
 		KERNEL_FILE="/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION"
-		Print "Using kernel $KERNEL_FILE"
-	elif type -p get_kernel_version >/dev/null ; then
+	elif type -p get_kernel_version &>/dev/null; then
 		# if we have get_kernel_version, search for probably matching kernel file
-		for k in $(find /boot -type f) ; do
-			if VER=$(get_kernel_version "$k") && test "$VER" == "$KERNEL_VERSION" ; then
-				KERNEL_FILE="$k"
-				Print "Found kernel $KERNEL_FILE"
+		for src in $(find /boot -type f) ; do
+			if VER=$(get_kernel_version "$src") && test "$VER" == "$KERNEL_VERSION" ; then
+				KERNEL_FILE="$src"
 				break
 			fi
 		done
@@ -48,9 +46,12 @@ if ! test -s "$KERNEL_FILE" ; then
 fi
 
 # if KERNEL_FILE is still not a valid file, complain
-if ! test -s "$KERNEL_FILE" ; then
-	Error "Could not find a suitable kernel. Maybe you have to set KERNEL_FILE [$KERNEL_FILE] ?"
+[ -s "$KERNEL_FILE" ]
+StopIfError "Could not find a suitable kernel. Maybe you have to set KERNEL_FILE [$KERNEL_FILE] ?"
+
+if [ -L $KERNEL_FILE ]; then
+    KERNEL_FILE=$(readlink -f $KERNEL_FILE)
 fi
 
-cp -aL "$KERNEL_FILE" "$BUILD_DIR/kernel" 
-
+Log "Found kernel $KERNEL_FILE"
+#cp -aL "$KERNEL_FILE" "$BUILD_DIR/kernel"

@@ -1,10 +1,10 @@
 # copy kernel and initrd to USB dir for Relax & Recover
 #
 
-cp -v "$BUILD_DIR/kernel" "$BUILD_DIR/usbfs/$USB_PREFIX/kernel" >&8
+cp -pL "$KERNEL_FILE" "$BUILD_DIR/usbfs/$USB_PREFIX/kernel" >&8
 StopIfError "Could not create $BUILD_DIR/usbfs/$USB_PREFIX/kernel"
 
-cp -v "$BUILD_DIR/initrd.cgz" "$BUILD_DIR/usbfs/$USB_PREFIX/initrd.cgz" >&8
+cp -p "$BUILD_DIR/initrd.cgz" "$BUILD_DIR/usbfs/$USB_PREFIX/initrd.cgz" >&8
 StopIfError "Could not create $BUILD_DIR/usbfs/$USB_PREFIX/initrd.cgz"
 
 Log "Copied kernel and initrd.cgz to $USB_PREFIX"

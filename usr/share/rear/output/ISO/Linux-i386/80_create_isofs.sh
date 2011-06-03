@@ -22,6 +22,9 @@
 [ -x "$ISO_MKISOFS_BIN" ]
 StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executabel !"
 
+Log "Copying kernel"
+cp -pL $KERNEL_FILE $BUILD_DIR/kernel
+
 ISO_FILES=( ${ISO_FILES[@]} $BUILD_DIR/kernel $BUILD_DIR/initrd.cgz )
 Log "Starting '$ISO_MKISOFS_BIN'"
 LogPrint "Making ISO image"
