@@ -26,7 +26,7 @@ Log "Checking COPY_AS_IS_EXELIST"
 while read -r ; do
 	lib="$REPLY"
 #	if ! grep -q "$lib" <<<"${COPY_AS_IS_EXELIST[@]}" ; then
-	if ! IsInArray "$lib" "${COPY_AS_IS_EXELIST[@]}; then
+	if ! IsInArray "$lib" "${COPY_AS_IS_EXELIST[@]}"; then
 		# if $lib is NOT part of the copy-as-is fileset, then add it to the global libs
 		LIBS=( ${LIBS[@]} $lib )
 		Log "Adding required $lib to LIBS"
