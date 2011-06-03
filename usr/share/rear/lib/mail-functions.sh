@@ -56,8 +56,8 @@ function create_mime_part_binary {
 	echo "Content-Type: application/octet-stream; name=\"$(basename "$1")\""
 	echo "Content-Disposition: attachment; filename=\"$(basename "$1")\""
 	echo
-	perl -MMIME::Base64 -0777 -ne 'print encode_base64($_)' <"$1" || \
-		Error "perl MIME::Base64 failed"
+	perl -MMIME::Base64 -0777 -ne 'print encode_base64($_)' <"$1"
+	StopIfError "perl MIME::Base64 failed"
 	echo
 }
 

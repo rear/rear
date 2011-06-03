@@ -11,8 +11,8 @@ case "$TIMESYNC" in
 		EOF
 		;;
 	RDATE)
-		test "$TIMESYNC_SOURCE" || \
-			Error "TIMESYNC_SOURCE not set, please set it to your RDATE server in $CONFIG_DIR/local.conf"
+		[ "$TIMESYNC_SOURCE" ]
+		StopIfError "TIMESYNC_SOURCE not set, please set it to your RDATE server in $CONFIG_DIR/local.conf"
 		PROGS=( "${PROGS[@]}" rdate )
 		cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-timesync.sh <<-EOF
 			echo "Setting system time via RDATE ..."
