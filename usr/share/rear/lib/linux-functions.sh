@@ -112,16 +112,15 @@ FindStorageDrivers() {
 
 # Copy binaries given in $* to $1, stripping them on the way
 BinCopyTo() {
-	local dest="$1" src=; shift
-	[ -d "$dest" ]
+	local dest="$1" src=
+	[[ -d "$dest" ]]
 	StopIfError "[BinCopyTo] Destination '$dest' not a directory"
-	for src in "$@"; do
-		test -z "$src" && continue # ignore blanks
-		[ -x "$src" ]
-		StopIfError "[BinCopyTo] Source '$src' is not an executable"
-		cp -v -a -L "$src" "$dest"
-		StopIfError "[BinCopyTo] Could not copy '$src' to '$dest'"
-		strip -s "$dest/$(basename "$src")" 2>/dev/null
+	while (( $# > 1 )); do
+		shift
+		[[ -z "$1" ]] && continue # ignore blanks
+		cp -v -a -L -f "$1" "$dest"
+		StopIfError "[BinCopyTo] Could not copy '$1' to '$dest'"
+#		strip -s "$dest/$(basename "$1")" 2>/dev/null
 	done
 	: # make sure that a failed strip won't fail the BinCopyTo
 }
@@ -129,29 +128,27 @@ BinCopyTo() {
 # Copy libraries given in $* to $1, stripping them on the way
 # like BinCopyTo, but copy symlinks as such, since some libraries
 LibCopyTo() {
-	local dest="$1" src=; shift
-	[ -d "$dest" ]
+	local dest="$1" src=
+	[[ -d "$dest" ]]
 	StopIfError "[LibCopyTo] Destination '$dest' not a directory"
-	for src in "$@"; do
-		test -z "$src" && continue # ignore blanks
-		[ -r "$src" ]
-		StopIfError "[LibCopyTo] Source '$src' is not readable"
-		if ! cmp "$dest/$(basename "$src")" "$src" 2>/dev/null; then
-			cp -v -a "$src" "$dest"
-			StopIfError "[LipCopyTo] Could not copy '$src' to '$dest'"
-		fi
-		test ! -L "$dest/$(basename "$src")" && strip -s "$dest/$(basename "$src")"
+	while (( $# > 1 )); do
+		shift
+		[[ -z "$1" ]] && continue # ignore blanks
+		cp -v -a -f "$1" "$dest"
+		StopIfError "[LipCopyTo] Could not copy '$src' to '$dest'"
+#		test ! -L "$dest/$(basename "$src")" && strip -s "$dest/$(basename "$src")"
 	done
 	: # make sure that a failed strip won't fail the BinCopyTo
 }
 
 # Copy Modules given in $* to $1
 ModulesCopyTo() {
-	local dest="$1" dir= src=; shift
-	for src in "$@"; do
-		dir="$(dirname "$src")"
-		mkdir -p $v "$dest/$dir"
-		cp -a -L -v "/$src" "$dest/$dir"
+	local dest="$1" dir= src=
+	while (( $# > 1 )); do
+		shift
+		dir="$(dirname "$1")"
+		[[ ! -d "$dest/$dir" ]] && mkdir -p $v "$dest/$dir"
+		cp -a -L -v "/$1" "$dest/$dir"
 	done
 }
 
@@ -202,28 +199,29 @@ SharedObjectFiles() {
 	StopIfError "Unable to find a working ldd binary."
 
 	local initrd_libs=( $(
-		$ldd "$@" \
-		| sed -ne 's:\t\(.* => \)\?\(/.*\) (0x[0-9a-f]*):\2:p'
+		$ldd "$@" | sed -ne 's:\t\(.* => \)\?\(/.*\) (0x[0-9a-f]*):\2:p' | sort -u
 	) )
+
+	### FIXME: Is this still relevant today ? If so, make it more specific !
 
 	# Evil hack: On some systems we have generic as well as optimized
 	# libraries, but the optimized libraries may not work with all
 	# kernel versions (e.g., the NPTL glibc libraries don't work with
 	# a 2.4 kernel). Use the generic versions of the libraries in the
 	# initrd (and guess the name).
-	local lib= n= optimized=
-	for ((n=0; $n<${#initrd_libs[@]}; n++)); do
-		lib=${initrd_libs[$n]}
-		optimized="$(echo "$lib" | sed -e 's:.*/\([^/]\+/\)[^/]\+$:\1:')"
-		lib=${lib/$optimized/}
-		if [ "${optimized:0:3}" != "lib" -a -f "$lib" ]; then
-			#echo "[Using $lib instead of ${initrd_libs[$n]}]" >&2
-			initrd_libs[$n]="${lib/$optimized/}"
-		fi
-		echo Deoptimizing "$lib" >&8
-	done
+#	local lib= n= optimized=
+#	for ((n=0; $n<${#initrd_libs[@]}; n++)); do
+#		lib=${initrd_libs[$n]}
+#		optimized="$(echo "$lib" | sed -e 's:.*/\([^/]\+/\)[^/]\+$:\1:')"
+#		lib=${lib/$optimized/}
+#		if [ "${optimized:0:3}" != "lib" -a -f "$lib" ]; then
+#			#echo "[Using $lib instead of ${initrd_libs[$n]}]" >&2
+#			initrd_libs[$n]="${lib/$optimized/}"
+#		fi
+#		echo Deoptimizing "$lib" >&8
+#	done
 
-	local link=
+	local lib= link=
 	for lib in "${initrd_libs[@]}"; do
 		case "$lib" in
 			(linux-gate*)
@@ -245,11 +243,10 @@ SharedObjectFiles() {
 		while [ -L "/$lib" ]; do
 			echo $lib
 			link="$(readlink "/$lib")"
-			if [ x"${link:0:1}" == x"/" ]; then
-				lib=${link#/}
-			else
-				lib="${lib%/*}/$link"
-			fi
+			case "$link" in
+				(/*) lib="${link:1}";;
+				(*)  lib="${lib%/*}/$link";;
+			esac
 		done
 		echo $lib
 		echo $lib >&8
@@ -280,7 +277,7 @@ ResolveModules () {
 			/sbin/modprobe $with_modprobe_conf --ignore-install \
 				--set-version $kernel_version \
 				--show-depends $module 2> /dev/null \
-				| sed -ne 's:.*insmod /\?::p' )
+				| sed -ne 's:.*insmod /\?::p' | sort -u)
 
 		if [ -z "$module_list" ]; then
 			case $module in
