@@ -28,3 +28,8 @@ ln -sfv ../bin $ROOTFS_DIR/usr/bin >&2
 ln -sfv ../bin $ROOTFS_DIR/usr/sbin >&2
 ln -sfv /proc/self/mounts $ROOTFS_DIR/etc/mtab >&2
 test -d $ROOTFS_DIR/etc/sysconfig/network-scripts && ln -sfv /bin/true $ROOTFS_DIR/etc/sysconfig/network-scripts/net.hotplug >&2
+
+lvmbins="lvchange lvconvert lvcreate lvdisplay lvextend lvmchange lvmdiskscan lvmsadc lvmsar lvreduce lvremove lvrename lvresize lvs lvscan pvchange pvresize pvck pvcreate pvdata pvdisplay pvmove pvremove pvs pvscan vgcfgbackup vgcfgrestore vgchange vgck vgconvert vgcreate vgdisplay vgexport vgextend vgimport vgmerge vgmknodes vgreduce vgremove vgrename vgs vgscan vgsplit"
+for bin in $lvmbins; do
+    ln -sfv lvm $ROOTFS_DIR/bin/$bin >&2
+done
