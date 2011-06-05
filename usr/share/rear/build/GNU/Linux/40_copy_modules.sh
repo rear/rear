@@ -19,21 +19,19 @@
 #
 
 Log "Collecting modules for kernel version $KERNEL_VERSION"
-LogPrint "Copy kernel modules"
 MODFILES=(
 $( ResolveModules "$KERNEL_VERSION" "${MODULES[@]}" "${MODULES_LOAD[@]}"  )
 )
 StopIfError "Could not resolve kernel module dependancies"
 
 # copy modules & depmod
-Log "Copying kernel modules"
-ModulesCopyTo "$ROOTFS_DIR" "${MODFILES[@]}" 1>&8 
+LogPrint "Copying kernel modules"
+ModulesCopyTo "$ROOTFS_DIR" "${MODFILES[@]}" >&8
 StopIfError "Could not copy kernel modules"
 
-depmod -avb "$ROOTFS_DIR" "$KERNEL_VERSION" 1>&8 
+depmod -avb "$ROOTFS_DIR" "$KERNEL_VERSION" >&8
 StopIfError "Could not configure modules with depmod"
 
 for m in "${MODULES_LOAD[@]}" ; do
 	echo $m
 done >>$ROOTFS_DIR/etc/modules
-

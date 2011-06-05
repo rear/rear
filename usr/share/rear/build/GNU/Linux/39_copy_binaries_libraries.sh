@@ -19,23 +19,20 @@
 #
 
 LogPrint "Copy program files & libraries"
-{
+
 # calculate binaries from needed progs
-declare -a BINARIES
-c=0
-for k in "${PROGS[@]}" "${REQUIRED_PROGS[@]}"; do
-	file="$(type -p "$k")"
-	if test -x "$file" ; then
-		BINARIES[$c]="$file"
-		let c++
-		echo "Found $file"
+declare -a BINARIES=( $(
+for bin in "${PROGS[@]}" "${REQUIRED_PROGS[@]}"; do
+	file="$(type -p "$bin")"
+	if [[ -x "$file" ]]; then
+		echo $file
+		echo "Found $file" >&8
 	fi
-done
-} 1>&8
+done | sort -u) )
+
 # copy binaries
 Log "Binaries: ${BINARIES[@]}"
-BinCopyTo "$ROOTFS_DIR/bin" "${BINARIES[@]}"  1>&8
-[ $PIPESTATUS -eq 0 ]
+BinCopyTo "$ROOTFS_DIR/bin" "${BINARIES[@]}" >&8
 StopIfError "Could not copy binaries"
 
 # split libs into lib and lib64 paths
@@ -53,32 +50,26 @@ for lib in ${LIBS[@]} $(SharedObjectFiles "${BINARIES[@]}" | sed -e 's#^#/#' ) ;
 	#
 	# we sort that into LIBS, LIBS32 and LIBS64 accordingly
 	case "$lib" in
-		(*lib32/*)	REAL_LIBS32=( ${REAL_LIBS32[@]} $lib ) ;;
-		(*lib64/*)	REAL_LIBS64=( ${REAL_LIBS64[@]} $lib ) ;;
-		(*)	REAL_LIBS=( ${REAL_LIBS[@]} $lib ) ;;
+		(*lib32/*) REAL_LIBS32=( ${REAL_LIBS32[@]} $lib ) ;;
+		(*lib64/*) REAL_LIBS64=( ${REAL_LIBS64[@]} $lib ) ;;
+		(*) REAL_LIBS=( ${REAL_LIBS[@]} $lib ) ;;
 	esac
 done
 
-Log "Libraries: ${REAL_LIBS[@]}"
-if test "$REAL_LIBS" ; then
-	LibCopyTo "$ROOTFS_DIR/lib" ${REAL_LIBS[@]} 1>&8
-	[ $PIPESTATUS -eq 0 ]
+if [[ "$REAL_LIBS" ]]; then
+	Log "Libraries: ${REAL_LIBS[@]}"
+	LibCopyTo "$ROOTFS_DIR/lib" ${REAL_LIBS[@]} >&8
 	StopIfError "Could not copy libraries"
 fi
-Log "Libraries(32): ${REAL_LIBS32[@]}"
-if test "$REAL_LIBS32" ; then
-	LibCopyTo "$ROOTFS_DIR/lib32" ${REAL_LIBS32[@]} 1>&8
-	[ $PIPESTATUS -eq 0 ]
+if [[ "$REAL_LIBS32" ]]; then
+	Log "Libraries(32): ${REAL_LIBS32[@]}"
+	LibCopyTo "$ROOTFS_DIR/lib32" ${REAL_LIBS32[@]} >&8
 	StopIfError "Could not copy 32bit libraries"
 fi
-Log "Libraries(64): ${REAL_LIBS64[@]}"
-if test "$REAL_LIBS64" ; then
-	LibCopyTo "$ROOTFS_DIR/lib64" ${REAL_LIBS64[@]} 1>&8
-	[ $PIPESTATUS -eq 0 ]
+if [[ "$REAL_LIBS64" ]]; then
+	Log "Libraries(64): ${REAL_LIBS64[@]}"
+	LibCopyTo "$ROOTFS_DIR/lib64" ${REAL_LIBS64[@]} >&8
 	StopIfError "Could not copy 64bit libraries"
 fi
-ldconfig $v -r "$ROOTFS_DIR" 1>&8
-[ $PIPESTATUS -eq 0 ]
+ldconfig $v -r "$ROOTFS_DIR" >&8
 StopIfError "Could not configure libraries with ldconfig"
-
-

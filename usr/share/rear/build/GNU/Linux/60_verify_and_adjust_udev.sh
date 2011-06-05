@@ -46,7 +46,7 @@ done < <(
 	grep -nE '(PROGRAM|RUN)' etc/udev/rules.d/* lib/udev/rules.d/* | \
 		sed -ne 's#\(^.*\):[0-9]\+:.*\(PROGRAM\|RUN\)[+!]\?="\([^"%\$ ]\+\).*#\3 \1#p' | \
 		grep -v ^socket: | \
-		sort -u \
+		sort -u
 	)
 
 # insert our module auto-loading rule
