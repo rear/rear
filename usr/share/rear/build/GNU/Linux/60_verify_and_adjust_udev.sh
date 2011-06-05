@@ -8,9 +8,7 @@ LogPrint "Checking udev"
 # check that all external programs used by udev are available
 while read file location ; do
 	# check for file in ROOTFS_DIR (if full path) or in lib/udev or in bin (if name without path)
-	if test -x $ROOTFS_DIR/$file -o \
-		-x $ROOTFS_DIR/lib/udev/$file -o \
-		-x $ROOTFS_DIR/bin/$file ; then
+	if [[ -x $ROOTFS_DIR/$file || -x $ROOTFS_DIR/lib/udev/$file || -x $ROOTFS_DIR/bin/$file ]]; then
 		# everything is fine
 		# Log "matched external call to $file in $location"
 		echo "matched external call to $file in $location" 1>&8
@@ -46,9 +44,9 @@ done < <(
 
 	cd  $ROOTFS_DIR
 	grep -nE '(PROGRAM|RUN)' etc/udev/rules.d/* lib/udev/rules.d/* | \
-		sed -ne 's#\(^.*:[0-9]\+\):.*\(PROGRAM\|RUN\)[+!]\?="\([^"%\$ ]\+\).*#\3 \1#p' | \
+		sed -ne 's#\(^.*\):[0-9]\+:.*\(PROGRAM\|RUN\)[+!]\?="\([^"%\$ ]\+\).*#\3 \1#p' | \
 		grep -v ^socket: | \
-		uniq
+		sort -u \
 	)
 
 # insert our module auto-loading rule
