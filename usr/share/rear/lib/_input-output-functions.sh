@@ -144,16 +144,22 @@ PrintIfError() {
 	fi
 }
 
-Stamp() {
-	date +"%Y-%m-%d %H:%M:%S "
-}
+if [[ "$DEBUG" || "$DEBUG_SCRIPTS" ]]; then
+	Stamp() {
+		date +"%Y-%m-%d %H:%M:%S.%N "
+	}
+else
+	Stamp() {
+		date +"%Y-%m-%d %H:%M:%S "
+	}
+fi
 
 Log() {
 	if test $# -gt 0 ; then
-		echo "$(Stamp)$*" 
+		echo "$(Stamp)$*"
 	else
-		echo "$(Stamp)$(cat)" 
-	fi 1>&2
+		echo "$(Stamp)$(cat)"
+	fi >&2
 }
 
 # log if there is an error
