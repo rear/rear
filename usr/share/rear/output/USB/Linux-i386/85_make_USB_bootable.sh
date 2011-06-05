@@ -1,3 +1,12 @@
+# Test for features in dd
+# true if dd supports oflag= option
+FEATURE_DD_OFLAG=
+
+dd_version=$(get_version "dd --version")
+if version_newer "$dd_version" 5.3.0; then
+    FEATURE_DD_OFLAG="y"
+fi
+
 # we assume that REAL_USB_DEVICE and RAW_USB_DEVICE are both set from the script
 # in prep/USB/Linux-i386/35_check_usb_disk.sh
 
@@ -38,12 +47,13 @@ esac
 if [ "$REAL_USB_DEVICE" != "$RAW_USB_DEVICE" ] ; then
 	# Write the USB boot sector if the filesystem is not the entire disk
 	LogPrint "Writing MBR to $RAW_USB_DEVICE"
-	dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE bs=440 count=1
+	if [[ "$FEATURE_DD_OFLAG" ]]; then
+		dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE bs=440 count=1 oflag=sync
+	else
+		dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE bs=440 count=1
+		sync
+	fi
 	StopIfError "Problem with writing the mbr.bin to '$RAW_USB_DEVICE'"
 else
 	Log "WARNING: Not writing MBR to '$RAW_USB_DEVICE'"
 fi
-
-# Need to flush the buffer for the USB boot sector.
-# FIXME: limit this to the USB device
-sync; sync
