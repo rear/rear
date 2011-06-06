@@ -24,7 +24,7 @@ mkdir -p -m0750 $VAR_DIR/recovery/cfg2html
 StopIfError "Could not create '$VAR_DIR/recovery/cfg2html' directory"
 
 cfg2html -px -o $VAR_DIR/recovery/cfg2html >&8
-StopIfError "An error occured when running cfg2html"
+LogIfError "Errors occured when running cfg2html (see $VAR_DIR/recovery/cfg2html/$(uname -n).err)"
 
 # Add HTML part of cfg2html to result files
 RESULT_FILES=( "${RESULT_FILES[@]}" $(find $VAR_DIR/recovery/cfg2html -type f -name \*.html) )
