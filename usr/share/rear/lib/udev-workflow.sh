@@ -54,9 +54,18 @@ WORKFLOW_udev () {
 
     # Beep distinctively
     if [[ "$UDEV_BEEP" =~ ^[yY1] ]]; then
-        for i in $(seq 1 10); do
-            echo -e "\007" >/dev/tty0
-            sleep 0.05
-        done
+        ### Make sure we have a PC speaker driver loaded
+        if grep -q pcpskr /proc/modules || modprobe pcspkr; then
+            if type -p beep &>/dev/null; then
+                beep -f 750 -l 50 -d 5 -r 15
+            else
+                for i in $(seq 1 15); do
+                    echo -e "\007" >/dev/tty0
+                    sleep 0.05
+                done
+            fi
+        else
+            LogPrint "Speaker driver failed to load, no beeps, sorry !"
+        fi
     fi
 }
