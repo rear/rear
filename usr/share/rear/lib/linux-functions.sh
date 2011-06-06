@@ -80,15 +80,12 @@ FindDrivers() {
 		return 0
 	fi
 	my_udevinfo -a -p $path | \
-		sed -ne '/DRIVER/!d;s/.*"\(.*\)".*/\1/;/^.\+/p' | \
+		sed -ne '/DRIVER/!d; s/.*"\(.*\)".*/\1/; /^.\+/p; /PIIX_IDE/d;'
 		# 1. filter all lines not containing DRIVER
 		# 2. cut out everything between the ""
 		# 3. filter empty lines
+		# 4. fiter out unwanted modules
 		# cool, eh :-)
-		sed -e "/PIIX_IDE/d;"
-		# filter out unwanted modules
-		# could be added to the previous sed, but like this
-		# it is easier to read
 	return $PIPESTATUS # return the status of the main udevinfo call instead
 }
 
@@ -104,7 +101,7 @@ FindStorageDrivers() {
 			IsInArray "$module" "${STORAGE_DRIVERS[@]}" && echo $module
 		done < <(lsmod)
 		find ${1:-$VAR_DIR/recovery} -name drivers -exec cat '{}' \;
-	} | sort -u | grep -v -E '(loop)'
+	} | grep -v -E '(loop)' | sort -u
 	# blacklist some more stuff here that came in the way on some systems
 	return 0
 	# always return 0 as the grep return code is meaningless
@@ -112,13 +109,13 @@ FindStorageDrivers() {
 
 # Copy binaries given in $* to $1, stripping them on the way
 BinCopyTo() {
-	local dest="$1" src=
+	local dest="$1"
 	[[ -d "$dest" ]]
 	StopIfError "[BinCopyTo] Destination '$dest' not a directory"
 	while (( $# > 1 )); do
 		shift
 		[[ -z "$1" ]] && continue # ignore blanks
-		cp -v -a -L -f "$1" "$dest"
+		cp -a -L -f $v "$1" "$dest"
 		StopIfError "[BinCopyTo] Could not copy '$1' to '$dest'"
 #		strip -s "$dest/$(basename "$1")" 2>/dev/null
 	done
@@ -128,30 +125,31 @@ BinCopyTo() {
 # Copy libraries given in $* to $1, stripping them on the way
 # like BinCopyTo, but copy symlinks as such, since some libraries
 LibCopyTo() {
-	local dest="$1" src=
+	local dest="$1" file=
 	[[ -d "$dest" ]]
 	StopIfError "[LibCopyTo] Destination '$dest' not a directory"
 	while (( $# > 1 )); do
 		shift
 		[[ -z "$1" ]] && continue # ignore blanks
-		cp -v -a -f "$1" "$dest"
-		StopIfError "[LipCopyTo] Could not copy '$src' to '$dest'"
-#		test ! -L "$dest/$(basename "$src")" && strip -s "$dest/$(basename "$src")"
+		cp -a -f $v "$1" "$dest"
+		StopIfError "[LibCopyTo] Could not copy '$1' to '$dest'"
+#		file=$(basename "$1")
+#		[[ ! -L "$dest/$file" ]] && strip -s "$dest/$file"
 	done
-	: # make sure that a failed strip won't fail the BinCopyTo
+	: # make sure that a failed strip won't fail the LibCopyTo
 }
 
 # Copy Modules given in $* to $1
 ModulesCopyTo() {
-	local dest="$1" dir= src=
+	local dest="$1" dir=
 	while (( $# > 1 )); do
 		shift
 		dir="$(dirname "$1")"
 		[[ ! -d "$dest/$dir" ]] && mkdir -p $v "$dest/$dir"
-		cp -a -L -v "/$1" "$dest/$dir"
+		cp -a -L $v "/$1" "$dest/$dir"
+		StopIfError "[ModulesCopyTo] Could not copy '/$1' to '$dest'"
 	done
 }
-
 
 # Check if module $1 is listed in $modules.
 has_module () {
@@ -189,18 +187,26 @@ cp_bin () {
 	done
 }
 
-
 # Resolve dynamic library dependencies. Returns a list of symbolic links
 # to shared objects and shared object files for the binaries in $*.
 # This is the function copied from mkinitrd off SuSE 9.3
 SharedObjectFiles() {
 	local ldd=$(type -p ldd 2>/dev/null)
-	[[ "$ldd" && -x "$ldd" ]]
+	[[ -x "$ldd" ]]
 	StopIfError "Unable to find a working ldd binary."
 
-	local initrd_libs=( $(
-		$ldd "$@" | sed -ne 's:\t\(.* => \)\?\(/.*\) (0x[0-9a-f]*):\2:p' | sort -u
-	) )
+	# Default ldd output (when providing more than one argument) has 5 cases:
+	#  1. Line: "file:"                            -> file argument
+	#  2. Line: "	lib =>  (mem-addr)"            -> virtual library
+	#  3. Line: "	lib => not found"              -> print error to stderr
+	#  4. Line: "	lib => /path/lib (mem-addr)"   -> print $3
+	#  5. Line: "	/path/lib (mem-addr)"          -> print $1
+	local -a initrd_libs=( $($ldd "$@" | awk '
+		/^\t.+ => not found/ { print "WARNING: Dynamic library " $1 " not found" > "/dev/stderr" }
+		/^\t.+ => \// { print $3 }
+		/^\t\// { print $1 }
+	' | sort -u) )
+    LogPrint "initrd_libs: ${initrd_libs[@]}"
 
 	### FIXME: Is this still relevant today ? If so, make it more specific !
 
@@ -223,23 +229,7 @@ SharedObjectFiles() {
 
 	local lib= link=
 	for lib in "${initrd_libs[@]}"; do
-		case "$lib" in
-			(linux-gate*)
-				# This library is mapped into the process by the kernel
-				# for vsyscalls (i.e., syscalls that don't need a user/
-				# kernel address space transition) in 2.6 kernels.
-				continue
-				;;
-			(/*)
-				lib="${lib:1}"
-				;;
-			(*)
-				# Library could not be found.
-				echo "WARNING: Dynamic library $lib not found" >&8
-				continue
-				;;
-		esac
-
+		lib="${lib:1}"
 		while [ -L "/$lib" ]; do
 			echo $lib
 			link="$(readlink "/$lib")"
@@ -250,7 +240,7 @@ SharedObjectFiles() {
 		done
 		echo $lib
 		echo $lib >&8
-	done | sort -u
+	done
 }
 
 
@@ -276,8 +266,8 @@ ResolveModules () {
 		module_list=$( \
 			/sbin/modprobe $with_modprobe_conf --ignore-install \
 				--set-version $kernel_version \
-				--show-depends $module 2> /dev/null \
-				| sed -ne 's:.*insmod /\?::p' | sort -u)
+				--show-depends $module 2>/dev/null \
+				| awk '/^insmod / { print $2 }' | sort -u)
 
 		if [ -z "$module_list" ]; then
 			case $module in
