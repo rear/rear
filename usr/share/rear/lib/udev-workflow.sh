@@ -23,16 +23,14 @@ WORKFLOWS=( ${WORKFLOWS[@]} udev )
 WORKFLOW_udev () {
     # If no udev workflow has been defined, exit cleanly
     if [[ -z "$UDEV_WORKFLOW" ]]; then
-        return
-    fi
-
-    # If OUTPUT is not USB, exit cleanly
-    if [[ "$OUTPUT" != "USB" ]]; then
-        Log "The udev handler only makes sense when using OUTPUT=USB"
+        Log "Variable UDEV_WORKFLOW not set, skipping udev workflow."
         return
     fi
 
     WORKFLOW="$UDEV_WORKFLOW"
+
+    # Triggered by block-device, so force OUTPUT
+    OUTPUT=USB
 
     # Set USB_DEVICE based on ID_FS_LABEL or UDEV DEVNAME
     if [[ "$ID_FS_LABEL" && -b "/dev/disk/by-label/$ID_FS_LABEL" ]]; then
