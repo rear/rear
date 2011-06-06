@@ -9,9 +9,9 @@ fi
 
 # mount the network filesystem
 
-# default option is rw, but it is just a dummy filler
+# default option is rw,noatime but it is just a dummy filler
 if test -z "$NETFS_OPTIONS" ; then
-	NETFS_OPTIONS="rw"
+	NETFS_OPTIONS="rw,noatime"
 fi
 # if a mount command is given, use that instead
 if test "$NETFS_MOUNTCMD" ; then

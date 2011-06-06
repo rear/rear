@@ -13,7 +13,7 @@ else
 	[[ "$USB_DEVICE" ]]
 	StopIfError "USB device (\$USB_DEVICE) is not set."
 	Log "Running 'mount $USB_DEVICE $BUILD_DIR/usbfs'"
-	mount "$USB_DEVICE" "$BUILD_DIR/usbfs" 1>&2
+	mount -o noatime "$USB_DEVICE" "$BUILD_DIR/usbfs" 1>&2
 	StopIfError "Mounting '$USB_DEVICE' '$BUILD_DIR/usbfs' failed."
 fi
 
