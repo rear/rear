@@ -55,7 +55,9 @@ WORKFLOW_udev () {
         ### Make sure we have a PC speaker driver loaded
         if grep -q pcpskr /proc/modules || modprobe pcspkr; then
             if type -p beep &>/dev/null; then
-                beep -f 750 -l 50 -d 5 -r 15
+                # After testing in a loud datacenter, this seems the best
+                # (although it takes up 4 seconds)
+                beep -f 2000 -l 1000 -d 500 -r 3
             else
                 for i in $(seq 1 15); do
                     echo -e "\007" >/dev/tty0
