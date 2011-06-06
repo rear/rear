@@ -206,7 +206,6 @@ SharedObjectFiles() {
 		/^\t.+ => \// { print $3 }
 		/^\t\// { print $1 }
 	' | sort -u) )
-    LogPrint "initrd_libs: ${initrd_libs[@]}"
 
 	### FIXME: Is this still relevant today ? If so, make it more specific !
 
