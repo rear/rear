@@ -50,11 +50,11 @@ WORKFLOW_udev () {
     # Run udev workflow
     WORKFLOW_$UDEV_WORKFLOW "${ARGS[@]}"
 
-    # Suspend USB port
+    # Suspend USB port (works fine on RHEL6, fails on RHEL5 and older)
     if [[ "$DEVPATH" && "$UDEV_SUSPEND" =~ ^[yY1] ]]; then
         path="/sys$DEVPATH"
         Log "Trying to syspend USB device at '$path'"
-        while [[ "$path" != "/sys/devices" && ! -w "$path/power/level" ]]; do
+        while [[ "$path" != "/sys" && ! -w "$path/power/level" ]]; do
             path=$(dirname $path)
         done
         if [[ -w "$path/power/level" ]]; then
