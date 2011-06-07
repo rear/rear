@@ -8,16 +8,20 @@ if grep -q '^cciss ' /proc/modules; then
 fi
 
 # Is a tape device provided
-[[ "${TAPE_DEVICE}" ]]
+[[ "$TAPE_DEVICE" ]]
 StopIfError "No tape device (TAPE_DEVICE) defined."
 
 # Write out tape status
-mt -f "${TAPE_DEVICE}" status >"$TMP_DIR/tape_status" 1>&2
-StopIfError "Problem with reading tape device '${TAPE_DEVICE}'."
+mt -f "$TAPE_DEVICE" status &>"$TMP_DIR/tape_status"
+StopIfError "Problem with reading tape device '$TAPE_DEVICE'."
 
 # Log tape status
 cat $TMP_DIR/tape_status
 
+# Check if tape is online
+grep -qP '\bONLINE\b' "$TMP_DIR/tape_status"
+StopIfError "Tape in device '$TAPE_DEVICE' is not online."
+
 # Check if tape is not write protected
 ! grep -q WR_PROT "$TMP_DIR/tape_status"
-StopIfError "Tape in device '${TAPE_DEVICE}' is write protected."
+StopIfError "Tape in device '$TAPE_DEVICE' is write protected."
