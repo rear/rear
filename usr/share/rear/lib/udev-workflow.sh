@@ -47,8 +47,22 @@ WORKFLOW_udev () {
     type -t WORKFLOW_$WORKFLOW >/dev/null
     StopIfError "Udev workflow '$UDEV_WORKFLOW' does not exist"
 
+    # Turn the UID led on
+    if type -p hpasmcli &>/dev/null && [[ "$UDEV_UID_LED" =~ ^[yY1] ]]; then
+        hpasmcli -s "set uid on" >&8
+    fi
+
     # Run udev workflow
     WORKFLOW_$UDEV_WORKFLOW "${ARGS[@]}"
+
+    # Blink the UID led and turn it off
+    if type -p hpasmcli &>/dev/null && [[ "$UDEV_UID_LED" =~ ^[yY1] ]]; then
+        hpasmcli -s "set uid off" >&8; sleep 0.5
+        hpasmcli -s "set uid on" >&8; sleep 0.5
+        hpasmcli -s "set uid off" >&8; sleep 0.5
+        hpasmcli -s "set uid on" >&8; sleep 0.5
+        hpasmcli -s "set uid off" >&8
+    fi
 
     # Suspend USB port (works fine on RHEL6, fails on RHEL5 and older)
     if [[ "$DEVPATH" && "$UDEV_SUSPEND" =~ ^[yY1] ]]; then
@@ -69,12 +83,12 @@ WORKFLOW_udev () {
         if grep -q pcpskr /proc/modules || modprobe pcspkr; then
             Log "Beep through PC speaker."
             if type -p beep &>/dev/null; then
-                # After testing in a loud datacenter, this seems the best
+                # After testing in a noisy datacenter, this seems the best
                 # (although it takes up 4 seconds)
-                beep -f 2000 -l 1000 -d 500 -r 3
+                beep -f 2000 -l 1000 -d 500 -r 3 >&8
             else
                 for i in $(seq 1 15); do
-                    echo -e "\007" >/dev/tty0
+                    echo -en "\a" >/dev/tty0
                     sleep 0.05
                 done
             fi
