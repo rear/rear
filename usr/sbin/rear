@@ -110,20 +110,6 @@ if [ $(id --user) -ne 0 ]; then
 	exit 1
 fi
 
-# get full path to main script
-SCRIPT_FILE="$(readlink -f $(type -p "$0" || echo "$0"))"
-
-if ! type -p pidof >/dev/null ; then
-	echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
-	exit 1
-fi
-
-# do not run if another instance is running. pidof -x will always report at least $$
-if [ $$ != "$(pidof -x "$SCRIPT_FILE")" ] ; then
-	echo "ERROR: $SCRIPT_FILE is already running, not starting again" >&2
-	exit 1
-fi
-
 # set some bash options
 shopt -s nullglob extglob
 hash -r
@@ -134,14 +120,30 @@ export LC_CTYPE=C LC_ALL=C LANG=C
 # include default config
 . $SHARE_DIR/conf/default.conf
 
-
-test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
-exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
-
 # include functions
 for script in $SHARE_DIR/lib/*.sh ; do
 	. $script
 done
+
+# get full path to main script
+SCRIPT_FILE="$(readlink -f $(type -p "$0" || echo "$0"))"
+
+if ! type -p pidof >/dev/null ; then
+	echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
+	exit 1
+fi
+
+# do not run if another instance is running. pidof -x will always report at least $$
+if ! IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS}" && [ $$ != "$(pidof -x "$SCRIPT_FILE")" ] ; then
+	echo "ERROR: $SCRIPT_FILE is already running, not starting again" >&2
+	exit 1
+fi
+
+if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}" ; then
+	LOGFILE="$LOGFILE.lockless"
+fi
+test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
+exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
 
 LogPrint "$PRODUCT Version $VERSION / $RELEASE_DATE"
 Log "Command line options: $0 ${CMD_OPTS[@]}"

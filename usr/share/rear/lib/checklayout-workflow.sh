@@ -20,9 +20,10 @@
 
 WORKFLOW_checklayout_DESCRIPTION="Check if the disk layout has changed since the last run of savelayout."
 WORKFLOWS=( ${WORKFLOWS[@]} checklayout )
+LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} checklayout )
 WORKFLOW_checklayout () {
     ORIG_LAYOUT=$VAR_DIR/layout/disklayout.conf
-    TEMP_LAYOUT=$VAR_DIR/layout/disklayout.conf.new
+    TEMP_LAYOUT=$TMP_DIR/checklayout.conf
 
     SourceStage "layout/precompare"
     

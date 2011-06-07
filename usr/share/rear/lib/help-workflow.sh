@@ -18,6 +18,7 @@
 #
 #
 
+LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} help )
 WORKFLOW_help () {
 	cat <<EOF
 $SCRIPT_FILE [Options] <command> [command options ...]
