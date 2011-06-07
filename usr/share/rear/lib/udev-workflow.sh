@@ -50,10 +50,24 @@ WORKFLOW_udev () {
     # Run udev workflow
     WORKFLOW_$UDEV_WORKFLOW "${ARGS[@]}"
 
+    # Suspend USB port
+    if [[ "$DEVPATH" && "$UDEV_SUSPEND" =~ ^[yY1] ]]; then
+        path="/sys$DEVPATH"
+        Log "Trying to syspend USB device at '$path'"
+        while [[ "$path" != "/sys/devices" && ! -w "$path/power/level" ]]; do
+            path=$(dirname $path)
+        done
+        if [[ -w "$path/power/level" ]]; then
+            Log "Suspending USB device at '$path'"
+            echo -n suspend >$path/power/level
+        fi
+    fi
+
     # Beep distinctively
     if [[ "$UDEV_BEEP" =~ ^[yY1] ]]; then
         ### Make sure we have a PC speaker driver loaded
         if grep -q pcpskr /proc/modules || modprobe pcspkr; then
+            Log "Beep through PC speaker."
             if type -p beep &>/dev/null; then
                 # After testing in a loud datacenter, this seems the best
                 # (although it takes up 4 seconds)
