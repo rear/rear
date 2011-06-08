@@ -10,10 +10,16 @@ ProgressStart "Preparing restore operation"
 case "$BACKUP_PROG" in
 	# tar compatible programs here
 	(tar)
+		if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
+			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
+		fi
 		$BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS \
 			-C /mnt/local/ -x -f "$backuparchive"
 	;;
 	(rsync)
+		if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
+			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
+		fi
 		$BACKUP_PROG --numeric-ids --sparse --archive --hard-links --verbose $BACKUP_PROG_OPTIONS \
 			"$backuparchive"/ /mnt/local/
 	;;
