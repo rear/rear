@@ -11,8 +11,7 @@ WORKFLOW_format () {
 		Log "Setting $key=$val"
 	done
 
-	SourceStage "format/tape"
-	SourceStage "format/USB"
+	SourceStage "format"
 
 	SourceStage "cleanup"
 
