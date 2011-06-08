@@ -1,6 +1,6 @@
 NOTE ! http://rear.sourceforge.net is the latest & greatest documentation !
 -------------------------------------------------------------------------------
-                                Relax & Recover
+                               Relax and Recover
 -------------------------------------------------------------------------------
 
 Relax and Recover (abbreviated rear) is a highly modular disaster recovery
@@ -100,12 +100,14 @@ USAGE
 To use rear you always call the main script /usr/sbin/rear:
 # rear
 rear [Options] <command> [command options ...]
-Relax & Recover Version 1.9.0 / 2010-11-19
+Relax and Recover Version 1.9.0 / 2010-11-19
 Build: 61da7c0f0a63776d42385f085fb92930
-Copyright (C) 2006-2010
+Copyright (C) 2006-2011
         Schlomo Schapiro
         Gratien D'haese, IT3 Consultants
-Relax & Recover comes with ABSOLUTELY NO WARRANTY; for details
+        Jeroen Hoekx
+        Dag Wieers, Dagit Linux Solutions
+Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details
 see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
 
 Available Options:

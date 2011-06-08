@@ -1,248 +1,364 @@
-.TH rear 8 "26 Jan 2009" "" "Relax and Recover"
+'\" t
+.\"     Title: rear
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 7 Jun 2011
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
 .\"
-.SH NAME
-rear \- Relax and Recover
-.\"
-.SH SYNOPSIS
-.B rear
-[\fIOPTIONS\fR]\ <COMMAND>\ [\fICOMMAND-OPTIONS\fR ...]
-.\"
-.SH DESCRIPTION
-Relax and Recover (abbreviated \fB ReaR\fR )
-is a highly modular disaster recovery
-framework for GNU/Linux based systems, but can be easily extended to other
-UNIX alike systems. The disaster recovery information
-can be stored and used via the network, local on hard disks or USB devices, DVD/CD-R. The result is also a bootable image that is capable of booting via
-PXE, DVD/CD. 
+.TH "REAR" "8" "7 Jun 2011" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+rear \- bare metal disaster recovery tool
+.SH "SYNOPSIS"
+.sp
+\fBrear\fR [\fB\-d\fR] [\fB\-D\fR] [\fB\-r\fR \fIKERNEL\fR] [\fB\-s\fR] [\fB\-S\fR] [\fB\-v\fR] [\fB\-V\fR] \fICOMMAND\fR [\fIARGS\fR\&...]
+.SH "DESCRIPTION"
+.sp
+Relax and Recover (abbreviated \fBReaR\fR) is a highly modular disaster recovery framework for GNU/Linux based systems, but can be easily extended to other UNIX alike systems\&. The disaster recovery information can be stored and used via the network, local on hard disks or USB devices, DVD/CD\-R\&. The result is also a bootable image that is capable of booting via PXE, DVD/CD\&.
+.sp
+The disaster recovery can be integrated with any existing backup software so that ReaR utilizes the backup software to restore the files and provides the "glue" surrounding the simple file restore to having a full bare metal disaster recovery solution\&. Support for specific backup software has to be added to rear on an individual base and is very simple (look at an existing implementation for further information)\&.
+.SH "OPTIONS"
+.SS "GLOBAL OPTIONS"
+.PP
+\-d
+.RS 4
 
-The disaster recovery can be also integrated with any existing backup software so that
-ReaR utilizes the backup software to restore the files and provides the "glue"
-surrounding the simple file restore to having a full bare metal disaster 
-recovery solution. Support for specific backup software has to be added to
-rear on an individual base and is very simple (look at the existing 
-implementations for further information).
+\fBdebug mode\fR
+(log debug messages to log file)
+.RE
+.PP
+\-D
+.RS 4
 
-.\"
-.SH OPTIONS
-Global options are:
-.HP
-\fB -V\fR
-	Version information
-.HP
-\fB -d\fR
-	Debug mode
-.HP
-\fB -D\fR
-	Debugscript mode
-.HP
-\fB -S\fR
-	Step-by-step mode
-.HP
-\fB -s\fR
-	Simulation mode (shows the scripts included)
-.HP
-\fB -q\fR
-	Quiet mode
-.HP
-\fB -r a.b.c-xx-yy\fR
-	Kernel version to use instead of autodetecting the current kernel
-.\"
-.SH COMMANDS
-Major Commands are:
-.HP
-\fB dump\fR
-	Dump configuration and system information. Please run this to verify your setup!
-.HP
-\fB help\fR
-	Print out usage.
-.HP
-\fB mkbackup\fR
-	Create rescue media and backup the system (only for internal backup methods).
-.HP
-\fB mkbackuponly\fR
-	Backup the system (only for internal backup methods) without creating a (new) rescue media.
-.HP
-\fB mkrescue\fR
-	Create rescue media only.
-.HP
-\fB recover\fR
-	Recover the system. Can be used only when running from the Rescue media.
-.TP
-Run "rear" without any parameters to see the full list of commands and options available.
-.\"
-.SH BACKGROUND INFORMATION
-.\"
-The process of bare metal disaster recovery consists of two parts: Recreate the system layout
-and restore the data to the system. Most backup software solutions are very good at restoring data
-but do not support recreating the system layout. Relax and Recover is very good at recreating the system
-	layout but and works best when used together with a supported backup software.
+\fBdebugscript mode\fR
+(log every function call)
+.RE
+.PP
+\-r KERNEL
+.RS 4
+Kernel version to use (by default use running kernel)
+.RE
+.PP
+\-s
+.RS 4
 
-In this combination ReaR recreates the system layout and calls the backup software to restore the
-actual data. Thus there is no unnessecary duplicate data storage and the ReaR rescue media can be very small.
+\fBsimulation mode\fR
+(show what scripts rear would include)
+.RE
+.PP
+\-S
+.RS 4
 
-For demonstration and special use purposes ReaR also includes an internal backup method, NETFS, which can be
-used to create a simple tar.gz archive of the system. For all permanent setups we recommend using something more
-professional for backup, either a traditional backup software (open source or commercial) or rsync with hardlink
-based solutions, e.g. RSYNC BACKUP MADE EASY.
-.\"
-.SH BACKUP SOFTWARE INTEGRATION
-Currently ReaR supports the following backup methods. Please distinguish carefully between ReaR support for 3rd
-party backup software and ReaR internal backup methods. The latter also creates a backup of your data while the
-former will only integrate ReaR with the backup software to restore the data with the help of the backup software
-without actually creating backups. This means that for all non-internal backup software you \fBmust\fR take
-care of creating backups yourself.
+\fBstep\-by\-step mode\fR
+(acknowledge each script individually)
+.RE
+.PP
+\-v
+.RS 4
 
-Especially the "rear mkbackup" command can be confusing as it is only useful for the internal backup methods and has
-no function at all with the other backup methods. The following backup methods need to be set in ReaR with the
-BACKUP= option.
+\fBverbose mode\fR
+(show progress output)
+.RE
+.PP
+\-V
+.RS 4
+version information
+.RE
+.SS "COMMANDS"
+.PP
+checklayout
+.RS 4
+check if the disk layout has changed since the last run of mkbackup/mkrescue
+.RE
+.PP
+dump
+.RS 4
+dump configuration and system information; please run this to verify your setup
+.RE
+.PP
+format
+.RS 4
+format and label USB or tape media to be used with ReaR;
 
-.HP
-\fBNETFS\fR
-	Internal backup method which can be used to create a simple backup (tar archive).
-.HP
-\fBREQUEST_RESTORE\fR
-	(Default) Not really a backup method at all, ReaR simply halts the recovery and requests that somebody
-will restore the data to the appropriate location (e.g. via SSH). This method works especially well with an 
-rsync bases backup that is pushed back to the backup client.
-.HP
-\fBEXTERNAL\fR
-	Internal backup method that uses an arbitrary external command to create a backup and restore the data.
-.HP
-\fBGALAXY\fR
-	Use CommVault Galaxy 5 to restore the data.
-.HP
-\fBGALAXY7\fR
-	Use CommVault Galaxy 7 to restore the data.
-.HP
-\fBTSM\fR
-	Use IBM Tivoli Storage Manager to restore the data. The ReaR result files (e.g. ISO image) are also
-saved into TSM.
+first argument is the USB or tape device to use, eg\&.
+\fI/dev/sdX\fR
+or
+\fI/dev/stX\fR
+.RE
+.PP
+help
+.RS 4
+print full list of commands and options
+.RE
+.PP
+mkbackup
+.RS 4
+create rescue media and backup the system (only for internal backup methods)
+.RE
+.PP
+mkbackuponly
+.RS 4
+backup the system (only for internal backup methods) without creating rescue media
+.RE
+.PP
+mkrescue
+.RS 4
+create rescue media only
+.RE
+.PP
+recover
+.RS 4
+recover the system; can be used only when running from the rescue media
+.RE
+.PP
+validate
+.RS 4
+submit validation information
+.RE
+.SH "BACKGROUND INFORMATION"
+.sp
+The process of bare metal disaster recovery consists of two parts:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Recreate the system layout
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Restore the data to the system
+.RE
+.sp
+Most backup software solutions are very good at restoring data but do not support recreating the system layout\&. Relax and Recover is very good at recreating the system layout but and works best when used together with a supported backup software\&.
+.sp
+In this combination ReaR recreates the system layout and calls the backup software to restore the actual data\&. Thus there is no unnessecary duplicate data storage and the ReaR rescue media can be very small\&.
+.sp
+For demonstration and special use purposes ReaR also includes an internal backup method, NETFS, which can be used to create a simple tar\&.gz archive of the system\&. For all permanent setups we recommend using something more professional for backup, either a traditional backup software (open source or commercial) or rsync with hardlink based solutions, e\&.g\&. RSYNC BACKUP MADE EASY\&.
+.SH "BACKUP SOFTWARE INTEGRATION"
+.sp
+Currently ReaR supports the following backup methods\&. Please distinguish carefully between ReaR support for 3rd party backup software and ReaR internal backup methods\&. The latter also creates a backup of your data while the former will only integrate ReaR with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself\&.
+.sp
+Especially the rear mkbackup command can be confusing as it is only useful for the internal backup methods and has no function at all with the other backup methods\&. The following backup methods need to be set in ReaR with the BACKUP= option\&.
+.PP
+DP
+.RS 4
+Use HP Data Protector to restore the data\&.
+.RE
+.PP
+EXTERNAL
+.RS 4
+Internal backup method that uses an arbitrary external command to create a backup and restore the data\&.
+.RE
+.PP
+GALAXY
+.RS 4
+Use CommVault Galaxy 5 to restore the data\&.
+.RE
+.PP
+GALAXY7
+.RS 4
+Use CommVault Galaxy 7 to restore the data\&.
+.RE
+.PP
+NBU
+.RS 4
+Use Symantec NetBackup to restore the data\&.
+.RE
+.PP
+NETFS
+.RS 4
+Internal backup method which can be used to create a simple backup (tar archive)\&.
+.RE
+.PP
+REQUEST_RESTORE
+.RS 4
 
-.HP
-\fBNBU\fR
-	Use Symantec NetBackup to restore the data
-.HP
-\fBDP\fR
-	Use HP Data Protector to restore the data
-.TP
-If your favourite backup software is missing from this list, please submit a patch or ask us to implement it for you.
-
-.SH CONFIGURATION
-To configure rear you have to edit the configuration files in \fB/etc/rear/\fR.
-All *.conf files there are part of the configuration, but only
-.B site.conf
-and 
-.B local.conf
-are intended for the user configuration. All other configuration
-files hold defaults for various distributions and should not be changed.
-
-In
-.B /etc/rear/templates
-there are also some template files which are used by rear
-to create configuration files (mostly for the boot environment). Modify the templates
-to adjust the information contained in the emails produced by ReaR. You can use
-these templates to prepend your own configurations to the configuration files
-created by rear, for example you can edit PXE_pxelinux.cfg to add some general
-pxelinux configuration you use.
-
-In almost all circumstances you have to configure two main settings and their
-parameters: The backup method and the output method. 
-
-The backup method defines, how your data was saved and wether rear should 
-backup your data as part of the mkrescue process or wether you use an external
-application, e.g. backup software to archive your data.
-
-The output method defines how the rescue system is written to disk and how you
-plan to boot the failed computer from the rescue system.
-
-See the default configuration file
-.B /usr/share/rear/default.conf
-for an overview of the possible methods and their 
-options.
-
-An example to use TSM for backup and ISO for output would be to add
-these lines to /etc/rear/local.conf:
-.br
+\fB(default)\fR
+Not really a backup method at all, ReaR simply halts the recovery and requests that somebody will restore the data to the appropriate location (e\&.g\&. via SSH)\&. This method works especially well with an rsync bases backup that is pushed back to the backup client\&.
+.RE
+.PP
+RSYNC
+.RS 4
+Use rsync to restore data\&.
+.RE
+.PP
+TSM
+.RS 4
+Use IBM Tivoli Storage Manager to restore the data\&. The ReaR result files (e\&.g\&. ISO image) are also saved into TSM\&.
+.RE
+.sp
+If your favourite backup software is missing from this list, please submit a patch or ask us to implement it for you\&.
+.SH "CONFIGURATION"
+.sp
+To configure rear you have to edit the configuration files in \fI/etc/rear/\fR\&. All \fI*\&.conf\fR files there are part of the configuration, but only \fIsite\&.conf\fR and \fIlocal\&.conf\fR are intended for the user configuration\&. All other configuration files hold defaults for various distributions and should not be changed\&.
+.sp
+In \fI/etc/rear/templates\fR there are also some template files which are used by rear to create configuration files (mostly for the boot environment)\&. Modify the templates to adjust the information contained in the emails produced by ReaR\&. You can use these templates to prepend your own configurations to the configuration files created by rear, for example you can edit \fIPXE_pxelinux\&.cfg\fR to add some general pxelinux configuration you use\&.
+.sp
+In almost all circumstances you have to configure two main settings and their parameters: The backup method and the output method\&.
+.sp
+The backup method defines, how your data was saved and wether rear should backup your data as part of the mkrescue process or wether you use an external application, e\&.g\&. backup software to archive your data\&.
+.sp
+The output method defines how the rescue system is written to disk and how you plan to boot the failed computer from the rescue system\&.
+.sp
+See the default configuration file \fI/usr/share/rear/default\&.conf\fR for an overview of the possible methods and their options\&.
+.sp
+An example to use TSM for backup and ISO for output would be to add these lines to \fI/etc/rear/local\&.conf\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
 BACKUP=TSM
-.br
 OUTPUT=ISO
-
-And if all your systems use NTP for time synchronisation, you can also
-add these lines to /etc/rear/site.conf:
-.br
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+And if all your systems use NTP for time synchronisation, you can also add these lines to \fI/etc/rear/site\&.conf\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
 TIMESYNC=NTP
-
-Don't forget to distribute the site.conf to all your systems.
-
-The resulting ISO image will be
-created in /tmp. You can now modify the behaviour by copying the 
-appropriate configuration variables from default.conf to local.conf and
-changing them to suit your environment.
-.\"
-.SH EXIT STATUS
-.B 0
-Successful program execution.
-.br
-.B >0 
-Usage, syntax or execution errors. Check the /tmp/rear.log file for more information.
-.\"
-.SH EXAMPLES
-.TP
-# rear help 
-	shows help.
-.TP
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Don\(cqt forget to distribute the \fIsite\&.conf\fR to all your systems\&.
+.sp
+The resulting ISO image will be created in \fI/tmp\fR\&. You can now modify the behaviour by copying the appropriate configuration variables from \fIdefault\&.conf\fR to \fIlocal\&.conf\fR and changing them to suit your environment\&.
+.SH "EXIT STATUS"
+.PP
+0
+.RS 4
+Successful program execution\&.
+.RE
+.PP
+>0
+.RS 4
+Usage, syntax or execution errors\&. Check the
+\fI/tmp/rear\-hostname\&.log\fR
+file for more information\&.
+.RE
+.SH "EXAMPLES"
+.sp
+To print out the current settings for BACKUP and OUTPUT methods and some system information\&. This command can be used to see the supported features for the given release and platform\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
 # rear dump
-	prints out the current settings for BACKUP and OUTPUT methods and some
-system information.  This command can be used to see the supported features for the given release and platform.
-.TP
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+To create a new rescue environment\&. Do not forget to copy the resulting rescue system away so that you can use it in the case of a system failure\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
 # rear mkrescue
-	create a new rescue environment. Do not forget
-to copy the resulting rescue system away so that you can use it in the case of
-a system failure.
-.\"
-.SH FILES
-.TP
+.fi
+.if n \{\
+.RE
+.\}
+.SH "FILES"
+.PP
 /usr/sbin/rear
-	The program itself.
-.TP
-/etc/rear/local.conf
-	System specific configuration can be set here.
-.TP
-/etc/rear/site.conf
-	Site specific configuration can be set here.
-.TP
-/tmp/rear.log
-	ReaR log file.
-.TP
-/tmp/rear.########
-	ReaR working directory. If ReaR exits with an error, you must remove this directory manually.
-.TP
+.RS 4
+The program itself\&.
+.RE
+.PP
+/etc/rear/local\&.conf
+.RS 4
+System specific configuration can be set here\&.
+.RE
+.PP
+/etc/rear/site\&.conf
+.RS 4
+Site specific configuration can be set here\&.
+.RE
+.PP
+/tmp/rear\-hostname\&.log
+.RS 4
+ReaR log file\&.
+.RE
+.PP
+/tmp/rear\&.##
+.RS 4
+ReaR working directory\&. If ReaR exits with an error, you must remove this directory manually\&.
+.RE
+.PP
 /usr/share/rear
-	ReaR script components.
-.TP
-/usr/share/rear/conf/default.conf and other files there
-	ReaR's included defaults. Contains a complete set of parameters and their explanation.
-Please do not edit or modify. Copy values to local.conf or site.conf instead.
-.\"
-.SH BUGS
-Feedback is welcome, please use the project page at
-.br
-http://rear.sourceforge.net
-.\"
-.SH AUTHORS
-Gratien D'haese, Schlomo Schapiro.
-.br
-Lars Pinne (This man page).
-.\"
-.SH COPYRIGHT
-(c) 2006-2009
-.br
+.RS 4
+ReaR script components\&.
+.RE
+.PP
+/usr/share/rear/conf/default\&.conf
+.RS 4
+ReaR\(cqs included defaults\&. Contains a complete set of parameters and its explanation\&. Please do not edit or modify\&. Copy values to
+\fIlocal\&.conf\fR
+or
+\fIsite\&.conf\fR
+instead\&.
+.RE
+.SH "BUGS"
+.sp
+Feedback is welcome, please use the project page at:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+http://rear\&.sourceforge\&.net/[]
+.fi
+.if n \{\
+.RE
+.\}
+.SH "AUTHORS"
+.sp
+Gratien D\(cqhaese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers\&.
+.sp
+Lars Pinne (this man page)\&.
+.SH "COPYRIGHT"
+.sp
+(c) 2006\-2011
+.sp
 Schlomo Schapiro
-.br
-Gratien D'haese, IT3 Consultants
-
-
-Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details
-.br
-see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
-.\"
+.sp
+Gratien D\(cqhaese, IT3 Consultants
+.sp
+Jeroen Hoekx
+.sp
+Dag Wieers, Dagit Linux Solutions
+.sp
+Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU General Public License at \m[blue]\fBhttp://www\&.gnu\&.org/licenses/gpl\&.html\fR\m[]

@@ -1,19 +1,19 @@
 # #81_create_pxelinux_cfg.sh
 #
-# create pxelinux config on PXE server for Relax & Recover
+# create pxelinux config on PXE server for Relax and Recover
 #
-#    Relax & Recover is free software; you can redistribute it and/or modify
+#    Relax and Recover is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
 
-#    Relax & Recover is distributed in the hope that it will be useful,
+#    Relax and Recover is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 
 #    You should have received a copy of the GNU General Public License
-#    along with Relax & Recover; if not, write to the Free Software
+#    along with Relax and Recover; if not, write to the Free Software
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
@@ -27,7 +27,7 @@ cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
 $(test -s $CONFIG_DIR/templates/PXE_pxelinux.cfg && cat $CONFIG_DIR/templates/PXE_pxelinux.cfg)
 display $PXE_MESSAGE
 say ----------------------------------------------------------
-say rear = disaster recover this system with Relax & Recover
+say rear = disaster recover this system with Relax and Recover
 label rear
 	kernel $PXE_KERNEL
 	append initrd=$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE

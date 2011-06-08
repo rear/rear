@@ -1,0 +1,281 @@
+= rear(8)
+:version: v1.12.0
+:date: 7 Jun 2011
+
+
+== NAME
+rear - bare metal disaster recovery tool
+
+
+== SYNOPSIS
+*rear* [*-d*] [*-D*] [*-r* _KERNEL_] [*-s*] [*-S*] [*-v*] [*-V*] _COMMAND_ [_ARGS_...]
+
+
+== DESCRIPTION
+Relax and Recover (abbreviated *ReaR*) is a highly modular disaster recovery
+framework for GNU/Linux based systems, but can be easily extended to other
+UNIX alike systems. The disaster recovery information can be stored and used
+via the network, local on hard disks or USB devices, DVD/CD-R. The result is
+also a bootable image that is capable of booting via PXE, DVD/CD. 
+
+The disaster recovery can be integrated with any existing backup software
+so that ReaR utilizes the backup software to restore the files and provides
+the "glue" surrounding the simple file restore to having a full bare metal
+disaster recovery solution. Support for specific backup software has to be
+added to rear on an individual base and is very simple (look at an existing
+implementation for further information).
+
+
+== OPTIONS
+
+=== GLOBAL OPTIONS
+
+-d::
+    *debug mode* (log debug messages to log file)
+
+-D::
+    *debugscript mode* (log every function call)
+
+-r KERNEL::
+    Kernel version to use (by default use running kernel)
+
+-s::
+    *simulation mode* (show what scripts rear would include)
+
+-S::
+    *step-by-step mode* (acknowledge each script individually)
+
+-v::
+    *verbose mode* (show progress output)
+
+-V::
+    version information
+
+=== COMMANDS
+
+checklayout::
+    check if the disk layout has changed since the last run of
+    mkbackup/mkrescue
+
+dump::
+    dump configuration and system information; please run this to verify
+    your setup
+
+format::
+    format and label USB or tape media to be used with ReaR;
+    +
+    first argument is the USB or tape device to use, eg. _/dev/sdX_ or
+    _/dev/stX_
+
+help::
+    print full list of commands and options
+
+mkbackup::
+    create rescue media and backup the system (only for internal backup
+    methods)
+
+mkbackuponly::
+    backup the system (only for internal backup methods) without creating
+    rescue media
+
+mkrescue::
+    create rescue media only
+
+recover::
+    recover the system; can be used only when running from the rescue media
+
+validate::
+    submit validation information
+
+
+== BACKGROUND INFORMATION
+The process of bare metal disaster recovery consists of two parts:
+
+ - Recreate the system layout
+ - Restore the data to the system
+
+Most backup software solutions are very good at restoring data but do not
+support recreating the system layout. Relax and Recover is very good at
+recreating the system layout but and works best when used together with
+a supported backup software.
+
+In this combination ReaR recreates the system layout and calls the backup
+software to restore the actual data. Thus there is no unnessecary duplicate
+data storage and the ReaR rescue media can be very small.
+
+For demonstration and special use purposes ReaR also includes an internal
+backup method, NETFS, which can be used to create a simple tar.gz archive
+of the system. For all permanent setups we recommend using something more
+professional for backup, either a traditional backup software (open
+source or commercial) or rsync with hardlink based solutions, e.g. RSYNC
+BACKUP MADE EASY.
+
+== BACKUP SOFTWARE INTEGRATION
+Currently ReaR supports the following backup methods. Please distinguish
+carefully between ReaR support for 3rd party backup software and ReaR
+internal backup methods. The latter also creates a backup of your data
+while the former will only integrate ReaR with the backup software to
+restore the data with the help of the backup software without actually
+creating backups. This means that for all non-internal backup software
+you *must* take care of creating backups yourself.
+
+Especially the +rear mkbackup+ command can be confusing as it is only
+useful for the internal backup methods and has no function at all with
+the other backup methods. The following backup methods need to be set
+in ReaR with the +BACKUP=+ option.
+
+DP::
+    Use HP Data Protector to restore the data.
+
+EXTERNAL::
+    Internal backup method that uses an arbitrary external command to
+    create a backup and restore the data.
+
+GALAXY::
+    Use CommVault Galaxy 5 to restore the data.
+
+GALAXY7::
+    Use CommVault Galaxy 7 to restore the data.
+
+NBU::
+    Use Symantec NetBackup to restore the data.
+
+NETFS::
+    Internal backup method which can be used to create a simple backup
+    (tar archive).
+
+REQUEST_RESTORE::
+    *(default)* Not really a backup method at all, ReaR simply halts the
+    recovery and requests that somebody will restore the data to the
+    appropriate location (e.g. via SSH). This method works especially
+    well with an rsync bases backup that is pushed back to the backup
+    client.
+
+RSYNC::
+    Use rsync to restore data.
+
+TSM::
+    Use IBM Tivoli Storage Manager to restore the data. The ReaR result
+    files (e.g. ISO image) are also saved into TSM.
+
+If your favourite backup software is missing from this list, please submit
+a patch or ask us to implement it for you.
+
+
+== CONFIGURATION
+To configure rear you have to edit the configuration files in _/etc/rear/_.
+All _*.conf_ files there are part of the configuration, but only _site.conf_
+and _local.conf_ are intended for the user configuration. All other
+configuration files hold defaults for various distributions and should not
+be changed.
+
+In _/etc/rear/templates_ there are also some template files which are used
+by rear to create configuration files (mostly for the boot environment).
+Modify the templates to adjust the information contained in the emails
+produced by ReaR. You can use these templates to prepend your own
+configurations to the configuration files created by rear, for example you
+can edit _PXE_pxelinux.cfg_ to add some general pxelinux configuration you use.
+
+In almost all circumstances you have to configure two main settings and their
+parameters: The backup method and the output method.
+
+The backup method defines, how your data was saved and wether rear should
+backup your data as part of the mkrescue process or wether you use an external
+application, e.g. backup software to archive your data.
+
+The output method defines how the rescue system is written to disk and how you
+plan to boot the failed computer from the rescue system.
+
+See the default configuration file _/usr/share/rear/default.conf_ for
+an overview of the possible methods and their options.
+
+An example to use TSM for backup and ISO for output would be to add
+these lines to _/etc/rear/local.conf_:
+
+    BACKUP=TSM
+    OUTPUT=ISO
+
+And if all your systems use NTP for time synchronisation, you can also
+add these lines to _/etc/rear/site.conf_
+
+    TIMESYNC=NTP
+
+Don't forget to distribute the _site.conf_ to all your systems.
+
+The resulting ISO image will be created in _/tmp_. You can now modify
+the behaviour by copying the appropriate configuration variables from
+_default.conf_ to _local.conf_ and changing them to suit your environment.
+
+
+== EXIT STATUS
+0::
+    Successful program execution.
+>0::
+    Usage, syntax or execution errors. Check the _/tmp/rear-hostname.log_
+    file for more information.
+
+
+== EXAMPLES
+To print out the current settings for +BACKUP+ and +OUTPUT+ methods and some
+system information. This command can be used to see the supported features
+for the given release and platform.
+
+  # rear dump
+
+To create a new rescue environment. Do not forget to copy the resulting
+rescue system away so that you can use it in the case of a system failure.
+
+  # rear mkrescue
+
+
+== FILES
+/usr/sbin/rear::
+    The program itself.
+
+/etc/rear/local.conf::
+    System specific configuration can be set here.
+
+/etc/rear/site.conf::
+    Site specific configuration can be set here.
+
+/tmp/rear-hostname.log::
+    ReaR log file.
+
+/tmp/rear.########::
+    ReaR working directory. If ReaR exits with an error, you must remove
+    this directory manually.
+
+/usr/share/rear::
+    ReaR script components.
+
+/usr/share/rear/conf/default.conf::
+    ReaR's included defaults. Contains a complete set of parameters and
+    its explanation.  Please do not edit or modify. Copy values to
+    _local.conf_ or _site.conf_ instead.
+
+
+== BUGS
+Feedback is welcome, please use the project page at:
+
+    http://rear.sourceforge.net/[]
+
+
+== AUTHORS
+Gratien D'haese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers.
+
+Lars Pinne (this man page).
+
+
+== COPYRIGHT
+(c) 2006-2011
+
+Schlomo Schapiro
+
+Gratien D'haese, IT3 Consultants
+
+Jeroen Hoekx
+
+Dag Wieers, Dagit Linux Solutions
+
+Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details
+see the GNU General Public License at http://www.gnu.org/licenses/gpl.html[]
