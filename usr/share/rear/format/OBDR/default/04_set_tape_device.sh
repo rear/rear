@@ -1,1 +1,1 @@
-../../../../prep/OBDR/default/04_set_tape_device.sh
+../../../prep/OBDR/default/04_set_tape_device.sh

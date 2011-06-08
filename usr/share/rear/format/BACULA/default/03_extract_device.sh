@@ -1,1 +1,1 @@
-../../../../prep/BACULA/default/03_extract_device.sh
+../../../prep/BACULA/default/03_extract_device.sh
