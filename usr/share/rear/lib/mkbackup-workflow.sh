@@ -1,9 +1,7 @@
 # mkbackup-workflow.sh
 #
 
-if [[ "$VERBOSE" ]]; then
-    WORKFLOW_mkbackup_DESCRIPTION="create rescue media and backup system"
-fi
+WORKFLOW_mkbackup_DESCRIPTION="create rescue media and backup system"
 WORKFLOWS=( ${WORKFLOWS[@]} mkbackup )
 WORKFLOW_mkbackup () {
 	for arg in "${ARGS[@]}" ; do
