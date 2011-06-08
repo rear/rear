@@ -16,7 +16,7 @@ mt -f "$TAPE_DEVICE" status &>"$TMP_DIR/tape_status"
 StopIfError "Problem with reading tape device '$TAPE_DEVICE'."
 
 # Log tape status
-cat $TMP_DIR/tape_status
+cat $TMP_DIR/tape_status >&2
 
 # Check if tape is online
 grep -qP '\bONLINE\b' "$TMP_DIR/tape_status"

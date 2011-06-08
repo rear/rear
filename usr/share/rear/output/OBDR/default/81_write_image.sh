@@ -4,8 +4,6 @@
 StopIfError "The ISO image $ISO_DIR/$ISO_PREFIX.iso was not found or could not be read."
 
 LogPrint "Writing ISO image to tape"
-mt -f  "$TAPE_DEVICE" rewind
-StopIfError "Problem with rewinding tape in drive '$TAPE_DEVICE'"
 
 dd if=$ISO_DIR/$ISO_PREFIX.iso of=$TAPE_DEVICE ${OBDR_BLOCKSIZE:+bs=$OBDR_BLOCKSIZE}
 StopIfError "ISO image could not be written to tape device '$TAPE_DEVICE'"

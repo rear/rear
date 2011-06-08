@@ -15,7 +15,3 @@ StopIfError "Could not set block size on tape device '$TAPE_DEVICE'"
 ### Make sure we set a tape label and total padding of 20 blocks of size 512
 printf 'REAR-000%10232s' ' ' | tr ' ' '\0' | dd of=$TAPE_DEVICE bs=512 count=20
 StopIfError "OBDR header could not be written to tape device '$TAPE_DEVICE'"
-
-mt -f  "$TAPE_DEVICE" rewind
-StopIfError "Problem with rewinding tape in drive '$TAPE_DEVICE'"
-
