@@ -44,7 +44,7 @@ for w in ${WORKFLOWS[@]} ; do
 		done
 )
 
-The $PRODUCT logfile is $LOGFILE
+The $PRODUCT logfile is ${LOGFILE%%.lockless}
 EOF
 	EXIT_CODE=1
 }
