@@ -2,7 +2,7 @@
 #
 
 WORKFLOW_format_DESCRIPTION="format and label media for use with rear"
-WORKFLOWS=( ${WORKFLOWS[@]} label )
+WORKFLOWS=( ${WORKFLOWS[@]} format )
 WORKFLOW_format () {
 	for arg in "${ARGS[@]}" ; do
 		key=OPT_"${arg%%=*}"
