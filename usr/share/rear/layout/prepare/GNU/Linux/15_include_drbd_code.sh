@@ -34,5 +34,6 @@ EOF
 
         # mark things which depend on this drbd resource as "done" (recursively)
         mark_tree_as_done "$disk"
+        EXCLUDE_RESTORE=( "${EXCLUDE_RESTORE[@]}" "$disk" )
     fi
 }
