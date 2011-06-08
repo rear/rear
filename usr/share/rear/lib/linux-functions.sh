@@ -191,8 +191,7 @@ cp_bin () {
 # to shared objects and shared object files for the binaries in $*.
 # This is the function copied from mkinitrd off SuSE 9.3
 SharedObjectFiles() {
-	local ldd=$(type -p ldd 2>/dev/null)
-	[[ -x "$ldd" ]]
+	type -p ldd &>/dev/null
 	StopIfError "Unable to find a working ldd binary."
 
 	# Default ldd output (when providing more than one argument) has 5 cases:
@@ -201,7 +200,7 @@ SharedObjectFiles() {
 	#  3. Line: "	lib => not found"              -> print error to stderr
 	#  4. Line: "	lib => /path/lib (mem-addr)"   -> print $3
 	#  5. Line: "	/path/lib (mem-addr)"          -> print $1
-	local -a initrd_libs=( $($ldd "$@" | awk '
+	local -a initrd_libs=( $(ldd "$@" | awk '
 		/^\t.+ => not found/ { print "WARNING: Dynamic library " $1 " not found" > "/dev/stderr" }
 		/^\t.+ => \// { print $3 }
 		/^\t\// { print $1 }
@@ -239,7 +238,7 @@ SharedObjectFiles() {
 		done
 		echo $lib
 		echo $lib >&8
-	done
+	done | sort -u
 }
 
 
