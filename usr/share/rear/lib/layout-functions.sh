@@ -127,14 +127,25 @@ mark_as_done() {
 
 # Mark all devices that depend on $1 as done.
 mark_tree_as_done() {
-    local devlist="$1 "
+    for component in $(get_child_components "$1") ; do
+        Log "Marking $component as done (dependent on $1)"
+        mark_as_done "$component"
+    done
+}
+
+# Return all the child components of $1 [filtered by type $2] 
+get_child_components() {
+    local devlist testdev dev on type
+    devlist="$1 "
     while [ -n "$devlist" ] ; do
         testdev=$(echo "$devlist" | cut -d " " -f "1")
         while read dev on junk ; do
             if [ "$on" = "$testdev" ] ; then
-                Log "Marking $testdev as done (dependent on $1)"
                 devlist="$devlist$dev "
-                mark_as_done "$dev"
+                type=$(get_component_type "$dev")
+                if [ "$type" = "$2" ] || [ -z "$2" ] ; then
+                    echo "$dev"
+                fi
             fi
         done < <(cat $LAYOUT_DEPS)
         devlist=$(echo "$devlist" | sed -r "s;^$testdev ;;")
@@ -144,26 +155,26 @@ mark_tree_as_done() {
 # find_devices <other>
 # Find the disk device(s) component $1 resides on.
 find_disk() {
-    echo "$(get_parent_components "disk" $1)" | sort | uniq
+    echo "$(get_parent_components $1 "disk")" | sort | uniq
 }
 
 find_partition() {
-    echo "$(get_parent_components "part" $1)" | sort | uniq
+    echo "$(get_parent_components $1 "part")" | sort | uniq
 }
 
-# Find all disk devices component $1 resides on.
+# Find all parent components [of type $2] component $1 resides on.
 # Can/will contain multiples.
 get_parent_components() {
     local component type
-    local components=$(get_parent_component $2)
+    local components=$(get_parent_component $1)
 
     for component in $components ; do
         type=$(get_component_type $component)
-        if [ "$type" = "$1" ] ; then
+        if [ "$type" = "$2" ] || [ -z "$2" ]; then
             echo "$component"
-        else
-            get_parent_components $1 $component
         fi
+
+        get_parent_components $component $2
     done
 }
 

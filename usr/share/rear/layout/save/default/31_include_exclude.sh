@@ -47,3 +47,9 @@ for component in "${EXCLUDE_COMPONENTS[@]}" ; do
     mark_as_done "$component"
     mark_tree_as_done "$component"
 done
+
+for component in "${EXCLUDE_RECREATE[@]}" ; do
+    LogPrint "Excluding component $component"
+    mark_as_done "$component"
+    mark_tree_as_done "$component"
+done
