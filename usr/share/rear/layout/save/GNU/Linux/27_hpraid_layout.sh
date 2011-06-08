@@ -54,7 +54,7 @@ while read line ; do
             arrayname=$nextarrayname
             
             # Create new Logical drive
-            drivedetails=$(echo "$line" | sed -r 's/.*logicaldrive ([^ ]+) .*RAID ([^ ]+),.*/\1 \2/')
+            drivedetails=$(echo "$line" | sed -r 's/.*logicaldrive ([^ ]+) .*RAID ([^ ,]+)[ ,]+.*/\1 \2/')
             raidlevel=${drivedetails#* }
             ldname=${drivedetails% *}
             
