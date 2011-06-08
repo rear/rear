@@ -4,7 +4,9 @@
 # create distribution files of rear
 #
 
-WORKFLOW_mkvendorrpm_DESCRIPTION="Create vendor RPM with this rear version"
+if [[ "$VERBOSE" ]]; then
+    WORKFLOW_mkvendorrpm_DESCRIPTION="create vendor rpm package using installed rear"
+fi
 WORKFLOWS=( ${WORKFLOWS[@]} mkvendorrpm )
 WORKFLOW_mkvendorrpm () {
 

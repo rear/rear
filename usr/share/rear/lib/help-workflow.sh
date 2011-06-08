@@ -21,30 +21,31 @@
 LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} help )
 WORKFLOW_help () {
 	cat <<EOF
-$SCRIPT_FILE [Options] <command> [command options ...]
-$COPYRIGHT
-$PRODUCT comes with ABSOLUTELY NO WARRANTY; for details 
+Usage: ${SCRIPT_FILE##*/} [-d] [-D] [-r KERNEL] [-s] [-S] [-v] [-V] COMMAND [ARGS...]
+
+$PRODUCT comes with ABSOLUTELY NO WARRANTY; for details
 see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
 
-Available Options:
--V                      version information
--v                      verbose mode
--d                      debug mode
--D                      debugscript mode
--S                      Step-by-step mode
--s                      Simulation mode (shows the scripts included)
--q                      Quiet mode
--r a.b.c-xx-yy          kernel version to use (current: '"$KERNEL_VERSION"')
+Available options:
+ -d           debug mode; log debug messages
+ -D           debugscript mode; log every function call
+ -r KERNEL    kernel version to use; current: '$KERNEL_VERSION'
+ -s           simulation mode; show what scripts rear would include
+ -S           step-by-step mode; acknowledge each script individually
+ -v           verbose mode; show more output
+ -V           version information
 
 List of commands:
 $(
-for w in ${WORKFLOWS[@]} ; do
-	        description=WORKFLOW_${w}_DESCRIPTION
-		        test "${!description}" && printf "%-24s%s\n" $w "${!description}"
-		done
+	for workflow in ${WORKFLOWS[@]} ; do
+		description=WORKFLOW_${workflow}_DESCRIPTION
+		if [[ "${!description}" ]]; then
+			 printf " %-16s%s\n" $workflow "${!description}"
+		fi
+	done
 )
 
-The $PRODUCT logfile is ${LOGFILE%%.lockless}
+The logfile is ${LOGFILE%%.lockless}
 EOF
 	EXIT_CODE=1
 }

@@ -4,7 +4,9 @@
 # create RPM files of rear
 #
 
-WORKFLOW_mkrpm_DESCRIPTION="Create RPM packages with this rear version"
+if [[ "$VERBOSE" ]]; then
+    WORKFLOW_mkrpm_DESCRIPTION="create rpm packages using installed rear"
+fi
 WORKFLOWS=( ${WORKFLOWS[@]} mkrpm )
 WORKFLOW_mkrpm () {
 

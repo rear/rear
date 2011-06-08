@@ -1,7 +1,7 @@
 # mkbackup-workflow.sh
 #
 
-WORKFLOW_mkbackuponly_DESCRIPTION="Backup system without creating a (new) rescue media."
+WORKFLOW_mkbackuponly_DESCRIPTION="backup system without creating rescue media"
 WORKFLOWS=( ${WORKFLOWS[@]} mkbackuponly )
 WORKFLOW_mkbackuponly () {
 	for arg in "${ARGS[@]}" ; do

@@ -20,7 +20,7 @@
 #
 #
 
-WORKFLOW_validate_DESCRIPTION="Submit validation information"
+WORKFLOW_validate_DESCRIPTION="submit validation information"
 WORKFLOWS=( ${WORKFLOWS[@]} validate )
 WORKFLOW_validate () {
 
@@ -29,7 +29,7 @@ Thank you for your time and effort to try out $PRODUCT and your
 willingness to report about $PRODUCT in your environment back to us.
 	
 This kind of user support is greatly appreciated and helps a lot to
-improve $PRODUCT.                      
+improve $PRODUCT.
 
 --- Schlomo Schapiro
 

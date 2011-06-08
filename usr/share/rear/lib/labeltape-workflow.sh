@@ -1,7 +1,7 @@
 # labeltape-workflow.sh
 #
 
-WORKFLOW_labeltape_DESCRIPTION="Label tape for OBDR use in ReaR."
+WORKFLOW_labeltape_DESCRIPTION="format and label tape for use with rear"
 WORKFLOWS=( ${WORKFLOWS[@]} labeltape )
 WORKFLOW_labeltape () {
 	for arg in "${ARGS[@]}" ; do

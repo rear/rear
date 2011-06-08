@@ -18,7 +18,7 @@
 #
 #
 
-WORKFLOW_dump_DESCRIPTION="Dump configuration and system information"
+WORKFLOW_dump_DESCRIPTION="dump configuration and system information"
 WORKFLOWS=( ${WORKFLOWS[@]} dump )
 WORKFLOW_dump () {
 	LogPrint "Dumping out configuration and system information"

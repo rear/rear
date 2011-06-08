@@ -18,7 +18,7 @@
 #
 #
 
-WORKFLOW_checklayout_DESCRIPTION="Check if the disk layout has changed since the last run of savelayout."
+WORKFLOW_checklayout_DESCRIPTION="check if the disk layout has changed"
 WORKFLOWS=( ${WORKFLOWS[@]} checklayout )
 LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} checklayout )
 WORKFLOW_checklayout () {

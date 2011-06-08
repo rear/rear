@@ -18,7 +18,9 @@
 #
 #
 
-WORKFLOW_mktar_DESCRIPTION="Create tar archive with this rear installation"
+if [[ "$VERBOSE" ]]; then
+    WORKFLOW_mktar_DESCRIPTION="create tar archive using installed rear"
+fi
 WORKFLOWS=( ${WORKFLOWS[@]} mktar )
 WORKFLOW_mktar () {
 	

@@ -92,7 +92,7 @@ ARGS=( "$@" )
 
 # the following workflows are always verbose
 case "$WORKFLOW" in
-	(validate|help|dump|mkdist|mktar|mk*rpm|mkdeb|shell|recover)
+	(validate|dump|mkdist|mktar|mk*rpm|mkdeb|shell|recover)
 		VERBOSE=1
 	;;
 esac
@@ -148,10 +148,13 @@ fi
 test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
 
-LogPrint "$PRODUCT Version $VERSION / $RELEASE_DATE"
-Log "Command line options: $0 ${CMD_OPTS[@]}"
-
-
+case "$WORKFLOW" in
+	(help) ;;
+	(*)
+		LogPrint "$PRODUCT Version $VERSION / $RELEASE_DATE"
+		Log "Command line options: $0 ${CMD_OPTS[@]}"
+		;;
+esac
 
 v=""
 verbose=""

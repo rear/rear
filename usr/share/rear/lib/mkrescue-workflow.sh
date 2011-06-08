@@ -18,7 +18,7 @@
 #
 #
 
-WORKFLOW_mkrescue_DESCRIPTION="Create rescue media only"
+WORKFLOW_mkrescue_DESCRIPTION="create rescue media only"
 WORKFLOWS=( ${WORKFLOWS[@]} mkrescue )
 WORKFLOW_mkrescue () {
 	for arg in "${ARGS[@]}" ; do

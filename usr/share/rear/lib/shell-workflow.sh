@@ -1,5 +1,7 @@
-WORKFLOW_shell_DESCRIPTION="Start a Bash within ReaR (development tool)"
-WORKFLOWS=( "${WORKFLOWS[@]}" shell )                                           
+if [[ "$VERBOSE" ]]; then
+    WORKFLOW_shell_DESCRIPTION="start a bash within rear; development tool"
+fi
+WORKFLOWS=( "${WORKFLOWS[@]}" shell )
 WORKFLOW_shell () {
 	for arg in "${ARGS[@]}" ; do
 		key=OPT_"${arg%%=*}"

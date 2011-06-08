@@ -18,7 +18,9 @@
 #
 #
 
-WORKFLOW_savelayout_DESCRIPTION="Save the disk layout of the system."
+if [[ "$VERBOSE" ]]; then
+    WORKFLOW_savelayout_DESCRIPTION="save the disk layout of the system"
+fi
 WORKFLOWS=( ${WORKFLOWS[@]} savelayout )
 WORKFLOW_savelayout () {
     DISKLAYOUT_FILE=$VAR_DIR/layout/disklayout.conf

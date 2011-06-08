@@ -18,7 +18,9 @@
 #
 #
 
-WORKFLOW_udev_DESCRIPTION="Udev handler"
+if [[ "$VERBOSE" ]]; then
+    WORKFLOW_udev_DESCRIPTION="udev handler; triggered by udev rule"
+fi
 WORKFLOWS=( ${WORKFLOWS[@]} udev )
 WORKFLOW_udev () {
     # If no udev workflow has been defined, exit cleanly

@@ -1,7 +1,7 @@
 # label-workflow.sh
 #
 
-WORKFLOW_label_DESCRIPTION="Label tape for OBDR or USB device used in ReaR."
+WORKFLOW_label_DESCRIPTION="format and label media for use with rear"
 WORKFLOWS=( ${WORKFLOWS[@]} label )
 WORKFLOW_label () {
 	for arg in "${ARGS[@]}" ; do

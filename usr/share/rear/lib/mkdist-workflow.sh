@@ -4,7 +4,9 @@
 # create distribution files of rear
 #
 
-WORKFLOW_mkdist_DESCRIPTION="Create distribution tar archive with this rear version"
+if [[ "$VERBOSE" ]]; then
+    WORKFLOW_mkdist_DESCRIPTION="create tar archive using installed rear"
+fi
 WORKFLOWS=( ${WORKFLOWS[@]} mkdist )
 
 WORKFLOW_mkdist_postprocess () {

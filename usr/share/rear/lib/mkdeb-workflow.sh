@@ -4,7 +4,9 @@
 # create DEB files of rear
 #
 
-WORKFLOW_mkdeb_DESCRIPTION="Create DEB packages with this rear version"
+if [[ "$VERBOSE" ]]; then
+    WORKFLOW_mkdeb_DESCRIPTION="create debian packages using installed rear"
+fi
 WORKFLOWS=( ${WORKFLOWS[@]} mkdeb )
 WORKFLOW_mkdeb () {
 
