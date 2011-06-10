@@ -18,6 +18,7 @@
 #
 #
 
+LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} dump )
 WORKFLOW_dump_DESCRIPTION="dump configuration and system information"
 WORKFLOWS=( ${WORKFLOWS[@]} dump )
 WORKFLOW_dump () {
