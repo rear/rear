@@ -25,6 +25,7 @@
 
 # Versioning
 PRODUCT="Relax and Recover"
+PROGRAM=$(basename $0)
 VERSION="0.0.0"
 RELEASE_DATE='$Date$'
 # remove SVN related junk from release date
@@ -55,34 +56,38 @@ VEROSE=
 DEBUG=
 KEEP_BUILD_DIR=
 
-# special test for long help option
-if [[ "${*//*--help*/--help}" == "--help" ]]; then
-	WORKFLOW=help
-elif [[ "${*//*--version*/--version}" == "--version" ]]; then
-	echo -e "$PRODUCT $VERSION / $RELEASE_DATE"; exit 0
-else
-	# Parse options
-	while getopts "VvhdDSsr:" Option
-	do
-		case $Option in
-		h ) WORKFLOW=help ;;
-		V ) echo -e "$PRODUCT $VERSION / $RELEASE_DATE"; exit 0;;
-		v ) VERBOSE=1 ;;
-		d ) DEBUG=1 ; VERBOSE=1 ;;
-		D ) DEBUGSCRIPTS=1 ;;
-		s ) SIMULATE=1 ; VERBOSE=1 ;;
-		S ) STEPBYSTEP=1 ;;
-		r ) KERNEL_VERSION="$OPTARG" ;;
-		* ) echo "ERROR: Unknown Option $Option specified." ;;
-		esac
-	done
-	shift $(($OPTIND - 1))
-	# Move argument pointer to next.
+# Parse options
+OPTS="$(getopt -n $PROGRAM -o "VvhdDSsr:" -l "help,version" -- "$@")"
+if (( $? != 0 )); then
+	echo "Try \`$PROGRAM --help' for more information."
+	exit 1
 fi
 
+eval set -- "$OPTS"
+while true; do
+	case "$1" in
+		(-h|--help) WORKFLOW="help";;
+		(-V|--version) echo -e "$PRODUCT $VERSION / $RELEASE_DATE"; exit 0;;
+		(-v) VERBOSE=1;;
+		(-d) DEBUG=1; VERBOSE=1;;
+		(-D) DEBUGSCRIPTS=1;;
+		(-s) SIMULATE=1; VERBOSE=1;;
+		(-S) STEPBYSTEP=1;;
+		(-r) KERNEL_VERSION="$2"; shift;;
+		(--) shift; break;;
+		(-*)
+			echo "$PROGNAME: invalied option -- '$option' specified."
+			echo "Try \`$PROGRAM --help' for more information."
+			exit 1
+			;;
+		(*) break;;
+	esac
+	shift
+done
+
 # set workflow to first command line argument or to usage
-if test -z "$WORKFLOW" ; then
-	if test "$1" ; then
+if [[ -z "$WORKFLOW" ]]; then
+	if [[ "$1" ]]; then
 		WORKFLOW=$1 ; shift # not "$1" to get rid of compound commands
 	else
 		WORKFLOW=help
@@ -102,10 +107,10 @@ esac
 # Make sure we have the necessary paths (eg. in cron), /sbin will be the first path to search.
 # some needed binaries are in /lib/udev
 for path in /usr/bin /bin /usr/sbin /sbin; do
-    case ":$PATH:" in
-        (*:"$path":*) ;;
-        (*) if [[ -d "$path" ]]; then PATH=$path:$PATH; fi ;;
-    esac
+	case ":$PATH:" in
+		(*:"$path":*) ;;
+		(*) if [[ -d "$path" ]]; then PATH=$path:$PATH; fi ;;
+	esac
 done
 PATH=$PATH:/lib/udev
 
@@ -123,15 +128,12 @@ hash -r
 export LC_CTYPE=C LC_ALL=C LANG=C
 
 # include default config
-. $SHARE_DIR/conf/default.conf
+source $SHARE_DIR/conf/default.conf
 
 # include functions
 for script in $SHARE_DIR/lib/*.sh ; do
-	. $script
+	source $script
 done
-
-# get full path to main script
-SCRIPT_FILE="$(readlink -f $(type -p "$0" || echo "$0"))"
 
 if ! type -p pidof >/dev/null ; then
 	echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
@@ -139,16 +141,20 @@ if ! type -p pidof >/dev/null ; then
 fi
 
 # do not run if another instance is running. pidof -x will always report at least $$
-if ! IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS}" && [ $$ != "$(pidof -x "$SCRIPT_FILE")" ] ; then
+SCRIPT_FILE="$(readlink -f $(type -p "$0" || echo "$0"))"
+PID=$(pidof -x -o %PPID "$SCRIPT_FILE")
+if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}"; then
+	LOGFILE="$LOGFILE.lockless"
+elif [[ "$PID" ]] ; then
 	echo "ERROR: $SCRIPT_FILE is already running, not starting again" >&2
 	exit 1
 fi
 
-if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}" ; then
-	LOGFILE="$LOGFILE.lockless"
+# keep old log file
+if [[ -r "$LOGFILE" ]]; then
+	mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null
 fi
-test -r "$LOGFILE" && mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null # keep old log file
-exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
+exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
 
 case "$WORKFLOW" in
 	(help) ;;
@@ -158,21 +164,20 @@ case "$WORKFLOW" in
 		;;
 esac
 
-
 v=""
 verbose=""
 # enable progress subsystem only in verbose mode, set some stuff that others can use
-if test "$VERBOSE" ; then
+if [[ "$VERBOSE" ]]; then
 	source $SHARE_DIR/lib/progresssubsystem.nosh
 	v="-v"
 	verbose="--verbose"
 fi
 
 # enable debug output of the progress pipe
-if test "$DEBUG" ; then
-        if test "$ProgressPID" ; then
-                kill -WINCH $ProgressPID
-                BugIfError "Could not kill -PWR ProgressPID"
+if [[ "$DEBUG" ]]; then
+	if [[ "$ProgressPID" ]]; then
+		kill -WINCH $ProgressPID
+		BugIfError "Could not kill -PWR ProgressPID"
 	fi
 	KEEP_BUILD_DIR=1
 fi
@@ -188,21 +193,18 @@ Source "$CONFIG_DIR/$WORKFLOW.conf"
 SetOSVendorAndVersion
 # distribution configuration files
 for config in "$ARCH" "$OS" \
-               "$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
-               "$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
-               if test "$config" ; then
-                       Source $SHARE_DIR/conf/"$config".conf
-               fi
+				"$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
+				"$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
+	if [[ "$config" ]]; then
+		Source "$SHARE_DIR/conf/$config.conf"
+	fi
 done
-# user configuration files
-for config in site local ; do
-       Source $CONFIG_DIR/"$config".conf
+# user configuration files, last thing is to overwrite variables if we are in the rescue system
+for config in site local rescue; do
+	Source "$CONFIG_DIR/$config.conf"
 done
-# last thing is to overwrite variables if we are in the rescue system
-Source "$CONFIG_DIR/rescue.conf" # set by rescue Stage
 
-# check for requirements
-# do we have all required binaries ?
+# check for requirements, # do we have all required binaries ?
 MISSING_PROGRS=()
 for f in "${REQUIRED_PROGS[@]}" ; do
 	if ! type -p "$f" >/dev/null ; then
@@ -210,7 +212,7 @@ for f in "${REQUIRED_PROGS[@]}" ; do
 	fi
 done
 [[ -z "$MISSING_PROGS" ]]
-StopIfError "cannot find required programs: ${MISSING_PROGS[@]}"
+StopIfError "Cannot find required programs: ${MISSING_PROGS[@]}"
 
 VERSION_INFO="
 $PRODUCT $VERSION / $RELEASE_DATE
