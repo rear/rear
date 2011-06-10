@@ -37,7 +37,7 @@ implementation for further information).
     *debugscript mode* (log every function call)
 
 -r KERNEL::
-    Kernel version to use (by default use running kernel)
+    kernel version to use (by default use running kernel)
 
 -s::
     *simulation mode* (show what scripts rear would include)
@@ -62,7 +62,7 @@ dump::
     your setup
 
 format::
-    format and label USB or tape media to be used with ReaR;
+    format and label USB or tape media to be used with rear;
     +
     first argument is the USB or tape device to use, eg. _/dev/sdX_ or
     _/dev/stX_
@@ -86,6 +86,8 @@ recover::
 
 validate::
     submit validation information
+
+More commands are available when running: +rear help -v+
 
 
 == BACKGROUND INFORMATION
@@ -241,7 +243,7 @@ rescue system away so that you can use it in the case of a system failure.
 /tmp/rear-hostname.log::
     ReaR log file.
 
-/tmp/rear.########::
+/tmp/rear.##############::
     ReaR working directory. If ReaR exits with an error, you must remove
     this directory manually.
 

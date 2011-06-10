@@ -56,15 +56,17 @@ DEBUG=
 KEEP_BUILD_DIR=
 
 # special test for long help option
-if test "${*//*--help*/--help}" == "--help" ; then
+if [[ "${*//*--help*/--help}" == "--help" ]]; then
 	WORKFLOW=help
+elif [[ "${*//*--version*/--version}" == "--version" ]]; then
+	echo -e "$PRODUCT $VERSION / $RELEASE_DATE"; exit 0
 else
 	# Parse options
 	while getopts "VvhdDSsr:" Option
 	do
 		case $Option in
 		h ) WORKFLOW=help ;;
-		V ) echo -e "$PRODUCT Version $VERSION / $RELEASE_DATE\n" ; exit 0 ;;
+		V ) echo -e "$PRODUCT $VERSION / $RELEASE_DATE"; exit 0;;
 		v ) VERBOSE=1 ;;
 		d ) DEBUG=1 ; VERBOSE=1 ;;
 		D ) DEBUGSCRIPTS=1 ;;
@@ -151,10 +153,11 @@ exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" 1>&2
 case "$WORKFLOW" in
 	(help) ;;
 	(*)
-		LogPrint "$PRODUCT Version $VERSION / $RELEASE_DATE"
+		LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
 		Log "Command line options: $0 ${CMD_OPTS[@]}"
 		;;
 esac
+
 
 v=""
 verbose=""
@@ -179,7 +182,7 @@ LogPrintIfError "Simulation mode activated, ReaR base directory: $SHARE_DIR"
 
 # All workflows need to read the configurations first.
 # Combine configuration files
-Log "Combining configuration files"
+Debug "Combining configuration files"
 Source "$CONFIG_DIR/os.conf"   # use this file to manually override the OS detection
 Source "$CONFIG_DIR/$WORKFLOW.conf"
 SetOSVendorAndVersion
@@ -210,10 +213,10 @@ done
 StopIfError "cannot find required programs: ${MISSING_PROGS[@]}"
 
 VERSION_INFO="
-$PRODUCT Version $VERSION / $RELEASE_DATE
-$COPYRIGHT
-$PRODUCT comes with ABSOLUTELY NO WARRANTY; for details
-see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
+$PRODUCT $VERSION / $RELEASE_DATE
+
+$PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
+the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Host $(uname -n) using Backup $BACKUP and Output $OUTPUT
 Build date: $(date -R)

@@ -42,7 +42,7 @@ function Source() {
 			[[ "$BREAKPOINT" && "$relname" == @($BREAKPOINT) ]] && read -p "Press ENTER to continue ..." 2>&1
 		fi
 	else
-		Log "Skipping $1 (file not found or empty)"
+		Debug "Skipping $1 (file not found or empty)"
 	fi
 }
 

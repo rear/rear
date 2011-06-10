@@ -23,8 +23,8 @@ WORKFLOW_help () {
 	cat <<EOF
 Usage: ${SCRIPT_FILE##*/} [-d] [-D] [-r KERNEL] [-s] [-S] [-v] [-V] COMMAND [ARGS...]
 
-$PRODUCT comes with ABSOLUTELY NO WARRANTY; for details
-see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
+$PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
+the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:
  -d           debug mode; log debug messages

@@ -4,7 +4,7 @@
 # what is going on !
 
 LogPrint "Rewinding tape"
-mt -f "$TAPE_DEVICE" rewind 
-StopIfError "Problem with rewinding tape device '$TAPE_DEVICE'"
+mt -f "$TAPE_DEVICE" rewind
+StopIfError "Problem with rewinding tape in drive '$TAPE_DEVICE'"
 
 Log "Finished rewinding tape"

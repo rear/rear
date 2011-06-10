@@ -136,6 +136,6 @@ fi
 # and http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=466138
 #
 # the way how we use bash with lots of (nested) functions and read etc. seems to trigger a bash
-# bug that causes leaked file descriptors. lvm likes to complain about that but since we 
+# bug that causes leaked file descriptors. lvm likes to complain about that but since we
 # cannot fix the bash we suppress these lvm warnings:
 export LVM_SUPPRESS_FD_WARNINGS=1

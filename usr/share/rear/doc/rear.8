@@ -47,7 +47,7 @@ The disaster recovery can be integrated with any existing backup software so tha
 .PP
 \-r KERNEL
 .RS 4
-Kernel version to use (by default use running kernel)
+kernel version to use (by default use running kernel)
 .RE
 .PP
 \-s
@@ -89,7 +89,7 @@ dump configuration and system information; please run this to verify your setup
 .PP
 format
 .RS 4
-format and label USB or tape media to be used with ReaR;
+format and label USB or tape media to be used with rear;
 
 first argument is the USB or tape device to use, eg\&.
 \fI/dev/sdX\fR
@@ -126,6 +126,8 @@ validate
 .RS 4
 submit validation information
 .RE
+.sp
+More commands are available when running: rear help \-v
 .SH "BACKGROUND INFORMATION"
 .sp
 The process of bare metal disaster recovery consists of two parts:
@@ -313,7 +315,7 @@ Site specific configuration can be set here\&.
 ReaR log file\&.
 .RE
 .PP
-/tmp/rear\&.##
+/tmp/rear\&.####
 .RS 4
 ReaR working directory\&. If ReaR exits with an error, you must remove this directory manually\&.
 .RE
