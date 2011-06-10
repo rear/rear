@@ -76,7 +76,7 @@ while true; do
 		(-r) KERNEL_VERSION="$2"; shift;;
 		(--) shift; break;;
 		(-*)
-			echo "$PROGNAME: invalied option -- '$option' specified."
+			echo "$PROGNAME: invalid option -- '$option' specified."
 			echo "Try \`$PROGRAM --help' for more information."
 			exit 1
 			;;
