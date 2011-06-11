@@ -177,7 +177,7 @@ add_module () {
 
 # Install a binary file
 cp_bin () {
-	cp -a "$@"
+	cp -a $v "$@"
 
 	# Remember the binaries installed. We need the list for checking
 	# for dynamic libraries.

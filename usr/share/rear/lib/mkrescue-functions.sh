@@ -176,7 +176,7 @@ egrep -vi '(^warning|^dos)'  "$1" > "${TMP_DIR}/partitions.tmp"
 # comments like "N° table de partition de " then we should replace the "N"
 # with hash(#) sign.
 sed -e 's/^N/#/' <"${TMP_DIR}/partitions.tmp" >"$1"
-rm -f "${TMP_DIR}/partitions.tmp"
+rm -f $v "${TMP_DIR}/partitions.tmp"
 }
 
 #-----<--------->-------

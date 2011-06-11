@@ -154,7 +154,7 @@ make_resolv_conf() {
         done
 
         change_resolv_conf ${rscf}
-        rm -f ${rscf}
+        rm -f $v ${rscf}
 
         if [ -n "${search}" ]; then
             eventually_add_hostnames_domain_to_search "${search}"

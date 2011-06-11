@@ -70,21 +70,21 @@ BugIfError "Mofified GRUB is empty !"
 
 if ! diff -u $grub_conf $TMP_DIR/menu.lst >&2; then
     LogPrint "Modifying local GRUB configuration"
-    cp -af $grub_conf $grub_conf.old >&2
+    cp -af $v $grub_conf $grub_conf.old >&2
     cat $TMP_DIR/menu.lst >$grub_conf
 fi
 
 if [[ $(stat -L -c '%d' $KERNEL_FILE) == $(stat -L -c '%d' /boot/) ]]; then
     # Hardlink file, if possible
-    cp -pLlf $KERNEL_FILE /boot/rear-kernel >&2
+    cp -pLlf $v $KERNEL_FILE /boot/rear-kernel >&2
 elif [[ $(stat -L -c '%s %Y' $KERNEL_FILE) == $(stat -L -c '%s %Y' /boot/rear-kernel &>/dev/null) ]]; then
     # If existing file has exact same size and modification time, assume the same
     :
 else
     # In all other cases, replace
-    cp -pLf $KERNEL_FILE /boot/rear-kernel >&2
+    cp -pLf $v $KERNEL_FILE /boot/rear-kernel >&2
 fi
 BugIfError "Unable to copy '$KERNEL_FILE' to /boot"
 
-cp -af $BUILD_DIR/initrd.cgz /boot/rear-initrd.cgz >&2
+cp -af $v $BUILD_DIR/initrd.cgz /boot/rear-initrd.cgz >&2
 BugIfError "Unable to copy '$BUILD_DIR/initrd.cgz' to /boot"

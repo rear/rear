@@ -9,7 +9,7 @@ touch "${TMP_DIR}/selinux.autorelabel"
 
 	(ssh)
 		# for some reason rsync changes the mode of backup after each run to 666
-		ssh $RSYNC_USER@$RSYNC_HOST "chmod 755 ${RSYNC_PATH}/${RSYNC_PREFIX}/backup" 2>/dev/null
+		ssh $RSYNC_USER@$RSYNC_HOST "chmod $v 755 ${RSYNC_PATH}/${RSYNC_PREFIX}/backup" 2>/dev/null
 		$BACKUP_PROG -a "${TMP_DIR}/selinux.autorelabel" \
 		 "$RSYNC_USER@$RSYNC_HOST:${RSYNC_PATH}/${RSYNC_PREFIX}/backup/.autorelabel" 2>/dev/null
 		_rc=$?

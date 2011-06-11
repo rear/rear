@@ -27,7 +27,10 @@ ln -sf $v true $ROOTFS_DIR/bin/pam_console_apply >&2 # RH/Fedora with udev needs
 ln -sf $v ../bin $ROOTFS_DIR/usr/bin >&2
 ln -sf $v ../bin $ROOTFS_DIR/usr/sbin >&2
 ln -sf $v /proc/self/mounts $ROOTFS_DIR/etc/mtab >&2
-test -d $ROOTFS_DIR/etc/sysconfig/network-scripts && ln -sfv /bin/true $ROOTFS_DIR/etc/sysconfig/network-scripts/net.hotplug >&2
+
+if [[ -d $ROOTFS_DIR/etc/sysconfig/network-scripts ]]; then
+    ln -sf $v /bin/true $ROOTFS_DIR/etc/sysconfig/network-scripts/net.hotplug >&2
+fi
 
 Log "Create LVM binary symlinks"
 lvmbins="lvchange lvconvert lvcreate lvdisplay lvextend lvmchange lvmdiskscan lvmsadc lvmsar lvreduce lvremove lvrename lvresize lvs lvscan pvchange pvresize pvck pvcreate pvdata pvdisplay pvmove pvremove pvs pvscan vgcfgbackup vgcfgrestore vgchange vgck vgconvert vgcreate vgdisplay vgexport vgextend vgimport vgmerge vgmknodes vgreduce vgremove vgrename vgs vgscan vgsplit"

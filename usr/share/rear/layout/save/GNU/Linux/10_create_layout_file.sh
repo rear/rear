@@ -2,9 +2,9 @@
 
 LogPrint "Creating disk layout."
 Log "Preparing layout directory."
-mkdir -p $VAR_DIR/layout
-mkdir -p $VAR_DIR/recovery
-mkdir -p $VAR_DIR/layout/config
+mkdir -p $v $VAR_DIR/layout
+mkdir -p $v $VAR_DIR/recovery
+mkdir -p $v $VAR_DIR/layout/config
 
 DISKLAYOUT_FILE=${DISKLAYOUT_FILE:-$VAR_DIR/layout/disklayout.conf}
 
@@ -12,7 +12,7 @@ if [ -e "$DISKLAYOUT_FILE" ] ; then
     Log "Removing old layout file."
 fi
 : > $DISKLAYOUT_FILE
-chmod 600 $DISKLAYOUT_FILE
+chmod $v 600 $DISKLAYOUT_FILE
 
 LAYOUT_FILE="$DISKLAYOUT_FILE"
 LAYOUT_DEPS="$VAR_DIR/layout/diskdeps.conf"

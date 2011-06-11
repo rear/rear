@@ -33,10 +33,10 @@ function syslinux_has {
     if [[ -e "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" ]]; then
         if [[ "$SYSLINUX_NEEDS_UPDATE" ]]; then
             if [[ -e "$SYSLINUX_DIR/$file" ]]; then
-                cp -vf "$SYSLINUX_DIR/$file" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&8
+                cp -f $v "$SYSLINUX_DIR/$file" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&8
             else
                 # Make sure we don't have any older copies on USB media
-                rm -f "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file"
+                rm -f $v "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file"
                 return 1;
             fi
         else
@@ -44,7 +44,7 @@ function syslinux_has {
         fi
     else
         if [[ -e "$SYSLINUX_DIR/$file" ]]; then
-            cp -v "$SYSLINUX_DIR/$file" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&8
+            cp $v "$SYSLINUX_DIR/$file" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&8
         else
             return 1
         fi
@@ -97,7 +97,7 @@ esac
 
 USB_REAR_DIR="$BUILD_DIR/usbfs/$USB_PREFIX"
 if [ ! -d "$USB_REAR_DIR" ]; then
-    mkdir -vp "$USB_REAR_DIR" >&8
+    mkdir -p $v "$USB_REAR_DIR" >&8
     StopIfError "Could not create USB rear dir [$USB_REAR_DIR] !"
 fi
 
@@ -127,13 +127,13 @@ for rear_run in $(ls -dt $BUILD_DIR/netfs/rear/$(uname -n)/*); do
         backup_count=$((backup_count - 1))
         if (( backup_count < 0 )); then
             Log "Remove older backup directory $rear_run"
-            rm -rvf $rear_run >&8
+            rm -rf $v $rear_run >&8
         fi
     else
         rescue_count=$((rescue_count - 1))
         if (( rescue_count < 0 )); then
             Log "Remove older rescue directory $rear_run"
-            rm -rvf $rear_run >&8
+            rm -rf $v $rear_run >&8
         fi
     fi
 done
@@ -213,7 +213,7 @@ EOF
 } 4>"$BUILD_DIR/usbfs/rear/syslinux.cfg"
 
 if [ ! -d "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX" ]; then
-    mkdir -vp "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX" >&8
+    mkdir -p $v "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX" >&8
     StopIfError "Could not create USB syslinux dir [$BUILD_DIR/usbfs/$SYSLINUX_PREFIX] !"
 fi
 
@@ -250,7 +250,7 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
     syslinux_has "vesamenu.c32"
 
     if [ -r "$CONFIG_DIR/templates/rear.help" ]; then
-        cp -v "$CONFIG_DIR/templates/rear.help" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/rear.help" >&8
+        cp $v "$CONFIG_DIR/templates/rear.help" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/rear.help" >&8
         syslinux_write <<EOF
 say F1 - Show help
 F1 /boot/syslinux/rear.help
@@ -346,12 +346,12 @@ EOF
 
     if syslinux_has "hdt.c32"; then
         if [ -r "/usr/share/hwdata/pci.ids" ]; then
-            cp -v "/usr/share/hwdata/pci.ids" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/pci.ids" >&8
+            cp $v "/usr/share/hwdata/pci.ids" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/pci.ids" >&8
         elif [ -r "/usr/share/pci.ids" ]; then
-            cp -v "/usr/share/pci.ids" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/pci.ids" >&8
+            cp $v "/usr/share/pci.ids" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/pci.ids" >&8
         fi
         if [ -r "/lib/modules/$(uname -r)/modules.pcimap" ]; then
-            cp -v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/modules.pcimap" >&8
+            cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/modules.pcimap" >&8
         fi
         syslinux_write <<EOF
 label hdt
@@ -368,7 +368,7 @@ EOF
     # You need the memtest86+ package installed for this to work
     MEMTEST_BIN=$(ls -d /boot/memtest86+-* 2>/dev/null | tail -1)
     if [[ "$MEMTEST_BIN" != "." && -r "$MEMTEST_BIN" ]]; then
-        cp -v "$MEMTEST_BIN" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/memtest" >&8
+        cp $v "$MEMTEST_BIN" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/memtest" >&8
         syslinux_write <<EOF
 label memtest
     say memtest - Run memtest86+

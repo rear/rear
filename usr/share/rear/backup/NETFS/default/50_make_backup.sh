@@ -10,7 +10,7 @@ while read -r ; do
 	Log " $REPLY"
 done < $BUILD_DIR/backup-exclude.txt
 
-mkdir -p "${BUILD_DIR}/netfs/${NETFS_PREFIX}"
+mkdir -p $v "${BUILD_DIR}/netfs/${NETFS_PREFIX}"
 
 LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 ProgressStart "Preparing archive operation"
@@ -25,7 +25,7 @@ case "$BACKUP_PROG" in
 	;;
 	(rsync)
 		# make sure that the target is a directory
-		mkdir -vp "$backuparchive" 1>&2
+		mkdir -p $v "$backuparchive" 1>&2
 		$BACKUP_PROG --sparse --archive --hard-links --one-file-system --verbose --delete --numeric-ids \
 			--exclude-from=$BUILD_DIR/backup-exclude.txt --delete-excluded \
 			$(cat $BUILD_DIR/backup-include.txt) "$backuparchive"
@@ -115,4 +115,4 @@ elif [ "$size" ]; then
 fi
 
 ### Copy progress log to backup media
-cp "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log"
+cp $v "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log"

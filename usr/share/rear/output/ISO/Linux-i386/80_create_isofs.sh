@@ -23,13 +23,13 @@
 StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executabel !"
 
 Log "Copying kernel"
-cp -pL $KERNEL_FILE $BUILD_DIR/kernel
+cp -pL $v $KERNEL_FILE $BUILD_DIR/kernel
 
 ISO_FILES=( ${ISO_FILES[@]} $BUILD_DIR/kernel $BUILD_DIR/initrd.cgz )
 Log "Starting '$ISO_MKISOFS_BIN'"
 LogPrint "Making ISO image"
 
-mkdir -p "$ISO_DIR" 1>&8
+mkdir -p $v "$ISO_DIR" 1>&8
 StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
 
 $ISO_MKISOFS_BIN -quiet -o "$ISO_DIR/$ISO_PREFIX.iso" -b isolinux.bin -c boot.cat \

@@ -1,6 +1,6 @@
 # create mount point
 if [[ ! -d "$BUILD_DIR/usbfs" ]]; then
-	mkdir -p "$BUILD_DIR/usbfs"
+	mkdir -p $v "$BUILD_DIR/usbfs"
 	StopIfError "Could not mkdir '$BUILD_DIR/usbfs'"
 fi
 
@@ -13,8 +13,8 @@ else
 	[[ "$USB_DEVICE" ]]
 	StopIfError "USB device (\$USB_DEVICE) is not set."
 	Log "Running 'mount $USB_DEVICE $BUILD_DIR/usbfs'"
-	mount -o noatime "$USB_DEVICE" "$BUILD_DIR/usbfs" 1>&2
+	mount $v -o noatime "$USB_DEVICE" "$BUILD_DIR/usbfs" 1>&2
 	StopIfError "Mounting '$USB_DEVICE' '$BUILD_DIR/usbfs' failed."
 fi
 
-AddExitTask "umount -fv '$BUILD_DIR/usbfs' 1>&2"
+AddExitTask "umount -f $v '$BUILD_DIR/usbfs' 1>&2"

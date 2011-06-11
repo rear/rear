@@ -34,7 +34,7 @@ for dir in default "$ARCH" "$OS" \
 		Log "Adding '$dir'"
 		tar -C "$dir" -c . | tar -C $ROOTFS_DIR -xv 1>&8
 	else
-		Log "No '$dir' or '$dir.tar.gz' found"
+		Debug "No '$dir' or '$dir.tar.gz' found"
 	fi
 done
 popd >/dev/null

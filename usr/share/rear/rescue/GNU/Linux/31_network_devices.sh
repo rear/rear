@@ -86,7 +86,7 @@ for sysfspath in /sys/class/net/* ; do
 WARNING:   sure that it loads automatically (e.g. via udev) or add 
 WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
     fi
-	mkdir -p $TMP_DIR/mappings
+	mkdir -p $v $TMP_DIR/mappings
 	test -f $CONFIG_DIR/mappings/ip_addresses && read_and_strip_file $CONFIG_DIR/mappings/ip_addresses > $TMP_DIR/mappings/ip_addresses
 	
 	if test -s $TMP_DIR/mappings/ip_addresses ; then

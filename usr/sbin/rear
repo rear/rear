@@ -52,7 +52,7 @@ CMD_OPTS=( "$@" )
 # initialize defaults
 STEPBYSTEP=
 SIMULATE=
-VEROSE=
+VERBOSE=
 DEBUG=
 KEEP_BUILD_DIR=
 
@@ -76,7 +76,7 @@ while true; do
 		(-r) KERNEL_VERSION="$2"; shift;;
 		(--) shift; break;;
 		(-*)
-			echo "$PROGNAME: invalid option -- '$option' specified."
+			echo "$PROGNAME: unrecognized option '$option'"
 			echo "Try \`$PROGRAM --help' for more information."
 			exit 1
 			;;
@@ -231,9 +231,9 @@ QuietAddExitTask cleanup_build_area_and_end_program
 Log "Using build area '$BUILD_DIR'"
 ROOTFS_DIR=$BUILD_DIR/rootfs
 TMP_DIR=$BUILD_DIR/tmp
-mkdir -p $ROOTFS_DIR
+mkdir -p $v $ROOTFS_DIR
 StopIfError "Could not create $ROOTFS_DIR"
-mkdir -p $TMP_DIR
+mkdir -p $v $TMP_DIR
 StopIfError "Could not create $TMP_DIR"
 
 # Check for and run the requested workflow

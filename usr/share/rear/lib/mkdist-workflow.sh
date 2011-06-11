@@ -21,7 +21,7 @@ WORKFLOW_mkdist_postprocess () {
 
 	# rename ebuild to current version if it does not have the current version
 	test -s .$SHARE_DIR/contrib/rear-$VERSION.ebuild ||\
-		mv -v .$SHARE_DIR/contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild 1>&8
+		mv $v .$SHARE_DIR/contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild 1>&8
 	StopIfError "Could not mv rear-*.ebuild"
 
 
@@ -32,9 +32,9 @@ WORKFLOW_mkdist_postprocess () {
 	fi
 
 	# reverted back to symlinking because we put more MegaByte into doc and should not package it twice
-	ln -s .$SHARE_DIR/{doc,contrib}  .  1>&8
+	ln -s $v .$SHARE_DIR/{doc,contrib}  .  1>&8
 	# to prevent RPMs from installing symlinks into the doc area we actually copy the text files
-	cp -r .$SHARE_DIR/{COPYING,README,AUTHORS,TODO}  .  1>&8
+	cp -r $v .$SHARE_DIR/{COPYING,README,AUTHORS,TODO}  .  1>&8
 	StopIfError "Could not copy .$SHARE_DIR/{COPYING,README,AUTHORS,TODO,doc,contrib}"
 	
 
@@ -44,10 +44,10 @@ WORKFLOW_mkdist_postprocess () {
 #	cp -fp .$SHARE_DIR/lib/rear.spec $SHARE_DIR/lib/rear.spec
 
 	# remove current recovery information (pre-1.7.15)
-	rm -Rf .$CONFIG_DIR/recovery
+	rm -Rf $v .$CONFIG_DIR/recovery
 
 	# remove development files
-	rm -Rf .project .settings .externalToolBuilders
+	rm -Rf $v .project .settings .externalToolBuilders
 
 	cat >./$CONFIG_DIR/local.conf <<EOF
 # sample local configuration

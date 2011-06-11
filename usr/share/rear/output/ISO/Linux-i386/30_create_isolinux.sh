@@ -1,6 +1,6 @@
 set_syslinux_features
 
-cp -L "$ISO_ISOLINUX_BIN" $BUILD_DIR/boot/isolinux.bin
+cp -L $v "$ISO_ISOLINUX_BIN" $BUILD_DIR/boot/isolinux.bin
 
 make_syslinux_config $BUILD_DIR/boot isolinux >$BUILD_DIR/boot/isolinux.cfg
 

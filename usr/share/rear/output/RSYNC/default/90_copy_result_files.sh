@@ -6,7 +6,7 @@ LogPrint "Copying resulting files to $RSYNC_URL location"
 # if called as mkbackuponly then we just don't have any result files.
 if test "$RESULT_FILES" ; then
 	Log "Copying files '${RESULT_FILES[@]}' to $RSYNC_URL location"
-	cp -v "${RESULT_FILES[@]}" "${BUILD_DIR}/rsync/${RSYNC_PREFIX}/" 1>&8
+	cp $v "${RESULT_FILES[@]}" "${BUILD_DIR}/rsync/${RSYNC_PREFIX}/" 1>&8
 	StopIfError "Could not copy files to local rsync location"
 	
 fi
@@ -14,7 +14,7 @@ fi
 echo "$VERSION_INFO" >"${BUILD_DIR}/rsync/${RSYNC_PREFIX}/VERSION"
 StopIfError "Could not create VERSION file on local rsync location"
 
-cp -v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "${BUILD_DIR}/rsync/${RSYNC_PREFIX}/README" 1>&8
+cp $v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "${BUILD_DIR}/rsync/${RSYNC_PREFIX}/README" 1>&8
 StopIfError "Could not copy usage file to local rsync location"
 
 cat "$LOGFILE" >"${BUILD_DIR}/rsync/${RSYNC_PREFIX}/rear.log"

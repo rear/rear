@@ -17,7 +17,7 @@ local path="/${ISO_URL#*://*/}"
 case "$scheme" in
     (file)
         LogPrint "Transferring ISO image to $path"
-        cp -a "$ISO_DIR/$ISO_PREFIX.iso" $path
+        cp -a $v "$ISO_DIR/$ISO_PREFIX.iso" $path
         StopIfError "Problem transferring ISO image to $ISO_URL"
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
@@ -27,7 +27,7 @@ case "$scheme" in
         ;;
     (rsync)
         LogPrint "Transferring ISO image to $ISO_URL"
-        rsync -a "$ISO_DIR/$ISO_PREFIX.iso" "$server:$path"
+        rsync -a $v "$ISO_DIR/$ISO_PREFIX.iso" "$server:$path"
         StopIfError "Problem transferring ISO image to $server:$path"
         ;;
     (*) BugError "Support for $scheme is not implemented yet.";;

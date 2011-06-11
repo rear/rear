@@ -10,9 +10,9 @@ if test "$NETFS_UMOUNTCMD" ; then
 	$NETFS_UMOUNTCMD "${BUILD_DIR}/netfs"
 else
 	Log "Running 'umount -f ${BUILD_DIR}/netfs'"
-	umount -f "${BUILD_DIR}/netfs"
+	umount -f $v "${BUILD_DIR}/netfs"
 fi
 StopIfError "Could not unmount directory ${BUILD_DIR}/netfs"
 
 # the argument to RemoveExitTask has to be identical to the one given to AddExitTask
-RemoveExitTask "umount -fv '$BUILD_DIR/netfs' 1>&2"
+RemoveExitTask "umount -f $v '$BUILD_DIR/netfs' 1>&2"

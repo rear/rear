@@ -4,10 +4,10 @@
 # this is useful to bring over some settings from the build system to the 
 # rescue system that would be hard to find out there
 
-mkdir -p $ROOTFS_DIR$CONFIG_DIR
+mkdir -p $v $ROOTFS_DIR$CONFIG_DIR
 
 # we can write stuff to $CONFIG_DIR/rescue.conf if we want to preserve some dynamic variables
 # so that they stay static in the rescue system. static means they stay the same as when the
 # rescue system was created.
-rm -f $ROOTFS_DIR$CONFIG_DIR/rescue.conf
+rm -f $v $ROOTFS_DIR$CONFIG_DIR/rescue.conf
 

@@ -51,14 +51,14 @@ case "$PXE_CREATE_LINKS" in
 		ip a | grep inet\ | grep -v inet\ 127 | \
 			while read inet IP junk ; do 
 				IP=${IP%/*}
-				ln -sf "$PXE_CONFIG_FILE" $(gethostip -x $IP)
+				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP)
 			done
 		;;
 	MAC)
 		# look at all devices that have link/ether
 		ip l | grep link/ether | \
 			while read link mac junk ; do 
-				ln -sf "$PXE_CONFIG_FILE" ${mac//:/-}
+				ln -sf $v "$PXE_CONFIG_FILE" ${mac//:/-}
 			done
 		;;
 	"")

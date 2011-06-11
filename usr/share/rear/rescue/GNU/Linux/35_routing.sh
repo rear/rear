@@ -18,7 +18,7 @@
 #
 #
 
-mkdir -p $TMP_DIR/mappings
+mkdir -p $v $TMP_DIR/mappings
 read_and_strip_file $CONFIG_DIR/mappings/routes > $TMP_DIR/mappings/routes
 
 # where to build networking configuration

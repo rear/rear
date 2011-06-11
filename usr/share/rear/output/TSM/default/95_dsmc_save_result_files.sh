@@ -13,13 +13,13 @@ TSM_RESULT_FILES=()
 test -z "$TSM_RESULT_FILE_PATH" && TSM_RESULT_FILE_PATH=/tmp
 
 if ! test -d "$TSM_RESULT_FILE_PATH" ; then
-	 mkdir -v -p "$TSM_RESULT_FILE_PATH" 1>&8
+	 mkdir -p $v "$TSM_RESULT_FILE_PATH" 1>&8
 	 StopIfError "Could not create '$TSM_RESULT_FILE_PATH'"
 fi
 
 
 if test "$TSM_RESULT_FILE_PATH" != "/tmp" ; then
-	cp -v  "${RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH" 1>&8
+	cp $v  "${RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH" 1>&8
 	StopIfError "Could not copy result files to '$TSM_RESULT_FILE_PATH'"
 	TSM_RESULT_FILES=(
 		$(
@@ -33,7 +33,7 @@ else
 fi
 
 if test -s "$CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt" ; then
-	cp -v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "$TSM_RESULT_FILE_PATH/README" 1>&8
+	cp $v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "$TSM_RESULT_FILE_PATH/README" 1>&8
 	StopIfError "Could not copy '$CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt'"
 	TSM_RESULT_FILES=( "${TSM_RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH"/README )
 fi

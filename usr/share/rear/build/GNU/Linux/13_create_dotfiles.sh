@@ -29,6 +29,6 @@ less $LOGFILE   # View ReaR's log file
 loadkeys -d     # Load default keyboard layout (US)
 rear recover    # Recover your system
 EOF
-chmod 0644 $ROOTFS_DIR/root/.bash_history
+chmod -v 0644 $ROOTFS_DIR/root/.bash_history
 
 # any other dot files should be listed below

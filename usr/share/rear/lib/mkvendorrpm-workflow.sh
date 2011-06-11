@@ -15,14 +15,14 @@ WORKFLOW_mkvendorrpm () {
 	LogPrint "Building vendor RPMs"
 
 	RPM_TopDir=`rpmtopdir`	# find rpmbuild %{_topdir} path
-	cp -fp $SHARE_DIR/lib/rear.spec ${RPM_TopDir}/SPECS/rear.spec
+	cp -fp $v $SHARE_DIR/lib/rear.spec ${RPM_TopDir}/SPECS/rear.spec
 	StopIfError "Could not copy ${RPM_TopDir}/SPECS/rear.spec"
 
-	chmod 644 ${RPM_TopDir}/SPECS/rear.spec
-	cp -fp $distarchive ${RPM_TopDir}/SOURCES/
+	chmod $v 644 ${RPM_TopDir}/SPECS/rear.spec
+	cp -fp $v $distarchive ${RPM_TopDir}/SOURCES/
 	StopIfError "Could not copy $distarchive to ${RPM_TopDir}/SOURCES/"
 
-	rpmbuild -ba -v ${RPM_TopDir}/SPECS/rear.spec 2>&1 | tee -a /dev/fd/8 /dev/fd/2 | grep '\.rpm$' >$TMP_DIR/rpmbuild 
+	rpmbuild -ba $v ${RPM_TopDir}/SPECS/rear.spec 2>&1 | tee -a /dev/fd/8 /dev/fd/2 | grep '\.rpm$' >$TMP_DIR/rpmbuild 
 	[ $PIPESTATUS -eq 0 ]
 	StopIfError $PIPESTATUS "Could not build RPM. See '$LOGFILE' for more information."
 

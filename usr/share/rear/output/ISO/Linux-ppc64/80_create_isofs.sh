@@ -26,7 +26,7 @@ ISO_FILES=( ${ISO_FILES[@]} kernel initrd.cgz )
 Log "Starting '$ISO_MKISOFS_BIN'"
 LogPrint "Making ISO image"
 
-mkdir -p "$ISO_DIR" 1>&8 
+mkdir -p $v "$ISO_DIR" 1>&8 
 StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
 
 pushd $BUILD_DIR 1>&8 # so that relative paths will work
