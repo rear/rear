@@ -38,7 +38,7 @@ if test -s $TMP_DIR/mappings/mac ; then
 	for file in "${PATCH_FILES[@]}"; do
 		new_file="$(sed -e "$SED_SCRIPT" <<<"$file")"
 		if test "$new_file" -a "$new_file" != "$file" ; then
-			mv -v "$file" "$new_file" 1>&2
+			mv $v "$file" "$new_file" >&2
 		fi
 	done
 fi

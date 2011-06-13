@@ -7,7 +7,7 @@
 
 LogPrint "Installing boot loader (I hope you used grub and it works ...)"
 mount -t proc none /mnt/local/proc
-if chroot /mnt/local /bin/bash --login -c "grub-install '(hd0)'" 1>&2 ; then
+if chroot /mnt/local /bin/bash --login -c "grub-install '(hd0)'" >&2 ; then
 	NOBOOTLOADER=
 else
 	LogPrint "WARNING !!! 

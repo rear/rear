@@ -39,7 +39,7 @@ else
 
 	# check if host is reachable
 	if test "$PING" ; then
-		ping -c 2 "$NETFS_HOST" 1>&8
+		ping -c 2 "$NETFS_HOST" >&8
 		StopIfError "Backup host [$NETFS_HOST] not reachable."
 	else
 		Log "Skipping ping test"

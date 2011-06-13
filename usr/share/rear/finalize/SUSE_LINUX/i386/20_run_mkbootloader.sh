@@ -14,7 +14,7 @@ if bootloader="$(cat $VAR_DIR/recovery/mkbootloader)"  ; then
 		mv /mnt/local/boot/grub/device.map /mnt/local/boot/grub/device.map.rear 
 	fi
 	Log "Running chroot '$bootloader'"
-	if chroot /mnt/local /bin/bash --login -c "$bootloader"  1>&2 ; then
+	if chroot /mnt/local /bin/bash --login -c "$bootloader"  >&2 ; then
 		NOBOOTLOADER=
 	else
 		LogPrint "WARNING !

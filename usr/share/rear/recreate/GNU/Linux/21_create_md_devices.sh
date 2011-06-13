@@ -67,7 +67,7 @@ while read file ; do
 			optname=$(sed -e 's/MD_OPTION_//' -e 'y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/' <<<$var)
 			echo "--$optname ${!var} "
 		done
-		) --verbose 1>&2 <<<y ; then
+		) --verbose >&2 <<<y ; then
 	else
 		# now the old style
 		Log "Fancy mdadm failed, trying plain old style"

@@ -47,7 +47,7 @@ partition_disk() {
 
     cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating partitions for disk $disk ($label)"
-parted -s $disk mklabel $label 1>&2
+parted -s $disk mklabel $label >&2
 EOF
 
     local start end start_mb end_mb
@@ -73,7 +73,7 @@ EOF
         
         if [ -n "$FEATURE_PARTED_ANYUNIT" ] ; then
 cat <<EOF >> $LAYOUT_CODE
-parted -s $disk mkpart $parttype ${start}B $(($end-1))B 1>&2
+parted -s $disk mkpart $parttype ${start}B $(($end-1))B >&2
 EOF
         else
             # Old versions of parted accept only sizes in megabytes...
@@ -84,7 +84,7 @@ EOF
             fi
             let end_mb=$end/1024/1024
 cat <<EOF >> $LAYOUT_CODE
-parted -s $disk mkpart $parttype $start_mb $end_mb 1>&2
+parted -s $disk mkpart $parttype $start_mb $end_mb >&2
 EOF
         fi
 
@@ -106,7 +106,7 @@ EOF
             if [ "$flag" = "none" ] ; then
                 continue
             fi
-            echo "parted -s $disk set $number $flag on 1>&2" >> $LAYOUT_CODE
+            echo "parted -s $disk set $number $flag on >&2" >> $LAYOUT_CODE
         done
     done < <(grep "^part $disk" $LAYOUT_FILE)
 

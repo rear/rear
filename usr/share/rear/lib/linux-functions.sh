@@ -115,7 +115,7 @@ BinCopyTo() {
 	while (( $# > 1 )); do
 		shift
 		[[ -z "$1" ]] && continue # ignore blanks
-		cp -a -L -f $v "$1" "$dest"
+		cp -a -L -f $v "$1" "$dest" >&2
 		StopIfError "[BinCopyTo] Could not copy '$1' to '$dest'"
 #		strip -s "$dest/$(basename "$1")" 2>/dev/null
 	done
@@ -131,7 +131,7 @@ LibCopyTo() {
 	while (( $# > 1 )); do
 		shift
 		[[ -z "$1" ]] && continue # ignore blanks
-		cp -a -f $v "$1" "$dest"
+		cp -a -f $v "$1" "$dest" >&2
 		StopIfError "[LibCopyTo] Could not copy '$1' to '$dest'"
 #		file=$(basename "$1")
 #		[[ ! -L "$dest/$file" ]] && strip -s "$dest/$file"
@@ -146,7 +146,7 @@ ModulesCopyTo() {
 		shift
 		dir="$(dirname "$1")"
 		[[ ! -d "$dest/$dir" ]] && mkdir -p $v "$dest/$dir"
-		cp -a -L $v "/$1" "$dest/$dir"
+		cp -a -L $v "/$1" "$dest/$dir" >&2
 		StopIfError "[ModulesCopyTo] Could not copy '/$1' to '$dest'"
 	done
 }
@@ -177,7 +177,7 @@ add_module () {
 
 # Install a binary file
 cp_bin () {
-	cp -a $v "$@"
+	cp -a $v "$@" >&2
 
 	# Remember the binaries installed. We need the list for checking
 	# for dynamic libraries.

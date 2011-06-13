@@ -33,10 +33,10 @@ function syslinux_has {
     if [[ -e "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" ]]; then
         if [[ "$SYSLINUX_NEEDS_UPDATE" ]]; then
             if [[ -e "$SYSLINUX_DIR/$file" ]]; then
-                cp -f $v "$SYSLINUX_DIR/$file" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&8
+                cp -f $v "$SYSLINUX_DIR/$file" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&2
             else
                 # Make sure we don't have any older copies on USB media
-                rm -f $v "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file"
+                rm -f $v "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&2
                 return 1;
             fi
         else
@@ -44,7 +44,7 @@ function syslinux_has {
         fi
     else
         if [[ -e "$SYSLINUX_DIR/$file" ]]; then
-            cp $v "$SYSLINUX_DIR/$file" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&8
+            cp $v "$SYSLINUX_DIR/$file" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&2
         else
             return 1
         fi

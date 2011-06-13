@@ -12,7 +12,7 @@ echo "
 ******************************************
 **	svn2tar script for rear      	**
 ******************************************
-" 1>&2
+" >&2
 
 # find the full path to this script
 ME="$(readlink -f "$0")"
@@ -36,7 +36,7 @@ if [ "$VERSION" = 0.0.0 -a -d "$rear_root/.svn" ] ; then
 	svn up "$rear_root" >&/dev/null
 	read junk rev < <(svn info "$rear_root" | grep ^Revision)
 	if ! test "$rev" -a "$rev" -gt 0 ; then
-		echo 1>&2 "ERROR: Could not determine version from svn".
+		echo "ERROR: Could not determine version from svn". >&2
 		exit 1
 	fi
 	VERSION="0.0.$rev"
@@ -57,30 +57,30 @@ BUILD_DIR=/tmp/rear.$$
 AddExitTask "rm -rf $BUILD_DIR"
 
 mkdir -p $BUILD_DIR/$prod_ver 
-echo "Will be using a temporary BUILD_DIR=${BUILD_DIR}" 1>&2
+echo "Will be using a temporary BUILD_DIR=${BUILD_DIR}" >&2
 
 
 
 # use tar to copy the current rear while excluding development and obsolete files
 if type -p svn >/dev/null && test -d $rear_root/.svn && svn info $rear_root >/dev/null ; then
 	# use svn export
-	ProgressStart "Building dist tar for rear $VERSION using svn export" 1>&2
-	svn export --force $rear_root $BUILD_DIR/$prod_ver 1>&8
+	ProgressStart "Building dist tar for rear $VERSION using svn export" >&2
+	svn export --force $rear_root $BUILD_DIR/$prod_ver >&8
 else
-	ProgressStart "Building dist tar for rear $VERSION" 1>&2
+	ProgressStart "Building dist tar for rear $VERSION" >&2
 	tar --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
      		 --exclude=\*.rpmnew\* --exclude=.\*.swp --exclude .svn \
-		 -c -C $rear_root usr etc | tar -C $BUILD_DIR/$prod_ver -x -v 1>&8
+		 -c -C $rear_root usr etc | tar -C $BUILD_DIR/$prod_ver -x -v >&8
 fi
 
 # cleaning up the $BUILD_DIR/$prod_ver directory before starting rpmbuild
 pushd $BUILD_DIR/$prod_ver >/dev/null
 
-WORKFLOW_mkdist_postprocess 1>&2
+WORKFLOW_mkdist_postprocess >&2
 
 popd >/dev/null
-ProgressStop 1>&2
+ProgressStop >&2
 
-echo Creating final $distarchive of rear version $prod_ver 1>&2
+echo Creating final $distarchive of rear version $prod_ver >&2
 tar -C $BUILD_DIR -czf $distarchive $prod_ver 
 echo $distarchive

@@ -18,7 +18,7 @@ echo "
 ******************************************
 **	svn2host script for rear      	**
 ******************************************
-" 1>&2
+" >&2
 
 # find the full path to this script
 ME="$(cd $(dirname "$0") ; pwd)/$(basename "$0")"

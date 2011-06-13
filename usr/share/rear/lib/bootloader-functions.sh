@@ -130,7 +130,7 @@ function make_syslinux_config {
 	# if we have the menu.c32 available we use it. if not we make sure that there will be no menu lines in the result
 	# so that we don't confuse older syslinux
 	if [ -r "$SYSLINUX_DIR/menu.c32" ] ; then
-		cp $v "$SYSLINUX_DIR/menu.c32" "$BOOT_DIR/menu.c32" >&8
+		cp $v "$SYSLINUX_DIR/menu.c32" "$BOOT_DIR/menu.c32" >&2
 		function syslinux_menu {
 			echo "MENU $@"
 		}
@@ -157,7 +157,7 @@ function make_syslinux_config {
 	echo "F1 message"
 
 	if [ -s "$CONFIG_DIR/templates/rear.help" ] ; then
-		cp $v "$CONFIG_DIR/templates/rear.help" "$BOOT_DIR/rear.help" >&8
+		cp $v "$CONFIG_DIR/templates/rear.help" "$BOOT_DIR/rear.help" >&2
 		echo "F2 rear.help" 
 		echo "say F2 - Show help" 
 		syslinux_menu "TABMSG Press [Tab] to edit, [F2] for help, [F1] for version info" 
@@ -193,7 +193,7 @@ function make_syslinux_config {
 
 	# Use chain booting for booting disk, if chain.c32 is available
 	if [ -r "$SYSLINUX_DIR/chain.c32" ] ; then
-		cp $v "$SYSLINUX_DIR/chain.c32" "$BOOT_DIR/chain.c32" >&8
+		cp $v "$SYSLINUX_DIR/chain.c32" "$BOOT_DIR/chain.c32" >&2
 
 		echo "say boothd0 - boot first local disk"
 		echo "label boothd0"
@@ -268,14 +268,14 @@ function make_syslinux_config {
 
 
 	if [ -r "$SYSLINUX_DIR/hdt.c32" ] ; then
-		cp $v "$SYSLINUX_DIR/hdt.c32" "$BOOT_DIR/hdt.c32" >&8
+		cp $v "$SYSLINUX_DIR/hdt.c32" "$BOOT_DIR/hdt.c32" >&2
 		if [ -r "/usr/share/hwdata/pci.ids" ] ; then
-		    cp $v "/usr/share/hwdata/pci.ids" "$BOOT_DIR/pci.ids" >&8
+		    cp $v "/usr/share/hwdata/pci.ids" "$BOOT_DIR/pci.ids" >&2
 		elif [ -r "/usr/share/pci.ids" ] ; then
-		    cp $v "/usr/share/pci.ids" "$BOOT_DIR/pci.ids" >&8
+		    cp $v "/usr/share/pci.ids" "$BOOT_DIR/pci.ids" >&2
 		fi
 		if [ -r "/lib/modules/$KERNEL_VERSION/modules.pcimap" ] ; then
-		    cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BOOT_DIR/modules.pcimap" >&8
+		    cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BOOT_DIR/modules.pcimap" >&2
 		fi
 		echo "say hdt - Hardware Detection Tool"
 		echo "label hdt"
@@ -287,7 +287,7 @@ function make_syslinux_config {
 	# You need the memtest86+ package installed for this to work
 	MEMTEST_BIN=$(ls -d /boot/memtest86+-* 2>/dev/null | tail -1)
 	if [ "$MEMTEST_BIN" != "." -a -r "$MEMTEST_BIN" ] ; then
-		cp $v "$MEMTEST_BIN" "$BOOT_DIR/memtest" >&8
+		cp $v "$MEMTEST_BIN" "$BOOT_DIR/memtest" >&2
 		echo "memtest - Run memtest86+"
 		echo "label memtest"
 		syslinux_menu "label ^Memory test"
@@ -299,7 +299,7 @@ function make_syslinux_config {
 
 
 	if [ -r "$SYSLINUX_DIR/reboot.c32" ] ; then
-		cp $v "$SYSLINUX_DIR/reboot.c32" "$BOOT_DIR/reboot.c32" >&8
+		cp $v "$SYSLINUX_DIR/reboot.c32" "$BOOT_DIR/reboot.c32" >&2
 		echo "say reboot - Reboot the system"
 		echo "label reboot"
 		syslinux_menu "label ^Reboot system"
@@ -309,7 +309,7 @@ function make_syslinux_config {
 	fi
 
 	if [ -r "$SYSLINUX_DIR/poweroff.com" ] ; then
-		cp $v "$SYSLINUX_DIR/poweroff.com" "$BOOT_DIR/poweroff.com" >&8
+		cp $v "$SYSLINUX_DIR/poweroff.com" "$BOOT_DIR/poweroff.com" >&2
 		echo "say poweroff - Poweroff the system"
 		echo "label poweroff"
 		syslinux_menu "label ^Power off system"

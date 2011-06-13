@@ -35,7 +35,7 @@ update-initramfs afterwards to update the initramfs with the new mdadm.conf
 		fi
 	fi
 
-	if chroot /mnt/local /bin/bash --login -c "update-initramfs -v -u -k all" 1>&2 ; then
+	if chroot /mnt/local /bin/bash --login -c "update-initramfs -v -u -k all" >&2 ; then
          	LogPrint "Updated initramfs with new drivers for this system."
 	else
         	LogPrint "WARNING !!! 

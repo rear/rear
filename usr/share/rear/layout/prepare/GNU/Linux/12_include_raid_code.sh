@@ -54,6 +54,6 @@ cat <<EOF >> $LAYOUT_CODE
 LogPrint "Creating software RAID $device"
 test -b $device && mdadm --stop $device
 
-$mdadmcmd 1>&2
+$mdadmcmd >&2
 EOF
 }

@@ -34,7 +34,7 @@ create_fs() {
             done
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
-mkfs -t ${fstype}${blocksize}${fragmentsize} $device 1>&2
+mkfs -t ${fstype}${blocksize}${fragmentsize} $device >&2
 EOF
 
             local tunefs="tune2fs"
@@ -44,15 +44,15 @@ EOF
             fi
 
             if [ -n "$label" ] ; then
-                echo "$tunefs -L $label $device 1>&2" >> $LAYOUT_CODE
+                echo "$tunefs -L $label $device >&2" >> $LAYOUT_CODE
             fi
             if [ -n "$uuid" ] ; then
-                echo "$tunefs -U $uuid $device 1>&2" >> $LAYOUT_CODE
+                echo "$tunefs -U $uuid $device >&2" >> $LAYOUT_CODE
             fi
             
             tune2fsopts="${reserved_blocks}${max_mounts}${check_interval}"
             if [ -n "$tune2fsopts" ] ; then
-                echo "$tunefs $tune2fsopts $device 1>&2" >> $LAYOUT_CODE
+                echo "$tunefs $tune2fsopts $device >&2" >> $LAYOUT_CODE
             fi
             ;;
         xfs)
@@ -61,10 +61,10 @@ LogPrint "Creating $fstype-filesystem $mp on $device"
 mkfs -t $fstype $device
 EOF
             if [ -n "$label" ] ; then
-                echo "xfs_admin -L $label $device 1>&2" >> $LAYOUT_CODE
+                echo "xfs_admin -L $label $device >&2" >> $LAYOUT_CODE
             fi
             if [ -n "$uuid" ] ; then
-                echo "xfs_admin -U $uuid $device 1>&2" >> $LAYOUT_CODE
+                echo "xfs_admin -U $uuid $device >&2" >> $LAYOUT_CODE
             fi
             ;;
         reiserfs)
@@ -73,16 +73,16 @@ LogPrint "Creating $fstype-filesystem $mp on $device"
 mkfs -t $fstype -q $device
 EOF
             if [ -n "$label" ] ; then
-                echo "reiserfstune --label $label $device 1>&2" >> $LAYOUT_CODE
+                echo "reiserfstune --label $label $device >&2" >> $LAYOUT_CODE
             fi
             if [ -n "$uuid" ] ; then
-                echo "reiserfstune --uuid $uuid $device 1>&2" >> $LAYOUT_CODE
+                echo "reiserfstune --uuid $uuid $device >&2" >> $LAYOUT_CODE
             fi
             ;;
         *)
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating filesystem ($fstype) $mp on $device"
-mkfs -t $fstype $device 1>&2
+mkfs -t $fstype $device >&2
 EOF
             ;;
     esac

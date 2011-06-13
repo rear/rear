@@ -7,6 +7,6 @@ Log "Backup method is DP: check Data Protector 6.* requirements"
 [ -x /opt/omni/bin/omnir ]
 StopIfError "Please install Data Protector 6 User Interface component."
 
-/opt/omni/bin/omnidb -filesystem | grep $(hostname) 1>&8
+/opt/omni/bin/omnidb -filesystem | grep $(hostname) >&8
 StopIfError "Data Protector check failed with error code $? (no filesystem backup found).
 See /tmp/rear.log for more details."

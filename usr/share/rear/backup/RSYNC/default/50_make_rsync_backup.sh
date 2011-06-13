@@ -63,12 +63,12 @@ case "$BACKUP_PROG" in
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			fsize="$(get_size $(tail -1 "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log"))"
 			size=$((size+fsize))
-			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" 1>&8
+			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
 		done
 		;;
 
 	(*)
-		echo "INFO Archiving" 1>&8
+		echo "INFO Archiving" >&8
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			ProgressStep
 		done

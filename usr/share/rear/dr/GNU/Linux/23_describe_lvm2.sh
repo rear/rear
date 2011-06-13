@@ -15,7 +15,7 @@ mkdir -p "${VAR_DIR}/recovery/lvm"
 StopIfError "Creating directory ${VAR_DIR}/recovery/lvm"
 
 # first we do a general VG backup to the system default location, just in case it might be needed
-vgcfgbackup 1>&2 8>&- 7>&-
+vgcfgbackup >&2 8>&- 7>&-
 
 for vg in $(lvm vgs --noheadings -o vg_name 8>&- 7>&-  ) ; do
 	if IsInArray $vg "${EXCLUDE_VG[@]}" ; then
@@ -23,7 +23,7 @@ for vg in $(lvm vgs --noheadings -o vg_name 8>&- 7>&-  ) ; do
 		continue
 	fi
 
-	lvm vgcfgbackup --file "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" $vg 1>&2 8>&- 7>&-
+	lvm vgcfgbackup --file "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" $vg >&2 8>&- 7>&-
 	StopIfError "vgcfgbackup failed for '$vg': $?"
 
 	[ -s "${VAR_DIR}/recovery/lvm/vgcfgbackup.$vg" ]

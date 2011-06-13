@@ -3,9 +3,9 @@ if ! test -z "${NETFS_KEEP_OLD_BACKUP_COPY}"; then
 	if ! test -f "${BUILD_DIR}/netfs/${NETFS_PREFIX}/.lockfile" ; then
 		# lockfile made through workflow backup already (so output keep hands off)
 		if test -d "${BUILD_DIR}/netfs/${NETFS_PREFIX}" ; then
-			rm -rf $v "${BUILD_DIR}/netfs/${NETFS_PREFIX}.old"
+			rm -rf $v "${BUILD_DIR}/netfs/${NETFS_PREFIX}.old" >&2
 			StopIfError "Could not remove '${BUILD_DIR}/netfs/${NETFS_PREFIX}.old'"
-			mv -f $v "${BUILD_DIR}/netfs/${NETFS_PREFIX}" "${BUILD_DIR}/netfs/${NETFS_PREFIX}.old"
+			mv -f $v "${BUILD_DIR}/netfs/${NETFS_PREFIX}" "${BUILD_DIR}/netfs/${NETFS_PREFIX}.old" >&2
 			StopIfError "Could not move '${BUILD_DIR}/netfs/${NETFS_PREFIX}'"
 		fi
 	else

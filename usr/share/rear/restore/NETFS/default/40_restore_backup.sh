@@ -46,11 +46,11 @@ case "$BACKUP_PROG" in
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			blocks="$(tail -1 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
 			size="$((blocks*512))"
-			echo "INFO Restored $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" 1>&8
+			echo "INFO Restored $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
 		done
 		;;
 	*)
-		echo "INFO Restoring" 1>&8
+		echo "INFO Restoring" >&8
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			ProgressStep
 		done

@@ -26,12 +26,12 @@ ISO_FILES=( ${ISO_FILES[@]} kernel initrd.cgz )
 Log "Starting '$ISO_MKISOFS_BIN'"
 LogPrint "Making ISO image"
 
-mkdir -p $v "$ISO_DIR" 1>&8 
+mkdir -p $v "$ISO_DIR" >&2
 StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
 
-pushd $BUILD_DIR 1>&8 # so that relative paths will work
+pushd $BUILD_DIR >&8 # so that relative paths will work
 $ISO_MKISOFS_BIN -o "$ISO_DIR/$ISO_PREFIX.iso" -U -chrp-boot \
-	-R -J -volid "$ISO_VOLID" -v -graft-points "${ISO_FILES[@]}"  1>&8
+	-R -J -volid "$ISO_VOLID" -v -graft-points "${ISO_FILES[@]}"  >&8
 StopIfError "Could not create ISO image"
 ISO_IMAGES=( "${ISO_IMAGES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
 popd >/dev/null

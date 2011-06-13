@@ -35,7 +35,7 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 
 	mount -t proc none /mnt/local/proc
 	mount -t sysfs none /mnt/local/sys
-	if chroot /mnt/local /bin/bash --login -c "mkinitrd" 1>&2 ; then
+	if chroot /mnt/local /bin/bash --login -c "mkinitrd" >&2 ; then
         	LogPrint "Updated initramfs with new drivers for this system."
 	else
         	LogPrint "WARNING !!! 

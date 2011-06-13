@@ -231,9 +231,9 @@ QuietAddExitTask cleanup_build_area_and_end_program
 Log "Using build area '$BUILD_DIR'"
 ROOTFS_DIR=$BUILD_DIR/rootfs
 TMP_DIR=$BUILD_DIR/tmp
-mkdir -p $v $ROOTFS_DIR
+mkdir -p $v $ROOTFS_DIR >&2
 StopIfError "Could not create $ROOTFS_DIR"
-mkdir -p $v $TMP_DIR
+mkdir -p $v $TMP_DIR >&2
 StopIfError "Could not create $TMP_DIR"
 
 # Check for and run the requested workflow

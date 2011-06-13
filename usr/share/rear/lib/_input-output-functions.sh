@@ -61,7 +61,7 @@ DoExitTasks() {
 	JOBS=( $(jobs -p) )
 	if test "$JOBS" ; then
                 Log "The following jobs are still active:"
-                jobs -l 1>&2
+                jobs -l >&2
 		kill -9 "${JOBS[@]}" &>/dev/null
 		sleep 1 # allow system to clean up after killed jobs
 	fi
@@ -78,7 +78,7 @@ MASTER_PID=$$
 exec 7>&1
 QuietAddExitTask "exec 7>&-"
 # USR1 is used to abort on errors, not using Print to always print to the original STDOUT, even if quiet
-builtin trap "echo 'Aborting due to an error, check $LOGFILE for details' 1>&7 ; kill $MASTER_PID" USR1
+builtin trap "echo 'Aborting due to an error, check $LOGFILE for details' >&7 ; kill $MASTER_PID" USR1
 
 # make sure nobody else can use trap
 function trap () {
@@ -88,7 +88,7 @@ function trap () {
 Error() {
 	if type caller &>/dev/null ; then
 		# Print stack strace on error
-		let c=0 ; while caller $c ; do let c++ ; done | sed 's/^/Trace: /' 1>&2 ; unset c
+		let c=0 ; while caller $c ; do let c++ ; done | sed 's/^/Trace: /' >&2 ; unset c
 	fi
 	# If first argument is numerical, use it as exit code
 	if [ $1 -eq $1 ] 2>/dev/null; then
@@ -133,7 +133,7 @@ Debug() {
 }
 
 Print() {
-	test "$VERBOSE" && echo -e "$*" 1>&7
+	test "$VERBOSE" && echo -e "$*" >&7
 }
 
 # print if there is an error

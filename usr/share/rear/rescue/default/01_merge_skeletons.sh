@@ -29,10 +29,10 @@ for dir in default "$ARCH" "$OS" \
 		continue
 	elif test -s "$dir".tar.gz ; then
 		Log "Adding '$dir.tar.gz'"
-		tar -C $ROOTFS_DIR -xvzf "$dir".tar.gz 1>&8
+		tar -C $ROOTFS_DIR -xvzf "$dir".tar.gz >&8
 	elif test -d "$dir" ; then
 		Log "Adding '$dir'"
-		tar -C "$dir" -c . | tar -C $ROOTFS_DIR -xv 1>&8
+		tar -C "$dir" -c . | tar -C $ROOTFS_DIR -xv >&8
 	else
 		Debug "No '$dir' or '$dir.tar.gz' found"
 	fi

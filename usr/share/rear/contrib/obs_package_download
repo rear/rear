@@ -12,7 +12,7 @@ OBS_PROJECT=home:sschapiro
 OBS_PACKAGE=ReaR
 
 die() {
-	echo 1>&2 "ERROR: $@"
+	echo "ERROR: $@" >&2
 	exit 1
 }
 

@@ -21,11 +21,11 @@ WORKFLOW_mkdeb () {
 	
 	tar -C $TMP_DIR -xzvf $distarchive >&8
 	# prod_ver is the same here as in mkdist, so the directory names should match
-	mkdir $v $TMP_DIR/$prod_ver/DEBIAN/
+	mkdir $v $TMP_DIR/$prod_ver/DEBIAN/ >&2
 	StopIfError "Could not mkdir '$TMP_DIR/$prod_ver/DEBIAN/'"
 	
-	rm $v $TMP_DIR/$prod_ver/doc
-	rm $v $TMP_DIR/$prod_ver/README
+	rm $v $TMP_DIR/$prod_ver/doc >&2
+	rm $v $TMP_DIR/$prod_ver/README >&2
 	StopIfError "Could not delete symlinks in '$TMP_DIR/$prod_ver/'"
 
 	cat > $TMP_DIR/$prod_ver/DEBIAN/control <<-EOF

@@ -15,7 +15,7 @@ if test -s $VAR_DIR/recovery/swapfiles ; then
 	while read file megs junk ; do
 		realfile=/mnt/local$file
 		Log "Creating swap file '$realfile' ($megs MB)"
-		dd if=/dev/zero of=$realfile bs=1M count=$megs 1>&2
+		dd if=/dev/zero of=$realfile bs=1M count=$megs >&2
 		StopIfError "Failed to create swap file '$file' ($megs MB)"
 		chmod 0600 $realfile
 	done <$VAR_DIR/recovery/swapfiles
@@ -65,7 +65,7 @@ while read file ; do
 	StopIfError "Swap creation command '$CMD' not found !"
 
 	# run command
-	eval "${CMD[@]}" 1>&8
+	eval "${CMD[@]}" >&8
 	StopIfError "Could not create swap on '$device'"
 	
 done < <(

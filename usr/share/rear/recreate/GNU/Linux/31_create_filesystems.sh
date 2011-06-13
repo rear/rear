@@ -91,7 +91,7 @@ while read file ; do
 	StopIfError "Filesystem creation command '$CMD' not found !"
 
 	# run command
-	eval "${CMD[@]}" 1>&8
+	eval "${CMD[@]}" >&8
 	StopIfError "Could not create filesystem ($ID_FS_TYPE) on '$device'"
 	
 	# should we run another command (CMD2) ?
@@ -102,7 +102,7 @@ while read file ; do
 		StopIfError "Filesystem manipulation command '$CMD2' not found !"
 		
 		# run CMD2
-		eval "${CMD2[@]}" 1>&8
+		eval "${CMD2[@]}" >&8
 		StopIfError "Could not '$CMD2' filesystem ($ID_FS_TYPE) on '$device'"
 
 	fi
@@ -115,7 +115,7 @@ while read file ; do
 		StopIfError "Filesystem manipulation command '$CMD3' not found !"
 		
 		# run CMD3
-		eval "${CMD3[@]}" 1>&8
+		eval "${CMD3[@]}" >&8
 		StopIfError "Could not '$CMD3' filesystem ($ID_FS_TYPE) on '$device'"
 
 	fi

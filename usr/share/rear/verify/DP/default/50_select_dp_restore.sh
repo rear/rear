@@ -21,7 +21,7 @@ DPGetBackupList() {
     HOST=$1
   else
     HOST="`hostname`"
-  fi 1>&2
+  fi >&2
   test -f /tmp/dp_list_of_sessions.in && rm -f /tmp/dp_list_of_sessions.in
   touch /tmp/dp_list_of_sessions.in
   ${OMNIDB} -filesystem | grep "${HOST}" | cut -d"'" -f -2 > /tmp/dp_list_of_fs_objects
@@ -47,7 +47,7 @@ DPChooseBackup() {
     HOST=$1
   else
     HOST="`hostname`"
-  fi 1>&2
+  fi >&2
   LogPrint "Scanning for DP backups for Host ${HOST}"
   DPGetBackupList $HOST > /tmp/backup.list
   >/tmp/backup.list.part

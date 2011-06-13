@@ -10,7 +10,7 @@ while read -r ; do
 	Log " $REPLY"
 done < $BUILD_DIR/backup-exclude.txt
 
-mkdir -p $v "${BUILD_DIR}/netfs/${NETFS_PREFIX}"
+mkdir -p $v "${BUILD_DIR}/netfs/${NETFS_PREFIX}" >&2
 
 LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 ProgressStart "Preparing archive operation"
@@ -25,7 +25,7 @@ case "$BACKUP_PROG" in
 	;;
 	(rsync)
 		# make sure that the target is a directory
-		mkdir -p $v "$backuparchive" 1>&2
+		mkdir -p $v "$backuparchive" >&2
 		$BACKUP_PROG --sparse --archive --hard-links --one-file-system --verbose --delete --numeric-ids \
 			--exclude-from=$BUILD_DIR/backup-exclude.txt --delete-excluded \
 			$(cat $BUILD_DIR/backup-include.txt) "$backuparchive"
@@ -58,7 +58,7 @@ case "$BACKUP_PROG" in
 			blocks="$(tail -1 ${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
 			size="$((blocks*512))"
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
-			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" 1>&8
+			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
 		done
 		;;
 	(rsync)
@@ -71,7 +71,7 @@ case "$BACKUP_PROG" in
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			let disk_used="$(get_disk_used "$backuparchive")" size=disk_used-old_disk_used
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
-			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" 1>&8
+			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
 		done
 		;;
 	(*)
@@ -83,7 +83,7 @@ case "$BACKUP_PROG" in
 Killed the backup program and aborting."
 			}
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
-			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" 1>&8
+			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
 		done
 		;;
 esac
@@ -115,4 +115,4 @@ elif [ "$size" ]; then
 fi
 
 ### Copy progress log to backup media
-cp $v "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log"
+cp $v "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log" >&2

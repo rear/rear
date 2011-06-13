@@ -5,5 +5,5 @@
 # set the variable in config file /etc/rear/Linux-ia64.conf
 [ CREATE_LOCAL_EFI_DIR = false ] && return
 [ ! -f /boot/efi/efi/rear ] && mkdir -p /boot/efi/efi/rear
-cp $v $BUILD_DIR/mnt/boot/* /boot/efi/efi/rear/
+cp $v $BUILD_DIR/mnt/boot/* /boot/efi/efi/rear/ >&2
 Log "Populated the local EFI boot directory /boot/efi/efi/rear"

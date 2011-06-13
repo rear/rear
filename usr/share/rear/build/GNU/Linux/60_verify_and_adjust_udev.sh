@@ -11,7 +11,7 @@ while read file location ; do
 	if [[ -x $ROOTFS_DIR/$file || -x $ROOTFS_DIR/lib/udev/$file || -x $ROOTFS_DIR/bin/$file ]]; then
 		# everything is fine
 		# Log "matched external call to $file in $location"
-		echo "matched external call to $file in $location" 1>&8
+		echo "matched external call to $file in $location" >&8
 	else
 		Log "WARNING: unmatched external call to '$file' in $location"
 	fi

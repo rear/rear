@@ -38,8 +38,8 @@ if type -p sshd >/dev/null ; then
 		IFS=: read user ex uid gid gecos homedir junk <<<"$PASSWD_SSH"
 		# add ssh group to be collected later
 		CLONE_GROUPS=( "${CLONE_GROUPS[@]}" "$gid" )
-		mkdir -p $v -m 0700 "$ROOTFS_DIR$homedir"
-		chown $v root.root "$ROOTFS_DIR$homedir"
+		mkdir -p $v -m 0700 "$ROOTFS_DIR$homedir" >&2
+		chown $v root.root "$ROOTFS_DIR$homedir" >&2
 	fi
 
 	echo "ssh:23:respawn:/bin/sshd -D" >>$ROOTFS_DIR/etc/inittab

@@ -17,7 +17,7 @@ local path="/${ISO_URL#*://*/}"
 case "$scheme" in
     (file)
         LogPrint "Transferring ISO image to $path"
-        cp -a $v "$ISO_DIR/$ISO_PREFIX.iso" $path
+        cp -a $v "$ISO_DIR/$ISO_PREFIX.iso" $path >&2
         StopIfError "Problem transferring ISO image to $ISO_URL"
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)

@@ -98,7 +98,7 @@ while read old_device new_device size ; do
 	mkdir -p $TMP_DIR/new_devices/$(dirname $new_device)
 	StopIfError "Could not create '$TMP_DIR/new_devices/$(dirname $new_device)'" # could be /dev or /dev/cciss
 
-	cp -rv $VAR_DIR/recovery/$old_device $TMP_DIR/new_devices/$new_device 1>&2
+	cp -rv $VAR_DIR/recovery/$old_device $TMP_DIR/new_devices/$new_device >&2
 	StopIfError "Could not cp '$VAR_DIR/recovery/$old_device' '$TMP_DIR/new_devices/$new_device'" 
 		# e.g. ../dev/sda -> ../dev/cciss/c0d0
 
@@ -131,12 +131,12 @@ while read old_device new_device size ; do
 		mkdir -p $TMP_DIR/new_devices/$(dirname $new_dir)
 		StopIfError "Could not create '$TMP_DIR/new_devices/$(dirname $new_dir)'"
 
-		mv -v $VAR_DIR/recovery/$old_dir $TMP_DIR/new_devices/$new_dir 1>&2
+		mv -v $VAR_DIR/recovery/$old_dir $TMP_DIR/new_devices/$new_dir >&2
 		StopIfError "Could not mv '$VAR_DIR/recovery/$old_dir' '$TMP_DIR/new_devices/$new_dir'"
 		# e.g. ../dev/sda2 -> ../dev/cciss/c0d0p2
 	done
 
 done < $TMP_DIR/mappings/disk_devices
 
-cp -rv $TMP_DIR/new_devices/dev $VAR_DIR/recovery/ 1>&2
+cp -rv $TMP_DIR/new_devices/dev $VAR_DIR/recovery/ >&2
 StopIfError "Could not copy updated device information"

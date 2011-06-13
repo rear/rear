@@ -13,17 +13,17 @@ TSM_RESULT_FILES=()
 test -z "$TSM_RESULT_FILE_PATH" && TSM_RESULT_FILE_PATH=/tmp
 
 if ! test -d "$TSM_RESULT_FILE_PATH" ; then
-	 mkdir -p $v "$TSM_RESULT_FILE_PATH" 1>&8
+	 mkdir -p $v "$TSM_RESULT_FILE_PATH" >&2
 	 StopIfError "Could not create '$TSM_RESULT_FILE_PATH'"
 fi
 
 
 if test "$TSM_RESULT_FILE_PATH" != "/tmp" ; then
-	cp $v  "${RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH" 1>&8
+	cp $v  "${RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH" >&2
 	StopIfError "Could not copy result files to '$TSM_RESULT_FILE_PATH'"
 	TSM_RESULT_FILES=(
 		$(
-			for fname in "${RESULT_FILES[@]}" ; do 
+			for fname in "${RESULT_FILES[@]}" ; do
 				echo "$TSM_RESULT_FILE_PATH/$(basename "$fname")"
 			done
 		 )
@@ -33,13 +33,13 @@ else
 fi
 
 if test -s "$CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt" ; then
-	cp $v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "$TSM_RESULT_FILE_PATH/README" 1>&8
+	cp $v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "$TSM_RESULT_FILE_PATH/README" >&2
 	StopIfError "Could not copy '$CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt'"
 	TSM_RESULT_FILES=( "${TSM_RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH"/README )
 fi
 
 Log "Saving files '${TSM_RESULT_FILES[@]}' with dsmc"
-dsmc incremental "${TSM_RESULT_FILES[@]}" 1>&8
+dsmc incremental "${TSM_RESULT_FILES[@]}" >&8
 ret=$?
 # Error code 8 can be ignored, see bug report at
 # https://sourceforge.net/tracker/?func=detail&atid=859452&aid=1942895&group_id=171835

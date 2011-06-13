@@ -31,7 +31,7 @@ if tty -s <&1; then
 		progress_chars=( "\\" '|' '/' '-' )
 		while read command text ; do
 			if [ $debugoutput -eq 1 ] ; then
-				echo "PROGRESS: $command $text" 1>&3
+				echo "PROGRESS: $command $text" >&3
 			fi
 			if [ "$command" == "START" ] ; then
 				echo -en "\e[2K\r$text  \e7${progress_chars[0]}"
@@ -69,13 +69,13 @@ if tty -s <&1; then
 	}
 	
 	ProgressStep() {
-		echo noop 1>&8
+		echo noop >&8
 	}
 
 	ProgressStepSingleChar() {
 		while read -rn 1 ; do
-			echo noop 1>&8
-			echo -n "$REPLY" 1>&2
+			echo noop >&8
+			echo -n "$REPLY" >&2
 		done
 	}
 else

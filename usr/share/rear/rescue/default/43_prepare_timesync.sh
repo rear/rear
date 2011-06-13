@@ -29,7 +29,7 @@ case "$TIMESYNC" in
 esac
 
 if [[ -s $ROOTFS_DIR/etc/scripts/system-setup.d/90-timesync.sh ]]; then
-	chmod $v +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-timesync.sh
+	chmod $v +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-timesync.sh >&2
 fi
 
 true

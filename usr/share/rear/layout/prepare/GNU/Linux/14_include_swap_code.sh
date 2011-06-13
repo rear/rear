@@ -18,6 +18,6 @@ create_swap() {
     
     (
     echo "LogPrint \"Creating swap on $device\""
-    echo "mkswap ${uuid}${label}${device} 1>&2" 
+    echo "mkswap ${uuid}${label}${device} >&2"
     ) >> $LAYOUT_CODE
 }

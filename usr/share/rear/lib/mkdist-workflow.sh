@@ -21,7 +21,7 @@ WORKFLOW_mkdist_postprocess () {
 
 	# rename ebuild to current version if it does not have the current version
 	test -s .$SHARE_DIR/contrib/rear-$VERSION.ebuild ||\
-		mv $v .$SHARE_DIR/contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild 1>&8
+		mv $v .$SHARE_DIR/contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild >&2
 	StopIfError "Could not mv rear-*.ebuild"
 
 
@@ -32,22 +32,22 @@ WORKFLOW_mkdist_postprocess () {
 	fi
 
 	# reverted back to symlinking because we put more MegaByte into doc and should not package it twice
-	ln -s $v .$SHARE_DIR/{doc,contrib}  .  1>&8
+	ln -s $v .$SHARE_DIR/{doc,contrib} . >&2
 	# to prevent RPMs from installing symlinks into the doc area we actually copy the text files
-	cp -r $v .$SHARE_DIR/{COPYING,README,AUTHORS,TODO}  .  1>&8
+	cp -r $v .$SHARE_DIR/{COPYING,README,AUTHORS,TODO} . >&2
 	StopIfError "Could not copy .$SHARE_DIR/{COPYING,README,AUTHORS,TODO,doc,contrib}"
 	
 
 # I want the generic SPEC file to be always shipped 2009-11-16 Schlomo
 	sed -i -e "s/Version:.*/Version: $VERSION/" .$SHARE_DIR/lib/rear.spec
-	chmod 644 .$SHARE_DIR/lib/rear.spec
+	chmod $v 644 .$SHARE_DIR/lib/rear.spec >&2
 #	cp -fp .$SHARE_DIR/lib/rear.spec $SHARE_DIR/lib/rear.spec
 
 	# remove current recovery information (pre-1.7.15)
-	rm -Rf $v .$CONFIG_DIR/recovery
+	rm -Rf $v .$CONFIG_DIR/recovery >&2
 
 	# remove development files
-	rm -Rf $v .project .settings .externalToolBuilders
+	rm -Rf $v .project .settings .externalToolBuilders >&2
 
 	cat >./$CONFIG_DIR/local.conf <<EOF
 # sample local configuration
@@ -86,7 +86,7 @@ WORKFLOW_mkdist () {
 	distarchive="/tmp/$prod_ver.tar.gz"
 	LogPrint "Creating archive '$distarchive'"
 
-	mkdir $BUILD_DIR/$prod_ver -v 1>&8
+	mkdir $BUILD_DIR/$prod_ver -v >&8
 	StopIfError "Could not mkdir $BUILD_DIR/$prod_ver"
 
 	# use tar to copy the current rear while excluding development and obsolete files
@@ -95,16 +95,16 @@ WORKFLOW_mkdist () {
 			"$SHARE_DIR" \
 			"$CONFIG_DIR" \
 			"$(type -p "$0")" |\
-		tar -C $BUILD_DIR/$prod_ver -x 1>&8
+		tar -C $BUILD_DIR/$prod_ver -x >&8
 	StopIfError "Could not copy files to $BUILD_DIR/$prod_ver"
 	
-	pushd $BUILD_DIR/$prod_ver 1>&8
+	pushd $BUILD_DIR/$prod_ver >&8
 	StopIfError "Could not pushd $BUILD_DIR/$prod_ver"
 
 	WORKFLOW_mkdist_postprocess
 
-	popd 1>&8
-	tar -C $BUILD_DIR -cvzf $distarchive $prod_ver 1>&8
+	popd >&8
+	tar -C $BUILD_DIR -cvzf $distarchive $prod_ver >&8
 	StopIfError "Could not create $distarchive"
 
 }

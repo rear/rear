@@ -5,4 +5,4 @@ cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-xinetd.sh <<-EOF
 echo "Starting a minimal xinetd daemon ..."
 xinetd
 EOF
-chmod $v +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-xinetd.sh
+chmod $v +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-xinetd.sh >&2

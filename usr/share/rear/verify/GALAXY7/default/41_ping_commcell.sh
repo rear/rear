@@ -5,8 +5,8 @@ if test "$PING" ; then
 		grep CSHOSTNAME /etc/CommVaultRegistry/Galaxy/Instance001/CommServe/.properties
 	)
 	if test "$CSHOSTNAME" ; then
-		ping -c 5 -q "$CSHOSTNAME" 1>&2 ||\
-			Error "Backup server [$CSHOSTNAME] not reachable !"
+		ping -c 5 -q "$CSHOSTNAME" >&2
+		StopIfError "Backup server [$CSHOSTNAME] not reachable !"
 	else
 		LogPrint "WARNING ! Could not determine CommServe hostname !"
 		Log "Please check /etc/CommVaultRegistry/Galaxy/Instance001/CommServe/.properties"

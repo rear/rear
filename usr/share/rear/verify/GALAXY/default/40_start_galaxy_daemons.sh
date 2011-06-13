@@ -9,7 +9,7 @@ fi
 
 if test "$GALAXY_COMMCELL" ; then
 	if test "$PING" ; then
-		ping -c 5 -q "$GALAXY_COMMCELL" 1>&2 ||\
+		ping -c 5 -q "$GALAXY_COMMCELL" >&2 ||\
 			Error "Backup server [$GALAXY_COMMCELL] not reachable !"
 	else
 		Log "Skipping ping test"

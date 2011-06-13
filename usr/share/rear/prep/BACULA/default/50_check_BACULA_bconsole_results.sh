@@ -17,7 +17,7 @@ BACULA_DIRECTOR=$(grep -i address /etc/bacula/bconsole.conf | awk '{ print $3 }'
 StopIfError "Director not defined in /etc/bacula/bconsole.conf"
 
 if test "$PING"; then
-	ping -c 2 -q  $BACULA_DIRECTOR 1>&8
+	ping -c 2 -q  $BACULA_DIRECTOR >&8
 	StopIfError "Backup host [$BACULA_DIRECTOR] not reachable."
 else
 	Log "Skipping ping test"

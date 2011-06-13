@@ -23,7 +23,7 @@ SGLX_FILES="/etc/sysconfig/keyboard
 [ -d /usr/local/cmcluster/conf -o -d /opt/cmcluster/conf ] || return
 
 # Phase 2: create a /etc/rear/recovery/sglx directory
-mkdir -p $v -m755 "$VAR_DIR/recovery/sglx"
+mkdir -p $v -m755 "$VAR_DIR/recovery/sglx" >&2
 StopIfError "Could not create sglx configuration directory: $VAR_DIR/recovery/sglx"
 
 SGLX_DIR="$VAR_DIR/recovery/sglx"
@@ -31,9 +31,9 @@ SGLX_DIR="$VAR_DIR/recovery/sglx"
 for sgf in $SGLX_FILES
 do
 	if [ `dirname ${sgf}` != . ]; then
-		mkdir -p $v ${SGLX_DIR}/`dirname ${sgf}` 2>/dev/null
+		mkdir -p $v ${SGLX_DIR}/`dirname ${sgf}` >&2
 	fi
 	if [ -f ${sgf} ]; then
-		cp $v ${sgf} ${SGLX_DIR}${sgf}
+		cp $v ${sgf} ${SGLX_DIR}${sgf} >&2
 	fi
 done

@@ -41,7 +41,7 @@ create_lvmdev() {
     if [ -n "$uuid" ] ; then
         uuidopt=" --uuid \"$uuid\""
     fi
-    echo "lvm pvcreate -ff --yes -v$uuidopt$restorefileopt $device 1>&2"
+    echo "lvm pvcreate -ff --yes -v$uuidopt$restorefileopt $device >&2"
     ) >> $LAYOUT_CODE
 }
 
@@ -57,8 +57,8 @@ LogPrint "Creating LVM VG ${vgrp#/dev/}"
 if [ -e $vgrp ] ; then
     rm -rf $vgrp
 fi
-lvm vgcreate --physicalextentsize ${extentsize}k ${vgrp#/dev/} ${devices[@]} 1>&2
-lvm vgchange --available y ${vgrp#/dev/} 1>&2
+lvm vgcreate --physicalextentsize ${extentsize}k ${vgrp#/dev/} ${devices[@]} >&2
+lvm vgchange --available y ${vgrp#/dev/} >&2
 EOF
 }
 
@@ -71,8 +71,8 @@ LogPrint "Restoring LVM VG ${vgrp#/dev/}"
 if [ -e $vgrp ] ; then
     rm -rf $vgrp
 fi
-lvm vgcfgrestore -f $VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg ${vgrp#/dev/} 1>&2
-lvm vgchange --available y ${vgrp#/dev/} 1>&2
+lvm vgcfgrestore -f $VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg ${vgrp#/dev/} >&2
+lvm vgchange --available y ${vgrp#/dev/} >&2
 EOF
 }
 
@@ -83,6 +83,6 @@ create_lvmvol() {
 
     (
     echo "LogPrint \"Creating LVM volume ${vgrp#/dev/}/$lvname\""
-    echo "lvm lvcreate -l $nrextents -n ${lvname} ${vgrp#/dev/} 1>&2"
+    echo "lvm lvcreate -l $nrextents -n ${lvname} ${vgrp#/dev/} >&2"
     ) >> $LAYOUT_CODE
 }

@@ -31,7 +31,7 @@ WORKFLOW_mktar () {
 	"
 	
 	LogPrint "Creating archive '$ARGS'"
-	tar -C / --exclude=\*~ -cvzf "$ARGS" "$SHARE_DIR" "$CONFIG_DIR" "$(type -p "$0")" 1>&2
+	tar -C / --exclude=\*~ -cvzf "$ARGS" "$SHARE_DIR" "$CONFIG_DIR" "$(type -p "$0")" >&2
 	StopIfError "Could not create archive"
 	
 }

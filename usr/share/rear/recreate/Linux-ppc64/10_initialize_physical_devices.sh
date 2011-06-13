@@ -12,11 +12,11 @@ while read device junk ; do
 	
 	# Restore partition table
 	if test -s $VAR_DIR/recovery$device/sfdisk.partitions ; then
-		sfdisk --force $device <$VAR_DIR/recovery$device/sfdisk.partitions 1>&8
+		sfdisk --force $device <$VAR_DIR/recovery$device/sfdisk.partitions >&8
 		StopIfError "Could not restore partition table to '$device'"
 	else
 		Log "Skipping partitioning '$device' (no sfdisk.partitions found)"
-		sfdisk -R $device 1>&2
+		sfdisk -R $device >&2
 		StopIfError "Could not re-read '$device', probably it is busy."
 	fi
 

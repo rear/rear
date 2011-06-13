@@ -78,7 +78,7 @@ esac
 
 # check if host is reachable
 if test "$PING" ; then
-	ping -c 2 "$RSYNC_HOST" 1>&8
+	ping -c 2 "$RSYNC_HOST" >&8
 	StopIfError "Backup host [$RSYNC_HOST] not reachable."
 else
 	Log "Skipping ping test"
@@ -89,13 +89,13 @@ case "$RSYNC_PROTO" in
 
 	(rsync)
 		Log "Test: $BACKUP_PROG ${RSYNC_PROTO}://${RSYNC_HOST}:${RSYNC_PORT}/"
-		$BACKUP_PROG ${RSYNC_PROTO}://${RSYNC_HOST}:${RSYNC_PORT}/ 1>&8
+		$BACKUP_PROG ${RSYNC_PROTO}://${RSYNC_HOST}:${RSYNC_PORT}/ >&8
 		StopIfError "Rsync daemon not running on $RSYNC_HOST" 
 		;;
 
 	(ssh)
 		Log "Test: ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true"
-		ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true 2>/dev/null 1>&8
+		ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true 2>/dev/null >&8
 		StopIfError "Secure shell connection not setup properly [$RSYNC_USER@$RSYNC_HOST]"
 		;;
 

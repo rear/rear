@@ -21,8 +21,8 @@
 # finding elilo.efi is now done in the prep stage, not here.
 # therefore ELILO_BIN for sure contains the full path to elilo.efi
 
-mkdir $v -p $BUILD_DIR/mnt/boot
-cp -L $v "$ELILO_BIN" $BUILD_DIR/mnt/boot
+mkdir $v -p $BUILD_DIR/mnt/boot >&2
+cp -L $v "$ELILO_BIN" $BUILD_DIR/mnt/boot >&2
 StopIfError "Could not find $ELILO_BIN"
 
 cp $v $BUILD_DIR/initrd.cgz $BUILD_DIR/mnt/boot
@@ -31,7 +31,7 @@ cp $v $BUILD_DIR/initrd.cgz $BUILD_DIR/mnt/boot
 #cp "${VMLINUX_KERNEL}" $BUILD_DIR/mnt/boot/kernel
 
 # KERNEL_FILE is defined in pack/Linux-ia64/30_copy_kernel.sh script
-cp $v "${KERNEL_FILE}" $BUILD_DIR/mnt/boot/kernel
+cp $v "${KERNEL_FILE}" $BUILD_DIR/mnt/boot/kernel >&2
 StopIfError "Could not find ${KERNEL_FILE}"
 
 echo "$VERSION_INFO" >$BUILD_DIR/mnt/boot/message

@@ -20,7 +20,7 @@
 
 # create yaboot directory structure
 mkdir -p -v $BUILD_DIR/ppc
-cp $v /usr/lib/yaboot/yaboot $BUILD_DIR/ppc/chrp
+cp $v /usr/lib/yaboot/yaboot $BUILD_DIR/ppc/chrp >&2
 
 cat >"$BUILD_DIR/ppc/bootinfo.txt" <<EOF
 <chrp-boot>
@@ -30,7 +30,7 @@ cat >"$BUILD_DIR/ppc/bootinfo.txt" <<EOF
 </chrp-boot>
 EOF
 
-mkdir -p $v $BUILD_DIR/etc
+mkdir -p $v $BUILD_DIR/etc >&2
 cat >"$BUILD_DIR/etc/yaboot.conf" <<EOF
 init-message = "\nReaR boot\n\n"
 timeout=100
