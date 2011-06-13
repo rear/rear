@@ -45,7 +45,10 @@ $(
 	done
 )
 
-The logfile is ${LOGFILE%%.lockless}
 EOF
+
+if [[ -z "$VERBOSE" ]]; then
+	echo "Use 'rear -v help' for more advanced commands."
+fi
 	EXIT_CODE=1
 }

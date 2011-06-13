@@ -87,7 +87,7 @@ recover::
 validate::
     submit validation information
 
-More commands are available when running: +rear help -v+
+Use 'rear -v help' for more advanced commands.
 
 
 == BACKGROUND INFORMATION
