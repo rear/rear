@@ -36,3 +36,7 @@
   - leave the default as it was before $(uname -n) to support existing setups
   - make the code robust enought to handle all kind of static and dynamic NETFS_PREFIX scenarios, regardless of how the path looks
   - write documentation how users can enable advanced stuff through setting a smarter NETFS_PREFIX, provide examples
+
+* avoid disabling selinux during backup
+  - add --selinux option to tar and testing
+  - rsync -X option tests required
