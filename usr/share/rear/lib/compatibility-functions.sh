@@ -42,7 +42,7 @@ elif has_binary udev_volume_id; then
 			-e "s/^U:\(.*\)/ID_FS_UUID='\1'/" | grep =
 	}
 # NOTE: We use blkid ONLY if it is a newer one and reports information back in udev-style
-elif has_binary blkid && has_binary udev; then
+elif has_binary blkid && blkid -o udev >&8 2>&1; then
 	Debug "Using 'blkid' for vol_id"
 	# since udev 142 vol_id was removed and udev depends on blkid
 	# blkid -o udev returns the same output as vol_id used to
