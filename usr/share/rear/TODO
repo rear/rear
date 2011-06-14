@@ -1,3 +1,8 @@
+Relax and Recovery TODO
+=======================
+
+A list of items that wait for someone to volunteer to fix :)
+
 * reboot on Ubuntu rescue media broken
 	- Probably we miss some script or config for upstart
 
@@ -29,6 +34,7 @@
 	- ia64 architecture will not support Linux anymore in future? Dropped off the list in RHEL6.
 
 * Can we drop the mkvendorrpm workflow?
+  - merge the default SPEC file with the Fedora specific SPEC file
 
 * Support dhcpcd (SLES11) in addition to dhclient
 
