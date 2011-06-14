@@ -18,7 +18,7 @@ StopIfError "Failed to find kernel, updating GRUB failed."
 StopIfError "Failed to find initrd.cgz, updating GRUB failed."
 
 function total_filesize {
-    stat --printf '%s\n' $@ 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
+    stat --format '%s' $@ 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
 }
 
 available_space=$(df -Pk /boot | awk 'END { print $4 * 1024 }')

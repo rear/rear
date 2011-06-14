@@ -51,7 +51,7 @@ starttime=$SECONDS
 sleep 1 # Give the backup software a good chance to start working
 
 function get_size () {
-	echo $(stat --printf '%s' "/$1")
+	echo $(stat --format '%s' "/$1")
 }
 
 # make sure that we don't fall for an old size info

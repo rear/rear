@@ -1,7 +1,7 @@
 # Restore the remote backup via RSYNC
 
 function get_size () {
-	echo $(stat --printf '%s' "/mnt/local/$1")
+	echo $(stat --format '%s' "/mnt/local/$1")
 }
 
 mkdir -p "${BUILD_DIR}/rsync/${NETFS_PREFIX}"
