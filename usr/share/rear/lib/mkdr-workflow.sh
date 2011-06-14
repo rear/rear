@@ -10,7 +10,4 @@ WORKFLOW_mkdr () {
 	SourceStage "prep"
 	
 	SourceStage "dr"
-	
-	SourceStage "cleanup"
-	
 }

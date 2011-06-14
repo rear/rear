@@ -26,11 +26,10 @@ WORKFLOW_checklayout () {
     TEMP_LAYOUT=$TMP_DIR/checklayout.conf
 
     SourceStage "layout/precompare"
-    
+
+    AddExitTask "rm -f $TEMP_LAYOUT"
     DISKLAYOUT_FILE=$TEMP_LAYOUT
     SourceStage "layout/save"
-    
+
     SourceStage "layout/compare"
-    
-    SourceStage "layout/cleanup"
 }

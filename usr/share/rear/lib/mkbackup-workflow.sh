@@ -12,23 +12,20 @@ WORKFLOW_mkbackup () {
 	done
 
 	SourceStage "prep"
-	
+
 	if [[ -z "$USE_LAYOUT" ]]; then
 		SourceStage "dr"
 	fi
-	
+
 	SourceStage "layout/save"
-	
+
 	SourceStage "rescue"
-	
+
 	SourceStage "build"
-	
+
 	SourceStage "pack"
-	
+
 	SourceStage "output"
 
 	SourceStage "backup"
-		
-	SourceStage "cleanup"
-	
 }

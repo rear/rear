@@ -87,7 +87,7 @@ function trap () {
 
 # Check if any of the binaries/aliases exist
 has_binary() {
-	for $bin in $@; do
+	for bin in $@; do
 		if type $bin >&8 2>&1; then
 			return 0
 		fi

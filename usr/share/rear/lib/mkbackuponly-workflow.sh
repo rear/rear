@@ -13,18 +13,5 @@ WORKFLOW_mkbackuponly () {
 
 	SourceStage "prep"
 	
-	#SourceStage "dr"
-	
-	#SourceStage "rescue"
-	
-	#SourceStage "build"
-	
-	#SourceStage "pack"
-	
 	SourceStage "backup"
-	
-	#SourceStage "output"
-	
-	SourceStage "cleanup"
-	
 }

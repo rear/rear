@@ -25,10 +25,14 @@ WORKFLOW_format () {
 
 	if [[ -z "$DEVICE" ]]; then
 		Error "No device provided as argument."
+	elif [[ -c "$DEVICE" ]]; then
+		OUTPUT=OBDR
+	elif [[ -b "$DEVICE" ]]; then
+		OUTPUT=USB
+	else
+		Error "Device $DEVICE is not a character, not a block device."
 	fi
 
 	SourceStage "format"
-
-	SourceStage "cleanup"
 
 }
