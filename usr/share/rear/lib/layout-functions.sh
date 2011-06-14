@@ -202,7 +202,7 @@ version_newer() {
   local pos
   for pos in $(seq 0 $(( max -1 ))); do
     ### Arithmetic comparison
-    if (( 10#0${v1list[$pos]} >= 0 && 10#0${v2list[$pos]} >= 0 )) 2>/dev/null; then
+    if (( 10#0${v1list[$pos]} >= 0 && 10#0${v2list[$pos]} >= 0 )) 2>&8; then
 #      echo "pos $pos: arithm ${v1list[$pos]} vs ${v2list[$pos]}"
       if (( 10#0${v1list[$pos]} < 10#0${v2list[$pos]} )); then
         return 1

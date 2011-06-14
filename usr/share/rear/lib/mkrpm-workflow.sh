@@ -10,7 +10,7 @@ fi
 WORKFLOWS=( ${WORKFLOWS[@]} mkrpm )
 WORKFLOW_mkrpm () {
 
-	type -p rpmbuild >/dev/null
+	has_binary rpmbuild
 	StopIfError "Please install 'rpmbuild' into your PATH."
 
 	# create dist archives

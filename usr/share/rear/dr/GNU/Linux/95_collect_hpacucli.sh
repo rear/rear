@@ -4,13 +4,13 @@
 #
 
 # do nothing unless we have hpacucli in our path
-if ! type -p hpacucli >/dev/null; then
+if ! has_binary hpacucli; then
     return
 fi
 
 # add hpacucli to rescue media
 PROGS=( "${PROGS[@]}" hpacucli )
-eval $(grep ON_DIR= $(type -p hpacucli))
+eval $(grep ON_DIR= $(get_path hpacucli))
 COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR" )
 
 # step 1) find out slots

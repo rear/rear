@@ -25,7 +25,7 @@
 if [ ! -s "$KERNEL_FILE" ]; then
 	if [ -r "/boot/vmlinuz-$KERNEL_VERSION" ]; then
 		KERNEL_FILE="/boot/vmlinuz-$KERNEL_VERSION"
-	elif type -p get_kernel_version &>/dev/null; then
+	elif has_binary get_kernel_version; then
 		for src in /boot/* ; do
 			if VER=$(get_kernel_version "$src") && test "$VER" == "$KERNEL_VERSION" ; then
 				KERNEL_FILE="$src"

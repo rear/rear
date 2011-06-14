@@ -33,7 +33,7 @@ label rear
 	append initrd=$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 EOF
 
-pushd "$PXE_LOCAL_PATH" >/dev/null
+pushd "$PXE_LOCAL_PATH" >&8
 StopIfError "PXE_CONFIG_PATH [$PXE_CONFIG_PATH] does not exist !"
 if test "$PXE_CREATE_LINKS" -a "$PXE_REMOVE_OLD_LINKS" ; then
 	# remove old links
@@ -68,7 +68,7 @@ case "$PXE_CREATE_LINKS" in
 		Error "Invalid PXE_CREATE_LINKS specified, must be MAC or IP or ''"
 		;;
 esac
-popd >/dev/null
+popd >&8
 
 #TODO: umount remote PXE server
 

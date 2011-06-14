@@ -13,7 +13,7 @@ while read file location ; do
 		# Log "matched external call to $file in $location"
 		echo "matched external call to $file in $location" >&8
 	else
-		Log "WARNING: unmatched external call to '$file' in $location"
+		Debug "WARNING: unmatched external call to '$file' in $location"
 	fi
 done < <(
 

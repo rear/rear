@@ -12,7 +12,7 @@ if [[ -z "$USE_CFG2HTML" && -z "$SKIP_CFG2HTML" ]]; then
 fi
 
 # No cfg2html binary, skip this script
-if ! type -p cfg2html &>/dev/null; then
+if ! has_binary cfg2html; then
     Log "cfg2html has not been found on the system, skipping cfg2html."
     return
 fi

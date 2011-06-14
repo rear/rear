@@ -1,12 +1,12 @@
 # Collect HP Smartarray information
 
-if ! type hpacucli &>/dev/null ; then
+if ! has_binary hpacucli; then
     return
 fi
 
 # Add hpacucli to the rescue image
 PROGS=( "${PROGS[@]}" hpacucli )
-eval $(grep ON_DIR= $(type -p hpacucli))
+eval $(grep ON_DIR= $(get_path hpacucli))
 COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR" )
 
 Log "Saving HP SmartArray configuration."

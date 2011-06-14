@@ -39,7 +39,7 @@ EOF
 
             local tunefs="tune2fs"
             # on RHEL 5, tune2fs does not work on ext4
-            if [ "$fstype" = "ext4" ] && type -p tune4fs &>/dev/null ; then
+            if [ "$fstype" = "ext4" ] && has_binary tune4fs; then
                 tunefs="tune4fs"
             fi
 

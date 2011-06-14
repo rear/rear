@@ -49,7 +49,7 @@ WORKFLOW_mkdist_postprocess () {
 	# remove development files
 	rm -Rf $v .project .settings .externalToolBuilders >&2
 
-	cat >./$CONFIG_DIR/local.conf <<EOF
+	cat <<EOF >./$CONFIG_DIR/local.conf
 # sample local configuration
 
 # Create ReaR rescue media as ISO image
@@ -66,7 +66,7 @@ WORKFLOW_mkdist_postprocess () {
 EOF
 	
 	# this little hack writes the same content into all these files...
-	tee ./$CONFIG_DIR/templates/PXE_pxelinux.cfg >/dev/null <<EOF
+	cat <<EOF >./$CONFIG_DIR/templates/PXE_pxelinux.cfg
 default hd
 prompt 1
 timeout 300
@@ -94,7 +94,7 @@ WORKFLOW_mkdist () {
        		 --exclude=\*.rpmnew\* --exclude=.\*.swp -cv \
 			"$SHARE_DIR" \
 			"$CONFIG_DIR" \
-			"$(type -p "$0")" |\
+			"$(get_path "$0")" |\
 		tar -C $BUILD_DIR/$prod_ver -x >&8
 	StopIfError "Could not copy files to $BUILD_DIR/$prod_ver"
 	

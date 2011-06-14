@@ -4,7 +4,7 @@
 # Enable serial console if possible, when not specified
 if [[ -z "$USE_SERIAL_CONSOLE" ]]; then
     for devnode in $(ls /dev/ttyS[0-9]* | sort); do
-        if stty -F $devnode &>/dev/null; then
+        if stty -F $devnode >&8 2>&1; then
             USE_SERIAL_CONSOLE=y
         fi
     done
@@ -15,10 +15,10 @@ if [[ ! "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
     return
 fi
 
-if type -p getty &>/dev/null; then
+if has_binary getty; then
     # Debian, Ubuntu,...
     GETTY=getty
-elif type -p agetty &>/dev/null; then
+elif has_binary agetty; then
     # Fedora, RHEL, SLES,...
     GETTY=agetty
 else

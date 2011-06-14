@@ -46,11 +46,11 @@ WORKFLOW_udev () {
     fi
 
     # If udev workflow does not exist, bail out loudly
-    type -t WORKFLOW_$WORKFLOW >/dev/null
+    has_binary WORKFLOW_$WORKFLOW
     StopIfError "Udev workflow '$UDEV_WORKFLOW' does not exist"
 
     # Turn the UID led on
-    if type -p hpasmcli &>/dev/null && [[ "$UDEV_UID_LED" =~ ^[yY1] ]]; then
+    if has_binary hpasmcli && [[ "$UDEV_UID_LED" =~ ^[yY1] ]]; then
         hpasmcli -s "set uid on" >&8
     fi
 
@@ -58,7 +58,7 @@ WORKFLOW_udev () {
     WORKFLOW_$UDEV_WORKFLOW "${ARGS[@]}"
 
     # Blink the UID led and turn it off
-    if type -p hpasmcli &>/dev/null && [[ "$UDEV_UID_LED" =~ ^[yY1] ]]; then
+    if has_binary hpasmcli && [[ "$UDEV_UID_LED" =~ ^[yY1] ]]; then
         hpasmcli -s "set uid off" >&8; sleep 0.5
         hpasmcli -s "set uid on" >&8; sleep 0.5
         hpasmcli -s "set uid off" >&8; sleep 0.5
@@ -84,7 +84,7 @@ WORKFLOW_udev () {
         ### Make sure we have a PC speaker driver loaded
         if grep -q pcpskr /proc/modules || modprobe pcspkr; then
             Log "Beep through PC speaker."
-            if type -p beep &>/dev/null; then
+            if has_binary beep; then
                 # After testing in a noisy datacenter, this seems the best
                 # (although it takes up 4 seconds)
                 beep -f 2000 -l 1000 -d 500 -r 3 >&8

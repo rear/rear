@@ -1,7 +1,7 @@
 # Describe luks devices
 # We use /etc/crypttab and cryptsetup for information
 
-if ! type cryptsetup &>/dev/null ; then
+if ! has_binary cryptsetup; then
     return
 fi
 
@@ -9,7 +9,7 @@ Log "Saving Encrypted volumes."
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" cryptsetup )
 
 for device in /dev/mapper/* ; do
-    if ! cryptsetup isLuks $device &>/dev/null; then
+    if ! cryptsetup isLuks $device >&8 2>&1; then
         continue
     fi
     

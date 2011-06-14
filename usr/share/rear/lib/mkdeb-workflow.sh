@@ -10,7 +10,7 @@ fi
 WORKFLOWS=( ${WORKFLOWS[@]} mkdeb )
 WORKFLOW_mkdeb () {
 
-	type -p dpkg >/dev/null
+	has_binary dpkg
 	StopIfError "Please install 'dpkg' into your PATH."
 
 	# create dist archives

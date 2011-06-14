@@ -9,7 +9,7 @@
 # 2007-01-04	GSS	Added general vgcfgbackup
 
 # silently skip the script if lvm is not available
-test -c /dev/mapper/control -a -x "$(type -p lvm)" || return	# silently skip
+test -c /dev/mapper/control -a -x "$(get_path lvm)" || return	# silently skip
 
 mkdir -p "${VAR_DIR}/recovery/lvm"
 StopIfError "Creating directory ${VAR_DIR}/recovery/lvm"

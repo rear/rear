@@ -18,8 +18,8 @@
 #
 #
 
-pushd $ROOTFS_DIR >/dev/null
-	touch var/log/lastlog	
+pushd $ROOTFS_DIR >&8
+	touch var/log/lastlog
 	touch var/lib/nfs/state
 	touch etc/mtab
-popd >/dev/null
+popd >&8

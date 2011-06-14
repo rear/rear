@@ -16,7 +16,7 @@ BugIfError "The sed script for the disk device mappings
 is missing, it should be defined in verify/GNU/Linux/21_migrate_recovery_configuration.sh."
 
 # now run sed
-pushd /mnt/local >/dev/null
+pushd /mnt/local >&8
 # the funny [] around the first letter make sure that shopt -s nullglob removes this file from the list if it does not exist
 # the files without a [] are mandatory, like fstab
 for file in 	[b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/{grub.conf,menu.lst,device.map} \
@@ -56,4 +56,4 @@ if grep -q "^/dev/disk/by-id/.*swap" etc/fstab ; then
 		echo "$swap_device 	swap	swap	defaults	0 0" >> etc/fstab
 	done
 fi
-popd >/dev/null
+popd >&8

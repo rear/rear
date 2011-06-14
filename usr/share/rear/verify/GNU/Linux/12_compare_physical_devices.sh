@@ -58,7 +58,7 @@ for device in $(cat $VAR_DIR/recovery/required_devices) ; do
 
 	# size is set in 11_describe_device_properties.sh
 	original_size="$(cat $VAR_DIR/recovery$device/size)"
-	size="$(cat ${TMP_DIR}$device/size 2>/dev/null )"
+	size="$(cat ${TMP_DIR}$device/size 2>&8 )"
 	test "$size" || size=0 # set size to sane value if unknown
 
 	

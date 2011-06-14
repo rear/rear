@@ -193,7 +193,7 @@ change_resolv_conf ()
           s=$(cat $1);
        fi;
     fi;
-    (echo "$s" > /etc/resolv.conf;) >/dev/null 2>&1;
+    (echo "$s" > /etc/resolv.conf;) &>/dev/null;
     r=$?
     if [ $r -eq 0 ]; then
         logger -p local7.notice -t "NET" -i "$0 : updated /etc/resolv.conf";
@@ -338,9 +338,9 @@ add_default_gateway() {
 flush_dev() {
 # Instead of bringing the interface down (#574568)
 # explicitly clear the ARP cache and flush all addresses & routes.
-    ip -4 addr flush dev ${1} >/dev/null 2>&1
-    ip -4 route flush dev ${1} >/dev/null 2>&1
-    ip -4 neigh flush dev ${1} >/dev/null 2>&1
+    ip -4 addr flush dev ${1} &>/dev/null
+    ip -4 route flush dev ${1} &>/dev/null
+    ip -4 neigh flush dev ${1} &>/dev/null
 }
 
 dhconfig() {
@@ -493,7 +493,7 @@ dhconfig() {
 
     if [ ! "${new_ip_address}" = "${alias_ip_address}" ] &&
        [ -n "${alias_ip_address}" ]; then
-        ip -4 addr flush dev ${interface}:0 >/dev/null 2>&1
+        ip -4 addr flush dev ${interface}:0 &>/dev/null
         ip -4 addr add ${alias_ip_address}/${alias_prefix} dev ${interface}:0
         ip -4 route replace ${alias_ip_address}/32 dev ${interface}:0
     fi
@@ -632,7 +632,7 @@ need_hostname ()
 set_hostname ()
 {
     hostname $1
-    if ! grep search /etc/resolv.conf >/dev/null 2>&1; then
+    if ! grep -q search /etc/resolv.conf; then
         domain=$(echo $1 | sed 's/^[^\.]*\.//')
         if [ -n "$domain" ]; then
                 rsctmp=$(mktemp /tmp/XXXXXX);
@@ -655,8 +655,8 @@ check_device_down ()
 
 check_link_down ()
 {
-        if ! LC_ALL=C ip link show dev $1 2>/dev/null| grep -q ",UP" ; then
-           ip link set dev $1 up >/dev/null 2>&1
+        if ! LC_ALL=C ip link show dev $1 2>/dev/null | grep -q ",UP" ; then
+           ip link set dev $1 up &>/dev/null
         fi
         timeout=0
         delay=10

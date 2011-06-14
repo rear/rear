@@ -18,7 +18,7 @@ Get_Start_Date ()
 # output: mm/dd/yyyy (string)
 # Recent_Month_Hour="Nov 12 20:45" is a possible output
 Recent_Month_Hour=""	# make it empty to start with
-Recent_Month_Hour=`LANG=C /usr/openv/netbackup/bin/bplist -l -s \`date -d "-5 days" "+%m/%d/%Y"\` $1 2>/dev/null | head -n 1 | awk '{print $5,$6,$7}'`
+Recent_Month_Hour=`LANG=C /usr/openv/netbackup/bin/bplist -l -s \`date -d "-5 days" "+%m/%d/%Y"\` $1 2>&8 | head -n 1 | awk '{print $5,$6,$7}'`
 [ "${Recent_Month_Hour}" ]
 StopIfError "Netbackup bplist cannot get last backup timestamp of $1"
 

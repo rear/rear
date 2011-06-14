@@ -3,12 +3,12 @@
 case $RSYNC_PROTO in
 
 	(ssh)
-		ssh ${RSYNC_USER}@${RSYNC_HOST} "ls -ld ${RSYNC_PATH}/${RSYNC_PREFIX}/backup" 1>/dev/null  2>&1
+		ssh ${RSYNC_USER}@${RSYNC_HOST} "ls -ld ${RSYNC_PATH}/${RSYNC_PREFIX}/backup" >&8 2>&1
 		StopIfError "Archive not found on [$RSYNC_USER@$RSYNC_HOST:${RSYNC_PATH}/${RSYNC_PREFIX}]"
 		;;
 
 	(rsync)
-		$BACKUP_PROG "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup" 1>/dev/null  2>&1
+		$BACKUP_PROG "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup" >&8 2>&1
 		StopIfError "Archive not found on [$RSYNC_USER@$RSYNC_HOST:${RSYNC_PATH}/${RSYNC_PREFIX}]"
 		;;
 esac

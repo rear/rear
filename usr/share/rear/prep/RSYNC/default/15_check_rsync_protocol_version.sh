@@ -4,7 +4,7 @@
 case $RSYNC_PROTO in
 
 	(ssh)
-		ssh ${RSYNC_USER}@${RSYNC_HOST} rsync --version >"$TMP_DIR/rsync_protocol" 2>/dev/null
+		ssh ${RSYNC_USER}@${RSYNC_HOST} rsync --version >"$TMP_DIR/rsync_protocol" >&8 2>&1
 		StopIfError "Secure shell connection not setup properly [$RSYNC_USER@$RSYNC_HOST]"
 		grep -q "protocol version" "$TMP_DIR/rsync_protocol"
 		if [ $? -eq 0 ]; then

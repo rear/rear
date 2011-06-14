@@ -135,13 +135,13 @@ for script in $SHARE_DIR/lib/*.sh ; do
 	source $script
 done
 
-if ! type -p pidof >/dev/null ; then
+if ! has_binary pidof; then
 	echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
 	exit 1
 fi
 
 # do not run if another instance is running. pidof -x will always report at least $$
-SCRIPT_FILE="$(readlink -f $(type -p "$0" || echo "$0"))"
+SCRIPT_FILE="$(readlink -f $(get_path "$0" || echo "$0"))"
 PID=$(pidof -x -o %PPID "$SCRIPT_FILE")
 if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}"; then
 	LOGFILE="$LOGFILE.lockless"
@@ -152,7 +152,7 @@ fi
 
 # keep old log file
 if [[ -r "$LOGFILE" ]]; then
-	mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null
+	mv -f "$LOGFILE" "$LOGFILE".old 2>&8
 fi
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
 
@@ -207,7 +207,7 @@ done
 # check for requirements, # do we have all required binaries ?
 MISSING_PROGRS=()
 for f in "${REQUIRED_PROGS[@]}" ; do
-	if ! type -p "$f" >/dev/null ; then
+	if ! has_binary "$f"; then
 		MISSING_PROGS=( "${MISSING_PROGS[@]}" "$f" )
 	fi
 done
@@ -237,7 +237,7 @@ mkdir -p $v $TMP_DIR >&2
 StopIfError "Could not create $TMP_DIR"
 
 # Check for and run the requested workflow
-if type -t WORKFLOW_$WORKFLOW >/dev/null ; then
+if has_binary WORKFLOW_$WORKFLOW; then
 	Log "Running $WORKFLOW workflow"
 	WORKFLOW_$WORKFLOW "${ARGS[@]}"
 	Log "Finished running $WORKFLOW workflow"

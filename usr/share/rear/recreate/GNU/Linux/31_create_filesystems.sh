@@ -87,7 +87,7 @@ while read file ; do
 	StopIfError "Invalid filesystem creation command: '${CMD[@]}'"
 	
 	# check that command exists
-	[ -x "$(type -p $CMD)" ]
+	[ -x "$(get_path $CMD)" ]
 	StopIfError "Filesystem creation command '$CMD' not found !"
 
 	# run command
@@ -98,7 +98,7 @@ while read file ; do
 	if test "${#CMD2[@]}" -ge 2 ; then
 
 		# check that CMD2 exists
-		[ -x "$( type -p $CMD2)" ]
+		[ -x "$( get_path $CMD2)" ]
 		StopIfError "Filesystem manipulation command '$CMD2' not found !"
 		
 		# run CMD2
@@ -111,7 +111,7 @@ while read file ; do
 	if test "${#CMD3[@]}" -ge 2 ; then
 
 		# check that CMD3 exists
-		[ test -x "$( type -p $CMD3)" ]
+		[ test -x "$( get_path $CMD3)" ]
 		StopIfError "Filesystem manipulation command '$CMD3' not found !"
 		
 		# run CMD3

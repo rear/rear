@@ -95,7 +95,7 @@ case "$RSYNC_PROTO" in
 
 	(ssh)
 		Log "Test: ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true"
-		ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true 2>/dev/null >&8
+		ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true >&8 2>&1
 		StopIfError "Secure shell connection not setup properly [$RSYNC_USER@$RSYNC_HOST]"
 		;;
 

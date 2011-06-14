@@ -54,7 +54,7 @@ function get_disk_used() {
 # while the backup runs in a sub-process, display some progress information to the user
 case "$BACKUP_PROG" in
 	(tar)
-		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+		while sleep 1 ; kill -0 $BackupPID 2>&8; do
 			blocks="$(tail -1 ${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
 			size="$((blocks*512))"
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
@@ -68,14 +68,14 @@ case "$BACKUP_PROG" in
 		# this should be good enough and in any case this is only some eye candy.
 		# TODO: Find a fast way to count the actual transfer data, preferrable getting the info from rsync.
 		let old_disk_used="$(get_disk_used "$backuparchive")"
-		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+		while sleep 1 ; kill -0 $BackupPID 2>&8; do
 			let disk_used="$(get_disk_used "$backuparchive")" size=disk_used-old_disk_used
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
 		done
 		;;
 	(*)
-		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+		while sleep 1 ; kill -0 $BackupPID 2>&8; do
 			size="$(stat -c "%s" "$backuparchive")" || {
 				kill -9 $BackupPID
 				ProgressError 

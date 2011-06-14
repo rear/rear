@@ -43,7 +43,7 @@ LogPrint "Start system layout restoration."
 
 mkdir -p /mnt/local
 if create_component "vgchange" "rear" ; then
-    lvm vgchange -a n > /dev/null
+    lvm vgchange -a n >&8
     component_created "vgchange" "rear"
 fi
 

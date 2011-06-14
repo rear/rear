@@ -20,10 +20,10 @@
 
 LogPrint "Create initramfs"
 
-pushd "$ROOTFS_DIR" >/dev/null
+pushd "$ROOTFS_DIR" >&8
 find . ! -name "*~"  |\
 	tee /dev/fd/8  |\
 	cpio -H newc --create --quiet  |\
 	gzip > "$BUILD_DIR/initrd.cgz"
 StopIfError "Could not create initramfs archive"
-popd >/dev/null
+popd >&8

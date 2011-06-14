@@ -19,7 +19,7 @@
 #
 
 LogPrint "Creating root FS layout"
-pushd $SHARE_DIR/skel >/dev/null
+pushd $SHARE_DIR/skel >&8
 for dir in default "$ARCH" "$OS" \
 		"$OS_MASTER_VENDOR/default" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" \
 		"$OS_VENDOR/default" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" \
@@ -37,4 +37,4 @@ for dir in default "$ARCH" "$OS" \
 		Debug "No '$dir' or '$dir.tar.gz' found"
 	fi
 done
-popd >/dev/null
+popd >&8

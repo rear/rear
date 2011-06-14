@@ -17,7 +17,7 @@ Log "Saving Swap information."
         done
         
         # find uuid or label
-        if type swaplabel &>/dev/null ; then
+        if has_binary swaplabel; then
             while read what value junk; do
                 case $what in
                     UUID:)

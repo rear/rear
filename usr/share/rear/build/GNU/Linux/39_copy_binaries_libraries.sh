@@ -23,7 +23,7 @@ LogPrint "Copy program files & libraries"
 # calculate binaries from needed progs
 declare -a BINARIES=( $(
 for bin in "${PROGS[@]}" "${REQUIRED_PROGS[@]}"; do
-	file="$(type -p "$bin")"
+	file="$(get_path "$bin")"
 	if [[ -x "$file" ]]; then
 		echo $file
 		echo "Found $file" >&8

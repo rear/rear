@@ -4,7 +4,7 @@ _remote_size=0
 while read -r ; do
 	LogPrint "Calculating size of $REPLY"
 	# on Linux output is represented in 1024-blocks (or kB) 
-	df -P "$REPLY"  >$TMP_DIR/fs_size 2>/dev/null
+	df -P "$REPLY"  >$TMP_DIR/fs_size
 	StopIfError "Failed to determine size of ${REPLY}."
 	fs_size=$(tail -n 1 $TMP_DIR/fs_size | awk '{print $3}')
 	_local_size=$((_local_size+fs_size))
@@ -15,7 +15,7 @@ case $RSYNC_PROTO in
 
 	(ssh)
 		LogPrint "Calculating size of $RSYNC_HOST:$RSYNC_PATH"
-		ssh -l $RSYNC_USER $RSYNC_HOST "df -P ${RSYNC_PATH}" >$TMP_DIR/rs_size 2>/dev/null
+		ssh -l $RSYNC_USER $RSYNC_HOST "df -P ${RSYNC_PATH}" >$TMP_DIR/rs_size 2>&8
 		StopIfError "Failed to determine size of ${RSYNC_PATH}"
 		_div=1	# 1024-blocks
 		grep -q "512-blocks" $TMP_DIR/rs_size && _div=2 # HPUX: divide with 2 to get kB size

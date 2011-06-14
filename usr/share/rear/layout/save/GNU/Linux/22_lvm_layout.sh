@@ -1,6 +1,6 @@
 # Save LVM layout
 
-if ! type -p lvm &>/dev/null ; then
+if ! has_binary lvm; then
     return
 fi
 

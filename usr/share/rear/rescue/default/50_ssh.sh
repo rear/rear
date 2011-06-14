@@ -17,16 +17,16 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 #
-if type -p sshd >/dev/null ; then
+if has_binary sshd; then
 
 	# assume that we have openssh with configs in /etc/ssh
 
 	COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/ssh* /root/.s[s]h /root/.shos[t]s )
-	PROGS=( 
-	${PROGS[@]} 
-	ssh sshd scp sftp 
-	$( 
-		read subsys sftp file junk < <( grep sftp /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig 2>/dev/null )
+	PROGS=(
+	${PROGS[@]}
+	ssh sshd scp sftp
+	$(
+		read subsys sftp file junk < <( grep sftp /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig 2>&8 )
 		echo $file
 	)
 	)

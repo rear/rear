@@ -18,7 +18,7 @@ StopIfError "Failed to find kernel, updating GRUB failed."
 StopIfError "Failed to find initrd.cgz, updating GRUB failed."
 
 function total_filesize {
-    stat --format '%s' $@ 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
+    stat --format '%s' $@ 2>&8 | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
 }
 
 available_space=$(df -Pk /boot | awk 'END { print $4 * 1024 }')
@@ -77,7 +77,7 @@ fi
 if [[ $(stat -L -c '%d' $KERNEL_FILE) == $(stat -L -c '%d' /boot/) ]]; then
     # Hardlink file, if possible
     cp -pLlf $v $KERNEL_FILE /boot/rear-kernel >&2
-elif [[ $(stat -L -c '%s %Y' $KERNEL_FILE) == $(stat -L -c '%s %Y' /boot/rear-kernel &>/dev/null) ]]; then
+elif [[ $(stat -L -c '%s %Y' $KERNEL_FILE) == $(stat -L -c '%s %Y' /boot/rear-kernel 2>&8) ]]; then
     # If existing file has exact same size and modification time, assume the same
     :
 else

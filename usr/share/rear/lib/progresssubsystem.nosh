@@ -72,12 +72,6 @@ if tty -s <&1; then
 		echo noop >&8
 	}
 
-	ProgressStepSingleChar() {
-		while read -rn 1 ; do
-			echo noop >&8
-			echo -n "$REPLY" >&2
-		done
-	}
 else
 	# no tty, disable progress animated display altogether
 
@@ -100,11 +94,6 @@ else
 		: ;
 	}
 
-	ProgressStepSingleChar() {
-		while read -n 1 ; do
-			: ;
-		done
-	}
 fi
 ####################### END Progress Indicator
 

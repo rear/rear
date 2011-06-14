@@ -1,6 +1,6 @@
 # Code to recreate a software RAID configuration
 
-if ! type -p mdadm &>/dev/null ; then
+if ! has_binary mdadm; then
     return
 fi
 

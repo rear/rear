@@ -5,7 +5,7 @@
 have_udev || return 0
 
 # check if we need to do something
-if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/recovery/storage_drivers >/dev/null ; then
+if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/recovery/storage_drivers >&8 ; then
 	# remember, diff returns 0 if the files are the same
 
 	# merge new drivers with previous initrd modules

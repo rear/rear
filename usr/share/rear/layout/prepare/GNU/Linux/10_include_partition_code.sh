@@ -1,6 +1,6 @@
 # Generate code to partition the disks
 
-if ! type -p parted &>/dev/null ; then
+if ! has_binary parted; then
     return
 fi
 

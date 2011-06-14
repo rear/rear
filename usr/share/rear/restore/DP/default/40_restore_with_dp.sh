@@ -30,7 +30,7 @@ do
 	fs=`echo ${object} | awk '{print $1}' | cut -d: -f 2`
 	label=`echo "${object}" | cut -d"'" -f 2`
 	# only retain the latest backup which was completed successfully
-	if grep "^${fs} " ${VAR_DIR}/recovery/mountpoint_device 2>&1 >/dev/null; then
+	if grep -q "^${fs} " ${VAR_DIR}/recovery/mountpoint_device; then
 		LogPrint "Restore filesystem ${object}"
 		SessionID=`cat /tmp/dp_recovery_session`
 		Device=`/opt/omni/bin/omnidb -session ${SessionID} -detail | grep Device | sort -u | tail -n 1 | awk '{print $4}'`
@@ -44,4 +44,4 @@ do
 				;;
 		esac
 	fi # if grep "^${fs}
-done 
+done

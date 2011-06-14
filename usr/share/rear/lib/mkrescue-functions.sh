@@ -54,7 +54,7 @@ case "${2}" in
 	"LVM")		# LVM - find disks under /dev/vg??/lvol??
 		[ -c /dev/mapper/control ]
 		StopIfError "LVM version 1 not supported"
-		for disk in $(lvm vgdisplay -v 2>/dev/null | awk -F\ + '/PV Name/ {print $4}');
+		for disk in $(lvm vgdisplay -v 2>&8 | awk -F\ + '/PV Name/ {print $4}');
 		do
 			local devcat=$(CategoriseDev ${disk})
 			if [ ${devcat} = 'NORMAL' ]; then
@@ -190,7 +190,7 @@ SWAPLABEL=""
 while read LABEL junk
 do
 	LABEL="${LABEL/*=/}"
-	if dd if=$1 bs=1024 count=10 2>/dev/null | strings | grep -q "${LABEL}" ; then
+	if dd if=$1 bs=1024 count=10 2>&8 | strings | grep -q "${LABEL}" ; then
 		SWAPLABEL="-L ${LABEL}"
 		Log "Found swap label $LABEL on $1"
 	fi

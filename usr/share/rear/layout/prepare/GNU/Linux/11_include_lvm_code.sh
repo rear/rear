@@ -2,7 +2,7 @@
 # The input to the code creation functions is a file descriptor to one line
 # of the layout description.
 
-if ! type -p lvm &>/dev/null ; then
+if ! has_binary lvm; then
     return
 fi
 

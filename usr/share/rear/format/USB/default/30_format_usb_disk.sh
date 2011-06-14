@@ -1,6 +1,6 @@
 # $answer is filled by 20_check_usb_layout.sh
 if [[ "$answer" == "Yes" || "$FORCE" ]]; then
-	umount $REAL_USB_DEVICE &>/dev/null
+	umount $REAL_USB_DEVICE >&8 2>&1
 
 	LogPrint "Repartition $RAW_USB_DEVICE"
 

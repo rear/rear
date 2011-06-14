@@ -71,8 +71,8 @@ else
 fi
 
 # create missing directories
-pushd /mnt/local >/dev/null
+pushd /mnt/local >&8
 for dir in opt/galaxy/Base/Temp opt/galaxy/Updates opt/galaxy/iDataAgent/jobResults ; do
 	mkdir -p "$dir"
 done
-popd >/dev/null
+popd >&8

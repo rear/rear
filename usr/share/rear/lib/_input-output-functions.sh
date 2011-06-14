@@ -62,7 +62,7 @@ DoExitTasks() {
 	if test "$JOBS" ; then
                 Log "The following jobs are still active:"
                 jobs -l >&2
-		kill -9 "${JOBS[@]}" &>/dev/null
+		kill -9 "${JOBS[@]}" >&2
 		sleep 1 # allow system to clean up after killed jobs
 	fi
 	for task in "${EXIT_TASKS[@]}" ; do
@@ -85,13 +85,27 @@ function trap () {
 	BugError "Forbidden use of trap with '$@'. Use AddExitTask instead."
 }
 
+# Check if any of the binaries/aliases exist
+has_binary() {
+	for $bin in $@; do
+		if type $bin >&8 2>&1; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+get_path() {
+	type -p $1 2>&8
+}
+
 Error() {
-	if type caller &>/dev/null ; then
+	if has_binary caller; then
 		# Print stack strace on error
 		let c=0 ; while caller $c ; do let c++ ; done | sed 's/^/Trace: /' >&2 ; unset c
 	fi
 	# If first argument is numerical, use it as exit code
-	if [ $1 -eq $1 ] 2>/dev/null; then
+	if [ $1 -eq $1 ] 2>&8; then
 		EXIT_CODE=$1
 		shift
 	else
@@ -111,7 +125,7 @@ StopIfError() {
 
 BugError() {
 	# If first argument is numerical, use it as exit code
-	if [ $1 -eq $1 ] 2>/dev/null; then
+	if [ $1 -eq $1 ] 2>&8; then
 		EXIT_CODE=$1
 		shift
 	else
@@ -184,7 +198,7 @@ LogPrintIfError() {
 }
 
 # setup dummy progress subsystem as a default
-# not VEROSE, Progress stuff replaced by dummy/noop
+# not VERBOSE, Progress stuff replaced by dummy/noop
 exec 8>/dev/null # start ProgressPipe listening at fd 8
 QuietAddExitTask "exec 8>&-" # new method, close fd 8 at exit
 
@@ -200,39 +214,17 @@ ProgressError() {
 ProgressStep() {
 	: ;
 }
-ProgressStepSingleChar() {
-	: ;
-}
 
-
-ProgressStopOrError() {
-	test $# -le 0 && Error "ProgressStopOrError called without return code to check !"
-	if test "$1" -gt 0 ; then
-		shift
-		ProgressError
-		Error "$@"
-	else
-		ProgressStop
-	fi
-}
-
-ProgressStopIfError() {
-	test $# -le 0 && Error "ProgressStopIfError called without return code to check !"
-	test "$1" -gt 0 || return 0
-	shift
-	ProgressError
-	Error "$@"
-}
-
-SpinnerSleep() {
-	if test $# -le 0 ; then
-		sec=1
-	else
-		sec=$1
-	fi
-	for i in `seq 1 $sec`
-	do
-		sleep 1
-		ProgressStep
+# Check if any of the binaries/aliases exist
+has_binary() {
+	for bin in $@; do
+		if type $bin >&8 2>&1; then
+			return 0
+		fi
 	done
+	return 1
+}
+
+get_path() {
+	type -p $1 2>&8
 }

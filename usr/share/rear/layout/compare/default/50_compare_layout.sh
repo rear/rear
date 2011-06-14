@@ -1,6 +1,6 @@
 # Test if ORIG_LAYOUT and TEMP_LAYOUT are the same
 
-diff $ORIG_LAYOUT $TEMP_LAYOUT >/dev/null
+diff $ORIG_LAYOUT $TEMP_LAYOUT >&8
 
 if [ $? -eq 0 ] ; then
     LogPrint "Disk layout is identical."

@@ -27,7 +27,7 @@ SetOSVendorAndVersion () {
 	if test "$OS_VENDOR" = generic -o "$OS_VERSION" = none ; then
 	
 		# try to use lsb_release
-		if type lsb_release >/dev/null 2>&1 ; then
+		if has_binary lsb_release >&8 2>&1; then
 			OS_VENDOR="$(lsb_release -i -s | tr -s " \t" _)"
 			OS_VERSION="$(lsb_release -r -s | tr -s " \t" _)"
 		else

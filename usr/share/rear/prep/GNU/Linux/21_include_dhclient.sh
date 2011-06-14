@@ -70,8 +70,8 @@ dhcp_interfaces_active		# check if one is running (if found define USE_DHCLIENT=
 if [ -z "$DHCLIENT_BIN" ]; then
 	for x in ${dhclients}
 	do
-		if type -p $x >/dev/null ; then
-			define_dhclient_bins `type -p $x`
+		if has_binary $x; then
+			define_dhclient_bins `get_path $x`
 		fi
 	done
 fi

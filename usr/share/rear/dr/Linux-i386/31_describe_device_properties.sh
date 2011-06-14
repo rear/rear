@@ -14,7 +14,7 @@ while read device junk ; do
 	sfdisk -s $device > $VAR_DIR/recovery$device/size
 	StopIfError "Could not store size for '$device'"
 
-	dd if=$device of=$VAR_DIR/recovery$device/mbr bs=446 count=1 >/dev/null
+	dd if=$device of=$VAR_DIR/recovery$device/mbr bs=446 count=1 >&8
 	StopIfError "Could not store MBR for '$device'"
 
 	# if we have udev collect also the drivers required for this device

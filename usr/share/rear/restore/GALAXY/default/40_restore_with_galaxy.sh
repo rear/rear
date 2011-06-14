@@ -63,8 +63,6 @@
 StopIfError "Galaxy aborted"
 
 # create missing directories
-pushd /mnt/local >/dev/null
-for dir in opt/galaxy/Base/Temp opt/galaxy/Updates opt/galaxy/iDataAgent/jobResults ; do
-	mkdir -p "$dir"
-done
-popd >/dev/null
+pushd /mnt/local >&8
+mkdir -p opt/galaxy/Base/Temp opt/galaxy/Updates opt/galaxy/iDataAgent/jobResults
+popd >&8

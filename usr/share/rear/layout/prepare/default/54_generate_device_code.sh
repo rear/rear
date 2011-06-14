@@ -15,7 +15,7 @@ while [ -z "$all_done" ] ; do
         
         donedeps=0
         for dep in "${deps[@]}" ; do
-            if grep "done $dep " $LAYOUT_TODO.tmp > /dev/null ; then
+            if grep -q "done $dep " $LAYOUT_TODO.tmp; then
                 let donedeps=donedeps+1
             fi
         done

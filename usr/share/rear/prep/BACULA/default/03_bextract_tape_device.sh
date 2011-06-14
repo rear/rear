@@ -8,7 +8,7 @@ if [[ "$BACKUP" != "BACULA" ]]; then
 fi
 
 if [[ -z "$TAPE_DEVICE" && "$BEXTRACT_DEVICE" ]]; then
-    type -p btape &>/dev/null
+    has_binary btape
     LogIfError "btape binary not found, unable to handle BEXTRACT_DEVICE '$BEXTRACT_DEVICE'"
 
     TAPE_DEVICE="$(echo cap | btape $BEXTRACT_DEVICE | awk '/^Device name/ { print $3 }')"

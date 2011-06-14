@@ -21,8 +21,7 @@
 # check if udev is available in a sufficiently recent version
 have_udev() {
 	local relpath="$1"; shift
-	if [ -d $relpath/etc/udev/rules.d ] && \
-		{ type -p udevadm || type -p udevtrigger || type -p udevstart; } &>/dev/null; then
+	if [ -d $relpath/etc/udev/rules.d ] && has_binary udevadm udevtrigger; then
 		return 0
 	fi
 	return 1
@@ -30,9 +29,9 @@ have_udev() {
 
 # call udevtrigger
 my_udevtrigger() {
-	if type -p udevadm &>/dev/null; then
+	if has_binary udevadm; then
 		udevadm trigger $@
-	elif type -p udevtrigger &>/dev/null; then
+	elif has_binary udevtrigger; then
 		udevtrigger $@
 	else
 		# do what start_udev does on RHEL 4
@@ -40,15 +39,15 @@ my_udevtrigger() {
 		if [ -n "$pid" ]; then
 			kill $pid
 		fi
-		udevstart </dev/null &>/dev/null
+		udevstart </dev/null >&8 2>&1
 	fi
 }
 
 # call udevsettle
 my_udevsettle() {
-	if type -p udevadm &>/dev/null; then
+	if has_binary udevadm; then
 		udevadm settle $@
-	elif type -p udevsettle &>/dev/null; then
+	elif has_binary udevsettle; then
 		udevsettle $@
 	elif [ -e /sys/kernel/uevent_seqnum ] && [ -e /dev/.udev/uevent_seqnum ]; then
 		# re-implement udevsettle for older systems
@@ -64,7 +63,7 @@ my_udevsettle() {
 
 # call udevinfo
 my_udevinfo() {
-	if type -p udevadm &>/dev/null; then
+	if has_binary udevadm; then
 		udevadm info "$@"
 	else
 		udevinfo "$@"
@@ -117,7 +116,7 @@ BinCopyTo() {
 		[[ -z "$1" ]] && continue # ignore blanks
 		cp -a -L -f $v "$1" "$dest" >&2
 		StopIfError "[BinCopyTo] Could not copy '$1' to '$dest'"
-#		strip -s "$dest/$(basename "$1")" 2>/dev/null
+#		strip -s "$dest/$(basename "$1")" 2>&8
 	done
 	: # make sure that a failed strip won't fail the BinCopyTo
 }
@@ -191,7 +190,7 @@ cp_bin () {
 # to shared objects and shared object files for the binaries in $*.
 # This is the function copied from mkinitrd off SuSE 9.3
 SharedObjectFiles() {
-	type -p ldd &>/dev/null
+	has_binary ldd
 	StopIfError "Unable to find a working ldd binary."
 
 	# Default ldd output (when providing more than one argument) has 5 cases:
@@ -264,7 +263,7 @@ ResolveModules () {
 		module_list=$( \
 			/sbin/modprobe $with_modprobe_conf --ignore-install \
 				--set-version $kernel_version \
-				--show-depends $module 2>/dev/null \
+				--show-depends $module 2>&8 \
 				| awk '/^insmod / { print $2 }' | sort -u)
 
 		if [ -z "$module_list" ]; then

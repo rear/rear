@@ -7,7 +7,7 @@ while read KEY VALUE ; do echo "$KEY" | grep -qi '^#' && continue ; test -z "$KE
 StopIfError "NBU Master Server not set in bp.conf (TCPSERVERADDRESS) !"
 
 if test "$PING" ; then
-	if ping -c 1 "${NBU_SERVER}" >/dev/null 2>&1 ; then
+	if ping -c 1 "${NBU_SERVER}" >&8 2>&1; then
 	   Log "NBU Master Server ${NBU_SERVER} seems to be up and running."
 	else
 	   Error "Sorry, but cannot reach NBU Master Server ${NBU_SERVER}"

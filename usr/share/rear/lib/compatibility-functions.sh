@@ -1,13 +1,10 @@
 # put all disaster recovery related functions here
 
 
-if type -p vol_id >/dev/null ; then
+if has_binary vol_id; then
       # nothing
 	:
-# NOTE: THE FOLLOWING elif IS PERMANENTLY DISABLED, WE WANT TO SEE WHO COMPLAINS ABOUT IT
-# AND BASICALLY GET RID OF THE udev_volume_id SUPPORT. IN ANY CASE IT IS ONLY FOR SOME VERY EARLY
-# Linux 2.6 SYSTEMS AND THE INTERNAL vol_id SEEMS TO WORK JUST FINE FOR THOSE. (Schlomo 2009-11-15)
-elif test "" && type -p udev_volume_id >/dev/null ; then
+elif has_binary udev_volume_id; then
 	Debug "Using 'udev_volume_id' for vol_id"
 	# vol_id does not exist, but the older udev_volume_id is available
 	# we write a little wrapper to map udev_volume_id to vol_id
@@ -45,7 +42,7 @@ elif test "" && type -p udev_volume_id >/dev/null ; then
 			-e "s/^U:\(.*\)/ID_FS_UUID='\1'/" | grep =
 	}
 # NOTE: We use blkid ONLY if it is a newer one and reports information back in udev-style
-elif type -p blkid >/dev/null && blkid -o udev 2>/dev/null >/dev/null ; then
+elif has_binary blkid && has_binary udev; then
 	Debug "Using 'blkid' for vol_id"
 	# since udev 142 vol_id was removed and udev depends on blkid
 	# blkid -o udev returns the same output as vol_id used to
@@ -86,7 +83,7 @@ WARNING ! This replacement has been tested on i386/x86_64 ONLY !!
 				val="${val##*( )}"
 				case "$key" in
 				*features*)
-					if expr match "$val" ".*journal.*" >/dev/null ; then
+					if expr match "$val" ".*journal.*" >&8; then
 						echo "ID_FS_TYPE='ext3'"
 					else
 						echo "ID_FS_TYPE='ext2'"
@@ -107,7 +104,7 @@ WARNING ! This replacement has been tested on i386/x86_64 ONLY !!
 		*ReiserFS*)
 			echo "ID_FS_USAGE='filesystem'"
 			echo "ID_FS_TYPE='reiserfs'"
-			echo "ID_FS_LABEL='$(dd if="$1" bs=1 skip=$((0x10064)) count=64 2>/dev/null)'"
+			echo "ID_FS_LABEL='$(dd if="$1" bs=1 skip=$((0x10064)) count=64 2>&8)'"
 			;;
 		*XFS*)
 			echo "ID_FS_USAGE='filesystem'"
@@ -119,7 +116,7 @@ WARNING ! This replacement has been tested on i386/x86_64 ONLY !!
 			echo "ID_FS_USAGE='other'"
 			echo "ID_FS_TYPE='swap'"
 			echo "ID_FS_VERSION='2'"
-			echo "ID_FS_LABEL='$(dd if="$1" bs=1 skip=$((0x41c)) count=64 2>/dev/null)'"
+			echo "ID_FS_LABEL='$(dd if="$1" bs=1 skip=$((0x41c)) count=64 2>&8)'"
 			;;
 		*)
 			Error "Unsupported filesystem found on '$1'

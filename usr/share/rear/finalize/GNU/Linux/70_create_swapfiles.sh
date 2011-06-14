@@ -61,7 +61,7 @@ while read file ; do
 	StopIfError "Invalid swap creation command: '${CMD[@]}'"
 	
 	# check that command exists
-	[ -x "$(type -p $CMD)" ]
+	[ -x "$(get_path $CMD)" ]
 	StopIfError "Swap creation command '$CMD' not found !"
 
 	# run command

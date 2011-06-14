@@ -36,13 +36,13 @@ mv -f $v "$BUILD_DIR"/tmp/boot.img "$BUILD_DIR/isofs/boot" >&2
 pushd $BUILD_DIR/isofs >&8 # so that relative paths will work
 $ISO_MKISOFS_BIN -o "$ISO_DIR/$ISO_PREFIX.iso" -b boot/boot.img -c boot/monboot.catalogi -pad \
 	-no-emul-boot -boot-load-size 4 -boot-info-table \
-	-R -J -volid "$ISO_VOLID" -v .  >&8
+	-R -J -volid "$ISO_VOLID" -v . >&8
 	#-R -J -volid "$ISO_VOLID" -v "$BUILD_DIR/isofs"  >&8
 	#-R -J -volid "$ISO_VOLID" -v "${ISO_FILES[@]}"  >&8
 StopIfError "Could not create ISO image"
 
 ISO_IMAGES=( "${ISO_IMAGES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
-popd >/dev/null
+popd >&8
 Print "Wrote ISO Image $ISO_DIR/$ISO_PREFIX.iso ($(du -h "$ISO_DIR/$ISO_PREFIX.iso"| tr -s " \t" " " | cut -d " " -f 1))"
 
 # Add ISO image to result files

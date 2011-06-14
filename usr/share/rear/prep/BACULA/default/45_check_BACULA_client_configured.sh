@@ -4,7 +4,7 @@
 if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
 
    ### Bacula support using bextract
-   type -p bextract &>/dev/null
+   has_binary bextract
    StopIfError "Bacula bextract is missing"
 
    [ -s /etc/bacula/bacula-sd.conf ]
@@ -13,13 +13,13 @@ if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
 else
 
    ### Bacula support using bconsole
-   type -p bacula-fd &>/dev/null
+   has_binary bacula-fd
    StopIfError "Bacula File Daemon is missing"
 
    [ -s /etc/bacula/bacula-fd.conf ]
    StopIfError "Bacula configuration file (bacula-fd.conf) missing"
 
-   type -p bconsole &>/dev/null
+   has_binary bconsole
    StopIfError "Bacula console executable is missing"
 
    [ -s /etc/bacula/bconsole.conf ]

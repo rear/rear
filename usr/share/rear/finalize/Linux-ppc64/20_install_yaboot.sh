@@ -13,7 +13,7 @@ if test -f /mnt/local/etc/yaboot.conf; then
     bootlist -m normal $bootdev
     NOBOOTLOADER=
   else
-    bootparts=`sfdisk -l 2>/dev/null | awk '/PPC PReP Boot/ {print $1}'`
+    bootparts=`sfdisk -l 2>&8 | awk '/PPC PReP Boot/ {print $1}'`
     LogPrint "Boot partitions found: $bootparts."
     for part in $bootparts
     do

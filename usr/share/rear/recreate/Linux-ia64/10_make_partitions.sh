@@ -2,7 +2,7 @@
 # install a blank default MBR on each disk
 
 LogPrint "Creating partitions"
-pushd "$VAR_DIR/recovery" >/dev/null
+pushd "$VAR_DIR/recovery" >&8
 mkdir -p /boot
 for f in $( find dev -type f -name parted ); do
 	device="$(dirname "$f")"
@@ -12,4 +12,4 @@ for f in $( find dev -type f -name parted ); do
 	"$f"  >&2
 	StopIfError "Repartioning of ${device} failed"
 done
-popd >/dev/null
+popd >&8

@@ -115,7 +115,7 @@ DPChangeHost() {
       DPChooseBackup
       return
     fi
-    if ${OMNICELLINFO} -cell | grep "host=\"${REPLY}\"" 2>&1 >/dev/null; then
+    if ${OMNICELLINFO} -cell | grep -q "host=\"${REPLY}\""; then
       valid=1
     else
       LogPrint "Invalid hostname '${REPLY}'!"
@@ -139,7 +139,7 @@ DPChangeDataList() {
     i=$(cat /tmp/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | wc -l)
     LogPrint ""
     read -r -p "Please choose datalist [1-$i]: " 2>&1
-    if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>&1 >/dev/null; then
+    if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>&8; then
       DL=$(cat /tmp/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | head -${REPLY} | tail -1)
       valid=1
     else
@@ -164,7 +164,7 @@ DPChangeSession() {
     i=$(cat /tmp/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | wc -l)
     echo
     read -r -p "Please choose session [1-$i]: " 2>&1
-    if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>&1 >/dev/null; then
+    if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>&8; then
       SESS=$(cat /tmp/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | head -${REPLY} | tail -1)
       valid=1
     else

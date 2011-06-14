@@ -15,14 +15,14 @@ if ! test -d /ramdisk ; then
 	# stop logfile
 	exec 2>&1
 
-	pushd / >/dev/null
+	pushd / >&8
 	for dir in opt var tmp ; do
 		mv "$dir" /ramdisk
 		mkdir "$dir"
 		mount --bind /ramdisk/"$dir" /"$dir"
 	done
 	chmod 1777 /tmp
-	popd >/dev/null
+	popd >&8
 
 
 	# start logfile

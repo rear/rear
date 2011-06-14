@@ -28,7 +28,7 @@ function Source() {
 	StopIfError "$1 is a directory, cannot source"
 	if test -s "$1" ; then
 		local relname="${1##$SHARE_DIR/}"
-		if test "$SIMULATE" && expr "$1" : "$SHARE_DIR" >/dev/null ; then
+		if test "$SIMULATE" && expr "$1" : "$SHARE_DIR" >&8; then
 			# simulate sourcing the scripts in $SHARE_DIR
 			LogPrint "Source $relname"
 		else

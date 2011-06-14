@@ -11,7 +11,7 @@
 test ${#ONLY_INCLUDE_VG[@]} -eq 0 && return	# skip when ONLY_INCLUDE_VG is empty
 
 # write the known VGs on this system into file $TMP_DIR/known_vg
-lvm vgs --noheadings -o vg_name 2>/dev/null 8>&- 7>&- | awk '{print $1}' | sort > $TMP_DIR/known_vg
+lvm vgs --noheadings -o vg_name 2>&8 8>&- 7>&- | awk '{print $1}' | sort > $TMP_DIR/known_vg
 
 # list the ONLY_INCLUDE_VG[@] array into file $TMP_DIR/include_vg
 echo ${ONLY_INCLUDE_VG[@]} | tr ' ' '\n' | sort -u > $TMP_DIR/include_vg

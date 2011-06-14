@@ -1,6 +1,6 @@
 # skip if no LVM installed
 
-if ! type -p lvm >/dev/null; then
+if ! has_binary lvm; then
     return 0
 fi
 

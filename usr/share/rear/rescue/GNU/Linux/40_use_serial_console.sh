@@ -13,7 +13,7 @@ for param in $KERNEL_CMDLINE; do
 done
 
 for devnode in $(ls /dev/ttyS[0-9]* | sort); do
-    speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
+    speed=$(stty -F $devnode 2>&8 | awk '/^speed / { print $2 }')
     if [ "$speed" ]; then
         echo "s${devnode##/dev/ttyS}:2345:respawn:/sbin/$GETTY $speed ${devnode##/dev/} vt100" >>$ROOTFS_DIR/etc/inittab
         cmdline="${cmdline}console=${devnode##/dev/},$speed "

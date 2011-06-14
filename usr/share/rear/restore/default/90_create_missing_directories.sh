@@ -3,9 +3,7 @@
 #
 #
 # create missing directories
-pushd /mnt/local >/dev/null
-for dir in mnt proc sys tmp dev/pts dev/shm ; do
-        mkdir -p "$dir"
-done
+pushd /mnt/local >&8
+mkdir -p mnt proc sys tmp dev/pts dev/shm
 chmod 1777 tmp
-popd >/dev/null
+popd >&8
