@@ -5,4 +5,4 @@ if ! has_binary lvm; then
 fi
 
 mkdir -p $v $VAR_DIR/layout/lvm >&2
-lvm 8>&- 7>&- vgcfgbackup -f $VAR_DIR/layout/lvm/%s.cfg >&8
+lvm vgcfgbackup -f $VAR_DIR/layout/lvm/%s.cfg >&8
