@@ -27,7 +27,6 @@ WORKFLOW_checklayout () {
 
     SourceStage "layout/precompare"
 
-    AddExitTask "rm -f $TEMP_LAYOUT"
     DISKLAYOUT_FILE=$TEMP_LAYOUT
     SourceStage "layout/save"
 
