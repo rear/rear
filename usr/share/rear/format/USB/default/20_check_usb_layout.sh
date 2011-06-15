@@ -8,7 +8,7 @@ StopIfError "USB device '$DEVICE' is not a block device"
 # Return a proper short device name using udev
 REAL_USB_DEVICE=$(readlink -f $DEVICE)
 
-[[ "$REAL_USB_DEVICE" && -b "$REAL_USB_DEVICE" ]
+[[ "$REAL_USB_DEVICE" && -b "$REAL_USB_DEVICE" ]]
 StopIfError "Unable to determine real USB device based on USB device '$DEVICE'."
 
 # We cannot use the layout dependency code in the backup phase (yet)
