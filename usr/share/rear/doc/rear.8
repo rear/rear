@@ -22,12 +22,14 @@
 rear \- bare metal disaster recovery tool
 .SH "SYNOPSIS"
 .sp
-\fBrear\fR [\fB\-d\fR] [\fB\-D\fR] [\fB\-r\fR \fIKERNEL\fR] [\fB\-s\fR] [\fB\-S\fR] [\fB\-v\fR] [\fB\-V\fR] \fICOMMAND\fR [\fIARGS\fR\&...]
+\fBrear\fR [\fB\-dDsSvV\fR] [\fB\-r\fR \fIKERNEL\fR] \fICOMMAND\fR [\-\- \fIARGS\fR\&...]
 .SH "DESCRIPTION"
 .sp
 Relax and Recover (abbreviated \fBReaR\fR) is a highly modular disaster recovery framework for GNU/Linux based systems, but can be easily extended to other UNIX alike systems\&. The disaster recovery information can be stored and used via the network, local on hard disks or USB devices, DVD/CD\-R\&. The result is also a bootable image that is capable of booting via PXE, DVD/CD\&.
 .sp
 The disaster recovery can be integrated with any existing backup software so that ReaR utilizes the backup software to restore the files and provides the "glue" surrounding the simple file restore to having a full bare metal disaster recovery solution\&. Support for specific backup software has to be added to rear on an individual base and is very simple (look at an existing implementation for further information)\&.
+.sp
+Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU General Public License at: http://www\&.gnu\&.org/licenses/gpl\&.html
 .SH "OPTIONS"
 .SS "GLOBAL OPTIONS"
 .PP
@@ -127,7 +129,7 @@ validate
 submit validation information
 .RE
 .sp
-More commands are available when running: rear help \-v
+Use \fIrear \-v help\fR for more advanced commands\&.
 .SH "BACKGROUND INFORMATION"
 .sp
 The process of bare metal disaster recovery consists of two parts:
@@ -363,4 +365,4 @@ Jeroen Hoekx
 .sp
 Dag Wieers, Dagit Linux Solutions
 .sp
-Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU General Public License at \m[blue]\fBhttp://www\&.gnu\&.org/licenses/gpl\&.html\fR\m[]
+Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU General Public License at http://www\&.gnu\&.org/licenses/gpl\&.html

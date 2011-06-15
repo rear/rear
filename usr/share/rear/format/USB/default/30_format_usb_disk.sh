@@ -4,13 +4,13 @@ if [[ "$answer" == "Yes" || "$FORCE" ]]; then
 
 	LogPrint "Repartition $RAW_USB_DEVICE"
 
-	parted $RAW_USB_DEVICE mklabel msdos <<<"Yes" >&2
+	echo "Yes" | parted -s $RAW_USB_DEVICE mklabel msdos >&2
 	StopIfError "Could not create msdos partitioning"
 
-	parted $RAW_USB_DEVICE mkpart primary 0 100% <<<"Yes" >&2
+	echo "Yes" | parted -s $RAW_USB_DEVICE mkpart primary 0 100% >&2
 	StopIfError "Could not create a primary partition on '$REAL_USB_DEVICE'"
 
-	parted $RAW_USB_DEVICE set 1 boot on >&2
+	echo "Yes" | parted -s $RAW_USB_DEVICE set 1 boot on >&2
 	StopIfError "Could not make primary partition boot-able on '$REAL_USB_DEVICE'"
 
 	partprobe $RAW_USB_DEVICE

@@ -8,7 +8,7 @@ rear - bare metal disaster recovery tool
 
 
 == SYNOPSIS
-*rear* [*-d*] [*-D*] [*-r* _KERNEL_] [*-s*] [*-S*] [*-v*] [*-V*] _COMMAND_ [_ARGS_...]
+*rear* [*-dDsSvV*] [*-r* _KERNEL_] _COMMAND_ [-- _ARGS_...]
 
 
 == DESCRIPTION
@@ -24,6 +24,9 @@ the "glue" surrounding the simple file restore to having a full bare metal
 disaster recovery solution. Support for specific backup software has to be
 added to rear on an individual base and is very simple (look at an existing
 implementation for further information).
+
+Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details see
+the GNU General Public License at: http://www.gnu.org/licenses/gpl.html[]
 
 
 == OPTIONS

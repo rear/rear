@@ -57,7 +57,7 @@ DEBUG=
 KEEP_BUILD_DIR=
 
 # Parse options
-OPTS="$(getopt -n $PROGRAM -o "VvhdDSsr:" -l "help,version" -- "$@")"
+OPTS="$(getopt -n $PROGRAM -o "dDhsSvVr:" -l "help,version" -- "$@")"
 if (( $? != 0 )); then
 	echo "Try \`$PROGRAM --help' for more information."
 	exit 1

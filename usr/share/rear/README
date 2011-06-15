@@ -12,7 +12,7 @@ The backup can be integrated with any existing backup software so that
 Rear utilizes the backup software to restore the files and provides the "glue"
 surrounding the simple file restore to having a full bare metal disaster
 recovery solution. Support for specific backup software has to be added to
-rear on an individual base and is very simple (look at the existing 
+Rear on an individual base and is very simple (look at the existing 
 implementations for further information).
 
 Rear is rapidly developing, please contact the Rear developers if something is
@@ -21,7 +21,7 @@ missing.
 REQUIREMENTS
 ------------
 Rear is written entirely in bash and does not require any external programs.
-However, the rescue system that is created by rear requires some programs that
+However, the rescue system that is created by Rear requires some programs that
 are needed to make our rescue system work:
 
  - mingetty
@@ -33,8 +33,8 @@ don't list them as a requirement.
 
 INSTALLATION
 ------------
-On RPM based systems you should use the rear RPM. Either obtain it from the
-rear homepage or build it yourself from the TAR archive with
+On RPM based systems you should use the Rear RPM. Either obtain it from the
+Rear homepage or build it yourself from the TAR archive with
 
    rpmbuild -ta rear-<version>.tar.gz
 
@@ -45,19 +45,19 @@ On DEB based systems you should be able to install the RPM with alien.
 Otherwise use the manual installation (see below) or, even better, contribute
 the DEB package to the project.
 
-To install rear manually, simply copy the etc and usr directories in the source
+To install Rear manually, simply copy the etc and usr directories in the source
 distribution to the '/' of your system.
 
 
 CONFIGURATION
 -------------
-To configure rear you have to edit the configuration files in '/etc/rear'. All
+To configure Rear you have to edit the configuration files in '/etc/rear'. All
 '*.conf' files there are part of the configuration, but only 'site.conf' and 
 'local.conf' are intended for the user configuration. All other configuration
 files hold defaults for various distributions and should not be changed.
 
 In '/etc/rear/templates' there are also some template files which are use by
-rear to create configuration files (mostly for the boot environment). You can
+Rear to create configuration files (mostly for the boot environment). You can
 use these templates to prepend your own configurations to the configuration
 files created by Rear, for example you can edit 'PXE_pxelinux.cfg' to add some
 general pxelinux configuration you use (I put there stuff to install Linux
@@ -66,7 +66,7 @@ over the network).
 In almost all circumstances you have to configure two main settings and their
 parameters: The +BACKUP+ method and the +OUTPUT+ method. 
 
-The backup method defines, how your data was saved and wether rear should 
+The backup method defines, how your data was saved and wether Rear should 
 backup your data as part of the mkrescue process or wether you use an external
 application, e.g. backup software to archive your data.
 
@@ -99,7 +99,7 @@ changing them to suit your environment.
 
 USAGE
 -----
-To use rear you always call the main script '/usr/sbin/rear':
+To use Rear you always call the main script '/usr/sbin/rear':
 
 ----
 # rear help

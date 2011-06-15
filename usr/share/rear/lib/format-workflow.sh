@@ -7,11 +7,21 @@ WORKFLOW_format () {
 
 	local DEVICE=""
 
-	while (( $# > 0 )); do
+	# Parse options
+	OPTS="$(getopt -n "$PROGRAM format" -o "fhy" -l "force,help,yes" -- "$@")"
+	if (( $? != 0 )); then
+		echo "Try \`$PROGRAM format -- --help' for more information."
+		exit 1
+	fi
+
+	eval set -- "$OPTS"
+	while true; do
 		case "$1" in
 			(-f|--force) FORCE=y;;
+			(-h|--help) echo "Valid options are: -f/--force or -y/--yes"; exit 1;;
 			(-y|--yes) YES=y;;
-			(-h|--help) Print "Valid options are: -f/--force or -y/--yes"; exit 0;;
+			(--) shift; continue;;
+			("") break;;
 			(/*)
 				if [[ "$DEVICE" ]]; then
 					Error "Device $DEVICE already provided, only one argument is accepted"
@@ -34,5 +44,4 @@ WORKFLOW_format () {
 	fi
 
 	SourceStage "format"
-
 }
