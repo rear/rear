@@ -13,12 +13,12 @@ LogPrint "Creating $BACKUP_PROG archive on '${RSYNC_HOST}:${RSYNC_PATH}'"
 
 ProgressStart "Running archive operation"
 (
-	case "$BACKUP_PROG" in
+	case "$(basename $BACKUP_PROG)" in
 
 		(rsync)
 			BACKUP_OPTS="--sparse --archive --hard-links --one-file-system --verbose --delete --numeric-ids --exclude-from=$BUILD_DIR/backup-exclude.txt --delete-excluded --compress --stats"
 			if [ "$RSYNC_USER" != "root" -a $RSYNC_PROTOCOL_VERSION -gt 29 ]; then
-				BACKUP_OPTS2="--devices --acls $RSYNC_FAKE_SUPER"
+				BACKUP_OPTS2=" $RSYNC_FAKE_SUPER"
 			fi
 
 			case $RSYNC_PROTO in
@@ -51,13 +51,13 @@ starttime=$SECONDS
 sleep 1 # Give the backup software a good chance to start working
 
 function get_size () {
-	echo $(stat --format '%s' "/$1")
+	echo $(stat --format '%s' "/$1" 2>/dev/null)
 }
 
 # make sure that we don't fall for an old size info
 unset size
 # while the backup runs in a sub-process, display some progress information to the user
-case "$BACKUP_PROG" in
+case "$(basename $BACKUP_PROG)" in
 
 	(rsync)
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
