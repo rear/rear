@@ -31,10 +31,10 @@ StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
 
 pushd $BUILD_DIR >&8 # so that relative paths will work
 $ISO_MKISOFS_BIN -o "$ISO_DIR/$ISO_PREFIX.iso" -U -chrp-boot \
-	-R -J -volid "$ISO_VOLID" -v -graft-points "${ISO_FILES[@]}"  >&8
+	-R -J -volid "$ISO_VOLID" -v -graft-points "${ISO_FILES[@]}" >&8
 StopIfError "Could not create ISO image"
 ISO_IMAGES=( "${ISO_IMAGES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
-popd >/dev/null
+popd >&8
 Print "Wrote ISO Image $ISO_DIR/$ISO_PREFIX.iso ($(du -h "$ISO_DIR/$ISO_PREFIX.iso"| tr -s " \t" " " | cut -d " " -f 1))"
 
 # Add ISO image to result files

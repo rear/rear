@@ -40,7 +40,7 @@ WORKFLOW_format () {
 	elif [[ -b "$DEVICE" ]]; then
 		OUTPUT=USB
 	else
-		Error "Device $DEVICE is not a character, not a block device."
+		Error "Device $DEVICE is not a character, nor a block device."
 	fi
 
 	SourceStage "format"
