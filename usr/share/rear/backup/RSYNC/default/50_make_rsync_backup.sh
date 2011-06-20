@@ -16,21 +16,18 @@ ProgressStart "Running archive operation"
 	case "$(basename $BACKUP_PROG)" in
 
 		(rsync)
-			BACKUP_OPTS="--sparse --archive --hard-links --one-file-system --verbose --delete --numeric-ids --exclude-from=$BUILD_DIR/backup-exclude.txt --delete-excluded --compress --stats"
-			if [ "$RSYNC_USER" != "root" -a $RSYNC_PROTOCOL_VERSION -gt 29 ]; then
-				BACKUP_OPTS2=" $RSYNC_FAKE_SUPER"
-			fi
+			RSYNC_OPTIONS=( "${RSYNC_OPTIONS[@]}" --one-file-system --delete --exclude-from=$BUILD_DIR/backup-exclude.txt --delete-excluded )
 
 			case $RSYNC_PROTO in
 
 				(ssh)
-					Log $BACKUP_PROG $BACKUP_OPTS $BACKUP_OPTS2 $(cat $BUILD_DIR/backup-include.txt) "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
-					$BACKUP_PROG $BACKUP_OPTS $BACKUP_OPTS2 $(cat $BUILD_DIR/backup-include.txt) \
-					"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup" 2>/dev/null
+					Log $BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $BUILD_DIR/backup-include.txt) "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
+					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $BUILD_DIR/backup-include.txt) \
+					"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup" # 2>/dev/null
 					;;
 
 				(rsync)
-					$BACKUP_PROG $BACKUP_OPTS $BACKUP_OPTS2 $(cat $BUILD_DIR/backup-include.txt) \
+					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $BUILD_DIR/backup-include.txt) \
 					"${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
 					;;
 

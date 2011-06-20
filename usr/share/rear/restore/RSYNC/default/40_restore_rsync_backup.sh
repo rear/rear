@@ -11,24 +11,20 @@ LogPrint "Restoring $BACKUP_PROG archive from '${RSYNC_HOST}:${RSYNC_PATH}'"
 
 ProgressStart "Restore operation"
 (
-	case "$BACKUP_PROG" in
+	case "$(basename $BACKUP_PROG)" in
 
 		(rsync)
-			BACKUP_OPTS="--sparse --archive --hard-links --verbose --numeric-ids --compress --stats"
-			if [ "$RSYNC_USER" != "root" -a $RSYNC_PROTOCOL_VERSION -gt 29 ]; then
-				BACKUP_OPTS2="--devices --acls $RSYNC_FAKE_SUPER"
-			fi
 
 			case $RSYNC_PROTO in
 
 				(ssh)
-					$BACKUP_PROG $BACKUP_OPTS $BACKUP_OPTS2 \
+					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" \
 					"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"/ \
 					/mnt/local/
 					;;
 
 				(rsync)
-					$BACKUP_PROG $BACKUP_OPTS $BACKUP_OPTS2 \
+					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" \
 					"${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup"/ /mnt/local/
 					;;
 
@@ -50,7 +46,7 @@ sleep 1 # Give the backup software a good chance to start working
 # make sure that we don't fall for an old size info
 unset size
 # while the restore runs in a sub-process, display some progress information to the user
-case "$BACKUP_PROG" in
+case "$(basename $BACKUP_PROG)" in
 	(rsync)
 		
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
