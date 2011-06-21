@@ -254,13 +254,47 @@ get_friendly_name() {
 get_sysfs_name() {
     local name=${1#/dev/}
     name=${name#/sys/block/}
-    echo "${name//\//!}"
+    
+    if [ -e /sys/block/${name//\//!} ] ; then
+        echo "${name//\//!}"
+        return 0
+    fi
+    
+    # accomodate for mapper/test -> dm-? mapping
+    local dev_number=$(dmsetup info -c --noheadings -o major,minor ${name##*/} 2>&8 )
+    if [ -n "$dev_number" ] ; then
+        local dev_name sysfs_device
+        for sysfs_device in /sys/block/*/dev ; do
+            if [ "$dev_number" = "$(cat $sysfs_device)" ] ; then
+                dev_name=${sysfs_device#/sys/block/}
+                echo "${dev_name%/*}"
+                return 0
+            fi
+        done
+    fi
 }
 
 # Translate a sysfs name to a device name.
 get_device_name() {
-    local name=$(get_sysfs_name $1)
-    echo "${name//!//}"
+    local name=${1#/dev/}
+    name=${name#/sys/block/}
+    name=${name//!//}
+    
+    if [ -e /dev/$name ] ; then
+        echo "$name"
+        return 0
+    fi
+    
+    # translate dm-8 -> mapper/test
+    local device dev_number mapper_number
+    dev_number=$(cat /sys/block/${name//\//!}/dev 2>&8)
+    for device in /dev/mapper/* ; do
+        mapper_number=$(dmsetup info -c --noheadings -o major,minor ${device#/dev/mapper/} 2>&8 )
+        if [ "$dev_number" = "$mapper_number" ] ; then
+            echo "${device#/dev/}"
+            return 0
+        fi
+    done
 }
 
 # Get the size in bytes of a block device.
