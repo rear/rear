@@ -39,28 +39,5 @@ while read dm_name junk ; do
     hash=$(cryptsetup luksDump $device | grep "Hash spec" | sed -r 's/^.+:[^a-z]+(.+)$/\1/')
     uuid=$(cryptsetup luksDump $device | grep "UUID" | sed -r 's/^.+:[^a-z]+(.+)$/\1/')
     
-    # Search for a keyfile or password.
-    keyfile=""
-    password=""
-    if [ -e /etc/crypttab ] ; then
-        while read name path key junk ; do
-            # skip blank lines, comments and non-block devices
-            if [ -n "$name" ] && [ "${name#\#}" = "$name" ] && [ -b "$path" ] && [ "$path" = "$device" ] ; then
-                # manual password
-                if [ "$key" = "none" ] ; then
-                    break
-                elif [ -e "$key" ] ; then
-                    # keyfile
-                    keyfile=" key=$key"
-                    COPY_AS_IS=( "${COPY_AS_IS[@]}" $key )
-                else
-                    # password
-                    password=" password=$key"
-                fi
-                break
-            fi
-        done < /etc/crypttab
-    fi
-    
-    echo "crypt /dev/mapper/$dm_name $device cipher=$cipher mode=$mode hash=$hash uuid=${uuid}${keyfile}${password}" >> $DISKLAYOUT_FILE
+    echo "crypt /dev/mapper/$dm_name $device cipher=$cipher mode=$mode hash=$hash uuid=${uuid}" >> $DISKLAYOUT_FILE
 done < <( dmsetup ls --target crypt )

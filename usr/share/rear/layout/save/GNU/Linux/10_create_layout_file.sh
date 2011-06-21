@@ -12,7 +12,6 @@ if [ -e "$DISKLAYOUT_FILE" ] ; then
     Log "Removing old layout file."
 fi
 : > $DISKLAYOUT_FILE
-chmod $v 600 $DISKLAYOUT_FILE >&2
 
 LAYOUT_FILE="$DISKLAYOUT_FILE"
 LAYOUT_DEPS="$VAR_DIR/layout/diskdeps.conf"
