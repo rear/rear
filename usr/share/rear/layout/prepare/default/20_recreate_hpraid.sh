@@ -40,9 +40,11 @@ done < <(grep "^logicaldrive " $LAYOUT_FILE)
 
 echo "set +e" >> $LAYOUT_CODE
 
-(
-. $LAYOUT_CODE
-)
-BugIfError "Could not configure the HP SmartArray controllers. Please see $LOGFILE for details."
+if [ ${#restored_controllers} -ne 0 ] ; then
+    (
+    . $LAYOUT_CODE
+    )
+    BugIfError "Could not configure the HP SmartArray controllers. Please see $LOGFILE for details."
+fi
 
 LAYOUT_CODE=$ORIG_LAYOUT_CODE
