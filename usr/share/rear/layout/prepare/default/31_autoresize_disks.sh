@@ -11,26 +11,17 @@ fi
 cp $LAYOUT_FILE $LAYOUT_FILE.tmp
 backup_file $LAYOUT_FILE
 
-while read type disk size junk ; do
-    device="/dev/$disk"
-    sysfsname=${disk/\//\!}
+while read type device size junk ; do
+    sysfsname=$(get_sysfs_name $device)
     
     if [ -d /sys/block/$sysfsname ] ; then
-        newsize=$(cat /sys/block/$sysfsname/size) # sectors
+        newsize=$(get_disk_size $sysfsname)
         
         if [ "$newsize" -eq "$size" ] ; then
             continue
         fi
-        
-        # Get the sector size
-        if [ -e /sys/block/$sysfsname/queue/logical_block_size ] ; then
-            sectorsize=$(cat /sys/block/$sysfsname/queue/logical_block_size)
-        else
-            sectorsize=512
-        fi
-        
-        let newsize=$newsize\*$sectorsize
-        let oldsize=$size\*512 # FIXME: should have old size in bytes instead...
+
+        let oldsize=$size
         
         Log "Searching for resizeable partitions on disk $device ($newsize)B"
         
@@ -41,7 +32,7 @@ while read type disk size junk ; do
                 partitions=( "${partitions[@]}" "$name|${size%B}" )
                 Log "Will resize partition $name."
             fi
-        done < <(grep "^part $disk" $LAYOUT_FILE)
+        done < <(grep "^part $device" $LAYOUT_FILE)
         
         if [ ${#partitions[@]} -eq 0 ] ; then
             Log "No resizeable partitions found."
@@ -60,7 +51,7 @@ while read type disk size junk ; do
             nr=$(echo "$name" | sed -r 's/.+([0-9])$/\1/')
             
             let new_size=$current_size+$delta
-            sed -r -i "s/^(part $disk) ${current_size}B(.+)$nr$/\1 ${new_size}B\2$nr/" $LAYOUT_FILE.tmp
+            sed -r -i "s/^(part $device) ${current_size}B(.+)$nr$/\1 ${new_size}B\2$nr/" $LAYOUT_FILE.tmp
             Log "Resized partition $name from ${current_size}B to ${new_size}B."
         done
     fi

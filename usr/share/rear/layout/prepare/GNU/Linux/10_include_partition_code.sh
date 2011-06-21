@@ -37,7 +37,7 @@ partition_disk() {
     fi
 
     # Find out the actual disk size
-    local disk_size=$( get_disk_size "$disk" )
+    local disk_size=$( get_disk_size $(get_sysfs_name "$disk") )
 
     [ "$disk_size" ]
     BugIfError "Could not determine size of disk $disk, please file a bug."

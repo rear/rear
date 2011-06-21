@@ -11,7 +11,7 @@ while read disk dev size junk ; do
     
     if [ -e "/sys/block/$dev" ] ; then
         Log "Device $dev exists."
-        newsize=$(cat /sys/block/$dev/size)
+        newsize=$(get_disk_size $dev)
         
         if [ "$newsize" -eq "$size" ] ; then
             Log "Size of device $dev matches."

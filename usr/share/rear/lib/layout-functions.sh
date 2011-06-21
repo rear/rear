@@ -278,16 +278,15 @@ get_sysfs_name() {
 get_device_name() {
     local name=${1#/dev/}
     name=${name#/sys/block/}
-    name=${name//!//}
     
-    if [ -e /dev/$name ] ; then
-        echo "$name"
+    if [ -e /dev/${name//!//} ] ; then
+        echo "${name//!//}"
         return 0
     fi
     
     # translate dm-8 -> mapper/test
     local device dev_number mapper_number
-    dev_number=$(cat /sys/block/${name//\//!}/dev 2>&8)
+    dev_number=$(cat /sys/block/$name/dev 2>&8)
     for device in /dev/mapper/* ; do
         mapper_number=$(dmsetup info -c --noheadings -o major,minor ${device#/dev/mapper/} 2>&8 )
         if [ "$dev_number" = "$mapper_number" ] ; then
@@ -297,13 +296,14 @@ get_device_name() {
     done
 }
 
-# Get the size in bytes of a block device.
+# Get the size in bytes of a disk/partition.
+# for partitions, use "sda/sda1" as argument
 get_disk_size() {
-    local disk_name=$(get_sysfs_name $1)
+    local disk_name=$1
     
     # Only newer kernels have an interface to get the block size
-    if [ -r /sys/block/$disk_name/queue/logical_block_size ] ; then
-        local block_size=$(cat /sys/block/$disk_name/queue/logical_block_size)
+    if [ -r /sys/block/${disk_name%/*}/queue/logical_block_size ] ; then
+        local block_size=$(cat /sys/block/${disk_name%/*}/queue/logical_block_size)
     else
         local block_size=512
     fi

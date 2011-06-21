@@ -15,8 +15,8 @@ Log "Saving disk partitions."
                 fi
                 
                 # fix cciss
-                devname=$(basename $disk | tr '!' '/')
-                devsize=$(cat $disk/size)
+                devname=$(get_device_name $disk)
+                devsize=$(get_disk_size ${disk#/sys/block/})
                 
                 disktype=$(parted -s /dev/$devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
                 
@@ -44,7 +44,7 @@ Log "Saving disk partitions."
     for device in "${devices[@]}" ; do
         if [ -e /dev/$device ] ; then
             
-            sysfsname=${device/\//\!} # sysfs name
+            sysfsname=$(get_sysfs_name $device)
             
             # Check for old version of parted.
             # Parted on RHEL 4 outputs differently 
@@ -93,18 +93,7 @@ Log "Saving disk partitions."
                         ;;
                 esac
                 
-                # Only newer kernels have an interface to get the block size
-                if [ -e /sys/block/$sysfsname/queue/logical_block_size ] ; then
-                    blocksize=$(cat /sys/block/$sysfsname/queue/logical_block_size)
-                else
-                    blocksize=512
-                fi
-                
-                psize=$(cat /sys/block/$sysfsname/${sysfsname}${pname}/size)
-                [ "$psize" ]
-                BugIfError "Could not determine size of partition ${sysfsname}${pname}, please file a bug."
-
-                let psize=$psize\*$blocksize
+                psize=$(get_disk_size "$sysfsname/$sysfsname$pname")
                 
                 flags=""
                 for flag in $pflags ; do
