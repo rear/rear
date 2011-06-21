@@ -2,7 +2,7 @@
 
 create_fs() {
     local fs device mp fstype uuid label options
-    read fs device mp fstype uuid label options < $1
+    read fs device mp fstype uuid label options < <(grep "^fs.* ${1#fs:} " $LAYOUT_FILE)
 
     label=${label#label=}
     uuid=${uuid#uuid=}

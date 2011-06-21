@@ -2,7 +2,7 @@
 
 create_swap() {
     local swap device uuid label junk
-    read swap device uuid label junk < $1
+    read swap device uuid label junk < <(grep "^swap ${1#swap:} " $LAYOUT_FILE)
     
     if [ -n "${uuid#uuid=}" ] ; then
         uuid="-U ${uuid#uuid=} "

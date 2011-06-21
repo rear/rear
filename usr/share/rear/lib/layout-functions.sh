@@ -28,60 +28,9 @@ create_device() {
 if create_component "$device" "$type" ; then
 EOF
     echo "# Create $device ($type)">> $LAYOUT_CODE
-    case "$type" in
-        disk)
-            partition_disk <(grep "^disk $device" $LAYOUT_FILE)
-            ;;
-        part)
-            # Partitions depend on disks, "disk" creates all partitions at once
-            ;;
-        lvmdev)
-            name=${device#pv:}
-            create_lvmdev <(grep "^lvmdev.*$name" $LAYOUT_FILE)
-            ;;
-        lvmgrp)
-            if [ -z "$MIGRATION_MODE" ] ; then
-                restore_lvmgrp <(grep "^lvmgrp $device" $LAYOUT_FILE)
-            else
-                create_lvmgrp <(grep "^lvmgrp $device" $LAYOUT_FILE)
-            fi
-            ;;
-        lvmvol)
-            if [ -n "$MIGRATION_MODE" ] ; then
-                name=${device#/dev/mapper/}
-                dm_vg=${name%-*}
-                # Device mapper doubles dashes
-                vg=${dm_vg/--/-}
-                lv=${name##*-}
-                create_lvmvol <(grep "^lvmvol /dev/$vg $lv" $LAYOUT_FILE)
-            fi
-            ;;
-        raid)
-            create_raid <(grep "^raid $device" $LAYOUT_FILE)
-            ;;
-        fs)
-            name=${device#fs:}
-            create_fs <(grep "^fs.* $name " $LAYOUT_FILE)
-            ;;
-        swap)
-            name=${device#swap:}
-            create_swap <(grep "^swap $name " $LAYOUT_FILE)
-            ;;
-        drbd)
-            create_drbd <(grep "^drbd $device" $LAYOUT_FILE)
-            ;;
-        crypt)
-            create_crypt <(grep "^crypt $device" $LAYOUT_FILE)
-            ;;
-        smartarray)
-            name=${device#sma:}
-            create_smartarray <(grep "^smartarray $name" $LAYOUT_FILE)
-            ;;
-        logicaldrive)
-            name=${device#ld:}
-            create_logicaldrive <(grep "^logicaldrive $name" $LAYOUT_FILE)
-            ;;
-    esac
+    if type -t create_$type >&8 ; then
+        create_$type $device
+    fi
     cat <<EOF >> $LAYOUT_CODE
 component_created "$device" "$type"
 else

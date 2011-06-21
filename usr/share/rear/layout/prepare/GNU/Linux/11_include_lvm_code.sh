@@ -22,7 +22,7 @@ fi
 # Create a new PV
 create_lvmdev() {
     local lvmdev vgrp device uuid junk
-    read lvmdev vgrp device uuid junk < $1
+    read lvmdev vgrp device uuid junk < <(grep "^lvmdev.*${1#pv:}" $LAYOUT_FILE)
 
     (
     echo "LogPrint \"Creating LVM PV $device\""
@@ -47,8 +47,13 @@ create_lvmdev() {
 
 # Create a new VG
 create_lvmgrp() {
+    if [ -z "$MIGRATION_MODE" ] ; then
+        restore_lvmgrp $1
+        return
+    fi
+
     local lvmgrp vgrp extentsize junk
-    read lvmgrp vgrp extentsize junk < $1
+    read lvmgrp vgrp extentsize junk < <(grep "^lvmgrp $1" $LAYOUT_FILE)
 
     local -a devices=($(grep "^lvmdev $vgrp" $LAYOUT_FILE | cut -d " " -f 3))
 
@@ -65,7 +70,7 @@ EOF
 # Restore a VG from a backup
 restore_lvmgrp() {
     local lvmgrp vgrp extentsize junk
-    read lvmgrp vgrp extentsize junk < $1
+    read lvmgrp vgrp extentsize junk < <(grep "^lvmgrp $1" $LAYOUT_FILE)
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Restoring LVM VG ${vgrp#/dev/}"
 if [ -e $vgrp ] ; then
@@ -78,8 +83,19 @@ EOF
 
 # Create a LV
 create_lvmvol() {
+    if [ -z "$MIGRATION_MODE" ] ; then
+        return
+    fi
+
+    local name dm_vg vg lv
+    name=${1#/dev/mapper/}
+    dm_vg=${name%-*}
+    # Device mapper doubles dashes
+    vg=${dm_vg/--/-}
+    lv=${name##*-}
+
     local lvmvol vgrp lvname nrextents junk
-    read lvmvol vgrp lvname nrextents junk < $1
+    read lvmvol vgrp lvname nrextents junk < <(grep "^lvmvol /dev/$vg $lv" $LAYOUT_FILE)
 
     (
     echo "LogPrint \"Creating LVM volume ${vgrp#/dev/}/$lvname\""

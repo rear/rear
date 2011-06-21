@@ -26,9 +26,9 @@ elif version_newer "$parted_version" 1.6.23 ; then
 fi
 
 # Partition a disk
-partition_disk() {
+create_disk() {
     local component disk size label junk
-    read component disk size label junk <$1
+    read component disk size label junk < <(grep "^disk $1 " $LAYOUT_FILE)
 
     if [ -z "$label" ] ; then
         # LVM on whole disk can lead to no label available.
