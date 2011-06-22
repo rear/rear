@@ -21,7 +21,7 @@
 # check if udev is available in a sufficiently recent version
 have_udev() {
 	local relpath="$1"; shift
-	if [ -d $relpath/etc/udev/rules.d ] && has_binary udevadm udevtrigger; then
+	if [ -d $relpath/etc/udev/rules.d ] && has_binary udevadm udevstart udevtrigger; then
 		return 0
 	fi
 	return 1
