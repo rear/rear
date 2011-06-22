@@ -51,7 +51,7 @@ while read type device size junk ; do
             nr=$(echo "$name" | sed -r 's/.+([0-9])$/\1/')
             
             let new_size=$current_size+$delta
-            sed -r -i "s/^(part $device) ${current_size}B(.+)$nr$/\1 ${new_size}B\2$nr/" $LAYOUT_FILE.tmp
+            sed -r -i "s|^(part $device) ${current_size}(.+)$nr$|\1 ${new_size}\2$nr|" $LAYOUT_FILE.tmp
             Log "Resized partition $name from ${current_size}B to ${new_size}B."
         done
     fi
