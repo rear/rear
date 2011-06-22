@@ -1,6 +1,6 @@
 # Stop SELinux if present with tar backup
 [ -f /selinux/enforce ] || return
-case "${BACKUP_PROG}" in
+case "$(basename ${BACKUP_PROG})" in
 	(tar|rsync)
 		cat /selinux/enforce > $TMP_DIR/selinux.mode
 		echo "0" > /selinux/enforce

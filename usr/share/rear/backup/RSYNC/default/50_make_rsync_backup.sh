@@ -23,7 +23,7 @@ ProgressStart "Running archive operation"
 				(ssh)
 					Log $BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $BUILD_DIR/backup-include.txt) "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
 					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $BUILD_DIR/backup-include.txt) \
-					"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup" # 2>/dev/null
+					"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"  2>/dev/null
 					;;
 
 				(rsync)
