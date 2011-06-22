@@ -72,6 +72,11 @@ while read -u 3 disk dev size junk ; do
     # Allow the user to select from the set of unmapped disks
     possible_targets=()
     for path in /sys/block/* ; do
+        # Skipping removable devices
+        if [ "$(cat $path/removable)" = "1" ] ; then
+            continue
+        fi
+
         if ! reverse_mapping_exists "/dev/$(get_device_name $path)" && [ -d $path/queue ] ; then
             possible_targets=("${possible_targets[@]}" "$(get_device_name $path)")
         fi
