@@ -1,6 +1,12 @@
 # 05_prep_rsync.sh : prepare rsync usage
 # define rsync as BACKUP_PROG and not tar (which is the default)
-[[ -z "$BACKUP_PROG" ]] && BACKUP_PROG=rsync	# will be added by PROGS
+#[[ -z "$BACKUP_PROG" ]] && BACKUP_PROG=rsync	# BACKUP_PROG=tar defined in default.conf!
+case $BACKUP_PROG in
+	(tar)	BACKUP_PROG=rsync ;;		# if nothing was set nor defined
+	(rsync)	: ;;				# was defined correctly
+	(*)	[[ ! -x $BACKUP_PROG ]] && BACKUP_PROG=rsync
+esac
+
 
 PROGS=( "${PROGS[@]}"
 $BACKUP_PROG
