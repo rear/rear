@@ -9,7 +9,7 @@ Log "Saving disk partitions."
     for disk in /sys/block/* ; do
         case $(basename $disk) in
             hd*|sd*|cciss*|vd*)
-                if [ "$(cat $disk/removable)" = "1" ] ; then
+                if [ "$( < $disk/removable)" = "1" ] ; then
                     Log "Skipping removable device $disk"
                     continue
                 fi

@@ -214,7 +214,7 @@ get_sysfs_name() {
     if [ -n "$dev_number" ] ; then
         local dev_name sysfs_device
         for sysfs_device in /sys/block/*/dev ; do
-            if [ "$dev_number" = "$(cat $sysfs_device)" ] ; then
+            if [ "$dev_number" = "$( < $sysfs_device)" ] ; then
                 dev_name=${sysfs_device#/sys/block/}
                 echo "${dev_name%/*}"
                 return 0
@@ -235,14 +235,16 @@ get_device_name() {
     
     # translate dm-8 -> mapper/test
     local device dev_number mapper_number
-    dev_number=$(cat /sys/block/$name/dev 2>&8)
-    for device in /dev/mapper/* ; do
-        mapper_number=$(dmsetup info -c --noheadings -o major,minor ${device#/dev/mapper/} 2>&8 )
-        if [ "$dev_number" = "$mapper_number" ] ; then
-            echo "${device#/dev/}"
-            return 0
-        fi
-    done
+    if [ -r /sys/block/$name/dev ] ; then
+        dev_number=$( < /sys/block/$name/dev)
+        for device in /dev/mapper/* ; do
+            mapper_number=$(dmsetup info -c --noheadings -o major,minor ${device#/dev/mapper/} 2>&8 )
+            if [ "$dev_number" = "$mapper_number" ] ; then
+                echo "${device#/dev/}"
+                return 0
+            fi
+        done
+    fi
 }
 
 # Get the size in bytes of a disk/partition.
@@ -252,7 +254,7 @@ get_disk_size() {
     
     # Only newer kernels have an interface to get the block size
     if [ -r /sys/block/${disk_name%/*}/queue/logical_block_size ] ; then
-        local block_size=$(cat /sys/block/${disk_name%/*}/queue/logical_block_size)
+        local block_size=$( < /sys/block/${disk_name%/*}/queue/logical_block_size)
     else
         local block_size=512
     fi
@@ -260,7 +262,7 @@ get_disk_size() {
     [ -r /sys/block/$disk_name/size ]
     BugIfError "Could not determine size of disk $disk_name, please file a bug."
 
-    local nr_blocks=$(cat /sys/block/$disk_name/size)
+    local nr_blocks=$( < /sys/block/$disk_name/size)
     local disk_size=$(( nr_blocks * block_size ))
     
     ### Make sure we always return a number

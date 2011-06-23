@@ -73,7 +73,7 @@ while read -u 3 disk dev size junk ; do
     possible_targets=()
     for path in /sys/block/* ; do
         # Skipping removable devices
-        if [ "$(cat $path/removable)" = "1" ] ; then
+        if [ "$( < $path/removable)" = "1" ] ; then
             continue
         fi
 
