@@ -252,12 +252,7 @@ get_device_name() {
 get_disk_size() {
     local disk_name=$1
     
-    # Only newer kernels have an interface to get the block size
-    if [ -r /sys/block/${disk_name%/*}/queue/logical_block_size ] ; then
-        local block_size=$( < /sys/block/${disk_name%/*}/queue/logical_block_size)
-    else
-        local block_size=512
-    fi
+    local block_size=$(get_block_size ${disk_name%/*})
     
     [ -r /sys/block/$disk_name/size ]
     BugIfError "Could not determine size of disk $disk_name, please file a bug."
@@ -268,3 +263,14 @@ get_disk_size() {
     ### Make sure we always return a number
     echo $(( disk_size ))
 }
+
+# Get the block size of a disk.
+get_block_size() {
+    # Only newer kernels have an interface to get the block size
+    if [ -r /sys/block/$1/queue/logical_block_size ] ; then
+        echo $( < /sys/block/$1/queue/logical_block_size)
+    else
+        echo "512"
+    fi
+}
+

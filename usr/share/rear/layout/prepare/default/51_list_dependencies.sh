@@ -25,7 +25,7 @@ while read type remainder ; do
         part)
             # disk is the first field of the remainder
             disk=$(echo "$remainder" | cut -d " " -f "1")
-            name=$(echo "$remainder" | cut -d " " -f "5")
+            name=$(echo "$remainder" | cut -d " " -f "6")
             add_dependency "$name" "$disk"
             add_component "$name" "part"
             ;;

@@ -27,7 +27,7 @@ while read type device size junk ; do
         
         # Find partitions that could be resized
         partitions=()
-        while read type part size name flags name junk; do
+        while read type part size start name flags name junk; do
             if [ "${flags/lvm/j}" != "${flags}" ] || [ "${flags/raid/j}" != "$flags" ] ; then
                 partitions=( "${partitions[@]}" "$name|${size%B}" )
                 Log "Will resize partition $name."

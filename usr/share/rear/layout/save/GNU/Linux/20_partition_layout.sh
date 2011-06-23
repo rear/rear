@@ -45,6 +45,7 @@ Log "Saving disk partitions."
         if [ -e /dev/$device ] ; then
             
             sysfsname=$(get_sysfs_name $device)
+            blocksize=$(get_block_size $sysfsname)
             
             # Check for old version of parted.
             # Parted on RHEL 4 outputs differently 
@@ -95,6 +96,12 @@ Log "Saving disk partitions."
                 
                 psize=$(get_disk_size "$sysfsname/$sysfsname$pname")
                 
+                pstart=$( < /sys/block/$sysfsname/${sysfsname}${pname}/start)
+                if [ -z "$pstart" ] ; then
+                    BugError "Could not determine start of partition ${sysfsname}${pname}, please file a bug."
+                fi
+                let pstart=$pstart\*$blocksize
+                
                 flags=""
                 for flag in $pflags ; do
                     case $flag in
@@ -107,7 +114,7 @@ Log "Saving disk partitions."
                     flags="none"
                 fi
                 
-                echo "part /dev/$device $psize $ptype ${flags%,} /dev/${device}${pname}"
+                echo "part /dev/$device $psize $pstart $ptype ${flags%,} /dev/${device}${pname}"
             done < <(grep -E '^[ ]*[0-9]' $TMP_DIR/parted)
 
         fi

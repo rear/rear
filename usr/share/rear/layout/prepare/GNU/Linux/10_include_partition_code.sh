@@ -55,7 +55,12 @@ EOF
     let end=0
 
     local part odisk size parttype flags name junk
-    while read part odisk size parttype flags name junk; do
+    while read part odisk size pstart parttype flags name junk; do
+        
+        # if not in migration mode, use original start
+        if [ -z "$MIGRATION_MODE" ] ; then
+            start=$pstart
+        fi
         
         # calculate the end of the partition.
         let end=$start+$size
