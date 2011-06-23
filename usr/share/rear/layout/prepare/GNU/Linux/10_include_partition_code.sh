@@ -95,7 +95,7 @@ EOF
         
         # round starting size to next multiple of 4096
         # 4096 is a good match for most device's block size
-        start=$( echo "$start" | awk '{print $1+4096-($1%4096);}')
+        start=$( echo "$start" | awk '{printf "%u", $1+4096-($1%4096);}')
         
         # Get the partition number from the name
         local number=$(echo "$name" | grep -o -E "[0-9]+$")
