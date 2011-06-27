@@ -15,7 +15,6 @@ done
 for devnode in $(ls /dev/ttyS[0-9]* | sort); do
     speed=$(stty -F $devnode 2>&8 | awk '/^speed / { print $2 }')
     if [ "$speed" ]; then
-        echo "s${devnode##/dev/ttyS}:2345:respawn:/sbin/$GETTY $speed ${devnode##/dev/} vt100" >>$ROOTFS_DIR/etc/inittab
         cmdline="${cmdline}console=${devnode##/dev/},$speed "
     fi
 done
@@ -25,5 +24,4 @@ if [[ " $cmdline" != "$KERNEL_CMDLINE " ]]; then
     KERNEL_CMDLINE="${cmdline}console=tty0"
 fi
 
-Log "Serial Console support enabled - adding required entries for '$GETTY' in inittab"
 Log "Modified kernel commandline to: '$KERNEL_CMDLINE'"
