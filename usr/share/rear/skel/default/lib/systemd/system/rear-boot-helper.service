@@ -1,5 +1,5 @@
 [Unit]
-Description=ReaR boot script
+Description=Rear boot script
 DefaultDependencies=no
 
 [Service]

@@ -12,14 +12,14 @@ rear - bare metal disaster recovery tool
 
 
 == DESCRIPTION
-Relax and Recover (abbreviated *ReaR*) is a highly modular disaster recovery
+Relax and Recover (abbreviated *Rear*) is a highly modular disaster recovery
 framework for GNU/Linux based systems, but can be easily extended to other
 UNIX alike systems. The disaster recovery information can be stored and used
 via the network, local on hard disks or USB devices, DVD/CD-R. The result is
 also a bootable image that is capable of booting via PXE, DVD/CD. 
 
 The disaster recovery can be integrated with any existing backup software
-so that ReaR utilizes the backup software to restore the files and provides
+so that Rear utilizes the backup software to restore the files and provides
 the "glue" surrounding the simple file restore to having a full bare metal
 disaster recovery solution. Support for specific backup software has to be
 added to rear on an individual base and is very simple (look at an existing
@@ -104,11 +104,11 @@ support recreating the system layout. Relax and Recover is very good at
 recreating the system layout but and works best when used together with
 a supported backup software.
 
-In this combination ReaR recreates the system layout and calls the backup
+In this combination Rear recreates the system layout and calls the backup
 software to restore the actual data. Thus there is no unnessecary duplicate
-data storage and the ReaR rescue media can be very small.
+data storage and the Rear rescue media can be very small.
 
-For demonstration and special use purposes ReaR also includes an internal
+For demonstration and special use purposes Rear also includes an internal
 backup method, NETFS, which can be used to create a simple tar.gz archive
 of the system. For all permanent setups we recommend using something more
 professional for backup, either a traditional backup software (open
@@ -116,10 +116,10 @@ source or commercial) or rsync with hardlink based solutions, e.g. RSYNC
 BACKUP MADE EASY.
 
 == BACKUP SOFTWARE INTEGRATION
-Currently ReaR supports the following backup methods. Please distinguish
-carefully between ReaR support for 3rd party backup software and ReaR
+Currently Rear supports the following backup methods. Please distinguish
+carefully between Rear support for 3rd party backup software and Rear
 internal backup methods. The latter also creates a backup of your data
-while the former will only integrate ReaR with the backup software to
+while the former will only integrate Rear with the backup software to
 restore the data with the help of the backup software without actually
 creating backups. This means that for all non-internal backup software
 you *must* take care of creating backups yourself.
@@ -127,7 +127,7 @@ you *must* take care of creating backups yourself.
 Especially the +rear mkbackup+ command can be confusing as it is only
 useful for the internal backup methods and has no function at all with
 the other backup methods. The following backup methods need to be set
-in ReaR with the +BACKUP=+ option.
+in Rear with the +BACKUP=+ option.
 
 DP::
     Use HP Data Protector to restore the data.
@@ -150,7 +150,7 @@ NETFS::
     (tar archive).
 
 REQUEST_RESTORE::
-    *(default)* Not really a backup method at all, ReaR simply halts the
+    *(default)* Not really a backup method at all, Rear simply halts the
     recovery and requests that somebody will restore the data to the
     appropriate location (e.g. via SSH). This method works especially
     well with an rsync bases backup that is pushed back to the backup
@@ -160,7 +160,7 @@ RSYNC::
     Use rsync to restore data.
 
 TSM::
-    Use IBM Tivoli Storage Manager to restore the data. The ReaR result
+    Use IBM Tivoli Storage Manager to restore the data. The Rear result
     files (e.g. ISO image) are also saved into TSM.
 
 If your favourite backup software is missing from this list, please submit
@@ -177,7 +177,7 @@ be changed.
 In _/etc/rear/templates_ there are also some template files which are used
 by rear to create configuration files (mostly for the boot environment).
 Modify the templates to adjust the information contained in the emails
-produced by ReaR. You can use these templates to prepend your own
+produced by Rear. You can use these templates to prepend your own
 configurations to the configuration files created by rear, for example you
 can edit _PXE_pxelinux.cfg_ to add some general pxelinux configuration you use.
 
@@ -244,17 +244,17 @@ rescue system away so that you can use it in the case of a system failure.
     Site specific configuration can be set here.
 
 /tmp/rear-hostname.log::
-    ReaR log file.
+    Rear log file.
 
 /tmp/rear.##############::
-    ReaR working directory. If ReaR exits with an error, you must remove
+    Rear working directory. If Rear exits with an error, you must remove
     this directory manually.
 
 /usr/share/rear::
-    ReaR script components.
+    Rear script components.
 
 /usr/share/rear/conf/default.conf::
-    ReaR's included defaults. Contains a complete set of parameters and
+    Rear's included defaults. Contains a complete set of parameters and
     its explanation.  Please do not edit or modify. Copy values to
     _local.conf_ or _site.conf_ instead.
 

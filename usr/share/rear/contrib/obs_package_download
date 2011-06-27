@@ -9,7 +9,7 @@
 # <distro>/<arch>
 
 OBS_PROJECT=home:sschapiro
-OBS_PACKAGE=ReaR
+OBS_PACKAGE=Rear
 
 die() {
 	echo "ERROR: $@" >&2

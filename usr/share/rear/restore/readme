@@ -1,4 +1,4 @@
-This is the "restore" tree of ReaR
+This is the "restore" tree of Rear
 ----------------------------------
 00-09	initialisation, e.g. copy dev-files needed for external backups progs
 10-19	do mounting if necessary (NETFS)

@@ -1,10 +1,10 @@
 = Configuration examples
 
 This document explains the various use-cases and how to configure them in
-ReaR. The configuration is performed by changing _/etc/rear/local.conf_ or
+Rear. The configuration is performed by changing _/etc/rear/local.conf_ or
 _/etc/rear/site.conf_.
 
-There are two important variables that influence ReaR and the ReaR rescue
+There are two important variables that influence Rear and the Rear rescue
 image. Set +OUTPUT+ to your preferred boot method and define +BACKUP+ for your
 favorite +BACKUP+ strategy. 
 
@@ -85,7 +85,7 @@ BACKUP=GALAXY7::
 Use CommVault Galaxy (7 and probably newer)
 
 BACKUP=NETFS::
-Use ReaR internal backup with tar or rsync (or similar)
+Use Rear internal backup with tar or rsync (or similar)
 
 BACKUP=REQUEST_RESTORE::
 No backup, just ask user to somehow restore the filesystems

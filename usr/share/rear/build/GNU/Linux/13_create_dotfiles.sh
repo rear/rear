@@ -23,9 +23,9 @@
 #-------------------------------------------------------80-|
 cat <<EOF > $ROOTFS_DIR/root/.bash_history
 : : : : : WHAT ELSE WOULD YOU HAVE EXPECTED HERE?
-less /var/lib/rear/layout/diskrestore.sh   # View disk restore script
-less /var/lib/rear/layout/disklayout.conf  # View disk layout configuration
-less $LOGFILE   # View ReaR's log file
+vi /var/lib/rear/layout/diskrestore.sh   # View/modify disk restore script
+vi /var/lib/rear/layout/disklayout.conf  # View/modify disk layout configuration
+less $LOGFILE   # View Rear's log file
 loadkeys -d     # Load default keyboard layout (US)
 rear recover    # Recover your system
 EOF

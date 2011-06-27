@@ -1,5 +1,5 @@
 [Unit]
-Description=ReaR run-syslog script
+Description=Rear run-syslog script
 DefaultDependencies=no
 
 [Service]

@@ -1,5 +1,5 @@
 [Unit]
-Description=ReaR system setup script
+Description=Rear system setup script
 DefaultDependencies=no
 
 [Service]

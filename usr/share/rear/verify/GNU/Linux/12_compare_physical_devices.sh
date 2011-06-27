@@ -43,7 +43,7 @@ if test -s $TMP_DIR/mappings/disk_devices ; then
 				let DISK_MAPPING_COUNT++
 				LogPrint "Valid disk mapping found for $original_device"
 			else
-				LogPrint "Warning: A disk mapping file has been found. But the size of $new_device is too small for the contents of $original_device. ReaR will continue with the manual mapping procedure."
+				LogPrint "Warning: A disk mapping file has been found. But the size of $new_device is too small for the contents of $original_device. Rear will continue with the manual mapping procedure."
 			fi
 		fi
 	done <$VAR_DIR/recovery/required_devices

@@ -24,7 +24,7 @@ cp $v /usr/lib/yaboot/yaboot $BUILD_DIR/ppc/chrp >&2
 
 cat >"$BUILD_DIR/ppc/bootinfo.txt" <<EOF
 <chrp-boot>
-<description>ReaR</description>
+<description>Rear</description>
 <os-name>Linux</os-name>
 <boot-script>boot &device;:\ppc\chrp\yaboot</boot-script>
 </chrp-boot>
@@ -32,12 +32,12 @@ EOF
 
 mkdir -p $v $BUILD_DIR/etc >&2
 cat >"$BUILD_DIR/etc/yaboot.conf" <<EOF
-init-message = "\nReaR boot\n\n"
+init-message = "\nRear boot\n\n"
 timeout=100
-default=ReaR
+default=Rear
 
 image=kernel
-	label=ReaR
+	label=Rear
 	initrd=initrd.cgz
 	append=" root=/dev/ram0 $KERNEL_CMDLINE"
 

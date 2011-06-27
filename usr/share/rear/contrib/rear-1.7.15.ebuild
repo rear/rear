@@ -5,7 +5,7 @@
 
 inherit eutils depend.php
 
-DESCRIPTION="ReaR - Relax and Recover | Disaster Recovery for GNU/Linux"
+DESCRIPTION="Rear - Relax and Recover | Disaster Recovery for GNU/Linux"
 HOMEPAGE="http://rear.sourceforge.net/"
 SRC_URI="mirror://sourceforge/${PN}/${P}.tar.gz"
 KEYWORDS="~amd64 x86"

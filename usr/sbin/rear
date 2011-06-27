@@ -183,7 +183,7 @@ if [[ "$DEBUG" ]]; then
 fi
 
 [[ -z "$SIMULATE" ]]
-LogPrintIfError "Simulation mode activated, ReaR base directory: $SHARE_DIR"
+LogPrintIfError "Simulation mode activated, Rear base directory: $SHARE_DIR"
 
 # All workflows need to read the configurations first.
 # Combine configuration files
@@ -204,7 +204,7 @@ for config in site local rescue; do
 	Source "$CONFIG_DIR/$config.conf"
 done
 
-# check for requirements, # do we have all required binaries ?
+# check for requirements, do we have all required binaries ?
 MISSING_PROGRS=()
 for f in "${REQUIRED_PROGS[@]}" ; do
 	if ! has_binary "$f"; then

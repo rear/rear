@@ -1,7 +1,7 @@
 Name: rear
 Version: 1.11.0
 Release: 1%{?dist}
-Summary: Relax and Recover (ReaR) is a Linux Disaster Recovery framework
+Summary: Relax and Recover (Rear) is a Linux Disaster Recovery framework
 
 Group: Productivity/Archiving/Backup
 License: GPL v2 or later

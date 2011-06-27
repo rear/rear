@@ -2,7 +2,7 @@ test "$PROFILEREAD" && return
 PROFILEREAD=1
 
 
-# ReaR rescue system uses only /bin, all other default bin paths are symlinks
+# Rear rescue system uses only /bin, all other default bin paths are symlinks
 export PATH=/bin
 
 spwd () {

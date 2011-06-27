@@ -146,10 +146,10 @@ if test -d /proc/net/bonding ; then
 		# *first* slave device
 		
 		# Anpassung HZD: Hat ein System bei einer SLES10 Installation zwei Bonding-Devices 
-		# gibt es Probleme beim Boot mit der ReaR-Iso-Datei. Der Befehl modprobe -o name ...
+		# gibt es Probleme beim Boot mit der Rear-Iso-Datei. Der Befehl modprobe -o name ...
 		# funkioniert nicht. Dadurch wird nur das erste bonding-Device koniguriert. 
 		# Die Konfiguration des zweiten Devices schlägt fehl und dieses lässt sich auch nicht manuell
-		# nachinstallieren. Daher wurde diese script so angepasst, dass die ReaR-Iso-Datei kein Bonding
+		# nachinstallieren. Daher wurde diese script so angepasst, dass die Rear-Iso-Datei kein Bonding
 		# konfiguriert, sondern die jeweiligen IP-Adressen einer Netzwerkkarte des Bondingdevices 
 		# zuordnet. Dadurch musste aber auch das script 35_routing.sh angepasst werden.
 

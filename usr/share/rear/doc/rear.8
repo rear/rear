@@ -25,9 +25,9 @@ rear \- bare metal disaster recovery tool
 \fBrear\fR [\fB\-dDsSvV\fR] [\fB\-r\fR \fIKERNEL\fR] \fICOMMAND\fR [\-\- \fIARGS\fR\&...]
 .SH "DESCRIPTION"
 .sp
-Relax and Recover (abbreviated \fBReaR\fR) is a highly modular disaster recovery framework for GNU/Linux based systems, but can be easily extended to other UNIX alike systems\&. The disaster recovery information can be stored and used via the network, local on hard disks or USB devices, DVD/CD\-R\&. The result is also a bootable image that is capable of booting via PXE, DVD/CD\&.
+Relax and Recover (abbreviated \fBRear\fR) is a highly modular disaster recovery framework for GNU/Linux based systems, but can be easily extended to other UNIX alike systems\&. The disaster recovery information can be stored and used via the network, local on hard disks or USB devices, DVD/CD\-R\&. The result is also a bootable image that is capable of booting via PXE, DVD/CD\&.
 .sp
-The disaster recovery can be integrated with any existing backup software so that ReaR utilizes the backup software to restore the files and provides the "glue" surrounding the simple file restore to having a full bare metal disaster recovery solution\&. Support for specific backup software has to be added to rear on an individual base and is very simple (look at an existing implementation for further information)\&.
+The disaster recovery can be integrated with any existing backup software so that Rear utilizes the backup software to restore the files and provides the "glue" surrounding the simple file restore to having a full bare metal disaster recovery solution\&. Support for specific backup software has to be added to rear on an individual base and is very simple (look at an existing implementation for further information)\&.
 .sp
 Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU General Public License at: http://www\&.gnu\&.org/licenses/gpl\&.html
 .SH "OPTIONS"
@@ -158,14 +158,14 @@ Restore the data to the system
 .sp
 Most backup software solutions are very good at restoring data but do not support recreating the system layout\&. Relax and Recover is very good at recreating the system layout but and works best when used together with a supported backup software\&.
 .sp
-In this combination ReaR recreates the system layout and calls the backup software to restore the actual data\&. Thus there is no unnessecary duplicate data storage and the ReaR rescue media can be very small\&.
+In this combination Rear recreates the system layout and calls the backup software to restore the actual data\&. Thus there is no unnessecary duplicate data storage and the Rear rescue media can be very small\&.
 .sp
-For demonstration and special use purposes ReaR also includes an internal backup method, NETFS, which can be used to create a simple tar\&.gz archive of the system\&. For all permanent setups we recommend using something more professional for backup, either a traditional backup software (open source or commercial) or rsync with hardlink based solutions, e\&.g\&. RSYNC BACKUP MADE EASY\&.
+For demonstration and special use purposes Rear also includes an internal backup method, NETFS, which can be used to create a simple tar\&.gz archive of the system\&. For all permanent setups we recommend using something more professional for backup, either a traditional backup software (open source or commercial) or rsync with hardlink based solutions, e\&.g\&. RSYNC BACKUP MADE EASY\&.
 .SH "BACKUP SOFTWARE INTEGRATION"
 .sp
-Currently ReaR supports the following backup methods\&. Please distinguish carefully between ReaR support for 3rd party backup software and ReaR internal backup methods\&. The latter also creates a backup of your data while the former will only integrate ReaR with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself\&.
+Currently Rear supports the following backup methods\&. Please distinguish carefully between Rear support for 3rd party backup software and Rear internal backup methods\&. The latter also creates a backup of your data while the former will only integrate Rear with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself\&.
 .sp
-Especially the rear mkbackup command can be confusing as it is only useful for the internal backup methods and has no function at all with the other backup methods\&. The following backup methods need to be set in ReaR with the BACKUP= option\&.
+Especially the rear mkbackup command can be confusing as it is only useful for the internal backup methods and has no function at all with the other backup methods\&. The following backup methods need to be set in Rear with the BACKUP= option\&.
 .PP
 DP
 .RS 4
@@ -201,7 +201,7 @@ REQUEST_RESTORE
 .RS 4
 
 \fB(default)\fR
-Not really a backup method at all, ReaR simply halts the recovery and requests that somebody will restore the data to the appropriate location (e\&.g\&. via SSH)\&. This method works especially well with an rsync bases backup that is pushed back to the backup client\&.
+Not really a backup method at all, Rear simply halts the recovery and requests that somebody will restore the data to the appropriate location (e\&.g\&. via SSH)\&. This method works especially well with an rsync bases backup that is pushed back to the backup client\&.
 .RE
 .PP
 RSYNC
@@ -211,7 +211,7 @@ Use rsync to restore data\&.
 .PP
 TSM
 .RS 4
-Use IBM Tivoli Storage Manager to restore the data\&. The ReaR result files (e\&.g\&. ISO image) are also saved into TSM\&.
+Use IBM Tivoli Storage Manager to restore the data\&. The Rear result files (e\&.g\&. ISO image) are also saved into TSM\&.
 .RE
 .sp
 If your favourite backup software is missing from this list, please submit a patch or ask us to implement it for you\&.
@@ -219,7 +219,7 @@ If your favourite backup software is missing from this list, please submit a pat
 .sp
 To configure rear you have to edit the configuration files in \fI/etc/rear/\fR\&. All \fI*\&.conf\fR files there are part of the configuration, but only \fIsite\&.conf\fR and \fIlocal\&.conf\fR are intended for the user configuration\&. All other configuration files hold defaults for various distributions and should not be changed\&.
 .sp
-In \fI/etc/rear/templates\fR there are also some template files which are used by rear to create configuration files (mostly for the boot environment)\&. Modify the templates to adjust the information contained in the emails produced by ReaR\&. You can use these templates to prepend your own configurations to the configuration files created by rear, for example you can edit \fIPXE_pxelinux\&.cfg\fR to add some general pxelinux configuration you use\&.
+In \fI/etc/rear/templates\fR there are also some template files which are used by rear to create configuration files (mostly for the boot environment)\&. Modify the templates to adjust the information contained in the emails produced by Rear\&. You can use these templates to prepend your own configurations to the configuration files created by rear, for example you can edit \fIPXE_pxelinux\&.cfg\fR to add some general pxelinux configuration you use\&.
 .sp
 In almost all circumstances you have to configure two main settings and their parameters: The backup method and the output method\&.
 .sp
@@ -314,22 +314,22 @@ Site specific configuration can be set here\&.
 .PP
 /tmp/rear\-hostname\&.log
 .RS 4
-ReaR log file\&.
+Rear log file\&.
 .RE
 .PP
 /tmp/rear\&.####
 .RS 4
-ReaR working directory\&. If ReaR exits with an error, you must remove this directory manually\&.
+Rear working directory\&. If Rear exits with an error, you must remove this directory manually\&.
 .RE
 .PP
 /usr/share/rear
 .RS 4
-ReaR script components\&.
+Rear script components\&.
 .RE
 .PP
 /usr/share/rear/conf/default\&.conf
 .RS 4
-ReaR\(cqs included defaults\&. Contains a complete set of parameters and its explanation\&. Please do not edit or modify\&. Copy values to
+Rear\(cqs included defaults\&. Contains a complete set of parameters and its explanation\&. Please do not edit or modify\&. Copy values to
 \fIlocal\&.conf\fR
 or
 \fIsite\&.conf\fR

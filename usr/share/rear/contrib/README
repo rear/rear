@@ -1,4 +1,4 @@
-Here you find useful stuff contributed by ReaR users
+Here you find useful stuff contributed by Rear users
 
 svn2tar
 ----------------
@@ -16,7 +16,7 @@ Build vendor RPM from subversion
 rear-1.6.ebuild
 ----------------
 
-This is (somehow, I am no Gentoo man) used to build a ReaR package on Gentoo. These
+This is (somehow, I am no Gentoo man) used to build a Rear package on Gentoo. These
 build steps accompanied it:
 
 --------------------------------- Anleitung ---------------------------------------

@@ -13,7 +13,7 @@ StopIfError "No mailer [$RESULT_SENDMAIL] found !"
 Log "Sending Email from $RESULT_MAILFROM to ${RESULT_MAILTO[@]}"
 Log "Attaching files: ${RESULT_FILES[@]}"
 
-test -z "$RESULT_MAILSUBJECT" && RESULT_MAILSUBJECT="ReaR $HOSTNAME ($OUTPUT)"
+test -z "$RESULT_MAILSUBJECT" && RESULT_MAILSUBJECT="Rear $HOSTNAME ($OUTPUT)"
 
 {
 	create_mime_mail_headers "$RESULT_MAILFROM" \

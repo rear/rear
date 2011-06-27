@@ -1,5 +1,5 @@
 [Unit]
-Description=ReaR sshd service
+Description=Rear sshd service
 DefaultDependencies=no
 ConditionPathExists=/etc/inittab
 

@@ -5,7 +5,7 @@
 #
 
 # Galaxy dies when it finds /lib/tls with libpthread
-# ReaR has a symlink from /lib to /lib/tls and I don't remember why (Schlomo)
+# Rear has a symlink from /lib to /lib/tls and I don't remember why (Schlomo)
 
 # delete problematic symlink
 rm -f /lib/tls

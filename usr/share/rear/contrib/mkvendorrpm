@@ -127,7 +127,7 @@ chmod 644 .$SHARE_DIR/lib/rear.spec
 cat >./$CONFIG_DIR/local.conf <<EOF
 # sample local configuration
 
-# Create ReaR rescue media as ISO image
+# Create Rear rescue media as ISO image
 OUTPUT=ISO
 
 # optionally define (non-default) backup software, e.g. TSM, NBU, DP, BACULA

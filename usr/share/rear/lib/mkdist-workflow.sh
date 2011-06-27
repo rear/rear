@@ -52,7 +52,7 @@ WORKFLOW_mkdist_postprocess () {
 	cat <<EOF >./$CONFIG_DIR/local.conf
 # sample local configuration
 
-# Create ReaR rescue media as ISO image
+# Create Rear rescue media as ISO image
 # OUTPUT=ISO
 
 # optionally define (non-default) backup software, e.g. TSM, NBU, DP, BACULA
