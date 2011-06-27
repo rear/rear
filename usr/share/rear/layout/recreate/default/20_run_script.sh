@@ -9,12 +9,18 @@ while [[ -z "$RESTORE_OK" ]]; do
     if (( $? -eq 0 )); then
         RESTORE_OK=y
     else
+        # FIXME: Replace this by a menu with the following options:
+        #         - View log-file
+        #         - Edit disklayout.conf (and recreate diskrestore.sh)
+        #         - Edit diskrestore.sh
+        #         - Retry diskrestore.sh
+        #         - Abort
         LogPrint "An error occured during restore. See $LOGFILE for details."
-        LogPrint
         LogPrint "You can either:"
-        LogPrint " - fix the error in $LAYOUT_CODE on another terminal and Retry here"
+        LogPrint
+        LogPrint " - fix the error in $LAYOUT_CODE on another terminal and Retry"
         LogPrint "   (only code-snippets that failed will be rerun when choosing Retry)"
-        LogPrint " - choose Abort and fix the error in $LAYOUT_FILE and rerun 'rear recover'"
+        LogPrint " - choose Abort, fix the error in $LAYOUT_FILE and rerun 'rear recover'"
 
         select choice in "Retry" "Abort"; do
             if [[ "$choice" == "Retry" || "$choice" == "Abort" ]]; then

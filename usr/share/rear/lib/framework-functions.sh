@@ -87,7 +87,7 @@ function SourceStage() {
 
 function cleanup_build_area_and_end_program() {
 	# Cleanup build area
-	LogPrint "Finished in $((SECONDS-STARTTIME)) seconds."
+	LogPrint "Finished in $((SECONDS-STARTTIME)) seconds"
 	if test "$KEEP_BUILD_DIR" ; then
 		LogPrint "You should also rm -Rf $BUILD_DIR"
 	else

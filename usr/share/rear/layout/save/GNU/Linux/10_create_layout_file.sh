@@ -9,7 +9,7 @@ mkdir -p $v $VAR_DIR/layout/config >&2
 DISKLAYOUT_FILE=${DISKLAYOUT_FILE:-$VAR_DIR/layout/disklayout.conf}
 
 if [ -e "$DISKLAYOUT_FILE" ] ; then
-    Log "Removing old layout file."
+    Log "Removing old layout file"
 fi
 : > $DISKLAYOUT_FILE
 
