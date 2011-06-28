@@ -7,6 +7,18 @@ if [ -n "$AUTOEXCLUDE_MULTIPATH" ] ; then
     done < <(grep ^multipath $LAYOUT_FILE)
 fi
 
+# Automatically exclude removable devices
+while read disk device junk ; do
+    sysfs_name=$(get_sysfs_name $device)
+    if [ -r /sys/block/$sysfs_name/removable ] ; then
+        if [ "$( < /sys/block/$sysfs_name/removable)" = "1" ] ; then
+            LogPrint "Automatically excluding removable device $device"
+            mark_as_done "$device"
+            mark_tree_as_done "$device"
+        fi
+    fi
+done < <(grep ^disk $LAYOUT_FILE)
+
 # Automatically exclude disks that do not have filesystems mounted.
 if [ -n "$AUTOEXCLUDE_DISKS" ] ; then
     used_disks=()

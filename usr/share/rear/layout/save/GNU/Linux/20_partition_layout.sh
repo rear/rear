@@ -9,12 +9,6 @@ Log "Saving disk partitions."
     for disk in /sys/block/* ; do
         case $(basename $disk) in
             hd*|sd*|cciss*|vd*)
-                if [ "$( < $disk/removable)" = "1" ] ; then
-                    Log "Skipping removable device $disk"
-                    continue
-                fi
-                
-                # fix cciss
                 devname=$(get_device_name $disk)
                 devsize=$(get_disk_size ${disk#/sys/block/})
                 
