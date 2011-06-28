@@ -22,12 +22,11 @@ Log "Saving disk partitions."
     done
 
     # This uses parted. Old versions of parted produce different output than newer versions.
-    if ! [ -e /dev/${devices[0]} ] ; then
-        LogPrint "No devices found... Check your layout description."
-        return
-    fi
-    parted -s "/dev/${devices[0]}" print > $TMP_DIR/parted
-    if grep -q "^Minor" $TMP_DIR/parted ; then
+    parted_version=$(get_version parted -v)
+    [ "$parted_version" ]
+    BugIfError "Function get_version could not detect parted version."
+    
+    if ! version_newer "$parted_version" 1.6.23 ; then
         oldparted="yes"
         Log "Old version of parted detected."
     fi
