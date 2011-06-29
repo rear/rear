@@ -221,6 +221,10 @@ get_sysfs_name() {
             fi
         done
     fi
+    
+    # otherwise, it can be the case that we just want to translate the name
+    echo "${name//\//!}"
+    return 1
 }
 
 # Translate a sysfs name to a device name.
