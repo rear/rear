@@ -3,12 +3,12 @@ if [ "$WORKFLOW" = "checklayout" ] ; then
     return 0
 fi
 
-: > $VAR_DIR/layout/config/files.md5sum
-
-for config in "${CHECK_CONFIG_FILES[@]}" ; do
-    if [ -e "$config" ] ; then
-        echo "$(md5sum "$config")" >> $VAR_DIR/layout/config/files.md5sum
-    else
-        echo "$(echo 0 | md5sum | cut -d " " -f "1")  $config" >> $VAR_DIR/layout/config/files.md5sum
+config_files=()
+for obj in "${CHECK_CONFIG_FILES[@]}" ; do
+    if [ -d "$obj" ] ; then
+        config_files=( "${config_files[@]}" $(find "$obj" -type f) )
+    elif [ -e "$obj" ] ; then
+        config_files=( "${config_files[@]}" "$obj")
     fi
 done
+md5sum "${config_files[@]}" > $VAR_DIR/layout/config/files.md5sum
