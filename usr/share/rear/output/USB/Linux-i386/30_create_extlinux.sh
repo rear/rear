@@ -150,7 +150,8 @@ label rear
 EOF
 
     oldsystem=
-    for file in $(cd $BUILD_DIR/usbfs; ls -dRt rear/*/*/syslinux.cfg); do
+    # TODO: Sort systems by name, but also sort timestamps in reverse order
+    for file in $(cd $BUILD_DIR/usbfs; find rear/*/* -name syslinux.cfg); do
         dir=$(dirname $file)
         time=$(basename $dir)
         system=$(basename $(dirname $dir))
