@@ -12,7 +12,7 @@ while read disk device junk ; do
     sysfs_name=$(get_sysfs_name $device)
     if [ -r /sys/block/$sysfs_name/removable ] ; then
         if [ "$( < /sys/block/$sysfs_name/removable)" = "1" ] ; then
-            LogPrint "Automatically excluding removable device $device"
+            Log "Automatically excluding removable device $device"
             mark_as_done "$device"
             mark_tree_as_done "$device"
         fi
@@ -30,7 +30,7 @@ if [ -n "$AUTOEXCLUDE_DISKS" ] ; then
             # Excluded mountpoints can lead to disks that aren't needed
             continue
         fi
-        
+
         # is a filesystem is already marked as done, it's not used
         if grep -q "^done fs:$mountpoint " $LAYOUT_TODO ; then
             continue
