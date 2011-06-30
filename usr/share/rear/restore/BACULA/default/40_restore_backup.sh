@@ -78,9 +78,8 @@ Please verify that the backup has been restored correctly to '/mnt/local'
 in the provided shell. When finished, type exit in the shell to continue
 recovery.
 "
-    cat <<EOF | rear_shell "Did the backup successfully restore to '/mnt/local' ? Ready to continue ?"
-bextract$exclude_list -V$BEXTRACT_VOLUME /backup /mnt/local
-EOF
+    rear_shell "Did the backup successfully restore to '/mnt/local' ? Ready to continue ?" \
+        "bextract$exclude_list -V$BEXTRACT_VOLUME /backup /mnt/local"
 
 fi
 
