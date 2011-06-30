@@ -6,29 +6,53 @@ while [[ -z "$RESTORE_OK" ]]; do
         . $LAYOUT_CODE
     )
 
-    if (( $? -eq 0 )); then
+    if (( $? == 0 )); then
         RESTORE_OK=y
     else
-        # FIXME: Replace this by a menu with the following options:
-        #         - View log-file
-        #         - Edit disklayout.conf (and recreate diskrestore.sh)
-        #         - Edit diskrestore.sh
-        #         - Retry diskrestore.sh
-        #         - Abort
-        LogPrint "An error occured during restore. See $LOGFILE for details."
-        LogPrint "You can either:"
-        LogPrint
-        LogPrint " - fix the error in $LAYOUT_CODE on another terminal and Retry"
-        LogPrint "   (only code-snippets that failed will be rerun when choosing Retry)"
-        LogPrint " - choose Abort, fix the error in $LAYOUT_FILE and rerun 'rear recover'"
+        # TODO: Provide a skip option (needs torough consideration)
+        # FIXME: Implement layout/prepare as part of a function ?
+        choices=(
+            "View Rear log"
+            "Go to Rear shell"
+#            "Edit disk layout (disklayout.conf)"
+            "Edit restore script (diskrestore.sh)"
+            "Continue restore script"
+            "Abort Rear"
+        )
 
-        select choice in "Retry" "Abort"; do
-            if [[ "$choice" == "Retry" || "$choice" == "Abort" ]]; then
-                break;
-            fi
+        timestamp=$(stat --format="%Y" $LAYOUT_CODE)
+        select choice in "${choices[@]}"; do
+            timestamp=$(stat --format="%Y" $LAYOUT_FILE)
+            case "$REPLY" in
+                (1) less $LOGFILE;;
+                (2) rear_shell;;
+#                (3) vi $LAYOUT_FILE;;
+                (3) vi $LAYOUT_CODE;;
+                (4) if (( $timestamp < $(stat --format="%Y" $LAYOUT_CODE) )); then
+                        break
+                    else
+                        LogPrint "Script $LAYOUT_CODE has not been changed, restarting has no impact."
+                    fi
+                    ;;
+                (5) break;;
+            esac
+
+            # If disklayout.conf has changed, generate new diskrestore.sh
+#            if (( $timestamp < $(stat --format="%Y" $LAYOUT_FILE) )); then
+#                LogPrint "Detected changes to $LAYOUT_FILE, rebuild $LAYOUT_CODE on-the-fly."
+#                SourceStage "layout/prepare" 2>>$LOGFILE
+#            fi
+
+            # Reprint menu options when returning from less, shell or vi
+            Print ""
+            for (( i=1; i <= ${#choices[@]}; i++ )); do
+                Print "$i) ${choices[$i-1]}"
+            done
         done 2>&1
 
-        if [[ "$choice" == "Abort" ]]; then
+        Log "User selected: $REPLY) ${choices[$REPLY-1]}"
+
+        if (( REPLY == ${#choices[@]} )); then
             abort_recreate
 
             Error "There was an error restoring the system layout. See $LOGFILE for details."
