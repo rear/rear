@@ -121,7 +121,7 @@ EOF
 # entries for backup and rescue
 backup_count=${USB_RETAIN_BACKUP_NR:-2}
 rescue_count=${USB_RETAIN_BACKUP_NR:-2}
-for rear_run in $(ls -dt $BUILD_DIR/netfs/rear/$(uname -n)/*); do
+for rear_run in $(ls -dt $BUILD_DIR/usbfs/rear/$(uname -n)/*); do
     backup_name=$rear_run/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
     if [[ -e $backup_name ]] ; then
         backup_count=$((backup_count - 1))
