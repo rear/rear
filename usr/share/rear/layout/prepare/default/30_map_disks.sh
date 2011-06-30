@@ -134,7 +134,7 @@ while read source target junk ; do
 done < $MAPPING_FILE
 
 LogPrint "This is the disk mapping table:"
-cat $MAPPING_FILE
+sed -e 's|^|    |' $MAPPING_FILE
 
 # Replace all originals with their replacements
 while read original replacement junk ; do
