@@ -46,3 +46,21 @@ A list of items that wait for someone to volunteer to fix :)
 * avoid disabling selinux during backup
   - add --selinux option to tar and testing
   - rsync -X option tests required
+
+* convert tabs to 4 spaces
+
+* convert test and [ ] constructs to [[ ]] and (( )) constructs
+
+* change filesystem structure into:
+  - AUTHORS, ChangeLog, COPYING, README, TODO
+  - bin/
+  - conf/
+  - contrib/
+  - doc/
+  - lib/
+  - man/
+  - skel/
+  - stages/
+  - workflows/
+
+* add another warning if there is less space on /boot than eg. 10 MB
