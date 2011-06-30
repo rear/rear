@@ -311,3 +311,41 @@ ResolveModules () {
 function rpmtopdir () {
 	rpmdb -E '%{_topdir}'
 }
+
+# Provide a shell, with custom exit-prompt and history
+rear_shell() {
+    local prompt=$1
+    local history=$2
+
+    if [[ -z "$prompt" ]]; then
+        prompt="Are you sure you want to exit the Rear shell ?"
+    fi
+
+    local histfile="$TMP_DIR/.bash_history"
+    if [[ "$history" ]]; then
+        echo -e "exit\n$history" >$histfile
+    else
+        echo "exit" >$histfile
+    fi
+
+    local bashrc="$TMP_DIR/.bashrc"
+    cat <<EOF >$bashrc
+export PS1="rear> "
+ask_exit() {
+    read -p "$prompt " REPLY
+    if [[ "\$REPLY" =~ ^[Yy1] ]]; then
+        \exit
+    fi
+}
+rear() {
+    echo "ERROR: You cannot run rear from within the rear shell !" >&2
+}
+alias exit=ask_exit
+alias halt=ask_exit
+alias poweroff=ask_exit
+alias reboot=ask_exit
+alias shutdown=ask_exit
+EOF
+
+    HISTFILE="$histfile" bash --noprofile --rcfile $bashrc
+}
