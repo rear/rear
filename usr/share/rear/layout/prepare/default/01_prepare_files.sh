@@ -27,14 +27,6 @@ if [ ! -e $LAYOUT_FILE ] ; then
     : > $LAYOUT_FILE
 fi
 
-# $LAYOUT_DEPS is a list of:
-# <item> <depends on>
-: > $LAYOUT_DEPS
-
-# $LAYOUT_TODO is a list of:
-# [todo|done] <type> <item>
-: > $LAYOUT_TODO
-
 # $LAYOUT_CODE will contain the script to restore the environment.
 cat > $LAYOUT_CODE <<EOF
 #!/bin/bash

@@ -1,6 +1,10 @@
 # Remove the excluded components from the disklayout file.
 # Excluded components are marked as DONE in the disktodo file.
 
+if ! [ -s "$LAYOUT_TODO" ] ; then
+    return 0
+fi
+
 # Component in position 2
 remove_component() {
     sed -i "s|^$1 $2 |\# $1 $2 |" $LAYOUT_FILE
