@@ -7,16 +7,16 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
             if [ "$array" != "ARRAY" ] ; then
                 continue
             fi
-            
+
             # We use the detailed mdadm output quite alot
             mdadm --misc --detail $device > $TMP_DIR/mdraid
-            
+
             # Gather information
             level=$( grep "Raid Level" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
             uuid=$( grep "UUID" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2-")
             layout=$( grep "Layout" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
             chunksize=$( grep "Chunk Size" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2" | sed -r 's/^([0-9]+).+/\1/')
-            
+
             # fix up layout for RAID10:
             # > near=2,far=1 -> n2
             if [ "$level" = "raid10" ] ; then
@@ -31,11 +31,11 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
                 done
                 IFS=$OIFS
             fi
-            
+
             ndevices=$( grep "Raid Devices" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
             totaldevices=$( grep "Total Devices" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
             let sparedevices=$totaldevices-$ndevices
-            
+
             # Find all devices
             # use the output of mdadm, but skip the array itself
             # sysfs has the information in RHEL 5+, but RHEL 4 lacks it.
@@ -48,30 +48,30 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
                     devices="$devices,/dev/$disk"
                 fi
             done
-            
+
             # prepare for output
             level=" level=$level"
             ndevices=" raid-devices=$ndevices"
             uuid=" uuid=$uuid"
-            
+
             if [ "$sparedevices" -gt 0 ] ; then
                 sparedevices=" spare-devices=$sparedevices"
             else
                 sparedevices=""
             fi
-            
+
             if [ -n "$layout" ] ; then
                 layout=" layout=$layout"
             else
                 layout=""
             fi
-            
+
             if [ -n "$chunksize" ] ; then
                 chunksize=" chunk=$chunksize"
             else
                 chunksize=""
             fi
-            
+
             echo "raid ${device}${level}${ndevices}${uuid}${sparedevices}${layout}${chunksize}${devices}"
         done < <(mdadm --detail --scan --config=partitions)
     ) >> $DISKLAYOUT_FILE

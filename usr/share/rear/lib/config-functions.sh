@@ -25,7 +25,7 @@ SetOSVendorAndVersion () {
 	# if this happens, then ALL the variables OS_* have to be set there !!
 	#
 	if test "$OS_VENDOR" = generic -o "$OS_VERSION" = none ; then
-	
+
 		# try to use lsb_release
 		if has_binary lsb_release >&8 2>&1; then
 			OS_VENDOR="$(lsb_release -i -s | tr -s " \t" _)"
@@ -37,7 +37,7 @@ SetOSVendorAndVersion () {
 	Please either install the LSB package (that supplies the 'lsb_release' command)
 	or improve $PRODUCT to handle this situation better.
 
-	As an alternative you can manually override OS_VENDOR and OS_VERSION in the 
+	As an alternative you can manually override OS_VENDOR and OS_VERSION in the
 	'$CONFIG_DIR/os.conf' file. Please be sure to test your setup !
 
 	See '$SHARE_DIR/lib/config-functions.sh' for more details about this matter.
@@ -82,6 +82,5 @@ SetOSVendorAndVersion () {
 		OS_MASTER_VENDOR_ARCH="$OS_MASTER_VENDOR/$MACHINE"
 		OS_MASTER_VENDOR_VERSION_ARCH="$OS_MASTER_VENDOR/$OS_MASTER_VERSION/$MACHINE"
 	fi
-		
 
 }

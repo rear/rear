@@ -1,4 +1,4 @@
-# Generate the $VAR_DIR/recovery/mountpoint_device file 
+# Generate the $VAR_DIR/recovery/mountpoint_device file
 # This is needed by several backup mechanisms (DP, NBU, NETFS)
 
 # TODO: rework other scripts to use LAYOUT_FILE directly

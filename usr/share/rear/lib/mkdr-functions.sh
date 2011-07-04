@@ -17,8 +17,8 @@ GuessPhysicalDevice () {
 		return 1
 		;;
 	esac
-}	
-	
+}
+
 #
 # Find a device node in /dev for a given device in /sys/block
 #
@@ -26,11 +26,11 @@ GuessPhysicalDevice () {
 # OUT: block device in /dev with full path (e.g. /dev/sda, /dev/sda1, /dev/cciss/c0d0 ...)
 #
 DeviceNameToNode () {
-	# since the old style cciss/c0d0 is slowly beeing migrated to cciss!c0d0 (the internal 
+	# since the old style cciss/c0d0 is slowly beeing migrated to cciss!c0d0 (the internal
 	# kernel representation), we try to replace ! by / and check that, too.
 	device="/dev/$1"
 	device2="${device//\!//}"
-	
+
 	if test -b $device ; then
 		echo $device
 	elif test -b $device2 ; then
@@ -52,7 +52,7 @@ DeviceNameToNode () {
 # OUT: list of device nodes in /dev
 #
 FindPhysicalDevices () {
-	# all phsical devices have device link in /sys/block/*. 
+	# all phsical devices have device link in /sys/block/*.
 	# Logical devices (DM, MD, RAM, ...) don't have it
 	#
 	# we use the device link to find out the physical devices from the logical ones
@@ -69,7 +69,7 @@ FindPhysicalDevices () {
 		sysfspath="$(dirname "$d")"		# /block/sys/sda
 		# bare device name
 		device="$(basename "$sysfspath")"	# sda
-		
+
 		# device size according to sysfs, usually in 512bytes units
 		if ! test -s $sysfspath/size ; then
 			Log "BUG BUG BUG Please report to the authors that '$sysfspath/size' is empty for '$d' on your system !"
@@ -92,6 +92,6 @@ FindPhysicalDevices () {
 		# find a device node matching this device in /dev
 		DeviceNameToNode "$device" || return 1
 
-	done 
+	done
 }
 

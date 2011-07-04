@@ -1,6 +1,6 @@
 # Exclude mountpoints from restore
 # This is based on the EXCLUDE_RESTORE and EXCLUDE_RECREATE variables
-# The output is written to 
+# The output is written to
 
 : > $TMP_DIR/restore-exclude-list.txt
 

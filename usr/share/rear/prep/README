@@ -1,11 +1,11 @@
 This is the preparation part of rear before starting the rescue build phase.
 
-Please note that you should not put any scripts that reference 
+Please note that you should not put any scripts that reference
 $ROOTFS_DIR or $CONFIG_DIR/recovery into this section. Scripts for $ROOTFS_DIR
 go to rescue/ and for $CONFIG_DIR/recovery go to dr/ respectively
 
-That way we keep only the real prep stuff here in the prep section. This is 
+That way we keep only the real prep stuff here in the prep section. This is
 important because some workflows (e.g. mkbackuponly) skip the dr and rescue
-sections but include the prep section so that we shouldn't do stuff in the 
+sections but include the prep section so that we shouldn't do stuff in the
 prep section like creating the ROOTFS_DIR or wiping $CONFIG_DIR/recovery since
 not ALL workflows require these things.

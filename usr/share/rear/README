@@ -12,7 +12,7 @@ The backup can be integrated with any existing backup software so that
 Rear utilizes the backup software to restore the files and provides the "glue"
 surrounding the simple file restore to having a full bare metal disaster
 recovery solution. Support for specific backup software has to be added to
-Rear on an individual base and is very simple (look at the existing 
+Rear on an individual base and is very simple (look at the existing
 implementations for further information).
 
 Rear is rapidly developing, please contact the Rear developers if something is
@@ -41,7 +41,7 @@ Rear homepage or build it yourself from the TAR archive with
 This will create an RPM for your distribution. The RPM is not platform-
 dependant and should work also on other RPM based distributions.
 
-On DEB based systems you should be able to install the RPM with alien. 
+On DEB based systems you should be able to install the RPM with alien.
 Otherwise use the manual installation (see below) or, even better, contribute
 the DEB package to the project.
 
@@ -52,7 +52,7 @@ distribution to the '/' of your system.
 CONFIGURATION
 -------------
 To configure Rear you have to edit the configuration files in '/etc/rear'. All
-'*.conf' files there are part of the configuration, but only 'site.conf' and 
+'*.conf' files there are part of the configuration, but only 'site.conf' and
 'local.conf' are intended for the user configuration. All other configuration
 files hold defaults for various distributions and should not be changed.
 
@@ -64,9 +64,9 @@ general pxelinux configuration you use (I put there stuff to install Linux
 over the network).
 
 In almost all circumstances you have to configure two main settings and their
-parameters: The +BACKUP+ method and the +OUTPUT+ method. 
+parameters: The +BACKUP+ method and the +OUTPUT+ method.
 
-The backup method defines, how your data was saved and wether Rear should 
+The backup method defines, how your data was saved and wether Rear should
 backup your data as part of the mkrescue process or wether you use an external
 application, e.g. backup software to archive your data.
 
@@ -92,9 +92,9 @@ TIMESYNC=NTP
 Don't forget to distribute the 'site.conf' to all your systems.
 
 The resulting PXE files (kernel, initrd and pxelinux configuration) will be
-written to files in '/tmp'. You can now modify the behaviour by copying the 
+written to files in '/tmp'. You can now modify the behaviour by copying the
 appropriate configuration variables from 'default.conf' to 'local.conf' and
-changing them to suit your environment. 
+changing them to suit your environment.
 
 
 USAGE
@@ -135,9 +135,9 @@ current settings for +BACKUP+ and +OUTPUT+ methods and some system information.
 
 To create a new rescue environment, simply call +rear mkrescue+. Do not forget
 to copy the resulting rescue system away so that you can use it in the case of
-a system failure. Use +rear mkbackup+ instead if you are using the builtin 
+a system failure. Use +rear mkbackup+ instead if you are using the builtin
 backup functions (like +BACKUP=NETFS+)
 
-To recover your system, start the computer from the rescue system and run 
-+rear recover+. Your system will be recovered and you can restart it and 
+To recover your system, start the computer from the rescue system and run
++rear recover+. Your system will be recovered and you can restart it and
 continue to use it normally.

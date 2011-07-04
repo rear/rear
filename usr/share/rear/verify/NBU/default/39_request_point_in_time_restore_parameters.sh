@@ -20,7 +20,7 @@ else
         # validate time
         NBU_ENDTIME_TIME=$( date -d "$REPLY" +%T 2>&8 ) || BAD_ENDTIME=1
         [ ${BAD_ENDTIME} -ne 1 ]
-        BugIfError "Incorrect date and/or time definition used: ${REPLY} Ending NetBackup Restore Attempt..." 
+        BugIfError "Incorrect date and/or time definition used: ${REPLY} Ending NetBackup Restore Attempt..."
         if test "$NBU_ENDTIME_TIME" = "00:00:00"; then
             NBU_ENDTIME=( "${NBU_ENDTIME_DATE}" )
         else

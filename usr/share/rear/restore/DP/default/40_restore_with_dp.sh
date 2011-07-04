@@ -3,20 +3,20 @@
 
 # /opt/omni/bin/omnidb -filesystem test.internal.it3.be:/ '/' -latest -detail
 #
-#SessionID     : 2008/12/24-1     
-#	Started            : wo 24 dec 2008 11:42:21 CET     
-#	Finished           : wo 24 dec 2008 11:54:52 CET     
-#	Object status      : Completed     
-#	Object size        : 2043947 KB    
-#	Backup type        : Full     
-#	Protection         : Protected for 2 days     
-#	Catalog retention  : Protected permanently     
-#	Access             : Private     
-#	Number of warnings : 3     
-#	Number of errors   : 0     
-#	Device name        : DDS4     
-#	Backup ID          : n/a     
-#	Copy ID            : 20 (Orig) 
+#SessionID     : 2008/12/24-1
+#	Started            : wo 24 dec 2008 11:42:21 CET
+#	Finished           : wo 24 dec 2008 11:54:52 CET
+#	Object status      : Completed
+#	Object size        : 2043947 KB
+#	Backup type        : Full
+#	Protection         : Protected for 2 days
+#	Catalog retention  : Protected permanently
+#	Access             : Private
+#	Number of warnings : 3
+#	Number of errors   : 0
+#	Device name        : DDS4
+#	Backup ID          : n/a
+#	Copy ID            : 20 (Orig)
 
 # The list of file systems to restore is listed in file /tmp/list_of_fs_objects
 # per line we have something like: test.internal.it3.be:/ '/'

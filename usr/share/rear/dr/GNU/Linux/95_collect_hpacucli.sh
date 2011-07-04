@@ -27,7 +27,7 @@ while read ; do
 
 	# report this controller
 	Log "Detected $REPLY"
-	
+
 	# calculate Slot number
 	SLOT="${REPLY##*Slot }"
 	SLOT="${SLOT%% *}"
@@ -42,7 +42,7 @@ fi
 
 
 function write_build_array() {
-	# this function takes the SLOT, PHYSICALDRIVES, RAIDLEVEL, LD_SectorsPerTrack, 
+	# this function takes the SLOT, PHYSICALDRIVES, RAIDLEVEL, LD_SectorsPerTrack,
 	# LD_StripeSize, SPAREDIVES variables and writes out the appropriate hpacucli
 	# commands to recreate the array
 
@@ -53,11 +53,11 @@ function write_build_array() {
 	echo "hpacucli ctrl slot=$SLOT create type=ld drives=$PHYSICALDRIVES raid=${RAIDLEVEL} sectors=$LD_SectorsPerTrack stripesize=$LD_StripeSize"
 	if test "$SPAREDRIVES" ; then
 		# to add spare drives we first have to determine the array to which to add to.
-		# we have to scan the current configuration and find the array that contains 
+		# we have to scan the current configuration and find the array that contains
 		# the first physical drive from the freshly assembled logical drive.
 		#
 		# at the moment we just assume that the array naming order will be the same
-		# AFTER we re-create the logical drives from scratch in the order that 
+		# AFTER we re-create the logical drives from scratch in the order that
 		# they exist now. Please submit a bug if this does not work for you.
 		#
 		ARRAY="$(find_array_from_drive $SLOT ${PHYSICALDRIVES%%,*})"
@@ -68,8 +68,8 @@ function write_build_array() {
 
 		echo "hpacucli ctrl slot=$SLOT array $ARRAY add spares=$SPAREDRIVES"
 	fi
-	
-	
+
+
 }
 
 # go over slots and dump configuration
@@ -84,11 +84,11 @@ for SLOT in "${SLOTS[@]}" ; do
 
 	mkdir -p $VAR_DIR/recovery/hpacucli/"Slot_$SLOT"
 	StopIfError "Could not mkdir '$VAR_DIR/recovery/hpacucli/Slot_$SLOT'"
-	
+
 	# store complete config for each controller (=SLOT)
 	hpacucli ctrl slot="$SLOT" show config >"$VAR_DIR/recovery/hpacucli/Slot_$SLOT/config.txt"
 	StopIfError "Could not read read hpacucli configuration for slot $SLOT"
-		
+
 	while read ; do
 		# output is like
 		T=<<EOF
@@ -135,23 +135,22 @@ EOF
 			*logicaldrive*)
 				# dump previously collected info
 				write_build_array >>"$VAR_DIR/recovery/hpacucli/Slot_$SLOT/hpacucli-commands.sh"
-				
+
 				LOGICALDRIVE="${REPLY##*logicaldrive }"
 				LOGICALDRIVE="${LOGICALDRIVE%% *}"
 
-				
 				RAIDLEVEL="${REPLY##*RAID }"
 				RAIDLEVEL="${RAIDLEVEL%%,*}"
-				
+
 				# Dump logical drive configuration for information
 				Log "Found Controller $SLOT Array $ARRAY Logical Drive $LOGICALDRIVE RAID $RAIDLEVEL"
 
 				# retrieve detailed configuration for logical drive and store in LD_ variables
 				hpacucli ctrl slot=$SLOT ld $LOGICALDRIVE show detail >"$VAR_DIR/recovery/hpacucli/Slot_$SLOT/ARRAY_$ARRAY-LOGICALDRIVE_$LOGICALDRIVE-detail.txt"
 				StopIfError "Could not read logical drive details with hpacucli"
-					
+
 				# parse logical drive detail information into environment variables
-				
+
 				# the result of the following while IFS=: loop are environment variables like this:
 				# (please note that LD_FaultTolerance is useless and $RAIDLEVEL should be used instead !)
 				T=<<EOF
@@ -170,7 +169,7 @@ EOF
 					LD_MountPoints=None
 					LD_LogicalDriveLabel=AA1C62C2PAFGK0N9SWN0O15584
 EOF
-				while IFS=: read key val ; do 
+				while IFS=: read key val ; do
 					val="${val#* }"
 					val="${val% *}"
 					test "${key// /}" -a "$val" || continue # skip empty

@@ -53,7 +53,7 @@ $(
 	done
 )"
 }
-			
+
 # do all exit tasks
 DoExitTasks() {
 	Log "Running exit tasks."

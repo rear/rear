@@ -2,7 +2,7 @@
 if tty -s <&1; then
 	######################## BEGIN Progress Indicator
 	# ProgressPipe uses fd 8 as a communication pipe
-	
+
 	# The ProgressThread listens on stdin and writes out progress chars for each line
 	# The signals USR2 and USR1 start and stop the process character printing
 	ProgressThread() {
@@ -52,22 +52,22 @@ if tty -s <&1; then
 	exec 8> >(ProgressThread) # start ProgressPipe listening at fd 8
 	# we need the PID of the process thread to be able to signal it
 	export ProgressPID=$!
-	
+
 	ProgressStart() {
 		echo -en "\e[2K\r$*  \e7"
 		kill -USR2 $ProgressPID
 	}
-	
+
 	ProgressStop() {
 		kill -USR1 $ProgressPID
 		echo -e "\e8\e[KOK"
 	}
-	
+
 	ProgressError() {
 		kill -USR1 $ProgressPID
 		echo -e "\e8\e[KFAILED"
 	}
-	
+
 	ProgressStep() {
 		echo noop >&8
 	}
@@ -77,19 +77,19 @@ else
 
 	exec 8>&- # first close, then open
 	exec 8>/dev/null # start ProgressPipe listening at fd 8
-	
+
 	ProgressStart() {
 		echo -n "$*  "
 	}
-	
+
 	ProgressStop() {
 		echo -e "OK"
 	}
-	
+
 	ProgressError() {
 		echo -e "FAILED"
 	}
-	
+
 	ProgressStep() {
 		: ;
 	}

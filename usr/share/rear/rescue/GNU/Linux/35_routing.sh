@@ -34,27 +34,27 @@ EOT
 # route mapping is available
 if test -s $TMP_DIR/mappings/routes ; then
 	while read destination gateway device junk ; do
-	        echo "ip route add $destination via $gateway dev $device" >>$netscript
+		echo "ip route add $destination via $gateway dev $device" >>$netscript
 	done < $TMP_DIR/mappings/routes
 else # use original routes
 
 	COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/iproute2 ) # for policy routing
 
 	# find out routing rules
-	RULES=() 
+	RULES=()
 	c=0
-	while read ; do 
-		RULES[c]="$REPLY" 
+	while read ; do
+		RULES[c]="$REPLY"
 		let c++
-	done < <( 
-		ip rule list |\
-		cut -d : -f 2- |\
+	done < <(
+		ip rule list | \
+		cut -d : -f 2- | \
 		grep -Ev "from all lookup (local|main|default)"
 		)
 	for rule in "${RULES[@]}" ; do
 		echo "ip rule add $rule" >>$netscript
 	done
-	
+
 	# for each table, list routes
 	# main is the default table, some distros don't mention it in rt_tables,
 	# so I add it for them and strip doubles with uniq

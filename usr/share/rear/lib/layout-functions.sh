@@ -202,7 +202,7 @@ mark_tree_as_done() {
     done
 }
 
-# Return all the child components of $1 [filtered by type $2] 
+# Return all the child components of $1 [filtered by type $2]
 get_child_components() {
     local devlist testdev dev on type
     devlist="$1 "
@@ -315,7 +315,7 @@ get_friendly_name() {
             return 0
         fi
     done
-    
+
     echo "$search"
 }
 
@@ -323,12 +323,12 @@ get_friendly_name() {
 get_sysfs_name() {
     local name=${1#/dev/}
     name=${name#/sys/block/}
-    
+
     if [ -e /sys/block/${name//\//!} ] ; then
         echo "${name//\//!}"
         return 0
     fi
-    
+
     # accomodate for mapper/test -> dm-? mapping
     local dev_number=$(dmsetup info -c --noheadings -o major,minor ${name##*/} 2>&8 )
     if [ -n "$dev_number" ] ; then
@@ -341,7 +341,7 @@ get_sysfs_name() {
             fi
         done
     fi
-    
+
     # otherwise, it can be the case that we just want to translate the name
     echo "${name//\//!}"
     return 1
@@ -351,12 +351,12 @@ get_sysfs_name() {
 get_device_name() {
     local name=${1#/dev/}
     name=${name#/sys/block/}
-    
+
     if [ -e /dev/${name//!//} ] ; then
         echo "${name//!//}"
         return 0
     fi
-    
+
     # translate dm-8 -> mapper/test
     local device dev_number mapper_number
     if [ -r /sys/block/$name/dev ] ; then
@@ -379,15 +379,15 @@ get_device_name() {
 # for partitions, use "sda/sda1" as argument
 get_disk_size() {
     local disk_name=$1
-    
+
     local block_size=$(get_block_size ${disk_name%/*})
-    
+
     [ -r /sys/block/$disk_name/size ]
     BugIfError "Could not determine size of disk $disk_name, please file a bug."
 
     local nr_blocks=$( < /sys/block/$disk_name/size)
     local disk_size=$(( nr_blocks * block_size ))
-    
+
     ### Make sure we always return a number
     echo $(( disk_size ))
 }

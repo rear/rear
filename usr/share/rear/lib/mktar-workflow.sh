@@ -23,15 +23,15 @@ if [[ "$VERBOSE" ]]; then
 fi
 WORKFLOWS=( ${WORKFLOWS[@]} mktar )
 WORKFLOW_mktar () {
-	
+
 	[ "$ARGS" ]
 	StopIfError "You must provide the filename for the archive,
 	e.g. my-rear-archive.tar.gz
 	The Archive will be a tar.gz archive.
 	"
-	
+
 	LogPrint "Creating archive '$ARGS'"
 	tar -C / --exclude=\*~ -cvzf "$ARGS" "$SHARE_DIR" "$CONFIG_DIR" "$(get_path "$0")" >&2
 	StopIfError "Could not create archive"
-	
+
 }

@@ -7,9 +7,9 @@ while read device type size junk ; do
 		LogPrint "Ignoring relative swap device/file '$device'"
 		continue
 	}
-	
+
 	DEPENDS=""
-       	case "$type" in
+	case "$type" in
 		partition)
 			: # no special stuff required, just remember the dependancy
 			DEPENDS="$device"
@@ -20,7 +20,7 @@ while read device type size junk ; do
 
 			# find the mountpoint by using df (LANG=C is crucial here !)
 			df=( $(df "$device") )
-			
+
 			# the mountpoint is ${df[12]}
 			missing=yes
 			while read mountpoint junk ; do
@@ -34,7 +34,7 @@ while read device type size junk ; do
 				Log "Skipping swapfile '$device' because it is not on an included mountpoint"
 				continue
 			fi
-			
+
 			# store the size to recreate the swap file
 			filesize=$(stat -c "%s" "$device")
 			megs=$((filesize/1024/1024))

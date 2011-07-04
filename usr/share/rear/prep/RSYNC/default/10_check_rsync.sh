@@ -90,7 +90,7 @@ case "$RSYNC_PROTO" in
 	(rsync)
 		Log "Test: $BACKUP_PROG ${RSYNC_PROTO}://${RSYNC_HOST}:${RSYNC_PORT}/"
 		$BACKUP_PROG ${RSYNC_PROTO}://${RSYNC_HOST}:${RSYNC_PORT}/ >&8
-		StopIfError "Rsync daemon not running on $RSYNC_HOST" 
+		StopIfError "Rsync daemon not running on $RSYNC_HOST"
 		;;
 
 	(ssh)

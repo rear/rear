@@ -6,9 +6,9 @@ define_dhclients_variable()
 	local x
 	dhclients=()
 	for x in "${DHCLIENT_BIN##*/}" \
-	         "${DHCLIENT6_BIN##*/}" \
-	         dhcpcd dhclient \
-	         dhcp6c dhclient6 ;
+		"${DHCLIENT6_BIN##*/}" \
+		dhcpcd dhclient \
+		dhcp6c dhclient6 ;
 	do
 		[ "x$x" == x ] && continue
 		for d in ${dhclients[@]} ; do

@@ -6,13 +6,13 @@ MIGRATION_MODE=${MIGRATION_MODE-""}
 
 while read disk dev size junk ; do
     dev=$( get_sysfs_name $dev )
-    
+
     Log "Looking for $dev..."
-    
+
     if [ -e "/sys/block/$dev" ] ; then
         Log "Device $dev exists."
         newsize=$(get_disk_size $dev)
-        
+
         if [ "$newsize" -eq "$size" ] ; then
             Log "Size of device $dev matches."
         else

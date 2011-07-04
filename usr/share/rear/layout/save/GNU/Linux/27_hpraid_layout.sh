@@ -52,12 +52,12 @@ while read line ; do
             write_logicaldrive
             slotnr=$nextslotnr
             arrayname=$nextarrayname
-            
+
             # Create new Logical drive
             drivedetails=$(echo "$line" | sed -r 's/.*logicaldrive ([^ ]+) .*RAID ([^ ,]+)[ ,]+.*/\1 \2/')
             raidlevel=${drivedetails#* }
             ldname=${drivedetails% *}
-            
+
             tmpfile=$TMP_DIR/ctrl$slotnr-$ldname.tmp
             hpacucli ctrl slot=$slotnr ld $ldname show detail > $tmpfile
             stripesize=$(grep -i "stripe" $tmpfile | sed -r "s/[^0-9]+([0-9]+).*/\1/")

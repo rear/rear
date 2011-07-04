@@ -48,7 +48,6 @@ unset size
 # while the restore runs in a sub-process, display some progress information to the user
 case "$(basename $BACKUP_PROG)" in
 	(rsync)
-		
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			fsize="$(get_size $(tail -1 "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log"))"
 			size=$((size+fsize))
@@ -57,7 +56,6 @@ case "$(basename $BACKUP_PROG)" in
 		;;
 
 	(*)
-
 		echo "INFO Restoring" >&8
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			ProgressStep

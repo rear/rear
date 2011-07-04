@@ -3,7 +3,7 @@ _local_size=0
 _remote_size=0
 while read -r ; do
 	LogPrint "Calculating size of $REPLY"
-	# on Linux output is represented in 1024-blocks (or kB) 
+	# on Linux output is represented in 1024-blocks (or kB)
 	df -P "$REPLY"  >$TMP_DIR/fs_size
 	StopIfError "Failed to determine size of ${REPLY}."
 	fs_size=$(tail -n 1 $TMP_DIR/fs_size | awk '{print $3}')

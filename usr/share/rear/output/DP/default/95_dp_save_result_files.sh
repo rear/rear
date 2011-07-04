@@ -11,8 +11,8 @@ LogPrint "Saving result files with DP"
 test -z "$DP_RESULT_FILES_PATH" && DP_RESULT_FILES_PATH="$VAR_DIR/rescue"
 
 if ! test -d "$DP_RESULT_FILES_PATH" ; then
-	 mkdir -p $v "$DP_RESULT_FILES_PATH" >&2
-	 StopIfError "Could not create '$DP_RESULT_FILES_PATH'"
+	mkdir -p $v "$DP_RESULT_FILES_PATH" >&2
+	StopIfError "Could not create '$DP_RESULT_FILES_PATH'"
 fi
 
 cp -r $v "$VAR_DIR/recovery" "$DP_RESULT_FILES_PATH" >&2

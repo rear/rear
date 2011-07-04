@@ -11,7 +11,7 @@ touch "${TMP_DIR}/selinux.autorelabel"
 		# for some reason rsync changes the mode of backup after each run to 666
 		ssh $RSYNC_USER@$RSYNC_HOST "chmod $v 755 ${RSYNC_PATH}/${RSYNC_PREFIX}/backup" 2>&8
 		$BACKUP_PROG -a "${TMP_DIR}/selinux.autorelabel" \
-		 "$RSYNC_USER@$RSYNC_HOST:${RSYNC_PATH}/${RSYNC_PREFIX}/backup/.autorelabel" 2>&8
+			"$RSYNC_USER@$RSYNC_HOST:${RSYNC_PATH}/${RSYNC_PREFIX}/backup/.autorelabel" 2>&8
 		_rc=$?
 		if [ $_rc -ne 0 ]; then
 			LogPrint "Failed to create .autorelabel on ${RSYNC_PATH}/${RSYNC_PREFIX}/backup [${rsync_err_msg[$_rc]}]"
@@ -21,7 +21,7 @@ touch "${TMP_DIR}/selinux.autorelabel"
 
 	(rsync)
 		$BACKUP_PROG -a "${TMP_DIR}/selinux.autorelabel" \
-		 "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup/.autorelabel"
+			"${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup/.autorelabel"
 		_rc=$?
 		if [ $_rc -ne 0 ]; then
 			LogPrint "Failed to create .autorelabel on ${RSYNC_PATH}/${RSYNC_PREFIX}/backup [${rsync_err_msg[$_rc]}]"

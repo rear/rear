@@ -15,7 +15,7 @@ StopIfError "Saving /proc/mdstat failed: $?"
 mdadm --detail --scan --config=partitions | while read ARRAY mddev options ; do
 	# sanity check, skip all lines that are NOT an array
 	test "$ARRAY" = ARRAY || continue
-	
+
 	# sanity check, the block device must exist
 	[ -b $mddev ]
 	StopIfError "The MD block device '$mddev' does not exist / is not a block device"
@@ -25,10 +25,9 @@ mdadm --detail --scan --config=partitions | while read ARRAY mddev options ; do
 		Log "Skipping excluded array '$mddev'"
 		continue
 	fi
-	
 
 	mkdir -p $VAR_DIR/recovery/$mddev
-	
+
 	mddevname="$(basename "$mddev")" # /dev/md0 -> md0
 	DEVICES=()
 
@@ -46,11 +45,11 @@ mdadm --detail --scan --config=partitions | while read ARRAY mddev options ; do
 		devname="${devname%%[*}" # strip off [x] from devname
 		DEVICES=( "${DEVICES[@]}" "$(DeviceNameToNode "$devname")" ) # sda -> /dev/sda
 	done
-	
-	
+
+
 	# store the raid devices
 	echo "${DEVICES[@]}" >$VAR_DIR/recovery/$mddev/md.devices
-	
+
 	# the raid devices are also the dependancy of this MD device
 	# TODO: Check for further dependancies like RAID-on-LVM ...
 	echo "${DEVICES[@]}" | tr ' ' "\n" >$VAR_DIR/recovery/$mddev/depends

@@ -39,7 +39,7 @@ done < <(
 				cut -s -d ' ' -f 1,2,3,4 | \
 				sort -k 2
 			)
-	)	
+	)
 
 # a last check to be sure
 [ -s $VAR_DIR/recovery/mountpoint_device ]
@@ -47,7 +47,7 @@ StopIfError "$VAR_DIR/recovery/mountpoint_device is missing"
 
 # FIXME In case a filesystem mentioned in fstab is not mounted this fails horribly
 
-# NOTE: this list might be faulty, e.g. if a device that is in the fstab is NOT mounted, then 
+# NOTE: this list might be faulty, e.g. if a device that is in the fstab is NOT mounted, then
 #       there are only 3 entries and not 4.
 #
 # a typical list might look like this:

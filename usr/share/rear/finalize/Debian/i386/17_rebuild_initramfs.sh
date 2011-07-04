@@ -36,9 +36,9 @@ update-initramfs afterwards to update the initramfs with the new mdadm.conf
 	fi
 
 	if chroot /mnt/local /bin/bash --login -c "update-initramfs -v -u -k all" >&2 ; then
-         	LogPrint "Updated initramfs with new drivers for this system."
+		LogPrint "Updated initramfs with new drivers for this system."
 	else
-        	LogPrint "WARNING !!! 
+		LogPrint "WARNING !!!
 initramfs creation failed, please check '$LOGFILE' to see the error
 messages in detail and decide yourself, wether the system will boot or not.
 "

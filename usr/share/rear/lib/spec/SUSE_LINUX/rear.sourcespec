@@ -48,7 +48,7 @@ This is work in progress, so some features are not yet implemented.
 
 %prep
 %setup -q
- 
+
 %build
 # no code to compile - all bash scripts
 

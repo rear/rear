@@ -21,22 +21,20 @@
 WORKFLOW_recover_DESCRIPTION="recover the system; only valid during rescue"
 WORKFLOWS=( ${WORKFLOWS[@]} recover )
 WORKFLOW_recover () {
-	
+
 	SourceStage "setup"
 
 	SourceStage "verify"
-	
+
 	if [ -n "$USE_LAYOUT" ] ; then
 		SourceStage "layout/prepare"
-		
 		SourceStage "layout/recreate"
 	else
 		SourceStage "recreate"
 	fi
-	
+
 	SourceStage "restore"
-	
+
 	SourceStage "finalize"
 	SourceStage "wrapup"
-	
 }

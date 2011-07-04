@@ -51,5 +51,5 @@ $(cat "$SLOTDIR"/hpacucli-commands.sh)"
 	sleep 2
 	modprobe cciss
 	sleep 2
-	
+
 done # for SLOTDIR

@@ -4,7 +4,7 @@
 
 # CHANGES
 # 2007-01-03	GSS	replaced the vgcfgbackup %s solution with single vgcfgbackup calls per VG
-#			because the %s didn't work on SLES10 (stupid, SLES9 had the bug, SLES9 SP3 
+#			because the %s didn't work on SLES10 (stupid, SLES9 had the bug, SLES9 SP3
 #			not, SLES10 has it again ...)
 # 2007-01-04	GSS	Added general vgcfgbackup
 

@@ -19,5 +19,5 @@ elif type -p syslog-ng >/dev/null ; then
     fi
 elif type -p syslogd >/dev/null ; then
     klogd -c 1 -x
-    exec syslogd -f /etc/syslog.conf -n 
+    exec syslogd -f /etc/syslog.conf -n
 fi

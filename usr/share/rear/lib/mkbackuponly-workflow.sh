@@ -12,6 +12,6 @@ WORKFLOW_mkbackuponly () {
 	done
 
 	SourceStage "prep"
-	
+
 	SourceStage "backup"
 }

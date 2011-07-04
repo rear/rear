@@ -27,7 +27,7 @@ WORKFLOW_validate () {
 	Print "
 Thank you for your time and effort to try out $PRODUCT and your
 willingness to report about $PRODUCT in your environment back to us.
-	
+
 This kind of user support is greatly appreciated and helps a lot to
 improve $PRODUCT.
 
@@ -38,7 +38,7 @@ improve $PRODUCT.
 	read -e -p "Press ENTER to continue ..." 2>&1
 
 	Print "
-The purpose of this module is to assist you with informing us about 
+The purpose of this module is to assist you with informing us about
 the correct functioning of $PRODUCT (or major parts of it)
 to establish a database of validated systems and environments.
 

@@ -13,15 +13,15 @@ EFI Boot Manager ver 1.10 [14.62]  Firmware ver 1.32 [4642]
 
 Please select a boot option
 
-    Red Hat Enterprise Linux Server                                 
-    Debian GNU/Linux                                                
-    iLO Virtual Media                                               
-    Core LAN Gb A                                                   
-    Core LAN Gb B                                                   
-    EFI Shell [Built-in]                                            
-    Internal Bootable DVD                                           
-    Boot Option Maintenance Menu                                    
-    System Configuration                                            
+    Red Hat Enterprise Linux Server
+    Debian GNU/Linux
+    iLO Virtual Media
+    Core LAN Gb A
+    Core LAN Gb B
+    EFI Shell [Built-in]
+    Internal Bootable DVD
+    Boot Option Maintenance Menu
+    System Configuration
 
 
     Use ^ and v to change option(s). Use Enter to select an option

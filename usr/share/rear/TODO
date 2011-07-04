@@ -11,7 +11,7 @@ A list of items that wait for someone to volunteer to fix :)
 	- also for OUTPUT=USB
 	- finding SYSLINUX_DIR should be a script of its own
 
-* unify the extlinux|isolinux configuration code between ISO and USB. 
+* unify the extlinux|isolinux configuration code between ISO and USB.
 	- ATM this is a copy-paste job
 	- probably put the meat into a function or a symlinked script
 

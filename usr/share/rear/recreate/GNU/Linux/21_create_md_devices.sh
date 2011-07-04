@@ -8,7 +8,7 @@ LogPrint "Creating Software RAID devices"
 while read file ; do
 	# md device name
 	device="/${file%%/md.devices}"
-	
+
 	# just in case, stop the md device
 	mdadm --stop $device
 
@@ -39,7 +39,7 @@ while read file ; do
 	if test "$MD_OPTION_num_devices" ; then
 		[ "$MD_OPTION_num_devices" -eq "${#DEVICES[@]}" ]
 		StopIfError "Number of RAID devices for '$device' differs between md.num_devices ($MD_OPTION_num_devices) and md.devices (${#DEVICES[@]}) !"
-	else 
+	else
 		# num_devices was not given, calculate it from the DEVICES array
 		MD_OPTION_num_devices=${#DEVICES[@]}
 	fi
@@ -60,7 +60,7 @@ while read file ; do
 		$(
 		for var in ${!MD_OPTION*}; do
 			# skipt level and num_devices as we used it already
-			case $var in 
+			case $var in
 				(*level|*num_devices) continue;;
 			esac
 			# convert MD_OPTION_UUID into uuid
@@ -77,5 +77,5 @@ while read file ; do
 
 done < <(
 	cd $VAR_DIR/recovery
-	find . -name md.devices -printf "%P\n" 
+	find . -name md.devices -printf "%P\n"
 	)

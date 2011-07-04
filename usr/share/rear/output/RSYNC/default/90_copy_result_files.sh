@@ -8,7 +8,6 @@ if test "$RESULT_FILES" ; then
 	Log "Copying files '${RESULT_FILES[@]}' to $RSYNC_URL location"
 	cp $v "${RESULT_FILES[@]}" "${BUILD_DIR}/rsync/${RSYNC_PREFIX}/" >&2
 	StopIfError "Could not copy files to local rsync location"
-	
 fi
 
 echo "$VERSION_INFO" >"${BUILD_DIR}/rsync/${RSYNC_PREFIX}/VERSION"
@@ -23,13 +22,11 @@ StopIfError "Could not copy $LOGFILE to local rsync location"
 case $RSYNC_PROTO in
 
 	(ssh)
-
 		Log "$BACKUP_PROG -a ${BUILD_DIR}/rsync/${RSYNC_PREFIX}/ ${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/"
 		$BACKUP_PROG -a "${BUILD_DIR}/rsync/${RSYNC_PREFIX}/" "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/" 2>&8
 		;;
 
 	(rsync)
-
 		Log "$BACKUP_PROG -a ${BUILD_DIR}/rsync/${RSYNC_PREFIX}/ ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/"
 		$BACKUP_PROG -a "${BUILD_DIR}/rsync/${RSYNC_PREFIX}/" "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/"
 		;;

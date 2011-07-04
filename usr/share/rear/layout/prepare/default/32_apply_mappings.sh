@@ -33,7 +33,7 @@ while read source target junk ; do
     if ! has_replacement "$source" ; then
         add_replacement "$source"
     fi
-    
+
     if ! has_replacement "$target" ; then
         add_replacement "$target"
     fi

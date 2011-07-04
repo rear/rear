@@ -96,7 +96,6 @@ function set_syslinux_features {
 	fi
 	Log "Using syslinux prefix: $SYSLINUX_PREFIX"
 
-
 	FEATURE_SYSLINUX_IS_SET=1
 }
 
@@ -158,11 +157,11 @@ function make_syslinux_config {
 
 	if [ -s "$CONFIG_DIR/templates/rear.help" ] ; then
 		cp $v "$CONFIG_DIR/templates/rear.help" "$BOOT_DIR/rear.help" >&2
-		echo "F2 rear.help" 
-		echo "say F2 - Show help" 
-		syslinux_menu "TABMSG Press [Tab] to edit, [F2] for help, [F1] for version info" 
+		echo "F2 rear.help"
+		echo "say F2 - Show help"
+		syslinux_menu "TABMSG Press [Tab] to edit, [F2] for help, [F1] for version info"
 	else
-		syslinux_menu "TABMSG Press [Tab] to edit options and [F1] for version info" 
+		syslinux_menu "TABMSG Press [Tab] to edit options and [F1] for version info"
 	fi
 
 	echo "timeout 300"
@@ -173,10 +172,10 @@ function make_syslinux_config {
 	echo "label rear"
 	syslinux_menu "label ^Recover $(uname -n)"
 	syslinux_menu_help "Rear rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
-			   "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${NETFS_URL:+NETFS_URL=$NETFS_URL}"
+			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${NETFS_URL:+NETFS_URL=$NETFS_URL}"
 	echo "kernel kernel"
 	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
-	
+
 	syslinux_menu separator
 	echo "label -"
 	syslinux_menu "label Other actions"
@@ -187,9 +186,8 @@ function make_syslinux_config {
 		echo "label help"
 		syslinux_menu "label ^Help for Relax and Recover"
 		syslinux_menu_help "More information about Rear and the steps for recovering your system"
-	    	syslinux_menu "help rear.help"
+		syslinux_menu "help rear.help"
 	fi
-
 
 	# Use chain booting for booting disk, if chain.c32 is available
 	if [ -r "$SYSLINUX_DIR/chain.c32" ] ; then
@@ -222,7 +220,6 @@ function make_syslinux_config {
 
 	fi
 
-	
 	if [ "$flavour" != "extlinux" -o "$FEATURE_SYSLINUX_EXTLINUX_WITH_LOCALBOOT" ] ; then
 		# localboot is a isolinux and pxelinux feature only, see http://syslinux.zytor.com/wiki/index.php/SYSLINUX#LOCALBOOT_type_.5BISOLINUX.2C_PXELINUX.5D
 		# but extlinux >= 3.70 actually also supports localboot, see http://syslinux.zytor.com/wiki/index.php/Syslinux_3_Changelog#Changes_in_3.70
@@ -266,21 +263,20 @@ function make_syslinux_config {
 		echo ""
 	fi
 
-
 	if [ -r "$SYSLINUX_DIR/hdt.c32" ] ; then
 		cp $v "$SYSLINUX_DIR/hdt.c32" "$BOOT_DIR/hdt.c32" >&2
 		if [ -r "/usr/share/hwdata/pci.ids" ] ; then
-		    cp $v "/usr/share/hwdata/pci.ids" "$BOOT_DIR/pci.ids" >&2
+			cp $v "/usr/share/hwdata/pci.ids" "$BOOT_DIR/pci.ids" >&2
 		elif [ -r "/usr/share/pci.ids" ] ; then
-		    cp $v "/usr/share/pci.ids" "$BOOT_DIR/pci.ids" >&2
+			cp $v "/usr/share/pci.ids" "$BOOT_DIR/pci.ids" >&2
 		fi
 		if [ -r "/lib/modules/$KERNEL_VERSION/modules.pcimap" ] ; then
-		    cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BOOT_DIR/modules.pcimap" >&2
+			cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BOOT_DIR/modules.pcimap" >&2
 		fi
 		echo "say hdt - Hardware Detection Tool"
 		echo "label hdt"
 		syslinux_menu "LABEL Information about your current hardware configuration"
-	    	echo "kernel hdt.c32"
+		echo "kernel hdt.c32"
 		echo ""
 	fi
 
@@ -296,7 +292,6 @@ function make_syslinux_config {
 		echo "append -"
 		echo ""
 	fi
-
 
 	if [ -r "$SYSLINUX_DIR/reboot.c32" ] ; then
 		cp $v "$SYSLINUX_DIR/reboot.c32" "$BOOT_DIR/reboot.c32" >&2
@@ -321,4 +316,4 @@ function make_syslinux_config {
 	if [ -r "$SYSLINUX_DIR/menu.c32" ] ; then
 		echo "default menu.c32"
 	fi
-} 
+}

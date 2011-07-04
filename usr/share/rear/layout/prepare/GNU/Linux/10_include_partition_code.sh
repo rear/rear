@@ -56,26 +56,26 @@ EOF
 
     local part odisk size parttype flags name junk
     while read part odisk size pstart parttype flags name junk; do
-        
+
         # if not in migration mode, use original start
         if [ -z "$MIGRATION_MODE" ] ; then
             start=$pstart
         fi
-        
+
         # calculate the end of the partition.
         let end=$start+$size
-        
+
         # test to make sure we're not past the end of the disk
         if [ $end -gt $disk_size ] ; then
             LogPrint "Partition $name size reduced to fit on disk."
             let end=$disk_size
         fi
-        
+
         # extended partitions run to the end of disk...
         if [ "$parttype" = "extended" ] ; then
             let end=$disk_size
         fi
-        
+
         if [ -n "$FEATURE_PARTED_ANYUNIT" ] ; then
 cat <<EOF >> $LAYOUT_CODE
 parted -s $disk mkpart $parttype ${start}B $(($end-1))B >&2
@@ -97,14 +97,14 @@ EOF
         # We can't use $end because of extended partitions
         # extended partitions have a small actual size as reported by sysfs
         let start=$start+${size%B}
-        
+
         # round starting size to next multiple of 4096
         # 4096 is a good match for most device's block size
         start=$( echo "$start" | awk '{printf "%u", $1+4096-($1%4096);}')
-        
+
         # Get the partition number from the name
         local number=$(echo "$name" | grep -o -E "[0-9]+$")
-        
+
         local flags="$(echo $flags | tr ',' ' ')"
         local flag
         for flag in $flags ; do

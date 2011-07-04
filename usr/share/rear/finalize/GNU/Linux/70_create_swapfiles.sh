@@ -32,10 +32,10 @@ while read file ; do
 		# otherwise use /mnt/local for swap files
 		device="/mnt/local/${file%%/swap_vol_id}" # /mnt/local/media/hdd2/swapfile
 	fi
-	
+
 	[ -s "$VAR_DIR/recovery/$file" ]
 	StopIfError "Description file '$VAR_DIR/recovery/$file' is empty."
-	
+
 	# source information from vol_id file
 	. $VAR_DIR/recovery/$file
 	# This should set stuff like this:
@@ -48,7 +48,7 @@ while read file ; do
 
 	[ "$ID_FS_TYPE" == swap ]
 	StopIfError "Unexpected swap type '$ID_FS_TYPE' found"
-	
+
 	# build swap creation command
 	# NOTE: We use an array to better preserve quotes in the arguments
 	CMD=(mkswap)
@@ -59,7 +59,7 @@ while read file ; do
 	# check that command has enough words
 	[ "${#CMD[@]}" -ge 2 ]
 	StopIfError "Invalid swap creation command: '${CMD[@]}'"
-	
+
 	# check that command exists
 	[ -x "$(get_path $CMD)" ]
 	StopIfError "Swap creation command '$CMD' not found !"
@@ -67,8 +67,8 @@ while read file ; do
 	# run command
 	eval "${CMD[@]}" >&8
 	StopIfError "Could not create swap on '$device'"
-	
+
 done < <(
 	cd $VAR_DIR/recovery
-	find . -name swap_vol_id -printf "%P\n" 
+	find . -name swap_vol_id -printf "%P\n"
 	)

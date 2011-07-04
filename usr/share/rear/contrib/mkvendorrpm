@@ -75,8 +75,8 @@ echo "Creating archive '$distarchive'"
 # use tar to copy the current rear while excluding development and obsolete files
 cd $rear_root
 tar --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
-     		 --exclude=\*.rpmnew\* --exclude=.\*.swp --exclude .svn -c \
-		 . | tar -C $BUILD_DIR/$prod_ver -x 
+		--exclude=\*.rpmnew\* --exclude=.\*.swp --exclude .svn -c \
+		. | tar -C $BUILD_DIR/$prod_ver -x
 
 cd -
 
@@ -154,7 +154,7 @@ EOF
 popd
 
 echo Creating final $distarchive of rear version $prod_ver
-tar -C $BUILD_DIR -czf $distarchive $prod_ver 
+tar -C $BUILD_DIR -czf $distarchive $prod_ver
 
 # ready for the rpmbuild
 RPM_TopDir=`rpmtopdir`	# find rpmbuild %{_topdir} path

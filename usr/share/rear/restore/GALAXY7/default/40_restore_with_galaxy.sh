@@ -34,19 +34,19 @@ if jobid=$(qoperation restore -af $TMP_DIR/galaxy.restore.options) ; then
 	LogPrint "Restoring data with Galaxy (job $jobid)"
 	while true ; do
 		# output of qlist job -co s -j ## :
-		# STATUS     
-		# ------     
-		# Pending  
+		# STATUS
+		# ------
+		# Pending
 		# the array gets rid of the line breaks :-)
 
 		jobdetails=( $(qlist job -co s -j $jobid) )
 		StopIfError "Could not receive job details. Check log file."
 
 		jobstatus="${jobdetails[2]}"
-		
+
 		# stop waiting if the job reached a final status
 		case "$jobstatus" in
-			?omplet*) 
+			?omplet*)
 				echo
 				LogPrint "Restore completed successfully."
 				break
@@ -65,7 +65,7 @@ if jobid=$(qoperation restore -af $TMP_DIR/galaxy.restore.options) ; then
 		esac
 		sleep 10
 	done
-	
+
 else
 	Error "Could not start Galaxy restore job. Check log file."
 fi

@@ -9,7 +9,7 @@ echo "I am $(uname -a)"
 echo "---- Loaded modules:"
 lsmod
 echo "---- NIC configuration:"
-for k in $(ip l |grep \< | cut -d : -f 2) ; do 
+for k in $(ip l |grep \< | cut -d : -f 2) ; do
 	echo "NIC $k:"
 	ethtool -i $k 2>&1
 	ethtool $k 2>&1

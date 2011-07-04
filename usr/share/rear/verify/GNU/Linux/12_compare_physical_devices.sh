@@ -8,7 +8,7 @@
 # situations. I see the following problems:
 # - if only some devices are missing, this code silently assumes that the matching
 #   devices are to be used. Since they are not removed from $available_devices
-#   this might lead to a double assignment of the same (new) physical device: Once 
+#   this might lead to a double assignment of the same (new) physical device: Once
 #   because it matched an original physical device and once through a manual mapping
 # - The support for CCISS style devices is there but I never tested it
 
@@ -61,7 +61,6 @@ for device in $(cat $VAR_DIR/recovery/required_devices) ; do
 	size="$(cat ${TMP_DIR}$device/size 2>&8 )"
 	test "$size" || size=0 # set size to sane value if unknown
 
-	
 	# Each original physical device must exist
 	if grep -q "$device" $TMP_DIR/physical_devices && test "$size" -ge "$original_size" ; then
 		: noop, all is fine
@@ -79,10 +78,10 @@ for device in $(cat $VAR_DIR/recovery/required_devices) ; do
 				DEVICE_LIST=( "${DEVICE_LIST[@]}" "$checkdevice $((checksize/1024/1024)) GB" )
 			fi
 		done < <(echo "$available_devices") # note: vim on F11 had a problem with syntax highlighting and <<< here!
-			
-		# display unit in GB	
+
+		# display unit in GB
 		let display_original_size=original_size/1024/1024 display_size=size/1024/1024
-		
+
 		LogPrint "
 WARNING! The original device $device [$display_original_size GB] is not available
 or too small$(test $size -gt 0 && echo " [$display_size GB]")."
@@ -119,6 +118,6 @@ this system and try again or contribute/sponsor a better script that can
 also change the amount and size of the target disk devices.
 "
 	fi
-done 
+done
 
 

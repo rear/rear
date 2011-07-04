@@ -38,8 +38,8 @@ StopIfError "PXE_CONFIG_PATH [$PXE_CONFIG_PATH] does not exist !"
 if test "$PXE_CREATE_LINKS" -a "$PXE_REMOVE_OLD_LINKS" ; then
 	# remove old links
 	find . -maxdepth 1 -type l | \
-		while read file ; do 
-			if test "$(readlink -s $file)" = "$PXE_CONFIG_FILE" ; then 
+		while read file ; do
+			if test "$(readlink -s $file)" = "$PXE_CONFIG_FILE" ; then
 				rm -f $file
 			fi
 		done
@@ -49,7 +49,7 @@ case "$PXE_CREATE_LINKS" in
 	IP)
 		# look only at IPv4 and skip localhost (127...)
 		ip a | grep inet\ | grep -v inet\ 127 | \
-			while read inet IP junk ; do 
+			while read inet IP junk ; do
 				IP=${IP%/*}
 				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP) >&2
 			done
@@ -57,7 +57,7 @@ case "$PXE_CREATE_LINKS" in
 	MAC)
 		# look at all devices that have link/ether
 		ip l | grep link/ether | \
-			while read link mac junk ; do 
+			while read link mac junk ; do
 				ln -sf $v "$PXE_CONFIG_FILE" ${mac//:/-} >&2
 			done
 		;;

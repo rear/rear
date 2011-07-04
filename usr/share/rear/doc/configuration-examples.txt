@@ -6,7 +6,7 @@ _/etc/rear/site.conf_.
 
 There are two important variables that influence Rear and the Rear rescue
 image. Set +OUTPUT+ to your preferred boot method and define +BACKUP+ for your
-favorite +BACKUP+ strategy. 
+favorite +BACKUP+ strategy.
 
 In most cases only these two settings are required.
 

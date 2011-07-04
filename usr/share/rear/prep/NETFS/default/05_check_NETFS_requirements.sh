@@ -61,10 +61,10 @@ esac
 # set archive names
 case "$TAPE_DEVICE:$NETFS_PROTO" in
 	(:*)
-		backuparchive="${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}" 
+		backuparchive="${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}"
 		;;
 	(*:tape)
-		backuparchive="${TAPE_DEVICE}" 
+		backuparchive="${TAPE_DEVICE}"
 		;;
 esac
 

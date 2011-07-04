@@ -16,4 +16,4 @@ if test "$GALAXY_COMMCELL" ; then
 	fi
 else
 	Error "GALAXY_COMMCELL not set !"
-fi 
+fi

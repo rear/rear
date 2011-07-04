@@ -4,7 +4,7 @@
 #
 # Most of the functions are coming from the fedora-14 dhclient-script
 
-readonly -a MASKS=( 
+readonly -a MASKS=(
         0
         2147483648 3221225472 3758096384 4026531840
         4160749568 4227858432 4261412864 4278190080
@@ -253,9 +253,9 @@ get_network_address() {
         if [[ "${nm}" = *.* ]]; then
             :
         else
-	    nm=`prefix2netmask ${nm}`
+            nm=`prefix2netmask ${nm}`
         fi
-	my_ipcalc ${ip} ${nm} | cut -d '/' -f 2
+        my_ipcalc ${ip} ${nm} | cut -d '/' -f 2
     fi
 }
 
@@ -553,7 +553,7 @@ add_ipv6_addr_with_DAD() {
                 fi
             done
 
-            # if there's still tentative flag = address didn't pass DAD = 
+            # if there's still tentative flag = address didn't pass DAD =
             # = it's duplicate = remove it
             if [ -n "${duplicate}" ]; then
                 ip -6 addr del ${new_ip6_address}/${new_ip6_prefixlen} dev ${interface}

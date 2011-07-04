@@ -68,7 +68,7 @@ backup_prog_rc=$?
 
 sleep 1
 test "$backup_prog_rc" -gt 0 && LogPrint "WARNING !
-There was an error (Nr. $backup_prog_rc) while restoring the archive. 
+There was an error (Nr. $backup_prog_rc) while restoring the archive.
 Please check '$LOGFILE' for more information. You should also
 manually check the restored system to see wether it is complete.
 "

@@ -17,7 +17,7 @@ WORKFLOW_mkrpm () {
 	WORKFLOW_mkdist
 
 	LogPrint "Creating RPM packages "
-	
+
 	rpmbuild -ta $v "$distarchive" 2>&1 | tee -a /dev/fd/8 /dev/fd/2 | grep '\.rpm$' >$TMP_DIR/rpmbuild
 	[ $PIPESTATUS -eq 0 ]
 	StopIfError "Could not build RPM. See '$LOGFILE' for more information."

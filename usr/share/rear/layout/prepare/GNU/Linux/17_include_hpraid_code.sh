@@ -14,17 +14,17 @@ EOF
 create_logicaldrive() {
     local ld disk path options
     read ld disk path options < <(grep "^logicaldrive ${1#ld:}" $LAYOUT_FILE)
-    
+
     local slotnr=${path%%|*}
     local arrayname=${path%|*}
     arrayname=${arrayname#*|}
-    
+
     local raid="" drives="" spares="" sectors="" stripesize=""
     local option key value
     for option in $options ; do
         key=${option%=*}
         value=${option#*=}
-        
+
         case $key in
             raid)
                 raid=" raid=$value"

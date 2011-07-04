@@ -21,7 +21,7 @@ while read device junk ; do
 	FindDrivers $device >$VAR_DIR/recovery/$device/drivers
 	StopIfError "Could not determine the required drivers for '$device'"
 	# NOTE: The result can be empty if we simply don't know!
-         
+
 done <$VAR_DIR/recovery/required_devices
 
 

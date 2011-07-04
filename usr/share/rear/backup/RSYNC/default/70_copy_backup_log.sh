@@ -17,7 +17,7 @@ case $RSYNC_PROTO in
 	(rsync)
 		$BACKUP_PROG -a "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log.gz" \
 		"${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/${BACKUP_PROG_ARCHIVE}-${Timestamp}.log.gz"
-		
+
 		$BACKUP_PROG -a "$LOGFILE" "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}//rear-${Timestamp}.log"
 		;;
 

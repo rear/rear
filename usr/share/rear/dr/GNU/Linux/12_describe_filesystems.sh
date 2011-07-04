@@ -31,8 +31,8 @@ Your udev implementation (vol_id or blkid) does not recognize it."
 		*)
 			Log "The filesystem $filesystem on $device does not support extended filesystem"
 			Log "parameters like max mount count, check imterval etc. or it"
-			Log "is not implemented in Rear yet" 
+			Log "is not implemented in Rear yet"
 			Log "Please file a bug if you think this is an error"
 			;;
-	esac	
+	esac
 done <$VAR_DIR/recovery/mountpoint_device

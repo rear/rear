@@ -25,10 +25,10 @@ while read device junk ; do
 			continue
 			;;
 	esac
-	
+
 	# Now we should have only real physical devices. If not, then THIS script has a bug and the above
 	# list needs to be extended
-			
+
 	# On some systems there seem to be several devices with the same MAJOR:MINOR (maybe some kind of RAID ?)
 	# so that we have to be careful not to assume the the grep below will always return exactly one match
 	sysfspath=( $(grep -rl "^$dev\$" /sys/block/*/dev /sys/block/*/*/dev) )
@@ -62,27 +62,27 @@ Please file a bug with complete info about your system, e.g. (fake) RAID, LVM, M
 	if test "$checkpath" = /sys ; then
 		physical_device="$(GuessPhysicalDevice "$device")"
 		StopIfError "Could not guess physical device for '$device' [$dev] in '$sysfspath'.
-This is probably a bug in your kernel or in $PRODUCT, 
+This is probably a bug in your kernel or in $PRODUCT,
 so please file a bug report about this."
 		if test -b "$physical_device" ; then
-		       	REQUIRED_DEVICES=( "${REQUIRED_DEVICES[@]}" "$physical_device" )
+			REQUIRED_DEVICES=( "${REQUIRED_DEVICES[@]}" "$physical_device" )
 			Log "WARNING ! I guessed that '$physical_device' is the physical device for '$device' [$dev] in '$sysfspath' but I might be wrong about that !"
 		else
 			Error "I could not find the physical device for '$device' [$dev] in '$sysfspath'.
 This might be a bug in $PRODUCT, so please file a bug report about this."
 		fi
 	else
-	# checkpath=/sys/block/sdc 
+	# checkpath=/sys/block/sdc
 
 	# The only remaining option is now that $checkpath contains a device link
 		REQUIRED_DEVICES=( "${REQUIRED_DEVICES[@]}" "$(DeviceNameToNode "$(basename "$checkpath")")" )
 	fi
-	
+
 done < <(
 	find $VAR_DIR/recovery -name depends -exec cat '{}' \; | sort -u
 	)
-	
-for d in "${REQUIRED_DEVICES[@]}" ; do 
+
+for d in "${REQUIRED_DEVICES[@]}" ; do
 	echo "$d"
 done | sort -u >$VAR_DIR/recovery/required_devices
 

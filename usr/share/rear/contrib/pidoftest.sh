@@ -1,6 +1,6 @@
 #!/bin/bash
 ME="$(type -p "$0" || readlink -f "$0")"
- 
+
 p="$(type -p pidof)"
 
 if ! test "$p" ; then

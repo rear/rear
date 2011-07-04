@@ -17,7 +17,7 @@ remove_second_component() {
 
 # Remove lines in the LAYOUT_FILE
 while read done name type junk ; do
-    case $type in 
+    case $type in
         part)
             name=$( echo "$name" | sed -r 's/(.*)[0-9]$/\1/')
             if [ "${name/cciss/}" != "$name" ] ; then

@@ -15,7 +15,7 @@ Log "Saving Swap information."
                 break
             fi
         done
-        
+
         # find uuid or label
         if has_binary swaplabel; then
             while read what value junk; do
@@ -29,7 +29,7 @@ Log "Saving Swap information."
                 esac
             done < <(swaplabel $filename)
         fi
-        
+
         echo "swap $filename uuid=$uuid label=$label"
     done < <(cat /proc/swaps)
 ) >> $DISKLAYOUT_FILE

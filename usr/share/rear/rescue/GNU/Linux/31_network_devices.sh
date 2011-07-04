@@ -82,15 +82,15 @@ for sysfspath in /sys/class/net/* ; do
         fi
         echo "$driver" >>$ROOTFS_DIR/etc/modules
     else
-        LogPrint "WARNING:   Could not determine network driver for '$dev'. Please make 
-WARNING:   sure that it loads automatically (e.g. via udev) or add 
+        LogPrint "WARNING:   Could not determine network driver for '$dev'. Please make
+WARNING:   sure that it loads automatically (e.g. via udev) or add
 WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
     fi
 	mkdir -p $v $TMP_DIR/mappings >&2
 	test -f $CONFIG_DIR/mappings/ip_addresses && read_and_strip_file $CONFIG_DIR/mappings/ip_addresses > $TMP_DIR/mappings/ip_addresses
-	
+
 	if test -s $TMP_DIR/mappings/ip_addresses ; then
-		
+
 		while read network_device ip_address junk ; do
 			Log "New IP-address will be $network_device $ip_address"
 			echo "ip addr add $ip_address dev $dev" >>$netscript
@@ -113,7 +113,7 @@ if test -d /proc/net/bonding ; then
 		# Note: Some users reported that this works only for the first bonding device
 		# in this case one should disable bonding by setting SIMPLIFY_BONDING
 		#
-		
+
 		# get list of bonding devices
 		BONDS=( $(ls /proc/net/bonding) )
 
@@ -144,13 +144,13 @@ if test -d /proc/net/bonding ; then
 	else
 		# The way to simplify the bonding is to copy the IP addresses from the bonding device to the
 		# *first* slave device
-		
-		# Anpassung HZD: Hat ein System bei einer SLES10 Installation zwei Bonding-Devices 
+
+		# Anpassung HZD: Hat ein System bei einer SLES10 Installation zwei Bonding-Devices
 		# gibt es Probleme beim Boot mit der Rear-Iso-Datei. Der Befehl modprobe -o name ...
-		# funkioniert nicht. Dadurch wird nur das erste bonding-Device koniguriert. 
+		# funkioniert nicht. Dadurch wird nur das erste bonding-Device koniguriert.
 		# Die Konfiguration des zweiten Devices schlägt fehl und dieses lässt sich auch nicht manuell
 		# nachinstallieren. Daher wurde diese script so angepasst, dass die Rear-Iso-Datei kein Bonding
-		# konfiguriert, sondern die jeweiligen IP-Adressen einer Netzwerkkarte des Bondingdevices 
+		# konfiguriert, sondern die jeweiligen IP-Adressen einer Netzwerkkarte des Bondingdevices
 		# zuordnet. Dadurch musste aber auch das script 35_routing.sh angepasst werden.
 
 		# go over bondX and record information

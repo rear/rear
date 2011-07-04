@@ -11,21 +11,21 @@ Log "Saving LVM layout."
     # format: lvmdev <volume_group> <device> [<uuid>] [<size(bytes)>]
     lvm 8>&- 7>&- pvdisplay -c | while read line ; do
         pdev=$(echo $line | cut -d ":" -f "1")
-        
+
         if [ "${pdev#/}" = "$pdev" ] ; then
             # Skip lines that are not describing physical devices
             continue
         fi
-        
+
         vgrp=$(echo $line | cut -d ":" -f "2")
         size=$(echo $line | cut -d ":" -f "3")
         uuid=$(echo $line | cut -d ":" -f "12")
-        
+
         echo "lvmdev /dev/$vgrp $pdev $uuid $size"
     done
 
     ## Get the volume group configuration
-    # format: lvmgrp <volume_group> <extentsize> [<size(extents)>] [<size(bytes)>] 
+    # format: lvmgrp <volume_group> <extentsize> [<size(extents)>] [<size(bytes)>]
     lvm 8>&- 7>&- vgdisplay -c | while read line ; do
         vgrp=$(echo $line | cut -d ":" -f "1")
         size=$(echo $line | cut -d ":" -f "12")
@@ -42,7 +42,7 @@ Log "Saving LVM layout."
         vgrp=$(echo $line | cut -d ":" -f "2")
         size=$(echo $line | cut -d ":" -f "7")
         extents=$(echo $line | cut -d ":" -f "8")
-        
+
         echo "lvmvol /dev/$vgrp $lvol $extents $size "
     done
 ) >> $DISKLAYOUT_FILE

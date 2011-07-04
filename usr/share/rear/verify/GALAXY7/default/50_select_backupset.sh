@@ -8,7 +8,7 @@ if ! test "$GALAXY7_BACKUPSET" ; then
 	)
 
 	LogPrint "
-Found the following backupsets: 
+Found the following backupsets:
 $(
 		for ((d=0 ; d<c ; d++)) ; do
 			echo "     [$d] ${backupsets[d]}"

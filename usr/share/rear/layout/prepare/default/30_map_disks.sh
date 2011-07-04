@@ -42,7 +42,7 @@ while read disk dev size junk ; do
     if mapping_exists "$dev" ; then
         continue
     fi
-    
+
     # first, try to find if the disk of the same name has the same size
     if [ -e /sys/block/$(get_sysfs_name "$dev") ] ; then
         newsize=$(get_disk_size $(get_sysfs_name "$dev"))
@@ -51,14 +51,14 @@ while read disk dev size junk ; do
             continue
         fi
     fi
-    
+
     # else, loop over all disks to find one of the same size
     for path in /sys/block/* ; do
         if [ ! -r $path/size ] || [ ! -d $path/queue ] ; then
             continue
         fi
         newsize=$(get_disk_size ${path#/sys/block/})
-        
+
         if [ "$size" -eq "$newsize" ] && ! reverse_mapping_exists "/dev/$(get_device_name $path)"; then
             add_mapping "$dev" "/dev/$(get_device_name $path)"
             break

@@ -78,7 +78,7 @@ case "$BACKUP_PROG" in
 		while sleep 1 ; kill -0 $BackupPID 2>&8; do
 			size="$(stat -c "%s" "$backuparchive")" || {
 				kill -9 $BackupPID
-				ProgressError 
+				ProgressError
 				Error "The backup program did not create the archive file !
 Killed the backup program and aborting."
 			}

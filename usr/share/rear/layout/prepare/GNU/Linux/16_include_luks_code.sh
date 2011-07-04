@@ -3,15 +3,15 @@
 create_crypt() {
     local crypt device encdevice options
     read crypt device encdevice options < <(grep "^crypt $1" $LAYOUT_FILE)
-    
+
     local name=${device#/dev/mapper/}
-    
+
     local cipher="" hash="" uuid="" keyfile="" password=""
     local option key value
     for option in $options ; do
         key=${option%=*}
         value=${option#*=}
-        
+
         case $key in
             cipher)
                 cipher=" --cipher $value"

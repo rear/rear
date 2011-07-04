@@ -22,7 +22,7 @@ fi
 if grep -q "^/$" $TMP_DIR/restore_fs_list
 then
    echo "!/mnt/local/" >> $TMP_DIR/restore_fs_list
-fi 
+fi
 if [ ${#EXCLUDE_MOUNTPOINTS[@]} -gt 0 ]
 then
     for FS in ${EXCLUDE_MOUNTPOINTS[@]}

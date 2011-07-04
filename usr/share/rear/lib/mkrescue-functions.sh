@@ -1,7 +1,7 @@
 CategoriseDev () {
 ##################
 # Purpose is to find out to which device category a device belongs to
-# input: /dev/hda1, /dev/md0, /dev/vg00/lvol01 
+# input: /dev/hda1, /dev/md0, /dev/vg00/lvol01
 # output: MD | LVM | NORMAL
 Log "CategoriseDevice called with '$@'"
 local dev=${1}
@@ -66,7 +66,7 @@ case "${2}" in
 			echo "${dsk}"
 		done
 		;;
-esac	
+esac
 }
 
 ParseDevice () {
@@ -145,7 +145,7 @@ Divide () {
 #########
 num1=$1
 num2=$2
-                                                                                
+
 # divide with floating numbering
 bc -l <<EOF
 ${num1}/${num2}
@@ -157,7 +157,7 @@ Multiply () {
 ###########
 num1=$1
 num2=$2
-                                                                                
+
 bc -l <<EOF
 ${num1}*${num2}
 EOF
@@ -168,7 +168,7 @@ FixSfdiskPartitionFile () {
 #^^^^^^^^^^^^^^^^^^^^^^
 # Sometimes we have a warning message in the partitions.$_dsk file which
 # makes sfdisk fail at restore time (we will remove those lines)
-# parameter: $1 is the sfdisk output file to fix 
+# parameter: $1 is the sfdisk output file to fix
 
 egrep -vi '(^warning|^dos)'  "$1" > "${TMP_DIR}/partitions.tmp"
 

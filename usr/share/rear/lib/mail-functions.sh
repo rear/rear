@@ -7,7 +7,7 @@
 MIME_BOUNDARY=_---------_-$RANDOM$RANDOM$RANDOM$RANDOM
 
 #
-# produce the headers of a mime/multipart message 
+# produce the headers of a mime/multipart message
 #
 # parameters:
 # $1 = sender

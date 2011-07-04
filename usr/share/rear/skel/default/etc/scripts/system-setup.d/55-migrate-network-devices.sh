@@ -3,7 +3,7 @@
 # migrate network device configuration found in /etc/udev/rules.d/*persistent*{net|names}*.rules to match
 # different hardware from the source system. We assume that udev or static module loading was used to load the
 # appropriate drivers and do not do anything about driver loading
-# 
+#
 # adjusts the udev rule and triggers udev
 #
 # NOTE: We don't do anything on systems that do not manage the persistent network names
@@ -36,7 +36,7 @@ and I could not find $orig_mac in the udev
 rules (${RULE_FILES[@]}).
 
 If your system uses persistent network names, it does not configure them with
-udev and you will have to adjust it yourself. If your system does not use 
+udev and you will have to adjust it yourself. If your system does not use
 persistent network names, then everything might or might not work, YMMV.
 "
 			return 0 # skip the remaining script
@@ -49,7 +49,7 @@ test ${#MIGRATE_MACS[@]} -eq 0 && return 0 # skip this process if all MACs are a
 # find the MAC addresses that are now available
 # this is an array with values of the form "$dev $mac $driver"
 # which is similar to /etc/mac-addresses but with the driver information added
-NEW_DEVICES=() 
+NEW_DEVICES=()
 for dev_dir in /sys/class/net/* ; do
 	dev="${dev_dir##*/}" # basename $dev_dir
 	case $dev in
@@ -84,7 +84,7 @@ if ! test $MANUAL_MAC_MAPPING ; then
 		PS3="
 	Choose the network device to use: "
 		echo -e "\nThe original network device $old_dev $old_mac is not available.\nPlease select another device:\n"
-		select choice in  "${NEW_DEVICES[@]}" "Skip replacing the network device" ; do 
+		select choice in  "${NEW_DEVICES[@]}" "Skip replacing the network device" ; do
 			n=( $REPLY )
 			let n-- # because bash arrays count from 0
 			if test $n -eq "${#NEW_DEVICES[@]}" ; then

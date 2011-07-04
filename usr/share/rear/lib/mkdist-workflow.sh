@@ -5,7 +5,7 @@
 #
 
 if [[ "$VERBOSE" ]]; then
-    WORKFLOW_mkdist_DESCRIPTION="create tar archive using installed rear"
+	WORKFLOW_mkdist_DESCRIPTION="create tar archive using installed rear"
 fi
 WORKFLOWS=( ${WORKFLOWS[@]} mkdist )
 
@@ -36,7 +36,6 @@ WORKFLOW_mkdist_postprocess () {
 	# to prevent RPMs from installing symlinks into the doc area we actually copy the text files
 	cp -r $v .$SHARE_DIR/{COPYING,README,AUTHORS,TODO} . >&2
 	StopIfError "Could not copy .$SHARE_DIR/{COPYING,README,AUTHORS,TODO,doc,contrib}"
-	
 
 # I want the generic SPEC file to be always shipped 2009-11-16 Schlomo
 	sed -i -e "s/Version:.*/Version: $VERSION/" .$SHARE_DIR/lib/rear.spec
@@ -64,7 +63,7 @@ WORKFLOW_mkdist_postprocess () {
 # extra kernel command line, to see boot messages on the serial console (uncomment next line)
 # KERNEL_CMDLINE="console=tty0 console=ttyS1"
 EOF
-	
+
 	# this little hack writes the same content into all these files...
 	cat <<EOF >./$CONFIG_DIR/templates/PXE_pxelinux.cfg
 default hd
@@ -81,7 +80,7 @@ EOF
 }
 
 WORKFLOW_mkdist () {
-	
+
 	prod_ver="$(basename "$0")-$VERSION"
 	distarchive="/tmp/$prod_ver.tar.gz"
 	LogPrint "Creating archive '$distarchive'"
@@ -91,13 +90,13 @@ WORKFLOW_mkdist () {
 
 	# use tar to copy the current rear while excluding development and obsolete files
 	tar -C / --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
-       		 --exclude=\*.rpmnew\* --exclude=.\*.swp -cv \
+		--exclude=\*.rpmnew\* --exclude=.\*.swp -cv \
 			"$SHARE_DIR" \
 			"$CONFIG_DIR" \
 			"$(get_path "$0")" |\
 		tar -C $BUILD_DIR/$prod_ver -x >&8
 	StopIfError "Could not copy files to $BUILD_DIR/$prod_ver"
-	
+
 	pushd $BUILD_DIR/$prod_ver >&8
 	StopIfError "Could not pushd $BUILD_DIR/$prod_ver"
 

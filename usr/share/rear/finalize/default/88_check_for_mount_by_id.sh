@@ -27,7 +27,7 @@ if grep -v swap $VAR_DIR/recovery/fstab | grep -q by-id ; then
 	# sanity check, should be some disks listed here.
 	if ! test "$SCSI_ID_HAVE_RESULT" ; then
 		LogPrint "
-	
+
 WARNING ! Could not list any LUN IDs with scsi_id. Please tell us how your
 system calls scsi_id. However, some disks just don't have any LUN ID. We
 would like to know more about such systems and how they look.

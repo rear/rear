@@ -10,7 +10,7 @@ WORKFLOW_shell () {
 		Log "Setting $key=$val"
 	done
 
-	export REAR_EVAL="$(declare -p | sed -e 's/^declare .. //' -e '/MASKS=/d' )" 
+	export REAR_EVAL="$(declare -p | sed -e 's/^declare .. //' -e '/MASKS=/d' )"
 	bash --rcfile $SHARE_DIR/lib/bashrc.rear -i 2>&1
-	
+
 }

@@ -67,7 +67,7 @@ setup --stage2=/boot/grub/stage2 --prefix=$grub_prefix (hd0)
 quit
 EOF
         else
-            # hd1 is a best effort guess, we cannot predict how numbering 
+            # hd1 is a best effort guess, we cannot predict how numbering
             # changes when a disk fails.
             chroot /mnt/local grub --batch --no-floppy >&2 <<EOF
 device (hd0) $disk

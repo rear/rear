@@ -23,22 +23,22 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 	# NEW_INITRD_MODULES and then add the new modules. Then we use "uniq -u" to filter out
 	# the modules which only appear once in the list. The result array the only
 	# contains the new modules.
-	NEW_INITRD_MODULES=( $INITRD_MODULES $INITRD_MODULES $( cat $TMP_DIR/storage_drivers ) )  
+	NEW_INITRD_MODULES=( $INITRD_MODULES $INITRD_MODULES $( cat $TMP_DIR/storage_drivers ) )
 
 	# uniq INITRD_MODULES
 
 	NEW_INITRD_MODULES=( $(tr " " "\n" <<< "${NEW_INITRD_MODULES[*]}" | sort | uniq -u) )
-	
+
 	Log "New INITRD_MODULES='${OLD_INITRD_MODULES[@]} ${NEW_INITRD_MODULES[@]}'"
-	
+
 	sed -i -e '/^INITRD_MODULES/s/^.*$/#&\nINITRD_MODULES="'"${OLD_INITRD_MODULES[*]} ${NEW_INITRD_MODULES[*]}"'"/' /mnt/local/etc/sysconfig/kernel
 
 	mount -t proc none /mnt/local/proc
 	mount -t sysfs none /mnt/local/sys
 	if chroot /mnt/local /bin/bash --login -c "mkinitrd" >&2 ; then
-        	LogPrint "Updated initramfs with new drivers for this system."
+		LogPrint "Updated initramfs with new drivers for this system."
 	else
-        	LogPrint "WARNING !!! 
+		LogPrint "WARNING !!!
 initramfs creation failed, please check '$LOGFILE' to see the error
 messages in detail and decide yourself, wether the system will boot or not.
 "

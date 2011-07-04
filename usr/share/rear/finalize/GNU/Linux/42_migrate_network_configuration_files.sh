@@ -1,5 +1,5 @@
 # rewrite all the network configuration files for SUSE LINUX according
-# to the mapping files 
+# to the mapping files
 
 PATCH_FILES=( /mnt/local/etc/sysconfig/*/ifcfg-* )
 
@@ -24,16 +24,16 @@ if test -s $TMP_DIR/mappings/mac ; then
 	while read old_mac new_mac dev ; do
 		SED_SCRIPT="$SED_SCRIPT;s/$old_mac/$new_mac/g"
 	done < <( read_and_strip_file $CONFIG_DIR/mappings/mac | sed -e 'p;y/abcdef/ABCDEF/' )
-	#             						^^^^^^^
+	#						^^^^^^^
 	#		this is a nasty hack that prints each line as is (lowercase) and once again in uppercase
 	#		the reason is that the mac mappings are in lower case but some systems seem to keep
 	#		the MAC adresses in upper case and since I don't want to mess with this I treat it as
 	#		separate things and do the replacement case-sensitive
-	
+
 	Log "SED_SCRIPT: '$SED_SCRIPT'"
 	sed -i -e "$SED_SCRIPT" "${PATCH_FILES[@]}"
 	LogPrintIfError "WARNING! There was an error patching the network configuration files!"
-	
+
 	# rename files
 	for file in "${PATCH_FILES[@]}"; do
 		new_file="$(sed -e "$SED_SCRIPT" <<<"$file")"

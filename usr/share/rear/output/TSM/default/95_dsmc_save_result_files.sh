@@ -13,8 +13,8 @@ TSM_RESULT_FILES=()
 test -z "$TSM_RESULT_FILE_PATH" && TSM_RESULT_FILE_PATH=/tmp
 
 if ! test -d "$TSM_RESULT_FILE_PATH" ; then
-	 mkdir -p $v "$TSM_RESULT_FILE_PATH" >&2
-	 StopIfError "Could not create '$TSM_RESULT_FILE_PATH'"
+	mkdir -p $v "$TSM_RESULT_FILE_PATH" >&2
+	StopIfError "Could not create '$TSM_RESULT_FILE_PATH'"
 fi
 
 
@@ -26,7 +26,7 @@ if test "$TSM_RESULT_FILE_PATH" != "/tmp" ; then
 			for fname in "${RESULT_FILES[@]}" ; do
 				echo "$TSM_RESULT_FILE_PATH/$(basename "$fname")"
 			done
-		 )
+		)
 	)
 else
 	TSM_RESULT_FILES=( "${RESULT_FILES[@]}" )

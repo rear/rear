@@ -40,7 +40,7 @@ $(
 	for workflow in ${WORKFLOWS[@]} ; do
 		description=WORKFLOW_${workflow}_DESCRIPTION
 		if [[ "${!description}" ]]; then
-			 printf " %-16s%s\n" $workflow "${!description}"
+			printf " %-16s%s\n" $workflow "${!description}"
 		fi
 	done
 )

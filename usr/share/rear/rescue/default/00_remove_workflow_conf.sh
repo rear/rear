@@ -1,7 +1,7 @@
 #
 # set extra config options for recovery phase
 #
-# this is useful to bring over some settings from the build system to the 
+# this is useful to bring over some settings from the build system to the
 # rescue system that would be hard to find out there
 
 mkdir -p $v $ROOTFS_DIR$CONFIG_DIR >&2

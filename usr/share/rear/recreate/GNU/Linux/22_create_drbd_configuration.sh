@@ -11,20 +11,20 @@ if [ -e /etc/drbd.conf ] ; then
     if [ $? -ne 0 ] ; then
         LogPrint "Failed to load DRBD module, please configure DRBD manually."
     fi
-    
+
     mkdir -p /var/lib/drbd
-    
+
     # LVM on DRBD
     # Recreate devices
     drbdadm create-md all
-    
+
     # Only attach, do not start synchronization
     drbdadm attach all
     drbdadm -- --overwrite-data-of-peer primary all
     if [ $? -ne 0 ] ; then
         LogPrint "Failed to restore DRBD configuration, please configure DRBD manually."
     fi
-    
+
     ## DRBD on LVM would look like:
     # drbdadm create-md all
     # drbdadm up all

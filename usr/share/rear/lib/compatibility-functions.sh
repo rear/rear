@@ -8,7 +8,7 @@ elif has_binary udev_volume_id; then
 	Debug "Using 'udev_volume_id' for vol_id"
 	# vol_id does not exist, but the older udev_volume_id is available
 	# we write a little wrapper to map udev_volume_id to vol_id
-	
+
 	# output of udev_volume_id looks like this:
         # F:filesystem
         # T:ext3
@@ -24,14 +24,14 @@ elif has_binary udev_volume_id; then
         # ID_FS_LABEL='boot'
         # ID_FS_LABEL_SAFE='boot'
         # ID_FS_UUID='eddf2e10-0adb-40a8-af88-027ef9710953'
-	
+
 	# NOTE: vol_id returns different exit codes depending on the error (file not found, unknown volume, ...)
 	#       But udev_volume_id returns 0 even on unknown volume.
 	#	To better mimic the vol_id behaviour we return 0 only if there is some real information
 	#	which we detect by searching for the = sign in the KEY=VAL result produced by sed
 	#	Furthermore, the grep = prevents non-KEY=VAL lines to be returned, which would confuse
 	#	the calling eval $(vol_id <device>) statement.
-	
+
 	function vol_id {
 		udev_volume_id "$1" | sed \
 			-e "s/^F:\(.*\)$/ID_FS_USAGE='\1'/" \
@@ -51,22 +51,22 @@ elif has_binary blkid && blkid -o udev >&8 2>&1; then
 	function vol_id {
 		blkid -o udev -p "$1"
 	}
-	
+
 	# BIG WARNING! I added this to support openSUSE 11.2 which removed vol_id between m2 and m6 (!!) by updating udev
 	#
-	# SADLY blkid on Fedora 10 and openSUSE 11.1 (for example) behaves totally different. Additionally I found out 
-	# that on Fedora 10 and openSUSE 11.1 blkid comes from e2fsprogs and on openSUSE 11.2m6 blkid comes from 
+	# SADLY blkid on Fedora 10 and openSUSE 11.1 (for example) behaves totally different. Additionally I found out
+	# that on Fedora 10 and openSUSE 11.1 blkid comes from e2fsprogs and on openSUSE 11.2m6 blkid comes from
 	# util-linux (which is util-linux-ng !)
 	#
 	# IT REMAINS TO BE OBSERVED how this story continues and whether all systems that do NOT have vol_id DO have
 	# a suitable blkid installed.
 	#
-# everybody else gets to use our built-in vol_id 
+# everybody else gets to use our built-in vol_id
 else
 	Debug "Using internal version of vol_id"
 	if [ "$WARN_MISSING_VOL_ID" ]; then
 		Log "Required udev program 'vol_id' or a suitable 'blkid' could not be found !
-Activating a very primitive builtin replacement that supports 
+Activating a very primitive builtin replacement that supports
 ext2/3:   LABEL and UUID
 reiserfs: LABEL
 xfs:      LABEL and UUID
@@ -125,7 +125,7 @@ You might try to install the proper vol_id from the udev package to support
 this filesystem."
 		esac
 	}
-fi	
+fi
 
 # see
 # http://osdir.com/ml/bug-bash-gnu/2010-04/msg00080.html

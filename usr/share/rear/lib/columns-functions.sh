@@ -7,12 +7,12 @@
 # Disk /dev/sda: 160GB
 # Sector size (logical/physical): 512B/512B
 # Partition Table: msdos
-# 
+#
 # Number  Start   End     Size    Type     File system  Flags
 #  1      32.3kB  98.7MB  98.7MB  primary  ext3         boot
 #  2      98.7MB  140GB   140GB   primary               lvm
 # >>
- 
+
 set_separator() {
     OIFS=$IFS
     IFS="$1"
@@ -27,7 +27,7 @@ columns=
 init_columns() {
     local line=$1
     columns=""
-    
+
     local word=""
     local wasspace=""
     local len=${#line}
@@ -40,34 +40,34 @@ init_columns() {
                 # word complete, write to list
                 let start=$i-${#word}
                 word=$(echo "$word" | tr '[:upper:]' '[:lower:]')
-                
+
                 columns="$columns${word%% }=$start;"
                 word=""
             fi
         else
             word="${word}${char}"
         fi
-        
+
         if [ "$char" = " " ] ; then
             wasspace="yes"
         else
             wasspace=""
         fi
-        
+
         let i++
     done
     # last word
     let start=$i-${#word}
     word=$(echo "$word" | tr '[:upper:]' '[:lower:]')
     columns="$columns${word%% }=$start;"
-    
+
     #echo "c:$columns"
 }
 
 # get_column_size $header
 get_column_size() {
     local start=$(get_column_start "$1")
-    
+
     local nextheader=$(get_next_header "$1")
     if [ -z "$nextheader" ] ; then
         echo "255"
@@ -85,7 +85,7 @@ get_column_start() {
     for pair in $columns ; do
         local header=${pair%=*}
         local hstart=${pair#*=}
-        
+
         if [ "$header" = "$1" ] ; then
             echo "$hstart"
             restore_separator
@@ -104,13 +104,13 @@ get_next_header() {
     for pair in $columns ; do
         local header=${pair%=*}
         local hstart=${pair#*=}
-        
+
         if [ "$previous" = "$1" ] ; then
             echo "$header"
             restore_separator
             return 0
         fi
-        
+
         previous=$header
     done
     restore_separator

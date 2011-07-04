@@ -1,7 +1,7 @@
 # run the external backup program
 LogPrint "Running external backup command"
 Log "Running '${EXTERNAL_BACKUP[@]}'"
-eval "${EXTERNAL_BACKUP[@]}" 
+eval "${EXTERNAL_BACKUP[@]}"
 ret=$?
 if IsInArray $ret "${EXTERNAL_IGNORE_ERRORS[@]}" ; then
 	Log "WARNING: Ignoring external backup command exit code of '$ret'."

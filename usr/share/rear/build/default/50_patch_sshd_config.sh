@@ -20,5 +20,5 @@ sed -i  -e 's/PasswordAuthentication.*/PasswordAuthentication no/ig' \
 	$ROOTFS_DIR/etc/sshd_co[n]fig $ROOTFS_DIR/etc/ssh/sshd_co[n]fig
 else
 	Log "WARNING: ssh configuration files missing"
-fi 
-						
+fi
+

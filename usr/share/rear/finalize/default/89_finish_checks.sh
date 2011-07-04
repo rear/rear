@@ -5,7 +5,7 @@ if ls -l /sys/block/*/ | grep -q xen ; then
 	LogPrint "This looks like a XEN PV system, ignoring boot loader issues"
 elif test "$NOBOOTLOADER" ; then
 	LogPrint "
-WARNING ! For this system 
+WARNING ! For this system
 $OS_VENDOR_VERSION on $ARCH (based on $OS_MASTER_VENDOR_VERSION_ARCH)
 there is no code to install a boot loader on the recovered system or the code
 that we have failed to install the boot loader correctly.
@@ -27,4 +27,4 @@ You can use 'chroot /mnt/local bash --login' to access the recovered system.
 Please remember to mount /proc before trying to install a boot loader.
 "
 
-fi	
+fi

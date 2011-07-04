@@ -54,16 +54,16 @@ function SourceStage() {
 	shift
 	STARTSTAGE=$SECONDS
 	Log "Running '$stage' stage"
-	scripts=( 
+	scripts=(
 		$(
-		cd $SHARE_DIR/$stage ; 
+		cd $SHARE_DIR/$stage ;
 		# We always source scripts in the same subdirectory structure. The {..,..,..} way of writing
 		# it is just a shell shortcut that expands as intended.
 		ls -d	{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
 			"$BACKUP"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
 			"$OUTPUT"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
 			"$OUTPUT"/"$BACKUP"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
-		| sed -e 's#/\([0-9][0-9]\)_#/!\1!_#g' | sort -t \! -k 2 | tr -d \! 
+		| sed -e 's#/\([0-9][0-9]\)_#/!\1!_#g' | sort -t \! -k 2 | tr -d \!
 		)
 		# This sed hack is neccessary to sort the scripts by their 2-digit number INSIDE indepentand of the
 		# directory depth of the script. Basicall sed inserts a ! before and after the number which makes the
@@ -73,10 +73,10 @@ function SourceStage() {
 	# if no script is found, then $scripts contains only .
 	# remove the . in this case
 	test "$scripts" = . && scripts=()
-	
+
 	if test "${#scripts[@]}" -gt 0 ; then
 		for script in ${scripts[@]} ; do
-			Source $SHARE_DIR/$stage/"$script" 
+			Source $SHARE_DIR/$stage/"$script"
 		done
 		Log "Finished running '$stage' stage in $((SECONDS-STARTSTAGE)) seconds"
 	else

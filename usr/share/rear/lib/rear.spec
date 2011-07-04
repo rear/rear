@@ -60,7 +60,7 @@ Requires:	mkisofs portmap
 %if 0%{?rhel_version} != 0
 Requires:	iproute redhat-lsb
 # Red Hat moved from CentOS/RHEL/SL 6 and Fedora 9 away from mkisofs
-%if 0%{?rhel_version} >= 600 
+%if 0%{?rhel_version} >= 600
 Requires:	genisoimage rpcbind
 %else
 Requires:	mkisofs portmap
@@ -92,7 +92,7 @@ bare metal disaster recovery abilities to the compatible backup software.
 
 %prep
 %setup -q
- 
+
 %build
 # no code to compile - all bash scripts
 

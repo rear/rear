@@ -14,13 +14,13 @@ while read dm_name junk ; do
         Log "Device Mapper name $dm_name not found in /dev/mapper."
         continue
     fi
-    
+
     dev_name=$(get_sysfs_name /dev/mapper/$dm_name)
     if [ -z "$dev_name" ] ; then
         Log "Could not find device $dev_number in sysfs."
         continue
     fi
-    
+
     device=""
     for slave in /sys/block/$dev_name/slaves/* ; do
         if ! [ -z "$device" ] ; then
@@ -28,16 +28,16 @@ while read dm_name junk ; do
         fi
         device="/dev/$(get_device_name ${slave##*/})"
     done
-    
+
     if ! cryptsetup isLuks $device >&8 2>&1; then
         continue
     fi
-    
+
     # gather crypt information
     cipher=$(cryptsetup luksDump $device | grep "Cipher name" | sed -r 's/^.+:[^a-z]+(.+)$/\1/')
     mode=$(cryptsetup luksDump $device | grep "Cipher mode" | sed -r 's/^.+:[^a-z]+(.+)$/\1/')
     hash=$(cryptsetup luksDump $device | grep "Hash spec" | sed -r 's/^.+:[^a-z]+(.+)$/\1/')
     uuid=$(cryptsetup luksDump $device | grep "UUID" | sed -r 's/^.+:[^a-z]+(.+)$/\1/')
-    
+
     echo "crypt /dev/mapper/$dm_name $device cipher=$cipher mode=$mode hash=$hash uuid=${uuid}" >> $DISKLAYOUT_FILE
 done < <( dmsetup ls --target crypt )

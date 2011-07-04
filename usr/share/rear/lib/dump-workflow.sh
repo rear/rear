@@ -32,7 +32,7 @@ WORKFLOW_dump () {
 	for var in "ARCH" "OS" \
 		"OS_MASTER_VENDOR" "OS_MASTER_VERSION" "OS_MASTER_VENDOR_ARCH" "OS_MASTER_VENDOR_VERSION" "OS_MASTER_VENDOR_VERSION_ARCH" \
 		"OS_VENDOR" "OS_VERSION" "OS_VENDOR_ARCH" "OS_VENDOR_VERSION" "OS_VENDOR_VERSION_ARCH"; do
-		LogPrint "$( printf "%40s = %s" "$var" "${!var}" )"	
+		LogPrint "$( printf "%40s = %s" "$var" "${!var}" )"
 	done
 
 	LogPrint "Configuration tree:"
@@ -50,7 +50,7 @@ WORKFLOW_dump () {
 								test -s $CONFIG_DIR/"$config".conf && echo OK || echo missing/empty
 								)" )"
 	done
-	
+
 	LogPrint "Backup with $BACKUP"
 	for opt in $(eval echo '${!'"$BACKUP"'_*}') ; do
 		LogPrint "$( printf "%40s = %s" "$opt" "$(eval 'echo "${'"$opt"'[@]}"')" )"
@@ -64,15 +64,15 @@ WORKFLOW_dump () {
 		done
 		;;
 	esac
-	
+
 	LogPrint "Output to $OUTPUT"
 	for opt in $(eval echo '${!'"$OUTPUT"'_*}') RESULT_MAILTO ; do
 		LogPrint "$( printf "%40s = %s" "$opt" "$(eval 'echo "${'"$opt"'[@]}"')" )"
 	done
 
 	Print ""
-	
-	echo "$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt" 
+
+	echo "$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt"
 	if test -s "$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt" ; then
 		LogPrint "Your system is validated with the following details:"
 		while read -r ; do

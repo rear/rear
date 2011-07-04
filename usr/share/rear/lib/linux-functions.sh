@@ -95,7 +95,7 @@ FindDrivers() {
 FindStorageDrivers() {
 	[ "$STORAGE_DRIVERS" ]
 	StopIfError "FindStorageDrivers called but STORAGE_DRIVERS is empty"
-	{ 
+	{
 		while read module junk; do
 			IsInArray "$module" "${STORAGE_DRIVERS[@]}" && echo $module
 		done < <(lsmod)

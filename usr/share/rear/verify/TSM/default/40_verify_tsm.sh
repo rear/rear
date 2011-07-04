@@ -41,7 +41,7 @@ while read num date time type path ; do
 	TSM_FILESPACE_NUMS[$num]="$num"
 done < <(grep -A 10000 '^  1' <<<"$TSM_FILESPACE_TEXT")
 
-Log "Available filespaces: 
+Log "Available filespaces:
 $TSM_FILESPACE_TEXT"
 
 echo "
@@ -49,9 +49,9 @@ The TSM Server reports the following for this node:
 $(echo "$TSM_FILESPACE_TEXT" | sed -e 's/^/\t\t/')
 Please enter the numbers of the filespaces we should restore.
 Pay attention to enter the filesystems in the correct order
-(like restore / before /var/log) ! " 
+(like restore / before /var/log) ! "
 read -t 30 -p "(default: ${TSM_FILESPACE_NUMS[*]}): [30sec] " -r TSM_RESTORE_FILESPACE_NUMS 2>&1
-if test -z "$TSM_RESTORE_FILESPACE_NUMS" ; then 
+if test -z "$TSM_RESTORE_FILESPACE_NUMS" ; then
 	TSM_RESTORE_FILESPACE_NUMS="${TSM_FILESPACE_NUMS[*]}" # set default on ENTER
 	Log "User pressed ENTER, setting default of ${TSM_FILESPACE_NUMS[*]}"
 fi

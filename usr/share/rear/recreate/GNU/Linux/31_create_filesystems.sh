@@ -7,17 +7,17 @@ LogPrint "Creating file systems"
 while read file ; do
 	# file looks like dev/md/0/fs_vol_id
 	device="/${file%%/fs_vol_id}" # /dev/md/0
-	
+
 	[ -s $VAR_DIR/recovery/$file ]
 	StopIfError "Description file '$VAR_DIR/recovery/$file' is empty."
-	
+
 	# initialize variables
 	ID_FS_USAGE=""
 	ID_FS_TYPE=""
 	ID_FS_VERSION=""
 	ID_FS_UUID=""
 	ID_FS_LABEL=""
-	ID_FS_LABEL_SAFE=""	
+	ID_FS_LABEL_SAFE=""
 	# source information from vol_id file
 	. $VAR_DIR/recovery/$file
 	# This should set stuff like this:
@@ -63,14 +63,13 @@ while read file ; do
 			;;
 		jfs)
 			CMD=(mkfs.jfs -q)
-			
 			test "$ID_FS_UUID" && CMD2=( jfs_tune -U "$ID_FS_UUID" "$device")
 			test "$ID_FS_LABEL" && CMD=( "${CMD[@]}" -L "'$ID_FS_LABEL'" )
 			CMD=( "${CMD[@]}" "$device" )
 			;;
 		vfat)
 			# vfat is used for EFI file system only (IA64)
-			# changed mkfs.vfat cmd -- according to the man-page mkfs.vfat should autodetect the needed size 
+			# changed mkfs.vfat cmd -- according to the man-page mkfs.vfat should autodetect the needed size
 			CMD=(mkfs.vfat)
 			VOLUME_ID="`echo $ID_FS_UUID | sed -e 's/-//'`"
 			test "$ID_FS_UUID" && CMD=( "${CMD[@]}" -i "$VOLUME_ID" )
@@ -85,7 +84,7 @@ while read file ; do
 	# check that command has enough words
 	[ "${#CMD[@]}" -ge 3 ]
 	StopIfError "Invalid filesystem creation command: '${CMD[@]}'"
-	
+
 	# check that command exists
 	[ -x "$(get_path $CMD)" ]
 	StopIfError "Filesystem creation command '$CMD' not found !"
@@ -93,14 +92,14 @@ while read file ; do
 	# run command
 	eval "${CMD[@]}" >&8
 	StopIfError "Could not create filesystem ($ID_FS_TYPE) on '$device'"
-	
+
 	# should we run another command (CMD2) ?
 	if test "${#CMD2[@]}" -ge 2 ; then
 
 		# check that CMD2 exists
 		[ -x "$( get_path $CMD2)" ]
 		StopIfError "Filesystem manipulation command '$CMD2' not found !"
-		
+
 		# run CMD2
 		eval "${CMD2[@]}" >&8
 		StopIfError "Could not '$CMD2' filesystem ($ID_FS_TYPE) on '$device'"
@@ -113,7 +112,7 @@ while read file ; do
 		# check that CMD3 exists
 		[ test -x "$( get_path $CMD3)" ]
 		StopIfError "Filesystem manipulation command '$CMD3' not found !"
-		
+
 		# run CMD3
 		eval "${CMD3[@]}" >&8
 		StopIfError "Could not '$CMD3' filesystem ($ID_FS_TYPE) on '$device'"
@@ -121,5 +120,5 @@ while read file ; do
 	fi
 done < <(
 	cd $VAR_DIR/recovery
-	find . -name fs_vol_id -printf "%P\n" 
+	find . -name fs_vol_id -printf "%P\n"
 	)

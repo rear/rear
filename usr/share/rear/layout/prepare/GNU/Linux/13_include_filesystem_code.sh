@@ -49,7 +49,7 @@ EOF
             if [ -n "$uuid" ] ; then
                 echo "$tunefs -U $uuid $device >&2" >> $LAYOUT_CODE
             fi
-            
+
             tune2fsopts="${reserved_blocks}${max_mounts}${check_interval}"
             if [ -n "$tune2fsopts" ] ; then
                 echo "$tunefs $tune2fsopts $device >&2" >> $LAYOUT_CODE
@@ -86,20 +86,20 @@ mkfs -t $fstype $device >&2
 EOF
             ;;
     esac
-    
+
     # Extract mount options
     local option mountopts
     for option in $options ; do
         name=${option%=*}
         value=${option#*=}
-        
+
         case $name in
             options)
                 mountopts=$value
                 ;;
         esac
     done
-    
+
     if [ -n "$mountopts" ] ; then
         mountopts=" -o $mountopts"
     fi

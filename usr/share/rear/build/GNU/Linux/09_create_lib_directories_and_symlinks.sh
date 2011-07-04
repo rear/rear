@@ -4,19 +4,19 @@ for libdir in /lib* ; do
 	if [ -L $libdir ] ; then
 		[ ! -d $ROOTFS_DIR$libdir ]
 		BugIfError "Cannot create symlink $libdir instead of directory"
-		
+
 		linktarget=$(readlink -f $libdir)
 		linktarget="${linktarget#/}" # strip leading / to make symlink a relative one
-		
+
 		mkdir -p $v "$ROOTFS_DIR/$linktarget" >&2
 		StopIfError "Could not mkdir '$ROOTFS_DIR/$linktarget'"
-		
+
 		ln -s $v "$linktarget" $ROOTFS_DIR$libdir >&2
 		StopIfError "Could not create symlink '$ROOTFS_DIR$libdir'"
 	elif [ -d $libdir ] ; then
 		[ ! -L $ROOTFS_DIR$libdir ]
 		BugIfError "Cannot create directory $libdir instead of symlink"
-		
+
 		mkdir -p $v $ROOTFS_DIR$libdir >&2
 		StopIfError "Could not create directory '$ROOTFS_DIR$libdir'"
 	else

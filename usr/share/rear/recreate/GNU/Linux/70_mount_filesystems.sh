@@ -15,5 +15,5 @@ while read mountpoint device mountby filesystem options junk; do
 done < "${VAR_DIR}/recovery/mountpoint_device"
 
 # In case they are missing we add the standard directories
-mkdir -p /mnt/local/{proc,sys,dev,tmp} 
+mkdir -p /mnt/local/{proc,sys,dev,tmp}
 chmod 1777 /mnt/local/tmp

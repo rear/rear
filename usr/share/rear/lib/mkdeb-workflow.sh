@@ -18,12 +18,12 @@ WORKFLOW_mkdeb () {
 
 	pkg_size="$(du -s $TMP_DIR/$prod_ver/ | awk -F " " '{print $1}')"
 	LogPrint "Creating DEB packages "
-	
+
 	tar -C $TMP_DIR -xzvf $distarchive >&8
 	# prod_ver is the same here as in mkdist, so the directory names should match
 	mkdir $v $TMP_DIR/$prod_ver/DEBIAN/ >&2
 	StopIfError "Could not mkdir '$TMP_DIR/$prod_ver/DEBIAN/'"
-	
+
 	rm $v $TMP_DIR/$prod_ver/doc >&2
 	rm $v $TMP_DIR/$prod_ver/README >&2
 	StopIfError "Could not delete symlinks in '$TMP_DIR/$prod_ver/'"

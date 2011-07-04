@@ -6,7 +6,7 @@ mount -t proc none /mnt/local/proc
 if chroot /mnt/local /bin/bash --login -c "grub-install '(hd0)'" >&2 ; then
 	NOBOOTLOADER=
 else
-	LogPrint "WARNING !!! 
+	LogPrint "WARNING !!!
 	grub installation failed, please check '$LOGFILE' to see the error
 	message and decide yourself, wether the system will boot or not.
 
