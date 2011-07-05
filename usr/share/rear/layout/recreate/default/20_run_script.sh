@@ -22,7 +22,7 @@ while [[ -z "$RESTORE_OK" ]]; do
 
         timestamp=$(stat --format="%Y" $LAYOUT_CODE)
         select choice in "${choices[@]}"; do
-            timestamp=$(stat --format="%Y" $LAYOUT_FILE)
+#            timestamp=$(stat --format="%Y" $LAYOUT_FILE)
             case "$REPLY" in
                 (1) less $LOGFILE;;
                 (2) rear_shell;;
@@ -31,7 +31,7 @@ while [[ -z "$RESTORE_OK" ]]; do
                 (4) if (( $timestamp < $(stat --format="%Y" $LAYOUT_CODE) )); then
                         break
                     else
-                        LogPrint "Script $LAYOUT_CODE has not been changed, restarting has no impact."
+                        Print "Script $LAYOUT_CODE has not been changed, restarting has no impact."
                     fi
                     ;;
                 (5) break;;

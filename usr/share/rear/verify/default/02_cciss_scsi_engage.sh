@@ -8,7 +8,7 @@ fi
 # make the CCISS tape device visible
 for host in /proc/driver/cciss/cciss?; do
     Log "Engage SCSI on host $host"
-    echo engage scsi >$host
+    echo engage scsi >$host 2>/dev/null
 done
 
 sleep 2

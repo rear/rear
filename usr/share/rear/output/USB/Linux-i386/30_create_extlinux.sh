@@ -109,7 +109,7 @@ label $(uname -n | cut -d. -f1)-$time
     menu label ${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2} $usb_label_workflow
     say $(uname -n | cut -d. -f1)-$time - Recover $(uname -n | cut -d. -f1) $usb_label_workflow ($time)
     text help
-Rear $usb_label_workflow using kernel $(uname -r) ${IPADDR:+on $IPADDR}
+Rear v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPADDR:+on $IPADDR}
 ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${NETFS_URL:+NETFS_URL=$NETFS_URL}
     endtext
     kernel /$USB_PREFIX/kernel

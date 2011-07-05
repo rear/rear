@@ -6,7 +6,9 @@ BACKUPS_TAKEN=()
 
 # Copy file $1 to $1.$DATE
 backup_file() {
-    if ! IsInArray "$1" "${BACKUPS_TAKEN[@]}" ; then
+    if [[ ! -r "$1" ]]; then
+        return
+    elif ! IsInArray "$1" "${BACKUPS_TAKEN[@]}" ; then
         cp -ar $1 $1.$DATE.$$.bak
         BACKUPS_TAKEN=( "${BACKUPS_TAKEN[@]}" "$1" )
     fi

@@ -1,1 +1,0 @@
-../../../verify/OBDR/default/02_cciss_scsi_engage.sh

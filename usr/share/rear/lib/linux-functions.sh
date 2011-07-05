@@ -347,5 +347,5 @@ alias reboot=ask_exit
 alias shutdown=ask_exit
 EOF
 
-    HISTFILE="$histfile" bash --noprofile --rcfile $bashrc
+    HISTFILE="$histfile" bash --noprofile --rcfile $bashrc 8>&- 7>&- 2>&1
 }

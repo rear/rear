@@ -46,7 +46,8 @@ recovery.
 
 Where \"$BEXTRACT_VOLUME\" is the required Volume name of the tape,
 alternatively, use '*' if you don't know the volume,
-and \"$BEXTRACT_DEVICE\" is the Bacula device name of the tape drive."
+and \"$BEXTRACT_DEVICE\" is the Bacula device name of the tape drive.
+"
 
         LogPrint "Please restore your backup in the provided shell, use the shell history to
 access the above command and, when finished, type exit in the shell to continue recovery.

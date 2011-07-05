@@ -27,5 +27,3 @@ udevinfo
 kpartx
 scsi_tur
 )
-
-
