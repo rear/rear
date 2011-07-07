@@ -71,7 +71,7 @@ case "$(basename $BACKUP_PROG)" in
 		i=0
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			i=$((i+1))
-			[[ $i -eq 300 ]] && i=0
+			[[ $i -gt 300 ]] && i=0
 			case $i in
 
 			300)
