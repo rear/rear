@@ -18,6 +18,7 @@ ProgressStart "Restore operation"
 			case $RSYNC_PROTO in
 
 				(ssh)
+					Log $BACKUP_PROG "${RSYNC_OPTIONS[@]}" "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"/ /mnt/local/
 					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" \
 					"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"/ \
 					/mnt/local/
@@ -41,21 +42,23 @@ ProgressStart "Restore operation"
 BackupPID=$!
 starttime=$SECONDS
 
-sleep 1 # Give the backup software a good chance to start working
+sleep 3 # Give the backup software a good chance to start working
 
 # make sure that we don't fall for an old size info
 unset size
 # while the restore runs in a sub-process, display some progress information to the user
 case "$(basename $BACKUP_PROG)" in
 	(rsync)
+		
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
-			fsize="$(get_size $(tail -1 "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log"))"
+			fsize="$(get_size $(tail -2 "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | head -n 1))"
 			size=$((size+fsize))
 			echo "INFO Restored $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
 		done
 		;;
 
 	(*)
+
 		echo "INFO Restoring" >&8
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			ProgressStep
