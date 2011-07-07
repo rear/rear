@@ -6,7 +6,7 @@ my_udevtrigger() {
 
 # call udevsettle
 my_udevsettle() {
-        type -p udevadm >/dev/null && udevadm settle $@ || udevsettle $@
+        type -p udevadm >/dev/null && udevadm settle --timeout=10 $@ || udevsettle $@
 }
 
 # call udevinfo
