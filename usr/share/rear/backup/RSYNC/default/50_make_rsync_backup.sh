@@ -23,7 +23,7 @@ ProgressStart "Running archive operation"
 				(ssh)
 					Log $BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $BUILD_DIR/backup-include.txt) "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
 					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $BUILD_DIR/backup-include.txt) \
-					"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"  2>/dev/null
+					"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"  #2>/dev/null
 					;;
 
 				(rsync)
@@ -45,10 +45,20 @@ ProgressStart "Running archive operation"
 BackupPID=$!
 starttime=$SECONDS
 
-sleep 1 # Give the backup software a good chance to start working
+sleep 3 # Give the backup software a good chance to start working
 
 function get_size () {
 	echo $(stat --format '%s' "/$1" 2>/dev/null)
+}
+
+function check_remote_df () {
+	echo $(ssh ${RSYNC_USER}@${RSYNC_HOST} df -P ${RSYNC_PATH} 2>/dev/null | tail -1 | awk '{print $5}' | sed -e 's/%//')
+}
+
+function check_remote_du () {
+	x=$(ssh ${RSYNC_USER}@${RSYNC_HOST} du -sb ${RSYNC_PATH}/${RSYNC_PREFIX}/backup 2>/dev/null | awk '{print $1}')
+	[[ -z "${x}" ]] && x=0
+	echo $x
 }
 
 # make sure that we don't fall for an old size info
@@ -57,9 +67,32 @@ unset size
 case "$(basename $BACKUP_PROG)" in
 
 	(rsync)
+		ofile=""
+		i=0
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
-			fsize="$(get_size $(tail -1 "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log"))"
-			size=$((size+fsize))
+			i=$((i+1))
+			[[ $i -eq 300 ]] && i=0
+			case $i in
+
+			300)
+			[[ $(check_remote_df) -eq 100 ]] && Error "Disk is full on system ${RSYNC_HOST}"
+			;;
+
+			15|30|45|60|75|90|105|120|135|150|165|180|195|210|225|240|255|270|285)
+			size=$(check_remote_du)
+			;;
+
+			* )
+			nfile="$(tail -1 "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log")"
+			#fsize="$(get_size $(tail -1 "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log"))"
+			[[ "$nfile" != "$ofile" ]] && {
+				fsize="$(get_size "$nfile")"
+				size=$((size+fsize))
+				ofile="$nfile"
+				}
+			;;
+			esac
+
 			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
 		done
 		;;
