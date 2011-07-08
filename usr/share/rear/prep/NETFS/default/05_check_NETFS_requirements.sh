@@ -48,7 +48,7 @@ else
 fi
 
 # some backup progs require a different backuparchive name
-case "$BACKUP_PROG" in
+case "$(basename $BACKUP_PROG)" in
 	(rsync)
 		# rsync creates a target directory instead of a file
 		BACKUP_PROG_SUFFIX=
