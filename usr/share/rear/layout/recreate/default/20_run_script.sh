@@ -13,6 +13,7 @@ while [[ -z "$RESTORE_OK" ]]; do
         # FIXME: Implement layout/prepare as part of a function ?
         choices=(
             "View Rear log"
+            "View original disk space usage"
             "Go to Rear shell"
 #            "Edit disk layout (disklayout.conf)"
             "Edit restore script (diskrestore.sh)"
@@ -25,16 +26,17 @@ while [[ -z "$RESTORE_OK" ]]; do
 #            timestamp=$(stat --format="%Y" $LAYOUT_FILE)
             case "$REPLY" in
                 (1) less $LOGFILE;;
-                (2) rear_shell;;
+                (2) less $VAR_DIR/layout/config/df.txt;;
+                (3) rear_shell;;
 #                (3) vi $LAYOUT_FILE;;
-                (3) vi $LAYOUT_CODE;;
-                (4) if (( $timestamp < $(stat --format="%Y" $LAYOUT_CODE) )); then
+                (4) vi $LAYOUT_CODE;;
+                (5) if (( $timestamp < $(stat --format="%Y" $LAYOUT_CODE) )); then
                         break
                     else
                         Print "Script $LAYOUT_CODE has not been changed, restarting has no impact."
                     fi
                     ;;
-                (5) break;;
+                (6) break;;
             esac
 
             # If disklayout.conf has changed, generate new diskrestore.sh

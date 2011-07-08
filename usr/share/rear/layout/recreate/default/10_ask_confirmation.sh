@@ -10,6 +10,7 @@ Print ""
 choices=(
     "View restore script (diskrestore.sh)"
     "Edit restore script (diskrestore.sh)"
+    "View original disk space usage"
     "Go to Rear shell"
     "Continue recovery"
     "Abort Rear"
@@ -19,12 +20,13 @@ select choice in "${choices[@]}"; do
     case "$REPLY" in
         (1) less $LAYOUT_CODE;;
         (2) vi $LAYOUT_CODE;;
-        (3) rear_shell "" "cd $VAR_DIR/layout/
+        (3) less $VAR_DIR/layout/config/df.txt;;
+        (4) rear_shell "" "cd $VAR_DIR/layout/
 vi $LAYOUT_CODE
 less $LAYOUT_CODE
 ";;
-        (4) break;;
         (5) break;;
+        (6) break;;
     esac
 
     # Reprint menu options when returning from less, shell or vi

@@ -10,6 +10,7 @@ Print ""
 choices=(
     "View disk layout (disklayout.conf)"
     "Edit disk layout (disklayout.conf)"
+    "View original disk space usage"
     "Go to Rear shell"
     "Continue recovery"
     "Abort Rear"
@@ -19,12 +20,13 @@ select choice in "${choices[@]}"; do
     case "$REPLY" in
         (1) less $LAYOUT_FILE;;
         (2) vi $LAYOUT_FILE;;
-        (3) rear_shell "" "cd $VAR_DIR/layout/
+        (3) less $VAR_DIR/layout/config/df.txt;;
+        (4) rear_shell "" "cd $VAR_DIR/layout/
 vi $LAYOUT_FILE
 less $LAYOUT_FILE
 ";;
-        (4) break;;
         (5) break;;
+        (6) break;;
     esac
 
     # Reprint menu options when returning from less, shell or vi
