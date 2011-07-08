@@ -23,13 +23,18 @@ while read type device size junk ; do
 
         let oldsize=$size
 
+        let difference=$newsize-$oldsize # can be negative!
+        Log "Total resize of ${difference}B"
+
         Log "Searching for resizeable partitions on disk $device ($newsize)B"
 
         # Find partitions that could be resized
         partitions=()
+        resizeable_size=0
         while read type part size start name flags name junk; do
             if [ "${flags/lvm/j}" != "${flags}" ] || [ "${flags/raid/j}" != "$flags" ] ; then
                 partitions=( "${partitions[@]}" "$name|${size%B}" )
+                let resizeable_size=$resizeable_size+${size%B}
                 Log "Will resize partition $name."
             fi
         done < <(grep "^part $device" $LAYOUT_FILE)
@@ -39,18 +44,20 @@ while read type device size junk ; do
             continue
         fi
 
-        # evenly distribute the size changes
-        let difference=$newsize-$oldsize
-        let delta=$difference/${#partitions[@]} # can be negative!
-        Log "Total resize of ${difference}B (${delta}x${#partitions[@]})"
+        if [ $resizeable_size -eq 0 ] || [ $resizeable_size -lt $difference ] ; then
+            LogPrint "No space to automatically resize partitions on disk $device."
+            continue
+        fi
 
+        # evenly distribute the size changes
         for data in "${partitions[@]}" ; do
             name=${data%|*}
             current_size=${data#*|}
 
-            nr=$(echo "$name" | sed -r 's/.+([0-9])$/\1/')
+            delta=$(echo "$current_size $resizeable_size $difference" | awk '{ printf "%d", ($1/$2)*$3; }')
+            let new_size=current_size+delta
 
-            let new_size=$current_size+$delta
+            nr=$(echo "$name" | sed -r 's/.+([0-9])$/\1/')
             sed -r -i "s|^(part $device) ${current_size}(.+)$nr$|\1 ${new_size}\2$nr|" $LAYOUT_FILE.tmp
             Log "Resized partition $name from ${current_size}B to ${new_size}B."
         done
