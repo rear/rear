@@ -33,7 +33,9 @@ in the provided shell. When finished, type exit in the shell to continue
 recovery.
 "
         rear_shell "Did the backup successfully restore to '/mnt/local' ? Ready to continue ?" \
-            "bextract$exclude_list -V$BEXTRACT_VOLUME /backup /mnt/local"
+            "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
+vi bootstrap.txt
+bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/local"
 
     else
 
@@ -53,7 +55,9 @@ and \"$BEXTRACT_DEVICE\" is the Bacula device name of the tape drive.
 access the above command and, when finished, type exit in the shell to continue recovery.
 "
         rear_shell "Did you restore the backup to /mnt/local ? Ready to continue ?" \
-            "bextract$exclude_list -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/local"
+            "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
+vi bootstrap.txt
+bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/local"
 
     fi
 
@@ -80,7 +84,9 @@ in the provided shell. When finished, type exit in the shell to continue
 recovery.
 "
     rear_shell "Did the backup successfully restore to '/mnt/local' ? Ready to continue ?" \
-        "bextract$exclude_list -V$BEXTRACT_VOLUME /backup /mnt/local"
+            "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
+vi bootstrap.txt
+bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/local"
 
 fi
 
