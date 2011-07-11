@@ -1,51 +1,74 @@
-Relax and Recovery TODO
-=======================
+= Relax and Recovery TODO
 
 A list of items that wait for someone to volunteer to fix :)
 
-* reboot on Ubuntu rescue media broken
-	- Probably we miss some script or config for upstart
-
-* 33_find_isolinux.sh
-	- currently used also to determine the SYSLINUX_DIR
-	- also for OUTPUT=USB
-	- finding SYSLINUX_DIR should be a script of its own
-
-* unify the extlinux|isolinux configuration code between ISO and USB.
-	- ATM this is a copy-paste job
-	- probably put the meat into a function or a symlinked script
-
-* finalize/Fedora/i386/17_rebuild_initramfs.sh
-	- needs to be written, seems like RH builds rich initramfs with all modules included
-	- be aware, recent Fedora uses dracut instead of mkinitrd
-
-* finalize/Gentoo/i386/17_rebuild_initramfs.sh
-	- needs to be written, I have no idea what should be done here (since I don't have Gentoo)
-
+== Wait for feedback
 * write network migration code for all other distributions
-	- some work has been done in the meantime, but not sure if it is sufficient enough to cover all
-	- waiting on customer feedback
+  - some work has been done in the meantime, but not sure if it is sufficient enough to cover all
+  - waiting on customer feedback
 
 * support dhcp for network migration
-	- has been added in 1.9.0
-	- waiting on customer feedback
+  - has been added in 1.9.0
+  - waiting on customer feedback
 
-* prep/Linux-ia64/20_getty_or_agetty.sh might be obsolete after the USE_SERIAL_CONSOLE piece has been added and tested successfully
-	- ia64 architecture will not support Linux anymore in future? Dropped off the list in RHEL6.
+== New features
+* add a disklayout.conf-related menu item to modify and recreate diskrestore.sh from it
 
-* Can we drop the mkvendorrpm workflow?
-  - merge the default SPEC file with the Fedora specific SPEC file
+* add another warning if there is less space on /boot than eg. 10 MB
 
 * Support dhcpcd (SLES11) in addition to dhclient
-
-* make sure that the new NETFS_PREFIX stuff does not brake existing setups, e.g. by putting the backup in a different location
-  - leave the default as it was before $(uname -n) to support existing setups
-  - make the code robust enought to handle all kind of static and dynamic NETFS_PREFIX scenarios, regardless of how the path looks
-  - write documentation how users can enable advanced stuff through setting a smarter NETFS_PREFIX, provide examples
 
 * avoid disabling selinux during backup
   - add --selinux option to tar and testing
   - rsync -X option tests required
+
+* finalize/Gentoo/i386/17_rebuild_initramfs.sh
+  - needs to be written, I have no idea what should be done here (since I don't have Gentoo)
+
+* finalize/Fedora/i386/17_rebuild_initramfs.sh
+  - needs to be written, seems like RH builds rich initramfs with all modules included
+  - be aware, recent Fedora uses dracut instead of mkinitrd
+
+== Known issues
+* reboot on Ubuntu rescue media broken
+  - Probably we miss some script or config for upstart
+
+* on RHEL4 the nbd kernel module is loaded as part of loading all block devices, this results in 128 nbd block devices offered to map to during manual recovery
+
+* running checklayout (eg. every 15 minutes) blocks an mkrescue or format workflow ran at the same time
+
+== Documentation
+* create official documentation for users and admins
+
+== Community
+* move to github, or something providing similar features to make contributing easier, includes:
+  - website/wiki
+  - issue-tracker
+  - milestone integration
+  - providing pull requests
+  - decentralized
+
+== Clean up
+* unify the extlinux|isolinux configuration code between ISO and USB.
+  - ATM this is a copy-paste job
+  - probably put the meat into a function or a symlinked script
+
+* 33_find_isolinux.sh
+  - currently used also to determine the SYSLINUX_DIR
+  - also for OUTPUT=USB
+  - finding SYSLINUX_DIR should be a script of its own
+
+* Can we drop the mkvendorrpm workflow?
+  - merge the default SPEC file with the Fedora specific SPEC file
+
+* Can we drop the mkdeb, mkdist, mktar, mkrpm workflows
+
+* prep/Linux-ia64/20_getty_or_agetty.sh might be obsolete after the USE_SERIAL_CONSOLE piece has been added and tested successfully
+  - ia64 architecture will not support Linux anymore in future? Dropped off the list in RHEL6.
+
+* remove remaining progress code
+
+* get rid of any vol_id dependencies, where possible (eg USE_LAYOUT)
 
 * convert tabs to 4 spaces
 
@@ -63,4 +86,3 @@ A list of items that wait for someone to volunteer to fix :)
   - stages/
   - workflows/
 
-* add another warning if there is less space on /boot than eg. 10 MB
