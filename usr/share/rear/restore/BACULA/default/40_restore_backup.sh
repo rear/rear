@@ -1,12 +1,38 @@
-#
-# Something basic to get started - V1.0.
-#
-#
-# restore from bacula
-#
-# Not much to do here. This is a manual restore in that we
-# assume that the user knows how to run a restore from bacula and that they
-# know what files to restore and to where.
+### Restore from bacula
+###
+
+### Create example bootstrap file
+cat <<EOF >$VAR_DIR/bootstrap.txt
+### Example Bacula bootstrap file
+###
+
+### Only the exact Volume name is required, other keywords are optional.
+### The use of FileIndex and Count keywords speeds up the selection enormously.
+
+### The Volume name to use
+Volume=PLEASE-EDIT-BOOTSTRAP
+
+### A (list of) Client name(s) to be matched on the current Volume
+#Client=$(hostname -s)-fd
+
+### A (list or range of) JobId(s) to be selected from the current Volume
+#JobId=18
+
+### A (list of) Job name(s) to be matched on the current Volume
+#Job=Bkp_Daily.2011-06-16
+
+### A (list or range of) Volume session id(s) to be matched from the current Volume
+#VolSessionId=1
+
+### The Volume session time to be matched from the current Volume
+#VolSessionTime=108927638
+
+### A (list or range of) FileIndex(es) to be selected from the current Volume
+#FileIndex=1-157
+
+### The total number of files that will be restored for this Volume.
+#Count=157
+EOF
 
 if [[ "$BEXTRACT_DEVICE" || "$BEXTRACT_VOLUME" ]]; then
 
@@ -17,11 +43,14 @@ if [[ "$BEXTRACT_DEVICE" || "$BEXTRACT_VOLUME" ]]; then
     if [[ -b "$BEXTRACT_DEVICE" && -d "/backup" ]]; then
 
         ### Bacula support using bextract and disk archive
-        LogPrint "The system is now ready for a restore via Bacula. bextract will
-be started for you to restore the required files. It's assumed that you know
-what is necessary to restore - typically it will be a full backup.
-Be aware, the new root is mounted under /mnt/local.
-Do not exit bextract until all files are restored.
+        LogPrint "
+The system is now ready to restore from Bacula. bextract will be started for
+you to restore the required files. It's assumed that you know what is
+necessary to restore - typically it will be a full backup.
+
+Do not exit 'bextract' until all files are restored.
+
+WARNING: The new root is mounted under '/mnt/local'.
 "
         read -p "Press ENTER to start bextract" 2>&1
 
@@ -67,11 +96,14 @@ else
 
     # Prompt the user that the system recreation has been done and that
     # bconsole is about to be started.
-    echo "The system is now ready for a restore via Bacula. bconsole will
-be started for you to restore the required files. It's assumed that you know
-what is necessary to restore - typically it will be a full backup.
-Be aware, the new root is mounted under '/mnt/local'.
-Do not exit bconsole until all files are restored
+    LogPrint "
+The system is now ready for a restore via Bacula. bconsole will be started for
+you to restore the required files. It's assumed that you know what is necessary
+to restore - typically it will be a full backup.
+
+Do not exit 'bconsole' until all files are restored
+
+WARNING: The new root is mounted under '/mnt/local'.
 
 Press ENTER to start bconsole"
     read

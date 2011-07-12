@@ -1,4 +1,5 @@
-# Enable serial console
+### Enable serial console
+###
 
 if ! type -p stty &>/dev/null; then
     echo "WARNING: stty not found, serial console disabled." >&2

@@ -345,6 +345,7 @@ alias halt=ask_exit
 alias poweroff=ask_exit
 alias reboot=ask_exit
 alias shutdown=ask_exit
+cd $VAR_DIR
 EOF
 
     HISTFILE="$histfile" bash --noprofile --rcfile $bashrc 8>&- 7>&- 2>&1

@@ -16,5 +16,3 @@ if [[ -z "$TAPE_DEVICE" && "$BEXTRACT_DEVICE" ]]; then
     [[ "$TAPE_DEVICE" ]]
     StopIfError "Either tape device $BEXTRACT_DEVICE is missing, or it has no tape inserted."
 fi
-
-TAPE_DEVICE=${TAPE_DEVICE//\/st/\/nst}

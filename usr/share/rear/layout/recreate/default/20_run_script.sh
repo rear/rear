@@ -9,6 +9,9 @@ while [[ -z "$RESTORE_OK" ]]; do
     if (( $? == 0 )); then
         RESTORE_OK=y
     else
+        LogPrint "An error occured during layout recreation."
+        Print ""
+
         # TODO: Provide a skip option (needs torough consideration)
         # FIXME: Implement layout/prepare as part of a function ?
         choices=(

@@ -61,6 +61,8 @@ if [ ${#restored_controllers} -ne 0 ] ; then
             RESTORE_OK=y
         else
             LogPrint "Could not configure an HP SmartArray controllers."
+            Print ""
+
             # TODO: Provide a skip option (needs torough consideration)
             choices=(
                 "View Rear log"
