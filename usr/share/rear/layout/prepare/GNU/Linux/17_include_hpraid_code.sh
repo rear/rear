@@ -25,6 +25,10 @@ create_logicaldrive() {
         key=${option%=*}
         value=${option#*=}
 
+        if [ -z "$value" ] ; then
+            continue
+        fi
+
         case $key in
             raid)
                 raid=" raid=$value"
