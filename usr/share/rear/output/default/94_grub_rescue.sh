@@ -1,12 +1,21 @@
-# Add the rescue kernel and initrd to the local GRUB Legacy
+### Add the rescue kernel and initrd to the local GRUB Legacy
+###
 
-# Only do when explicitely enabled
+### Only do when explicitely enabled
 if [[ ! "$GRUB_RESCUE" =~ ^[yY1] ]]; then
     return
 fi
 
-# Only do when system has GRUB Legacy
-grub_version=$(get_version "grub --version")
+### Only do when system has GRUB Legacy
+grub_binary=$(get_path grub)
+if [[ -z "$grub_binary" ]]; then
+    Log "Could not find grub binary."
+    return
+fi
+
+### Use strings as grub --version syncs all disks
+#grub_version=$(get_version "grub --version")
+grub_version=$(get_version "strings $grub_binary")
 if version_newer "$grub_version" 1.0; then
     return
 fi
