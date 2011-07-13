@@ -40,6 +40,21 @@ A list of items that wait for someone to volunteer to fix :)
 == Documentation
 * create official documentation for users and admins
 
+== Packaging/installation
+* Implement a Makefile with the following targets:
+  - install
+  - uninstall
+  - dist
+  - rpm
+  - deb
+
+* Check bash syntax from 'make dist' or 'make install' to prevent syntax errors
+  - Maybe even provide a 'make test' target as well
+
+* Check for empty files and/or dangling symlinks and/or files containing subversion symlink info
+  - To help detect problems caused be backporting/forwardporting patches using patch/diff
+  - As part of the above 'make test' target ?
+
 == Community
 * move to github, or something providing similar features to make contributing easier, includes:
   - website/wiki
@@ -85,4 +100,3 @@ A list of items that wait for someone to volunteer to fix :)
   - skel/
   - stages/
   - workflows/
-
