@@ -2,6 +2,7 @@
 
 A list of items that wait for someone to volunteer to fix :)
 
+
 == Wait for feedback
 * write network migration code for all other distributions
   - some work has been done in the meantime, but not sure if it is sufficient enough to cover all
@@ -10,6 +11,7 @@ A list of items that wait for someone to volunteer to fix :)
 * support dhcp for network migration
   - has been added in 1.9.0
   - waiting on customer feedback
+
 
 == New features
 * add a disklayout.conf-related menu item to modify and recreate diskrestore.sh from it
@@ -29,6 +31,16 @@ A list of items that wait for someone to volunteer to fix :)
   - needs to be written, seems like RH builds rich initramfs with all modules included
   - be aware, recent Fedora uses dracut instead of mkinitrd
 
+* add fsadm so 'lvreduce -r' works
+  - also add lvresize commands to shell history for convenience
+
+* rewrite '/mnt/local/etc/fstab' so disklayout/diskrestore changes are taken into effect after a reboot
+  - without this, a reboot will go into rescue mode because filesystems cannot be mounted
+
+* implement reserved block count in percentage, rather than fixed sizes
+  - otherwise changing the container (logical volume/partition) size may cause problems because the reserved block count is too high/not proportional to its new size
+
+
 == Known issues
 * reboot on Ubuntu rescue media broken
   - Probably we miss some script or config for upstart
@@ -37,8 +49,17 @@ A list of items that wait for someone to volunteer to fix :)
 
 * running checklayout (eg. every 15 minutes) blocks an mkrescue or format workflow ran at the same time
 
+* we do not support backing up logical volumes that are not mounted/visible.
+  - in case of eg. KVM hosts, we fail to back up those disk images that are logical volumes
+
+* we have seen boot-problems where udev seems to wait indefinitely
+  - since no USB support has been loaded, USB keyboards are not working to intervene
+  - cold-booting this hardware always caused udev to continue (!)
+
+
 == Documentation
 * create official documentation for users and admins
+
 
 == Packaging/installation
 * Implement a Makefile with the following targets:
@@ -55,6 +76,7 @@ A list of items that wait for someone to volunteer to fix :)
   - To help detect problems caused be backporting/forwardporting patches using patch/diff
   - As part of the above 'make test' target ?
 
+
 == Community
 * move to github, or something providing similar features to make contributing easier, includes:
   - website/wiki
@@ -62,6 +84,7 @@ A list of items that wait for someone to volunteer to fix :)
   - milestone integration
   - providing pull requests
   - decentralized
+
 
 == Clean up
 * unify the extlinux|isolinux configuration code between ISO and USB.
