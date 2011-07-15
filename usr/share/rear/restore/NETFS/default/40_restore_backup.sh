@@ -13,6 +13,8 @@ case "$BACKUP_PROG" in
 		if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
 			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
 		fi
+		Log $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS \
+			-C /mnt/local/ -x -f "$backuparchive"
 		$BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS \
 			-C /mnt/local/ -x -f "$backuparchive"
 	;;
@@ -20,7 +22,8 @@ case "$BACKUP_PROG" in
 		if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
 			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
 		fi
-		$BACKUP_PROG --numeric-ids --sparse --archive --hard-links --verbose $BACKUP_PROG_OPTIONS \
+		Log $BACKUP_PROG "${RSYNC_OPTIONS[@]}" $BACKUP_PROG_OPTIONS "$backuparchive"/ /mnt/local/
+		$BACKUP_PROG "${RSYNC_OPTIONS[@]}" $BACKUP_PROG_OPTIONS \
 			"$backuparchive"/ /mnt/local/
 	;;
 	(*)

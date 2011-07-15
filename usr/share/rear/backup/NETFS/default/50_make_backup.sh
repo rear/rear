@@ -15,9 +15,13 @@ mkdir -p $v "${BUILD_DIR}/netfs/${NETFS_PREFIX}" >&2
 LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 ProgressStart "Preparing archive operation"
 (
-case "$BACKUP_PROG" in
+case "$(basename ${BACKUP_PROG})" in
 	# tar compatible programs here
 	(tar)
+		Log $BACKUP_PROG --sparse --block-number --totals --verbose --no-wildcards-match-slash --one-file-system --ignore-failed-read \
+			$BACKUP_PROG_OPTIONS ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} $BACKUP_PROG_COMPRESS_OPTIONS \
+			-X $TMP_DIR/backup-exclude.txt -C / -c -f "$backuparchive" \
+			$(cat $TMP_DIR/backup-include.txt) $LOGFILE
 		$BACKUP_PROG --sparse --block-number --totals --verbose --no-wildcards-match-slash --one-file-system --ignore-failed-read \
 			$BACKUP_PROG_OPTIONS ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} $BACKUP_PROG_COMPRESS_OPTIONS \
 			-X $TMP_DIR/backup-exclude.txt -C / -c -f "$backuparchive" \
@@ -26,12 +30,19 @@ case "$BACKUP_PROG" in
 	(rsync)
 		# make sure that the target is a directory
 		mkdir -p $v "$backuparchive" >&2
-		$BACKUP_PROG --sparse --archive --hard-links --one-file-system --verbose --delete --numeric-ids \
+		Log $BACKUP_PROG "${RSYNC_OPTIONS[@]}" --one-file-system --delete \
+			--exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded \
+			$(cat $TMP_DIR/backup-include.txt) "$backuparchive"
+		$BACKUP_PROG "${RSYNC_OPTIONS[@]}" --one-file-system --delete \
 			--exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded \
 			$(cat $TMP_DIR/backup-include.txt) "$backuparchive"
 	;;
 	(*)
 		Log "Using unsupported backup program '$BACKUP_PROG'"
+		Log $BACKUP_PROG $BACKUP_PROG_COMPRESS_OPTIONS \
+			$BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $TMP_DIR/backup-exclude.txt \
+			$BACKUP_PROG_OPTIONS $backuparchive \
+			$(cat $TMP_DIR/backup-include.txt) $LOGFILE > $backuparchive
 		$BACKUP_PROG $BACKUP_PROG_COMPRESS_OPTIONS \
 			$BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $TMP_DIR/backup-exclude.txt \
 			$BACKUP_PROG_OPTIONS $backuparchive \
@@ -52,7 +63,7 @@ function get_disk_used() {
 	echo $used
 }
 # while the backup runs in a sub-process, display some progress information to the user
-case "$BACKUP_PROG" in
+case "$(basename ${BACKUP_PROG})" in
 	(tar)
 		while sleep 1 ; kill -0 $BackupPID 2>&8; do
 			blocks="$(tail -1 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"

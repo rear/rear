@@ -1,6 +1,15 @@
 # check if SELinux is in use, if not, just silently return
 [[ -f /selinux/enforce ]] || return
 
+# check global settings (see default.conf) - non-empty means disable SELinux during backup
+if [ -n "$BACKUP_SELINUX_DISABLE" ]; then
+        cat /selinux/enforce > $TMP_DIR/selinux.mode
+        RSYNC_SELINUX=
+        return
+fi
+
+#PROGS=( "${PROGS[@]}" setfiles chcon restorecon )
+
 # SELinux is found to be available on this system; depending on backup program we may need to do different things
 # So far, only rsync and tar has special options for selinux. Others, just disable SELinux during backup only!
 case $(basename $BACKUP_PROG) in
@@ -19,10 +28,19 @@ case $(basename $BACKUP_PROG) in
 			fi
 			RSYNC_SELINUX=1		# variable used in recover mode (means using xattr and not disable SELinux)
 		fi
+		touch $TMP_DIR/force.autorelabel	# after reboot the restored system do a forced SELinux relabeling
 		;;
 
 	(tar)
-		tar --usage | grep -q selinux && BACKUP_PROG_OPTIONS="--selinux" || cat /selinux/enforce > $TMP_DIR/selinux.mode
+		if tar --usage | grep -q selinux  ; then
+			# during backup we will NOT disable SELinux
+			BACKUP_PROG_OPTIONS="--selinux"
+			touch $TMP_DIR/force.autorelabel
+		else
+			# during backup we will disable SELinux
+			cat /selinux/enforce > $TMP_DIR/selinux.mode
+			# after reboot the restored system does a SELinux relabeling
+		fi
 		;;
 
 	(*)

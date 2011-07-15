@@ -5,7 +5,7 @@ if [ "$NETFS_PROTO" == "tape" ]; then
 	return
 fi
 
-[ -s "$backuparchive" ]
+[ -s "$backuparchive" -o -d "$backuparchive" ]
 StopIfError "Backup archive '$backuparchive' not found !"
 
 LogPrint "Calculating backup archive size"

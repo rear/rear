@@ -1,6 +1,6 @@
 # Restore the remote backup via RSYNC
 
-function get_size () {
+get_size() {
 	echo $(stat --format '%s' "/mnt/local/$1")
 }
 
@@ -51,7 +51,7 @@ case "$(basename $BACKUP_PROG)" in
 	(rsync)
 		
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
-			fsize="$(get_size $(tail -2 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | head -n 1))"
+			fsize=$(get_size "$(tail -2 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | head -n 1)")
 			size=$((size+fsize))
 			echo "INFO Restored $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
 		done

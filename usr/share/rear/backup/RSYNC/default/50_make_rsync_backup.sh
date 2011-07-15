@@ -47,15 +47,15 @@ starttime=$SECONDS
 
 sleep 3 # Give the backup software a good chance to start working
 
-function get_size () {
+get_size() {
 	echo $(stat --format '%s' "/$1" 2>/dev/null)
 }
 
-function check_remote_df () {
+check_remote_df() {
 	echo $(ssh ${RSYNC_USER}@${RSYNC_HOST} df -P ${RSYNC_PATH} 2>/dev/null | tail -1 | awk '{print $5}' | sed -e 's/%//')
 }
 
-function check_remote_du () {
+check_remote_du() {
 	x=$(ssh ${RSYNC_USER}@${RSYNC_HOST} du -sb ${RSYNC_PATH}/${RSYNC_PREFIX}/backup 2>/dev/null | awk '{print $1}')
 	[[ -z "${x}" ]] && x=0
 	echo $x

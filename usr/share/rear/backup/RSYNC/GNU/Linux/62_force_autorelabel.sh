@@ -1,9 +1,7 @@
-# Start SELinux if it was stopped - check presence of  $TMP_DIR/selinux.mode
+[ -f $TMP_DIR/force.autorelabel ] && {
 
-[ -f $TMP_DIR/selinux.mode ] && {
-	touch "${TMP_DIR}/selinux.autorelabel"
-	cat $TMP_DIR/selinux.mode > /selinux/enforce
-	Log "Restored original SELinux mode"
+	> "${TMP_DIR}/selinux.autorelabel"
+
 	case $RSYNC_PROTO in
 
 	(ssh)
@@ -28,7 +26,17 @@
 		fi
 		;;
 
+	(*)
+		# probably using the BACKUP=NETFS workflow instead
+		if [ -d "${BUILD_DIR}/netfs/${NETFS_PREFIX}" ]; then
+			if [ ! -f "${BUILD_DIR}/netfs/${NETFS_PREFIX}/selinux.autorelabel" ]; then
+				> "${BUILD_DIR}/netfs/${NETFS_PREFIX}/selinux.autorelabel"
+				StopIfError "Failed to create selinux.autorelabel on ${BUILD_DIR}/netfs/${NETFS_PREFIX}"
+			fi
+		fi
+		;;
+
 	esac
-	Log "Trigger autorelabel (SELinux) file"
+	Log "Trigger (forced) autorelabel (SELinux) file"
 }
 
