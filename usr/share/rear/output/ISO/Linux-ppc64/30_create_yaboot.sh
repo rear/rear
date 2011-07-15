@@ -19,10 +19,10 @@
 #
 
 # create yaboot directory structure
-mkdir -p $v $BUILD_DIR/ppc >&2
-cp $v /usr/lib/yaboot/yaboot $BUILD_DIR/ppc/chrp >&2
+mkdir -p $v $TMP_DIR/ppc >&2
+cp $v /usr/lib/yaboot/yaboot $TMP_DIR/ppc/chrp >&2
 
-cat >"$BUILD_DIR/ppc/bootinfo.txt" <<EOF
+cat >"$TMP_DIR/ppc/bootinfo.txt" <<EOF
 <chrp-boot>
 <description>Rear</description>
 <os-name>Linux</os-name>
@@ -30,8 +30,8 @@ cat >"$BUILD_DIR/ppc/bootinfo.txt" <<EOF
 </chrp-boot>
 EOF
 
-mkdir -p $v $BUILD_DIR/etc >&2
-cat >"$BUILD_DIR/etc/yaboot.conf" <<EOF
+mkdir -p $v $TMP_DIR/etc >&2
+cat >"$TMP_DIR/etc/yaboot.conf" <<EOF
 init-message = "\nRear boot\n\n"
 timeout=100
 default=Rear

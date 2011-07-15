@@ -4,7 +4,7 @@
 cp -pL $v "$KERNEL_FILE" "$BUILD_DIR/usbfs/$USB_PREFIX/kernel" >&2
 StopIfError "Could not create $BUILD_DIR/usbfs/$USB_PREFIX/kernel"
 
-cp -p $v "$BUILD_DIR/initrd.cgz" "$BUILD_DIR/usbfs/$USB_PREFIX/initrd.cgz" >&2
+cp -p $v "$TMP_DIR/initrd.cgz" "$BUILD_DIR/usbfs/$USB_PREFIX/initrd.cgz" >&2
 StopIfError "Could not create $BUILD_DIR/usbfs/$USB_PREFIX/initrd.cgz"
 
 Log "Copied kernel and initrd.cgz to $USB_PREFIX"

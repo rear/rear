@@ -8,7 +8,7 @@ while read -r ; do
 	StopIfError "Failed to determine size of ${REPLY}."
 	fs_size=$(tail -n 1 $TMP_DIR/fs_size | awk '{print $3}')
 	_local_size=$((_local_size+fs_size))
-done < $BUILD_DIR/backup-include.txt
+done < $TMP_DIR/backup-include.txt
 LogPrint "Estimated size of local file systems is $((_local_size/1024)) MB"
 
 case $RSYNC_PROTO in

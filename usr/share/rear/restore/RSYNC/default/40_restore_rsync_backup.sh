@@ -4,8 +4,8 @@ function get_size () {
 	echo $(stat --format '%s' "/mnt/local/$1")
 }
 
-mkdir -p "${BUILD_DIR}/rsync/${NETFS_PREFIX}"
-StopIfError "Could not mkdir '$BUILD_DIR/rsync/${NETFS_PREFIX}'"
+mkdir -p "${TMP_DIR}/rsync/${NETFS_PREFIX}"
+StopIfError "Could not mkdir '$TMP_DIR/rsync/${NETFS_PREFIX}'"
 
 LogPrint "Restoring $BACKUP_PROG archive from '${RSYNC_HOST}:${RSYNC_PATH}'"
 
@@ -37,8 +37,8 @@ ProgressStart "Restore operation"
 			:
 			;;
 	esac
-	echo $? >$BUILD_DIR/retval
-) >"${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" &
+	echo $? >$TMP_DIR/retval
+) >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" &
 BackupPID=$!
 starttime=$SECONDS
 
@@ -51,7 +51,7 @@ case "$(basename $BACKUP_PROG)" in
 	(rsync)
 		
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
-			fsize="$(get_size $(tail -2 "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | head -n 1))"
+			fsize="$(get_size $(tail -2 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | head -n 1))"
 			size=$((size+fsize))
 			echo "INFO Restored $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
 		done
@@ -81,7 +81,7 @@ Please check '$LOGFILE' for more information. You should also
 manually check the restored system to see wether it is complete.
 "
 
-_message="$(tail -14 ${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log)"
+_message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log)"
 
 if [ $_rc -eq 0 -a "$_message" ] ; then
         LogPrint "$_message in $transfertime seconds."

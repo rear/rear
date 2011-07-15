@@ -4,11 +4,11 @@
 Log "Include list:"
 while read -r ; do
 	Log "  $REPLY"
-done < $BUILD_DIR/backup-include.txt
+done < $TMP_DIR/backup-include.txt
 Log "Exclude list:"
 while read -r ; do
 	Log " $REPLY"
-done < $BUILD_DIR/backup-exclude.txt
+done < $TMP_DIR/backup-exclude.txt
 
 mkdir -p $v "${BUILD_DIR}/netfs/${NETFS_PREFIX}" >&2
 
@@ -20,24 +20,24 @@ case "$BACKUP_PROG" in
 	(tar)
 		$BACKUP_PROG --sparse --block-number --totals --verbose --no-wildcards-match-slash --one-file-system --ignore-failed-read \
 			$BACKUP_PROG_OPTIONS ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} $BACKUP_PROG_COMPRESS_OPTIONS \
-			-X $BUILD_DIR/backup-exclude.txt -C / -c -f "$backuparchive" \
-			$(cat $BUILD_DIR/backup-include.txt) $LOGFILE
+			-X $TMP_DIR/backup-exclude.txt -C / -c -f "$backuparchive" \
+			$(cat $TMP_DIR/backup-include.txt) $LOGFILE
 	;;
 	(rsync)
 		# make sure that the target is a directory
 		mkdir -p $v "$backuparchive" >&2
 		$BACKUP_PROG --sparse --archive --hard-links --one-file-system --verbose --delete --numeric-ids \
-			--exclude-from=$BUILD_DIR/backup-exclude.txt --delete-excluded \
-			$(cat $BUILD_DIR/backup-include.txt) "$backuparchive"
+			--exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded \
+			$(cat $TMP_DIR/backup-include.txt) "$backuparchive"
 	;;
 	(*)
 		Log "Using unsupported backup program '$BACKUP_PROG'"
 		$BACKUP_PROG $BACKUP_PROG_COMPRESS_OPTIONS \
-			$BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $BUILD_DIR/backup-exclude.txt \
+			$BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $TMP_DIR/backup-exclude.txt \
 			$BACKUP_PROG_OPTIONS $backuparchive \
-			$(cat $BUILD_DIR/backup-include.txt) $LOGFILE > $backuparchive
+			$(cat $TMP_DIR/backup-include.txt) $LOGFILE > $backuparchive
 	;;
-esac >"${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log"
+esac >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
 # important trick: the backup prog is the last in each case entry and the case .. esac is the last command
 # in the (..) subshell. As a result the return code of the subshell is the return code of the backup prog!
 ) &
@@ -55,7 +55,7 @@ function get_disk_used() {
 case "$BACKUP_PROG" in
 	(tar)
 		while sleep 1 ; kill -0 $BackupPID 2>&8; do
-			blocks="$(tail -1 ${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
+			blocks="$(tail -1 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
 			size="$((blocks*512))"
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
@@ -115,4 +115,4 @@ elif [ "$size" ]; then
 fi
 
 ### Copy progress log to backup media
-cp $v "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log" >&2
+cp $v "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/netfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log" >&2

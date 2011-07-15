@@ -85,8 +85,8 @@ WORKFLOW_mkdist () {
 	distarchive="/tmp/$prod_ver.tar.gz"
 	LogPrint "Creating archive '$distarchive'"
 
-	mkdir $BUILD_DIR/$prod_ver -v >&8
-	StopIfError "Could not mkdir $BUILD_DIR/$prod_ver"
+	mkdir $TMP_DIR/$prod_ver -v >&8
+	StopIfError "Could not mkdir $TMP_DIR/$prod_ver"
 
 	# use tar to copy the current rear while excluding development and obsolete files
 	tar -C / --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
@@ -94,16 +94,16 @@ WORKFLOW_mkdist () {
 			"$SHARE_DIR" \
 			"$CONFIG_DIR" \
 			"$(get_path "$0")" |\
-		tar -C $BUILD_DIR/$prod_ver -x >&8
-	StopIfError "Could not copy files to $BUILD_DIR/$prod_ver"
+		tar -C $TMP_DIR/$prod_ver -x >&8
+	StopIfError "Could not copy files to $TMP_DIR/$prod_ver"
 
-	pushd $BUILD_DIR/$prod_ver >&8
-	StopIfError "Could not pushd $BUILD_DIR/$prod_ver"
+	pushd $TMP_DIR/$prod_ver >&8
+	StopIfError "Could not pushd $TMP_DIR/$prod_ver"
 
 	WORKFLOW_mkdist_postprocess
 
 	popd >&8
-	tar -C $BUILD_DIR -cvzf $distarchive $prod_ver >&8
+	tar -C $TMP_DIR -cvzf $distarchive $prod_ver >&8
 	StopIfError "Could not create $distarchive"
 
 }

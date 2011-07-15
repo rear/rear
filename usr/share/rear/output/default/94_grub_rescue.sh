@@ -32,7 +32,7 @@ function total_filesize {
 
 available_space=$(df -Pk /boot | awk 'END { print $4 * 1024 }')
 used_space=$(total_filesize /boot/rear-kernel /boot/rear-initrd.cgz)
-required_space=$(total_filesize $KERNEL_FILE $BUILD_DIR/initrd.cgz)
+required_space=$(total_filesize $KERNEL_FILE $TMP_DIR/initrd.cgz)
 
 if (( available_space + used_space < required_space )); then
     LogPrint "WARNING: Not enough disk space available in /boot for GRUB rescue image"
@@ -95,5 +95,5 @@ else
 fi
 BugIfError "Unable to copy '$KERNEL_FILE' to /boot"
 
-cp -af $v $BUILD_DIR/initrd.cgz /boot/rear-initrd.cgz >&2
-BugIfError "Unable to copy '$BUILD_DIR/initrd.cgz' to /boot"
+cp -af $v $TMP_DIR/initrd.cgz /boot/rear-initrd.cgz >&2
+BugIfError "Unable to copy '$TMP_DIR/initrd.cgz' to /boot"

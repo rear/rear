@@ -3,11 +3,11 @@
 Log "Include list:"
 while read -r ; do
 	Log "  $REPLY"
-done < $BUILD_DIR/backup-include.txt
+done < $TMP_DIR/backup-include.txt
 Log "Exclude list:"
 while read -r ; do
 	Log " $REPLY"
-done < $BUILD_DIR/backup-exclude.txt
+done < $TMP_DIR/backup-exclude.txt
 
 LogPrint "Creating $BACKUP_PROG archive on '${RSYNC_HOST}:${RSYNC_PATH}'"
 
@@ -16,18 +16,18 @@ ProgressStart "Running archive operation"
 	case "$(basename $BACKUP_PROG)" in
 
 		(rsync)
-			RSYNC_OPTIONS=( "${RSYNC_OPTIONS[@]}" --one-file-system --delete --exclude-from=$BUILD_DIR/backup-exclude.txt --delete-excluded )
+			RSYNC_OPTIONS=( "${RSYNC_OPTIONS[@]}" --one-file-system --delete --exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded )
 
 			case $RSYNC_PROTO in
 
 				(ssh)
-					Log $BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $BUILD_DIR/backup-include.txt) "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
-					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $BUILD_DIR/backup-include.txt) \
+					Log $BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
+					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) \
 					"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"  #2>/dev/null
 					;;
 
 				(rsync)
-					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $BUILD_DIR/backup-include.txt) \
+					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) \
 					"${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
 					;;
 
@@ -40,8 +40,8 @@ ProgressStart "Running archive operation"
 			;;
 
 	esac
-	echo $? >$BUILD_DIR/retval
-) >"${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log" &
+	echo $? >$TMP_DIR/retval
+) >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" &
 BackupPID=$!
 starttime=$SECONDS
 
@@ -83,8 +83,8 @@ case "$(basename $BACKUP_PROG)" in
 			;;
 
 			* )
-			nfile="$(tail -1 "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log")"
-			#fsize="$(get_size $(tail -1 "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log"))"
+			nfile="$(tail -1 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log")"
+			#fsize="$(get_size $(tail -1 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"))"
 			[[ "$nfile" != "$ofile" ]] && {
 				fsize="$(get_size "$nfile")"
 				size=$((size+fsize))
@@ -110,7 +110,7 @@ ProgressStop
 wait $BackupPID
 
 transfertime="$((SECONDS-starttime))"
-_rc="$(cat $BUILD_DIR/retval)"
+_rc="$(cat $TMP_DIR/retval)"
 
 sleep 1
 # everyone should see this warning, even if not verbose
@@ -124,7 +124,7 @@ verify the backup yourself before trusting it !
 
 "
 
-_message="$(tail -14 ${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}.log)"
+_message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log)"
 if [ $_rc -eq 0 -a "$_message" ] ; then
 	LogPrint "$_message in $transfertime seconds."
 elif [ "$size" ]; then

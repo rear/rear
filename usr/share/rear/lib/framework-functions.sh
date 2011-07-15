@@ -92,7 +92,9 @@ function cleanup_build_area_and_end_program() {
 		LogPrint "You should also rm -Rf $BUILD_DIR"
 	else
 		Log "Removing build area $BUILD_DIR"
-		rm -Rf $BUILD_DIR
+		rm -Rf $TMP_DIR
+		rm -Rf $ROOTFS_DIR
+		rmdir $v $BUILD_DIR >&2
 	fi
 	Log "End of program reached"
 }

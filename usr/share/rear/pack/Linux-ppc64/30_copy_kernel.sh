@@ -55,4 +55,4 @@ if [ -L $KERNEL_FILE ]; then
 fi
 
 Log "Found kernel $KERNEL_FILE"
-#cp -aL $v "$KERNEL_FILE" "$BUILD_DIR/kernel" >&2
+#cp -aL $v "$KERNEL_FILE" "$TMP_DIR/kernel" >&2

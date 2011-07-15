@@ -2,6 +2,7 @@
 if [[ ! -d "$BUILD_DIR/usbfs" ]]; then
 	mkdir -p $v "$BUILD_DIR/usbfs" >&2
 	StopIfError "Could not mkdir '$BUILD_DIR/usbfs'"
+	AddExitTask "rmdir $v $BUILD_DIR/usbfs >&2"
 fi
 
 # if a mount command is given, use that instead

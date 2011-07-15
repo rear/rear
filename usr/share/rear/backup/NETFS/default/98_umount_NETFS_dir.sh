@@ -14,5 +14,8 @@ else
 fi
 StopIfError "Could not unmount directory ${BUILD_DIR}/netfs"
 
+rmdir $v $BUILD_DIR/netfs >&2
+
 # the argument to RemoveExitTask has to be identical to the one given to AddExitTask
 RemoveExitTask "umount -f $v '$BUILD_DIR/netfs' >&2"
+RemoveExitTask "rmdir $v $BUILD_DIR/netfs >&2"

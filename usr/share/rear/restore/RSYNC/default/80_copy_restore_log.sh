@@ -5,7 +5,7 @@ if ! test -d /mnt/local/root ; then
 	chmod 0700 /mnt/local/root
 fi
 
-cp "${BUILD_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" /mnt/local/root/restore-$(date +%Y%m%d.%H%M).log
+cp "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" /mnt/local/root/restore-$(date +%Y%m%d.%H%M).log
 StopIfError "Could not copy ${BACKUP_PROG_ARCHIVE}-restore.log to /mnt/local/root"
 gzip /mnt/local/root/restore-$(date +%Y%m%d.%H%M).log
 

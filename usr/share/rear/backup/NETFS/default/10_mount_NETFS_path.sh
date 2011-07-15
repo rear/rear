@@ -2,6 +2,8 @@
 mkdir -p $v "$BUILD_DIR/netfs" >&2
 StopIfError "Could not mkdir '$BUILD_DIR/netfs'"
 
+AddExitTask "rmdir $v $BUILD_DIR/netfs >&2"
+
 # don't mount anything for tape backups
 if [ "$NETFS_PROTO" == "tape" ]; then
 	return 0

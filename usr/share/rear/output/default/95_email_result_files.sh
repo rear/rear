@@ -29,10 +29,10 @@ test -z "$RESULT_MAILSUBJECT" && RESULT_MAILSUBJECT="Rear $HOSTNAME ($OUTPUT)"
 	done
 
 	create_mime_ending
-} > $BUILD_DIR/email.bin
+} > $TMP_DIR/email.bin
 
-MAIL_SIZE=( $(du -h $BUILD_DIR/email.bin) )
+MAIL_SIZE=( $(du -h $TMP_DIR/email.bin) )
 
 LogPrint "Mailing resulting files ($MAIL_SIZE) to ${RESULT_MAILTO[@]}"
-$RESULT_SENDMAIL "${RESULT_SENDMAIL_OPTIONS[@]}" <$BUILD_DIR/email.bin
+$RESULT_SENDMAIL "${RESULT_SENDMAIL_OPTIONS[@]}" <$TMP_DIR/email.bin
 LogPrintIfError "WARNING ! Sending Email with '$RESULT_SENDMAIL "${RESULT_SENDMAIL_OPTIONS[@]}"' failed."
