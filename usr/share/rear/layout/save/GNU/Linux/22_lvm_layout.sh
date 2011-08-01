@@ -21,7 +21,7 @@ Log "Saving LVM layout."
         size=$(echo $line | cut -d ":" -f "3")
         uuid=$(echo $line | cut -d ":" -f "12")
 
-        echo "lvmdev /dev/$vgrp $pdev $uuid $size"
+        echo "lvmdev /dev/$vgrp /dev/$(get_friendly_name $pdev) $uuid $size"
     done
 
     ## Get the volume group configuration
