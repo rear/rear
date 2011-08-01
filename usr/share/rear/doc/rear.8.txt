@@ -1,6 +1,10 @@
 = rear(8)
 :version: v1.12.0
 :date: 7 Jun 2011
+:data-uri:
+:doctype: manpage
+:lang: en
+:quirks:
 
 
 == NAME
@@ -26,7 +30,7 @@ added to rear on an individual base and is very simple (look at an existing
 implementation for further information).
 
 Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details see
-the GNU General Public License at: http://www.gnu.org/licenses/gpl.html[]
+the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 
 == OPTIONS
@@ -149,7 +153,7 @@ NETFS::
     Internal backup method which can be used to create a simple backup
     (tar archive).
 
-REQUEST_RESTORE::
+REQUESTRESTORE::
     *(default)* Not really a backup method at all, Rear simply halts the
     recovery and requests that somebody will restore the data to the
     appropriate location (e.g. via SSH). This method works especially
@@ -261,8 +265,7 @@ rescue system away so that you can use it in the case of a system failure.
 
 == BUGS
 Feedback is welcome, please use the project page at:
-
-    http://rear.sourceforge.net/[]
+http://rear.sourceforge.net/
 
 
 == AUTHORS
@@ -283,4 +286,4 @@ Jeroen Hoekx
 Dag Wieers, Dagit Linux Solutions
 
 Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details
-see the GNU General Public License at http://www.gnu.org/licenses/gpl.html[]
+see the GNU General Public License at http://www.gnu.org/licenses/gpl.html

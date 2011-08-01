@@ -1,4 +1,8 @@
 = Configuration examples
+:data-uri:
+:doctype: article
+:lang: en
+:quirks:
 
 This document explains the various use-cases and how to configure them in
 Rear. The configuration is performed by changing _/etc/rear/local.conf_ or
@@ -87,7 +91,7 @@ Use CommVault Galaxy (7 and probably newer)
 BACKUP=NETFS::
 Use Rear internal backup with tar or rsync (or similar)
 
-BACKUP=REQUEST_RESTORE::
+BACKUP=REQUESTRESTORE::
 No backup, just ask user to somehow restore the filesystems
 
 BACKUP=EXTERNAL::
