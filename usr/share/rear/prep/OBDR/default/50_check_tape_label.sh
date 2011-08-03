@@ -20,4 +20,4 @@ StopIfError "Could not read label from tape device '$TAPE_DEVICE'"
 
 # Match label
 [[ "REAR-000" == "${TAPE_LABEL:0:8}" ]]
-StopIfError "Tape ($TAPE_DEVICE) does not have the proper REAR-000 label. Use 'rear labeltape' to allow this tape to be used in OBDR mode."
+StopIfError "Tape ($TAPE_DEVICE) does not have the proper REAR-000 label. Use 'rear format $TAPE_DEVICE' to allow this tape to be used in OBDR mode."
