@@ -28,10 +28,10 @@
 
 	(*)
 		# probably using the BACKUP=NETFS workflow instead
-		if [ -d "${BUILD_DIR}/netfs/${NETFS_PREFIX}" ]; then
-			if [ ! -f "${BUILD_DIR}/netfs/${NETFS_PREFIX}/selinux.autorelabel" ]; then
-				> "${BUILD_DIR}/netfs/${NETFS_PREFIX}/selinux.autorelabel"
-				StopIfError "Failed to create selinux.autorelabel on ${BUILD_DIR}/netfs/${NETFS_PREFIX}"
+		if [ -d "${BUILD_DIR}/outputfs/${NETFS_PREFIX}" ]; then
+			if [ ! -f "${BUILD_DIR}/outputfs/${NETFS_PREFIX}/selinux.autorelabel" ]; then
+				> "${BUILD_DIR}/outputfs/${NETFS_PREFIX}/selinux.autorelabel"
+				StopIfError "Failed to create selinux.autorelabel on ${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
 			fi
 		fi
 		;;

@@ -1,7 +1,7 @@
 # 40_restore_backup.sh
 #
 
-mkdir -p "${BUILD_DIR}/netfs/${NETFS_PREFIX}"
+mkdir -p "${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
 
 Log "Restoring $BACKUP_PROG archive '$backuparchive'"
 Print "Restoring from '$displayarchive'"

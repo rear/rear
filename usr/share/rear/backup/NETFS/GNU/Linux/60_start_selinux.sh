@@ -2,6 +2,6 @@
 [ -f $TMP_DIR/selinux.mode ] && {
 	cat $TMP_DIR/selinux.mode > /selinux/enforce
 	Log "Restored original SELinux mode"
-	touch "${BUILD_DIR}/netfs/${NETFS_PREFIX}/selinux.autorelabel"
+	touch "${BUILD_DIR}/outputfs/${NETFS_PREFIX}/selinux.autorelabel"
 	Log "Trigger autorelabel (SELinux) file"
 	}

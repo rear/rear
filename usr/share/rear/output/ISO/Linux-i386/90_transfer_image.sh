@@ -9,12 +9,15 @@ if [[ -z "$ISO_URL" ]]; then
     continue
 fi
 
-local scheme="${ISO_URL%%://*}"
-local server="${ISO_URL#*://}"
-server="${server%%/*}"
-local path="/${ISO_URL#*://*/}"
+local scheme=$(url_scheme $ISO_URL)
+local server=$(url_host $ISO_URL)
+local path=$(url_path $ISO_URL)
 
 case "$scheme" in
+    (nfs|cifs|usb|tape)
+        # The ISO has already been transferred by NETFS.
+        return 0
+        ;;
     (file)
         LogPrint "Transferring ISO image to $path"
         cp -a $v "$ISO_DIR/$ISO_PREFIX.iso" $path >&2

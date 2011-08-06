@@ -26,11 +26,11 @@ usb_filesystem=$(grep -P "^($USB_DEVICE|$REAL_USB_DEVICE)\\s" /proc/mounts | cut
 case "$usb_filesystem" in
 	(ext?)
 		if [[ "$FEATURE_SYSLINUX_EXTLINUX_INSTALL" ]]; then
-			extlinux -i "${BUILD_DIR}/usbfs/$SYSLINUX_PREFIX"
+			extlinux -i "${BUILD_DIR}/outputfs/$SYSLINUX_PREFIX"
 		else
-			extlinux "${BUILD_DIR}/usbfs/$SYSLINUX_PREFIX"
+			extlinux "${BUILD_DIR}/outputfs/$SYSLINUX_PREFIX"
 		fi
-		StopIfError "Problem with extlinux -i ${BUILD_DIR}/usbfs/$SYSLINUX_PREFIX"
+		StopIfError "Problem with extlinux -i ${BUILD_DIR}/outputfs/$SYSLINUX_PREFIX"
 		;;
 	(ntfs|vfat)
 		Error "Filesystem '$usb_filesystem' will not be supported."

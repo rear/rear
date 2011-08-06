@@ -1,7 +1,8 @@
 #
 # start required daemons, like portmap
 #
-case "$NETFS_PROTO" in
+local scheme=$(url_scheme "$NETFS_URL")
+case "$scheme" in
 	nfs)
 		# newer Linux distros use rpcbind instead of portmap
 		if has_binary portmap; then

@@ -25,3 +25,115 @@ function read_and_strip_file () {
 	fi
 }
 
+######
+### Functions for dealing with URLs
+######
+
+url_scheme() {
+    local url=$1
+    echo ${url%%://*}
+}
+
+url_host() {
+    local url=$1
+    local temp=${url#*//}
+    echo ${temp%%/*}
+}
+
+url_path() {
+    local url=$1
+    local temp=${url#*//}
+    echo ${temp#*/}
+}
+
+### Mount URL $1 at mountpoint $2[, with options $3]
+mount_url() {
+    local url=$1
+    local mountpoint=$2
+    local options=${3:-"rw,noatime"}
+
+    ### Generate a mount command
+    local mount_cmd
+    case $(url_scheme $url) in
+        (tape|file|rsync)
+            ### Don't need to mount anything for these
+            return 0
+            ;;
+        (var)
+            ### The mount command is given by variable in the url host
+            local var=$(url_host $url)
+            mount_cmd="${!var} $mountpoint"
+            ;;
+        (cifs)
+            mount_cmd="mount $v -o $options //$(url_host $url)/$(url_path $url) $mountpoint"
+            ;;
+        (usb)
+            mount_cmd="mount $v -o $options /$(url_path $url) $mountpoint"
+            ;;
+        (*)
+            mount_cmd="mount $v -t $(url_scheme $url) -o $options $(url_host $url):/$(url_path $url) $mountpoint"
+            ;;
+    esac
+
+    Log "Mounting with '$mount_cmd'"
+    $mount_cmd >&2
+    StopIfError "Mount command '$mount_cmd' failed."
+
+    AddExitTask "umount -f $v '$mountpoint' >&2"
+    return 0
+}
+
+### Unmount url $1 at mountpoint $2
+umount_url() {
+    local url=$1
+    local mountpoint=$2
+
+    case $(url_scheme $url) in
+        (tape|file|rsync)
+            ### Don't need to umount anything for these
+            return 0
+            ;;
+        (var)
+            local var=$(url_host $url)
+            umount_cmd="${!var} $mountpoint"
+
+            Log "Unmounting with '$umount_cmd'"
+            $umount_cmd
+            StopIfError "Unmounting failed."
+
+            RemoveExitTask "umount -f $v '$mountpoint' >&2"
+            return 0
+            ;;
+    esac
+
+    umount_mountpoint $mountpoint
+    StopIfError "Unmounting '$mountpoint' failed."
+
+    RemoveExitTask "umount -f $v '$mountpoint' >&2"
+    return 0
+}
+
+### Unmount mountpoint $1
+umount_mountpoint() {
+    local mountpoint=$1
+
+    ### First, try a normal unmount,
+    Log "Unmounting '$mountpoint'"
+    umount $v $mountpoint >&2
+    if [[ $? -eq 0 ]] ; then
+        return 0
+    fi
+
+    ### otherwise, try to kill all processes that opened files on the mount.
+    # TODO: actually implement this
+
+    ### If that still fails, force unmount.
+    Log "Forced unmount of '$mountpoint'"
+    umount $v -f $mountpoint >&2
+    if [[ $? -eq 0 ]] ; then
+        return 0
+    fi
+
+    Log "Unmounting '$mountpoint' failed."
+    return 1
+}

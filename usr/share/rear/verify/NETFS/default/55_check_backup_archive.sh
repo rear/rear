@@ -1,9 +1,11 @@
 # check wether the archive is actually there
 
 # Don't check when backup is on a tape device
-if [ "$NETFS_PROTO" == "tape" ]; then
-	return
-fi
+case $(url_scheme "$NETFS_URL") in
+    (tape)
+        return 0
+        ;;
+esac
 
 [ -s "$backuparchive" -o -d "$backuparchive" ]
 StopIfError "Backup archive '$backuparchive' not found !"

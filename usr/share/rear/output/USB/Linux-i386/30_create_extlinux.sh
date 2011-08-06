@@ -1,7 +1,7 @@
 # Create a suitable syslinux configuration based on capabilities
 
 function get_usb_syslinux_version {
-    for file in $BUILD_DIR/usbfs/{boot/syslinux,}/{ld,ext}linux.sys; do
+    for file in $BUILD_DIR/outputfs/{boot/syslinux,}/{ld,ext}linux.sys; do
         if [[ -s "$file" ]];  then
             strings $file | grep -P -m1 "^(EXT|SYS)LINUX \\d+.\\d+" | cut -d' ' -f2
             return 0
@@ -30,13 +30,13 @@ function syslinux_needs_update {
 function syslinux_has {
     local file="$1"
 
-    if [[ -e "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" ]]; then
+    if [[ -e "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/$file" ]]; then
         if [[ "$SYSLINUX_NEEDS_UPDATE" ]]; then
             if [[ -e "$SYSLINUX_DIR/$file" ]]; then
-                cp -f $v "$SYSLINUX_DIR/$file" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&2
+                cp -f $v "$SYSLINUX_DIR/$file" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/$file" >&2
             else
                 # Make sure we don't have any older copies on USB media
-                rm -f $v "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&2
+                rm -f $v "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/$file" >&2
                 return 1;
             fi
         else
@@ -44,7 +44,7 @@ function syslinux_has {
         fi
     else
         if [[ -e "$SYSLINUX_DIR/$file" ]]; then
-            cp $v "$SYSLINUX_DIR/$file" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/$file" >&2
+            cp $v "$SYSLINUX_DIR/$file" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/$file" >&2
         else
             return 1
         fi
@@ -95,7 +95,7 @@ case "$WORKFLOW" in
     (*) BugError "Workflow $WORKFLOW should not run this script."
 esac
 
-USB_REAR_DIR="$BUILD_DIR/usbfs/$USB_PREFIX"
+USB_REAR_DIR="$BUILD_DIR/outputfs/$USB_PREFIX"
 if [ ! -d "$USB_REAR_DIR" ]; then
     mkdir -p $v "$USB_REAR_DIR" >&8
     StopIfError "Could not create USB rear dir [$USB_REAR_DIR] !"
@@ -121,7 +121,7 @@ EOF
 # entries for backup and rescue
 backup_count=${USB_RETAIN_BACKUP_NR:-2}
 rescue_count=${USB_RETAIN_BACKUP_NR:-2}
-for rear_run in $(ls -dt $BUILD_DIR/usbfs/rear/$(uname -n)/*); do
+for rear_run in $(ls -dt $BUILD_DIR/outputfs/rear/$(uname -n)/*); do
     backup_name=$rear_run/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
     if [[ -e $backup_name ]] ; then
         backup_count=$((backup_count - 1))
@@ -151,7 +151,7 @@ EOF
 
     oldsystem=
     # TODO: Sort systems by name, but also sort timestamps in reverse order
-    for file in $(cd $BUILD_DIR/usbfs; find rear/*/* -name syslinux.cfg); do
+    for file in $(cd $BUILD_DIR/outputfs; find rear/*/* -name syslinux.cfg); do
         dir=$(dirname $file)
         time=$(basename $dir)
         system=$(basename $(dirname $dir))
@@ -187,7 +187,7 @@ EOF
         if [[ "$FEATURE_SYSLINUX_INCLUDE" ]]; then
             syslinux_write "    include /$file"
         else
-            cat $BUILD_DIR/usbfs/$file >&4
+            cat $BUILD_DIR/outputfs/$file >&4
         fi
         oldsystem=$system
     done
@@ -211,14 +211,14 @@ menu end
 EOF
     fi
 
-} 4>"$BUILD_DIR/usbfs/rear/syslinux.cfg"
+} 4>"$BUILD_DIR/outputfs/rear/syslinux.cfg"
 
-if [ ! -d "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX" ]; then
-    mkdir -p $v "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX" >&8
-    StopIfError "Could not create USB syslinux dir [$BUILD_DIR/usbfs/$SYSLINUX_PREFIX] !"
+if [ ! -d "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" ]; then
+    mkdir -p $v "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" >&8
+    StopIfError "Could not create USB syslinux dir [$BUILD_DIR/outputfs/$SYSLINUX_PREFIX] !"
 fi
 
-echo "$VERSION_INFO" >$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/message
+echo "$VERSION_INFO" >$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/message
 
 # We generate a main extlinux.conf in /boot/syslinux that consist of all
 # default functionality
@@ -251,7 +251,7 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
     syslinux_has "vesamenu.c32"
 
     if [ -r "$CONFIG_DIR/templates/rear.help" ]; then
-        cp $v "$CONFIG_DIR/templates/rear.help" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/rear.help" >&8
+        cp $v "$CONFIG_DIR/templates/rear.help" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/rear.help" >&8
         syslinux_write <<EOF
 say F1 - Show help
 F1 /boot/syslinux/rear.help
@@ -280,7 +280,7 @@ include custom.cfg
 include /rear/syslinux.cfg
 EOF
 else
-    cat "$BUILD_DIR/usbfs/rear/syslinux.cfg" >&4
+    cat "$BUILD_DIR/outputfs/rear/syslinux.cfg" >&4
 fi
 
 syslinux_write <<EOF
@@ -347,12 +347,12 @@ EOF
 
     if syslinux_has "hdt.c32"; then
         if [ -r "/usr/share/hwdata/pci.ids" ]; then
-            cp $v "/usr/share/hwdata/pci.ids" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/pci.ids" >&8
+            cp $v "/usr/share/hwdata/pci.ids" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/pci.ids" >&8
         elif [ -r "/usr/share/pci.ids" ]; then
-            cp $v "/usr/share/pci.ids" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/pci.ids" >&8
+            cp $v "/usr/share/pci.ids" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/pci.ids" >&8
         fi
         if [ -r "/lib/modules/$(uname -r)/modules.pcimap" ]; then
-            cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/modules.pcimap" >&8
+            cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/modules.pcimap" >&8
         fi
         syslinux_write <<EOF
 label hdt
@@ -369,7 +369,7 @@ EOF
     # You need the memtest86+ package installed for this to work
     MEMTEST_BIN=$(ls -d /boot/memtest86+-* 2>&8 | tail -1)
     if [[ "$MEMTEST_BIN" != "." && -r "$MEMTEST_BIN" ]]; then
-        cp $v "$MEMTEST_BIN" "$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/memtest" >&8
+        cp $v "$MEMTEST_BIN" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/memtest" >&8
         syslinux_write <<EOF
 label memtest
     say memtest - Run memtest86+
@@ -411,6 +411,6 @@ Power off the system now
 EOF
     fi
 
-} 4>"$BUILD_DIR/usbfs/$SYSLINUX_PREFIX/extlinux.conf"
+} 4>"$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/extlinux.conf"
 
 Log "Created extlinux configuration '$SYSLINUX_PREFIX/extlinux.conf'"
