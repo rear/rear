@@ -1,7 +1,7 @@
 #
 # start required daemons, like portmap
 #
-local scheme=$(url_scheme "$NETFS_URL")
+local scheme=$(url_scheme "$BACKUP_URL")
 case "$scheme" in
 	nfs)
 		# newer Linux distros use rpcbind instead of portmap

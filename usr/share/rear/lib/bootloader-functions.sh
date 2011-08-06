@@ -172,7 +172,7 @@ function make_syslinux_config {
 	echo "label rear"
 	syslinux_menu "label ^Recover $(uname -n)"
 	case $BACKUP in
-		(NETFS) MY_URL="${NETFS_URL:+NETFS_URL=$NETFS_URL}" ;;
+		(NETFS) MY_URL="${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}" ;;
 		(RSYNC) MY_URL="${RSYNC_URL:+RSYNC_URL=$RSYNC_URL}" ;;
 	esac
 	syslinux_menu_help "Rear rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \

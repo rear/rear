@@ -1,7 +1,7 @@
 # check wether the archive is actually there
 
 # Don't check when backup is on a tape device
-case $(url_scheme "$NETFS_URL") in
+case $(url_scheme "$BACKUP_URL") in
     (tape)
         return 0
         ;;

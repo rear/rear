@@ -1,14 +1,14 @@
 # umount ISO mountpoint
 
-if [[ "$ISO_UMOUNTCMD" ]] ; then
-    ISO_URL="var://NETFS_UMOUNTCMD"
+if [[ "$OUTPUT_UMOUNTCMD" ]] ; then
+    OUTPUT_URL="var://OUTPUT_UMOUNTCMD"
 fi
 
-if [[ -z "$ISO_URL" ]] ; then
+if [[ -z "$OUTPUT_URL" ]] ; then
     return
 fi
 
-umount_url $ISO_URL $BUILD_DIR/outputfs
+umount_url $OUTPUT_URL $BUILD_DIR/outputfs
 
 rmdir $v $BUILD_DIR/outputfs >&2
 if [[ $? -eq 0 ]] ; then

@@ -110,7 +110,7 @@ label $(uname -n | cut -d. -f1)-$time
     say $(uname -n | cut -d. -f1)-$time - Recover $(uname -n | cut -d. -f1) $usb_label_workflow ($time)
     text help
 Rear v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPADDR:+on $IPADDR}
-${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${NETFS_URL:+NETFS_URL=$NETFS_URL}
+${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
     endtext
     kernel /$USB_PREFIX/kernel
     append initrd=/$USB_PREFIX/initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE

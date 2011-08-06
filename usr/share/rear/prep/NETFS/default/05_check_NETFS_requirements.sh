@@ -1,14 +1,14 @@
-# NETFS_URL=[proto]://[host]/[share]
+# BACKUP_URL=[proto]://[host]/[share]
 # example: nfs://lucky/temp/backup
 # example: cifs://lucky/temp
 # example: usb:///dev/sdb1
 # example: tape:///dev/nst0
 
-[[ "$NETFS_URL" || "$NETFS_MOUNTCMD" ]]
-StopIfError "You must specify either NETFS_URL or NETFS_MOUNTCMD and NETFS_UMOUNTCMD !"
+[[ "$BACKUP_URL" || "$BACKUP_MOUNTCMD" ]]
+StopIfError "You must specify either BACKUP_URL or BACKUP_MOUNTCMD and BACKUP_UMOUNTCMD !"
 
-if [[ "$NETFS_URL" ]] ; then
-    local host=$(url_host $NETFS_URL)
+if [[ "$BACKUP_URL" ]] ; then
+    local host=$(url_host $BACKUP_URL)
 
     if [[ -z "$host" ]] ; then
         host="localhost" # otherwise, ping could fail
@@ -22,20 +22,14 @@ if [[ "$NETFS_URL" ]] ; then
             Log "Skipping ping test"
     fi
 
-    ### set other variables from NETFS_URL
-    case $(url_scheme $NETFS_URL) in
+    ### set other variables from BACKUP_URL
+    case $(url_scheme $BACKUP_URL) in
         (usb)
             if [[ -z "$USB_DEVICE" ]] ; then
-                USB_DEVICE="/$(url_path $NETFS_URL)"
+                USB_DEVICE="/$(url_path $BACKUP_URL)"
             fi
             ;;
     esac
-
-    if [[ -z "$ISO_URL" ]] ; then
-        if [[ -z "$ISO_MOUNTCMD" ]] ; then
-            ISO_URL=$NETFS_URL
-        fi
-    fi
 fi
 
 # some backup progs require a different backuparchive name
@@ -50,7 +44,7 @@ case "$(basename $BACKUP_PROG)" in
 esac
 
 # set archive names
-case "$TAPE_DEVICE:$(url_scheme $NETFS_URL)" in
+case "$TAPE_DEVICE:$(url_scheme $BACKUP_URL)" in
 	(:*)
 		backuparchive="${BUILD_DIR}/outputfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}"
 		;;
@@ -59,10 +53,10 @@ case "$TAPE_DEVICE:$(url_scheme $NETFS_URL)" in
 		;;
 esac
 
-if test "$NETFS_MOUNTCMD" -a "$NETFS_UMOUNTCMD" ; then
+if test "$BACKUP_MOUNTCMD" -a "$BACKUP_UMOUNTCMD" ; then
 	displayarchive="$backuparchive"
 else
-	displayarchive="$NETFS_URL/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}"
+	displayarchive="$BACKUP_URL/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}"
 fi
 
 
@@ -76,11 +70,11 @@ portmap
 rpcbind
 rpcinfo
 mount
-mount.$(url_scheme $NETFS_URL)
-umount.$(url_scheme $NETFS_URL)
+mount.$(url_scheme $BACKUP_URL)
+umount.$(url_scheme $BACKUP_URL)
 $(
-test "$NETFS_MOUNTCMD" && echo "${NETFS_MOUNTCMD%% *}"
-test "$NETFS_UMOUNTCMD" && echo "${NETFS_UMOUNTCMD%% *}"
+test "$BACKUP_MOUNTCMD" && echo "${BACKUP_MOUNTCMD%% *}"
+test "$BACKUP_UMOUNTCMD" && echo "${BACKUP_UMOUNTCMD%% *}"
 )
 $BACKUP_PROG
 gzip
@@ -88,4 +82,4 @@ bzip2
 )
 
 # include required modules, like nfs cifs ...
-MODULES=( "${MODULES[@]}" $(url_scheme $NETFS_URL) )
+MODULES=( "${MODULES[@]}" $(url_scheme $BACKUP_URL) )

@@ -4,12 +4,12 @@ StopIfError "Could not mkdir '$BUILD_DIR/outputfs'"
 
 AddExitTask "rmdir $v $BUILD_DIR/outputfs >&2"
 
-if [[ "$ISO_MOUNTCMD" ]] ; then
-    ISO_URL="var://ISO_MOUNTCMD"
+if [[ "$OUTPUT_MOUNTCMD" ]] ; then
+    OUTPUT_URL="var://OUTPUT_MOUNTCMD"
 fi
 
-if [[ -z "$ISO_URL" ]] ; then
+if [[ -z "$OUTPUT_URL" ]] ; then
     return
 fi
 
-mount_url $ISO_URL $BUILD_DIR/outputfs
+mount_url $OUTPUT_URL $BUILD_DIR/outputfs $OUTPUT_OPTIONS

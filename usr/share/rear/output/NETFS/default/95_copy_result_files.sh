@@ -3,7 +3,7 @@
 
 
 # do not do this for tapes
-local scheme=$(url_scheme $ISO_URL)
+local scheme=$(url_scheme $OUTPUT_URL)
 case $scheme in
     (tape|usb|file)
         return 0
