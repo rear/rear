@@ -43,9 +43,13 @@ if [ ! -s "$KERNEL_FILE" ]; then
 		StopIfError "Could not find a matching kernel in /boot/efi/efi/debian !"
 		KERNEL_FILE="/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION"
 	elif [ -f /etc/arch-release ]; then
-		[ -f "/boot/vmlinuz26" ]
-		StopIfError "Could not find Arch kernel /boot/vmlinuz26"
-		KERNEL_FILE="/boot/vmlinuz26"
+		if [ -f "/boot/vmlinuz-linux" ] ; then
+			KERNEL_FILE="/boot/vmlinuz-linux"
+		elif [ -f "/boot/vmlinuz26" ] ; then
+			KERNEL_FILE="/boot/vmlinuz26"
+		else
+			Error "Could not find Arch kernel /boot/vmlinuz[-linux|26]"
+		fi
 	else
 		Error "Could not find a matching kernel in /boot !"
 	fi
