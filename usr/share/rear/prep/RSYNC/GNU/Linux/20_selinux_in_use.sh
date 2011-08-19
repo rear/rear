@@ -23,8 +23,8 @@ case $(basename $BACKUP_PROG) in
 			RSYNC_SELINUX=		# internal variable used in recover mode (empty means disable SELinux)
 		else
 			# if --xattrs is already set; no need to do it again
-			if ! grep -q xattrs <<< $(echo ${RSYNC_OPTIONS[@]}); then
-				RSYNC_OPTIONS=( "${RSYNC_OPTIONS[@]}" --xattrs )
+			if ! grep -q xattrs <<< $(echo ${BACKUP_RSYNC_OPTIONS[@]}); then
+				BACKUP_RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --xattrs )
 			fi
 			RSYNC_SELINUX=1		# variable used in recover mode (means using xattr and not disable SELinux)
 		fi
@@ -34,7 +34,7 @@ case $(basename $BACKUP_PROG) in
 	(tar)
 		if tar --usage | grep -q selinux  ; then
 			# during backup we will NOT disable SELinux
-			BACKUP_PROG_OPTIONS="--selinux"
+			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --selinux"
 			touch $TMP_DIR/force.autorelabel
 		else
 			# during backup we will disable SELinux

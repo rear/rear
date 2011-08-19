@@ -17,6 +17,15 @@ if [[ "$NETFS_OPTIONS" ]] ; then
     BACKUP_OPTIONS=$NETFS_OPTIONS
 fi
 
+if [[ "$RSYNC_URL" ]] ; then
+    Log "Using RSYNC_URL is deprecated. Use BACKUP_URL instead."
+    BACKUP_URL=$RSYNC_URL
+fi
+
+if [[ "$RSYNC_OPTIONS" ]] ; then
+    BACKUP_RSYNC_OPTIONS=$RSYNC_OPTIONS
+fi
+
 if [[ "$ISO_URL" ]] ; then
     Log "Using ISO_URL is deprecated. Use OUTPUT_URL instead."
     OUTPUT_URL=$ISO_URL

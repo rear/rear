@@ -16,18 +16,18 @@ ProgressStart "Running archive operation"
 	case "$(basename $BACKUP_PROG)" in
 
 		(rsync)
-			RSYNC_OPTIONS=( "${RSYNC_OPTIONS[@]}" --one-file-system --delete --exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded )
+			BACKUP_RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete --exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded )
 
 			case $RSYNC_PROTO in
 
 				(ssh)
-					Log $BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
-					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) \
+					Log $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
+					$BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) \
 					"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"  #2>/dev/null
 					;;
 
 				(rsync)
-					$BACKUP_PROG "${RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) \
+					$BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) \
 					"${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
 					;;
 

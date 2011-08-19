@@ -37,7 +37,7 @@ if [ "${RSYNC_USER}" != "root" ]; then
 			_mntpt=$(ssh ${RSYNC_USER}@${RSYNC_HOST} 'cd ${RSYNC_PATH}; df -P .' 2>/dev/null | tail -1 | awk '{print $6}')
 			ssh ${RSYNC_USER}@${RSYNC_HOST} mount 2>/dev/null | grep "$_mntpt" | grep -q user_xattr
 			StopIfError "Remote file system $_mntpt does not have user_xattr mount option set!"
-			RSYNC_OPTIONS=( "${RSYNC_OPTIONS[@]}" --xattrs --rsync-path="""rsync --fake-super""" )
+			BACKUP_RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --xattrs --rsync-path="""rsync --fake-super""" )
 		fi
 	else
 		Error "rsync --fake-super not possible on system ($RSYNC_HOST) (please upgrade rsync to 3.x)"

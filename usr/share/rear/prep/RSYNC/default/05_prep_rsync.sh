@@ -1,6 +1,6 @@
 # 05_prep_rsync.sh : prepare rsync usage
 # define rsync as BACKUP_PROG and not tar (which is the default)
-#[[ -z "$BACKUP_PROG" ]] && BACKUP_PROG=rsync	# BACKUP_PROG=tar defined in default.conf!
+# $BACKUP_PROG could contain full path to executable on purpose
 case $BACKUP_PROG in
 	(tar)	BACKUP_PROG=rsync ;;		# if nothing was set nor defined
 	(rsync)	: ;;				# was defined correctly

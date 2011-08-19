@@ -1,4 +1,4 @@
-# 10_check_rsync.sh - analyze the RSYNC_URL
+# 10_check_rsync.sh - analyze the BACKUP_URL
 ## from man page:
 # Access via remote shell:
 #	Pull: rsync [OPTION...] [USER@]HOST:SRC... [DEST]
@@ -10,10 +10,10 @@
 #	rsync [OPTION...] SRC... rsync://[USER@]HOST[:PORT]/DEST
 #
 #### rear needs a destination path which is the SRC (or DST)
-# RSYNC_URL=[USER@]HOST:PATH			# using ssh (no rsh)
+# BACKUP_URL=[USER@]HOST:PATH			# using ssh (no rsh)
 # with rsync protocol PATH is a MODULE name defined in remote /etc/rsyncd.conf file
-# RSYNC_URL=[USER@]HOST::PATH			# using rsync
-# RSYNC_URL=rsync://[USER@]HOST[:PORT]/PATH	# using rsync
+# BACKUP_URL=[USER@]HOST::PATH			# using rsync
+# BACKUP_URL=rsync://[USER@]HOST[:PORT]/PATH	# using rsync
 
 RSYNC_PROTO=					# ssh or rsync
 RSYNC_USER=
@@ -21,18 +21,18 @@ RSYNC_HOST=
 RSYNC_PORT=873					# default port (of rsync server)
 RSYNC_PATH=
 
-if test -z "$RSYNC_URL" ; then
-	Error "You must specify RSYNC_URL !"
+if test -z "$BACKUP_URL" ; then
+	Error "You must specify BACKUP_URL !"
 fi
 
-echo $RSYNC_URL | egrep -q '(rsync:|::)'
+echo $BACKUP_URL | egrep -q '(rsync:|::)'
 if [ $? -eq 0 ]; then
 	RSYNC_PROTO=rsync
 else
 	RSYNC_PROTO=ssh
 fi
 
-tmp="${RSYNC_URL##*://}"	# remove rsync:// if present
+tmp="${BACKUP_URL##*://}"	# remove rsync:// if present
 echo $tmp | grep -q '@'
 if [ $? -eq 0 ]; then
 	RSYNC_USER="${tmp%%@*}"	# grap user name
