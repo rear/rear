@@ -30,8 +30,8 @@ case "$scheme" in
         ;;
     (rsync)
         LogPrint "Transferring ISO image to $OUTPUT_URL"
-        rsync -a $v "$ISO_DIR/$ISO_PREFIX.iso" "$server:$path"
-        StopIfError "Problem transferring ISO image to $server:$path"
+        rsync -a $v "$ISO_DIR/$ISO_PREFIX.iso" "$OUTPUT_URL"
+        StopIfError "Problem transferring ISO image to $OUTPUT_URL"
         ;;
     (*) BugError "Support for $scheme is not implemented yet.";;
 esac

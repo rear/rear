@@ -31,7 +31,9 @@ function read_and_strip_file () {
 
 url_scheme() {
     local url=$1
-    echo ${url%%://*}
+    local scheme=${url%%://*}
+    # rsync scheme does not have to start with rsync:// it can also be scp style
+    echo $scheme | grep -q ":" && echo rsync || echo $scheme
 }
 
 url_host() {
