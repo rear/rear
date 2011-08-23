@@ -55,6 +55,12 @@ WORKFLOW_dump () {
 	for opt in $(eval echo '${!'"$BACKUP"'_*}') ; do
 		LogPrint "$( printf "%40s = %s" "$opt" "$(eval 'echo "${'"$opt"'[@]}"')" )"
 	done
+	for opt in $(eval echo '${!BACKUP_*}') ; do
+		case $opt in
+			BACKUP_PROG*) ;;
+			*) LogPrint "$( printf "%40s = %s" "$opt" "$(eval 'echo "${'"$opt"'[@]}"')" )" ;;
+		esac
+	done
 
 	case "$BACKUP" in
 		NETFS)
