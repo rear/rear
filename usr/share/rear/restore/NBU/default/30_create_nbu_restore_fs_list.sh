@@ -27,13 +27,7 @@ if [ ${#EXCLUDE_MOUNTPOINTS[@]} -gt 0 ]
 then
     for FS in ${EXCLUDE_MOUNTPOINTS[@]}
     do
-       NUMFIELDS=$(echo $FS | awk -F "/" '{print NF}')
-       if [ ${NUMFIELDS} -gt 2 ]
-       then
-          echo "!${FS}/" >> $TMP_DIR/restore_fs_list
-       else
-          echo "${FS}/" >> $TMP_DIR/restore_fs_list
-          echo "!${FS}/*" >> $TMP_DIR/restore_fs_list
-       fi
+        echo "${FS}/" >> $TMP_DIR/restore_fs_list
+        echo "!${FS}/*" >> $TMP_DIR/restore_fs_list
     done
 fi
