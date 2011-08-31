@@ -57,7 +57,7 @@ mount_url() {
     ### Generate a mount command
     local mount_cmd
     case $(url_scheme $url) in
-        (tape|file|rsync)
+        (tape|file|rsync|fish|ftp|ftps|hftp|http|https|sftp)
             ### Don't need to mount anything for these
             return 0
             ;;
@@ -91,7 +91,7 @@ umount_url() {
     local mountpoint=$2
 
     case $(url_scheme $url) in
-        (tape|file|rsync)
+        (tape|file|rsyncfish|ftp|ftps|hftp|http|https|sftp)
             ### Don't need to umount anything for these
             return 0
             ;;
