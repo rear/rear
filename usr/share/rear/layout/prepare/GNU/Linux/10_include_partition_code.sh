@@ -113,6 +113,11 @@ EOF
             fi
             echo "parted -s $disk set $number $flag on >&2" >> $LAYOUT_CODE
         done
+
+        # Explicitly name GPT partitions
+        if [[ "$label" = "gpt" ]] && [[ "$parttype" != "rear-noname" ]] ; then
+            echo "parted -s $disk name $number \"$parttype\"" >> $LAYOUT_CODE
+        fi
     done < <(grep "^part $disk" $LAYOUT_FILE)
 
 cat >> $LAYOUT_CODE <<EOF

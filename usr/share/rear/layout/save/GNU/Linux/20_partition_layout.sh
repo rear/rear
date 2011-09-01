@@ -78,6 +78,10 @@ Log "Saving disk partitions."
                 ptype=$(get_columns "$line" "$typefield" | tr -d " " | tr -d ";")
                 pflags=$(get_columns "$line" "flags" | tr -d "," |tr -d ";")
 
+                if [ -z "$ptype" ] ; then
+                    ptype="rear-noname"
+                fi
+
                 case $device in
                     *cciss*)
                         pname="p${pnumber}"
@@ -98,7 +102,7 @@ Log "Saving disk partitions."
                 flags=""
                 for flag in $pflags ; do
                     case $flag in
-                        boot|root|swap|hidden|raid|lvm|lba|palo)
+                        boot|root|swap|hidden|raid|lvm|lba|palo|legacy_boot|bios_grub)
                             flags="$flags$flag,"
                             ;;
                     esac
