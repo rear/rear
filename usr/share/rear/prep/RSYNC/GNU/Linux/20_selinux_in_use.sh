@@ -1,9 +1,18 @@
 # check if SELinux is in use, if not, just silently return
-[[ -f /selinux/enforce ]] || return
+[[ -f /selinux/enforce || -f /sys/fs/selinux/enforce ]] || return
+
+if [ -f /selinux/enforce ]; then
+        SELINUX_ENFORCE=/selinux/enforce
+elif [ -f /sys/fs/selinux/enforce ]; then
+        SELINUX_ENFORCE=/sys/fs/selinux/enforce
+else
+        SELINUX_ENFORCE=
+        BugError "SELinux enforce file is not found. Please enhance this script."
+fi
 
 # check global settings (see default.conf) - non-empty means disable SELinux during backup
 if [ -n "$BACKUP_SELINUX_DISABLE" ]; then
-        cat /selinux/enforce > $TMP_DIR/selinux.mode
+        cat $SELINUX_ENFORCE  > $TMP_DIR/selinux.mode
         RSYNC_SELINUX=
         return
 fi
@@ -19,7 +28,7 @@ case $(basename $BACKUP_PROG) in
 			# no xattrs compiled in remote rsync, so saving SELinux attributes are not possible
 			Log "WARNING: --xattrs not possible on system ($RSYNC_HOST) (no xattrs compiled in rsync)"
 			# $TMP_DIR/selinux.mode is a trigger during backup to disable SELinux
-			cat /selinux/enforce > $TMP_DIR/selinux.mode
+			cat $SELINUX_ENFORCE > $TMP_DIR/selinux.mode
 			RSYNC_SELINUX=		# internal variable used in recover mode (empty means disable SELinux)
 		else
 			# if --xattrs is already set; no need to do it again
@@ -38,14 +47,14 @@ case $(basename $BACKUP_PROG) in
 			touch $TMP_DIR/force.autorelabel
 		else
 			# during backup we will disable SELinux
-			cat /selinux/enforce > $TMP_DIR/selinux.mode
+			cat $SELINUX_ENFORCE > $TMP_DIR/selinux.mode
 			# after reboot the restored system does a SELinux relabeling
 		fi
 		;;
 
 	(*)
 		# disable SELinux for unlisted BACKUP_PROGs
-		cat /selinux/enforce > $TMP_DIR/selinux.mode
+		cat $SELINUX_ENFORCE > $TMP_DIR/selinux.mode
 		;;
 
 esac

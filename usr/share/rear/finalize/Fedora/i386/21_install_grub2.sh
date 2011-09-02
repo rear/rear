@@ -1,4 +1,4 @@
-# This script is an improvement over the default grub-install '(hd0)'
+#  This  script is an improvement over the default grub-install '(hd0)'
 #
 # However the following issues still exist:
 #
@@ -10,28 +10,29 @@
 #    guarantee a correct boot-order, or even a working boot-lader config (eg.
 #    GRUB stage2 might not be at the exact same location)
 
-# Only for GRUB Legacy - GRUB2 will be handled by its own script
-[[ $(type -p grub) ]] || return
+# Only for GRUB2 - GRUB Legacy will be handled by its own script
+[[ $(type -p grub-install) || $(type -p grub2-install) ]] || return
 
-LogPrint "Installing GRUB boot loader"
+LogPrint "Installing GRUB2 boot loader"
 mount -t proc none /mnt/local/proc
+#for i in /dev /dev/pts /proc /sys; do mount -B $i /mnt/local${i} ; done
 
 if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
 
-    # Check if we find GRUB stage 2 where we expect it
+    # Check if we find GRUB where we expect it
     [[ -d "/mnt/local/boot" ]]
     StopIfError "Could not find directory /boot"
-    [[ -d "/mnt/local/boot/grub" ]]
-    StopIfError "Could not find directory /boot/grub"
-    [[ -r "/mnt/local/boot/grub/stage2" ]]
-    StopIfError "Unable to find /boot/grub/stage2."
+    [[ -d "/mnt/local/boot/grub2" ]]
+    StopIfError "Could not find directory /boot/grub2"
+    [[ -r "/mnt/local/boot/grub2/grub.cfg" ]]
+    LogIfError "Unable to find /boot/grub2/grub.cfg."
 
     # Find exclusive partitions belonging to /boot (subtract root partitions from deps)
     bootparts=$( (find_partition fs:/boot; find_partition fs:/) | sort | uniq -u )
     grub_prefix=/grub
     if [[ -z "$bootparts" ]]; then
         bootparts=$(find_partition fs:/)
-        grub_prefix=/boot/grub
+        grub_prefix=/boot/grub2
     fi
     # Should never happen
     [[ "$bootparts" ]]
@@ -62,23 +63,13 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
         partnr=$((partnr - 1))
 
         if [[ "$bootdisk" == "$disk" ]]; then
-            # Best case scenario is to have /boot on disk with MBR booted
-            chroot /mnt/local grub --batch --no-floppy >&2 <<EOF
-device (hd0) $disk
-root (hd0,$partnr)
-setup --stage2=/boot/grub/stage2 --prefix=$grub_prefix (hd0)
-quit
-EOF
+            #chroot /mnt/local grub2-mkconfig -o /boot/grub2/grub.cfg
+	    #chroot /mnt/local grub2-install "$bootdisk"
+	    grub2-install --root-directory=/mnt/local/ $bootdisk
         else
-            # hd1 is a best effort guess, we cannot predict how numbering
-            # changes when a disk fails.
-            chroot /mnt/local grub --batch --no-floppy >&2 <<EOF
-device (hd0) $disk
-device (hd1) $bootdisk
-root (hd1,$partnr)
-setup --stage2=/boot/grub/stage2 --prefix=$grub_prefix (hd0)
-quit
-EOF
+            chroot /mnt/local grub2-mkconfig -o /boot/grub2/grub.cfg
+	    #chroot /mnt/local grub2-install "$bootdisk"
+	    grub2-install --root-directory=/mnt/local/ $bootdisk
         fi
 
         if (( $? == 0 )); then
@@ -88,9 +79,10 @@ EOF
 fi
 
 if [[ "$NOBOOTLOADER" ]]; then
-    if chroot /mnt/local grub-install '(hd0)' >&2 ; then
+    if chroot /mnt/local grub2-install "$disk" >&2 ; then
         NOBOOTLOADER=
     fi
 fi
 
+#for i in /dev /dev/pts /proc /sys; do umount  /mnt/local${i} ; done
 umount /mnt/local/proc

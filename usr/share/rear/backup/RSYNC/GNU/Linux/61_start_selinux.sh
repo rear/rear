@@ -2,7 +2,7 @@
 
 [ -f $TMP_DIR/selinux.mode ] && {
 	touch "${TMP_DIR}/selinux.autorelabel"
-	cat $TMP_DIR/selinux.mode > /selinux/enforce
+	cat $TMP_DIR/selinux.mode > $SELINUX_ENFORCE
 	Log "Restored original SELinux mode"
 	case $RSYNC_PROTO in
 
