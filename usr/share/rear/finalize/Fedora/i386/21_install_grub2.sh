@@ -11,7 +11,7 @@
 #    GRUB stage2 might not be at the exact same location)
 
 # Only for GRUB2 - GRUB Legacy will be handled by its own script
-[[ $(type -p grub-install) || $(type -p grub2-install) ]] || return
+[[ $(type -p grub-probe) || $(type -p grub2-probe) ]] || return
 
 LogPrint "Installing GRUB2 boot loader"
 mount -t proc none /mnt/local/proc
