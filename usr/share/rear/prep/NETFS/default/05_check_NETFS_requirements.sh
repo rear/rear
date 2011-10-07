@@ -79,6 +79,7 @@ test "$BACKUP_UMOUNTCMD" && echo "${BACKUP_UMOUNTCMD%% *}"
 $BACKUP_PROG
 gzip
 bzip2
+xz
 )
 
 # include required modules, like nfs cifs ...

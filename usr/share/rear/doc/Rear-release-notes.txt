@@ -1,0 +1,217 @@
+= Release Notes for Relax and Recover (rear) version 1.11.0
+
+:Author: Gratien D'haese
+:Date: 20 July 2011
+:Revision: 1.0
+:data-uri:
+:icons:
+:numbered:
+:toc:
+:toclevels: 2
+
+This document contains the release notes for the open source project "Relax and Recover" (abbreviated as rear).  Rear is hosted at SourceForge:
+
+. project rear : http://sourceforge.net/projects/rear
+. home of rear : http://rear.sourceforge.net/
+
+This document is distributed with the following license: "Creative Commons Attribution-NoDerivs 3.0 Unported (CC BY-ND 3.0)". To read the license deed go to: http://creativecommons.org/licenses/by-nd/3.0/
+
+== Overview
+Relax and Recover (rear) is GNU/Linux system administrator tool-set used to create disaster recovery images which makes bare metal restore easier.
+System administrators use rear as part of disaster recovery policy which does not replace in any way a good backup policy.
+Rear is supported on most GNU/Linux based operating systems with a kernel 2.6.* and higher.
+
+=== Product Features
+The following features are supported on the most recent releases of rear. Anything labeled as "new" was added as the most recent release. New functionality for previous releases can be seen in the next chapter that details each release.
+The most recent release of rear is supported on GNU/Linux based systems with a kernel 2.6.* or higher. It provides the following functionality:
+
+*	Hot maintenance capability. A rescue image can be made online while the system is running.
+*	Command line interface. Rear doesn't require a graphical interface to run, nor in creation mode, nor in rescue mode (console is enough).
+*	Support included for most common file systems, such as ext2, ext3 and ext4, reiserfs, jfs, xfs are also on our list, but are less tested. [Please give us feedback]
+*	Hardware mirroring and RAID managers (like cciss) are known to work.
+*	LVM root volumes are supported.
+*	Integrates with external backup solutions such as:
+
+..	GNU tar (BACKUP=NETFS)
+..	NEW! rsync (BACKUP=NETFS)
+..	Tivoli Storage Manager (BACKUP=TSM)
+..	HP Data Protector (BACKUP=DP)
+..	Symantec NetBacakup (BACKUP=NBU)
+..	Galaxy 5, 6 and 7 (BACKUP=GALAXY)
+..	*NEW!* Bacula (BACKUP=BACULA)
+
+*	Udev support (except for some really ancient udev versions) which is the base for many new and important features:
+
+..	kernel drivers for network cards and storage adapters are now loaded via udev
+..	deal with network persistent names in udev rules
+..	firmware loading
+..	persistent storage device names (though ReaR does nothing with this)
+
+*	System reconfiguration
+
+..	enable recovery on hardware, that is not the same as the original system
+..	network and storage drivers are adjusted
+..	map hard disks if they do not match (e.g. hda -> sda)
+
+*	Support new backup software: Bacula, both locally attached tapes (with bextract) and network-based backups. Also, in combination with OBDR tapes.
+*	Create OBDR tapes with method *mkbackup* and put the backup onto the tape to have a single-tape bootable recovery solution
+*	Label the OBDR tape with the method *labeltape* to avoid accidental overwrites with OBDR
+*	*NEW (EXPERIMENTAL)!* Create bootable disk (eSATA, USB ...) media with the backup included:
+----
+NETFS_URL=usb:///dev/<device>
+----
+Together with *OUTPUT=USB* we have now a complete solution on hard disks (booting of it and restoring data).
+
+*	DHCP client support (IPv4 and IPv6) has been added. Auto detection is possible with new variable *USE_DHCLIENT=yes* (define in _local.conf_), or one can hard-code your special DHCP client with the variables *DHCLIENT_BIN* (for IPv4), and/or *DHCLIENT6_BIN* (for IPv6)
+*	*NEW!* Save layout and compare layouts for easy automation of making rear snapshots
+*	*NEW (EXPERIMENTAL)!* The possibility to use the new *layout* workflow instead of the current standard *dr* workflow. The *dr* workflow kept all important system information into a directory structure where the new *layout* workflow use files to keep the information centralized
+*	*NEW (EXPERIMENTAL)!* External USB booting now uses extlinux instead of syslinux, and therefore, the USB disk must first be formatted with an exy2, ext3, ext4 or bttfs based file system
+
+NOTE: Features marked experimental are prone to change with future releases.
+
+== Rear Releases
+The first release of Rear, version 1.0, was posted to the web in July 2006. For each release, this chapter lists the new features and defect fixes. Note that all releases are cumulative, and that all releases of Rear are compatible with previous versions of Rear, unless otherwise noted.
+
+=== Version 1.11.0 (May 2011)
+
+* +rear mkobdr+  method has been removed. To make an OBDR aware tape now just use the ''+rear mkbackup+'' method and define the proper variables in _/etc/rear/local.conf_ as
+----
+BACKUP=NETFS
+OUTPUT=OBDR
+NETFS_URL=tape:///dev/nst0
+----
+
+* The site configuration file _/etc/rear/site.conf_ has been removed from the rear package, but can still be used if end-users want. The purpose of this is to enable sites to distribute this file through RPM or DEB packages that do not have a file conflict with the rear package. The distribution _/etc/rear/local.conf_ file contains only configuration examples as comments in order to not interfere with configurations in _site.conf_.
+
+* The +rear+ command is by default quiet, which means if you want the same behavior as in previous versions you need to add the verbose option (+-v+) with the rear command
+
+* The *output* workflow now runs before the *mkbackup* workflow especially done to make OBDR tape creation possible with the *mkbackup* workflow as the ISO image must be written first on an OBDR aware tape. Please note that this is a fundamental change with regard to pre-vious versions of Rear. While utmost care has been taken that there would be no adverse side effects of this change we cannot test all possible usage scenarios.
+
+* When using *OUTPUT=USB* then you have to make that the destination (USB) disk is formatted as an ext2, ext3, ext4 or btrfs file-system. Extlinux is now the only supported boot loader for bootable disks, syslinux is not supported any more.
+
+* The rear boot now shows a boot menu with options to choose from. The actual content of the menu depends on the available syslinux version and its modules (like menu.c32, hdt.c32, reboot.c32, poweroff.com).
+
+* Rear does properly recognize IPv6 addresses and uses these if configured.
+
+* NBU backup method now allows to restore to a point in time.
+* Support Fedora 15 (using systemd to boot-up) and RHEL6 and Scientific Linux 6.
+* Improved handling of HP SmartArray controllers.
+* Significantly improved error handling, especially when failing on subshells.
+* Autologin as root in the rescue media (for upstart and systemd based systems).
+* EXCLUDE_MOUNTPOINTS should work correctly now (fixed typo).
+* Support ext4 on RHEL5 and clones.
+* Ignore known errors when using EXTERNAL backup method (set EXTERNAL_IGNORE_ERRORS to an array of return codes to ignore).
+* Use original filesystem mount options for recovery, support +attr+ and +facl+ tools.
+* Support XEN paravirtualized systems (tested only on RHEL5 so far).
+* Performance improvements (removed checksum calculation, PID-based locking).
+* Rear work space is now created with a random part to prevent potential security exploits.
+* Control exit tasks and subprocesses better. Kill subprocesses before exiting.
+* Support adding Rear boot files to local GRUB environment (GRUB_RESCUE) and password protect rescue boot +
+ (GRUB_RESCUE_PASSWORD) to avoid accidential recovery.
+ The default password is *REAR*.
+* *EXPERIMENTAL!* Transfer ISO image to remote URL (ISO_URL). Please note that this
+feature will be extended to cover all output methods and then it will (probably) be renamed
+to OUTPUT_URL.
+* Removed various warnings, e.g. about NETFS not being a professional backup method.
+* *EXPERIMENTAL!* Partial support for Arch Linux has been added, more testing required.
+* NEW! shell workflow is now really usable.
+* Make 32/64 bit handling much more robust, especially on systems having /lib32.
+* NETFS backup and restore with rsync working now (BACKUP_METHOD=rsync).
+* Support udev on RHEL4.
+* Development snapshot have now a version like 0.0.REV where REV is the SVN revision used to build the development snapshot.
+* Greatly reduced log clutter (lvm warnings about leaked file descriptors, which is a bash bug, various irrelevant error and verbose output).
+* checklayout can now also check arbitrary files (through an md5 checksum), extend the CHECK_CONFIG_FILES array to use this feature.
+
+=== Version 1.10.0 (February 2011)
+An intermediate release only which fixed some hanging issues of version 1.9.0. Also, a RPM upgrade
+was fixed by this release from 1.7.25 to 1.9.0, which failed because of a wrongly Centos
+symbolic link. +
+See https://bugzilla.redhat.com/show_bug.cgi?id=680664
+
+=== Version 1.9.0 (February 2011)
+With version 1.9.0 some new methods were added, such as:
+
+* +rear mkobdr+ : to create an OBDR recovery tape (obsolete since 1.11.0)
+* +rear labeltape+ : goes together with OBDR tapes. To avoid accidental overwrites we force
+the creation of a label before '+rear mkbackup+' will work. (obsolete since 1.11.0)
+* +rear checklayout/savelayout+ : a new method to save the disk layout and check if a new
++rear mkbackup+ or +rear mkrescue+ is required.
+* New BACKUP methods were added, Bacula (*BACKUP=BACULA*) and bextract
+(*BACKUP=BEXTRACT*), both are able to work in conjunction with *output=TAPE*. See
+under the doc directory (or _/usr/share/doc/rear-1.9.0/_) the _configuration-examples.txt_ text
+file for beginners instructions.
+* *OUTPUT=USB* method has been extended with *BACKUP=NETFS* and
+*NETFS_URL=usb:///dev/<device>* which makes it possible that the complete archive is
+stored on the +/dev/<device>+ and ReaR will make the USB stick (or disk) bootable too.
+* Udev support (except for some really ancient udev versions) which is the base for many
+new and important features, like kernel drivers for network cards and storage adapters are
+now loaded via udev, or deal with network persistent names in udev rules, and firmware
+loading.
+* DHCP client support (IPv4 and IPv6) has been added. Auto detection is possible with new
+variable *USE_DHCLIENT=yes* (define in local.conf), or one can hard-code your special
+DHCL client with the variables DHCLIENT_BIN (for IPv4), and/or DHCLIENT6_BIN (for
+IPv6).
+
+Rear version 1.9.0 contain fixes for the following defects:
+
+* Missing support for Scientific Linux, LinuxMint
+Sourceforge patch ID 2963804 - support for USBFS, but this patch was been rewritten
+afterward to incorporate usb support into the NETFS backup method, instead of having a
+separate USBFS backup method. Now, by using +NETFS_URL=usb:///dev/<device>+ and
+the NETFS backup method we achieve the same result.
+* Sourceforge bug 3153027 : support for RHEV virtio device files
+* Novell bugzilla 581292 : cannot load NIC firmware because of missing udev support.
+Version 1.9 does have udev support, but firmware loading was broken. The rule in 00-
+rear.rules has been changed.
+ 
+=== Version 1.7.26 (November 2010)
+Rear version 1.7.26 fixed RedHat bugzilla defect 657174 : rescue image freezes during the boot
+while executing init. This was due the new upstart mechanism (replaced the sysv init procedure).
+
+=== Version 1.7.25 (June 2010)
+Rear version 1.7.25 fixed RedHat bugzilla defect 600217 : Fedora link missing in restore, pack
+and finalize sub-directories. This broke the proper image building on several Fedora versions.
+
+== System and Software Requirements
+Rear works on GNU/Linux kernel with version 2.6.* and higher. For lower kernel versions Rear
+cannot be used, and for these systems, link:http://mkcdrec.sourceforge.net/[mkcdrec] is still a good
+alternative.
+
+As Rear has been solely written in the bash language we need the bash shell which is standard
+available on all GNU/Linux based systems. The default backup program Rear uses is GNU/tar
+which is also standard available.
+
+Rear is known to work well on x86 and x86_64 based architectures. Rear has also been ported
+to ia64 and ppc architectures, but these are less tested. Use the '+rear validate+' command after
+every successful DR test please and mail us the results.
+
+== Known Problems and Workarounds
+*Issue Description*: System reconfiguration still has some weaknesses.
+
+* this has to be tested before relying on it, there are too many unknowns involved so that we
+cannot guarantee anything in this area. It has been developed mostly as a P2V tool to
+migrate HP servers to VMware Vms
+
+* hard disks need to be at least of the same size and amount as in the original system, ATM
+this is a simple 1:1 mapping of old to new disks, there is no removal of RAID groups or
+merging of smaller disks onto a bigger one or making stuff smaller.
+
+* any use of _/dev/disk/by-path_ or _/dev/disk/by-id_ is untested and will most likely not work.
+In some cases ReaR will print a warning, but we are not able to detect all cases. Typically
+this leads to unbootable systems or bad _/etc/fstab_ files
+
+*Issue Description*: The DHCP client is still a little rough around the edges, especially with complex
+networking scenarios.
+
+*Issue Description*: The rescue image of Rear cannot boot on Fedora Rawhide (F15) due to the
+new init method (systemd). Solved since release 1.11.0.
+
+*Issue Description*: An error is encountered while upgrading rear-1.7.* to rear-1.9.0:
+----
+error: unpacking of archive failed on file /usr/share/rear/finalize/CentOS: cpio: rename failed - Is a directory
+----
+*Workaround*: 
+First remove the older rear version by hand and then install the new version.
+The _local.conf_ is saved (as _local.conf.rpmsave_) when we execute '+rpm -e rear+'
+
+//vim: set syntax=asciidoc
