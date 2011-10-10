@@ -529,4 +529,64 @@ That looks the way we want it. Notice how Rear detected that it had already crea
 Rear makes it possible to define the layout on the target system even before the backup is taken. All one has to do is to move the +/var/lib/rear/layout/disklayout.conf+ file to +/etc/rear/disklayout.conf+ and edit it. This won't be overwritten on future backup runs. During recovery, Rear will use that file instead of the snapshot of the original system.
 
 == Disk layout file syntax ==
-TBW
+This section describes the syntax of all components in the rear layout file at +/var/lib/rear/disklayout.conf+. The syntax used to describe it is straightforward. Normal text has to be present verbatim in the file. Angle brackets "<" and ">" delimit a value that can be edited. Quotes " inside the angle brackets indicate a verbatim option, often used together with a / to indicate multiple options. Parens "(" ")" inside explain the expected unit. No unit suffix should be present, unless specifically indicated. Square brackes "[" and "]" indicate an optional parameter. They can be excluded when hand-crafting a layout file line.
+
+=== Disks ===
+----------------------------------
+disk <name> <size(B)> <partition label> 
+----------------------------------
+
+=== Partitions ===
+----------------------------------
+part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <partition name>
+----------------------------------
+
+=== Software RAID ===
+----------------------------------
+raid /dev/<name> level=<RAID level> raid-devices=<nr of devices> [uuid=<uuid>] [spare-devices=<nr of spares>] [layout=<RAID layout>] [chunk=<chunk size>] devices=<device1,device2,...>
+----------------------------------
+
+=== Physical Volumes ===
+----------------------------------
+lvmdev /dev/<volume group name> <device> <UUID> [<size(K)>]
+----------------------------------
+
+=== Volume Groups ===
+----------------------------------
+lvmgrp /dev/<volume group name> <extent size(B)> [<number of extents>] [<size(K)>]
+----------------------------------
+
+=== Logical Volumes ===
+----------------------------------
+lvmvol /dev/<volume group name> <logical volume name> <number of extents> [<size(K)>]
+----------------------------------
+
+=== LUKS Devices ===
+----------------------------------
+crypt /dev/mapper/<name> <device> cipher=<cipher> mode=<cipher mode> hash=<hash function> [uuid=<uuid>]
+----------------------------------
+
+=== DRBD ===
+----------------------------------
+drbd /dev/drbd<nr> <drbd resource name> <device>
+----------------------------------
+
+=== Filesystems ===
+----------------------------------
+fs <device> <mountpoint> <filesystem type> [uuid=<uuid>] [label=<label>] [blocksize=<block size(B)>] [<reserved_blocks=<nr of reserved blocks>] [max_mounts=<nr>] [check_interval=<number of days>d] [options=<filesystem options>]
+----------------------------------
+
+=== Swap ===
+----------------------------------
+swap <device> [uuid=<uuid>] [label=<label>]
+----------------------------------
+
+=== HP SmartArray Controllers ===
+----------------------------------
+smartarray <slot number>
+----------------------------------
+
+=== HP SmartArray Logical Drives ===
+----------------------------------
+logicaldrive <device> <slot nr>|<array name>|<logical drive name> raid=<raid level> drives=<drive1,drive2> [spares=<spare1,spare2>]  [sectors=<sectors>] [stripesize=<stripe size>]
+----------------------------------
