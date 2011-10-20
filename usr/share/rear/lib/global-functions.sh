@@ -48,6 +48,23 @@ url_path() {
     echo ${temp#*/}
 }
 
+output_path() {
+    local scheme=$1
+    local path=$2
+    case $scheme in
+       (tape)  # no path for tape required
+           path=""
+           ;;
+       (file)  # type file needs a local path (must be mounted by user)
+           path="/$path/${NETFS_PREFIX}"
+           ;;
+       (*)     # nfs, cifs, usb, a.o. need a temporary mount-path 
+           path="${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
+           ;;
+    esac
+    echo "$path"
+}
+
 ### Mount URL $1 at mountpoint $2[, with options $3]
 mount_url() {
     local url=$1

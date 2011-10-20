@@ -3,12 +3,15 @@
 # example: cifs://lucky/temp
 # example: usb:///dev/sdb1
 # example: tape:///dev/nst0
+# example: file:///path
 
 [[ "$BACKUP_URL" || "$BACKUP_MOUNTCMD" ]]
 StopIfError "You must specify either BACKUP_URL or BACKUP_MOUNTCMD and BACKUP_UMOUNTCMD !"
 
 if [[ "$BACKUP_URL" ]] ; then
     local host=$(url_host $BACKUP_URL)
+    local scheme=$(url_scheme $BACKUP_URL)
+    local path=$(url_path $BACKUP_URL)
 
     if [[ -z "$host" ]] ; then
         host="localhost" # otherwise, ping could fail
@@ -23,13 +26,16 @@ if [[ "$BACKUP_URL" ]] ; then
     fi
 
     ### set other variables from BACKUP_URL
-    case $(url_scheme $BACKUP_URL) in
+    case $scheme in
         (usb)
             if [[ -z "$USB_DEVICE" ]] ; then
-                USB_DEVICE="/$(url_path $BACKUP_URL)"
+                USB_DEVICE="/$path"
             fi
             ;;
     esac
+
+    # define the output path according scheme (for tape is opath="")
+    local opath=$(output_path $scheme $path)
 fi
 
 # some backup progs require a different backuparchive name
@@ -45,6 +51,9 @@ esac
 
 # set archive names
 case "$TAPE_DEVICE:$(url_scheme $BACKUP_URL)" in
+	(:file)
+		backuparchive="${opath}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}"
+		;;
 	(:*)
 		backuparchive="${BUILD_DIR}/outputfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}"
 		;;

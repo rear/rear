@@ -14,14 +14,9 @@ local server=$(url_host $OUTPUT_URL)
 local path=$(url_path $OUTPUT_URL)
 
 case "$scheme" in
-    (nfs|cifs|usb|tape)
+    (nfs|cifs|usb|tape|file)
         # The ISO has already been transferred by NETFS.
         return 0
-        ;;
-    (file)
-        LogPrint "Transferring ISO image to $path"
-        cp -a $v "$ISO_DIR/$ISO_PREFIX.iso" $path >&2
-        StopIfError "Problem transferring ISO image to $OUTPUT_URL"
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
         LogPrint "Transferring ISO image to $OUTPUT_URL"

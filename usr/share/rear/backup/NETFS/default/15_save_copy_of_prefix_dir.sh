@@ -1,15 +1,24 @@
 # if NETFS_KEEP_OLD_BACKUP_COPY is not empty then move old NETFS_PREFIX directory to NETFS_PREFIX.old
-if ! test -z "${NETFS_KEEP_OLD_BACKUP_COPY}"; then
-	if ! test -f "${BUILD_DIR}/outputfs/${NETFS_PREFIX}/.lockfile" ; then
-		# lockfile made through workflow backup already (so output keep hands off)
-		if test -d "${BUILD_DIR}/outputfs/${NETFS_PREFIX}" ; then
-			rm -rf $v "${BUILD_DIR}/outputfs/${NETFS_PREFIX}.old" >&2
-			StopIfError "Could not remove '${BUILD_DIR}/outputfs/${NETFS_PREFIX}.old'"
-			mv -f $v "${BUILD_DIR}/outputfs/${NETFS_PREFIX}" "${BUILD_DIR}/outputfs/${NETFS_PREFIX}.old" >&2
-			StopIfError "Could not move '${BUILD_DIR}/outputfs/${NETFS_PREFIX}'"
-		fi
-	else
-		Log "Lockfile '${BUILD_DIR}/outputfs/${NETFS_PREFIX}/.lockfile' found. Not keeping old backup data."
+
+[ -z "${NETFS_KEEP_OLD_BACKUP_COPY}" ] && return
+
+# do not do this for tapes and special attention for file:///path
+local scheme=$(url_scheme $OUTPUT_URL)
+local path=$(url_path $OUTPUT_URL)
+local opath=$(output_path $scheme $path)
+
+# if $opath is empty return silently (e.g. scheme tape)
+[ -z "$opath" ] && return 0
+
+if ! test -f "${opath}/.lockfile" ; then
+	# lockfile made through workflow backup already (so output keep hands off)
+	if test -d "${opath}" ; then
+		rm -rf $v "${opath}.old" >&2
+		StopIfError "Could not remove '${opath}.old'"
+		mv -f $v "${opath}" "${opath}.old" >&2
+		StopIfError "Could not move '${opath}'"
 	fi
+else
+	Log "Lockfile '${opath}/.lockfile' found. Not keeping old backup data."
 fi
 # the ${BUILD_DIR}/outputfs/${NETFS_PREFIX} will be created by output/NETFS/default/20_make_prefix_dir.sh

@@ -27,11 +27,14 @@
 		;;
 
 	(*)
+		local scheme=$(url_scheme $OUTPUT_URL)
+		local path=$(url_path $OUTPUT_URL)
+		local opath=$(output_path $scheme $path)
 		# probably using the BACKUP=NETFS workflow instead
-		if [ -d "${BUILD_DIR}/outputfs/${NETFS_PREFIX}" ]; then
-			if [ ! -f "${BUILD_DIR}/outputfs/${NETFS_PREFIX}/selinux.autorelabel" ]; then
-				> "${BUILD_DIR}/outputfs/${NETFS_PREFIX}/selinux.autorelabel"
-				StopIfError "Failed to create selinux.autorelabel on ${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
+		if [ -d "${opath}" ]; then
+			if [ ! -f "${opath}/selinux.autorelabel" ]; then
+				> "${opath}/selinux.autorelabel"
+				StopIfError "Failed to create selinux.autorelabel on ${opath}"
 			fi
 		fi
 		;;

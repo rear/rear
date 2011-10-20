@@ -10,7 +10,10 @@ while read -r ; do
 	Log " $REPLY"
 done < $TMP_DIR/backup-exclude.txt
 
-mkdir -p $v "${BUILD_DIR}/outputfs/${NETFS_PREFIX}" >&2
+local scheme=$(url_scheme $BACKUP_URL)
+local path=$(url_path $BACKUP_URL)
+local opath=$(output_path $scheme $path)
+mkdir -p $v "${opath}" >&2
 
 LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 ProgressStart "Preparing archive operation"
@@ -126,4 +129,4 @@ elif [ "$size" ]; then
 fi
 
 ### Copy progress log to backup media
-cp $v "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${BUILD_DIR}/outputfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}.log" >&2
+cp $v "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${opath}/${BACKUP_PROG_ARCHIVE}.log" >&2

@@ -1,7 +1,10 @@
 # Start SELinux if it was stopped - check presence of /tmp/selinux.mode
 [ -f $TMP_DIR/selinux.mode ] && {
-	cat $TMP_DIR/selinux.mode > $SELINUX_ENFORCE
-	Log "Restored original SELinux mode"
-	touch "${BUILD_DIR}/outputfs/${NETFS_PREFIX}/selinux.autorelabel"
-	Log "Trigger autorelabel (SELinux) file"
-	}
+    local scheme=$(url_scheme $OUTPUT_URL)
+    local path=$(url_path $OUTPUT_URL)
+    local opath=$(output_path $scheme $path)
+    cat $TMP_DIR/selinux.mode > $SELINUX_ENFORCE
+    Log "Restored original SELinux mode"
+    touch "${opath}/selinux.autorelabel"
+    Log "Trigger autorelabel (SELinux) file"
+}
