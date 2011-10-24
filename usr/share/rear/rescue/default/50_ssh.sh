@@ -42,11 +42,6 @@ if has_binary sshd; then
 		chown $v root.root "$ROOTFS_DIR$homedir" >&2
 	fi
 
-	# fedora 16 and higher has a special group for the keys
-	if grep -q ssh_keys /etc/group ; then
-		CLONE_GROUPS=( "${CLONE_GROUPS[@]}" ssh_keys )
-	fi
-
 	echo "ssh:23:respawn:/bin/sshd -D" >>$ROOTFS_DIR/etc/inittab
 
 	# print a warning if there is no authorized_keys file for root
