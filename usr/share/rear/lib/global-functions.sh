@@ -108,7 +108,7 @@ umount_url() {
     local mountpoint=$2
 
     case $(url_scheme $url) in
-        (tape|file|rsyncfish|ftp|ftps|hftp|http|https|sftp)
+        (tape|file|rsync|fish|ftp|ftps|hftp|http|https|sftp)
             ### Don't need to umount anything for these
             return 0
             ;;
