@@ -54,3 +54,10 @@ if [ -n "$AUTOEXCLUDE_DISKS" ] ; then
     done < <(grep ^disk $LAYOUT_FILE)
 
 fi
+
+### Automatically exclude autofs devices
+if [[ -n "$AUTOEXCLUDE_AUTOFS" ]] ; then
+    while read name mountpoint junk ; do
+        BACKUP_PROG_EXCLUDE=( "${BACKUP_PROG_EXCLUDE[@]}" "$mountpoint" )
+    done < <(grep " autofs " /proc/mounts)
+fi
