@@ -13,5 +13,8 @@ WORKFLOW_mkbackuponly () {
 
 	SourceStage "prep"
 
+	DISKLAYOUT_FILE=$TMP_DIR/backuplayout.conf
+	SourceStage "layout/save"
+
 	SourceStage "backup"
 }
