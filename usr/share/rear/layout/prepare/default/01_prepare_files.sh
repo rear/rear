@@ -5,6 +5,8 @@ LAYOUT_DEPS="$VAR_DIR/layout/diskdeps.conf"
 LAYOUT_TODO="$VAR_DIR/layout/disktodo.conf"
 LAYOUT_CODE="$VAR_DIR/layout/diskrestore.sh"
 
+FS_UUID_MAP="$VAR_DIR/layout/fs_uuid_mapping"
+
 # Touchfiles for layout recreation.
 LAYOUT_TOUCHDIR="$TMP_DIR/touch"
 if [ -e $LAYOUT_TOUCHDIR ] ; then
@@ -25,4 +27,8 @@ fi
 if [ ! -e $LAYOUT_FILE ] ; then
     Log "Disklayout file does not exist, creating empty file."
     : > $LAYOUT_FILE
+fi
+
+if [ -e $FS_UUID_MAP ] ; then
+    rm -f $FS_UUID_MAP  # map sure old data is deleted
 fi

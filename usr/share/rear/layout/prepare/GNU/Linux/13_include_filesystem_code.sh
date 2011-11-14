@@ -79,6 +79,25 @@ EOF
                 echo "reiserfstune --uuid $uuid $device >&2" >> $LAYOUT_CODE
             fi
             ;;
+        btrfs)
+cat >> $LAYOUT_CODE <<EOF
+LogPrint "Creating $fstype-filesystem $mp on $device"
+mkfs -t $fstype $device
+EOF
+            if [ -n "$label" ] ; then
+                echo "btrfs filesystem label $device $label >&2" >> $LAYOUT_CODE
+            fi
+            if [ -n "$uuid" ] ; then
+                # Problem with btrfs is that uuid cannot be set during mkfs! So, we must map it and
+                # change later the /etc/fstab, /boot/grub/menu.lst, etc
+                cat >> $LAYOUT_CODE <<EOF
+                new_uuid=\$(btrfs filesystem show $device | grep -i uuid | cut -d: -f3 | sed -e 's/^ //')
+                if [ "$uuid" != "\$new_uuid" ] ; then
+                    echo "$uuid \$new_uuid $device" >> $FS_UUID_MAP
+                fi
+EOF
+            fi
+            ;;
         *)
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating filesystem ($fstype) $mp on $device"
