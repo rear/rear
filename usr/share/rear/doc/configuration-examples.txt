@@ -1,6 +1,8 @@
 = Configuration examples
 :data-uri:
 :doctype: article
+:icons:
+:iconsdir: /usr/share/asciidoc/images/icons
 :lang: en
 :quirks:
 
