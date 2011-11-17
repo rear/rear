@@ -56,6 +56,11 @@ A list of items that wait for someone to volunteer to fix :)
   - since no USB support has been loaded, USB keyboards are not working to intervene
   - cold-booting this hardware always caused udev to continue (!)
 
+- During boot, a lot of different output messes up the screen
+  - to a point that sometimes the prompt is not visible
+
+- For remapping, the proposed disks include loop and ram devices
+
 
 == Documentation
 * create official documentation for users and admins
