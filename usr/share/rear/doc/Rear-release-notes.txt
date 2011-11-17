@@ -28,7 +28,7 @@ The most recent release of rear is supported on GNU/Linux based systems with a k
 
 *	Hot maintenance capability. A rescue image can be made online while the system is running.
 *	Command line interface. Rear doesn't require a graphical interface to run, nor in creation mode, nor in rescue mode (console is enough).
-*	Support included for most common file systems, such as ext2, ext3, ext4 and reiserfs, jfs, xfs, btrfs [NEW] are also on our list, but are less tested. [Please give us feedback]
+*	Support included for most common file systems, such as ext2, ext3, ext4 and reiserfs, jfs, xfs, btrfs [*NEW*] are also on our list, but are less tested. [Please give us feedback]
 *	Hardware mirroring and RAID managers (like cciss) are known to work.
 *	LVM root volumes are supported.
 *	Integrates with external backup solutions such as:
@@ -56,8 +56,8 @@ The most recent release of rear is supported on GNU/Linux based systems with a k
 
 *	Support new backup software: Bacula, both locally attached tapes (with bextract) and network-based backups. Also, in combination with OBDR tapes.
 *	Create OBDR tapes with method *mkbackup* and put the backup onto the tape to have a single-tape bootable recovery solution
-*	Label the OBDR tape with the method *labeltape* to avoid accidental overwrites with OBDR
-*	*[NEW]* Create bootable disk (eSATA, USB ...) media with the backup included:
+*	Label the OBDR tape with the method *format* avoid accidental overwrites with OBDR
+*	[*NEW*] Create bootable disk (eSATA, USB ...) media with the backup included:
 ----
 BACKUP_URL=usb:///dev/<device>
 ----
@@ -65,8 +65,8 @@ Together with *OUTPUT=USB* we have now a complete solution on hard disks (bootin
 
 *	DHCP client support (IPv4 and IPv6) has been added. Auto detection is possible with new variable *USE_DHCLIENT=yes* (define in _local.conf_), or one can hard-code your special DHCP client with the variables *DHCLIENT_BIN* (for IPv4), and/or *DHCLIENT6_BIN* (for IPv6)
 *	Save layout and compare layouts for easy automation of making rear snapshots
-*	*[NEW]* The possibility to use the new *layout* workflow instead of the current standard *dr* workflow. The *dr* workflow kept all important system information into a directory structure where the new *layout* workflow use files to keep the information centralized
-*	*[NEW]* External USB booting now uses extlinux instead of syslinux, and therefore, the USB disk must first be formatted with an exy2, ext3, ext4 or bttfs based file system
+*	[*NEW*] The possibility to use the new *layout* workflow instead of the current standard *dr* workflow. The *dr* workflow kept all important system information into a directory structure where the new *layout* workflow use files to keep the information centralized
+*	[*NEW*] External USB booting now uses extlinux instead of syslinux, and therefore, the USB disk must first be formatted with an exy2, ext3, ext4 or bttfs based file system
 
 NOTE: Features marked experimental are prone to change with future releases.
 
@@ -76,7 +76,7 @@ The first release of Rear, version 1.0, was posted to the web in July 2006. For 
 === Version 1.12.0 (November 2011)
 
 *	Multiple copies of Rear archives (of the same or different systems) can be kept on an USB disk (with *OUTPUT=USB*).
-*	*[NEW!]* *BACKUP=RSYNC* workflow using +rsync+ executable. Both +ssh+ and +rsync+ methods are supported. E.g.
+*	[*NEW!*] *BACKUP=RSYNC* workflow using +rsync+ executable. Both +ssh+ and +rsync+ methods are supported. E.g.
 ----
 BACKUP=RSYNC
 OUTPUT=ISO
@@ -100,7 +100,9 @@ rear format [/dev/st0|/dev/sdx]
 *	Replaced NETFS_URL and ISO_URL by BACKUP_URL and OUTPUT_URL. However, old references will still be recognized and automatically renamed.
 *	Fedora 16 is supported including GRUB 2, and systemd as init replacement.
 *	Added the *BACKUP_URL=file:///PATH* with *BACKUP=NETFS* method (as described in _configuration-examples.txt_)
-*	*[NEW! EXPERIMENTAL!]* Btrfs file system backup and restore works, but some files seem to become corrupt. Advise is not to trust it (yet). At recreation of the btrfs file system the UUID number is automatically renamed in all configuration files (such as _/etc/fstab_ or _/boot/grub/menu.lst_).
+*	Improved multipath functionality
+*	Optional automatic autofs exclusion
+*	[*NEW! EXPERIMENTAL!*] Basic btrfs file system backup and restore works. Advise is not to trust it (yet). At recreation of the btrfs file system the UUID number is automatically renamed in all configuration files (such as _/etc/fstab_ or _/boot/grub/menu.lst_).
 
 === Version 1.11.0 (May 2011)
 
@@ -237,32 +239,34 @@ this leads to unbootable systems or bad _/etc/fstab_ files
 *Issue Description*: The DHCP client is still a little rough around the edges, especially with complex
 networking scenarios.
 
-*Issue Description*: The rescue image of Rear cannot boot on Fedora Rawhide (F15) due to the
-new init method (systemd). Solved since release 1.11.0.
-
 *Issue Description*: An error is encountered while upgrading rear-1.7.* to rear-1.9.0:
 ----
 error: unpacking of archive failed on file /usr/share/rear/finalize/CentOS: cpio: rename failed - Is a directory
 ----
-*Workaround*: 
+.Workaround: 
+****
 First remove the older rear version by hand and then install the new version.
 The _local.conf_ is saved (as _local.conf.rpmsave_) when we execute '+rpm -e rear+'
+****
 
 *Issue Description*: If SELinux is not disabled during backup (variable *BACKUP_SELINUX_DISABLE=* in _/etc/rear/local.conf_) then we might see errors in the +rear-$(hostname).log+ file such as:
 ----
 tar: var/cache/yum/i386/15/updates/packages: Cannot setfilecon: No such file or directory
 ----
-*Workaround*: 
+.Workaround: 
+****
 Make sure the *BACKUP_URL* destination understands extended attributes (CIFS is out of the question and NFS is problematic). When using local disks (or external USB devices) make sure the proper mount options are given in the *BACKUP_OPTIONS* variable, e.g.:
 ----
 BACKUP_OPTIONS="rw,relatime,seclabel,user_xattr,acl,barrier=1,data=ordered"
 ----
+****
 TIP: *BACKUP_SELINUX_DISABLE=1* variable has been introduced in the _/usr/share/rear/conf/default.conf_ file to disable SELinux while the backup is running (default setting).
 
 *Issue Description*: Is incremental backup possible? With our default settings (*BACKUP=NETFS* and *BACKUP_PROG=tar*) we do not support incremental backups.
 
-*Workaround*: 
+.Workaround:
+****
 However, when we change *BACKUP_PROG=rsync* we can use +rear mkbackuponly+ option which is in fact an incremental backup using the +rsync+ program. The same can be accomplished by using *BACKUP=RSYNC* and the proper *BACKUP_URL=rsync://hostname/PATH*.
-
+****
 
 //vim: set syntax=asciidoc
