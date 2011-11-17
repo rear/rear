@@ -7,5 +7,12 @@ if [[ -z "$BACKUP_URL" ]]; then
     BACKUP_URL="usb://$USB_DEVICE"
 fi
 
+if [[ -z "$OUTPUT_URL" ]]; then
+    [[ "$USB_DEVICE" ]]
+    StopIfError "You must specify either OUTPUT_URL or USB_DEVICE !"
+
+    OUTPUT_URL="usb://$USB_DEVICE"
+fi
+
 USB_PREFIX="rear/$(uname -n)/$(date +%Y%m%d.%H%M)"
 NETFS_PREFIX="$USB_PREFIX"
