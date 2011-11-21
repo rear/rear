@@ -1,0 +1,326 @@
+= Rear: Disaster Recovery and System Migration solution
+Dag Wieërs <dag@wieers.com>
+
+_This presentation is written in AsciiDoc and can be converted to
+a LibreOffice/OpenOffice presentation using
+http://github.com/dagwieers/asciidoc-odf[asciidoc-odf]._
+
+
+////
+== Who is Dag Wieërs ?
+* Linux and Open Source consultant
+  - Worked at IBM Belgium, now self-employed to provide advice, design, automation, maintenance
+
+* Involved in various Open Source communities
+  - incl. RPMforge, ELRepo, CentOS, syslinux, AsciiDoc, LibreOffice, docbook2odf, Rear
+
+* Author of various tools
+  - incl. dstat, unoconv, mrepo, proxytunnel, wiipresent, dconf, asciidoc-odf
+////
+
+
+== What is Relax and Recover ?
+_Tool that implements a DR workflow for Linux_
+
+Which basically means ?
+
+  - Easy to deploy (set up and forget)
+  - Makes recovery as easy as possible
+  - Complete bare-metal disaster recovery
+  - Integration for various Linux technologies
+  - Integration with various back-up solutions
+  - Modular framework written in Bash
+  - Easy to extend to own needs
+
+
+== How does Rear work ?
+Rear builds a rescue image from the existing installation
+
+  - Restored system is an accurate copy
+  - Restored system supports the hardware
+  - Exotic setups (kernel, hardware) guaranteed to work
+  - What worked before keeps on working
+  - Recovery is fully automated
+
+Backup software is integrated into rescue image
+
+  - With a working configuration
+
+
+== Why is a backup not sufficient ?
+Backup only covers storing data safely/securely
+
+  - Often only the data is available
+  - DR is a manual and time-consuming process
+
+So manual disaster recovery risks:
+
+  - unknown system storage and network configuration
+  - incompatibilities between firmware/software/hardware
+    * using newer tools with older data (or vice versa)
+    * hardware is not supported
+  - making manual mistakes (again and again)
+  - working against the clock amidst chaos
+  - frustration
+
+
+== What does Rear bring to the table ?
+But the Rear rescue image takes care of the complete
+recovery process until the system runs:
+
+  - enabling the network and remote access
+  - using tools to recreate an accurate/working copy
+  - recreating hardware and software RAID
+  - partitioning and creating file systems
+  - starting the backup restore process
+  - restoring the bootloader
+
+
+== Rear functionality
+* Supported storage technologies
+  - HP SmartArray, SW RAID, DRBD, LVM, multipath
+  - ext2/ext3/ext4, xfs, jfs, vfat, btrfs, LUKS
+
+* Boot media or remote storage
+  - OBDR tape, ISO, USB, eSATA, network booting
+  - NFS, CIFS, rsync, HTTP, FTP, SFTP, ...
+
+* Back-up backends
+  - IBM TSM, HP DataProtector, Symantec NetBackup,
+    Bacula, tar, rsync
+
+
+== How is Rear used ?
+* Creating Rear boot media: +rear mkrescue+
+  - Copies kernel, modules, minimal system
+  - Saves storage layout, network configuration
+  - Write boot media
+
+* Restore system
+  - Boot Rear media
+  - Optionally, modify storage/network config
+  - Run: +rear recover+
+  - Rear parses layout then creates diskrestore script
+  - Rear initiates restore or prompts for restore
+
+
+== Nifty features to help relax
+* Local GRUB integration (password protected)
+
+* Serial console support (think: disaster)
+
+* History-stuffing during recovery
+
+* Network and SSH key integration
+
+* Layout code guides you through recovery
+  - Menu's and command-line in one session
+  - Provides original storage info
+
+* Beep, UID led and USB suspend integration
+
+* Syslinux management
+
+* Log-file on recovery media
+
+
+== Use case: Belgian Federal Police /1
+* Requirements:
+  - About 200 sites with each a set of Linux servers
+  - Each server comes with a tape-drive
+  - Single bootable tape to:
+    ** Restore complete system
+    ** Restore from back-up
+  - Support for various technologies
+    ** HP SmartArray, SW RAID, DRBD, LVM
+    ** OBDR, Bacula tape support
+    ** RHEL 4, RHEL5 and RHEL6 support
+  - End-user documentation in 3 languages
+
+
+== Use case: Belgian Federal Police /2
+* Solution:
+  - All requirements implement but...
+  - New systems didn't support bootable tape (OBDR)
+  - USB is much more flexible than tape
+    ** Can store multiple rescue images
+    ** Can store rescue images of multiple servers
+    ** Easier workflow (udev): insert, wait, pull (2 min max)
+    ** Cheaper
+    ** Implementation is more reliable
+  - Bonus implementation of flexible layout
+  - Support migration scenarios
+
+
+== Use case: Belgian Federal Police /3
+* Rear config for USB rescue media:
+
+[code,bash]
+----
+BACKUP=BACULA
+OUTPUT=USB
+USB_DEVICE=/dev/disk/by-label/REAR-000
+----
+
+* Rear config for USB backup media:
+
+[code,bash]
+----
+BACKUP=NETFS
+OUTPUT=USB
+USB_DEVICE=/dev/disk/by-label/REAR-000
+ONLY_INCLUDE_VG=( vg00 )
+EXCLUDE_MOUNTPOINTS=( /data )
+----
+
+
+== Use case: Belgian Federal Police /4
+* Rear config for OBDR rescue tapes:
+
+[code,bash]
+----
+BACKUP=BACULA
+OUTPUT=OBDR
+BEXTRACT_DEVICE=Ultrium-1
+BEXTRACT_VOLUME=VOL-*
+----
+
+* Rear config for OBDR backup tapes:
+
+[code,bash]
+----
+BACKUP=NETFS
+OUTPUT=OBDR
+TAPE_DEVICE=/dev/nst0
+----
+
+== Use case: Centralized images /1
+* Requirements:
+  - Remote rescue images
+  - Removable media for off-site storage
+  - Easy restore of physical hosts and guests
+
+* Solution:
+  - Cron creates image when Rear detects change
+  - Images pushed through HTTP to PXE server/host
+  - Stored on USB disks, rotated every week
+
+
+== Use case: Centralized images /2
+* Label USB disk(s) and mount
+
+* Configure Apache to allow HTTP PUT to USB disk
+
+* Rear config in _/etc/rear/local.conf_:
+
+[code,bash]
+----
+BACKUP=BACULA
+OUTPUT=ISO
+ISO_URL=http://server:port/path/
+----
+
+* Rear cron-job at /etc/cron.d/rear:
+----
+30 0 1 * * root /usr/sbin/rear mkrescue
+30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue
+----
+
+== Rear command line /1
+
+----
+[root@moria rear]# rear help
+Usage: rear [-dDsSvV] [-r KERNEL] COMMAND [-- ARGS...]
+-snip-
+List of commands:
+ checklayout     check if the disk layout has changed
+ dump            dump configuration and system information
+ format          format and label media for use with rear
+ mkbackup        create rescue media and backup system
+ mkbackuponly    backup system without creating rescue media
+ mkrescue        create rescue media only
+ recover         recover the system; valid during rescue
+ validate        submit validation information
+
+Use 'rear -v help' for more advanced commands.
+----
+
+== Rear command line /2
+
+----
+[root@moria rear]# rear help
+Usage: rear [-dDsSvV] [-r KERNEL] COMMAND [-- ARGS...]
+
+Available options:
+ -d           debug mode; log debug messages
+ -D           debugscript mode; log every function call
+ -r KERNEL    kernel version to use
+ -s           simulation mode; show included scripts
+ -S           step-by-step mode; ack each script one-by-one
+ -v           verbose mode; show more output
+ -V           version information
+
+-snip-
+----
+
+== Hacking on Rear
+* It is Bash !
+
+* Join the mailinglist
+
+* Understand modular framework and workflows
+  - Use: +rear -s <workflow>+
+
+* Logging
+  - Logfile in: _/tmp/rear-hostname.log_
+
+* Debugging
+  - Verbose: +rear -v+
+  - Debug: +rear -d+
+  - Tracing: +rear -D+
+
+
+== Project future
+* Functionality
+  - Improved rsync support (like rsnapshot or rbme)
+  - More back-up backend integration
+  - PXE integration
+
+* Development
+  - Re-organize code base
+  - Release management needs a process
+  - Website and documentation not up-to-date
+  - Change of development tools ?
+
+
+== Development team
+Consists of:
+
+  - Schlomo Schapiro (original author)
+  - Gratien D'haese (original author)
+  - Jeroen Hoekx (new contributor)
+  - Dag Wieërs (new contributor)
+
+and various other contributors
+
+Development at Sourceforge
+
+  - http://rear.sourceforge.net/
+  - rear-users@lists.sourceforge.net
+
+
+== Thank you for listening
+Any questions, ideas, pull-requests ?
+
+
+== Live USB demo
+* Demo USB/udev integration (check udev config !)
+  - Prepare USB stick: rear format /dev/sdb
+  - Re-insert USB stick and wait until light goes out
+
+* Demo restore procedure (disable udev rule !)
+  - Boot from KVM virtual machine
+  - Re-insert USB stick and start virt-manager
+  - Create VM with 4GB disk and boot VM
+  - Show bash history and perform: +rear recover+
+  - Show menu system and modify sizes
