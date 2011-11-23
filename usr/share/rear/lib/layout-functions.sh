@@ -192,66 +192,105 @@ add_component() {
 
 # Mark device $1 as done.
 mark_as_done() {
-    Log "Marking $1 as done."
+    Debug "Marking $1 as done."
     sed -i "s;todo\ $1\ ;done\ $1\ ;" $LAYOUT_TODO
 }
 
 # Mark all devices that depend on $1 as done.
 mark_tree_as_done() {
     for component in $(get_child_components "$1") ; do
-        Log "Marking $component as done (dependent on $1)"
+        Debug "Marking $component as done (dependent on $1)"
         mark_as_done "$component"
     done
 }
 
-# Return all the child components of $1 [filtered by type $2]
+# Return all the (grand-)child components of $1 [filtered by type $2]
 get_child_components() {
-    local devlist testdev dev on type
-    devlist="$1 "
-    while [ -n "$devlist" ] ; do
-        testdev=$(echo "$devlist" | cut -d " " -f "1")
-        while read dev on junk ; do
-            if [ "$on" = "$testdev" ] ; then
-                devlist="$devlist$dev "
-                type=$(get_component_type "$dev")
-                if [ "$type" = "$2" ] || [ -z "$2" ] ; then
-                    echo "$dev"
+    declare -a devlist children
+    declare current child parent
+
+    devlist=( "$1" )
+    while (( ${#devlist[@]} )) ; do
+        current=${devlist[0]}
+
+        ### Find all direct child elements of the current component...
+        while read child parent junk ; do
+            if [[ "$parent" = "$current" ]] ; then
+                ### ...and add them to the list
+                if IsInArray "$child" "${children[@]}" ; then
+                    continue
                 fi
+                devlist+=( "$child" )
+                children+=( "$child" )
             fi
-        done < <(cat $LAYOUT_DEPS)
-        devlist=$(echo "$devlist" | sed -r "s;^$testdev ;;")
+        done < $LAYOUT_DEPS
+
+        ### remove the current element from the array and re-index it
+        unset devlist[0]
+        devlist=( "${devlist[@]}" )
+    done
+
+    ### Filter for the wanted type
+    declare component type
+    for component in "${children[@]}" ; do
+        if [[ "$2" ]] ; then
+            type=$(get_component_type "$component")
+            if [[ "$type" != "$2" ]] ; then
+                continue
+            fi
+        fi
+        echo "$component"
+    done
+}
+
+# Return all ancestors of component $1 [ of type $2 ]
+get_parent_components() {
+    declare -a ancestors devlist
+    declare current child parent
+
+    devlist=( "$1" )
+    while (( ${#devlist[@]} )) ; do
+        current=${devlist[0]}
+
+        ### Find all direct parent elements of the current component...
+        while read child parent junk ; do
+            if [[ "$child" = "$current" ]] ; then
+                ### ...test if we visited them already...
+                if IsInArray "$parent" "${ancestors[@]}" ; then
+                    continue
+                fi
+                ### ...and add them to the list
+                devlist+=( "$parent" )
+                ancestors+=( "$parent" )
+            fi
+        done < $LAYOUT_DEPS
+
+        ### remove the current element from the array and re-index it
+        unset devlist[0]
+        devlist=( "${devlist[@]}" )
+    done
+
+    ### Filter the ancestors for the correct type.
+    declare component type
+    for component in "${ancestors[@]}" ; do
+        if [[ "$2" ]] ; then
+            type=$(get_component_type "$component")
+            if [[ "$type" != "$2" ]] ; then
+                continue
+            fi
+        fi
+        echo "$component"
     done
 }
 
 # find_devices <other>
 # Find the disk device(s) component $1 resides on.
 find_disk() {
-    echo "$(get_parent_components $1 "disk")" | sort | uniq
+    get_parent_components $1 "disk"
 }
 
 find_partition() {
-    echo "$(get_parent_components $1 "part")" | sort | uniq
-}
-
-# Find all parent components [of type $2] component $1 resides on.
-# Can/will contain multiples.
-get_parent_components() {
-    local component type
-    local components=$(get_parent_component $1)
-
-    for component in $components ; do
-        type=$(get_component_type $component)
-        if [ "$type" = "$2" ] || [ -z "$2" ]; then
-            echo "$component"
-        fi
-
-        get_parent_components $component $2
-    done
-}
-
-# Read the parent component(s) from the layout deps list
-get_parent_component() {
-    grep "^$1 " $LAYOUT_DEPS | cut -d " " -f 2 | sort | uniq
+    get_parent_components $1 "part"
 }
 
 # Get the type of a layout component
