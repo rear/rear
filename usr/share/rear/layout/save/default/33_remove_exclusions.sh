@@ -19,10 +19,8 @@ remove_second_component() {
 while read done name type junk ; do
     case $type in
         part)
-            name=$( echo "$name" | sed -r 's/(.*)[0-9]$/\1/')
-            if [ "${name/cciss/}" != "$name" ] ; then
-                name=${name%p}
-            fi
+            ### find the immediate parent
+            name=$(grep "^$name " $LAYOUT_DEPS | cut -d " " -f 2)
             remove_component $type $name
             ;;
         lvmdev)

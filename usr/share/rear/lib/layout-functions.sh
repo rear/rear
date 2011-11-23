@@ -365,17 +365,26 @@ get_sysfs_name() {
     local name=${1#/dev/}
     name=${name#/sys/block/}
 
-    if [ -e /sys/block/${name//\//!} ] ; then
+    if [[ -e /sys/block/${name//\//!} ]] ; then
         echo "${name//\//!}"
         return 0
     fi
 
+    ### Follow symlinks
+    if [[ -h /dev/$name ]] ; then
+        local target=$(readlink -f /dev/$name)
+        if [[ -e /sys/block/${target#/dev/} ]] ; then
+            echo "${target#/dev/}"
+            return 0
+        fi
+    fi
+
     # accomodate for mapper/test -> dm-? mapping
     local dev_number=$(dmsetup info -c --noheadings -o major,minor ${name##*/} 2>&8 )
-    if [ -n "$dev_number" ] ; then
+    if [[ "$dev_number" ]] ; then
         local dev_name sysfs_device
         for sysfs_device in /sys/block/*/dev ; do
-            if [ "$dev_number" = "$( < $sysfs_device)" ] ; then
+            if [[ "$dev_number" = "$( < $sysfs_device)" ]] ; then
                 dev_name=${sysfs_device#/sys/block/}
                 echo "${dev_name%/*}"
                 return 0

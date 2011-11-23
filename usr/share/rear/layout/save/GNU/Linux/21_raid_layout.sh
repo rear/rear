@@ -8,6 +8,12 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
                 continue
             fi
 
+            ### Get the actual device node
+            if [[ -h $device ]] ; then
+                name=${device##*/}
+                device=$(readlink -f $device)
+            fi
+
             # We use the detailed mdadm output quite alot
             mdadm --misc --detail $device > $TMP_DIR/mdraid
 
@@ -72,7 +78,15 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
                 chunksize=""
             fi
 
-            echo "raid ${device}${level}${ndevices}${uuid}${sparedevices}${layout}${chunksize}${devices}"
+            if [[ "$name" ]] ; then
+                name=" name=$name"
+            else
+                name=""
+            fi
+
+            echo "raid ${device}${level}${ndevices}${uuid}${name}${sparedevices}${layout}${chunksize}${devices}"
+
+            extract_partitions "$device"
         done < <(mdadm --detail --scan --config=partitions)
     ) >> $DISKLAYOUT_FILE
 fi
