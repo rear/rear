@@ -226,7 +226,7 @@ get_child_components() {
         done < $LAYOUT_DEPS
 
         ### remove the current element from the array and re-index it
-        unset devlist[0]
+        unset "devlist[0]"
         devlist=( "${devlist[@]}" )
     done
 
@@ -266,7 +266,7 @@ get_parent_components() {
         done < $LAYOUT_DEPS
 
         ### remove the current element from the array and re-index it
-        unset devlist[0]
+        unset "devlist[0]"
         devlist=( "${devlist[@]}" )
     done
 
