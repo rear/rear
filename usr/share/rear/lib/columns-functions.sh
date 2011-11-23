@@ -32,14 +32,14 @@ init_columns() {
     local wasspace=""
     local len=${#line}
     local i=0
-    while [ $i -lt $len ] ;
+    while (( $i < $len )) ;
     do
         local char="${line:$i:1}"
-        if [ -n "$wasspace" ] && [ "$char" = " " ] ;then
-            if [ -n "$word" ] ; then
+        if [[ "$wasspace" ]] && [[ "$char" = " " ]] ;then
+            if [[ "$word" ]] ; then
                 # word complete, write to list
                 let start=$i-${#word}
-                word=$(echo "$word" | tr '[:upper:]' '[:lower:]')
+                word=${word,,}
 
                 columns="$columns${word%% }=$start;"
                 word=""
@@ -48,7 +48,7 @@ init_columns() {
             word="${word}${char}"
         fi
 
-        if [ "$char" = " " ] ; then
+        if [[ "$char" = " " ]] ; then
             wasspace="yes"
         else
             wasspace=""
@@ -58,7 +58,7 @@ init_columns() {
     done
     # last word
     let start=$i-${#word}
-    word=$(echo "$word" | tr '[:upper:]' '[:lower:]')
+    word=${word,,}
     columns="$columns${word%% }=$start;"
 
     #echo "c:$columns"
@@ -69,7 +69,7 @@ get_column_size() {
     local start=$(get_column_start "$1")
 
     local nextheader=$(get_next_header "$1")
-    if [ -z "$nextheader" ] ; then
+    if [[ -z "$nextheader" ]] ; then
         echo "255"
         return 0
     fi
@@ -86,7 +86,7 @@ get_column_start() {
         local header=${pair%=*}
         local hstart=${pair#*=}
 
-        if [ "$header" = "$1" ] ; then
+        if [[ "$header" = "$1" ]] ; then
             echo "$hstart"
             restore_separator
             return 0
@@ -105,7 +105,7 @@ get_next_header() {
         local header=${pair%=*}
         local hstart=${pair#*=}
 
-        if [ "$previous" = "$1" ] ; then
+        if [[ "$previous" = "$1" ]] ; then
             echo "$header"
             restore_separator
             return 0
