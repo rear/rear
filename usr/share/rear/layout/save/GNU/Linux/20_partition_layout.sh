@@ -121,14 +121,23 @@ extract_partitions() {
     fi
 
     ### find the flags given by parted.
-    declare flags
+    declare flags flaglist
     if [[ "$FEATURE_PARTED_MACHINEREADABLE" ]] ; then
         while read partition_nr size start junk ; do
-            flags=$(grep "^$partition_nr:" $TMP_DIR/parted | cut -d ":" -f "7" | tr -d " " | tr -d ";")
+            flaglist=$(grep "^$partition_nr:" $TMP_DIR/parted | cut -d ":" -f "7" | tr -d "," | tr -d ";")
+
+            ### only report flags parted can actually recreate
+            flags=""
+            for flag in $flaglist ; do
+                if [[ "$flag" = @(boot|root|swap|hidden|raid|lvm|lba|palo|legacy_boot|bios_grub) ]] ; then
+                    flags+="$flag,"
+                fi
+            done
+
             if [[ -z "$flags" ]] ; then
                 flags="none"
             fi
-            sed -i /^$partition_nr\ /s/$/\ $flags/ $TMP_DIR/partitions
+            sed -i /^$partition_nr\ /s/$/\ ${flags%,}/ $TMP_DIR/partitions
         done < $TMP_DIR/partitions-data
     else
         declare line line_length number numberfield
@@ -147,13 +156,21 @@ extract_partitions() {
             fi
 
             number=$(get_columns "$line" "$numberfield" | tr -d " " | tr -d ";")
-            flags=$(get_columns "$line" "flags" | tr -d " " | tr -d ";")
+            flaglist=$(get_columns "$line" "flags" | tr -d "," | tr -d ";")
+
+            ### only report flags parted can actually recreate
+            flags=""
+            for flag in $flaglist ; do
+                if [[ "$flag" = @(boot|root|swap|hidden|raid|lvm|lba|palo|legacy_boot|bios_grub) ]] ; then
+                    flags+="$flag,"
+                fi
+            done
 
             if [[ -z "$flags" ]] ; then
                 flags="none"
             fi
 
-            sed -i /^$number\ /s/$/\ $flags/ $TMP_DIR/partitions
+            sed -i /^$number\ /s/$/\ ${flags%,}/ $TMP_DIR/partitions
         done < <(grep -E '^[ ]*[0-9]' $TMP_DIR/parted)
     fi
 
