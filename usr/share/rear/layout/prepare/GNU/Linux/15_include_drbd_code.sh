@@ -13,7 +13,7 @@ fi
 mkdir -p /var/lib/drbd
 
 LogPrint "Creating DRBD resource $resource"
-dd if=/dev/zero of=$device count=20 bs=1M
+dd if=/dev/zero of=$device bs=1M count=20 conv=fsync
 drbdadm create-md $resource
 
 EOF

@@ -46,6 +46,9 @@ create_disk() {
     StopIfError "Disk $disk has size $disk_size, unable to continue."
 
     cat >> $LAYOUT_CODE <<EOF
+Log "Erasing MBR of disk $disk"
+dd if=/dev/zero of=$disk bs=512 count=1 conv=fsync
+
 LogPrint "Creating partitions for disk $disk ($label)"
 parted -s $disk mklabel $label >&2
 EOF
