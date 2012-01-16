@@ -1,9 +1,9 @@
 = Relax and Recover: User guide
 :author: Dag Wieers and Jeroen Hoekx
+:version: 0.4 draft
 :data-uri:
+:doctype: book
 :encoding: UTF-8
-:icons:
-:iconsdir: /usr/share/asciidoc/images/icons
 :numbered:
 :toc:
 :toclevels: 2
@@ -62,8 +62,8 @@ https://lists.sourceforge.net/lists/listinfo/rear-users
 == Features and functionality
 Relax and Recover has a wide range of features:
 
-// FIXME: Insert the various features from the Release Notes
-//        include the information from the presentations
+// FIXME: Insert the various features from the Release Notes +
+//        include the information from the presentations +
 //        and optionally the rescue creation and recovery workflow
 // FIXME: Get rid of the below list when everything is in the feature set
 
@@ -163,15 +163,15 @@ System definition:
 
 
 == Overview
-// FIXME: Describe the concept behind Rear
-//  - Creating a rescue environment (bootable media and optionally backup)
+// FIXME: Describe the concept behind Rear +
+//  - Creating a rescue environment (bootable media and optionally backup) +
 //  - Restoring from booted media
 
 
 == Scenarios
-// FIXME: Add the various scenarios, merge with configuration-examples.txt and
-//        the below content
-//  e.g. using different backup methods,
+// FIXME: Add the various scenarios, merge with configuration-examples.txt +
+//        and the below content +
+//  e.g. using different backup methods, +
 //       using different output methods
 
 == Using Rear with USB storage devices
@@ -1296,7 +1296,7 @@ And in the following ways:
 
 
 == Design and implementation
-// FIXME: This chapter explains the concepts and implementation details
+// FIXME: This chapter explains the concepts and implementation details +
 //        This should include the layout information from Jeroen
 
 
