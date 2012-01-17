@@ -29,8 +29,8 @@ else
 	if test -s /etc/modules ; then
 		while read module options ; do
 			case "$module" in
-				\#*|"") : ;;
-				*)	modprobe -v $module $options ;;
+				(\#*|"") ;;
+				(*) modprobe -v $module $options;;
 			esac
 		done </etc/modules
 	fi
@@ -43,12 +43,14 @@ else
 	#
 	# Especially how to analyse a running system and load the same drivers and bind them to the same devices in
 	# the correct order
-	for m in $(find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ide,message,ata} -type f 2>/dev/null) ; do
-		modprobe -q $(basename $m .ko)
+	echo "Loading storage modules..."
+	for module in $(find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ide,message,ata} -type f 2>/dev/null) ; do
+		case "$module" in
+			(nbd) echo "Module nbd excluded from being autoloaded.";;
+			(*) modprobe -q $(basename $module .ko);;
+		esac
 	done
 fi
 
 # device mapper gets a special treatment here because there is no dependency to load it
 modprobe -q dm-mod
-
-
