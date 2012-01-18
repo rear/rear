@@ -7,7 +7,11 @@ mt -f  "$TAPE_DEVICE" rewind
 StopIfError "Problem with rewinding tape in drive '$TAPE_DEVICE'"
 
 mt -f "$TAPE_DEVICE" compression off
-StopIfError "Could not disable compression on tape device '$TAPE_DEVICE'"
+if [[ $? -ne 0 ]] ; then
+    ### Try datcompression (for SLES10,11)
+    mt -f "${TAPE_DEVICE}" datcompression off
+fi
+LogIfError "Could not disable compression on tape device '$TAPE_DEVICE'"
 
 mt -f "$TAPE_DEVICE" setblk 512
 StopIfError "Could not set block size on tape device '$TAPE_DEVICE'"

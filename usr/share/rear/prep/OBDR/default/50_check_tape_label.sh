@@ -8,7 +8,11 @@ StopIfError "Problem with rewinding tape in drive '$TAPE_DEVICE'"
 
 # Turn compression off for reading tape label
 mt -f $TAPE_DEVICE compression off
-StopIfError "Could not disable compression on tape device '$TAPE_DEVICE'"
+if [[ $? -ne 0 ]] ; then
+    ### Try datcompression (for SLES10,11)
+    mt -f ${TAPE_DEVICE} datcompression off
+fi
+LogIfError "Could not disable compression on tape device '$TAPE_DEVICE'"
 
 # Set correct blocksize for reading tape label
 mt -f $TAPE_DEVICE setblk 512

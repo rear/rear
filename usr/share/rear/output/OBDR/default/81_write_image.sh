@@ -12,7 +12,11 @@ mt -f ${TAPE_DEVICE} eof
 StopIfError "Could not write EOF to tape device '$TAPE_DEVICE'"
 
 mt -f ${TAPE_DEVICE} compression on
-StopIfError "Could not enable compression on tape device '$TAPE_DEVICE'"
+if [[ $? -ne 0 ]] ; then
+    ### Try datcompression (for SLES10,11)
+    mt -f ${TAPE_DEVICE} datcompression on
+fi
+LogIfError "Could not enable compression on tape device '$TAPE_DEVICE'"
 
 # Disable compression (as tape drive does compression already)
 Log "Disable compression for backup (BACKUP_PROG_COMPRESS_*)"
