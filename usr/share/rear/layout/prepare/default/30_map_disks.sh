@@ -79,6 +79,19 @@ while read -u 3 disk dev size junk ; do
             continue
         fi
 
+        ### Skip if the name is in EXCLUDE_DEVICE_MAPPING
+        skip=
+        for name in "${EXCLUDE_DEVICE_MAPPING[@]}" ; do
+            case "${path##*/}" in
+                ($name)
+                    skip=y
+                    ;;
+            esac
+        done
+        if [[ "$skip" ]] ; then
+            continue
+        fi
+
         if ! reverse_mapping_exists "/dev/$(get_device_name $path)" && [ -d $path/queue ] ; then
             possible_targets=("${possible_targets[@]}" "$(get_device_name $path)")
         fi
