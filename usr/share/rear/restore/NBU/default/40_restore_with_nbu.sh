@@ -66,4 +66,4 @@ fi
 LogPrint "RUN: /usr/openv/netbackup/bin/bprestore ${ARGS}"
 LogPrint "Restore progress: see /tmp/bplog.restore"
 LANG=C /usr/openv/netbackup/bin/bprestore ${ARGS}
-StopIfError "bprestore failed"
+StopIfFail "bprestore failed"
