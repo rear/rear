@@ -32,8 +32,7 @@ extract_partitions() {
     for path in /sys/block/$sysfs_name/$sysfs_name* ; do
         partition_name=${path##*/}
 
-        [[ $partition_name =~ ([0-9]+)$ ]]
-        partition_nr=${BASH_REMATCH[1]}
+        partition_nr=$(echo "$partition_name" | grep -E -o '[0-9]+$')
 
         partition_prefix=${partition_name%$partition_nr}
 
@@ -130,7 +129,7 @@ extract_partitions() {
             flags=""
             for flag in $flaglist ; do
                 if [[ "$flag" = @(boot|root|swap|hidden|raid|lvm|lba|palo|legacy_boot|bios_grub) ]] ; then
-                    flags+="$flag,"
+                    flags="$flags$flag,"
                 fi
             done
 
@@ -162,7 +161,7 @@ extract_partitions() {
             flags=""
             for flag in $flaglist ; do
                 if [[ "$flag" = @(boot|root|swap|hidden|raid|lvm|lba|palo|legacy_boot|bios_grub) ]] ; then
-                    flags+="$flag,"
+                    flags="$flags$flag,"
                 fi
             done
 

@@ -220,8 +220,8 @@ get_child_components() {
                 if IsInArray "$child" "${children[@]}" ; then
                     continue
                 fi
-                devlist+=( "$child" )
-                children+=( "$child" )
+                devlist=( "${devlist[@]}" "$child" )
+                children=( "${children[@]}" "$child" )
             fi
         done < $LAYOUT_DEPS
 
@@ -260,8 +260,8 @@ get_parent_components() {
                     continue
                 fi
                 ### ...and add them to the list
-                devlist+=( "$parent" )
-                ancestors+=( "$parent" )
+                devlist=( "${devlist[@]}" "$parent" )
+                ancestors=( "${ancestors[@]}" "$parent" )
             fi
         done < $LAYOUT_DEPS
 

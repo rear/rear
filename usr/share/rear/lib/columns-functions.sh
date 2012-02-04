@@ -39,7 +39,7 @@ init_columns() {
             if [[ "$word" ]] ; then
                 # word complete, write to list
                 let start=$i-${#word}
-                word=${word,,}
+                word=$( echo "$word" | tr '[:upper:]' '[:lower:]')
 
                 columns="$columns${word%% }=$start;"
                 word=""
@@ -58,7 +58,7 @@ init_columns() {
     done
     # last word
     let start=$i-${#word}
-    word=${word,,}
+    word=$( echo "$word"| tr '[:upper:]' '[:lower:]')
     columns="$columns${word%% }=$start;"
 
     #echo "c:$columns"
