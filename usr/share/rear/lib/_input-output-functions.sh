@@ -123,13 +123,6 @@ StopIfError() {
 	fi
 }
 
-StopIfFail() {
-	# If return code > 1, bail out (we can live with 1 error)
-	if (( $? -gt 1 )); then
-		Error "$@"
-	fi
-}
-
 BugError() {
 	# If first argument is numerical, use it as exit code
 	if [ $1 -eq $1 ] 2>&8; then
