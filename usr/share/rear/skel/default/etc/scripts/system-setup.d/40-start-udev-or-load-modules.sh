@@ -45,7 +45,7 @@ else
 	# the correct order
 	echo "Loading storage modules..."
 	for module in $(find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ide,message,ata} -type f 2>/dev/null) ; do
-		case "$module" in
+		case "$(basename $module .ko)" in
 			(nbd) echo "Module nbd excluded from being autoloaded.";;
 			(*) modprobe -q $(basename $module .ko);;
 		esac
