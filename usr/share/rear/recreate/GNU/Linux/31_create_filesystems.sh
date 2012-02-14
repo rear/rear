@@ -89,6 +89,18 @@ while read file ; do
 	[ -x "$(get_path $CMD)" ]
 	StopIfError "Filesystem creation command '$CMD' not found !"
 
+        # check if device is already there (some devices need time after partitioning)
+        if ! test -b "$device"
+        then echo "'$device' not ready, waiting up to 30 seconds for it to appear"
+             for i in 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
+             do ProgressStep
+                sleep 1
+                if test -b "$device"
+                then break
+                fi
+             done
+        fi
+
 	# run command
 	eval "${CMD[@]}" >&8
 	StopIfError "Could not create filesystem ($ID_FS_TYPE) on '$device'"
