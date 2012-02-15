@@ -194,7 +194,11 @@ extract_partitions() {
 
     ### Write to layout file
     while read partition_nr size start type flags junk ; do
-        echo "part $device $size $start $type $flags ${device%/*}/${partition_prefix/\!//}$partition_nr"
+        ### determine the name of the partition using the number
+        ### device=/dev/cciss/c0d0 ; partition_prefix=cciss!c0d0p
+        ### device=/dev/md127 ; partition_prefix=md127p
+        ### device=/dev/sda ; partition_prefix=sda
+        echo "part $device $size $start $type $flags ${device%/*}/${partition_prefix/*\!//}$partition_nr"
     done < $TMP_DIR/partitions
 }
 
