@@ -22,7 +22,7 @@ extract_partitions() {
     declare device=$1
 
     declare sysfs_name=$(get_sysfs_name $device)
-    declare block_size=$(get_block_size $device)
+    declare block_size=$(get_block_size $sysfs_name)
 
     ### collect basic information
     : > $TMP_DIR/partitions
