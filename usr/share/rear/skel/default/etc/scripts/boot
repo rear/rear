@@ -7,6 +7,19 @@ dmesg -n1
 # basic mounts
 mount -t proc -n none /proc
 mount -t sysfs none /sys
+
+if type udevd 2>/dev/null ; then
+    udev_version=$(udevd --version)
+    if [[ "$udev_version" -gt 175 ]]; then
+        ### udev > 175 needs devtmpfs
+        mount -t devtmpfs none /dev
+    fi
+fi
+
+if [[ ! -d /dev/pts ]] ; then
+    mkdir /dev/pts
+fi
+
 mount -t devpts -o gid=5,mode=620 none /dev/pts
 
 cat /proc/mounts >/etc/mtab 2>/dev/null

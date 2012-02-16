@@ -1,4 +1,8 @@
 # Save the partition layout
+### This works on a per device basis.
+### The main function is extract_partitions
+### Temporary caching of data in $TMP_DIR/partitions
+### Temporary caching of parted data in $TMP_DIR/parted
 
 ### Parted can output machine parseable information
 FEATURE_PARTED_MACHINEREADABLE=
@@ -24,24 +28,43 @@ extract_partitions() {
     declare sysfs_name=$(get_sysfs_name $device)
     declare block_size=$(get_block_size $sysfs_name)
 
+    ### check if we can find any partitions
+    declare sysfs_paths=(/sys/block/$sysfs_name/$sysfs_name*)
+
+    declare path sysfs_path
+    if [[ ${#sysfs_paths[@]} -eq 0 ]] ; then
+        ### try to find partitions like /dev/mapper/datalun1p1
+        if [[ ${device/mapper//} != ${device} ]] ; then
+            for path in ${device}p* ; do
+                sysfs_path=$(get_sysfs_name $path)
+                if [[ "$sysfs_path" ]] && [[ -e "/sys/block/$sysfs_path" ]] ; then
+                    sysfs_paths=( "${sysfs_paths[@]}" "/sys/block/$sysfs_path" )
+                fi
+            done
+        fi
+    fi
+
     ### collect basic information
     : > $TMP_DIR/partitions
 
-    declare path partition_name partition_prefix start_block
+    declare partition_dev_name partition_name partition_prefix start_block
     declare partition_nr size start
-    for path in /sys/block/$sysfs_name/$sysfs_name* ; do
-        partition_name=${path##*/}
+    for path in "${sysfs_paths[@]}" ; do
+        partition_dev_name=$(get_device_name $path)
+        partition_name=${partition_dev_name##*/}
 
         partition_nr=$(echo "$partition_name" | grep -E -o '[0-9]+$')
 
         partition_prefix=${partition_name%$partition_nr}
 
-        size=$(get_disk_size $sysfs_name/$partition_name)
+        size=$(get_disk_size ${path#/sys/block/})
         start_block=$(< $path/start)
-        if [[ -z "$start_block" ]] ; then
-            BugError "Could not determine start of partition $partition_name, please file a bug."
+        if [[ "$start_block" ]] ; then
+            start=$(( $start_block*$block_size ))
+        else
+            Log "Could not determine start of partition $partition_name."
+            start="unknown"
         fi
-        start=$(( $start_block*$block_size ))
 
         echo "$partition_nr $size $start">> $TMP_DIR/partitions
     done

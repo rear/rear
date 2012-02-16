@@ -62,7 +62,7 @@ EOF
     while read part odisk size pstart parttype flags name junk; do
 
         # if not in migration mode, use original start
-        if [ -z "$MIGRATION_MODE" ] ; then
+        if [ -z "$MIGRATION_MODE" ] && ! [ "$pstart" = "unknown" ] ; then
             start=$pstart
         fi
 
