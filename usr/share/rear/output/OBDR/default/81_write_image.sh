@@ -11,10 +11,10 @@ StopIfError "ISO image could not be written to tape device '$TAPE_DEVICE'"
 mt -f ${TAPE_DEVICE} eof
 StopIfError "Could not write EOF to tape device '$TAPE_DEVICE'"
 
-mt -f ${TAPE_DEVICE} compression on
+mt -f ${TAPE_DEVICE} compression on >&2
 if [[ $? -ne 0 ]] ; then
     ### Try datcompression (for SLES10,11)
-    mt -f ${TAPE_DEVICE} datcompression on
+    mt -f ${TAPE_DEVICE} datcompression on >&2
 fi
 LogIfError "Could not enable compression on tape device '$TAPE_DEVICE'"
 
