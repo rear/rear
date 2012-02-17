@@ -6,10 +6,10 @@ LogPrint "Writing OBDR header to tape in drive '$TAPE_DEVICE'"
 mt -f  "$TAPE_DEVICE" rewind
 StopIfError "Problem with rewinding tape in drive '$TAPE_DEVICE'"
 
-mt -f "$TAPE_DEVICE" compression off
+mt -f "$TAPE_DEVICE" compression off >&2
 if [[ $? -ne 0 ]] ; then
     ### Try datcompression (for SLES10,11)
-    mt -f "${TAPE_DEVICE}" datcompression off
+    mt -f "${TAPE_DEVICE}" datcompression off >&2
 fi
 LogIfError "Could not disable compression on tape device '$TAPE_DEVICE'"
 
