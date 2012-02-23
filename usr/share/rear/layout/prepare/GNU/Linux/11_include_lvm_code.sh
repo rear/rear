@@ -28,7 +28,7 @@ create_lvmdev() {
     echo "LogPrint \"Creating LVM PV $device\""
 
     ### Work around automatic volume group activation leading to active disks
-    echo "lvm vgchange -a n ${vgrp#/dev/} #>&2"
+    echo "lvm vgchange -a n ${vgrp#/dev/} || true"
 
     local uuidopt=""
     local restorefileopt=""
