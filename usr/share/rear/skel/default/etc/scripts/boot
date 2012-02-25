@@ -1,6 +1,5 @@
 #!/bin/bash
 # Relax & Recover
-
 # disable console logging for kernel messages
 dmesg -n1
 
@@ -9,15 +8,23 @@ mount -t proc -n none /proc
 mount -t sysfs none /sys
 
 if type udevd 2>/dev/null ; then
-    udev_version=$(udevd --version)
-    if [[ "$udev_version" -gt 175 ]]; then
+#    udev_version=$(udevd --version)
+#    if [[ "$udev_version" -gt 175 ]]; then
         ### udev > 175 needs devtmpfs
-        mount -t devtmpfs none /dev
-    fi
+#        mount -t devtmpfs none /dev
+#    else
+#	mount -t tmpfs none /dev
+#    fi
+     mount -t devtmpfs none /dev || mount -t tmpfs none /dev
 fi
 
 if [[ ! -d /dev/pts ]] ; then
     mkdir /dev/pts
+fi
+
+# was missing on ia64 rhel5
+if [[ ! -L /dev/fd ]] ; then 
+    ln -s /proc/self/fd /dev/fd
 fi
 
 mount -t devpts -o gid=5,mode=620 none /dev/pts
