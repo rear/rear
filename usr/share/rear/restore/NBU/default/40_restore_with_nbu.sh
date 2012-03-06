@@ -18,7 +18,7 @@ Get_Start_Date ()
 # output: mm/dd/yyyy (string)
 # Recent_Month_Hour="Nov 12 20:45" is a possible output
 Recent_Month_Hour=""	# make it empty to start with
-Recent_Month_Hour=`LANG=C /usr/openv/netbackup/bin/bplist -l -s \`date -d "-5 days" "+%m/%d/%Y"\` $1 2>&8 | head -n 1 | awk '{print $5,$6,$7}'`
+Recent_Month_Hour=`LANG=C /usr/openv/netbackup/bin/bplist -C ${NBU_CLIENT_SOURCE} -l -s \`date -d "-5 days" "+%m/%d/%Y"\` $1 2>&8 | head -n 1 | awk '{print $5,$6,$7}'`
 [ "${Recent_Month_Hour}" ]
 StopIfError "Netbackup bplist cannot get last backup timestamp of $1"
 
@@ -58,14 +58,12 @@ sdate=`Get_Start_Date ${FIRSTFS}`
 if [ ${#NBU_ENDTIME[@]} -gt 0 ]
 then
    edate="${NBU_ENDTIME[@]}"
-   ARGS="-B -H -L /tmp/bplog.restore -8 -R /tmp/nbu_change_file -t 0 -w 0 -e ${edate} -f $TMP_DIR/restore_fs_list"
+   ARGS="-B -H -L /tmp/bplog.restore -8 -R /tmp/nbu_change_file -t 0 -w 0 -e ${edate} -C ${NBU_CLIENT_SOURCE} -D ${NBU_CLIENT_NAME} -f $TMP_DIR/restore_fs_list"
 else
-   ARGS="-B -H -L /tmp/bplog.restore -8 -R /tmp/nbu_change_file -t 0 -w 0 -s ${sdate} -f $TMP_DIR/restore_fs_list"
+   ARGS="-B -H -L /tmp/bplog.restore -8 -R /tmp/nbu_change_file -t 0 -w 0 -s ${sdate} -C ${NBU_CLIENT_SOURCE} -D ${NBU_CLIENT_NAME} -f $TMP_DIR/restore_fs_list"
 fi
 
 LogPrint "RUN: /usr/openv/netbackup/bin/bprestore ${ARGS}"
 LogPrint "Restore progress: see /tmp/bplog.restore"
 LANG=C /usr/openv/netbackup/bin/bprestore ${ARGS}
-if (( $? > 1 )); then
-	Error "bprestore failed"
-fi
+StopIfFail "bprestore failed"

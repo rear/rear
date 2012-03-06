@@ -1,6 +1,4 @@
 # 40_verify_nbu.sh
-# read NBU vars from NBU config file bp.conf
-while read KEY VALUE ; do echo "$KEY" | grep -qi '^#' && continue ; test -z "$KEY" && continue ; KEY="$(echo "$KEY" | tr a-z A-Z)" ; export NBU_$KEY="$(echo "$VALUE" | sed -e 's/=//' -e 's/ //g')" ; done </usr/openv/netbackup/bp.conf
 
 # check that NBU master server is actually available (ping)
 [ "${NBU_SERVER}" ]
