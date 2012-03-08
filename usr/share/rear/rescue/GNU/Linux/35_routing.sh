@@ -31,6 +31,15 @@ if [ ! -z "\$DHCLIENT_BIN" -o ! -z "\$DHCLIENT6_BIN" ]; then
 fi
 EOT
 
+### Skip netscript if noip is configured on the command line
+cat <<EOT >> $netscript
+if [[ -e /proc/cmdline ]] ; then
+    if grep -q 'noip' /proc/cmdline ; then
+        return
+    fi
+fi
+EOT
+
 # route mapping is available
 if test -s $TMP_DIR/mappings/routes ; then
 	while read destination gateway device junk ; do

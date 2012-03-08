@@ -33,6 +33,15 @@ if [ ! -z "\$DHCLIENT_BIN" -o ! -z "\$DHCLIENT6_BIN" ]; then
 fi
 EOT
 
+### Skip netscript if noip is configured on the command line
+cat <<EOT >> $netscript
+if [[ -e /proc/cmdline ]] ; then
+    if grep -q 'noip' /proc/cmdline ; then
+        return
+    fi
+fi
+EOT
+
 # go over the network devices and record information
 # and, BTW, interfacenames luckily do not allow spaces :-)
 for sysfspath in /sys/class/net/* ; do
