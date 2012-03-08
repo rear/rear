@@ -98,14 +98,15 @@ EOF
 EOF
             fi
             ;;
-	vfat)
+        vfat)
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
 mkfs.vfat $device
 EOF
-	if [ -n "$label" ] ; then
-	    echo "dosfslabel $device $label >&2" >> $LAYOUT_CODE
-	;;
+            if [ -n "$label" ] ; then
+                echo "dosfslabel $device $label >&2" >> $LAYOUT_CODE
+            fi
+            ;;
         *)
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating filesystem ($fstype) $mp on $device"
