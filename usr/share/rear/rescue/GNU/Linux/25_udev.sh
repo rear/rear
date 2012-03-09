@@ -19,6 +19,7 @@ udev
 udevadm
 udevcontrol
 udevd
+udevsend
 udevsettle
 udevstart
 udevtest
@@ -26,4 +27,5 @@ udevtrigger
 udevinfo
 kpartx
 scsi_tur
+biosdevname
 )
