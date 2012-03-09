@@ -7,15 +7,14 @@ dmesg -n1
 mount -t proc -n none /proc
 mount -t sysfs none /sys
 
-if type udevd 2>/dev/null ; then
-#    udev_version=$(udevd --version)
-#    if [[ "$udev_version" -gt 175 ]]; then
+if type udevd &>/dev/null && ! type udevsend &>/dev/null; then
+    ### we use udevsend to filter out really old udev versions that don't
+    ### support --version
+    udev_version=$(udevd --version)
+    if [[ "$udev_version" -gt 175 ]]; then
         ### udev > 175 needs devtmpfs
-#        mount -t devtmpfs none /dev
-#    else
-#	mount -t tmpfs none /dev
-#    fi
-     mount -t devtmpfs none /dev || mount -t tmpfs none /dev
+        mount -t devtmpfs none /dev
+    fi
 fi
 
 if [[ ! -d /dev/pts ]] ; then
