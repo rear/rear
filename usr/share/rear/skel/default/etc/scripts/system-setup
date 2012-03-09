@@ -9,6 +9,7 @@ shopt -s nullglob
 
 # sourcing our /etc/rear/local.conf file as we need some variables
 . /etc/rear/local.conf
+[[ -f /etc/rear/rescue.conf ]] && . /etc/rear/rescue.conf
 
 function debug() {
 	read -r </proc/cmdline
