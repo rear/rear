@@ -28,9 +28,10 @@ netscript=$ROOTFS_DIR/etc/scripts/system-setup.d/60-network-devices.sh
 
 # add a line at the top of netscript to skip if dhclient will be used
 cat - <<EOT > $netscript
-if [ ! -z "\$DHCLIENT_BIN" -o ! -z "\$DHCLIENT6_BIN" ]; then
-	return
-fi
+# if USE_DHCLIENT=y then use DHCP instead and skip 60-network-devices.sh
+[[ ! -z "\$USE_DHCLIENT" ]] && return
+# if IPADDR=1.2.3.4 has been defined at boot time via ip=1.2.3.4 then skip 
+[[ ! -z "\$IPADDR" ]] && return
 EOT
 
 ### Skip netscript if noip is configured on the command line

@@ -1,9 +1,7 @@
 # start dhclient daemon script
 #
-## check if we have the executable, if not then we run 60/62 scripts
-if [ -z "$DHCLIENT_BIN" -a -z "$DHCLIENT6_BIN" ]; then
-	return
-fi
+# check if we have USE_DHCLIENT=y, if not then we run 60/62 scripts
+[[ -z "$USE_DHCLIENT"  ]] && return
 
 echo "Attempting to start the DHCP client daemon"
 

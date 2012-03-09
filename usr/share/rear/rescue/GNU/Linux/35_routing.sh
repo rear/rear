@@ -26,9 +26,10 @@ netscript=$ROOTFS_DIR/etc/scripts/system-setup.d/62-routing.sh
 
 # add a line at the top of netscript to skip if dhclient will be used
 cat - <<EOT > $netscript
-if [ ! -z "\$DHCLIENT_BIN" -o ! -z "\$DHCLIENT6_BIN" ]; then
-	return
-fi
+# if USE_DHCLIENT=y then skip 62-routing.sh as we are using DHCP instead
+[[ ! -z "\$USE_DHCLIENT" ]] && return
+# if GATEWAY is defined as boot option gw=1.2.3.4 then use that one
+[[ ! -z "\$GATEWAY" ]] && return
 EOT
 
 ### Skip netscript if noip is configured on the command line

@@ -74,7 +74,7 @@ echo "Will be using a temporary BUILD_DIR=${BUILD_DIR}"
 echo "Creating archive '$distarchive'"
 # use tar to copy the current rear while excluding development and obsolete files
 cd $rear_root
-tar --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
+tar --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* --exclude=.gitignore \
 		--exclude=\*.rpmnew\* --exclude=.\*.swp --exclude .svn -c \
 		. | tar -C $BUILD_DIR/$prod_ver -x
 
