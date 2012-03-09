@@ -346,7 +346,7 @@ get_friendly_name() {
     # Compare device numbers on the input device and the mapper devices
     local number=$(stat -L -c "%t:%T" /dev/$search )
     [ "$number" ]
-    BugIfError "Unknown device..."
+    BugIfError "Unknown device /dev/$search"
 
     local device
     for device in /dev/mapper/* ; do
