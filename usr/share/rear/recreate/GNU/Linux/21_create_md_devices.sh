@@ -68,6 +68,7 @@ while read file ; do
 			echo "--$optname ${!var} "
 		done
 		) --verbose >&2 <<<y ; then
+		:
 	else
 		# now the old style
 		Log "Fancy mdadm failed, trying plain old style"
