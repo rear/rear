@@ -21,7 +21,7 @@ while read dm_name junk ; do
 
     echo "multipath /dev/mapper/$dm_name ${slaves%,}" >> $DISKLAYOUT_FILE
 
-    extract_partitions "$dev_name" >> $DISKLAYOUT_FILE
+    extract_partitions "/dev/mapper/$dm_name" >> $DISKLAYOUT_FILE
 done < <( dmsetup ls --target multipath )
 
 if grep -q ^multipath $DISKLAYOUT_FILE ; then

@@ -47,11 +47,14 @@ extract_partitions() {
     ### collect basic information
     : > $TMP_DIR/partitions
 
-    declare partition_dev_name partition_name partition_prefix start_block
+    declare partition_name partition_prefix start_block
     declare partition_nr size start
     for path in "${sysfs_paths[@]}" ; do
-        partition_dev_name=$(get_device_name $path)
-        partition_name=${partition_dev_name##*/}
+        ### path can be: /sys/block/sda/sda1 --> /dev/sda1
+        ###              /sys/block/dm-4 --> /dev/mapper/mpathbp1
+        partition_name=$(get_friendly_name ${path##*/})
+        ### get_friendly_name strips off /dev/, for DM also strip mapper/
+        partition_name=${partition_name#mapper/}
 
         partition_nr=$(echo "$partition_name" | grep -E -o '[0-9]+$')
 
@@ -221,7 +224,9 @@ extract_partitions() {
         ### device=/dev/cciss/c0d0 ; partition_prefix=cciss!c0d0p
         ### device=/dev/md127 ; partition_prefix=md127p
         ### device=/dev/sda ; partition_prefix=sda
-        echo "part $device $size $start $type $flags ${device%/*}/${partition_prefix/*\!//}$partition_nr"
+        ### device=/dev/mapper/mpathbp1 ; partition_prefix=mpathbp
+        partition_name="${device%/*}/${partition_prefix/*\!//}$partition_nr"
+        echo "part $device $size $start $type $flags /dev/$(get_friendly_name $partition_name)"
     done < $TMP_DIR/partitions
 }
 
