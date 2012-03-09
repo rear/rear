@@ -57,7 +57,7 @@ create_lvmgrp() {
     fi
 
     local lvmgrp vgrp extentsize junk
-    read lvmgrp vgrp extentsize junk < <(grep "^lvmgrp $1" $LAYOUT_FILE)
+    read lvmgrp vgrp extentsize junk < <(grep "^lvmgrp $1 " $LAYOUT_FILE)
 
     local -a devices=($(grep "^lvmdev $vgrp" $LAYOUT_FILE | cut -d " " -f 3))
 
@@ -99,7 +99,7 @@ create_lvmvol() {
     lv=${name##*-}
 
     local lvmvol vgrp lvname nrextents junk
-    read lvmvol vgrp lvname nrextents junk < <(grep "^lvmvol /dev/$vg $lv" $LAYOUT_FILE)
+    read lvmvol vgrp lvname nrextents junk < <(grep "^lvmvol /dev/$vg $lv " $LAYOUT_FILE)
 
     (
     echo "LogPrint \"Creating LVM volume ${vgrp#/dev/}/$lvname\""

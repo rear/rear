@@ -29,7 +29,7 @@ extract_partitions() {
     declare block_size=$(get_block_size $sysfs_name)
 
     ### check if we can find any partitions
-    declare sysfs_paths=(/sys/block/$sysfs_name/$sysfs_name*)
+    declare -a sysfs_paths=(/sys/block/$sysfs_name/$sysfs_name*)
 
     declare path sysfs_path
     if [[ ${#sysfs_paths[@]} -eq 0 ]] ; then
