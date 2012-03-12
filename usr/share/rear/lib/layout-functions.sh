@@ -343,6 +343,9 @@ get_friendly_name() {
     # strip /dev/ from the front of the input
     local search=${1#/dev/}
 
+    ### convert cciss!c0d0 to cciss/c0d0
+    search=${search//!//}
+
     # Compare device numbers on the input device and the mapper devices
     local number=$(stat -L -c "%t:%T" /dev/$search )
     [ "$number" ]
