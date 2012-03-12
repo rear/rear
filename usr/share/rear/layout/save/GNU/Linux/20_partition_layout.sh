@@ -221,11 +221,11 @@ extract_partitions() {
     ### Write to layout file
     while read partition_nr size start type flags junk ; do
         ### determine the name of the partition using the number
-        ### device=/dev/cciss/c0d0 ; partition_prefix=cciss!c0d0p
+        ### device=/dev/cciss/c0d0 ; partition_prefix=cciss/c0d0p
         ### device=/dev/md127 ; partition_prefix=md127p
         ### device=/dev/sda ; partition_prefix=sda
         ### device=/dev/mapper/mpathbp1 ; partition_prefix=mpathbp
-        partition_name="${device%/*}/${partition_prefix/*\!//}$partition_nr"
+        partition_name="${device%/*}/${partition_prefix#*/}$partition_nr"
         echo "part $device $size $start $type $flags /dev/$(get_friendly_name $partition_name)"
     done < $TMP_DIR/partitions
 }
