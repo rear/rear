@@ -61,8 +61,8 @@ extract_partitions() {
         partition_prefix=${partition_name%$partition_nr}
 
         size=$(get_disk_size ${path#/sys/block/})
-        start_block=$(< $path/start)
-        if [[ "$start_block" ]] ; then
+        if [[ -r $path/start ]] ; then
+            start_block=$(< $path/start)
             start=$(( $start_block*$block_size ))
         else
             Log "Could not determine start of partition $partition_name."
