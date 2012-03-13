@@ -52,8 +52,9 @@ extract_partitions() {
     for path in "${sysfs_paths[@]}" ; do
         ### path can be: /sys/block/sda/sda1 --> /dev/sda1
         ###              /sys/block/dm-4 --> /dev/mapper/mpathbp1
-        partition_name=$(get_friendly_name ${path##*/})
-        ### get_friendly_name strips off /dev/, for DM also strip mapper/
+        partition_name=$(get_device_name ${path##*/})
+        ### strip prefixes
+        partition_name=${partition_name#/dev/}
         partition_name=${partition_name#mapper/}
 
         partition_nr=$(echo "$partition_name" | grep -E -o '[0-9]+$')
@@ -226,7 +227,7 @@ extract_partitions() {
         ### device=/dev/sda ; partition_prefix=sda
         ### device=/dev/mapper/mpathbp1 ; partition_prefix=mpathbp
         partition_name="${device%/*}/${partition_prefix#*/}$partition_nr"
-        echo "part $device $size $start $type $flags /dev/$(get_friendly_name $partition_name)"
+        echo "part $device $size $start $type $flags $(get_device_name $partition_name)"
     done < $TMP_DIR/partitions
 }
 
@@ -241,11 +242,11 @@ Log "Saving disk partitions."
             devname=$(get_device_name $disk)
             devsize=$(get_disk_size ${disk#/sys/block/})
 
-            disktype=$(parted -s /dev/$devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
+            disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
 
-            echo "disk /dev/$devname $devsize $disktype"
+            echo "disk $devname $devsize $disktype"
 
-            extract_partitions "/dev/$devname"
+            extract_partitions "$devname"
         fi
     done
 

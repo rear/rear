@@ -59,8 +59,8 @@ while read disk dev size junk ; do
         fi
         newsize=$(get_disk_size ${path#/sys/block/})
 
-        if [ "$size" -eq "$newsize" ] && ! reverse_mapping_exists "/dev/$(get_device_name $path)"; then
-            add_mapping "$dev" "/dev/$(get_device_name $path)"
+        if [ "$size" -eq "$newsize" ] && ! reverse_mapping_exists "$(get_device_name $path)"; then
+            add_mapping "$dev" "$(get_device_name $path)"
             break
         fi
     done
@@ -92,7 +92,7 @@ while read -u 3 disk dev size junk ; do
             continue
         fi
 
-        if ! reverse_mapping_exists "/dev/$(get_device_name $path)" && [ -d $path/queue ] ; then
+        if ! reverse_mapping_exists "$(get_device_name $path)" && [ -d $path/queue ] ; then
             possible_targets=("${possible_targets[@]}" "$(get_device_name $path)")
         fi
     done
@@ -105,7 +105,7 @@ while read -u 3 disk dev size junk ; do
             LogPrint "Disk $(get_device_name $dev) not automatically replaced."
         else
             LogPrint "Disk $choice chosen as replacement for $(get_device_name $dev)."
-            add_mapping "$dev" "/dev/$choice"
+            add_mapping "$dev" "$choice"
         fi
         break
     done 2>&1 # to get the prompt, otherwise it would go to the logfile

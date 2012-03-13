@@ -16,7 +16,7 @@ while read dm_name junk ; do
 
     slaves=""
     for slave in /sys/block/$name/slaves/* ; do
-        slaves="$slaves/dev/$(get_device_name ${slave##*/}),"
+        slaves="$slaves$(get_device_name ${slave##*/}),"
     done
 
     echo "multipath /dev/mapper/$dm_name ${slaves%,}" >> $DISKLAYOUT_FILE

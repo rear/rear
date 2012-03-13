@@ -338,31 +338,6 @@ get_version() {
   $@ 2>&1 | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | head -1
 }
 
-# Get the device mapper name of a device
-get_friendly_name() {
-    # strip /dev/ from the front of the input
-    local search=${1#/dev/}
-
-    ### convert cciss!c0d0 to cciss/c0d0
-    search=${search//!//}
-
-    # Compare device numbers on the input device and the mapper devices
-    local number=$(stat -L -c "%t:%T" /dev/$search )
-    [ "$number" ]
-    BugIfError "Unknown device /dev/$search"
-
-    local device
-    for device in /dev/mapper/* ; do
-        local test=$(stat -L -c "%t:%T" $device)
-        if [ "$test" = "$number" ] ; then
-            echo ${device#/dev/}
-            return 0
-        fi
-    done
-
-    echo "$search"
-}
-
 # Translate a device name to a sysfs name.
 get_sysfs_name() {
     local name=${1#/dev/}
@@ -400,31 +375,45 @@ get_sysfs_name() {
     return 1
 }
 
-# Translate a sysfs name to a device name.
+### Translate a sysfs name or device name to the name preferred in Rear.
+### The device does not necessarily exist.
+###     cciss!c0d0 -> /dev/cciss/c0d0
+###     /dev/dm-3 -> /dev/mapper/system-tmp
+###     /dev/dm-4 -> /dev/mapper/oralun
+###     /dev/dm-5 -> /dev/mapper/oralunp1
 get_device_name() {
+    ### strip common prefixes
     local name=${1#/dev/}
     name=${name#/sys/block/}
 
-    if [ -e /dev/${name//!//} ] ; then
-        echo "${name//!//}"
-        return 0
-    fi
+    [[ "$name" ]]
+    BugIfError "Empty string passed to get_device_name"
 
-    # translate dm-8 -> mapper/test
+    ### translate dm-8 -> mapper/test
     local device dev_number mapper_number
-    if [ -r /sys/block/$name/dev ] ; then
-        dev_number=$( < /sys/block/$name/dev)
-        for device in /dev/mapper/* ; do
-            mapper_number=$(dmsetup info -c --noheadings -o major,minor ${device#/dev/mapper/} 2>&8 )
-            if [ "$dev_number" = "$mapper_number" ] ; then
-                echo "${device#/dev/}"
-                return 0
-            fi
-        done
+    if [[ -d /sys/block/$name ]] ; then
+        if [[ -r /sys/block/$name/dm/name ]] ; then
+            ### recent kernels have a dm subfolder
+            echo "/dev/mapper/$( < /sys/block/$name/dm/name)";
+            return 0
+        else
+            ### loop over all block devices
+            dev_number=$( < /sys/block/$name/dev)
+            for device in /dev/mapper/* ; do
+                mapper_number=$(dmsetup info -c --noheadings -o major,minor ${device#/dev/mapper/} 2>&8 )
+                if [ "$dev_number" = "$mapper_number" ] ; then
+                    echo "$device"
+                    return 0
+                fi
+            done
+        fi
     fi
 
-    # otherwise, it can be the case that we just want to translate the name
-    echo "${name//!//}"
+    ### handle cciss sysfs naming
+    name=${name//!//}
+
+    ### just return the possibly nonexisting name
+    echo "/dev/$name"
     return 1
 }
 

@@ -47,11 +47,11 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
             # sysfs has the information in RHEL 5+, but RHEL 4 lacks it.
             devices=""
             for disk in $( grep -o -E "/dev/[^m].*$" $TMP_DIR/mdraid | tr "\n" " ") ; do
-                disk=$( get_friendly_name ${disk/!/\/} )
+                disk=$( get_device_name $disk )
                 if [ -z "$devices" ] ; then
-                    devices=" devices=/dev/$disk"
+                    devices=" devices=$disk"
                 else
-                    devices="$devices,/dev/$disk"
+                    devices="$devices,$disk"
                 fi
             done
 

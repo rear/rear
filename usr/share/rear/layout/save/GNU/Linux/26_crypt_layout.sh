@@ -26,7 +26,7 @@ while read dm_name junk ; do
         if ! [ -z "$device" ] ; then
             BugError "Multiple Device Mapper slaves for crypt $dm_name detected."
         fi
-        device="/dev/$(get_device_name ${slave##*/})"
+        device="$(get_device_name ${slave##*/})"
     done
 
     if ! cryptsetup isLuks $device >&8 2>&1; then
