@@ -19,7 +19,6 @@ udev
 udevadm
 udevcontrol
 udevd
-udevsend
 udevsettle
 udevstart
 udevtest

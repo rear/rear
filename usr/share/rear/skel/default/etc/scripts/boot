@@ -7,8 +7,8 @@ dmesg -n1
 mount -t proc -n none /proc
 mount -t sysfs none /sys
 
-if type udevd &>/dev/null && ! type udevsend &>/dev/null; then
-    ### we use udevsend to filter out really old udev versions that don't
+if type udevd &>/dev/null && ! type udevinfo &>/dev/null; then
+    ### we use udevinfo to filter out old udev versions (<106) that don't
     ### support --version
     udev_version=$(udevd --version)
     if [[ "$udev_version" -gt 175 ]]; then
