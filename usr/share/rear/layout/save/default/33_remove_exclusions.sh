@@ -28,8 +28,13 @@ while read done name type junk ; do
             remove_second_component $type $name
             ;;
         lvmvol)
-            name=${name##/dev/mapper/*-}
-            remove_second_component $type $name
+            name=${name#/dev/mapper/}
+            dm_vg=${name%-*}
+            ### Device mapper doubles dashes
+            vg=${dm_vg/--/-}
+            lv=${name##*-}
+
+            sed -i -r "s|^($type /dev/$vg $lv )|\#\1|" $LAYOUT_FILE
             ;;
         fs)
             name=${name#fs:}
