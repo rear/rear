@@ -74,6 +74,10 @@ SetOSVendorAndVersion () {
 			OS_MASTER_VENDOR="Debian"
 			OS_MASTER_VERSION="$OS_VERSION"
 			;;
+		(*archlinux*)
+			OS_MASTER_VENDOR="Arch"
+			OS_MASTER_VERSION="$OS_VERSION"
+			;;
 	esac
 
 	# combined stuff for OS_MASTER_*
