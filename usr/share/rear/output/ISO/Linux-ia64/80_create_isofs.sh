@@ -20,7 +20,7 @@
 
 # last check for mkisofs
 [ -x "$ISO_MKISOFS_BIN" ]
-StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executabel !"
+StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executable !"
 
 ISO_FILES=( ${ISO_FILES[@]} boot/boot.img )
 Log "Starting '$ISO_MKISOFS_BIN'"
@@ -34,11 +34,8 @@ mkdir -p $v "$TMP_DIR/isofs" >&2
 mkdir -p $v "$TMP_DIR/isofs/boot" >&2
 mv -f $v $TMP_DIR/boot.img "$TMP_DIR/isofs/boot" >&2
 pushd $TMP_DIR/isofs >&8 # so that relative paths will work
-$ISO_MKISOFS_BIN -o "$ISO_DIR/$ISO_PREFIX.iso" -b boot/boot.img -c boot/monboot.catalogi -pad \
-	-no-emul-boot -boot-load-size 4 -boot-info-table \
-	-R -J -volid "$ISO_VOLID" -v . >&8
-	#-R -J -volid "$ISO_VOLID" -v "$TMP_DIR/isofs"  >&8
-	#-R -J -volid "$ISO_VOLID" -v "${ISO_FILES[@]}"  >&8
+$ISO_MKISOFS_BIN -o "$ISO_DIR/$ISO_PREFIX.iso" -b boot/boot.img -c boot/boot.catalog -no-emul-boot \
+	-R -T -J -volid "$ISO_VOLID" -v . >&8
 StopIfError "Could not create ISO image"
 
 ISO_IMAGES=( "${ISO_IMAGES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
