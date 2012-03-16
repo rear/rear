@@ -8,3 +8,11 @@ if grep -q ^multipath $LAYOUT_FILE ; then
         rear_shell "Did you activate the multipath devices?"
     fi
 fi
+
+### Create multipath devices (at least partitions on them)
+create_multipath() {
+    local multipath device
+    read multipath device junk < <(grep "multipath $1 " $LAYOUT_FILE)
+
+    create_partitions "$device"
+}
