@@ -13,6 +13,3 @@ if [[ -z "$OUTPUT_URL" ]]; then
 
     OUTPUT_URL="usb://$USB_DEVICE"
 fi
-
-USB_PREFIX="rear/$(uname -n)/$(date +%Y%m%d.%H%M)"
-NETFS_PREFIX="$USB_PREFIX"
