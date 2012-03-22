@@ -7,6 +7,7 @@ Log "Device mapper found enabled. Including LVM tools."
 PROGS=( "${PROGS[@]}"
 lvm
 dmsetup
+dmeventd
 )
 COPY_AS_IS=( "${COPY_AS_IS[@]}"
 /etc/lvm
