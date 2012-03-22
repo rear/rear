@@ -97,7 +97,7 @@ while read -u 3 disk dev size junk ; do
         fi
     done
 
-    LogPrint "Disk $(get_device_name $dev) does not exist in the target system. Please choose the appropriate replacement."
+    LogPrint "Original disk $(get_device_name $dev) does not exist in the target system. Please choose an appropriate replacement."
     select choice in "${possible_targets[@]}" "Do not map disk." ; do
         n=( $REPLY ) # trim blanks from reply
         let n-- # because bash arrays count from 0
