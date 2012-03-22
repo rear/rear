@@ -22,7 +22,12 @@ create_fs() {
                         blocksize=" -b $value"
                         ;;
                     reserved_blocks)
-                        reserved_blocks=" -r $value"
+                        ### reserved_blocks can be a number or a percentage
+                        if [[ ${value%\%} == ${value} ]] ; then
+                            reserved_blocks=" -r $value"
+                        else
+                            reserved_blocks=" -m ${value%\%}"
+                        fi
                         ;;
                     max_mounts)
                         max_mounts=" -c $value"
