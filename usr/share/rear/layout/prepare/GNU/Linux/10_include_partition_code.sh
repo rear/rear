@@ -25,106 +25,33 @@ elif version_newer "$parted_version" 1.6.23 ; then
     FEATURE_PARTED_ANYUNIT="y"
 fi
 
-# Partition a disk
+### Prepare a disk for partitioning/general usage
 create_disk() {
     local component disk size label junk
     read component disk size label junk < <(grep "^disk $1 " $LAYOUT_FILE)
 
-    if [ -z "$label" ] ; then
-        # LVM on whole disk can lead to no label available.
-        Log "No disk label information for disk $disk."
-        return 0
-    fi
+    ### disks should be block devices
+    [[ -b "$disk" ]]
+    BugIfError "Disk $disk is not a block device."
 
-    # Find out the actual disk size
+    ### Find out the actual disk size
     local disk_size=$( get_disk_size $(get_sysfs_name "$disk") )
 
-    [ "$disk_size" ]
+    [[ "$disk_size" ]]
     BugIfError "Could not determine size of disk $disk, please file a bug."
 
-    [ $disk_size -gt 0 ]
+    [[ $disk_size -gt 0 ]]
     StopIfError "Disk $disk has size $disk_size, unable to continue."
 
     cat >> $LAYOUT_CODE <<EOF
 Log "Erasing MBR of disk $disk"
 dd if=/dev/zero of=$disk bs=512 count=1
 sync
-
-LogPrint "Creating partitions for disk $disk ($label)"
-parted -s $disk mklabel $label >&2
 EOF
 
-    local start end start_mb end_mb
-    let start=32768 # start after one cylinder 63*512 + multiple of 4k = 64*512
-    let end=0
+    create_partitions "$disk" "$label"
 
-    local part odisk size parttype flags name junk
-    while read part odisk size pstart parttype flags name junk; do
-
-        # if not in migration mode, use original start
-        if [ -z "$MIGRATION_MODE" ] && ! [ "$pstart" = "unknown" ] ; then
-            start=$pstart
-        fi
-
-        # calculate the end of the partition.
-        let end=$start+$size
-
-        # test to make sure we're not past the end of the disk
-        if [ $end -gt $disk_size ] ; then
-            LogPrint "Partition $name size reduced to fit on disk."
-            let end=$disk_size
-        fi
-
-        # extended partitions run to the end of disk...
-        if [ "$parttype" = "extended" ] ; then
-            let end=$disk_size
-        fi
-
-        if [ -n "$FEATURE_PARTED_ANYUNIT" ] ; then
-cat <<EOF >> $LAYOUT_CODE
-parted -s $disk mkpart $parttype ${start}B $(($end-1))B >&2
-EOF
-        else
-            # Old versions of parted accept only sizes in megabytes...
-            if [ $start -gt 0 ] ; then
-                let start_mb=$start/1024/1024
-            else
-                start_mb=0
-            fi
-            let end_mb=$end/1024/1024
-cat <<EOF >> $LAYOUT_CODE
-parted -s $disk mkpart $parttype $start_mb $end_mb >&2
-EOF
-        fi
-
-        # the start of the next partition is where this one ends
-        # We can't use $end because of extended partitions
-        # extended partitions have a small actual size as reported by sysfs
-        let start=$start+${size%B}
-
-        # round starting size to next multiple of 4096
-        # 4096 is a good match for most device's block size
-        start=$( echo "$start" | awk '{printf "%u", $1+4096-($1%4096);}')
-
-        # Get the partition number from the name
-        local number=$(echo "$name" | grep -o -E "[0-9]+$")
-
-        local flags="$(echo $flags | tr ',' ' ')"
-        local flag
-        for flag in $flags ; do
-            if [ "$flag" = "none" ] ; then
-                continue
-            fi
-            echo "parted -s $disk set $number $flag on >&2" >> $LAYOUT_CODE
-        done
-
-        # Explicitly name GPT partitions
-        if [[ "$label" = "gpt" ]] && [[ "$parttype" != "rear-noname" ]] ; then
-            echo "parted -s $disk name $number \"$parttype\"" >> $LAYOUT_CODE
-        fi
-    done < <(grep "^part $disk" $LAYOUT_FILE)
-
-cat >> $LAYOUT_CODE <<EOF
+    cat >> $LAYOUT_CODE <<EOF
 # Wait some time before advancing
 sleep 10
 
@@ -132,4 +59,130 @@ sleep 10
 my_udevtrigger
 my_udevsettle
 EOF
+}
+
+### Create partitions on a block device.
+### The block device does not necessarily exist yet...
+create_partitions() {
+    local device=$1
+    local label=$2
+
+    ### list partition types/names to detect disk label type
+    local -a names=()
+    local part size pstart name junk
+    while read part disk size pstart name junk ; do
+        names=( "${names[@]}" $name )
+        case $name in
+            (primary|extended|logical)
+                if [[ -z "$label" ]] ; then
+                    Log "Disk label for $device detected as msdos."
+                    label="msdos"
+                fi
+                ;;
+        esac
+    done < <( grep "^part $device " $LAYOUT_FILE )
+
+    ### early return for devices without partitions.
+    if [[ ${#names[@]} -eq 0 ]] ; then
+        Log "No partitions on device $device."
+        return 0
+    fi
+
+    if [[ -z "$label" ]] ; then
+        label="gpt"
+        ### msdos label types are detected earlier
+    fi
+
+    cat >> $LAYOUT_CODE <<EOF
+LogPrint "Creating partitions for disk $device ($label)"
+parted -s $device mklabel $label >&2
+EOF
+
+    local device_size sysfs_name
+    if [[ -b $device ]] ; then
+        sysfs_name=$(get_sysfs_name "$device")
+        if [[ "$sysfs_name" ]] && [[ -d /sys/block/$sysfs_name ]] ; then
+            device_size=$( get_disk_size  "$sysfs_name" )
+        fi
+    fi
+
+    local start end start_mb end_mb
+    let start=32768 # start after one cylinder 63*512 + multiple of 4k = 64*512
+    let end=0
+
+    local flags partition
+    while read part disk size pstart name flags partition junk; do
+
+        ### if not in migration mode and start known, use original start
+        if [ -z "$MIGRATION_MODE" ] && ! [ "$pstart" = "unknown" ] ; then
+            start=$pstart
+        fi
+
+        end=$(( start + size ))
+
+        ### test to make sure we're not past the end of the disk
+        if [[ "$device_size" ]] && (( end > $device_size )) ; then
+            LogPrint "Partition $name on $device: size reduced to fit on disk."
+            end=$device_size
+        fi
+
+        ### extended partitions run to the end of disk... (we assume)
+        if [[ "$name" = "extended" ]] ; then
+            if [[ "$device_size" ]] ; then
+                end=$device_size
+            else
+                ### we don't know the size of devices that don't exist yet
+                ### replaced by 100% later on.
+                end=
+            fi
+        fi
+
+        if [[ "$FEATURE_PARTED_ANYUNIT" ]] ; then
+            if [[ "$end" ]] ; then
+                end="$(($end-1))B"
+            else
+                end="100%"
+            fi
+            cat >> $LAYOUT_CODE <<EOF
+parted -s $device mkpart $name ${start}B $end >&2
+EOF
+        else
+            ### Old versions of parted accept only sizes in megabytes...
+            if (( $start > 0 )) ; then
+                start_mb=$(( start/1024/1024 ))
+            else
+                start_mb=0
+            fi
+            end_mb=$(( end/1024/1024 ))
+            cat  >> $LAYOUT_CODE <<EOF
+parted -s $device mkpart $name $start_mb $end_mb >&2
+EOF
+        fi
+
+        # the start of the next partition is where this one ends
+        # We can't use $end because of extended partitions
+        # extended partitions have a small actual size as reported by sysfs
+        start=$(( start + ${size%B} ))
+
+        # round starting size to next multiple of 4096
+        # 4096 is a good match for most device's block size
+        start=$( echo "$start" | awk '{printf "%u", $1+4096-($1%4096);}')
+
+        # Get the partition number from the name
+        local number=$(echo "$partition" | grep -o -E "[0-9]+$")
+
+        local flags="$(echo $flags | tr ',' ' ')"
+        local flag
+        for flag in $flags ; do
+            if [[ "$flag" = "none" ]] ; then
+                continue
+            fi
+            echo "parted -s $device set $number $flag on >&2" >> $LAYOUT_CODE
+        done
+
+        # Explicitly name GPT partitions
+        if [[ "$label" = "gpt" ]] && [[ "$name" != "rear-noname" ]] ; then
+            echo "parted -s $device name $number \"$name\"" >> $LAYOUT_CODE
+        fi
+    done < <(grep "^part $device" $LAYOUT_FILE)
 }

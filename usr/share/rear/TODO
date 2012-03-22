@@ -18,8 +18,6 @@ A list of items that wait for someone to volunteer to fix :)
 * Add a disklayout.conf-related menu item to modify and recreate
   _diskrestore.sh_ from it
 
-* Add another warning if there is less space on _/boot_ than e.g. 10 MB
-
 * Support dhcpcd (SLES11) in addition to dhclient
 
 * Avoid disabling selinux during backup
@@ -28,33 +26,17 @@ A list of items that wait for someone to volunteer to fix :)
 
 * _finalize/Gentoo/i386/17_rebuild_initramfs.sh_
   - needs to be written, I have no idea what should be done here
-    (sinceI don't have Gentoo)
+    (since I don't have Gentoo)
 
 * _finalize/Fedora/i386/17_rebuild_initramfs.sh_
   - needs to be written, seems like RH builds rich initramfs with all
     modules included
   - be aware, recent Fedora uses dracut instead of mkinitrd
 
-* Add fsadm so 'lvreduce -r' works
-  - also add lvresize commands to shell history for convenience
-
-* Rewrite '/mnt/local/etc/fstab' so disklayout/diskrestore changes are taken
-  into effect after a reboot
-  - without this, a reboot will go into rescue mode because filesystems cannot
-    be mounted
-
-* Implement reserved block count in percentage, rather than fixed sizes
-  - otherwise changing the container (logical volume/partition) size may
-    cause problems because the reserved block count is too high/not
-    proportional to its new size
-
 
 == Known issues
 * Reboot on Ubuntu rescue media broken
   - Probably we miss some script or config for upstart
-
-* Running checklayout (e.g. every 15 minutes) blocks an mkrescue or
-  format workflow ran at the same time
 
 * We do not support backing up logical volumes that are not mounted/visible.
   - in case of e.g. KVM hosts, we fail to back up those disk images that are
@@ -64,46 +46,6 @@ A list of items that wait for someone to volunteer to fix :)
   - since no USB support has been loaded, USB keyboards are not working
     to intervene
   - cold-booting this hardware always caused udev to continue (!)
-
-* During boot, a lot of different output messes up the screen
-  - to a point that sometimes the prompt is not visible
-
-* For remapping, the proposed disks include loop and ram devices
-  - on RHEL4 the nbd kernel module is loaded as part of loading all
-    block devices, this results in 128 nbd block devices offered to
-    map to during manual recovery
-
-
-== Documentation
-* Create official documentation for users and admins
-
-
-== Packaging/installation
-* Implement a _Makefile_ with the following targets:
-  - install
-  - uninstall
-  - dist
-  - rpm
-  - deb
-
-* Check bash syntax from +make dist+ or +make install+ to prevent syntax errors
-  - Maybe even provide a +make test+ target as well
-
-* Check for empty files and/or dangling symlinks and/or files containing
-  subversion symlink info
-  - To help detect problems caused be backporting/forwardporting patches
-    using patch/diff
-  - As part of the above +make test+ target ?
-
-
-== Community
-* Move to github, or something providing similar features to make
-  contributing easier, includes:
-  - website/wiki
-  - issue-tracker
-  - milestone integration
-  - providing pull requests
-  - decentralized
 
 
 == Clean up
@@ -116,32 +58,4 @@ A list of items that wait for someone to volunteer to fix :)
   - also for +OUTPUT=USB+
   - finding +SYSLINUX_DIR+ should be a script of its own
 
-* Can we drop the mkvendorrpm workflow?
-  - merge the default SPEC file with the Fedora specific SPEC file
-
-* Can we drop the mkdeb, mkdist, mktar, mkrpm workflows
-
-* _prep/Linux-ia64/20_getty_or_agetty.sh_ might be obsolete after the
-  +USE_SERIAL_CONSOLE+ piece has been added and tested successfully
-  - ia64 architecture will not support Linux anymore in future?
-    Dropped off the list in RHEL6.
-
-* Remove remaining progress code
-
 * Get rid of any +vol_id+ dependencies, where possible (e.g. +USE_LAYOUT+)
-
-* Convert tabs to 4 spaces
-
-* Convert test and [ ] constructs to [[ ]] and (( )) constructs
-
-* Change filesystem structure into:
-  - AUTHORS, ChangeLog, COPYING, README, TODO
-  - bin/
-  - conf/
-  - contrib/
-  - doc/
-  - lib/
-  - man/
-  - skel/
-  - stages/
-  - workflows/

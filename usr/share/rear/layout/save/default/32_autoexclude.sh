@@ -7,17 +7,21 @@ if [ -n "$AUTOEXCLUDE_MULTIPATH" ] ; then
     done < <(grep ^multipath $LAYOUT_FILE)
 fi
 
-# Automatically exclude removable devices
-while read disk device junk ; do
-    sysfs_name=$(get_sysfs_name $device)
-    if [ -r /sys/block/$sysfs_name/removable ] ; then
-        if [ "$( < /sys/block/$sysfs_name/removable)" = "1" ] ; then
-            Log "Automatically excluding removable device $device"
-            mark_as_done "$device"
-            mark_tree_as_done "$device"
-        fi
-    fi
-done < <(grep ^disk $LAYOUT_FILE)
+### Automatically exclude filesystems under a certain path
+### This should cover automatically attached USB devices.
+if [[ "$AUTOEXCLUDE_PATH" ]] && (( "${#AUTOEXCLUDE_PATH[@]}" > 0 )) ; then
+    for exclude in "${AUTOEXCLUDE_PATH[@]}" ; do
+        while read fs device mountpoint junk ; do
+            if [[ "${mountpoint#${exclude%/}/}" != "$mountpoint" ]] ; then
+                Log "Automatically excluding filesystem $mountpoint."
+                mark_as_done "fs:$mountpoint"
+                mark_tree_as_done "fs:$mountpoint"
+                ### by excluding the filesystem, the device will be excluded by the
+                ### automatic exclusion of disks without mounted filesystems.
+            fi
+        done < <(grep ^fs $LAYOUT_FILE)
+    done
+fi
 
 # Automatically exclude disks that do not have filesystems mounted.
 if [ -n "$AUTOEXCLUDE_DISKS" ] ; then

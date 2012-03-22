@@ -33,19 +33,23 @@ Log "Saving Filesystem layout."
                 blocksize=$($tunefs -l $device | grep "Block size" | tr -d " " | cut -d ":" -f "2")
                 max_mounts=$($tunefs -l $device | grep "Maximum mount count" | tr -d " " | cut -d ":" -f "2")
                 check_interval=$($tunefs -l $device | grep "Check interval" | cut -d "(" -f 1 | tr -d " " | cut -d ":" -f "2")
+
+                nr_blocks=$($tunefs -l $device | grep "Block count" | tr -d " " | cut -d ":" -f "2")
                 reserved_blocks=$($tunefs -l $device | grep "Reserved block count" | tr -d " " | cut -d ":" -f "2")
+                reserved_percentage=$(( reserved_blocks * 100 / nr_blocks ))
 
                 # translate check_interval from seconds to days
                 let check_interval=$check_interval/86400
 
                 echo -n "uuid=$uuid label=$label"
-                echo -n " blocksize=$blocksize reserved_blocks=$reserved_blocks"
+                echo -n " blocksize=$blocksize reserved_blocks=$reserved_percentage%"
                 echo -n " max_mounts=$max_mounts check_interval=${check_interval}d"
                 ;;
-	    vfat)
-		label=$(dosfslabel $device)
-		echo -n " label=$label"
-		;;
+            vfat)
+                # Make sure we don't get any other output from dosfslabel (errors go to stdout :-/)
+                label=$(dosfslabel $device | tail -1)
+                echo -n " label=$label"
+                ;;
             xfs)
                 uuid=$(xfs_admin -u $device | cut -d'=' -f 2 | tr -d " ")
                 label=$(xfs_admin -l $device | cut -d'"' -f 2)

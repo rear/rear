@@ -26,5 +26,6 @@ done < <( dmsetup ls --target multipath )
 
 if grep -q ^multipath $DISKLAYOUT_FILE ; then
     PROGS=( "${PROGS[@]}" multipath kpartx multipathd )
-    COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/multipath.conf )
+    COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/multipath.conf /etc/lib*/multipath )
+    LIB=( "${PROGS[@]}" libaio* )
 fi

@@ -32,3 +32,6 @@ fi
 if [ -e $FS_UUID_MAP ] ; then
     rm -f $FS_UUID_MAP  # map sure old data is deleted
 fi
+
+: > $LAYOUT_TODO
+: > $LAYOUT_DEPS

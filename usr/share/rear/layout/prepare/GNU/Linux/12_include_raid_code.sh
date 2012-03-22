@@ -56,4 +56,7 @@ test -b $device && mdadm --stop $device
 
 $mdadmcmd >&2
 EOF
+
+    ### Create partitions on MD
+    create_partitions "$device"
 }

@@ -8,6 +8,7 @@ PROGS=( "${PROGS[@]}"
 lvm
 dmsetup
 dmeventd
+fsadm
 )
 COPY_AS_IS=( "${COPY_AS_IS[@]}"
 /etc/lvm

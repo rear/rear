@@ -93,12 +93,12 @@ case "$(basename $BACKUP_PROG)" in
 			;;
 			esac
 
-			echo "INFO Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]" >&8
+			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 		done
 		;;
 
 	(*)
-		echo "INFO Archiving" >&8
+		ProgressInfo "Archiving"
 		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
 			ProgressStep
 		done

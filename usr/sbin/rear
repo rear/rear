@@ -175,10 +175,6 @@ fi
 
 # enable debug output of the progress pipe
 if [[ "$DEBUG" ]]; then
-	if [[ "$ProgressPID" ]]; then
-		kill -WINCH $ProgressPID
-		BugIfError "Could not kill -PWR ProgressPID"
-	fi
 	KEEP_BUILD_DIR=1
 fi
 
