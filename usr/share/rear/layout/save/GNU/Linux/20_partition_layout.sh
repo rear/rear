@@ -207,8 +207,9 @@ extract_partitions() {
             (( $partition_nr > 4 )) && continue
 
             if has_binary sfdisk ; then
-                declare partition_id=$(sfdisk -c $device $partition_nr)
-                if [[ "$partition_id" = "f" ]] || [[ "$partition_id" = "5" ]] ; then
+                declare partition_id=$(sfdisk -c $device $partition_nr 2>&8)
+                ### extended partitions are either DOS_EXT, EXT_LBA or LINUX_EXT
+                if [[ "$partition_id" = @(5|f|85) ]]; then
                     sed -i /^$partition_nr\ /s/\ primary\ /\ extended\ / $TMP_DIR/partitions
                 fi
             else
