@@ -45,10 +45,11 @@ Log "Saving Filesystem layout."
                 echo -n " blocksize=$blocksize reserved_blocks=$reserved_percentage%"
                 echo -n " max_mounts=$max_mounts check_interval=${check_interval}d"
                 ;;
-	    vfat)
-		label=$(dosfslabel $device)
-		echo -n " label=$label"
-		;;
+            vfat)
+                # Make sure we don't get any other output from dosfslabel (errors go to stdout :-/)
+                label=$(dosfslabel $device | tail -1)
+                echo -n " label=$label"
+                ;;
             xfs)
                 uuid=$(xfs_admin -u $device | cut -d'=' -f 2 | tr -d " ")
                 label=$(xfs_admin -l $device | cut -d'"' -f 2)
