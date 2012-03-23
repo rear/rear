@@ -9,7 +9,7 @@ fi
 
 ### Automatically exclude filesystems under a certain path
 ### This should cover automatically attached USB devices.
-if [[ "$AUTOEXCLUDE_PATH" ]] && (( "${#AUTOEXCLUDE_PATH[@]}" > 0 )) ; then
+if [[ "$AUTOEXCLUDE_PATH" ]] ; then
     for exclude in "${AUTOEXCLUDE_PATH[@]}" ; do
         while read fs device mountpoint junk ; do
             if [[ "${mountpoint#${exclude%/}/}" != "$mountpoint" ]] ; then
