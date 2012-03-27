@@ -35,7 +35,7 @@ extract_partitions() {
     if [[ ${#sysfs_paths[@]} -eq 0 ]] ; then
         ### try to find partitions like /dev/mapper/datalun1p1
         if [[ ${device/mapper//} != ${device} ]] ; then
-            for path in ${device}p* ${device}-part* ; do
+            for path in ${device}p* ${device}-part*  ${device}_part*; do
                 sysfs_path=$(get_sysfs_name $path)
                 if [[ "$sysfs_path" ]] && [[ -e "/sys/block/$sysfs_path" ]] ; then
                     sysfs_paths=( "${sysfs_paths[@]}" "/sys/block/$sysfs_path" )
