@@ -1,8 +1,0 @@
-[Unit]
-Description=udev Kernel Socket
-DefaultDependencies=no
-
-[Socket]
-Service=udev.service
-ReceiveBuffer=134217728
-ListenNetlink=kobject-uevent 1
