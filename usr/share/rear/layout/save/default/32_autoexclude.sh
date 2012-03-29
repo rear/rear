@@ -61,14 +61,25 @@ fi
 
 ### Prevent partitioning of the underlying devices on multipath
 while read multipath device slaves junk ; do
+    local -a devices=()
+
     OIFS=$IFS
     IFS=","
     for slave in $slaves ; do
-        Log "Excluding multipath slave $slave."
-        mark_as_done "$slave"
-        mark_tree_as_done "$slave"
+        devices=( "${devices[@]}" "$slave" )
     done
     IFS=$OIFS
+
+    for slave in "${devices[@]}" ; do
+        Log "Excluding multipath slave $slave."
+        mark_as_done "$slave"
+        ### the slave can have partitions, also exclude them
+        while read child parent junk ; do
+            if [[ "$child" != "$device" ]] ; then
+                mark_as_done "$child"
+            fi
+        done < <(grep "$slave$" $LAYOUT_DEPS)
+    done
 done < <(grep ^multipath $LAYOUT_FILE)
 
 ### Automatically exclude autofs devices
