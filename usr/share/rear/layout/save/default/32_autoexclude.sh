@@ -59,6 +59,18 @@ if [ -n "$AUTOEXCLUDE_DISKS" ] ; then
 
 fi
 
+### Prevent partitioning of the underlying devices on multipath
+while read multipath device slaves junk ; do
+    OIFS=$IFS
+    IFS=","
+    for slave in $slaves ; do
+        Log "Excluding multipath slave $slave."
+        mark_as_done "$slave"
+        mark_tree_as_done "$slave"
+    done
+    IFS=$OIFS
+done < <(grep ^multipath $LAYOUT_FILE)
+
 ### Automatically exclude autofs devices
 if [[ -n "$AUTOEXCLUDE_AUTOFS" ]] ; then
     while read name mountpoint junk ; do
