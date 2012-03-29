@@ -31,14 +31,17 @@ while read type device size junk ; do
         resizeable_space=0
         available_space=$newsize
         while read type part size start name flags name junk; do
-            if [[ "${flags/boot/}" == "$flags" ]] ; then
-                partitions=( "${partitions[@]}" "$name|${size%B}" )
-                resizeable_space=$(( resizeable_space + ${size%B} ))
-                Log "Will resize partition $name."
-            else
-                available_space=$(( available_space - ${size%B} ))
-                Log "Will not resize partition $name."
-            fi
+            case $flags in
+                (*boot*|*bios_grub*)
+                    available_space=$(( available_space - ${size%B} ))
+                    Log "Will not resize partition $name."
+                    ;;
+                (*)
+                    partitions=( "${partitions[@]}" "$name|${size%B}" )
+                    resizeable_space=$(( resizeable_space + ${size%B} ))
+                    Log "Will resize partition $name."
+                    ;;
+            esac
         done < <(grep "^part $device" $LAYOUT_FILE)
 
         if (( ${#partitions[@]} == 0 )) ; then
