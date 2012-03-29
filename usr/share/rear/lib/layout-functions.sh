@@ -167,9 +167,10 @@ generate_layout_dependencies() {
                 name=$(echo "$remainder" | cut -d " " -f "1")
                 disks=$(echo "$remainder" | cut -d " " -f "2" | tr "," " ")
 
+                add_component "$name" "multipath"
+
                 for disk in $disks ; do
                     add_dependency "$name" "$disk"
-                    add_component "$name" "multipath"
                 done
                 ;;
         esac
