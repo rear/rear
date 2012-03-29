@@ -98,11 +98,20 @@ LogPrint "Creating partitions for disk $device ($label)"
 parted -s $device mklabel $label >&2
 EOF
 
-    local device_size sysfs_name
+    local block_size device_size sysfs_name
     if [[ -b $device ]] ; then
         sysfs_name=$(get_sysfs_name "$device")
         if [[ "$sysfs_name" ]] && [[ -d /sys/block/$sysfs_name ]] ; then
+            block_size=$( get_block_size "$sysfs_name" )
             device_size=$( get_disk_size  "$sysfs_name" )
+
+            ### GPT disks need 33 LBA blocks at the end of the disk
+            if [[ "$label" == "gpt" ]] ; then
+                device_size=$(( device_size - 33*block_size ))
+                if [[ "$MIGRATION_MODE" ]] ; then
+                    Log "Size reductions of GPT partitions probably needed."
+                fi
+            fi
         fi
     fi
 
@@ -123,6 +132,7 @@ EOF
         ### test to make sure we're not past the end of the disk
         if [[ "$device_size" ]] && (( end > $device_size )) ; then
             LogPrint "Partition $name on $device: size reduced to fit on disk."
+            Log "End changed from $end to $device_size."
             end=$device_size
         fi
 
