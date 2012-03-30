@@ -4,9 +4,6 @@ A list of items that wait for someone to volunteer to fix :)
 
 
 == New features
-* Add a disklayout.conf-related menu item to modify and recreate
-  _diskrestore.sh_ from it
-
 * Support dhcpcd (SLES11) in addition to dhclient
 
 * Avoid disabling selinux during backup
