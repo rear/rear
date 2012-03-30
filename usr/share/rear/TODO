@@ -4,8 +4,6 @@ A list of items that wait for someone to volunteer to fix :)
 
 
 == New features
-* Support dhcpcd (SLES11) in addition to dhclient
-
 * Avoid disabling selinux during backup
   - add +--selinux+ option to tar and testing
   - +rsync -X+ option tests required
