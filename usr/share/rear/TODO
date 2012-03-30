@@ -35,9 +35,6 @@ A list of items that wait for someone to volunteer to fix :)
 
 
 == Known issues
-* Reboot on Ubuntu rescue media broken
-  - Probably we miss some script or config for upstart
-
 * We have seen boot-problems where udev seems to wait indefinitely
   - since no USB support has been loaded, USB keyboards are not working
     to intervene
