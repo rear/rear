@@ -4,10 +4,6 @@ A list of items that wait for someone to volunteer to fix :)
 
 
 == New features
-* Avoid disabling selinux during backup
-  - add +--selinux+ option to tar and testing
-  - +rsync -X+ option tests required
-
 * _finalize/Gentoo/i386/17_rebuild_initramfs.sh_
   - needs to be written, I have no idea what should be done here
     (since I don't have Gentoo)
