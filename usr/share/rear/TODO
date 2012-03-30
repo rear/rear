@@ -3,17 +3,6 @@
 A list of items that wait for someone to volunteer to fix :)
 
 
-== Wait for feedback
-* Write network migration code for all other distributions
-  - some work has been done in the meantime, but not sure if it is
-    sufficient enough to cover all
-  - waiting on customer feedback
-
-* Support dhcp for network migration
-  - has been added in 1.9.0
-  - waiting on customer feedback
-
-
 == New features
 * Add a disklayout.conf-related menu item to modify and recreate
   _diskrestore.sh_ from it
