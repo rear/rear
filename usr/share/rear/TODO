@@ -3,17 +3,6 @@
 A list of items that wait for someone to volunteer to fix :)
 
 
-== New features
-* _finalize/Gentoo/i386/17_rebuild_initramfs.sh_
-  - needs to be written, I have no idea what should be done here
-    (since I don't have Gentoo)
-
-* _finalize/Fedora/i386/17_rebuild_initramfs.sh_
-  - needs to be written, seems like RH builds rich initramfs with all
-    modules included
-  - be aware, recent Fedora uses dracut instead of mkinitrd
-
-
 == Known issues
 * We have seen boot-problems where udev seems to wait indefinitely
   - since no USB support has been loaded, USB keyboards are not working
