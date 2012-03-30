@@ -47,7 +47,7 @@ while read device type size junk ; do
 	esac
 	# for swap partitions and files alike: Create swap_vol_id
 	mkdir -p "${VAR_DIR}/recovery${device}"
-	vol_id $device >${VAR_DIR}/recovery${device}/swap_vol_id
-	StopIfError "Could not read swap space info from '$device'.Your udev implementation (vol_id or blkid) has a problem reading it."
+	rear_vol_id $device >${VAR_DIR}/recovery${device}/swap_vol_id
+	StopIfError "Could not read swap space info from '$device'. The rear_vol_id wrapper (using vol_id or blkid) has a problem reading it."
 	test "$DEPENDS" && echo "$DEPENDS" >${VAR_DIR}/recovery${device}/depends
 done </proc/swaps

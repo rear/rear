@@ -57,5 +57,3 @@ A list of items that wait for someone to volunteer to fix :)
   - currently used also to determine the +SYSLINUX_DIR+
   - also for +OUTPUT=USB+
   - finding +SYSLINUX_DIR+ should be a script of its own
-
-* Get rid of any +vol_id+ dependencies, where possible (e.g. +USE_LAYOUT+)
