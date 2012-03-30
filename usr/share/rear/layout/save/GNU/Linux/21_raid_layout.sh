@@ -19,7 +19,7 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
 
             # Gather information
             level=$( grep "Raid Level" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
-            uuid=$( grep "UUID" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2-")
+            uuid=$( grep "UUID" $TMP_DIR/mdraid | tr -d " " | cut -d "(" -f "1" | cut -d ":" -f "2-")
             layout=$( grep "Layout" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
             chunksize=$( grep "Chunk Size" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2" | sed -r 's/^([0-9]+).+/\1/')
 
