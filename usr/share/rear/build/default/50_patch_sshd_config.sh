@@ -16,6 +16,7 @@ if test "$SSH_CONFIG_FILES" ; then
 sed -i  -e 's/PasswordAuthentication.*/PasswordAuthentication no/ig' \
 	-e 's/ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/ig' \
 	-e 's/UsePAM.*/UsePam no/ig' \
+	-e 's/ListenAddress.*/ListenAddress 0.0.0.0/ig' \
 	-e '1i PrintMotd no' \
 	$ROOTFS_DIR/etc/sshd_co[n]fig $ROOTFS_DIR/etc/ssh/sshd_co[n]fig
 else
