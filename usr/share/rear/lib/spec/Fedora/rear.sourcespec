@@ -65,13 +65,12 @@ sed	-e 's#/etc#%{_sysconfdir}#' \
 rm -f $RPM_BUILD_ROOT%{_datadir}/rear/README
 rm -f $RPM_BUILD_ROOT%{_datadir}/rear/COPYING
 rm -f $RPM_BUILD_ROOT%{_datadir}/rear/AUTHORS
-rm -f $RPM_BUILD_ROOT%{_datadir}/rear/TODO
 rm -rf $RPM_BUILD_ROOT%{_datadir}/rear/doc/*
 
 
 %files
 %defattr(-,root,root,-)
-%doc COPYING README AUTHORS TODO
+%doc AUTHORS COPYING README
 %doc doc/*.txt
 %{_sbindir}/rear
 %{_datadir}/rear

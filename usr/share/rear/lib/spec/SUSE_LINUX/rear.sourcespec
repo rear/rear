@@ -89,7 +89,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc COPYING README AUTHORS TODO
+%doc AUTHORS COPYING README
 %doc doc/*.txt
 %{_sbindir}/rear
 %{_datadir}/rear

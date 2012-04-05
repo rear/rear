@@ -95,9 +95,9 @@ SBIN_DIR=/usr/sbin
 test -s .$SHARE_DIR/contrib/rear-$VERSION.ebuild ||\
 	mv -v .$SHARE_DIR/contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild
 # copy doc files
-cp -rv .$SHARE_DIR/{COPYING,README,AUTHORS,TODO,doc,contrib}  .
+cp -rv .$SHARE_DIR/{COPYING,README,AUTHORS,doc,contrib}  .
 # convert files to UTF-8 if possible
-for file in COPYING README AUTHORS TODO `echo doc/*` ; do
+for file in COPYING README AUTHORS `echo doc/*` ; do
 	mv "${file}" timestamp
 	iconv -f ISO-8859-1 -t UTF-8 -o "${file}" timestamp
 	touch -r timestamp "${file}"
