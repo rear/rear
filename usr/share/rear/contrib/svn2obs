@@ -39,7 +39,7 @@ if [[ "$REV" != "$OBSREV" || ( "$1" && "$1" = force ) ]] ; then
 	osc add rear-snapshot/*.tar.gz
 	sed -i -e "/^Version:/s/^Version.*$/Version: 0.0.$REV/" rear-snapshot/rear-snapshot.dsc rear-snapshot/rear-snapshot.spec rear-snapshot/debian.control
 	sed -i -e "/rear-snapshot/s/0.0.[0-9]*/0.0.$REV/g" rear-snapshot/debian.changelog
-	osc ci -m "SVN -> OBS rev $REV" rear-snapshot
+	osc ci --skip-validation -m "SVN -> OBS rev $REV" rear-snapshot
 else
 	echo "ReaR revision in SVN and OBS match already ($REV)"
 fi
