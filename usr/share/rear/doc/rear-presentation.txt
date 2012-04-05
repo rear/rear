@@ -287,7 +287,7 @@ Available options:
 == Hacking on Rear
 * It is Bash !
 
-* Join the mailinglist
+*Join the mailinglist
 
 * Understand modular framework and workflows
   - Use: +rear -s <workflow>+

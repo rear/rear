@@ -275,7 +275,32 @@ Once booted from the USB device, select the system you like to recover from
 the list. If you don't press a key within 30 seconds, the system will try to
 boot from the local disk.
 
+["aafigure",width="12cm",height="6cm",align="center",format="svg",options="textual",aspect="0.7",linewidth="1"]
 ----
++---------------------------------------------+
+|        "Relax and Recover v1.12.0svn497"    |
++---------------------------------------------+
+|  "Recovery images"                          |
+|    "system.localdomain"                   > |
+|    "other.localdomain"                    > |
+|---------------------------------------------|
+|  "Other actions"                            |
+|    "Help for Relax and Recover"             |
+|    "Boot Local disk (hd1)"                  |
+|    "Boot BIOS disk (0x81)"                  |
+|    "Boot Next BIOS device"                  |
+|    "Hardware Detection tool"                |
+|    "Memory test"                            |
+|    "Reboot system"                          |
+|    "Power off system"                       |
++---------------------------------------------+
+
+      "Press [Tab] to edit options or [F1] for Rear help"
+
+           "Automatic boot in 30 seconds..."
+----
+
+////
       .-------------------------------------------------------------.
       |               Relax and Recover v1.12.0svn497               |
       |-------------------------------------------------------------|
@@ -297,7 +322,7 @@ boot from the local disk.
              Press [Tab] to edit options or [F1] for Rear help
 
                         Automatic boot in 30 seconds...
-----
+////
 
 WARNING: Booting from a local disk may fail when booting from a USB device.
          This is caused by the fact that the GRUB bootloader on the local
@@ -308,7 +333,34 @@ WARNING: Booting from a local disk may fail when booting from a USB device.
 
 Then select the image you would like to recover.
 
+["aafigure",width="14cm",height="7cm",align="center",format="svg",options="textual",aspect="0.7",linewidth="1"]
 ----
++---------------------------------------------+
+|           "system.localdomain"              |
++---------------------------------------------+
+|  "2011-03-26 02:16 backup"                  |
+|  "2011-03-25 18:39 backup"                  |
+|  "2011-03-05 16:12 rescue image"            |
+|---------------------------------------------|
+|  "Back"                                     |
+|                                             |
+|                                             |
+|                                             |
+|                                             |
+|                                             |
+|                                             |
+|                                             |
+|                                             |
++---------------------------------------------+
+
+      "Press [Tab] to edit options or [F1] for Rear help"
+
+
+"Rear backup using kernel 2.6.32-122.el6.x86_64"
+"BACKUP=NETFS OUTPUT=USB OUTPUT_URL=usb:///dev/disk/by-label/REAR-000"
+----
+
+////
       .-------------------------------------------------------------.
       |                     system.localdomain                      |
       |-------------------------------------------------------------|
@@ -334,7 +386,7 @@ Then select the image you would like to recover.
 
 Rear backup using kernel 2.6.32-122.el6.x86_64
 BACKUP=NETFS OUTPUT=USB OUTPUT_URL=usb:///dev/disk/by-label/REAR-000
-----
+////
 
 TIP: When browsing through the images you get more information about the
      image at the bottom of the screen.
@@ -852,7 +904,32 @@ Once booted from the OBDR tape, select the 'Relax and Recover' menu entry from
 the menu. If you don't press a key within 30 seconds, the system will try to
 boot from the local disk.
 
+["aafigure",width="12cm",height="6cm",align="center",format="svg",options="textual",aspect="0.7",linewidth="1"]
 ----
++---------------------------------------------+
+|        "Relax and Recover v1.12.0svn497"    |
++---------------------------------------------+
+|  "Relax and Recover"                        |
+|---------------------------------------------|
+|  "Other actions"                            |
+|    "Help for Relax and Recover"             |
+|    "Boot Local disk (hd1)"                  |
+|    "Boot BIOS disk (0x81)"                  |
+|    "Boot Next BIOS device"                  |
+|    "Hardware Detection tool"                |
+|    "Memory test"                            |
+|    "Reboot system"                          |
+|    "Power off system"                       |
+|                                             |
+|                                             |
++---------------------------------------------+
+
+      "Press [Tab] to edit options or [F1] for Rear help"
+
+           "Automatic boot in 30 seconds..."
+----
+
+////
       .-------------------------------------------------------------.
       |               Relax and Recover v1.12.0svn497               |
       |-------------------------------------------------------------|
@@ -872,7 +949,7 @@ boot from the local disk.
              Press [Tab] to edit options or [F1] for Rear help
 
                         Automatic boot in 30 seconds...
-----
+////
 
 
 ==== Restoring the OBDR rescue tape
@@ -1425,6 +1502,6 @@ the following commands:
     # hpacucli ctrl all show detail
     # hpacucli ctrl all show config
     # hpacucli ctrl all show config detail
+--
 
 TIP: You can find these commands as part of the history of the Rear shell.
---
