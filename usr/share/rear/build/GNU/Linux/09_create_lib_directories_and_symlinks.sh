@@ -18,9 +18,8 @@ for libdir in /lib* /usr/lib* ; do
 	(*)	# all other libs
 		if [[ -L $libdir ]]; then
 			# ok $libdir is a link, does it exists in $ROOTFS as a dir?
-			if [[ ! -d $ROOTFS_DIR$libdir ]]; then
-				echo BugIfError "Cannot create symlink $libdir instead of directory"
-			fi
+			[[ ! -d $ROOTFS_DIR$libdir ]]
+			BugIfError "Cannot create symlink $libdir instead of directory"
 
 			linktarget=$(readlink -f $libdir)
 			linktarget="${linktarget#/}" # strip leading / to make symlink a relative one
