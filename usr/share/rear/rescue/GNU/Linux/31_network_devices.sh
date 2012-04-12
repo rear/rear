@@ -51,7 +51,7 @@ for sysfspath in /sys/class/net/* ; do
 	# FIXME: This guess is name-based and will fail horribly on renamed interfaces like I like to use them :-(
 	case $dev in
 		(bonding_masters|lo|pan*|sit*|tun*|tap*|vboxnet*|vmnet*) continue ;; # skip all kind of internal devices
-		(vlan*) Error "$PRODUCT does not yet support 802.1q, please sponsor it!" ;;
+		(vlan*) LogPrint "$PRODUCT does not yet support 802.1q, please sponsor it!" ;;
 	esac
 
 	# get mac address
