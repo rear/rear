@@ -1,6 +1,6 @@
-= Release Notes for Relax and Recover (Rear) version 1.12.0
+= Release Notes for Relax and Recover (Rear) version 1.13.0
 :Author: Gratien D'haese
-:Date: 17 November 2011
+:Date: 16 April 2012
 :Revision: 1.0
 :data-uri:
 :icons:
@@ -12,10 +12,16 @@
 This document contains the release notes for the open source project "Relax
 and Recover" (abbreviated as Rear). Rear is hosted at SourceForge:
 
-Rear project::
+Rear project [ New main place ]::
+    https://github.com/rear/rear
+
+Rear project [ Old main place ]::   
     http://sourceforge.net/projects/rear
 
-Rear website::
+Rear website [ New web-site ]::
+    http://rear.github.com/
+
+Rear website [ Old web-site ]::     
     http://rear.sourceforge.net/
 
 This document is distributed with the following license: "Creative Commons
@@ -53,6 +59,8 @@ systems with kernel 2.6 or higher. It provides the following functionality:
 
 * LVM root volumes are supported.
 
+* [*NEW!*] Multipath support for SAN storage
+ 
 * Integrates with external backup solutions such as:
 
   - GNU tar (BACKUP=NETFS)
@@ -76,8 +84,10 @@ systems with kernel 2.6 or higher. It provides the following functionality:
   - enable recovery on hardware, that is not the same as the original system
   - network and storage drivers are adjusted
   - map hard disks if they do not match (e.g. hda -> sda)
+  - remap network MAC addresses
+  - rebuild the initial ramdisk if needed (for new storage drivers)
 
-* Support new backup software: Bacula, both locally attached tapes (with
+* Support backup software: Bacula, both locally attached tapes (with
   bextract) and network-based backups. Also, in combination with OBDR tapes.
 
 * Create OBDR tapes with method +mkbackup+ and put the backup onto the tape
@@ -86,26 +96,25 @@ systems with kernel 2.6 or higher. It provides the following functionality:
 * Label the OBDR tape with the method +format+ to avoid accidental
   overwrites with OBDR
 
-* [*NEW!*] Create bootable disk (eSATA, USB ...) media with the backup included:
+* Create bootable disk (eSATA, USB ...) media with the backup included:
 ----
 BACKUP_URL=usb:///dev/<device>
 ----
 Together with +OUTPUT=USB+ we have now a complete solution on hard disks
 (booting of it and restoring data).
 
-* DHCP client support (IPv4 and IPv6) has been added. Auto detection is
-  possible with new variable +USE_DHCLIENT=yes+ (define in _local.conf_),
-  or one can hard-code your special DHCP client with the variables
-  +DHCLIENT_BIN+ (for IPv4), and/or +DHCLIENT6_BIN+ (for IPv6)
+* DHCP client support (IPv4 and IPv6) has been added. Dhcp client activation
+  can be forced via the variable +USE_DHCLIENT=yes+ (define in _local.conf_).
+  It is also possible to force DHCP at boot time with kernel option 'dhcp'
 
 * Save layout and compare layouts for easy automation of making Rear snapshots
 
-* [*NEW!*] The possibility to use the new *layout* workflow instead of the
-  current standard *dr* workflow. The *dr* workflow kept all important
+* The *layout* workflow  is now the default workflow instead of the
+  previous *dr* workflow. The *dr* workflow kept all important
   system information into a directory structure where the new *layout*
   workflow use files to keep the information centralized
 
-* [*NEW!*] External USB booting now uses extlinux instead of syslinux, and
+* External USB booting now uses extlinux instead of syslinux, and
   therefore, the USB disk must first be formatted with an ext2, ext3, ext4
   or btrfs based file system
 
@@ -117,6 +126,35 @@ The first release of Rear, version 1.0, was posted to the web in July 2006.
 For each release, this chapter lists the new features and defect fixes. Note
 that all releases are cumulative, and that all releases of Rear are compatible
 with previous versions of Rear, unless otherwise noted.
+
+=== Version 1.13.0 (April 2012)
+
+* Support for multipathing was added
+
+* Several improvements and bug fixes to the layout code (especially with parted backwards compatibility).
+
+* Added support for ext4 file systems
+
+* The OUTPUT=USB with BACKUP=NETFS and BACKUP_PROG=rsync was corrected to avoid duplicate work
+
+* Fedora and RHEL will now rebuild the initial ramdisk if needed (on recovered system)
+
+* Fix for SF#3475480: datacompression on tape
+
+* Fix for SF#3481656: missing bacula-console executable for BACKUP=BACULA workflow
+
+* Fix for SF#3479570: /etc/passwd contains ':x:' without /etc/shadow
+
+* Added "migrate HWADDR after cloning" code
+
+* Improved the systemd code (parts required by rear only) for Fedora 16/17
+
+* The DHCLIENT variables were moved from local.conf to rescue.conf. This is done automatically, so the end-user, shouldn't be aware of it.
+
+* At boot time more kernel options are recognized such as 'noip', 'dhcp', 'debug'. The 'noip' will give you a rear environment without any attempt to start networking. The 'dhcp' variable will try to start dhclient on any network interface it finds activated. The 'debug' variable (which is not new by the way) will give you the chance to debug the code of our rear code.
+
+* Rear works again on IA64 architecture (at least with RHEL 5.x). Remember, RHEL 6 is not ported to IA64.
+
 
 
 === Version 1.12.0 (November 2011)
