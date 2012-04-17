@@ -1,5 +1,5 @@
 Name: rear
-Version: 1.12.0
+Version: 1.13.0
 Release: 1%{?dist}
 Summary: Relax and Recover (Rear) is a Linux Disaster Recovery framework
 
@@ -140,6 +140,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Apr 17 2012 Gratien D'haese <gdha at sourceforge.net> - 1.13.0-1
+- placeholder for release
+
 * Mon Nov 21 2011 Gratien D'haese <gdha at sourceforge.net> - 1.12.0-1
 - placeholder for release
 
