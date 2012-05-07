@@ -239,7 +239,7 @@ Log "Saving disk partitions."
     # Disk sizes
     # format: disk <disk> <sectors> <partition label type>
     for disk in /sys/block/* ; do
-        if [[ ${disk#/sys/block/} = @(hd*|sd*|cciss*|vd*) ]] ; then
+        if [[ ${disk#/sys/block/} = @(hd*|sd*|cciss*|vd*|xvd*) ]] ; then
             devname=$(get_device_name $disk)
             devsize=$(get_disk_size ${disk#/sys/block/})
 
