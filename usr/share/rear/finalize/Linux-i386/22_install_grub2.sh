@@ -10,6 +10,11 @@
 #    guarantee a correct boot-order, or even a working boot-lader config (eg.
 #    GRUB stage2 might not be at the exact same location)
 
+# skip if another bootloader was installed
+if [[ -z "$NOBOOTLOADER" ]] ; then
+    return
+fi
+
 # Only for GRUB2 - GRUB Legacy will be handled by its own script
 [[ $(type -p grub-probe) || $(type -p grub2-probe) ]] || return
 
@@ -22,10 +27,16 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
     # Check if we find GRUB where we expect it
     [[ -d "/mnt/local/boot" ]]
     StopIfError "Could not find directory /boot"
-    [[ -d "/mnt/local/boot/grub2" ]]
-    StopIfError "Could not find directory /boot/grub2"
-    [[ -r "/mnt/local/boot/grub2/grub.cfg" ]]
-    LogIfError "Unable to find /boot/grub2/grub.cfg."
+
+    # grub2 can be in /boot/grub or /boot/grub2
+    grub_name="grub2"
+    if [[ ! -d "/mnt/local/boot/$grub_name" ]] ; then
+        grub_name="grub"
+        [[ -d "/mnt/local/boot/$grub_name" ]]
+        StopIfError "Could not find directory /boot/$grub_name"
+    fi
+    [[ -r "/mnt/local/boot/$grub_name/grub.cfg" ]]
+    LogIfError "Unable to find /boot/$grub_name/grub.cfg."
 
     # Find exclusive partitions belonging to /boot (subtract root partitions from deps)
     bootparts=$( (find_partition fs:/boot; find_partition fs:/) | sort | uniq -u )
@@ -63,13 +74,13 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
         partnr=$((partnr - 1))
 
         if [[ "$bootdisk" == "$disk" ]]; then
-            #chroot /mnt/local grub2-mkconfig -o /boot/grub2/grub.cfg
-	    #chroot /mnt/local grub2-install "$bootdisk"
-	    grub2-install --root-directory=/mnt/local/ $bootdisk
+            #chroot /mnt/local $grub_name-mkconfig -o /boot/$grub_name/grub.cfg
+	    #chroot /mnt/local $grub_name-install "$bootdisk"
+	    $grub_name-install --root-directory=/mnt/local/ $bootdisk
         else
-            chroot /mnt/local grub2-mkconfig -o /boot/grub2/grub.cfg
-	    #chroot /mnt/local grub2-install "$bootdisk"
-	    grub2-install --root-directory=/mnt/local/ $bootdisk
+            chroot /mnt/local $grub_name-mkconfig -o /boot/$grub_name/grub.cfg
+	    #chroot /mnt/local $grub_name-install "$bootdisk"
+	    $grub_name-install --root-directory=/mnt/local/ $bootdisk
         fi
 
         if (( $? == 0 )); then
