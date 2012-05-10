@@ -10,6 +10,11 @@
 #    guarantee a correct boot-order, or even a working boot-lader config (eg.
 #    GRUB stage2 might not be at the exact same location)
 
+# skip if another bootloader was installed
+if [[ -z "$NOBOOTLOADER" ]] ; then
+    return
+fi
+
 # Only for GRUB Legacy - GRUB2 will be handled by its own script
 [[ $(type -p grub) ]] || return
 

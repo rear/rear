@@ -75,7 +75,7 @@ echo "Creating archive '$distarchive'"
 # use tar to copy the current rear while excluding development and obsolete files
 cd $rear_root
 tar --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* --exclude=.gitignore \
-		--exclude=\*.rpmnew\* --exclude=.\*.swp --exclude .svn -c \
+		--exclude=\*.rpmnew\* --exclude=.\*.swp --exclude-vcs -c \
 		. | tar -C $BUILD_DIR/$prod_ver -x
 
 cd -
