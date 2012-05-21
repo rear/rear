@@ -22,5 +22,6 @@ printf 'REAR-000%10232s' ' ' | tr ' ' '\0' | dd of=$TAPE_DEVICE bs=512 count=20
 StopIfError "OBDR header could not be written to tape device '$TAPE_DEVICE'"
 
 ### Make sure we jump to block 20 before writing (needed for DAT320)
+### "mt seek" is not supported on all tape devices, do not stop on failure
 mt -f "${TAPE_DEVICE}" seek 20
-StopIfError "Could not seek to block 20 on tape device '$TAPE_DEVICE'"
+LogIfError "Could not seek to block 20 on tape device '$TAPE_DEVICE'"
