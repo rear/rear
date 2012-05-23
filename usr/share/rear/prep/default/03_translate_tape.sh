@@ -15,10 +15,6 @@ if [[ "$BACKUP_URL" ]] ; then
     fi
 fi
 
-if [[ "$TAPE_DEVICE" ]] ; then
-    TAPE_DEVICE=${TAPE_DEVICE//\/st/\/nst}
-fi
-
 if [[ -z "$BACKUP_URL" ]]; then
     if [[ "$TAPE_DEVICE" ]] ; then
         BACKUP_URL="tape://$TAPE_DEVICE"
