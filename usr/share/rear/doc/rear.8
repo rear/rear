@@ -25,9 +25,15 @@ rear \- bare metal disaster recovery tool
 \fBrear\fR [\fB\-dDsSvV\fR] [\fB\-r\fR \fIKERNEL\fR] \fICOMMAND\fR [\-\- \fIARGS\fR\&...]
 .SH "DESCRIPTION"
 .sp
-Relax and Recover (abbreviated \fBRear\fR) is a highly modular disaster recovery framework for GNU/Linux based systems, but can be easily extended to other UNIX alike systems\&. The disaster recovery information can be stored and used via the network, local on hard disks or USB devices, DVD/CD\-R\&. The result is also a bootable image that is capable of booting via PXE, DVD/CD\&.
+Relax and Recover (abbreviated \fBRear\fR) is the leading Open Source disaster recovery solution, and successor to mkcdrec\&. It comprises of a modular framework and ready\-to\-go workflows for many common situations to produce a bootable image and restore from backup using this image\&. As a benefit, it allows to restore to different hardware and can therefore be used as a migration tool as well\&.
 .sp
-The disaster recovery can be integrated with any existing backup software so that Rear utilizes the backup software to restore the files and provides the "glue" surrounding the simple file restore to having a full bare metal disaster recovery solution\&. Support for specific backup software has to be added to rear on an individual base and is very simple (look at an existing implementation for further information)\&.
+Currently Rear supports various boot media (incl\&. ISO, PXE, OBDR tape, USB or eSATA storage), a variety of network protocols (incl\&. sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude of backup strategies (incl\&. IBM TSM, HP DataProtector, Symantec NetBackup, Bacula, rsync)\&. This results in a bootable image that os capable of booting via PXE, DVD/CD, bootable tape or virtual provisioning\&.
+.sp
+Rear was designed to be easy to set up, requires no maintenance and is there to assist when disaster strikes\&. Its setup\-and\-forget nature eradicates any excuses for not having a disaster recovery solution implemented\&.
+.sp
+Recovering from disaster is made very straight\-forward by a 2\-step recovery process so that it can be executed by operational teams when required\&. When used interactively (e\&.g\&. when used for migrating systems), menus help make decisions to restore to a new (hardware) environment\&.
+.sp
+Extending Rear is made possible by its modular framework\&. Consistent logging and optionally extended output help understand the concepts behind Rear and help debug during development\&.
 .sp
 Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU General Public License at: \m[blue]\fBhttp://www\&.gnu\&.org/licenses/gpl\&.html\fR\m[]
 .SH "OPTIONS"
@@ -79,17 +85,17 @@ version information
 .RE
 .SS "COMMANDS"
 .PP
-checklayout
+\fBchecklayout\fR
 .RS 4
 check if the disk layout has changed since the last run of mkbackup/mkrescue
 .RE
 .PP
-dump
+\fBdump\fR
 .RS 4
 dump configuration and system information; please run this to verify your setup
 .RE
 .PP
-format
+\fBformat\fR
 .RS 4
 format and label USB or tape media to be used with rear;
 
@@ -99,32 +105,32 @@ or
 \fI/dev/stX\fR
 .RE
 .PP
-help
+\fBhelp\fR
 .RS 4
 print full list of commands and options
 .RE
 .PP
-mkbackup
+\fBmkbackup\fR
 .RS 4
 create rescue media and backup the system (only for internal backup methods)
 .RE
 .PP
-mkbackuponly
+\fBmkbackuponly\fR
 .RS 4
 backup the system (only for internal backup methods) without creating rescue media
 .RE
 .PP
-mkrescue
+\fBmkrescue\fR
 .RS 4
 create rescue media only
 .RE
 .PP
-recover
+\fBrecover\fR
 .RS 4
 recover the system; can be used only when running from the rescue media
 .RE
 .PP
-validate
+\fBvalidate\fR
 .RS 4
 submit validation information
 .RE
@@ -161,60 +167,206 @@ Most backup software solutions are very good at restoring data but do not suppor
 In this combination Rear recreates the system layout and calls the backup software to restore the actual data\&. Thus there is no unnessecary duplicate data storage and the Rear rescue media can be very small\&.
 .sp
 For demonstration and special use purposes Rear also includes an internal backup method, NETFS, which can be used to create a simple tar\&.gz archive of the system\&. For all permanent setups we recommend using something more professional for backup, either a traditional backup software (open source or commercial) or rsync with hardlink based solutions, e\&.g\&. RSYNC BACKUP MADE EASY\&.
+.SH "RESCUE IMAGE CONFIGURATION"
+.sp
+The OUTPUT variable defines where the rescue image should be send to\&. Possible OUTPUT setting are:
+.PP
+OUTPUT=\fBISO\fR
+.RS 4
+Create a bootable ISO9660 image on disk as
+\fIrear\-$(hostname)\&.iso\fR
+.RE
+.PP
+OUTPUT=\fBPXE\fR
+.RS 4
+Create on a remote PXE/NFS server the required files (such as configuration file, kernel and initrd image
+.RE
+.PP
+OUTPUT=\fBOBDR\fR
+.RS 4
+Create a bootable OBDR tape (optionally including the backup archive)\&. Specify the OBDR tape device by using
+TAPE_DEVICE\&.
+.RE
+.PP
+OUTPUT=\fBUSB\fR
+.RS 4
+Create a bootable USB disk (using extlinux)\&. Specify the USB storage device by using
+USB_DEVICE\&.
+.RE
+.sp
+When using OUTPUT=ISO you should provide the backup target location through the OUTPUT_URL variable\&. Possible OUTPUT_URL settings are:
+.PP
+OUTPUT_URL=\fBfile://\fR
+.RS 4
+Write the ISO image to disk\&. The default is in
+\fI/tmp\fR\&.
+.RE
+.PP
+OUTPUT_URL=\fBfish://\fR
+.RS 4
+Write the ISO image using
+lftp
+and the FISH protocol\&.
+.RE
+.PP
+OUTPUT_URL=\fBftp://\fR
+.RS 4
+Write the ISO image using
+lftp
+and the FTP protocol\&.
+.RE
+.PP
+OUTPUT_URL=\fBftps://\fR
+.RS 4
+Write the ISO image using
+lftp
+and the FTPS protocol\&.
+.RE
+.PP
+OUTPUT_URL=\fBhftp://\fR
+.RS 4
+Write the ISO image using
+lftp
+and the HFTP protocol\&.
+.RE
+.PP
+OUTPUT_URL=\fBhttp://\fR
+.RS 4
+Write the ISO image using
+lftp
+and the HTTP (PUT) procotol\&.
+.RE
+.PP
+OUTPUT_URL=\fBhttps://\fR
+.RS 4
+Write the ISO image using
+lftp
+and the HTTPS (PUT) protocol\&.
+.RE
+.PP
+OUTPUT_URL=\fBsftp://\fR
+.RS 4
+Write the ISO image using
+lftp
+and the secure FTP (SFTP) protocol\&.
+.RE
+.PP
+OUTPUT_URL=\fBrsync://\fR
+.RS 4
+Write the ISO image using
+rsync
+and the RSYNC protocol\&.
+.RE
 .SH "BACKUP SOFTWARE INTEGRATION"
 .sp
 Currently Rear supports the following backup methods\&. Please distinguish carefully between Rear support for 3rd party backup software and Rear internal backup methods\&. The latter also creates a backup of your data while the former will only integrate Rear with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself\&.
 .sp
 Especially the rear mkbackup command can be confusing as it is only useful for the internal backup methods and has no function at all with the other backup methods\&. The following backup methods need to be set in Rear with the BACKUP= option\&.
 .PP
-DP
+BACKUP=\fBDP\fR
 .RS 4
 Use HP Data Protector to restore the data\&.
 .RE
 .PP
-EXTERNAL
+BACKUP=\fBEXTERNAL\fR
 .RS 4
 Internal backup method that uses an arbitrary external command to create a backup and restore the data\&.
 .RE
 .PP
-GALAXY
+BACKUP=\fBGALAXY\fR
 .RS 4
 Use CommVault Galaxy 5 to restore the data\&.
 .RE
 .PP
-GALAXY7
+BACKUP=\fBGALAXY7\fR
 .RS 4
 Use CommVault Galaxy 7 to restore the data\&.
 .RE
 .PP
-NBU
+BACKUP=\fBNBU\fR
 .RS 4
 Use Symantec NetBackup to restore the data\&.
 .RE
 .PP
-NETFS
+BACKUP=\fBNETFS\fR
 .RS 4
 Internal backup method which can be used to create a simple backup (tar archive)\&.
 .RE
 .PP
-REQUESTRESTORE
+BACKUP=\fBREQUESTRESTORE\fR
 .RS 4
 
 \fB(default)\fR
 Not really a backup method at all, Rear simply halts the recovery and requests that somebody will restore the data to the appropriate location (e\&.g\&. via SSH)\&. This method works especially well with an rsync bases backup that is pushed back to the backup client\&.
 .RE
 .PP
-RSYNC
+BACKUP=\fBRSYNC\fR
 .RS 4
 Use rsync to restore data\&.
 .RE
 .PP
-TSM
+BACKUP=\fBTSM\fR
 .RS 4
 Use IBM Tivoli Storage Manager to restore the data\&. The Rear result files (e\&.g\&. ISO image) are also saved into TSM\&.
 .RE
 .sp
 If your favourite backup software is missing from this list, please submit a patch or ask us to implement it for you\&.
+.sp
+When using BACKUP=NETFS you should provide the backup target location through the BACKUP_URL variable\&. Possible BACKUP_URL settings are:
+.PP
+BACKUP_URL=\fBfile://\fR
+.RS 4
+To backup to local disk, use
+BACKUP_URL=file:///directory/path/
+.RE
+.PP
+BACKUP_URL=\fBnfs://\fR
+.RS 4
+To backup to NFS disk, use
+BACKUP_URL=nfs://nfs\-server\-name/share/path
+.RE
+.PP
+BACKUP_URL=\fBtape://\fR
+.RS 4
+To backup to tape device, use
+BACKUP_URL=tape:///dev/nst0
+or alternatively, simply define
+TAPE_DEVICE=/dev/nst0
+.RE
+.PP
+BACKUP_URL=\fBcifs://\fR
+.RS 4
+To backup to a Samba share (CIFS), use
+BACKUP_URL=cifs://cifs\-server\-name/share/path\&. To provide credentials for CIFS mounting use a
+\fI/etc/rear/\&.cifs\fR
+credentials file and define
+BACKUP_OPTIONS="cred=/etc/rear/\&.cifs"
+and pass along:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+username=_username_
+password=_secret password_
+domain=_domain_
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+BACKUP_URL=\fBusb://\fR
+.RS 4
+To backup to USB storage device, use
+NETFS=usb:///dev/disk/by\-path/REAR\-000
+or use a real device node or a specific filesystem label\&. Alternatively, you can specify the device using
+USB_DEVICE=/dev/disk/by\-path/REAR\-000\&.
+.sp
+If you combine this with
+OUTPUT=USB
+you will end up with a bootable USB device\&.
+.RE
 .SH "CONFIGURATION"
 .sp
 To configure rear you have to edit the configuration files in \fI/etc/rear/\fR\&. All \fI*\&.conf\fR files there are part of the configuration, but only \fIsite\&.conf\fR and \fIlocal\&.conf\fR are intended for the user configuration\&. All other configuration files hold defaults for various distributions and should not be changed\&.
@@ -337,15 +489,22 @@ instead\&.
 .RE
 .SH "BUGS"
 .sp
-Feedback is welcome, please use the project page at: \m[blue]\fBhttp://rear\&.sourceforge\&.net/\fR\m[]
+Feedback is welcome, please report any issues or improvements to our issue\-tracker at: \m[blue]\fBhttp://github\&.com/rear/issues/\fR\m[]
+.SH "SEE ALSO"
+.sp
+Relax and Recover comes with extensive documentation located in \fI/usr/share/doc\fR\&.
 .SH "AUTHORS"
 .sp
 Gratien D\(cqhaese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers\&.
 .sp
 Lars Pinne (this man page)\&.
+.sp
+Relax and Recover is a collaborative process using Github at: \m[blue]\fBhttp://github\&.com/rear/\fR\m[]
+.sp
+The Relax and Recover website is located at: \m[blue]\fBhttp://rear\&.github\&.com/\fR\m[]
 .SH "COPYRIGHT"
 .sp
-(c) 2006\-2011
+(c) 2006\-2012
 .sp
 Schlomo Schapiro
 .sp
