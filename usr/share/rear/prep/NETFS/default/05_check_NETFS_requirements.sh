@@ -33,9 +33,6 @@ if [[ "$BACKUP_URL" ]] ; then
             fi
             ;;
     esac
-
-    # define the output path according scheme (for tape is opath="")
-    local opath=$(output_path $scheme $path)
 fi
 
 # some backup progs require a different backuparchive name
@@ -48,26 +45,6 @@ case "$(basename $BACKUP_PROG)" in
 	(*)	:
 		;;
 esac
-
-# set archive names
-case "$TAPE_DEVICE:$(url_scheme $BACKUP_URL)" in
-	(:file)
-		backuparchive="${opath}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}"
-		;;
-	(:*)
-		backuparchive="${BUILD_DIR}/outputfs/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}"
-		;;
-	(*:tape)
-		backuparchive="${TAPE_DEVICE}"
-		;;
-esac
-
-if test "$BACKUP_MOUNTCMD" -a "$BACKUP_UMOUNTCMD" ; then
-	displayarchive="$backuparchive"
-else
-	displayarchive="$BACKUP_URL/${NETFS_PREFIX}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}"
-fi
-
 
 # include required programs
 # please note that this is just for safety reasons. Most of these programs are also listet in conf/GNU/Linux.conf !
