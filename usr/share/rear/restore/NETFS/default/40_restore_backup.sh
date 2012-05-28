@@ -4,7 +4,7 @@
 mkdir -p "${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
 
 Log "Restoring $BACKUP_PROG archive '$backuparchive'"
-Print "Restoring from '$displayarchive'"
+Print "Restoring from '$backuparchive'"
 ProgressStart "Preparing restore operation"
 (
 case "$BACKUP_PROG" in

@@ -306,9 +306,9 @@ domain=_domain_
 ----
 
 BACKUP_URL=usb://::
-To backup to USB storage device, use +NETFS=usb:///dev/disk/by-path/REAR-000+
+To backup to USB storage device, use +NETFS=usb:///dev/disk/by-label/REAR-000+
 or use a real device node or a specific filesystem label. Alternatively, you
-can specify the device using +USB_DEVICE=/dev/disk/by-path/REAR-000+.
+can specify the device using +USB_DEVICE=/dev/disk/by-label/REAR-000+.
 +
 If you combine this with +OUTPUT=USB+ you will end up with a bootable USB device.
 
