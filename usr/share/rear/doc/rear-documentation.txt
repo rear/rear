@@ -59,6 +59,24 @@ mailinglist ! You can subscribed to the list at:
 https://lists.sourceforge.net/lists/listinfo/rear-users
 
 
+== Design concepts
+At the start of the project a set of groundrules were defined and over time
+improved:
+
+ - Focus on Disaster Recovery
+ - Modular design
+ - For Linux (and possibly other Unix-like operating systems)
+ - Few external dependencies (Bash and standard Unix tools)
+ - Easy to use and easy to extend
+
+The aim is to make Rear as least demanding as possible, it will require only
+the applications neccessary to fulfill the job rear is configured for. All
+other applications will be copied to the rescue system if they are present.
+
+Furthermore, Rear should be platform independant and ideally install just as
+a set of scripts that utilizes everything that the Linux OS provides
+
+
 == Features and functionality
 Relax and Recover has a wide range of features:
 

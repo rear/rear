@@ -1,23 +1,6 @@
 = Relax and Recover: The Ultimate Disaster Recovery Framework
 Schlomo Schapiro, Gratien D'haese, Dag Wieers
 
-== Purpose and Key Features
-
-  - Focus on Disaster Recovery
-  - Modular concept
-  - For Linux and other Unix-like operations systems
-  - No external dependencies – use only standard software supplied with the
-    distribution encryption (optional) – openssl ?
-  - Linux: kernel > 2.6 supported (no kernel 2.2/2.4 support !)
-  - User friendly – minimal output, use log file for error messages and details
-
-The aim is to make Rear as least demanding as possible, it will require only
-the applications neccessary to fulfill the job rear is configured for. All
-other applications will be copied to the rescue system if they are present.
-
-Furthermore, Rear should be platform independant and ideally install just as
-a set of scripts that utilizes everything that the Linux OS provides
-
 == The Workflow System
 Rear is built as a modular framework. A call of rear <command> will invoke
 the following general workflow:
