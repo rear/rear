@@ -7,12 +7,12 @@ fi
 
 # Component in position 2
 remove_component() {
-    sed -i "s|^$1 $2 |\# $1 $2 |" $LAYOUT_FILE
+    sed -i "s|^$1 $2 |\#$1 $2 |" $LAYOUT_FILE
 }
 
 # Component in position 3
 remove_second_component() {
-    sed -i -r "s|^$1 ([^ ]+) $2 |\# $1 \1 $2 |" $LAYOUT_FILE
+    sed -i -r "s|^$1 ([^ ]+) $2 |\#$1 \1 $2 |" $LAYOUT_FILE
 }
 
 # Remove lines in the LAYOUT_FILE
@@ -34,7 +34,7 @@ while read done name type junk ; do
             vg=${dm_vg/--/-}
             lv=${name##*-}
 
-            sed -i -r "s|^($type /dev/$vg $lv )|\# \1|" $LAYOUT_FILE
+            sed -i -r "s|^($type /dev/$vg $lv )|\#\1|" $LAYOUT_FILE
             ;;
         fs)
             name=${name#fs:}
