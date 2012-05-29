@@ -34,7 +34,7 @@ while read done name type junk ; do
             vg=${dm_vg/--/-}
             lv=${name##*-}
 
-            sed -i -r "s|^($type /dev/$vg $lv )|\#\1|" $LAYOUT_FILE
+            sed -i -r "s|^($type /dev/$vg $lv )|\# \1|" $LAYOUT_FILE
             ;;
         fs)
             name=${name#fs:}
