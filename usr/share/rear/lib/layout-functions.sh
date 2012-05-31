@@ -112,7 +112,7 @@ generate_layout_dependencies() {
                 name=$(echo "$remainder" | cut -d " " -f "2")
 
                 # Volume groups containing - in their name have a double dash in DM
-                dm_vgrp=${vgrp/-/--}
+                dm_vgrp=${vgrp//-/--}
 
                 add_dependency "/dev/mapper/${dm_vgrp#/dev/}-$name" "$vgrp"
                 add_component "/dev/mapper/${dm_vgrp#/dev/}-$name" "lvmvol"

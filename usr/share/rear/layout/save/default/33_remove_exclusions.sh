@@ -31,7 +31,7 @@ while read done name type junk ; do
             name=${name#/dev/mapper/}
             dm_vg=${name%-*}
             ### Device mapper doubles dashes
-            vg=${dm_vg/--/-}
+            vg=${dm_vg//--/-}
             lv=${name##*-}
 
             sed -i -r "s|^($type /dev/$vg $lv )|\#\1|" $LAYOUT_FILE

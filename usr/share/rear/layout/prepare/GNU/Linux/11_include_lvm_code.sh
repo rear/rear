@@ -95,7 +95,7 @@ create_lvmvol() {
     name=${1#/dev/mapper/}
     dm_vg=${name%-*}
     # Device mapper doubles dashes
-    vg=${dm_vg/--/-}
+    vg=${dm_vg//--/-}
     lv=${name##*-}
 
     local lvmvol vgrp lvname nrextents junk
