@@ -35,41 +35,41 @@ Log "Binaries: ${BINARIES[@]}"
 BinCopyTo "$ROOTFS_DIR/bin" "${BINARIES[@]}" >&8
 StopIfError "Could not copy binaries"
 
-# split libs into lib and lib64 paths
-# I know, our modular design demands to split this into multiple files
-# but I prefer to do that when a 3rd variety has to be dealt with.
-REAL_LIBS=()
-REAL_LIBS32=()
-REAL_LIBS64=()
+# copy libraries
+declare -a all_libs=( $(
 for lib in ${LIBS[@]} $(SharedObjectFiles "${BINARIES[@]}" | sed -e 's#^#/#' ) ; do
-	# this is a list of library filenames like this:
-	# /lib/libc-2.11.1.so
-	# /lib64/ld-2.11.1.so
-	# /lib32/libc-2.11.1.so
-	# /usr/lib/libgthread-2.0.so.0
-	#
-	# we sort that into LIBS, LIBS32 and LIBS64 accordingly
-	case "$lib" in
-		(*lib32/*) REAL_LIBS32=( ${REAL_LIBS32[@]} $lib ) ;;
-		(*lib64/*) REAL_LIBS64=( ${REAL_LIBS64[@]} $lib ) ;;
-		(*) REAL_LIBS=( ${REAL_LIBS[@]} $lib ) ;;
-	esac
+    echo $lib
+done | sort -u) )
+
+ensure_dir() {
+    local dir=${1%/*}
+    if [[ ! -d $ROOTFS_DIR$dir ]] ; then
+        mkdir $v -p $ROOTFS_DIR$dir >&2
+    fi
+}
+
+copy_lib() {
+    local lib=$1
+
+    ensure_dir $lib
+
+    if [[ ! -e $ROOTFS_DIR/$lib ]] ; then
+        cp -a -f $v $lib $ROOTFS_DIR$lib >&2
+    fi
+}
+
+Log "Libraries: ${all_libs[@]}"
+for lib in "${all_libs[@]}" ; do
+    if [[ -L $lib ]] ; then
+        target=$(readlink -f $lib)
+        copy_lib $target
+
+        ensure_dir $lib
+        ln $v -sf ${target} $ROOTFS_DIR$lib >&2
+    else
+        copy_lib $lib
+    fi
 done
 
-if [[ "$REAL_LIBS" ]]; then
-	Log "Libraries: ${REAL_LIBS[@]}"
-	LibCopyTo "$ROOTFS_DIR/lib" ${REAL_LIBS[@]} >&8
-	StopIfError "Could not copy libraries"
-fi
-if [[ "$REAL_LIBS32" ]]; then
-	Log "Libraries(32): ${REAL_LIBS32[@]}"
-	LibCopyTo "$ROOTFS_DIR/lib32" ${REAL_LIBS32[@]} >&8
-	StopIfError "Could not copy 32bit libraries"
-fi
-if [[ "$REAL_LIBS64" ]]; then
-	Log "Libraries(64): ${REAL_LIBS64[@]}"
-	LibCopyTo "$ROOTFS_DIR/lib64" ${REAL_LIBS64[@]} >&8
-	StopIfError "Could not copy 64bit libraries"
-fi
 ldconfig $v -r "$ROOTFS_DIR" >&8
 StopIfError "Could not configure libraries with ldconfig"
