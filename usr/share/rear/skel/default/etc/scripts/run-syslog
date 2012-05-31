@@ -10,8 +10,6 @@ elif type -p syslog-ng >/dev/null ; then
 
     ng_version=$(get_version syslog-ng --version)
     if version_newer "$ng_version" "3" ; then
-        # /var/empty needs to be owned by root
-        chown root:root /var/empty
         ### Update the config file version to the actually used version
         sed -i "s/VERSION/${ng_version%.*}/" /etc/syslog-ng-v3.conf
         exec syslog-ng -p /var/run/syslog-ng.pid -f /etc/syslog-ng-v3.conf -F --no-caps
