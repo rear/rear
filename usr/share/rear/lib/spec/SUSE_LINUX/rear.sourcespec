@@ -5,8 +5,8 @@ Summary: Relax and Recover (Rear) is a Linux Disaster Recovery framework
 
 Group: Productivity/Archiving/Backup
 License: GPL v2 or later
-URL: http://rear.sourceforge.net
-Source0: http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
+URL: http://rear.github.com/
+Source0: https://github.com/downloads/rear/rear/rear-%{version}.tar.gz
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 

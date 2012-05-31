@@ -42,13 +42,13 @@ Rear and help debug during development.
 
 == Relax and Recover project
 The support and development of the Relax and Recover project takes place
-on SourceForge:
+on Github:
 
 Project page::
-    http://sourceforge.net/projects/rear
+    http://github.com/rear/rear/
 
 Website::
-    http://rear.sourceforge.net/
+    http://rear.github.com/
 
 In case you have questions, ideas or feedback about this document, you
 can contact the development team on the Rear mailinglist at:

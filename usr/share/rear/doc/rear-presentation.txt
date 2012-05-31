@@ -324,9 +324,9 @@ Consists of:
 
 and various other contributors
 
-Development at Sourceforge
+Development at Github
 
-  - http://rear.sourceforge.net/
+  - http://rear.github.com/
   - rear-users@lists.sourceforge.net
 
 
