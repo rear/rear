@@ -121,23 +121,6 @@ BinCopyTo() {
 	: # make sure that a failed strip won't fail the BinCopyTo
 }
 
-# Copy libraries given in $* to $1, stripping them on the way
-# like BinCopyTo, but copy symlinks as such, since some libraries
-LibCopyTo() {
-	local dest="$1" file=
-	[[ -d "$dest" ]]
-	StopIfError "[LibCopyTo] Destination '$dest' not a directory"
-	while (( $# > 1 )); do
-		shift
-		[[ -z "$1" ]] && continue # ignore blanks
-		cp -a -f $v "$1" "$dest" >&2
-		StopIfError "[LibCopyTo] Could not copy '$1' to '$dest'"
-#		file=$(basename "$1")
-#		[[ ! -L "$dest/$file" ]] && strip -s "$dest/$file"
-	done
-	: # make sure that a failed strip won't fail the LibCopyTo
-}
-
 # Copy Modules given in $* to $1
 ModulesCopyTo() {
 	local dest="$1" dir=

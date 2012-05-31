@@ -3,15 +3,13 @@
 # run a syslog daemon
 
 if type -p rsyslogd >/dev/null ; then
-        exec rsyslogd -c3 -n -i /var/run/rsyslogd.pid -f /etc/rsyslog.conf -M /lib$(test -s /lib64/imklog.so && echo 64)
+        exec rsyslogd -c3 -n -i /var/run/rsyslogd.pid -f /etc/rsyslog.conf
 elif type -p syslog-ng >/dev/null ; then
     # need get_version and version_newer functions
     . /usr/share/rear/lib/layout-functions.sh
 
     ng_version=$(get_version syslog-ng --version)
     if version_newer "$ng_version" "3" ; then
-        # /var/empty needs to be owned by root
-        chown root:root /var/empty
         ### Update the config file version to the actually used version
         sed -i "s/VERSION/${ng_version%.*}/" /etc/syslog-ng-v3.conf
         exec syslog-ng -p /var/run/syslog-ng.pid -f /etc/syslog-ng-v3.conf -F --no-caps
