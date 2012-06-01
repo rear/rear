@@ -70,9 +70,20 @@ fi
 
 # set the new routes if a mapping file is available
 if test -s $TMP_DIR/mappings/routes ; then
-	> /mnt/local/etc/sysconfig/network/routes
-	StopIfError "Could not write to '/mnt/local/etc/sysconfig/network/routes'"
 	while read destination gateway device junk ; do
-		echo "$destination $gateway - $device" >> /mnt/local/etc/sysconfig/network/routes
+	#	echo "$destination $gateway - $device" >> /mnt/local/etc/sysconfig/network/routes
+		if [[ "$destination" = "default" ]]; then
+			for network_file in /mnt/local/etc/sysconfig/*/ifcfg-*${device}* /mnt/local/etc/sysconfig/network ; do
+				SED_SCRIPT="s#^GATEWAY=.*#GATEWAY='$gateway'#g;s#^GATEWAYDEV=.*#GATEWAYDEV='$device'#g"
+				Log "SED_SCRIPT: '$SED_SCRIPT'"
+				sed -i -e "$SED_SCRIPT" "$network_file"
+				LogPrintIfError "WARNING! There was an error patching the network configuration files!"
+			done
+		else
+			# static-routes or route-<device> settings?
+			for network_file in /mnt/local/etc/sysconfig/*/route-*${device}* /mnt/local/etc/sysconfig/static-routes ; do
+				LogPrint "WARNING! Change entries in $network_file manually please!"
+			done
+		fi
 	done < $TMP_DIR/mappings/routes
 fi
