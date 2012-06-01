@@ -103,8 +103,8 @@ WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
 
 		while read network_device ip_address junk ; do
 			Log "New IP-address will be $network_device $ip_address"
-			echo "ip addr add $ip_address dev $dev" >>$netscript
-			echo "ip link set dev $dev up" >>$netscript
+			echo "ip addr add $ip_address dev $network_device" >>$netscript
+			echo "ip link set dev $network_device up" >>$netscript
 		done < $TMP_DIR/mappings/ip_addresses
 	else
 
