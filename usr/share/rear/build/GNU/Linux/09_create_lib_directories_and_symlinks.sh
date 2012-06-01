@@ -7,7 +7,10 @@ for libdir in /lib* /usr/lib* ; do
         if [[ ! -e $ROOTFS_DIR$target ]] ; then
             mkdir $v -p $ROOTFS_DIR$target >&2
         fi
-        ln $v -sf $target $ROOTFS_DIR$libdir >&2
+        ### move into ROOTFS_DIR to create 'absolute' symlinks
+        pushd $ROOTFS_DIR >&8
+        ln $v -sf ${target#/} ${libdir#/} >&2
+        popd >&8
     else
         mkdir $v -p $ROOTFS_DIR$libdir >&2
     fi
