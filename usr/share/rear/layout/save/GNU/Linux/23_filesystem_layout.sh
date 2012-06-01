@@ -48,7 +48,7 @@ Log "Saving Filesystem layout."
             vfat)
                 # Make sure we don't get any other output from dosfslabel (errors go to stdout :-/)
                 label=$(dosfslabel $device | tail -1)
-                echo -n " label=$label"
+                echo -n " uuid= label=$label"
                 ;;
             xfs)
                 uuid=$(xfs_admin -u $device | cut -d'=' -f 2 | tr -d " ")
