@@ -1,44 +1,43 @@
-# Copyright 1999-2006 Gentoo Foundation
+# Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
+EAPI=4
 
-inherit eutils depend.php
-
-DESCRIPTION="Rear - Relax and Recover | Disaster Recovery for GNU/Linux"
+DESCRIPTION="Fully automated disaster Recovery supporting a broad variety of backup strategies and scenarios"
 HOMEPAGE="http://rear.github.com/"
-SRC_URI="mirror://sourceforge/${PN}/${P}.tar.gz"
-KEYWORDS="~amd64 x86"
+SRC_URI="mirror://github/downloads/${PN}/${PN}/${P}.tar.gz"
+
 LICENSE="GPL-2"
-SLOT="1"
+SLOT="0"
+KEYWORDS="~amd64 ~x86"
+IUSE="udev"
 
-RDEPEND="sys-apps/util-linux
-	net-dialup/mingetty
-	sys-apps/lsb-release
-	sys-apps/iproute2
+RDEPEND="net-dialup/mingetty
 	net-fs/nfs-utils
+	sys-apps/iproute2
+	sys-apps/lsb-release
+	sys-apps/util-linux
+	sys-block/parted
 	sys-boot/syslinux
-	app-cdr/cdrtools"
+	virtual/cdrtools
+	udev? ( sys-fs/udev )
+	"
 
-S=${WORKDIR}
+src_install () {
+	if use udev; then
+		insinto /lib/udev/rules.d
+		doins etc/udev/rules.d/62-${PN}-usb.rules
+	fi
 
-src_unpack() {
-        unpack ${A}
-}
+	insinto /etc
+	doins -r etc/${PN}
 
-src_compile() {
-        einfo "Nothing to compile."
-}
+	# copy main script-file and docs
+	dosbin usr/sbin/${PN}
+	doman usr/share/${PN}/doc/${PN}.8
+	dodoc README
 
-src_install() {
-	dodir /usr/share/rear /etc/rear
-	cp -rPR ${S}/${P}/etc/rear/* "${D}etc/rear"
-	cp -rPR ${S}/${P}/usr/share/rear/* "${D}usr/share/rear"
-	dosbin ${S}/${P}/usr/sbin/rear
-}
-
-pkg_config() {
-	einfo Rear - Relax and Recover was successfully installed
-	einfo you can get information about configuration on
-	einfo the website http://rear.sourceforge.net/documentation.php
+	insinto /usr/share/
+	doins -r usr/share/${PN}
 }
