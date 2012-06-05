@@ -29,7 +29,7 @@ Log "Saving Filesystem layout."
                 uuid=$($tunefs -l $device | grep UUID | cut -d ":" -f 2 | tr -d " ")
                 label=$(e2label $device)
 
-                # options: blocks, fragments, max_mount, check_interval, reserved blocks
+                # options: blocks, fragments, max_mount, check_interval, reserved blocks, bytes_per_inode
                 blocksize=$($tunefs -l $device | grep "Block size" | tr -d " " | cut -d ":" -f "2")
                 max_mounts=$($tunefs -l $device | grep "Maximum mount count" | tr -d " " | cut -d ":" -f "2")
                 check_interval=$($tunefs -l $device | grep "Check interval" | cut -d "(" -f 1 | tr -d " " | cut -d ":" -f "2")
@@ -38,12 +38,16 @@ Log "Saving Filesystem layout."
                 reserved_blocks=$($tunefs -l $device | grep "Reserved block count" | tr -d " " | cut -d ":" -f "2")
                 reserved_percentage=$(( reserved_blocks * 100 / nr_blocks ))
 
+                nr_inodes=$($tunefs -l $device | grep "Inode count" | tr -d " " | cut -d ":" -f "2")
+                let "bytes_per_inode=$nr_blocks*$blocksize/$nr_inodes"
+
                 # translate check_interval from seconds to days
                 let check_interval=$check_interval/86400
 
                 echo -n "uuid=$uuid label=$label"
                 echo -n " blocksize=$blocksize reserved_blocks=$reserved_percentage%"
                 echo -n " max_mounts=$max_mounts check_interval=${check_interval}d"
+                echo -n " bytes_per_inode=$bytes_per_inode"
                 ;;
             vfat)
                 # Make sure we don't get any other output from dosfslabel (errors go to stdout :-/)
