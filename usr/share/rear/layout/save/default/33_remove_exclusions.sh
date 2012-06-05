@@ -29,10 +29,10 @@ while read done name type junk ; do
             ;;
         lvmvol)
             name=${name#/dev/mapper/}
-            dm_vg=${name%-*}
-            ### Device mapper doubles dashes
-            vg=${dm_vg//--/-}
-            lv=${name##*-}
+            ### split between vg and lv is single dash
+            ### Device mapper doubles dashes in vg and lv
+            vg=$(sed "s/\([^-]\)-[^-].*/\1/;s/--/-/g" <<< $name)
+            lv=$(sed "s/.*[^-]-\([^-]\)/\1/;s/--/-/g" <<< $name)
 
             sed -i -r "s|^($type /dev/$vg $lv )|\#\1|" $LAYOUT_FILE
             ;;
