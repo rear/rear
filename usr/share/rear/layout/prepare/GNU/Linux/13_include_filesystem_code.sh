@@ -21,6 +21,9 @@ create_fs() {
                     blocksize)
                         blocksize=" -b $value"
                         ;;
+                    bytes_per_inode)
+                        bytes_per_inode=" -i $value"
+                        ;;
                     reserved_blocks)
                         ### reserved_blocks can be a number or a percentage
                         if [[ ${value%\%} == ${value} ]] ; then
@@ -39,7 +42,7 @@ create_fs() {
             done
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
-mkfs -t ${fstype}${blocksize}${fragmentsize} $device >&2
+mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} $device >&2
 EOF
 
             local tunefs="tune2fs"
