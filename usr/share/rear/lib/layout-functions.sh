@@ -82,7 +82,7 @@ generate_layout_dependencies() {
     # [todo|done] <type> <item>
     : > $LAYOUT_TODO
 
-    local type dev remainder name disk disks vgrp dm_vgrp part mp fs bd nmp temp_nm
+    local type dev remainder name disk disks vgrp dm_vgrp lvol dm_lvol part mp fs bd nmp temp_nm
     while read type remainder ; do
         case $type in
             disk)
@@ -109,13 +109,14 @@ generate_layout_dependencies() {
                 ;;
             lvmvol)
                 vgrp=$(echo "$remainder" | cut -d " " -f "1")
-                name=$(echo "$remainder" | cut -d " " -f "2")
+                lvol=$(echo "$remainder" | cut -d " " -f "2")
 
-                # Volume groups containing - in their name have a double dash in DM
+                # Vgs and Lvs containing - in their name have a double dash in DM
                 dm_vgrp=${vgrp//-/--}
+                dm_lvol=${lvol//-/--}
 
-                add_dependency "/dev/mapper/${dm_vgrp#/dev/}-$name" "$vgrp"
-                add_component "/dev/mapper/${dm_vgrp#/dev/}-$name" "lvmvol"
+                add_dependency "/dev/mapper/${dm_vgrp#/dev/}-$dm_lvol" "$vgrp"
+                add_component "/dev/mapper/${dm_vgrp#/dev/}-$dm_lvol" "lvmvol"
                 ;;
             raid)
                 name=$(echo "$remainder" | cut -d " " -f "1")

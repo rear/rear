@@ -91,12 +91,12 @@ create_lvmvol() {
         return
     fi
 
-    local name dm_vg vg lv
+    local name vg lv
     name=${1#/dev/mapper/}
-    dm_vg=${name%-*}
-    # Device mapper doubles dashes
-    vg=${dm_vg//--/-}
-    lv=${name##*-}
+    ### split between vg and lv is single dash
+    ### Device mapper doubles dashes in vg and lv
+    vg=$(sed "s/\([^-]\)-[^-].*/\1/;s/--/-/g" <<< $name)
+    lv=$(sed "s/.*[^-]-\([^-]\)/\1/;s/--/-/g" <<< $name)
 
     local lvmvol vgrp lvname nrextents junk
     read lvmvol vgrp lvname nrextents junk < <(grep "^lvmvol /dev/$vg $lv " $LAYOUT_FILE)
