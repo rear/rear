@@ -6,7 +6,7 @@ StopIfError "Image $ISO_DIR/$ISO_PREFIX.iso is missing or empty."
 
 # Check if we have a target location OUTPUT_URL
 if [[ -z "$OUTPUT_URL" ]]; then
-    continue
+    return
 fi
 
 local scheme=$(url_scheme $OUTPUT_URL)
