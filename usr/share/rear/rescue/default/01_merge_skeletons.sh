@@ -38,3 +38,6 @@ for dir in default "$ARCH" "$OS" \
 	fi
 done
 popd >&8
+
+# make sure the owner is root if running from checkout
+chown -R root:root $ROOTFS_DIR

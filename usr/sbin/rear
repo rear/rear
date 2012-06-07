@@ -42,11 +42,16 @@ STARTTIME=$SECONDS
 # Allow workflows to set the exit code to a different value.
 EXIT_CODE=0
 
-# Program directories - they must be set here. Everything else is then dynamic
+# Find out if we're running from checkout
+SCRIPT_FILE="$(readlink -f $(type -p "$0" || echo "$0"))"
+if [[ "$SCRIPT_FILE" != "$(readlink -f /usr/sbin/$PROGRAM)" ]]; then
+    REAR_DIR_PREFIX=${SCRIPT_FILE%/usr/sbin/$PROGRAM}
+fi
 
-SHARE_DIR="/usr/share/rear"
-CONFIG_DIR="/etc/rear"
-VAR_DIR="/var/lib/rear"
+# Program directories - they must be set here. Everything else is then dynamic
+SHARE_DIR="$REAR_DIR_PREFIX/usr/share/rear"
+CONFIG_DIR="$REAR_DIR_PREFIX/etc/rear"
+VAR_DIR="$REAR_DIR_PREFIX/var/lib/rear"
 CMD_OPTS=( "$@" )
 
 # initialize defaults
@@ -141,7 +146,6 @@ if ! has_binary pidof; then
 fi
 
 # do not run if another instance is running. pidof -x will always report at least $$
-SCRIPT_FILE="$(readlink -f $(get_path "$0" || echo "$0"))"
 PID=$(pidof -x -o %PPID "$SCRIPT_FILE")
 if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}"; then
 	LOGFILE="$LOGFILE.lockless"
