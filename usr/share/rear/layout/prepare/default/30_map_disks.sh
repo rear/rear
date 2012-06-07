@@ -111,6 +111,9 @@ while read -u 3 disk dev size junk ; do
     done 2>&1 # to get the prompt, otherwise it would go to the logfile
 done 3< <(grep "^disk " $LAYOUT_FILE)
 
+LogPrint "This is the disk mapping table:"
+LogPrint "$(sed -e 's|^|    |' $MAPPING_FILE)"
+
 # Remove unmapped devices from disk layout
 while read disk dev junk ; do
     if ! mapping_exists "$dev" ; then

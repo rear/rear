@@ -39,9 +39,6 @@ while read source target junk ; do
     fi
 done < $MAPPING_FILE
 
-LogPrint "This is the disk mapping table:"
-sed -e 's|^|    |' $MAPPING_FILE
-
 # Replace all originals with their replacements
 while read original replacement junk ; do
     # Replace partitions (we normalize cciss/c0d0p1 to _REAR5_1)
