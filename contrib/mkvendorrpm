@@ -92,11 +92,8 @@ VAR_DIR=/var/lib/rear
 SBIN_DIR=/usr/sbin
 
 # gentoo build file
-test -s .$SHARE_DIR/contrib/rear-$VERSION.ebuild ||\
-	mv -v .$SHARE_DIR/contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild
-# copy doc files
-cp -rv .$SHARE_DIR/{doc,contrib}  .
-cp -rv ./{AUTHORS,COPYING,README}  .
+test -s ./contrib/rear-$VERSION.ebuild ||\
+	mv -v ./contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild
 # convert files to UTF-8 if possible
 for file in AUTHORS COPYING README `echo doc/*` ; do
 	mv "${file}" timestamp

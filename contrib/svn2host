@@ -27,7 +27,7 @@ rear_root="${ME%/usr/share/rear/contrib/svn2host}"
 ### echo The root of rear SVN directory is $rear_root
 
 # building dist tar
-distarchive=$($rear_root/usr/share/rear/contrib/svn2tar)
+distarchive=$($rear_root/contrib/svn2tar)
 
 RESULTS=()
 FAILED=()

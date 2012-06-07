@@ -130,8 +130,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc AUTHORS COPYING README
-%doc doc/*.txt
+%doc AUTHORS COPYING README contrib/ doc/*
 %{_sbindir}/rear
 %{_datadir}/rear
 %{_localstatedir}/lib/rear

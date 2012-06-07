@@ -20,9 +20,10 @@ WORKFLOW_mkdist_postprocess () {
 	# VERSION
 
 	# rename ebuild to current version if it does not have the current version
-	test -s .$SHARE_DIR/contrib/rear-$VERSION.ebuild ||\
-		mv $v .$SHARE_DIR/contrib/rear-*.ebuild .$SHARE_DIR/contrib/rear-$VERSION.ebuild >&2
-	StopIfError "Could not mv rear-*.ebuild"
+	test -s contrib/rear-$VERSION.ebuild ||\
+		cp $v contrib/rear-*.ebuild contrib/rear-$VERSION.ebuild >&2
+	ls -l home
+	StopIfError "Could not mv contrib/rear-*.ebuild"
 
 
 	version_string="VERSION=\"$VERSION\""
@@ -30,13 +31,6 @@ WORKFLOW_mkdist_postprocess () {
 		Log "Patching version $version_string in $(pwd)/usr/sbin/rear"
 		sed -i -e 's/^VERSION=.*$/VERSION="'"$VERSION"'"/' usr/sbin/rear
 	fi
-
-	# reverted back to symlinking because we put more MegaByte into doc and should not package it twice
-	ln -s $v .$SHARE_DIR/{doc,contrib} . >&2
-	StopIfError "Could not symlink .$SHARE_DIR/{doc,contrib}"
-	# to prevent RPMs from installing symlinks into the doc area we actually copy the text files
-	cp -r $v ./{AUTHORS,COPYING,README} . >&2
-	StopIfError "Could not copy ./{AUTHORS,COPYING,README}"
 
 # I want the generic SPEC file to be always shipped 2009-11-16 Schlomo
 	sed -i -e "s/Version:.*/Version: $VERSION/" .$SHARE_DIR/lib/rear.spec
@@ -92,6 +86,8 @@ WORKFLOW_mkdist () {
 	# use tar to copy the current rear while excluding development and obsolete files
 	tar -C / --exclude=hpasmcliOutput.txt --exclude=\*~ --exclude=\*.rpmsave\* \
 		--exclude=\*.rpmnew\* --exclude=.\*.swp -cv \
+			"/contrib/" \
+			"/doc/" \
 			"$SHARE_DIR" \
 			"$CONFIG_DIR" \
 			"$(get_path "$0")" |\
