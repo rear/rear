@@ -33,9 +33,10 @@ WORKFLOW_mkdist_postprocess () {
 
 	# reverted back to symlinking because we put more MegaByte into doc and should not package it twice
 	ln -s $v .$SHARE_DIR/{doc,contrib} . >&2
+	StopIfError "Could not symlink .$SHARE_DIR/{doc,contrib}"
 	# to prevent RPMs from installing symlinks into the doc area we actually copy the text files
-	cp -r $v .$SHARE_DIR/{COPYING,README,AUTHORS} . >&2
-	StopIfError "Could not copy .$SHARE_DIR/{COPYING,README,AUTHORS,doc,contrib}"
+	cp -r $v ./{AUTHORS,COPYING,README} . >&2
+	StopIfError "Could not copy ./{AUTHORS,COPYING,README}"
 
 # I want the generic SPEC file to be always shipped 2009-11-16 Schlomo
 	sed -i -e "s/Version:.*/Version: $VERSION/" .$SHARE_DIR/lib/rear.spec

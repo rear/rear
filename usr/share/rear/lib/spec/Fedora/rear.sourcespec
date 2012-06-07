@@ -62,9 +62,6 @@ sed	-e 's#/etc#%{_sysconfdir}#' \
 	doc/rear.8 >$RPM_BUILD_ROOT%{_mandir}/man8/rear.8
 
 # remove doc files under  $RPM_BUILD_ROOT/usr/share/rear
-rm -f $RPM_BUILD_ROOT%{_datadir}/rear/README
-rm -f $RPM_BUILD_ROOT%{_datadir}/rear/COPYING
-rm -f $RPM_BUILD_ROOT%{_datadir}/rear/AUTHORS
 rm -rf $RPM_BUILD_ROOT%{_datadir}/rear/doc/*
 
 
