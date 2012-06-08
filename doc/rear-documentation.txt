@@ -201,6 +201,10 @@ In most cases only these two settings are required.
 The +OUTPUT+ variable defines where the rescue image should be send to.
 Possible +OUTPUT+ setting are:
 
+OUTPUT=RAMDISK::
+Copy the kernel and the initramfs containing the rescue system to a selected
+location.
+
 OUTPUT=ISO::
 Create a bootable ISO9660 image on disk as _rear-$(hostname).iso_
 
@@ -217,8 +221,8 @@ Create a bootable USB disk (using extlinux). Specify the USB storage device by
 using +USB_DEVICE+.
 
 ==== Using ISO as output method
-When using +OUTPUT=ISO+ you should provide the backup target location through
-the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+ settings are:
+When using +OUTPUT=ISO+ or +OUTPUT=RAMDISK+ you should provide the backup target
+location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+ settings are:
 
 OUTPUT_URL=file://::
 Write the ISO image to disk. The default is in _/tmp_.
