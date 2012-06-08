@@ -115,4 +115,5 @@ rpm: dist-git
 	@echo -e "\033[1m== Building RPM package ==\033[0;0m"
 	rpmbuild -tb --clean \
 	--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
+	--define "debug_package %{nil}" \
 	--define "_rpmdir %(pwd)" $(name)-$(version)-$(date)-$(git_branch).tar.bz2

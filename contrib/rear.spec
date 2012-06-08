@@ -1,17 +1,3 @@
-# $Id$
-
-# ExcludeDist: el2 el3
-
-### Necessary to build from own directory or as user
-%define _sourcedir %(pwd)
-%define _rpmdir %(pwd)
-%define _srcrpmdir %(pwd)
-%define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
-%define _builddir /dev/shm
-%define debug_package %{nil}
-
-%{?!rhel:%define rhel X}
-
 Summary: Relax and Recover (Rear) is a Linux Disaster Recovery framework
 Name: rear
 Version: 1.13.0
@@ -64,10 +50,13 @@ bare metal disaster recovery abilities to the compatible backup software.
 
 echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
 
+### Add a specific os.conf for RHEL so we do not depend on redhat-lsb
+%if %{?rhel}0
 %{__cat} <<EOF >etc/rear/os.conf
 OS_VENDOR=RedHatEnterpriseServer
 OS_VERSION=%{?rhel}
 EOF
+%endif
 
 %build
 
