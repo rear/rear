@@ -55,6 +55,7 @@ SIMULATE=
 VERBOSE=
 DEBUG=
 KEEP_BUILD_DIR=
+RECOVERY_MODE=
 
 # Parse options
 OPTS="$(getopt -n $PROGRAM -o "dDhsSvVr:" -l "help,version" -- "$@")"
@@ -175,6 +176,11 @@ fi
 # enable debug output of the progress pipe
 if [[ "$DEBUG" ]]; then
 	KEEP_BUILD_DIR=1
+fi
+
+# check if we are in recovery mode
+if [[ -e "/etc/rear-release" ]]; then
+	RECOVERY_MODE="y"
 fi
 
 [[ -z "$SIMULATE" ]]

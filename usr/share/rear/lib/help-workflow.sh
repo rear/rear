@@ -40,16 +40,20 @@ $(
 	for workflow in ${WORKFLOWS[@]} ; do
 		description=WORKFLOW_${workflow}_DESCRIPTION
 		if [[ "${!description}" ]]; then
-			printf " %-16s%s\n" $workflow "${!description}"
+			if [[ -z "$RECOVERY_MODE" && "$workflow" != "recover" ]]; then
+				printf " %-16s%s\n" $workflow "${!description}"
+			elif [[ "$RECOVERY_MODE" && "$workflow" == "recover" ]]; then
+				printf " %-16s%s\n" $workflow "${!description}"
+			fi
 		fi
 	done
 )
 
 EOF
 
-#if [[ -z "$VERBOSE" ]]; then
-#	echo "Use 'rear -v help' for more advanced commands."
-#fi
+if [[ -z "$VERBOSE" ]]; then
+	echo "Use 'rear -v help' for more advanced commands."
+fi
 
 	EXIT_CODE=1
 }

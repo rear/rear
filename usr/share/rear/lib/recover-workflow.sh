@@ -18,7 +18,7 @@
 #
 #
 
-WORKFLOW_recover_DESCRIPTION="recover the system; only valid during rescue"
+WORKFLOW_recover_DESCRIPTION="recover the system"
 WORKFLOWS=( ${WORKFLOWS[@]} recover )
 WORKFLOW_recover () {
 
