@@ -47,8 +47,9 @@ $(
 
 EOF
 
-if [[ -z "$VERBOSE" ]]; then
-	echo "Use 'rear -v help' for more advanced commands."
-fi
+#if [[ -z "$VERBOSE" ]]; then
+#	echo "Use 'rear -v help' for more advanced commands."
+#fi
+
 	EXIT_CODE=1
 }
