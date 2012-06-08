@@ -30,10 +30,6 @@ WORKFLOW_mkrescue () {
 
 	SourceStage "prep"
 
-	if [[ -z "$USE_LAYOUT" ]]; then
-		SourceStage "dr"
-	fi
-
 	SourceStage "layout/save"
 
 	SourceStage "rescue"

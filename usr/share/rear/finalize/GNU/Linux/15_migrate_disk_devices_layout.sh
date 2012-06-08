@@ -1,6 +1,6 @@
 ### Apply chosen migrations to files on the disk.
 
-if [[ ! "$USE_LAYOUT" ]] || [[ ! -s "$MAPPING_FILE" ]] ; then
+if [[ ! -s "$MAPPING_FILE" ]] ; then
     return
 fi
 

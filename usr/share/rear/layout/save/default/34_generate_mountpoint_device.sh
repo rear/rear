@@ -3,10 +3,6 @@
 
 # TODO: rework other scripts to use LAYOUT_FILE directly
 
-if [ -z "$USE_LAYOUT" ] ; then
-    return 0
-fi
-
 # Find all mountpoints excluded using EXCLUDE_BACKUP
 # EXCLUDE_RECREATE is handled automatically (commented out in LAYOUT_FILE)
 excluded_mountpoints=()

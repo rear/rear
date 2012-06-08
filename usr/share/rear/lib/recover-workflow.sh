@@ -26,12 +26,8 @@ WORKFLOW_recover () {
 
 	SourceStage "verify"
 
-	if [ -n "$USE_LAYOUT" ] ; then
-		SourceStage "layout/prepare"
-		SourceStage "layout/recreate"
-	else
-		SourceStage "recreate"
-	fi
+	SourceStage "layout/prepare"
+	SourceStage "layout/recreate"
 
 	SourceStage "restore"
 
