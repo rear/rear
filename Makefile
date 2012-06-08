@@ -20,7 +20,10 @@ uninstall:
 	-rm -rv $(DESTDIR)$(datadir)/rear/
 #	rm -rv $(DESTDIR)$(localstatedir)/lib/rear/
 
-install:
+validate:
+	find . -name '*.sh' -exec bash -n {} \;
+
+install: validate
 	install -d -m0755 $(DESTDIR)$(mandir)/man8/
 	install -d -m0755 $(DESTDIR)$(datadir)/rear/
 	cp -a usr/share/rear/. $(DESTDIR)$(datadir)/rear/
@@ -41,7 +44,7 @@ install:
 		-e 's#/usr/share/doc/packages#$(datadir)/doc#' \
 		doc/rear.8 >$(DESTDIR)$(mandir)/man8/rear.8
 
-dist: clean
+dist: clean validate
 	git ls-tree -r --name-only --full-tree $$(git branch --no-color 2>/dev/null | \
 	sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/') | \
 	pax -d -w -x ustar -s ,^,$(name)-$(version)/, | \
