@@ -13,16 +13,20 @@ datadir = $(prefix)/share
 mandir = $(datadir)/man
 localstatedir = /var
 
-all:
-	@echo "Nothing to be build."
+all: help
+
+help:
+	@echo -e "Rear make targets. \n\
+\n\
+  validate        - Check source code\n\
+  install         - Install Rear to DESTDIR (may replace files)\n\
+  uninstall       - Uninstall Rear from DESTDIR (may remove files)\n\
+  dist            - Create tar file\n\
+  deb             - Create DEB package\n\
+  rpm             - Create RPM package\n\
+"
 
 clean:
-
-uninstall:
-	-rm -v $(DESTDIR)$(sbindir)/rear
-	-rm -v $(DESTDIR)$(mandir)/man8/rear.8
-	-rm -rv $(DESTDIR)$(datadir)/rear/
-#	rm -rv $(DESTDIR)$(localstatedir)/lib/rear/
 
 validate:
 	find . -name '*.sh' -exec bash -n {} \;
@@ -47,6 +51,13 @@ install: validate
 		-e 's#/usr/share#$(datadir)#' \
 		-e 's#/usr/share/doc/packages#$(datadir)/doc#' \
 		doc/rear.8 >$(DESTDIR)$(mandir)/man8/rear.8
+
+uninstall:
+	-rm -v $(DESTDIR)$(sbindir)/rear
+	-rm -v $(DESTDIR)$(mandir)/man8/rear.8
+	-rm -rv $(DESTDIR)$(datadir)/rear/
+#	rm -rv $(DESTDIR)$(sysconfdir)/rear/
+#	rm -rv $(DESTDIR)$(localstatedir)/lib/rear/
 
 dist: clean validate
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
