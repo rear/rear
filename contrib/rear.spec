@@ -51,12 +51,7 @@ bare metal disaster recovery abilities to the compatible backup software.
 echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
 
 ### Add a specific os.conf for RHEL so we do not depend on redhat-lsb
-%if %{?rhel}0
-%{__cat} <<EOF >etc/rear/os.conf
-OS_VENDOR=RedHatEnterpriseServer
-OS_VERSION=%{?rhel}
-EOF
-%endif
+%{?rhel:echo -e "OS_VENDOR=RedHatEnterpriseServer\nOS_VERSION=%{?rhel}" >etc/rear/os.conf}
 
 %build
 
