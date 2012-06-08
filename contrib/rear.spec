@@ -69,34 +69,13 @@ OS_VENDOR=RedHatEnterpriseServer
 OS_VERSION=%{?rhel}
 EOF
 
-%{__perl} -pi -e '
-        s|^CONFIG_DIR=.*|CONFIG_DIR="%{_sysconfdir}/rear"|;
-        s|^SHARE_DIR=.*|SHARE_DIR="%{_datadir}/rear"|;
-        s|^VAR_DIR=.*|VAR_DIR="%{_localstatedir}/lib/rear"|;
-    ' usr/sbin/rear
-
-%{__perl} -pi -e '
-        s|/etc\b|%{_sysconfdir}|g;
-        s|/usr/sbin\b|%{_sbindir}|g;
-        s|/usr/share\b|%{_datadir}|g;
-    ' doc/rear.8
-
 %build
 
 %install
 %{__rm} -rf %{buildroot}
-
-%{__install} -d -m0755 %{buildroot}%{_localstatedir}/lib/rear/
-
-%{__install} -d -m0755 %{buildroot}%{_datadir}/rear/
-%{__cp} -av usr/share/rear/. %{buildroot}%{_datadir}/rear/
-
-%{__install} -d -m0755 %{buildroot}%{_sysconfdir}/
-%{__cp} -av etc/. %{buildroot}%{_sysconfdir}/
-
-%{__install} -Dp -m0755 usr/sbin/rear %{buildroot}%{_sbindir}/rear
-%{__install} -Dp -m0644 doc/rear.8 %{buildroot}%{_mandir}/man8/rear.8
+%{__make} install DESTDIR="%{buildroot}"
 %{__install} -Dp -m0644 rear.cron %{buildroot}%{_sysconfdir}/cron.d/rear
+%{__install} -Dp -m0644 etc/udev/rules.d/62-rear-usb.rules %{buildroot}%{_sysconfdir}/udev/rules.d/62-rear-usb.rules
 
 %clean
 %{__rm} -rf %{buildroot}
