@@ -2,6 +2,10 @@ name = rear
 #version = $(shell awk '/^Version: / { print $$2}' $(name).spec)
 version = $(shell awk 'BEGIN { FS="=" } /^VERSION=/ { print $$2}' usr/sbin/rear)
 
+git_ref = $(shell git symbolic-ref -q HEAD)
+git_branch ?= $(lastword $(subst /, ,$(git_ref)))
+git_branch ?= HEAD
+
 prefix = /usr
 sysconfdir = /etc
 sbindir = $(prefix)/sbin
@@ -45,8 +49,8 @@ install: validate
 		doc/rear.8 >$(DESTDIR)$(mandir)/man8/rear.8
 
 dist: clean validate
-	git ls-tree -r --name-only --full-tree $$(git branch --no-color 2>/dev/null | \
-	sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/') | \
+	git ls-tree -r --name-only --full-tree $(git_branch) | \
+	sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/' | \
 	pax -d -w -x ustar -s ,^,$(name)-$(version)/, | \
 	bzip2 >$(name)-$(version).tar.bz2
 
