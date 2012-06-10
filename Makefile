@@ -64,7 +64,8 @@ install-data:
 
 install-var:
 	@echo -e "\033[1m== Installing working directory ==\033[0;0m"
-	install -d -m0755 $(DESTDIR)$(localstatedir)/lib/rear
+	install -d -m0755 $(DESTDIR)$(localstatedir)/lib/rear/
+	install -d -m0755 $(DESTDIR)$(localstatedir)/log/rear/
 
 install-doc:
 	@echo -e "\033[1m== Installing documentation ==\033[0;0m"

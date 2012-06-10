@@ -225,7 +225,7 @@ When using +OUTPUT=ISO+ or +OUTPUT=RAMDISK+ you should provide the backup target
 location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+ settings are:
 
 OUTPUT_URL=file://::
-Write the ISO image to disk. The default is in _/tmp_.
+Write the ISO image to disk. The default is in _/var/lib/rear/output/_.
 
 OUTPUT_URL=fish//::
 Write the ISO image using +lftp+ and the FISH protocol.
@@ -997,7 +997,7 @@ Copy kernel modules
 Checking udev
 Create initramfs
 Making ISO image
-Wrote ISO Image /tmp/rear-dag-ops.iso (48M)
+Wrote ISO Image /var/lib/rear/output/rear-dag-ops.iso (48M)
 Writing ISO image to tape
 Modifying local GRUB configuration
 Finished in 119 seconds.
@@ -1320,7 +1320,7 @@ Copy kernel modules
 Checking udev
 Create initramfs
 Making ISO image
-Wrote ISO Image /tmp/rear-system.iso (45M)
+Wrote ISO Image /var/lib/rear/output/rear-system.iso (45M)
 Writing ISO image to tape
 Creating archive '/dev/nst0'
 Total bytes written: 7834132480 (7.3GiB, 24MiB/s) in 317 seconds.
@@ -1553,7 +1553,7 @@ if ! /usr/sbin/rear checklayout; then
 fi
 ----
 
-We also monitor the _/tmp/rear-system.log_ file for +ERROR:+ and +BUG BUG BUG+
+We also monitor the _/var/log/rear/rear-system.log_ file for +ERROR:+ and +BUG BUG BUG+
 strings, so that in case of problems the operator is notified immediately.
 
 
@@ -1581,10 +1581,10 @@ And in the following ways:
 
 == Troubleshooting Rear
 If you encounter a problem, you may find more information in the log file
-which is located at _/tmp/rear-system.log_. During recovery the backup log file
-is also available from _/tmp_, for your convenience the history in rescue mode
-comes with useful commands for debugging, use the up arrow key in the shell
-to find those commands.
+which is located at _/var/log/rear/rear-system.log_. During recovery the backup
+log file is also available from _/var/log/rear/_, for your convenience the
+history in rescue mode comes with useful commands for debugging, use the up
+arrow key in the shell to find those commands.
 
 There are a few options in Rear to help you debug the situation:
 

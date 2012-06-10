@@ -156,7 +156,7 @@ When using +OUTPUT=ISO+ you should provide the backup target location through
 the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+ settings are:
 
 OUTPUT_URL=*file://*::
-Write the ISO image to disk. The default is in _/tmp_.
+Write the ISO image to disk. The default is in _/var/lib/rear/output/_.
 
 OUTPUT_URL=*fish://*::
 Write the ISO image using +lftp+ and the FISH protocol.
@@ -276,7 +276,7 @@ and _local.conf_ are intended for the user configuration. All other
 configuration files hold defaults for various distributions and should not
 be changed.
 
-In _/etc/rear/templates_ there are also some template files which are used
+In _/etc/rear/templates/_ there are also some template files which are used
 by rear to create configuration files (mostly for the boot environment).
 Modify the templates to adjust the information contained in the emails
 produced by Rear. You can use these templates to prepend your own
@@ -309,17 +309,18 @@ add these lines to _/etc/rear/site.conf_
 
 Don't forget to distribute the _site.conf_ to all your systems.
 
-The resulting ISO image will be created in _/tmp_. You can now modify
-the behaviour by copying the appropriate configuration variables from
-_default.conf_ to _local.conf_ and changing them to suit your environment.
+The resulting ISO image will be created in _/var/lib/rear/output/_.
+You can now modify the behaviour by copying the appropriate
+configuration variables from _default.conf_ to _local.conf_ and
+changing them to suit your environment.
 
 
 == EXIT STATUS
 0::
     Successful program execution.
 >0::
-    Usage, syntax or execution errors. Check the _/tmp/rear-hostname.log_
-    file for more information.
+    Usage, syntax or execution errors. Check the log file in
+    _/var/log/rear/_ for more information.
 
 
 == EXAMPLES
@@ -345,8 +346,8 @@ System specific configuration can be set here.
 /etc/rear/site.conf::
 Site specific configuration can be set here.
 
-/tmp/rear-hostname.log::
-Rear log file.
+/var/log/rear/::
+Directory holding the Rear log files.
 
 /tmp/rear.##############::
 Rear working directory. If Rear exits with an error, you must remove

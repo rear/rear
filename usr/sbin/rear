@@ -168,6 +168,7 @@ v=""
 verbose=""
 # enable progress subsystem only in verbose mode, set some stuff that others can use
 if [[ "$VERBOSE" ]]; then
+	LogPrint "Using log file: $LOGFILE"
 	source $SHARE_DIR/lib/progresssubsystem.nosh
 	v="-v"
 	verbose="--verbose"

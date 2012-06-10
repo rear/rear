@@ -12,8 +12,8 @@ the following general workflow:
      Read config files for the combination of system attributes. Always
      read 'default.conf' first and 'site.conf', 'local.conf' last.
 
-  2. Create work area in '/tmp/rear.$$' and start logging to
-     '/tmp/rear-hostname.log'
+  2. Create work area in '/tmp/rear.$$/' and start logging to
+     '/var/log/rear/rear-hostname.log'
 
   3. Run the workflow script for the specified command:
      '/usr/share/rear/lib/<command>-workflow.sh'
@@ -63,7 +63,7 @@ The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices a
 
 == Workflow – Recovery
 The result of the analysis is written into configuration files under
-'/etc/rear/recovery'. This directory is copied together with the other
+'/etc/rear/recovery/'. This directory is copied together with the other
 Rear directories onto the rescue system where the same framework runs
 a different workflow – the recovery workflow.
 
@@ -88,26 +88,26 @@ are indeed the same):
   3. *Recreate:* Recreate the FS layout (partitioning, LVM, raid,
      filesystems, ...) and mount it under /mnt/local
 
-  4. *Restore:* Restore files and directories from the backup to '/mnt/local'.
+  4. *Restore:* Restore files and directories from the backup to '/mnt/local/'.
      This module is the analog to the Backup module
 
   5. *Finalize:* Install boot loader, finalize system, dump recovery log
-     onto '/tmp' in the recovered system.
+     onto '/var/log/rear/' in the recovered system.
 
 == FS layout
 Rear tries to be as much LSB complient as possible. Therefore rear will be
 installed into the usual locations:
 
-/etc/rear::
+/etc/rear/::
     Configurations
 
 /usr/bin/rear::
     Main program
 
-/usr/share/rear::
+/usr/share/rear/::
     Internal scripts
 
-/tmp/rear.$$::
+/tmp/rear.$$/::
     Build area
 
 === Layout of /etc/rear
@@ -220,10 +220,10 @@ The various stages and modules communicate via standarized environment variables
 
 |====
 |NAME             |TYPE         |Descriptions                         |Example
-|CONFIG_DIR       |STRING (RO)  |Configuration dir                    |'/etc/rear'
-|SHARE_DIR        |STRING (RO)  |Shared data dir                      |'/usr/share/rear'
-|BUILD_DIR        |STRING (RO)  |Build directory                      |'/tmp/rear.$$'
-|ROOTFS_DIR       |STRING (RO)  |Root FS directory for rescue system  |'/tmp/rear.$$/initrd'
+|CONFIG_DIR       |STRING (RO)  |Configuration dir                    |'/etc/rear/'
+|SHARE_DIR        |STRING (RO)  |Shared data dir                      |'/usr/share/rear/'
+|BUILD_DIR        |STRING (RO)  |Build directory                      |'/tmp/rear.$$/'
+|ROOTFS_DIR       |STRING (RO)  |Root FS directory for rescue system  |'/tmp/rear.$$/initrd/'
 |RESCUE_BINARIES  |LIST         |Program files to copy                |+bash ip route grep ls+ ...
 |RESCUE_MODULES   |LIST         |Modules to copy                      |+af_unix e1000 ide-cd+ ...
 |RESCUE_FILES     |LIST         |Files (with path) to copy as-is      |'/etc/localtime' ...

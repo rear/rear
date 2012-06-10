@@ -51,12 +51,12 @@ distribution to the '/' of your system.
 
 CONFIGURATION
 -------------
-To configure Rear you have to edit the configuration files in '/etc/rear'. All
+To configure Rear you have to edit the configuration files in '/etc/rear/'. All
 '*.conf' files there are part of the configuration, but only 'site.conf' and
 'local.conf' are intended for the user configuration. All other configuration
 files hold defaults for various distributions and should not be changed.
 
-In '/etc/rear/templates' there are also some template files which are use by
+In '/etc/rear/templates/' there are also some template files which are use by
 Rear to create configuration files (mostly for the boot environment). You can
 use these templates to prepend your own configurations to the configuration
 files created by Rear, for example you can edit 'PXE_pxelinux.cfg' to add some
@@ -92,9 +92,9 @@ TIMESYNC=NTP
 Don't forget to distribute the 'site.conf' to all your systems.
 
 The resulting PXE files (kernel, initrd and pxelinux configuration) will be
-written to files in '/tmp'. You can now modify the behaviour by copying the
-appropriate configuration variables from 'default.conf' to 'local.conf' and
-changing them to suit your environment.
+written to files in '/var/lib/rear/output/'. You can now modify the behaviour
+by copying the appropriate configuration variables from 'default.conf' to
+'local.conf' and changing them to suit your environment.
 
 
 USAGE
