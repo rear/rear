@@ -15,8 +15,17 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Relax & Recover; if not, write to the Free Software
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+# The way how we use Bash with lots of (nested) functions and read etc. seems to trigger a Bash
+# bug that causes leaked file descriptors. lvm likes to complain about that but since we
+# cannot fix the bash we suppress these lvm warnings:
 #
-#
+# See:
+#   http://osdir.com/ml/bug-bash-gnu/2010-04/msg00080.html
+#   http://stackoverflow.com/questions/2649240/bash-file-descriptor-leak
+#   http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=466138
+export LVM_SUPPRESS_FD_WARNINGS=1
+
 
 # check if udev is available in a sufficiently recent version
 have_udev() {
