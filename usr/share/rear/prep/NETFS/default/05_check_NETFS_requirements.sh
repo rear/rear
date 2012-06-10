@@ -29,7 +29,7 @@ if [[ "$BACKUP_URL" ]] ; then
     case $scheme in
         (usb)
             if [[ -z "$USB_DEVICE" ]] ; then
-                USB_DEVICE="/$path"
+                USB_DEVICE="$path"
             fi
             ;;
     esac

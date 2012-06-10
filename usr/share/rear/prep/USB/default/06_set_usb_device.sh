@@ -4,7 +4,7 @@ if [[ -z "$USB_DEVICE" ]] && [[ "$OUTPUT_URL" ]]; then
     local path=$(url_path $OUTPUT_URL)
     case $scheme in
         (usb)
-            USB_DEVICE="/$path"
+            USB_DEVICE="$path"
             ;;
     esac
 fi

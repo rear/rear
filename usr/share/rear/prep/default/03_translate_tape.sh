@@ -3,7 +3,7 @@
 if [[ "$BACKUP_URL" ]] ; then
     backup_scheme=$(url_scheme "$BACKUP_URL")
     if [[ "$backup_scheme" == @(tape|obdr) ]] ; then
-        testdevice=/$(url_path "$BACKUP_URL")
+        testdevice=$(url_path "$BACKUP_URL")
         ### Complain when both are specified, but don't match
         if [[ "$TAPE_DEVICE" && "$TAPE_DEVICE" != "$testdevice" ]]; then
             Error "Tape device in BACKUP_URL '$BACKUP_URL' and TAPE_DEVICE '$TAPE_DEVICE' is not the same"

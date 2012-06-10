@@ -45,7 +45,7 @@ url_host() {
 url_path() {
     local url=$1
     local path=${url#*//}
-    echo $path
+    echo /${path#*/}
 }
 
 output_path() {
@@ -56,7 +56,7 @@ output_path() {
            path=""
            ;;
        (file)  # type file needs a local path (must be mounted by user)
-           path="/$path/${NETFS_PREFIX}"
+           path="$path/${NETFS_PREFIX}"
            ;;
        (*)     # nfs, cifs, usb, a.o. need a temporary mount-path 
            path="${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
@@ -84,13 +84,13 @@ mount_url() {
             mount_cmd="${!var} $mountpoint"
             ;;
         (cifs)
-            mount_cmd="mount $v -o $options //$(url_host $url)/$(url_path $url) $mountpoint"
+            mount_cmd="mount $v -o $options //$(url_host $url)$(url_path $url) $mountpoint"
             ;;
         (usb)
-            mount_cmd="mount $v -o $options /$(url_path $url) $mountpoint"
+            mount_cmd="mount $v -o $options $(url_path $url) $mountpoint"
             ;;
         (*)
-            mount_cmd="mount $v -t $(url_scheme $url) -o $options $(url_host $url):/$(url_path $url) $mountpoint"
+            mount_cmd="mount $v -t $(url_scheme $url) -o $options $(url_host $url):$(url_path $url) $mountpoint"
             ;;
     esac
 
