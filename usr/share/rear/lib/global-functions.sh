@@ -38,14 +38,14 @@ url_scheme() {
 
 url_host() {
     local url=$1
-    local temp=${url#*//}
-    echo ${temp%%/*}
+    local host=${url#*//}
+    echo ${host%%/*}
 }
 
 url_path() {
     local url=$1
-    local temp=${url#*//}
-    echo ${temp#*/}
+    local path=${url#*//}
+    echo $path
 }
 
 output_path() {
