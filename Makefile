@@ -90,24 +90,22 @@ dist: clean validate
 	@echo -e "\033[1m== Building archive ==\033[0;0m"
 	sed -i -e 's#^Version:.*#Version: $(version)#' contrib/$(name).spec
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
-	pax -d -w -x ustar -s ',^\.,\.,' -s ',^,$(name)-$(version)/,' | \
-	bzip2 >$(name)-$(version).tar.bz2
+		tar -cjf $(name)-$(version).tar.bz2 --transform='s,^,$(name)-$(version)/,' --files-from=-
 
 dist-git: clean validate
 	@echo -e "\033[1m== Building archive ==\033[0;0m"
 	sed -i \
-	-e 's#^Source:.*#Source: $(name)-$(version)-git$(date)-$(git_branch).tar.bz2#' \
-	-e 's#^Version:.*#Version: $(version)#' \
-	-e 's#^\(Release: *[0-9]\+\)#\1.git$(date)#' \
-	contrib/$(name).spec
+		-e 's#^Source:.*#Source: $(name)-$(version)-git$(date)-$(git_branch).tar.bz2#' \
+		-e 's#^Version:.*#Version: $(version)#' \
+		-e 's#^\(Release: *[0-9]\+\)#\1.git$(date)#' \
+		contrib/$(name).spec
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
-	pax -d -w -x ustar -s ',^\.,\.,' -s ',^,$(name)-$(version)/,' | \
-	bzip2 >$(name)-$(version)-git$(date)-$(git_branch).tar.bz2
+		tar -cjf $(name)-$(version)-git$(date)-$(git_branch).tar.bz2 --transform='s,^,$(name)-$(version)/,' --files-from=-
 	git checkout contrib/$(name).spec
 
 rpm: dist-git
 	@echo -e "\033[1m== Building RPM package ==\033[0;0m"
 	rpmbuild -tb --clean \
-	--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
-	--define "debug_package %{nil}" \
-	--define "_rpmdir %(pwd)" $(name)-$(version)-git$(date)-$(git_branch).tar.bz2
+		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
+		--define "debug_package %{nil}" \
+		--define "_rpmdir %(pwd)" $(name)-$(version)-git$(date)-$(git_branch).tar.bz2
