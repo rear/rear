@@ -22,11 +22,10 @@ case "$scheme" in
         return 0
         ;;
     (file)
-        if [[ -d $path ]] ; then
-            LogPrint "Transferring kernel and initramfs to $path"
-            cp $v -pLf $KERNEL_FILE $path/kernel-$RAMDISK_SUFFIX >&2
-            cp $v -pLf $TMP_DIR/initrd.cgz $path/initramfs-$RAMDISK_SUFFIX.img >&2
-        fi
+        LogPrint "Transferring kernel and initramfs to $path"
+        mkdir -p $v $path
+        cp $v -pLf $KERNEL_FILE $path/kernel-$RAMDISK_SUFFIX >&2
+        cp $v -pLf $TMP_DIR/initrd.cgz $path/initramfs-$RAMDISK_SUFFIX.img >&2
         ;;
     (nfs|cifs|usb)
         LogPrint "Transferring kernel and initramfs to $OUTPUT_URL"
