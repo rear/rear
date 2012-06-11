@@ -47,6 +47,7 @@ fi
 SHARE_DIR="$REAR_DIR_PREFIX/usr/share/rear"
 CONFIG_DIR="$REAR_DIR_PREFIX/etc/rear"
 VAR_DIR="$REAR_DIR_PREFIX/var/lib/rear"
+LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
 CMD_OPTS=( "$@" )
 
 # initialize defaults
@@ -154,6 +155,7 @@ fi
 if [[ -r "$LOGFILE" ]]; then
 	mv -f "$LOGFILE" "$LOGFILE".old 2>&8
 fi
+mkdir -p $LOG_DIR
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
 
 case "$WORKFLOW" in
