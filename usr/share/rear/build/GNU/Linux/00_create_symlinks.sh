@@ -33,7 +33,7 @@ if [[ -d $ROOTFS_DIR/etc/sysconfig/network-scripts ]]; then
 fi
 [[ -x /sbin/hwup ]] && ln -sf $v true $ROOTFS_DIR/sbin/hwup >&2 # SUSE with udev needs this
 
-Log "Create LVM binary symlinks"
+Log "Creating LVM binary symlinks"
 lvmbins="lvchange lvconvert lvcreate lvdisplay lvextend lvmchange lvmdiskscan lvmsadc lvmsar lvreduce lvremove lvrename lvresize lvs lvscan pvchange pvresize pvck pvcreate pvdata pvdisplay pvmove pvremove pvs pvscan vgcfgbackup vgcfgrestore vgchange vgck vgconvert vgcreate vgdisplay vgexport vgextend vgimport vgmerge vgmknodes vgreduce vgremove vgrename vgs vgscan vgsplit"
 for bin in $lvmbins; do
     ln -sf $v lvm $ROOTFS_DIR/bin/$bin >&2

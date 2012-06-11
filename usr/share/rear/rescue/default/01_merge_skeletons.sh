@@ -18,7 +18,7 @@
 #
 #
 
-LogPrint "Creating root FS layout"
+LogPrint "Creating root filesystem layout"
 pushd $SHARE_DIR/skel >&8
 for dir in default "$ARCH" "$OS" \
 		"$OS_MASTER_VENDOR/default" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" \

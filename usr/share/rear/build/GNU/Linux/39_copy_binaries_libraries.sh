@@ -18,7 +18,7 @@
 #
 #
 
-LogPrint "Copy binaries and libraries"
+LogPrint "Copying binaries and libraries"
 
 # calculate binaries from needed progs
 declare -a BINARIES=( $(

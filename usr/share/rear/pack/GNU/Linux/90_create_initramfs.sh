@@ -18,7 +18,7 @@
 #
 #
 
-LogPrint "Create initramfs"
+LogPrint "Creating initramfs"
 
 pushd "$ROOTFS_DIR" >&8
 find . ! -name "*~"  |\

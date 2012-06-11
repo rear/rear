@@ -1,4 +1,4 @@
-# #80_create_isofs.sh
+# 80_create_isofs.sh
 #
 # create initramfs for Relax & Recover
 #
@@ -20,7 +20,7 @@
 
 # check that we have mkisofs
 [ -x "$ISO_MKISOFS_BIN" ]
-StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executabel !"
+StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executable !"
 
 Log "Copying kernel"
 cp -pL $v $KERNEL_FILE $TMP_DIR/kernel >&2
@@ -32,14 +32,14 @@ LogPrint "Making ISO image"
 mkdir -p $v "$ISO_DIR" >&2
 StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
 
-$ISO_MKISOFS_BIN -quiet -o "$ISO_DIR/$ISO_PREFIX.iso" -b isolinux.bin -c boot.cat \
+$ISO_MKISOFS_BIN -o "$ISO_DIR/$ISO_PREFIX.iso" -b isolinux.bin -c boot.cat \
 	-no-emul-boot -boot-load-size 4 -boot-info-table \
 	-R -J -volid "$ISO_VOLID" -v "${ISO_FILES[@]}"  >&8
 StopIfError "Could not create ISO image"
 
 ISO_IMAGES=( "${ISO_IMAGES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
 iso_image_size=( $(du -h "$ISO_DIR/$ISO_PREFIX.iso") )
-LogPrint "Wrote ISO Image $ISO_DIR/$ISO_PREFIX.iso ($iso_image_size)"
+LogPrint "Wrote ISO image: $ISO_DIR/$ISO_PREFIX.iso ($iso_image_size)"
 
 # Add ISO image to result files
 RESULT_FILES=( "${RESULT_FILES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )

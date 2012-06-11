@@ -4,7 +4,7 @@
 # systems. Checks also for library dependancies of executables and adds
 # them to the LIBS list, if they are not included in the copied files.
 
-LogPrint "Copy files and directories"
+LogPrint "Copying files and directories"
 Log "Will copy ${COPY_AS_IS[@]} and exclude ${COPY_AS_IS_EXCLUDE[@]}"
 for f in "${COPY_AS_IS_EXCLUDE[@]}" ; do echo "$f" ; done >$TMP_DIR/copy-as-is-exclude
 tar -X $TMP_DIR/copy-as-is-exclude \
