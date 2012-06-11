@@ -35,6 +35,7 @@ Rear make variables (optional):\n\
 
 clean:
 
+### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
 	@echo -e "\033[1m== Validating scripts and configuration ==\033[0;0m"
 	find etc/ usr/share/rear/conf/ -name '*.conf' | xargs bash -n
