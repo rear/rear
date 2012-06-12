@@ -242,6 +242,11 @@ ResolveModules () {
 		module=${module#.o}  # strip trailing ".o" just in case.
 		module=${module#.ko}  # strip trailing ".ko" just in case.
 
+		# Check if the module actually exists
+		if ! modinfo $module &>/dev/null; then
+			continue
+		fi
+
 		local with_modprobe_conf
 		if [ -e $boot_dir/etc/modprobe.conf ]; then
 			with_modprobe_conf="-C $boot_dir/etc/modprobe.conf"
