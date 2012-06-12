@@ -137,8 +137,8 @@ ModulesCopyTo() {
 		shift
 		dir="$(dirname "$1")"
 		[[ ! -d "$dest/$dir" ]] && mkdir -p $v "$dest/$dir"
-		cp -a -L $v "/$1" "$dest/$dir" >&2
-		StopIfError "[ModulesCopyTo] Could not copy '/$1' to '$dest'"
+		cp -a -L $v "$1" "$dest/$dir" >&2
+		StopIfError "[ModulesCopyTo] Could not copy '$1' to '$dest'"
 	done
 }
 

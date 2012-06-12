@@ -4,7 +4,7 @@
 # skip this script if udev is not part of the rescue system
 test -d $ROOTFS_DIR/etc/udev/rules.d || return 0
 
-LogPrint "Checking udev"
+Log "Checking udev"
 # check that all external programs used by udev are available
 while read file location ; do
 	# check for file in ROOTFS_DIR (if full path) or in lib/udev or in bin (if name without path)

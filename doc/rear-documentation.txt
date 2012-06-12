@@ -169,7 +169,7 @@ You can test your installation by running +rear dump+:
 
 ----
 [root@system ~]# rear dump
-Relax and Recover Version 1.12.0svn497 / 2011-07-11
+Relax and Recover 1.12.0svn497 / 2011-07-11
 Dumping out configuration and system information
 System definition:
                                     ARCH = Linux-x86_64
@@ -450,13 +450,12 @@ for the USB device is what is configured for +USB_DEVICE+.
 
 ----
 [root@system ~]# rear -v mkrescue
-Relax and Recover Version 1.12.0svn497 / 2011-07-11
+Relax and Recover 1.12.0svn497 / 2011-07-11
 Creating disk layout.
 Creating root filesystem layout
 Copying files and directories
 Copying program files and libraries
 Copying kernel modules
-Checking udev
 Creating initramfs
 Finished in 72 seconds.
 ----
@@ -603,7 +602,7 @@ different system.
 
 ----
 RESCUE SYSTEM:/ # rear recover
-Relax and Recover Version 1.12.0svn497 / 2011-07-11
+Relax and Recover 1.12.0svn497 / 2011-07-11
 NOTICE: Will do driver migration
 To recreate HP SmartArray controller 3, type exactly YES: YES
 To recreate HP SmartArray controller 0, type exactly YES: YES
@@ -831,13 +830,12 @@ configured.
 
 ----
 [root@system ~]# rear -v mkbackup
-Relax and Recover Version 1.12.0svn497 / 2011-07-11
+Relax and Recover 1.12.0svn497 / 2011-07-11
 Creating disk layout.
 Creating root filesystem layout
 Copying files and directories
 Copying program files and libraries
 Copying kernel modules
-Checking udev
 Creating initramfs
 Creating archive 'usb:///dev/sda1/system.localdomain/20110326.0216/backup.tar.gz'
 Total bytes written: 3644416000 (3.4GiB, 5.5MiB/s) in 637 seconds.
@@ -868,7 +866,7 @@ different system.
 
 ----
 RESCUE SYSTEM:/ # rear recover
-Relax and Recover Version 1.12.0svn497 / 2011-07-11
+Relax and Recover 1.12.0svn497 / 2011-07-11
 Backup archive size is 1.2G (compressed)
 To recreate HP SmartArray controller 1, type exactly YES: YES
 To recreate HP SmartArray controller 7, type exactly YES: YES
@@ -985,7 +983,7 @@ To create a rescue environment that can boot from an OBDR tape, simply run
 
 ----
 [root@system ~]# rear -v mkrescue
-Relax and Recover Version 1.12.0svn497 / 2011-07-11
+Relax and Recover 1.12.0svn497 / 2011-07-11
 Rewinding tape
 Writing OBDR header to tape in drive '/dev/nst0'
 Creating disk layout.
@@ -993,7 +991,6 @@ Creating root filesystem layout
 Copying files and directories
 Copying program files and libraries
 Copying kernel modules
-Checking udev
 Creating initramfs
 Making ISO image
 Wrote ISO image: /var/lib/rear/output/rear-dag-ops.iso (48M)
@@ -1164,7 +1161,7 @@ different system.
 
 ----
 RESCUE SYSTEM:/ # rear recover
-Relax and Recover Version 1.12.0svn497 / 2011-07-11
+Relax and Recover 1.12.0svn497 / 2011-07-11
 NOTICE: Will do driver migration
 Rewinding tape
 To recreate HP SmartArray controller 3, type exactly YES: YES
@@ -1308,7 +1305,7 @@ To create a bootable backup tape that can boot from OBDR, simply run
 
 ----
 [root@system ~]# rear -v mkbackup
-Relax and Recover Version 1.12.0svn497 / 2011-07-11
+Relax and Recover 1.12.0svn497 / 2011-07-11
 Rewinding tape
 Writing OBDR header to tape in drive '/dev/nst0'
 Creating disk layout
@@ -1316,7 +1313,6 @@ Creating root filesystem layout
 Copying files and directories
 Copying program files and libraries
 Copying kernel modules
-Checking udev
 Creating initramfs
 Making ISO image
 Wrote ISO image: /var/lib/rear/output/rear-system.iso (45M)
@@ -1342,7 +1338,7 @@ information about how to enable OBDR and boot from OBDR tapes.
 
 ----
 RESCUE SYSTEM:~ # rear recover
-Relax and Recover Version 1.12.0svn497 / 2011-07-11
+Relax and Recover 1.12.0svn497 / 2011-07-11
 NOTICE: Will do driver migration
 Rewinding tape
 To recreate HP SmartArray controller 3, type exactly YES: YES
