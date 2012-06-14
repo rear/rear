@@ -9,7 +9,7 @@ license=('GPL')
 depends=(lsb-release iproute2 parted mingetty cpio)
 optdepends=( 'nfs-utils: to save images to NFS shares'
              'cdrkit: to create ISO images' )
-makedepends=('git')
+makedepends=('git' 'asciidoc' 'xmlto')
 provides=('rear')
 backup=('etc/rear/local.conf')
 source=()
