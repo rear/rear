@@ -1,33 +1,45 @@
 # Maintainer: Jeroen Hoekx <jeroen.hoekx AT hamok DOT be>
-pkgname=rear-svn
-pkgver=494
+pkgname=rear-git
+pkgver=20120614
 pkgrel=1
 pkgdesc="Linux Disaster Recovery"
 arch=(any)
 url="http://rear.github.com/"
 license=('GPL')
-depends=(nfs-utils lsb-release iproute2 parted mingetty cdrkit cpio)
-makedepends=('subversion')
+depends=(lsb-release iproute2 parted mingetty cpio)
+optdepends=( 'nfs-utils: to save images to NFS shares'
+             'cdrkit: to create ISO images' )
+makedepends=('git')
+provides=('rear')
 backup=('etc/rear/local.conf')
 source=()
 md5sums=()
 
-_svntrunk=https://rear.svn.sourceforge.net/svnroot/rear/trunk
-_svnmod=trunk
+_gitroot=https://github.com/rear/rear.git
+_gitname=rear
 
 build() {
   cd "$srcdir"
+  msg "Connecting to GIT server...."
 
-  if [ -d $_svnmod/.svn ]; then
-    (cd $_svnmod && svn up -r $pkgver)
+  if [[ -d "$_gitname" ]]; then
+    cd "$_gitname" && git pull origin
+    msg "The local files are updated."
   else
-    svn co $_svntrunk --config-dir ./ -r $pkgver $_svnmod
+    git clone "$_gitroot" "$_gitname"
   fi
 
-  msg "SVN checkout done or server timeout"
+  msg "GIT checkout done or server timeout"
+  msg "Starting build..."
+
+  rm -rf "$srcdir/$_gitname-build"
+  git clone "$srcdir/$_gitname" "$srcdir/$_gitname-build"
+  cd "$srcdir/$_gitname-build"
 }
 
 package() {
-  cp -a "$srcdir/$_svnmod/"* "$pkgdir/"
-  rm -rf $(find "$pkgdir" -type d -name ".svn")
+  cd "$srcdir/$_gitname-build"
+  make DESTDIR="$pkgdir/" install
 }
+
+# vim:set ts=2 sw=2 et:
