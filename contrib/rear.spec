@@ -63,11 +63,12 @@ bare metal disaster recovery abilities to the compatible backup software.
 
 echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
 
-### Add a specific os.conf for RHEL so we do not depend on redhat-lsb
+### Add a specific os.conf so we do not depend on LSB dependencies
 %{?rhel:echo -e "OS_VENDOR=RedHatEnterpriseServer\nOS_VERSION=%{?rhel}" >etc/rear/os.conf}
 %{?fedora:echo -e "OS_VENDOR=Fedora\nOS_VERSION=%{?fedora}" >etc/rear/os.conf}
-%{?suse_version:echo -e "OS_VENDOR=SUSE_Linux\nOS_VERSION=%{?suse_version}" >etc/rear/os.conf}
-%{?sles_version:echo -e "OS_VENDOR=SUSE_Linux\nOS_VERSION=%{?sles_version}" >etc/rear/os.conf}
+%{?suse_version:echo -e "OS_VENDOR=SUSE_LINUX\nOS_VERSION=%{?suse_version}" >etc/rear/os.conf}
+%{?sles_version:echo -e "OS_VENDOR=SUSE_LINUX\nOS_VERSION=%{?sles_version}" >etc/rear/os.conf}
+%{?mdkversion:echo -e "OS_VENDOR=Mandriva\nOS_VERSION=%{distro_rel}" >etc/rear/os.conf}
 
 %build
 
