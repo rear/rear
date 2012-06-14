@@ -19,7 +19,7 @@
 #
 
 # create yaboot directory structure
-mkdir -p $v $TMP_DIR/ppc >&2
+mkdir -p $v $TMP_DIR/ppc/chrp >&2
 cp $v /usr/lib/yaboot/yaboot $TMP_DIR/ppc/chrp >&2
 
 cat >"$TMP_DIR/ppc/bootinfo.txt" <<EOF
