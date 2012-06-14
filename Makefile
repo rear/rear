@@ -101,7 +101,7 @@ dist: clean validate man
 	@echo -e "\033[1m== Building archive ==\033[0;0m"
 	sed -i -e 's#^Version:.*#Version: $(version)#' contrib/$(name).spec
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
-		tar -cjf $(name)-$(version).tar.bz2 --transform='s,^,$(name)-$(version)/,' --files-from=-
+		tar -cjf $(name)-$(version).tar.bz2 --transform='s,^,$(name)-$(version)/,S' --files-from=-
 
 dist-git: clean validate man
 	@echo -e "\033[1m== Building archive ==\033[0;0m"
@@ -111,7 +111,7 @@ dist-git: clean validate man
 		-e 's#^\(Release: *[0-9]\+\)#\1.git$(date)#' \
 		contrib/$(name).spec
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
-		tar -cjf $(name)-$(version)-git$(date)-$(git_branch).tar.bz2 --transform='s,^,$(name)-$(version)/,' --files-from=-
+		tar -cjf $(name)-$(version)-git$(date)-$(git_branch).tar.bz2 --transform='s,^,$(name)-$(version)/,S' --files-from=-
 	git checkout contrib/$(name).spec
 
 rpm: dist-git
