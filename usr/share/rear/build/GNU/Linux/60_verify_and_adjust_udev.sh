@@ -43,7 +43,7 @@ done < <(
 	# the files without a path name are supposed to be in /lib/udev
 
 	cd  $ROOTFS_DIR
-	grep -nE '(PROGRAM|RUN)' etc/udev/rules.d/* lib/udev/rules.d/* | \
+	grep -nE '(PROGRAM|RUN)' etc/udev/rules.d/* lib/udev/rules.d/* usr/lib/udev/rules.d/* | \
 		sed -ne 's#\(^.*\):[0-9]\+:.*\(PROGRAM\|RUN\)[+!]\?="\([^"%\$ ]\+\).*#\3 \1#p' | \
 		grep -v ^socket: | \
 		sort -u
