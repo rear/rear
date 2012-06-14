@@ -14,28 +14,25 @@ BuildArch: noarch
 ### Dependencies on all distributions
 Requires: binutils
 Requires: ethtool
-##Requires: genisoimage
 Requires: gzip
-Requires: iproute
 Requires: iputils
 Requires: mingetty
-Requires: mkisofs
 Requires: parted
-Requires: portmap
-##Requires: rpcbind
 Requires: tar
 Requires: util-linux
 
+### If you require NFS, you may need the below packages
+#Requires: nfsclient portmap rpcbind
+
 ### We drop LSB requirements because it pulls in too many dependencies
-### We hardcode the OS in /etc/rear/os.conf instead
-##Requires: redhat-lsb
+### The OS is hardcoded in /etc/rear/os.conf instead
+#Requires: redhat-lsb
 
 ### Required for Bacula/MySQL support
 #Requires: bacula-mysql
 
 ### Required for OBDR
-#Requires: lsscsi
-#Requires: sg3_utils
+#Requires: lsscsi sg3_utils
 
 ### Optional requirement
 #Requires: cfg2html
@@ -46,6 +43,35 @@ Requires: syslinux
 %ifarch ppc ppc64
 Requires: yaboot
 %endif
+
+%if %{?suse_version:1}0
+Requires: iproute2
+# recent SuSE versions have an extra nfs-client package and switched to genisoimage/wodim
+%if 0%{?suse_version} >= 1020
+Requires: genisoimage
+%else
+Requires: mkisofs
+%endif
+%endif
+
+%if %{?mandriva_version:1}0
+Requires: iproute2
+# Mandriva switched from 2008 away from mkisofs, and as a specialty call the package cdrkit-genisoimage!
+%if 0%{?mandriva_version} >= 2008
+Requires: cdrkit-genisoimage
+%else
+Requires: mkisofs
+%endif
+%endif
+
+### On RHEL/Fedora the genisoimage packages provides mkisofs
+%if %{?centos_version:1}%{?fedora_version:1}%{?rhel_version:1}0
+Requires: iproute
+Requires: mkisofs
+%endif
+
+### The rear-snapshot package is no more
+Obsoletes: rear-snapshot
 
 %description
 Relax and Recover (abbreviated Rear) is a highly modular disaster recovery
