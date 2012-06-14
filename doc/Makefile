@@ -9,6 +9,8 @@ all:
 
 dist: docs
 
+man: rear.8
+
 docs: rear.8 $(htmltargets)
 
 install: rear.8
@@ -17,14 +19,14 @@ install: rear.8
 clean:
 	rm -f unconv.8 *.html *.xml
 
-%.1.html: %.1.txt
+%.8.html: %.8.txt
 	asciidoc -d manpage $<
 
-%.1: %.1.xml
+%.8: %.8.xml
 	xmlto man $<
 
 %.html: %.txt
 	asciidoc $<
 
-%.1.xml: %.1.txt
+%.8.xml: %.8.txt
 	asciidoc -b docbook -d manpage $<

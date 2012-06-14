@@ -45,6 +45,9 @@ validate:
 	find . -name '*.sh' | xargs bash -n
 	find -L . -type l
 
+man:
+	make -C doc man
+
 doc:
 	make -C doc docs
 
@@ -84,7 +87,7 @@ install-doc:
 		-e 's,/usr/share/doc/packages,$(datadir)/doc,' \
 		$(DESTDIR)$(mandir)/man8/rear.8
 
-install: validate doc install-config install-bin install-data install-var install-doc
+install: validate man install-config install-bin install-data install-var install-doc
 
 uninstall:
 	@echo -e "\033[1m== Uninstalling Rear ==\033[0;0m"
@@ -94,13 +97,13 @@ uninstall:
 #	rm -rv $(DESTDIR)$(sysconfdir)/rear/
 #	rm -rv $(DESTDIR)$(localstatedir)/lib/rear/
 
-dist: clean validate doc
+dist: clean validate man
 	@echo -e "\033[1m== Building archive ==\033[0;0m"
 	sed -i -e 's#^Version:.*#Version: $(version)#' contrib/$(name).spec
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
 		tar -cjf $(name)-$(version).tar.bz2 --transform='s,^,$(name)-$(version)/,' --files-from=-
 
-dist-git: clean validate doc
+dist-git: clean validate man
 	@echo -e "\033[1m== Building archive ==\033[0;0m"
 	sed -i \
 		-e 's#^Source:.*#Source: $(name)-$(version)-git$(date)-$(git_branch).tar.bz2#' \
