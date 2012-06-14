@@ -23,13 +23,13 @@ case "$scheme" in
         ;;
     (file)
         LogPrint "Transferring kernel and initramfs to $path"
-        mkdir -p $v $path
+        mkdir -p $v $path >&2
         cp $v -pLf $KERNEL_FILE $path/kernel-$RAMDISK_SUFFIX >&2
         cp $v -pLf $TMP_DIR/initrd.cgz $path/initramfs-$RAMDISK_SUFFIX.img >&2
         ;;
     (nfs|cifs|usb)
         LogPrint "Transferring kernel and initramfs to $OUTPUT_URL"
-        mkdir -p $v $BUILD_DIR/outputfs/$NETFS_PREFIX/
+        mkdir -p $v $BUILD_DIR/outputfs/$NETFS_PREFIX/ >&2
         cp $v -pLf $KERNEL_FILE $BUILD_DIR/outputfs/$NETFS_PREFIX/kernel-$RAMDISK_SUFFIX >&2
         cp $v -pLf $TMP_DIR/initrd.cgz $BUILD_DIR/outputfs/$NETFS_PREFIX/initramfs-$RAMDISK_SUFFIX.img >&2
         ;;
