@@ -10,32 +10,45 @@ Source: rear-%{version}.tar.bz2
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch: noarch
+
+### Dependencies on all distributions
 Requires: binutils
-#Requires: cfg2html
-#Requires: bacula-mysql
 Requires: ethtool
 ##Requires: genisoimage
 Requires: gzip
 Requires: iproute
 Requires: iputils
-#Requires: lsscsi
 Requires: mingetty
 Requires: mkisofs
 Requires: parted
 Requires: portmap
-### FIXME: Hardcode the OS in /etc/rear/os.conf
-###   OS_VENDOR=RedHatEnterpriseServer
-###   OS_VERSION=5
-##Requires: redhat-lsb
 ##Requires: rpcbind
-### FIXME: Required for Federal Police
-#Requires: sg3_utils
-Requires: syslinux >= 4.00
 Requires: tar
 Requires: util-linux
 
+### We drop LSB requirements because it pulls in too many dependencies
+### We hardcode the OS in /etc/rear/os.conf instead
+##Requires: redhat-lsb
+
+### Required for Bacula/MySQL support
+#Requires: bacula-mysql
+
+### Required for OBDR
+#Requires: lsscsi
+#Requires: sg3_utils
+
+### Optional requirement
+#Requires: cfg2html
+
+%ifarch %ix86 x86_64
+Requires: syslinux
+%endif
+%ifarch ppc ppc64
+Requires: yaboot
+%endif
+
 %description
-Relax and Recover (abbreviated rear) is a highly modular disaster recovery
+Relax and Recover (abbreviated Rear) is a highly modular disaster recovery
 framework for GNU/Linux based systems, but can be easily extended to other
 UNIX alike systems. The disaster recovery information (and maybe the backups)
 can be stored via the network, local on hard disks or USB devices, DVD/CD-R,
@@ -52,6 +65,9 @@ echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >re
 
 ### Add a specific os.conf for RHEL so we do not depend on redhat-lsb
 %{?rhel:echo -e "OS_VENDOR=RedHatEnterpriseServer\nOS_VERSION=%{?rhel}" >etc/rear/os.conf}
+%{?fedora:echo -e "OS_VENDOR=Fedora\nOS_VERSION=%{?fedora}" >etc/rear/os.conf}
+%{?suse_version:echo -e "OS_VENDOR=SUSE_Linux\nOS_VERSION=%{?suse_version}" >etc/rear/os.conf}
+%{?sles_version:echo -e "OS_VENDOR=SUSE_Linux\nOS_VERSION=%{?sles_version}" >etc/rear/os.conf}
 
 %build
 
@@ -66,7 +82,7 @@ echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >re
 
 %files
 %defattr(-, root, root, 0755)
-%doc AUTHORS COPYING README doc/*
+%doc AUTHORS COPYING README doc/*.html doc/*.txt
 %doc %{_mandir}/man8/rear.8*
 %config(noreplace) %{_sysconfdir}/cron.d/rear/
 %config(noreplace) %{_sysconfdir}/rear/
@@ -76,5 +92,5 @@ echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >re
 %{_sbindir}/rear
 
 %changelog
-* Thu Jun 03 2010 Dag Wieers <dag@wieers.com> - 1.7.23-1
+* Thu Jun 03 2010 Dag Wieers <dag@wieers.com>
 - Initial package. (using DAR)

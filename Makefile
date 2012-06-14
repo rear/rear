@@ -15,6 +15,8 @@ datadir = $(prefix)/share
 mandir = $(datadir)/man
 localstatedir = /var
 
+.PHONY: doc
+
 all:
 	@echo "Nothing to build. Use \`make help' for more information."
 
@@ -43,18 +45,23 @@ validate:
 	find . -name '*.sh' | xargs bash -n
 	find -L . -type l
 
+doc:
+	make -C doc docs
+
 install-config:
 	@echo -e "\033[1m== Installing configuration ==\033[0;0m"
 	install -d -m0755 $(DESTDIR)$(sysconfdir)/rear/
+	-[[ ! -e $(DESTDIR)$(sysconfdir)/rear/local.conf ]] && \
+		install -Dp -m0644 etc/rear/local.conf $(DESTDIR)$(sysconfdir)/rear/local.conf
 	cp -a etc/rear/{mappings,templates} $(DESTDIR)$(sysconfdir)/rear/
 	-find $(DESTDIR)$(sysconfdir)/rear/ -name '.gitignore' -exec rm -rf {} \; &>/dev/null
 
 install-bin:
 	@echo -e "\033[1m== Installing binary ==\033[0;0m"
 	install -Dp -m0755 usr/sbin/rear $(DESTDIR)$(sbindir)/rear
-	sed -i -e 's#^CONFIG_DIR=.*#CONFIG_DIR="$(sysconfdir)/rear"#' \
-		-e 's#^SHARE_DIR=.*#SHARE_DIR="$(datadir)/rear"#' \
-		-e 's#^VAR_DIR=.*#VAR_DIR="$(localstatedir)/lib/rear"#' \
+	sed -i -e 's,^CONFIG_DIR=.*,CONFIG_DIR="$(sysconfdir)/rear",' \
+		-e 's,^SHARE_DIR=.*,SHARE_DIR="$(datadir)/rear",' \
+		-e 's,^VAR_DIR=.*,VAR_DIR="$(localstatedir)/lib/rear",' \
 		$(DESTDIR)$(sbindir)/rear
 
 install-data:
@@ -70,14 +77,14 @@ install-var:
 
 install-doc:
 	@echo -e "\033[1m== Installing documentation ==\033[0;0m"
-	install -Dp -m0755 doc/rear.8 $(DESTDIR)$(mandir)/man8/rear.8
-	sed -i -e 's#/etc#$(sysconfdir)#' \
-		-e 's#/usr/sbin#$(sbindir)#' \
-		-e 's#/usr/share#$(datadir)#' \
-		-e 's#/usr/share/doc/packages#$(datadir)/doc#' \
+	make -C doc install
+	sed -i -e 's,/etc,$(sysconfdir),' \
+		-e 's,/usr/sbin,$(sbindir),' \
+		-e 's,/usr/share,$(datadir),' \
+		-e 's,/usr/share/doc/packages,$(datadir)/doc,' \
 		$(DESTDIR)$(mandir)/man8/rear.8
 
-install: validate install-config install-bin install-data install-var install-doc
+install: validate doc install-config install-bin install-data install-var install-doc
 
 uninstall:
 	@echo -e "\033[1m== Uninstalling Rear ==\033[0;0m"
@@ -87,13 +94,13 @@ uninstall:
 #	rm -rv $(DESTDIR)$(sysconfdir)/rear/
 #	rm -rv $(DESTDIR)$(localstatedir)/lib/rear/
 
-dist: clean validate
+dist: clean validate doc
 	@echo -e "\033[1m== Building archive ==\033[0;0m"
 	sed -i -e 's#^Version:.*#Version: $(version)#' contrib/$(name).spec
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
 		tar -cjf $(name)-$(version).tar.bz2 --transform='s,^,$(name)-$(version)/,' --files-from=-
 
-dist-git: clean validate
+dist-git: clean validate doc
 	@echo -e "\033[1m== Building archive ==\033[0;0m"
 	sed -i \
 		-e 's#^Source:.*#Source: $(name)-$(version)-git$(date)-$(git_branch).tar.bz2#' \
