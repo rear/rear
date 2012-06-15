@@ -19,12 +19,10 @@ DESTDIR=
 OFFICIAL=
 
 distversion=$(version)
-distrelease=
 rpmrelease=
 ifeq ($(OFFICIAL),)
     distversion=$(version)-git$(date)
-    distrelease=git$(date)
-    rpmrelease=.$(distrelease)
+    rpmrelease=.git$(date)
 endif
 
 
