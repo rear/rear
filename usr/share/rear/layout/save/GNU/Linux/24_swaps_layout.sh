@@ -28,6 +28,17 @@ Log "Saving Swap information."
                         ;;
                 esac
             done < <(swaplabel $filename)
+	elif has_binary blkid; then
+	   for value in $(blkid $filename | tr " " "\n") ; do
+		case $value in
+		    UUID=*)
+			uuid=$(echo $value | cut -d= -f2 | sed -e 's/"//g')
+			;;
+		    LABEL=*)
+			label=$(echo $value | cut -d= -f2 | sed -e 's/"//g')
+			;;
+		esac
+	   done
         fi
 
         echo "swap $filename uuid=$uuid label=$label"
