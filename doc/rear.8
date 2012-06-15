@@ -199,7 +199,7 @@ When using OUTPUT=ISO you should provide the backup target location through the 
 OUTPUT_URL=\fBfile://\fR
 .RS 4
 Write the ISO image to disk\&. The default is in
-\fI/tmp\fR\&.
+\fI/var/lib/rear/output/\fR\&.
 .RE
 .PP
 OUTPUT_URL=\fBfish://\fR
@@ -371,7 +371,7 @@ you will end up with a bootable USB device\&.
 .sp
 To configure rear you have to edit the configuration files in \fI/etc/rear/\fR\&. All \fI*\&.conf\fR files there are part of the configuration, but only \fIsite\&.conf\fR and \fIlocal\&.conf\fR are intended for the user configuration\&. All other configuration files hold defaults for various distributions and should not be changed\&.
 .sp
-In \fI/etc/rear/templates\fR there are also some template files which are used by rear to create configuration files (mostly for the boot environment)\&. Modify the templates to adjust the information contained in the emails produced by Rear\&. You can use these templates to prepend your own configurations to the configuration files created by rear, for example you can edit \fIPXE_pxelinux\&.cfg\fR to add some general pxelinux configuration you use\&.
+In \fI/etc/rear/templates/\fR there are also some template files which are used by rear to create configuration files (mostly for the boot environment)\&. Modify the templates to adjust the information contained in the emails produced by Rear\&. You can use these templates to prepend your own configurations to the configuration files created by rear, for example you can edit \fIPXE_pxelinux\&.cfg\fR to add some general pxelinux configuration you use\&.
 .sp
 In almost all circumstances you have to configure two main settings and their parameters: The backup method and the output method\&.
 .sp
@@ -408,7 +408,7 @@ TIMESYNC=NTP
 .sp
 Don\(cqt forget to distribute the \fIsite\&.conf\fR to all your systems\&.
 .sp
-The resulting ISO image will be created in \fI/tmp\fR\&. You can now modify the behaviour by copying the appropriate configuration variables from \fIdefault\&.conf\fR to \fIlocal\&.conf\fR and changing them to suit your environment\&.
+The resulting ISO image will be created in \fI/var/lib/rear/output/\fR\&. You can now modify the behaviour by copying the appropriate configuration variables from \fIdefault\&.conf\fR to \fIlocal\&.conf\fR and changing them to suit your environment\&.
 .SH "EXIT STATUS"
 .PP
 0
@@ -418,9 +418,9 @@ Successful program execution\&.
 .PP
 >0
 .RS 4
-Usage, syntax or execution errors\&. Check the
-\fI/tmp/rear\-hostname\&.log\fR
-file for more information\&.
+Usage, syntax or execution errors\&. Check the log file in
+\fI/var/log/rear/\fR
+for more information\&.
 .RE
 .SH "EXAMPLES"
 .sp
@@ -464,9 +464,9 @@ System specific configuration can be set here\&.
 Site specific configuration can be set here\&.
 .RE
 .PP
-/tmp/rear\-hostname\&.log
+/var/log/rear/
 .RS 4
-Rear log file\&.
+Directory holding the Rear log files\&.
 .RE
 .PP
 /tmp/rear\&.####
