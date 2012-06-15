@@ -15,13 +15,26 @@ datadir = $(prefix)/share
 mandir = $(datadir)/man
 localstatedir = /var
 
+DESTDIR=
+OFFICIAL=
+
+distversion=$(version)
+distrelease=
+rpmrelease=
+ifeq ($(OFFICIAL),)
+    distversion=$(version)-git$(date)
+    distrelease=git$(date)
+    rpmrelease=.$(distrelease)
+endif
+
+
 .PHONY: doc
 
 all:
 	@echo "Nothing to build. Use \`make help' for more information."
 
 help:
-	@echo -e "Rear make targets: \n\
+	@echo -e "Rear make targets:\n\
 \n\
   validate        - Check source code\n\
   install         - Install Rear to DESTDIR (may replace files)\n\
@@ -33,6 +46,7 @@ help:
 Rear make variables (optional):\n\
 \n\
   DESTDIR=        - Location to install/uninstall\n\
+  OFFICIAL=       - Build an official release\n\
 "
 
 clean:
@@ -98,25 +112,19 @@ uninstall:
 #	rm -rv $(DESTDIR)$(localstatedir)/lib/rear/
 
 dist: clean validate man
-	@echo -e "\033[1m== Building archive ==\033[0;0m"
-	sed -i -e 's#^Version:.*#Version: $(version)#' contrib/$(name).spec
-	git ls-tree -r --name-only --full-tree $(git_branch) | \
-		tar -cjf $(name)-$(version).tar.bz2 --transform='s,^,$(name)-$(version)/,S' --files-from=-
-
-dist-git: clean validate man
-	@echo -e "\033[1m== Building archive ==\033[0;0m"
+	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
 	sed -i \
-		-e 's#^Source:.*#Source: $(name)-$(version)-git$(date)-$(git_branch).tar.bz2#' \
+		-e 's#^Source:.*#Source: $(name)-$(distversion).tar.bz2#' \
 		-e 's#^Version:.*#Version: $(version)#' \
-		-e 's#^\(Release: *[0-9]\+\)#\1.git$(date)#' \
+		-e 's#^\(Release: *[0-9]\+\)#\1$(rpmrelease)#' \
 		contrib/$(name).spec
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
-		tar -cjf $(name)-$(version)-git$(date)-$(git_branch).tar.bz2 --transform='s,^,$(name)-$(version)/,S' --files-from=-
+		tar -cjf $(name)-$(distversion).tar.bz2 --transform='s,^,$(name)-$(version)/,S' --files-from=-
 	git checkout contrib/$(name).spec
 
-rpm: dist-git
-	@echo -e "\033[1m== Building RPM package ==\033[0;0m"
+rpm: dist
+	@echo -e "\033[1m== Building RPM package $(name)-$(distversion)==\033[0;0m"
 	rpmbuild -tb --clean \
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
 		--define "debug_package %{nil}" \
-		--define "_rpmdir %(pwd)" $(name)-$(version)-git$(date)-$(git_branch).tar.bz2
+		--define "_rpmdir %(pwd)" $(name)-$(distversion).tar.bz2

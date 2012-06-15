@@ -109,7 +109,7 @@ echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >re
 
 %files
 %defattr(-, root, root, 0755)
-%doc AUTHORS COPYING README doc/*.html doc/*.txt
+%doc AUTHORS COPYING README doc/*.txt
 %doc %{_mandir}/man8/rear.8*
 %config(noreplace) %{_sysconfdir}/cron.d/rear/
 %config(noreplace) %{_sysconfdir}/rear/
