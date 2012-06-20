@@ -1,3 +1,9 @@
+
+scheme=$(url_scheme "$BACKUP_URL")
+if [[ "$scheme" != "usb" ]] ; then
+    return
+fi
+
 # Detect all backups on the USB device
 backups=()
 backup_times=()
