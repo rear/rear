@@ -127,3 +127,30 @@ rpm: dist
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
 		--define "debug_package %{nil}" \
 		--define "_rpmdir %(pwd)" $(name)-$(distversion).tar.bz2
+
+obs: BUILD_DIR = /tmp/rear.$(distversion)
+obs: obsrev = $(shell osc cat Archiving:Backup:Rear rear-snapshot rear.spec | grep Version | cut -d' ' -f2)
+obs: dist
+	@echo -e "\033[1m== Updating OBS $(name)-$(distversion)==\033[0;0m"
+ifneq ($(obsrev),$(distversion))
+	
+	rm -rf $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)
+	
+	cp $(name)-$(distversion).tar.bz2 $(BUILD_DIR)/
+	
+	osc co -c Archiving:Backup:Rear rear-snapshot -o $(BUILD_DIR)/rear-snapshot
+	
+	-osc del $(BUILD_DIR)/rear-snapshot/*.tar.bz2
+	cp $(name)-$(distversion).tar.bz2 $(BUILD_DIR)/rear-snapshot/
+	osc add $(BUILD_DIR)/rear-snapshot/$(name)-$(distversion).tar.bz2
+
+	sed -i \
+	-e 's#^Source:.*#Source: $(name)-$(distversion).tar.bz2#' \
+	-e 's#^Version:.*#Version: $(version)#' \
+	-e 's#^\(Release: *[0-9]\+\)#\1$(rpmrelease)#' \
+	$(BUILD_DIR)/rear-snapshot/rear.spec
+	cd $(BUILD_DIR) ; osc ci -m "Git -> OBS rev $REV" rear-snapshot
+	
+	rm -rf $(BUILD_DIR)
+endif
