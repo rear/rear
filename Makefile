@@ -1,7 +1,8 @@
-### Get version from rear itself
+### Get version from Relax-and-Recover itself
 name = rear
 version = $(shell awk 'BEGIN { FS="=" } /^VERSION=/ { print $$2}' usr/sbin/rear)
-date = $(shell date +%Y%m%d%H%M)
+gitdate = $(shell git log -n 1 --format="%ai")
+date = $(shell date --date="$(gitdate)" +%Y%m%d%H%M)
 
 ### Get the branch information from git
 git_ref = $(shell git symbolic-ref -q HEAD)
@@ -32,16 +33,16 @@ all:
 	@echo "Nothing to build. Use \`make help' for more information."
 
 help:
-	@echo -e "Rear make targets:\n\
+	@echo -e "Relax-and-Recover make targets:\n\
 \n\
   validate        - Check source code\n\
-  install         - Install Rear to DESTDIR (may replace files)\n\
-  uninstall       - Uninstall Rear from DESTDIR (may remove files)\n\
+  install         - Install Relax-and-Recover to DESTDIR (may replace files)\n\
+  uninstall       - Uninstall Relax-and-Recover from DESTDIR (may remove files)\n\
   dist            - Create tar file\n\
   deb             - Create DEB package\n\
   rpm             - Create RPM package\n\
 \n\
-Rear make variables (optional):\n\
+Relax-and-Recover make variables (optional):\n\
 \n\
   DESTDIR=        - Location to install/uninstall\n\
   OFFICIAL=       - Build an official release\n\
