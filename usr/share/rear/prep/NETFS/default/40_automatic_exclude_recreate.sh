@@ -7,7 +7,7 @@ local path=$(url_path $OUTPUT_URL)
 
 case $scheme in
      (file) # if user added path manually then there is no need to do it again
-	_mntpt=$(df -P ${path} 2>/dev/null | tail -1 | awk '{print $6}')
+        _mntpt=$(df -P ${path} 2>/dev/null | tail -1 | awk '{print $6}')
         [[ "${_mntpt}" = "/" ]] && Error "Making backup on / is forbidden. Use an external device!"
         if ! grep -q "${_mntpt}" <<< $(echo ${EXCLUDE_RECREATE[@]}); then
                 EXCLUDE_RECREATE=( "${EXCLUDE_RECREATE[@]}" "fs:${_mntpt}" )
