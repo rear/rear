@@ -1,13 +1,14 @@
 ### Get version from Relax-and-Recover itself
 name = rear
 version = $(shell awk 'BEGIN { FS="=" } /^VERSION=/ { print $$2}' usr/sbin/rear)
-gitdate = $(shell git log -n 1 --format="%ai")
-date = $(shell date --date="$(gitdate)" +%Y%m%d%H%M)
 
 ### Get the branch information from git
+git_date = $(shell git log -n 1 --format="%ai")
 git_ref = $(shell git symbolic-ref -q HEAD)
 git_branch ?= $(lastword $(subst /, ,$(git_ref)))
 git_branch ?= HEAD
+
+date = $(shell date --date="$(git_date)" +%Y%m%d%H%M)
 
 prefix = /usr
 sysconfdir = /etc
@@ -15,17 +16,20 @@ sbindir = $(prefix)/sbin
 datadir = $(prefix)/share
 mandir = $(datadir)/man
 localstatedir = /var
+specfile = contrib/$(name).spec
 
-DESTDIR=
-OFFICIAL=
+DESTDIR =
+OFFICIAL =
 
-distversion=$(version)
-rpmrelease=
+distversion = $(version)
+rpmrelease =
+obsproject = Archiving:Backup:Rear
+obspackage = $(name)
 ifeq ($(OFFICIAL),)
-    distversion=$(version)-git$(date)
-    rpmrelease=.git$(date)
+    distversion = $(version)-git$(date)
+    rpmrelease = .git$(date)
+    obsproject = Archiving:Backup:Rear:Snapshot
 endif
-
 
 .PHONY: doc
 
@@ -56,12 +60,15 @@ validate:
 	find etc/ usr/share/rear/conf/ -name '*.conf' | xargs bash -n
 	bash -n usr/sbin/rear
 	find . -name '*.sh' | xargs bash -n
-	find -L . -type l
+### Fails to work on RHEL
+#	find -L . -type l
 
 man:
+	@echo -e "\033[1m== Prepare manual ==\033[0;0m"
 	make -C doc man
 
 doc:
+	@echo -e "\033[1m== Prepare documentation ==\033[0;0m"
 	make -C doc docs
 
 install-config:
@@ -110,16 +117,18 @@ uninstall:
 #	rm -rv $(DESTDIR)$(sysconfdir)/rear/
 #	rm -rv $(DESTDIR)$(localstatedir)/lib/rear/
 
-dist: clean validate man
+dist: clean validate man $(name)-$(distversion).tar.bz2
+
+$(name)-$(distversion).tar.bz2:
 	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
 	sed -i \
 		-e 's#^Source:.*#Source: $(name)-$(distversion).tar.bz2#' \
 		-e 's#^Version:.*#Version: $(version)#' \
 		-e 's#^\(Release: *[0-9]\+\)#\1$(rpmrelease)#' \
-		contrib/$(name).spec
+		$(specfile)
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
 		tar -cjf $(name)-$(distversion).tar.bz2 --transform='s,^,$(name)-$(version)/,S' --files-from=-
-	git checkout contrib/$(name).spec
+	git checkout $(specfile)
 
 rpm: dist
 	@echo -e "\033[1m== Building RPM package $(name)-$(distversion)==\033[0;0m"
@@ -128,29 +137,18 @@ rpm: dist
 		--define "debug_package %{nil}" \
 		--define "_rpmdir %(pwd)" $(name)-$(distversion).tar.bz2
 
-obs: BUILD_DIR = /tmp/rear.$(distversion)
-obs: obsrev = $(shell osc cat Archiving:Backup:Rear rear-snapshot rear.spec | grep Version | cut -d' ' -f2)
+obs: BUILD_DIR = /tmp/rear-$(distversion)
+obs: obsname = $(shell osc ls $(obsproject) $(obspackage) | awk '/.tar.bz2$$/ { gsub(".tar.bz2$$","",$$1); print }')
 obs: dist
-	@echo -e "\033[1m== Updating OBS $(name)-$(distversion)==\033[0;0m"
-ifneq ($(obsrev),$(distversion))
-	
-	rm -rf $(BUILD_DIR)
+	@echo -e "\033[1m== Updating OBS from $(obsname) to $(name)-$(distversion)==\033[0;0m"
+ifneq ($(obsname),$(name)-$(distversion))
+	-rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
-	
-	cp $(name)-$(distversion).tar.bz2 $(BUILD_DIR)/
-	
-	osc co -c Archiving:Backup:Rear rear-snapshot -o $(BUILD_DIR)/rear-snapshot
-	
-	-osc del $(BUILD_DIR)/rear-snapshot/*.tar.bz2
-	cp $(name)-$(distversion).tar.bz2 $(BUILD_DIR)/rear-snapshot/
-	osc add $(BUILD_DIR)/rear-snapshot/$(name)-$(distversion).tar.bz2
-
-	sed -i \
-	-e 's#^Source:.*#Source: $(name)-$(distversion).tar.bz2#' \
-	-e 's#^Version:.*#Version: $(version)#' \
-	-e 's#^\(Release: *[0-9]\+\)#\1$(rpmrelease)#' \
-	$(BUILD_DIR)/rear-snapshot/rear.spec
-	cd $(BUILD_DIR) ; osc ci -m "Git -> OBS rev $REV" rear-snapshot
-	
+	osc co -c $(obsproject) $(obspackage) -o $(BUILD_DIR)
+	-osc del $(BUILD_DIR)/*.tar.bz2
+	cp $(name)-$(distversion).tar.bz2 $(BUILD_DIR)
+	tar -xOjf $(name)-$(distversion).tar.bz2 -C $(BUILD_DIR) $(name)-$(version)/$(specfile) >$(BUILD_DIR)/$(name).spec
+	osc add $(BUILD_DIR)/$(name)-$(distversion).tar.bz2
+	osc ci -m "Update to $(name)-$(distversion)" $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
 endif
