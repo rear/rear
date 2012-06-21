@@ -1,4 +1,4 @@
-Summary: Relax and Recover (Rear) is a Linux Disaster Recovery framework
+Summary: Relax-and-Recover is a Linux disaster recovery and system migration tool
 Name: rear
 Version: 1.13.0
 Release: 1%{?dist}
@@ -74,15 +74,23 @@ Requires: mkisofs
 Obsoletes: rear-snapshot
 
 %description
-Relax and Recover (abbreviated Rear) is a highly modular disaster recovery
-framework for GNU/Linux based systems, but can be easily extended to other
-UNIX alike systems. The disaster recovery information (and maybe the backups)
-can be stored via the network, local on hard disks or USB devices, DVD/CD-R,
-tape, etc. The result is also a bootable image that is capable of booting via
-PXE, DVD/CD and USB media.
+Relax-and-Recover is the leading Open Source disaster recovery and system
+migration solution, and successor to mkcdrec. It comprises of a modular
+framework and ready-to-go workflows for many common situations to produce
+a bootable image and restore from backup using this image. As a benefit,
+it allows to restore to different hardware and can therefore be used as
+a migration tool as well.
 
-Relax and Recover integrates with other backup software and provides integrated
-bare metal disaster recovery abilities to the compatible backup software.
+Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
+OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
+sftp, ftp, http, nfs, cifs) as well as a multitude of backup strategies
+(incl.  IBM TSM, HP DataProtector, Symantec NetBackup, Bacula, rsync).
+
+Relax-and-Recover was designed to be easy to set up, requires no maintenance
+and is there to assist when disaster strikes. Its setup-and-forget nature
+removes any excuse for not having a disaster recovery solution implemented.
+
+Professional services and support are available.
 
 %prep
 %setup
@@ -102,7 +110,7 @@ echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >re
 %{__rm} -rf %{buildroot}
 %{__make} install DESTDIR="%{buildroot}"
 %{__install} -Dp -m0644 rear.cron %{buildroot}%{_sysconfdir}/cron.d/rear
-%{__install} -Dp -m0644 etc/udev/rules.d/62-rear-usb.rules %{buildroot}%{_sysconfdir}/udev/rules.d/62-rear-usb.rules
+#%{__install} -Dp -m0644 etc/udev/rules.d/62-rear-usb.rules %{buildroot}%{_sysconfdir}/udev/rules.d/62-rear-usb.rules
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -113,7 +121,7 @@ echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >re
 %doc %{_mandir}/man8/rear.8*
 %config(noreplace) %{_sysconfdir}/cron.d/rear/
 %config(noreplace) %{_sysconfdir}/rear/
-%config(noreplace) %{_sysconfdir}/udev/rules.d/62-rear-usb.rules
+#%config(noreplace) %{_sysconfdir}/udev/rules.d/62-rear-usb.rules
 %{_datadir}/rear/
 %{_localstatedir}/lib/rear/
 %{_sbindir}/rear
