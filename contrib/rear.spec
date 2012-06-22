@@ -1,7 +1,9 @@
+%define rpmrelease %{nil}
+
 Summary: Relax-and-Recover is a Linux disaster recovery and system migration tool
 Name: rear
 Version: 1.13.0
-Release: 1%{?dist}
+Release: 1%{?rpmrelease}%{?dist}
 License: GPLv3
 Group: Applications/File
 URL: http://rear.github.com/

@@ -124,7 +124,7 @@ $(name)-$(distversion).tar.bz2:
 	sed -i \
 		-e 's#^Source:.*#Source: $(name)-$(distversion).tar.bz2#' \
 		-e 's#^Version:.*#Version: $(version)#' \
-		-e 's#^\(Release: *[0-9]\+\)#\1$(rpmrelease)#' \
+		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
 		$(specfile)
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
 		tar -cjf $(name)-$(distversion).tar.bz2 --transform='s,^,$(name)-$(version)/,S' --files-from=-
