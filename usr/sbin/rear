@@ -163,6 +163,9 @@ case "$WORKFLOW" in
 	(*)
 		LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
 		Log "Command line options: $0 ${CMD_OPTS[@]}"
+		if [[ "$VERBOSE" ]]; then
+			LogPrint "Using log file: $LOGFILE"
+		fi
 		;;
 esac
 
@@ -170,7 +173,6 @@ v=""
 verbose=""
 # enable progress subsystem only in verbose mode, set some stuff that others can use
 if [[ "$VERBOSE" ]]; then
-	LogPrint "Using log file: $LOGFILE"
 	source $SHARE_DIR/lib/progresssubsystem.nosh
 	v="-v"
 	verbose="--verbose"
@@ -246,6 +248,7 @@ if has_binary WORKFLOW_$WORKFLOW; then
 	WORKFLOW_$WORKFLOW "${ARGS[@]}"
 	Log "Finished running $WORKFLOW workflow"
 else
+	VERBOSE=1
 	LogPrint "ERROR: The specified command '$WORKFLOW' does not exist !"
 	EXIT_CODE=1
 fi
