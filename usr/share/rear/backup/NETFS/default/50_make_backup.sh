@@ -13,7 +13,10 @@ done < $TMP_DIR/backup-exclude.txt
 local scheme=$(url_scheme $BACKUP_URL)
 local path=$(url_path $BACKUP_URL)
 local opath=$(output_path $scheme $path)
-mkdir -p $v "${opath}" >&2
+
+if [[ "$opath" ]]; then
+    mkdir -p $v "${opath}" >&2
+fi
 
 LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 ProgressStart "Preparing archive operation"
@@ -97,8 +100,7 @@ case "$(basename ${BACKUP_PROG})" in
 			size="$(stat -c "%s" "$backuparchive")" || {
 				kill -9 $BackupPID
 				ProgressError
-				Error "The backup program did not create the archive file !
-Killed the backup program and aborting."
+				Error "$(basename $BACKUP_PROG) failed to create the archive file"
 			}
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
@@ -114,16 +116,41 @@ wait $BackupPID
 backup_prog_rc=$?
 
 sleep 1
+
 # everyone should see this warning, even if not verbose
-test "$backup_prog_rc" -gt 0 && VERBOSE=1 LogPrint "WARNING !
-There was an error (Nr. $backup_prog_rc) during archive creation.
-Please check the archive and see '$LOGFILE' for more information.
+case "$(basename $BACKUP_PROG)" in
+    (tar)
+        if (( $backup_prog_rc == 1 )); then
+            LogPrint "WARNING: $(basename $BACKUP_PROG) ended with return code $backup_prog_rc and below output:
 
-Since errors are oftenly related to files that cannot be saved by
-$BACKUP_PROG, we will continue the $WORKFLOW process. However, you MUST
-verify the backup yourself before trusting it !
+$(grep '^tar: ' $LOGFILE | sed -e 's/^/  /')
 
+This means that files have been modified during the archiving
+process. As a result the backup may not be completely consistent
+or may not be a perfect copy of the system.
+
+Relax-and-Recover will continue, however it is highly advisable
+to verify the backup in order to be sure to safely recover this
+system.
 "
+        elif (( $backup_prog_rc > 1 )); then
+            Error "$(basename $BACKUP_PROG) failed with return code $backup_prog_rc and below output:
+
+$(grep '^tar: ' $LOGFILE | sed -e 's/^/  /')
+
+This means that the archiving process ended prematurely, or did
+not even start. As a result it is unlikely you can recover this
+system properly. Relax-and-Recover is therefore aborting execution.
+"
+        fi;;
+    (*)
+            Error "$(basename $BACKUP_PROG) failed with return code $backup_prog_rc
+
+This means that the archiving process ended prematurely, or did
+not even start. As a result it is unlikely you can recover this
+system properly. Relax-and-Recover is therefore aborting execution.
+";;
+esac
 
 tar_message="$(tac $LOGFILE | grep -m1 '^Total bytes written: ')"
 if [ $backup_prog_rc -eq 0 -a "$tar_message" ] ; then

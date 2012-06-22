@@ -21,6 +21,12 @@ if [[ -z "$BACKUP_URL" ]]; then
     fi
 fi
 
+if [[ -z "$OUTPUT_URL" ]]; then
+    if [[ "$TAPE_DEVICE" ]] ; then
+        OUTPUT_URL="tape://$TAPE_DEVICE"
+    fi
+fi
+
 if [[ "$TAPE_DEVICE" ]]; then
     Log "Tape device $TAPE_DEVICE selected."
 fi
