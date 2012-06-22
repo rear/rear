@@ -1,6 +1,6 @@
-09Rear recovery mode07
-01~~~~~~~~~~~~~~~~~~07
-0fRelax and Recover07 (Rear) is a disaster recovery and system migration tool.
+09Relax-and-Recover recovery mode07
+01~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~07
+0fRelax-and-Recover07 is a disaster recovery and system migration tool.
 
 This help is part of the rescue image, you are here because you plan to recover
 or migrate a previously made backup of your system, including the disk layout

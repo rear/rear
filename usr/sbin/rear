@@ -1,20 +1,20 @@
 #!/bin/bash
 # $Id$
 #
-# Relax and Recover
+# Relax-and-Recover
 #
-#    Relax and Recover is free software; you can redistribute it and/or modify
+#    Relax-and-Recover is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
 
-#    Relax and Recover is distributed in the hope that it will be useful,
+#    Relax-and-Recover is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 
 #    You should have received a copy of the GNU General Public License
-#    along with Relax and Recover; if not, write to the Free Software
+#    along with Relax-and-Recover; if not, write to the Free Software
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 # Authors:
@@ -24,7 +24,7 @@
 # Dag Wieers <dag at wieers dot com> [DAG]
 
 # Versioning
-PRODUCT="Relax and Recover"
+PRODUCT="Relax-and-Recover"
 PROGRAM=$(basename $0)
 VERSION=1.13.0
 RELEASE_DATE='$Date$'
@@ -187,7 +187,7 @@ if [[ -e "/etc/rear-release" ]]; then
 fi
 
 [[ -z "$SIMULATE" ]]
-LogPrintIfError "Simulation mode activated, Rear base directory: $SHARE_DIR"
+LogPrintIfError "Simulation mode activated, Relax-and-Recover base directory: $SHARE_DIR"
 
 # All workflows need to read the configurations first.
 # Combine configuration files

@@ -1,4 +1,4 @@
-= Rear: Disaster Recovery and System Migration solution
+= Relax-and-Recover: Disaster Recovery and System Migration solution
 Dag Wieërs <dag@wieers.com>
 
 _This presentation is written in AsciiDoc and can be converted to
@@ -12,14 +12,15 @@ http://github.com/dagwieers/asciidoc-odf[asciidoc-odf]._
   - Worked at IBM Belgium, now self-employed to provide advice, design, automation, maintenance
 
 * Involved in various Open Source communities
-  - incl. RPMforge, ELRepo, CentOS, syslinux, AsciiDoc, LibreOffice, docbook2odf, Rear
+  - incl. RPMforge, ELRepo, CentOS, syslinux, AsciiDoc, LibreOffice,
+    docbook2odf, Relax-and-Recover
 
 * Author of various tools
   - incl. dstat, unoconv, mrepo, proxytunnel, wiipresent, dconf, asciidoc-odf
 ////
 
 
-== What is Relax and Recover ?
+== What is Relax-and-Recover ?
 _Tool that implements a DR workflow for Linux_
 
 Which basically means ?
@@ -33,8 +34,8 @@ Which basically means ?
   - Easy to extend to own needs
 
 
-== How does Rear work ?
-Rear builds a rescue image from the existing installation
+== How does Relax-and-Recover work ?
+Relax-and-Recover builds a rescue image from the existing installation
 
   - Restored system is an accurate copy
   - Restored system supports the hardware
@@ -64,8 +65,8 @@ So manual disaster recovery risks:
   - frustration
 
 
-== What does Rear bring to the table ?
-But the Rear rescue image takes care of the complete
+== What does Relax-and-Recover bring to the table ?
+But the Relax-and-Recover rescue image takes care of the complete
 recovery process until the system runs:
 
   - enabling the network and remote access
@@ -76,7 +77,7 @@ recovery process until the system runs:
   - restoring the bootloader
 
 
-== Rear functionality
+== Relax-and-Recover functionality
 * Supported storage technologies
   - HP SmartArray, SW RAID, DRBD, LVM, multipath
   - ext2/ext3/ext4, xfs, jfs, vfat, btrfs, LUKS
@@ -90,20 +91,20 @@ recovery process until the system runs:
     Bacula, tar, rsync
 
 
-== How is Rear used ?
-* Creating Rear boot media: +rear mkrescue+
+== How is Relax-and-Recover used ?
+* Creating boot media: +rear mkrescue+
   - Copies kernel, modules, minimal system
   - Saves storage layout, network configuration
   - Write boot media
 
 * Restore system
-  - Boot Rear media
+  - Boot Relax-and-Recover media
   - Optionally, modify storage/network config
   - Run: +rear recover+
-  - Rear parses layout then creates diskrestore script
-  - Rear initiates restore or prompts for restore
+  - Relax-and-Recover parses layout then creates diskrestore script
+  - Relax-and-Recover initiates restore or prompts for restore
 
-== Rear on a running system
+== Relax-and-Recover on a running system
 
 [ditaa]
 ----
@@ -174,7 +175,7 @@ recovery process until the system runs:
 
 
 == Use case: Belgian Federal Police /3
-* Rear config for USB rescue media:
+* Relax-and-Recover config for USB rescue media:
 
 [source,bash]
 ----
@@ -183,7 +184,7 @@ OUTPUT=USB
 USB_DEVICE=/dev/disk/by-label/REAR-000
 ----
 
-* Rear config for USB backup media:
+* Relax-and-Recover config for USB backup media:
 
 [source,bash]
 ----
@@ -196,7 +197,7 @@ EXCLUDE_MOUNTPOINTS=( /data )
 
 
 == Use case: Belgian Federal Police /4
-* Rear config for OBDR rescue tapes:
+* Relax-and-Recover config for OBDR rescue tapes:
 
 [source,bash]
 ----
@@ -206,7 +207,7 @@ BEXTRACT_DEVICE=Ultrium-1
 BEXTRACT_VOLUME=VOL-*
 ----
 
-* Rear config for OBDR backup tapes:
+* Relax-and-Recover config for OBDR backup tapes:
 
 [source,bash]
 ----
@@ -222,7 +223,7 @@ TAPE_DEVICE=/dev/nst0
   - Easy restore of physical hosts and guests
 
 * Solution:
-  - Cron creates image when Rear detects change
+  - Cron creates image when Relax-and-Recover detects change
   - Images pushed through HTTP to PXE server/host
   - Stored on USB disks, rotated every week
 
@@ -232,7 +233,7 @@ TAPE_DEVICE=/dev/nst0
 
 * Configure Apache to allow HTTP PUT to USB disk
 
-* Rear config in _/etc/rear/local.conf_:
+* Relax-and-Recover config in _/etc/rear/local.conf_:
 
 [source,bash]
 ----
@@ -241,13 +242,13 @@ OUTPUT=ISO
 ISO_URL=http://server:port/path/
 ----
 
-* Rear cron-job at /etc/cron.d/rear:
+* Relax-and-Recover cron-job at /etc/cron.d/rear:
 ----
 30 0 1 * * root /usr/sbin/rear mkrescue
 30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue
 ----
 
-== Rear command line /1
+== Relax-and-Recover command line /1
 
 ----
 [root@moria rear]# rear help
@@ -266,7 +267,7 @@ List of commands:
 Use 'rear -v help' for more advanced commands.
 ----
 
-== Rear command line /2
+== Relax-and-Recover command line /2
 
 ----
 [root@moria rear]# rear help
@@ -284,7 +285,7 @@ Available options:
 -snip-
 ----
 
-== Hacking on Rear
+== Hacking on Relax-and-Recover
 * It is Bash !
 
 *Join the mailinglist
@@ -326,7 +327,7 @@ and various other contributors
 
 Development at Github
 
-  - http://rear.github.com/
+  - http://relax-and-recover.org/
   - rear-users@lists.sourceforge.net
 
 
@@ -336,7 +337,7 @@ Any questions, ideas, pull-requests ?
 
 == Live USB demo
 * Demo USB/udev integration (check udev config !)
-  - Prepare USB stick: rear format /dev/sdb
+  - Prepare USB stick: +rear format /dev/sdb+
   - Re-insert USB stick and wait until light goes out
 
 * Demo restore procedure (disable udev rule !)

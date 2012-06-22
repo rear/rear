@@ -110,7 +110,7 @@ install-doc:
 install: validate man install-config install-bin install-data install-var install-doc
 
 uninstall:
-	@echo -e "\033[1m== Uninstalling Rear ==\033[0;0m"
+	@echo -e "\033[1m== Uninstalling Relax-and-Recover ==\033[0;0m"
 	-rm -v $(DESTDIR)$(sbindir)/rear
 	-rm -v $(DESTDIR)$(mandir)/man8/rear.8
 	-rm -rv $(DESTDIR)$(datadir)/rear/

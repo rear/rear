@@ -8,7 +8,7 @@
 
 
 == NAME
-rear - bare metal disaster recovery tool
+rear - bare metal disaster recovery and system migration tool
 
 
 == SYNOPSIS
@@ -16,34 +16,34 @@ rear - bare metal disaster recovery tool
 
 
 == DESCRIPTION
-Relax and Recover (abbreviated *Rear*) is the leading Open Source disaster
-recovery solution, and successor to mkcdrec. It comprises of a modular
+Relax-and-Recover is the leading Open Source disaster recovery and system
+migration solution, and successor to mkcdrec. It comprises of a modular
 framework and ready-to-go workflows for many common situations to produce
 a bootable image and restore from backup using this image. As a benefit,
 it allows to restore to different hardware and can therefore be used as
 a migration tool as well.
 
-Currently Rear supports various boot media (incl. ISO, PXE, OBDR tape,
-USB or eSATA storage), a variety of network protocols (incl. sftp, ftp,
-http, nfs, cifs) for storage and backup as well as a multitude of
-backup strategies (incl.  IBM TSM, HP DataProtector, Symantec NetBackup,
+Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
+OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
+sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude
+of backup strategies (incl.  IBM TSM, HP DataProtector, Symantec NetBackup,
 Bacula, rsync). This results in a bootable image that os capable of booting
 via PXE, DVD/CD, bootable tape or virtual provisioning.
 
-Rear was designed to be easy to set up, requires no maintenance and is
-there to assist when disaster strikes. Its setup-and-forget nature eradicates
-any excuses for not having a disaster recovery solution implemented.
+Relax-and-Recover was designed to be easy to set up, requires no maintenance
+and is there to assist when disaster strikes. Its setup-and-forget nature
+removes any excuses for not having a disaster recovery solution implemented.
 
 Recovering from disaster is made very straight-forward by a 2-step recovery
 process so that it can be executed by operational teams when required.
 When used interactively (e.g. when used for migrating systems), menus help
 make decisions to restore to a new (hardware) environment.
 
-Extending Rear is made possible by its modular framework. Consistent
-logging and optionally extended output help understand the concepts behind
-Rear and help debug during development.
+Extending Relax-and-Recover is made possible by its modular framework.
+Consistent logging and optionally extended output help understand the concepts
+behind Relax-and-Recover and help debug during development.
 
-Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details see
+Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 
@@ -118,18 +118,18 @@ The process of bare metal disaster recovery consists of two parts:
  - Restore the data to the system
 
 Most backup software solutions are very good at restoring data but do not
-support recreating the system layout. Relax and Recover is very good at
+support recreating the system layout. Relax-and-Recover is very good at
 recreating the system layout but and works best when used together with
 a supported backup software.
 
-In this combination Rear recreates the system layout and calls the backup
-software to restore the actual data. Thus there is no unnessecary duplicate
-data storage and the Rear rescue media can be very small.
+In this combination Relax-and-Recover recreates the system layout and calls
+the backup software to restore the actual data. Thus there is no unnessecary
+duplicate data storage and the Relax-and-Recover rescue media can be very small.
 
-For demonstration and special use purposes Rear also includes an internal
-backup method, NETFS, which can be used to create a simple tar.gz archive
-of the system. For all permanent setups we recommend using something more
-professional for backup, either a traditional backup software (open
+For demonstration and special use purposes Relax-and-Recover also includes
+an internal backup method, NETFS, which can be used to create a simple tar.gz
+archive of the system. For all permanent setups we recommend using something
+more professional for backup, either a traditional backup software (open
 source or commercial) or rsync with hardlink based solutions, e.g. RSYNC
 BACKUP MADE EASY.
 
@@ -184,18 +184,19 @@ Write the ISO image using +rsync+ and the RSYNC protocol.
 
 
 == BACKUP SOFTWARE INTEGRATION
-Currently Rear supports the following backup methods. Please distinguish
-carefully between Rear support for 3rd party backup software and Rear
-internal backup methods. The latter also creates a backup of your data
-while the former will only integrate Rear with the backup software to
-restore the data with the help of the backup software without actually
-creating backups. This means that for all non-internal backup software
-you *must* take care of creating backups yourself.
+Currently Relax-and-Recover supports the following backup methods. Please
+distinguish carefully between Relax-and-Recover support for 3rd party
+backup software and Relax-and-Recover internal backup methods. The latter
+also creates a backup of your data while the former will only integrate
+Relax-and-Recover with the backup software to restore the data with the
+help of the backup software without actually creating backups. This means
+that for all non-internal backup software you *must* take care of creating
+backups yourself.
 
 Especially the +rear mkbackup+ command can be confusing as it is only
 useful for the internal backup methods and has no function at all with
 the other backup methods. The following backup methods need to be set
-in Rear with the +BACKUP=+ option.
+in Relax-and-Recover with the +BACKUP=+ option.
 
 BACKUP=*DP*::
 Use HP Data Protector to restore the data.
@@ -218,9 +219,9 @@ Internal backup method which can be used to create a simple backup
 (tar archive).
 
 BACKUP=*REQUESTRESTORE*::
-*(default)* Not really a backup method at all, Rear simply halts the
-recovery and requests that somebody will restore the data to the
-appropriate location (e.g. via SSH). This method works especially
+*(default)* Not really a backup method at all, Relax-and-Recover simply
+halts the recovery and requests that somebody will restore the data
+to the appropriate location (e.g. via SSH). This method works especially
 well with an rsync bases backup that is pushed back to the backup
 client.
 
@@ -228,8 +229,8 @@ BACKUP=*RSYNC*::
 Use rsync to restore data.
 
 BACKUP=*TSM*::
-Use IBM Tivoli Storage Manager to restore the data. The Rear result
-files (e.g. ISO image) are also saved into TSM.
+Use IBM Tivoli Storage Manager to restore the data. The Relax-and-Recover
+result files (e.g. ISO image) are also saved into TSM.
 
 If your favourite backup software is missing from this list, please submit
 a patch or ask us to implement it for you.
@@ -270,25 +271,26 @@ device.
 
 
 == CONFIGURATION
-To configure rear you have to edit the configuration files in _/etc/rear/_.
-All _*.conf_ files there are part of the configuration, but only _site.conf_
-and _local.conf_ are intended for the user configuration. All other
-configuration files hold defaults for various distributions and should not
-be changed.
+To configure Relax-and-Recover you have to edit the configuration files in
+_/etc/rear/_.  All _*.conf_ files there are part of the configuration, but
+only _site.conf_ and _local.conf_ are intended for the user configuration.
+All other configuration files hold defaults for various distributions and
+should not be changed.
 
 In _/etc/rear/templates/_ there are also some template files which are used
-by rear to create configuration files (mostly for the boot environment).
-Modify the templates to adjust the information contained in the emails
-produced by Rear. You can use these templates to prepend your own
-configurations to the configuration files created by rear, for example you
-can edit _PXE_pxelinux.cfg_ to add some general pxelinux configuration you use.
+by Relax-and-Recover to create configuration files (mostly for the boot
+environment).  Modify the templates to adjust the information contained in
+the emails produced by Relax-and-Recover. You can use these templates to
+prepend your own configurations to the configuration files created by
+Relax-and-recover, for example you can edit _PXE_pxelinux.cfg_ to add some
+general pxelinux configuration you use.
 
 In almost all circumstances you have to configure two main settings and their
 parameters: The backup method and the output method.
 
-The backup method defines, how your data was saved and wether rear should
-backup your data as part of the mkrescue process or wether you use an external
-application, e.g. backup software to archive your data.
+The backup method defines, how your data was saved and wether Relax-and-Recover
+should backup your data as part of the mkrescue process or wether you use an
+external application, e.g. backup software to archive your data.
 
 The output method defines how the rescue system is written to disk and how you
 plan to boot the failed computer from the rescue system.
@@ -347,18 +349,18 @@ System specific configuration can be set here.
 Site specific configuration can be set here.
 
 /var/log/rear/::
-Directory holding the Rear log files.
+Directory holding the log files.
 
 /tmp/rear.##############::
-Rear working directory. If Rear exits with an error, you must remove
-this directory manually.
+Relax-and-Recover working directory. If Relax-and-Recover exits with an error,
+you must remove this directory manually.
 
 /usr/share/rear::
-Rear script components.
+Relax-and-Recover script components.
 
 /usr/share/rear/conf/default.conf::
-Rear's included defaults. Contains a complete set of parameters and
-its explanation.  Please do not edit or modify. Copy values to
+Relax-and-Recover's included defaults. Contains a complete set of parameters
+and its explanation.  Please do not edit or modify. Copy values to
 _local.conf_ or _site.conf_ instead.
 
 
@@ -368,7 +370,7 @@ issue-tracker at: http://github.com/rear/issues/
 
 
 == SEE ALSO
-Relax and Recover comes with extensive documentation located in 
+Relax-and-Recover comes with extensive documentation located in 
 _/usr/share/doc_.
 
 
@@ -377,10 +379,10 @@ Gratien D'haese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers.
 
 Lars Pinne (this man page).
 
-Relax and Recover is a collaborative process using Github at:
+Relax-and-Recover is a collaborative process using Github at:
 http://github.com/rear/
 
-The Relax and Recover website is located at: http://rear.github.com/
+The Relax-and-Recover website is located at: http://relax-and-recover.org/
 
 
 == COPYRIGHT
@@ -394,5 +396,5 @@ Jeroen Hoekx
 
 Dag Wieers, Dagit Linux Solutions
 
-Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details
+Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details
 see the GNU General Public License at http://www.gnu.org/licenses/gpl.html

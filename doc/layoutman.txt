@@ -1,12 +1,16 @@
-Relax and Recover Layout Manual
+Relax-and-Recover Layout Manual
 ===============================
 Jeroen Hoekx <jeroen.hoekx@hamok.be>
 2011-09-10
 
-This document describes all aspects of the system disk layout generation in Relax and Recover.
+This document describes all aspects of the system disk layout generation in Relax-and-Recover.
 
 == General overview ==
-The disk layout generation code in Relax and Recover is responsible for the faithful recreation of the disk layout of the original system. It gathers information about any component in the system layout. Components supported in Rear include:
+The disk layout generation code in Relax-and-Recover is responsible for the
+faithful recreation of the disk layout of the original system. It gathers
+information about any component in the system layout. Components supported in
+Relax-and-Recover include:
+
 - Partitions
 - Logical volume management (LVM)
 - Software RAID (MD)
@@ -17,9 +21,12 @@ The disk layout generation code in Relax and Recover is responsible for the fait
 - DRBD
 - HP SmartArray controllers
 
-Rear detects dependencies between these components.
+Relax-and-Recover detects dependencies between these components.
 
-During the rescue media creation phase, Rear centralizes all information in one file. During recovery, that file is used to generate the actual commands to recreate the components. Rear allows customizations and manual editing in all these phases.
+During the rescue media creation phase, Relax-and-Recover centralizes all
+information in one file. During recovery, that file is used to generate the
+actual commands to recreate the components. Relax-and-Recover allows
+customizations and manual editing in all these phases.
 
 == Layout information gathered during rescue image creation ==
 Layout information is stored in +/var/lib/rear/layout/disklayout.conf+. The term 'layout file' in this document refers to this particular file.
@@ -58,7 +65,11 @@ fs /dev/sda1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksi
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
 crypt /dev/mapper/disk /dev/sda2 cipher=aes mode=xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 ----------------------------------
-This document will continue to use this example to explore the various options available in Rear. The exact syntax of the layout file is described in a later section. It is already clear that this file is human readable and thus human editable. It is also machine readable and all information necessary to restore is a system is listed.
+This document will continue to use this example to explore the various options
+available in Relax-and-Recover. The exact syntax of the layout file is
+described in a later section. It is already clear that this file is human
+readable and thus human editable. It is also machine readable and all
+information necessary to restore is a system is listed.
 
 It's easy to see that there are 3 disks attached to the system. +/dev/sda+ is the internal disk of the system. Its filesystems are normally mounted. The other devices are external disks. One of them has just normal partitions. The other one has a physical volume on one of the partitions.
 
@@ -66,9 +77,14 @@ It's easy to see that there are 3 disks attached to the system. +/dev/sda+ is th
 
 === Autoexcludes ===
 
-Rear has reasonable defaults when creating the recovery information. It has commented out the two external disks and any component that's part of it. The reason is that no mounted filesystem uses these two disks. After all, you don't wan't to recreate your backup disk when you're recovering your system.
+Relax-and-Recover has reasonable defaults when creating the recovery
+information. It has commented out the two external disks and any
+component that's part of it. The reason is that no mounted filesystem
+uses these two disks. After all, you don't wan't to recreate your
+backup disk when you're recovering your system.
 
-If we mount the filesystem on +/dev/mapper/backup-backup+ on +/media/backup+, Rear will think that it's necessary to recreate the filesystem:
+If we mount the filesystem on +/dev/mapper/backup-backup+ on +/media/backup+,
+Relax-and-Recover will think that it's necessary to recreate the filesystem:
 ----------------------------------
 disk /dev/sda 160041885696 msdos
 # disk /dev/sdb 320072933376 msdos
@@ -104,9 +120,15 @@ swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
 crypt /dev/mapper/disk /dev/sda2 cipher=aes mode=xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 ----------------------------------
 
-This behavior is controlled by the +AUTOEXCLUDE_DISKS=y+ parameter in +default.conf+. If we unset it in the local configuration, Rear will nog longer exclude it automatically.
+This behavior is controlled by the +AUTOEXCLUDE_DISKS=y+ parameter in
++default.conf+. If we unset it in the local configuration, Relax-and-Recover
+will nog longer exclude it automatically.
 
-A similar mechanism exists for multipath disks. The +AUTOEXCLUDE_MULTIPATH=y+ variable in +default.conf+ prevents Rear from overwriting multipath disks. Typically, they are part of the SAN disaster recovery strategy. However, there can be cases where you want to recover them. The information is retained in +disklayout.conf+.
+A similar mechanism exists for multipath disks. The +AUTOEXCLUDE_MULTIPATH=y+
+variable in +default.conf+ prevents Relax-and-Recover from overwriting
+multipath disks. Typically, they are part of the SAN disaster recovery
+strategy. However, there can be cases where you want to recover them. The
+information is retained in +disklayout.conf+.
 
 === Manual excludes ===
 It seems prudent to prevent the external drives from ever being backed-up or overwritten. The default configuration contains these lines:
@@ -171,12 +193,16 @@ EXCLUDE_RECREATE=( "${EXCLUDE_RECREATE[@]}" "/dev/backup" )
 ----------------------------------
 
 == Restore to the same hardware ==
-Restoring the system to the same hardware is simple. Type +rear recover+ in the rescue system prompt. Rear will detect that it's restoring to the same system and will make sure things like UUIDs match. It also asks my LUKS encryption password.
+Restoring the system to the same hardware is simple. Type +rear recover+ in
+the rescue system prompt. Relax-and-Recover will detect that it's restoring to
+the same system and will make sure things like UUIDs match. It also asks my
+LUKS encryption password.
 
-Once the restore of the backup is completed, Rear will install the bootloader and the system is back in working order.
+Once the restore of the backup is completed, Relax-and-Recover will install
+the bootloader and the system is back in working order.
 ----------------------------------
 RESCUE firefly:~ # rear recover
-Relax and Recover 0.0.0 / $Date$
+Relax-and-Recover 0.0.0 / $Date$
 NOTICE: Will do driver migration
 Comparing disks.
 Disk configuration is identical, proceeding with restore.
@@ -218,7 +244,7 @@ hard disks of the recovered system are mounted there.
 Please restore your backup in the provided shell and, when finished, type exit
 in the shell to continue recovery.
 
-Welcome to Relax and Recover. Run "rear recover" to restore your system !
+Welcome to Relax-and-Recover. Run "rear recover" to restore your system !
 
 rear>
 ----------------------------------
@@ -226,13 +252,22 @@ rear>
 There are two ways to deal with different hardware. One is being lazy and dealing with problems when you encounter them. The second option is to plan in advance. Both are valid approaches. The lazy approach works fine when you are in control of the restore and you have good knowledge of the components in your system. The second approach is preferable in disaster recovery situations or migrations where you know the target hardware in advance and the actual restore will be carried out by less knowledgeable people.
 
 === The Ad-Hoc Way ===
-Rear will assist you somewhat in case it notices different disk sizes. It will ask you to map each differently sized disk to a disk in the target system. Partitions will be resized. Rear is careful not to resize your boot partition, since this is often the one with the most stringent sizing constraints. In fact, it only resizes LVM and RAID partitions.
+Relax-and-Recover will assist you somewhat in case it notices different disk
+sizes. It will ask you to map each differently sized disk to a disk in the
+target system. Partitions will be resized. Relax-and-Recover is careful not to
+resize your boot partition, since this is often the one with the most
+stringent sizing constraints. In fact, it only resizes LVM and RAID
+partitions.
 
-Let's try to restore our system to a different system. Instead of one 160G disk, there is now one 5G and one 10G disk. That's not enough space to restore the complete system, but for purposes of this demonstration, we do not care about that. We're also not going to use the first disk, but we just want to show that Rear handles the renaming automatically.
+Let's try to restore our system to a different system. Instead of one 160G
+disk, there is now one 5G and one 10G disk. That's not enough space to restore
+the complete system, but for purposes of this demonstration, we do not care
+about that. We're also not going to use the first disk, but we just want to
+show that Relax-and-Recover handles the renaming automatically.
 
 ----------------------------------
 RESCUE firefly:~ # rear recover
-Relax and Recover 0.0.0 / $Date$
+Relax-and-Recover 0.0.0 / $Date$
 NOTICE: Will do driver migration
 Comparing disks.
 Device sda has size 5242880000, 160041885696 expected
@@ -248,12 +283,13 @@ This is the disk mapping table:
     /dev/sda /dev/sdb
 Please confirm that '/var/lib/rear/layout/disklayout.conf' is as you expect.
 
-1) View disk layout (disklayout.conf)  4) Go to Rear shell
+1) View disk layout (disklayout.conf)  4) Go to Relax-and-Recover shell
 2) Edit disk layout (disklayout.conf)  5) Continue recovery
-3) View original disk space usage      6) Abort Rear
+3) View original disk space usage      6) Abort Relax-and-Recover
 ----------------------------------
 
-Ok, mapping the disks was not that hard. If Rear insists on us checking the disklayout file, we'd better do that.
+Ok, mapping the disks was not that hard. If Relax-and-Recover insists on us
+checking the disklayout file, we'd better do that.
 
 ----------------------------------
 #? 1
@@ -293,9 +329,9 @@ crypt /dev/mapper/disk /dev/sdb2 cipher=aes mode=xts-plain hash=sha1 uuid=beafe6
 1) View disk layout (disklayout.conf)
 2) Edit disk layout (disklayout.conf)
 3) View original disk space usage
-4) Go to Rear shell
+4) Go to Relax-and-Recover shell
 5) Continue recovery
-6) Abort Rear
+6) Abort Relax-and-Recover
 #? 
 ----------------------------------
 The renaming operation was successful.
@@ -346,9 +382,9 @@ Let's continue recovery.
 1) View disk layout (disklayout.conf)
 2) Edit disk layout (disklayout.conf)
 3) View original disk space usage
-4) Go to Rear shell
+4) Go to Relax-and-Recover shell
 5) Continue recovery
-6) Abort Rear
+6) Abort Relax-and-Recover
 #? 5
 Partition /dev/sdb3 size reduced to fit on disk.
 Please confirm that '/var/lib/rear/layout/diskrestore.sh' is as you expect.
@@ -356,9 +392,9 @@ Please confirm that '/var/lib/rear/layout/diskrestore.sh' is as you expect.
 1) View restore script (diskrestore.sh)
 2) Edit restore script (diskrestore.sh)
 3) View original disk space usage
-4) Go to Rear shell
+4) Go to Relax-and-Recover shell
 5) Continue recovery
-6) Abort Rear
+6) Abort Relax-and-Recover
 #? 
 ----------------------------------
 
@@ -417,9 +453,9 @@ Do the same thing for the other logical volumes and choose number 5, continue.
 1) View restore script (diskrestore.sh)
 2) Edit restore script (diskrestore.sh)
 3) View original disk space usage
-4) Go to Rear shell
+4) Go to Relax-and-Recover shell
 5) Continue recovery
-6) Abort Rear
+6) Abort Relax-and-Recover
 #? 5
 Start system layout restoration.
 Creating partitions for disk /dev/sdb (msdos)
@@ -438,17 +474,17 @@ Mounting filesystem /
 Creating ext4-filesystem /home on /dev/mapper/system-home
 An error occured during layout recreation.
 
-1) View Rear log
+1) View Relax-and-Recover log
 2) View original disk space usage
-3) Go to Rear shell
+3) Go to Relax-and-Recover shell
 4) Edit restore script (diskrestore.sh)
 5) Continue restore script
-6) Abort Rear
+6) Abort Relax-and-Recover
 #?
 ----------------------------------
 An error... Did you expect it? I didn't.
 
-Rear produces exceptionally good logs. Let's check them.
+Relax-and-Recover produces exceptionally good logs. Let's check them.
 ----------------------------------
 +++ tune2fs -r 262144 -c 38 -i 180d /dev/mapper/system-home
 tune2fs: reserved blocks count is too big (262144)
@@ -494,12 +530,12 @@ fi
 ----------------------------------
 Continue the restore script.
 ----------------------------------
-1) View Rear log
+1) View Relax-and-Recover log
 2) View original disk space usage
-3) Go to Rear shell
+3) Go to Relax-and-Recover shell
 4) Edit restore script (diskrestore.sh)
 5) Continue restore script
-6) Abort Rear
+6) Abort Relax-and-Recover
 #? 5
 Start system layout restoration.
 Skipping /dev/sdb (disk) as it has already been created.
@@ -523,13 +559,28 @@ Mounting filesystem /boot
 Creating swap on /dev/mapper/system-swap
 Disk layout created.
 ----------------------------------
-That looks the way we want it. Notice how Rear detected that it had already created quite a few components and dit not try to recreate them anymore.
+That looks the way we want it. Notice how Relax-and-Recover detected that it
+had already created quite a few components and dit not try to recreate them
+anymore.
 
 === Planning In Advance ===
-Rear makes it possible to define the layout on the target system even before the backup is taken. All one has to do is to move the +/var/lib/rear/layout/disklayout.conf+ file to +/etc/rear/disklayout.conf+ and edit it. This won't be overwritten on future backup runs. During recovery, Rear will use that file instead of the snapshot of the original system.
+Relax-and-Recover makes it possible to define the layout on the target system
+even before the backup is taken. All one has to do is to move the
++/var/lib/rear/layout/disklayout.conf+ file to +/etc/rear/disklayout.conf+ and
+edit it. This won't be overwritten on future backup runs. During recovery,
+Relax-and-Recover will use that file instead of the snapshot of the original
+system.
 
 == Disk layout file syntax ==
-This section describes the syntax of all components in the rear layout file at +/var/lib/rear/disklayout.conf+. The syntax used to describe it is straightforward. Normal text has to be present verbatim in the file. Angle brackets "<" and ">" delimit a value that can be edited. Quotes " inside the angle brackets indicate a verbatim option, often used together with a / to indicate multiple options. Parens "(" ")" inside explain the expected unit. No unit suffix should be present, unless specifically indicated. Square brackes "[" and "]" indicate an optional parameter. They can be excluded when hand-crafting a layout file line.
+This section describes the syntax of all components in the Relax-and-Recover
+layout file at +/var/lib/rear/disklayout.conf+. The syntax used to describe it
+is straightforward. Normal text has to be present verbatim in the file. Angle
+brackets "<" and ">" delimit a value that can be edited. Quotes " inside the
+angle brackets indicate a verbatim option, often used together with a / to
+indicate multiple options. Parens "(" ")" inside explain the expected unit. No
+unit suffix should be present, unless specifically indicated. Square brackes
+"[" and "]" indicate an optional parameter. They can be excluded when
+hand-crafting a layout file line.
 
 === Disks ===
 ----------------------------------

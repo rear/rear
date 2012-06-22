@@ -171,7 +171,7 @@ function make_syslinux_config {
 	echo "say rear - Recover $(uname -n)"
 	echo "label rear"
 	syslinux_menu "label ^Recover $(uname -n)"
-	syslinux_menu_help "Rear rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
+	syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"
 	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
@@ -184,8 +184,8 @@ function make_syslinux_config {
 
 	if [[ "$FEATURE_SYSLINUX_MENU_HELP" && -r "$CONFIG_DIR/templates/rear.help" ]]; then
 		echo "label help"
-		syslinux_menu "label ^Help for Relax and Recover"
-		syslinux_menu_help "More information about Rear and the steps for recovering your system"
+		syslinux_menu "label ^Help for $PRODUCT"
+		syslinux_menu_help "More information about Relax-and-Recover and the steps for recovering your system"
 		syslinux_menu "help rear.help"
 	fi
 

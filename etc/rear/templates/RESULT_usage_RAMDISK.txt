@@ -1,5 +1,5 @@
 How to recover your system:
 ---------------------------
 
-Use the kernel image and initramfs to wire Rear into your booting system. That
-can be using USB/PXE or even direct boot.
+Use the kernel image and initramfs to wire Relax-and-Recover into your booting
+system. That can be using USB/PXE or even direct boot.

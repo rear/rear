@@ -11,9 +11,9 @@ choices=(
     "View disk layout (disklayout.conf)"
     "Edit disk layout (disklayout.conf)"
     "View original disk space usage"
-    "Go to Rear shell"
+    "Go to Relax-and-Recover shell"
     "Continue recovery"
-    "Abort Rear"
+    "Abort Relax-and-Recover"
 )
 
 select choice in "${choices[@]}"; do
@@ -40,5 +40,5 @@ Log "User selected: $REPLY) ${choices[$REPLY-1]}"
 
 if (( REPLY == ${#choices[@]} )); then
     restore_backup $LAYOUT_FILE
-    Error "User aborted Rear recovery. See $LOGFILE for details."
+    Error "User aborted recovery. See $LOGFILE for details."
 fi

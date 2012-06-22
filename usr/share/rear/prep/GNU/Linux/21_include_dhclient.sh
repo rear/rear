@@ -26,7 +26,7 @@ dhcp_interfaces_active() {
 	ps -e | grep -qEs "[ /]($my_dhclients)"
 	if [ $? -eq 0 ]; then
 		# if we find a dhcp client being active we automatically
-		# include DHCP CLIENT support in Rear
+		# include DHCP CLIENT support in Relax-and-Recover
 		Log "Running DHCP client found, enabling USE_DHCLIENT"
 		USE_DHCLIENT=y
 	fi
@@ -66,7 +66,7 @@ dhcp_interfaces_active		# check if one is running (if found define USE_DHCLIENT=
 #[ -z "$USE_DHCLIENT" ] && return	# empty string means no dhcp client support required
 
 # Ok, at this point we want DHCP client support to be included in the rescue
-# image of Rear. Check which clients are available.
+# image of Relax-and-Recover. Check which clients are available.
 # Check which executables we want to include - dhcpcd or dhclient or ??
 if [ -z "$DHCLIENT_BIN" ]; then
 	for x in ${dhclients}

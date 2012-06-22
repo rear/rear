@@ -1,5 +1,5 @@
 #!/bin/bash
-# Relax & Recover
+# Relax-and-Recover
 # disable console logging for kernel messages
 dmesg -n1
 

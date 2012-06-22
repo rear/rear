@@ -8,4 +8,5 @@ topic).
 Then put the attached files onto the stick and boot your computer from that.
 If booting fails, you might have to experiment with various methods of bootable
 USB sticks (USB-FLOPPY, USB-ZIP, USB-HDD) and BIOS settings. (But of course
-you did that already before when testing your Rear implementation, right ?)
+you did that already before when testing your Relax-and-Recover implementation,
+right ?)

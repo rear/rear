@@ -1,19 +1,19 @@
 # linux-functions.sh
 #
-# linux functions for Relax & Recover
+# linux functions for Relax-and-Recover
 #
-#    Relax & Recover is free software; you can redistribute it and/or modify
+#    Relax-and-Recover is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
 
-#    Relax & Recover is distributed in the hope that it will be useful,
+#    Relax-and-Recover is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 
 #    You should have received a copy of the GNU General Public License
-#    along with Relax & Recover; if not, write to the Free Software
+#    along with Relax-and-Recover; if not, write to the Free Software
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 # The way how we use Bash with lots of (nested) functions and read etc. seems to trigger a Bash
@@ -315,7 +315,7 @@ rear_shell() {
     local history=$2
 
     if [[ -z "$prompt" ]]; then
-        prompt="Are you sure you want to exit the Rear shell ?"
+        prompt="Are you sure you want to exit the Relax-and-Recover shell ?"
     fi
 
     local histfile="$TMP_DIR/.bash_history"
@@ -335,7 +335,7 @@ ask_exit() {
     fi
 }
 rear() {
-    echo "ERROR: You cannot run rear from within the rear shell !" >&2
+    echo "ERROR: You cannot run rear from within the Relax-and-Recover shell !" >&2
 }
 alias exit=ask_exit
 alias halt=ask_exit

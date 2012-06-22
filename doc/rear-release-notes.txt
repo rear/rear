@@ -1,4 +1,4 @@
-= Release Notes for Relax and Recover (Rear) version 1.13.0
+= Release Notes for Relax-and-Recover version 1.13.0
 :Author: Gratien D'haese
 :Date: 16 April 2012
 :Revision: 1.0
@@ -9,20 +9,14 @@
 :toc:
 :toclevels: 2
 
-This document contains the release notes for the open source project "Relax
-and Recover" (abbreviated as Rear). Rear is hosted at SourceForge:
+This document contains the release notes for the open source project
+Relax-and-Recover.
 
-Rear project [ New main place ]::
-    https://github.com/rear/rear
+Relax-and-Recover website::
+    http://relax-and-recover.org/
 
-Rear project [ Old main place ]::   
-    http://sourceforge.net/projects/rear
-
-Rear website [ New web-site ]::
-    http://rear.github.com/
-
-Rear website [ Old web-site ]::     
-    http://rear.sourceforge.net/
+Github project::
+    https://github.com/rear/
 
 This document is distributed with the following license: "Creative Commons
 Attribution-NoDerivs 3.0 Unported (CC BY-ND 3.0)". To read the license deed
@@ -30,25 +24,28 @@ go to: http://creativecommons.org/licenses/by-nd/3.0/
 
 
 == Overview
-Relax and Recover (Rear) is GNU/Linux system administrator tool used to
+Relax-and-Recover is a GNU/Linux system administrator tool used to
 create disaster recovery images which makes bare metal restore easier.
-System administrators use Rear as part of disaster recovery policy which
-does not replace in any way a good backup policy.
+System administrators use Relax-and-Recover as part of disaster recovery
+policy which does not replace in any way a good backup policy.
 
 
 === Product Features
-The following features are supported on the most recent releases of Rear.
-Anything labeled as [*NEW!*] was added as the most recent release. New
-functionality for previous releases can be seen in the next chapter that
-details each release.
-The most recent release of Rear is supported on most GNU/Linux based
-systems with kernel 2.6 or higher. It provides the following functionality:
+The following features are supported on the most recent releases of
+Relax-and-Recover.  Anything labeled as [*NEW!*] was added as the
+most recent release. New functionality for previous releases can be
+seen in the next chapter that details each release.
+
+The most recent release of Relax-and-Recover is supported on most GNU/Linux
+based systems with kernel 2.6 or higher. It provides the following
+functionality:
 
 * Hot maintenance capability. A rescue image can be made online while
   the system is running.
 
-* Command line interface. Rear doesn't require a graphical interface to
-  run, nor in creation mode, nor in rescue mode (console is enough).
+* Command line interface. Relax-and-Recover doesn't require a graphical
+  interface to run, nor in creation mode, nor in rescue mode (console
+  is enough).
 
 * Support included for most common file systems, such as ext2, ext3, ext4
   and reiserfs. Other filesystems like jfs, xfs and btrfs [*NEW!*] are also
@@ -77,7 +74,7 @@ systems with kernel 2.6 or higher. It provides the following functionality:
   - kernel drivers for network cards and storage adapters are loaded via udev
   - deal with network persistent names in udev rules
   - firmware loading
-  - persistent storage device names (though Rear does nothing with this)
+  - persistent storage device names (though Relax-and-Recover does nothing with this)
 
 * System reconfiguration
 
@@ -107,7 +104,8 @@ Together with +OUTPUT=USB+ we have now a complete solution on hard disks
   can be forced via the variable +USE_DHCLIENT=yes+ (define in _local.conf_).
   It is also possible to force DHCP at boot time with kernel option 'dhcp'
 
-* Save layout and compare layouts for easy automation of making Rear snapshots
+* Save layout and compare layouts for easy automation of making
+  Relax-and-Recover snapshots
 
 * The *layout* workflow  is now the default workflow instead of the
   previous *dr* workflow. The *dr* workflow kept all important
@@ -121,11 +119,12 @@ Together with +OUTPUT=USB+ we have now a complete solution on hard disks
 NOTE: Features marked experimental are prone to change with future releases.
 
 
-== Rear Releases
-The first release of Rear, version 1.0, was posted to the web in July 2006.
-For each release, this chapter lists the new features and defect fixes. Note
-that all releases are cumulative, and that all releases of Rear are compatible
-with previous versions of Rear, unless otherwise noted.
+== Relax-and-Recover Releases
+The first release of Relax-and-Recover, version 1.0, was posted to the web
+in July 2006.  For each release, this chapter lists the new features and
+defect fixes. Note that all releases are cumulative, and that all releases
+of Relax-and-Recover are compatible with previous versions of
+Relax-and-Recover, unless otherwise noted.
 
 === Version 1.13.0 (April 2012)
 
@@ -147,20 +146,25 @@ with previous versions of Rear, unless otherwise noted.
 
 * Added "migrate HWADDR after cloning" code
 
-* Improved the systemd code (parts required by rear only) for Fedora 16/17
+* Improved the systemd code (parts required by Relax-and-Recover only) for Fedora 16/17
 
 * The DHCLIENT variables were moved from local.conf to rescue.conf. This is done automatically, so the end-user, shouldn't be aware of it.
 
-* At boot time more kernel options are recognized such as 'noip', 'dhcp', 'debug'. The 'noip' will give you a rear environment without any attempt to start networking. The 'dhcp' variable will try to start dhclient on any network interface it finds activated. The 'debug' variable (which is not new by the way) will give you the chance to debug the code of our rear code.
+* At boot time more kernel options are recognized such as 'noip', 'dhcp',
+  'debug'. The 'noip' will give you a rescue environment without any attempt to
+  start networking. The 'dhcp' variable will try to start dhclient on any
+  network interface it finds activated. The 'debug' variable (which is not new
+  by the way) will give you the chance to debug the code of our
+  Relax-and-Recover code.
 
-* Rear works again on IA64 architecture (at least with RHEL 5.x). Remember, RHEL 6 is not ported to IA64.
+* Relax-and-Recover works again on IA64 architecture (at least with RHEL 5.x). Remember, RHEL 6 is not ported to IA64.
 
 
 
 === Version 1.12.0 (November 2011)
 
-* Multiple copies of Rear archives (of the same or different systems) can be
-  kept on a USB device (with +OUTPUT=USB+).
+* Multiple copies of Relax-and-Recover backups (of the same or different
+  systems) can be kept on a USB device (with +OUTPUT=USB+).
 
 * [*NEW!*] +BACKUP=RSYNC+ workflow using +rsync+ executable. Both +ssh+ and
   +rsync+ methods are supported. E.g.
@@ -179,7 +183,7 @@ BACKUP_PROG=/usr/local/bin/rsync		(instead of the default rsync)
 * The *layout* workflow is now the default instead of the *dr* workflow.
   Under _/var/lib/rear/layout_ all information of the system is kept in files.
 
-* Arch Linux is now supported with Rear.
+* Arch Linux is now supported with Relax-and-Recover.
 
 * The +labeltape+ command has been superseded by the +format+ command. This
   can be used with tapes and external (USB, eSATA) devices. Usage:
@@ -217,33 +221,34 @@ BACKUP_URL=tape:///dev/nst0
 ----
 
 * The site configuration file _/etc/rear/site.conf_ has been removed from the
-  Rear package, but can still be used if end-users want. The purpose of this
+  Relax-and-Recover package, but can still be used if end-users want. The purpose of this
   is to enable sites to distribute this file through RPM or DEB packages that
-  do not have a file conflict with the Rear package. The distribution
+  do not have a file conflict with the Relax-and-Recover package. The distribution
   _/etc/rear/local.conf_ file contains only configuration examples as comments
   in order to not interfere with configurations in _site.conf_.
 
 * The +rear+ command is by default quiet, which means if you want the same
   behavior as in previous versions you need to add the verbose option (+-v+)
-  with the rear command
+  with the +rear+ command
 
 * The *output* workflow now runs before the *mkbackup* workflow especially done
   to make OBDR tape creation possible with the *mkbackup* workflow as the ISO
   image must be written first on an OBDR aware tape. Please note that this is
-  a fundamental change with regard to pre-vious versions of Rear. While utmost
-  care has been taken that there would be no adverse side effects of this change
-  we cannot test all possible usage scenarios.
+  a fundamental change with regard to previous versions of Relax-and-Recover.
+  While utmost care has been taken that there would be no adverse side effects
+  of this change. We cannot test all possible usage scenarios.
 
 * When using +OUTPUT=USB+ then you have to make sure that the destination (USB)
   disk is formatted as an ext2, ext3, ext4 or btrfs file-system. Extlinux is
   now the only supported boot loader for bootable disks, syslinux is not
   supported any more.
 
-* The Rear boot now shows a boot menu with options to choose from. The actual
-  content of the menu depends on the available syslinux version and its modules
-  (like menu.c32, hdt.c32, reboot.c32, poweroff.com).
+* The Relax-and-Recover boot now shows a boot menu with options to choose from.
+  The actual content of the menu depends on the available syslinux version and
+  its modules (like menu.c32, hdt.c32, reboot.c32, poweroff.com).
 
-* Rear does properly recognize IPv6 addresses and uses these if configured.
+* Relax-and-Recover does properly recognize IPv6 addresses and uses these if
+  configured.
 
 * NBU backup method now allows to restore to a point in time.
 
@@ -269,14 +274,14 @@ BACKUP_URL=tape:///dev/nst0
 
 * Performance improvements (removed checksum calculation, PID-based locking).
 
-* Rear work space is now created with a random part to prevent potential
-  security exploits.
+* Relax-and-Recover work space is now created with a random part to prevent
+  potential security exploits.
 
 * Control exit tasks and subprocesses better. Kill subprocesses before exiting.
 
-* Support adding Rear boot files to local GRUB environment (+GRUB_RESCUE+) and
-  password protect rescue boot (+GRUB_RESCUE_PASSWORD+) to avoid accidential
-  recovery.
+* Support adding Relax-and-Recover boot files to local GRUB environment
+  (+GRUB_RESCUE+) and password protect rescue boot (+GRUB_RESCUE_PASSWORD+)
+  to avoid accidential recovery.
 .
   The default password is *REAR*.
 
@@ -332,8 +337,8 @@ the _configuration-examples.txt_ text file for beginners instructions.
 
 * +OUTPUT=USB+ method has been extended with +BACKUP=NETFS+ and
 +NETFS_URL=usb:///dev/<device>+ which makes it possible that the
-complete archive is stored on the _/dev/<device>_ and Rear will
-make the USB stick (or disk) bootable too.
+complete archive is stored on the _/dev/<device>_ and 
+Relax-and-Recover will make the USB stick (or disk) bootable too.
 
 * Udev support (except for some really ancient udev versions) which is the
 base for many new and important features, like kernel drivers for network
@@ -346,7 +351,7 @@ or one can hard-code your special DHCP client with the variables
 +DHCLIENT_BIN+ (for IPv4), and/or +DHCLIENT6_BIN+ (for
 IPv6).
 
-Rear version 1.9.0 contain fixes for the following defects:
+Relax-and-Recover version 1.9.0 contain fixes for the following defects:
 
 * Missing support for Scientific Linux, LinuxMint
 Sourceforge patch ID 2963804 - support for USBFS, but this patch has been
@@ -363,37 +368,40 @@ broken. The rule in 00- rear.rules has been changed.
 
 
 === Version 1.7.26 (November 2010)
-Rear version 1.7.26 fixed RedHat bugzilla defect 657174 : rescue image freezes
-during the boot while executing init. This was due the new upstart mechanism
-(replaced the sysv init procedure).
+Relax-and-Recover version 1.7.26 fixed RedHat bugzilla defect 657174 : rescue
+image freezes during the boot while executing init. This was due the new
+upstart mechanism (replaced the sysv init procedure).
 
 
 === Version 1.7.25 (June 2010)
-Rear version 1.7.25 fixed RedHat bugzilla defect 600217 : Fedora link missing
-in restore, pack and finalize sub-directories. This broke the proper image
-building on several Fedora versions.
+Relax-and-Recover version 1.7.25 fixed RedHat bugzilla defect 600217 : Fedora
+link missing in restore, pack and finalize sub-directories. This broke the
+proper image building on several Fedora versions.
 
 
 == System and Software Requirements
-Rear works on GNU/Linux kernel with version 2.6 and higher. For lower kernel
-versions Rear cannot be used, and for these systems,
-link:http://mkcdrec.sourceforge.net/[mkcdrec] is still a good alternative.
+Relax-and-Recover works on GNU/Linux kernel with version 2.6 and higher.
+For lower kernel versions Relax-and-Recover cannot be used, and for these
+systems, link:http://mkcdrec.sourceforge.net/[mkcdrec] is still a good
+alternative.
 
-As Rear has been solely written in the bash language we need the bash shell
-which is standard available on all GNU/Linux based systems. The default
-backup program Rear uses is GNU/tar which is also standard available.
+As Relax-and-Recover has been solely written in the bash language we need
+the bash shell which is standard available on all GNU/Linux based systems.
+The default backup program Relax-and-Recover uses is GNU/tar which is also
+standard available.
 
-Rear is known to work well on x86 and x86_64 based architectures. Rear has
-also been ported to ia64 and ppc architectures, but these are less tested.
-Use the '+rear validate+' command after every successful DR test please and
-mail us the results.
+Relax-and-Recover is known to work well on x86 and x86_64 based architectures.
+Relax-and-Recover has also been ported to ia64 and ppc architectures, but
+these are less tested.  Use the '+rear validate+' command after every
+successful DR test please and mail us the results.
 
 
 === Choosing the best compression algorithm
-The default backup program with Rear is (+BACKUP_PROG=tar+) GNU tar and the
-default compression used with tar is +gzip+. However, is using +gzip+ the
-best choice? We have done some tests and published the results. See
-link:http://www.it3.be/Joomla/index.php?option=com_content&view=article&id=76:rear-compression&catid=40:Open%20Source%20Projects&Itemid=54[Rear compression tests]
+The default backup program with Relax-and-Recover is (+BACKUP_PROG=tar+)
+GNU tar and the default compression used with tar is +gzip+. However, is
+using +gzip+ the best choice? We have done some tests and published the
+results. See
+link:http://www.it3.be/Joomla/index.php?option=com_content&view=article&id=76:rear-compression&catid=40:Open%20Source%20Projects&Itemid=54[Relax-and-Recover compression tests]
 
 
 == Known Problems and Workarounds
@@ -409,9 +417,9 @@ there is no removal of RAID groups or merging of smaller disks onto a
 bigger one or making stuff smaller.
 
 * any use of _/dev/disk/by-path_ or _/dev/disk/by-id_ is untested and will
-most likely not work. In some cases Rear will print a warning, but we are
-not able to detect all cases. Typically this leads to unbootable systems or
-bad _/etc/fstab_ files
+most likely not work. In some cases Relax-and-Recover will print a warning,
+but we are not able to detect all cases. Typically this leads to unbootable
+systems or bad _/etc/fstab_ files
 
 *Issue Description*: The DHCP client is still a little rough around the edges,
 especially with complex networking scenarios.
@@ -425,9 +433,9 @@ error: unpacking of archive failed on file /usr/share/rear/finalize/CentOS: cpio
 
 .Workaround:
 ****
-First remove the older Rear version by hand and then install the new version.
-The _local.conf_ is saved (as _local.conf.rpmsave_) when we execute
-+rpm -e rear+
+First remove the older Relax-and-Recover version by hand and then install
+the new version. The _local.conf_ is saved (as _local.conf.rpmsave_) when
+we execute +rpm -e rear+
 ****
 
 *Issue Description*: If SELinux is not disabled during backup (variable

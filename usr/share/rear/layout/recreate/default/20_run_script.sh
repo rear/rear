@@ -15,13 +15,13 @@ while [[ -z "$RESTORE_OK" ]]; do
         # TODO: Provide a skip option (needs torough consideration)
         # FIXME: Implement layout/prepare as part of a function ?
         choices=(
-            "View Rear log"
+            "View Relax-and-Recover log"
             "View original disk space usage"
-            "Go to Rear shell"
+            "Go to Relax-and-Recover shell"
 #            "Edit disk layout (disklayout.conf)"
             "Edit restore script (diskrestore.sh)"
             "Continue restore script"
-            "Abort Rear"
+            "Abort Relax-and-Recover"
         )
 
         timestamp=$(stat --format="%Y" $LAYOUT_CODE)

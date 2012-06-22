@@ -1,5 +1,5 @@
 [Unit]
-Description=Rear boot script
+Description=Relax-and-Recover boot script
 DefaultDependencies=no
 
 [Service]

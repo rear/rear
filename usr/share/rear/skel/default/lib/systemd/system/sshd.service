@@ -1,5 +1,5 @@
 [Unit]
-Description=Rear sshd service
+Description=Relax-and-Recover sshd service
 DefaultDependencies=no
 ConditionPathExists=/etc/inittab
 

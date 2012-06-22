@@ -1,9 +1,9 @@
-= Relax and Recover: The Ultimate Disaster Recovery Framework
+= Relax-and-Recover: The Ultimate Disaster Recovery Framework
 Schlomo Schapiro, Gratien D'haese, Dag Wieers
 
 == The Workflow System
-Rear is built as a modular framework. A call of rear <command> will invoke
-the following general workflow:
+Relax-and-Recover is built as a modular framework. A call of rear <command>
+will invoke the following general workflow:
 
   1. *Configuration:* Collect system information to assemble a correct
      configuration (default, arch, OS, OS_ARCH, OS_VER, site, local).
@@ -64,8 +64,8 @@ The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices a
 == Workflow – Recovery
 The result of the analysis is written into configuration files under
 '/etc/rear/recovery/'. This directory is copied together with the other
-Rear directories onto the rescue system where the same framework runs
-a different workflow – the recovery workflow.
+Relax-and-Recover directories onto the rescue system where the same
+framework runs a different workflow – the recovery workflow.
 
 The recovery workflow is triggered by the fact that the root filesystem is
 mounted in a ram disk or tmpfs. Alternatively a „demo“ recovery workflow
@@ -95,7 +95,7 @@ are indeed the same):
      onto '/var/log/rear/' in the recovered system.
 
 == FS layout
-Rear tries to be as much LSB complient as possible. Therefore rear will be
+Relax-and-Recover tries to be as much LSB complient as possible. Therefore rear will be
 installed into the usual locations:
 
 /etc/rear/::

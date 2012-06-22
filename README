@@ -1,40 +1,55 @@
-Relax and Recover
+Relax-and-Recover
 =================
 
-Relax and Recover (abbreviated Rear) is a highly modular disaster recovery
-framework for GNU/Linux based systems, but can be easily extended to other
-UNIX alike systems. The disaster recovery information (and maybe the backups)
-can be stored via the network, local on hard disks or USB devices, DVD/CD-R,
-tape, etc. The result is also a bootable image that is capable of booting via
-PXE, DVD/CD, USB or tape (OBDR).
+Relax-and-Recover is the leading Open Source disaster recovery and system
+migration solution, and successor to mkcdrec. It comprises of a modular
+framework and ready-to-go workflows for many common situations to produce
+a bootable image and restore from backup using this image. As a benefit,
+it allows to restore to different hardware and can therefore be used as
+a migration tool as well.
 
-The backup can be integrated with any existing backup software so that
-Rear utilizes the backup software to restore the files and provides the "glue"
-surrounding the simple file restore to having a full bare metal disaster
-recovery solution. Support for specific backup software has to be added to
-Rear on an individual base and is very simple (look at the existing
-implementations for further information).
+Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
+OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
+sftp, ftp, http, nfs, cifs) as well as a multitude of backup strategies
+(incl.  IBM TSM, HP DataProtector, Symantec NetBackup, Bacula, rsync).
 
-Rear is rapidly developing, please contact the Rear developers if something is
-missing.
+Relax-and-Recover was designed to be easy to set up, requires no maintenance
+and is there to assist when disaster strikes. Its setup-and-forget nature
+removes any excuse for not having a disaster recovery solution implemented.
+
+Recovering from disaster is made very straight-forward by a 2-step recovery
+process so that it can be executed by operational teams when required.
+When used interactively (e.g. when used for migrating systems), menus help
+make decisions to restore to a new (hardware) environment.
+
+Extending and integrating Relax-and-Recover into complex environments is made
+possible by its modular framework. Consistent logging and optionally extended
+output help understand the concepts behind Relax-and-Recover, troubleshoot
+during initial configuration and help debug during integration.
+
+Professional services and support are available.
+
 
 REQUIREMENTS
 ------------
-Rear is written entirely in bash and does not require any external programs.
-However, the rescue system that is created by Rear requires some programs that
-are needed to make our rescue system work:
+Relax-and-Recover is written entirely in Bash and does not require any
+external programs.  However, the rescue system that is created by
+Relax-and-Recover requires some programs that are needed to make our
+rescue system work:
 
  - mingetty
  - sfdisk
 
-All other required programs (like sort, dd, grep, etc.) are so common, that we
-don't list them as a requirement.
+All other required programs (like sort, dd, grep, etc.) are so common, that
+we don't list them as requirements. In case your specific workflow requires
+additional tools, Relax-and-Recover will tell you.
 
 
 INSTALLATION
 ------------
-On RPM based systems you should use the Rear RPM. Either obtain it from the
-Rear homepage or build it yourself from the TAR archive with
+On RPM based systems you should use the rear RPM package. Either obtain it
+from the Relax-and-Recover homepage or build it yourself from the TAR archive
+with:
 
    rpmbuild -ta rear-<version>.tar.gz
 
@@ -45,30 +60,31 @@ On DEB based systems you should be able to install the RPM with alien.
 Otherwise use the manual installation (see below) or, even better, contribute
 the DEB package to the project.
 
-To install Rear manually, simply copy the etc and usr directories in the source
-distribution to the '/' of your system.
+To install Relax-and-Recover manually, simply copy the etc and usr directories
+in the source distribution to the '/' of your system.
 
 
 CONFIGURATION
 -------------
-To configure Rear you have to edit the configuration files in '/etc/rear/'. All
-'*.conf' files there are part of the configuration, but only 'site.conf' and
-'local.conf' are intended for the user configuration. All other configuration
-files hold defaults for various distributions and should not be changed.
+To configure Relax-and-Recover you have to edit the configuration files in
+'/etc/rear/'. All '*.conf' files there are part of the configuration, but
+only 'site.conf' and 'local.conf' are intended for the user configuration.
+All other configuration files hold defaults for various distributions and
+should not be changed.
 
 In '/etc/rear/templates/' there are also some template files which are use by
-Rear to create configuration files (mostly for the boot environment). You can
-use these templates to prepend your own configurations to the configuration
-files created by Rear, for example you can edit 'PXE_pxelinux.cfg' to add some
-general pxelinux configuration you use (I put there stuff to install Linux
-over the network).
+Relax-and-Recover to create configuration files (mostly for the boot
+environment). You can use these templates to prepend your own configurations
+to the configuration files created by Relax-and-Recover, for example you can
+edit 'PXE_pxelinux.cfg' to add some general pxelinux configuration you use
+(I put there stuff to install Linux over the network).
 
 In almost all circumstances you have to configure two main settings and their
 parameters: The +BACKUP+ method and the +OUTPUT+ method.
 
-The backup method defines, how your data was saved and wether Rear should
-backup your data as part of the mkrescue process or wether you use an external
-application, e.g. backup software to archive your data.
+The backup method defines, how your data was saved and wether Relax-and-Recover
+ar should backup your data as part of the mkrescue process or wether you use an
+external application, e.g. backup software to archive your data.
 
 The output method defines how the rescue system is written to disk and how you
 plan to boot the failed computer from the rescue system.
@@ -99,13 +115,13 @@ by copying the appropriate configuration variables from 'default.conf' to
 
 USAGE
 -----
-To use Rear you always call the main script '/usr/sbin/rear':
+To use Relax-and-Recover you always call the main script '/usr/sbin/rear':
 
 ----
 # rear help
 Usage: rear [-d] [-D] [-r KERNEL] [-s] [-S] [-v] [-V] COMMAND [ARGS...]
 
-Relax and Recover comes with ABSOLUTELY NO WARRANTY; for details see
+Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:

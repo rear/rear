@@ -65,12 +65,12 @@ if [ ${#restored_controllers} -ne 0 ] ; then
 
             # TODO: Provide a skip option (needs torough consideration)
             choices=(
-                "View Rear log"
-                "Go to Rear shell"
+                "View Relax-and-Recover log"
+                "Go to Relax-and-Recover shell"
 #                "Edit disk layout (disklayout.conf)"
                 "Edit restore script (hpraid.sh)"
                 "Restart restore script"
-                "Abort Rear"
+                "Abort Relax-and-Recover"
             )
 
             timestamp=$(stat --format="%Y" $LAYOUT_CODE)

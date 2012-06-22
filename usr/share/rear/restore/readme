@@ -1,5 +1,5 @@
-This is the "restore" tree of Rear
-----------------------------------
+This is the "restore" tree of Relax-and-Recover
+-----------------------------------------------
 00-09	initialisation, e.g. copy dev-files needed for external backups progs
 10-19	do mounting if necessary (NETFS)
 20-29	user interaction scripts, e.g. do restore via 3th party software

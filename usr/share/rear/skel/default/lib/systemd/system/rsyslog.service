@@ -1,5 +1,5 @@
 [Unit]
-Description=Rear run-syslog script
+Description=Relax-and-Recover run-syslog script
 DefaultDependencies=no
 
 [Service]

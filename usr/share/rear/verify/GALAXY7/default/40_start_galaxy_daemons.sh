@@ -5,7 +5,7 @@
 #
 
 # Galaxy dies when it finds /lib/tls with libpthread
-# Rear has a symlink from /lib to /lib/tls and I don't remember why (Schlomo)
+# Relax-and-Recover has a symlink from /lib to /lib/tls and I don't remember why (Schlomo)
 
 # delete problematic symlink
 rm -f /lib/tls

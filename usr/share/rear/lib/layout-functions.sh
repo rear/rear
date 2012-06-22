@@ -377,7 +377,8 @@ get_sysfs_name() {
     return 1
 }
 
-### Translate a sysfs name or device name to the name preferred in Rear.
+### Translate a sysfs name or device name to the name preferred in
+### Relax-and-Recover.
 ### The device does not necessarily exist.
 ###     cciss!c0d0 -> /dev/cciss/c0d0
 ###     /dev/dm-3 -> /dev/mapper/system-tmp

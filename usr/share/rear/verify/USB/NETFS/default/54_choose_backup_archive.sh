@@ -8,10 +8,10 @@ fi
 backups=()
 backup_times=()
 for rear_run in $BUILD_DIR/outputfs/rear/$(uname -n)/* ;do
-    Debug "Rear run $rear_run detected."
+    Debug "Relax-and-Recover run $rear_run detected."
     backup_name=$rear_run/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
     if [ -e $backup_name ] ; then
-        Debug "Rear backup $backup_name detected."
+        Debug "Relax-and-Recover backup $backup_name detected."
         backups=( "${backups[@]}" "$backup_name")
         backup_times=( "${backup_times[@]}" "${rear_run##*/}")
     fi

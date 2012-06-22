@@ -15,7 +15,7 @@ eval "$REAR_EVAL" &>/dev/null
 
 VERBOSE=1
 
-# source Rear functions
+# source Relax-and-Recover functions
 for script in $SHARE_DIR/lib/*functions.sh ; do source $script ; done
 source $SHARE_DIR/lib/progresssubsystem.nosh
 

@@ -1,4 +1,4 @@
-= Relax and Recover: User guide
+= Relax-and-Recover: User guide
 :author: Dag Wieers and Jeroen Hoekx
 :version: 0.4 draft
 :data-uri:
@@ -8,54 +8,57 @@
 :toc:
 :toclevels: 2
 
-This document describes everything there is to know regarding Relax and
-Recover, an Open Source bare-metal disaster recovery and system migration
-solution designed for Linux.
+This document describes everything there is to know regarding
+Relax-and-Recover, an Open Source bare-metal disaster recovery and system
+migration solution designed for Linux.
 
 
 == Introduction
-Relax and Recover (Rear) is the leading Open Source disaster recovery
+Relax-and-Recover is the leading Open Source disaster recovery
 solution, and successor to mkcdrec. It comprises of a modular framework
 and ready-to-go workflows for many common situations to produce a bootable
 image and restore from backup using this image. As a benefit, it allows to
 restore to different hardware and can therefore be used as a migration
 tool as well.
 
-Currently Rear supports various boot media (incl. ISO, PXE, OBDR tape,
-USB or eSATA storage), a variety of network protocols (incl. sftp, ftp,
-http, nfs, cifs) as well as a multitude of backup strategies (incl.
-IBM TSM, HP DataProtector, Symantec NetBackup, Bacula, rsync).
+Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
+OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
+sftp, ftp, http, nfs, cifs) as well as a multitude of backup strategies
+(incl.  IBM TSM, HP DataProtector, Symantec NetBackup, Bacula, rsync).
 
-Rear was designed to be easy to set up, requires no maintenance and is
-there to assist when disaster strikes. Its setup-and-forget nature eradicates
-any excuses for not having a disaster recovery solution implemented.
+Relax-and-Recover was designed to be easy to set up, requires no maintenance
+and is there to assist when disaster strikes. Its setup-and-forget nature
+removes any excuse for not having a disaster recovery solution implemented.
 
 Recovering from disaster is made very straight-forward by a 2-step recovery
 process so that it can be executed by operational teams when required.
 When used interactively (e.g. when used for migrating systems), menus help
 make decisions to restore to a new (hardware) environment.
 
-Extending Rear is made possible by its modular framework. Consistent
-logging and optionally extended output help understand the concepts behind
-Rear and help debug during development.
+Extending and integrating Relax-and-Recover into complex environments is made
+possible by its modular framework. Consistent logging and optionally extended
+output help understand the concepts behind Relax-and-Recover, troubleshoot
+during initial configuration and help debug during integration.
+
+Professional services and support are available.
 
 
-== Relax and Recover project
-The support and development of the Relax and Recover project takes place
+== Relax-and-Recover project
+The support and development of the Relax-and-Recover project takes place
 on Github:
 
-Project page::
+Relax-and-Recover website::
+    http://relax-and-recover.org/
+
+Github project::
     http://github.com/rear/rear/
 
-Website::
-    http://rear.github.com/
-
 In case you have questions, ideas or feedback about this document, you
-can contact the development team on the Rear mailinglist at:
+can contact the development team on the Relax-and-Recover mailinglist at:
 rear-users@lists.sourceforge.net.
 
-NOTE: Note that you have to be subscribed to be able to send mails to the Rear
-mailinglist ! You can subscribed to the list at:
+NOTE: Note that you have to be subscribed to be able to send mails to the
+Relax-and-Recover mailinglist ! You can subscribed to the list at:
 https://lists.sourceforge.net/lists/listinfo/rear-users
 
 
@@ -69,16 +72,18 @@ improved:
  - Few external dependencies (Bash and standard Unix tools)
  - Easy to use and easy to extend
 
-The aim is to make Rear as least demanding as possible, it will require only
-the applications neccessary to fulfill the job rear is configured for. All
-other applications will be copied to the rescue system if they are present.
+The aim is to make Relax-and-Recover as least demanding as possible, it will
+require only the applications neccessary to fulfill the job Relax-and-Recover
+is configured for. All other applications will be copied to the rescue system
+if they are present.
 
-Furthermore, Rear should be platform independant and ideally install just as
-a set of scripts that utilizes everything that the Linux OS provides
+Furthermore, Relax-and-Recover should be platform independant and ideally
+install just as a set of scripts that utilizes everything that the Linux OS
+provides.
 
 
 == Features and functionality
-Relax and Recover has a wide range of features:
+Relax-and-Recover has a wide range of features:
 
 // FIXME: Insert the various features from the Release Notes +
 //        include the information from the presentations +
@@ -94,7 +99,7 @@ Relax and Recover has a wide range of features:
  - Multiple DR images per system on single USB storage device
  - USB ext3/ext4 support
  - GRUB bootloader re-implementation
- - Add Relax and Recover entry to local GRUB configuration
+ - Add Relax-and-Recover entry to local GRUB configuration
  - Nagios and webmin integration
  - Syslinux boot menu
  - Storing rescue/backup logfile on rescue media
@@ -103,22 +108,22 @@ Relax and Recover has a wide range of features:
  - Various usability improvements
  - Serial console support auto-detected
  - Lockless workflows
- - USB udev integration to trigger rear on inserting USB device
+ - USB udev integration to trigger mkrescue on inserting USB device
  - Beep/UID led/USB suspend integration
 
 
-== Installing Rear
+== Installing Relax-and-Recover
 
 
 // FIXME: Make this part more generic and add distribution information
 
 === Software requirements
-Rear can be installed from a native RPM package. Since it is mostly a
-collection of Bash scripts, there is no need to make RPM packages for each
-Red Hat release. For the supported RHEL distributions it is mostly
+Relax-and-Recover can be installed from a native RPM package. Since it is
+mostly a collection of Bash scripts, there is no need to make RPM packages
+for each Red Hat release. For the supported RHEL distributions it is mostly
 version-agnostic.
 
-Rear has few dependencies:
+Relax-and-Recover has few dependencies:
 
  - recent syslinux (tested with 4.0)
 
@@ -128,24 +133,24 @@ For OBDR tape mode you need the following packages:
  - mkisofs
  - sg3_utils
 
-Rear at this time has only been tested on RHEL4, RHEL5 and RHEL6.
+Relax-and-Recover at this time has only been tested on RHEL4, RHEL5 and RHEL6.
 
 
 === Limitations
-Relax and Recover offers a lot of flexibility in various use-cases, however it
+Relax-and-Recover offers a lot of flexibility in various use-cases, however it
 does have some limitations under certain circumstances:
 
- - Rear depends on the software of the running system. When recovering this
-   system to newer hardware, it is possible that the hardware support of the
-   original system does not support the newer hardware.
+ - Relax-and-Recover depends on the software of the running system. When
+   recovering this system to newer hardware, it is possible that the hardware
+   support of the original system does not support the newer hardware.
 +
 This problem has been seen when restoring an older RHEL4 with an older HP
 Proliant Support Pack (PSP) to more recent hardware. This PSP did not detect
 the newer HP SmartArray controller or its firmware.
 
- - Rear supports recovering to different hardware, but it cannot always
-   automatically adapt to this new environment. In such cases it requires a
-   manual intervention to eg.
+ - Relax-and-Recover supports recovering to different hardware, but it cannot
+   always automatically adapt to this new environment. In such cases it
+   requires a manual intervention to eg.
 
    * modify the _disklayout.conf_ to indicate the number of controller, disks
      or specific custom desires during restore
@@ -169,7 +174,7 @@ You can test your installation by running +rear dump+:
 
 ----
 [root@system ~]# rear dump
-Relax and Recover 1.12.0svn497 / 2011-07-11
+Relax-and-Recover 1.12.0svn497 / 2011-07-11
 Dumping out configuration and system information
 System definition:
                                     ARCH = Linux-x86_64
@@ -181,7 +186,7 @@ System definition:
 
 
 == Overview
-// FIXME: Describe the concept behind Rear +
+// FIXME: Describe the concept behind Relax-and-Recoverar +
 //  - Creating a rescue environment (bootable media and optionally backup) +
 //  - Restoring from booted media
 
@@ -190,9 +195,9 @@ System definition:
 The configuration is performed by changing _/etc/rear/local.conf_ or
 _/etc/rear/site.conf_.
 
-There are two important variables that influence Rear and the Rear rescue
-image. Set +OUTPUT+ to your preferred boot method and define +BACKUP+ for your
-favorite +BACKUP+ strategy.
+There are two important variables that influence Relax-and-Recover and
+the rescue image. Set +OUTPUT+ to your preferred boot method and define
++BACKUP+ for your favorite +BACKUP+ strategy.
 
 In most cases only these two settings are required.
 
@@ -275,7 +280,7 @@ BACKUP=GALAXY7::
 Use CommVault Galaxy (7 and probably newer)
 
 BACKUP=NETFS::
-Use Rear internal backup with tar or rsync (or similar)
+Use Relax-and-Recover internal backup with tar or rsync (or similar)
 
 BACKUP=REQUESTRESTORE::
 No backup, just ask user to somehow restore the filesystems
@@ -376,8 +381,8 @@ TAPE_DEVICE=/dev/nst0
 //  e.g. using different backup methods, +
 //       using different output methods
 
-== Using Rear with USB storage devices
-Using USB devices with Rear can be appealing for several reasons:
+== Using Relax-and-Recover with USB storage devices
+Using USB devices with Relax-and-Recover can be appealing for several reasons:
 
  - If you only need to have a bootable rescue environment, a USB device is
    a *cheap device* for storing only 25 to 60MB to boot from
@@ -402,9 +407,9 @@ Using USB devices with Rear can be appealing for several reasons:
 However USB devices may be slow for backup purposes, especially on older
 systems or with unreliable/cheap devices.
 
-=== Configuring Rear for USB storage devices
+=== Configuring Relax-and-Recover for USB storage devices
 The below configuration (_/etc/rear/local.conf_) gives a list of possible
-options when you want to run Rear with USB storage.
+options when you want to run Relax-and-Recover with USB storage.
 
 [source,bash]
 ----
@@ -422,7 +427,7 @@ IMPORTANT: On RHEL4 or older there are no _/dev/disk/by-label/_ udev aliases,
 
 
 === Preparing your USB storage device
-To prepare your USB device for use with Rear, do: +rear format /dev/sdX+
+To prepare your USB device for use with Relax-and-Recover, do: +rear format /dev/sdX+
 
 This will create a single partition, make it bootable, format it with ext3,
 label it +REAR-000+ and disable warnings related filesystem check for the
@@ -431,7 +436,7 @@ device.
 
 === USB storage as rescue media
 
-==== Configuring Rear to have Bacula tools
+==== Configuring Relax-and-Recover to have Bacula tools
 If the rescue environment needs additional tools and workflow, this can be
 spcified by using +BACKUP=BACULA+ in the configuration file
 _/etc/rear/local.conf_:
@@ -450,7 +455,7 @@ for the USB device is what is configured for +USB_DEVICE+.
 
 ----
 [root@system ~]# rear -v mkrescue
-Relax and Recover 1.12.0svn497 / 2011-07-11
+Relax-and-Recover 1.12.0svn497 / 2011-07-11
 Creating disk layout.
 Creating root filesystem layout
 Copying files and directories
@@ -478,14 +483,14 @@ boot from the local disk.
 ["aafigure",width="12cm",height="6cm",align="center",format="svg",options="textual",aspect="0.7",linewidth="1"]
 ----
 +---------------------------------------------+
-|        "Relax and Recover v1.12.0svn497"    |
+|        "Relax-and-Recover v1.12.0svn497"    |
 +---------------------------------------------+
 |  "Recovery images"                          |
 |    "system.localdomain"                   > |
 |    "other.localdomain"                    > |
 |---------------------------------------------|
 |  "Other actions"                            |
-|    "Help for Relax and Recover"             |
+|    "Help for Relax-and-Recover"             |
 |    "Boot Local disk (hd1)"                  |
 |    "Boot BIOS disk (0x81)"                  |
 |    "Boot Next BIOS device"                  |
@@ -495,21 +500,21 @@ boot from the local disk.
 |    "Power off system"                       |
 +---------------------------------------------+
 
-      "Press [Tab] to edit options or [F1] for Rear help"
+      "Press [Tab] to edit options or [F1] for help"
 
            "Automatic boot in 30 seconds..."
 ----
 
 ////
       .-------------------------------------------------------------.
-      |               Relax and Recover v1.12.0svn497               |
+      |               Relax-and-Recover v1.12.0svn497               |
       |-------------------------------------------------------------|
       |  Recovery images                                            |
       |   system.localdomain                                      > |
       |   other.localdomain                                       > |
       |-------------------------------------------------------------|
       |  Other actions                                              |
-      |   Help for Relax and Recover                                |
+      |   Help for Relax-and-Recover                                |
       (>  Boot Local disk (hd1)                                    <)
       |   Boot BIOS disk (0x81)                                     |
       |   Boot Next BIOS device                                     |
@@ -519,7 +524,7 @@ boot from the local disk.
       |   Power off system                                          |
       `-------------------------------------------------------------'
 
-             Press [Tab] to edit options or [F1] for Rear help
+             Press [Tab] to edit options or [F1] for help
 
                         Automatic boot in 30 seconds...
 ////
@@ -553,10 +558,10 @@ Then select the image you would like to recover.
 |                                             |
 +---------------------------------------------+
 
-      "Press [Tab] to edit options or [F1] for Rear help"
+      "Press [Tab] to edit options or [F1] for help"
 
 
-"Rear backup using kernel 2.6.32-122.el6.x86_64"
+"Backup using kernel 2.6.32-122.el6.x86_64"
 "BACKUP=NETFS OUTPUT=USB OUTPUT_URL=usb:///dev/disk/by-label/REAR-000"
 ----
 
@@ -580,11 +585,11 @@ Then select the image you would like to recover.
       |                                                             |
       `-------------------------------------------------------------'
 
-             Press [Tab] to edit options or [F1] for Rear help
+             Press [Tab] to edit options or [F1] for help
 
 
 
-Rear backup using kernel 2.6.32-122.el6.x86_64
+Backup using kernel 2.6.32-122.el6.x86_64
 BACKUP=NETFS OUTPUT=USB OUTPUT_URL=usb:///dev/disk/by-label/REAR-000
 ////
 
@@ -602,7 +607,7 @@ different system.
 
 ----
 RESCUE SYSTEM:/ # rear recover
-Relax and Recover 1.12.0svn497 / 2011-07-11
+Relax-and-Recover 1.12.0svn497 / 2011-07-11
 NOTICE: Will do driver migration
 To recreate HP SmartArray controller 3, type exactly YES: YES
 To recreate HP SmartArray controller 0, type exactly YES: YES
@@ -787,7 +792,7 @@ WARNING: In this case +bextract+ will restore all the Bacula jobs on the
 
 
 ==== Finish recovery process
-Once finished, continue Rear by typing +exit+.
+Once finished, continue Relax-and-Recover by typing +exit+.
 
 ----
 rear> exit
@@ -806,9 +811,9 @@ IMPORTANT: If you neglect to perform this last crucial step, your new system
 
 === USB storage as backup media
 
-==== Configuring Rear for backup to USB storage device
+==== Configuring Relax-and-Recover for backup to USB storage device
 The below configuration (_/etc/rear/local.conf_) gives a list of possible
-options when you want to run Rear with USB storage.
+options when you want to run Relax-and-Recover with USB storage.
 
 [source,bash]
 ----
@@ -830,7 +835,7 @@ configured.
 
 ----
 [root@system ~]# rear -v mkbackup
-Relax and Recover 1.12.0svn497 / 2011-07-11
+Relax-and-Recover 1.12.0svn497 / 2011-07-11
 Creating disk layout.
 Creating root filesystem layout
 Copying files and directories
@@ -866,7 +871,7 @@ different system.
 
 ----
 RESCUE SYSTEM:/ # rear recover
-Relax and Recover 1.12.0svn497 / 2011-07-11
+Relax-and-Recover 1.12.0svn497 / 2011-07-11
 Backup archive size is 1.2G (compressed)
 To recreate HP SmartArray controller 1, type exactly YES: YES
 To recreate HP SmartArray controller 7, type exactly YES: YES
@@ -914,7 +919,7 @@ If all is well, you can now remove the USB device, restore the BIOS boot order
 and reboot the system into the recovered OS.
 
 
-== Using Rear with OBDR tapes
+== Using Relax-and-Recover with OBDR tapes
 Using One-Button-Disaster-Recovery (OBDR) tapes has a few benefits.
 
  - Within large organisations tape media is already *part of a workflow*
@@ -932,12 +937,12 @@ However, you need one tape per system as an OBDR tape can only store one
 single rescue environment.
 
 
-=== Configuring Rear for OBDR rescue tapes
+=== Configuring Relax-and-Recover for OBDR rescue tapes
 The below configuration (_/etc/rear/local.conf_) gives a list of possible
-options when you want to run Rear with a tape drive. This example shows how to
-use the tape *only* for storing the rescue image, the backup is expected to be
-handled by Bacula and so the Bacula tools are included in the rescue
-environment to enable a Bacula restore.
+options when you want to run Relax-and-Recover with a tape drive. This
+example shows how to use the tape *only* for storing the rescue image,
+the backup is expected to be handled by Bacula and so the Bacula tools
+are included in the rescue environment to enable a Bacula restore.
 
 [source,bash]
 ----
@@ -948,14 +953,14 @@ TAPE_DEVICE=/dev/nst0
 
 === Preparing your OBDR rescue tape
 To protect normal backup tapes (in case tape drives are also used by another
-backup solution) Rear expects that the tape to use is labeled *REAR-000*.
-To achieve this is to insert a blank tape to use for Rear and run the
-+rear format /dev/stX+ command.
+backup solution) Relax-and-Recover expects that the tape to use is labeled
+*REAR-000*.  To achieve this is to insert a blank tape to use for
+Relax-and-Recover and run the +rear format /dev/stX+ command.
 
 
 === OBDR tapes as rescue media
 
-==== Configuring Rear to have Bacula tools
+==== Configuring Relax-and-Recover to have Bacula tools
 If the rescue environment needs additional tools and workflow, this can be
 spcified by using +BACKUP=BACULA+ in the configuration file
 _/etc/rear/local.conf_:
@@ -983,7 +988,7 @@ To create a rescue environment that can boot from an OBDR tape, simply run
 
 ----
 [root@system ~]# rear -v mkrescue
-Relax and Recover 1.12.0svn497 / 2011-07-11
+Relax-and-Recover 1.12.0svn497 / 2011-07-11
 Rewinding tape
 Writing OBDR header to tape in drive '/dev/nst0'
 Creating disk layout.
@@ -1020,9 +1025,9 @@ TIP: An OBDR capable drive can be switched into CD-ROM mode by *powering on
 
 
 ===== Using a HP Smart Array controller
-To boot from OBDR, boot your system with the Rear tape inserted. During the
-boot sequence, interrupt the HP Smart Array controller with the tape attached
-by pressing *F8* (or *Escape-8* on serial console).
+To boot from OBDR, boot your system with the Relax-and-Recover tape inserted.
+During the boot sequence, interrupt the HP Smart Array controller with the
+tape attached by pressing *F8* (or *Escape-8* on serial console).
 
 ----
 iLO 2 v1.78 Jun 10 2009 10.5.20.171
@@ -1052,9 +1057,10 @@ Then press *ENTER* and *Escape* to leave the Smart Array controller BIOS.
 
 
 ===== Using an LSI controller
-To boot from OBDR when using an LSI controller, boot your system with the Rear
-tape inserted. During the boot sequence, interrupt the LSI controller BIOS
-that has the tape attached by pressing *F8* (or *Escape-8* on serial console).
+To boot from OBDR when using an LSI controller, boot your system with the
+Relax-and-Recover tape inserted. During the boot sequence, interrupt the
+LSI controller BIOS that has the tape attached by pressing *F8* (or
+*Escape-8* on serial console).
 
 ----
 LSI Logic Corp. MPT BIOS
@@ -1098,19 +1104,19 @@ During the next boot, OBDR-mode will be indicate by:
 
 
 ===== Booting the OBDR tape
-Once booted from the OBDR tape, select the 'Relax and Recover' menu entry from
+Once booted from the OBDR tape, select the 'Relax-and-Recover' menu entry from
 the menu. If you don't press a key within 30 seconds, the system will try to
 boot from the local disk.
 
 ["aafigure",width="12cm",height="6cm",align="center",format="svg",options="textual",aspect="0.7",linewidth="1"]
 ----
 +---------------------------------------------+
-|        "Relax and Recover v1.12.0svn497"    |
+|        "Relax-and-Recover v1.12.0svn497"    |
 +---------------------------------------------+
-|  "Relax and Recover"                        |
+|  "Relax-and-Recover"                        |
 |---------------------------------------------|
 |  "Other actions"                            |
-|    "Help for Relax and Recover"             |
+|    "Help for Relax-and-Recover"             |
 |    "Boot Local disk (hd1)"                  |
 |    "Boot BIOS disk (0x81)"                  |
 |    "Boot Next BIOS device"                  |
@@ -1122,19 +1128,19 @@ boot from the local disk.
 |                                             |
 +---------------------------------------------+
 
-      "Press [Tab] to edit options or [F1] for Rear help"
+      "Press [Tab] to edit options or [F1] for help"
 
            "Automatic boot in 30 seconds..."
 ----
 
 ////
       .-------------------------------------------------------------.
-      |               Relax and Recover v1.12.0svn497               |
+      |               Relax-and-Recover v1.12.0svn497               |
       |-------------------------------------------------------------|
-      |  Relax and Recover                                          |
+      |  Relax-and-Recover                                          |
       |-------------------------------------------------------------|
       |  Other actions                                              |
-      |   Help for Relax and Recover                                |
+      |   Help for Relax-and-Recover                                |
       (>  Boot Local disk (hd0)                                    <)
       |   Boot BIOS disk (0x80)                                     |
       |   Boot Next BIOS device                                     |
@@ -1144,7 +1150,7 @@ boot from the local disk.
       |   Power off system                                          |
       `-------------------------------------------------------------'
 
-             Press [Tab] to edit options or [F1] for Rear help
+             Press [Tab] to edit options or [F1] for help
 
                         Automatic boot in 30 seconds...
 ////
@@ -1161,7 +1167,7 @@ different system.
 
 ----
 RESCUE SYSTEM:/ # rear recover
-Relax and Recover 1.12.0svn497 / 2011-07-11
+Relax-and-Recover 1.12.0svn497 / 2011-07-11
 NOTICE: Will do driver migration
 Rewinding tape
 To recreate HP SmartArray controller 3, type exactly YES: YES
@@ -1286,10 +1292,10 @@ CAUTION: Please make sure that the system fits onto a single tape uncompressed.
          For an LTO4 Ultrium that would mean no more than 1.6TB.
 
 
-==== Configuring Rear for OBDR backup tapes
+==== Configuring Relax-and-Recover for OBDR backup tapes
 The below configuration (_/etc/rear/local.conf_) gives a list of possible
-options when you want to run Rear with a tape drive. This example shows how to
-use the tape for storing *both* the rescue image and the backup.
+options when you want to run Relax-and-Recover with a tape drive. This example
+shows how to use the tape for storing *both* the rescue image and the backup.
 
 [source,bash]
 ----
@@ -1305,7 +1311,7 @@ To create a bootable backup tape that can boot from OBDR, simply run
 
 ----
 [root@system ~]# rear -v mkbackup
-Relax and Recover 1.12.0svn497 / 2011-07-11
+Relax-and-Recover 1.12.0svn497 / 2011-07-11
 Rewinding tape
 Writing OBDR header to tape in drive '/dev/nst0'
 Creating disk layout
@@ -1338,7 +1344,7 @@ information about how to enable OBDR and boot from OBDR tapes.
 
 ----
 RESCUE SYSTEM:~ # rear recover
-Relax and Recover 1.12.0svn497 / 2011-07-11
+Relax-and-Recover 1.12.0svn497 / 2011-07-11
 NOTICE: Will do driver migration
 Rewinding tape
 To recreate HP SmartArray controller 3, type exactly YES: YES
@@ -1426,10 +1432,10 @@ Finished recovering your system. You can explore it under '/mnt/local'.
 Finished in 361 seconds.
 ----
 
-== Tips and tricks using Rear
+== Tips and tricks using Relax-and-Recover
 Recovering a system should not be a struggle against time with poor
-tools weighing against you. Rear emphasizes on a relaxing recovery,
-and for this it follows three distinct rules:
+tools weighing against you. Relax-and-Recover emphasizes on a relaxing
+recovery, and for this it follows three distinct rules:
 
  1. Do what is generally expected, if possible
 
@@ -1441,20 +1447,20 @@ This results in the following useful tips and tricks:
 
 [TIP]
 ====
- 1. Rear adds its own GRUB menu entry to your local system's GRUB,
-    which is convenient to restore a system without the need for an
+ 1. Relax-and-Recover adds its own GRUB menu entry to your local system's
+    GRUB, which is convenient to restore a system without the need for an
     additional boot media. This only works if your system can (still)
     boot from the local disk and the disaster didn't destroy that disk.
     To protect accidental recovery, you need to enter the password:
     *Rec0ver1t*
 
- 2. Rear automatically detects and enables serial console support. This is
-    extremely useful if the only way to access the console during disaster
-    is a Java-based console riddled with keyboard bugs and slow screen
+ 2. Relax-and-Recover automatically detects and enables serial console support.
+    This is extremely useful if the only way to access the console during
+    disaster is a Java-based console riddled with keyboard bugs and slow screen
     refreshes.
 
- 3. Rear conveniently ships with a set of useful commands in its shell
-    history. This makes it possible to quickly look for a command to help
+ 3. Relax-and-Recover conveniently ships with a set of useful commands in its
+    shell history. This makes it possible to quickly look for a command to help
     troubleshoot, or modify an important file during recovery.
 
  4. If you have keyboard problems using a HP iLO 2 Remote Console, type the
@@ -1462,33 +1468,34 @@ This results in the following useful tips and tricks:
     this command from your shell history).
 
  5. If the original system was configured to log on remotely through the use
-    of SSH keys, Rear preserved those keys on the rescue environment and you
-    can access the rescue environment from the network as you were used to
-    before.
+    of SSH keys, Relax-and-Recover preserved those keys on the rescue
+    environment and you can access the rescue environment from the network
+    as you were used to before.
 
- 6. During recovery at any stage you can re-run Rear, modify the layout file
-    for recreating the structure and intervene when restoring the backup.
+ 6. During recovery at any stage you can re-run Relax-and-Recovery, modify
+    the layout file for recreating the structure and intervene when restoring
+    the backup.
 ====
 
 
-== Monitoring your system with Rear
-If Rear is not in charge of the backup, but only for creating a rescue
-environment, it can be useful to know when a change to the system invalidates
-your existing/stored rescue environment, requiring one to update the rescue
-environment.
+== Monitoring your system with Relax-and-Recover
+If Relax-and-Recover is not in charge of the backup, but only for creating
+a rescue environment, it can be useful to know when a change to the system
+invalidates your existing/stored rescue environment, requiring one to update
+the rescue environment.
 
-For this, Rear has two different targets, one to create a new baseline (which
-is automatically done when creating a new rescue environment successfully. And
-one to verify the (old) baseline to the current situation.
+For this, Relax-and-Recover has two different targets, one to create a new
+baseline (which is automatically done when creating a new rescue environment
+successfully. And one to verify the (old) baseline to the current situation.
 
 With this, one can monitor or automate generating new rescue environments only
 when it is really needed.
 
 
 === Creating a baseline
-Rear automatically creates a new baseline as soon as it successfully has
-created a new rescue environment. However if for some reason you want to
-recreate the baseline manually, use +rear savelayout+.
+Relax-and-Recover automatically creates a new baseline as soon as it
+successfully has created a new rescue environment. However if for some reason
+you want to recreate the baseline manually, use +rear savelayout+.
 
 
 === Detecting changes to the baseline
@@ -1553,7 +1560,7 @@ strings, so that in case of problems the operator is notified immediately.
 
 
 == Tested configurations
-During the development of Rear we have tested Rear with the following
+During development we have tested Relax-and-Recover with the following
 configurations:
 
  - With USB storage as rescue and Bacula backup on tape
@@ -1574,30 +1581,30 @@ And in the following ways:
 //        This should include the layout information from Jeroen
 
 
-== Troubleshooting Rear
+== Troubleshooting Relax-and-Recover
 If you encounter a problem, you may find more information in the log file
 which is located at _/var/log/rear/rear-system.log_. During recovery the backup
 log file is also available from _/var/log/rear/_, for your convenience the
 history in rescue mode comes with useful commands for debugging, use the up
 arrow key in the shell to find those commands.
 
-There are a few options in Rear to help you debug the situation:
+There are a few options in Relax-and-Recover to help you debug the situation:
 
  - use the +-v+ option to show progress output during execution
  - use the +-d+ option to have debug information in your log file
- - use the +-s+ option to see what scripts Rear would be using; this is useful
-   to understand how Rear is working internally
+ - use the +-s+ option to see what scripts Relax-and-Recover would be using;
+   this is useful to understand how Relax-and-Recover is working internally
  - use the +-S+ option to step through each individual script when
    troubleshooting
  - use the +-D+ option to dump every function call to log file; this is very
-   convenient during development or when troubleshooting Rear
+   convenient during development or when troubleshooting Relax-and-Recover
 
 
 === During backup
-During backup Rear creates a description of your system layout in one file
-(_disklayout.conf_) and stores this as part of its rescue image. This file
-describes the configuration of SmartArray RAID, parititions, software RAID,
-DRBD, logical volumes, filesystems, and possibly more.
+During backup Relax-and-Recover creates a description of your system layout
+in one file (_disklayout.conf_) and stores this as part of its rescue image.
+This file describes the configuration of SmartArray RAID, parititions,
+software RAID, DRBD, logical volumes, filesystems, and possibly more.
 
 Here is a list of known issues during backup:
 
@@ -1605,9 +1612,9 @@ Here is a list of known issues during backup:
 One or more HP SmartArray controllers have errors::
 +
 --
-Rear had detected that one of your HP SmartArray controllers is in ERROR
-state and as a result it can not trust the information returned from that
-controller. This can be dangerous because we cannot guarantee that the
+Relax-and-Recover had detected that one of your HP SmartArray controllers is
+in ERROR state and as a result it can not trust the information returned from
+that controller. This can be dangerous because we cannot guarantee that the
 disk layout is valid when recovering the system.
 
 We discovered that this problem can be caused by a controller that still
@@ -1632,10 +1639,11 @@ succeeds in a write and verify test, the USB stick is reliable.
 
 
 === During recovery
-During restore Rear uses the saved system layout as the basis for recreating a
-workable layout on your new system. If your new hardware is very different,
-it's advised to copy the layout file _/var/lib/rear/layout/disklayout.conf_
-to _/etc/rear_ and modify it according to what is required.
+During restore Relax-and-Recover uses the saved system layout as the basis for
+recreating a workable layout on your new system. If your new hardware is very
+different, it's advised to copy the layout file
+_/var/lib/rear/layout/disklayout.conf_ to _/etc/rear_ and modify it according
+to what is required.
 
 ----
 cp /var/lib/rear/layout/disklayout.conf /etc/rear/
@@ -1644,14 +1652,14 @@ vi /etc/rear/disklayout.conf
 
 Then restart the recovery process: +rear recover+
 
-During the recovery process, Rear translates this layout file into a shell
-procedure (_/var/lib/rear/layout/diskrestore.sh_) that contains all the needed
-instructions for recreating your desired layout.
+During the recovery process, Relax-and-Recover translates this layout file
+into a shell procedure (_/var/lib/rear/layout/diskrestore.sh_) that contains
+all the needed instructions for recreating your desired layout.
 
-If Rear comes across irreconcilable differences, it provides you with a small
-menu of options you have. In any case you can Abort the menu, and retry after
-cleaning up everything Rear may already have done, incl. +mdadm --stop
---scan+ or +vgchange -a n+.
+If Relax-and-Recover comes across irreconcilable differences, it provides you
+with a small menu of options you have. In any case you can Abort the menu, and
+retry after cleaning up everything Relax-and-Recover may already have done, incl.
++mdadm --stop --scan+ or +vgchange -a n+.
 
 In any case, you will have to look into the issue, see what goes wrong and
 either fix the layout file (_disklayout.conf_) and restart the recovery
@@ -1690,8 +1698,8 @@ manually and continue from where it left off.
 
 When the number of physical or logical disks are different, or when other
 important system characteristics that matter to recovery are incompatible,
-this will be indicated by a multitude of possible error-messages. Rear
-makes it possible to recover also in these cases by hand.
+this will be indicated by a multitude of possible error-messages.
+Relax-and-Recover makes it possible to recover also in these cases by hand.
 
 You can find more information about your HP SmartArray setup by running one of
 the following commands:
@@ -1701,4 +1709,5 @@ the following commands:
     # hpacucli ctrl all show config detail
 --
 
-TIP: You can find these commands as part of the history of the Rear shell.
+TIP: You can find these commands as part of the history of the
+Relax-and-Recover shell.

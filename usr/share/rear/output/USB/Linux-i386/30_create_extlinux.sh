@@ -109,7 +109,7 @@ label $(uname -n | cut -d. -f1)-$time
     menu label ${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2} $usb_label_workflow
     say $(uname -n | cut -d. -f1)-$time - Recover $(uname -n | cut -d. -f1) $usb_label_workflow ($time)
     text help
-Rear v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPADDR:+on $IPADDR}
+Relax-and-Recover v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPADDR:+on $IPADDR}
 ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
     endtext
     kernel /$USB_PREFIX/kernel
@@ -143,7 +143,7 @@ Log "Creating /rear/syslinux.cfg"
 {
     syslinux_write <<EOF
 label rear
-    say rear - Recover $(uname -n) from $time
+    say Relax-and-Recover - Recover $(uname -n) from $time
     menu hide
     kernel $(uname -n | cut -d. -f1)-$time
 
@@ -202,7 +202,7 @@ EOF
         menu label ^Back
         menu default
         text help
-Return to the main Rear menu
+Return to the main menu
         endtext
         menu exit
 
@@ -255,7 +255,7 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
         syslinux_write <<EOF
 say F1 - Show help
 F1 /boot/syslinux/rear.help
-menu tabmsg Press [Tab] to edit options or [F1] for Rear help
+menu tabmsg Press [Tab] to edit options or [F1] for help
 EOF
     fi
 
@@ -295,9 +295,9 @@ EOF
     if [[ "$FEATURE_SYSLINUX_MENU_HELP" && -r "$CONFIG_DIR/templates/rear.help" ]]; then
         syslinux_write <<EOF
 label help
-    menu label ^Help for Relax and Recover
+    menu label ^Help for Relax-and-Recover
     text help
-More information about Rear and the steps for recovering your system
+More information about Relax-and-Recover and the steps for recovering your system
     endtext
     menu help rear.help
 
