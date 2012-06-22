@@ -55,11 +55,11 @@ Github project::
 
 In case you have questions, ideas or feedback about this document, you
 can contact the development team on the Relax-and-Recover mailinglist at:
-rear-users@lists.sourceforge.net.
+rear-users@lists.relax-and-recover.org.
 
 NOTE: Note that you have to be subscribed to be able to send mails to the
 Relax-and-Recover mailinglist ! You can subscribed to the list at:
-https://lists.sourceforge.net/lists/listinfo/rear-users
+https://lists.relax-and-recover.org/lists/listinfo/rear-users
 
 
 == Design concepts

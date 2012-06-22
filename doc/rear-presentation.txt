@@ -328,7 +328,7 @@ and various other contributors
 Development at Github
 
   - http://relax-and-recover.org/
-  - rear-users@lists.sourceforge.net
+  - rear-users@lists.relax-and-recover.org
 
 
 == Thank you for listening
