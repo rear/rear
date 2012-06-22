@@ -59,7 +59,7 @@ rear-users@lists.relax-and-recover.org.
 
 NOTE: Note that you have to be subscribed to be able to send mails to the
 Relax-and-Recover mailinglist ! You can subscribed to the list at:
-https://lists.relax-and-recover.org/lists/listinfo/rear-users
+http://lists.relax-and-recover.org/mailman/listinfo/rear-users
 
 
 == Design concepts
