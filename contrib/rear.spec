@@ -6,9 +6,9 @@ Version: 1.13.0
 Release: 1%{?rpmrelease}%{?dist}
 License: GPLv3
 Group: Applications/File
-URL: http://rear.github.com/
+URL: http://relax-and-recover.org/
 
-Source: rear-%{version}.tar.bz2
+Source: https://github.com/downloads/rear/rear/rear-%{version}.tar.gz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch: noarch
