@@ -6,7 +6,9 @@ local path=$(url_path $OUTPUT_URL)
 local opath=$(output_path $scheme $path)
 
 # if $opath is empty return silently (e.g. scheme tape)
-[ -z "$opath" ] && return 0
+if [[ -z "$opath" || -z "$OUTPUT_URL" || "$scheme" == "obdr" || "$scheme" == "tape" ]]; then
+    return 0
+fi
 
 LogPrint "Copying resulting files to $scheme location"
 
