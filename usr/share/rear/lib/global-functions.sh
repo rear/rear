@@ -84,7 +84,7 @@ mount_url() {
             mount_cmd="${!var} $mountpoint"
             ;;
         (cifs)
-            mount_cmd="mount $v -o $options //$(url_host $url)$(url_path $url) $mountpoint"
+            mount_cmd="mount $v -o $options,guest //$(url_host $url)$(url_path $url) $mountpoint"
             ;;
         (usb)
             mount_cmd="mount $v -o $options $(url_path $url) $mountpoint"
