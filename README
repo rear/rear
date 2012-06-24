@@ -18,7 +18,7 @@ Relax-and-Recover was designed to be easy to set up, requires no maintenance
 and is there to assist when disaster strikes. Its setup-and-forget nature
 removes any excuse for not having a disaster recovery solution implemented.
 
-Recovering from disaster is made very straight-forward by a 2-step recovery
+Recovering from disaster is made very straightforward by a 2-step recovery
 process so that it can be executed by operational teams when required.
 When used interactively (e.g. when used for migrating systems), menus help
 make decisions to restore to a new (hardware) environment.
@@ -132,7 +132,7 @@ backup using:
 
     sudo usr/sbin/rear -v mkbackup
 
-That's it. You hard disk can now safely fail.
+That's it. Your hard disk can now safely fail.
 
 CONFIGURATION
 -------------
@@ -152,8 +152,8 @@ edit 'PXE_pxelinux.cfg' to add some general pxelinux configuration you use
 In almost all circumstances you have to configure two main settings and their
 parameters: The +BACKUP+ method and the +OUTPUT+ method.
 
-The backup method defines, how your data was saved and wether Relax-and-Recover
-ar should backup your data as part of the mkrescue process or wether you use an
+The backup method defines, how your data was saved and whether Relax-and-Recover
+ should backup your data as part of the mkrescue process or whether you use an
 external application, e.g. backup software to archive your data.
 
 The output method defines how the rescue system is written to disk and how you
