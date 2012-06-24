@@ -1,7 +1,8 @@
 ### Copy the kernel and the initramfs to the location given in OUTPUT_URL
 
 if [[ -z "$OUTPUT_URL" ]] ; then
-    return
+    OUTPUT_URL=file://$VAR_DIR/output
+    Log "No OUTPUT_URL defined. Using default location $OUTPUT_URL."
 fi
 
 local scheme=$(url_scheme $OUTPUT_URL)
