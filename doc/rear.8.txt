@@ -16,12 +16,13 @@ rear - bare metal disaster recovery and system migration tool
 
 
 == DESCRIPTION
-Relax-and-Recover is the leading Open Source disaster recovery and system
-migration solution, and successor to mkcdrec. It comprises of a modular
-framework and ready-to-go workflows for many common situations to produce
-a bootable image and restore from backup using this image. As a benefit,
-it allows to restore to different hardware and can therefore be used as
-a migration tool as well.
+Relax-and-Recover is the leading Open Source disaster recovery solution. It
+is a modular framework with many ready-to-go workflows for common situations. 
+
+Relax-and-Recover produces a bootable image. This image can repartition the
+system. Once that is done it initiates a restore from backup. Restores to
+different hardware are possible. Relax-and-Recover can therefore be used as a 
+migration tool as well.
 
 Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
 OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
@@ -119,8 +120,8 @@ The process of bare metal disaster recovery consists of two parts:
 
 Most backup software solutions are very good at restoring data but do not
 support recreating the system layout. Relax-and-Recover is very good at
-recreating the system layout but and works best when used together with
-a supported backup software.
+recreating the system layout but works best when used together with
+supported backup software.
 
 In this combination Relax-and-Recover recreates the system layout and calls
 the backup software to restore the actual data. Thus there is no unnessecary
@@ -137,6 +138,9 @@ BACKUP MADE EASY.
 The +OUTPUT+ variable defines where the rescue image should be send to.
 Possible +OUTPUT+ setting are:
 
+OUTPUT=*RAMDISK*::
+*(Default)* Create only the Relax-and-Recover initramfs.
+
 OUTPUT=*ISO*::
 Create a bootable ISO9660 image on disk as _rear-$(hostname).iso_
 
@@ -152,35 +156,36 @@ OUTPUT=*USB*::
 Create a bootable USB disk (using extlinux). Specify the USB storage
 device by using +USB_DEVICE+.
 
-When using +OUTPUT=ISO+ you should provide the backup target location through
-the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+ settings are:
+When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+ or +USB+ you should provide the 
+backup target location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+ 
+settings are:
 
 OUTPUT_URL=*file://*::
-Write the ISO image to disk. The default is in _/var/lib/rear/output/_.
+Write the image to disk. The default is in _/var/lib/rear/output/_.
 
 OUTPUT_URL=*fish://*::
-Write the ISO image using +lftp+ and the FISH protocol.
+Write the image using +lftp+ and the FISH protocol.
 
 OUTPUT_URL=*ftp://*::
-Write the ISO image using +lftp+ and the FTP protocol.
+Write the image using +lftp+ and the FTP protocol.
 
 OUTPUT_URL=*ftps://*::
-Write the ISO image using +lftp+ and the FTPS protocol.
+Write the image using +lftp+ and the FTPS protocol.
 
 OUTPUT_URL=*hftp://*::
-Write the ISO image using +lftp+ and the HFTP protocol.
+Write the image using +lftp+ and the HFTP protocol.
 
 OUTPUT_URL=*http://*::
-Write the ISO image using +lftp+ and the HTTP (PUT) procotol.
+Write the image using +lftp+ and the HTTP (PUT) procotol.
 
 OUTPUT_URL=*https://*::
-Write the ISO image using +lftp+ and the HTTPS (PUT) protocol.
+Write the image using +lftp+ and the HTTPS (PUT) protocol.
 
 OUTPUT_URL=*sftp://*::
-Write the ISO image using +lftp+ and the secure FTP (SFTP) protocol.
+Write the image using +lftp+ and the secure FTP (SFTP) protocol.
 
 OUTPUT_URL=*rsync://*::
-Write the ISO image using +rsync+ and the RSYNC protocol.
+Write the image using +rsync+ and the RSYNC protocol.
 
 
 == BACKUP SOFTWARE INTEGRATION
