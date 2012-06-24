@@ -32,7 +32,7 @@ LogPrint "Making ISO image"
 mkdir -p $v "$ISO_DIR" >&2
 StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
 
-$ISO_MKISOFS_BIN -o "$ISO_DIR/$ISO_PREFIX.iso" -b isolinux.bin -c boot.cat \
+$ISO_MKISOFS_BIN $v -o "$ISO_DIR/$ISO_PREFIX.iso" -b isolinux.bin -c boot.cat \
 	-no-emul-boot -boot-load-size 4 -boot-info-table \
 	-R -J -volid "$ISO_VOLID" -v "${ISO_FILES[@]}"  >&8
 StopIfError "Could not create ISO image"

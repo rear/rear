@@ -33,7 +33,7 @@ mkdir -p $v "$ISO_DIR" >&2
 StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
 
 pushd $TMP_DIR >&8 # so that relative paths will work
-$ISO_MKISOFS_BIN -o "$ISO_DIR/$ISO_PREFIX.iso" -U -chrp-boot \
+$ISO_MKISOFS_BIN $v -o "$ISO_DIR/$ISO_PREFIX.iso" -U -chrp-boot \
 	-R -J -volid "$ISO_VOLID" -v -graft-points "${ISO_FILES[@]}" >&8
 StopIfError "Could not create ISO image"
 ISO_IMAGES=( "${ISO_IMAGES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
