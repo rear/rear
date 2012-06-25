@@ -1,6 +1,25 @@
 # 50_make_backup.sh
 #
 
+function set_tar_features {
+    # Default tar options
+    TAR_OPTIONS=
+
+    # Test for features in tar
+    # true if at supports the --warning option (v1.23+)
+    FEATURE_TAR_WARNINGS=
+
+    local tar_version=$(get_version tar --version)
+
+    if version_newer "$tar_version" 1.23; then
+        FEATURE_TAR_WARNINGS="y"
+        TAR_OPTIONS="$TAR_OPTIONS --warning=no-xdev"
+    fi
+
+    FEATURE_TAR_IS_SET=1
+}
+
+
 Log "Include list:"
 while read -r ; do
 	Log "  $REPLY"
@@ -24,14 +43,15 @@ ProgressStart "Preparing archive operation"
 case "$(basename ${BACKUP_PROG})" in
 	# tar compatible programs here
 	(tar)
-		Log $BACKUP_PROG --sparse --block-number --totals --verbose \
-			--no-wildcards-match-slash --one-file-system --warning=no-xdev \
+		set_tar_features
+		Log $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
+			--no-wildcards-match-slash --one-file-system \
 			--ignore-failed-read $BACKUP_PROG_OPTIONS \
 			${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} $BACKUP_PROG_COMPRESS_OPTIONS \
 			-X $TMP_DIR/backup-exclude.txt -C / -c -f "$backuparchive" \
 			$(cat $TMP_DIR/backup-include.txt) $LOGFILE
-		$BACKUP_PROG --sparse --block-number --totals --verbose \
-			--no-wildcards-match-slash --one-file-system --warning=no-xdev \
+		$BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
+			--no-wildcards-match-slash --one-file-system \
 			--ignore-failed-read $BACKUP_PROG_OPTIONS \
 			${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} $BACKUP_PROG_COMPRESS_OPTIONS \
 			-X $TMP_DIR/backup-exclude.txt -C / -c -f "$backuparchive" \
@@ -123,7 +143,7 @@ case "$(basename $BACKUP_PROG)" in
         if (( $backup_prog_rc == 1 )); then
             LogPrint "WARNING: $(basename $BACKUP_PROG) ended with return code $backup_prog_rc and below output:
 
-$(grep '^tar: ' $LOGFILE | sed -e 's/^/  /')
+$(grep '^tar: ' $LOGFILE | sed -e 's/^/  /' | tail -n3)
 
 This means that files have been modified during the archiving
 process. As a result the backup may not be completely consistent
@@ -136,7 +156,7 @@ system.
         elif (( $backup_prog_rc > 1 )); then
             Error "$(basename $BACKUP_PROG) failed with return code $backup_prog_rc and below output:
 
-$(grep '^tar: ' $LOGFILE | sed -e 's/^/  /')
+$(grep '^tar: ' $LOGFILE | sed -e 's/^/  /' | tail -n3)
 
 This means that the archiving process ended prematurely, or did
 not even start. As a result it is unlikely you can recover this
