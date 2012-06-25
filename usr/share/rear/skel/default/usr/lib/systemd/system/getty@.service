@@ -7,31 +7,41 @@
 
 [Unit]
 Description=Getty on %I
-BindTo=dev-%i.device
-After=dev-%i.device
+Documentation=man:agetty(8)
+After=systemd-user-sessions.service plymouth-quit-wait.service
+After=rc-local.service
 
 # If additional gettys are spawned during boot then we should make
 # sure that this is synchronized before getty.target, even though
 # getty.target didn't actually pull it in.
-#Before=getty.target
+Before=getty.target
+IgnoreOnIsolate=yes
+
+# On systems without virtual consoles, don't start any getty. (Note
+# that serial gettys are covered by serial-getty@.service, not this
+# unit
+#ConditionPathExists=/dev/tty0
 
 [Service]
 Environment=TERM=linux
-#ExecStart=-/bin/agetty %I 38400
-#ExecStart=/bin/agetty %I 38400
-ExecStart=/bin/mingetty %I
+ExecStart=-/sbin/agetty %I 38400
 Restart=always
 RestartSec=0
 UtmpIdentifier=%I
-KillMode=process-group
+TTYPath=/dev/%I
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+KillMode=process
+IgnoreSIGPIPE=no
 
 # Unset locale for the console getty since the console has problems
 # displaying some internationalized messages.
-Environment=LANG= LC_CTYPE= LC_NUMERIC= LC_TIME= LC_COLLATE= LC_MONETARY= LC_MESSAGE= LC_PAPER= LC_NAME= LC_ADDRESS= LC_TELEPHONE= LC_MEASUREMENT= LC_IDENTIFICATION=
+Environment=LANG= LANGUAGE= LC_CTYPE= LC_NUMERIC= LC_TIME= LC_COLLATE= LC_MONETARY= LC_MESSAGES= LC_PAPER= LC_NAME= LC_ADDRESS= LC_TELEPHONE= LC_MEASUREMENT= LC_IDENTIFICATION=
 
 # Some login implementations ignore SIGTERM, so we send SIGHUP
 # instead, to ensure that login terminates cleanly.
 KillSignal=SIGHUP
 
 [Install]
-Alias=getty.target.wants/getty@tty1.service getty.target.wants/getty@tty2.service getty.target.wants/getty@tty3.service getty.target.wants/getty@tty4.service
+Alias=getty.target.wants/getty@tty1.service
