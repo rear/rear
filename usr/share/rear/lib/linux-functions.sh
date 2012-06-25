@@ -123,7 +123,7 @@ BinCopyTo() {
 	while (( $# > 1 )); do
 		shift
 		[[ -z "$1" ]] && continue # ignore blanks
-		cp -a -L -f $v "$1" "$dest" >&2
+		cp $v -a -L -f "$1" "$dest" >&2
 		StopIfError "[BinCopyTo] Could not copy '$1' to '$dest'"
 #		strip -s "$dest/$(basename "$1")" 2>&8
 	done
@@ -137,7 +137,7 @@ ModulesCopyTo() {
 		shift
 		dir="$(dirname "$1")"
 		[[ ! -d "$dest/$dir" ]] && mkdir -p $v "$dest/$dir"
-		cp -a -L $v "$1" "$dest/$dir" >&2
+		cp $v -a -L "$1" "$dest/$dir" >&2
 		StopIfError "[ModulesCopyTo] Could not copy '$1' to '$dest'"
 	done
 }
