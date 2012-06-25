@@ -25,7 +25,9 @@ rear \- bare metal disaster recovery and system migration tool
 \fBrear\fR [\fB\-dDsSvV\fR] [\fB\-r\fR \fIKERNEL\fR] \fICOMMAND\fR [\-\- \fIARGS\fR\&...]
 .SH "DESCRIPTION"
 .sp
-Relax\-and\-Recover is the leading Open Source disaster recovery and system migration solution, and successor to mkcdrec\&. It comprises of a modular framework and ready\-to\-go workflows for many common situations to produce a bootable image and restore from backup using this image\&. As a benefit, it allows to restore to different hardware and can therefore be used as a migration tool as well\&.
+Relax\-and\-Recover is the leading Open Source disaster recovery solution\&. It is a modular framework with many ready\-to\-go workflows for common situations\&.
+.sp
+Relax\-and\-Recover produces a bootable image\&. This image can repartition the system\&. Once that is done it initiates a restore from backup\&. Restores to different hardware are possible\&. Relax\-and\-Recover can therefore be used as a migration tool as well\&.
 .sp
 Currently Relax\-and\-Recover supports various boot media (incl\&. ISO, PXE, OBDR tape, USB or eSATA storage), a variety of network protocols (incl\&. sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude of backup strategies (incl\&. IBM TSM, HP DataProtector, Symantec NetBackup, Bacula, rsync)\&. This results in a bootable image that os capable of booting via PXE, DVD/CD, bootable tape or virtual provisioning\&.
 .sp
@@ -162,7 +164,7 @@ Recreate the system layout
 Restore the data to the system
 .RE
 .sp
-Most backup software solutions are very good at restoring data but do not support recreating the system layout\&. Relax\-and\-Recover is very good at recreating the system layout but and works best when used together with a supported backup software\&.
+Most backup software solutions are very good at restoring data but do not support recreating the system layout\&. Relax\-and\-Recover is very good at recreating the system layout but works best when used together with supported backup software\&.
 .sp
 In this combination Relax\-and\-Recover recreates the system layout and calls the backup software to restore the actual data\&. Thus there is no unnessecary duplicate data storage and the Relax\-and\-Recover rescue media can be very small\&.
 .sp
@@ -170,6 +172,13 @@ For demonstration and special use purposes Relax\-and\-Recover also includes an 
 .SH "RESCUE IMAGE CONFIGURATION"
 .sp
 The OUTPUT variable defines where the rescue image should be send to\&. Possible OUTPUT setting are:
+.PP
+OUTPUT=\fBRAMDISK\fR
+.RS 4
+
+\fB(Default)\fR
+Create only the Relax\-and\-Recover initramfs\&.
+.RE
 .PP
 OUTPUT=\fBISO\fR
 .RS 4
@@ -194,66 +203,66 @@ Create a bootable USB disk (using extlinux)\&. Specify the USB storage device by
 USB_DEVICE\&.
 .RE
 .sp
-When using OUTPUT=ISO you should provide the backup target location through the OUTPUT_URL variable\&. Possible OUTPUT_URL settings are:
+When using OUTPUT=ISO, RAMDISK, OBDR or USB you should provide the backup target location through the OUTPUT_URL variable\&. Possible OUTPUT_URL settings are:
 .PP
 OUTPUT_URL=\fBfile://\fR
 .RS 4
-Write the ISO image to disk\&. The default is in
+Write the image to disk\&. The default is in
 \fI/var/lib/rear/output/\fR\&.
 .RE
 .PP
 OUTPUT_URL=\fBfish://\fR
 .RS 4
-Write the ISO image using
+Write the image using
 lftp
 and the FISH protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBftp://\fR
 .RS 4
-Write the ISO image using
+Write the image using
 lftp
 and the FTP protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBftps://\fR
 .RS 4
-Write the ISO image using
+Write the image using
 lftp
 and the FTPS protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBhftp://\fR
 .RS 4
-Write the ISO image using
+Write the image using
 lftp
 and the HFTP protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBhttp://\fR
 .RS 4
-Write the ISO image using
+Write the image using
 lftp
 and the HTTP (PUT) procotol\&.
 .RE
 .PP
 OUTPUT_URL=\fBhttps://\fR
 .RS 4
-Write the ISO image using
+Write the image using
 lftp
 and the HTTPS (PUT) protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBsftp://\fR
 .RS 4
-Write the ISO image using
+Write the image using
 lftp
 and the secure FTP (SFTP) protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBrsync://\fR
 .RS 4
-Write the ISO image using
+Write the image using
 rsync
 and the RSYNC protocol\&.
 .RE
