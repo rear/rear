@@ -31,7 +31,7 @@ for bin in "${PROGS[@]}" "${REQUIRED_PROGS[@]}"; do
 done | sort -u) )
 
 # copy binaries
-Log "Binaries: ${BINARIES[@]}"
+Log "Binaries being copied: ${BINARIES[@]}"
 BinCopyTo "$ROOTFS_DIR/bin" "${BINARIES[@]}" >&8
 StopIfError "Could not copy binaries"
 
@@ -58,7 +58,7 @@ copy_lib() {
     fi
 }
 
-Log "Libraries: ${all_libs[@]}"
+Log "Libraries being copied: ${all_libs[@]}"
 for lib in "${all_libs[@]}" ; do
     if [[ -L $lib ]] ; then
         target=$(readlink -f $lib)
