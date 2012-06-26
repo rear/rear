@@ -89,8 +89,8 @@ rewrite:
 
 restore:
 	@echo -e "\033[1m== Restoring $(specfile) and $(rearbin) ==\033[0;0m"
-	mv $(specfile).orig $(specfile)
-	mv $(rearbin).orig $(rearbin)
+	mv -f $(specfile).orig $(specfile)
+	mv -f $(rearbin).orig $(rearbin)
 else
 rewrite:
 	@echo "Nothing to do."
