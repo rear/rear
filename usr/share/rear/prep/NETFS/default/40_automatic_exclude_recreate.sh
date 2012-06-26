@@ -2,8 +2,8 @@
 # to the EXCLUDE_RECREATE array.
 # For the moment we only concentrate on BACKUP_URL=file:///path and
 # add path to the above mentioned array
-local scheme=$(url_scheme $OUTPUT_URL)
-local path=$(url_path $OUTPUT_URL)
+local scheme=$(url_scheme $BACKUP_URL)
+local path=$(url_path $BACKUP_URL)
 
 case $scheme in
      (file) # if user added path manually then there is no need to do it again
