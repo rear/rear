@@ -78,7 +78,7 @@ ifneq ($(git_date),)
 rewrite:
 	@echo -e "\033[1m== Rewriting $(specfile) and $(rearbin) ==\033[0;0m"
 	sed -i.orig \
-		-e 's#^Source:.*#Source: $(name)-$(distversion).tar.bz2#' \
+		-e 's#^Source:.*#Source: $(name)-$(distversion).tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
 		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
 		$(specfile)
@@ -145,32 +145,36 @@ uninstall:
 #	rm -rv $(DESTDIR)$(sysconfdir)/rear/
 #	rm -rv $(DESTDIR)$(localstatedir)/lib/rear/
 
-dist: clean validate man rewrite $(name)-$(distversion).tar.bz2 restore
+dist: clean validate man rewrite $(name)-$(distversion).tar.gz restore
 
-$(name)-$(distversion).tar.bz2:
+$(name)-$(distversion).tar.gz:
 	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
-		tar -cjf $(name)-$(distversion).tar.bz2 --transform='s,^,$(name)-$(version)/,S' --files-from=-
+		tar -czf $(name)-$(distversion).tar.gz --transform='s,^,$(name)-$(version)/,S' --files-from=-
 
 rpm: dist
 	@echo -e "\033[1m== Building RPM package $(name)-$(distversion)==\033[0;0m"
 	rpmbuild -tb --clean \
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
 		--define "debug_package %{nil}" \
-		--define "_rpmdir %(pwd)" $(name)-$(distversion).tar.bz2
+		--define "_rpmdir %(pwd)" $(name)-$(distversion).tar.gz
+
+deb: dist
+	@echo -e "\033[1m== Building DEB package $(name)-$(distversion)==\033[0;0m"
+	@echo -e "Not implemented yet."
 
 obs: BUILD_DIR = /tmp/rear-$(distversion)
-obs: obsname = $(shell osc ls $(obsproject) $(obspackage) | awk '/.tar.bz2$$/ { gsub(".tar.bz2$$","",$$1); print }')
+obs: obsname = $(shell osc ls $(obsproject) $(obspackage) | awk '/.tar.gz$$/ { gsub(".tar.gz$$","",$$1); print }')
 obs: dist
 	@echo -e "\033[1m== Updating OBS from $(obsname) to $(name)-$(distversion)==\033[0;0m"
 ifneq ($(obsname),$(name)-$(distversion))
 	-rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
 	osc co -c $(obsproject) $(obspackage) -o $(BUILD_DIR)
-	-osc del $(BUILD_DIR)/*.tar.bz2
-	cp $(name)-$(distversion).tar.bz2 $(BUILD_DIR)
-	tar -xOjf $(name)-$(distversion).tar.bz2 -C $(BUILD_DIR) $(name)-$(version)/$(specfile) >$(BUILD_DIR)/$(name).spec
-	osc add $(BUILD_DIR)/$(name)-$(distversion).tar.bz2
+	-osc del $(BUILD_DIR)/*.tar.bz2 $(BUILD_DIR)/*.tar.gz
+	cp $(name)-$(distversion).tar.gz $(BUILD_DIR)
+	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(version)/$(specfile) >$(BUILD_DIR)/$(name).spec
+	osc add $(BUILD_DIR)/$(name)-$(distversion).tar.gz
 	osc ci -m "Update to $(name)-$(distversion)" $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
 endif

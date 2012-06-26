@@ -95,7 +95,7 @@ removes any excuse for not having a disaster recovery solution implemented.
 Professional services and support are available.
 
 %prep
-%setup
+%setup -q
 
 echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
 
