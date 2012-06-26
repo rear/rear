@@ -51,7 +51,9 @@ the newer HP SmartArray controller or its firmware.
    * perform commands to restore the backup
 
 
-== RPM installation
+== Installation
+
+=== From RPM packages
 Simply install (or update) the provided packages using
 the command: +rpm -Uhv rear-1.12.0svn497-0.1.noarch.rpm+
 
@@ -68,3 +70,12 @@ System definition:
                               OS_VERSION = 5.6
 ...
 ----
+
+=== From DEB packages
+
+
+=== From source
+
+== File locations
+
+== Quick demo

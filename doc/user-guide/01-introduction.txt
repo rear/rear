@@ -97,6 +97,15 @@ Relax-and-Recover has a wide range of features:
  - USB udev integration to trigger mkrescue on inserting USB device
  - Beep/UID led/USB suspend integration
 
+== Use-cases
+
+=== Transforming a system to use LUKS partitions
+=== Recreate a system for optimal partition alignment
+=== Transforming a system to move from SWRAID to HWRAID
+=== Transforming a system to move from SWRAID to LVM mirroring
+=== Recreate a system on a new RAID hardware backend (replace all disks to enlarge limited storage)
+=== Create a single snapshot for offsite troubleshooting
+
 == Tested configurations
 During development we have tested Relax-and-Recover with the following
 configurations:

@@ -1,0 +1,14 @@
+Source: rear
+Section: unknown
+Priority: optional
+Maintainer: Dag Wieers <dag@wieers.com>
+Build-Depends: debhelper (>= 4.1.16)
+
+Package: rear
+Architecture: all
+Depends: mingetty, syslinux, ethtool, libc6, lsb-release, portmap, genisoimage, iproute, iputils-ping, nfs-client, binutils, parted
+Description: Relax and Recover is a bare metal disaster recovery and system
+ migration framework. See http://relax-and-recover.org/ for all the details.
+ We are still looking for a Debian package maintainer who would write better
+ packages. Please contact us to volunteer for maintaining Relax-and-Recover
+ in Debian and Ubuntu.

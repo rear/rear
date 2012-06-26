@@ -1,0 +1,75 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This is the debhelper compatibility version to use.
+export DH_COMPAT=4
+
+build: build-stamp
+build-stamp:
+	dh_testdir
+	# noop
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp
+	# noop
+	dh_clean
+
+# Build architecture-independent files here.
+binary-indep: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+	
+	# The DESTDIR Has To Be Exactly debian/rear
+	mkdir -vp \
+		debian/rear/usr/share/man/man8/ \
+		debian/rear/usr/share/ \
+		debian/rear/etc/ \
+		debian/rear/usr/sbin/ \
+		debian/rear/var/log/rear/
+		debian/rear/var/lib/rear/
+	
+	# copy rear components into directories
+	cp -av usr/share/rear debian/rear/usr/share/
+	cp -av usr/sbin/rear debian/rear/usr/sbin/
+	cp -av etc/rear debian/rear/etc/
+	
+	# patch rear main script with correct locations for rear components
+	sed -i  \
+		-e 's#^CONFIG_DIR=.*#CONFIG_DIR="/etc/rear"#' \
+		-e 's#^SHARE_DIR=.*#SHARE_DIR="/usr/share/rear"#' \
+		-e 's#^VAR_DIR=.*#VAR_DIR="/var/lib/rear"#' \
+		debian/rear/usr/sbin/rear
+	
+	# update man page with correct locations
+	install -Dp -m0644 doc/rear.8 debian/rear/usr/share/man/man8/rear.8
+	sed -i \
+		-e 's#/usr/share/doc/packages#/usr/share/doc#' \
+		debian/rear/usr/share/man/man8/rear.8
+	
+	# --- end custom part for installing
+	
+	dh_installdocs README doc
+	dh_installchangelogs
+	dh_installman usr/share/rear/doc/rear.8
+	dh_link
+	dh_strip
+	dh_fixperms
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+# Build architecture-dependent files here.
+binary-arch: build
+
+binary: binary-arch binary-indep
+.PHONY: build clean binary-indep binary-arch binary
