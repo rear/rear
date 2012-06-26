@@ -142,22 +142,20 @@ case "$(basename $BACKUP_PROG)" in
     (tar)
         if (( $backup_prog_rc == 1 )); then
             LogPrint "WARNING: $(basename $BACKUP_PROG) ended with return code $backup_prog_rc and below output:
-
+  ---snip---
 $(grep '^tar: ' $LOGFILE | sed -e 's/^/  /' | tail -n3)
-
+  ----------
 This means that files have been modified during the archiving
 process. As a result the backup may not be completely consistent
-or may not be a perfect copy of the system.
-
-Relax-and-Recover will continue, however it is highly advisable
-to verify the backup in order to be sure to safely recover this
-system.
+or may not be a perfect copy of the system. Relax-and-Recover
+will continue, however it is highly advisable to verify the
+backup in order to be sure to safely recover this system.
 "
         elif (( $backup_prog_rc > 1 )); then
             Error "$(basename $BACKUP_PROG) failed with return code $backup_prog_rc and below output:
-
+  ---snip---
 $(grep '^tar: ' $LOGFILE | sed -e 's/^/  /' | tail -n3)
-
+  ----------
 This means that the archiving process ended prematurely, or did
 not even start. As a result it is unlikely you can recover this
 system properly. Relax-and-Recover is therefore aborting execution.
