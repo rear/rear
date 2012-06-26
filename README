@@ -210,7 +210,6 @@ List of commands:
  mkbackup        create rescue media and backup system
  mkbackuponly    backup system without creating rescue media
  mkrescue        create rescue media only
- recover         recover the system; only valid during rescue
  validate        submit validation information
 
 Use 'rear -v help' for more advanced commands.
