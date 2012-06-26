@@ -11,6 +11,7 @@ echo $REPLY | grep -q "ip="
 if [ $? -eq 0 ]; then
 	IPADDR=${REPLY#*ip=}
 	IPADDR=${IPADDR%% *}
+	echo "IP address will be overruled by kernel option ip=$IPADDR"
 fi
 echo $REPLY | grep -q "nm="
 if [ $? -eq 0 ]; then
@@ -22,4 +23,3 @@ if [ $? -eq 0 ]; then
 	GATEWAY=${REPLY#*gw=}
 	GATEWAY=${GATEWAY%% *}
 fi
-echo "IP address will be overruled by kernel option ip=$IPADDR"
