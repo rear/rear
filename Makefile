@@ -19,7 +19,7 @@ datadir = $(prefix)/share
 mandir = $(datadir)/man
 localstatedir = /var
 
-specfile = contrib/$(name).spec
+specfile = contrib/rpm/$(name).spec
 
 DESTDIR =
 OFFICIAL =
