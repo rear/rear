@@ -1,11 +1,11 @@
-Relax-and-Recover Layout Manual
-===============================
+// This document describes all aspects of the system disk layout generation in
+// Relax-and-Recover.
+
+= Layout configuration
 Jeroen Hoekx <jeroen.hoekx@hamok.be>
 2011-09-10
 
-This document describes all aspects of the system disk layout generation in Relax-and-Recover.
-
-== General overview ==
+== General overview
 The disk layout generation code in Relax-and-Recover is responsible for the
 faithful recreation of the disk layout of the original system. It gathers
 information about any component in the system layout. Components supported in
@@ -28,7 +28,7 @@ information in one file. During recovery, that file is used to generate the
 actual commands to recreate the components. Relax-and-Recover allows
 customizations and manual editing in all these phases.
 
-== Layout information gathered during rescue image creation ==
+== Layout information gathered during rescue image creation
 Layout information is stored in +/var/lib/rear/layout/disklayout.conf+. The term 'layout file' in this document refers to this particular file.
 
 Consider the information from the following system as an example:
@@ -73,9 +73,9 @@ information necessary to restore is a system is listed.
 
 It's easy to see that there are 3 disks attached to the system. +/dev/sda+ is the internal disk of the system. Its filesystems are normally mounted. The other devices are external disks. One of them has just normal partitions. The other one has a physical volume on one of the partitions.
 
-== Including/Excluding components ==
+== Including/Excluding components
 
-=== Autoexcludes ===
+=== Autoexcludes
 
 Relax-and-Recover has reasonable defaults when creating the recovery
 information. It has commented out the two external disks and any
@@ -130,7 +130,7 @@ multipath disks. Typically, they are part of the SAN disaster recovery
 strategy. However, there can be cases where you want to recover them. The
 information is retained in +disklayout.conf+.
 
-=== Manual excludes ===
+=== Manual excludes
 It seems prudent to prevent the external drives from ever being backed-up or overwritten. The default configuration contains these lines:
 ----------------------------------
 # Exclude components from being backed up, recreation information is active
@@ -192,7 +192,7 @@ Another approach would be to exclude the backup volume group. This is achieved b
 EXCLUDE_RECREATE=( "${EXCLUDE_RECREATE[@]}" "/dev/backup" )
 ----------------------------------
 
-== Restore to the same hardware ==
+== Restore to the same hardware
 Restoring the system to the same hardware is simple. Type +rear recover+ in
 the rescue system prompt. Relax-and-Recover will detect that it's restoring to
 the same system and will make sure things like UUIDs match. It also asks my
@@ -248,10 +248,10 @@ Welcome to Relax-and-Recover. Run "rear recover" to restore your system !
 
 rear>
 ----------------------------------
-== Restore to different hardware ==
+== Restore to different hardware
 There are two ways to deal with different hardware. One is being lazy and dealing with problems when you encounter them. The second option is to plan in advance. Both are valid approaches. The lazy approach works fine when you are in control of the restore and you have good knowledge of the components in your system. The second approach is preferable in disaster recovery situations or migrations where you know the target hardware in advance and the actual restore will be carried out by less knowledgeable people.
 
-=== The Ad-Hoc Way ===
+=== The Ad-Hoc Way
 Relax-and-Recover will assist you somewhat in case it notices different disk
 sizes. It will ask you to map each differently sized disk to a disk in the
 target system. Partitions will be resized. Relax-and-Recover is careful not to

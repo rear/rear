@@ -1,4 +1,6 @@
-= Relax-and-Recover: The Ultimate Disaster Recovery Framework
+// FIXME: Original design document needs a lot of rework
+
+= Design concepts
 Schlomo Schapiro, Gratien D'haese, Dag Wieers
 
 == The Workflow System

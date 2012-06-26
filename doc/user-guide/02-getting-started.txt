@@ -1,0 +1,70 @@
+// FIXME: Make this part more generic and add distribution information
+
+= Getting started
+
+== Software requirements
+Relax-and-Recover can be installed from a native RPM package. Since it is
+mostly a collection of Bash scripts, there is no need to make RPM packages
+for each Red Hat release. For the supported RHEL distributions it is mostly
+version-agnostic.
+
+Relax-and-Recover has few dependencies:
+
+ - recent syslinux (tested with 4.0)
+
+For OBDR tape mode you need the following packages:
+
+ - lsscsi
+ - mkisofs
+ - sg3_utils
+
+Relax-and-Recover at this time has only been tested on RHEL4, RHEL5 and RHEL6.
+
+
+== Limitations
+Relax-and-Recover offers a lot of flexibility in various use-cases, however it
+does have some limitations under certain circumstances:
+
+ - Relax-and-Recover depends on the software of the running system. When
+   recovering this system to newer hardware, it is possible that the hardware
+   support of the original system does not support the newer hardware.
++
+This problem has been seen when restoring an older RHEL4 with an older HP
+Proliant Support Pack (PSP) to more recent hardware. This PSP did not detect
+the newer HP SmartArray controller or its firmware.
+
+ - Relax-and-Recover supports recovering to different hardware, but it cannot
+   always automatically adapt to this new environment. In such cases it
+   requires a manual intervention to eg.
+
+   * modify the _disklayout.conf_ to indicate the number of controller, disks
+     or specific custom desires during restore
+
+   * reduce the partition-sizes/LV-sizes when restoring to smaller storage
+
+   * pull network-media or configure the network interfaces manually
+
+ - Depending on your back-up strategy you may have to perform actions, like:
+
+   * insert the required tape(s)
+
+   * perform commands to restore the backup
+
+
+== RPM installation
+Simply install (or update) the provided packages using
+the command: +rpm -Uhv rear-1.12.0svn497-0.1.noarch.rpm+
+
+You can test your installation by running +rear dump+:
+
+----
+[root@system ~]# rear dump
+Relax-and-Recover 1.12.0svn497 / 2011-07-11
+Dumping out configuration and system information
+System definition:
+                                    ARCH = Linux-x86_64
+                                      OS = GNU/Linux
+                               OS_VENDOR = RedHatEnterpriseServer
+                              OS_VERSION = 5.6
+...
+----

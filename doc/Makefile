@@ -5,13 +5,14 @@ mandir = $(datadir)/man
 txttargets = $(shell echo *.txt)
 htmltargets = $(patsubst %.txt, %.html, $(txttargets))
 
-all:
+all: docs
 
 dist: docs
 
 man: rear.8
 
 docs: rear.8 $(htmltargets)
+	make -C user-guide docs
 
 install: rear.8
 	install -Dp -m0644 rear.8 $(DESTDIR)$(mandir)/man8/rear.8

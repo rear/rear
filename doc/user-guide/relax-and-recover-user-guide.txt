@@ -1,0 +1,24 @@
+= Relax-and-Recover user guide
+:author: Dag Wieers and Jeroen Hoekx
+:version: 0.4 draft
+:data-uri:
+:doctype: book
+:encoding: UTF-8
+:numbered:
+:toc:
+:toclevels: 2
+
+This document describes everything there is to know regarding
+Relax-and-Recover, an Open Source bare-metal disaster recovery and system
+migration solution designed for Linux.
+
+:leveloffset: 1
+include::01-introduction.txt[]
+include::02-getting-started.txt[]
+include::03-configuration.txt[]
+include::04-scenarios.txt[]
+include::05-integration.txt[]
+include::06-layout-configuration.txt[]
+include::07-tips-and-tricks.txt[]
+include::08-troubleshooting.txt[]
+include::09-design-concepts.txt[]

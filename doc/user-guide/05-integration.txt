@@ -1,0 +1,81 @@
+= Integration
+
+== Monitoring your system with Relax-and-Recover
+If Relax-and-Recover is not in charge of the backup, but only for creating
+a rescue environment, it can be useful to know when a change to the system
+invalidates your existing/stored rescue environment, requiring one to update
+the rescue environment.
+
+For this, Relax-and-Recover has two different targets, one to create a new
+baseline (which is automatically done when creating a new rescue environment
+successfully. And one to verify the (old) baseline to the current situation.
+
+With this, one can monitor or automate generating new rescue environments only
+when it is really needed.
+
+
+=== Creating a baseline
+Relax-and-Recover automatically creates a new baseline as soon as it
+successfully has created a new rescue environment. However if for some reason
+you want to recreate the baseline manually, use +rear savelayout+.
+
+
+=== Detecting changes to the baseline
+When you want to know if the latest rescue environment is still valid, you may
+want to use the +rear checklayout+ command instead.
+
+----
+[root@system ~]# rear checklayout
+[root@system ~]# echo $?
+0
+----
+
+If the layout has changed, the return code will indicate this by a non-zero
+return code.
+
+----
+[root@system ~]# rear checklayout
+[root@system ~]# echo $?
+1
+----
+
+
+=== Integration with Nagios and Opsview
+If having current DR rescue images is important to your organisation, but they
+cannot be automated (eg. a tape or USB device needs inserting), we provide a
+Nagios plugin that can send out a notification whenever there is a critical
+change to the system that requires updating your rescue environment.
+
+Changes to the system requiring an update are:
+
+ - Changes to hardware RAID
+ - Changes to software RAID
+ - Changes to partitioning
+ - Changes to DRBD configuration
+ - Changes to LVM
+ - Changes to filesystems
+
+The integration is done using our own _check_rear_ plugin for Nagios.
+
+[source,bash]
+----
+#!/bin/bash
+#
+# Purpose: Checks if disaster recovery usb stick is up to date
+
+# Check if rear is installed
+if [[ ! -x /usr/sbin/rear ]]; then
+    echo "REAR IS NOT INSTALLED"
+    exit 2
+fi
+
+# rear disk layout status can be identical or changed
+# returncode: 0 = ok
+if ! /usr/sbin/rear checklayout; then
+    echo "Disk layout has changed. Please insert Disaster Recovery USB stick into system !"
+    exit 2
+fi
+----
+
+We also monitor the _/var/log/rear/rear-system.log_ file for +ERROR:+ and +BUG BUG BUG+
+strings, so that in case of problems the operator is notified immediately.
