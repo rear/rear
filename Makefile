@@ -19,7 +19,7 @@ datadir = $(prefix)/share
 mandir = $(datadir)/man
 localstatedir = /var
 
-specfile = contrib/rpm/$(name).spec
+specfile = packaging/rpm/$(name).spec
 
 DESTDIR =
 OFFICIAL =
@@ -149,8 +149,10 @@ dist: clean validate man rewrite $(name)-$(distversion).tar.gz restore
 
 $(name)-$(distversion).tar.gz:
 	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
+	cp -r packaging/debian/ .
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
 		tar -czf $(name)-$(distversion).tar.gz --transform='s,^,$(name)-$(version)/,S' --files-from=-
+	-rm -rf debian/
 
 rpm: dist
 	@echo -e "\033[1m== Building RPM package $(name)-$(distversion)==\033[0;0m"
@@ -161,7 +163,12 @@ rpm: dist
 
 deb: dist
 	@echo -e "\033[1m== Building DEB package $(name)-$(distversion)==\033[0;0m"
-	@echo -e "Not implemented yet."
+	cp -r packaging/debian/ .
+	chmod 755 debian/rules
+	fakeroot debian/rules clean                                                                                  
+	fakeroot dh_install
+	fakeroot debian/rules binary
+	-rm -rf debian/
 
 obs: BUILD_DIR = /tmp/rear-$(distversion)
 obs: obsname = $(shell osc ls $(obsproject) $(obspackage) | awk '/.tar.gz$$/ { gsub(".tar.gz$$","",$$1); print }')
