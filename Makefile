@@ -63,7 +63,7 @@ validate:
 	find etc/ usr/share/rear/conf/ -name '*.conf' | xargs bash -n
 	bash -n $(rearbin)
 	find . -name '*.sh' | xargs bash -n
-### Fails to work on RHEL
+### Fails to work on RHEL4
 #	find -L . -type l
 
 man:
@@ -177,4 +177,5 @@ ifneq ($(obsname),$(name)-$(distversion))
 	osc add $(BUILD_DIR)/$(name)-$(distversion).tar.gz
 	osc ci -m "Update to $(name)-$(distversion)" $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
+	echo -e "\033[1mNow visit https://build.opensuse.org/monitor/old or https://build.opensuse.org/monitor to inspect the queue and activity.\033[0;0m"
 endif

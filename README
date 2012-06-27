@@ -1,8 +1,9 @@
 Relax-and-Recover
 =================
 
-Relax-and-Recover is the leading Open Source disaster recovery solution. It
-is a modular framework with many ready-to-go workflows for common situations. 
+Relax-and-Recover is the leading Open Source bare metal disaster recovery
+and system migration solution. It is a modular framework with many
+ready-to-go workflows for common situations. 
 
 Relax-and-Recover produces a bootable image. This image can repartition the
 system. Once that is done it initiates a restore from backup. Restores to
@@ -28,7 +29,10 @@ possible by its modular framework. Consistent logging and optionally extended
 output help understand the concepts behind Relax-and-Recover, troubleshoot
 during initial configuration and help debug during integration.
 
-Professional services and support are available.
+Professional services and support are available as well.
+
+For more detailed information about Relax-and-Recover, please read the
+Relax-and-Recover User Guide.
 
 
 REQUIREMENTS
@@ -112,7 +116,7 @@ Relax-and-Recover 1.13.0 / $Date$
 Using log file: /home/jeroen/tmp/quickstart/rear/var/log/rear/rear-fireflash.log
 Creating disk layout
 Creating root filesystem layout
-WARNING: To login as root via ssh you need to setup an authorized_keys file in /root/.ssh
+TIP: To login as root via ssh you need to set up /root/.ssh/authorized_keys
 Copying files and directories
 Copying binaries and libraries
 Copying kernel modules
@@ -127,12 +131,12 @@ Relax-and-Recover is doing.
 Now reboot your system and try to boot from the USB device.
 
 If that worked, you can dive into the advanced Relax-and-Recover options and
-start creating full backups. If you USB devices has enough space, initiate a
+start creating full backups. If your USB device has enough space, initiate a
 backup using:
 
     sudo usr/sbin/rear -v mkbackup
 
-That's it. Your hard disk can now safely fail.
+That is it. You are now better prepared for failure !
 
 CONFIGURATION
 -------------
@@ -153,7 +157,7 @@ In almost all circumstances you have to configure two main settings and their
 parameters: The +BACKUP+ method and the +OUTPUT+ method.
 
 The backup method defines, how your data was saved and whether Relax-and-Recover
- should backup your data as part of the mkrescue process or whether you use an
+should backup your data as part of the mkrescue process or whether you use an
 external application, e.g. backup software to archive your data.
 
 The output method defines how the rescue system is written to disk and how you
