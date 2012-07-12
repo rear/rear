@@ -196,7 +196,7 @@ change_resolv_conf ()
     (echo "$s" > /etc/resolv.conf;) &>/dev/null;
     r=$?
     if [ $r -eq 0 ]; then
-        logger -p local7.notice -t "NET" -i "$0 : updated /etc/resolv.conf";
+        logger -p local7.notice -t "$PROGRAM" -i "updated /etc/resolv.conf";
     fi;
     return $r;
 }

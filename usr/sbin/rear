@@ -25,7 +25,7 @@
 
 # Versioning
 PRODUCT="Relax-and-Recover"
-PROGRAM=$(basename $0)
+PROGRAM=${0##*/}
 VERSION=1.13.0
 RELEASE_DATE=Git
 
@@ -144,7 +144,7 @@ PID=$(pidof -x -o %PPID "$SCRIPT_FILE")
 if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}"; then
 	LOGFILE="$LOGFILE.lockless"
 elif [[ "$PID" ]] ; then
-	echo "ERROR: $SCRIPT_FILE is already running, not starting again" >&2
+	echo "ERROR: $PROGRAM is already running, not starting again" >&2
 	exit 1
 fi
 

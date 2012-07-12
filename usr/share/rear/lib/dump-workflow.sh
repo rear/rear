@@ -86,7 +86,7 @@ WORKFLOW_dump () {
 		done <"$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt"
 	else
 		LogPrint "Your system is not yet validated. Please carefully check all functions"
-		LogPrint "and create a validation record with '$0 validate'. This will help others"
+		LogPrint "and create a validation record with '$PROGRAM validate'. This will help others"
 		LogPrint "to know about the validation status of $PRODUCT on this system."
 		# if the master OS is validated print out a suitable hint
 		if test -s "$SHARE_DIR/lib/validated/$OS_MASTER_VENDOR_VERSION_ARCH.txt" ; then
