@@ -30,17 +30,17 @@ binary-indep: build
 	
 	# The DESTDIR Has To Be Exactly debian/rear
 	mkdir -vp \
-		debian/rear/usr/share/man/man8/ \
-		debian/rear/usr/share/ \
 		debian/rear/etc/ \
 		debian/rear/usr/sbin/ \
+		debian/rear/usr/share/ \
+		debian/rear/usr/share/man/man8/ \
+		debian/rear/var/lib/rear/ \
 		debian/rear/var/log/rear/
-		debian/rear/var/lib/rear/
 	
 	# copy rear components into directories
-	cp -av usr/share/rear debian/rear/usr/share/
-	cp -av usr/sbin/rear debian/rear/usr/sbin/
 	cp -av etc/rear debian/rear/etc/
+	cp -av usr/sbin/rear debian/rear/usr/sbin/
+	cp -av usr/share/rear debian/rear/usr/share/
 	
 	# patch rear main script with correct locations for rear components
 	sed -i  \
@@ -57,9 +57,14 @@ binary-indep: build
 	
 	# --- end custom part for installing
 	
-	dh_installdocs README doc
+	dh_installdocs README doc/*
 	dh_installchangelogs
-	dh_installman usr/share/rear/doc/rear.8
+	# dh_installman usr/share/rear/doc/rear.8
+	find debian/rear -name ".git*" -exec rm {} \;
+	rm debian/rear/usr/share/doc/rear/Makefile
+	rm debian/rear/usr/share/doc/rear/rear.8.txt
+	rm debian/rear/usr/share/doc/rear/user-guide/Makefile
+	rm debian/rear/usr/share/doc/rear/rear.8
 	dh_link
 	dh_strip
 	dh_fixperms
