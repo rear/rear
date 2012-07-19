@@ -178,11 +178,12 @@ ifneq ($(obsname),$(name)-$(distversion))
 	-rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
 	osc co -c $(obsproject) $(obspackage) -o $(BUILD_DIR)
-	-osc del $(BUILD_DIR)/*.tar.bz2 $(BUILD_DIR)/*.tar.gz
+	-osc del $(BUILD_DIR)/*.tar.gz
 	cp $(name)-$(distversion).tar.gz $(BUILD_DIR)
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(version)/$(specfile) >$(BUILD_DIR)/$(name).spec
+	echo -en "Format: 1.0\nSource: rear\nVersion: $(distversion)\nBinary: rear\nMaintainer: Dag Wieers <dag@wieers.com>\nArchitecture: all\nBuild-Depends: debhelper (>= 4.1.16)\nFiles:\n $$(md5sum $(name)-$(distversion).tar.gz | cut -d' ' -f1) $$(stat -c '%s %n' $(name)-$(distversion).tar.gz)" >$(BUILD_DIR)/rear.dsc
 	osc add $(BUILD_DIR)/$(name)-$(distversion).tar.gz
 	osc ci -m "Update to $(name)-$(distversion)" $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
-	echo -e "\033[1mNow visit https://build.opensuse.org/monitor/old or https://build.opensuse.org/monitor to inspect the queue and activity.\033[0;0m"
+	@echo -e "\033[1mNow visit https://build.opensuse.org/monitor/old or https://build.opensuse.org/monitor to inspect the queue and activity.\033[0;0m"
 endif
