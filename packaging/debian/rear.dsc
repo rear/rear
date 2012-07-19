@@ -1,6 +1,6 @@
 Format: 1.0
 Source: rear
-Version: 1.13.0-git201207192228
+Version: 1.13.0
 Binary: rear
 Maintainer: Dag Wieers <dag@wieers.com>
 Architecture: all
