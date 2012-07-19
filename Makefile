@@ -26,11 +26,13 @@ DESTDIR =
 OFFICIAL =
 
 distversion = $(version)
+debrelease = 0
 rpmrelease =
 obsproject = Archiving:Backup:Rear
 obspackage = $(name)
 ifeq ($(OFFICIAL),)
     distversion = $(version)-git$(date)
+    debrelease = 0git$(date)
     rpmrelease = .git$(date)
     obsproject = Archiving:Backup:Rear:Snapshot
 endif
@@ -86,7 +88,7 @@ rewrite:
 		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
 		$(specfile)
 	sed -i.orig \
-		-e 's#^Version:.*#Version: $(distversion)#' \
+		-e 's#^Version:.*#Version: $(version)-$(debrelease)#' \
 		$(dscfile)
 	sed -i.orig \
 		-e 's#^VERSION=.*#VERSION=$(distversion)#' \
@@ -96,6 +98,7 @@ rewrite:
 restore:
 	@echo -e "\033[1m== Restoring $(specfile) and $(rearbin) ==\033[0;0m"
 	mv -f $(specfile).orig $(specfile)
+	mv -f $(dscfile).orig $(dscfile)
 	mv -f $(rearbin).orig $(rearbin)
 else
 rewrite:
@@ -161,14 +164,14 @@ $(name)-$(distversion).tar.gz:
 		tar -czf $(name)-$(distversion).tar.gz --transform='s,^,$(name)-$(distversion)/,S' --files-from=-
 
 rpm: dist
-	@echo -e "\033[1m== Building RPM package $(name)-$(distversion)==\033[0;0m"
+	@echo -e "\033[1m== Building RPM package $(name)-$(distversion) ==\033[0;0m"
 	rpmbuild -tb --clean \
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
 		--define "debug_package %{nil}" \
 		--define "_rpmdir %(pwd)" $(name)-$(distversion).tar.gz
 
 deb: dist
-	@echo -e "\033[1m== Building DEB package $(name)-$(distversion)==\033[0;0m"
+	@echo -e "\033[1m== Building DEB package $(name)-$(distversion) ==\033[0;0m"
 	cp -r packaging/debian/ .
 	chmod 755 debian/rules
 	fakeroot debian/rules clean                                                                                  
@@ -179,7 +182,7 @@ deb: dist
 obs: BUILD_DIR = /tmp/rear-$(distversion)
 obs: obsname = $(shell osc ls $(obsproject) $(obspackage) | awk '/.tar.gz$$/ { gsub(".tar.gz$$","",$$1); print }')
 obs: dist
-	@echo -e "\033[1m== Updating OBS from $(obsname) to $(name)-$(distversion)==\033[0;0m"
+	@echo -e "\033[1m== Updating OBS from $(obsname) to $(name)-$(distversion)== \033[0;0m"
 ifneq ($(obsname),$(name)-$(distversion))
 	-rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
@@ -189,8 +192,9 @@ ifneq ($(obsname),$(name)-$(distversion))
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(specfile) >$(BUILD_DIR)/$(name).spec
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(dscfile) >$(BUILD_DIR)/$(name).dsc
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/control >$(BUILD_DIR)/debian.control
-	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/changelog >$(BUILD_DIR)/debian.changelog
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/rules >$(BUILD_DIR)/debian.rules
+	echo -e "rear ($(version)-$(debrelease)) stable; urgency=low\n\n  * new snapshot build\n\n -- OpenSUSE Build System <obs@relax-and-recover.org> $$(date -R)" >$(BUILD_DIR)/debian.changelog
+	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/changelog >>$(BUILD_DIR)/debian.changelog
 	osc add $(BUILD_DIR)/$(name)-$(distversion).tar.gz
 	osc ci -m "Update to $(name)-$(distversion)" $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
