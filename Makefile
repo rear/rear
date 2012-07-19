@@ -104,6 +104,8 @@ install-config:
 	install -d -m0700 $(DESTDIR)$(sysconfdir)/rear/
 	-[[ ! -e $(DESTDIR)$(sysconfdir)/rear/local.conf ]] && \
 		install -Dp -m0600 etc/rear/local.conf $(DESTDIR)$(sysconfdir)/rear/local.conf
+	-[[ ! -e $(DESTDIR)$(sysconfdir)/rear/os.conf && -e etc/rear/os.conf ]] && \
+		install -Dp -m0600 etc/rear/os.conf $(DESTDIR)$(sysconfdir)/rear/os.conf
 	cp -a etc/rear/{mappings,templates} $(DESTDIR)$(sysconfdir)/rear/
 	-find $(DESTDIR)$(sysconfdir)/rear/ -name '.gitignore' -exec rm -rf {} \; &>/dev/null
 
