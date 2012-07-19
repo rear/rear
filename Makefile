@@ -20,6 +20,7 @@ mandir = $(datadir)/man
 localstatedir = /var
 
 specfile = packaging/rpm/$(name).spec
+dscfile = packaging/debian/$(name).dsc
 
 DESTDIR =
 OFFICIAL =
@@ -56,6 +57,7 @@ Relax-and-Recover make variables (optional):\n\
 "
 
 clean:
+	rm -f $(name)-$(distversion).tar.gz
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
@@ -81,7 +83,11 @@ rewrite:
 		-e 's#^Source:.*#Source: $(name)-$(distversion).tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
 		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
+		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
 		$(specfile)
+	sed -i.orig \
+		-e 's#^Version:.*#Version: $(distversion)#' \
+		$(dscfile)
 	sed -i.orig \
 		-e 's#^VERSION=.*#VERSION=$(distversion)#' \
 		-e 's#^RELEASE_DATE=.*#RELEASE_DATE="$(release_date)"#' \
@@ -151,10 +157,8 @@ dist: clean validate man rewrite $(name)-$(distversion).tar.gz restore
 
 $(name)-$(distversion).tar.gz:
 	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
-	cp -r packaging/debian/ .
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
-		tar -czf $(name)-$(distversion).tar.gz --transform='s,^,$(name)-$(version)/,S' --files-from=-
-	-rm -rf debian/
+		tar -czf $(name)-$(distversion).tar.gz --transform='s,^,$(name)-$(distversion)/,S' --files-from=-
 
 rpm: dist
 	@echo -e "\033[1m== Building RPM package $(name)-$(distversion)==\033[0;0m"
@@ -182,8 +186,11 @@ ifneq ($(obsname),$(name)-$(distversion))
 	osc co -c $(obsproject) $(obspackage) -o $(BUILD_DIR)
 	-osc del $(BUILD_DIR)/*.tar.gz
 	cp $(name)-$(distversion).tar.gz $(BUILD_DIR)
-	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(version)/$(specfile) >$(BUILD_DIR)/$(name).spec
-	echo -en "Format: 1.0\nSource: rear\nVersion: $(distversion)\nBinary: rear\nMaintainer: Dag Wieers <dag@wieers.com>\nArchitecture: all\nBuild-Depends: debhelper (>= 4.1.16)\nFiles:\n $$(md5sum $(name)-$(distversion).tar.gz | cut -d' ' -f1) $$(stat -c '%s %n' $(name)-$(distversion).tar.gz)" >$(BUILD_DIR)/rear.dsc
+	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(specfile) >$(BUILD_DIR)/$(name).spec
+	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(dscfile) >$(BUILD_DIR)/$(name).dsc
+	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/control >$(BUILD_DIR)/debian.control
+	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/changelog >$(BUILD_DIR)/debian.changelog
+	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/rules >$(BUILD_DIR)/debian.rules
 	osc add $(BUILD_DIR)/$(name)-$(distversion).tar.gz
 	osc ci -m "Update to $(name)-$(distversion)" $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
