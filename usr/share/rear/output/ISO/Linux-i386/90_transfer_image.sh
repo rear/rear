@@ -20,7 +20,7 @@ case "$scheme" in
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
         LogPrint "Transferring ISO image to $OUTPUT_URL"
-        lftp -c "open $OUTPUT_URL/$path; mput $ISO_DIR/$ISO_PREFIX.iso"
+        lftp -c "open $OUTPUT_URL; mput $ISO_DIR/$ISO_PREFIX.iso"
         StopIfError "Problem transferring ISO image to $OUTPUT_URL"
         ;;
     (rsync)
