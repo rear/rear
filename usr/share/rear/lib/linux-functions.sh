@@ -289,7 +289,7 @@ ResolveModules () {
 				(*)
 					echo "Cannot determine dependencies of module $module." \
 						"Is modules.dep up to date?" >&2
-					find /lib/modules/$kernel_version -name $module.\* | sed -e 's#^/##'
+					find /lib/modules/$kernel_version -name $module.\*
 					;;
 			esac
 		fi
