@@ -22,6 +22,7 @@ ubiquitous Linux tools like:
  - sed
  - ssh (openssh-clients)
  - strings (binutils)
+ - tar
  - ...
 
 Optionally, some use-cases require other tools:

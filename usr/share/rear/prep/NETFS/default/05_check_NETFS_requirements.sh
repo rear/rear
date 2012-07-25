@@ -13,16 +13,12 @@ if [[ "$BACKUP_URL" ]] ; then
     local scheme=$(url_scheme $BACKUP_URL)
     local path=$(url_path $BACKUP_URL)
 
-    if [[ -z "$host" ]] ; then
-        host="localhost" # otherwise, ping could fail
-    fi
-
     ### check if host is reachable
-    if [[ "$PING" ]]; then
-            ping -c 2 "$host" >&8
-            StopIfError "Backup host [$host] not reachable."
+    if [[ "$PING" && "$host" ]]; then
+        ping -c 2 "$host" >&8
+        StopIfError "Backup host [$host] not reachable."
     else
-            Log "Skipping ping test"
+        Log "Skipping ping test"
     fi
 
     ### set other variables from BACKUP_URL

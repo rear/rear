@@ -1,5 +1,5 @@
 # Create RSYNC_PREFIX under the local TMP_DIR and also on remote rsync server
-# RSYNC_PREFIX=$(uname -n) as set in default.conf
+# RSYNC_PREFIX=$HOSTNAME as set in default.conf
 
 # create temporary local work-spaces to collect files (we already make the remote backup dir with the correct mode!!)
 mkdir -p $v -m0750 "${TMP_DIR}/rsync/${RSYNC_PREFIX}" >&2

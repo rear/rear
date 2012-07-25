@@ -7,7 +7,7 @@ fi
 # Detect all backups on the USB device
 backups=()
 backup_times=()
-for rear_run in $BUILD_DIR/outputfs/rear/$(uname -n)/* ;do
+for rear_run in $BUILD_DIR/outputfs/rear/$HOSTNAME/* ;do
     Debug "Relax-and-Recover run $rear_run detected."
     backup_name=$rear_run/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
     if [ -e $backup_name ] ; then

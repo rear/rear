@@ -105,9 +105,9 @@ fi
 Log "Creating $USB_PREFIX/syslinux.cfg"
 time=$(basename $USB_REAR_DIR)
 syslinux_write <<EOF 4>"$USB_REAR_DIR/syslinux.cfg"
-label $(uname -n | cut -d. -f1)-$time
+label $HOSTNAME-$time
     menu label ${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2} $usb_label_workflow
-    say $(uname -n | cut -d. -f1)-$time - Recover $(uname -n | cut -d. -f1) $usb_label_workflow ($time)
+    say $HOSTNAME-$time - Recover $HOSTNAME $usb_label_workflow ($time)
     text help
 Relax-and-Recover v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPADDR:+on $IPADDR}
 ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
@@ -121,7 +121,7 @@ EOF
 # entries for backup and rescue
 backup_count=${USB_RETAIN_BACKUP_NR:-2}
 rescue_count=${USB_RETAIN_BACKUP_NR:-2}
-for rear_run in $(ls -dt $BUILD_DIR/outputfs/rear/$(uname -n)/*); do
+for rear_run in $(ls -dt $BUILD_DIR/outputfs/rear/$HOSTNAME/*); do
     backup_name=$rear_run/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
     if [[ -e $backup_name ]] ; then
         backup_count=$((backup_count - 1))
@@ -145,7 +145,7 @@ Log "Creating /rear/syslinux.cfg"
 label rear
     say Relax-and-Recover - Recover $(uname -n) from $time
     menu hide
-    kernel $(uname -n | cut -d. -f1)-$time
+    kernel $HOSTNAME-$time
 
 EOF
 

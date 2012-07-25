@@ -1,5 +1,5 @@
 # if set, create $NETFS_PREFIX under the mounted network filesystem share. This defaults
-# to uname -n
+# to $HOSTNAME
 
 # do not do this for tapes and special attention for file:///path
 url="$( echo $stage | tr '[:lower:]' '[:upper:]')_URL"

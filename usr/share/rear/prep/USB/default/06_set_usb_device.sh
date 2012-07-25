@@ -9,7 +9,7 @@ if [[ -z "$USB_DEVICE" ]] && [[ "$OUTPUT_URL" ]]; then
     esac
 fi
 
-USB_PREFIX="rear/$(uname -n)/$(date +%Y%m%d.%H%M)"
+USB_PREFIX="rear/$HOSTNAME/$(date +%Y%m%d.%H%M)"
 
 ### Change NETFS_PREFIX to USB_PREFIX if our backup URL is on USB
 if [[ "$BACKUP_URL" ]] ; then
