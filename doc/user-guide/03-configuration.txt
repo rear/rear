@@ -95,6 +95,11 @@ No backup, just ask user to somehow restore the filesystems
 BACKUP=EXTERNAL::
 Use a custom strategy by providing backup and restore commands
 
+BACKUP=DUPLICITY::
+Use duplicity to manage backup (see http://duplicity.nongnu.org). Additionally if duply
+(see http://duply.net) is also installed while generating the rescue images it is
+part of the image.
+
 == Using NETFS as backup strategy
 When using +BACKUP=NETFS+ you should provide the backup target location through
 the +BACKUP_URL+ variable. Possible +BACKUP_URL+ settings are:
