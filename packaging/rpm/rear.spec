@@ -1,14 +1,14 @@
-%define rpmrelease %{nil}
+%define rpmrelease .git201207261154
 
 Summary: Relax-and-Recover is a Linux disaster recovery and system migration tool
 Name: rear
-Version: 1.13.0
+Version: 1.13.0-git201207261154
 Release: 1%{?rpmrelease}%{?dist}
 License: GPLv3
 Group: Applications/File
 URL: http://relax-and-recover.org/
 
-Source: rear-1.13.0.tar.gz
+Source: rear-1.13.0-git201207261154-git201207261154.tar.gz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch: noarch
@@ -95,7 +95,7 @@ removes any excuse for not having a disaster recovery solution implemented.
 Professional services and support are available.
 
 %prep
-%setup -q
+%setup -q -n rear-1.13.0-git201207261154-git201207261154
 
 echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
 

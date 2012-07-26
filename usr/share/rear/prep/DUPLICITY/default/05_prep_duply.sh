@@ -13,17 +13,24 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-PROGS=(
-"${PROGS[@]}"
+REQUIRED_PROGS=(
+"${REQUIRED_PROGS[@]}"
 gpg
 duplicity
 python2.6
 )
 
+PROGS=(
+"${PROGS[@]}"
+duply
+)
+
 COPY_AS_IS=(
 "${COPY_AS_IS[@]}"
+/etc/duply
 /etc/python
 /etc/python2.6
+/root/.duply
 /root/.gnupg
 /usr/lib/pymodules
 /usr/lib/pyshared
