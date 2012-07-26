@@ -13,6 +13,5 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-ln -sf $v $ROOTFS_DIR/bin/python2.6 $ROOTFS_DIR/bin/python2
-ln -sf $v $ROOTFS_DIR/bin/python2.6 $ROOTFS_DIR/bin/python
-ln -sf $v $ROOTFS_DIR/usr/lib/librsync.so.1.0.2 $ROOTFS_DIR/usr/lib/librsync.so.1
+ln -sf $v /bin/python2.6 $ROOTFS_DIR/bin/python2
+ln -sf $v /bin/python2.6 $ROOTFS_DIR/bin/python

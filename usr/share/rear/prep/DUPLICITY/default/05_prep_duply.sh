@@ -24,6 +24,7 @@ COPY_AS_IS=(
 "${COPY_AS_IS[@]}"
 /etc/python
 /etc/python2.6
+/root/.gnupg
 /usr/lib/pymodules
 /usr/lib/pyshared
 /usr/lib/python2.6
