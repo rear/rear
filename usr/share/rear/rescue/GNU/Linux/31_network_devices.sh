@@ -113,6 +113,13 @@ WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
 		done
 		echo "ip link set dev $dev up" >>$netscript
 	fi
+
+	# record interface MTU
+	if test -e "$sysfspath/mtu" ; then
+		mtu="$(cat $sysfspath/mtu)"
+		PrintIfError "Could not read a MTU address from '$sysfspath/mtu'!"
+		[[ "$mtu" ]] && echo "ip link set dev $dev mtu $mtu" >>$netscript
+	fi
 done # for dev in /sys/class/net/*
 
 # the following is only used for bonding setups
