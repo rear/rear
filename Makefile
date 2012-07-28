@@ -17,6 +17,7 @@ sysconfdir = /etc
 sbindir = $(prefix)/sbin
 datadir = $(prefix)/share
 mandir = $(datadir)/man
+docdir = $(datadir)/doc/rear
 localstatedir = /var
 
 specfile = packaging/rpm/$(name).spec
@@ -36,6 +37,11 @@ ifeq ($(OFFICIAL),)
     rpmrelease = .git$(date)
     obsproject = Archiving:Backup:Rear:Snapshot
 endif
+
+# In some dists (e.g. Ubuntu) bash is not the default shell. Statements like 
+#   cp -a etc/rear/{mappings,templates} ...
+# assumes bash. So its better to set SHELL
+SHELL=/bin/bash
 
 .PHONY: doc
 
@@ -60,7 +66,8 @@ Relax-and-Recover make variables (optional):\n\
 
 clean:
 	rm -f $(name)-$(distversion).tar.gz
-	rm -f build-stamp
+	make -C doc clean
+
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
@@ -81,7 +88,7 @@ doc:
 
 ifneq ($(git_date),)
 rewrite:
-	@echo -e "\033[1m== Rewriting $(specfile) and $(rearbin) ==\033[0;0m"
+	@echo -e "\033[1m== Rewriting $(specfile), $(dscfile) and $(rearbin) ==\033[0;0m"
 	sed -i.orig \
 		-e 's#^Source:.*#Source: $(name)-$(distversion).tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
@@ -146,6 +153,7 @@ install-doc:
 		-e 's,/usr/share,$(datadir),' \
 		-e 's,/usr/share/doc/packages,$(datadir)/doc,' \
 		$(DESTDIR)$(mandir)/man8/rear.8
+	install -p -m0644 AUTHORS COPYING README $(DESTDIR)$(docdir)
 
 install: validate man install-config rewrite install-bin restore install-data install-var install-doc
 
