@@ -1,12 +1,14 @@
 = Introduction
 
-Relax-and-Recover is the leading Open Source disaster recovery solution. It
-is a modular framework with many ready-to-go workflows for common situations. 
+Relax-and-Recover is the leading Open Source bare metal disaster recovery
+solution. It is a modular framework with many ready-to-go workflows for
+common situations.
 
-Relax-and-Recover produces a bootable image. This image can repartition the
-system. Once that is done it initiates a restore from backup. Restores to
-different hardware are possible. Relax-and-Recover can therefore be used as a 
-migration tool as well.
+Relax-and-Recover produces a bootable image which can recreate the system's
+original storage layout. Once that is done it initiates a restore from backup.
+Since the storage layout can be modified prior to recovery, and disimilar
+hardware and virtualization is supported, Relax-and-Recover offers the
+flexibility to be used for complex system migrations.
 
 Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
 OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
@@ -45,27 +47,27 @@ can contact the development team on the Relax-and-Recover mailinglist at:
 rear-users@lists.relax-and-recover.org.
 
 NOTE: Note that you have to be subscribed to be able to send mails to the
-Relax-and-Recover mailinglist ! You can subscribe to the list at:
+Relax-and-Recover mailinglist. You can subscribe to the list at:
 http://lists.relax-and-recover.org/mailman/listinfo/rear-users
 
 
 == Design concepts
-At the start of the project a set of groundrules were defined and over time
-improved:
+Based on experience from previous projects, a set of design principles were
+defined, and improved over time:
 
- - Focus on Disaster Recovery
- - Modular design
- - For Linux (and possibly other Unix-like operating systems)
+ - Focus on easy and automated disaster recovery
+ - Modular design, focussed on system administrators
+ - For Linux (and possibly Unix operating systems)
  - Few external dependencies (Bash and standard Unix tools)
  - Easy to use and easy to extend
 
-The aim is to make Relax-and-Recover as least demanding as possible, it will
+The goal is to make Relax-and-Recover as least demanding as possible, it will
 require only the applications neccessary to fulfill the job Relax-and-Recover
 is configured for.
 
 Furthermore, Relax-and-Recover should be platform independant and ideally
-install just as a set of scripts that utilizes everything that the Linux OS
-provides.
+install just as a set of scripts that utilizes everything that the Linux
+operating system provides.
 
 
 == Features and functionality
