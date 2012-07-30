@@ -13,5 +13,6 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-ln -sf $v /bin/python2.6 $ROOTFS_DIR/bin/python2
-ln -sf $v /bin/python2.6 $ROOTFS_DIR/bin/python
+py=$(readlink -f $(get_path python))
+ln -sf $v /bin/$(basename $py) $ROOTFS_DIR/bin/python2
+ln -sf $v /bin/$(basename $py) $ROOTFS_DIR/bin/python
