@@ -4,7 +4,7 @@
 # outside the /lib/modules path. To cope with that we add the vmware-tools if vmxnet
 # is loaded but modinfo cannot find it.
 
-if lsmod | grep -q vmxnet ; then
+if lsmod | grep -q -E '^vmxnet\b'; then
 	if ! modinfo vmxnet >&8 2>&1; then
 		COPY_AS_IS=( "${COPY_AS_IS[@]}" /usr/lib*/vmware-tools )
 		Log "Including '/usr/lib*/vmware-tools'"
