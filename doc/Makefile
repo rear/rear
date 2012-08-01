@@ -19,6 +19,7 @@ install: rear.8
 
 clean:
 	rm -f unconv.8 *.html *.xml
+	make -C user-guide clean
 
 %.8.html: %.8.txt
 	asciidoc -d manpage $<

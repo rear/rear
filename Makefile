@@ -1,13 +1,21 @@
+# In some dists (e.g. Ubuntu) bash is not the default shell. Statements like 
+#   cp -a etc/rear/{mappings,templates} ...
+# assumes bash. So its better to set SHELL
+SHELL=/bin/bash
+
 ### Get version from Relax-and-Recover itself
 rearbin = usr/sbin/rear
 name = rear
 version := $(shell awk 'BEGIN { FS="=" } /^VERSION=/ { print $$2}' $(rearbin))
 
 ### Get the branch information from git
+git_available := $(shell if [ "$(shell which git)" != "" ]; then echo 1; else echo 0; fi)
+ifeq ($(git_available),1)
 git_date := $(shell git log -n 1 --format="%ai")
 git_ref := $(shell git symbolic-ref -q HEAD)
 git_branch ?= $(lastword $(subst /, ,$(git_ref)))
 git_branch ?= HEAD
+endif
 
 date := $(shell date --date="$(git_date)" +%Y%m%d%H%M)
 release_date := $(shell date --date="$(git_date)" +%Y-%m-%d)
@@ -60,7 +68,7 @@ Relax-and-Recover make variables (optional):\n\
 
 clean:
 	rm -f $(name)-$(distversion).tar.gz
-	rm -f build-stamp
+	make -C doc clean
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
@@ -81,7 +89,7 @@ doc:
 
 ifneq ($(git_date),)
 rewrite:
-	@echo -e "\033[1m== Rewriting $(specfile) and $(rearbin) ==\033[0;0m"
+	@echo -e "\033[1m== Rewriting $(specfile), $(dscfile) and $(rearbin) ==\033[0;0m"
 	sed -i.orig \
 		-e 's#^Source:.*#Source: $(name)-$(distversion).tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
