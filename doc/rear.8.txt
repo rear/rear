@@ -300,7 +300,7 @@ external application, e.g. backup software to archive your data.
 The output method defines how the rescue system is written to disk and how you
 plan to boot the failed computer from the rescue system.
 
-See the default configuration file _/usr/share/rear/default.conf_ for
+See the default configuration file _/usr/share/rear/conf/default.conf_ for
 an overview of the possible methods and their options.
 
 An example to use TSM for backup and ISO for output would be to add
