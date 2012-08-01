@@ -25,7 +25,6 @@ sysconfdir = /etc
 sbindir = $(prefix)/sbin
 datadir = $(prefix)/share
 mandir = $(datadir)/man
-docdir = $(datadir)/doc/rear
 localstatedir = /var
 
 specfile = packaging/rpm/$(name).spec
@@ -70,7 +69,6 @@ Relax-and-Recover make variables (optional):\n\
 clean:
 	rm -f $(name)-$(distversion).tar.gz
 	make -C doc clean
-
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
@@ -156,7 +154,6 @@ install-doc:
 		-e 's,/usr/share,$(datadir),' \
 		-e 's,/usr/share/doc/packages,$(datadir)/doc,' \
 		$(DESTDIR)$(mandir)/man8/rear.8
-	install -p -m0644 AUTHORS COPYING README $(DESTDIR)$(docdir)
 
 install: validate man install-config rewrite install-bin restore install-data install-var install-doc
 
