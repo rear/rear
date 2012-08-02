@@ -1,11 +1,11 @@
 %define rpmrelease %{nil}
 
 ### Work-around the fact that OpenSUSE/SLES _always_ defined both :-/
-%if 1%{?suse_version} == 10
+%if 0%{?suse_version} == 0
 %undefine suse_version
 %endif
 
-if 1%{sles_version} == 10
+%if 0%{?sles_version} == 0
 %undefine sles_version
 %endif
 
