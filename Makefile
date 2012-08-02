@@ -4,10 +4,12 @@ name = rear
 version := $(shell awk 'BEGIN { FS="=" } /^VERSION=/ { print $$2}' $(rearbin))
 
 ### Get the branch information from git
+ifneq ($(shell which git),)
 git_date := $(shell git log -n 1 --format="%ai")
 git_ref := $(shell git symbolic-ref -q HEAD)
 git_branch ?= $(lastword $(subst /, ,$(git_ref)))
 git_branch ?= HEAD
+endif
 
 date := $(shell date --date="$(git_date)" +%Y%m%d%H%M)
 release_date := $(shell date --date="$(git_date)" +%Y-%m-%d)
@@ -175,7 +177,7 @@ deb: dist
 	@echo -e "\033[1m== Building DEB package $(name)-$(distversion) ==\033[0;0m"
 	cp -r packaging/debian/ .
 	chmod 755 debian/rules
-	fakeroot debian/rules clean                                                                                  
+	fakeroot debian/rules clean
 	fakeroot dh_install
 	fakeroot debian/rules binary
 	-rm -rf debian/
