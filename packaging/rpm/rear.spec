@@ -1,5 +1,14 @@
 %define rpmrelease %{nil}
 
+### Work-around the fact that OpenSUSE/SLES _always_ defined both :-/
+%if 1%{?suse_version} == 10
+%undefine suse_version
+%endif
+
+if 1%{sles_version} == 10
+%undefine sles_version
+%endif
+
 Summary: Relax-and-Recover is a Linux disaster recovery and system migration tool
 Name: rear
 Version: 1.13.0
