@@ -1,10 +1,6 @@
 %define rpmrelease %{nil}
 
 ### Work-around the fact that OpenSUSE/SLES _always_ defined both :-/
-%if 0%{?suse_version} == 0
-%undefine suse_version
-%endif
-
 %if 0%{?sles_version} == 0
 %undefine sles_version
 %endif
@@ -57,28 +53,36 @@ Requires: yaboot
 
 %if %{?suse_version:1}0
 Requires: iproute2
-# recent SuSE versions have an extra nfs-client package and switched to genisoimage/wodim
+### recent SuSE versions have an extra nfs-client package
+### and switched to genisoimage/wodim
 %if 0%{?suse_version} >= 1020
 Requires: genisoimage
 %else
 Requires: mkisofs
 %endif
+###
+if %{!?sles_version:1}0
+Requires: lsb
+%endif
 %endif
 
 %if %{?mandriva_version:1}0
 Requires: iproute2
-# Mandriva switched from 2008 away from mkisofs, and as a specialty call the package cdrkit-genisoimage!
+### Mandriva switched from 2008 away from mkisofs,
+### and as a specialty call the package cdrkit-genisoimage!
 %if 0%{?mandriva_version} >= 2008
 Requires: cdrkit-genisoimage
 %else
 Requires: mkisofs
 %endif
+#Requires: lsb
 %endif
 
 ### On RHEL/Fedora the genisoimage packages provides mkisofs
 %if %{?centos_version:1}%{?fedora_version:1}%{?rhel_version:1}0
 Requires: iproute
 Requires: mkisofs
+#Requires: redhat-lsb
 %endif
 
 ### The rear-snapshot package is no more
@@ -109,11 +113,12 @@ Professional services and support are available.
 echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
 
 ### Add a specific os.conf so we do not depend on LSB dependencies
-%{?rhel:echo -e "OS_VENDOR=RedHatEnterpriseServer\nOS_VERSION=%{?rhel}" >etc/rear/os.conf}
 %{?fedora:echo -e "OS_VENDOR=Fedora\nOS_VERSION=%{?fedora}" >etc/rear/os.conf}
-%{?suse_version:echo -e "OS_VENDOR=SUSE_LINUX\nOS_VERSION=%{?suse_version}" >etc/rear/os.conf}
-%{?sles_version:echo -e "OS_VENDOR=SUSE_LINUX\nOS_VERSION=%{?sles_version}" >etc/rear/os.conf}
 %{?mdkversion:echo -e "OS_VENDOR=Mandriva\nOS_VERSION=%{distro_rel}" >etc/rear/os.conf}
+%{?rhel:echo -e "OS_VENDOR=RedHatEnterpriseServer\nOS_VERSION=%{?rhel}" >etc/rear/os.conf}
+%{?sles_version:echo -e "OS_VENDOR=SUSE_LINUX\nOS_VERSION=%{?sles_version}" >etc/rear/os.conf}
+### Doesn't work as, suse_version for OpenSUSE 11.3 is 1130
+#%{?suse_version:echo -e "OS_VENDOR=SUSE_LINUX\nOS_VERSION=%{?suse_version}" >etc/rear/os.conf}
 
 %build
 
