@@ -61,7 +61,7 @@ Requires: genisoimage
 Requires: mkisofs
 %endif
 ###
-if %{!?sles_version:1}0
+%if %{!?sles_version:1}0
 Requires: lsb
 %endif
 %endif
