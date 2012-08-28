@@ -1,3 +1,8 @@
+# In some dists (e.g. Ubuntu) bash is not the default shell. Statements like 
+#   cp -a etc/rear/{mappings,templates} ...
+# assumes bash. So its better to set SHELL
+SHELL=/bin/bash
+
 ### Get version from Relax-and-Recover itself
 rearbin = usr/sbin/rear
 name = rear
@@ -63,6 +68,7 @@ Relax-and-Recover make variables (optional):\n\
 clean:
 	rm -f $(name)-$(distversion).tar.gz
 	rm -f build-stamp
+	make -C doc clean
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
@@ -83,7 +89,7 @@ doc:
 
 ifneq ($(git_date),)
 rewrite:
-	@echo -e "\033[1m== Rewriting $(specfile) and $(rearbin) ==\033[0;0m"
+	@echo -e "\033[1m== Rewriting $(specfile), $(dscfile) and $(rearbin) ==\033[0;0m"
 	sed -i.orig \
 		-e 's#^Source:.*#Source: $(name)-$(distversion).tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
