@@ -68,6 +68,7 @@ Relax-and-Recover make variables (optional):\n\
 clean:
 	rm -f $(name)-$(distversion).tar.gz
 	rm -f build-stamp
+	make -C doc clean
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
