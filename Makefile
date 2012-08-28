@@ -34,7 +34,7 @@ OFFICIAL =
 
 distversion = $(version)
 debrelease = 0
-rpmrelease =
+rpmrelease = %nil
 obsproject = Archiving:Backup:Rear
 obspackage = $(name)
 ifeq ($(OFFICIAL),)
@@ -208,5 +208,6 @@ ifneq ($(obsname),$(name)-$(distversion))
 	osc add $(BUILD_DIR)/$(name)-$(distversion).tar.gz
 	osc ci -m "Update to $(name)-$(distversion)" $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
-	@echo -e "\033[1mNow visit https://build.opensuse.org/monitor/old or https://build.opensuse.org/monitor to inspect the queue and activity.\033[0;0m"
+	@echo -e "\033[1mNow visit https://build.opensuse.org/package/show?package=rear&project=$(obsproject)"
+	@echo -e "or inspect the queue at: https://build.opensuse.org/monitor\033[0;0m"
 endif
