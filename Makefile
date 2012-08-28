@@ -53,11 +53,12 @@ help:
 	@echo -e "Relax-and-Recover make targets:\n\
 \n\
   validate        - Check source code\n\
-  install         - Install Relax-and-Recover to DESTDIR (may replace files)\n\
-  uninstall       - Uninstall Relax-and-Recover from DESTDIR (may remove files)\n\
+  install         - Install Relax-and-Recover (may replace files)\n\
+  uninstall       - Uninstall Relax-and-Recover (may remove files)\n\
   dist            - Create tar file\n\
   deb             - Create DEB package\n\
   rpm             - Create RPM package\n\
+  obs             - Initiate OBS builds\n\
 \n\
 Relax-and-Recover make variables (optional):\n\
 \n\
