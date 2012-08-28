@@ -88,7 +88,7 @@ doc:
 
 ifneq ($(git_date),)
 rewrite:
-	@echo -e "\033[1m== Rewriting $(specfile) and $(rearbin) ==\033[0;0m"
+	@echo -e "\033[1m== Rewriting $(specfile), $(dscfile) and $(rearbin) ==\033[0;0m"
 	sed -i.orig \
 		-e 's#^Source:.*#Source: $(name)-$(distversion).tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
