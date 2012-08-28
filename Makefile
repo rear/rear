@@ -3,18 +3,25 @@
 # assumes bash. So its better to set SHELL
 SHELL=/bin/bash
 
+DESTDIR =
+OFFICIAL =
+
 ### Get version from Relax-and-Recover itself
 rearbin = usr/sbin/rear
 name = rear
 version := $(shell awk 'BEGIN { FS="=" } /^VERSION=/ { print $$2}' $(rearbin))
 
 ### Get the branch information from git
+ifeq ($(OFFICIAL),)
 ifneq ($(shell which git),)
 git_date := $(shell git log -n 1 --format="%ai")
 git_ref := $(shell git symbolic-ref -q HEAD)
-git_branch ?= $(lastword $(subst /, ,$(git_ref)))
-git_branch ?= HEAD
+git_branch = $(lastword $(subst /, ,$(git_ref)))
 endif
+else
+git_branch = rear-$(version)
+endif
+git_branch ?= master
 
 date := $(shell date --date="$(git_date)" +%Y%m%d%H%M)
 release_date := $(shell date --date="$(git_date)" +%Y-%m-%d)
@@ -28,9 +35,6 @@ localstatedir = /var
 
 specfile = packaging/rpm/$(name).spec
 dscfile = packaging/debian/$(name).dsc
-
-DESTDIR =
-OFFICIAL =
 
 distversion = $(version)
 debrelease = 0
@@ -170,6 +174,7 @@ dist: clean validate man rewrite $(name)-$(distversion).tar.gz restore
 
 $(name)-$(distversion).tar.gz:
 	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
+	git checkout $(git_branch)
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
 		tar -czf $(name)-$(distversion).tar.gz --transform='s,^,$(name)-$(distversion)/,S' --files-from=-
 
