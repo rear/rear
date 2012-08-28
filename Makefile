@@ -1,3 +1,8 @@
+# In some dists (e.g. Ubuntu) bash is not the default shell. Statements like 
+#   cp -a etc/rear/{mappings,templates} ...
+# assumes bash. So its better to set SHELL
+SHELL=/bin/bash
+
 ### Get version from Relax-and-Recover itself
 rearbin = usr/sbin/rear
 name = rear
