@@ -141,7 +141,12 @@ BugError() {
 		EXIT_CODE=1
 	fi
 	Error "BUG BUG BUG! " "$@" "
-	Please report this as a bug to the authors of $PRODUCT"
+=== Issue report ===
+Please report this unexpected issue at: https://github.com/rear/rear/issues
+Also include the relevant bits from $LOGFILE
+
+HINT: If you can reproduce the issue, try using the -d or -D option !
+===================="
 }
 
 BugIfError() {
