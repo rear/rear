@@ -100,10 +100,6 @@ get_path() {
 }
 
 Error() {
-	if has_binary caller; then
-		# Print stack strace on error
-		let c=0 ; while caller $c ; do let c++ ; done | sed 's/^/Trace: /' >&2 ; unset c
-	fi
 	# If first argument is numerical, use it as exit code
 	if [ $1 -eq $1 ] 2>&8; then
 		EXIT_CODE=$1
@@ -113,6 +109,19 @@ Error() {
 	fi
 	VERBOSE=1
 	LogPrint "ERROR: $*"
+	if has_binary caller; then
+		# Print stack strace on errors in reverse order
+		(
+			echo "=== Stack trace ==="
+			local c=0;
+			while caller $((c++)); do :; done | awk '
+				{ l[NR]=$3":"$1" "$2 }
+				END { for (i=NR; i>0;) print "Trace "NR-i": "l[i--] }
+			'
+			echo "Message: $*"
+			echo "==================="
+		) >&2
+	fi
 	kill -USR1 $MASTER_PID # make sure that Error exits the master process, even if called from child processes :-)
 }
 
