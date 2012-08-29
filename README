@@ -19,7 +19,7 @@ Relax-and-Recover was designed to be easy to set up, requires no maintenance
 and is there to assist when disaster strikes. Its setup-and-forget nature
 removes any excuse for not having a disaster recovery solution implemented.
 
-Recovering from disaster is made very straightforward by a 2-step recovery
+Recovering from disaster is made straightforward by a 2-step recovery
 process so that it can be executed by operational teams when required.
 When used interactively (e.g. when used for migrating systems), menus help
 make decisions to restore to a new (hardware) environment.
@@ -29,7 +29,7 @@ possible by its modular framework. Consistent logging and optionally extended
 output help understand the concepts behind Relax-and-Recover, troubleshoot
 during initial configuration and help debug during integration.
 
-Professional services and support are available as well.
+Professional services and support are available.
 
 For more detailed information about Relax-and-Recover, please read the
 Relax-and-Recover User Guide.
