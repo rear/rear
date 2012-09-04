@@ -26,7 +26,7 @@ NETWORK_DRIVERS=(
 # Include crypto drivers
 CRYPTO_DRIVERS=(
 	$(
-		find /lib/modules/$KERNEL_VERSION/kernel/drivers/crypto -type f -name '*.ko*' -printf '%f\n' | \
+		find /lib/modules/$KERNEL_VERSION/kernel/crypto -type f -name '*.ko*' -printf '%f\n' | \
 		sed -e 's/^\(.*\)\.ko.*/\1/'
 		#  ^^^^- remove the .ko, faster one sed call than many basename calls or shell code
 	)
