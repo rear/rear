@@ -15,6 +15,12 @@ Log "Saving Filesystem layout."
             continue
         fi
 
+        if [[ $device == /dev/disk/by-uuid* ]]; then
+          ndevice=$(readlink -f $device)
+          Log "Mapping $device to $ndevice"
+          device=$ndevice
+        fi
+
         echo -n "fs $device $mountpoint $fstype "
         case "$fstype" in
             ext*)
