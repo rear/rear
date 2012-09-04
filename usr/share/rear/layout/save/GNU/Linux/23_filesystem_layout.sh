@@ -16,7 +16,7 @@ Log "Saving Filesystem layout."
         fi
 
         if [[ $device == /dev/disk/by-uuid* ]]; then
-          ndevice=$(realpath $device)
+          ndevice=$(readlink -f $device)
           Log "Mapping $device to $ndevice"
           device=$ndevice
         fi
