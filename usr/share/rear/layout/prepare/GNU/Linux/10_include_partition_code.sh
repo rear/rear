@@ -195,4 +195,8 @@ EOF
             echo "parted -s $device name $number \"$name\"" >> $LAYOUT_CODE
         fi
     done < <(grep "^part $device" $LAYOUT_FILE)
+
+    cat >> $LAYOUT_CODE <<EOF
+partprobe $device >&2
+EOF
 }
