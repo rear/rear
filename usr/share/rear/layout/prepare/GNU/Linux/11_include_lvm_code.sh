@@ -74,7 +74,7 @@ EOF
 # Restore a VG from a backup
 restore_lvmgrp() {
     local lvmgrp vgrp extentsize junk
-    read lvmgrp vgrp extentsize junk < <(grep "^lvmgrp $1" $LAYOUT_FILE)
+    read lvmgrp vgrp extentsize junk < <(grep "^lvmgrp $1 " $LAYOUT_FILE)
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Restoring LVM VG ${vgrp#/dev/}"
 if [ -e $vgrp ] ; then
