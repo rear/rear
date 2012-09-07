@@ -347,3 +347,9 @@ EOF
 
     HISTFILE="$histfile" bash --noprofile --rcfile $bashrc 8>&- 7>&- 2>&1
 }
+
+# Return the filesystem name related to a path
+function filesystem_name() {
+    local path=$1
+    df $path | awk 'END { print $6 }'
+}
