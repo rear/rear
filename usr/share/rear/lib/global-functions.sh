@@ -84,7 +84,11 @@ mount_url() {
             mount_cmd="${!var} $mountpoint"
             ;;
         (cifs)
-            mount_cmd="mount $v -o $options,guest //$(url_host $url)$(url_path $url) $mountpoint"
+            if grep -qP '\bcred=\b' <<<$options; then
+                mount_cmd="mount $v -o $options //$(url_host $url)$(url_path $url) $mountpoint"
+            else
+                mount_cmd="mount $v -o $options,guest //$(url_host $url)$(url_path $url) $mountpoint"
+            fi
             ;;
         (usb)
             mount_cmd="mount $v -o $options $(url_path $url) $mountpoint"
