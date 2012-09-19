@@ -202,14 +202,20 @@ ifneq ($(obsname),$(name)-$(distversion))
 	-rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
 	osc co -c $(obsproject) $(obspackage) -o $(BUILD_DIR)
+ifeq ($(OFFICIAL),)
 	-osc del $(BUILD_DIR)/*.tar.gz
+endif
 	cp $(name)-$(distversion).tar.gz $(BUILD_DIR)
-	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(specfile) >$(BUILD_DIR)/$(name).spec
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(dscfile) >$(BUILD_DIR)/$(name).dsc
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/control >$(BUILD_DIR)/debian.control
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/rules >$(BUILD_DIR)/debian.rules
 	echo -e "rear ($(version)-$(debrelease)) stable; urgency=low\n\n  * new snapshot build\n\n -- OpenSUSE Build System <obs@relax-and-recover.org> $$(date -R)" >$(BUILD_DIR)/debian.changelog
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/changelog >>$(BUILD_DIR)/debian.changelog
+	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(specfile) >$(BUILD_DIR)/$(name).spec
+ifneq ($(OFFICIAL),)
+	mv $(BUILD_DIR)/$(name).spec $(BUILD_DIR)/$(name)-$(version).spec
+	osc add $(BUILD_DIR)/$(name)-$(version).spec
+endif
 	osc add $(BUILD_DIR)/$(name)-$(distversion).tar.gz
 	osc ci -m "Update to $(name)-$(distversion)" $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
