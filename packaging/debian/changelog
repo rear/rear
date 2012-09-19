@@ -1,3 +1,7 @@
+rear (1.14-1) stable; urgency=high
+
+  * majpr bugfixes
+
 rear (1.13.0-1) stable; urgency=low
 
   * new features
