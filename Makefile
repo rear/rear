@@ -40,12 +40,13 @@ distversion = $(version)
 debrelease = 0
 rpmrelease = %nil
 obsproject = Archiving:Backup:Rear
-obspackage = $(name)
+obspackage = $(name)-$(version)
 ifeq ($(OFFICIAL),)
     distversion = $(version)-git$(date)
     debrelease = 0git$(date)
     rpmrelease = .git$(date)
     obsproject = Archiving:Backup:Rear:Snapshot
+    obspackage = $(name)
 endif
 
 .PHONY: doc
@@ -201,24 +202,24 @@ obs: dist
 ifneq ($(obsname),$(name)-$(distversion))
 	-rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
-	osc co -c $(obsproject) $(obspackage) -o $(BUILD_DIR)
-ifeq ($(OFFICIAL),)
-	-osc del $(BUILD_DIR)/*.tar.gz
+ifneq ($(OFFICIAL),)
+#	osc rdelete -m 'Recreating branch $(obspackage)' $(obsproject) $(obspackage)
+	-cd $(BUILD_DIR); osc meta pkg $(obsproject) $(obspackage) && osc meta prjconf -F- <<<"Release: <CI_CNT>%%%%{?rpmrelease}%%%%{?dist}"
 endif
+	-osc co -c $(obsproject) $(obspackage) -o $(BUILD_DIR)
+	-osc del $(BUILD_DIR)/*.tar.gz
 	cp $(name)-$(distversion).tar.gz $(BUILD_DIR)
+	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(specfile) >$(BUILD_DIR)/$(name).spec
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(dscfile) >$(BUILD_DIR)/$(name).dsc
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/control >$(BUILD_DIR)/debian.control
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/rules >$(BUILD_DIR)/debian.rules
 	echo -e "rear ($(version)-$(debrelease)) stable; urgency=low\n\n  * new snapshot build\n\n -- OpenSUSE Build System <obs@relax-and-recover.org> $$(date -R)" >$(BUILD_DIR)/debian.changelog
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/packaging/debian/changelog >>$(BUILD_DIR)/debian.changelog
-	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(specfile) >$(BUILD_DIR)/$(name).spec
-ifneq ($(OFFICIAL),)
-	mv $(BUILD_DIR)/$(name).spec $(BUILD_DIR)/$(name)-$(version).spec
-	osc add $(BUILD_DIR)/$(name)-$(version).spec
-endif
-	osc add $(BUILD_DIR)/$(name)-$(distversion).tar.gz
+	cd $(BUILD_DIR); osc addremove
 	osc ci -m "Update to $(name)-$(distversion)" $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)
 	@echo -e "\033[1mNow visit https://build.opensuse.org/package/show?package=rear&project=$(obsproject)"
 	@echo -e "or inspect the queue at: https://build.opensuse.org/monitor\033[0;0m"
+else
+	@echo -e "OBS already updated to this release."
 endif
