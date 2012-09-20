@@ -97,7 +97,7 @@ ifneq ($(git_date),)
 rewrite:
 	@echo -e "\033[1m== Rewriting $(specfile), $(dscfile) and $(rearbin) ==\033[0;0m"
 	sed -i.orig \
-		-e 's#^Source:.*#Source: https://github.com/downloads/rear/rear/rear-%%{version}.tar.gz#' \
+		-e 's#^Source:.*#Source: https://github.com/downloads/rear/rear/$(name)-$(distversion).tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
 		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
 		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
@@ -207,10 +207,8 @@ ifneq ($(OFFICIAL),)
 	-osc branch Archiving:Backup:Rear:Snapshot rear $(obsproject) $(obspackage)
 	-osc detachbranch $(obsproject) $(obspackage)
 endif
-	-osc co -c $(obsproject) $(obspackage) -o $(BUILD_DIR)
-ifeq ($(obsname),$(name)-$(distversion))
+	osc co -c $(obsproject) $(obspackage) -o $(BUILD_DIR)
 	-osc del $(BUILD_DIR)/*.tar.gz
-endif
 	cp $(name)-$(distversion).tar.gz $(BUILD_DIR)
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(specfile) >$(BUILD_DIR)/$(name).spec
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(dscfile) >$(BUILD_DIR)/$(name).dsc
