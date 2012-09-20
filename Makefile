@@ -204,10 +204,13 @@ ifneq ($(obsname),$(name)-$(distversion))
 	mkdir -p $(BUILD_DIR)
 ifneq ($(OFFICIAL),)
 #	osc rdelete -m 'Recreating branch $(obspackage)' $(obsproject) $(obspackage)
-	-cd $(BUILD_DIR); osc meta pkg $(obsproject) $(obspackage) && osc meta prjconf -F- <<<"Release: <CI_CNT>%%%%{?rpmrelease}%%%%{?dist}"
+	-osc branch Archiving:Backup:Rear:Snapshot rear $(obsproject) $(obspackage)
+	-osc detachbranch $(obsproject) $(obspackage)
 endif
 	-osc co -c $(obsproject) $(obspackage) -o $(BUILD_DIR)
+ifeq ($(obsname),$(name)-$(distversion))
 	-osc del $(BUILD_DIR)/*.tar.gz
+endif
 	cp $(name)-$(distversion).tar.gz $(BUILD_DIR)
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(specfile) >$(BUILD_DIR)/$(name).spec
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(dscfile) >$(BUILD_DIR)/$(name).dsc
