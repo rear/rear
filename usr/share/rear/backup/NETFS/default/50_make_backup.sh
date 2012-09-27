@@ -162,12 +162,15 @@ system properly. Relax-and-Recover is therefore aborting execution.
 "
         fi;;
     (*)
+        if (( $backup_prog_rc > 0 )) ; then
             Error "$(basename $BACKUP_PROG) failed with return code $backup_prog_rc
 
 This means that the archiving process ended prematurely, or did
 not even start. As a result it is unlikely you can recover this
 system properly. Relax-and-Recover is therefore aborting execution.
-";;
+"
+        fi
+        ;;
 esac
 
 tar_message="$(tac $LOGFILE | grep -m1 '^Total bytes written: ')"
