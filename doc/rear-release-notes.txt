@@ -1,6 +1,6 @@
-= Release Notes for Relax-and-Recover version 1.13.0
+= Release Notes for Relax-and-Recover version 1.14.0
 :Author: Gratien D'haese
-:Date: 16 April 2012
+:Date: 26 September 2012
 :Revision: 1.0
 :data-uri:
 :icons:
@@ -67,6 +67,7 @@ functionality:
   - Symantec NetBacakup (BACKUP=NBU)
   - Galaxy 5, 6 and 7 (BACKUP=GALAXY)
   - Bacula (BACKUP=BACULA)
+  - Duplicity/Duply (BACKUP=DUPLICITY) [*NEW! Experimental*]
 
 * Udev support (except for some really ancient udev versions) which is
   the base for many new and important features:
@@ -110,7 +111,8 @@ Together with +OUTPUT=USB+ we have now a complete solution on hard disks
 * The *layout* workflow  is now the default workflow instead of the
   previous *dr* workflow. The *dr* workflow kept all important
   system information into a directory structure where the new *layout*
-  workflow use files to keep the information centralized
+  workflow use files to keep the information centralized. The *dr* workflow
+  has been removed in v1.14
 
 * External USB booting now uses extlinux instead of syslinux, and
   therefore, the USB disk must first be formatted with an ext2, ext3, ext4
@@ -125,6 +127,42 @@ in July 2006.  For each release, this chapter lists the new features and
 defect fixes. Note that all releases are cumulative, and that all releases
 of Relax-and-Recover are compatible with previous versions of
 Relax-and-Recover, unless otherwise noted.
+
+=== Version 1.14.0 (September 2012)
+
+The references pointing to *fix#nr* refer to our issues tracker https://github.com/rear/rear/issues 
+Lots of minor bugs were fixed, and not all of them are listed in current release notes. For a
+complete overview see the issue tracker.
+
+* Added duply/duplicity with one new backup method duplicity (*Experimental*)
+
+* Systemd supported on Fedora 17 and OpenSuse 12.2 (fix #115, #126)
+
+* Create correct yaboot dir on ppc (fix #109)
+
+* Add new RAMDISK output method. This writes the kernel and the initramfs to the location given in OUTPUT_URL.
+
+* Packaging - introduction of Makefile; cleanup dr workflow (fix #13, #49)
+
+* Make rear working from checkout of git, w.o.w. path is relocatable (fix #53)
+
+* Add bytes_per_inode information for ext* filesystem to layout.conf (fix #86)
+
+* Fixing ebuild to be Gentoo compliant (fix #93)
+
+* fix shutdown with upstart (fix #41)
+
+* multiarch support library support (fix #82)
+
+* Fix serial console on ubuntu 11.04 (fix #83)
+
+* Several fixes in layout file (fix #85)
+
+* Added fix for DAT320 tape drive (fix for #35)
+
+* Use generic grub code for all distributions (fix for #77)
+
+* list Xen paravirtualized disks in disklayout.conf (fixes #74 and SF3520992)
 
 === Version 1.13.0 (April 2012)
 
