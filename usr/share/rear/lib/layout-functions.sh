@@ -447,3 +447,39 @@ get_block_size() {
     fi
 }
 
+# Get the filesystem of a partition
+get_filesystem () {
+    local name=$1
+
+    file_output=$(file -sbL "$name")
+    shopt -q nocasematch
+    case_match_status=$?
+    shopt -s nocasematch
+
+    case "$file_output" in
+        (*ext2\ filesystem*)
+            filesystem=ext2
+            ;;
+        (*ext3\ filesystem*)
+            filesystem=ext3
+            ;;
+        (*ext4\ filesystem*)
+            filesystem=ext4
+            ;;
+        (*btrfs\ filesystem*)
+            filesystem=btrfs
+            ;;
+        (*)
+            filesystem=unknown
+            ;;
+    esac
+
+    if (( $case_match_status == 1 )); then
+        shopt -u nocasematch
+    fi
+
+    echo $filesystem
+
+    return 0
+}
+

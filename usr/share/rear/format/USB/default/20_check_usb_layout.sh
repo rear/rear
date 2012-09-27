@@ -36,7 +36,7 @@ StopIfError "Unable to determine raw USB device for $REAL_USB_DEVICE"
 answer=""
 
 ID_FS_TYPE=
-eval $(vol_id "$REAL_USB_DEVICE")
+ID_FS_TYPE=$(get_filesystem $REAL_USB_DEVICE)
 StopIfError "Could not determine filesystem info for '$REAL_USB_DEVICE'"
 
 [[ "$ID_FS_TYPE" == @(btr*|ext*) ]]
