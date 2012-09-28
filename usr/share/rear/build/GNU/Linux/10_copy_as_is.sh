@@ -9,7 +9,7 @@ Log "Files being copied: ${COPY_AS_IS[@]}"
 Log "Files being excluded: ${COPY_AS_IS_EXCLUDE[@]}"
 
 for f in "${COPY_AS_IS_EXCLUDE[@]}" ; do echo "$f" ; done >$TMP_DIR/copy-as-is-exclude
-tar $v -X $TMP_DIR/copy-as-is-exclude \
+tar -v -X $TMP_DIR/copy-as-is-exclude \
 	-P -C / -c "${COPY_AS_IS[@]}" 2>$TMP_DIR/copy-as-is-filelist | \
 	tar $v -C $ROOTFS_DIR/ -x >&8
 StopIfError "Could not copy files and directories"
