@@ -35,9 +35,23 @@ StopIfError "Unable to determine raw USB device for $REAL_USB_DEVICE"
 
 answer=""
 
-ID_FS_TYPE=
-eval $(vol_id "$REAL_USB_DEVICE")
-StopIfError "Could not determine filesystem info for '$REAL_USB_DEVICE'"
+file_output=$(file -sbL "$REAL_USB_DEVICE")
+ID_FS_TYPE=$(
+    shopt -s nocasematch
+
+    case "$file_output" in
+        (*ext2\ filesystem*)
+            echo "ext2";;
+        (*ext3\ filesystem*)
+            echo "ext3";;
+        (*ext4\ filesystem*)
+            echo "ext4";;
+        (*btrfs\ filesystem*)
+            echo "btrfs";;
+        (*)
+            echo "unknown";;
+    esac
+)
 
 [[ "$ID_FS_TYPE" == @(btr*|ext*) ]]
 if (( $? != 0 )) && [[ -z "$YES" ]]; then
