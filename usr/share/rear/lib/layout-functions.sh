@@ -446,4 +446,3 @@ get_block_size() {
         echo "512"
     fi
 }
-
