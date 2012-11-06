@@ -1,0 +1,23 @@
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+
+[Unit]
+Description=udev Kernel Device Manager
+Documentation=man:systemd-udevd.service(8) man:udev(7)
+Wants=systemd-udevd-control.socket systemd-udevd-kernel.socket
+After=systemd-udevd-control.socket systemd-udevd-kernel.socket
+Before=basic.target
+DefaultDependencies=no
+ConditionCapability=CAP_MKNOD
+
+[Service]
+Type=notify
+OOMScoreAdjust=-1000
+Sockets=systemd-udevd-control.socket systemd-udevd-kernel.socket
+Restart=always
+RestartSec=0
+ExecStart=/usr/lib/systemd/systemd-udevd
