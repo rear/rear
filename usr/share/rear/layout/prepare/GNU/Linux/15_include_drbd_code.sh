@@ -20,18 +20,16 @@ drbdadm create-md $resource
 EOF
 
     # ask if we need to become primary
-    read 2>&1 -p "Type \"Yes\" if you want DRBD resource $resource to become primary: "
-    if [ "$REPLY" = "Yes" ] ; then
-        cat >> $LAYOUT_CODE <<EOF
-# We assume DRBD on LVM
-drbdadm attach $resource
-drbdadm -- --overwrite-data-of-peer primary $resource
-EOF
+    read 2>&1 -p "Type \"yes\" if you want DRBD resource $resource to become primary: "
+    if [ "$REPLY" = "yes" ] ; then
+        cat >> $LAYOUT_CODE <<-EOF
+        drbdadm up $resource
+        drbdadm -- --overwrite-data-of-peer primary $resource
+        EOF
     else
-        cat >> $LAYOUT_CODE <<EOF
-# LVM on DRBD
-drbdadm up $resource
-EOF
+        cat >> $LAYOUT_CODE <<-EOF
+        drbdadm attach $resource
+        EOF
 
         # mark things which depend on this drbd resource as "done" (recursively)
         mark_tree_as_done "$disk"
