@@ -22,12 +22,12 @@ EOF
     # ask if we need to become primary
     read 2>&1 -p "Type \"yes\" if you want DRBD resource $resource to become primary: "
     if [ "$REPLY" = "yes" ] ; then
-        cat >> $LAYOUT_CODE <<EOF
+        cat >> $LAYOUT_CODE <<-EOF
         drbdadm up $resource
         drbdadm -- --overwrite-data-of-peer primary $resource
         EOF
     else
-        cat >> $LAYOUT_CODE <<EOF
+        cat >> $LAYOUT_CODE <<-EOF
         drbdadm attach $resource
         EOF
 
