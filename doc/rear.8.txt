@@ -1,6 +1,6 @@
 = rear(8)
-:version: v1.12.0
-:date: 7 Jun 2011
+:version: v1.14.0
+:date: 14 Nov 2012
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -187,6 +187,8 @@ Write the image using +lftp+ and the secure FTP (SFTP) protocol.
 OUTPUT_URL=*rsync://*::
 Write the image using +rsync+ and the RSYNC protocol.
 
+OUTPUT_URL=*sshfs://*::
+Write the image using sshfs and the SSH protocol.
 
 == BACKUP SOFTWARE INTEGRATION
 Currently Relax-and-Recover supports the following backup methods. Please
@@ -267,13 +269,19 @@ domain=_domain_
 ----
 
 BACKUP_URL=*usb://*::
-To backup to USB storage device, use +NETFS=usb:///dev/disk/by-path/REAR-000+
+To backup to USB storage device, use +BACKUP_URL=usb:///dev/disk/by-path/REAR-000+
 or use a real device node or a specific filesystem label. Alternatively, you
 can specify the device using +USB_DEVICE=/dev/disk/by-path/REAR-000+.
 +
 If you combine this with +OUTPUT=USB+ you will end up with a bootable USB
 device.
 
+BACKUP_URL=*sshfs://*::
+To backup to a remote server via sshfs (SSH protocol), use 
++BACKUP_URL=sshfs://user@remote-system.domain.org/home/user/backup-dir/+
++
+It is advisable to add *ServerAliveInterval 15* in the +/root/.ssh/config+
+file for the remote system (remote-system.domain.org).
 
 == CONFIGURATION
 To configure Relax-and-Recover you have to edit the configuration files in
@@ -340,7 +348,7 @@ for the given release and platform.
 To create a new rescue environment. Do not forget to copy the resulting
 rescue system away so that you can use it in the case of a system failure.
 
-  # rear mkrescue
+  # rear -v mkrescue
 
 
 == FILES
@@ -351,7 +359,7 @@ The program itself.
 System specific configuration can be set here.
 
 /etc/rear/site.conf::
-Site specific configuration can be set here.
+Site specific configuration can be set here (not created by default).
 
 /var/log/rear/::
 Directory holding the log files.

@@ -4,6 +4,7 @@
 # example: usb:///dev/sdb1
 # example: tape:///dev/nst0
 # example: file:///path
+# example: sshfs://user@host/G/rear/
 
 [[ "$BACKUP_URL" || "$BACKUP_MOUNTCMD" ]]
 StopIfError "You must specify either BACKUP_URL or BACKUP_MOUNTCMD and BACKUP_UMOUNTCMD !"
@@ -13,6 +14,22 @@ if [[ "$BACKUP_URL" ]] ; then
     local scheme=$(url_scheme $BACKUP_URL)
     local path=$(url_path $BACKUP_URL)
 
+    ### set other variables from BACKUP_URL
+    case $scheme in
+        (usb)
+            if [[ -z "$USB_DEVICE" ]] ; then
+                USB_DEVICE="$path"
+            fi
+            ;;
+	(sshfs)
+	    # check if $host contains a '@' because then we use user@host format
+	    echo $host | grep -q '@' && {
+		sshfs_user="${host%%@*}"	# save the user
+		host="${host#*@}"		# remove user@
+		}
+	    ;;
+    esac
+
     ### check if host is reachable
     if [[ "$PING" && "$host" ]]; then
         ping -c 2 "$host" >&8
@@ -21,14 +38,6 @@ if [[ "$BACKUP_URL" ]] ; then
         Log "Skipping ping test"
     fi
 
-    ### set other variables from BACKUP_URL
-    case $scheme in
-        (usb)
-            if [[ -z "$USB_DEVICE" ]] ; then
-                USB_DEVICE="$path"
-            fi
-            ;;
-    esac
 fi
 
 # some backup progs require a different backuparchive name
@@ -63,6 +72,16 @@ gzip
 bzip2
 xz
 )
+
+[[ "$scheme" = "sshfs" ]] && {	# see http://sourceforge.net/apps/mediawiki/fuse/index.php?title=SshfsFaq
+	REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" sshfs )
+	PROGS=( "${PROGS[@]}" fusermount mount.fuse )
+	MODULES=( "${MODULES[@]}" fuse )
+	MODULES_LOAD=( "${MODULES_LOAD[@]}" fuse )
+	# as we're using SSH behind the scenes we need our keys/config file saved
+	COPY_AS_IS=( "${COPY_AS_IS[@]}" $HOME/.ssh /etc/fuse.conf )
+	}
+	
 
 # include required modules, like nfs cifs ...
 MODULES=( "${MODULES[@]}" $(url_scheme $BACKUP_URL) )

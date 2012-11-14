@@ -93,6 +93,9 @@ mount_url() {
         (usb)
             mount_cmd="mount $v -o $options $(url_path $url) $mountpoint"
             ;;
+	(sshfs)
+	    mount_cmd="sshfs $(url_host $url):$(url_path $url) $mountpoint -o $options"
+	    ;; 
         (*)
             mount_cmd="mount $v -t $(url_scheme $url) -o $options $(url_host $url):$(url_path $url) $mountpoint"
             ;;
@@ -116,6 +119,9 @@ umount_url() {
             ### Don't need to umount anything for these
             return 0
             ;;
+	(sshfs)
+	    umount_cmd="fusermount -u $mountpoint"
+	    ;;
         (var)
             local var=$(url_host $url)
             umount_cmd="${!var} $mountpoint"
