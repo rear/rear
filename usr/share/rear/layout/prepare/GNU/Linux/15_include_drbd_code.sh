@@ -25,11 +25,11 @@ EOF
         cat >> $LAYOUT_CODE <<-EOF
         drbdadm up $resource
         drbdadm -- --overwrite-data-of-peer primary $resource
-        EOF
+	EOF
     else
         cat >> $LAYOUT_CODE <<-EOF
         drbdadm attach $resource
-        EOF
+	EOF
 
         # mark things which depend on this drbd resource as "done" (recursively)
         mark_tree_as_done "$disk"
