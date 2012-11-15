@@ -17,7 +17,7 @@
 # Those devices have already been adjusted in 
 # verify/GNU/Linux/21_migrate_recovery_configuration.sh
 
-FILES="/etc/fstab /boot/grub/menu.lst"
+FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg"
 
 OLD_ID_FILE=${VAR_DIR}/recovery/diskbyid_mappings
 NEW_ID_FILE=/tmp/diskbyid_mappings
@@ -61,6 +61,7 @@ done < $OLD_ID_FILE > $NEW_ID_FILE
 
 for file in $FILES; do
 	realfile=/mnt/local/$file
+	[ ! -f $realfile ] && continue	# if file is not there continue with next one
 	# keep backup
 	cp $realfile ${realfile}.rearbak
 	# we should consider creating a sed script within a string
