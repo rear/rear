@@ -195,6 +195,20 @@ deb: dist
 	fakeroot debian/rules binary
 	-rm -rf debian/
 
+pacman: BUILD_DIR = /tmp/rear-$(distversion)
+pacman: dist
+	@echo -e "\033[1m== Building Pacman package $(name)-$(distversion) ==\033[0;0m"
+	rm -rf $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)
+	cp packaging/arch/PKGBUILD.local $(BUILD_DIR)/PKGBUILD
+	cp $(name)-$(distversion).tar.gz $(BUILD_DIR)/
+	cd $(BUILD_DIR) ; sed -i -e 's/VERSION/$(date)/' \
+		-e 's/SOURCE/$(name)-$(distversion).tar.gz/' \
+		-e 's/MD5SUM/$(shell md5sum $(name)-$(distversion).tar.gz | cut -d' ' -f1)/' \
+		PKGBUILD ; makepkg -c
+	cp $(BUILD_DIR)/*.pkg.* .
+	rm -rf $(BUILD_DIR)
+
 obs: BUILD_DIR = /tmp/rear-$(distversion)
 obs: obsname = $(shell osc ls $(obsproject) $(obspackage) | awk '/.tar.gz$$/ { gsub(".tar.gz$$","",$$1); print }')
 obs: dist

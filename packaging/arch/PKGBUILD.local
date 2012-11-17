@@ -1,0 +1,23 @@
+# Maintainer: Jeroen Hoekx <jeroen.hoekx AT hamok DOT be>
+pkgname=rear-git
+pkgver=VERSION
+pkgrel=1
+pkgdesc="Linux Disaster Recovery"
+arch=(any)
+url="http://relax-and-recover.org/"
+license=('GPL')
+depends=(lsb-release iproute2 parted mingetty cpio)
+optdepends=( 'nfs-utils: to save images to NFS shares'
+             'cdrkit: to create ISO images' )
+makedepends=('git' 'asciidoc' 'xmlto')
+provides=('rear')
+backup=('etc/rear/local.conf')
+source=(SOURCE)
+md5sums=(MD5SUM)
+
+package() {
+  cd "$srcdir/"
+  cp -ar ./rear*${pkgver}/* "${pkgdir}/"
+}
+
+# vim:set ts=2 sw=2 et:
