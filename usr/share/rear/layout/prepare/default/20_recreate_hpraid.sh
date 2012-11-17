@@ -38,7 +38,10 @@ while read type name remainder junk ; do
     fi
 done < <(grep "^logicaldrive " $LAYOUT_FILE)
 
+### engage scsi can fail in certain cases
 cat <<'EOF' >>$LAYOUT_CODE
+set +e
+
 # make the CCISS tape device visible
 for host in /proc/driver/cciss/cciss?; do
     Log "Engage SCSI on host $host"
@@ -46,8 +49,6 @@ for host in /proc/driver/cciss/cciss?; do
 done
 
 sleep 2
-
-set +e
 EOF
 
 if [ ${#restored_controllers} -ne 0 ] ; then
