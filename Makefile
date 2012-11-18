@@ -63,6 +63,7 @@ help:
   dist            - Create tar file\n\
   deb             - Create DEB package\n\
   rpm             - Create RPM package\n\
+  pacman          - Create Pacman package\n\
   obs             - Initiate OBS builds\n\
 \n\
 Relax-and-Recover make variables (optional):\n\
