@@ -20,4 +20,9 @@ elif type -p syslog-ng >/dev/null ; then
 elif type -p syslogd >/dev/null ; then
     klogd -c 1 -x
     exec syslogd -f /etc/syslog.conf -n
+else
+    ### no syslog, so just keep running a loop
+    while true ; do
+        sleep 10
+    done
 fi
