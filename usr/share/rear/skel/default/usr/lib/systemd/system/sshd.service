@@ -5,5 +5,4 @@ ConditionPathExists=/etc/inittab
 
 [Service]
 ExecStart=/etc/scripts/run-sshd
-Type=oneshot
-TimeoutSec=0
+Type=simple

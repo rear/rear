@@ -1,13 +1,7 @@
 [Unit]
-Description=Emulate plain old SysInitV (system-setup of Relax-and-Recover)
+Description=Initialize Rescue System
 
 [Service]
-ExecStartPre=-/bin/echo 'Welcome to Relax-and-Recover rescue mode.'
+Type=oneshot
 ExecStart=/etc/scripts/system-setup
-#ExecStart=/bin/bash -c "exec /etc/rc.systemd"
-StandardInput=tty-force
-KillMode=process-group
-
-# Bash ignores SIGTERM, so we send SIGHUP instead, to ensure that bash
-# terminates cleanly.
-KillSignal=SIGHUP
+StandardInput=tty

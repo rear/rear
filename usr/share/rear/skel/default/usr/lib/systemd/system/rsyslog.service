@@ -3,5 +3,5 @@ Description=Relax-and-Recover run-syslog script
 DefaultDependencies=no
 
 [Service]
-Type=oneshot
+Type=simple
 ExecStart=/etc/scripts/run-syslog

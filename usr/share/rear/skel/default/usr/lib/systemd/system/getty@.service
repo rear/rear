@@ -9,7 +9,7 @@
 Description=Getty on %I
 Documentation=man:agetty(8)
 After=systemd-user-sessions.service plymouth-quit-wait.service
-After=rc-local.service
+After=sysinit.service
 
 # If additional gettys are spawned during boot then we should make
 # sure that this is synchronized before getty.target, even though
