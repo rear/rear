@@ -25,7 +25,9 @@ StopIfError "Could not create VERSION file on $scheme location"
 cp $v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "${opath}/README" >&2
 StopIfError "Could not copy usage file to $scheme location"
 
-cat "$LOGFILE" >"${opath}/rear.log"
-StopIfError "Could not copy $LOGFILE to $scheme location"
+# REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log (name set by main script)
+cat "$REAR_LOGFILE" >"${opath}/rear.log"
+StopIfError "Could not copy $REAR_LOGFILE to $scheme location"
 
-Log "Saved $LOGFILE as rear.log"
+Log "Saved $REAR_LOGFILE as rear.log"
+

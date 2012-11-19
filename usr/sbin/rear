@@ -154,6 +154,9 @@ if [[ -r "$LOGFILE" ]]; then
 fi
 mkdir -p $LOG_DIR
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
+# keep our default $LOGFILE location in a seperate variable REAR_LOGFILE
+# in case end-user overruled it in the local.conf file
+REAR_LOGFILE="$LOGFILE"
 
 case "$WORKFLOW" in
 	(help) ;;
@@ -249,5 +252,7 @@ else
 	LogPrint "ERROR: The specified command '$WORKFLOW' does not exist !"
 	EXIT_CODE=1
 fi
+
+[[ "$REAR_LOGFILE" != "$LOGFILE" ]] && cat "$REAR_LOGFILE" > "$LOGFILE"
 
 exit $EXIT_CODE

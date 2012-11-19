@@ -2,12 +2,12 @@
 .\"     Title: rear
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 09/27/2012
+.\"      Date: 11/19/2012
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "REAR" "8" "09/27/2012" "[FIXME: source]" "[FIXME: manual]"
+.TH "REAR" "8" "11/19/2012" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -275,6 +275,11 @@ Write the image using
 rsync
 and the RSYNC protocol\&.
 .RE
+.PP
+OUTPUT_URL=\fBsshfs://\fR
+.RS 4
+Write the image using sshfs and the SSH protocol\&.
+.RE
 .SH "BACKUP SOFTWARE INTEGRATION"
 .sp
 Currently Relax\-and\-Recover supports the following backup methods\&. Please distinguish carefully between Relax\-and\-Recover support for 3rd party backup software and Relax\-and\-Recover internal backup methods\&. The latter also creates a backup of your data while the former will only integrate Relax\-and\-Recover with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself\&.
@@ -377,13 +382,25 @@ domain=_domain_
 BACKUP_URL=\fBusb://\fR
 .RS 4
 To backup to USB storage device, use
-NETFS=usb:///dev/disk/by\-path/REAR\-000
+BACKUP_URL=usb:///dev/disk/by\-path/REAR\-000
 or use a real device node or a specific filesystem label\&. Alternatively, you can specify the device using
 USB_DEVICE=/dev/disk/by\-path/REAR\-000\&.
 .sp
 If you combine this with
 OUTPUT=USB
 you will end up with a bootable USB device\&.
+.RE
+.PP
+BACKUP_URL=\fBsshfs://\fR
+.RS 4
+To backup to a remote server via sshfs (SSH protocol), use
+BACKUP_URL=sshfs://user@remote\-system\&.domain\&.org/home/user/backup\-dir/
+.sp
+It is advisable to add
+\fBServerAliveInterval 15\fR
+in the
+/root/\&.ssh/config
+file for the remote system (remote\-system\&.domain\&.org)\&.
 .RE
 .SH "CONFIGURATION"
 .sp
@@ -460,7 +477,7 @@ To create a new rescue environment\&. Do not forget to copy the resulting rescue
 .RS 4
 .\}
 .nf
-# rear mkrescue
+# rear \-v mkrescue
 .fi
 .if n \{\
 .RE
@@ -479,7 +496,7 @@ System specific configuration can be set here\&.
 .PP
 /etc/rear/site\&.conf
 .RS 4
-Site specific configuration can be set here\&.
+Site specific configuration can be set here (not created by default)\&.
 .RE
 .PP
 /var/log/rear/
