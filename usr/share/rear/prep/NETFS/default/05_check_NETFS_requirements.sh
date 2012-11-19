@@ -52,15 +52,8 @@ case "$(basename $BACKUP_PROG)" in
 esac
 
 # include required programs
-# please note that this is just for safety reasons. Most of these programs are also listet in conf/GNU/Linux.conf !
-
 PROGS=( "${PROGS[@]}"
-ping
 showmount
-portmap
-rpcbind
-rpcinfo
-mount
 mount.$(url_scheme $BACKUP_URL)
 umount.$(url_scheme $BACKUP_URL)
 $(
