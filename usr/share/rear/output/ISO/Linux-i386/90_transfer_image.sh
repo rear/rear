@@ -15,8 +15,11 @@ local path=$(url_path $OUTPUT_URL)
 
 case "$scheme" in
     (nfs|cifs|usb|tape|file|sshfs)
-        # The ISO has already been transferred by NETFS.
-        return 0
+        if [[ "$BACKUP" != "NETFS" ]] ; then
+            local opath=$(output_path $scheme $path)
+            LogPrint "Transferring ISO image to $OUTPUT_URL."
+            cp $v $ISO_DIR/$ISO_PREFIX.iso $opath/ >&2
+        fi
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
         LogPrint "Transferring ISO image to $OUTPUT_URL"
