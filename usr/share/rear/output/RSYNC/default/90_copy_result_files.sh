@@ -1,11 +1,11 @@
 #
 # copy resulting files to remote network (backup) location
 
-LogPrint "Copying resulting files to $RSYNC_URL location"
+LogPrint "Copying resulting files to $OUTPUT_URL location"
 
 # if called as mkbackuponly then we just don't have any result files.
 if test "$RESULT_FILES" ; then
-	Log "Copying files '${RESULT_FILES[@]}' to $RSYNC_URL location"
+	Log "Copying files '${RESULT_FILES[@]}' to $OUTPUT_URL location"
 	cp $v "${RESULT_FILES[@]}" "${TMP_DIR}/rsync/${RSYNC_PREFIX}/" >&2
 	StopIfError "Could not copy files to local rsync location"
 fi
