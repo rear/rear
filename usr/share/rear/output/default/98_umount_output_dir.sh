@@ -18,4 +18,3 @@ if [[ $? -eq 0 ]] ; then
     # the argument to RemoveExitTask has to be identical to the one given to AddExitTask
     RemoveExitTask "rmdir $v $BUILD_DIR/outputfs >&2"
 fi
-

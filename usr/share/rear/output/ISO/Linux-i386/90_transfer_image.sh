@@ -27,12 +27,12 @@ case "$scheme" in
         StopIfError "Problem transferring ISO image to $OUTPUT_URL"
         ;;
     (rsync)
-	if [[ "$BACKUP" != "NETFS" ]] && [[ "$BACKUP" != "RSYNC" ]] ; then
-	    # BACKUP=NETFS/RSYNC - iso is copied via result_files[]
+    if [[ "$BACKUP" != "NETFS" ]] && [[ "$BACKUP" != "RSYNC" ]] ; then
+        # BACKUP=NETFS/RSYNC - iso is copied via result_files[]
             LogPrint "Transferring ISO image to $OUTPUT_URL"
             rsync -a $v "$ISO_DIR/$ISO_PREFIX.iso" "$OUTPUT_URL"
             StopIfError "Problem transferring ISO image to $OUTPUT_URL"
-	fi
+    fi
         ;;
     (*) BugError "Support for $scheme is not implemented yet.";;
 esac
