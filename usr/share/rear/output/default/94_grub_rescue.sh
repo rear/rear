@@ -6,10 +6,12 @@ if [[ ! "$GRUB_RESCUE" =~ ^[yY1] ]]; then
     return
 fi
 
+[[ $(type -p grub-probe) || $(type -p grub2-probe) ]] || return # no grub nor grub2 used
+
 ### Only do when system has GRUB Legacy
 grub_binary=$(get_path grub)
 if [[ -z "$grub_binary" ]]; then
-    Log "Could not find grub binary."
+    Log "Could not find grub (legacy) binary."
     return
 fi
 
