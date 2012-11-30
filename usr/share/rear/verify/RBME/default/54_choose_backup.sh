@@ -17,6 +17,16 @@ for backup in $BUILD_DIR/outputfs/$HOSTNAME/????-??-?? ;do
     backups=( "${backups[@]}" ${backup##*/} )
 done
 
+if [[ "$RBME_BACKUP" ]] ; then
+    if IsInArray "$RBME_BACKUP" "${backups[@]}" ; then
+        LogPrint "Backup $RBME_BACKUP preselected."
+        return
+    else
+        LogPrint "Preselected backup $RBME_BACKUP does not exist."
+    fi
+fi
+
+
 # The user has to choose the backup
 LogPrint "Select a backup to restore."
 select choice in "${backups[@]}" "Abort"; do
