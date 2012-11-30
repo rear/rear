@@ -21,6 +21,11 @@ if [[ "$RBME_BACKUP" ]] ; then
     if IsInArray "$RBME_BACKUP" "${backups[@]}" ; then
         LogPrint "Backup $RBME_BACKUP preselected."
         return
+    elif [[ "$RBME_BACKUP" == "latest" ]] ; then
+        ### a bash glob is alphabetically sorted
+        RBME_BACKUP=${backups[${#backups[@]} - 1]}
+        LogPrint "Latest backup $RBME_BACKUP selected."
+        return
     else
         LogPrint "Preselected backup $RBME_BACKUP does not exist."
     fi
