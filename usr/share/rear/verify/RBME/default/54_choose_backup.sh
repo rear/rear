@@ -17,6 +17,9 @@ for backup in $BUILD_DIR/outputfs/$RBME_HOSTNAME/????-??-?? ;do
     backups=( "${backups[@]}" ${backup##*/} )
 done
 
+(( ${#backups[@]} > 0 ))
+StopIfError "No RBME backups available."
+
 if [[ "$RBME_BACKUP" ]] ; then
     if IsInArray "$RBME_BACKUP" "${backups[@]}" ; then
         LogPrint "Backup $RBME_BACKUP preselected."
