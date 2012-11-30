@@ -12,7 +12,7 @@ esac
 # Detect all backups in the specified location
 backups=()
 backup_times=()
-for backup in $BUILD_DIR/outputfs/$HOSTNAME/????-??-?? ;do
+for backup in $BUILD_DIR/outputfs/$RBME_HOSTNAME/????-??-?? ;do
     Debug "RBME backup $backup detected."
     backups=( "${backups[@]}" ${backup##*/} )
 done
