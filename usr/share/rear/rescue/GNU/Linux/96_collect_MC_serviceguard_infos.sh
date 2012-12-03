@@ -3,7 +3,10 @@
 # in order to prepare a smooth rolling upgrade
 
 # List files and directories in SGLX_FILES
-SGLX_FILES="/etc/sysconfig/keyboard
+SGLX_FILES="/etc/hostname
+/etc/vconsole.conf
+/etc/locale.conf
+/etc/sysconfig/keyboard
 /etc/sysconfig/network-scripts/ifcfg*
 /etc/sysconfig/network/ifcfg*
 /etc/sysconfig/network
