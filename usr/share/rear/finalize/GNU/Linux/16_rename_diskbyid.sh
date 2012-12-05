@@ -17,7 +17,7 @@
 # Those devices have already been adjusted in 
 # verify/GNU/Linux/21_migrate_recovery_configuration.sh
 
-FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg"
+FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg /boot/grub/device.map"
 
 OLD_ID_FILE=${VAR_DIR}/recovery/diskbyid_mappings
 NEW_ID_FILE=/tmp/diskbyid_mappings
@@ -28,7 +28,7 @@ NEW_ID_FILE=/tmp/diskbyid_mappings
 # udevinfo is deprecated by udevadm (SLES 10 still uses udevinfo)
 UdevSymlinkName=""
 type -p udevinfo >/dev/null && UdevSymlinkName="udevinfo -r / -q symlink -n"
-type -p udevadm >/dev/null &&  UdevSymlinkName="udevadm info --query=symlink --name"
+type -p udevadm >/dev/null &&  UdevSymlinkName="udevadm info --root --query=symlink --name"
 [[ -z "$UdevSymlinkName" ]] && {
 	LogPrint "Could not find udevinfo nor udevadm (skip 16_remove_diskbyid.sh)"
 	return
@@ -64,6 +64,7 @@ for file in $FILES; do
 	[ ! -f $realfile ] && continue	# if file is not there continue with next one
 	# keep backup
 	cp $realfile ${realfile}.rearbak
+        sed -i -e 's/$/ /g' $realfile
 	# we should consider creating a sed script within a string
 	# and then call sed once (as done other times)
 	while read ID DEV_NAME ID_NEW; do
