@@ -179,7 +179,7 @@ EOF
         start=$( echo "$start" | awk '{printf "%u", $1+4096-($1%4096);}')
 
         # Get the partition number from the name
-        local number=$(echo "$partition" | grep -o -E "[0-9]+$")
+        local number=$(echo "$partition" | grep -o -E "[0-9]+$" | sed -e 's/.*\(..\)/\1/' -e 's/^[0]*//')
 
         local flags="$(echo $flags | tr ',' ' ')"
         local flag
