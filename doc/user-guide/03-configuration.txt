@@ -63,6 +63,9 @@ Write the ISO image using +lftp+ and the secure FTP (SFTP) protocol.
 OUTPUT_URL=rsync://::
 Write the ISO image using +rsync+ and the RSYNC protocol.
 
+OUTPUT_URL=sshfs://::
+Write the image using sshfs and the SSH protocol.
+
 
 == Backup/Restore strategy (BACKUP)
 The +BACKUP+ setting defines our backup/restore strategy.
@@ -99,6 +102,9 @@ BACKUP=DUPLICITY::
 Use duplicity to manage backup (see http://duplicity.nongnu.org). Additionally if duply
 (see http://duply.net) is also installed while generating the rescue images it is
 part of the image.
+
+BACKUP=RBME::
+Use Rsync Backup Made Easy (rbme) to restore the data.
 
 == Using NETFS as backup strategy
 When using +BACKUP=NETFS+ you should provide the backup target location through
