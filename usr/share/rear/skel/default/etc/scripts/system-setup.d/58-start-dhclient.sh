@@ -3,6 +3,13 @@
 # check if we have USE_DHCLIENT=y, if not then we run 60/62 scripts
 [[ -z "$USE_DHCLIENT"  ]] && return
 
+# if 'noip' is gicen on boot prompt then skip dhcp start-up
+if [[ -e /proc/cmdline ]] ; then
+    if grep -q 'noip' /proc/cmdline ; then
+        return
+    fi
+fi
+
 echo "Attempting to start the DHCP client daemon"
 
 . /usr/share/rear/lib/network-functions.sh
