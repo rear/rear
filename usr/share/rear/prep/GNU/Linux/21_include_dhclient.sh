@@ -85,7 +85,7 @@ $DHCLIENT6_BIN
 
 # we made our own /etc/dhclient.conf and /bin/dhclient-script files (no need to copy these
 # from the local Linux system for dhclient). For dhcpcd we have /bin/dhcpcd.sh foreseen.
-COPY_AS_IS=( "${COPY_AS_IS[@]}" "/etc/localtime" )
+COPY_AS_IS=( "${COPY_AS_IS[@]}" "/etc/localtime" "/usr/lib/dhcpcd/*" )
 PROGS=( "${PROGS[@]}" arping ipcalc usleep "${dhclients[@]}" )
 
 # At this point we want DHCP client support and found a binary
@@ -102,7 +102,6 @@ fi
 grep -q "^DHCLIENT_BIN=" "$CONFIG_DIR/local.conf"
 if [ $? -eq 1 ]; then
 	cat - <<EOF >> "$ROOTFS_DIR$CONFIG_DIR/rescue.conf"
-# line below was automatically added by 21_include_dhclient.sh
 DHCLIENT_BIN=$DHCLIENT_BIN
 EOF
 fi
@@ -110,7 +109,6 @@ fi
 grep -q "^DHCLIENT6_BIN=" "$CONFIG_DIR/local.conf"
 if [ $? -eq 1 ]; then
 	cat - <<EOF >> "$ROOTFS_DIR$CONFIG_DIR/rescue.conf"
-# line below was automatically added by 21_include_dhclient.sh
 DHCLIENT6_BIN=$DHCLIENT6_BIN
 EOF
 fi

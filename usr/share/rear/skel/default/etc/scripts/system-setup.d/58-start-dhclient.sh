@@ -40,7 +40,7 @@ for dev in `get_device_by_hwaddr` ; do
 			dhclient -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.pid -cf /etc/dhclient.conf ${DEVICE}
 		;;
 		(dhcpcd)
-			dhcpcd -c /bin/dhcpcd.sh ${DEVICE}
+			dhcpcd ${DEVICE}
 		;;
 	esac
 
