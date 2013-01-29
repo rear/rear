@@ -32,7 +32,7 @@ echo "$VERSION_INFO" >"$PXE_TFTP_LOCAL_PATH/$PXE_MESSAGE"
 
 # TODO: umount remote TFTP path
 
-LogPrint "Copied kernel+initrd ($(du -shc $KERNEL_FILE "$TMP_DIR/initrd.cgz"} | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 )) to $PXE_TFTP_PATH"
+LogPrint "Copied kernel+initrd ($(du -shc $KERNEL_FILE "$TMP_DIR/initrd.cgz" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 )) to $PXE_TFTP_PATH"
 
 # Add to result files
 RESULT_FILES=( "${RESULT_FILES[@]}" "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL" "$PXE_TFTP_LOCAL_PATH/$PXE_INITRD" "$PXE_TFTP_LOCAL_PATH/$PXE_MESSAGE" )
