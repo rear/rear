@@ -3,6 +3,16 @@
 
 mkdir -p "${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
 
+# Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default value to cat in
+# case encryption is disabled
+if (( $BACKUP_PROG_CRYPT_ENABLED == 1 )); then
+  LogPrint "Decrypting archive with key: $BACKUP_PROG_CRYPT_KEY"
+else
+  LogPrint "Decrypting disabled"
+  BACKUP_PROG_DECRYPT_OPTIONS="cat"
+  BACKUP_PROG_CRYPT_KEY=""
+fi
+
 Log "Restoring $BACKUP_PROG archive '$backuparchive'"
 Print "Restoring from '$backuparchive'"
 ProgressStart "Preparing restore operation"
@@ -13,10 +23,8 @@ case "$BACKUP_PROG" in
 		if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
 			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
 		fi
-		Log $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS \
-			-C /mnt/local/ -x -f "$backuparchive"
-		$BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS \
-			-C /mnt/local/ -x -f "$backuparchive"
+		Log dd if=$backuparchive \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
+		dd if=$backuparchive | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
 	;;
 	(rsync)
 		if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
