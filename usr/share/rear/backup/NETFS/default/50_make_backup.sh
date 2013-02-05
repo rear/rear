@@ -31,7 +31,7 @@ done < $TMP_DIR/backup-exclude.txt
 
 local scheme=$(url_scheme $BACKUP_URL)
 local path=$(url_path $BACKUP_URL)
-local opath=$(output_path $scheme $path)
+local opath=$(backup_path $scheme $path)
 
 if [[ "$opath" ]]; then
     mkdir -p $v "${opath}" >&2

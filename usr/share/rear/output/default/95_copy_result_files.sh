@@ -1,5 +1,5 @@
 #
-# copy resulting files to network backup location
+# copy resulting files to network output location
 
 local scheme=$(url_scheme $OUTPUT_URL)
 local path=$(url_path $OUTPUT_URL)

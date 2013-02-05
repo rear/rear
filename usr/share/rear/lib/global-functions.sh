@@ -48,7 +48,7 @@ url_path() {
     echo /${path#*/}
 }
 
-output_path() {
+backup_path() {
     local scheme=$1
     local path=$2
     case $scheme in
@@ -64,6 +64,24 @@ output_path() {
     esac
     echo "$path"
 }
+
+output_path() {
+    local scheme=$1
+    local path=$2
+    case $scheme in
+       (tape)  # no path for tape required
+           path=""
+           ;;
+       (file)  # type file needs a local path (must be mounted by user)
+           path="$path/${OUTPUT_PREFIX}"
+           ;;
+       (*)     # nfs, cifs, usb, a.o. need a temporary mount-path 
+           path="${BUILD_DIR}/outputfs/${OUTPUT_PREFIX}"
+           ;;
+    esac
+    echo "$path"
+}
+
 
 ### Mount URL $1 at mountpoint $2[, with options $3]
 mount_url() {

@@ -6,7 +6,7 @@ case "$TAPE_DEVICE:$scheme" in
     (:file)
         # define the output path according to the scheme
         local path=$(url_path $BACKUP_URL)
-        local opath=$(output_path $scheme $path)
+        local opath=$(backup_path $scheme $path)
         backuparchive="${opath}/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}"
         ;;
     (:*)
