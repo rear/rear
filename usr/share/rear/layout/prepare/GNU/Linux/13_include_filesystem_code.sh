@@ -131,7 +131,8 @@ EOF
 
         case $name in
             options)
-                mountopts=$value
+                ### do not mount nodev, as chrooting later on would fail
+                mountopts=${value//nodev/dev}
                 ;;
         esac
     done
