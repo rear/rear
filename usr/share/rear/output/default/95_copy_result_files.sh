@@ -2,6 +2,7 @@
 # copy resulting files to network output location
 
 local scheme=$(url_scheme $OUTPUT_URL)
+local host=$(url_host $OUTPUT_URL)
 local path=$(url_path $OUTPUT_URL)
 local opath=$(output_path $scheme $path)
 
@@ -37,7 +38,7 @@ case "$scheme" in
     ;;
     (rsync)
     LogPrint "Copying files '${RESULT_FILES[@]}' to $scheme location"
-    rsync -a $v "${RESULT_FILES[@]}" "$OUTPUT_URL"
+    rsync -a $v "${RESULT_FILES[@]}" "${host}:${path}"
     StopIfError "Problem transferring files to $OUTPUT_URL"
     ;;
     (*) BugError "Support for $scheme is not implemented yet."
