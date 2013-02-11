@@ -19,13 +19,14 @@ fi
 #grub_version=$(get_version "grub --version")
 grub_version=$(get_version "strings $grub_binary")
 if version_newer "$grub_version" 1.0; then
+    # only for grub-legacy we make special rear boot entry in menu.lst 
     return
 fi
 
 [[ -r "$KERNEL_FILE" ]]
 StopIfError "Failed to find kernel, updating GRUB failed."
 
-[[ -r "$KERNEL_FILE" ]]
+[[ -r "$TMP_DIR/initrd.cgz" ]]
 StopIfError "Failed to find initrd.cgz, updating GRUB failed."
 
 function total_filesize {
