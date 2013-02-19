@@ -16,7 +16,7 @@ if [ -e /mnt/local/etc/fstab ] && grep -v swap /mnt/local/etc/fstab | grep -q by
 		sysfs="$(tr / \! <<<"$device")"
 		ID_SERIAL=
 		# apparently the usage of scsi_id changed over the times, so we try two ways to call it
-		eval "$(scsi_id -g -x -n -s /block/"$sysfs" -d /dev/$device || scsi_id --export --whitelisted -d /dev/$device)"
+		eval "$(scsi_id -g -x -n -s /block/"$sysfs" -d /dev/$device 2>/dev/null || scsi_id --export --whitelisted -d /dev/$device)"
 		if test "$ID_SERIAL" ; then
 			LogPrint "  $ID_SERIAL  /dev/$device  $((size/1024))MB"
 			SCSI_ID_HAVE_RESULT=1
