@@ -4,6 +4,8 @@
 # $ /opt/omni/bin/omnidb -filesystem | grep $(hostname)
 # test.internal.it3.be:/ '/'                                      FileSystem
 
+[ -f /tmp/DP_GUI_RESTORE ] && return # GUI restore explicetely requested
+
 /opt/omni/bin/omnidb -session $(cat /tmp/dp_recovery_session) | cut -d"'" -f -2 > /tmp/list_of_fs_objects
 [ -s /tmp/list_of_fs_objects ]
 StopIfError "Data Protector did not find any file system objects for $(hostname)"
