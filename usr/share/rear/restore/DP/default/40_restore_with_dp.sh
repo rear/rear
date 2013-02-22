@@ -21,7 +21,7 @@
 # The list of file systems to restore is listed in file /tmp/list_of_fs_objects
 # per line we have something like: test.internal.it3.be:/ '/'
 
-rm -f /tmp/DP_RESTORE_FAILED # make sure the flag of failed restore does not exist
+[ -f /tmp/DP_GUI_RESTORE ] && return # GUI restore explicetely requested
 
 # we will loop over all objects listed in /tmp/list_of_fs_objects
 cat /tmp/list_of_fs_objects | while read object
@@ -39,7 +39,7 @@ do
 			0)  Log "Restore of ${fs} was successful." ;;
 			10) Log "Restore of ${fs} finished with warnings." ;;
 			*)  LogPrint "Restore of ${fs} failed."
-				> /tmp/DP_RESTORE_FAILED
+				> /tmp/DP_GUI_RESTORE
 				break # get out of the loop
 				;;
 		esac
