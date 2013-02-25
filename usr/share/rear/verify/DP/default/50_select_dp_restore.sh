@@ -11,6 +11,9 @@
 
 #set -e
 
+[ -f /tmp/DP_GUI_RESTORE ] && return # GUI restore explicetely requested
+
+
 OMNIDB=/opt/omni/bin/omnidb
 OMNICELLINFO=/opt/omni/bin/omnicellinfo
 
