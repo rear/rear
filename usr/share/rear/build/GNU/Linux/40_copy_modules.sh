@@ -33,5 +33,9 @@ depmod -avb "$ROOTFS_DIR" "$KERNEL_VERSION" >&8
 StopIfError "Could not configure modules with depmod"
 
 for m in "${MODULES_LOAD[@]}" ; do
-	echo $m
+    echo $m
 done >>$ROOTFS_DIR/etc/modules
+
+# avoid duplicates in etc/modules
+cat $ROOTFS_DIR/etc/modules | sort -u > $ROOTFS_DIR/etc/modules.new
+mv -f $ROOTFS_DIR/etc/modules.new  $ROOTFS_DIR/etc/modules
