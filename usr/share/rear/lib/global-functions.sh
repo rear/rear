@@ -87,7 +87,8 @@ output_path() {
 mount_url() {
     local url=$1
     local mountpoint=$2
-    local options=${3:-"rw,noatime"}
+    local defaultoptions="rw,noatime"
+    local options=${3:-"$defaultoptions"}
 
     ### Generate a mount command
     local mount_cmd
@@ -102,10 +103,10 @@ mount_url() {
             mount_cmd="${!var} $mountpoint"
             ;;
         (cifs)
-            if grep -qP '\bcred=\b' <<<$options; then
-                mount_cmd="mount $v -o $options //$(url_host $url)$(url_path $url) $mountpoint"
-            else
+            if [ x"$options" = x"$defaultoptions" ];then
                 mount_cmd="mount $v -o $options,guest //$(url_host $url)$(url_path $url) $mountpoint"
+            else
+                mount_cmd="mount $v -o $options //$(url_host $url)$(url_path $url) $mountpoint"
             fi
             ;;
         (usb)
