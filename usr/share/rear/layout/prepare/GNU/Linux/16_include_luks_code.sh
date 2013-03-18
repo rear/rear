@@ -36,14 +36,14 @@ create_crypt() {
 
     echo "Log \"Creating luks device $name on $encdevice\"" >> $LAYOUT_CODE
     if [ -n "$keyfile" ] ; then
-        echo "cryptsetup luksFormat -q${cipher}${hash} ${encdevice} $keyfile" >> $LAYOUT_CODE
+        echo "cryptsetup luksFormat -q${cipher}${hash}${uuid} ${encdevice} $keyfile" >> $LAYOUT_CODE
         echo "cryptsetup luksOpen --key-file $keyfile $encdevice $name" >> $LAYOUT_CODE
     elif [ -n "$password" ] ; then
-        echo "echo \"$password\" | cryptsetup luksFormat -q${cipher}${hash} ${encdevice}" >> $LAYOUT_CODE
+        echo "echo \"$password\" | cryptsetup luksFormat -q${cipher}${hash}${uuid} ${encdevice}" >> $LAYOUT_CODE
         echo "echo \"$password\" | cryptsetup luksOpen $encdevice $name" >> $LAYOUT_CODE
     else
         echo "LogPrint \"Please enter the password for $name($encdevice):\"" >> $LAYOUT_CODE
-        echo "cryptsetup luksFormat -q${cipher}${hash} ${encdevice}" >> $LAYOUT_CODE
+        echo "cryptsetup luksFormat -q${cipher}${hash}${uuid} ${encdevice}" >> $LAYOUT_CODE
         echo "LogPrint \"Please re-enter the password for $name($encdevice):\"" >> $LAYOUT_CODE
         echo "cryptsetup luksOpen $encdevice $name" >> $LAYOUT_CODE
     fi
