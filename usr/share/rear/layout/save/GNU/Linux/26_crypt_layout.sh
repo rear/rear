@@ -34,10 +34,10 @@ while read dm_name junk ; do
     fi
 
     # gather crypt information
-    cipher=$(cryptsetup luksDump $device | grep "Cipher name" | sed -r 's/^.+:[^a-z]+(.+)$/\1/')
-    mode=$(cryptsetup luksDump $device | grep "Cipher mode" | sed -r 's/^.+:[^a-z]+(.+)$/\1/')
-    hash=$(cryptsetup luksDump $device | grep "Hash spec" | sed -r 's/^.+:[^a-z]+(.+)$/\1/')
-    uuid=$(cryptsetup luksDump $device | grep "UUID" | sed -r 's/^.+:[^a-z]+(.+)$/\1/')
+    cipher=$(cryptsetup luksDump $device | grep "Cipher name" | sed -r 's/^.+:\s*(.+)$/\1/')
+    mode=$(cryptsetup luksDump $device | grep "Cipher mode" | sed -r 's/^.+:\s*(.+)$/\1/')
+    hash=$(cryptsetup luksDump $device | grep "Hash spec" | sed -r 's/^.+:\s*(.+)$/\1/')
+    uuid=$(cryptsetup luksDump $device | grep "UUID" | sed -r 's/^.+:\s*(.+)$/\1/')
 
     echo "crypt /dev/mapper/$dm_name $device cipher=$cipher mode=$mode hash=$hash uuid=${uuid}" >> $DISKLAYOUT_FILE
 done < <( dmsetup ls --target crypt )
