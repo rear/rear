@@ -89,7 +89,7 @@ case "$(basename ${BACKUP_PROG})" in
 			$BACKUP_PROG_OPTIONS $backuparchive \
 			$(cat $TMP_DIR/backup-include.txt) $LOGFILE > $backuparchive
 	;;
-esac >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
+esac 2> "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
 # important trick: the backup prog is the last in each case entry and the case .. esac is the last command
 # in the (..) subshell. As a result the return code of the subshell is the return code of the backup prog!
 ) &
@@ -107,8 +107,9 @@ function get_disk_used() {
 case "$(basename ${BACKUP_PROG})" in
 	(tar)
 		while sleep 1 ; kill -0 $BackupPID 2>&8; do
-			blocks="$(stat -c %b ${backuparchive})"
-			size="$((blocks*512))"
+			#blocks="$(stat -c %b ${backuparchive})"
+			#size="$((blocks*512))"
+			size="$(stat -c %s ${backuparchive})"
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 		done
