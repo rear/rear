@@ -6,7 +6,10 @@ make_syslinux_config $TMP_DIR/boot isolinux >$TMP_DIR/boot/isolinux.cfg
 
 Log "Created isolinux configuration"
 
+cp $v -r $TMP_DIR/boot  $TMP_DIR/isofs/ >&2
+StopIfError "Could not copy syslinux boot directory to isofs/"
+
 # add all files that we need for booting to ISO_FILES
-ISO_FILES=( "${ISO_FILES[@]}" $TMP_DIR/boot/* )
+#ISO_FILES=( "${ISO_FILES[@]}" $TMP_DIR/boot/* )
 
 
