@@ -116,6 +116,7 @@ extract_partitions() {
                 if [[ -z "$type" ]] ; then
                     type="rear-noname"
                 fi
+                type=$(echo "$type" | sed -e 's/ /0x20/g') # replace spaces with 0x20 in name field
                 sed -i /^$partition_nr\ /s/$/\ $type/ $TMP_DIR/partitions
             done < $TMP_DIR/partitions-data
         else
@@ -141,6 +142,7 @@ extract_partitions() {
                     type="rear-noname"
                 fi
 
+                type=$(echo "$type" | sed -e 's/ /0x20/g')
                 sed -i /^$number\ /s/$/\ $type/ $TMP_DIR/partitions
             done < <(grep -E '^[ ]*[0-9]' $TMP_DIR/parted)
         fi

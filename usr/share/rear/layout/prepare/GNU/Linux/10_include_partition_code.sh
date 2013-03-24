@@ -147,6 +147,9 @@ EOF
             fi
         fi
 
+        # the 'name' could contain spaces (were replaced with 0%20; need to change this again)
+        name=$(echo "$name" | sed -e 's/0x20/ /g')
+
         if [[ "$FEATURE_PARTED_ANYUNIT" ]] ; then
             if [[ "$end" ]] ; then
                 end="$(($end-1))B"
@@ -154,7 +157,7 @@ EOF
                 end="100%"
             fi
             cat >> $LAYOUT_CODE <<EOF
-parted -s $device mkpart $name ${start}B $end >&2
+parted -s $device mkpart "$name" ${start}B $end >&2
 EOF
         else
             ### Old versions of parted accept only sizes in megabytes...
@@ -165,7 +168,7 @@ EOF
             fi
             end_mb=$(( end/1024/1024 ))
             cat  >> $LAYOUT_CODE <<EOF
-parted -s $device mkpart $name $start_mb $end_mb >&2
+parted -s $device mkpart "$name" $start_mb $end_mb >&2
 EOF
         fi
 
