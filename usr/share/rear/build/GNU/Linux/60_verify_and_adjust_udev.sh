@@ -4,6 +4,14 @@
 # skip this script if udev is not part of the rescue system
 test -d $ROOTFS_DIR/etc/udev/rules.d || return 0
 
+# check systemd version
+systemd_version="$(systemd-notify --version 2>/dev/null | grep systemd | awk '{print $2}')"
+[[ -z "$systemd_version" ]] && systemd_version=0
+if version_newer "$systemd_version" 190; then
+   Log "systemd-udevd will be used - no need for udev rules rewrites"
+   return
+fi
+
 Log "Checking udev"
 # check that all external programs used by udev are available
 while read file location ; do
