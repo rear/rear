@@ -41,16 +41,16 @@ search --no-floppy --file /boot/efiboot.img --set
 
 menuentry "Relax and Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
      echo 'Loading kernel ...'
-     linux /boot/kernel
+     linux /isolinux/kernel
      echo 'Loading initial ramdisk ...'
-     initrd /boot/initrd.cgz
+     initrd /isolinux/initrd.cgz
 }
 
 menuentry "Relax and Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
      echo 'Loading kernel ...'
-     linuxefi /boot/kernel
+     linuxefi /isolinux/kernel
      echo 'Loading initial ramdisk ...'
-     initrdefi /boot/initrd.cgz
+     initrdefi /isolinux/initrd.cgz
 }
 
 menuentry "Reboot" {
@@ -87,12 +87,12 @@ else
 fi
 
 # copy of efiboot content also the our ISO tree (isofs/)
-mkdir $v -p $TMP_DIR/isofs/EFI/BOOT >&2
+mkdir $v -p -m 755 $TMP_DIR/isofs/EFI/BOOT >&2
 cp $v -r $TMP_DIR/mnt/EFI  $TMP_DIR/isofs/ >&2
 StopIfError "Could not create the isofs/EFI/BOOT directory on the ISO image"
 
 # make /boot/grub/grub.cfg available on isofs/
-mkdir $v -p $TMP_DIR/isofs/boot/grub >&2
+mkdir $v -p -m 755 $TMP_DIR/isofs/boot/grub >&2
 cp $v $TMP_DIR/isofs/EFI/BOOT/*.cfg  $TMP_DIR/isofs/boot/grub/ >&2
 StopIfError "Could not copy grub.cfg to isofs/boot/grub"
 

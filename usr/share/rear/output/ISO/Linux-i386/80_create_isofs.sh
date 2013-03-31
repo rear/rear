@@ -24,8 +24,8 @@ StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executable !"
 
 Log "Copying kernel"
 #cp -pL $v $KERNEL_FILE $TMP_DIR/kernel >&2
-cp -pL $v $KERNEL_FILE $TMP_DIR/isofs/boot/kernel >&2
-mv $TMP_DIR/initrd.cgz $TMP_DIR/isofs/boot/initrd.cgz >&2
+cp -pL $v $KERNEL_FILE $TMP_DIR/isofs/isolinux/kernel >&2
+mv $TMP_DIR/initrd.cgz $TMP_DIR/isofs/isolinux/initrd.cgz >&2
 
 #ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/kernel $TMP_DIR/initrd.cgz )
 
