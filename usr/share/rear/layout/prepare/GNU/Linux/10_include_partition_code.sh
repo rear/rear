@@ -157,7 +157,7 @@ EOF
                 end="100%"
             fi
             cat >> $LAYOUT_CODE <<EOF
-parted -s $device mkpart "$name" ${start}B $end >&2
+parted -s $device mkpart '"$name"' ${start}B $end >&2
 EOF
         else
             ### Old versions of parted accept only sizes in megabytes...
@@ -168,7 +168,7 @@ EOF
             fi
             end_mb=$(( end/1024/1024 ))
             cat  >> $LAYOUT_CODE <<EOF
-parted -s $device mkpart "$name" $start_mb $end_mb >&2
+parted -s $device mkpart '"$name"' $start_mb $end_mb >&2
 EOF
         fi
 
