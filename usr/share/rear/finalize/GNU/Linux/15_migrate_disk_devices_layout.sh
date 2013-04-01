@@ -15,7 +15,7 @@ for file in     [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/
                 [e]tc/mtools.conf \
                 [e]tc/smartd.conf [e]tc/sysconfig/smartmontools \
                 [e]tc/sysconfig/rawdevices \
-                [e]tc/security/pam_mount.conf.xml
+                [e]tc/security/pam_mount.conf.xml [b]oot/efi/*/*/grub.cfg
         do
 
         # sed -i bails on symlinks, so we follow the symlink and patch the result

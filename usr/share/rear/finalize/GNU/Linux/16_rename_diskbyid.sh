@@ -17,7 +17,7 @@
 # Those devices have already been adjusted in 
 # verify/GNU/Linux/21_migrate_recovery_configuration.sh
 
-FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg /boot/grub/device.map"
+FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg /boot/grub/device.map /boot/efi/*/*/grub.cfg"
 
 OLD_ID_FILE=${VAR_DIR}/recovery/diskbyid_mappings
 NEW_ID_FILE=/tmp/diskbyid_mappings
