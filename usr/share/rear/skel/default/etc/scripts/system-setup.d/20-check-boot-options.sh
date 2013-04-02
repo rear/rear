@@ -23,3 +23,8 @@ if [ $? -eq 0 ]; then
 	GATEWAY=${REPLY#*gw=}
 	GATEWAY=${GATEWAY%% *}
 fi
+echo $REPLY | grep -q "netdev="
+if [ $? -eq 0 ]; then
+    NETDEV=${REPLY#*netdev=}
+    NETDEV=${NETDEV%% *}
+fi

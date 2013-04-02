@@ -26,20 +26,28 @@
 # where to build networking configuration
 netscript=$ROOTFS_DIR/etc/scripts/system-setup.d/60-network-devices.sh
 
-# add a line at the top of netscript to skip if dhclient will be used
-cat - <<EOT > $netscript
-# if USE_DHCLIENT=y then use DHCP instead and skip 60-network-devices.sh
-[[ ! -z "\$USE_DHCLIENT" ]] && return
-# if IPADDR=1.2.3.4 has been defined at boot time via ip=1.2.3.4 then skip 
-[[ ! -z "\$IPADDR" ]] && return
-EOT
-
 ### Skip netscript if noip is configured on the command line
 cat <<EOT >> $netscript
 if [[ -e /proc/cmdline ]] ; then
     if grep -q 'noip' /proc/cmdline ; then
         return
     fi
+fi
+EOT
+
+# add a line at the top of netscript to skip if dhclient will be used
+cat - <<EOT > $netscript
+# if USE_DHCLIENT=y then use DHCP instead and skip 60-network-devices.sh
+[[ ! -z "\$USE_DHCLIENT" ]] && return
+# if IPADDR=1.2.3.4 has been defined at boot time via ip=1.2.3.4 then configure 
+if [[ "\$IPADDR" ]] && [[ "\$NETMASK" ]] ; then
+    device=\${NETDEV:-eth0}
+    ip link set dev "\$device" up
+    ip addr add "\$IPADDR"/"\$NETMASK" dev "\$device"
+    if [[ "\$GATEWAY" ]] ; then
+        ip route add default via "\$GATEWAY"
+    fi
+    return
 fi
 EOT
 
