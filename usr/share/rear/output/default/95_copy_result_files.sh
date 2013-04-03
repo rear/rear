@@ -24,7 +24,7 @@ case "$scheme" in
         echo "$VERSION_INFO" >"${opath}/VERSION"
         StopIfError "Could not create VERSION file on $scheme location"
 
-        cp $v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "${opath}/README" >&2
+        cp $v $(get_template "RESULT_usage_$OUTPUT.txt") "${opath}/README" >&2
         StopIfError "Could not copy usage file to $scheme location"
 
         # REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log (name set by main script)

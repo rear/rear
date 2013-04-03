@@ -155,8 +155,8 @@ function make_syslinux_config {
 	echo "display message"
 	echo "F1 message"
 
-	if [[ -s "$CONFIG_DIR/templates/rear.help" ]]; then
-		cp $v "$CONFIG_DIR/templates/rear.help" "$BOOT_DIR/rear.help" >&2
+	if [[ -s $(get_template "rear.help") ]]; then
+		cp $v $(get_template "rear.help") "$BOOT_DIR/rear.help" >&2
 		echo "F2 rear.help"
 		echo "say F2 - Show help"
 		syslinux_menu "TABMSG Press [Tab] to edit, [F2] for help, [F1] for version info"
@@ -182,7 +182,7 @@ function make_syslinux_config {
 	syslinux_menu "disable"
 	echo ""
 
-	if [[ "$FEATURE_SYSLINUX_MENU_HELP" && -r "$CONFIG_DIR/templates/rear.help" ]]; then
+	if [[ "$FEATURE_SYSLINUX_MENU_HELP" && -r $(get_template "rear.help") ]]; then
 		echo "label help"
 		syslinux_menu "label ^Help for $PRODUCT"
 		syslinux_menu_help "More information about Relax-and-Recover and the steps for recovering your system"

@@ -32,9 +32,9 @@ else
 	TSM_RESULT_FILES=( "${RESULT_FILES[@]}" )
 fi
 
-if test -s "$CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt" ; then
-	cp $v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "$TSM_RESULT_FILE_PATH/README" >&2
-	StopIfError "Could not copy '$CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt'"
+if test -s $(get_template "RESULT_usage_$OUTPUT.txt") ; then
+	cp $v $(get_template "RESULT_usage_$OUTPUT.txt") "$TSM_RESULT_FILE_PATH/README" >&2
+	StopIfError "Could not copy '$(get_template RESULT_usage_$OUTPUT.txt)'"
 	TSM_RESULT_FILES=( "${TSM_RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH"/README )
 fi
 

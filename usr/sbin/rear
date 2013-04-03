@@ -56,7 +56,7 @@ KEEP_BUILD_DIR=
 RECOVERY_MODE=
 
 # Parse options
-OPTS="$(getopt -n $PROGRAM -o "dDhsSvVr:" -l "help,version" -- "$@")"
+OPTS="$(getopt -n $PROGRAM -o "c:dDhsSvVr:" -l "help,version" -- "$@")"
 if (( $? != 0 )); then
 	echo "Try \`$PROGRAM --help' for more information."
 	exit 1
@@ -68,6 +68,7 @@ while true; do
 		(-h|--help) WORKFLOW="help";;
 		(-V|--version) echo -e "$PRODUCT $VERSION / $RELEASE_DATE"; exit 0;;
 		(-v) VERBOSE=1;;
+		(-c) CONFIG_DIR="$2"; shift;;
 		(-d) DEBUG=1; VERBOSE=1;;
 		(-D) DEBUGSCRIPTS=1;;
 		(-s) SIMULATE=1; VERBOSE=1;;

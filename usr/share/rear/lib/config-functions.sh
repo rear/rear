@@ -88,3 +88,12 @@ SetOSVendorAndVersion () {
 	fi
 
 }
+
+### Return the template filename
+get_template() {
+    if [[ -e $CONFIG_DIR/templates/$1 ]] ; then
+        echo $CONFIG_DIR/templates/$1
+    else
+        echo $SHARE_DIR/conf/templates/$1
+    fi
+}

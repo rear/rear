@@ -33,8 +33,8 @@ reverse_mapping_exists() {
     fi
 }
 
-if [ -e /etc/rear/mappings/disk_devices ] ; then
-    cp /etc/rear/mappings/disk_devices $MAPPING_FILE
+if [ -e $CONFIG_DIR/mappings/disk_devices ] ; then
+    cp $CONFIG_DIR/mappings/disk_devices $MAPPING_FILE
 fi
 
 # Automap old disks

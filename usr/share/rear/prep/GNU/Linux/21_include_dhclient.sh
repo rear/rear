@@ -93,7 +93,7 @@ PROGS=( "${PROGS[@]}" arping ipcalc usleep "${dhclients[@]}" )
 # as we need this variable at recovery time.
 grep -q "^USE_DHCLIENT=" "$CONFIG_DIR/local.conf"
 if [ $? -eq 1 ]; then
-	cat - <<EOF >> "$ROOTFS_DIR$CONFIG_DIR/rescue.conf"
+	cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
 # line below was automatically added by 21_include_dhclient.sh
 USE_DHCLIENT=$USE_DHCLIENT
 EOF
@@ -101,14 +101,14 @@ fi
 
 grep -q "^DHCLIENT_BIN=" "$CONFIG_DIR/local.conf"
 if [ $? -eq 1 ]; then
-	cat - <<EOF >> "$ROOTFS_DIR$CONFIG_DIR/rescue.conf"
+	cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
 DHCLIENT_BIN=$DHCLIENT_BIN
 EOF
 fi
 
 grep -q "^DHCLIENT6_BIN=" "$CONFIG_DIR/local.conf"
 if [ $? -eq 1 ]; then
-	cat - <<EOF >> "$ROOTFS_DIR$CONFIG_DIR/rescue.conf"
+	cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
 DHCLIENT6_BIN=$DHCLIENT6_BIN
 EOF
 fi

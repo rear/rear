@@ -17,10 +17,14 @@ Log "Finished copying COPY_AS_IS"
 
 # fix rear directory if running from checkout
 if [[ "$REAR_DIR_PREFIX" ]] ; then
-    for dir in /usr/share/rear /etc/rear /var/lib/rear ; do
+    for dir in /usr/share/rear /var/lib/rear ; do
         ln $v -sf $REAR_DIR_PREFIX$dir $ROOTFS_DIR$dir>&8
     done
 fi
+
+### Copy configuration directory
+mkdir $v -p $ROOTFS_DIR/etc/rear
+cp $v -r $CONFIG_DIR/* $ROOTFS_DIR/etc/rear/
 
 COPY_AS_IS_EXELIST=()
 while read -r ; do

@@ -24,7 +24,7 @@
 PXE_LOCAL_PATH=$PXE_CONFIG_PATH
 PXE_CONFIG_FILE="${PXE_CONFIG_PREFIX}$(uname -n)"
 cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
-$(test -s $CONFIG_DIR/templates/PXE_pxelinux.cfg && cat $CONFIG_DIR/templates/PXE_pxelinux.cfg)
+$(test -s $(get_template "PXE_pxelinux.cfg") && cat $(get_template "PXE_pxelinux.cfg"))
 display $PXE_MESSAGE
 say ----------------------------------------------------------
 say rear = disaster recover this system with Relax and Recover

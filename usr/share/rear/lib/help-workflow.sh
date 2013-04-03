@@ -21,12 +21,13 @@
 LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} help )
 WORKFLOW_help () {
 	cat <<EOF
-Usage: $PROGRAM [-dDsSvV] [-r KERNEL] COMMAND [-- ARGS...]
+Usage: $PROGRAM [-dDsSvV] [-c DIR ] [-r KERNEL] COMMAND [-- ARGS...]
 
 $PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:
+ -c DIR       alternative config directory; instead of /etc/rear
  -d           debug mode; log debug messages
  -D           debugscript mode; log every function call
  -r KERNEL    kernel version to use; current: '$KERNEL_VERSION'

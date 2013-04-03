@@ -20,8 +20,8 @@ test -z "$RESULT_MAILSUBJECT" && RESULT_MAILSUBJECT="Relax-and-Recover $HOSTNAME
 		"$RESULT_MAILSUBJECT" \
 		"${RESULT_MAILTO[@]}"
 
-	echo -e "$VERSION_INFO\n\n" | cat - $CONFIG_DIR/templates/RESULT_m*ailbody.txt \
-		$CONFIG_DIR/templates/RESULT_u*sage_$OUTPUT.txt | \
+	echo -e "$VERSION_INFO\n\n" | cat - $(get_template "RESULT_m*ailbody.txt") \
+		$(get_template "RESULT_u*sage_$OUTPUT.txt") | \
 		create_mime_part_plain
 
 	for file in "${RESULT_FILES[@]}" ; do

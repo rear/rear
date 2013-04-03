@@ -46,7 +46,7 @@ fi
 if [[ ! -z "${UEFI_BOOTLOADER}" ]]; then
     # right, variable is not empty, but is it a file?
     [[ ! -f ${UEFI_BOOTLOADER} ]] && Error "Cannot find a proper UEFI_BOOTLOADER ($UEFI_BOOTLOADER). 
-Please define it in /etc/rear/local.conf (e.g. UEFI_BOOTLOADER=/boot/efi/EFI/fedora/grubx64.efi)"
+Please define it in $CONFIG_DIR/local.conf (e.g. UEFI_BOOTLOADER=/boot/efi/EFI/fedora/grubx64.efi)"
     
 else
     # the UEFI_BOOTLOADER contains path in DOS format
@@ -60,7 +60,7 @@ fi
 if [[ ! -f ${UEFI_BOOTLOADER} ]]; then
 
     Error "Cannot find a proper UEFI_BOOTLOADER ($UEFI_BOOTLOADER). 
-Please define it in /etc/rear/local.conf (e.g. UEFI_BOOTLOADER=/boot/efi/EFI/fedora/shim.efi)"
+Please define it in $CONFIG_DIR/local.conf (e.g. UEFI_BOOTLOADER=/boot/efi/EFI/fedora/shim.efi)"
 
 else
 
@@ -69,7 +69,7 @@ else
 fi
 
 # save the variables we need in recover mode into the rescue.conf file
-cat - <<EOF >> "$ROOTFS_DIR$CONFIG_DIR/rescue.conf"
+cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
 USING_UEFI_BOOTLOADER=$USING_UEFI_BOOTLOADER
 UEFI_BOOTLOADER="$UEFI_BOOTLOADER"
 EOF

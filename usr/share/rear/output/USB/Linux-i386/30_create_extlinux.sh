@@ -250,8 +250,8 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
     syslinux_has "sysdump.c32"
     syslinux_has "vesamenu.c32"
 
-    if [ -r "$CONFIG_DIR/templates/rear.help" ]; then
-        cp $v "$CONFIG_DIR/templates/rear.help" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/rear.help" >&8
+    if [ -r $(get_template "rear.help") ]; then
+        cp $v $(get_template "rear.help") "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/rear.help" >&8
         syslinux_write <<EOF
 say F1 - Show help
 F1 /boot/syslinux/rear.help
@@ -292,7 +292,7 @@ label -
 
 EOF
 
-    if [[ "$FEATURE_SYSLINUX_MENU_HELP" && -r "$CONFIG_DIR/templates/rear.help" ]]; then
+    if [[ "$FEATURE_SYSLINUX_MENU_HELP" && -r $(get_template "rear.help") ]]; then
         syslinux_write <<EOF
 label help
     menu label ^Help for Relax-and-Recover

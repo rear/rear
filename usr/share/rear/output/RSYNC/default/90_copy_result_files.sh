@@ -13,7 +13,7 @@ fi
 echo "$VERSION_INFO" >"${TMP_DIR}/rsync/${RSYNC_PREFIX}/VERSION"
 StopIfError "Could not create VERSION file on local rsync location"
 
-cp $v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "${TMP_DIR}/rsync/${RSYNC_PREFIX}/README" >&2
+cp $v $(get_template "RESULT_usage_$OUTPUT.txt" "${TMP_DIR}/rsync/${RSYNC_PREFIX}/README" >&2
 StopIfError "Could not copy usage file to local rsync location"
 
 cat "$LOGFILE" >"${TMP_DIR}/rsync/${RSYNC_PREFIX}/rear.log"

@@ -5,4 +5,4 @@ if [ $BACKUP_PROG_CRYPT_ENABLED -ne 1 ]; then
 fi
 
 [ ! -z "$BACKUP_PROG_CRYPT_KEY" ]
-StopIfError "Please enter BACKUP_PROG_CRYPT_KEY in /etc/rear/local.conf !"
+StopIfError "Please enter BACKUP_PROG_CRYPT_KEY in $CONFIG_DIR/local.conf !"
