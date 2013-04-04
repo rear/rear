@@ -40,6 +40,8 @@ parted
 gdisk
 efibootmgr
 uefivars
+dosfsck
+dosfslabel
 )
 
 MODULES=( "${MODULES[@]}" efivars )
