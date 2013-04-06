@@ -15,6 +15,9 @@ if [[ -z "$NOBOOTLOADER" ]] ; then
     return
 fi
 
+# for UEFI systems with grub2 with should use efibootmgr instead
+[[ ! -z "$USING_UEFI_BOOTLOADER" ]] && return # not empty means UEFI booting
+
 # Only for GRUB2 - GRUB Legacy will be handled by its own script
 [[ $(type -p grub-probe) || $(type -p grub2-probe) ]] || return
 
