@@ -446,3 +446,17 @@ get_block_size() {
         echo "512"
     fi
 }
+
+# Get the UUID of a device
+# device is something like /dev/sda1
+blkid_uuid_of_device() {
+    local device=$1
+    local uuid=""
+    for LINE in $(blkid $device  2>/dev/null)
+    do
+        uuid=$( echo "$LINE" | grep "^UUID=" | cut -d= -f2 | sed -e 's/"//g')
+        [[ ! -z "$uuid" ]] && break
+    done
+    echo "$uuid"
+}
+

@@ -7,4 +7,5 @@ StopIfError "Could not find directory /mnt/local/boot/efi"
 
 cat > /mnt/local/etc/selinux/fixfiles_exclude_dirs <<EOF
 /boot/efi
+/boot/efi(/.*)?
 EOF
