@@ -114,6 +114,15 @@ EOF
             if [ -n "$label" ] ; then
                 echo "dosfslabel $device $label >&2" >> $LAYOUT_CODE
             fi
+            if [ -n "$uuid" ]; then
+                # the UUID label of vfat is changed by recreating the fs, we must swap it
+                cat >> $LAYOUT_CODE <<EOF
+                new_uuid=\$(blkid_uuid_of_device $device)
+                if [ "$uuid" != "\$new_uuid" ] ; then
+                    echo "$uuid \$new_uuid $device" >> $FS_UUID_MAP
+                fi
+EOF
+            fi
             ;;
         *)
 cat >> $LAYOUT_CODE <<EOF
