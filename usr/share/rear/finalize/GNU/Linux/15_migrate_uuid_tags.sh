@@ -28,6 +28,7 @@ for file in 	[b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/{gr
 		[e]tc/security/pam_mount.conf.xml [b]oot/efi/*/*/grub.cfg
 	do
 
+	[[ -d "$file" ]] && continue # skip directory
 	# sed -i bails on symlinks, so we follow the symlink and patch the result
 	# on dead links we warn and skip them
 	# TODO: maybe we must put this into a chroot so that absolute symlinks will work correctly
