@@ -221,8 +221,8 @@ ifneq ($(OFFICIAL),)
 	-osc branch Archiving:Backup:Rear:Snapshot rear $(obsproject) $(obspackage)
 	-osc detachbranch $(obsproject) $(obspackage)
 endif
-	osc co -c $(obsproject) $(obspackage) -o $(BUILD_DIR)
-	-osc del $(BUILD_DIR)/*.tar.gz
+	(cd $(BUILD_DIR) ; osc co -c $(obsproject) $(obspackage) )
+	-(cd $(BUILD_DIR)/$(obspackage) ; osc del *.tar.gz )
 	cp $(name)-$(distversion).tar.gz $(BUILD_DIR)
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(specfile) >$(BUILD_DIR)/$(name).spec
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)/$(dscfile) >$(BUILD_DIR)/$(name).dsc
