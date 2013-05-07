@@ -6,9 +6,9 @@ if [[ ! "$GRUB_RESCUE" =~ ^[yY1] ]]; then
     return
 fi
 
-[[ $(type -p grub-probe) || $(type -p grub2-probe) ]] || return # no grub nor grub2 used
-
 ### Only do when system has GRUB Legacy
+[[ $(type -p grub-probe) || $(type -p grub2-probe) ]] && return
+
 grub_binary=$(get_path grub)
 if [[ -z "$grub_binary" ]]; then
     Log "Could not find grub (legacy) binary."
@@ -17,7 +17,7 @@ fi
 
 ### Use strings as grub --version syncs all disks
 #grub_version=$(get_version "grub --version")
-grub_version=$(get_version "strings $grub_binary")
+grub_version=$(strings $grub_binary | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | tail -n 1)
 if version_newer "$grub_version" 1.0; then
     # only for grub-legacy we make special rear boot entry in menu.lst 
     return
