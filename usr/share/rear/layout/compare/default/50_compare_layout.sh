@@ -1,6 +1,6 @@
 # Test if ORIG_LAYOUT and TEMP_LAYOUT are the same
 
-diff <(grep -v '^#' $ORIG_LAYOUT) <(grep -v '^#' $TEMP_LAYOUT) >&8
+diff -u <(grep -v '^#' $ORIG_LAYOUT) <(grep -v '^#' $TEMP_LAYOUT) >&8
 
 if [ $? -eq 0 ] ; then
     LogPrint "Disk layout is identical."
