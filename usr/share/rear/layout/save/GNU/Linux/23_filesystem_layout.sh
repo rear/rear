@@ -81,8 +81,15 @@ Log "Saving Filesystem layout."
 
         options=${options#(}
         options=${options%)}
-        echo -n " options=$options"
 
+	# in case of btrfs we could deal with subvolumes - subvol option needed or not?
+	case "$fstype" in
+	    btrfs)
+		subvol=$(btrfs subvolume show $mountpoint | grep "Name:" | awk '{print $2}')
+		[[ ! -z "$subvol" ]] && options="$options,subvol=$subvol"
+		;;
+	esac
+        echo -n " options=$options"
         echo
     done < <(mount)
 ) >> $DISKLAYOUT_FILE
