@@ -244,12 +244,16 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
     syslinux_has "disk.c32"
     syslinux_has "host.c32"
     syslinux_has "kbdmap.c32"
-    syslinux_has "ldlinux.c32"
     syslinux_has "ls.c32"
     syslinux_has "lua.c32"
     syslinux_has "rosh.c32"
     syslinux_has "sysdump.c32"
     syslinux_has "vesamenu.c32"
+
+    # Add needed libraries for syslinux v5
+    syslinux_has "ldlinux.c32"
+    syslinux_has "libmenu.c32"
+    syslinux_has "libutil.c32"
 
     if [ -r $(get_template "rear.help") ]; then
         cp $v $(get_template "rear.help") "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/rear.help" >&8
