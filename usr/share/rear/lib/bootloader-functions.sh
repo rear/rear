@@ -263,9 +263,15 @@ function make_syslinux_config {
 		echo ""
 	fi
 
-	# Add needed libraries for syslinux v5
+	# Add needed libraries for syslinux v5 and hdt
 	if [[ -r "$SYSLINUX_DIR/ldlinux.c32" ]]; then
 		cp $v "$SYSLINUX_DIR/ldlinux.c32" "$BOOT_DIR/ldlinux.c32" >&2
+	fi
+	if [[ -r "$SYSLINUX_DIR/libcom32.c32" ]]; then
+		cp $v "$SYSLINUX_DIR/libcom32.c32" "$BOOT_DIR/libcom32.c32" >&2
+	fi
+	if [[ -r "$SYSLINUX_DIR/libgpl.c32" ]]; then
+		cp $v "$SYSLINUX_DIR/libgpl.c32" "$BOOT_DIR/libgpl.c32" >&2
 	fi
 	if [[ -r "$SYSLINUX_DIR/libmenu.c32" ]]; then
 		cp $v "$SYSLINUX_DIR/libmenu.c32" "$BOOT_DIR/libmenu.c32" >&2

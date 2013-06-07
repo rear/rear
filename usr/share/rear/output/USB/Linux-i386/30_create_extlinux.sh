@@ -250,8 +250,10 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
     syslinux_has "sysdump.c32"
     syslinux_has "vesamenu.c32"
 
-    # Add needed libraries for syslinux v5
+    # Add needed libraries for syslinux v5 and hdt
     syslinux_has "ldlinux.c32"
+    syslinux_has "libcom32.c32"
+    syslinux_has "libgpl.c32"
     syslinux_has "libmenu.c32"
     syslinux_has "libutil.c32"
 
