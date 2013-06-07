@@ -6,7 +6,7 @@ have_udev || return 0
 FindStorageDrivers $TMP_DIR/dev >$TMP_DIR/storage_drivers
 
 # compare
-if ! diff $VAR_DIR/recovery/storage_drivers $TMP_DIR/storage_drivers >&2 ; then
+if ! diff -u $VAR_DIR/recovery/storage_drivers $TMP_DIR/storage_drivers >&2 ; then
 	# TODO this branch is obsolete as this script runs only under UDEV
 	if have_udev ; then
 		LogPrint "NOTICE: Will do driver migration"

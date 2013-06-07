@@ -24,7 +24,7 @@ fi
 
 ### Copy configuration directory
 mkdir $v -p $ROOTFS_DIR/etc/rear
-cp $v -r $CONFIG_DIR/* $ROOTFS_DIR/etc/rear/
+cp $v -r $CONFIG_DIR/* $ROOTFS_DIR/etc/rear/ >&2
 
 COPY_AS_IS_EXELIST=()
 while read -r ; do
