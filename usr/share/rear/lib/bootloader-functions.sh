@@ -263,6 +263,10 @@ function make_syslinux_config {
 		echo ""
 	fi
 
+	if [[ -r "$SYSLINUX_DIR/ldlinux.c32" ]]; then
+		cp $v "$SYSLINUX_DIR/ldlinux.c32" "$BOOT_DIR/ldlinux.c32" >&2
+	fi
+
 	if [[ -r "$SYSLINUX_DIR/hdt.c32" ]]; then
 		cp $v "$SYSLINUX_DIR/hdt.c32" "$BOOT_DIR/hdt.c32" >&2
 		if [[ -r "/usr/share/hwdata/pci.ids" ]]; then
