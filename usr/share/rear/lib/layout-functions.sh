@@ -288,11 +288,11 @@ get_parent_components() {
 # find_devices <other>
 # Find the disk device(s) component $1 resides on.
 find_disk() {
-    get_parent_components $1 "disk"
+    get_parent_components "$1" "disk"
 }
 
 find_partition() {
-    get_parent_components $1 "part"
+    get_parent_components "$1" "part"
 }
 
 # Get the type of a layout component

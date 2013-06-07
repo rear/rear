@@ -16,7 +16,9 @@ if [[ -z "$NOBOOTLOADER" ]] ; then
 fi
 
 # Only for GRUB Legacy - GRUB2 will be handled by its own script
-[[ $(type -p grub) ]] || return
+if [[ -z "$(type -p grub)" ]]; then
+    return
+fi
 
 LogPrint "Installing GRUB boot loader"
 mount -t proc none /mnt/local/proc
@@ -31,12 +33,14 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
     [[ -r "/mnt/local/boot/grub/stage2" ]]
     StopIfError "Unable to find /boot/grub/stage2."
 
-    # Find exclusive partitions belonging to /boot (subtract root partitions from deps)
-    bootparts=$( (find_partition fs:/boot; find_partition fs:/) | sort | uniq -u )
-    grub_prefix=/grub
-    if [[ -z "$bootparts" ]]; then
+    # Find exclusive partition(s) belonging to /boot
+    # or / (if /boot is inside root filesystem)
+    if [[ "$(filesystem_name /mnt/local/boot)" == "/mnt/local" ]]; then
         bootparts=$(find_partition fs:/)
         grub_prefix=/boot/grub
+    else
+        bootparts=$(find_partition fs:/boot)
+        grub_prefix=/grub
     fi
     # Should never happen
     [[ "$bootparts" ]]
