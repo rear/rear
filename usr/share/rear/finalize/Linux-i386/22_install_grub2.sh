@@ -41,12 +41,14 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
     [[ -r "/mnt/local/boot/$grub_name/grub.cfg" ]]
     LogIfError "Unable to find /boot/$grub_name/grub.cfg."
 
-    # Find exclusive partitions belonging to /boot (subtract root partitions from deps)
-    bootparts=$( (find_partition fs:/boot; find_partition fs:/) | sort | uniq -u )
-    grub_prefix=/grub
-    if [[ -z "$bootparts" ]]; then
+    # Find exclusive partition(s) belonging to /boot
+    # or / (if /boot is inside root filesystem)
+    if [[ "$(filesystem_name /mnt/local/boot)" == "/mnt/local" ]]; then
         bootparts=$(find_partition fs:/)
         grub_prefix=/boot/grub2
+    else
+        bootparts=$(find_partition fs:/boot)
+        grub_prefix=/grub2
     fi
     # Should never happen
     [[ "$bootparts" ]]

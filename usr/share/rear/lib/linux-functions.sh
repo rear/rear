@@ -351,5 +351,10 @@ EOF
 # Return the filesystem name related to a path
 function filesystem_name() {
     local path=$1
-    df $path | awk 'END { print $6 }'
+    local fs=$(df -P "$path" | awk 'END { print $6 }')
+    if [[ -z "$fs" ]]; then
+        echo "/"
+    else
+        echo "$fs"
+    fi
 }
