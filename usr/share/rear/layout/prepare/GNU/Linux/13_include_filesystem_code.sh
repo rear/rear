@@ -7,10 +7,13 @@ create_fs() {
     label=${label#label=}
     uuid=${uuid#uuid=}
 
+
     case $fstype in
         ext*)
             # File system parameters.
             local blocksize="" reserved_blocks="" max_mounts="" check_interval=""
+            OIFS=$IFS
+            IFS=","
 
             local option name value
             for option in $options ; do
@@ -40,6 +43,7 @@ create_fs() {
                         ;;
                 esac
             done
+            IFS=$OIFS
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
 mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} $device >&2
@@ -90,19 +94,32 @@ EOF
         btrfs)
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
-mkfs -t $fstype $device
+# if $device is already mounted, skip
+mount | grep -q $device || mkfs -t $fstype -f $device
 EOF
             if [ -n "$label" ] ; then
-                echo "btrfs filesystem label $device $label >&2" >> $LAYOUT_CODE
+                echo "mount | grep -q $device || btrfs filesystem label $device $label >&2" >> $LAYOUT_CODE
             fi
             if [ -n "$uuid" ] ; then
                 # Problem with btrfs is that uuid cannot be set during mkfs! So, we must map it and
                 # change later the /etc/fstab, /boot/grub/menu.lst, etc
-                cat >> $LAYOUT_CODE <<EOF
-                new_uuid=\$(btrfs filesystem show $device | grep -i uuid | cut -d: -f3 | sed -e 's/^ //')
+                cat >> $LAYOUT_CODE <<-EOF
+                new_uuid=\$(btrfs filesystem show $device 2>/dev/null | grep -i uuid | cut -d: -f3 | sed -e 's/^ //')
                 if [ "$uuid" != "\$new_uuid" ] ; then
-                    echo "$uuid \$new_uuid $device" >> $FS_UUID_MAP
-                fi
+                    if [ ! -f $FS_UUID_MAP ]; then 
+                        echo "$uuid \$new_uuid $device" > $FS_UUID_MAP
+                    else
+                        grep -q "${uuid}" $FS_UUID_MAP
+                        if [[ \$? -eq 0 ]]; then
+                            # required when we restart rear recover (via menu) - uuid changed again
+                            old_uuid=\$(grep ${uuid} $FS_UUID_MAP | tail -1 | awk '{print \$2}')
+                            SED_SCRIPT=";/${uuid}/s/\${old_uuid}/\${new_uuid}/g"
+                            sed -i "\$SED_SCRIPT" "$FS_UUID_MAP"
+                        else
+                            echo "$uuid \$new_uuid $device" >> $FS_UUID_MAP
+                        fi
+                    fi
+                fi # end of [ "$uuid" != "\$new_uuid" ]
 EOF
             fi
             ;;
@@ -135,7 +152,7 @@ EOF
     # Extract mount options
     local option mountopts
     for option in $options ; do
-        name=${option%=*}
+        name=${option%%=*}     # options can contain more '=' signs
         value=${option#*=}
 
         case $name in
@@ -150,9 +167,39 @@ EOF
         mountopts=" -o $mountopts"
     fi
 
-cat >> $LAYOUT_CODE <<EOF
-LogPrint "Mounting filesystem $mp"
-mkdir -p /mnt/local$mp
-mount$mountopts $device /mnt/local$mp
-EOF
+    echo "LogPrint \"Mounting filesystem $mp\"" >> $LAYOUT_CODE
+
+    case $fstype in
+        btrfs)
+            # check the $value for subvols (other then root)
+            subvol=$(echo $value |  awk -F, '/subvol=/  { print $NF}') # empty or something like 'subvol=root'
+            if [ -z "$subvol" ]; then
+                echo "mkdir -p /mnt/local$mp" >> $LAYOUT_CODE
+            elif [ "$subvol" = "subvol=root" ]; then
+		echo "# btrfs subvolume 'root' is a special case" >> $LAYOUT_CODE
+		echo "# before we can create subvolumes we must mount a btrfs device on /mnt" >> $LAYOUT_CODE
+		echo "mount | grep btrfs | grep -q '/mnt' || mount /dev/sda3 /mnt" >> $LAYOUT_CODE
+		echo "# create the root btrfs subvolume" >> $LAYOUT_CODE
+		echo "btrfs subvolume create /mnt/root" >> $LAYOUT_CODE
+                echo "mkdir -p /mnt/local$mp" >> $LAYOUT_CODE
+                echo "# umount subvol 0 as it will be remounted as /mnt/local" >> $LAYOUT_CODE
+                echo "umount /mnt" >> $LAYOUT_CODE
+            else
+		echo "# btrfs subvolume creates sub-directory itself" >> $LAYOUT_CODE
+                echo "btrfs subvolume create /mnt/local$mp" >> $LAYOUT_CODE
+                # just mounting it with subvol=xxx will probably fail with an cryptic error:
+                # mount: mount(2) failed: No such file or directory
+                # we need to mount it with its subvol-id - not a joke
+                # even its not yet mounted we can view it - see http://www.funtoo.org/BTRFS_Fun
+                btrfs_id=\$(btrfs subvolume list /mnt/local$mp | tail -1 | awk '{print \$2}') >> $LAYOUT_CODE
+                mountopts=" -o subvolid=\${btrfs_id}" >> $LAYOUT_CODE
+            fi
+            echo "mount$mountopts $device /mnt/local$mp" >> $LAYOUT_CODE
+            ;;
+        *)
+            echo "mkdir -p /mnt/local$mp" >> $LAYOUT_CODE
+            echo "mount$mountopts $device /mnt/local$mp" >> $LAYOUT_CODE
+            ;;
+    esac
+
 }
