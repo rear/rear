@@ -34,20 +34,22 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 	Log "New INITRD_MODULES='${OLD_INITRD_MODULES[@]} ${NEW_INITRD_MODULES[@]}'"
 	INITRD_MODULES="${OLD_INITRD_MODULES[@]} ${NEW_INITRD_MODULES[@]}"
 
-	WITH_INITRD_MODULES=$( printf '%s\n' ${INITRD_MODULES[@]} | awk '{printf "--with=%s ", $1}' )
-	[[ -f /mnt/local/boot/initrd-${KERNEL_VERSION}.img ]] && INITRD_IMG=/boot/initrd-${KERNEL_VERSION}.img \
-	|| INITRD_IMG=/boot/initramfs-${KERNEL_VERSION}.img
+	WITH_INITRD_MODULES=$( prin mount -t proc none /mnt/local/proc
+        mount -t sysfs none /mnt/local/sys
 
-	mount -t proc none /mnt/local/proc
-	mount -t sysfs none /mnt/local/sys
-	if chroot /mnt/local /bin/bash --login -c "mkinitrd -v -f ${WITH_INITRD_MODULES[@]} $INITRD_IMG $KERNEL_VERSION" >&2 ; then
-		LogPrint "Updated initramfs with new drivers for this system."
-	else
-		LogPrint "WARNING !!!
-initramfs creation failed, please check '$LOGFILE' to see the error
+        # Watch for any initrd or initramfs in original grub.conf and recreate it with the new drivers
+        for INITRD_IMG in `grep -v "#" /mnt/local/boot/grub/grub.conf | egrep -o '(initrd-.*img|initramfs-.*img)'` ; do
+            KERNEL_VERSION=`echo $INITRD_IMG | cut -f2- -d"-" | sed s/".img"//`
+            if chroot /mnt/local /bin/bash --login -c "mkinitrd -v -f ${WITH_INITRD_MODULES[@]} $INITRD_IMG $KERNEL_VERSION" >&2 ; then
+                        LogPrint "Updated initramfs with new drivers for installed Kernel $KERNEL_VERSION."
+            else
+                        LogPrint "WARNING !!!
+initramfs creation for Kernel $KERNEL_VERSION failed, please check '$LOGFILE' to see the error
 messages in detail and decide yourself, wether the system will boot or not.
 "
-	fi
-	umount /mnt/local/proc /mnt/local/sys
+            fi
+        done
+
+        umount /mnt/local/proc /mnt/local/sys
 
 fi
