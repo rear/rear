@@ -191,7 +191,7 @@ EOF
                 # mount: mount(2) failed: No such file or directory
                 # we need to mount it with its subvol-id - not a joke
                 # even its not yet mounted we can view it - see http://www.funtoo.org/BTRFS_Fun
-                btrfs_id=\$(btrfs subvolume list /mnt/local$mp | tail -1 | awk '{print \$2}') >> $LAYOUT_CODE
+                btrfs_id=$(btrfs subvolume list /mnt/local$mp | tail -1 | awk '{print \$2}') >> $LAYOUT_CODE
                 mountopts=" -o subvolid=\${btrfs_id}" >> $LAYOUT_CODE
             fi
             echo "mount$mountopts $device /mnt/local$mp" >> $LAYOUT_CODE
