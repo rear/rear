@@ -178,7 +178,7 @@ EOF
             elif [ "$subvol" = "subvol=root" ]; then
 		echo "# btrfs subvolume 'root' is a special case" >> $LAYOUT_CODE
 		echo "# before we can create subvolumes we must mount a btrfs device on /mnt" >> $LAYOUT_CODE
-		echo "mount | grep btrfs | grep -q '/mnt' || mount /dev/sda3 /mnt" >> $LAYOUT_CODE
+		echo "mount | grep btrfs | grep -q '/mnt' || mount $device /mnt" >> $LAYOUT_CODE
 		echo "# create the root btrfs subvolume" >> $LAYOUT_CODE
 		echo "btrfs subvolume create /mnt/root" >> $LAYOUT_CODE
                 echo "mkdir -p /mnt/local$mp" >> $LAYOUT_CODE
