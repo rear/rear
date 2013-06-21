@@ -3,9 +3,9 @@
 # then add all the required executables, kernel modules, etc...
 # Most likely, only recent OSes will be UEFI capable, such as SLES11, RHEL6, Ubuntu 12.10, Fedora 18
 
-# To verify if this kernel has UEFI Runtime Services enabled we check for efivars module
+# Some distributions don't have a builtin efivars kernel module, so we need to load it.
 # Be aware, efivars is not listed with 'lsmod'
-modprobe -q efivars || return  # if the module is not present no UEFI booting is possible
+modprobe -q efivars
 
 # next step, is checking the presence of UEFI variables directory
 # However, we should first check kernel command line to see whether we hide on purpose the UEFI vars with 'noefi'
