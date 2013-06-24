@@ -37,3 +37,9 @@ for s in /etc/scripts/system-setup.d/*.sh ; do
 	set +x
 done
 echo "* * * Rescue System is ready * * *"
+
+# Launch rear recover automatically
+if grep -q 'auto_recover' /proc/cmdline ; then
+        rear recover -v
+fi
+
