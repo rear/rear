@@ -11,7 +11,7 @@ create_fs() {
     case $fstype in
         ext*)
             # File system parameters.
-            local blocksize="" reserved_blocks="" max_mounts="" check_interval=""
+            local blocksize="" reserved_blocks="" max_mounts="" check_interval="" default_mount_options=""
             OIFS=$IFS
             IFS=","
 
@@ -41,6 +41,9 @@ create_fs() {
                     check_interval)
                         check_interval=" -i $value"
                         ;;
+                    default_mount_options)
+                        default_mount_options=" -o $value"
+                        ;;
                 esac
             done
             IFS=$OIFS
@@ -62,7 +65,7 @@ EOF
                 echo "$tunefs -U $uuid $device >&2" >> $LAYOUT_CODE
             fi
 
-            tune2fsopts="${reserved_blocks}${max_mounts}${check_interval}"
+            tune2fsopts="${reserved_blocks}${max_mounts}${check_interval}${default_mount_options}"
             if [ -n "$tune2fsopts" ] ; then
                 echo "$tunefs $tune2fsopts $device >&2" >> $LAYOUT_CODE
             fi
