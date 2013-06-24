@@ -12,14 +12,11 @@ create_fs() {
         ext*)
             # File system parameters.
             local blocksize="" reserved_blocks="" max_mounts="" check_interval="" default_mount_options=""
-            OIFS=$IFS
-            IFS=","
 
             local option name value
             for option in $options ; do
                 name=${option%=*}
                 value=${option#*=}
-
                 case $name in
                     blocksize)
                         blocksize=" -b $value"
@@ -46,7 +43,6 @@ create_fs() {
                         ;;
                 esac
             done
-            IFS=$OIFS
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
 mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} $device >&2
