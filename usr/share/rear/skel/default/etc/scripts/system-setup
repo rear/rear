@@ -42,4 +42,10 @@ echo "* * * Rescue System is ready * * *"
 if grep -q 'auto_recover' /proc/cmdline ; then
         rear recover -v
 fi
-
+if [ $? -eq 0 ] ; then
+	echo -e "\n\n Success ! Reboot Now.\n"
+	reboot
+else
+	echo "" > /etc/issue
+	echo "" > /etc/motd
+fi
