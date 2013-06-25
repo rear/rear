@@ -42,10 +42,29 @@ echo "* * * Rescue System is ready * * *"
 if grep -q 'auto_recover' /proc/cmdline ; then
         rear recover -v
 fi
+choices=(
+    "View Relax-and-Recover log"
+    "Go to Relax-and-Recover shell"
+)
 if [ $? -eq 0 ] ; then
-	echo -e "\n\n Success ! Reboot Now.\n"
-	reboot
+    choices=(
+    "${choices[@]}"
+    "Reboot"
+    )
+    echo -e "\n\n Success !\n"
 else
-	echo "" > /etc/issue
-	echo "" > /etc/motd
+    echo -e "\n\n Errors, please see log file !\n"
 fi
+
+select choice in "${choices[@]}"; do
+    case "$REPLY" in
+	(1) less /var/log/rear/rear-`uname -n`.log;;
+	(2) echo "" > /etc/issue
+	    echo "" > /etc/motd
+	    break;;
+	(3) reboot;;
+    esac
+    for (( i=1; i <= ${#choices[@]}; i++ )); do
+	echo "$i) ${choices[$i-1]}"
+    done
+done 2>&1
