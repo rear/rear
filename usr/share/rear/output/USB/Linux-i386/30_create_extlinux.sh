@@ -115,6 +115,16 @@ ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BA
     kernel /$USB_PREFIX/kernel
     append initrd=/$USB_PREFIX/initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 
+label $HOSTNAME-$time
+    menu label ${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2} $usb_label_workflow - AUTOMATIC RECOVER
+    say $HOSTNAME-$time - Recover $HOSTNAME $usb_label_workflow ($time)
+    text help
+Relax-and-Recover v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPADDR:+on $IPADDR}
+${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
+    endtext
+    kernel /$USB_PREFIX/kernel
+    append initrd=/$USB_PREFIX/initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover
+
 EOF
 
 # Clean up older images of a given system, but keep USB_RETAIN_BACKUP_NR
