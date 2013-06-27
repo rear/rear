@@ -1,14 +1,15 @@
+# Test for the syslinux version
 function get_syslinux_version {
     local syslinux_version
 
-    # Test for the syslinux version
     syslinux_version=$(get_version extlinux --version)
+
     if [[ -z "$syslinux_version" ]]; then
         syslinux_version=$(get_version syslinux --version)
     fi
 
     if [[ -z "$syslinux_version" ]]; then
-        syslinux_version=$(strings $SYSLINUX_DIR/isolinux.bin | grep ISOLINUX | head -1 | cut -d' ' -f2)
+        syslinux_version=$(strings $SYSLINUX_DIR/isolinux.bin | awk '/^ISOLINUX / { print $2 }')
     fi
 
     if [[ -z "$syslinux_version" ]]; then
