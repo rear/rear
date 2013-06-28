@@ -295,6 +295,30 @@ find_partition() {
     get_parent_components "$1" "part"
 }
 
+# Function returns partition number of partition block device name
+#
+# This function should support:
+#   /dev/mapper/36001438005deb05d0000e00005c40000p1
+#   /dev/mapper/36001438005deb05d0000e00005c40000_part1
+#   /dev/mapper/36001438005deb05d0000e00005c400001
+#   /dev/sda1
+#   /dev/cciss/c0d0p1
+
+get_partition_number() {
+    local partition=$1
+    local number=$(echo "$partition" | grep -o -E "[0-9]+$")
+
+    # FIXME: This only supports up to 9 partitions
+    if (( ${#number} > 1 )); then
+        number=${number: -1}
+    fi
+
+    [ $number -gt 0 2>/dev/null ]
+    BugIfError "Partition number '$number' of partition $partition is not a valid number."
+
+    echo $number
+}
+
 # Get the type of a layout component
 get_component_type() {
     grep -E "^[^ ]+ $1 " $LAYOUT_TODO | cut -d " " -f 3
