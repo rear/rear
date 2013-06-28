@@ -303,6 +303,8 @@ find_partition() {
 #   /dev/mapper/36001438005deb05d0000e00005c400001
 #   /dev/sda1
 #   /dev/cciss/c0d0p1
+#
+# Requires: grep v2.5 or higher (option -o)
 
 get_partition_number() {
     local partition=$1

@@ -57,7 +57,7 @@ extract_partitions() {
         partition_name=${partition_name#/dev/}
         partition_name=${partition_name#mapper/}
 
-        partition_nr=$(echo "$partition_name" | grep -E -o '[0-9]+$')
+        partition_nr=$(get_partition_number "$partition_name")
 
         partition_prefix=${partition_name%$partition_nr}
 
