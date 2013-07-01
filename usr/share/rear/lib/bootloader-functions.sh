@@ -176,7 +176,17 @@ function make_syslinux_config {
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"
 	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
-
+	echo ""
+	
+	echo "say rear - Recover $(uname -n)"
+	echo "label rear"
+	syslinux_menu "label Automatic ^Recover $(uname -n)"
+	syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
+			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
+	echo "kernel kernel"
+	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover"
+	echo ""
+	
 	syslinux_menu separator
 	echo "label -"
 	syslinux_menu "label Other actions"
