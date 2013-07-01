@@ -1,5 +1,10 @@
 # copy required system users and groups to the rescue system
 
+if [[ "$CLONE_ALL_USERS_GROUPS" =~ ^[yY1] ]]; then
+    CLONE_USERS=($(cut -d ':' -f '1' /etc/passwd))
+    CLONE_GROUPS=($(cut -d ':' -f '1' /etc/group))
+fi
+
 Log "Cloning users: ${CLONE_USERS[@]}"
 for u in "${CLONE_USERS[@]}" ; do
 	# go over all users

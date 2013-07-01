@@ -47,6 +47,8 @@ Log "Saving Filesystem layout."
                 nr_inodes=$($tunefs -l $device | grep "Inode count" | tr -d " " | cut -d ":" -f "2")
                 let "bytes_per_inode=$nr_blocks*$blocksize/$nr_inodes"
 
+                default_mount_options=$(tune2fs -l $device | grep -i "Default mount options" | cut -d ":" -f "2" | awk '{$1=$1};1' | tr ' ' ',' | grep -v none)
+
                 # translate check_interval from seconds to days
                 let check_interval=$check_interval/86400
 
@@ -54,6 +56,9 @@ Log "Saving Filesystem layout."
                 echo -n " blocksize=$blocksize reserved_blocks=$reserved_percentage%"
                 echo -n " max_mounts=$max_mounts check_interval=${check_interval}d"
                 echo -n " bytes_per_inode=$bytes_per_inode"
+                if [[ -n $default_mount_options ]]; then
+                    echo -n " default_mount_options=$default_mount_options"
+                fi
                 ;;
             vfat)
                 # Make sure we don't get any other output from dosfslabel (errors go to stdout :-/)
