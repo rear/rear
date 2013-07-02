@@ -9,10 +9,21 @@ StopIfError "Could not create $TMP_DIR/mnt/EFI/BOOT/fonts"
 mkdir $v -p $TMP_DIR/mnt/EFI/BOOT/locale >&2
 StopIfError "Could not create $TMP_DIR/mnt/EFI/BOOT/locale"
 
-# copy the grub*.efi executable
-cp  $v "${UEFI_BOOTLOADER}" $TMP_DIR/mnt/EFI/BOOT >&2
+# copy the grub*.efi executable to EFI/BOOT/BOOTX64.efi 
+cp  $v "${UEFI_BOOTLOADER}" $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi >&2
 StopIfError "Could not find ${UEFI_BOOTLOADER}"
 
+if [[ -n "$(type -p grub)" ]]; then
+cat > $TMP_DIR/mnt/EFI/BOOT/BOOTX64.conf << EOF
+default=0
+timeout 5
+splashimage=/EFI/BOOT/splash.xpm.gz
+title Relax and Recover (no Secure Boot)
+    kernel /isolinux/kernel
+    initrd /isolinux/initrd.cgz
+
+EOF
+else
 # create small embedded grub.cfg file for grub-mkimage
 cat > $TMP_DIR/mnt/EFI/BOOT/embedded_grub.cfg <<EOF
 set prefix=(cd0)/EFI/BOOT
@@ -61,7 +72,7 @@ menuentry "Exit to EFI Shell" {
      quit
 }
 EOF
-
+fi
 # create BOOTX86.efi
 build_bootx86_efi
 
@@ -93,7 +104,12 @@ StopIfError "Could not create the isofs/EFI/BOOT directory on the ISO image"
 
 # make /boot/grub/grub.cfg available on isofs/
 mkdir $v -p -m 755 $TMP_DIR/isofs/boot/grub >&2
-cp $v $TMP_DIR/isofs/EFI/BOOT/*.cfg  $TMP_DIR/isofs/boot/grub/ >&2
-StopIfError "Could not copy grub.cfg to isofs/boot/grub"
+if [[ -n "$(type -p grub)" ]]; then
+    cp $v $TMP_DIR/isofs/EFI/BOOT/BOOTX64.conf  $TMP_DIR/isofs/boot/grub/ >&2
+else
+    cp $v $TMP_DIR/isofs/EFI/BOOT/grub.cfg  $TMP_DIR/isofs/boot/grub/ >&2
+fi
+
+StopIfError "Could not copy grub config file to isofs/boot/grub"
 
 ISO_FILES=( "${ISO_FILES[@]}" )
