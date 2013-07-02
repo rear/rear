@@ -16,7 +16,7 @@ Log "Cleaning up systemd udev socket files"
 my_udev_files=( $(find $ROOTFS_DIR/usr/lib/systemd/system/sockets.target.wants -type l -name "*udev*"  -printf "%P\n") )
 
 for m in "${my_udev_files[@]}" ; do
-    if [[ ! -h /lib/systemd/system/sockets.target.wants/$m ]] || [[ ! -h /usr/lib/systemd/system/sockets.target.wants/$m ]]; then
+    if [[ ! -h /lib/systemd/system/sockets.target.wants/$m ]] && [[ ! -h /usr/lib/systemd/system/sockets.target.wants/$m ]]; then
         rm -f $ROOTFS_DIR/usr/lib/systemd/system/sockets.target.wants/$m
     fi
 done

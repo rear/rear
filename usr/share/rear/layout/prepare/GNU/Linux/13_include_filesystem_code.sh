@@ -174,6 +174,7 @@ EOF
             subvol=$(echo $value |  awk -F, '/subvol=/  { print $NF}') # empty or something like 'subvol=root'
             if [ -z "$subvol" ]; then
                 echo "mkdir -p /mnt/local$mp" >> $LAYOUT_CODE
+                echo "mount$mountopts $device /mnt/local$mp" >> $LAYOUT_CODE
             elif [ "$subvol" = "subvol=root" ]; then
 		echo "# btrfs subvolume 'root' is a special case" >> $LAYOUT_CODE
 		echo "# before we can create subvolumes we must mount a btrfs device on /mnt" >> $LAYOUT_CODE
