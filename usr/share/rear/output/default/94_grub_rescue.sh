@@ -44,7 +44,11 @@ if (( available_space + used_space < required_space )); then
     return
 fi
 
-grub_conf=$(readlink -f /boot/grub/menu.lst)
+if [ -n "$USING_UEFI_BOOTLOADER" ]; then
+    grub_conf="`dirname $UEFI_BOOTLOADER`/grub.conf"
+else
+    grub_conf=$(readlink -f /boot/grub/menu.lst)
+fi
 [[ -w "$grub_conf" ]]
 StopIfError "GRUB configuration cannot be modified."
 
