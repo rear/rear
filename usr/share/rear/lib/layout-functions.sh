@@ -300,7 +300,6 @@ find_partition() {
 # This function should support:
 #   /dev/mapper/36001438005deb05d0000e00005c40000p1
 #   /dev/mapper/36001438005deb05d0000e00005c40000_part1
-#   /dev/mapper/36001438005deb05d0000e00005c400001
 #   /dev/sda1
 #   /dev/cciss/c0d0p1
 #
@@ -310,13 +309,13 @@ get_partition_number() {
     local partition=$1
     local number=$(echo "$partition" | grep -o -E "[0-9]+$")
 
-    # FIXME: This only supports up to 9 partitions
-    if (( ${#number} > 1 )); then
-        number=${number: -1}
-    fi
+    # Test if $number is a positive integer, if not it is a bug
+    [ $number -gt 0 ] 2>&8
+    StopIfError "Partition number '$number' of partition $partition is not a valid number."
 
-    [ $number -gt 0 2>/dev/null ]
-    BugIfError "Partition number '$number' of partition $partition is not a valid number."
+    # Catch if $number is too big, report it as a bug
+    (( $number <= 128 ))
+    StopIfError "Partition $partition is numbered '$number'. More than 128 partitions is not supported."
 
     echo $number
 }
