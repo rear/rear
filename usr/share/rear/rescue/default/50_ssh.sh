@@ -48,4 +48,9 @@ if has_binary sshd; then
 	if test ! -f "/root/.ssh/authorized_keys" ; then
 		LogPrint "TIP: To login as root via ssh you need to set up /root/.ssh/authorized_keys"
 	fi
+	
+	# Set the SSH root password
+	if [ -n "$SSH_ROOT_PASSWORD" ] ; then
+		echo "root:`echo $SSH_ROOT_PASSWORD | openssl passwd -1 -stdin`:::::::" > $ROOTFS_DIR/etc/shadow
+	fi
 fi
