@@ -10,8 +10,8 @@ else
         BugError "SELinux enforce file is not found. Please enhance this script."
 fi
 
-# check global settings (see default.conf) - non-empty means disable SELinux during backup
-if [ -n "$BACKUP_SELINUX_DISABLE" ]; then
+# check global settings (see default.conf)
+if [[ "$BACKUP_SELINUX_DISABLE" =~ ^[yY1] ]]; then
         cat $SELINUX_ENFORCE  > $TMP_DIR/selinux.mode
         RSYNC_SELINUX=
         return
