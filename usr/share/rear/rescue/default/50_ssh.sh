@@ -50,7 +50,7 @@ if has_binary sshd; then
 	fi
 	
 	# Set the SSH root password
-	if [ -n "$SSH_ROOT_PASSWORD" ] ; then
-		echo "root:`echo $SSH_ROOT_PASSWORD | openssl passwd -1 -stdin`:::::::" > $ROOTFS_DIR/etc/shadow
+	if [[ $SSH_ROOT_PASSWORD ]] ; then
+		echo "root:$(echo $SSH_ROOT_PASSWORD | openssl passwd -1 -stdin):::::::" > $ROOTFS_DIR/etc/shadow
 	fi
 fi
