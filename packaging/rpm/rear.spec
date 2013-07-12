@@ -29,6 +29,7 @@ Requires: mingetty
 Requires: parted
 Requires: tar
 Requires: util-linux
+Requires: openssl
 
 ### If you require NFS, you may need the below packages
 #Requires: nfsclient portmap rpcbind
