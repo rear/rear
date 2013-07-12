@@ -56,6 +56,7 @@ if grep -q 'auto_recover' /proc/cmdline ; then
 	    echo -e "\n\n Errors, please see log file !\n"
 	fi
 
+	PS3="What do you want to do now ? "
 	select choice in "${choices[@]}"; do
 	    case "$REPLY" in
 		(1) less /var/log/rear/rear-`uname -n`.log;;
