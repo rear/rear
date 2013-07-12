@@ -10,8 +10,8 @@ else
         BugError "SELinux enforce file is not found. Please enhance this script."
 fi
 
-# check global settings (see default.conf) - non-empty means disable SELinux during backup
-if [ -n "$BACKUP_SELINUX_DISABLE" ]; then
+# check global settings (see default.conf)
+if [[ "$BACKUP_SELINUX_DISABLE" =~ ^[yY1] ]]; then
         cat $SELINUX_ENFORCE  > $TMP_DIR/selinux.mode
         RSYNC_SELINUX=
         return
@@ -30,6 +30,7 @@ case $(basename $BACKUP_PROG) in
 			# $TMP_DIR/selinux.mode is a trigger during backup to disable SELinux
 			cat $SELINUX_ENFORCE > $TMP_DIR/selinux.mode
 			RSYNC_SELINUX=		# internal variable used in recover mode (empty means disable SELinux)
+			touch $TMP_DIR/force.autorelabel	# after reboot the restored system do a forced SELinux relabeling
 		else
 			# if --xattrs is already set; no need to do it again
 			if ! grep -q xattrs <<< $(echo ${BACKUP_RSYNC_OPTIONS[@]}); then
@@ -37,17 +38,16 @@ case $(basename $BACKUP_PROG) in
 			fi
 			RSYNC_SELINUX=1		# variable used in recover mode (means using xattr and not disable SELinux)
 		fi
-		touch $TMP_DIR/force.autorelabel	# after reboot the restored system do a forced SELinux relabeling
 		;;
 
 	(tar)
 		if tar --usage | grep -q selinux  ; then
 			# during backup we will NOT disable SELinux
 			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --selinux"
-			touch $TMP_DIR/force.autorelabel
 		else
 			# during backup we will disable SELinux
 			cat $SELINUX_ENFORCE > $TMP_DIR/selinux.mode
+			touch $TMP_DIR/force.autorelabel
 			# after reboot the restored system does a SELinux relabeling
 		fi
 		;;
@@ -55,6 +55,7 @@ case $(basename $BACKUP_PROG) in
 	(*)
 		# disable SELinux for unlisted BACKUP_PROGs
 		cat $SELINUX_ENFORCE > $TMP_DIR/selinux.mode
+		touch $TMP_DIR/force.autorelabel
 		;;
 
 esac
