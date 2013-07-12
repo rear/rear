@@ -58,6 +58,15 @@ backup_path() {
        (file)  # type file needs a local path (must be mounted by user)
            path="$path/${NETFS_PREFIX}"
            ;;
+       (iso)
+           if [[ "$WORKFLOW" = "recover" ]]; then
+               # The backup is located inside the ISO mount point when we do a recover
+               path="${BUILD_DIR}/outputfs${path}"
+           else
+               # The backup will be located on the ISO temporary dir
+               path="${TMP_DIR}/isofs${path}"
+           fi
+           ;;
        (*)     # nfs, cifs, usb, a.o. need a temporary mount-path 
            path="${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
            ;;
@@ -97,6 +106,13 @@ mount_url() {
             ### Don't need to mount anything for these
             return 0
             ;;
+        (iso)
+            if [[ "$WORKFLOW" = "recover" ]]; then
+                mount_cmd="mount -o loop /dev/disk/by-label/${ISO_VOLID} $mountpoint"
+            else
+                return 0
+            fi
+            ;;
         (var)
             ### The mount command is given by variable in the url host
             local var=$(url_host $url)
@@ -114,7 +130,7 @@ mount_url() {
             ;;
 	(sshfs)
 	    mount_cmd="sshfs $(url_host $url):$(url_path $url) $mountpoint -o $options"
-	    ;; 
+	    ;;
         (*)
             mount_cmd="mount $v -t $(url_scheme $url) -o $options $(url_host $url):$(url_path $url) $mountpoint"
             ;;
@@ -137,6 +153,11 @@ umount_url() {
         (tape|file|rsync|fish|ftp|ftps|hftp|http|https|sftp)
             ### Don't need to umount anything for these
             return 0
+            ;;
+        (iso)
+            if [[ "$WORKFLOW" != "recover" ]]; then
+                return 0
+            fi
             ;;
 	(sshfs)
 	    umount_cmd="fusermount -u $mountpoint"

@@ -3,7 +3,7 @@
 
 local scheme=$(url_scheme $BACKUP_URL)
 case "$TAPE_DEVICE:$scheme" in
-    (:file)
+    (:file|:iso)
         # define the output path according to the scheme
         local path=$(url_path $BACKUP_URL)
         local opath=$(backup_path $scheme $path)
