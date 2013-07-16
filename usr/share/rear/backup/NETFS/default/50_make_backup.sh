@@ -147,6 +147,10 @@ transfertime="$((SECONDS-starttime))"
 wait $BackupPID
 backup_prog_rc=$?
 
+if [[ $BACKUP_INTEGRITY_CHECK =~ ^[yY1] && "$(basename ${BACKUP_PROG})" = "tar" ]] ; then
+    (cd $(dirname $backuparchive) && md5sum $(basename $backuparchive) > ${backuparchive}.md5)
+fi
+
 sleep 1
 
 # everyone should see this warning, even if not verbose

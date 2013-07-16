@@ -17,3 +17,9 @@ StopIfError "Failed to determine backup archive size."
 
 read backuparchive_size junk <$TMP_DIR/backuparchive_size
 LogPrint "Backup archive size is $backuparchive_size${BACKUP_PROG_COMPRESS_SUFFIX:+ (compressed)}"
+
+if [[ $BACKUP_INTEGRITY_CHECK =~ ^[yY1] && -f ${backuparchive}.md5 ]] ; then
+    LogPrint "Checking integrity of $(basename $backuparchive) ..."
+    (cd $(dirname $backuparchive) && md5sum -c ${backuparchive}.md5)
+    StopIfError "Integrity check failed !! \nIf you want to bypass this check please edit the configuration file (/etc/rear/local.conf) and unset BACKUP_INTEGRITY_CHECK."
+fi
