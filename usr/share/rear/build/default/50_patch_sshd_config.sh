@@ -13,12 +13,17 @@
 shopt -s nullglob
 SSH_CONFIG_FILES=( $ROOTFS_DIR/etc/ssh/sshd_co[n]fig $ROOTFS_DIR/etc/sshd_co[n]fig )
 if test "$SSH_CONFIG_FILES" ; then
-sed -i  -e 's/PasswordAuthentication.*/PasswordAuthentication no/ig' \
-	-e 's/ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/ig' \
+sed -i  -e 's/ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/ig' \
 	-e 's/UsePAM.*/UsePam no/ig' \
 	-e 's/ListenAddress.*/ListenAddress 0.0.0.0/ig' \
 	-e '1i PrintMotd no' \
 	$ROOTFS_DIR/etc/sshd_co[n]fig $ROOTFS_DIR/etc/ssh/sshd_co[n]fig
+	
+	if [ -n "$SSH_ROOT_PASSWORD" ] ; then 
+		sed -i -e 's/PasswordAuthentication.*/PasswordAuthentication yes/ig' $ROOTFS_DIR/etc/sshd_co[n]fig $ROOTFS_DIR/etc/ssh/sshd_co[n]fig
+	else
+		sed -i  -e 's/PasswordAuthentication.*/PasswordAuthentication no/ig' $ROOTFS_DIR/etc/sshd_co[n]fig $ROOTFS_DIR/etc/ssh/sshd_co[n]fig
+	fi
 else
 	Log "WARNING: ssh configuration files missing"
 fi

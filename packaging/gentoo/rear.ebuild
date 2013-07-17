@@ -22,6 +22,7 @@ RDEPEND="net-dialup/mingetty
 	sys-boot/syslinux
 	virtual/cdrtools
 	udev? ( sys-fs/udev )
+	dev-libs/openssl
 "
 
 src_install () {
