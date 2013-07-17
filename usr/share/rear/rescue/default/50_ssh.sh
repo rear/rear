@@ -46,7 +46,7 @@ if has_binary sshd; then
 
 	# print a warning if there is no authorized_keys file for root
 	if test ! -f "/root/.ssh/authorized_keys" ; then
-		LogPrint "TIP: To login as root via ssh you need to set up /root/.ssh/authorized_keys"
+		LogPrint "TIP: To login as root via ssh you need to set up /root/.ssh/authorized_keys or SSH_ROOT_PASSWORD in your configuration file"
 	fi
 	
 	# Set the SSH root password
