@@ -242,6 +242,13 @@ ResolveModules () {
 		module=${module#.o}  # strip trailing ".o" just in case.
 		module=${module#.ko}  # strip trailing ".ko" just in case.
 
+		# Check if the module is not in the exclude list
+		for emodule in ${EXCLUDE_MODULES[@]}; do
+			if [ "$module" = "$emodule" ]; then
+				continue 2
+			fi
+		done
+
 		# Check if the module actually exists
 		if ! modinfo $module &>/dev/null; then
 			continue
