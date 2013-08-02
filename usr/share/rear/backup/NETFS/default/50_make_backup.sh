@@ -47,6 +47,11 @@ else
   BACKUP_PROG_CRYPT_KEY=""
 fi 
 
+if [[ -n "$ISO_MAX_SIZE" ]]; then
+    SPLIT_COMMAND="split -d -b ${ISO_MAX_SIZE}m - ${backuparchive}."
+else
+    SPLIT_COMMAND="dd of=$backuparchive"
+fi
 
 LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 ProgressStart "Preparing archive operation"
@@ -60,13 +65,13 @@ case "$(basename ${BACKUP_PROG})" in
 			--ignore-failed-read $BACKUP_PROG_OPTIONS \
 			${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} $BACKUP_PROG_COMPRESS_OPTIONS \
 			-X $TMP_DIR/backup-exclude.txt -C / -c -f - \
-			$(cat $TMP_DIR/backup-include.txt) $LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| dd of="$backuparchive"
+			$(cat $TMP_DIR/backup-include.txt) $LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
 		$BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
 			--no-wildcards-match-slash --one-file-system \
 			--ignore-failed-read $BACKUP_PROG_OPTIONS \
 			${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} $BACKUP_PROG_COMPRESS_OPTIONS \
 			-X $TMP_DIR/backup-exclude.txt -C / -c -f - \
-			$(cat $TMP_DIR/backup-include.txt) $LOGFILE | $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | dd of="$backuparchive"
+			$(cat $TMP_DIR/backup-include.txt) $LOGFILE | $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $SPLIT_COMMAND
 	;;
 	(rsync)
 		# make sure that the target is a directory
@@ -109,7 +114,7 @@ case "$(basename ${BACKUP_PROG})" in
 		while sleep 1 ; kill -0 $BackupPID 2>&8; do
 			#blocks="$(stat -c %b ${backuparchive})"
 			#size="$((blocks*512))"
-			size="$(stat -c %s ${backuparchive})"
+			size="$(stat -c %s ${backuparchive}* | awk '{s+=$1} END {print s}')"
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 		done
@@ -148,7 +153,7 @@ wait $BackupPID
 backup_prog_rc=$?
 
 if [[ $BACKUP_INTEGRITY_CHECK =~ ^[yY1] && "$(basename ${BACKUP_PROG})" = "tar" ]] ; then
-    (cd $(dirname $backuparchive) && md5sum $(basename $backuparchive) > ${backuparchive}.md5)
+    (cd $(dirname $backuparchive) && md5sum $(basename $backuparchive) > ${backuparchive}.md5 || md5sum $(basename $backuparchive).?? > ${backuparchive}.md5)
 fi
 
 sleep 1
