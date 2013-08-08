@@ -20,6 +20,12 @@ ProgressStart "Preparing restore operation"
 case "$BACKUP_PROG" in
 	# tar compatible programs here
 	(tar)
+		# Add the --selinux option to be safe with SELinux context restoration
+		if [[ ! $BACKUP_SELINUX_DISABLE =~ ^[yY1] ]]; then
+			if tar --usage | grep -q selinux;  then
+				BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --selinux"
+			fi
+		fi
 		if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
 			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
 		fi
