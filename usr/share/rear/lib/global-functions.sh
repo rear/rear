@@ -108,7 +108,7 @@ mount_url() {
             ;;
         (iso)
             if [[ "$WORKFLOW" = "recover" ]]; then
-                mount_cmd="mount -o loop /dev/disk/by-label/${ISO_VOLID} $mountpoint"
+                mount_cmd="mount /dev/disk/by-label/${ISO_VOLID} $mountpoint"
             else
                 return 0
             fi
