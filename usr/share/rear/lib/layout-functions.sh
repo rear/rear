@@ -291,6 +291,19 @@ find_disk() {
     get_parent_components "$1" "disk"
 }
 
+find_disk_and_multipath() {
+    res=$(find_disk "$1")
+    if [[ -n "$res" || "$AUTOEXCLUDE_MULTIPATH" =~ ^[yY1] ]]; then
+        echo $res
+    else
+        find_multipath "$1"
+    fi
+}
+
+find_multipath() {
+    get_parent_components "$1" "multipath"
+}
+
 find_partition() {
     get_parent_components "$1" "part"
 }
