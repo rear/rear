@@ -94,7 +94,7 @@ EOF
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
 # if $device is already mounted, skip
-mount | grep -q $device || mkfs -t $fstype -f $device
+mount | grep -q $device || mkfs -t $fstype $device
 EOF
             if [ -n "$label" ] ; then
                 echo "mount | grep -q $device || btrfs filesystem label $device $label >&2" >> $LAYOUT_CODE
