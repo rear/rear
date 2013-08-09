@@ -55,7 +55,7 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
     BugIfError "Unable to find any /boot partitions"
 
     # Find the disks that need a new GRUB MBR
-    disks=$(grep '^disk ' $LAYOUT_FILE | cut -d' ' -f2)
+    disks=$(grep '^disk \|^multipath ' $LAYOUT_FILE | cut -d' ' -f2)
     [[ "$disks" ]]
     StopIfError "Unable to find any disks"
 
@@ -65,7 +65,7 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
 
         # Use boot partition that matches with this disk, if any
         for bootpart in $bootparts; do
-            bootdisk=$(find_disk "$bootpart")
+            bootdisk=$(find_disk_and_multipath "$bootpart")
             if [[ "$disk" == "$bootdisk" ]]; then
                 part=$bootpart
                 break
@@ -73,7 +73,7 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
         done
 
         # Find boot-disk and partition number
-        bootdisk=$(find_disk "$part")
+        bootdisk=$(find_disk_and_multipath "$part")
         partnr=${part#$bootdisk}
         partnr=${partnr#p}
         partnr=$((partnr - 1))
