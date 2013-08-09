@@ -1,5 +1,5 @@
 # Automatically exclude multipath devices
-if [ "$AUTOEXCLUDE_MULTIPATH" =~ ^[yY1] ] ; then
+if [[ "$AUTOEXCLUDE_MULTIPATH" =~ ^[yY1] ]] ; then
     while read multipath device devices junk ; do
         Log "Automatically excluding multipath device $device."
         mark_as_done "$device"
