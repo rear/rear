@@ -47,7 +47,20 @@ else
   BACKUP_PROG_CRYPT_KEY=""
 fi 
 
+# Check if the backup needs to be splitted or not
 if [[ -n "$ISO_MAX_SIZE" ]]; then
+    # Computation of the real backup maximum size by excluding bootable files size on the first ISO (EFI, kernel, ramdisk)
+    # Don't use that on max size less than 200MB which would result in too many backups
+    if [[ $ISO_MAX_SIZE -gt 200 ]]; then
+        INITRD_SIZE=$(stat -c '%s' $TMP_DIR/initrd.cgz)
+        KERNEL_SIZE=$(stat -c '%s' $KERNEL_FILE)
+        # We add 15MB which is the average size of all isolinux binaries
+        BASE_ISO_SIZE=$(((${INITRD_SIZE}+${KERNEL_SIZE})/1024/1024+15))
+        # If we are EFI, add 30MB (+ previous 15MB), UEFI files can't exceed this size
+        [[ $USING_UEFI_BOOTLOADER ]] && BASE_ISO_SIZE=$((${BASE_ISO_SIZE}+30))
+        ISO_MAX_SIZE=$((${ISO_MAX_SIZE}-${BASE_ISO_SIZE}))
+    fi
+    LogPrint "New ISO_MAX_SIZE : $ISO_MAX_SIZE  BASE_ISO_SIZE : $BASE_ISO_SIZE  INITRD_SIZE : $INITRD_SIZE  KERNEL_SIZE : KERNEL_SIZE"
     SPLIT_COMMAND="split -d -b ${ISO_MAX_SIZE}m - ${backuparchive}."
 else
     SPLIT_COMMAND="dd of=$backuparchive"
