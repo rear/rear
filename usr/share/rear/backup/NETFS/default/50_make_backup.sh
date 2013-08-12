@@ -60,7 +60,6 @@ if [[ -n "$ISO_MAX_SIZE" ]]; then
         [[ $USING_UEFI_BOOTLOADER ]] && BASE_ISO_SIZE=$((${BASE_ISO_SIZE}+30))
         ISO_MAX_SIZE=$((${ISO_MAX_SIZE}-${BASE_ISO_SIZE}))
     fi
-    LogPrint "New ISO_MAX_SIZE : $ISO_MAX_SIZE  BASE_ISO_SIZE : $BASE_ISO_SIZE  INITRD_SIZE : $INITRD_SIZE  KERNEL_SIZE : KERNEL_SIZE"
     SPLIT_COMMAND="split -d -b ${ISO_MAX_SIZE}m - ${backuparchive}."
 else
     SPLIT_COMMAND="dd of=$backuparchive"
