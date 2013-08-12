@@ -38,18 +38,9 @@ if [ -e $CONFIG_DIR/mappings/disk_devices ] ; then
 fi
 
 # Automap old disks
-while read disk dev size junk ; do
+while read disk dev size junk serialnumber location ; do
     if mapping_exists "$dev" ; then
         continue
-    fi
-
-    # first, try to find if the disk of the same name has the same size
-    if [ -e /sys/block/$(get_sysfs_name "$dev") ] ; then
-        newsize=$(get_disk_size $(get_sysfs_name "$dev"))
-        if [ "$size" -eq "$newsize" ] ; then
-            add_mapping "$dev" "$dev"
-            continue
-        fi
     fi
 
     # else, loop over all disks to find one of the same size
@@ -60,6 +51,25 @@ while read disk dev size junk ; do
         newsize=$(get_disk_size ${path#/sys/block/})
 
         if [ "$size" -eq "$newsize" ] && ! reverse_mapping_exists "$(get_device_name $path)"; then
+            diskserialnumber="0"
+            #SerialNumber check
+            if which smartctl >/dev/null 2>&1 ; then
+                diskserialnumber=$(LANG=C smartctl -a $dev | grep -i "Serial Number" | cut -d ':' -f 2 | tr -d ' ' 2>/dev/null)
+                if [[ ! "$serialnumber" = "$diskserialnumber" ]] ; then
+                    continue
+                fi
+            fi
+            #Location check
+            if which lsscsi >/dev/null 2>&1 ; then
+                disklocation="0"
+                lsscsi -t | grep disk  | grep $dev | grep -q " fc:"
+                if [ ! $? -eq 0 ] ; then
+                    disklocation=$(lsscsi -t | grep disk  | grep $dev | cut -d " " -f 1 2>/dev/null)
+                fi
+                if [[ ! "$disklocation" = "$location" ]] ; then
+                    continue
+                fi
+            fi
             add_mapping "$dev" "$(get_device_name $path)"
             break
         fi
@@ -93,7 +103,7 @@ while read -u 3 disk dev size junk ; do
         fi
 
         if ! reverse_mapping_exists "$(get_device_name $path)" && [ -d $path/queue ] ; then
-            possible_targets=("${possible_targets[@]}" "$(get_device_name $path)")
+            possible_targets=("${possible_targets[@]}" "$(get_device_name $path) - $(LANG=C parted -s /dev/$(basename $path) print | grep Disk | cut -d " " -f 3) - $(cat $path/device/vendor | tr -d ' ') $(cat $path/device/model)")
         fi
     done
 

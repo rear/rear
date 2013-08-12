@@ -236,7 +236,6 @@ extract_partitions() {
 
 
 Log "Saving disk partitions."
-
 (
     # Disk sizes
     # format: disk <disk> <sectors> <partition label type>
@@ -244,13 +243,26 @@ Log "Saving disk partitions."
         if [[ ${disk#/sys/block/} = @(hd*|sd*|cciss*|vd*|xvd*) ]] ; then
             devname=$(get_device_name $disk)
             devsize=$(get_disk_size ${disk#/sys/block/})
-
             disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
 
-            echo "disk $devname $devsize $disktype"
+            diskserialnumber="0"
+            if which smartctl >/dev/null 2>&1 ; then
+                diskserialnumber=$(LANG=C smartctl -a $devname | grep -i "Serial Number" | cut -d ':' -f 2 | tr -d ' ' 2>/dev/null)
+                if [[ $diskserialnumber = "" ]] ; then
+                    diskserialnumber="0"
+                fi
+            fi
 
+            disklocation="0"
+            if which lsscsi >/dev/null 2>&1 ; then
+                lsscsi -t | grep disk  | grep $devname | grep -q " fc:"
+                if [ ! $? -eq 0 ] ; then
+                    disklocation=$(lsscsi -t | grep disk  | grep $devname | cut -d " " -f 1 2>/dev/null)
+                fi
+            fi
+
+            echo "disk $devname $devsize $disktype $diskserialnumber $disklocation"
             extract_partitions "$devname"
         fi
     done
-
 ) >> $DISKLAYOUT_FILE
