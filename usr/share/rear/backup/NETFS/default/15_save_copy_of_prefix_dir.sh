@@ -12,14 +12,14 @@ local opath=$(backup_path $scheme $path)
 [ -z "$opath" ] && return 0
 
 if ! test -f "${opath}/.lockfile" ; then
-	# lockfile made through workflow backup already (so output keep hands off)
-	if test -d "${opath}" ; then
-		rm -rf $v "${opath}.old" >&2
-		StopIfError "Could not remove '${opath}.old'"
-		mv -f $v "${opath}" "${opath}.old" >&2
-		StopIfError "Could not move '${opath}'"
-	fi
+    if test -d "${opath}" ; then
+        rm -rf $v "${opath}.old" >&2
+        StopIfError "Could not remove '${opath}.old'"
+        mv -f $v "${opath}" "${opath}.old" >&2
+        StopIfError "Could not move '${opath}'"
+    fi
 else
-	Log "Lockfile '${opath}/.lockfile' found. Not keeping old backup data."
+    # lockfile was already made through the output workflow (hands off)
+    Log "Lockfile '${opath}/.lockfile' found (created by output workflow)."
 fi
 # the ${BUILD_DIR}/outputfs/${NETFS_PREFIX} will be created by output/NETFS/default/20_make_prefix_dir.sh
