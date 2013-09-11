@@ -1,6 +1,6 @@
 = rear(8)
-:version: v1.14.0
-:date: 14 Nov 2012
+:version: v1.15.0
+:date: 11 Sep 2013
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -238,6 +238,8 @@ result files (e.g. ISO image) are also saved into TSM.
 BACKUP=*RBME*::
 Use Rsync Backup Made Easy (rbme) to restore the data.
 
+BACKUP=*NSR*::
+Using EMC NetWorker (Legato) to restore the data.
 
 The following +BACKUP+ methods are internal of Relax-and-Recover:
 
@@ -291,6 +293,15 @@ To backup to a remote server via sshfs (SSH protocol), use
 +
 It is advisable to add *ServerAliveInterval 15* in the +/root/.ssh/config+
 file for the remote system (remote-system.domain.org).
+
+BACKUP_URL=*iso://*::
+To include the backup within the ISO image. It is important that the +BACKUP_URL+ and
++OUTPUT_URL+ variables are different. E.g.
++
+----
+BACKUP_URL=iso:///backup/
+OUTPUT_URL=nfs://server/path/
+----
 
 == CONFIGURATION
 To configure Relax-and-Recover you have to edit the configuration files in
@@ -399,7 +410,7 @@ _/usr/share/doc_.
 == AUTHORS
 Gratien D'haese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers.
 
-Lars Pinne (this man page).
+Lars Pinne (original man page).
 
 Relax-and-Recover is a collaborative process using Github at:
 http://github.com/rear/
