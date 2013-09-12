@@ -25,6 +25,15 @@ function read_and_strip_file () {
 	fi
 }
 
+function is_numeric () {
+    # simple test if var is an integer
+    if expr $1 + 0 >/dev/null 2>&1 ; then
+        echo $1
+    else
+        echo 0
+    fi
+}
+
 ######
 ### Functions for dealing with URLs
 ######

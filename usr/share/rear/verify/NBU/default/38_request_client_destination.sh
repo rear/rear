@@ -12,7 +12,7 @@ LogPrint ""
 LogPrint "Netbackup Client Source For This Restore is:  $NBU_CLIENT_SOURCE"
 LogPrint "> If this is a normal restore to the same client press ENTER."
 LogPrint "> If this is a restore to a CLONE enter the new client name."
-read -t 30 -r -p "Enter Cloned Client name or press ENTER [30sec]: " 2>&1
+read -t $WAIT_SECS -r -p "Enter Cloned Client name or press ENTER [$WAIT_SECS secs]: " 2>&1
 
 # validate input
 if test -z "${REPLY}"; then
@@ -27,5 +27,5 @@ else
         LogPrint ""
         LogPrint "bp.conf defined servers: " ; cat /usr/openv/netbackup/bp.conf | grep -i server
         LogPrint ""
-        read -t 60 -r -p "Press any key to continue....[60sec]"   2>&1
+        read -t $WAIT_SECS -r -p "Press any key to continue....[$WAIT_SECS secs]"   2>&1
 fi

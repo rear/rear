@@ -5,7 +5,7 @@ LogPrint ""
 LogPrint "TSM restores by default the latest backup data. Alternatively you can specify"
 LogPrint "a different date and time to enable Point-In-Time Restore. Press ENTER to"
 LogPrint "use the most recent available backup"
-read -t 30 -r -p "Enter date/time (YYYY-MM-DD HH:mm:ss) or press ENTER [30sec]: " 2>&1
+read -t $WAIT_SECS -r -p "Enter date/time (YYYY-MM-DD HH:mm:ss) or press ENTER [$WAIT_SECS secs]: " 2>&1
 # validate input
 if test -z "${REPLY}"; then
 	LogPrint "Skipping Point-In-Time Restore, will restore most recent data."
