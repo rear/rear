@@ -4,7 +4,7 @@ if [[ ! -z "$NSRSERVER" ]]; then
 elif [[ -f $NSR_ROOT_DIR/res/servers ]]; then
     NSRSERVER=$( cat $NSR_ROOT_DIR/res/servers | head -1 )
 elif [[ -d $NSR_ROOT_DIR/res/nsrladb/03 ]]; then
-    NSRSERVER=$(grep servers $NSR_ROOT_DIR/res/nsrladb/03/* | tail -1 | awk '{print $2}' | sed -e 's/;//' )
+    NSRSERVER=$(grep servers $NSR_ROOT_DIR/res/nsrladb/03/* | tail -1 | awk '{print $2}' | sed -e 's/[;,]//' )
 fi
 
 if [[ -z "$NSRSERVER" ]]; then
