@@ -7,15 +7,15 @@
 
 Summary: Relax-and-Recover is a Linux disaster recovery and system migration tool
 Name: rear
-Version: 1.14
+Version: 1.15
 Release: 1%{?rpmrelease}%{?dist}
 License: GPLv3
 Group: Applications/File
 URL: http://relax-and-recover.org/
 
 # as GitHub stopped with download section we need to go back to Sourceforge for downloads
-#Source: https://github.com/downloads/rear/rear/rear-%{version}.tar.gz
 Source: https://sourceforge.net/projects/rear/files/rear/%{version}/rear-%{version}.tar.gz
+
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch: noarch
@@ -103,7 +103,8 @@ a migration tool as well.
 Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
 OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
 sftp, ftp, http, nfs, cifs) as well as a multitude of backup strategies
-(incl.  IBM TSM, HP DataProtector, Symantec NetBackup, Bacula, rsync).
+(incl.  IBM TSM, HP DataProtector, Symantec NetBackup, EMC NetWorker,
+Bacula, Bareos, rsync).
 
 Relax-and-Recover was designed to be easy to set up, requires no maintenance
 and is there to assist when disaster strikes. Its setup-and-forget nature
