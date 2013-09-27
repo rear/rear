@@ -23,8 +23,8 @@ else
     restoreinput=$backuparchive
 fi
 
-Log "Restoring $BACKUP_PROG archive '$backuparchive'"
-Print "Restoring from '$backuparchive'"
+Log "Restoring $BACKUP_PROG archive '$restorearchive'"
+Print "Restoring from '$restorearchive'"
 ProgressStart "Preparing restore operation"
 (
 case "$BACKUP_PROG" in
@@ -39,8 +39,22 @@ case "$BACKUP_PROG" in
 		if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
 			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
 		fi
-		Log dd if=$restoreinput \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
-		dd if=$restoreinput | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
+		if [ $BACKUP_TYPE == "incremental" ]; then
+			LAST="$restorearchive"
+			BASE=$(dirname "$restorearchive")/$(tar --test-label -f "$restorearchive")
+			if [ "$BASE" == "$LAST" ]; then
+				Log dd if=$BASE \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
+				dd if=$BASE | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
+			else
+				Log dd if="$BASE" \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
+				dd if="$BASE" | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
+				Log dd if="$LAST" \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
+				dd if="$LAST" | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
+			fi
+		else
+			Log dd if=$restoreinput \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
+			dd if=$restoreinput | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C /mnt/local/ -x -f -
+		fi
 	;;
 	(rsync)
 		if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then

@@ -91,6 +91,8 @@ Use CommVault Galaxy (7 and probably newer)
 
 BACKUP=NETFS::
 Use Relax-and-Recover internal backup with tar or rsync (or similar)
+BACKUP_TYPE=incremental and FULLBACKUPDAY="Mon", activates incremental Backups.
+Please keep in Mind to clean your old Backups from time to time.
 
 BACKUP=REQUESTRESTORE::
 No backup, just ask user to somehow restore the filesystems
