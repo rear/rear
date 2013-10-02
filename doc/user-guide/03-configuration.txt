@@ -80,8 +80,14 @@ Use HP DataProtector programs
 BACKUP=NBU::
 Use Symantec NetBackup programs
 
+BACKUP=NSR::
+Use EMC NetWorker (Legato)
+
 BACKUP=BACULA::
 Use Bacula programs
+
+BACKUP=BAREOS::
+Use Bareos fork of Bacula
 
 BACKUP=GALAXY::
 Use CommVault Galaxy (5, probably 6)
