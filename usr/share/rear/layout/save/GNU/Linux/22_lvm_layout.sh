@@ -21,6 +21,7 @@ Log "Saving LVM layout."
         size=$(echo $line | cut -d ":" -f "3")
         uuid=$(echo $line | cut -d ":" -f "12")
 
+        pdev=$(get_device_mapping $pdev)  # xlate through diskbyid_mappings file
         echo "lvmdev /dev/$vgrp $(get_device_name $pdev) $uuid $size"
     done
 
