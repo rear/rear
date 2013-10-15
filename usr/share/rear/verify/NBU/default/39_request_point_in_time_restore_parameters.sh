@@ -8,7 +8,7 @@ LogPrint ""
 LogPrint "Netbackup restores by default the latest backup data. Alternatively you can specify"
 LogPrint "a different date and time to enable Point-In-Time Restore. Press ENTER to"
 LogPrint "use the most recent available backup"
-read -t 30 -r -p "Enter date (mm/dd/yyyy) or date/time (mm/dd/yyyy HH:MM:SS) or press ENTER [30sec]: " 2>&1
+read -t $WAIT_SECS -r -p "Enter date (mm/dd/yyyy) or date/time (mm/dd/yyyy HH:MM:SS) or press ENTER [$WAIT_SECS secs]: " 2>&1
 
 # validate input
 if test -z "${REPLY}"; then

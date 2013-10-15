@@ -72,7 +72,7 @@ DPChooseBackup() {
     LogPrint "      Media(s)....: $MEDIA"
     LogPrint ""
     unset REPLY
-    read -t 30 -r -n 1 -p "press ENTER or choose H,D,S [30sec]: " 2>&1
+    read -t $WAIT_SECS -r -n 1 -p "press ENTER or choose H,D,S [$WAIT_SECS secs]: " 2>&1
 
     if test -z "${REPLY}"; then
       echo $HOST > /tmp/dp_recovery_host

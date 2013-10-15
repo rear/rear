@@ -458,6 +458,26 @@ get_device_name() {
     return 1
 }
 
+# check $VAR_LIB/recovery/diskbyid_mappings file to see whether we find
+# a disk/by-id mapping to dm style (the by-id dev is not translated
+# properly by get_device_name function - dm dev are better)
+# 22_lvm_layout.sh uses get_device_mapping to translate lvmdev better
+### ciss-3600508b1001fffffa004f7b3f209000b-part2 -> cciss/c0d0p2
+# see issue #305
+get_device_mapping() {
+    if [[ ! -s ${VAR_DIR}/recovery/diskbyid_mappings ]]; then
+        echo $1
+    else
+        local name=${1##*/}      # /dev/disk/by-id/scsi-xxxx -> scsi-xxx
+        local disk_name=$(grep "^${name}" ${VAR_DIR}/recovery/diskbyid_mappings | awk '{print $2}')
+        if [[ -z "$disk_name" ]]; then
+            echo $1
+        else
+            echo "/dev/$disk_name"
+        fi
+    fi
+}
+
 # Get the size in bytes of a disk/partition.
 # for partitions, use "sda/sda1" as argument
 get_disk_size() {

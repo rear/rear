@@ -98,7 +98,7 @@ ifneq ($(git_date),)
 rewrite:
 	@echo -e "\033[1m== Rewriting $(specfile), $(dscfile) and $(rearbin) ==\033[0;0m"
 	sed -i.orig \
-		-e 's#^Source:.*#Source: https://github.com/downloads/rear/rear/$(name)-$(distversion).tar.gz#' \
+		-e 's#^Source:.*#Source: https://sourceforge.net/projects/rear/files/rear/${version}/$(name)-${distversion}.tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
 		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
 		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \

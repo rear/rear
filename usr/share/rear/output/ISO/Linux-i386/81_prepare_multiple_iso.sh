@@ -23,6 +23,10 @@
 local backup_path=$(url_path $BACKUP_URL)
 local isofs_path=$(dirname $backuparchive)
 
+# in mkrescue workflow there is no need to check the backups made, otherwise, 
+# NB_ISOS=(ls . | wc -l) [side effect is that lots of empty ISOs are made]
+[[ "$WORKFLOW" = "mkrescue" ]] && return
+
 NB_ISOS=$(ls $backuparchive.?? | wc -l)
 
 Print "Preparing $NB_ISOS ISO images ..."

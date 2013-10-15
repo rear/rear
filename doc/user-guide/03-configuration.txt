@@ -80,8 +80,14 @@ Use HP DataProtector programs
 BACKUP=NBU::
 Use Symantec NetBackup programs
 
+BACKUP=NSR::
+Use EMC NetWorker (Legato)
+
 BACKUP=BACULA::
 Use Bacula programs
+
+BACKUP=BAREOS::
+Use Bareos fork of Bacula
 
 BACKUP=GALAXY::
 Use CommVault Galaxy (5, probably 6)
@@ -91,6 +97,8 @@ Use CommVault Galaxy (7 and probably newer)
 
 BACKUP=NETFS::
 Use Relax-and-Recover internal backup with tar or rsync (or similar)
+BACKUP_TYPE=incremental and FULLBACKUPDAY="Mon", activates incremental Backups.
+Please keep in Mind to clean your old Backups from time to time.
 
 BACKUP=REQUESTRESTORE::
 No backup, just ask user to somehow restore the filesystems
