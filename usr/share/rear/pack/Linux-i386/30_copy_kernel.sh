@@ -50,6 +50,14 @@ if [ ! -s "$KERNEL_FILE" ]; then
 		else
 			Error "Could not find Arch kernel /boot/vmlinuz[-linux|26]"
 		fi
+	elif [ -f /etc/gentoo-release ]; then
+		if [ -f "/boot/kernel-genkernel-${REAL_MACHINE}-${KERNEL_VERSION}" ]; then
+     		KERNEL_FILE="/boot/kernel-genkernel-${REAL_MACHINE}-${KERNEL_VERSION}"
+     	elif [ -f "/boot/kernel-${KERNEL_VERSION}" ]; then
+     		KERNEL_FILE="/boot/kernel-${KERNEL_VERSION}"
+		else
+     		Error "Could not find Gentoo kernel"
+		fi
 	else
 		Error "Could not find a matching kernel in /boot !"
 	fi
