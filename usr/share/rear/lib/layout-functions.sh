@@ -375,7 +375,7 @@ version_newer() {
 
 # Function to get version from tool
 get_version() {
-  $@ 2>&1 | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | head -1
+  TERM=dumb $@ 2>&1 | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | head -1
 }
 
 # Translate a device name to a sysfs name.
