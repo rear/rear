@@ -135,7 +135,8 @@ source or commercial) or rsync with hardlink based solutions, e.g. RSYNC
 BACKUP MADE EASY.
 
 == RESCUE IMAGE CONFIGURATION
-The +OUTPUT+ variable defines where the rescue image should be send to.
+The +OUTPUT+ variable defines how from where our rescue image will be booted and
+the +OUTPUT_URL+ variable defines where the rescue image should be send to.
 Possible +OUTPUT+ setting are:
 
 OUTPUT=*RAMDISK*::
