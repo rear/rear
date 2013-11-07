@@ -8,20 +8,9 @@ if [ -e /etc/sesam2000.ini ]; then
 
         Log "Detected Sesam Installation"
 
-        SM_INI=`grep SM_INI /etc/sesam2000.ini | cut -d '=' -f 2`
-        SESAM_BIN_DIR=`grep ^gv_ro= $SM_INI | cut -d '=' -f 2`
-        SESAM_VAR_DIR=`grep ^gv_rw= $SM_INI | cut -d '=' -f 2`
-        SESAM_WORK_DIR=`grep ^gv_rw_work= $SM_INI | cut -d '=' -f 2`
-        SESAM_TMP_DIR=`grep ^gv_rw_tmp= $SM_INI | cut -d '=' -f 2`
-        SESAM_LIS_DIR=`grep ^gv_rw_lis= $SM_INI | cut -d '=' -f 2`
-        SESAM_LGC_DIR=`grep ^gv_rw_lgc= $SM_INI | cut -d '=' -f 2`
-        SESAM_WORK_DIR=`grep ^gv_rw_work= $SM_INI | cut -d '=' -f 2`
-        SESAM_SMS_DIR=`grep ^gv_rw_stpd= $SM_INI | cut -d '=' -f 2`
-        SESAM_PROT_DIR=`grep ^gv_rw_prot= $SM_INI | cut -d '=' -f 2`
+        source $SHARE_DIR/lib/sesam-functions.sh
 
         # include sesam executables and configuration files 
-        # also includes some more tools to ensure init script
-        # functionality
         COPY_AS_IS=( 
                 "${COPY_AS_IS[@]}" 
                 "${COPY_AS_IS_SESAM[@]}" 
@@ -29,13 +18,7 @@ if [ -e /etc/sesam2000.ini ]; then
                 $VAR_DIR 
                 $SESAM_BIN_DIR 
                 $SESAM_VAR_DIR 
-                /etc/sesam2000.ini 
-                /etc/init.d/functions 
-                /etc/init.d/sesam 
-                /etc/rc.status 
-                /usr/bin/nohup 
-                /usr/bin/lsb_release 
-                /sbin/consoletype
+                /etc/sesam2000.ini
         )
 
         # do not include certain sesam folders as generated boot

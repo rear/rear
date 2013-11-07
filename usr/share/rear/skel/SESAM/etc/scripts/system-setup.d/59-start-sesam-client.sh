@@ -1,14 +1,14 @@
 # start included sesam client so file restore can happen:
-
 if [ -e /etc/sesam2000.ini ]; then
-        SM_INI=`grep SM_INI /etc/sesam2000.ini | cut -d '=' -f 2`
 
-        SESAM_VAR_DIR=`grep ^gv_rw= $SM_INI | cut -d '=' -f 2`
-        SESAM_WORK_DIR=`grep ^gv_rw_work= $SM_INI | cut -d '=' -f 2`
+        # get sesam installation
+        source /usr/share/rear/lib/sesam-functions.sh
+        # set the sesam environment profile
+        source $SESAM_VAR_DIR/var/ini/sesam2000.profile
 
         # create sesam Semaphore directory
         mkdir -p $SESAM_WORK_DIR/sem/
 
-        # start sesam client via included init script
-        /etc/init.d/sesam start
+        # start sesam client daemon
+        $SESAM_BIN_DIR/bin/sesam/sm_main start
 fi
