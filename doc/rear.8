@@ -1,22 +1,161 @@
-'\" t
 .\"     Title: rear
 .\"    Author: [see the "AUTHORS" section]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 11 Sep 2013
-.\"    Manual: \ \&
-.\"    Source: \ \&
+.\" Generator: DocBook XSL Stylesheets v1.74.0 <http://docbook.sf.net/>
+.\"      Date: 11/15/2013
+.\"    Manual: [FIXME: manual]
+.\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "REAR" "8" "11 Sep 2013" "\ \&" "\ \&"
+.TH "REAR" "8" "11/15/2013" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
-.\" * Define some portability stuff
+.\" * (re)Define some macros
 .\" -----------------------------------------------------------------
 .\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.\" http://bugs.debian.org/507673
-.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" toupper - uppercase a string (locale-aware)
 .\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.ie \n(.g .ds Aq \(aq
-.el       .ds Aq '
+.de toupper
+.tr aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ
+\\$*
+.tr aabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz
+..
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" SH-xref - format a cross-reference to an SH section
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.de SH-xref
+.ie n \{\
+.\}
+.toupper \\$*
+.el \{\
+\\$*
+.\}
+..
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" SH - level-one heading that works better for non-TTY output
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.de1 SH
+.\" put an extra blank line of space above the head in non-TTY output
+.if t \{\
+.sp 1
+.\}
+.sp \\n[PD]u
+.nr an-level 1
+.set-an-margin
+.nr an-prevailing-indent \\n[IN]
+.fi
+.in \\n[an-margin]u
+.ti 0
+.HTML-TAG ".NH \\n[an-level]"
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+\." make the size of the head bigger
+.ps +3
+.ft B
+.ne (2v + 1u)
+.ie n \{\
+.\" if n (TTY output), use uppercase
+.toupper \\$*
+.\}
+.el \{\
+.nr an-break-flag 0
+.\" if not n (not TTY), use normal case (not uppercase)
+\\$1
+.in \\n[an-margin]u
+.ti 0
+.\" if not n (not TTY), put a border/line under subheading
+.sp -.6
+\l'\n(.lu'
+.\}
+..
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" SS - level-two heading that works better for non-TTY output
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.de1 SS
+.sp \\n[PD]u
+.nr an-level 1
+.set-an-margin
+.nr an-prevailing-indent \\n[IN]
+.fi
+.in \\n[IN]u
+.ti \\n[SN]u
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.ps \\n[PS-SS]u
+\." make the size of the head bigger
+.ps +2
+.ft B
+.ne (2v + 1u)
+.if \\n[.$] \&\\$*
+..
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" BB/BE - put background/screen (filled box) around block of text
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.de BB
+.if t \{\
+.sp -.5
+.br
+.in +2n
+.ll -2n
+.gcolor red
+.di BX
+.\}
+..
+.de EB
+.if t \{\
+.if "\\$2"adjust-for-leading-newline" \{\
+.sp -1
+.\}
+.br
+.di
+.in
+.ll
+.gcolor
+.nr BW \\n(.lu-\\n(.i
+.nr BH \\n(dn+.5v
+.ne \\n(BHu+.5v
+.ie "\\$2"adjust-for-leading-newline" \{\
+\M[\\$1]\h'1n'\v'+.5v'\D'P \\n(BWu 0 0 \\n(BHu -\\n(BWu 0 0 -\\n(BHu'\M[]
+.\}
+.el \{\
+\M[\\$1]\h'1n'\v'-.5v'\D'P \\n(BWu 0 0 \\n(BHu -\\n(BWu 0 0 -\\n(BHu'\M[]
+.\}
+.in 0
+.sp -.5v
+.nf
+.BX
+.in
+.sp .5v
+.fi
+.\}
+..
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" BM/EM - put colored marker in margin next to block of text
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.de BM
+.if t \{\
+.br
+.ll -2n
+.gcolor red
+.di BX
+.\}
+..
+.de EM
+.if t \{\
+.br
+.di
+.ll
+.gcolor
+.nr BH \\n(dn
+.ne \\n(BHu
+\M[\\$1]\D'P -.75n 0 0 \\n(BHu -(\\n[.i]u - \\n(INu - .75n) 0 0 -\\n(BHu'\M[]
+.in 0
+.nf
+.BX
+.in
+.fi
+.\}
+..
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -27,9 +166,9 @@
 .\" -----------------------------------------------------------------
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
-.SH "NAME"
+.SH "Name"
 rear \- bare metal disaster recovery and system migration tool
-.SH "SYNOPSIS"
+.SH "Synopsis"
 .sp
 \fBrear\fR [\fB\-dDsSvV\fR] [\fB\-r\fR \fIKERNEL\fR] \fICOMMAND\fR [\-\- \fIARGS\fR\&...]
 .SH "DESCRIPTION"
@@ -52,12 +191,14 @@ Relax\-and\-Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU G
 .PP
 \-d
 .RS 4
+
 \fBdebug mode\fR
 (log debug messages to log file)
 .RE
 .PP
 \-D
 .RS 4
+
 \fBdebugscript mode\fR
 (log every function call)
 .RE
@@ -69,18 +210,21 @@ kernel version to use (by default use running kernel)
 .PP
 \-s
 .RS 4
+
 \fBsimulation mode\fR
 (show what scripts rear would include)
 .RE
 .PP
 \-S
 .RS 4
+
 \fBstep\-by\-step mode\fR
 (acknowledge each script individually)
 .RE
 .PP
 \-v
 .RS 4
+
 \fBverbose mode\fR
 (show progress output)
 .RE
@@ -103,9 +247,7 @@ dump configuration and system information; please run this to verify your setup
 .PP
 \fBformat\fR
 .RS 4
-format and label USB or tape media to be used with rear;
-
-first argument is the USB or tape device to use, eg\&.
+format and label USB or tape media to be used with rear; first argument is the USB or tape device to use, eg\&.
 \fI/dev/sdX\fR
 or
 \fI/dev/stX\fR
@@ -175,10 +317,11 @@ In this combination Relax\-and\-Recover recreates the system layout and calls th
 For demonstration and special use purposes Relax\-and\-Recover also includes an internal backup method, NETFS, which can be used to create a simple tar\&.gz archive of the system\&. For all permanent setups we recommend using something more professional for backup, either a traditional backup software (open source or commercial) or rsync with hardlink based solutions, e\&.g\&. RSYNC BACKUP MADE EASY\&.
 .SH "RESCUE IMAGE CONFIGURATION"
 .sp
-The OUTPUT variable defines where the rescue image should be send to\&. Possible OUTPUT setting are:
+The \FCOUTPUT\F[] variable defines how from where our rescue image will be booted and the \FCOUTPUT_URL\F[] variable defines where the rescue image should be send to\&. Possible \FCOUTPUT\F[] setting are:
 .PP
 OUTPUT=\fBRAMDISK\fR
 .RS 4
+
 \fB(Default)\fR
 Create only the Relax\-and\-Recover initramfs\&.
 .RE
@@ -197,16 +340,16 @@ Create on a remote PXE/NFS server the required files (such as configuration file
 OUTPUT=\fBOBDR\fR
 .RS 4
 Create a bootable OBDR tape (optionally including the backup archive)\&. Specify the OBDR tape device by using
-TAPE_DEVICE\&.
+\FCTAPE_DEVICE\F[]\&.
 .RE
 .PP
 OUTPUT=\fBUSB\fR
 .RS 4
 Create a bootable USB disk (using extlinux)\&. Specify the USB storage device by using
-USB_DEVICE\&.
+\FCUSB_DEVICE\F[]\&.
 .RE
 .sp
-When using OUTPUT=ISO, RAMDISK, OBDR or USB you should provide the backup target location through the OUTPUT_URL variable\&. Possible OUTPUT_URL settings are:
+When using \FCOUTPUT=ISO\F[], \FCRAMDISK\F[], \FCOBDR\F[] or \FCUSB\F[] you should provide the backup target location through the \FCOUTPUT_URL\F[] variable\&. Possible \FCOUTPUT_URL\F[] settings are:
 .PP
 OUTPUT_URL=\fBfile://\fR
 .RS 4
@@ -217,56 +360,56 @@ Write the image to disk\&. The default is in
 OUTPUT_URL=\fBfish://\fR
 .RS 4
 Write the image using
-lftp
+\FClftp\F[]
 and the FISH protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBftp://\fR
 .RS 4
 Write the image using
-lftp
+\FClftp\F[]
 and the FTP protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBftps://\fR
 .RS 4
 Write the image using
-lftp
+\FClftp\F[]
 and the FTPS protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBhftp://\fR
 .RS 4
 Write the image using
-lftp
+\FClftp\F[]
 and the HFTP protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBhttp://\fR
 .RS 4
 Write the image using
-lftp
+\FClftp\F[]
 and the HTTP (PUT) procotol\&.
 .RE
 .PP
 OUTPUT_URL=\fBhttps://\fR
 .RS 4
 Write the image using
-lftp
+\FClftp\F[]
 and the HTTPS (PUT) protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBsftp://\fR
 .RS 4
 Write the image using
-lftp
+\FClftp\F[]
 and the secure FTP (SFTP) protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBrsync://\fR
 .RS 4
 Write the image using
-rsync
+\FCrsync\F[]
 and the RSYNC protocol\&.
 .RE
 .PP
@@ -278,12 +421,13 @@ Write the image using sshfs and the SSH protocol\&.
 .sp
 Currently Relax\-and\-Recover supports the following backup methods\&. Please distinguish carefully between Relax\-and\-Recover support for 3rd party backup software and Relax\-and\-Recover internal backup methods\&. The latter also creates a backup of your data while the former will only integrate Relax\-and\-Recover with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself\&.
 .sp
-Especially the rear mkbackup command can be confusing as it is only useful for the internal backup methods and has no function at all with the other (external) backup methods\&. The following backup methods need to be set in Relax\-and\-Recover with the BACKUP= option\&.
+Especially the \FCrear mkbackup\F[] command can be confusing as it is only useful for the internal backup methods and has no function at all with the other (external) backup methods\&. The following backup methods need to be set in Relax\-and\-Recover with the \FCBACKUP=\F[] option\&.
 .sp
-The following BACKUP methods are external of Relax\-and\-Recover meaning that you are responsible of backups being made:
+The following \FCBACKUP\F[] methods are external of Relax\-and\-Recover meaning that you are responsible of backups being made:
 .PP
 BACKUP=\fBREQUESTRESTORE\fR
 .RS 4
+
 \fB(default)\fR
 Not really a backup method at all, Relax\-and\-Recover simply halts the recovery and requests that somebody will restore the data to the appropriate location (e\&.g\&. via SSH)\&. This method works especially well with an rsync bases backup that is pushed back to the backup client\&.
 .RE
@@ -328,7 +472,7 @@ BACKUP=\fBNSR\fR
 Using EMC NetWorker (Legato) to restore the data\&.
 .RE
 .sp
-The following BACKUP methods are internal of Relax\-and\-Recover:
+The following \FCBACKUP\F[] methods are internal of Relax\-and\-Recover:
 .PP
 BACKUP=\fBNETFS\fR
 .RS 4
@@ -342,45 +486,51 @@ Use rsync to restore data\&.
 .sp
 If your favourite backup software is missing from this list, please submit a patch or ask us to implement it for you\&.
 .sp
-When using BACKUP=NETFS you should provide the backup target location through the BACKUP_URL variable\&. Possible BACKUP_URL settings are:
+When using \FCBACKUP=NETFS\F[] you should provide the backup target location through the \FCBACKUP_URL\F[] variable\&. Possible \FCBACKUP_URL\F[] settings are:
 .PP
 BACKUP_URL=\fBfile://\fR
 .RS 4
 To backup to local disk, use
-BACKUP_URL=file:///directory/path/
+\FCBACKUP_URL=file:///directory/path/\F[]
 .RE
 .PP
 BACKUP_URL=\fBnfs://\fR
 .RS 4
 To backup to NFS disk, use
-BACKUP_URL=nfs://nfs\-server\-name/share/path
+\FCBACKUP_URL=nfs://nfs\-server\-name/share/path\F[]
 .RE
 .PP
 BACKUP_URL=\fBtape://\fR
 .RS 4
 To backup to tape device, use
-BACKUP_URL=tape:///dev/nst0
+\FCBACKUP_URL=tape:///dev/nst0\F[]
 or alternatively, simply define
-TAPE_DEVICE=/dev/nst0
+\FCTAPE_DEVICE=/dev/nst0\F[]
 .RE
 .PP
 BACKUP_URL=\fBcifs://\fR
 .RS 4
 To backup to a Samba share (CIFS), use
-BACKUP_URL=cifs://cifs\-server\-name/share/path\&. To provide credentials for CIFS mounting use a
+\FCBACKUP_URL=cifs://cifs\-server\-name/share/path\F[]\&. To provide credentials for CIFS mounting use a
 \fI/etc/rear/\&.cifs\fR
 credentials file and define
-BACKUP_OPTIONS="cred=/etc/rear/\&.cifs"
+\FCBACKUP_OPTIONS="cred=/etc/rear/\&.cifs"\F[]
 and pass along:
 .sp
 .if n \{\
 .RS 4
 .\}
+.fam C
+.ps -1
 .nf
+.BB lightgray
 username=_username_
 password=_secret password_
 domain=_domain_
+.EB lightgray
 .fi
+.fam
+.ps +1
 .if n \{\
 .RE
 .\}
@@ -389,42 +539,48 @@ domain=_domain_
 BACKUP_URL=\fBusb://\fR
 .RS 4
 To backup to USB storage device, use
-BACKUP_URL=usb:///dev/disk/by\-path/REAR\-000
+\FCBACKUP_URL=usb:///dev/disk/by\-path/REAR\-000\F[]
 or use a real device node or a specific filesystem label\&. Alternatively, you can specify the device using
-USB_DEVICE=/dev/disk/by\-path/REAR\-000\&.
+\FCUSB_DEVICE=/dev/disk/by\-path/REAR\-000\F[]\&.
 .sp
 If you combine this with
-OUTPUT=USB
+\FCOUTPUT=USB\F[]
 you will end up with a bootable USB device\&.
 .RE
 .PP
 BACKUP_URL=\fBsshfs://\fR
 .RS 4
 To backup to a remote server via sshfs (SSH protocol), use
-BACKUP_URL=sshfs://user@remote\-system\&.domain\&.org/home/user/backup\-dir/
+\FCBACKUP_URL=sshfs://\m[blue]\fBuser@remote\-system\&.domain\&.org\fR\m[]\&\s-2\u[1]\d\s+2/home/user/backup\-dir/\F[]
 .sp
 It is advisable to add
 \fBServerAliveInterval 15\fR
 in the
-/root/\&.ssh/config
+\FC/root/\&.ssh/config\F[]
 file for the remote system (remote\-system\&.domain\&.org)\&.
 .RE
 .PP
 BACKUP_URL=\fBiso://\fR
 .RS 4
 To include the backup within the ISO image\&. It is important that the
-BACKUP_URL
+\FCBACKUP_URL\F[]
 and
-OUTPUT_URL
+\FCOUTPUT_URL\F[]
 variables are different\&. E\&.g\&.
 .sp
 .if n \{\
 .RS 4
 .\}
+.fam C
+.ps -1
 .nf
+.BB lightgray
 BACKUP_URL=iso:///backup/
 OUTPUT_URL=nfs://server/path/
+.EB lightgray
 .fi
+.fam
+.ps +1
 .if n \{\
 .RE
 .\}
@@ -448,10 +604,16 @@ An example to use TSM for backup and ISO for output would be to add these lines 
 .if n \{\
 .RS 4
 .\}
+.fam C
+.ps -1
 .nf
+.BB lightgray
 BACKUP=TSM
 OUTPUT=ISO
+.EB lightgray
 .fi
+.fam
+.ps +1
 .if n \{\
 .RE
 .\}
@@ -461,14 +623,20 @@ And if all your systems use NTP for time synchronisation, you can also add these
 .if n \{\
 .RS 4
 .\}
+.fam C
+.ps -1
 .nf
+.BB lightgray
 TIMESYNC=NTP
+.EB lightgray
 .fi
+.fam
+.ps +1
 .if n \{\
 .RE
 .\}
 .sp
-Don\(cqt forget to distribute the \fIsite\&.conf\fR to all your systems\&.
+Don\'t forget to distribute the \fIsite\&.conf\fR to all your systems\&.
 .sp
 The resulting ISO image will be created in \fI/var/lib/rear/output/\fR\&. You can now modify the behaviour by copying the appropriate configuration variables from \fIdefault\&.conf\fR to \fIlocal\&.conf\fR and changing them to suit your environment\&.
 .SH "EXIT STATUS"
@@ -486,14 +654,20 @@ for more information\&.
 .RE
 .SH "EXAMPLES"
 .sp
-To print out the current settings for BACKUP and OUTPUT methods and some system information\&. This command can be used to see the supported features for the given release and platform\&.
+To print out the current settings for \FCBACKUP\F[] and \FCOUTPUT\F[] methods and some system information\&. This command can be used to see the supported features for the given release and platform\&.
 .sp
 .if n \{\
 .RS 4
 .\}
+.fam C
+.ps -1
 .nf
+.BB lightgray
 # rear dump
+.EB lightgray
 .fi
+.fam
+.ps +1
 .if n \{\
 .RE
 .\}
@@ -503,9 +677,15 @@ To create a new rescue environment\&. Do not forget to copy the resulting rescue
 .if n \{\
 .RS 4
 .\}
+.fam C
+.ps -1
 .nf
+.BB lightgray
 # rear \-v mkrescue
+.EB lightgray
 .fi
+.fam
+.ps +1
 .if n \{\
 .RE
 .\}
@@ -543,7 +723,7 @@ Relax\-and\-Recover script components\&.
 .PP
 /usr/share/rear/conf/default\&.conf
 .RS 4
-Relax\-and\-Recover\(cqs included defaults\&. Contains a complete set of parameters and its explanation\&. Please do not edit or modify\&. Copy values to
+Relax\-and\-Recover\'s included defaults\&. Contains a complete set of parameters and its explanation\&. Please do not edit or modify\&. Copy values to
 \fIlocal\&.conf\fR
 or
 \fIsite\&.conf\fR
@@ -557,7 +737,7 @@ Feedback is welcome, please report any issues or improvements to our issue\-trac
 Relax\-and\-Recover comes with extensive documentation located in \fI/usr/share/doc\fR\&.
 .SH "AUTHORS"
 .sp
-Gratien D\(cqhaese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers\&.
+Gratien D\'haese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers\&.
 .sp
 Lars Pinne (original man page)\&.
 .sp
@@ -570,10 +750,16 @@ The Relax\-and\-Recover website is located at: \m[blue]\fBhttp://relax\-and\-rec
 .sp
 Schlomo Schapiro
 .sp
-Gratien D\(cqhaese, IT3 Consultants
+Gratien D\'haese, IT3 Consultants
 .sp
 Jeroen Hoekx
 .sp
 Dag Wieers, Dagit Linux Solutions
 .sp
 Relax\-and\-Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU General Public License at \m[blue]\fBhttp://www\&.gnu\&.org/licenses/gpl\&.html\fR\m[]
+.SH "Notes"
+.IP " 1." 4
+user@remote-system.domain.org
+.RS 4
+\%mailto:user@remote-system.domain.org
+.RE
