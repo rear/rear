@@ -175,7 +175,7 @@ In this combination Relax\-and\-Recover recreates the system layout and calls th
 For demonstration and special use purposes Relax\-and\-Recover also includes an internal backup method, NETFS, which can be used to create a simple tar\&.gz archive of the system\&. For all permanent setups we recommend using something more professional for backup, either a traditional backup software (open source or commercial) or rsync with hardlink based solutions, e\&.g\&. RSYNC BACKUP MADE EASY\&.
 .SH "RESCUE IMAGE CONFIGURATION"
 .sp
-The OUTPUT variable defines where the rescue image should be send to\&. Possible OUTPUT setting are:
+The OUTPUT variable defines how from where our rescue image will be booted and the OUTPUT_URL variable defines where the rescue image should be send to\&. Possible OUTPUT setting are:
 .PP
 OUTPUT=\fBRAMDISK\fR
 .RS 4
