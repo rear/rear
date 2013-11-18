@@ -2,7 +2,7 @@
 #
 # prep/SESAM/default/40_prep_sesam.sh
 # skel/SESAM/etc/scripts/system-setup.d/59-start-sesam-client.sh
-SM_INI=$(grep SM_INI /etc/sesam2000.ini | cut -d '=' -f 2)
+SM_INI=$(grep SM_INI /etc/sesam2000.ini 2>/dev/null | cut -d '=' -f 2)
 while IFS== read key value ; do
     case "$key" in
         gv_ro) SESAM_BIN_DIR="$value" ;;
