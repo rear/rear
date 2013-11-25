@@ -24,7 +24,7 @@ if [[ "$AUTOEXCLUDE_PATH" ]] ; then
 fi
 
 # Automatically exclude disks that do not have filesystems mounted.
-if [ -n "$AUTOEXCLUDE_DISKS" ] ; then
+if [[ "$AUTOEXCLUDE_DISKS" =~ ^[yY1] ]] ; then
     used_disks=()
 
     # List disks used by mountpoints
