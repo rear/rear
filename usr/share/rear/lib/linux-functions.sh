@@ -102,8 +102,10 @@ FindDrivers() {
 # optionally $1 specifies the directory where to search for
 # drivers files
 FindStorageDrivers() {
-	[ "$STORAGE_DRIVERS" ]
-	StopIfError "FindStorageDrivers called but STORAGE_DRIVERS is empty"
+	if (( ${#STORAGE_DRIVERS[@]} == 0 )); then
+		grep -E 'kernel/drivers/(block|firewire|ide|ata|md|message|scsi|usb/storage)' /lib/modules/$KERNEL_VERSION/modules.builtin
+		StopIfError "FindStorageDrivers called but STORAGE_DRIVERS is empty and no builtin storage modules found"
+	fi 
 	{
 		while read module junk; do
 			IsInArray "$module" "${STORAGE_DRIVERS[@]}" && echo $module
