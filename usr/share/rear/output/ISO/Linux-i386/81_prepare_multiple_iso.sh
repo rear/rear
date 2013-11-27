@@ -51,7 +51,7 @@ for i in `seq -f '%02g' 1 $(($NB_ISOS-1))`; do
     LogPrint "Making additionnal ISO image : ${ISO_NAME}"
 
     pushd $TEMP_ISO_DIR >&8
-    $ISO_MKISOFS_BIN $v -o "${ISO_OUTPUT_PATH}" -R -J -volid "${ISO_VOLID}_${i}" -v .  >&8
+    $ISO_MKISOFS_BIN $v -o "${ISO_OUTPUT_PATH}" -R -J -volid "${ISO_VOLID}_${i}" -v -iso-level 3 .  >&8
     StopIfError "Could not create ISO image ${ISO_NAME} (with $ISO_MKISOFS_BIN)"
     popd >&8
 
