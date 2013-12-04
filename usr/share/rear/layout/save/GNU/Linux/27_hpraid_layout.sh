@@ -20,7 +20,16 @@ if (( $? != 1 )); then
     Error "One or more HP SmartArray controllers have errors, fix this first !"
 fi
 
-hpacucli ctrl all show config > $TMP_DIR/hpraid-config.tmp
+## with newer version of hpacucli the order logicaldrive and array could be wrong
+## therefore, we build the input file to process more prudent
+##hpacucli ctrl all show config > $TMP_DIR/hpraid-config.tmp
+for slotnr in $( hpacucli controller all show | grep Slot | sed -r 's/.*Slot ([0-9]).*/\1/' )
+do
+    # we want the order as Slot, array, logicaldrive, physicaldrive
+    hpacucli controller slot=$slotnr ld all show >> $TMP_DIR/hpraid-config.tmp
+    hpacucli controller slot=$slotnr pd all show | grep physicaldrive >> $TMP_DIR/hpraid-config.tmp
+done
+
 
 # a list of all non-empty controllers
 controllers=()
@@ -39,6 +48,7 @@ write_logicaldrive() {
 
 drives=
 spares=
+
 while read line ; do
     case $line in
         *Slot*)
