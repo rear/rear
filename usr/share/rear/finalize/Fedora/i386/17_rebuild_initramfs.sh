@@ -45,10 +45,10 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
         # Ignore possible kdump images as they are build by kdump
         unalias ls 2>/dev/null
 
-        for INITRD_IMG in `ls /mnt/local/boot/initramfs-*.img /mnt/local/boot/initrd-*.img | grep -v kdump` ; do
+        for INITRD_IMG in $(ls /mnt/local/boot/initramfs-*.img /mnt/local/boot/initrd-*.img | grep -v kdump) ; do
 
-            KERNEL_VERSION=$(basename `echo $INITRD_IMG` | cut -f2- -d"-" | sed s/"\.img"//)
-            INITRD=`echo $INITRD_IMG|egrep -o "/boot/.*"`
+            KERNEL_VERSION=$(basename $(echo $INITRD_IMG) | cut -f2- -d"-" | sed s/"\.img"//)
+            INITRD=$(echo $INITRD_IMG|egrep -o "/boot/.*")
 
             if chroot /mnt/local /bin/bash --login -c "mkinitrd -v -f ${WITH_INITRD_MODULES[@]} $INITRD $KERNEL_VERSION" >&2 ; then
                         LogPrint "Updated initramfs with new drivers for Kernel $KERNEL_VERSION."
