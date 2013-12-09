@@ -2,7 +2,7 @@
 if [ -e /etc/sesam2000.ini ]; then
 
         # get sesam installation
-        source $SHARE_DIR/lib/sesam-functions.sh
+        source /usr/share/rear/lib/sesam-functions.sh
         # set the sesam environment profile
         source $SESAM_VAR_DIR/var/ini/sesam2000.profile
 
