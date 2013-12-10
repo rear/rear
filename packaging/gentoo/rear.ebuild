@@ -18,6 +18,7 @@ RDEPEND="net-dialup/mingetty
 	sys-apps/iproute2
 	sys-apps/lsb-release
 	sys-apps/util-linux
+	sys-apps/gawk
 	sys-block/parted
 	sys-boot/syslinux
 	virtual/cdrtools
