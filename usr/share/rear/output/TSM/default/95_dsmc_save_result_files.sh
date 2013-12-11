@@ -38,12 +38,15 @@ if test -s $(get_template "RESULT_usage_$OUTPUT.txt") ; then
 	TSM_RESULT_FILES=( "${TSM_RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH"/README )
 fi
 
-Log "Saving files '${TSM_RESULT_FILES[@]}' with dsmc"
-dsmc incremental "${TSM_RESULT_FILES[@]}" >&8
-ret=$?
-# Error code 8 can be ignored, see bug report at
-# https://sourceforge.net/tracker/?func=detail&atid=859452&aid=1942895&group_id=171835
-[ "$ret" -eq 0 -o "$ret" -eq 8 ]
-StopIfError "Could not save result files with dsmc"
-
+if [ $TSM_RESULT_SAVE == "n" ];then
+   Log "Result saving via TSM skiped"
+else
+   Log "Saving files '${TSM_RESULT_FILES[@]}' with dsmc"
+   dsmc incremental "${TSM_RESULT_FILES[@]}" >&8
+   ret=$?
+   # Error code 8 can be ignored, see bug report at
+   # https://sourceforge.net/tracker/?func=detail&atid=859452&aid=1942895&group_id=171835
+   [ "$ret" -eq 0 -o "$ret" -eq 8 ]
+   StopIfError "Could not save result files with dsmc"
+fi
 set +x
