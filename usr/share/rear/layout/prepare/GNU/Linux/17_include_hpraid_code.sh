@@ -1,11 +1,13 @@
 # Code to recreate HP SmartArray controllers
 
+define_HPSSACLI  # call function to find proper Smart Storage Administrator CLI command - define $HPSSACLI var
+
 create_smartarray() {
     local sa slotnr junk
     read sa slotnr junk < <(grep "^smartarray ${1#sma:}" $LAYOUT_FILE)
     cat <<EOF >>$LAYOUT_CODE
 LogPrint "Clearing HP SmartArray controller $slotnr"
-if ! hpacucli ctrl slot=$slotnr delete forced >&8; then
+if ! $HPSSACLI ctrl slot=$slotnr delete forced >&8; then
     Log "Failed to clear HP SmartArray controller $slotnr, this is not necessarily fatal."
 fi
 EOF
@@ -49,9 +51,9 @@ create_logicaldrive() {
         esac
     done
     echo "LogPrint \"Recreating HP SmartArray controller $slotnr|$arrayname\"" >> $LAYOUT_CODE
-    echo "hpacucli ctrl slot=$slotnr create type=ld ${drives}${raid}${sectors}${stripesize}" >> $LAYOUT_CODE
+    echo "$HPSSACLI ctrl slot=$slotnr create type=ld ${drives}${raid}${sectors}${stripesize}" >> $LAYOUT_CODE
     if [ -n "$spares" ] ; then
-        echo "hpacucli ctrl slot=$slotnr array $arrayname add${spares}" >> $LAYOUT_CODE
+        echo "$HPSSACLI ctrl slot=$slotnr array $arrayname add${spares}" >> $LAYOUT_CODE
     fi
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Configuration restored successfully, reloading CCISS driver..."

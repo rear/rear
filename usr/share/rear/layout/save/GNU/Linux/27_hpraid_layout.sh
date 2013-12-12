@@ -1,33 +1,35 @@
 # Collect HP Smartarray information
 
-if ! has_binary hpacucli; then
+define_HPSSACLI  # call function to find proper Smart Storage Administrator CLI command - define $HPSSACLI var
+
+if ! has_binary $HPSSACLI ; then
     return
 fi
 
-# Add hpacucli to the rescue image
-PROGS=( "${PROGS[@]}" hpacucli )
-eval $(grep ON_DIR= $(get_path hpacucli))
+# Add $HPSSACLI to the rescue image
+PROGS=( "${PROGS[@]}" $HPSSACLI )
+eval $(grep ON_DIR= $(get_path $HPSSACLI))
 COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR" )
 
 Log "Saving HP SmartArray configuration."
 
-### In case we have a controller problem, the hpacucli output may not reflect
+### In case we have a controller problem, the $HPSSACLI output may not reflect
 ### the actual configuration of the system, and hence the layout output could
 ### be incorrect ! Fail if this is the case !
-hpacucli ctrl all show detail > $TMP_DIR/hpraid-detail.tmp
+$HPSSACLI ctrl all show detail > $TMP_DIR/hpraid-detail.tmp
 grep 'Controller Status:' $TMP_DIR/hpraid-detail.tmp | grep -v 'Controller Status: OK'
 if (( $? != 1 )); then
     Error "One or more HP SmartArray controllers have errors, fix this first !"
 fi
 
-## with newer version of hpacucli the order logicaldrive and array could be wrong
+## with newer version of $HPSSACLI the order logicaldrive and array could be wrong
 ## therefore, we build the input file to process more prudent
-##hpacucli ctrl all show config > $TMP_DIR/hpraid-config.tmp
-for slotnr in $( hpacucli controller all show | grep Slot | sed -r 's/.*Slot ([0-9]).*/\1/' )
+##$HPSSACLI ctrl all show config > $TMP_DIR/hpraid-config.tmp
+for slotnr in $( $HPSSACLI controller all show | grep Slot | sed -r 's/.*Slot ([0-9]).*/\1/' )
 do
     # we want the order as Slot, array, logicaldrive, physicaldrive
-    hpacucli controller slot=$slotnr ld all show >> $TMP_DIR/hpraid-config.tmp
-    hpacucli controller slot=$slotnr pd all show | grep physicaldrive >> $TMP_DIR/hpraid-config.tmp
+    $HPSSACLI controller slot=$slotnr ld all show >> $TMP_DIR/hpraid-config.tmp
+    $HPSSACLI controller slot=$slotnr pd all show | grep physicaldrive >> $TMP_DIR/hpraid-config.tmp
 done
 
 
@@ -69,7 +71,7 @@ while read line ; do
             ldname=${drivedetails% *}
 
             tmpfile=$TMP_DIR/ctrl$slotnr-$ldname.tmp
-            hpacucli ctrl slot=$slotnr ld $ldname show detail > $tmpfile
+            $HPSSACLI ctrl slot=$slotnr ld $ldname show detail > $tmpfile
             stripesize=$(grep -i "stripe" $tmpfile | sed -r "s/[^0-9]+([0-9]+).*/\1/")
             sectors=$(grep -i "sectors" $tmpfile | sed -r "s/[^0-9]+([0-9]+).*/\1/")
             devname=$(grep -i "name" $tmpfile | cut -d ":" -f "2" | tr -d " ")

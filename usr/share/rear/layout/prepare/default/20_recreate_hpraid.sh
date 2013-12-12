@@ -52,6 +52,7 @@ sleep 2
 EOF
 
 if [ ${#restored_controllers} -ne 0 ] ; then
+    define_HPSSACLI  # call function to find proper Smart Storage Administrator CLI command - define $HPSSACLI var
     RESTORE_OK=
     while [[ -z "$RESTORE_OK" ]]; do
         (
@@ -79,9 +80,9 @@ if [ ${#restored_controllers} -ne 0 ] ; then
                 timestamp=$(stat --format="%Y" $LAYOUT_FILE)
                 case "$REPLY" in
                     (1) less $LOGFILE;;
-                    (2) rear_shell "" "hpacucli ctrl all show detail
-hpacucli ctrl all show config detail
-hpacucli ctrl all show config
+                    (2) rear_shell "" "$HPSSACLI ctrl all show detail
+$HPSSACLI ctrl all show config detail
+$HPSSACLI ctrl all show config
 ";;
 #                    (3) vi $LAYOUT_FILE;;
                     (3) vi $LAYOUT_CODE;;
