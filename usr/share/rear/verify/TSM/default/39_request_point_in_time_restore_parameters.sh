@@ -11,7 +11,7 @@ if test -z "${REPLY}"; then
     LogPrint "Skipping Point-In-Time Restore, will restore most recent data."
 else
     # validate date
-    TSM_RESTORE_PIT_DATE=$( date -d "$REPLY" +%m.%d.%Y 2>&8 ) ||\
+    TSM_RESTORE_PIT_DATE=$( date -d "$REPLY" +%Y.%m.%d 2>&8 ) ||\
     Error "Invalid date for recovery: '$REPLY'"
     # correct date, add to dsmc options
     TSM_DSMC_RESTORE_OPTIONS=( "${TSM_DSMC_RESTORE_OPTIONS[@]}" -pitd="$TSM_RESTORE_PIT_DATE" )
