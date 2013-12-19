@@ -140,10 +140,10 @@ the +OUTPUT_URL+ variable defines where the rescue image should be send to.
 Possible +OUTPUT+ setting are:
 
 OUTPUT=*RAMDISK*::
-*(Default)* Create only the Relax-and-Recover initramfs.
+Create only the Relax-and-Recover initramfs.
 
 OUTPUT=*ISO*::
-Create a bootable ISO9660 image on disk as _rear-$(hostname).iso_
+*(Default)* Create a bootable ISO9660 image on disk as _rear-$(hostname).iso_
 
 OUTPUT=*PXE*::
 Create on a remote PXE/NFS server the required files (such as
