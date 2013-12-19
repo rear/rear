@@ -1,4 +1,4 @@
-%define rpmrelease %{nil}
+%define rpmrelease .git201312111623
 
 ### Work-around the fact that OpenSUSE/SLES _always_ defined both :-/
 %if 0%{?sles_version} == 0
@@ -14,7 +14,7 @@ Group: Applications/File
 URL: http://relax-and-recover.org/
 
 # as GitHub stopped with download section we need to go back to Sourceforge for downloads
-Source: https://sourceforge.net/projects/rear/files/rear/%{version}/rear-%{version}.tar.gz
+Source: https://sourceforge.net/projects/rear/files/rear/1.15/rear-1.15-git201312111623.tar.gz
 
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -114,7 +114,7 @@ removes any excuse for not having a disaster recovery solution implemented.
 Professional services and support are available.
 
 %prep
-%setup -q
+%setup -q -n rear-1.15-git201312111623
 
 echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
 

@@ -9,8 +9,6 @@ function define_HPSSACLI() {
         HPSSACLI=hpacucli
     elif has_binary hpssacli ; then
         HPSSACLI=hpssacli
-    else
-        Error "HP Smart Storage Administrator CLI not found: hpacucli nor hpssacli"
     fi
 }
 
