@@ -1,7 +1,8 @@
-# here we will verify and add (if necessary) local backup directories
-# to the EXCLUDE_RECREATE array.
-# For the moment we only concentrate on BACKUP_URL=file:///path and
-# add path to the above mentioned array
+# This file is part of Relax and Recover, licensed under the GNU General
+# Public License. Refer to the included LICENSE for full text of license.
+
+# here we will verify and add (if necessary) local backup directories to the EXCLUDE_RECREATE array.
+# For the moment we only concentrate on BACKUP_URL=file:///path and add path to the above mentioned array
 local scheme=$(url_scheme $BACKUP_URL)
 local path=$(url_path $BACKUP_URL)
 

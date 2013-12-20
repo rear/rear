@@ -1,3 +1,5 @@
+# This file is part of Relax and Recover, licensed under the GNU General
+# Public License. Refer to the included LICENSE for full text of license.
 # try to grab the rsync protocol version of rsync on the remote server
 if [ -z "$RSYNC_PROTOCOL_VERSION" ]; then
 

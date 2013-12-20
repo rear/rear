@@ -2,19 +2,8 @@
 #
 # linux functions for Relax-and-Recover
 #
-#    Relax-and-Recover is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-
-#    Relax-and-Recover is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-
-#    You should have received a copy of the GNU General Public License
-#    along with Relax-and-Recover; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# This file is part of Relax and Recover, licensed under the GNU General
+# Public License. Refer to the included LICENSE for full text of license.
 
 # The way how we use Bash with lots of (nested) functions and read etc. seems to trigger a Bash
 # bug that causes leaked file descriptors. lvm likes to complain about that but since we
@@ -360,7 +349,7 @@ EOF
 # Return the filesystem name related to a path
 function filesystem_name() {
     local path=$1
-    local fs=$(df -P "$path" | awk 'END { print $6 }')
+    local fs=$(df -Pl "$path" | awk 'END { print $6 }')
     if [[ -z "$fs" ]]; then
         echo "/"
     else
