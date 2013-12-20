@@ -69,7 +69,7 @@ EOF
         xfs)
 cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
-mkfs -f -t $fstype $device
+mkfs.xfs -f  $device
 EOF
             if [ -n "$label" ] ; then
                 echo "xfs_admin -L $label $device >&2" >> $LAYOUT_CODE
