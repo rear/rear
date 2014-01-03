@@ -25,7 +25,6 @@ Requires: binutils
 Requires: ethtool
 Requires: gzip
 Requires: iputils
-Requires: mingetty
 Requires: parted
 Requires: tar
 Requires: util-linux
@@ -88,6 +87,14 @@ Requires: crontabs
 Requires: iproute
 Requires: mkisofs
 #Requires: redhat-lsb
+%endif
+
+# mingetty is not available anymore with RHEL 7 (use agetty instead via systemd)
+# Note that CentOS also has %rhel defined so there is no need to use %centos
+%if 0%{?rhel} && 0%{?rhel} > 6
+Requires: agetty
+%else
+Requires: mingetty
 %endif
 
 ### The rear-snapshot package is no more
