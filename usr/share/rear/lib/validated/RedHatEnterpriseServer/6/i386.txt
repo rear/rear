@@ -1,0 +1,6 @@
+Relax and Recover Version 1.13.0 / $Date$
+Validation:     RedHatEnterpriseServer/6/i386
+Submitted:      tdec0909@yahoo.com
+Date:           2013-05-21
+Features:       LVM, VMware guest, ISO, NETFS
+Comment:        'shutdown' after recovery does not bring the VMware guest down. After resetting the VMware guest, the recovered OS starts fine.
