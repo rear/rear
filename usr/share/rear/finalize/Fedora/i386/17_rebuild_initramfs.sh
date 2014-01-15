@@ -35,17 +35,20 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 	INITRD_MODULES="${OLD_INITRD_MODULES[@]} ${NEW_INITRD_MODULES[@]}"
 
 	WITH_INITRD_MODULES=$( printf '%s\n' ${INITRD_MODULES[@]} | awk '{printf "--with=%s ", $1}' )
-	[[ -f /mnt/local/boot/initrd-${KERNEL_VERSION}.img ]] && INITRD_IMG=/boot/initrd-${KERNEL_VERSION}.img \
-	|| INITRD_IMG=/boot/initramfs-${KERNEL_VERSION}.img
-
+	
 	mount -t proc none /mnt/local/proc
 	mount -t sysfs none /mnt/local/sys
 
         # Recreate any initrd or initramfs image under /mnt/local/boot/ with new drivers
-        # Ignore possible kdump images as they are build by kdump
+        # Images ignored:
+        # kdump images as they are build by kdump
+        # initramfs rescue images (>= Rhel 7), which need all modules and
+        # are created by new-kernel-pkg
+        # initrd-plymouth.img (>= Rhel 7), which contains only files needed for graphical boot via plymouth
+
         unalias ls 2>/dev/null
 
-        for INITRD_IMG in $(ls /mnt/local/boot/initramfs-*.img /mnt/local/boot/initrd-*.img | grep -v kdump) ; do
+        for INITRD_IMG in $(ls /mnt/local/boot/initramfs-*.img /mnt/local/boot/initrd-*.img | egrep -v '(kdump|rescue|plymouth)') ; do
 
             KERNEL_VERSION=$(basename $(echo $INITRD_IMG) | cut -f2- -d"-" | sed s/"\.img"//)
             INITRD=$(echo $INITRD_IMG|egrep -o "/boot/.*")
