@@ -55,3 +55,5 @@ uefivars
 )
 
 MODULES=( "${MODULES[@]}" efivars )
+
+awk '/\/boot\/efi/ { print $1 }' /proc/mounts >$VAR_DIR/recovery/bootdisk 2>/dev/null
