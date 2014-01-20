@@ -14,6 +14,10 @@ Log "Saving Filesystem layout."
             Log "$device is not a block device, skipping."
             continue
         fi
+        if [ "$fstype" = "iso9660" ] ; then
+            Log "$device is CD/DVD type device [$fstype], skipping."
+            continue
+        fi
 
         if [[ $device == /dev/disk/by-uuid* ]]; then
           ndevice=$(readlink -f $device)
