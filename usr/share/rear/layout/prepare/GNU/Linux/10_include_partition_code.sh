@@ -96,6 +96,7 @@ create_partitions() {
     cat >> $LAYOUT_CODE <<EOF
 LogPrint "Creating partitions for disk $device ($label)"
 parted -s $device mklabel $label >&2
+sleep 1
 EOF
 
     local block_size device_size sysfs_name
@@ -158,6 +159,7 @@ EOF
             fi
             cat >> $LAYOUT_CODE <<EOF
 parted -s $device mkpart '"$name"' ${start}B $end >&2
+sleep 1
 EOF
         else
             ### Old versions of parted accept only sizes in megabytes...
@@ -169,6 +171,7 @@ EOF
             end_mb=$(( end/1024/1024 ))
             cat  >> $LAYOUT_CODE <<EOF
 parted -s $device mkpart '"$name"' $start_mb $end_mb >&2
+sleep 1
 EOF
         fi
 
