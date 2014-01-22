@@ -45,7 +45,7 @@ extract_partitions() {
     fi
 
     ### collect basic information
-    : > $TMP_DIR/partitions
+    : > $TMP_DIR/partitions_unsorted
 
     declare partition_name partition_prefix start_block
     declare partition_nr size start
@@ -70,8 +70,11 @@ extract_partitions() {
             start="unknown"
         fi
 
-        echo "$partition_nr $size $start">> $TMP_DIR/partitions
+        echo "$partition_nr $size $start">> $TMP_DIR/partitions_unsorted
     done
+
+    # do a numeric sort to have the partitions in numeric order (see #352)
+    sort -n  $TMP_DIR/partitions_unsorted > $TMP_DIR/partitions
 
     if [[ ! -s $TMP_DIR/partitions ]] ; then
         Debug "No partitions found on $device."
@@ -87,6 +90,7 @@ extract_partitions() {
         parted -s $device print > $TMP_DIR/parted
         disk_label=$(grep -E "Partition Table|Disk label" $TMP_DIR/parted | cut -d ":" -f "2" | tr -d " ")
     fi
+
 
     cp $TMP_DIR/partitions $TMP_DIR/partitions-data
 
