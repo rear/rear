@@ -16,7 +16,8 @@ for disk in /sys/block/* ; do
         echo "LILO" >$VAR_DIR/recovery/bootloader
         return
         }
-        cat TMP_DIR/bootloader >&7
+        echo "Displaying the raw bootloader info:" >&7
+        cat $TMP_DIR/bootloader >&7
    fi
 done
 
