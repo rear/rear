@@ -14,7 +14,7 @@ else
     TSM_RESTORE_PIT_DATE=$( date -d "$REPLY" +%Y.%m.%d 2>&8 ) ||\
     Error "Invalid date for recovery: '$REPLY'"
     # correct date, add to dsmc options
-    TSM_DSMC_RESTORE_OPTIONS=( "${TSM_DSMC_RESTORE_OPTIONS[@]}" -pitd="$TSM_RESTORE_PIT_DATE" )
+    TSM_DSMC_RESTORE_OPTIONS=( "${TSM_DSMC_RESTORE_OPTIONS[@]}" -date=5 -pitd="$TSM_RESTORE_PIT_DATE" )
 
     # validate time
     TSM_RESTORE_PIT_TIME=$( date -d "$REPLY" +%T 2>&8 ) ||\
@@ -24,7 +24,7 @@ else
         TSM_RESTORE_PIT_TIME=
     else
         # valid time, add to dsmc options
-        TSM_DSMC_RESTORE_OPTIONS=( "${TSM_DSMC_RESTORE_OPTIONS[@]}" -pitt="$TSM_RESTORE_PIT_TIME" )
+        TSM_DSMC_RESTORE_OPTIONS=( "${TSM_DSMC_RESTORE_OPTIONS[@]}" -date=5 -pitt="$TSM_RESTORE_PIT_TIME" )
     fi
     LogPrint "Restoring all filespaces from backup before ${TSM_RESTORE_PIT_DATE} ${TSM_RESTORE_PIT_TIME} (MM/DD/YYYY HH:mm:ss)"
     LogPrint "Please note that the following list of file spaces always shows the latest backup"
