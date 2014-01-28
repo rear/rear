@@ -260,8 +260,8 @@ get_network_address() {
 }
 
 prefix2netmask() {
-	pf="${1}"
-	echo $(num2ip "${MASKS[$BITS]}")
+    pf="${1}"
+    echo $(num2ip "${MASKS[$pf]}")
 }
 
 get_prefix() {
