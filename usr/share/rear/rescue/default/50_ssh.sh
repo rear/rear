@@ -52,7 +52,5 @@ if has_binary sshd; then
 	# Set the SSH root password
 	if [[ $SSH_ROOT_PASSWORD ]] ; then
 		echo "root:$(echo $SSH_ROOT_PASSWORD | openssl passwd -1 -stdin):::::::" > $ROOTFS_DIR/etc/shadow
-        sed -i 's/.*PermitRootLogin.*/PermitRootLogin yes/g' $ROOTFS_DIR/etc/ssh/sshd_config
-        sed -i 's/.*PasswordAuthentication.*/PasswordAuthentication yes/g' $ROOTFS_DIR/etc/ssh/sshd_config
 	fi
 fi
