@@ -12,6 +12,9 @@ fi
 
 echo "Attempting to start the DHCP client daemon"
 
+# To be sure that network is properly initialized (get_device_by_hwaddr sees network interfaces)
+sleep 5
+
 . /usr/share/rear/lib/network-functions.sh
 
 # Need to find the devices and their HWADDR (avoid local and virtual devices)
