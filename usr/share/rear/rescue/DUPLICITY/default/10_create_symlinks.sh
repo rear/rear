@@ -14,5 +14,5 @@
 #
 
 py=$(readlink -f $(get_path python))
-ln -sf $v /bin/$(basename $py) $ROOTFS_DIR/bin/python2
-ln -sf $v /bin/$(basename $py) $ROOTFS_DIR/bin/python
+ln -sf $v /bin/$(basename $py) $ROOTFS_DIR/bin/python2 >&2
+#ln -sf $v /bin/$(basename $py) $ROOTFS_DIR/bin/python
