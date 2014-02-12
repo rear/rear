@@ -13,7 +13,7 @@ else
     DUPLY_RESTORE_OK="y"
 
     # we need to move up one dir (to get restore almost empty)
-    cd /mnt/local/restore
+    cd /mnt/local
 
     # file $VAR_DIR/recovery/mountpoint_device contains the mount points in / /boot etc order
     # we need to reverse it - to avoid tac we use sed instead
