@@ -1,6 +1,8 @@
 #
 # copy resulting files to network output location
 
+[[ "$BACKUP" = "RSYNC" ]] && return 0   # output/RSYNC/default/90_copy_result_files.sh took care of it
+
 local scheme=$(url_scheme $OUTPUT_URL)
 local host=$(url_host $OUTPUT_URL)
 local path=$(url_path $OUTPUT_URL)
@@ -31,16 +33,21 @@ case "$scheme" in
         cat "$REAR_LOGFILE" >"${opath}/rear.log"
         StopIfError "Could not copy $REAR_LOGFILE to $scheme location"
     ;;
+
     (fish|ftp|ftps|hftp|http|https|sftp)
     LogPrint "Copying files '${RESULT_FILES[@]}' to $scheme location"
+    Log "lftp -c open $OUTPUT_URL; mput ${RESULT_FILES[@]}"
     lftp -c "open $OUTPUT_URL; mput ${RESULT_FILES[@]}"
     StopIfError "Problem transferring files to $OUTPUT_URL"
     ;;
+
     (rsync)
     LogPrint "Copying files '${RESULT_FILES[@]}' to $scheme location"
+    Log "rsync -a $v ${RESULT_FILES[@]} ${host}:${path}"
     rsync -a $v "${RESULT_FILES[@]}" "${host}:${path}"
     StopIfError "Problem transferring files to $OUTPUT_URL"
     ;;
+
     (*) BugError "Support for $scheme is not implemented yet."
     ;;
 esac
