@@ -1,72 +1,73 @@
 # 10_check_rsync.sh - analyze the BACKUP_URL
-## from man page:
-# Access via remote shell:
-#	Pull: rsync [OPTION...] [USER@]HOST:SRC... [DEST]
-#	Push: rsync [OPTION...] SRC... [USER@]HOST:DEST
-# Access via rsync daemon:
-#	Pull: rsync [OPTION...] [USER@]HOST::SRC... [DEST]
-#	rsync [OPTION...] rsync://[USER@]HOST[:PORT]/SRC... [DEST]
-#	Push: rsync [OPTION...] SRC... [USER@]HOST::DEST
-#	rsync [OPTION...] SRC... rsync://[USER@]HOST[:PORT]/DEST
 #
-#### rear needs a destination path which is the SRC (or DST)
-# BACKUP_URL=[USER@]HOST:PATH			# using ssh (no rsh)
-# with rsync protocol PATH is a MODULE name defined in remote /etc/rsyncd.conf file
-# BACKUP_URL=[USER@]HOST::PATH			# using rsync
-# BACKUP_URL=rsync://[USER@]HOST[:PORT]/PATH	# using rsync
+# This file is part of Relax and Recover, licensed under the GNU General
+# Public License. Refer to the included LICENSE for full text of license.
 
-RSYNC_PROTO=					# ssh or rsync
-RSYNC_USER=
-RSYNC_HOST=
-RSYNC_PORT=873					# default port (of rsync server)
-RSYNC_PATH=
+#### OLD STYLE:
+# BACKUP_URL=[USER@]HOST:PATH           # using ssh (no rsh)
+#
+# with rsync protocol PATH is a MODULE name defined in remote /etc/rsyncd.conf file
+# BACKUP_URL=[USER@]HOST::PATH          # using rsync
+# BACKUP_URL=rsync://[USER@]HOST[:PORT]/PATH    # using rsync (is not compatible with new style!!!)
+
+#### NEW STYLE:
+# BACKUP_URL=rsync://[USER@]HOST[:PORT]/PATH    # using ssh
+# BACKUP_URL=rsync://[USER@]HOST[:PORT]::/PATH  # using rsync
 
 if test -z "$BACKUP_URL" ; then
-	Error "You must specify BACKUP_URL !"
+    Error "Missing BACKUP_URL=rsync://[USER@]HOST[:PORT][::]/PATH !"
 fi
 
-echo $BACKUP_URL | egrep -q '(rsync:|::)'
-if [ $? -eq 0 ]; then
-	RSYNC_PROTO=rsync
-else
-	RSYNC_PROTO=ssh
+local host=$(url_host $BACKUP_URL)
+local scheme=$(url_scheme $BACKUP_URL)  # url_scheme still recognizes old style
+local path=$(url_path $BACKUP_URL)
+
+if [[ "$scheme" != "rsync" ]]; then
+    Error "Missing BACKUP_URL=rsync://[USER@]HOST[:PORT][::]/PATH !"
 fi
 
-tmp="${BACKUP_URL##*://}"	# remove rsync:// if present
-echo $tmp | grep -q '@'
-if [ $? -eq 0 ]; then
-	RSYNC_USER="${tmp%%@*}"	# grap user name
+RSYNC_PROTO=                    # ssh or rsync
+RSYNC_USER=
+RSYNC_HOST=
+RSYNC_PORT=873                  # default port (of rsync server)
+RSYNC_PATH=
+
+
+echo $BACKUP_URL | egrep -q '(::)'      # new style '::' means rsync protocol
+if [[ $? -eq 0 ]]; then
+    RSYNC_PROTO=rsync
 else
-	RSYNC_USER=root
+    RSYNC_PROTO=ssh
+fi
+
+echo $host | grep -q '@'
+if [[ $? -eq 0 ]]; then
+    RSYNC_USER="${host%%@*}"    # grab user name
+else
+    RSYNC_USER=root
 fi
 
 # remove USER@ if present (we don't need it anymore)
-tmp2="${tmp#*@}"
+tmp2="${host#*@}"
 
 case "$RSYNC_PROTO" in
 
-	(rsync)
-		echo $tmp2 | grep -q '::'
-		if [ $? -eq 0 ]; then
-			RSYNC_HOST="${tmp2%%::*}"
-			RSYNC_PATH="${tmp2##*::}"
-		else
-			echo $tmp2 | grep -q ':'
-			if [ $? -eq 0 ]; then
-				RSYNC_HOST="${tmp2%%:*}"
-				tmp="${tmp2##*:}"
-				RSYNC_PORT="${tmp%%/*}"
-				RSYNC_PATH="${tmp##*/}"
-			else
-				RSYNC_HOST="${tmp2%%/*}"
-				RSYNC_PATH="${tmp2##*/}"
-			fi
-		fi
-		;;
-	(ssh)
-		RSYNC_HOST="${tmp2%%:*}"
-		RSYNC_PATH="${tmp2##*:}"
-		;;
+    (rsync)
+        # tmp2=witsbebelnx02::backup or tmp2=witsbebelnx02::
+        RSYNC_HOST="${tmp2%%::*}"
+        # path=/gdhaese1@witsbebelnx02::backup or path=/backup
+        echo $path | grep -q '::'
+        if [[ $? -eq 0 ]]; then
+            RSYNC_PATH="${path##*::}"
+        else
+            RSYNC_PATH="${path##*/}"
+        fi
+        ;;
+    (ssh)
+        # tmp2=host or tmp2=host:
+        RSYNC_HOST="${tmp2%%:*}"
+        RSYNC_PATH=$path
+        ;;
 
 esac
 
@@ -78,25 +79,25 @@ esac
 
 # check if host is reachable
 if test "$PING" ; then
-	ping -c 2 "$RSYNC_HOST" >&8
-	StopIfError "Backup host [$RSYNC_HOST] not reachable."
+    ping -c 2 "$RSYNC_HOST" >&8
+    StopIfError "Backup host [$RSYNC_HOST] not reachable."
 else
-	Log "Skipping ping test"
+    Log "Skipping ping test"
 fi
 
 # check protocol connectivity
 case "$RSYNC_PROTO" in
 
-	(rsync)
-		Log "Test: $BACKUP_PROG ${RSYNC_PROTO}://${RSYNC_HOST}:${RSYNC_PORT}/"
-		$BACKUP_PROG ${RSYNC_PROTO}://${RSYNC_HOST}:${RSYNC_PORT}/ >&8
-		StopIfError "Rsync daemon not running on $RSYNC_HOST"
-		;;
+    (rsync)
+        Log "Test: $BACKUP_PROG ${RSYNC_PROTO}://${RSYNC_HOST}:${RSYNC_PORT}/"
+        $BACKUP_PROG ${RSYNC_PROTO}://${RSYNC_HOST}:${RSYNC_PORT}/ >&8
+        StopIfError "Rsync daemon not running on $RSYNC_HOST"
+        ;;
 
-	(ssh)
-		Log "Test: ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true"
-		ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true >&8 2>&1
-		StopIfError "Secure shell connection not setup properly [$RSYNC_USER@$RSYNC_HOST]"
-		;;
+    (ssh)
+        Log "Test: ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true"
+        ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true >&8 2>&1
+        StopIfError "Secure shell connection not setup properly [$RSYNC_USER@$RSYNC_HOST]"
+        ;;
 
 esac
