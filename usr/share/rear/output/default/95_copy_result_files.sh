@@ -1,8 +1,6 @@
 #
 # copy resulting files to network output location
 
-[[ "$BACKUP" = "RSYNC" ]] && return 0   # output/RSYNC/default/90_copy_result_files.sh took care of it
-
 local scheme=$(url_scheme $OUTPUT_URL)
 local host=$(url_host $OUTPUT_URL)
 local path=$(url_path $OUTPUT_URL)
@@ -42,6 +40,7 @@ case "$scheme" in
     ;;
 
     (rsync)
+    [[ "$BACKUP" = "RSYNC" ]] && return 0   # output/RSYNC/default/90_copy_result_files.sh took care of it
     LogPrint "Copying files '${RESULT_FILES[@]}' to $scheme location"
     Log "rsync -a $v ${RESULT_FILES[@]} ${host}:${path}"
     rsync -a $v "${RESULT_FILES[@]}" "${host}:${path}"
