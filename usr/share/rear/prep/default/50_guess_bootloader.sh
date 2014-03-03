@@ -3,7 +3,7 @@
 if [[ -f /etc/sysconfig/bootloader ]]; then
     my_bootloader=$( grep LOADER /etc/sysconfig/bootloader |cut -d= -f2 | sed -e 's/"//g' )
     if [[ ! -z "$my_bootloader" ]]; then
-        echo "$my_bootloader" >$VAR_DIR/recovery/bootloader
+        echo "$my_bootloader" | tr '[a-z]' '[A-Z]' >$VAR_DIR/recovery/bootloader
         return
     fi
 fi
