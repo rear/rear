@@ -18,6 +18,12 @@ fi
 # for UEFI systems with grub legacy with should use efibootmgr instead
 [[ ! -z "$USING_UEFI_BOOTLOADER" ]] && return # not empty means UEFI booting
 
+# check the BOOTLOADER variable (read by 01_prepare_checks.sh script)
+if [[ "$BOOTLOADER" = "GRUB2" ]]; then
+    # grub2 script should handle this instead
+    return
+fi
+
 # Only for GRUB Legacy - GRUB2 will be handled by its own script
 if [[ -z "$(type -p grub)" ]]; then
     return
