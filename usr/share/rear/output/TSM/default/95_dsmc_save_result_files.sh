@@ -1,4 +1,3 @@
-#
 # saving result files via TSM
 
 [ ${#RESULT_FILES[@]} -gt 0 ]
@@ -24,7 +23,7 @@ if test "$TSM_RESULT_FILE_PATH" != "/tmp" ; then
     TSM_RESULT_FILES=(
        $(
              for fname in "${RESULT_FILES[@]}" ; do
-             echo "$TSM_RESULT_FILE_PATH/$(basename "$fname")"
+                 echo "$TSM_RESULT_FILE_PATH/$(basename "$fname")"
              done
        )
     )
@@ -38,15 +37,19 @@ if test -s $(get_template "RESULT_usage_$OUTPUT.txt") ; then
     TSM_RESULT_FILES=( "${TSM_RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH"/README )
 fi
 
-if [[ "$TSM_RESULT_SAVE" == "n" ]]; then
+if [[ "$TSM_RESULT_SAVE" = "n" ]]; then
     Log "Result saving via TSM skipped"
-else
-    Log "Saving files '${TSM_RESULT_FILES[@]}' with dsmc"
-    dsmc incremental "${TSM_RESULT_FILES[@]}" >&8
-    ret=$?
-    # Error code 8 can be ignored, see bug report at
-    # https://sourceforge.net/tracker/?func=detail&atid=859452&aid=1942895&group_id=171835
-    [ "$ret" -eq 0 -o "$ret" -eq 8 ]
-    StopIfError "Could not save result files with dsmc"
+    return
 fi
-set +x
+
+Log "Saving files '${TSM_RESULT_FILES[@]}' with dsmc"
+if [[ -z "$TSM_ARCHIVE_MGMT_CLASS" ]]; then
+    dsmc incremental "${TSM_RESULT_FILES[@]}" >&8
+else
+    dsmc archive -archmc="$TSM_ARCHIVE_MGMT_CLASS" "${TSM_RESULT_FILES[@]}" >&8
+fi
+ret=$?
+# Error code 8 can be ignored
+[ "$ret" -eq 0 -o "$ret" -eq 8 ]
+StopIfError "Could not save result files with dsmc"
+
