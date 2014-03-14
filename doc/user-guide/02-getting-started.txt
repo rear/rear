@@ -16,7 +16,7 @@ ubiquitous Linux tools like:
  - file
  - grep
  - gzip
- - ip (iproute)
+ - ip (iproute[2])
  - mount (util-linux-ng)
  - ps (procps)
  - sed
@@ -36,6 +36,10 @@ In some cases having newer versions of tools may provide better support:
  - syslinux >= 4.00 (provides menu support)
  - parted
 
+In case we are using +BACKUP=NETFS+ with nfs or cifs we might need also:
+
+ - nfs-client
+ - cifs-utils
 
 == Distribution support
 As a project our aim is not to exclude any distribution from being supported,
@@ -51,6 +55,7 @@ Currently we aim to support the following distributions by testing them
 regularly:
 
  - Red Hat Enterprise Linux and derivatives: RHEL4, RHEL5 and RHEL6
+ - SuSe SLES 10, 11, 12
  - Ubuntu LTS: 10.04 and 12.04
 
 Distributions known to be 'unsupported' are:

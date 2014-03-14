@@ -68,7 +68,8 @@ Write the image using sshfs and the SSH protocol.
 
 
 == Backup/Restore strategy (BACKUP)
-The +BACKUP+ setting defines our backup/restore strategy.
+The +BACKUP+ setting defines our backup/restore strategy. The +BACKUP+ can be handled via internal archive executable (+tar+ or +rsync+) or by an external backup program (commercial or open source).
+ 
 Possible +BACKUP+ settings are:
 
 BACKUP=TSM::
@@ -97,7 +98,7 @@ Use CommVault Galaxy (7 and probably newer)
 
 BACKUP=NETFS::
 Use Relax-and-Recover internal backup with tar or rsync (or similar)
-BACKUP_TYPE=incremental and FULLBACKUPDAY="Mon", activates incremental Backups (only with tar).
++BACKUP_TYPE=incremental+ and +FULLBACKUPDAY="Mon"+, activates incremental Backups (only with +tar+!).
 Please keep in mind to clean your old Backups from time to time.
 
 BACKUP=REQUESTRESTORE::
@@ -114,7 +115,7 @@ part of the image.
 BACKUP=RBME::
 Use Rsync Backup Made Easy (rbme) to restore the data.
 
-== Using NETFS as backup strategy
+== Using NETFS as backup strategy (internal archive method)
 When using +BACKUP=NETFS+ you should provide the backup target location through
 the +BACKUP_URL+ variable. Possible +BACKUP_URL+ settings are:
 
