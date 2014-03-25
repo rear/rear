@@ -29,8 +29,8 @@ display $PXE_MESSAGE
 say ----------------------------------------------------------
 say rear = disaster recover this system with Relax and Recover
 label rear
-	kernel $PXE_KERNEL
-	append initrd=$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
+	kernel $OUTPUT_PREFIX/$PXE_KERNEL
+	append initrd=$OUTPUT_PREFIX/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 EOF
 
 pushd "$PXE_LOCAL_PATH" >&8

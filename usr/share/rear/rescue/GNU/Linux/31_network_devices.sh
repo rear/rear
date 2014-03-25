@@ -220,7 +220,7 @@ if test -d /proc/net/vlan ; then
         # we might need it if we ever want to implement VLAN Migration
         echo "modprobe 8021q" >>$netscript
         echo "sleep 5" >>$netscript
-        VLANS=( $(ls /proc/net/vlan/vlan*) )
+        VLANS=( $(ls /proc/net/vlan/* | grep -v config) )
         for vlan in ${VLANS[*]##*/}
         do
             if ip link show dev $vlan | grep -q UP ; then
