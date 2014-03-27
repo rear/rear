@@ -4,10 +4,19 @@
 # the user has to do the main part here :-)
 #
 #
-[[ "$DUPLY_RESTORE_OK" = "y" ]] && return
 
-LogPrint "Please restore your backup in the provided shell to /mnt/local and, when finished, type exit
-in the shell to continue recovery. You can use duplicity / duply to restore your backup."
+if [ "$BACKUP_PROG" = "duply" ]; then
 
-export TMPDIR=/mnt/local
-rear_shell "Did you restore the backup to /mnt/local ? Are you ready to continue recovery ?"
+    [[ "$DUPLY_RESTORE_OK" = "y" ]] && return
+
+    # if restore should be done with duply, but it failed, give the user
+    # a chance to fix it manually
+
+    LogPrint "Please restore your backup in the provided shell to /mnt/local and, 
+    when finished, type exit in the shell to continue recovery. 
+    You can use duplicity / duply to restore your backup."
+
+    export TMPDIR=/mnt/local
+    rear_shell "Did you restore the backup to /mnt/local ? Are you ready to continue recovery ?"
+
+fi    
