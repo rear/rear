@@ -8,7 +8,8 @@
 # the profile is in fact a directory name containing the conf file and exclude file
 # we shall copy this variable, if defined, to our rescue.conf file
 
-if has_binary duply; then
+if [ "$BACKUP_PROG" = "duply" ] && has_binary duply; then
+
     # we found the duply program; check if we can find a profile defined
     if [[ -z "$DUPLY_PROFILE" ]]; then
         # no profile pre-set; let's try to find one

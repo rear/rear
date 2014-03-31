@@ -10,7 +10,7 @@ local server=$(url_host $OUTPUT_URL)
 local path=$(url_path $OUTPUT_URL)
 
 case "$scheme" in
-    (nfs|cifs|usb|tape|file)
+    (nfs|cifs|usb|tape|file|davfs)
         # The ISO has already been transferred by NETFS.
         return 0
         ;;

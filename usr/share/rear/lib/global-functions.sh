@@ -20,9 +20,9 @@
 
 function read_and_strip_file () {
 # extracts content from config files. In other words: strips the comments and new lines
-    if test -s "$1" ; then
-        sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$1"
-    fi
+	if test -s "$1" ; then
+		sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$1"
+	fi
 }
 
 function is_numeric () {
@@ -41,8 +41,7 @@ function is_numeric () {
 url_scheme() {
     local url=$1
     local scheme=${url%%://*}
-    # rsync scheme does not have to start with rsync:// it can also be scp style (old style)
-    # next line will be removed in future releases (TODO)
+    # rsync scheme does not have to start with rsync:// it can also be scp style
     echo $scheme | grep -q ":" && echo rsync || echo $scheme
 }
 
@@ -138,9 +137,12 @@ mount_url() {
         (usb)
             mount_cmd="mount $v -o $options $(url_path $url) $mountpoint"
             ;;
-        (sshfs)
-            mount_cmd="sshfs $(url_host $url):$(url_path $url) $mountpoint -o $options"
+	(sshfs)
+	    mount_cmd="sshfs $(url_host $url):$(url_path $url) $mountpoint -o $options"
             ;;
+	(davfs)
+	    mount_cmd="mount $v -t davfs http://$(url_host $url)$(url_path $url) $mountpoint"
+	    ;;
         (*)
             mount_cmd="mount $v -t $(url_scheme $url) -o $options $(url_host $url):$(url_path $url) $mountpoint"
             ;;
@@ -169,9 +171,19 @@ umount_url() {
                 return 0
             fi
             ;;
-        (sshfs)
-            umount_cmd="fusermount -u $mountpoint"
-            ;;
+	    (sshfs)
+	        umount_cmd="fusermount -u $mountpoint"
+	    ;;
+	    (davfs)
+	        umount_cmd="umount $mountpoint"
+            # Wait for 3 sek. then remove the cache-dir /var/cache/davfs
+            sleep 30
+            # ToDo: put in here the cache-dir from /etc/davfs2/davfs.conf
+            # and delete only the just used cache
+            #rm -rf /var/cache/davfs2/*<mountpoint-hash>*
+            rm -rf /var/cache/davfs2/*outputfs*
+            
+	    ;;
         (var)
             local var=$(url_host $url)
             umount_cmd="${!var} $mountpoint"
