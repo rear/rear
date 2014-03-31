@@ -4,7 +4,11 @@ if [[ ! "$TSM_RM_ISOFILE" =~ [yY1] ]] ; then
 fi
 
 Log "Verify if the files '$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso' were archived correctly with dsmc"
-dsmc q archive "$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso" >&8
+if [[ -z "$TSM_ARCHIVE_MGMT_CLASS" ]]; then
+    dsmc q backup "$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso" >&8
+else
+    dsmc q archive "$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso" >&8
+fi
 if [[ $? -eq 0 ]]; then
     Log "Removing the '${TSM_RESULT_FILES[@]}' files to preserve space"
     rm $v -f ${TSM_RESULT_FILES[@]} >&8
