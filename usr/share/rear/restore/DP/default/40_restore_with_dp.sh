@@ -23,8 +23,8 @@
 
 [ -f /tmp/DP_GUI_RESTORE ] && return # GUI restore explicetely requested
 
-# we will loop over all objects listed in /tmp/list_of_fs_objects
-cat /tmp/list_of_fs_objects | while read object
+# we will loop over all objects listed in /tmp/dp_list_of_fs_objects
+cat /tmp/dp_list_of_fs_objects | while read object
 do
 	host_fs=`echo ${object} | awk '{print $1}'`
 	fs=`echo ${object} | awk '{print $1}' | cut -d: -f 2`
