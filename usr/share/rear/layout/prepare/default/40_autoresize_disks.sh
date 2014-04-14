@@ -42,7 +42,7 @@ while read type device size junk ; do
                     Log "Will resize partition $name."
                     ;;
             esac
-        done < <(grep "^part $device" $LAYOUT_FILE)
+        done < <(grep "^part $device" $LAYOUT_FILE | grep -v $(grep "^swap $device" $LAYOUT_FILE | cut -d' ' -f 2) )
 
         if (( ${#partitions[@]} == 0 )) ; then
             Log "No resizeable partitions found."
