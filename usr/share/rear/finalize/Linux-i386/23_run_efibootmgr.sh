@@ -12,7 +12,7 @@ ParNr=$( echo ${Dev} | sed -e 's/.*\([0-9]\).*/\1/' )  # 1 (must anyway be a low
 BootLoader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' ) # EFI\fedora\shim.efi
 Log efibootmgr --create --gpt --disk ${Disk} --part ${ParNr} --write-signature --label \"${OS_VENDOR} ${OS_VERSION}\" --loader \"\\${BootLoader}\"
 efibootmgr --create --gpt --disk ${Disk} --part ${ParNr} --write-signature --label "${OS_VENDOR} ${OS_VERSION}" --loader "\\${BootLoader}"
-LogIfError "Problem occured with creating an efibootmgr entry"
+LogIfError "Problem occurred with creating an efibootmgr entry"
 
 # ok, boot loader has been set-up - tell rear we are done using following var.
 NOBOOTLOADER=

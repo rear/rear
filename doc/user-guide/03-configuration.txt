@@ -69,7 +69,7 @@ Write the image using sshfs and the SSH protocol.
 
 == Backup/Restore strategy (BACKUP)
 The +BACKUP+ setting defines our backup/restore strategy. The +BACKUP+ can be handled via internal archive executable (+tar+ or +rsync+) or by an external backup program (commercial or open source).
- 
+
 Possible +BACKUP+ settings are:
 
 BACKUP=TSM::
@@ -157,7 +157,7 @@ NETFS_KEEP_OLD_BACKUP_COPY=y::
 if you want to keep the previous backup archive (do not use this together with +BACKUP_TYPE=incremental+)
 
 TMPDIR=/bigdisk::
-Define this variable in +local.conf+ if +/tmp+ is too small to contain the ISO image, e.g. when using 
+Define this variable in +local.conf+ if +/tmp+ is too small to contain the ISO image, e.g. when using
 
     OUTPUT=ISO
     BACKUP=NETFS

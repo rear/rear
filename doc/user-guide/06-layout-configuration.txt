@@ -69,7 +69,7 @@ This document will continue to use this example to explore the various options
 available in Relax-and-Recover. The exact syntax of the layout file is
 described in a later section. It is already clear that this file is human
 readable and thus human editable. It is also machine readable and all
-information necessary to restore is a system is listed.
+information necessary to restore a system is listed.
 
 It's easy to see that there are 3 disks attached to the system. +/dev/sda+ is the internal disk of the system. Its filesystems are normally mounted. The other devices are external disks. One of them has just normal partitions. The other one has a physical volume on one of the partitions.
 
@@ -80,7 +80,7 @@ It's easy to see that there are 3 disks attached to the system. +/dev/sda+ is th
 Relax-and-Recover has reasonable defaults when creating the recovery
 information. It has commented out the two external disks and any
 component that's part of it. The reason is that no mounted filesystem
-uses these two disks. After all, you don't wan't to recreate your
+uses these two disks. After all, you don't want to recreate your
 backup disk when you're recovering your system.
 
 If we mount the filesystem on +/dev/mapper/backup-backup+ on +/media/backup+,
@@ -122,7 +122,7 @@ crypt /dev/mapper/disk /dev/sda2 cipher=aes mode=xts-plain hash=sha1 uuid=beafe6
 
 This behavior is controlled by the +AUTOEXCLUDE_DISKS=y+ parameter in
 +default.conf+. If we unset it in the local configuration, Relax-and-Recover
-will nog longer exclude it automatically.
+will no longer exclude it automatically.
 
 A similar mechanism exists for multipath disks. The +AUTOEXCLUDE_MULTIPATH=y+
 variable in +default.conf+ prevents Relax-and-Recover from overwriting
@@ -142,7 +142,7 @@ EXCLUDE_BACKUP=()
 EXCLUDE_RECREATE=()
 
 # Exclude components during the backup restore phase
-# Only used to exclude files from the restore.
+# only used to exclude files from the restore.
 EXCLUDE_RESTORE=()
 ----------------------------------
 
@@ -195,10 +195,10 @@ EXCLUDE_RECREATE=( "${EXCLUDE_RECREATE[@]}" "/dev/backup" )
 == Restore to the same hardware
 Restoring the system to the same hardware is simple. Type +rear recover+ in
 the rescue system prompt. Relax-and-Recover will detect that it's restoring to
-the same system and will make sure things like UUIDs match. It also asks my
-LUKS encryption password.
+the same system and will make sure things like UUIDs match. It also asks for
+your LUKS encryption password.
 
-Once the restore of the backup is completed, Relax-and-Recover will install
+Once the restore of the backup has completed, Relax-and-Recover will install
 the bootloader and the system is back in working order.
 ----------------------------------
 RESCUE firefly:~ # rear recover
@@ -249,7 +249,7 @@ Welcome to Relax-and-Recover. Run "rear recover" to restore your system !
 rear>
 ----------------------------------
 == Restore to different hardware
-There are two ways to deal with different hardware. One is being lazy and dealing with problems when you encounter them. The second option is to plan in advance. Both are valid approaches. The lazy approach works fine when you are in control of the restore and you have good knowledge of the components in your system. The second approach is preferable in disaster recovery situations or migrations where you know the target hardware in advance and the actual restore will be carried out by less knowledgeable people.
+There are two ways to deal with different hardware. One is being lazy and dealing with problems when you encounter them. The second option is to plan in advance. Both are valid approaches. The lazy approach works fine when you are in control of the restore and you have good knowledge of the components in your system. The second approach is preferable in disaster recovery situations or migrations where you know the target hardware in advance and the actual restore can be carried out by less knowledgeable people.
 
 === The Ad-Hoc Way
 Relax-and-Recover will assist you somewhat in case it notices different disk
@@ -472,7 +472,7 @@ Creating LVM volume system/swap
 Creating ext4-filesystem / on /dev/mapper/system-root
 Mounting filesystem /
 Creating ext4-filesystem /home on /dev/mapper/system-home
-An error occured during layout recreation.
+An error occurred during layout recreation.
 
 1) View Relax-and-Recover log
 2) View original disk space usage
@@ -491,7 +491,7 @@ tune2fs: reserved blocks count is too big (262144)
 tune2fs 1.41.14 (22-Dec-2010)
 Setting maximal mount count to 38
 Setting interval between checks to 15552000 seconds
-2011-09-10 16:27:35 An error occured during layout recreation.
+2011-09-10 16:27:35 An error occurred during layout recreation.
 ----------------------------------
 Yes, we resized the home partition from 20GB to 2G in the previous step. The root user wants more reserved blocks than the total number of available blocks.
 
