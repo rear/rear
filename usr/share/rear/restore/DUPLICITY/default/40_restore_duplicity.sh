@@ -26,9 +26,14 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     export PASSPHRASE
     
     starttime=$SECONDS
+
+    # ensure we have enougth space to unpack the backups (they are 100M, but neet up to 1G to unpack!)
+    mkdir -p /mnt/tmp
+    mount -t tmpfs none /mnt/tmp
     
     LogPrint "with CMD: $DUPLICITY_PROG -v 5 $GPG_OPT --encrypt-key $GPG_KEY --force $BACKUP_DUPLICITY_URL/$HOSTNAME/ /mnt/local/"
-    $DUPLICITY_PROG -v 5 $GPG_OPT --encrypt-key $GPG_KEY --force $BACKUP_DUPLICITY_URL/$HOSTNAME/ /mnt/local | tee $TMP_DIR/duplicity-restore.log
+    LogPrint "Logging to $TMP_DIR/duplicity-restore.log"
+    $DUPLICITY_PROG -v 5 $GPG_OPT --encrypt-key $GPG_KEY --force --tempdir=/mnt/tmp $BACKUP_DUPLICITY_URL/$HOSTNAME/ /mnt/local | tee $TMP_DIR/duplicity-restore.log
     _rc=$?
     
     transfertime="$((SECONDS-$starttime))"

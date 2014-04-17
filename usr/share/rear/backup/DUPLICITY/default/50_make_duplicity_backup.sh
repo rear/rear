@@ -89,11 +89,9 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
     
     # do the backup
-    LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS --encrypt-key $GPG_KEY $GPG_OPT \
-     --exclude '/proc/*' --exclude '/sys/*' --exclude '/var/lib/ntp/proc/*' $EXCLUDES \
-     / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1"
-    $DUPLICITY_PROG -v5 $DUP_OPTIONS --encrypt-key $GPG_KEY $GPG_OPT \
-         --exclude '/proc/**' --exclude '/sys/**' --exclude '/var/lib/ntp/proc/**' $EXCLUDES \
+    LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS --encrypt-key $GPG_KEY $GPG_OPT $EXCLUDES \
+     / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
+    $DUPLICITY_PROG -v5 $DUP_OPTIONS --encrypt-key $GPG_KEY $GPG_OPT $EXCLUDES \
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
     
     RC_DUP=$?
