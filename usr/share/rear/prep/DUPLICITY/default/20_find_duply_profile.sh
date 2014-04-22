@@ -8,7 +8,7 @@
 # the profile is in fact a directory name containing the conf file and exclude file
 # we shall copy this variable, if defined, to our rescue.conf file
 
-if [ "$BACKUP_PROG" = "duply" ] && has_binary duply; then
+if [ "$BACKUP_PROG" = "duplicity" ] && has_binary duply; then
 
     # we found the duply program; check if we can find a profile defined
     if [[ -z "$DUPLY_PROFILE" ]]; then
@@ -41,6 +41,9 @@ if [ "$BACKUP_PROG" = "duply" ] && has_binary duply; then
     # a real profile was detected - check if we can talk to the remote site
     duply "$DUPLY_PROFILE" status >&2   # output is going to logfile
     StopIfError "Duply profile $DUPLY_PROFILE status returned errors - see $LOGFILE"
+
+    # we seem to use duply as BACKUP_PROG - so define as such too
+    BACKUP_PROG=duply
 
     echo "DUPLY_PROFILE=$DUPLY_PROFILE" >> "$ROOTFS_DIR/etc/rear/rescue.conf"
     LogIfError "Could not add DUPLY_PROFILE variable to rescue.conf"

@@ -52,3 +52,6 @@ LIBS=(
 /usr/lib64/librsync.so.1
 /usr/lib/cruft
 )
+
+# hard code the BACKUP_PROG to duplicity
+BACKUP_PROG=duplicity
