@@ -38,7 +38,7 @@ disk layout is valid when recovering the system.
 We discovered that this problem can be caused by a controller that still
 has information in its cache that has not been flushed and the only way to
 solve it was to reboot the system and pressing F2 during the controller
-initialisation when it reports this problem.
+initialization when it reports this problem.
 --
 
 USB sticks disappear and re-appear with difference device name::
@@ -46,7 +46,7 @@ USB sticks disappear and re-appear with difference device name::
 --
 We have had issues before with a specific batch of JetFlash USB sticks
 which, during write operations, reset the USB controller because of a bug
-in the Linux kernel. The behaviour is that the device disappears (during
+in the Linux kernel. The behavior is that the device disappears (during
 write operations!) and reappears with a different device name. The result
 is that the filesystem becomes corrupt and the stick cannot be used.
 

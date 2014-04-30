@@ -57,16 +57,16 @@ Based on experience from previous projects, a set of design principles were
 defined, and improved over time:
 
  - Focus on easy and automated disaster recovery
- - Modular design, focussed on system administrators
+ - Modular design, focused on system administrators
  - For Linux (and possibly Unix operating systems)
  - Few external dependencies (Bash and standard Unix tools)
  - Easy to use and easy to extend
 
 The goal is to make Relax-and-Recover as least demanding as possible, it will
-require only the applications neccessary to fulfill the job Relax-and-Recover
+require only the applications necessary to fulfill the job Relax-and-Recover
 is configured for.
 
-Furthermore, Relax-and-Recover should be platform independant and ideally
+Furthermore, Relax-and-Recover should be platform independent and ideally
 install just as a set of scripts that utilizes everything that the Linux
 operating system provides.
 

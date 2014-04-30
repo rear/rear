@@ -33,16 +33,16 @@ by appropriately named scripts in various subdirectories:
   2. *Analyse (DR)*: Analyse the system to create the '/etc/recovery' data
 
   3. *Analyse (Rescue):* Analyse the system to create the rescue system
-     (network, binary dependancies, ...)
+     (network, binary dependencies, ...)
 
   4. *Build:* Build the rescue image by copying together everything required
 
   5. *Pack:* Package the kernel and initrd image together
 
-  6. *Backup:* (Optionally) run the backup sowftware to create a current backup
+  6. *Backup:* (Optionally) run the backup software to create a current backup
 
   7. *Output:* Copy / Install the rescue system (kernel+initrd+(optionally)
-     backups) into the target environemnt (e.g. PXE boot, write on tape,
+     backups) into the target environment (e.g. PXE boot, write on tape,
      write on CD/DVD)
 
   8. *Cleanup:* Cleanup the build area from temporary files
@@ -86,8 +86,8 @@ are indeed the same):
      This makes writing pairs of backup/restore modules much easier.
 
   2. *Verify:* Verify the integrity and sanity of the recovery data and
-     check the hardware found to determine, wether a recovery will be
-     likely to suceed. If not, then we abort the workflow so as not to
+     check the hardware found to determine, whether a recovery will be
+     likely to succeed. If not, then we abort the workflow so as not to
      touch the hard disks if we don't believe that we would manage to
      successfully recover the system on this hardware.
 
@@ -101,7 +101,7 @@ are indeed the same):
      onto '/var/log/rear/' in the recovered system.
 
 == FS layout
-Relax-and-Recover tries to be as much LSB complient as possible. Therefore rear will be
+Relax-and-Recover tries to be as much LSB compliant as possible. Therefore rear will be
 installed into the usual locations:
 
 /etc/rear/::
@@ -251,5 +251,4 @@ RO means that the framework manages this variable and modules and methods should
   - Better documentation for developers
   - Cut the overhead – less is better
   - Less choices (=> less errors)
-
 

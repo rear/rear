@@ -9,7 +9,7 @@ while [[ -z "$RESTORE_OK" ]]; do
     if (( $? == 0 )); then
         RESTORE_OK=y
     else
-        LogPrint "An error occured during layout recreation."
+        LogPrint "An error occurred during layout recreation."
         Print ""
 
         # TODO: Provide a skip option (needs torough consideration)

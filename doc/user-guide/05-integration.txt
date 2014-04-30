@@ -41,7 +41,7 @@ return code.
 
 
 === Integration with Nagios and Opsview
-If having current DR rescue images is important to your organisation, but they
+If having current DR rescue images is important to your organization, but they
 cannot be automated (eg. a tape or USB device needs inserting), we provide a
 Nagios plugin that can send out a notification whenever there is a critical
 change to the system that requires updating your rescue environment.
