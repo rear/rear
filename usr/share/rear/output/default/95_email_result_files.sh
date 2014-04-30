@@ -11,7 +11,16 @@ StopIfError "No files to send (RESULT_FILES is empty)"
 StopIfError "No mailer [$RESULT_SENDMAIL] found !"
 
 Log "Sending Email from $RESULT_MAILFROM to ${RESULT_MAILTO[@]}"
-Log "Attaching files: ${RESULT_FILES[@]}"
+# We will remove the ISO files from the RESULT_FILES array (is becoming too big - issue #397)
+c=${#RESULT_FILES[@]} # amount of element is array RESULT_FILES
+i=0
+while (( $i < $c ))
+do
+    echo ${RESULT_FILES[i]} | grep -q "\.iso$" || MAIL_FILES=( ${MAIL_FILES[@]} ${RESULT_FILES[i]} )
+    i=$(( i + 1 ))
+done
+ 
+Log "Attaching files: ${MAIL_FILES[@]}"
 
 test -z "$RESULT_MAILSUBJECT" && RESULT_MAILSUBJECT="Relax-and-Recover $HOSTNAME ($OUTPUT)"
 
@@ -24,7 +33,7 @@ test -z "$RESULT_MAILSUBJECT" && RESULT_MAILSUBJECT="Relax-and-Recover $HOSTNAME
 		$(get_template "RESULT_u*sage_$OUTPUT.txt") | \
 		create_mime_part_plain
 
-	for file in "${RESULT_FILES[@]}" ; do
+	for file in "${MAIL_FILES[@]}" ; do
 		create_mime_part_binary "$file"
 	done
 

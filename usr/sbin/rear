@@ -256,4 +256,10 @@ fi
 
 [[ "$REAR_LOGFILE" != "$LOGFILE" ]] && cat "$REAR_LOGFILE" > "$LOGFILE"
 
+if [[ $EXIT_CODE -eq 0 ]]; then
+    LogToSyslog "DONE: rc=$EXIT_CODE"
+else
+    LogToSyslog "WARNING: rc=$EXIT_CODE (see $LOGFILE)"
+fi
+
 exit $EXIT_CODE

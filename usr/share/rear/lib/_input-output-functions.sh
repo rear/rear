@@ -122,6 +122,7 @@ Error() {
 			echo "==================="
 		) >&2
 	fi
+	LogToSyslog "ERROR: $*"
 	kill -USR1 $MASTER_PID # make sure that Error exits the master process, even if called from child processes :-)
 }
 
@@ -232,3 +233,9 @@ ProgressStep() {
 ProgressInfo() {
 	: ;
 }
+
+LogToSyslog() {
+    # send a line to syslog or messages file with input string
+    logger -t rear -i "$*"
+}
+
