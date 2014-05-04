@@ -1,3 +1,9 @@
+rear (1.16-1) stable; urgency=high
+
+  * new features
+  * lots of bug fixes
+
+ -- Gratien Dhaese <gratien.dhaese@gmail.com> Sun 04 May 2014 21:00:36 +0100
 rear (1.15-1) stable; urgency=high
 
   * new features
