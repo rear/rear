@@ -29,6 +29,7 @@ Requires: parted
 Requires: tar
 Requires: openssl
 Requires: gawk
+Requires: attr
 
 ### If you require NFS, you may need the below packages
 #Requires: nfsclient portmap rpcbind
