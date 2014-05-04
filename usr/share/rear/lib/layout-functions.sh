@@ -1,6 +1,7 @@
 # Utility functions for the system layout processing.
 
 DATE=$(date +%Y%m%d)
+# FIXME: Why not using ISO 8601 date? $(date +%F)
 
 BACKUPS_TAKEN=()
 
