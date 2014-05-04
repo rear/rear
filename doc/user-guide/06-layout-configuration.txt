@@ -560,7 +560,7 @@ Creating swap on /dev/mapper/system-swap
 Disk layout created.
 ----------------------------------
 That looks the way we want it. Notice how Relax-and-Recover detected that it
-had already created quite a few components and dit not try to recreate them
+had already created quite a few components and did not try to recreate them
 anymore.
 
 === Planning In Advance ===
@@ -577,8 +577,8 @@ layout file at +/var/lib/rear/disklayout.conf+. The syntax used to describe it
 is straightforward. Normal text has to be present verbatim in the file. Angle
 brackets "<" and ">" delimit a value that can be edited. Quotes " inside the
 angle brackets indicate a verbatim option, often used together with a / to
-indicate multiple options. Parens "(" ")" inside explain the expected unit. No
-unit suffix should be present, unless specifically indicated. Square brackes
+indicate multiple options. Parenthesis "(" ")" inside explain the expected unit. No
+unit suffix should be present, unless specifically indicated. Square brackets
 "[" and "]" indicate an optional parameter. They can be excluded when
 hand-crafting a layout file line.
 
