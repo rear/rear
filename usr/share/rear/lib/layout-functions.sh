@@ -19,21 +19,21 @@ restore_backup() {
     cp -ar $1.$DATE.$$.bak $1
 }
 
-# generate code to restore a device $1 of type $2
+# Generate code to restore a device $1 of type $2.
 # Note that we do not handle partitioning here.
 create_device() {
-    local device=$1
-    local type=$2
+    local device="$1"
+    local type="$2"
     local name # used to extract the actual name of the device
 
-    cat <<EOF >> $LAYOUT_CODE
+    cat <<EOF >> "$LAYOUT_CODE"
 if create_component "$device" "$type" ; then
 EOF
-    echo "# Create $device ($type)">> $LAYOUT_CODE
+    echo "# Create $device ($type)" >> "$LAYOUT_CODE"
     if type -t create_$type >&8 ; then
-        create_$type $device
+        create_$type "$device"
     fi
-    cat <<EOF >> $LAYOUT_CODE
+    cat <<EOF >> "$LAYOUT_CODE"
 component_created "$device" "$type"
 else
     LogPrint "Skipping $device ($type) as it has already been created."
@@ -50,29 +50,29 @@ abort_recreate() {
 
 # Test and log if a component $1 (type $2) needs to be recreated.
 create_component() {
-    local device=$1
-    local type=$2
-    # if a touchfile already exists, no need to recreate this component
+    local device="$1"
+    local type="$2"
+    # If a touchfile already exists, no need to recreate this component.
     local touchfile="$type-${device//\//-}"
-    if [ -e $LAYOUT_TOUCHDIR/$touchfile ] ; then
+    if [ -e "$LAYOUT_TOUCHDIR/$touchfile" ] ; then
         return 1
     else
         return 0
     fi
 }
 
-# Mark a component as created
+# Mark a component as created.
 component_created() {
     local device=$1
     local type=$2
-    # Create a touchfile
+    # Create a touchfile.
     local touchfile="$type-${device//\//-}"
-    touch $LAYOUT_TOUCHDIR/$touchfile
+    touch "$LAYOUT_TOUCHDIR/$touchfile"
 }
 
-# Generate dependencies between disks as found in $LAYOUT_FILE
-# This will be written to $LAYOUT_DEPS
-# Also generate a list of disks to be restored in $LAYOUT_TODO
+# Generate dependencies between disks as found in $LAYOUT_FILE.
+# This will be written to $LAYOUT_DEPS.
+# Also generate a list of disks to be restored in $LAYOUT_TODO.
 generate_layout_dependencies() {
     # $LAYOUT_DEPS is a list of:
     # <item> <depends on>
@@ -373,7 +373,7 @@ version_newer() {
   return 0
 }
 
-# Function to get version from tool
+# Function to get version from tool.
 get_version() {
   TERM=dumb $@ 2>&1 | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | head -1
 }

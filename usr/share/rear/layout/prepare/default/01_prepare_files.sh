@@ -30,7 +30,7 @@ if [ ! -e $LAYOUT_FILE ] ; then
 fi
 
 if [ -e $FS_UUID_MAP ] ; then
-    rm -f $FS_UUID_MAP  # map sure old data is deleted
+    rm -f $FS_UUID_MAP  # Make sure old data is deleted.
 fi
 
 : > $LAYOUT_TODO

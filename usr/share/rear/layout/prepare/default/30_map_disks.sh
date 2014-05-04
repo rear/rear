@@ -1,23 +1,23 @@
-# Map source disks to target disks
+# Map source disks to target disks.
 
 if [ -z "$MIGRATION_MODE" ] ; then
     return 0
 fi
 
-MAPPING_FILE=$VAR_DIR/layout/disk_mappings
-: > $MAPPING_FILE
+MAPPING_FILE="$VAR_DIR/layout/disk_mappings"
+: > "$MAPPING_FILE"
 
 generate_layout_dependencies
 
 # Add a mapping from <source> to <target>
 # Source/Target should be "like sda" "cciss/c1d0"
 add_mapping() {
-    echo "$1 $2" >> $MAPPING_FILE
+    echo "$1 $2" >> "$MAPPING_FILE"
 }
 
-# Return 0 if a mapping for <$1> exists
+# Return 0 if a mapping for <$1> exists.
 mapping_exists() {
-    if grep -q "^$1 " $MAPPING_FILE ; then
+    if grep -q "^$1 " "$MAPPING_FILE" ; then
         return 0
     else
         return 1
@@ -26,24 +26,24 @@ mapping_exists() {
 
 # Return 0 if <$1> is used in a mapping.
 reverse_mapping_exists() {
-    if grep -q " $1$" $MAPPING_FILE ; then
+    if grep -q " $1$" "$MAPPING_FILE" ; then
         return 0
     else
         return 1
     fi
 }
 
-if [ -e $CONFIG_DIR/mappings/disk_devices ] ; then
-    cp $CONFIG_DIR/mappings/disk_devices $MAPPING_FILE
+if [ -e "$CONFIG_DIR/mappings/disk_devices" ] ; then
+    cp "$CONFIG_DIR/mappings/disk_devices" "$MAPPING_FILE"
 fi
 
-# Automap old disks
+# Automap old disks.
 while read disk dev size junk ; do
     if mapping_exists "$dev" ; then
         continue
     fi
 
-    # first, try to find if the disk of the same name has the same size
+    # First, try to find if the disk of the same name has the same size.
     if [ -e /sys/block/$(get_sysfs_name "$dev") ] ; then
         newsize=$(get_disk_size $(get_sysfs_name "$dev"))
         if [ "$size" -eq "$newsize" ] ; then
@@ -52,7 +52,7 @@ while read disk dev size junk ; do
         fi
     fi
 
-    # else, loop over all disks to find one of the same size
+    # Else, loop over all disks to find one of the same size.
     for path in /sys/block/* ; do
         if [ ! -r $path/size ] || [ ! -d $path/queue ] ; then
             continue
@@ -64,9 +64,9 @@ while read disk dev size junk ; do
             break
         fi
     done
-done < <(grep "^disk " $LAYOUT_FILE)
+done < <(grep "^disk " "$LAYOUT_FILE")
 
-# For every unmapped disk in the source system
+# For every unmapped disk in the source system.
 while read -u 3 disk dev size junk ; do
     if mapping_exists "$dev" ; then
         continue
@@ -109,10 +109,10 @@ while read -u 3 disk dev size junk ; do
         fi
         break
     done 2>&1 # to get the prompt, otherwise it would go to the logfile
-done 3< <(grep "^disk " $LAYOUT_FILE)
+done 3< <(grep "^disk " "$LAYOUT_FILE")
 
 LogPrint "This is the disk mapping table:"
-LogPrint "$(sed -e 's|^|    |' $MAPPING_FILE)"
+LogPrint "$(sed -e 's|^|    |' "$MAPPING_FILE")"
 
 # Remove unmapped devices from disk layout
 while read disk dev junk ; do
@@ -120,4 +120,4 @@ while read disk dev junk ; do
         mark_as_done "$dev"
         mark_tree_as_done "$dev"
     fi
-done < <(grep "^disk " $LAYOUT_FILE)
+done < <(grep "^disk " "$LAYOUT_FILE")

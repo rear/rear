@@ -1,14 +1,14 @@
-# Code to recreate a software RAID configuration
+# Code to recreate a software RAID configuration.
 
 if ! has_binary mdadm; then
     return
 fi
 
-# Test for features in mdadm
-# true if mdadm supports uuid restoration
+# Test for features of mdadm.
+# True if mdadm supports uuid restoration.
 FEATURE_MDADM_UUID=
 
-# Test for the mdadm version, version gets printed on stderr
+# Test for the mdadm version, version gets printed on stderr.
 mdadm_version=$(get_version mdadm --version)
 
 [ "$mdadm_version" ]
@@ -20,7 +20,7 @@ fi
 
 create_raid() {
     local raid device options
-    read raid device options < <(grep "^raid $1" $LAYOUT_FILE)
+    read raid device options < <(grep "^raid $1" "$LAYOUT_FILE")
 
     local mdadmcmd="mdadm --create $device --force"
 
@@ -50,13 +50,13 @@ create_raid() {
     # Try to make mdadm non-interactive...
     mdadmcmd="echo \"Y\" | $mdadmcmd $devices"
 
-cat <<EOF >> $LAYOUT_CODE
+cat <<EOF >> "$LAYOUT_CODE"
 LogPrint "Creating software RAID $device"
 test -b $device && mdadm --stop $device
 
 $mdadmcmd >&2
 EOF
 
-    ### Create partitions on MD
+    ### Create partitions on MD.
     create_partitions "$device"
 }

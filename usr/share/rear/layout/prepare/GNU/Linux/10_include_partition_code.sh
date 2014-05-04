@@ -1,14 +1,14 @@
-# Generate code to partition the disks
+# Generate code to partition the disks.
 
 if ! has_binary parted; then
     return
 fi
 
-# Test for features in parted
+# Test for features of parted.
 
-# true if parted accepts values in units other than mebibytes
+# True if parted accepts values in units other than mebibytes.
 FEATURE_PARTED_ANYUNIT=
-# true if parted can align partitions
+# True if parted can align partitions.
 FEATURE_PARTED_ALIGNMENT=
 
 # Test by using the parted version numbers...
@@ -25,16 +25,16 @@ elif version_newer "$parted_version" 1.6.23 ; then
     FEATURE_PARTED_ANYUNIT="y"
 fi
 
-### Prepare a disk for partitioning/general usage
+### Prepare a disk for partitioning/general usage.
 create_disk() {
     local component disk size label junk
-    read component disk size label junk < <(grep "^disk $1 " $LAYOUT_FILE)
+    read component disk size label junk < <(grep "^disk $1 " "$LAYOUT_FILE")
 
-    ### disks should be block devices
+    ### Disks should be block devices.
     [[ -b "$disk" ]]
     BugIfError "Disk $disk is not a block device."
 
-    ### Find out the actual disk size
+    ### Find out the actual disk size.
     local disk_size=$( get_disk_size $(get_sysfs_name "$disk") )
 
     [[ "$disk_size" ]]
@@ -43,7 +43,7 @@ create_disk() {
     [[ $disk_size -gt 0 ]]
     StopIfError "Disk $disk has size $disk_size, unable to continue."
 
-    cat >> $LAYOUT_CODE <<EOF
+    cat >> "$LAYOUT_CODE" <<EOF
 Log "Erasing MBR of disk $disk"
 dd if=/dev/zero of=$disk bs=512 count=1
 sync
@@ -51,7 +51,7 @@ EOF
 
     create_partitions "$disk" "$label"
 
-    cat >> $LAYOUT_CODE <<EOF
+    cat >> "$LAYOUT_CODE" <<EOF
 # Wait some time before advancing
 sleep 10
 
@@ -67,7 +67,7 @@ create_partitions() {
     local device=$1
     local label=$2
 
-    ### list partition types/names to detect disk label type
+    ### List partition types/names to detect disk label type.
     local -a names=()
     local part size pstart name junk
     while read part disk size pstart name junk ; do
@@ -80,9 +80,9 @@ create_partitions() {
                 fi
                 ;;
         esac
-    done < <( grep "^part $device " $LAYOUT_FILE )
+    done < <( grep "^part $device " "$LAYOUT_FILE" )
 
-    ### early return for devices without partitions.
+    ### Early return for devices without partitions.
     if [[ ${#names[@]} -eq 0 ]] ; then
         Log "No partitions on device $device."
         return 0
@@ -90,10 +90,10 @@ create_partitions() {
 
     if [[ -z "$label" ]] ; then
         label="gpt"
-        ### msdos label types are detected earlier
+        ### msdos label types are detected earlier.
     fi
 
-    cat >> $LAYOUT_CODE <<EOF
+    cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Creating partitions for disk $device ($label)"
 parted -s $device mklabel $label >&2
 sleep 1
@@ -102,7 +102,7 @@ EOF
     local block_size device_size sysfs_name
     if [[ -b $device ]] ; then
         sysfs_name=$(get_sysfs_name "$device")
-        if [[ "$sysfs_name" ]] && [[ -d /sys/block/$sysfs_name ]] ; then
+        if [[ "$sysfs_name" ]] && [[ -d "/sys/block/$sysfs_name" ]] ; then
             block_size=$( get_block_size "$sysfs_name" )
             device_size=$( get_disk_size  "$sysfs_name" )
 
@@ -123,32 +123,32 @@ EOF
     local flags partition
     while read part disk size pstart name flags partition junk; do
 
-        ### if not in migration mode and start known, use original start
+        ### If not in migration mode and start known, use original start.
         if [ -z "$MIGRATION_MODE" ] && ! [ "$pstart" = "unknown" ] ; then
-            start=$pstart
+            start="$pstart"
         fi
 
         end=$(( start + size ))
 
-        ### test to make sure we're not past the end of the disk
+        ### Test to make sure we're not past the end of the disk.
         if [[ "$device_size" ]] && (( end > $device_size )) ; then
             LogPrint "Partition $name on $device: size reduced to fit on disk."
             Log "End changed from $end to $device_size."
-            end=$device_size
+            end="$device_size"
         fi
 
-        ### extended partitions run to the end of disk... (we assume)
+        ### Extended partitions run to the end of disk... (we assume).
         if [[ "$name" = "extended" ]] ; then
             if [[ "$device_size" ]] ; then
-                end=$device_size
+                end="$device_size"
             else
-                ### we don't know the size of devices that don't exist yet
-                ### replaced by 100% later on.
+                ### We don't know the size of devices that don't exist yet
+                ### replaced by "100%" later on.
                 end=
             fi
         fi
 
-        # the 'name' could contain spaces (were replaced with 0%20; need to change this again)
+        # The 'name' could contain spaces (were replaced with 0%20; need to change this again).
         name=$(echo "$name" | sed -e 's/0x20/ /g')
 
         if [[ "$FEATURE_PARTED_ANYUNIT" ]] ; then
@@ -157,7 +157,7 @@ EOF
             else
                 end="100%"
             fi
-            cat >> $LAYOUT_CODE <<EOF
+            cat >> "$LAYOUT_CODE" <<EOF
 parted -s $device mkpart '"$name"' ${start}B $end >&2
 sleep 1
 EOF
@@ -169,7 +169,7 @@ EOF
                 start_mb=0
             fi
             end_mb=$(( end/1024/1024 ))
-            cat  >> $LAYOUT_CODE <<EOF
+            cat  >> "$LAYOUT_CODE" <<EOF
 parted -s $device mkpart '"$name"' $start_mb $end_mb >&2
 sleep 1
 EOF
@@ -185,7 +185,7 @@ EOF
         start=$( echo "$start" | awk '{printf "%u", $1+4096-($1%4096);}')
 
         # Get the partition number from the name
-        local number=$(get_partition_number $partition)
+        local number=$(get_partition_number "$partition")
 
         local flags="$(echo $flags | tr ',' ' ')"
         local flag
@@ -196,12 +196,12 @@ EOF
             echo "parted -s $device set $number $flag on >&2" >> $LAYOUT_CODE
         done
 
-        # Explicitly name GPT partitions
+        # Explicitly name GPT partitions.
         if [[ "$label" = "gpt" ]] && [[ "$name" != "rear-noname" ]] ; then
             echo "parted -s $device name $number '\"$name\"' >&2" >> $LAYOUT_CODE
         fi
     done < <(grep "^part $device" $LAYOUT_FILE)
 
-# Ensure we have the new partitioning on the device
-echo "partprobe -s $device >&2" >> $LAYOUT_CODE
+    # Ensure we have the new partitioning on the device.
+    echo "partprobe -s $device >&2" >> "$LAYOUT_CODE"
 }
