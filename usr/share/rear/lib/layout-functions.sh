@@ -1,10 +1,10 @@
-# Utility functions for the system layout processing
+# Utility functions for the system layout processing.
 
 DATE=$(date +%Y%m%d)
 
 BACKUPS_TAKEN=()
 
-# Copy file $1 to $1.$DATE
+# Copy file $1 to $1.$DATE.
 backup_file() {
     if [[ ! -r "$1" ]]; then
         return
@@ -388,7 +388,7 @@ get_sysfs_name() {
         return 0
     fi
 
-    ### Follow symlinks
+    ### Follow symlinks.
     if [[ -h /dev/$name ]] ; then
         local target=$(readlink -f /dev/$name)
         if [[ -e /sys/block/${target#/dev/} ]] ; then
@@ -397,7 +397,7 @@ get_sysfs_name() {
         fi
     fi
 
-    # accomodate for mapper/test -> dm-? mapping
+    # Accommodate for mapper/test -> dm-? mapping.
     local dev_number=$(dmsetup info -c --noheadings -o major,minor ${name##*/} 2>&8 )
     if [[ "$dev_number" ]] ; then
         local dev_name sysfs_device
@@ -410,7 +410,7 @@ get_sysfs_name() {
         done
     fi
 
-    # otherwise, it can be the case that we just want to translate the name
+    # Otherwise, it can be the case that we just want to translate the name.
     echo "${name//\//!}"
     return 1
 }
@@ -430,7 +430,7 @@ get_device_name() {
     [[ "$name" ]]
     BugIfError "Empty string passed to get_device_name"
 
-    ### translate dm-8 -> mapper/test
+    ### Translate dm-8 -> mapper/test
     local device dev_number mapper_number
     if [[ -d /sys/block/$name ]] ; then
         if [[ -r /sys/block/$name/dm/name ]] ; then
@@ -465,7 +465,7 @@ get_device_name() {
 ### ciss-3600508b1001fffffa004f7b3f209000b-part2 -> cciss/c0d0p2
 # see issue #305
 get_device_mapping() {
-    if [[ ! -s ${VAR_DIR}/recovery/diskbyid_mappings ]]; then
+    if [[ ! -s "${VAR_DIR}/recovery/diskbyid_mappings" ]]; then
         echo $1
     else
         local name=${1##*/}      # /dev/disk/by-id/scsi-xxxx -> scsi-xxx
@@ -479,7 +479,7 @@ get_device_mapping() {
 }
 
 # Get the size in bytes of a disk/partition.
-# for partitions, use "sda/sda1" as argument
+# For partitions, use "sda/sda1" as argument.
 get_disk_size() {
     local disk_name=$1
 
@@ -505,8 +505,8 @@ get_block_size() {
     fi
 }
 
-# Get the UUID of a device
-# device is something like /dev/sda1
+# Get the UUID of a device.
+# Device is something like /dev/sda1.
 blkid_uuid_of_device() {
     local device=$1
     local uuid=""
