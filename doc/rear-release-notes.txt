@@ -1,13 +1,9 @@
-= Release Notes for Relax-and-Recover version 1.15.0
-:Author: Gratien D'haese
-:Date: 11 September 2013
-:Revision: 1.0
-:data-uri:
-:icons:
-:iconsdir: /usr/share/asciidoc/images/icons
-:numbered:
-:toc:
-:toclevels: 2
+---
+layout: default
+title: Relax-and-Recover Release Notes
+---
+
+## Release Notes for Relax-and-Recover version 1.16.0
 
 This document contains the release notes for the open source project
 Relax-and-Recover.
@@ -21,14 +17,14 @@ Attribution-NoDerivs 3.0 Unported (CC BY-ND 3.0)". To read the license deed
 go to [http://creativecommons.org/licenses/by-nd/3.0/](http://creativecommons.org/licenses/by-nd/3.0/)
 
 
-== Overview
+## Overview
 Relax-and-Recover is a GNU/Linux system administrator tool used to
 create disaster recovery images which makes bare metal restore easier.
 System administrators use Relax-and-Recover as part of disaster recovery
 policy which does not replace in any way a good backup policy.
 
 
-=== Product Features
+### Product Features
 The following features are supported on the most recent releases of
 Relax-and-Recover.  Anything labeled as (*NEW!*) was added as the
 most recent release. New functionality for previous releases can be
@@ -61,6 +57,7 @@ functionality:
 * Integrates with _internal_ backup solutions such as:
 
    - GNU tar (BACKUP=NETFS, BACKUP_PROG=tar)
+   - GNU tar (BACKUP=NETFS, BACKUP_PROG=tar, BACKUP_TYPE=incremental, FULLBACKUPDAY="Mon") for using incremental backups with a weekly full backup. Be aware, old tar archives will not be removed automatically!
    - GNU tar with openssl encryption (BACKUP=NETFS, BACKUP_PROG=tar, BACKUP_PROG_CRYPT_ENABLED=1)
    - rsync on local devices (BACKUP=NETFS, BACKUP_PROG=rsync), such USB and local disks
    - Rsync over the network (BACKUP=RSYNC, BACKUP_PROG=rsync)
@@ -74,8 +71,9 @@ functionality:
   - Bacula (BACKUP=BACULA)
   - Bareos (BACKUP=BAREOS) (*New!*) (A fork of Bacula)
   - Rsync Backup Made Easy (BACKUP=RBME)
-  - Duplicity/Duply (BACKUP=DUPLICITY) (*Experimental*)
-  - EMC Networker, also known as Legato (BACKUP=NSR) (*NEW!*)
+  - Duplicity/Duply (BACKUP=DUPLICITY) (*New!*)
+  - EMC Networker, also known as Legato (BACKUP=NSR)
+  - SEP Sesam (BACKUP=SESAM) (*New!*)
 
 * Udev support (except for some really ancient udev versions) which is
   the base for many new and important features:
@@ -130,17 +128,86 @@ functionality:
 
 * cron job to check changes in disk layout and trigger `rear mkrescue` if required
 
+* VLAN tagging support
+
+* Add timestamp of rear run with rc code to the syslog or messages file; sending mail report is also possible
+
 *NOTE*: Features marked *experimental* are prone to change with future releases.
 
 
-== Relax-and-Recover Releases
+## Relax-and-Recover Releases
 The first release of Relax-and-Recover, version 1.0, was posted to the web
 in July 2006.  For each release, this chapter lists the new features and
 defect fixes. Note that all releases are cumulative, and that all releases
 of Relax-and-Recover are compatible with previous versions of
 Relax-and-Recover, unless otherwise noted.
 
-=== Version 1.15.0 (September 2013)
+### Version 1.16.0 (May 2014)
+
+The references pointing to *fix #nr* or *issue #nr* refer to our [issues tracker](https://github.com/rear/rear/issues)
+
+As usual lots of bug fixes - see the issue tracker.
+
+* Network script now deals correctly with VLAN tagging as well
+
+* Added 2 new variables to `default.conf` for TSM: `TSM_ARCHIVE_MGMT_CLASS` which defines a backup class to use with TSM, and `TSM_RM_ISOFILE` which triggers (if set to y) to remove the original ISO files from local system once the ISO image has been transferred to TSM
+
+* Guessing the bootloader and saving this in a file in the `$VAR_LIB/recovery/bootloader` (will be picke dup during recovery to assist us in selecting the proper bootloader [ grub, grub2, uefi ])
+
+* Various corrections with `BACKYP=RSYNC` method (issue #200 and #366). In rear 1.16 the old and new style are still recognized, but we might drop the old style in later versions.
+
+       OLD STYLE:
+       BACKUP_URL=[USER@]HOST:PATH           # using ssh (no rsh)
+       with rsync protocol PATH is a MODULE name defined in remote /etc/rsyncd.conf file
+       BACKUP_URL=[USER@]HOST::PATH          # using rsync
+       
+       NEW STYLE:
+       BACKUP_URL=rsync://[USER@]HOST[:PORT]/PATH    # using ssh
+       BACKUP_URL=rsync://[USER@]HOST[:PORT]::/PATH  # using rsync
+
+* Checking the bootloader files during savelayout section - see issue #234
+
+* Backup method `BACKUP=DUPLICITY` has been fully tested and proven to work well (backup and recover). When using `duply` and automated recovery is possible. Several updates were made to make duplicity works as well with backup and recover
+
+* Variable `SSH_ROOT_PASSWORD` (see `default.conf`) allows to force a password with the rescue image (issue #362)
+
+* TSM version >=6.4 is now supported (issue #356), and point in time restore works better now (issue #358)
+
+* Fix the order of `fs` lines in `checklayout.conf` file when mor ethen 9 partitions are in use (issue #352)
+
+* Avoiding CD/DVD type devices to be added in the disklayout.conf file during savelayout (issue #257)
+
+* Removed `mingetty` executable from `REQUIRED_PROGS` list as RHEL 7 does not ship it anymore. `agetty` is getting more and more the standard now and rear will use this one automatically when `mingetty` is absent
+
+* New variable in `default.conf` file was defined `BACKUP_TYPE=` (empty is full or incremental; only works with the default `BACKUP_PROG=tar`)
+
+* Avoid stale NFS hangs with `df` command (issue #350)
+
+* For TSM a new variable was introduced in `default.conf` file: TSM_RESULT_SAVE (to disable the TSM saving; can be used when you saved the result via `$ISO_URL`, `$OUTPUT_URL`, `$ISO_DIR` or something else)
+
+* `/etc/rear/local.conf` is now empty by default and `/etc/rear/site.conf` now contains `OUTPUT=ISO` setting. This way we are sure that during an upgrade of rear we do not loose our original user settings (local.conf tends te be overwritten).
+
+* Fix for hpacucli where the order logicaldrive and array could be wrong (issue #208)
+
+* New variable TMPDIR allows to overrule the default `/tmp` temporary directory (handy when building big ISO images)
+
+* Added option `-iso-level 3` to `mkisofs` command so we can create ISO image bigger then 4 GB (issue #323)
+
+* detecting 'out of space' errors while building huge ISO images
+
+* Add SEP Sesam external backup integration - issues #324 and #325
+
+* Add automatic recovery mode for Bareos - issue #311
+
+* Add incremental backup type with GNU tar with weekly backups, define in _/etc/rear/local.conf_ the following (issue #294):
+
+       BACKUP=NETFS
+       BACKUP_TYPE=incremental
+       FULLBACKUPDAY="Mon"
+
+* Add support for Gentoo kernels - issue #312
+
+### Version 1.15.0 (September 2013)
 
 The references pointing to *fix #nr* or *issue #nr* refer to our [issues tracker](https://github.com/rear/rear/issues)
 
@@ -171,9 +238,9 @@ As usual lots of bug fixes - see the issue tracker.
 
 * Fix SELinux autorelabelling (issue #270 and #274)
 
-* Rear support now more then 9 partitions (see issue #263)
+* Rear supports now more then 9 partitions (see issue #263)
 
-* systemd support added for Fedora 19 and OpenSuse 12.x
+* systemd support added for Fedora 19/20 and OpenSuse 12.x/13.x
 
 * Automatic Recover feature on USB devices (label AUTOMATIC RECOVER in rear recover menu)
 
@@ -229,7 +296,7 @@ As usual lots of bug fixes - see the issue tracker.
 
 * Check if ROOT_FS filesystem was mounted with 'noexec' attribute (issue #150)
 
-=== Version 1.14.0 (September 2012)
+### Version 1.14.0 (September 2012)
 
 The references pointing to *fix#nr* refer to our [issues tracker](https://github.com/rear/rear/issues)
 
@@ -266,7 +333,7 @@ complete overview see the issue tracker.
 
 * list Xen paravirtualized disks in disklayout.conf (fixes #74 and SF3520992)
 
-=== Version 1.13.0 (April 2012)
+### Version 1.13.0 (April 2012)
 
 * Support for multipathing was added
 
@@ -301,7 +368,7 @@ complete overview see the issue tracker.
 
 
 
-=== Version 1.12.0 (November 2011)
+### Version 1.12.0 (November 2011)
 
 * Multiple copies of Relax-and-Recover backups (of the same or different
   systems) can be kept on a USB device (with `OUTPUT=USB`).
@@ -341,7 +408,7 @@ complete overview see the issue tracker.
 * (*NEW! EXPERIMENTAL!*) Basic btrfs file system backup and restore works. Advise is not to trust it (yet). At recreation of the btrfs file system the UUID number is automatically renamed in all configuration files (such as _/etc/fstab_ or _/boot/grub/menu.lst_).
 
 
-=== Version 1.11.0 (May 2011)
+### Version 1.11.0 (May 2011)
 
 * The `mkobdr` command has been removed. OBDR-enabled tapes can now be created using the `mkrescue` command and by defining the proper variables in _/etc/rear/local.conf_:
 
@@ -440,14 +507,14 @@ complete overview see the issue tracker.
 * checklayout can now also check arbitrary files (through an md5 checksum),
   extend the `CHECK_CONFIG_FILES` array to use this feature.
 
-=== Version 1.10.0 (February 2011)
+### Version 1.10.0 (February 2011)
 An intermediate release only which fixed some hanging issues of version 1.9.0.
 Also, a RPM upgrade was fixed by this release from 1.7.25 to 1.9.0, which
 failed because of a wrongly CentOS symbolic link. See
 [bugzilla#680664](https://bugzilla.redhat.com/show_bug.cgi?id=680664)
 
 
-=== Version 1.9.0 (February 2011)
+### Version 1.9.0 (February 2011)
 With version 1.9.0 some new methods were added, such as:
 
 * `rear mkobdr` : to create an OBDR recovery tape (obsolete since 1.11.0)
@@ -497,19 +564,19 @@ support.  Version 1.9 does have udev support, but firmware loading was
 broken. The rule in 00-rear.rules has been changed.
 
 
-=== Version 1.7.26 (November 2010)
+### Version 1.7.26 (November 2010)
 Relax-and-Recover version 1.7.26 fixed RedHat bugzilla defect 657174 : rescue
 image freezes during the boot while executing init. This was due the new
 upstart mechanism (replaced the sysv init procedure).
 
 
-=== Version 1.7.25 (June 2010)
+### Version 1.7.25 (June 2010)
 Relax-and-Recover version 1.7.25 fixed RedHat bugzilla defect 600217 : Fedora
 link missing in restore, pack and finalize sub-directories. This broke the
 proper image building on several Fedora versions.
 
 
-== System and Software Requirements
+## System and Software Requirements
 Relax-and-Recover works on GNU/Linux kernel with version 2.6 and higher.
 For lower kernel versions Relax-and-Recover cannot be used, and for these
 systems, [mkcdrec](http://mkcdrec.sourceforge.net/) is still a good
@@ -526,7 +593,7 @@ these are less tested.  Use the '`rear validate`' command after every
 successful DR test please and mail us the results.
 
 
-=== Choosing the best compression algorithm
+### Choosing the best compression algorithm
 The default backup program with Relax-and-Recover is (`BACKUP_PROG=tar`)
 GNU tar and the default compression used with tar is `gzip`. However, is
 using `gzip` the best choice? We have done some tests and published the
@@ -534,7 +601,19 @@ results. See
 [Relax-and-Recover compression tests](http://www.it3.be/2013/09/16/NETFS-compression-tests/)
 
 
-== Known Problems and Workarounds
+## Known Problems and Workarounds
+
+*Issue Description*: with RHEL 4 systems extended partitions are recognized as primary partitions
+
+    Error: Expecting a partition number
+
+* Workaround:
+
+Full details can be read in [issue 314](https://github.com/rear/rear/issues/319).
+However, you need to edit `/var/lib/rear/layout/disklayout.conf` file and change for
+partition 4 "primary" to "extended"
+
+
 *Issue Description*: System reconfiguration still has some weaknesses.
 
 * this has to be tested before relying on it, there are too many unknowns
@@ -606,4 +685,12 @@ Above error message might be seen after upgrading rear from a very old version (
 * Workaround:
 
 Use the command `rpm -V rear` to verify the upgrade went fine. If not, then remove first the old version (with `rpm -e rear`) before installing the latest version.
+
+*Issue Description*: ERROR: FindStorageDrivers called but STORAGE_DRIVERS is empty
+
+Above error message might be seen after a fresh installation of the GNU/Linux kernel. Rear got confused between the running kernel version number and the actual fresh kernel available.
+
+* Workaround:
+
+Reboot your server before using rear again, which is a good practice anyway after upgrading the GNU/Linux kernel.
 
