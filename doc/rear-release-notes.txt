@@ -1,8 +1,3 @@
----
-layout: default
-title: Relax-and-Recover Release Notes
----
-
 ## Release Notes for Relax-and-Recover version 1.16.0
 
 This document contains the release notes for the open source project
