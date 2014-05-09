@@ -1,37 +1,37 @@
-# Try to automatically resize disks
+# Try to automatically resize disks.
 
 if [[ -z "$MIGRATION_MODE" ]] ; then
     return 0
 fi
 
-# Resize all partitions, except the boot partition
+# Resize all partitions, except the boot partition.
 # This does not resize volumes on top of the affected partitions.
 
-cp $LAYOUT_FILE $LAYOUT_FILE.tmp
-backup_file $LAYOUT_FILE
+cp "$LAYOUT_FILE" "$LAYOUT_FILE.tmp"
+backup_file "$LAYOUT_FILE"
 
 while read type device size junk ; do
     sysfsname=$(get_sysfs_name $device)
 
-    if [[ -d /sys/block/$sysfsname ]] ; then
-        newsize=$(get_disk_size $sysfsname)
+    if [[ -d "/sys/block/$sysfsname" ]] ; then
+        newsize=$(get_disk_size "$sysfsname")
 
         if (( "$newsize" == "$size" )) ; then
             continue
         fi
 
-        oldsize=$size
+        oldsize="$size"
         difference=$(( newsize - oldsize )) # can be negative!
         Log "Total resize of ${difference}B"
 
         Log "Searching for resizeable partitions on disk $device (${newsize}B)"
 
-        # Find partitions that could be resized
+        # Find partitions that could be resized.
         partitions=()
         resizeable_space=0
-        available_space=$newsize
+        available_space="$newsize"
         while read type part size start name flags name junk; do
-            case $flags in
+            case "$flags" in
                 (*boot*|*bios_grub*)
                     available_space=$(( available_space - ${size%B} ))
                     Log "Will not resize partition $name."
@@ -42,7 +42,7 @@ while read type device size junk ; do
                     Log "Will resize partition $name."
                     ;;
             esac
-        done < <(grep "^part $device" $LAYOUT_FILE | grep -v $(grep "^swap $device" $LAYOUT_FILE | cut -d' ' -f 2) )
+        done < <(grep "^part $device" "$LAYOUT_FILE" | grep -v $(grep "^swap $device" "$LAYOUT_FILE" | cut -d' ' -f 2) )
 
         if (( ${#partitions[@]} == 0 )) ; then
             Log "No resizeable partitions found."
@@ -86,6 +86,6 @@ while read type device size junk ; do
             Log "Resized partition $name from ${partition_size}B to ${new_size}B."
         done
     fi
-done < <(grep "^disk " $LAYOUT_FILE)
+done < <(grep "^disk " "$LAYOUT_FILE")
 
-mv $LAYOUT_FILE.tmp $LAYOUT_FILE
+mv "$LAYOUT_FILE.tmp" "$LAYOUT_FILE"

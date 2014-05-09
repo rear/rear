@@ -21,7 +21,7 @@ There are a few options in Relax-and-Recover to help you debug the situation:
 == During backup
 During backup Relax-and-Recover creates a description of your system layout
 in one file (_disklayout.conf_) and stores this as part of its rescue image.
-This file describes the configuration of SmartArray RAID, parititions,
+This file describes the configuration of SmartArray RAID, partitions,
 software RAID, DRBD, logical volumes, filesystems, and possibly more.
 
 Here is a list of known issues during backup:

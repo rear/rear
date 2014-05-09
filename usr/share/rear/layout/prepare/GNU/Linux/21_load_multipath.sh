@@ -1,5 +1,5 @@
 
-if grep -q ^multipath $LAYOUT_FILE ; then
+if grep -q '^multipath' "$LAYOUT_FILE" ; then
     Log "Activating multipath"
     modprobe dm-multipath >&2
     multipath >&2
@@ -9,10 +9,10 @@ if grep -q ^multipath $LAYOUT_FILE ; then
     fi
 fi
 
-### Create multipath devices (at least partitions on them)
+### Create multipath devices (at least partitions on them).
 create_multipath() {
     local multipath device
-    read multipath device junk < <(grep "multipath $1 " $LAYOUT_FILE)
+    read multipath device junk < <(grep "multipath $1 " "$LAYOUT_FILE")
 
     create_partitions "$device"
 }

@@ -23,4 +23,4 @@ while read fs device mountpoint junk ; do
         continue
     fi
     echo "$mountpoint $device"
-done < <(grep ^fs $LAYOUT_FILE) > $VAR_DIR/recovery/mountpoint_device
+done < <(grep '^fs' $LAYOUT_FILE) > $VAR_DIR/recovery/mountpoint_device

@@ -12,7 +12,7 @@ while [[ -z "$RESTORE_OK" ]]; do
         LogPrint "An error occurred during layout recreation."
         Print ""
 
-        # TODO: Provide a skip option (needs torough consideration)
+        # TODO: Provide a skip option (needs thoughtful consideration)
         # FIXME: Implement layout/prepare as part of a function ?
         choices=(
             "View Relax-and-Recover log"

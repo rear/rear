@@ -30,7 +30,7 @@ by appropriately named scripts in various subdirectories:
      This can also come from various sources (FS layout for arch, OS, OS_VER,
      Backup-SW, Output, ...)
 
-  2. *Analyse (DR)*: Analyse the system to create the '/etc/recovery' data
+  2. *Analyse (DR)*: Analyse the system to create the '/etc/rear/recovery/' data
 
   3. *Analyse (Rescue):* Analyse the system to create the rescue system
      (network, binary dependencies, ...)
@@ -107,7 +107,7 @@ installed into the usual locations:
 /etc/rear/::
     Configurations
 
-/usr/bin/rear::
+/usr/sbin/rear::
     Main program
 
 /usr/share/rear/::
@@ -222,7 +222,7 @@ finalize/...::
     Finalization scripts
 
 == Inter-module communication
-The various stages and modules communicate via standarized environment variables:
+The various stages and modules communicate via standardized environment variables:
 
 |====
 |NAME             |TYPE         |Descriptions                         |Example

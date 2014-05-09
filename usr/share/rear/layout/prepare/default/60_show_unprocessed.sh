@@ -1,4 +1,4 @@
-# Warn for missing components
+# Warn for missing components.
 
 while read -u 3 status name type junk ; do
     LogPrint "No code has been generated to restore device $name ($type).
@@ -13,4 +13,4 @@ while read -u 3 status name type junk ; do
         abort_recreate
         Error "User chose to abort the recovery."
     fi
-done 3< <(grep "^todo" $LAYOUT_TODO)
+done 3< <(grep "^todo" "$LAYOUT_TODO")

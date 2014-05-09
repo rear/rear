@@ -1,4 +1,4 @@
-# Exclude components
+# Exclude components.
 
 for component in "${EXCLUDE_RECREATE[@]}" ; do
     Log "Excluding $component from recreate stage."
@@ -6,7 +6,7 @@ for component in "${EXCLUDE_RECREATE[@]}" ; do
     mark_tree_as_done "$component"
 done
 
-### Make sure we have all dependencies for multipath devices in place
+### Make sure we have all dependencies for multipath devices in place.
 while read multipath device slaves junk ; do
     local -a devices=()
 
@@ -21,4 +21,4 @@ while read multipath device slaves junk ; do
         add_component "$slave"
         mark_as_done "$slave"
     done
-done < <(grep ^multipath $LAYOUT_FILE)
+done < <(grep ^multipath "$LAYOUT_FILE")

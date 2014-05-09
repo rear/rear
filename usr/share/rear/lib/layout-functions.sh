@@ -1,10 +1,11 @@
-# Utility functions for the system layout processing
+# Utility functions for the system layout processing.
 
 DATE=$(date +%Y%m%d)
+# FIXME: Why not using ISO 8601 date? $(date +%F)
 
 BACKUPS_TAKEN=()
 
-# Copy file $1 to $1.$DATE
+# Copy file $1 to $1.$DATE.
 backup_file() {
     if [[ ! -r "$1" ]]; then
         return
@@ -19,21 +20,21 @@ restore_backup() {
     cp -ar $1.$DATE.$$.bak $1
 }
 
-# generate code to restore a device $1 of type $2
+# Generate code to restore a device $1 of type $2.
 # Note that we do not handle partitioning here.
 create_device() {
-    local device=$1
-    local type=$2
+    local device="$1"
+    local type="$2"
     local name # used to extract the actual name of the device
 
-    cat <<EOF >> $LAYOUT_CODE
+    cat <<EOF >> "$LAYOUT_CODE"
 if create_component "$device" "$type" ; then
 EOF
-    echo "# Create $device ($type)">> $LAYOUT_CODE
+    echo "# Create $device ($type)" >> "$LAYOUT_CODE"
     if type -t create_$type >&8 ; then
-        create_$type $device
+        create_$type "$device"
     fi
-    cat <<EOF >> $LAYOUT_CODE
+    cat <<EOF >> "$LAYOUT_CODE"
 component_created "$device" "$type"
 else
     LogPrint "Skipping $device ($type) as it has already been created."
@@ -50,29 +51,29 @@ abort_recreate() {
 
 # Test and log if a component $1 (type $2) needs to be recreated.
 create_component() {
-    local device=$1
-    local type=$2
-    # if a touchfile already exists, no need to recreate this component
+    local device="$1"
+    local type="$2"
+    # If a touchfile already exists, no need to recreate this component.
     local touchfile="$type-${device//\//-}"
-    if [ -e $LAYOUT_TOUCHDIR/$touchfile ] ; then
+    if [ -e "$LAYOUT_TOUCHDIR/$touchfile" ] ; then
         return 1
     else
         return 0
     fi
 }
 
-# Mark a component as created
+# Mark a component as created.
 component_created() {
     local device=$1
     local type=$2
-    # Create a touchfile
+    # Create a touchfile.
     local touchfile="$type-${device//\//-}"
-    touch $LAYOUT_TOUCHDIR/$touchfile
+    touch "$LAYOUT_TOUCHDIR/$touchfile"
 }
 
-# Generate dependencies between disks as found in $LAYOUT_FILE
-# This will be written to $LAYOUT_DEPS
-# Also generate a list of disks to be restored in $LAYOUT_TODO
+# Generate dependencies between disks as found in $LAYOUT_FILE.
+# This will be written to $LAYOUT_DEPS.
+# Also generate a list of disks to be restored in $LAYOUT_TODO.
 generate_layout_dependencies() {
     # $LAYOUT_DEPS is a list of:
     # <item> <depends on>
@@ -373,7 +374,7 @@ version_newer() {
   return 0
 }
 
-# Function to get version from tool
+# Function to get version from tool.
 get_version() {
   TERM=dumb $@ 2>&1 | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | head -1
 }
@@ -388,7 +389,7 @@ get_sysfs_name() {
         return 0
     fi
 
-    ### Follow symlinks
+    ### Follow symlinks.
     if [[ -h /dev/$name ]] ; then
         local target=$(readlink -f /dev/$name)
         if [[ -e /sys/block/${target#/dev/} ]] ; then
@@ -397,7 +398,7 @@ get_sysfs_name() {
         fi
     fi
 
-    # accomodate for mapper/test -> dm-? mapping
+    # Accommodate for mapper/test -> dm-? mapping.
     local dev_number=$(dmsetup info -c --noheadings -o major,minor ${name##*/} 2>&8 )
     if [[ "$dev_number" ]] ; then
         local dev_name sysfs_device
@@ -410,7 +411,7 @@ get_sysfs_name() {
         done
     fi
 
-    # otherwise, it can be the case that we just want to translate the name
+    # Otherwise, it can be the case that we just want to translate the name.
     echo "${name//\//!}"
     return 1
 }
@@ -430,7 +431,7 @@ get_device_name() {
     [[ "$name" ]]
     BugIfError "Empty string passed to get_device_name"
 
-    ### translate dm-8 -> mapper/test
+    ### Translate dm-8 -> mapper/test
     local device dev_number mapper_number
     if [[ -d /sys/block/$name ]] ; then
         if [[ -r /sys/block/$name/dm/name ]] ; then
@@ -465,7 +466,7 @@ get_device_name() {
 ### ciss-3600508b1001fffffa004f7b3f209000b-part2 -> cciss/c0d0p2
 # see issue #305
 get_device_mapping() {
-    if [[ ! -s ${VAR_DIR}/recovery/diskbyid_mappings ]]; then
+    if [[ ! -s "${VAR_DIR}/recovery/diskbyid_mappings" ]]; then
         echo $1
     else
         local name=${1##*/}      # /dev/disk/by-id/scsi-xxxx -> scsi-xxx
@@ -479,7 +480,7 @@ get_device_mapping() {
 }
 
 # Get the size in bytes of a disk/partition.
-# for partitions, use "sda/sda1" as argument
+# For partitions, use "sda/sda1" as argument.
 get_disk_size() {
     local disk_name=$1
 
@@ -505,8 +506,8 @@ get_block_size() {
     fi
 }
 
-# Get the UUID of a device
-# device is something like /dev/sda1
+# Get the UUID of a device.
+# Device is something like /dev/sda1.
 blkid_uuid_of_device() {
     local device=$1
     local uuid=""
