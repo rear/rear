@@ -1,6 +1,6 @@
 = rear(8)
-:version: v1.15.0
-:date: 11 Sep 2013
+:version: v1.16.1
+:date: 12 May 2014
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -27,7 +27,8 @@ migration tool as well.
 Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
 OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
 sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude
-of backup strategies (incl.  IBM TSM, HP DataProtector, Symantec NetBackup,
+of backup strategies (incl.  IBM Tivoli Storage Manager, HP DataProtector,
+Symantec NetBackup, EMC NetWorker, Bareos,
 Bacula, rsync, rbme). This results in a bootable image that os capable of
 booting via PXE, DVD/CD, bootable tape or virtual provisioning.
 
@@ -186,7 +187,7 @@ OUTPUT_URL=*sftp://*::
 Write the image using +lftp+ and the secure FTP (SFTP) protocol.
 
 OUTPUT_URL=*rsync://*::
-Write the image using +rsync+ and the RSYNC protocol.
+Write the image using +rsync+ and the RSYNC protocol (SSH only).
 
 OUTPUT_URL=*sshfs://*::
 Write the image using sshfs and the SSH protocol.
@@ -203,10 +204,13 @@ backups yourself.
 
 Especially the +rear mkbackup+ command can be confusing as it is only
 useful for the internal backup methods and has no function at all with
-the other (external) backup methods. The following backup methods need to
-be set in Relax-and-Recover with the +BACKUP=+ option.
+the other (external) backup methods.
 
-The following +BACKUP+ methods are external of Relax-and-Recover meaning
+The following backup methods need to
+be set in Relax-and-Recover with the +BACKUP+ option. As mentioned we have
+two types of +BACKUP+ methods - _internal_ and _external_.
+
+The following +BACKUP+ methods are _external_ of Relax-and-Recover meaning
 that you are responsible of backups being made:
 
 BACKUP=*REQUESTRESTORE*::
@@ -216,12 +220,12 @@ to the appropriate location (e.g. via SSH). This method works especially
 well with an rsync bases backup that is pushed back to the backup
 client.
 
-BACKUP=*DP*::
-Use HP Data Protector to restore the data.
-
 BACKUP=*EXTERNAL*::
 Internal backup method that uses an arbitrary external command to
 create a backup and restore the data.
+
+BACKUP=*DP*::
+Use HP Data Protector to restore the data.
 
 BACKUP=*GALAXY*::
 Use CommVault Galaxy 5 to restore the data.
@@ -236,13 +240,22 @@ BACKUP=*TSM*::
 Use IBM Tivoli Storage Manager to restore the data. The Relax-and-Recover
 result files (e.g. ISO image) are also saved into TSM.
 
-BACKUP=*RBME*::
-Use Rsync Backup Made Easy (rbme) to restore the data.
-
 BACKUP=*NSR*::
 Using EMC NetWorker (Legato) to restore the data.
 
-The following +BACKUP+ methods are internal of Relax-and-Recover:
+BACKUP=*RBME*::
+Use Rsync Backup Made Easy (rbme) to restore the data.
+
+BACKUP=*BAREOS*::
+Use Open Source backup solution BAREOS (a fork a BUCULA) to restore the data.
+
+BACKUP=*BACULA*::
+Use Open Source backup solution BACULA to restore the data.
+
+BACKUP=*DUPLICITY*::
+Use encrypted bandwidth-efficient backup solution using the rsync algorithm to restore the data.
+
+The following +BACKUP+ methods are _internal_ of Relax-and-Recover:
 
 BACKUP=*NETFS*::
 Internal backup method which can be used to create a simple backup
@@ -257,6 +270,7 @@ a patch or ask us to implement it for you.
 
 When using +BACKUP=NETFS+ you should provide the backup target location
 through the +BACKUP_URL+ variable. Possible +BACKUP_URL+ settings are:
+
 
 BACKUP_URL=*file://*::
 To backup to local disk, use +BACKUP_URL=file:///directory/path/+
@@ -333,7 +347,8 @@ See the default configuration file _/usr/share/rear/conf/default.conf_ for
 an overview of the possible methods and their options.
 
 An example to use TSM for backup and ISO for output would be to add
-these lines to _/etc/rear/local.conf_:
+these lines to _/etc/rear/local.conf_ (no need to define a +BACKUP_URL+
+when using an external backup solution):
 
     BACKUP=TSM
     OUTPUT=ISO
@@ -343,7 +358,7 @@ add these lines to _/etc/rear/site.conf_
 
     TIMESYNC=NTP
 
-Don't forget to distribute the _site.conf_ to all your systems.
+Do not forget to distribute the _site.conf_ to all your systems.
 
 The resulting ISO image will be created in _/var/lib/rear/output/_.
 You can now modify the behaviour by copying the appropriate
@@ -364,12 +379,17 @@ To print out the current settings for +BACKUP+ and +OUTPUT+ methods and some
 system information. This command can be used to see the supported features
 for the given release and platform.
 
-  # rear dump
+    # rear dump
 
 To create a new rescue environment. Do not forget to copy the resulting
 rescue system away so that you can use it in the case of a system failure.
 
-  # rear -v mkrescue
+    # rear -v mkrescue
+
+To create a new rescue image together with a complete archive of your local
+system run the command:
+
+   # rear -v mkbackup
 
 
 == FILES
@@ -402,6 +422,7 @@ _local.conf_ or _site.conf_ instead.
 Feedback is welcome, please report any issues or improvements to our
 issue-tracker at: http://github.com/rear/issues/
 
+Furthermore, we welcome pull request via GitHub.
 
 == SEE ALSO
 Relax-and-Recover comes with extensive documentation located in 
@@ -409,7 +430,7 @@ _/usr/share/doc_.
 
 
 == AUTHORS
-Gratien D'haese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers.
+Gratien Dhaese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers.
 
 Lars Pinne (original man page).
 
@@ -420,11 +441,11 @@ The Relax-and-Recover website is located at: http://relax-and-recover.org/
 
 
 == COPYRIGHT
-(c) 2006-2013
+(c) 2006-2014
 
 Schlomo Schapiro
 
-Gratien D'haese, IT3 Consultants
+Gratien Dhaese, IT3 Consultants
 
 Jeroen Hoekx
 
