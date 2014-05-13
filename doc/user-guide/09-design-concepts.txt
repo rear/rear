@@ -30,7 +30,7 @@ by appropriately named scripts in various subdirectories:
      This can also come from various sources (FS layout for arch, OS, OS_VER,
      Backup-SW, Output, ...)
 
-  2. *Analyse (DR)*: Analyse the system to create the '/etc/rear/recovery/' data
+  2. *Analyse disklayout*: Analyse the system disklayout to create the '/var/lib/rear/layout/' data
 
   3. *Analyse (Rescue):* Analyse the system to create the rescue system
      (network, binary dependencies, ...)
@@ -181,17 +181,22 @@ prep/$OUTPUT/*.sh::
     +
     where 00 < ## < 99
 
-dr/default/*.sh::
-dr/$(uname -i)/*.sh::
-dr/$OS_OS_VER/*.sh::
-dr/$BACKUP/*.sh::
-dr/$OUTPUT/*.sh::
-    Analyse-DR scripts. The scripts get merged from the applicable directories
-    and executed in their alphabetical order. Naming conventions are:
-    +
-    ##_name.sh
-    +
-    where 00 < ## < 99
+layout/compare/default/::
+layout/compare/$OS_$OS_VER/::
+    Scripts to compare the saved layout (under /var/lib/rear/layout/) with the actual situation. This is used by workflow *rear checklayout* and may trigger a new run of *rear mkrescue* or *rear mkbackup*
+
+layout/precompare/default/::
+layout/precompare/$OS_$OS_VER/::
+
+layout/prepare/default/::
+layout/prepare/$OS_$OS_VER/::
+
+layout/recreate/default/::
+layout/recreate/$OS_$OS_VER/::
+
+layout/save/default/::
+layout/save/$OS_$OS_VER/::
+    Scripts to capture the disk layout and write it into /var/lib/rear/layout/ directory
 
 rescue/...::
     Analyse-Rescue scripts: ...

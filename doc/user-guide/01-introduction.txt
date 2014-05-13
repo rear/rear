@@ -99,29 +99,6 @@ Relax-and-Recover has a wide range of features:
  - Lockless workflows
  - USB udev integration to trigger mkrescue on inserting USB device
  - Beep/UID led/USB suspend integration
+ - Migrate UUID from disks and MAC addressed from network interfaces
 
-== Use-cases
-
-=== Transforming a system to use LUKS partitions
-=== Recreate a system for optimal partition alignment
-=== Transforming a system to move from SWRAID to HWRAID
-=== Transforming a system to move from SWRAID to LVM mirroring
-=== Recreate a system on a new RAID hardware backend (replace all disks to enlarge limited storage)
-=== Create a single snapshot for offsite troubleshooting
-
-== Tested configurations
-During development we have tested Relax-and-Recover with the following
-configurations:
-
- - With USB storage as rescue and Bacula backup on tape
- - With USB storage as rescue and backup on same USB storage
- - With OBDR tape as rescue and Bacula backup on separate tape
- - With OBDR tape as rescue and backup on same tape
-
-And in the following ways:
-
- - Booting from second disk in SW RAID1 setup
- - Restoring to different storage configuration
- - Restoring to different hardware
- - Restoring to bad HP SmartArray config
 

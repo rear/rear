@@ -13,6 +13,17 @@ OUTPUT=ISO
 OUTPUT_URL=http://server/path-to-push/
 ----
 
+== Bootable ISO with an external (commercial) backup software
+If you rely on your backup software to do the full restore of a system then you could define:
+
+----
+OUTPUT=ISO
+BACKUP=[TSM|NSR|DP|NBU|BACULA|BAREOS|RBME]
+----
+
+When using one of the above backup solution (commercial or open source) then there is no need to use +rear mkbackup+ as the backup workflow would be empty. Just use +rear mkrescue+
+
+Rear will incorporate the needed executables and libraries of your chosen backup solution into the rescue image of rear.
 
 == Bootable USB device with backup to USB
 If you want a bootable USB device with a (tar) backup to USB as well, you

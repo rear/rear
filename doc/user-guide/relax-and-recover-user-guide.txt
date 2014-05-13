@@ -1,6 +1,6 @@
 = Relax-and-Recover user guide
-:author: Dag Wieers and Jeroen Hoekx
-:version: 0.4 draft
+:author: Dag Wieers, Jeroen Hoekx, Gratien Dhaese
+:version: 0.5 draft
 :data-uri:
 :doctype: book
 :encoding: UTF-8

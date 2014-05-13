@@ -95,9 +95,13 @@ the newer HP SmartArray controller or its firmware.
 
 == Installation
 
+You can find the RPM and DEB packages from our web site at http://relax-and-recover.org/download/
+
+The latest stable versions of Fedora and SLES can be installed via +yum+ and +zypper+
+
 === From RPM packages
 Simply install (or update) the provided packages using
-the command: +rpm -Uhv rear-1.12.0svn497-0.1.noarch.rpm+
+the command: +rpm -Uhv rear-1.16-1.fc20.noarch.rpm+
 
 You can test your installation by running +rear dump+:
 
@@ -115,9 +119,30 @@ System definition:
 
 === From DEB packages
 
+On a Debian system (or Ubuntu) you can download the DEB packages from our download page and install it with the command:
+
+----
+dpkg -i rear*.deb
+----
+
+On Debian (Ubuntu) use the following command to install missing dependencies:
+
+----
+apt-get -f install
+----
 
 === From source
 
+The latest and greatest sources are available at GitHub location : https://github.com/rear/rear
+
+To make local copy with our github repository just type:
+
+----
+git clone git@github.com:rear/rear.git
+----
+
 == File locations
 
-== Quick demo
+Remember the general configuration file is found at +/usr/share/rear/conf/default.conf+. In that file you find all variables used by +rear+ which can be overruled by redefining these in the +/etc/rear/site.conf+ or +/etc/rear/local.conf+ files. Please do not modify the +default.conf+ file itself, but use the +site.conf+ or +local.conf+ for this purpose.
+
+
