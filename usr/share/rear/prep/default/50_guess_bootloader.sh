@@ -9,7 +9,8 @@ if [[ -f /etc/sysconfig/bootloader ]]; then
     fi
 fi
 for disk in /sys/block/* ; do
-    if [[ ${disk#/sys/block/} = @(hd*|sd*|cciss*|vd*|xvd*) ]] ; then
+    blockd=${disk#/sys/block/}
+    if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* ]] ; then
         devname=$(get_device_name $disk)
         dd if=$devname bs=512 count=4 | strings > $TMP_DIR/bootloader
         grep -q "EFI" $TMP_DIR/bootloader && {

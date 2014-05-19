@@ -161,7 +161,7 @@ extract_partitions() {
             ### only report flags parted can actually recreate
             flags=""
             for flag in $flaglist ; do
-                if [[ "$flag" = @(boot|root|swap|hidden|raid|lvm|lba|palo|legacy_boot|bios_grub) ]] ; then
+                if [[ "$flag" = boot || "$flag" = root || "$flag" = swap || "$flag" = hidden || "$flag" = raid || "$flag" = lvm || "$flag" = lba || "$flag" = palo || "$flag" = legacy_boot || "$flag" = bios_grub ]] ; then
                     flags="$flags$flag,"
                 fi
             done
@@ -193,7 +193,7 @@ extract_partitions() {
             ### only report flags parted can actually recreate
             flags=""
             for flag in $flaglist ; do
-                if [[ "$flag" = @(boot|root|swap|hidden|raid|lvm|lba|palo|legacy_boot|bios_grub) ]] ; then
+                if [[ "$flag" = boot || "$flag" = root || "$flag" = swap || "$flag" = hidden || "$flag" = raid || "$flag" = lvm || "$flag" = lba || "$flag" = palo || "$flag" = legacy_boot || "$flag" = bios_grub ]] ; then
                     flags="$flags$flag,"
                 fi
             done
@@ -215,7 +215,7 @@ extract_partitions() {
             if has_binary sfdisk ; then
                 declare partition_id=$(sfdisk -c $device $partition_nr 2>&8)
                 ### extended partitions are either DOS_EXT, EXT_LBA or LINUX_EXT
-                if [[ "$partition_id" = @(5|f|85) ]]; then
+                if [[ "$partition_id" = 5 || "$partition_id" = f || "$partition_id" = 85 ]]; then
                     sed -i /^$partition_nr\ /s/\ primary\ /\ extended\ / $TMP_DIR/partitions
                 fi
             else
@@ -245,7 +245,8 @@ Log "Saving disk partitions."
     # Disk sizes
     # format: disk <disk> <sectors> <partition label type>
     for disk in /sys/block/* ; do
-        if [[ ${disk#/sys/block/} = @(hd*|sd*|cciss*|vd*|xvd*) ]] ; then
+        blockd=${disk#/sys/block/}
+        if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* ]] ; then
             devname=$(get_device_name $disk)
             devsize=$(get_disk_size ${disk#/sys/block/})
 

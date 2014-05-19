@@ -2,7 +2,7 @@
 
 if [[ "$BACKUP_URL" ]] ; then
     backup_scheme=$(url_scheme "$BACKUP_URL")
-    if [[ "$backup_scheme" == @(tape|obdr) ]] ; then
+    if [[ "$backup_scheme" == tape || "$backup_scheme" == obdr ]] ; then
         testdevice=$(url_path "$BACKUP_URL")
         ### Complain when both are specified, but don't match
         if [[ "$TAPE_DEVICE" && "$TAPE_DEVICE" != "$testdevice" ]]; then

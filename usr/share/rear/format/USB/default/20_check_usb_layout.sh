@@ -53,7 +53,7 @@ ID_FS_TYPE=$(
     esac
 )
 
-[[ "$ID_FS_TYPE" == @(btr*|ext*) ]]
+[[ "$ID_FS_TYPE" == btr* || "$ID_FS_TYPE" == ext* ]]
 if (( $? != 0 )) && [[ -z "$YES" ]]; then
 	echo "USB device $REAL_USB_DEVICE must be formatted with ext2/3/4 or btrfs file system"
 	echo "Please type Yes to format $REAL_USB_DEVICE in ext3 format:"
