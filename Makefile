@@ -80,9 +80,9 @@ clean:
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
 	@echo -e "\033[1m== Validating scripts and configuration ==\033[0;0m"
-	find etc/ usr/share/rear/conf/ -name '*.conf' | xargs bash -n
+	find etc/ usr/share/rear/conf/ -name '*.conf' | xargs -n 1 bash -n
 	bash -n $(rearbin)
-	find . -name '*.sh' | xargs bash -n
+	find . -name '*.sh' | xargs -n 1 bash -n
 ### Fails to work on RHEL4
 #	find -L . -type l
 
