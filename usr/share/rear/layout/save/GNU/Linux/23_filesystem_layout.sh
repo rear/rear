@@ -81,7 +81,7 @@ Log "Saving Filesystem layout."
                 echo -n "uuid=$uuid label=$label"
                 ;;
             btrfs)
-                uuid=$(btrfs filesystem show $device | grep -i uuid | cut -d":" -f "3" | tr -d " ")
+                uuid=$(btrfs filesystem show $device | grep -i "uuid:" | cut -d":" -f "3" | tr -d " ")
                 label=$(btrfs filesystem show $device | grep -i label | cut -d":" -f "2" | sed -e 's/uuid//' -e 's/^ //')
                 [[ "$(echo $label)" = "none" ]] && label=
                 echo -n "uuid=$uuid label=$label"
