@@ -1,0 +1,1 @@
+REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" extlinux )
