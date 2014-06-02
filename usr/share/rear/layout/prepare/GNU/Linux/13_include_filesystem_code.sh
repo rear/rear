@@ -95,7 +95,8 @@ EOF
 cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
 # if $device is already mounted, skip
-mount | grep -q $device || mkfs -t $fstype $device
+# see https://bugzilla.novell.com/show_bug.cgi?id=878870 (adding -f [force] option to mkfs for btrfs)
+mount | grep -q $device || mkfs -t $fstype -f $device
 EOF
             if [ -n "$label" ] ; then
                 echo "mount | grep -q $device || btrfs filesystem label $device $label >&2" >> "$LAYOUT_CODE"
@@ -104,7 +105,7 @@ EOF
                 # Problem with btrfs is that UUID cannot be set during mkfs! So, we must map it and
                 # change later the /etc/fstab, /boot/grub/menu.lst, etc.
                 cat >> "$LAYOUT_CODE" <<-EOF
-                new_uuid=\$(btrfs filesystem show $device 2>/dev/null | grep -i uuid | cut -d: -f3 | sed -e 's/^ //')
+                new_uuid=\$(btrfs filesystem show $device 2>/dev/null | grep -i uuid: | cut -d: -f3 | sed -e 's/^ //')
                 if [ "$uuid" != "\$new_uuid" ] ; then
                     if [ ! -f "$FS_UUID_MAP" ]; then
                         echo "$uuid \$new_uuid $device" > "$FS_UUID_MAP"
