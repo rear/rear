@@ -1,4 +1,9 @@
-## Release Notes for Relax-and-Recover version 1.16.0
+---
+layout: default
+title: Relax-and-Recover Release Notes
+---
+
+## Release Notes for Relax-and-Recover version 1.16.1
 
 This document contains the release notes for the open source project
 Relax-and-Recover.
@@ -123,7 +128,7 @@ functionality:
 
 * cron job to check changes in disk layout and trigger `rear mkrescue` if required
 
-* VLAN tagging support
+* VLAN tagging support (*New!*)
 
 * Add timestamp of rear run with rc code to the syslog or messages file; sending mail report is also possible
 
@@ -137,9 +142,24 @@ defect fixes. Note that all releases are cumulative, and that all releases
 of Relax-and-Recover are compatible with previous versions of
 Relax-and-Recover, unless otherwise noted.
 
-### Version 1.16.0 (May 2014)
-
 The references pointing to *fix #nr* or *issue #nr* refer to our [issues tracker](https://github.com/rear/rear/issues)
+
+
+### Version 1.16.1 (June 2014)
+
+* The validate rule for `xarg bash -n` changed into `xarg -n bash -n` so that rear is working correctly with older bash version 3 as well. Especially required for SLES 10, SLES 11 and EPEL 5 (issue #410).
+
+* Adding an updated rear man page and the correct release notes to the 1.16.1 sub-release. In rear 1.16.0 these were forgotten.
+
+* Code style improvements (issue #409).
+
+* Improvements around btrfs file system recognition and re-creation (issues #408 and #415).
+
+* Important fix for grub2 with OpenSuse 13 (changed LOADER into LOADER_TYPE).
+
+* Added example prep script to verify if extlinux is present (issue #250) - this type of script could be cloned for other important executables in various workflows.
+
+### Version 1.16.0 (May 2014)
 
 As usual lots of bug fixes - see the issue tracker.
 
@@ -597,6 +617,12 @@ results. See
 
 
 ## Known Problems and Workarounds
+
+*Issue Description*: Is there a possibility to add btrfs subvolume to a rsync backup
+
+* Workaround:
+
+At present (release 1.16.1) there is no workaround in place. If you happen to know how this could be fixed then add your ideas to [issue #417](https://github.com/rear/rear/issues/417)
 
 *Issue Description*: with RHEL 4 systems extended partitions are recognized as primary partitions
 

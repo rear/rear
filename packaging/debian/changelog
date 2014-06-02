@@ -1,3 +1,10 @@
+rear (1.16.1-1) stable; urgency=low
+
+  * script validation now works for bash v3 and v4
+  * updated man page and release notes
+  * code styling improvements
+  * minor bug fixes
+
 rear (1.16-1) stable; urgency=high
 
   * new features
