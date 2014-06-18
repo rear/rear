@@ -39,12 +39,12 @@ fi
 
 NSRSERVER=$(cat $VAR_DIR/recovery/nsr_server )
 CLIENTNAME=$(hostname)
-POOLNAME=$( mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool" )
+POOLNAME="$( mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool" )"
 [[ -z "$POOLNAME" ]] && POOLNAME="Default"
 [[ -z "$RETENTION_TIME" ]] && RETENTION_TIME="1 day"
 
 Log "Saving files '${NSR_RESULT_FILES[@]}' with save"
-save -s $NSRSERVER -c $CLIENTNAME -b $POOLNAME -y "$RETENTION_TIME" "${NSR_RESULT_FILES[@]}" 1>&8
+save -s $NSRSERVER -c $CLIENTNAME -b "$POOLNAME" -y "$RETENTION_TIME" "${NSR_RESULT_FILES[@]}" 1>&8
 StopIfError "Could not save result files with save"
 
 # show the saved result files
