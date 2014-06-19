@@ -7,8 +7,8 @@ case $(url_scheme "$BACKUP_URL") in
         ;;
 esac
 
-if [ $BACKUP_TYPE == "incremental" ]; then
-	backuparchive=$restorearchive
+if [ "$BACKUP_TYPE" == "incremental" ]; then
+    backuparchive="$restorearchive"
 fi
 
 [ -s "$backuparchive" -o -d "$backuparchive" -o -f "$(dirname $backuparchive)/backup.splitted" ]
