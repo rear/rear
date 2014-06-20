@@ -121,6 +121,12 @@ removes any excuse for not having a disaster recovery solution implemented.
 
 Professional services and support are available.
 
+%pre
+if [ $1 -gt 1 ] ; then
+# during upgrade remove obsolete directories
+%{__rm} -rf %{_datadir}/rear/output/NETFS
+fi
+
 %prep
 %setup -q 
 
@@ -157,6 +163,9 @@ echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >re
 %{_sbindir}/rear
 
 %changelog
+* Fri Jun 20 2014 Gratien D'haese <gratien.dhaese@gmail.com>
+- add %%pre section
+
 * Thu Apr 11 2013 Gratien D'haese <gratien.dhaese@gmail.com>
 - changes Source
 
