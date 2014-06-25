@@ -39,7 +39,7 @@ fi
 
 NSRSERVER=$(cat $VAR_DIR/recovery/nsr_server )
 CLIENTNAME=$(hostname)
-POOLNAME="$( mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool" )"
+POOLNAME="$( mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool" | head -1 )"
 [[ -z "$POOLNAME" ]] && POOLNAME="Default"
 [[ -z "$RETENTION_TIME" ]] && RETENTION_TIME="1 day"
 
