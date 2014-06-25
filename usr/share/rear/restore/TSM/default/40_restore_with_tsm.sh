@@ -20,7 +20,7 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     LogPrint "Restoring ${filespace}"
     TsmProcessed=""
     Log "Running 'dsmc restore ${filespace}* /mnt/local/$filespace -verbose -subdir=yes -replace=all -tapeprompt=no ${TSM_DSMC_RESTORE_OPTIONS[@]}'"
-    dsmc restore \""${filespace}"\" \""/mnt/local/${filespace}/"\"  \
+    LC_ALL=${LANG_RECOVER} dsmc restore \""${filespace}"\" \""/mnt/local/${filespace}/"\"  \
         -verbose -subdir=yes -replace=all \
         -tapeprompt=no "${TSM_DSMC_RESTORE_OPTIONS[@]}" | \
     while read Line ; do
