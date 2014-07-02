@@ -33,9 +33,9 @@ case "$scheme" in
     ;;
 
     (fish|ftp|ftps|hftp|http|https|sftp)
-    LogPrint "Copying files '${RESULT_FILES[@]}' to $scheme location"
-    Log "lftp -c open $OUTPUT_URL; mput ${RESULT_FILES[@]}"
-    lftp -c "open $OUTPUT_URL; mput ${RESULT_FILES[@]}"
+    LogPrint "Copying files '${RESULT_FILES[*]}' to $scheme location"
+    Log "lftp -c open $OUTPUT_URL; mput ${RESULT_FILES[*]}"
+    lftp -c "open $OUTPUT_URL; mput ${RESULT_FILES[*]}"
     StopIfError "Problem transferring files to $OUTPUT_URL"
     ;;
 
