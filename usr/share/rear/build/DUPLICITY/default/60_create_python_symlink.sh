@@ -4,9 +4,9 @@
     for py in $(find . -name "python*" )
     do 
         this_py=${py#./*}   # should be without ./
-        case $this_py in
-            python) break ;;
-            python2|python3) ln -sf $v $this_py python >&2 ;;
+        case "$this_py" in
+            "python") break ;;
+            "python2*"|"python3*") ln -sf $v "$this_py" python >&2 ;;
         esac
     done
 )

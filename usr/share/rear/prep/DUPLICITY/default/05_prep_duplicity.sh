@@ -23,6 +23,7 @@ COPY_AS_IS=(
 /etc/duply
 /etc/python
 /etc/python2.6
+/etc/python2.7
 /root/.duply
 /root/.gnupg
 /usr/lib/pymodules
@@ -36,6 +37,7 @@ COPY_AS_IS=(
 /usr/lib64/python2.6/site-packages/duplicity
 /usr/lib/python2.7
 /usr/lib64/python2.7
+/usr/lib/python3
 /usr/lib/python3.1
 /usr/share/pycentral-data
 /usr/share/pyshared
@@ -44,6 +46,8 @@ COPY_AS_IS=(
 /usr/share/python-apt
 /usr/share/python-support
 /var/lib/pycentral
+/usr/include/python2.6/pyconfig-64.h
+/usr/include/python2.7/pyconfig.h
 )
 
 LIBS=(
