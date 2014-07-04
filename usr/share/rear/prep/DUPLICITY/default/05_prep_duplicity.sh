@@ -25,6 +25,7 @@ COPY_AS_IS=(
 /etc/python2.6
 /etc/python2.7
 /root/.duply
+/root/.duplicity
 /root/.gnupg
 /usr/lib/pymodules
 /usr/lib/pyshared
@@ -54,6 +55,8 @@ LIBS=(
 "${LIBS[@]}"
 /usr/lib/librsync.so.1.0.2
 /usr/lib64/librsync.so.1
+/usr/lib64/libexpat.so.1
+/lib/libexpat.so.1
 /usr/lib/cruft
 )
 
