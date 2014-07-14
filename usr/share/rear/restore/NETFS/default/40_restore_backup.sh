@@ -39,7 +39,7 @@ case "$BACKUP_PROG" in
 		if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
 			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
 		fi
-		if [ $BACKUP_TYPE == "incremental" ]; then
+		if [ "$BACKUP_TYPE" == "incremental" ]; then
 			LAST="$restorearchive"
 			BASE=$(dirname "$restorearchive")/$(tar --test-label -f "$restorearchive")
 			if [ "$BASE" == "$LAST" ]; then
