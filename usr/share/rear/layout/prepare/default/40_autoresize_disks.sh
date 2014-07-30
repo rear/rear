@@ -31,18 +31,15 @@ while read type device size junk ; do
         resizeable_space=0
         available_space="$newsize"
         while read type part size start name flags name junk; do
-            case "$flags" in
-                (*boot*|*bios_grub*)
+            if [ -n "$(grep "^fs $name /boot\|^swap $name " "$LAYOUT_FILE")" ]; then
                     available_space=$(( available_space - ${size%B} ))
                     Log "Will not resize partition $name."
-                    ;;
-                (*)
+            else
                     partitions=( "${partitions[@]}" "$name|${size%B}" )
                     resizeable_space=$(( resizeable_space + ${size%B} ))
                     Log "Will resize partition $name."
-                    ;;
-            esac
-        done < <(grep "^part $device" "$LAYOUT_FILE" | grep -v $(grep "^swap $device" "$LAYOUT_FILE" | cut -d' ' -f 2) )
+            fi
+        done < <(grep "^part $device" "$LAYOUT_FILE" )
 
         if (( ${#partitions[@]} == 0 )) ; then
             Log "No resizeable partitions found."
