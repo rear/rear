@@ -59,7 +59,7 @@ if grep -q 'auto_recover' /proc/cmdline ; then
 	PS3="What do you want to do now ? "
 	select choice in "${choices[@]}"; do
 	    case "$REPLY" in
-		(1) less /var/log/rear/rear-`uname -n`.log;;
+		(1) less /var/log/rear/rear-$HOSTNAME.log;;
 		(2) echo "" > /etc/issue
 		    echo "" > /etc/motd
 		    break;;
