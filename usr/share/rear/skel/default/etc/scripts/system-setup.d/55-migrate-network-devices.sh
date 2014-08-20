@@ -91,7 +91,7 @@ if ! test $MANUAL_MAC_MAPPING ; then
 				choice="cancel"
 				break; # from the select
 			elif test $n -ge 0 -a $n -lt "${#NEW_DEVICES[@]}" ; then
-				unset "NEW_DEVICES[$n]"
+				NEW_DEVICES=( "${NEW_DEVICES[@]/$choice/}" )
 				break; # from the select
 			else
 				: invalid choice
