@@ -57,6 +57,7 @@ LIBS=(
 /usr/lib64/librsync.so.1
 /usr/lib64/libexpat.so.1
 /lib/libexpat.so.1
+/lib/x86_64-linux-gnu/libexpat.so.1
 /usr/lib/cruft
 )
 
