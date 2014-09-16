@@ -59,7 +59,7 @@ for dev_dir in /sys/class/net/* ; do
 	read mac junk <$dev_dir/address # read first word from address file
 	test "$mac" = "00:00:00:00:00:00" && continue # skip devices without MAC address
 	# get the driver(s), I care only about the first one, udev prints a list of DRIVER[S]=="module" lines
-	driver=( $( my_udevinfo -a -p /class/net/$dev | sed -ne '/DRIVER.*=".\+"/s/.*"\(.*\)".*/\1/p') )
+	driver=( $( my_udevinfo -a -p /sys/class/net/$dev | sed -ne '/DRIVER.*=".\+"/s/.*"\(.*\)".*/\1/p') )
 	# the array contains a list of drivers, but I care only about the first one
 
 	NEW_DEVICES=( "${NEW_DEVICES[@]}" "$dev $mac $driver" )
