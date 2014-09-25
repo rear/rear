@@ -15,7 +15,8 @@ lvm_version=$(get_version lvm version)
 [ "$lvm_version" ]
 BugIfError "Function get_version could not detect lvm version."
 
-if version_newer "$lvm_version" 2.02.73 ; then
+# RHEL 6.0 contains lvm with knowledge of --norestorefile (issue #462)
+if version_newer "$lvm_version" 2.02.71 ; then
     FEATURE_LVM_RESTOREFILE="y"
 fi
 
