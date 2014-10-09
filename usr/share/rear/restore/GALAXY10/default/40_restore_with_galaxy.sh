@@ -27,13 +27,14 @@ $GALAXY10_BACKUPSET
 [destinationpath]
 /mnt/local
 EOF
+
 if [ "x$GALAXY10_ZEIT" != "x" ]; then
 cat <<EOF >>$TMP_DIR/galaxy.restore.options
 [browseto]
 $GALAXY10_ZEIT
 EOF
 fi
-    
+
 # initialize variable
 jobstatus=Unknown
 
