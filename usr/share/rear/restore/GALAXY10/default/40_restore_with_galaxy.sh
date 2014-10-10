@@ -7,6 +7,7 @@
 StopIfError "Galaxy Backup Set not defined [GALAXY10_BACKUPSET=]."
 
 # create argument file
+
 cat <<EOF >$TMP_DIR/galaxy.restore.options
 $(test -r "$GALAXY10_Q_ARGUMENTFILE" && cat "$GALAXY10_Q_ARGUMENTFILE")
 [sourceclient]
@@ -16,6 +17,7 @@ $HOSTNAME
 [options]
 QR_PRESERVE_LEVEL
 QR_DO_NOT_OVERWRITE_FILE_ON_DISK
+$GALAXY10_PIT
 [dataagent]
 Q_LINUX_FS
 [backupset]
@@ -25,6 +27,13 @@ $GALAXY10_BACKUPSET
 [destinationpath]
 /mnt/local
 EOF
+
+if [ "x$GALAXY10_ZEIT" != "x" ]; then
+cat <<EOF >>$TMP_DIR/galaxy.restore.options
+[browseto]
+$GALAXY10_ZEIT
+EOF
+fi
 
 # initialize variable
 jobstatus=Unknown
