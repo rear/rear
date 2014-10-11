@@ -1,12 +1,9 @@
 # This file is part of Relax and Recover, licensed under the GNU General
 # Public License. Refer to the included LICENSE for full text of license.
 
-# 25_find_all_libs.sh (use 20 as with 10 we would loose our DUPLY_PROFILE setting)
+# 25_find_all_libs.sh 
+# This is to FInd Out Missing Librarys with Strace, if Strace isnt installed this is skipped
 
-# purpose is to see we're using duply wrapper and if there is an existing profile defined
-# if that is the case then we define an internal variable DUPLY_PROFILE="profile"
-# the profile is in fact a directory name containing the conf file and exclude file
-# we shall copy this variable, if defined, to our rescue.conf file
 which strace > /dev/null 2>&1
 if [ "x$BACKUP_PROG" == 'xduply' ] && [ $? -eq 0 ]; then
 
