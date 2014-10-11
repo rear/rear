@@ -4,8 +4,13 @@
 # 25_find_all_libs.sh 
 # This is to FInd Out Missing Librarys with Strace, if Strace isnt installed this is skipped
 
-which strace > /dev/null 2>&1
-if [ "x$BACKUP_PROG" == 'xduply' ] && [ $? -eq 0 ]; then
+which straces > /dev/null 2>&1
+STRACE_OK=$?
+which readlink > /dev/null 2>&1
+READLINK_OK=$?
+which file > /dev/null 2>&1
+FILE_OK=$?
+if [ "x$BACKUP_PROG" == 'xduply' ] && [ $STRACE_OK -eq 0 ] && [ $READLINK_OK -eq 0 ] && [ $FILE_OK -eq 0 ]; then
 
   FILES=`strace -Ff -e open duply $DUPLY_PROFILE status 2>&1 1>/dev/null|grep -v '= -1'|grep -i open|grep -v "open resumed" |cut -d \" -f 2|sort -u`
   for name in $FILES; do
