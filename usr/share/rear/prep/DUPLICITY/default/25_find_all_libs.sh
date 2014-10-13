@@ -5,13 +5,13 @@
 # This is to FInd Out Missing Librarys with Strace, if Strace isnt installed this is skipped
 
 #Check if Strace Readlink File Is avabile and Backup_PROG=Duply 
-which straces > /dev/null 2>&1
+which strace > /dev/null 2>&1
 STRACE_OK=$?
 which readlink > /dev/null 2>&1
 READLINK_OK=$?
 which file > /dev/null 2>&1
 FILE_OK=$?
-if [ "x$BACKUP_PROG" == 'xduply' ] && [ $STRACE_OK -eq 0 ] && [ $READLINK_OK -eq 0 ] && [ $FILE_OK -eq 0 ]; then
+if [ "x$BACKUP_PROG" == "xduply" ] && [ $STRACE_OK -eq 0 ] && [ $READLINK_OK -eq 0 ] && [ $FILE_OK -eq 0 ]; then
 
 # Find Out the File used by duply status
   FILES=`strace -Ff -e open duply $DUPLY_PROFILE status 2>&1 1>/dev/null|grep -v '= -1'|grep -i open|grep -v "open resumed" |cut -d \" -f 2|sort -u`
@@ -25,7 +25,7 @@ if [ "x$BACKUP_PROG" == 'xduply' ] && [ $STRACE_OK -eq 0 ] && [ $READLINK_OK -eq
 # Add the Lib
           LIBS=(
            "${LIBS[@]}"
-           $LIB
+           $name
           )
        fi
      fi 
