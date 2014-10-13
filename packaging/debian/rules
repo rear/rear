@@ -56,7 +56,8 @@ binary-indep: build
 		debian/rear/usr/share/man/man8/rear.8
 	
 	# --- end custom part for installing
-	
+
+	dh_installdeb
 	dh_installdocs README doc/*
 	dh_installchangelogs
 	# dh_installman usr/share/rear/doc/rear.8
