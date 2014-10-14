@@ -44,6 +44,8 @@ if [ "x$BACKUP_PROG" == "xduply" ] && [ $STRACE_OK -eq 0 ] && [ $READLINK_OK -eq
    # Filter if Duplicate Librarys have been added
    sorted_unique_LIBS=$(echo "${LIBS[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
    LIBS=$sorted_unique_LIBS
+   echo "++++++++++++++++++++++++++++++"
+   echo "${LIBS[@]}"| tr ' ' '\n')
    # Filter Duplicate Scripts
    sorted_unique_COPY_AS_IS=$(echo "${COPY_AS_IS[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
    COPY_AS_IS=$sorted_unique_COPY_AS_IS
