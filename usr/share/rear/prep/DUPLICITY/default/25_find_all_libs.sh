@@ -15,22 +15,36 @@ if [ "x$BACKUP_PROG" == "xduply" ] && [ $STRACE_OK -eq 0 ] && [ $READLINK_OK -eq
 
 # Find Out the File used by duply status
   FILES=`strace -Ff -e open duply $DUPLY_PROFILE status 2>&1 1>/dev/null|grep -v '= -1'|grep -i open|grep -v "open resumed" |cut -d \" -f 2|sort -u`
+
   for name in $FILES; do
-# Libs ar often Links, Solve the Links
-     if [ -f $name ] || [ -L $name ]; then
-       DATEI=`readlink -f $name`
-# Determinate if its a Lib
-       LIB=`file $DATEI|grep "shared object"|cut -d \: -f 1`
-       if [ "x$LIB" != "x" ]; then
-# Add the Lib
-          LIBS=(
-           "${LIBS[@]}"
-           $name
-          )
-       fi
-     fi 
+
+	# Libs ar often Links, Solve the Links
+	if [ -f $name ] || [ -L $name ]; then
+		DATEI=`readlink -f $name`
+		# Determinate if its a Lib
+       		LIB=`file $DATEI|grep "shared object"|cut -d \: -f 1`
+		#Determinate if its a Script
+       		SKRIPT_FILES=`file $DATEI|grep "script,"|cut -d \: -f 1`
+		# Add the Lib
+		if [ "x$LIB" != "x" ]; then
+          		LIBS=(
+           			"${LIBS[@]}"
+           			$name
+          		)
+       		fi
+		#Add Script
+       	if [ "x$SKRIPT_FILES" != "x" ]; then
+	 		COPY_AS_IS=(
+	   			"${COPY_AS_IS[@]}"
+           			$SKRIPT_FILES
+         		)
+       		fi
+     	fi 
    done
-# Filter if Duplicate Librarys have been added
-sorted_unique_LIBS=$(echo "${LIBS[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
-LIBS=$sorted_unique_LIBS
+   # Filter if Duplicate Librarys have been added
+   sorted_unique_LIBS=$(echo "${LIBS[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+   LIBS=$sorted_unique_LIBS
+   # Filter Duplicate Scripts
+   sorted_unique_COPY_AS_IS=$(echo "${COPY_AS_IS[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+   COPY_AS_IS=$sorted_unique_COPY_AS_IS
 fi
