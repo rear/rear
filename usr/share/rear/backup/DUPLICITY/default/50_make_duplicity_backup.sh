@@ -11,7 +11,7 @@ if [ "$BACKUP_PROG" = "duply" ] && has_binary duply; then
     StopIfError "Duply profile $DUPLY_PROFILE backup returned errors - see $LOGFILE"
 
     LogPrint "The last full backup taken with duply/duplicity was:"
-    LogPrint "$( tail -50 $LOGFILE | grep "Last full backup date:" )"
+    LogPrint "$( tail -50 $LOGFILE | grep 'Last full backup date:' )"
 fi
 
 

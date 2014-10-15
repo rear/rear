@@ -13,7 +13,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] && has_binary duply; then
     # we found the duply program; check if we can find a profile defined
     if [[ -z "$DUPLY_PROFILE" ]]; then
         # no profile pre-set; let's try to find one
-        DUPLY_PROFILE=$( find /etc/duply /root/.duply -name conf )
+        DUPLY_PROFILE=$( find /etc/duply /root/.duply -name conf 2>&1)
         [[ -z "$DUPLY_PROFILE" ]] && return
 
         # there could be more then one profile present - select where SOURCE='/'
@@ -49,6 +49,6 @@ if [ "$BACKUP_PROG" = "duplicity" ] && has_binary duply; then
     LogIfError "Could not add DUPLY_PROFILE variable to rescue.conf"
 
     LogPrint "The last full backup taken with duply/duplicity was:"
-    LogPrint "$( tail -10 $LOGFILE | grep Full )"
+    LogPrint "$( tail -50 $LOGFILE | grep 'Last full backup date:' )"
 fi
 
