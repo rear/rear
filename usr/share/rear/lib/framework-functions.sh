@@ -35,13 +35,13 @@ function Source() {
 			# step-by-step mode or breakpoint if needed
 			# usage of the external variable BREAKPOINT:
 			# sudo BREAKPOINT="*foo*" rear mkrescue
-			[[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == $BREAKPOINT ) ]] && read -p "Press ENTER to include '$1' ..." 2>&1
+			[[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ) ]] && read -p "Press ENTER to include '$1' ..." 2>&1
 
 			Log "Including ${1##$SHARE_DIR/}"
 			test "$DEBUGSCRIPTS" && set -x
 			. "$1"
 			test "$DEBUGSCRIPTS" && set +x
-			[[ "$BREAKPOINT" && "$relname" == $BREAKPOINT ]] && read -p "Press ENTER to continue ..." 2>&1
+			[[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] && read -p "Press ENTER to continue ..." 2>&1
 		fi
 	else
 		Debug "Skipping $1 (file not found or empty)"
