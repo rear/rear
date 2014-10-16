@@ -18,7 +18,8 @@ Log "$SED_SCRIPT"
 pushd /mnt/local >&8
 # the funny [] around the first letter make sure that shopt -s nullglob removes this file from the list if it does not exist
 # the files without a [] are mandatory, like fstab
-for file in 	[b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/{grub.conf,menu.lst,device.map} \
+for file in 	[b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* \
+		[b]oot/grub/{grub.conf,grub.cfg,menu.lst,device.map} \
 		[b]oot/grub2/{grub.conf,grub.cfg,menu.lst,device.map} \
 		[e]tc/sysconfig/grub [e]tc/sysconfig/bootloader \
 		[e]tc/lilo.conf \
