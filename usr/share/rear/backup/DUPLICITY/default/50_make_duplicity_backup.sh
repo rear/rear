@@ -6,11 +6,12 @@ if [ "$BACKUP_PROG" = "duply" ] && has_binary duply; then
     [[ -z "$DUPLY_PROFILE" ]] && return
 
     # a real profile was detected - check if we can talk to the remote site
+    LogPrint "Starting full backup with duply/duplicity"
     duply "$DUPLY_PROFILE" backup >&2   # output is going to logfile
     StopIfError "Duply profile $DUPLY_PROFILE backup returned errors - see $LOGFILE"
 
     LogPrint "The last full backup taken with duply/duplicity was:"
-    LogPrint "$( tail -10 $LOGFILE | grep Full )"
+    LogPrint "$( tail -50 $LOGFILE | grep 'Last full backup date:' )"
 fi
 
 
