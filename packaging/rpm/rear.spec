@@ -64,9 +64,9 @@ Requires: genisoimage
 Requires: mkisofs
 %endif
 ###
-%if %{!?sles_version:1}0
-Requires: lsb
-%endif
+#%if %{!?sles_version:1}0
+#Requires: lsb
+#%endif
 %endif
 
 %if %{?mandriva_version:1}0
