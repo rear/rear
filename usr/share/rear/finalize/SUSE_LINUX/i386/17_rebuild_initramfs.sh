@@ -13,6 +13,21 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 	#      could be done better, but might not be worth the risk
 
 	# set INITRD_MODULES from recovered system
+   if test -r /mnt/local/etc/sysconfig/kernel
+   then # In SLE12 RC2 /etc/sysconfig/kernel is an useless stub that contains only one line
+        #   INITRD_MODULES=""
+        # Since SLE12 RC3 /etc/sysconfig/kernel does no longer exist, see bnc#895084 where
+        # in particular https://bugzilla.novell.com/show_bug.cgi?id=895084#c7 reads
+        #   Best would be to add something like that:
+        #   # This replaces old INIRD_MODULES= variable from /etc/sysconfig/kernel
+        #   # force_drivers+="kernel_module1 kernel_module2 ..."
+        #   in our /etc/dracut.conf.d/01-dist.conf file.
+        #   And a similar comment to /etc/sysconfig/kernel
+        #   # DO NOT USE THIS FILE ANYMORE. IF YOU WANT TO ENFORCE LOADING
+        #   # SPECIFIC KERNEL MODULES SEE /etc/dracut.conf.d/01-dist.conf
+        #   # and the dracut (--force-drivers paramter) manpage.
+        # Because the comment above reads "probably not required" at least for now
+        # there is no support for force_drivers in /etc/dracut.conf.d/01-dist.conf.
 	source /mnt/local/etc/sysconfig/kernel
 	StopIfError "Could not source '/mnt/local/etc/sysconfig/kernel'"
 
@@ -32,14 +47,15 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 	Log "New INITRD_MODULES='${OLD_INITRD_MODULES[@]} ${NEW_INITRD_MODULES[@]}'"
 
 	sed -i -e '/^INITRD_MODULES/s/^.*$/#&\nINITRD_MODULES="'"${OLD_INITRD_MODULES[*]} ${NEW_INITRD_MODULES[*]}"'"/' /mnt/local/etc/sysconfig/kernel
+   fi
 
 	mount -t proc none /mnt/local/proc
 	mount -t sysfs none /mnt/local/sys
 	if chroot /mnt/local /bin/bash --login -c "mkinitrd" >&2 ; then
-		LogPrint "Updated initramfs with new drivers for this system."
+		LogPrint "Recreated initramfs (mkinitrd)."
 	else
 		LogPrint "WARNING !!!
-initramfs creation failed, please check '$LOGFILE' to see the error
+initramfs creation (mkinitrd) failed, please check '$LOGFILE' to see the error
 messages in detail and decide yourself, wether the system will boot or not.
 "
 	fi
