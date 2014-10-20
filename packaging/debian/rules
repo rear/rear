@@ -25,7 +25,7 @@ clean:
 binary-indep: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k
+	dh_prep
 	dh_installdirs
 	
 	# The DESTDIR Has To Be Exactly debian/rear
