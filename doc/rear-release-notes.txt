@@ -113,6 +113,10 @@ functionality:
   can be forced via the variable *USE_DHCLIENT=yes* (define in _/etc/rear/local.conf_).
   It is also possible to force DHCP at boot time with kernel option `dhcp`
 
+* By default, if DHCP is used, static network configuration is ignored.
+  Override this with *USE_STATIC_NETWORKING=yes* in
+  _/etc/rear/local.conf_.
+
 * Save layout and compare layouts for easy automation of making
   Relax-and-Recover snapshots (checklayout option)
 
@@ -144,6 +148,10 @@ Relax-and-Recover, unless otherwise noted.
 
 The references pointing to *fix #nr* or *issue #nr* refer to our [issues tracker](https://github.com/rear/rear/issues)
 
+
+### Version 1.17.0
+
+* A new configuration option, `USE_STATIC_NETWORKING=y`, will cause statically configured network settings to be applied even when `USE_DHCLIENT` is in effect.
 
 ### Version 1.16.1 (June 2014)
 
