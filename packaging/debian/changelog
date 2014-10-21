@@ -10,43 +10,43 @@ rear (1.16-1) stable; urgency=high
   * new features
   * lots of bug fixes
 
- -- Gratien Dhaese <gratien.dhaese@gmail.com> Sun 04 May 2014 21:00:36 +0100
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Sun, 04 May 2014 21:00:36 +0100
 rear (1.15-1) stable; urgency=high
 
   * new features
   * bugfixes
 
- -- Gratien Dhaese <gratien.dhaese@gmail.com> Wed, 09 Oct 2013 16:15:21 +0100
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Wed, 09 Oct 2013 16:15:21 +0100
 rear (1.14-1) stable; urgency=high
 
   * major bugfixes
 
- -- Dag Wieers <dag@wieers.com> Mon, 25 Jun 2012 12:46:21 +0100
+ -- Dag Wieers <dag@wieers.com>  Mon, 25 Jun 2012 12:46:21 +0100
 rear (1.13.0-1) stable; urgency=low
 
   * new features
   * bugfixes
 
- -- Dag Wieers <dag@wieers.com> Mon, 25 Jun 2012 12:46:21 +0100
+ -- Dag Wieers <dag@wieers.com>  Mon, 25 Jun 2012 12:46:21 +0100
 rear (1.12.0-1) stable; urgency=low
 
   * new features
   * bugfixes
   * see http://sourceforge.net/projects/rear/files/rear/1.12/1.12.0/rear-release-notes.txt/download for details
 
- -- Schlomo Schapiro <rear-buildservice@schlomo.schapiro.org> Wed, 15 Feb 2012 11:02:03 +0100
+ -- Schlomo Schapiro <rear-buildservice@schlomo.schapiro.org>  Wed, 15 Feb 2012 11:02:03 +0100
 rear (1.11.0-11) stable; urgency=low
 
   * new features
   * bugfixes
 
- -- Schlomo Schapiro <rear-buildservice@schlomo.schapiro.org> Sun, 23 May 2011 17:47:47 +0100
+ -- Schlomo Schapiro <rear-buildservice@schlomo.schapiro.org>  Sun, 23 May 2011 17:47:47 +0100
 rear (1.10.0-1) stable; urgency=low
 
   * new features
   * bugfixes
 
- -- Schlomo Schapiro <rear-buildservice@schlomo.schapiro.org> Sun, 20 Mar 2011 11:55:54 +0100
+ -- Schlomo Schapiro <rear-buildservice@schlomo.schapiro.org>  Sun, 20 Mar 2011 11:55:54 +0100
 rear (1.7.23-1) stable; urgency=low
 
   * bugfixes, mostly for x86_64
