@@ -99,7 +99,7 @@ FindStorageDrivers() {
 		while read module junk; do
 			IsInArray "$module" "${STORAGE_DRIVERS[@]}" && echo $module
 		done < <(lsmod)
-		find ${1:-$VAR_DIR/recovery} -name storage_drivers -exec cat '{}' \;
+		find ${1:-$VAR_DIR/recovery} -name storage_drivers -exec cat '{}' \; 2>/dev/null
 	} | grep -v -E '(loop)' | sort -u
 	# blacklist some more stuff here that came in the way on some systems
 	return 0
