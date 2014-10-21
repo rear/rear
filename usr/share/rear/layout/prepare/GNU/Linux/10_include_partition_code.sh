@@ -178,7 +178,12 @@ EOF
         # the start of the next partition is where this one ends
         # We can't use $end because of extended partitions
         # extended partitions have a small actual size as reported by sysfs
-        start=$(( start + ${size%B} ))
+        # in front of a logical partition should be at least 512B empty space
+        if [ -n "$MIGRATION_MODE" ] && [ "$name" = "logical" ] ; then
+            start=$(( start + ${size%B} + block_size ))
+        else
+            start=$(( start + ${size%B} ))
+        fi
 
         # round starting size to next multiple of 4096
         # 4096 is a good match for most device's block size
