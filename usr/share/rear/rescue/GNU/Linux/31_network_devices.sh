@@ -37,7 +37,7 @@ EOT
 # add a line at the top of netscript to skip if dhclient will be used
 cat - <<EOT > $netscript
 # if USE_DHCLIENT=y then use DHCP instead and skip 60-network-devices.sh
-[[ ! -z "\$USE_DHCLIENT" ]] && return
+[[ ! -z "\$USE_DHCLIENT" && -z "\$USE_STATIC_NETWORKING" ]] && return
 # if IPADDR=1.2.3.4 has been defined at boot time via ip=1.2.3.4 then configure 
 if [[ "\$IPADDR" ]] && [[ "\$NETMASK" ]] ; then
     device=\${NETDEV:-eth0}
