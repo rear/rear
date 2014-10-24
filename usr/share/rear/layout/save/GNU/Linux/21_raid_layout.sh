@@ -18,6 +18,7 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
             mdadm --misc --detail $device > $TMP_DIR/mdraid
 
             # Gather information
+            metadata=$( grep "Version" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
             level=$( grep "Raid Level" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
             uuid=$( grep "UUID" $TMP_DIR/mdraid | tr -d " " | cut -d "(" -f "1" | cut -d ":" -f "2-")
             layout=$( grep "Layout" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
@@ -56,6 +57,7 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
             done
 
             # prepare for output
+            metadata=" metadata=$metadata"
             level=" level=$level"
             ndevices=" raid-devices=$ndevices"
             uuid=" uuid=$uuid"
@@ -84,7 +86,7 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
                 name=""
             fi
 
-            echo "raid ${device}${level}${ndevices}${uuid}${name}${sparedevices}${layout}${chunksize}${devices}"
+            echo "raid ${device}${metadata}${level}${ndevices}${uuid}${name}${sparedevices}${layout}${chunksize}${devices}"
 
             extract_partitions "$device"
         done < <(mdadm --detail --scan --config=partitions)
