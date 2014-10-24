@@ -4,7 +4,7 @@ define_HPSSACLI  # Call function to find proper Smart Storage Administrator CLI 
 
 create_smartarray() {
     local sa slotnr junk
-    read sa slotnr junk < <(grep "^smartarray ${1#sma:}" "$LAYOUT_FILE")
+    read sa slotnr junk < <(grep "^smartarray ${1#sma:} " "$LAYOUT_FILE")
     cat <<EOF >>"$LAYOUT_CODE"
 LogPrint "Clearing HP SmartArray controller $slotnr"
 if ! $HPSSACLI ctrl slot=$slotnr delete forced >&8; then
@@ -15,7 +15,7 @@ EOF
 
 create_logicaldrive() {
     local ld disk path options
-    read ld disk path options < <(grep "^logicaldrive ${1#ld:}" "$LAYOUT_FILE")
+    read ld disk path options < <(grep "^logicaldrive ${1#ld:} " "$LAYOUT_FILE")
 
     local slotnr=${path%%|*}
     local arrayname=${path%|*}

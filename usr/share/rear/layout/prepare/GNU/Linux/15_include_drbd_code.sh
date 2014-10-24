@@ -3,7 +3,7 @@
 # This requires DRBD configuration present!
 create_drbd() {
     local drbd disk resource device junk
-    read drbd disk resource device junk < <(grep "^drbd $1" "$LAYOUT_FILE")
+    read drbd disk resource device junk < <(grep "^drbd $1 " "$LAYOUT_FILE")
 
     cat >> "$LAYOUT_CODE" <<EOF
 if [ ! -e /proc/drbd ] ; then

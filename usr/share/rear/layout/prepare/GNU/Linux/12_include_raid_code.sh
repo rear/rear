@@ -20,7 +20,7 @@ fi
 
 create_raid() {
     local raid device options
-    read raid device options < <(grep "^raid $1" "$LAYOUT_FILE")
+    read raid device options < <(grep "^raid $1 " "$LAYOUT_FILE")
 
     local mdadmcmd="mdadm --create $device --force"
 

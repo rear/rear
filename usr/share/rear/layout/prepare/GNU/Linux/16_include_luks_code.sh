@@ -2,7 +2,7 @@
 
 create_crypt() {
     local crypt device encdevice options
-    read crypt device encdevice options < <(grep "^crypt $1" "$LAYOUT_FILE")
+    read crypt device encdevice options < <(grep "^crypt $1 " "$LAYOUT_FILE")
 
     local name=${device#/dev/mapper/}
 
