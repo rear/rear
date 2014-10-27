@@ -451,6 +451,22 @@ get_device_name() {
         fi
     fi
 
+    ### Translate device name to mapper name. ex: vg/lv -> mapper/vg-lv
+    if [[ "$name" =~ ^mapper/ ]]; then
+        echo "/dev/$name"
+        return 0
+    fi
+    if my_dm=`readlink /dev/$name`; then
+       for mapper_dev in /dev/mapper/*; do
+           if mapper_dm=`readlink $mapper_dev`; then
+              if [ "$my_dm" = "$mapper_dm" ]; then
+                 echo $mapper_dev
+                 return 0
+              fi
+           fi
+       done
+    fi
+
     ### handle cciss sysfs naming
     name=${name//!//}
 
