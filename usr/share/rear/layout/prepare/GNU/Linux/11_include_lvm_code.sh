@@ -23,7 +23,7 @@ fi
 # Create a new PV.
 create_lvmdev() {
     local lvmdev vgrp device uuid junk
-    read lvmdev vgrp device uuid junk < <(grep "^lvmdev.*${1#pv:}" "$LAYOUT_FILE")
+    read lvmdev vgrp device uuid junk < <(grep "^lvmdev.*${1#pv:} " "$LAYOUT_FILE")
 
     (
     echo "LogPrint \"Creating LVM PV $device\""
@@ -60,7 +60,7 @@ create_lvmgrp() {
     local lvmgrp vgrp extentsize junk
     read lvmgrp vgrp extentsize junk < <(grep "^lvmgrp $1 " "$LAYOUT_FILE")
 
-    local -a devices=($(grep "^lvmdev $vgrp" "$LAYOUT_FILE" | cut -d " " -f 3))
+    local -a devices=($(grep "^lvmdev $vgrp " "$LAYOUT_FILE" | cut -d " " -f 3))
 
 cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Creating LVM VG ${vgrp#/dev/}"
