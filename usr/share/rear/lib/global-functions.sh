@@ -87,7 +87,7 @@ output_path() {
     local scheme=$1
     local path=$2
     case $scheme in
-       (tape)  # no path for tape required
+       (null|tape)  # no path for tape required
            path=""
            ;;
        (file)  # type file needs a local path (must be mounted by user)
@@ -111,7 +111,7 @@ mount_url() {
     ### Generate a mount command
     local mount_cmd
     case $(url_scheme $url) in
-        (tape|file|rsync|fish|ftp|ftps|hftp|http|https|sftp)
+        (null|tape|file|rsync|fish|ftp|ftps|hftp|http|https|sftp)
             ### Don't need to mount anything for these
             return 0
             ;;
@@ -162,7 +162,7 @@ umount_url() {
     local mountpoint=$2
 
     case $(url_scheme $url) in
-        (tape|file|rsync|fish|ftp|ftps|hftp|http|https|sftp)
+        (null|tape|file|rsync|fish|ftp|ftps|hftp|http|https|sftp)
             ### Don't need to umount anything for these
             return 0
             ;;
