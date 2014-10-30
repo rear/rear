@@ -13,9 +13,9 @@ fi
 mkdir -p /var/lib/drbd
 
 LogPrint "Creating DRBD resource $resource"
-dd if=/dev/zero of=$device bs=1M count=20
-sync
-drbdadm create-md $resource
+if ! drbdadm role $resource &>/dev/null ; then
+   drbdadm -- --force create-md $resource
+fi
 
 EOF
 
@@ -23,12 +23,16 @@ EOF
     read 2>&1 -p "Type \"yes\" if you want DRBD resource $resource to become primary: "
     if [ "$REPLY" = "yes" ] ; then
         cat >> "$LAYOUT_CODE" <<-EOF
-        drbdadm up $resource
-        drbdadm -- --overwrite-data-of-peer primary $resource
+        if ! drbdadm role $resource &>/dev/null ; then
+           drbdadm up $resource
+           drbdadm -- --overwrite-data-of-peer primary $resource
+        fi
 	EOF
     else
         cat >> "$LAYOUT_CODE" <<-EOF
-        drbdadm attach $resource
+        if ! drbdadm role $resource &>/dev/null ; then
+           drbdadm attach $resource
+        fi
 	EOF
 
         # Mark things which depend on this drbd resource as "done" (recursively).
