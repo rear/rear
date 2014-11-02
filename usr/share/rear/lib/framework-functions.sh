@@ -65,9 +65,36 @@ function SourceStage() {
     # remove the . in this case
     test "$scripts" = . && scripts=()
 
-    if test "${#scripts[@]}" -gt 0 ; then
+    custom_functions=( $(declare -F | cut -d " " -f 3 | grep "^cf--$stage--") )
+    if test "${#scripts[@]}" -gt 0 || test "${#custom_functions[@]}" -gt 0; then
         for script in ${scripts[@]} ; do
+	    todo_custom_functions=()
+            script_basename=`basename $script`
+
+            for custom_function in ${custom_functions[@]} ; do
+                if [[ "$custom_function" < "cf--$stage--$script_basename" ]]; then
+                   if [[ -n "$SIMULATE" ]] ; then
+                      LogPrint "Execute custom function $custom_function"
+                   else
+                      Log "Execute custom function $custom_function"
+                      eval $custom_function
+                      StopIfError "custom function $custom_function failed"
+                   fi
+                else
+                   todo_custom_functions=( ${todo_custom_functions[@]} $custom_function )
+                fi
+            done
+            custom_functions=( ${todo_custom_functions[@]} )
+
             Source $SHARE_DIR/$stage/"$script"
+        done
+        for custom_function in ${custom_functions[@]} ; do
+            if [[ -n "$SIMULATE" ]] ; then
+               LogPrint "Execute custom function $custom_function"
+            else
+               Log "Execute custom function $custom_function"
+               eval $custom_function
+            fi
         done
         Log "Finished running '$stage' stage in $((SECONDS-STARTSTAGE)) seconds"
     else
