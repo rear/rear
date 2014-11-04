@@ -16,10 +16,26 @@ function Source() {
     [[ ! -d "$1" ]]
     StopIfError "$1 is a directory, cannot source"
     if test -s "$1" ; then
+	# find pre/post script
+	script_number=$(basename $1 | cut -b1,2)
+	script_stage=$(echo $2 | tr '[:lower:]' '[:upper:]')
+	script_pre_name=PRE_${script_stage}_${script_number}_SCRIPT
+	script_post_name=POST_${script_stage}_${script_number}_SCRIPT
+	
         local relname="${1##$SHARE_DIR/}"
         if test "$SIMULATE" && expr "$1" : "$SHARE_DIR" >&8; then
             # simulate sourcing the scripts in $SHARE_DIR
+            if test "${!script_pre_name}" ; then
+	       script_array="$script_pre_name[@]"
+               LogPrint "Running $script_pre_name '${!script_array}'"
+            fi
+
             LogPrint "Source $relname"
+
+            if test "${!script_post_name}" ; then
+	       script_array="$script_post_name[@]"
+               LogPrint "Running $script_post_name '${!script_array}'"
+            fi
         else
             # step-by-step mode or breakpoint if needed
             # usage of the external variable BREAKPOINT:
@@ -28,7 +44,21 @@ function Source() {
 
             Log "Including ${1##$SHARE_DIR/}"
             test "$DEBUGSCRIPTS" && set -x
+
+            if test "${!script_pre_name}" ; then
+	       script_array="$script_pre_name[@]"
+               Log "Running $script_pre_name '${!script_array}'"
+               eval "${!script_array}"
+            fi
+
             . "$1"
+
+            if test "${!script_post_name}" ; then
+	       script_array="$script_post_name[@]"
+               Log "Running $script_post_name '${!script_array}'"
+               eval "${!script_array}"
+            fi
+
             test "$DEBUGSCRIPTS" && set +x
             [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] && read -p "Press ENTER to continue ..." 2>&1
         fi
@@ -67,7 +97,7 @@ function SourceStage() {
 
     if test "${#scripts[@]}" -gt 0 ; then
         for script in ${scripts[@]} ; do
-            Source $SHARE_DIR/$stage/"$script"
+            Source $SHARE_DIR/$stage/"$script" $stage
         done
         Log "Finished running '$stage' stage in $((SECONDS-STARTSTAGE)) seconds"
     else
