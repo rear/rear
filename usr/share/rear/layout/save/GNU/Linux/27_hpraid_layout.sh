@@ -1,3 +1,6 @@
+# This file is part of Relax and Recover, licensed under the GNU General
+# Public License. Refer to the included LICENSE for full text of license.
+
 # Collect HP Smartarray information
 
 define_HPSSACLI  # call function to find proper Smart Storage Administrator CLI command - define $HPSSACLI var
@@ -11,6 +14,9 @@ PROGS=( "${PROGS[@]}" $HPSSACLI )
 eval $(grep ON_DIR= $(get_path $HPSSACLI))
 COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR" )
 
+# determine the version of HPSSACLI - required to know for a bug with version '9.30.15' (see issue #455)
+HPSSACLI_VERSION=$( get_version $HPSSACLI version )
+
 Log "Saving HP SmartArray configuration."
 
 ### In case we have a controller problem, the $HPSSACLI output may not reflect
@@ -22,15 +28,18 @@ if (( $? != 1 )); then
     Error "One or more HP SmartArray controllers have errors, fix this first !"
 fi
 
-## with newer version of $HPSSACLI the order logicaldrive and array could be wrong
-## therefore, we build the input file to process more prudent
-##$HPSSACLI ctrl all show config > $TMP_DIR/hpraid-config.tmp
-for slotnr in $( $HPSSACLI controller all show | grep Slot | sed -r 's/.*Slot ([0-9]).*/\1/' )
-do
-    # we want the order as Slot, array, logicaldrive, physicaldrive
-    $HPSSACLI controller slot=$slotnr ld all show >> $TMP_DIR/hpraid-config.tmp
-    $HPSSACLI controller slot=$slotnr pd all show | grep physicaldrive >> $TMP_DIR/hpraid-config.tmp
-done
+echo "$HPSSACLI_VERSION" | grep -q '9.30.15'
+if [[ $? -eq 0 ]]; then
+    # see issue #455 - due to a bug in hpssacl version 9.30.15 we need to list it different
+    for slotnr in $( $HPSSACLI controller all show | grep Slot | sed -r 's/.*Slot ([0-9]).*/\1/' )
+    do
+        # we want the order as Slot, array, logicaldrive, physicaldrive (see issue #208)
+        $HPSSACLI controller slot=$slotnr ld all show >> $TMP_DIR/hpraid-config.tmp
+        $HPSSACLI controller slot=$slotnr pd all show | grep physicaldrive >> $TMP_DIR/hpraid-config.tmp
+    done
+else
+    $HPSSACLI ctrl all show config > $TMP_DIR/hpraid-config.tmp
+fi
 
 
 # a list of all non-empty controllers
