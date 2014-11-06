@@ -1,0 +1,9 @@
+[Unit]
+Description=SEPsesam client
+After=network.target
+ConditionPathExists=/etc/sesam2000.ini
+
+[Service]
+Type=forking
+ExecStart=/opt/sesam/bin/sesam/sm_main start
+ExecStop=/opt/sesam/bin/sesam/sm_main stop
