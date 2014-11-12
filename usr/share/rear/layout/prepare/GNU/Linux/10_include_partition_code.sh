@@ -44,11 +44,18 @@ create_disk() {
     StopIfError "Disk $disk has size $disk_size, unable to continue."
 
     cat >> "$LAYOUT_CODE" <<EOF
-Log "Stop mdadm and pause udev"
 if [ -d "/dev/md" ] && ls /dev/md?* &>/dev/null; then
+    Log "Stop mdadm and pause udev"
     mdadm --stop /dev/md?* >&2
+
+    type -p udevadm >/dev/null
+    if [ $? -eq 0 ]; then
+        udevadm control --stop-exec-queue
+    else
+        udevcontrol stop_exec_queue
+    fi
 fi
-type -p udevadm >/dev/null && udevadm control --stop-exec-queue || udevcontrol stop_exec_queue
+
 Log "Erasing MBR of disk $disk"
 dd if=/dev/zero of=$disk bs=512 count=1
 sync
@@ -57,8 +64,16 @@ EOF
     create_partitions "$disk" "$label"
 
     cat >> "$LAYOUT_CODE" <<EOF
-Log "Resume udev"
-type -p udevadm >/dev/null && udevadm control --start-exec-queue || udevcontrol start_exec_queue
+if [ -d "/dev/md" ] && ls /dev/md?* &>/dev/null; then
+    Log "Resume udev"
+    type -p udevadm >/dev/null
+        if [ $? -eq 0 ]; then
+        udevadm control --stop-exec-queue
+    else
+        udevcontrol stop_exec_queue
+    fi
+fi
+
 # Wait some time before advancing
 sleep 10
 
