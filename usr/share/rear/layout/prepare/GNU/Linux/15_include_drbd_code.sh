@@ -29,12 +29,6 @@ EOF
         fi
 	EOF
     else
-        cat >> "$LAYOUT_CODE" <<-EOF
-        if ! drbdadm role $resource &>/dev/null ; then
-           drbdadm attach $resource
-        fi
-	EOF
-
         # Mark things which depend on this drbd resource as "done" (recursively).
         mark_tree_as_done "$disk"
         EXCLUDE_RESTORE=( "${EXCLUDE_RESTORE[@]}" "$disk" )
