@@ -104,6 +104,8 @@ create_lvmvol() {
 
     (
     echo "LogPrint \"Creating LVM volume ${vgrp#/dev/}/$lvname\""
-    echo "lvm lvcreate -l $nrextents -n ${lvname} ${vgrp#/dev/} >&2"
+    #echo "lvm lvcreate -l $nrextents -n ${lvname} ${vgrp#/dev/} >&2"
+    # remove the '>&2' from lvcreate as sometimes we get an question like "Wipe it? [y/n]"
+    echo "lvm lvcreate -l $nrextents -n ${lvname} ${vgrp#/dev/}"
     ) >> "$LAYOUT_CODE"
 }
