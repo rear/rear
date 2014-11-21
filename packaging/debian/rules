@@ -2,6 +2,9 @@
 # Sample debian/rules that uses debhelper.
 # GNU copyright 1997 to 1999 by Joey Hess.
 
+# to build on debian/ubuntu we need the following package:
+# sudo apt-get install debhelper
+
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
