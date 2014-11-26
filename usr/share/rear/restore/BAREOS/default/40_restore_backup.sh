@@ -97,7 +97,10 @@ else
     then
 	# restore most recent backup automatically
 
-        BAREOS_CLIENT=$(grep $(hostname) /etc/bareos/bareos-fd.conf | awk '/-fd/ {print $3}' )
+        if [ -z "$BAREOS_CLIENT" ]
+        then
+                BAREOS_CLIENT=$(grep $(hostname -s) /etc/bareos/bareos-fd.conf | awk '/-fd/ {print $3}' )
+        fi
 
         echo "restore client=$BAREOS_CLIENT where=/mnt/local select all done
 
