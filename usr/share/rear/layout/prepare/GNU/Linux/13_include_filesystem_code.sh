@@ -2,12 +2,12 @@
 
 create_fs() {
     local fs device mp fstype uuid label options
+    device=${1#fs:}
     ## mp: mount point
-    read fs device mp fstype uuid label options < <(grep "^fs.* ${1#fs:} " "$LAYOUT_FILE")
+    read fs device mp fstype uuid label options < <( grep "^fs.* $device " "$LAYOUT_FILE" )
 
     label=${label#label=}
     uuid=${uuid#uuid=}
-
 
     case "$fstype" in
         ext*)
@@ -104,23 +104,21 @@ EOF
             if [ -n "$uuid" ] ; then
                 # Problem with btrfs is that UUID cannot be set during mkfs! So, we must map it and
                 # change later the /etc/fstab, /boot/grub/menu.lst, etc.
-                cat >> "$LAYOUT_CODE" <<-EOF
-                new_uuid=\$(btrfs filesystem show $device 2>/dev/null | grep -i uuid: | cut -d: -f3 | sed -e 's/^ //')
-                if [ "$uuid" != "\$new_uuid" ] ; then
-                    if [ ! -f "$FS_UUID_MAP" ]; then
-                        echo "$uuid \$new_uuid $device" > "$FS_UUID_MAP"
-                    else
-                        grep -q "${uuid}" "$FS_UUID_MAP"
-                        if [[ \$? -eq 0 ]]; then
-                            # Required when we restart rear recover (via menu) - UUID changed again.
-                            old_uuid=\$(grep ${uuid} $FS_UUID_MAP | tail -1 | awk '{print \$2}')
-                            SED_SCRIPT=";/${uuid}/s/\${old_uuid}/\${new_uuid}/g"
-                            sed -i "\$SED_SCRIPT" "$FS_UUID_MAP"
-                        else
-                            echo "$uuid \$new_uuid $device" >> $FS_UUID_MAP
-                        fi
-                    fi
-                fi # end of [ "$uuid" != "\$new_uuid" ]
+                cat >> "$LAYOUT_CODE" <<EOF
+new_uuid=\$( btrfs filesystem show $device 2>/dev/null | grep -o 'uuid: .*'| cut -d ':' -f 2 | tr -d '[:space:]' )
+if [ "$uuid" != "\$new_uuid" ] ; then
+    # The following grep command intentionally also
+    # fails when there is not yet a FS_UUID_MAP file
+    # and then the FS_UUID_MAP file will be created:
+    if ! grep -q "${uuid}" "$FS_UUID_MAP" ; then
+        echo "$uuid \$new_uuid $device" >> $FS_UUID_MAP
+    else
+        # Required when we restart rear recover (via menu) - UUID changed again.
+        old_uuid=\$(grep ${uuid} $FS_UUID_MAP | tail -1 | awk '{print \$2}')
+        SED_SCRIPT=";/${uuid}/s/\${old_uuid}/\${new_uuid}/g"
+        sed -i "\$SED_SCRIPT" "$FS_UUID_MAP"
+    fi
+fi # end of [ "$uuid" != "\$new_uuid" ]
 EOF
             fi
             ;;
