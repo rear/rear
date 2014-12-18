@@ -4,6 +4,7 @@
 # especially the case for btrfs related file systems
 
 mount_fs() {
+    Log "Begin mount_fs( $@ )"
     local fs device mp fstype uuid label options
     ## mp: mount point
     read fs device mp fstype uuid label options < <(grep "^fs.* ${1#fs:} " "$LAYOUT_FILE")
@@ -26,7 +27,7 @@ mount_fs() {
     done
 
     if [ -n "$mountopts" ] ; then
-        mountopts=" -o $mountopts"
+        mountopts="-o $mountopts"
     fi
 
     echo "LogPrint \"Mounting filesystem $mp\"" >> "$LAYOUT_CODE"
@@ -38,7 +39,7 @@ mount_fs() {
             subvol=$(echo $value |  awk -F, '/subvol=/  { print $NF}') # empty or something like 'subvol=root'
             if [ -z "$subvol" ]; then
                 echo "mkdir -p /mnt/local$mp" >> "$LAYOUT_CODE"
-                echo "mount$mountopts $device /mnt/local$mp" >> "$LAYOUT_CODE"
+                echo "mount $mountopts $device /mnt/local$mp" >> "$LAYOUT_CODE"
             elif [ "$subvol" = "subvol=root" ]; then
                 (
                 echo "# btrfs subvolume 'root' is a special case"
@@ -49,7 +50,7 @@ mount_fs() {
                 echo "mkdir -p /mnt/local$mp"
                 echo "# umount subvol 0 as it will be remounted as /mnt/local"
                 echo "umount /mnt"
-                echo "mount$mountopts $device /mnt/local$mp"
+                echo "mount $mountopts $device /mnt/local$mp"
                 ) >> "$LAYOUT_CODE"
             else
                 (
@@ -61,16 +62,19 @@ mount_fs() {
                 # even its not yet mounted we can view it - see http://www.funtoo.org/BTRFS_Fun
                 echo "btrfs_id=\$(btrfs subvolume list /mnt/local$mp | tail -1 | awk '{print \$2}')"
                 echo "mountopts=\" -o subvolid=\${btrfs_id}\""
-                echo "mount\$mountopts $device /mnt/local$mp"
+                echo "mount \$mountopts $device /mnt/local$mp"
                 ) >> "$LAYOUT_CODE"
             fi
             ;;
         *)
             (
             echo "mkdir -p /mnt/local$mp"
-            echo "mount$mountopts $device /mnt/local$mp"
+            echo "mount $mountopts $device /mnt/local$mp"
             ) >> "$LAYOUT_CODE"
             ;;
     esac
 
+    # Return successfully:
+    Log "End mount_fs( $@ )"
+    true
 }
