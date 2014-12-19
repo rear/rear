@@ -13,9 +13,9 @@ btrfs_subvolumes_setup() {
     local snapshot_subvolumes_devices_and_paths snapshot_subvolume_device_and_path snapshot_subvolume_device snapshot_subvolume_path
     device=$1
     mountpoint=$2
+    # Empty device or mountpoint may indicate an error. In this case be verbose and inform the user:
     if test -z "$device" -o -z "$mountpoint" ; then
-        # Empty device or mountpoint may indicate an error. In this case be verbose and inform the user:
-        LogPrint "Empty device='$device' or mountpoint='$mountpoint', skipping btrfs_subvolumes_setup for it."
+        LogPrint "Empty device='$device' or mountpoint='$mountpoint' may indicate an error, skipping btrfs_subvolumes_setup for it."
         Log "Return 0 from btrfs_subvolumes_setup( $@ )"
         return 0
     fi
@@ -52,9 +52,9 @@ btrfs_subvolumes_setup() {
     # In particular a special btrfs default subvolume (i.e. when the btrfs default subvolume is not the toplevel/root subvolume)
     # is also listed as a normal subvolume so that also the subvolume that is later used as default subvolume is hereby created.
     while read dummy dummy dummy dummy subvolume_path junk ; do
+        # Empty subvolume_path may indicate an error. In this case be verbose and inform the user:
         if test -z "$subvolume_path" ; then
-            # Empty subvolume_path may indicate an error. In this case be verbose and inform the user:
-            LogPrint "btrfsnormalsubvol entry with empty subvolume_path for $device at $mountpoint may indicate an error."
+            LogPrint "btrfsnormalsubvol entry with empty subvolume_path for $device at $mountpoint may indicate an error, skipping subvolume setup for it."
             continue
         fi
         # When there is a non-empty subvolume_path, btrfs normal subvolume setup is needed:
@@ -119,13 +119,16 @@ btrfs_subvolumes_setup() {
     # After the btrfs default subvolume setup now the btrfs default subvolume is mounted and then it is possible
     # to mount the other btrfs normal subvolumes at their mountpoints in the tree of the mounted filesystems:
     while read dummy dummy subvolume_mountpoint subvolume_mount_options subvolume_path junk ; do
+        # Empty subvolume_mountpoint or subvolume_mount_options or subvolume_path may indicate an error.
+        # E.g. missing subvolume mount options result that the subvolume path is read into subvolume_mount_options and subvolume_path becomes empty.
+        # Therefore be verbose and inform the user:
         if test -z "$subvolume_mountpoint" -o -z "$subvolume_mount_options" -o -z "$subvolume_path" ; then
-            # Empty subvolume_mountpoint or subvolume_mount_options or subvolume_path may indicate an error.
-            # E.g. missing subvolume mount options result that the subvolume path is read into subvolume_mount_options and subvolume_path becomes empty.
-            # Therefore be verbose and inform the user:
-            LogPrint "btrfsmountedsubvolume entry with empty subvolume_mountpoint or subvolume_mount_options or subvolume_path for $device may indicate an error."
+            LogPrint "btrfsmountedsubvolume entry for $device where subvolume_mountpoint='$subvolume_mountpoint' or subvolume_mount_options='$subvolume_mount_options' or subvolume_path='$subvolume_path' is empty may indicate an error, skipping mounting it."
             continue
         fi
+        # To be on the safe side early skip mounting the root of the mounted filesystem tree because that is already mounted
+        # regardless that it should also be skipped later at "Do not mount when something is already mounted at the mountpoint":
+        test '/' = "$subvolume_mountpoint" && continue
         # Do not mount btrfs snapshot subvolumes:
         for snapshot_subvolume_device_and_path in $snapshot_subvolumes_devices_and_paths ; do
             # Assume $snapshot_subvolume_device_and_path is "/dev/sdX99,my/subvolume,path" then split
@@ -134,7 +137,7 @@ btrfs_subvolumes_setup() {
             # If a subvolume path contains space or tab characters it will break here
             # because space tab and newline are standard bash internal field separators ($IFS)
             # so that admins who use such characters for their subvolume paths get hereby
-            # an exercise in using fail-safe names and/or how to enhance standard bash scripts ;-)
+            # an exercise in using fail-safe names and/or how to enhance standard bash scripts:
             snapshot_subvolume_device=${snapshot_subvolume_device_and_path%%,*}
             snapshot_subvolume_path=${snapshot_subvolume_device_and_path#*,}
             if test "$device" = "$snapshot_subvolume_device" -a "$subvolume_path" = "$snapshot_subvolume_path" ; then
@@ -150,7 +153,7 @@ btrfs_subvolumes_setup() {
         recovery_system_mountpoint=$recovery_system_root$subvolume_mountpoint
         info_message="Mounting btrfs normal subvolume $subvolume_path on $device at $subvolume_mountpoint"
         # Do not mount when something is already mounted at the mountpoint.
-        # In particular do not mount again the already mounted btrfs default subvolume at the same mountpoint.
+        # In particular do not mount again the already mounted btrfs default subvolume or toplevel/root subvolume at the same mountpoint.
         # One same subvolume can be mounted at several mountpoints but one mountpoint cannot be used several times.
         Log "Mounting btrfs normal subvolume $subvolume_path on $device at $subvolume_mountpoint (if not something is already mounted there)."
         (

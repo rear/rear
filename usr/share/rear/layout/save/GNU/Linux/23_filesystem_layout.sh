@@ -87,29 +87,27 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                         tunefs="tune4fs"
                     fi
                 fi
-                uuid=$($tunefs -l $device | grep UUID | cut -d ":" -f 2 | tr -d " ")
-                label=$(e2label $device)
-                echo -n " uuid=$uuid label=$label"
+                uuid=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'UUID:' | cut -d ':' -f 2 )
+                echo -n " uuid=$uuid"
+                label=$( e2label $device )
+                echo -n " label=$label"
                 # options: blocks, fragments, max_mount, check_interval, reserved blocks, bytes_per_inode
-                blocksize=$($tunefs -l $device | grep "Block size" | tr -d " " | cut -d ":" -f "2")
-                max_mounts=$($tunefs -l $device | grep "Maximum mount count" | tr -d " " | cut -d ":" -f "2")
-                check_interval=$($tunefs -l $device | grep "Check interval" | cut -d "(" -f 1 | tr -d " " | cut -d ":" -f "2")
-
-                nr_blocks=$($tunefs -l $device | grep "Block count" | tr -d " " | cut -d ":" -f "2")
-                reserved_blocks=$($tunefs -l $device | grep "Reserved block count" | tr -d " " | cut -d ":" -f "2")
+                blocksize=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Blocksize:[0-9]*' | cut -d ':' -f 2 )
+                echo -n " blocksize=$blocksize"
+                nr_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Blockcount:[0-9]*' | cut -d ':' -f 2 )
+                reserved_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Reservedblockcount:[0-9]*' | cut -d ':' -f 2 )
                 reserved_percentage=$(( reserved_blocks * 100 / nr_blocks ))
-
-                nr_inodes=$($tunefs -l $device | grep "Inode count" | tr -d " " | cut -d ":" -f "2")
-                let "bytes_per_inode=$nr_blocks*$blocksize/$nr_inodes"
-
-                default_mount_options=$(tune2fs -l $device | grep -i "Default mount options" | cut -d ":" -f "2" | awk '{$1=$1};1' | tr ' ' ',' | grep -v none)
-
+                echo -n " reserved_blocks=$reserved_percentage%"
+                max_mounts=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Maximummountcount:[0-9]*' | cut -d ':' -f 2 )
+                echo -n " max_mounts=$max_mounts"
+                check_interval=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Checkinterval:[0-9]*' | cut -d ':' -f 2 )
                 # translate check_interval from seconds to days
                 let check_interval=$check_interval/86400
-
-                echo -n " blocksize=$blocksize reserved_blocks=$reserved_percentage%"
-                echo -n " max_mounts=$max_mounts check_interval=${check_interval}d"
+                echo -n " check_interval=${check_interval}d"
+                nr_inodes=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Inodecount:[0-9]*' | cut -d ':' -f 2 )
+                let "bytes_per_inode=$nr_blocks*$blocksize/$nr_inodes"
                 echo -n " bytes_per_inode=$bytes_per_inode"
+                default_mount_options=$( tune2fs -l $device | grep -i "Default mount options:" | cut -d ':' -f 2 | awk '{$1=$1};1' | tr ' ' ',' | grep -v none )
                 if [[ -n $default_mount_options ]]; then
                     echo -n " default_mount_options=$default_mount_options"
                 fi
@@ -228,16 +226,17 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 if test -z "$btrfs_subvolume_path" ; then
                     # When btrfs_subvolume_path is empty (in particular when the traditional mount command is used)
                     # try to find the mountpoint in /etc/fstab and try to read the subvol=... option value if exists
-                    # (using subvolid=... can fail because the subvolume ID can be different during system recovery):
+                    # (using subvolid=... can fail because the subvolume ID can be different during system recovery).
+                    # Because both "mount ... -o subvol=/path/to/subvolume" and "mount ... -o subvol=path/to/subvolume" work
+                    # the subvolume path can be specified with or without leading '/':
                     btrfs_subvolume_path=$( grep " $subvolume_mountpoint btrfs " /etc/fstab | grep -o 'subvol=[^ ]*' | cut -s -d '=' -f 2 )
                 fi
-                # Remove the leading '/' from btrfs_subvolume_path to avoid confusion because
-                # both "mount ... -o subvol=/path/to/subvolume" and "mount ... -o subvol=path/to/subvolume" work
-                # but the latter makes it more clear that the subvolume path is not an absolute path
-                # (in particular it is not a path in the currently mounted tree of filesystems) instead
-                # it is relative to the toplevel/root subvolume of the particular btrfs filesystem
+                # Remove leading '/' from btrfs_subvolume_path (except it is only '/') to have same syntax for all entries and
+                # without leading '/' is more clear that it is not an absolute path in the currently mounted tree of filesystems
+                # instead the subvolume path is relative to the toplevel/root subvolume of the particular btrfs filesystem
+                # (i.e. a subvolume path is an absolute path in the particular btrfs filesystem)
                 # see https://btrfs.wiki.kernel.org/index.php/Mount_options
-                btrfs_subvolume_path=${btrfs_subvolume_path#/}
+                test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
                 echo "btrfsmountedsubvolume $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
             fi
         done < <( eval $read_mounted_btrfs_subvolumes_command )

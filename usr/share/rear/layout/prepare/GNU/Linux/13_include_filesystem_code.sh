@@ -10,7 +10,7 @@ create_fs() {
     uuid=${uuid#uuid=}
 
     case "$fstype" in
-        ext*)
+        (ext*)
             # File system parameters.
             local blocksize="" reserved_blocks="" max_mounts="" check_interval="" default_mount_options=""
 
@@ -19,13 +19,13 @@ create_fs() {
                 name=${option%=*}
                 value=${option#*=}
                 case "$name" in
-                    blocksize)
+                    (blocksize)
                         blocksize=" -b $value"
                         ;;
-                    bytes_per_inode)
+                    (bytes_per_inode)
                         bytes_per_inode=" -i $value"
                         ;;
-                    reserved_blocks)
+                    (reserved_blocks)
                         ### reserved_blocks can be a number or a percentage.
                         if [[ ${value%\%} == ${value} ]] ; then
                             reserved_blocks=" -r $value"
@@ -33,13 +33,13 @@ create_fs() {
                             reserved_blocks=" -m ${value%\%}"
                         fi
                         ;;
-                    max_mounts)
+                    (max_mounts)
                         max_mounts=" -c $value"
                         ;;
-                    check_interval)
+                    (check_interval)
                         check_interval=" -i $value"
                         ;;
-                    default_mount_options)
+                    (default_mount_options)
                         default_mount_options=" -o $value"
                         ;;
                 esac
@@ -67,7 +67,7 @@ EOF
                 echo "$tunefs $tune2fsopts $device >&2" >> "$LAYOUT_CODE"
             fi
             ;;
-        xfs)
+        (xfs)
 cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
 mkfs.xfs -f $device
@@ -79,7 +79,7 @@ EOF
                 echo "xfs_admin -U $uuid $device >&2" >> "$LAYOUT_CODE"
             fi
             ;;
-        reiserfs)
+        (reiserfs)
 cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
 mkfs -t $fstype -q $device
@@ -91,7 +91,7 @@ EOF
                 echo "reiserfstune --uuid $uuid $device >&2" >> "$LAYOUT_CODE"
             fi
             ;;
-        btrfs)
+        (btrfs)
 cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
 # if $device is already mounted, skip
@@ -105,7 +105,7 @@ EOF
                 # Problem with btrfs is that UUID cannot be set during mkfs! So, we must map it and
                 # change later the /etc/fstab, /boot/grub/menu.lst, etc.
                 cat >> "$LAYOUT_CODE" <<EOF
-new_uuid=\$( btrfs filesystem show $device 2>/dev/null | grep -o 'uuid: .*'| cut -d ':' -f 2 | tr -d '[:space:]' )
+new_uuid=\$( btrfs filesystem show $device 2>/dev/null | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )
 if [ "$uuid" != "\$new_uuid" ] ; then
     # The following grep command intentionally also
     # fails when there is not yet a FS_UUID_MAP file
@@ -122,7 +122,7 @@ fi # end of [ "$uuid" != "\$new_uuid" ]
 EOF
             fi
             ;;
-        vfat)
+        (vfat)
 cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Creating $fstype-filesystem $mp on $device"
 mkfs.vfat $device
@@ -133,14 +133,14 @@ EOF
             if [ -n "$uuid" ]; then
                 # The UUID label of vfat is changed by recreating the fs, we must swap it.
                 cat >> "$LAYOUT_CODE" <<EOF
-                new_uuid=\$(blkid_uuid_of_device $device)
-                if [ "$uuid" != "\$new_uuid" ] ; then
-                    echo "$uuid \$new_uuid $device" >> "$FS_UUID_MAP"
-                fi
+new_uuid=\$(blkid_uuid_of_device $device)
+if [ "$uuid" != "\$new_uuid" ] ; then
+    echo "$uuid \$new_uuid $device" >> "$FS_UUID_MAP"
+fi
 EOF
             fi
             ;;
-        *)
+        (*)
 cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Creating filesystem ($fstype) $mp on $device"
 mkfs -t $fstype $device >&2

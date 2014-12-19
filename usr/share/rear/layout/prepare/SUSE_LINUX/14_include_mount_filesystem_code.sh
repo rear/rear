@@ -19,7 +19,7 @@ mount_fs() {
         value=${option#*=}
 
         case $name in
-            options)
+            (options)
                 ### Do not mount nodev, as chrooting later on would fail.
                 mountopts=${value//nodev/dev}
                 ;;
@@ -33,7 +33,7 @@ mount_fs() {
     echo "LogPrint \"Mounting filesystem $mp\"" >> "$LAYOUT_CODE"
 
     case $fstype in
-        btrfs)
+        (btrfs)
             # The following commands are basically the same as in the default/fallback case.
             # The explicite case for btrfs is only there to be prepared for special adaptions for btrfs related file systems.
             # Because the btrfs filesystem was created anew just before by the create_fs function in 13_include_filesystem_code.sh
@@ -54,7 +54,7 @@ mount_fs() {
             # Call the btrfs_subvolumes_setup function for the btrfs filesystem that was mounted above:
             btrfs_subvolumes_setup $device $mp $mountopts
             ;;
-        *)
+        (*)
             (
             echo "mkdir -p /mnt/local$mp"
             echo "mount $mountopts $device /mnt/local$mp"
