@@ -44,16 +44,16 @@ create_disk() {
     StopIfError "Disk $disk has size $disk_size, unable to continue."
 
     cat >> "$LAYOUT_CODE" <<EOF
-if [ -d "/dev/md" ] && ls /dev/md?* &>/dev/null; then
-    Log "Stop mdadm and pause udev"
-    mdadm --stop /dev/md?* >&2
+Log "Stop mdadm and pause udev"
+if grep -q md /proc/mdstat &>/dev/null; then
+    mdadm --stop -s >&2 || echo "stop mdadm failed"
+fi
 
-    type -p udevadm >/dev/null
-    if [ $? -eq 0 ]; then
-        udevadm control --stop-exec-queue
-    else
-        udevcontrol stop_exec_queue
-    fi
+type -p udevadm >/dev/null
+if [ $? -eq 0 ]; then
+    udevadm control --stop-exec-queue >&2 || echo "pause udev via udevadm failed"
+else
+    udevcontrol stop_exec_queue >&2 || echo "pause udev via udevcontrol failed"
 fi
 
 Log "Erasing MBR of disk $disk"
@@ -64,14 +64,12 @@ EOF
     create_partitions "$disk" "$label"
 
     cat >> "$LAYOUT_CODE" <<EOF
-if [ -d "/dev/md" ] && ls /dev/md?* &>/dev/null; then
-    Log "Resume udev"
-    type -p udevadm >/dev/null
-        if [ $? -eq 0 ]; then
-        udevadm control --stop-exec-queue
-    else
-        udevcontrol stop_exec_queue
-    fi
+Log "Resume udev"
+type -p udevadm >/dev/null
+if [ $? -eq 0 ]; then
+    udevadm control --start-exec-queue >&2 || echo "resume udev via udevadm failed"
+else
+    udevcontrol start_exec_queue >&2 || echo "resume udev via udevcontrol failed"
 fi
 
 # Wait some time before advancing
