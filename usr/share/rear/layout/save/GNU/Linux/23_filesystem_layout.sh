@@ -98,7 +98,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 reserved_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Reservedblockcount:[0-9]*' | cut -d ':' -f 2 )
                 reserved_percentage=$(( reserved_blocks * 100 / nr_blocks ))
                 echo -n " reserved_blocks=$reserved_percentage%"
-                max_mounts=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Maximummountcount:[0-9]*' | cut -d ':' -f 2 )
+                max_mounts=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Maximummountcount:[0-9]*' | cut -d ':' -f 2 )
                 echo -n " max_mounts=$max_mounts"
                 check_interval=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Checkinterval:[0-9]*' | cut -d ':' -f 2 )
                 # translate check_interval from seconds to days
