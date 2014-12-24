@@ -19,7 +19,7 @@ mount_fs() {
         value=${option#*=}
 
         case $name in
-            options)
+            (options)
                 ### Do not mount nodev, as chrooting later on would fail.
                 mountopts=${value//nodev/dev}
                 ;;
@@ -33,40 +33,28 @@ mount_fs() {
     echo "LogPrint \"Mounting filesystem $mp\"" >> "$LAYOUT_CODE"
 
     case $fstype in
-        btrfs)
-            # Fedora generic btrfs mount code
-            # check the $value for subvols (other then root)
-            subvol=$(echo $value |  awk -F, '/subvol=/  { print $NF}') # empty or something like 'subvol=root'
-            if [ -z "$subvol" ]; then
-                echo "mkdir -p /mnt/local$mp" >> "$LAYOUT_CODE"
-                echo "mount $mountopts $device /mnt/local$mp" >> "$LAYOUT_CODE"
-            elif [ "$subvol" = "subvol=root" ]; then
-                (
-                echo "# btrfs subvolume 'root' is a special case"
-                echo "# before we can create subvolumes we must mount a btrfs device on /mnt"
-                echo "mount | grep btrfs | grep -q '/mnt' || mount $device /mnt"
-                echo "# create the root btrfs subvolume"
-                echo "btrfs subvolume create /mnt/root"
-                echo "mkdir -p /mnt/local$mp"
-                echo "# umount subvol 0 as it will be remounted as /mnt/local"
-                echo "umount /mnt"
-                echo "mount $mountopts $device /mnt/local$mp"
-                ) >> "$LAYOUT_CODE"
-            else
-                (
-                echo "# btrfs subvolume creates sub-directory itself"
-                echo "btrfs subvolume create /mnt/local$mp"
-                # just mounting it with subvol=xxx will probably fail with an cryptic error:
-                # mount: mount(2) failed: No such file or directory
-                # we need to mount it with its subvol-id - not a joke
-                # even its not yet mounted we can view it - see http://www.funtoo.org/BTRFS_Fun
-                echo "btrfs_id=\$(btrfs subvolume list /mnt/local$mp | tail -1 | awk '{print \$2}')"
-                echo "mountopts=\" -o subvolid=\${btrfs_id}\""
-                echo "mount \$mountopts $device /mnt/local$mp"
-                ) >> "$LAYOUT_CODE"
-            fi
+        (btrfs)
+            # The following commands are basically the same as in the default/fallback case.
+            # The explicite case for btrfs is only there to be prepared for special adaptions for btrfs related file systems.
+            # Because the btrfs filesystem was created anew just before by the create_fs function in 13_include_filesystem_code.sh
+            # the code here mounts the whole btrfs filesystem because by default when creating a btrfs filesystem
+            # its top-level/root subvolume is the btrfs default subvolume which gets mounted when no other subvolume is specified.
+            # For a plain btrfs filesystem without subvolumes it is effectively the same as for other filesystems (like ext2/3/4).
+            (
+            echo "mkdir -p /mnt/local$mp"
+            echo "mount -t btrfs $mountopts $device /mnt/local$mp"
+            ) >> "$LAYOUT_CODE"
+            # But btrfs filesystems with subvolumes need a special handling.
+            # In particular when in the original system the btrfs filesystem had a special different default subvolume,
+            # that different subvolume needs to be first created, then set to be the default subvolume, and
+            # finally that btrfs filesystem needs to be umounted and mounted again so that in the end
+            # that special different default subvolume is mounted at the mountpoint /mnt/local$mp.
+            # All btrfs subvolume handling happens in the btrfs_subvolumes_setup function in 13_include_mount_subvolumes_code.sh
+            # For a plain btrfs filesystem without subvolumes the btrfs_subvolumes_setup function does nothing.
+            # Call the btrfs_subvolumes_setup function for the btrfs filesystem that was mounted above:
+            btrfs_subvolumes_setup $device $mp $mountopts
             ;;
-        *)
+        (*)
             (
             echo "mkdir -p /mnt/local$mp"
             echo "mount $mountopts $device /mnt/local$mp"
@@ -78,3 +66,4 @@ mount_fs() {
     Log "End mount_fs( $@ )"
     true
 }
+

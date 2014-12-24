@@ -23,11 +23,14 @@ btrfs_subvolumes_setup() {
     # which means $3 is '-o' and 'foo,bar,baz' is $4:
     mountopts="$3 $4"
     recovery_system_root=/mnt/local
+    ###########################################
     # Btrfs snapshot subvolumes handling:
     # Remember all btrfs snapshot subvolumes to exclude them when mounting all btrfs normal subvolumes below.
-    # The btrfs snapshot subvolumes entries that are created by 23_filesystem_layout.sh are deactivated (as '#btrfssnapshotsubvol ...').
+    # The btrfs snapshot subvolumes entries that are created by 23_filesystem_layout.sh are deactivated 
+    # (as '#btrfssnapshotsubvol ...').
     # When there are active btrfs snapshot subvolumes entries the user has manually activated them (as 'btrfssnapshotsubvol ...').
-    # Because any btrfssnapshotsubvol entries are needed to exclude all btrfs snapshot subvolumes 'grep "btrfssnapshotsubvol ..." ... | sed ...' is used.
+    # Because any btrfssnapshotsubvol entries are needed to exclude all btrfs snapshot subvolumes 
+    # 'grep "btrfssnapshotsubvol ..." ... | sed ...' is used.
     while read keyword dummy dummy dummy subvolume_path junk ; do
         if test -z "$subvolume_path" ; then
            continue
@@ -42,6 +45,7 @@ btrfs_subvolumes_setup() {
             echo "# $info_message" >> "$LAYOUT_CODE"
          fi
     done < <( grep "btrfssnapshotsubvol $device $mountpoint " "$LAYOUT_FILE" | sed -e 's/.*#.*btrfssnapshotsubvol/#btrfssnapshotsubvol/' )
+    ##########################################
     # Btrfs normal subvolumes setup:
     # Create the normal btrfs subvolumes before the btrfs default subvolume setup
     # because currently the whole btrfs filesystem (i.e. its top-level/root subvolume) is mounted at the mountpoint
@@ -81,8 +85,19 @@ btrfs_subvolumes_setup() {
             echo "fi"
         fi
         echo "btrfs subvolume create $recovery_system_mountpoint/$subvolume_path"
+        if test "$subvolume_path" = "root" ; then
+            # as root is special case - we must remount it again (we have to make sure root it / and not /root)
+            # otherwise, after restoring sysroot contains /root instead of / and it stops in initramfs
+            # we need to mount it with its subvol-id - not a joke
+            # even its not yet mounted we can view it - see http://www.funtoo.org/BTRFS_Fun
+            echo "btrfs_id=\$(btrfs subvolume list $recovery_system_mountpoint | tail -1 | awk '{print \$2}')"
+            echo "mountopts=\"$mountopts,subvolid=\${btrfs_id}\""
+            echo "umount $recovery_system_mountpoint"
+            echo "mount -t btrfs \$mountopts $device $recovery_system_mountpoint"
+        fi
         ) >> "$LAYOUT_CODE"
     done < <( grep "^btrfsnormalsubvol $device $mountpoint " "$LAYOUT_FILE" )
+    ##########################################
     # Btrfs default subvolume setup:
     while read dummy dummy dummy dummy subvolume_path junk ; do
         if test -z "$subvolume_path" ; then
@@ -115,6 +130,7 @@ btrfs_subvolumes_setup() {
         echo "# End btrfs default subvolume setup on $device at $mountpoint"
         ) >> "$LAYOUT_CODE"
     done < <( grep "^btrfsdefaultsubvol $device $mountpoint " "$LAYOUT_FILE" )
+    ########################################
     # Mounting all btrfs normal subvolumes:
     # After the btrfs default subvolume setup now the btrfs default subvolume is mounted and then it is possible
     # to mount the other btrfs normal subvolumes at their mountpoints in the tree of the mounted filesystems:
@@ -172,6 +188,7 @@ btrfs_subvolumes_setup() {
         echo "fi"
         ) >> "$LAYOUT_CODE"
     done < <( grep "^btrfsmountedsubvolume $device " "$LAYOUT_FILE" )
+
     # Return successfully:
     Log "End btrfs_subvolumes_setup( $@ )"
     true
