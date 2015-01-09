@@ -23,15 +23,32 @@
 # TODO: mount remote PXE server
 PXE_LOCAL_PATH=$PXE_CONFIG_PATH
 PXE_CONFIG_FILE="${PXE_CONFIG_PREFIX}$(uname -n)"
-cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
+
+if [ "$DRLM_MANAGED" == "y" ]; then
+
+cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" << EOF
+$(test -s $(get_template "PXE_pxelinux.cfg") && cat $(get_template "PXE_pxelinux.cfg"))
+display $PXE_MESSAGE
+say ----------------------------------------------------------
+say rear = disaster recover this system with ReaR/DRLM
+label rear
+kernel $DRLM_PREFIX/$OUTPUT_PREFIX/$PXE_KERNEL 
+append initrd=$DRLM_PREFIX/$OUTPUT_PREFIX/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
+EOF
+
+else
+
+cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" << EOF
 $(test -s $(get_template "PXE_pxelinux.cfg") && cat $(get_template "PXE_pxelinux.cfg"))
 display $OUTPUT_PREFIX/$PXE_MESSAGE
 say ----------------------------------------------------------
 say rear = disaster recover this system with Relax and Recover
 label rear
-	kernel $DRLM_NAME/$OUTPUT_PREFIX/$PXE_KERNEL
-	append initrd=$DRLM_NAME/$OUTPUT_PREFIX/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
+kernel $OUTPUT_PREFIX/$PXE_KERNEL
+append initrd=$OUTPUT_PREFIX/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 EOF
+
+fi
 
 pushd "$PXE_LOCAL_PATH" >&8
 StopIfError "PXE_CONFIG_PATH [$PXE_CONFIG_PATH] does not exist !"

@@ -211,6 +211,17 @@ for config in site local rescue; do
 	Source "$CONFIG_DIR/$config.conf"
 done
 
+# Check if ReaR is managed by DRLM and configure ac¢ording
+if [ "$DRLM_MANAGED" == "y" ] && [ "$WORKFLOW" != "recover" ]; then
+
+	if drlm_check; then
+		drlm_set_rear_config
+	else
+		Error "ReaR only can be run from DRLM Server ('DRLM_MANAGED=y' is set)"
+	fi
+
+fi
+
 # check for requirements, do we have all required binaries ?
 MISSING_PROGRS=()
 for f in "${REQUIRED_PROGS[@]}" ; do
