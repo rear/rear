@@ -137,7 +137,8 @@ EOF
     fi
 
     local start end start_mb end_mb
-    let start=32768 # start after one cylinder 63*512 + multiple of 4k = 64*512
+    # let start=32768 # start after one cylinder 63*512 + multiple of 4k = 64*512
+    let start=2097152 # start after cylinder 4096*512 (for grub2 - see issue #492)
     let end=0
 
     local flags partition
