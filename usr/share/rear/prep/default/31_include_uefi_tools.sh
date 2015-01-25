@@ -8,6 +8,13 @@ if grep -qw 'noefi' /proc/cmdline; then
     return
 fi
 
+# by default the variable USING_UEFI_BOOTLOADER is empty which means rear will decide (this script)
+if [[ "$USING_UEFI_BOOTLOADER" = "0" ]]; then
+    # we forced the variable to zero (in local.conf) so we do not want UEFI stuff
+    Log "We do not want UEFI capabilities in rear (USING_UEFI_BOOTLOADER=0)"
+    return
+fi
+
 # Some distributions don't have a builtin efivars kernel module, so we need to load it.
 # Be aware, efivars is not listed with 'lsmod'
 modprobe -q efivars

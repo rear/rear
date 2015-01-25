@@ -1,4 +1,6 @@
-(( $USING_UEFI_BOOTLOADER )) || return
+# 25_populate_efibootimg.sh
+
+(( USING_UEFI_BOOTLOADER )) || return    # empty or 0 means NO UEFI
 
 mkdir $v -p $TMP_DIR/mnt/EFI/BOOT >&2
 StopIfError "Could not create $TMP_DIR/mnt/EFI/BOOT"
