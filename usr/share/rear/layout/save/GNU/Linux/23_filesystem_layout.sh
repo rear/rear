@@ -46,12 +46,12 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
     # Read the output of the read_filesystems_command:
     while read device mountpoint fstype options junk ; do
         # Empty device or mountpoint or fstype may may indicate an error. In this case be verbose and inform the user:
-        if test -z "$device" -o -z "$mountpoint" -o -z "$fstype"; then
+        if test -z "$device" -o -z "$mountpoint" -o -z "$fstype" ; then
             LogPrint "Empty device='$device' or mountpoint='$mountpoint' or fstype='$fstype', skipping saving filesystem layout for it."
             continue
         fi
         # FIXME: I (jsmeix@suse.de) have no idea what the reason for the following is.
-        # If someone knows the reason replace this comment with a description of the reason:
+        # If someone knows the reason replace this comment with a description of the the actual root cause.
         if [ "${device#/}" = "$device" ] ; then
             Log "\${device#/} = '${device#/}' = \$device, skipping."
             continue
@@ -98,6 +98,9 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 reserved_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Reservedblockcount:[0-9]*' | cut -d ':' -f 2 )
                 reserved_percentage=$(( reserved_blocks * 100 / nr_blocks ))
                 echo -n " reserved_blocks=$reserved_percentage%"
+                # FIXME: I (jsmeix@suse.de) have no idea what the reason for the following is:
+                # On Fedora | grep -oi 'Maximummountcount:[0-9]*' | does not work but | grep -i 'Maximummountcount:[0-9]*' | works.
+                # If someone knows the reason replace this comment with a description of the actual root cause.
                 max_mounts=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Maximummountcount:[0-9]*' | cut -d ':' -f 2 )
                 echo -n " max_mounts=$max_mounts"
                 check_interval=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Checkinterval:[0-9]*' | cut -d ':' -f 2 )
@@ -147,6 +150,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
 
     # Btrfs subvolume layout if a btrfs filesystem exists:
     if test -n "$btrfs_devices_and_mountpoints" ; then
+        ########################################
         # Btrfs subvolumes (regardless if mounted or not):
         for btrfs_device_and_mountpoint in $btrfs_devices_and_mountpoints ; do
             # Assume $btrfs_device_and_mountpoint is "/dev/sdX99,/my/mount,point" then split
@@ -158,11 +162,28 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             # an exercise in using fail-safe names and/or how to enhance standard bash scripts:
             btrfs_device=${btrfs_device_and_mountpoint%%,*}
             btrfs_mountpoint=${btrfs_device_and_mountpoint#*,}
+            ####################################
             # Btrfs default subvolume:
             echo "# Btrfs default subvolume for $btrfs_device at $btrfs_mountpoint"
-            echo "# Format: btrfsdefaultsubvol <device> <mountpoint> <btrfs_subvolume_ID> [<btrfs_subvolume_path>]"
-            echo -n "btrfsdefaultsubvol $btrfs_device $btrfs_mountpoint "
-            btrfs subvolume get-default $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2,9 | sed -e 's/<FS_TREE>\///'
+            echo "# Format: btrfsdefaultsubvol <device> <mountpoint> <btrfs_subvolume_ID> <btrfs_subvolume_path>"
+            # The command:           btrfs subvolume get-default /
+            # results on SLES 12:    ID 257 gen 6733 top level 5 path @
+            # and on openSUSE 13.2:  ID 5 (FS_TREE)
+            # and on Fedora 21:      ID 5 (FS_TREE)
+            btrfs_default_subvolume_ID=$( btrfs subvolume get-default $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 )
+            btrfs_default_subvolume_path=$( btrfs subvolume get-default $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 9 )
+            # If there is no field 9 the default subvolume path is the filesystem root (called "top-level subvolume" or "FS_TREE" by btrfs).
+            # Denote the btrfs filesystem root by '/' (the only character that is really forbidden in directory names).
+            # Do not denote the filesystem root by 'FS_TREE' or by any word that is a valid directory name or btrfs subvolume name
+            # because an admin can create a btrfs subvolume with name 'FS_TREE' via: btrfs subvolume create FS_TREE
+            test -z "$btrfs_default_subvolume_path" && btrfs_default_subvolume_path="/"
+            # Empty btrfs_default_subvolume_ID may may indicate an error. In this case be verbose and inform the user:
+            if test -z "$btrfs_default_subvolume_ID" ; then
+                LogPrint "Empty btrfs_default_subvolume_ID, no btrfs default subvolume stored for $btrfs_device at $btrfs_mountpoint"
+            else
+                echo "btrfsdefaultsubvol $btrfs_device $btrfs_mountpoint $btrfs_default_subvolume_ID $btrfs_default_subvolume_path"
+            fi
+            ####################################
             # Btrfs snapshot subvolumes:
             # In case of errors "btrfs subvolume list" results output on stderr but none on stdout
             # so that the following test intentionally also fails in case of errors:
@@ -174,6 +195,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 prefix=$( echo "#btrfssnapshotsubvol $btrfs_device $btrfs_mountpoint" | sed -e 's/\//\\\//g' )
                 btrfs subvolume list -as $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2,14 | sed -e 's/<FS_TREE>\///' | sed -e "s/^/$prefix /"
             fi
+            ####################################
             # Btrfs normal subvolumes:
             # Btrfs normal subvolumes are btrfs subvolumes that are no snapshot subvolumes.
             # In case of errors "btrfs subvolume list" results output on stderr but none on stdout
@@ -198,6 +220,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 fi
             fi
         done
+        ########################################
         # Mounted btrfs subvolumes:
         if test -x "$findmnt_command" ; then
             read_mounted_btrfs_subvolumes_command="$findmnt_command -alnv -o SOURCE,TARGET,OPTIONS,FSROOT -t btrfs | tr -s '[:blank:]' ' '"
@@ -206,18 +229,18 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         fi
         while read device subvolume_mountpoint mount_options btrfs_subvolume_path junk ; do
             if test -n "$device" -a -n "$subvolume_mountpoint" ; then
-                if test -z "$btrfsmountedsubvolume_entry_exists" ; then
+                if test -z "$btrfsmountedsubvol_entry_exists" ; then
                     # Output header only once:
-                    btrfsmountedsubvolume_entry_exists="yes"
+                    btrfsmountedsubvol_entry_exists="yes"
                     echo "# All mounted btrfs subvolumes (including mounted btrfs default subvolumes and mounted btrfs snapshot subvolumes)."
                     if test -x "$findmnt_command" ; then
-                        echo "# Using the findmnt command that shows the mounted btrfs_subvolume_path."
-                        echo "# Format: btrfsmountedsubvolume <device> <subvolume_mountpoint> <mount_options> <btrfs_subvolume_path>"
+                        echo "# Determined by the findmnt command that shows the mounted btrfs_subvolume_path."
+                        echo "# Format: btrfsmountedsubvol <device> <subvolume_mountpoint> <mount_options> <btrfs_subvolume_path>"
                     else
-                        echo "# Using the traditional mount command that cannot show the mounted btrfs_subvolume_path."
+                        echo "# Determined by the traditional mount command that cannot show the mounted btrfs_subvolume_path."
                         echo "# The mounted btrfs_subvolume_path is read from /etc/fstab if it can be found there."
                         echo "# Without btrfs_subvolume_path the btrfs subvolume cannot be mounted during system recovery."
-                        echo "# Format: btrfsmountedsubvolume <device> <subvolume_mountpoint> <mount_options> [<btrfs_subvolume_path>]"
+                        echo "# Format: btrfsmountedsubvol <device> <subvolume_mountpoint> <mount_options> [<btrfs_subvolume_path>]"
                     fi
                 fi
                 # Remove parenthesis (from the traditional mount command output) from the list of mount options:
@@ -237,7 +260,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 # (i.e. a subvolume path is an absolute path in the particular btrfs filesystem)
                 # see https://btrfs.wiki.kernel.org/index.php/Mount_options
                 test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
-                echo "btrfsmountedsubvolume $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
+                echo "btrfsmountedsubvol $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
             fi
         done < <( eval $read_mounted_btrfs_subvolumes_command )
     fi

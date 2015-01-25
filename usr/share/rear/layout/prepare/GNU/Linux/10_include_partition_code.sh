@@ -44,18 +44,10 @@ create_disk() {
     StopIfError "Disk $disk has size $disk_size, unable to continue."
 
     cat >> "$LAYOUT_CODE" <<EOF
-Log "Stop mdadm and pause udev"
+Log "Stop mdadm"
 if grep -q md /proc/mdstat &>/dev/null; then
     mdadm --stop -s >&2 || echo "stop mdadm failed"
 fi
-
-type -p udevadm >/dev/null
-if [ $? -eq 0 ]; then
-    udevadm control --stop-exec-queue >&2 || echo "pause udev via udevadm failed"
-else
-    udevcontrol stop_exec_queue >&2 || echo "pause udev via udevcontrol failed"
-fi
-
 Log "Erasing MBR of disk $disk"
 dd if=/dev/zero of=$disk bs=512 count=1
 sync
@@ -64,17 +56,6 @@ EOF
     create_partitions "$disk" "$label"
 
     cat >> "$LAYOUT_CODE" <<EOF
-Log "Resume udev"
-type -p udevadm >/dev/null
-if [ $? -eq 0 ]; then
-    udevadm control --start-exec-queue >&2 || echo "resume udev via udevadm failed"
-else
-    udevcontrol start_exec_queue >&2 || echo "resume udev via udevcontrol failed"
-fi
-
-# Wait some time before advancing
-sleep 10
-
 # Make sure device nodes are visible (eg. in RHEL4)
 my_udevtrigger
 my_udevsettle
@@ -115,8 +96,9 @@ create_partitions() {
 
     cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Creating partitions for disk $device ($label)"
+my_udevsettle
 parted -s $device mklabel $label >&2
-sleep 1
+my_udevsettle
 EOF
 
     local block_size device_size sysfs_name
@@ -179,8 +161,9 @@ EOF
                 end="100%"
             fi
             cat >> "$LAYOUT_CODE" <<EOF
+my_udevsettle
 parted -s $device mkpart '"$name"' ${start}B $end >&2
-sleep 1
+my_udevsettle
 EOF
         else
             ### Old versions of parted accept only sizes in megabytes...
@@ -191,8 +174,9 @@ EOF
             fi
             end_mb=$(( end/1024/1024 ))
             cat  >> "$LAYOUT_CODE" <<EOF
+my_udevsettle
 parted -s $device mkpart '"$name"' $start_mb $end_mb >&2
-sleep 1
+my_udevsettle
 EOF
         fi
 
@@ -219,15 +203,27 @@ EOF
             if [[ "$flag" = "none" ]] ; then
                 continue
             fi
-            echo "parted -s $device set $number $flag on >&2" >> $LAYOUT_CODE
+            (
+            echo "my_udevsettle"
+            echo "parted -s $device set $number $flag on >&2"
+            echo "my_udevsettle"
+            ) >> $LAYOUT_CODE
         done
 
         # Explicitly name GPT partitions.
         if [[ "$label" = "gpt" ]] && [[ "$name" != "rear-noname" ]] ; then
-            echo "parted -s $device name $number '\"$name\"' >&2" >> $LAYOUT_CODE
+            (
+            echo "my_udevsettle"
+            echo "parted -s $device name $number '\"$name\"' >&2"
+            echo "my_udevsettle"
+            ) >> $LAYOUT_CODE
         fi
     done < <(grep "^part $device " $LAYOUT_FILE)
 
     # Ensure we have the new partitioning on the device.
-    echo "partprobe -s $device >&2" >> "$LAYOUT_CODE"
+    (
+    echo "my_udevsettle"
+    echo "partprobe -s $device >&2"
+    echo "my_udevsettle"
+    ) >> "$LAYOUT_CODE"
 }
