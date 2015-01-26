@@ -22,11 +22,11 @@ function set_tar_features {
 
 Log "Include list:"
 while read -r ; do
-	Log "  $REPLY"
+    Log "  $REPLY"
 done < $TMP_DIR/backup-include.txt
 Log "Exclude list:"
 while read -r ; do
-	Log " $REPLY"
+    Log " $REPLY"
 done < $TMP_DIR/backup-exclude.txt
 
 local scheme=$(url_scheme $BACKUP_URL)
@@ -45,7 +45,7 @@ else
   LogPrint "Encrypting disabled"
   BACKUP_PROG_CRYPT_OPTIONS="cat"
   BACKUP_PROG_CRYPT_KEY=""
-fi 
+fi
 
 # Check if the backup needs to be splitted or not
 if [[ -n "$ISO_MAX_SIZE" ]]; then
@@ -57,7 +57,7 @@ if [[ -n "$ISO_MAX_SIZE" ]]; then
         # We add 15MB which is the average size of all isolinux binaries
         BASE_ISO_SIZE=$(((${INITRD_SIZE}+${KERNEL_SIZE})/1024/1024+15))
         # If we are EFI, add 30MB (+ previous 15MB), UEFI files can't exceed this size
-        [[ $USING_UEFI_BOOTLOADER ]] && BASE_ISO_SIZE=$((${BASE_ISO_SIZE}+30))
+        (( USING_UEFI_BOOTLOADER )) && BASE_ISO_SIZE=$((${BASE_ISO_SIZE}+30))
         ISO_MAX_SIZE=$((${ISO_MAX_SIZE}-${BASE_ISO_SIZE}))
     fi
     SPLIT_COMMAND="split -d -b ${ISO_MAX_SIZE}m - ${backuparchive}."

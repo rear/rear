@@ -13,7 +13,9 @@ set -e
 
 # Unload CCISS module to make sure nothing is using it
 rmmod cciss
-StopIfError "CCISS failed to unload, something is still using it !"
+if (( $? != 0 )); then
+    Error "CCISS failed to unload, something is still using it !"
+fi
 
 modprobe cciss
 sleep 2

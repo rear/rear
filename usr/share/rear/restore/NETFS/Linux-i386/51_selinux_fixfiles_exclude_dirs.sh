@@ -1,5 +1,5 @@
 # for UEFI only we should avoid SElinux relabeling vfat filesystem: /boot/efi
-[[ -z "$USING_UEFI_BOOTLOADER" ]] && return  # empty means using BIOS
+(( USING_UEFI_BOOTLOADER )) || return  # empty or 0 means using BIOS method
 
 # check if /mnt/local/boot/efi is mounted
 [[ -d "/mnt/local/boot/efi" ]]

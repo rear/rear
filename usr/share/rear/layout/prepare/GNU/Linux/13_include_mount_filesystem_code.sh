@@ -47,7 +47,7 @@ mount_fs() {
             # But btrfs filesystems with subvolumes need a special handling.
             # In particular when in the original system the btrfs filesystem had a special different default subvolume,
             # that different subvolume needs to be first created, then set to be the default subvolume, and
-            # finally that btrfs filesystem needs to be umounted and mounted again so that in the end
+            # finally that btrfs filesystem needs to be unmounted and mounted again so that in the end
             # that special different default subvolume is mounted at the mountpoint /mnt/local$mp.
             # All btrfs subvolume handling happens in the btrfs_subvolumes_setup function in 13_include_mount_subvolumes_code.sh
             # For a plain btrfs filesystem without subvolumes the btrfs_subvolumes_setup function does nothing.

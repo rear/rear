@@ -47,7 +47,8 @@ if (( available_space + used_space < required_space )); then
     return
 fi
 
-if [ -n "$USING_UEFI_BOOTLOADER" ]; then
+if (( USING_UEFI_BOOTLOADER )) ; then
+    # set to 1 means using UEFI
     grub_conf="`dirname $UEFI_BOOTLOADER`/grub.conf"
 else
     grub_conf=$(readlink -f /boot/grub/menu.lst)

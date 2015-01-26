@@ -1,11 +1,11 @@
 # a simplified uefivars replacement
-(( $USING_UEFI_BOOTLOADER )) || return
+(( USING_UEFI_BOOTLOADER )) || return    # empty or 0 means NO UEFI
 
 [[ ! -d $VAR_DIR/recovery ]] && mkdir -p -m 755 $VAR_DIR/recovery
 rm -f $VAR_DIR/recovery/uefi-variables
 
 EFIBOOTMGR_OUTPUT=$TMP_DIR/efibootmgr_output
-efibootmgr > $EFIBOOTMGR_OUTPUT
+efibootmgr > "$EFIBOOTMGR_OUTPUT"
 
 # depending the directory ends on vars or efivars we need to treat it different
 if [ "$SYSFS_DIR_EFI_VARS" = "/sys/firmware/efi/vars" ]; then
@@ -47,7 +47,7 @@ if [[ ! -z "${UEFI_BOOTLOADER}" ]]; then
     # right, variable is not empty, but is it a file?
     [[ ! -f ${UEFI_BOOTLOADER} ]] && Error "Cannot find a proper UEFI_BOOTLOADER ($UEFI_BOOTLOADER). 
 Please define it in $CONFIG_DIR/local.conf (e.g. UEFI_BOOTLOADER=/boot/efi/EFI/fedora/grubx64.efi)"
-    
+
 else
     # the UEFI_BOOTLOADER contains path in DOS format
     UEFI_BOOTLOADER="/boot/efi"$(echo "$my_UEFI_BOOTLOADER" | sed -e 's;\\;/;g')
