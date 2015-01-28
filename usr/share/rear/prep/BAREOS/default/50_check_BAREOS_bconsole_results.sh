@@ -31,12 +31,12 @@ fi
 # "Connecting to Client 'bareos_client_name-fd at FQDN:9102"
 if [ -z "$BAREOS_CLIENT" ]
 then
-	BAREOS_CLIENT=`grep $(hostname -s) /etc/bareos/bareos-fd.conf | grep "\-fd" | awk '{print $3}' | sed -e "s/-fd//g"`
+	BAREOS_CLIENT=`grep $(hostname -s) /etc/bareos/bareos-fd.conf | grep "\-fd" | awk '{print $3}'`
 fi
 [ "${BAREOS_CLIENT}" ]
 StopIfError "Client $(hostname -s) not defined in /etc/bareos/bareos-fd.conf"
 
-BAREOS_RESULT=( `echo -e " status client=${BAREOS_CLIENT}-fd" | bconsole |grep Connect ` )
+BAREOS_RESULT=( `echo -e " status client=${BAREOS_CLIENT}" | bconsole |grep Connect ` )
 
 director=${BAREOS_RESULT[3]}
 client=${BAREOS_RESULT[9]}
