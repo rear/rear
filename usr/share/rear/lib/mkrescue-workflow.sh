@@ -21,12 +21,6 @@
 WORKFLOW_mkrescue_DESCRIPTION="create rescue media only"
 WORKFLOWS=( ${WORKFLOWS[@]} mkrescue )
 WORKFLOW_mkrescue () {
-	for arg in "${ARGS[@]}" ; do
-		key=OPT_"${arg%%=*}"
-		val="${arg#*=}"
-		declare $key="$val"
-		Log "Setting $key=$val"
-	done
 
 	SourceStage "prep"
 

@@ -6,42 +6,30 @@
 # This file is part of Relax and Recover, licensed under the GNU General
 # Public License. Refer to the included LICENSE for full text of license.
 
-function drlm_check() {
+function drlm_is_managed() {
 
-	if [ -z $DRLM_PREFIX ] || [ -z $DRLM_OPTS1 ] || [ -z $DRLM_OPTS2 ]; then
-		return 1
-	else
+	if [ "$DRLM_MANAGED" == "y" ]; then
 		return 0
+	else
+		return 1
 	fi
 
 }
 
-function drlm_set_rear_config() {
+function drlm_import_runtime_config() {
 
-	DRLM_VAR=($(echo $DRLM_OPTS1|tr ";" " "))
-	DRLM_VAL=($(echo $DRLM_OPTS2|tr ";" " "))
-
-	for ((i = 0; i < ${#DRLM_VAR[@]}; i++))
-	do
-		val=($(echo ${DRLM_VAL[$i]}|tr "," " "))
-		if [ "$val" != "UNSET" ]; then
-			eval "${DRLM_VAR[$i]}=(\${val[@]})"
-		fi
+	for arg in "${ARGS[@]}" ; do
+		key=DRLM_"${arg%%=*}"
+		val="${arg#*=}"
+		declare $key="$val"
+		Log "Setting $key=$val"
 	done
 
-}
-
-function drlm_set_rescue_conf() {
-
-	DRLM_VAR=($(echo $DRLM_OPTS1|tr ";" " "))
-	DRLM_VAL=($(echo $DRLM_OPTS2|tr ";" " "))
-
-	for ((i = 0; i < ${#DRLM_VAR[@]}; i++))
-	do
-		val=($(echo ${DRLM_VAL[$i]}|tr "," " "))
-		if [ "$val" != "UNSET" ]; then
-			echo "${DRLM_VAR[$i]}=(${val[@]})" | tee -a $ROOTFS_DIR/etc/rear/rescue.conf
-		fi
-	done
+	if [ $DRLM_SERVER ] && [ $DRLM_USER ] && [ $DRLM_PASS ] && [ $DRLM_CLIENT ]; then
+		DRLM_CFG=$(curl -X POST -k -u $DRLM_USER:$DRLM_PASS -d "client=$DRLM_CLIENT" https://$DRLM_SERVER/getconfig)
+		eval "$DRLM_CFG"
+	else
+		Error "ReaR only can be run from DRLM Server ('DRLM_MANAGED=y' is set)"
+	fi
 
 }
