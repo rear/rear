@@ -12,10 +12,7 @@ cat <<EOF >$LAYOUT_CODE
 set -e
 
 # Unload CCISS module to make sure nothing is using it
-rmmod cciss
-if (( $? != 0 )); then
-    Error "CCISS failed to unload, something is still using it !"
-fi
+rmmod cciss || Error "CCISS failed to unload, something is still using it !"
 
 modprobe cciss
 sleep 2

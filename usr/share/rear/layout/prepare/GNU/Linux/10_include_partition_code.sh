@@ -47,6 +47,18 @@ create_disk() {
 Log "Stop mdadm"
 if grep -q md /proc/mdstat &>/dev/null; then
     mdadm --stop -s >&2 || echo "stop mdadm failed"
+    # Prevent udev waking up mdadm later.
+    # Reasoning: At least on RHEL6 when parted created a raid partition on disk,
+    # udev (via /lib/udev/rules.d/65-md-incremental.rules) wakes up mdadm which locks the disk,
+    # so further parted commands with the disk will fail since the disk is busy now.
+    # The /lib/udev/rules.d/65-md-incremental.rules detects anaconda (the Red Hat installer),
+    # and if it find itself running under anaconda, it will not run.
+    # Accordingly also for other installers (in particular the rear installer)
+    # this rule should not be there (and other Linux distros probably do not have it)
+    # which means removing it is the right solution to make rear work also for RHEL6:
+    if [ -e /lib/udev/rules.d/65-md-incremental.rules ] ; then
+        rm -f /lib/udev/rules.d/65-md-incremental.rules || echo "rm 65-md-incremental.rules failed"
+    fi
 fi
 Log "Erasing MBR of disk $disk"
 dd if=/dev/zero of=$disk bs=512 count=1
