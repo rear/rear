@@ -25,12 +25,12 @@ PXE_LOCAL_PATH=$PXE_CONFIG_PATH
 PXE_CONFIG_FILE="${PXE_CONFIG_PREFIX}$(uname -n)"
 cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
 $(test -s $(get_template "PXE_pxelinux.cfg") && cat $(get_template "PXE_pxelinux.cfg"))
-display $OUTPUT_PREFIX/$PXE_MESSAGE
+display $OUTPUT_PREFIX_PXE/$PXE_MESSAGE
 say ----------------------------------------------------------
 say rear = disaster recover this system with Relax and Recover
 label rear
-	kernel $OUTPUT_PREFIX/$PXE_KERNEL
-	append initrd=$OUTPUT_PREFIX/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
+	kernel $OUTPUT_PREFIX_PXE/$PXE_KERNEL
+	append initrd=$OUTPUT_PREFIX_PXE/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 EOF
 
 pushd "$PXE_LOCAL_PATH" >&8
