@@ -25,6 +25,10 @@ function drlm_import_runtime_config() {
         Log "Setting $key=$val"
     done
 
+    if ! has_binary curl ; then
+        Error "Need 'curl' to download DRLM dynamic configuration. Please install curl and try again."
+    fi
+
     if [[ "$DRLM_SERVER" && "$DRLM_REST_OPTS" && "$DRLM_ID" ]]; then
         DRLM_CFG=$(curl $DRLM_REST_OPTS https://$DRLM_SERVER/clients/$DRLM_ID)
         eval "$DRLM_CFG"
