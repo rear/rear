@@ -6,6 +6,6 @@ fi
 
 drlm_import_runtime_config
 
-if [ "$OUTPUT" == "PXE" ]; then
+if [[ "$OUTPUT" == "PXE" ]]; then
     OUTPUT_PREFIX_PXE="$DRLM_CLIENT/$OUTPUT_PREFIX"
 fi

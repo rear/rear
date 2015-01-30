@@ -8,28 +8,28 @@
 
 function drlm_is_managed() {
 
-	if [ "$DRLM_MANAGED" == "y" ]; then
-		return 0
-	else
-		return 1
-	fi
+    if [[ "$DRLM_MANAGED" == "y" ]]; then
+        return 0
+    else
+        return 1
+    fi
 
 }
 
 function drlm_import_runtime_config() {
 
-	for arg in "${ARGS[@]}" ; do
-		key=DRLM_"${arg%%=*}"
-		val="${arg#*=}"
-		declare $key="$val"
-		Log "Setting $key=$val"
-	done
+    for arg in "${ARGS[@]}" ; do
+        key=DRLM_"${arg%%=*}"
+        val="${arg#*=}"
+        declare $key="$val"
+        Log "Setting $key=$val"
+    done
 
-	if [ $DRLM_SERVER ] && [ $DRLM_USER ] && [ $DRLM_PASS ] && [ $DRLM_CLIENT ]; then
-		DRLM_CFG=$(curl -X POST -k -u $DRLM_USER:$DRLM_PASS -d "client=$DRLM_CLIENT" https://$DRLM_SERVER/getconfig)
-		eval "$DRLM_CFG"
-	else
-		Error "ReaR only can be run from DRLM Server ('DRLM_MANAGED=y' is set)"
-	fi
+    if [[ "$DRLM_SERVER" && "$DRLM_REST_OPTS" && "$DRLM_ID" ]]; then
+        DRLM_CFG=$(curl $DRLM_REST_OPTS https://$DRLM_SERVER/clients/$DRLM_ID)
+        eval "$DRLM_CFG"
+    else
+        Error "ReaR only can be run from DRLM Server ('DRLM_MANAGED=y' is set)"
+    fi
 
 }
