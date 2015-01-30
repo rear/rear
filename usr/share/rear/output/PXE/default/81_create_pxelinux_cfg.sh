@@ -23,7 +23,7 @@
 # TODO: mount remote PXE server
 PXE_LOCAL_PATH=$PXE_CONFIG_PATH
 PXE_CONFIG_FILE="${PXE_CONFIG_PREFIX}$(uname -n)"
-cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" << EOF
+cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
 $(test -s $(get_template "PXE_pxelinux.cfg") && cat $(get_template "PXE_pxelinux.cfg"))
 display $OUTPUT_PREFIX_PXE/$PXE_MESSAGE
 say ----------------------------------------------------------
