@@ -29,11 +29,14 @@ fi
 # and that the director can connect to the file daemon on this system.
 # "Connecting to Director 'director_name-fd:9101'"
 # "Connecting to Client 'bareos_client_name-fd at FQDN:9102"
-BAREOS_CLIENT=`grep $(hostname -s) /etc/bareos/bareos-fd.conf | grep "\-fd" | awk '{print $3}' | sed -e "s/-fd//g"`
+if [ -z "$BAREOS_CLIENT" ]
+then
+	BAREOS_CLIENT=`grep $(hostname -s) /etc/bareos/bareos-fd.conf | grep "\-fd" | awk '{print $3}'`
+fi
 [ "${BAREOS_CLIENT}" ]
 StopIfError "Client $(hostname -s) not defined in /etc/bareos/bareos-fd.conf"
 
-BAREOS_RESULT=( `echo -e " status client=${BAREOS_CLIENT}-fd" | bconsole |grep Connect ` )
+BAREOS_RESULT=( `echo -e " status client=${BAREOS_CLIENT}" | bconsole |grep Connect ` )
 
 director=${BAREOS_RESULT[3]}
 client=${BAREOS_RESULT[9]}
