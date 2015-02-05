@@ -17,6 +17,16 @@ my_udev_files=( $(find $ROOTFS_DIR/usr/lib/systemd/system/sockets.target.wants -
 
 for m in "${my_udev_files[@]}" ; do
     if [[ ! -h /lib/systemd/system/sockets.target.wants/$m ]] && [[ ! -h /usr/lib/systemd/system/sockets.target.wants/$m ]]; then
-        rm -f $ROOTFS_DIR/usr/lib/systemd/system/sockets.target.wants/$m
+        rm $v -f $ROOTFS_DIR/usr/lib/systemd/system/sockets.target.wants/$m
     fi
 done
+
+# remove the udev* files if these do not exist on this system (these were coming from the skel directory)
+my_udev_files=( $(find $ROOTFS_DIR/usr/lib/systemd/system -type f -name "udev*"  -printf "%P\n") )
+
+for m in "${my_udev_files[@]}" ; do
+    if [[ ! -f /lib/systemd/system/$m ]] && [[ ! -f /usr/lib/systemd/system/$m ]]; then
+        rm $v -f $ROOTFS_DIR/usr/lib/systemd/system/$m
+    fi
+done
+
