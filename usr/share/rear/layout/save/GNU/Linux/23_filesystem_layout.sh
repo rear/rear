@@ -145,6 +145,10 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         # Remove parenthesis (from the traditional mount command output) from the list of options:
         options=${options#(}
         options=${options%)}
+
+        #clip out the "seclabel" option to avoid problems. See issue no.545
+        options=${options//seclabel,/}
+
         echo -n " options=$options"
         # Finish the current filesystem layout line with a newline character:
         echo
