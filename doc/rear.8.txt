@@ -1,6 +1,6 @@
 = rear(8)
-:version: v1.16.1
-:date: 12 May 2014
+:version: v1.17
+:date: 19 February 2015
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -192,6 +192,10 @@ Write the image using +rsync+ and the RSYNC protocol (SSH only).
 OUTPUT_URL=*sshfs://*::
 Write the image using sshfs and the SSH protocol.
 
+OUTPUT_URL=*null*::
+Do not copy the ISO image from _/var/lib/rear/output/_ to an external destination.
+Useful in combination with an _external_ backup program, or when +BACKUP_URL=iso://backup+
+
 == BACKUP SOFTWARE INTEGRATION
 Currently Relax-and-Recover supports the following backup methods. Please
 distinguish carefully between Relax-and-Recover support for 3rd party
@@ -233,6 +237,9 @@ Use CommVault Galaxy 5 to restore the data.
 BACKUP=*GALAXY7*::
 Use CommVault Galaxy 7 to restore the data.
 
+BACKUP=*GALAXY10*::
+Use CommVault Galaxy 10 (or Simpana 10) to restore the data.
+
 BACKUP=*NBU*::
 Use Symantec NetBackup to restore the data.
 
@@ -242,6 +249,9 @@ result files (e.g. ISO image) are also saved into TSM.
 
 BACKUP=*NSR*::
 Using EMC NetWorker (Legato) to restore the data.
+
+BACKUP=*SESAM*::
+Using SEP Sesam to restore the data.
 
 BACKUP=*RBME*::
 Use Rsync Backup Made Easy (rbme) to restore the data.
@@ -317,6 +327,9 @@ To include the backup within the ISO image. It is important that the +BACKUP_URL
 BACKUP_URL=iso:///backup/
 OUTPUT_URL=nfs://server/path/
 ----
+
+When using +BACKUP=NETFS+ there is an option to select a +BACKUP_TYPE=incremental+
+ to have +rear+ make incrementals until the next +FULLBACKUPDAY="Mon"+ has reached.
 
 == CONFIGURATION
 To configure Relax-and-Recover you have to edit the configuration files in
@@ -413,7 +426,7 @@ you must remove this directory manually.
 Relax-and-Recover script components.
 
 /usr/share/rear/conf/default.conf::
-Relax-and-Recover's included defaults. Contains a complete set of parameters
+Relax-and-Recover default values. Contains a complete set of parameters
 and its explanation.  Please do not edit or modify. Copy values to
 _local.conf_ or _site.conf_ instead.
 
@@ -422,7 +435,7 @@ _local.conf_ or _site.conf_ instead.
 Feedback is welcome, please report any issues or improvements to our
 issue-tracker at: http://github.com/rear/issues/
 
-Furthermore, we welcome pull request via GitHub.
+Furthermore, we welcome pull requests via GitHub.
 
 == SEE ALSO
 Relax-and-Recover comes with extensive documentation located in 
@@ -441,7 +454,7 @@ The Relax-and-Recover website is located at: http://relax-and-recover.org/
 
 
 == COPYRIGHT
-(c) 2006-2014
+(c) 2006-2015
 
 Schlomo Schapiro
 
