@@ -18,6 +18,7 @@ Relax-and-Recover include:
 - Multipath disks
 - Swap
 - Filesystems
+- Btrfs Volumes
 - DRBD
 - HP SmartArray controllers
 
@@ -625,6 +626,21 @@ drbd /dev/drbd<nr> <drbd resource name> <device>
 === Filesystems ===
 ----------------------------------
 fs <device> <mountpoint> <filesystem type> [uuid=<uuid>] [label=<label>] [blocksize=<block size(B)>] [<reserved_blocks=<nr of reserved blocks>] [max_mounts=<nr>] [check_interval=<number of days>d] [options=<filesystem options>]
+----------------------------------
+
+=== Btrfs Default SubVolumes ===
+----------------------------------
+btrfsdefaultsubvol <device> <mountpoint> <btrfs_subvolume_ID> <btrfs_subvolume_path>
+----------------------------------
+
+=== Btrfs Normal SubVolumes ===
+----------------------------------
+btrfsnormalsubvol <device> <mountpoint> <btrfs_subvolume_ID> <btrfs_subvolume_path>
+----------------------------------
+
+=== Btrfs Mounted SubVolumes ====
+----------------------------------
+btrfsmountedsubvol <device> <subvolume_mountpoint> <mount_options> <btrfs_subvolume_path>
 ----------------------------------
 
 === Swap ===

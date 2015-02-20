@@ -14,7 +14,7 @@ Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
 OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
 sftp, ftp, http, nfs, cifs) as well as a multitude of backup strategies
 (incl.  IBM TSM, HP DataProtector, Symantec NetBackup, EMC NetWorker [Legato],
-Bacula, Bareos, rsync).
+SEP Sesam, Galaxy [Simpana], Bacula, Bareos, rsync).
 
 Relax-and-Recover was designed to be easy to set up, requires no maintenance
 and is there to assist when disaster strikes. Its setup-and-forget nature
@@ -84,16 +84,16 @@ Relax-and-Recover has a wide range of features:
  - Disk layout change detection for monitoring
  - One-Button-Disaster-Recovery (OBDR) tape support
  - DRBD filesystem support
- - Bacula tape support
+ - Bacula or Bareos tape support
  - Multiple DR images per system on single USB storage device
  - USB ext3/ext4 support
  - GRUB bootloader re-implementation
- - Add Relax-and-Recover entry to local GRUB configuration
+ - Add Relax-and-Recover entry to local GRUB configuration (optional)
  - Nagios and webmin integration
  - Syslinux boot menu
  - Storing rescue/backup logfile on rescue media
  - Restoring to different hardware
- - RHEL4, RHEL5 and RHEL6 support
+ - RHEL4, RHEL5, RHEL6 and RHEL7 support
  - Various usability improvements
  - Serial console support auto-detected
  - Lockless workflows
