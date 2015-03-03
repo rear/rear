@@ -17,7 +17,7 @@ my_udev_files=( $(find $ROOTFS_DIR/usr/lib/systemd/system/sockets.target.wants -
 
 for m in "${my_udev_files[@]}" ; do
     if [[ ! -h /lib/systemd/system/sockets.target.wants/$m ]] && [[ ! -h /usr/lib/systemd/system/sockets.target.wants/$m ]]; then
-        rm $v -f $ROOTFS_DIR/usr/lib/systemd/system/sockets.target.wants/$m
+        rm $v -f $ROOTFS_DIR/usr/lib/systemd/system/sockets.target.wants/$m >&2
     fi
 done
 
@@ -26,7 +26,7 @@ my_udev_files=( $(find $ROOTFS_DIR/usr/lib/systemd/system -type f -name "udev*" 
 
 for m in "${my_udev_files[@]}" ; do
     if [[ ! -f /lib/systemd/system/$m ]] && [[ ! -f /usr/lib/systemd/system/$m ]]; then
-        rm $v -f $ROOTFS_DIR/usr/lib/systemd/system/$m
+        rm $v -f $ROOTFS_DIR/usr/lib/systemd/system/$m >&2
     fi
 done
 
