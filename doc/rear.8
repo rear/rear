@@ -2,12 +2,12 @@
 .\"     Title: rear
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 12 May 2014
+.\"      Date: 19 February 2015
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "REAR" "8" "12 May 2014" "\ \&" "\ \&"
+.TH "REAR" "8" "19 February 2015" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -274,6 +274,16 @@ OUTPUT_URL=\fBsshfs://\fR
 .RS 4
 Write the image using sshfs and the SSH protocol\&.
 .RE
+.PP
+OUTPUT_URL=\fBnull\fR
+.RS 4
+Do not copy the ISO image from
+\fI/var/lib/rear/output/\fR
+to an external destination\&. Useful in combination with an
+\fIexternal\fR
+backup program, or when
+BACKUP_URL=iso://backup
+.RE
 .SH "BACKUP SOFTWARE INTEGRATION"
 .sp
 Currently Relax\-and\-Recover supports the following backup methods\&. Please distinguish carefully between Relax\-and\-Recover support for 3rd party backup software and Relax\-and\-Recover internal backup methods\&. The latter also creates a backup of your data while the former will only integrate Relax\-and\-Recover with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself\&.
@@ -310,6 +320,11 @@ BACKUP=\fBGALAXY7\fR
 Use CommVault Galaxy 7 to restore the data\&.
 .RE
 .PP
+BACKUP=\fBGALAXY10\fR
+.RS 4
+Use CommVault Galaxy 10 (or Simpana 10) to restore the data\&.
+.RE
+.PP
 BACKUP=\fBNBU\fR
 .RS 4
 Use Symantec NetBackup to restore the data\&.
@@ -323,6 +338,11 @@ Use IBM Tivoli Storage Manager to restore the data\&. The Relax\-and\-Recover re
 BACKUP=\fBNSR\fR
 .RS 4
 Using EMC NetWorker (Legato) to restore the data\&.
+.RE
+.PP
+BACKUP=\fBSESAM\fR
+.RS 4
+Using SEP Sesam to restore the data\&.
 .RE
 .PP
 BACKUP=\fBRBME\fR
@@ -446,6 +466,8 @@ OUTPUT_URL=nfs://server/path/
 .RE
 .\}
 .RE
+.sp
+When using BACKUP=NETFS there is an option to select a BACKUP_TYPE=incremental to have rear make incrementals until the next FULLBACKUPDAY="Mon" has reached\&.
 .SH "CONFIGURATION"
 .sp
 To configure Relax\-and\-Recover you have to edit the configuration files in \fI/etc/rear/\fR\&. All \fI*\&.conf\fR files there are part of the configuration, but only \fIsite\&.conf\fR and \fIlocal\&.conf\fR are intended for the user configuration\&. All other configuration files hold defaults for various distributions and should not be changed\&.
@@ -572,7 +594,7 @@ Relax\-and\-Recover script components\&.
 .PP
 /usr/share/rear/conf/default\&.conf
 .RS 4
-Relax\-and\-Recover\(cqs included defaults\&. Contains a complete set of parameters and its explanation\&. Please do not edit or modify\&. Copy values to
+Relax\-and\-Recover default values\&. Contains a complete set of parameters and its explanation\&. Please do not edit or modify\&. Copy values to
 \fIlocal\&.conf\fR
 or
 \fIsite\&.conf\fR
@@ -582,7 +604,7 @@ instead\&.
 .sp
 Feedback is welcome, please report any issues or improvements to our issue\-tracker at: \m[blue]\fBhttp://github\&.com/rear/issues/\fR\m[]
 .sp
-Furthermore, we welcome pull request via GitHub\&.
+Furthermore, we welcome pull requests via GitHub\&.
 .SH "SEE ALSO"
 .sp
 Relax\-and\-Recover comes with extensive documentation located in \fI/usr/share/doc\fR\&.
@@ -597,7 +619,7 @@ Relax\-and\-Recover is a collaborative process using Github at: \m[blue]\fBhttp:
 The Relax\-and\-Recover website is located at: \m[blue]\fBhttp://relax\-and\-recover\&.org/\fR\m[]
 .SH "COPYRIGHT"
 .sp
-(c) 2006\-2014
+(c) 2006\-2015
 .sp
 Schlomo Schapiro
 .sp

@@ -13,6 +13,7 @@ create_fs() {
         (ext*)
             # File system parameters.
             local blocksize="" reserved_blocks="" max_mounts="" check_interval="" default_mount_options=""
+            local fragmentsize="" bytes_per_inode=""
 
             local option name value
             for option in $options ; do
@@ -21,6 +22,9 @@ create_fs() {
                 case "$name" in
                     (blocksize)
                         blocksize=" -b $value"
+                        ;;
+                    (fragmentsize)
+                        fragmentsize=" -f $value"
                         ;;
                     (bytes_per_inode)
                         bytes_per_inode=" -i $value"
@@ -128,6 +132,11 @@ LogPrint "Creating $fstype-filesystem $mp on $device"
 mkfs.vfat $device
 EOF
             if [ -n "$label" ] ; then
+               echo "$label" | grep -q '\b'  # we substituted all " " with "\\b" in savelayout (\\b becomes \b by reading label)
+               if [ $? -eq 0 ] ; then
+                  label2=$(echo $label | sed -e 's/\\b/ /g') # replace \b with a " "
+                  label="$label2"
+                fi
                 echo "dosfslabel $device $label >&2" >> "$LAYOUT_CODE"
             fi
             if [ -n "$uuid" ]; then

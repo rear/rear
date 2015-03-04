@@ -30,6 +30,7 @@ Optionally, some use-cases require other tools:
  - lsscsi and sg3_utils (for OBDR tape support)
  - mkisofs or genisoimage (for ISO output support)
  - syslinux (for ISO or USB output support)
+ - syslinux-extlinux (for USB support)
 
 In some cases having newer versions of tools may provide better support:
 
@@ -54,9 +55,9 @@ testing and contributing to support those distributions.
 Currently we aim to support the following distributions by testing them
 regularly:
 
- - Red Hat Enterprise Linux and derivatives: RHEL4, RHEL5 and RHEL6
- - SuSe SLES 10, 11, 12
- - Ubuntu LTS: 10.04 and 12.04
+ - Red Hat Enterprise Linux and derivatives: RHEL5, RHEL6 and RHEL7
+ - SuSe SLES 11, 12
+ - Ubuntu LTS: 10.04, 12.04 and 13.*
 
 Distributions known to be 'unsupported' are:
 
@@ -77,7 +78,7 @@ the newer HP SmartArray controller or its firmware.
 
  - Relax-and-Recover supports recovering to different hardware, but it cannot
    always automatically adapt to this new environment. In such cases it
-   requires a manual intervention to eg.
+   requires a manual intervention to e.g.
 
    * modify the _disklayout.conf_ to indicate the number of controller, disks
      or specific custom desires during restore
@@ -101,7 +102,7 @@ The latest stable versions of Fedora and SLES can be installed via +yum+ and +zy
 
 === From RPM packages
 Simply install (or update) the provided packages using
-the command: +rpm -Uhv rear-1.16-1.fc20.noarch.rpm+
+the command: +rpm -Uhv rear-1.17-1.fc20.noarch.rpm+
 
 You can test your installation by running +rear dump+:
 

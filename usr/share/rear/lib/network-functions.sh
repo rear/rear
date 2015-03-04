@@ -79,7 +79,6 @@ eventually_add_hostnames_domain_to_search() {
 }
 
 make_resolv_conf() {
-    [ "${PEERDNS}" = "no" ] && return
 
     if [ "${reason}" = "RENEW" ] &&
        [ "${new_domain_name}" = "${old_domain_name}" ] &&

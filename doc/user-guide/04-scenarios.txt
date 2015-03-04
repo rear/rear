@@ -8,6 +8,7 @@
 == Bootable ISO
 If you simply want a bootable ISO on a central server, you would do:
 
+[source,bash]
 ----
 OUTPUT=ISO
 OUTPUT_URL=http://server/path-to-push/
@@ -16,19 +17,36 @@ OUTPUT_URL=http://server/path-to-push/
 == Bootable ISO with an external (commercial) backup software
 If you rely on your backup software to do the full restore of a system then you could define:
 
+[source,bash]
 ----
 OUTPUT=ISO
-BACKUP=[TSM|NSR|DP|NBU|BACULA|BAREOS|RBME]
+BACKUP=[TSM|NSR|DP|NBU|GALAXY10|SEP|DUPLICITY|BACULA|BAREOS|RBME]
 ----
 
 When using one of the above backup solution (commercial or open source) then there is no need to use +rear mkbackup+ as the backup workflow would be empty. Just use +rear mkrescue+
 
 Rear will incorporate the needed executables and libraries of your chosen backup solution into the rescue image of rear.
 
+== Bootable ISO and storing archive on NFS/NAS
+To create an ISO rescue image and using a central NFS/NAS server to store the archive, you could define:
+
+[source,bash]
+----
+OUTPUT=ISO
+BACKUP=NETFS
+BACKUP_URL=nfs://remote-nfs-server/exports
+#BACKUP_PROG_CRYPT_ENABLED=1
+#BACKUP_PROG_CRYPT_KEY="my_Secret_pw"
+----
+
+The above example shows that it is even possible to protect the archives with a password.  Be aware, that the password entry +BACKUP_PROG_CRYPT_KEY="my_Secret_pw"+ will be deleted in the +/etc/rear/local.conf+ file within the rescue image. So, it is important to remember the password (if you use the rescue image months later could cause problems I guess).
+
+
 == Bootable USB device with backup to USB
 If you want a bootable USB device with a (tar) backup to USB as well, you
 would use:
 
+[source,bash]
 ----
 BACKUP=NETFS
 OUTPUT=USB
@@ -40,6 +58,7 @@ USB_DEVICE=/dev/disk/by-label/REAR-000
 If you want an OBDR image and backup on tape, and use GNU tar for
 backup/restore, you would use:
 
+[source,bash]
 ----
 BACKUP=NETFS
 OUTPUT=OBDR
@@ -51,6 +70,7 @@ TAPE_DEVICE=/dev/nst0
 If you want an OBDR image on tape, and the Bacula tools to recover your
 backup, use:
 
+[source,bash]
 ----
 BACKUP=BACULA
 OUTPUT=OBDR

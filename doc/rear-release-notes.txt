@@ -153,6 +153,8 @@ The references pointing to *fix #nr* or *issue #nr* refer to our [issues tracker
 
 * A new configuration option, `USE_STATIC_NETWORKING=y`, will cause statically configured network settings to be applied even when `USE_DHCLIENT` is in effect.
 
+* [Disaster Recovery Linux Manager (DRLM)](http://drlm.org/) is a new Open Source project to centrally manage Disaster Recovery for Linux. ReaR 1.17 adds support for DRLM with a new configuration option `DRLM_MANAGED=y`.
+
 ### Version 1.16.1 (June 2014)
 
 * The validate rule for `xarg bash -n` changed into `xarg -n bash -n` so that rear is working correctly with older bash version 3 as well. Especially required for SLES 10, SLES 11 and EPEL 5 (issue #410).

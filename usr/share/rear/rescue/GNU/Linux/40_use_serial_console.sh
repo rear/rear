@@ -12,7 +12,7 @@ for param in $KERNEL_CMDLINE; do
     esac
 done
 
-for devnode in $(ls /dev/ttyS[0-9]* | sort); do
+for devnode in $(ls /dev/ttyS[0-9]* /dev/hvsi[0-9]* | sort); do
     speed=$(stty -F $devnode 2>&8 | awk '/^speed / { print $2 }')
     if [ "$speed" ]; then
         cmdline="${cmdline}console=${devnode##/dev/},$speed "

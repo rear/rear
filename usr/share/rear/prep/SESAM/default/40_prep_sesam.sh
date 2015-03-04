@@ -34,7 +34,6 @@ if [ -e /etc/sesam2000.ini ]; then
                 $SESAM_PROT_DIR 
         )
 
-        PROGS=( "${PROGS[@]}" "${PROGS_SESAM[@]}" )
 
         # include libssl as it is needed to run sesam sm_sshd if included
         LIBS=( 

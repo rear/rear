@@ -94,6 +94,8 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 # options: blocks, fragments, max_mount, check_interval, reserved blocks, bytes_per_inode
                 blocksize=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Blocksize:[0-9]*' | cut -d ':' -f 2 )
                 echo -n " blocksize=$blocksize"
+                fragmentsize=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Fragmentsize:[0-9]*' | cut -d ':' -f 2 )
+                echo -n " fragmentsize=$fragmentsize"
                 nr_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -iv reserved | grep -oi 'Blockcount:[0-9]*' | cut -d ':' -f 2 )
                 reserved_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Reservedblockcount:[0-9]*' | cut -d ':' -f 2 )
                 reserved_percentage=$(( reserved_blocks * 100 / nr_blocks ))
@@ -117,8 +119,8 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 ;;
             (vfat)
                 # Make sure we don't get any other output from dosfslabel (errors go to stdout :-/)
-                label=$(dosfslabel $device | tail -1)
-		uuid=$(blkid_uuid_of_device $device)
+                label=$(dosfslabel $device | tail -1 | sed -e 's/ /\\\\b/g')  # replace all " " with "\\b"
+                uuid=$(blkid_uuid_of_device $device)
                 echo -n " uuid=$uuid label=$label"
                 ;;
             (xfs)
@@ -143,6 +145,10 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         # Remove parenthesis (from the traditional mount command output) from the list of options:
         options=${options#(}
         options=${options%)}
+
+        #clip out the "seclabel" option to avoid problems. See issue no.545
+        options=${options//seclabel,/}
+
         echo -n " options=$options"
         # Finish the current filesystem layout line with a newline character:
         echo
