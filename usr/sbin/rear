@@ -211,6 +211,8 @@ for config in site local rescue; do
 	Source "$CONFIG_DIR/$config.conf"
 done
 
+SourceStage "init"
+
 # check for requirements, do we have all required binaries ?
 MISSING_PROGRS=()
 for f in "${REQUIRED_PROGS[@]}" ; do
