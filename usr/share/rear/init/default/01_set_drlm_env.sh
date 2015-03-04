@@ -6,8 +6,7 @@ fi
 
 PROGS=( "${PROGS[@]}" curl )
 
-drlm_import_runtime_config
+# Needed for curl with NSS support
+LIBS=( "${LIBS[@]}" /usr/lib64/libsoftokn3.so /usr/lib64/libsqlite3.so.0 /lib64/libfreeblpriv3.so )
 
-if [[ "$OUTPUT" == "PXE" ]]; then
-    OUTPUT_PREFIX_PXE="$DRLM_CLIENT/$OUTPUT_PREFIX"
-fi
+drlm_import_runtime_config
