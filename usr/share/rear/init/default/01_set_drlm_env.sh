@@ -7,6 +7,12 @@ fi
 PROGS=( "${PROGS[@]}" curl )
 
 # Needed for curl with NSS support
-LIBS=( "${LIBS[@]}" /usr/lib64/libsoftokn3.so /usr/lib64/libsqlite3.so.0 /lib64/libfreeblpriv3.so )
+LIBS=( 
+    "${LIBS[@]}"
+    /usr/lib*/libsoftokn3.so* 
+    /usr/lib*/libsqlite3.so* 
+    /lib*/libfreeblpriv3.so*
+    /usr/lib*/libfreeblpriv3.so*
+)
 
 drlm_import_runtime_config
