@@ -9,7 +9,7 @@ supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"
 #   /dev/sda2 / btrfs (rw,relatime,space_cache)
 #   /dev/sda2 /.snapshots btrfs (rw,relatime,space_cache)
 #   /dev/sda2 /var/tmp btrfs (rw,relatime,space_cache)
-read_filesystems_command="mount -t $supported_filesystems | tr -s '[:blank:]' ' ' | cut -d ' ' -f 1,3,5,6"
+read_filesystems_command="mount -t $supported_filesystems | cut -d ' ' -f 1,3,5,6"
 # If the findmnt command is available use it instead of the traditional mount command
 # because (since SLE12) "man 8 mount" reads:
 #   The listing mode is maintained for backward compatibility only.
@@ -23,7 +23,7 @@ read_filesystems_command="mount -t $supported_filesystems | tr -s '[:blank:]' ' 
 # The only difference is that the traditional mount command output has the list of options in parenthesis.
 findmnt_command="$( type -P findmnt )"
 if test -x "$findmnt_command" ; then
-    read_filesystems_command="$findmnt_command -alnuv -o SOURCE,TARGET,FSTYPE,OPTIONS -t $supported_filesystems | tr -s '[:blank:]' ' '"
+    read_filesystems_command="$findmnt_command -nrv -o SOURCE,TARGET,FSTYPE,OPTIONS -t $supported_filesystems"
     Log "Saving filesystem layout (using the findmnt command)."
 else
     Log "Saving filesystem layout (using the traditional mount command)."
@@ -229,9 +229,9 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         ########################################
         # Mounted btrfs subvolumes:
         if test -x "$findmnt_command" ; then
-            read_mounted_btrfs_subvolumes_command="$findmnt_command -alnuv -o SOURCE,TARGET,OPTIONS,FSROOT -t btrfs | tr -s '[:blank:]' ' '"
+            read_mounted_btrfs_subvolumes_command="$findmnt_command -nrv -o SOURCE,TARGET,OPTIONS,FSROOT -t btrfs"
         else
-            read_mounted_btrfs_subvolumes_command="mount -t btrfs | tr -s '[:blank:]' ' ' | cut -d ' ' -f 1,3,6"
+            read_mounted_btrfs_subvolumes_command="mount -t btrfs | cut -d ' ' -f 1,3,6"
         fi
         while read device subvolume_mountpoint mount_options btrfs_subvolume_path junk ; do
             if test -n "$device" -a -n "$subvolume_mountpoint" ; then
