@@ -110,7 +110,7 @@ function make_syslinux_config {
 	[[ -d "$1" ]]
 	BugIfError "Required argument for BOOT_DIR is missing"
 	[[ -d "$SYSLINUX_DIR" ]]
-	BugIfError "Required environment SYSLINUX_DIR ($SYSLINX_DIR) is not set or not a d irectory"
+	BugIfError "Required environment SYSLINUX_DIR ($SYSLINUX_DIR) is not set or not a d irectory"
 	[[ "$FEATURE_SYSLINUX_IS_SET" ]]
 	BugIfError "You must call set_syslinux_features before"
 
