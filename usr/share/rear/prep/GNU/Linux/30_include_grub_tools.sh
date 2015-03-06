@@ -1,6 +1,6 @@
 # GRUB2 has much more commands then the legacy grub command, including modules
 # check if we're using grub2 before doing something...
-[ ! -d $VAR_LIB/recovery ] && mkdir -p $VAR_DIR/recovery
+[[ ! -d $VAR_DIR/recovery ]] && mkdir -p $VAR_DIR/recovery
 
 grubdir=$(ls -d /boot/grub*)
 [[ ! -d $grubdir ]] && grubdir=/boot/grub	# a safe choice
