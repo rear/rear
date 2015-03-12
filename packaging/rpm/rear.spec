@@ -99,12 +99,12 @@ Requires: util-linux
 %endif
 
 ### The rear-snapshot package is no more
-Obsoletes: rear-snapshot
+#Obsoletes: rear-snapshot
 
 %description
 Relax-and-Recover is the leading Open Source disaster recovery and system
-migration solution, and successor to mkcdrec. It comprises of a modular
-framework and ready-to-go workflows for many common situations to produce
+migration solution. It comprises of a modular
+frame-work and ready-to-go workflows for many common situations to produce
 a bootable image and restore from backup using this image. As a benefit,
 it allows to restore to different hardware and can therefore be used as
 a migration tool as well.
