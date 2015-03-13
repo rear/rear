@@ -1,3 +1,9 @@
+rear (1.17.0-1) stable; urgency=high
+
+  * new features
+  * lots of bug fixes
+
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Fri, 13 Mar 2015 14:53:50 +0100
 rear (1.16.1-1) stable; urgency=low
 
   * script validation now works for bash v3 and v4
