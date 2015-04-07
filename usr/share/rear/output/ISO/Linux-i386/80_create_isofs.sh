@@ -28,6 +28,11 @@ cp -pL $v $KERNEL_FILE $TMP_DIR/isofs/isolinux/kernel >&2
 cp $v $TMP_DIR/initrd.cgz $TMP_DIR/isofs/isolinux/initrd.cgz >&2
 
 #ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/kernel $TMP_DIR/initrd.cgz )
+# in case the user populates this array manually we must not forget to copy
+# these files to our temporary isofs
+if test "${#ISO_FILES[@]}" -gt 0 ; then
+    cp -pL $v ${ISO_FILES[@]}  $TMP_DIR/isofs/isolinux/ >&2
+fi
 
 mkdir -p $v "$ISO_DIR" >&2
 StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
