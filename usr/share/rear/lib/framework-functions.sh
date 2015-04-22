@@ -87,7 +87,6 @@ function cleanup_build_area_and_end_program() {
         rm -Rf $ROOTFS_DIR
         # line below put in comment due to issue #465
         #rm -Rf $BUILD_DIR/outputfs
-        rmdir $v $BUILD_DIR/outputfs >&2
         # in worst case it could not umount; so before remove the BUILD_DIR check if above outputfs is gone
         mount | grep -q "$BUILD_DIR/outputfs"
         if [[ $? -eq 0 ]]; then
@@ -96,6 +95,9 @@ function cleanup_build_area_and_end_program() {
             sleep 2
             umount -f -l $BUILD_DIR/outputfs >&2
             rmdir $v $BUILD_DIR/outputfs >&2
+        else
+            # not mounted so we can safely delete $BUILD_DIR/outputfs
+            rm -Rf $BUILD_DIR/outputfs
         fi
         rmdir $v $BUILD_DIR >&2
     fi
