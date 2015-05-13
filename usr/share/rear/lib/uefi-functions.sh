@@ -25,8 +25,8 @@ function efibootmgr_read_var {
 function uefi_extract_bootloader {
     # input arg path/data
     local dt
-    dt=$(cat "$1" | cut -c40- | tr -cd '[:print:]\n' | cut -d\\ -f2-)
-    echo "\\${dt}"
+    dt=$(cat "$1" | tail -1 | tr -cd '[:print:]\n' | cut -d\\ -f2-)
+    echo "\\$(trim ${dt})"
 }
 
 function trim {
