@@ -19,9 +19,11 @@ fi
 (( USING_UEFI_BOOTLOADER )) && return # set to 1 means UEFI booting
 
 # check the BOOTLOADER variable (read by 01_prepare_checks.sh script)
-if [[ "$BOOTLOADER" = "GRUB2" ]]; then
-    # grub2 script should handle this instead
-    return
+if [[ "$BOOTLOADER" = "GRUB" ]]; then
+    if [[ $(type -p grub-probe) || $(type -p grub2-probe) ]]; then
+        # grub2 script should handle this instead
+        return
+    fi
 fi
 
 # Only for GRUB Legacy - GRUB2 will be handled by its own script
