@@ -48,9 +48,9 @@ if [ "$REAL_USB_DEVICE" != "$RAW_USB_DEVICE" ] ; then
 	# Write the USB boot sector if the filesystem is not the entire disk
 	LogPrint "Writing MBR to $RAW_USB_DEVICE"
 	if [[ "$FEATURE_DD_OFLAG" ]]; then
-		dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE bs=440 count=1 oflag=sync
+		dd if=$SYSLINUX_MBR_BIN of=$RAW_USB_DEVICE bs=440 count=1 oflag=sync
 	else
-		dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE bs=440 count=1
+		dd if=$SYSLINUX_MBR_BIN of=$RAW_USB_DEVICE bs=440 count=1
 		sync
 	fi
 	StopIfError "Problem with writing the mbr.bin to '$RAW_USB_DEVICE'"

@@ -19,6 +19,20 @@ function get_syslinux_version {
     echo "$syslinux_version"
 }
 
+function find_syslinux_file {
+    # input argument is usually isolinux.bin
+    # output argument is the full path of isolinux.bin
+    local syslinux_file=""
+
+    for file in /usr/{share,lib,libexec}/*/"$1" ; do
+        if [[ -s "$file" ]]; then
+            syslinux_file="$file"
+            break # for loop
+        fi
+    done
+    echo "$syslinux_file"
+}
+
 function set_syslinux_features {
 	# Test for features in syslinux
 	# true if isolinux supports booting from /boot/syslinux, /boot or only from / of the ISO
@@ -46,12 +60,10 @@ function set_syslinux_features {
 
 	# Define the syslinux directory for later usage
 	if [[ -z "$SYSLINUX_DIR" ]]; then
-		for file in /usr/{share,lib,libexec}/*/isolinux.bin ; do
-			if [[ -s "$file" ]]; then
-				SYSLINUX_DIR="$(dirname $file)"
-				break # for loop
-			fi
-		done
+		ISOLINUX_BIN=$(find_syslinux_file isolinux.bin)
+		if [[ -s "$ISOLINUX_BIN" ]]; then
+			SYSLINUX_DIR="$(dirname $ISOLINUX_BIN)"
+		fi
 	fi
 	[[ "$SYSLINUX_DIR" ]]
 	StopIfError "Could not find a working syslinux path."
