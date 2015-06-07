@@ -78,7 +78,7 @@ case "$(basename ${BACKUP_PROG})" in
 			$BACKUP_PROG_X_OPTIONS \
 			${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} $BACKUP_PROG_COMPRESS_OPTIONS \
 			-X $TMP_DIR/backup-exclude.txt -C / -c -f - \
-			$(cat $TMP_DIR/backup-include.txt) $LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
+			$(cat $TMP_DIR/backup-include.txt) $LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
 		$BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
 			--no-wildcards-match-slash --one-file-system \
 			--ignore-failed-read $BACKUP_PROG_OPTIONS \
