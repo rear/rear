@@ -40,7 +40,7 @@ fi
 # Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default value to cat in 
 # case encryption is disabled
 if (( $BACKUP_PROG_CRYPT_ENABLED == 1 )); then
-  LogPrint "Encrypting archive with key: $BACKUP_PROG_CRYPT_KEY"
+  LogPrint "Encrypting archive with a key"
 else
   LogPrint "Encrypting disabled"
   BACKUP_PROG_CRYPT_OPTIONS="cat"
