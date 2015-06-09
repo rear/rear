@@ -20,6 +20,18 @@
 #    mark_tree_as_done "fs:$mountpoint"
 #done
 
+# check if in MANUAL_INCLUDE mode. If YES, mark all filesystems
+# NOT included in BACKUP_PROG_INCLUDE as done
+if [ "${MANUAL_INCLUDE:-NO}" == "YES" ] ; then
+    while read fs device mountpoint junk ; do
+        if ! IsInArray "$mountpoint" "${BACKUP_PROG_INCLUDE[@]}" ; then
+            LogPrint "Excluding mountpoint $mountpoint. (MANUAL_INCLUDE mode)"
+            mark_as_done "fs:$mountpoint"
+            mark_tree_as_done "fs:$mountpoint"
+        fi
+    done < <(grep ^fs $LAYOUT_FILE)
+fi
+
 for md in "${EXCLUDE_MD[@]}" ; do
     LogPrint "Excluding RAID $md."
     mark_as_done "/dev/$md"
