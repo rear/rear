@@ -92,26 +92,26 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 label=$( e2label $device )
                 echo -n " label=$label"
                 # options: blocks, fragments, max_mount, check_interval, reserved blocks, bytes_per_inode
-                blocksize=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Blocksize:[0-9]*' | cut -d ':' -f 2 )
+                blocksize=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Blocksize:[0-9]*' | cut -d ':' -f 2 )
                 echo -n " blocksize=$blocksize"
                 # we agreed to comment fragmentsize due mkfs.ext* option -f not existing (man page says it is) - issue #558
                 #fragmentsize=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Fragmentsize:[0-9]*' | cut -d ':' -f 2 )
                 #echo -n " fragmentsize=$fragmentsize"
-                nr_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -iv reserved | grep -oi 'Blockcount:[0-9]*' | cut -d ':' -f 2 )
-                reserved_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Reservedblockcount:[0-9]*' | cut -d ':' -f 2 )
+                nr_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -iv reserved | grep -i 'Blockcount:[0-9]*' | cut -d ':' -f 2 )
+                reserved_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Reservedblockcount:[0-9]*' | cut -d ':' -f 2 )
                 reserved_percentage=$(( reserved_blocks * 100 / nr_blocks ))
+                StopIfError "Divide by zero detected"
                 echo -n " reserved_blocks=$reserved_percentage%"
-                # FIXME: I (jsmeix@suse.de) have no idea what the reason for the following is:
-                # On Fedora | grep -oi 'Maximummountcount:[0-9]*' | does not work but | grep -i 'Maximummountcount:[0-9]*' | works.
-                # If someone knows the reason replace this comment with a description of the actual root cause.
                 max_mounts=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Maximummountcount:[0-9]*' | cut -d ':' -f 2 )
                 echo -n " max_mounts=$max_mounts"
-                check_interval=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Checkinterval:[0-9]*' | cut -d ':' -f 2 )
+                check_interval=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Checkinterval:[0-9]*' | cut -d ':' -f 2 | cut -d '(' -f1 )
+                check_interval=$( is_numeric $check_interval )  # if non-numeric 0 is returned
                 # translate check_interval from seconds to days
                 let check_interval=$check_interval/86400
                 echo -n " check_interval=${check_interval}d"
-                nr_inodes=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Inodecount:[0-9]*' | cut -d ':' -f 2 )
+                nr_inodes=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Inodecount:[0-9]*' | cut -d ':' -f 2 )
                 let "bytes_per_inode=$nr_blocks*$blocksize/$nr_inodes"
+                StopIfError "Divide by zero detected"
                 echo -n " bytes_per_inode=$bytes_per_inode"
                 default_mount_options=$( tune2fs -l $device | grep -i "Default mount options:" | cut -d ':' -f 2 | awk '{$1=$1};1' | tr ' ' ',' | grep -v none )
                 if [[ -n $default_mount_options ]]; then
