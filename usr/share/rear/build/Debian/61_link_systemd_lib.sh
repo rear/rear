@@ -1,0 +1,1 @@
+../SUSE_LINUX/61_link_systemd_lib.sh

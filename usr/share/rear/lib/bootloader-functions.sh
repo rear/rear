@@ -57,6 +57,8 @@ function set_syslinux_features {
 	FEATURE_SYSLINUX_MENU_HIDDEN=
 	# true if syslinux supports TEXT HELP directive
 	FEATURE_SYSLINUX_TEXT_HELP=
+        # true if syslinux supports modules sub-dir (Version > 5.00)
+        FEATURE_SYSLINUX_MODULES=
 
 	# Define the syslinux directory for later usage
 	if [[ -z "$SYSLINUX_DIR" ]]; then
@@ -102,6 +104,10 @@ function set_syslinux_features {
 		FEATURE_SYSLINUX_EXTLINUX_INSTALL="y"
 	fi
 
+	if version_newer "$syslinux_version" 5.00; then
+		FEATURE_SYSLINUX_MODULES=y
+	fi
+
 	if [[ "$FEATURE_SYSLINUX_BOOT_SYSLINUX" ]]; then
 		SYSLINUX_PREFIX="boot/syslinux"
 	else
@@ -128,6 +134,18 @@ function make_syslinux_config {
 
 	local BOOT_DIR="$1" ; shift
 	local flavour="${1:-isolinux}" ; shift
+
+	if [[ "$FEATURE_SYSLINUX_MODULES" ]]; then
+		SYSLINUX_MODULES_DIR=
+		if [[ -d /usr/lib/syslinux/modules ]]; then
+			if (( USING_UEFI_BOOTLOADER )); then
+				SYSLINUX_MODULES_DIR=/usr/lib/syslinux/modules/efi64
+			else
+				SYSLINUX_MODULES_DIR=/usr/lib/syslinux/modules/bios
+			fi
+			SYSLINUX_DIR="$SYSLINUX_MODULES_DIR"
+		fi
+	fi
 
     # Enable serial console, unless explicitly disabled (only last entry is used :-/)
     if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
