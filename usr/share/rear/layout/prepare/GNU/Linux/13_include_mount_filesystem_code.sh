@@ -54,6 +54,13 @@ mount_fs() {
             # Call the btrfs_subvolumes_setup function for the btrfs filesystem that was mounted above:
             btrfs_subvolumes_setup $device $mp $mountopts
             ;;
+        (vfat)
+            # mounting vfat filesystem - avoid using mount options - issue #576
+            (
+            echo "mkdir -p /mnt/local$mp"
+            echo "mount $device /mnt/local$mp"
+            ) >> "$LAYOUT_CODE"
+            ;;
         (*)
             (
             echo "mkdir -p /mnt/local$mp"
