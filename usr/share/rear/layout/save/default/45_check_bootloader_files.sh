@@ -12,4 +12,6 @@ case $myBOOTloader in
         ;;
     LILO) CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/lilo.conf )
         ;;
+    ELILO) CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/elilo.conf )
+        ;;
 esac
