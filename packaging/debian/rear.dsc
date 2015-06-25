@@ -1,6 +1,6 @@
 Format: 1.0
 Source: rear
-Version: 1.17.0
+Version: 1.17.1
 Binary: rear
 Maintainer: Dag Wieers <dag@wieers.com>
 Architecture: all

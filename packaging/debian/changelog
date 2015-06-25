@@ -1,3 +1,11 @@
+rear (1.17.1-1) stable; urgency=low
+
+  * added support for Debian 8 and Ubuntu 15
+  * some security fixes
+  * minor bug fixes
+
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Thu, 25 Jun 2015 09:36:39 +0100
+
 rear (1.17.0-1) stable; urgency=high
 
   * new features
