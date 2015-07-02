@@ -13,12 +13,12 @@ Relax-and-Recover, an Open Source bare-metal disaster recovery and system
 migration solution designed for Linux.
 
 :leveloffset: 1
-include::01-introduction.txt[]
-include::02-getting-started.txt[]
-include::03-configuration.txt[]
-include::04-scenarios.txt[]
-include::05-integration.txt[]
-include::06-layout-configuration.txt[]
-include::07-tips-and-tricks.txt[]
-include::08-troubleshooting.txt[]
-include::09-design-concepts.txt[]
+include::01-introduction.asciidoc[]
+include::02-getting-started.asciidoc[]
+include::03-configuration.asciidoc[]
+include::04-scenarios.asciidoc[]
+include::05-integration.asciidoc[]
+include::06-layout-configuration.asciidoc[]
+include::07-tips-and-tricks.asciidoc[]
+include::08-troubleshooting.asciidoc[]
+include::09-design-concepts.asciidoc[]
