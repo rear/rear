@@ -14,11 +14,19 @@ migration solution designed for Linux.
 
 :leveloffset: 1
 include::01-introduction.asciidoc[]
+
 include::02-getting-started.asciidoc[]
+
 include::03-configuration.asciidoc[]
+
 include::04-scenarios.asciidoc[]
+
 include::05-integration.asciidoc[]
+
 include::06-layout-configuration.asciidoc[]
+
 include::07-tips-and-tricks.asciidoc[]
+
 include::08-troubleshooting.asciidoc[]
+
 include::09-design-concepts.asciidoc[]
