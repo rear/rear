@@ -2,8 +2,8 @@ prefix = /usr
 datadir = $(prefix)/share
 mandir = $(datadir)/man
 
-adoctargets = relax-and-recover-user-guide.asciidoc
-htmltargets = $(patsubst %.asciidoc, %.html, $(adoctargets))
+adoctargets = relax-and-recover-user-guide.adoc
+htmltargets = $(patsubst %.adoc, %.html, $(adoctargets))
 
 all: docs
 
@@ -14,5 +14,5 @@ docs: $(htmltargets)
 clean:
 	rm -f *.html *.svg *.xml
 
-%.html: %.asciidoc
+%.html: %.adoc
 	asciidoc $<
