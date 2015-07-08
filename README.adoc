@@ -32,7 +32,7 @@ during initial configuration and help debug during integration.
 Professional services and support are available.
 
 For more detailed information about Relax-and-Recover, please read the
-Relax-and-Recover User Guide.
+http://relax-and-recover.org/documentation/[Relax-and-Recover documentation].
 
 
 REQUIREMENTS
