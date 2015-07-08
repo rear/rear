@@ -61,7 +61,7 @@ binary-indep: build
 	# --- end custom part for installing
 
 	dh_installdeb
-	dh_installdocs README doc/*
+	dh_installdocs README.adoc doc/*
 	dh_installchangelogs
 	# dh_installman usr/share/rear/doc/rear.8
 	find debian/rear -name ".git*" -exec rm {} \;
