@@ -25,7 +25,11 @@ StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executable !"
 Log "Copying kernel"
 cp -pL $v $KERNEL_FILE $TMP_DIR/kernel >&2
 
-ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/kernel initrd.cgz )
+if [[ "$SUSE_STYLE" ]]; then
+  ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/kernel initrd.cgz yaboot)
+else
+  ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/kernel initrd.cgz)
+fi
 Log "Starting '$ISO_MKISOFS_BIN'"
 LogPrint "Making ISO image"
 

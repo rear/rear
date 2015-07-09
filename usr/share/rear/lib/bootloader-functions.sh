@@ -33,6 +33,20 @@ function find_syslinux_file {
     echo "$syslinux_file"
 }
 
+function find_yaboot_file {
+    # input argument is usually: yaboot
+    # output argument is the full path of the yaboot binary
+    local yaboot_file=""
+
+    for file in /{lib/lilo,usr/lib}/*/"$1" ; do
+        if [[ -s "$file" ]]; then
+            yaboot_file="$file"
+            break
+        fi
+    done
+    echo "$yaboot_file"
+}
+
 function set_syslinux_features {
 	# Test for features in syslinux
 	# true if isolinux supports booting from /boot/syslinux, /boot or only from / of the ISO
