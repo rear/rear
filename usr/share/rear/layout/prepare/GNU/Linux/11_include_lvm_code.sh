@@ -54,6 +54,10 @@ create_lvmdev() {
 create_lvmgrp() {
     if [ -z "$MIGRATION_MODE" ] ; then
         restore_lvmgrp "$1"
+        cat >> "$LAYOUT_CODE" <<EOF
+LogPrint "Sleeping 3 seconds to let udev or systemd-udevd create their devices..."
+sleep 3 >&2
+EOF
         return
     fi
 
