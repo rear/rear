@@ -5,7 +5,11 @@
 # of rear mkrescue
 
 # load udev or load modules manually
-if test -s /etc/udev/rules.d/00-rear.rules -a -w /sys/kernel/uevent_helper ; then
+# again, check if current systemd is present
+systemd_version=$(systemd-notify --version 2>/dev/null | grep systemd | awk '{ print $2; }')
+[[ -z "$systemd_version" ]] && systemd_version=0
+
+if [ $systemd_version -gt 190 ] || [ -s /etc/udev/rules.d/00-rear.rules ] && [ -w /sys/kernel/uevent_helper ]; then
 	# found our "special" module-auto-load rule
 
 	# clean away old device nodes from source system
