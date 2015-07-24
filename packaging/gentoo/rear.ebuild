@@ -46,7 +46,7 @@ src_install () {
 	# copy main script-file and docs
 	dosbin usr/sbin/${PN}
 	doman doc/${PN}.8
-	dodoc README
+	dodoc README.adoc
 
 	insinto /usr/share/
 	doins -r usr/share/${PN}/
