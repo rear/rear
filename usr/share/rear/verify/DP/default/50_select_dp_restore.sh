@@ -3,15 +3,15 @@
 # Select dataprotector backup to be restored
 #
 # Ends in:
-#   /tmp/dp_recovery_host     - the host to be restored
-#   /tmp/dp_recovery_devs     - the devices used during backup
-#   /tmp/dp_recovery_session  - the session to be restored
-#   /tmp/dp_recovery_datalist - the datalist to be restored
+#   $TMP_DIR/dp_recovery_host     - the host to be restored
+#   $TMP_DIR/dp_recovery_devs     - the devices used during backup
+#   $TMP_DIR/dp_recovery_session  - the session to be restored
+#   $TMP_DIR/dp_recovery_datalist - the datalist to be restored
 #
 
 #set -e
 
-[ -f /tmp/DP_GUI_RESTORE ] && return # GUI restore explicetely requested
+[ -f $TMP_DIR/DP_GUI_RESTORE ] && return # GUI restore explicetely requested
 
 
 OMNIDB=/opt/omni/bin/omnidb
@@ -25,17 +25,17 @@ DPGetBackupList() {
   else
     HOST="`hostname`"
   fi >&2
-  test -f /tmp/dp_list_of_sessions.in && rm -f /tmp/dp_list_of_sessions.in
-  touch /tmp/dp_list_of_sessions.in
-  ${OMNIDB} -filesystem | grep "${HOST}" | cut -d"'" -f -2 > /tmp/dp_list_of_fs_objects
-  cat /tmp/dp_list_of_fs_objects | while read object; do
+  test -f $TMP_DIR/dp_list_of_sessions.in && rm -f $TMP_DIR/dp_list_of_sessions.in
+  touch $TMP_DIR/dp_list_of_sessions.in
+  ${OMNIDB} -filesystem | grep "${HOST}" | cut -d"'" -f -2 > $TMP_DIR/dp_list_of_fs_objects
+  cat $TMP_DIR/dp_list_of_fs_objects | while read object; do
     host_fs=`echo ${object} | awk '{print $1}'`
     fs=`echo ${object} | awk '{print $1}' | cut -d: -f 2`
     label=`echo "${object}" | cut -d"'" -f 2`
-    ${OMNIDB} -filesystem $host_fs "$label" | grep -v "^SessionID" | grep -v "^===========" | awk '{ print $1 }' >> /tmp/dp_list_of_sessions.in
+    ${OMNIDB} -filesystem $host_fs "$label" | grep -v "^SessionID" | grep -v "^===========" | awk '{ print $1 }' >> $TMP_DIR/dp_list_of_sessions.in
   done
-  sort -u -r < /tmp/dp_list_of_sessions.in > /tmp/dp_list_of_sessions
-  cat /tmp/dp_list_of_sessions | while read sessid; do
+  sort -u -r < $TMP_DIR/dp_list_of_sessions.in > $TMP_DIR/dp_list_of_sessions
+  cat $TMP_DIR/dp_list_of_sessions | while read sessid; do
     datalist=$(${OMNIDB} -session $sessid -report | grep BSM | cut -d\" -f 2 | head -1)
     device=$(${OMNIDB} -session $sessid -detail | grep "Device name" | cut -d: -f 2 | awk '{ print $1 }' | sort -u)
     media=$(${OMNIDB} -session $sessid -media | grep -v "^Medium Label" | grep -v "^=====" | awk '{ print $1 }' | sort -u)
@@ -52,14 +52,14 @@ DPChooseBackup() {
     HOST="`hostname`"
   fi >&2
   LogPrint "Scanning for DP backups for Host ${HOST}"
-  DPGetBackupList $HOST > /tmp/backup.list
-  >/tmp/backup.list.part
+  DPGetBackupList $HOST > $TMP_DIR/backup.list
+  > $TMP_DIR/backup.list.part
 
-  SESSION=$(head -1 /tmp/backup.list | cut -f 1)
-  DATALIST=$(head -1 /tmp/backup.list | cut -f 2)
-  DEVS=$(head -1 /tmp/backup.list | cut -f 3)
-  MEDIA=$(head -1 /tmp/backup.list | cut -f 4)
-  HOST=$(head -1 /tmp/backup.list | cut -f 5)
+  SESSION=$(head -1 $TMP_DIR/backup.list | cut -f 1)
+  DATALIST=$(head -1 $TMP_DIR/backup.list | cut -f 2)
+  DEVS=$(head -1 $TMP_DIR/backup.list | cut -f 3)
+  MEDIA=$(head -1 $TMP_DIR/backup.list | cut -f 4)
+  HOST=$(head -1 $TMP_DIR/backup.list | cut -f 5)
 
   while true; do
     LogPrint ""
@@ -75,10 +75,10 @@ DPChooseBackup() {
     read -t $WAIT_SECS -r -n 1 -p "press ENTER or choose H,D,S [$WAIT_SECS secs]: " 2>&1
 
     if test -z "${REPLY}"; then
-      echo $HOST > /tmp/dp_recovery_host
-      echo $SESSION > /tmp/dp_recovery_session
-      echo $DATALIST > /tmp/dp_recovery_datalist
-      echo $DEVS > /tmp/dp_recovery_devs
+      echo $HOST > $TMP_DIR/dp_recovery_host
+      echo $SESSION > $TMP_DIR/dp_recovery_session
+      echo $DATALIST > $TMP_DIR/dp_recovery_datalist
+      echo $DEVS > $TMP_DIR/dp_recovery_devs
       LogPrint "ok"
       return
     elif test "${REPLY}" = "h" -o "${REPLY}" = "H"; then
@@ -87,24 +87,24 @@ DPChooseBackup() {
     elif test "${REPLY}" = "d" -o "${REPLY}" = "D"; then
       local DL=test
       DPChangeDataList
-      >/tmp/backup.list.part
-      cat /tmp/backup.list | while read s; do
+      > $TMP_DIR/backup.list.part
+      cat $TMP_DIR/backup.list | while read s; do
         DATALIST=$(echo "$s" | cut -f 2)
-        if test $DATALIST = $DL; then echo "$s" >> /tmp/backup.list.part; fi
+        if test $DATALIST = $DL; then echo "$s" >> $TMP_DIR/backup.list.part; fi
       done
-      SESSION=$(head -1 /tmp/backup.list.part | cut -f 1)
-      DATALIST=$(head -1 /tmp/backup.list.part | cut -f 2)
-      DEVS=$(head -1 /tmp/backup.list.part | cut -f 3)
-      MEDIA=$(head -1 /tmp/backup.list.part | cut -f 4)
-      HOST=$(head -1 /tmp/backup.list.part | cut -f 5)
+      SESSION=$(head -1 $TMP_DIR/backup.list.part | cut -f 1)
+      DATALIST=$(head -1 $TMP_DIR/backup.list.part | cut -f 2)
+      DEVS=$(head -1 $TMP_DIR/backup.list.part | cut -f 3)
+      MEDIA=$(head -1 $TMP_DIR/backup.list.part | cut -f 4)
+      HOST=$(head -1 $TMP_DIR/backup.list.part | cut -f 5)
     elif test "${REPLY}" = "s" -o "${REPLY}" = "S"; then
       local SESS=$SESSION
       DPChangeSession
       SESSION=$SESS
-      DATALIST=$(grep "^$SESS" /tmp/backup.list | cut -f 2)
-      DEVS=$(grep "^$SESS" /tmp/backup.list| cut -f 3)
-      MEDIA=$(grep "^$SESS" /tmp/backup.list | cut -f 4)
-      HOST=$(grep "^$SESS" /tmp/backup.list | cut -f 5)
+      DATALIST=$(grep "^$SESS" $TMP_DIR/backup.list | cut -f 2)
+      DEVS=$(grep "^$SESS" $TMP_DIR/backup.list| cut -f 3)
+      MEDIA=$(grep "^$SESS" $TMP_DIR/backup.list | cut -f 4)
+      HOST=$(grep "^$SESS" $TMP_DIR/backup.list | cut -f 5)
     fi
   done
 }
@@ -135,15 +135,15 @@ DPChangeDataList() {
     LogPrint "Available datalists for host:"
     LogPrint ""
     i=0
-    cat /tmp/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | while read s; do
+    cat $TMP_DIR/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | while read s; do
       i=$(expr $i + 1)
       LogPrint "  [$i] $s"
     done
-    i=$(cat /tmp/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | wc -l)
+    i=$(cat $TMP_DIR/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | wc -l)
     LogPrint ""
     read -r -p "Please choose datalist [1-$i]: " 2>&1
     if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>&8; then
-      DL=$(cat /tmp/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | head -${REPLY} | tail -1)
+      DL=$(cat $TMP_DIR/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | head -${REPLY} | tail -1)
       valid=1
     else
       LogPrint "Invalid number '${REPLY}'!"
@@ -159,16 +159,16 @@ DPChangeSession() {
     LogPrint "Available sessions for datalist:"
     LogPrint ""
     i=0
-    if test ! -s /tmp/backup.list.part; then cp /tmp/backup.list /tmp/backup.list.part; fi
-    cat /tmp/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | while read s; do
+    if test ! -s $TMP_DIR/backup.list.part; then cp $TMP_DIR/backup.list $TMP_DIR/backup.list.part; fi
+    cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | while read s; do
       i=$(expr $i + 1)
       LogPrint "  [$i] $s"
     done
-    i=$(cat /tmp/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | wc -l)
+    i=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | wc -l)
     echo
     read -r -p "Please choose session [1-$i]: " 2>&1
     if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>&8; then
-      SESS=$(cat /tmp/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | head -${REPLY} | tail -1)
+      SESS=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | head -${REPLY} | tail -1)
       valid=1
     else
       LogPrint "Invalid number '${REPLY}!"
