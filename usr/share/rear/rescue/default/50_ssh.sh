@@ -31,6 +31,10 @@ if has_binary sshd; then
     )
     )
 
+    # we need to add some specific NSS lib for shadow passwords to work on RHEL 6/7
+    LIBS=( ${LIBS[@]} /usr/lib64/libfreeblpriv3.* )
+    Log "Adding required libfreeblpriv3.so to LIBS"
+
     # copy ssh user
     if PASSWD_SSH=$(grep ssh /etc/passwd) ; then
     # sshd:x:71:65:SSH daemon:/var/lib/sshd:/bin/false
@@ -52,7 +56,7 @@ if has_binary sshd; then
     # Set the SSH root password; if pw is hashed just copy it otherwise use openssl (for backward compatibility)
     if [[ "$SSH_ROOT_PASSWORD" ]] ; then
         case "$SSH_ROOT_PASSWORD" in
-        "$1$*") echo "root:$SSH_ROOT_PASSWORD:::::::" > $ROOTFS_DIR/etc/shadow ;;
+        '$1$'*) echo "root:$SSH_ROOT_PASSWORD:::::::" > $ROOTFS_DIR/etc/shadow ;;
         *     ) echo "root:$(echo $SSH_ROOT_PASSWORD | openssl passwd -1 -stdin):::::::" > $ROOTFS_DIR/etc/shadow ;;
         esac
     fi
