@@ -9,6 +9,11 @@ create_fs() {
     label=${label#label=}
     uuid=${uuid#uuid=}
 
+#need to wait for udev device creation
+cat >> "$LAYOUT_CODE" <<EOF
+my_udevsettle
+EOF
+
     case "$fstype" in
         (ext*)
             # File system parameters.
