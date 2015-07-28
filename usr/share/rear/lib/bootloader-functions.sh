@@ -119,7 +119,7 @@ function set_syslinux_features {
 	fi
 
 	if version_newer "$syslinux_version" 5.00; then
-		FEATURE_SYSLINUX_MODULES=y
+		FEATURE_SYSLINUX_MODULES="y"
 	fi
 
 	if [[ "$FEATURE_SYSLINUX_BOOT_SYSLINUX" ]]; then
@@ -158,6 +158,8 @@ function make_syslinux_config {
 				SYSLINUX_MODULES_DIR=/usr/lib/syslinux/modules/bios
 			fi
 			SYSLINUX_DIR="$SYSLINUX_MODULES_DIR"
+                else
+			Error "Define SYSLINUX_MODULES_DIR in local.conf as syslinux modules were not found"            
 		fi
 	fi
 
