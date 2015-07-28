@@ -163,6 +163,8 @@ extract_partitions() {
             for flag in $flaglist ; do
                 if [[ "$flag" = boot || "$flag" = root || "$flag" = swap || "$flag" = hidden || "$flag" = raid || "$flag" = lvm || "$flag" = lba || "$flag" = palo || "$flag" = legacy_boot || "$flag" = bios_grub || "$flag" = prep ]] ; then
                     flags="$flags$flag,"
+                elif [[ "$flag" = "type=06" ]] ; then
+                    flags="${flags}prep,"
                 fi
             done
 
@@ -195,6 +197,8 @@ extract_partitions() {
             for flag in $flaglist ; do
                 if [[ "$flag" = boot || "$flag" = root || "$flag" = swap || "$flag" = hidden || "$flag" = raid || "$flag" = lvm || "$flag" = lba || "$flag" = palo || "$flag" = legacy_boot || "$flag" = bios_grub || "$flag" = prep ]] ; then
                     flags="$flags$flag,"
+                elif [[ "$flag" = "type=06" ]] ; then
+                    flags="${flags}prep,"
                 fi
             done
 

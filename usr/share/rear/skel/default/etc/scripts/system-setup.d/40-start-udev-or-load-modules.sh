@@ -10,6 +10,17 @@ systemd_version=$(systemd-notify --version 2>/dev/null | grep systemd | awk '{ p
 [[ -z "$systemd_version" ]] && systemd_version=0
 
 if [ $systemd_version -gt 190 ] || [ -s /etc/udev/rules.d/00-rear.rules ] && [ -w /sys/kernel/uevent_helper ]; then
+
+	# systemd-udevd case: systemd-udevd is started by systemd
+	ps ax | grep -v grep | grep -q systemd-udevd && { # check if daemon is actually running
+		my_udevtrigger
+		echo -n "Waiting for udev ... "
+		sleep 1
+		my_udevsettle
+		echo "done."
+		return
+   	}
+
 	# found our "special" module-auto-load rule
 
 	# clean away old device nodes from source system

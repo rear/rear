@@ -26,12 +26,13 @@ ISO_YABOOT_BIN=$(find_yaboot_file yaboot)
 
 if [[ $ISO_YABOOT_BIN == *"/lib/lilo/pmac"* ]]
 then
+   ISO_YABOOT_BIN="/lib/lilo/chrp/yaboot.chrp"
    SUSE_STYLE=1
 fi
 
 if [[ "$SUSE_STYLE" ]]; then
   #SUSE type distos
-  cp $v $ISO_YABOOT_BIN $TMP_DIR >&2
+  cp $v $ISO_YABOOT_BIN $TMP_DIR/yaboot >&2
 
 cat >"$TMP_DIR/ppc/bootinfo.txt" <<EOF
 <chrp-boot>
