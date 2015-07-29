@@ -33,6 +33,43 @@ function find_syslinux_file {
     echo "$syslinux_file"
 }
 
+function find_syslinux_modules_dir {
+    # input argument is usually a com32 image file
+    # output argument is the full path of the SYSLINUX_MODULES_DIR directory (not of the com32 file!)
+    local syslinux_version=$(get_syslinux_version)
+    local syslinux_modules_dir=
+
+    if [[ -n "$SYSLINUX_MODULES_DIR" ]]; then
+        [[ -d "$SYSLINUX_MODULES_DIR" ]] && echo "$SYSLINUX_MODULES_DIR"
+        return
+    fi
+
+    if version_newer "$syslinux_version" 5.00; then
+        # check for the default location - fast and easy
+        if [[ -d /usr/lib/syslinux/modules ]]; then
+            if (( USING_UEFI_BOOTLOADER )); then
+                syslinux_modules_dir=/usr/lib/syslinux/modules/efi64
+            else
+                syslinux_modules_dir=/usr/lib/syslinux/modules/bios
+            fi
+        else
+            # not default location? try to find it
+            # file=/usr/lib/syslinux/modules/efi32/menu.c32
+            file=$( find /usr -name "$1" 2>/dev/null | tail -1 )
+            syslinux_modules_dir=$( dirname "$file" )        # /usr/lib/syslinux/modules/efi32
+            syslinux_modules_dir=${syslinux_modules_dir%/*}  # /usr/lib/syslinux/modules
+            if (( USING_UEFI_BOOTLOADER )); then
+                syslinux_modules_dir=${syslinux_modules_dir}/efi64
+            else
+                syslinux_modules_dir=${syslinux_modules_dir}/bios
+            fi
+            [[ "$syslinux_modules_dir" ]] 
+            BugIfError "Define SYSLINUX_MODULES_DIR in local.conf as syslinux modules were not found"
+        fi
+    fi
+    echo "$syslinux_modules_dir"
+}
+
 function find_yaboot_file {
     # input argument is usually: yaboot
     # output argument is the full path of the yaboot binary
@@ -74,7 +111,7 @@ function set_syslinux_features {
         # true if syslinux supports modules sub-dir (Version > 5.00)
         FEATURE_SYSLINUX_MODULES=
 
-	# Define the syslinux directory for later usage
+	# Define the syslinux directory for later usage (since version 5 the bins and c32 are in separate dirs)
 	if [[ -z "$SYSLINUX_DIR" ]]; then
 		ISOLINUX_BIN=$(find_syslinux_file isolinux.bin)
 		if [[ -s "$ISOLINUX_BIN" ]]; then
@@ -148,19 +185,13 @@ function make_syslinux_config {
 
 	local BOOT_DIR="$1" ; shift
 	local flavour="${1:-isolinux}" ; shift
+	# syslinux v5 and higher has now its modules in a separate directory structure
+	local syslinux_modules_dir=
 
 	if [[ "$FEATURE_SYSLINUX_MODULES" ]]; then
-		SYSLINUX_MODULES_DIR=
-		if [[ -d /usr/lib/syslinux/modules ]]; then
-			if (( USING_UEFI_BOOTLOADER )); then
-				SYSLINUX_MODULES_DIR=/usr/lib/syslinux/modules/efi64
-			else
-				SYSLINUX_MODULES_DIR=/usr/lib/syslinux/modules/bios
-			fi
-			SYSLINUX_DIR="$SYSLINUX_MODULES_DIR"
-                else
-			Error "Define SYSLINUX_MODULES_DIR in local.conf as syslinux modules were not found"            
-		fi
+		syslinux_modules_dir=$( find_syslinux_modules_dir menu.c32 )
+		# the modules dir is the base for SYSLINUX_DIR (to comply with versions < 5)
+		SYSLINUX_DIR="$syslinux_modules_dir"
 	fi
 
     # Enable serial console, unless explicitly disabled (only last entry is used :-/)
