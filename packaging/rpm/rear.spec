@@ -208,6 +208,6 @@ OS_VERSION="13.2"
 %{_sbindir}/rear
 
 %changelog
-* Thu Jul 30 18:22:35 CEST 2015 - jsmeix@suse.de
+* Thu Jul 30 2015 Johannes Meixner <jsmeix@suse.de>
 - For a changelog see the rear-release-notes.txt file.
 
