@@ -208,5 +208,5 @@ OS_VERSION="13.2"
 %{_sbindir}/rear
 
 %changelog
-For a changelog see the rear-release-notes.txt file.
+* For a changelog see the rear-release-notes.txt file.
 
