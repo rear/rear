@@ -11,7 +11,10 @@ export DH_VERBOSE=1
 # This is the debhelper compatibility version to use.
 export DH_COMPAT=5
 
-build: build-stamp
+build: build-arch build-indep
+build-arch: build-stamp
+build-indep: build-stamp
+
 build-stamp:
 	dh_testdir
 	# noop
