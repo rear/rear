@@ -1,7 +1,7 @@
 # 45_restore_via_gui.sh
 # id the automatic restore failed give the end-user the option to execute a retsore via GUI
 
-[ ! -f /tmp/DP_GUI_RESTORE ] && return	# restore was OK - skip this option
+[ ! -f $TMP_DIR/DP_GUI_RESTORE ] && return   # restore was OK - skip this option
 
 Log "Request for a manual restore via the GUI"
 
