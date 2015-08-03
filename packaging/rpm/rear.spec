@@ -18,7 +18,23 @@ Source: https://sourceforge.net/projects/rear/files/rear/%{version}/rear-%{versi
 
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildArch: noarch
+# rear contains only bash scripts plus documentation so that on first glance it colud be "BuildArch: noarch"
+# but actually it is not "noarch" because it only works on those architectures that are explicitly supported.
+# Of course the rear bash scripts can be installed on any architecture just as any binaries can be installed on any architecture.
+# But the meaning of architecture dependent packages should be on what architectures they will work.
+# Therefore only those architectures that are actually supported are explicitly listed.
+# This avoids that rear can be "just installed" on architectures that are actually not supported (e.g. ARM or IBM z Systems):
+ExclusiveArch: %ix86 x86_64 ppc ppc64
+# Furthermore for some architectures it requires architecture dependent packages (like syslinux for x86 and x86_64)
+# so that rear must be architecture dependent because ifarch conditions never match in case of "BuildArch: noarch"
+# see the GitHub issue https://github.com/rear/rear/issues/629
+%ifarch %ix86 x86_64
+Requires: syslinux
+%endif
+# In the end this should tell the user that rear is known to work only on %ix86 x86_64 ppc ppc64
+# and on %ix86 x86_64 syslinux is explicitly required to make the bootable ISO image
+# (in addition to the default installed bootloader grub2) while on ppc ppc64 the
+# default installed bootloader yaboot is also useed to make the bootable ISO image.
 
 ### Dependencies on all distributions
 Requires: binutils
@@ -46,13 +62,6 @@ Requires: attr
 
 ### Optional requirement
 #Requires: cfg2html
-
-%ifarch %ix86 x86_64
-Requires: syslinux
-%endif
-%ifarch ppc ppc64
-Requires: yaboot
-%endif
 
 %if %{?suse_version:1}0
 Requires: iproute2
@@ -128,7 +137,7 @@ if [ $1 -gt 1 ] ; then
 fi
 
 %prep
-%setup -q 
+%setup -q
 
 echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
 
@@ -199,14 +208,6 @@ OS_VERSION="13.2"
 %{_sbindir}/rear
 
 %changelog
-* Fri Oct 17 2014 Gratien D'haese <gratien.dhaese@gmail.com>
-- added the suse_version lines to identify the corresponding OS_VERSION
+* Thu Jul 30 2015 Johannes Meixner <jsmeix@suse.de>
+- For a changelog see the rear-release-notes.txt file.
 
-* Fri Jun 20 2014 Gratien D'haese <gratien.dhaese@gmail.com>
-- add %%pre section
-
-* Thu Apr 11 2013 Gratien D'haese <gratien.dhaese@gmail.com>
-- changes Source
-
-* Thu Jun 03 2010 Dag Wieers <dag@wieers.com>
-- Initial package. (using DAR)
