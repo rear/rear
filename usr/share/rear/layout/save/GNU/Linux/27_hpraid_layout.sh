@@ -12,7 +12,7 @@ fi
 # Add $HPSSACLI to the rescue image
 PROGS=( "${PROGS[@]}" $HPSSACLI )
 eval $(grep ON_DIR= $(get_path $HPSSACLI))
-COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR" )
+COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR"  "$HPSSACLI_BIN_INSTALLATION_DIR" )
 
 # determine the version of HPSSACLI - required to know for a bug with version '9.30.15' (see issue #455)
 HPSSACLI_VERSION=$( get_version $HPSSACLI version )
