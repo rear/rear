@@ -32,7 +32,7 @@ if has_binary sshd; then
     )
 
     # we need to add some specific NSS lib for shadow passwords to work on RHEL 6/7
-    LIBS=( ${LIBS[@]} /usr/lib64/libfreeblpriv3.* )
+    LIBS=( ${LIBS[@]} /usr/lib64/libfreeblpriv3.* /lib/libfreeblpriv3.* )
     Log "Adding required libfreeblpriv3.so to LIBS"
 
     # copy ssh user
