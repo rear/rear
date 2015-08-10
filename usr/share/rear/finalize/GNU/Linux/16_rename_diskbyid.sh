@@ -20,7 +20,7 @@
 FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg /boot/grub/device.map /boot/efi/*/*/grub.cfg /etc/lvm/lvm.conf"
 
 OLD_ID_FILE=${VAR_DIR}/recovery/diskbyid_mappings
-NEW_ID_FILE=/tmp/diskbyid_mappings
+NEW_ID_FILE=$TMP_DIR/diskbyid_mappings
 
 [ ! -s "$OLD_ID_FILE" ] && return 0
 [ -z "$FILES" ] && return 0

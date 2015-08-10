@@ -8,8 +8,8 @@ TSM_RESULT_FILES=()
 
 # decide where to put the result files for saving them with TSM
 # if TSM_RESULT_FILE_PATH is unset, then save the result files where they are
-# NOTE: Make sure that your TSM installation will not silently skip files in /tmp !
-test -z "$TSM_RESULT_FILE_PATH" && TSM_RESULT_FILE_PATH=/tmp
+# NOTE: Make sure that your TSM installation will not silently skip files in $TMP_DIR !
+test -z "$TSM_RESULT_FILE_PATH" && TSM_RESULT_FILE_PATH=$TMP_DIR
 
 if ! test -d "$TSM_RESULT_FILE_PATH" ; then
     mkdir -p $v "$TSM_RESULT_FILE_PATH" >&2
@@ -17,7 +17,7 @@ if ! test -d "$TSM_RESULT_FILE_PATH" ; then
 fi
 
 
-if test "$TSM_RESULT_FILE_PATH" != "/tmp" ; then
+if test "$TSM_RESULT_FILE_PATH" != "$TMP_DIR" ; then
     cp $v  "${RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH" >&2
     StopIfError "Could not copy result files to '$TSM_RESULT_FILE_PATH'"
     TSM_RESULT_FILES=(

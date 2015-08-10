@@ -16,7 +16,7 @@ function uefi_read_attributes {
 }
 
 function efibootmgr_read_var {
-    # input args are $1 (efi var) and $2 (file /tmp/efibootmgr_output)
+    # input args are $1 (efi var) and $2 (file $TMP_DIR/efibootmgr_output)
     local var
     var=$(grep "$1" $2 | cut -d: -f 2- | cut -d* -f2-)
     echo "$var"

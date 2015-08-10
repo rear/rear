@@ -8,8 +8,8 @@ NSR_RESULT_FILES=()
 
 # decide where to put the result files for saving them with NSR
 # if NSR_RESULT_FILE_PATH is unset, then save the result files where they are
-# NOTE: Make sure that your NSR installation will not silently skip files in /tmp !
-test -z "$NSR_RESULT_FILE_PATH" && NSR_RESULT_FILE_PATH=/tmp
+# NOTE: Make sure that your NSR installation will not silently skip files in $TMP_DIR !
+test -z "$NSR_RESULT_FILE_PATH" && NSR_RESULT_FILE_PATH=$TMP_DIR
 
 if ! test -d "$NSR_RESULT_FILE_PATH" ; then
 	 mkdir -v -p "$NSR_RESULT_FILE_PATH" 1>&8
@@ -17,7 +17,7 @@ if ! test -d "$NSR_RESULT_FILE_PATH" ; then
 fi
 
 
-if test "$NSR_RESULT_FILE_PATH" != "/tmp" ; then
+if test "$NSR_RESULT_FILE_PATH" != "$TMP_DIR" ; then
 	cp -v  "${RESULT_FILES[@]}" "$NSR_RESULT_FILE_PATH" 1>&8
 	StopIfError "Could not copy result files to '$NSR_RESULT_FILE_PATH'"
 	NSR_RESULT_FILES=( 
