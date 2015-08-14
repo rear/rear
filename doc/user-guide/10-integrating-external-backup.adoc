@@ -27,6 +27,7 @@ What does rear need to have on board before we can initiate a restore from your 
 Do not make your life too difficult by re-invented the wheel. Have a look at existing integrations. How?
 
 Start with the default configuration file of rear:
+
     $ cd /usr/share/rear/conf
     $ grep -r NBU *
     default.conf:# BACKUP=NBU stuff (Symantec/Veritas NetBackup)
