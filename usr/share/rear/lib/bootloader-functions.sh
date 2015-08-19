@@ -55,6 +55,7 @@ function find_syslinux_modules_dir {
         else
             # not default location? try to find it
             # file=/usr/lib/syslinux/modules/efi32/menu.c32
+            # f23: file=/usr/share/syslinux/menu.c32
             file=$( find /usr -name "$1" 2>/dev/null | tail -1 )
             syslinux_modules_dir=$( dirname "$file" )        # /usr/lib/syslinux/modules/efi32
             syslinux_modules_dir=${syslinux_modules_dir%/*}  # /usr/lib/syslinux/modules
@@ -63,7 +64,10 @@ function find_syslinux_modules_dir {
             else
                 syslinux_modules_dir=${syslinux_modules_dir}/bios
             fi
-            [[ "$syslinux_modules_dir" ]] 
+            if [[ ! -d "$syslinux_modules_dir" ]] ; then     # f23: /usr/share/bios
+                syslinux_modules_dir=$( dirname "$file" )    # try again (f23 uses old location for its modules)
+            fi
+            [[ -d "$syslinux_modules_dir" ]]
             BugIfError "Define SYSLINUX_MODULES_DIR in local.conf as syslinux modules were not found"
         fi
     fi
@@ -366,6 +370,9 @@ function make_syslinux_config {
 	fi
 	if [[ -r "$SYSLINUX_DIR/libutil.c32" ]]; then
 		cp $v "$SYSLINUX_DIR/libutil.c32" "$BOOT_DIR/libutil.c32" >&2
+	fi
+	if [[ -r "$SYSLINUX_DIR/vesamenu.c32" ]]; then
+		cp $v "$SYSLINUX_DIR/vesamenu.c32" "$BOOT_DIR/vesamenu.c32" >&2
 	fi
 
 	if [[ -r "$SYSLINUX_DIR/hdt.c32" ]]; then
