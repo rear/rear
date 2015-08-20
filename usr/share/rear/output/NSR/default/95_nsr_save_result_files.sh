@@ -40,15 +40,15 @@ fi
 NSRSERVER=$(cat $VAR_DIR/recovery/nsr_server )
 CLIENTNAME=$(hostname)
 POOLNAME="$( mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool" | head -1 )"
-[[ -z "$POOLNAME" ]] && POOLNAME="Default"
-[[ -z "$RETENTION_TIME" ]] && RETENTION_TIME="1 day"
+[[ -z "$POOLNAME" ]] && POOLNAME="$NSR_DEFAULT_POOL_NAME"
+[[ -z "$NSR_RETENTION_TIME" ]] && NSR_RETENTION_TIME="1 day"
 
 Log "Saving files '${NSR_RESULT_FILES[@]}' with save"
-save -s $NSRSERVER -c $CLIENTNAME -b "$POOLNAME" -y "$RETENTION_TIME" "${NSR_RESULT_FILES[@]}" 1>&8
+save -s $NSRSERVER -c $CLIENTNAME -b "$POOLNAME" -y "$NSR_RETENTION_TIME" "${NSR_RESULT_FILES[@]}" 1>&8
 StopIfError "Could not save result files with save"
 
 # show the saved result files
-LogPrint "If the RETENTION_TIME=\"$RETENTION_TIME\" is too low please add RETENTION_TIME variable in $CONFIG_DIR/local.conf"
+LogPrint "If the NSR_RETENTION_TIME=\"$NSR_RETENTION_TIME\" is too low please add NSR_RETENTION_TIME variable in $CONFIG_DIR/local.conf"
 LogPrint " pool           retent  name"
 LogPrint "============================"
 mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool,ssretent,name" | \
