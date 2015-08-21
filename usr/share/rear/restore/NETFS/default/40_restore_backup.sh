@@ -60,9 +60,8 @@ case "$BACKUP_PROG" in
         if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
             BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
         fi
-        Log $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" $BACKUP_PROG_OPTIONS "$backuparchive"/ /mnt/local/
-        $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" $BACKUP_PROG_OPTIONS \
-            "$backuparchive"/ /mnt/local/
+        Log $BACKUP_PROG $v "${BACKUP_RSYNC_OPTIONS[@]}" "$backuparchive"/ /mnt/local/
+        $BACKUP_PROG  $v "${BACKUP_RSYNC_OPTIONS[@]}" "$backuparchive"/ /mnt/local/
     ;;
     (*)
         Log "Using unsupported backup program '$BACKUP_PROG'"
