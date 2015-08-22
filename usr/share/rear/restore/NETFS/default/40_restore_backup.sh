@@ -58,7 +58,7 @@ case "$BACKUP_PROG" in
     ;;
     (rsync)
         if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
-            BACKUP_RSYNC_OPTIONS=( ${BACKUP_RSYNC_OPTIONS[@]}" --exclude-from=$TMP_DIR/restore-exclude-list.txt )
+            BACKUP_RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --exclude-from=$TMP_DIR/restore-exclude-list.txt )
         fi
         Log $BACKUP_PROG $v "${BACKUP_RSYNC_OPTIONS[@]}"  "$backuparchive"/ /mnt/local/
         $BACKUP_PROG  $v "${BACKUP_RSYNC_OPTIONS[@]}" "$backuparchive"/ /mnt/local/
