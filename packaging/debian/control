@@ -8,7 +8,7 @@ Package: rear
 Architecture: all
 Provides: rear
 Build-Depends: debhelper
-Depends: mingetty, syslinux, ethtool, ${shlibs:Depends}, lsb-release, portmap, genisoimage, iproute, iputils-ping, binutils, parted, openssl, gawk, attr, ${misc:Depends}
+Depends: syslinux, ethtool, ${shlibs:Depends}, lsb-release, portmap, genisoimage, iproute, iputils-ping, binutils, parted, openssl, gawk, attr, ${misc:Depends}
 Recommends: nfs-client
 Description: Relax and Recover is a bare metal disaster recovery and system
  migration framework. See http://relax-and-recover.org/ for all the details.
