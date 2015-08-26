@@ -5,7 +5,7 @@
 # create missing directories
 pushd /mnt/local >&8
 if [ -z "$MOUNTPOINTS_TO_RESTORE" ]; then 
-    mkdir -p mnt proc sys tmp dev/pts dev/shm
+    mkdir -p mnt proc run sys tmp dev/pts dev/shm
 else
     LogPrint "Restore the Mountpoints $MOUNTPOINTS_TO_RESTORE".
     mkdir -p $MOUNTPOINTS_TO_RESTORE
