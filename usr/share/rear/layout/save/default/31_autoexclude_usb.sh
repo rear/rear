@@ -17,6 +17,8 @@ do
                     USB_DEVICE="$path"
                 fi
                 ;;
+	     (*)
+                continue ;;
         esac
     else
         continue  # check next one
