@@ -139,10 +139,10 @@ EOF
             if [ -n "$label" ] ; then
                echo "$label" | grep -q '\b'  # we substituted all " " with "\\b" in savelayout (\\b becomes \b by reading label)
                if [ $? -eq 0 ] ; then
-                  label2=$(echo $label | sed -e 's/\\b/ /g') # replace \b with a " "
+                  label2="$(echo $label | sed -e 's/\\b/ /g')" # replace \b with a " "
                   label="$label2"
                 fi
-                echo "dosfslabel $device $label >&2" >> "$LAYOUT_CODE"
+                echo "dosfslabel $device \"$label\" >&2" >> "$LAYOUT_CODE"
             fi
             if [ -n "$uuid" ]; then
                 # The UUID label of vfat is changed by recreating the fs, we must swap it.
