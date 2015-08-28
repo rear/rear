@@ -3,7 +3,7 @@
 case "$TIMESYNC" in
 	NTP)
 		PROGS=( "${PROGS[@]}" ntpd )
-		COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/ntp.conf "/etc/ntp/crypto/pw" )
+		COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/ntp.conf "/etc/ntp" )
 		echo "NT:2345:respawn:/bin/ntpd -n -g -p /var/run/ntpd.pid" >>$ROOTFS_DIR/etc/inittab
 		cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-timesync.sh <<-EOF
 			echo "Setting system time via NTP ..."
