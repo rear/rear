@@ -26,7 +26,7 @@
 # Versioning
 PRODUCT="Relax-and-Recover"
 PROGRAM=${0##*/}
-VERSION=1.17.1
+VERSION=1.17.2
 RELEASE_DATE=Git
 
 STARTTIME=$SECONDS

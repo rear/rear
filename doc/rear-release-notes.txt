@@ -10,7 +10,7 @@ Relax-and-Recover
 Survey stock image
 Please take our online survey
 
-Release Notes for Relax-and-Recover version 1.17.1
+Release Notes for Relax-and-Recover version 1.17.2
 
 This document contains the release notes for the open source project
 Relax-and-Recover.
@@ -168,6 +168,83 @@ Relax-and-Recover are compatible with previous versions of Relax-and-Recover,
 unless otherwise noted.
 
 The references pointing to fix #nr or issue #nr refer to our issues tracker
+
+Version 1.17.2 (August 2015)
+
+  • Several fixed required to the Debian packaging rules needed so it builds
+    correctly on OBS
+
+  • Fixed the NTP startup script (issue #641)
+
+  • Fixed the vfat label issue (issue #647)
+
+  • Improved the DUPLICITY method with finding all required libraries and
+    python scripts
+
+  • Added the /run directory to the list of recreating missing directories
+    (issue #619)
+
+  • Fix issue with USB disk and rsync as internal backup program (issue #645)
+
+  • Fix rsync restore: –anchored invalid rsync option (issue #642)
+
+  • A new variable was introduced NSR_POOLNAME (issue #640)
+
+  • Replaced almost all temporary files from /tmp/ to $TMP_DIR/ (issue #607)
+    Related to security recommendations for Fedora and RHEL:
+      □ https://bugzilla.redhat.com/show_bug.cgi?id=1239009 (f22)
+      □ https://bugzilla.redhat.com/show_bug.cgi?id=1238843 (rhel 7.2)
+  • Move nfs-client from depends to recommends in Debian control file (issue
+    #633)
+
+  • In packaging/rpm/rear.spec replaced “BuildArch: noarch” with
+    “ExclusiveArch: %ix86 x86_64 ppc ppc64” that should tell the user that
+    rear is known to work only on %ix86 x86_64 ppc ppc64 and removed
+    “Requires: yaboot” for ppc ppc64 because that is the default installed
+    bootloader on ppc ppc64 (issues #629 and #631)
+
+  • Support the Oracle Linux 6 ksplice module (issue #605)
+
+  • In script 27_hpraid_layout.sh added the missing
+    HPSSACLI_BIN_INSTALLATION_DIR variable to the COPY_AS_IS array (issue #
+    630)
+
+  • Modified the packaging Makefile and rules for debian to fix the failing
+    OBS Debian builds (issue #604)
+
+  • Syslinux version > 5.00 is now supported (ISO and USB output) - works on
+    Debian 8, Ubuntu 15.04 (issue #624)
+
+  • Bail out when syslinux/modules are not found in lib/
+    bootloader-functions.sh (issues #467 and #596) You could also define a
+    variable SYSLINUX_MODULES_DIR if rear cannot find it automatically
+    (should not be necessary)
+
+  • Support was added for SLES11 on PPC64 hardware (issues #616 and #628)
+
+  • Support was added for new hardware - PPC64LE - RHEL and Ubuntu (issue #
+    627)
+
+  • FIX the hashed password (SSH_ROOT_PASSWORD variable) and added a missing
+    library libfreeblpriv3 (issue #560)
+
+  • Insert a 3 seconds sleep after a volume group restauration to give udevd
+    or systemd-udevd time to create needed devices (issue #608 and #617)
+
+  • Variable MANUAL_INCLUDE=YES has been introduced to work with array
+    BACKUP_PROG_INCLUDE (issue #597)
+
+  • Add new variable NSR_DEFAULT_POOL_NAME (defaulting to Default) to use a
+    different default pool name. Renamed the RETENTION_TIME variable to
+    NSR_RETENTION_TIME (issue #640)
+
+  • rear website shows the user guide which is part of the rear software
+    (linked to GitHub)
+
+  • new document 10-integrating-external-backup.adoc which explains the steps
+    to take for a new backup integration into rear
+
+  • All AsciiDoc documentation changed extention from .txt to .adoc
 
 Version 1.17.1 (June 2015)
 
@@ -986,10 +1063,12 @@ Rear-1.17 may or may not fully work on:
 
   • Intel Itanium processors
   • PPC processors
+  • PPC64LE processors (new)
 
 Rear-1.17 does not support:
 
   • ARM type of processors
+  • Partitions of type gpt_sync_mbr aka. hybrid (synced) MBR
 
 If you feel the need to get a fully functional rear working on one of the
 above mentioned type of processors please buy consultancy from one of our
@@ -1011,6 +1090,16 @@ support contract for one or more systems. You buy time with our core
 developers…
 
 Known Problems and Workarounds
+
+Issue Description: Debian 8 initramfs-tools: / on LVM gets mounted by initrd
+with kernel device name /dev/dm-X instead of /dev/mapper/XXX name
+
+Issue #613 goes deeper into the problem with Debian 8 and LVM on /. The
+reporter created also a Debian Bug report #791754 for it.
+
+  • Workaround:
+
+See the fix mentioned in Debian Bug report #791754
 
 Issue Description: BACKUP=NSR on RHEL 6 could break yum
 
