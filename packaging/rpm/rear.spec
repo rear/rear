@@ -31,8 +31,8 @@ ExclusiveArch: %ix86 x86_64 ppc ppc64
 %ifarch %ix86 x86_64
 Requires: syslinux
 %endif
-# In the end this should tell the user that rear is known to work only on %ix86 x86_64 ppc ppc64
-# and on %ix86 x86_64 syslinux is explicitly required to make the bootable ISO image
+# In the end this should tell the user that rear is known to work only on ix86 x86_64 ppc ppc64
+# and on ix86 x86_64 syslinux is explicitly required to make the bootable ISO image
 # (in addition to the default installed bootloader grub2) while on ppc ppc64 the
 # default installed bootloader yaboot is also useed to make the bootable ISO image.
 
@@ -99,7 +99,7 @@ Requires: mkisofs
 %endif
 
 # mingetty is not available anymore with RHEL 7 (use agetty instead via systemd)
-# Note that CentOS also has %rhel defined so there is no need to use %centos
+# Note that CentOS also has rhel defined so there is no need to use centos
 %if 0%{?rhel} && 0%{?rhel} > 6
 Requires: util-linux
 %else
@@ -202,7 +202,6 @@ OS_VERSION="13.2"
 %doc %{_mandir}/man8/rear.8*
 %config(noreplace) %{_sysconfdir}/cron.d/rear
 %config(noreplace) %{_sysconfdir}/rear/
-#%config(noreplace) %{_sysconfdir}/udev/rules.d/62-rear-usb.rules
 %{_datadir}/rear/
 %{_localstatedir}/lib/rear/
 %{_sbindir}/rear
