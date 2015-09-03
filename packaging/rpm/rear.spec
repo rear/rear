@@ -73,9 +73,6 @@ Requires: genisoimage
 Requires: mkisofs
 %endif
 ###
-#%if %{!?sles_version:1}0
-#Requires: lsb
-#%endif
 %endif
 
 %if %{?mandriva_version:1}0
@@ -191,7 +188,6 @@ OS_VERSION="13.2"
 %{__rm} -rf %{buildroot}
 %{__make} install DESTDIR="%{buildroot}"
 %{__install} -Dp -m0644 rear.cron %{buildroot}%{_sysconfdir}/cron.d/rear
-#%{__install} -Dp -m0644 etc/udev/rules.d/62-rear-usb.rules %{buildroot}%{_sysconfdir}/udev/rules.d/62-rear-usb.rules
 
 %clean
 %{__rm} -rf %{buildroot}
