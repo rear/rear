@@ -15,24 +15,18 @@ StopIfError "Could not create $TMP_DIR/mnt/EFI/BOOT/locale"
 cp  $v "${UEFI_BOOTLOADER}" $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi >&2
 StopIfError "Could not find ${UEFI_BOOTLOADER}"
 
-if [[ `basename $ISO_MKISOFS_BIN` = "ebiso" && `basename ${UEFI_BOOTLOADER}` = "elilo.efi" ]]; then
+if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" && $(basename ${UEFI_BOOTLOADER}) = "elilo.efi" ]]; then
+   Log "Copying kernel"
+   
    # copy initrd and kernel inside efi_boot image as
    # elilo is not smart enough to look for them outside ...
    cp -pL $v $KERNEL_FILE $TMP_DIR/mnt/EFI/BOOT/kernel >&2
    StopIfError "Could not copy kernel to UEFI"
    cp $v $TMP_DIR/initrd.cgz $TMP_DIR/mnt/EFI/BOOT/initrd.cgz >&2
    StopIfError "Could not copy initrd to UEFI"
-
-# Create config file for elilo
-cat > $TMP_DIR/mnt/EFI/BOOT/elilo.conf << EOF
-   timeout = 5
-   default = "Relax and Recover (no Secure Boot)"
-
-   image = kernel
-       label = "Relax and Recover (no Secure Boot)"
-       initrd = initrd.cgz
-EOF
-
+   
+   # Create config file for elilo
+   create_ebiso_elilo_conf
 fi
 
 if [[ -n "$(type -p grub)" ]]; then

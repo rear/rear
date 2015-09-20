@@ -2,7 +2,7 @@
 (( USING_UEFI_BOOTLOADER )) || return
 
 # we will need more space for initrd and kernel if elilo is used
-if [[ `basename $ISO_MKISOFS_BIN` = "ebiso" && `basename ${UEFI_BOOTLOADER}` = "elilo.efi" ]]; then
+if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" && $(basename ${UEFI_BOOTLOADER}) = "elilo.efi" ]]; then
    size=128000
 else
    size=32000

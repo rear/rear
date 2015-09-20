@@ -430,3 +430,15 @@ function make_syslinux_config {
 		echo "default menu.c32"
 	fi
 }
+
+# Create configuration file for elilo
+function create_ebiso_elilo_conf {
+cat > $TMP_DIR/mnt/EFI/BOOT/elilo.conf << EOF
+timeout = 5
+default = "Relax and Recover (no Secure Boot)"
+
+image = kernel
+    label = "Relax and Recover (no Secure Boot)"
+    initrd = initrd.cgz
+EOF
+}
