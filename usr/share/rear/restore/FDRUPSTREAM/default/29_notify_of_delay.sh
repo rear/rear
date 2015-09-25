@@ -5,3 +5,4 @@
 echo
 echo "OK, proceeding with Relax and Recover."
 echo "This may take a few moments..."
+echo
