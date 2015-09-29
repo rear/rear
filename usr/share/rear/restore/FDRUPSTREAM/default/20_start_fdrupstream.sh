@@ -3,7 +3,8 @@
 #
 
 echo
-echo "Starting FDR/Upstream..."
+LogPrint "Starting FDR/Upstream..."
 echo
 
 $FDRUPSTREAM_INSTALL_PATH/fdrupstream start
+StopIfError "Error starting FDR/Upstream.  Cannot proceed."
