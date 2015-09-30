@@ -231,6 +231,9 @@ create a backup and restore the data.
 BACKUP=*DP*::
 Use HP Data Protector to restore the data.
 
+BACKUP=*FDRUPSTREAM*::
+Use FDR/Upstream to restore the data.
+
 BACKUP=*GALAXY*::
 Use CommVault Galaxy 5 to restore the data.
 

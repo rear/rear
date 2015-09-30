@@ -80,6 +80,9 @@ Use IBM Tivoli Storage Manager programs
 BACKUP=DP::
 Use HP DataProtector programs
 
+BACKUP=FDRUPSTREAM::
+Use FDR/Upstream
+
 BACKUP=NBU::
 Use Symantec NetBackup programs
 
