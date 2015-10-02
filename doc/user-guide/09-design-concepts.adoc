@@ -62,7 +62,7 @@ The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices a
 |BAREOS      | BACKUP  | Use fork of Bacula                       | done
 |RSYNC       | BACKUP  | Use rsync to remote location             | done
 |RBME        | BACKUP  | Use Rsync Backup Made Easy               | done
-|FDRUPSTREAM | BACKUP  | Use Rsync Backup Made Easy               | done
+|FDRUPSTREAM | BACKUP  | Use FDR/Upstream                         | done
 |            |         |                                          |
 |ISO         | OUTPUT  | Write result to ISO9660 image            | done
 |OBDR        | OUTPUT  | Create OBDR Tape                         | done
