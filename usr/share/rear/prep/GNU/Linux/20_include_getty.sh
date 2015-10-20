@@ -5,6 +5,6 @@
 
 ps ax | grep mingetty | grep -v grep && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mingetty )
 ps ax | grep agetty   | grep -v grep && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" agetty )
-ps ax | grep "getty " | grep -v grep && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" getty )  # mind the trailing space
+ps ax | grep "/getty" | grep -v grep && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" getty )  # mind the / to avoid confusion with agetty
 
 # if a REQUIRED_PROGS is missing rear will complain and stop
