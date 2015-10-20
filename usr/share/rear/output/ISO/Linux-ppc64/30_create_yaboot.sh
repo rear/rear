@@ -18,6 +18,12 @@
 #
 #
 
+## other bootloader distro case
+if [[ ! -r /etc/yaboot.conf ]]
+then
+    return
+fi
+
 SUSE_STYLE=
 
 # create yaboot directory structure
