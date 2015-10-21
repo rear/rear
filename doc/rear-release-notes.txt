@@ -87,6 +87,7 @@ functionality:
       □ Duplicity/Duply (BACKUP=DUPLICITY)
       □ EMC Networker, also known as Legato (BACKUP=NSR)
       □ SEP Sesam (BACKUP=SESAM)
+      □ FDR/Upstream (BACKUP=FDRUPSTREAM) (NEW!)
   • Integrates with Disaster Recovery Linux Manager (drlm) (NEW!)
 
   • Udev support (except for some really ancient udev versions) which is the

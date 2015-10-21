@@ -12,9 +12,9 @@ fi
 ### Only do when system is not using GRUB Legacy
 [[ $(type -p grub-probe) || $(type -p grub2-probe) ]] || return
 
-if [ -f /bin/grub-mkpasswd-pbkdf2 ]; then
+if has_binary grub-mkpasswd-pbkdf2 ; then
     grub_binary=$(get_path grub-mkpasswd-pbkdf2)
-elif [ -f /usr/bin/grub2-mkpasswd-pbkdf2 ]; then
+elif has_binary grub2-mkpasswd-pbkdf2 ; then
     grub_binary=$(get_path grub2-mkpasswd-pbkdf2)
 else
     StopIfError "ERROR: no binary found for grub-mkpasswd-pbkdf2 or grub2-mkpasswd-pbkdf2"

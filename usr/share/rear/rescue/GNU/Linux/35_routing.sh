@@ -83,7 +83,8 @@ else # use original routes
 				ifslaves=($(cat /proc/net/bonding/$device | grep "Slave Interface:" | cut -d : -f 2))
 				Log "X${ifslaves[@]}X"
 				echo "ip route add $destination $via $gateway $dev ${ifslaves[0]} table $table" >>$netscript
-			else
+			# be sure that it is not a teaming-interface
+			elif ! ethtool -i $device | grep -w "driver:" | grep -qw team ; then
 				echo "ip route add $destination $via $gateway $dev $device table $table" >>$netscript
 			fi
 		done
@@ -95,7 +96,8 @@ else # use original routes
 				ifslaves=($(cat /proc/net/bonding/$device | grep "Slave Interface:" | cut -d : -f 2))
 				Log "X${ifslaves[@]}X"
 				echo "ip route add $destination $via $gateway $dev ${ifslaves[0]} table $table" >>$netscript
-			else
+			# be sure that it is not a teaming-interface
+			elif ! ethtool -i $device | grep -w "driver:" | grep -qw team ; then
 				echo "ip route add $destination $via $gateway $dev $device table $table" >>$netscript
 			fi
 		done

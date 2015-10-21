@@ -50,17 +50,22 @@ if [[ "\$IPADDR" ]] && [[ "\$NETMASK" ]] ; then
 fi
 EOT
 
+# collect list of all physical network interface cards
+# take all interfaces in /sys/class/net and subtract /sys/devices/virtual/net, bonding_masters
+ETHER_NICS=
+VIRTUAL_DEVICES=$(ls /sys/devices/virtual/net)
+for DEVICE in `ls /sys/class/net`
+do
+	if [ $DEVICE != "bonding_masters" ] && ! [[ $VIRTUAL_DEVICES =~ (^|[[:space:]])${DEVICE}($|[[:space:]]) ]]
+	then
+		ETHER_NICS+=" $DEVICE"
+	fi
+done
+
 # go over the network devices and record information
 # and, BTW, interfacenames luckily do not allow spaces :-)
-for sysfspath in /sys/class/net/* ; do
-    dev=${sysfspath##*/}
-    # skip well-known non-physical interfaces
-    # FIXME: This guess is name-based and will fail horribly on renamed interfaces like I like to use them :-(
-    case $dev in
-        (bonding_masters|lo|pan*|sit*|tun*|tap*|vboxnet*|vmnet*) continue ;; # skip all kind of internal devices
-                (vlan*) MODULES=( "${MODULES[@]}" '8021q' 'garp' )
-    esac
-
+for dev in $ETHER_NICS ; do
+	sysfspath=/sys/class/net/$dev
     # get mac address
     mac="$(cat $sysfspath/address)"
     BugIfError "Could not read a MAC address from '$sysfspath/address'!"
@@ -76,12 +81,7 @@ for sysfspath in /sys/class/net/* ; do
     echo "$dev $mac">>$ROOTFS_DIR/etc/mac-addresses
 
     # take information only from UP devices, we don't care about non-working devices.
-    case $dev in
-        (bond*|vlan*) continue  # we have a seperate section for bonding and vlan
-            ;;
-        (*) ip link show dev $dev | grep -q UP || continue
-            ;;
-    esac
+    ip link show dev $dev | grep -q UP || continue
 
     # link is up
     # determine the driver to load, relevant only for non-udev environments
@@ -132,108 +132,173 @@ WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
         PrintIfError "Could not read a MTU address from '$sysfspath/mtu'!"
         [[ "$mtu" ]] && echo "ip link set dev $dev mtu $mtu" >>$netscript
     fi
-done # for dev in /sys/class/net/*
+done
 
-# the following is only used for bonding setups
+
+
+# extract configuration of a given VLAN interface
+vlan_setup() {
+	local IFACE=$1
+
+	# check if we already dealt with this interface as a dependency
+	[[ $VLANS_SET_UP =~ (^|[[:space:]])$IFACE($|[[:space:]]) ]] && return
+
+	local PARENT=$(grep "^${IFACE}" /proc/net/vlan/config | awk '{print $5}')
+	
+	# if VLNA is built on top of a bonding, set that up first
+	if [[ ${BONDS[@]} =~ (^|[[:space:]])$PARENT($|[[:space:]]) ]]
+	then
+		bond_setup $PARENT
+	fi
+
+	local VLAN_ID=$(grep "^${IFACE}" /proc/net/vlan/config | awk '{print $3}')
+
+	echo ip link add link $PARENT name $IFACE type vlan id $VLAN_ID >>$netscript
+
+	for ADDR in $(ip ad show dev $IFACE scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
+		echo "ip addr add $ADDR dev $IFACE" >>$netscript
+	done
+	echo "ip link set dev $IFACE up" >>$netscript
+	
+	VLANS_SET_UP+=" ${IFACE}"
+}
+
+# extract configuration of a given bonding interface
+bond_setup() {
+	local IFACE=$1
+
+	# check if we already dealt with this interface as a dependency
+	[[ $BONDS_SET_UP =~ (^|[[:space:]])$IFACE($|[[:space:]]) ]] && return
+	
+	# get list of members
+	local MEMBERS=$(cat /sys/class/net/${IFACE}/bonding/slaves)
+		
+	# if a member of the bonding group is a VLAN, set that up first
+	for MEMBER in $MEMBERS
+	do
+		if [[ ${VLANS[@]} =~ (^|[[:space:]])$MEMBER($|[[:space:]]) ]]
+		then
+			vlan_setup $MEMBER
+		else
+			echo member $MEMBER not a vlan
+		fi
+	done
+
+	
+	# we first need to "up" the bonding interface, then add the slaves (ifenslave complains
+	# about missing IP adresses, can be ignored), and then add the IP addresses
+	echo "ip link set dev $IFACE up" >>$netscript
+
+	# enslave slave interfaces which we read from the sysfs status file
+	if command -v ifenslave >/dev/null 2>&1
+	then
+		# we can use ifenslave(8) and do it all at once
+		echo ifenslave $IFACE $MEMBERS >>$netscript
+	else
+		# no ifenslave(8) found, hopefully ip(8) can do it
+		for MEMBER in $MEMBERS
+		do
+			echo ip link set $MEMBER master $IFACE >>$netscript
+		done
+	fi
+	
+	echo "sleep 5" >>$netscript
+		
+	for ADDR in $(ip ad show dev $IFACE scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
+		echo "ip addr add $ADDR dev $IFACE " >>$netscript
+	done
+	
+	BONDS_SET_UP+=" ${IFACE}"
+}
+
+
+# load required modules for bonding and collect list of all up bonding interfaces
+BONDS=()
 if test -d /proc/net/bonding ; then
+	
+	for BOND in `ls /proc/net/bonding`
+	do
+		if ip link show dev $BOND | grep -q UP
+		then
+			BONDS+=($BOND)
+		fi
+	done
+	
+	# default bonding mode 1 (active backup)
+    BONDING_MODE=1
+    grep -q "Bonding Mode: IEEE 802.3ad" /proc/net/bonding/${BONDS[0]} && BONDING_MODE=4
+    # load bonding with the correct amount of bonding devices
+    echo "modprobe bonding max_bonds=${#BONDS[@]} miimon=100 mode=$BONDING_MODE use_carrier=0"  >>$netscript
+    MODULES=( "${MODULES[@]}" 'bonding' )
+fi
 
-    if ! test "$SIMPLIFY_BONDING" ; then
-        # go over bondX and record information
-        # Note: Some users reported that this works only for the first bonding device
-        # in this case one should disable bonding by setting SIMPLIFY_BONDING
-        #
-
-        # get list of bonding devices
-        BONDS=( $(ls /proc/net/bonding) )
-        
-        # default bonding mode 1 (active backup)
-        BONDING_MODE=1
-        grep -q "Bonding Mode: IEEE 802.3ad" /proc/net/bonding/${BONDS[0]} && BONDING_MODE=4
-
-        # load bonding with the correct amount of bonding devices
-        echo "modprobe bonding max_bonds=${#BONDS[@]} miimon=100 mode=$BONDING_MODE use_carrier=0"  >>$netscript
-        MODULES=( "${MODULES[@]}" 'bonding' )
-
-        # configure bonding devices
-        for dev in "${BONDS[@]}" ; do
-            if ip link show dev $dev | grep -q UP ; then
-                # link is up, copy interface setup
-                #
-                # we first need to "up" the bonding interface, then add the slaves (ifenslave complains
-                # about missing IP adresses, can be ignores), and then add the IP addresses
-                echo "ip link set dev $dev up" >>$netscript
-                # enslave slave interfaces which we read from the /proc status file
-                ifslaves=($(cat /proc/net/bonding/$dev | grep "Slave Interface:" | cut -d : -f 2))
-                #
-                # NOTE: [*] is used here on purpose !
-                echo "ifenslave $dev ${ifslaves[*]}" >>$netscript
-                echo "sleep 5" >>$netscript
-                for addr in $(ip a show dev $dev scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
-                    echo "ip addr add $addr dev $dev" >>$netscript
-                done
-            fi
-        done
-
-    else
-        # The way to simplify the bonding is to copy the IP addresses from the bonding device to the
-        # *first* slave device
-
-        # Anpassung HZD: Hat ein System bei einer SLES10 Installation zwei Bonding-Devices
-        # gibt es Probleme beim Boot mit der Rear-Iso-Datei. Der Befehl modprobe -o name ...
-        # funkioniert nicht. Dadurch wird nur das erste bonding-Device koniguriert.
-        # Die Konfiguration des zweiten Devices schlägt fehl und dieses lässt sich auch nicht manuell
-        # nachinstallieren. Daher wurde diese script so angepasst, dass die Rear-Iso-Datei kein Bonding
-        # konfiguriert, sondern die jeweiligen IP-Adressen einer Netzwerkkarte des Bondingdevices
-        # zuordnet. Dadurch musste aber auch das script 35_routing.sh angepasst werden.
-
-        # go over bondX and record information
-        c=0
-        while : ; do
-            dev=bond$c
-            if test -r /proc/net/bonding/$dev ; then
-                if ip link show dev $dev | grep -q UP ; then
-                # link is up
-                    ifslaves=($(cat /proc/net/bonding/$dev | grep "Slave Interface:" | cut -d : -f 2))
-                    for addr in $(ip a show dev $dev scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
-                        # ise ifslaves[0] instead of bond$c to copy IP address from bonding device
-                        # to the first enslaved device
-                        echo "ip addr add $addr dev ${ifslaves[0]}" >>$netscript
-                    done
-                    echo "ip link set dev ${ifslaves[0]} up" >>$netscript
-                fi
-            else
-                break # while loop
-            fi
-            let c++
-        done
-
-    fi
-
-fi # if bonding
-
-# VLAN section
+# load required modules for VLAN and collect list of all up VLAN interfaces
+VLANS=()
 if test -d /proc/net/vlan ; then
-    # copy the vlan config file to VAR_DIR/recovery/
-    if [[ -f /proc/net/vlan/config ]]; then
+	if [[ -f /proc/net/vlan/config ]]; then
         # config file contains a line like "vlan163        | 163  | bond1" describing the vlan
         cp /proc/net/vlan/config $VAR_DIR/recovery/vlan.config   # save a copy to our recovery area
         # we might need it if we ever want to implement VLAN Migration
-        echo "modprobe 8021q" >>$netscript
-        echo "sleep 5" >>$netscript
-        VLANS=( $(ls /proc/net/vlan/* | grep -v config) )
-        for vlan in ${VLANS[*]##*/}
-        do
-            if ip link show dev $vlan | grep -q UP ; then
-            # link is up; skip if the vlan is down
-                VLAN_ID=$( grep "^${vlan}" /proc/net/vlan/config | awk '{print $3}' )
-                dev=$( grep "^${vlan}" /proc/net/vlan/config | awk '{print $5}' )
-                echo "ip link add link $dev name $vlan type vlan id $VLAN_ID" >>$netscript
-                for addr in $(ip a show dev $vlan scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
-                    echo "ip addr add $addr dev $vlan" >>$netscript
-                done
-                echo "ip link set dev $vlan up" >>$netscript
-            fi
-        done
-    fi
-fi # if vlan
+	fi
+	
+	echo "modprobe 8021q" >>$netscript
+	echo "sleep 5" >>$netscript
+	
+	for VLAN in `ls /proc/net/vlan | grep -v config`
+	do
+		if ip link show dev $VLAN | grep -q UP
+		then
+			VLANS+=($VLAN)
+		fi
+	done
+fi
+
+# set up all VLANS
+for VLAN in ${VLANS[@]}
+do
+	vlan_setup $VLAN
+done
+
+# set up BONDS
+if ! test "$SIMPLIFY_BONDING" ; then
+	for BOND in ${BONDS[@]}
+	do
+		bond_setup $BOND
+	done
+else
+	# The way to simplify the bonding is to copy the IP addresses from the bonding device to the
+	# *first* slave device
+
+	# Anpassung HZD: Hat ein System bei einer SLES10 Installation zwei Bonding-Devices
+	# gibt es Probleme beim Boot mit der Rear-Iso-Datei. Der Befehl modprobe -o name ...
+	# funkioniert nicht. Dadurch wird nur das erste bonding-Device koniguriert.
+	# Die Konfiguration des zweiten Devices schlägt fehl und dieses lässt sich auch nicht manuell
+	# nachinstallieren. Daher wurde diese script so angepasst, dass die Rear-Iso-Datei kein Bonding
+	# konfiguriert, sondern die jeweiligen IP-Adressen einer Netzwerkkarte des Bondingdevices
+	# zuordnet. Dadurch musste aber auch das script 35_routing.sh angepasst werden.
+
+	# go over bondX and record information
+	c=0
+	while : ; do
+		dev=bond$c
+		if test -r /proc/net/bonding/$dev ; then
+			if ip link show dev $dev | grep -q UP ; then
+				# link is up
+				ifslaves=($(cat /proc/net/bonding/$dev | grep "Slave Interface:" | cut -d : -f 2))
+				for addr in $(ip a show dev $dev scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
+					# ise ifslaves[0] instead of bond$c to copy IP address from bonding device
+					# to the first enslaved device
+					echo "ip addr add $addr dev ${ifslaves[0]}" >>$netscript
+				done
+				echo "ip link set dev ${ifslaves[0]} up" >>$netscript
+			fi
+		else
+			break # while loop
+		fi
+		let c++
+	done
+	
+	# fake BONDS_SET_UP, so that no recursive call tries to bring one up the not-simplified way
+	BONDS_SET_UP=${BONDS[@]}
+fi
 

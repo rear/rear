@@ -50,23 +50,24 @@ by appropriately named scripts in various subdirectories:
 The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices are:
 
 |====
-|NAME      | TYPE    | Description                              | Implement in Phase
-|NETFS     | BACKUP  | Copy files to NFS/CIFS share             | done
-|TAPE      | BACKUP  | Copy files to tape(s)                    | done
-|DUPLICITY | BACKUP  | Copy files to the Cloud                  | done
-|NSR       | BACKUP  | Use Legato Networker                     | done
-|TSM       | BACKUP  | Use Tivoli Storage Manager               | done
-|DP        | BACKUP  | Use HP DataProtector                     | done
-|NBU       | BACKUP  | Use Symantec NetBackup                   | done
-|BACULA    | BACKUP  | Use Bacula                               | done
-|BAREOS    | BACKUP  | Use fork of Bacula                       | done
-|RSYNC     | BACKUP  | Use rsync to remote location             | done
-|RBME      | BACKUP  | Use Rsync Backup Made Easy               | done
-|          |         |                                          |
-|ISO       | OUTPUT  | Write result to ISO9660 image            | done
-|OBDR      | OUTPUT  | Create OBDR Tape                         | done
-|PXE       | OUTPUT  | Create PXE bootable files on TFTP server | done
-|USB       | OUTPUT  | Create bootable USB device               | done
+|NAME        | TYPE    | Description                              | Implement in Phase
+|NETFS       | BACKUP  | Copy files to NFS/CIFS share             | done
+|TAPE        | BACKUP  | Copy files to tape(s)                    | done
+|DUPLICITY   | BACKUP  | Copy files to the Cloud                  | done
+|NSR         | BACKUP  | Use Legato Networker                     | done
+|TSM         | BACKUP  | Use Tivoli Storage Manager               | done
+|DP          | BACKUP  | Use HP DataProtector                     | done
+|NBU         | BACKUP  | Use Symantec NetBackup                   | done
+|BACULA      | BACKUP  | Use Bacula                               | done
+|BAREOS      | BACKUP  | Use fork of Bacula                       | done
+|RSYNC       | BACKUP  | Use rsync to remote location             | done
+|RBME        | BACKUP  | Use Rsync Backup Made Easy               | done
+|FDRUPSTREAM | BACKUP  | Use FDR/Upstream                         | done
+|            |         |                                          |
+|ISO         | OUTPUT  | Write result to ISO9660 image            | done
+|OBDR        | OUTPUT  | Create OBDR Tape                         | done
+|PXE         | OUTPUT  | Create PXE bootable files on TFTP server | done
+|USB         | OUTPUT  | Create bootable USB device               | done
 |====
 
 == Workflow – Recovery

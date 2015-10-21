@@ -20,7 +20,7 @@ If you rely on your backup software to do the full restore of a system then you 
 [source,bash]
 ----
 OUTPUT=ISO
-BACKUP=[TSM|NSR|DP|NBU|GALAXY10|SEP|DUPLICITY|BACULA|BAREOS|RBME]
+BACKUP=[TSM|NSR|DP|NBU|GALAXY10|SEP|DUPLICITY|BACULA|BAREOS|RBME|FDRUPSTREAM]
 ----
 
 When using one of the above backup solution (commercial or open source) then there is no need to use +rear mkbackup+ as the backup workflow would be empty. Just use +rear mkrescue+
