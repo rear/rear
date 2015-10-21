@@ -42,6 +42,7 @@ if [[ -r "$LAYOUT_FILE" ]]; then
 
     if [ -n "$part" ]; then
         LogPrint "Boot partition found: $part"
+        dd if=/dev/zero of=$part
         chroot /mnt/local /bin/bash --login -c "$grub_name-install $part"
         # Run bootlist only in PowerVM environment
         if ! grep -q "PowerNV" /proc/cpuinfo && ! grep -q "emulated by qemu" /proc/cpuinfo ; then
