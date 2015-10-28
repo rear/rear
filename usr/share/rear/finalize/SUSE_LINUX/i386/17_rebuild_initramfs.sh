@@ -51,6 +51,7 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 
 	mount -t proc none /mnt/local/proc
 	mount -t sysfs none /mnt/local/sys
+        echo "Running mkinitrd..."
 	if chroot /mnt/local /bin/bash --login -c "mkinitrd" >&2 ; then
 		LogPrint "Recreated initramfs (mkinitrd)."
 	else
