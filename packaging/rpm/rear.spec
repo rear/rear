@@ -96,17 +96,10 @@ Requires: mkisofs
 #Requires: redhat-lsb
 %endif
 
-# mingetty is not available anymore with RHEL 7 (use agetty instead via systemd)
 # Note that CentOS also has rhel defined so there is no need to use centos
-%if 0%{?rhel} && 0%{?rhel} > 6
-Requires: util-linux
-%else
-Requires: mingetty
+%if 0%{?rhel}
 Requires: util-linux
 %endif
-
-### The rear-snapshot package is no more
-#Obsoletes: rear-snapshot
 
 %description
 Relax-and-Recover is the leading Open Source disaster recovery and system
