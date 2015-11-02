@@ -105,6 +105,11 @@ create_partitions() {
         label="gpt"
         ### msdos label types are detected earlier.
     fi
+    # For the SUSE specific gpt_sync_mbr partitioning scheme
+    # see https://github.com/rear/rear/issues/544
+    # For 'gpt_sync_mbr' labeled disks create_partitions was called e.g. as
+    #   create_partitions /dev/sda gpt_sync_mbr
+    # so that $label is not empty but still set to 'gpt_sync_mbr' here.
 
     cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Creating partitions for disk $device ($label)"
@@ -121,7 +126,9 @@ EOF
             device_size=$( get_disk_size  "$sysfs_name" )
 
             ### GPT disks need 33 LBA blocks at the end of the disk
-            if [[ "$label" == "gpt" ]] ; then
+            # For the SUSE specific gpt_sync_mbr partitioning scheme
+            # see https://github.com/rear/rear/issues/544
+            if [[ "$label" == "gpt" || "$label" == "gpt_sync_mbr" ]] ; then
                 device_size=$(( device_size - 33*block_size ))
                 if [[ "$MIGRATION_MODE" ]] ; then
                     Log "Size reductions of GPT partitions probably needed."
