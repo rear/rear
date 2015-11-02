@@ -270,6 +270,32 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 echo "btrfsmountedsubvol $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
             fi
         done < <( eval $read_mounted_btrfs_subvolumes_command )
+        ########################################
+        # No copy on write attributes of mounted btrfs subvolumes:
+        echo "# Mounted btrfs subvolumes that have the 'no copy on write' attribute set."
+        echo "# Format: btrfsnocopyonwrite <btrfs_subvolume_path>"
+        lsattr_command="$( type -P lsattr )"
+        if test -x "$lsattr_command" -a -x "$findmnt_command" ; then
+            for subvolume_mountpoint in $( $findmnt_command -nrv -o TARGET -t btrfs ) ; do
+                # The 'no copy on write' attribute is shown as 'C' in the lsattr output (see "man chattr"):
+                if $lsattr_command -d $subvolume_mountpoint | cut -d ' ' -f 1 | grep -q 'C' ; then
+                    btrfs_subvolume_path=$( $findmnt_command -nrv -o FSROOT $subvolume_mountpoint )
+                    # Remove leading '/' from btrfs_subvolume_path (except it is only '/') to have same syntax for all entries and
+                    # without leading '/' is more clear that it is not an absolute path in the currently mounted tree of filesystems
+                    # instead the subvolume path is relative to the toplevel/root subvolume of the particular btrfs filesystem
+                    # (i.e. a subvolume path is an absolute path in the particular btrfs filesystem)
+                    # see https://btrfs.wiki.kernel.org/index.php/Mount_options
+                    test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
+                    if test -n "btrfs_subvolume_path" ; then
+                        echo "btrfsnocopyonwrite $btrfs_subvolume_path"
+                    else
+                        echo "# $subvolume_mountpoint has the 'no copy on write' attribute set but $findmnt_command does not show its btrfs subvolume path"
+                    fi
+                fi
+            done
+        else
+            echo "# Attributes cannot be determined because no executable 'lsattr' and/or 'findmnt' command(s) found."
+        fi
     fi
 
 ) >> $DISKLAYOUT_FILE
