@@ -50,13 +50,16 @@ fi
 [[ -z "$NSR_RETENTION_TIME" ]] && NSR_RETENTION_TIME="1 day"
 
 Log "Saving files '${NSR_RESULT_FILES[@]}' with save"
-save -s $NSRSERVER -c $CLIENTNAME -b "$POOLNAME" -y "$NSR_RETENTION_TIME" "${NSR_RESULT_FILES[@]}" 1>&8
+SNAME="REAR.$(date +%Y%m%d)"
+save -s $NSRSERVER -c $CLIENTNAME -N "${SNAME}" -b "$POOLNAME" -y "$NSR_RETENTION_TIME" "${NSR_RESULT_FILES[@]}" 1>&8
 StopIfError "Could not save result files with save"
 
 # show the saved result files
 LogPrint "If the NSR_RETENTION_TIME=\"$NSR_RETENTION_TIME\" is too low please add NSR_RETENTION_TIME variable in $CONFIG_DIR/local.conf"
 LogPrint " pool           retent  name"
 LogPrint "============================"
-mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool,ssretent,name" | \
-    grep -E $( echo ${NSR_RESULT_FILES[@]} | sed -e "s/ /|/g") > $TMP_DIR/saved_result_files
+#mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool,ssretent,name" | \
+#    grep -E $( echo ${NSR_RESULT_FILES[@]} | sed -e "s/ /|/g") > $TMP_DIR/saved_result_files
+mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME,name=${SNAME},pool=${POOLNAME}" \
+    -r "pool,ssretent,name" > $TMP_DIR/saved_result_files
 LogPrint "$(cat $TMP_DIR/saved_result_files)"
