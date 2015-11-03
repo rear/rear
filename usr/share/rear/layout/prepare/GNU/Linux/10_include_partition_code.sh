@@ -230,7 +230,9 @@ EOF
         done
 
         # Explicitly name GPT partitions.
-        if [[ "$label" = "gpt" ]] && [[ "$name" != "rear-noname" ]] ; then
+        # For the SUSE specific gpt_sync_mbr partitioning scheme
+        # see https://github.com/rear/rear/issues/544
+        if [[ "$label" = "gpt" || "$label" == "gpt_sync_mbr" ]] && [[ "$name" != "rear-noname" ]] ; then
             (
             echo "my_udevsettle"
             echo "parted -s $device name $number '\"$name\"' >&2"
