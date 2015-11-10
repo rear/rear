@@ -101,13 +101,15 @@ else
         then
                 BAREOS_CLIENT=$(grep $(hostname -s) /etc/bareos/bareos-fd.conf | awk '/-fd/ {print $3}' )
         fi
+	
+	if [ -n "$BAREOS_FILESET" ]
+	then
+		FILESET="fileset=\"$BAREOS_FILESET\""
+	fi
 
-        if [ -n "$BAREOS_FILESET" ]
-        then
-                FILESET="fileset=\"$BAREOS_FILESET\""
-        fi
+        echo "restore client=$BAREOS_CLIENT $FILESET where=/mnt/local select all done
 
-        echo "restore client=$BAREOS_CLIENT $FILESET where=/mnt/local select all done " |     bconsole
+" |     bconsole
 
         # wait for job to start
         LogPrint "waiting for job to start"
@@ -148,10 +150,15 @@ Please verify that the backup has been restored correctly to '/mnt/local'
 in the provided shell. When finished, type exit in the shell to continue
 recovery.
 "
+
+if [ "$ISO_DEFAULT" != "unattended" ]
+then
+
     rear_shell "Did the backup successfully restore to '/mnt/local' ? Ready to continue ?" \
             "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
 vi bootstrap.txt
 bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/local"
+fi
 
 fi
 
