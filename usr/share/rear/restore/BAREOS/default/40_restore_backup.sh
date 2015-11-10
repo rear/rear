@@ -102,9 +102,12 @@ else
                 BAREOS_CLIENT=$(grep $(hostname -s) /etc/bareos/bareos-fd.conf | awk '/-fd/ {print $3}' )
         fi
 
-        echo "restore client=$BAREOS_CLIENT where=/mnt/local select all done
+        if [ -n "$BAREOS_FILESET" ]
+        then
+                FILESET="fileset=\"$BAREOS_FILESET\""
+        fi
 
-" |     bconsole
+        echo "restore client=$BAREOS_CLIENT $FILESET where=/mnt/local select all done " |     bconsole
 
         # wait for job to start
         LogPrint "waiting for job to start"
