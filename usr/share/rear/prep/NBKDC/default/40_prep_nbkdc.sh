@@ -7,7 +7,7 @@
 
 source $SHARE_DIR/lib/nbkdc-functions.sh
 
-Log "Detected NovaBACKUP DC Installation detected in $NBKDC_DIR"
+Log "Detected NovaBACKUP DC Installation in $NBKDC_DIR"
 
 # include DataCenter executables and configuration files 
 COPY_AS_IS=( 
