@@ -14,14 +14,31 @@ mount_fs() {
 
     # Extract mount options.
     local option mountopts
+    # An input line could look like this (an example from SLES12-SP1):
+    # fs /dev/sda2 / btrfs uuid=a2b2c3 label= options=rw,relatime,space_cache,subvolid=259,subvol=/@/.snapshots/1/snapshot
+    # which means by the above 'read' the variable (that is unfortunately) named 'options' gets the
+    # value 'options=rw,relatime,space_cache,subvolid=259,subvol=/@/.snapshots/1/snapshot'
+    # i.e. options='options=rw,relatime,space_cache,subvolid=259,subvol=/@/.snapshots/1/snapshot'
     for option in $options ; do
-        name=${option%%=*}     # options can contain more '=' signs
-        value=${option#*=}
+        name=${option%%=*}     # an option can contain more '=' signs (see the above example value)
+        value=${option#*=}     # therefore split the name from the actual value at the leftmost '='
 
         case $name in
             (options)
                 ### Do not mount nodev, as chrooting later on would fail.
-                mountopts=${value//nodev/dev}
+                value=${value//nodev/dev}
+                # btrfs mount options like subvolid=259 or subvol=/@/.snapshots/1/snapshot
+                # from the old system cannot work here for recovery because btrfs subvolumes
+                # are not yet created (and when created their subvolid is likely different)
+                # so that those mount options are removed here. All btrfs subvolume handling
+                # happens in the btrfs_subvolumes_setup function in 13_include_mount_subvolumes_code.sh
+                # First add a comma at the end so that it is easier to remove a mount option at the end:
+                value=${value/%/,}
+                # Remove all subvolid= and subvol= mount options (the extglob shell option is enabled in rear):
+                value=${value//subvolid=*([^,]),/}
+                value=${value//subvol=*([^,]),/}
+                # Remove all commas at the end:
+                mountopts=${value/%,/}
                 ;;
         esac
     done

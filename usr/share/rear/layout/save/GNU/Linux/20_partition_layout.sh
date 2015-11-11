@@ -113,7 +113,9 @@ extract_partitions() {
     fi
 
     ### find partition name for gpt disks.
-    if [[ "$disk_label" = "gpt" ]] ; then
+    # For the SUSE specific gpt_sync_mbr partitioning scheme
+    # see https://github.com/rear/rear/issues/544
+    if [[ "$disk_label" = "gpt" || "$disk_label" == "gpt_sync_mbr" ]] ; then
         if [[ "$FEATURE_PARTED_MACHINEREADABLE" ]] ; then
             while read partition_nr size start junk ; do
                 type=$(grep "^$partition_nr:" $TMP_DIR/parted | cut -d ":" -f "6")
@@ -256,8 +258,12 @@ Log "Saving disk partitions."
 
             disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
 
+            echo "# Disk $devname"
+            echo "# Format: disk <devname> <size(bytes)> <partition label type>"
             echo "disk $devname $devsize $disktype"
 
+            echo "# Partitions on $devname"
+            echo "# Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>"
             extract_partitions "$devname"
         fi
     done

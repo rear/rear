@@ -13,8 +13,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="udev"
 
-RDEPEND="net-dialup/mingetty
-	net-fs/nfs-utils
+RDEPEND="net-fs/nfs-utils
 	sys-apps/iproute2
 	sys-apps/lsb-release
 	sys-apps/util-linux

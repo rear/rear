@@ -33,6 +33,35 @@ btrfs_subvolumes_setup() {
     # The root of the filesysten tree of the to-be-recovered-system in the recovery system should be in a global variable:
     recovery_system_root=/mnt/local
     ###########################################
+    # SLES 12 SP1 special btrfs subvolumes setup detection:
+    SLES12SP1_btrfs_detection_string="@/.snapshots/"
+    if grep "^btrfsdefaultsubvol $device $mountpoint [0-9]* $SLES12SP1_btrfs_detection_string" "$LAYOUT_FILE" ; then
+        info_message="Detected SLES 12 SP1 special btrfs subvolumes setup because the default subvolume path contains '$SLES12SP1_btrfs_detection_string'"
+        Log $info_message
+        echo "# $info_message" >> "$LAYOUT_CODE"
+        # For SLES 12 SP1 a btrfsdefaultsubvol entry in disklayout.conf looks like
+        #   btrfsdefaultsubvol /dev/sda2 / 259 @/.snapshots/1/snapshot
+        # where "@/.snapshots/" should be fixed but "1/snapshot" may vary.
+        # This requires special setup because the btrfs default subvolume on SLES 12 SP1
+        # is not a normal btrfs subvolume (as it was on SLES 12 (without SP1))
+        # but on SLES 12 SP1 it is a snapper controlled btrfs snapshot subvolume, see
+        # https://github.com/rear/rear/issues/556
+        # https://fate.suse.com/318701 (SUSE internal feature request)
+        # https://bugzilla.suse.com/show_bug.cgi?id=946006 (SUSE internal issue)
+        SLES12SP1_btrfs_subvolumes_setup="yes"
+        # Because that very special btrfs default subvolume on SLES 12 SP1
+        # has to be controlled by snapper it must be set up by snapper
+        # which means that snapper is needed in the rear recovery system.
+        # For this special setup during installation a special SUSE tool
+        # /usr/lib/snapper/installation-helper is used:
+        SLES12SP1_installation_helper_executable="/usr/lib/snapper/installation-helper"
+        # What "snapper/installation-helper --step 1" basically does is
+        # creating a snapshot of the first root filesystem
+        # where the first root filesystem must have the btrfs subvolume '@' mounted at '/'
+        # which means the btrfs subvolume '@' must be the initial btrfs default subvolume:
+        SLES12SP1_initial_default_subvolume_path="@"
+    fi
+    ###########################################
     # Btrfs snapshot subvolumes handling:
     # Remember all btrfs snapshot subvolumes to exclude them when mounting all btrfs normal subvolumes below.
     # The btrfs snapshot subvolumes entries that are created by 23_filesystem_layout.sh
@@ -66,12 +95,20 @@ btrfs_subvolumes_setup() {
     # In contrast after the btrfs default subvolume setup only the btrfs filesystem default subvolume is mounted at the mountpoint and
     # then it would be no longer possible to create btrfs subvolumes with the subvolume path that is stored in the LAYOUT_FILE.
     # In particular a special btrfs default subvolume (i.e. when the btrfs default subvolume is not the toplevel/root subvolume)
-    # is also listed as a normal subvolume so that also the subvolume that is later used as default subvolume is hereby created.
+    # is also listed as a normal subvolume so that also the subvolume that is later used as default subvolume is hereby created
+    # provided the btrfs default subvolume is not a btrfs snapshot subvolume as in SLES 12 SP1 - but not in SLES 12 (without SP1):
     while read dummy dummy dummy dummy subvolume_path junk ; do
         # Empty subvolume_path may indicate an error. In this case be verbose and inform the user:
         if test -z "$subvolume_path" ; then
             LogPrint "btrfsnormalsubvol entry with empty subvolume_path for $device at $mountpoint may indicate an error, skipping subvolume setup for it."
             continue
+        fi
+        # In case of SLES 12 SP1 special btrfs subvolumes setup
+        # skip setup of the normal btrfs subvolume '@/.snapshots' because
+        # that one will be created by "snapper/installation-helper --step 1"
+        # which fails if it already exists:
+        if test -n "$SLES12SP1_btrfs_subvolumes_setup" ; then
+            test "$subvolume_path" = "@/.snapshots" && continue
         fi
         # When there is a non-empty subvolume_path, btrfs normal subvolume setup is needed:
         Log "Setup normal subvolume $subvolume_path for $device at $mountpoint"
@@ -99,10 +136,20 @@ btrfs_subvolumes_setup() {
         fi
         echo "btrfs subvolume create $recovery_system_mountpoint/$subvolume_path"
         ) >> "$LAYOUT_CODE"
+        # Btrfs subvolumes 'no copy on write' attribute setup:
+        if grep -q "^btrfsnocopyonwrite $subvolume_path\$" "$LAYOUT_FILE" ; then
+            info_message="Setting 'no copy on write' attribute for subvolume $subvolume_path"
+            Log $info_message
+            (
+            echo "# $info_message"
+            echo "chattr +C $recovery_system_mountpoint/$subvolume_path"
+            ) >> "$LAYOUT_CODE"
+        fi
     done < <( grep "^btrfsnormalsubvol $device $mountpoint " "$LAYOUT_FILE" )
     ###########################################
     # Btrfs default subvolume setup:
-    # There is exactly one default subvolume for one btrfs filesystem on one specific device (usually a harddisk partition like e.g. /dev/sda1):
+    # No outer 'while read ...' loop because there is exactly one default subvolume for one btrfs filesystem
+    # on one specific device (usually a harddisk partition like e.g. /dev/sda1):
     read dummy dummy dummy dummy subvolume_path junk < <( grep "^btrfsdefaultsubvol $device $mountpoint " "$LAYOUT_FILE" )
     # Artificial 'for' clause that is run only once to be able to 'continue' in the same syntactical way as in the 'while' loops
     # (because the 'for' loop is run only once 'continue' is the same as 'break'):
@@ -125,18 +172,46 @@ btrfs_subvolumes_setup() {
             echo "# $info_message" >> "$LAYOUT_CODE"
             continue
         fi
-        # When in the original system the btrfs filesystem had a special different default subvolume,
+        # When in the original system the btrfs filesystem had a special different default subvolume
+        # (i.e. when the btrfs default subvolume is not the toplevel/root subvolume), then
         # that different subvolume needs to be set to be the default subvolume:
         recovery_system_mountpoint=$recovery_system_root$mountpoint
         Log "Setting $subvolume_path as btrfs default subvolume for $device at $mountpoint"
-        (
-        echo "# Begin btrfs default subvolume setup on $device at $mountpoint"
-        echo "# Making the $subvolume_path subvolume the default subvolume"
-        echo "# Get the ID of the $subvolume_path subvolume"
-        echo "subvolumeID=\$( btrfs subvolume list -a $recovery_system_mountpoint | sed -e 's/<FS_TREE>\///' | grep ' $subvolume_path\$' | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 )"
-        echo "# Set the $subvolume_path subvolume as default subvolume using its subvolume ID"
-        echo "btrfs subvolume set-default \$subvolumeID $recovery_system_mountpoint"
-        ) >> "$LAYOUT_CODE"
+        if test -n "$SLES12SP1_btrfs_subvolumes_setup" ; then
+            (
+            echo "# Begin btrfs default subvolume setup on $device at $mountpoint"
+            echo "# Doing special SLES 12 SP1 btrfs default snapper snapshot subvolume setup"
+            echo "# because the default subvolume path '$subvolume_path' contains '@/.snapshots/'"
+            echo "# Making the $SLES12SP1_initial_default_subvolume_path subvolume the initial default subvolume"
+            echo "# Get the ID of the $initial_default_subvolume_path subvolume"
+            echo "subvolumeID=\$( btrfs subvolume list -a $recovery_system_mountpoint | sed -e 's/<FS_TREE>\///' | grep ' $SLES12SP1_initial_default_subvolume_path\$' | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 )"
+            echo "# Set the $SLES12SP1_initial_default_subvolume_path subvolume as initial default subvolume using its subvolume ID"
+            echo "btrfs subvolume set-default \$subvolumeID $recovery_system_mountpoint"
+            echo "# Begin step 1 of special SLES 12 SP1 btrfs default snapper snapshot subvolume setup"
+            echo "umount $recovery_system_mountpoint"
+            echo "# Configuring snapper for root filesystem - step 1:"
+            echo "# - temporarily mounting device"
+            echo "# - copying/modifying config-file"
+            echo "# - creating filesystem config"
+            echo "# - creating snapshot of first root filesystem"
+            echo "# - setting default subvolume"
+            echo "if test -x $SLES12SP1_installation_helper_executable"
+            echo "then $SLES12SP1_installation_helper_executable --step 1 --device $device --description 'first root filesystem'"
+            echo "else LogPrint '$SLES12SP1_installation_helper_executable not executable may indicate an error with btrfs default subvolume setup for $subvolume_path on $device'"
+            echo "fi"
+            echo " mount -t btrfs -o subvolid=0 $mountopts $device $recovery_system_mountpoint"
+            echo "# End step 1 of special SLES 12 SP1 btrfs default snapper snapshot subvolume setup"
+            ) >> "$LAYOUT_CODE"
+        else
+            (
+            echo "# Begin btrfs default subvolume setup on $device at $mountpoint"
+            echo "# Making the $subvolume_path subvolume the default subvolume"
+            echo "# Get the ID of the $subvolume_path subvolume"
+            echo "subvolumeID=\$( btrfs subvolume list -a $recovery_system_mountpoint | sed -e 's/<FS_TREE>\///' | grep ' $subvolume_path\$' | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 )"
+            echo "# Set the $subvolume_path subvolume as default subvolume using its subvolume ID"
+            echo "btrfs subvolume set-default \$subvolumeID $recovery_system_mountpoint"
+            ) >> "$LAYOUT_CODE"
+        fi
         # When the btrfs filesystem has a special default subvolume (one that is not the toplevel/root subvolume)
         # then a reasonable assumption is that this one was mounted in the original system and not something else.
         # FIXME: It is possible that the admin has actually mounted something else in his original system
@@ -165,6 +240,18 @@ btrfs_subvolumes_setup() {
         fi
         # When there are non-empty values, mounting normal subvolume is needed:
         Log "Mounting normal subvolume $subvolume_path at $subvolume_mountpoint for $device"
+        # btrfs mount options like subvolid=259 or subvol=/@/.snapshots/1/snapshot
+        # from the old system cannot work here or are not needed here for recovery
+        # because for new created btrfs subvolumes their subvolid is likely different
+        # and the subvol=... value is already explicitly available via subvolume_path
+        # so that those mount options are removed here:
+        # First add a comma at the end so that it is easier to remove a mount option at the end:
+        subvolume_mount_options=${subvolume_mount_options/%/,}
+        # Remove all subvolid= and subvol= mount options (the extglob shell option is enabled in rear):
+        subvolume_mount_options=${subvolume_mount_options//subvolid=*([^,]),/}
+        subvolume_mount_options=${subvolume_mount_options//subvol=*([^,]),/}
+        # Remove all commas at the end:
+        subvolume_mount_options=${subvolume_mount_options/%,/}
         # Do not mount btrfs snapshot subvolumes:
         for snapshot_subvolume_device_and_path in $snapshot_subvolumes_devices_and_paths ; do
             # Assume $snapshot_subvolume_device_and_path is "/dev/sdX99,my/subvolume,path" then split
@@ -193,9 +280,20 @@ btrfs_subvolumes_setup() {
         # On Fedora 21 there is a btrfs subvolume "root" which is mounted at the '/' mountpoint.
         # I (jsmeix@suse.de) am not a btrfs expert but from my point of view it looks like
         # a misconfiguration (a.k.a. bug) in Fedora 21 how they set up btrfs. I think Fedora
-        # should specify as btrfs default subvolume what is mounted at the '/' mountpoint.
-        # Regardless if it is really a misconfiguration or not I like to have rear working fail-safe
-        # because an admin could manually create such an awkward btrfs setup.
+        # should specify as btrfs default subvolume what is mounted by default at the '/' mountpoint.
+        # On the other hand I noticed an openSUSE user who presented arguments that
+        # the btrfs default subvolume setting only belongs to the user and
+        # should not be used by the system to specify what is mounted by default,
+        # see what Chris Murphy wrote on the "Default btrfs subvolume after a rollback"
+        # and "systemd, btrfs, /var/lib/machines" mail threads on opensuse-factory@opensuse.org
+        # http://lists.opensuse.org/opensuse-factory/2015-07/msg00517.html
+        # http://lists.opensuse.org/opensuse-factory/2015-07/msg00591.html
+        # and his GitHub snapper issue and openSUSE feature request
+        # "snapper improperly usurps control of the default subvolume from the user"
+        # https://github.com/openSUSE/snapper/issues/178
+        # https://features.opensuse.org/319292
+        # Regardless who or what is right or wrong here I like to have rear working fail-safe
+        # because an admin could manually create any kind of awkward btrfs setup.
         # Therefore remounting is needed when the subvolume_mountpoint is '/'
         # but the subvolume_path is neither '/' nor the default subvolume.
         # Examples: disklayout.conf contains
@@ -205,6 +303,11 @@ btrfs_subvolumes_setup() {
         # on SLES 12 at '/' the default subvolume '@' is mounted:
         #   btrfsdefaultsubvol /dev/sda2 / 257 @
         #   btrfsmountedsubvol /dev/sda2 / rw,relatime,space_cache @
+        # on SLES 12 SP1 at '/' the default subvolume '@/.snapshots/1/snapshot' is mounted:
+        #   btrfsdefaultsubvol /dev/sda2 / 259 @/.snapshots/1/snapshot
+        #   #btrfssnapshotsubvol /dev/sda2 / 259 @/.snapshots/1/snapshot
+        #   btrfsnormalsubvol /dev/sda2 / 258 @/.snapshots
+        #   btrfsmountedsubvol /dev/sda2 / rw,relatime,space_cache,subvolid=259,subvol=/@/.snapshots/1/snapshot @/.snapshots/1/snapshot
         # on Fedora 21 at '/' not the default subvolume which is the root subvolume (ID 5 '/') but the subvolume 'root' is mounted:
         #   btrfsdefaultsubvol /dev/sda3 / 5 /
         #   btrfsmountedsubvol /dev/sda3 / rw,relatime,seclabel,space_cache root

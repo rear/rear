@@ -10,10 +10,13 @@ if [[ ! -d /boot/efi ]]; then
     return    # must be mounted
 fi
 
-PROGS=( "${PROGS[@]}"
+REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}"
 dosfsck
 dosfslabel
 efibootmgr
+)
+
+PROGS=( "${PROGS[@]}"
 gdisk
 parted
 uefivars
