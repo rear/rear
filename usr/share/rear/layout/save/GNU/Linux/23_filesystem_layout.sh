@@ -119,8 +119,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 fi
                 ;;
             (vfat)
-                # Make sure we don't get any other output from dosfslabel (errors go to stdout :-/)
-                label=$(dosfslabel $device | tail -1 | sed -e 's/ /\\\\b/g')  # replace all " " with "\\b"
+                label=$(blkid_label_of_device $device)
                 uuid=$(blkid_uuid_of_device $device)
                 echo -n " uuid=$uuid label=$label"
                 ;;
