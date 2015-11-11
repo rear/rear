@@ -3,6 +3,9 @@
 Log "Saving Swap information."
 
 (
+    echo "# Swap partitions or swap files"
+    echo "# Format: swap <filename> uuid=<uuid> label=<label>"
+
     while read filename type junk ; do
         if [ "$filename" = "Filename" ] || [ "$type" = "file" ] ; then
             continue
