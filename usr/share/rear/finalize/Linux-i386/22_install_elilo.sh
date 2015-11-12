@@ -27,7 +27,7 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
     StopIfError "Could not find directory /boot/efi"
 
     # the UEFI_BOOTLOADER was saved in /etc/rear/rescue.conf file by rear mkrescue/mkbackup
-    [[ ! -f "/mnt/local${UEFI_BOOTLOADER}" ]]
+    [[ -f "/mnt/local${UEFI_BOOTLOADER}" ]]
     StopIfError "Could not find elilo.efi"
 
     [[ -r "/mnt/local/etc/elilo.conf" ]]
