@@ -433,7 +433,7 @@ function make_syslinux_config {
 
 # Create configuration file for elilo
 function create_ebiso_elilo_conf {
-cat > $TMP_DIR/mnt/EFI/BOOT/elilo.conf << EOF
+cat << EOF
 timeout = 5
 default = "Relax and Recover (no Secure Boot)"
 
@@ -441,4 +441,53 @@ image = kernel
     label = "Relax and Recover (no Secure Boot)"
     initrd = initrd.cgz
 EOF
+    [[ -n $KERNEL_CMDLINE ]] && cat << EOF
+    append = "$KERNEL_CMDLINE"
+EOF
 }
+
+# Create configuration grub
+function create_grub2_cfg {
+cat << EOF
+set default="0"
+
+insmod efi_gop
+insmod efi_uga
+insmod video_bochs
+insmod video_cirrus
+insmod all_video
+
+set gfxpayload=keep
+insmod gzio
+insmod part_gpt
+insmod ext2
+
+set timeout=5
+
+search --no-floppy --file /boot/efiboot.img --set
+#set root=(cd0)
+
+menuentry "Relax and Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
+     echo 'Loading kernel ...'
+     linux /isolinux/kernel $KERNEL_CMDLINE
+     echo 'Loading initial ramdisk ...'
+     initrd /isolinux/initrd.cgz
+}
+
+menuentry "Relax and Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
+     echo 'Loading kernel ...'
+     linuxefi /isolinux/kernel $KERNEL_CMDLINE
+     echo 'Loading initial ramdisk ...'
+     initrdefi /isolinux/initrd.cgz
+}
+
+menuentry "Reboot" {
+     reboot
+}
+
+menuentry "Exit to EFI Shell" {
+     exit
+}
+EOF
+}
+
