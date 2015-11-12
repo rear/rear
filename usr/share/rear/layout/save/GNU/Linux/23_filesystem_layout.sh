@@ -74,6 +74,13 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             Log "Mapping $device to $ndevice"
             device=$ndevice
         fi
+        # FIXME: is the above condition still needed if the following is in place?
+        # get_device_name and get_device_name_mapping below should canonicalize obscured udev names
+
+        # work with the persistent dev name: address the fact than dm-XX may be different disk in the recovery environment
+        device=$(get_device_mapping $device)
+        device=$(get_device_name $device)
+
         # Output generic filesystem layout values:
         echo -n "fs $device $mountpoint $fstype"
         # Output filesystem specific layout values:
@@ -234,6 +241,11 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             read_mounted_btrfs_subvolumes_command="mount -t btrfs | cut -d ' ' -f 1,3,6"
         fi
         while read device subvolume_mountpoint mount_options btrfs_subvolume_path junk ; do
+
+            # work with the persistent dev name: address the fact than dm-XX may be different disk in the recovery environment
+            device=$(get_device_mapping $device)
+            device=$(get_device_name $device)
+
             if test -n "$device" -a -n "$subvolume_mountpoint" ; then
                 if test -z "$btrfsmountedsubvol_entry_exists" ; then
                     # Output header only once:
