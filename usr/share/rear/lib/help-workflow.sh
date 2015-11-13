@@ -1,6 +1,6 @@
-# usage-workflow.sh
+# help-workflow.sh
 #
-# mkrescue workflow for Relax-and-Recover
+# help workflow for Relax-and-Recover
 #
 #    Relax-and-Recover is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -21,20 +21,22 @@
 LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} help )
 WORKFLOW_help () {
 	cat <<EOF
-Usage: $PROGRAM [-dDsSvV] [-c DIR ] [-r KERNEL] COMMAND [-- ARGS...]
+Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-r KERNEL] [--] COMMAND [ARGS...]
 
 $PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:
- -c DIR       alternative config directory; instead of /etc/rear
- -d           debug mode; log debug messages
- -D           debugscript mode; log every function call
- -r KERNEL    kernel version to use; current: '$KERNEL_VERSION'
- -s           simulation mode; show what scripts rear would include
- -S           step-by-step mode; acknowledge each script individually
- -v           verbose mode; show more output
- -V           version information
+ -h --help           usage information
+ -c DIR              alternative config directory; instead of /etc/rear
+ -d                  debug mode; log debug messages
+ -D                  debugscript mode; log every function call (via 'set -x')
+ --debugscripts SET  same as -D but with 'set -SET'
+ -r KERNEL           kernel version to use; current: '$KERNEL_VERSION'
+ -s                  simulation mode; show what scripts rear would include
+ -S                  step-by-step mode; acknowledge each script individually
+ -v                  verbose mode; show more output
+ -V --version        version information
 
 List of commands:
 $(
