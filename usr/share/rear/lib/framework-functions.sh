@@ -9,32 +9,41 @@
 
 # source a file given in $1
 function Source() {
-    # skip empty
-    if test -z "$1" ; then
+    local source_file="$1"
+    # Skip if source file name is empty:
+    if test -z "$source_file" ; then
+        Debug "Skipping Source() because it was called with empty source file name"
         return
     fi
-    [[ ! -d "$1" ]]
-    StopIfError "$1 is a directory, cannot source"
-    if test -s "$1" ; then
-        local relname="${1##$SHARE_DIR/}"
-        if test "$SIMULATE" && expr "$1" : "$SHARE_DIR" >&8; then
-            # simulate sourcing the scripts in $SHARE_DIR
-            LogPrint "Source $relname"
-        else
-            # step-by-step mode or breakpoint if needed
-            # usage of the external variable BREAKPOINT:
-            # sudo BREAKPOINT="*foo*" rear mkrescue
-            [[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ) ]] && read -p "Press ENTER to include '$1' ..." 2>&1
-
-            Log "Including ${1##$SHARE_DIR/}"
-            test "$DEBUGSCRIPTS" && set -x
-            . "$1"
-            test "$DEBUGSCRIPTS" && set +x
-            [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] && read -p "Press ENTER to continue ..." 2>&1
-        fi
-    else
-        Debug "Skipping $1 (file not found or empty)"
+    # Ensure source file is not a directory:
+    [[ ! -d "$source_file" ]]
+    StopIfError "Source file '$source_file' is a directory, cannot source"
+    # Skip if source file does not exist of if its content is empty:
+    if ! test -s "$source_file" ; then
+        Debug "Skipping Source() because source file '$source_file' not found or empty"
+        return
     fi
+    # Clip leading standard path to rear files (usually /usr/share/rear/):
+    local relname="${source_file##$SHARE_DIR/}"
+    # Simulate sourcing the scripts in $SHARE_DIR
+    if test "$SIMULATE" && expr "$source_file" : "$SHARE_DIR" >&8; then
+        LogPrint "Source $relname"
+        return
+    fi
+    # Step-by-step mode or breakpoint if needed
+    # Usage of the external variable BREAKPOINT:
+    # sudo BREAKPOINT="*foo*" rear mkrescue
+    [[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ) ]] && read -p "Press ENTER to include '$source_file' ..." 2>&1
+    Log "Including $relname"
+    # DEBUGSCRIPTS mode settings:
+    test "$DEBUGSCRIPTS_ARGUMENT" || DEBUGSCRIPTS_ARGUMENT="x"
+    test "$DEBUGSCRIPTS" && set -$DEBUGSCRIPTS_ARGUMENT
+    # The actual work (source the source file):
+    source "$source_file"
+    # Undo DEBUGSCRIPTS mode settings:
+    test "$DEBUGSCRIPTS" && set +$DEBUGSCRIPTS_ARGUMENT
+    # Breakpoint if needed:
+    [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] && read -p "Press ENTER to continue ..." 2>&1
 }
 
 # collect scripts given in $1 in the standard subdirectories and
