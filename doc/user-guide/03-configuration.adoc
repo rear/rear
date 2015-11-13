@@ -69,6 +69,11 @@ Write the image using sshfs and the SSH protocol.
 OUTPUT_URL=null::
 To avoid duplicate ISO images. Useful in combination with an _external_ backup program, or when +BACKUP_URL=iso://backup+
 
+The default boot option of the created ISO is boothd / "boot from first harddisk". If you want to change this, e.g. because you integrate REAR
+into some automation process, you can change the default using
+ISO_DEFAULT={manual,automatic,boothd}
+
+
 == Backup/Restore strategy (BACKUP)
 The +BACKUP+ setting defines our backup/restore strategy. The +BACKUP+ can be handled via internal archive executable (+tar+ or +rsync+) or by an external backup program (commercial or open source).
 
@@ -94,6 +99,10 @@ Use Bacula programs
 
 BACKUP=BAREOS::
 Use Bareos fork of Bacula
+
+BAREOS_FILESET=Full
+Only if you have more than one fileset defined for your clients backup jobs, you need to specify which
+to use for restore
 
 BACKUP=GALAXY::
 Use CommVault Galaxy (5, probably 6)
