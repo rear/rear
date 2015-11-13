@@ -47,33 +47,36 @@ VAR_DIR="$REAR_DIR_PREFIX/var/lib/rear"
 LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
 CMD_OPTS=( "$@" )
 
-# initialize defaults
-STEPBYSTEP=
-SIMULATE=
-VERBOSE=
-DEBUG=
-KEEP_BUILD_DIR=
-RECOVERY_MODE=
+# initialize defaults: empty value means "false"/"no"
+STEPBYSTEP=""
+SIMULATE=""
+VERBOSE=""
+DEBUG=""
+DEBUGSCRIPTS=""
+DEBUGSCRIPTS_ARGUMENT=""
+KEEP_BUILD_DIR=""
+RECOVERY_MODE=""
 
 # Parse options
-OPTS="$(getopt -n $PROGRAM -o "c:dDhsSvVr:" -l "help,version" -- "$@")"
+OPTS="$(getopt -n $PROGRAM -o "c:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@")"
 if (( $? != 0 )); then
 	echo "Try \`$PROGRAM --help' for more information."
 	exit 1
 fi
-
+missing_argument_message="requires an argument, see '$PROGRAM --help' or 'man $PROGRAM'"
 eval set -- "$OPTS"
 while true; do
 	case "$1" in
 		(-h|--help) WORKFLOW="help";;
 		(-V|--version) echo -e "$PRODUCT $VERSION / $RELEASE_DATE"; exit 0;;
 		(-v) VERBOSE=1;;
-		(-c) CONFIG_DIR="$2"; shift;;
+		(-c) [[ "$2" == -* ]] && { echo "-c $missing_argument_message" ; exit 1 ; } ; CONFIG_DIR="$2"; shift;;
 		(-d) DEBUG=1; VERBOSE=1;;
 		(-D) DEBUGSCRIPTS=1;;
+		(--debugscripts) DEBUGSCRIPTS=1; [[ "$2" == -* ]] && { echo "--debugscripts $missing_argument_message" ; exit 1 ; } ; DEBUGSCRIPTS_ARGUMENT="$2"; shift;;
 		(-s) SIMULATE=1; VERBOSE=1;;
 		(-S) STEPBYSTEP=1;;
-		(-r) KERNEL_VERSION="$2"; shift;;
+		(-r) [[ "$2" == -* ]] && { echo "-r $missing_argument_message" ; exit 1 ; } ; KERNEL_VERSION="$2"; shift;;
 		(--) shift; break;;
 		(-*)
 			echo "$PROGNAME: unrecognized option '$option'"
