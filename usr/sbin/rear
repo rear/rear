@@ -23,6 +23,9 @@
 # Jeroen Hoekx <jeroen.hoekx at hamok dot be> [JH]
 # Dag Wieers <dag at wieers dot com> [DAG]
 
+# for debugging:
+# set -xvue
+
 # Versioning
 PRODUCT="Relax-and-Recover"
 PROGRAM=${0##*/}
@@ -35,8 +38,9 @@ STARTTIME=$SECONDS
 EXIT_CODE=0
 
 # Find out if we're running from checkout
-SCRIPT_FILE="$(readlink -f $(type -p "$0" || echo "$0"))"
-if [[ "$SCRIPT_FILE" != "$(readlink -f /usr/sbin/$PROGRAM)" ]]; then
+REAR_DIR_PREFIX=""
+SCRIPT_FILE="$( readlink -f $( type -p "$0" || echo "$0" ) )"
+if test "$SCRIPT_FILE" != "$( readlink -f /usr/sbin/$PROGRAM )" ; then
     REAR_DIR_PREFIX=${SCRIPT_FILE%/usr/sbin/$PROGRAM}
 fi
 
@@ -48,53 +52,102 @@ LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
 CMD_OPTS=( "$@" )
 
 # initialize defaults: empty value means "false"/"no"
-STEPBYSTEP=""
-SIMULATE=""
-VERBOSE=""
 DEBUG=""
 DEBUGSCRIPTS=""
 DEBUGSCRIPTS_ARGUMENT=""
 KEEP_BUILD_DIR=""
 RECOVERY_MODE=""
+STEPBYSTEP=""
+SIMULATE=""
+VERBOSE=""
+WORKFLOW=""
 
 # Parse options
 OPTS="$( getopt -n $PROGRAM -o "c:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )"
-if (( $? != 0 )); then
-	echo "Try \`$PROGRAM --help' for more information."
-	exit 1
+if test $? -ne 0 ; then
+    echo "Try '$PROGRAM --help' for more information."
+    exit 1
 fi
-missing_argument_message="requires an argument, see '$PROGRAM --help' or 'man $PROGRAM'"
 eval set -- "$OPTS"
-while true; do
-	case "$1" in
-		(-h|--help) WORKFLOW="help";;
-		(-V|--version) echo -e "$PRODUCT $VERSION / $RELEASE_DATE"; exit 0;;
-		(-v) VERBOSE=1;;
-		(-c) [[ "$2" == -* ]] && { echo "-c $missing_argument_message" ; exit 1 ; } ; CONFIG_DIR="$2"; shift;;
-		(-d) DEBUG=1; VERBOSE=1;;
-		(-D) DEBUGSCRIPTS=1;;
-		(--debugscripts) DEBUGSCRIPTS=1; [[ "$2" == -* ]] && { echo "--debugscripts $missing_argument_message" ; exit 1 ; } ; DEBUGSCRIPTS_ARGUMENT="$2"; shift;;
-		(-s) SIMULATE=1; VERBOSE=1;;
-		(-S) STEPBYSTEP=1;;
-		(-r) [[ "$2" == -* ]] && { echo "-r $missing_argument_message" ; exit 1 ; } ; KERNEL_VERSION="$2"; shift;;
-		(--) shift; break;;
-		(-*)
-			echo "$PROGNAME: unrecognized option '$option'"
-			echo "Try \`$PROGRAM --help' for more information."
-			exit 1
-			;;
-		(*) break;;
-	esac
-	shift
+while true ; do
+    case "$1" in
+        (-h|--help)
+            WORKFLOW="help"
+            ;;
+        (-V|--version)
+            echo -e "$PRODUCT $VERSION / $RELEASE_DATE"
+            exit 0
+            ;;
+        (-v)
+            VERBOSE=1
+            ;;
+        (-c)
+            if [[ "$2" == -* ]] ; then
+                echo "-c requires an argument, see '$PROGRAM --help' or 'man $PROGRAM'"
+                exit 1
+            fi
+            CONFIG_DIR="$2"
+            shift
+            ;;
+        (-d)
+            DEBUG=1
+            VERBOSE=1
+            ;;
+        (-D)
+            DEBUGSCRIPTS=1
+            ;;
+        (--debugscripts)
+            DEBUGSCRIPTS=1
+            if [[ "$2" == -* ]] ; then
+                echo "--debugscripts requires an argument, see '$PROGRAM --help' or 'man $PROGRAM'"
+                exit 1
+            fi
+            DEBUGSCRIPTS_ARGUMENT="$2"
+            shift
+            ;;
+        (-s)
+            SIMULATE=1
+            VERBOSE=1
+            ;;
+        (-S)
+            STEPBYSTEP=1
+            ;;
+        (-r)
+            if [[ "$2" == -* ]] ; then
+                echo "-r requires an argument, see '$PROGRAM --help' or 'man $PROGRAM'"
+                exit 1
+            fi
+            KERNEL_VERSION="$2"
+            shift
+            ;;
+        (--)
+            shift
+            break
+            ;;
+        (-*)
+            echo "$PROGNAME: unrecognized option '$option'"
+            echo "Try '$PROGRAM --help' for more information."
+            exit 1
+            ;;
+        (*)
+            break
+            ;;
+    esac
+    shift
 done
 
 # set workflow to first command line argument or to usage
-if [[ -z "$WORKFLOW" ]]; then
-	if [[ "$1" ]]; then
-		WORKFLOW=$1 ; shift # not "$1" to get rid of compound commands
-	else
-		WORKFLOW=help
-	fi
+if test -z "$WORKFLOW" ; then
+   # usually workflow is now in $1 (after the options and its arguments were shifted above)
+   # but when rear is called without a workflow there exists no $1 here so that
+   # an empty default value is used to avoid 'set -eu' error exit if $1 is unset:
+    if test -n "${1:-""}" ; then
+        # not "$1" to get rid of compound commands
+        WORKFLOW=$1
+        shift
+    else
+        WORKFLOW=help
+    fi
 fi
 
 # keep the remaining command line arguments to feed to the workflow
@@ -102,25 +155,30 @@ ARGS=( "$@" )
 
 # the following workflows are always verbose
 case "$WORKFLOW" in
-	(validate|dump|shell|recover)
-		VERBOSE=1
+    (validate|dump|shell|recover)
+        VERBOSE=1
 	;;
 esac
 
 # Make sure we have the necessary paths (eg. in cron), /sbin will be the first path to search.
 # some needed binaries are in /lib/udev or /usr/lib/udev
-for path in /usr/bin /bin /usr/sbin /sbin; do
-	case ":$PATH:" in
-		(*:"$path":*) ;;
-		(*) if [[ -d "$path" ]]; then PATH=$path:$PATH; fi ;;
-	esac
+for path in /usr/bin /bin /usr/sbin /sbin ; do
+    case ":$PATH:" in
+        (*:"$path":*)
+            ;;
+        (*)
+            if test -d "$path" ; then
+                PATH=$path:$PATH
+            fi
+            ;;
+    esac
 done
 PATH=$PATH:/lib/udev:/usr/lib/udev
 
 # are we root ?
-if [[ "$(id --user)" != "0" ]]; then
-	echo "ERROR: $PRODUCT needs ROOT privileges!" >&2
-	exit 1
+if test "$( id --user )" != "0" ; then
+    echo "ERROR: $PRODUCT needs ROOT privileges!" >&2
+#   exit 1
 fi
 
 # set some bash options
@@ -135,26 +193,26 @@ source $SHARE_DIR/conf/default.conf
 
 # include functions
 for script in $SHARE_DIR/lib/*.sh ; do
-	source $script
+    source $script
 done
 
-if ! has_binary pidof; then
-	echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
-	exit 1
+if ! has_binary pidof ; then
+    echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
+    exit 1
 fi
 
 # do not run if another instance is running. pidof -x will always report at least $$
-PID=$(pidof -x -o %PPID "$SCRIPT_FILE")
-if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}"; then
-	LOGFILE="$LOGFILE.lockless"
-elif [[ "$PID" ]] ; then
-	echo "ERROR: $PROGRAM is already running, not starting again" >&2
-	exit 1
+PID=$( pidof -x -o %PPID "$SCRIPT_FILE" )
+if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}" ; then
+    LOGFILE="$LOGFILE.lockless"
+elif test -n "$PID" ; then
+    echo "ERROR: $PROGRAM is already running, not starting again" >&2
+    exit 1
 fi
 
 # keep old log file
-if [[ -r "$LOGFILE" ]]; then
-	mv -f "$LOGFILE" "$LOGFILE".old 2>&8
+if test -r "$LOGFILE" ; then
+    mv -f "$LOGFILE" "$LOGFILE".old 2>&8
 fi
 mkdir -p $LOG_DIR
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
@@ -163,36 +221,37 @@ exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
 REAR_LOGFILE="$LOGFILE"
 
 case "$WORKFLOW" in
-	(help) ;;
-	(*)
-		LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
-		Log "Command line options: $0 ${CMD_OPTS[@]}"
-		if [[ "$VERBOSE" ]]; then
-			LogPrint "Using log file: $LOGFILE"
-		fi
-		;;
+    (help)
+        ;;
+    (*)
+        LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
+        Log "Command line options: $0 ${CMD_OPTS[@]}"
+        if [[ "$VERBOSE" ]] ; then
+            LogPrint "Using log file: $LOGFILE"
+        fi
+        ;;
 esac
 
 v=""
 verbose=""
 # enable progress subsystem only in verbose mode, set some stuff that others can use
-if [[ "$VERBOSE" ]]; then
-	source $SHARE_DIR/lib/progresssubsystem.nosh
-	v="-v"
-	verbose="--verbose"
+if test -n "$VERBOSE" ; then
+  source $SHARE_DIR/lib/progresssubsystem.nosh
+  v="-v"
+  verbose="--verbose"
 fi
 
 # enable debug output of the progress pipe
-if [[ "$DEBUG" ]]; then
-	KEEP_BUILD_DIR=1
+if test -n "$DEBUG" ; then
+  KEEP_BUILD_DIR=1
 fi
 
 # check if we are in recovery mode
-if [[ -e "/etc/rear-release" ]]; then
-	RECOVERY_MODE="y"
+if test -e "/etc/rear-release" ; then
+  RECOVERY_MODE="y"
 fi
 
-[[ -z "$SIMULATE" ]]
+test -z "$SIMULATE"
 LogPrintIfError "Simulation mode activated, Relax-and-Recover base directory: $SHARE_DIR"
 
 # All workflows need to read the configurations first.
@@ -203,15 +262,15 @@ Source "$CONFIG_DIR/$WORKFLOW.conf"
 SetOSVendorAndVersion
 # distribution configuration files
 for config in "$ARCH" "$OS" \
-				"$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
-				"$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
-	if [[ "$config" ]]; then
-		Source "$SHARE_DIR/conf/$config.conf"
-	fi
+              "$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
+              "$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
+    if test -n "$config" ; then
+        Source "$SHARE_DIR/conf/$config.conf"
+    fi
 done
 # user configuration files, last thing is to overwrite variables if we are in the rescue system
-for config in site local rescue; do
-	Source "$CONFIG_DIR/$config.conf"
+for config in site local rescue ; do
+    Source "$CONFIG_DIR/$config.conf"
 done
 
 SourceStage "init"
@@ -219,11 +278,11 @@ SourceStage "init"
 # check for requirements, do we have all required binaries ?
 MISSING_PROGRS=()
 for f in "${REQUIRED_PROGS[@]}" ; do
-	if ! has_binary "$f"; then
-		MISSING_PROGS=( "${MISSING_PROGS[@]}" "$f" )
-	fi
+    if ! has_binary "$f" ; then
+        MISSING_PROGS=( "${MISSING_PROGS[@]}" "$f" )
+    fi
 done
-[[ -z "$MISSING_PROGS" ]]
+test -z "$MISSING_PROGS"
 StopIfError "Cannot find required programs: ${MISSING_PROGS[@]}"
 
 VERSION_INFO="
@@ -232,12 +291,12 @@ $PRODUCT $VERSION / $RELEASE_DATE
 $PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
-Host $(uname -n) using Backup $BACKUP and Output $OUTPUT
-Build date: $(date -R)
+Host $( uname -n ) using Backup $BACKUP and Output $OUTPUT
+Build date: $( date -R )
 "
 
 # create temporary work area and register removal exit task
-BUILD_DIR="$(mktemp -d -t rear.XXXXXXXXXXXXXXX)"
+BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX )"
 StopIfError "Could not create build area '$BUILD_DIR'"
 QuietAddExitTask cleanup_build_area_and_end_program
 Log "Using build area '$BUILD_DIR'"
@@ -249,20 +308,23 @@ mkdir -p $v $TMP_DIR >&2
 StopIfError "Could not create $TMP_DIR"
 
 # Check for and run the requested workflow
-if has_binary WORKFLOW_$WORKFLOW; then
-	Log "Running $WORKFLOW workflow"
-	WORKFLOW_$WORKFLOW "${ARGS[@]}"
-	Log "Finished running $WORKFLOW workflow"
+if has_binary WORKFLOW_$WORKFLOW ; then
+    Log "Running $WORKFLOW workflow"
+    WORKFLOW_$WORKFLOW "${ARGS[@]}"
+    Log "Finished running $WORKFLOW workflow"
 else
-	VERBOSE=1
-	LogPrint "ERROR: The specified command '$WORKFLOW' does not exist !"
-	EXIT_CODE=1
+    VERBOSE=1
+    LogPrint "ERROR: The specified command '$WORKFLOW' does not exist !"
+    EXIT_CODE=1
 fi
 
-[[ "$REAR_LOGFILE" != "$LOGFILE" ]] && cat "$REAR_LOGFILE" > "$LOGFILE"
+if test "$REAR_LOGFILE" != "$LOGFILE" ; then
+    cat "$REAR_LOGFILE" > "$LOGFILE"
+fi
 
-if [[ $EXIT_CODE -eq 0 ]]; then
+if test $EXIT_CODE -eq 0 ; then
     LogToSyslog "DONE: rc=$EXIT_CODE"
 fi
 
 exit $EXIT_CODE
+
