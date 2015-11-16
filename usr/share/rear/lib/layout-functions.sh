@@ -535,3 +535,15 @@ blkid_uuid_of_device() {
     echo "$uuid"
 }
 
+# Get the LABEL of a device.
+# Device is something like /dev/sda1.
+blkid_label_of_device() {
+    local device=$1
+    local label=""
+    for LINE in $(blkid $device  2>/dev/null)
+    do
+        label=$( echo "$LINE" | grep "^LABEL=" | cut -d= -f2 | sed -e 's/"//g' | sed -e 's/ /\\\\b/g')  # replace all " " with "\\b"
+        [[ ! -z "$label" ]] && break
+    done
+    echo "$label"
+}

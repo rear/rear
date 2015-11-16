@@ -5,10 +5,12 @@
 # Script restore/default/90_create_missing_directories.sh will recreate the missing dirs (all other
 # script may be deleted)
 
+: > "$VAR_DIR/recovery/mountpoint_permissions"
 # drwxr-xr-x.  20 root root  4096 Nov  2 07:44 /
 while read junk junk userid groupid junk junk junk junk dir
 do
-    echo $dir $(stat -c %a $dir) $userid $groupid >> "$VAR_DIR/recovery/mountpoint_permissions"
+    [[ $dir = / ]] && continue
+    echo ${dir#/*} $(stat -c %a $dir) $userid $groupid >> "$VAR_DIR/recovery/mountpoint_permissions"
 done < <(ls -ld $(mount | grep -vE '(cgroup|fuse|nfs|/sys/|REAR-000)' | awk '{print $3}'))
 
-# output looks like / 755 root root
+# output looks like boot 755 root root

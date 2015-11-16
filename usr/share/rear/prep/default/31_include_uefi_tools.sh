@@ -12,7 +12,6 @@ fi
 
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}"
 dosfsck
-dosfslabel
 efibootmgr
 )
 
