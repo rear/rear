@@ -19,8 +19,9 @@
 #
 
 LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} help )
-WORKFLOW_help () {
-	cat <<EOF
+
+function WORKFLOW_help () {
+cat <<EOF
 Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-r KERNEL] [--] COMMAND [ARGS...]
 
 $PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
@@ -40,23 +41,28 @@ Available options:
 
 List of commands:
 $(
-	for workflow in ${WORKFLOWS[@]} ; do
-		description=WORKFLOW_${workflow}_DESCRIPTION
-		if [[ "${!description}" ]]; then
-			if [[ -z "$RECOVERY_MODE" && "$workflow" != "recover" ]]; then
-				printf " %-16s%s\n" $workflow "${!description}"
-			elif [[ "$RECOVERY_MODE" && "$workflow" == "recover" ]]; then
-				printf " %-16s%s\n" $workflow "${!description}"
-			fi
-		fi
-	done
+    for workflow in ${WORKFLOWS[@]} ; do
+        description=WORKFLOW_${workflow}_DESCRIPTION
+        # when description is empty then ${!description} uses an unbound variable:
+        if test -n "$description" ; then
+            if [[ "${!description}" ]] ; then
+                if [[ -z "$RECOVERY_MODE" && "$workflow" != "recover" ]] ; then
+                    printf " %-16s%s\n" $workflow "${!description}"
+                elif [[ "$RECOVERY_MODE" && "$workflow" == "recover" ]] ; then
+                    printf " %-16s%s\n" $workflow "${!description}"
+                fi
+            fi
+        fi
+    done
 )
 
 EOF
 
-if [[ -z "$VERBOSE" ]]; then
-	echo "Use 'rear -v help' for more advanced commands."
+if test -z "$VERBOSE" ; then
+    echo "Use 'rear -v help' for more advanced commands."
 fi
 
-	EXIT_CODE=1
+EXIT_CODE=1
+
 }
+

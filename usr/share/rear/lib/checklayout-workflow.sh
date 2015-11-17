@@ -21,7 +21,7 @@
 WORKFLOW_checklayout_DESCRIPTION="check if the disk layout has changed"
 WORKFLOWS=( ${WORKFLOWS[@]} checklayout )
 LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} checklayout )
-WORKFLOW_checklayout () {
+function WORKFLOW_checklayout () {
     ORIG_LAYOUT=$VAR_DIR/layout/disklayout.conf
     TEMP_LAYOUT=$TMP_DIR/checklayout.conf
 
