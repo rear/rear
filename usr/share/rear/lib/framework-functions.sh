@@ -16,8 +16,7 @@ function Source() {
         return
     fi
     # Ensure source file is not a directory:
-    [[ ! -d "$source_file" ]]
-    StopIfError "Source file '$source_file' is a directory, cannot source"
+    test -d "$source_file" && Error "Source file '$source_file' is a directory, cannot source"
     # Skip if source file does not exist of if its content is empty:
     if ! test -s "$source_file" ; then
         Debug "Skipping Source() because source file '$source_file' not found or empty"
@@ -31,8 +30,9 @@ function Source() {
         return
     fi
     # Step-by-step mode or breakpoint if needed
-    # Usage of the external variable BREAKPOINT:
-    # sudo BREAKPOINT="*foo*" rear mkrescue
+    # Usage of the external variable BREAKPOINT: sudo BREAKPOINT="*foo*" rear mkrescue
+    # an empty default value is set to avoid 'set -eu' error exit if BREAKPOINT is unset:
+    : ${BREAKPOINT:=}
     [[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ) ]] && read -p "Press ENTER to include '$source_file' ..." 2>&1
     Log "Including $relname"
     # DEBUGSCRIPTS mode settings:

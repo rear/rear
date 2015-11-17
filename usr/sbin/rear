@@ -24,7 +24,9 @@
 # Dag Wieers <dag at wieers dot com> [DAG]
 
 # for debugging:
-# set -xvue
+# set -xvue -o pipefail
+# set -ue -o pipefail
+set -u
 
 # Versioning
 PRODUCT="Relax-and-Recover"
@@ -63,9 +65,10 @@ VERBOSE=""
 WORKFLOW=""
 
 # Parse options
+help_note_text="Use '$PROGRAM --help' or 'man $PROGRAM' for more information."
 OPTS="$( getopt -n $PROGRAM -o "c:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )"
 if test $? -ne 0 ; then
-    echo "Try '$PROGRAM --help' for more information."
+    echo "$help_note_text"
     exit 1
 fi
 eval set -- "$OPTS"
@@ -83,7 +86,10 @@ while true ; do
             ;;
         (-c)
             if [[ "$2" == -* ]] ; then
-                echo "-c requires an argument, see '$PROGRAM --help' or 'man $PROGRAM'"
+                # When the item that follows '-c' starts with a '-'
+                # it is considered to be the next option and not an argument for '-c':
+                echo "-c requires an argument."
+                echo "$help_note_text"
                 exit 1
             fi
             CONFIG_DIR="$2"
@@ -99,7 +105,10 @@ while true ; do
         (--debugscripts)
             DEBUGSCRIPTS=1
             if [[ "$2" == -* ]] ; then
-                echo "--debugscripts requires an argument, see '$PROGRAM --help' or 'man $PROGRAM'"
+                # When the item that follows '--debugscripts' starts with a '-'
+                # it is considered to be the next option and not an argument for '--debugscripts':
+                echo "--debugscripts requires an argument."
+                echo "$help_note_text"
                 exit 1
             fi
             DEBUGSCRIPTS_ARGUMENT="$2"
@@ -114,7 +123,10 @@ while true ; do
             ;;
         (-r)
             if [[ "$2" == -* ]] ; then
-                echo "-r requires an argument, see '$PROGRAM --help' or 'man $PROGRAM'"
+                # When the item that follows '-r' starts with a '-'
+                # it is considered to be the next option and not an argument for '-r':
+                echo "-r requires an argument."
+                echo "$help_note_text"
                 exit 1
             fi
             KERNEL_VERSION="$2"
@@ -126,7 +138,7 @@ while true ; do
             ;;
         (-*)
             echo "$PROGNAME: unrecognized option '$option'"
-            echo "Try '$PROGRAM --help' for more information."
+            echo "$help_note_text"
             exit 1
             ;;
         (*)
@@ -141,7 +153,7 @@ if test -z "$WORKFLOW" ; then
    # usually workflow is now in $1 (after the options and its arguments were shifted above)
    # but when rear is called without a workflow there exists no $1 here so that
    # an empty default value is used to avoid 'set -eu' error exit if $1 is unset:
-    if test -n "${1:-""}" ; then
+    if test -n "${1:-}" ; then
         # not "$1" to get rid of compound commands
         WORKFLOW=$1
         shift
@@ -178,7 +190,7 @@ PATH=$PATH:/lib/udev:/usr/lib/udev
 # are we root ?
 if test "$( id --user )" != "0" ; then
     echo "ERROR: $PRODUCT needs ROOT privileges!" >&2
-#   exit 1
+    exit 1
 fi
 
 # set some bash options
@@ -196,18 +208,26 @@ for script in $SHARE_DIR/lib/*.sh ; do
     source $script
 done
 
-if ! has_binary pidof ; then
-    echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
-    exit 1
-fi
-
-# do not run if another instance is running. pidof -x will always report at least $$
-PID=$( pidof -x -o %PPID "$SCRIPT_FILE" )
+# LOCKLESS_WORKFLOWS can run simlutaneously with another instance by using a LOGFILE.lockless:
 if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}" ; then
     LOGFILE="$LOGFILE.lockless"
-elif test -n "$PID" ; then
-    echo "ERROR: $PROGRAM is already running, not starting again" >&2
-    exit 1
+else
+    # when it is not a LOCKLESS_WORKFLOWS it cannot run simlutaneously with another instance
+    # in this case pidof is needed to test what running instances theer are:
+    if ! has_binary pidof ; then
+        echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
+        exit 1
+    fi
+    # for unknown reasons '-o %PPID' does not work for pidof at least in SLES11 so that
+    # a manual workaround is done to remove $$ from the list of PIDs in the pidof output
+    # have a blank at the end so that it is easier to remove $$ when it is at the end:
+    ALL_RUNNING_PIDS="$( pidof -x "$SCRIPT_FILE" ) "
+    # remove '$$ ' (the extglob shell option is enabled above):
+    OTHER_RUNNING_PIDS=${ALL_RUNNING_PIDS//$$ }
+    if test -n "$OTHER_RUNNING_PIDS" ; then
+        echo "ERROR: $PROGRAM is already running, not starting again" >&2
+        exit 1
+    fi
 fi
 
 # keep old log file
@@ -215,6 +235,7 @@ if test -r "$LOGFILE" ; then
     mv -f "$LOGFILE" "$LOGFILE".old 2>&8
 fi
 mkdir -p $LOG_DIR
+
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
 # keep our default $LOGFILE location in a seperate variable REAR_LOGFILE
 # in case end-user overruled it in the local.conf file
@@ -226,7 +247,7 @@ case "$WORKFLOW" in
     (*)
         LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
         Log "Command line options: $0 ${CMD_OPTS[@]}"
-        if [[ "$VERBOSE" ]] ; then
+        if test -n "$VERBOSE" ; then
             LogPrint "Using log file: $LOGFILE"
         fi
         ;;
@@ -251,39 +272,42 @@ if test -e "/etc/rear-release" ; then
   RECOVERY_MODE="y"
 fi
 
-test -z "$SIMULATE"
-LogPrintIfError "Simulation mode activated, Relax-and-Recover base directory: $SHARE_DIR"
+if test -n "$SIMULATE" ; then
+    LogPrint "Simulation mode activated, Relax-and-Recover base directory: $SHARE_DIR"
+fi
 
 # All workflows need to read the configurations first.
 # Combine configuration files
 Debug "Combining configuration files"
-Source "$CONFIG_DIR/os.conf"   # use this file to manually override the OS detection
-Source "$CONFIG_DIR/$WORKFLOW.conf"
+# use this file to manually override the OS detection
+test -r "$CONFIG_DIR/os.conf" && Source "$CONFIG_DIR/os.conf" || true
+test -r "$CONFIG_DIR/$WORKFLOW.conf" && Source "$CONFIG_DIR/$WORKFLOW.conf" || true
 SetOSVendorAndVersion
 # distribution configuration files
 for config in "$ARCH" "$OS" \
               "$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
               "$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
-    if test -n "$config" ; then
-        Source "$SHARE_DIR/conf/$config.conf"
-    fi
+    test -r "$SHARE_DIR/conf/$config.conf" && Source "$SHARE_DIR/conf/$config.conf" || true
 done
 # user configuration files, last thing is to overwrite variables if we are in the rescue system
 for config in site local rescue ; do
-    Source "$CONFIG_DIR/$config.conf"
+    test -r "$CONFIG_DIR/$config.conf" && Source "$CONFIG_DIR/$config.conf" || true
 done
 
 SourceStage "init"
 
 # check for requirements, do we have all required binaries ?
-MISSING_PROGRS=()
+# without the empty string as initial value MISSING_PROGS would be
+# an unbound variable that would result an error exit if 'set -eu' is used:
+MISSING_PROGS=("")
 for f in "${REQUIRED_PROGS[@]}" ; do
     if ! has_binary "$f" ; then
         MISSING_PROGS=( "${MISSING_PROGS[@]}" "$f" )
     fi
 done
-test -z "$MISSING_PROGS"
-StopIfError "Cannot find required programs: ${MISSING_PROGS[@]}"
+if test -n "$MISSING_PROGS" ; then
+    Error "Cannot find required programs: ${MISSING_PROGS[@]}"
+fi
 
 VERSION_INFO="
 $PRODUCT $VERSION / $RELEASE_DATE
@@ -296,25 +320,24 @@ Build date: $( date -R )
 "
 
 # create temporary work area and register removal exit task
-BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX )"
-StopIfError "Could not create build area '$BUILD_DIR'"
+BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
 QuietAddExitTask cleanup_build_area_and_end_program
 Log "Using build area '$BUILD_DIR'"
 ROOTFS_DIR=$BUILD_DIR/rootfs
 TMP_DIR=$BUILD_DIR/tmp
-mkdir -p $v $ROOTFS_DIR >&2
-StopIfError "Could not create $ROOTFS_DIR"
-mkdir -p $v $TMP_DIR >&2
-StopIfError "Could not create $TMP_DIR"
+mkdir -p $v $ROOTFS_DIR >&2 || Error "Could not create $ROOTFS_DIR"
+mkdir -p $v $TMP_DIR >&2 || Error "Could not create $TMP_DIR"
 
 # Check for and run the requested workflow
 if has_binary WORKFLOW_$WORKFLOW ; then
     Log "Running $WORKFLOW workflow"
-    WORKFLOW_$WORKFLOW "${ARGS[@]}"
+    # there could be no ARGS[@] which means it would be an unbound variable so that
+    # an empty default is used here to avoid an error exit if 'set -eu' is used:
+    WORKFLOW_$WORKFLOW "${ARGS[@]:-}"
     Log "Finished running $WORKFLOW workflow"
 else
     VERBOSE=1
-    LogPrint "ERROR: The specified command '$WORKFLOW' does not exist !"
+    LogPrint "ERROR: The specified command '$WORKFLOW' does not exist!"
     EXIT_CODE=1
 fi
 
