@@ -23,10 +23,13 @@
 # Jeroen Hoekx <jeroen.hoekx at hamok dot be> [JH]
 # Dag Wieers <dag at wieers dot com> [DAG]
 
-# for debugging:
+# Enable as needed for development of fail-safe code:
 # set -xvue -o pipefail
 # set -ue -o pipefail
-set -u
+# Cf. the Relax-and-Recover Coding Style
+# https://github.com/rear/rear/wiki/Coding-Style
+# that reads (excerpt - dated 18. Nov. 2015):
+# "TODO Use set -eu to die from unset variables and unhandled errors"
 
 # Versioning
 PRODUCT="Relax-and-Recover"
@@ -103,6 +106,8 @@ while true ; do
             DEBUGSCRIPTS=1
             ;;
         (--debugscripts)
+            DEBUG=1
+            VERBOSE=1
             DEBUGSCRIPTS=1
             if [[ "$2" == -* ]] ; then
                 # When the item that follows '--debugscripts' starts with a '-'
@@ -208,26 +213,25 @@ for script in $SHARE_DIR/lib/*.sh ; do
     source $script
 done
 
-# LOCKLESS_WORKFLOWS can run simlutaneously with another instance by using a LOGFILE.lockless:
+# LOCKLESS_WORKFLOWS can run simultaneously with another instance by using a LOGFILE.lockless:
 if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}" ; then
     LOGFILE="$LOGFILE.lockless"
 else
-    # when it is not a LOCKLESS_WORKFLOWS it cannot run simlutaneously with another instance
-    # in this case pidof is needed to test what running instances theer are:
+    # when this currently running instance is not one of the LOCKLESS_WORKFLOWS
+    # then it cannot run simultaneously with another instance
+    # in this case pidof is needed to test what running instances there are:
     if ! has_binary pidof ; then
         echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
         exit 1
     fi
-    # for unknown reasons '-o %PPID' does not work for pidof at least in SLES11 so that
-    # a manual workaround is done to remove $$ from the list of PIDs in the pidof output
-    # have a blank at the end so that it is easier to remove $$ when it is at the end:
-    ALL_RUNNING_PIDS="$( pidof -x "$SCRIPT_FILE" ) "
-    # remove '$$ ' (the extglob shell option is enabled above):
-    OTHER_RUNNING_PIDS=${ALL_RUNNING_PIDS//$$ }
-    if test -n "$OTHER_RUNNING_PIDS" ; then
-        echo "ERROR: $PROGRAM is already running, not starting again" >&2
-        exit 1
-    fi
+    # for unknown reasons '-o %PPID' does not work for pidof at least in SLES11
+    # so that a manual test is done to find out if another pid != $$ is running:
+    for pid in $( pidof -x "$SCRIPT_FILE" ) ; do
+        if test "$pid" != $$ ; then
+            echo "ERROR: $PROGRAM is already running, not starting again" >&2
+            exit 1
+        fi
+    done
 fi
 
 # keep old log file
@@ -241,17 +245,13 @@ exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
 # in case end-user overruled it in the local.conf file
 REAR_LOGFILE="$LOGFILE"
 
-case "$WORKFLOW" in
-    (help)
-        ;;
-    (*)
-        LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
-        Log "Command line options: $0 ${CMD_OPTS[@]}"
-        if test -n "$VERBOSE" ; then
-            LogPrint "Using log file: $LOGFILE"
-        fi
-        ;;
-esac
+if test "$WORKFLOW" != "help" ; then
+    LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
+    Log "Command line options: $0 ${CMD_OPTS[@]}"
+    if test -n "$VERBOSE" ; then
+        LogPrint "Using log file: $LOGFILE"
+    fi
+fi
 
 v=""
 verbose=""
@@ -274,6 +274,11 @@ fi
 
 if test -n "$SIMULATE" ; then
     LogPrint "Simulation mode activated, Relax-and-Recover base directory: $SHARE_DIR"
+fi
+
+if test -n "$DEBUGSCRIPTS_ARGUMENT" ; then
+    Debug "Current set of flags is '$-'"
+    Debug "The debugscripts flags are '$DEBUGSCRIPTS_ARGUMENT'"
 fi
 
 # All workflows need to read the configurations first.
@@ -319,14 +324,16 @@ Host $( uname -n ) using Backup $BACKUP and Output $OUTPUT
 Build date: $( date -R )
 "
 
-# create temporary work area and register removal exit task
-BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
-QuietAddExitTask cleanup_build_area_and_end_program
-Log "Using build area '$BUILD_DIR'"
-ROOTFS_DIR=$BUILD_DIR/rootfs
-TMP_DIR=$BUILD_DIR/tmp
-mkdir -p $v $ROOTFS_DIR >&2 || Error "Could not create $ROOTFS_DIR"
-mkdir -p $v $TMP_DIR >&2 || Error "Could not create $TMP_DIR"
+if test "$WORKFLOW" != "help" ; then
+    # create temporary work area and register removal exit task
+    BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
+    QuietAddExitTask cleanup_build_area_and_end_program
+    Log "Using build area '$BUILD_DIR'"
+    ROOTFS_DIR=$BUILD_DIR/rootfs
+    TMP_DIR=$BUILD_DIR/tmp
+    mkdir -p $v $ROOTFS_DIR >&2 || Error "Could not create $ROOTFS_DIR"
+    mkdir -p $v $TMP_DIR >&2 || Error "Could not create $TMP_DIR"
+fi
 
 # Check for and run the requested workflow
 if has_binary WORKFLOW_$WORKFLOW ; then
