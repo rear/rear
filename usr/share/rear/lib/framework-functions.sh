@@ -8,7 +8,7 @@
 # convert tabs into 4 spaces with: expand --tabs=4 file >new-file
 
 # source a file given in $1
-function Source() {
+function Source () {
     local source_file="$1"
     # Skip if source file name is empty:
     if test -z "$source_file" ; then
@@ -37,11 +37,21 @@ function Source() {
     Log "Including $relname"
     # DEBUGSCRIPTS mode settings:
     test "$DEBUGSCRIPTS_ARGUMENT" || DEBUGSCRIPTS_ARGUMENT="x"
-    test "$DEBUGSCRIPTS" && set -$DEBUGSCRIPTS_ARGUMENT
+    if test "$DEBUGSCRIPTS" ; then
+        Debug "Enabling debugscripts mode: 'set -$DEBUGSCRIPTS_ARGUMENT'"
+        set -$DEBUGSCRIPTS_ARGUMENT
+    fi
     # The actual work (source the source file):
     source "$source_file"
     # Undo DEBUGSCRIPTS mode settings:
-    test "$DEBUGSCRIPTS" && set +$DEBUGSCRIPTS_ARGUMENT
+    if test "$DEBUGSCRIPTS" ; then
+        # Assume $DEBUGSCRIPTS_ARGUMENT is "xvue +h -o pipefail"
+        # then the opposite is created by interchanging '+' and '-'
+        # so that DEBUGSCRIPTS_OPPOSITE_ARGUMENT is "xvue -h +o pipefail"
+        DEBUGSCRIPTS_OPPOSITE_ARGUMENT="$( echo "$DEBUGSCRIPTS_ARGUMENT" | tr '+-' '-+' )"
+        Debug "Disabling debugscripts mode: 'set +$DEBUGSCRIPTS_OPPOSITE_ARGUMENT'"
+        set +$DEBUGSCRIPTS_OPPOSITE_ARGUMENT
+    fi
     # Breakpoint if needed:
     [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] && read -p "Press ENTER to continue ..." 2>&1
 }
@@ -49,7 +59,7 @@ function Source() {
 # collect scripts given in $1 in the standard subdirectories and
 # sort them by their script file name and
 # source them
-function SourceStage() {
+function SourceStage () {
     stage="$1"
     shift
     STARTSTAGE=$SECONDS
@@ -85,7 +95,7 @@ function SourceStage() {
 }
 
 
-function cleanup_build_area_and_end_program() {
+function cleanup_build_area_and_end_program () {
     # Cleanup build area
     Log "Finished in $((SECONDS-STARTTIME)) seconds"
     if test "$KEEP_BUILD_DIR" ; then
@@ -112,3 +122,4 @@ function cleanup_build_area_and_end_program() {
     fi
     Log "End of program reached"
 }
+
