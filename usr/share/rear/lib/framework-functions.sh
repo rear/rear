@@ -8,39 +8,58 @@
 # convert tabs into 4 spaces with: expand --tabs=4 file >new-file
 
 # source a file given in $1
-function Source() {
-    # skip empty
-    if test -z "$1" ; then
+function Source () {
+    local source_file="$1"
+    # Skip if source file name is empty:
+    if test -z "$source_file" ; then
+        Debug "Skipping Source() because it was called with empty source file name"
         return
     fi
-    [[ ! -d "$1" ]]
-    StopIfError "$1 is a directory, cannot source"
-    if test -s "$1" ; then
-        local relname="${1##$SHARE_DIR/}"
-        if test "$SIMULATE" && expr "$1" : "$SHARE_DIR" >&8; then
-            # simulate sourcing the scripts in $SHARE_DIR
-            LogPrint "Source $relname"
-        else
-            # step-by-step mode or breakpoint if needed
-            # usage of the external variable BREAKPOINT:
-            # sudo BREAKPOINT="*foo*" rear mkrescue
-            [[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ) ]] && read -p "Press ENTER to include '$1' ..." 2>&1
-
-            Log "Including ${1##$SHARE_DIR/}"
-            test "$DEBUGSCRIPTS" && set -x
-            . "$1"
-            test "$DEBUGSCRIPTS" && set +x
-            [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] && read -p "Press ENTER to continue ..." 2>&1
-        fi
-    else
-        Debug "Skipping $1 (file not found or empty)"
+    # Ensure source file is not a directory:
+    test -d "$source_file" && Error "Source file '$source_file' is a directory, cannot source"
+    # Skip if source file does not exist of if its content is empty:
+    if ! test -s "$source_file" ; then
+        Debug "Skipping Source() because source file '$source_file' not found or empty"
+        return
     fi
+    # Clip leading standard path to rear files (usually /usr/share/rear/):
+    local relname="${source_file##$SHARE_DIR/}"
+    # Simulate sourcing the scripts in $SHARE_DIR
+    if test "$SIMULATE" && expr "$source_file" : "$SHARE_DIR" >&8; then
+        LogPrint "Source $relname"
+        return
+    fi
+    # Step-by-step mode or breakpoint if needed
+    # Usage of the external variable BREAKPOINT: sudo BREAKPOINT="*foo*" rear mkrescue
+    # an empty default value is set to avoid 'set -eu' error exit if BREAKPOINT is unset:
+    : ${BREAKPOINT:=}
+    [[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ) ]] && read -p "Press ENTER to include '$source_file' ..." 2>&1
+    Log "Including $relname"
+    # DEBUGSCRIPTS mode settings:
+    test "$DEBUGSCRIPTS_ARGUMENT" || DEBUGSCRIPTS_ARGUMENT="x"
+    if test "$DEBUGSCRIPTS" ; then
+        Debug "Enabling debugscripts mode: 'set -$DEBUGSCRIPTS_ARGUMENT'"
+        set -$DEBUGSCRIPTS_ARGUMENT
+    fi
+    # The actual work (source the source file):
+    source "$source_file"
+    # Undo DEBUGSCRIPTS mode settings:
+    if test "$DEBUGSCRIPTS" ; then
+        # Assume $DEBUGSCRIPTS_ARGUMENT is "xvue +h -o pipefail"
+        # then the opposite is created by interchanging '+' and '-'
+        # so that DEBUGSCRIPTS_OPPOSITE_ARGUMENT is "xvue -h +o pipefail"
+        DEBUGSCRIPTS_OPPOSITE_ARGUMENT="$( echo "$DEBUGSCRIPTS_ARGUMENT" | tr '+-' '-+' )"
+        Debug "Disabling debugscripts mode: 'set +$DEBUGSCRIPTS_OPPOSITE_ARGUMENT'"
+        set +$DEBUGSCRIPTS_OPPOSITE_ARGUMENT
+    fi
+    # Breakpoint if needed:
+    [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] && read -p "Press ENTER to continue ..." 2>&1
 }
 
 # collect scripts given in $1 in the standard subdirectories and
 # sort them by their script file name and
 # source them
-function SourceStage() {
+function SourceStage () {
     stage="$1"
     shift
     STARTSTAGE=$SECONDS
@@ -76,7 +95,7 @@ function SourceStage() {
 }
 
 
-function cleanup_build_area_and_end_program() {
+function cleanup_build_area_and_end_program () {
     # Cleanup build area
     Log "Finished in $((SECONDS-STARTTIME)) seconds"
     if test "$KEEP_BUILD_DIR" ; then
@@ -103,3 +122,4 @@ function cleanup_build_area_and_end_program() {
     fi
     Log "End of program reached"
 }
+

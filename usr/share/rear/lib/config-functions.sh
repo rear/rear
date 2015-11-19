@@ -69,6 +69,11 @@ SetOSVendorAndVersion () {
             OS_MASTER_VENDOR="Arch"
             OS_MASTER_VERSION="$OS_VERSION"
             ;;
+        (*)
+            # set fallback values to aviod error exit for 'set -eu' because of unbound variables:
+            OS_MASTER_VENDOR=""
+            OS_MASTER_VERSION="$OS_VERSION"
+            ;;
     esac
 
     # combined stuff for OS_MASTER_*
@@ -76,6 +81,11 @@ SetOSVendorAndVersion () {
         OS_MASTER_VENDOR_VERSION="$OS_MASTER_VENDOR/$OS_MASTER_VERSION"
         OS_MASTER_VENDOR_ARCH="$OS_MASTER_VENDOR/$MACHINE"
         OS_MASTER_VENDOR_VERSION_ARCH="$OS_MASTER_VENDOR/$OS_MASTER_VERSION/$MACHINE"
+    else
+        # set fallback values to aviod error exit for 'set -eu' because of unbound variables:
+        OS_MASTER_VENDOR_VERSION="$OS_MASTER_VERSION"
+        OS_MASTER_VENDOR_ARCH="$MACHINE"
+        OS_MASTER_VENDOR_VERSION_ARCH="$OS_MASTER_VERSION/$MACHINE"
     fi
 
 }
