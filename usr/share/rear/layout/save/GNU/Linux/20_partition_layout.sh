@@ -26,7 +26,6 @@ extract_partitions() {
     declare device=$1
 
     declare sysfs_name=$(get_sysfs_name $device)
-    declare block_size=$(get_block_size $sysfs_name)
 
     ### check if we can find any partitions
     declare -a sysfs_paths=(/sys/block/$sysfs_name/$sysfs_name*)
@@ -62,13 +61,7 @@ extract_partitions() {
         partition_prefix=${partition_name%$partition_nr}
 
         size=$(get_disk_size ${path#/sys/block/})
-        if [[ -r $path/start ]] ; then
-            start_block=$(< $path/start)
-            start=$(( $start_block*$block_size ))
-        else
-            Log "Could not determine start of partition $partition_name."
-            start="unknown"
-        fi
+        start=$(get_partition_start ${path#/sys/block/})
 
         echo "$partition_nr $size $start">> $TMP_DIR/partitions_unsorted
     done
