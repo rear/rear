@@ -155,9 +155,9 @@ done
 
 # set workflow to first command line argument or to usage
 if test -z "$WORKFLOW" ; then
-   # usually workflow is now in $1 (after the options and its arguments were shifted above)
-   # but when rear is called without a workflow there exists no $1 here so that
-   # an empty default value is used to avoid 'set -eu' error exit if $1 is unset:
+    # usually workflow is now in $1 (after the options and its arguments were shifted above)
+    # but when rear is called without a workflow there exists no $1 here so that
+    # an empty default value is used to avoid 'set -eu' error exit if $1 is unset:
     if test -n "${1:-}" ; then
         # not "$1" to get rid of compound commands
         WORKFLOW=$1
@@ -257,19 +257,19 @@ v=""
 verbose=""
 # enable progress subsystem only in verbose mode, set some stuff that others can use
 if test -n "$VERBOSE" ; then
-  source $SHARE_DIR/lib/progresssubsystem.nosh
-  v="-v"
-  verbose="--verbose"
+    source $SHARE_DIR/lib/progresssubsystem.nosh
+    v="-v"
+    verbose="--verbose"
 fi
 
 # enable debug output of the progress pipe
 if test -n "$DEBUG" ; then
-  KEEP_BUILD_DIR=1
+    KEEP_BUILD_DIR=1
 fi
 
 # check if we are in recovery mode
 if test -e "/etc/rear-release" ; then
-  RECOVERY_MODE="y"
+    RECOVERY_MODE="y"
 fi
 
 if test -n "$SIMULATE" ; then
@@ -290,8 +290,8 @@ test -r "$CONFIG_DIR/$WORKFLOW.conf" && Source "$CONFIG_DIR/$WORKFLOW.conf" || t
 SetOSVendorAndVersion
 # distribution configuration files
 for config in "$ARCH" "$OS" \
-              "$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
-              "$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
+        "$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
+        "$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
     test -r "$SHARE_DIR/conf/$config.conf" && Source "$SHARE_DIR/conf/$config.conf" || true
 done
 # user configuration files, last thing is to overwrite variables if we are in the rescue system
