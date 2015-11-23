@@ -5,9 +5,8 @@
 
 mount_fs() {
     Log "Begin mount_fs( $@ )"
-    local fs device mp fstype uuid label options
-    ## mp: mount point
-    read fs device mp fstype uuid label options < <(grep "^fs.* ${1#fs:} " "$LAYOUT_FILE")
+    local fs device mountpoint fstype uuid label options
+    read fs device mountpoint fstype uuid label options < <(grep "^fs.* ${1#fs:} " "$LAYOUT_FILE")
 
     label=${label#label=}
     uuid=${uuid#uuid=}
@@ -47,7 +46,7 @@ mount_fs() {
         mountopts="-o $mountopts"
     fi
 
-    echo "LogPrint \"Mounting filesystem $mp\"" >> "$LAYOUT_CODE"
+    echo "LogPrint \"Mounting filesystem $mountpoint\"" >> "$LAYOUT_CODE"
 
     case $fstype in
         (btrfs)
@@ -58,30 +57,30 @@ mount_fs() {
             # its top-level/root subvolume is the btrfs default subvolume which gets mounted when no other subvolume is specified.
             # For a plain btrfs filesystem without subvolumes it is effectively the same as for other filesystems (like ext2/3/4).
             (
-            echo "mkdir -p /mnt/local$mp"
-            echo "mount -t btrfs $mountopts $device /mnt/local$mp"
+            echo "mkdir -p $RECOVERY_FS_ROOT$mountpoint"
+            echo "mount -t btrfs $mountopts $device $RECOVERY_FS_ROOT$mountpoint"
             ) >> "$LAYOUT_CODE"
             # But btrfs filesystems with subvolumes need a special handling.
             # In particular when in the original system the btrfs filesystem had a special different default subvolume,
             # that different subvolume needs to be first created, then set to be the default subvolume, and
             # finally that btrfs filesystem needs to be unmounted and mounted again so that in the end
-            # that special different default subvolume is mounted at the mountpoint /mnt/local$mp.
+            # that special different default subvolume is mounted at the mountpoint $RECOVERY_FS_ROOT$mountpoint.
             # All btrfs subvolume handling happens in the btrfs_subvolumes_setup function in 13_include_mount_subvolumes_code.sh
             # For a plain btrfs filesystem without subvolumes the btrfs_subvolumes_setup function does nothing.
             # Call the btrfs_subvolumes_setup function for the btrfs filesystem that was mounted above:
-            btrfs_subvolumes_setup $device $mp $mountopts
+            btrfs_subvolumes_setup $device $mountpoint $mountopts
             ;;
         (vfat)
             # mounting vfat filesystem - avoid using mount options - issue #576
             (
-            echo "mkdir -p /mnt/local$mp"
-            echo "mount $device /mnt/local$mp"
+            echo "mkdir -p $RECOVERY_FS_ROOT$mountpoint"
+            echo "mount $device $RECOVERY_FS_ROOT$mountpoint"
             ) >> "$LAYOUT_CODE"
             ;;
         (*)
             (
-            echo "mkdir -p /mnt/local$mp"
-            echo "mount $mountopts $device /mnt/local$mp"
+            echo "mkdir -p $RECOVERY_FS_ROOT$mountpoint"
+            echo "mount $mountopts $device $RECOVERY_FS_ROOT$mountpoint"
             ) >> "$LAYOUT_CODE"
             ;;
     esac
