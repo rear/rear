@@ -36,7 +36,6 @@ function Source () {
     [[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ) ]] && read -p "Press ENTER to include '$source_file' ..." 2>&1
     Log "Including $relname"
     # DEBUGSCRIPTS mode settings:
-    test "$DEBUGSCRIPTS_ARGUMENT" || DEBUGSCRIPTS_ARGUMENT="x"
     if test "$DEBUGSCRIPTS" ; then
         Debug "Enabling debugscripts mode: 'set -$DEBUGSCRIPTS_ARGUMENT'"
         set -$DEBUGSCRIPTS_ARGUMENT
@@ -45,10 +44,6 @@ function Source () {
     source "$source_file"
     # Undo DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
-        # Assume $DEBUGSCRIPTS_ARGUMENT is "xvue +h -o pipefail"
-        # then the opposite is created by interchanging '+' and '-'
-        # so that DEBUGSCRIPTS_OPPOSITE_ARGUMENT is "xvue -h +o pipefail"
-        DEBUGSCRIPTS_OPPOSITE_ARGUMENT="$( echo "$DEBUGSCRIPTS_ARGUMENT" | tr '+-' '-+' )"
         Debug "Disabling debugscripts mode: 'set +$DEBUGSCRIPTS_OPPOSITE_ARGUMENT'"
         set +$DEBUGSCRIPTS_OPPOSITE_ARGUMENT
     fi

@@ -82,7 +82,7 @@ function DoExitTasks () {
 # activate the trap function
 builtin trap "DoExitTasks" 0
 # keep PID of main process
-MASTER_PID=$$
+readonly MASTER_PID=$$
 # duplication STDOUT to fd7 to use for Print
 exec 7>&1
 QuietAddExitTask "exec 7>&-"

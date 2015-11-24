@@ -32,35 +32,55 @@
 # "TODO Use set -eu to die from unset variables and unhandled errors"
 
 # Versioning
-PRODUCT="Relax-and-Recover"
-PROGRAM=${0##*/}
-VERSION=1.17.2
-RELEASE_DATE=Git
+readonly PRODUCT="Relax-and-Recover"
+readonly PROGRAM=${0##*/}
+readonly VERSION=1.17.2
+readonly RELEASE_DATE=Git
 
-STARTTIME=$SECONDS
+# Used in framework-functions.sh to calculate the time spent executing rear:
+readonly STARTTIME=$SECONDS
 
-# Allow workflows to set the exit code to a different value.
+# Provide the command line options in an array so that other scripts may read them:
+readonly CMD_OPTS=( "$@" )
+
+# Allow workflows to set the exit code to a different value (not "readonly"):
 EXIT_CODE=0
 
 # Find out if we're running from checkout
 REAR_DIR_PREFIX=""
-SCRIPT_FILE="$( readlink -f $( type -p "$0" || echo "$0" ) )"
+readonly SCRIPT_FILE="$( readlink -f $( type -p "$0" || echo "$0" ) )"
 if test "$SCRIPT_FILE" != "$( readlink -f /usr/sbin/$PROGRAM )" ; then
     REAR_DIR_PREFIX=${SCRIPT_FILE%/usr/sbin/$PROGRAM}
 fi
+readonly REAR_DIR_PREFIX
 
-# Program directories - they must be set here. Everything else is then dynamic
+# Program directories - they must be set here. Everything else is then dynamic.
+# Not yet readonly here because they are set via the /etc/rear/rescue.conf file
+# in the recovery system that is sourced by the rear command in recover mode
+# and CONFIG_DIR can also be changed via '-c' command line option:
 SHARE_DIR="$REAR_DIR_PREFIX/usr/share/rear"
 CONFIG_DIR="$REAR_DIR_PREFIX/etc/rear"
 VAR_DIR="$REAR_DIR_PREFIX/var/lib/rear"
 LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
-CMD_OPTS=( "$@" )
 
-# initialize defaults: empty value means "false"/"no"
+# Generic global variables that are not meant to be configured by the user
+# (i.e. that do not belong into usr/share/rear/conf/default.conf),
+# see https://github.com/rear/rear/issues/678
+# and https://github.com/rear/rear/issues/708
+# Location of the disklayout.conf file created by savelayout
+# (no readonly DISKLAYOUT_FILE because it is also set in checklayout-workflow.sh and mkbackuponly-workflow.sh):
+DISKLAYOUT_FILE="$VAR_DIR/layout/disklayout.conf"
+# Location of the root of the filesystem tree of the to-be-recovered-system in the recovery system
+# i.e. the mountpoint in the recovery system where the filesystem tree of the to-be-recovered-system is mounted:
+readonly RECOVERY_FS_ROOT="/mnt/local"
+
+# Initialize defaults: empty value means "false"/"no":
 DEBUG=""
 DEBUGSCRIPTS=""
-DEBUGSCRIPTS_ARGUMENT=""
+DEBUGSCRIPTS_ARGUMENT="x"
+DEBUGSCRIPTS_OPPOSITE_ARGUMENT=$DEBUGSCRIPTS_ARGUMENT
 KEEP_BUILD_DIR=""
+KERNEL_VERSION=""
 RECOVERY_MODE=""
 STEPBYSTEP=""
 SIMULATE=""
@@ -69,7 +89,7 @@ WORKFLOW=""
 
 # Parse options
 help_note_text="Use '$PROGRAM --help' or 'man $PROGRAM' for more information."
-OPTS="$( getopt -n $PROGRAM -o "c:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )"
+readonly OPTS="$( getopt -n $PROGRAM -o "c:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )"
 if test $? -ne 0 ; then
     echo "$help_note_text"
     exit 1
@@ -117,6 +137,11 @@ while true ; do
                 exit 1
             fi
             DEBUGSCRIPTS_ARGUMENT="$2"
+            # Assume $DEBUGSCRIPTS_ARGUMENT is "xvue +h -o pipefail"
+            # then the opposite is created by interchanging '+' and '-'
+            # so that DEBUGSCRIPTS_OPPOSITE_ARGUMENT is "xvue -h +o pipefail"
+            # (FIXME: interchanging all '+' and '-' fails for "-o interactive-comments"):
+            DEBUGSCRIPTS_OPPOSITE_ARGUMENT="$( echo "$DEBUGSCRIPTS_ARGUMENT" | tr '+-' '-+' )"
             shift
             ;;
         (-s)
@@ -153,13 +178,13 @@ while true ; do
     shift
 done
 
-# set workflow to first command line argument or to usage
+# Set workflow to first command line argument or to "help" as fallback:
 if test -z "$WORKFLOW" ; then
-    # usually workflow is now in $1 (after the options and its arguments were shifted above)
+    # Usually workflow is now in $1 (after the options and its arguments were shifted above)
     # but when rear is called without a workflow there exists no $1 here so that
     # an empty default value is used to avoid 'set -eu' error exit if $1 is unset:
-    if test -n "${1:-}" ; then
-        # not "$1" to get rid of compound commands
+    if test "${1:-}" ; then
+        # Not "$1" to get rid of compound commands:
         WORKFLOW=$1
         shift
     else
@@ -167,15 +192,32 @@ if test -z "$WORKFLOW" ; then
     fi
 fi
 
-# keep the remaining command line arguments to feed to the workflow
+# Keep the remaining command line arguments to feed to the workflow:
 ARGS=( "$@" )
 
-# the following workflows are always verbose
+# The following workflows are always verbose:
 case "$WORKFLOW" in
     (validate|dump|shell|recover)
         VERBOSE=1
-	;;
+        ;;
 esac
+
+# Mark variables that are not meant to be changed later as constants (i.e. readonly).
+# Exceptions here:
+# CONFIG_DIR because "rear recover" sets it in /etc/rear/rescue.conf in the recovery system
+# WORKFLOW because for the udev workflow WORKFLOW is set to the actual workflow
+# KERNEL_VERSION because if empty it is set when sourcing config files below
+# VERBOSE because there is a special "VERBOSE=1" setting below:
+readonly ARGS
+readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DEBUGSCRIPTS_OPPOSITE_ARGUMENT
+readonly SIMULATE STEPBYSTEP
+
+# The udev workflow is a special case because it is only a wrapper workflow
+# that calls an actual workflow that is specified as $UDEV_WORKFLOW
+# (e.g. the default UDEV_WORKFLOW is "mkrescue" in default.conf)
+# and then WORKFLOW is set to the actual workflow in udev-workflow.sh
+# so that WORKFLOW cannot be set readonly for the udev workflow:
+test "$WORKFLOW" = "udev" || readonly WORKFLOW
 
 # Make sure we have the necessary paths (eg. in cron), /sbin will be the first path to search.
 # some needed binaries are in /lib/udev or /usr/lib/udev
@@ -190,25 +232,32 @@ for path in /usr/bin /bin /usr/sbin /sbin ; do
             ;;
     esac
 done
+# No readonly PATH so that it can be later extended if needed
+# (e.g. to have third-party backup/restore tools available via PATH):
 PATH=$PATH:/lib/udev:/usr/lib/udev
 
-# are we root ?
+# Are we root?
 if test "$( id --user )" != "0" ; then
     echo "ERROR: $PRODUCT needs ROOT privileges!" >&2
     exit 1
 fi
 
-# set some bash options
+# Set some bash options:
+# With nullglob set when e.g. for foo*bar no file matches are found, then foo*bar is removed
+# (e.g. "ls foo*bar" becomes plain "ls" without "foo*bar: No such file or directory" error).
+# The extglob shell option enables several extended pattern matching operators.
 shopt -s nullglob extglob
+
+# Forget all remembered full pathnames of commands:
 hash -r
 
-# make sure that we use only english
+# Make sure that we use only English:
 export LC_CTYPE=C LC_ALL=C LANG=C
 
-# include default config
+# Include default config:
 source $SHARE_DIR/conf/default.conf
 
-# include functions
+# Include functions:
 for script in $SHARE_DIR/lib/*.sh ; do
     source $script
 done
@@ -217,14 +266,14 @@ done
 if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}" ; then
     LOGFILE="$LOGFILE.lockless"
 else
-    # when this currently running instance is not one of the LOCKLESS_WORKFLOWS
+    # When this currently running instance is not one of the LOCKLESS_WORKFLOWS
     # then it cannot run simultaneously with another instance
     # in this case pidof is needed to test what running instances there are:
     if ! has_binary pidof ; then
         echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
         exit 1
     fi
-    # for unknown reasons '-o %PPID' does not work for pidof at least in SLES11
+    # For unknown reasons '-o %PPID' does not work for pidof at least in SLES11
     # so that a manual test is done to find out if another pid != $$ is running:
     for pid in $( pidof -x "$SCRIPT_FILE" ) ; do
         if test "$pid" != $$ ; then
@@ -234,75 +283,71 @@ else
     done
 fi
 
-# keep old log file
+# Keep old log file:
 if test -r "$LOGFILE" ; then
     mv -f "$LOGFILE" "$LOGFILE".old 2>&8
 fi
 mkdir -p $LOG_DIR
 
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
-# keep our default $LOGFILE location in a seperate variable REAR_LOGFILE
-# in case end-user overruled it in the local.conf file
-REAR_LOGFILE="$LOGFILE"
+# Keep our default $LOGFILE location in a seperate variable REAR_LOGFILE
+# in case end-user overruled it in the local.conf file:
+readonly REAR_LOGFILE="$LOGFILE"
 
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
     Log "Command line options: $0 ${CMD_OPTS[@]}"
-    if test -n "$VERBOSE" ; then
-        LogPrint "Using log file: $LOGFILE"
-    fi
+    test "$VERBOSE" && LogPrint "Using log file: $LOGFILE" || true
 fi
 
 v=""
 verbose=""
-# enable progress subsystem only in verbose mode, set some stuff that others can use
-if test -n "$VERBOSE" ; then
+# Enable progress subsystem only in verbose mode, set some stuff that others can use:
+if test "$VERBOSE" ; then
     source $SHARE_DIR/lib/progresssubsystem.nosh
     v="-v"
     verbose="--verbose"
 fi
 
-# enable debug output of the progress pipe
-if test -n "$DEBUG" ; then
-    KEEP_BUILD_DIR=1
-fi
+# Enable debug output of the progress pipe
+# (no readonly KEEP_BUILD_DIR because it is also set to 1 in build/default/98_verify_rootfs.sh):
+test "$DEBUG" && KEEP_BUILD_DIR=1 || true
 
-# check if we are in recovery mode
-if test -e "/etc/rear-release" ; then
-    RECOVERY_MODE="y"
-fi
+# Check if we are in recovery mode:
+test -e "/etc/rear-release" && RECOVERY_MODE="y" || true
+readonly RECOVERY_MODE
 
-if test -n "$SIMULATE" ; then
-    LogPrint "Simulation mode activated, Relax-and-Recover base directory: $SHARE_DIR"
-fi
+test "$SIMULATE" && LogPrint "Simulation mode activated, Relax-and-Recover base directory: $SHARE_DIR" || true
 
-if test -n "$DEBUGSCRIPTS_ARGUMENT" ; then
+if test "$DEBUGSCRIPTS_ARGUMENT" ; then
     Debug "Current set of flags is '$-'"
     Debug "The debugscripts flags are '$DEBUGSCRIPTS_ARGUMENT'"
 fi
 
 # All workflows need to read the configurations first.
-# Combine configuration files
+# Combine configuration files:
 Debug "Combining configuration files"
-# use this file to manually override the OS detection
+# Use this file to manually override the OS detection:
 test -r "$CONFIG_DIR/os.conf" && Source "$CONFIG_DIR/os.conf" || true
 test -r "$CONFIG_DIR/$WORKFLOW.conf" && Source "$CONFIG_DIR/$WORKFLOW.conf" || true
 SetOSVendorAndVersion
-# distribution configuration files
+# Distribution configuration files:
 for config in "$ARCH" "$OS" \
         "$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
         "$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
     test -r "$SHARE_DIR/conf/$config.conf" && Source "$SHARE_DIR/conf/$config.conf" || true
 done
-# user configuration files, last thing is to overwrite variables if we are in the rescue system
+# User configuration files, last thing is to overwrite variables if we are in the rescue system:
 for config in site local rescue ; do
     test -r "$CONFIG_DIR/$config.conf" && Source "$CONFIG_DIR/$config.conf" || true
 done
+# Now SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR and KERNEL_VERSION should be set to a fixed value:
+readonly SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR KERNEL_VERSION
 
 SourceStage "init"
 
-# check for requirements, do we have all required binaries ?
-# without the empty string as initial value MISSING_PROGS would be
+# Check for requirements, do we have all required binaries?
+# Without the empty string as initial value MISSING_PROGS would be
 # an unbound variable that would result an error exit if 'set -eu' is used:
 MISSING_PROGS=("")
 for f in "${REQUIRED_PROGS[@]}" ; do
@@ -310,11 +355,9 @@ for f in "${REQUIRED_PROGS[@]}" ; do
         MISSING_PROGS=( "${MISSING_PROGS[@]}" "$f" )
     fi
 done
-if test -n "$MISSING_PROGS" ; then
-    Error "Cannot find required programs: ${MISSING_PROGS[@]}"
-fi
+test "$MISSING_PROGS" && Error "Cannot find required programs: ${MISSING_PROGS[@]}"
 
-VERSION_INFO="
+readonly VERSION_INFO="
 $PRODUCT $VERSION / $RELEASE_DATE
 
 $PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
@@ -325,7 +368,7 @@ Build date: $( date -R )
 "
 
 if test "$WORKFLOW" != "help" ; then
-    # create temporary work area and register removal exit task
+    # Create temporary work area and register removal exit task:
     BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
     QuietAddExitTask cleanup_build_area_and_end_program
     Log "Using build area '$BUILD_DIR'"
@@ -335,10 +378,10 @@ if test "$WORKFLOW" != "help" ; then
     mkdir -p $v $TMP_DIR >&2 || Error "Could not create $TMP_DIR"
 fi
 
-# Check for and run the requested workflow
+# Check for and run the requested workflow:
 if has_binary WORKFLOW_$WORKFLOW ; then
     Log "Running $WORKFLOW workflow"
-    # there could be no ARGS[@] which means it would be an unbound variable so that
+    # There could be no ARGS[@] which means it would be an unbound variable so that
     # an empty default is used here to avoid an error exit if 'set -eu' is used:
     WORKFLOW_$WORKFLOW "${ARGS[@]:-}"
     Log "Finished running $WORKFLOW workflow"

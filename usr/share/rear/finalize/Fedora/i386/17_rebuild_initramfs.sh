@@ -23,7 +23,7 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 	# To see what has been added by the migration process, the new modules are added to the
 	# end of the list. To achieve this, we list the old modules twice in the variable
 	# NEW_INITRD_MODULES and then add the new modules. Then we use "uniq -u" to filter out
-	# the modules which only appear once in the list. The resulting array 
+	# the modules which only appear once in the list. The resulting array
 	# contains the new modules also.
 	NEW_INITRD_MODULES=( ${OLD_INITRD_MODULES[@]} ${OLD_INITRD_MODULES[@]} $( cat $TMP_DIR/storage_drivers ) )
 
@@ -35,7 +35,7 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 	INITRD_MODULES="${OLD_INITRD_MODULES[@]} ${NEW_INITRD_MODULES[@]}"
 
 	WITH_INITRD_MODULES=$( printf '%s\n' ${INITRD_MODULES[@]} | awk '{printf "--with=%s ", $1}' )
-	
+
 	mount -t proc none /mnt/local/proc
 	mount -t sysfs none /mnt/local/sys
 
@@ -49,21 +49,20 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
         unalias ls 2>/dev/null
 
         for INITRD_IMG in $(ls /mnt/local/boot/initramfs-*.img /mnt/local/boot/initrd-*.img | egrep -v '(kdump|rescue|plymouth)') ; do
-
-            KERNEL_VERSION=$(basename $(echo $INITRD_IMG) | cut -f2- -d"-" | sed s/"\.img"//)
-            INITRD=$(echo $INITRD_IMG|egrep -o "/boot/.*")
+            # do not use KERNEL_VERSION here because that is readonly in the rear main script:
+            kernel_version=$( basename $( echo $INITRD_IMG ) | cut -f2- -d"-" | sed s/"\.img"// )
+            INITRD=$( echo $INITRD_IMG|egrep -o "/boot/.*" )
 
             echo "Running mkinitrd..."
-            if chroot /mnt/local /bin/bash --login -c "mkinitrd -v -f ${WITH_INITRD_MODULES[@]} $INITRD $KERNEL_VERSION" >&2 ; then
-                        LogPrint "Updated initramfs with new drivers for Kernel $KERNEL_VERSION."
+            if chroot /mnt/local /bin/bash --login -c "mkinitrd -v -f ${WITH_INITRD_MODULES[@]} $INITRD $kernel_version" >&2 ; then
+                LogPrint "Updated initramfs with new drivers for Kernel $kernel_version."
             else
-                        LogPrint "WARNING !!!
-initramfs creation for Kernel $KERNEL_VERSION failed, please check '$LOGFILE' to see the error
-messages in detail and decide yourself, wether the system will boot or not.
+                LogPrint "WARNING !!!
+initramfs creation for Kernel version '$kernel_version' failed,
+please check '$LOGFILE' to see the error messages in detail
+and decide yourself, wether the system will boot or not.
 "
             fi
-
-
 
         done
 

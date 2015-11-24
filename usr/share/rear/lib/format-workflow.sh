@@ -13,13 +13,14 @@ WORKFLOW_format () {
     local DEVICE=""
 
     # Parse options
-    OPTS="$(getopt -n "$PROGRAM format" -o "efhy" -l "efi,force,help,yes" -- "$@")"
+    # (do not use OPTS here because that is readonly in the rear main script):
+    format_workflow_opts="$(getopt -n "$PROGRAM format" -o "efhy" -l "efi,force,help,yes" -- "$@")"
     if (( $? != 0 )); then
         echo "Try \`$PROGRAM format -- --help' for more information."
         exit 1
     fi
 
-    eval set -- "$OPTS"
+    eval set -- "$format_workflow_opts"
     while true; do
         case "$1" in
             (-e|--efi) EFI=y;;
@@ -52,3 +53,4 @@ WORKFLOW_format () {
     SourceStage "format"
 
 }
+
