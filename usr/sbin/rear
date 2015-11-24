@@ -54,12 +54,14 @@ if test "$SCRIPT_FILE" != "$( readlink -f /usr/sbin/$PROGRAM )" ; then
 fi
 readonly REAR_DIR_PREFIX
 
-# Program directories - they must be set here. Everything else is then dynamic:
-readonly SHARE_DIR="$REAR_DIR_PREFIX/usr/share/rear"
-readonly VAR_DIR="$REAR_DIR_PREFIX/var/lib/rear"
-readonly LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
-# Not yet readonly CONFIG_DIR because it might be changed via '-c' command line option:
+# Program directories - they must be set here. Everything else is then dynamic.
+# Not yet readonly here because they are set via the /etc/rear/rescue.conf file
+# in the recovery system that is sourced by the rear command in recover mode
+# and CONFIG_DIR can also be changed via '-c' command line option:
+SHARE_DIR="$REAR_DIR_PREFIX/usr/share/rear"
 CONFIG_DIR="$REAR_DIR_PREFIX/etc/rear"
+VAR_DIR="$REAR_DIR_PREFIX/var/lib/rear"
+LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
 
 # Generic global variables that are not meant to be configured by the user
 # (i.e. that do not belong into usr/share/rear/conf/default.conf),
@@ -202,10 +204,11 @@ esac
 
 # Mark variables that are not meant to be changed later as constants (i.e. readonly).
 # Exceptions here:
+# CONFIG_DIR because "rear recover" sets it in /etc/rear/rescue.conf in the recovery system
 # WORKFLOW because for the udev workflow WORKFLOW is set to the actual workflow
 # KERNEL_VERSION because if empty it is set when sourcing config files below
 # VERBOSE because there is a special "VERBOSE=1" setting below:
-readonly ARGS CONFIG_DIR
+readonly ARGS
 readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DEBUGSCRIPTS_OPPOSITE_ARGUMENT
 readonly SIMULATE STEPBYSTEP
 
@@ -338,8 +341,8 @@ done
 for config in site local rescue ; do
     test -r "$CONFIG_DIR/$config.conf" && Source "$CONFIG_DIR/$config.conf" || true
 done
-# Now KERNEL_VERSION should have been set to a fixed value:
-readonly KERNEL_VERSION
+# Now SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR and KERNEL_VERSION should be set to a fixed value:
+readonly SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR KERNEL_VERSION
 
 SourceStage "init"
 
