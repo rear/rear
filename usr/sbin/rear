@@ -23,6 +23,38 @@
 # Jeroen Hoekx <jeroen.hoekx at hamok dot be> [JH]
 # Dag Wieers <dag at wieers dot com> [DAG]
 
+# The complementary stateful global functions to save and restore bash flags and options
+# and the array where the flags and options are stored are needed from the very beginning.
+# Lowercase bash_flags_and_options_array global name because it is not meant to be ever
+# used directly, only SaveBashFlagsAndOptions and RestoreBashFlagsAndOptions use it.
+# Initially the array has the empty string as dummy first element to avoid 'set -eu' error exit
+# when it is used as ${array[@]} in array=( "${array[@]}" "$e" ) in SaveBashFlagsAndOptions
+# (also array=( "${array[@]:-}" "$e" ) adds empty string as first element and $e as second element):
+bash_flags_and_options_array=("")
+function SaveBashFlagsAndOptions () {
+    # Get current flags and option settings as bash commands:
+    local flags_and_options_setting_commands=$( set +o | tr '\n' ';' ; shopt -p | tr '\n' ';' )
+    # Save current flags and option settings:.
+    bash_flags_and_options_array=( "${bash_flags_and_options_array[@]}" "$flags_and_options_setting_commands" )
+}
+function RestoreBashFlagsAndOptions () {
+    # I <jsmeix@suse.de> prefer using the last array index by subtracting 1 from the array size ${#array[@]}
+    # over string manipulation via ${array[@]:(-1)} because the later makes it less obvious what is done and
+    # using the index -1 to get the last element via ${array[-1]} does not work with bash-3.2 in SLE11
+    # and the last array index is needed anyway to remove the last element from the array:
+    local last_index=$(( ${#bash_flags_and_options_array[@]} - 1 ))
+    # If the array has only one element (the empty string dummy initial element) there is a bug in the code:
+    test "$last_index" -le "0" && BugError "RestoreBashFlagsAndOptions is called more often than SaveBashFlagsAndOptions." || true
+    # Get last saved bash commands to set flags and options:
+    local flags_and_options_setting_commands=${bash_flags_and_options_array[last_index]}
+    # Set flags and options to the last saved ones:
+    eval $flags_and_options_setting_commands
+    # Remove last saved bash commands from the array:
+    unset bash_flags_and_options_array[last_index]
+}
+# Save initial bash flags and options:
+SaveBashFlagsAndOptions
+
 # Enable as needed for development of fail-safe code:
 # set -xvue -o pipefail
 # set -ue -o pipefail
@@ -398,6 +430,9 @@ fi
 if test $EXIT_CODE -eq 0 ; then
     LogToSyslog "DONE: rc=$EXIT_CODE"
 fi
+
+# Restore initial bash flags and options:
+RestoreBashFlagsAndOptions
 
 exit $EXIT_CODE
 
