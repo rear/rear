@@ -37,15 +37,16 @@ function Source () {
     Log "Including $relname"
     # DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
-        Debug "Enabling debugscripts mode: 'set -$DEBUGSCRIPTS_ARGUMENT'"
+        Debug "Entering debugscripts mode: First SaveBashFlagsAndOptions and then 'set -$DEBUGSCRIPTS_ARGUMENT'"
+        SaveBashFlagsAndOptions
         set -$DEBUGSCRIPTS_ARGUMENT
     fi
     # The actual work (source the source file):
     source "$source_file"
     # Undo DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
-        Debug "Disabling debugscripts mode: 'set +$DEBUGSCRIPTS_OPPOSITE_ARGUMENT'"
-        set +$DEBUGSCRIPTS_OPPOSITE_ARGUMENT
+        Debug "Leaving debugscripts mode: Back to previous settings via RestoreBashFlagsAndOptions"
+        RestoreBashFlagsAndOptions
     fi
     # Breakpoint if needed:
     [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] && read -p "Press ENTER to continue ..." 2>&1
