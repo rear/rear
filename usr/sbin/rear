@@ -31,6 +31,24 @@
 # that reads (excerpt - dated 18. Nov. 2015):
 # "TODO Use set -eu to die from unset variables and unhandled errors"
 
+# The complementary global functions to get and apply bash flags and options commands
+# are needed from the very beginning:
+function GetBashFlagsAndOptionsCommands () {
+    # Output bash commands that set the currently set flags:
+    set +o | tr '\n' ';'
+    # Output bash commands that set the currently set options:
+    shopt -p | tr '\n' ';'
+}
+# This function exists only to provide a syntactically matching counterpart of GetBashFlagsAndOptionsCommands:
+function ApplyBashFlagsAndOptionsCommands () {
+    # Must be called with $1 that is the output of a previous GetBashFlagsAndOptionsCommands call:
+    eval "$1"
+}
+# At the very beginning save initial bash flags and options in a global readonly variable
+# so that exactly the initial bash flags and options can be restored if needed via
+#   ApplyBashFlagsAndOptionsCommands "$INITIAL_FLAGS_AND_OPTIONS_SETTING_COMMANDS"
+readonly INITIAL_FLAGS_AND_OPTIONS_SETTING_COMMANDS="$( GetBashFlagsAndOptionsCommands )"
+
 # Versioning
 readonly PRODUCT="Relax-and-Recover"
 readonly PROGRAM=${0##*/}
@@ -78,7 +96,6 @@ readonly RECOVERY_FS_ROOT="/mnt/local"
 DEBUG=""
 DEBUGSCRIPTS=""
 DEBUGSCRIPTS_ARGUMENT="x"
-DEBUGSCRIPTS_OPPOSITE_ARGUMENT=$DEBUGSCRIPTS_ARGUMENT
 KEEP_BUILD_DIR=""
 KERNEL_VERSION=""
 RECOVERY_MODE=""
@@ -137,11 +154,6 @@ while true ; do
                 exit 1
             fi
             DEBUGSCRIPTS_ARGUMENT="$2"
-            # Assume $DEBUGSCRIPTS_ARGUMENT is "xvue +h -o pipefail"
-            # then the opposite is created by interchanging '+' and '-'
-            # so that DEBUGSCRIPTS_OPPOSITE_ARGUMENT is "xvue -h +o pipefail"
-            # (FIXME: interchanging all '+' and '-' fails for "-o interactive-comments"):
-            DEBUGSCRIPTS_OPPOSITE_ARGUMENT="$( echo "$DEBUGSCRIPTS_ARGUMENT" | tr '+-' '-+' )"
             shift
             ;;
         (-s)
@@ -209,7 +221,7 @@ esac
 # KERNEL_VERSION because if empty it is set when sourcing config files below
 # VERBOSE because there is a special "VERBOSE=1" setting below:
 readonly ARGS
-readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DEBUGSCRIPTS_OPPOSITE_ARGUMENT
+readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT
 readonly SIMULATE STEPBYSTEP
 
 # The udev workflow is a special case because it is only a wrapper workflow
@@ -247,6 +259,10 @@ fi
 # (e.g. "ls foo*bar" becomes plain "ls" without "foo*bar: No such file or directory" error).
 # The extglob shell option enables several extended pattern matching operators.
 shopt -s nullglob extglob
+# Save the current default bash flags and options in a global readonly variable
+# so that exactly the default bash flags and options can be restored if needed via
+#   ApplyBashFlagsAndOptionsCommands "$DEFAULT_FLAGS_AND_OPTIONS_SETTING_COMMANDS"
+readonly DEFAULT_FLAGS_AND_OPTIONS_SETTING_COMMANDS="$( GetBashFlagsAndOptionsCommands )"
 
 # Forget all remembered full pathnames of commands:
 hash -r
