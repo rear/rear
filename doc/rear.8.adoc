@@ -12,16 +12,16 @@ rear - bare metal disaster recovery and system migration tool
 
 
 == SYNOPSIS
-*rear* [*-dDsSvV*] [*-r* _KERNEL_] _COMMAND_ [-- _ARGS_...]
+*rear* [*-h*|*--help*] [*-V*|*--version*] [*-dsSv*] [*-D*|*--debugscripts* _SET_] [*-c* _DIR_] [*-r* _KERNEL_] [--] _COMMAND_ [_ARGS_...]
 
 
 == DESCRIPTION
 Relax-and-Recover is the leading Open Source disaster recovery solution. It
-is a modular framework with many ready-to-go workflows for common situations. 
+is a modular framework with many ready-to-go workflows for common situations.
 
 Relax-and-Recover produces a bootable image. This image can repartition the
 system. Once that is done it initiates a restore from backup. Restores to
-different hardware are possible. Relax-and-Recover can therefore be used as a 
+different hardware are possible. Relax-and-Recover can therefore be used as a
 migration tool as well.
 
 Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
@@ -53,11 +53,21 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 === GLOBAL OPTIONS
 
+-h --help::
+    usage information
+
+
+-c DIR::
+    alternative config directory; instead of /etc/rear
+
 -d::
     *debug mode* (log debug messages to log file)
 
 -D::
-    *debugscript mode* (log every function call)
+    *debugscript mode* (log every function call via 'set -x')
+
+--debugscripts SET::
+    same as -d -v -D but *debugscript mode* with 'set -SET'
 
 -r KERNEL::
     kernel version to use (by default use running kernel)
@@ -71,7 +81,7 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 -v::
     *verbose mode* (show progress output)
 
--V::
+-V --version::
     version information
 
 === COMMANDS
@@ -158,8 +168,8 @@ OUTPUT=*USB*::
 Create a bootable USB disk (using extlinux). Specify the USB storage
 device by using +USB_DEVICE+.
 
-When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+ or +USB+ you should provide the 
-backup target location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+ 
+When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+ or +USB+ you should provide the
+backup target location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+
 settings are:
 
 OUTPUT_URL=*file://*::
@@ -316,7 +326,7 @@ If you combine this with +OUTPUT=USB+ you will end up with a bootable USB
 device.
 
 BACKUP_URL=*sshfs://*::
-To backup to a remote server via sshfs (SSH protocol), use 
+To backup to a remote server via sshfs (SSH protocol), use
 +BACKUP_URL=sshfs://user@remote-system.domain.org/home/user/backup-dir/+
 +
 It is advisable to add *ServerAliveInterval 15* in the +/root/.ssh/config+
@@ -441,7 +451,7 @@ issue-tracker at: http://github.com/rear/issues/
 Furthermore, we welcome pull requests via GitHub.
 
 == SEE ALSO
-Relax-and-Recover comes with extensive documentation located in 
+Relax-and-Recover comes with extensive documentation located in
 _/usr/share/doc_.
 
 

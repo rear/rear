@@ -31,7 +31,7 @@
 rear \- bare metal disaster recovery and system migration tool
 .SH "SYNOPSIS"
 .sp
-\fBrear\fR [\fB\-dDsSvV\fR] [\fB\-r\fR \fIKERNEL\fR] \fICOMMAND\fR [\-\- \fIARGS\fR\&...]
+\fBrear\fR [\fB\-h\fR \||\| \fB\-\-help\fR] [\fB\-V\fR \||\| \fB\-\-version\fR] [\fB\-dsSv\fR] [\fB\-D\fR \||\| \fB\-\-debugscripts\fR \fISET\fR] [\fB\-c\fR \fIDIR\fR] [\fB\-r\fR \fIKERNEL\fR] [\-\-] \fICOMMAND\fR [\fIARGS\fR\&...]
 .SH "DESCRIPTION"
 .sp
 Relax\-and\-Recover is the leading Open Source disaster recovery solution\&. It is a modular framework with many ready\-to\-go workflows for common situations\&.
@@ -50,6 +50,17 @@ Relax\-and\-Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU G
 .SH "OPTIONS"
 .SS "GLOBAL OPTIONS"
 .PP
+\-h --help
+.RS 4
+\fBusage information\fR
+.RE
+.PP
+\-c DIR
+.RS 4
+alternative config directory
+(instead of /etc/rear)
+.RE
+.PP
 \-d
 .RS 4
 \fBdebug mode\fR
@@ -59,7 +70,13 @@ Relax\-and\-Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU G
 \-D
 .RS 4
 \fBdebugscript mode\fR
-(log every function call)
+(log every function call via 'set -x')
+.RE
+.PP
+\--debugscripts SET
+.RS 4
+\fBdebugscript mode\fR
+(same as -d -v -D but with 'set -SET')
 .RE
 .PP
 \-r KERNEL
@@ -85,7 +102,7 @@ kernel version to use (by default use running kernel)
 (show progress output)
 .RE
 .PP
-\-V
+\-V --version
 .RS 4
 version information
 .RE
