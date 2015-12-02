@@ -23,31 +23,35 @@
 # Jeroen Hoekx <jeroen.hoekx at hamok dot be> [JH]
 # Dag Wieers <dag at wieers dot com> [DAG]
 
-# Enable as needed for development of fail-safe code:
-# set -xvue -o pipefail
-# set -ue -o pipefail
-# Cf. the Relax-and-Recover Coding Style
-# https://github.com/rear/rear/wiki/Coding-Style
-# that reads (excerpt - dated 18. Nov. 2015):
-# "TODO Use set -eu to die from unset variables and unhandled errors"
-
 # The complementary global functions to get and apply bash flags and options commands
-# are needed from the very beginning:
-function GetBashFlagsAndOptionsCommands () {
-    # Output bash commands that set the currently set flags:
-    set +o | tr '\n' ';'
+# are needed from the very beginning (other functions are sourced at "Include functions" below):
+function get_bash_flags_and_options_commands () {
+    # Output bash commands that set the currently set flags
+    # in reverse ordering to have "set ... xtrace" (i.e. "set +/- x") first
+    # so that this flag is set first via apply_bash_flags_and_options_commands
+    # which results better matching logging output in debugscripts mode:
+    set +o | tac | tr '\n' ';'
     # Output bash commands that set the currently set options:
     shopt -p | tr '\n' ';'
 }
-# This function exists only to provide a syntactically matching counterpart of GetBashFlagsAndOptionsCommands:
-function ApplyBashFlagsAndOptionsCommands () {
-    # Must be called with $1 that is the output of a previous GetBashFlagsAndOptionsCommands call:
+# This function exists only to provide a syntactically matching counterpart of get_bash_flags_and_options_commands:
+function apply_bash_flags_and_options_commands () {
+    # Must be called with $1 that is the output of a previous get_bash_flags_and_options_commands:
     eval "$1"
 }
 # At the very beginning save initial bash flags and options in a global readonly variable
 # so that exactly the initial bash flags and options can be restored if needed via
-#   ApplyBashFlagsAndOptionsCommands "$INITIAL_FLAGS_AND_OPTIONS_SETTING_COMMANDS"
-readonly INITIAL_FLAGS_AND_OPTIONS_SETTING_COMMANDS="$( GetBashFlagsAndOptionsCommands )"
+#   apply_bash_flags_and_options_commands "$INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS"
+readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_commands )"
+
+# Enable as needed for development of fail-safe code:
+# set -ue -o pipefail
+# set -xue -o pipefail
+# set -xvue -o pipefail
+# Cf. the Relax-and-Recover Coding Style
+# https://github.com/rear/rear/wiki/Coding-Style
+# that reads (excerpt - dated 18. Nov. 2015):
+# "TODO Use set -eu to die from unset variables and unhandled errors"
 
 # Versioning
 readonly PRODUCT="Relax-and-Recover"
@@ -261,8 +265,8 @@ fi
 shopt -s nullglob extglob
 # Save the current default bash flags and options in a global readonly variable
 # so that exactly the default bash flags and options can be restored if needed via
-#   ApplyBashFlagsAndOptionsCommands "$DEFAULT_FLAGS_AND_OPTIONS_SETTING_COMMANDS"
-readonly DEFAULT_FLAGS_AND_OPTIONS_SETTING_COMMANDS="$( GetBashFlagsAndOptionsCommands )"
+#   apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
+readonly DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_commands )"
 
 # Forget all remembered full pathnames of commands:
 hash -r
