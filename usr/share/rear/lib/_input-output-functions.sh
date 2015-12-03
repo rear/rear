@@ -94,18 +94,27 @@ function trap () {
     BugError "Forbidden use of trap with '$@'. Use AddExitTask instead."
 }
 
-# Check if any of the binaries/aliases exist
-has_binary() {
-	for bin in $@; do
-		if type $bin >&8 2>&1; then
-			return 0
-		fi
-	done
-	return 1
+# Check if any of the arguments is executable (logical OR condition).
+# Using plain "type" without any option because has_binary is intended
+# to know if there is a program that one can call regardless if it is
+# an alias, builtin, function, or a disk file that would be executed
+# see https://github.com/rear/rear/issues/729
+function has_binary () {
+    for bin in $@ ; do
+        if type $bin >&8 2>&1 ; then
+            return 0
+        fi
+    done
+    return 1
 }
 
-get_path() {
-	type -p $1 2>&8
+# Get the name of the disk file that would be executed.
+# In contrast to "type -p" that returns nothing for an alias, builtin, or function,
+# "type -P" forces a PATH search for each NAME, even if it is an alias, builtin,
+# or function, and returns the name of the disk file that would be executed
+# see https://github.com/rear/rear/issues/729
+function get_path () {
+    type -P $1 2>&8
 }
 
 Error() {
