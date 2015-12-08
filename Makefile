@@ -107,8 +107,8 @@ rewrite:
 		-e 's#^Version:.*#Version: $(version)-$(debrelease)#' \
 		$(dscfile)
 	sed -i.orig \
-		-e 's#^VERSION=.*#readonly VERSION=$(distversion)#' \
-		-e 's#^RELEASE_DATE=.*#readonly RELEASE_DATE="$(release_date)"#' \
+		-e 's#^readonly VERSION=.*#readonly VERSION=$(distversion)#' \
+		-e 's#^readonly RELEASE_DATE=.*#readonly RELEASE_DATE="$(release_date)"#' \
 		$(rearbin)
 
 restore:
