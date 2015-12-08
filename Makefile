@@ -9,7 +9,7 @@ OFFICIAL =
 ### Get version from Relax-and-Recover itself
 rearbin = usr/sbin/rear
 name = rear
-version := $(shell awk 'BEGIN { FS="=" } /^VERSION=/ { print $$2}' $(rearbin))
+version := $(shell awk 'BEGIN { FS="=" } /^readonly VERSION=/ { print $$2}' $(rearbin))
 
 ### Get the branch information from git
 ifeq ($(OFFICIAL),)
@@ -107,8 +107,8 @@ rewrite:
 		-e 's#^Version:.*#Version: $(version)-$(debrelease)#' \
 		$(dscfile)
 	sed -i.orig \
-		-e 's#^VERSION=.*#VERSION=$(distversion)#' \
-		-e 's#^RELEASE_DATE=.*#RELEASE_DATE="$(release_date)"#' \
+		-e 's#^VERSION=.*#readonly VERSION=$(distversion)#' \
+		-e 's#^RELEASE_DATE=.*#readonly RELEASE_DATE="$(release_date)"#' \
 		$(rearbin)
 
 restore:
