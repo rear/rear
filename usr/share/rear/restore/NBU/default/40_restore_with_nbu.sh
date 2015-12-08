@@ -19,17 +19,18 @@ LogPrint "NetBackup: restoring / into /mnt/local"
 
 echo "change / to /mnt/local" > $TMP_DIR/nbu_change_file
 
+# Do not use ARGS here because that is readonly in the rear main script:
 if [ ${#NBU_ENDTIME[@]} -gt 0 ]
 then
    edate="${NBU_ENDTIME[@]}"
-   ARGS="-B -H -L $TMP_DIR/bplog.restore -8 -R $TMP_DIR/nbu_change_file -t 0 -w 0 -e ${edate} -C ${NBU_CLIENT_SOURCE} -D ${NBU_CLIENT_NAME} -f $TMP_DIR/restore_fs_list"
+   bprestore_args="-B -H -L $TMP_DIR/bplog.restore -8 -R $TMP_DIR/nbu_change_file -t 0 -w 0 -e ${edate} -C ${NBU_CLIENT_SOURCE} -D ${NBU_CLIENT_NAME} -f $TMP_DIR/restore_fs_list"
 else
-   ARGS="-B -H -L $TMP_DIR/bplog.restore -8 -R $TMP_DIR/nbu_change_file -t 0 -w 0 -C ${NBU_CLIENT_SOURCE} -D ${NBU_CLIENT_NAME} -f $TMP_DIR/restore_fs_list"
+   bprestore_args="-B -H -L $TMP_DIR/bplog.restore -8 -R $TMP_DIR/nbu_change_file -t 0 -w 0 -C ${NBU_CLIENT_SOURCE} -D ${NBU_CLIENT_NAME} -f $TMP_DIR/restore_fs_list"
 fi
 
-LogPrint "RUN: /usr/openv/netbackup/bin/bprestore ${ARGS}"
+LogPrint "RUN: /usr/openv/netbackup/bin/bprestore $bprestore_args"
 LogPrint "Restore progress: see $TMP_DIR/bplog.restore"
-LANG=C /usr/openv/netbackup/bin/bprestore ${ARGS}
+LANG=C /usr/openv/netbackup/bin/bprestore $bprestore_args
 if (( $? > 1 )); then
     Error "bprestore failed (return code = $?)"
 fi

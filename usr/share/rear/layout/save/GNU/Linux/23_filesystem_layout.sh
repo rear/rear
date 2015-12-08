@@ -1,5 +1,12 @@
 # Save Filesystem layout
 Log "Begin saving filesystem layout"
+# If available wipefs is used in the recovery system by 13_include_filesystem_code.sh
+# as a generic way to cleanup disk partitions before creating a filesystem on a disk partition,
+# see https://github.com/rear/rear/issues/540
+# and https://github.com/rear/rear/issues/649#issuecomment-148725865
+# Therefore if wipefs exists here in the original system it is added to REQUIRED_PROGS
+# so that it will become also available in the recovery system (cf. 26_crypt_layout.sh):
+has_binary wipefs && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" wipefs ) || true
 # Comma separated list of filesystems that is used for "mount/findmnt -t <list,of,filesystems>" below:
 supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"
 # Read filesystem information from the system by default using the traditional mount command
@@ -271,7 +278,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                     # Because both "mount ... -o subvol=/path/to/subvolume" and "mount ... -o subvol=path/to/subvolume" work
                     # the subvolume path can be specified with or without leading '/':
                     btrfs_subvolume_path=$( egrep "[[:space:]]$subvolume_mountpoint[[:space:]]+btrfs[[:space:]]" /etc/fstab \
-                                            | egrep -v '[[:space:]]*#' \
+                                            | egrep -v '^[[:space:]]*#' \
                                             | grep -o 'subvol=[^ ]*' | cut -s -d '=' -f 2 )
                 fi
                 # Remove leading '/' from btrfs_subvolume_path (except it is only '/') to have same syntax for all entries and

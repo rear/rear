@@ -114,7 +114,10 @@ function set_syslinux_features {
 	FEATURE_SYSLINUX_TEXT_HELP=
         # true if syslinux supports modules sub-dir (Version > 5.00)
         FEATURE_SYSLINUX_MODULES=
-
+	# If ISO_DEFAULT is not set, set it to default 'boothd'
+	if [ -z "$ISO_DEFAULT" ]; then
+		ISO_DEFAULT="boothd"
+	fi
 	# Define the syslinux directory for later usage (since version 5 the bins and c32 are in separate dirs)
 	if [[ -z "$SYSLINUX_DIR" ]]; then
 		ISOLINUX_BIN=$(find_syslinux_file isolinux.bin)
@@ -257,15 +260,24 @@ function make_syslinux_config {
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"
 	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
+	if [ "$ISO_DEFAULT" == "manual" ] ; then
+               echo "default rear"
+               syslinux_menu "default"
+        fi 
 	echo ""
 	
 	echo "say rear - Recover $(uname -n)"
-	echo "label rear"
-	syslinux_menu "label Automatic ^Recover $(uname -n)"
+	echo "label rear-automatic"
+	syslinux_menu "label ^Automatic Recover $(uname -n)"
 	syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"
 	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover"
+
+	if [ "$ISO_DEFAULT" == "automatic" ] ; then
+               echo "default rear-automatic"
+               syslinux_menu "default"
+        fi	
 	echo ""
 	
 	syslinux_menu separator
@@ -288,7 +300,7 @@ function make_syslinux_config {
 		echo "say boothd0 - boot first local disk"
 		echo "label boothd0"
 		syslinux_menu "label Boot First ^Local disk (hd0)"
-		if [ "$flavour" == "isolinux" ] ; then
+		if [[ "$flavour" == "isolinux" ]] && [ "$ISO_DEFAULT" == "boothd" ] ; then
 			# for isolinux local boot means boot from first disk
 			echo "default boothd0"
 			syslinux_menu "default"
@@ -300,7 +312,7 @@ function make_syslinux_config {
 		echo "say boothd1 - boot second local disk"
 		echo "label boothd1"
 		syslinux_menu "label Boot ^Second Local disk (hd1)"
-		if [[ "$flavour" == "extlinux" ]]; then
+		if [[ "$flavour" == "extlinux" ]] && [ "$ISO_DEFAULT" == "boothd" ]; then
 			# for extlinux local boot means boot from second disk because the boot disk became the first disk
 			# which usually allows us to access the original first disk as second disk
 			echo "default boothd1"

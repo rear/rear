@@ -48,11 +48,11 @@ if has_binary sshd; then
 
     echo "ssh:23:respawn:/bin/sshd -D" >>$ROOTFS_DIR/etc/inittab
 
-    # print a warning if there is no authorized_keys file for root
-    if test ! -f "/root/.ssh/authorized_keys" ; then
+    # print a warning if there is no authorized_keys file for root and no SSH_ROOT_PASSWORD set
+    if ! test -f "/root/.ssh/authorized_keys" -o "$SSH_ROOT_PASSWORD" ; then
         LogPrint "TIP: To login as root via ssh you need to set up /root/.ssh/authorized_keys or SSH_ROOT_PASSWORD in your configuration file"
     fi
-    
+
     # Set the SSH root password; if pw is hashed just copy it otherwise use openssl (for backward compatibility)
     if [[ "$SSH_ROOT_PASSWORD" ]] ; then
         case "$SSH_ROOT_PASSWORD" in
@@ -61,3 +61,4 @@ if has_binary sshd; then
         esac
     fi
 fi
+

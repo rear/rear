@@ -12,16 +12,16 @@ rear - bare metal disaster recovery and system migration tool
 
 
 == SYNOPSIS
-*rear* [*-dDsSvV*] [*-r* _KERNEL_] _COMMAND_ [-- _ARGS_...]
+*rear* [*-h*|*--help*] [*-V*|*--version*] [*-dsSv*] [*-D*|*--debugscripts* _SET_] [*-c* _DIR_] [*-r* _KERNEL_] [--] _COMMAND_ [_ARGS_...]
 
 
 == DESCRIPTION
 Relax-and-Recover is the leading Open Source disaster recovery solution. It
-is a modular framework with many ready-to-go workflows for common situations. 
+is a modular framework with many ready-to-go workflows for common situations.
 
 Relax-and-Recover produces a bootable image. This image can repartition the
 system. Once that is done it initiates a restore from backup. Restores to
-different hardware are possible. Relax-and-Recover can therefore be used as a 
+different hardware are possible. Relax-and-Recover can therefore be used as a
 migration tool as well.
 
 Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
@@ -53,11 +53,21 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 === GLOBAL OPTIONS
 
+-h --help::
+    usage information
+
+
+-c DIR::
+    alternative config directory; instead of /etc/rear
+
 -d::
     *debug mode* (log debug messages to log file)
 
 -D::
-    *debugscript mode* (log every function call)
+    *debugscript mode* (log every function call via 'set -x')
+
+--debugscripts SET::
+    same as -d -v -D but *debugscript mode* with 'set -SET'
 
 -r KERNEL::
     kernel version to use (by default use running kernel)
@@ -71,7 +81,7 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 -v::
     *verbose mode* (show progress output)
 
--V::
+-V --version::
     version information
 
 === COMMANDS
@@ -158,8 +168,8 @@ OUTPUT=*USB*::
 Create a bootable USB disk (using extlinux). Specify the USB storage
 device by using +USB_DEVICE+.
 
-When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+ or +USB+ you should provide the 
-backup target location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+ 
+When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+ or +USB+ you should provide the
+backup target location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+
 settings are:
 
 OUTPUT_URL=*file://*::
@@ -196,6 +206,11 @@ OUTPUT_URL=*null*::
 Do not copy the ISO image from _/var/lib/rear/output/_ to an external destination.
 Useful in combination with an _external_ backup program, or when +BACKUP_URL=iso://backup+
 
+The +ISO_DEFAULT+ variable defines what default boot option is used on the rescue image.
+Possible values are `manual`, `boothd` or `unattended`. Manual will make you boot into
+the shell directly by default, boothd will boot to the first disk (default) or unattended
+will automatically start in recovery mode.
+
 == BACKUP SOFTWARE INTEGRATION
 Currently Relax-and-Recover supports the following backup methods. Please
 distinguish carefully between Relax-and-Recover support for 3rd party
@@ -221,7 +236,7 @@ BACKUP=*REQUESTRESTORE*::
 *(default)* Not really a backup method at all, Relax-and-Recover simply
 halts the recovery and requests that somebody will restore the data
 to the appropriate location (e.g. via SSH). This method works especially
-well with an rsync bases backup that is pushed back to the backup
+well with an rsync based backup that is pushed back to the backup
 client.
 
 BACKUP=*EXTERNAL*::
@@ -316,7 +331,7 @@ If you combine this with +OUTPUT=USB+ you will end up with a bootable USB
 device.
 
 BACKUP_URL=*sshfs://*::
-To backup to a remote server via sshfs (SSH protocol), use 
+To backup to a remote server via sshfs (SSH protocol), use
 +BACKUP_URL=sshfs://user@remote-system.domain.org/home/user/backup-dir/+
 +
 It is advisable to add *ServerAliveInterval 15* in the +/root/.ssh/config+
@@ -441,12 +456,12 @@ issue-tracker at: http://github.com/rear/issues/
 Furthermore, we welcome pull requests via GitHub.
 
 == SEE ALSO
-Relax-and-Recover comes with extensive documentation located in 
+Relax-and-Recover comes with extensive documentation located in
 _/usr/share/doc_.
 
 
 == AUTHORS
-Gratien Dhaese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers.
+Gratien Dhaese, Schlomo Schapiro, Johannes Meixner, Jeroen Hoekx and Dag Wieers.
 
 Lars Pinne (original man page).
 
@@ -462,6 +477,8 @@ The Relax-and-Recover website is located at: http://relax-and-recover.org/
 Schlomo Schapiro
 
 Gratien Dhaese, IT3 Consultants
+
+Johannes Meixner, SuSe
 
 Jeroen Hoekx
 

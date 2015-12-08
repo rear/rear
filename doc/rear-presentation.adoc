@@ -252,7 +252,8 @@ ISO_URL=http://server:port/path/
 
 ----
 [root@moria rear]# rear help
-Usage: rear [-dDsSvV] [-r KERNEL] COMMAND [-- ARGS...]
+
+Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-r KERNEL] [--] COMMAND [ARGS...]
 -snip-
 List of commands:
  checklayout     check if the disk layout has changed
@@ -271,16 +272,20 @@ Use 'rear -v help' for more advanced commands.
 
 ----
 [root@moria rear]# rear help
-Usage: rear [-dDsSvV] [-r KERNEL] COMMAND [-- ARGS...]
+
+Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-r KERNEL] [--] COMMAND [ARGS...]
 
 Available options:
- -d           debug mode; log debug messages
- -D           debugscript mode; log every function call
- -r KERNEL    kernel version to use
- -s           simulation mode; show included scripts
- -S           step-by-step mode; ack each script one-by-one
- -v           verbose mode; show more output
- -V           version information
+ -h --help           usage information
+ -c DIR              alternative config directory; instead of /etc/rear
+ -d                  debug mode; log debug messages
+ -D                  debugscript mode; log every function call (via 'set -x')
+ --debugscripts SET  same as -d -v -D but debugscript mode with 'set -SET'
+ -r KERNEL           kernel version to use; current: '$KERNEL_VERSION'
+ -s                  simulation mode; show what scripts rear would include
+ -S                  step-by-step mode; acknowledge each script individually
+ -v                  verbose mode; show more output
+ -V --version        version information
 
 -snip-
 ----
@@ -294,7 +299,7 @@ Available options:
   - Use: +rear -s <workflow>+
 
 * Logging
-  - Logfile in: _/tmp/rear-hostname.log_
+  - Logfile in: _/var/log/rear/rear-<hostname>.log_
 
 * Debugging
   - Verbose: +rear -v+
