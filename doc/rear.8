@@ -31,7 +31,7 @@
 rear \- bare metal disaster recovery and system migration tool
 .SH "SYNOPSIS"
 .sp
-\fBrear\fR [\fB\-h\fR \||\| \fB\-\-help\fR] [\fB\-V\fR \||\| \fB\-\-version\fR] [\fB\-dsSv\fR] [\fB\-D\fR \||\| \fB\-\-debugscripts\fR \fISET\fR] [\fB\-c\fR \fIDIR\fR] [\fB\-r\fR \fIKERNEL\fR] [\-\-] \fICOMMAND\fR [\fIARGS\fR\&...]
+\fBrear\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fB\-dsSv\fR] [\fB\-D\fR|\fB\-\-debugscripts\fR \fISET\fR] [\fB\-c\fR \fIDIR\fR] [\fB\-r\fR \fIKERNEL\fR] [\-\-] \fICOMMAND\fR [\fIARGS\fR\&...]
 .SH "DESCRIPTION"
 .sp
 Relax\-and\-Recover is the leading Open Source disaster recovery solution\&. It is a modular framework with many ready\-to\-go workflows for common situations\&.
@@ -50,15 +50,14 @@ Relax\-and\-Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU G
 .SH "OPTIONS"
 .SS "GLOBAL OPTIONS"
 .PP
-\-h --help
+\-h \-\-help
 .RS 4
-\fBusage information\fR
+usage information
 .RE
 .PP
 \-c DIR
 .RS 4
-alternative config directory
-(instead of /etc/rear)
+alternative config directory; instead of /etc/rear
 .RE
 .PP
 \-d
@@ -70,13 +69,16 @@ alternative config directory
 \-D
 .RS 4
 \fBdebugscript mode\fR
-(log every function call via 'set -x')
+(log every function call via
+\fIset \-x\fR)
 .RE
 .PP
-\--debugscripts SET
+\-\-debugscripts SET
 .RS 4
+same as \-d \-v \-D but
 \fBdebugscript mode\fR
-(same as -d -v -D but with 'set -SET')
+with
+\fIset \-SET\fR
 .RE
 .PP
 \-r KERNEL
@@ -102,7 +104,7 @@ kernel version to use (by default use running kernel)
 (show progress output)
 .RE
 .PP
-\-V --version
+\-V \-\-version
 .RS 4
 version information
 .RE
@@ -301,6 +303,8 @@ to an external destination\&. Useful in combination with an
 backup program, or when
 BACKUP_URL=iso://backup
 .RE
+.sp
+The ISO_DEFAULT variable defines what default boot option is used on the rescue image\&. Possible values are manual, boothd or unattended\&. Manual will make you boot into the shell directly by default, boothd will boot to the first disk (default) or unattended will automatically start in recovery mode\&.
 .SH "BACKUP SOFTWARE INTEGRATION"
 .sp
 Currently Relax\-and\-Recover supports the following backup methods\&. Please distinguish carefully between Relax\-and\-Recover support for 3rd party backup software and Relax\-and\-Recover internal backup methods\&. The latter also creates a backup of your data while the former will only integrate Relax\-and\-Recover with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself\&.
@@ -632,7 +636,7 @@ Furthermore, we welcome pull requests via GitHub\&.
 Relax\-and\-Recover comes with extensive documentation located in \fI/usr/share/doc\fR\&.
 .SH "AUTHORS"
 .sp
-Gratien Dhaese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers\&.
+Gratien Dhaese, Schlomo Schapiro, Johannes Meixner, Jeroen Hoekx and Dag Wieers\&.
 .sp
 Lars Pinne (original man page)\&.
 .sp
@@ -646,6 +650,8 @@ The Relax\-and\-Recover website is located at: \m[blue]\fBhttp://relax\-and\-rec
 Schlomo Schapiro
 .sp
 Gratien Dhaese, IT3 Consultants
+.sp
+Johannes Meixner, SuSe
 .sp
 Jeroen Hoekx
 .sp
