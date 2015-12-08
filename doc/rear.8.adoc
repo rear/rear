@@ -206,7 +206,10 @@ OUTPUT_URL=*null*::
 Do not copy the ISO image from _/var/lib/rear/output/_ to an external destination.
 Useful in combination with an _external_ backup program, or when +BACKUP_URL=iso://backup+
 
-The +ISO_DEFAULT+ variable defines what default boot option is used on the rescue image. Possible values are `manual`, `boothd` or `unattended`. Manual will make you boot into the shell directly by default, boothd will boot to the first disk (default) or unattended will automatically start in recovery mode.
+The +ISO_DEFAULT+ variable defines what default boot option is used on the rescue image.
+Possible values are `manual`, `boothd` or `unattended`. Manual will make you boot into
+the shell directly by default, boothd will boot to the first disk (default) or unattended
+will automatically start in recovery mode.
 
 == BACKUP SOFTWARE INTEGRATION
 Currently Relax-and-Recover supports the following backup methods. Please
@@ -458,7 +461,7 @@ _/usr/share/doc_.
 
 
 == AUTHORS
-Gratien Dhaese, Schlomo Schapiro, Jeroen Hoekx and Dag Wieers.
+Gratien Dhaese, Schlomo Schapiro, Johannes Meixner, Jeroen Hoekx and Dag Wieers.
 
 Lars Pinne (original man page).
 
@@ -474,6 +477,8 @@ The Relax-and-Recover website is located at: http://relax-and-recover.org/
 Schlomo Schapiro
 
 Gratien Dhaese, IT3 Consultants
+
+Johannes Meixner, SuSe
 
 Jeroen Hoekx
 
