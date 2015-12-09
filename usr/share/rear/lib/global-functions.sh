@@ -20,9 +20,9 @@
 
 function read_and_strip_file () {
 # extracts content from config files. In other words: strips the comments and new lines
-	if test -s "$1" ; then
-		sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$1"
-	fi
+    if test -s "$1" ; then
+        sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$1"
+    fi
 }
 
 function is_numeric () {
@@ -32,6 +32,14 @@ function is_numeric () {
     else
         echo 0
     fi
+}
+
+function is_true () {
+    # argument is variable which needs to be tested if it is true or not (see issue #625)
+    case "$1" in
+        y*|Y*|1) return 0 ;;
+        *) return 1 ;;
+    esac
 }
 
 ######
