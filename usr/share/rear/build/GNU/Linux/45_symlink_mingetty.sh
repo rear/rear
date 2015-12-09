@@ -4,6 +4,6 @@
 
 (
     cd  $ROOTFS_DIR/bin
-    [[ -f getty ]]  && ln -sf $v getty mingetty
-    [[ -f agetty ]] && ln -sf $v agetty mingetty
+    [[ -f getty ]]  && ln -sf $v getty mingetty >&2
+    [[ -f agetty ]] && ln -sf $v agetty mingetty >&2
 )
