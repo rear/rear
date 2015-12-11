@@ -9,7 +9,7 @@ REAL_USB_DEVICE=$(readlink -f $USB_DEVICE)
 StopIfError "USB device '$USB_DEVICE' is not a block device"
 
 ! grep -q "^$REAL_USB_DEVICE " /proc/mounts
-StopIfError "USB device '$USB_DEVICE' is already mounted on $(grep -P "^$REAL_USB_DEVICE\\s" /proc/mounts | cut -d' ' -f2 |tail -1)"
+StopIfError "USB device '$USB_DEVICE' is already mounted on $(grep -E "^$REAL_USB_DEVICE\\s" /proc/mounts | cut -d' ' -f2 |tail -1)"
 
 # We cannot use the layout dependency code in the backup phase (yet)
 #RAW_USB_DEVICE=$(find_disk $REAL_USB_DEVICE)
