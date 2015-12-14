@@ -19,7 +19,7 @@ function Source () {
     # If $source_file does not exist try using $SHARE_DIR/$source_file as fallback:
     if ! test -e "$source_file" ; then
         Debug "Using '$SHARE_DIR/$source_file' because '$source_file' does not exist"
-        source_file=$SHARE_DIR/$source_file
+        source_file="$SHARE_DIR/$source_file"
     fi
     # Ensure source file is not a directory:
     test -d "$source_file" && Error "Source file '$source_file' is a directory, cannot source"
