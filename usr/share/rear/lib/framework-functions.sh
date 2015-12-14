@@ -16,13 +16,13 @@ function Source () {
         Debug "Skipping Source() because it was called with empty source file name"
         return
     fi
-    # Ensure source file is not a directory:
-    test -d "$source_file" && Error "Source file '$source_file' is a directory, cannot source"
     # If $source_file does not exist try using $SHARE_DIR/$source_file as fallback:
     if ! test -e "$source_file" ; then
         Debug "Using '$SHARE_DIR/$source_file' because '$source_file' does not exist"
         source_file=$SHARE_DIR/$source_file
     fi
+    # Ensure source file is not a directory:
+    test -d "$source_file" && Error "Source file '$source_file' is a directory, cannot source"
     # Skip if source file does not exist of if its content is empty:
     if ! test -s "$source_file" ; then
         Debug "Skipping Source() because source file '$source_file' not found or empty"
