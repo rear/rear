@@ -2,6 +2,6 @@
 ###
 
 Print "
-Finished recovering your system. You can explore it under '$RECOVERY_FS_ROOT'.
+Finished recovering your system. You can explore it under '$TARGET_FS_ROOT'.
 "
 
