@@ -61,14 +61,14 @@ mount_fs() {
             # its top-level/root subvolume is the btrfs default subvolume which gets mounted when no other subvolume is specified.
             # For a plain btrfs filesystem without subvolumes it is effectively the same as for other filesystems (like ext2/3/4).
             (
-            echo "mkdir -p $RECOVERY_FS_ROOT$mountpoint"
-            echo "mount -t btrfs $mountopts $device $RECOVERY_FS_ROOT$mountpoint"
+            echo "mkdir -p $TARGET_FS_ROOT$mountpoint"
+            echo "mount -t btrfs $mountopts $device $TARGET_FS_ROOT$mountpoint"
             ) >> "$LAYOUT_CODE"
             # But btrfs filesystems with subvolumes need a special handling.
             # In particular when in the original system the btrfs filesystem had a special different default subvolume,
             # that different subvolume needs to be first created, then set to be the default subvolume, and
             # finally that btrfs filesystem needs to be unmounted and mounted again so that in the end
-            # that special different default subvolume is mounted at the mountpoint $RECOVERY_FS_ROOT$mountpoint.
+            # that special different default subvolume is mounted at the mountpoint $TARGET_FS_ROOT$mountpoint.
             # All btrfs subvolume handling happens in the btrfs_subvolumes_setup function in 13_include_mount_subvolumes_code.sh
             # For a plain btrfs filesystem without subvolumes the btrfs_subvolumes_setup function does nothing.
             # Call the btrfs_subvolumes_setup function for the btrfs filesystem that was mounted above:
@@ -77,14 +77,14 @@ mount_fs() {
         (vfat)
             # mounting vfat filesystem - avoid using mount options - issue #576
             (
-            echo "mkdir -p $RECOVERY_FS_ROOT$mountpoint"
-            echo "mount $device $RECOVERY_FS_ROOT$mountpoint"
+            echo "mkdir -p $TARGET_FS_ROOT$mountpoint"
+            echo "mount $device $TARGET_FS_ROOT$mountpoint"
             ) >> "$LAYOUT_CODE"
             ;;
         (*)
             (
-            echo "mkdir -p $RECOVERY_FS_ROOT$mountpoint"
-            echo "mount $mountopts $device $RECOVERY_FS_ROOT$mountpoint"
+            echo "mkdir -p $TARGET_FS_ROOT$mountpoint"
+            echo "mount $mountopts $device $TARGET_FS_ROOT$mountpoint"
             ) >> "$LAYOUT_CODE"
             ;;
     esac

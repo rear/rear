@@ -95,9 +95,10 @@ LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
 # Location of the disklayout.conf file created by savelayout
 # (no readonly DISKLAYOUT_FILE because it is also set in checklayout-workflow.sh and mkbackuponly-workflow.sh):
 DISKLAYOUT_FILE="$VAR_DIR/layout/disklayout.conf"
-# Location of the root of the filesystem tree of the to-be-recovered-system in the recovery system
+# Location of the root of the filesystem tree of the target system
+# in particular the root of the filesystem tree of the to-be-recovered-system in the recovery system
 # i.e. the mountpoint in the recovery system where the filesystem tree of the to-be-recovered-system is mounted:
-readonly RECOVERY_FS_ROOT="/mnt/local"
+readonly TARGET_FS_ROOT="/mnt/local"
 
 # Initialize defaults: empty value means "false"/"no":
 DEBUG=""
