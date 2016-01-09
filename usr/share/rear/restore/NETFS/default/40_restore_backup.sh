@@ -9,8 +9,9 @@ mkdir -p "${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
 
 # Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default value to cat in
 # case encryption is disabled
-if (( $BACKUP_PROG_CRYPT_ENABLED == 1 )); then
-  LogPrint "Decrypting archive with key: $BACKUP_PROG_CRYPT_KEY"
+##if (( $BACKUP_PROG_CRYPT_ENABLED == 1 )); then
+if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+  LogPrint "Decrypting archive with key defined in variable \$BACKUP_PROG_CRYPT_KEY"
 else
   LogPrint "Decrypting disabled"
   BACKUP_PROG_DECRYPT_OPTIONS="cat"
@@ -31,7 +32,8 @@ case "$BACKUP_PROG" in
     # tar compatible programs here
     (tar)
         # Add the --selinux option to be safe with SELinux context restoration
-        if [[ ! $BACKUP_SELINUX_DISABLE =~ ^[yY1] ]]; then
+        ##if [[ ! $BACKUP_SELINUX_DISABLE =~ ^[yY1] ]]; then
+        if ! is_true "$BACKUP_SELINUX_DISABLE" ; then
             if tar --usage | grep -q selinux;  then
                 BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --selinux"
             fi
@@ -104,7 +106,8 @@ if [[ -f "${TMP_DIR}/backup.splitted" ]]; then
         done
 
         if [[ -f "$file_path" ]]; then
-            if [[ $BACKUP_INTEGRITY_CHECK =~ ^[yY1] && -f "${TMP_DIR}/backup.md5" ]] ; then
+            ##if [[ $BACKUP_INTEGRITY_CHECK =~ ^[yY1] && -f "${TMP_DIR}/backup.md5" ]] ; then
+            if is_true "$BACKUP_INTEGRITY_CHECK" && [[ -f "${TMP_DIR}/backup.md5" ]] ; then
                 LogPrint "Checking $name ..."
                 (cd $(dirname $backuparchive) && grep $name "${TMP_DIR}/backup.md5" | md5sum -c)
                 ret=$?
