@@ -37,9 +37,10 @@ function is_numeric () {
 function is_true () {
     # argument is variable which needs to be tested if it is true or not (see issue #625)
     case "$1" in
-        y*|Y*|1) return 0 ;;
-        *) return 1 ;;
+        [tT] | [yY] | [yY][eE][sS] | [tT][rR][uU][eE] | 1)
+        return 0 ;;
     esac
+    return 1
 }
 
 ######
