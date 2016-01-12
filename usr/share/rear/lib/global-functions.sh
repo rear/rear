@@ -138,7 +138,8 @@ mount_url() {
             ;;
         (cifs)
             if [ x"$options" = x"$defaultoptions" ];then
-                mount_cmd="mount $v -o $options,guest //$(url_host $url)$(url_path $url) $mountpoint"
+                # defaultoptions contains noatime which is not valid for cifs (issue #752)
+                mount_cmd="mount $v -o rw,guest //$(url_host $url)$(url_path $url) $mountpoint"
             else
                 mount_cmd="mount $v -o $options //$(url_host $url)$(url_path $url) $mountpoint"
             fi
