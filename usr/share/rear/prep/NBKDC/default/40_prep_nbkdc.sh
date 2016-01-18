@@ -13,8 +13,7 @@ if [ ! -f "$NBKDC_DIR/conf/client.properties" ]; then
         NBKDC_DIR=$(readlink /Hiback | sed 's/\/Hiback$//g')
         if [ ! -f "$NBKDC_DIR/conf/client.properties" ]; then 
             echo "No NovaBACKUP DataCenter Software installed"
-            Log "No NBKDC found, exiting NBKDC prep"
-            exit 2
+            Error "No NBKDC found, exiting NBKDC prep"
         fi
     fi
 fi
