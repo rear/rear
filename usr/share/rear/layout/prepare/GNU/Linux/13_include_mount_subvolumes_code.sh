@@ -9,13 +9,13 @@ btrfs_subvolumes_setup() {
     Log "Begin btrfs_subvolumes_setup( $@ )"
     # Local variables are visible only in this btrfs_subvolumes_setup function and its children:
     local dummy junk keyword info_message
-    local device mountpoint mountopts recovery_system_root recovery_system_mountpoint
+    local device mountpoint mountopts target_system_mountpoint
     local subvolume_path subvolume_directory_path subvolume_mountpoint subvolume_mount_options
     local snapshot_subvolumes_devices_and_paths snapshot_subvolume_device_and_path snapshot_subvolume_device snapshot_subvolume_path
     local default_subvolume_path
     # Assign function arguments to meaningful variable names:
     # This function is called in 13_include_mount_filesystem_code.sh as follows:
-    #   btrfs_subvolumes_setup $device $mp $mountopts
+    #   btrfs_subvolumes_setup $device $mountpoint $mountopts
     # where $device is the device node where the filesystem was already created by 13_include_filesystem_code.sh
     # (usually a harddisk partition like e.g. /dev/sda1):
     device=$1
@@ -29,9 +29,6 @@ btrfs_subvolumes_setup() {
         Log "Return 0 from btrfs_subvolumes_setup( $@ )"
         return 0
     fi
-    # FIXME: The following avoids to have '/mnt/local' hardcoded at many places in the code only here.
-    # The root of the filesysten tree of the to-be-recovered-system in the recovery system should be in a global variable:
-    recovery_system_root=/mnt/local
     ###########################################
     # SLES 12 SP1 special btrfs subvolumes setup detection:
     SLES12SP1_btrfs_detection_string="@/.snapshots/"
@@ -121,7 +118,7 @@ btrfs_subvolumes_setup() {
             # but 'mysubvol' must not be made as a normal directory by 'mkdir' below:
             subvolume_directory_path=""
         fi
-        recovery_system_mountpoint=$recovery_system_root$mountpoint
+        target_system_mountpoint=$TARGET_FS_ROOT$mountpoint
         info_message="Creating normal btrfs subvolume $subvolume_path on $device at $mountpoint"
         Log $info_message
         (
@@ -130,11 +127,11 @@ btrfs_subvolumes_setup() {
             # Test in the recovery system if the directory path already exists to avoid that
             # useless 'mkdir -p' commands are run which look confusing in the "rear recover" log
             # regardless that 'mkdir -p' does nothing when its argument already exists:
-            echo "if ! test -d $recovery_system_mountpoint/$subvolume_directory_path ; then"
-            echo "    mkdir -p $recovery_system_mountpoint/$subvolume_directory_path"
+            echo "if ! test -d $target_system_mountpoint/$subvolume_directory_path ; then"
+            echo "    mkdir -p $target_system_mountpoint/$subvolume_directory_path"
             echo "fi"
         fi
-        echo "btrfs subvolume create $recovery_system_mountpoint/$subvolume_path"
+        echo "btrfs subvolume create $target_system_mountpoint/$subvolume_path"
         ) >> "$LAYOUT_CODE"
         # Btrfs subvolumes 'no copy on write' attribute setup:
         if grep -q "^btrfsnocopyonwrite $subvolume_path\$" "$LAYOUT_FILE" ; then
@@ -142,7 +139,7 @@ btrfs_subvolumes_setup() {
             Log $info_message
             (
             echo "# $info_message"
-            echo "chattr +C $recovery_system_mountpoint/$subvolume_path"
+            echo "chattr +C $target_system_mountpoint/$subvolume_path"
             ) >> "$LAYOUT_CODE"
         fi
     done < <( grep "^btrfsnormalsubvol $device $mountpoint " "$LAYOUT_FILE" )
@@ -175,7 +172,7 @@ btrfs_subvolumes_setup() {
         # When in the original system the btrfs filesystem had a special different default subvolume
         # (i.e. when the btrfs default subvolume is not the toplevel/root subvolume), then
         # that different subvolume needs to be set to be the default subvolume:
-        recovery_system_mountpoint=$recovery_system_root$mountpoint
+        target_system_mountpoint=$TARGET_FS_ROOT$mountpoint
         Log "Setting $subvolume_path as btrfs default subvolume for $device at $mountpoint"
         if test -n "$SLES12SP1_btrfs_subvolumes_setup" ; then
             (
@@ -184,11 +181,11 @@ btrfs_subvolumes_setup() {
             echo "# because the default subvolume path '$subvolume_path' contains '@/.snapshots/'"
             echo "# Making the $SLES12SP1_initial_default_subvolume_path subvolume the initial default subvolume"
             echo "# Get the ID of the $initial_default_subvolume_path subvolume"
-            echo "subvolumeID=\$( btrfs subvolume list -a $recovery_system_mountpoint | sed -e 's/<FS_TREE>\///' | grep ' $SLES12SP1_initial_default_subvolume_path\$' | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 )"
+            echo "subvolumeID=\$( btrfs subvolume list -a $target_system_mountpoint | sed -e 's/<FS_TREE>\///' | grep ' $SLES12SP1_initial_default_subvolume_path\$' | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 )"
             echo "# Set the $SLES12SP1_initial_default_subvolume_path subvolume as initial default subvolume using its subvolume ID"
-            echo "btrfs subvolume set-default \$subvolumeID $recovery_system_mountpoint"
+            echo "btrfs subvolume set-default \$subvolumeID $target_system_mountpoint"
             echo "# Begin step 1 of special SLES 12 SP1 btrfs default snapper snapshot subvolume setup"
-            echo "umount $recovery_system_mountpoint"
+            echo "umount $target_system_mountpoint"
             echo "# Configuring snapper for root filesystem - step 1:"
             echo "# - temporarily mounting device"
             echo "# - copying/modifying config-file"
@@ -199,7 +196,7 @@ btrfs_subvolumes_setup() {
             echo "then $SLES12SP1_installation_helper_executable --step 1 --device $device --description 'first root filesystem'"
             echo "else LogPrint '$SLES12SP1_installation_helper_executable not executable may indicate an error with btrfs default subvolume setup for $subvolume_path on $device'"
             echo "fi"
-            echo " mount -t btrfs -o subvolid=0 $mountopts $device $recovery_system_mountpoint"
+            echo " mount -t btrfs -o subvolid=0 $mountopts $device $target_system_mountpoint"
             echo "# End step 1 of special SLES 12 SP1 btrfs default snapper snapshot subvolume setup"
             ) >> "$LAYOUT_CODE"
         else
@@ -207,9 +204,9 @@ btrfs_subvolumes_setup() {
             echo "# Begin btrfs default subvolume setup on $device at $mountpoint"
             echo "# Making the $subvolume_path subvolume the default subvolume"
             echo "# Get the ID of the $subvolume_path subvolume"
-            echo "subvolumeID=\$( btrfs subvolume list -a $recovery_system_mountpoint | sed -e 's/<FS_TREE>\///' | grep ' $subvolume_path\$' | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 )"
+            echo "subvolumeID=\$( btrfs subvolume list -a $target_system_mountpoint | sed -e 's/<FS_TREE>\///' | grep ' $subvolume_path\$' | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 )"
             echo "# Set the $subvolume_path subvolume as default subvolume using its subvolume ID"
-            echo "btrfs subvolume set-default \$subvolumeID $recovery_system_mountpoint"
+            echo "btrfs subvolume set-default \$subvolumeID $target_system_mountpoint"
             ) >> "$LAYOUT_CODE"
         fi
         # When the btrfs filesystem has a special default subvolume (one that is not the toplevel/root subvolume)
@@ -217,12 +214,12 @@ btrfs_subvolumes_setup() {
         # FIXME: It is possible that the admin has actually mounted something else in his original system
         # which would result a wrong recovery because currently such an awkward setup is not supported.
         # Under the above assumption the btrfs filesystem needs to be umonted and mounted again so that
-        # the special default subvolume gets mounted in the recovery system at /mnt/local$mountpoint.
+        # the special default subvolume gets mounted in the recovery system at $TARGET_FS_ROOT$mountpoint.
         Log "Remounting the btrfs default subvolume $subvolume_path for $device at $mountpoint"
         (
-        echo "# Remounting the $subvolume_path default subvolume at $recovery_system_mountpoint"
-        echo "umount $recovery_system_mountpoint"
-        echo "mount -t btrfs $mountopts $device $recovery_system_mountpoint"
+        echo "# Remounting the $subvolume_path default subvolume at $target_system_mountpoint"
+        echo "umount $target_system_mountpoint"
+        echo "mount -t btrfs $mountopts $device $target_system_mountpoint"
         echo "# End btrfs default subvolume setup on $device at $mountpoint"
         ) >> "$LAYOUT_CODE"
     done
@@ -273,7 +270,7 @@ btrfs_subvolumes_setup() {
                 continue 2
             fi
         done
-        recovery_system_mountpoint=$recovery_system_root$subvolume_mountpoint
+        target_system_mountpoint=$TARGET_FS_ROOT$subvolume_mountpoint
         # Remounting is needed when at the '/' mountpoint not the btrfs default subvolume is mounted:
         # On Fedora 21 what is mounted at the root of the filesystem tree (i.e. at the '/' mountpoint)
         # is not the btrfs default subvolume (the default subvolume is the toplevel/root subvolume).
@@ -329,21 +326,21 @@ btrfs_subvolumes_setup() {
             # Remounting is needed when the subvolume_path is not the default_subvolume_path for this device:
             Log "On $device btrfs subvolume $subvolume_path currently not mounted at $subvolume_mountpoint, needs remounting"
             (
-            echo "# Begin remounting btrfs subvolume $subvolume_path at $recovery_system_mountpoint"
-            echo "# On $device btrfs subvolume $subvolume_path is currently not mounted at $recovery_system_mountpoint, needs remounting:"
+            echo "# Begin remounting btrfs subvolume $subvolume_path at $target_system_mountpoint"
+            echo "# On $device btrfs subvolume $subvolume_path is currently not mounted at $target_system_mountpoint, needs remounting:"
             echo "# Get the ID of the $subvolume_path subvolume because it must be mounted with subvolid=ID"
             echo "# (using subvol=NAME may not work as long as it is falsely mounted so that subvolume names may not match)"
-            echo "subvolumeID=\$( btrfs subvolume list -a $recovery_system_mountpoint | sed -e 's/<FS_TREE>\///' | grep ' $subvolume_path\$' | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 )"
+            echo "subvolumeID=\$( btrfs subvolume list -a $target_system_mountpoint | sed -e 's/<FS_TREE>\///' | grep ' $subvolume_path\$' | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 )"
             echo "if test -n \"\$subvolumeID\" ; then"
             echo "    # No remounting when subvolumeID is empty because then umount would work but mount would fail"
-            echo "    # Remounting the $subvolume_path subvolume at $recovery_system_mountpoint"
-            echo "    umount $recovery_system_mountpoint"
-            echo "    mount -t btrfs -o $subvolume_mount_options -o subvolid=\$subvolumeID $device $recovery_system_mountpoint"
+            echo "    # Remounting the $subvolume_path subvolume at $target_system_mountpoint"
+            echo "    umount $target_system_mountpoint"
+            echo "    mount -t btrfs -o $subvolume_mount_options -o subvolid=\$subvolumeID $device $target_system_mountpoint"
             echo "else"
             echo "    # Empty subvolumeID may indicate an error. Therefore be verbose and inform the user:"
             echo "    LogPrint 'Empty subvolumeID for $subvolume_path on $device may indicate an error, skipping remounting it to $subvolume_mountpoint'"
             echo "fi"
-            echo "# End remounting btrfs subvolume $subvolume_path at $recovery_system_mountpoint"
+            echo "# End remounting btrfs subvolume $subvolume_path at $target_system_mountpoint"
             ) >> "$LAYOUT_CODE"
             # Handling of the '/' mountpoint is done hereby:
             continue
@@ -353,18 +350,18 @@ btrfs_subvolumes_setup() {
         # One same subvolume can be mounted at several mountpoints but one mountpoint cannot be used several times.
         Log "Mounting btrfs normal subvolume $subvolume_path on $device at $subvolume_mountpoint (if not something is already mounted there)."
         (
-        echo "# Mounting btrfs normal subvolume $subvolume_path on $device at $recovery_system_mountpoint (if not something is already mounted there):"
-        # If recovery_system_mountpoint has a trailing '/' it must be cut, otherwise it is not found as an already mounted mountpoint.
-        # In particular a subvolume_mountpoint '/' leads to a trailing '/' in recovery_system_mountpoint (e.g. '/mnt/local/')
-        # and at least the recovery filesystem root '/mnt/local/' is already mounted in any case here:
-        echo "if ! mount -t btrfs | tr -s '[:blank:]' ' ' | grep -q ' on ${recovery_system_mountpoint%/} ' ; then"
-        # Test in the recovery system if the recovery_system_mountpoint directory already exists to avoid that
+        echo "# Mounting btrfs normal subvolume $subvolume_path on $device at $target_system_mountpoint (if not something is already mounted there):"
+        # If target_system_mountpoint has a trailing '/' it must be cut, otherwise it is not found as an already mounted mountpoint.
+        # In particular a subvolume_mountpoint '/' leads to a trailing '/' in target_system_mountpoint (e.g. '/mnt/local/')
+        # and at least the recovery filesystem root $TARGET_FS_ROOT (by default '/mnt/local') is already mounted in any case here:
+        echo "if ! mount -t btrfs | tr -s '[:blank:]' ' ' | grep -q ' on ${target_system_mountpoint%/} ' ; then"
+        # Test in the recovery system if the target_system_mountpoint directory already exists to avoid that
         # useless 'mkdir -p' commands are run which look confusing in the "rear recover" log
         # regardless that 'mkdir -p' does nothing when its argument already exists:
-        echo "    if ! test -d $recovery_system_mountpoint ; then"
-        echo "        mkdir -p $recovery_system_mountpoint"
+        echo "    if ! test -d $target_system_mountpoint ; then"
+        echo "        mkdir -p $target_system_mountpoint"
         echo "    fi"
-        echo "    mount -t btrfs -o $subvolume_mount_options -o subvol=$subvolume_path $device $recovery_system_mountpoint"
+        echo "    mount -t btrfs -o $subvolume_mount_options -o subvol=$subvolume_path $device $target_system_mountpoint"
         echo "fi"
         ) >> "$LAYOUT_CODE"
     done < <( grep "^btrfsmountedsubvol $device " "$LAYOUT_FILE" )

@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+# Automatically added by dh_installdocs
+if [ "$1" = "configure" ]; then
+    printf "OS_VENDOR="  > /etc/rear/os.conf
+    awk -F"[=\"]+" '/^NAME=/ {print $2}' /etc/os-release >> /etc/rear/os.conf
+    printf "OS_VERSION=" >> /etc/rear/os.conf
+    awk -F"[=\"]+" '/^VERSION_ID=/ {print $2}' /etc/os-release  >> /etc/rear/os.conf
+fi

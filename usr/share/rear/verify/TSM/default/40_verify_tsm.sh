@@ -48,14 +48,14 @@ TSM_FILESPACE_NUMS=( )
 # TSM_FILESPACE_INCLUDED arrays for use as default value for TSM_RESTORE_FILESPACE_NUMS
 TSM_FILESPACE_INCLUDED=( )
 TSM_FILESPACE_INCLUDED_NUMS=( )
-while read num date time type path ; do
+while read num path ; do
 	TSM_FILESPACES[$num]="$path"
 	TSM_FILESPACE_NUMS[$num]="$num"
         if IsInArray $path "${included_mountpoints[@]}" ; then
               TSM_FILESPACE_INCLUDED[$num]="$path"
               TSM_FILESPACE_INCLUDED_NUMS[$num]="$num"
         fi
-done < <(grep -A 10000 '^  1' <<<"$TSM_FILESPACE_TEXT")
+done < <((grep -A 10000 '^  1' | awk '{print $1 " " $NF}') <<<"$TSM_FILESPACE_TEXT")
 
 Log "Available filespaces:
 $TSM_FILESPACE_TEXT"

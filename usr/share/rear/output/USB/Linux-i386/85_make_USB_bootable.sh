@@ -22,7 +22,7 @@ if [[ "$usb_syslinux_version" ]] && version_newer "$usb_syslinux_version" "$sysl
 fi
 
 # Make the USB bootable
-usb_filesystem=$(grep -P "^($USB_DEVICE|$REAL_USB_DEVICE)\\s" /proc/mounts | cut -d' ' -f3 | tail -1)
+usb_filesystem=$(grep -E "^($USB_DEVICE|$REAL_USB_DEVICE)\\s" /proc/mounts | cut -d' ' -f3 | tail -1)
 case "$usb_filesystem" in
 	(ext?)
 		if [[ "$FEATURE_SYSLINUX_EXTLINUX_INSTALL" ]]; then

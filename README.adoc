@@ -1,13 +1,15 @@
 Relax-and-Recover
 =================
 
+image:https://travis-ci.org/rear/rear.svg?branch=master["Build Status", link="https://travis-ci.org/rear/rear"]
+
 Relax-and-Recover is the leading Open Source bare metal disaster recovery
 and system migration solution. It is a modular framework with many
-ready-to-go workflows for common situations. 
+ready-to-go workflows for common situations.
 
 Relax-and-Recover produces a bootable image. This image can repartition the
 system. Once that is done it initiates a restore from backup. Restores to
-different hardware are possible. Relax-and-Recover can therefore be used as a 
+different hardware are possible. Relax-and-Recover can therefore be used as a
 migration tool as well.
 
 Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
@@ -115,11 +117,10 @@ Now you are ready to create a rescue image. We want verbose output (-v option).
 
 The output I get is:
 ----
-Relax-and-Recover 1.13.0 / $Date$
-Using log file: /home/jeroen/tmp/quickstart/rear/var/log/rear/rear-fireflash.log
+Relax-and-Recover <version>
+Using log file: /var/log/rear/rear-<hostname>.log
 Creating disk layout
 Creating root filesystem layout
-TIP: To login as root via ssh you need to set up /root/.ssh/authorized_keys
 Copying files and directories
 Copying binaries and libraries
 Copying kernel modules
@@ -196,19 +197,23 @@ To use Relax-and-Recover you always call the main script '/usr/sbin/rear':
 
 ----
 # rear help
-Usage: rear [-d] [-D] [-r KERNEL] [-s] [-S] [-v] [-V] COMMAND [ARGS...]
+
+Usage: rear [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-r KERNEL] [--] COMMAND [ARGS...]
 
 Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:
- -d           debug mode; log debug messages
- -D           debugscript mode; log every function call
- -r KERNEL    kernel version to use; current: '2.6.32-131.2.1.el6.x86_64'
- -s           simulation mode; show what scripts rear would include
- -S           step-by-step mode; acknowledge each script individually
- -v           verbose mode; show more output
- -V           version information
+ -h --help           usage information
+ -c DIR              alternative config directory; instead of /etc/rear
+ -d                  debug mode; log debug messages
+ -D                  debugscript mode; log every function call (via 'set -x')
+ --debugscripts SET  same as -d -v -D but debugscript mode with 'set -SET'
+ -r KERNEL           kernel version to use; current: '3.12.49-3-default'
+ -s                  simulation mode; show what scripts rear would include
+ -S                  step-by-step mode; acknowledge each script individually
+ -v                  verbose mode; show more output
+ -V --version        version information
 
 List of commands:
  checklayout     check if the disk layout has changed
@@ -217,6 +222,7 @@ List of commands:
  mkbackup        create rescue media and backup system
  mkbackuponly    backup system without creating rescue media
  mkrescue        create rescue media only
+ recover         recover the system
  validate        submit validation information
 
 Use 'rear -v help' for more advanced commands.

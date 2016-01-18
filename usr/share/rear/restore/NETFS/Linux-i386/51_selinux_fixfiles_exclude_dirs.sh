@@ -1,11 +1,16 @@
+
 # for UEFI only we should avoid SElinux relabeling vfat filesystem: /boot/efi
-(( USING_UEFI_BOOTLOADER )) || return  # empty or 0 means using BIOS method
 
-# check if /mnt/local/boot/efi is mounted
-[[ -d "/mnt/local/boot/efi" ]]
-StopIfError "Could not find directory /mnt/local/boot/efi"
+# empty or 0 means using BIOS method
+(( USING_UEFI_BOOTLOADER )) || return
 
-cat > /mnt/local/etc/selinux/fixfiles_exclude_dirs <<EOF
+# check if $TARGET_FS_ROOT/boot/efi is mounted
+if ! test -d "$TARGET_FS_ROOT/boot/efi" ; then
+    Error "Could not find directory $TARGET_FS_ROOT/boot/efi"
+fi
+
+cat > $TARGET_FS_ROOT/etc/selinux/fixfiles_exclude_dirs <<EOF
 /boot/efi
 /boot/efi(/.*)?
 EOF
+

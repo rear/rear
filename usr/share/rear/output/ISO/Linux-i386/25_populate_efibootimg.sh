@@ -14,19 +14,33 @@ StopIfError "Could not create $TMP_DIR/mnt/EFI/BOOT/locale"
 # copy the grub*.efi executable to EFI/BOOT/BOOTX64.efi 
 cp  $v "${UEFI_BOOTLOADER}" $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi >&2
 StopIfError "Could not find ${UEFI_BOOTLOADER}"
+if [[ $(basename ${UEFI_BOOTLOADER}) = shim.efi ]]; then
+    # if shim is used, bootloader can be actually anything
+    # named as grub*.efi (follow-up loader is shim compile time option)
+    # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
+    cp $v $(dirname ${UEFI_BOOTLOADER})/grub*.efi $TMP_DIR/mnt/EFI/BOOT/
+fi
 
-if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" && $(basename ${UEFI_BOOTLOADER}) = "elilo.efi" ]]; then
-   Log "Copying kernel"
-   
-   # copy initrd and kernel inside efi_boot image as
-   # elilo is not smart enough to look for them outside ...
-   cp -pL $v $KERNEL_FILE $TMP_DIR/mnt/EFI/BOOT/kernel >&2
-   StopIfError "Could not copy kernel to UEFI"
-   cp $v $TMP_DIR/initrd.cgz $TMP_DIR/mnt/EFI/BOOT/initrd.cgz >&2
-   StopIfError "Could not copy initrd to UEFI"
-   
-   # Create config file for elilo
-   create_ebiso_elilo_conf
+
+# FIXME: do we need to test if we are ebiso at all?
+# copying kernel should happen for any ueafi mkiso tool with elilo
+if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" ]]; then
+    if [[ $(basename ${UEFI_BOOTLOADER}) =~ (shim.efi|elilo.efi) ]]; then 
+        # if shim is used, bootloader can be actually anything (also elilo)
+        # named as grub*.efi (follow-up loader is shim compile time option)
+        # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
+        # if shim is used, bootloader can be actually also elilo
+        # elilo is not smart enough to look for them outside ...
+        Log "Copying kernel"
+
+        # copy initrd and kernel inside efi_boot image as
+        cp -pL $v $KERNEL_FILE $TMP_DIR/mnt/EFI/BOOT/kernel >&2
+        StopIfError "Could not copy kernel to UEFI"
+        cp $v $TMP_DIR/initrd.cgz $TMP_DIR/mnt/EFI/BOOT/initrd.cgz >&2
+        StopIfError "Could not copy initrd to UEFI"
+        create_ebiso_elilo_conf > $TMP_DIR/mnt/EFI/BOOT/elilo.conf 
+        create_grub2_cfg > $TMP_DIR/mnt/EFI/BOOT/grub.cfg
+    fi
 fi
 
 if [[ -n "$(type -p grub)" ]]; then
@@ -47,47 +61,7 @@ configfile /EFI/BOOT/grub.cfg
 EOF
 
 # create a grub.cfg
-cat > $TMP_DIR/mnt/EFI/BOOT/grub.cfg << EOF
-set default="0"
-
-insmod efi_gop
-insmod efi_uga
-insmod video_bochs
-insmod video_cirrus
-insmod all_video
-
-set gfxpayload=keep
-insmod gzio
-insmod part_gpt
-insmod ext2
-
-set timeout=5
-
-search --no-floppy --file /boot/efiboot.img --set
-#set root=(cd0)
-
-menuentry "Relax and Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
-     echo 'Loading kernel ...'
-     linux /isolinux/kernel
-     echo 'Loading initial ramdisk ...'
-     initrd /isolinux/initrd.cgz
-}
-
-menuentry "Relax and Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
-     echo 'Loading kernel ...'
-     linuxefi /isolinux/kernel
-     echo 'Loading initial ramdisk ...'
-     initrdefi /isolinux/initrd.cgz
-}
-
-menuentry "Reboot" {
-     reboot
-}
-
-menuentry "Exit to EFI Shell" {
-     quit
-}
-EOF
+    create_grub2_cfg > $TMP_DIR/mnt/EFI/BOOT/grub.cfg
 fi
 # create BOOTX86.efi
 build_bootx86_efi

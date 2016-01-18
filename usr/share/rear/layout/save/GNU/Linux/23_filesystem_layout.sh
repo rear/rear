@@ -1,5 +1,12 @@
 # Save Filesystem layout
 Log "Begin saving filesystem layout"
+# If available wipefs is used in the recovery system by 13_include_filesystem_code.sh
+# as a generic way to cleanup disk partitions before creating a filesystem on a disk partition,
+# see https://github.com/rear/rear/issues/540
+# and https://github.com/rear/rear/issues/649#issuecomment-148725865
+# Therefore if wipefs exists here in the original system it is added to REQUIRED_PROGS
+# so that it will become also available in the recovery system (cf. 26_crypt_layout.sh):
+has_binary wipefs && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" wipefs ) || true
 # Comma separated list of filesystems that is used for "mount/findmnt -t <list,of,filesystems>" below:
 supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"
 # Read filesystem information from the system by default using the traditional mount command
@@ -74,6 +81,13 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             Log "Mapping $device to $ndevice"
             device=$ndevice
         fi
+        # FIXME: is the above condition still needed if the following is in place?
+        # get_device_name and get_device_name_mapping below should canonicalize obscured udev names
+
+        # work with the persistent dev name: address the fact than dm-XX may be different disk in the recovery environment
+        device=$(get_device_mapping $device)
+        device=$(get_device_name $device)
+
         # Output generic filesystem layout values:
         echo -n "fs $device $mountpoint $fstype"
         # Output filesystem specific layout values:
@@ -234,6 +248,11 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             read_mounted_btrfs_subvolumes_command="mount -t btrfs | cut -d ' ' -f 1,3,6"
         fi
         while read device subvolume_mountpoint mount_options btrfs_subvolume_path junk ; do
+
+            # work with the persistent dev name: address the fact than dm-XX may be different disk in the recovery environment
+            device=$(get_device_mapping $device)
+            device=$(get_device_name $device)
+
             if test -n "$device" -a -n "$subvolume_mountpoint" ; then
                 if test -z "$btrfsmountedsubvol_entry_exists" ; then
                     # Output header only once:
@@ -258,7 +277,9 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                     # (using subvolid=... can fail because the subvolume ID can be different during system recovery).
                     # Because both "mount ... -o subvol=/path/to/subvolume" and "mount ... -o subvol=path/to/subvolume" work
                     # the subvolume path can be specified with or without leading '/':
-                    btrfs_subvolume_path=$( grep " $subvolume_mountpoint btrfs " /etc/fstab | grep -o 'subvol=[^ ]*' | cut -s -d '=' -f 2 )
+                    btrfs_subvolume_path=$( egrep "[[:space:]]$subvolume_mountpoint[[:space:]]+btrfs[[:space:]]" /etc/fstab \
+                                            | egrep -v '^[[:space:]]*#' \
+                                            | grep -o 'subvol=[^ ]*' | cut -s -d '=' -f 2 )
                 fi
                 # Remove leading '/' from btrfs_subvolume_path (except it is only '/') to have same syntax for all entries and
                 # without leading '/' is more clear that it is not an absolute path in the currently mounted tree of filesystems
