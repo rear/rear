@@ -1,4 +1,8 @@
 = Configuration
+
+// FIXME: add a picture with a simple overview to explain the diff
+// between BACKUP and OUTPUT schemes
+
 The configuration is performed by changing _/etc/rear/local.conf_ or
 _/etc/rear/site.conf_.
 
@@ -22,7 +26,7 @@ Create a bootable ISO9660 image on disk as _rear-$(hostname).iso_
 
 OUTPUT=PXE::
 Create on a remote PXE/NFS server the required files (such as configuration
-file, kernel and initrd image
+file, kernel and initrd image)
 
 OUTPUT=OBDR::
 Create a bootable OBDR tape including the backup archive. Specify the OBDR
@@ -69,9 +73,9 @@ Write the image using sshfs and the SSH protocol.
 OUTPUT_URL=null::
 To avoid duplicate ISO images. Useful in combination with an _external_ backup program, or when +BACKUP_URL=iso://backup+
 
-The default boot option of the created ISO is boothd / "boot from first harddisk". If you want to change this, e.g. because you integrate REAR
-into some automation process, you can change the default using
-ISO_DEFAULT={manual,automatic,boothd}
+The default boot option of the created ISO is boothd / "boot from first harddisk". If you want to change this,
+e.g. because you integrate REAR into some automation process, you can change the default using
+_ISO_DEFAULT={manual,automatic,boothd}_
 
 
 == Backup/Restore strategy (BACKUP)
