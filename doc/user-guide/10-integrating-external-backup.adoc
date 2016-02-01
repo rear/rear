@@ -14,10 +14,12 @@ Well, what does this mean? Is my backup program capable of making full backups o
 If the CLI approach is working then this would be the preferred manor for rear. If on the other hand only GUI approach is possible, then can you initiate a push from the media server instead of the pull method (which we could program within rear)?
 
 So, most imprtant things to remember here are:
+
  * CLI - preferred method (and far the easiest one to integrate within rear) - pull method
  * GUI - as rear has no X Windows available (only command line) we cannot use the GUI within rear, however, GUI is still possible from another system (media server or backup server) and push out the restore to the recovered system. This method is similar to the REQUESTRESTORE BACKUP method.
 
 What does rear need to have on board before we can initiate a restore from your backup program?
+
  * the executables (and libraries) from your backup program (only client related)
  * configuration files required by above executables?
  * most likely you need the manuals a bit to gather some background information of your backup program around its minimum requirements
