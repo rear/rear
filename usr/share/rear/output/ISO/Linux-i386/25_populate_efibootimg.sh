@@ -25,7 +25,9 @@ fi
 # FIXME: do we need to test if we are ebiso at all?
 # copying kernel should happen for any ueafi mkiso tool with elilo
 if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" ]]; then
-    if [[ $(basename ${UEFI_BOOTLOADER}) =~ (shim.efi|elilo.efi) ]]; then 
+    # See https://github.com/rear/rear/issues/758 why 'test' is used here:
+    uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
+    if test "$uefi_bootloader_basename" = "shim.efi" -o "$uefi_bootloader_basename" = "elilo.efi" ; then
         # if shim is used, bootloader can be actually anything (also elilo)
         # named as grub*.efi (follow-up loader is shim compile time option)
         # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
