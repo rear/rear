@@ -52,22 +52,40 @@ EOT
 
 # collect list of all physical network interface cards
 # take all interfaces in /sys/class/net and subtract /sys/devices/virtual/net, bonding_masters
-ETHER_NICS=
-VIRTUAL_DEVICES=$(ls /sys/devices/virtual/net)
-for DEVICE in `ls /sys/class/net`
-do
-	if [ $DEVICE != "bonding_masters" ] && ! [[ $VIRTUAL_DEVICES =~ (^|[[:space:]])${DEVICE}($|[[:space:]]) ]]
-	then
-		ETHER_NICS+=" $DEVICE"
-	fi
+physical_network_interfaces=""
+# e.g. on SLES12 with KVM/QEMU 'ls /sys/devices/virtual/net' may result "br0 lo virbr1 virbr1-nic vnet0"
+virtual_network_interfaces=$( ls /sys/devices/virtual/net )
+# e.g. on SLES12 with KVM/QEMU 'ls /sys/class/net' may result "br0 eth0 lo virbr1 virbr1-nic vnet0"
+network_interfaces=$( ls /sys/class/net )
+# so that in this example using network_interfaces and subtracting virtual_network_interfaces
+# results "eth0" as the only physical network interface.
+# Note that when network_interfaces or virtual_network_interfaces is empty
+# then no commands are executed in the for-loops and the return status is 0
+# which is the right behaviour here (i.e. no additional "if empty" test needed) and
+# because network interface names do not allow spaces they can be just used in for-loops:
+for network_interface in $network_interfaces ; do
+    # See https://github.com/rear/rear/issues/758 why regular expression
+    # cannot be used here (because it does not work on all bash 3.x versions).
+    # Additionally one cannot use simple substring search because assume
+    # virtual_network_interfaces is "lo virt-eth0" and network_interfaces is "eth0 lo virt-eth0"
+    # then simple substring search would find "etho" as substring in "lo virt-eth0"
+    # so that to be on the safe side a dumb traditional for-loop approach is used
+    # (unitl someone implements a better solution that works on all bash 3.x versions):
+    for virtual_network_interface in $virtual_network_interfaces ; do
+        test "$network_interface" = "$virtual_network_interface" && network_interface=""
+    done
+    # bonding_masters is also no physical network interface:
+    test "$network_interface" = "bonding_masters" && network_interface=""
+    # Now network_interface is non-epmtry only for physical network interfaces:
+    test "$network_interface" && physical_network_interfaces+=" $network_interface"
 done
 
-# go over the network devices and record information
-# and, BTW, interfacenames luckily do not allow spaces :-)
-for dev in $ETHER_NICS ; do
-	sysfspath=/sys/class/net/$dev
+# go over the physical network interfaces and record information
+# and, BTW, network interface names luckily do not allow spaces :-)
+for physical_network_interface in $physical_network_interfaces ; do
+    sysfspath=/sys/class/net/$physical_network_interface
     # get mac address
-    mac="$(cat $sysfspath/address)"
+    mac="$( cat $sysfspath/address )"
     BugIfError "Could not read a MAC address from '$sysfspath/address'!"
 
     # skip fake interfaces without MAC address
@@ -78,10 +96,10 @@ for dev in $ETHER_NICS ; do
     # I lack experience with bonding setups to write this blindly, so please contribute better code
     #
     # keep mac address information for rescue system
-    echo "$dev $mac">>$ROOTFS_DIR/etc/mac-addresses
+    echo "$physical_network_interface $mac">>$ROOTFS_DIR/etc/mac-addresses
 
     # take information only from UP devices, we don't care about non-working devices.
-    ip link show dev $dev | grep -q UP || continue
+    ip link show dev $physical_network_interface | grep -q UP || continue
 
     # link is up
     # determine the driver to load, relevant only for non-udev environments
@@ -96,7 +114,7 @@ for dev in $ETHER_NICS ; do
         # this should work for virtio_net, xennet and vmxnet on older kernels (2.6.18)
         driver=$(basename $(readlink $sysfspath/driver))
     elif [[ -z "$driver" ]] && has_binary ethtool; then
-        driver=$(ethtool -i $dev 2>&8 | grep driver: | cut -d: -f2)
+        driver=$(ethtool -i $physical_network_interface 2>&8 | grep driver: | cut -d: -f2)
     fi
     if [[ "$driver" ]]; then
         if ! grep -q $driver /proc/modules; then
@@ -104,7 +122,7 @@ for dev in $ETHER_NICS ; do
         fi
         echo "$driver" >>$ROOTFS_DIR/etc/modules
     else
-        LogPrint "WARNING:   Could not determine network driver for '$dev'. Please make
+        LogPrint "WARNING:   Could not determine network driver for '$physical_network_interface'. Please make
 WARNING:   sure that it loads automatically (e.g. via udev) or add
 WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
     fi
@@ -120,17 +138,17 @@ WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
         done < $TMP_DIR/mappings/ip_addresses
     else
 
-        for addr in $(ip a show dev $dev scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
-            echo "ip addr add $addr dev $dev" >>$netscript
+        for addr in $(ip a show dev $physical_network_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
+            echo "ip addr add $addr dev $physical_network_interface" >>$netscript
         done
-        echo "ip link set dev $dev up" >>$netscript
+        echo "ip link set dev $physical_network_interface up" >>$netscript
     fi
 
     # record interface MTU
     if test -e "$sysfspath/mtu" ; then
         mtu="$(cat $sysfspath/mtu)"
         PrintIfError "Could not read a MTU address from '$sysfspath/mtu'!"
-        [[ "$mtu" ]] && echo "ip link set dev $dev mtu $mtu" >>$netscript
+        [[ "$mtu" ]] && echo "ip link set dev $physical_network_interface mtu $mtu" >>$netscript
     fi
 done
 
@@ -261,44 +279,43 @@ done
 
 # set up BONDS
 if ! test "$SIMPLIFY_BONDING" ; then
-	for BOND in ${BONDS[@]}
-	do
-		bond_setup $BOND
-	done
+    for BOND in ${BONDS[@]} ; do
+        bond_setup $BOND
+    done
 else
-	# The way to simplify the bonding is to copy the IP addresses from the bonding device to the
-	# *first* slave device
-
-	# Anpassung HZD: Hat ein System bei einer SLES10 Installation zwei Bonding-Devices
-	# gibt es Probleme beim Boot mit der Rear-Iso-Datei. Der Befehl modprobe -o name ...
-	# funkioniert nicht. Dadurch wird nur das erste bonding-Device koniguriert.
-	# Die Konfiguration des zweiten Devices schlägt fehl und dieses lässt sich auch nicht manuell
-	# nachinstallieren. Daher wurde diese script so angepasst, dass die Rear-Iso-Datei kein Bonding
-	# konfiguriert, sondern die jeweiligen IP-Adressen einer Netzwerkkarte des Bondingdevices
-	# zuordnet. Dadurch musste aber auch das script 35_routing.sh angepasst werden.
-
-	# go over bondX and record information
-	c=0
-	while : ; do
-		dev=bond$c
-		if test -r /proc/net/bonding/$dev ; then
-			if ip link show dev $dev | grep -q UP ; then
-				# link is up
-				ifslaves=($(cat /proc/net/bonding/$dev | grep "Slave Interface:" | cut -d : -f 2))
-				for addr in $(ip a show dev $dev scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
-					# ise ifslaves[0] instead of bond$c to copy IP address from bonding device
-					# to the first enslaved device
-					echo "ip addr add $addr dev ${ifslaves[0]}" >>$netscript
-				done
-				echo "ip link set dev ${ifslaves[0]} up" >>$netscript
-			fi
-		else
-			break # while loop
-		fi
-		let c++
-	done
-	
-	# fake BONDS_SET_UP, so that no recursive call tries to bring one up the not-simplified way
-	BONDS_SET_UP=${BONDS[@]}
+    # The way to simplify the bonding is to copy the IP addresses from the bonding device to the
+    # *first* slave device
+    #
+    # FIXME: Translate the following comment into globally comprehensible language (i.e. English!)
+    # Anpassung HZD: Hat ein System bei einer SLES10 Installation zwei Bonding-Devices
+    # gibt es Probleme beim Boot mit der Rear-Iso-Datei. Der Befehl modprobe -o name ...
+    # funkioniert nicht. Dadurch wird nur das erste bonding-Device koniguriert.
+    # Die Konfiguration des zweiten Devices schlaegt fehl und dieses laesst sich auch nicht manuell
+    # nachinstallieren. Daher wurde diese script so angepasst, dass die Rear-Iso-Datei kein Bonding
+    # konfiguriert, sondern die jeweiligen IP-Adressen einer Netzwerkkarte des Bondingdevices
+    # zuordnet. Dadurch musste aber auch das script 35_routing.sh angepasst werden.
+    #
+    # go over bondX and record information
+    c=0
+    while : ; do
+        bonding_device=bond$c
+        if test -r /proc/net/bonding/$bonding_device ; then
+            if ip link show dev $bonding_device | grep -q UP ; then
+                # link is up
+                ifslaves=($(cat /proc/net/bonding/$bonding_device | grep "Slave Interface:" | cut -d : -f 2))
+                for addr in $(ip a show dev $bonding_device scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
+                    # ise ifslaves[0] instead of bond$c to copy IP address from bonding device
+                    # to the first enslaved device
+                    echo "ip addr add $addr dev ${ifslaves[0]}" >>$netscript
+                done
+                echo "ip link set dev ${ifslaves[0]} up" >>$netscript
+            fi
+        else
+            break # while loop
+        fi
+        let c++
+    done
+    # fake BONDS_SET_UP, so that no recursive call tries to bring one up the not-simplified way
+    BONDS_SET_UP=${BONDS[@]}
 fi
 
