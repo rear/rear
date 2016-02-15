@@ -3,7 +3,8 @@
 # run a syslog daemon
 
 if type -p rsyslogd >/dev/null ; then
-        exec rsyslogd -c3 -n -i /var/run/rsyslogd.pid -f /etc/rsyslog.conf
+        ##exec rsyslogd -c3 -n -i /var/run/rsyslogd.pid -f /etc/rsyslog.conf
+        exec rsyslogd  -n -i /var/run/rsyslogd.pid -f /etc/rsyslog.conf
 elif type -p syslog-ng >/dev/null ; then
     # need get_version and version_newer functions
     . /usr/share/rear/lib/layout-functions.sh
