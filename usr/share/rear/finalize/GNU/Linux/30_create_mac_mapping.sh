@@ -1,10 +1,15 @@
+
 # we will create a $CONFIG_DIR/mappings/mac file if needed
-PATCH_FILES=( /mnt/local/etc/sysconfig/*/ifcfg-* )
+
+# because the bash option nullglob is set in rear (see usr/sbin/rear)
+# PATCH_FILES is empty if nothing matches $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*
+PATCH_FILES=( $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* )
 
 # skip if no network configuration files are found
 test $PATCH_FILES || return 0
 
-[[ -f $CONFIG_DIR/mappings/mac ]] && return 0	# if a "mac" is found no need to create one
+# if a "mac" is found no need to create one
+[[ -f $CONFIG_DIR/mappings/mac ]] && return 0
 
 for file in "${PATCH_FILES[@]}"; do
 	grep -q HWADDR $file || continue

@@ -1,8 +1,8 @@
-# remove existing disk-by-id mappings 
+# remove existing disk-by-id mappings
 #
 # We call sed once for each substituation
-# it would be better to build one sed script and use this later 
-# (like verify/GNU/Linux/21_migrate_recovery_configuration.sh 
+# it would be better to build one sed script and use this later
+# (like verify/GNU/Linux/21_migrate_recovery_configuration.sh
 #   and finalize/GNU/Linux/15_migrate_disk_devices.sh)
 #
 # OLD_ID_FILE contains entries like these (last 2 lines are multipath targets)
@@ -14,7 +14,7 @@
 # scsi-1HITACHI_770122800061 dm-1
 # scsi-1HITACHI_770122800062 dm-0
 #
-# Those devices have already been adjusted in 
+# Those devices have already been adjusted in
 # verify/GNU/Linux/21_migrate_recovery_configuration.sh
 
 FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg /boot/grub/device.map /boot/efi/*/*/grub.cfg /etc/lvm/lvm.conf"
@@ -60,28 +60,28 @@ while read ID DEV_NAME; do
 done < $OLD_ID_FILE > $NEW_ID_FILE
 
 for file in $FILES; do
-	realfile=/mnt/local/$file
+	realfile=$TARGET_FS_ROOT/$file
 	[ ! -f $realfile ] && continue	# if file is not there continue with next one
 	# keep backup
 	cp $realfile ${realfile}.rearbak
 	# we should consider creating a sed script within a string
 	# and then call sed once (as done other times)
 	while read ID DEV_NAME ID_NEW; do
-		if [ -n "$ID_NEW" ]; then 
+		if [ -n "$ID_NEW" ]; then
 			# great, we found a new device
 			ID_FULL=/dev/disk/by-id/$ID
 			ID_NEW_FULL=/dev/disk/by-id/$ID_NEW
 			sed -i "s#$ID_FULL\([^-a-zA-Z0-9]\)#$ID_NEW_FULL\1#g" \
 				$realfile
-			#                 ^^^^^^^^^^^^^^^ 
+			#                 ^^^^^^^^^^^^^^^
 			# This is to make sure we get the full ID (and not
 			# a substring) because we ask sed for a char other then
-			# those contained in IDs. 
+			# those contained in IDs.
             # This does not work with IDs at line end: substitute also those:
 			sed -i "s#$ID_FULL\$#$ID_NEW_FULL#g" $realfile
 		else
 			# lets try with the DEV_NAME as fallback
-			[ -z "$DEV_NAME" ] && continue 
+			[ -z "$DEV_NAME" ] && continue
 			# not even DEV_NAME exists, we can't do anything
 			ID_FULL=/dev/disk/by-id/$ID
 			sed -i "s#$ID_FULL\([^-a-zA-Z0-9]\)#/dev/$DEV_NAME\1#g" \

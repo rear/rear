@@ -2,12 +2,12 @@
 LogPrint "Installing PPC PReP Boot partition."
 
 # Find PPC PReP Boot partitions
-if test -f /mnt/local/etc/yaboot.conf; then
-  part=`awk -F '=' '/^boot=/ {print $2}' /mnt/local/etc/yaboot.conf`
+if test -f $TARGET_FS_ROOT/etc/yaboot.conf; then
+  part=$( awk -F '=' '/^boot=/ {print $2}' $TARGET_FS_ROOT/etc/yaboot.conf )
 
   if [ -n "$part" ]; then
     LogPrint "Boot partion found: $part"
-    chroot /mnt/local /bin/bash --login -c "/sbin/lilo"
+    chroot $TARGET_FS_ROOT /bin/bash --login -c "/sbin/lilo"
     bootdev=`echo $part | sed -e 's/[0-9]*$//'`
     LogPrint "Boot device is $bootdev."
     NOBOOTLOADER=
@@ -17,7 +17,7 @@ if test -f /mnt/local/etc/yaboot.conf; then
     for part in $bootparts
     do
       LogPrint "Initializing boot partition $part."
-      chroot /mnt/local /bin/bash --login -c "/sbin/lilo"
+      chroot $TARGET_FS_ROOT /bin/bash --login -c "/sbin/lilo"
     done
     bootdev=`for part in $bootparts
              do

@@ -7,7 +7,7 @@ cat <<EOF >"$LAYOUT_CODE"
 
 LogPrint "Start system layout restoration."
 
-mkdir -p /mnt/local
+mkdir -p $TARGET_FS_ROOT
 if create_component "vgchange" "rear" ; then
     lvm vgchange -a n >&8
     component_created "vgchange" "rear"

@@ -13,11 +13,11 @@ star ()
 }
 #-----<--------->-------
 
-LogPrint "NetBackup: restoring / into /mnt/local"
+LogPrint "NetBackup: restoring / into $TARGET_FS_ROOT"
 
 # $TMP_DIR/restore_fs_list was made by 30_create_nbu_restore_fs_list.sh
 
-echo "change / to /mnt/local" > $TMP_DIR/nbu_change_file
+echo "change / to $TARGET_FS_ROOT" > $TMP_DIR/nbu_change_file
 
 # Do not use ARGS here because that is readonly in the rear main script:
 if [ ${#NBU_ENDTIME[@]} -gt 0 ]

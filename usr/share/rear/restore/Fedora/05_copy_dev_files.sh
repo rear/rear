@@ -5,4 +5,4 @@
 # The solution is to copy a rudimentary set of /dev entries into the restored system
 # We take these from the rescue system.
 
-cp -a /dev/. /mnt/local/dev/
+cp -a /dev/. $TARGET_FS_ROOT/dev/

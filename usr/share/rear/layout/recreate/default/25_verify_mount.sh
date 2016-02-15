@@ -1,6 +1,6 @@
-### Verify that a filesystem has been mounted at /mnt/local
+### Verify that a filesystem has been mounted at $TARGET_FS_ROOT (by default /mnt/local)
 ### Failure would lead to OOM conditions (restore to the ramdisk)
 
-if diff -u <( df -P /mnt/local ) <( df -P / ) >&8 ; then
-    Error "No filesystem mounted on /mnt/local. Stopping."
+if diff -u <( df -P $TARGET_FS_ROOT ) <( df -P / ) >&8 ; then
+    Error "No filesystem mounted on '$TARGET_FS_ROOT'. Stopping."
 fi

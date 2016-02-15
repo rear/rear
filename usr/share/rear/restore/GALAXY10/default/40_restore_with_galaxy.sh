@@ -25,7 +25,7 @@ $GALAXY10_BACKUPSET
 [sourcepaths]
 /
 [destinationpath]
-/mnt/local
+$TARGET_FS_ROOT
 EOF
 
 if [ "x$GALAXY10_ZEIT" != "x" ]; then
@@ -80,7 +80,7 @@ else
 fi
 
 # create missing directories
-pushd /mnt/local >&8
+pushd $TARGET_FS_ROOT >&8
 for dir in opt/simpana/Base/Temp opt/simpana/Updates opt/simpana/iDataAgent/jobResults ; do
 	mkdir -p "$dir"
 done

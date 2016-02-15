@@ -26,10 +26,10 @@ RULE_FILES=( $( echo /etc/udev/rules.d/*persistent*{names,net,cd}.rules ) )
 # preserving a backup in /root/rear-*.old
 for rule in "${RULE_FILES[@]}" ; do
 	rulefile="$(basename "$rule")"
-	if test -s "$rule" && ! diff -q "$rule" /mnt/local/"$rule" >&8 ; then
+	if test -s "$rule" && ! diff -q "$rule" $TARGET_FS_ROOT/"$rule" >&8 ; then
 		LogPrint "Updating udev configuration ($rulefile)"
-		cp /mnt/local/"$rule" /mnt/local/root/rear-"$rulefile".old
-		cp "$rule" /mnt/local/"$rule"
-		StopIfError "Could not copy '$rule' -> '/mnt/local/$rule'"
+		cp $TARGET_FS_ROOT/"$rule" $TARGET_FS_ROOT/root/rear-"$rulefile".old
+		cp "$rule" $TARGET_FS_ROOT/"$rule"
+		StopIfError "Could not copy '$rule' -> '$TARGET_FS_ROOT/$rule'"
 	fi
 done

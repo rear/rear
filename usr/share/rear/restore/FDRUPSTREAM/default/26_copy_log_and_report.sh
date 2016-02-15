@@ -8,7 +8,7 @@ echo
 for file in $FDRUPSTREAM_INSTALL_PATH/*.log $FDRUPSTREAM_INSTALL_PATH/*.rpt; do
     LogPrint "Archiving "$( basename "$file" )" to the restored system as:"
     LogPrint "  $( basename "$file" ).$EXTENSION"
-    cp "$file" "/mnt/local/$file.$EXTENSION"
-    LogPrintIfError "Error archiving $file.  Before rebooting, be sure to copy logs and/or reports from $FDRUPSTREAM_INSTALL_PATH into the /mnt/local file tree."
+    cp "$file" "$TARGET_FS_ROOT/$file.$EXTENSION"
+    LogPrintIfError "Error archiving $file.  Before rebooting, be sure to copy logs and/or reports from $FDRUPSTREAM_INSTALL_PATH into the $TARGET_FS_ROOT file tree."
     echo
 done

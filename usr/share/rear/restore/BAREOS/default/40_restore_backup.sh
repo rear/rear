@@ -50,21 +50,21 @@ necessary to restore - typically it will be a full backup.
 
 Do not exit 'bextract' until all files are restored.
 
-WARNING: The new root is mounted under '/mnt/local'.
+WARNING: The new root is mounted under '$TARGET_FS_ROOT'.
 "
         read -p "Press ENTER to start bextract" 2>&1
 
-        bextract$exclude_list -V$BEXTRACT_VOLUME /backup /mnt/local
+        bextract$exclude_list -V$BEXTRACT_VOLUME /backup $TARGET_FS_ROOT
 
         LogPrint "
-Please verify that the backup has been restored correctly to '/mnt/local'
+Please verify that the backup has been restored correctly to '$TARGET_FS_ROOT'
 in the provided shell. When finished, type exit in the shell to continue
 recovery.
 "
-        rear_shell "Did the backup successfully restore to '/mnt/local' ? Ready to continue ?" \
+        rear_shell "Did the backup successfully restore to '$TARGET_FS_ROOT' ? Ready to continue ?" \
             "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
 vi bootstrap.txt
-bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/local"
+bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE $TARGET_FS_ROOT"
 
     else
 
@@ -73,20 +73,20 @@ bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/
 
         LogPrint "The bextract command looks like:
 
-   bextract$exclude_list -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/local
+   bextract$exclude_list -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE $TARGET_FS_ROOT
 
-Where \"$BEXTRACT_VOLUME\" is the required Volume name of the tape,
+Where '$BEXTRACT_VOLUME' is the required Volume name of the tape,
 alternatively, use '*' if you don't know the volume,
-and \"$BEXTRACT_DEVICE\" is the Bareos device name of the tape drive.
+and '$BEXTRACT_DEVICE' is the Bareos device name of the tape drive.
 "
 
         LogPrint "Please restore your backup in the provided shell, use the shell history to
 access the above command and, when finished, type exit in the shell to continue recovery.
 "
-        rear_shell "Did you restore the backup to /mnt/local ? Ready to continue ?" \
+        rear_shell "Did you restore the backup to '$TARGET_FS_ROOT' ? Ready to continue ?" \
             "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
 vi bootstrap.txt
-bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/local"
+bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE $TARGET_FS_ROOT"
 
     fi
 
@@ -101,13 +101,13 @@ else
         then
                 BAREOS_CLIENT=$(grep $(hostname -s) /etc/bareos/bareos-fd.conf | awk '/-fd/ {print $3}' )
         fi
-	
+
 	if [ -n "$BAREOS_FILESET" ]
 	then
 		FILESET="fileset=\"$BAREOS_FILESET\""
 	fi
 
-        echo "restore client=$BAREOS_CLIENT $FILESET where=/mnt/local select all done
+        echo "restore client=$BAREOS_CLIENT $FILESET where=$TARGET_FS_ROOT select all done
 
 " |     bconsole
 
@@ -138,7 +138,7 @@ to restore - typically it will be a full backup.
 
 Do not exit 'bconsole' until all files are restored
 
-WARNING: The new root is mounted under '/mnt/local'.
+WARNING: The new root is mounted under '$TARGET_FS_ROOT'.
 
 Press ENTER to start bconsole"
         read
@@ -146,7 +146,7 @@ Press ENTER to start bconsole"
         bconsole
     fi
     LogPrint "
-Please verify that the backup has been restored correctly to '/mnt/local'
+Please verify that the backup has been restored correctly to '$TARGET_FS_ROOT'
 in the provided shell. When finished, type exit in the shell to continue
 recovery.
 "
@@ -154,16 +154,16 @@ recovery.
 if [ "$ISO_DEFAULT" != "unattended" ]
 then
 
-    rear_shell "Did the backup successfully restore to '/mnt/local' ? Ready to continue ?" \
+    rear_shell "Did the backup successfully restore to '$TARGET_FS_ROOT' ? Ready to continue ?" \
             "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
 vi bootstrap.txt
-bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE /mnt/local"
+bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE $TARGET_FS_ROOT"
 fi
 
 fi
 
 
-mkdir /mnt/local/var/lib/bareos && chroot /mnt/local chown bareos: /var/lib/bareos
+mkdir $TARGET_FS_ROOT/var/lib/bareos && chroot $TARGET_FS_ROOT chown bareos: /var/lib/bareos
 
 LogPrint "Bareos restore finished."
 

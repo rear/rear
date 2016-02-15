@@ -19,31 +19,31 @@ fi
 [[ $(type -p grub-probe) || $(type -p grub2-probe) ]] || return
 
 LogPrint "Installing GRUB2 boot loader"
-mount -t proc none /mnt/local/proc
+mount -t proc none $TARGET_FS_ROOT/proc
 
 if [[ -r "$LAYOUT_FILE" ]]; then
 
     # Check if we find GRUB where we expect it
-    [[ -d "/mnt/local/boot" ]]
+    [[ -d "$TARGET_FS_ROOT/boot" ]]
     StopIfError "Could not find directory /boot"
 
     # grub2 can be in /boot/grub or /boot/grub2
     grub_name="grub2"
-    if [[ ! -d "/mnt/local/boot/$grub_name" ]] ; then
+    if [[ ! -d "$TARGET_FS_ROOT/boot/$grub_name" ]] ; then
         grub_name="grub"
-        [[ -d "/mnt/local/boot/$grub_name" ]]
+        [[ -d "$TARGET_FS_ROOT/boot/$grub_name" ]]
         StopIfError "Could not find directory /boot/$grub_name"
     fi
-    [[ -r "/mnt/local/boot/$grub_name/grub.cfg" ]]
+    [[ -r "$TARGET_FS_ROOT/boot/$grub_name/grub.cfg" ]]
     LogIfError "Unable to find /boot/$grub_name/grub.cfg."
 
-    # Find PPC PReP Boot partition 
-    part=`awk -F ' ' '/^part / {if ($6 ~ /prep/) {print $7}}' $LAYOUT_FILE`
+    # Find PPC PReP Boot partition
+    part=$( awk -F ' ' '/^part / {if ($6 ~ /prep/) {print $7}}' $LAYOUT_FILE )
 
     if [ -n "$part" ]; then
         LogPrint "Boot partition found: $part"
         dd if=/dev/zero of=$part
-        chroot /mnt/local /bin/bash --login -c "$grub_name-install $part"
+        chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $part"
         # Run bootlist only in PowerVM environment
         if ! grep -q "PowerNV" /proc/cpuinfo && ! grep -q "emulated by qemu" /proc/cpuinfo ; then
             bootdev=`echo $part | sed -e 's/[0-9]*$//'`
@@ -56,7 +56,6 @@ fi
 
 if [[ "NOBOOTLOADER" ]]; then
     LogIfError "No bootloader configuration found. Install boot partition manually"
-fi    
+fi
 
-#for i in /dev /dev/pts /proc /sys; do umount  /mnt/local${i} ; done
-umount /mnt/local/proc
+umount $TARGET_FS_ROOT/proc

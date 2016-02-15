@@ -1,9 +1,9 @@
 # only useful for UEFI systems in combination with grub[2]-efi
 (( USING_UEFI_BOOTLOADER )) || return  # empty or 0 means using BIOS
 
-# check if /mnt/local/boot/efi is mounted
-[[ -d "/mnt/local/boot/efi" ]]
-StopIfError "Could not find directory /mnt/local/boot/efi"
+# check if $TARGET_FS_ROOT/boot/efi is mounted
+[[ -d "$TARGET_FS_ROOT/boot/efi" ]]
+StopIfError "Could not find directory $TARGET_FS_ROOT/boot/efi"
 
 BootEfiDev="$( mount | grep "boot/efi" | awk '{print $1}' )"
 Dev=$( get_device_name $BootEfiDev )    # /dev/sda1 or /dev/mapper/vol34_part2 or /dev/mapper/mpath99p4

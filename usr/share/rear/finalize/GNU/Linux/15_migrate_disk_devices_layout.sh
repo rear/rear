@@ -5,7 +5,10 @@ if [[ ! -s "$MAPPING_FILE" ]] ; then
 fi
 
 ### reuse the script in layout/prepare/default/32_apply_mappings.sh
-pushd /mnt/local >&8
+# FIXME: Why is there is no matching popd for this pushd?
+# Cf. usr/share/rear/finalize/GNU/Linux/15_migrate_uuid_tags.sh where a popd is at the end.
+# If there is intentionally no popd here an explanation why there is no popd is missing.
+pushd $TARGET_FS_ROOT >&8
 # the funny [] around the first letter make sure that shopt -s nullglob removes this file from the list if it does not exist
 # the files without a [] are mandatory, like fstab
 for file in     [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/{grub.conf,menu.lst,device.map} \
