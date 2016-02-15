@@ -1,5 +1,5 @@
 # skip if yaboot conf is not found
-if test ! -f /mnt/local/etc/yaboot.conf; then
+if test ! -f $TARGET_FS_ROOT/etc/yaboot.conf; then
   return
 fi
 
@@ -7,11 +7,11 @@ fi
 LogPrint "Installing PPC PReP Boot partition."
 
 # Find PPC PReP Boot partitions
-part=`awk -F '=' '/^boot=/ {print $2}' /mnt/local/etc/yaboot.conf`
+part=$( awk -F '=' '/^boot=/ {print $2}' $TARGET_FS_ROOT/etc/yaboot.conf )
 
 if [ -n "$part" ]; then
   LogPrint "Boot partion found: $part"
-  chroot /mnt/local /bin/bash --login -c "/sbin/mkofboot -b $part --filesystem raw -f"
+  chroot $TARGET_FS_ROOT /bin/bash --login -c "/sbin/mkofboot -b $part --filesystem raw -f"
   bootdev=`echo $part | sed -e 's/[0-9]*$//'`
   LogPrint "Boot device is $bootdev."
   bootlist -m normal $bootdev
@@ -22,7 +22,7 @@ else
   for part in $bootparts
   do
     LogPrint "Initializing boot partition $part."
-    chroot /mnt/local /bin/bash --login -c "/sbin/mkofboot -b $part --filesystem raw -f"
+    chroot $TARGET_FS_ROOT /bin/bash --login -c "/sbin/mkofboot -b $part --filesystem raw -f"
   done
   bootdev=`for part in $bootparts
            do

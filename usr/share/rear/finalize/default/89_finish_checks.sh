@@ -24,7 +24,7 @@ $SHARE_DIR/finalize/Linux-i386/22_install_grub2.sh
 |                                                                     |
 -----------------------------------------------------------------------
 
-You can use 'chroot /mnt/local bash --login' to access the recovered system.
+You can use 'chroot $TARGET_FS_ROOT bash --login' to access the recovered system.
 Please remember to mount /proc before trying to install a boot loader.
 "
 

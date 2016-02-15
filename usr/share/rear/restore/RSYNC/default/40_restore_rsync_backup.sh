@@ -1,7 +1,7 @@
 # Restore the remote backup via RSYNC
 
 get_size() {
-	echo $(stat --format '%s' "/mnt/local/$1")
+	echo $( stat --format '%s' "$TARGET_FS_ROOT/$1" )
 }
 
 mkdir -p "${TMP_DIR}/rsync/${NETFS_PREFIX}"
@@ -18,15 +18,15 @@ ProgressStart "Restore operation"
 			case $RSYNC_PROTO in
 
 				(ssh)
-					Log $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"/ /mnt/local/
+					Log $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"/ $TARGET_FS_ROOT/
 					$BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" \
 					"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/backup"/ \
-					/mnt/local/
+					$TARGET_FS_ROOT/
 					;;
 
 				(rsync)
 					$BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" \
-					"${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup"/ /mnt/local/
+					"${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup"/ $TARGET_FS_ROOT/
 					;;
 
 			esac

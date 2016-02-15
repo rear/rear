@@ -6,11 +6,11 @@
 Log "Request for a manual restore via the GUI"
 
 echo "
-***************************************************************************
-**  Please try to push the backups of the latest session from DP GUI     **
-**  Make sure you select \"overwrite\" (destination tab) and make the      **
-**  new destination /mnt/local.                                          **
-**  When the restore is complete press ANY key to continue!              **
-***************************************************************************
+**********************************************************************
+**  Please try to push the backups of the latest session from DP GUI
+**  Make sure you select \"overwrite\" (destination tab) and make the
+**  new destination $TARGET_FS_ROOT.
+**  When the restore is complete press ANY key to continue!
+**********************************************************************
 "
    read answer

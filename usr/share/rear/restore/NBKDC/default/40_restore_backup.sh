@@ -24,16 +24,16 @@ LogPrint "
 
 The System is now ready for restore. Please start the restore task
 from the NovaBACKUP DataCenter Central Management!
-It's assumed that you know what is necessary 
+It's assumed that you know what is necessary
 to restore - typically it will be a full backup.
 
-!!! Remember that the restore target must be set to '/mnt/local' !!!
+!!! Remember that the restore target must be set to '$TARGET_FS_ROOT' !!!
 
 For further documentation see the following link:
  http://www.novastor.com/help-html/dc/en-US/index.html
 
 
-Please verify that the backup has been restored correctly to '/mnt/local'.
+Please verify that the backup has been restored correctly to '$TARGET_FS_ROOT'.
 
 "
 #When finished, type 'exit' to continue recovery.
@@ -42,13 +42,13 @@ Please verify that the backup has been restored correctly to '/mnt/local'.
 # Suppress the motd, as it is only confusing at this stage
 #mv /etc/motd ~/.hushlogin
 
-#rear_shell "Did you restore the backup to /mnt/local ? Are you ready to continue recovery ?"
+#rear_shell "Did you restore the backup to $TARGET_FS_ROOT ? Are you ready to continue recovery ?"
 
 # Now we can make the motd available for further use
 #mv ~/.hushlogin /etc/motd
 
 while true ;do
-    echo -n "Have you successfully restored the backup to /mnt/local ? Are you ready ro continue recovery? (y/n) "
+    echo -n "Have you successfully restored the backup to $TARGET_FS_ROOT ? Are you ready ro continue recovery? (y/n) "
     read INP
     if [[ "$INP" =~ ^[Yy1] ]]; then
         LogPrint "Done with restore. Continuing recovery."

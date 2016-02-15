@@ -19,8 +19,8 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     test "${filespace:0-1}" == "/" || filespace="$filespace/"
     LogPrint "Restoring ${filespace}"
     TsmProcessed=""
-    Log "Running 'dsmc restore ${filespace}* /mnt/local/$filespace -verbose -subdir=yes -replace=all -tapeprompt=no ${TSM_DSMC_RESTORE_OPTIONS[@]}'"
-    LC_ALL=${LANG_RECOVER} dsmc restore \""${filespace}"\" \""/mnt/local/${filespace}/"\"  \
+    Log "Running 'dsmc restore ${filespace}* $TARGET_FS_ROOT/$filespace -verbose -subdir=yes -replace=all -tapeprompt=no ${TSM_DSMC_RESTORE_OPTIONS[@]}'"
+    LC_ALL=${LANG_RECOVER} dsmc restore \""${filespace}"\" \""$TARGET_FS_ROOT/${filespace}/"\"  \
         -verbose -subdir=yes -replace=all \
         -tapeprompt=no "${TSM_DSMC_RESTORE_OPTIONS[@]}" | \
     while read Line ; do

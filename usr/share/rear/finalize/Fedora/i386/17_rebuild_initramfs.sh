@@ -36,10 +36,10 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 
 	WITH_INITRD_MODULES=$( printf '%s\n' ${INITRD_MODULES[@]} | awk '{printf "--with=%s ", $1}' )
 
-	mount -t proc none /mnt/local/proc
-	mount -t sysfs none /mnt/local/sys
+	mount -t proc none $TARGET_FS_ROOT/proc
+	mount -t sysfs none $TARGET_FS_ROOT/sys
 
-        # Recreate any initrd or initramfs image under /mnt/local/boot/ with new drivers
+        # Recreate any initrd or initramfs image under $TARGET_FS_ROOT/boot/ with new drivers
         # Images ignored:
         # kdump images as they are build by kdump
         # initramfs rescue images (>= Rhel 7), which need all modules and
@@ -48,13 +48,13 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 
         unalias ls 2>/dev/null
 
-        for INITRD_IMG in $(ls /mnt/local/boot/initramfs-*.img /mnt/local/boot/initrd-*.img | egrep -v '(kdump|rescue|plymouth)') ; do
+        for INITRD_IMG in $( ls $TARGET_FS_ROOT/boot/initramfs-*.img $TARGET_FS_ROOT/boot/initrd-*.img | egrep -v '(kdump|rescue|plymouth)' ) ; do
             # do not use KERNEL_VERSION here because that is readonly in the rear main script:
             kernel_version=$( basename $( echo $INITRD_IMG ) | cut -f2- -d"-" | sed s/"\.img"// )
             INITRD=$( echo $INITRD_IMG|egrep -o "/boot/.*" )
 
             echo "Running mkinitrd..."
-            if chroot /mnt/local /bin/bash --login -c "mkinitrd -v -f ${WITH_INITRD_MODULES[@]} $INITRD $kernel_version" >&2 ; then
+            if chroot $TARGET_FS_ROOT /bin/bash --login -c "mkinitrd -v -f ${WITH_INITRD_MODULES[@]} $INITRD $kernel_version" >&2 ; then
                 LogPrint "Updated initramfs with new drivers for Kernel $kernel_version."
             else
                 LogPrint "WARNING !!!
@@ -66,6 +66,6 @@ and decide yourself, wether the system will boot or not.
 
         done
 
-	umount /mnt/local/proc /mnt/local/sys
+	umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
 
 fi

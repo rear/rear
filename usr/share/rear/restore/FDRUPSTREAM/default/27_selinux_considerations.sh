@@ -3,7 +3,7 @@
 #
 
 # ---- Is this a standard path for the selinux config file?
-if [ $( grep "SELINUX=enforcing" /mnt/local/etc/selinux/config ) ]; then
+if [ $( grep "SELINUX=enforcing" $TARGET_FS_ROOT/etc/selinux/config ) ]; then
 # ----
     echo
     echo "SELinux is currently set to enforcing mode."
@@ -14,7 +14,7 @@ if [ $( grep "SELINUX=enforcing" /mnt/local/etc/selinux/config ) ]; then
         echo "Would you like to relabel on next boot? (y/n)"
         read ANSWER
         case $ANSWER in
-            [Yy] ) touch /mnt/local/.autorelabel; break;;
+            [Yy] ) touch $TARGET_FS_ROOT/.autorelabel; break;;
             [Nn] ) break;;
             * ) echo; echo "Please answer 'y' or 'n'";;
         esac

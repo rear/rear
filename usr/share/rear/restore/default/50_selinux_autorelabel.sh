@@ -5,5 +5,5 @@
 [[ ! "$BACKUP_SELINUX_DISABLE"  =~ ^[yY1] ]] && return
 
 # force relabeling after reboot of the recovered system
-touch /mnt/local/.autorelabel
+touch $TARGET_FS_ROOT/.autorelabel
 Log "Created /.autorelabel file : after reboot SELinux will relabel all files"

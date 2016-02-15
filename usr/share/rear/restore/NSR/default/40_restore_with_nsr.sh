@@ -6,8 +6,8 @@ TERM=linux nsrwatch -p 1 -s $(cat $VAR_DIR/recovery/nsr_server ) </dev/tty8 >/de
 LogPrint "Restore filesystem $(cat $VAR_DIR/recovery/nsr_paths) with recover"
 
 BLANK=" "
-recover -s $(cat $VAR_DIR/recovery/nsr_server) -c $(hostname) -d /mnt/local -a $(cat $VAR_DIR/recovery/nsr_paths) 2>&1 | \
-while read -r ; do 
+recover -s $(cat $VAR_DIR/recovery/nsr_server) -c $(hostname) -d $TARGET_FS_ROOT -a $(cat $VAR_DIR/recovery/nsr_paths) 2>&1 | \
+while read -r ; do
     echo -ne "\r${BLANK:1-COLUMNS}\r"
     case "$REPLY" in
         *:*\ *)	echo "$REPLY" ;;
@@ -17,7 +17,7 @@ while read -r ; do
                     echo -n "$REPLY"
                 fi
                 ;;
-        *)	echo "$REPLY" ;; 
-    esac 
+        *)	echo "$REPLY" ;;
+    esac
 done
 

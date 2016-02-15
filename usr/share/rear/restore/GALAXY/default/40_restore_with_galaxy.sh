@@ -36,7 +36,7 @@
 		-inst "\"$GALAXY_INSTANCE\"" -bs "\"$GALAXY_BACKUPSET\"" \
 		-srcPath '"/"' -ft 0 -tt 0 -jobStat 0 -bkpLevel 0 \
 		-agedData 0 -opt 4224 -dCl "\"$SHORTHOST\"" \
-		-dPath '"/mnt/local"' -mFile '""' -rstUnMap 0 \
+		-dPath "\"$TARGET_FS_ROOT\"" -mFile '""' -rstUnMap 0 \
 		-cpPreVal 0 -dPathLevels 1 -if 0 -strmCount -1 \
 		-devNode 0 -devAsReg 0 -mode sync -ss 0
 	#-------------- till here
@@ -63,6 +63,6 @@
 StopIfError "Galaxy aborted"
 
 # create missing directories
-pushd /mnt/local >&8
+pushd $TARGET_FS_ROOT >&8
 mkdir -p opt/galaxy/Base/Temp opt/galaxy/Updates opt/galaxy/iDataAgent/jobResults
 popd >&8

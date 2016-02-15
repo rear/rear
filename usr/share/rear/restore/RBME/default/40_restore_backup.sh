@@ -12,7 +12,7 @@ case $scheme in
     (local|nfs)
         [[ -d $BUILD_DIR/outputfs/$RBME_HOSTNAME/$RBME_BACKUP ]]
         BugIfError "Backup $RBME_BACKUP not found in $BACKUP_URL$RBME_HOSTNAME/."
-        rsync -aSH $BUILD_DIR/outputfs/$RBME_HOSTNAME/$RBME_BACKUP/* /mnt/local/
+        rsync -aSH $BUILD_DIR/outputfs/$RBME_HOSTNAME/$RBME_BACKUP/* $TARGET_FS_ROOT/
         ;;
     *)
         return
@@ -31,7 +31,7 @@ sleep 1 # Give the backup software a good chance to start working
 unset size
 # while the restore runs in a sub-process, display some progress information to the user
 while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
-    size=$(df -P /mnt/local | tail -1 | awk '{print $3}')
+    size=$( df -P $TARGET_FS_ROOT | tail -1 | awk '{print $3}' )
     ProgressInfo "Restored $((size/1024)) MiB [avg $((size/(SECONDS-starttime))) KiB/sec]"
 done
 

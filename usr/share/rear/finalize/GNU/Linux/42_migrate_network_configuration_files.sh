@@ -1,7 +1,9 @@
 # rewrite all the network configuration files for SUSE LINUX according
 # to the mapping files
 
-PATCH_FILES=( /mnt/local/etc/sysconfig/*/ifcfg-* )
+# because the bash option nullglob is set in rear (see usr/sbin/rear)
+# PATCH_FILES is empty if nothing matches $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*
+PATCH_FILES=( $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* )
 
 # skip if no network configuration files are found
 test $PATCH_FILES || return 0
@@ -59,7 +61,7 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
 
     join -1 3 $TMP_DIR/mappings/mac $TMP_DIR/mappings/ip_addresses |\
     while read dev old_mac new_mac new_ip ; do
-        for network_file in /mnt/local/etc/sysconfig/*/ifcfg-*${new_mac}* /mnt/local/etc/sysconfig/*/ifcfg-*${dev}*; do
+        for network_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${new_mac}* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${dev}*; do
             # RHEL 4, 5,... cannot handle IPADDR="x.x.x.x/cidr"
             nmask=$(prefix2netmask ${new_ip#*/})    # ipaddress/cidr (recalculate the cidr)
             if [[ "$nmask" = "0.0.0.0" ]]; then
@@ -81,9 +83,9 @@ fi
 # set the new routes if a mapping file is available
 if test -s $TMP_DIR/mappings/routes ; then
     while read destination gateway device junk ; do
-    #   echo "$destination $gateway - $device" >> /mnt/local/etc/sysconfig/network/routes
+    #   echo "$destination $gateway - $device" >> $TARGET_FS_ROOT/etc/sysconfig/network/routes
         if [[ "$destination" = "default" ]]; then
-            for network_file in /mnt/local/etc/sysconfig/*/ifcfg-*${device}* /mnt/local/etc/sysconfig/network ; do
+            for network_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${device}* $TARGET_FS_ROOT/etc/sysconfig/network ; do
                 SED_SCRIPT="s#^GATEWAY=.*#GATEWAY='$gateway'#g;s#^GATEWAYDEV=.*#GATEWAYDEV='$device'#g"
                 Log "SED_SCRIPT: '$SED_SCRIPT'"
                 sed -i -e "$SED_SCRIPT" "$network_file"
@@ -91,7 +93,7 @@ if test -s $TMP_DIR/mappings/routes ; then
             done
         else
             # static-routes or route-<device> settings?
-            for network_file in /mnt/local/etc/sysconfig/*/route-*${device}* /mnt/local/etc/sysconfig/static-routes ; do
+            for network_file in $TARGET_FS_ROOT/etc/sysconfig/*/route-*${device}* $TARGET_FS_ROOT/etc/sysconfig/static-routes ; do
                 LogPrint "WARNING! Change entries in $network_file manually please!"
             done
         fi
