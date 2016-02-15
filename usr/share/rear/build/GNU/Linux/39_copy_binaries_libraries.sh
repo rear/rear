@@ -71,5 +71,5 @@ for lib in "${all_libs[@]}" ; do
     fi
 done
 
-ldconfig $v -r "$ROOTFS_DIR" >&8
-StopIfError "Could not configure libraries with ldconfig"
+#ldconfig $v -r "$ROOTFS_DIR" >&8
+#StopIfError "Could not configure libraries with ldconfig"
