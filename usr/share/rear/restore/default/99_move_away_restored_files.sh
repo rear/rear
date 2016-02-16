@@ -1,0 +1,60 @@
+#
+# Move away restored files that should not have been restored:
+#
+# See https://github.com/rear/rear/issues/779
+#
+# After backup restore rear should move away files
+# that should not have been restored - maily files that
+# are created and maintained by system tools where
+# a restore from the backup results wrong/outdated
+# content that conflicts with the actual system.
+#
+# The generic traditional example of such a file was /etc/mtab.
+# As long as it was a regular file it must not have been restored
+# with outdated content from a backup. Nowadays it is a symbolic link
+# to /proc/self/mounts which should probably be restored to ensure
+# that link is available.
+#
+# rear will not remove any file (any user data is sacrosanct).
+# Instead rear moves those files away into a rear-specific directory
+# (BACKUP_RESTORE_MOVE_AWAY_DIRECTORY in default.conf) so that
+# the admin can inspect that directory to see what rear thinks
+# should not have been restored.
+#
+# There is nothing hardcoded in the scripts.
+# Instead BACKUP_RESTORE_MOVE_AWAY_FILES is a documented predefined list
+# in default.conf what files are moved away by default.
+
+# Go to the recovery system root directory:
+pushd $TARGET_FS_ROOT >&8
+# Artificial 'for' clause that is run only once to be able to 'continue' in case of errors
+# (because the 'for' loop is run only once 'continue' is the same as 'break'):
+for dummy in "once" ; do
+    # The following code is only meant to be used for the "recover" workflow:
+    test "recover" = "$WORKFLOW" || continue
+    # Nothing to do if the BACKUP_RESTORE_MOVE_AWAY_FILES list is empty
+    # (that list is considered to be empty when its first element is empty):
+    test "$BACKUP_RESTORE_MOVE_AWAY_FILES" || continue
+    # Strip leading '/' from $BACKUP_RESTORE_MOVE_AWAY_DIRECTORY
+    # to get a relative path that is needed inside the recovery system:
+    move_away_dir="${BACKUP_RESTORE_MOVE_AWAY_DIRECTORY#/}"
+    # Do nothing if no real BACKUP_RESTORE_MOVE_AWAY_DIRECTORY is specified
+    # (it has to be specified in default.conf and must not be only '/'):
+    test "$move_away_dir" || continue
+    # Create the directory with mode 0700 (rwx------) so that only root can access files and subdirectories therein
+    # because the files therein could contain security relevant information:
+    mkdir -p -m 0700 $move_away_dir || continue
+    # Copy each file in BACKUP_RESTORE_MOVE_AWAY_FILES with full path and
+    # preserve all file attributes and keep symbolic links as symbolic links:
+    for file in ${BACKUP_RESTORE_MOVE_AWAY_FILES[@]} ; do
+        # Strip leading '/' from $file to get it with relative path that is needed inside the recovery system:
+        file_relative="${file#/}"
+        # Skip file listed in BACKUP_RESTORE_MOVE_AWAY_FILES that do not actually exist:
+        test -e $file_relative || continue
+        # Only if the copy was successful remove the original file:
+        cp --parents --preserve=all --no-dereference $file_relative $move_away_dir && rm -f $file_relative
+    done
+done
+# Go back from the recovery system root directory:
+popd >&8
+
