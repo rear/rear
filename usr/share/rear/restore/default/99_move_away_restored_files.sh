@@ -1,11 +1,11 @@
 #
-# Move away restored files that should not have been restored:
+# Move away restored files or directories that should not have been restored:
 #
 # See https://github.com/rear/rear/issues/779
 #
-# After backup restore rear should move away files
-# that should not have been restored - maily files that
-# are created and maintained by system tools where
+# After backup restore rear should move away files or directories
+# that should not have been restored - maily files or directories
+# that are created and maintained by system tools where
 # a restore from the backup results wrong/outdated
 # content that conflicts with the actual system.
 #
@@ -17,13 +17,13 @@
 #
 # rear will not remove any file (any user data is sacrosanct).
 # Instead rear moves those files away into a rear-specific directory
-# (BACKUP_RESTORE_MOVE_AWAY_DIRECTORY in default.conf) so that
-# the admin can inspect that directory to see what rear thinks
+# (specified by BACKUP_RESTORE_MOVE_AWAY_DIRECTORY in default.conf)
+# so that the admin can inspect that directory to see what rear thinks
 # should not have been restored.
 #
 # There is nothing hardcoded in the scripts.
 # Instead BACKUP_RESTORE_MOVE_AWAY_FILES is a documented predefined list
-# in default.conf what files are moved away by default.
+# in default.conf what files or directories are moved away by default.
 
 # Go to the recovery system root directory:
 pushd $TARGET_FS_ROOT >&8
@@ -41,18 +41,24 @@ for dummy in "once" ; do
     # Do nothing if no real BACKUP_RESTORE_MOVE_AWAY_DIRECTORY is specified
     # (it has to be specified in default.conf and must not be only '/'):
     test "$move_away_dir" || continue
-    # Create the directory with mode 0700 (rwx------) so that only root can access files and subdirectories therein
+    # Create the move away directory with mode 0700 (rwx------)
+    # so that only root can access files and subdirectories therein
     # because the files therein could contain security relevant information:
     mkdir -p -m 0700 $move_away_dir || continue
-    # Copy each file in BACKUP_RESTORE_MOVE_AWAY_FILES with full path and
-    # preserve all file attributes and keep symbolic links as symbolic links:
+    # Copy each file or directory in BACKUP_RESTORE_MOVE_AWAY_FILES with full path:
     for file in ${BACKUP_RESTORE_MOVE_AWAY_FILES[@]} ; do
         # Strip leading '/' from $file to get it with relative path that is needed inside the recovery system:
         file_relative="${file#/}"
-        # Skip file listed in BACKUP_RESTORE_MOVE_AWAY_FILES that do not actually exist:
+        # Skip files or directories listed in BACKUP_RESTORE_MOVE_AWAY_FILES that do not actually exist:
         test -e $file_relative || continue
-        # Only if the copy was successful remove the original file:
-        cp --parents --preserve=all --no-dereference $file_relative $move_away_dir && rm -f $file_relative
+        # Clean up already existing stuff in the move away directory
+        # that would be (partially) overwritten by the current copy
+        # (such stuff is considered as outdated leftover e.g. from a previous recovery)
+        # but keep already existing stuff in the move away directory
+        # that is not in the curent BACKUP_RESTORE_MOVE_AWAY_FILES list:
+        rm -rf $move_away_dir/$file_relative
+        # Only if the copy was successful remove the original file or directory:
+        cp -a --parents $file_relative $move_away_dir && rm -rf $file_relative
     done
 done
 # Go back from the recovery system root directory:
