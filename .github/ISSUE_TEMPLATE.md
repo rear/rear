@@ -1,4 +1,4 @@
-= Relax-and-Recover (rear) Issue Template
+## Relax-and-Recover (rear) Issue Template
 
 Please fill in the following items before submitting a new issue:
 * **rear version** (/usr/sbin/rear -V):
