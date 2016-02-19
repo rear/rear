@@ -24,7 +24,7 @@
 
 * Ask any question about how to use rear in the [rear-user mailing list](http://lists.relax-and-recover.org/mailman/listinfo/rear-users)
 
-#### **Do you want to contribute to the Rails documentation?**
+#### **Do you want to contribute to the rear documentation?**
 
 * Please read and improve the [documentation](https://github.com/rear/rear/tree/master/doc)
 
