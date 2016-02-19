@@ -57,8 +57,22 @@ for dummy in "once" ; do
         # but keep already existing stuff in the move away directory
         # that is not in the curent BACKUP_RESTORE_MOVE_AWAY_FILES list:
         rm -rf $move_away_dir/$file_relative
-        # Only if the copy was successful remove the original file or directory:
-        cp -a --parents $file_relative $move_away_dir && rm -rf $file_relative
+        # Copy the file or directory:
+        cp -a --parents $file_relative $move_away_dir || continue
+        # Only if the copy was successful remove the original file or directory content
+        # but keep the original (empty) directory (for the reason see default.conf):
+        if test -d $file_relative ; then
+            # remove all files in the directory other than '.' and '..'
+            # (avoids scaring stderr message: "rm: refusing to remove '.' or '..' directory")
+            # * matches non-dot-files
+            # .[!.]* matches dot-files except '.' and dot-dot-files
+            # ..?* matches dot-dot-files (also dot-dot-...-dot-files) except '..'
+            # If all patterns match nothing the nullglob setting in rear let it expand to empty
+            # which is o.k. because 'rm -f' does not care about non-existent arguments:
+            rm -rf $file_relative/* $file_relative/.[!.]* $file_relative/..?*
+        else
+            rm -rf $file_relative
+        fi
     done
 done
 # Go back from the recovery system root directory:
