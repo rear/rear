@@ -48,7 +48,8 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 
 	sed -i -e '/^INITRD_MODULES/s/^.*$/#&\nINITRD_MODULES="'"${OLD_INITRD_MODULES[*]} ${NEW_INITRD_MODULES[*]}"'"/' $TARGET_FS_ROOT/etc/sysconfig/kernel
    fi
-
+	udevadm trigger
+	sleep 5
 	mount -t proc none $TARGET_FS_ROOT/proc
 	mount -t sysfs none $TARGET_FS_ROOT/sys
         echo "Running mkinitrd..."
