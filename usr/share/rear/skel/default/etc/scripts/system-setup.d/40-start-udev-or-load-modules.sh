@@ -35,9 +35,10 @@ if [[ $systemd_version -gt 190 ]] || [[ -s /etc/udev/rules.d/00-rear.rules ]] ; 
 
     # start udev daemon
     udevd --daemon
+    sleep 1
     my_udevtrigger
     echo -n "Waiting for udev ... "
-    sleep 1
+    sleep 3
     my_udevsettle
     echo "done."
 else
