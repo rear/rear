@@ -1,12 +1,12 @@
-# copy the restore log to restored system /mnt/local/root/ with a timestamp
+# copy the restore log to restored system $TARGET_FS_ROOT/root/ with a timestamp
 
-if ! test -d /mnt/local/root ; then
-	mkdir -p /mnt/local/root
-	chmod 0700 /mnt/local/root
+if ! test -d $TARGET_FS_ROOT/root ; then
+	mkdir -p $TARGET_FS_ROOT/root
+	chmod 0700 $TARGET_FS_ROOT/root
 fi
 
-cp "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" /mnt/local/root/restore-$(date +%Y%m%d.%H%M).log
-StopIfError "Could not copy ${BACKUP_PROG_ARCHIVE}-restore.log to /mnt/local/root"
-gzip "/mnt/local/root/restore-$(date +%Y%m%d.)*.log"
+cp "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" $TARGET_FS_ROOT/root/restore-$(date +%Y%m%d.%H%M).log
+StopIfError "Could not copy ${BACKUP_PROG_ARCHIVE}-restore.log to $TARGET_FS_ROOT/root"
+gzip "$TARGET_FS_ROOT/root/restore-$(date +%Y%m%d.)*.log"
 
 # the rear.log file will be copied later (by wrapup/default/99_copy_logfile.sh)

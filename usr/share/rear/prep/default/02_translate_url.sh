@@ -54,7 +54,9 @@ if [[ -z "$OUTPUT_OPTIONS" ]] ; then
 fi
 
 if [[ -z "$OUTPUT_URL" ]] ; then
-    if [[ -z "$OUTPUT_MOUNTCMD" ]] ; then
+    if [[ "$USB_DEVICE" ]] ; then
+        OUTPUT_URL="usb://$USB_DEVICE"
+    elif [[ -z "$OUTPUT_MOUNTCMD" ]] ; then
         OUTPUT_URL=$BACKUP_URL
     fi
 fi

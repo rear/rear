@@ -2,7 +2,7 @@
 mkdir -p $v "$BUILD_DIR/outputfs" >&2
 StopIfError "Could not mkdir '$BUILD_DIR/outputfs'"
 
-AddExitTask "rmdir $v $BUILD_DIR/outputfs >&2"
+AddExitTask "rm -Rf $v $BUILD_DIR/outputfs >&2"
 
 if [[ "$OUTPUT_MOUNTCMD" ]] ; then
     OUTPUT_URL="var://$OUTPUT_MOUNTCMD"

@@ -333,7 +333,35 @@ get_partition_number() {
 
     echo $number
 }
+# Returns partition start block or 'unknown'
+# sda/sda1 or
+# dm-XX
+get_partition_start() {
+    local disk_name=$1
+    local start_block start
 
+    local block_size=$(get_block_size ${disk_name%/*})
+
+    if [[ -r /sys/block/$disk_name/start ]] ; then
+        start_block=$(< $path/start)
+    elif [[ $disk_name =~ ^dm- ]]; then
+        # /dev/mapper/mpath4-part1
+        local devname=$(get_device_name $disk_name)
+        devname=${devname#/dev/mapper/}
+       
+        # 0 536846303 linear 253:7 536895488
+        read junk junk junk junk start_block < <( dmsetup table ${devname} 2>&8 )
+    fi
+    if [[ -z $start_block ]]; then
+        Log "Could not determine start of partition $partition_name."
+        start="unknown"
+    else
+        start=$(( start_block * block_size ))
+    fi
+
+    echo $start
+}
+    
 # Get the type of a layout component
 get_component_type() {
     grep -E "^[^ ]+ $1 " $LAYOUT_TODO | cut -d " " -f 3
@@ -486,7 +514,7 @@ get_device_mapping() {
         echo $1
     else
         local name=${1##*/}      # /dev/disk/by-id/scsi-xxxx -> scsi-xxx
-        local disk_name=$(grep "^${name}" ${VAR_DIR}/recovery/diskbyid_mappings | awk '{print $2}')
+        local disk_name=$(grep -w "^${name}" ${VAR_DIR}/recovery/diskbyid_mappings | awk '{print $2}')
         if [[ -z "$disk_name" ]]; then
             echo $1
         else
@@ -533,5 +561,18 @@ blkid_uuid_of_device() {
         [[ ! -z "$uuid" ]] && break
     done
     echo "$uuid"
+}
+
+# Get the LABEL of a device.
+# Device is something like /dev/sda1.
+blkid_label_of_device() {
+    local device=$1
+    local label=""
+    for LINE in $(blkid $device  2>/dev/null)
+    do
+        label=$( echo "$LINE" | grep "^LABEL=" | cut -d= -f2 | sed -e 's/"//g' | sed -e 's/ /\\\\b/g')  # replace all " " with "\\b"
+        [[ ! -z "$label" ]] && break
+    done
+    echo "$label"
 }
 

@@ -8,8 +8,8 @@ NSR_RESULT_FILES=()
 
 # decide where to put the result files for saving them with NSR
 # if NSR_RESULT_FILE_PATH is unset, then save the result files where they are
-# NOTE: Make sure that your NSR installation will not silently skip files in /tmp !
-test -z "$NSR_RESULT_FILE_PATH" && NSR_RESULT_FILE_PATH=/tmp
+# NOTE: Make sure that your NSR installation will not silently skip files in $TMP_DIR !
+test -z "$NSR_RESULT_FILE_PATH" && NSR_RESULT_FILE_PATH=$TMP_DIR
 
 if ! test -d "$NSR_RESULT_FILE_PATH" ; then
 	 mkdir -v -p "$NSR_RESULT_FILE_PATH" 1>&8
@@ -17,7 +17,7 @@ if ! test -d "$NSR_RESULT_FILE_PATH" ; then
 fi
 
 
-if test "$NSR_RESULT_FILE_PATH" != "/tmp" ; then
+if test "$NSR_RESULT_FILE_PATH" != "$TMP_DIR" ; then
 	cp -v  "${RESULT_FILES[@]}" "$NSR_RESULT_FILE_PATH" 1>&8
 	StopIfError "Could not copy result files to '$NSR_RESULT_FILE_PATH'"
 	NSR_RESULT_FILES=( 
@@ -39,18 +39,27 @@ fi
 
 NSRSERVER=$(cat $VAR_DIR/recovery/nsr_server )
 CLIENTNAME=$(hostname)
-POOLNAME="$( mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool" | head -1 )"
-[[ -z "$POOLNAME" ]] && POOLNAME="Default"
-[[ -z "$RETENTION_TIME" ]] && RETENTION_TIME="1 day"
+#POOLNAME="$( mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool" | head -1 )"
+if [[ -z "$NSR_POOL_NAME" ]] ; then
+    POOLNAME="$( mminfo -ot -s $NSRSERVER -a -q "client=$CLIENTNAME,name=/" -r "avail,pool" | \
+        awk '$1 ~ "n" { print $2; exit; }' )"
+else
+    POOLNAME="$NSR_POOL_NAME"
+fi
+[[ -z "$POOLNAME" ]] && POOLNAME="$NSR_DEFAULT_POOL_NAME"
+[[ -z "$NSR_RETENTION_TIME" ]] && NSR_RETENTION_TIME="1 day"
 
 Log "Saving files '${NSR_RESULT_FILES[@]}' with save"
-save -s $NSRSERVER -c $CLIENTNAME -b "$POOLNAME" -y "$RETENTION_TIME" "${NSR_RESULT_FILES[@]}" 1>&8
+SNAME="REAR.$(date +%Y%m%d)"
+save -s $NSRSERVER -c $CLIENTNAME -N "${SNAME}" -b "$POOLNAME" -y "$NSR_RETENTION_TIME" "${NSR_RESULT_FILES[@]}" 1>&8
 StopIfError "Could not save result files with save"
 
 # show the saved result files
-LogPrint "If the RETENTION_TIME=\"$RETENTION_TIME\" is too low please add RETENTION_TIME variable in $CONFIG_DIR/local.conf"
+LogPrint "If the NSR_RETENTION_TIME=\"$NSR_RETENTION_TIME\" is too low please add NSR_RETENTION_TIME variable in $CONFIG_DIR/local.conf"
 LogPrint " pool           retent  name"
 LogPrint "============================"
-mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool,ssretent,name" | \
-    grep -E $( echo ${NSR_RESULT_FILES[@]} | sed -e "s/ /|/g") > $TMP_DIR/saved_result_files
+#mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME" -r "pool,ssretent,name" | \
+#    grep -E $( echo ${NSR_RESULT_FILES[@]} | sed -e "s/ /|/g") > $TMP_DIR/saved_result_files
+mminfo -s $NSRSERVER -a -q "client=$CLIENTNAME,name=${SNAME},pool=${POOLNAME}" \
+    -r "pool,ssretent,name" > $TMP_DIR/saved_result_files
 LogPrint "$(cat $TMP_DIR/saved_result_files)"

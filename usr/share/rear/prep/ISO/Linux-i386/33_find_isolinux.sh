@@ -2,13 +2,7 @@
 
 # find isolinux.bin
 if [[ ! -s "$ISO_ISOLINUX_BIN" ]]; then
-	for file in /usr/{share,lib,libexec}/*/isolinux.bin ; do
-		if [[ -s "$file" ]]; then
-			ISO_ISOLINUX_BIN="$file"
-			break # for loop
-		fi
-	done
-
+    ISO_ISOLINUX_BIN=$(find_syslinux_file isolinux.bin)
 fi
 
 [[ -s "$ISO_ISOLINUX_BIN" ]]

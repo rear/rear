@@ -1,5 +1,12 @@
 # Save Filesystem layout
 Log "Begin saving filesystem layout"
+# If available wipefs is used in the recovery system by 13_include_filesystem_code.sh
+# as a generic way to cleanup disk partitions before creating a filesystem on a disk partition,
+# see https://github.com/rear/rear/issues/540
+# and https://github.com/rear/rear/issues/649#issuecomment-148725865
+# Therefore if wipefs exists here in the original system it is added to REQUIRED_PROGS
+# so that it will become also available in the recovery system (cf. 26_crypt_layout.sh):
+has_binary wipefs && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" wipefs ) || true
 # Comma separated list of filesystems that is used for "mount/findmnt -t <list,of,filesystems>" below:
 supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"
 # Read filesystem information from the system by default using the traditional mount command
@@ -9,7 +16,7 @@ supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"
 #   /dev/sda2 / btrfs (rw,relatime,space_cache)
 #   /dev/sda2 /.snapshots btrfs (rw,relatime,space_cache)
 #   /dev/sda2 /var/tmp btrfs (rw,relatime,space_cache)
-read_filesystems_command="mount -t $supported_filesystems | tr -s '[:blank:]' ' ' | cut -d ' ' -f 1,3,5,6"
+read_filesystems_command="mount -t $supported_filesystems | cut -d ' ' -f 1,3,5,6"
 # If the findmnt command is available use it instead of the traditional mount command
 # because (since SLE12) "man 8 mount" reads:
 #   The listing mode is maintained for backward compatibility only.
@@ -23,7 +30,7 @@ read_filesystems_command="mount -t $supported_filesystems | tr -s '[:blank:]' ' 
 # The only difference is that the traditional mount command output has the list of options in parenthesis.
 findmnt_command="$( type -P findmnt )"
 if test -x "$findmnt_command" ; then
-    read_filesystems_command="$findmnt_command -alnv -o SOURCE,TARGET,FSTYPE,OPTIONS -t $supported_filesystems | tr -s '[:blank:]' ' '"
+    read_filesystems_command="$findmnt_command -nrv -o SOURCE,TARGET,FSTYPE,OPTIONS -t $supported_filesystems"
     Log "Saving filesystem layout (using the findmnt command)."
 else
     Log "Saving filesystem layout (using the traditional mount command)."
@@ -74,6 +81,13 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             Log "Mapping $device to $ndevice"
             device=$ndevice
         fi
+        # FIXME: is the above condition still needed if the following is in place?
+        # get_device_name and get_device_name_mapping below should canonicalize obscured udev names
+
+        # work with the persistent dev name: address the fact than dm-XX may be different disk in the recovery environment
+        device=$(get_device_mapping $device)
+        device=$(get_device_name $device)
+
         # Output generic filesystem layout values:
         echo -n "fs $device $mountpoint $fstype"
         # Output filesystem specific layout values:
@@ -92,25 +106,26 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 label=$( e2label $device )
                 echo -n " label=$label"
                 # options: blocks, fragments, max_mount, check_interval, reserved blocks, bytes_per_inode
-                blocksize=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Blocksize:[0-9]*' | cut -d ':' -f 2 )
+                blocksize=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Blocksize:[0-9]*' | cut -d ':' -f 2 )
                 echo -n " blocksize=$blocksize"
-                fragmentsize=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Fragmentsize:[0-9]*' | cut -d ':' -f 2 )
-                echo -n " fragmentsize=$fragmentsize"
-                nr_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -iv reserved | grep -oi 'Blockcount:[0-9]*' | cut -d ':' -f 2 )
-                reserved_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Reservedblockcount:[0-9]*' | cut -d ':' -f 2 )
+                # we agreed to comment fragmentsize due mkfs.ext* option -f not existing (man page says it is) - issue #558
+                #fragmentsize=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Fragmentsize:[0-9]*' | cut -d ':' -f 2 )
+                #echo -n " fragmentsize=$fragmentsize"
+                nr_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -iv reserved | grep -i 'Blockcount:[0-9]*' | cut -d ':' -f 2 )
+                reserved_blocks=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Reservedblockcount:[0-9]*' | cut -d ':' -f 2 )
                 reserved_percentage=$(( reserved_blocks * 100 / nr_blocks ))
+                StopIfError "Divide by zero detected"
                 echo -n " reserved_blocks=$reserved_percentage%"
-                # FIXME: I (jsmeix@suse.de) have no idea what the reason for the following is:
-                # On Fedora | grep -oi 'Maximummountcount:[0-9]*' | does not work but | grep -i 'Maximummountcount:[0-9]*' | works.
-                # If someone knows the reason replace this comment with a description of the actual root cause.
                 max_mounts=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Maximummountcount:[0-9]*' | cut -d ':' -f 2 )
                 echo -n " max_mounts=$max_mounts"
-                check_interval=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Checkinterval:[0-9]*' | cut -d ':' -f 2 )
+                check_interval=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Checkinterval:[0-9]*' | cut -d ':' -f 2 | cut -d '(' -f1 )
+                check_interval=$( is_numeric $check_interval )  # if non-numeric 0 is returned
                 # translate check_interval from seconds to days
                 let check_interval=$check_interval/86400
                 echo -n " check_interval=${check_interval}d"
-                nr_inodes=$( $tunefs -l $device | tr -d '[:blank:]' | grep -oi 'Inodecount:[0-9]*' | cut -d ':' -f 2 )
+                nr_inodes=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Inodecount:[0-9]*' | cut -d ':' -f 2 )
                 let "bytes_per_inode=$nr_blocks*$blocksize/$nr_inodes"
+                StopIfError "Divide by zero detected"
                 echo -n " bytes_per_inode=$bytes_per_inode"
                 default_mount_options=$( tune2fs -l $device | grep -i "Default mount options:" | cut -d ':' -f 2 | awk '{$1=$1};1' | tr ' ' ',' | grep -v none )
                 if [[ -n $default_mount_options ]]; then
@@ -118,8 +133,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 fi
                 ;;
             (vfat)
-                # Make sure we don't get any other output from dosfslabel (errors go to stdout :-/)
-                label=$(dosfslabel $device | tail -1 | sed -e 's/ /\\\\b/g')  # replace all " " with "\\b"
+                label=$(blkid_label_of_device $device)
                 uuid=$(blkid_uuid_of_device $device)
                 echo -n " uuid=$uuid label=$label"
                 ;;
@@ -229,11 +243,16 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         ########################################
         # Mounted btrfs subvolumes:
         if test -x "$findmnt_command" ; then
-            read_mounted_btrfs_subvolumes_command="$findmnt_command -alnv -o SOURCE,TARGET,OPTIONS,FSROOT -t btrfs | tr -s '[:blank:]' ' '"
+            read_mounted_btrfs_subvolumes_command="$findmnt_command -nrv -o SOURCE,TARGET,OPTIONS,FSROOT -t btrfs"
         else
-            read_mounted_btrfs_subvolumes_command="mount -t btrfs | tr -s '[:blank:]' ' ' | cut -d ' ' -f 1,3,6"
+            read_mounted_btrfs_subvolumes_command="mount -t btrfs | cut -d ' ' -f 1,3,6"
         fi
         while read device subvolume_mountpoint mount_options btrfs_subvolume_path junk ; do
+
+            # work with the persistent dev name: address the fact than dm-XX may be different disk in the recovery environment
+            device=$(get_device_mapping $device)
+            device=$(get_device_name $device)
+
             if test -n "$device" -a -n "$subvolume_mountpoint" ; then
                 if test -z "$btrfsmountedsubvol_entry_exists" ; then
                     # Output header only once:
@@ -258,7 +277,9 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                     # (using subvolid=... can fail because the subvolume ID can be different during system recovery).
                     # Because both "mount ... -o subvol=/path/to/subvolume" and "mount ... -o subvol=path/to/subvolume" work
                     # the subvolume path can be specified with or without leading '/':
-                    btrfs_subvolume_path=$( grep " $subvolume_mountpoint btrfs " /etc/fstab | grep -o 'subvol=[^ ]*' | cut -s -d '=' -f 2 )
+                    btrfs_subvolume_path=$( egrep "[[:space:]]$subvolume_mountpoint[[:space:]]+btrfs[[:space:]]" /etc/fstab \
+                                            | egrep -v '^[[:space:]]*#' \
+                                            | grep -o 'subvol=[^ ]*' | cut -s -d '=' -f 2 )
                 fi
                 # Remove leading '/' from btrfs_subvolume_path (except it is only '/') to have same syntax for all entries and
                 # without leading '/' is more clear that it is not an absolute path in the currently mounted tree of filesystems
@@ -269,6 +290,32 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 echo "btrfsmountedsubvol $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
             fi
         done < <( eval $read_mounted_btrfs_subvolumes_command )
+        ########################################
+        # No copy on write attributes of mounted btrfs subvolumes:
+        echo "# Mounted btrfs subvolumes that have the 'no copy on write' attribute set."
+        echo "# Format: btrfsnocopyonwrite <btrfs_subvolume_path>"
+        lsattr_command="$( type -P lsattr )"
+        if test -x "$lsattr_command" -a -x "$findmnt_command" ; then
+            for subvolume_mountpoint in $( $findmnt_command -nrv -o TARGET -t btrfs ) ; do
+                # The 'no copy on write' attribute is shown as 'C' in the lsattr output (see "man chattr"):
+                if $lsattr_command -d $subvolume_mountpoint | cut -d ' ' -f 1 | grep -q 'C' ; then
+                    btrfs_subvolume_path=$( $findmnt_command -nrv -o FSROOT $subvolume_mountpoint )
+                    # Remove leading '/' from btrfs_subvolume_path (except it is only '/') to have same syntax for all entries and
+                    # without leading '/' is more clear that it is not an absolute path in the currently mounted tree of filesystems
+                    # instead the subvolume path is relative to the toplevel/root subvolume of the particular btrfs filesystem
+                    # (i.e. a subvolume path is an absolute path in the particular btrfs filesystem)
+                    # see https://btrfs.wiki.kernel.org/index.php/Mount_options
+                    test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
+                    if test -n "btrfs_subvolume_path" ; then
+                        echo "btrfsnocopyonwrite $btrfs_subvolume_path"
+                    else
+                        echo "# $subvolume_mountpoint has the 'no copy on write' attribute set but $findmnt_command does not show its btrfs subvolume path"
+                    fi
+                fi
+            done
+        else
+            echo "# Attributes cannot be determined because no executable 'lsattr' and/or 'findmnt' command(s) found."
+        fi
     fi
 
 ) >> $DISKLAYOUT_FILE

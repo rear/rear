@@ -3,12 +3,15 @@
 # so we need to double check before leaving the prep stage.
 
 # check for requirements, do we have all required binaries ?
-MISSING_PROGRS=()
+# without the empty string as initial value MISSING_PROGS would be
+# an unbound variable that would result an error exit if 'set -eu' is used:
+declare -a MISSING_PROGS
 for f in "${REQUIRED_PROGS[@]}" ; do
-        if ! has_binary "$f"; then
-                MISSING_PROGS=( "${MISSING_PROGS[@]}" "$f" )
-        fi
+    if ! has_binary "$f" ; then
+        MISSING_PROGS=( "${MISSING_PROGS[@]}" "$f" )
+    fi
 done
-[[ -z "$MISSING_PROGS" ]]
-StopIfError "Cannot find required programs: ${MISSING_PROGS[@]}"
+if test -n "$MISSING_PROGS" ; then
+    Error "Cannot find required programs: ${MISSING_PROGS[@]}"
+fi
 

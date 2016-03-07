@@ -19,9 +19,11 @@ fi
 (( USING_UEFI_BOOTLOADER )) && return # set to 1 means UEFI booting
 
 # check the BOOTLOADER variable (read by 01_prepare_checks.sh script)
-if [[ "$BOOTLOADER" = "GRUB2" ]]; then
-    # grub2 script should handle this instead
-    return
+if [[ "$BOOTLOADER" = "GRUB" ]]; then
+    if [[ $(type -p grub-probe) || $(type -p grub2-probe) ]]; then
+        # grub2 script should handle this instead
+        return
+    fi
 fi
 
 # Only for GRUB Legacy - GRUB2 will be handled by its own script
@@ -30,21 +32,21 @@ if [[ -z "$(type -p grub)" ]]; then
 fi
 
 LogPrint "Installing GRUB boot loader"
-mount -t proc none /mnt/local/proc
+mount -t proc none $TARGET_FS_ROOT/proc
 
 if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
 
     # Check if we find GRUB stage 2 where we expect it
-    [[ -d "/mnt/local/boot" ]]
+    [[ -d "$TARGET_FS_ROOT/boot" ]]
     StopIfError "Could not find directory /boot"
-    [[ -d "/mnt/local/boot/grub" ]]
+    [[ -d "$TARGET_FS_ROOT/boot/grub" ]]
     StopIfError "Could not find directory /boot/grub"
-    [[ -r "/mnt/local/boot/grub/stage2" ]]
+    [[ -r "$TARGET_FS_ROOT/boot/grub/stage2" ]]
     StopIfError "Unable to find /boot/grub/stage2."
 
     # Find exclusive partition(s) belonging to /boot
     # or / (if /boot is inside root filesystem)
-    if [[ "$(filesystem_name /mnt/local/boot)" == "/mnt/local" ]]; then
+    if [[ "$(filesystem_name $TARGET_FS_ROOT/boot)" == "$TARGET_FS_ROOT" ]]; then
         bootparts=$(find_partition fs:/)
         grub_prefix=/boot/grub
     else
@@ -81,7 +83,7 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
 
         if [[ "$bootdisk" == "$disk" ]]; then
             # Best case scenario is to have /boot on disk with MBR booted
-            chroot /mnt/local grub --batch --no-floppy >&2 <<EOF
+            chroot $TARGET_FS_ROOT grub --batch --no-floppy >&2 <<EOF
 device (hd0) $disk
 root (hd0,$partnr)
 setup --stage2=/boot/grub/stage2 --prefix=$grub_prefix (hd0)
@@ -90,7 +92,7 @@ EOF
         else
             # hd1 is a best effort guess, we cannot predict how numbering
             # changes when a disk fails.
-            chroot /mnt/local grub --batch --no-floppy >&2 <<EOF
+            chroot $TARGET_FS_ROOT grub --batch --no-floppy >&2 <<EOF
 device (hd0) $disk
 device (hd1) $bootdisk
 root (hd1,$partnr)
@@ -106,9 +108,9 @@ EOF
 fi
 
 if [[ "$NOBOOTLOADER" ]]; then
-    if chroot /mnt/local grub-install '(hd0)' >&2 ; then
+    if chroot $TARGET_FS_ROOT grub-install '(hd0)' >&2 ; then
         NOBOOTLOADER=
     fi
 fi
 
-umount /mnt/local/proc
+umount $TARGET_FS_ROOT/proc

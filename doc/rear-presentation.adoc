@@ -1,0 +1,353 @@
+= Relax-and-Recover: Disaster Recovery and System Migration solution
+Dag Wieërs <dag@wieers.com>
+
+_This presentation is written in AsciiDoc and can be converted to
+a LibreOffice/OpenOffice presentation using
+http://github.com/dagwieers/asciidoc-odf[asciidoc-odf]._
+
+
+////
+== Who is Dag Wieërs ?
+* Linux and Open Source consultant
+  - Worked at IBM Belgium, now self-employed to provide advice, design, automation, maintenance
+
+* Involved in various Open Source communities
+  - incl. RPMforge, ELRepo, CentOS, syslinux, AsciiDoc, LibreOffice,
+    docbook2odf, Relax-and-Recover
+
+* Author of various tools
+  - incl. dstat, unoconv, mrepo, proxytunnel, wiipresent, dconf, asciidoc-odf
+////
+
+
+== What is Relax-and-Recover ?
+_Tool that implements a DR workflow for Linux_
+
+Which basically means ?
+
+  - Easy to deploy (set up and forget)
+  - Makes recovery as easy as possible
+  - Complete bare-metal disaster recovery
+  - Integration for various Linux technologies
+  - Integration with various back-up solutions
+  - Modular framework written in Bash
+  - Easy to extend to own needs
+
+
+== How does Relax-and-Recover work ?
+Relax-and-Recover builds a rescue image from the existing installation
+
+  - Restored system is an accurate copy
+  - Restored system supports the hardware
+  - Exotic setups (kernel, hardware) guaranteed to work
+  - What worked before keeps on working
+  - Recovery is fully automated
+
+Backup software is integrated into rescue image
+
+  - With a working configuration
+
+
+== Why is a backup not sufficient ?
+Backup only covers storing data safely/securely
+
+  - Often only the data is available
+  - DR is a manual and time-consuming process
+
+So manual disaster recovery risks:
+
+  - unknown system storage and network configuration
+  - incompatibilities between firmware/software/hardware
+    * using newer tools with older data (or vice versa)
+    * hardware is not supported
+  - making manual mistakes (again and again)
+  - working against the clock amidst chaos
+  - frustration
+
+
+== What does Relax-and-Recover bring to the table ?
+But the Relax-and-Recover rescue image takes care of the complete
+recovery process until the system runs:
+
+  - enabling the network and remote access
+  - using tools to recreate an accurate/working copy
+  - recreating hardware and software RAID
+  - partitioning and creating file systems
+  - starting the backup restore process
+  - restoring the bootloader
+
+
+== Relax-and-Recover functionality
+* Supported storage technologies
+  - HP SmartArray, SW RAID, DRBD, LVM, multipath
+  - ext2/ext3/ext4, xfs, jfs, vfat, btrfs, LUKS
+
+* Boot media or remote storage
+  - OBDR tape, ISO, USB, eSATA, network booting
+  - NFS, CIFS, rsync, HTTP, FTP, SFTP, ...
+
+* Back-up backends
+  - IBM TSM, HP DataProtector, Symantec NetBackup,
+    FDR/Upstream, Bacula, tar, rsync
+
+
+== How is Relax-and-Recover used ?
+* Creating boot media: +rear mkrescue+
+  - Copies kernel, modules, minimal system
+  - Saves storage layout, network configuration
+  - Write boot media
+
+* Restore system
+  - Boot Relax-and-Recover media
+  - Optionally, modify storage/network config
+  - Run: +rear recover+
+  - Relax-and-Recover parses layout then creates diskrestore script
+  - Relax-and-Recover initiates restore or prompts for restore
+
+== Relax-and-Recover on a running system
+
+[ditaa]
+----
+/-------------+       /-----------+       /-----------+
+| Storage     |       | Collect   |       | Integrate |
+| layout      | ----> | new       | ----> | required  |
+| change      |       | storage   |       | backup    |
+| detected    |       | layout    |       | strategy  |
++-------------/       +-----------/       +-----------/
+
+                                                |
+                                                V
+
+/-------------+       /-----------+       /-----------+
+| Off-site    |       | Push      |       | Create    |
+| storage     | <---- | recovery  | <---- | new       |
+| together    |       | image     |       | recovery  |
+| with backup |       | centrally |       | image     |
++-------------/       +-----------/       +-----------/
+----
+
+== Nifty features to help relax
+* Local GRUB integration (password protected)
+
+* Serial console support (think: disaster)
+
+* History-stuffing during recovery
+
+* Network and SSH key integration
+
+* Layout code guides you through recovery
+  - Menu's and command-line in one session
+  - Provides original storage info
+
+* Beep, UID led and USB suspend integration
+
+* Syslinux management
+
+* Log-file on recovery media
+
+
+== Use case: Belgian Federal Police /1
+* Requirements:
+  - About 200 sites with each a set of Linux servers
+  - Each server comes with a tape-drive
+  - Single bootable tape to:
+    ** Restore complete system
+    ** Restore from back-up
+  - Support for various technologies
+    ** HP SmartArray, SW RAID, DRBD, LVM
+    ** OBDR, Bacula tape support
+    ** RHEL 4, RHEL5 and RHEL6 support
+  - End-user documentation in 3 languages
+
+
+== Use case: Belgian Federal Police /2
+* Solution:
+  - All requirements implement but...
+  - New systems didn't support bootable tape (OBDR)
+  - USB is much more flexible than tape
+    ** Can store multiple rescue images
+    ** Can store rescue images of multiple servers
+    ** Easier workflow (udev): insert, wait, pull (2 min max)
+    ** Cheaper
+    ** Implementation is more reliable
+  - Bonus implementation of flexible layout
+  - Support migration scenarios
+
+
+== Use case: Belgian Federal Police /3
+* Relax-and-Recover config for USB rescue media:
+
+[source,bash]
+----
+BACKUP=BACULA
+OUTPUT=USB
+USB_DEVICE=/dev/disk/by-label/REAR-000
+----
+
+* Relax-and-Recover config for USB backup media:
+
+[source,bash]
+----
+BACKUP=NETFS
+OUTPUT=USB
+USB_DEVICE=/dev/disk/by-label/REAR-000
+ONLY_INCLUDE_VG=( vg00 )
+EXCLUDE_MOUNTPOINTS=( /data )
+----
+
+
+== Use case: Belgian Federal Police /4
+* Relax-and-Recover config for OBDR rescue tapes:
+
+[source,bash]
+----
+BACKUP=BACULA
+OUTPUT=OBDR
+BEXTRACT_DEVICE=Ultrium-1
+BEXTRACT_VOLUME=VOL-*
+----
+
+* Relax-and-Recover config for OBDR backup tapes:
+
+[source,bash]
+----
+BACKUP=NETFS
+OUTPUT=OBDR
+TAPE_DEVICE=/dev/nst0
+----
+
+== Use case: Centralized images /1
+* Requirements:
+  - Remote rescue images
+  - Removable media for off-site storage
+  - Easy restore of physical hosts and guests
+
+* Solution:
+  - Cron creates image when Relax-and-Recover detects change
+  - Images pushed through HTTP to PXE server/host
+  - Stored on USB disks, rotated every week
+
+
+== Use case: Centralized images /2
+* Label USB disk(s) and mount
+
+* Configure Apache to allow HTTP PUT to USB disk
+
+* Relax-and-Recover config in _/etc/rear/local.conf_:
+
+[source,bash]
+----
+BACKUP=BACULA
+OUTPUT=ISO
+ISO_URL=http://server:port/path/
+----
+
+* Relax-and-Recover cron-job at /etc/cron.d/rear:
+----
+30 0 1 * * root /usr/sbin/rear mkrescue
+30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue
+----
+
+== Relax-and-Recover command line /1
+
+----
+[root@moria rear]# rear help
+
+Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-r KERNEL] [--] COMMAND [ARGS...]
+-snip-
+List of commands:
+ checklayout     check if the disk layout has changed
+ dump            dump configuration and system information
+ format          format and label media for use with rear
+ mkbackup        create rescue media and backup system
+ mkbackuponly    backup system without creating rescue media
+ mkrescue        create rescue media only
+ recover         recover the system; valid during rescue
+ validate        submit validation information
+
+Use 'rear -v help' for more advanced commands.
+----
+
+== Relax-and-Recover command line /2
+
+----
+[root@moria rear]# rear help
+
+Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-r KERNEL] [--] COMMAND [ARGS...]
+
+Available options:
+ -h --help           usage information
+ -c DIR              alternative config directory; instead of /etc/rear
+ -d                  debug mode; log debug messages
+ -D                  debugscript mode; log every function call (via 'set -x')
+ --debugscripts SET  same as -d -v -D but debugscript mode with 'set -SET'
+ -r KERNEL           kernel version to use; current: '$KERNEL_VERSION'
+ -s                  simulation mode; show what scripts rear would include
+ -S                  step-by-step mode; acknowledge each script individually
+ -v                  verbose mode; show more output
+ -V --version        version information
+
+-snip-
+----
+
+== Hacking on Relax-and-Recover
+* It is Bash !
+
+*Join the mailinglist
+
+* Understand modular framework and workflows
+  - Use: +rear -s <workflow>+
+
+* Logging
+  - Logfile in: _/var/log/rear/rear-<hostname>.log_
+
+* Debugging
+  - Verbose: +rear -v+
+  - Debug: +rear -d+
+  - Tracing: +rear -D+
+
+
+== Project future
+* Functionality
+  - Improved rsync support (like rsnapshot or rbme)
+  - More back-up backend integration
+  - PXE integration
+
+* Development
+  - Re-organize code base
+  - Release management needs a process
+  - Website and documentation not up-to-date
+  - Change of development tools ?
+
+
+== Development team
+Consists of:
+
+  - Schlomo Schapiro (original author)
+  - Gratien D'haese (original author)
+  - Jeroen Hoekx (new contributor)
+  - Dag Wieërs (new contributor)
+
+and various other contributors
+
+Development at Github
+
+  - http://relax-and-recover.org/
+  - rear-users@lists.relax-and-recover.org
+
+
+== Thank you for listening
+Any questions, ideas, pull-requests ?
+
+
+== Live USB demo
+* Demo USB/udev integration (check udev config !)
+  - Prepare USB stick: +rear format /dev/sdb+
+  - Re-insert USB stick and wait until light goes out
+
+* Demo restore procedure (disable udev rule !)
+  - Boot from KVM virtual machine
+  - Re-insert USB stick and start virt-manager
+  - Create VM with 4GB disk and boot VM
+  - Show bash history and perform: +rear recover+
+  - Show menu system and modify sizes

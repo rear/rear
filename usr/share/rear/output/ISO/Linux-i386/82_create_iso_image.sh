@@ -10,10 +10,15 @@ else
 fi
 
 pushd $TMP_DIR/isofs >&8
-$ISO_MKISOFS_BIN $v -o "$ISO_DIR/$ISO_PREFIX.iso" -b isolinux/isolinux.bin -c isolinux/boot.cat \
-    -no-emul-boot -boot-load-size 4 -boot-info-table \
-    -R -J -volid "$ISO_VOLID" $EFIBOOT -v -iso-level 3 .  >&8
-    ##-R -J -volid "$ISO_VOLID" $EFIBOOT  "${ISO_FILES[@]}"  >&8
+# ebiso currenlty works only with UEFI
+if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" && $USING_UEFI_BOOTLOADER == 1 ]]; then
+   $ISO_MKISOFS_BIN -R -o $ISO_DIR/$ISO_PREFIX.iso -e boot/efiboot.img .
+else
+   $ISO_MKISOFS_BIN $v -o "$ISO_DIR/$ISO_PREFIX.iso" -b isolinux/isolinux.bin -c isolinux/boot.cat \
+       -no-emul-boot -boot-load-size 4 -boot-info-table \
+       -R -J -volid "$ISO_VOLID" $EFIBOOT -v -iso-level 3 .  >&8
+       ##-R -J -volid "$ISO_VOLID" $EFIBOOT  "${ISO_FILES[@]}"  >&8
+fi
 StopIfError "Could not create ISO image (with $ISO_MKISOFS_BIN)"
 popd >&8
 

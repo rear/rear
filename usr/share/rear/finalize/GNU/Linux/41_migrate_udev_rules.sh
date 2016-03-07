@@ -25,11 +25,14 @@ RULE_FILES=( $( echo /etc/udev/rules.d/*persistent*{names,net,cd}.rules ) )
 # and, if they differ, copy the version from the rescue system into the recovered system, of course
 # preserving a backup in /root/rear-*.old
 for rule in "${RULE_FILES[@]}" ; do
-	rulefile="$(basename "$rule")"
-	if test -s "$rule" && ! diff -q "$rule" /mnt/local/"$rule" >&8 ; then
-		LogPrint "Updating udev configuration ($rulefile)"
-		cp /mnt/local/"$rule" /mnt/local/root/rear-"$rulefile".old
-		cp "$rule" /mnt/local/"$rule"
-		StopIfError "Could not copy '$rule' -> '/mnt/local/$rule'"
-	fi
+    rulefile="$(basename "$rule")"
+    if test -s "$rule" && ! diff -q "$rule" $TARGET_FS_ROOT/"$rule" >&8 ; then
+        LogPrint "Updating udev configuration ($rulefile)"
+        # test for file $TARGET_FS_ROOT/"$rule" as BACKUP_RESTORE_MOVE_AWAY_FILES variable
+        # may have prevented the restore of one of these files
+        [[ -f $TARGET_FS_ROOT/"$rule" ]] && cp $v $TARGET_FS_ROOT/"$rule" $TARGET_FS_ROOT/root/rear-"$rulefile".old >&2
+        # copy the $rule from the rescue image to $TARGET_FS_ROOT/
+        cp $v "$rule" $TARGET_FS_ROOT/"$rule" >&2
+        StopIfError "Could not copy '$rule' -> '$TARGET_FS_ROOT/$rule'"
+    fi
 done

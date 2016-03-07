@@ -11,7 +11,7 @@ case "$TAPE_DEVICE:$scheme" in
         ;;
     (:*)
         if [ "$BACKUP_TYPE" == "incremental" ]; then
-            for i in $(ls ${BUILD_DIR}/outputfs/${NETFS_PREFIX}/*.tar.gz); do restorearchive=$i;done
+            for i in $(ls ${BUILD_DIR}/outputfs/${NETFS_PREFIX}/*${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}); do restorearchive=$i;done
             if [ $(date +%a) = $FULLBACKUPDAY ]; then
                 Log "It is Full-Backup-Day"
                 rm -f "${BUILD_DIR}/outputfs/${NETFS_PREFIX}/timestamp.txt"

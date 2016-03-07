@@ -22,28 +22,28 @@ fi
 [[ $(type -p grub-probe) || $(type -p grub2-probe) ]] || return
 
 LogPrint "Installing GRUB2 boot loader"
-mount -t proc none /mnt/local/proc
-#for i in /dev /dev/pts /proc /sys; do mount -B $i /mnt/local${i} ; done
+mount -t proc none $TARGET_FS_ROOT/proc
+#for virtual_filesystem in /dev /dev/pts /proc /sys ; do mount -B $virtual_filesystem $TARGET_FS_ROOT$virtual_filesystem ; done
 
 if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
 
     # Check if we find GRUB where we expect it
-    [[ -d "/mnt/local/boot" ]]
+    [[ -d "$TARGET_FS_ROOT/boot" ]]
     StopIfError "Could not find directory /boot"
 
     # grub2 can be in /boot/grub or /boot/grub2
     grub_name="grub2"
-    if [[ ! -d "/mnt/local/boot/$grub_name" ]] ; then
+    if [[ ! -d "$TARGET_FS_ROOT/boot/$grub_name" ]] ; then
         grub_name="grub"
-        [[ -d "/mnt/local/boot/$grub_name" ]]
+        [[ -d "$TARGET_FS_ROOT/boot/$grub_name" ]]
         StopIfError "Could not find directory /boot/$grub_name"
     fi
-    [[ -r "/mnt/local/boot/$grub_name/grub.cfg" ]]
+    [[ -r "$TARGET_FS_ROOT/boot/$grub_name/grub.cfg" ]]
     LogIfError "Unable to find /boot/$grub_name/grub.cfg."
 
     # Find exclusive partition(s) belonging to /boot
     # or / (if /boot is inside root filesystem)
-    if [[ "$(filesystem_name /mnt/local/boot)" == "/mnt/local" ]]; then
+    if [[ "$( filesystem_name $TARGET_FS_ROOT/boot )" == "$TARGET_FS_ROOT" ]]; then
         bootparts=$(find_partition fs:/)
         grub_prefix=/boot/grub2
     else
@@ -79,13 +79,13 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
         partnr=$((partnr - 1))
 
         if [[ "$bootdisk" == "$disk" ]]; then
-            #chroot /mnt/local $grub_name-mkconfig -o /boot/$grub_name/grub.cfg
-	    #chroot /mnt/local $grub_name-install "$bootdisk"
-	    $grub_name-install --root-directory=/mnt/local/ $bootdisk
+            #chroot $TARGET_FS_ROOT $grub_name-mkconfig -o /boot/$grub_name/grub.cfg
+	    #chroot $TARGET_FS_ROOT $grub_name-install "$bootdisk"
+	    $grub_name-install --root-directory=$TARGET_FS_ROOT $bootdisk
         else
-            chroot /mnt/local $grub_name-mkconfig -o /boot/$grub_name/grub.cfg
-	    #chroot /mnt/local $grub_name-install "$bootdisk"
-	    $grub_name-install --root-directory=/mnt/local/ $bootdisk
+            chroot $TARGET_FS_ROOT $grub_name-mkconfig -o /boot/$grub_name/grub.cfg
+	    #chroot $TARGET_FS_ROOT $grub_name-install "$bootdisk"
+	    $grub_name-install --root-directory=$TARGET_FS_ROOT $bootdisk
         fi
 
         if (( $? == 0 )); then
@@ -95,10 +95,10 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
 fi
 
 if [[ "$NOBOOTLOADER" ]]; then
-    if chroot /mnt/local grub2-install "$disk" >&2 ; then
+    if chroot $TARGET_FS_ROOT grub2-install "$disk" >&2 ; then
         NOBOOTLOADER=
     fi
 fi
 
-#for i in /dev /dev/pts /proc /sys; do umount  /mnt/local${i} ; done
-umount /mnt/local/proc
+#for virtual_filesystem in /dev /dev/pts /proc /sys ; do umount $TARGET_FS_ROOT$virtual_filesystem ; done
+umount $TARGET_FS_ROOT/proc

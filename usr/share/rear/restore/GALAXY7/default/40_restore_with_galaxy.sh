@@ -23,7 +23,7 @@ $GALAXY7_BACKUPSET
 [sourcepaths]
 /
 [destinationpath]
-/mnt/local
+$TARGET_FS_ROOT
 EOF
 
 # initialize variable
@@ -71,7 +71,7 @@ else
 fi
 
 # create missing directories
-pushd /mnt/local >&8
+pushd $TARGET_FS_ROOT >&8
 for dir in opt/galaxy/Base/Temp opt/galaxy/Updates opt/galaxy/iDataAgent/jobResults ; do
 	mkdir -p "$dir"
 done

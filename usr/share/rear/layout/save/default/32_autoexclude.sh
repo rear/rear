@@ -23,6 +23,20 @@ if [[ "$AUTOEXCLUDE_PATH" ]] ; then
     done
 fi
 
+# Automatically exclude filesystems mounted from USB devices found in OUTPUT_URL or BACKUP_URL
+if [[ "$AUTOEXCLUDE_USB_PATH" ]] ; then
+    for exclude in "${AUTOEXCLUDE_USB_PATH[@]}" ; do
+        while read fs device mountpoint junk ; do
+            if [[ "$exclude" = "$mountpoint" ]] ; then
+                Log "Automatically excluding filesystem $mountpoint (USB device $device)."
+                mark_as_done "fs:$mountpoint"
+                mark_tree_as_done "fs:$mountpoint"
+                ### by excluding the filesystem, the device will also be excluded
+            fi
+        done < <(grep ^fs $LAYOUT_FILE)
+    done
+fi
+
 # Automatically exclude disks that do not have filesystems mounted.
 if [[ "$AUTOEXCLUDE_DISKS" =~ ^[yY1] ]] ; then
     used_disks=()

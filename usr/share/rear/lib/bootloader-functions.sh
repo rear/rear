@@ -19,6 +19,75 @@ function get_syslinux_version {
     echo "$syslinux_version"
 }
 
+function find_syslinux_file {
+    # input argument is usually isolinux.bin
+    # output argument is the full path of isolinux.bin
+    local syslinux_file=""
+
+    for file in /usr/{share,lib,libexec}/*/"$1" ; do
+        if [[ -s "$file" ]]; then
+            syslinux_file="$file"
+            break # for loop
+        fi
+    done
+    echo "$syslinux_file"
+}
+
+function find_syslinux_modules_dir {
+    # input argument is usually a com32 image file
+    # output argument is the full path of the SYSLINUX_MODULES_DIR directory (not of the com32 file!)
+    local syslinux_version=$(get_syslinux_version)
+    local syslinux_modules_dir=
+
+    if [[ -n "$SYSLINUX_MODULES_DIR" ]]; then
+        [[ -d "$SYSLINUX_MODULES_DIR" ]] && echo "$SYSLINUX_MODULES_DIR"
+        return
+    fi
+
+    if version_newer "$syslinux_version" 5.00; then
+        # check for the default location - fast and easy
+        if [[ -d /usr/lib/syslinux/modules ]]; then
+            if (( USING_UEFI_BOOTLOADER )); then
+                syslinux_modules_dir=/usr/lib/syslinux/modules/efi64
+            else
+                syslinux_modules_dir=/usr/lib/syslinux/modules/bios
+            fi
+        else
+            # not default location? try to find it
+            # file=/usr/lib/syslinux/modules/efi32/menu.c32
+            # f23: file=/usr/share/syslinux/menu.c32
+            file=$( find /usr -name "$1" 2>/dev/null | tail -1 )
+            syslinux_modules_dir=$( dirname "$file" )        # /usr/lib/syslinux/modules/efi32
+            syslinux_modules_dir=${syslinux_modules_dir%/*}  # /usr/lib/syslinux/modules
+            if (( USING_UEFI_BOOTLOADER )); then
+                syslinux_modules_dir=${syslinux_modules_dir}/efi64
+            else
+                syslinux_modules_dir=${syslinux_modules_dir}/bios
+            fi
+            if [[ ! -d "$syslinux_modules_dir" ]] ; then     # f23: /usr/share/bios
+                syslinux_modules_dir=$( dirname "$file" )    # try again (f23 uses old location for its modules)
+            fi
+            [[ -d "$syslinux_modules_dir" ]]
+            BugIfError "Define SYSLINUX_MODULES_DIR in local.conf as syslinux modules were not found"
+        fi
+    fi
+    echo "$syslinux_modules_dir"
+}
+
+function find_yaboot_file {
+    # input argument is usually: yaboot
+    # output argument is the full path of the yaboot binary
+    local yaboot_file=""
+
+    for file in /{lib/lilo,usr/lib}/*/"$1" ; do
+        if [[ -s "$file" ]]; then
+            yaboot_file="$file"
+            break
+        fi
+    done
+    echo "$yaboot_file"
+}
+
 function set_syslinux_features {
 	# Test for features in syslinux
 	# true if isolinux supports booting from /boot/syslinux, /boot or only from / of the ISO
@@ -43,15 +112,18 @@ function set_syslinux_features {
 	FEATURE_SYSLINUX_MENU_HIDDEN=
 	# true if syslinux supports TEXT HELP directive
 	FEATURE_SYSLINUX_TEXT_HELP=
-
-	# Define the syslinux directory for later usage
+        # true if syslinux supports modules sub-dir (Version > 5.00)
+        FEATURE_SYSLINUX_MODULES=
+	# If ISO_DEFAULT is not set, set it to default 'boothd'
+	if [ -z "$ISO_DEFAULT" ]; then
+		ISO_DEFAULT="boothd"
+	fi
+	# Define the syslinux directory for later usage (since version 5 the bins and c32 are in separate dirs)
 	if [[ -z "$SYSLINUX_DIR" ]]; then
-		for file in /usr/{share,lib,libexec}/*/isolinux.bin ; do
-			if [[ -s "$file" ]]; then
-				SYSLINUX_DIR="$(dirname $file)"
-				break # for loop
-			fi
-		done
+		ISOLINUX_BIN=$(find_syslinux_file isolinux.bin)
+		if [[ -s "$ISOLINUX_BIN" ]]; then
+			SYSLINUX_DIR="$(dirname $ISOLINUX_BIN)"
+		fi
 	fi
 	[[ "$SYSLINUX_DIR" ]]
 	StopIfError "Could not find a working syslinux path."
@@ -90,6 +162,10 @@ function set_syslinux_features {
 		FEATURE_SYSLINUX_EXTLINUX_INSTALL="y"
 	fi
 
+	if version_newer "$syslinux_version" 5.00; then
+		FEATURE_SYSLINUX_MODULES="y"
+	fi
+
 	if [[ "$FEATURE_SYSLINUX_BOOT_SYSLINUX" ]]; then
 		SYSLINUX_PREFIX="boot/syslinux"
 	else
@@ -110,12 +186,20 @@ function make_syslinux_config {
 	[[ -d "$1" ]]
 	BugIfError "Required argument for BOOT_DIR is missing"
 	[[ -d "$SYSLINUX_DIR" ]]
-	BugIfError "Required environment SYSLINUX_DIR ($SYSLINX_DIR) is not set or not a d irectory"
+	BugIfError "Required environment SYSLINUX_DIR ($SYSLINUX_DIR) is not set or not a directory"
 	[[ "$FEATURE_SYSLINUX_IS_SET" ]]
 	BugIfError "You must call set_syslinux_features before"
 
 	local BOOT_DIR="$1" ; shift
 	local flavour="${1:-isolinux}" ; shift
+	# syslinux v5 and higher has now its modules in a separate directory structure
+	local syslinux_modules_dir=
+
+	if [[ "$FEATURE_SYSLINUX_MODULES" ]]; then
+		syslinux_modules_dir=$( find_syslinux_modules_dir menu.c32 )
+		# the modules dir is the base for SYSLINUX_DIR (to comply with versions < 5)
+		SYSLINUX_DIR="$syslinux_modules_dir"
+	fi
 
     # Enable serial console, unless explicitly disabled (only last entry is used :-/)
     if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
@@ -176,15 +260,24 @@ function make_syslinux_config {
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"
 	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
+	if [ "$ISO_DEFAULT" == "manual" ] ; then
+               echo "default rear"
+               syslinux_menu "default"
+        fi 
 	echo ""
 	
 	echo "say rear - Recover $(uname -n)"
-	echo "label rear"
-	syslinux_menu "label Automatic ^Recover $(uname -n)"
+	echo "label rear-automatic"
+	syslinux_menu "label ^Automatic Recover $(uname -n)"
 	syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"
 	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover"
+
+	if [ "$ISO_DEFAULT" == "automatic" ] ; then
+               echo "default rear-automatic"
+               syslinux_menu "default"
+        fi	
 	echo ""
 	
 	syslinux_menu separator
@@ -207,7 +300,7 @@ function make_syslinux_config {
 		echo "say boothd0 - boot first local disk"
 		echo "label boothd0"
 		syslinux_menu "label Boot First ^Local disk (hd0)"
-		if [ "$flavour" == "isolinux" ] ; then
+		if [[ "$flavour" == "isolinux" ]] && [ "$ISO_DEFAULT" == "boothd" ] ; then
 			# for isolinux local boot means boot from first disk
 			echo "default boothd0"
 			syslinux_menu "default"
@@ -219,7 +312,7 @@ function make_syslinux_config {
 		echo "say boothd1 - boot second local disk"
 		echo "label boothd1"
 		syslinux_menu "label Boot ^Second Local disk (hd1)"
-		if [[ "$flavour" == "extlinux" ]]; then
+		if [[ "$flavour" == "extlinux" ]] && [ "$ISO_DEFAULT" == "boothd" ]; then
 			# for extlinux local boot means boot from second disk because the boot disk became the first disk
 			# which usually allows us to access the original first disk as second disk
 			echo "default boothd1"
@@ -290,6 +383,9 @@ function make_syslinux_config {
 	if [[ -r "$SYSLINUX_DIR/libutil.c32" ]]; then
 		cp $v "$SYSLINUX_DIR/libutil.c32" "$BOOT_DIR/libutil.c32" >&2
 	fi
+	if [[ -r "$SYSLINUX_DIR/vesamenu.c32" ]]; then
+		cp $v "$SYSLINUX_DIR/vesamenu.c32" "$BOOT_DIR/vesamenu.c32" >&2
+	fi
 
 	if [[ -r "$SYSLINUX_DIR/hdt.c32" ]]; then
 		cp $v "$SYSLINUX_DIR/hdt.c32" "$BOOT_DIR/hdt.c32" >&2
@@ -346,3 +442,64 @@ function make_syslinux_config {
 		echo "default menu.c32"
 	fi
 }
+
+# Create configuration file for elilo
+function create_ebiso_elilo_conf {
+cat << EOF
+timeout = 5
+default = "Relax and Recover (no Secure Boot)"
+
+image = kernel
+    label = "Relax and Recover (no Secure Boot)"
+    initrd = initrd.cgz
+EOF
+    [[ -n $KERNEL_CMDLINE ]] && cat << EOF
+    append = "$KERNEL_CMDLINE"
+EOF
+}
+
+# Create configuration grub
+function create_grub2_cfg {
+cat << EOF
+set default="0"
+
+insmod efi_gop
+insmod efi_uga
+insmod video_bochs
+insmod video_cirrus
+insmod all_video
+
+set gfxpayload=keep
+insmod gzio
+insmod part_gpt
+insmod ext2
+
+set timeout=5
+
+search --no-floppy --file /boot/efiboot.img --set
+#set root=(cd0)
+
+menuentry "Relax and Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
+     echo 'Loading kernel ...'
+     linux /isolinux/kernel $KERNEL_CMDLINE
+     echo 'Loading initial ramdisk ...'
+     initrd /isolinux/initrd.cgz
+}
+
+menuentry "Relax and Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
+     echo 'Loading kernel ...'
+     linuxefi /isolinux/kernel $KERNEL_CMDLINE
+     echo 'Loading initial ramdisk ...'
+     initrdefi /isolinux/initrd.cgz
+}
+
+menuentry "Reboot" {
+     reboot
+}
+
+menuentry "Exit to EFI Shell" {
+     exit
+}
+EOF
+}
+

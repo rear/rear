@@ -37,7 +37,7 @@ excluded_mountpoints=( $(grep ^#fs $VAR_DIR/layout/disklayout.conf  | awk '{prin
 MOUNTPOINTS_TO_RESTORE=${excluded_mountpoints[@]#/}
 
 # find out which filespaces (= mountpoints) are available for restore
-LC_ALL=${LANG_RECOVER} dsmc query filespace -date=2 -time=1 | grep -A 10000 'File' >$TMP_DIR/tsm_filespaces
+LC_ALL=${LANG_RECOVER} dsmc query filespace -date=2 -time=1 -scrollprompt=no | grep -A 10000 'File' >$TMP_DIR/tsm_filespaces
 # Error code 8 can be ignored, see bug report at
 # https://sourceforge.net/tracker/?func=detail&atid=859452&aid=1942895&group_id=171835
 [ $PIPESTATUS -eq 0 -o $PIPESTATUS -eq 8 ]
@@ -48,14 +48,14 @@ TSM_FILESPACE_NUMS=( )
 # TSM_FILESPACE_INCLUDED arrays for use as default value for TSM_RESTORE_FILESPACE_NUMS
 TSM_FILESPACE_INCLUDED=( )
 TSM_FILESPACE_INCLUDED_NUMS=( )
-while read num date time type path ; do
+while read num path ; do
 	TSM_FILESPACES[$num]="$path"
 	TSM_FILESPACE_NUMS[$num]="$num"
         if IsInArray $path "${included_mountpoints[@]}" ; then
               TSM_FILESPACE_INCLUDED[$num]="$path"
               TSM_FILESPACE_INCLUDED_NUMS[$num]="$num"
         fi
-done < <(grep -A 10000 '^  1' <<<"$TSM_FILESPACE_TEXT")
+done < <((grep -A 10000 '^  1' | awk '{print $1 " " $NF}') <<<"$TSM_FILESPACE_TEXT")
 
 Log "Available filespaces:
 $TSM_FILESPACE_TEXT"

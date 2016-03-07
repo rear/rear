@@ -18,9 +18,39 @@
 #
 #
 
+## other bootloader distro case
+if [[ ! -r /etc/yaboot.conf ]]
+then
+    return
+fi
+
+SUSE_STYLE=
+
 # create yaboot directory structure
 mkdir -p $v $TMP_DIR/ppc/chrp >&2
-cp $v /usr/lib/yaboot/yaboot $TMP_DIR/ppc/chrp >&2
+ISO_YABOOT_BIN=$(find_yaboot_file yaboot)
+
+if [[ $ISO_YABOOT_BIN == *"/lib/lilo/pmac"* ]]
+then
+   ISO_YABOOT_BIN="/lib/lilo/chrp/yaboot.chrp"
+   SUSE_STYLE=1
+fi
+
+if [[ "$SUSE_STYLE" ]]; then
+  #SUSE type distos
+  cp $v $ISO_YABOOT_BIN $TMP_DIR/yaboot >&2
+
+cat >"$TMP_DIR/ppc/bootinfo.txt" <<EOF
+<chrp-boot>
+<description>Relax-and-Recover</description>
+<os-name>Linux</os-name>
+<boot-script>boot &device;:\yaboot</boot-script>
+</chrp-boot>
+EOF
+
+else
+  #Red Hat type distros
+  cp $v $ISO_YABOOT_BIN $TMP_DIR/ppc/chrp >&2
 
 cat >"$TMP_DIR/ppc/bootinfo.txt" <<EOF
 <chrp-boot>
@@ -29,6 +59,8 @@ cat >"$TMP_DIR/ppc/bootinfo.txt" <<EOF
 <boot-script>boot &device;:\ppc\chrp\yaboot</boot-script>
 </chrp-boot>
 EOF
+
+fi
 
 mkdir -p $v $TMP_DIR/etc >&2
 cat >"$TMP_DIR/etc/yaboot.conf" <<EOF

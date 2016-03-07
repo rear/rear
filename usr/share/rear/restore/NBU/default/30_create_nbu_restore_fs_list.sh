@@ -21,7 +21,7 @@ fi
 # Part 4: Add excluded filesystems to the listfile used in the -f option of the bprecover command
 if grep -q "^/$" $TMP_DIR/restore_fs_list
 then
-   echo "!/mnt/local/" >> $TMP_DIR/restore_fs_list
+   echo "!$TARGET_FS_ROOT" >> $TMP_DIR/restore_fs_list
 fi
 if [ ${#EXCLUDE_MOUNTPOINTS[@]} -gt 0 ]
 then

@@ -9,7 +9,7 @@ OFFICIAL =
 ### Get version from Relax-and-Recover itself
 rearbin = usr/sbin/rear
 name = rear
-version := $(shell awk 'BEGIN { FS="=" } /^VERSION=/ { print $$2}' $(rearbin))
+version := $(shell awk 'BEGIN { FS="=" } /^readonly VERSION=/ { print $$2}' $(rearbin))
 
 ### Get the branch information from git
 ifeq ($(OFFICIAL),)
@@ -107,8 +107,8 @@ rewrite:
 		-e 's#^Version:.*#Version: $(version)-$(debrelease)#' \
 		$(dscfile)
 	sed -i.orig \
-		-e 's#^VERSION=.*#VERSION=$(distversion)#' \
-		-e 's#^RELEASE_DATE=.*#RELEASE_DATE="$(release_date)"#' \
+		-e 's#^readonly VERSION=.*#readonly VERSION=$(distversion)#' \
+		-e 's#^readonly RELEASE_DATE=.*#readonly RELEASE_DATE="$(release_date)"#' \
 		$(rearbin)
 
 restore:
@@ -230,6 +230,8 @@ endif
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR)/$(obspackage) $(name)-$(distversion)/packaging/debian/rules >$(BUILD_DIR)/$(obspackage)/debian.rules
 	echo -e "rear ($(version)-$(debrelease)) stable; urgency=low\n\n  * new snapshot build\n\n -- OpenSUSE Build System <obs@relax-and-recover.org>  $$(date -R)" >$(BUILD_DIR)/$(obspackage)/debian.changelog
 	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR)/$(obspackage) $(name)-$(distversion)/packaging/debian/changelog >>$(BUILD_DIR)/$(obspackage)/debian.changelog
+	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR)/$(obspackage) $(name)-$(distversion)/packaging/debian/compat >>$(BUILD_DIR)/$(obspackage)/debian.compat
+	tar -xOzf $(name)-$(distversion).tar.gz -C $(BUILD_DIR)/$(obspackage) $(name)-$(distversion)/packaging/debian/copyright >>$(BUILD_DIR)/$(obspackage)/debian.copyright
 	cd $(BUILD_DIR)/$(obspackage); osc addremove
 	cd $(BUILD_DIR)/$(obspackage); osc ci -m "Update to $(name)-$(distversion)" $(BUILD_DIR)/$(obspackage)
 	rm -rf $(BUILD_DIR)

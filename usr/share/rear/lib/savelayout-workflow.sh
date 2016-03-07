@@ -23,6 +23,6 @@ if [[ "$VERBOSE" ]]; then
 fi
 WORKFLOWS=( ${WORKFLOWS[@]} savelayout )
 WORKFLOW_savelayout () {
-    DISKLAYOUT_FILE=$VAR_DIR/layout/disklayout.conf
+    #DISKLAYOUT_FILE=$VAR_DIR/layout/disklayout.conf # defined in default.conf now (issue #678)
     SourceStage "layout/save"
 }

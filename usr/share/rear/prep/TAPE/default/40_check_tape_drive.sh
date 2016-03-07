@@ -19,7 +19,7 @@ StopIfError "Problem with reading tape device '$TAPE_DEVICE'."
 cat $TMP_DIR/tape_status >&2
 
 # Check if tape is online
-grep -qP '\bONLINE\b' "$TMP_DIR/tape_status"
+grep -qE '\bONLINE\b' "$TMP_DIR/tape_status"
 StopIfError "Tape in device '$TAPE_DEVICE' is not online."
 
 # Check if tape is not write protected

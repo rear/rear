@@ -1,3 +1,22 @@
+rear (1.17.2-1) stable; urgency=low
+
+  * some security fixes
+  * minor bug fixes
+
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Mon, 31 Aug 2015 09:33:06 +0100
+rear (1.17.1-1) stable; urgency=low
+
+  * added support for Debian 8 and Ubuntu 15
+  * some security fixes
+  * minor bug fixes
+
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Thu, 25 Jun 2015 09:36:39 +0100
+rear (1.17.0-1) stable; urgency=high
+
+  * new features
+  * lots of bug fixes
+
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Fri, 13 Mar 2015 14:53:50 +0100
 rear (1.16.1-1) stable; urgency=low
 
   * script validation now works for bash v3 and v4

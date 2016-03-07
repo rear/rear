@@ -40,7 +40,7 @@ fi
 # Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default value to cat in 
 # case encryption is disabled
 if (( $BACKUP_PROG_CRYPT_ENABLED == 1 )); then
-  LogPrint "Encrypting archive with key: $BACKUP_PROG_CRYPT_KEY"
+  LogPrint "Encrypting archive with a key"
 else
   LogPrint "Encrypting disabled"
   BACKUP_PROG_CRYPT_OPTIONS="cat"
@@ -78,7 +78,7 @@ case "$(basename ${BACKUP_PROG})" in
 			$BACKUP_PROG_X_OPTIONS \
 			${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} $BACKUP_PROG_COMPRESS_OPTIONS \
 			-X $TMP_DIR/backup-exclude.txt -C / -c -f - \
-			$(cat $TMP_DIR/backup-include.txt) $LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
+			$(cat $TMP_DIR/backup-include.txt) $LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
 		$BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
 			--no-wildcards-match-slash --one-file-system \
 			--ignore-failed-read $BACKUP_PROG_OPTIONS \
@@ -90,10 +90,10 @@ case "$(basename ${BACKUP_PROG})" in
 	(rsync)
 		# make sure that the target is a directory
 		mkdir -p $v "$backuparchive" >&2
-		Log $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete \
+		Log $BACKUP_PROG $v "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete \
 			--exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded \
 			$(cat $TMP_DIR/backup-include.txt) "$backuparchive"
-		$BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete \
+		$BACKUP_PROG  $v "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete \
 			--exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded \
 			$(cat $TMP_DIR/backup-include.txt) "$backuparchive"
 	;;

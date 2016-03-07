@@ -20,9 +20,9 @@
 
 function read_and_strip_file () {
 # extracts content from config files. In other words: strips the comments and new lines
-	if test -s "$1" ; then
-		sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$1"
-	fi
+    if test -s "$1" ; then
+        sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$1"
+    fi
 }
 
 function is_numeric () {
@@ -32,6 +32,15 @@ function is_numeric () {
     else
         echo 0
     fi
+}
+
+function is_true () {
+    # argument is variable which needs to be tested if it is true or not (see issue #625)
+    case "$1" in
+        [tT] | [yY] | [yY][eE][sS] | [tT][rR][uU][eE] | 1)
+        return 0 ;;
+    esac
+    return 1
 }
 
 ######
@@ -129,7 +138,8 @@ mount_url() {
             ;;
         (cifs)
             if [ x"$options" = x"$defaultoptions" ];then
-                mount_cmd="mount $v -o $options,guest //$(url_host $url)$(url_path $url) $mountpoint"
+                # defaultoptions contains noatime which is not valid for cifs (issue #752)
+                mount_cmd="mount $v -o rw,guest //$(url_host $url)$(url_path $url) $mountpoint"
             else
                 mount_cmd="mount $v -o $options //$(url_host $url)$(url_path $url) $mountpoint"
             fi

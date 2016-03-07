@@ -13,7 +13,7 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 	#      could be done better, but might not be worth the risk
 
 	# set INITRD_MODULES from recovered system
-   if test -r /mnt/local/etc/sysconfig/kernel
+   if test -r $TARGET_FS_ROOT/etc/sysconfig/kernel
    then # In SLE12 RC2 /etc/sysconfig/kernel is an useless stub that contains only one line
         #   INITRD_MODULES=""
         # Since SLE12 RC3 /etc/sysconfig/kernel does no longer exist, see bnc#895084 where
@@ -28,8 +28,8 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
         #   # and the dracut (--force-drivers paramter) manpage.
         # Because the comment above reads "probably not required" at least for now
         # there is no support for force_drivers in /etc/dracut.conf.d/01-dist.conf.
-	source /mnt/local/etc/sysconfig/kernel
-	StopIfError "Could not source '/mnt/local/etc/sysconfig/kernel'"
+	source $TARGET_FS_ROOT/etc/sysconfig/kernel
+	StopIfError "Could not source '$TARGET_FS_ROOT/etc/sysconfig/kernel'"
 
 	Log "Original INITRD_MODULES='$INITRD_MODULES'"
 	OLD_INITRD_MODULES=( $INITRD_MODULES ) # use array to split into words
@@ -46,12 +46,13 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 
 	Log "New INITRD_MODULES='${OLD_INITRD_MODULES[@]} ${NEW_INITRD_MODULES[@]}'"
 
-	sed -i -e '/^INITRD_MODULES/s/^.*$/#&\nINITRD_MODULES="'"${OLD_INITRD_MODULES[*]} ${NEW_INITRD_MODULES[*]}"'"/' /mnt/local/etc/sysconfig/kernel
+	sed -i -e '/^INITRD_MODULES/s/^.*$/#&\nINITRD_MODULES="'"${OLD_INITRD_MODULES[*]} ${NEW_INITRD_MODULES[*]}"'"/' $TARGET_FS_ROOT/etc/sysconfig/kernel
    fi
 
-	mount -t proc none /mnt/local/proc
-	mount -t sysfs none /mnt/local/sys
-	if chroot /mnt/local /bin/bash --login -c "mkinitrd" >&2 ; then
+	mount -t proc none $TARGET_FS_ROOT/proc
+	mount -t sysfs none $TARGET_FS_ROOT/sys
+        echo "Running mkinitrd..."
+	if chroot $TARGET_FS_ROOT /bin/bash --login -c "mkinitrd" >&2 ; then
 		LogPrint "Recreated initramfs (mkinitrd)."
 	else
 		LogPrint "WARNING !!!
@@ -59,6 +60,6 @@ initramfs creation (mkinitrd) failed, please check '$LOGFILE' to see the error
 messages in detail and decide yourself, wether the system will boot or not.
 "
 	fi
-	umount /mnt/local/proc /mnt/local/sys
+	umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
 
 fi

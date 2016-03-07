@@ -12,11 +12,11 @@ if [ "$BACKUP_PROG" = "duply" ]; then
     # if restore should be done with duply, but it failed, give the user
     # a chance to fix it manually
 
-    LogPrint "Please restore your backup in the provided shell to /mnt/local and, 
-    when finished, type exit in the shell to continue recovery. 
+    LogPrint "Please restore your backup in the provided shell to $TARGET_FS_ROOT and,
+    when finished, type exit in the shell to continue recovery.
     You can use duplicity / duply to restore your backup."
 
-    export TMPDIR=/mnt/local
-    rear_shell "Did you restore the backup to /mnt/local ? Are you ready to continue recovery ?"
+    export TMPDIR=$TARGET_FS_ROOT
+    rear_shell "Did you restore the backup to $TARGET_FS_ROOT ? Are you ready to continue recovery ?"
 
-fi    
+fi

@@ -1,5 +1,5 @@
-# Start SELinux if it was stopped - check presence of /tmp/selinux.mode
-[ -f $TMP_DIR/selinux.mode ] && {
+# Start SELinux if it was stopped - check presence of $TMP_DIR/selinux.mode
+[[ -f $TMP_DIR/selinux.mode ]] && {
     local scheme=$(url_scheme $BACKUP_URL)
     local path=$(url_path $BACKUP_URL)
     local opath=$(backup_path $scheme $path)

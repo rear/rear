@@ -9,9 +9,12 @@
 export DH_VERBOSE=1
 
 # This is the debhelper compatibility version to use.
-export DH_COMPAT=5
+#export DH_COMPAT=5
 
-build: build-stamp
+build: build-arch build-indep
+build-arch: build-stamp
+build-indep: build-stamp
+
 build-stamp:
 	dh_testdir
 	# noop
@@ -34,11 +37,14 @@ binary-indep: build
 	# The DESTDIR Has To Be Exactly debian/rear
 	mkdir -vp \
 		debian/rear/etc/ \
+		debian/rear/usr/share/doc/ \
 		debian/rear/usr/sbin/ \
 		debian/rear/usr/share/ \
 		debian/rear/usr/share/man/man8/ \
 		debian/rear/var/lib/rear/ \
 		debian/rear/var/log/rear/
+
+	find ./debian -type d | xargs chmod 755
 	
 	# copy rear components into directories
 	cp -av etc/rear debian/rear/etc/
@@ -57,16 +63,16 @@ binary-indep: build
 	sed -i \
 		-e 's#/usr/share/doc/packages#/usr/share/doc#' \
 		debian/rear/usr/share/man/man8/rear.8
+	gzip --best debian/rear/usr/share/man/man8/rear.8
 	
 	# --- end custom part for installing
 
 	dh_installdeb
-	dh_installdocs README doc/*
+	dh_installdocs README.adoc doc/*
 	dh_installchangelogs
 	# dh_installman usr/share/rear/doc/rear.8
 	find debian/rear -name ".git*" -exec rm {} \;
 	rm debian/rear/usr/share/doc/rear/Makefile
-	rm debian/rear/usr/share/doc/rear/rear.8.txt
 	rm debian/rear/usr/share/doc/rear/user-guide/Makefile
 	rm debian/rear/usr/share/doc/rear/rear.8
 	dh_link

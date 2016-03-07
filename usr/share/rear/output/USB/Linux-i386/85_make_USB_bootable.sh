@@ -22,7 +22,7 @@ if [[ "$usb_syslinux_version" ]] && version_newer "$usb_syslinux_version" "$sysl
 fi
 
 # Make the USB bootable
-usb_filesystem=$(grep -P "^($USB_DEVICE|$REAL_USB_DEVICE)\\s" /proc/mounts | cut -d' ' -f3 | tail -1)
+usb_filesystem=$(grep -E "^($USB_DEVICE|$REAL_USB_DEVICE)\\s" /proc/mounts | cut -d' ' -f3 | tail -1)
 case "$usb_filesystem" in
 	(ext?)
 		if [[ "$FEATURE_SYSLINUX_EXTLINUX_INSTALL" ]]; then
@@ -48,9 +48,9 @@ if [ "$REAL_USB_DEVICE" != "$RAW_USB_DEVICE" ] ; then
 	# Write the USB boot sector if the filesystem is not the entire disk
 	LogPrint "Writing MBR to $RAW_USB_DEVICE"
 	if [[ "$FEATURE_DD_OFLAG" ]]; then
-		dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE bs=440 count=1 oflag=sync
+		dd if=$SYSLINUX_MBR_BIN of=$RAW_USB_DEVICE bs=440 count=1 oflag=sync
 	else
-		dd if=$(dirname $ISO_ISOLINUX_BIN)/mbr.bin of=$RAW_USB_DEVICE bs=440 count=1
+		dd if=$SYSLINUX_MBR_BIN of=$RAW_USB_DEVICE bs=440 count=1
 		sync
 	fi
 	StopIfError "Problem with writing the mbr.bin to '$RAW_USB_DEVICE'"

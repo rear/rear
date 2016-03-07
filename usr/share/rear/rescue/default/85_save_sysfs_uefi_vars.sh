@@ -56,11 +56,16 @@ else
     fi
 fi
 
-# double check it
+# in case we have an elilo bootloader then we might be lucky with next statements
+if [[ ! -f ${UEFI_BOOTLOADER} ]]; then
+    UEFI_BOOTLOADER=$(find /boot/efi -name "elilo.efi" | tail -1)
+fi
+
+# triple check it
 if [[ ! -f ${UEFI_BOOTLOADER} ]]; then
 
     Error "Cannot find a proper UEFI_BOOTLOADER ($UEFI_BOOTLOADER). 
-Please define it in $CONFIG_DIR/local.conf (e.g. UEFI_BOOTLOADER=/boot/efi/EFI/fedora/shim.efi)"
+Please define it in $CONFIG_DIR/local.conf (e.g. UEFI_BOOTLOADER=/boot/efi/EFI/fedora/bootx64.efi)"
 
 else
 

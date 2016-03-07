@@ -2,8 +2,8 @@ prefix = /usr
 datadir = $(prefix)/share
 mandir = $(datadir)/man
 
-txttargets = $(shell echo *.txt)
-htmltargets = $(patsubst %.txt, %.html, $(txttargets))
+adoctargets = $(shell echo *.adoc)
+htmltargets = $(patsubst %.adoc, %.html, $(adoctargets))
 
 all: docs
 
@@ -21,14 +21,14 @@ clean:
 	rm -f unconv.8 *.html *.xml
 	make -C user-guide clean
 
-%.8.html: %.8.txt
+%.8.html: %.8.adoc
 	asciidoc -d manpage $<
 
 %.8: %.8.xml
 	xmlto man $<
 
-%.html: %.txt
+%.html: %.adoc
 	asciidoc $<
 
-%.8.xml: %.8.txt
+%.8.xml: %.8.adoc
 	asciidoc -b docbook -d manpage $<
