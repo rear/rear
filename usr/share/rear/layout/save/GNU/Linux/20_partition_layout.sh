@@ -245,7 +245,7 @@ Log "Saving disk partitions."
     # format: disk <disk> <sectors> <partition label type>
     for disk in /sys/block/* ; do
         blockd=${disk#/sys/block/}
-        if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* ]] ; then
+        if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* || $blockd = nvme* ]] ; then
             devname=$(get_device_name $disk)
             devsize=$(get_disk_size ${disk#/sys/block/})
 
