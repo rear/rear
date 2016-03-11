@@ -5,7 +5,7 @@
 ###
 
 ### Only do when explicitely enabled
-if [[ ! "$GRUB_RESCUE" =~ ^[yY1] ]]; then
+if ! is_true "$GRUB_RESCUE" ; then
     return
 fi
 
@@ -57,7 +57,7 @@ fi
 if (( USING_UEFI_BOOTLOADER )) ; then
     # set to 1 means using UEFI
     grub_conf="`dirname $UEFI_BOOTLOADER`/grub.cfg"
-elif [[ $(type -p grub2-probe) ]]; then
+elif has_binary grub2-probe ; then
     grub_conf=$(readlink -f /boot/grub2/grub.cfg)
 else
     grub_conf=$(readlink -f /boot/grub/grub.cfg)
@@ -67,7 +67,7 @@ fi
 StopIfError "GRUB2 configuration cannot be modified."
 
 if [[ ! "${GRUB_RESCUE_PASSWORD:0:11}" == 'grub.pbkdf2' ]]; then
-    StopIfError "GRUB_RESCUE_PASSWORD needs to be set. Run grub2-mkpasswd-pbkdf2 to generate pbkdf2 hash"
+    Error "GRUB_RESCUE_PASSWORD needs to be set. Run grub2-mkpasswd-pbkdf2 to generate pbkdf2 hash"
 fi
 
 if [[ ! -f /etc/grub.d/01_users ]]; then
