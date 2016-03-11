@@ -241,10 +241,32 @@ EOF
         fi
     done < <(grep "^part $device " $LAYOUT_FILE)
 
-    # Ensure we have the new partitioning on the device.
+    # Try to ensure the kernel uses the new partitioning
+    # see https://github.com/rear/rear/issues/793
+    # First do a hardcoded sleep of 1 second so that
+    # the kernel and udev get a bit of time to process
+    # automated "read partition table changes" triggers
+    # of nowadays parted.
+    # Then to be backward compatible with traditional parted
+    # call partprobe explicitly to trigger the kernel
+    # to "read partition table changes" and if that fails
+    # wait 10 seconds before a first retry and if that fails
+    # wait 60 seconds before a final retry and if that fails
+    # ignore that failure and proceed "bona fide" because
+    # nowadays it should "just work" regardless of partprobe.
     (
-    echo "my_udevsettle"
-    echo "partprobe -s $device >&2"
-    echo "my_udevsettle"
+    echo "sleep 1"
+    echo "if ! partprobe -s $device >&2 ; then"
+    echo "    LogPrint 'retrying partprobe $device after 10 seconds' "
+    echo "    sleep 10"
+    echo "    if ! partprobe -s $device >&2 ; then"
+    echo "        LogPrint 'retrying partprobe $device after 1 minute' "
+    echo "        sleep 60"
+    echo "        if ! partprobe -s $device >&2 ; then"
+    echo "            LogPrint 'partprobe $device failed, proceeding bona fide' "
+    echo "        fi"
+    echo "    fi"
+    echo "fi"
     ) >> "$LAYOUT_CODE"
 }
+
