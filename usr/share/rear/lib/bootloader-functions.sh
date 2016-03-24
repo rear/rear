@@ -47,7 +47,7 @@ function find_syslinux_modules_dir {
     if version_newer "$syslinux_version" 5.00; then
         # check for the default location - fast and easy
         if [[ -d /usr/lib/syslinux/modules ]]; then
-            if (( USING_UEFI_BOOTLOADER )); then
+            if is_true $USING_UEFI_BOOTLOADER ; then
                 syslinux_modules_dir=/usr/lib/syslinux/modules/efi64
             else
                 syslinux_modules_dir=/usr/lib/syslinux/modules/bios
@@ -59,7 +59,7 @@ function find_syslinux_modules_dir {
             file=$( find /usr -name "$1" 2>/dev/null | tail -1 )
             syslinux_modules_dir=$( dirname "$file" )        # /usr/lib/syslinux/modules/efi32
             syslinux_modules_dir=${syslinux_modules_dir%/*}  # /usr/lib/syslinux/modules
-            if (( USING_UEFI_BOOTLOADER )); then
+            if is_true $USING_UEFI_BOOTLOADER ; then
                 syslinux_modules_dir=${syslinux_modules_dir}/efi64
             else
                 syslinux_modules_dir=${syslinux_modules_dir}/bios

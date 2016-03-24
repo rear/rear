@@ -1,5 +1,5 @@
 # a simplified uefivars replacement
-(( USING_UEFI_BOOTLOADER )) || return    # empty or 0 means NO UEFI
+is_true $USING_UEFI_BOOTLOADER || return    # empty or 0 means NO UEFI
 
 [[ ! -d $VAR_DIR/recovery ]] && mkdir -p -m 755 $VAR_DIR/recovery
 rm -f $VAR_DIR/recovery/uefi-variables

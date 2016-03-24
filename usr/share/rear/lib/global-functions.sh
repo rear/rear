@@ -34,10 +34,30 @@ function is_numeric () {
     fi
 }
 
+# two explicit functions to be able to test explicitly for true and false (see issue #625)
+# because "tertium non datur" (cf. https://en.wikipedia.org/wiki/Law_of_excluded_middle)
+# does not hold for variables because variables could be unset or have empty value
+# and to test if a variable is true or false its value is tested by that functions
+# but the variable may not have a real value (i.e. be unset or have empty value):
+
 function is_true () {
-    # argument is variable which needs to be tested if it is true or not (see issue #625)
+    # the argument is usually the value of a variable which needs to be tested
+    # only if there is explicitly a 'true' value then is_true returns true
+    # so that an unset variable or an empty value is not true:
     case "$1" in
-        [tT] | [yY] | [yY][eE][sS] | [tT][rR][uU][eE] | 1)
+        ([tT] | [yY] | [yY][eE][sS] | [tT][rR][uU][eE] | 1)
+        return 0 ;;
+    esac
+    return 1
+}
+
+function is_false () {
+    # the argument is usually the value of a variable which needs to be tested
+    # only if there is explicitly a 'false' value then is_false returns true
+    # so that an unset variable or an empty value is not false
+    # caution: for unset or empty variables is_false is false
+    case "$1" in
+        ([fF] | [nN] | [nN][oO] | [fF][aA][lL][sS][eE] | 0)
         return 0 ;;
     esac
     return 1
@@ -85,7 +105,7 @@ backup_path() {
                path="${TMP_DIR}/isofs${path}"
            fi
            ;;
-       (*)     # nfs, cifs, usb, a.o. need a temporary mount-path 
+       (*)     # nfs, cifs, usb, a.o. need a temporary mount-path
            path="${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
            ;;
     esac
@@ -102,7 +122,7 @@ output_path() {
        (file)  # type file needs a local path (must be mounted by user)
            path="$path/${OUTPUT_PREFIX}"
            ;;
-       (*)     # nfs, cifs, usb, a.o. need a temporary mount-path 
+       (*)     # nfs, cifs, usb, a.o. need a temporary mount-path
            path="${BUILD_DIR}/outputfs/${OUTPUT_PREFIX}"
            ;;
     esac
@@ -192,7 +212,7 @@ umount_url() {
             # and delete only the just used cache
             #rm -rf /var/cache/davfs2/*<mountpoint-hash>*
             rm -rf /var/cache/davfs2/*outputfs*
-            
+
 	    ;;
         (var)
             local var=$(url_host $url)
@@ -238,3 +258,4 @@ umount_mountpoint() {
     Log "Unmounting '$mountpoint' failed."
     return 1
 }
+

@@ -37,7 +37,7 @@ if [[ "$opath" ]]; then
     mkdir -p $v "${opath}" >&2
 fi
 
-# Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default value to cat in 
+# Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default value to cat in
 # case encryption is disabled
 if (( $BACKUP_PROG_CRYPT_ENABLED == 1 )); then
   LogPrint "Encrypting archive with a key"
@@ -57,7 +57,7 @@ if [[ -n "$ISO_MAX_SIZE" ]]; then
         # We add 15MB which is the average size of all isolinux binaries
         BASE_ISO_SIZE=$(((${INITRD_SIZE}+${KERNEL_SIZE})/1024/1024+15))
         # If we are EFI, add 30MB (+ previous 15MB), UEFI files can't exceed this size
-        (( USING_UEFI_BOOTLOADER )) && BASE_ISO_SIZE=$((${BASE_ISO_SIZE}+30))
+        is_true $USING_UEFI_BOOTLOADER && BASE_ISO_SIZE=$((${BASE_ISO_SIZE}+30))
         ISO_MAX_SIZE=$((${ISO_MAX_SIZE}-${BASE_ISO_SIZE}))
     fi
     SPLIT_COMMAND="split -d -b ${ISO_MAX_SIZE}m - ${backuparchive}."
