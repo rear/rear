@@ -64,5 +64,9 @@ function efiboot_img_size {
             (*) size=32000
         esac
     fi
+    # this is purely experimental value.
+    # FIXME: calculating size dynamically would be more robust.
+    [[ $BACKUP = "TSM" ]] && size=$((size + 96000))
+
     echo $size
 }
