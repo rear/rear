@@ -54,7 +54,7 @@ if (( available_space + used_space < required_space )); then
     return
 fi
 
-if (( USING_UEFI_BOOTLOADER )) ; then
+if is_true $USING_UEFI_BOOTLOADER ; then
     # set to 1 means using UEFI
     grub_conf="`dirname $UEFI_BOOTLOADER`/grub.cfg"
 elif has_binary grub2-probe ; then

@@ -1,5 +1,5 @@
 # 20_mount_efibootimg.sh
-(( USING_UEFI_BOOTLOADER )) || return
+is_true $USING_UEFI_BOOTLOADER || return
 
 dd if=/dev/zero of=$TMP_DIR/efiboot.img count=$(efiboot_img_size) bs=1024
 # make sure we select FAT16 instead of FAT12 as size >30MB

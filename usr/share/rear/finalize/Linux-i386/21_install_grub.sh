@@ -16,7 +16,7 @@ if [[ -z "$NOBOOTLOADER" ]] ; then
 fi
 
 # for UEFI systems with grub legacy with should use efibootmgr instead
-(( USING_UEFI_BOOTLOADER )) && return # set to 1 means UEFI booting
+is_true $USING_UEFI_BOOTLOADER && return # set to 1 means UEFI booting
 
 # check the BOOTLOADER variable (read by 01_prepare_checks.sh script)
 if [[ "$BOOTLOADER" = "GRUB" ]]; then

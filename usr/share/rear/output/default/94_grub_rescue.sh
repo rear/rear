@@ -22,7 +22,7 @@ fi
 #grub_version=$(get_version "grub --version")
 grub_version=$(strings $grub_binary | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | tail -n 1)
 if version_newer "$grub_version" 1.0; then
-    # only for grub-legacy we make special rear boot entry in menu.lst 
+    # only for grub-legacy we make special rear boot entry in menu.lst
     return
 fi
 
@@ -47,7 +47,7 @@ if (( available_space + used_space < required_space )); then
     return
 fi
 
-if (( USING_UEFI_BOOTLOADER )) ; then
+if is_true $USING_UEFI_BOOTLOADER ; then
     # set to 1 means using UEFI
     # SLES uses elilo instead of grub-efi; we will return if that is the case (and do not add a rear rescue entry)
     [[ "${UEFI_BOOTLOADER##*/}" = "elilo.efi" ]] && return
