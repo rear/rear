@@ -1,6 +1,6 @@
 # 25_populate_efibootimg.sh
 
-(( USING_UEFI_BOOTLOADER )) || return    # empty or 0 means NO UEFI
+is_true $USING_UEFI_BOOTLOADER || return    # empty or 0 means NO UEFI
 
 mkdir $v -p $TMP_DIR/mnt/EFI/BOOT >&2
 StopIfError "Could not create $TMP_DIR/mnt/EFI/BOOT"
@@ -11,7 +11,7 @@ StopIfError "Could not create $TMP_DIR/mnt/EFI/BOOT/fonts"
 mkdir $v -p $TMP_DIR/mnt/EFI/BOOT/locale >&2
 StopIfError "Could not create $TMP_DIR/mnt/EFI/BOOT/locale"
 
-# copy the grub*.efi executable to EFI/BOOT/BOOTX64.efi 
+# copy the grub*.efi executable to EFI/BOOT/BOOTX64.efi
 cp  $v "${UEFI_BOOTLOADER}" $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi >&2
 StopIfError "Could not find ${UEFI_BOOTLOADER}"
 if [[ $(basename ${UEFI_BOOTLOADER}) = shim.efi ]]; then
@@ -40,7 +40,7 @@ if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" ]]; then
         StopIfError "Could not copy kernel to UEFI"
         cp $v $TMP_DIR/initrd.cgz $TMP_DIR/mnt/EFI/BOOT/initrd.cgz >&2
         StopIfError "Could not copy initrd to UEFI"
-        create_ebiso_elilo_conf > $TMP_DIR/mnt/EFI/BOOT/elilo.conf 
+        create_ebiso_elilo_conf > $TMP_DIR/mnt/EFI/BOOT/elilo.conf
         create_grub2_cfg > $TMP_DIR/mnt/EFI/BOOT/grub.cfg
     fi
 fi

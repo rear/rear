@@ -39,6 +39,7 @@ Start with the default configuration file of rear:
     
 
 What does this learn you?
+
  * you need to define a backup method name, e.g. `BACKUP=NBU` (must be unique within rear!)
  * define some new variables to automatically copy executables into the rear rescue image, and one to exclude stuff which is not required by the recovery (this means you have to play with it and fine-tune it)
  * finally, define a place holder array for your backup programs (is empty to start with).
