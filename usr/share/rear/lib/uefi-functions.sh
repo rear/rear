@@ -52,21 +52,23 @@ function build_bootx86_efi {
 }
 
 # estimate size of efibooot image
-function efiboot_img_size {
-    local size=32000
+function efiboot_img_size_MiB {
+    local size=32
     if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" ]]; then
         case "$(basename $UEFI_BOOTLOADER)" in
             # we will need more space for initrd and kernel if elilo is used
             # if shim is used, bootloader can be actually anything (also elilo)
             # named as grub64.efi (follow-up loader is shim compile time option)
             # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
-            (shim.efi|elilo.efi) size=128000 ;;
-            (*) size=32000
+            (shim.efi|elilo.efi) size=128 ;;
+            (*) size=32
         esac
     fi
     # this is purely experimental value.
     # FIXME: calculating size dynamically would be more robust.
-    [[ $BACKUP = "TSM" ]] && size=$((size + 96000))
+    if [[ $BACKUP = "TSM" ]]; then
+        size=$((size + 96))
+    fi
 
     echo $size
 }
