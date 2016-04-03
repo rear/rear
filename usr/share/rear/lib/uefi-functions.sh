@@ -51,18 +51,22 @@ function build_bootx86_efi {
     StopIfError "Error occurred during $gmkimage of BOOTX64.efi"
 }
 
-# estimate size of efibooot image
+# get exact size of EFI virtual image (efiboot.img)
 function efiboot_img_size {
-    local size=32000
-    if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" ]]; then
-        case "$(basename $UEFI_BOOTLOADER)" in
-            # we will need more space for initrd and kernel if elilo is used
-            # if shim is used, bootloader can be actually anything (also elilo)
-            # named as grub64.efi (follow-up loader is shim compile time option)
-            # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
-            (shim.efi|elilo.efi) size=128000 ;;
-            (*) size=32000
-        esac
+    # minimum EFI virtual image size in [MB]
+    # default: 128MB
+    EFI_IMG_MIN_SZ=128
+     
+    # get size of directory holding EFI virtual image content
+    SIZE=$(du -ms ${1} | awk '{print $1}')
+   
+    if [ ${SIZE} -lt ${EFI_IMG_MIN_SZ} ]; then
+        FINAL_SIZE=${EFI_IMG_MIN_SZ}
+    else
+        FINAL_SIZE=${SIZE}
     fi
-    echo $size
+   
+    # final size must be aligned to 32
+    # +1 to add some buffer space when going marginal    
+    echo $(((FINAL_SIZE / 32 + 1) * 32))
 }
