@@ -14,8 +14,8 @@ function efiboot_img_size {
         ;;
         (*)
             # minimum EFI virtual image size for grub in [MB]
-            # default: 32MB
-            EFI_IMG_MIN_SZ=32
+            # default: 0MB (this will create EFI virtual image with size of 32MB)
+            EFI_IMG_MIN_SZ=0
         ;;
     esac
     
