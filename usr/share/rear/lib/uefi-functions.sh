@@ -50,19 +50,3 @@ function build_bootx86_efi {
     $gmkimage $v -O x86_64-efi -c $TMP_DIR/mnt/EFI/BOOT/embedded_grub.cfg -d /usr/lib/grub/x86_64-efi -o $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi -p "/EFI/BOOT" part_gpt part_msdos fat ext2 normal chain boot configfile linux linuxefi multiboot jfs iso9660 usb usbms usb_keyboard video udf ntfs all_video gzio efi_gop reboot search test echo
     StopIfError "Error occurred during $gmkimage of BOOTX64.efi"
 }
-
-# estimate size of efibooot image
-function efiboot_img_size {
-    local size=32000
-    if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" ]]; then
-        case "$(basename $UEFI_BOOTLOADER)" in
-            # we will need more space for initrd and kernel if elilo is used
-            # if shim is used, bootloader can be actually anything (also elilo)
-            # named as grub64.efi (follow-up loader is shim compile time option)
-            # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
-            (shim.efi|elilo.efi) size=128000 ;;
-            (*) size=32000
-        esac
-    fi
-    echo $size
-}
