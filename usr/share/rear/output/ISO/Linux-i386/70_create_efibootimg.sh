@@ -12,8 +12,8 @@ function efiboot_img_size {
     case "$( basename $UEFI_BOOTLOADER )" in
         (shim.efi|elilo.efi)
             # minimum EFI virtual image size for shim and elilo
-            # default: 128MiB = 4 * 32MiB blocks
-            efi_img_min_sz=4
+            # default: 160MiB = 5 * 32MiB blocks
+            efi_img_min_sz=5
         ;;
         (*)
             # minimum EFI virtual image size for grub
@@ -23,7 +23,7 @@ function efiboot_img_size {
     esac
     
     # Fallback output of the minimum EFI virtual image size measured in 32MiB blocks:
-    test $efi_img_dir || echo $efi_img_min_sz
+    test $efi_img_dir || { echo $efi_img_min_sz ; return ; }
     
     # The du output is stored in an artificial bash array
     # so that $efi_img_sz can be simply used to get the first word
@@ -31,8 +31,7 @@ function efiboot_img_size {
     efi_img_sz=( $( du --block-size=32M --summarize $efi_img_dir ) )
     
     # Fallback output of the minimum EFI virtual image size measured in 32MiB blocks:
-    test $efi_img_sz || echo $efi_img_min_sz
-    test $efi_img_sz -ge 1 || echo $efi_img_min_sz
+    test $efi_img_sz -ge 1 || { echo $efi_img_min_sz ; return ; }
     
     # Output at least the minimum EFI virtual image size measured in 32MiB blocks:
     if test $efi_img_sz -lt $efi_img_min_sz ; then
@@ -52,8 +51,5 @@ mount $v -o loop -t vfat -o fat=16 $TMP_DIR/efiboot.img $TMP_DIR/efi_virt >&2
 cp $v -r $TMP_DIR/mnt/. $TMP_DIR/efi_virt
 
 umount $v $TMP_DIR/efiboot.img >&2
-#mv $v -f $TMP_DIR/efiboot.img $TMP_DIR/boot/efiboot.img >&2
 mv $v -f $TMP_DIR/efiboot.img $TMP_DIR/isofs/boot/efiboot.img >&2
 StopIfError "Could not move efiboot.img file"
-
-#ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/boot/efiboot.img )
