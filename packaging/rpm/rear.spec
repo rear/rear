@@ -10,7 +10,14 @@ Summary: Relax-and-Recover is a Linux disaster recovery and system migration too
 Name: rear
 Version: 1.18
 Release: 1%{?rpmrelease}%{?dist}
-License: GPLv3
+# Currently (as of this writing Wed May 4 2016) rear contains many files
+# with explicit GPL-2.0+ or GPL-2.1+ licensing notes of the form
+#   either version 2 of the License, or (at your option) any later version
+#   either version 2.1 of the License, or (at your option) any later version
+# so that some (older) rear files are still "GPL-2.0+" but some (newer) rear files are "GPL-3.0"
+# according to the current COPYING file in rear that was changed from GPL version 2 (up to rear 1.17.2)
+# to GPL version 3 (since rear 1.18) see the rear upstream issue https://github.com/rear/rear/pull/739
+License: GPL-2.0+ and GPL-3.0
 Group: Applications/File
 URL: http://relax-and-recover.org/
 
