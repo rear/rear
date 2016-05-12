@@ -28,7 +28,8 @@ fi
 
 # Use the included_mountpoints array derived from the disklayout.conf to determine the default
 # TSM filespaces to include in a restore. 
-included_mountpoints=( $(grep ^fs $VAR_DIR/layout/disklayout.conf  | awk '{print $3}') )
+included_mountpoints=( $(grep ^fs $VAR_DIR/layout/disklayout.conf  | awk '{print $3}') $(grep ^btrfsmountedsubvol $VAR_DIR/layout/disklayout.conf | awk '{print $3}' | grep -v "/.snapshots") )
+included_mountpoints=($(tr ' ' '\n' <<<"${included_mountpoints[@]}" | awk '!u[$0]++' |  tr '\n' ' '))
 
 # TSM does not restore the mountpoints for filesystems it does not recover. Setting the
 # MOUNTPOINTS_TO_RESTORE variable allows this to be recreated in the restore 
