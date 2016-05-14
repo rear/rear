@@ -30,6 +30,10 @@ if [[ "$answer" == "Yes" || "$FORCE" ]]; then
     if [[ "$EFI" == "y" ]]; then
         LogPrint "Creating new vfat filesystem on ${RAW_USB_DEVICE}1"
         mkfs.vfat $v -F 16 -n REAR-EFI ${RAW_USB_DEVICE}1 >&2
+        
+        # create link for EFI partition in /dev/disk/by-label
+        partprobe $RAW_USB_DEVICE
+        sleep 5
     fi
     LogPrint "Creating new ext3 filesystem on ${RAW_USB_DEVICE}${ParNr}"
     mkfs.ext3 -L REAR-000 ${RAW_USB_DEVICE}${ParNr} >&2
@@ -37,5 +41,4 @@ if [[ "$answer" == "Yes" || "$FORCE" ]]; then
 
     tune2fs -c 0 -i 0 -o acl,journal_data,journal_data_ordered ${RAW_USB_DEVICE}${ParNr} >&2
     StopIfError "Failed to change filesystem characteristics on '${RAW_USB_DEVICE}${ParNr}'"
-
 fi
