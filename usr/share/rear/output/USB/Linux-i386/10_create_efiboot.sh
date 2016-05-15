@@ -1,23 +1,23 @@
 # 10_create_efiboot.sh
-# Only elilo is supported so far, grub will follow
+# USB device needs to be formated with command `rear format -- --efi /dev/<device_name>'
 
 is_true $USING_UEFI_BOOTLOADER || return
 
+Log "Configuring device for EFI boot"
+
+# $BUILD_DIR is not present at this stage, temp dir will be used instead
+EFI_MPT=$(mktemp -d /tmp/rear-efi.XXXXX)
+StopIfError "Failed to create mount point ${EFI_MPT}"
+
+uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
 EFI_PART="/dev/disk/by-label/REAR-EFI"
+EFI_DIR="/EFI/BOOT"
+EFI_DST="${EFI_MPT}/${EFI_DIR}"
 
 # Fail if EFI partition is not present
 if [[ ! -b ${EFI_PART} ]]; then
     Error "${EFI_PART} is not block device. Use \`rear format -- --efi <USB_device_file>' for correct format"
 fi
-
-Log "Making USB devide EFI bootable"
-
-# $BUILD_DIR is not present at this stage, temp dir will be used instead
-EFI_MPT=$(mktemp -d /tmp/rear-efi.XXXXX)
-StopIfError "Failed to create mountpoint ${EFI_MPT}"
-
-# Destination for files needed by EFI
-EFI_DST="${EFI_MPT}/EFI/BOOT"
 
 # Mount EFI partition
 mount ${EFI_PART} ${EFI_MPT}
@@ -41,10 +41,14 @@ StopIfError "Could not copy ${TMP_DIR}/initrd.cgz to ${EFI_DST}/initrd.cgz"
 
 Log "Copied kernel and initrd.cgz to ${EFI_DST}"
 
-# Create config for elilo
-Log "Creating ${EFI_DST}/elilo.conf"
+# Configure elilo for EFI boot
+if test "$uefi_bootloader_basename" = "elilo.efi" ; then
+    Log "Configuring elilo for EFI boot"
+    
+    # Create config for elilo
+    Log "Creating ${EFI_DST}/elilo.conf"
 
-cat > ${EFI_DST}/elilo.conf << EOF
+    cat > ${EFI_DST}/elilo.conf << EOF
 default = rear
 timeout = 5
 
@@ -52,6 +56,55 @@ image = kernel
     label = rear
     initrd = initrd.cgz
 EOF
+
+# Configure grub for EFI boot or die
+else
+    # Hope this assumption is not wrong ...
+    if has_binary grub-install; then
+        # What version of grub are we using
+        # substr() for awk did not work as expected for this reason cut was used
+        # First charecter should be enough to identify grub version
+        grub_version=$(grub-install --version | awk '{print $NF}' | cut -c1-1)
+        
+        case ${grub_version} in
+            0)
+                Log "Configuring grub 0.97 for EFI boot"
+                
+                # Create config for grub 0.97
+                cat > ${EFI_DST}/BOOTX64.conf << EOF
+default=0
+timeout=5
+
+title Relax and Recover (no Secure Boot)
+    kernel ${EFI_DIR}/kernel
+    initrd ${EFI_DIR}/initrd.cgz
+EOF
+            ;;
+            2)
+                Log "Configuring grub 2.0 for EFI boot"
+                
+                # Create bootloader, this overwrite BOOTX64.efi copied in previous step ...
+                grub-mkimage -o ${EFI_DST}/BOOTX64.efi -p ${EFI_DIR} -O x86_64-efi linux part_gpt ext2 normal gfxterm gfxterm_background gfxterm_menu test all_video loadenv fat
+                
+                # Create config for grub 2.0
+                cat > ${EFI_DST}/grub.cfg << EOF
+set timeout=5
+set default=0 
+
+menuentry "Relax and Recover (no Secure Boot)" {
+    linux ${EFI_DIR}/kernel
+    initrd ${EFI_DIR}/initrd.cgz
+}
+EOF
+            ;;
+            *)
+                BugError "Neither grub 0.97 nor 2.0"
+            ;;
+        esac
+    else
+        BugIfError "Unknown EFI bootloader"
+    fi
+fi
 
 # Do cleanup of EFI temporary mount point
 Log "Doing cleanup of ${EFI_MPT}"
@@ -63,3 +116,5 @@ if [[ $? -eq 0 ]]; then
 else
     Log "Could not umount ${EFI_MPT}, please check manually"
 fi
+
+Log "Created EFI configuration for USB"
