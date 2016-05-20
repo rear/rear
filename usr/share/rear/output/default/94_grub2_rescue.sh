@@ -110,6 +110,9 @@ else
     grub-mkconfig -o $grub_conf
 fi
 
+#Finding UUID of filesystem containing /boot 
+grub_boot_uuid=$(df /boot | awk 'END {print $1}' | xargs blkid -s UUID -o value)
+
 awk -f- $grub_conf >$TMP_DIR/grub.cfg <<EOF
 /^menuentry \"Relax and Recover\" --class os --users \"\"/ {
     ISREAR=1
@@ -129,7 +132,7 @@ awk -f- $grub_conf >$TMP_DIR/grub.cfg <<EOF
 
 END {
     print "menuentry \"Relax and Recover\" --class os --users \"\" {"
-    print "\tset root=\'hd0,msdos1\'"
+    print "\tsearch --no-floppy --fs-uuid  --set root $grub_boot_uuid"
     print "\tlinux  /rear-kernel $KERNEL_CMDLINE"
     print "\tinitrd /rear-initrd.cgz"
     print "\tpassword_pbkdf2 $GRUB_SUPERUSER $GRUB_RESCUE_PASSWORD"
