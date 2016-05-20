@@ -14,6 +14,18 @@ if [[ "$BACKUP_URL" ]] ; then
     local scheme=$(url_scheme $BACKUP_URL)
     local path=$(url_path $BACKUP_URL)
 
+    ### check for vaild BACKUP_URL schemes
+    ### see https://github.com/rear/rear/issues/842
+    case $scheme in
+        (nfs|cifs|usb|tape|file|sshfs)
+          # do nothing for vaild BACKUP_URL schemes
+          :
+          ;;
+        (*)
+          Error "Invalid scheme '$scheme' in BACKUP_URL '$BACKUP_URL' (only nfs cifs usb tape file sshfs are valid)"
+          ;;
+    esac
+
     ### set other variables from BACKUP_URL
     case $scheme in
         (usb)
@@ -31,7 +43,7 @@ if [[ "$BACKUP_URL" ]] ; then
     esac
 
     ### check if host is reachable
-    if [[ "$PING" && "$host" ]]; then
+    if [[ "$PING" && "$host" ]] ; then
         ping -c 2 "$host" >&8
         StopIfError "Backup host [$host] not reachable."
     else
@@ -42,13 +54,14 @@ fi
 
 # some backup progs require a different backuparchive name
 case "$(basename $BACKUP_PROG)" in
-	(rsync)
-		# rsync creates a target directory instead of a file
-		BACKUP_PROG_SUFFIX=
-		BACKUP_PROG_COMPRESS_SUFFIX=
-		;;
-	(*)	:
-		;;
+    (rsync)
+        # rsync creates a target directory instead of a file
+        BACKUP_PROG_SUFFIX=
+        BACKUP_PROG_COMPRESS_SUFFIX=
+        ;;
+    (*)
+        :
+        ;;
 esac
 
 # include required programs
@@ -56,25 +69,24 @@ PROGS=( "${PROGS[@]}"
 showmount
 mount.$(url_scheme $BACKUP_URL)
 umount.$(url_scheme $BACKUP_URL)
-$(
-test "$BACKUP_MOUNTCMD" && echo "${BACKUP_MOUNTCMD%% *}"
-test "$BACKUP_UMOUNTCMD" && echo "${BACKUP_UMOUNTCMD%% *}"
-)
+$( test "$BACKUP_MOUNTCMD" && echo "${BACKUP_MOUNTCMD%% *}" )
+$( test "$BACKUP_UMOUNTCMD" && echo "${BACKUP_UMOUNTCMD%% *}" )
 $BACKUP_PROG
 gzip
 bzip2
 xz
 )
 
-[[ "$scheme" = "sshfs" ]] && {	# see http://sourceforge.net/apps/mediawiki/fuse/index.php?title=SshfsFaq
-	REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" sshfs )
-	PROGS=( "${PROGS[@]}" fusermount mount.fuse )
-	MODULES=( "${MODULES[@]}" fuse )
-	MODULES_LOAD=( "${MODULES_LOAD[@]}" fuse )
-	# as we're using SSH behind the scenes we need our keys/config file saved
-	COPY_AS_IS=( "${COPY_AS_IS[@]}" $HOME/.ssh /etc/fuse.conf )
-	}
-	
+if [[ "$scheme" = "sshfs" ]] ; then
+    # see http://sourceforge.net/apps/mediawiki/fuse/index.php?title=SshfsFaq
+    REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" sshfs )
+    PROGS=( "${PROGS[@]}" fusermount mount.fuse )
+    MODULES=( "${MODULES[@]}" fuse )
+    MODULES_LOAD=( "${MODULES_LOAD[@]}" fuse )
+    # as we're using SSH behind the scenes we need our keys/config file saved
+    COPY_AS_IS=( "${COPY_AS_IS[@]}" $HOME/.ssh /etc/fuse.conf )
+fi
 
 # include required modules, like nfs cifs ...
 MODULES=( "${MODULES[@]}" $(url_scheme $BACKUP_URL) )
+
