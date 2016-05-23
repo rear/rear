@@ -27,5 +27,8 @@ done < <( dmsetup ls --target multipath )
 if grep -q ^multipath $DISKLAYOUT_FILE ; then
     PROGS=( "${PROGS[@]}" multipath kpartx multipathd )
     COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/multipath.conf /lib*/multipath )
-    LIB=( "${PROGS[@]}" libaio* )
+
+    # depending to the linux distro and arch, libaio can be located in different dir. (ex: /lib/powerpc64le-linux-gnu)
+    libaio_dir=$(ldconfig -p | awk '/libaio.so/ { print $NF }' | xargs -n1 dirname)
+    LIBS=( "${LIBS[@]}" $libaio_dir/libaio* )
 fi
