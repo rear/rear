@@ -98,14 +98,17 @@ if [[ ! $grub_enc_password == $GRUB_RESCUE_PASSWORD ]]; then
     sed -i "s/password_pbkdf2\s\S*\s\S*/password_pbkdf2 $GRUB_SUPERUSER $GRUB_RESCUE_PASSWORD/" /etc/grub.d/01_users
 fi
 
-
 # Ensure 01_users is added to the /boot/grub.d/
 if [[ ! -x /etc/grub.d/01_users ]]; then
     chmod 755 /etc/grub.d/01_users
 fi
 
-#Finding UUID of filesystem containing /boot 
+#Finding UUID of filesystem containing /boot
 grub_boot_uuid=$(df /boot | awk 'END {print $1}' | xargs blkid -s UUID -o value)
+
+#Stop if $grub_boot_uuid is not a valid UUID
+blkid -U $grub_boot_uuid > /dev/null 2>&1
+StopIfError "$grub_boot_uuid is not a valid UUID"
 
 #Creating REAR grub menu entry
 echo "#!/bin/bash
