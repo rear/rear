@@ -98,46 +98,38 @@ if [[ ! $grub_enc_password == $GRUB_RESCUE_PASSWORD ]]; then
     sed -i "s/password_pbkdf2\s\S*\s\S*/password_pbkdf2 $GRUB_SUPERUSER $GRUB_RESCUE_PASSWORD/" /etc/grub.d/01_users
 fi
 
-
 # Ensure 01_users is added to the /boot/grub.d/
 if [[ ! -x /etc/grub.d/01_users ]]; then
     chmod 755 /etc/grub.d/01_users
 fi
 
+#Finding UUID of filesystem containing /boot
+grub_boot_uuid=$(df /boot | awk 'END {print $1}' | xargs blkid -s UUID -o value)
+
+#Stop if $grub_boot_uuid is not a valid UUID
+blkid -U $grub_boot_uuid > /dev/null 2>&1
+StopIfError "$grub_boot_uuid is not a valid UUID"
+
+#Creating REAR grub menu entry
+echo "#!/bin/bash
+cat << EOF
+menuentry \"Relax and Recover\" --class os --users \"\" {
+        search --no-floppy --fs-uuid  --set root $grub_boot_uuid
+        linux  /rear-kernel $KERNEL_CMDLINE
+        initrd /rear-initrd.cgz
+        password_pbkdf2 $GRUB_SUPERUSER $GRUB_RESCUE_PASSWORD
+}
+EOF" > /etc/grub.d/45_rear
+
+chmod 755 /etc/grub.d/45_rear
+
 if [[ $( type -f grub2-mkconfig ) ]]; then
-    grub2-mkconfig -o $grub_conf
+    grub2-mkconfig -o $TMP_DIR/grub.cfg
 else
-    grub-mkconfig -o $grub_conf
+    grub-mkconfig -o $TMP_DIR/grub.cfg
 fi
 
-awk -f- $grub_conf >$TMP_DIR/grub.cfg <<EOF
-/^menuentry \"Relax and Recover\" --class os --users \"\"/ {
-    ISREAR=1
-    next
-}
-
-/^menuentry / {
-    ISREAR=0
-}
-
-{
-    if (ISREAR) {
-        next
-    }
-    print
-}
-
-END {
-    print "menuentry \"Relax and Recover\" --class os --users \"\" {"
-    print "\tset root=\'hd0,msdos1\'"
-    print "\tlinux  /rear-kernel $KERNEL_CMDLINE"
-    print "\tinitrd /rear-initrd.cgz"
-    print "\tpassword_pbkdf2 $GRUB_SUPERUSER $GRUB_RESCUE_PASSWORD"
-    print "}"
-}
-EOF
-
-[[ -s $grub_conf ]]
+[[ -s $TMP_DIR/grub.cfg ]]
 BugIfError "Modified GRUB2 is empty !"
 
 if ! diff -u $grub_conf $TMP_DIR/grub.cfg >&2; then
