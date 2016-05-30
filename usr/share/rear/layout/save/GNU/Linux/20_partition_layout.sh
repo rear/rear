@@ -253,7 +253,7 @@ function is_multipath_path {
             devsize=$(get_disk_size ${disk#/sys/block/})
 
             #Check if blockd is a path of a multipath device.
-            if is_multipath_path /dev/${blockd} ; then
+            if is_multipath_path ${blockd} ; then
                 Log "Ignoring $blockd: it is a path of a multipath device"
             else
                 disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
