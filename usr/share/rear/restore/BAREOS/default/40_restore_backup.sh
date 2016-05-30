@@ -107,7 +107,12 @@ else
 		FILESET="fileset=\"$BAREOS_FILESET\""
 	fi
 
-        echo "restore client=$BAREOS_CLIENT $FILESET where=$TARGET_FS_ROOT select all done
+	if [ -n "$BAREOS_RESTOREJOB" ]
+	then
+		RESTOREJOB="restorejob=$BAREOS_RESTOREJOB"
+	fi
+
+        echo "restore client=$BAREOS_CLIENT $RESTOREJOB $FILESET where=$TARGET_FS_ROOT select all done
 
 " |     bconsole
 
