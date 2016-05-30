@@ -73,8 +73,13 @@ function create_fs () {
             done
             # If available use wipefs to cleanup disk partition:
             test "$has_wipefs" && echo "$wipefs_command" >> "$LAYOUT_CODE"
-            # Actually create the filesystem:
-            echo "mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} $device >&2" >> "$LAYOUT_CODE"
+            # Actually create the filesystem with initially correct UUID
+	    # (Addresses Fedora/systemd problem, see issue 851)
+            if [ -n "$uuid" ] ; then
+		echo "mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} -U $uuid $device >&2" >> "$LAYOUT_CODE"
+	    else
+		echo "mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode}  $device >&2" >> "$LAYOUT_CODE"
+	    fi
             # Adjust tunable filesystem parameters on ext2/ext3/ext4 filesystems:
             local tunefs="tune2fs"
             # On RHEL 5, tune2fs does not work on ext4.
@@ -84,10 +89,6 @@ function create_fs () {
             # Set the label:
             if [ -n "$label" ] ; then
                 echo "$tunefs -L $label $device >&2" >> "$LAYOUT_CODE"
-            fi
-            # Set the UUID:
-            if [ -n "$uuid" ] ; then
-                echo "$tunefs -U $uuid $device >&2" >> "$LAYOUT_CODE"
             fi
             # Set the other tunable filesystem parameters:
             tune2fsopts="${reserved_blocks}${max_mounts}${check_interval}${default_mount_options}"
