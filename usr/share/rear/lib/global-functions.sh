@@ -66,24 +66,72 @@ function is_false () {
 ######
 ### Functions for dealing with URLs
 ######
+# URL is the most common form of URI
+# see https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
+# where a generic URI is of the form
+# scheme:[//[user:password@]host[:port]][/]path[?query][#fragment]
+# e.g. for BACKUP_URL=sshfs://user@host/G/rear/
+# url_scheme = 'sshfs' , url_host = 'user@host' , url_hostname = 'host' , url_username = 'user' , url_path = '/G/rear/'
+# e.g. for BACKUP_URL=usb:///dev/sdb1
+# url_scheme = 'usb' , url_host = '' , url_hostname = '' , url_username = '' , url_path = '/dev/sdb1'
 
-url_scheme() {
+function url_scheme() {
     local url=$1
+    # the scheme is the leading part up to '://'
     local scheme=${url%%://*}
     # rsync scheme does not have to start with rsync:// it can also be scp style
+    # see the comments in usr/share/rear/prep/RSYNC/default/10_check_rsync.sh
     echo $scheme | grep -q ":" && echo rsync || echo $scheme
 }
 
-url_host() {
+function url_host() {
     local url=$1
-    local host=${url#*//}
-    echo ${host%%/*}
+    local url_without_scheme=${url#*//}
+    # the authority part is the part after the scheme (e.g. 'host' or 'user@host')
+    # i.e. after 'scheme://' all up to but excluding the next '/'
+    # which means it breaks if there is a username that contains a '/'
+    # which should not happen because a POSIX-compliant username
+    # should have only characters from the portable filename character set
+    # which is ASCII letters, digits, dot, hyphen, and underscore
+    # (a hostname must not contain a '/' see RFC 952 and RFC 1123)
+    local authority_part=${url_without_scheme%%/*}
+    # for backward compatibility the url_host function returns the whole authority part
+    # see https://github.com/rear/rear/issues/856
+    # to get only hostname or username use the url_hostname and url_username functions
+    echo $authority_part
 }
 
-url_path() {
+function url_hostname() {
     local url=$1
-    local path=${url#*//}
-    echo /${path#*/}
+    local url_without_scheme=${url#*//}
+    local authority_part=${url_without_scheme%%/*}
+    # if authority_part contains a '@' we assume the 'user@host' format and
+    # then we remove the 'user@' part (i.e. all up to and including the last '@')
+    # so that it also works when the username contains a '@'
+    # like 'john@doe' in BACKUP_URL=sshfs://john@doe@host/G/rear/
+    # (a hostname must not contain a '@' see RFC 952 and RFC 1123)
+    echo ${authority_part##*@}
+}
+
+function url_username() {
+    local url=$1
+    local url_without_scheme=${url#*//}
+    local authority_part=${url_without_scheme%%/*}
+    # if authority_part contains a '@' we assume the 'user@host' format and
+    # then we remove the '@host' part (i.e. all from and including the last '@')
+    # so that it also works when the username contains a '@'
+    # like 'john@doe' in BACKUP_URL=sshfs://john@doe@host/G/rear/
+    # (a hostname must not contain a '@' see RFC 952 and RFC 1123)
+    echo $authority_part | grep -q '@' && echo ${authority_part%@*}
+}
+
+function url_path() {
+    local url=$1
+    local url_without_scheme=${url#*//}
+    # the path is all after the first '/' in url_without_scheme
+    # i.e. the whole rest after the authority part so that
+    # it may contain an optional trailing '?query' and '#fragment'
+    echo /${url_without_scheme#*/}
 }
 
 backup_path() {
