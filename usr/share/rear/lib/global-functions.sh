@@ -110,25 +110,35 @@ function url_hostname() {
     # so that it also works when the username contains a '@'
     # like 'john@doe' in BACKUP_URL=sshfs://john@doe@host/G/rear/
     # (a hostname must not contain a '@' see RFC 952 and RFC 1123)
-    echo ${authority_part##*@}
+    local host_and_port=${authority_part##*@}
+    # if host_and_port contains a ':' we assume the 'host:port' format and
+    # then we remove the ':port' part (i.e. all from and including the last ':')
+    # so that it even works when the hostname contains a ':' (in spite of RFC 952 and RFC 1123)
+    echo ${host_and_port%:*}
 }
 
 function url_username() {
     local url=$1
     local url_without_scheme=${url#*//}
     local authority_part=${url_without_scheme%%/*}
-    # if authority_part contains a '@' we assume the 'user@host' format and
-    # then we remove the '@host' part (i.e. all from and including the last '@')
+    # authority_part must contain a '@' when a username is specified
+    echo $authority_part | grep -q '@' || return 0
+    # we remove the '@host' part (i.e. all from and including the last '@')
     # so that it also works when the username contains a '@'
     # like 'john@doe' in BACKUP_URL=sshfs://john@doe@host/G/rear/
     # (a hostname must not contain a '@' see RFC 952 and RFC 1123)
-    echo $authority_part | grep -q '@' && echo ${authority_part%@*}
+    local user_and_password=${authority_part%@*}
+    # if user_and_password contains a ':' we assume the 'user:password' format and
+    # then we remove the ':password' part (i.e. all from and including the first ':')
+    # so that it works when the password contains a ':'
+    # (a POSIX-compliant username should not contain a ':')
+    echo $user_and_password | grep -q ':' && echo ${user_and_password%%:*} || echo $user_and_password
 }
 
 function url_path() {
     local url=$1
     local url_without_scheme=${url#*//}
-    # the path is all after the first '/' in url_without_scheme
+    # the path is all from and including first '/' in url_without_scheme
     # i.e. the whole rest after the authority part so that
     # it may contain an optional trailing '?query' and '#fragment'
     echo /${url_without_scheme#*/}
