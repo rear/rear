@@ -4,6 +4,7 @@
 # example: usb:///dev/sdb1
 # example: tape:///dev/nst0
 # example: file:///path
+# example: iso://backup/
 # example: sshfs://user@host/G/rear/
 
 [[ "$BACKUP_URL" || "$BACKUP_MOUNTCMD" ]]
@@ -17,12 +18,12 @@ if [[ "$BACKUP_URL" ]] ; then
     ### check for vaild BACKUP_URL schemes
     ### see https://github.com/rear/rear/issues/842
     case $scheme in
-        (nfs|cifs|usb|tape|file|sshfs)
+        (nfs|cifs|usb|tape|file|iso|sshfs)
           # do nothing for vaild BACKUP_URL schemes
           :
           ;;
         (*)
-          Error "Invalid scheme '$scheme' in BACKUP_URL '$BACKUP_URL' (only nfs cifs usb tape file sshfs are valid)"
+          Error "Invalid scheme '$scheme' in BACKUP_URL '$BACKUP_URL' (only nfs cifs usb tape file iso sshfs are valid)"
           ;;
     esac
 
