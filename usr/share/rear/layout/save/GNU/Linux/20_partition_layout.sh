@@ -237,8 +237,11 @@ extract_partitions() {
     done < $TMP_DIR/partitions
 }
 
-
 Log "Saving disk partitions."
+
+function is_multipath_path {
+    [ "$1" ] && type multipath &>/dev/null && multipath -c /dev/$1 &>/dev/null
+}
 
 (
     # Disk sizes
@@ -249,15 +252,20 @@ Log "Saving disk partitions."
             devname=$(get_device_name $disk)
             devsize=$(get_disk_size ${disk#/sys/block/})
 
-            disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
+            #Check if blockd is a path of a multipath device.
+            if is_multipath_path ${blockd} ; then
+                Log "Ignoring $blockd: it is a path of a multipath device"
+            else
+                disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
 
-            echo "# Disk $devname"
-            echo "# Format: disk <devname> <size(bytes)> <partition label type>"
-            echo "disk $devname $devsize $disktype"
+                echo "# Disk $devname"
+                echo "# Format: disk <devname> <size(bytes)> <partition label type>"
+                echo "disk $devname $devsize $disktype"
 
-            echo "# Partitions on $devname"
-            echo "# Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>"
-            extract_partitions "$devname"
+                echo "# Partitions on $devname"
+                echo "# Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>"
+                extract_partitions "$devname"
+            fi
         fi
     done
 
