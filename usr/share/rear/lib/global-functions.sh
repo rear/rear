@@ -74,6 +74,16 @@ function is_false () {
 # url_scheme = 'sshfs' , url_host = 'user@host' , url_hostname = 'host' , url_username = 'user' , url_path = '/G/rear/'
 # e.g. for BACKUP_URL=usb:///dev/sdb1
 # url_scheme = 'usb' , url_host = '' , url_hostname = '' , url_username = '' , url_path = '/dev/sdb1'
+# FIXME: the ulr_* functions are not safe against special characters
+# for example they break when the password contains spaces
+# but on the other hand permitted characters for values in a URI
+# are ASCII letters, digits, dot, hyphen, underscore, and tilde
+# and any other character must be percent-encoded (in particular the
+# characters : / ? # [ ] @ are reserved as delimiters of URI components
+# and must be percent-encoded when used in the value of a URI component)
+# so that what is missing is support for percent-encoded characters
+# but user-friendly support for percent-encoded characters is not possible
+# cf. http://bugzilla.opensuse.org/show_bug.cgi?id=561626#c7
 
 function url_scheme() {
     local url=$1
@@ -256,12 +266,15 @@ mount_url() {
             if test "$username" ; then
                 local password=$( url_password $url )
                 if test "$password" ; then
-                    mount_cmd="curlftpfs -o user=$username:$password ftp://$hostname$path $mountpoint"
+                    # single quoting is a must for the password
+                    mount_cmd="curlftpfs $verbose -o user='$username:$password' ftp://$hostname$path $mountpoint"
                 else
-                    mount_cmd="curlftpfs -o user=$username ftp://$hostname$path $mountpoint"
+                    # also single quoting for the plain username so that it also works for non-POSIX-compliant usernames
+                    # (a POSIX-compliant username should only contain ASCII letters, digits, dot, hyphen, and underscore)
+                    mount_cmd="curlftpfs $verbose -o user='$username' ftp://$hostname$path $mountpoint"
                 fi
             else
-                mount_cmd="curlftpfs ftp://$hostname$path $mountpoint"
+                mount_cmd="curlftpfs $verbose ftp://$hostname$path $mountpoint"
             fi
             ;;
 	(davfs)
@@ -273,7 +286,8 @@ mount_url() {
     esac
 
     Log "Mounting with '$mount_cmd'"
-    $mount_cmd >&2
+    # eval is required when mount_cmd contains single quoted stuff (e.g. see the above mount_cmd for curlftpfs)
+    eval $mount_cmd >&2
     StopIfError "Mount command '$mount_cmd' failed."
 
     AddExitTask "umount -f $v '$mountpoint' >&2"
