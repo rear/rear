@@ -6,49 +6,48 @@
 # example: file:///path
 # example: iso://backup/
 # example: sshfs://user@host/G/rear/
+# example: ftpfs://user@host/rear/
 
 [[ "$BACKUP_URL" || "$BACKUP_MOUNTCMD" ]]
+# FIXME: The above test does not match the error message below.
+# To match the the error message the test should be
+# [[ "$BACKUP_URL" || ( "$BACKUP_MOUNTCMD" && "$BACKUP_UMOUNTCMD" ) ]]
+# but I <jsmeix@suse.de> cannot decide if there is a subtle reason for the omission.
 StopIfError "You must specify either BACKUP_URL or BACKUP_MOUNTCMD and BACKUP_UMOUNTCMD !"
 
 if [[ "$BACKUP_URL" ]] ; then
-    local host=$(url_host $BACKUP_URL)
-    local scheme=$(url_scheme $BACKUP_URL)
-    local path=$(url_path $BACKUP_URL)
+    local scheme=$( url_scheme $BACKUP_URL )
+    local hostname=$( url_hostname $BACKUP_URL )
+    local path=$( url_path $BACKUP_URL )
 
     ### check for vaild BACKUP_URL schemes
     ### see https://github.com/rear/rear/issues/842
     case $scheme in
-        (nfs|cifs|usb|tape|file|iso|sshfs)
-          # do nothing for vaild BACKUP_URL schemes
-          :
-          ;;
+        (nfs|cifs|usb|tape|file|iso|sshfs|ftpfs)
+            # do nothing for vaild BACKUP_URL schemes
+            :
+            ;;
         (*)
-          Error "Invalid scheme '$scheme' in BACKUP_URL '$BACKUP_URL' (only nfs cifs usb tape file iso sshfs are valid)"
-          ;;
+            Error "Invalid scheme '$scheme' in BACKUP_URL '$BACKUP_URL' valid schemes: nfs cifs usb tape file iso sshfs ftpfs"
+            ;;
     esac
 
     ### set other variables from BACKUP_URL
-    case $scheme in
-        (usb)
-            if [[ -z "$USB_DEVICE" ]] ; then
-                USB_DEVICE="$path"
-            fi
-            ;;
-	(sshfs)
-	    # check if $host contains a '@' because then we use user@host format
-	    echo $host | grep -q '@' && {
-		sshfs_user="${host%%@*}"	# save the user
-		host="${host#*@}"		# remove user@
-		}
-	    ;;
-    esac
+    if [[ "usb" = "$scheme" ]] ; then
+        # if USB_DEVICE is not explicitly specified it is the path from BACKUP_URL
+        [[ -z "$USB_DEVICE" ]] && USB_DEVICE="$path"
+    fi
 
     ### check if host is reachable
-    if [[ "$PING" && "$host" ]] ; then
-        ping -c 2 "$host" >&8
-        StopIfError "Backup host [$host] not reachable."
+    if [[ "$PING" && "$hostname" ]] ; then
+        # TODO: it is questionable if it is a fatal error when it does not respond to a 'ping'
+        # because sometimes hosts are accessible via certain ports but do not respond to a 'ping'
+        # cf. https://bugzilla.opensuse.org/show_bug.cgi?id=616706
+        # so that it would be better to test if it is accessible via the actually needed port(s)
+        ping -c 2 "$hostname" >&8
+        StopIfError "Host '$hostname' in BACKUP_URL '$BACKUP_URL' does not respond to a 'ping'."
     else
-        Log "Skipping ping test"
+        Log "Skipping ping test for host '$hostname' in BACKUP_URL '$BACKUP_URL'"
     fi
 
 fi
@@ -66,6 +65,10 @@ case "$(basename $BACKUP_PROG)" in
 esac
 
 # include required programs
+# FIXME: the code below includes mount.* and umount.* programs for all non-empty schemes
+# i.e. for any non-empty BACKUP_URL like usb tape file sshfs ftpfs
+# and it includes 'mount.' for empty schemes (e.g. if BACKUP_URL is not set)
+# but I <jsmeix@suse.de> cannot decide if there is a subtle reason for that
 PROGS=( "${PROGS[@]}"
 showmount
 mount.$(url_scheme $BACKUP_URL)
@@ -78,16 +81,31 @@ bzip2
 xz
 )
 
-if [[ "$scheme" = "sshfs" ]] ; then
-    # see http://sourceforge.net/apps/mediawiki/fuse/index.php?title=SshfsFaq
-    REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" sshfs )
+# include required stuff for sshfs or ftpfs (via CurlFtpFS)
+if [[ "sshfs" = "$scheme" || "ftpfs" = "$scheme" ]] ; then
+    # both sshfs and ftpfs (via CurlFtpFS) are based on FUSE
     PROGS=( "${PROGS[@]}" fusermount mount.fuse )
     MODULES=( "${MODULES[@]}" fuse )
     MODULES_LOAD=( "${MODULES_LOAD[@]}" fuse )
-    # as we're using SSH behind the scenes we need our keys/config file saved
-    COPY_AS_IS=( "${COPY_AS_IS[@]}" $HOME/.ssh /etc/fuse.conf )
+    COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/fuse.conf )
+    # include what is specific for sshfs
+    if [[ "sshfs" = "$scheme" ]] ; then
+        # see http://sourceforge.net/apps/mediawiki/fuse/index.php?title=SshfsFaq
+        REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" sshfs )
+        # as we're using SSH behind the scenes we need our keys/config file saved
+        COPY_AS_IS=( "${COPY_AS_IS[@]}" $HOME/.ssh )
+    fi
+    # include what is specific for ftpfs
+    if [[ "ftpfs" = "$scheme" ]] ; then
+        # see http://curlftpfs.sourceforge.net/
+        # and https://github.com/rear/rear/issues/845
+        REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" curlftpfs )
+    fi
 fi
 
 # include required modules, like nfs cifs ...
+# FIXME: the code below includes modules for all non-empty schemes
+# i.e. for any non-empty BACKUP_URL like usb tape file sshfs ftpfs
+# but I <jsmeix@suse.de> cannot decide if there is a subtle reason for that
 MODULES=( "${MODULES[@]}" $(url_scheme $BACKUP_URL) )
 

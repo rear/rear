@@ -135,10 +135,29 @@ function url_username() {
     echo $user_and_password | grep -q ':' && echo ${user_and_password%%:*} || echo $user_and_password
 }
 
+function url_password() {
+    local url=$1
+    local url_without_scheme=${url#*//}
+    local authority_part=${url_without_scheme%%/*}
+    # authority_part must contain a '@' when a username is specified
+    echo $authority_part | grep -q '@' || return 0
+    # we remove the '@host' part (i.e. all from and including the last '@')
+    # so that it also works when the username contains a '@'
+    # like 'john@doe' in BACKUP_URL=sshfs://john@doe@host/G/rear/
+    # (a hostname must not contain a '@' see RFC 952 and RFC 1123)
+    local user_and_password=${authority_part%@*}
+    # user_and_password must contain a ':' when a password is specified
+    echo $user_and_password | grep -q ':' || return 0
+    # we remove the 'user:' part (i.e. all up to and including the first ':')
+    # so that it works when the password contains a ':'
+    # (a POSIX-compliant username should not contain a ':')
+    echo ${user_and_password#*:}
+}
+
 function url_path() {
     local url=$1
     local url_without_scheme=${url#*//}
-    # the path is all from and including first '/' in url_without_scheme
+    # the path is all from and including the first '/' in url_without_scheme
     # i.e. the whole rest after the authority part so that
     # it may contain an optional trailing '?query' and '#fragment'
     echo /${url_without_scheme#*/}
@@ -227,6 +246,23 @@ mount_url() {
             ;;
 	(sshfs)
 	    mount_cmd="sshfs $(url_host $url):$(url_path $url) $mountpoint -o $options"
+            ;;
+        (ftpfs)
+            local hostname=$( url_hostname $url )
+            test "$hostname" || Error "Cannot run 'curlftpfs' because no hostname found in URL '$url'."
+            local path=$( url_path $url )
+            test "$path" || Error "Cannot run 'curlftpfs' because no path found in URL '$url'."
+            local username=$( url_username $url )
+            if test "$username" ; then
+                local password=$( url_password $url )
+                if test "$password" ; then
+                    mount_cmd="curlftpfs -o user=$username:$password ftp://$hostname$path $mountpoint"
+                else
+                    mount_cmd="curlftpfs -o user=$username ftp://$hostname$path $mountpoint"
+                fi
+            else
+                mount_cmd="curlftpfs ftp://$hostname$path $mountpoint"
+            fi
             ;;
 	(davfs)
 	    mount_cmd="mount $v -t davfs http://$(url_host $url)$(url_path $url) $mountpoint"
