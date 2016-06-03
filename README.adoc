@@ -31,10 +31,9 @@ possible by its modular framework. Consistent logging and optionally extended
 output help understand the concepts behind Relax-and-Recover, troubleshoot
 during initial configuration and help debug during integration.
 
-Professional services and support are available.
+https://github.com/rear/rear#references[Professional services and support are available.]
 
-For more detailed information about Relax-and-Recover, please read the
-http://relax-and-recover.org/documentation/[Relax-and-Recover documentation].
+https://github.com/rear/rear#references[For more detailed information about Relax-and-Recover.]
 
 
 REQUIREMENTS
