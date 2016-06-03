@@ -44,8 +44,8 @@ external programs.  However, the rescue system that is created by
 Relax-and-Recover requires some programs that are needed to make our
 rescue system work:
 
- - mingetty
- - sfdisk
+ - mingetty or agetty
+ - sfdisk or parted
 
 All other required programs (like sort, dd, grep, etc.) are so common, that
 we don't list them as requirements. In case your specific workflow requires
@@ -239,3 +239,12 @@ backup functions (like +BACKUP=NETFS+)
 To recover your system, start the computer from the rescue system and run
 +rear recover+. Your system will be recovered and you can restart it and
 continue to use it normally.
+
+REFERENCES
+----------
+
+* http://relax-and-recover.org/documentation/[Relax-and-Recover Documentation]
+* http://relax-and-recover.org/support/[Relax-and-Recover Support]
+* http://relax-and-recover.org/events/[Relax-and-Recover Events]
+* https://github.com/rear/rear/issues[Relax-and-Recover Issues]
+* http://relax-and-recover.org/support/sponsors[Relax-and-Recover Sponsoring]
