@@ -74,6 +74,16 @@ function is_false () {
 # url_scheme = 'sshfs' , url_host = 'user@host' , url_hostname = 'host' , url_username = 'user' , url_path = '/G/rear/'
 # e.g. for BACKUP_URL=usb:///dev/sdb1
 # url_scheme = 'usb' , url_host = '' , url_hostname = '' , url_username = '' , url_path = '/dev/sdb1'
+# FIXME: the ulr_* functions are not safe against special characters
+# for example they break when the password contains spaces
+# but on the other hand permitted characters for values in a URI
+# are ASCII letters, digits, dot, hyphen, underscore, and tilde
+# and any other character must be percent-encoded (in particular the
+# characters : / ? # [ ] @ are reserved as delimiters of URI components
+# and must be percent-encoded when used in the value of a URI component)
+# so that what is missing is support for percent-encoded characters
+# but user-friendly support for percent-encoded characters is not possible
+# cf. http://bugzilla.opensuse.org/show_bug.cgi?id=561626#c7
 
 function url_scheme() {
     local url=$1
@@ -135,10 +145,29 @@ function url_username() {
     echo $user_and_password | grep -q ':' && echo ${user_and_password%%:*} || echo $user_and_password
 }
 
+function url_password() {
+    local url=$1
+    local url_without_scheme=${url#*//}
+    local authority_part=${url_without_scheme%%/*}
+    # authority_part must contain a '@' when a username is specified
+    echo $authority_part | grep -q '@' || return 0
+    # we remove the '@host' part (i.e. all from and including the last '@')
+    # so that it also works when the username contains a '@'
+    # like 'john@doe' in BACKUP_URL=sshfs://john@doe@host/G/rear/
+    # (a hostname must not contain a '@' see RFC 952 and RFC 1123)
+    local user_and_password=${authority_part%@*}
+    # user_and_password must contain a ':' when a password is specified
+    echo $user_and_password | grep -q ':' || return 0
+    # we remove the 'user:' part (i.e. all up to and including the first ':')
+    # so that it works when the password contains a ':'
+    # (a POSIX-compliant username should not contain a ':')
+    echo ${user_and_password#*:}
+}
+
 function url_path() {
     local url=$1
     local url_without_scheme=${url#*//}
-    # the path is all from and including first '/' in url_without_scheme
+    # the path is all from and including the first '/' in url_without_scheme
     # i.e. the whole rest after the authority part so that
     # it may contain an optional trailing '?query' and '#fragment'
     echo /${url_without_scheme#*/}
@@ -228,6 +257,28 @@ mount_url() {
 	(sshfs)
 	    mount_cmd="sshfs $(url_host $url):$(url_path $url) $mountpoint -o $options"
             ;;
+        (ftpfs)
+            local hostname=$( url_hostname $url )
+            test "$hostname" || Error "Cannot run 'curlftpfs' because no hostname found in URL '$url'."
+            local path=$( url_path $url )
+            test "$path" || Error "Cannot run 'curlftpfs' because no path found in URL '$url'."
+            local username=$( url_username $url )
+            # ensure the fuse kernel module is loaded because ftpfs (via CurlFtpFS) is based on FUSE
+            lsmod | grep -q '^fuse' || modprobe $verbose fuse || Error "Cannot run 'curlftpfs' because 'fuse' kernel module is not loadable."
+            if test "$username" ; then
+                local password=$( url_password $url )
+                if test "$password" ; then
+                    # single quoting is a must for the password
+                    mount_cmd="curlftpfs $verbose -o user='$username:$password' ftp://$hostname$path $mountpoint"
+                else
+                    # also single quoting for the plain username so that it also works for non-POSIX-compliant usernames
+                    # (a POSIX-compliant username should only contain ASCII letters, digits, dot, hyphen, and underscore)
+                    mount_cmd="curlftpfs $verbose -o user='$username' ftp://$hostname$path $mountpoint"
+                fi
+            else
+                mount_cmd="curlftpfs $verbose ftp://$hostname$path $mountpoint"
+            fi
+            ;;
 	(davfs)
 	    mount_cmd="mount $v -t davfs http://$(url_host $url)$(url_path $url) $mountpoint"
 	    ;;
@@ -237,7 +288,8 @@ mount_url() {
     esac
 
     Log "Mounting with '$mount_cmd'"
-    $mount_cmd >&2
+    # eval is required when mount_cmd contains single quoted stuff (e.g. see the above mount_cmd for curlftpfs)
+    eval $mount_cmd >&2
     StopIfError "Mount command '$mount_cmd' failed."
 
     AddExitTask "umount -f $v '$mountpoint' >&2"

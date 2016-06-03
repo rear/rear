@@ -14,7 +14,7 @@ fi
 LogPrint "Copying resulting files to $scheme location"
 
 case "$scheme" in
-    (nfs|cifs|usb|file|sshfs|davfs)
+    (nfs|cifs|usb|file|sshfs|ftpfs|davfs)
         # if called as mkbackuponly then we just don't have any result files.
         if test "$RESULT_FILES" ; then
             Log "Copying files '${RESULT_FILES[@]}' to $scheme location"
