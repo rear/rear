@@ -6,7 +6,7 @@
 # example: file:///path
 # example: iso://backup/
 # example: sshfs://user@host/G/rear/
-# example: ftpfs://user@host/rear/
+# example: ftpfs://user:password@host/rear/ (the password part is optional)
 
 [[ "$BACKUP_URL" || "$BACKUP_MOUNTCMD" ]]
 # FIXME: The above test does not match the error message below.
@@ -40,14 +40,15 @@ if [[ "$BACKUP_URL" ]] ; then
 
     ### check if host is reachable
     if [[ "$PING" && "$hostname" ]] ; then
-        # TODO: it is questionable if it is a fatal error when it does not respond to a 'ping'
-        # because sometimes hosts are accessible via certain ports but do not respond to a 'ping'
+        # Only LogPrintIfError but no StopIfError because it is not a fatal error
+        # (i.e. not a reason to abort) when a host does not respond to a 'ping'
+        # because hosts can be accessible via certain ports but do not respond to a 'ping'
         # cf. https://bugzilla.opensuse.org/show_bug.cgi?id=616706
-        # so that it would be better to test if it is accessible via the actually needed port(s)
+        # TODO: it would be better to test if it is accessible via the actually needed port(s)
         ping -c 2 "$hostname" >&8
-        StopIfError "Host '$hostname' in BACKUP_URL '$BACKUP_URL' does not respond to a 'ping'."
+        LogPrintIfError "Host '$hostname' in BACKUP_URL '$BACKUP_URL' does not respond to a 'ping'."
     else
-        Log "Skipping ping test for host '$hostname' in BACKUP_URL '$BACKUP_URL'"
+        Log "Skipping 'ping' test for host '$hostname' in BACKUP_URL '$BACKUP_URL'"
     fi
 
 fi
@@ -65,10 +66,12 @@ case "$(basename $BACKUP_PROG)" in
 esac
 
 # include required programs
-# FIXME: the code below includes mount.* and umount.* programs for all non-empty schemes
-# i.e. for any non-empty BACKUP_URL like usb tape file sshfs ftpfs
+# the code below includes mount.* and umount.* programs for all non-empty schemes
+# (i.e. for any non-empty BACKUP_URL like usb tape file sshfs ftpfs)
 # and it includes 'mount.' for empty schemes (e.g. if BACKUP_URL is not set)
-# but I <jsmeix@suse.de> cannot decide if there is a subtle reason for that
+# which is o.k. because it is a catch all rule so we do not miss any
+# important executable needed a certain scheme and it does not hurt
+# see https://github.com/rear/rear/pull/859
 PROGS=( "${PROGS[@]}"
 showmount
 mount.$(url_scheme $BACKUP_URL)
@@ -104,8 +107,10 @@ if [[ "sshfs" = "$scheme" || "ftpfs" = "$scheme" ]] ; then
 fi
 
 # include required modules, like nfs cifs ...
-# FIXME: the code below includes modules for all non-empty schemes
-# i.e. for any non-empty BACKUP_URL like usb tape file sshfs ftpfs
-# but I <jsmeix@suse.de> cannot decide if there is a subtle reason for that
+# the code below includes modules for all non-empty schemes
+# (i.e. for any non-empty BACKUP_URL like usb tape file sshfs ftpfs)
+# which is o.k. because this must been seen as a catch all rule
+# (one never knows what one could miss)
+# see https://github.com/rear/rear/pull/859
 MODULES=( "${MODULES[@]}" $(url_scheme $BACKUP_URL) )
 
