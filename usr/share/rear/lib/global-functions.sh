@@ -263,6 +263,8 @@ mount_url() {
             local path=$( url_path $url )
             test "$path" || Error "Cannot run 'curlftpfs' because no path found in URL '$url'."
             local username=$( url_username $url )
+            # ensure the fuse kernel module is loaded because ftpfs (via CurlFtpFS) is based on FUSE
+            lsmod | grep -q '^fuse' || modprobe $verbose fuse || Error "Cannot run 'curlftpfs' because 'fuse' kernel module is not loadable."
             if test "$username" ; then
                 local password=$( url_password $url )
                 if test "$password" ; then
