@@ -27,7 +27,7 @@ local isofs_path=$(dirname $backuparchive)
 # NB_ISOS=(ls . | wc -l) [side effect is that lots of empty ISOs are made]
 [[ "$WORKFLOW" = "mkrescue" ]] && return
 
-NB_ISOS=$(ls $backuparchive.?? | wc -l)
+NB_ISOS=$(ls ${backuparchive}.?? | wc -l)
 
 Print "Preparing $NB_ISOS ISO images ..."
 echo -n "$(basename $backuparchive.00)" >> "${isofs_path}/backup.splitted"
