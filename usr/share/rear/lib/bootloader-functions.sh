@@ -263,9 +263,9 @@ function make_syslinux_config {
 	if [ "$ISO_DEFAULT" == "manual" ] ; then
                echo "default rear"
                syslinux_menu "default"
-        fi 
+        fi
 	echo ""
-	
+
 	echo "say rear - Recover $(uname -n)"
 	echo "label rear-automatic"
 	syslinux_menu "label ^Automatic Recover $(uname -n)"
@@ -277,9 +277,9 @@ function make_syslinux_config {
 	if [ "$ISO_DEFAULT" == "automatic" ] ; then
                echo "default rear-automatic"
                syslinux_menu "default"
-        fi	
+        fi
 	echo ""
-	
+
 	syslinux_menu separator
 	echo "label -"
 	syslinux_menu "label Other actions"
@@ -447,10 +447,10 @@ function make_syslinux_config {
 function create_ebiso_elilo_conf {
 cat << EOF
 timeout = 5
-default = "Relax and Recover (no Secure Boot)"
+default = "Relax and Recover (no UEFI - usually BIOS boot)"
 
 image = kernel
-    label = "Relax and Recover (no Secure Boot)"
+    label = "Relax and Recover (no UEFI - usually BIOS boot)"
     initrd = initrd.cgz
 EOF
     [[ -n $KERNEL_CMDLINE ]] && cat << EOF
@@ -479,14 +479,14 @@ set timeout=5
 search --no-floppy --file /boot/efiboot.img --set
 #set root=(cd0)
 
-menuentry "Relax and Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
+menuentry "Relax and Recover (no UEFI - usually BIOS boot)"  --class gnu-linux --class gnu --class os {
      echo 'Loading kernel ...'
      linux /isolinux/kernel $KERNEL_CMDLINE
      echo 'Loading initial ramdisk ...'
      initrd /isolinux/initrd.cgz
 }
 
-menuentry "Relax and Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
+menuentry "Relax and Recover (UEFI boot)"  --class gnu-linux --class gnu --class os {
      echo 'Loading kernel ...'
      linuxefi /isolinux/kernel $KERNEL_CMDLINE
      echo 'Loading initial ramdisk ...'
