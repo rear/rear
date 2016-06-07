@@ -4,7 +4,7 @@
 #
 #    Relax-and-Recover is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
+#    the Free Software Foundation; either version 3 of the License, or
 #    (at your option) any later version.
 
 #    Relax-and-Recover is distributed in the hope that it will be useful,
@@ -26,7 +26,7 @@ if has_binary sshd; then
     ${PROGS[@]}
     ssh sshd scp sftp
     $(
-        read subsys sftp file junk < <( grep sftp /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig 2>&8 )
+        read subsys sftp file junk < <( grep sftp /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig /etc/centrifydc/ssh/sshd_co[n]fig 2>&8 )
         echo $file
     )
     )
