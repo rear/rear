@@ -85,7 +85,7 @@ else
 default=0
 timeout=5
 
-title Relax and Recover (no UEFI - usually BIOS boot)
+title Relax and Recover (using grub 0.97)
     kernel ${EFI_DIR}/kernel
     initrd ${EFI_DIR}/initrd.cgz
 EOF
@@ -103,7 +103,7 @@ EOF
 set timeout=5
 set default=0
 
-menuentry "Relax and Recover (no UEFI - usually BIOS boot)" {
+menuentry "Relax and Recover (using grub 2.0 'linux' and 'initrd')" {
     linux ${EFI_DIR}/kernel
     initrd ${EFI_DIR}/initrd.cgz
 }

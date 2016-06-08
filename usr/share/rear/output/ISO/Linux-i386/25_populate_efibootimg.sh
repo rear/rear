@@ -45,26 +45,29 @@ if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" ]]; then
     fi
 fi
 
+# create GRUB config
 if [[ -n "$(type -p grub)" ]]; then
+# we are using GRUB Legacy
 cat > $TMP_DIR/mnt/EFI/BOOT/BOOTX64.conf << EOF
 default=0
 timeout 5
 splashimage=/EFI/BOOT/splash.xpm.gz
-title Relax and Recover (no UEFI - usually BIOS boot)
+title Relax and Recover (using GRUB Legacy)
     kernel /isolinux/kernel
     initrd /isolinux/initrd.cgz
 
 EOF
 else
-# create small embedded grub.cfg file for grub-mkimage
+# we are using GRUB 2
+# create small embedded grub.cfg file for grub2-mkimage
 cat > $TMP_DIR/mnt/EFI/BOOT/embedded_grub.cfg <<EOF
 set prefix=(cd0)/EFI/BOOT
 configfile /EFI/BOOT/grub.cfg
 EOF
-
-# create a grub.cfg
+# create a grub.cfg for GRUB 2
     create_grub2_cfg > $TMP_DIR/mnt/EFI/BOOT/grub.cfg
 fi
+
 # create BOOTX86.efi
 build_bootx86_efi
 
