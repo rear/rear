@@ -46,7 +46,11 @@ if [[ -r "$LAYOUT_FILE" ]]; then
         chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $part"
         # Run bootlist only in PowerVM environment
         if ! grep -q "PowerNV" /proc/cpuinfo && ! grep -q "emulated by qemu" /proc/cpuinfo ; then
-            bootdev=`echo $part | sed -e 's/[0-9]*$//'`
+            #Using $LAYOUT_DEPS file to find the disk device containing the partition.
+            bootdev=$(awk '$1==PART { print $NF}' PART=$part $LAYOUT_DEPS)
+            if [[ -z $bootdev ]]; then
+                bootdev=`echo $part | sed -e 's/[0-9]*$//'`
+            fi
             LogPrint "Boot device is $bootdev."
 
             # Test if $bootdev is a multipath device
