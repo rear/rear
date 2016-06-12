@@ -114,7 +114,7 @@ StopIfError "$grub_boot_uuid is not a valid UUID"
 echo "#!/bin/bash
 cat << EOF
 menuentry \"Relax and Recover\" --class os --users \"\" {
-        search --no-floppy --fs-uuid  --set root $grub_boot_uuid
+        search --no-floppy --fs-uuid  --set=root $grub_boot_uuid
         linux  /rear-kernel $KERNEL_CMDLINE
         initrd /rear-initrd.cgz
         password_pbkdf2 $GRUB_SUPERUSER $GRUB_RESCUE_PASSWORD
