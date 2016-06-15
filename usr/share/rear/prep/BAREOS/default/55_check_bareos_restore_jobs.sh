@@ -15,7 +15,9 @@ echo "show jobs" | bconsole | grep "Name =" | grep restore | grep $HOSTNAME | cu
 # when amount of lines > 1 in file $TMP_DIR/bareos_restorejobs then we may decide that there is more then 1 restore job
 # for current host
 
-nr_of_restore_jobs=$( wc -l $TMP_DIR/bareos_restorejobs | awk '{print $1}' )
+# The wc output is stored in an artificial bash array
+# so that $nr_of_restore_jobs can be simply used to get the first word
+nr_of_restore_jobs=( $(wc -l $TMP_DIR/bareos_restorejobs) ) 
 
 case "$nr_of_restore_jobs" in
     0 ) Error "No restore job defined in Bareos for $HOSTNAME" ;;

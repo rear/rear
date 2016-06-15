@@ -14,7 +14,7 @@ echo "show filesets" | bconsole | grep "Name =" | grep $HOSTNAME | cut -d= -f2 >
 # when amount of lines > 1 in file $TMP_DIR/bareos_filesets then we may decide that there is more then 1 fileset
 # for current host
 
-nr_of_filesets=$( wc -l $TMP_DIR/bareos_filesets | awk '{print $1}' )
+nr_of_filesets=( $(wc -l $TMP_DIR/bareos_filesets) )
 
 case "$nr_of_filesets" in
     0 ) Error "No fileset defined in Bareos for $HOSTNAME" ;;
