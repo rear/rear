@@ -33,6 +33,7 @@ Volume=PLEASE-EDIT-BOOTSTRAP
 ### The total number of files that will be restored for this Volume.
 #Count=157
 EOF
+#############################################################################
 
 if [[ "$BEXTRACT_DEVICE" || "$BEXTRACT_VOLUME" ]]; then
 
@@ -95,19 +96,24 @@ else
 
     if [ "$BAREOS_RECOVERY_MODE" != "manual" ]
     then
-	# restore most recent backup automatically
+        # restore most recent backup automatically
 
         if [ -z "$BAREOS_CLIENT" ]
         then
-                BAREOS_CLIENT=$(grep $(hostname -s) /etc/bareos/bareos-fd.conf | awk '/-fd/ {print $3}' )
+            BAREOS_CLIENT=$(grep $(hostname -s) /etc/bareos/bareos-fd.conf | awk '/-fd/ {print $3}' )
         fi
 
-	if [ -n "$BAREOS_FILESET" ]
-	then
-		FILESET="fileset=\"$BAREOS_FILESET\""
-	fi
+        if [ -n "$BAREOS_FILESET" ]
+        then
+            FILESET="fileset=\"$BAREOS_FILESET\""
+        fi
 
-        echo "restore client=$BAREOS_CLIENT $FILESET where=$TARGET_FS_ROOT select all done
+        if [ -n "$BAREOS_RESTORE_JOB" ]
+        then
+            RESTOREJOB="restorejob=$BAREOS_RESTORE_JOB"
+        fi
+
+        echo "restore client=$BAREOS_CLIENT $RESTOREJOB $FILESET where=$TARGET_FS_ROOT select all done
 
 " |     bconsole
 
@@ -115,18 +121,18 @@ else
         LogPrint "waiting for job to start"
         while true
         do
-                sleep 3
-                echo "status client=$BAREOS_CLIENT" | bconsole | egrep "^JobId.* running." && break
+            sleep 3
+            echo "status client=$BAREOS_CLIENT" | bconsole | egrep "^JobId.* running." && break
         done
 
         # wait for job to finish
         LogPrint "waiting for job to finish"
         while true
         do
-                sleep 10
-                echo "status client=$BAREOS_CLIENT" | bconsole | egrep "^No Jobs running" >/dev/null && break
+            sleep 10
+            echo "status client=$BAREOS_CLIENT" | bconsole | egrep "^No Jobs running" >/dev/null && break
         done
-	LogPrint "Restore job finished."
+        LogPrint "Restore job finished."
     else
 
     # Prompt the user that the system recreation has been done and that
