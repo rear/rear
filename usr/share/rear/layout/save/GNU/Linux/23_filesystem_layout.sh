@@ -30,7 +30,10 @@ read_filesystems_command="mount -t $supported_filesystems | cut -d ' ' -f 1,3,5,
 # The only difference is that the traditional mount command output has the list of options in parenthesis.
 findmnt_command="$( type -P findmnt )"
 if test -x "$findmnt_command" ; then
-    read_filesystems_command="$findmnt_command -nrv -o SOURCE,TARGET,FSTYPE,OPTIONS -t $supported_filesystems"
+    # Use the (deprecated) "findmnt -m" to avoid issues
+    # as in https://github.com/rear/rear/issues/882
+    # FIXME: Replace using the deprecated '-m' option with a future proof solution.
+    read_filesystems_command="$findmnt_command -mnrv -o SOURCE,TARGET,FSTYPE,OPTIONS -t $supported_filesystems"
     Log "Saving filesystem layout (using the findmnt command)."
 else
     Log "Saving filesystem layout (using the traditional mount command)."
@@ -84,9 +87,11 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         # FIXME: is the above condition still needed if the following is in place?
         # get_device_name and get_device_name_mapping below should canonicalize obscured udev names
 
-        # work with the persistent dev name: address the fact than dm-XX may be different disk in the recovery environment
-        device=$(get_device_mapping $device)
-        device=$(get_device_name $device)
+        # Work with the persistent dev name:
+        # Address the fact than dm-XX may be different disk in the recovery environment.
+        # See https://github.com/rear/rear/pull/695
+        device=$( get_device_mapping $device )
+        device=$( get_device_name $device )
 
         # Output generic filesystem layout values:
         echo -n "fs $device $mountpoint $fstype"
@@ -242,23 +247,28 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         done
         ########################################
         # Mounted btrfs subvolumes:
-        if test -x "$findmnt_command" ; then
+        # On older systems like SLE11 findmnt does not know about FSROOT
+        # see https://github.com/rear/rear/issues/883
+        # therefore use by default the traditional mount command
+        read_mounted_btrfs_subvolumes_command="mount -t btrfs | cut -d ' ' -f 1,3,6"
+        # and use findmnd only if "findmnd -o FSROOT" works:
+        if test -x "$findmnt_command" && $findmnt_command -nrv -o FSROOT -t btrfs &>/dev/null ; then
             read_mounted_btrfs_subvolumes_command="$findmnt_command -nrv -o SOURCE,TARGET,OPTIONS,FSROOT -t btrfs"
-        else
-            read_mounted_btrfs_subvolumes_command="mount -t btrfs | cut -d ' ' -f 1,3,6"
+            findmnt_FSROOT_works="yes"
         fi
         while read device subvolume_mountpoint mount_options btrfs_subvolume_path junk ; do
-
-            # work with the persistent dev name: address the fact than dm-XX may be different disk in the recovery environment
-            device=$(get_device_mapping $device)
-            device=$(get_device_name $device)
-
+            # Work with the persistent dev name:
+            # Address the fact than dm-XX may be different disk in the recovery environment.
+            # See https://github.com/rear/rear/pull/695
+            device=$( get_device_mapping $device )
+            device=$( get_device_name $device )
+            # Output btrfsmountedsubvol entries:
             if test -n "$device" -a -n "$subvolume_mountpoint" ; then
                 if test -z "$btrfsmountedsubvol_entry_exists" ; then
                     # Output header only once:
                     btrfsmountedsubvol_entry_exists="yes"
                     echo "# All mounted btrfs subvolumes (including mounted btrfs default subvolumes and mounted btrfs snapshot subvolumes)."
-                    if test -x "$findmnt_command" ; then
+                    if test "$findmnt_FSROOT_works" ; then
                         echo "# Determined by the findmnt command that shows the mounted btrfs_subvolume_path."
                         echo "# Format: btrfsmountedsubvol <device> <subvolume_mountpoint> <mount_options> <btrfs_subvolume_path>"
                     else
@@ -295,7 +305,9 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         echo "# Mounted btrfs subvolumes that have the 'no copy on write' attribute set."
         echo "# Format: btrfsnocopyonwrite <btrfs_subvolume_path>"
         lsattr_command="$( type -P lsattr )"
-        if test -x "$lsattr_command" -a -x "$findmnt_command" ; then
+        # On older systems like SLE11 findmnt does not know about FSROOT (see above)
+        # therefore test if findmnt_FSROOT_works was set above:
+        if test -x "$lsattr_command" -a -x "$findmnt_command" -a "$findmnt_FSROOT_works" ; then
             for subvolume_mountpoint in $( $findmnt_command -nrv -o TARGET -t btrfs ) ; do
                 # The 'no copy on write' attribute is shown as 'C' in the lsattr output (see "man chattr"):
                 if $lsattr_command -d $subvolume_mountpoint | cut -d ' ' -f 1 | grep -q 'C' ; then
