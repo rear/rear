@@ -326,7 +326,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 fi
             done
         else
-            echo "# Attributes cannot be determined because no executable 'lsattr' and/or 'findmnt' command(s) found."
+            echo "# Attributes cannot be determined because no executable 'lsattr' and/or 'findmnt' command(s) found that supports 'FSROOT'."
         fi
     fi
 
