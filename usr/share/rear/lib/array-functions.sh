@@ -13,3 +13,17 @@ function IsInArray() {
     return 1
 }
 
+function RmInArray() {
+    # "$1" string to be removed in array "${2[@]}"
+    # please note that the array elements are a bunch of words in this function
+    # usage: BACKUP_RSYNC_OPTIONS=( $( RmInArray "--relative" "${BACKUP_RSYNC_OPTIONS[@]}" ) )
+    local needle="$1"
+    declare -a nArray  # we will build a new array
+    while shift ; do
+        if [[ "$needle" != "$1" ]] ; then
+            nArray=( ${nArray[@]} "$1" )
+        fi
+    done
+    # we return the array as a string
+    echo "${nArray[@]}"
+}
