@@ -71,11 +71,15 @@ else
     # start rpc.statd daemon if found
     # some Linux distros use a kernel-based RPC status daemon
     if has_binary rpc.statd ; then
-        rpc.statd || LogPrint "Starting rpc.statd failed."
-        LogPrint "Started rpc.statd."
-        rpcinfo -p 2>/dev/null | grep -q 'status' && LogPrint "RPC status rpc.statd available."
+        rpc.statd && LogPrint "Started rpc.statd." || LogPrint "Starting rpc.statd failed."
     else
         LogPrint "Could not find rpc.statd program."
+    fi
+    # do a final check if RPC status service is available
+    # regardless of the result of starting rpc.statd
+    if rpcinfo -p 2>/dev/null | grep -q 'status' ; then
+        LogPrint "RPC status rpc.statd available."
+    else
         LogPrint "RPC status rpc.statd unavailable (you may have to mount NFS without locking 'nolock')."
     fi
 fi
