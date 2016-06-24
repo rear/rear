@@ -31,6 +31,7 @@ local attempt=""
 local portmapper_program=""
 # the actual work
 LogPrint "Starting required daemons for NFS: RPC portmapper (portmap or rpcbind) and rpc.statd if available."
+
 # newer Linux distros use rpcbind instead of portmap
 if has_binary portmap ; then
     portmapper_program="portmap"
@@ -84,3 +85,13 @@ else
     fi
 fi
 
+# NFSv4 related daemons: rpc.idmapd is the bare mininum when dealing with nfsv4 and security 'sys'
+if has_binary rpc.idmapd ; then
+    # so far it is always a daemon process
+    rpc.idmapd $RPCIDMAPDARGS && LogPrint "Started rpc.idmapd." || LogPrint "Starting rpc.idmapd failed."
+    modprobe nfsd  &>/dev/null
+    modprobe nfsv4 &>/dev/null
+    modprobe nfsv3 &>/dev/null
+    mount -t rpc_pipefs -n sunrpc /var/lib/nfs/rpc_pipefs
+    mount -t nfsd -n nfsd /proc/fs/nfsd
+fi
