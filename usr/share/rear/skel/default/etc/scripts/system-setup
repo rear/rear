@@ -40,12 +40,12 @@ echo "* * * Rescue System is ready * * *"
 
 # Launch rear recover automatically
 if grep -q 'auto_recover' /proc/cmdline ; then
-        rear recover -v
-        
 	choices=(
 	    "View Relax-and-Recover log"
 	    "Go to Relax-and-Recover shell"
 	)
+	
+	rear recover -v
 	if [ $? -eq 0 ] ; then
 	    choices=(
 	    "${choices[@]}"
