@@ -11,6 +11,6 @@ while read junk junk userid groupid junk junk junk junk dir
 do
     [[ $dir = / ]] && continue
     echo ${dir#/*} $(stat -c %a $dir) $userid $groupid >> "$VAR_DIR/recovery/mountpoint_permissions"
-done < <(ls -ld $(mount | grep -vE '(cgroup|fuse|nfs|/sys/|REAR-000)' | awk '{print $3}'))
+done < <(ls -ld $(mount | grep -vE '(cgroup|fuse|nfsd|/sys/|REAR-000)' | awk '{print $3}'))
 
 # output looks like boot 755 root root
