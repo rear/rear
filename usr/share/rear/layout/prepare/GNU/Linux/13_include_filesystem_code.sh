@@ -73,19 +73,33 @@ function create_fs () {
             done
             # If available use wipefs to cleanup disk partition:
             test "$has_wipefs" && echo "$wipefs_command" >> "$LAYOUT_CODE"
-            # Actually create the filesystem with initially correct UUID
-	    # (Addresses Fedora/systemd problem, see issue 851)
-            if [ -n "$uuid" ] ; then
-		echo "mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} -U $uuid $device >&2" >> "$LAYOUT_CODE"
-	    else
-		echo "mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode}  $device >&2" >> "$LAYOUT_CODE"
-	    fi
-            # Adjust tunable filesystem parameters on ext2/ext3/ext4 filesystems:
+            # Use the right program to adjust tunable filesystem parameters on ext2/ext3/ext4 filesystems:
             local tunefs="tune2fs"
             # On RHEL 5, tune2fs does not work on ext4.
-            if [ "$fstype" = "ext4" ] && has_binary tune4fs; then
+            if [ "$fstype" = "ext4" ] && has_binary tune4fs ; then
                 tunefs="tune4fs"
             fi
+            # Actually create the filesystem with initially correct UUID
+	    # (addresses Fedora/systemd problem, see issue 851)
+            # "mkfs -U" works at least since SLE11 but it may fail on older systems
+            # e.g. on RHEL 5 mkfs does not support '-U' so that when "mkfs -U" fails
+            # we assume it failed because of missing support for '-U' and
+            # then we fall back to the old way before issue 851
+            # i.e. using "mkfs" without '-U' plus "tunefs -U":
+            if [ -n "$uuid" ] ; then
+                ( echo "# Try 'mkfs -U' to create the filesystem with initially correct UUID"
+                  echo "# but if that fails assume it failed because of missing support for '-U'"
+                  echo "# (e.g. in RHEL 5 it fails, see https://github.com/rear/rear/issues/890)"
+                  echo "# then fall back to using mkfs without '-U' plus 'tune2fs/tune4fs -U'"
+                  echo "if ! mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} -U $uuid $device >&2 ; then"
+                  echo "    mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} $device >&2"
+                  echo "    $tunefs -U $uuid $device >&2"
+                  echo "fi"
+                ) >> "$LAYOUT_CODE"
+	    else
+		echo "mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} $device >&2" >> "$LAYOUT_CODE"
+	    fi
+            # Adjust tunable filesystem parameters on ext2/ext3/ext4 filesystems:
             # Set the label:
             if [ -n "$label" ] ; then
                 echo "$tunefs -L $label $device >&2" >> "$LAYOUT_CODE"
