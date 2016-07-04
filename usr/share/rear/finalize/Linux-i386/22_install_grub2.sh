@@ -60,6 +60,11 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
     StopIfError "Unable to find any disks"
 
     for disk in $disks; do
+        # Installing grub on an LVM PV will wipe the metadata so we skip those
+        is_disk_a_pv "$disk"
+        if [[ $? -eq 1 ]]; then
+            continue
+        fi
         # Use first boot partition by default
         part=$(echo $bootparts | cut -d' ' -f1)
 
