@@ -80,6 +80,10 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]] ; then
     test "$disks" || Error "Unable to find any disks."
 
     for disk in $disks ; do
+        # Installing grub on an LVM PV will wipe the metadata so we skip those
+        if is_disk_a_pv "$disk" ; then
+            continue
+        fi
         # Use first boot partition by default
         part=$( echo $bootparts | cut -d' ' -f1 )
 
@@ -138,4 +142,3 @@ fi
 is_true $NOBOOTLOADER && Error "Failed to install GRUB Legacy boot loader."
 
 umount $TARGET_FS_ROOT/proc
-

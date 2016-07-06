@@ -348,7 +348,7 @@ get_partition_start() {
         # /dev/mapper/mpath4-part1
         local devname=$(get_device_name $disk_name)
         devname=${devname#/dev/mapper/}
-       
+
         # 0 536846303 linear 253:7 536895488
         read junk junk junk junk start_block < <( dmsetup table ${devname} 2>&8 )
     fi
@@ -361,7 +361,7 @@ get_partition_start() {
 
     echo $start
 }
-    
+
 # Get the type of a layout component
 get_component_type() {
     grep -E "^[^ ]+ $1 " $LAYOUT_TODO | cut -d " " -f 3
@@ -576,3 +576,13 @@ blkid_label_of_device() {
     echo "$label"
 }
 
+# Returns 1 if the device is an LVM physical volume
+# Returns 0 otherwise or if the device doesn't exists
+is_disk_a_pv() {
+    disk=$1
+    if grep -q "^lvmdev .* ${disk} " $LAYOUT_FILE ; then
+        return 0
+    else
+        return 1
+    fi
+}
