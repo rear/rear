@@ -580,11 +580,9 @@ blkid_label_of_device() {
 # Returns 0 otherwise or if the device doesn't exists
 is_disk_a_pv() {
     disk=$1
-#   grep "^lvmdev .* ${disk} " $VAR_DIR/layout/disklayout.conf > /dev/null 2>&1
-    grep "^lvmdev .* ${disk} " $VAR_DIR/layout/disklayout.conf
-    if [[ $? -eq 0 ]] ; then
-        return 1
-    else
+    if grep -q "^lvmdev .* ${disk} " $LAYOUT_FILE ; then
         return 0
+    else
+        return 1
     fi
 }
