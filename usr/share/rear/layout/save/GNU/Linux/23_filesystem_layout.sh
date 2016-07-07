@@ -252,8 +252,12 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         # therefore use by default the traditional mount command
         read_mounted_btrfs_subvolumes_command="mount -t btrfs | cut -d ' ' -f 1,3,6"
         # and use findmnd only if "findmnd -o FSROOT" works:
-        if test -x "$findmnt_command" && $findmnt_command -nrv -o FSROOT -t btrfs &>/dev/null ; then
-            read_mounted_btrfs_subvolumes_command="$findmnt_command -nrv -o SOURCE,TARGET,OPTIONS,FSROOT -t btrfs"
+        # Use the (deprecated) "findmnt -m" to avoid issues
+        # as in https://github.com/rear/rear/issues/882
+        # FIXME: Replace using the deprecated '-m' option with a future proof solution.
+
+        if test -x "$findmnt_command" && $findmnt_command -mnrv -o FSROOT -t btrfs &>/dev/null ; then
+            read_mounted_btrfs_subvolumes_command="$findmnt_command -mnrv -o SOURCE,TARGET,OPTIONS,FSROOT -t btrfs"
             findmnt_FSROOT_works="yes"
         fi
         while read device subvolume_mountpoint mount_options btrfs_subvolume_path junk ; do
@@ -307,11 +311,14 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         lsattr_command="$( type -P lsattr )"
         # On older systems like SLE11 findmnt does not know about FSROOT (see above)
         # therefore test if findmnt_FSROOT_works was set above:
+        # Use the (deprecated) "findmnt -m" to avoid issues
+        # as in https://github.com/rear/rear/issues/882
+        # FIXME: Replace using the deprecated '-m' option with a future proof solution.
         if test -x "$lsattr_command" -a -x "$findmnt_command" -a "$findmnt_FSROOT_works" ; then
-            for subvolume_mountpoint in $( $findmnt_command -nrv -o TARGET -t btrfs ) ; do
+            for subvolume_mountpoint in $( $findmnt_command -mnrv -o TARGET -t btrfs ) ; do
                 # The 'no copy on write' attribute is shown as 'C' in the lsattr output (see "man chattr"):
                 if $lsattr_command -d $subvolume_mountpoint | cut -d ' ' -f 1 | grep -q 'C' ; then
-                    btrfs_subvolume_path=$( $findmnt_command -nrv -o FSROOT $subvolume_mountpoint )
+                    btrfs_subvolume_path=$( $findmnt_command -mnrv -o FSROOT $subvolume_mountpoint )
                     # Remove leading '/' from btrfs_subvolume_path (except it is only '/') to have same syntax for all entries and
                     # without leading '/' is more clear that it is not an absolute path in the currently mounted tree of filesystems
                     # instead the subvolume path is relative to the toplevel/root subvolume of the particular btrfs filesystem
@@ -319,6 +326,13 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                     # see https://btrfs.wiki.kernel.org/index.php/Mount_options
                     test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
                     if test -n "btrfs_subvolume_path" ; then
+			# Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
+                        for p in chattr lsattr
+                        do
+                            if ! IsInArray "$p" "${PROGS[@]}"; then 
+                                PROGS=( ${PROGS[@]} "$p" )
+                            fi
+                        done 
                         echo "btrfsnocopyonwrite $btrfs_subvolume_path"
                     else
                         echo "# $subvolume_mountpoint has the 'no copy on write' attribute set but $findmnt_command does not show its btrfs subvolume path"
