@@ -75,3 +75,18 @@ fi
 
 # device mapper gets a special treatment here because there is no dependency to load it
 modprobe -q dm-mod
+
+# When udevd or systemd is in place then out /etc/modules content is skipped, however, we
+# might need it for e.g. loading fuse which was added to the MODULES_LOAD array
+# There might be other kernel modules added by the user on demand, therefore, we always
+# load the modules found in /etc/modules
+if test -s /etc/modules ; then
+    while read module options ; do
+    case "$module" in
+        (\#*|"") ;;
+        (*) modprobe -v $module $options;;
+    esac
+    done </etc/modules
+fi
+
+
