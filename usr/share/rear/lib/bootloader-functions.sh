@@ -24,7 +24,7 @@ function find_syslinux_file {
     # output argument is the full path of isolinux.bin
     local syslinux_file=""
 
-    for file in /usr/{share,lib,libexec}/*/"$1" ; do
+    for file in /usr/{share,lib,libexec,lib/syslinux}/*/"$1" ; do
         if [[ -s "$file" ]]; then
             syslinux_file="$file"
             break # for loop
@@ -263,9 +263,9 @@ function make_syslinux_config {
 	if [ "$ISO_DEFAULT" == "manual" ] ; then
                echo "default rear"
                syslinux_menu "default"
-        fi 
+        fi
 	echo ""
-	
+
 	echo "say rear - Recover $(uname -n)"
 	echo "label rear-automatic"
 	syslinux_menu "label ^Automatic Recover $(uname -n)"
@@ -277,9 +277,9 @@ function make_syslinux_config {
 	if [ "$ISO_DEFAULT" == "automatic" ] ; then
                echo "default rear-automatic"
                syslinux_menu "default"
-        fi	
+        fi
 	echo ""
-	
+
 	syslinux_menu separator
 	echo "label -"
 	syslinux_menu "label Other actions"
@@ -502,4 +502,3 @@ menuentry "Exit to EFI Shell" {
 }
 EOF
 }
-
