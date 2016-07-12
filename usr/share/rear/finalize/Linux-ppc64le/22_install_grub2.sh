@@ -69,7 +69,7 @@ if [[ -r "$LAYOUT_FILE" ]]; then
     fi
 fi
 
-if [[ "NOBOOTLOADER" ]]; then
+if [[ "$NOBOOTLOADER" ]]; then
     LogIfError "No bootloader configuration found. Install boot partition manually"
 fi
 
