@@ -45,17 +45,17 @@ case "$BACKUP_PROG" in
             LAST="$restorearchive"
             BASE=$(dirname "$restorearchive")/$(tar --test-label -f "$restorearchive")
             if [ "$BASE" == "$LAST" ]; then
-                Log dd if=$BASE \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
-                dd if=$BASE | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
+                Log dd if=$BASE \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                dd if=$BASE | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
             else
-                Log dd if="$BASE" \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
-                dd if="$BASE" | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
-                Log dd if="$LAST" \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
-                dd if="$LAST" | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
+                Log dd if="$BASE" \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                dd if="$BASE" | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                Log dd if="$LAST" \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                dd if="$LAST" | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
             fi
         else
-            Log dd if=$restoreinput \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
-            dd if=$restoreinput | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
+            Log dd if=$restoreinput \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+            dd if=$restoreinput | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
         fi
     ;;
     (rsync)
@@ -67,7 +67,7 @@ case "$BACKUP_PROG" in
     ;;
     (*)
         Log "Using unsupported backup program '$BACKUP_PROG'"
-        $BACKUP_PROG $BACKUP_PROG_COMPRESS_OPTIONS \
+        $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
             $BACKUP_PROG_OPTIONS_RESTORE_ARCHIVE $TARGET_FS_ROOT \
             $BACKUP_PROG_OPTIONS $backuparchive
     ;;
