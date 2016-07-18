@@ -1,31 +1,32 @@
-# Check BACKUP_URL and OUTPUT_URL for incorrect usage
 
-if [[ "$OUTPUT_URL" ]]; then
-    local scheme=$(url_scheme $OUTPUT_URL)
-    local server=$(url_host $OUTPUT_URL)
-    local path=$(url_path $OUTPUT_URL)
+# Check file:// tape:// usb:// BACKUP_URL and OUTPUT_URL for incorrect usage
 
+# Use generic wording in error messages because prep/default/02_translate_url.sh
+# may translate a BACKUP_URL into an OUTPUT_URL so that errors in a BACKUP_URL
+# may appear when testing the translated/derived OUTPUT_URL
+# see https://github.com/rear/rear/issues/925
+
+# First steps to be prepared for 'se -e' which means
+# replacing COMMAND ; StopIfError ...
+# with COMMAND || Error ...
+
+# See lib/global-functions.sh what the url_* functions actually result and
+# see prep/NETFS/default/05_check_NETFS_requirements.sh for vaild BACKUP_URLs
+
+local url=""
+for url in "$BACKUP_URL" "$OUTPUT_URL" ; do
+    test "$url" || continue
+    local scheme=$( url_scheme $url )
+    local authority=$( url_host $url )
+    local path=$( url_path $url )
     case "$scheme" in
         (file|tape|usb)
-            [[ -z "$server" ]]
-            StopIfError "OUTPUT_URL requires tripple slash ('$scheme:///$server$path' instead of '$OUTPUT_URL')"
-            [[ "$path" ]]
-            StopIfError "OUTPUT_URL is missing propper path ($OUTPUT_URL)"
+            # file:// tape:// usb:// URLs must not have an authority part (scheme://authority/path)
+            # i.e. file:// tape:// usb:// URLs must have an empty authority part (scheme:///path)
+            test "$authority" && Error "BACKUP_URL or OUTPUT_URL '$url' requires tripple slash (i.e. '$scheme:///path')"
+            # file:// tape:// usb:// URLs must have a non-empty path
+            test "$path" || Error "BACKUP_URL or OUTPUT_URL '$url' is missing a path (i.e. '$scheme:///path')"
             ;;
     esac
-fi
+done
 
-if [[ "$BACKUP_URL" ]]; then
-    local scheme=$(url_scheme $BACKUP_URL)
-    local server=$(url_host $BACKUP_URL)
-    local path=$(url_path $BACKUP_URL)
-
-    case "$scheme" in
-        (file|tape|usb)
-            [[ -z "$server" ]]
-            StopIfError "OUTPUT_URL for protocol $scheme requires tripple slash ('$scheme:///$server$path' instead of '$BACKUP_URL')"
-            [[ "$path" ]]
-            StopIfError "BACKUP_URL is missing propper path ($BACKUP_URL)"
-            ;;
-    esac
-fi
