@@ -1,13 +1,11 @@
-# #82_copy_to_net.sh
+
+# 82_copy_to_net.sh
 
 # Check if we have a target location OUTPUT_URL
-if [[ -z "$OUTPUT_URL" ]]; then
-    return
-fi
+test "$OUTPUT_URL" || return
 
-local scheme=$(url_scheme $OUTPUT_URL)
-local server=$(url_host $OUTPUT_URL)
-local path=$(url_path $OUTPUT_URL)
+local scheme=$( url_scheme $OUTPUT_URL )
+local result_file=""
 
 case "$scheme" in
     (nfs|cifs|usb|tape|file|davfs)
@@ -16,21 +14,19 @@ case "$scheme" in
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
         LogPrint "Transferring PXE files to $OUTPUT_URL"
-        for i in "${RESULT_FILES[@]}"
-          do
-            LogPrint "Transferring file: $i"
-            lftp -c "open $OUTPUT_URL; mput $i"
-          done
-        StopIfError "Problem transferring PXE files to $OUTPUT_URL"
+        for result_file in "${RESULT_FILES[@]}" ; do
+            LogPrint "Transferring file: $result_file"
+            lftp -c "open $OUTPUT_URL; mput $result_file" || Error "Problem transferring '$result_file' to $OUTPUT_URL"
+        done
         ;;
     (rsync)
         LogPrint "Transferring PXE files to $OUTPUT_URL"
-        for i in "${RESULT_FILES[@]}"
-          do
-            LogPrint "Transferring file: $i"
-            rsync -a $v "$i" "$OUTPUT_URL"
-          done
-        StopIfError "Problem transferring PXE files to $OUTPUT_URL"
+        for result_file in "${RESULT_FILES[@]}" ; do
+            LogPrint "Transferring file: $result_file"
+            rsync -a $v "$result_file" "$OUTPUT_URL" || Error "Problem transferring '$result_file' to $OUTPUT_URL"
+        done
         ;;
-    (*) BugError "Support for $scheme is not implemented yet.";;
+    (*) Error "Invalid scheme '$scheme' in '$OUTPUT_URL'."
+        ;;
 esac
+
