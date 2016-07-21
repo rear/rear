@@ -23,8 +23,8 @@ case $scheme in
         # a backup directory in the '/' filesystem is simply forbidden
         # regardless that a backup inside itself may not result fatal errors
         # see https://github.com/rear/rear/issues/926
-        test -e "backup_directory" || Error "URL '$BACKUP_URL' would result the backup directory '$backup_directory' in the '/' filesystem which is forbidden."
-        test -d "backup_directory" || Error "URL '$BACKUP_URL' specifies '$backup_directory' which is not a directory."
+        test -e "$backup_directory" || Error "URL '$BACKUP_URL' would result the backup directory '$backup_directory' in the '/' filesystem which is forbidden."
+        test -d "$backup_directory" || Error "URL '$BACKUP_URL' specifies '$backup_directory' which is not a directory."
         backup_directory_mountpoint=$( df -P "$backup_directory" 2>/dev/null | tail -1 | awk '{print $6}' )
         test "/" = "$backup_directory_mountpoint" && Error "URL '$BACKUP_URL' has the backup directory '$backup_directory' in the '/' filesystem which is forbidden."
         # When the mountpoint of the backup directory is not yet excluded add its mountpoint to the EXCLUDE_RECREATE array:
