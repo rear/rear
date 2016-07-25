@@ -11,7 +11,7 @@ is_true "$GRUB_RESCUE" || return
 # (grub-probe or grub2-probe only exist in GRUB 2)
 # in particular do not run this script when GRUB Legacy is used
 # (for GRUB Legacy output/default/94_grub_rescue.sh is run):
-type -p grub-probe >&2 || type -p grub2-probe >&2 || { LogPrint "Skipping GRUB_RESCUE setup for GRUB 2 (no GRUB 2 found)." return ; }
+type -p grub-probe >&2 || type -p grub2-probe >&2 || { LogPrint "Skipping GRUB_RESCUE setup for GRUB 2 (no GRUB 2 found)." ; return ; }
 
 # Now GRUB_RESCUE is explicitly wanted and this script is the right one to set it up.
 LogPrint "Setting up GRUB_RESCUE: Adding Relax-and-Recover rescue system to the local GRUB 2 configuration."
@@ -55,7 +55,7 @@ test -r "$TMP_DIR/initrd.cgz" || Error "Cannot setup GRUB_RESCUE: Cannot read in
 
 # Esure there is sufficient disk space in /boot for the local Relax-and-Recover rescue system:
 function total_filesize {
-    stat --format '%s' $@ 2>&8 | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
+    stat --format '%s' $@ | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
 }
 local available_space=$(df -Pkl /boot | awk 'END { print $4 * 1024 }')
 local used_space=$(total_filesize /boot/rear-kernel /boot/rear-initrd.cgz)
@@ -78,8 +78,12 @@ else
 fi
 test -w "$grub_conf" || Error "Cannot setup GRUB_RESCUE: GRUB 2 configuration '$grub_conf' cannot be modified."
 
-# Make a PBKDF2 hash of the GRUB_RESCUE_PASSWORD if it is not yet in this form:
+# Set up GRUB 2 superuser with password if enabled:
 local grub_rescue_password_PBKDF2_hash=""
+
+if test "$GRUB_SUPERUSER" -a "$GRUB_RESCUE_PASSWORD" ; then
+
+# Make a PBKDF2 hash of the GRUB_RESCUE_PASSWORD if it is not yet in this form:
 if [[ "${GRUB_RESCUE_PASSWORD:0:11}" == 'grub.pbkdf2' ]] ; then
     grub_rescue_password_PBKDF2_hash="$GRUB_RESCUE_PASSWORD"
 else
@@ -122,6 +126,8 @@ if [[ ! -x /etc/grub.d/01_users ]] ; then
     chmod 755 /etc/grub.d/01_users
 fi
 
+fi
+
 # Finding UUID of filesystem containing /boot
 grub_boot_uuid=$( df /boot | awk 'END {print $1}' | xargs blkid -s UUID -o value )
 
@@ -129,15 +135,28 @@ grub_boot_uuid=$( df /boot | awk 'END {print $1}' | xargs blkid -s UUID -o value
 blkid -U $grub_boot_uuid > /dev/null 2>&1 || Error "$grub_boot_uuid is not a valid UUID"
 
 # Creating Relax-and-Recover grub menu entry
-echo "#!/bin/bash
-cat << EOF
-menuentry \"Relax-and-Recover\" --class os --users \"\" {
-        search --no-floppy --fs-uuid  --set=root $grub_boot_uuid
-        linux  /boot/rear-kernel $KERNEL_CMDLINE
-        initrd /boot/rear-initrd.cgz
-        password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash
-}
-EOF" > /etc/grub.d/45_rear
+if test "$grub_rescue_password_PBKDF2_hash" ; then
+    ( echo "#!/bin/bash"
+      echo "cat << EOF"
+      echo "menuentry \"Relax-and-Recover\" --class os --users \"\" {"
+      echo "          search --no-floppy --fs-uuid  --set=root $grub_boot_uuid"
+      echo "          linux  /boot/rear-kernel $KERNEL_CMDLINE"
+      echo "          initrd /boot/rear-initrd.cgz"
+      echo "          password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash"
+      echo "}"
+      echo "EOF"
+    ) > /etc/grub.d/45_rear
+else
+    ( echo "#!/bin/bash"
+      echo "cat << EOF"
+      echo "menuentry \"Relax-and-Recover\" --class os --users \"\" {"
+      echo "          search --no-floppy --fs-uuid  --set=root $grub_boot_uuid"
+      echo "          linux  /boot/rear-kernel $KERNEL_CMDLINE"
+      echo "          initrd /boot/rear-initrd.cgz"
+      echo "}"
+      echo "EOF"
+    ) > /etc/grub.d/45_rear
+fi
 
 chmod 755 /etc/grub.d/45_rear
 
@@ -158,7 +177,7 @@ fi
 if [[ $(stat -L -c '%d' $KERNEL_FILE) == $(stat -L -c '%d' /boot/) ]] ; then
     # Hardlink file, if possible
     cp -pLlf $v $KERNEL_FILE /boot/rear-kernel >&2
-elif [[ $(stat -L -c '%s %Y' $KERNEL_FILE) == $(stat -L -c '%s %Y' /boot/rear-kernel 2>&8) ]] ; then
+elif [[ $(stat -L -c '%s %Y' $KERNEL_FILE) == $( stat -L -c '%s %Y' /boot/rear-kernel ) ]] ; then
     # If existing file has exact same size and modification time, assume the same
     :
 else
