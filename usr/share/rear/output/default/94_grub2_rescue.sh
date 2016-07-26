@@ -19,8 +19,8 @@ LogPrint "Setting up GRUB_RESCUE: Adding Relax-and-Recover rescue system to the 
 
 # Either grub-mkpasswd-pbkdf2 or grub2-mkpasswd-pbkdf2 is required:
 local grub_mkpasswd_binary=""
-has_binary grub-mkpasswd-pbkdf2 && grub_mkpasswd_binary=$(get_path grub-mkpasswd-pbkdf2)
-has_binary grub2-mkpasswd-pbkdf2 && grub_mkpasswd_binary=$(get_path grub2-mkpasswd-pbkdf2)
+has_binary grub-mkpasswd-pbkdf2 && grub_mkpasswd_binary=$( get_path grub-mkpasswd-pbkdf2 )
+has_binary grub2-mkpasswd-pbkdf2 && grub_mkpasswd_binary=$( get_path grub2-mkpasswd-pbkdf2 )
 test "$grub_mkpasswd_binary" || Error "Cannot setup GRUB_RESCUE: Neither grub-mkpasswd-pbkdf2 nor grub2-mkpasswd-pbkdf2 found."
 
 ### Use strings as grub --version syncs all disks
@@ -78,54 +78,56 @@ else
 fi
 test -w "$grub_conf" || Error "Cannot setup GRUB_RESCUE: GRUB 2 configuration '$grub_conf' cannot be modified."
 
-# Set up GRUB 2 superuser with password if enabled:
-local grub_rescue_password_PBKDF2_hash=""
-
-if test "$GRUB_SUPERUSER" -a "$GRUB_RESCUE_PASSWORD" ; then
-
-# Make a PBKDF2 hash of the GRUB_RESCUE_PASSWORD if it is not yet in this form:
-if [[ "${GRUB_RESCUE_PASSWORD:0:11}" == 'grub.pbkdf2' ]] ; then
-    grub_rescue_password_PBKDF2_hash="$GRUB_RESCUE_PASSWORD"
-else
-    grub_rescue_password_PBKDF2_hash="$( echo -e "$GRUB_RESCUE_PASSWORD\n$GRUB_RESCUE_PASSWORD" | $grub_mkpasswd_binary | grep -o 'grub.pbkdf2.*' )"
-fi
-if [[ ! "${grub_rescue_password_PBKDF2_hash:0:11}" == 'grub.pbkdf2' ]] ; then
-    Error "Cannot setup GRUB_RESCUE: GRUB 2 password '${grub_rescue_password_PBKDF2_hash:0:40}...' seems to be not in the form of a PBKDF2_hash."
-fi
-
-if [[ ! -f /etc/grub.d/01_users ]] ; then
-    echo "#!/bin/sh
-cat << EOF
-set superusers=\"$GRUB_SUPERUSER\"
-password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash
-EOF" > /etc/grub.d/01_users
-fi
-
-grub_pass_set=$( tail -n 4 /etc/grub.d/01_users | grep -E "cat|set superusers|password_pbkdf2|EOF" | wc -l )
-if [[ $grub_pass_set < 4 ]] ; then
-    echo "#!/bin/sh
-cat << EOF
-set superusers=\"$GRUB_SUPERUSER\"
-password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash
-EOF" > /etc/grub.d/01_users
-fi
-
-grub_super_set=$( grep 'set superusers' /etc/grub.d/01_users | cut -f2 -d '"' )
-if [[ ! $grub_super_set == $GRUB_SUPERUSER ]] ; then
-    sed -i "s/set superusers=\"\S*\"/set superusers=\"$GRUB_SUPERUSER\"/" /etc/grub.d/01_users
-    sed -i "s/password_pbkdf2\s\S*\s\S*/password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash/" /etc/grub.d/01_users
-fi
-
-grub_enc_password=$( grep "password_pbkdf2" /etc/grub.d/01_users | awk '{print $3}' )
-if [[ ! $grub_enc_password == $grub_rescue_password_PBKDF2_hash ]] ; then
-    sed -i "s/password_pbkdf2\s\S*\s\S*/password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash/" /etc/grub.d/01_users
-fi
-
-# Ensure 01_users is added to the /boot/grub.d/
-if [[ ! -x /etc/grub.d/01_users ]] ; then
-    chmod 755 /etc/grub.d/01_users
-fi
-
+# Set up GRUB 2 password protection if enabled:
+if test "$GRUB_RESCUE_PASSWORD" ; then
+    # When GRUB_RESCUE_USER is not specified, use by default GRUB_SUPERUSER (by default GRUB_SUPERUSER is empty):
+    test "$GRUB_RESCUE_USER" || GRUB_RESCUE_USER="$GRUB_SUPERUSER"
+    test "$GRUB_RESCUE_USER" || Error "Non-empty GRUB_RESCUE_PASSWORD requires that a GRUB_RESCUE_USER is specified."
+    LogPrint "Setting up GRUB 2 password protection with GRUB 2 user '$GRUB_RESCUE_USER'".
+    local grub_rescue_password_PBKDF2_hash=""
+    # Make a PBKDF2 hash of the GRUB_RESCUE_PASSWORD if it is not yet in this form:
+    if [[ "${GRUB_RESCUE_PASSWORD:0:11}" == 'grub.pbkdf2' ]] ; then
+        grub_rescue_password_PBKDF2_hash="$GRUB_RESCUE_PASSWORD"
+    else
+        grub_rescue_password_PBKDF2_hash="$( echo -e "$GRUB_RESCUE_PASSWORD\n$GRUB_RESCUE_PASSWORD" | $grub_mkpasswd_binary | grep -o 'grub.pbkdf2.*' )"
+    fi
+    # Ensure the password is in the form of a PBKDF2 hash:
+    if [[ ! "${grub_rescue_password_PBKDF2_hash:0:11}" == 'grub.pbkdf2' ]] ; then
+        Error "Cannot setup GRUB_RESCUE: GRUB 2 password '${grub_rescue_password_PBKDF2_hash:0:40}...' seems to be not in the form of a PBKDF2_hash."
+    fi
+    # Set up a GRUB 2 superuser if enabled:
+    LogPrint "Setting up GRUB 2 superuser '$GRUB_SUPERUSER'."
+    if test "$GRUB_SUPERUSER" ; then
+        local grub_users_file="/etc/grub.d/01_users"
+        if [[ ! -f $grub_users_file ]] ; then
+            ( echo "#!/bin/sh"
+              echo "cat << EOF"
+              echo "set superusers=\"$GRUB_SUPERUSER\""
+              echo "password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash"
+              echo "EOF"
+            ) > $grub_users_file
+        fi
+        local grub_pass_set=$( tail -n 4 $grub_users_file | grep -E "cat|set superusers|password_pbkdf2|EOF" | wc -l )
+        if [[ $grub_pass_set < 4 ]] ; then
+            ( echo "#!/bin/sh"
+              echo "cat << EOF"
+              echo "set superusers=\"$GRUB_SUPERUSER\""
+              echo "password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash"
+              echo "EOF"
+            ) > $grub_users_file
+        fi
+        local grub_super_set=$( grep 'set superusers' $grub_users_file | cut -f2 -d '"' )
+        if [[ ! $grub_super_set == $GRUB_SUPERUSER ]] ; then
+            sed -i "s/set superusers=\"\S*\"/set superusers=\"$GRUB_SUPERUSER\"/" $grub_users_file
+            sed -i "s/password_pbkdf2\s\S*\s\S*/password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash/" $grub_users_file
+        fi
+        local grub_enc_password=$( grep "password_pbkdf2" $grub_users_file | awk '{print $3}' )
+        if [[ ! $grub_enc_password == $grub_rescue_password_PBKDF2_hash ]] ; then
+            sed -i "s/password_pbkdf2\s\S*\s\S*/password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash/" $grub_users_file
+        fi
+        # Ensure the grub users file is executable:
+        test -x $grub_users_file || chmod 755 $grub_users_file
+    fi
 fi
 
 # Finding UUID of filesystem containing /boot
@@ -134,58 +136,54 @@ grub_boot_uuid=$( df /boot | awk 'END {print $1}' | xargs blkid -s UUID -o value
 # Stop if $grub_boot_uuid is not a valid UUID
 blkid -U $grub_boot_uuid > /dev/null 2>&1 || Error "$grub_boot_uuid is not a valid UUID"
 
-# Creating Relax-and-Recover grub menu entry
+# Creating Relax-and-Recover grub menu entry:
+local grub_rear_menu_entry_file="/etc/grub.d/45_rear"
+  ( echo "#!/bin/bash"
+    echo "cat << EOF"
+    echo "menuentry \"Relax-and-Recover\" --class os --users \"\" {"
+    echo "          search --no-floppy --fs-uuid  --set=root $grub_boot_uuid"
+    echo "          linux  /boot/rear-kernel $KERNEL_CMDLINE"
+    echo "          initrd /boot/rear-initrd.cgz"
+  ) > $grub_rear_menu_entry_file
 if test "$grub_rescue_password_PBKDF2_hash" ; then
-    ( echo "#!/bin/bash"
-      echo "cat << EOF"
-      echo "menuentry \"Relax-and-Recover\" --class os --users \"\" {"
-      echo "          search --no-floppy --fs-uuid  --set=root $grub_boot_uuid"
-      echo "          linux  /boot/rear-kernel $KERNEL_CMDLINE"
-      echo "          initrd /boot/rear-initrd.cgz"
-      echo "          password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash"
-      echo "}"
-      echo "EOF"
-    ) > /etc/grub.d/45_rear
-else
-    ( echo "#!/bin/bash"
-      echo "cat << EOF"
-      echo "menuentry \"Relax-and-Recover\" --class os --users \"\" {"
-      echo "          search --no-floppy --fs-uuid  --set=root $grub_boot_uuid"
-      echo "          linux  /boot/rear-kernel $KERNEL_CMDLINE"
-      echo "          initrd /boot/rear-initrd.cgz"
-      echo "}"
-      echo "EOF"
-    ) > /etc/grub.d/45_rear
+    # Specify GRUB 2 password protection if enabled:
+    echo "          password_pbkdf2 $GRUB_RESCUE_USER $grub_rescue_password_PBKDF2_hash" >> $grub_rear_menu_entry_file
 fi
+  ( echo "}"
+    echo "EOF"
+  ) >> $grub_rear_menu_entry_file
+chmod 755 $grub_rear_menu_entry_file
 
-chmod 755 /etc/grub.d/45_rear
-
+# Generate a GRUB 2 configuration file:
 if [[ $( type -f grub2-mkconfig ) ]] ; then
-    grub2-mkconfig -o $TMP_DIR/grub.cfg
+    grub2-mkconfig -o $TMP_DIR/grub.cfg || Error "Failed to generate GRUB 2 configuration file (using grub2-mkconfig)."
 else
-    grub-mkconfig -o $TMP_DIR/grub.cfg
+    grub-mkconfig -o $TMP_DIR/grub.cfg || Error "Failed to generate GRUB 2 configuration file (using grub-mkconfig)."
 fi
+test -s $TMP_DIR/grub.cfg || BugError "Generated empty GRUB 2 configuration file '$TMP_DIR/grub.cfg'"
 
-[[ -s $TMP_DIR/grub.cfg ]] || BugError "Modified GRUB 2 configuration is empty!"
-
+# Modifying local GRUB 2 configuration if it was actually changed:
 if ! diff -u $grub_conf $TMP_DIR/grub.cfg >&2 ; then
     LogPrint "Modifying local GRUB 2 configuration."
     cp -af $v $grub_conf $grub_conf.old >&2
     cat $TMP_DIR/grub.cfg >$grub_conf
 fi
 
-if [[ $(stat -L -c '%d' $KERNEL_FILE) == $(stat -L -c '%d' /boot/) ]] ; then
-    # Hardlink file, if possible
+# Provide the kernel as /boot/rear-kernel
+if [[ $( stat -L -c '%d' $KERNEL_FILE ) == $( stat -L -c '%d' /boot/ ) ]] ; then
+    # Hardlink file, if possible:
     cp -pLlf $v $KERNEL_FILE /boot/rear-kernel >&2
-elif [[ $(stat -L -c '%s %Y' $KERNEL_FILE) == $( stat -L -c '%s %Y' /boot/rear-kernel ) ]] ; then
-    # If existing file has exact same size and modification time, assume the same
+elif [[ $( stat -L -c '%s %Y' $KERNEL_FILE ) == $( stat -L -c '%s %Y' /boot/rear-kernel ) ]] ; then
+    # If an already existing /boot/rear-kernel has exact same size and modification time
+    # as the current KERNEL_FILE, assume both are the same and do nothing:
     :
 else
-    # In all other cases, replace
+    # In all other cases, replace /boot/rear-kernel with the current KERNEL_FILE:
     cp -pLf $v $KERNEL_FILE /boot/rear-kernel >&2
 fi
 BugIfError "Unable to copy '$KERNEL_FILE' to /boot"
 
+# Provide the rear recovery system in TMP_DIR/initrd.cgz as /boot/rear-initrd.cgz
 cp -af $v $TMP_DIR/initrd.cgz /boot/rear-initrd.cgz >&2 || BugError "Unable to copy '$TMP_DIR/initrd.cgz' to /boot"
 
 LogPrint "Finished GRUB_RESCUE setup: Added 'Relax-and-Recover' GRUB 2 menu entry."
