@@ -146,7 +146,9 @@ local grub_rear_menu_entry_file="/etc/grub.d/45_rear"
     echo "cat << EOF"
     echo "menuentry \"Relax-and-Recover\" --class os --users \"\" {"
     echo "          search --no-floppy --fs-uuid  --set=root $grub_boot_uuid"
+    echo "          echo 'Loading kernel $boot_kernel_file ...'"
     echo "          linux  $boot_kernel_file $KERNEL_CMDLINE"
+    echo "          echo 'Loading initrd $boot_initrd_file (may take a while) ...'"
     echo "          initrd $boot_initrd_file"
   ) > $grub_rear_menu_entry_file
 if test "$grub_rescue_password_PBKDF2_hash" ; then
