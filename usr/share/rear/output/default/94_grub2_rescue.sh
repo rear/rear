@@ -15,39 +15,8 @@ type -p grub-probe >&2 || type -p grub2-probe >&2 || { LogPrint "Skipping GRUB_R
 
 # Now GRUB_RESCUE is explicitly wanted and this script is the right one to set it up.
 LogPrint "Setting up GRUB_RESCUE: Adding Relax-and-Recover rescue system to the local GRUB 2 configuration."
+test "unrestricted" = "$GRUB_RESCUE_USER" && LogPrint "Anyone can boot that and replace the current system via 'rear recover'."
 # Now error out whenever it cannot setup the GRUB_RESCUE functionality.
-
-# Either grub-mkpasswd-pbkdf2 or grub2-mkpasswd-pbkdf2 is required:
-local grub_mkpasswd_binary=""
-has_binary grub-mkpasswd-pbkdf2 && grub_mkpasswd_binary=$( get_path grub-mkpasswd-pbkdf2 )
-has_binary grub2-mkpasswd-pbkdf2 && grub_mkpasswd_binary=$( get_path grub2-mkpasswd-pbkdf2 )
-test "$grub_mkpasswd_binary" || Error "Cannot setup GRUB_RESCUE: Neither grub-mkpasswd-pbkdf2 nor grub2-mkpasswd-pbkdf2 found."
-
-### Use strings as grub --version syncs all disks
-#grub_version=$(get_version "grub --version")
-# FIXME:
-# This works with GRUB Legacy
-# e.g. on my <jsmeix@suse.de> SLES11 system:
-#   # strings /usr/sbin/grub | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | tail -n 1
-#   0.97
-#   # /usr/sbin/grub --version
-#   grub (GNU GRUB 0.97)
-#   # rpm -q grub
-#   grub-0.97-162.172.1
-# But it does no longer result the right version when grub_mkpasswd_binary is uesd
-# e.g. on my <jsmeix@suse.de> SLES12 system:
-#   # strings /usr/bin/grub2-mkpasswd-pbkdf2 | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | tail -n 1
-#   1.2.840.113549.1.1.12
-#   # /usr/bin/grub2-mkpasswd-pbkdf2 --version
-#   /usr/bin/grub2-mkpasswd-pbkdf2 (GRUB2) 2.02~beta2
-#   # rpm -q grub2
-#   grub2-2.02~beta2-69.1.x86_64
-# Because this works on my <jsmeix@suse.de> SLES12 system:
-#   # strings /usr/bin/grub2-mkpasswd-pbkdf2 | grep '^2\.' | head -n 1
-#   2.02~beta2
-# I <jsmeix@suse.de> simply use that for now until someone provides a better solution:
-local grub_version=$( strings $grub_mkpasswd_binary | grep '^2\.' | head -n 1 )
-test "$grub_version" || Error "Cannot setup GRUB_RESCUE: It seems '$grub_mkpasswd_binary' is of unsupported version 'grub_version'."
 
 # Ensure that kernel and initrd are there:
 test -r "$KERNEL_FILE" || Error "Cannot setup GRUB_RESCUE: Cannot read kernel file '$KERNEL_FILE'."
@@ -82,27 +51,23 @@ else
 fi
 test -w "$grub_conf" || Error "Cannot setup GRUB_RESCUE: GRUB 2 configuration '$grub_conf' cannot be modified."
 
-# Set up GRUB 2 password protection if enabled:
-local grub_rescue_password_PBKDF2_hash=""
-if test "$GRUB_RESCUE_PASSWORD" ; then
-    # When GRUB_RESCUE_USER is not specified, try to use a GRUB_SUPERUSER value as backward compatible fallback
-    # (be prepared for 'set -u' by specifying an empty fallback value if GRUB_SUPERUSER is not set):
-    test "$GRUB_RESCUE_USER" || GRUB_RESCUE_USER="${GRUB_SUPERUSER:-}"
-    test "$GRUB_RESCUE_USER" || Error "Non-empty GRUB_RESCUE_PASSWORD requires that a GRUB_RESCUE_USER is specified."
-    LogPrint "Setting up GRUB 2 password protection with GRUB 2 user '$GRUB_RESCUE_USER'".
-    # Make a PBKDF2 hash of the GRUB_RESCUE_PASSWORD if it is not yet in this form:
-    if [[ "${GRUB_RESCUE_PASSWORD:0:11}" == 'grub.pbkdf2' ]] ; then
-        grub_rescue_password_PBKDF2_hash="$GRUB_RESCUE_PASSWORD"
-    else
-        grub_rescue_password_PBKDF2_hash="$( echo -e "$GRUB_RESCUE_PASSWORD\n$GRUB_RESCUE_PASSWORD" | $grub_mkpasswd_binary | grep -o 'grub.pbkdf2.*' )"
-    fi
-    # Ensure the password is in the form of a PBKDF2 hash:
-    if [[ ! "${grub_rescue_password_PBKDF2_hash:0:11}" == 'grub.pbkdf2' ]] ; then
-        Error "Cannot setup GRUB_RESCUE: GRUB 2 password '${grub_rescue_password_PBKDF2_hash:0:40}...' seems to be not in the form of a PBKDF2_hash."
-    fi
-    # Report no longer supported GRUB 2 superuser setup if GRUB_SUPERUSER is non-empty
-    # (be prepared for 'set -u' by specifying an empty fallback value if GRUB_SUPERUSER is not set):
-    test ${GRUB_SUPERUSER:-} && LogPrint "Skipping GRUB 2 superuser setup: GRUB_SUPERUSER is no longer supported (see default.conf)."
+# Report no longer supported GRUB 2 superuser setup if GRUB_SUPERUSER is non-empty
+# (be prepared for 'set -u' by specifying an empty fallback value if GRUB_SUPERUSER is not set):
+test ${GRUB_SUPERUSER:-} && LogPrint "Skipping GRUB 2 superuser setup: GRUB_SUPERUSER is no longer supported (see default.conf)."
+# Report no longer supported GRUB 2 password setup if GRUB_RESCUE_PASSWORD is non-empty
+# (be prepared for 'set -u' by specifying an empty fallback value if GRUB_RESCUE_PASSWORD is not set):
+test ${GRUB_RESCUE_PASSWORD:-} && LogPrint "Skipping GRUB 2 password setup: GRUB_RESCUE_PASSWORD is no longer supported (see default.conf)."
+# It is no error when GRUB_SUPERUSER and/or GRUB_RESCUE_PASSWORD are non-empty
+# because it should work reasonably backward compatible, see default.conf
+
+# A simple check if a GRUB_RESCUE_USER exists in the usual GRUB2 users file /etc/grub.d/01_users
+# but this check is unreliable because the GRUB2 users filename could be anything else
+# so that it only notifies without interpretation and does not error out if the check fails.
+# On the other hand when /etc/grub.d/01_users exists then we might even assume that
+# this one is the only GRUB2 users file and error out if GRUB_RESCUE_USER is not therein?
+local supposed_grub_users_file="/etc/grub.d/01_users"
+if test -r $supposed_grub_users_file -a "$GRUB_RESCUE_USER" -a "unrestricted" != "$GRUB_RESCUE_USER" ; then
+    grep -q "$GRUB_RESCUE_USER" $supposed_grub_users_file || LogPrint "GRUB_RESCUE_USER '$GRUB_RESCUE_USER' not found in $supposed_grub_users_file - is that okay?"
 fi
 
 # Finding UUID of filesystem containing boot_dir (i.e. /boot)
@@ -115,18 +80,22 @@ blkid -U $grub_boot_uuid > /dev/null 2>&1 || Error "$grub_boot_uuid is not a val
 local grub_rear_menu_entry_file="/etc/grub.d/45_rear"
   ( echo "#!/bin/bash"
     echo "cat << EOF"
-    echo "menuentry \"Relax-and-Recover\" --class os --users \"\" {"
-    echo "          search --no-floppy --fs-uuid  --set=root $grub_boot_uuid"
+  ) > $grub_rear_menu_entry_file
+if test "$GRUB_RESCUE_USER" ; then
+    if test "unrestricted" = "$GRUB_RESCUE_USER" ; then
+        echo "menuentry 'Relax-and-Recover' --class os --unrestricted {" >> $grub_rear_menu_entry_file
+    else
+        echo "menuentry 'Relax-and-Recover' --class os --users $GRUB_RESCUE_USER {" >> $grub_rear_menu_entry_file
+    fi
+else
+    echo "menuentry 'Relax-and-Recover' --class os {" >> $grub_rear_menu_entry_file
+fi
+ (  echo "          search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
     echo "          echo 'Loading kernel $boot_kernel_file ...'"
     echo "          linux  $boot_kernel_file $KERNEL_CMDLINE"
     echo "          echo 'Loading initrd $boot_initrd_file (may take a while) ...'"
     echo "          initrd $boot_initrd_file"
-  ) > $grub_rear_menu_entry_file
-if test "$grub_rescue_password_PBKDF2_hash" ; then
-    # Specify GRUB 2 password protection if enabled:
-    echo "          password_pbkdf2 $GRUB_RESCUE_USER $grub_rescue_password_PBKDF2_hash" >> $grub_rear_menu_entry_file
-fi
-  ( echo "}"
+    echo "}"
     echo "EOF"
   ) >> $grub_rear_menu_entry_file
 chmod 755 $grub_rear_menu_entry_file
