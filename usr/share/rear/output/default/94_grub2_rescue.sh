@@ -85,8 +85,9 @@ test -w "$grub_conf" || Error "Cannot setup GRUB_RESCUE: GRUB 2 configuration '$
 # Set up GRUB 2 password protection if enabled:
 local grub_rescue_password_PBKDF2_hash=""
 if test "$GRUB_RESCUE_PASSWORD" ; then
-    # When GRUB_RESCUE_USER is not specified, use by default GRUB_SUPERUSER (by default GRUB_SUPERUSER is empty):
-    test "$GRUB_RESCUE_USER" || GRUB_RESCUE_USER="$GRUB_SUPERUSER"
+    # When GRUB_RESCUE_USER is not specified, try to use a GRUB_SUPERUSER value as backward compatible fallback
+    # (be prepared for 'set -u' by specifying an empty fallback value if GRUB_SUPERUSER is not set):
+    test "$GRUB_RESCUE_USER" || GRUB_RESCUE_USER="${GRUB_SUPERUSER:-}"
     test "$GRUB_RESCUE_USER" || Error "Non-empty GRUB_RESCUE_PASSWORD requires that a GRUB_RESCUE_USER is specified."
     LogPrint "Setting up GRUB 2 password protection with GRUB 2 user '$GRUB_RESCUE_USER'".
     # Make a PBKDF2 hash of the GRUB_RESCUE_PASSWORD if it is not yet in this form:
@@ -99,39 +100,9 @@ if test "$GRUB_RESCUE_PASSWORD" ; then
     if [[ ! "${grub_rescue_password_PBKDF2_hash:0:11}" == 'grub.pbkdf2' ]] ; then
         Error "Cannot setup GRUB_RESCUE: GRUB 2 password '${grub_rescue_password_PBKDF2_hash:0:40}...' seems to be not in the form of a PBKDF2_hash."
     fi
-    # Set up a GRUB 2 superuser if enabled:
-    if test "$GRUB_SUPERUSER" ; then
-        LogPrint "Setting up GRUB 2 superuser '$GRUB_SUPERUSER'."
-        local grub_users_file="/etc/grub.d/01_users"
-        if [[ ! -f $grub_users_file ]] ; then
-            ( echo "#!/bin/sh"
-              echo "cat << EOF"
-              echo "set superusers=\"$GRUB_SUPERUSER\""
-              echo "password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash"
-              echo "EOF"
-            ) > $grub_users_file
-        fi
-        local grub_pass_set=$( tail -n 4 $grub_users_file | grep -E "cat|set superusers|password_pbkdf2|EOF" | wc -l )
-        if [[ $grub_pass_set < 4 ]] ; then
-            ( echo "#!/bin/sh"
-              echo "cat << EOF"
-              echo "set superusers=\"$GRUB_SUPERUSER\""
-              echo "password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash"
-              echo "EOF"
-            ) > $grub_users_file
-        fi
-        local grub_super_set=$( grep 'set superusers' $grub_users_file | cut -f2 -d '"' )
-        if [[ ! $grub_super_set == $GRUB_SUPERUSER ]] ; then
-            sed -i "s/set superusers=\"\S*\"/set superusers=\"$GRUB_SUPERUSER\"/" $grub_users_file
-            sed -i "s/password_pbkdf2\s\S*\s\S*/password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash/" $grub_users_file
-        fi
-        local grub_enc_password=$( grep "password_pbkdf2" $grub_users_file | awk '{print $3}' )
-        if [[ ! $grub_enc_password == $grub_rescue_password_PBKDF2_hash ]] ; then
-            sed -i "s/password_pbkdf2\s\S*\s\S*/password_pbkdf2 $GRUB_SUPERUSER $grub_rescue_password_PBKDF2_hash/" $grub_users_file
-        fi
-        # Ensure the GRUB 2 users file is executable:
-        test -x $grub_users_file || chmod 755 $grub_users_file
-    fi
+    # Report no longer supported GRUB 2 superuser setup if GRUB_SUPERUSER is non-empty
+    # (be prepared for 'set -u' by specifying an empty fallback value if GRUB_SUPERUSER is not set):
+    test ${GRUB_SUPERUSER:-} && LogPrint "Skipping GRUB 2 superuser setup: GRUB_SUPERUSER is no longer supported (see default.conf)."
 fi
 
 # Finding UUID of filesystem containing boot_dir (i.e. /boot)
