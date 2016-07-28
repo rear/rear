@@ -14,7 +14,8 @@ is_true "$GRUB_RESCUE" || return
 type -p grub-probe >&2 || type -p grub2-probe >&2 || { LogPrint "Skipping GRUB_RESCUE setup for GRUB 2 (no GRUB 2 found)." ; return ; }
 
 # Now GRUB_RESCUE is explicitly wanted and this script is the right one to set it up.
-LogPrint "Setting up GRUB_RESCUE: Adding Relax-and-Recover rescue system to the local GRUB 2 configuration."
+local grub_rear_menu_entry_name="Relax-and-Recover"
+LogPrint "Setting up GRUB_RESCUE: Adding $grub_rear_menu_entry_name rescue system to the local GRUB 2 configuration."
 test "unrestricted" = "$GRUB_RESCUE_USER" && LogPrint "Anyone can boot that and replace the current system via 'rear recover'."
 # Now error out whenever it cannot setup the GRUB_RESCUE functionality.
 
@@ -36,10 +37,10 @@ local required_space=$( total_filesize $KERNEL_FILE $initrd_file )
 if (( available_space + used_space < required_space )) ; then
     required_MiB=$(( required_space / 1024 / 1024 ))
     available_MiB=$(( ( available_space + used_space ) / 1024 / 1024 ))
-    Error "Cannot setup GRUB_RESCUE: Not enough disk space in $boot_dir for Relax-and-Recover rescue system. Required: $required_MiB MiB. Available: $available_MiB MiB."
+    Error "Cannot setup GRUB_RESCUE: Not enough disk space in $boot_dir for $grub_rear_menu_entry_name rescue system. Required: $required_MiB MiB. Available: $available_MiB MiB."
 fi
 
-# Ensure a GRUB2 configuration file is found:
+# Ensure a GRUB 2 configuration file is found:
 local grub_conf=""
 if is_true $USING_UEFI_BOOTLOADER ; then
     # set to 1 means using UEFI
@@ -60,11 +61,11 @@ test ${GRUB_RESCUE_PASSWORD:-} && LogPrint "Skipping GRUB 2 password setup: GRUB
 # It is no error when GRUB_SUPERUSER and/or GRUB_RESCUE_PASSWORD are non-empty
 # because it should work reasonably backward compatible, see default.conf
 
-# A simple check if a GRUB_RESCUE_USER exists in the usual GRUB2 users file /etc/grub.d/01_users
-# but this check is unreliable because the GRUB2 users filename could be anything else
+# A simple check if a GRUB_RESCUE_USER exists in the usual GRUB 2 users file /etc/grub.d/01_users
+# but this check is unreliable because the GRUB 2 users filename could be anything else
 # so that it only notifies without interpretation and does not error out if the check fails.
 # On the other hand when /etc/grub.d/01_users exists then we might even assume that
-# this one is the only GRUB2 users file and error out if GRUB_RESCUE_USER is not therein?
+# this one is the only GRUB 2 users file and error out if GRUB_RESCUE_USER is not therein?
 local supposed_grub_users_file="/etc/grub.d/01_users"
 if test -r $supposed_grub_users_file -a "$GRUB_RESCUE_USER" -a "unrestricted" != "$GRUB_RESCUE_USER" ; then
     grep -q "$GRUB_RESCUE_USER" $supposed_grub_users_file || LogPrint "GRUB_RESCUE_USER '$GRUB_RESCUE_USER' not found in $supposed_grub_users_file - is that okay?"
@@ -76,25 +77,48 @@ grub_boot_uuid=$( df $boot_dir | awk 'END {print $1}' | xargs blkid -s UUID -o v
 # Stop if grub_boot_uuid is not a valid UUID
 blkid -U $grub_boot_uuid > /dev/null 2>&1 || Error "$grub_boot_uuid is not a valid UUID"
 
-# Creating Relax-and-Recover grub menu entry:
+# Creating Relax-and-Recover GRUB 2 menu entry:
 local grub_rear_menu_entry_file="/etc/grub.d/45_rear"
+local grub_rear_menu_entry_linux_value=""
+local grub_rear_menu_entry_initrd_value=""
+# Different Linux distributions specify in /boot/grub2/grub.cfg
+# the linux and initrd values differently
+# see https://github.com/rear/rear/pull/942#issuecomment-235507831
+# At least for now (until a generic solution is found)
+# we differentiate depending on the Linux distribution.
+# SUSE SLE and openSUSE use the absolute path for the linux and initrd values.
+# It seems Red Hat and Red Hat based Linux distributions (e.g. CentOS)
+# use the basename plus a leading '/' for the linux and initrd values
+# see https://github.com/rear/rear/issues/703#issuecomment-235404491
+# For SUSE SLE and openSUSE the OS_VENDOR is commonly set to 'SUSE_LINUX'
+# (by default the 'lsb_release -i -s' output via the SetOSVendorAndVersion function
+#  or explicitly specified in /etc/rear/os.conf e.g. via RPM spec file).
+# For all others we assume Red Hat behaviour as default/fallback:
+if test "SUSE_LINUX" = "$OS_VENDOR" ; then
+    grub_rear_menu_entry_linux_value="$boot_kernel_file"
+    grub_rear_menu_entry_initrd_value="$boot_initrd_file"
+else
+    grub_rear_menu_entry_linux_value="/$( basename $boot_kernel_file )"
+    grub_rear_menu_entry_initrd_value="/$( basename $boot_initrd_file )"
+fi
+# Create a GRUB 2 menu config file:
   ( echo "#!/bin/bash"
     echo "cat << EOF"
   ) > $grub_rear_menu_entry_file
 if test "$GRUB_RESCUE_USER" ; then
     if test "unrestricted" = "$GRUB_RESCUE_USER" ; then
-        echo "menuentry 'Relax-and-Recover' --class os --unrestricted {" >> $grub_rear_menu_entry_file
+        echo "menuentry '$grub_rear_menu_entry_name' --class os --unrestricted {" >> $grub_rear_menu_entry_file
     else
-        echo "menuentry 'Relax-and-Recover' --class os --users $GRUB_RESCUE_USER {" >> $grub_rear_menu_entry_file
+        echo "menuentry '$grub_rear_menu_entry_name' --class os --users $GRUB_RESCUE_USER {" >> $grub_rear_menu_entry_file
     fi
 else
-    echo "menuentry 'Relax-and-Recover' --class os {" >> $grub_rear_menu_entry_file
+    echo "menuentry '$grub_rear_menu_entry_name' --class os {" >> $grub_rear_menu_entry_file
 fi
- (  echo "          search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
+  ( echo "          search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
     echo "          echo 'Loading kernel $boot_kernel_file ...'"
-    echo "          linux  $boot_kernel_file $KERNEL_CMDLINE"
+    echo "          linux $grub_rear_menu_entry_linux_value $KERNEL_CMDLINE"
     echo "          echo 'Loading initrd $boot_initrd_file (may take a while) ...'"
-    echo "          initrd $boot_initrd_file"
+    echo "          initrd $grub_rear_menu_entry_initrd_value"
     echo "}"
     echo "EOF"
   ) >> $grub_rear_menu_entry_file
@@ -133,5 +157,5 @@ BugIfError "Unable to copy '$KERNEL_FILE' to '$boot_kernel_file'."
 # Provide the rear recovery system in initrd_file (i.e. TMP_DIR/initrd.cgz) as boot_initrd_file (i.e. /boot/rear-initrd.cgz):
 cp -af $v $initrd_file $boot_initrd_file >&2 || BugError "Unable to copy '$initrd_file' to '$boot_initrd_file'."
 
-LogPrint "Finished GRUB_RESCUE setup: Added 'Relax-and-Recover' GRUB 2 menu entry."
+LogPrint "Finished GRUB_RESCUE setup: Added '$grub_rear_menu_entry_name' GRUB 2 menu entry."
 
