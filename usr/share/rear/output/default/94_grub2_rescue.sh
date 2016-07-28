@@ -1,153 +1,161 @@
+
 # This file is part of Relax and Recover, licensed under the GNU General
 # Public License. Refer to the included LICENSE for full text of license.
 
-### Add the rescue kernel and initrd to the local GRUB Legacy
-###
+# Add the rescue kernel and initrd to the local GRUB 2 bootloader.
 
-### Only do when explicitely enabled
-if ! is_true "$GRUB_RESCUE" ; then
-    return
-fi
+# Only do it when explicitly enabled:
+is_true "$GRUB_RESCUE" || return
 
-### Only do when system is not using GRUB Legacy
-[[ $(type -p grub-probe) || $(type -p grub2-probe) ]] || return
+# Only run this script when GRUB 2 is there
+# (grub-probe or grub2-probe only exist in GRUB 2)
+# in particular do not run this script when GRUB Legacy is used
+# (for GRUB Legacy output/default/94_grub_rescue.sh is run):
+type -p grub-probe >&2 || type -p grub2-probe >&2 || { LogPrint "Skipping GRUB_RESCUE setup for GRUB 2 (no GRUB 2 found)." ; return ; }
 
-if has_binary grub-mkpasswd-pbkdf2 ; then
-    grub_binary=$(get_path grub-mkpasswd-pbkdf2)
-elif has_binary grub2-mkpasswd-pbkdf2 ; then
-    grub_binary=$(get_path grub2-mkpasswd-pbkdf2)
-else
-    StopIfError "ERROR: no binary found for grub-mkpasswd-pbkdf2 or grub2-mkpasswd-pbkdf2"
-fi
+# Now GRUB_RESCUE is explicitly wanted and this script is the right one to set it up.
+local grub_rear_menu_entry_name="Relax-and-Recover"
+LogPrint "Setting up GRUB_RESCUE: Adding $grub_rear_menu_entry_name rescue system to the local GRUB 2 configuration."
+test "unrestricted" = "$GRUB_RESCUE_USER" && LogPrint "Anyone can boot that and replace the current system via 'rear recover'."
+# Now error out whenever it cannot setup the GRUB_RESCUE functionality.
 
-if [[ -z "$grub_binary" ]]; then
-    Log "Could not find grub-mkpasswd-pbkdf2 or grub2-mkpasswd-pbkdf2 binary."
-    return
-fi
+# Ensure that kernel and initrd are there:
+test -r "$KERNEL_FILE" || Error "Cannot setup GRUB_RESCUE: Cannot read kernel file '$KERNEL_FILE'."
+local initrd_file=$TMP_DIR/initrd.cgz
+test -r $initrd_file || Error "Cannot setup GRUB_RESCUE: Cannot read initrd '$initrd_file'."
 
-### Use strings as grub --version syncs all disks
-#grub_version=$(get_version "grub --version")
-grub_version=$(strings $grub_binary | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | tail -n 1)
-if [[ ! "$grub_version" ]]; then
-    # only for grub-legacy we make special rear boot entry in menu.lst
-    return
-fi
-
-[[ -r "$KERNEL_FILE" ]]
-StopIfError "Failed to find kernel, updating GRUB2 failed."
-
-[[ -r "$TMP_DIR/initrd.cgz" ]]
-StopIfError "Failed to find initrd.cgz, updating GRUB2 failed."
-
+# Esure there is sufficient disk space in /boot for the local Relax-and-Recover rescue system:
 function total_filesize {
-    stat --format '%s' $@ 2>&8 | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
+    stat --format '%s' $@ | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
 }
-
-available_space=$(df -Pkl /boot | awk 'END { print $4 * 1024 }')
-used_space=$(total_filesize /boot/rear-kernel /boot/rear-initrd.cgz)
-required_space=$(total_filesize $KERNEL_FILE $TMP_DIR/initrd.cgz)
-
+local boot_dir="/boot"
+local boot_kernel_file="$boot_dir/rear-kernel"
+local boot_initrd_file="$boot_dir/rear-initrd.cgz"
+local available_space=$( df -Pkl $boot_dir | awk 'END { print $4 * 1024 }' )
+local used_space=$( total_filesize $boot_kernel_file $boot_initrd_file )
+local required_space=$( total_filesize $KERNEL_FILE $initrd_file )
 if (( available_space + used_space < required_space )) ; then
     required_MiB=$(( required_space / 1024 / 1024 ))
     available_MiB=$(( ( available_space + used_space ) / 1024 / 1024 ))
-    Error "Not enough disk space available in /boot for GRUB2 rescue image. Required: $required_MiB MiB. Available: $available_MiB MiB."
+    Error "Cannot setup GRUB_RESCUE: Not enough disk space in $boot_dir for $grub_rear_menu_entry_name rescue system. Required: $required_MiB MiB. Available: $available_MiB MiB."
 fi
 
+# Ensure a GRUB 2 configuration file is found:
+local grub_conf=""
 if is_true $USING_UEFI_BOOTLOADER ; then
     # set to 1 means using UEFI
-    grub_conf="`dirname $UEFI_BOOTLOADER`/grub.cfg"
+    grub_conf="$( dirname $UEFI_BOOTLOADER )/grub.cfg"
 elif has_binary grub2-probe ; then
-    grub_conf=$(readlink -f /boot/grub2/grub.cfg)
+    grub_conf=$( readlink -f $boot_dir/grub2/grub.cfg )
 else
-    grub_conf=$(readlink -f /boot/grub/grub.cfg)
+    grub_conf=$( readlink -f $boot_dir/grub/grub.cfg )
+fi
+test -w "$grub_conf" || Error "Cannot setup GRUB_RESCUE: GRUB 2 configuration '$grub_conf' cannot be modified."
+
+# Report no longer supported GRUB 2 superuser setup if GRUB_SUPERUSER is non-empty
+# (be prepared for 'set -u' by specifying an empty fallback value if GRUB_SUPERUSER is not set):
+test ${GRUB_SUPERUSER:-} && LogPrint "Skipping GRUB 2 superuser setup: GRUB_SUPERUSER is no longer supported (see default.conf)."
+# Report no longer supported GRUB 2 password setup if GRUB_RESCUE_PASSWORD is non-empty
+# (be prepared for 'set -u' by specifying an empty fallback value if GRUB_RESCUE_PASSWORD is not set):
+test ${GRUB_RESCUE_PASSWORD:-} && LogPrint "Skipping GRUB 2 password setup: GRUB_RESCUE_PASSWORD is no longer supported (see default.conf)."
+# It is no error when GRUB_SUPERUSER and/or GRUB_RESCUE_PASSWORD are non-empty
+# because it should work reasonably backward compatible, see default.conf
+
+# A simple check if a GRUB_RESCUE_USER exists in the usual GRUB 2 users file /etc/grub.d/01_users
+# but this check is unreliable because the GRUB 2 users filename could be anything else
+# so that it only notifies without interpretation and does not error out if the check fails.
+# On the other hand when /etc/grub.d/01_users exists then we might even assume that
+# this one is the only GRUB 2 users file and error out if GRUB_RESCUE_USER is not therein?
+local supposed_grub_users_file="/etc/grub.d/01_users"
+if test -r $supposed_grub_users_file -a "$GRUB_RESCUE_USER" -a "unrestricted" != "$GRUB_RESCUE_USER" ; then
+    grep -q "$GRUB_RESCUE_USER" $supposed_grub_users_file || LogPrint "GRUB_RESCUE_USER '$GRUB_RESCUE_USER' not found in $supposed_grub_users_file - is that okay?"
 fi
 
-[[ -w "$grub_conf" ]]
-StopIfError "GRUB2 configuration cannot be modified."
+# Finding UUID of filesystem containing boot_dir (i.e. /boot)
+grub_boot_uuid=$( df $boot_dir | awk 'END {print $1}' | xargs blkid -s UUID -o value )
 
-if [[ ! "${GRUB_RESCUE_PASSWORD:0:11}" == 'grub.pbkdf2' ]]; then
-    Error "GRUB_RESCUE_PASSWORD needs to be set. Run grub2-mkpasswd-pbkdf2 to generate pbkdf2 hash"
-fi
+# Stop if grub_boot_uuid is not a valid UUID
+blkid -U $grub_boot_uuid > /dev/null 2>&1 || Error "$grub_boot_uuid is not a valid UUID"
 
-if [[ ! -f /etc/grub.d/01_users ]]; then
-    echo "#!/bin/sh
-cat << EOF
-set superusers=\"$GRUB_SUPERUSER\"
-password_pbkdf2 $GRUB_SUPERUSER $GRUB_RESCUE_PASSWORD
-EOF" > /etc/grub.d/01_users
-fi
-
-grub_pass_set=$(tail -n 4 /etc/grub.d/01_users | grep -E "cat|set superusers|password_pbkdf2|EOF" | wc -l)
-if [[ $grub_pass_set < 4 ]]; then
-    echo "#!/bin/sh
-cat << EOF
-set superusers=\"$GRUB_SUPERUSER\"
-password_pbkdf2 $GRUB_SUPERUSER $GRUB_RESCUE_PASSWORD
-EOF" > /etc/grub.d/01_users
-fi
-
-grub_super_set=$(grep 'set superusers' /etc/grub.d/01_users | cut -f2 -d '"')
-if [[ ! $grub_super_set == $GRUB_SUPERUSER ]]; then
-    sed -i "s/set superusers=\"\S*\"/set superusers=\"$GRUB_SUPERUSER\"/" /etc/grub.d/01_users
-    sed -i "s/password_pbkdf2\s\S*\s\S*/password_pbkdf2 $GRUB_SUPERUSER $GRUB_RESCUE_PASSWORD/" /etc/grub.d/01_users
-fi
-
-grub_enc_password=$(grep "password_pbkdf2" /etc/grub.d/01_users | awk '{print $3}')
-if [[ ! $grub_enc_password == $GRUB_RESCUE_PASSWORD ]]; then
-    sed -i "s/password_pbkdf2\s\S*\s\S*/password_pbkdf2 $GRUB_SUPERUSER $GRUB_RESCUE_PASSWORD/" /etc/grub.d/01_users
-fi
-
-# Ensure 01_users is added to the /boot/grub.d/
-if [[ ! -x /etc/grub.d/01_users ]]; then
-    chmod 755 /etc/grub.d/01_users
-fi
-
-#Finding UUID of filesystem containing /boot
-grub_boot_uuid=$(df /boot | awk 'END {print $1}' | xargs blkid -s UUID -o value)
-
-#Stop if $grub_boot_uuid is not a valid UUID
-blkid -U $grub_boot_uuid > /dev/null 2>&1
-StopIfError "$grub_boot_uuid is not a valid UUID"
-
-#Creating REAR grub menu entry
-echo "#!/bin/bash
-cat << EOF
-menuentry \"Relax and Recover\" --class os --users \"\" {
-        search --no-floppy --fs-uuid  --set=root $grub_boot_uuid
-        linux  /rear-kernel $KERNEL_CMDLINE
-        initrd /rear-initrd.cgz
-        password_pbkdf2 $GRUB_SUPERUSER $GRUB_RESCUE_PASSWORD
-}
-EOF" > /etc/grub.d/45_rear
-
-chmod 755 /etc/grub.d/45_rear
-
-if [[ $( type -f grub2-mkconfig ) ]]; then
-    grub2-mkconfig -o $TMP_DIR/grub.cfg
+# Creating Relax-and-Recover GRUB 2 menu entry:
+local grub_rear_menu_entry_file="/etc/grub.d/45_rear"
+local grub_rear_menu_entry_linux_value=""
+local grub_rear_menu_entry_initrd_value=""
+# Different Linux distributions specify in /boot/grub2/grub.cfg
+# the linux and initrd values differently
+# see https://github.com/rear/rear/pull/942#issuecomment-235507831
+# At least for now (until a generic solution is found)
+# we differentiate depending on the Linux distribution.
+# SUSE SLE and openSUSE use the absolute path for the linux and initrd values.
+# It seems Red Hat and Red Hat based Linux distributions (e.g. CentOS)
+# use the basename plus a leading '/' for the linux and initrd values
+# see https://github.com/rear/rear/issues/703#issuecomment-235404491
+# For SUSE SLE and openSUSE the OS_VENDOR is commonly set to 'SUSE_LINUX'
+# (by default the 'lsb_release -i -s' output via the SetOSVendorAndVersion function
+#  or explicitly specified in /etc/rear/os.conf e.g. via RPM spec file).
+# For all others we assume Red Hat behaviour as default/fallback:
+if test "SUSE_LINUX" = "$OS_VENDOR" ; then
+    grub_rear_menu_entry_linux_value="$boot_kernel_file"
+    grub_rear_menu_entry_initrd_value="$boot_initrd_file"
 else
-    grub-mkconfig -o $TMP_DIR/grub.cfg
+    grub_rear_menu_entry_linux_value="/$( basename $boot_kernel_file )"
+    grub_rear_menu_entry_initrd_value="/$( basename $boot_initrd_file )"
 fi
+# Create a GRUB 2 menu config file:
+  ( echo "#!/bin/bash"
+    echo "cat << EOF"
+  ) > $grub_rear_menu_entry_file
+if test "$GRUB_RESCUE_USER" ; then
+    if test "unrestricted" = "$GRUB_RESCUE_USER" ; then
+        echo "menuentry '$grub_rear_menu_entry_name' --class os --unrestricted {" >> $grub_rear_menu_entry_file
+    else
+        echo "menuentry '$grub_rear_menu_entry_name' --class os --users $GRUB_RESCUE_USER {" >> $grub_rear_menu_entry_file
+    fi
+else
+    echo "menuentry '$grub_rear_menu_entry_name' --class os {" >> $grub_rear_menu_entry_file
+fi
+  ( echo "          search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
+    echo "          echo 'Loading kernel $boot_kernel_file ...'"
+    echo "          linux $grub_rear_menu_entry_linux_value $KERNEL_CMDLINE"
+    echo "          echo 'Loading initrd $boot_initrd_file (may take a while) ...'"
+    echo "          initrd $grub_rear_menu_entry_initrd_value"
+    echo "}"
+    echo "EOF"
+  ) >> $grub_rear_menu_entry_file
+chmod 755 $grub_rear_menu_entry_file
 
-[[ -s $TMP_DIR/grub.cfg ]]
-BugIfError "Modified GRUB2 is empty !"
+# Generate a GRUB 2 configuration file:
+local generated_grub_conf="$TMP_DIR/grub.cfg"
+if [[ $( type -f grub2-mkconfig ) ]] ; then
+    grub2-mkconfig -o $generated_grub_conf || Error "Failed to generate GRUB 2 configuration file (using grub2-mkconfig)."
+else
+    grub-mkconfig -o $generated_grub_conf || Error "Failed to generate GRUB 2 configuration file (using grub-mkconfig)."
+fi
+test -s $generated_grub_conf || BugError "Generated empty GRUB 2 configuration file '$generated_grub_conf'."
 
-if ! diff -u $grub_conf $TMP_DIR/grub.cfg >&2; then
-    LogPrint "Modifying local GRUB configuration"
+# Modifying local GRUB 2 configuration if it was actually changed:
+if ! diff -u $grub_conf $generated_grub_conf >&2 ; then
+    LogPrint "Modifying local GRUB 2 configuration."
     cp -af $v $grub_conf $grub_conf.old >&2
-    cat $TMP_DIR/grub.cfg >$grub_conf
+    cat $generated_grub_conf >$grub_conf
 fi
 
-if [[ $(stat -L -c '%d' $KERNEL_FILE) == $(stat -L -c '%d' /boot/) ]]; then
-    # Hardlink file, if possible
-    cp -pLlf $v $KERNEL_FILE /boot/rear-kernel >&2
-elif [[ $(stat -L -c '%s %Y' $KERNEL_FILE) == $(stat -L -c '%s %Y' /boot/rear-kernel 2>&8) ]]; then
-    # If existing file has exact same size and modification time, assume the same
+# Provide the kernel as boot_kernel_file (i.e. /boot/rear-kernel):
+if [[ $( stat -L -c '%d' $KERNEL_FILE ) == $( stat -L -c '%d' $boot_dir/ ) ]] ; then
+    # Hardlink file, if possible:
+    cp -pLlf $v $KERNEL_FILE $boot_kernel_file >&2
+elif [[ $( stat -L -c '%s %Y' $KERNEL_FILE ) == $( stat -L -c '%s %Y' $boot_kernel_file ) ]] ; then
+    # If an already existing boot_kernel_file has exact same size and modification time
+    # as the current KERNEL_FILE, assume both are the same and do nothing:
     :
 else
-    # In all other cases, replace
-    cp -pLf $v $KERNEL_FILE /boot/rear-kernel >&2
+    # In all other cases, replace boot_kernel_file with the current KERNEL_FILE:
+    cp -pLf $v $KERNEL_FILE $boot_kernel_file >&2
 fi
-BugIfError "Unable to copy '$KERNEL_FILE' to /boot"
+BugIfError "Unable to copy '$KERNEL_FILE' to '$boot_kernel_file'."
 
-cp -af $v $TMP_DIR/initrd.cgz /boot/rear-initrd.cgz >&2
-BugIfError "Unable to copy '$TMP_DIR/initrd.cgz' to /boot"
+# Provide the rear recovery system in initrd_file (i.e. TMP_DIR/initrd.cgz) as boot_initrd_file (i.e. /boot/rear-initrd.cgz):
+cp -af $v $initrd_file $boot_initrd_file >&2 || BugError "Unable to copy '$initrd_file' to '$boot_initrd_file'."
+
+LogPrint "Finished GRUB_RESCUE setup: Added '$grub_rear_menu_entry_name' GRUB 2 menu entry."
+
