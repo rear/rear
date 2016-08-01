@@ -11,7 +11,10 @@ is_true "$GRUB_RESCUE" || return
 # (grub-probe or grub2-probe only exist in GRUB 2)
 # in particular do not run this script when GRUB Legacy is used
 # (for GRUB Legacy output/default/94_grub_rescue.sh is run):
-type -p grub-probe >&2 || type -p grub2-probe >&2 || { LogPrint "Skipping GRUB_RESCUE setup for GRUB 2 (no GRUB 2 found)." ; return ; }
+if [[ ! $( type -p grub-probe ) && ! $( type -p grub2-probe ) ]]; then
+    LogPrint "Skipping GRUB_RESCUE setup for GRUB 2 (no GRUB 2 found)."
+    return
+fi
 
 # Now GRUB_RESCUE is explicitly wanted and this script is the right one to set it up.
 local grub_rear_menu_entry_name="Relax-and-Recover"
@@ -28,12 +31,28 @@ test -r $initrd_file || Error "Cannot setup GRUB_RESCUE: Cannot read initrd '$in
 function total_filesize {
     stat --format '%s' $@ | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
 }
+
+local kernel_name="rear-kernel"
+local initrd_name="rear-initrd.cgz"
+
 local boot_dir="/boot"
-local boot_kernel_file="$boot_dir/rear-kernel"
-local boot_initrd_file="$boot_dir/rear-initrd.cgz"
+local boot_kernel_file="$boot_dir/$kernel_name"
+local boot_initrd_file="$boot_dir/$initrd_name"
 local available_space=$( df -Pkl $boot_dir | awk 'END { print $4 * 1024 }' )
 local used_space=$( total_filesize $boot_kernel_file $boot_initrd_file )
 local required_space=$( total_filesize $KERNEL_FILE $initrd_file )
+local grub_boot_dir=$boot_dir
+
+if mountpoint -q $boot_dir ; then
+    # When /boot is on its own partition
+    # i.e. a filesystem on /dev/sdaN
+    # that will be under Linux mounted as /boot
+    # then GRUB uses the filesystem on /dev/sdaN directly
+    # and in that filesystem there is no such thing as /boot
+    # so that for GRUB the files are in the root of that filesystem:
+    grub_boot_dir=""
+fi
+
 if (( available_space + used_space < required_space )) ; then
     required_MiB=$(( required_space / 1024 / 1024 ))
     available_MiB=$(( ( available_space + used_space ) / 1024 / 1024 ))
@@ -81,26 +100,7 @@ blkid -U $grub_boot_uuid > /dev/null 2>&1 || Error "$grub_boot_uuid is not a val
 local grub_rear_menu_entry_file="/etc/grub.d/45_rear"
 local grub_rear_menu_entry_linux_value=""
 local grub_rear_menu_entry_initrd_value=""
-# Different Linux distributions specify in /boot/grub2/grub.cfg
-# the linux and initrd values differently
-# see https://github.com/rear/rear/pull/942#issuecomment-235507831
-# At least for now (until a generic solution is found)
-# we differentiate depending on the Linux distribution.
-# SUSE SLE and openSUSE use the absolute path for the linux and initrd values.
-# It seems Red Hat and Red Hat based Linux distributions (e.g. CentOS)
-# use the basename plus a leading '/' for the linux and initrd values
-# see https://github.com/rear/rear/issues/703#issuecomment-235404491
-# For SUSE SLE and openSUSE the OS_VENDOR is commonly set to 'SUSE_LINUX'
-# (by default the 'lsb_release -i -s' output via the SetOSVendorAndVersion function
-#  or explicitly specified in /etc/rear/os.conf e.g. via RPM spec file).
-# For all others we assume Red Hat behaviour as default/fallback:
-if test "SUSE_LINUX" = "$OS_VENDOR" ; then
-    grub_rear_menu_entry_linux_value="$boot_kernel_file"
-    grub_rear_menu_entry_initrd_value="$boot_initrd_file"
-else
-    grub_rear_menu_entry_linux_value="/$( basename $boot_kernel_file )"
-    grub_rear_menu_entry_initrd_value="/$( basename $boot_initrd_file )"
-fi
+
 # Create a GRUB 2 menu config file:
   ( echo "#!/bin/bash"
     echo "cat << EOF"
@@ -116,9 +116,9 @@ else
 fi
   ( echo "          search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
     echo "          echo 'Loading kernel $boot_kernel_file ...'"
-    echo "          linux $grub_rear_menu_entry_linux_value $KERNEL_CMDLINE"
+    echo "          linux $grub_boot_dir/$kernel_name $KERNEL_CMDLINE"
     echo "          echo 'Loading initrd $boot_initrd_file (may take a while) ...'"
-    echo "          initrd $grub_rear_menu_entry_initrd_value"
+    echo "          initrd $grub_boot_dir/$initrd_name"
     echo "}"
     echo "EOF"
   ) >> $grub_rear_menu_entry_file
