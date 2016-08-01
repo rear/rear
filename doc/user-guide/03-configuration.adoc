@@ -153,8 +153,8 @@ simply define +TAPE_DEVICE=/dev/nst0+
 BACKUP_URL=cifs://::
 To backup to a Samba share (CIFS), use
 +BACKUP_URL=cifs://cifs-server-name/share/path+. To provide credentials for
-CIFS mounting use a _/etc/rear/.cifs_ credentials file and define
-+BACKUP_OPTIONS="cred=/etc/rear/.cifs"+ and pass along:
+CIFS mounting use a _/etc/rear/cifs_ credentials file and define
++BACKUP_OPTIONS="cred=/etc/rear/cifs"+ and pass along:
 +
 ----
 username=_username_
