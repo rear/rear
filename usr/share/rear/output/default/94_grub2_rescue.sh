@@ -11,7 +11,7 @@ is_true "$GRUB_RESCUE" || return
 # (grub-probe or grub2-probe only exist in GRUB 2)
 # in particular do not run this script when GRUB Legacy is used
 # (for GRUB Legacy output/default/94_grub_rescue.sh is run):
-if [[ ! $( type -p grub-probe ) && ! $( type -p grub2-probe ) ]]; then
+if [[ ! $( type -p grub-probe ) && ! $( type -p grub2-probe ) ]] ; then
     LogPrint "Skipping GRUB_RESCUE setup for GRUB 2 (no GRUB 2 found)."
     return
 fi
@@ -27,42 +27,35 @@ test -r "$KERNEL_FILE" || Error "Cannot setup GRUB_RESCUE: Cannot read kernel fi
 local initrd_file=$TMP_DIR/initrd.cgz
 test -r $initrd_file || Error "Cannot setup GRUB_RESCUE: Cannot read initrd '$initrd_file'."
 
-# Esure there is sufficient disk space in /boot for the local Relax-and-Recover rescue system:
-function total_filesize {
-    stat --format '%s' $@ | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
-}
-
-local kernel_name="rear-kernel"
-local initrd_name="rear-initrd.cgz"
-
+# Some commonly needed values:
 local boot_dir="/boot"
-local boot_kernel_file="$boot_dir/$kernel_name"
-local boot_initrd_file="$boot_dir/$initrd_name"
-local available_space=$( df -Pkl $boot_dir | awk 'END { print $4 * 1024 }' )
-local used_space=$( total_filesize $boot_kernel_file $boot_initrd_file )
+local boot_kernel_name="rear-kernel"
+local boot_initrd_name="rear-initrd.cgz"
+local boot_kernel_file="$boot_dir/$boot_kernel_name"
+local boot_initrd_file="$boot_dir/$boot_initrd_name"
+
+# Esure there is sufficient disk space available in /boot for the local Relax-and-Recover rescue system:
+function total_filesize {
+    stat --format '%s' $@ 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
+}
+# Free space in /boot:
+local free_space=$( df -Pkl $boot_dir | awk 'END { print $4 * 1024 }' )
+# Used space by an already existing Relax-and-Recover rescue system in /boot:
+local already_used_space=$( total_filesize $boot_kernel_file $boot_initrd_file )
+# Available space is the free space plus what an already existing Relax-and-Recover rescue system uses
+# because an already existing Relax-and-Recover rescue system would be overwritten:
+local available_space=$(( free_space + already_used_space ))
+# Required space for the new Relax-and-Recover rescue system:
 local required_space=$( total_filesize $KERNEL_FILE $initrd_file )
-local grub_boot_dir=$boot_dir
-
-if mountpoint -q $boot_dir ; then
-    # When /boot is on its own partition
-    # i.e. a filesystem on /dev/sdaN
-    # that will be under Linux mounted as /boot
-    # then GRUB uses the filesystem on /dev/sdaN directly
-    # and in that filesystem there is no such thing as /boot
-    # so that for GRUB the files are in the root of that filesystem:
-    grub_boot_dir=""
-fi
-
-if (( available_space + used_space < required_space )) ; then
+if (( available_space < required_space )) ; then
     required_MiB=$(( required_space / 1024 / 1024 ))
-    available_MiB=$(( ( available_space + used_space ) / 1024 / 1024 ))
+    available_MiB=$(( available_space / 1024 / 1024 ))
     Error "Cannot setup GRUB_RESCUE: Not enough disk space in $boot_dir for $grub_rear_menu_entry_name rescue system. Required: $required_MiB MiB. Available: $available_MiB MiB."
 fi
 
 # Ensure a GRUB 2 configuration file is found:
 local grub_conf=""
 if is_true $USING_UEFI_BOOTLOADER ; then
-    # set to 1 means using UEFI
     grub_conf="$( dirname $UEFI_BOOTLOADER )/grub.cfg"
 elif has_binary grub2-probe ; then
     grub_conf=$( readlink -f $boot_dir/grub2/grub.cfg )
@@ -98,9 +91,15 @@ blkid -U $grub_boot_uuid > /dev/null 2>&1 || Error "$grub_boot_uuid is not a val
 
 # Creating Relax-and-Recover GRUB 2 menu entry:
 local grub_rear_menu_entry_file="/etc/grub.d/45_rear"
-local grub_rear_menu_entry_linux_value=""
-local grub_rear_menu_entry_initrd_value=""
-
+local grub_boot_dir=$boot_dir
+if mountpoint -q $boot_dir ; then
+    # When /boot is a mountpoint
+    # (i.e. a filesystem on a partition /dev/sdaN is mounted at /boot)
+    # then GRUB uses the filesystem on /dev/sdaN directly
+    # and in that filesystem there is no such thing as /boot
+    # so that for GRUB the files are in the root of that filesystem:
+    grub_boot_dir=""
+fi
 # Create a GRUB 2 menu config file:
   ( echo "#!/bin/bash"
     echo "cat << EOF"
@@ -116,9 +115,9 @@ else
 fi
   ( echo "          search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
     echo "          echo 'Loading kernel $boot_kernel_file ...'"
-    echo "          linux $grub_boot_dir/$kernel_name $KERNEL_CMDLINE"
+    echo "          linux $grub_boot_dir/$boot_kernel_name $KERNEL_CMDLINE"
     echo "          echo 'Loading initrd $boot_initrd_file (may take a while) ...'"
-    echo "          initrd $grub_boot_dir/$initrd_name"
+    echo "          initrd $grub_boot_dir/$boot_initrd_name"
     echo "}"
     echo "EOF"
   ) >> $grub_rear_menu_entry_file
