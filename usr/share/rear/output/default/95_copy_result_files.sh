@@ -13,6 +13,14 @@ fi
 
 LogPrint "Copying resulting files to $scheme location"
 
+echo "$VERSION_INFO" >"$TMP_DIR/VERSION" || Error "Could not create $TMP_DIR/VERSION file"
+get_template "RESULT_usage_$OUTPUT.txt" > "$TMP_DIR/README" || Error "Could not copy usage file to $TMP_DIR/README"
+# REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log (name set by main script)
+cat "$REAR_LOGFILE" > "$TMP_DIR/rear.log" || Error "Could not copy $REAR_LOGFILE to $TMP_DIR/rear.log"
+
+# Add the README, VERSION and rear.log to the RESULT_FILES array
+RESULT_FILES=( ${RESULT_FILES[*]} "$TMP_DIR/VERSION" "$TMP_DIR/README" "$TMP_DIR/rear.log" )
+
 case "$scheme" in
     (nfs|cifs|usb|file|sshfs|ftpfs|davfs)
         # if called as mkbackuponly then we just don't have any result files.
@@ -20,10 +28,6 @@ case "$scheme" in
             Log "Copying result files '${RESULT_FILES[@]}' to $opath at $scheme location"
             cp $v "${RESULT_FILES[@]}" "${opath}/" >&2 || Error "Could not copy result files to $opath at $scheme location"
         fi
-        echo "$VERSION_INFO" >"${opath}/VERSION" || Error "Could not create ${opath}/VERSION file at $scheme location"
-        cp $v $( get_template "RESULT_usage_$OUTPUT.txt" ) "${opath}/README" >&2 || Error "Could not copy usage file to ${opath}/README at $scheme location"
-        # REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log (name set by main script)
-        cat "$REAR_LOGFILE" >"${opath}/rear.log" || Error "Could not copy $REAR_LOGFILE to ${opath}/rear.log at $scheme location"
     ;;
 
     (fish|ftp|ftps|hftp|http|https|sftp)
