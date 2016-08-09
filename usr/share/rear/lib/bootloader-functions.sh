@@ -460,6 +460,9 @@ EOF
 
 # Create configuration grub
 function create_grub2_cfg {
+# SLES12 SP1 boot throw kernel panic without root= set
+root_uuid=$(mount | grep -w 'on /' | awk '{print $1}' | xargs blkid -s UUID -o value)
+
 cat << EOF
 set default="0"
 
@@ -481,14 +484,14 @@ search --no-floppy --file /boot/efiboot.img --set
 
 menuentry "Relax and Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
      echo 'Loading kernel ...'
-     linux /isolinux/kernel $KERNEL_CMDLINE
+     linux /isolinux/kernel root=UUID=$root_uuid $KERNEL_CMDLINE
      echo 'Loading initial ramdisk ...'
      initrd /isolinux/initrd.cgz
 }
 
 menuentry "Relax and Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
      echo 'Loading kernel ...'
-     linuxefi /isolinux/kernel $KERNEL_CMDLINE
+     linuxefi /isolinux/kernel root=UUID=$root_uuid $KERNEL_CMDLINE
      echo 'Loading initial ramdisk ...'
      initrdefi /isolinux/initrd.cgz
 }
