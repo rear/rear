@@ -44,7 +44,7 @@ Log "Copied kernel and initrd.cgz to ${EFI_DST}"
 # Configure elilo for EFI boot
 if test "$uefi_bootloader_basename" = "elilo.efi" ; then
     Log "Configuring elilo for EFI boot"
-    
+
     # Create config for elilo
     Log "Creating ${EFI_DST}/elilo.conf"
 
@@ -61,49 +61,49 @@ EOF
 else
     # Hope this assumption is not wrong ...
     if has_binary grub-install grub2-install; then
-    
+
         # Choose right grub binary
         # Issue #849
         if has_binary grub2-install; then
             NUM=2
         fi
-        
+
         GRUB_MKIMAGE=grub${NUM}-mkimage
         GRUB_INSTALL=grub${NUM}-install
-        
+
         # What version of grub are we using
         # substr() for awk did not work as expected for this reason cut was used
         # First charecter should be enough to identify grub version
         grub_version=$($GRUB_INSTALL --version | awk '{print $NF}' | cut -c1-1)
-        
+
         case ${grub_version} in
             0)
                 Log "Configuring grub 0.97 for EFI boot"
-                
+
                 # Create config for grub 0.97
                 cat > ${EFI_DST}/BOOTX64.conf << EOF
 default=0
 timeout=5
 
-title Relax and Recover (no Secure Boot)
+title Relax and Recover (using grub 0.97)
     kernel ${EFI_DIR}/kernel
     initrd ${EFI_DIR}/initrd.cgz
 EOF
             ;;
             2)
                 Log "Configuring grub 2.0 for EFI boot"
-                
+
                 # Create bootloader, this overwrite BOOTX64.efi copied in previous step ...
                 # Fail if BOOTX64.efi can't be created
                 ${GRUB_MKIMAGE} -o ${EFI_DST}/BOOTX64.efi -p ${EFI_DIR} -O x86_64-efi linux part_gpt ext2 normal gfxterm gfxterm_background gfxterm_menu test all_video loadenv fat
                 StopIfError "Failed to create BOOTX64.efi"
-                
+
                 # Create config for grub 2.0
                 cat > ${EFI_DST}/grub.cfg << EOF
 set timeout=5
-set default=0 
+set default=0
 
-menuentry "Relax and Recover (no Secure Boot)" {
+menuentry "Relax and Recover (using grub 2.0 'linux' and 'initrd')" {
     linux ${EFI_DIR}/kernel
     initrd ${EFI_DIR}/initrd.cgz
 }
