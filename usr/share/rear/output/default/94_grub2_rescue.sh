@@ -16,18 +16,19 @@ if [[ ! $( type -p grub-probe ) && ! $( type -p grub2-probe ) ]] ; then
     return
 fi
 
-# We dont need to do grub(2)-probe all the time
-# adding $grub_num to whatever grub binary should do the trick
-# e.g. grub${grub_num}-mkimage
-if [[ $( type -p grub2-probe ) ]]; then
-    grub_num="2"
-fi
-
 # Now GRUB_RESCUE is explicitly wanted and this script is the right one to set it up.
 local grub_rear_menu_entry_name="Relax-and-Recover"
 LogPrint "Setting up GRUB_RESCUE: Adding $grub_rear_menu_entry_name rescue system to the local GRUB 2 configuration."
 test "unrestricted" = "$GRUB_RESCUE_USER" && LogPrint "Anyone can boot that and replace the current system via 'rear recover'."
 # Now error out whenever it cannot setup the GRUB_RESCUE functionality.
+
+# We dont need to do grub(2)-probe all the time
+# adding $grub_num to whatever grub binary should do the trick
+# e.g. grub${grub_num}-mkimage
+local grub_num=""
+if [[ $( type -p grub2-probe ) ]]; then
+    grub_num="2"
+fi
 
 # Ensure that kernel and initrd are there:
 test -r "$KERNEL_FILE" || Error "Cannot setup GRUB_RESCUE: Cannot read kernel file '$KERNEL_FILE'."
@@ -96,9 +97,7 @@ fi
 
 if ! is_true $USING_UEFI_BOOTLOADER ; then
     # Ensure a GRUB 2 configuration file is found:
-    local grub_conf=""
-    grub_conf=$( readlink -f $grub_config_dir/grub.cfg )
-
+    local grub_conf=$( readlink -f $grub_config_dir/grub.cfg )
     test -w "$grub_conf" || Error "Cannot setup GRUB_RESCUE: GRUB 2 configuration '$grub_conf' cannot be modified."
 
     # Report no longer supported GRUB 2 superuser setup if GRUB_SUPERUSER is non-empty
@@ -148,7 +147,7 @@ if is_true $USING_UEFI_BOOTLOADER ; then
     # Grub2 modules that will be used for booting "Relax-and-Recover"
     # It might be usefull to make this variable global in the future
     grub2_modules="linux echo all_video part_gpt ext2 btrfs search configfile"
-    
+
     # Create configuration file for "Relax-and-Recover" UEFI boot entry.
     # This file will not interact with existing Grub2 configuration in any way.
     (   echo "menuentry '$grub_rear_menu_entry_name' --class os {"
@@ -159,7 +158,7 @@ if is_true $USING_UEFI_BOOTLOADER ; then
         echo "          initrd $grub_boot_dir/$boot_initrd_name"
         echo "}"
     ) > $grub_config_dir/rear.cfg
-    
+
     # Tell rear.efi which configuration file to load
     (   echo "search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
         echo ""
@@ -168,11 +167,12 @@ if is_true $USING_UEFI_BOOTLOADER ; then
         echo ""
         echo "configfile (\$root)${grub_boot_dir}/grub${grub_num}/rear.cfg"
     ) > $grub_config_dir/rear_embed.cfg
-    
+
     # Create rear.efi at UEFI default boot directory location.
-    grub${grub_num}-mkimage -o $boot_dir/efi/EFI/BOOT/rear.efi -O x86_64-efi -c $grub_config_dir/rear_embed.cfg -p /EFI/BOOT $grub2_modules
-    StopIfError "Could not create UEFI boot image"
-    
+    if ! grub${grub_num}-mkimage -o $boot_dir/efi/EFI/BOOT/rear.efi -O x86_64-efi -c $grub_config_dir/rear_embed.cfg -p /EFI/BOOT $grub2_modules ; then
+        Error "Could not create UEFI boot image"
+    fi
+
     # If UEFI boot entry for "Relax-and-Recover" does not exist, create it.
     # This will also add "Relax-and-Recover" to boot order because if UEFI entry is not listed in BootOrder,
     # it is not visible in UEFI boot menu.
@@ -183,13 +183,13 @@ if is_true $USING_UEFI_BOOTLOADER ; then
         efi_disk_part=$(grep -w /boot/efi /proc/mounts | awk '{print $1}')
         efi_disk=$(echo $efi_disk_part | sed -e 's/[0-9]//g')
         efi_part=$(echo $efi_disk_part | sed -e 's/[^0-9]//g')
-        
+
         # Save current BootOrder, as during `efibootmgr -c ...' phase (creating of "Relax-and-Recover" UEFI boot entry),
         # newly created entry will be set as primary, which is not something we don't really want
         efi_boot_order=$(efibootmgr | grep "BootOrder" | cut -d ":" -f2)
         efibootmgr -c -d $efi_disk -p $efi_part -L "$grub_rear_menu_entry_name" -l "\EFI\BOOT\rear.efi" > /dev/null 2>&1
         rear_boot_id=$(efibootmgr | grep -w $grub_rear_menu_entry_name | cut -d " " -f1 | sed -e 's/[^0-9]//g')
-        
+
         # Set "Relax-and-Recover" as last entry in UEFI boot menu.
         efibootmgr -o ${efi_boot_order},${rear_boot_id} > /dev/null 2>&1
     fi
@@ -237,16 +237,15 @@ fi
 # Provide the kernel as boot_kernel_file (i.e. /boot/rear-kernel):
 if [[ $( stat -L -c '%d' $KERNEL_FILE ) == $( stat -L -c '%d' $boot_dir/ ) ]] ; then
     # Hardlink file, if possible:
-    cp -pLlf $v $KERNEL_FILE $boot_kernel_file >&2
+    cp -pLlf $v $KERNEL_FILE $boot_kernel_file >&2 || BugError "Unable to hardlink '$KERNEL_FILE' to '$boot_kernel_file'."
 elif [[ $( stat -L -c '%s %Y' $KERNEL_FILE ) == $( stat -L -c '%s %Y' $boot_kernel_file ) ]] ; then
     # If an already existing boot_kernel_file has exact same size and modification time
     # as the current KERNEL_FILE, assume both are the same and do nothing:
     :
 else
     # In all other cases, replace boot_kernel_file with the current KERNEL_FILE:
-    cp -pLf $v $KERNEL_FILE $boot_kernel_file >&2
+    cp -pLf $v $KERNEL_FILE $boot_kernel_file >&2 || BugError "Unable to copy '$KERNEL_FILE' to '$boot_kernel_file'."
 fi
-BugIfError "Unable to copy '$KERNEL_FILE' to '$boot_kernel_file'."
 
 # Provide the rear recovery system in initrd_file (i.e. TMP_DIR/initrd.cgz) as boot_initrd_file (i.e. /boot/rear-initrd.cgz):
 cp -af $v $initrd_file $boot_initrd_file >&2 || BugError "Unable to copy '$initrd_file' to '$boot_initrd_file'."
