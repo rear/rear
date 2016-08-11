@@ -60,6 +60,23 @@ if [[ "\$IPADDR" ]] && [[ "\$NETMASK" ]] ; then
 fi
 EOT
 
+# When there is at least one non-empty command specified in NETWORKING_SETUP_COMMANDS
+# those commands are the only ones that are run in the rescue/recovery system
+# in /etc/scripts/system-setup.d/60-network-devices.sh to setup the network devices:
+no_automated_network_devices_setup=""
+for command in "${NETWORKING_SETUP_COMMANDS[@]}" ; do
+    if test "$command" ; then
+        if test -z "$no_automated_network_devices_setup" ; then
+            no_automated_network_devices_setup="yes"
+            # Have a explanatory comment before the commands:
+            info="Network devices setup happens only via NETWORKING_SETUP_COMMANDS (no automated network devices setup)."
+            Log "$info"
+            echo "# $info">>$network_devices_setup_script
+        fi
+        echo "$command" >>$network_devices_setup_script
+    fi
+done
+
 # Collect list of all physical network interface cards.
 # Take all interfaces in /sys/class/net and subtract /sys/devices/virtual/net, bonding_masters:
 physical_network_interfaces=""
