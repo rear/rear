@@ -124,6 +124,14 @@ if test -s /etc/rear/mappings/mac ; then
 	my_udevtrigger
 	sleep 1
 	my_udevsettle
+    
+    if [[ $(ps --no-headers -C systemd) ]]; then
+        # This might be not mandatory.
+        # It will release orphaned (old) device names in systemd
+        # Maybe it can be done by some less invazive command, but I didn't found it yet
+        systemctl daemon-reload
+    fi
+    
 	echo "done."
 fi
 
