@@ -15,30 +15,40 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Relax-and-Recover; if not, write to the Free Software
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
+
 # Notes:
-# - Thanks to Markus Brylski for fixing some bugs with bonding !
-# - Thanks to Gerhard Weick for coming up with a way to disable bonding if needed
+# - Thanks to Markus Brylski for fixing some bugs with bonding.
+# - Thanks to Gerhard Weick for coming up with a way to disable bonding if needed.
 
-# BUG: Supports Ethernet only (so far)
+# TODO: Currently it supports only ethernet.
 
-# Where to build networking configuration:
-netscript=$ROOTFS_DIR/etc/scripts/system-setup.d/60-network-devices.sh
+# Where to build networking configuration.
+# When booting the rescue/recovery system
+# /etc/scripts/system-setup.d/60-network-devices.sh
+# is run to setup the network devices:
+network_devices_setup_script=$ROOTFS_DIR/etc/scripts/system-setup.d/60-network-devices.sh
 
-# Skip netscript if noip is configured on the command line:
-cat <<EOT >> $netscript
-if [[ -e /proc/cmdline ]] ; then
-    if grep -q 'noip' /proc/cmdline ; then
-        return
-    fi
+# When DHCP is used via 58-start-dhclient.sh do not mess up the existing networking setup
+# here by possibly conflicting network devices setup via 60-network-devices.sh:
+if test $USE_DHCLIENT -a -z $USE_STATIC_NETWORKING ; then
+    Log "No network devices setup via 60-network-devices.sh because that happens via DHCP in 58-start-dhclient.sh."
+    # To be on the safe side remove network_devices_setup_script if it somehow already exists:
+    rm $v -f $network_devices_setup_script >&2
+    return
 fi
-EOT
 
-# Add a line at the top of netscript to skip if dhclient will be used:
-cat - <<EOT > $netscript
-# if USE_DHCLIENT=y then use DHCP instead and skip 60-network-devices.sh
-[[ ! -z "\$USE_DHCLIENT" && -z "\$USE_STATIC_NETWORKING" ]] && return
-# if IPADDR=1.2.3.4 has been defined at boot time via ip=1.2.3.4 then configure
+# Initialize network_devices_setup_script:
+echo "# Network devices setup:" >$network_devices_setup_script
+
+# Skip network_devices_setup_script if the kernel command line contains the 'noip' parameter:
+  ( echo "# Skip network devices setup if the kernel command line parameter 'noip' is specifiled:"
+    echo "grep -q '\<noip\>' /proc/cmdline && return"
+  ) >>$network_devices_setup_script
+
+# If IPADDR=1.2.3.4 has been defined at boot time via ip=1.2.3.4
+# then do the network devices setup this way:
+cat - <<EOT >>$network_devices_setup_script
+# If IPADDR=1.2.3.4 has been defined at boot time via ip=1.2.3.4 setup network devices this way:
 if [[ "\$IPADDR" ]] && [[ "\$NETMASK" ]] ; then
     device=\${NETDEV:-eth0}
     ip link set dev "\$device" up
@@ -85,8 +95,7 @@ done
 for physical_network_interface in $physical_network_interfaces ; do
     sysfspath=/sys/class/net/$physical_network_interface
     # Get MAC address:
-    mac="$( cat $sysfspath/address )"
-    BugIfError "Could not read a MAC address from '$sysfspath/address'!"
+    mac="$( cat $sysfspath/address )" || BugError "Could not read a MAC address from '$sysfspath/address'."
     # Skip fake interfaces without MAC address:
     test "$mac" == "00:00:00:00:00:00" && continue
     # TODO: skip bonding (and other dependent) devices from recording their MAC address in /etc/mac-addresses
@@ -94,33 +103,29 @@ for physical_network_interface in $physical_network_interfaces ; do
     # I lack experience with bonding setups to write this blindly, so please contribute better code
     #
     # Keep mac address information for rescue system:
-    echo "$physical_network_interface $mac">>$ROOTFS_DIR/etc/mac-addresses
+    echo "$physical_network_interface $mac" >>$ROOTFS_DIR/etc/mac-addresses
     # Take information only from UP devices, we don't care about non-working devices:
     ip link show dev $physical_network_interface | grep -q UP || continue
     # Link is up.
     # Determine the driver to load, relevant only for non-udev environments:
-    if [[ -z "$driver" && -e "$sysfspath/device/driver" ]]; then
+    if [[ -z "$driver" && -e "$sysfspath/device/driver" ]] ; then
         # This should work for virtio_net, xennet and vmxnet on recent kernels:
-        driver=$(basename $(readlink $sysfspath/device/driver))
-    if test "$driver" -a "$driver" = vif ; then
-        # xennet driver announces itself as vif :-(
-        driver=xennet
-    fi
-    elif [[ -z "$driver" && -e "$sysfspath/driver" ]]; then
-        # This should work for virtio_net, xennet and vmxnet on older kernels (2.6.18):
-        driver=$(basename $(readlink $sysfspath/driver))
-    elif [[ -z "$driver" ]] && has_binary ethtool; then
-        driver=$(ethtool -i $physical_network_interface 2>&8 | grep driver: | cut -d: -f2)
-    fi
-    if [[ "$driver" ]]; then
-        if ! grep -q $driver /proc/modules; then
-            LogPrint "WARNING: Driver $driver currently not loaded ?"
+        driver=$( basename $( readlink $sysfspath/device/driver ) )
+        if test "$driver" -a "$driver" = vif ; then
+            # xennet driver announces itself as vif :-(
+            driver=xennet
         fi
+    elif [[ -z "$driver" && -e "$sysfspath/driver" ]] ; then
+        # This should work for virtio_net, xennet and vmxnet on older kernels (2.6.18):
+        driver=$( basename $( readlink $sysfspath/driver ) )
+    elif [[ -z "$driver" ]] && has_binary ethtool ; then
+        driver=$( ethtool -i $physical_network_interface 2>&8 | grep driver: | cut -d: -f2 )
+    fi
+    if [[ "$driver" ]] ; then
+        grep -q $driver /proc/modules || LogPrint "Driver '$driver' for '$physical_network_interface' not loaded - is that okay?"
         echo "$driver" >>$ROOTFS_DIR/etc/modules
     else
-        LogPrint "WARNING:   Could not determine network driver for '$physical_network_interface'. Please make
-WARNING:   sure that it loads automatically (e.g. via udev) or add
-WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
+        LogPrint "Could not determine driver for '$physical_network_interface'. To ensure it gets loaded add it to MODULES_LOAD."
     fi
     mkdir -p $v $TMP_DIR/mappings >&2
     test -f $CONFIG_DIR/mappings/ip_addresses && read_and_strip_file $CONFIG_DIR/mappings/ip_addresses > $TMP_DIR/mappings/ip_addresses
@@ -128,21 +133,22 @@ WARNING:   it to MODULES_LOAD in $CONFIG_DIR/{local,site}.conf!"
     if test -s $TMP_DIR/mappings/ip_addresses ; then
         while read network_device ip_address junk ; do
             Log "New IP-address will be $network_device $ip_address"
-            echo "ip addr add $ip_address dev $network_device" >>$netscript
-            echo "ip link set dev $network_device up" >>$netscript
+              ( echo "# New IP-address will be $network_device $ip_address:"
+                echo "ip addr add $ip_address dev $network_device"
+                echo "ip link set dev $network_device up"
+              ) >>$network_devices_setup_script
         done < $TMP_DIR/mappings/ip_addresses
     else
-        for addr in $(ip a show dev $physical_network_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3) ; do
-            echo "ip addr add $addr dev $physical_network_interface" >>$netscript
+        for addr in $( ip a show dev $physical_network_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
+            echo "ip addr add $addr dev $physical_network_interface" >>$network_devices_setup_script
         done
-        echo "ip link set dev $physical_network_interface up" >>$netscript
+        echo "ip link set dev $physical_network_interface up" >>$network_devices_setup_script
     fi
 
     # Record interface MTU:
     if test -e "$sysfspath/mtu" ; then
-        mtu="$(cat $sysfspath/mtu)"
-        PrintIfError "Could not read a MTU address from '$sysfspath/mtu'!"
-        [[ "$mtu" ]] && echo "ip link set dev $physical_network_interface mtu $mtu" >>$netscript
+        mtu="$( cat $sysfspath/mtu )" || LogPrint "Could not read a MTU address from '$sysfspath/mtu'!"
+        [[ "$mtu" ]] && echo "ip link set dev $physical_network_interface mtu $mtu" >>$network_devices_setup_script
     fi
 done
 
@@ -173,15 +179,15 @@ function vlan_setup () {
         test "$parent_interface" = "$bonding_interface" &&  bond_setup $parent_interface
     done
     # Determine the VLAN ID:
-    local vlan_id=$(grep "^${network_interface}" /proc/net/vlan/config | awk '{print $3}')
+    local vlan_id=$( grep "^${network_interface}" /proc/net/vlan/config | awk '{print $3}' )
     # Set up network device (a.k.a. 'link'):
-    echo ip link add link $parent_interface name $network_interface type vlan id $vlan_id >>$netscript
+    echo ip link add link $parent_interface name $network_interface type vlan id $vlan_id >>$network_devices_setup_script
     # Set up IP addresses on that device:
     for ip_address in $( ip ad show dev $network_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
-        echo "ip addr add $ip_address dev $network_interface" >>$netscript
+        echo "ip addr add $ip_address dev $network_interface" >>$network_devices_setup_script
     done
     # Enable the network interface:
-    echo "ip link set dev $network_interface up" >>$netscript
+    echo "ip link set dev $network_interface up" >>$network_devices_setup_script
     # Remember that we already dealt with this interface:
     already_set_up_vlans+=" ${network_interface}"
 }
@@ -221,22 +227,22 @@ function bond_setup () {
     # We first need to "up" the bonding interface, then add the slaves
     # (ifenslave complains about missing IP adresses, can be ignored),
     # and then add the IP addresses:
-    echo "ip link set dev $network_interface up" >>$netscript
+    echo "ip link set dev $network_interface up" >>$network_devices_setup_script
     # Enslave slave interfaces which we read from the sysfs status file:
     if command -v ifenslave >/dev/null 2>&1 ; then
         # We can use ifenslave(8) and do it all at once:
-        echo "ifenslave $network_interface $bonding_group_members" >>$netscript
+        echo "ifenslave $network_interface $bonding_group_members" >>$network_devices_setup_script
     else
         # No ifenslave(8) found, hopefully ip(8) can do it:
         for bonding_group_member in $bonding_group_members ; do
-            echo "ip link set $bonding_group_member master $network_interface" >>$netscript
+            echo "ip link set $bonding_group_member master $network_interface" >>$network_devices_setup_script
         done
     fi
     # FIXME: What is the reason why sleeping hardcoded 5 seconds is "the right thing" that makes it work?
-    echo "sleep 5" >>$netscript
+    echo "sleep 5" >>$network_devices_setup_script
     # Set up IP addresses on that device:
     for ip_address in $( ip ad show dev $network_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
-        echo "ip addr add $ip_address dev $network_interface" >>$netscript
+        echo "ip addr add $ip_address dev $network_interface" >>$network_devices_setup_script
     done
     # Remember that we already dealt with this interface:
     already_set_up_bonding_interfaces+=" ${network_interface}"
@@ -254,7 +260,7 @@ if test -d /proc/net/bonding ; then
     bonding_mode=1
     grep -q "Bonding Mode: IEEE 802.3ad" /proc/net/bonding/${bonding_interfaces[0]} && bonding_mode=4
     # Load bonding with the correct amount of bonding devices:
-    echo "modprobe bonding max_bonds=${#bonding_interfaces[@]} miimon=100 mode=$bonding_mode use_carrier=0" >>$netscript
+    echo "modprobe bonding max_bonds=${#bonding_interfaces[@]} miimon=100 mode=$bonding_mode use_carrier=0" >>$network_devices_setup_script
     MODULES=( "${MODULES[@]}" 'bonding' )
 fi
 
@@ -268,8 +274,8 @@ if test -d /proc/net/vlan ; then
         cp /proc/net/vlan/config $VAR_DIR/recovery/vlan.config
     fi
     # Load required modules for VLAN:
-    echo "modprobe 8021q" >>$netscript
-    echo "sleep 5" >>$netscript
+    echo "modprobe 8021q" >>$network_devices_setup_script
+    echo "sleep 5" >>$network_devices_setup_script
     # Collect list of all up VLAN interfaces:
     for vlan_interface in $( ls /proc/net/vlan | grep -v config ) ; do
         if ip link show dev $vlan_interface | grep -q UP ; then
@@ -312,13 +318,13 @@ else
         test -r /proc/net/bonding/$bonding_interface || break
         if ip link show dev $bonding_interface | grep -q UP ; then
             # Link is up:
-            bonding_enslaved_interfaces=($( cat /proc/net/bonding/$bonding_interface | grep "Slave Interface:" | cut -d : -f 2 ))
+            bonding_enslaved_interfaces=( $( cat /proc/net/bonding/$bonding_interface | grep "Slave Interface:" | cut -d : -f 2 ) )
             for addr in $( ip a show dev $bonding_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
                 # Use bonding_enslaved_interfaces[0] instead of bond$c
                 # to copy IP address from bonding device to the first enslaved device:
-                echo "ip addr add $addr dev ${bonding_enslaved_interfaces[0]}" >>$netscript
+                echo "ip addr add $addr dev ${bonding_enslaved_interfaces[0]}" >>$network_devices_setup_script
             done
-            echo "ip link set dev ${bonding_enslaved_interfaces[0]} up" >>$netscript
+            echo "ip link set dev ${bonding_enslaved_interfaces[0]} up" >>$network_devices_setup_script
         fi
         let bonding_interface_number++
     done
