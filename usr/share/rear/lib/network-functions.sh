@@ -614,7 +614,7 @@ get_hwaddr ()
 
 get_device_by_hwaddr ()
 {
-    LANG=C ip -o link | grep -v link/ieee802.11 | awk -F ': ' -vIGNORECASE=1 "/$1/ { print \$2 }"
+    LANG=C ip -o link | grep -v link/ieee802.11 | grep -i "$1" | awk -F ": " '{print $2}'
 }
 
 need_hostname ()
