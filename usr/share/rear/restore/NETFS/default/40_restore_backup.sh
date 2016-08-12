@@ -9,7 +9,6 @@ mkdir -p "${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
 
 # Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default value to cat in
 # case encryption is disabled
-##if (( $BACKUP_PROG_CRYPT_ENABLED == 1 )); then
 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
   LogPrint "Decrypting archive with key defined in variable \$BACKUP_PROG_CRYPT_KEY"
 else
@@ -19,6 +18,7 @@ else
 fi
 
 if [[ -f "${TMP_DIR}/backup.splitted" ]]; then
+    # for multiple ISOs
     restoreinput=$FIFO
 else
     restoreinput="$backuparchive"

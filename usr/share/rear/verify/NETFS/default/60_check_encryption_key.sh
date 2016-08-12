@@ -1,6 +1,6 @@
 # Stop if no key is configured
 
-if [ $BACKUP_PROG_CRYPT_ENABLED -ne 1 ]; then
+if is_false "$BACKUP_PROG_CRYPT_ENABLED" ; then
   return
 fi
 

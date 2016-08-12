@@ -39,7 +39,8 @@ fi
 
 # Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default value to cat in
 # case encryption is disabled
-if (( $BACKUP_PROG_CRYPT_ENABLED == 1 )); then
+if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+  # Note: encryption is only supported with tar
   LogPrint "Encrypting archive with a key"
 else
   LogPrint "Encrypting disabled"
@@ -47,7 +48,7 @@ else
   BACKUP_PROG_CRYPT_KEY=""
 fi
 
-# Check if the backup needs to be splitted or not
+# Check if the backup needs to be splitted or not (on multiple ISOs)
 if [[ -n "$ISO_MAX_SIZE" ]]; then
     # Computation of the real backup maximum size by excluding bootable files size on the first ISO (EFI, kernel, ramdisk)
     # Don't use that on max size less than 200MB which would result in too many backups
