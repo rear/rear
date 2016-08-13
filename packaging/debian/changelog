@@ -2,7 +2,7 @@ rear (1.18.1-1) stable; urgency=high
 
   * Add missing dependency isolinux
   * Add missing dependency dosfstools
-  * Switch to xorriso since Debian's genisofs does not seem to correctly
+  * Switch to xorriso since Debian's genisoimage does not seem to correctly
     handle UEFI ISO boot.
 
  -- Carlos Ramos <carragom@gmail.com> Fri, 29 Jul 2016 13:25:17 +0100
