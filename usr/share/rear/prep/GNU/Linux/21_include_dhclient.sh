@@ -88,7 +88,7 @@ PROGS=( "${PROGS[@]}" arping ipcalc usleep "${dhclients[@]}" )
 # At this point we want DHCP client support and found a binary
 # check if binary was defined in /etc/rear/local.conf; if not append it to rescue.conf
 # as we need this variable at recovery time.
-if [[ ! -z "$USE_DHCLIENT" && -z "$USE_STATIC_NETWORKING" ]]; then
+if [ ! -z "$USE_DHCLIENT" ]; then
     REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" $DHCLIENT_BIN $DHCLIENT6_BIN )
     cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
 # The following 3 lines were added through 21_include_dhclient.sh
