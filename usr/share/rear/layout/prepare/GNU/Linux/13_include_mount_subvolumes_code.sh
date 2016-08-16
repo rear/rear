@@ -32,9 +32,9 @@ btrfs_subvolumes_setup() {
     ###########################################
     # SLES 12 SP1 and SP2 special btrfs subvolumes setup detection:
     SLES12SP1SP2_btrfs_detection_string="@/.snapshots/"
-    if grep "^btrfsdefaultsubvol $device $mountpoint [0-9]* $SLES12SP1SP2_btrfs_detection_string" "$LAYOUT_FILE" ; then
-        info_message="Detected SLES 12 SP1 and SP2 special btrfs subvolumes setup because the default subvolume path contains '$SLES12SP1SP2_btrfs_detection_string'"
-        Log $info_message
+    if grep -q "^btrfsdefaultsubvol $device $mountpoint [0-9]* $SLES12SP1SP2_btrfs_detection_string" "$LAYOUT_FILE" ; then
+        info_message="Doing SLES12 special btrfs subvolumes setup because the default subvolume path contains '$SLES12SP1SP2_btrfs_detection_string'"
+        LogPrint $info_message
         echo "# $info_message" >> "$LAYOUT_CODE"
         # For SLES 12 SP1 a btrfsdefaultsubvol entry in disklayout.conf looks like
         #   btrfsdefaultsubvol /dev/sda2 / 259 @/.snapshots/1/snapshot
@@ -100,25 +100,29 @@ btrfs_subvolumes_setup() {
             LogPrint "btrfsnormalsubvol entry with empty subvolume_path for $device at $mountpoint may indicate an error, skipping subvolume setup for it."
             continue
         fi
-        # In case of SLES 12 SP1 and SP2 special btrfs subvolumes setup skip setup of some special normal btrfs subvolumes:
+        # In case of SLES 12 SP1 and SP2 special btrfs subvolumes setup skip setup of '@/.snapshots' normal btrfs subvolumes:
         if test -n "$SLES12SP1SP2_btrfs_subvolumes_setup" ; then
             # In case of SLES 12 SP1 and SP2 special btrfs subvolumes setup
             # skip setup of the normal btrfs subvolume '@/.snapshots' because
             # that one will be created by "snapper/installation-helper --step 1"
             # which fails if it already exists.
             if test "$subvolume_path" = "@/.snapshots" ; then
-                info_message="Skipping 'btrfs subvolume create' for the SLES 12 SP1 and SP2 normal btrfs subvolume '@/.snapshots' because that one will be created by 'snapper/installation-helper --step 1' which would fail if that subvolume already exists."
-                Log $info_message
+                info_message="No 'btrfs subvolume create' for '$subvolume_path' because it will be created by 'snapper/installation-helper --step 1' (which fails if that already exists)."
+                LogPrint $info_message
                 echo "# $info_message" >> "$LAYOUT_CODE"
                 continue
             fi
-            # Since SLES 12 SP2 there is by default another '.snapshots' normal btrfs subvolume
-            # '@/.snapshots/1/snapshot/var/lib/machines' which is not created by "snapper/installation-helper --step 1"
-            # but which also lets "snapper/installation-helper --step 1" fail if it already exists
-            # so that this one is also excluded here (see https://github.com/rear/rear/issues/944):
-            if test "$subvolume_path" = "@/.snapshots/1/snapshot/var/lib/machines" ; then
-                info_message="Skipping 'btrfs subvolume create' for the SLES 12 SP2 normal btrfs subvolume '@/.snapshots/1/snapshot/var/lib/machines' because 'snapper/installation-helper --step 1' would fail if that subvolume already exists."
-                Log $info_message
+            # Any normal btrfs subvolume under snapper's base subvolume is wrong
+            # (see https://github.com/rear/rear/issues/944#issuecomment-238239926
+            # and https://github.com/rear/rear/issues/963
+            # and layout/save/GNU/Linux/23_filesystem_layout.sh).
+            # Because any btrfs subvolume under '@/.snapshots/' lets "snapper/installation-helper --step 1" fail
+            # any btrfs subvolume under '@/.snapshots/' is excluded here from being recreated
+            # to not let "rear recover" fail because of such kind of wrong btrfs subvolumes
+            # and inform the user about that via 'LogPrint':
+            if [[ "$subvolume_path" == "@/.snapshots/"* ]] ; then
+                info_message="Skipping subvolume setup for '$subvolume_path' because any btrfs subvolume under '.snapshots' would let 'snapper/installation-helper --step 1' fail."
+                LogPrint $info_message
                 echo "# $info_message" >> "$LAYOUT_CODE"
                 continue
             fi
@@ -209,10 +213,11 @@ btrfs_subvolumes_setup() {
             echo "# - creating snapshot of first root filesystem"
             echo "# - setting default subvolume"
             echo "if test -x $SLES12SP1SP2_installation_helper_executable"
-            echo "then $SLES12SP1SP2_installation_helper_executable --step 1 --device $device --description 'first root filesystem'"
+            echo "then LogPrint 'Running snapper/installation-helper:'"
+            echo "     $SLES12SP1SP2_installation_helper_executable --step 1 --device $device --description 'first root filesystem'"
             echo "else LogPrint '$SLES12SP1SP2_installation_helper_executable not executable may indicate an error with btrfs default subvolume setup for $subvolume_path on $device'"
             echo "fi"
-            echo " mount -t btrfs -o subvolid=0 $mountopts $device $target_system_mountpoint"
+            echo "mount -t btrfs -o subvolid=0 $mountopts $device $target_system_mountpoint"
             echo "# End step 1 of special SLES 12 SP1 btrfs default snapper snapshot subvolume setup"
             ) >> "$LAYOUT_CODE"
         else
