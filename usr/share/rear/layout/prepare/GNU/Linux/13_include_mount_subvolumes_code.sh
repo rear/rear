@@ -213,10 +213,11 @@ btrfs_subvolumes_setup() {
             echo "# - creating snapshot of first root filesystem"
             echo "# - setting default subvolume"
             echo "if test -x $SLES12SP1SP2_installation_helper_executable"
-            echo "then $SLES12SP1SP2_installation_helper_executable --step 1 --device $device --description 'first root filesystem'"
+            echo "then LogPrint 'Running snapper/installation-helper:'"
+            echo "     $SLES12SP1SP2_installation_helper_executable --step 1 --device $device --description 'first root filesystem'"
             echo "else LogPrint '$SLES12SP1SP2_installation_helper_executable not executable may indicate an error with btrfs default subvolume setup for $subvolume_path on $device'"
             echo "fi"
-            echo " mount -t btrfs -o subvolid=0 $mountopts $device $target_system_mountpoint"
+            echo "mount -t btrfs -o subvolid=0 $mountopts $device $target_system_mountpoint"
             echo "# End step 1 of special SLES 12 SP1 btrfs default snapper snapshot subvolume setup"
             ) >> "$LAYOUT_CODE"
         else

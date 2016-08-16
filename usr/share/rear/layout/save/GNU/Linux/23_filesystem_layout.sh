@@ -270,7 +270,12 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                     echo "# plus usually an entry in /etc/fstab to get it mounted automatically when booting."
                     echo "# Because any '@/.snapshots' subvolume would let 'snapper/installation-helper --step 1' fail"
                     echo "# such subvolumes are deactivated here to not let 'rear recover' fail:"
-                    echo "$subvolume_list" | grep "$snapper_base_subvolume" | sed -e "s/^/#$prefix /"
+                    if test -z "$snapshot_subvolumes_pattern" ; then
+                        # With an empty snapshot_subvolumes_pattern egrep -v '' would exclude all lines:
+                        echo "$subvolume_list" | grep "$snapper_base_subvolume" | sed -e "s/^/#$prefix /"
+                    else
+                        echo "$subvolume_list" | egrep -v "$snapshot_subvolumes_pattern" | grep "$snapper_base_subvolume" | sed -e "s/^/#$prefix /"
+                    fi
                 fi
                 # Output btrfs normal subvolumes:
                 if test -z "$subvolumes_exclude_pattern" ; then
