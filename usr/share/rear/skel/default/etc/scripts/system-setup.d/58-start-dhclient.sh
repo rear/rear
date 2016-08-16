@@ -3,6 +3,10 @@
 # check if we have USE_DHCLIENT=y, if not then we run 60/62 scripts
 [[ -z "$USE_DHCLIENT"  ]] && return
 
+# with USE_STATIC_NETWORKING no networking setup via DHCP must happen
+# see default.conf: USE_STATIC_NETWORKING overrules USE_DHCLIENT
+test "$USE_STATIC_NETWORKING" && return
+
 # if 'noip' is gicen on boot prompt then skip dhcp start-up
 if [[ -e /proc/cmdline ]] ; then
     if grep -q 'noip' /proc/cmdline ; then
