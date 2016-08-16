@@ -108,7 +108,7 @@ btrfs_subvolumes_setup() {
             # which fails if it already exists.
             if test "$subvolume_path" = "@/.snapshots" ; then
                 info_message="No 'btrfs subvolume create' for '$subvolume_path' because it will be created by 'snapper/installation-helper --step 1' (which fails if that already exists)."
-                Log $info_message
+                LogPrint $info_message
                 echo "# $info_message" >> "$LAYOUT_CODE"
                 continue
             fi
@@ -121,7 +121,7 @@ btrfs_subvolumes_setup() {
             # to not let "rear recover" fail because of such kind of wrong btrfs subvolumes
             # and inform the user about that via 'LogPrint':
             if [[ "$subvolume_path" == "@/.snapshots/"* ]] ; then
-                info_message="Skipping subvolume setup for '$subvolume_path' because any normal btrfs subvolume under '.snapshots' is wrong (and 'snapper/installation-helper --step 1' fails if such a subvolume exists)."
+                info_message="Skipping subvolume setup for '$subvolume_path' because any btrfs subvolume under '.snapshots' would let 'snapper/installation-helper --step 1' fail."
                 LogPrint $info_message
                 echo "# $info_message" >> "$LAYOUT_CODE"
                 continue
