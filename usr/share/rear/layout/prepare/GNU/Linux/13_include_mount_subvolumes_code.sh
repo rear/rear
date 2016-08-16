@@ -32,9 +32,9 @@ btrfs_subvolumes_setup() {
     ###########################################
     # SLES 12 SP1 and SP2 special btrfs subvolumes setup detection:
     SLES12SP1SP2_btrfs_detection_string="@/.snapshots/"
-    if grep "^btrfsdefaultsubvol $device $mountpoint [0-9]* $SLES12SP1SP2_btrfs_detection_string" "$LAYOUT_FILE" ; then
-        info_message="Detected SLES 12 SP1 and SP2 special btrfs subvolumes setup because the default subvolume path contains '$SLES12SP1SP2_btrfs_detection_string'"
-        Log $info_message
+    if grep -q "^btrfsdefaultsubvol $device $mountpoint [0-9]* $SLES12SP1SP2_btrfs_detection_string" "$LAYOUT_FILE" ; then
+        info_message="Doing SLES12 special btrfs subvolumes setup because the default subvolume path contains '$SLES12SP1SP2_btrfs_detection_string'"
+        LogPrint $info_message
         echo "# $info_message" >> "$LAYOUT_CODE"
         # For SLES 12 SP1 a btrfsdefaultsubvol entry in disklayout.conf looks like
         #   btrfsdefaultsubvol /dev/sda2 / 259 @/.snapshots/1/snapshot

@@ -250,16 +250,12 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 snapper_base_subvolume="@/.snapshots"
                 # Exclude usual snapshot subvolumes and subvolumes that belong to snapper:
                 subvolumes_exclude_pattern="$snapshot_subvolumes_pattern|$snapper_base_subvolume"
-                # Output header, btrfs normal subvolumes, and (if exist) list snapper subvolumes as comments:
+                # Output header:
                 echo "# Btrfs normal subvolumes for $btrfs_device at $btrfs_mountpoint"
                 echo "# Format: btrfsnormalsubvol <device> <mountpoint> <btrfs_subvolume_ID> <btrfs_subvolume_path>"
-                # With an empty subvolumes_exclude_pattern egrep -v '' would exclude all lines:
-                if test "$subvolumes_exclude_pattern" ; then
-                    echo "$subvolume_list" | egrep -v "$subvolumes_exclude_pattern" | sed -e "s/^/$prefix /"
-                else
-                    echo "$subvolume_list" | sed -e "s/^/$prefix /"
-                fi
-                # List subvolumes that belong to snapper as comments (deactivated) if such subvolumes exist:
+                # List subvolumes that belong to snapper as comments (deactivated) if such subvolumes exist.
+                # Have them before the other btrfs normal subvolumes because a single comment block looks less confusing
+                # and matches better to the directly before listed (deactivated) snapshot subvolumes comments:
                 if btrfs subvolume list -a $btrfs_mountpoint | grep -q "$snapper_base_subvolume" ; then
                     echo "# Btrfs subvolumes that belong to snapper are listed here only as documentation."
                     echo "# Snapper's base subvolume '/@/.snapshots' is deactivated here because during 'rear recover'"
@@ -274,7 +270,14 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                     echo "# plus usually an entry in /etc/fstab to get it mounted automatically when booting."
                     echo "# Because any '@/.snapshots' subvolume would let 'snapper/installation-helper --step 1' fail"
                     echo "# such subvolumes are deactivated here to not let 'rear recover' fail:"
-                    echo "$subvolume_list" | grep "$snapper_base_subvolume" | sed -e "s/^/# $prefix /"
+                    echo "$subvolume_list" | grep "$snapper_base_subvolume" | sed -e "s/^/#$prefix /"
+                fi
+                # Output btrfs normal subvolumes:
+                if test -z "$subvolumes_exclude_pattern" ; then
+                    # With an empty subvolumes_exclude_pattern egrep -v '' would exclude all lines:
+                    echo "$subvolume_list" | sed -e "s/^/$prefix /"
+                else
+                    echo "$subvolume_list" | egrep -v "$subvolumes_exclude_pattern" | sed -e "s/^/$prefix /"
                 fi
             fi
         done
