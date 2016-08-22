@@ -48,7 +48,7 @@ case "$BACKUP_PROG" in
                 # As the archive is encrypted we cannot use tar to find the label (which should be the same as the content of file basebackup.txt)
                 # If that is not the case the restore will fail (verification needed after a new full backup if the content of file basebackup.txt
                 # will be modified as well - see issue #952)
-                BASE=$BASEDIR/$(cat basebackup.txt)
+                BASE=$BASEDIR/$(cat $BASEDIR/basebackup.txt)
             else
                 BASE=$BASEDIR/$(tar --test-label -f "$restorearchive")
             fi
