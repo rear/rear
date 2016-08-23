@@ -176,10 +176,10 @@ OUTPUT_URL=*file://*::
 Write the image to disk. The default is in _/var/lib/rear/output/_.
 
 OUTPUT_URL=*nfs://*::
-Write the image by mouting the target filesystem via NFS.
+Write the image by mounting the target filesystem via NFS.
 
 OUTPUT_URL=*cifs://*::
-Write the image by mouting the target filesystem via CIFS.
+Write the image by mounting the target filesystem via CIFS.
 
 OUTPUT_URL=*fish://*::
 Write the image using +lftp+ and the FISH protocol.
