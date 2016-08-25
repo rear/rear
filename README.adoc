@@ -45,6 +45,7 @@ rescue system work:
 
  - mingetty or agetty
  - sfdisk or parted
+ - grub2-efi-modules or similar package that provides Grub2 modules (/usr/lib/grub(2)/) if USB recovery on EFI is used
 
 All other required programs (like sort, dd, grep, etc.) are so common, that
 we don't list them as requirements. In case your specific workflow requires

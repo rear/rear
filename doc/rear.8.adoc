@@ -1,6 +1,6 @@
 = rear(8)
-:version: v1.18.0
-:date: 16 March 2016
+:version: v1.19.0
+:date: 23 August 2016
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -29,7 +29,7 @@ OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
 sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude
 of backup strategies (incl.  IBM Tivoli Storage Manager, HP DataProtector,
 Symantec NetBackup, EMC NetWorker, FDR/Upstream, NovaBACKUP DC, Bareos,
-Bacula, rsync, rbme). This results in a bootable image that os capable of
+Bacula, rsync, rbme). This results in a bootable image that is capable of
 booting via PXE, DVD/CD, bootable tape or virtual provisioning.
 
 Relax-and-Recover was designed to be easy to set up, requires no maintenance
@@ -146,7 +146,7 @@ source or commercial) or rsync with hardlink based solutions, e.g. RSYNC
 BACKUP MADE EASY.
 
 == RESCUE IMAGE CONFIGURATION
-The +OUTPUT+ variable defines how from where our rescue image will be booted and
+The +OUTPUT+ variable defines from where our bootable rescue image will be booted and
 the +OUTPUT_URL+ variable defines where the rescue image should be send to.
 Possible +OUTPUT+ setting are:
 
@@ -175,6 +175,12 @@ settings are:
 OUTPUT_URL=*file://*::
 Write the image to disk. The default is in _/var/lib/rear/output/_.
 
+OUTPUT_URL=*nfs://*::
+Write the image by mounting the target filesystem via NFS.
+
+OUTPUT_URL=*cifs://*::
+Write the image by mounting the target filesystem via CIFS.
+
 OUTPUT_URL=*fish://*::
 Write the image using +lftp+ and the FISH protocol.
 
@@ -197,7 +203,7 @@ OUTPUT_URL=*sftp://*::
 Write the image using +lftp+ and the secure FTP (SFTP) protocol.
 
 OUTPUT_URL=*rsync://*::
-Write the image using +rsync+ and the RSYNC protocol (SSH only).
+Write the image using +rsync+ and the RSYNC protocol.
 
 OUTPUT_URL=*sshfs://*::
 Write the image using sshfs and the SSH protocol.
@@ -205,6 +211,10 @@ Write the image using sshfs and the SSH protocol.
 OUTPUT_URL=*null*::
 Do not copy the ISO image from _/var/lib/rear/output/_ to an external destination.
 Useful in combination with an _external_ backup program, or when +BACKUP_URL=iso://backup+
+
+If you do not specify +OUTPUT_URL+ variable then by default it will be aligned to what
+was defined by variable +BACKUP_URL+. And, the ISO image will then be copied to the same
+location as your backup of the system disk(s).
 
 The +ISO_DEFAULT+ variable defines what default boot option is used on the rescue image.
 Possible values are `manual`, `boothd` or `unattended`. Manual will make you boot into
@@ -313,11 +323,19 @@ BACKUP_URL=*tape://*::
 To backup to tape device, use +BACKUP_URL=tape:///dev/nst0+ or alternatively,
 simply define +TAPE_DEVICE=/dev/nst0+
 
+BACKUP_URL=*rsync://*::
+When backup method +BACKUP=RSYNC+ is chosen then we need to define a corresponding +BACKUP_URL+ rule:
++
+----
+BACKUP_URL=rsync://[user@]host[:port]/path
+BACKUP_URL=rsync://[user@]host[:port]::/path
+----
+
 BACKUP_URL=*cifs://*::
 To backup to a Samba share (CIFS), use
 +BACKUP_URL=cifs://cifs-server-name/share/path+. To provide credentials for
-CIFS mounting use a _/etc/rear/.cifs_ credentials file and define
-+BACKUP_OPTIONS="cred=/etc/rear/.cifs"+ and pass along:
+CIFS mounting use a _/etc/rear/cifs_ credentials file and define
++BACKUP_OPTIONS="cred=/etc/rear/cifs"+ and pass along:
 +
 ----
 username=_username_

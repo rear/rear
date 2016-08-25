@@ -254,8 +254,14 @@ mount_url() {
         (usb)
             mount_cmd="mount $v -o $options $(url_path $url) $mountpoint"
             ;;
-	(sshfs)
-	    mount_cmd="sshfs $(url_host $url):$(url_path $url) $mountpoint -o $options"
+        (sshfs)
+            local authority=$( url_host $url )
+            test "$authority" || Error "Cannot run 'sshfs' because no authority '[user@]host' found in URL '$url'."
+            local path=$( url_path $url )
+            test "$path" || Error "Cannot run 'sshfs' because no path found in URL '$url'."
+            # ensure the fuse kernel module is loaded because sshfs is based on FUSE
+            lsmod | grep -q '^fuse' || modprobe $verbose fuse || Error "Cannot run 'sshfs' because 'fuse' kernel module is not loadable."
+            mount_cmd="sshfs $authority:$path $mountpoint -o $options"
             ;;
         (ftpfs)
             local hostname=$( url_hostname $url )
@@ -279,9 +285,9 @@ mount_url() {
                 mount_cmd="curlftpfs $verbose ftp://$hostname$path $mountpoint"
             fi
             ;;
-	(davfs)
-	    mount_cmd="mount $v -t davfs http://$(url_host $url)$(url_path $url) $mountpoint"
-	    ;;
+        (davfs)
+            mount_cmd="mount $v -t davfs http://$(url_host $url)$(url_path $url) $mountpoint"
+            ;;
         (*)
             mount_cmd="mount $v -t $(url_scheme $url) -o $options $(url_host $url):$(url_path $url) $mountpoint"
             ;;

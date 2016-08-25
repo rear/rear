@@ -9,7 +9,6 @@ mkdir -p "${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
 
 # Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default value to cat in
 # case encryption is disabled
-##if (( $BACKUP_PROG_CRYPT_ENABLED == 1 )); then
 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
   LogPrint "Decrypting archive with key defined in variable \$BACKUP_PROG_CRYPT_KEY"
 else
@@ -19,6 +18,7 @@ else
 fi
 
 if [[ -f "${TMP_DIR}/backup.splitted" ]]; then
+    # for multiple ISOs
     restoreinput=$FIFO
 else
     restoreinput="$backuparchive"
@@ -43,19 +43,27 @@ case "$BACKUP_PROG" in
         fi
         if [ "$BACKUP_TYPE" == "incremental" ]; then
             LAST="$restorearchive"
-            BASE=$(dirname "$restorearchive")/$(tar --test-label -f "$restorearchive")
-            if [ "$BASE" == "$LAST" ]; then
-                Log dd if=$BASE \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
-                dd if=$BASE | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
+            BASEDIR=$(dirname "$restorearchive")
+            if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+                # As the archive is encrypted we cannot use tar to find the label (which should be the same as the content of file basebackup.txt)
+                # If that is not the case the restore will fail (verification needed after a new full backup if the content of file basebackup.txt
+                # will be modified as well - see issue #952)
+                BASE=$BASEDIR/$(cat $BASEDIR/basebackup.txt)
             else
-                Log dd if="$BASE" \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
-                dd if="$BASE" | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
-                Log dd if="$LAST" \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
-                dd if="$LAST" | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
+                BASE=$BASEDIR/$(tar --test-label -f "$restorearchive")
+            fi
+            if [ "$BASE" == "$LAST" ]; then
+                Log dd if=$BASE \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                dd if=$BASE | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+            else
+                Log dd if="$BASE" \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                dd if="$BASE" | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                Log dd if="$LAST" \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                dd if="$LAST" | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
             fi
         else
-            Log dd if=$restoreinput \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
-            dd if=$restoreinput | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS $BACKUP_PROG_COMPRESS_OPTIONS -C $TARGET_FS_ROOT/ -x -f -
+            Log dd if=$restoreinput \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+            dd if=$restoreinput | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
         fi
     ;;
     (rsync)
@@ -67,7 +75,7 @@ case "$BACKUP_PROG" in
     ;;
     (*)
         Log "Using unsupported backup program '$BACKUP_PROG'"
-        $BACKUP_PROG $BACKUP_PROG_COMPRESS_OPTIONS \
+        $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
             $BACKUP_PROG_OPTIONS_RESTORE_ARCHIVE $TARGET_FS_ROOT \
             $BACKUP_PROG_OPTIONS $backuparchive
     ;;

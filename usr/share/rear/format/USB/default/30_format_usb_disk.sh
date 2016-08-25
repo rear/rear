@@ -9,7 +9,26 @@ if [[ "$answer" == "Yes" || "$FORCE" ]]; then
 
     if [[ "$EFI" == "y" ]]; then
         LogPrint "The --efi toggle was used with format - make an EFI bootable USB disk"
-        echo "Yes" | parted -s $RAW_USB_DEVICE -- mklabel gpt mkpart primary 0 100Mib mkpart primary 100Mib 100% >&2
+        
+        # Prompt user for size of EFI partition on USB disk
+        # Pressing Enter (\n) will use default value from default.conf
+        echo -n "Please enter size of EFI partition on USB device in MB [default ${USB_UEFI_PART_SIZE} MB]: "
+        read efi_part_size
+        
+        # Check if user entered unsigned integer larger than 0
+        if [[ "${efi_part_size}" =~ ^[0-9]+$ && ${efi_part_size} > 0 ]]; then
+            USB_UEFI_PART_SIZE=${efi_part_size}
+            LogPrint "Creating EFI partition on USB device with size ${USB_UEFI_PART_SIZE} MB."
+        # We did not read anything, used defaults
+        elif [[ -z ${efi_part_size} ]]; then
+            LogPrint "Creating EFI partition on USB device with default size ${USB_UEFI_PART_SIZE} MB."
+        # User input was not correct ...
+        else
+            Error "Bad input for EFI partition size."
+        fi
+            
+        echo "Yes" | parted -s $RAW_USB_DEVICE -- mklabel gpt mkpart primary 0 ${USB_UEFI_PART_SIZE}Mib mkpart primary ${USB_UEFI_PART_SIZE}Mib 100% >&2
+        
         StopIfError "Could not create primary partitions on '$REAL_USB_DEVICE'"
         # partition 1 is the ESP (vfat partition) on which EFI/BOOT/BOOTX86.EFI resides
         ParNr=2

@@ -6,45 +6,40 @@
 
 # load udev or load modules manually
 # again, check if current systemd is present
-systemd_version=$(systemd-notify --version 2>/dev/null | grep systemd | awk '{ print $2; }')
+systemd_version=$( systemd-notify --version 2>/dev/null | grep systemd | awk '{ print $2; }' )
 # if $systemd_version is empty we put it 0 (no systemd present)
-[[ -z "$systemd_version" ]] && systemd_version=0
+test "$systemd_version" || systemd_version=0
 
 if [[ $systemd_version -gt 190 ]] || [[ -s /etc/udev/rules.d/00-rear.rules ]] ; then
-
     # systemd-udevd case: systemd-udevd is started by systemd
-    ps ax | grep -v grep | grep -q systemd-udevd && { # check if daemon is actually running
+    if ps ax | grep -v grep | grep -q systemd-udevd ; then
+        # check if daemon is actually running
         my_udevtrigger
         echo -n "Waiting for udev ... "
         sleep 1
         my_udevsettle
         echo "done."
-        return
-    }
-
-    # found our "special" module-auto-load rule
-
-    # clean away old device nodes from source system
-    rm -Rf /dev/{sd*,hd*,sr*,cc*,disk}
-    mkdir -p /dev/disk/by-{id,name,path,label}
-
-    # everybody does that even though it seems to be empty by default..
-    if [[ -w /sys/kernel/uevent_helper ]]; then
-        echo >/sys/kernel/uevent_helper
+    else
+        # found our "special" module-auto-load rule
+        # clean away old device nodes from source system
+        rm -Rf /dev/{sd*,hd*,sr*,cc*,disk}
+        mkdir -p /dev/disk/by-{id,name,path,label}
+        # everybody does that even though it seems to be empty by default..
+        test -w /sys/kernel/uevent_helper && echo >/sys/kernel/uevent_helper
+        # start udev daemon
+        udevd --daemon
+        sleep 1
+        my_udevtrigger
+        echo -n "Waiting for udev ... "
+        sleep 3
+        my_udevsettle
+        echo "done."
     fi
-
-    # start udev daemon
-    udevd --daemon
-    sleep 1
-    my_udevtrigger
-    echo -n "Waiting for udev ... "
-    sleep 3
-    my_udevsettle
-    echo "done."
-else
-    # no udev, use manual method to deal with modules
-
-    # load specified modules
+    # When udevd or systemd is in place then our /etc/modules content could be normally skipped,
+    # however, we need it for e.g. loading fuse (cf. https://github.com/rear/rear/pull/905)
+    # or any other module that is intended to be loaded via the MODULES_LOAD array.
+    # There might be other kernel modules added by the user on demand, therefore,
+    # we always load the modules in /etc/modules (same code as just below):
     if test -s /etc/modules ; then
         while read module options ; do
             case "$module" in
@@ -53,19 +48,29 @@ else
             esac
         done </etc/modules
     fi
-
+else
+    # no udev, use manual method to deal with modules
+    # load specified modules (same code as just above):
+    if test -s /etc/modules ; then
+        while read module options ; do
+            case "$module" in
+                (\#*|"") ;;
+                (*) modprobe -v $module $options;;
+            esac
+        done </etc/modules
+    fi
     # load block device modules, probably not in the right order
     # we load ata drivers after ide drivers to support older systems running in compatibility mode
     # most probably these lines are the cause for most problems with wrong disk order and missing block devices
-    #
-    # Please submit any better ideas !!
-    #
+    # FIXME: Please submit any better ideas !!
     # Especially how to analyse a running system and load the same drivers and bind them to the same devices in
     # the correct order
     echo "Loading storage modules..."
-    for module in $(find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ide,message,ata} -type f 2>/dev/null) ; do
-        filename="$(basename $module)"   # module extention could be .ko or .ko.xz
-        modulename="${filename%%.*}"     # strip everything after the first .
+    for module in $( find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ide,message,ata} -type f 2>/dev/null ) ; do
+        # module extention could be .ko or .ko.xz
+        filename="$( basename $module )"
+        # strip everything after the first .
+        modulename="${filename%%.*}"
         case "$modulename" in
             (nbd) echo "Module nbd excluded from being autoloaded.";;
             (*) modprobe -q "$modulename";;
@@ -75,3 +80,4 @@ fi
 
 # device mapper gets a special treatment here because there is no dependency to load it
 modprobe -q dm-mod
+

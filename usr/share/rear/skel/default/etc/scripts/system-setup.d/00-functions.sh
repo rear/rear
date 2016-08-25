@@ -1,12 +1,19 @@
 # helper functions
 # call udevtrigger
 my_udevtrigger() {
-        type -p udevadm >/dev/null && udevadm trigger $@ || udevtrigger $@
+    type -p udevadm >/dev/null && udevadm trigger $@ || udevtrigger $@
+    
+    # If systemd is running, this should help to rename devices
+    if [[ $(ps --no-headers -C systemd) ]]; then
+        sleep 1
+        my_udevsettle
+        udevadm trigger --action=add
+    fi
 }
 
 # call udevsettle
 my_udevsettle() {
-        type -p udevadm >/dev/null && udevadm settle --timeout=10 $@ || udevsettle $@
+    type -p udevadm >/dev/null && udevadm settle --timeout=10 $@ || udevsettle $@
 }
 
 # call udevinfo

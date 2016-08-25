@@ -5,13 +5,12 @@ if [[ -z "$OUTPUT_URL" ]] ; then
     Log "No OUTPUT_URL defined. Using default location $OUTPUT_URL."
 fi
 
-local scheme=$(url_scheme $OUTPUT_URL)
-local path=$(url_path $OUTPUT_URL)
+local scheme=$( url_scheme $OUTPUT_URL )
+local path=$( url_path $OUTPUT_URL )
 
 if [[ "$BACKUP" == "NETFS" ]] ; then
     cp $v -pLf $KERNEL_FILE $TMP_DIR/kernel-$RAMDISK_SUFFIX >&2
     cp $v -pLf $TMP_DIR/initrd.cgz $TMP_DIR/initramfs-$RAMDISK_SUFFIX.img >&2
-
     # NETFS will copy things for us
     RESULT_FILES=( "${RESULT_FILES[@]}" $TMP_DIR/kernel-$RAMDISK_SUFFIX $TMP_DIR/initramfs-$RAMDISK_SUFFIX.img )
     return
@@ -36,17 +35,15 @@ case "$scheme" in
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
         LogPrint "Transferring kernel and initramfs to $OUTPUT_URL"
-        lftp -c "open $OUTPUT_URL; mkdir $path; mput -O $path $KERNEL_FILE"
-        StopIfError "Problem transferring kernel to $OUTPUT_URL"
-        lftp -c "open $OUTPUT_URL; mkdir $path; mput -O $path $TMP_DIR/initrd.cgz"
-        StopIfError "Problem transferring ramdisk to $OUTPUT_URL"
+        lftp -c "open $OUTPUT_URL; mkdir $path; mput -O $path $KERNEL_FILE" || Error "Problem transferring kernel '$KERNEL_FILE' to $OUTPUT_URL"
+        lftp -c "open $OUTPUT_URL; mkdir $path; mput -O $path $TMP_DIR/initrd.cgz" || Error "Problem transferring ramdisk '$TMP_DIR/initrd.cgz' to $OUTPUT_URL"
         ;;
     (rsync)
         LogPrint "Transferring kernel and initramfs to $OUTPUT_URL"
-        rsync -a $v "$KERNEL_FILE" "$OUTPUT_URL"
-        StopIfError "Problem transferring kernel to $OUTPUT_URL"
-        rsync -a $v "$TMP_DIR/initrd.cgz" "$OUTPUT_URL"
-        StopIfError "Problem transferring ramdisk to $OUTPUT_URL"
+        rsync -a $v "$KERNEL_FILE" "$OUTPUT_URL" || Error "Problem transferring kernel '$KERNEL_FILE' to $OUTPUT_URL"
+        rsync -a $v "$TMP_DIR/initrd.cgz" "$OUTPUT_URL" || Error "Problem transferring ramdisk '$TMP_DIR/initrd.cgz' to $OUTPUT_URL"
         ;;
-    (*) BugError "Support for $scheme is not implemented yet.";;
+    (*) Error "Invalid scheme '$scheme' in '$OUTPUT_URL'."
+        ;;
 esac
+

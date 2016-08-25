@@ -213,12 +213,13 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             # In case of errors "btrfs subvolume list" results output on stderr but none on stdout
             # so that the following test intentionally also fails in case of errors:
             if test $( btrfs subvolume list -as $btrfs_mountpoint | wc -l ) -gt 0 ; then
+                snapshot_subvolume_list=$( btrfs subvolume list -as $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2,14 | sed -e 's/<FS_TREE>\///' )
+                prefix=$( echo "#btrfssnapshotsubvol $btrfs_device $btrfs_mountpoint" | sed -e 's/\//\\\//g' )
                 echo "# Btrfs snapshot subvolumes for $btrfs_device at $btrfs_mountpoint"
                 echo "# Btrfs snapshot subvolumes are listed here only as documentation."
                 echo "# There is no recovery of btrfs snapshot subvolumes."
                 echo "# Format: btrfssnapshotsubvol <device> <mountpoint> <btrfs_subvolume_ID> <btrfs_subvolume_path>"
-                prefix=$( echo "#btrfssnapshotsubvol $btrfs_device $btrfs_mountpoint" | sed -e 's/\//\\\//g' )
-                btrfs subvolume list -as $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2,14 | sed -e 's/<FS_TREE>\///' | sed -e "s/^/$prefix /"
+                echo "$snapshot_subvolume_list" | sed -e "s/^/$prefix /"
             fi
             ####################################
             # Btrfs normal subvolumes:
@@ -226,6 +227,8 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             # In case of errors "btrfs subvolume list" results output on stderr but none on stdout
             # so that the following test intentionally also fails in case of errors:
             if test $( btrfs subvolume list -a $btrfs_mountpoint | wc -l ) -gt 0 ; then
+                subvolume_list=$( btrfs subvolume list -a $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2,9 | sed -e 's/<FS_TREE>\///' )
+                prefix=$( echo "btrfsnormalsubvol $btrfs_device $btrfs_mountpoint" | sed -e 's/\//\\\//g' )
                 # Get the IDs of the snapshot subvolumes as pattern for "egrep -v" e.g. like
                 #   egrep -v '^279 |^280 |^281 |^282 |^285 |^286 |^289 |^290 '
                 # to exclude snapshot subvolume lines to get only the normal subvolumes.
@@ -233,15 +236,53 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 # which is the case here because the btrfs_device_and_mountpoint is fixed herein
                 # and on one btrfs_device (e.g. /dev/sda2) there is only one btrfs filesystem.
                 # The following " sed | tr | sed " pipe is ugly ( simplification is left as an exercise for the reader ;-)
-                pattern=$( btrfs subvolume list -as $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 | sed -e 's/^/^/' -e 's/$/ |/' | tr -d '\n' | sed -e 's/|$//' )
+                snapshot_subvolumes_pattern=$( btrfs subvolume list -as $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 | sed -e 's/^/^/' -e 's/$/ |/' | tr -d '\n' | sed -e 's/|$//' )
+                # SLES 12 SP1 and SP2 normal subvolumes that belong to snapper are excluded from being recreated:
+                # Snapper's base subvolume '/@/.snapshots' is excluded because during "rear recover"
+                # that one will be created by "snapper/installation-helper --step 1" which fails if it already exists
+                # (see the code in layout/prepare/GNU/Linux/13_include_mount_subvolumes_code.sh).
+                # Furthermore any normal btrfs subvolume under snapper's base subvolume '/@/.snapshots' is wrong
+                # (see https://github.com/rear/rear/issues/944#issuecomment-238239926
+                # and https://github.com/rear/rear/issues/963).
+                # Because any btrfs subvolume under '@/.snapshots/' lets "snapper/installation-helper --step 1" fail
+                # any btrfs subvolume under '@/.snapshots/' is excluded here from being recreated
+                # to not let "rear recover" fail because of such kind of wrong btrfs subvolumes:
+                snapper_base_subvolume="@/.snapshots"
+                # Exclude usual snapshot subvolumes and subvolumes that belong to snapper:
+                subvolumes_exclude_pattern="$snapshot_subvolumes_pattern|$snapper_base_subvolume"
+                # Output header:
                 echo "# Btrfs normal subvolumes for $btrfs_device at $btrfs_mountpoint"
                 echo "# Format: btrfsnormalsubvol <device> <mountpoint> <btrfs_subvolume_ID> <btrfs_subvolume_path>"
-                prefix=$( echo "btrfsnormalsubvol $btrfs_device $btrfs_mountpoint" | sed -e 's/\//\\\//g' )
-                # With an empty pattern egrep -v '' excludes all lines:
-                if test -z "$pattern" ; then
-                    btrfs subvolume list -a $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2,9 | sed -e 's/<FS_TREE>\///' | sed -e "s/^/$prefix /"
+                # List subvolumes that belong to snapper as comments (deactivated) if such subvolumes exist.
+                # Have them before the other btrfs normal subvolumes because a single comment block looks less confusing
+                # and matches better to the directly before listed (deactivated) snapshot subvolumes comments:
+                if btrfs subvolume list -a $btrfs_mountpoint | grep -q "$snapper_base_subvolume" ; then
+                    echo "# Btrfs subvolumes that belong to snapper are listed here only as documentation."
+                    echo "# Snapper's base subvolume '/@/.snapshots' is deactivated here because during 'rear recover'"
+                    echo "# it is created by 'snapper/installation-helper --step 1' (which fails if it already exists)."
+                    echo "# Furthermore any normal btrfs subvolume under snapper's base subvolume would be wrong."
+                    echo "# See https://github.com/rear/rear/issues/944#issuecomment-238239926"
+                    echo "# and https://github.com/rear/rear/issues/963#issuecomment-240061392"
+                    echo "# how to create a btrfs subvolume in compliance with the SLES12 default brtfs structure."
+                    echo "# In short: Normal btrfs subvolumes on SLES12 must be created directly below '/@/'"
+                    echo "# e.g. '/@/var/lib/mystuff' (which requires that the btrfs root subvolume is mounted)"
+                    echo "# and then the subvolume is mounted at '/var/lib/mystuff' to be accessible from '/'"
+                    echo "# plus usually an entry in /etc/fstab to get it mounted automatically when booting."
+                    echo "# Because any '@/.snapshots' subvolume would let 'snapper/installation-helper --step 1' fail"
+                    echo "# such subvolumes are deactivated here to not let 'rear recover' fail:"
+                    if test -z "$snapshot_subvolumes_pattern" ; then
+                        # With an empty snapshot_subvolumes_pattern egrep -v '' would exclude all lines:
+                        echo "$subvolume_list" | grep "$snapper_base_subvolume" | sed -e "s/^/#$prefix /"
+                    else
+                        echo "$subvolume_list" | egrep -v "$snapshot_subvolumes_pattern" | grep "$snapper_base_subvolume" | sed -e "s/^/#$prefix /"
+                    fi
+                fi
+                # Output btrfs normal subvolumes:
+                if test -z "$subvolumes_exclude_pattern" ; then
+                    # With an empty subvolumes_exclude_pattern egrep -v '' would exclude all lines:
+                    echo "$subvolume_list" | sed -e "s/^/$prefix /"
                 else
-                    btrfs subvolume list -a $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2,9 | sed -e 's/<FS_TREE>\///' | egrep -v "$pattern" | sed -e "s/^/$prefix /"
+                    echo "$subvolume_list" | egrep -v "$subvolumes_exclude_pattern" | sed -e "s/^/$prefix /"
                 fi
             fi
         done
@@ -252,8 +293,12 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         # therefore use by default the traditional mount command
         read_mounted_btrfs_subvolumes_command="mount -t btrfs | cut -d ' ' -f 1,3,6"
         # and use findmnd only if "findmnd -o FSROOT" works:
-        if test -x "$findmnt_command" && $findmnt_command -nrv -o FSROOT -t btrfs &>/dev/null ; then
-            read_mounted_btrfs_subvolumes_command="$findmnt_command -nrv -o SOURCE,TARGET,OPTIONS,FSROOT -t btrfs"
+        # Use the (deprecated) "findmnt -m" to avoid issues
+        # as in https://github.com/rear/rear/issues/882
+        # FIXME: Replace using the deprecated '-m' option with a future proof solution.
+
+        if test -x "$findmnt_command" && $findmnt_command -mnrv -o FSROOT -t btrfs &>/dev/null ; then
+            read_mounted_btrfs_subvolumes_command="$findmnt_command -mnrv -o SOURCE,TARGET,OPTIONS,FSROOT -t btrfs"
             findmnt_FSROOT_works="yes"
         fi
         while read device subvolume_mountpoint mount_options btrfs_subvolume_path junk ; do
@@ -307,11 +352,14 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         lsattr_command="$( type -P lsattr )"
         # On older systems like SLE11 findmnt does not know about FSROOT (see above)
         # therefore test if findmnt_FSROOT_works was set above:
+        # Use the (deprecated) "findmnt -m" to avoid issues
+        # as in https://github.com/rear/rear/issues/882
+        # FIXME: Replace using the deprecated '-m' option with a future proof solution.
         if test -x "$lsattr_command" -a -x "$findmnt_command" -a "$findmnt_FSROOT_works" ; then
-            for subvolume_mountpoint in $( $findmnt_command -nrv -o TARGET -t btrfs ) ; do
+            for subvolume_mountpoint in $( $findmnt_command -mnrv -o TARGET -t btrfs ) ; do
                 # The 'no copy on write' attribute is shown as 'C' in the lsattr output (see "man chattr"):
                 if $lsattr_command -d $subvolume_mountpoint | cut -d ' ' -f 1 | grep -q 'C' ; then
-                    btrfs_subvolume_path=$( $findmnt_command -nrv -o FSROOT $subvolume_mountpoint )
+                    btrfs_subvolume_path=$( $findmnt_command -mnrv -o FSROOT $subvolume_mountpoint )
                     # Remove leading '/' from btrfs_subvolume_path (except it is only '/') to have same syntax for all entries and
                     # without leading '/' is more clear that it is not an absolute path in the currently mounted tree of filesystems
                     # instead the subvolume path is relative to the toplevel/root subvolume of the particular btrfs filesystem
@@ -319,6 +367,13 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                     # see https://btrfs.wiki.kernel.org/index.php/Mount_options
                     test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
                     if test -n "btrfs_subvolume_path" ; then
+			# Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
+                        for p in chattr lsattr
+                        do
+                            if ! IsInArray "$p" "${PROGS[@]}"; then 
+                                PROGS=( ${PROGS[@]} "$p" )
+                            fi
+                        done 
                         echo "btrfsnocopyonwrite $btrfs_subvolume_path"
                     else
                         echo "# $subvolume_mountpoint has the 'no copy on write' attribute set but $findmnt_command does not show its btrfs subvolume path"

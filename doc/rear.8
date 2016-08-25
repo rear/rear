@@ -2,12 +2,12 @@
 .\"     Title: rear
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 31 August 2015
+.\"      Date: 05 August 2016
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "REAR" "8" "31 August 2015" "\ \&" "\ \&"
+.TH "REAR" "8" "05 August 2016" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,7 +38,7 @@ Relax\-and\-Recover is the leading Open Source disaster recovery solution\&. It 
 .sp
 Relax\-and\-Recover produces a bootable image\&. This image can repartition the system\&. Once that is done it initiates a restore from backup\&. Restores to different hardware are possible\&. Relax\-and\-Recover can therefore be used as a migration tool as well\&.
 .sp
-Currently Relax\-and\-Recover supports various boot media (incl\&. ISO, PXE, OBDR tape, USB or eSATA storage), a variety of network protocols (incl\&. sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude of backup strategies (incl\&. IBM Tivoli Storage Manager, HP DataProtector, Symantec NetBackup, EMC NetWorker, Bareos, Bacula, rsync, rbme)\&. This results in a bootable image that os capable of booting via PXE, DVD/CD, bootable tape or virtual provisioning\&.
+Currently Relax\-and\-Recover supports various boot media (incl\&. ISO, PXE, OBDR tape, USB or eSATA storage), a variety of network protocols (incl\&. sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude of backup strategies (incl\&. IBM Tivoli Storage Manager, HP DataProtector, Symantec NetBackup, EMC NetWorker, FDR/Upstream, NovaBACKUP DC, Bareos, Bacula, rsync, rbme)\&. This results in a bootable image that is capable of booting via PXE, DVD/CD, bootable tape or virtual provisioning\&.
 .sp
 Relax\-and\-Recover was designed to be easy to set up, requires no maintenance and is there to assist when disaster strikes\&. Its setup\-and\-forget nature removes any excuses for not having a disaster recovery solution implemented\&.
 .sp
@@ -194,7 +194,7 @@ In this combination Relax\-and\-Recover recreates the system layout and calls th
 For demonstration and special use purposes Relax\-and\-Recover also includes an internal backup method, NETFS, which can be used to create a simple tar\&.gz archive of the system\&. For all permanent setups we recommend using something more professional for backup, either a traditional backup software (open source or commercial) or rsync with hardlink based solutions, e\&.g\&. RSYNC BACKUP MADE EASY\&.
 .SH "RESCUE IMAGE CONFIGURATION"
 .sp
-The OUTPUT variable defines how from where our rescue image will be booted and the OUTPUT_URL variable defines where the rescue image should be send to\&. Possible OUTPUT setting are:
+The OUTPUT variable defines from where our bootable rescue image will be booted and the OUTPUT_URL variable defines where the rescue image should be send to\&. Possible OUTPUT setting are:
 .PP
 OUTPUT=\fBRAMDISK\fR
 .RS 4
@@ -286,7 +286,7 @@ OUTPUT_URL=\fBrsync://\fR
 .RS 4
 Write the image using
 rsync
-and the RSYNC protocol (SSH only)\&.
+and the RSYNC protocol\&.
 .RE
 .PP
 OUTPUT_URL=\fBsshfs://\fR
@@ -371,6 +371,11 @@ BACKUP=\fBSESAM\fR
 Using SEP Sesam to restore the data\&.
 .RE
 .PP
+BACKUP=\fBNBKDC\fR
+.RS 4
+Using Novastor NovaBACKUP DC to restore the data\&.
+.RE
+.PP
 BACKUP=\fBRBME\fR
 .RS 4
 Use Rsync Backup Made Easy (rbme) to restore the data\&.
@@ -427,13 +432,33 @@ or alternatively, simply define
 TAPE_DEVICE=/dev/nst0
 .RE
 .PP
+BACKUP_URL=\fBrsync://\fR
+.RS 4
+When backup method
+BACKUP=RSYNC
+is chosen then we need to define a corresponding
+BACKUP_URL
+rule:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+BACKUP_URL=rsync://[user@]host[:port]/path
+BACKUP_URL=rsync://[user@]host[:port]::/path
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
 BACKUP_URL=\fBcifs://\fR
 .RS 4
 To backup to a Samba share (CIFS), use
 BACKUP_URL=cifs://cifs\-server\-name/share/path\&. To provide credentials for CIFS mounting use a
-\fI/etc/rear/\&.cifs\fR
+\fI/etc/rear/cifs\fR
 credentials file and define
-BACKUP_OPTIONS="cred=/etc/rear/\&.cifs"
+BACKUP_OPTIONS="cred=/etc/rear/cifs"
 and pass along:
 .sp
 .if n \{\
@@ -645,7 +670,7 @@ Relax\-and\-Recover is a collaborative process using Github at: \m[blue]\fBhttp:
 The Relax\-and\-Recover website is located at: \m[blue]\fBhttp://relax\-and\-recover\&.org/\fR\m[]
 .SH "COPYRIGHT"
 .sp
-(c) 2006\-2015
+(c) 2006\-2016
 .sp
 Schlomo Schapiro
 .sp
