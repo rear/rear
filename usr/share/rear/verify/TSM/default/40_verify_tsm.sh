@@ -7,11 +7,13 @@
 # 2009-10-12 Schlomo as part of a code review to fix all occurences of [*]
 #
 #
-# read TSM vars from TSM config files
+# read TSM vars from TSM config files ( look a bit like an init file with KEY=VALUE pairs )
+# The keys are loaded into environment variables called TSM_SYS_$KEY
+# Since TSM has several options that have a dot in their name, the dot is replaced by an underscore
 # read dsm.sys
-while read KEY VALUE ; do echo "$KEY" | grep -q '*' && continue ; test -z "$KEY" && continue ; KEY="$(echo "$KEY" | tr a-z A-Z)" ; export TSM_SYS_$KEY="${VALUE//\"}" ; done </opt/tivoli/tsm/client/ba/bin/dsm.sys
+while read KEY VALUE ; do echo "$KEY" | grep -q '*' && continue ; test -z "$KEY" && continue ; KEY="$(echo "$KEY" | tr a-z. A-Z_)" ; export TSM_SYS_$KEY="${VALUE//\"}" ; done </opt/tivoli/tsm/client/ba/bin/dsm.sys
 # read dsm.opt
-while read KEY VALUE ; do echo "$KEY" | grep -q '*' && continue ; test -z "$KEY" && continue ; KEY="$(echo "$KEY" | tr a-z A-Z)" ; export TSM_OPT_$KEY="${VALUE//\"}" ; done </opt/tivoli/tsm/client/ba/bin/dsm.opt
+while read KEY VALUE ; do echo "$KEY" | grep -q '*' && continue ; test -z "$KEY" && continue ; KEY="$(echo "$KEY" | tr a-z. A-Z_)" ; export TSM_OPT_$KEY="${VALUE//\"}" ; done </opt/tivoli/tsm/client/ba/bin/dsm.opt
 
 # check that TSM server is actually available (ping)
 [ "${TSM_SYS_TCPSERVERADDRESS}" ]
