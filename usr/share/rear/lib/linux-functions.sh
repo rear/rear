@@ -106,7 +106,7 @@ FindStorageDrivers() {
 	# always return 0 as the grep return code is meaningless
 }
 
-# Copy binaries given in $* to $1, stripping them on the way
+# Copy binaries given in $* to $1
 BinCopyTo() {
 	local dest="$1"
 	[[ -d "$dest" ]]
@@ -116,9 +116,8 @@ BinCopyTo() {
 		[[ -z "$1" ]] && continue # ignore blanks
 		cp $v -a -L -f "$1" "$dest" >&2
 		StopIfError "[BinCopyTo] Could not copy '$1' to '$dest'"
-#		strip -s "$dest/$(basename "$1")" 2>&8
 	done
-	: # make sure that a failed strip won't fail the BinCopyTo
+	: # make sure that a failed copy won't fail the BinCopyTo
 }
 
 # Copy Modules given in $* to $1
