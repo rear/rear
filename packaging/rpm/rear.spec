@@ -1,7 +1,7 @@
 %define rpmrelease %{nil}
 %define debug_package %{nil}
 
-### Work-around the fact that OpenSUSE/SLES _always_ defined both :-/
+### Work-around the fact that openSUSE/SLES _always_ defined both :-/
 %if 0%{?sles_version} == 0
 %undefine sles_version
 %endif
