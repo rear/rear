@@ -2,13 +2,13 @@
 # Public License. Refer to the included LICENSE for full text of license.
 
 if [[ -d /etc/sysconfig/network ]]; then
-    # suse
+    # SUSE
     CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/sysconfig/network/ifcfg-* )
 elif [[ -d /etc/sysconfig/network-scripts ]]; then
-    # redhat
+    # Red Hat
     CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/sysconfig/network-scripts/ifcfg-* )
 elif [[ -d /etc/network ]]; then
-    # debian
+    # Debian
     CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/network/interfaces )
 fi
 

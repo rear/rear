@@ -170,7 +170,7 @@ cp_bin () {
 
 # Resolve dynamic library dependencies. Returns a list of symbolic links
 # to shared objects and shared object files for the binaries in $*.
-# This is the function copied from mkinitrd off SuSE 9.3
+# This is the function copied from mkinitrd off SUSE 9.3
 SharedObjectFiles() {
 	has_binary ldd
 	StopIfError "Unable to find a working ldd binary."

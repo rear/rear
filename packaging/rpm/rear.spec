@@ -73,7 +73,7 @@ Requires: attr
 
 %if %{?suse_version:1}0
 Requires: iproute2
-### recent SuSE versions have an extra nfs-client package
+### recent SUSE versions have an extra nfs-client package
 ### and switched to genisoimage/wodim
 %if 0%{?suse_version} >= 1020
 Requires: genisoimage
