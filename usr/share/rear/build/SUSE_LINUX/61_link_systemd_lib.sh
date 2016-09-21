@@ -1,4 +1,4 @@
-# Fedora puts systemd stuff into /usr/lib/systemd and SuSe under /lib/systemd
+# Fedora puts systemd stuff into /usr/lib/systemd and SUSE under /lib/systemd
 pushd $ROOTFS_DIR >/dev/null
 	if [[ -d usr/lib/systemd/system ]];  then
 		if [[ ! -d lib/systemd/system ]]; then

@@ -1,7 +1,7 @@
 %define rpmrelease %{nil}
 %define debug_package %{nil}
 
-### Work-around the fact that OpenSUSE/SLES _always_ defined both :-/
+### Work-around the fact that openSUSE/SLES _always_ defined both :-/
 %if 0%{?sles_version} == 0
 %undefine sles_version
 %endif
@@ -73,7 +73,7 @@ Requires: attr
 
 %if %{?suse_version:1}0
 Requires: iproute2
-### recent SuSE versions have an extra nfs-client package
+### recent SUSE versions have an extra nfs-client package
 ### and switched to genisoimage/wodim
 %if 0%{?suse_version} >= 1020
 Requires: genisoimage
