@@ -119,8 +119,10 @@ Use CommVault Galaxy 10 (or Simpana 10)
 
 BACKUP=NETFS::
 Use Relax-and-Recover internal backup with tar or rsync (or similar)
-+BACKUP_TYPE=incremental+ and +FULLBACKUPDAY="Mon"+, activates incremental Backups (only with +tar+!).
-Please keep in mind to clean your old Backups from time to time.
++BACKUP_TYPE=incremental+ and +FULLBACKUPDAY="Mon"+, activates incremental backups (only with +tar+!).
+The current implementation supports only to restore one full backup plus one single incremental backup
+so that currently BACKUP_TYPE=incremental actually implements a differential backup.
+Please keep in mind to clean your old backups from time to time.
 
 BACKUP=REQUESTRESTORE::
 No backup, just ask user to somehow restore the filesystems

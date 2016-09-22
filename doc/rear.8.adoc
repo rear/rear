@@ -368,7 +368,10 @@ OUTPUT_URL=nfs://server/path/
 ----
 
 When using +BACKUP=NETFS+ there is an option to select a +BACKUP_TYPE=incremental+
- to have +rear+ make incrementals until the next +FULLBACKUPDAY="Mon"+ has reached.
+to have +rear+ make incremental backups until the next full backup
+e.g. via +FULLBACKUPDAY="Mon"+ is reached. The current implementation supports only
+to restore one full backup plus one single incremental backup so that currently
++BACKUP_TYPE=incremental+ actually implements a differential backup.
 
 == CONFIGURATION
 To configure Relax-and-Recover you have to edit the configuration files in
