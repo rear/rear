@@ -87,7 +87,7 @@ Relax-and-Recover will 'own' the device in this example.
 
     sudo usr/sbin/rear format /dev/sdb
 
-Relax-and-recover asks you to confirm that you want to format the device:
+Relax-and-Recover asks you to confirm that you want to format the device:
 
     Yes
 

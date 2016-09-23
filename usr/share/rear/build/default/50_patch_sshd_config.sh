@@ -18,7 +18,7 @@ if test "$SSH_CONFIG_FILES" ; then
 sed -i  -e 's/ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/ig' \
     -e 's/UsePAM.*/UsePam no/ig' \
     -e 's/ListenAddress.*/ListenAddress 0.0.0.0/ig' \
-    -e '$a PrintMotd no' \
+    -e '1i\PrintMotd no' \
     ${SSH_CONFIG_FILES[@]}
     
     if [ -n "$SSH_ROOT_PASSWORD" ] ; then 

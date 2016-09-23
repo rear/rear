@@ -1,4 +1,4 @@
-# This file is part of Relax and Recover, licensed under the GNU General
+# This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included LICENSE for full text of license.
 #
 # copy the binaries and config files that we require to use dhclient/dhcpcd

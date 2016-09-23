@@ -22,7 +22,7 @@ SGLX_FILES="/etc/hostname
 /opt/cmcluster/conf/*/*"
 
 # Phase 1 : does sglx soft is installed?
-# on RH path is /usr/local/cmcluster; on SuSe path is /opt/cmcluster
+# on RH path is /usr/local/cmcluster; on SUSE path is /opt/cmcluster
 [ -d /usr/local/cmcluster/conf -o -d /opt/cmcluster/conf ] || return
 
 # Phase 2: create a /etc/rear/recovery/sglx directory

@@ -3,10 +3,10 @@
 # configuration functions for Relax-and-Recover
 #
 
-# This file is part of Relax and Recover, licensed under the GNU General
+# This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included LICENSE for full text of license.
 
-# find out which OS Vendor and Version we run on (SuSE, SLES, RHEL, Fedora, Debian, ...)
+# find out which OS Vendor and Version we run on (SUSE, SLES, RHEL, Fedora, Debian, ...)
 SetOSVendorAndVersion () {
     # if (magically) these variables are already set, skip doing it again
     # this is needed, so that they can be overridden in $WORKFLOW.conf

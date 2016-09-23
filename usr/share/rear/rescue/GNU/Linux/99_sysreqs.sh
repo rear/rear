@@ -35,7 +35,7 @@ else
 fi
 
 echo
-echo "Relax and recover version:"
+echo "Relax-and-Recover version:"
 /usr/sbin/rear -V
 echo
 

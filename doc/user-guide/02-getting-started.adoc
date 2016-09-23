@@ -57,7 +57,7 @@ Currently we aim to support the following distributions by testing them
 regularly:
 
  - Red Hat Enterprise Linux and derivatives: RHEL5, RHEL6 and RHEL7
- - SuSe SLES 11, 12
+ - SUSE SLES 11, 12
  - Ubuntu LTS: 10.04, 12.04, 13.* and 14.*
 
 Distributions dropped as supported:

@@ -1,4 +1,4 @@
-# This file is part of Relax and Recover, licensed under the GNU General
+# This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included LICENSE for full text of license.
 
 ### Add the rescue kernel and initrd to the local GRUB Legacy
@@ -62,7 +62,7 @@ if [[ "${GRUB_RESCUE_PASSWORD:0:3}" == '$1$' ]]; then
 fi
 
 awk -f- $grub_conf >$TMP_DIR/menu.lst <<EOF
-/^title Relax and Recover/ {
+/^title Relax-and-Recover/ {
     ISREAR=1
     next
 }
@@ -79,7 +79,7 @@ awk -f- $grub_conf >$TMP_DIR/menu.lst <<EOF
 }
 
 END {
-    print "title Relax and Recover"
+    print "title Relax-and-Recover"
     print "\tpassword $GRUB_RESCUE_PASSWORD"
     print "\tkernel /rear-kernel $KERNEL_CMDLINE"
     print "\tinitrd /rear-initrd.cgz"

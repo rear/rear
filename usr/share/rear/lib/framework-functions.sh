@@ -2,7 +2,7 @@
 #
 # shell script functions for Relax-and-Recover
 #
-# This file is part of Relax and Recover, licensed under the GNU General
+# This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included LICENSE for full text of license.
 #
 # convert tabs into 4 spaces with: expand --tabs=4 file >new-file

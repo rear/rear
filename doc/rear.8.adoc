@@ -368,7 +368,10 @@ OUTPUT_URL=nfs://server/path/
 ----
 
 When using +BACKUP=NETFS+ there is an option to select a +BACKUP_TYPE=incremental+
- to have +rear+ make incrementals until the next +FULLBACKUPDAY="Mon"+ has reached.
+to have +rear+ make incremental backups until the next full backup
+e.g. via +FULLBACKUPDAY="Mon"+ is reached. The current implementation supports only
+to restore one full backup plus one single incremental backup so that currently
++BACKUP_TYPE=incremental+ actually implements a differential backup.
 
 == CONFIGURATION
 To configure Relax-and-Recover you have to edit the configuration files in
@@ -382,7 +385,7 @@ by Relax-and-Recover to create configuration files (mostly for the boot
 environment).  Modify the templates to adjust the information contained in
 the emails produced by Relax-and-Recover. You can use these templates to
 prepend your own configurations to the configuration files created by
-Relax-and-recover, for example you can edit _PXE_pxelinux.cfg_ to add some
+Relax-and-Recover, for example you can edit _PXE_pxelinux.cfg_ to add some
 general pxelinux configuration you use.
 
 In almost all circumstances you have to configure two main settings and their
@@ -499,7 +502,7 @@ Schlomo Schapiro
 
 Gratien Dhaese, IT3 Consultants
 
-Johannes Meixner, SuSe
+Johannes Meixner, SUSE
 
 Jeroen Hoekx
 

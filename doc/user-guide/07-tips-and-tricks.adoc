@@ -39,7 +39,7 @@ This results in the following useful tips and tricks:
     environment and you can access the rescue environment from the network
     as you were used to before.
 
- 6. During recovery at any stage you can re-run Relax-and-Recovery, modify
+ 6. During recovery at any stage you can re-run Relax-and-Recover, modify
     the layout file for recreating the structure and intervene when restoring
     the backup.
 ====

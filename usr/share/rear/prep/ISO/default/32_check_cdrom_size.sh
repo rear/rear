@@ -1,4 +1,4 @@
-# This file is part of Relax and Recover, licensed under the GNU General
+# This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included LICENSE for full text of license.
 # check_cdrom_size.sh
 while read DEV total used available junk
