@@ -62,8 +62,9 @@ functionality:
 
       □ GNU tar (BACKUP=NETFS, BACKUP_PROG=tar)
       □ GNU tar (BACKUP=NETFS, BACKUP_PROG=tar, BACKUP_TYPE=incremental,
-        FULLBACKUPDAY=”Mon”) for using incremental backups with a weekly full
-        backup. Be aware, old tar archives will not be removed automatically!
+        FULLBACKUPDAY=”Mon”) for using incremental (actually differential)
+        backups with a weekly full backup. Be aware, old tar archives will not be
+        removed automatically!
       □ GNU tar with openssl encryption (BACKUP=NETFS, BACKUP_PROG=tar,
         BACKUP_PROG_CRYPT_ENABLED=1)
       □ rsync on local devices (BACKUP=NETFS, BACKUP_PROG=rsync), such USB
@@ -705,8 +706,8 @@ As usual lots of bug fixes - see the issue tracker.
 
   • Add automatic recovery mode for Bareos - issue #311
 
-  • Add incremental backup type with GNU tar with weekly backups, define in /
-    etc/rear/local.conf the following (issue #294):
+  • Add incremental (actually differential) backup type with GNU tar with
+    weekly backups, define in /etc/rear/local.conf the following (issue #294):
 
      BACKUP=NETFS
      BACKUP_TYPE=incremental
@@ -1313,10 +1314,14 @@ BACKUP_OPTIONS="rw,relatime,seclabel,user_xattr,acl,barrier=1,data=ordered"
 Issue Description: Is incremental backup possible?
 
 With our default settings (BACKUP=NETFS and BACKUP_PROG=tar) we support
-incremental backups when we add the following extra variables:
+a simple form of incremental backups when we add the following extra variables:
 
 BACKUP_TYPE=incremental
 FULLBACKUPDAY="Mon"
+
+The current implementation supports only to restore one full backup plus one single
+incremental backup so that currently BACKUP_TYPE=incremental actually implements
+a differential backup (cf. https://github.com/rear/rear/issues/974).
 
 Issue Description: ERROR: FindStorageDrivers called but STORAGE_DRIVERS is
 empty

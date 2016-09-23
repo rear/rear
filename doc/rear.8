@@ -518,7 +518,7 @@ OUTPUT_URL=nfs://server/path/
 .\}
 .RE
 .sp
-When using BACKUP=NETFS there is an option to select a BACKUP_TYPE=incremental to have rear make incrementals until the next FULLBACKUPDAY="Mon" has reached\&.
+When using BACKUP=NETFS there is an option to select a BACKUP_TYPE=incremental to have rear make incremental backups until the next full backup e.g. via FULLBACKUPDAY="Mon" is reached\&. The current implementation supports only to restore one full backup plus one single incremental backup so that currently BACKUP_TYPE=incremental actually implements a differential backup\&.
 .SH "CONFIGURATION"
 .sp
 To configure Relax\-and\-Recover you have to edit the configuration files in \fI/etc/rear/\fR\&. All \fI*\&.conf\fR files there are part of the configuration, but only \fIsite\&.conf\fR and \fIlocal\&.conf\fR are intended for the user configuration\&. All other configuration files hold defaults for various distributions and should not be changed\&.
