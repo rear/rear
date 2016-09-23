@@ -2,7 +2,7 @@
 #
 # linux functions for Relax-and-Recover
 #
-# This file is part of Relax and Recover, licensed under the GNU General
+# This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included LICENSE for full text of license.
 
 # The way how we use Bash with lots of (nested) functions and read etc. seems to trigger a Bash

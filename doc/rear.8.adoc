@@ -385,7 +385,7 @@ by Relax-and-Recover to create configuration files (mostly for the boot
 environment).  Modify the templates to adjust the information contained in
 the emails produced by Relax-and-Recover. You can use these templates to
 prepend your own configurations to the configuration files created by
-Relax-and-recover, for example you can edit _PXE_pxelinux.cfg_ to add some
+Relax-and-Recover, for example you can edit _PXE_pxelinux.cfg_ to add some
 general pxelinux configuration you use.
 
 In almost all circumstances you have to configure two main settings and their

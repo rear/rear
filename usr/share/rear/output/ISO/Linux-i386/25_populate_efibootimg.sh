@@ -50,7 +50,7 @@ cat > $TMP_DIR/mnt/EFI/BOOT/BOOTX64.conf << EOF
 default=0
 timeout 5
 splashimage=/EFI/BOOT/splash.xpm.gz
-title Relax and Recover (no Secure Boot)
+title Relax-and-Recover (no Secure Boot)
     kernel /isolinux/kernel
     initrd /isolinux/initrd.cgz
 

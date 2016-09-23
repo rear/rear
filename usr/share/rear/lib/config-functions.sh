@@ -3,7 +3,7 @@
 # configuration functions for Relax-and-Recover
 #
 
-# This file is part of Relax and Recover, licensed under the GNU General
+# This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included LICENSE for full text of license.
 
 # find out which OS Vendor and Version we run on (SUSE, SLES, RHEL, Fedora, Debian, ...)

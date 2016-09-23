@@ -1,5 +1,5 @@
 # make backup using the RSYNC method
-# This file is part of Relax and Recover, licensed under the GNU General
+# This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included LICENSE for full text of license.
 
 Log "Include list:"
