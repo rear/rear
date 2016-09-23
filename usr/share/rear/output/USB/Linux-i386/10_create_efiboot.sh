@@ -85,7 +85,7 @@ else
 default=0
 timeout=5
 
-title Relax and Recover (no Secure Boot)
+title Relax-and-Recover (no Secure Boot)
     kernel ${EFI_DIR}/kernel
     initrd ${EFI_DIR}/initrd.cgz
 EOF
@@ -103,7 +103,7 @@ EOF
 set timeout=5
 set default=0 
 
-menuentry "Relax and Recover (no Secure Boot)" {
+menuentry "Relax-and-Recover (no Secure Boot)" {
     linux ${EFI_DIR}/kernel
     initrd ${EFI_DIR}/initrd.cgz
 }
