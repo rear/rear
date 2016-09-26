@@ -11,7 +11,7 @@ for command in reboot halt poweroff ; do
 cat <<EOF >$ROOTFS_DIR/bin/$command
 #!/bin/bash
 echo umounting all filesystems
-umount -vfar &>/dev/null
+umount -vfar
 echo $command in 3 seconds...
 sleep 3
 systemctl --force $command
