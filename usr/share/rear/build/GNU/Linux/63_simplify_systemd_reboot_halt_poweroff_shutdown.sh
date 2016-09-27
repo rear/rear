@@ -3,8 +3,13 @@
 # simplifies how reboot halt poweroff and shutdown work in case of systemd
 # to make them more fail-safe, see https://github.com/rear/rear/issues/953
 
-# Skip if systemd is not used:
-test -d $ROOTFS_DIR/usr/lib/systemd/system || return 0
+# Skip if systemd is not used.
+# Because the scripts below need the systemctl executable and because
+# via prep/GNU/Linux/28_include_systemd.sh and build/GNU/Linux/10_copy_as_is.sh
+# systemctl gets only copied into the recovery system if systemd is used,
+# we can test here (i.e. after build/GNU/Linux/10_copy_as_is.sh had already run)
+# if /bin/systemctl exists in the recovery system:
+test -x $ROOTFS_DIR/bin/systemctl || return 0
 
 # Replace reboot halt and poweroff by simple scripts that basically run
 #   "umount -a ; sync ; systemctl --force [reboot halt poweroff]"
