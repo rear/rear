@@ -32,7 +32,7 @@ cat <<EOF >$filename
 export LC_ALL=C LANG=C
 echo umounting all filesystems
 umount -vfar
-echo syncing disks... (waiting 3 seconds before $command)
+echo syncing disks... waiting 3 seconds before $command
 sync
 sleep 3
 systemctl --force $command
