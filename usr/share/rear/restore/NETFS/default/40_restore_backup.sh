@@ -50,7 +50,8 @@ case "$BACKUP_PROG" in
                 # will be modified as well - see issue #952)
                 BASE=$BASEDIR/$(cat $BASEDIR/basebackup.txt)
             else
-                BASE=$BASEDIR/$(tar --test-label -f "$restorearchive")
+                #BASE=$BASEDIR/$(tar --test-label -f "$restorearchive")
+                BASE=$BASEDIR/$(cat $BASEDIR/basebackup.txt)
             fi
             if [ "$BASE" == "$LAST" ]; then
                 Log dd if=$BASE \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
