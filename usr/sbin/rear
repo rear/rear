@@ -409,6 +409,7 @@ if has_binary WORKFLOW_$WORKFLOW ; then
     # an empty default is used here to avoid an error exit if 'set -eu' is used:
     WORKFLOW_$WORKFLOW "${ARGS[@]:-}"
     Log "Finished running $WORKFLOW workflow"
+    LogPrint "Finished running $WORKFLOW workflow $BACKUP_URL `date` "
 else
     VERBOSE=1
     LogPrint "ERROR: The specified command '$WORKFLOW' does not exist!"
