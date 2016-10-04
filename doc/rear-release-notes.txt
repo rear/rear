@@ -1,11 +1,11 @@
 Relax-and-Recover
 
-  • Features
-  • Documentation
-  • Downloads
-  • Support
-  • Development
-  • Events
+  * Features
+  * Documentation
+  * Downloads
+  * Support
+  * Development
+  * Events
 
 Release Notes for Relax-and-Recover version 1.18
 
@@ -16,8 +16,9 @@ Relax-and-Recover website
 
 Github project
 
-This document is distributed with the following license: “Creative Commons
-Attribution-NoDerivs 3.0 Unported (CC BY-ND 3.0)”. To read the license deed
+This document is distributed with the following license:
+"Creative Commons Attribution-NoDerivs 3.0 Unported (CC BY-ND 3.0)".
+To read the license deed
 go to http://creativecommons.org/licenses/by-nd/3.0/
 
 Overview
@@ -38,118 +39,122 @@ The most recent release of Relax-and-Recover is supported on most GNU/Linux
 based systems with kernel 2.6 or higher. It provides the following
 functionality:
 
-  • Hot maintenance capability. A rescue image can be made online while the
+  * Hot maintenance capability. A rescue image can be made online while the
     system is running.
 
-  • Command line interface. Relax-and-Recover doesnot require a graphical
+  * Command line interface. Relax-and-Recover doesnot require a graphical
     interface to run, nor in creation mode, nor in rescue mode (console is
     enough).
 
-  • Support included for most common file systems, such as ext2, ext3, ext4
-    and reiserfs. Other filesystems like jfs, xfs and btrfs are also
-    implemented, but are less tested. (Feedback is appreciated)
+  * Support included for most common file systems, such as ext2, ext3, ext4,
+    and reiserfs. Other filesystems like jfs, xfs, and btrfs are also
+    implemented, but are less tested. (Feedback is appreciated.)
 
-  • Selected Hardware RAID and (eg. HP SmartArray) and mirroring solutions
+  * Selected Hardware RAID and (eg. HP SmartArray) and mirroring solutions
     (eg. DRBD) are supported.
 
-  • LVM root volumes are supported.
+  * LVM root volumes are supported.
 
-  • Multipath support for SAN storage
+  * Multipath support for SAN storage.
 
-  • UEFI support
+  * UEFI support.
 
-  • Integrates with internal backup solutions such as:
+  * Integrates with internal backup solutions such as:
 
-      □ GNU tar (BACKUP=NETFS, BACKUP_PROG=tar)
-      □ GNU tar (BACKUP=NETFS, BACKUP_PROG=tar, BACKUP_TYPE=incremental,
-        FULLBACKUPDAY=”Mon”) for using incremental (actually differential)
-        backups with a weekly full backup. Be aware, old tar archives will not be
-        removed automatically!
-      □ GNU tar with openssl encryption (BACKUP=NETFS, BACKUP_PROG=tar,
+      - GNU tar (BACKUP=NETFS, BACKUP_PROG=tar)
+      - GNU tar (BACKUP=NETFS, BACKUP_PROG=tar, BACKUP_TYPE=incremental,
+        FULLBACKUPDAY="Mon") for using incremental (actually differential)
+        backups with a weekly full backup. Be aware, old tar archives
+        will not be removed automatically!
+      - GNU tar with openssl encryption (BACKUP=NETFS, BACKUP_PROG=tar,
         BACKUP_PROG_CRYPT_ENABLED=1)
-      □ rsync on local devices (BACKUP=NETFS, BACKUP_PROG=rsync), such USB
+      - rsync on local devices (BACKUP=NETFS, BACKUP_PROG=rsync), such USB
         and local disks
-      □ rsync over the network (BACKUP=RSYNC, BACKUP_PROG=rsync)
-  • Integrates with external backup solutions such as:
+      - rsync over the network (BACKUP=RSYNC, BACKUP_PROG=rsync)
 
-      □ Tivoli Storage Manager (BACKUP=TSM)
-      □ HP Data Protector (BACKUP=DP)
-      □ Symantec NetBacakup (BACKUP=NBU)
-      □ Galaxy 5, 6, and 7 (BACKUP=GALAXY)
-      □ Galaxy 10 [Commvault Simpana] (BACKUP=GALAXY10)
-      □ Bacula (BACKUP=BACULA)
-      □ Bareos (BACKUP=BAREOS) (A fork of Bacula)
-      □ Rsync Backup Made Easy (BACKUP=RBME)
-      □ Duplicity/Duply (BACKUP=DUPLICITY)
-      □ EMC Networker, also known as Legato (BACKUP=NSR)
-      □ SEP Sesam (BACKUP=SESAM)
-      □ FDR/Upstream (BACKUP=FDRUPSTREAM)
-      □ Novastor NovaBACKUP DC (BACKUP=NBKDC) (NEW!)
-  • Integrates with Disaster Recovery Linux Manager (DRLM)
+  * Integrates with external backup solutions such as:
 
-  • Udev support (except for some really ancient udev versions) which is the
+      - Tivoli Storage Manager (BACKUP=TSM)
+      - HP Data Protector (BACKUP=DP)
+      - Symantec NetBacakup (BACKUP=NBU)
+      - Galaxy 5, 6, and 7 (BACKUP=GALAXY)
+      - Galaxy 10 [Commvault Simpana] (BACKUP=GALAXY10)
+      - Bacula (BACKUP=BACULA)
+      - Bareos (BACKUP=BAREOS) (A fork of Bacula)
+      - Rsync Backup Made Easy (BACKUP=RBME)
+      - Duplicity/Duply (BACKUP=DUPLICITY)
+      - EMC Networker, also known as Legato (BACKUP=NSR)
+      - SEP Sesam (BACKUP=SESAM)
+      - FDR/Upstream (BACKUP=FDRUPSTREAM)
+      - Novastor NovaBACKUP DC (BACKUP=NBKDC)
+
+  * Integrates with Disaster Recovery Linux Manager (DRLM)
+
+  * Udev support (except for some really ancient udev versions) which is the
     base for many new and important features:
 
-      □ kernel drivers for network cards and storage adapters are loaded via
+      - kernel drivers for network cards and storage adapters are loaded via
         udev
-      □ deal with network persistent names in udev rules
-      □ firmware loading
-      □ persistent storage device names (though Relax-and-Recover does
+      - deal with network persistent names in udev rules
+      - firmware loading
+      - persistent storage device names (though Relax-and-Recover does
         nothing with this)
-  • System reconfiguration
 
-      □ enable recovery on hardware, that is not the same as the original
+  * System reconfiguration
+
+      - enable recovery on hardware, that is not the same as the original
         system
-      □ network and storage drivers are adjusted
-      □ map hard disks if they do not match (e.g. hda -> sda)
-      □ remap network MAC addresses
-      □ use another IP address, or using dhcp via templates or from kernel
+      - network and storage drivers are adjusted
+      - map hard disks if they do not match (e.g. hda -> sda)
+      - remap network MAC addresses
+      - use another IP address, or using dhcp via templates or from kernel
         command line
-      □ rebuild the initial ramdisk if needed (for new storage drivers)
-      □ migration to SAN storage (Experimental)
-  • Support backup software: Bacula, both locally attached tapes (with
+      - rebuild the initial ramdisk if needed (for new storage drivers)
+      - migration to SAN storage (Experimental)
+
+  * Support backup software: Bacula, both locally attached tapes (with
     bextract) and network-based backups. Also, in combination with OBDR
     tapes.
 
-  • Create OBDR tapes with method mkbackup and put the backup onto the tape
-    to have a single-tape bootable recovery solution
+  * Create OBDR tapes with method mkbackup and put the backup onto the tape
+    to have a single-tape bootable recovery solution.
 
-  • Label the OBDR tape with the method format to avoid accidental overwrites
-    with OBDR
+  * Label the OBDR tape with the method format to avoid accidental overwrites
+    with OBDR.
 
-  • Create bootable disk (eSATA, USB …) media with the backup included:
+  * Create bootable disk (eSATA, USB, ...) media with the backup included:
 
     BACKUP_URL=usb:///dev/device
 
     Together with OUTPUT=USB we have now a complete solution on hard disks
     (booting of it and restoring data).
 
-  • DHCP client support (IPv4 and IPv6). Dhcp client activation can be forced
+  * DHCP client support (IPv4 and IPv6). Dhcp client activation can be forced
     via the variable USE_DHCLIENT=yes (define in /etc/rear/local.conf). It is
-    also possible to force DHCP at boot time with kernel option dhcp
+    also possible to force DHCP at boot time with kernel option dhcp.
 
-  • USE_STATIC_NETWORKING=y, will cause statically configured network
-    settings to be applied even when USE_DHCLIENT is in effect
+  * USE_STATIC_NETWORKING=y, will cause statically configured network
+    settings to be applied even when USE_DHCLIENT is in effect.
 
-  • Save layout and compare layouts for easy automation of making
-    Relax-and-Recover snapshots (checklayout option)
+  * Save layout and compare layouts for easy automation of making
+    Relax-and-Recover snapshots (checklayout option).
 
-  • The layout workflow is the default workflow instead of the deprecated dr
+  * The layout workflow is the default workflow instead of the deprecated dr
     workflow. The dr workflow kept all important system information into a
     directory structure where the new layout workflow use files to keep the
     information centralized. The dr workflow has been removed in rear v1.14!
 
-  • External USB booting now uses extlinux instead of syslinux, and
+  * External USB booting now uses extlinux instead of syslinux, and
     therefore, the USB disk must first be formatted with an ext2, ext3, ext4
-    or btrfs based file system
+    or btrfs based file system.
 
-  • cron job to check changes in disk layout and trigger rear mkrescue if
-    required
+  * cron job to check changes in disk layout and trigger rear mkrescue if
+    required.
 
-  • VLAN tagging support
+  * VLAN tagging support.
 
-  • Add timestamp of rear run with rc code to the syslog or messages file;
-    sending mail report is also possible
+  * Add timestamp of rear run with rc code to the syslog or messages file;
+    sending mail report is also possible.
 
 NOTE: Features marked experimental are prone to change with future releases.
 
@@ -165,135 +170,135 @@ The references pointing to fix #nr or issue #nr refer to our issues tracker
 
 Version 1.18.0 (March 2016)
 
-  • Support was added for NVME SSD type of disk devices (issue #787)
+  * Support was added for NVME SSD type of disk devices (issue #787)
 
-  • For LUKS added the password libraries (issue #679)
+  * For LUKS added the password libraries (issue #679)
 
-  • Script 99_sysreqs.sh was added to save the minimal system requirements
+  * Script 99_sysreqs.sh was added to save the minimal system requirements
     necessary for cloning a system in a remote DRP data center (issue #798)
 
-  • New 99_move_away_restored_files.sh to remove restored files after recover
+  * New 99_move_away_restored_files.sh to remove restored files after recover
     (issue #799) New array was introduced to make this -
     BACKUP_RESTORE_MOVE_AWAY_FILES=()
 
-  • Improved 40-start-udev-or-load-modules.sh script for better udevd
+  * Improved 40-start-udev-or-load-modules.sh script for better udevd
     handling (issue #766)
 
-  • Run ldconfig -X before dhclient gets started at boot time (issue #772)
+  * Run ldconfig -X before dhclient gets started at boot time (issue #772)
 
-  • Remove the “-c3” option fron rsyslogd start-up (issue #773)
+  * Remove the "-c3" option fron rsyslogd start-up (issue #773)
 
-  • Add example configuration for NetBackup Master/Media server
+  * Add example configuration for NetBackup Master/Media server
 
-  • Added backup capabilities; getcap and setcap are used to backup and
+  * Added backup capabilities; getcap and setcap are used to backup and
     restore (issue #771)
 
-  • Correct bash syntax so rear is compatible with bash v3 and v4 (issue #
-    765, #767)
+  * Correct bash syntax so rear is compatible with bash v3 and v4
+    (issue #765, #767)
 
-  • Added support for new backup method Novastor NovaBACKUP DC (+BACKUP=
-    NBKDC+) (issue #669)
+  * Added support for new backup method Novastor NovaBACKUP DC
+    (BACKUP=NBKDC) (issue #669)
 
-  • Code was improved to have network teaming support (issue #655)
+  * Code was improved to have network teaming support (issue #655)
 
-  • Example configuration to put backup and rescue image on same ISO image,
+  * Example configuration to put backup and rescue image on same ISO image,
     eg. DVD (issue #430)
 
-  • Improved the rear documentation
+  * Improved the rear documentation
 
-  • remove the noatime mount option for cifs mount (issue #752)
+  * remove the noatime mount option for cifs mount (issue #752)
 
-  • Replace option ‘grep -P’ to ‘grep -E’ due to SELinux errors (issue #565,
-    #737)
+  * Replace option 'grep -P' to 'grep -E' due to SELinux errors
+    (issue #565, #737)
 
-  • Hidding the encryption key while doing the restore in the rear.log (issue
-    #749)
+  * Hidding the encryption key while doing the restore in the rear.log
+    (issue #749)
 
-  • is_true function was to uniform the different ways of enable/disble
+  * is_true function was to uniform the different ways of enable/disble
     variable settings (issue #625)
 
-  • Added and use sysctl.conf; rescue mode should honor these settings (issue
-    #748)
+  * Added and use sysctl.conf; rescue mode should honor these settings
+    (issue #748)
 
-  • The BACKUP_PROG_COMPRESS variable was not used during incremental backup
+  * The BACKUP_PROG_COMPRESS variable was not used during incremental backup
     (issue #743)
 
-  • prevent any other workflow in REAR rescue mode then recover (issue #719)
+  * prevent any other workflow in REAR rescue mode then recover (issue #719)
 
-  • Exclude Oracle ASM device directory from Rescue System (issue #721)
+  * Exclude Oracle ASM device directory from Rescue System (issue #721)
 
-  • SaveBashFlagsAndOptions and RestoreBashFlagsAndOptions in usr/share/rear/
-    lib/framework-functions.sh were added (issue #700)
+  * SaveBashFlagsAndOptions and RestoreBashFlagsAndOptions
+    in usr/share/rear/lib/framework-functions.sh were added (issue #700)
 
-  • /mnt/local became a global variable TARGET_FS_ROOT (issue #708)
+  * /mnt/local became a global variable TARGET_FS_ROOT (issue #708)
 
-  • Copy rear.log from recovery into /var/log/rear/recovery/ directory after
-    a ‘rear recover’ (issue #706)
+  * Copy rear.log from recovery into /var/log/rear/recovery/ directory after
+    a 'rear recover' (issue #706)
 
-  • wipefs will be used when available (issue #649)
+  * wipefs will be used when available (issue #649)
 
-  • SAN related improvements with btrfs (issue #695)
+  * SAN related improvements with btrfs (issue #695)
 
-  • Support for shim.efi (UEFI booting) added (issue #702)
+  * Support for shim.efi (UEFI booting) added (issue #702)
 
-  • Added support for elilo (used by SLES 11/12) (issue #583, #691, #692, #
-    693)
+  * Added support for elilo (used by SLES 11/12)
+    (issue #583, #691, #692, #693)
 
-  • Added option –debugscripts to rear (help-workflow) (issue #688)
+  * Added option --debugscripts to rear (issue #688)
 
-  • Removed dosfslabel as required program for vfat UEFI boot partition
+  * Removed dosfslabel as required program for vfat UEFI boot partition
     (issue #694)
 
-  • Bareos team added BAREOS_FILESET and ISO_DEFAULT to default.conf (for
-    automated DR tests executed by Bareos team; issue #686, #719)
+  * Bareos team added BAREOS_FILESET and ISO_DEFAULT to default.conf
+    (for automated DR tests executed by Bareos team; issue #686, #719)
 
-  • Fix getty/agetty with upstart (issue #685)
+  * Fix getty/agetty with upstart (issue #685)
 
-  • New SLE11-SLE12-SAP-HANA-UEFI-example.conf (issue #683)
+  * New SLE11-SLE12-SAP-HANA-UEFI-example.conf (issue #683)
 
-  • usr/share/rear/conf/examples/SLE12-SP1-btrfs-example.conf added as an
+  * usr/share/rear/conf/examples/SLE12-SP1-btrfs-example.conf added as an
     example configuration file
 
-  • Added support for the SUSE specific gpt_sync_mbr partitioning scheme
+  * Added support for the SUSE specific gpt_sync_mbr partitioning scheme
     (issue #544)
 
-  • Improved btrfs snapshot support with SLES 12 (issue #556)
+  * Improved btrfs snapshot support with SLES 12 (issue #556)
 
-  • Unload scsi_debug driver in recovery mode for RHEL 7.1 (issue #626)
+  * Unload scsi_debug driver in recovery mode for RHEL 7.1 (issue #626)
 
-  • Saved the current mount points and permissions; in order to improve and
+  * Saved the current mount points and permissions; in order to improve and
     avoid missing mount points after recovery (issue #619)
 
-  • NSR servername not defined causing rear to hang (issue #637)
+  * NSR servername not defined causing rear to hang (issue #637)
 
-  • Removed mingetty as a required package (issue #661)
+  * Removed mingetty as a required package (issue #661)
 
-  • Adding -scrollprompt=no to dsmc query in script verify/TSM/default/
-    40_verify_tsm.sh (issue #667)
+  * Adding -scrollprompt=no to dsmc query in script
+    verify/TSM/default/40_verify_tsm.sh (issue #667)
 
-  • Fixed a bug around USB_DEVICE and OUTPUT_URL mis-match (issue #579)
+  * Fixed a bug around USB_DEVICE and OUTPUT_URL mis-match (issue #579)
 
-  • grub support for ppc64 (issue #673)
+  * grub support for ppc64 (issue #673)
 
-  • grub2 supported was added for ppc64 (issue #672)
+  * grub2 supported was added for ppc64 (issue #672)
 
-  • ppc64le support was added into the rear.spec (issue #665)
+  * ppc64le support was added into the rear.spec (issue #665)
 
-  • Network code partially rewritten to improve teaming (issue #662)
+  * Network code partially rewritten to improve teaming (issue #662)
 
-  • Changed default value of USE_CFG2HTML from 1 to empty (means do not run
+  * Changed default value of USE_CFG2HTML from 1 to empty (means do not run
     cfg2html by default) (issue #643)
 
-  • Move the 50_selinux_autorelabel.sh script to the default location so it
+  * Move the 50_selinux_autorelabel.sh script to the default location so it
     gets picked up by all backup methods. This was required for RHEL 7 (issue
     #650)
 
-  • Check via NSR if the ISO image is not obsolete (issue #653)
+  * Check via NSR if the ISO image is not obsolete (issue #653)
 
-  • Added ebiso support within rear (required for UEFI booting with SLES 11 &
-    12 (issue #657)
+  * Added ebiso support within rear (required for UEFI booting
+    with SLES 11 & 12 (issue #657)
 
-  • FDR/Upstream (BACKUP=FDRUPSTREAM) (NEW!) (issue #659)
+  * FDR/Upstream (BACKUP=FDRUPSTREAM) (NEW!) (issue #659)
 
 Version 1.17.2 (August 2015)
 
