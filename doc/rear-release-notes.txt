@@ -166,7 +166,7 @@ fixes. Note that all releases are cumulative, and that all releases of
 Relax-and-Recover are compatible with previous versions of Relax-and-Recover,
 unless otherwise noted.
 
-The references pointing to fix #nr or issue #nr refer to our issues tracker
+The references pointing to fix #nr or issue #nr refer to our issues tracker.
 
 Version 1.18.0 (March 2016)
 
@@ -635,7 +635,7 @@ Version 1.16.1 (June 2014)
 
 Version 1.16.0 (May 2014)
 
-As usual lots of bug fixes - see the issue tracker.
+  As usual lots of bug fixes - see the issue tracker.
 
   * Network script now deals correctly with VLAN tagging as well
 
@@ -725,9 +725,9 @@ As usual lots of bug fixes - see the issue tracker.
 
 Version 1.15.0 (September 2013)
 
-The references pointing to fix #nr or issue #nr refer to our issues tracker
+  The references pointing to fix #nr or issue #nr refer to our issues tracker.
 
-As usual lots of bug fixes - see the issue tracker.
+  As usual lots of bug fixes - see the issue tracker.
 
   * Add EMC NetWorker (Legato) support for doing external backup
 
@@ -822,10 +822,10 @@ As usual lots of bug fixes - see the issue tracker.
 
 Version 1.14.0 (September 2012)
 
-The references pointing to fix#nr refer to our issues tracker
+  The references pointing to fix#nr refer to our issues tracker.
 
-Lots of minor bugs were fixed, and not all of them are listed in current
-release notes. For a complete overview see the issue tracker.
+  Lots of minor bugs were fixed, and not all of them are listed in current
+  release notes. For a complete overview see the issue tracker.
 
   * Added duply/duplicity with one new backup method duplicity (Experimental)
 
@@ -1059,13 +1059,14 @@ Version 1.11.0 (May 2011)
 
 Version 1.10.0 (February 2011)
 
-An intermediate release only which fixed some hanging issues of version
-1.9.0. Also, a RPM upgrade was fixed by this release from 1.7.25 to 1.9.0,
-which failed because of a wrongly CentOS symbolic link. See bugzilla#680664
+  * An intermediate release only which fixed some hanging issues of version
+    1.9.0. Also, a RPM upgrade was fixed by this release from 1.7.25
+    to 1.9.0, which failed because of a wrongly CentOS symbolic link.
+    See bugzilla#680664
 
 Version 1.9.0 (February 2011)
 
-With version 1.9.0 some new methods were added, such as:
+  With version 1.9.0 some new methods were added, such as:
 
   * rear mkobdr : to create an OBDR recovery tape (obsolete since 1.11.0)
 
@@ -1096,7 +1097,9 @@ With version 1.9.0 some new methods were added, such as:
     one can hard-code your special DHCP client with the variables
     DHCLIENT_BIN (for IPv4), and/or DHCLIENT6_BIN (for IPv6).
 
-Relax-and-Recover version 1.9.0 contain fixes for the following defects:
+Version 1.9.0
+
+  It contain fixes for the following defects:
 
   * Missing support for Scientific Linux, LinuxMint
 
@@ -1114,15 +1117,15 @@ Relax-and-Recover version 1.9.0 contain fixes for the following defects:
 
 Version 1.7.26 (November 2010)
 
-Relax-and-Recover version 1.7.26 fixed RedHat bugzilla defect 657174 : rescue
-image freezes during the boot while executing init. This was due the new
-upstart mechanism (replaced the sysv init procedure).
+  * Relax-and-Recover version 1.7.26 fixed RedHat bugzilla defect 657174:
+    Rescue image freezes during the boot while executing init.
+    This was due the new upstart mechanism (replaced the sysv init procedure).
 
 Version 1.7.25 (June 2010)
 
-Relax-and-Recover version 1.7.25 fixed RedHat bugzilla defect 600217 : Fedora
-link missing in restore, pack and finalize sub-directories. This broke the
-proper image building on several Fedora versions.
+  * Relax-and-Recover version 1.7.25 fixed RedHat bugzilla defect 600217:
+    Fedora link missing in restore, pack and finalize sub-directories.
+    This broke the proper image building on several Fedora versions.
 
 System and Software Requirements
 
