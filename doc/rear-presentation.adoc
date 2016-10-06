@@ -1,5 +1,5 @@
 = Relax-and-Recover: Disaster Recovery and System Migration solution
-Dag Wieërs <dag@wieers.com>
+Dag Wieers <dag@wieers.com>
 
 _This presentation is written in AsciiDoc and can be converted to
 a LibreOffice/OpenOffice presentation using
@@ -7,7 +7,7 @@ http://github.com/dagwieers/asciidoc-odf[asciidoc-odf]._
 
 
 ////
-== Who is Dag Wieërs ?
+== Who is Dag Wieers ?
 * Linux and Open Source consultant
   - Worked at IBM Belgium, now self-employed to provide advice, design, automation, maintenance
 
@@ -326,7 +326,7 @@ Consists of:
   - Schlomo Schapiro (original author)
   - Gratien D'haese (original author)
   - Jeroen Hoekx (new contributor)
-  - Dag Wieërs (new contributor)
+  - Dag Wieers (new contributor)
 
 and various other contributors
 
@@ -351,3 +351,4 @@ Any questions, ideas, pull-requests ?
   - Create VM with 4GB disk and boot VM
   - Show bash history and perform: +rear recover+
   - Show menu system and modify sizes
+

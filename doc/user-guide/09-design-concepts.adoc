@@ -22,7 +22,7 @@ will invoke the following general workflow:
 
   4. Cleanup work area
 
-== Workflow – Make Rescue Media
+== Workflow - Make Rescue Media
 The application will have the following general workflow which is represented
 by appropriately named scripts in various subdirectories:
 
@@ -70,14 +70,14 @@ The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices a
 |USB         | OUTPUT  | Create bootable USB device               | done
 |====
 
-== Workflow – Recovery
+== Workflow - Recovery
 The result of the analysis is written into configuration files under
 '/etc/rear/recovery/'. This directory is copied together with the other
 Relax-and-Recover directories onto the rescue system where the same
-framework runs a different workflow – the recovery workflow.
+framework runs a different workflow - the recovery workflow.
 
 The recovery workflow is triggered by the fact that the root filesystem is
-mounted in a ram disk or tmpfs. Alternatively a „demo“ recovery workflow
+mounted in a ram disk or tmpfs. Alternatively a "demo" recovery workflow
 can be started manually. This will simply recover all data into a
 subdirectory and not touch the hard disks (Phase 2).
 
@@ -121,7 +121,7 @@ installed into the usual locations:
 
 === Layout of /etc/rear
 default.conf::
-    Default configuration – will define EVERY variable with a sane default
+    Default configuration - will define EVERY variable with a sane default
     setting. Serves also as a reference for the available variables 'site.conf'
     site wide configuration (optional)
 
@@ -257,7 +257,7 @@ RO means that the framework manages this variable and modules and methods should
   - Easier integration with third party software (GPL or commercial)
   - Modular and plug-ins should be easy for end-users
   - Better documentation for developers
-  - Cut the overhead – less is better
+  - Cut the overhead - less is better
   - Less choices (=> less errors)
 
   - **mkCDrec project is not active more**
