@@ -1,5 +1,6 @@
+# 94_grub_rescue.sh
 # This file is part of Relax-and-Recover, licensed under the GNU General
-# Public License. Refer to the included LICENSE for full text of license.
+# Public License. Refer to the included COPYING for full text of license.
 
 ### Add the rescue kernel and initrd to the local GRUB Legacy
 ###

@@ -1,5 +1,5 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
-# Public License. Refer to the included LICENSE for full text of license.
+# Public License. Refer to the included COPYING for full text of license.
 
 # We support using cfg2html to collect general system information.
 # For this cfg2html has to be installed and it has not been disabled.

@@ -1,5 +1,5 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
-# Public License. Refer to the included LICENSE for full text of license.
+# Public License. Refer to the included COPYING for full text of license.
 
 # At SLES11 /usr/bin/python is a link to ./python2.6
 # and because copy failed with an error "cp: not writing through dangling symlink"

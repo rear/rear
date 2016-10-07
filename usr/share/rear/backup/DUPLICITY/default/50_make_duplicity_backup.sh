@@ -1,5 +1,5 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
-# Public License. Refer to the included LICENSE for full text of license.
+# Public License. Refer to the included COPYING for full text of license.
 
 if [ "$BACKUP_PROG" = "duply" ] && has_binary duply ; then
     # we found the duply program; check if a profile was defined

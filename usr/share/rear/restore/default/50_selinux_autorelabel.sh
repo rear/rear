@@ -1,5 +1,5 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
-# Public License. Refer to the included LICENSE for full text of license.
+# Public License. Refer to the included COPYING for full text of license.
 
 # when the variable BACKUP_SELINUX_DISABLE is unset then silently return
 [[ ! "$BACKUP_SELINUX_DISABLE"  =~ ^[yY1] ]] && return

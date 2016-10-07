@@ -1,7 +1,7 @@
 # 10_check_rsync.sh - analyze the BACKUP_URL
 #
 # This file is part of Relax-and-Recover, licensed under the GNU General
-# Public License. Refer to the included LICENSE for full text of license.
+# Public License. Refer to the included COPYING for full text of license.
 
 #### OLD STYLE:
 # BACKUP_URL=[USER@]HOST:PATH           # using ssh (no rsh)

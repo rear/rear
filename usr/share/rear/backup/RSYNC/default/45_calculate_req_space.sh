@@ -1,6 +1,6 @@
 # here we will calculate the space required to hold the backup archive on the remote rsync system
 # This file is part of Relax-and-Recover, licensed under the GNU General
-# Public License. Refer to the included LICENSE for full text of license.
+# Public License. Refer to the included COPYING for full text of license.
 _local_size=0
 _remote_size=0
 while read -r ; do

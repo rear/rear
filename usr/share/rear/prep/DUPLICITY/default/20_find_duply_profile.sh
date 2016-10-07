@@ -1,5 +1,5 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
-# Public License. Refer to the included LICENSE for full text of license.
+# Public License. Refer to the included COPYING for full text of license.
 
 # 20_find_duply_profile.sh (use 20 as with 10 we would loose our DUPLY_PROFILE setting)
 
