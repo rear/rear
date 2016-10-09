@@ -12,6 +12,13 @@ for disk in /sys/block/* ; do
     blockd=${disk#/sys/block/}
     if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* ]] ; then
         devname=$(get_device_name $disk)
+
+        # Check if devname contains a PPC PreP boot partition (ID=0x41)
+        if $(file -s $devname | grep ID=0x41 >/dev/null) ; then
+           echo "PPC" >$VAR_DIR/recovery/bootloader
+           return
+        fi
+
         dd if=$devname bs=512 count=4 | strings > $TMP_DIR/bootloader
         grep -q "EFI" $TMP_DIR/bootloader && {
         echo "EFI" >$VAR_DIR/recovery/bootloader
@@ -29,4 +36,3 @@ for disk in /sys/block/* ; do
         cat $TMP_DIR/bootloader >&2
    fi
 done
-
