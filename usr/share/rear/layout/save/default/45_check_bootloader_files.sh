@@ -14,6 +14,8 @@ case $myBOOTloader in
         ;;
     ELILO) CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/elilo.conf )
         ;;
+    PPC) CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/lilo.conf /etc/yaboot.conf)
+        ;; 
       *) BugError "Unknown bootloader ($myBOOTloader) - ask for sponsoring to get this fixed"
         ;;
 esac
