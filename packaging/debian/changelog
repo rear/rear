@@ -1,3 +1,8 @@
+rear (1.19-1) stable; urgency=low
+
+  * minor bug fixes
+
+ -- Gratien Dhaese <gratien.dhaese@gmail.com> Tue, 11 Oct 2016 16:46:00 +0100
 rear (1.18.1-1) stable; urgency=high
 
   * Add missing dependency isolinux
