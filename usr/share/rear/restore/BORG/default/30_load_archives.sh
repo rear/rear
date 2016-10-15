@@ -20,11 +20,9 @@ StopIfError "Could not list Borg archive"
 # Store number of lines in archive_cache file for later use
 archive_cache_lines=$(wc -l $archive_cache | awk '{print $1}')
 
-# This should not happen.
-# In theory if something goes wrong with obtaining Borg archive info,
-# we should be stopped by foregoing "StopIfError()"
-if [ archive_cache_lines -eq 0 ]; then
-    BugIfError "Something went wrong while getting Borg repository content"
+# This means empty repository
+if [ $archive_cache_lines -eq 0 ]; then
+    Error "Borg repository $BORG_REPO on $BORG_HOST is empty"
 fi
 
 # Display list of archives in repository
@@ -57,8 +55,5 @@ while(true); do
     elif [[ $choice -eq $(($archive_cache_lines+1)) ]]; then
         Error "Operation aborted by user"
         break;
-    # Invalid pick
-    else
-        counter=1
     fi
 done

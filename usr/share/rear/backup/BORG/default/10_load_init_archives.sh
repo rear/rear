@@ -3,6 +3,17 @@
 #
 # 10_load_archives.sh
 
+# Check if BORG_ARCHIVE_PREFIX is correctly set
+# Using '_' could result to some unpleasant site effects,
+# as this character is used as delimiter in latter `for' loop ...
+# Excluding other non aplhanum characeters is not really necessary,
+# however it looks safer to me.
+# I'm sure archive handling can be done better, but no time for it now ...
+if [[ $BORG_ARCHIVE_PREFIX =~ [^a-zA-Z0-9] ]] \
+|| [[ -z $BORG_ARCHIVE_PREFIX ]]; then
+    Error "BORG_ARCHIVE_PREFIX must be alphanumeric non emply value only"
+fi
+
 # Do we have Borg binary?
 has_binary borg
 StopIfError "Could not find Borg binary"
@@ -26,7 +37,6 @@ if [ $rc -ne 0 ]; then
     Log "Creating new Borg repository $BORG_REPO on $BORG_HOST"
     borg init -e none $BORG_USERNAME@$BORG_HOST:$BORG_REPO
     rc=$?
-    StopIfError "Could not initialize Borg repository"
 fi
 
 # Borg repository initilization failed in previous step,
@@ -40,7 +50,7 @@ fi
 SUFFIX=0
 
 for i in \
-$(cat $archive_cache | grep "^$BORG_ARCHIVE_PREFIX" | awk '{print $1}'); do
+$(cat $archive_cache | grep "^$BORG_ARCHIVE_PREFIX_" | awk '{print $1}'); do
     suffix_tmp=$(echo $i | cut -d "_" -f 2)
 
     if [ $suffix_tmp -gt $SUFFIX ]; then
