@@ -2,7 +2,7 @@
 
 Relax-and-Recover can be used only to restore the disk layout of your system and boot loader. However, that means you are responsible for taking backups. And, more important, to restore these before you reboot recovered system.
 
-However, we have sucessfully already integrated external backup programs within rear, such as Netbackup, EMC NetWorker, Tivoli Storage Manager, Data Protetctor to name a few commercial backup programs. Furthermore, open source external backup programs which are also working with rear are, Bacula, Bareos and Duplicity to name the most known ones.
+However, we have sucessfully already integrated external backup programs within rear, such as Netbackup, EMC NetWorker, Tivoli Storage Manager, Data Protetctor to name a few commercial backup programs. Furthermore, open source external backup programs which are also working with rear are, Bacula, Bareos, Duplicity and Borg to name the most known ones.
 
 Ah, my backup program which is the best of course, is not yet integrated within rear. How shall we proceed to make your backup program working with rear? This is a step by step approach.
 
@@ -36,7 +36,7 @@ Start with the default configuration file of rear:
     default.conf:COPY_AS_IS_NBU=( /usr/openv/bin/vnetd /usr/openv/bin/vopied /usr/openv/lib /usr/openv/netbackup /usr/openv/var/auth/[mn]*.txt )
     default.conf:COPY_AS_IS_EXCLUDE_NBU=( "/usr/openv/netbackup/logs/*" "/usr/openv/netbackup/bin/bpjava*" "/usr/openv/netbackup/bin/xbp" )
     default.conf:PROGS_NBU=( )
-    
+
 
 What does this learn you?
 
@@ -44,7 +44,7 @@ What does this learn you?
  * define some new variables to automatically copy executables into the rear rescue image, and one to exclude stuff which is not required by the recovery (this means you have to play with it and fine-tune it)
  * finally, define a place holder array for your backup programs (is empty to start with).
 
-Now, you have defined a new BACKUP scheme name, right? As an example take the name BURP (http://burp.grke.org/). 
+Now, you have defined a new BACKUP scheme name, right? As an example take the name BURP (http://burp.grke.org/).
 
 Define in /usr/share/rear/conf/default:
 

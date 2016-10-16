@@ -88,7 +88,7 @@ recovery process until the system runs:
 
 * Back-up backends
   - IBM TSM, HP DataProtector, Symantec NetBackup,
-    FDR/Upstream, Bacula, tar, rsync
+    FDR/Upstream, Bacula, tar, rsync, borg
 
 
 == How is Relax-and-Recover used ?

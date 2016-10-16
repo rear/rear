@@ -117,6 +117,9 @@ Use CommVault Galaxy (7 and probably newer)
 BACKUP=GALAXY10::
 Use CommVault Galaxy 10 (or Simpana 10)
 
+BACKUP=BORG::
+Use BorgBackup (short Borg) a deduplicating backup program to restore the data.
+
 BACKUP=NETFS::
 Use Relax-and-Recover internal backup with tar or rsync (or similar). By adding the following settings in the configuration file -
 +BACKUP_TYPE=incremental+ and +FULLBACKUPDAY="Mon"+, incremental backups (only with +tar+!) will be activated.

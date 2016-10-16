@@ -29,7 +29,7 @@ OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
 sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude
 of backup strategies (incl.  IBM Tivoli Storage Manager, HP DataProtector,
 Symantec NetBackup, EMC NetWorker, FDR/Upstream, NovaBACKUP DC, Bareos,
-Bacula, rsync, rbme). This results in a bootable image that is capable of
+Bacula, rsync, rbme, borg). This results in a bootable image that is capable of
 booting via PXE, DVD/CD, bootable tape or virtual provisioning.
 
 Relax-and-Recover was designed to be easy to set up, requires no maintenance
@@ -295,6 +295,9 @@ Use Open Source backup solution BACULA to restore the data.
 
 BACKUP=*DUPLICITY*::
 Use encrypted bandwidth-efficient backup solution using the rsync algorithm to restore the data.
+
+BACKUP=*BORG*::
+Use BorgBackup (short Borg) a deduplicating backup program to restore the data.
 
 The following +BACKUP+ methods are _internal_ of Relax-and-Recover:
 
