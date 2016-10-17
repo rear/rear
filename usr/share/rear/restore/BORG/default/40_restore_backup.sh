@@ -5,7 +5,7 @@
 
 # Borg restores to cwd
 # Switch current working directory or die
-cd /mnt/local
+cd $TARGET_FS_ROOT
 StopIfError "Could not change directory to /mnt/local"
 
 # Start actual restore

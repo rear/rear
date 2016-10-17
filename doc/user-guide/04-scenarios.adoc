@@ -107,8 +107,8 @@ BORG_PRUNE_MONTHLY=
 BORG_PRUNE_YEARLY=
 ----
 
- - Executing `rear mkbackup` will create bootable ISO image of your system and start borg backup process. It will also prune old backups if BORG_PRUNE* is set.
- - To recover your system, boot ISO and trigger `rear recover`, you will be prompted which archive to recover from borg repository, once ReaR finished with layout configuration.
+ - Executing `rear mkbackup` will create bootable ISO image of your system and start Borg backup process. It will also prune old backups if BORG_PRUNE* is set.
+ - To recover your system, boot ISO and trigger `rear recover`, you will be prompted which archive to recover from Borg repository, once ReaR finished with layout configuration.
 ```
 ...
 Disk layout created.
