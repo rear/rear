@@ -33,7 +33,10 @@ echo "Host:       $BORG_HOST"
 echo "Repository: $BORG_REPO"
 echo ""
 
-# Display archive_cache file content and prompt user for archive to restore
+# Display archive_cache file content and prompt user for archive to restore.
+# Always ask which archive to restore (even if there is only one).
+# This gives possibility to abort restore if repository doesn't contain
+# desired archive, hence saves some time.
 while(true); do
     cat -n $archive_cache | awk '{print "["$1"]", $2,"\t"$3,$4,$5}'
 
