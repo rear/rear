@@ -63,6 +63,7 @@ The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices a
 |RSYNC       | BACKUP  | Use rsync to remote location             | done
 |RBME        | BACKUP  | Use Rsync Backup Made Easy               | done
 |FDRUPSTREAM | BACKUP  | Use FDR/Upstream                         | done
+|BORG        | BACKUP  | Use Borg                                 | done
 |            |         |                                          |
 |ISO         | OUTPUT  | Write result to ISO9660 image            | done
 |OBDR        | OUTPUT  | Create OBDR Tape                         | done
@@ -238,6 +239,7 @@ The various stages and modules communicate via standardized environment variable
 |SHARE_DIR        |STRING (RO)  |Shared data dir                      |'/usr/share/rear/'
 |BUILD_DIR        |STRING (RO)  |Build directory                      |'/tmp/rear.$$/'
 |ROOTFS_DIR       |STRING (RO)  |Root FS directory for rescue system  |'/tmp/rear.$$/initrd/'
+|TARGET_FS_ROOT   |STRING (RO)  |Directory for restore                |'/mnt/local'
 |PROGS            |LIST         |Program files to copy                |+bash ip route grep ls+ ...
 |MODULES          |LIST         |Modules to copy                      |+af_unix e1000 ide-cd+ ...
 |COPY_AS_IS       |LIST         |Files (with path) to copy as-is      |'/etc/localtime' ...

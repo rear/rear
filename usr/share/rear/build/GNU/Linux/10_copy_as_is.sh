@@ -24,8 +24,14 @@ fi
 
 ### Copy configuration directory
 mkdir $v -p $ROOTFS_DIR/etc/rear
-cp $v -r $CONFIG_DIR/* $ROOTFS_DIR/etc/rear/ >&2
-cp $v -r $CONFIG_DIR/.[a-z]* $ROOTFS_DIR/etc/rear/ >&2
+# This will do same job as lines below.
+# On top of that, it does not throw log warning like:
+# "cp: missing destination file operand after"
+# if hidden file (.<filename>) is missing in $CONFIG_DIR
+cp $v -r $CONFIG_DIR/. $ROOTFS_DIR/etc/rear/ >&2
+
+#cp $v -r $CONFIG_DIR/* $ROOTFS_DIR/etc/rear/ >&2
+#cp $v -r $CONFIG_DIR/.[a-z]* $ROOTFS_DIR/etc/rear/ >&2
 
 COPY_AS_IS_EXELIST=()
 while read -r ; do
