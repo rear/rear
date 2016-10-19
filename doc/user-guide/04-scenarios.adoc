@@ -83,7 +83,7 @@ TAPE_DEVICE=/dev/nst0
  - Setup ssh key infrastructure for user that will be running backup.
 Issuing following command must work without any password prompts or remote host identity confirmation:
 
-`ssh <BORG_USERNAME>@<BORG_HOST>`
+`ssh <BORGBACKUP_USERNAME>@<BORGBACKUP_HOST>`
 
  - Edit _local.conf_ / _site.conf_ as follows:
 [source,bash]
@@ -92,19 +92,19 @@ OUTPUT=ISO
 OUTPUT_URL=nfs://<server_to_store_iso>/<directory/to/store/iso>
 
 BACKUP=BORG
-BORG_HOST=<server_to_store_backup>
-BORG_USERNAME=<user_to_run_backup>
-BORG_REPO=</path/to/borg/repository>
+BORGBACKUP_HOST=<server_to_store_backup>
+BORGBACKUP_USERNAME=<user_to_run_backup>
+BORGBACKUP_REPO=</path/to/borg/repository>
 ----
  - Setting automatic retention strategy:
 (https://borgbackup.readthedocs.io/en/stable/usage.html#borg-prune)
 [source,bash]
 ----
-BORG_PRUNE_HOURLY=
-BORG_PRUNE_DAILY=
-BORG_PRUNE_WEEKLY=
-BORG_PRUNE_MONTHLY=
-BORG_PRUNE_YEARLY=
+BORGBACKUP_PRUNE_HOURLY=
+BORGBACKUP_PRUNE_DAILY=
+BORGBACKUP_PRUNE_WEEKLY=
+BORGBACKUP_PRUNE_MONTHLY=
+BORGBACKUP_PRUNE_YEARLY=
 ----
 
  - Executing `rear mkbackup` will create bootable ISO image of your system and start Borg backup process. It will also prune old backups if BORG_PRUNE* is set.

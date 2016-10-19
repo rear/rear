@@ -2,7 +2,7 @@
 
 Relax-and-Recover can be used only to restore the disk layout of your system and boot loader. However, that means you are responsible for taking backups. And, more important, to restore these before you reboot recovered system.
 
-However, we have sucessfully already integrated external backup programs within rear, such as Netbackup, EMC NetWorker, Tivoli Storage Manager, Data Protetctor to name a few commercial backup programs. Furthermore, open source external backup programs which are also working with rear are, Bacula, Bareos, Duplicity and Borg to name the most known ones.
+However, we have successfully already integrated external backup programs within rear, such as Netbackup, EMC NetWorker, Tivoli Storage Manager, Data Protetctor to name a few commercial backup programs. Furthermore, open source external backup programs which are also working with rear are Bacula, Bareos, Duplicity and Borg to name the most known ones.
 
 Ah, my backup program which is the best of course, is not yet integrated within rear. How shall we proceed to make your backup program working with rear? This is a step by step approach.
 
