@@ -8,7 +8,7 @@ myBOOTloader=$( cat $VAR_DIR/recovery/bootloader )
 case $myBOOTloader in
     EFI)  CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /boot/efi/EFI/*/grub*.cfg )
         ;;
-    GRUB) CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]}  /etc/grub.cfg /etc/grub2.cfg /boot/grub2/grub2.cfg /boot/grub/grub.cfg )
+    GRUB|GRUB2) CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/grub.cfg /etc/grub2.cfg /boot/grub2/grub2.cfg /boot/grub/grub.cfg )
         ;;
     LILO) CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/lilo.conf )
         ;;
