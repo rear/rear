@@ -2,7 +2,7 @@
 # /var/lib/rear/recovery/bootloader
 if [[ -f /etc/sysconfig/bootloader ]]; then
     # openSUSE uses LOADER_TYPE, and others??
-    my_bootloader=$( grep LOADER_TYPE /etc/sysconfig/bootloader | cut -d= -f2 | sed -e 's/"//g' )
+    my_bootloader=$( grep ^LOADER_TYPE /etc/sysconfig/bootloader | cut -d= -f2 | sed -e 's/"//g' )
     if [[ ! -z "$my_bootloader" ]]; then
         echo "$my_bootloader" | tr '[a-z]' '[A-Z]' >$VAR_DIR/recovery/bootloader
         return
