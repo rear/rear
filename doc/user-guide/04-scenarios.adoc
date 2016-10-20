@@ -95,6 +95,7 @@ BACKUP=BORG
 BORGBACKUP_HOST=<server_to_store_backup>
 BORGBACKUP_USERNAME=<user_to_run_backup>
 BORGBACKUP_REPO=</path/to/borg/repository>
+BORGBACKUP_ENC_TYPE="none"
 ----
  - Setting automatic retention strategy:
 (https://borgbackup.readthedocs.io/en/stable/usage.html#borg-prune)
@@ -107,8 +108,10 @@ BORGBACKUP_PRUNE_MONTHLY=
 BORGBACKUP_PRUNE_YEARLY=
 ----
 
+ - If not using BORGBACKUP_ENC_TYPE="none", you should initialize BORGBACKUP_REPO manually, as Borg repository encryption requires some user interaction. Be sure to read **ReaR with Borg and repository encryption** section to avoid possible problems during system backup/restore operations.
  - Executing `rear mkbackup` will create bootable ISO image of your system and start Borg backup process. It will also prune old backups if BORG_PRUNE* is set.
  - To recover your system, boot ISO and trigger `rear recover`, you will be prompted which archive to recover from Borg repository, once ReaR finished with layout configuration.
+
 ```
 ...
 Disk layout created.
@@ -128,6 +131,23 @@ Choose archive to recover from:
 
 ```
 
+=== ReaR with Borg and repository encryption
+
+Borg by default uses option "repokey" for repository initialization. This ensures that your repository is encrypted with your chosen pass-phrase.
+Having pass-phrase in place however requires user interaction every time you run `rear mkbackup/recover`,
+hence avoids running ReaR with Borg in non-interactive mode (e.g. using cron).
+
+**To start ReaR with Borg in non-interactive mode, you can choose one of the following:**
+
+ - Use BORGBACKUP_ENC_TYPE="none" (no repository encryption)
+ - Use BORGBACKUP_ENC_TYPE="repokey" (without pass-phrase - same as having BORGBACKUP_ENC_TYPE="none")
+ - Use BORGBACKUP_ENC_TYPE="keyfile" (without pass-phrase - repository will be encrypted with keyfile stored on client side in /$HOME/.config/borg/keys/)
+
+IMPORTANT: If using BORGBACKUP_ENC_TYPE="keyfile", don't forget to make your
+           encryption key available for case of restore!
+           (using `COPY_AS_IS_BORG=( "/root/.config/borg/keys/" )` is a option to consider)
+
+More information on Borg repository initialization/encryption: https://borgbackup.readthedocs.io/en/stable/usage.html#borg-init
 
 == Using Relax-and-Recover with USB storage devices
 Using USB devices with Relax-and-Recover can be appealing for several reasons:
