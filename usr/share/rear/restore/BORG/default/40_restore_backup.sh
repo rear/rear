@@ -3,19 +3,20 @@
 #
 # 20_start_restore.sh
 
-# Borg restores to cwd
-# Switch current working directory or die
+# Borg restores to cwd.
+# Switch current working directory or die.
 cd $TARGET_FS_ROOT
 StopIfError "Could not change directory to /mnt/local"
 
-# Start actual restore
+# Start actual restore.
 # Scope of LC_ALL is only within run of `borg extract'.
 # This avoids Borg problems with restoring UTF-8 encoded files names in archive
 # and should not interfere with remaining stages of rear recover.
-# This is still not the ideal sollution, but best I can think of so far :-/
+# This is still not the ideal solution, but best I can think of so far :-/.
 LogPrint "Recovering from Borg archive $ARCHIVE"
 LC_ALL=rear.UTF-8 \
-borg extract --sparse $BORG_USERNAME@$BORG_HOST:$BORG_REPO::$ARCHIVE
+borg extract --sparse \
+$BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO::$ARCHIVE
 StopIfError "Could not successfully finish Borg restore"
 
 LogPrint "Borg OS restore finished successfully"

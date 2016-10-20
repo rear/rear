@@ -5,35 +5,36 @@
 
 prune_opts=()
 
-# Construct Borg arguments for archive purging
+# Construct Borg arguments for archive pruning.
 # No need to check config values of $BORG_PRUNE* family
-# Borg will boil out with error if values are wrong
-if [ ! -z $BORG_PRUNE_HOURLY ]; then
-    prune_opts+=("--keep-hourly=$BORG_PRUNE_HOURLY ")
+# Borg will bail out with error if values are wrong.
+if [ ! -z $BORGBACKUP_PRUNE_HOURLY ]; then
+    prune_opts+=("--keep-hourly=$BORGBACKUP_PRUNE_HOURLY ")
 fi
 
-if [ ! -z $BORG_PRUNE_DAILY ]; then
-    prune_opts+=("--keep-daily=$BORG_PRUNE_DAILY ")
+if [ ! -z $BORGBACKUP_PRUNE_DAILY ]; then
+    prune_opts+=("--keep-daily=$BORGBACKUP_PRUNE_DAILY ")
 fi
 
-if [ ! -z $BORG_PRUNE_WEEKLY ]; then
-    prune_opts+=("--keep-weekly=$BORG_PRUNE_WEEKLY ")
+if [ ! -z $BORGBACKUP_PRUNE_WEEKLY ]; then
+    prune_opts+=("--keep-weekly=$BORGBACKUP_PRUNE_WEEKLY ")
 fi
 
-if [ ! -z $BORG_PRUNE_MONTHLY ]; then
-    prune_opts+=("--keep-monthly=$BORG_PRUNE_MONTHLY ")
+if [ ! -z $BORGBACKUP_PRUNE_MONTHLY ]; then
+    prune_opts+=("--keep-monthly=$BORGBACKUP_PRUNE_MONTHLY ")
 fi
 
-if [ ! -z $BORG_PRUNE_YEARLY ]; then
-    prune_opts+=("--keep-yearly=$BORG_PRUNE_YEARLY ")
+if [ ! -z $BORGBACKUP_PRUNE_YEARLY ]; then
+    prune_opts+=("--keep-yearly=$BORGBACKUP_PRUNE_YEARLY ")
 fi
 
 if [ ! -z $prune_opts ]; then
-    # Purge old archives according user settings
-    Log "Purging old Borg archives in repository $BORG_REPO"
-    borg prune -v --list ${prune_opts[@]} $BORG_USERNAME@$BORG_HOST:$BORG_REPO
+    # Purge old archives according user settings.
+    Log "Purging old Borg archives in repository $BORGBACKUP_REPO"
+    borg prune -v --list ${prune_opts[@]} \
+    $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO
     StopIfError "Failed to purge old backups"
 else
-    # Purge is not set
-    Log "Purgining of old Borg archives not set, skipping"
+    # Purge is not set.
+    Log "Purging of old Borg archives not set, skipping"
 fi
