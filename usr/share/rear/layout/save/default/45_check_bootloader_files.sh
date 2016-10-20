@@ -6,7 +6,7 @@
 myBOOTloader=$( cat $VAR_DIR/recovery/bootloader )
 
 case $myBOOTloader in
-    EFI)  CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /boot/efi/EFI/*/grub*.cfg )
+    EFI|GRUB2-EFI)  CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /boot/efi/EFI/*/grub*.cfg )
         ;;
     GRUB|GRUB2) CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/grub.cfg /etc/grub2.cfg /boot/grub2/grub2.cfg /boot/grub/grub.cfg )
         ;;
@@ -15,7 +15,7 @@ case $myBOOTloader in
     ELILO) CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/elilo.conf )
         ;;
     PPC) CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/lilo.conf /etc/yaboot.conf)
-        ;; 
-      *) BugError "Unknown bootloader ($myBOOTloader) - ask for sponsoring to get this fixed"
+        ;;
+    *) BugError "Unknown bootloader ($myBOOTloader) - ask for sponsoring to get this fixed"
         ;;
 esac

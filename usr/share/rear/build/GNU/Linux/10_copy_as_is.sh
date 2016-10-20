@@ -30,9 +30,6 @@ mkdir $v -p $ROOTFS_DIR/etc/rear
 # if hidden file (.<filename>) is missing in $CONFIG_DIR
 cp $v -r $CONFIG_DIR/. $ROOTFS_DIR/etc/rear/ >&2
 
-#cp $v -r $CONFIG_DIR/* $ROOTFS_DIR/etc/rear/ >&2
-#cp $v -r $CONFIG_DIR/.[a-z]* $ROOTFS_DIR/etc/rear/ >&2
-
 COPY_AS_IS_EXELIST=()
 while read -r ; do
 	if [[ ! -d "$REPLY" && -x "$REPLY" ]]; then
