@@ -31,12 +31,20 @@ borg list $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO \
 # will be skipped.
 rc=$?
 
-# TODO: Add security options for Borg repository initialization ...
+# Prepare option for Borg encryption.
+# If user did not set anything in BORGBACKUP_ENC_TYPE,
+# Borg default encryption will be used.
+opt_encryption=""
+if [ ! -z $BORGBACKUP_ENC_TYPE ]; then
+    opt_encryption="--encryption $BORGBACKUP_ENC_TYPE"
+fi
+
 # This might be a Borg connection error, or missing repository.
 # If initialization succeeds, we can rule out connection problems.
 if [ $rc -ne 0 ]; then
     Log "Creating new Borg repository $BORGBACKUP_REPO on $BORGBACKUP_HOST"
-    borg init -e none $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO
+    borg init $opt_encryption \
+    $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO
     rc=$?
 fi
 
