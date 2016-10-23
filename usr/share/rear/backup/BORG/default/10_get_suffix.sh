@@ -11,7 +11,7 @@ StopIfError "Could not find Borg binary"
 SUFFIX=0
 
 for i in \
-$(cat $ARCHIVE_CACHE | grep "^$BORGBACKUP_ARCHIVE_PREFIX_" | awk '{print $1}')
+$(cat $ARCHIVE_CACHE | grep "^${BORGBACKUP_ARCHIVE_PREFIX}_" | awk '{print $1}')
 do
     suffix_tmp=$(echo $i | cut -d "_" -f 2)
 
