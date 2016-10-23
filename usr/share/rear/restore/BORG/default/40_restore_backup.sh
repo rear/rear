@@ -1,7 +1,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 #
-# 20_start_restore.sh
+# 40_restore_backup.sk
 
 # Borg restores to cwd.
 # Switch current working directory or die.
@@ -15,7 +15,7 @@ StopIfError "Could not change directory to /mnt/local"
 # This is still not the ideal solution, but best I can think of so far :-/.
 LogPrint "Recovering from Borg archive $ARCHIVE"
 LC_ALL=rear.UTF-8 \
-borg extract --sparse \
+borg extract --sparse $OPT_REMOTE_PATH \
 $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO::$ARCHIVE
 StopIfError "Could not successfully finish Borg restore"
 
