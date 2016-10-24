@@ -9,13 +9,14 @@ LogPrint "Starting Borg restore"
 has_binary borg
 BugIfError "Could not find Borg binary"
 
-# Query Borg server for repository information and store it to ARCHIVE_CACHE.
+# Query Borg server for repository information
+# and store it to BORGBACKUP_ARCHIVE_CACHE.
 # This should avoid repeatingly quering Borg server, which could be slow.
 borg_archive_cache_create
 StopIfError "Could not list Borg archive"
 
-# Store number of lines in ARCHIVE_CACHE file for later use.
-archive_cache_lines=$(wc -l $ARCHIVE_CACHE | awk '{print $1}')
+# Store number of lines in BORGBACKUP_ARCHIVE_CACHE file for later use.
+archive_cache_lines=$(wc -l $BORGBACKUP_ARCHIVE_CACHE | awk '{print $1}')
 
 # This means empty repository.
 if [ $archive_cache_lines -eq 0 ]; then
@@ -30,12 +31,13 @@ echo "Host:       $BORGBACKUP_HOST"
 echo "Repository: $BORGBACKUP_REPO"
 echo ""
 
-# Display ARCHIVE_CACHE file content and prompt user for archive to restore.
+# Display BORGBACKUP_ARCHIVE_CACHE file content
+# and prompt user for archive to restore.
 # Always ask which archive to restore (even if there is only one).
 # This gives possibility to abort restore if repository doesn't contain
 # desired archive, hence saves some time.
 while(true); do
-    cat -n $ARCHIVE_CACHE | awk '{print "["$1"]", $2,"\t"$3,$4,$5}'
+    cat -n $BORGBACKUP_ARCHIVE_CACHE | awk '{print "["$1"]", $2,"\t"$3,$4,$5}'
 
     # Show "Exit" option.
     echo ""
@@ -49,7 +51,8 @@ while(true); do
     # Evaluate user selection and save archive name to restore.
     # Valid pick
     if [[ $choice -ge 1 && $choice -le $archive_cache_lines ]]; then
-        ARCHIVE=$(sed "$choice!d" $ARCHIVE_CACHE | awk '{print $1}')
+        BORGBACKUP_ARCHIVE=$(sed "$choice!d" $BORGBACKUP_ARCHIVE_CACHE \
+        | awk '{print $1}')
         break;
     # Exit
     elif [[ $choice -eq $(($archive_cache_lines+1)) ]]; then

@@ -7,42 +7,42 @@ function borg_set_vars {
     # Construct Borg arguments for archive pruning.
     # No need to check config values of $BORG_PRUNE* family
     # Borg will bail out with error if values are wrong.
-    OPT_PRUNE=()
+    BORGBACKUP_OPT_PRUNE=()
     if [ ! -z $BORGBACKUP_PRUNE_HOURLY ]; then
-        OPT_PRUNE+=("--keep-hourly=$BORGBACKUP_PRUNE_HOURLY ")
+        BORGBACKUP_OPT_PRUNE+=("--keep-hourly=$BORGBACKUP_PRUNE_HOURLY ")
     fi
     if [ ! -z $BORGBACKUP_PRUNE_DAILY ]; then
-        OPT_PRUNE+=("--keep-daily=$BORGBACKUP_PRUNE_DAILY ")
+        BORGBACKUP_OPT_PRUNE+=("--keep-daily=$BORGBACKUP_PRUNE_DAILY ")
     fi
     if [ ! -z $BORGBACKUP_PRUNE_WEEKLY ]; then
-        OPT_PRUNE+=("--keep-weekly=$BORGBACKUP_PRUNE_WEEKLY ")
+        BORGBACKUP_OPT_PRUNE+=("--keep-weekly=$BORGBACKUP_PRUNE_WEEKLY ")
     fi
     if [ ! -z $BORGBACKUP_PRUNE_MONTHLY ]; then
-        OPT_PRUNE+=("--keep-monthly=$BORGBACKUP_PRUNE_MONTHLY ")
+        BORGBACKUP_OPT_PRUNE+=("--keep-monthly=$BORGBACKUP_PRUNE_MONTHLY ")
     fi
     if [ ! -z $BORGBACKUP_PRUNE_YEARLY ]; then
-        OPT_PRUNE+=("--keep-yearly=$BORGBACKUP_PRUNE_YEARLY ")
+        BORGBACKUP_OPT_PRUNE+=("--keep-yearly=$BORGBACKUP_PRUNE_YEARLY ")
     fi
 
     # Prepare option for Borg compression.
     # Empty BORGBACKUP_COMPRESSION will default to "none" compression.
-    OPT_COMPRESSION=""
+    BORGBACKUP_OPT_COMPRESSION=""
     if [ ! -z $BORGBACKUP_COMPRESSION ]; then
-        OPT_COMPRESSION="--compression $BORGBACKUP_COMPRESSION"
+        BORGBACKUP_OPT_COMPRESSION="--compression $BORGBACKUP_COMPRESSION"
     fi
 
     # Prepare option for Borg encryption.
     # Empty BORGBACKUP_ENC_TYPE will default to "repokey".
-    OPT_ENCRYPTION=""
+    BORGBACKUP_OPT_ENCRYPTION=""
     if [ ! -z $BORGBACKUP_ENC_TYPE ]; then
-        OPT_ENCRYPTION="--encryption $BORGBACKUP_ENC_TYPE"
+        BORGBACKUP_OPT_ENCRYPTION="--encryption $BORGBACKUP_ENC_TYPE"
     fi
 
     # Prepare option for Borg remote-path.
     # Empty BORGBACKUP_REMOTE_PATH will default to "borg".
-    OPT_REMOTE_PATH=""
+    BORGBACKUP_OPT_REMOTE_PATH=""
     if [ ! -z $BORGBACKUP_REMOTE_PATH ]; then
-        OPT_REMOTE_PATH="--remote-path $BORGBACKUP_REMOTE_PATH"
+        BORGBACKUP_OPT_REMOTE_PATH="--remote-path $BORGBACKUP_REMOTE_PATH"
     fi
 
     # Prepare for export of pass-phrase, when Borg repository is encrypted
@@ -51,13 +51,14 @@ function borg_set_vars {
     fi
 
     # Set archive cache file
-    ARCHIVE_CACHE=$TMP_DIR/borg_archive
+    BORGBACKUP_ARCHIVE_CACHE=$TMP_DIR/borg_archive
 }
 
-# Query Borg server for repository information and store it to ARCHIVE_CACHE.
+# Query Borg server for repository information
+# and store it to BORGBACKUP_ARCHIVE_CACHE.
 # This should avoid repeatingly quering Borg server, which could be slow.
 function borg_archive_cache_create {
-    borg list $OPT_REMOTE_PATH \
+    borg list $BORGBACKUP_OPT_REMOTE_PATH \
 $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO \
-2> /dev/null > $ARCHIVE_CACHE
+2> /dev/null > $BORGBACKUP_ARCHIVE_CACHE
 }

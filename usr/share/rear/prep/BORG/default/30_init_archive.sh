@@ -7,7 +7,8 @@
 has_binary borg
 StopIfError "Could not find Borg binary"
 
-# Query Borg server for repository information and store it to ARCHIVE_CACHE.
+# Query Borg server for repository information
+# and store it to BORGBACKUP_ARCHIVE_CACHE.
 # This should avoid repeatingly quering Borg server, which could be slow.
 borg_archive_cache_create
 
@@ -23,7 +24,7 @@ rc=$?
 if [ $rc -ne 0 ]; then
     Log "Failed to list $BORGBACKUP_REPO on $BORGBACKUP_HOST"
     Log "Creating new Borg repository $BORGBACKUP_REPO on $BORGBACKUP_HOST"
-    borg init $OPT_ENCRYPTION $OPT_REMOTE_PATH \
+    borg init $BORGBACKUP_OPT_ENCRYPTION $BORGBACKUP_OPT_REMOTE_PATH \
     $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO
     rc=$?
 fi
