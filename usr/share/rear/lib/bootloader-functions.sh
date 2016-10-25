@@ -253,9 +253,9 @@ function make_syslinux_config {
 	echo "#noescape 1"
 	syslinux_menu title $PRODUCT v$VERSION
 
-	echo "say rear - Recover $(uname -n)"
+	echo "say rear - Recover $HOSTNAME"
 	echo "label rear"
-	syslinux_menu "label ^Recover $(uname -n)"
+	syslinux_menu "label ^Recover $HOSTNAME"
 	syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"
@@ -266,9 +266,9 @@ function make_syslinux_config {
         fi
 	echo ""
 
-	echo "say rear - Recover $(uname -n)"
+	echo "say rear - Recover $HOSTNAME"
 	echo "label rear-automatic"
-	syslinux_menu "label ^Automatic Recover $(uname -n)"
+	syslinux_menu "label ^Automatic Recover $HOSTNAME"
 	syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"

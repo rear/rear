@@ -9,7 +9,7 @@
 
 # TODO: mount remote PXE server
 PXE_LOCAL_PATH=$PXE_CONFIG_PATH
-PXE_CONFIG_FILE="${PXE_CONFIG_PREFIX}$(uname -n)"
+PXE_CONFIG_FILE="${PXE_CONFIG_PREFIX}$HOSTNAME"
 cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
 $(test -s $(get_template "PXE_pxelinux.cfg") && cat $(get_template "PXE_pxelinux.cfg"))
 display $OUTPUT_PREFIX_PXE/$PXE_MESSAGE
@@ -59,7 +59,7 @@ popd >&8
 
 #TODO: umount remote PXE server
 
-LogPrint "Created pxelinux config '${PXE_CONFIG_PREFIX}$(uname -n)' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
+LogPrint "Created pxelinux config '${PXE_CONFIG_PREFIX}$HOSTNAME' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
 
 # Add to result files
 RESULT_FILES=( "${RESULT_FILES[@]}" "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" )

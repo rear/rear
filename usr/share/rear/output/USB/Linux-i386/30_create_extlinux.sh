@@ -153,7 +153,7 @@ Log "Creating /rear/syslinux.cfg"
 {
     syslinux_write <<EOF
 label rear
-    say Relax-and-Recover - Recover $(uname -n) from $time
+    say Relax-and-Recover - Recover $HOSTNAME from $time
     menu hide
     kernel $HOSTNAME-$time
 
