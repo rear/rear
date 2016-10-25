@@ -14,7 +14,11 @@ fi
 LogPrint "Copying resulting files to $scheme location"
 
 echo "$VERSION_INFO" >"$TMP_DIR/VERSION" || Error "Could not create $TMP_DIR/VERSION file"
-get_template "RESULT_usage_$OUTPUT.txt" > "$TMP_DIR/README" || Error "Could not copy usage file to $TMP_DIR/README"
+if test -s $(get_template "RESULT_usage_$OUTPUT.txt") ; then
+    cp $v $(get_template "RESULT_usage_$OUTPUT.txt") "$TMP_DIR/README" >&2
+    StopIfError "Could not copy '$(get_template RESULT_usage_$OUTPUT.txt)'"
+fi
+
 # REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log (name set by main script)
 cat "$REAR_LOGFILE" > "$TMP_DIR/rear.log" || Error "Could not copy $REAR_LOGFILE to $TMP_DIR/rear.log"
 
