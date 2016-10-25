@@ -79,38 +79,50 @@ TAPE_DEVICE=/dev/nst0
 
 
 == Bootable ISO with Borg
- - Install Borg backup (https://borgbackup.readthedocs.io/en/stable/installation.html) to _/usr/sbin/borg_.
+ - Install Borg backup (https://borgbackup.readthedocs.io/en/stable/installation.html).
  - Setup ssh key infrastructure for user that will be running backup.
 Issuing following command must work without any password prompts or remote host identity confirmation:
 
 `ssh <BORGBACKUP_USERNAME>@<BORGBACKUP_HOST>`
 
- - Edit _local.conf_ / _site.conf_ as follows:
+ - Example _local.conf_:
 [source,bash]
 ----
 OUTPUT=ISO
-OUTPUT_URL=nfs://<server_to_store_iso>/<directory/to/store/iso>
+OUTPUT_URL=nfs://foo.bar.xy/mnt/backup/iso
 
 BACKUP=BORG
-BORGBACKUP_HOST=<server_to_store_backup>
-BORGBACKUP_USERNAME=<user_to_run_backup>
-BORGBACKUP_REPO=</path/to/borg/repository>
-BORGBACKUP_ENC_TYPE="none"
-----
- - Setting automatic retention strategy:
-(https://borgbackup.readthedocs.io/en/stable/usage.html#borg-prune)
-[source,bash]
-----
-BORGBACKUP_PRUNE_HOURLY=
-BORGBACKUP_PRUNE_DAILY=
-BORGBACKUP_PRUNE_WEEKLY=
-BORGBACKUP_PRUNE_MONTHLY=
-BORGBACKUP_PRUNE_YEARLY=
-----
+BORGBACKUP_HOST="foo.bar.xy"
+BORGBACKUP_USERNAME="borg_user"
+BORGBACKUP_REPO="/mnt/backup/client"
+BORGBACKUP_REMOTE_PATH="/usr/local/bin/borg"
 
- - If not using BORGBACKUP_ENC_TYPE="none", you should initialize BORGBACKUP_REPO manually, as Borg repository encryption requires some user interaction. Be sure to read **ReaR with Borg and repository encryption** section to avoid possible problems during system backup/restore operations.
- - Executing `rear mkbackup` will create bootable ISO image of your system and start Borg backup process. It will also prune old backups if BORG_PRUNE* is set.
- - To recover your system, boot ISO and trigger `rear recover`, you will be prompted which archive to recover from Borg repository, once ReaR finished with layout configuration.
+# Automatic archive pruning
+# (https://borgbackup.readthedocs.io/en/stable/usage.html#borg-prune)
+BORGBACKUP_PRUNE_WEEKLY=2
+
+# Archive compression
+# (https://borgbackup.readthedocs.io/en/stable/usage.html#borg-create)
+BORGBACKUP_COMPRESSION="lzma,9"     # Slowest backup, best compression
+
+# Repository encryption
+# (https://borgbackup.readthedocs.io/en/stable/usage.html#borg-init)
+BORGBACKUP_ENC_TYPE="keyfile"
+BORGBACKUP_PASSPHRASE="S3cr37_P455w0rD"
+COPY_AS_IS_BORG=( "/root/.config/borg/keys/" )
+
+----
+IMPORTANT: If using BORGBACKUP_ENC_TYPE="keyfile", don't forget to make your
+           encryption key available for case of restore!
+           (using `COPY_AS_IS_BORG=( "/root/.config/borg/keys/" )` is a option to consider).
+           Be sure to read https://borgbackup.readthedocs.io/en/stable/usage.html#borg-init,
+           and make your self familiar how encryption in Borg works.
+
+ - Executing `rear mkbackup` will create Relax-and-Recover rescue/recovery system and
+ start Borg backup process. Once backup finishes, it will also prune old archives from repository,
+ if at least one of BORGBACKUP_PRUNE_* variables is set.
+ - To recover your system, boot Relax-and-Recover rescue/recovery system and trigger `rear recover`.
+ You will be prompted which archive to recover from Borg repository, once ReaR finished with layout configuration.
 
 ```
 ...
@@ -118,8 +130,8 @@ Disk layout created.
 Starting Borg restore
 
 === Borg archives list ===
-Host:       beta
-Repository: /mnt/rear/borg/alfa
+Host:       foo.bar.xy
+Repository: /mnt/backup/client
 
 [1] rear_1 	Sun, 2016-10-16 14:08:16
 [2] rear_2 	Sun, 2016-10-16 14:32:11
@@ -130,24 +142,6 @@ Choose archive to recover from:
 
 
 ```
-
-=== ReaR with Borg and repository encryption
-
-Borg by default uses option "repokey" for repository initialization. This ensures that your repository is encrypted with your chosen pass-phrase.
-Having pass-phrase in place however requires user interaction every time you run `rear mkbackup/recover`,
-hence avoids running ReaR with Borg in non-interactive mode (e.g. using cron).
-
-**To start ReaR with Borg in non-interactive mode, you can choose one of the following:**
-
- - Use BORGBACKUP_ENC_TYPE="none" (no repository encryption)
- - Use BORGBACKUP_ENC_TYPE="repokey" (without pass-phrase - same as having BORGBACKUP_ENC_TYPE="none")
- - Use BORGBACKUP_ENC_TYPE="keyfile" (without pass-phrase - repository will be encrypted with keyfile stored on client side in /$HOME/.config/borg/keys/)
-
-IMPORTANT: If using BORGBACKUP_ENC_TYPE="keyfile", don't forget to make your
-           encryption key available for case of restore!
-           (using `COPY_AS_IS_BORG=( "/root/.config/borg/keys/" )` is a option to consider)
-
-More information on Borg repository initialization/encryption: https://borgbackup.readthedocs.io/en/stable/usage.html#borg-init
 
 == Using Relax-and-Recover with USB storage devices
 Using USB devices with Relax-and-Recover can be appealing for several reasons:

@@ -1,7 +1,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 #
-# 20_start_backup.sh
+# 50_make_backup.sh
 
 include_list=()
 
@@ -16,22 +16,14 @@ for i in $(cat $TMP_DIR/backup-include.txt); do
     include_list+=("$i ")
 done
 
-# Prepare option for Borg compression.
-# If user did not set anything in BORGBACKUP_COMPRESSION,
-# Borg default compression will be used.
-opt_compression=""
-if [ ! -z $BORGBACKUP_COMPRESSION ]; then
-    opt_compression="--compression $BORGBACKUP_COMPRESSION"
-fi
-
-Log "Creating archive ${BORGBACKUP_ARCHIVE_PREFIX}_$SUFFIX \
+Log "Creating archive ${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
 in repository $BORGBACKUP_REPO on host $BORGBACKUP_HOST"
 
 # Start actual Borg backup.
-borg create --one-file-system --verbose --stats $opt_compression \
---exclude-from $TMP_DIR/backup-exclude.txt \
+borg create --one-file-system --verbose --stats $BORGBACKUP_OPT_COMPRESSION \
+$BORGBACKUP_OPT_REMOTE_PATH --exclude-from $TMP_DIR/backup-exclude.txt \
 $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO::\
-${BORGBACKUP_ARCHIVE_PREFIX}_$SUFFIX \
+${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
 ${include_list[@]}
 
 StopIfError "Failed to create backup"
