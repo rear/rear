@@ -1,1 +1,1 @@
-../../../prep/default/03_translate_tape.sh
+../../../prep/default/04_translate_tape.sh
