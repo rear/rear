@@ -1,4 +1,4 @@
-# verify/default/04_validate_variables.sh
+# verify/default/040_validate_variables.sh
 
 # test if variable WAIT_SECS is an interger, if not, give it the default value
 if [[ ! -z "$WAIT_SECS" ]]; then

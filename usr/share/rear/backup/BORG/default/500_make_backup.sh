@@ -5,7 +5,7 @@
 
 include_list=()
 
-# Check if backup-include.txt (created by 40_create_include_exclude_files.sh),
+# Check if backup-include.txt (created by 400_create_include_exclude_files.sh),
 # really exists.
 if [ ! -r $TMP_DIR/backup-include.txt ]; then
     Error "Can't find include list"

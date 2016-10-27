@@ -41,7 +41,7 @@ case "$scheme" in
     ;;
 
     (rsync)
-    [[ "$BACKUP" = "RSYNC" ]] && return 0   # output/RSYNC/default/90_copy_result_files.sh took care of it
+    [[ "$BACKUP" = "RSYNC" ]] && return 0   # output/RSYNC/default/900_copy_result_files.sh took care of it
     LogPrint "Copying result files '${RESULT_FILES[@]}' to $scheme location"
     Log "rsync -a $v ${RESULT_FILES[@]} ${host}:${path}"
     rsync -a $v "${RESULT_FILES[@]}" "${host}:${path}" || Error "Problem transferring result files to $OUTPUT_URL"

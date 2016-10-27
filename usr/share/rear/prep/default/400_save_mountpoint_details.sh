@@ -2,7 +2,7 @@
 # Purpose of this script is to save the ownership and permissions of the mount points in a file
 # That file will be read during recovery time to recreate missing directories and set up the proper
 # permissions again (for the moment it is scattered across different flows)
-# Script restore/default/90_create_missing_directories.sh will recreate the missing dirs (all other
+# Script restore/default/900_create_missing_directories.sh will recreate the missing dirs (all other
 # script may be deleted)
 
 : > "$VAR_DIR/recovery/mountpoint_permissions"

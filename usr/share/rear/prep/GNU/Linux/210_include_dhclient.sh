@@ -91,7 +91,7 @@ PROGS=( "${PROGS[@]}" arping ipcalc usleep "${dhclients[@]}" )
 if [ ! -z "$USE_DHCLIENT" ]; then
     REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" $DHCLIENT_BIN $DHCLIENT6_BIN )
     cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
-# The following 3 lines were added through 21_include_dhclient.sh
+# The following 3 lines were added through 210_include_dhclient.sh
 USE_DHCLIENT=$USE_DHCLIENT
 DHCLIENT_BIN=$DHCLIENT_BIN
 DHCLIENT6_BIN=$DHCLIENT6_BIN

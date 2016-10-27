@@ -77,7 +77,7 @@ do
         echo "ip link set dev ${FIRST_PORT} mtu ${PORT_MTU}" >>${netscript}
     fi
 
-    # catch the routing for the teaming interface as we disabled it in 35_routing.sh
+    # catch the routing for the teaming interface as we disabled it in 350_routing.sh
     for table in $( { echo "254     main" ; cat /etc/iproute2/rt_tables ; } |\
             grep -E '^[0-9]+' |\
                 tr -s " \t" " " |\

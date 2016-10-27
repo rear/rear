@@ -1,7 +1,7 @@
 
 # Check file:// tape:// usb:// BACKUP_URL and OUTPUT_URL for incorrect usage
 
-# Use generic wording in error messages because prep/default/02_translate_url.sh
+# Use generic wording in error messages because prep/default/020_translate_url.sh
 # may translate a BACKUP_URL into an OUTPUT_URL so that errors in a BACKUP_URL
 # may appear when testing the translated/derived OUTPUT_URL
 # see https://github.com/rear/rear/issues/925
@@ -11,7 +11,7 @@
 # with COMMAND || Error ...
 
 # See lib/global-functions.sh what the url_* functions actually result and
-# see prep/NETFS/default/05_check_NETFS_requirements.sh for vaild BACKUP_URLs
+# see prep/NETFS/default/050_check_NETFS_requirements.sh for vaild BACKUP_URLs
 
 local url=""
 for url in "$BACKUP_URL" "$OUTPUT_URL" ; do

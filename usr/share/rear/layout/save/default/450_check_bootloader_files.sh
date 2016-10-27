@@ -2,7 +2,7 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 # If any of our bootloader files changes then we should trigger a new savelayout or mkrescue
-# prep/default/50_guess_bootloader.sh script created $VAR_DIR/recovery/bootloader file
+# prep/default/500_guess_bootloader.sh script created $VAR_DIR/recovery/bootloader file
 myBOOTloader=$( cat $VAR_DIR/recovery/bootloader )
 
 case $myBOOTloader in

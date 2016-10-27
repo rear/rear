@@ -15,7 +15,7 @@ star ()
 
 LogPrint "NetBackup: restoring / into $TARGET_FS_ROOT"
 
-# $TMP_DIR/restore_fs_list was made by 30_create_nbu_restore_fs_list.sh
+# $TMP_DIR/restore_fs_list was made by 300_create_nbu_restore_fs_list.sh
 
 echo "change / to $TARGET_FS_ROOT" > $TMP_DIR/nbu_change_file
 

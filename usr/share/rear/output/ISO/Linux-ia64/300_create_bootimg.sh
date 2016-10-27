@@ -17,7 +17,7 @@ cp $v $TMP_DIR/initrd.cgz $TMP_DIR/mnt/boot
 #VMLINUX_KERNEL=`find / -xdev -name "vmlinu*-${KERNEL_VERSION}"`
 #cp "${VMLINUX_KERNEL}" $TMP_DIR/mnt/boot/kernel
 
-# KERNEL_FILE is defined in pack/Linux-ia64/30_copy_kernel.sh script
+# KERNEL_FILE is defined in pack/Linux-ia64/300_copy_kernel.sh script
 cp $v "${KERNEL_FILE}" $TMP_DIR/mnt/boot/kernel >&2
 StopIfError "Could not find ${KERNEL_FILE}"
 

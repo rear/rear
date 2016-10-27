@@ -8,7 +8,7 @@ if version_newer "$dd_version" 5.3.0; then
 fi
 
 # we assume that REAL_USB_DEVICE and RAW_USB_DEVICE are both set from the script
-# in prep/USB/Linux-i386/35_check_usb_disk.sh
+# in prep/USB/Linux-i386/350_check_usb_disk.sh
 
 [ "$RAW_USB_DEVICE" -a "$REAL_USB_DEVICE" ]
 BugIfError "RAW_USB_DEVICE and REAL_USB_DEVICE should be already set"

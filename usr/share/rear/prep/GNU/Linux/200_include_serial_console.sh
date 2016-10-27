@@ -20,7 +20,7 @@ elif has_binary agetty; then
 else
     # being desperate (not sure this is the best choice?)
     BugError "Could not find a suitable (a)getty for serial console. Please fix
-$SHARE_DIR/prep/GNU/Linux/20_include_agetty.sh"
+$SHARE_DIR/prep/GNU/Linux/200_include_serial_console.sh"
 fi
 
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "${GETTY}" stty )
