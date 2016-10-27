@@ -1,1 +1,0 @@
-../../ISO/default/32_check_cdrom_size.sh

@@ -1,0 +1,1 @@
+../../ISO/Linux-ia64/330_find_elilo_efi.sh

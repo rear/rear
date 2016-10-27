@@ -1,1 +1,0 @@
-../../ISO/Linux-i386/30_create_isolinux.sh

@@ -1,1 +1,0 @@
-../../TAPE/default/40_check_tape_drive.sh

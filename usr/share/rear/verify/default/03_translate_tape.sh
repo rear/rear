@@ -1,1 +1,0 @@
-../../prep/default/03_translate_tape.sh
