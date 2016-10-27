@@ -21,6 +21,8 @@ rc=$?
 
 # This might be a Borg connection error, or missing repository.
 # If initialization succeeds, we can rule out connection problems.
+# `borg init` has to be triggered in "prep" stage if user decides to include
+# keyfiles to Relax-and-Recover rescue/recovery system using COPY_AS_IS_BORG.
 if [ $rc -ne 0 ]; then
     Log "Failed to list $BORGBACKUP_REPO on $BORGBACKUP_HOST"
     Log "Creating new Borg repository $BORGBACKUP_REPO on $BORGBACKUP_HOST"
