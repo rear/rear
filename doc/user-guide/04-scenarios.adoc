@@ -108,8 +108,13 @@ BORGBACKUP_COMPRESSION="lzma,9"     # Slowest backup, best compression
 # Repository encryption
 # (https://borgbackup.readthedocs.io/en/stable/usage.html#borg-init)
 BORGBACKUP_ENC_TYPE="keyfile"
-BORGBACKUP_PASSPHRASE="S3cr37_P455w0rD"
+export BORG_PASSPHRASE="S3cr37_P455w0rD"
 COPY_AS_IS_BORG=( "/root/.config/borg/keys/" )
+
+# Borg environment variables
+# (https://borgbackup.readthedocs.io/en/stable/usage.html#environment-variables)
+export BORG_RELOCATED_REPO_ACCESS_IS_OK="yes"
+export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK="yes"
 
 ----
 IMPORTANT: If using BORGBACKUP_ENC_TYPE="keyfile", don't forget to make your
