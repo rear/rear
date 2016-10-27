@@ -50,6 +50,26 @@ function borg_set_vars {
         export BORG_PASSPHRASE=$BORGBACKUP_PASSPHRASE
     fi
 
+    # Custom directory for keeping repository encryption keys
+    if [ ! -z $BORGBACKUP_KEYS_DIR ]; then
+        export BORG_KEYS_DIR=$BORGBACKUP_KEYS_DIR
+    fi
+
+    # Custom Borg cache directory
+    if [ ! -z $BORGBACKUP_CACHE_DIR ]; then
+        export BORG_CACHE_DIR=$BORGBACKUP_CACHE_DIR
+    fi
+
+    # Custom value for confirmation of repository relocation dialog
+    if [ ! -z $BORGBACKUP_RELOCATED_REPO_ACCESS_IS_OK ]; then
+        export BORG_RELOCATED_REPO_ACCESS_IS_OK=$BORGBACKUP_RELOCATED_REPO_ACCESS_IS_OK
+    fi
+
+    # Custom value for confirmation of unencrypted repository access dialog
+    if [ ! -z $BORGBACKUP_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK ]; then
+        export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=$BORGBACKUP_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK
+    fi
+
     # Set archive cache file
     BORGBACKUP_ARCHIVE_CACHE=$TMP_DIR/borg_archive
 }
