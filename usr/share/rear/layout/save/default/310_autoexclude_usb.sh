@@ -1,4 +1,4 @@
-# 31_autoexclude_usb.sh
+# 310_autoexclude_usb.sh
 # Reason: issue #645
 # /dev/sdb1                           240234164 2996672 225027564   2% /mnt
 # is not detected as an USB path which causing rsync to loop until usb output_url is full

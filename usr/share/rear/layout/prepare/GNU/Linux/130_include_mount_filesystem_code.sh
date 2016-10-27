@@ -1,5 +1,5 @@
 # code to mount a file system
-# 13_mount_filesystem_code.sh contains the generic function 'mount_fs'
+# 130_mount_filesystem_code.sh contains the generic function 'mount_fs'
 # each distro may overrule the 'mount_fs' function with its proper way to do it
 # especially the case for btrfs related file systems
 
@@ -34,7 +34,7 @@ mount_fs() {
                 # from the old system cannot work here for recovery because btrfs subvolumes
                 # are not yet created (and when created their subvolid is likely different)
                 # so that those mount options are removed here. All btrfs subvolume handling
-                # happens in the btrfs_subvolumes_setup function in 13_include_mount_subvolumes_code.sh
+                # happens in the btrfs_subvolumes_setup function in 130_include_mount_subvolumes_code.sh
                 # First add a comma at the end so that it is easier to remove a mount option at the end:
                 value=${value/%/,}
                 # Remove all subvolid= and subvol= mount options (the extglob shell option is enabled in rear):
@@ -56,7 +56,7 @@ mount_fs() {
         (btrfs)
             # The following commands are basically the same as in the default/fallback case.
             # The explicite case for btrfs is only there to be prepared for special adaptions for btrfs related file systems.
-            # Because the btrfs filesystem was created anew just before by the create_fs function in 13_include_filesystem_code.sh
+            # Because the btrfs filesystem was created anew just before by the create_fs function in 130_include_filesystem_code.sh
             # the code here mounts the whole btrfs filesystem because by default when creating a btrfs filesystem
             # its top-level/root subvolume is the btrfs default subvolume which gets mounted when no other subvolume is specified.
             # For a plain btrfs filesystem without subvolumes it is effectively the same as for other filesystems (like ext2/3/4).
@@ -69,7 +69,7 @@ mount_fs() {
             # that different subvolume needs to be first created, then set to be the default subvolume, and
             # finally that btrfs filesystem needs to be unmounted and mounted again so that in the end
             # that special different default subvolume is mounted at the mountpoint $TARGET_FS_ROOT$mountpoint.
-            # All btrfs subvolume handling happens in the btrfs_subvolumes_setup function in 13_include_mount_subvolumes_code.sh
+            # All btrfs subvolume handling happens in the btrfs_subvolumes_setup function in 130_include_mount_subvolumes_code.sh
             # For a plain btrfs filesystem without subvolumes the btrfs_subvolumes_setup function does nothing.
             # Call the btrfs_subvolumes_setup function for the btrfs filesystem that was mounted above:
             btrfs_subvolumes_setup $device $mountpoint $mountopts

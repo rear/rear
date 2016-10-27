@@ -1,4 +1,4 @@
-# 40_restore_with_nbu.sh
+# 400_restore_with_nbu.sh
 # restore files with NBU
 #-----<--------->-------
 export starposition=1

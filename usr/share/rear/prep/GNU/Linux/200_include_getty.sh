@@ -1,4 +1,4 @@
-# 20_include_getty.sh
+# 200_include_getty.sh
 # investigate which getty this system has in use and add it to the REQUIRED_PROGS array
 # older Linux distro's use usually mingetty, but newer ones stick to agetty to spawn ttys
 # except debian and ubuntu who are using getty instead

@@ -1,4 +1,4 @@
-# 80_create_isofs.sh
+# 800_create_isofs.sh
 #
 # create initramfs for Relax-and-Recover
 #

@@ -1,4 +1,4 @@
-# 96_dsmc_verify_isofile.sh
+# 960_dsmc_verify_isofile.sh
 if [[ ! "$TSM_RM_ISOFILE" =~ [yY1] ]] ; then
     return
 fi

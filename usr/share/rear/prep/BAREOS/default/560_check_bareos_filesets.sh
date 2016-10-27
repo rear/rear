@@ -1,4 +1,4 @@
-# 56_check_bareos_filesets.sh
+# 560_check_bareos_filesets.sh
 
 [[ ! -z "$BAREOS_FILESET" ]] && return   # variable filled in already (via local.conf?)
 

@@ -1,4 +1,4 @@
-# 40_restore_backup.sh
+# 400_restore_backup.sh
 #
 
 local scheme=$(url_scheme $BACKUP_URL)

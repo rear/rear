@@ -1,4 +1,4 @@
-# 20_create_dotfiles.sh
+# 200_create_dotfiles.sh
 #
 # Create some . dot files for Relax-and-Recover
 #

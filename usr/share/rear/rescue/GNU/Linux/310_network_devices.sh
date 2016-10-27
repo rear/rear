@@ -1,4 +1,4 @@
-# 31_network_devices.sh
+# 310_network_devices.sh
 #
 # record network device configuration for Relax-and-Recover
 #

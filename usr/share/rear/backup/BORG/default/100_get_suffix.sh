@@ -1,7 +1,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 #
-# 10_get_suffix.sh
+# 100_get_suffix.sh
 
 # Do we have Borg binary?
 has_binary borg

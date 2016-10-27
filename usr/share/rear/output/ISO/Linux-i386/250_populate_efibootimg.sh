@@ -1,4 +1,4 @@
-# 25_populate_efibootimg.sh
+# 250_populate_efibootimg.sh
 
 is_true $USING_UEFI_BOOTLOADER || return    # empty or 0 means NO UEFI
 

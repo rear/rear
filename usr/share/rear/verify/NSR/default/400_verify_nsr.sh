@@ -1,4 +1,4 @@
-# 40_verify_nsr.sh
+# 400_verify_nsr.sh
 # read NSR server name from /nsr/res/servers file of /var/lib/rear/recovery/nsr_server
 
 if [[ ! -z "$NSRSERVER" ]]; then

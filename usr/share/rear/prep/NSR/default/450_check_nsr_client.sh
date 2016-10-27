@@ -1,4 +1,4 @@
-# 45_check_nsr_client.sh
+# 450_check_nsr_client.sh
 # this script has a simple goal: check if this client system knows the networker server?
 
 Log "Backup method is NetWorker (NSR): check nsrexecd"

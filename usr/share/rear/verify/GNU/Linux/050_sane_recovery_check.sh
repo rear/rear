@@ -1,4 +1,4 @@
-# 05_sane_recovery_check
+# 050_sane_recovery_check
 #
 # recover workflow for Relax-and-Recover
 #

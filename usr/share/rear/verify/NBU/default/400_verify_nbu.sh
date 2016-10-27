@@ -1,4 +1,4 @@
-# 40_verify_nbu.sh
+# 400_verify_nbu.sh
 
 # check that NBU master server is actually available (ping)
 [ "${NBU_SERVER}" ]

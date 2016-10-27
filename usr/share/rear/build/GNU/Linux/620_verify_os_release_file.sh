@@ -1,4 +1,4 @@
-# 62_verify_os_release_file.sh
+# 620_verify_os_release_file.sh
 # Because of issue 778 (where /etc/os-release is linked to /usr/lib/os-release) the copy of /etc/os-release fails
 # This is the case on Fedora 23
 

@@ -1,4 +1,4 @@
-# 81_create_pxelinux_cfg.sh
+# 810_create_pxelinux_cfg.sh
 #
 # create pxelinux config on PXE server for Relax-and-Recover
 #

@@ -1,4 +1,4 @@
-# 40_restore_with_nsr.sh
+# 400_restore_with_nsr.sh
 
 LogPrint "Starting nsrwatch on console 8"
 TERM=linux nsrwatch -p 1 -s $(cat $VAR_DIR/recovery/nsr_server ) </dev/tty8 >/dev/tty8 &

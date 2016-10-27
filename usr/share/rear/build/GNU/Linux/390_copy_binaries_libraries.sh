@@ -1,4 +1,4 @@
-# 20_copy_binaries_libraries.sh
+# 200_copy_binaries_libraries.sh
 #
 # copy binaries and libraries for Relax-and-Recover
 #

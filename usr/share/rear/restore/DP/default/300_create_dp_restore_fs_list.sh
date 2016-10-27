@@ -1,4 +1,4 @@
-# 30_create_dp_restore_fs_list.sh
+# 300_create_dp_restore_fs_list.sh
 # Purpose: Generate a file system list of objects to restore
 
 # $ /opt/omni/bin/omnidb -filesystem | grep $(hostname)

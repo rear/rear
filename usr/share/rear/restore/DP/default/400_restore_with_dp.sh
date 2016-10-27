@@ -1,4 +1,4 @@
-# 40_restore_with_dp.sh
+# 400_restore_with_dp.sh
 # Purpose: Restore script to restore file systems with Data Protector
 
 # /opt/omni/bin/omnidb -filesystem test.internal.it3.be:/ '/' -latest -detail

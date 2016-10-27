@@ -1,4 +1,4 @@
-# 38_request_client_destination.sh
+# 380_request_client_destination.sh
 
 # Request the user to input the new Client name if the restore is a clone.       
 # OR Request the user to hit ENTER to do a normal restore to the same client.

@@ -1,4 +1,4 @@
-# 15_check_rsync_protocol_version.sh
+# 150_check_rsync_protocol_version.sh
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 # try to grab the rsync protocol version of rsync on the remote server

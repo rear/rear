@@ -1,4 +1,4 @@
-# 94_grub_rescue.sh
+# 940_grub_rescue.sh
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 

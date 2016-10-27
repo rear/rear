@@ -1,7 +1,8 @@
-# this script must run after 32_autoexclude.sh; therefore the nr 34_false_blacklisted.sh
-# be careful, script 34_generate_mountpoint_device.sh generates the mountpoint devices
-# which is used to generate the backup-include.txt file. Therefore, this script must be
-# run before 34_generate_mountpoint_device.sh
+# this script must run after layout/save/default/320_autoexclude.sh
+# therefore the number 340 in layout/save/GNU/Linux/340_false_blacklisted.sh
+# be careful, layout/save/default/340_generate_mountpoint_device.sh generates
+# the mountpoint devices which is used to generate the backup-include.txt file.
+# Therefore, this script must be run before 340_generate_mountpoint_device.sh
 
 # check if we have the multipath executable
 if ! has_binary multipath ; then

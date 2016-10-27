@@ -1,4 +1,4 @@
-# 45_prepare_networker_startup.sh
+# 450_prepare_networker_startup.sh
 # make sure nsrecexd gets started up in the rescue image
 
 cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-networker.sh <<-EOF

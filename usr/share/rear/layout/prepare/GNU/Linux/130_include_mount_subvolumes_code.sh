@@ -1,8 +1,8 @@
 
 # Code for btrfs subvolume handling.
-# 13_include_mount_subvolumes_code.sh contains the function btrfs_subvolumes_setup for all btrfs subvolume handling.
+# 130_include_mount_subvolumes_code.sh contains the function btrfs_subvolumes_setup for all btrfs subvolume handling.
 # Btrfs filesystems with subvolumes need a special handling.
-# All btrfs subvolume handling happens in the btrfs_subvolumes_setup function in 13_include_mount_subvolumes_code.sh
+# All btrfs subvolume handling happens in the btrfs_subvolumes_setup function in 130_include_mount_subvolumes_code.sh
 # For a plain btrfs filesystem without subvolumes the btrfs_subvolumes_setup function does nothing.
 
 btrfs_subvolumes_setup() {
@@ -14,13 +14,13 @@ btrfs_subvolumes_setup() {
     local snapshot_subvolumes_devices_and_paths snapshot_subvolume_device_and_path snapshot_subvolume_device snapshot_subvolume_path
     local default_subvolume_path
     # Assign function arguments to meaningful variable names:
-    # This function is called in 13_include_mount_filesystem_code.sh as follows:
+    # This function is called in 130_include_mount_filesystem_code.sh as follows:
     #   btrfs_subvolumes_setup $device $mountpoint $mountopts
-    # where $device is the device node where the filesystem was already created by 13_include_filesystem_code.sh
+    # where $device is the device node where the filesystem was already created by 130_include_filesystem_code.sh
     # (usually a harddisk partition like e.g. /dev/sda1):
     device=$1
     mountpoint=$2
-    # mountopts are of the form "-o foo,bar,baz" (see 13_include_mount_filesystem_code.sh)
+    # mountopts are of the form "-o foo,bar,baz" (see 130_include_mount_filesystem_code.sh)
     # which means $3 is '-o' and 'foo,bar,baz' is $4:
     mountopts="$3 $4"
     # Empty device or mountpoint may indicate an error. In this case be verbose and inform the user:
@@ -61,7 +61,7 @@ btrfs_subvolumes_setup() {
     ###########################################
     # Btrfs snapshot subvolumes handling:
     # Remember all btrfs snapshot subvolumes to exclude them when mounting all btrfs normal subvolumes below.
-    # The btrfs snapshot subvolumes entries that are created by 23_filesystem_layout.sh
+    # The btrfs snapshot subvolumes entries that are created by 230_filesystem_layout.sh
     # are deactivated (as '#btrfssnapshotsubvol ...') in the LAYOUT_FILE (disklayout.conf).
     # When there are active btrfs snapshot subvolumes entries, the user has manually
     # activated them (as 'btrfssnapshotsubvol ...') in the LAYOUT_FILE (disklayout.conf).
@@ -115,7 +115,7 @@ btrfs_subvolumes_setup() {
             # Any normal btrfs subvolume under snapper's base subvolume is wrong
             # (see https://github.com/rear/rear/issues/944#issuecomment-238239926
             # and https://github.com/rear/rear/issues/963
-            # and layout/save/GNU/Linux/23_filesystem_layout.sh).
+            # and layout/save/GNU/Linux/230_filesystem_layout.sh).
             # Because any btrfs subvolume under '@/.snapshots/' lets "snapper/installation-helper --step 1" fail
             # any btrfs subvolume under '@/.snapshots/' is excluded here from being recreated
             # to not let "rear recover" fail because of such kind of wrong btrfs subvolumes

@@ -1,4 +1,4 @@
-# 50_ssh.sh
+# 500_ssh.sh
 #
 # take ssh for Relax-and-Recover
 #

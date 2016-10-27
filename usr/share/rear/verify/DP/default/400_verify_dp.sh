@@ -1,4 +1,4 @@
-# 40_verify_dp.sh
+# 400_verify_dp.sh
 # read DP vars from config file
 CELL_SERVER="`cat /etc/opt/omni/client/cell_server`"
 

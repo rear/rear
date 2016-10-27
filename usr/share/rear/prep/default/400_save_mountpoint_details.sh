@@ -1,4 +1,4 @@
-# 40_save_mountpoint_details.sh
+# 400_save_mountpoint_details.sh
 # Purpose of this script is to save the ownership and permissions of the mount points in a file
 # That file will be read during recovery time to recreate missing directories and set up the proper
 # permissions again (for the moment it is scattered across different flows)

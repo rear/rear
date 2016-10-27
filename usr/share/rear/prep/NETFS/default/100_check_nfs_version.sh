@@ -1,4 +1,4 @@
-# 10_check_nfs_version.sh
+# 100_check_nfs_version.sh
 
 # save the output of mount
 mount | grep nfs > "$TMP_DIR/nfs.mount.info"

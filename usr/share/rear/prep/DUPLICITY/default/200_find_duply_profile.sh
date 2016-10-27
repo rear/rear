@@ -1,7 +1,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# 20_find_duply_profile.sh (use 20 as with 10 we would loose our DUPLY_PROFILE setting)
+# 200_find_duply_profile.sh (use 20 as with 10 we would loose our DUPLY_PROFILE setting)
 
 # purpose is to see we're using duply wrapper and if there is an existing profile defined
 # if that is the case then we define an internal variable DUPLY_PROFILE="profile"

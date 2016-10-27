@@ -1,4 +1,4 @@
-# 10_create_initramfs.sh
+# 100_create_initramfs.sh
 #
 # create initramfs for Relax-and-Recover
 #

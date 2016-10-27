@@ -1,4 +1,4 @@
-# 10_hostname.sh
+# 100_hostname.sh
 #
 # take hostname for Relax-and-Recover
 #

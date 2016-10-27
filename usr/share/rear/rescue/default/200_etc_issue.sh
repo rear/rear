@@ -1,4 +1,4 @@
-# 20_etc_issue.sh
+# 200_etc_issue.sh
 #
 # write out /etc/issue for Relax-and-Recover
 #

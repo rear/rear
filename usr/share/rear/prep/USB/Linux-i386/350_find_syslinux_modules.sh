@@ -1,4 +1,4 @@
-# 35_find_syslinux_modules.sh
+# 350_find_syslinux_modules.sh
 # syslinux version 5 and higher moved the com32 image files to modules directories and for the moment
 # there are 3 forms of these (efi32, efi64 and bios)
 # Purpose here is to define the proper SYSLINUX_DIR (which was already defined to the path were isolinux.bin lives)

@@ -1,4 +1,4 @@
-# 20_prompt_user_to_start_restore.sh
+# 200_prompt_user_to_start_restore.sh
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 #

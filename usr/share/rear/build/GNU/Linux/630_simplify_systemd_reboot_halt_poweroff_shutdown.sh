@@ -1,13 +1,13 @@
 
-# build/GNU/Linux/63_simplify_systemd_reboot_halt_poweroff_shutdown.sh
+# build/GNU/Linux/630_simplify_systemd_reboot_halt_poweroff_shutdown.sh
 # simplifies how reboot halt poweroff and shutdown work in case of systemd
 # to make them more fail-safe, see https://github.com/rear/rear/issues/953
 
 # Skip if systemd is not used.
 # Because the scripts below need the systemctl executable and because
-# via prep/GNU/Linux/28_include_systemd.sh and build/GNU/Linux/10_copy_as_is.sh
+# via prep/GNU/Linux/280_include_systemd.sh and build/GNU/Linux/100_copy_as_is.sh
 # systemctl gets only copied into the recovery system if systemd is used,
-# we can test here (i.e. after build/GNU/Linux/10_copy_as_is.sh had already run)
+# we can test here (i.e. after build/GNU/Linux/100_copy_as_is.sh had already run)
 # if /bin/systemctl exists in the recovery system:
 test -x $ROOTFS_DIR/bin/systemctl || return 0
 
@@ -33,7 +33,7 @@ cat <<EOF >$filename
 #!/bin/bash
 # script to make $command working more simple and fail-safe
 # see https://github.com/rear/rear/issues/953
-# and 63_simplify_systemd_reboot_halt_poweroff_shutdown.sh
+# and 630_simplify_systemd_reboot_halt_poweroff_shutdown.sh
 export LC_ALL=C LANG=C
 echo umounting all filesystems
 umount -vfar
@@ -59,7 +59,7 @@ cat <<'EOF' >$filename
 #!/bin/bash
 # script to make shutdown working more simple and fail-safe
 # see https://github.com/rear/rear/issues/953
-# and 63_simplify_systemd_reboot_halt_poweroff_shutdown.sh
+# and 630_simplify_systemd_reboot_halt_poweroff_shutdown.sh
 export LC_ALL=C LANG=C
 command=poweroff
 for arg in "$@" ; do

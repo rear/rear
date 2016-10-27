@@ -1,4 +1,4 @@
-# Stop SELinux if present - see prep/RSYNC/default/20_selinux_in_use.sh
+# Stop SELinux if present - see prep/RSYNC/GNU/Linux/200_selinux_in_use.sh
 [ -f $TMP_DIR/selinux.mode ] || return
 case "$(basename ${BACKUP_PROG})" in
 	(tar|rsync)

@@ -1,7 +1,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 #
-# 30_load_archives.sh
+# 300_load_archives.sh
 
 LogPrint "Starting Borg restore"
 

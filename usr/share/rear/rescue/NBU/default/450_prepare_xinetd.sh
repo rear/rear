@@ -1,4 +1,4 @@
-# 45_prepare_xinetd.sh
+# 450_prepare_xinetd.sh
 # prepare environment for xinetd for NBU services (only if NBU version <7.x)
 # NBU only supports RHEL/SLES distributions and both use xinetd daemon
 

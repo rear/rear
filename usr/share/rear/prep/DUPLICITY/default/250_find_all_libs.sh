@@ -1,7 +1,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# 25_find_all_libs.sh 
+# 250_find_all_libs.sh 
 # This is to FInd Out Missing Librarys with Strace, if Strace isnt installed this is skipped
 
 # Check if Strace Readlink File Is available and Backup_PROG=Duply 

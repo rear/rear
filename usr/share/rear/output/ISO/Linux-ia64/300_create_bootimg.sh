@@ -1,4 +1,4 @@
-# 30_create_bootimg.sh
+# 300_create_bootimg.sh
 #
 # create elilo.conf for Relax-and-Recover
 #

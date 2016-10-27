@@ -22,4 +22,4 @@ else
     # lockfile was already made through the output workflow (hands off)
     Log "Lockfile '${opath}/.lockfile' found (created by output workflow)."
 fi
-# the ${BUILD_DIR}/outputfs/${NETFS_PREFIX} will be created by output/NETFS/default/20_make_prefix_dir.sh
+# the ${BUILD_DIR}/outputfs/${NETFS_PREFIX} will be created by backup/NETFS/default/200_make_prefix_dir.sh

@@ -1,4 +1,4 @@
-# 80_copy_to_tftp.sh
+# 800_copy_to_tftp.sh
 #
 # copy kernel and initrd to TFTP server for Relax-and-Recover
 #

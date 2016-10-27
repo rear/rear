@@ -1,4 +1,4 @@
-# 30_create_nbu_restore_fs_list.sh
+# 300_create_nbu_restore_fs_list.sh
 ##################################
 
 # Part 1: create the restore file system list file

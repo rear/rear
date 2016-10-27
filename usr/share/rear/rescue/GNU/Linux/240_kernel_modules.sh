@@ -1,4 +1,4 @@
-# 40_kernel_modules.sh
+# 400_kernel_modules.sh
 #
 # find kernel and modules for Relax-and-Recover
 #

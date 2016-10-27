@@ -1,4 +1,4 @@
-# 05_create_mappings_dir.sh
+# 050_create_mappings_dir.sh
 # We need the /etc/rear/mappings directory before the finalize script 30_create_mac_mappings.sh
 # script is invoked. If the directory was not created then the /etc/rear/mappings/mac file
 # cannot created as described in issue #861

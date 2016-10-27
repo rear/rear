@@ -1,4 +1,4 @@
-# 46_save_nsr_server_name.sh
+# 460_save_nsr_server_name.sh
 if [[ ! -z "$NSRSERVER" ]]; then
     : # do nothing
 elif [[ -f $NSR_ROOT_DIR/res/servers ]]; then

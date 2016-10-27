@@ -1,4 +1,4 @@
-# 36_teaming.sh
+# 360_teaming.sh
 #
 # record teaming information (network and routing) for Relax-and-Recover
 #

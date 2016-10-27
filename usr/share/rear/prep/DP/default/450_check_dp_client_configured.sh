@@ -1,4 +1,4 @@
-# 45_check_dp_client_configured.sh
+# 450_check_dp_client_configured.sh
 # this script has a simple goal: check if this client system has been properly
 # defined on the DP cell server and that a backup specification has been
 # made for this client - no more no less

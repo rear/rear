@@ -1,7 +1,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 #
-# 30_init_archive.sh
+# 300_init_archive.sh
 
 # Do we have Borg binary?
 has_binary borg

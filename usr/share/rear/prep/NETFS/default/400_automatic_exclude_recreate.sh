@@ -1,4 +1,4 @@
-# 40_automatic_exclude_recreate.sh
+# 400_automatic_exclude_recreate.sh
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 

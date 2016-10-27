@@ -1,4 +1,4 @@
-# 96_collect_MC_serviceguard_infos.sh
+# 960_collect_MC_serviceguard_infos.sh
 # Purpose of this script is to gather MC/SG related config files
 # in order to prepare a smooth rolling upgrade
 

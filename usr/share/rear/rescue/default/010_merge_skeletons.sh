@@ -1,4 +1,4 @@
-# 00_merge_skeletons.sh
+# 010_merge_skeletons.sh
 #
 # merge skeleton directories for Relax-and-Recover
 #

@@ -1,4 +1,4 @@
-# 40_copy_modules.sh
+# 400_copy_modules.sh
 #
 # copy kernel modules for Relax-and-Recover
 #

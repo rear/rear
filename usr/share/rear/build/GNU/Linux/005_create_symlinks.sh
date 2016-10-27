@@ -1,4 +1,4 @@
-# 00_create_symlinks.sh
+# 005_create_symlinks.sh
 #
 # create some symlinks for Relax-and-Recover
 #

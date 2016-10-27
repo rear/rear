@@ -1,4 +1,4 @@
-# 10_touch_empty_files.sh
+# 100_touch_empty_files.sh
 #
 # Create some empty system necessary files for Relax-and-Recover
 #

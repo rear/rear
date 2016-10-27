@@ -76,16 +76,16 @@ Again, think burp, and you probably also need these directories to be created:
 Another easy trick is to look at the existing scripts of NBU (as a starter):
 
     $ sudo rear -s mkrescue | grep NBU
-    Source prep/NBU/default/40_prep_nbu.sh
-    Source prep/NBU/default/45_check_nbu_client_configured.sh
-    Source rescue/NBU/default/45_prepare_netbackup.sh
-    Source rescue/NBU/default/45_prepare_xinetd.sh
+    Source prep/NBU/default/400_prep_nbu.sh
+    Source prep/NBU/default/450_check_nbu_client_configured.sh
+    Source rescue/NBU/default/450_prepare_netbackup.sh
+    Source rescue/NBU/default/450_prepare_xinetd.sh
 
     $ sudo rear -s recover | grep NBU
-    Source verify/NBU/default/38_request_client_destination.sh
-    Source verify/NBU/default/39_request_point_in_time_restore_parameters.sh
-    Source verify/NBU/default/40_verify_nbu.sh
-    Source restore/NBU/default/30_create_nbu_restore_fs_list.sh
-    Source restore/NBU/default/40_restore_with_nbu.sh
-    Source finalize/NBU/default/99_copy_bplogrestorelog.sh
+    Source verify/NBU/default/380_request_client_destination.sh
+    Source verify/NBU/default/390_request_point_in_time_restore_parameters.sh
+    Source verify/NBU/default/400_verify_nbu.sh
+    Source restore/NBU/default/300_create_nbu_restore_fs_list.sh
+    Source restore/NBU/default/400_restore_with_nbu.sh
+    Source finalize/NBU/default/990_copy_bplogrestorelog.sh
 

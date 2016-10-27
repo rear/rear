@@ -1,4 +1,4 @@
-# 30_create_grub2.sh
+# 300_create_grub2.sh
 #
 # create grub.cfg for Relax-and-Recover
 #

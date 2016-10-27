@@ -1,4 +1,4 @@
-# 30_copy_kernel.sh
+# 300_copy_kernel.sh
 #
 # copy kernel for Relax-and-Recover
 #

@@ -82,5 +82,5 @@ else
 fi >>$ROOTFS_DIR/etc/udev/rules.d/00-rear.rules
 
 # udev requires certain standard groups, add them to the rescue system
-# the groups and users are in rescue/default/15_users_and_groups.sh
+# the groups and users are in rescue/default/900_clone_users_and_groups.sh
 

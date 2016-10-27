@@ -3,7 +3,7 @@
 # We call sed once for each substituation
 # it would be better to build one sed script and use this later
 # (like verify/GNU/Linux/21_migrate_recovery_configuration.sh
-#   and finalize/GNU/Linux/15_migrate_disk_devices.sh)
+#   and finalize/GNU/Linux/150_migrate_disk_devices_layout.sh)
 #
 # OLD_ID_FILE contains entries like these (last 2 lines are multipath targets)
 # cciss-3600508b100104c3953573830524b0004 cciss/c0d0
@@ -30,7 +30,7 @@ UdevSymlinkName=""
 type -p udevinfo >/dev/null && UdevSymlinkName="udevinfo -r / -q symlink -n"
 type -p udevadm >/dev/null &&  UdevSymlinkName="udevadm info --root --query=symlink --name"
 [[ -z "$UdevSymlinkName" ]] && {
-	LogPrint "Could not find udevinfo nor udevadm (skip 16_remove_diskbyid.sh)"
+	LogPrint "Could not find udevinfo nor udevadm (skip 160_rename_diskbyid.sh)"
 	return
 	}
 

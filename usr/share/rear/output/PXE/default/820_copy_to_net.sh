@@ -1,5 +1,5 @@
 
-# 82_copy_to_net.sh
+# 820_copy_to_net.sh
 
 # Check if we have a target location OUTPUT_URL
 test "$OUTPUT_URL" || return

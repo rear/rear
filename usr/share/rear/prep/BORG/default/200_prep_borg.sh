@@ -1,7 +1,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 #
-# 20_prep_borg.sh
+# 200_prep_borg.sh
 
 # Check if BORGBACKUP_ARCHIVE_PREFIX is correctly set.
 # Using '_' could result to some unpleasant side effects,

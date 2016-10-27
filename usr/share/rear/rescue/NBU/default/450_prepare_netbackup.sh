@@ -1,4 +1,4 @@
-# 45_prepare_netbackup.sh
+# 450_prepare_netbackup.sh
 # prepare environment for NBU (only if NBU version >=7.x)
 
 [ -f /usr/openv/netbackup/bin/version ] && \

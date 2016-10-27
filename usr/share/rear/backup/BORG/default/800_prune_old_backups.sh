@@ -1,7 +1,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 #
-# 80_prune_old_backups.sh
+# 800_prune_old_backups.sh
 
 if [ ! -z $BORGBACKUP_OPT_PRUNE ]; then
     # Purge old archives according user settings.

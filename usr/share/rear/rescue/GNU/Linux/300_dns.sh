@@ -1,4 +1,4 @@
-# 30_dns.sh
+# 300_dns.sh
 #
 # copy resolver info for Relax-and-Recover
 #

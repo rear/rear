@@ -1,4 +1,4 @@
-# 35_routing.sh
+# 350_routing.sh
 #
 # record routing configuration for Relax-and-Recover
 #

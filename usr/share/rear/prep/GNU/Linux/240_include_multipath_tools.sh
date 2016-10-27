@@ -1,4 +1,4 @@
-# 24_include_multipath_tools.sh
+# 240_include_multipath_tools.sh
 # Boot Over SAN executables and other goodies
 
 [[ $BOOT_OVER_SAN != ^[yY1] ]] && return

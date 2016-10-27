@@ -1,11 +1,11 @@
 # Save Filesystem layout
 Log "Begin saving filesystem layout"
-# If available wipefs is used in the recovery system by 13_include_filesystem_code.sh
+# If available wipefs is used in the recovery system by 130_include_filesystem_code.sh
 # as a generic way to cleanup disk partitions before creating a filesystem on a disk partition,
 # see https://github.com/rear/rear/issues/540
 # and https://github.com/rear/rear/issues/649#issuecomment-148725865
 # Therefore if wipefs exists here in the original system it is added to REQUIRED_PROGS
-# so that it will become also available in the recovery system (cf. 26_crypt_layout.sh):
+# so that it will become also available in the recovery system (cf. 260_crypt_layout.sh):
 has_binary wipefs && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" wipefs ) || true
 # Comma separated list of filesystems that is used for "mount/findmnt -t <list,of,filesystems>" below:
 supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"
@@ -240,7 +240,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 # SLES 12 SP1 and SP2 normal subvolumes that belong to snapper are excluded from being recreated:
                 # Snapper's base subvolume '/@/.snapshots' is excluded because during "rear recover"
                 # that one will be created by "snapper/installation-helper --step 1" which fails if it already exists
-                # (see the code in layout/prepare/GNU/Linux/13_include_mount_subvolumes_code.sh).
+                # (see the code in layout/prepare/GNU/Linux/130_include_mount_subvolumes_code.sh).
                 # Furthermore any normal btrfs subvolume under snapper's base subvolume '/@/.snapshots' is wrong
                 # (see https://github.com/rear/rear/issues/944#issuecomment-238239926
                 # and https://github.com/rear/rear/issues/963).

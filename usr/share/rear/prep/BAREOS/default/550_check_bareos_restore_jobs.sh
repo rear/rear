@@ -1,4 +1,4 @@
-# 55_check_bareos_restore_jobs.sh
+# 550_check_bareos_restore_jobs.sh
 
 [[ ! -z "$BAREOS_RESTORE_JOB" ]] && return   # variable filled in already (via local.conf?)
 

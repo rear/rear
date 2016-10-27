@@ -1,4 +1,4 @@
-# 30_create_isolinux.sh
+# 300_create_isolinux.sh
 #
 # create yaboot.cfg for Relax-and-Recover
 #

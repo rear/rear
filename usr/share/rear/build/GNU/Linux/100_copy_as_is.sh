@@ -1,4 +1,4 @@
-# 40_copy_as_is.sh
+# 400_copy_as_is.sh
 #
 # copy files and directories that should be copied over as-is to the rescue
 # systems. Checks also for library dependancies of executables and adds
