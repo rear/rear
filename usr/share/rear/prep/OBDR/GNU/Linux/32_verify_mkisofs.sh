@@ -1,1 +1,0 @@
-../../../ISO/GNU/Linux/32_verify_mkisofs.sh

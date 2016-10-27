@@ -506,7 +506,7 @@ get_device_name() {
 # check $VAR_LIB/recovery/diskbyid_mappings file to see whether we find
 # a disk/by-id mapping to dm style (the by-id dev is not translated
 # properly by get_device_name function - dm dev are better)
-# 22_lvm_layout.sh uses get_device_mapping to translate lvmdev better
+# 220_lvm_layout.sh uses get_device_mapping to translate lvmdev better
 ### ciss-3600508b1001fffffa004f7b3f209000b-part2 -> cciss/c0d0p2
 # see issue #305
 get_device_mapping() {

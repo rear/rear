@@ -334,7 +334,7 @@ if test "$VERBOSE" ; then
 fi
 
 # Enable debug output of the progress pipe
-# (no readonly KEEP_BUILD_DIR because it is also set to 1 in build/default/98_verify_rootfs.sh):
+# (no readonly KEEP_BUILD_DIR because it is also set to 1 in build/default/980_verify_rootfs.sh):
 test "$DEBUG" && KEEP_BUILD_DIR=1 || true
 
 # Check if we are in recovery mode:

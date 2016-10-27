@@ -1,1 +1,0 @@
-../../../prep/OBDR/default/04_change_tape_name.sh
