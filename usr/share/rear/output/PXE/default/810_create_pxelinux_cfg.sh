@@ -1,4 +1,4 @@
-# 810_create_pxelinux_cfg.sh
+# 81_create_pxelinux_cfg.sh
 #
 # create pxelinux config on PXE server for Relax-and-Recover
 #
@@ -7,18 +7,39 @@
 
 # we got PXE_KERNEL and PXE_INITRD set in the previous script
 
-# TODO: mount remote PXE server
-PXE_LOCAL_PATH=$PXE_CONFIG_PATH
+if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
+    # E.g. PXE_CONFIG_URL=nfs://server/export/nfs/tftpboot/pxelinux.cfg
+    # Better be sure that on 'server' the directory /export/nfs/tftpboot/pxelinux.cfg exists
+    local scheme=$( url_scheme $PXE_CONFIG_URL )
+    local path=$( url_path $PXE_CONFIG_URL )
+    mkdir -p $v "$BUILD_DIR/tftpbootfs" >&2
+    StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs'"
+    AddExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
+    mount_url $PXE_CONFIG_URL $BUILD_DIR/tftpbootfs
+    PXE_LOCAL_PATH=$BUILD_DIR/tftpbootfs
+else
+    # legacy way using PXE_LOCAL_PATH default
+    PXE_LOCAL_PATH=$PXE_CONFIG_PATH
+fi
+
+# PXE_CONFIG_PREFIX is a "string" (by default rear-) - is the name of PXE boot configuration of $HOSTNAME
 PXE_CONFIG_FILE="${PXE_CONFIG_PREFIX}$HOSTNAME"
-cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
-$(test -s $(get_template "PXE_pxelinux.cfg") && cat $(get_template "PXE_pxelinux.cfg"))
-display $OUTPUT_PREFIX_PXE/$PXE_MESSAGE
-say ----------------------------------------------------------
-say rear = disaster recover this system with Relax-and-Recover
-label rear
+if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
+    make_pxelinux_config >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE"
+    chmod 444 "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE"
+else
+    # legacy way using PXE_LOCAL_PATH default
+    cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
+    $(test -s $(get_template "PXE_pxelinux.cfg") && cat $(get_template "PXE_pxelinux.cfg"))
+    display $OUTPUT_PREFIX_PXE/$PXE_MESSAGE
+    say ----------------------------------------------------------
+    say rear = disaster recover this system with Relax-and-Recover
+    label rear
 	kernel $OUTPUT_PREFIX_PXE/$PXE_KERNEL
-	append initrd=$OUTPUT_PREFIX_PXE/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
+	append initrd=$OUTPUT_PREFIX_PXE/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE
 EOF
+fi
+
 
 pushd "$PXE_LOCAL_PATH" >&8
 StopIfError "PXE_CONFIG_PATH [$PXE_CONFIG_PATH] does not exist !"
@@ -39,6 +60,8 @@ case "$PXE_CREATE_LINKS" in
 			while read inet IP junk ; do
 				IP=${IP%/*}
 				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP) >&2
+				# to capture the whole subnet as well
+				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP | cut -c 1-6) >&2
 			done
 		;;
 	MAC)
@@ -57,9 +80,17 @@ case "$PXE_CREATE_LINKS" in
 esac
 popd >&8
 
-#TODO: umount remote PXE server
+if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
+    LogPrint "Created pxelinux config '${PXE_CONFIG_PREFIX}$HOSTNAME' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_URL"
+    umount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs
+    rmdir $BUILD_DIR/tftpbootfs >&2
+    if [[ $? -eq 0 ]] ; then
+        RemoveExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
+    fi
+    RESULT_FILES=( "${RESULT_FILES[@]}" )
+else
+    LogPrint "Created pxelinux config '${PXE_CONFIG_PREFIX}$HOSTNAME' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
+    # Add to result files
+    RESULT_FILES=( "${RESULT_FILES[@]}" "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" )
+fi
 
-LogPrint "Created pxelinux config '${PXE_CONFIG_PREFIX}$HOSTNAME' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
-
-# Add to result files
-RESULT_FILES=( "${RESULT_FILES[@]}" "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" )
