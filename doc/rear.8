@@ -2,12 +2,12 @@
 .\"     Title: rear
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05 August 2016
+.\"      Date: 23 August 2016
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "REAR" "8" "05 August 2016" "\ \&" "\ \&"
+.TH "REAR" "8" "23 August 2016" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,7 +38,7 @@ Relax\-and\-Recover is the leading Open Source disaster recovery solution\&. It 
 .sp
 Relax\-and\-Recover produces a bootable image\&. This image can repartition the system\&. Once that is done it initiates a restore from backup\&. Restores to different hardware are possible\&. Relax\-and\-Recover can therefore be used as a migration tool as well\&.
 .sp
-Currently Relax\-and\-Recover supports various boot media (incl\&. ISO, PXE, OBDR tape, USB or eSATA storage), a variety of network protocols (incl\&. sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude of backup strategies (incl\&. IBM Tivoli Storage Manager, HP DataProtector, Symantec NetBackup, EMC NetWorker, FDR/Upstream, NovaBACKUP DC, Bareos, Bacula, rsync, rbme)\&. This results in a bootable image that is capable of booting via PXE, DVD/CD, bootable tape or virtual provisioning\&.
+Currently Relax\-and\-Recover supports various boot media (incl\&. ISO, PXE, OBDR tape, USB or eSATA storage), a variety of network protocols (incl\&. sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude of backup strategies (incl\&. IBM Tivoli Storage Manager, HP DataProtector, Symantec NetBackup, EMC NetWorker, FDR/Upstream, NovaBACKUP DC, Bareos, Bacula, rsync, rbme, Borg)\&. This results in a bootable image that is capable of booting via PXE, DVD/CD, bootable tape or virtual provisioning\&.
 .sp
 Relax\-and\-Recover was designed to be easy to set up, requires no maintenance and is there to assist when disaster strikes\&. Its setup\-and\-forget nature removes any excuses for not having a disaster recovery solution implemented\&.
 .sp
@@ -233,6 +233,16 @@ Write the image to disk\&. The default is in
 \fI/var/lib/rear/output/\fR\&.
 .RE
 .PP
+OUTPUT_URL=\fBnfs://\fR
+.RS 4
+Write the image by mounting the target filesystem via NFS\&.
+.RE
+.PP
+OUTPUT_URL=\fBcifs://\fR
+.RS 4
+Write the image by mounting the target filesystem via CIFS\&.
+.RE
+.PP
 OUTPUT_URL=\fBfish://\fR
 .RS 4
 Write the image using
@@ -303,6 +313,8 @@ to an external destination\&. Useful in combination with an
 backup program, or when
 BACKUP_URL=iso://backup
 .RE
+.sp
+If you do not specify OUTPUT_URL variable then by default it will be aligned to what was defined by variable BACKUP_URL\&. And, the ISO image will then be copied to the same location as your backup of the system disk(s)\&.
 .sp
 The ISO_DEFAULT variable defines what default boot option is used on the rescue image\&. Possible values are manual, boothd or unattended\&. Manual will make you boot into the shell directly by default, boothd will boot to the first disk (default) or unattended will automatically start in recovery mode\&.
 .SH "BACKUP SOFTWARE INTEGRATION"
@@ -394,6 +406,11 @@ Use Open Source backup solution BACULA to restore the data\&.
 BACKUP=\fBDUPLICITY\fR
 .RS 4
 Use encrypted bandwidth\-efficient backup solution using the rsync algorithm to restore the data\&.
+.RE
+.PP
+BACKUP=\fBBORG\fR
+.RS 4
+Use BorgBackup (short Borg) a deduplicating backup program to restore the data\&.
 .RE
 .sp
 The following BACKUP methods are \fIinternal\fR of Relax\-and\-Recover:
@@ -518,12 +535,12 @@ OUTPUT_URL=nfs://server/path/
 .\}
 .RE
 .sp
-When using BACKUP=NETFS there is an option to select a BACKUP_TYPE=incremental to have rear make incremental backups until the next full backup e.g. via FULLBACKUPDAY="Mon" is reached\&. The current implementation supports only to restore one full backup plus one single incremental backup so that currently BACKUP_TYPE=incremental actually implements a differential backup\&.
+When using BACKUP=NETFS there is an option to select a BACKUP_TYPE=incremental to have rear make incremental backups until the next full backup e\&.g\&. via FULLBACKUPDAY="Mon" is reached\&. The current implementation supports only to restore one full backup plus one single incremental backup so that currently BACKUP_TYPE=incremental actually implements a differential backup\&.
 .SH "CONFIGURATION"
 .sp
 To configure Relax\-and\-Recover you have to edit the configuration files in \fI/etc/rear/\fR\&. All \fI*\&.conf\fR files there are part of the configuration, but only \fIsite\&.conf\fR and \fIlocal\&.conf\fR are intended for the user configuration\&. All other configuration files hold defaults for various distributions and should not be changed\&.
 .sp
-In \fI/etc/rear/templates/\fR there are also some template files which are used by Relax\-and\-Recover to create configuration files (mostly for the boot environment)\&. Modify the templates to adjust the information contained in the emails produced by Relax\-and\-Recover\&. You can use these templates to prepend your own configurations to the configuration files created by Relax\-and\-recover, for example you can edit \fIPXE_pxelinux\&.cfg\fR to add some general pxelinux configuration you use\&.
+In \fI/etc/rear/templates/\fR there are also some template files which are used by Relax\-and\-Recover to create configuration files (mostly for the boot environment)\&. Modify the templates to adjust the information contained in the emails produced by Relax\-and\-Recover\&. You can use these templates to prepend your own configurations to the configuration files created by Relax\-and\-Recover, for example you can edit \fIPXE_pxelinux\&.cfg\fR to add some general pxelinux configuration you use\&.
 .sp
 In almost all circumstances you have to configure two main settings and their parameters: The backup method and the output method\&.
 .sp

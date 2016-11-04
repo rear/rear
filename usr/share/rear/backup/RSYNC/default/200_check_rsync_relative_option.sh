@@ -6,5 +6,5 @@
 
 if ! grep -q relative <<< $(echo ${BACKUP_RSYNC_OPTIONS[@]}); then
     BACKUP_RSYNC_OPTIONS=( ${BACKUP_RSYNC_OPTIONS[@]} --relative )
-    Log "Added option \"--relative\" to the BACKUP_RSYNC_OPTIONS array during $WORKFLOW workflow"
+    Log "Added option '--relative' to the BACKUP_RSYNC_OPTIONS array during $WORKFLOW workflow"
 fi
