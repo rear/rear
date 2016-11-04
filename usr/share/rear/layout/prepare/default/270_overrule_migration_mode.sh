@@ -4,6 +4,7 @@
 # The 'unattended' parameter must be present on the boot command line - for the moment
 # this feature will only be used by automated PXE booting
 
-if grep -q 'unattented' /proc/cmdline ; then
+if grep -q 'unattended' /proc/cmdline ; then
+    LogPrint "Switching off migration mode due to 'unattended' kernel option"
     MIGRATION_MODE=
 fi
