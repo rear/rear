@@ -562,7 +562,7 @@ function make_pxelinux_config {
         echo "say boothd0 - boot first local disk"
         echo "label boothd0"
         echo "MENU label Boot First ^Local disk (hd0)"
-        echo "chain.c32"
+        echo "kernel chain.c32"
         echo "append hd0"
         echo "say ----------------------------------------------------------"
         echo "say boothd1 - boot second local disk"
