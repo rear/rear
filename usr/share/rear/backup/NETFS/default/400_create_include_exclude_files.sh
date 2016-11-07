@@ -3,12 +3,17 @@
 for k in "${BACKUP_PROG_INCLUDE[@]}" ; do
 	test "$k" && echo "$k"
 done > $TMP_DIR/backup-include.txt
-# add the mountpoints that will be recovered to the backup include list
-while read mountpoint device junk ; do
-	if ! IsInArray "$mountpoint" "${EXCLUDE_MOUNTPOINTS[@]}" ; then
-		echo "$mountpoint"
-	fi
-done <"$VAR_DIR/recovery/mountpoint_device" >> $TMP_DIR/backup-include.txt
+
+# if we are in MANUAL_INCLUDE mode, there is no need to
+# include anything more. So skip this part if MANUAL_INCLUDE == "YES"
+if [ "${MANUAL_INCLUDE:-NO}" != "YES" ] ; then
+	# add the mountpoints that will be recovered to the backup include list
+	while read mountpoint device junk ; do
+		if ! IsInArray "$mountpoint" "${EXCLUDE_MOUNTPOINTS[@]}" ; then
+			echo "$mountpoint"
+		fi
+	done <"$VAR_DIR/recovery/mountpoint_device" >> $TMP_DIR/backup-include.txt
+fi
 
 # exclude list
 for k in "${BACKUP_PROG_EXCLUDE[@]}" ; do
