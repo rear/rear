@@ -6,7 +6,7 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 ## other bootloader distro case
-if [[ ! -r /etc/yaboot.conf ]]
+if [[ ! -r /etc/yaboot.conf ]] && [[ ! -r /etc/lilo.conf ]]
 then
     return
 fi
