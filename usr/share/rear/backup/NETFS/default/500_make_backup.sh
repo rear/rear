@@ -124,6 +124,7 @@ function get_disk_used() {
 	echo $used
 }
 # while the backup runs in a sub-process, display some progress information to the user
+# ProgressInfo texts have a space at the end to get the 'OK' from ProgressStop shown separated
 case "$(basename ${BACKUP_PROG})" in
 	(tar)
 		while sleep 1 ; kill -0 $BackupPID 2>&8; do
@@ -131,7 +132,7 @@ case "$(basename ${BACKUP_PROG})" in
 			#size="$((blocks*512))"
 			size="$(stat -c %s ${backuparchive}* | awk '{s+=$1} END {print s}')"
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
-			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec] "
 		done
 		;;
 	(rsync)
@@ -144,7 +145,7 @@ case "$(basename ${BACKUP_PROG})" in
 		while sleep 1 ; kill -0 $BackupPID 2>&8; do
 			let disk_used="$(get_disk_used "$backuparchive")" size=disk_used-old_disk_used
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
-			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec] "
 		done
 		;;
 	(*)
@@ -155,7 +156,7 @@ case "$(basename ${BACKUP_PROG})" in
 				Error "$(basename $BACKUP_PROG) failed to create the archive file"
 			}
 			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
-			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec] "
 		done
 		;;
 esac
