@@ -8,7 +8,26 @@ case $(url_scheme "$BACKUP_URL") in
 esac
 
 if [ "$BACKUP_TYPE" == "incremental" ]; then
-    backuparchive="$restorearchive"
+    LAST="$restorearchive"
+    BASEDIR=$(dirname "$restorearchive")
+    if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+        # As the archive is encrypted we cannot use tar to find the label (which should be the same as the content of file basebackup.txt)
+        # If that is not the case the restore will fail (verification needed after a new full backup if the content of file basebackup.txt
+        # will be modified as well - see issue #952)
+        BASE=$BASEDIR/$(cat $BASEDIR/basebackup.txt)
+    else
+        BASE=$BASEDIR/$(tar --test-label -f "$restorearchive")
+    fi
+    if [ "$BASE" == "$LAST" ]; then
+        backuparchive="$BASE"
+    else
+        # Only simple tests in case of BACKUP_TYPE=incremental with a real BASE full backup plus one LAST incremental backup:
+        test -s "$BASE" || Error "Full backup '$BASE' not found (or empty)."
+        test -s "$LAST" || Error "Incremental backup '$LAST' not found (or empty)."
+        # Just return here to avoid misleading 'Calculating backup archive size' output for only one backup archive.
+        # TODO: Implement 'Calculating backup archive size' correctly for BACKUP_TYPE=incremental.
+        return 0
+    fi
 fi
 
 [ -s "$backuparchive" -o -d "$backuparchive" -o -f "$(dirname $backuparchive)/backup.splitted" ]
@@ -33,3 +52,4 @@ if [[ $BACKUP_INTEGRITY_CHECK =~ ^[yY1] && -f ${backuparchive}.md5 ]] ; then
         StopIfError "Integrity check failed !! \nIf you want to bypass this check please edit the configuration file (/etc/rear/local.conf) and unset BACKUP_INTEGRITY_CHECK."
     fi
 fi
+

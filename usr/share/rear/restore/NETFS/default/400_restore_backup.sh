@@ -24,8 +24,27 @@ else
     restoreinput="$backuparchive"
 fi
 
-Log "Restoring $BACKUP_PROG archive '$restorearchive'"
-Print "Restoring from '$restorearchive'"
+if [ "$BACKUP_TYPE" == "incremental" ]; then
+    LAST="$restorearchive"
+    BASEDIR=$(dirname "$restorearchive")
+    if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+        # As the archive is encrypted we cannot use tar to find the label (which should be the same as the content of file basebackup.txt)
+        # If that is not the case the restore will fail (verification needed after a new full backup if the content of file basebackup.txt
+        # will be modified as well - see issue #952)
+        BASE=$BASEDIR/$(cat $BASEDIR/basebackup.txt)
+    else
+        BASE=$BASEDIR/$(tar --test-label -f "$restorearchive")
+    fi
+    if [ "$BASE" == "$LAST" ]; then
+        LogPrint "Restoring full backup $BACKUP_PROG archive from '$BASE'"
+    else
+        LogPrint "First restoring full backup $BACKUP_PROG archive from '$BASE'"
+        LogPrint "Then restoring incremental backup $BACKUP_PROG archive from '$restorearchive'"
+    fi
+else
+    LogPrint "Restoring $BACKUP_PROG archive from '$restorearchive'"
+fi
+
 ProgressStart "Preparing restore operation"
 (
 case "$BACKUP_PROG" in
@@ -42,16 +61,6 @@ case "$BACKUP_PROG" in
             BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
         fi
         if [ "$BACKUP_TYPE" == "incremental" ]; then
-            LAST="$restorearchive"
-            BASEDIR=$(dirname "$restorearchive")
-            if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
-                # As the archive is encrypted we cannot use tar to find the label (which should be the same as the content of file basebackup.txt)
-                # If that is not the case the restore will fail (verification needed after a new full backup if the content of file basebackup.txt
-                # will be modified as well - see issue #952)
-                BASE=$BASEDIR/$(cat $BASEDIR/basebackup.txt)
-            else
-                BASE=$BASEDIR/$(tar --test-label -f "$restorearchive")
-            fi
             if [ "$BASE" == "$LAST" ]; then
                 Log dd if=$BASE \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
                 dd if=$BASE | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
@@ -86,7 +95,8 @@ esac >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log"
 BackupPID=$!
 starttime=$SECONDS
 
-sleep 1 # Give the backup software a good chance to start working
+# Give the backup software a good chance to start working:
+sleep 1
 
 (
 # In case of a splitted backup
@@ -144,18 +154,34 @@ fi
 unset size
 # while the backup runs in a sub-process, display some progress information to the user
 case "$BACKUP_PROG" in
-    tar)
+    (tar)
+        ProgressInfo "Restoring..."
         while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
             blocks="$(tail -1 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
             size="$((blocks*512))"
             if [ -f ${TMP_DIR}/wait_dvd ]; then
-                            starttime=$((starttime+1))
+                starttime=$((starttime+1))
             else
-                            ProgressInfo "Restored $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
-                        fi
+                restored_size_MiB=$((size/1024/1024))
+                restored_avg_KiB_per_sec=$((size/1024/(SECONDS-starttime)))
+                if [ "$BACKUP_TYPE" == "incremental" ]; then
+                    # ProgressInfo texts have a space at the end to get the 'OK' from ProgressStop shown separated.
+                    if [ "$BASE" == "$LAST" ]; then
+                        ProgressInfo "Restored full backup $restored_size_MiB MiB [avg $restored_avg_KiB_per_sec KiB/sec] "
+                    else
+                        # Do not show info here to avoid misleading restored_size_MiB and restored_avg_KiB_per_sec output
+                        # for only one backup archive - the last one which is the (usually small) incremental backup archive.
+                        # TODO: Implement calculating right restored_size_MiB and restored_avg_KiB_per_sec values
+                        # both for restoring the initial full backup archive and the subsequent incremental backup archive.
+                        ProgressStep
+                    fi
+                else
+                    ProgressInfo "Restored $restored_size_MiB MiB [avg $restored_avg_KiB_per_sec KiB/sec] "
+                fi
+            fi
         done
         ;;
-    *)
+    (*)
         ProgressInfo "Restoring..."
         while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
             ProgressStep
@@ -185,5 +211,20 @@ tar_message="$(tac $LOGFILE | grep -m1 '^Total bytes written: ')"
 if [ $backup_prog_rc -eq 0 -a "$tar_message" ] ; then
     LogPrint "$tar_message in $transfertime seconds."
 elif [ "$size" ]; then
-    LogPrint "Restored $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"
+    restored_size_MiB=$((size/1024/1024))
+    restored_avg_KiB_per_sec=$((size/1024/transfertime))
+    if [ "$BACKUP_TYPE" == "incremental" ]; then
+        if [ "$BASE" == "$LAST" ]; then
+            LogPrint "Restored full backup $restored_size_MiB MiB in $((transfertime)) seconds [avg $restored_avg_KiB_per_sec KiB/sec]"
+        else
+            # Showing a simpler text here to avoid misleading restored_size_MiB and restored_avg_KiB_per_sec output
+            # for only one backup archive - the last one which is the (usually small) incremental backup archive.
+            # TODO: Implement calculating right restored_size_MiB and restored_avg_KiB_per_sec values
+            # both for restoring the initial full backup archive and the subsequent incremental backup archive.
+            LogPrint "Restored full backup and incremental backup in $((transfertime)) seconds"
+        fi
+    else
+        LogPrint "Restored $restored_size_MiB MiB in $((transfertime)) seconds [avg $restored_avg_KiB_per_sec KiB/sec]"
+    fi
 fi
+
