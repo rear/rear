@@ -113,15 +113,36 @@ function create_fs () {
         (xfs)
             # If available use wipefs to cleanup disk partition:
             test "$has_wipefs" && echo "$wipefs_command" >> "$LAYOUT_CODE"
-            # Actually create the filesystem:
-            echo "mkfs.xfs -f $device" >> "$LAYOUT_CODE"
+
+            local opts=""
+            local set_uuid_using_xfs_admin=0
+
+            # Decide if mkfs.xfs or xfs_admin will set uuid.
+            # Uuid set by xfs_admin will set incompatible flag on systems with
+            # enabled CRC. This might cause ReaR failure during grub installation.
+            # See: https://github.com/rear/rear/issues/1065
+            if [ -n "$uuid" ] ; then
+                # Check if option '-m uuid=<uuid>' is available in mkfs.xfs
+                if [ $(mkfs.xfs --help 2>&1 | grep "\-m" | grep -c uuid) -ne 0 ]; then
+                    opts="-m uuid=$uuid"
+                else
+                    # mkfs.xfs does not support uuid modification,
+                    # trigger xfs_admin to set uuid
+                    set_uuid_using_xfs_admin=1
+                fi
+            fi
+
+            # Actually create the filesystem (and set uuid if supported)
+            echo "mkfs.xfs -f $opts $device >&2" >> "$LAYOUT_CODE"
+
+            # Set UUID if needed
+            if [ $set_uuid_using_xfs_admin -eq 1 ]; then
+                echo "xfs_admin -U $uuid $device >&2" >> "$LAYOUT_CODE"
+            fi
+
             # Set the label:
             if [ -n "$label" ] ; then
                 echo "xfs_admin -L $label $device >&2" >> "$LAYOUT_CODE"
-            fi
-            # Set the UUID:
-            if [ -n "$uuid" ] ; then
-                echo "xfs_admin -U $uuid $device >&2" >> "$LAYOUT_CODE"
             fi
             ;;
         (reiserfs)
