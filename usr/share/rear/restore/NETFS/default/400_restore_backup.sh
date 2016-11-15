@@ -152,10 +152,14 @@ fi
 
 # make sure that we don't fall for an old size info
 unset size
-# while the backup runs in a sub-process, display some progress information to the user
+
+# While the backup runs in a sub-process, display some progress information to the user.
+# ProgressInfo texts have a space at the end to get the 'OK' from ProgressStop shown separated.
 case "$BACKUP_PROG" in
     (tar)
-        ProgressInfo "Restoring..."
+        ProgressInfo "Restoring... "
+        # Sleep one second to be on the safe side before testing that the backup sub-process is running
+        # and avoid "kill: (BackupPID) - No such process" output when the backup sub-process has finished:
         while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
             blocks="$(tail -1 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }')"
             size="$((blocks*512))"
@@ -165,15 +169,16 @@ case "$BACKUP_PROG" in
                 restored_size_MiB=$((size/1024/1024))
                 restored_avg_KiB_per_sec=$((size/1024/(SECONDS-starttime)))
                 if [ "$BACKUP_TYPE" == "incremental" ]; then
-                    # ProgressInfo texts have a space at the end to get the 'OK' from ProgressStop shown separated.
                     if [ "$BASE" == "$LAST" ]; then
                         ProgressInfo "Restored full backup $restored_size_MiB MiB [avg $restored_avg_KiB_per_sec KiB/sec] "
                     else
-                        # Do not show info here to avoid misleading restored_size_MiB and restored_avg_KiB_per_sec output
-                        # for only one backup archive - the last one which is the (usually small) incremental backup archive.
+                        # Avoid misleading restored_size_MiB output for only one backup archive - the last one
+                        # which is the (usually small) incremental backup archive.
                         # TODO: Implement calculating right restored_size_MiB and restored_avg_KiB_per_sec values
                         # both for restoring the initial full backup archive and the subsequent incremental backup archive.
-                        ProgressStep
+                        # Display any progress information to the user so that he knows things are going on
+                        # show restored_avg_KiB_per_sec output regardless whether or not iot is fully correct:
+                        ProgressInfo "Restoring with about $restored_avg_KiB_per_sec KiB/sec... "
                     fi
                 else
                     ProgressInfo "Restored $restored_size_MiB MiB [avg $restored_avg_KiB_per_sec KiB/sec] "
@@ -182,7 +187,7 @@ case "$BACKUP_PROG" in
         done
         ;;
     (*)
-        ProgressInfo "Restoring..."
+        ProgressInfo "Restoring... "
         while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
             ProgressStep
         done

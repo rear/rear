@@ -6,6 +6,7 @@
 # If TAPE_DEVICE is specified, use that:
 if test "$TAPE_DEVICE" ; then
     backuparchive="$TAPE_DEVICE"
+    LogPrint "Using backup archive '$backuparchive'"
     return
 fi
 
@@ -17,14 +18,16 @@ local path=$( url_path $BACKUP_URL )
 case "$scheme" in
     (file|iso)
         # Define the output path according to the scheme
-        local output_path=$( backup_path $scheme $path )
-        backuparchive="$output_path/$backup_file_name"
+        local outputpath=$( backup_path $scheme $path )
+        backuparchive="$outputpath/$backup_file_name"
+        LogPrint "Using backup archive '$backuparchive'"
         return
         ;;
     (tape)
         # TODO: Check if that case is really needed.
         # Perhaps prep/default/030_translate_tape.sh does already all what is needed.
         backuparchive=$path
+        LogPrint "Using backup archive '$backuparchive'"
         return
         ;;
 esac
@@ -35,6 +38,7 @@ local backup_directory=$BUILD_DIR/outputfs/$NETFS_PREFIX
 if [ "$BACKUP_TYPE" != "incremental" ] ; then
     backuparchive="$backup_directory/$backup_file_name"
     restorearchive="$backuparchive"
+    LogPrint "Using backup archive '$backup_file_name'"
     return
 fi
 
@@ -80,9 +84,11 @@ restorearchive=$( find $backup_directory -name "*$backup_file_suffix" | sort | t
 # File that contains the YYYY-MM-DD date of the latest full backup.
 # If that file does not (yet) exist a full backup is done.
 # If that file already exists with a valid value (not too old), an incremental backup is done:
-local latest_full_backup_date_file="$backup_directory/timestamp.txt"
+local latest_full_backup_date_file_name="timestamp.txt"
+local latest_full_backup_date_file="$backup_directory/$latest_full_backup_date_file_name"
 # File that contains the filename of the latest full backup:
-local latest_full_backup_file_name_file="$backup_directory/basebackup.txt"
+local latest_full_backup_filename_file_name="basebackup.txt"
+local latest_full_backup_filename_file="$backup_directory/$latest_full_backup_filename_file_name"
 # A FULLBACKUPDAY value must match the 'date +%a' output (in current_weekday), see default.conf and
 # quoting FULLBACKUPDAY avoids "bash: ... unary operator expected" error message if FULLBACKUPDAY is empty:
 if [ $current_weekday = "$FULLBACKUPDAY" ] ; then
@@ -94,8 +100,8 @@ else
     # Today's weekday is not FULLBACKUPDAY (or FULLBACKUPDAY is empty):
     if [ ! -f $latest_full_backup_date_file ] ; then
         # When there is no latest_full_backup_date_file (e.g. initially)
-        # there is nothing special to do here - just tell the user about it:
-        LogPrint "No full backup date file (timestamp.txt) found - triggers full backup"
+        # there is nothing special to do here, just tell the user about it:
+        LogPrint "No full backup date file (timestamp.txt) found, triggers full backup"
     else
         # There is a latest_full_backup_date_file.
         # Check if the latest full backup is too old:
@@ -107,27 +113,27 @@ else
             # Remove latest_full_backup_date_file to trigger a new full backup:
             rm -f $latest_full_backup_date_file
         else
-            # When latest_full_backup_date_file exists latest_full_backup_file_name_file must also exist:
-            if [ ! -f $latest_full_backup_file_name_file ] ; then
-                # Trigger a new full backup when latest_full_backup_file_name_file is missing:
-                LogPrint "Latest full backup file name file (basebackup.txt) missing - triggering full backup"
+            # When latest_full_backup_date_file exists latest_full_backup_filename_file must also exist:
+            if [ ! -f $latest_full_backup_filename_file ] ; then
+                # Trigger a new full backup when latest_full_backup_filename_file is missing:
+                LogPrint "Latest full backup file name file (basebackup.txt) missing, triggering full backup"
                 # Remove latest_full_backup_date_file to trigger a new full backup:
                 rm -f $latest_full_backup_date_file
             else
-                # When latest_full_backup_date_file and latest_full_backup_file_name_file exist
+                # When latest_full_backup_date_file and latest_full_backup_filename_file exist
                 # verify that the matching full backup file actually exists:
-                local latest_full_backup_file_name=$( cat $latest_full_backup_file_name_file )
-                local latest_full_backup_file="$backup_directory/$latest_full_backup_file_name"
+                local latest_full_backup_filename=$( cat $latest_full_backup_filename_file )
+                local latest_full_backup_file="$backup_directory/$latest_full_backup_filename"
                 if [ ! -f $latest_full_backup_file] ; then
                     # Trigger a new full backup when the latest full backup file is missing:
-                    LogPrint "Latest full backup file ($latest_full_backup_file_name) not found - triggering full backup"
+                    LogPrint "Latest full backup file ($latest_full_backup_filename) not found, triggering full backup"
                     # Remove latest_full_backup_date_file to trigger a new full backup:
                     rm -f $latest_full_backup_date_file
                 else
-                    # When latest_full_backup_date_file and latest_full_backup_file_name_file
+                    # When latest_full_backup_date_file and latest_full_backup_filename_file
                     # and latest_full_backup_file exist, an incremental backup will be done.
-                    # There is nothing special to do here - just tell the user about it:
-                    LogPrint "Full backup files found (timestamp.txt, basebackup.txt, $latest_full_backup_file_name) - doing incremental backup"
+                    # There is nothing special to do here, just tell the user about it:
+                    LogPrint "Full backup files found (timestamp.txt, basebackup.txt, $latest_full_backup_filename), doing incremental backup"
                 fi
             fi
         fi
@@ -138,15 +144,20 @@ if [ -f $latest_full_backup_date_file ] ; then
     local incremental_backup_file_name_marker="I"
     local incremental_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$incremental_backup_file_name_marker$backup_file_suffix"
     backuparchive="$backup_directory/$incremental_backup_file_name"
-    BACKUP_PROG_X_OPTIONS="$BACKUP_PROG_X_OPTIONS --newer=$latest_full_backup_date -V $latest_full_backup_file_name"
-    LogPrint "Performing incremental backup ($backuparchive)"
+    BACKUP_PROG_X_OPTIONS="$BACKUP_PROG_X_OPTIONS --newer=$latest_full_backup_date -V $latest_full_backup_filename"
+    LogPrint "Performing incremental backup using backup archive '$incremental_backup_file_name'"
 else
     local full_backup_file_name_marker="F"
     local full_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$full_backup_file_name_marker$backup_file_suffix"
     backuparchive="$backup_directory/$full_backup_file_name"
-    echo "$current_yyyy_mm_dd" >$latest_full_backup_date_file
-    echo "$full_backup_file_name" >$latest_full_backup_file_name_file
+    # Create latest_full_backup_date_file and latest_full_backup_filename_file in TMP_DIR because
+    # initially (i.e. for the very first run of "rear mkbackup") there is not yet the
+    # backup_directory (it is created later by output/default/200_make_prefix_dir.sh) and
+    # those files will later be copied into the backup_directory by output/default/950_copy_result_files.sh
+    # (see see https://github.com/rear/rear/pull/1066):
+    echo "$current_yyyy_mm_dd" >$TMP_DIR/$latest_full_backup_date_file_name
+    echo "$full_backup_file_name" >$TMP_DIR/$latest_full_backup_filename_file_name
     BACKUP_PROG_X_OPTIONS="$BACKUP_PROG_X_OPTIONS -V $full_backup_file_name"
-    LogPrint "Performing full backup ($backuparchive)"
+    LogPrint "Performing full backup using backup archive '$full_backup_file_name'"
 fi
 
