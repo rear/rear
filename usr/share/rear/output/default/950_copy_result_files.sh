@@ -21,35 +21,48 @@ fi
 
 # REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log (name set by main script)
 cat "$REAR_LOGFILE" > "$TMP_DIR/rear.log" || Error "Could not copy $REAR_LOGFILE to $TMP_DIR/rear.log"
+Log "Saving $REAR_LOGFILE as rear.log"
 
 # Add the README, VERSION and rear.log to the RESULT_FILES array
-RESULT_FILES=( ${RESULT_FILES[*]} "$TMP_DIR/VERSION" "$TMP_DIR/README" "$TMP_DIR/rear.log" )
+RESULT_FILES=( "${RESULT_FILES[@]}" "$TMP_DIR/VERSION" "$TMP_DIR/README" "$TMP_DIR/rear.log" )
 
+# For incremental backup also add latest_full_backup_date_file and latest_full_backup_filename_file
+# to the RESULT_FILES array if they exist (cf. prep/NETFS/default/070_set_backup_archive.sh):
+if test "incremental" = "$BACKUP_TYPE" ; then
+    for filename in timestamp.txt basebackup.txt ; do
+        test -f "$TMP_DIR/$filename" && RESULT_FILES=( "${RESULT_FILES[@]}" "$TMP_DIR/$filename" )
+    done
+fi
+
+# For example for "rear mkbackuponly" there are usually no result files
+# that would need to be copied here to the network output location.
+# But for incremental backup also "rear mkbackuponly" may cause result files
+# namely latest_full_backup_date_file and latest_full_backup_filename_file
+# if a full backup is made in case of incremental backup:
+test "$RESULT_FILES" || return 0
+
+# The real work (actually copying resulting files to the network output location):
 case "$scheme" in
     (nfs|cifs|usb|file|sshfs|ftpfs|davfs)
-        # if called as mkbackuponly then we just don't have any result files.
-        if test "$RESULT_FILES" ; then
-            Log "Copying result files '${RESULT_FILES[@]}' to $opath at $scheme location"
-            cp $v "${RESULT_FILES[@]}" "${opath}/" >&2 || Error "Could not copy result files to $opath at $scheme location"
-        fi
-    ;;
-
+        Log "Copying result files '${RESULT_FILES[@]}' to $opath at $scheme location"
+        cp $v "${RESULT_FILES[@]}" "${opath}/" >&2 || Error "Could not copy result files to $opath at $scheme location"
+        ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
-    LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
-    Log "lftp -c open $OUTPUT_URL; mput ${RESULT_FILES[*]}"
-    lftp -c "open $OUTPUT_URL; mput ${RESULT_FILES[*]}" || Error "Problem transferring result files to $OUTPUT_URL"
-    ;;
-
+        # FIXME: Verify if usage of $array[*] instead of "${array[@]}" is actually intended here
+        # see https://github.com/rear/rear/issues/1068
+        LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
+        Log "lftp -c open $OUTPUT_URL; mput ${RESULT_FILES[*]}"
+        lftp -c "open $OUTPUT_URL; mput ${RESULT_FILES[*]}" || Error "Problem transferring result files to $OUTPUT_URL"
+        ;;
     (rsync)
-    [[ "$BACKUP" = "RSYNC" ]] && return 0   # output/RSYNC/default/900_copy_result_files.sh took care of it
-    LogPrint "Copying result files '${RESULT_FILES[@]}' to $scheme location"
-    Log "rsync -a $v ${RESULT_FILES[@]} ${host}:${path}"
-    rsync -a $v "${RESULT_FILES[@]}" "${host}:${path}" || Error "Problem transferring result files to $OUTPUT_URL"
-    ;;
-
-    (*) Error "Invalid scheme '$scheme' in '$OUTPUT_URL'."
-    ;;
+        # If BACKUP = RSYNC output/RSYNC/default/900_copy_result_files.sh took care of it:
+        test "$BACKUP" = "RSYNC" && return 0
+        LogPrint "Copying result files '${RESULT_FILES[@]}' to $scheme location"
+        Log "rsync -a $v ${RESULT_FILES[@]} ${host}:${path}"
+        rsync -a $v "${RESULT_FILES[@]}" "${host}:${path}" || Error "Problem transferring result files to $OUTPUT_URL"
+        ;;
+    (*)
+        Error "Invalid scheme '$scheme' in '$OUTPUT_URL'."
+        ;;
 esac
-
-Log "Saved $REAR_LOGFILE as rear.log"
 
