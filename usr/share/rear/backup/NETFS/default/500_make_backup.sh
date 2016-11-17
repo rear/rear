@@ -37,15 +37,16 @@ if [[ "$opath" ]]; then
     mkdir -p $v "${opath}" >&2
 fi
 
-# Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default value to cat in
-# case encryption is disabled
+# Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default with 'cat' when encryption is disabled
+# (by default encryption is disabled but the default BACKUP_PROG_CRYPT_OPTIONS is not 'cat'):
 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
-  # Note: encryption is only supported with tar
-  LogPrint "Encrypting archive with a key"
+    # Backup archive encryption is only supported with 'tar':
+    test "tar" = "$BACKUP_PROG" || Error "Backup archive encryption is only supported with BACKUP_PROG=tar"
+    LogPrint "Encrypting backup archive with key defined in variable \$BACKUP_PROG_CRYPT_KEY"
 else
-  LogPrint "Encrypting disabled"
-  BACKUP_PROG_CRYPT_OPTIONS="cat"
-  BACKUP_PROG_CRYPT_KEY=""
+    Log "Encrypting backup archive is disabled"
+    BACKUP_PROG_CRYPT_OPTIONS="cat"
+    BACKUP_PROG_CRYPT_KEY=""
 fi
 
 # Check if the backup needs to be splitted or not (on multiple ISOs)

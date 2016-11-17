@@ -1,7 +1,7 @@
 ### Determine the name of the backup archive
 ### This needs to be after we special case USB devices.
 
-# FIXME: backuparchive and restorearchive are no local variables (regardless that they are lowercased)
+# FIXME: backuparchive is no local variable (regardless that it is lowercased)
 
 # If TAPE_DEVICE is specified, use that:
 if test "$TAPE_DEVICE" ; then
@@ -37,14 +37,25 @@ local backup_directory=$BUILD_DIR/outputfs/$NETFS_PREFIX
 # Normal (i.e. non-incremental) backup:
 if [ "$BACKUP_TYPE" != "incremental" ] ; then
     backuparchive="$backup_directory/$backup_file_name"
-    restorearchive="$backuparchive"
+    # In case of normal (i.e. non-incremental) backup there is only one restore archive
+    # and its name is the same as the backup archive (usually 'backup.tar.gz'):
+    RESTORE_ARCHIVES=( "$backuparchive" )
     LogPrint "Using backup archive '$backup_file_name'"
     return
 fi
 
 # Incremental backup:
-# Incremental backup only works for the NETFS backup method:
-test "NETFS" = "$BACKUP" || Error "BACKUP_TYPE=incremental only works with BACKUP=NETFS"
+# Incremental backup only works for the NETFS backup method
+# and only with the 'tar' backup program:
+if ! test "NETFS" = "$BACKUP" -a "tar" = "$BACKUP_PROG" ; then
+    Error "BACKUP_TYPE=incremental only works with BACKUP=NETFS and BACKUP_PROG=tar"
+fi
+# Incremental backup and keeping old backup contradict each other (mutual exclusive)
+# so that NETFS_KEEP_OLD_BACKUP_COPY must not be 'true' in case of incremental backup:
+if test "$NETFS_KEEP_OLD_BACKUP_COPY" ; then
+    NETFS_KEEP_OLD_BACKUP_COPY=""
+    LogPrint "Disabled NETFS_KEEP_OLD_BACKUP_COPY because BACKUP_TYPE=incremental does not work with that"
+fi
 # For incremental backup some date values (weekday, YYYY-MM-DD, HHMM) are needed
 # that must be consistent for one single point of the current time which means
 # one cannot call the 'date' command several times because then there would be
@@ -71,16 +82,51 @@ local current_hhmm="${current_date_output[2]}"
 # and yyyymmdd_7_days_ago=20160111 (already Monday January 11 in 2016), then
 # Sunday January 10 is older than Monday January 11 so that a new full backup is made:
 local yyyymmdd_7_days_ago=$( date '+%Y%m%d' --date='7 days ago' )
-# Incremental backup and keeping old backup contradict each other (mutual exclusive)
-# so that NETFS_KEEP_OLD_BACKUP_COPY must not be 'true' in case of incremental backup:
-NETFS_KEEP_OLD_BACKUP_COPY=""
-# Get the latest backup file '*.tar.gz' (full backup or incremental backup) if one exists.
+# The full backup file name is of the form YYYY-MM-DD-HHMM-F.tar.gz
+# where the 'F' denotes a full backup:
+local full_backup_marker="F"
+# The incremental backup file name is of the form YYYY-MM-DD-HHMM-I.tar.gz
+# where the 'I' denotes an incremental backup:
+local incremental_backup_marker="I"
+# In case of incremental backup the RESTORE_ARCHIVES contains
+# first the latest full backup file and then each incremental backup
+# in the ordering how they must be restored.
+# For example when the latest full backup was made on Sunday
+# plus each subsequent weekday a separated incremental backup was made,
+# then during a "rear recover" on Wednesday morning
+# first the full backup from Sunday has to be restored,
+# then the incremental backup from Monday, and
+# finally the incremental backup from Tuesday.
 # Here 'find /path/to/dir -name '*.tar.gz' | sort' is used because
 # one cannot use bash globbing via commands like 'ls /path/to/dir/*.tar.gz'
 # because /usr/sbin/rear sets the nullglob bash option which leads to plain 'ls'
 # when '/path/to/dir/*.tar.gz' matches nothing (i.e. when no backup file exists)
-# so that then plain 'ls' would result a nonsense value for restorearchive:
-restorearchive=$( find $backup_directory -name "*$backup_file_suffix" | sort | tail -n1 )
+# so that then plain 'ls' would result nonsense.
+# First get the latest full backup:
+local date_time_glob_regex="[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]-"
+local full_backup_glob_regex="$date_time_glob_regex$full_backup_marker$backup_file_suffix"
+local full_or_incremental_backup_glob_regex="$date_time_glob_regex[$full_backup_marker$incremental_backup_marker]$backup_file_suffix"
+local latest_full_backup=$( find $backup_directory -name "$full_backup_glob_regex" | sort | tail -n1 )
+if test "$latest_full_backup" ; then
+    # When a latest full backup is found use that plus all later incremental backups for restore:
+    local latest_full_backup_file_name=$( basename $latest_full_backup )
+    # The following command is a bit tricky:
+    # It lists all YYYY-MM-DD-HHMM-F.tar.gz and all YYYY-MM-DD-HHMM-I.tar.gz files in the backup directory and sorts them
+    # and finally it outputs only those that match the latest full backup file name and all what got sorted after that
+    # where it is mandatory that the backup file names sort by date (i.e. date must be the leading part of the backup file names):
+    RESTORE_ARCHIVES=( $( find $backup_directory -name "$full_or_incremental_backup_glob_regex" | sort | sed -n -e "/$latest_full_backup_file_name/,\$p" ) )
+else
+    # If no latest full backup is found (i.e. no file name matches the YYYY-MM-DD-HHMM-F.tar.gz form)
+    # fall back to what is done in case of normal (i.e. non-incremental) backup
+    # and hope for the best (i.e. that a backup_directory/backup_file_name actually exists).
+    # In case of normal (i.e. non-incremental) backup there is only one restore archive
+    # and its name is the same as the backup archive (usually 'backup.tar.gz').
+    # This is only a fallback setting to be more on the safe side for "rear recover".
+    # Initially for the very fist run of incremental backup during "rear mkbackup"
+    # a full backup file of the YYYY-MM-DD-HHMM-F.tar.gz form will be created
+    # according to the code below:
+    RESTORE_ARCHIVES=( "$backup_directory/$backup_file_name" )
+fi
 # File that contains the YYYY-MM-DD date of the latest full backup.
 # If that file does not (yet) exist a full backup is done.
 # If that file already exists with a valid value (not too old), an incremental backup is done:
@@ -141,14 +187,12 @@ else
 fi
 # The actual work (setting the right stuff):
 if [ -f $latest_full_backup_date_file ] ; then
-    local incremental_backup_file_name_marker="I"
-    local incremental_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$incremental_backup_file_name_marker$backup_file_suffix"
+    local incremental_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$incremental_backup_marker$backup_file_suffix"
     backuparchive="$backup_directory/$incremental_backup_file_name"
     BACKUP_PROG_X_OPTIONS="$BACKUP_PROG_X_OPTIONS --newer=$latest_full_backup_date -V $latest_full_backup_filename"
     LogPrint "Performing incremental backup using backup archive '$incremental_backup_file_name'"
 else
-    local full_backup_file_name_marker="F"
-    local full_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$full_backup_file_name_marker$backup_file_suffix"
+    local full_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$full_backup_marker$backup_file_suffix"
     backuparchive="$backup_directory/$full_backup_file_name"
     # Create latest_full_backup_date_file and latest_full_backup_filename_file in TMP_DIR because
     # initially (i.e. for the very first run of "rear mkbackup") there is not yet the
