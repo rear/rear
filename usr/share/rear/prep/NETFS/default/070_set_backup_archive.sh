@@ -168,9 +168,9 @@ if test "$latest_full_backup" ; then
             RESTORE_ARCHIVES=( $( find $backup_directory -name "$full_or_differential_backup_glob_regex" | sort | sed -n -e "/$latest_full_backup_file_name/,\$p" | sed -n -e '1p;$p' | sort -u ) )
             ;;
         (*)
-            # With bash >= 3 the BASH_SOURCE and BASH_LINENO variables are supported and
-            # even for older bash it should work sufficiently fail-safe when unset variables evaluate to empty:
-            BugError "Unexpected BACKUP_TYPE '$BACKUP_TYPE' in '$BASH_SOURCE' script at line '$BASH_LINENO'"
+            # With bash >= 3 the BASH_SOURCE variable is supported and
+            # even for older bash it should be fail-safe when unset variables evaluate to empty:
+            BugError "Unexpected BACKUP_TYPE '$BACKUP_TYPE' in '$BASH_SOURCE'"
             ;;
     esac
 else
@@ -230,9 +230,9 @@ case "$create_backup_type" in
         return
         ;;
     (*)
-        # With bash >= 3 the BASH_SOURCE and BASH_LINENO variables are supported and
-        # even for older bash it should work sufficiently fail-safe when unset variables evaluate to empty:
-        BugError "Unexpected create_backup_type '$create_backup_type' in '$BASH_SOURCE' script at line '$BASH_LINENO'"
+        # With bash >= 3 the BASH_SOURCE variable is supported and
+        # even for older bash it should be fail-safe when unset variables evaluate to empty:
+        BugError "Unexpected create_backup_type '$create_backup_type' in '$BASH_SOURCE'"
         ;;
 esac
 
