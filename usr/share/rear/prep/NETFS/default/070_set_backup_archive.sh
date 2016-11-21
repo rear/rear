@@ -45,6 +45,7 @@ if ! test "incremental" = "$BACKUP_TYPE" -o "differential" = "$BACKUP_TYPE" ; th
 fi
 
 # Incremental or differential backup:
+set -e -u -o pipefail
 # Incremental or differential backup only works for the NETFS backup method
 # and only with the 'tar' backup program:
 if ! test "NETFS" = "$BACKUP" -a "tar" = "$BACKUP_PROG" ; then
@@ -144,6 +145,9 @@ local latest_full_backup=$( find $backup_directory -name "$full_backup_glob_rege
 # A latest full backup is found:
 if test "$latest_full_backup" ; then
     local latest_full_backup_file_name=$( basename "$latest_full_backup" )
+    # The full_or_incremental_backup_glob_regex is also needed below for non-"recover" WORKFLOWs
+    # to set the right variables for creating an incremental backup:
+    local full_or_incremental_backup_glob_regex="$date_time_glob_regex-[$full_backup_marker$incremental_backup_marker]$backup_file_suffix"
     # Code regarding creating a backup is useless during "rear recover" and
     # messages about creating a backup are misleading during "rear recover":
     if ! test "recover" = "$WORKFLOW" ; then
@@ -172,7 +176,6 @@ if test "$latest_full_backup" ; then
                 # It lists all YYYY-MM-DD-HHMM-F.tar.gz and all YYYY-MM-DD-HHMM-I.tar.gz files in the backup directory and sorts them
                 # and finally it outputs only those that match the latest full backup file name and incremental backups that got sorted after that
                 # where it is mandatory that the backup file names sort by date (i.e. date must be the leading part of the backup file names):
-                local full_or_incremental_backup_glob_regex="$date_time_glob_regex-[$full_backup_marker$incremental_backup_marker]$backup_file_suffix"
                 RESTORE_ARCHIVES=( $( find $backup_directory -name "$full_or_incremental_backup_glob_regex" | sort | sed -n -e "/$latest_full_backup_file_name/,\$p" ) )
                 ;;
             (differential)
@@ -192,6 +195,12 @@ if test "$latest_full_backup" ; then
                 BugError "Unexpected BACKUP_TYPE '$BACKUP_TYPE' in '$BASH_SOURCE'"
                 ;;
         esac
+        # Tell the user what will be restored:
+        local restore_archives_file_names=""
+        for restore_archive in "${RESTORE_ARCHIVES[@]}" ; do
+            restore_archives_file_names="$restore_archives_file_names $( basename "$restore_archive" )"
+        done
+        LogPrint "For backup restore using $restore_archives_file_names"
     fi
 # No latest full backup is found:
 else
@@ -212,6 +221,7 @@ else
         # Initially for the very fist run of incremental backup during "rear mkbackup"
         # a full backup file of the YYYY-MM-DD-HHMM-F.tar.gz form will be created.
         RESTORE_ARCHIVES=( "$backup_directory/$backup_file_name" )
+        LogPrint "Using $backup_file_name for backup restore"
     fi
 fi
 # Code regarding creating a backup is useless during "rear recover" and
@@ -224,7 +234,6 @@ if ! test "recover" = "$WORKFLOW" ; then
             backuparchive="$backup_directory/$new_full_backup_file_name"
             BACKUP_PROG_CREATE_NEWER_OPTIONS="-V $new_full_backup_file_name"
             LogPrint "Performing full backup using backup archive '$new_full_backup_file_name'"
-            return
             ;;
         (incremental)
             local new_incremental_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$incremental_backup_marker$backup_file_suffix"
@@ -247,14 +256,12 @@ if ! test "recover" = "$WORKFLOW" ; then
                 BACKUP_PROG_CREATE_NEWER_OPTIONS="--newer=$latest_full_backup_date -V $latest_full_backup_file_name"
                 LogPrint "Performing incremental backup for files newer than $latest_full_backup_date using backup archive '$new_incremental_backup_file_name'"
             fi
-            return
             ;;
         (differential)
             local new_differential_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$differential_backup_marker$backup_file_suffix"
             backuparchive="$backup_directory/$new_differential_backup_file_name"
             BACKUP_PROG_CREATE_NEWER_OPTIONS="--newer=$latest_full_backup_date -V $latest_full_backup_file_name"
             LogPrint "Performing differential backup for files newer than $latest_full_backup_date using backup archive '$new_differential_backup_file_name'"
-            return
             ;;
         (*)
             # With bash >= 3 the BASH_SOURCE variable is supported and
@@ -263,4 +270,6 @@ if ! test "recover" = "$WORKFLOW" ; then
             ;;
     esac
 fi
+# Go back from "set -e -u -o pipefail" to the defaults:
+apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
 
