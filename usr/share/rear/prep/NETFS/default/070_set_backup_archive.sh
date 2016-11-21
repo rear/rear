@@ -90,10 +90,8 @@ local full_backup_marker="F"
 # where the 'I' denotes an incremental backup:
 local incremental_backup_marker="I"
 # Differential backup file names are of the form YYYY-MM-DD-HHMM-D.tar.gz
-# where the last 'D' denotes an differential backup:
+# where the last 'D' denotes a differential backup:
 local differential_backup_marker="D"
-# Determine what kind of backup must be created, 'full' or 'incremental' or 'differential':
-local create_backup_type="full"
 # In case of incremental or differential backup the RESTORE_ARCHIVES contains
 # first the latest full backup file.
 # In case of incremental backup the RESTORE_ARCHIVES contains
@@ -122,6 +120,19 @@ local create_backup_type="full"
 # at https://www.gnu.org/software/tar/manual/html_node/Calendar-date-items.html#SEC124
 local date_glob_regex="[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"
 local date_time_glob_regex="$date_glob_regex-[0-9][0-9][0-9][0-9]"
+# Determine what kind of backup must be created, 'full' or 'incremental' or 'differential'
+# (the empty default means it is undecided what kind of backup must be created):
+local create_backup_type=""
+# Code regarding creating a backup is useless during "rear recover" and
+# messages about creating a backup are misleading during "rear recover":
+if ! test "recover" = "$WORKFLOW" ; then
+    # When today is a specified full backup day, do a full backup in any case
+    # (regardless if there is already a full backup of this day):
+    if IsInArray "$current_weekday" "${FULLBACKUPDAY[@]}" ; then
+        create_backup_type="full"
+        LogPrint "Today's weekday ('$current_weekday') is a full backup day that triggers a new full backup in any case"
+    fi
+fi
 # Get the latest full backup (if exists):
 local full_backup_glob_regex="$date_time_glob_regex-$full_backup_marker$backup_file_suffix"
 # Here things like 'find /path/to/dir -name '*.tar.gz' | sort' are used because
@@ -130,109 +141,126 @@ local full_backup_glob_regex="$date_time_glob_regex-$full_backup_marker$backup_f
 # when '/path/to/dir/*.tar.gz' matches nothing (i.e. when no backup file exists)
 # so that then plain 'ls' would result nonsense.
 local latest_full_backup=$( find $backup_directory -name "$full_backup_glob_regex" | sort | tail -n1 )
+# A latest full backup is found:
 if test "$latest_full_backup" ; then
-    # A latest full backup is found:
-    local latest_full_backup_file_name=$( basename $latest_full_backup )
-    local latest_full_backup_date=$( echo $latest_full_backup_file_name | grep -o "$date_glob_regex" )
-    local yyyymmdd_latest_full_backup=$( echo $latest_full_backup_date | tr -d '-' )
-    # Check if the latest full backup is too old:
-    if test $yyyymmdd_latest_full_backup -lt $yyyymmdd_max_days_ago ; then
-         create_backup_type="full"
-        LogPrint "Latest full backup date '$latest_full_backup_date' is too old (more than $FULLBACKUP_OUTDATED_DAYS days ago), triggers new full backup"
+    local latest_full_backup_file_name=$( basename "$latest_full_backup" )
+    # Code regarding creating a backup is useless during "rear recover" and
+    # messages about creating a backup are misleading during "rear recover":
+    if ! test "recover" = "$WORKFLOW" ; then
+        # There is nothing to do here if it is already decided that
+        # a full backup must be created (see "full backup day" above"):
+        if ! test "full" = "$create_backup_type" ; then
+            local latest_full_backup_date=$( echo $latest_full_backup_file_name | grep -o "$date_glob_regex" )
+            local yyyymmdd_latest_full_backup=$( echo $latest_full_backup_date | tr -d '-' )
+            # Check if the latest full backup is too old:
+            if test $yyyymmdd_latest_full_backup -lt $yyyymmdd_max_days_ago ; then
+                create_backup_type="full"
+                LogPrint "Latest full backup date '$latest_full_backup_date' too old (more than $FULLBACKUP_OUTDATED_DAYS days ago) triggers new full backup"
+            else
+                # When a latest full backup is found that is not too old
+                # a BACKUP_TYPE (incremental or differential) backup will be created:
+                create_backup_type="$BACKUP_TYPE"
+                LogPrint "Latest full backup found ($latest_full_backup_file_name) triggers $BACKUP_TYPE backup"
+            fi
+        fi
     else
-        # When a latest full backup is found that is not too old
-        # a BACKUP_TYPE (incremental or differential) backup will be created:
-        create_backup_type="$BACKUP_TYPE"
-        LogPrint "Latest full backup found ($latest_full_backup_file_name), doing $BACKUP_TYPE backup"
+        # This script is also run during "rear recover" where RESTORE_ARCHIVES must be set:
+        case "$BACKUP_TYPE" in
+            (incremental)
+                # When a latest full backup is found use that plus all later incremental backups for restore:
+                # The following command is a bit tricky:
+                # It lists all YYYY-MM-DD-HHMM-F.tar.gz and all YYYY-MM-DD-HHMM-I.tar.gz files in the backup directory and sorts them
+                # and finally it outputs only those that match the latest full backup file name and incremental backups that got sorted after that
+                # where it is mandatory that the backup file names sort by date (i.e. date must be the leading part of the backup file names):
+                local full_or_incremental_backup_glob_regex="$date_time_glob_regex-[$full_backup_marker$incremental_backup_marker]$backup_file_suffix"
+                RESTORE_ARCHIVES=( $( find $backup_directory -name "$full_or_incremental_backup_glob_regex" | sort | sed -n -e "/$latest_full_backup_file_name/,\$p" ) )
+                ;;
+            (differential)
+                # For differential backup use the latest full backup plus the one latest differential backup for restore:
+                # The following command is a bit tricky:
+                # It lists all YYYY-MM-DD-HHMM-F.tar.gz and all YYYY-MM-DD-HHMM-D.tar.gz files in the backup directory and sorts them
+                # then it outputs only those that match the latest full backup file name and all differential backups that got sorted after that
+                # and then it outputs only the first line (i.e. the full backup) and the last line (i.e. the latest differential backup)
+                # but when no differential backup exists (i.e. when only the full backup exists) the first line is also the last line
+                # so that "sed -n -e '1p;$p'" outputs the full backup twice which is corrected by the final "sort -u":
+                local full_or_differential_backup_glob_regex="$date_time_glob_regex-[$full_backup_marker$differential_backup_marker]$backup_file_suffix"
+                RESTORE_ARCHIVES=( $( find $backup_directory -name "$full_or_differential_backup_glob_regex" | sort | sed -n -e "/$latest_full_backup_file_name/,\$p" | sed -n -e '1p;$p' | sort -u ) )
+                ;;
+            (*)
+                # With bash >= 3 the BASH_SOURCE variable is supported and
+                # even for older bash it should be fail-safe when unset variables evaluate to empty:
+                BugError "Unexpected BACKUP_TYPE '$BACKUP_TYPE' in '$BASH_SOURCE'"
+                ;;
+        esac
     fi
-    # This script is also run during "rear recover" where RESTORE_ARCHIVES is needed:
-    case "$BACKUP_TYPE" in
+# No latest full backup is found:
+else
+    # Code regarding creating a backup is useless during "rear recover" and
+    # messages about creating a backup are misleading during "rear recover":
+    if ! test "recover" = "$WORKFLOW" ; then
+        # If no latest full backup is found create one during "rear mkbackup":
+        create_backup_type="full"
+        LogPrint "No full backup found (YYYY-MM-DD-HHMM-F.tar.gz) triggers full backup"
+    else
+        # This script is also run during "rear recover" where RESTORE_ARCHIVES must be set:
+        # If no latest full backup is found (i.e. no file name matches the YYYY-MM-DD-HHMM-F.tar.gz form)
+        # fall back to what is done in case of normal (i.e. non-incremental/non-differential) backup
+        # and hope for the best (i.e. that a backup_directory/backup_file_name actually exists).
+        # In case of normal (i.e. non-incremental/non-differential) backup there is only one restore archive
+        # and its name is the same as the backup archive (usually 'backup.tar.gz').
+        # This is only a fallback setting to be more on the safe side for "rear recover".
+        # Initially for the very fist run of incremental backup during "rear mkbackup"
+        # a full backup file of the YYYY-MM-DD-HHMM-F.tar.gz form will be created.
+        RESTORE_ARCHIVES=( "$backup_directory/$backup_file_name" )
+    fi
+fi
+# Code regarding creating a backup is useless during "rear recover" and
+# messages about creating a backup are misleading during "rear recover":
+if ! test "recover" = "$WORKFLOW" ; then
+    # Set the right variables for creating a backup (but do not actually do anything at this point):
+    case "$create_backup_type" in
+        (full)
+            local new_full_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$full_backup_marker$backup_file_suffix"
+            backuparchive="$backup_directory/$new_full_backup_file_name"
+            BACKUP_PROG_CREATE_NEWER_OPTIONS="-V $new_full_backup_file_name"
+            LogPrint "Performing full backup using backup archive '$new_full_backup_file_name'"
+            return
+            ;;
         (incremental)
-            # When a latest full backup is found use that plus all later incremental backups for restore:
-            # The following command is a bit tricky:
-            # It lists all YYYY-MM-DD-HHMM-F.tar.gz and all YYYY-MM-DD-HHMM-I.tar.gz files in the backup directory and sorts them
-            # and finally it outputs only those that match the latest full backup file name and incremental backups that got sorted after that
-            # where it is mandatory that the backup file names sort by date (i.e. date must be the leading part of the backup file names):
-            local full_or_incremental_backup_glob_regex="$date_time_glob_regex-[$full_backup_marker$incremental_backup_marker]$backup_file_suffix"
-            RESTORE_ARCHIVES=( $( find $backup_directory -name "$full_or_incremental_backup_glob_regex" | sort | sed -n -e "/$latest_full_backup_file_name/,\$p" ) )
+            local new_incremental_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$incremental_backup_marker$backup_file_suffix"
+            backuparchive="$backup_directory/$new_incremental_backup_file_name"
+            # Get the latest latest incremental backup that is based on the latest full backup (if exists):
+            local incremental_backup_glob_regex="$date_time_glob_regex-$incremental_backup_marker$backup_file_suffix"
+            # First get the latest full backup plus all later incremental backups (cf. how RESTORE_ARCHIVES is set in case of incremental backup)
+            # then grep only the incremental backups and from the incremental backups use only the last one (if exists):
+            local latest_incremental_backup=$( find $backup_directory -name "$full_or_incremental_backup_glob_regex" | sort | sed -n -e "/$latest_full_backup_file_name/,\$p" | grep "$incremental_backup_glob_regex" | tail -n1 )
+            if test "$latest_incremental_backup" ; then
+                # A latest incremental backup that is based on the latest full backup is found:
+                local latest_incremental_backup_file_name=$( basename $latest_incremental_backup )
+                LogPrint "Latest incremental backup found ($latest_incremental_backup_file_name) that is newer than the latest full backup"
+                local latest_incremental_backup_date=$( echo $latest_incremental_backup_file_name | grep -o "$date_glob_regex" )
+                BACKUP_PROG_CREATE_NEWER_OPTIONS="--newer=$latest_incremental_backup_date -V $latest_incremental_backup_file_name"
+                LogPrint "Performing incremental backup for files newer than $latest_incremental_backup_date using backup archive '$new_incremental_backup_file_name'"
+            else
+                # When there is not yet an incremental backup that is based on the latest full backup
+                # the new created incremental backup must be based on the latest full backup:
+                BACKUP_PROG_CREATE_NEWER_OPTIONS="--newer=$latest_full_backup_date -V $latest_full_backup_file_name"
+                LogPrint "Performing incremental backup for files newer than $latest_full_backup_date using backup archive '$new_incremental_backup_file_name'"
+            fi
+            return
             ;;
         (differential)
-            # For differential backup use the latest full backup plus the one latest differential backup for restore:
-            # The following command is a bit tricky:
-            # It lists all YYYY-MM-DD-HHMM-F.tar.gz and all YYYY-MM-DD-HHMM-D.tar.gz files in the backup directory and sorts them
-            # then it outputs only those that match the latest full backup file name and all differential backups that got sorted after that
-            # and then it outputs only the first line (i.e. the full backup) and the last line (i.e. the latest differential backup)
-            # but when no differential backup exists (i.e. when only the full backup exists) the first line is also the last line
-            # so that "sed -n -e '1p;$p'" outputs the full backup twice which is corrected by the final "sort -u":
-            local full_or_differential_backup_glob_regex="$date_time_glob_regex-[$full_backup_marker$differential_backup_marker]$backup_file_suffix"
-            RESTORE_ARCHIVES=( $( find $backup_directory -name "$full_or_differential_backup_glob_regex" | sort | sed -n -e "/$latest_full_backup_file_name/,\$p" | sed -n -e '1p;$p' | sort -u ) )
+            local new_differential_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$differential_backup_marker$backup_file_suffix"
+            backuparchive="$backup_directory/$new_differential_backup_file_name"
+            BACKUP_PROG_CREATE_NEWER_OPTIONS="--newer=$latest_full_backup_date -V $latest_full_backup_file_name"
+            LogPrint "Performing differential backup for files newer than $latest_full_backup_date using backup archive '$new_differential_backup_file_name'"
+            return
             ;;
         (*)
             # With bash >= 3 the BASH_SOURCE variable is supported and
             # even for older bash it should be fail-safe when unset variables evaluate to empty:
-            BugError "Unexpected BACKUP_TYPE '$BACKUP_TYPE' in '$BASH_SOURCE'"
+            BugError "Unexpected create_backup_type '$create_backup_type' in '$BASH_SOURCE'"
             ;;
     esac
-else
-    # If no latest full backup is found create one during "rear mkbackup":
-    create_backup_type="full"
-    LogPrint "No full backup (YYYY-MM-DD-HHMM-F.tar.gz) found, triggers full backup"
-    # This script is also run during "rear recover" where RESTORE_ARCHIVES is needed:
-    # If no latest full backup is found (i.e. no file name matches the YYYY-MM-DD-HHMM-F.tar.gz form)
-    # fall back to what is done in case of normal (i.e. non-incremental/non-differential) backup
-    # and hope for the best (i.e. that a backup_directory/backup_file_name actually exists).
-    # In case of normal (i.e. non-incremental/non-differential) backup there is only one restore archive
-    # and its name is the same as the backup archive (usually 'backup.tar.gz').
-    # This is only a fallback setting to be more on the safe side for "rear recover".
-    # Initially for the very fist run of incremental backup during "rear mkbackup"
-    # a full backup file of the YYYY-MM-DD-HHMM-F.tar.gz form will be created
-    # according to the code below:
-    RESTORE_ARCHIVES=( "$backup_directory/$backup_file_name" )
 fi
-# The actual work (setting the right variables but do not actually do anything at this point):
-case "$create_backup_type" in
-    (full)
-        local new_full_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$full_backup_marker$backup_file_suffix"
-        backuparchive="$backup_directory/$new_full_backup_file_name"
-        BACKUP_PROG_X_OPTIONS="$BACKUP_PROG_X_OPTIONS -V $new_full_backup_file_name"
-        LogPrint "Performing full backup using backup archive '$new_full_backup_file_name'"
-        return
-        ;;
-    (incremental)
-        local new_incremental_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$incremental_backup_marker$backup_file_suffix"
-        backuparchive="$backup_directory/$new_incremental_backup_file_name"
-        # Get the latest latest incremental backup that is based on the latest full backup (if exists):
-        local incremental_backup_glob_regex="$date_time_glob_regex-$incremental_backup_marker$backup_file_suffix"
-        # First get the latest full backup plus all later incremental backups (cf. how RESTORE_ARCHIVES is set in case of incremental backup)
-        # then grep only the incremental backups and from the incremental backups use only the last one (if exists):
-        local latest_incremental_backup=$( find $backup_directory -name "$full_or_incremental_backup_glob_regex" | sort | sed -n -e "/$latest_full_backup_file_name/,\$p" | grep "$incremental_backup_glob_regex" | tail -n1 )
-        if test "$latest_incremental_backup" ; then
-            # A latest incremental backup that is based on the latest full backup is found:
-            local latest_incremental_backup_file_name=$( basename $latest_incremental_backup )
-            LogPrint "Latest incremental backup found ($latest_incremental_backup_file_name) that is newer than the latest full backup"
-            local latest_incremental_backup_date=$( echo $latest_incremental_backup_file_name | grep -o "$date_glob_regex" )
-            BACKUP_PROG_X_OPTIONS="$BACKUP_PROG_X_OPTIONS --newer=$latest_incremental_backup_date -V $latest_incremental_backup_file_name"
-            LogPrint "Performing incremental backup for files newer than $latest_incremental_backup_date using backup archive '$new_incremental_backup_file_name'"
-        else
-            # When there is not yet an incremental backup that is based on the latest full backup
-            # the new created incremental backup must be based on the latest full backup:
-            BACKUP_PROG_X_OPTIONS="$BACKUP_PROG_X_OPTIONS --newer=$latest_full_backup_date -V $latest_full_backup_file_name"
-            LogPrint "Performing incremental backup for files newer than $latest_full_backup_date using backup archive '$new_incremental_backup_file_name'"
-        fi
-        return
-        ;;
-    (differential)
-        local new_differential_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$differential_backup_marker$backup_file_suffix"
-        backuparchive="$backup_directory/$new_differential_backup_file_name"
-        BACKUP_PROG_X_OPTIONS="$BACKUP_PROG_X_OPTIONS --newer=$latest_full_backup_date -V $latest_full_backup_file_name"
-        LogPrint "Performing differential backup for files newer than $latest_full_backup_date using backup archive '$new_differential_backup_file_name'"
-
-        return
-        ;;
-    (*)
-        # With bash >= 3 the BASH_SOURCE variable is supported and
-        # even for older bash it should be fail-safe when unset variables evaluate to empty:
-        BugError "Unexpected create_backup_type '$create_backup_type' in '$BASH_SOURCE'"
-        ;;
-esac
 
