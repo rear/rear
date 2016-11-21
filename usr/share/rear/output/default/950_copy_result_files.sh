@@ -26,19 +26,8 @@ Log "Saving $REAR_LOGFILE as rear.log"
 # Add the README, VERSION and rear.log to the RESULT_FILES array
 RESULT_FILES=( "${RESULT_FILES[@]}" "$TMP_DIR/VERSION" "$TMP_DIR/README" "$TMP_DIR/rear.log" )
 
-# For incremental backup also add latest_full_backup_date_file and latest_full_backup_filename_file
-# to the RESULT_FILES array if they exist (cf. prep/NETFS/default/070_set_backup_archive.sh):
-if test "incremental" = "$BACKUP_TYPE" ; then
-    for filename in timestamp.txt basebackup.txt ; do
-        test -f "$TMP_DIR/$filename" && RESULT_FILES=( "${RESULT_FILES[@]}" "$TMP_DIR/$filename" )
-    done
-fi
-
 # For example for "rear mkbackuponly" there are usually no result files
-# that would need to be copied here to the network output location.
-# But for incremental backup also "rear mkbackuponly" may cause result files
-# namely latest_full_backup_date_file and latest_full_backup_filename_file
-# if a full backup is made in case of incremental backup:
+# that would need to be copied here to the network output location:
 test "$RESULT_FILES" || return 0
 
 # The real work (actually copying resulting files to the network output location):
