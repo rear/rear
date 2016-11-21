@@ -121,11 +121,12 @@ BACKUP=BORG::
 Use BorgBackup (short Borg) a deduplicating backup program to restore the data.
 
 BACKUP=NETFS::
-Use Relax-and-Recover internal backup with tar or rsync (or similar). By adding the following settings in the configuration file -
-+BACKUP_TYPE=incremental+ and +FULLBACKUPDAY="Mon"+, incremental backups (only with +tar+!) will be activated.
-The current implementation supports only to restore one full backup plus one single incremental backup
-so that currently BACKUP_TYPE=incremental actually implements a differential backup.
-Please keep in mind to clean your old backups from time to time.
+Use Relax-and-Recover internal backup with tar or rsync (or similar).
+When using +BACKUP=NETFS+ and +BACKUP_PROG=tar+ there is an option to select
++BACKUP_TYPE=incremental+ or +BACKUP_TYPE=differential+ to let rear make
+incremental or differential backups until the next full backup day
+e.g. via +FULLBACKUPDAY="Mon"+ is reached or when the last full backup
+is too old after FULLBACKUP_OUTDATED_DAYS has passed.
 
 BACKUP=REQUESTRESTORE::
 No backup, just ask user to somehow restore the filesystems.
@@ -191,7 +192,9 @@ BACKUP_PROG=rsync::
 If you want to use rsync instead of tar (only for +BACKUP=NETFS+). Do not confuse this with the +BACKUP=RSYNC+ backup mechanism.
 
 NETFS_KEEP_OLD_BACKUP_COPY=y::
-If you want to keep the previous backup archive (by defining +BACKUP_TYPE=incremental+ the +NETFS_KEEP_OLD_BACKUP_COPY+ variable will be unset automatically)
+If you want to keep the previous backup archive.
+Incremental or differential backup and NETFS_KEEP_OLD_BACKUP_COPY contradict each other so that
++NETFS_KEEP_OLD_BACKUP_COPY+ must not be 'true' in case of incremental or differential backup.
 
 TMPDIR=/bigdisk::
 Define this variable in +/etc/rear/local.conf+ if directoru +/tmp+ is too small to contain the ISO image, e.g. when using
