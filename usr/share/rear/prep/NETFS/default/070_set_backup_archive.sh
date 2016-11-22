@@ -190,9 +190,7 @@ if test "$latest_full_backup" ; then
                 RESTORE_ARCHIVES=( $( find $backup_directory -name "$full_or_differential_backup_glob_regex" | sort | sed -n -e "/$latest_full_backup_file_name/,\$p" | sed -n -e '1p;$p' | sort -u ) )
                 ;;
             (*)
-                # With bash >= 3 the BASH_SOURCE variable is supported and
-                # even for older bash it should be fail-safe when unset variables evaluate to empty:
-                BugError "Unexpected BACKUP_TYPE '$BACKUP_TYPE' in '$BASH_SOURCE'"
+                BugError "Unexpected BACKUP_TYPE '$BACKUP_TYPE'"
                 ;;
         esac
         # Tell the user what will be restored:
@@ -264,9 +262,7 @@ if ! test "recover" = "$WORKFLOW" ; then
             LogPrint "Performing differential backup for files newer than $latest_full_backup_date using backup archive '$new_differential_backup_file_name'"
             ;;
         (*)
-            # With bash >= 3 the BASH_SOURCE variable is supported and
-            # even for older bash it should be fail-safe when unset variables evaluate to empty:
-            BugError "Unexpected create_backup_type '$create_backup_type' in '$BASH_SOURCE'"
+            BugError "Unexpected create_backup_type '$create_backup_type'"
             ;;
     esac
 fi
