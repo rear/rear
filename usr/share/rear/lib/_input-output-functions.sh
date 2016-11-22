@@ -138,20 +138,37 @@ StopIfError() {
 	fi
 }
 
-BugError() {
-	# If first argument is numerical, use it as exit code
-	if [ $1 -eq $1 ] 2>&8; then
-		EXIT_CODE=$1
-		shift
-	else
-		EXIT_CODE=1
-	fi
-	Error "BUG BUG BUG! " "$@" "
-=== Issue report ===
-Please report this unexpected issue at: https://github.com/rear/rear/issues
-Also include the relevant bits from $LOGFILE
-
-HINT: If you can reproduce the issue, try using the -d or -D option !
+function BugError () {
+    EXIT_CODE=1
+    # If first argument is numerical, use it as exit code:
+    if [ $1 -eq $1 ] 2>/dev/null ; then
+        EXIT_CODE=$1
+        shift
+    fi
+    # Get the source file of actual caller script.
+    # Usually this is ${BASH_SOURCE[1]} but BugError is also called
+    # from (wrapper) functions in this script like BugIfError below.
+    # When BugIfError is called the actual caller is the script
+    # that had called BugIfError which is ${BASH_SOURCE[2]} because when
+    # BugIfError is called ${BASH_SOURCE[0]} and ${BASH_SOURCE[1]}
+    # are the same (i.e. this '_input-output-functions.sh' file).
+    # Currently it is sufficient to test up to ${BASH_SOURCE[2]}
+    # (i.e. currently there is at most one indirection).
+    # With bash >= 3 the BASH_SOURCE array variable is supported and even
+    # for older bash it should be fail-safe when unset variables evaluate to empty:
+    local this_script="${BASH_SOURCE[0]}"
+    local caller_source="${BASH_SOURCE[1]}"
+    test "$caller_source" = "$this_script" && caller_source="${BASH_SOURCE[2]}"
+    test "$caller_source" || caller_source="Relax-and-Recover"
+    # Call Error explicitly with the above set EXIT_CODE:
+    Error $EXIT_CODE "
+====================
+BUG in $caller_source:
+'$@'
+--------------------
+Please report this issue at https://github.com/rear/rear/issues
+and include the relevant parts from $LOGFILE
+preferably with full debug information via 'rear -d -D $WORKFLOW'
 ===================="
 }
 
