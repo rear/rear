@@ -27,57 +27,70 @@ test "$RESTORE_ARCHIVES" || RESTORE_ARCHIVES=( "$backuparchive" )
 # if the backup is splitted and then restore input is not a file but a FIFO
 # i.e. RESTORE_ARCHIVES is then only one element which is the FIFO
 # In this case launch another subshell that runs the feeder program:
-if test -f "${TMP_DIR}/backup.splitted" ; then
+if test -f $TMP_DIR/backup.splitted ; then
     # for multiple ISOs
     RESTORE_ARCHIVES=( "$FIFO" )
-    (
-        # Give the subsequent subshell that runs the backup restore prog a good chance to start working:
+    (   # Give the subsequent subshell that runs the backup restore prog a good chance to start working:
         sleep 1
         Print ""
-        while read file ; do
-            name=${file%% *}
-            vol_name=${file##* }
-            file_path="${opath}/${name}"
-
-            touch ${TMP_DIR}/wait_dvd
-
-            while ! [[ -f "$file_path" ]] ; do
-                umount "${BUILD_DIR}/outputfs"
-                ProgressInfo "Please insert the media called $vol_name in your CD-ROM drive..."
-                sleep 2
-                drive=$( cat /proc/sys/dev/cdrom/info | grep -i "drive name:" | awk '{print $3 " " $4}' )
-                for dev in $drive; do
-                    label=$( blkid /dev/${dev} | awk 'BEGIN{FS="[=\"]"} {print $3}' )
-                    if [[ $label = $vol_name ]] ; then
-                        LogPrint "\n${vol_name} detected in /dev/${dev} ..."
-                        mount /dev/${dev} "${BUILD_DIR}/outputfs"
+        while read backup_splitted_line ; do
+            # The lines in backup.splitted are like
+            #   backup.tar.gz.00 878706688 RELAXRECOVER
+            #   backup.tar.gz.01 878706688 RELAXRECOVER_01
+            #   backup.tar.gz.02 758343480 RELAXRECOVER_02
+            # The first word is name, the second a size, the last one is the label/vol_name:
+            name=${backup_splitted_line%% *}
+            vol_name=${backup_splitted_line##* }
+            backup_file_path="$opath/$name"
+            # Clean up a possibly existing ProgressInfo message before printing a LogPrint message:
+            ProgressInfo ""
+            LogPrint "Preparing to restore $name ..."
+            # Wait for the right labelled medium to appear:
+            touch $TMP_DIR/wait_dvd
+            while ! test -f "$backup_file_path" ; do
+                umount "$BUILD_DIR/outputfs"
+                cdrom_devnames=$( cat /proc/sys/dev/cdrom/info | grep -i "drive name:" | awk '{print $3 " " $4}' )
+                ProgressInfo "Insert medium labelled $vol_name (containing $name) in a CD-ROM drive ($cdrom_devnames) ..."
+                sleep 3
+                for cdrom_dev in $cdrom_devnames ; do
+                    cdrom_device="/dev/$cdrom_dev"
+                    ProgressInfo "Autodetecting medium in $cdrom_device ..."
+                    if blkid $cdrom_device | grep -q "$vol_name" ; then
+                        ProgressInfo ""
+                        LogPrint "Medium labelled $vol_name detected in $cdrom_device ..."
+                        mount $cdrom_device "$BUILD_DIR/outputfs" || Error "Failed to mount $cdrom_device"
+                        break
+                    else
+                        sleep 2
+                        ProgressInfo "No medium labelled $vol_name detected in $cdrom_device ..."
+                        sleep 2
                     fi
                 done
             done
-
-            if [[ -f "$file_path" ]] ; then
-                if is_true "$BACKUP_INTEGRITY_CHECK" && [[ -f "${TMP_DIR}/backup.md5" ]] ; then
-                    LogPrint "Checking $name ..."
-                    ( cd $( dirname $backuparchive ) && grep $name "${TMP_DIR}/backup.md5" | md5sum -c )
+            # The right labelled medium has appeared:
+            if test -f "$backup_file_path" ; then
+                if is_true "$BACKUP_INTEGRITY_CHECK" && test -f "$TMP_DIR/backup.md5" ; then
+                    ProgressInfo ""
+                    LogPrint "Checking backup integrity for $name ..."
+                    ( cd $( dirname $backuparchive ) && grep $name "$TMP_DIR/backup.md5" | md5sum -c )
                     ret=$?
                     if [[ $ret -ne 0 ]] ; then
                         Error "Integrity check failed. Restore aborted because BACKUP_INTEGRITY_CHECK is enabled."
                         return
                     fi
                 fi
-                rm ${TMP_DIR}/wait_dvd
+                rm -f $TMP_DIR/wait_dvd
+                ProgressInfo ""
                 LogPrint "Processing $name ..."
                 # The actual feeder program:
-                dd if="${file_path}" of="$FIFO"
+                dd if="$backup_file_path" of="$FIFO"
             else
-                StopIfError "$name could not be found on the $vol_name media !"
+                StopIfError "$name could not be found on the $vol_name medium!"
             fi
-        done < "${TMP_DIR}/backup.splitted"
-
-        kill -9 $( cat "${TMP_DIR}/cat_pid" )
-        rm "${TMP_DIR}/cat_pid"
-        rm "${TMP_DIR}/backup.splitted"
-        rm "${TMP_DIR}/backup.md5"
+        done < $TMP_DIR/backup.splitted
+        # Clean up:
+        kill -9 $( cat "$TMP_DIR/cat_pid" )
+        rm -f $TMP_DIR/cat_pid $TMP_DIR/backup.splitted $TMP_DIR/backup.md5
     ) &
     BackupRestoreFeederPID=$!
     Log "Launched backup restore feeder subshell (PID=$BackupRestoreFeederPID)"
@@ -87,8 +100,7 @@ fi
 for restoreinput in "${RESTORE_ARCHIVES[@]}" ; do
     LogPrint "Restoring from '$restoreinput'..."
     # Launch a subshell that runs the backup restore prog:
-    (
-        case "$BACKUP_PROG" in
+    (   case "$BACKUP_PROG" in
             (tar)
                 # Add the --selinux option to be safe with SELinux context restoration
                 if ! is_true "$BACKUP_SELINUX_DISABLE" ; then
