@@ -45,6 +45,6 @@ client=${BAREOS_RESULT[9]}
 StopIfError "Bareos director not reachable."
 
 [ "$client" ]
-StopIfError 1 "Bareos client status unknown on director."
+StopIfError "Bareos client status unknown on director."
 
 Log "Bareos director = $director, client = $client"

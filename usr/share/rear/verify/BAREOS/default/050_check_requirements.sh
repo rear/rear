@@ -29,6 +29,6 @@ else
    StopIfError "Bareos executable (bconsole) missing or not executable"
 
    [ -s /etc/bareos/bconsole.conf ]
-   StopIfError 1  "Bareos configuration file (bconsole.conf) missing"
+   StopIfError "Bareos configuration file (bconsole.conf) missing"
 
 fi

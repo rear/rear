@@ -42,6 +42,6 @@ client=${BACULA_RESULT[9]}
 StopIfError "Bacula director not reachable."
 
 [ "$client" ]
-StopIfError 1 "Bacula client status unknown on director."
+StopIfError "Bacula client status unknown on director."
 
 Log "Bacula director = $director, client = $client"
