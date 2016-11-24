@@ -104,47 +104,36 @@ function get_path () {
     type -P $1 2>&8
 }
 
-Error() {
-	# If first argument is numerical, use it as exit code
-	if [ $1 -eq $1 ] 2>&8; then
-		EXIT_CODE=$1
-		shift
-	else
-		EXIT_CODE=1
-	fi
-	VERBOSE=1
-	LogPrint "ERROR: $*"
-	if has_binary caller; then
-		# Print stack strace on errors in reverse order
-		(
-			echo "=== Stack trace ==="
-			local c=0;
-			while caller $((c++)); do :; done | awk '
-				{ l[NR]=$3":"$1" "$2 }
-				END { for (i=NR; i>0;) print "Trace "NR-i": "l[i--] }
-			'
-			echo "Message: $*"
-			echo "==================="
-		) >&2
-	fi
-	LogToSyslog "ERROR: $*"
-	kill -USR1 $MASTER_PID # make sure that Error exits the master process, even if called from child processes :-)
+function Error () {
+    VERBOSE=1
+    LogPrint "ERROR: $*"
+    if has_binary caller ; then
+        # Print stack strace in reverse order:
+        (   echo "=== Stack trace ==="
+            local c=0;
+            while caller $((c++)) ; do
+                # nothing to do
+                :
+            done | awk ' { l[NR]=$3":"$1" "$2 }
+                         END { for (i=NR; i>0;) print "Trace "NR-i": "l[i--] }
+                       '
+            echo "Message: $*"
+            echo "==================="
+        ) >&2
+    fi
+    LogToSyslog "ERROR: $*"
+    # Make sure Error exits the master process, even if called from child processes:
+    kill -USR1 $MASTER_PID
 }
 
-StopIfError() {
-	# If return code is non-zero, bail out
-	if (( $? != 0 )); then
-		Error "$@"
-	fi
+function StopIfError () {
+    # If return code is non-zero, bail out
+    if (( $? != 0 )) ; then
+        Error "$@"
+    fi
 }
 
 function BugError () {
-    EXIT_CODE=1
-    # If first argument is numerical, use it as exit code:
-    if [ $1 -eq $1 ] 2>/dev/null ; then
-        EXIT_CODE=$1
-        shift
-    fi
     # Get the source file of actual caller script.
     # Usually this is ${BASH_SOURCE[1]} but BugError is also called
     # from (wrapper) functions in this script like BugIfError below.
@@ -160,8 +149,7 @@ function BugError () {
     local caller_source="${BASH_SOURCE[1]}"
     test "$caller_source" = "$this_script" && caller_source="${BASH_SOURCE[2]}"
     test "$caller_source" || caller_source="Relax-and-Recover"
-    # Call Error explicitly with the above set EXIT_CODE:
-    Error $EXIT_CODE "
+    Error "
 ====================
 BUG in $caller_source:
 '$@'
@@ -172,19 +160,19 @@ preferably with full debug information via 'rear -d -D $WORKFLOW'
 ===================="
 }
 
-BugIfError() {
-	# If return code is non-zero, bail out
-	if (( $? != 0 )); then
-		BugError "$@"
-	fi
+function BugIfError () {
+    # If return code is non-zero, bail out
+    if (( $? != 0 )) ; then
+        BugError "$@"
+    fi
 }
 
 function Debug () {
-    test -n "$DEBUG" && Log "$@" || true
+    test "$DEBUG" && Log "$@" || true
 }
 
 function Print () {
-    test -n "$VERBOSE" && echo -e "$*" >&7 || true
+    test "$VERBOSE" && echo -e "$*" >&7 || true
 }
 
 # print if there is an error

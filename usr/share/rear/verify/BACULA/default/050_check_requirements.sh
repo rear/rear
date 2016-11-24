@@ -29,6 +29,6 @@ else
    StopIfError "Bacula executable (bconsole) missing or not executable"
 
    [ -s /etc/bacula/bconsole.conf ]
-   StopIfError 1  "Bacula configuration file (bconsole.conf) missing"
+   StopIfError "Bacula configuration file (bconsole.conf) missing"
 
 fi
