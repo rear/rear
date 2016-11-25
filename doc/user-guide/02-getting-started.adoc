@@ -154,4 +154,4 @@ git clone git@github.com:rear/rear.git
 
 Remember the general configuration file is found at +/usr/share/rear/conf/default.conf+. In that file you find all variables used by +rear+ which can be overruled by redefining these in the +/etc/rear/site.conf+ or +/etc/rear/local.conf+ files. Please do not modify the +default.conf+ file itself, but use the +site.conf+ or +local.conf+ for this purpose.
 
-NOTE: Important note about the configuration files inside rear. Treat these as Bash scripts! Rear will source these configuration files, and therefore, if you make any syntax error against Bash scripting rules rear will break.
+NOTE: Important note about the configuration files inside ReaR. Treat these as Bash scripts! ReaR will source these configuration files, and therefore, if you make any syntax error against Bash scripting rules ReaR will break.

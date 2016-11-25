@@ -6,7 +6,7 @@
 # With the --efi toggle you get 2 partitions (vfat and ext3) so we are able
 # to make this USB UEFI bootable afterwards
 
-WORKFLOW_format_DESCRIPTION="format and label media for use with rear"
+WORKFLOW_format_DESCRIPTION="Format and label medium for use with ReaR"
 WORKFLOWS=( ${WORKFLOWS[@]} format )
 WORKFLOW_format () {
 

@@ -8,20 +8,20 @@ if grep -qw 'noefi' /proc/cmdline; then
     return
 fi
 
-# by default the variable USING_UEFI_BOOTLOADER is empty which means rear will decide (this script)
+# by default the variable USING_UEFI_BOOTLOADER is empty which means ReaR will decide (this script)
 # except when the variable USING_UEFI_BOOTLOADER has an explicit 'false' value set:
 if is_false $USING_UEFI_BOOTLOADER ; then
     # we forced the variable to zero (in local.conf) so we do not want UEFI stuff
-    Log "We do not want UEFI capabilities in rear (USING_UEFI_BOOTLOADER=0)"
+    Log "We do not want UEFI capabilities in ReaR (USING_UEFI_BOOTLOADER=0)"
     return
 fi
-# FIXME: I <jsmeix@suse.de> wonder if rear should also decide via the code below
+# FIXME: I <jsmeix@suse.de> wonder if ReaR should also decide via the code below
 # if the variable USING_UEFI_BOOTLOADER has already an explicit 'true' value set.
 # I think if the variable USING_UEFI_BOOTLOADER has an explicit 'true' value set
 # but the code below returns before "it is safe to turn on USING_UEFI_BOOTLOADER=1"
 # then something is probably wrong because the user wants USING_UEFI_BOOTLOADER
 # but the tests in the code below seem to contradict what the user wants
-# so that probably rear should better abort here with an error and not
+# so that probably ReaR should better abort here with an error and not
 # blindly proceed and then fail later in arbitrary unpredictable ways
 # cf. https://github.com/rear/rear/issues/801#issuecomment-200353337
 # or is it also usually "safe to proceed with USING_UEFI_BOOTLOADER=1"

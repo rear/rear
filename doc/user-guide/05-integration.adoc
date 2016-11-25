@@ -63,13 +63,13 @@ The integration is done using our own _check_rear_ plugin for Nagios.
 #
 # Purpose: Checks if disaster recovery usb stick is up to date
 
-# Check if rear is installed
+# Check if ReaR is installed
 if [[ ! -x /usr/sbin/rear ]]; then
     echo "REAR IS NOT INSTALLED"
     exit 2
 fi
 
-# rear disk layout status can be identical or changed
+# ReaR disk layout status can be identical or changed
 # returncode: 0 = ok
 if ! /usr/sbin/rear checklayout; then
     echo "Disk layout has changed. Please insert Disaster Recovery USB stick into system !"

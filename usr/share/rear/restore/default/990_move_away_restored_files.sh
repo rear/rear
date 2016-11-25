@@ -3,7 +3,7 @@
 #
 # See https://github.com/rear/rear/issues/779
 #
-# After backup restore rear should move away files or directories
+# After backup restore ReaR should move away files or directories
 # that should not have been restored - maily files or directories
 # that are created and maintained by system tools where
 # a restore from the backup results wrong/outdated
@@ -15,10 +15,10 @@
 # to /proc/self/mounts which should probably be restored to ensure
 # that link is available.
 #
-# rear will not remove any file (any user data is sacrosanct).
-# Instead rear moves those files away into a rear-specific directory
+# ReaR will not remove any file (any user data is sacrosanct).
+# Instead ReaR moves those files away into a ReaR-specific directory
 # (specified by BACKUP_RESTORE_MOVE_AWAY_DIRECTORY in default.conf)
-# so that the admin can inspect that directory to see what rear thinks
+# so that the admin can inspect that directory to see what ReaR thinks
 # should not have been restored.
 #
 # There is nothing hardcoded in the scripts.
@@ -67,7 +67,7 @@ for dummy in "once" ; do
             # * matches non-dot-files
             # .[!.]* matches dot-files except '.' and dot-dot-files
             # ..?* matches dot-dot-files (also dot-dot-...-dot-files) except '..'
-            # If all patterns match nothing the nullglob setting in rear let it expand to empty
+            # If all patterns match nothing the nullglob setting in ReaR let it expand to empty
             # which is o.k. because 'rm -f' does not care about non-existent arguments:
             rm -rf $file_relative/* $file_relative/.[!.]* $file_relative/..?*
         else

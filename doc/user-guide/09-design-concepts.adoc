@@ -4,7 +4,7 @@
 Schlomo Schapiro, Gratien D'haese, Dag Wieers
 
 == The Workflow System
-Relax-and-Recover is built as a modular framework. A call of rear <command>
+Relax-and-Recover is built as a modular framework. A call of +rear <command>+
 will invoke the following general workflow:
 
   1. *Configuration:* Collect system information to assemble a correct
@@ -105,7 +105,7 @@ are indeed the same):
      onto '/var/log/rear/' in the recovered system.
 
 == FS layout
-Relax-and-Recover tries to be as much LSB compliant as possible. Therefore rear will be
+Relax-and-Recover tries to be as much LSB compliant as possible. Therefore ReaR will be
 installed into the usual locations:
 
 /etc/rear/::

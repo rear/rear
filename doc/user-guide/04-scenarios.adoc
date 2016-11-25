@@ -25,7 +25,7 @@ BACKUP=[TSM|NSR|DP|NBU|GALAXY10|SEP|DUPLICITY|BACULA|BAREOS|RBME|FDRUPSTREAM]
 
 When using one of the above backup solution (commercial or open source) then there is no need to use +rear mkbackup+ as the backup workflow would be empty. Just use +rear mkrescue+
 
-Rear will incorporate the needed executables and libraries of your chosen backup solution into the rescue image of rear.
+ReaR will incorporate the needed executables and libraries of your chosen backup solution into the rescue image of ReaR.
 
 == Bootable ISO and storing archive on NFS/NAS
 To create an ISO rescue image and using a central NFS/NAS server to store the archive, you could define:

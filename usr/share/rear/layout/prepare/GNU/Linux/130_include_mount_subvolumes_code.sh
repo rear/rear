@@ -48,7 +48,7 @@ btrfs_subvolumes_setup() {
         SLES12SP1SP2_btrfs_subvolumes_setup="yes"
         # Because that very special btrfs default subvolume on SLES 12 SP1
         # has to be controlled by snapper it must be set up by snapper
-        # which means that snapper is needed in the rear recovery system.
+        # which means that snapper is needed in the ReaR recovery system.
         # For this special setup during installation a special SUSE tool
         # /usr/lib/snapper/installation-helper is used:
         SLES12SP1SP2_installation_helper_executable="/usr/lib/snapper/installation-helper"
@@ -310,7 +310,7 @@ btrfs_subvolumes_setup() {
         # "snapper improperly usurps control of the default subvolume from the user"
         # https://github.com/openSUSE/snapper/issues/178
         # https://features.opensuse.org/319292
-        # Regardless who or what is right or wrong here I like to have rear working fail-safe
+        # Regardless who or what is right or wrong here I like to have ReaR working fail-safe
         # because an admin could manually create any kind of awkward btrfs setup.
         # Therefore remounting is needed when the subvolume_mountpoint is '/'
         # but the subvolume_path is neither '/' nor the default subvolume.

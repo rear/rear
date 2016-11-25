@@ -15,7 +15,7 @@ tar -v -X $TMP_DIR/copy-as-is-exclude \
 StopIfError "Could not copy files and directories"
 Log "Finished copying COPY_AS_IS"
 
-# fix rear directory if running from checkout
+# fix ReaR directory if running from checkout
 if [[ "$REAR_DIR_PREFIX" ]] ; then
     for dir in /usr/share/rear /var/lib/rear ; do
         ln $v -sf $REAR_DIR_PREFIX$dir $ROOTFS_DIR$dir>&8

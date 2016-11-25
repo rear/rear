@@ -53,9 +53,9 @@ if grep -q md /proc/mdstat &>/dev/null; then
     # so further parted commands with the disk will fail since the disk is busy now.
     # The /lib/udev/rules.d/65-md-incremental.rules detects anaconda (the Red Hat installer),
     # and if it find itself running under anaconda, it will not run.
-    # Accordingly also for other installers (in particular the rear installer)
+    # Accordingly also for other installers (in particular the ReaR installer)
     # this rule should not be there (and other Linux distros probably do not have it)
-    # which means removing it is the right solution to make rear work also for RHEL6:
+    # which means removing it is the right solution to make ReaR work also for RHEL6:
     if [ -e /lib/udev/rules.d/65-md-incremental.rules ] ; then
         rm -f /lib/udev/rules.d/65-md-incremental.rules || echo "rm 65-md-incremental.rules failed"
     fi

@@ -3,14 +3,14 @@
 
 # See https://github.com/rear/rear/issues/841
 
-# Currently updating rear is only supported during "rear recover"
+# Currently updating ReaR is only supported during "rear recover"
 # because "rear recover" is only run once in the recovery system and
 # afterwards the recovery system is shut down and the recovered system is booted.
 # Currently it is not tested what mess might happen for other workflows
 # that run many times in one same system like "rear mkbackup" in the normal system.
-# Furthermore it seems to make not much sense to update rear in the normal system
-# via this special built-in rear functionality because in the normal system
-# one can manually update rear as anything else.
+# Furthermore it seems to make not much sense to update ReaR in the normal system
+# via this special built-in ReaR functionality because in the normal system
+# one can manually update ReaR as anything else.
 test "$WORKFLOW" != "recover" && return
 
 # Without a RECOVERY_UPDATE_URL there is nothing to do:
