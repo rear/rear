@@ -1,7 +1,5 @@
-# when booted from rear archive the only only workflow(s) are:
-# - recover
-
-# when booted from rear image then the file /etc/rear-release is unique and does not exist in production
+# When booted from ReaR image the only only workflow is 'recover' and
+# when booted from ReaR image /etc/rear-release is unique (does not exist otherwise):
 if [[ -f /etc/rear-release ]] && [[ "$WORKFLOW" != "recover" ]] ; then
-    Error "The workflow $WORKFLOW is not supported when booted from rear rescue image"
+    Error "The workflow $WORKFLOW is not supported when booted from ReaR rescue image"
 fi

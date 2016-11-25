@@ -3,7 +3,7 @@
 # and error out when a BACKUP method is not found this way in default.conf
 # to ensure that the user cannot specify a non-working BACKUP in /etc/rear/local.conf
 # and to ensure that each implemented BACKUP method is mentioned in default.conf
-# to have a minimum documentation about what BACKUP methods are implemented in rear
+# to have a minimum documentation about what BACKUP methods are implemented in ReaR
 # see https://github.com/rear/rear/issues/914
 # and https://github.com/rear/rear/issues/159
 
@@ -15,6 +15,6 @@ for backup_method in $( grep 'BACKUP=' $SHARE_DIR/conf/default.conf | grep -v '_
 done
 
 if ! grep -q "$BACKUP" <<< $( echo ${valid_backup_methods[@]} ) ; then
-    Error "The BACKUP method '$BACKUP' is not known to rear."
+    Error "The BACKUP method '$BACKUP' is not known to ReaR."
 fi
 

@@ -7,7 +7,7 @@ test -d $ROOTFS_DIR/usr/lib/systemd/system || return 0
 # ls /usr/lib/systemd/system/sockets.target.wants/
 #dbus.socket  systemd-initctl.socket  systemd-journald.socket  systemd-shutdownd.socket  udev-control.socket  udev-kernel.socket
 
-# in our rear skel directory we have:
+# in our ReaR skel directory we have:
 # ls sockets.target.wants/
 #dbus.socket    systemd-journald.socket  systemd-shutdownd.socket      systemd-udevd-kernel.socket  udev-kernel.socket
 #syslog.socket  systemd-logger.socket    systemd-udevd-control.socket  udev-control.socket

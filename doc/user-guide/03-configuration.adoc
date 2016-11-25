@@ -206,7 +206,7 @@ Define this variable in +/etc/rear/local.conf+ if directoru +/tmp+ is too small 
     OUTPUT_URL=nfs://lnx01/vol/lnx01/linux_images_dr
 
 The +TMPDIR+ is picked up by the +mktemp+ command to create the +BUILD_DIR+ under +/bigdisk/tmp/rear.XXXX+
-Please be aware, that directory +/bigdisk+ must exist, otherwise, rear will bail out when executing the +mktemp+ command.
+Please be aware, that directory +/bigdisk+ must exist, otherwise, +rear+ will bail out when executing the +mktemp+ command.
 The default value of +TMPDIR+ is an empty string, therefore, by default +BUILD_DIR+ is +/tmp/rear.XXXX+
 
 Another point of interest is the +ISO_DIR+ variable to choose another location of the ISO image instead of the default location (+/var/lib/rear/output+).

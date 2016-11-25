@@ -14,4 +14,4 @@ if [ -f /usr/sbin/nsrexecd ]; then
 fi
 EOF
 chmod +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-networker.sh
-Log "Created the EMC NetWorker nsrexecd start-up script (90-networker.sh) for Rear"
+Log "Created the EMC NetWorker nsrexecd start-up script (90-networker.sh) for ReaR"

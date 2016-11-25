@@ -3,7 +3,7 @@
 # system in a remote DRP site
 # Output file: /var/lib/rear/sysreqs/Minimal_System_Requirements.txt
 # This is just for your information and the output is nowhere else
-# used by rear whatsoever.
+# used by ReaR whatsoever.
 
 test -d $VAR_DIR/sysreqs || mkdir -m 755 $VAR_DIR/sysreqs
 
@@ -26,7 +26,7 @@ if test -f /etc/SuSE-release ; then
 elif test -f /etc/redhat-release ; then
     cat /etc/redhat-release
 elif test -f /etc/rear/os.conf ; then
-    # The following 2 variables are listed as an example, and are already known by rear
+    # The following 2 variables are listed as an example, and are already known by ReaR
     # OS_VENDOR=RedHatEnterpriseServer
     # OS_VERSION=6
     echo "${OS_VENDOR} ${OS_VERSION}"
