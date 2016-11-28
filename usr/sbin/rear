@@ -114,7 +114,7 @@ WORKFLOW=""
 
 # Parse options
 help_note_text="Use '$PROGRAM --help' or 'man $PROGRAM' for more information."
-readonly OPTS="$( getopt -n $PROGRAM -o "c:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )"
+readonly OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )"
 if test $? -ne 0 ; then
     echo "$help_note_text"
     exit 1
@@ -141,6 +141,17 @@ while true ; do
                 exit 1
             fi
             CONFIG_DIR="$2"
+            shift
+            ;;
+        (-C)
+            if [[ "$2" == -* ]] ; then
+                # When the item that follows '-C' starts with a '-'
+                # it is considered to be the next option and not an argument for '-C':
+                echo "-C requires an argument."
+                echo "$help_note_text"
+                exit 1
+            fi
+            CONFIG_APPEND_FILES="$2"
             shift
             ;;
         (-d)
@@ -229,6 +240,7 @@ esac
 # KERNEL_VERSION because if empty it is set when sourcing config files below
 # VERBOSE because there is a special "VERBOSE=1" setting below:
 readonly ARGS
+readonly CONFIG_APPEND_FILES
 readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT
 readonly SIMULATE STEPBYSTEP
 
@@ -365,6 +377,33 @@ done
 for config in site local rescue ; do
     test -r "$CONFIG_DIR/$config.conf" && Source "$CONFIG_DIR/$config.conf" || true
 done
+# Finally source additional configuration files if specified on the command line:
+if test "$CONFIG_APPEND_FILES" ; then
+    for config_append_file in $CONFIG_APPEND_FILES ; do
+        # If what is specified on the command line starts with '/' an absolute path is meant
+        # otherwise what is specified on the command line means a file in CONFIG_DIR:
+        case "$config_append_file" in
+            (/*)
+                config_append_file_path="$config_append_file"
+                ;;
+            (*)
+                config_append_file_path="$CONFIG_DIR/$config_append_file"
+                ;;
+        esac
+        # If "-C foo" was specified on the command line but 'foo' does not exist
+        # try if 'foo.conf' exists and if yes, use that:
+        if test -r "$config_append_file_path" ; then
+            LogPrint "Sourcing additional configuration file '$config_append_file_path'"
+            Source "$config_append_file_path"
+        else if test -r "$config_append_file_path.conf" ; then
+                 LogPrint "Sourcing additional configuration file '$config_append_file_path.conf'"
+                 Source "$config_append_file_path.conf"
+             else
+                 Error "There is '-C $config_append_file' requested but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
+             fi
+        fi
+    done
+fi
 # Now SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR and KERNEL_VERSION should be set to a fixed value:
 readonly SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR KERNEL_VERSION
 
