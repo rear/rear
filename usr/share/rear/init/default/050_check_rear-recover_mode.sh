@@ -1,5 +1,16 @@
-# When booted from ReaR image the only only workflow is 'recover' and
-# when booted from ReaR image /etc/rear-release is unique (does not exist otherwise):
-if [[ -f /etc/rear-release ]] && [[ "$WORKFLOW" != "recover" ]] ; then
-    Error "The workflow $WORKFLOW is not supported when booted from ReaR rescue image"
+# In the ReaR rescue/recovery system the only possible workflow is 'recover'
+# and its partial workflows 'layoutonly' 'restoreonly' 'finalizeonly'
+# cf. https://github.com/rear/rear/issues/987
+# and https://github.com/rear/rear/issues/1088
+# In the ReaR rescue/recovery system /etc/rear-release is unique (it does not exist otherwise):
+if test -f /etc/rear-release ; then
+    case "$WORKFLOW" in
+        (recover|layoutonly|restoreonly|finalizeonly)
+            LogPrint "Running workflow $WORKFLOW within the ReaR rescue/recovery system"
+            ;;
+        (*)
+            Error "The workflow $WORKFLOW is not supported in the ReaR rescue/recovery system"
+            ;;
+    esac
 fi
+

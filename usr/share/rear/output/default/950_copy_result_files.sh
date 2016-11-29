@@ -19,9 +19,12 @@ if test -s $(get_template "RESULT_usage_$OUTPUT.txt") ; then
     StopIfError "Could not copy '$(get_template RESULT_usage_$OUTPUT.txt)'"
 fi
 
-# REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log (name set by main script)
-cat "$REAR_LOGFILE" > "$TMP_DIR/rear.log" || Error "Could not copy $REAR_LOGFILE to $TMP_DIR/rear.log"
-Log "Saving $REAR_LOGFILE as rear.log"
+# Usually REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
+# The  REAR_LOGFILE name set by main script from LOGFILE in default.conf
+# but later user config files are sourced in main script where LOGFILE can be set different
+# so that the user config LOGFILE setting is used as final logfile name:
+cat "$REAR_LOGFILE" > "$TMP_DIR/$LOGFILE" || Error "Could not copy $REAR_LOGFILE to $TMP_DIR/$LOGFILE"
+LogPrint "Saving $REAR_LOGFILE as $LOGFILE to network output location"
 
 # Add the README, VERSION and rear.log to the RESULT_FILES array
 RESULT_FILES=( "${RESULT_FILES[@]}" "$TMP_DIR/VERSION" "$TMP_DIR/README" "$TMP_DIR/rear.log" )
