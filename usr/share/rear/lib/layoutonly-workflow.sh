@@ -14,6 +14,6 @@ function WORKFLOW_layoutonly () {
     SourceStage "layout/recreate"
     # SourceStage "restore"
     # SourceStage "finalize"
-    SourceStage "wrapup"
+    # SourceStage "wrapup"
 }
 

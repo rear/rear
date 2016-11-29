@@ -25,10 +25,10 @@ fi
 # so that the user config LOGFILE basename is used as final logfile name:
 final_logfile_name=$( basename $LOGFILE )
 cat "$REAR_LOGFILE" > "$TMP_DIR/$final_logfile_name" || Error "Could not copy $REAR_LOGFILE to $TMP_DIR/$final_logfile_name"
-LogPrint "Saving $REAR_LOGFILE as $final_logfile_name to network output location"
+LogPrint "Saving $REAR_LOGFILE as $final_logfile_name to $scheme location"
 
-# Add the README, VERSION and rear.log to the RESULT_FILES array
-RESULT_FILES=( "${RESULT_FILES[@]}" "$TMP_DIR/VERSION" "$TMP_DIR/README" "$TMP_DIR/rear.log" )
+# Add the README, VERSION and the final logfile to the RESULT_FILES array
+RESULT_FILES=( "${RESULT_FILES[@]}" "$TMP_DIR/VERSION" "$TMP_DIR/README" "$TMP_DIR/$final_logfile_name" )
 
 # For example for "rear mkbackuponly" there are usually no result files
 # that would need to be copied here to the network output location:

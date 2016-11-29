@@ -9,8 +9,8 @@ WORKFLOW_finalizeonly_DESCRIPTION="only finalize the recovery"
 WORKFLOWS=( ${WORKFLOWS[@]} finalizeonly )
 function WORKFLOW_finalizeonly () {
     SourceStage "setup"
-    # SourceStage "verify"
-    # SourceStage "layout/prepare"
+    SourceStage "verify"
+    SourceStage "layout/prepare"
     # SourceStage "layout/recreate"
     # SourceStage "restore"
     SourceStage "finalize"
