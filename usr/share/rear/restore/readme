@@ -1,12 +1,12 @@
 This is the "restore" tree of Relax-and-Recover
 -----------------------------------------------
-00-09	initialisation, e.g. copy dev-files needed for external backups progs
-10-19	do mounting if necessary (NETFS)
-20-29	user interaction scripts, e.g. do restore via 3th party software
-30-39	exec pre-exec scripts
-40-49	exec the restore itself
-50-59	exec the post-exec scripts
-60-69	reserved
-70-79	umount (NETFS)
-80-89	reserved
-90-99	finalisation scripts
+000-099 initialisation, e.g. copy dev-files needed for external backups progs
+100-199 do mounting if necessary (NETFS)
+200-299	user interaction scripts, e.g. do restore via 3th party software
+300-399	exec pre-exec scripts
+400-499	exec the restore itself
+500-599	exec the post-exec scripts
+600-699	reserved
+700-799	umount (NETFS)
+800-899	reserved
+900-999	finalisation scripts
