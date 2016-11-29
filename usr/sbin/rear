@@ -455,7 +455,7 @@ else
 fi
 
 # Usually REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
-# The  REAR_LOGFILE name set by main script from LOGFILE in default.conf
+# The REAR_LOGFILE name set by main script from LOGFILE in default.conf
 # but later user config files are sourced in main script where LOGFILE can be set different
 # so that the user config LOGFILE setting is used as final logfile name:
 if test "$REAR_LOGFILE" != "$LOGFILE" ; then

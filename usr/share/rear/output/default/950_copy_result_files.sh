@@ -20,11 +20,12 @@ if test -s $(get_template "RESULT_usage_$OUTPUT.txt") ; then
 fi
 
 # Usually REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
-# The  REAR_LOGFILE name set by main script from LOGFILE in default.conf
+# The REAR_LOGFILE name set by main script from LOGFILE in default.conf
 # but later user config files are sourced in main script where LOGFILE can be set different
-# so that the user config LOGFILE setting is used as final logfile name:
-cat "$REAR_LOGFILE" > "$TMP_DIR/$LOGFILE" || Error "Could not copy $REAR_LOGFILE to $TMP_DIR/$LOGFILE"
-LogPrint "Saving $REAR_LOGFILE as $LOGFILE to network output location"
+# so that the user config LOGFILE basename is used as final logfile name:
+final_logfile_name=$( basename $LOGFILE )
+cat "$REAR_LOGFILE" > "$TMP_DIR/$final_logfile_name" || Error "Could not copy $REAR_LOGFILE to $TMP_DIR/$final_logfile_name"
+LogPrint "Saving $REAR_LOGFILE as $final_logfile_name to network output location"
 
 # Add the README, VERSION and rear.log to the RESULT_FILES array
 RESULT_FILES=( "${RESULT_FILES[@]}" "$TMP_DIR/VERSION" "$TMP_DIR/README" "$TMP_DIR/rear.log" )
