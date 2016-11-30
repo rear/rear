@@ -333,7 +333,7 @@ readonly REAR_LOGFILE="$LOGFILE"
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
     Log "Command line options: $0 ${CMD_OPTS[@]}"
-    test "$VERBOSE" && LogPrint "Using log file: $LOGFILE" || true
+    LogPrint "Using log file: $REAR_LOGFILE"
 fi
 
 v=""
@@ -454,7 +454,12 @@ else
     EXIT_CODE=1
 fi
 
+# Usually REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
+# The REAR_LOGFILE name set by main script from LOGFILE in default.conf
+# but later user config files are sourced in main script where LOGFILE can be set different
+# so that the user config LOGFILE setting is used as final logfile name:
 if test "$REAR_LOGFILE" != "$LOGFILE" ; then
+    LogPrint "Saving $REAR_LOGFILE as $LOGFILE"
     cat "$REAR_LOGFILE" > "$LOGFILE"
 fi
 

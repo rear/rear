@@ -19,12 +19,16 @@ if test -s $(get_template "RESULT_usage_$OUTPUT.txt") ; then
     StopIfError "Could not copy '$(get_template RESULT_usage_$OUTPUT.txt)'"
 fi
 
-# REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log (name set by main script)
-cat "$REAR_LOGFILE" > "$TMP_DIR/rear.log" || Error "Could not copy $REAR_LOGFILE to $TMP_DIR/rear.log"
-Log "Saving $REAR_LOGFILE as rear.log"
+# Usually REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
+# The REAR_LOGFILE name set by main script from LOGFILE in default.conf
+# but later user config files are sourced in main script where LOGFILE can be set different
+# so that the user config LOGFILE basename is used as final logfile name:
+final_logfile_name=$( basename $LOGFILE )
+cat "$REAR_LOGFILE" > "$TMP_DIR/$final_logfile_name" || Error "Could not copy $REAR_LOGFILE to $TMP_DIR/$final_logfile_name"
+LogPrint "Saving $REAR_LOGFILE as $final_logfile_name to $scheme location"
 
-# Add the README, VERSION and rear.log to the RESULT_FILES array
-RESULT_FILES=( "${RESULT_FILES[@]}" "$TMP_DIR/VERSION" "$TMP_DIR/README" "$TMP_DIR/rear.log" )
+# Add the README, VERSION and the final logfile to the RESULT_FILES array
+RESULT_FILES=( "${RESULT_FILES[@]}" "$TMP_DIR/VERSION" "$TMP_DIR/README" "$TMP_DIR/$final_logfile_name" )
 
 # For example for "rear mkbackuponly" there are usually no result files
 # that would need to be copied here to the network output location:
