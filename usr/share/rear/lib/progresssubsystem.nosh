@@ -18,7 +18,6 @@ if tty -s <&1 ; then
         function ProgressInfo () {
             echo "${MESSAGE_PREFIX}$*"
         }
-
     else
         # If the 'plain' progress mode is not explicitly requested
         # (default/fallback behaviour when there is a tty on stdout)
