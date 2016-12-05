@@ -137,14 +137,15 @@ for restoreinput in "${RESTORE_ARCHIVES[@]}" ; do
     # make sure that we don't fall for an old size info
     unset size
 
-    # While the backup runs in a sub-process, display some progress information to the user.
+    # While the backup restore runs in a sub-process, display some progress information to the user.
     # ProgressInfo texts have a space at the end to get the 'OK' from ProgressStop shown separated.
+    test "$PROGRESS_WAIT_SECONDS" || PROGRESS_WAIT_SECONDS=1
     ProgressStart "Restoring... "
     case "$BACKUP_PROG" in
         (tar)
             # Sleep one second to be on the safe side before testing that the backup sub-process is running and
             # avoid "kill: (BackupPID) - No such process" output when the backup sub-process has finished:
-            while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+            while sleep $PROGRESS_WAIT_SECONDS ; kill -0 $BackupPID 2>/dev/null ; do
                 blocks="$( tail -1 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }' )"
                 size="$((blocks*512))"
                 if [ -f ${TMP_DIR}/wait_dvd ] ; then
@@ -158,7 +159,7 @@ for restoreinput in "${RESTORE_ARCHIVES[@]}" ; do
             ;;
         (*)
             # Display some rather meaningless info to shows at least that restoring is still going on:
-            while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+            while sleep $PROGRESS_WAIT_SECONDS ; kill -0 $BackupPID 2>/dev/null ; do
                 restore_seconds="$((SECONDS-starttime))"
                 ProgressInfo "Restoring for $restore_seconds seconds... "
             done

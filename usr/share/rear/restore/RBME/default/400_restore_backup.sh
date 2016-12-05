@@ -30,7 +30,8 @@ sleep 1 # Give the backup software a good chance to start working
 # make sure that we don't fall for an old size info
 unset size
 # while the restore runs in a sub-process, display some progress information to the user
-while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+test "$PROGRESS_WAIT_SECONDS" || PROGRESS_WAIT_SECONDS=1
+while sleep $PROGRESS_WAIT_SECONDS ; kill -0 $BackupPID 2>/dev/null ; do
     size=$( df -P $TARGET_FS_ROOT | tail -1 | awk '{print $3}' )
     ProgressInfo "Restored $((size/1024)) MiB [avg $((size/(SECONDS-starttime))) KiB/sec]"
 done

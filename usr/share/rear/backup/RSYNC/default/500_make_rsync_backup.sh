@@ -66,12 +66,13 @@ check_remote_du() {
 # make sure that we don't fall for an old size info
 unset size
 # while the backup runs in a sub-process, display some progress information to the user
+test "$PROGRESS_WAIT_SECONDS" || PROGRESS_WAIT_SECONDS=1
 case "$(basename $BACKUP_PROG)" in
 
 	(rsync)
 		ofile=""
 		i=0
-		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+		while sleep $PROGRESS_WAIT_SECONDS ; kill -0 $BackupPID 2>/dev/null ; do
 			i=$((i+1))
 			[[ $i -gt 300 ]] && i=0
 			case $i in
@@ -101,7 +102,7 @@ case "$(basename $BACKUP_PROG)" in
 
 	(*)
 		ProgressInfo "Archiving"
-		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+		while sleep $PROGRESS_WAIT_SECONDS ; kill -0 $BackupPID 2>/dev/null ; do
 			ProgressStep
 		done
 		;;
