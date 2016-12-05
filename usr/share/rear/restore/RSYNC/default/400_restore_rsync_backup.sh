@@ -47,10 +47,11 @@ sleep 3 # Give the backup software a good chance to start working
 # make sure that we don't fall for an old size info
 unset size
 # while the restore runs in a sub-process, display some progress information to the user
+test "$PROGRESS_WAIT_SECONDS" || PROGRESS_WAIT_SECONDS=1
 case "$(basename $BACKUP_PROG)" in
 	(rsync)
 		
-		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+		while sleep $PROGRESS_WAIT_SECONDS ; kill -0 $BackupPID 2>/dev/null ; do
 			fsize=$(get_size "$(tail -2 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | head -n 1)")
 			size=$((size+fsize))
 			ProgressInfo "Restored $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
@@ -60,7 +61,7 @@ case "$(basename $BACKUP_PROG)" in
 	(*)
 
 		ProgressInfo "Restoring"
-		while sleep 1 ; kill -0 $BackupPID 2>/dev/null ; do
+		while sleep $PROGRESS_WAIT_SECONDS ; kill -0 $BackupPID 2>/dev/null ; do
 			ProgressStep
 		done
 		;;

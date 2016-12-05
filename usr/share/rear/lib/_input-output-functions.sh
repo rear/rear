@@ -74,7 +74,7 @@ readonly MASTER_PID=$$
 exec 7>&1
 QuietAddExitTask "exec 7>&-"
 # USR1 is used to abort on errors, not using Print to always print to the original STDOUT, even if quiet
-builtin trap "echo 'Aborting due to an error, check $LOGFILE for details' >&7 ; kill $MASTER_PID" USR1
+builtin trap "echo '${MESSAGE_PREFIX}Aborting due to an error, check $LOGFILE for details' >&7 ; kill $MASTER_PID" USR1
 
 # make sure nobody else can use trap
 function trap () {
@@ -109,7 +109,7 @@ function Error () {
     LogPrint "ERROR: $*"
     if has_binary caller ; then
         # Print stack strace in reverse order:
-        (   echo "=== Stack trace ==="
+        (   echo "==== ${MESSAGE_PREFIX}Stack trace ===="
             local c=0;
             while caller $((c++)) ; do
                 # nothing to do
@@ -117,8 +117,8 @@ function Error () {
             done | awk ' { l[NR]=$3":"$1" "$2 }
                          END { for (i=NR; i>0;) print "Trace "NR-i": "l[i--] }
                        '
-            echo "Message: $*"
-            echo "==================="
+            echo "${MESSAGE_PREFIX}Message: $*"
+            echo "== ${MESSAGE_PREFIX}End stack trace =="
         ) >&2
     fi
     LogToSyslog "ERROR: $*"
@@ -172,7 +172,7 @@ function Debug () {
 }
 
 function Print () {
-    test "$VERBOSE" && echo -e "$*" >&7 || true
+    test "$VERBOSE" && echo -e "${MESSAGE_PREFIX}$*" >&7 || true
 }
 
 # print if there is an error
@@ -195,9 +195,9 @@ fi
 
 function Log () {
     if test $# -gt 0 ; then
-        echo "$(Stamp)$*"
+        echo "${MESSAGE_PREFIX}$(Stamp)$*"
     else
-        echo "$(Stamp)$(cat)"
+        echo "${MESSAGE_PREFIX}$(Stamp)$(cat)"
     fi >&2
 }
 
@@ -246,6 +246,6 @@ ProgressInfo() {
 
 LogToSyslog() {
     # send a line to syslog or messages file with input string
-    logger -t rear -i "$*"
+    logger -t rear -i "${MESSAGE_PREFIX}$*"
 }
 
