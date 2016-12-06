@@ -210,6 +210,84 @@ ReaR recovery/rescue system:
 
 == Running Multiple Backups and Restores in Parallel
 
-coming soon...
+When the files in multiple backups are separated from each other
+it should work to run either multiple backup or multiple restores
+in parallel.
+
+I.e. it should work to run multiple different
+ rear -C backup_config mkbackuponly
+or multiple different
+ rear -C backup_config restoreonly
+in parallel.
+
+Running in parallel is only supported for mkbackuponly and restoreonly.
+
+For example like
+ rear -C backup1 mkbackuponly & rear -C backup2 mkbackuponly & wait
+or
+ rear -C backup1 restoreonly & rear -C backup2 restoreonly & wait
+
+ReaR's default logging is not prepared for multiple simultaneous runs
+and also ReaR's current progress subsystem is not prepared for that.
+On the terminal the messages from different simultaneous runs are
+indistinguishable and the current progress subsystem additionally
+outputs its messages on one same line where its messages mix up
+which results illegible and meaningless output on the terminal.
+
+Therefore additional parameters must be set to make ReaR's log messages
+and the progress subsystem output appropriate for parallel runs.
+Those additional parameters MESSAGE_PREFIX PROGRESS_MODE and
+PROGRESS_WAIT_SECONDS are described in conf/default.conf.
+
+For example a setup for parallel runs of mkbackuponly and restoreonly
+could look like the following:
+
+./etc/rear/local.conf
+----
+OUTPUT=ISO
+BACKUP=NETFS
+BACKUP_OPTIONS="nfsvers=3,nolock"
+BACKUP_URL=nfs://your.NFS.server.IP/path/to/your/rear/backup
+MESSAGE_PREFIX="$$: "
+PROGRESS_MODE="plain"
+PROGRESS_WAIT_SECONDS="3"
+----
+
+./etc/rear/basic_system.conf
+----
+this_file_name=$( basename ${BASH_SOURCE[0]} )
+LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
+BACKUP_PROG_EXCLUDE=( /home/* /opt/* )
+BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
+----
+
+./etc/rear/home_backup.conf
+----
+this_file_name=$( basename ${BASH_SOURCE[0]} )
+LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
+BACKUP_ONLY_INCLUDE="yes"
+BACKUP_PROG_INCLUDE=( /home/* )
+BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
+----
+
+./etc/rear/opt_backup.conf
+----
+this_file_name=$( basename ${BASH_SOURCE[0]} )
+LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
+BACKUP_ONLY_INCLUDE="yes"
+BACKUP_PROG_INCLUDE=( /opt/* )
+BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
+----
+
+With those config files creating the ReaR recovery/rescue system ISO image
+together with a backup of the files of the basic system and then
+backup the files in /home and /opt in parallel could be done like:
+ rear -C basic_system mkbackup
+ rear -C home_backup mkbackuponly & rear -C opt_backup mkbackuponly & wait
+
+Recovery of that system could be done by calling in the
+ReaR recovery/rescue system:
+ rear -C basic_system recover
+ rear -C home_backup restoreonly & rear -C opt_backup restoreonly & wait
 
 
