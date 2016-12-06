@@ -31,7 +31,7 @@
 rear \- bare metal disaster recovery and system migration tool
 .SH "SYNOPSIS"
 .sp
-\fBrear\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fB\-dsSv\fR] [\fB\-D\fR|\fB\-\-debugscripts\fR \fISET\fR] [\fB\-c\fR \fIDIR\fR] [\fB\-r\fR \fIKERNEL\fR] [\-\-] \fICOMMAND\fR [\fIARGS\fR\&...]
+\fBrear\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fB\-dsSv\fR] [\fB\-D\fR|\fB\-\-debugscripts\fR \fISET\fR] [\fB\-c\fR \fIDIR\fR] [\fB\-C\fR \fICONFIG\fR] [\fB\-r\fR \fIKERNEL\fR] [\-\-] \fICOMMAND\fR [\fIARGS\fR\&...]
 .SH "DESCRIPTION"
 .sp
 Relax\-and\-Recover is the leading Open Source disaster recovery solution\&. It is a modular framework with many ready\-to\-go workflows for common situations\&.
@@ -58,6 +58,11 @@ usage information
 \-c DIR
 .RS 4
 alternative config directory; instead of /etc/rear
+.RE
+.PP
+\-C CONFIG
+.RS 4
+additional config file; absolute path or relative to config directory
 .RE
 .PP
 \-d
@@ -153,6 +158,11 @@ create rescue media only
 \fBrecover\fR
 .RS 4
 recover the system; can be used only when running from the rescue media
+.RE
+.PP
+\fBrestoreonly\fR
+.RS 4
+only restore the backup; can be used only when running from the rescue media
 .RE
 .PP
 \fBvalidate\fR

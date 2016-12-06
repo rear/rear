@@ -12,7 +12,7 @@ rear - bare metal disaster recovery and system migration tool
 
 
 == SYNOPSIS
-*rear* [*-h*|*--help*] [*-V*|*--version*] [*-dsSv*] [*-D*|*--debugscripts* _SET_] [*-c* _DIR_] [*-r* _KERNEL_] [--] _COMMAND_ [_ARGS_...]
+*rear* [*-h*|*--help*] [*-V*|*--version*] [*-dsSv*] [*-D*|*--debugscripts* _SET_] [*-c* _DIR_] [*-C* _CONFIG_] [*-r* _KERNEL_] [--] _COMMAND_ [_ARGS_...]
 
 
 == DESCRIPTION
@@ -59,6 +59,9 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 -c DIR::
     alternative config directory; instead of /etc/rear
+
+ -C CONFIG::
+    additional config file; absolute path or relative to config directory
 
 -d::
     *debug mode* (log debug messages to log file)
@@ -116,6 +119,9 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 *recover*::
     recover the system; can be used only when running from the rescue media
+
+*restoreonly*::
+    only restore the backup; can be used only when running from the rescue media
 
 *validate*::
     submit validation information
