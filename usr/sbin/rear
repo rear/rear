@@ -358,6 +358,10 @@ if test "$VERBOSE" ; then
     verbose="--verbose"
 fi
 
+# In DEBUG mode keep by default the build area but that can be overridden in user config files
+# therefore no readonly KEEP_BUILD_DIR (it is also set to 1 in build/default/980_verify_rootfs.sh):
+test "$DEBUG" && KEEP_BUILD_DIR=1 || true
+
 # Check if we are in recovery mode:
 test -e "/etc/rear-release" && RECOVERY_MODE="y" || true
 readonly RECOVERY_MODE
@@ -433,10 +437,6 @@ readonly SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR KERNEL_VERSION
 if test "$VERBOSE" ; then
     source $SHARE_DIR/lib/progresssubsystem.nosh
 fi
-
-# Enable debug output of the progress pipe
-# (no readonly KEEP_BUILD_DIR because it is also set to 1 in build/default/980_verify_rootfs.sh):
-test "$DEBUG" && KEEP_BUILD_DIR=1 || true
 
 SourceStage "init"
 
