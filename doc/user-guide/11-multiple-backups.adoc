@@ -290,4 +290,9 @@ ReaR recovery/rescue system:
  rear -C basic_system recover
  rear -C home_backup restoreonly & rear -C opt_backup restoreonly & wait
 
+Remember that system recovery with multiple backups requires that
+first and foremost the basic system is recovered where all files
+must be restored that are needed to install the bootloader and
+to boot the basic system into a normal usable state so that
+'rear recover' cannot run in parallel with 'rear restoreonly'.
 
