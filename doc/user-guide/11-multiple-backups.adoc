@@ -14,9 +14,11 @@ Accordingly "rear mkbackup" can be splitted into
 a single "rear mkrescue" plus multiple "rear mkbackuponly"
 where each particular "rear mkbackuponly" backups only a
 particular part of the files of the system, for example
+....
 a backup of the files of the basic system,
 a backup of the files in the /home directories, and
 a backup of the files in the /opt directory.
+....
 
 Multiple "rear mkbackuponly" require that each particular
 "rear mkbackuponly" uses a specific ReaR configuration file
@@ -31,19 +33,27 @@ Have common settings in /etc/rear/local.conf
 
 For each particular backup specify its parameters in
 a separated additional configuration files like
- /etc/rear/basic_system.conf
- /etc/rear/home_backup.conf
- /etc/rear/opt_backup.conf
+....
+/etc/rear/basic_system.conf
+/etc/rear/home_backup.conf
+/etc/rear/opt_backup.conf
+....
 
 First create the ReaR recovery/rescue system ISO image
 together with a backup of the files of the basic system:
- rear -C basic_system mkbackup
+....
+rear -C basic_system mkbackup
+....
 
 Then backup the files in the /home directories:
- rear -C home_backup mkbackuponly
+....
+rear -C home_backup mkbackuponly
+....
 
 Afterwards backup the files in the /opt directory:
- rear -C opt_backup mkbackuponly
+....
+rear -C opt_backup mkbackuponly
+....
 
 How to recover with multiple backups:
 
@@ -57,27 +67,37 @@ Boot the ReaR recovery/rescue system.
 In the ReaR recovery/rescue system do the following:
 
 First recover the basic system:
- rear -C basic_system recover
+....
+rear -C basic_system recover
+....
 
 Then restore the files in the /home directories:
- rear -C home_backup restoreonly
+....
+rear -C home_backup restoreonly
+....
 
 Afterwards restore the files in the /opt directory:
- rear -C opt_backup restoreonly
+....
+rear -C opt_backup restoreonly
+....
 
 Finally reboot the recreated system.
 
 For more internal details and some background information see
- https://github.com/rear/rear/issues/1088
+....
+https://github.com/rear/rear/issues/1088
+....
 
 == Relax-and-Recover Setup for Multiple Backups
 
 Assume for example multiple backups should be used
+using the NETFS backup method with 'tar' as backup program
 to get separated backups for
+....
 the files of the basic system,
 the files in the /home directories, and
 the files in the /opt directory
-using the NETFS backup method with 'tar' as backup program.
+....
 
 Those four configuration files could be used:
 
@@ -117,16 +137,20 @@ BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 
 With those config files creating the ReaR recovery/rescue system ISO image
 and subsequently backup the files of the system could be done like:
- rear mkrescue
- rear -C basic_system mkbackuponly
- rear -C home_backup mkbackuponly
- rear -C opt_backup mkbackuponly
+....
+rear mkrescue
+rear -C basic_system mkbackuponly
+rear -C home_backup mkbackuponly
+rear -C opt_backup mkbackuponly
+....
 
 Recovery of that system could be done by calling in the
 ReaR recovery/rescue system:
- rear -C basic_system recover
- rear -C home_backup restoreonly
- rear -C opt_backup restoreonly
+....
+rear -C basic_system recover
+rear -C home_backup restoreonly
+rear -C opt_backup restoreonly
+....
 
 Note that system recovery with multiple backups requires that
 first and foremost the basic system is recovered where all files
@@ -200,13 +224,17 @@ export BORG_REMOTE_PATH="/usr/local/bin/borg"
 With those config files creating the ReaR recovery/rescue system ISO image
 together with a backup of the files of the basic system and
 then backup the files in /home could be done like:
- rear -C basic_system mkbackup
- rear -C home_backup mkbackuponly
+....
+rear -C basic_system mkbackup
+rear -C home_backup mkbackuponly
+....
 
 Recovery of that system could be done by calling in the
 ReaR recovery/rescue system:
- rear -C basic_system recover
- rear -C home_backup restoreonly
+....
+rear -C basic_system recover
+rear -C home_backup restoreonly
+....
 
 == Running Multiple Backups and Restores in Parallel
 
@@ -215,17 +243,25 @@ it should work to run either multiple backup or multiple restores
 in parallel.
 
 I.e. it should work to run multiple different
- rear -C backup_config mkbackuponly
+....
+rear -C backup_config mkbackuponly
+....
 or multiple different
- rear -C backup_config restoreonly
+....
+rear -C backup_config restoreonly
+....
 in parallel.
 
 Running in parallel is only supported for mkbackuponly and restoreonly.
 
 For example like
- rear -C backup1 mkbackuponly & rear -C backup2 mkbackuponly & wait
+....
+rear -C backup1 mkbackuponly & rear -C backup2 mkbackuponly & wait
+....
 or
- rear -C backup1 restoreonly & rear -C backup2 restoreonly & wait
+....
+rear -C backup1 restoreonly & rear -C backup2 restoreonly & wait
+....
 
 ReaR's default logging is not prepared for multiple simultaneous runs
 and also ReaR's current progress subsystem is not prepared for that.
@@ -282,13 +318,17 @@ BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 With those config files creating the ReaR recovery/rescue system ISO image
 together with a backup of the files of the basic system and then
 backup the files in /home and /opt in parallel could be done like:
- rear -C basic_system mkbackup
- rear -C home_backup mkbackuponly & rear -C opt_backup mkbackuponly & wait
+....
+rear -C basic_system mkbackup
+rear -C home_backup mkbackuponly & rear -C opt_backup mkbackuponly & wait
+....
 
 Recovery of that system could be done by calling in the
 ReaR recovery/rescue system:
- rear -C basic_system recover
- rear -C home_backup restoreonly & rear -C opt_backup restoreonly & wait
+....
+rear -C basic_system recover
+rear -C home_backup restoreonly & rear -C opt_backup restoreonly & wait
+....
 
 Remember that system recovery with multiple backups requires that
 first and foremost the basic system is recovered where all files

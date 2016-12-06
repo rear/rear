@@ -13,7 +13,7 @@ WORKFLOWS=( ${WORKFLOWS[@]} finalizeonly )
 # The finalizeonly workflow does currently not yet work,
 # see https://github.com/rear/rear/pull/1091#issuecomment-263621714
 function WORKFLOW_finalizeonly () {
-    Error "The finalizeonly workflow does currently not yet work."
+    Error "The finalizeonly workflow does not yet work: Aborting in ${BASH_SOURCE[0]}"
     SourceStage "setup"
     SourceStage "verify"
     SourceStage "layout/prepare"
