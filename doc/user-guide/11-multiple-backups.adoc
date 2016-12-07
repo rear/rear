@@ -342,6 +342,17 @@ rear -C basic_system recover
 rear -C home_backup restoreonly & rear -C opt_backup restoreonly & wait
 ----
 
+Even on a relatively small system with a single CPU
+running multiple backups and restores in parallel
+can be somewhat faster compared to sequential processing.
+
+On powerful systems with multiple CPUs, much main memory, fast storage access,
+and fast access to the backups it is in practice basically mandatory
+to split a single huge backup of the whole system into separated parts
+and run at least the restores in parallel unless one likes to grant
+the hardware some time to relax when a system recovery happens
+(but that is not the intended meaning of Relax-and-Recover ;-)
+
 Remember that system recovery with multiple backups requires that
 first and foremost the basic system is recovered where all files
 must be restored that are needed to install the bootloader and
