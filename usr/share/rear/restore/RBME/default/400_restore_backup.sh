@@ -49,6 +49,6 @@ sleep 1
 test "$_rc" -gt 0 && LogPrint "WARNING !
 There was an error (${rsync_err_msg[$_rc]}) while restoring the archive.
 Please check '$LOGFILE' for more information. You should also
-manually check the restored system to see wether it is complete.
+manually check the restored system to see whether it is complete.
 "
 LogPrint "Restored $((size/1024)) MiB in $((transfertime)) seconds [avg $((size/transfertime)) KiB/sec]"

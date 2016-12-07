@@ -60,7 +60,7 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
                 LogPrint "WARNING !!!
 initramfs creation for Kernel version '$kernel_version' failed,
 please check '$LOGFILE' to see the error messages in detail
-and decide yourself, wether the system will boot or not.
+and decide yourself, whether the system will boot or not.
 "
             fi
 

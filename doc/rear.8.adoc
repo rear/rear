@@ -141,7 +141,7 @@ recreating the system layout but works best when used together with
 supported backup software.
 
 In this combination Relax-and-Recover recreates the system layout and calls
-the backup software to restore the actual data. Thus there is no unnessecary
+the backup software to restore the actual data. Thus there is no unnecessary
 duplicate data storage and the Relax-and-Recover rescue media can be very small.
 
 For demonstration and special use purposes Relax-and-Recover also includes
@@ -400,8 +400,8 @@ general pxelinux configuration you use.
 In almost all circumstances you have to configure two main settings and their
 parameters: The backup method and the output method.
 
-The backup method defines, how your data was saved and wether Relax-and-Recover
-should backup your data as part of the mkrescue process or wether you use an
+The backup method defines, how your data was saved and whether Relax-and-Recover
+should backup your data as part of the mkrescue process or whether you use an
 external application, e.g. backup software to archive your data.
 
 The output method defines how the rescue system is written to disk and how you

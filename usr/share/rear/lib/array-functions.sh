@@ -1,6 +1,6 @@
 # some array functions
 
-# return wether $1 equals one of the remaining arguments
+# return whether $1 equals one of the remaining arguments
 function IsInArray() {
     local needle="$1"
     test -z "$needle" && return 1

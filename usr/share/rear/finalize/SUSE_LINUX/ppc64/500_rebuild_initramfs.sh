@@ -58,7 +58,7 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 	else
 		LogPrint "WARNING !!!
 initramfs creation (mkinitrd) failed, please check '$LOGFILE' to see the error
-messages in detail and decide yourself, wether the system will boot or not.
+messages in detail and decide yourself, whether the system will boot or not.
 "
 	fi
 	umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
