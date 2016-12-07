@@ -198,7 +198,7 @@ To use Relax-and-Recover you always call the main script '/usr/sbin/rear':
 ----
 # rear help
 
-Usage: rear [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-r KERNEL] [--] COMMAND [ARGS...]
+Usage: rear [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [--] COMMAND [ARGS...]
 
 Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
@@ -206,6 +206,7 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 Available options:
  -h --help           usage information
  -c DIR              alternative config directory; instead of /etc/rear
+ -C CONFIG           additional config file; absolute path or relative to config directory
  -d                  debug mode; log debug messages
  -D                  debugscript mode; log every function call (via 'set -x')
  --debugscripts SET  same as -d -v -D but debugscript mode with 'set -SET'
@@ -223,6 +224,7 @@ List of commands:
  mkbackuponly    backup system without creating rescue media
  mkrescue        create rescue media only
  recover         recover the system
+ restoreonly     only restore the backup
  validate        submit validation information
 
 Use 'rear -v help' for more advanced commands.

@@ -10,7 +10,7 @@ LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} help )
 function WORKFLOW_help () {
 
 cat <<EOF
-Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-r KERNEL] [--] COMMAND [ARGS...]
+Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [--] COMMAND [ARGS...]
 
 $PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
@@ -18,6 +18,7 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 Available options:
  -h --help           usage information
  -c DIR              alternative config directory; instead of /etc/rear
+ -C CONFIG           additional config file; absolute path or relative to config directory
  -d                  debug mode; log debug messages
  -D                  debugscript mode; log every function call (via 'set -x')
  --debugscripts SET  same as -d -v -D but debugscript mode with 'set -SET'
