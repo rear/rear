@@ -10,11 +10,11 @@ Currently multiple backups are only supported for:
 
 === The basic idea behind
 
-A "rear mkbackup" run can be splitted into
+A "rear mkbackup" run can be split into
 a "rear mkrescue" run plus a "rear mkbackuponly" run
 and the result is still the same.
 
-Accordingly "rear mkbackup" can be splitted into
+Accordingly "rear mkbackup" can be split into
 a single "rear mkrescue" plus multiple "rear mkbackuponly"
 where each particular "rear mkbackuponly" backups only a
 particular part of the files of the system, for example:
