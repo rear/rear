@@ -1,4 +1,4 @@
-# check wether the archive is actually there
+# check whether the archive is actually there
 
 # Do not check when the backup is on a tape device:
 test "tape" = "$( url_scheme "$BACKUP_URL" )" && return 0

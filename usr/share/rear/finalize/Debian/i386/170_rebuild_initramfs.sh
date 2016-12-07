@@ -40,7 +40,7 @@ update-initramfs afterwards to update the initramfs with the new mdadm.conf
 	else
 		LogPrint "WARNING !!!
 initramfs creation failed, please check '$LOGFILE' to see the error
-messages in detail and decide yourself, wether the system will boot or not.
+messages in detail and decide yourself, whether the system will boot or not.
 "
 	fi
 	umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys

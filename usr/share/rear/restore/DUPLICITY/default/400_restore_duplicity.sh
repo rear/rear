@@ -50,7 +50,7 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
         LogPrint "WARNING !
     There was an error while restoring the archive.
     Please check '$LOGFILE' and $TMP_DIR/duplicity-restore.log for more information.
-    You should also manually check the restored system to see wether it is complete.
+    You should also manually check the restored system to see whether it is complete.
     "
 
         _message="$(tail -14 ${TMP_DIR}/duplicity-restore.log)"

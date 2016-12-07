@@ -218,7 +218,7 @@ output/$OUTPUT/*.sh::
     Output scripts: ...
 
 verify/...::
-    Verify the recovery data against the hardware found, wether we can
+    Verify the recovery data against the hardware found, whether we can
     successfully recover the system
 
 recreate/...::
