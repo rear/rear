@@ -3,9 +3,10 @@
 
 == Basics
 
-Currently multiple backups are only supported
-for the internal BACKUP=NETFS method and
-for the external BACKUP=BORG method.
+Currently multiple backups are only supported for:
+
+* the internal BACKUP=NETFS method
+* the external BACKUP=BORG method
 
 === The basic idea behind
 
@@ -59,7 +60,7 @@ rear -C opt_backup mkbackuponly
 
 === The basic way how to recover with multiple backups
 
-The base idea how to recover with multiple backups is
+The basic idea how to recover with multiple backups is
 to split the "rear recover" into an initial recovery
 of the basic system followed by several backup restore
 operations as follows:
@@ -86,13 +87,11 @@ rear -C opt_backup restoreonly
 Finally reboot the recreated system.
 
 For more internal details and some background information see
-----
 https://github.com/rear/rear/issues/1088
-----
 
 == Relax-and-Recover Setup for Multiple Backups
 
-Assume for example multiple backups should be used
+Assume for example multiple backups should be done
 using the NETFS backup method with 'tar' as backup program
 to get separated backups for:
 
@@ -242,10 +241,13 @@ rear -C home_backup restoreonly
 == Running Multiple Backups and Restores in Parallel
 
 When the files in multiple backups are separated from each other
-it should work to run either multiple backup or multiple restores
-in parallel.
+it should work to run multiple backups or multiple restores in parallel.
 
-I.e. it should work to run multiple different
+Whether or not that actually works in your particular case
+depends on how you made the backups in your particular case.
+
+For sufficiently well separated backups it should work
+to run multiple different
 ----
 rear -C backup_config mkbackuponly
 ----
@@ -270,13 +272,15 @@ ReaR's default logging is not prepared for multiple simultaneous runs
 and also ReaR's current progress subsystem is not prepared for that.
 On the terminal the messages from different simultaneous runs are
 indistinguishable and the current progress subsystem additionally
-outputs its messages on one same line where its messages mix up
-which results illegible and meaningless output on the terminal.
+outputs subsequent messages on one same line which results
+illegible and meaningless output on the terminal.
 
-Therefore additional parameters must be set to make ReaR's log messages
+Therefore additional parameters must be set to make ReaR's messages
 and the progress subsystem output appropriate for parallel runs.
+
 Simultaneously running ReaR workflows require unique messages and
 unique logfile names.
+
 Therefore the PID ('$$') is specified to be used as message prefix
 for all ReaR messages and it is also added to the LOGFILE value.
 
