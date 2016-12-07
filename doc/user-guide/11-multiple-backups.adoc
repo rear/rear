@@ -358,7 +358,7 @@ On powerful systems with multiple CPUs, much main memory, fast storage access,
 and fast access to the backups it is in practice basically mandatory
 to split a single huge backup of the whole system into separated parts
 and run at least the restores in parallel unless one likes to grant
-the hardware some time to relax when a system recovery happens
+the hardware some time to relax while a system recovery is going on
 (but that is not the intended meaning of Relax-and-Recover ;-)
 
 Remember that system recovery with multiple backups requires that
