@@ -223,6 +223,14 @@ export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK="yes"
 export BORG_REMOTE_PATH="/usr/local/bin/borg"
 ----
 
+Using different backup methods requires to get all the binaries and all
+other needed files of all used backup methods into the recovery system
+during the initial "rear mkbackup/mkrescue" run.
+
+Those binaries and other needed files must be manually specified
+via REQUIRED_PROGS and COPY_AS_IS in /etc/rear/local.conf
+(regarding REQUIRED_PROGS and COPY_AS_IS see conf/default.conf).
+
 With those config files creating the ReaR recovery/rescue system ISO image
 together with a backup of the files of the basic system and
 then backup the files in /home could be done like:
