@@ -1,11 +1,13 @@
 
 = Using Multiple Backups for Relax-and-Recover
 
+== Basics
+
 Currently multiple backups are only supported
 for the internal BACKUP=NETFS method and
 for the external BACKUP=BORG method.
 
-The basic idea behind is:
+=== The basic idea behind
 
 A "rear mkbackup" run can be splitted into
 a "rear mkrescue" run plus a "rear mkbackuponly" run
@@ -15,9 +17,10 @@ Accordingly "rear mkbackup" can be splitted into
 a single "rear mkrescue" plus multiple "rear mkbackuponly"
 where each particular "rear mkbackuponly" backups only a
 particular part of the files of the system, for example:
- - a backup of the files of the basic system
- - a backup of the files in the /home directories
- - a backup of the files in the /opt directory
+
+* a backup of the files of the basic system
+* a backup of the files in the /home directories
+* a backup of the files in the /opt directory
 
 Multiple "rear mkbackuponly" require that each particular
 "rear mkbackuponly" uses a specific ReaR configuration file
@@ -26,7 +29,7 @@ that specifies how that particular "rear mkbackuponly" must be done.
 Therefore the '-C' command line parameter is needed where
 an additional ReaR configuration file can be specified.
 
-The basic way how to use multiple backups:
+=== The basic way how to create multiple backups
 
 Have common settings in /etc/rear/local.conf
 
@@ -54,7 +57,7 @@ Afterwards backup the files in the /opt directory:
 rear -C opt_backup mkbackuponly
 ----
 
-How to recover with multiple backups:
+=== The basic way how to recover with multiple backups
 
 The base idea how to recover with multiple backups is
 to split the "rear recover" into an initial recovery
@@ -92,9 +95,10 @@ https://github.com/rear/rear/issues/1088
 Assume for example multiple backups should be used
 using the NETFS backup method with 'tar' as backup program
 to get separated backups for:
- - the files of the basic system
- - the files in the /home directories
- - the files in the /opt directory
+
+* the files of the basic system
+* the files in the /home directories
+* the files in the /opt directory
 
 Those four configuration files could be used:
 
