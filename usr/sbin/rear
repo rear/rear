@@ -233,6 +233,16 @@ case "$WORKFLOW" in
         ;;
 esac
 
+# Set the variables v and verbose to be used in called programs
+# that support the '-v' or '--verbose' options like
+# "cp $v ..." or "rm $verbose ..." and so on:
+v=""
+verbose=""
+if test "$VERBOSE" ; then
+    v="-v"
+    verbose="--verbose"
+fi
+
 # Mark variables that are not meant to be changed later as constants (i.e. readonly).
 # Exceptions here:
 # CONFIG_DIR because "rear recover" sets it in /etc/rear/rescue.conf in the recovery system
@@ -290,22 +300,27 @@ hash -r
 # Make sure that we use only English:
 export LC_CTYPE=C LC_ALL=C LANG=C
 
-# Include default config:
+# Include default config before the LOGFILE value is set because
+# setting the right LOGFILE value requires values from default.conf
+# in particular the default LOGFILE value and the values of the
+# LOCKLESS_WORKFLOWS and SIMULTANEOUS_RUNNABLE_WORKFLOWS arrays:
 source $SHARE_DIR/conf/default.conf
 
-# Include functions:
-for script in $SHARE_DIR/lib/*.sh ; do
-    source $script
-done
-
+# Set the right LOGFILE value depending on whether or not
+# this currently running instance can run simultaneously with another instance:
+can_run_simultaneously=""
 # LOCKLESS_WORKFLOWS can run simultaneously with another instance by using a LOGFILE.lockless:
-if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}" ; then
-    LOGFILE="$LOGFILE.lockless"
-else
-    # SIMULTANEOUS_RUNNABLE_WORKFLOWS are allowed to run simultaneously
-    # but cannot use LOGFILE.lockless instead they get a LOGFILE with PID
-    # see https://github.com/rear/rear/issues/1102
-    if  IsInArray "$WORKFLOW" "${SIMULTANEOUS_RUNNABLE_WORKFLOWS[@]}" ; then
+for lockless_workflow in "${LOCKLESS_WORKFLOWS[@]}" ; do
+    test "$WORKFLOW" = "$lockless_workflow" && LOGFILE="$LOGFILE.lockless"
+    can_run_simultaneously="yes"
+done
+# SIMULTANEOUS_RUNNABLE_WORKFLOWS are allowed to run simultaneously
+# but cannot use LOGFILE.lockless instead they get a LOGFILE with PID
+# see https://github.com/rear/rear/issues/1102
+# When a workflow is both in LOCKLESS_WORKFLOWS and in SIMULTANEOUS_RUNNABLE_WORKFLOWS
+# its right LOGFILE value is the one for SIMULTANEOUS_RUNNABLE_WORKFLOWS:
+for simultaneous_runnable_workflow in "${SIMULTANEOUS_RUNNABLE_WORKFLOWS[@]}" ; do
+    if test "$WORKFLOW" = "$simultaneous_runnable_workflow" ; then
         # Simultaneously runnable workflows require unique logfile names
         # so that the PID is interposed in the LOGFILE value from default.conf
         # which is used below as REAR_LOGFILE while the workflow is running
@@ -314,48 +329,50 @@ else
         # (in this case ${LOGFILE##*.} returns the whole $LOGFILE value):
         logfile_suffix=$( test "${LOGFILE##*.}" = "$LOGFILE" && echo 'log' || echo "${LOGFILE##*.}" )
         LOGFILE="${LOGFILE%.*}.$$.$logfile_suffix"
-    else
-        # When this currently running instance is not one of the LOCKLESS_WORKFLOWS
-        # and not one of the SIMULTANEOUS_RUNNABLE_WORKFLOWS
-        # then it cannot run simultaneously with another instance.
-        # In this case pidof is needed to test what running instances there are:
-        if ! has_binary pidof ; then
-            echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
+        can_run_simultaneously="yes"
+    fi
+done
+
+# When this currently running instance cannot run simultaneously with another instance
+# test that this currently running instance does not run simultaneously with another instance:
+if ! test "$can_run_simultaneously" ; then
+    # In this case pidof is needed to test what running instances there are:
+    if ! has_binary pidof ; then
+        echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
+        exit 1
+    fi
+    # For unknown reasons '-o %PPID' does not work for pidof at least in SLES11
+    # so that a manual test is done to find out if another pid != $$ is running:
+    for pid in $( pidof -x "$SCRIPT_FILE" ) ; do
+        if test "$pid" != $$ ; then
+            echo "ERROR: $PROGRAM is already running, not starting again" >&2
             exit 1
         fi
-        # For unknown reasons '-o %PPID' does not work for pidof at least in SLES11
-        # so that a manual test is done to find out if another pid != $$ is running:
-        for pid in $( pidof -x "$SCRIPT_FILE" ) ; do
-            if test "$pid" != $$ ; then
-                echo "ERROR: $PROGRAM is already running, not starting again" >&2
-                exit 1
-            fi
-        done
-    fi
+    done
 fi
 
 # Keep old log file:
 if test -r "$LOGFILE" ; then
-    mv -f "$LOGFILE" "$LOGFILE".old 2>&8
+    mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null
 fi
 mkdir -p $LOG_DIR
 
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
-# Keep our default $LOGFILE location in a seperate variable REAR_LOGFILE
+# Keep our currently used LOGFILE in a seperate variable REAR_LOGFILE
 # in case end-user overruled it in the local.conf file:
 readonly REAR_LOGFILE="$LOGFILE"
 
+# Include functions after LOGFILE and REAR_LOGFILE are set
+# because some functions use LOGFILE or REAR_LOGFILE:
+for script in $SHARE_DIR/lib/*.sh ; do
+    source $script
+done
+
+# Show initial startup messages:
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
     Log "Command line options: $0 ${CMD_OPTS[@]}"
     LogPrint "Using log file: $REAR_LOGFILE"
-fi
-
-v=""
-verbose=""
-if test "$VERBOSE" ; then
-    v="-v"
-    verbose="--verbose"
 fi
 
 # In DEBUG mode keep by default the build area but that can be overridden in user config files

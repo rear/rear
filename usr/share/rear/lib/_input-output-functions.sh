@@ -74,7 +74,7 @@ readonly MASTER_PID=$$
 exec 7>&1
 QuietAddExitTask "exec 7>&-"
 # USR1 is used to abort on errors, not using Print to always print to the original STDOUT, even if quiet
-builtin trap "echo '${MESSAGE_PREFIX}Aborting due to an error, check $LOGFILE for details' >&7 ; kill $MASTER_PID" USR1
+builtin trap "echo '${MESSAGE_PREFIX}Aborting due to an error, check $REAR_LOGFILE for details' >&7 ; kill $MASTER_PID" USR1
 
 # make sure nobody else can use trap
 function trap () {
@@ -155,7 +155,7 @@ BUG in $caller_source:
 '$@'
 --------------------
 Please report this issue at https://github.com/rear/rear/issues
-and include the relevant parts from $LOGFILE
+and include the relevant parts from $REAR_LOGFILE
 preferably with full debug information via 'rear -d -D $WORKFLOW'
 ===================="
 }
