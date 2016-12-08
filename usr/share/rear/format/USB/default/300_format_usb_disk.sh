@@ -23,7 +23,7 @@ if [[ "$EFI" == "y" ]]; then
     parted -s $RAW_USB_DEVICE mklabel gpt >&2 || Error "Failed to create GPT partition table on '$RAW_USB_DEVICE'"
     LogPrint "Creating EFI system partition with size $USB_UEFI_PART_SIZE MB on '$RAW_USB_DEVICE'"
     parted -s $RAW_USB_DEVICE mkpart primary 0 ${USB_UEFI_PART_SIZE}Mib || Error "Failed to create EFI system partition on '$RAW_USB_DEVICE'"
-    LogPrint "Creating ReaR data partition up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% on '$RAW_USB_DEVICE'"
+    LogPrint "Creating ReaR data partition up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
     parted -s $RAW_USB_DEVICE mkpart primary ${USB_UEFI_PART_SIZE}Mib ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% >&2 || Error "Failed to create ReaR data partition on '$RAW_USB_DEVICE'"
     # partition 1 is the EFI system partition (vfat partition) on which EFI/BOOT/BOOTX86.EFI resides
     ParNr=2
@@ -31,7 +31,7 @@ else
     test "msdos" = "$USB_DEVICE_PARTED_LABEL" -o "gpt" = "$USB_DEVICE_PARTED_LABEL" || USB_DEVICE_PARTED_LABEL="msdos"
     LogPrint "Creating partition table of type '$USB_DEVICE_PARTED_LABEL' on '$RAW_USB_DEVICE'"
     parted -s $RAW_USB_DEVICE mklabel $USB_DEVICE_PARTED_LABEL >&2 || Error "Failed to create $USB_DEVICE_PARTED_LABEL partition table on '$RAW_USB_DEVICE'"
-    LogPrint "Creating ReaR data partition with size ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% on '$RAW_USB_DEVICE'"
+    LogPrint "Creating ReaR data partition up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
     parted -s $RAW_USB_DEVICE mkpart primary 0 ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% >&2 || Error "Failed to create ReaR data partition on '$RAW_USB_DEVICE'"
     ParNr=1
 fi
