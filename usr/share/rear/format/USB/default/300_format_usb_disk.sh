@@ -13,8 +13,8 @@ if [[ "$EFI" == "y" ]]; then
     # Prompt user for size of EFI system partition on USB disk if no valid value is specified:
     while ! [[ "$USB_UEFI_PART_SIZE" =~ ^[0-9]+$ && $USB_UEFI_PART_SIZE > 0 ]] ; do
         # When USB_UEFI_PART_SIZE is empty, do not tell about "Invalid EFI partition size value":
-        test "$USB_UEFI_PART_SIZE" && echo "Invalid EFI system partition size value '$USB_UEFI_PART_SIZE' (must be unsigned integer larger than 0)"
-        echo -n "Enter size for EFI system partition on '$RAW_USB_DEVICE' in MB (plain 'Enter' defaults to 100 MB): "
+        test "$USB_UEFI_PART_SIZE" && echo "${MESSAGE_PREFIX}Invalid EFI system partition size value '$USB_UEFI_PART_SIZE' (must be unsigned integer larger than 0)"
+        echo -n "${MESSAGE_PREFIX}Enter size for EFI system partition on '$RAW_USB_DEVICE' in MB (plain 'Enter' defaults to 100 MB): "
         read USB_UEFI_PART_SIZE
         # Plain 'Enter' defaults to 100 MB (same as the default value in default.conf):
         test "$USB_UEFI_PART_SIZE" || USB_UEFI_PART_SIZE="100"

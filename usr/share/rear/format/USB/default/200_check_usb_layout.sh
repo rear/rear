@@ -58,8 +58,8 @@ ID_FS_TYPE=$(
 
 [[ "$ID_FS_TYPE" == btr* || "$ID_FS_TYPE" == ext* ]]
 if (( $? != 0 )) && [[ -z "$YES" ]]; then
-	echo "USB device $REAL_USB_DEVICE is not formatted with ext2/3/4 or btrfs filesystem"
-	echo -n "Type exactly 'Yes' to format $REAL_USB_DEVICE with $USB_DEVICE_FILESYSTEM filesystem: "
+	echo "${MESSAGE_PREFIX}USB device $REAL_USB_DEVICE is not formatted with ext2/3/4 or btrfs filesystem"
+	echo -n "${MESSAGE_PREFIX}Type exactly 'Yes' to format $REAL_USB_DEVICE with $USB_DEVICE_FILESYSTEM filesystem: "
 	read USB_format_answer
 	[[ "$USB_format_answer" == "Yes" ]]
 	StopIfError "Abort USB format process by user (user input '$USB_format_answer' is not 'Yes')"
