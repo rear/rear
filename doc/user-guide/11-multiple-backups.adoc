@@ -223,20 +223,31 @@ export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK="yes"
 export BORG_REMOTE_PATH="/usr/local/bin/borg"
 ----
 
-Using different backup methods requires to get all the binaries and all
-other needed files of all used backup methods into the recovery system
-during the initial "rear mkbackup/mkrescue" run.
+Using different backup methods requires to get all the binaries
+and all other needed files of all used backup methods into the
+ReaR recovery/rescue system during "rear mkbackup/mkrescue".
 
 Those binaries and other needed files must be manually specified
 via REQUIRED_PROGS and COPY_AS_IS in /etc/rear/local.conf
 (regarding REQUIRED_PROGS and COPY_AS_IS see conf/default.conf).
 
 With those config files creating the ReaR recovery/rescue system ISO image
-together with a backup of the files of the basic system and
-then backup the files in /home could be done like:
+together with a 'tar' backup of the files of the basic system and
+a separated Borg backup of the files in /home could be done like:
+----
+rear -C home_backup mkbackuponly
+rear -C basic_system mkbackup
+----
+In contrast to the other examples above the Borg backup is run first
+because Borg creates encryption keys during repository initialization.
+This ensures the right /borg/keys is created before it will be copied into
+the ReaR recovery/rescue system by the subsequent "rear mkbackup/mkrescue".
+Alternatively the ReaR recovery/rescue system could be created again
+after the Borg backup is done like:
 ----
 rear -C basic_system mkbackup
 rear -C home_backup mkbackuponly
+rear -C basic_system mkrescue
 ----
 
 Recovery of that system could be done by calling in the
@@ -355,11 +366,11 @@ running multiple backups and restores in parallel
 can be somewhat faster compared to sequential processing.
 
 On powerful systems with multiple CPUs, much main memory, fast storage access,
-and fast access to the backups it is in practice basically mandatory
-to split a single huge backup of the whole system into separated parts
-and run at least the restores in parallel unless one likes to grant
-the hardware some time to relax while a system recovery is going on
-(but that is not the intended meaning of Relax-and-Recover ;-)
+and fast access to the backups it is in practice mandatory to split
+a single huge backup of the whole system into separated parts and
+run at least the restores in parallel to utilize powerful hardware
+and be as fast as possible in case of emergency and time pressure
+during a real disaster recovery.
 
 Remember that system recovery with multiple backups requires that
 first and foremost the basic system is recovered where all files
