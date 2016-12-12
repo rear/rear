@@ -323,7 +323,7 @@ for simultaneous_runnable_workflow in "${SIMULTANEOUS_RUNNABLE_WORKFLOWS[@]}" ; 
     if test "$WORKFLOW" = "$simultaneous_runnable_workflow" ; then
         # Simultaneously runnable workflows require unique logfile names
         # so that the PID is interposed in the LOGFILE value from default.conf
-        # which is used below as REAR_LOGFILE while the workflow is running
+        # which is used below as RUNTIME_LOGFILE while the workflow is running
         # and at the end it gets copied to a possibly used-defined LOGFILE.
         # The logfile_suffix also works for logfile names without '.*' suffix
         # (in this case ${LOGFILE##*.} returns the whole $LOGFILE value):
@@ -358,12 +358,12 @@ fi
 mkdir -p $LOG_DIR
 
 exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
-# Keep our currently used LOGFILE in a seperate variable REAR_LOGFILE
+# Keep our currently used LOGFILE in a seperate variable RUNTIME_LOGFILE
 # in case end-user overruled it in the local.conf file:
-readonly REAR_LOGFILE="$LOGFILE"
+readonly RUNTIME_LOGFILE="$LOGFILE"
 
-# Include functions after LOGFILE and REAR_LOGFILE are set
-# because some functions use LOGFILE or REAR_LOGFILE:
+# Include functions after LOGFILE and RUNTIME_LOGFILE are set
+# because some functions use LOGFILE or RUNTIME_LOGFILE:
 for script in $SHARE_DIR/lib/*.sh ; do
     source $script
 done
@@ -372,7 +372,7 @@ done
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
     Log "Command line options: $0 ${CMD_OPTS[@]}"
-    LogPrint "Using log file: $REAR_LOGFILE"
+    LogPrint "Using log file: $RUNTIME_LOGFILE"
 fi
 
 # In DEBUG mode keep by default the build area but that can be overridden in user config files
@@ -502,13 +502,13 @@ else
     EXIT_CODE=1
 fi
 
-# Usually REAR_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
-# The REAR_LOGFILE name set by main script from LOGFILE in default.conf
-# but later user config files are sourced in main script where LOGFILE can be set different
-# so that the user config LOGFILE setting is used as final logfile name:
-if test "$REAR_LOGFILE" != "$LOGFILE" ; then
-    LogPrint "Saving $REAR_LOGFILE as $LOGFILE"
-    cat "$REAR_LOGFILE" > "$LOGFILE"
+# Usually RUNTIME_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
+# The RUNTIME_LOGFILE name is set by the main script from LOGFILE in default.conf
+# but later user config files are sourced in the main script where LOGFILE can be set different
+# so that the user config LOGFILE is used as final logfile name:
+if test "$RUNTIME_LOGFILE" != "$LOGFILE" ; then
+    LogPrint "Saving $RUNTIME_LOGFILE as $LOGFILE"
+    cat "$RUNTIME_LOGFILE" > "$LOGFILE"
 fi
 
 if test $EXIT_CODE -eq 0 ; then
