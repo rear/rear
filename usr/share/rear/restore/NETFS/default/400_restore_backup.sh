@@ -178,12 +178,12 @@ for restoreinput in "${RESTORE_ARCHIVES[@]}" ; do
     wait $BackupPID 2>/dev/null
     backup_prog_return_code=$?
     if test "0" != "$backup_prog_return_code" ; then
-        LogPrint "Backup restore program '$BACKUP_PROG' failed with return code '$backup_prog_return_code'. Check '$LOGFILE' and the restored system."
+        LogPrint "Backup restore program '$BACKUP_PROG' failed with return code '$backup_prog_return_code'. Check '$RUNTIME_LOGFILE' and the restored system."
         is_true "$BACKUP_INTEGRITY_CHECK" && Error "Integrity check failed. Restore aborted because BACKUP_INTEGRITY_CHECK is enabled."
     fi
 
     # TODO if size is not given then calculate it from backuparchive_size
-    tar_message="$(tac $LOGFILE | grep -m1 '^Total bytes written: ')"
+    tar_message="$( tac $RUNTIME_LOGFILE | grep -m1 'Total bytes written: ' )"
     if test "$backup_prog_return_code" = "0" -a "$tar_message" ; then
         LogPrint "$tar_message in $transfertime seconds."
     elif [ "$size" ] ; then

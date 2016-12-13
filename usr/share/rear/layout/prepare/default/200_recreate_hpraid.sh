@@ -78,7 +78,7 @@ if [ ${#restored_controllers} -ne 0 ] ; then
             select choice in "${choices[@]}"; do
                 timestamp=$(stat --format="%Y" "$LAYOUT_FILE")
                 case "$REPLY" in
-                    (1) less "$LOGFILE";;
+                    (1) less "$RUNTIME_LOGFILE";;
                     (2) rear_shell "" "$HPSSACLI ctrl all show detail
 $HPSSACLI ctrl all show config detail
 $HPSSACLI ctrl all show config
@@ -106,7 +106,7 @@ $HPSSACLI ctrl all show config
             if (( REPLY == ${#choices[@]} )); then
                 abort_recreate
 
-                Error "There was an error restoring the HP SmartArray drives. See $LOGFILE for details."
+                Error "There was an error restoring the HP SmartArray drives. See $RUNTIME_LOGFILE for details."
             fi
         fi
     done

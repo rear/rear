@@ -78,7 +78,7 @@ _rc=$?
 sleep 1
 test "$_rc" -gt 0 && LogPrint "WARNING !
 There was an error (${rsync_err_msg[$_rc]}) while restoring the archive.
-Please check '$LOGFILE' for more information. You should also
+Please check '$RUNTIME_LOGFILE' for more information. You should also
 manually check the restored system to see whether it is complete.
 "
 

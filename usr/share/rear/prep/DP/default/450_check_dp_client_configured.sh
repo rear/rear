@@ -9,4 +9,4 @@ StopIfError "Please install Data Protector 6 User Interface component."
 
 /opt/omni/bin/omnidb -filesystem | grep $(hostname) >&8
 StopIfError "Data Protector check failed with error code $? (no filesystem backup found).
-See $LOGFILE for more details."
+See $RUNTIME_LOGFILE for more details."

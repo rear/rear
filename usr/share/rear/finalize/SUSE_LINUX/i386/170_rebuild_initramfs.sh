@@ -57,7 +57,7 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
 		LogPrint "Recreated initramfs (mkinitrd)."
 	else
 		LogPrint "WARNING !!!
-initramfs creation (mkinitrd) failed, please check '$LOGFILE' to see the error
+initramfs creation (mkinitrd) failed, please check '$RUNTIME_LOGFILE' to see the error
 messages in detail and decide yourself, whether the system will boot or not.
 "
 	fi

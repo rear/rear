@@ -49,7 +49,7 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     if [ "$_rc" -gt 0 ]; then
         LogPrint "WARNING !
     There was an error while restoring the archive.
-    Please check '$LOGFILE' and $TMP_DIR/duplicity-restore.log for more information.
+    Please check '$RUNTIME_LOGFILE' and $TMP_DIR/duplicity-restore.log for more information.
     You should also manually check the restored system to see whether it is complete.
     "
 

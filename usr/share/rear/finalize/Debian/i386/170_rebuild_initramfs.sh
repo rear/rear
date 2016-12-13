@@ -39,7 +39,7 @@ update-initramfs afterwards to update the initramfs with the new mdadm.conf
 		LogPrint "Updated initramfs with new drivers for this system."
 	else
 		LogPrint "WARNING !!!
-initramfs creation failed, please check '$LOGFILE' to see the error
+initramfs creation failed, please check '$RUNTIME_LOGFILE' to see the error
 messages in detail and decide yourself, whether the system will boot or not.
 "
 	fi
