@@ -5,8 +5,12 @@
 
 Currently multiple backups are only supported for:
 
-* the internal BACKUP=NETFS method
+* the internal BACKUP=NETFS method with BACKUP_TYPE=""
 * the external BACKUP=BORG method
+
+In general multiple backups are not supported for
+BACKUP_TYPE=incremental or BACKUP_TYPE=differential
+because those require special backup archive file names.
 
 === The basic idea behind
 
