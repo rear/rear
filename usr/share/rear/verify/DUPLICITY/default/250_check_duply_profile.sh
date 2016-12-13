@@ -4,4 +4,4 @@
 [[ -z "$DUPLY_PROFILE" ]] && return
 
 duply "$DUPLY_PROFILE" status >&2   # output is going to logfile
-LogPrintIfError "Duply profile $DUPLY_PROFILE status returned errors - see $LOGFILE"
+LogPrintIfError "Duply profile $DUPLY_PROFILE status returned errors - see $RUNTIME_LOGFILE"

@@ -26,5 +26,5 @@ if ! test -d /ramdisk ; then
 
 
 	# start logfile
-	exec 2>>"$LOGFILE"
+	exec 2>>"$RUNTIME_LOGFILE"
 fi

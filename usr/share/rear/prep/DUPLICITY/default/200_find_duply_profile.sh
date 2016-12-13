@@ -40,7 +40,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] && has_binary duply; then
 
     # a real profile was detected - check if we can talk to the remote site
     duply "$DUPLY_PROFILE" status >&2   # output is going to logfile
-    StopIfError "Duply profile $DUPLY_PROFILE status returned errors - see $LOGFILE"
+    StopIfError "Duply profile $DUPLY_PROFILE status returned errors - see $RUNTIME_LOGFILE"
 
     # we seem to use duply as BACKUP_PROG - so define as such too
     BACKUP_PROG=duply
@@ -49,6 +49,6 @@ if [ "$BACKUP_PROG" = "duplicity" ] && has_binary duply; then
     LogIfError "Could not add DUPLY_PROFILE variable to rescue.conf"
 
     LogPrint "The last full backup taken with duply/duplicity was:"
-    LogPrint "$( tail -50 $LOGFILE | grep 'Last full backup date:' )"
+    LogPrint "$( tail -50 $RUNTIME_LOGFILE | grep 'Last full backup date:' )"
 fi
 

@@ -268,9 +268,7 @@ for path in /usr/bin /bin /usr/sbin /sbin ; do
         (*:"$path":*)
             ;;
         (*)
-            if test -d "$path" ; then
-                PATH=$path:$PATH
-            fi
+            test -d "$path" && PATH=$path:$PATH
             ;;
     esac
 done
@@ -278,9 +276,9 @@ done
 # (e.g. to have third-party backup/restore tools available via PATH):
 PATH=$PATH:/lib/udev:/usr/lib/udev
 
-# Are we root?
+# ReaR must run as 'root' (i.e. abort if effective user ID is not 0):
 if test "$( id --user )" != "0" ; then
-    echo "ERROR: $PRODUCT needs ROOT privileges!" >&2
+    echo "ERROR: $PRODUCT needs 'root' privileges (effective user ID is not 0)" >&2
     exit 1
 fi
 
@@ -300,19 +298,29 @@ hash -r
 # Make sure that we use only English:
 export LC_CTYPE=C LC_ALL=C LANG=C
 
-# Include default config before the LOGFILE value is set because
-# setting the right LOGFILE value requires values from default.conf
+# Include default config before the RUNTIME_LOGFILE value is set because
+# setting the right RUNTIME_LOGFILE value requires values from default.conf
 # in particular the default LOGFILE value and the values of the
 # LOCKLESS_WORKFLOWS and SIMULTANEOUS_RUNNABLE_WORKFLOWS arrays:
 source $SHARE_DIR/conf/default.conf
 
-# Set the right LOGFILE value depending on whether or not
+# Use RUNTIME_LOGFILE for the logfile that is actually used during runtime
+# so that the user can specify a different LOGFILE in his local.conf file.
+# During runtime use only the actually used RUNTIME_LOGFILE value.
+# By default RUNTIME_LOGFILE is the LOGFILE from default.conf:
+RUNTIME_LOGFILE="$LOGFILE"
+# Set the right RUNTIME_LOGFILE value depending on whether or not
 # this currently running instance can run simultaneously with another instance:
 can_run_simultaneously=""
-# LOCKLESS_WORKFLOWS can run simultaneously with another instance by using a LOGFILE.lockless:
+# LOCKLESS_WORKFLOWS can run simultaneously with another instance by using LOGFILE.lockless.
+# FIXME: Only one lockless workflow can run otherwise the same LOGFILE.lockless
+# would be used by more than one simultaneously running lockless workflows:
 for lockless_workflow in "${LOCKLESS_WORKFLOWS[@]}" ; do
-    test "$WORKFLOW" = "$lockless_workflow" && LOGFILE="$LOGFILE.lockless"
-    can_run_simultaneously="yes"
+    if test "$WORKFLOW" = "$lockless_workflow" ; then
+        RUNTIME_LOGFILE="$LOGFILE.lockless"
+        can_run_simultaneously="yes"
+        break
+    fi
 done
 # SIMULTANEOUS_RUNNABLE_WORKFLOWS are allowed to run simultaneously
 # but cannot use LOGFILE.lockless instead they get a LOGFILE with PID
@@ -323,15 +331,18 @@ for simultaneous_runnable_workflow in "${SIMULTANEOUS_RUNNABLE_WORKFLOWS[@]}" ; 
     if test "$WORKFLOW" = "$simultaneous_runnable_workflow" ; then
         # Simultaneously runnable workflows require unique logfile names
         # so that the PID is interposed in the LOGFILE value from default.conf
-        # which is used below as RUNTIME_LOGFILE while the workflow is running
+        # which is used as RUNTIME_LOGFILE while the workflow is running
         # and at the end it gets copied to a possibly used-defined LOGFILE.
         # The logfile_suffix also works for logfile names without '.*' suffix
         # (in this case ${LOGFILE##*.} returns the whole $LOGFILE value):
         logfile_suffix=$( test "${LOGFILE##*.}" = "$LOGFILE" && echo 'log' || echo "${LOGFILE##*.}" )
-        LOGFILE="${LOGFILE%.*}.$$.$logfile_suffix"
+        RUNTIME_LOGFILE="${LOGFILE%.*}.$$.$logfile_suffix"
         can_run_simultaneously="yes"
+        break
     fi
 done
+# The log file that is actually used during runtime must not be changed:
+readonly RUNTIME_LOGFILE
 
 # When this currently running instance cannot run simultaneously with another instance
 # test that this currently running instance does not run simultaneously with another instance:
@@ -352,18 +363,14 @@ if ! test "$can_run_simultaneously" ; then
 fi
 
 # Keep old log file:
-if test -r "$LOGFILE" ; then
-    mv -f "$LOGFILE" "$LOGFILE".old 2>/dev/null
-fi
+test -r "$RUNTIME_LOGFILE" && mv -f "$RUNTIME_LOGFILE" "$RUNTIME_LOGFILE".old 2>/dev/null
+
+# Start logging:
 mkdir -p $LOG_DIR
+exec 2>"$RUNTIME_LOGFILE" || echo "ERROR: Could not create $RUNTIME_LOGFILE" >&2
 
-exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
-# Keep our currently used LOGFILE in a seperate variable RUNTIME_LOGFILE
-# in case end-user overruled it in the local.conf file:
-readonly RUNTIME_LOGFILE="$LOGFILE"
-
-# Include functions after LOGFILE and RUNTIME_LOGFILE are set
-# because some functions use LOGFILE or RUNTIME_LOGFILE:
+# Include functions after RUNTIME_LOGFILE is set and readonly
+# so that functions can use a fixed RUNTIME_LOGFILE value:
 for script in $SHARE_DIR/lib/*.sh ; do
     source $script
 done
@@ -503,8 +510,8 @@ else
 fi
 
 # Usually RUNTIME_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
-# The RUNTIME_LOGFILE name is set by the main script from LOGFILE in default.conf
-# but later user config files are sourced in the main script where LOGFILE can be set different
+# The RUNTIME_LOGFILE name is set above from LOGFILE in default.conf
+# but later user config files are sourced where LOGFILE can be set different
 # so that the user config LOGFILE is used as final logfile name:
 if test "$RUNTIME_LOGFILE" != "$LOGFILE" ; then
     LogPrint "Saving $RUNTIME_LOGFILE as $LOGFILE"

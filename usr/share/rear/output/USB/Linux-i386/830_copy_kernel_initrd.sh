@@ -9,9 +9,15 @@ StopIfError "Could not create $BUILD_DIR/outputfs/$USB_PREFIX/initrd.cgz"
 
 Log "Copied kernel and initrd.cgz to $USB_PREFIX"
 
-cat "$LOGFILE" >"$BUILD_DIR/outputfs/$USB_PREFIX/rear.log"
-StopIfError "Could not copy $LOGFILE to $BUILD_DIR/outputfs/$USB_PREFIX/rear.log"
-Log "Saved $LOGFILE as $USB_PREFIX/rear.log"
+# Copy current unfinished logfile to USB dir for debug purpose.
+# Usually RUNTIME_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
+# The RUNTIME_LOGFILE name is set by the main script from LOGFILE in default.conf
+# but later user config files are sourced in the main script where LOGFILE can be set different
+# so that the user config LOGFILE basename is used as target logfile name:
+logfile_basename=$( basename $LOGFILE )
+cat "$RUNTIME_LOGFILE" >"$BUILD_DIR/outputfs/$USB_PREFIX/$logfile_basename"
+StopIfError "Could not copy $RUNTIME_LOGFILE to $BUILD_DIR/outputfs/$USB_PREFIX/$logfile_basename"
+LogPrint "Saved $RUNTIME_LOGFILE as $USB_PREFIX/$logfile_basename"
 
 # FIXME: This is meaningless ATM, RESULT_FILES should be put somewhere reliable and not on a temporary mounted media.
 #RESULT_FILES=( "${USB_FILES[@]}" "$USB_DIR/kernel" "$USB_DIR/initrd.cgz" )

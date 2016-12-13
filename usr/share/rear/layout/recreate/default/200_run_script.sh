@@ -28,7 +28,7 @@ while [[ -z "$RESTORE_OK" ]]; do
         select choice in "${choices[@]}"; do
 #            timestamp=$(stat --format="%Y" $LAYOUT_FILE)
             case "$REPLY" in
-                (1) less $LOGFILE;;
+                (1) less $RUNTIME_LOGFILE;;
                 (2) less $VAR_DIR/layout/config/df.txt;;
                 (3) rear_shell;;
 #                (3) vi $LAYOUT_FILE;;
@@ -45,7 +45,7 @@ while [[ -z "$RESTORE_OK" ]]; do
             # If disklayout.conf has changed, generate new diskrestore.sh
 #            if (( $timestamp < $(stat --format="%Y" $LAYOUT_FILE) )); then
 #                LogPrint "Detected changes to $LAYOUT_FILE, rebuild $LAYOUT_CODE on-the-fly."
-#                SourceStage "layout/prepare" 2>>$LOGFILE
+#                SourceStage "layout/prepare" 2>>$RUNTIME_LOGFILE
 #            fi
 
             # Reprint menu options when returning from less, shell or vi
@@ -60,7 +60,7 @@ while [[ -z "$RESTORE_OK" ]]; do
         if (( REPLY == ${#choices[@]} )); then
             abort_recreate
 
-            Error "There was an error restoring the system layout. See $LOGFILE for details."
+            Error "There was an error restoring the system layout. See $RUNTIME_LOGFILE for details."
         fi
     fi
 done

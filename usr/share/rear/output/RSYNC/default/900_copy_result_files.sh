@@ -16,8 +16,8 @@ StopIfError "Could not create VERSION file on local rsync location"
 cp $v $(get_template "RESULT_usage_$OUTPUT.txt") "${TMP_DIR}/rsync/${RSYNC_PREFIX}/README" >&2
 StopIfError "Could not copy usage file to local rsync location"
 
-cat "$LOGFILE" >"${TMP_DIR}/rsync/${RSYNC_PREFIX}/rear.log"
-StopIfError "Could not copy $LOGFILE to local rsync location"
+cat "$RUNTIME_LOGFILE" >"${TMP_DIR}/rsync/${RSYNC_PREFIX}/rear.log"
+StopIfError "Could not copy $RUNTIME_LOGFILE to local rsync location"
 
 case $RSYNC_PROTO in
 
