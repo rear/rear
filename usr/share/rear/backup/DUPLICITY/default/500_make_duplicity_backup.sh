@@ -8,10 +8,10 @@ if [ "$BACKUP_PROG" = "duply" ] && has_binary duply ; then
     # a real profile was detected - check if we can talk to the remote site
     LogPrint "Starting full backup with duply/duplicity"
     duply "$DUPLY_PROFILE" backup >&2   # output is going to logfile
-    StopIfError "Duply profile $DUPLY_PROFILE backup returned errors - see $LOGFILE"
+    StopIfError "Duply profile $DUPLY_PROFILE backup returned errors - see $RUNTIME_LOGFILE"
 
     LogPrint "The last full backup taken with duply/duplicity was:"
-    LogPrint "$( tail -50 $LOGFILE | grep 'Last full backup date:' )"
+    LogPrint "$( tail -50 $RUNTIME_LOGFILE | grep 'Last full backup date:' )"
 fi
 
 
@@ -104,7 +104,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
         VERBOSE=1
         LogPrint "WARNING !
     There was an error during archive creation.
-    Please check the archive and see '$LOGFILE' for more information.
+    Please check the archive and see '$RUNTIME_LOGFILE' for more information.
 
     Since errors are oftenly related to files that cannot be saved by
     $BACKUP_PROG, we will continue the $WORKFLOW process. However, you MUST

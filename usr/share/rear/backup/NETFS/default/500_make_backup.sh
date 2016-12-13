@@ -80,14 +80,14 @@ case "$(basename ${BACKUP_PROG})" in
 			$BACKUP_PROG_CREATE_NEWER_OPTIONS \
 			${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
 			-X $TMP_DIR/backup-exclude.txt -C / -c -f - \
-			$(cat $TMP_DIR/backup-include.txt) $LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
+			$(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
 		$BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
 			--no-wildcards-match-slash --one-file-system \
 			--ignore-failed-read $BACKUP_PROG_OPTIONS \
 			$BACKUP_PROG_CREATE_NEWER_OPTIONS \
 			${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
 			-X $TMP_DIR/backup-exclude.txt -C / -c -f - \
-			$(cat $TMP_DIR/backup-include.txt) $LOGFILE | $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $SPLIT_COMMAND
+			$(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE | $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $SPLIT_COMMAND
 	;;
 	(rsync)
 		# make sure that the target is a directory
@@ -104,11 +104,11 @@ case "$(basename ${BACKUP_PROG})" in
 		Log $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
 			$BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $TMP_DIR/backup-exclude.txt \
 			$BACKUP_PROG_OPTIONS $backuparchive \
-			$(cat $TMP_DIR/backup-include.txt) $LOGFILE > $backuparchive
+			$(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
 		$BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
 			$BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $TMP_DIR/backup-exclude.txt \
 			$BACKUP_PROG_OPTIONS $backuparchive \
-			$(cat $TMP_DIR/backup-include.txt) $LOGFILE > $backuparchive
+			$(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
 	;;
 esac 2> "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
 # important trick: the backup prog is the last in each case entry and the case .. esac is the last command
@@ -183,7 +183,7 @@ case "$(basename $BACKUP_PROG)" in
         if (( $backup_prog_rc == 1 )); then
             LogPrint "WARNING: $(basename $BACKUP_PROG) ended with return code $backup_prog_rc and below output:
   ---snip---
-$(grep '^tar: ' $LOGFILE | sed -e 's/^/  /' | tail -n3)
+$(grep '^tar: ' $RUNTIME_LOGFILE | sed -e 's/^/  /' | tail -n3)
   ----------
 This means that files have been modified during the archiving
 process. As a result the backup may not be completely consistent
@@ -194,7 +194,7 @@ backup in order to be sure to safely recover this system.
         elif (( $backup_prog_rc > 1 )); then
             Error "$(basename $BACKUP_PROG) failed with return code $backup_prog_rc and below output:
   ---snip---
-$(grep '^tar: ' $LOGFILE | sed -e 's/^/  /' | tail -n3)
+$(grep '^tar: ' $RUNTIME_LOGFILE | sed -e 's/^/  /' | tail -n3)
   ----------
 This means that the archiving process ended prematurely, or did
 not even start. As a result it is unlikely you can recover this
@@ -213,7 +213,7 @@ system properly. Relax-and-Recover is therefore aborting execution.
         ;;
 esac
 
-tar_message="$(tac $LOGFILE | grep -m1 '^Total bytes written: ')"
+tar_message="$(tac $RUNTIME_LOGFILE | grep -m1 '^Total bytes written: ')"
 if [ $backup_prog_rc -eq 0 -a "$tar_message" ] ; then
 	LogPrint "$tar_message in $transfertime seconds."
 elif [ "$size" ]; then
