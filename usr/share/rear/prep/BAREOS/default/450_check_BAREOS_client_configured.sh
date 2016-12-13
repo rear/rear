@@ -16,7 +16,7 @@ else
    has_binary bareos-fd
    StopIfError "Bareos File Daemon is missing"
 
-   [ -s /etc/bareos/bareos-fd.conf ]
+   [ -s /etc/bareos/bareos-fd.conf ] || [ -s /etc/bareos/bareos-fd.d/client/myself.conf ]
    StopIfError "Bareos configuration file (bareos-fd.conf) missing"
 
    has_binary bconsole

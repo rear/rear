@@ -31,7 +31,8 @@ fi
 # "Connecting to Client 'bareos_client_name-fd at FQDN:9102"
 if [ -z "$BAREOS_CLIENT" ]
 then
-	BAREOS_CLIENT=`grep $(hostname -s) /etc/bareos/bareos-fd.conf | grep "\-fd" | awk '{print $3}'`
+  [ -s /etc/bareos/bareos-fd.conf ] && BAREOS_CLIENT=`grep $(hostname -s) /etc/bareos/bareos-fd.conf | grep "\-fd" | awk '{print $3}'`
+  [ -s /etc/bareos/bareos-fd.d/client/myself.conf ] && BAREOS_CLIENT=`grep $(hostname -s) /etc/bareos/bareos-fd.d/client/myself.conf | grep "\-fd" | awk '{print $3}'`
 fi
 [ "${BAREOS_CLIENT}" ]
 StopIfError "Client $(hostname -s) not defined in /etc/bareos/bareos-fd.conf"
