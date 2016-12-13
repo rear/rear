@@ -348,7 +348,7 @@ readonly RUNTIME_LOGFILE
 # test that this currently running instance does not run simultaneously with another instance:
 if ! test "$can_run_simultaneously" ; then
     # In this case pidof is needed to test what running instances there are:
-    if ! has_binary pidof ; then
+    if ! type pidof 1>/dev/null ; then
         echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
         exit 1
     fi
