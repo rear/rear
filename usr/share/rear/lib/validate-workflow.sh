@@ -11,6 +11,11 @@ WORKFLOW_validate_DESCRIPTION="submit validation information"
 WORKFLOWS=( ${WORKFLOWS[@]} validate )
 WORKFLOW_validate () {
 
+    if test "$SIMULATE" ; then
+        LogPrint "${BASH_SOURCE[0]} submits validation information"
+        return 0
+    fi
+
 	Print "
 Thank you for your time and effort to try out $PRODUCT and your
 willingness to report about $PRODUCT in your environment back
