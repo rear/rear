@@ -145,15 +145,34 @@ for restoreinput in "${RESTORE_ARCHIVES[@]}" ; do
         (tar)
             # Sleep one second to be on the safe side before testing that the backup sub-process is running and
             # avoid "kill: (BackupPID) - No such process" output when the backup sub-process has finished:
+            previous_tar_restore_blocks=0
             while sleep $PROGRESS_WAIT_SECONDS ; kill -0 $BackupPID 2>/dev/null ; do
-                blocks="$( tail -1 "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" | awk 'BEGIN { FS="[ :]" } /^block [0-9]+: / { print $2 }' )"
-                size="$((blocks*512))"
+                # Use an array to easily separate the parts (i.e. each message word is an array member):
+                latest_tar_restore_message=( $( tail -n1 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log ) )
                 if [ -f ${TMP_DIR}/wait_dvd ] ; then
                     starttime=$((starttime+1))
                 else
-                    restored_size_MiB=$((size/1024/1024))
-                    restored_avg_KiB_per_sec=$((size/1024/(SECONDS-starttime)))
-                    ProgressInfo "Restored $restored_size_MiB MiB [avg $restored_avg_KiB_per_sec KiB/sec] "
+                    # An usual 'tar' restore message looks like 'block 219: etc/fstab'
+                    # so that ${latest_tar_restore_message[1]} is '219:'
+                    latest_tar_restore_blocks=$( echo ${latest_tar_restore_message[1]} | tr -c -d '[:digit:]' )
+                    test "$latest_tar_restore_blocks" || latest_tar_restore_blocks=0
+                    if test "$latest_tar_restore_blocks" -gt "$previous_tar_restore_blocks" ; then
+                        previous_tar_restore_blocks=$latest_tar_restore_blocks
+                        size="$((latest_tar_restore_blocks*512))"
+                        restored_size_MiB=$((size/1024/1024))
+                        restored_avg_KiB_per_sec=$((size/1024/(SECONDS-starttime)))
+                        ProgressInfo "Restored $restored_size_MiB MiB [avg $restored_avg_KiB_per_sec KiB/sec] "
+                    else
+                        # A negative subscript as in ${latest_tar_restore_message[-1]} only works in bash 4.3 and above so that
+                        # an expression in the subscript is used ${latest_tar_restore_message[${#latest_tar_restore_message[@]}-1]}
+                        # see http://unix.stackexchange.com/questions/198787/is-there-a-way-of-reading-the-last-element-of-an-array-with-bash
+                        latest_tar_restore_file=${latest_tar_restore_message[${#latest_tar_restore_message[@]}-1]}
+                        if test "$latest_tar_restore_file" ; then
+                            ProgressInfo "Restoring $latest_tar_restore_file "
+                        else
+                            ProgressInfo "Restoring ${latest_tar_restore_message[@]} "
+                        fi
+                    fi
                 fi
             done
             ;;
@@ -182,14 +201,17 @@ for restoreinput in "${RESTORE_ARCHIVES[@]}" ; do
         is_true "$BACKUP_INTEGRITY_CHECK" && Error "Integrity check failed. Restore aborted because BACKUP_INTEGRITY_CHECK is enabled."
     fi
 
-    # TODO if size is not given then calculate it from backuparchive_size
-    tar_message="$( tac $RUNTIME_LOGFILE | grep -m1 'Total bytes written: ' )"
-    if test "$backup_prog_return_code" = "0" -a "$tar_message" ; then
-        LogPrint "$tar_message in $transfertime seconds."
-    elif [ "$size" ] ; then
-        restored_size_MiB=$((size/1024/1024))
-        restored_avg_KiB_per_sec=$((size/1024/transfertime))
-        LogPrint "Restored $restored_size_MiB MiB in $((transfertime)) seconds [avg $restored_avg_KiB_per_sec KiB/sec]"
+    # Final info message:
+    if test "tar" = "$BACKUP_PROG" ; then
+        latest_tar_restore_message=( $( tail -n1 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log ) )
+        latest_tar_restore_blocks=$( echo ${latest_tar_restore_message[1]} | tr -c -d '[:digit:]' )
+        test "$latest_tar_restore_blocks" || latest_tar_restore_blocks=0
+        if test "$latest_tar_restore_blocks" -gt "1" ; then
+            size="$((latest_tar_restore_blocks*512))"
+            restored_size_MiB=$((size/1024/1024))
+            restored_avg_KiB_per_sec=$((size/1024/(SECONDS-starttime)))
+            LogPrint "Restored $restored_size_MiB MiB in $transfertime seconds [avg $restored_avg_KiB_per_sec KiB/sec] "
+        fi
     fi
 
 done
