@@ -5,7 +5,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-WORKFLOW_finalizeonly_DESCRIPTION="only finalize the recovery"
+test "$VERBOSE" && WORKFLOW_finalizeonly_DESCRIPTION="only finalize the recovery (does not yet work)"
 WORKFLOWS=( ${WORKFLOWS[@]} finalizeonly )
 # The finalizeonly workflow is a part (a strict subset) of the recover workflow
 # by skipping those part of the recover workflow that are not needed

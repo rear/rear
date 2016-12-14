@@ -5,7 +5,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-WORKFLOW_layoutonly_DESCRIPTION="only recreate the disk layout"
+test "$VERBOSE" && WORKFLOW_layoutonly_DESCRIPTION="only recreate the disk layout (experimental)"
 WORKFLOWS=( ${WORKFLOWS[@]} layoutonly )
 # The layoutonly workflow is a part (a strict subset) of the recover workflow
 # by skipping those part of the recover workflow that are not needed

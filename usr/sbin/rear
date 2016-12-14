@@ -514,12 +514,12 @@ fi
 # but later user config files are sourced where LOGFILE can be set different
 # so that the user config LOGFILE is used as final logfile name:
 if test "$RUNTIME_LOGFILE" != "$LOGFILE" ; then
-    LogPrint "Saving $RUNTIME_LOGFILE as $LOGFILE"
+    test "$WORKFLOW" != "help" && LogPrint "Saving $RUNTIME_LOGFILE as $LOGFILE"
     cat "$RUNTIME_LOGFILE" > "$LOGFILE"
 fi
 
 if test $EXIT_CODE -eq 0 ; then
-    LogToSyslog "DONE: rc=$EXIT_CODE"
+    test "$WORKFLOW" != "help" && LogToSyslog "DONE: rc=$EXIT_CODE"
 fi
 
 exit $EXIT_CODE
