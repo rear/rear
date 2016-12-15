@@ -181,7 +181,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                         # see http://unix.stackexchange.com/questions/198787/is-there-a-way-of-reading-the-last-element-of-an-array-with-bash
                         latest_tar_restore_file=${latest_tar_restore_message[ ${#latest_tar_restore_message[@]} - 1 ]}
                         # A valid filename in a 'tar --verbose' message contains usually a '/' (perhaps except files directly in '/'):
-                        if [[ "$latest_tar_restore_file" =~ ".*/.*" ]] ; then
+                        if [[ $latest_tar_restore_file =~ .*/.* ]] ; then
                             ProgressInfo "Restoring $latest_tar_restore_file "
                         else
                             ProgressInfo "Restoring ${latest_tar_restore_message[@]} "
