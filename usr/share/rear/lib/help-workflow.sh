@@ -37,16 +37,10 @@ for workflow in ${WORKFLOWS[@]} ; do
     # is only defined if "$VERBOSE" is set - currently (18. Nov. 2015) for those
     # WORKFLOW_savelayout_DESCRIPTION WORKFLOW_shell_DESCRIPTION WORKFLOW_udev_DESCRIPTION
     # so that an empty default is used to avoid that ${!description} is an unbound variable:
-    if test -n "${!description:-}" ; then
-        printf " %-16s%s\n" $workflow "${!description:-}"
-    fi
+    test "${!description:-}" && printf " %-16s%s\n" $workflow "${!description:-}"
 done
 
-if test -z "$VERBOSE" ; then
-    echo "Use 'rear -v help' for more advanced commands."
-fi
-
-EXIT_CODE=1
+test "$VERBOSE" || echo "Use 'rear -v help' for more advanced commands."
 
 }
 
