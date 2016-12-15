@@ -138,7 +138,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
     # While the backup restore runs in a sub-process, display some progress information to the user.
     # ProgressInfo texts have a space at the end to get the 'OK' from ProgressStop shown separated.
     test "$PROGRESS_WAIT_SECONDS" || PROGRESS_WAIT_SECONDS=1
-    ProgressStart "Backup restore program '$BACKUP_PROG' started (PID=$BackupPID)"
+    ProgressStart "Backup restore program '$BACKUP_PROG' started in subshell (PID=$BackupPID)"
     case "$BACKUP_PROG" in
         (tar)
             # Sleep one second to be on the safe side before testing that the backup sub-process is running and
