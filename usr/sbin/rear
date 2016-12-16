@@ -518,8 +518,12 @@ if test "$RUNTIME_LOGFILE" != "$LOGFILE" ; then
     cat "$RUNTIME_LOGFILE" > "$LOGFILE"
 fi
 
-if test $EXIT_CODE -eq 0 ; then
-    test "$WORKFLOW" != "help" && LogToSyslog "DONE: rc=$EXIT_CODE"
+if test "$WORKFLOW" != "help" ; then
+    if test $EXIT_CODE -eq 0 ; then
+        LogToSyslog "$PROGRAM $WORKFLOW finished with zero exit code"
+    else
+        LogToSyslog "$PROGRAM $WORKFLOW failed with exit code $EXIT_CODE"
+    fi
 fi
 
 exit $EXIT_CODE
