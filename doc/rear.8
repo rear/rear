@@ -316,12 +316,11 @@ Write the image using sshfs and the SSH protocol\&.
 .PP
 OUTPUT_URL=\fBnull\fR
 .RS 4
-Do not copy the ISO image from
-\fI/var/lib/rear/output/\fR
-to an external destination\&. Useful in combination with an
-\fIexternal\fR
-backup program, or when
-BACKUP_URL=iso://backup
+Do not copy the ISO image from \fI/var/lib/rear/output/\fR to a remote output location\&.
+OUTPUT_URL=null is useful when another program (e.g. an \fIexternal\fR backup program) is used to save the ISO image from the local system to a remote place,
+or with BACKUP_URL=iso:///backup when the backup is included in the ISO image to avoid a (big) copy of the ISO image at a remote output location\&.
+In the latter case the ISO image must be manually saved from the local system to a remote place\&.
+OUTPUT_URL=null is only supported together with BACKUP=NETFS\&.
 .RE
 .sp
 If you do not specify OUTPUT_URL variable then by default it will be aligned to what was defined by variable BACKUP_URL\&. And, the ISO image will then be copied to the same location as your backup of the system disk(s)\&.
