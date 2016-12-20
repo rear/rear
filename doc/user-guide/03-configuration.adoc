@@ -71,7 +71,13 @@ OUTPUT_URL=sshfs://::
 Write the image using sshfs and the SSH protocol.
 
 OUTPUT_URL=null::
-To avoid duplicate ISO images. Useful in combination with an _external_ backup program, or when +BACKUP_URL=iso://backup+
+Do not copy the ISO image from _/var/lib/rear/output/_ to a remote output location.
++OUTPUT_URL=null+ is useful when another program (e.g. an _external_ backup program)
+is used to save the ISO image from the local system to a remote place,
+or with +BACKUP_URL=iso:///backup+ when the backup is included in the ISO image
+to avoid a (big) copy of the ISO image at a remote output location.
+In the latter case the ISO image must be manually saved from the local system to a remote place.
++OUTPUT_URL=null+ is only supported together with +BACKUP=NETFS+.
 
 The default boot option of the created ISO is boothd / "boot from first harddisk". If you want to change this,
 e.g. because you integrate REAR into some automation process, you can change the default using
