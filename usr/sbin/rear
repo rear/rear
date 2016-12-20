@@ -518,11 +518,25 @@ if test "$RUNTIME_LOGFILE" != "$LOGFILE" ; then
     cat "$RUNTIME_LOGFILE" > "$LOGFILE"
 fi
 
+# When this point is reached, the workflow is done without a real error because
+# for real errors one of the Error functions should be called that kills rear
+# and then the exit code is usually 143 (i.e. 128 + signal-number)
+# and the Error function results an "ERROR: ..." syslog message.
+# There should be no syslog message for the help workflow:
 if test "$WORKFLOW" != "help" ; then
     if test $EXIT_CODE -eq 0 ; then
         LogToSyslog "$PROGRAM $WORKFLOW finished with zero exit code"
     else
-        LogToSyslog "$PROGRAM $WORKFLOW failed with exit code $EXIT_CODE"
+        if test "checklayout" = "$WORKFLOW" -a $EXIT_CODE -eq 1 ; then
+            # The checklayout workflow is special because it sets EXIT_CODE=1
+            # when the disk layout has changed or when configuration files have changed
+            # but that exit code 1 is no error but meant as a signal that things have changed
+            # which require a new ISO image so that users can run "rear checklayout || rear mkrescue"
+            # see https://github.com/rear/rear/issues/564
+            LogToSyslog "$PROGRAM checklayout finished with exit code 1 (layout or config changed)"
+        else
+            LogToSyslog "$PROGRAM $WORKFLOW failed with exit code $EXIT_CODE"
+        fi
     fi
 fi
 
