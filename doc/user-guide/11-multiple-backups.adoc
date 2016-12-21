@@ -117,7 +117,7 @@ BACKUP_URL=nfs://your.NFS.server.IP/path/to/your/rear/backup
 ----
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
-BACKUP_PROG_EXCLUDE=( /home/* /opt/* )
+BACKUP_PROG_EXCLUDE=( "${BACKUP_PROG_EXCLUDE[@]}" '/home/*' '/opt/*' )
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 ----
 
@@ -126,7 +126,7 @@ BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
 BACKUP_ONLY_INCLUDE="yes"
-BACKUP_PROG_INCLUDE=( /home/* )
+BACKUP_PROG_INCLUDE=( '/home/*' )
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 ----
 
@@ -135,7 +135,7 @@ BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
 BACKUP_ONLY_INCLUDE="yes"
-BACKUP_PROG_INCLUDE=( /opt/* )
+BACKUP_PROG_INCLUDE=( '/opt/*' )
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 ----
 
@@ -197,7 +197,7 @@ COPY_AS_IS=( "${COPY_AS_IS[@]}" "/borg/keys" )
 ----
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
-BACKUP_PROG_EXCLUDE=( /home/* )
+BACKUP_PROG_EXCLUDE=( "${BACKUP_PROG_EXCLUDE[@]}" '/home/*' )
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 BACKUP=NETFS
 BACKUP_OPTIONS="nfsvers=3,nolock"
@@ -210,7 +210,7 @@ this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
 BACKUP=BORG
 BACKUP_ONLY_INCLUDE="yes"
-BACKUP_PROG_INCLUDE=( /home/* )
+BACKUP_PROG_INCLUDE=( '/home/*' )
 BORGBACKUP_ARCHIVE_PREFIX="rear"
 BORGBACKUP_HOST="borg.server.name"
 BORGBACKUP_USERNAME="borg_server_username"
@@ -328,7 +328,7 @@ PROGRESS_WAIT_SECONDS="3"
 ----
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
-BACKUP_PROG_EXCLUDE=( /home/* /opt/* )
+BACKUP_PROG_EXCLUDE=( "${BACKUP_PROG_EXCLUDE[@]}" '/home/*' '/opt/*' )
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 ----
 
@@ -337,7 +337,7 @@ BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
 BACKUP_ONLY_INCLUDE="yes"
-BACKUP_PROG_INCLUDE=( /home/* )
+BACKUP_PROG_INCLUDE=( '/home/*' )
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 ----
 
@@ -346,7 +346,7 @@ BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
 BACKUP_ONLY_INCLUDE="yes"
-BACKUP_PROG_INCLUDE=( /opt/* )
+BACKUP_PROG_INCLUDE=( '/opt/*' )
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 ----
 
