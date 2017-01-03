@@ -133,6 +133,10 @@ When using +BACKUP=NETFS+ and +BACKUP_PROG=tar+ there is an option to select
 incremental or differential backups until the next full backup day
 e.g. via +FULLBACKUPDAY="Mon"+ is reached or when the last full backup
 is too old after FULLBACKUP_OUTDATED_DAYS has passed.
+Incremental or differential backup is currently only known to work
+with +BACKUP_URL=nfs+. Other BACKUP_URL schemes may work but
+at least +BACKUP_URL=usb+ is known not to work with incremental
+or differential backup.
 
 BACKUP=REQUESTRESTORE::
 No backup, just ask user to somehow restore the filesystems.

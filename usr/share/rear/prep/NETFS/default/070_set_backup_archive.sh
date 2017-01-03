@@ -51,6 +51,12 @@ set -e -u -o pipefail
 if ! test "NETFS" = "$BACKUP" -a "tar" = "$BACKUP_PROG" ; then
     Error "BACKUP_TYPE incremental or differential only works with BACKUP=NETFS and BACKUP_PROG=tar"
 fi
+# Incremental or differential backup is currently only known to work with BACKUP_URL=nfs://.
+# Other BACKUP_URL schemes may work but at least BACKUP_URL=usb:///... is known not to work
+# with incremental or differential backup (see https://github.com/rear/rear/issues/1145):
+if test "usb" = "$scheme" ; then
+    Error "BACKUP_TYPE incremental or differential does not work with BACKUP_URL=usb:///..."
+fi
 # Incremental or differential backup and keeping old backup contradict each other (mutual exclusive)
 # so that NETFS_KEEP_OLD_BACKUP_COPY must not be 'true' in case of incremental or differential backup:
 if test "$NETFS_KEEP_OLD_BACKUP_COPY" ; then
