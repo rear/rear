@@ -96,7 +96,7 @@ Relax-and-Recover has a wide range of features:
  - Syslinux boot menu
  - Storing rescue/backup logfile on rescue media
  - Restoring to different hardware
- - RHEL4, RHEL5, RHEL6 and RHEL7 support
+ - RHEL5, RHEL6 and RHEL7 support
  - SLES 11 and SLES 12 support
  - Debian and Ubuntu support
  - Various usability improvements
