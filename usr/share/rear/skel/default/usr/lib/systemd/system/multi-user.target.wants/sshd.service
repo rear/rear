@@ -1,1 +1,8 @@
-../sshd.service
+[Unit]
+Description=Relax-and-Recover sshd service
+DefaultDependencies=no
+ConditionPathExists=/etc/inittab
+
+[Service]
+ExecStart=/etc/scripts/run-sshd
+Type=simple

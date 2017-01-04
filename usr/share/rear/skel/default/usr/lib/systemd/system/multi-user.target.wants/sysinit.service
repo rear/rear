@@ -1,1 +1,8 @@
-../sysinit.service
+[Unit]
+Description=Initialize Rescue System
+After=systemd-udevd.service
+
+[Service]
+Type=oneshot
+ExecStart=/etc/scripts/system-setup
+StandardInput=tty

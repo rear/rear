@@ -1,1 +1,14 @@
-../systemd-udevd-kernel.socket
+#  This file is part of systemd.
+#
+
+[Unit]
+Description=udev Kernel Socket
+Documentation=man:systemd-udevd.service(8) man:udev(7)
+DefaultDependencies=no
+ConditionCapability=CAP_MKNOD
+
+[Socket]
+Service=systemd-udevd.service
+ReceiveBuffer=134217728
+ListenNetlink=kobject-uevent 1
+PassCredentials=yes

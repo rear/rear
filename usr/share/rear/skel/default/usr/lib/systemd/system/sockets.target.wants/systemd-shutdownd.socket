@@ -1,1 +1,11 @@
-../systemd-shutdownd.socket
+#  This file is part of systemd.
+#
+# See systemd.special(7) for details
+
+[Unit]
+Description=Delayed Shutdown Socket
+DefaultDependencies=no
+Before=sockets.target
+
+[Socket]
+ListenDatagram=@/org/freedesktop/systemd1/shutdownd

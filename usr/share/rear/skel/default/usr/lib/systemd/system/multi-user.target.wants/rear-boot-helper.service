@@ -1,1 +1,7 @@
-../rear-boot-helper.service
+[Unit]
+Description=Relax-and-Recover boot script
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/etc/scripts/boot
