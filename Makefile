@@ -83,8 +83,18 @@ validate:
 	find etc/ usr/share/rear/conf/ -name '*.conf' | xargs -n 1 bash -n
 	bash -n $(rearbin)
 	find . -name '*.sh' | xargs -n 1 bash -n
-### Fails to work on RHEL4
-#	find -L . -type l
+	find usr/share/rear -name '*.sh' | grep -v -E '(lib|skel|conf)' | while read FILE ; do \
+		num=$$(echo $${FILE##*/} | cut -c1-3); \
+		if [[ "$$num" = "000" || "$$num" = "999" ]] ; then \
+			echo "ERROR: script $$FILE may not start with $$num"; \
+			exit 1; \
+		else \
+			if $$( grep '[_[:alpha:]]' <<< $$num >/dev/null 2>&1 ) ; then \
+				echo "ERROR: script $$FILE must start with 3 digits"; \
+				exit 1; \
+			fi; \
+		fi; \
+	done
 
 man:
 	@echo -e "\033[1m== Prepare manual ==\033[0;0m"
