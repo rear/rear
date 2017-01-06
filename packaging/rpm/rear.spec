@@ -8,7 +8,7 @@
 
 Summary: Relax-and-Recover is a Linux disaster recovery and system migration tool
 Name: rear
-Version: 1.19
+Version: 2.00
 Release: 1%{?rpmrelease}%{?dist}
 License: GPLv3
 Group: Applications/File
@@ -113,7 +113,7 @@ Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
 OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
 sftp, ftp, http, nfs, cifs) as well as a multitude of backup strategies
 (incl.  IBM TSM, HP DataProtector, Symantec NetBackup, EMC NetWorker,
-Bacula, Bareos, rsync).
+Bacula, Bareos, BORG, Duplicity, rsync).
 
 Relax-and-Recover was designed to be easy to set up, requires no maintenance
 and is there to assist when disaster strikes. Its setup-and-forget nature

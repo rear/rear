@@ -1,6 +1,6 @@
 = rear(8)
-:version: v1.19.0
-:date: 23 August 2016
+:version: v2.00
+:date: 6 January 2017
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -514,7 +514,7 @@ The Relax-and-Recover website is located at: http://relax-and-recover.org/
 
 
 == COPYRIGHT
-(c) 2006-2016
+(c) 2006-2017
 
 Schlomo Schapiro
 

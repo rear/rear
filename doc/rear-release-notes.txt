@@ -7,7 +7,7 @@ Relax-and-Recover
   o Development
   o Events
 
-Release Notes for Relax-and-Recover version 1.19
+Release Notes for Relax-and-Recover version 2.00
 
 This document contains the release notes for the open source project
 Relax-and-Recover.
@@ -30,7 +30,7 @@ which does not replace in any way a good backup policy.
 Product Features
 
 The following features are supported on the most recent releases of
-Relax-and-Recover. Anything labeled as (NEW!) was added as the most recent
+Relax-and-Recover. Anything labeled as (New) was added as the most recent
 release. New functionality for previous releases can be seen in the next
 chapter that details each release.
 
@@ -56,7 +56,7 @@ functionality:
 
   o Multipath support for SAN storage
 
-  o UEFI support
+  o UEFI support (including UEFI USB booting (New))
 
   o Integrates with internal backup solutions such as:
 
@@ -64,11 +64,17 @@ functionality:
       - GNU tar (BACKUP=NETFS, BACKUP_PROG=tar, BACKUP_TYPE=incremental,
         FULLBACKUPDAY="Mon") for using incremental backups with a weekly full
         backup. Be aware, old tar archives will not be removed automatically!
+        (New)
+      - GNU tar (BACKUP=NETFS, BACKUP_PROG=tar, BACKUP_TYPE=differential,
+        FULLBACKUPDAY="Mon") for using differential backups with a weekly
+        full backup. Be aware, old tar archives will not be removed
+        automatically! (Updated)
       - GNU tar with openssl encryption (BACKUP=NETFS, BACKUP_PROG=tar,
         BACKUP_PROG_CRYPT_ENABLED=1)
       - rsync on local devices (BACKUP=NETFS, BACKUP_PROG=rsync), such USB
         and local disks
       - rsync over the network (BACKUP=RSYNC, BACKUP_PROG=rsync)
+      - Multiple backup methods (read the documentation) (New)
   o Integrates with external backup solutions such as:
 
       - Tivoli Storage Manager (BACKUP=TSM)
@@ -84,6 +90,7 @@ functionality:
       - SEP Sesam (BACKUP=SESAM)
       - FDR/Upstream (BACKUP=FDRUPSTREAM)
       - Novastor NovaBACKUP DC (BACKUP=NBKDC)
+      - Borg Backup (BACKUP=BORG) (New)
   o Integrates with Disaster Recovery Linux Manager (DRLM)
 
   o Udev support (except for some really ancient udev versions) which is the
@@ -136,7 +143,7 @@ functionality:
   o The layout workflow is the default workflow instead of the deprecated dr
     workflow. The dr workflow kept all important system information into a
     directory structure where the new layout workflow use files to keep the
-    information centralized. The dr workflow has been removed in rear v1.14!
+    information centralized. The dr workflow has been removed in ReaR v1.14!
 
   o External USB booting now uses extlinux instead of syslinux, and
     therefore, the USB disk must first be formatted with an ext2, ext3, ext4
@@ -147,7 +154,7 @@ functionality:
 
   o VLAN tagging support
 
-  o Add timestamp of rear run with rc code to the syslog or messages file;
+  o Add timestamp of ReaR run with rc code to the syslog or messages file;
     sending mail report is also possible
 
 NOTE: Features marked experimental are prone to change with future releases.
@@ -161,6 +168,64 @@ Relax-and-Recover are compatible with previous versions of Relax-and-Recover,
 unless otherwise noted.
 
 The references pointing to fix #nr or issue #nr refer to our issues tracker.
+
+Version 2.00 (January 2017)
+
+(Important Note) ReaR 2.00 introduced the 3-digits scripts instead of the
+2-digits script. This means all scripts must begin with 3 digits, e.g.
+010-my-script.sh instead of 10-my-script. Therefore, if you wrote your own
+scripts make sure to renumber these. You could also use the make validate to
+check this.
+
+  o Bareos support: add missing directory /var/run/bareos in recovery system
+    (issue #1148)
+
+  o Forbid BACKUP_URL=usb for BACKUP_TYPE=incremental/differential (issues #
+    1141 and #1145)
+
+  o Improved and added new example configurations (issue #1068, #1058)
+
+  o Modified/Improved the exit code messages of ReaR (issues #1089, #1133)
+
+  o Fix documentation regarding OUTPUT_URL=null (issues #734, #1130)
+
+  o Better and fail safe progress messages while tar backup restore (issue #
+    1116)
+
+  o Implement simulation mode with simulation with the workflows validate and
+    shell (issue #1098)
+
+  o Update 11-multiple-backups.adoc : Multiple backups are in general not
+    supported for BACKUP_TYPE=incremental or BACKUP_TYPE=differential (issues
+    #1074 and #1123)
+
+  o Using RUNTIME_LOGFILE in all scripts as needed (issue #1119)
+
+  o New Backup method was added - BORG (issues #1118,
+
+  o Multiple backups are now possible (issue #1088, #1102, #1096) - see the
+    documentation page (New)
+
+  o Support partitioning and formatting huge USB devices (issue #1105)
+
+  o Skip remount async when systemd is used (issue #1097)
+
+  o Fixed and enhanced code for multiple ISOs (issue #1081)
+
+  o BACKUP_TYPE=incremental (New) and BACKUP_TYPE=differential were updated
+    (issue #974, #1069)
+
+  o Added support for setting a UUID on XFS with enabled CRC (RHEL 7) (issue
+    #1065)
+
+  o Fix for ISO not bootable for SLES11 ppc64 with root LVM (issue #1061)
+
+  o PXE booting enhancement with new style of uploading the boot files (issue
+    #193)
+
+  o Renumbering the ReaR scripts from 2-digits to 3-digits (issue #1051)
+
+  o Improved boot loader detection (issue #1038)
 
 Version 1.19.0 (October 2016)
 
@@ -229,7 +294,7 @@ Version 1.19.0 (October 2016)
 
   o NFS mount points are not recreated after a recover (issue #818)
 
-  o Correcting rear return code handling in auto recover mode (issue #893)
+  o Correcting ReaR return code handling in auto recover mode (issue #893)
 
   o Added NFSv4 support for security 'sys' only so far (issue #754)
 
@@ -295,7 +360,7 @@ Version 1.18.0 (March 2016)
   o Added backup capabilities; getcap and setcap are used to backup and
     restore (issue #771)
 
-  o Correct bash syntax so rear is compatible with bash v3 and v4 (issue #
+  o Correct bash syntax so ReaR is compatible with bash v3 and v4 (issue #
     765, #767)
 
   o Added support for new backup method Novastor NovaBACKUP DC (+BACKUP=
@@ -306,7 +371,7 @@ Version 1.18.0 (March 2016)
   o Example configuration to put backup and rescue image on same ISO image,
     eg. DVD (issue #430)
 
-  o Improved the rear documentation
+  o Improved the ReaR documentation
 
   o remove the noatime mount option for cifs mount (issue #752)
 
@@ -371,7 +436,7 @@ Version 1.18.0 (March 2016)
   o Saved the current mount points and permissions; in order to improve and
     avoid missing mount points after recovery (issue #619)
 
-  o NSR servername not defined causing rear to hang (issue #637)
+  o NSR servername not defined causing ReaR to hang (issue #637)
 
   o Removed mingetty as a required package (issue #661)
 
@@ -397,7 +462,7 @@ Version 1.18.0 (March 2016)
 
   o Check via NSR if the ISO image is not obsolete (issue #653)
 
-  o Added ebiso support within rear (required for UEFI booting with SLES 11 &
+  o Added ebiso support within ReaR (required for UEFI booting with SLES 11 &
     12 (issue #657)
 
   o FDR/Upstream (BACKUP=FDRUPSTREAM) (NEW!) (issue #659)
@@ -450,7 +515,7 @@ Version 1.17.2 (August 2015)
 
   o Bail out when syslinux/modules are not found in lib/
     bootloader-functions.sh (issues #467 and #596) You could also define a
-    variable SYSLINUX_MODULES_DIR if rear cannot find it automatically
+    variable SYSLINUX_MODULES_DIR if ReaR cannot find it automatically
     (should not be necessary)
 
   o Support was added for SLES11 on PPC64 hardware (issues #616 and #628)
@@ -471,11 +536,11 @@ Version 1.17.2 (August 2015)
     different default pool name. Renamed the RETENTION_TIME variable to
     NSR_RETENTION_TIME (issue #640)
 
-  o rear website shows the user guide which is part of the rear software
+  o ReaR website shows the user guide which is part of the ReaR software
     (linked to GitHub)
 
   o new document 10-integrating-external-backup.adoc which explains the steps
-    to take for a new backup integration into rear
+    to take for a new backup integration into ReaR
 
   o All AsciiDoc documentation changed extention from .txt to .adoc
 
@@ -533,7 +598,7 @@ Version 1.17.1 (June 2015)
 
 Version 1.17.0 (March 2015)
 
-  o rear 1.17 introduced a new stage directory (init) which is called before
+  o ReaR 1.17 introduced a new stage directory (init) which is called before
     any workflow. Can be used for extra initialization code, custom
     configurations and other stuff that should happen each time that ReaR is
     used (was added especially for DRLM as plugin for their DRLM variables)
@@ -544,7 +609,7 @@ Version 1.17.0 (March 2015)
     was executed after the mount test instead of before. (issue #547)
 
   o RHEL 6 on PPC64 architecture has problems with seclabel mount option.
-    There was a fix which cuts the seclabel mount option (as rear is by
+    There was a fix which cuts the seclabel mount option (as ReaR is by
     default not using SELinux) (issue #545)
 
   o Disaster Recovery Linux Manager (DRLM) is a new Open Source project to
@@ -571,7 +636,7 @@ Version 1.17.0 (March 2015)
   o Increased to start variable from 32768 to 2097152 in script
     10_include_partition_code.sh (issue #492)
 
-  o Adding /run/resolvconf/resolv.conf (Ubuntu) to rear image when found
+  o Adding /run/resolvconf/resolv.conf (Ubuntu) to ReaR image when found
     (issue #520)
 
   o When using /etc/rear/mappings/ip_addresses IPADDR/cidr must be translated
@@ -585,9 +650,9 @@ Version 1.17.0 (March 2015)
   o Adding findmnt command to GNU/Linux.conf file; request from https://
     bugzilla.opensuse.org/show_bug.cgi?id=908854
 
-  o BTRFS code has been rewritten by J. Meixner/G. D'haese to get SuSe
-    rear116 fork back into our master tree of rear. BTRFS is now properly
-    recreated on Fedora 20 and 21 and on SLES 12 and OpenSuSe 13 (issue #233,
+  o BTRFS code has been rewritten by J. Meixner/G. D'haese to get SUSE
+    rear116 fork back into our master tree of ReaR. BTRFS is now properly
+    recreated on Fedora 20 and 21 and on SLES 12 and openSUSE 13 (issue #233,
     #497, #538) See also https://bugzilla.opensuse.org/show_bug.cgi?id=908854
 
   o Enhanced the systemd start-up of udev daemons which is different on
@@ -634,7 +699,7 @@ Version 1.17.0 (March 2015)
   o Several fixes in the 10_include_partition_code.sh script (issue #487, #
     492)
 
-  o Being a bit more careful when deleting the outputfs directory when rear
+  o Being a bit more careful when deleting the outputfs directory when ReaR
     finishes (issue #465)
 
   o Add a new config option USE_STATIC_NETWORKING (issue #488)
@@ -644,14 +709,14 @@ Version 1.17.0 (March 2015)
   o Improved the RPM package build for SLES, removed the lsb requirement
     (issue #479)
 
-  o Integrated the patch skip_sysconfig_kernel_if_not_exist.diff from SuSe
+  o Integrated the patch skip_sysconfig_kernel_if_not_exist.diff from SUSE
     (issue #477)
 
   o Debian 7 reference to grub.conf was corrected (issue #473)
 
   o Debian packing was improved (issue #474, #484)
 
-  o Commercial backup solution Galaxy 10 support added to rear (issue #471)
+  o Commercial backup solution Galaxy 10 support added to ReaR (issue #471)
     Also, point in time recovery was implemented (issue #472)
 
   o Fixed the error "unary operator expected with BACKUP_TYPE" (issue #422)
@@ -715,18 +780,18 @@ Version 1.17.0 (March 2015)
 Version 1.16.1 (June 2014)
 
   o The validate rule for xarg bash -n changed into xarg -n bash -n so that
-    rear is working correctly with older bash version 3 as well. Especially
+    ReaR is working correctly with older bash version 3 as well. Especially
     required for SLES 10, SLES 11 and EPEL 5 (issue #410).
 
-  o Adding an updated rear man page and the correct release notes to the
-    1.16.1 sub-release. In rear 1.16.0 these were forgotten.
+  o Adding an updated ReaR man page and the correct release notes to the
+    1.16.1 sub-release. In ReaR 1.16.0 these were forgotten.
 
   o Code style improvements (issue #409).
 
   o Improvements around btrfs file system recognition and re-creation (issues
     #408 and #415).
 
-  o Important fix for grub2 with OpenSuse 13 (changed LOADER into
+  o Important fix for grub2 with openSUSE 13 (changed LOADER into
     LOADER_TYPE).
 
   o Added example prep script to verify if extlinux is present (issue #250) -
@@ -747,7 +812,7 @@ Version 1.16.0 (May 2014)
     selecting the proper bootloader [ grub, grub2, uefi ])
 
   o Various corrections with BACKYP=RSYNC method (issue #200 and #366). In
-    rear 1.16 the old and new style are still recognized, but we might drop
+    ReaR 1.16 the old and new style are still recognized, but we might drop
     the old style in later versions.
 
      OLD STYLE:
@@ -780,7 +845,7 @@ Version 1.16.0 (May 2014)
 
   o Removed mingetty executable from REQUIRED_PROGS list as RHEL 7 does not
     ship it anymore. agetty is getting more and more the standard now and
-    rear will use this one automatically when mingetty is absent
+    ReaR will use this one automatically when mingetty is absent
 
   o New variable in default.conf file was defined BACKUP_TYPE= (empty is full
     or incremental; only works with the default BACKUP_PROG=tar)
@@ -793,7 +858,7 @@ Version 1.16.0 (May 2014)
 
   o /etc/rear/local.conf is now empty by default and /etc/rear/site.conf now
     contains OUTPUT=ISO setting. This way we are sure that during an upgrade
-    of rear we do not loose our original user settings (local.conf tends te
+    of ReaR we do not loose our original user settings (local.conf tends te
     be overwritten).
 
   o Fix for hpacucli where the order logicaldrive and array could be wrong
@@ -853,7 +918,7 @@ Version 1.15.0 (September 2013)
 
   o Rear supports now more then 9 partitions (see issue #263)
 
-  o systemd support added for Fedora 19/20 and OpenSuse 12.x/13.x
+  o systemd support added for Fedora 19/20 and openSUSE 12.x/13.x
 
   o Automatic Recover feature on USB devices (label AUTOMATIC RECOVER in rear
     recover menu)
@@ -882,7 +947,7 @@ Version 1.15.0 (September 2013)
 
   o Recognize OracleServer as a Fedora derivate
 
-  o Added UEFI integration within rear (including booting ISO images)
+  o Added UEFI integration within ReaR (including booting ISO images)
 
   o Improved dataprotector GUI interaction (issue #189)
 
@@ -917,7 +982,7 @@ Version 1.14.0 (September 2012)
 
   o Added duply/duplicity with one new backup method duplicity (Experimental)
 
-  o Systemd supported on Fedora 17 and OpenSuse 12.2 (fix #115, #126)
+  o Systemd supported on Fedora 17 and openSUSE 12.2 (fix #115, #126)
 
   o Create correct yaboot dir on ppc (fix #109)
 
@@ -926,7 +991,7 @@ Version 1.14.0 (September 2012)
 
   o Packaging - introduction of Makefile; cleanup dr workflow (fix #13, #49)
 
-  o Make rear working from checkout of git, w.o.w. path is relocatable (fix #
+  o Make ReaR working from checkout of git, w.o.w. path is relocatable (fix #
     53)
 
   o Add bytes_per_inode information for ext* filesystem to layout.conf (fix #
@@ -1237,7 +1302,7 @@ Relax-and-Recover compression tests
 Support
 
 Relax-and-Recover (rear) is an Open Source project under GPL v3 license which
-means it is free to use and modify. However, the creators of rear have spend
+means it is free to use and modify. However, the creators of ReaR have spend
 many, many hours in development and support. We will only give free of charge
 support in our free time (and when work/home balance allows it).
 
@@ -1246,69 +1311,69 @@ as a service (not free of charge).
 
 Supported Operating Systems
 
-We try to keep our wiki page Test Matrix rear 1.19 up-to-date with feedback
+We try to keep our wiki page Test Matrix rear 2.00 up-to-date with feedback
 we receive from the community.
 
-Rear-1.19 is supported on the following Linux based operating systems:
+Rear-2.00 is supported on the following Linux based operating systems:
 
-  o Fedora 21, 22, 23 and 24
+  o Fedora 22, 23, 24 and 25
   o RHEL 5, 6 and 7
   o CentOS 5, 6 and 7
   o ScientificLinux 6 and 7
   o SLES 11 and 12
-  o OpenSuSe 11, 12 and 13
+  o openSUSE 11, 12 and 13
   o Debian 6, 7 and 8
   o Ubuntu 12, 13, 14 and 15
 
-Rear-1.19 dropped officially support for the following Linux based operating
+Rear-2.00 dropped officially support for the following Linux based operating
 systems:
 
-  o Fedora <21
+  o Fedora <22
   o RHEL 3 and 4
   o SLES 9 and 10
-  o OpenSuSe <11
+  o openSUSE <11
   o Debian <6
   o Ubuntu <12
 
 If you require support for unsupported Linux Operating System you must
-acquire a rear support contract (per system).
+acquire a ReaR support contract (per system).
 
-Requests to port rear to another Operating System (not Linux) can only be
+Requests to port ReaR to another Operating System (not Linux) can only be
 achieved with serious sponsoring.
 
 Supported Architectures
 
-Rear-1.19 is supported on:
+Rear-2.00 is supported on:
 
   o Intel x86 type of processors
   o AMD x86 type of processors
 
-Rear-1.19 may or may not fully work on:
+Rear-2.00 may or may not fully work on:
 
   o Intel Itanium processors
   o PPC processors
   o PPC64 processors
   o PPC64LE processors
 
-Rear-1.19 does not support:
+Rear-2.00 does not support:
 
   o ARM type of processors
   o s390x type of processors
 
-If you feel the need to get a fully functional rear working on one of the
+If you feel the need to get a fully functional ReaR working on one of the
 above mentioned type of processors please buy consultancy from one of our
 official developers.
 
-Supported rear versions
+Supported ReaR versions
 
-Rear has a long history (since 2006) and we cannot supported all released
+ReaR has a long history (since 2006) and we cannot supported all released
 versions anymore. If you have a problem we urge you to install the latest
-stable rear version or the development version (available on github) before
+stable ReaR version or the development version (available on github) before
 submitting an issue.
 
 However, we do understand that it is not always possible to install on
 hundreds of systems the latest and greatest version so we are willing to
-support previous versions of rear if you buy a support contract. Why do we
+support previous versions of ReaR if you buy a support contract. Why do we
 change our policy? We cannot handle the big support requests anymore and we
 must give paid projects priority, therefore, we urge our customers to buy a
 support contract for one or more systems. You buy time with our core
@@ -1362,14 +1427,14 @@ backup
 At present (release 1.18) there is no workaround in place. If you happen to
 know how this could be fixed then add your ideas to issue #417
 
-Issue Description: UEFI ISO booting does not work on OpenSuSe 12.x, or SLES
+Issue Description: UEFI ISO booting does not work on openSUSE 12.x, or SLES
 11/12
 
   o Workaround:
 
-At present (release 1.18.x) genisoimage cannot produce ISO images that can
-boot via UEFI on an OpenSuSe distribution (and also SLES). However, use the
-ebiso package instead to create UEFI ISO images on SLES.
+At present (release 1.18.x and higher) genisoimage cannot produce ISO images
+that can boot via UEFI on an openSUSE distribution (and also SLES). However,
+use the ebiso package instead to create UEFI ISO images on SLES.
 
 Issue Description: TSM 7.1.0.0 cp writing dangling symlink
 libxmlutil-7.1.0.0.so on SLES SP3
@@ -1434,7 +1499,7 @@ actual fresh kernel available.
 
   o Workaround:
 
-Reboot your server before using rear again, which is a good practice anyway
+Reboot your server before using ReaR again, which is a good practice anyway
 after upgrading the GNU/Linux kernel.
 
 ReaR on Google+

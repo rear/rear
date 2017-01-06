@@ -2,12 +2,12 @@
 .\"     Title: rear
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 23 August 2016
+.\"      Date: 6 January 2017
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "REAR" "8" "23 August 2016" "\ \&" "\ \&"
+.TH "REAR" "8" "6 January 2017" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -316,11 +316,18 @@ Write the image using sshfs and the SSH protocol\&.
 .PP
 OUTPUT_URL=\fBnull\fR
 .RS 4
-Do not copy the ISO image from \fI/var/lib/rear/output/\fR to a remote output location\&.
-OUTPUT_URL=null is useful when another program (e.g. an \fIexternal\fR backup program) is used to save the ISO image from the local system to a remote place,
-or with BACKUP_URL=iso:///backup when the backup is included in the ISO image to avoid a (big) copy of the ISO image at a remote output location\&.
-In the latter case the ISO image must be manually saved from the local system to a remote place\&.
-OUTPUT_URL=null is only supported together with BACKUP=NETFS\&.
+Do not copy the ISO image from
+\fI/var/lib/rear/output/\fR
+to a remote output location\&.
+OUTPUT_URL=null
+is useful when another program (e\&.g\&. an
+\fIexternal\fR
+backup program) is used to save the ISO image from the local system to a remote place, or with
+BACKUP_URL=iso:///backup
+when the backup is included in the ISO image to avoid a (big) copy of the ISO image at a remote output location\&. In the latter case the ISO image must be manually saved from the local system to a remote place\&.
+OUTPUT_URL=null
+is only supported together with
+BACKUP=NETFS\&.
 .RE
 .sp
 If you do not specify OUTPUT_URL variable then by default it will be aligned to what was defined by variable BACKUP_URL\&. And, the ISO image will then be copied to the same location as your backup of the system disk(s)\&.
@@ -544,11 +551,7 @@ OUTPUT_URL=nfs://server/path/
 .\}
 .RE
 .sp
-When using BACKUP=NETFS and BACKUP_PROG=tar there is an option to select BACKUP_TYPE=incremental or BACKUP_TYPE=differential
-to let rear make incremental or differential backups until the next full backup day e\&.g\&. via FULLBACKUPDAY="Mon" is reached
-or when the last full backup is too old after FULLBACKUP_OUTDATED_DAYS has passed\&. Incremental or differential backup is
-currently only known to work with BACKUP_URL=nfs\&. Other BACKUP_URL schemes may work but at least BACKUP_URL=usb is known
-not to work with incremental or differential backup\&.
+When using BACKUP=NETFS and BACKUP_PROG=tar there is an option to select BACKUP_TYPE=incremental or BACKUP_TYPE=differential to let rear make incremental or differential backups until the next full backup day e\&.g\&. via FULLBACKUPDAY="Mon" is reached or when the last full backup is too old after FULLBACKUP_OUTDATED_DAYS has passed\&. Incremental or differential backup is currently only known to work with BACKUP_URL=nfs\&. Other BACKUP_URL schemes may work but at least BACKUP_URL=usb is known not to work with incremental or differential backup\&.
 .SH "CONFIGURATION"
 .sp
 To configure Relax\-and\-Recover you have to edit the configuration files in \fI/etc/rear/\fR\&. All \fI*\&.conf\fR files there are part of the configuration, but only \fIsite\&.conf\fR and \fIlocal\&.conf\fR are intended for the user configuration\&. All other configuration files hold defaults for various distributions and should not be changed\&.
@@ -700,7 +703,7 @@ Relax\-and\-Recover is a collaborative process using Github at: \m[blue]\fBhttp:
 The Relax\-and\-Recover website is located at: \m[blue]\fBhttp://relax\-and\-recover\&.org/\fR\m[]
 .SH "COPYRIGHT"
 .sp
-(c) 2006\-2016
+(c) 2006\-2017
 .sp
 Schlomo Schapiro
 .sp

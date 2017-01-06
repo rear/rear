@@ -1,3 +1,8 @@
+rear (2.00-1) stable; urgency=low
+
+  * Added Multiple backups and Borg
+
+ -- Gratien Dhaese <gratien.dhaese@gmail.com> Fri, 6 Jan 2017 12:00:00 +0100
 rear (1.19-1) stable; urgency=low
 
   * minor bug fixes
@@ -15,6 +20,7 @@ rear (1.18-1) stable; urgency=high
 
   * new features
   * lots of bug fixes
+
  -- Gratien Dhaese <gratien.dhaese@gmail.com> Wed, 16 Mar 2016 11:21:17 +0100
 rear (1.17.2-1) stable; urgency=low
 
