@@ -36,7 +36,22 @@ else
     ParNr=1
 fi
 
-parted -s $RAW_USB_DEVICE set 1 boot on >&2 || Error "Could not make first partition bootable on '$RAW_USB_DEVICE'"
+# Choose correct boot flag for partition table (see issue #1153)
+local boot_flag
+case "$USB_DEVICE_PARTED_LABEL" in
+    "msdos")
+        boot_flag="boot"
+    ;;
+    "gpt")
+        boot_flag="legacy_boot"
+    ;;
+    *)
+        Error "USB_DEVICE_PARTED_LABEL is incorrectly set, please check your settings."
+    ;;
+esac
+
+LogPrint "Setting '$boot_flag' flag on $RAW_USB_DEVICE"
+parted -s $RAW_USB_DEVICE set 1 $boot_flag on >&2 || Error "Could not make first partition bootable on '$RAW_USB_DEVICE'"
 
 partprobe $RAW_USB_DEVICE
 # Wait until udev has had the time to kick in
