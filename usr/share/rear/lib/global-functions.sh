@@ -362,3 +362,30 @@ umount_mountpoint() {
     return 1
 }
 
+# Change $1 to user input or leave default value on empty input
+function change_default
+{
+    local response
+    read response
+
+    if [ -n "$response" ]; then
+        eval $1=\$response
+    fi
+}
+
+# Check if block device is mounted
+# lsblk can discover mounted device even if mounted as link, this makes it
+# more suitable for job then e.g. grep from /proc/mounts
+function is_device_mounted
+{
+   disk=$1
+   [ -z "$disk" ] && echo 1
+
+   m=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
+
+   if [ -z $m ]; then
+      echo 0
+   else
+      echo 1
+   fi
+}

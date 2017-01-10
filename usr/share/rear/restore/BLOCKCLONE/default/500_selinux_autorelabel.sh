@@ -1,0 +1,1 @@
+../../NETFS/default/500_selinux_autorelabel.sh

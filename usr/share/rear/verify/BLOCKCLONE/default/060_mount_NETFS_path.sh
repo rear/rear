@@ -1,0 +1,1 @@
+../../NETFS/default/060_mount_NETFS_path.sh

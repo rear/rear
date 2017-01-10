@@ -1,0 +1,1 @@
+../../NETFS/default/510_set_capabilities.sh
