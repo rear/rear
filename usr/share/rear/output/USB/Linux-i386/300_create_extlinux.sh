@@ -103,10 +103,22 @@ fi
 
 # We generate a single syslinux.cfg for the current system
 Log "Creating $USB_PREFIX/syslinux.cfg"
+# FIXME: # type -a time
+#        time is a shell keyword
+#        time is /usr/bin/time
 time=$(basename $USB_REAR_DIR)
+if test $USB_SUFFIX ; then
+    # USB_SUFFIX specifies the last part of the backup directory on the USB medium
+    # and then basename $USB_REAR_DIR can be anything so that we use it as is:
+    menu_label="$time"
+else
+    # When USB_SUFFIX is unset, empty, or contains only blanks
+    # basename $USB_REAR_DIR is a timestamp of the form YYYYMMDD.HHMM
+    menu_label="${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2}"
+fi
 syslinux_write <<EOF 4>"$USB_REAR_DIR/syslinux.cfg"
 label $HOSTNAME-$time
-    menu label ${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2} $usb_label_workflow
+    menu label $menu_label $usb_label_workflow
     say $HOSTNAME-$time - Recover $HOSTNAME $usb_label_workflow ($time)
     text help
 Relax-and-Recover v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPADDR:+on $IPADDR}
@@ -116,7 +128,7 @@ ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BA
     append initrd=/$USB_PREFIX/initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 
 label $HOSTNAME-$time
-    menu label ${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2} $usb_label_workflow - AUTOMATIC RECOVER
+    menu label $menu_label $usb_label_workflow - AUTOMATIC RECOVER
     say $HOSTNAME-$time - Recover $HOSTNAME $usb_label_workflow ($time)
     text help
 Relax-and-Recover v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPADDR:+on $IPADDR}
@@ -128,25 +140,37 @@ ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BA
 EOF
 
 # Clean up older images of a given system, but keep USB_RETAIN_BACKUP_NR
-# entries for backup and rescue
-backup_count=${USB_RETAIN_BACKUP_NR:-2}
-rescue_count=${USB_RETAIN_BACKUP_NR:-2}
-for rear_run in $(ls -dt $BUILD_DIR/outputfs/rear/$HOSTNAME/*); do
-    backup_name=$rear_run/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
-    if [[ -e $backup_name ]] ; then
-        backup_count=$((backup_count - 1))
-        if (( backup_count < 0 )); then
-            Log "Remove older backup directory $rear_run"
-            rm -rf $v $rear_run >&8
+# entries for backup and rescue when backup on USB works in default mode.
+# When USB_SUFFIX is set the compliance mode is used where
+# backup on USB works in compliance with backup on NFS which means
+# a fixed backup directory and no automated removal of backups or other stuff
+# see https://github.com/rear/rear/issues/1164
+# Use plain $USB_SUFFIX and not "$USB_SUFFIX" because when USB_SUFFIX contains only blanks
+# test "$USB_SUFFIX" would result true because test " " results true:
+if ! test $USB_SUFFIX ; then
+    backup_count=${USB_RETAIN_BACKUP_NR:-2}
+    rescue_count=${USB_RETAIN_BACKUP_NR:-2}
+    for rear_run in $(ls -dt $BUILD_DIR/outputfs/rear/$HOSTNAME/*); do
+        # This fails when the backup archive name is not
+        # ${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
+        # so that in particular it would fail for incremental/differential backups
+        # but incremental/differential backups on USB require USB_SUFFIX to be set:
+        backup_name=$rear_run/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
+        if [[ -e $backup_name ]] ; then
+            backup_count=$((backup_count - 1))
+            if (( backup_count < 0 )); then
+                Log "Remove older backup directory $rear_run"
+                rm -rf $v $rear_run >&8
+            fi
+        else
+            rescue_count=$((rescue_count - 1))
+            if (( rescue_count < 0 )); then
+                Log "Remove older rescue directory $rear_run"
+                rm -rf $v $rear_run >&8
+            fi
         fi
-    else
-        rescue_count=$((rescue_count - 1))
-        if (( rescue_count < 0 )); then
-            Log "Remove older rescue directory $rear_run"
-            rm -rf $v $rear_run >&8
-        fi
-    fi
-done
+    done
+fi
 
 # We generate a ReaR syslinux.cfg based on existing ReaR syslinux.cfg files.
 Log "Creating /rear/syslinux.cfg"
@@ -163,6 +187,9 @@ EOF
     # TODO: Sort systems by name, but also sort timestamps in reverse order
     for file in $(cd $BUILD_DIR/outputfs; find rear/*/* -name syslinux.cfg); do
         dir=$(dirname $file)
+        # FIXME: # type -a time
+        #        time is a shell keyword
+        #        time is /usr/bin/time
         time=$(basename $dir)
         system=$(basename $(dirname $dir))
 
