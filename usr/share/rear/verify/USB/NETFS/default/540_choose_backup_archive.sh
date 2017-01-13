@@ -1,10 +1,27 @@
 
-scheme=$(url_scheme "$BACKUP_URL")
-if [[ "$scheme" != "usb" ]] ; then
-    return
-fi
+# In case of backup on USB let the user choose which backup will be restored.
 
-# Detect all backups on the USB device
+scheme=$( url_scheme "$BACKUP_URL" )
+# Skip if not backup on USB:
+test "usb" = "$scheme" || return
+
+# When USB_SUFFIX is set the compliance mode is used where
+# backup on USB works in compliance with backup on NFS which means
+# a fixed backup directory where the user cannot choose the backup
+# because what there is in the fixed backup directory will be restored
+# via RESTORE_ARCHIVES in usr/share/rear/prep/NETFS/default/070_set_backup_archive.sh
+# Use plain $USB_SUFFIX and not "$USB_SUFFIX" because when USB_SUFFIX contains only blanks
+# test "$USB_SUFFIX" would result true because test " " results true:
+test $USB_SUFFIX && return
+
+# Detect all backups on the USB device.
+# FIXME: This fails when the backup archive name is not
+# ${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
+# so that in particular it fails for incremental/differential backups
+# but incremental/differential backups usually require several backup archives
+# to be restored (one full backup plus one differential or several incremental backups)
+# cf. RESTORE_ARCHIVES in usr/share/rear/prep/NETFS/default/070_set_backup_archive.sh
+# and the code below only works for one single backup archive:
 backups=()
 backup_times=()
 for rear_run in $BUILD_DIR/outputfs/rear/$HOSTNAME/* ;do

@@ -128,25 +128,37 @@ ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BA
 EOF
 
 # Clean up older images of a given system, but keep USB_RETAIN_BACKUP_NR
-# entries for backup and rescue
-backup_count=${USB_RETAIN_BACKUP_NR:-2}
-rescue_count=${USB_RETAIN_BACKUP_NR:-2}
-for rear_run in $(ls -dt $BUILD_DIR/outputfs/rear/$HOSTNAME/*); do
-    backup_name=$rear_run/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
-    if [[ -e $backup_name ]] ; then
-        backup_count=$((backup_count - 1))
-        if (( backup_count < 0 )); then
-            Log "Remove older backup directory $rear_run"
-            rm -rf $v $rear_run >&8
+# entries for backup and rescue when backup on USB works in default mode.
+# When USB_SUFFIX is set the compliance mode is used where
+# backup on USB works in compliance with backup on NFS which means
+# a fixed backup directory and no automated removal of backups or other stuff
+# see https://github.com/rear/rear/issues/1164
+# Use plain $USB_SUFFIX and not "$USB_SUFFIX" because when USB_SUFFIX contains only blanks
+# test "$USB_SUFFIX" would result true because test " " results true:
+if ! test $USB_SUFFIX ; then
+    backup_count=${USB_RETAIN_BACKUP_NR:-2}
+    rescue_count=${USB_RETAIN_BACKUP_NR:-2}
+    for rear_run in $(ls -dt $BUILD_DIR/outputfs/rear/$HOSTNAME/*); do
+        # This fails when the backup archive name is not
+        # ${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
+        # so that in particular it would fail for incremental/differential backups
+        # but incremental/differential backups on USB require USB_SUFFIX to be set:
+        backup_name=$rear_run/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
+        if [[ -e $backup_name ]] ; then
+            backup_count=$((backup_count - 1))
+            if (( backup_count < 0 )); then
+                Log "Remove older backup directory $rear_run"
+                rm -rf $v $rear_run >&8
+            fi
+        else
+            rescue_count=$((rescue_count - 1))
+            if (( rescue_count < 0 )); then
+                Log "Remove older rescue directory $rear_run"
+                rm -rf $v $rear_run >&8
+            fi
         fi
-    else
-        rescue_count=$((rescue_count - 1))
-        if (( rescue_count < 0 )); then
-            Log "Remove older rescue directory $rear_run"
-            rm -rf $v $rear_run >&8
-        fi
-    fi
-done
+    done
+fi
 
 # We generate a ReaR syslinux.cfg based on existing ReaR syslinux.cfg files.
 Log "Creating /rear/syslinux.cfg"
