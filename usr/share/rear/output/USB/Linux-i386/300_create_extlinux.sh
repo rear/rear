@@ -103,10 +103,22 @@ fi
 
 # We generate a single syslinux.cfg for the current system
 Log "Creating $USB_PREFIX/syslinux.cfg"
+# FIXME: # type -a time
+#        time is a shell keyword
+#        time is /usr/bin/time
 time=$(basename $USB_REAR_DIR)
+if test $USB_SUFFIX ; then
+    # USB_SUFFIX specifies the last part of the backup directory on the USB medium
+    # and then basename $USB_REAR_DIR can be anything so that we use it as is:
+    menu_label="$time"
+else
+    # When USB_SUFFIX is unset, empty, or contains only blanks
+    # basename $USB_REAR_DIR is a timestamp of the form YYYYMMDD.HHMM
+    menu_label="${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2}"
+fi
 syslinux_write <<EOF 4>"$USB_REAR_DIR/syslinux.cfg"
 label $HOSTNAME-$time
-    menu label ${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2} $usb_label_workflow
+    menu label $menu_label $usb_label_workflow
     say $HOSTNAME-$time - Recover $HOSTNAME $usb_label_workflow ($time)
     text help
 Relax-and-Recover v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPADDR:+on $IPADDR}
@@ -116,7 +128,7 @@ ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BA
     append initrd=/$USB_PREFIX/initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 
 label $HOSTNAME-$time
-    menu label ${time:0:4}-${time:4:2}-${time:6:2} ${time:9:2}:${time:11:2} $usb_label_workflow - AUTOMATIC RECOVER
+    menu label $menu_label $usb_label_workflow - AUTOMATIC RECOVER
     say $HOSTNAME-$time - Recover $HOSTNAME $usb_label_workflow ($time)
     text help
 Relax-and-Recover v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPADDR:+on $IPADDR}
@@ -175,6 +187,9 @@ EOF
     # TODO: Sort systems by name, but also sort timestamps in reverse order
     for file in $(cd $BUILD_DIR/outputfs; find rear/*/* -name syslinux.cfg); do
         dir=$(dirname $file)
+        # FIXME: # type -a time
+        #        time is a shell keyword
+        #        time is /usr/bin/time
         time=$(basename $dir)
         system=$(basename $(dirname $dir))
 
