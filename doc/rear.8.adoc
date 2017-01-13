@@ -388,8 +388,8 @@ e.g. via +FULLBACKUPDAY="Mon"+ is reached or when the last full backup
 is too old after FULLBACKUP_OUTDATED_DAYS has passed.
 Incremental or differential backup is currently only known to work
 with +BACKUP_URL=nfs+. Other BACKUP_URL schemes may work but
-at least +BACKUP_URL=usb+ is known not to work with incremental
-or differential backup.
+at least +BACKUP_URL=usb+ requires USB_SUFFIX to be set
+to work with incremental or differential backup.
 
 == CONFIGURATION
 To configure Relax-and-Recover you have to edit the configuration files in
