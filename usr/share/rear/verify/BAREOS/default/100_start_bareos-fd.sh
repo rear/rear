@@ -13,7 +13,7 @@ if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
 else
 
    ### Bareos support using bconsole
-   bareos-fd -u root -g bareos -c /etc/bareos/bareos-fd.conf
+   bareos-fd -u root -g bareos
    StopIfError "Cannot start bareos-fd file daemon"
 
 fi

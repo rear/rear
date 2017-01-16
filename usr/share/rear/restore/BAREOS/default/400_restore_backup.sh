@@ -100,7 +100,7 @@ else
 
         if [ -z "$BAREOS_CLIENT" ]
         then
-            BAREOS_CLIENT=$(grep $(hostname -s) /etc/bareos/bareos-fd.conf | awk '/-fd/ {print $3}' )
+            BAREOS_CLIENT="$HOSTNAME-fd"
         fi
 
         if [ -n "$BAREOS_FILESET" ]
