@@ -1,5 +1,7 @@
 
-# In case of backup on USB let the user choose which backup will be restored.
+# In case of backup restore from USB let the user choose which backup will be restored.
+# This script is only run during a backup restore workflow (recover/restoreoly)
+# so that RESTORE_ARCHIVES is set in this script.
 
 scheme=$( url_scheme "$BACKUP_URL" )
 # Skip if not backup on USB:
@@ -9,16 +11,19 @@ test "usb" = "$scheme" || return
 # backup on USB works in compliance with backup on NFS which means
 # a fixed backup directory where the user cannot choose the backup
 # because what there is in the fixed backup directory will be restored
-# via RESTORE_ARCHIVES in usr/share/rear/prep/NETFS/default/070_set_backup_archive.sh
+# via RESTORE_ARCHIVES set by usr/share/rear/prep/NETFS/default/070_set_backup_archive.sh
 # Use plain $USB_SUFFIX and not "$USB_SUFFIX" because when USB_SUFFIX contains only blanks
 # test "$USB_SUFFIX" would result true because test " " results true:
 test $USB_SUFFIX && return
 
-# When the RESTORE_ARCHIVES array is not empty, there is no need to disrupt
-# "rear recover" or "rear restoreonly" and ask the user for the backup archive.
-# For the 'test' one must have all array members as a single word i.e. "${name[*]}"
-# because it should succeed when there is any non-empty array member, not necessarily the first one:
-test "${RESTORE_ARCHIVES[*]}" && return
+# When backup on USB works in its default mode with several timestamp backup directories
+# let the user choose the backup regardless whether or not RESTORE_ARCHIVES
+# is already set by usr/share/rear/prep/NETFS/default/070_set_backup_archive.sh
+# because when the user has created a backup plus recovery system via "rear mkbackup"
+# and afterwards a newer backup without recovery system via "rear mkbackuponly"
+# then the recovery system directory contains the (older) backup and that one gets
+# set in RESTORE_ARCHIVES by usr/share/rear/prep/NETFS/default/070_set_backup_archive.sh
+# but probably the user wants to choose the newer backup to be actually restored.
 
 # Detect all backups on the USB device.
 # TODO: This fails when the backup archive name is not
@@ -40,26 +45,51 @@ for rear_run in $BUILD_DIR/outputfs/rear/$HOSTNAME/* ; do
     fi
 done
 
+# When there is no backup archive detected error out because in this case
+# it does not make sense to show a basically empty backup selection dialog
+# (strictly speaking a backup selection dialog with the only choice 'Abort').
+# For the 'test' one must have all array members as a single word i.e. "${name[*]}"
+# because it should succeed when there is any non-empty array member, not necessarily the first one:
+test "${backups[*]}" || Error "No '${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}' detected in '$BUILD_DIR/outputfs/rear/$HOSTNAME/*'"
+
 # When there is only one backup archive detected use that and do not disrupt
-# "rear recover" or "rear restoreonly" and ask the user for the backup archive:
+# "rear recover" or "rear restoreonly" with a backup selection dialog
+# because what else could the user chose except that one backup
+# (it is questionable why there is an 'Abort' choice below):
 if test "1" = "${#backups[@]}" ; then
     backuparchive=${backups[0]}
+    RESTORE_ARCHIVES=( "$backuparchive" )
     LogPrint "Using backup archive '$backuparchive'."
     return
 fi
 
-# Let the user has choose the backup:
+# Let the user choose the backup that should be restored:
 LogPrint "Select a backup archive."
-select choice in "${backup_times[@]}" "Abort" ; do
-    test "Abort" = "$choice" && Error "User chose to abort recovery."
-    n=( $REPLY ) # trim blanks from reply
-    let n-- # because bash arrays count from 0
-    if [ "$n" -lt 0 ] || [ "$n" -ge "${#backup_times[@]}" ] ; then
-        LogPrint "Invalid choice $REPLY, try again or abort."
-        continue
-    fi
-    backuparchive=${backups[$n]}
-    LogPrint "Using backup archive '$backuparchive'."
-    break
-done 2>&1
+# Run the select command in a subshell together with beforehand
+# disabling printing commands and their arguments as they are executed on stderr
+# which could have been enabled when running e.g. "rear -d -D recover"
+# to not disturb the select output which also happens on stderr.
+# When 'set -x' is set even calling 'set +x 2>/dev/null' would output '+ set +x' but
+# http://stackoverflow.com/questions/13195655/bash-set-x-without-it-being-printed
+# shows that when 'set -x' is set calling '{ set +x ; } 2>/dev/null' runs silently:
+(   { set +x ; } 2>/dev/null
+    select choice in "${backup_times[@]}" "Abort" ; do
+        test "Abort" = "$choice" && Error "User chose to abort recovery."
+        # trim blanks from reply
+        n=( $REPLY )
+        # bash arrays count from 0
+        let n--
+        if [ "$n" -lt 0 ] || [ "$n" -ge "${#backup_times[@]}" ] ; then
+            # direct output to stdout which is fd7 (see lib/_input-output-functions.sh)
+            # and not using a Print function to always print to the original stdout
+            # i.e. to the terminal wherefrom the user has started "rear recover":
+            echo "Invalid choice $REPLY, try again or abort." >&7
+            continue
+        fi
+        backuparchive=${backups[$n]}
+        break
+    done 2>&1
+)
+RESTORE_ARCHIVES=( "$backuparchive" )
+LogPrint "Using backup archive '$backuparchive'."
 
