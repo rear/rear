@@ -7,8 +7,8 @@ if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
    has_binary bextract
    StopIfError "Bareos bextract is missing"
 
-   [ -s /etc/bareos/bareos-sd.conf ]
-   StopIfError "Bareos configuration file (bareos-sd.conf) missing"
+   bareos-sd -t 
+   StopIfError "Bareos-sd configuration invalid"
 
 else
 
@@ -16,13 +16,13 @@ else
    has_binary bareos-fd
    StopIfError "Bareos File Daemon is missing"
 
-   [ -s /etc/bareos/bareos-fd.conf ] || [ -s /etc/bareos/bareos-fd.d/client/myself.conf ]
-   StopIfError "Bareos configuration file (bareos-fd.conf) missing"
+   bareos-fd -t
+   StopIfError "Bareos-fd configuration invalid"
 
    has_binary bconsole
    StopIfError "Bareos console executable is missing"
 
-   [ -s /etc/bareos/bconsole.conf ]
-   StopIfError "Bareos configuration file (bconsole.conf) missing"
+   bconsole -t
+   StopIfError "Bareos bconsole invalid"
 
 fi

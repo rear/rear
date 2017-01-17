@@ -12,9 +12,9 @@ fi
 # See if we can ping the director
 #
 # is the director server present? Fetch from /etc/bareos/bconsole.conf file
-BAREOS_DIRECTOR=$(grep -i address /etc/bareos/bconsole.conf | awk '{ print $3 }')
+BAREOS_DIRECTOR=$(bconsole -xc | grep -i address | awk '{ print $3 }')
 [ "${BAREOS_DIRECTOR}" ]
-StopIfError "Director not defined in /etc/bareos/bconsole.conf"
+StopIfError "Director not configured in bconsole"
 
 if test "$PING"; then
 	ping -c 2 -q  $BAREOS_DIRECTOR >&8
@@ -31,11 +31,8 @@ fi
 # "Connecting to Client 'bareos_client_name-fd at FQDN:9102"
 if [ -z "$BAREOS_CLIENT" ]
 then
-  [ -s /etc/bareos/bareos-fd.conf ] && BAREOS_CLIENT=`grep $(hostname -s) /etc/bareos/bareos-fd.conf | grep "\-fd" | awk '{print $3}'`
-  [ -s /etc/bareos/bareos-fd.d/client/myself.conf ] && BAREOS_CLIENT=`grep $(hostname -s) /etc/bareos/bareos-fd.d/client/myself.conf | grep "\-fd" | awk '{print $3}'`
+   BAREOS_CLIENT="$HOSTNAME-fd"
 fi
-[ "${BAREOS_CLIENT}" ]
-StopIfError "Client $(hostname -s) not defined in /etc/bareos/bareos-fd.conf"
 
 BAREOS_RESULT=( `echo -e " status client=${BAREOS_CLIENT}" | bconsole |grep Connect ` )
 

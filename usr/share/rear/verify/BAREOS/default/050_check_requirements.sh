@@ -13,8 +13,8 @@ if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
    [ -x /usr/sbin/bextract ]
    StopIfError "Bareos executable (bextract) missing or not executable"
 
-   [ -s /etc/bareos/bareos-sd.conf ]
-   StopIfError "Bareos configuration file (bareos-sd.conf) missing"
+   bareos-sd -t 
+   StopIfError "Bareos-sd configuration invalid"
 
 else
 
@@ -22,13 +22,13 @@ else
    [ -x /usr/sbin/bareos-fd ]
    StopIfError "Bareos executable (bareos-fd) missing or not executable"
 
-   [ -s /etc/bareos/bareos-fd.conf ]
-   StopIfError "Bareos configuration file (bareos-fd.conf) missing"
+   bareos-fd -t
+   StopIfError "Bareos-fd configuration invalid"
 
    [ -x /usr/sbin/bconsole ]
    StopIfError "Bareos executable (bconsole) missing or not executable"
 
-   [ -s /etc/bareos/bconsole.conf ]
-   StopIfError "Bareos configuration file (bconsole.conf) missing"
+   bconsole -t
+   StopIfError "Bareos bconsole configuration invalid"
 
 fi
