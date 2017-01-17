@@ -65,31 +65,31 @@ fi
 
 # Let the user choose the backup that should be restored:
 LogPrint "Select a backup archive."
-# Run the select command in a subshell together with beforehand
-# disabling printing commands and their arguments as they are executed on stderr
+# Disable printing commands and their arguments as they are executed on stderr
 # which could have been enabled when running e.g. "rear -d -D recover"
 # to not disturb the select output which also happens on stderr.
 # When 'set -x' is set even calling 'set +x 2>/dev/null' would output '+ set +x' but
 # http://stackoverflow.com/questions/13195655/bash-set-x-without-it-being-printed
 # shows that when 'set -x' is set calling '{ set +x ; } 2>/dev/null' runs silently:
-(   { set +x ; } 2>/dev/null
-    select choice in "${backup_times[@]}" "Abort" ; do
-        test "Abort" = "$choice" && Error "User chose to abort recovery."
-        # trim blanks from reply
-        n=( $REPLY )
-        # bash arrays count from 0
-        let n--
-        if [ "$n" -lt 0 ] || [ "$n" -ge "${#backup_times[@]}" ] ; then
-            # direct output to stdout which is fd7 (see lib/_input-output-functions.sh)
-            # and not using a Print function to always print to the original stdout
-            # i.e. to the terminal wherefrom the user has started "rear recover":
-            echo "Invalid choice $REPLY, try again or abort." >&7
-            continue
-        fi
-        backuparchive=${backups[$n]}
-        break
-    done 2>&1
-)
+{ set +x ; } 2>/dev/null
+select choice in "${backup_times[@]}" "Abort" ; do
+    test "Abort" = "$choice" && Error "User chose to abort recovery."
+    # trim blanks from reply
+    n=( $REPLY )
+    # bash arrays count from 0
+    let n--
+    if [ "$n" -lt 0 ] || [ "$n" -ge "${#backup_times[@]}" ] ; then
+        # direct output to stdout which is fd7 (see lib/_input-output-functions.sh)
+        # and not using a Print function to always print to the original stdout
+        # i.e. to the terminal wherefrom the user has started "rear recover":
+        echo "Invalid choice $REPLY, try again or abort." >&7
+        continue
+    fi
+    backuparchive=${backups[$n]}
+    break
+done 2>&7
+# Go back from "set +x" to the defaults:
+apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
 RESTORE_ARCHIVES=( "$backuparchive" )
 LogPrint "Using backup archive '$backuparchive'."
 
