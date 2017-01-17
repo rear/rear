@@ -36,11 +36,27 @@ local backup_directory=$BUILD_DIR/outputfs/$NETFS_PREFIX
 
 # Normal (i.e. non-incremental/non-differential) backup:
 if ! test "incremental" = "$BACKUP_TYPE" -o "differential" = "$BACKUP_TYPE" ; then
-    backuparchive="$backup_directory/$backup_file_name"
     # In case of normal (i.e. non-incremental) backup there is only one restore archive
     # and its name is the same as the backup archive (usually 'backup.tar.gz'):
-    RESTORE_ARCHIVES=( "$backuparchive" )
-    LogPrint "Using backup archive '$backup_file_name'"
+    backuparchive="$backup_directory/$backup_file_name"
+    LogPrint "Using backup archive '$backuparchive'"
+    # This script is also run during "rear recover/restoreonly" where RESTORE_ARCHIVES must be set.
+    local backup_restore_workflows=( "recover" "restoreonly" )
+    if IsInArray $WORKFLOW ${backup_restore_workflows[@]} ; then
+        # Only set RESTORE_ARCHIVES the backup archive is actually accessible
+        # cf. https://github.com/rear/rear/issues/1166
+        if test -r "$backuparchive" ; then
+            RESTORE_ARCHIVES=( "$backuparchive" )
+        else
+            # In case of USB backup there is the subsequent 540_choose_backup_archive.sh script
+            # that shows a backup selection dialog when RESTORE_ARCHIVES is not already set.
+            if test "usb" = "$scheme" ; then
+                LogPrint "Backup archive '$backuparchive' not readable. Need to select another one."
+            else
+                Error "Backup archive '$backuparchive' not readable."
+            fi
+        fi
+    fi
     return
 fi
 
@@ -137,7 +153,8 @@ local date_time_glob_regex="$date_glob_regex-[0-9][0-9][0-9][0-9]"
 local create_backup_type=""
 # Code regarding creating a backup is useless during "rear recover" and
 # messages about creating a backup are misleading during "rear recover":
-if ! test "recover" = "$WORKFLOW" ; then
+local recovery_workflows=( "recover" "layoutonly" "restoreonly" )
+if ! IsInArray $WORKFLOW ${recovery_workflows[@]} ; then
     # When today is a specified full backup day, do a full backup in any case
     # (regardless if there is already a full backup of this day):
     if IsInArray "$current_weekday" "${FULLBACKUPDAY[@]}" ; then
@@ -161,7 +178,7 @@ if test "$latest_full_backup" ; then
     local full_or_incremental_backup_glob_regex="$date_time_glob_regex-[$full_backup_marker$incremental_backup_marker]$backup_file_suffix"
     # Code regarding creating a backup is useless during "rear recover" and
     # messages about creating a backup are misleading during "rear recover":
-    if ! test "recover" = "$WORKFLOW" ; then
+    if ! IsInArray $WORKFLOW ${recovery_workflows[@]} ; then
         # There is nothing to do here if it is already decided that
         # a full backup must be created (see "full backup day" above"):
         if ! test "full" = "$create_backup_type" ; then
@@ -215,7 +232,7 @@ if test "$latest_full_backup" ; then
 else
     # Code regarding creating a backup is useless during "rear recover" and
     # messages about creating a backup are misleading during "rear recover":
-    if ! test "recover" = "$WORKFLOW" ; then
+    if ! IsInArray $WORKFLOW ${recovery_workflows[@]} ; then
         # If no latest full backup is found create one during "rear mkbackup":
         create_backup_type="full"
         LogPrint "No full backup found (YYYY-MM-DD-HHMM-F.tar.gz) triggers full backup"
@@ -235,7 +252,7 @@ else
 fi
 # Code regarding creating a backup is useless during "rear recover" and
 # messages about creating a backup are misleading during "rear recover":
-if ! test "recover" = "$WORKFLOW" ; then
+if ! IsInArray $WORKFLOW ${recovery_workflows[@]} ; then
     # Set the right variables for creating a backup (but do not actually do anything at this point):
     case "$create_backup_type" in
         (full)
