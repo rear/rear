@@ -46,16 +46,14 @@ for rear_run in $BUILD_DIR/outputfs/rear/$HOSTNAME/* ; do
 done
 
 # When there is no backup archive detected error out because in this case
-# it does not make sense to show a basically empty backup selection dialog
-# (strictly speaking a backup selection dialog with the only choice 'Abort').
+# it does not make sense to show a backup selection dialog without anything to choose.
 # For the 'test' one must have all array members as a single word i.e. "${name[*]}"
 # because it should succeed when there is any non-empty array member, not necessarily the first one:
 test "${backups[*]}" || Error "No '${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}' detected in '$BUILD_DIR/outputfs/rear/$HOSTNAME/*'"
 
 # When there is only one backup archive detected use that and do not disrupt
 # "rear recover" or "rear restoreonly" with a backup selection dialog
-# because what else could the user chose except that one backup
-# (it is questionable why there is an 'Abort' choice below):
+# because what else could the user choose except that one backup:
 if test "1" = "${#backups[@]}" ; then
     backuparchive=${backups[0]}
     RESTORE_ARCHIVES=( "$backuparchive" )
@@ -72,8 +70,7 @@ LogPrint "Select a backup archive."
 # http://stackoverflow.com/questions/13195655/bash-set-x-without-it-being-printed
 # shows that when 'set -x' is set calling '{ set +x ; } 2>/dev/null' runs silently:
 { set +x ; } 2>/dev/null
-select choice in "${backup_times[@]}" "Abort" ; do
-    test "Abort" = "$choice" && Error "User chose to abort recovery."
+select choice in "${backup_times[@]}" ; do
     # trim blanks from reply
     n=( $REPLY )
     # bash arrays count from 0
@@ -82,7 +79,7 @@ select choice in "${backup_times[@]}" "Abort" ; do
         # direct output to stdout which is fd7 (see lib/_input-output-functions.sh)
         # and not using a Print function to always print to the original stdout
         # i.e. to the terminal wherefrom the user has started "rear recover":
-        echo "Invalid choice $REPLY, try again or abort." >&7
+        echo "Invalid choice $REPLY, try again (or press [Ctrl]+[C] to abort)." >&7
         continue
     fi
     backuparchive=${backups[$n]}
