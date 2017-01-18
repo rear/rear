@@ -1,7 +1,10 @@
 # rebuild the initramfs if the drivers changed
 #
-# probably not required, but I prefer to rely on this information when it
-# is backed by udev
+# probably not required, but I prefer to rely on this information when it is backed by udev
+# FIXME: who is 'I'?
+# Perhaps Schlomo Schapiro or someone who made the "P2V patch from Heinlein Support"?
+# (see commit 844d50b75ac4b7722f4fee7a5ee3350b93f3adb7)
+# And what happens if there is no 'have_udev'? Why is everything o.k. then to just 'return 0'?
 have_udev || return 0
 
 # check if we need to do something
@@ -49,23 +52,26 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
         unalias ls 2>/dev/null
 
         for INITRD_IMG in $( ls $TARGET_FS_ROOT/boot/initramfs-*.img $TARGET_FS_ROOT/boot/initrd-*.img | egrep -v '(kdump|rescue|plymouth)' ) ; do
-            # do not use KERNEL_VERSION here because that is readonly in the rear main script:
+            # Do not use KERNEL_VERSION here because that is readonly in the rear main script:
             kernel_version=$( basename $( echo $INITRD_IMG ) | cut -f2- -d"-" | sed s/"\.img"// )
-            INITRD=$( echo $INITRD_IMG|egrep -o "/boot/.*" )
-
+            INITRD=$( echo $INITRD_IMG | egrep -o "/boot/.*" )
+            # FIXME: Why is plain 'echo' used here and not 'LogPrint' or 'echo ... >&7'
+            # to print to the original stdout (see 'fd7' in lib/_input-output-functions.sh)?
             echo "Running mkinitrd..."
-            if chroot $TARGET_FS_ROOT /bin/bash --login -c "mkinitrd -v -f ${WITH_INITRD_MODULES[@]} $INITRD $kernel_version" >&2 ; then
-                LogPrint "Updated initramfs with new drivers for Kernel $kernel_version."
+            # Run mkinitrd directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
+            local mkinitrd_binary=$( get_path mkinitrd )
+            if chroot $TARGET_FS_ROOT $mkinitrd_binary -v -f ${WITH_INITRD_MODULES[@]} $INITRD $kernel_version >&2 ; then
+                LogPrint "Updated initrd with new drivers for kernel $kernel_version."
             else
-                LogPrint "WARNING !!!
-initramfs creation for Kernel version '$kernel_version' failed,
-please check '$RUNTIME_LOGFILE' to see the error messages in detail
+                LogPrint "WARNING:
+Failed to create initrd for kernel version '$kernel_version'.
+Check '$RUNTIME_LOGFILE' to see the error messages in detail
 and decide yourself, whether the system will boot or not.
 "
             fi
-
         done
 
 	umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
 
 fi
+

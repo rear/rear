@@ -1,7 +1,10 @@
 # rebuild the initramfs if the drivers changed
 #
-# probably not required, but I prefer to rely on this information when it
-# is backed by udev
+# probably not required, but I prefer to rely on this information when it is backed by udev
+# FIXME: who is 'I'?
+# Perhaps Schlomo Schapiro or someone who made the "P2V patch from Heinlein Support"?
+# (see commit 844d50b75ac4b7722f4fee7a5ee3350b93f3adb7)
+# And what happens if there is no 'have_udev'? Why is everything o.k. then to just 'return 0'?
 have_udev || return 0
 
 # check if we need to do something
@@ -35,14 +38,18 @@ update-initramfs afterwards to update the initramfs with the new mdadm.conf
 		fi
 	fi
 
-	if chroot $TARGET_FS_ROOT /bin/bash --login -c "update-initramfs -v -u -k all" >&2 ; then
+        # Run update-initramfs directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
+        local update_initramfs_binary=$( get_path update-initramfs )
+	if chroot $TARGET_FS_ROOT $update_initramfs_binary -v -u -k all >&2 ; then
 		LogPrint "Updated initramfs with new drivers for this system."
 	else
-		LogPrint "WARNING !!!
-initramfs creation failed, please check '$RUNTIME_LOGFILE' to see the error
-messages in detail and decide yourself, whether the system will boot or not.
+		LogPrint "WARNING:
+Failed to create initramfs ($update_initramfs_binary).
+Check '$RUNTIME_LOGFILE' to see the error messages in detail
+and decide yourself, whether the system will boot or not.
 "
 	fi
 	umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
 
 fi
+
