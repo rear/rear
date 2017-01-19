@@ -55,17 +55,31 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
             # Do not use KERNEL_VERSION here because that is readonly in the rear main script:
             kernel_version=$( basename $( echo $INITRD_IMG ) | cut -f2- -d"-" | sed s/"\.img"// )
             INITRD=$( echo $INITRD_IMG | egrep -o "/boot/.*" )
-            # FIXME: Why is plain 'echo' used here and not 'LogPrint' or 'echo ... >&7'
-            # to print to the original stdout (see 'fd7' in lib/_input-output-functions.sh)?
-            echo "Running mkinitrd..."
-            # Run mkinitrd directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
-            local mkinitrd_binary=$( get_path mkinitrd )
-            if chroot $TARGET_FS_ROOT $mkinitrd_binary -v -f ${WITH_INITRD_MODULES[@]} $INITRD $kernel_version >&2 ; then
-                LogPrint "Updated initrd with new drivers for kernel $kernel_version."
-            else
-                LogPrint "WARNING:
+            LogPrint "Running mkinitrd..."
+            # Run mkinitrd directly in chroot without a login shell in between (see https://github.com/rear/rear/issues/862).
+            # We need the mkinitrd binary in the chroot environment i.e. the mkinitrd binary in the recreated system.
+            # Normally we would use a login shell like: chroot $TARGET_FS_ROOT /bin/bash --login -c 'type -P mkinitrd'
+            # because otherwise there is no useful PATH (PATH is only /bin) so that 'type -P' won't find it
+            # but we cannot use a login shell because that contradicts https://github.com/rear/rear/issues/862
+            # so that we use a plain (non-login) shell and set a (hopefully) reasonable PATH:
+            local mkinitrd_binary=$( chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/bin:/bin type -P mkinitrd' )
+            # If there is no mkinitrd in the chroot environment plain 'chroot $TARGET_FS_ROOT' will hang up endlessly
+            # and then "rear recover" cannot be aborted with the usual [Ctrl]+[C] keys.
+            # Use plain $var because when var contains only blanks test "$var" results true because test " " results true:
+            if test $mkinitrd_binary ; then
+                if chroot $TARGET_FS_ROOT $mkinitrd_binary -v -f ${WITH_INITRD_MODULES[@]} $INITRD $kernel_version >&2 ; then
+                    LogPrint "Updated initrd with new drivers for kernel $kernel_version."
+                else
+                    LogPrint "WARNING:
 Failed to create initrd for kernel version '$kernel_version'.
 Check '$RUNTIME_LOGFILE' to see the error messages in detail
+and decide yourself, whether the system will boot or not.
+"
+                fi
+            else
+                LogPrint "WARNING:
+Cannot create initrd (found no mkinitrd in the recreated system).
+Check the recreated system (mounted at $TARGET_FS_ROOT)
 and decide yourself, whether the system will boot or not.
 "
             fi

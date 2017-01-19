@@ -38,18 +38,34 @@ update-initramfs afterwards to update the initramfs with the new mdadm.conf
 		fi
 	fi
 
-        # Run update-initramfs directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
-        local update_initramfs_binary=$( get_path update-initramfs )
-	if chroot $TARGET_FS_ROOT $update_initramfs_binary -v -u -k all >&2 ; then
-		LogPrint "Updated initramfs with new drivers for this system."
-	else
-		LogPrint "WARNING:
+        # Run update-initramfs directly in chroot without a login shell in between (see https://github.com/rear/rear/issues/862).
+        # We need the update-initramfs binary in the chroot environment i.e. the update-initramfs binary in the recreated system.
+        # Normally we would use a login shell like: chroot $TARGET_FS_ROOT /bin/bash --login -c 'type -P update-initramfs'
+        # because otherwise there is no useful PATH (PATH is only /bin) so that 'type -P' won't find it
+        # but we cannot use a login shell because that contradicts https://github.com/rear/rear/issues/862
+        # so that we use a plain (non-login) shell and set a (hopefully) reasonable PATH:
+        local update_initramfs_binary=$( chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/bin:/bin type -P update-initramfs' )
+        # If there is no update-initramfs in the chroot environment plain 'chroot $TARGET_FS_ROOT' will hang up endlessly
+        # and then "rear recover" cannot be aborted with the usual [Ctrl]+[C] keys.
+        # Use plain $var because when var contains only blanks test "$var" results true because test " " results true:
+        if test $update_initramfs_binary ; then
+            if chroot $TARGET_FS_ROOT $update_initramfs_binary -v -u -k all >&2 ; then
+                LogPrint "Updated initramfs with new drivers for this system."
+            else
+                LogPrint "WARNING:
 Failed to create initramfs ($update_initramfs_binary).
 Check '$RUNTIME_LOGFILE' to see the error messages in detail
 and decide yourself, whether the system will boot or not.
 "
-	fi
-	umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
+            fi
+        else
+        LogPrint "WARNING:
+Cannot create initramfs (found no update-initramfs in the recreated system).
+Check the recreated system (mounted at $TARGET_FS_ROOT)
+and decide yourself, whether the system will boot or not.
+"
+        fi
+        umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
 
 fi
 
