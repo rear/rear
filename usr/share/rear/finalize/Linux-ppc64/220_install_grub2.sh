@@ -43,7 +43,8 @@ if [[ -r "$LAYOUT_FILE" ]]; then
     if [ -n "$part" ]; then
         LogPrint "Boot partition found: $part"
         dd if=/dev/zero of=$part
-        chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $part"
+        # Run grub-install/grub2-install directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
+        chroot $TARGET_FS_ROOT $grub_name-install $part
         # Run bootlist only in PowerVM environment
         if ! grep -q "PowerNV" /proc/cpuinfo && ! grep -q "emulated by qemu" /proc/cpuinfo ; then
             #Using $LAYOUT_DEPS file to find the disk device containing the partition.
