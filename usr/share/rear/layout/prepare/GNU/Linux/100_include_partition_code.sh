@@ -245,7 +245,7 @@ EOF
     # and create exact copy of original disk layout
     # (ugly, ugly, ugly, but works)
     # TODO: add code for GPT
-    if [[ "$BLOCKCLONE_STRICT_PARTITIONING" =~ ^[yY1] ]] && [ -n $BLOCKCLONE_SAVE_MBR_DEV ]; then
+    if is_true "$BLOCKCLONE_STRICT_PARTITIONING" && [ -n "$BLOCKCLONE_SAVE_MBR_DEV" ]; then
         (
         echo ""
         echo "# WARNING:"

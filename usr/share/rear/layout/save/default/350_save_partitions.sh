@@ -17,7 +17,7 @@ local label=$(parted $BLOCKCLONE_SAVE_MBR_DEV print | \
 grep "Partition Table" | awk -F ": " '{print $2}')
 
 case "$label" in
-    "msdos")
+    ("msdos")
         Log "Saving strict partition layout"
 
         sfdisk -d $BLOCKCLONE_SAVE_MBR_DEV > \
@@ -35,13 +35,13 @@ case "$label" in
 
         StopIfError "Failed to save bootstrap code area"
     ;;
-    #~ "gpt")
+    #~ ("gpt")
         #~ sgdisk -b $VAR_DIR/layout/$BLOCKCLONE_PARTITIONS_CONF_FILE \
         #~ $BLOCKCLONE_SAVE_MBR_DEV
         #~
         #~ StopIfError "Failed to save partition layout"
     #~ ;;
-    *)
+    (*)
         BugError "Unknown partition table on $BLOCKCLONE_SAVE_MBR_DEV"
     ;;
 esac
