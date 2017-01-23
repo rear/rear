@@ -241,6 +241,22 @@ EOF
         fi
     done < <(grep "^part $device " $LAYOUT_FILE)
 
+    # This will override all partition setup previously made,
+    # and create exact copy of original disk layout
+    # (ugly, ugly, ugly, but works)
+    # TODO: add code for GPT
+    if is_true "$BLOCKCLONE_STRICT_PARTITIONING" && [ -n "$BLOCKCLONE_SAVE_MBR_DEV" ]; then
+        (
+        echo ""
+        echo "# WARNING:"
+        echo "# This code will overwrite all partition changes previously made."
+        echo "# If you want avoid this, set BLOCKCLONE_STRICT_PARTITIONING=\"no\""
+        echo "sfdisk $device < $VAR_DIR/layout/$BLOCKCLONE_PARTITIONS_CONF_FILE"
+        echo "dd if=$VAR_DIR/layout/$BLOCKCLONE_MBR_FILE of=$device bs=446 count=1"
+        echo ""
+        ) >> "$LAYOUT_CODE"
+    fi
+
     # Try to ensure the kernel uses the new partitioning
     # see https://github.com/rear/rear/issues/793
     # First do a hardcoded sleep of 1 second so that

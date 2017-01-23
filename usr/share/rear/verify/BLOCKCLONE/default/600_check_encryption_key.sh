@@ -1,0 +1,1 @@
+../../NETFS/default/600_check_encryption_key.sh

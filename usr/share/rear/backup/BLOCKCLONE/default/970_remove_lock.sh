@@ -1,0 +1,1 @@
+../../NETFS/default/970_remove_lock.sh
