@@ -18,7 +18,7 @@ if ! test -s $TMP_DIR/storage_drivers ; then
 fi
 # During "rear mkbackup/mkrescue" 260_storage_drivers.sh creates $VAR_DIR/recovery/storage_drivers
 if cmp -s $TMP_DIR/storage_drivers $VAR_DIR/recovery/storage_drivers ; then
-    Log "No driver migration: '$TMP_DIR/storage_drivers' and '$VAR_DIR/recovery/storage_drivers' are same"
+    Log "No driver migration: '$TMP_DIR/storage_drivers' and '$VAR_DIR/recovery/storage_drivers' are the same"
     return 0
 fi
 
