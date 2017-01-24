@@ -155,6 +155,9 @@ Use Rsync Backup Made Easy (rbme) to restore the data.
 BACKUP=RSYNC::
 Use rsync to foresee in backup and restore of your system disks.
 
+BACKUP=BLOCKCLONE::
+Backup block devices using dd or ntfsclone
+
 == Using NETFS as backup strategy (internal archive method)
 When using +BACKUP=NETFS+ you should provide the backup target location through
 the +BACKUP_URL+ variable. Possible +BACKUP_URL+ settings are:

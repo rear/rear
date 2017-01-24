@@ -148,6 +148,81 @@ Choose archive to recover from:
 
 ```
 
+
+== Backup/restore alien file system using BLOCKCLONE and dd
+=== Configuration
+
+- First we need to set some global options to _local.conf_
+
+```
+# cat local.conf
+OUTPUT=ISO
+BACKUP=NETFS
+BACKUP_OPTIONS="nfsvers=3,nolock"
+BACKUP_URL=nfs://beta.virtual.sk/mnt/rear
+```
+
+- Now we can define variables that will apply only for targeted block device
+
+```
+# cat alien.conf
+BACKUP=BLOCKCLONE                                        # Define BLOCKCLONE as backup method
+BACKUP_PROG_ARCHIVE="alien"                              # Name of image file
+BACKUP_PROG_SUFFIX=".dd.img"                             # Suffix of image file
+BACKUP_PROG_COMPRESS_SUFFIX=""                           # Clear additional suffixes
+
+BLOCKCLONE_PROG=dd                                       # Use dd for image creation
+BLOCKCLONE_PROG_OPTS="bs=4k"                             # Additional options that will be passed to dd
+BLOCKCLONE_SOURCE_DEV="/dev/sdc1"                        # Device that should be backed up
+
+BLOCKCLONE_SAVE_MBR_DEV="/dev/sdc"                       # Device where partitioning information is stored (optional)
+BLOCKCLONE_MBR_FILE="alien_boot_strap.img"               # Output filename for boot strap code
+BLOCKCLONE_PARTITIONS_CONF_FILE="alien_partitions.conf"  # Output filename for partition configuration
+BLOCKCLONE_ALLOW_MOUNTED="yes"                           # Device can be mounted during backup (default NO)
+```
+
+=== Running backup
+
+ - Save partitions configuration, bootstrap code and create actual backup of /dev/sdc1
+
+```
+# rear -C alien mkbackuponly
+```
+
+ - Running restore from ReaR restore/recovery system
+
+```
+# rear -C alien restoreonly
+
+Restore alien.dd.img to device: [/dev/sdc1]                 # User is always prompted for restore destination
+Device /dev/sdc1 was not found.                             # If destination does not exist ReaR will try to create it (or fail if BLOCKCLONE_SAVE_MBR_DEV was not set during backup)
+Restore partition layout to (^c to abort): [/dev/sdc]       # Prompt user for device where partition configuration should be restored
+Checking that no-one is using this disk right now ... OK
+
+Disk /dev/sdc: 5 GiB, 5368709120 bytes, 10485760 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Created a new DOS disklabel with disk identifier 0x10efb7a9.
+Created a new partition 1 of type 'HPFS/NTFS/exFAT' and of size 120 MiB.
+
+/dev/sdc2:
+New situation:
+
+Device     Boot Start    End Sectors  Size Id Type
+/dev/sdc1        4096 249855  245760  120M  7 HPFS/NTFS/exFAT
+
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+```
+
+
 == Using Relax-and-Recover with USB storage devices
 Using USB devices with Relax-and-Recover can be appealing for several reasons:
 
