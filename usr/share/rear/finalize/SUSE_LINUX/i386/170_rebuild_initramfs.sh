@@ -31,7 +31,7 @@ if test -s $TMP_DIR/storage_drivers && ! diff $TMP_DIR/storage_drivers $VAR_DIR/
         #   # and the dracut (--force-drivers paramter) manpage.
         # Because the comment above reads "probably not required" at least for now
         # there is no support for force_drivers in /etc/dracut.conf.d/01-dist.conf.
-        source $TARGET_FS_ROOT/etc/sysconfig/kerneli || Error "Could not source '$TARGET_FS_ROOT/etc/sysconfig/kernel'"
+        source $TARGET_FS_ROOT/etc/sysconfig/kernel || Error "Could not source '$TARGET_FS_ROOT/etc/sysconfig/kernel'"
 
         Log "Original INITRD_MODULES='$INITRD_MODULES'"
         OLD_INITRD_MODULES=( $INITRD_MODULES ) # use array to split into words
@@ -86,4 +86,3 @@ and decide yourself, whether the system will boot or not.
     umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
 
 fi
-
