@@ -1,22 +1,26 @@
-# find the storage drivers for the recovery hardware
+# Find the storage drivers for the recovery hardware.
 
-have_udev || return 0
-# the difference is that we refer to the stuff in TMP_DIR which was created
-# during the recover stages
+# A longer time ago udev was optional on some distros.
+# This changed and nowadays udev is not optional any more.
+# See https://github.com/rear/rear/pull/1171#issuecomment-274442700
+# But it is not necessarily an error if the storage drivers
+# for the recovery hardware cannot be determined:
+if ! have_udev ; then
+    LogPrint "Cannot determine storage drivers (no udev found), proceeding bona fide"
+    return 0
+fi
+
 FindStorageDrivers $TMP_DIR/dev >$TMP_DIR/storage_drivers
 
-# compare
-if ! diff -u $VAR_DIR/recovery/storage_drivers $TMP_DIR/storage_drivers >&2 ; then
-	# TODO this branch is obsolete as this script runs only under UDEV
-	if have_udev ; then
-		LogPrint "NOTICE: Will do driver migration"
-	else
-		LogPrint "WARNING:
-Some or all of the storage drivers are different between this system and
-the source system. Please make sure to adjust the recovered system before
-attempting to boot it.
-
-BTW, with newer Kernel 2.6 systems this would happen automatically.
-"
-	fi
+if ! test -s $TMP_DIR/storage_drivers ; then
+    Log "No driver migration: No needed storage drivers found ('$TMP_DIR/storage_drivers' is empty)"
+    return 0
 fi
+# During "rear mkbackup/mkrescue" 260_storage_drivers.sh creates $VAR_DIR/recovery/storage_drivers
+if cmp -s $TMP_DIR/storage_drivers $VAR_DIR/recovery/storage_drivers ; then
+    Log "No driver migration: '$TMP_DIR/storage_drivers' and '$VAR_DIR/recovery/storage_drivers' are the same"
+    return 0
+fi
+
+LogPrint "Will do driver migration (recreating initramfs/initrd)"
+
