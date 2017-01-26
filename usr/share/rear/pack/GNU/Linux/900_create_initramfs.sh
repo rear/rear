@@ -6,25 +6,51 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 LogPrint "Creating recovery/rescue system initramfs/initrd"
-
+# The REAR_INITRD_FILENAME is needed in various subsequent scripts that install the bootloader
+# of the Relax-and-Recover recovery/rescue system during the subsequent 'output' stage.
 pushd "$ROOTFS_DIR" >/dev/null
-# First try to create initrd.xz with the newer xz-lzma compression,
-# see https://github.com/rear/rear/issues/1142
-# The REAR_INITRD_FILENAME is needed in various subsequent scripts:
-REAR_INITRD_FILENAME="initrd.xz"
-if find . ! -name "*~" | cpio -H newc --create --quiet | xz --format=lzma --compress --stdout > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
-    LogPrint "Created $REAR_INITRD_FILENAME with xz-lzma compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes)"
-else
-    REAR_INITRD_FILENAME="initrd.cgz"
-    # If it fails to create initrd.xz with xz-lzma compression
-    # fall back to the traditional way and create initrd.cgz with gzip compression,
-    # cf. "Dirty hacks welcome" at https://github.com/rear/rear/wiki/Coding-Style
-    if find . ! -name "*~" | cpio -H newc --create --quiet | gzip > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
-        LogPrint "Created $REAR_INITRD_FILENAME with gzip compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes)"
-    else
-        # No need to clean up things (like 'popd') because Error exits directly:
-        Error "Failed to create recovery/rescue system initramfs/initrd"
-    fi
-fi
+case "$REAR_INITRD_COMPRESSION" in
+    (lzma)
+        # Create initrd.xz with xz and use the lzma compression, see https://github.com/rear/rear/issues/1142
+        REAR_INITRD_FILENAME="initrd.xz"
+        if find . ! -name "*~" | cpio -H newc --create --quiet | xz --format=lzma --compress --stdout > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
+            LogPrint "Created $REAR_INITRD_FILENAME with xz lzma compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes)"
+        else
+            # No need to clean up things (like 'popd') because Error exits directly:
+            Error "Failed to create recovery/rescue system $REAR_INITRD_FILENAME"
+        fi
+        ;;
+    (fast)
+        # Create initrd.cgz with gzip --fast compression (fast speed but less compression)
+        REAR_INITRD_FILENAME="initrd.cgz"
+        if find . ! -name "*~" | cpio -H newc --create --quiet | gzip --fast > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
+            LogPrint "Created $REAR_INITRD_FILENAME with gzip fast compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes)"
+        else
+            # No need to clean up things (like 'popd') because Error exits directly:
+            Error "Failed to create recovery/rescue system $REAR_INITRD_FILENAME"
+        fi
+        ;;
+    (best)
+        # Create initrd.cgz with gzip --best compression (best compression but slow speed)
+        REAR_INITRD_FILENAME="initrd.cgz"
+        if find . ! -name "*~" | cpio -H newc --create --quiet | gzip --best > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
+            LogPrint "Created $REAR_INITRD_FILENAME with gzip best compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes)"
+        else
+            # No need to clean up things (like 'popd') because Error exits directly:
+            Error "Failed to create recovery/rescue system $REAR_INITRD_FILENAME"
+        fi
+        ;;
+    (*)
+        # Create initrd.cgz with gzip default compression by default and also as fallback
+        # (no need to error out here if REAR_INITRD_COMPRESSION has an invalid value)
+        REAR_INITRD_FILENAME="initrd.cgz"
+        if find . ! -name "*~" | cpio -H newc --create --quiet | gzip > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
+            LogPrint "Created $REAR_INITRD_FILENAME with gzip default compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes)"
+        else
+            # No need to clean up things (like 'popd') because Error exits directly:
+            Error "Failed to create recovery/rescue system $REAR_INITRD_FILENAME"
+        fi
+        ;;
+esac
 popd >/dev/null
 
