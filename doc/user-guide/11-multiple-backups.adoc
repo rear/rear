@@ -6,6 +6,7 @@
 Currently multiple backups are only supported for:
 
 * the internal BACKUP=NETFS method with BACKUP_TYPE=""
+* the internal BACKUP=BLOCKCLONE method
 * the external BACKUP=BORG method
 
 In general multiple backups are not supported for
