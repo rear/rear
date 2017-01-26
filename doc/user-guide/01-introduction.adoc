@@ -107,5 +107,6 @@ Relax-and-Recover has a wide range of features:
  - Migrate UUID from disks and MAC addressed from network interfaces
  - Integrates with Disaster Recovery Linux Manager (DRLM)
  - Data deduplication with Borg as backend
+ - Block device level backup/restore
 
 

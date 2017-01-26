@@ -35,3 +35,5 @@ include::10-integrating-external-backup.adoc[]
 
 include::11-multiple-backups.adoc[]
 
+include::12-BLOCKCLONE.adoc[]
+
