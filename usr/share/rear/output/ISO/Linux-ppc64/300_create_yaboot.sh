@@ -57,7 +57,7 @@ default=Relax-and-Recover
 
 image=kernel
 	label=Relax-and-Recover
-	initrd=initrd.cgz
+	initrd=$REAR_INITRD_FILENAME
 	append=" root=/dev/ram0 $KERNEL_CMDLINE"
 
 EOF

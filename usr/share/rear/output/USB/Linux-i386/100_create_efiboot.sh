@@ -36,15 +36,15 @@ cp -pL $v "${KERNEL_FILE}" "${EFI_DST}/kernel" >&2
 StopIfError "Could not copy ${KERNEL_FILE} to ${EFI_DST}/kernel"
 
 # Copy initrd
-cp -p $v "${TMP_DIR}/initrd.cgz" "${EFI_DST}/initrd.cgz" >&2
-StopIfError "Could not copy ${TMP_DIR}/initrd.cgz to ${EFI_DST}/initrd.cgz"
+cp -p $v "${TMP_DIR}/$REAR_INITRD_FILENAME" "${EFI_DST}/$REAR_INITRD_FILENAME" >&2
+StopIfError "Could not copy ${TMP_DIR}/$REAR_INITRD_FILENAME to ${EFI_DST}/$REAR_INITRD_FILENAME"
 
-Log "Copied kernel and initrd.cgz to ${EFI_DST}"
+Log "Copied kernel and $REAR_INITRD_FILENAME to ${EFI_DST}"
 
 # Configure elilo for EFI boot
 if test "$uefi_bootloader_basename" = "elilo.efi" ; then
     Log "Configuring elilo for EFI boot"
-    
+
     # Create config for elilo
     Log "Creating ${EFI_DST}/elilo.conf"
 
@@ -54,32 +54,32 @@ timeout = 5
 
 image = kernel
     label = rear
-    initrd = initrd.cgz
+    initrd = $REAR_INITRD_FILENAME
 EOF
 
 # Configure grub for EFI boot or die
 else
     # Hope this assumption is not wrong ...
     if has_binary grub-install grub2-install; then
-    
+
         # Choose right grub binary
         # Issue #849
         if has_binary grub2-install; then
             NUM=2
         fi
-        
+
         GRUB_MKIMAGE=grub${NUM}-mkimage
         GRUB_INSTALL=grub${NUM}-install
-        
+
         # What version of grub are we using
         # substr() for awk did not work as expected for this reason cut was used
         # First charecter should be enough to identify grub version
         grub_version=$($GRUB_INSTALL --version | awk '{print $NF}' | cut -c1-1)
-        
+
         case ${grub_version} in
             0)
                 Log "Configuring grub 0.97 for EFI boot"
-                
+
                 # Create config for grub 0.97
                 cat > ${EFI_DST}/BOOTX64.conf << EOF
 default=0
@@ -87,25 +87,25 @@ timeout=5
 
 title Relax-and-Recover (no Secure Boot)
     kernel ${EFI_DIR}/kernel
-    initrd ${EFI_DIR}/initrd.cgz
+    initrd ${EFI_DIR}/$REAR_INITRD_FILENAME
 EOF
             ;;
             2)
                 Log "Configuring grub 2.0 for EFI boot"
-                
+
                 # Create bootloader, this overwrite BOOTX64.efi copied in previous step ...
                 # Fail if BOOTX64.efi can't be created
                 ${GRUB_MKIMAGE} -o ${EFI_DST}/BOOTX64.efi -p ${EFI_DIR} -O x86_64-efi linux part_gpt ext2 normal gfxterm gfxterm_background gfxterm_menu test all_video loadenv fat
                 StopIfError "Failed to create BOOTX64.efi"
-                
+
                 # Create config for grub 2.0
                 cat > ${EFI_DST}/grub.cfg << EOF
 set timeout=5
-set default=0 
+set default=0
 
 menuentry "Relax-and-Recover (no Secure Boot)" {
     linux ${EFI_DIR}/kernel
-    initrd ${EFI_DIR}/initrd.cgz
+    initrd ${EFI_DIR}/$REAR_INITRD_FILENAME
 }
 EOF
             ;;

@@ -54,7 +54,7 @@ if [[ -n "$ISO_MAX_SIZE" ]]; then
     # Computation of the real backup maximum size by excluding bootable files size on the first ISO (EFI, kernel, ramdisk)
     # Don't use that on max size less than 200MB which would result in too many backups
     if [[ $ISO_MAX_SIZE -gt 200 ]]; then
-        INITRD_SIZE=$(stat -c '%s' $TMP_DIR/initrd.cgz)
+        INITRD_SIZE=$(stat -c '%s' $TMP_DIR/$REAR_INITRD_FILENAME)
         KERNEL_SIZE=$(stat -c '%s' $KERNEL_FILE)
         # We add 15MB which is the average size of all isolinux binaries
         BASE_ISO_SIZE=$(((${INITRD_SIZE}+${KERNEL_SIZE})/1024/1024+15))

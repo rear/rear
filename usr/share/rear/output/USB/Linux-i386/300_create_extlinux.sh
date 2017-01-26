@@ -125,7 +125,7 @@ Relax-and-Recover v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPA
 ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
     endtext
     kernel /$USB_PREFIX/kernel
-    append initrd=/$USB_PREFIX/initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
+    append initrd=/$USB_PREFIX/$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 
 label $HOSTNAME-$time
     menu label $menu_label $usb_label_workflow - AUTOMATIC RECOVER
@@ -135,7 +135,7 @@ Relax-and-Recover v$VERSION - $usb_label_workflow using kernel $(uname -r) ${IPA
 ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
     endtext
     kernel /$USB_PREFIX/kernel
-    append initrd=/$USB_PREFIX/initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover
+    append initrd=/$USB_PREFIX/$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover
 
 EOF
 

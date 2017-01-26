@@ -1,4 +1,4 @@
-# 80_copy_to_tftp.sh
+# 800_copy_to_tftp.sh
 #
 # copy kernel and initrd to TFTP server for Relax-and-Recover
 #
@@ -19,20 +19,20 @@ if [[ ! -z "$PXE_TFTP_URL" ]] ; then
     mkdir -m 755 -p $v "$BUILD_DIR/tftpbootfs/$OUTPUT_PREFIX_PXE" >&2
     StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs/$OUTPUT_PREFIX_PXE'"
     PXE_KERNEL="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}kernel"
-    PXE_INITRD="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}initrd.cgz"
+    PXE_INITRD="$OUTPUT_PREFIX_PXE/$PXE_TFTP_PREFIX$REAR_INITRD_FILENAME"
     PXE_MESSAGE="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}message"
 else
     PXE_TFTP_LOCAL_PATH="$PXE_TFTP_PATH"
     # By default PXE_TFTP_PREFIX=$HOSTNAME. (see conf/default.conf)
     PXE_KERNEL="${PXE_TFTP_PREFIX}kernel"
-    PXE_INITRD="${PXE_TFTP_PREFIX}initrd.cgz"
+    PXE_INITRD="$PXE_TFTP_PREFIX$REAR_INITRD_FILENAME"
     PXE_MESSAGE="${PXE_TFTP_PREFIX}message"
     [[ ! -d "$PXE_TFTP_LOCAL_PATH" ]] && mkdir $v -m 750 "$PXE_TFTP_LOCAL_PATH" >&2
 fi
 
 
 cp -pL $v "$KERNEL_FILE" "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL" >&2
-cp -a $v "$TMP_DIR"/initrd.cgz "$PXE_TFTP_LOCAL_PATH/$PXE_INITRD" >&2
+cp -a $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$PXE_TFTP_LOCAL_PATH/$PXE_INITRD" >&2
 echo "$VERSION_INFO" >"$PXE_TFTP_LOCAL_PATH/$PXE_MESSAGE"
 # files must be readable for others for PXE
 chmod 444 "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL"
@@ -65,16 +65,16 @@ fi
 
 
 if [[ ! -z "$PXE_TFTP_URL" ]] ; then
-    LogPrint "Copied kernel+initrd ($(du -shc $KERNEL_FILE "$TMP_DIR/initrd.cgz" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 )) to $PXE_TFTP_URL"
+    LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_TFTP_URL"
     umount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs
     rmdir $BUILD_DIR/tftpbootfs >&2
     if [[ $? -eq 0 ]] ; then
         RemoveExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
     fi
-    RESULT_FILES=( "${RESULT_FILES[@]}" )
 else
     # legacy way PXE_TFTP_PATH
-    LogPrint "Copied kernel+initrd ($(du -shc $KERNEL_FILE "$TMP_DIR/initrd.cgz" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 )) to $PXE_TFTP_PATH"
+    LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_TFTP_PATH"
     # Add to result files
     RESULT_FILES=( "${RESULT_FILES[@]}" "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL" "$PXE_TFTP_LOCAL_PATH/$PXE_INITRD" "$PXE_TFTP_LOCAL_PATH/$PXE_MESSAGE" )
 fi
+

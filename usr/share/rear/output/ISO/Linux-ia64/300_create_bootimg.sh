@@ -12,7 +12,7 @@ mkdir $v -p $TMP_DIR/mnt/boot >&2
 cp -L $v "$ELILO_BIN" $TMP_DIR/mnt/boot >&2
 StopIfError "Could not find $ELILO_BIN"
 
-cp $v $TMP_DIR/initrd.cgz $TMP_DIR/mnt/boot
+cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/mnt/boot
 
 #VMLINUX_KERNEL=`find / -xdev -name "vmlinu*-${KERNEL_VERSION}"`
 #cp "${VMLINUX_KERNEL}" $TMP_DIR/mnt/boot/kernel
@@ -29,7 +29,7 @@ timeout=50
 
 image=kernel
 	label=rear
-	initrd=initrd.cgz
+	initrd=$REAR_INITRD_FILENAME
 	read-only
 	append="ramdisk=512000 $CONSOLE  rhgb selinux=0"
 EOF

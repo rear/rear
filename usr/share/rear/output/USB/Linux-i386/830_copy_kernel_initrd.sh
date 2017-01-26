@@ -4,10 +4,10 @@
 cp -pL $v "$KERNEL_FILE" "$BUILD_DIR/outputfs/$USB_PREFIX/kernel" >&2
 StopIfError "Could not create $BUILD_DIR/outputfs/$USB_PREFIX/kernel"
 
-cp -p $v "$TMP_DIR/initrd.cgz" "$BUILD_DIR/outputfs/$USB_PREFIX/initrd.cgz" >&2
-StopIfError "Could not create $BUILD_DIR/outputfs/$USB_PREFIX/initrd.cgz"
+cp -p $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$BUILD_DIR/outputfs/$USB_PREFIX/$REAR_INITRD_FILENAME" >&2
+StopIfError "Could not create $BUILD_DIR/outputfs/$USB_PREFIX/$REAR_INITRD_FILENAME"
 
-Log "Copied kernel and initrd.cgz to $USB_PREFIX"
+Log "Copied kernel and $REAR_INITRD_FILENAME to $USB_PREFIX"
 
 # Copy current unfinished logfile to USB dir for debug purpose.
 # Usually RUNTIME_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
@@ -20,4 +20,4 @@ StopIfError "Could not copy $RUNTIME_LOGFILE to $BUILD_DIR/outputfs/$USB_PREFIX/
 LogPrint "Saved $RUNTIME_LOGFILE as $USB_PREFIX/$logfile_basename"
 
 # FIXME: This is meaningless ATM, RESULT_FILES should be put somewhere reliable and not on a temporary mounted media.
-#RESULT_FILES=( "${USB_FILES[@]}" "$USB_DIR/kernel" "$USB_DIR/initrd.cgz" )
+#RESULT_FILES=( "${USB_FILES[@]}" "$USB_DIR/kernel" "$USB_DIR/$REAR_INITRD_FILENAME" )

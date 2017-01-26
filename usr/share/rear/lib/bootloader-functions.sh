@@ -259,7 +259,7 @@ function make_syslinux_config {
 	syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"
-	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
+	echo "append initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
 	if [ "$ISO_DEFAULT" == "manual" ] ; then
                echo "default rear"
                syslinux_menu "default"
@@ -272,7 +272,7 @@ function make_syslinux_config {
 	syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"
-	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover"
+	echo "append initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover"
 
 	if [ "$ISO_DEFAULT" == "automatic" ] ; then
                echo "default rear-automatic"
@@ -451,7 +451,7 @@ default = "Relax-and-Recover (no Secure Boot)"
 
 image = kernel
     label = "Relax-and-Recover (no Secure Boot)"
-    initrd = initrd.cgz
+    initrd = $REAR_INITRD_FILENAME
 EOF
     [[ -n $KERNEL_CMDLINE ]] && cat << EOF
     append = "$KERNEL_CMDLINE"
@@ -486,14 +486,14 @@ menuentry "Relax-and-Recover (no Secure Boot)"  --class gnu-linux --class gnu --
      echo 'Loading kernel ...'
      linux /isolinux/kernel root=UUID=$root_uuid $KERNEL_CMDLINE
      echo 'Loading initial ramdisk ...'
-     initrd /isolinux/initrd.cgz
+     initrd /isolinux/$REAR_INITRD_FILENAME
 }
 
 menuentry "Relax-and-Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
      echo 'Loading kernel ...'
      linuxefi /isolinux/kernel root=UUID=$root_uuid $KERNEL_CMDLINE
      echo 'Loading initial ramdisk ...'
-     initrdefi /isolinux/initrd.cgz
+     initrdefi /isolinux/$REAR_INITRD_FILENAME
 }
 
 menuentry "Reboot" {
