@@ -38,8 +38,8 @@ if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" ]]; then
         # copy initrd and kernel inside efi_boot image as
         cp -pL $v $KERNEL_FILE $TMP_DIR/mnt/EFI/BOOT/kernel >&2
         StopIfError "Could not copy kernel to UEFI"
-        cp $v $TMP_DIR/initrd.cgz $TMP_DIR/mnt/EFI/BOOT/initrd.cgz >&2
-        StopIfError "Could not copy initrd to UEFI"
+        cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/mnt/EFI/BOOT/$REAR_INITRD_FILENAME >&2
+        StopIfError "Could not copy $REAR_INITRD_FILENAME to UEFI"
         create_ebiso_elilo_conf > $TMP_DIR/mnt/EFI/BOOT/elilo.conf
         create_grub2_cfg > $TMP_DIR/mnt/EFI/BOOT/grub.cfg
     fi
@@ -52,7 +52,7 @@ timeout 5
 splashimage=/EFI/BOOT/splash.xpm.gz
 title Relax-and-Recover (no Secure Boot)
     kernel /isolinux/kernel
-    initrd /isolinux/initrd.cgz
+    initrd /isolinux/$REAR_INITRD_FILENAME
 
 EOF
 else

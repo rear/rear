@@ -21,7 +21,7 @@ set timeout=100
 
 menuentry "Relax-and-Recover" {
 	linux   /kernel root=/dev/ram0 $KERNEL_CMDLINE
-	initrd  /initrd.cgz
+	initrd  /$REAR_INITRD_FILENAME
 }
 EOF
 

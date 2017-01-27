@@ -32,13 +32,13 @@ fi
 
 # Ensure that kernel and initrd are there:
 test -r "$KERNEL_FILE" || Error "Cannot setup GRUB_RESCUE: Cannot read kernel file '$KERNEL_FILE'."
-local initrd_file=$TMP_DIR/initrd.cgz
+local initrd_file=$TMP_DIR/$REAR_INITRD_FILENAME
 test -r $initrd_file || Error "Cannot setup GRUB_RESCUE: Cannot read initrd '$initrd_file'."
 
 # Some commonly needed values:
 local boot_dir="/boot"
 local boot_kernel_name="rear-kernel"
-local boot_initrd_name="rear-initrd.cgz"
+local boot_initrd_name="rear-$REAR_INITRD_FILENAME"
 local boot_kernel_file="$boot_dir/$boot_kernel_name"
 local boot_initrd_file="$boot_dir/$boot_initrd_name"
 local grub_config_dir="$boot_dir/grub${grub_num}"
@@ -247,7 +247,9 @@ else
     cp -pLf $v $KERNEL_FILE $boot_kernel_file >&2 || BugError "Unable to copy '$KERNEL_FILE' to '$boot_kernel_file'."
 fi
 
-# Provide the rear recovery system in initrd_file (i.e. TMP_DIR/initrd.cgz) as boot_initrd_file (i.e. /boot/rear-initrd.cgz):
+# Provide the rear recovery system in initrd_file (i.e. TMP_DIR/initrd.cgz or TMP_DIR/initrd.xz)
+# as boot_initrd_file (i.e. /boot/rear-initrd.cgz or /boot/rear-initrd.xz)
+# (regarding '.cgz' versus '.xz' see https://github.com/rear/rear/issues/1142)
 cp -af $v $initrd_file $boot_initrd_file >&2 || BugError "Unable to copy '$initrd_file' to '$boot_initrd_file'."
 
 LogPrint "Finished GRUB_RESCUE setup: Added '$grub_rear_menu_entry_name' GRUB 2 menu entry."

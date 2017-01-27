@@ -30,16 +30,16 @@ fi
 [[ -r "$KERNEL_FILE" ]]
 StopIfError "Failed to find kernel, updating GRUB failed."
 
-[[ -r "$TMP_DIR/initrd.cgz" ]]
-StopIfError "Failed to find initrd.cgz, updating GRUB failed."
+[[ -r "$TMP_DIR/$REAR_INITRD_FILENAME" ]]
+StopIfError "Failed to find $REAR_INITRD_FILENAME, updating GRUB failed."
 
 function total_filesize {
     stat --format '%s' $@ 2>&8 | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
 }
 
 available_space=$(df -Pkl /boot | awk 'END { print $4 * 1024 }')
-used_space=$(total_filesize /boot/rear-kernel /boot/rear-initrd.cgz)
-required_space=$(total_filesize $KERNEL_FILE $TMP_DIR/initrd.cgz)
+used_space=$(total_filesize /boot/rear-kernel /boot/rear-$REAR_INITRD_FILENAME)
+required_space=$(total_filesize $KERNEL_FILE $TMP_DIR/$REAR_INITRD_FILENAME)
 
 if (( available_space + used_space < required_space )) ; then
     required_MiB=$(( required_space / 1024 / 1024 ))
@@ -83,7 +83,7 @@ END {
     print "title Relax-and-Recover"
     print "\tpassword $GRUB_RESCUE_PASSWORD"
     print "\tkernel /rear-kernel $KERNEL_CMDLINE"
-    print "\tinitrd /rear-initrd.cgz"
+    print "\tinitrd /rear-$REAR_INITRD_FILENAME"
 }
 EOF
 
@@ -108,5 +108,5 @@ else
 fi
 BugIfError "Unable to copy '$KERNEL_FILE' to /boot"
 
-cp -af $v $TMP_DIR/initrd.cgz /boot/rear-initrd.cgz >&2
-BugIfError "Unable to copy '$TMP_DIR/initrd.cgz' to /boot"
+cp -af $v $TMP_DIR/$REAR_INITRD_FILENAME /boot/rear-$REAR_INITRD_FILENAME >&2
+BugIfError "Unable to copy '$TMP_DIR/$REAR_INITRD_FILENAME' to /boot"

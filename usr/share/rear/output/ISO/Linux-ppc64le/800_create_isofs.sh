@@ -12,7 +12,7 @@ StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executable !"
 Log "Copying kernel"
 cp -pL $v $KERNEL_FILE $TMP_DIR/kernel >&2
 
-ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/kernel initrd.cgz )
+ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/kernel $REAR_INITRD_FILENAME )
 Log "Starting '$ISO_MKISOFS_BIN'"
 LogPrint "Making ISO image"
 
