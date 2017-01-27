@@ -68,7 +68,11 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
                 nmask=""
                 nip="$new_ip"           # keep ipaddress/cidr
             else
-                nip="${new_ip%%/*}"     # only keep ipaddress
+		if grep -qE '^NETMASK=' $network_file;then
+			nip="${new_ip%%/*}"     # only keep ipaddress
+		else
+			nip="${new_ip}"     # keep ipaddress format
+		fi
             fi
             # TODO: what if NETMASK keyword is not defined? Should be keep new_ip then??
             SED_SCRIPT="s#^IPADDR=.*#IPADDR='${nip}'#g;s#^NETMASK=.*#NETMASK='${nmask}'#g;s#^NETWORK=.*#NETWORK=''#g;s#^BROADCAST=.*#BROADCAST=''#g;s#^BOOTPROTO=.*#BOOTPROTO='static'#g;s#STARTMODE='[mo].*#STARTMODE='auto'#g;/^IPADDR_/d;/^LABEL_/d;/^NETMASK_/d"
@@ -85,7 +89,7 @@ if test -s $TMP_DIR/mappings/routes ; then
     while read destination gateway device junk ; do
     #   echo "$destination $gateway - $device" >> $TARGET_FS_ROOT/etc/sysconfig/network/routes
         if [[ "$destination" = "default" ]]; then
-            for network_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${device}* $TARGET_FS_ROOT/etc/sysconfig/network ; do
+            for network_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${device}* $TARGET_FS_ROOT/etc/sysconfig/network/routes ; do
                 SED_SCRIPT="s#^GATEWAY=.*#GATEWAY='$gateway'#g;s#^GATEWAYDEV=.*#GATEWAYDEV='$device'#g"
                 Log "SED_SCRIPT: '$SED_SCRIPT'"
                 sed -i -e "$SED_SCRIPT" "$network_file"
