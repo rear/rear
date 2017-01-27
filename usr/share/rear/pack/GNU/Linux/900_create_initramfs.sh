@@ -7,6 +7,11 @@
 
 # The REAR_INITRD_FILENAME is needed in various subsequent scripts that install the bootloader
 # of the Relax-and-Recover recovery/rescue system during the subsequent 'output' stage.
+# REAR_INITRD_FILENAME contains the filename (i.e. basename) of ReaR's own initramfs/initrd
+# that contains the files of the Relax-and-Recover recovery/rescue system.
+# In contrast a variable that contains the filename of the initramfs/initrd of the system
+# where "rear mkbackup" runs would have to be named like SYSTEM_INITRD_FILENAME and/or
+# where "rear recover" runs like TARGET_SYSTEM_INITRD_FILENAME (cf. TARGET_FS_ROOT).
 pushd "$ROOTFS_DIR" >/dev/null
 case "$REAR_INITRD_COMPRESSION" in
     (lzma)
