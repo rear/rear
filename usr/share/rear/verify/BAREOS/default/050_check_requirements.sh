@@ -22,7 +22,7 @@ else
    [ -x /usr/sbin/bareos-fd ]
    StopIfError "Bareos executable (bareos-fd) missing or not executable"
 
-   [ -s /etc/bareos/bareos-fd.conf ]
+   [ -s /etc/bareos/bareos-fd.conf ] || [ -s /etc/bareos/bareos-fd.d/client/myself.conf ]
    StopIfError "Bareos configuration file (bareos-fd.conf) missing"
 
    [ -x /usr/sbin/bconsole ]
