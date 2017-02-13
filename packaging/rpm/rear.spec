@@ -92,7 +92,8 @@ Requires: mkisofs
 %if %{?centos_version:1}%{?fedora_version:1}%{?rhel_version:1}0
 Requires: crontabs
 Requires: iproute
-Requires: mkisofs
+#Requires: mkisofs
+Requires: genisoimage
 #Requires: redhat-lsb
 %endif
 
