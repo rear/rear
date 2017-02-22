@@ -61,7 +61,12 @@ if [[ ! -f ${UEFI_BOOTLOADER} ]]; then
     UEFI_BOOTLOADER=$(find /boot/efi -name "elilo.efi" | tail -1)
 fi
 
-# triple check it
+# in case we have a 64-bit systemd bootloader not listed in efivars then we might be lucky with next statements
+if [[ ! -f ${UEFI_BOOTLOADER} ]]; then
+    UEFI_BOOTLOADER=$(find /boot/EFI -name "BOOTX64.EFI" | tail -1)
+fi
+
+# did we find a boot loader?
 if [[ ! -f ${UEFI_BOOTLOADER} ]]; then
 
     Error "Cannot find a proper UEFI_BOOTLOADER ($UEFI_BOOTLOADER). 
