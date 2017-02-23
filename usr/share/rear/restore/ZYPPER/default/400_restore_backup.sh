@@ -21,18 +21,18 @@ for zypper_repository in "${ZYPPER_REPOSITORIES[@]}" ; do
     zypper_repository_number=$(( zypper_repository_number + 1 ))
     LogPrint "Adding zypper repository '$zypper_repository' as 'repository$zypper_repository_number'"
     # See "man zypper" (on SLES12 or Leap42.1) why there is --no-gpg-checks before 'addrepo' and --no-gpgcheck after it:
-    zypper $verbose --non-interactive --root $TARGET_FS_ROOT --no-gpg-checks addrepo --no-gpgcheck "$zypper_repository" repository$zypper_repository_number
+    zypper $verbose --non-interactive --root $TARGET_FS_ROOT --no-gpg-checks addrepo --no-gpgcheck "$zypper_repository" repository$zypper_repository_number 1>&2
 done
 # To be on the safe side explicitly refresh the new added zypper repositories:
-zypper $verbose --non-interactive --root $TARGET_FS_ROOT refresh
+zypper $verbose --non-interactive --root $TARGET_FS_ROOT refresh 1>&2
 
 # Provide all /etc/products.d/ stuff in the target system:
 cp $verbose --archive /etc/products.d $TARGET_FS_ROOT/etc
 
 # First and foremost install the very basic stuff:
 local rpm_package_name="aaa_base"
-LogPrint "Installing the very basic stuff ('$rpm_package_name' and what it requires):"
-zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --auto-agree-with-licenses --force-resolution --no-recommends "$rpm_package_name"
+LogPrint "Installing the very basic stuff ('$rpm_package_name' and what it requires)"
+zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --auto-agree-with-licenses --force-resolution --download-in-advance --no-recommends "$rpm_package_name" 1>&2
 # aaa_base requires filesystem so that zypper installs filesystem before aaa_base
 # but for a clean filesystem installation RPM needs users and gropus
 # as shown by RPM as warnings like (excerpt):
@@ -54,41 +54,60 @@ rpms_in_installion_order="$( rpm $v --root $TARGET_FS_ROOT --query --all --last 
 local rpm_package=""
 local rpm_package_name_version=""
 for rpm_package in $rpms_in_installion_order ; do
+    # Simple "something is still going on" indicator by printing dots
+    # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+    # and not using a Print function to always print to the original stdout
+    # i.e. to the terminal wherefrom the user has started "rear recover":
+    echo -n "." >&7
     # rpm_package is of the form name-version-release.architecture
     rpm_package_name_version=${rpm_package%-*}
     rpm_package_name=${rpm_package_name_version%-*}
-    zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --force --auto-agree-with-licenses --force-resolution --no-recommends "$rpm_package_name"
+    zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --force --auto-agree-with-licenses --force-resolution --download-in-advance --no-recommends "$rpm_package_name" 1>&2
 done
+# One newline ends the "something is still going on" indicator:
+echo "" >&7
 # Report the differences of what is in the RPM packages
 # compared to the actually installed files in the target system.
 # Differences are only reported here so that the user is informed
 # but differences are not necessarily an error.
-LogPrint "Differences of what is in the basic RPM packages compared to what is actually installed:"
+Log "Differences of what is in the basic RPM packages compared to what is actually installed:"
 # Report all differences except when only the mtime differs but the file content (MD5 sum) is still the same:
-if rpm $v --root $TARGET_FS_ROOT --verify --all --nomtime ; then
-    LogPrint "No differences between basic RPM packages and what is actually installed."
+if rpm $v --root $TARGET_FS_ROOT --verify --all --nomtime 1>&2 ; then
+    Log "No differences between basic RPM packages and what is actually installed"
 else
-    LogPrint "Differences between basic RPM packages and what is installed are not necessarily an error."
+    LogPrint "There are differences between what is in the basic RPM packages and what is actually installed (this is not necessarily an error), check the log file"
 fi
 
 # The actual software installation:
-LogPrint "Installing the other RPM packages and what they require and recommend:"
+LogPrint "Installing the other RPM packages and what they require and recommend"
 for rpm_package in $( cut -d ' ' -f1 $zypper_backup_dir/independent_RPMs ) ; do
+    # Simple "something is still going on" indicator by printing dots
+    # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+    # and not using a Print function to always print to the original stdout
+    # i.e. to the terminal wherefrom the user has started "rear recover":
+    echo -n "." >&7
     # rpm_package is of the form name-version-release.architecture
     rpm_package_name_version=${rpm_package%-*}
     rpm_package_name=${rpm_package_name_version%-*}
-    zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --auto-agree-with-licenses --force-resolution "$rpm_package_name"
+    # Report when a non-basic package cannot be installed but do not treat that as an error that aborts "rear recover":
+    if zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --auto-agree-with-licenses --force-resolution --download-in-advance "$rpm_package_name" 1>&2 ; then
+        Log "Installed '$rpm_package_name'"
+    else
+        LogPrint "Failed to install '$rpm_package_name', check the log file"
+    fi
 done
+# One newline ends the "something is still going on" indicator:
+echo "" >&7
 # Report the differences of what is in the RPM packages
 # compared to the actually installed files in the target system.
 # Differences are only reported here so that the user is informed
 # but differences are not necessarily an error.
-LogPrint "Differences of what is in all RPM packages compared to what is actually installed:"
+Log "Differences of what is in all RPM packages compared to what is actually installed:"
 # Report all differences except when only the mtime differs but the file content (MD5 sum) is still the same:
-if rpm $v --root $TARGET_FS_ROOT --verify --all --nomtime ; then
-    LogPrint "No differences between RPM packages and what is actually installed."
+if rpm $v --root $TARGET_FS_ROOT --verify --all --nomtime 1>&2 ; then
+    Log "No differences between RPM packages and what is actually installed"
 else
-    LogPrint "Differences between RPM packages and what is installed are not necessarily an error."
+    LogPrint "There are differences between what is in the RPM packages and what is actually installed (this is not necessarily an error), check the log file"
 fi
 
 # Restore the ReaR default bash flags and options (see usr/sbin/rear):
