@@ -6,11 +6,12 @@
 # see https://github.com/rear/rear/wiki/Coding-Style
 set -e -u -o pipefail
 
-# What files and programs need to be included in the ReaR recovery system:
-COPY_AS_IS=( "${COPY_AS_IS[@]}" "${COPY_AS_IS_ZYPPER[@]}" )
-COPY_AS_IS_EXCLUDE=( "${COPY_AS_IS_EXCLUDE[@]}" "${COPY_AS_IS_EXCLUDE_ZYPPER[@]}" )
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "${REQUIRED_PROGS_ZYPPER[@]}" )
-PROGS=( "${PROGS[@]}" "${PROGS_ZYPPER[@]}" )
+# What files and programs need to be included in the ReaR recovery system.
+# Use "${ARRAY[@]:-}" to avoid unbound variable "${ARRAY[@]}" when ARRAY=():
+COPY_AS_IS=( "${COPY_AS_IS[@]:-}" "${COPY_AS_IS_ZYPPER[@]:-}" )
+COPY_AS_IS_EXCLUDE=( "${COPY_AS_IS_EXCLUDE[@]:-}" "${COPY_AS_IS_EXCLUDE_ZYPPER[@]:-}" )
+REQUIRED_PROGS=( "${REQUIRED_PROGS[@]:-}" "${REQUIRED_PROGS_ZYPPER[@]:-}" )
+PROGS=( "${PROGS[@]:-}" "${PROGS_ZYPPER[@]:-}" )
 
 # RPM packages data that need to be included in the ReaR recovery system:
 LogPrint "Determining RPM packages data for ZYPPER..."
