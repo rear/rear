@@ -17,16 +17,22 @@ local zypper_backup_dir=$VAR_DIR/backup/$BACKUP
 test "${ZYPPER_REPOSITORIES[@]:-}" || Error "No zypper repository (empty ZYPPER_REPOSITORIES array)"
 local zypper_repository=""
 local zypper_repository_number=0
-for zypper_repository in "${ZYPPER_REPOSITORIES[@]:-}" ; do
+for zypper_repository in "${ZYPPER_REPOSITORIES[@]}" ; do
     zypper_repository_number=$(( zypper_repository_number + 1 ))
-    zypper $verbose --non-interactive --root $TARGET_FS_ROOT addrepo --no-gpg-checks $zypper_repository repository$zypper_repository_number
+    LogPrint "Adding zypper repository '$zypper_repository' as 'repository$zypper_repository_number'"
+    # See "man zypper" (on SLES12 or Leap42.1) why there is --no-gpg-checks before 'addrepo' and --no-gpgcheck after it:
+    zypper $verbose --non-interactive --root $TARGET_FS_ROOT --no-gpg-checks addrepo --no-gpgcheck "$zypper_repository" repository$zypper_repository_number
 done
 # To be on the safe side explicitly refresh the new added zypper repositories:
 zypper $verbose --non-interactive --root $TARGET_FS_ROOT refresh
 
+# Provide all /etc/products.d/ stuff in the target system:
+cp $verbose --archive /etc/products.d $TARGET_FS_ROOT/etc
+
 # First and foremost install the very basic stuff:
-LogPrint "Installing the very basic stuff (aaa_base and what it requires):"
-zypper $verbose --non-interactive --root $TARGET_FS_ROOT install aaa_base
+local rpm_package_name="aaa_base"
+LogPrint "Installing the very basic stuff ('$rpm_package_name' and what it requires):"
+zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --auto-agree-with-licenses --force-resolution --no-recommends "$rpm_package_name"
 # aaa_base requires filesystem so that zypper installs filesystem before aaa_base
 # but for a clean filesystem installation RPM needs users and gropus
 # as shown by RPM as warnings like (excerpt):
@@ -44,15 +50,14 @@ zypper $verbose --non-interactive --root $TARGET_FS_ROOT install aaa_base
 # simply all packages that are installed up to now are
 # enforced installed a second time:
 local rpms_in_installion_order=""
-rpms_in_installion_order=$( rpm $v --root $TARGET_FS_ROOT --query --all --last | cut -d ' ' -f 1 | tac )
+rpms_in_installion_order="$( rpm $v --root $TARGET_FS_ROOT --query --all --last | cut -d ' ' -f 1 | tac )"
 local rpm_package=""
 local rpm_package_name_version=""
-local rpm_package_name=""
-for rpm_package in "$rpms_in_installion_order" ; do
+for rpm_package in $rpms_in_installion_order ; do
     # rpm_package is of the form name-version-release.architecture
     rpm_package_name_version=${rpm_package%-*}
     rpm_package_name=${rpm_package_name_version%-*}
-    zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --force $rpm_package_name
+    zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --force --auto-agree-with-licenses --force-resolution --no-recommends "$rpm_package_name"
 done
 # Report the differences of what is in the RPM packages
 # compared to the actually installed files in the target system.
@@ -67,11 +72,12 @@ else
 fi
 
 # The actual software installation:
+LogPrint "Installing the other RPM packages and what they require and recommend:"
 for rpm_package in $( cut -d ' ' -f1 $zypper_backup_dir/independent_RPMs ) ; do
     # rpm_package is of the form name-version-release.architecture
     rpm_package_name_version=${rpm_package%-*}
     rpm_package_name=${rpm_package_name_version%-*}
-    zypper $verbose --non-interactive --root $TARGET_FS_ROOT install $rpm_package_name
+    zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --auto-agree-with-licenses --force-resolution "$rpm_package_name"
 done
 # Report the differences of what is in the RPM packages
 # compared to the actually installed files in the target system.
