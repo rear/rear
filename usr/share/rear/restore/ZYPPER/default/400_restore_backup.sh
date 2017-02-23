@@ -66,20 +66,21 @@ for rpm_package in $rpms_in_installion_order ; do
 done
 # One newline ends the "something is still going on" indicator:
 echo "" >&7
-# Report the differences of what is in the RPM packages
+# Check the differences of what is in the RPM packages
 # compared to the actually installed files in the target system.
 # Differences are only reported here so that the user is informed
 # but differences are not necessarily an error.
 Log "Differences of what is in the basic RPM packages compared to what is actually installed:"
-# Report all differences except when only the mtime differs but the file content (MD5 sum) is still the same:
-if rpm $v --root $TARGET_FS_ROOT --verify --all --nomtime 1>&2 ; then
+# Report all differences except when only the mtime differs but the file content (MD5 sum) is still the same.
+# Do not run "rpm -v" because that lists the results for all files in the RPM package also when nothing differs:
+if rpm --root $TARGET_FS_ROOT --verify --all --nomtime 1>&2 ; then
     Log "No differences between basic RPM packages and what is actually installed"
 else
     LogPrint "There are differences between what is in the basic RPM packages and what is actually installed (this is not necessarily an error), check the log file"
 fi
 
 # The actual software installation:
-LogPrint "Installing the other RPM packages and what they require and recommend"
+LogPrint "Installing the other RPM packages and what they require and recommend (needs time - be patient)"
 for rpm_package in $( cut -d ' ' -f1 $zypper_backup_dir/independent_RPMs ) ; do
     # Simple "something is still going on" indicator by printing dots
     # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
@@ -89,23 +90,32 @@ for rpm_package in $( cut -d ' ' -f1 $zypper_backup_dir/independent_RPMs ) ; do
     # rpm_package is of the form name-version-release.architecture
     rpm_package_name_version=${rpm_package%-*}
     rpm_package_name=${rpm_package_name_version%-*}
+    # Dirty hack for "gpg-pubkey" packages where several of them with different version and release
+    # can be (and actually are) installed at the same time e.g. on my <jsmeix@suse.de> SLES12 system
+    # where "rpm -qa | grep gpg-pubkey" results things like gpg-pubkey-1a2b-3c4d and gpg-pubkey-5e6f-7890
+    # so that the exact "gpg-pubkey" package with version and release must be specified to be installed:
+    test "gpg-pubkey" = "$rpm_package_name" && rpm_package_name=$rpm_package
     # Report when a non-basic package cannot be installed but do not treat that as an error that aborts "rear recover":
     if zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --auto-agree-with-licenses --force-resolution --download-in-advance "$rpm_package_name" 1>&2 ; then
         Log "Installed '$rpm_package_name'"
     else
+        # One newline to end the current "something is still going on" indicator:
+        echo "" >&7
+        # Report also the version because e.g. for gpg-pubkey
         LogPrint "Failed to install '$rpm_package_name', check the log file"
     fi
 done
 # One newline ends the "something is still going on" indicator:
 echo "" >&7
-# Report the differences of what is in the RPM packages
+# Check the differences of what is in the RPM packages
 # compared to the actually installed files in the target system.
 # Differences are only reported here so that the user is informed
 # but differences are not necessarily an error.
-Log "Differences of what is in all RPM packages compared to what is actually installed:"
-# Report all differences except when only the mtime differs but the file content (MD5 sum) is still the same:
-if rpm $v --root $TARGET_FS_ROOT --verify --all --nomtime 1>&2 ; then
-    Log "No differences between RPM packages and what is actually installed"
+LogPrint "Checking differences of what is in all RPM packages compared to what is actually installed:"
+# Report all differences except when only the mtime differs but the file content (MD5 sum) is still the same.
+# Do not run "rpm -v" because that lists the results for all files in the RPM package also when nothing differs:
+if rpm --root $TARGET_FS_ROOT --verify --all --nomtime 1>&2 ; then
+    LogPrint "No differences between RPM packages and what is actually installed"
 else
     LogPrint "There are differences between what is in the RPM packages and what is actually installed (this is not necessarily an error), check the log file"
 fi
