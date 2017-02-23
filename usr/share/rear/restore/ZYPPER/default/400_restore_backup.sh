@@ -70,7 +70,7 @@ echo "" >&7
 # compared to the actually installed files in the target system.
 # Differences are only reported here so that the user is informed
 # but differences are not necessarily an error.
-Log "Differences of what is in the basic RPM packages compared to what is actually installed:"
+Log "Checking differences of what is in the basic RPM packages compared to what is actually installed"
 # Report all differences except when only the mtime differs but the file content (MD5 sum) is still the same.
 # Do not run "rpm -v" because that lists the results for all files in the RPM package also when nothing differs:
 if rpm --root $TARGET_FS_ROOT --verify --all --nomtime 1>&2 ; then
@@ -111,7 +111,7 @@ echo "" >&7
 # compared to the actually installed files in the target system.
 # Differences are only reported here so that the user is informed
 # but differences are not necessarily an error.
-LogPrint "Checking differences of what is in all RPM packages compared to what is actually installed:"
+LogPrint "Checking differences of what is in all RPM packages compared to what is actually installed"
 # Report all differences except when only the mtime differs but the file content (MD5 sum) is still the same.
 # Do not run "rpm -v" because that lists the results for all files in the RPM package also when nothing differs:
 if rpm --root $TARGET_FS_ROOT --verify --all --nomtime 1>&2 ; then
