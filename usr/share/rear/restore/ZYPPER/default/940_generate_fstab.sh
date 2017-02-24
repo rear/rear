@@ -16,7 +16,7 @@ set -e -u -o pipefail
 # Determine system partition and swap partition
 # from what is in LAYOUT_FILE (usually var/lib/rear/layout/disklayout.conf).
 local keyword device_node mountpoint filesystem_type junk
-pushd /dev/disk/by-uuid/
+pushd /dev/disk/by-uuid/ 1>&2
 # Ensure file name generation (globbing) is enabled (needed below in 'for uuid in *'):
 set +f
 # Write swap entries to etc/fstab in the target system:
@@ -62,7 +62,7 @@ while read keyword device_node mountpoint filesystem_type junk ; do
         LogPrint "Wrote '$device_node $mountpoint $filesystem_type defaults 0 0' to etc/fstab in the target system"
     fi
 done < <( grep "^fs " "$LAYOUT_FILE" )
-popd
+popd 1>&2
 
 # Restore the ReaR default bash flags and options (see usr/sbin/rear):
 apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
