@@ -24,7 +24,7 @@ mount -t sysfs sys $TARGET_FS_ROOT/sys || true
 mount -o bind /dev $TARGET_FS_ROOT/dev || true
 
 # Make initrd verbosely in the target system:
-#chroot $TARGET_FS_ROOT /sbin/mkinitrd -v
+chroot $TARGET_FS_ROOT /sbin/mkinitrd -v
 
 # Run grub2-mkconfig in the target system.
 # A login shell in between is needed when shell scripts are called insinde 'chroot'
@@ -33,7 +33,7 @@ mount -o bind /dev $TARGET_FS_ROOT/dev || true
 chroot $TARGET_FS_ROOT /bin/bash --login -c '/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg'
 
 # Install bootloader in the target system:
-#chroot $TARGET_FS_ROOT /usr/sbin/grub2-install --force /dev/sda
+chroot $TARGET_FS_ROOT /usr/sbin/grub2-install --force /dev/sda
 
 # Restore the ReaR default bash flags and options (see usr/sbin/rear):
 apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
