@@ -23,6 +23,7 @@ mount -t proc none $TARGET_FS_ROOT/proc || true
 mount -t sysfs sys $TARGET_FS_ROOT/sys || true
 mount -o bind /dev $TARGET_FS_ROOT/dev || true
 
+# FIXME: This should not be needed here but work via finalize/SUSE_LINUX/i386/170_rebuild_initramfs.sh
 # Make initrd verbosely in the target system:
 chroot $TARGET_FS_ROOT /sbin/mkinitrd -v
 
@@ -32,6 +33,7 @@ chroot $TARGET_FS_ROOT /sbin/mkinitrd -v
 # In particular grub2-mkconfig is a shell script that calls other shell scripts:
 chroot $TARGET_FS_ROOT /bin/bash --login -c '/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg'
 
+# FIXME: This should not be needed here but work via finalize/Linux-i386/220_install_grub2.sh
 # Install bootloader in the target system:
 chroot $TARGET_FS_ROOT /usr/sbin/grub2-install --force /dev/sda
 
