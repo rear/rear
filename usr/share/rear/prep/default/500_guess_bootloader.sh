@@ -11,7 +11,7 @@ if [[ -f /etc/sysconfig/bootloader ]]; then
 fi
 for disk in /sys/block/* ; do
     blockd=${disk#/sys/block/}
-    if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* ]] ; then
+    if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = nvme* ]] ; then
         devname=$(get_device_name $disk)
 
         # Check if devname contains a PPC PreP boot partition (ID=0x41)
