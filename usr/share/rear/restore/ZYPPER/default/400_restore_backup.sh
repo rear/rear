@@ -80,33 +80,66 @@ else
 fi
 
 # The actual software installation:
-LogPrint "Installing the other RPM packages and what they require and recommend (needs time - be patient)"
-for rpm_package in $( cut -d ' ' -f1 $zypper_backup_dir/independent_RPMs ) ; do
-    # Simple "something is still going on" indicator by printing dots
-    # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
-    # and not using a Print function to always print to the original stdout
-    # i.e. to the terminal wherefrom the user has started "rear recover":
-    echo -n "." >&7
-    # rpm_package is of the form name-version-release.architecture
-    rpm_package_name_version=${rpm_package%-*}
-    rpm_package_name=${rpm_package_name_version%-*}
-    # Dirty hack for "gpg-pubkey" packages where several of them with different version and release
-    # can be (and actually are) installed at the same time e.g. on my <jsmeix@suse.de> SLES12 system
-    # where "rpm -qa | grep gpg-pubkey" results things like gpg-pubkey-1a2b-3c4d and gpg-pubkey-5e6f-7890
-    # so that the exact "gpg-pubkey" package with version and release must be specified to be installed:
-    test "gpg-pubkey" = "$rpm_package_name" && rpm_package_name=$rpm_package
-    # Report when a non-basic package cannot be installed but do not treat that as an error that aborts "rear recover":
-    if zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --auto-agree-with-licenses --force-resolution --download-in-advance "$rpm_package_name" 1>&2 ; then
-        Log "Installed '$rpm_package_name'"
-    else
-        # One newline to end the current "something is still going on" indicator:
-        echo "" >&7
-        # Report also the version because e.g. for gpg-pubkey
-        LogPrint "Failed to install '$rpm_package_name', check the log file"
-    fi
-done
+if test "independent_RPMs" = "$ZYPPER_INSTALL_RPMS" ; then
+    LogPrint "Installing independent RPM packages and what they require and recommend (needs time - be patient)"
+    # Installation must happen in reverse ordering of what is listed in zypper_backup_dir/independent_RPMs
+    # because therein the latest installed RPMs are listed topmost:
+    for rpm_package in $( tac $zypper_backup_dir/independent_RPMs ) ; do
+        # Simple "something is still going on" indicator by printing dots
+        # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+        # and not using a Print function to always print to the original stdout
+        # i.e. to the terminal wherefrom the user has started "rear recover":
+        echo -n "." >&7
+        # rpm_package is of the form name-version-release.architecture
+        rpm_package_name_version=${rpm_package%-*}
+        rpm_package_name=${rpm_package_name_version%-*}
+        # Dirty hack for "gpg-pubkey" packages where several of them with different version and release
+        # can be (and actually are) installed at the same time e.g. on my <jsmeix@suse.de> SLES12 system
+        # where "rpm -qa | grep gpg-pubkey" results things like gpg-pubkey-1a2b-3c4d and gpg-pubkey-5e6f-7890
+        # so that the exact "gpg-pubkey" package with version and release must be specified to be installed:
+        test "gpg-pubkey" = "$rpm_package_name" && rpm_package_name=$rpm_package
+        # Report when a non-basic package cannot be installed but do not treat that as an error that aborts "rear recover":
+        if zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --auto-agree-with-licenses --force-resolution --download-in-advance "$rpm_package_name" 1>&2 ; then
+            Log "Installed '$rpm_package_name'"
+        else
+            # One newline to end the current "something is still going on" indicator:
+            echo "" >&7
+            # Report also the version because e.g. for gpg-pubkey
+            LogPrint "Failed to install '$rpm_package_name', check the log file"
+        fi
+    done
+else
+    LogPrint "Installing all other RPM packages and what they require (needs time - be patient)"
+    # Installation must happen in reverse ordering of what is listed in zypper_backup_dir/installed_RPMs
+    # because therein the latest installed RPMs are listed topmost:
+    for rpm_package in $( tac $zypper_backup_dir/installed_RPMs | cut -d ' ' -f1 ) ; do
+        # Simple "something is still going on" indicator by printing dots
+        # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+        # and not using a Print function to always print to the original stdout
+        # i.e. to the terminal wherefrom the user has started "rear recover":
+        echo -n "." >&7
+        # rpm_package is of the form name-version-release.architecture
+        rpm_package_name_version=${rpm_package%-*}
+        rpm_package_name=${rpm_package_name_version%-*}
+        # Dirty hack for "gpg-pubkey" packages where several of them with different version and release
+        # can be (and actually are) installed at the same time e.g. on my <jsmeix@suse.de> SLES12 system
+        # where "rpm -qa | grep gpg-pubkey" results things like gpg-pubkey-1a2b-3c4d and gpg-pubkey-5e6f-7890
+        # so that the exact "gpg-pubkey" package with version and release must be specified to be installed:
+        test "gpg-pubkey" = "$rpm_package_name" && rpm_package_name=$rpm_package
+        # Report when a non-basic package cannot be installed but do not treat that as an error that aborts "rear recover":
+        if zypper $verbose --non-interactive --root $TARGET_FS_ROOT install --auto-agree-with-licenses --force-resolution --download-in-advance --no-recommends "$rpm_package_name" 1>&2 ; then
+            Log "Installed '$rpm_package_name'"
+        else
+            # One newline to end the current "something is still going on" indicator:
+            echo "" >&7
+            # Report also the version because e.g. for gpg-pubkey
+            LogPrint "Failed to install '$rpm_package_name', check the log file"
+        fi
+    done
+fi
 # One newline ends the "something is still going on" indicator:
 echo "" >&7
+
 # Check the differences of what is in the RPM packages
 # compared to the actually installed files in the target system.
 # Differences are only reported here so that the user is informed
