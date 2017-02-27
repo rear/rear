@@ -16,7 +16,7 @@
 set -e -u -o pipefail
 
 # Do nothing when no initial network setup should be done:
-test "${ZYPPER_INITIAL_NETWORK_SETUP:-}" || return
+test "${ZYPPER_NETWORK_SETUP_COMMANDS[@]:-}" || return
 
 # Initial network setup in the target system.
 # Use a login shell in between so that one has in the chrooted environment
@@ -24,28 +24,35 @@ test "${ZYPPER_INITIAL_NETWORK_SETUP:-}" || return
 # the commands inside 'chroot' as one would type them in a normal working shell.
 # In particular one can call programs (like 'yast2' or 'ip') by their basename without path
 # cf. https://github.com/rear/rear/issues/862#issuecomment-274068914
-case "$ZYPPER_INITIAL_NETWORK_SETUP" in
-    (YAST)
-        # YaST network card setup in the target system (without having ncurses stuff in the output via TERM=dumb)
-        # plus automated respose to all requested user input via yes '' (i.e. only plain [Enter] as user input)
-        # and ignoring errors to avoid that "rear recover" aborts here:
-        LogPrint "Initial network setup in the target system via 'yast2 --ncurses lan add name=eth0 ethdevice=eth0 bootproto=dhcp'"
-        chroot $TARGET_FS_ROOT /bin/bash --login -c "yes '' | TERM=dumb yast2 --ncurses lan add name=eth0 ethdevice=eth0 bootproto=dhcp" || true
-        ;;
-    (NETWORKING_PREPARATION_COMMANDS)
-        LogPrint "Initial network setup in the target system as specified in NETWORKING_PREPARATION_COMMANDS"
-        local command=""
-        for command in "${NETWORKING_PREPARATION_COMMANDS[@]}" ; do
-            # Ignore errors to avoid that "rear recover" aborts here:
-            test "$command" && chroot $TARGET_FS_ROOT /bin/bash --login -c "$command" || true
-        done
-        ;;
-    (*)
-        LogPrint "Initial network setup in the target system as specified in ZYPPER_INITIAL_NETWORK_SETUP"
-        # Ignore errors to avoid that "rear recover" aborts here:
-        chroot $TARGET_FS_ROOT /bin/bash --login -c "$ZYPPER_INITIAL_NETWORK_SETUP" || true
-        ;;
-esac
+local network_setup_command=""
+local networking_preparation_command=""
+for network_setup_command in "${ZYPPER_NETWORK_SETUP_COMMANDS[@]}" ; do
+    case "$network_setup_command" in
+        (YAST)
+            # YaST network card setup in the target system (without having ncurses stuff in the output via TERM=dumb)
+            # plus automated respose to all requested user input via yes '' (i.e. only plain [Enter] as user input)
+            # and ignore non zero exit codes from YaST to avoid that "rear recover" aborts here:
+            LogPrint "Initial network setup in the target system via 'yast2 --ncurses lan add name=eth0 ethdevice=eth0 bootproto=dhcp'"
+            chroot $TARGET_FS_ROOT /bin/bash --login -c "yes '' | TERM=dumb yast2 --ncurses lan add name=eth0 ethdevice=eth0 bootproto=dhcp" || true
+            ;;
+        (NETWORKING_PREPARATION_COMMANDS)
+            LogPrint "Initial network setup in the target system as specified in NETWORKING_PREPARATION_COMMANDS"
+            for networking_preparation_command in "${NETWORKING_PREPARATION_COMMANDS[@]}" ; do
+                if test "$networking_preparation_command" ; then
+                    # Only report errors to avoid that "rear recover" aborts here:
+                    chroot $TARGET_FS_ROOT /bin/bash --login -c "$networking_preparation_command" || LogPrint "Command failed: $networking_preparation_command"
+                fi
+            done
+            ;;
+        (*)
+            if test "$network_setup_command" ; then
+                LogPrint "Initial network setup in the target system via $network_setup_command"
+                # Only report errors to avoid that "rear recover" aborts here:
+                chroot $TARGET_FS_ROOT /bin/bash --login -c "$network_setup_command" || LogPrint "Command failed: $network_setup_command"
+            fi
+            ;;
+    esac
+done
 
 # Restore the ReaR default bash flags and options (see usr/sbin/rear):
 apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
