@@ -13,8 +13,12 @@ set -e -u -o pipefail
 # in files in the $VAR_DIR/ZYPPER directory.
 local zypper_backup_dir=$VAR_DIR/backup/$BACKUP
 
+# Using the '[*]' subscript is required here otherwise test gets more than one argument
+# which fails with bash error 'bash: test: ...: unary operator expected'
+# cf. https://github.com/rear/rear/issues/1068#issuecomment-282741981
+test "${ZYPPER_REPOSITORIES[*]:-}" || Error "No zypper repository (empty ZYPPER_REPOSITORIES array)"
+
 # Add zypper repositories:
-test "${ZYPPER_REPOSITORIES[@]:-}" || Error "No zypper repository (empty ZYPPER_REPOSITORIES array)"
 local zypper_repository=""
 local zypper_repository_number=0
 for zypper_repository in "${ZYPPER_REPOSITORIES[@]}" ; do
@@ -109,7 +113,7 @@ if test "independent_RPMs" = "$ZYPPER_INSTALL_RPMS" ; then
         fi
     done
 else
-    LogPrint "Installing all other RPM packages and what they require (needs time - be patient)"
+    LogPrint "Installing all other RPM packages and what they require (needs time)"
     # Installation must happen in reverse ordering of what is listed in zypper_backup_dir/installed_RPMs
     # because therein the latest installed RPMs are listed topmost:
     for rpm_package in $( tac $zypper_backup_dir/installed_RPMs | cut -d ' ' -f1 ) ; do
@@ -144,7 +148,7 @@ echo "" >&7
 # compared to the actually installed files in the target system.
 # Differences are only reported here so that the user is informed
 # but differences are not necessarily an error.
-LogPrint "Checking differences of what is in all RPM packages compared to what is actually installed"
+LogPrint "Checking differences of what is in the RPM packages compared to what is actually installed"
 # Report all differences except when only the mtime differs but the file content (MD5 sum) is still the same.
 # Do not run "rpm -v" because that lists the results for all files in the RPM package also when nothing differs:
 if rpm --root $TARGET_FS_ROOT --verify --all --nomtime 1>&2 ; then

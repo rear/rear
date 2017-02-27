@@ -16,7 +16,10 @@
 set -e -u -o pipefail
 
 # Do nothing when no initial network setup should be done:
-test "${ZYPPER_NETWORK_SETUP_COMMANDS[@]:-}" || return
+# Using the '[*]' subscript is required here otherwise test gets more than one argument
+# which fails with bash error 'bash: test: ...: unary operator expected'
+# cf. https://github.com/rear/rear/issues/1068#issuecomment-282741981
+test "${ZYPPER_NETWORK_SETUP_COMMANDS[*]:-}" || return
 
 # Initial network setup in the target system.
 # Use a login shell in between so that one has in the chrooted environment
