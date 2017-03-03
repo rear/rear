@@ -44,6 +44,13 @@ case $(basename $BACKUP_PROG) in
 		if tar --usage | grep -q selinux  ; then
 			# during backup we will NOT disable SELinux
 			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --selinux"
+
+			# include SELinux utilities and /etc/selinux directory so rescue/restore ReaR image can run with SELinux enabled
+			PROGS=( "${PROGS[@]}" getenforce setenforce sestatus setfiles chcon restorecon )
+			COPY_AS_IS=( ${COPY_AS_IS[@]} /etc/selinux )
+			# alter kernel command line to explicitly enable SELinux (append "selinux=1" if no selinux=0 exists)
+			KERNEL_CMDLINE=$(echo $KERNEL_CMDLINE | sed -e 's/selinux=0/selinux=1/')
+			echo $KERNEL_CMDLINE | grep -q 'selinux=1' || KERNEL_CMDLINE="$KERNEL_CMDLINE selinux=1"	
 		else
 			# during backup we will disable SELinux
 			cat $SELINUX_ENFORCE > $TMP_DIR/selinux.mode
