@@ -21,12 +21,12 @@ if [[ "$EFI" == "y" ]]; then
     done
     LogPrint "Creating GUID partition table (GPT) on '$RAW_USB_DEVICE'"
     parted -s $RAW_USB_DEVICE mklabel gpt >&2 || Error "Failed to create GPT partition table on '$RAW_USB_DEVICE'"
-    test $USB_PARTITION_ALIGN_BLOCK_SIZE || USB_PARTITION_ALIGN_BLOCK_SIZE="8" #MiB
-    # Block size must be an integer of 1 or greater
-    test "$USB_PARTITION_ALIGN_BLOCK_SIZE" -eq "$USB_PARTITION_ALIGN_BLOCK_SIZE" || USB_PARTITION_ALIGN_BLOCK_SIZE="8" #MiB
+    test $USB_PARTITION_ALIGN_BLOCK_SIZE || USB_PARTITION_ALIGN_BLOCK_SIZE="8" # MiB
+    # Block size must be an integer of 1 or greater (the first test checks for integer: test "1.5" -eq "1.5" fails with bash error "integer expression expected"):
+    test "$USB_PARTITION_ALIGN_BLOCK_SIZE" -eq "$USB_PARTITION_ALIGN_BLOCK_SIZE" 2>/dev/null || USB_PARTITION_ALIGN_BLOCK_SIZE="8" # MiB
     test $USB_PARTITION_ALIGN_BLOCK_SIZE -ge 1 || USB_PARTITION_ALIGN_BLOCK_SIZE="1"
-    # Round UEFI partition size to nearest block size. This to make the 2nd partition also align to the block size
-    USB_UEFI_PART_SIZE=$((($USB_UEFI_PART_SIZE + ($USB_PARTITION_ALIGN_BLOCK_SIZE / 2)) / $USB_PARTITION_ALIGN_BLOCK_SIZE * $USB_PARTITION_ALIGN_BLOCK_SIZE)) 
+    # Round UEFI partition size to nearest block size. This to make the 2nd partition also align to the block size:
+    USB_UEFI_PART_SIZE=$((($USB_UEFI_PART_SIZE + ($USB_PARTITION_ALIGN_BLOCK_SIZE / 2)) / $USB_PARTITION_ALIGN_BLOCK_SIZE * $USB_PARTITION_ALIGN_BLOCK_SIZE))
     LogPrint "Creating EFI system partition with size $USB_UEFI_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB on '$RAW_USB_DEVICE'"
     parted -s $RAW_USB_DEVICE mkpart primary ${USB_PARTITION_ALIGN_BLOCK_SIZE}Mib "$((${USB_PARTITION_ALIGN_BLOCK_SIZE} + ${USB_UEFI_PART_SIZE}))"Mib || Error "Failed to create EFI system partition on '$RAW_USB_DEVICE'"
     LogPrint "Creating ReaR data partition up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
