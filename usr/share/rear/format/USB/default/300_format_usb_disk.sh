@@ -21,10 +21,16 @@ if [[ "$EFI" == "y" ]]; then
     done
     LogPrint "Creating GUID partition table (GPT) on '$RAW_USB_DEVICE'"
     parted -s $RAW_USB_DEVICE mklabel gpt >&2 || Error "Failed to create GPT partition table on '$RAW_USB_DEVICE'"
-    LogPrint "Creating EFI system partition with size $USB_UEFI_PART_SIZE MB on '$RAW_USB_DEVICE'"
-    parted -s $RAW_USB_DEVICE mkpart primary 0 ${USB_UEFI_PART_SIZE}Mib || Error "Failed to create EFI system partition on '$RAW_USB_DEVICE'"
+    test $USB_PARTITION_ALIGN_BLOCK_SIZE || USB_PARTITION_ALIGN_BLOCK_SIZE="8" #MiB
+    # Block size must be an integer of 1 or greater
+    test "$USB_PARTITION_ALIGN_BLOCK_SIZE" -eq "$USB_PARTITION_ALIGN_BLOCK_SIZE" || USB_PARTITION_ALIGN_BLOCK_SIZE="8" #MiB
+    test $USB_PARTITION_ALIGN_BLOCK_SIZE -ge 1 || USB_PARTITION_ALIGN_BLOCK_SIZE="1"
+    # Round UEFI partition size to nearest block size. This to make the 2nd partition also align to the block size
+    USB_UEFI_PART_SIZE=$((($USB_UEFI_PART_SIZE + ($USB_PARTITION_ALIGN_BLOCK_SIZE / 2)) / $USB_PARTITION_ALIGN_BLOCK_SIZE * $USB_PARTITION_ALIGN_BLOCK_SIZE)) 
+    LogPrint "Creating EFI system partition with size $USB_UEFI_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB on '$RAW_USB_DEVICE'"
+    parted -s $RAW_USB_DEVICE mkpart primary ${USB_PARTITION_ALIGN_BLOCK_SIZE}Mib "$((${USB_PARTITION_ALIGN_BLOCK_SIZE} + ${USB_UEFI_PART_SIZE}))"Mib || Error "Failed to create EFI system partition on '$RAW_USB_DEVICE'"
     LogPrint "Creating ReaR data partition up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
-    parted -s $RAW_USB_DEVICE mkpart primary ${USB_UEFI_PART_SIZE}Mib ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% >&2 || Error "Failed to create ReaR data partition on '$RAW_USB_DEVICE'"
+    parted -s $RAW_USB_DEVICE mkpart primary "$((${USB_PARTITION_ALIGN_BLOCK_SIZE} + ${USB_UEFI_PART_SIZE}))"Mib ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% >&2 || Error "Failed to create ReaR data partition on '$RAW_USB_DEVICE'"
     # partition 1 is the EFI system partition (vfat partition) on which EFI/BOOT/BOOTX86.EFI resides
     ParNr=2
 else
@@ -67,7 +73,7 @@ if [[ "$EFI" == "y" ]]; then
 fi
 
 LogPrint "Creating $USB_DEVICE_FILESYSTEM filesystem with label 'REAR-000' on '${RAW_USB_DEVICE}${ParNr}'"
-mkfs.$USB_DEVICE_FILESYSTEM -L REAR-000 ${RAW_USB_DEVICE}${ParNr} >&2 || Error "Failed to create $USB_DEVICE_FILESYSTEM filesystem on '${RAW_USB_DEVICE}${ParNr}'"
+mkfs.$USB_DEVICE_FILESYSTEM -L REAR-000 ${USB_DEVICE_FILESYSTEM_PARAMS} ${RAW_USB_DEVICE}${ParNr} >&2 || Error "Failed to create $USB_DEVICE_FILESYSTEM filesystem on '${RAW_USB_DEVICE}${ParNr}'"
 
 LogPrint "Adjusting filesystem parameters on '${RAW_USB_DEVICE}${ParNr}'"
 tune2fs -c 0 -i 0 -o acl,journal_data,journal_data_ordered ${RAW_USB_DEVICE}${ParNr} >&2 || Error "Failed to adjust filesystem parameters on '${RAW_USB_DEVICE}${ParNr}'"

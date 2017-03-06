@@ -14,12 +14,27 @@
 # where "rear recover" runs like TARGET_SYSTEM_INITRD_FILENAME (cf. TARGET_FS_ROOT).
 pushd "$ROOTFS_DIR" >/dev/null
 case "$REAR_INITRD_COMPRESSION" in
+    (lz4)
+        # Create initrd.lz4 with lz4 default -1 compression (fast speed but less compression)
+        REAR_INITRD_FILENAME="initrd.lz4"
+        LogPrint "Creating recovery/rescue system initramfs/initrd $REAR_INITRD_FILENAME with lz4 compression"
+	start=`date +%s`
+        if find . ! -name "*~" | cpio -H newc --create --quiet | lz4 > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
+	    end=`date +%s`
+            LogPrint "Created $REAR_INITRD_FILENAME with lz4 compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes) in $((end-start)) seconds"
+        else
+            # No need to clean up things (like 'popd') because Error exits directly:
+            Error "Failed to create recovery/rescue system $REAR_INITRD_FILENAME"
+        fi
+        ;;
     (lzma)
         # Create initrd.xz with xz and use the lzma compression, see https://github.com/rear/rear/issues/1142
         REAR_INITRD_FILENAME="initrd.xz"
         LogPrint "Creating recovery/rescue system initramfs/initrd $REAR_INITRD_FILENAME with xz lzma compression"
+	start=`date +%s`
         if find . ! -name "*~" | cpio -H newc --create --quiet | xz --format=lzma --compress --stdout > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
-            LogPrint "Created $REAR_INITRD_FILENAME with xz lzma compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes)"
+	    end=`date +%s`
+            LogPrint "Created $REAR_INITRD_FILENAME with xz lzma compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes) in $((end-start)) seconds"
         else
             # No need to clean up things (like 'popd') because Error exits directly:
             Error "Failed to create recovery/rescue system $REAR_INITRD_FILENAME"
@@ -29,8 +44,10 @@ case "$REAR_INITRD_COMPRESSION" in
         # Create initrd.cgz with gzip --fast compression (fast speed but less compression)
         REAR_INITRD_FILENAME="initrd.cgz"
         LogPrint "Creating recovery/rescue system initramfs/initrd $REAR_INITRD_FILENAME with gzip fast compression"
+	start=`date +%s`
         if find . ! -name "*~" | cpio -H newc --create --quiet | gzip --fast > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
-            LogPrint "Created $REAR_INITRD_FILENAME with gzip fast compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes)"
+	    end=`date +%s`
+            LogPrint "Created $REAR_INITRD_FILENAME with gzip fast compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes) in $((end-start)) seconds"
         else
             # No need to clean up things (like 'popd') because Error exits directly:
             Error "Failed to create recovery/rescue system $REAR_INITRD_FILENAME"
@@ -40,8 +57,10 @@ case "$REAR_INITRD_COMPRESSION" in
         # Create initrd.cgz with gzip --best compression (best compression but slow speed)
         REAR_INITRD_FILENAME="initrd.cgz"
         LogPrint "Creating recovery/rescue system initramfs/initrd $REAR_INITRD_FILENAME with gzip best compression"
+	start=`date +%s`
         if find . ! -name "*~" | cpio -H newc --create --quiet | gzip --best > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
-            LogPrint "Created $REAR_INITRD_FILENAME with gzip best compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes)"
+	    end=`date +%s`
+            LogPrint "Created $REAR_INITRD_FILENAME with gzip best compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes) in $((end-start)) seconds"
         else
             # No need to clean up things (like 'popd') because Error exits directly:
             Error "Failed to create recovery/rescue system $REAR_INITRD_FILENAME"
@@ -52,8 +71,10 @@ case "$REAR_INITRD_COMPRESSION" in
         # (no need to error out here if REAR_INITRD_COMPRESSION has an invalid value)
         REAR_INITRD_FILENAME="initrd.cgz"
         LogPrint "Creating recovery/rescue system initramfs/initrd $REAR_INITRD_FILENAME with gzip default compression"
+	start=`date +%s`
         if find . ! -name "*~" | cpio -H newc --create --quiet | gzip > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
-            LogPrint "Created $REAR_INITRD_FILENAME with gzip default compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes)"
+	    end=`date +%s`
+            LogPrint "Created $REAR_INITRD_FILENAME with gzip default compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes) in $((end-start)) seconds"
         else
             # No need to clean up things (like 'popd') because Error exits directly:
             Error "Failed to create recovery/rescue system $REAR_INITRD_FILENAME"
@@ -61,4 +82,3 @@ case "$REAR_INITRD_COMPRESSION" in
         ;;
 esac
 popd >/dev/null
-
