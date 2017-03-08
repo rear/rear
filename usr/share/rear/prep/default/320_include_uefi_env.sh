@@ -49,8 +49,6 @@ fi
 
 # next step, is case-sensitive checking /boot for case-insensitive /efi directory (we need it)
 if [[ -n `find /boot -maxdepth 1 -iname efi -type d` ]]; then
-    # found
-else
     return    # not found
 fi
 
