@@ -2,3 +2,4 @@ rear-*.tar.gz
 test/
 build-stamp
 /var
+etc/rear/site.conf
