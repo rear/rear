@@ -1,8 +1,8 @@
 Format: 1.0
 Source: rear
-Version: 1.18
+Version: 2.00
 Binary: rear
-Maintainer: Dag Wieers <dag@wieers.com>
+Maintainer: Gratien Dhaese <gratien.dhaese@gmail.com>
 Architecture: all
 Build-Depends: debhelper
 Files: 

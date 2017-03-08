@@ -4,7 +4,7 @@
 Schlomo Schapiro, Gratien D'haese, Dag Wieers
 
 == The Workflow System
-Relax-and-Recover is built as a modular framework. A call of rear <command>
+Relax-and-Recover is built as a modular framework. A call of +rear <command>+
 will invoke the following general workflow:
 
   1. *Configuration:* Collect system information to assemble a correct
@@ -22,7 +22,7 @@ will invoke the following general workflow:
 
   4. Cleanup work area
 
-== Workflow – Make Rescue Media
+== Workflow - Make Rescue Media
 The application will have the following general workflow which is represented
 by appropriately named scripts in various subdirectories:
 
@@ -63,6 +63,7 @@ The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices a
 |RSYNC       | BACKUP  | Use rsync to remote location             | done
 |RBME        | BACKUP  | Use Rsync Backup Made Easy               | done
 |FDRUPSTREAM | BACKUP  | Use FDR/Upstream                         | done
+|BORG        | BACKUP  | Use Borg                                 | done
 |            |         |                                          |
 |ISO         | OUTPUT  | Write result to ISO9660 image            | done
 |OBDR        | OUTPUT  | Create OBDR Tape                         | done
@@ -70,14 +71,14 @@ The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices a
 |USB         | OUTPUT  | Create bootable USB device               | done
 |====
 
-== Workflow – Recovery
+== Workflow - Recovery
 The result of the analysis is written into configuration files under
 '/etc/rear/recovery/'. This directory is copied together with the other
 Relax-and-Recover directories onto the rescue system where the same
-framework runs a different workflow – the recovery workflow.
+framework runs a different workflow - the recovery workflow.
 
 The recovery workflow is triggered by the fact that the root filesystem is
-mounted in a ram disk or tmpfs. Alternatively a „demo“ recovery workflow
+mounted in a ram disk or tmpfs. Alternatively a "demo" recovery workflow
 can be started manually. This will simply recover all data into a
 subdirectory and not touch the hard disks (Phase 2).
 
@@ -104,7 +105,7 @@ are indeed the same):
      onto '/var/log/rear/' in the recovered system.
 
 == FS layout
-Relax-and-Recover tries to be as much LSB compliant as possible. Therefore rear will be
+Relax-and-Recover tries to be as much LSB compliant as possible. Therefore ReaR will be
 installed into the usual locations:
 
 /etc/rear/::
@@ -121,7 +122,7 @@ installed into the usual locations:
 
 === Layout of /etc/rear
 default.conf::
-    Default configuration – will define EVERY variable with a sane default
+    Default configuration - will define EVERY variable with a sane default
     setting. Serves also as a reference for the available variables 'site.conf'
     site wide configuration (optional)
 
@@ -217,7 +218,7 @@ output/$OUTPUT/*.sh::
     Output scripts: ...
 
 verify/...::
-    Verify the recovery data against the hardware found, wether we can
+    Verify the recovery data against the hardware found, whether we can
     successfully recover the system
 
 recreate/...::
@@ -238,6 +239,7 @@ The various stages and modules communicate via standardized environment variable
 |SHARE_DIR        |STRING (RO)  |Shared data dir                      |'/usr/share/rear/'
 |BUILD_DIR        |STRING (RO)  |Build directory                      |'/tmp/rear.$$/'
 |ROOTFS_DIR       |STRING (RO)  |Root FS directory for rescue system  |'/tmp/rear.$$/initrd/'
+|TARGET_FS_ROOT   |STRING (RO)  |Directory for restore                |'/mnt/local'
 |PROGS            |LIST         |Program files to copy                |+bash ip route grep ls+ ...
 |MODULES          |LIST         |Modules to copy                      |+af_unix e1000 ide-cd+ ...
 |COPY_AS_IS       |LIST         |Files (with path) to copy as-is      |'/etc/localtime' ...
@@ -257,7 +259,7 @@ RO means that the framework manages this variable and modules and methods should
   - Easier integration with third party software (GPL or commercial)
   - Modular and plug-ins should be easy for end-users
   - Better documentation for developers
-  - Cut the overhead – less is better
+  - Cut the overhead - less is better
   - Less choices (=> less errors)
 
   - **mkCDrec project is not active more**

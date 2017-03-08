@@ -1,6 +1,6 @@
 # read sesam configuration values, referenced by
 #
-# prep/SESAM/default/40_prep_sesam.sh
+# prep/SESAM/default/400_prep_sesam.sh
 # skel/SESAM/etc/scripts/system-setup.d/59-start-sesam-client.sh
 
 sesam2000ini_file="/etc/sesam2000.ini"

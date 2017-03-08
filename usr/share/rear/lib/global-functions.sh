@@ -2,21 +2,8 @@
 #
 # global functions for Relax-and-Recover
 #
-#    Relax-and-Recover is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-
-#    Relax-and-Recover is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-
-#    You should have received a copy of the GNU General Public License
-#    along with Relax-and-Recover; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
+# This file is part of Relax-and-Recover, licensed under the GNU General
+# Public License. Refer to the included COPYING for full text of license.
 
 function read_and_strip_file () {
 # extracts content from config files. In other words: strips the comments and new lines
@@ -90,7 +77,7 @@ function url_scheme() {
     # the scheme is the leading part up to '://'
     local scheme=${url%%://*}
     # rsync scheme does not have to start with rsync:// it can also be scp style
-    # see the comments in usr/share/rear/prep/RSYNC/default/10_check_rsync.sh
+    # see the comments in usr/share/rear/prep/RSYNC/default/100_check_rsync.sh
     echo $scheme | grep -q ":" && echo rsync || echo $scheme
 }
 
@@ -375,3 +362,30 @@ umount_mountpoint() {
     return 1
 }
 
+# Change $1 to user input or leave default value on empty input
+function change_default
+{
+    local response
+    read response
+
+    if [ -n "$response" ]; then
+        eval $1=\$response
+    fi
+}
+
+# Check if block device is mounted
+# lsblk can discover mounted device even if mounted as link, this makes it
+# more suitable for job then e.g. grep from /proc/mounts
+function is_device_mounted
+{
+   disk=$1
+   [ -z "$disk" ] && echo 1
+
+   m=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
+
+   if [ -z $m ]; then
+      echo 0
+   else
+      echo 1
+   fi
+}

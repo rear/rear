@@ -172,9 +172,10 @@ FixSfdiskPartitionFile () {
 
 egrep -vi '(^warning|^dos)'  "$1" > "${TMP_DIR}/partitions.tmp"
 
-# If LANG is not set to C (it should be) and sfdisk is still producing French
-# comments like "N° table de partition de " then we should replace the "N"
-# with hash(#) sign.
+# If LANG is not set to C (it should be) and sfdisk is producing locale specific comments
+# for example in French something like "N<degree sign (U+00B0)> table de partition de "
+# where <degree sign (U+00B0)> means one unicode character (in UTF-8 two bytes 0xC2 0xB0)
+# then we should replace the "N" with hash(#) sign.
 sed -e 's/^N/#/' <"${TMP_DIR}/partitions.tmp" >"$1"
 rm -f $v "${TMP_DIR}/partitions.tmp" >&2
 }

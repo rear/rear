@@ -253,26 +253,26 @@ function make_syslinux_config {
 	echo "#noescape 1"
 	syslinux_menu title $PRODUCT v$VERSION
 
-	echo "say rear - Recover $(uname -n)"
+	echo "say rear - Recover $HOSTNAME"
 	echo "label rear"
-	syslinux_menu "label ^Recover $(uname -n)"
+	syslinux_menu "label ^Recover $HOSTNAME"
 	syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"
-	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
+	echo "append initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
 	if [ "$ISO_DEFAULT" == "manual" ] ; then
                echo "default rear"
                syslinux_menu "default"
         fi
 	echo ""
 
-	echo "say rear - Recover $(uname -n)"
+	echo "say rear - Recover $HOSTNAME"
 	echo "label rear-automatic"
-	syslinux_menu "label ^Automatic Recover $(uname -n)"
+	syslinux_menu "label ^Automatic Recover $HOSTNAME"
 	syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
 			"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
 	echo "kernel kernel"
-	echo "append initrd=initrd.cgz root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover"
+	echo "append initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover"
 
 	if [ "$ISO_DEFAULT" == "automatic" ] ; then
                echo "default rear-automatic"
@@ -451,7 +451,7 @@ default = "Relax-and-Recover (no Secure Boot)"
 
 image = kernel
     label = "Relax-and-Recover (no Secure Boot)"
-    initrd = initrd.cgz
+    initrd = $REAR_INITRD_FILENAME
 EOF
     [[ -n $KERNEL_CMDLINE ]] && cat << EOF
     append = "$KERNEL_CMDLINE"
@@ -486,14 +486,14 @@ menuentry "Relax-and-Recover (no Secure Boot)"  --class gnu-linux --class gnu --
      echo 'Loading kernel ...'
      linux /isolinux/kernel root=UUID=$root_uuid $KERNEL_CMDLINE
      echo 'Loading initial ramdisk ...'
-     initrd /isolinux/initrd.cgz
+     initrd /isolinux/$REAR_INITRD_FILENAME
 }
 
 menuentry "Relax-and-Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
      echo 'Loading kernel ...'
      linuxefi /isolinux/kernel root=UUID=$root_uuid $KERNEL_CMDLINE
      echo 'Loading initial ramdisk ...'
-     initrdefi /isolinux/initrd.cgz
+     initrdefi /isolinux/$REAR_INITRD_FILENAME
 }
 
 menuentry "Reboot" {
@@ -505,3 +505,110 @@ menuentry "Exit to EFI Shell" {
 }
 EOF
 }
+
+function make_pxelinux_config {
+    # we use this function in case we are using $PXE_CONFIG_URL style of configuration
+    echo "timeout 300"
+    case "$PXE_RECOVER_MODE" in
+        "automatic"|"unattended" ) echo "prompt 0" ;;
+        * ) # manual mode
+            echo "prompt 1"
+            echo "say ENTER - boot next local device"
+            echo "say --------------------------------------------------------------------------------" ;;
+    esac
+    # Display MENU title first
+    echo "MENU title Relax-and-Recover v$VERSION"
+
+    # Display message now:
+    echo "display $PXE_MESSAGE"
+    echo "say ----------------------------------------------------------"
+
+    # start with rear entry
+    case "$PXE_RECOVER_MODE" in
+        "automatic")
+            echo "say rear-automatic - Recover $HOSTNAME with auto-recover kernel option"
+            echo "label rear-automatic"
+            echo "MENU label ^Automatic Recover $HOSTNAME"
+            ;;
+        "unattended")
+            echo "say rear-unattended - Recover $HOSTNAME with unattended kernel option"
+            echo "label rear-unattended"
+            echo "MENU label ^Unattended Recover $HOSTNAME"
+            ;;
+        *)
+            echo "say rear - Recover $HOSTNAME"
+            echo "label rear"
+            echo "MENU label ^Recover $HOSTNAME"
+            ;;
+    esac
+    echo "TEXT HELP"
+    echo "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)"
+    echo "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
+    echo "ENDTEXT"
+    echo "    kernel $PXE_KERNEL"
+    echo "    append initrd=$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
+    echo "say ----------------------------------------------------------"
+
+    # start the the other entries like local,...
+    echo "say local - Boot from next boot device"
+    echo "label local"
+    echo "MENU label Boot ^Next device"
+    echo "TEXT HELP"
+    echo "Boot from the next device in the BIOS boot order list."
+    echo "ENDTEXT"
+    echo "localboot -1"
+    echo "say ----------------------------------------------------------"
+    if [[ -f $syslinux_modules_dir/chain.c32 ]] ; then
+        echo "say boothd0 - boot first local disk"
+        echo "label boothd0"
+        echo "MENU label Boot First ^Local disk (hd0)"
+        echo "kernel chain.c32"
+        echo "append hd0"
+        echo "say ----------------------------------------------------------"
+        echo "say boothd1 - boot second local disk"
+        echo "label boothd1"
+        echo "MENU label Boot ^Second Local disk (hd1)"
+        echo "kernel chain.c32"
+        echo "append hd1"
+        echo "say ----------------------------------------------------------"
+    fi
+    if [[ -f $syslinux_modules_dir/hdt.c32 ]] ; then
+        echo "say hdt - Hardware Detection Tool"
+        echo "label hdt"
+        echo "MENU label ^Hardware Detection Tool"
+        echo "TEXT HELP"
+        echo "Information about your current hardware configuration"
+        echo "ENDTEXT"
+        echo "kernel hdt.c32"
+        echo "say ----------------------------------------------------------"
+    fi
+    if [[ -f $syslinux_modules_dir/reboot.c32 ]] ; then
+        echo "say reboot - Reboot the system"
+        echo "label reboot"
+        echo "MENU label Re^Boot system"
+        echo "TEXT HELP"
+        echo "Reboot the system now"
+        echo "ENDTEXT"
+        echo "kernel reboot.c32"
+        echo "say ----------------------------------------------------------"
+    fi
+    if [[ -f $syslinux_modules_dir/poweroff.com ]] ; then
+        echo "say poweroff - Poweroff the system"
+        echo "label poweroff"
+        echo "MENU label ^Power off system"
+        echo "TEXT HELP"
+        echo "Power off the system now"
+        echo "ENDTEXT"
+        echo "kernel poweroff.com"
+    fi
+
+    # And, finally define the default entry to boot off
+    case "$PXE_RECOVER_MODE" in
+        "automatic") echo "default rear-automatic" ;;
+        "unattended") echo "default rear-unattended" ;;
+        "boothd") echo "default boothd0" ;;
+        *) echo "default local" ;;
+    esac
+    # end of function make_pxelinux_config
+}
+

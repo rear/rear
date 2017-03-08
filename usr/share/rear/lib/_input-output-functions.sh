@@ -5,21 +5,8 @@
 
 # input-output functions for Relax-and-Recover
 #
-#    Relax-and-Recover is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-
-#    Relax-and-Recover is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-
-#    You should have received a copy of the GNU General Public License
-#    along with Relax-and-Recover; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
-#
+# This file is part of Relax-and-Recover, licensed under the GNU General
+# Public License. Refer to the included COPYING for full text of license.
 
 # the sequence $'...' is an special bash expansion with backslash-escaped characters
 # see "Words of the form $'string' are treated specially" in "man bash"
@@ -87,7 +74,7 @@ readonly MASTER_PID=$$
 exec 7>&1
 QuietAddExitTask "exec 7>&-"
 # USR1 is used to abort on errors, not using Print to always print to the original STDOUT, even if quiet
-builtin trap "echo 'Aborting due to an error, check $LOGFILE for details' >&7 ; kill $MASTER_PID" USR1
+builtin trap "echo '${MESSAGE_PREFIX}Aborting due to an error, check $RUNTIME_LOGFILE for details' >&7 ; kill $MASTER_PID" USR1
 
 # make sure nobody else can use trap
 function trap () {
@@ -117,70 +104,75 @@ function get_path () {
     type -P $1 2>&8
 }
 
-Error() {
-	# If first argument is numerical, use it as exit code
-	if [ $1 -eq $1 ] 2>&8; then
-		EXIT_CODE=$1
-		shift
-	else
-		EXIT_CODE=1
-	fi
-	VERBOSE=1
-	LogPrint "ERROR: $*"
-	if has_binary caller; then
-		# Print stack strace on errors in reverse order
-		(
-			echo "=== Stack trace ==="
-			local c=0;
-			while caller $((c++)); do :; done | awk '
-				{ l[NR]=$3":"$1" "$2 }
-				END { for (i=NR; i>0;) print "Trace "NR-i": "l[i--] }
-			'
-			echo "Message: $*"
-			echo "==================="
-		) >&2
-	fi
-	LogToSyslog "ERROR: $*"
-	kill -USR1 $MASTER_PID # make sure that Error exits the master process, even if called from child processes :-)
+function Error () {
+    VERBOSE=1
+    LogPrint "ERROR: $*"
+    if has_binary caller ; then
+        # Print stack strace in reverse order:
+        (   echo "==== ${MESSAGE_PREFIX}Stack trace ===="
+            local c=0;
+            while caller $((c++)) ; do
+                # nothing to do
+                :
+            done | awk ' { l[NR]=$3":"$1" "$2 }
+                         END { for (i=NR; i>0;) print "Trace "NR-i": "l[i--] }
+                       '
+            echo "${MESSAGE_PREFIX}Message: $*"
+            echo "== ${MESSAGE_PREFIX}End stack trace =="
+        ) >&2
+    fi
+    LogToSyslog "ERROR: $*"
+    # Make sure Error exits the master process, even if called from child processes:
+    kill -USR1 $MASTER_PID
 }
 
-StopIfError() {
-	# If return code is non-zero, bail out
-	if (( $? != 0 )); then
-		Error "$@"
-	fi
+function StopIfError () {
+    # If return code is non-zero, bail out
+    if (( $? != 0 )) ; then
+        Error "$@"
+    fi
 }
 
-BugError() {
-	# If first argument is numerical, use it as exit code
-	if [ $1 -eq $1 ] 2>&8; then
-		EXIT_CODE=$1
-		shift
-	else
-		EXIT_CODE=1
-	fi
-	Error "BUG BUG BUG! " "$@" "
-=== Issue report ===
-Please report this unexpected issue at: https://github.com/rear/rear/issues
-Also include the relevant bits from $LOGFILE
-
-HINT: If you can reproduce the issue, try using the -d or -D option !
+function BugError () {
+    # Get the source file of actual caller script.
+    # Usually this is ${BASH_SOURCE[1]} but BugError is also called
+    # from (wrapper) functions in this script like BugIfError below.
+    # When BugIfError is called the actual caller is the script
+    # that had called BugIfError which is ${BASH_SOURCE[2]} because when
+    # BugIfError is called ${BASH_SOURCE[0]} and ${BASH_SOURCE[1]}
+    # are the same (i.e. this '_input-output-functions.sh' file).
+    # Currently it is sufficient to test up to ${BASH_SOURCE[2]}
+    # (i.e. currently there is at most one indirection).
+    # With bash >= 3 the BASH_SOURCE array variable is supported and even
+    # for older bash it should be fail-safe when unset variables evaluate to empty:
+    local this_script="${BASH_SOURCE[0]}"
+    local caller_source="${BASH_SOURCE[1]}"
+    test "$caller_source" = "$this_script" && caller_source="${BASH_SOURCE[2]}"
+    test "$caller_source" || caller_source="Relax-and-Recover"
+    Error "
+====================
+BUG in $caller_source:
+'$@'
+--------------------
+Please report this issue at https://github.com/rear/rear/issues
+and include the relevant parts from $RUNTIME_LOGFILE
+preferably with full debug information via 'rear -d -D $WORKFLOW'
 ===================="
 }
 
-BugIfError() {
-	# If return code is non-zero, bail out
-	if (( $? != 0 )); then
-		BugError "$@"
-	fi
+function BugIfError () {
+    # If return code is non-zero, bail out
+    if (( $? != 0 )) ; then
+        BugError "$@"
+    fi
 }
 
 function Debug () {
-    test -n "$DEBUG" && Log "$@" || true
+    test "$DEBUG" && Log "$@" || true
 }
 
 function Print () {
-    test -n "$VERBOSE" && echo -e "$*" >&7 || true
+    test "$VERBOSE" && echo -e "${MESSAGE_PREFIX}$*" >&7 || true
 }
 
 # print if there is an error
@@ -203,9 +195,9 @@ fi
 
 function Log () {
     if test $# -gt 0 ; then
-        echo "$(Stamp)$*"
+        echo "${MESSAGE_PREFIX}$(Stamp)$*"
     else
-        echo "$(Stamp)$(cat)"
+        echo "${MESSAGE_PREFIX}$(Stamp)$(cat)"
     fi >&2
 }
 
@@ -254,6 +246,6 @@ ProgressInfo() {
 
 LogToSyslog() {
     # send a line to syslog or messages file with input string
-    logger -t rear -i "$*"
+    logger -t rear -i "${MESSAGE_PREFIX}$*"
 }
 

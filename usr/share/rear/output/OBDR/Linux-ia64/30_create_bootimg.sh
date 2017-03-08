@@ -1,1 +1,0 @@
-../../ISO/Linux-ia64/30_create_bootimg.sh

@@ -5,7 +5,7 @@
 #
 #    Relax-and-Recover is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
+#    the Free Software Foundation; either version 3 of the License, or
 #    (at your option) any later version.
 
 #    Relax-and-Recover is distributed in the hope that it will be useful,
@@ -59,7 +59,7 @@ readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_
 # Versioning
 readonly PRODUCT="Relax-and-Recover"
 readonly PROGRAM=${0##*/}
-readonly VERSION=1.18
+readonly VERSION=2.00
 readonly RELEASE_DATE=Git
 
 # Used in framework-functions.sh to calculate the time spent executing rear:
@@ -114,7 +114,7 @@ WORKFLOW=""
 
 # Parse options
 help_note_text="Use '$PROGRAM --help' or 'man $PROGRAM' for more information."
-readonly OPTS="$( getopt -n $PROGRAM -o "c:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )"
+readonly OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )"
 if test $? -ne 0 ; then
     echo "$help_note_text"
     exit 1
@@ -141,6 +141,17 @@ while true ; do
                 exit 1
             fi
             CONFIG_DIR="$2"
+            shift
+            ;;
+        (-C)
+            if [[ "$2" == -* ]] ; then
+                # When the item that follows '-C' starts with a '-'
+                # it is considered to be the next option and not an argument for '-C':
+                echo "-C requires an argument."
+                echo "$help_note_text"
+                exit 1
+            fi
+            CONFIG_APPEND_FILES="$2"
             shift
             ;;
         (-d)
@@ -222,6 +233,16 @@ case "$WORKFLOW" in
         ;;
 esac
 
+# Set the variables v and verbose to be used in called programs
+# that support the '-v' or '--verbose' options like
+# "cp $v ..." or "rm $verbose ..." and so on:
+v=""
+verbose=""
+if test "$VERBOSE" ; then
+    v="-v"
+    verbose="--verbose"
+fi
+
 # Mark variables that are not meant to be changed later as constants (i.e. readonly).
 # Exceptions here:
 # CONFIG_DIR because "rear recover" sets it in /etc/rear/rescue.conf in the recovery system
@@ -229,6 +250,7 @@ esac
 # KERNEL_VERSION because if empty it is set when sourcing config files below
 # VERBOSE because there is a special "VERBOSE=1" setting below:
 readonly ARGS
+readonly CONFIG_APPEND_FILES
 readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT
 readonly SIMULATE STEPBYSTEP
 
@@ -246,9 +268,7 @@ for path in /usr/bin /bin /usr/sbin /sbin ; do
         (*:"$path":*)
             ;;
         (*)
-            if test -d "$path" ; then
-                PATH=$path:$PATH
-            fi
+            test -d "$path" && PATH=$path:$PATH
             ;;
     esac
 done
@@ -256,9 +276,9 @@ done
 # (e.g. to have third-party backup/restore tools available via PATH):
 PATH=$PATH:/lib/udev:/usr/lib/udev
 
-# Are we root?
+# ReaR must run as 'root' (i.e. abort if effective user ID is not 0):
 if test "$( id --user )" != "0" ; then
-    echo "ERROR: $PRODUCT needs ROOT privileges!" >&2
+    echo "ERROR: $PRODUCT needs 'root' privileges (effective user ID is not 0)" >&2
     exit 1
 fi
 
@@ -278,22 +298,57 @@ hash -r
 # Make sure that we use only English:
 export LC_CTYPE=C LC_ALL=C LANG=C
 
-# Include default config:
+# Include default config before the RUNTIME_LOGFILE value is set because
+# setting the right RUNTIME_LOGFILE value requires values from default.conf
+# in particular the default LOGFILE value and the values of the
+# LOCKLESS_WORKFLOWS and SIMULTANEOUS_RUNNABLE_WORKFLOWS arrays:
 source $SHARE_DIR/conf/default.conf
 
-# Include functions:
-for script in $SHARE_DIR/lib/*.sh ; do
-    source $script
+# Use RUNTIME_LOGFILE for the logfile that is actually used during runtime
+# so that the user can specify a different LOGFILE in his local.conf file.
+# During runtime use only the actually used RUNTIME_LOGFILE value.
+# By default RUNTIME_LOGFILE is the LOGFILE from default.conf:
+RUNTIME_LOGFILE="$LOGFILE"
+# Set the right RUNTIME_LOGFILE value depending on whether or not
+# this currently running instance can run simultaneously with another instance:
+can_run_simultaneously=""
+# LOCKLESS_WORKFLOWS can run simultaneously with another instance by using LOGFILE.lockless.
+# FIXME: Only one lockless workflow can run otherwise the same LOGFILE.lockless
+# would be used by more than one simultaneously running lockless workflows:
+for lockless_workflow in "${LOCKLESS_WORKFLOWS[@]}" ; do
+    if test "$WORKFLOW" = "$lockless_workflow" ; then
+        RUNTIME_LOGFILE="$LOGFILE.lockless"
+        can_run_simultaneously="yes"
+        break
+    fi
 done
+# SIMULTANEOUS_RUNNABLE_WORKFLOWS are allowed to run simultaneously
+# but cannot use LOGFILE.lockless instead they get a LOGFILE with PID
+# see https://github.com/rear/rear/issues/1102
+# When a workflow is both in LOCKLESS_WORKFLOWS and in SIMULTANEOUS_RUNNABLE_WORKFLOWS
+# its right LOGFILE value is the one for SIMULTANEOUS_RUNNABLE_WORKFLOWS:
+for simultaneous_runnable_workflow in "${SIMULTANEOUS_RUNNABLE_WORKFLOWS[@]}" ; do
+    if test "$WORKFLOW" = "$simultaneous_runnable_workflow" ; then
+        # Simultaneously runnable workflows require unique logfile names
+        # so that the PID is interposed in the LOGFILE value from default.conf
+        # which is used as RUNTIME_LOGFILE while the workflow is running
+        # and at the end it gets copied to a possibly used-defined LOGFILE.
+        # The logfile_suffix also works for logfile names without '.*' suffix
+        # (in this case ${LOGFILE##*.} returns the whole $LOGFILE value):
+        logfile_suffix=$( test "${LOGFILE##*.}" = "$LOGFILE" && echo 'log' || echo "${LOGFILE##*.}" )
+        RUNTIME_LOGFILE="${LOGFILE%.*}.$$.$logfile_suffix"
+        can_run_simultaneously="yes"
+        break
+    fi
+done
+# The log file that is actually used during runtime must not be changed:
+readonly RUNTIME_LOGFILE
 
-# LOCKLESS_WORKFLOWS can run simultaneously with another instance by using a LOGFILE.lockless:
-if IsInArray "$WORKFLOW" "${LOCKLESS_WORKFLOWS[@]}" ; then
-    LOGFILE="$LOGFILE.lockless"
-else
-    # When this currently running instance is not one of the LOCKLESS_WORKFLOWS
-    # then it cannot run simultaneously with another instance
-    # in this case pidof is needed to test what running instances there are:
-    if ! has_binary pidof ; then
+# When this currently running instance cannot run simultaneously with another instance
+# test that this currently running instance does not run simultaneously with another instance:
+if ! test "$can_run_simultaneously" ; then
+    # In this case pidof is needed to test what running instances there are:
+    if ! type pidof 1>/dev/null ; then
         echo "ERROR: Required program 'pidof' missing, please check your PATH" >&2
         exit 1
     fi
@@ -308,33 +363,27 @@ else
 fi
 
 # Keep old log file:
-if test -r "$LOGFILE" ; then
-    mv -f "$LOGFILE" "$LOGFILE".old 2>&8
-fi
+test -r "$RUNTIME_LOGFILE" && mv -f "$RUNTIME_LOGFILE" "$RUNTIME_LOGFILE".old 2>/dev/null
+
+# Start logging:
 mkdir -p $LOG_DIR
+exec 2>"$RUNTIME_LOGFILE" || echo "ERROR: Could not create $RUNTIME_LOGFILE" >&2
 
-exec 2>"$LOGFILE" || echo "ERROR: Could not create $LOGFILE" >&2
-# Keep our default $LOGFILE location in a seperate variable REAR_LOGFILE
-# in case end-user overruled it in the local.conf file:
-readonly REAR_LOGFILE="$LOGFILE"
+# Include functions after RUNTIME_LOGFILE is set and readonly
+# so that functions can use a fixed RUNTIME_LOGFILE value:
+for script in $SHARE_DIR/lib/*.sh ; do
+    source $script
+done
 
+# Show initial startup messages:
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
     Log "Command line options: $0 ${CMD_OPTS[@]}"
-    test "$VERBOSE" && LogPrint "Using log file: $LOGFILE" || true
+    LogPrint "Using log file: $RUNTIME_LOGFILE"
 fi
 
-v=""
-verbose=""
-# Enable progress subsystem only in verbose mode, set some stuff that others can use:
-if test "$VERBOSE" ; then
-    source $SHARE_DIR/lib/progresssubsystem.nosh
-    v="-v"
-    verbose="--verbose"
-fi
-
-# Enable debug output of the progress pipe
-# (no readonly KEEP_BUILD_DIR because it is also set to 1 in build/default/98_verify_rootfs.sh):
+# In DEBUG mode keep by default the build area but that can be overridden in user config files
+# therefore no readonly KEEP_BUILD_DIR (it is also set to 1 in build/default/980_verify_rootfs.sh):
 test "$DEBUG" && KEEP_BUILD_DIR=1 || true
 
 # Check if we are in recovery mode:
@@ -365,8 +414,53 @@ done
 for config in site local rescue ; do
     test -r "$CONFIG_DIR/$config.conf" && Source "$CONFIG_DIR/$config.conf" || true
 done
+# Finally source additional configuration files if specified on the command line:
+if test "$CONFIG_APPEND_FILES" ; then
+    for config_append_file in $CONFIG_APPEND_FILES ; do
+        # If what is specified on the command line starts with '/' an absolute path is meant
+        # otherwise what is specified on the command line means a file in CONFIG_DIR.
+        # Files in CONFIG_DIR get automatically copied into the recovery system but
+        # other files are added to COPY_AS_IS to get them copied into the recovery system:
+        case "$config_append_file" in
+            (/*)
+                config_append_file_path="$config_append_file"
+                # If "-C foo" was specified on the command line but 'foo' does not exist
+                # try if 'foo.conf' exists and if yes, use that:
+                if test -r "$config_append_file_path" ; then
+                    COPY_AS_IS=( "${COPY_AS_IS[@]}" "$config_append_file_path" )
+                else if test -r "$config_append_file_path.conf" ; then
+                         COPY_AS_IS=( "${COPY_AS_IS[@]}" "$config_append_file_path.conf" )
+                     else
+                         Error "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
+                     fi
+                fi
+                ;;
+            (*)
+                config_append_file_path="$CONFIG_DIR/$config_append_file"
+                ;;
+        esac
+        # If "-C foo" was specified on the command line but 'foo' does not exist
+        # try if 'foo.conf' exists and if yes, use that:
+        if test -r "$config_append_file_path" ; then
+            LogPrint "Sourcing additional configuration file '$config_append_file_path'"
+            Source "$config_append_file_path"
+        else if test -r "$config_append_file_path.conf" ; then
+                 LogPrint "Sourcing additional configuration file '$config_append_file_path.conf'"
+                 Source "$config_append_file_path.conf"
+             else
+                 Error "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
+             fi
+        fi
+    done
+fi
+
 # Now SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR and KERNEL_VERSION should be set to a fixed value:
 readonly SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR KERNEL_VERSION
+
+# Enable progress subsystem only in verbose mode, set some stuff that others can use:
+if test "$VERBOSE" ; then
+    source $SHARE_DIR/lib/progresssubsystem.nosh
+fi
 
 SourceStage "init"
 
@@ -415,12 +509,35 @@ else
     EXIT_CODE=1
 fi
 
-if test "$REAR_LOGFILE" != "$LOGFILE" ; then
-    cat "$REAR_LOGFILE" > "$LOGFILE"
+# Usually RUNTIME_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
+# The RUNTIME_LOGFILE name is set above from LOGFILE in default.conf
+# but later user config files are sourced where LOGFILE can be set different
+# so that the user config LOGFILE is used as final logfile name:
+if test "$RUNTIME_LOGFILE" != "$LOGFILE" ; then
+    test "$WORKFLOW" != "help" && LogPrint "Saving $RUNTIME_LOGFILE as $LOGFILE"
+    cat "$RUNTIME_LOGFILE" > "$LOGFILE"
 fi
 
-if test $EXIT_CODE -eq 0 ; then
-    LogToSyslog "DONE: rc=$EXIT_CODE"
+# When this point is reached, the workflow is done without a real error because
+# for real errors one of the Error functions should be called that kills rear
+# and then the exit code is usually 143 (i.e. 128 + signal-number)
+# and the Error function results an "ERROR: ..." syslog message.
+# There should be no syslog message for the help workflow:
+if test "$WORKFLOW" != "help" ; then
+    if test $EXIT_CODE -eq 0 ; then
+        LogToSyslog "$PROGRAM $WORKFLOW finished with zero exit code"
+    else
+        if test "checklayout" = "$WORKFLOW" -a $EXIT_CODE -eq 1 ; then
+            # The checklayout workflow is special because it sets EXIT_CODE=1
+            # when the disk layout has changed or when configuration files have changed
+            # but that exit code 1 is no error but meant as a signal that things have changed
+            # which require a new ISO image so that users can run "rear checklayout || rear mkrescue"
+            # see https://github.com/rear/rear/issues/564
+            LogToSyslog "$PROGRAM checklayout finished with exit code 1 (layout or config changed)"
+        else
+            LogToSyslog "$PROGRAM $WORKFLOW failed with exit code $EXIT_CODE"
+        fi
+    fi
 fi
 
 exit $EXIT_CODE

@@ -57,15 +57,17 @@ Currently we aim to support the following distributions by testing them
 regularly:
 
  - Red Hat Enterprise Linux and derivatives: RHEL5, RHEL6 and RHEL7
- - SUSE SLES 11, 12
- - Ubuntu LTS: 10.04, 12.04, 13.* and 14.*
+ - SUSE Linux Enterprise Server 11 and 12
+ - Ubuntu LTS: 12, 13, 14 and 15
 
 Distributions dropped as supported:
 
  - Ubuntu LTS <12
+ - Fedora <21
+ - RHEL 3 and 4
+ - SLES 9 and 10
+ - openSUSE <11
  - Debian <6
- - RHEL 3, 4
- - Fedora <20
 
 Distributions known to be 'unsupported' are:
 
@@ -154,4 +156,4 @@ git clone git@github.com:rear/rear.git
 
 Remember the general configuration file is found at +/usr/share/rear/conf/default.conf+. In that file you find all variables used by +rear+ which can be overruled by redefining these in the +/etc/rear/site.conf+ or +/etc/rear/local.conf+ files. Please do not modify the +default.conf+ file itself, but use the +site.conf+ or +local.conf+ for this purpose.
 
-NOTE: Important note about the configuration files inside rear. Treat these as Bash scripts! Rear will source these configuration files, and therefore, if you make any syntax error against Bash scripting rules rear will break.
+NOTE: Important note about the configuration files inside ReaR. Treat these as Bash scripts! ReaR will source these configuration files, and therefore, if you make any syntax error against Bash scripting rules ReaR will break.

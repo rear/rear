@@ -1,6 +1,6 @@
 = rear(8)
-:version: v1.19.0
-:date: 23 August 2016
+:version: v2.00
+:date: 6 January 2017
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -12,7 +12,7 @@ rear - bare metal disaster recovery and system migration tool
 
 
 == SYNOPSIS
-*rear* [*-h*|*--help*] [*-V*|*--version*] [*-dsSv*] [*-D*|*--debugscripts* _SET_] [*-c* _DIR_] [*-r* _KERNEL_] [--] _COMMAND_ [_ARGS_...]
+*rear* [*-h*|*--help*] [*-V*|*--version*] [*-dsSv*] [*-D*|*--debugscripts* _SET_] [*-c* _DIR_] [*-C* _CONFIG_] [*-r* _KERNEL_] [--] _COMMAND_ [_ARGS_...]
 
 
 == DESCRIPTION
@@ -29,7 +29,7 @@ OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
 sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude
 of backup strategies (incl.  IBM Tivoli Storage Manager, HP DataProtector,
 Symantec NetBackup, EMC NetWorker, FDR/Upstream, NovaBACKUP DC, Bareos,
-Bacula, rsync, rbme). This results in a bootable image that is capable of
+Bacula, rsync, rbme, Borg). This results in a bootable image that is capable of
 booting via PXE, DVD/CD, bootable tape or virtual provisioning.
 
 Relax-and-Recover was designed to be easy to set up, requires no maintenance
@@ -59,6 +59,9 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 -c DIR::
     alternative config directory; instead of /etc/rear
+
+ -C CONFIG::
+    additional config file; absolute path or relative to config directory
 
 -d::
     *debug mode* (log debug messages to log file)
@@ -117,6 +120,9 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 *recover*::
     recover the system; can be used only when running from the rescue media
 
+*restoreonly*::
+    only restore the backup; can be used only when running from the rescue media
+
 *validate*::
     submit validation information
 
@@ -135,7 +141,7 @@ recreating the system layout but works best when used together with
 supported backup software.
 
 In this combination Relax-and-Recover recreates the system layout and calls
-the backup software to restore the actual data. Thus there is no unnessecary
+the backup software to restore the actual data. Thus there is no unnecessary
 duplicate data storage and the Relax-and-Recover rescue media can be very small.
 
 For demonstration and special use purposes Relax-and-Recover also includes
@@ -209,8 +215,13 @@ OUTPUT_URL=*sshfs://*::
 Write the image using sshfs and the SSH protocol.
 
 OUTPUT_URL=*null*::
-Do not copy the ISO image from _/var/lib/rear/output/_ to an external destination.
-Useful in combination with an _external_ backup program, or when +BACKUP_URL=iso://backup+
+Do not copy the ISO image from _/var/lib/rear/output/_ to a remote output location.
++OUTPUT_URL=null+ is useful when another program (e.g. an _external_ backup program)
+is used to save the ISO image from the local system to a remote place,
+or with +BACKUP_URL=iso:///backup+ when the backup is included in the ISO image
+to avoid a (big) copy of the ISO image at a remote output location.
+In the latter case the ISO image must be manually saved from the local system to a remote place.
++OUTPUT_URL=null+ is only supported together with +BACKUP=NETFS+.
 
 If you do not specify +OUTPUT_URL+ variable then by default it will be aligned to what
 was defined by variable +BACKUP_URL+. And, the ISO image will then be copied to the same
@@ -296,6 +307,9 @@ Use Open Source backup solution BACULA to restore the data.
 BACKUP=*DUPLICITY*::
 Use encrypted bandwidth-efficient backup solution using the rsync algorithm to restore the data.
 
+BACKUP=*BORG*::
+Use BorgBackup (short Borg) a deduplicating backup program to restore the data.
+
 The following +BACKUP+ methods are _internal_ of Relax-and-Recover:
 
 BACKUP=*NETFS*::
@@ -367,11 +381,15 @@ BACKUP_URL=iso:///backup/
 OUTPUT_URL=nfs://server/path/
 ----
 
-When using +BACKUP=NETFS+ there is an option to select a +BACKUP_TYPE=incremental+
-to have +rear+ make incremental backups until the next full backup
-e.g. via +FULLBACKUPDAY="Mon"+ is reached. The current implementation supports only
-to restore one full backup plus one single incremental backup so that currently
-+BACKUP_TYPE=incremental+ actually implements a differential backup.
+When using +BACKUP=NETFS+ and BACKUP_PROG=tar there is an option to select
++BACKUP_TYPE=incremental+ or +BACKUP_TYPE=differential+ to let +rear+ make
+incremental or differential backups until the next full backup day
+e.g. via +FULLBACKUPDAY="Mon"+ is reached or when the last full backup
+is too old after FULLBACKUP_OUTDATED_DAYS has passed.
+Incremental or differential backup is currently only known to work
+with +BACKUP_URL=nfs+. Other BACKUP_URL schemes may work but
+at least +BACKUP_URL=usb+ requires USB_SUFFIX to be set
+to work with incremental or differential backup.
 
 == CONFIGURATION
 To configure Relax-and-Recover you have to edit the configuration files in
@@ -391,8 +409,8 @@ general pxelinux configuration you use.
 In almost all circumstances you have to configure two main settings and their
 parameters: The backup method and the output method.
 
-The backup method defines, how your data was saved and wether Relax-and-Recover
-should backup your data as part of the mkrescue process or wether you use an
+The backup method defines, how your data was saved and whether Relax-and-Recover
+should backup your data as part of the mkrescue process or whether you use an
 external application, e.g. backup software to archive your data.
 
 The output method defines how the rescue system is written to disk and how you
@@ -496,7 +514,7 @@ The Relax-and-Recover website is located at: http://relax-and-recover.org/
 
 
 == COPYRIGHT
-(c) 2006-2016
+(c) 2006-2017
 
 Schlomo Schapiro
 

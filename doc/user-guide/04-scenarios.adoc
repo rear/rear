@@ -25,7 +25,7 @@ BACKUP=[TSM|NSR|DP|NBU|GALAXY10|SEP|DUPLICITY|BACULA|BAREOS|RBME|FDRUPSTREAM]
 
 When using one of the above backup solution (commercial or open source) then there is no need to use +rear mkbackup+ as the backup workflow would be empty. Just use +rear mkrescue+
 
-Rear will incorporate the needed executables and libraries of your chosen backup solution into the rescue image of rear.
+ReaR will incorporate the needed executables and libraries of your chosen backup solution into the rescue image of ReaR.
 
 == Bootable ISO and storing archive on NFS/NAS
 To create an ISO rescue image and using a central NFS/NAS server to store the archive, you could define:
@@ -76,6 +76,152 @@ BACKUP=BACULA
 OUTPUT=OBDR
 TAPE_DEVICE=/dev/nst0
 ----
+
+
+== Bootable ISO with Borg
+ - Install Borg backup (https://borgbackup.readthedocs.io/en/stable/installation.html).
+ - Setup ssh key infrastructure for user that will be running backup.
+Issuing following command must work without any password prompts or remote host identity confirmation:
+
+`ssh <BORGBACKUP_USERNAME>@<BORGBACKUP_HOST>`
+
+ - Example _local.conf_:
+[source,bash]
+----
+OUTPUT=ISO
+OUTPUT_URL=nfs://foo.bar.xy/mnt/backup/iso
+
+BACKUP=BORG
+BORGBACKUP_HOST="foo.bar.xy"
+BORGBACKUP_USERNAME="borg_user"
+BORGBACKUP_REPO="/mnt/backup/client"
+BORGBACKUP_REMOTE_PATH="/usr/local/bin/borg"
+
+# Automatic archive pruning
+# (https://borgbackup.readthedocs.io/en/stable/usage.html#borg-prune)
+BORGBACKUP_PRUNE_WEEKLY=2
+
+# Archive compression
+# (https://borgbackup.readthedocs.io/en/stable/usage.html#borg-create)
+BORGBACKUP_COMPRESSION="lzma,9"     # Slowest backup, best compression
+
+# Repository encryption
+# (https://borgbackup.readthedocs.io/en/stable/usage.html#borg-init)
+BORGBACKUP_ENC_TYPE="keyfile"
+export BORG_PASSPHRASE="S3cr37_P455w0rD"
+COPY_AS_IS_BORG=( "/root/.config/borg/keys/" )
+
+# Borg environment variables
+# (https://borgbackup.readthedocs.io/en/stable/usage.html#environment-variables)
+export BORG_RELOCATED_REPO_ACCESS_IS_OK="yes"
+export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK="yes"
+
+----
+IMPORTANT: If using BORGBACKUP_ENC_TYPE="keyfile", don't forget to make your
+           encryption key available for case of restore!
+           (using `COPY_AS_IS_BORG=( "/root/.config/borg/keys/" )` is a option to consider).
+           Be sure to read https://borgbackup.readthedocs.io/en/stable/usage.html#borg-init,
+           and make your self familiar how encryption in Borg works.
+
+ - Executing `rear mkbackup` will create Relax-and-Recover rescue/recovery system and
+ start Borg backup process. Once backup finishes, it will also prune old archives from repository,
+ if at least one of BORGBACKUP_PRUNE_* variables is set.
+ - To recover your system, boot Relax-and-Recover rescue/recovery system and trigger `rear recover`.
+ You will be prompted which archive to recover from Borg repository, once ReaR finished with layout configuration.
+
+```
+...
+Disk layout created.
+Starting Borg restore
+
+=== Borg archives list ===
+Host:       foo.bar.xy
+Repository: /mnt/backup/client
+
+[1] rear_1 	Sun, 2016-10-16 14:08:16
+[2] rear_2 	Sun, 2016-10-16 14:32:11
+
+[3] Exit
+
+Choose archive to recover from:
+
+
+```
+
+
+== Backup/restore alien file system using BLOCKCLONE and dd
+=== Configuration
+
+- First we need to set some global options to _local.conf_
+
+```
+# cat local.conf
+OUTPUT=ISO
+BACKUP=NETFS
+BACKUP_OPTIONS="nfsvers=3,nolock"
+BACKUP_URL=nfs://beta.virtual.sk/mnt/rear
+```
+
+- Now we can define variables that will apply only for targeted block device
+
+```
+# cat alien.conf
+BACKUP=BLOCKCLONE                                        # Define BLOCKCLONE as backup method
+BACKUP_PROG_ARCHIVE="alien"                              # Name of image file
+BACKUP_PROG_SUFFIX=".dd.img"                             # Suffix of image file
+BACKUP_PROG_COMPRESS_SUFFIX=""                           # Clear additional suffixes
+
+BLOCKCLONE_PROG=dd                                       # Use dd for image creation
+BLOCKCLONE_PROG_OPTS="bs=4k"                             # Additional options that will be passed to dd
+BLOCKCLONE_SOURCE_DEV="/dev/sdc1"                        # Device that should be backed up
+
+BLOCKCLONE_SAVE_MBR_DEV="/dev/sdc"                       # Device where partitioning information is stored (optional)
+BLOCKCLONE_MBR_FILE="alien_boot_strap.img"               # Output filename for boot strap code
+BLOCKCLONE_PARTITIONS_CONF_FILE="alien_partitions.conf"  # Output filename for partition configuration
+BLOCKCLONE_ALLOW_MOUNTED="yes"                           # Device can be mounted during backup (default NO)
+```
+
+=== Running backup
+
+ - Save partitions configuration, bootstrap code and create actual backup of /dev/sdc1
+
+```
+# rear -C alien mkbackuponly
+```
+
+ - Running restore from ReaR restore/recovery system
+
+```
+# rear -C alien restoreonly
+
+Restore alien.dd.img to device: [/dev/sdc1]                 # User is always prompted for restore destination
+Device /dev/sdc1 was not found.                             # If destination does not exist ReaR will try to create it (or fail if BLOCKCLONE_SAVE_MBR_DEV was not set during backup)
+Restore partition layout to (^c to abort): [/dev/sdc]       # Prompt user for device where partition configuration should be restored
+Checking that no-one is using this disk right now ... OK
+
+Disk /dev/sdc: 5 GiB, 5368709120 bytes, 10485760 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Script header accepted.
+>>> Created a new DOS disklabel with disk identifier 0x10efb7a9.
+Created a new partition 1 of type 'HPFS/NTFS/exFAT' and of size 120 MiB.
+
+/dev/sdc2:
+New situation:
+
+Device     Boot Start    End Sectors  Size Id Type
+/dev/sdc1        4096 249855  245760  120M  7 HPFS/NTFS/exFAT
+
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+```
+
 
 == Using Relax-and-Recover with USB storage devices
 Using USB devices with Relax-and-Recover can be appealing for several reasons:

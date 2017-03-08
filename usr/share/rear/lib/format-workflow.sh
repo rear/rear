@@ -6,7 +6,7 @@
 # With the --efi toggle you get 2 partitions (vfat and ext3) so we are able
 # to make this USB UEFI bootable afterwards
 
-WORKFLOW_format_DESCRIPTION="format and label media for use with rear"
+WORKFLOW_format_DESCRIPTION="Format and label medium for use with ReaR"
 WORKFLOWS=( ${WORKFLOWS[@]} format )
 WORKFLOW_format () {
 
@@ -40,14 +40,25 @@ WORKFLOW_format () {
         shift
     done
 
-    if [[ -z "$DEVICE" ]]; then
-        Error "No device provided as argument."
-    elif [[ -c "$DEVICE" ]]; then
+    if [[ -z "$DEVICE" ]] ; then
+        test "$SIMULATE" || Error "No device provided as argument."
+        # Simulation mode should work even without a device specified
+        # see https://github.com/rear/rear/issues/1098#issuecomment-268973536
+        LogPrint "Simulation mode for the format workflow with a USB device /dev/sdX:"
+        OUTPUT=USB
+        SourceStage "format"
+        LogPrint "Simulation mode for the format workflow with a OBDR tape device /dev/stX:"
+        OUTPUT=OBDR
+        SourceStage "format"
+        return 0
+    fi
+
+    if [[ -c "$DEVICE" ]]; then
         OUTPUT=OBDR
     elif [[ -b "$DEVICE" ]]; then
         OUTPUT=USB
     else
-        Error "Device $DEVICE is not a character, nor a block device."
+        Error "Device $DEVICE is neither a character, nor a block device."
     fi
 
     SourceStage "format"

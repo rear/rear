@@ -39,7 +39,7 @@ done
 echo "* * * Rescue System is ready * * *"
 
 # Launch rear recover automatically
-if grep -q 'auto_recover' /proc/cmdline ; then
+if grep -q -e 'auto_recover' -e 'automatic' /proc/cmdline ; then
 	choices=(
 	    "View Relax-and-Recover log"
 	    "Go to Relax-and-Recover shell"
@@ -69,4 +69,33 @@ if grep -q 'auto_recover' /proc/cmdline ; then
 		echo "$i) ${choices[$i-1]}"
 	    done
 	done 2>&1
+fi
+# Launch rear recover automatically in unattended mode
+# Experts only mode - hope you know what you are doing
+if grep -q 'unattended'  /proc/cmdline ; then
+    choices=(
+        "View Relax-and-Recover log"
+        "Go to Relax-and-Recover shell"
+    )
+    rear recover -v
+    if [ $? -eq 0 ] ; then
+        echo -e "\n\n Success !\n"
+        echo -e "\nRebooting in 30 seconds (Ctrl-C to interrupt)\n"
+        sleep 30
+        reboot
+    else
+        echo -e "\n\n Errors, please see log file !\n"
+        PS3="What do you want to do now ? "
+        select choice in "${choices[@]}"; do
+            case "$REPLY" in
+                (1) less /var/log/rear/rear-$HOSTNAME.log;;
+                (2) echo "" > /etc/issue
+                    echo "" > /etc/motd
+                    break;;
+            esac
+            for (( i=1; i <= ${#choices[@]}; i++ )); do
+                echo "$i) ${choices[$i-1]}"
+            done
+        done 2>&1
+    fi
 fi

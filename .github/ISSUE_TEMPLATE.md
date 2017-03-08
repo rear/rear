@@ -1,9 +1,10 @@
-# Relax-and-Recover (rear) Issue Template
+#### Relax-and-Recover (rear) Issue Template
 
-Please fill in the following items before submitting a new issue:
+Please fill in the following items before submitting a new issue (quick response is not guaranteed with free support):
 
 * rear version (/usr/sbin/rear -V):
-* OS version (cat /etc/rear/os.conf or lsb_release  -a):
+* OS version (cat /etc/rear/os.conf or lsb_release -a):
 * rear configuration files (cat /etc/rear/site.conf or cat /etc/rear/local.conf):
-* Brief description of the issue
-* Work-around, if any
+* Are you using legacy BIOS or UEFI boot?
+* Brief description of the issue:
+* Work-around, if any:

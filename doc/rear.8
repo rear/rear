@@ -2,12 +2,12 @@
 .\"     Title: rear
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05 August 2016
+.\"      Date: 6 January 2017
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "REAR" "8" "05 August 2016" "\ \&" "\ \&"
+.TH "REAR" "8" "6 January 2017" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,14 +31,14 @@
 rear \- bare metal disaster recovery and system migration tool
 .SH "SYNOPSIS"
 .sp
-\fBrear\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fB\-dsSv\fR] [\fB\-D\fR|\fB\-\-debugscripts\fR \fISET\fR] [\fB\-c\fR \fIDIR\fR] [\fB\-r\fR \fIKERNEL\fR] [\-\-] \fICOMMAND\fR [\fIARGS\fR\&...]
+\fBrear\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fB\-dsSv\fR] [\fB\-D\fR|\fB\-\-debugscripts\fR \fISET\fR] [\fB\-c\fR \fIDIR\fR] [\fB\-C\fR \fICONFIG\fR] [\fB\-r\fR \fIKERNEL\fR] [\-\-] \fICOMMAND\fR [\fIARGS\fR\&...]
 .SH "DESCRIPTION"
 .sp
 Relax\-and\-Recover is the leading Open Source disaster recovery solution\&. It is a modular framework with many ready\-to\-go workflows for common situations\&.
 .sp
 Relax\-and\-Recover produces a bootable image\&. This image can repartition the system\&. Once that is done it initiates a restore from backup\&. Restores to different hardware are possible\&. Relax\-and\-Recover can therefore be used as a migration tool as well\&.
 .sp
-Currently Relax\-and\-Recover supports various boot media (incl\&. ISO, PXE, OBDR tape, USB or eSATA storage), a variety of network protocols (incl\&. sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude of backup strategies (incl\&. IBM Tivoli Storage Manager, HP DataProtector, Symantec NetBackup, EMC NetWorker, FDR/Upstream, NovaBACKUP DC, Bareos, Bacula, rsync, rbme)\&. This results in a bootable image that is capable of booting via PXE, DVD/CD, bootable tape or virtual provisioning\&.
+Currently Relax\-and\-Recover supports various boot media (incl\&. ISO, PXE, OBDR tape, USB or eSATA storage), a variety of network protocols (incl\&. sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude of backup strategies (incl\&. IBM Tivoli Storage Manager, HP DataProtector, Symantec NetBackup, EMC NetWorker, FDR/Upstream, NovaBACKUP DC, Bareos, Bacula, rsync, rbme, Borg)\&. This results in a bootable image that is capable of booting via PXE, DVD/CD, bootable tape or virtual provisioning\&.
 .sp
 Relax\-and\-Recover was designed to be easy to set up, requires no maintenance and is there to assist when disaster strikes\&. Its setup\-and\-forget nature removes any excuses for not having a disaster recovery solution implemented\&.
 .sp
@@ -58,6 +58,11 @@ usage information
 \-c DIR
 .RS 4
 alternative config directory; instead of /etc/rear
+.RE
+.PP
+\-C CONFIG
+.RS 4
+additional config file; absolute path or relative to config directory
 .RE
 .PP
 \-d
@@ -155,6 +160,11 @@ create rescue media only
 recover the system; can be used only when running from the rescue media
 .RE
 .PP
+\fBrestoreonly\fR
+.RS 4
+only restore the backup; can be used only when running from the rescue media
+.RE
+.PP
 \fBvalidate\fR
 .RS 4
 submit validation information
@@ -189,7 +199,7 @@ Restore the data to the system
 .sp
 Most backup software solutions are very good at restoring data but do not support recreating the system layout\&. Relax\-and\-Recover is very good at recreating the system layout but works best when used together with supported backup software\&.
 .sp
-In this combination Relax\-and\-Recover recreates the system layout and calls the backup software to restore the actual data\&. Thus there is no unnessecary duplicate data storage and the Relax\-and\-Recover rescue media can be very small\&.
+In this combination Relax\-and\-Recover recreates the system layout and calls the backup software to restore the actual data\&. Thus there is no unnecessary duplicate data storage and the Relax\-and\-Recover rescue media can be very small\&.
 .sp
 For demonstration and special use purposes Relax\-and\-Recover also includes an internal backup method, NETFS, which can be used to create a simple tar\&.gz archive of the system\&. For all permanent setups we recommend using something more professional for backup, either a traditional backup software (open source or commercial) or rsync with hardlink based solutions, e\&.g\&. RSYNC BACKUP MADE EASY\&.
 .SH "RESCUE IMAGE CONFIGURATION"
@@ -231,6 +241,16 @@ OUTPUT_URL=\fBfile://\fR
 .RS 4
 Write the image to disk\&. The default is in
 \fI/var/lib/rear/output/\fR\&.
+.RE
+.PP
+OUTPUT_URL=\fBnfs://\fR
+.RS 4
+Write the image by mounting the target filesystem via NFS\&.
+.RE
+.PP
+OUTPUT_URL=\fBcifs://\fR
+.RS 4
+Write the image by mounting the target filesystem via CIFS\&.
 .RE
 .PP
 OUTPUT_URL=\fBfish://\fR
@@ -298,11 +318,19 @@ OUTPUT_URL=\fBnull\fR
 .RS 4
 Do not copy the ISO image from
 \fI/var/lib/rear/output/\fR
-to an external destination\&. Useful in combination with an
+to a remote output location\&.
+OUTPUT_URL=null
+is useful when another program (e\&.g\&. an
 \fIexternal\fR
-backup program, or when
-BACKUP_URL=iso://backup
+backup program) is used to save the ISO image from the local system to a remote place, or with
+BACKUP_URL=iso:///backup
+when the backup is included in the ISO image to avoid a (big) copy of the ISO image at a remote output location\&. In the latter case the ISO image must be manually saved from the local system to a remote place\&.
+OUTPUT_URL=null
+is only supported together with
+BACKUP=NETFS\&.
 .RE
+.sp
+If you do not specify OUTPUT_URL variable then by default it will be aligned to what was defined by variable BACKUP_URL\&. And, the ISO image will then be copied to the same location as your backup of the system disk(s)\&.
 .sp
 The ISO_DEFAULT variable defines what default boot option is used on the rescue image\&. Possible values are manual, boothd or unattended\&. Manual will make you boot into the shell directly by default, boothd will boot to the first disk (default) or unattended will automatically start in recovery mode\&.
 .SH "BACKUP SOFTWARE INTEGRATION"
@@ -394,6 +422,11 @@ Use Open Source backup solution BACULA to restore the data\&.
 BACKUP=\fBDUPLICITY\fR
 .RS 4
 Use encrypted bandwidth\-efficient backup solution using the rsync algorithm to restore the data\&.
+.RE
+.PP
+BACKUP=\fBBORG\fR
+.RS 4
+Use BorgBackup (short Borg) a deduplicating backup program to restore the data\&.
 .RE
 .sp
 The following BACKUP methods are \fIinternal\fR of Relax\-and\-Recover:
@@ -518,16 +551,16 @@ OUTPUT_URL=nfs://server/path/
 .\}
 .RE
 .sp
-When using BACKUP=NETFS there is an option to select a BACKUP_TYPE=incremental to have rear make incremental backups until the next full backup e.g. via FULLBACKUPDAY="Mon" is reached\&. The current implementation supports only to restore one full backup plus one single incremental backup so that currently BACKUP_TYPE=incremental actually implements a differential backup\&.
+When using BACKUP=NETFS and BACKUP_PROG=tar there is an option to select BACKUP_TYPE=incremental or BACKUP_TYPE=differential to let rear make incremental or differential backups until the next full backup day e\&.g\&. via FULLBACKUPDAY="Mon" is reached or when the last full backup is too old after FULLBACKUP_OUTDATED_DAYS has passed\&. Incremental or differential backup is currently only known to work with BACKUP_URL=nfs\&. Other BACKUP_URL schemes may work but at least BACKUP_URL=usb requires USB_SUFFIX to be set to work with incremental or differential backup\&.
 .SH "CONFIGURATION"
 .sp
 To configure Relax\-and\-Recover you have to edit the configuration files in \fI/etc/rear/\fR\&. All \fI*\&.conf\fR files there are part of the configuration, but only \fIsite\&.conf\fR and \fIlocal\&.conf\fR are intended for the user configuration\&. All other configuration files hold defaults for various distributions and should not be changed\&.
 .sp
-In \fI/etc/rear/templates/\fR there are also some template files which are used by Relax\-and\-Recover to create configuration files (mostly for the boot environment)\&. Modify the templates to adjust the information contained in the emails produced by Relax\-and\-Recover\&. You can use these templates to prepend your own configurations to the configuration files created by Relax\-and\-recover, for example you can edit \fIPXE_pxelinux\&.cfg\fR to add some general pxelinux configuration you use\&.
+In \fI/etc/rear/templates/\fR there are also some template files which are used by Relax\-and\-Recover to create configuration files (mostly for the boot environment)\&. Modify the templates to adjust the information contained in the emails produced by Relax\-and\-Recover\&. You can use these templates to prepend your own configurations to the configuration files created by Relax\-and\-Recover, for example you can edit \fIPXE_pxelinux\&.cfg\fR to add some general pxelinux configuration you use\&.
 .sp
 In almost all circumstances you have to configure two main settings and their parameters: The backup method and the output method\&.
 .sp
-The backup method defines, how your data was saved and wether Relax\-and\-Recover should backup your data as part of the mkrescue process or wether you use an external application, e\&.g\&. backup software to archive your data\&.
+The backup method defines, how your data was saved and whether Relax\-and\-Recover should backup your data as part of the mkrescue process or whether you use an external application, e\&.g\&. backup software to archive your data\&.
 .sp
 The output method defines how the rescue system is written to disk and how you plan to boot the failed computer from the rescue system\&.
 .sp
@@ -670,7 +703,7 @@ Relax\-and\-Recover is a collaborative process using Github at: \m[blue]\fBhttp:
 The Relax\-and\-Recover website is located at: \m[blue]\fBhttp://relax\-and\-recover\&.org/\fR\m[]
 .SH "COPYRIGHT"
 .sp
-(c) 2006\-2016
+(c) 2006\-2017
 .sp
 Schlomo Schapiro
 .sp

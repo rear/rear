@@ -1,0 +1,1 @@
+../i386/170_rebuild_initramfs.sh

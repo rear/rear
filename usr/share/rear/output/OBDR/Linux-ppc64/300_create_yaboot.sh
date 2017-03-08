@@ -1,0 +1,1 @@
+../../ISO/Linux-ppc64/300_create_yaboot.sh

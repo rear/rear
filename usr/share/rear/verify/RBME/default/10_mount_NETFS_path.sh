@@ -1,1 +1,0 @@
-../../../backup/NETFS/default/10_mount_NETFS_path.sh

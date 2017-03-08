@@ -1,0 +1,1 @@
+../../NETFS/default/250_create_lock.sh
