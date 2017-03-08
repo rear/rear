@@ -52,15 +52,15 @@ if [[ -n $(find /boot -maxdepth 1 -iname efi -type d) ]]; then
     return    # not found
 fi
 
+local esp_mount_point=""
+
 # next step, check filesystem partition type (vfat?)
-local efi_mount_point=""
-UEFI_FS_TYPE=$(awk '/\/boot\/efi/ { print $3 }' /proc/mounts)
+esp_mount_point='/\/boot\/efi/'
+UEFI_FS_TYPE=$(awk $esp_mount_point' { print $3 }' /proc/mounts)
 # if not mounted at /boot/efi, try /boot
 if [[ -z "$UEFI_FS_TYPE" ]]; then
-    UEFI_FS_TYPE=$(awk '/\/boot/ { print $3 }' /proc/mounts)
-    [[ -z "$UEFI_FS_TYPE" ]] && efi_mount_point='/\/boot/'
-else
-    efi_mount_point='/\/boot\/efi/'
+    esp_mount_point='/\/boot/'
+    UEFI_FS_TYPE=$(awk $esp_mount_point' { print $3 }' /proc/mounts)
 fi
 
 # ESP must be type vfat (under Linux)
@@ -72,4 +72,4 @@ fi
 USING_UEFI_BOOTLOADER=1
 LogPrint "Using UEFI Boot Loader for Linux (USING_UEFI_BOOTLOADER=1)"
 
-awk $efi_mount_point' { print $1 }' /proc/mounts >$VAR_DIR/recovery/bootdisk 2>/dev/null
+awk $esp_mount_point' { print $1 }' /proc/mounts >$VAR_DIR/recovery/bootdisk 2>/dev/null
