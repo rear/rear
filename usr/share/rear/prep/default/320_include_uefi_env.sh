@@ -1,7 +1,7 @@
 # in conf/default.conf we defined an empty variable USING_UEFI_BOOTLOADER
 # This script will try to guess if we're using UEFI or not, and if yes,
 # then add all the required executables, kernel modules, etc...
-# Most likely, only recent OSes will be UEFI capable, such as SLES11, RHEL6, Ubuntu 12.10, Fedora 18
+# Most likely, only recent OSes will be UEFI capable, such as SLES11, RHEL6, Ubuntu 12.10, Fedora 18, Arch Linux
 
 # If noefi is set, we can ignore UEFI altogether
 if grep -qw 'noefi' /proc/cmdline; then
@@ -47,13 +47,21 @@ if grep -qw efivars /proc/mounts; then
     SYSFS_DIR_EFI_VARS=/sys/firmware/efi/efivars
 fi
 
-# next step, is checking /boot/efi directory (we need it)
-if [[ ! -d /boot/efi ]]; then
-    return    # must be mounted
+# next step, is case-sensitive checking /boot for case-insensitive /efi directory (we need it)
+if [[ -n $(find /boot -maxdepth 1 -iname efi -type d) ]]; then
+    return    # not found
 fi
 
+local esp_mount_point=""
+
 # next step, check filesystem partition type (vfat?)
-UEFI_FS_TYPE=$(awk '/\/boot\/efi/ { print $3 }' /proc/mounts)
+esp_mount_point='/\/boot\/efi/'
+UEFI_FS_TYPE=$(awk $esp_mount_point' { print $3 }' /proc/mounts)
+# if not mounted at /boot/efi, try /boot
+if [[ -z "$UEFI_FS_TYPE" ]]; then
+    esp_mount_point='/\/boot/'
+    UEFI_FS_TYPE=$(awk $esp_mount_point' { print $3 }' /proc/mounts)
+fi
 
 # ESP must be type vfat (under Linux)
 if [[ "$UEFI_FS_TYPE" != "vfat" ]]; then
@@ -64,5 +72,4 @@ fi
 USING_UEFI_BOOTLOADER=1
 LogPrint "Using UEFI Boot Loader for Linux (USING_UEFI_BOOTLOADER=1)"
 
-awk '/\/boot\/efi/ { print $1 }' /proc/mounts >$VAR_DIR/recovery/bootdisk 2>/dev/null
-
+awk $esp_mount_point' { print $1 }' /proc/mounts >$VAR_DIR/recovery/bootdisk 2>/dev/null
