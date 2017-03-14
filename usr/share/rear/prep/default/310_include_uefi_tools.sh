@@ -6,7 +6,7 @@ if grep -qw 'noefi' /proc/cmdline; then
 fi
 
 # next step, is checking /boot/efi directory case-insensitive for the /EFI part (we need it)
-if [[ -n $(find /boot -maxdepth 1 -iname efi -type d) ]]; then
+if [[ $(find /boot -maxdepth 1 -iname efi -type d | wc -l) -eq 0 ]] ; then
     return    # must be mounted
 fi
 
