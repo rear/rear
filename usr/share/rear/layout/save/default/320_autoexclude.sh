@@ -40,6 +40,21 @@ fi
 # Automatically exclude disks that do not have filesystems mounted.
 if [[ "$AUTOEXCLUDE_DISKS" =~ ^[yY1] ]] ; then
     used_disks=()
+    # List disks used by swap devices
+    while read swap device uuid label junk ; do
+
+        if grep -q "^done swap:$device " $LAYOUT_TODO ; then
+            continue
+        fi
+
+        disks=$(find_disk swap:$device)
+        for disk in $disks ; do
+            if ! IsInArray "$disk" "${used_disks[@]}" ; then
+                used_disks=( "${used_disks[@]}" "$disk" )
+            fi
+        done
+
+    done < <(grep ^swap $LAYOUT_FILE)
 
     # List disks used by mountpoints
     while read fs device mountpoint junk ; do
