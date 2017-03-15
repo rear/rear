@@ -1,3 +1,4 @@
+
 # config-functions.sh
 #
 # configuration functions for Relax-and-Recover
@@ -6,30 +7,47 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# find out which OS Vendor and Version we run on (SUSE, SLES, RHEL, Fedora, Debian, ...)
-SetOSVendorAndVersion () {
-    # if (magically) these variables are already set, skip doing it again
-    # this is needed, so that they can be overridden in $WORKFLOW.conf
-    # if this happens, then ALL the variables OS_* have to be set there !!
-    #
+# Find out which OS vendor and version we run on (openSUSE, SLES, RHEL, Fedora, Debian, ...)
+function SetOSVendorAndVersion () {
+
+    # If these variables are already set, skip doing it again.
+    # This is needed, so that they can be overridden in $WORKFLOW.conf
+    # if this happens, then ALL the variables OS_* have to be set there.
+    # The test must match OS_VENDOR=generic and OS_VERSION=none in default.conf:
     if test "$OS_VENDOR" = generic -o "$OS_VERSION" = none ; then
 
-        # try to use lsb_release
-        if has_binary lsb_release >&8 2>&1; then
-            OS_VENDOR="$(lsb_release -i -s | tr -s " \t" _)"
-            OS_VERSION="$(lsb_release -r -s | tr -s " \t" _)"
-        else
-            # we have to go the classical way
-            Error "The LSB package is not installed.
-    Currently there is no support to detect the OS and VERSION without LSB support.
-    Please either install the LSB package (that supplies the 'lsb_release' command)
-    or improve $PRODUCT to handle this situation better.
+        # If OS_VENDOR or OS_VERSION has the default value
+        # the 'lsb_release' command is needed to detect the actual value:
+        if ! has_binary lsb_release ; then
+            Error "The 'lsb_release' command cannot be run.
+Detecting the operating system and its version requires LSB support.
+Install a software package that provides the 'lsb_release' command.
+Alternatively you can manually specify OS_VENDOR and OS_VERSION in
+'$CONFIG_DIR/os.conf' and verify that your setup actually works.
+See '$SHARE_DIR/lib/config-functions.sh' for more details."
+        fi
 
-    As an alternative you can manually override OS_VENDOR and OS_VERSION in the
-    '$CONFIG_DIR/os.conf' file. Please be sure to test your setup !
+        # If OS_VENDOR has the default value, detect the actual value:
+        if test "$OS_VENDOR" = generic ; then
+            OS_VENDOR="$( lsb_release -i -s | tr -s '[:blank:]' '_' )"
+            test "$OS_VENDOR" || Error "Failed to detect OS_VENDOR. You may manually specify it in $CONFIG_DIR/os.conf"
+            # For all SUSE distributions (SLES and openSUSE) ReaR uses
+            # only .../SUSE_LINUX/... sub-directories plus conf/SUSE_LINUX.conf
+            # so that 'lsb_release -i -s' output must be unified to 'SUSE_LINUX'.
+            # For example 'lsb_release -i -s' outputs
+            # on SLES11 SP3 : 'SUSE LINUX'
+            # on SLES12 12 SP2 : 'SUSE'
+            # on openSUSE Leap 42.1 : 'SUSE LINUX'
+            # on openSUSE Tumbleweed 20170304 : 'openSUSE'
+            # so that the common substring is 'SUSE'.
+            # When OS_VENDOR contains the substring 'SUSE', set OS_VENDOR to 'SUSE_LINUX':
+            test "${OS_VENDOR#*SUSE}" = "$OS_VENDOR" || OS_VENDOR="SUSE_LINUX"
+        fi
 
-    See '$SHARE_DIR/lib/config-functions.sh' for more details about this matter.
-"
+        # If OS_VERSION has the default value, detect the actual value:
+        if test "$OS_VERSION" = none ; then
+            OS_VERSION="$( lsb_release -r -s | tr -s '[:blank:]' '_' )"
+            test "$OS_VERSION" || Error "Failed to detect OS_VERSION. You may manually specify it in $CONFIG_DIR/os.conf"
         fi
     fi
 
@@ -69,6 +87,18 @@ SetOSVendorAndVersion () {
             OS_MASTER_VENDOR="Arch"
             OS_MASTER_VERSION="$OS_VERSION"
             ;;
+        (*SUSE*)
+            # When OS_VENDOR_VERSION contains 'SUSE', set OS_MASTER_VENDOR to 'SUSE'
+            # but do not set OS_MASTER_VENDOR same as OS_VENDOR (i.e. 'SUSE_LINUX')
+            # (cf. above: all SUSE distributions ... must be unified to 'SUSE_LINUX')
+            # because then scripts in a .../SUSE_LINUX/... sub-directoriy and conf/SUSE_LINUX.conf
+            # get sourced twice by the (buggy) SourceStage function in lib/framework-functions.sh
+            OS_MASTER_VENDOR="SUSE"
+            # If OS_VERSION is of the form 12.34.56 OS_MASTER_VERSION is only the first part '12'.
+            # Because openSUSE Tumbleweed has rolling releases OS_VERSION is a date of the form YYYYMMDD
+            # so that there is no real OS_MASTER_VERSION which is then the the same as OS_VERSION:
+            OS_MASTER_VERSION="${OS_VERSION%%.*}"
+            ;;
         (*)
             # set fallback values to aviod error exit for 'set -eu' because of unbound variables:
             OS_MASTER_VENDOR=""
@@ -91,10 +121,11 @@ SetOSVendorAndVersion () {
 }
 
 ### Return the template filename
-get_template() {
+function get_template() {
     if [[ -e $CONFIG_DIR/templates/$1 ]] ; then
         echo $CONFIG_DIR/templates/$1
     else
         echo $SHARE_DIR/conf/templates/$1
     fi
 }
+
