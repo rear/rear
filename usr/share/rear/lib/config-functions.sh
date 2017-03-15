@@ -91,10 +91,13 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
             # When OS_VENDOR_VERSION contains 'SUSE', set OS_MASTER_VENDOR to 'SUSE'
             # but do not set OS_MASTER_VENDOR same as OS_VENDOR (i.e. 'SUSE_LINUX')
             # (cf. above: all SUSE distributions ... must be unified to 'SUSE_LINUX')
-            # because then scripts in a .../SUSE_LINUX/... sub-directory and conf/SUSE_LINUX.conf
-            # get sourced twice by the (buggy?) SourceStage function in lib/framework-functions.sh
+            # because then scripts in a .../SUSE_LINUX/... sub-directoriy and conf/SUSE_LINUX.conf
+            # get sourced twice by the (buggy) SourceStage function in lib/framework-functions.sh
             OS_MASTER_VENDOR="SUSE"
-            OS_MASTER_VERSION="$OS_VERSION"
+            # If OS_VERSION is of the form 12.34.56 OS_MASTER_VERSION is only the first part '12'.
+            # Because openSUSE Tumbleweed has rolling releases OS_VERSION is a date of the form YYYYMMDD
+            # so that there is no real OS_MASTER_VERSION which is then the the same as OS_VERSION:
+            OS_MASTER_VERSION="${OS_VERSION%%.*}"
             ;;
         (*)
             # set fallback values to aviod error exit for 'set -eu' because of unbound variables:
