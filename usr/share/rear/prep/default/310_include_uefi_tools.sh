@@ -7,10 +7,10 @@ fi
 
 # Next step, is checking /boot/efi directory case-insensitive for the /EFI part (we need it).
 # If no /boot/[eE][fF][iI] directory can be found we cannot copy the UEFI binaries we might need.
-# TODO: I <jsmeix@suse.de> wonder if plain silent 'return' really the right way out here
+# TODO: I <jsmeix@suse.de> wonder if plain silent 'return' is really the right way out here
 # or whether there should be some more checks? Perhaps having access to the UEFI binaries
-# is sometimes mandatory so that ReaR might then better abort with a clear Error message
-# instead of proceeding 'bona fide' here?
+# is sometimes mandatory (e.g. in case of USING_UEFI_BOOTLOADER=1) so that ReaR might then
+# better abort with a clear Error message instead of proceeding 'bona fide' here?
 test "$( find /boot -maxdepth 1 -iname efi -type d )" || return
 
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}"
