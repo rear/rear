@@ -416,6 +416,17 @@ for config in site local rescue ; do
 done
 # Finally source additional configuration files if specified on the command line:
 if test "$CONFIG_APPEND_FILES" ; then
+    # Treat missing additional config files (almost) same as other missing config files
+    # which means that missing additional config files do not let ReaR abort with an Error
+    # but in contrast to other missing config files missing additional config files
+    # are reported to the user via 'LogPrint' so that the user is at least informed
+    # if what he requested via the '-C' command line option cannot be fulfilled.
+    # An intended positive side-effect when missing additional config files are no Error
+    # is that then it also works (not relly cleanly but it works) for DRLM_MANAGED=y
+    # which requires that missing local config files must not let ReaR abort with an Error
+    # because the needed config files get later downloaded from the DRLM server and applied
+    # (cf. the drlm_import_runtime_config function in lib/drlm-functions.sh)
+    # for details see https://github.com/rear/rear/issues/1229
     for config_append_file in $CONFIG_APPEND_FILES ; do
         # If what is specified on the command line starts with '/' an absolute path is meant
         # otherwise what is specified on the command line means a file in CONFIG_DIR.
@@ -431,7 +442,7 @@ if test "$CONFIG_APPEND_FILES" ; then
                 else if test -r "$config_append_file_path.conf" ; then
                          COPY_AS_IS=( "${COPY_AS_IS[@]}" "$config_append_file_path.conf" )
                      else
-                         Error "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
+                         LogPrint "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
                      fi
                 fi
                 ;;
@@ -448,7 +459,7 @@ if test "$CONFIG_APPEND_FILES" ; then
                  LogPrint "Sourcing additional configuration file '$config_append_file_path.conf'"
                  Source "$config_append_file_path.conf"
              else
-                 Error "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
+                 LogPrint "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
              fi
         fi
     done
