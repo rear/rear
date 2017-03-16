@@ -193,6 +193,7 @@ OS_VERSION="13.2"
 %doc %{_mandir}/man8/rear.8*
 %config(noreplace) %{_sysconfdir}/cron.d/rear
 %config(noreplace) %{_sysconfdir}/rear/
+%config(noreplace) %{_sysconfdir}/rear/cert/
 %{_datadir}/rear/
 %{_localstatedir}/lib/rear/
 %{_sbindir}/rear

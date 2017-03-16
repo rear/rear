@@ -21,7 +21,7 @@ function drlm_import_runtime_config() {
     for arg in "${ARGS[@]}" ; do
         key=DRLM_"${arg%%=*}"
         val="${arg#*=}"
-        declare $key="$val"
+        eval $key='$val'
         Log "Setting $key=$val"
     done
 
