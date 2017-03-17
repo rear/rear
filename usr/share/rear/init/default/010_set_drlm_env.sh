@@ -4,8 +4,6 @@ if ! drlm_is_managed ; then
     return 0
 fi
 
-PROGS=( "${PROGS[@]}" curl )
-
 # Needed for curl (HTTPs)
 COPY_AS_IS=( ${COPY_AS_IS[@]} /etc/ssl/certs/* /etc/pki/* )
 
