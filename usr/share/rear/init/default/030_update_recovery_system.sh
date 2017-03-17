@@ -3,18 +3,26 @@
 
 # See https://github.com/rear/rear/issues/841
 
+# Without a RECOVERY_UPDATE_URL there is nothing to do:
+test "$RECOVERY_UPDATE_URL" || return
+
+# With a RECOVERY_UPDATE_URL ensure 'curl' is actually there
+# because that 'curl' was added to the default PROGS array
+# (see https://github.com/rear/rear/issues/1156)
+# is not sufficient to ensure 'curl' is actually there.
+# This test is run in particular during "rear mkbackup/mkrescue"
+# so that it errors out if 'curl' is required but not there:
+has_binary curl || Error "RECOVERY_UPDATE_URL requires that 'curl' is installed"
+
 # Currently updating ReaR is only supported during "rear recover"
-# because "rear recover" is only run once in the recovery system and
-# afterwards the recovery system is shut down and the recovered system is booted.
+# because "rear recover" is run first and only once in the recovery system
+# (perhaps followed by several subsequent or simultaneous "rear restoreonly").
 # Currently it is not tested what mess might happen for other workflows
 # that run many times in one same system like "rear mkbackup" in the normal system.
 # Furthermore it seems to make not much sense to update ReaR in the normal system
 # via this special built-in ReaR functionality because in the normal system
 # one can manually update ReaR as anything else.
 test "$WORKFLOW" != "recover" && return
-
-# Without a RECOVERY_UPDATE_URL there is nothing to do:
-test "$RECOVERY_UPDATE_URL" || return
 
 # The actual work:
 
