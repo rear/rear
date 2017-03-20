@@ -28,9 +28,11 @@ if [[ "$EFI" == "y" ]]; then
     # Round UEFI partition size to nearest block size. This to make the 2nd partition also align to the block size:
     USB_UEFI_PART_SIZE=$((($USB_UEFI_PART_SIZE + ($USB_PARTITION_ALIGN_BLOCK_SIZE / 2)) / $USB_PARTITION_ALIGN_BLOCK_SIZE * $USB_PARTITION_ALIGN_BLOCK_SIZE))
     LogPrint "Creating EFI system partition with size $USB_UEFI_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB on '$RAW_USB_DEVICE'"
-    parted -s $RAW_USB_DEVICE mkpart primary ${USB_PARTITION_ALIGN_BLOCK_SIZE}Mib "$((${USB_PARTITION_ALIGN_BLOCK_SIZE} + ${USB_UEFI_PART_SIZE}))"Mib || Error "Failed to create EFI system partition on '$RAW_USB_DEVICE'"
+    # part-type = 'ESP' && not 'primary' is used here. Source: an example at https://wiki.archlinux.org/index.php/GNU_Parted
+    parted -s $RAW_USB_DEVICE mkpart ESP fat16 ${USB_PARTITION_ALIGN_BLOCK_SIZE}Mib "$((${USB_PARTITION_ALIGN_BLOCK_SIZE} + ${USB_UEFI_PART_SIZE}))"Mib name 1 EFIBOOT || Error "Failed to create EFI system partition on '$RAW_USB_DEVICE'"
     LogPrint "Creating ReaR data partition up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
-    parted -s $RAW_USB_DEVICE mkpart primary "$((${USB_PARTITION_ALIGN_BLOCK_SIZE} + ${USB_UEFI_PART_SIZE}))"Mib ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% >&2 || Error "Failed to create ReaR data partition on '$RAW_USB_DEVICE'"
+    # Note: most Linux native file systems, like ext3 and ext4, map to the same partition code 0x83 (you will see ext2 using the parted print command)
+    parted -s $RAW_USB_DEVICE mkpart primary $USB_DEVICE_FILESYSTEM "$((${USB_PARTITION_ALIGN_BLOCK_SIZE} + ${USB_UEFI_PART_SIZE}))"Mib ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% name 2 REARDATA >&2 || Error "Failed to create ReaR data partition on '$RAW_USB_DEVICE'"
     # partition 1 is the EFI system partition (vfat partition) on which EFI/BOOT/BOOTX86.EFI resides
     ParNr=2
 else
@@ -49,14 +51,22 @@ case "$USB_DEVICE_PARTED_LABEL" in
         boot_flag="boot"
     ;;
     "gpt")
-        boot_flag="legacy_boot"
+        # Pure UEFI/GPT/EFISTUB booting or GRUB with legacy MBR?
+        # echo "SYSTEMD_BOOT=$SYSTEMD_BOOT"
+        # SYSTEMD_BOOT is not set here. Result: check for systemd-boot here
+        #  The 'if' statement below is copied from: usr/share/rear/prep/USB/Linux-i386/330_find_systemd-boot.sh
+        if [[ -d /sys/firmware/efi/efivars && -f /boot/EFI/systemd/systemd-bootx64.efi || -f /usr/lib/systemd/boot/efi/systemd-bootx64.efi ]]; then
+            boot_flag="esp"
+        else
+            boot_flag="legacy_boot"
+        fi
     ;;
     *)
         Error "USB_DEVICE_PARTED_LABEL is incorrectly set, please check your settings."
     ;;
 esac
 
-LogPrint "Setting '$boot_flag' flag on $RAW_USB_DEVICE"
+LogPrint "Setting '$boot_flag' flag on ${RAW_USB_DEVICE}1"
 parted -s $RAW_USB_DEVICE set 1 $boot_flag on >&2 || Error "Could not make first partition bootable on '$RAW_USB_DEVICE'"
 
 partprobe $RAW_USB_DEVICE

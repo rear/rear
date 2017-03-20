@@ -1,6 +1,8 @@
 # The file mbr.bin is only added since syslinux 3.08
 # The extlinux -i option is only added since syslinux 3.20
 
+is_true $SYSTEMD_BOOT && return
+
 local mbr_image_file
 
 # Choose right MBR image file for right partition table type (issue #1153)

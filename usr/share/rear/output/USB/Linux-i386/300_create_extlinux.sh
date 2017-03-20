@@ -1,3 +1,5 @@
+is_true $SYSTEMD_BOOT && return
+
 # Create a suitable syslinux configuration based on capabilities
 
 function get_usb_syslinux_version {

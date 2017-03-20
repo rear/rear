@@ -9,7 +9,12 @@ test -d $VAR_DIR/sysreqs || mkdir -m 755 $VAR_DIR/sysreqs
 
 {
 echo
-echo $( hostname ) - $( date '+%F %R' )
+# Not every system has a hostname command, try /etc/hostname first
+if test -f /etc/hostname ; then
+    echo $( cat /etc/hostname ) - $( date '+%F %R' )
+else
+    echo $( hostname ) - $( date '+%F %R' )
+fi
 echo
 
 #
@@ -36,7 +41,11 @@ fi
 
 echo
 echo "Relax-and-Recover version:"
-/usr/sbin/rear -V
+if test -f /usr/sbin/rear ; then
+    /usr/sbin/rear -V
+elif test -f ./usr/sbin/rear ; then
+    ./usr/sbin/rear -V
+fi
 echo
 
 #
@@ -57,12 +66,16 @@ echo
 #
 # VG information
 #
-echo "Volume Group info:"
-vgs --units=g
-echo
-echo "Logical Volume Groups info:"
-lvs --units=g
-echo
+if hash vgs 2>/dev/null; then
+  echo "Volume Group info:"
+  vgs --units=g
+  echo
+fi
+if hash lvs 2>/dev/null; then
+  echo "Logical Volume Groups info:"
+  lvs --units=g
+  echo
+fi
 
 #
 # Disk information
@@ -91,11 +104,15 @@ echo "  IP adresses:"
 # If "... DNS name" should not be output when there is no DNS name
 # a test whether or not <<$( dig +short -x ${ip%/*} )>> is empty would help.
 ip addr show | grep inet | grep -v 127.0.0. | sed -e "s/ brd.*//" -e "s/inet6//" -e "s/inet//" | while read ip ; do
-  DNSname="$( dig +short -x ${ip%/*} )"
+  if hash dig 2>/dev/null; then
+      DNSname="$( dig +short -x ${ip%/*} )"
+  else
+      DNSname=""
+  fi
   if test -z "$DNSname" ; then
       echo "    ip ${ip%/*} subnet /${ip#*/}"
   else
-      echo "    ip ${ip%/*} subnet /${ip#*/} DNS name $( dig +short -x ${ip%/*} )"
+      echo "    ip ${ip%/*} subnet /${ip#*/} DNS name $DNSname"
   fi
 done
 
