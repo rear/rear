@@ -1,18 +1,31 @@
 # Setting required environment for DRLM proper function
 
-if ! drlm_is_managed ; then
-    return 0
-fi
+is_true "$DRLM_MANAGED" || return 0
 
-PROGS=( "${PROGS[@]}" curl )
+# Needed for curl (HTTPs)
+COPY_AS_IS=( ${COPY_AS_IS[@]} /etc/ssl/certs/* /etc/pki/* )
 
-# Needed for curl with NSS support
-LIBS=( 
+LIBS=(
     "${LIBS[@]}"
-    /usr/lib*/libsoftokn3.so* 
-    /usr/lib*/libsqlite3.so* 
+    /lib*/libnsspem.so*
+    /usr/lib*/libnsspem.so*
+    /lib*/libfreebl*.so*
+    /usr/lib*/libfreebl*.so*
+    /lib*/libnss3.so*
+    /usr/lib*/libnss3.so*
+    /lib*/libnssutil3.so*
+    /usr/lib*/libnssutil3.so*
+    /lib*/libsoftokn3.so*
+    /usr/lib*/libsoftokn3.so*
+    /lib*/libsqlite3.so*
+    /usr/lib*/libsqlite3.so*
     /lib*/libfreeblpriv3.so*
     /usr/lib*/libfreeblpriv3.so*
+    /lib*/libssl.so*
+    /usr/lib*/libssl.so*
+    /lib*/libnssdbm3.so*
+    /usr/lib*/libnssdbm3.so*
 )
 
 drlm_import_runtime_config
+drlm_send_log

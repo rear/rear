@@ -37,6 +37,7 @@ binary-indep: build
 	# The DESTDIR Has To Be Exactly debian/rear
 	mkdir -vp \
 		debian/rear/etc/ \
+		debian/rear/etc/rear/cert/ \
 		debian/rear/usr/share/doc/ \
 		debian/rear/usr/sbin/ \
 		debian/rear/usr/share/ \
