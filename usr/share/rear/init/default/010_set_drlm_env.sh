@@ -1,8 +1,6 @@
 # Setting required environment for DRLM proper function
 
-if ! drlm_is_managed ; then
-    return 0
-fi
+is_true "$DRLM_MANAGED" || return 0
 
 # Needed for curl (HTTPs)
 COPY_AS_IS=( ${COPY_AS_IS[@]} /etc/ssl/certs/* /etc/pki/* )

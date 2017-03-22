@@ -6,16 +6,6 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-function drlm_is_managed() {
-
-    if [[ "$DRLM_MANAGED" == "y" ]]; then
-        return 0
-    else
-        return 1
-    fi
-
-}
-
 function drlm_import_runtime_config() {
 
     for arg in "${ARGS[@]}" ; do
@@ -57,6 +47,6 @@ function drlm_send_log() {
 
     # send log file in real time to DRLM
     LogPrint "DRLM_MANAGED: Sending Logfile: '$RUNTIME_LOGFILE' to DRLM in real time ..."
-    tail -f --lines=5000 --pid=$$ $RUNTIME_LOGFILE | curl $verbose -T- -f -s -S $DRLM_REST_OPTS https://$DRLM_SERVER/clients/$DRLM_ID/log/$WORKFLOW/$(date +%Y%m%d%H%M%S) &
+    ( tail -f --lines=5000 --pid=$$ $RUNTIME_LOGFILE | curl $verbose -T- -f -s -S $DRLM_REST_OPTS https://$DRLM_SERVER/clients/$DRLM_ID/log/$WORKFLOW/$(date +%Y%m%d%H%M%S) ) &
 
 }
