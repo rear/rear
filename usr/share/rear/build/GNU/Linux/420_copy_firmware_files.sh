@@ -25,7 +25,7 @@ if is_true "$FIRMWARE_FILES" ; then
     # Use a simple 'cp -a' for this case to be safe against possible issues
     # with the more complicated 'find ... | xargs cp' method below.
     # The '--parents' is needed to get the '/lib*/' directory in the copy.
-    cp $verbose -t $ROOTFS_DIR -a --parents /lib*/firmware
+    cp $verbose -t $ROOTFS_DIR -a --parents /lib*/firmware 1>&2
     return
 fi
 
