@@ -4,13 +4,11 @@
 # The 'unattended' parameter must be present on the boot command line - for the moment
 # this feature will only be used by automated PXE booting
 
-# Use an artificial array to get the kernel command line parameters as array elements
-kernel_command_line=( $( cat /proc/cmdline ) )
-for kernel_command_line_parameter in "${kernel_command_line[@]}" ; do
+for kernel_command_line_parameter in $( cat /proc/cmdline ) ; do
     if test "unattended" = "$kernel_command_line_parameter" ; then
         LogPrint "Switching off migration mode due to 'unattended' kernel option"
         MIGRATION_MODE=
-        break
+        return
     fi
 done
 
