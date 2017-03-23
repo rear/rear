@@ -57,12 +57,12 @@ sleep 1
 
 if rear_debug ; then
     echo -e "\nIn Relax-and-Recover debug mode a shell will be started by default on tty9\n"
-    read -n 1 -p "Press ENTER or type a digit '1...8' for another tty or '0' to skip it "
+    read -n 1 -p "Press ENTER or type a digit '2...8' for another tty or '0' to skip it "
     case "$REPLY" in
         (0)
             echo -e "\nNo debug mode shell started\n"
             ;;
-        ([1-8])
+        ([2-8])
             /bin/bash </dev/tty$REPLY >/dev/tty$REPLY 2>&1 &
             echo -e "\nStarted debug mode shell on tty$REPLY\n"
             ;;
@@ -71,8 +71,6 @@ if rear_debug ; then
             echo -e "\nStarted debug mode shell on tty9\n"
             ;;
     esac
-    echo -e "\nIn debug mode each system-setup script is run separatedly with 'set -x'\n"
-    read -p "Press ENTER to continue with the system-setup scripts "
 fi
 
 echo -e "\nConfiguring Relax-and-Recover rescue system\n"
@@ -91,6 +89,15 @@ for system_setup_script in /etc/scripts/system-setup.d/*.sh ; do
 done
 echo -e "\nRelax-and-Recover rescue system is ready\n"
 
+# In debug mode run the automated 'rear recover' also with debug options.
+# Because the kernel command line option 'debug' means 'set -x' for the system setup scripts
+# it also means '-D' (i.e. 'set -x') for the automated 'rear recover' run:
+if rear_debug ; then
+    rear_debug_options='-d -D'
+else
+    rear_debug_options=''
+fi
+
 # Launch rear recover automatically:
 if automatic_recovery ; then
     choices=( "View Relax-and-Recover log file(s)"
@@ -98,7 +105,7 @@ if automatic_recovery ; then
             )
     echo -e "\nLaunching 'rear recover' automatically\n"
     # The recover workflow is always verbose (see usr/sbin/rear):
-    if rear recover ; then
+    if rear $rear_debug_options recover ; then
         echo -e "\n'rear recover' finished successfully\n"
         choices=( "${choices[@]}"
                   "Reboot"
@@ -137,7 +144,7 @@ if unattended_recovery ; then
             )
     echo -e "\nLaunching 'rear recover' automatically in unattended mode\n"
     # The recover workflow is always verbose (see usr/sbin/rear):
-    if rear recover ; then
+    if rear $rear_debug_options recover ; then
         echo -e "\n'rear recover' finished successfully\n"
         echo -e "\nRebooting in 30 seconds (Ctrl-C to interrupt)\n"
         sleep 30
