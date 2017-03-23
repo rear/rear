@@ -9,7 +9,11 @@
 # (e.g. "ls foo*bar" becomes plain "ls" without "foo*bar: No such file or directory" error).
 shopt -s nullglob
 
-# Sourcing /etc/rear/local.conf as we need some variables:
+# Sourcing /etc/rear/local.conf as we need some variables.
+# TODO: I <jsmeix@suse.d> wonder why only local.conf and rescue.conf are sourced here.
+# What about config files like site.conf or os.conf and WORKFLOW.conf
+# and poaaibly other various distribution and architecture config files
+# that may also contain 'some variables' that might be needed by system-setup scripts?
 source /etc/rear/local.conf
 test -f /etc/rear/rescue.conf && source /etc/rear/rescue.conf
 
@@ -44,10 +48,29 @@ function automatic_recovery() {
     return 1
 }
 
+# The 'sleep 1' is used as workaround to avoid whatever inexplicable actual reason
+# that at least on SLES12 some initial output lines of this script would get lost
+# (perhaps somewhere in systemd's nowhere land) which results that in partricular
+# in Relax-and-Recover debug mode the user sits in front of an empty screen wondering
+# why nothing happens because in partricular the read prompt "Press ENTER ..." was lost:
+sleep 1
+
 if rear_debug ; then
-    echo -e "\nIn Relax-and-Recover debug mode a shell will be started on tty9\n"
-    read -p "Press ENTER to start the shell on tty9 "
-    /bin/bash </dev/tty9 >/dev/tty9 2>&1 &
+    echo -e "\nIn Relax-and-Recover debug mode a shell will be started by default on tty9\n"
+    read -n 1 -p "Press ENTER or type a digit '1...8' for another tty or '0' to skip it "
+    case "$REPLY" in
+        (0)
+            echo -e "\nNo debug mode shell started\n"
+            ;;
+        ([1-8])
+            /bin/bash </dev/tty$REPLY >/dev/tty$REPLY 2>&1 &
+            echo -e "\nStarted debug mode shell on tty$REPLY\n"
+            ;;
+        (*)
+            /bin/bash </dev/tty9 >/dev/tty9 2>&1 &
+            echo -e "\nStarted debug mode shell on tty9\n"
+            ;;
+    esac
     echo -e "\nIn debug mode each system-setup script is run separatedly with 'set -x'\n"
     read -p "Press ENTER to continue with the system-setup scripts "
 fi
