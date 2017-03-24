@@ -147,9 +147,9 @@ install-config:
 install-bin:
 	@echo -e "\033[1m== Installing binary ==\033[0;0m"
 	install -Dp -m0755 $(rearbin) $(DESTDIR)$(sbindir)/rear
-	sed -i -e 's,^CONFIG_DIR=.*,CONFIG_DIR="$(sysconfdir)/rear",' \
-		-e 's,^SHARE_DIR=.*,SHARE_DIR="$(datadir)/rear",' \
-		-e 's,^VAR_DIR=.*,VAR_DIR="$(localstatedir)/lib/rear",' \
+	sed -i -e 's,^CONFIG_DIR=.*,CONFIG_DIR="$(DESTDIR)$(sysconfdir)/rear",' \
+		-e 's,^SHARE_DIR=.*,SHARE_DIR="$(DESTDIR)$(datadir)/rear",' \
+		-e 's,^VAR_DIR=.*,VAR_DIR="$(DESTDIR)$(localstatedir)/lib/rear",' \
 		$(DESTDIR)$(sbindir)/rear
 
 install-data:
