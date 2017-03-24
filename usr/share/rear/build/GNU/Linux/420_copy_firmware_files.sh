@@ -6,7 +6,10 @@
 # is recognized as 'no' by the is_false function enforces that
 # no files from the /lib*/firmware/ directories get included
 # in the rescue/recovery system:
-is_false "$FIRMWARE_FILES" && return
+if is_false "$FIRMWARE_FILES" ; then
+    LogPrint "Omit copying files in /lib*/firmware/ (FIRMWARE_FILES='$FIRMWARE_FILES')"
+    return
+fi
 
 # The by default empty FIRMWARE_FILES array means that
 # usually all files in the /lib*/firmware/ directories
