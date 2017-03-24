@@ -37,7 +37,8 @@ for block_device in /sys/block/* ; do
     fi
     # Get all strings in the first 512*4=2048 bytes on the disk:
     bootloader_area_strings_file="$TMP_DIR/bootloader_area_strings"
-    dd if=$disk_device bs=512 count=4 | strings >$bootloader_area_strings_file
+    block_size=$( get_block_size ${disk_device##*/} )
+    dd if=$disk_device bs=$block_size count=4 | strings >$bootloader_area_strings_file
     # Examine the strings in the first bytes on the disk to guess the used bootloader,
     # see layout/save/default/450_check_bootloader_files.sh for the known bootloaders.
     # Test the more specific strings first because the first match wins:
