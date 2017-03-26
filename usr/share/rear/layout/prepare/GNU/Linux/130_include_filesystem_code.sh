@@ -130,6 +130,10 @@ function create_fs () {
                 ( echo "if ! mkfs.xfs -f -m uuid=$uuid $xfs_opts $device >&2; then"
                   echo "    mkfs.xfs -f $xfs_opts $device >&2"
                   echo "    xfs_admin -U $uuid $device >&2"
+                  # xfs_admin -U might cause dirty structure and problems with
+                  # mounting.
+                  # xfs_repair will fix this.
+                  echo "    xfs_repair $device"
                   echo "fi"
                 ) >> "$LAYOUT_CODE"
             else
