@@ -4,98 +4,171 @@
 # the purpose is to have different skel areas contribute different scripts into
 # the system-setup stage
 
-# set null globbing, we need this for our scripts
+# Set null globbing, we need this for our scripts (cf. usr/sbin/rear).
+# With nullglob set when e.g. for foo*bar no file matches are found, then foo*bar is removed
+# (e.g. "ls foo*bar" becomes plain "ls" without "foo*bar: No such file or directory" error).
 shopt -s nullglob
 
-# sourcing our /etc/rear/local.conf file as we need some variables
-. /etc/rear/local.conf
-[[ -f /etc/rear/rescue.conf ]] && . /etc/rear/rescue.conf
+# Sourcing /etc/rear/local.conf as we need some variables.
+# TODO: I <jsmeix@suse.de> wonder why only local.conf (and rescue.conf) are sourced here.
+# What about config files like site.conf or os.conf and WORKFLOW.conf
+# and possibly other various distribution and architecture config files
+# that may also contain 'some variables' that might be needed by system-setup scripts?
+source /etc/rear/local.conf
+test -f /etc/rear/rescue.conf && source /etc/rear/rescue.conf
 
-function debug() {
-	read -r </proc/cmdline
-	case "$REPLY" in
-		(*debug*) return 0 ;;
-		(*) return 1;;
-	esac
+# Use an artificial array to get the kernel command line parameters as array elements
+kernel_command_line=( $( cat /proc/cmdline ) )
+
+function rear_debug() {
+    for kernel_command_line_parameter in "${kernel_command_line[@]}" ; do
+        test "debug" = "$kernel_command_line_parameter" && return 0
+    done
+    return 1
 }
 
-if debug ; then
-	echo "---> DEBUG MODE ENABLED, starting shell on tty9 <---"
-	echo
-	/bin/bash </dev/tty9 >/dev/tty9 2>&1 &
+function unattended_recovery() {
+    for kernel_command_line_parameter in "${kernel_command_line[@]}" ; do
+        test "unattended" = "$kernel_command_line_parameter" && return 0
+    done
+    return 1
+}
+
+function automatic_recovery() {
+    # The unattended recovery mode implies automatic recovery (see the implementations below)
+    # so that in unattended mode the automatic recovery code below must not be run
+    # otherwise first the automatic recovery code and then the unattended recovery code
+    # get run automatically one after the other where the unattended recovery fails
+    # because for two subsequent 'rear recover' the second one fails:
+    unattended_recovery && return 1
+    for kernel_command_line_parameter in "${kernel_command_line[@]}" ; do
+        test "auto_recover" = "$kernel_command_line_parameter" && return 0
+        test "automatic" = "$kernel_command_line_parameter" && return 0
+    done
+    return 1
+}
+
+# The 'sleep 1' is used as workaround to avoid whatever inexplicable actual reason
+# that at least on SLES12 some initial output lines of this script would get lost
+# (perhaps somewhere in systemd's nowhere land) which results that in partricular
+# in Relax-and-Recover debug mode the user sits in front of an empty screen wondering
+# why nothing happens because in partricular the read prompt "Press ENTER ..." was lost:
+sleep 1
+
+if rear_debug ; then
+    echo -e "\nIn Relax-and-Recover debug mode a shell will be started by default on tty9\n"
+    read -n 1 -p "Press ENTER or type a digit '2...8' for another tty or '0' to skip it "
+    case "$REPLY" in
+        (0)
+            echo -e "\nNo debug mode shell started\n"
+            ;;
+        ([2-8])
+            /bin/bash </dev/tty$REPLY >/dev/tty$REPLY 2>&1 &
+            echo -e "\nStarted debug mode shell on tty$REPLY\n"
+            ;;
+        (*)
+            /bin/bash </dev/tty9 >/dev/tty9 2>&1 &
+            echo -e "\nStarted debug mode shell on tty9\n"
+            ;;
+    esac
 fi
 
-echo "* * * Configuring Rescue System * * *"
-for s in /etc/scripts/system-setup.d/*.sh ; do
-	if debug ; then
-		read -p "Press ENTER to run $(basename $s) "
-		set -x
-	else
-		echo "Running $(basename $s)..."
-	fi
-	source $s
-	set +x
+echo -e "\nConfiguring Relax-and-Recover rescue system\n"
+for system_setup_script in /etc/scripts/system-setup.d/*.sh ; do
+    if rear_debug ; then
+        read -p "Press ENTER to run $( basename $system_setup_script ) "
+        set -x
+        source $system_setup_script
+        # The only known way how to do 'set +x' after 'set -x' without a '+ set +x' output:
+        { set +x ; } 2>/dev/null
+        echo
+    else
+        echo "Running $( basename $system_setup_script )..."
+        source $system_setup_script
+    fi
 done
-echo "* * * Rescue System is ready * * *"
+echo -e "\nRelax-and-Recover rescue system is ready\n"
 
-# Launch rear recover automatically
-if grep -q -e 'auto_recover' -e 'automatic' /proc/cmdline ; then
-	choices=(
-	    "View Relax-and-Recover log"
-	    "Go to Relax-and-Recover shell"
-	)
-	
-	rear recover -v
-	if [ $? -eq 0 ] ; then
-	    choices=(
-	    "${choices[@]}"
-	    "Reboot"
-	    )
-	    echo -e "\n\n Success !\n"
-	else
-	    echo -e "\n\n Errors, please see log file !\n"
-	fi
-
-	PS3="What do you want to do now ? "
-	select choice in "${choices[@]}"; do
-	    case "$REPLY" in
-		(1) less /var/log/rear/rear-$HOSTNAME.log;;
-		(2) echo "" > /etc/issue
-		    echo "" > /etc/motd
-		    break;;
-		(3) reboot;;
-	    esac
-	    for (( i=1; i <= ${#choices[@]}; i++ )); do
-		echo "$i) ${choices[$i-1]}"
-	    done
-	done 2>&1
+# In debug mode run the automated 'rear recover' also with debug options.
+# Because the kernel command line option 'debug' means 'set -x' for the system setup scripts
+# it also means '-D' (i.e. 'set -x') for the automated 'rear recover' run:
+if rear_debug ; then
+    rear_debug_options='-d -D'
+else
+    rear_debug_options=''
 fi
+
+# Launch rear recover automatically:
+if automatic_recovery ; then
+    choices=( "View Relax-and-Recover log file(s)"
+              "Go to Relax-and-Recover shell"
+            )
+    echo -e "\nLaunching 'rear recover' automatically\n"
+    # The recover workflow is always verbose (see usr/sbin/rear):
+    if rear $rear_debug_options recover ; then
+        echo -e "\n'rear recover' finished successfully\n"
+        choices=( "${choices[@]}"
+                  "Reboot"
+                )
+    else
+        echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
+    fi
+    PS3="Select what to do "
+    select choice in "${choices[@]}" ; do
+        case "$REPLY" in
+            (1)
+                # Do not assume the ReaR log file is named rear-$HOSTNAME.log
+                # the user can have specified any name as LOGFILE:
+                less /var/log/rear/*
+                ;;
+            (2)
+                echo "" > /etc/issue
+                echo "" > /etc/motd
+                break
+                ;;
+            (3)
+                reboot
+                ;;
+        esac
+        for (( i=1 ; i <= ${#choices[@]} ; i++ )) ; do
+            echo "$i) ${choices[$i-1]}"
+        done
+    done 2>&1
+fi
+
 # Launch rear recover automatically in unattended mode
-# Experts only mode - hope you know what you are doing
-if grep -q 'unattended'  /proc/cmdline ; then
-    choices=(
-        "View Relax-and-Recover log"
-        "Go to Relax-and-Recover shell"
-    )
-    rear recover -v
-    if [ $? -eq 0 ] ; then
-        echo -e "\n\n Success !\n"
+# i.e. with automated reboot after successful 'rear recover':
+if unattended_recovery ; then
+    choices=( "View Relax-and-Recover log file(s)"
+              "Go to Relax-and-Recover shell"
+            )
+    echo -e "\nLaunching 'rear recover' automatically in unattended mode\n"
+    # The recover workflow is always verbose (see usr/sbin/rear):
+    if rear $rear_debug_options recover ; then
+        echo -e "\n'rear recover' finished successfully\n"
         echo -e "\nRebooting in 30 seconds (Ctrl-C to interrupt)\n"
         sleep 30
         reboot
     else
-        echo -e "\n\n Errors, please see log file !\n"
-        PS3="What do you want to do now ? "
-        select choice in "${choices[@]}"; do
+        echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
+        PS3="Select what to do "
+        select choice in "${choices[@]}" ; do
             case "$REPLY" in
-                (1) less /var/log/rear/rear-$HOSTNAME.log;;
-                (2) echo "" > /etc/issue
+                (1)
+                    # Do not assume the ReaR log file is named rear-$HOSTNAME.log
+                    # the user can have specified any name as LOGFILE:
+                    less /var/log/rear/*
+                    ;;
+                (2)
+                    echo "" > /etc/issue
                     echo "" > /etc/motd
-                    break;;
+                    break
+                    ;;
             esac
-            for (( i=1; i <= ${#choices[@]}; i++ )); do
+            for (( i=1 ; i <= ${#choices[@]} ; i++ )) ; do
                 echo "$i) ${choices[$i-1]}"
             done
         done 2>&1
     fi
 fi
+
