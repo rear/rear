@@ -1,11 +1,13 @@
+
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# If any of our bootloader files changes then we should trigger a new savelayout or mkrescue
-# prep/default/500_guess_bootloader.sh script created $VAR_DIR/recovery/bootloader file
-myBOOTloader=$( cat $VAR_DIR/recovery/bootloader )
+# If the files of the used bootloader change then we should trigger a new savelayout or mkrescue.
+# The layout/save/default/445_guess_bootloader.sh script created $VAR_DIR/recovery/bootloader file.
+# An artificial bash array is used so that the first array element $used_bootloader is the used bootloader:
+used_bootloader=( $( cat $VAR_DIR/recovery/bootloader ) )
 
-case $myBOOTloader in
+case $used_bootloader in
     (EFI|GRUB2-EFI)
         CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /boot/efi/EFI/*/grub*.cfg )
         ;;
@@ -22,6 +24,7 @@ case $myBOOTloader in
         CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/lilo.conf /etc/yaboot.conf)
         ;;
     (*)
-        BugError "Unknown bootloader ($myBOOTloader) - ask for sponsoring to get this fixed"
+        BugError "Unknown bootloader ($used_bootloader) - ask for sponsoring to get this fixed"
         ;;
 esac
+
