@@ -1,28 +1,33 @@
-if [[ "$EFI" == "Yes" ]]; then
-    ParNr=2
+
+if [[ "$EFI" == "Yes" ]] ; then
+    ReaR_Data_Partition_Number=2
 else
-    ParNr=1
+    ReaR_Data_Partition_Number=1
 fi
 
-case "$ID_FS_TYPE" in
+# Artificial 'for' clause that is run only once
+# to be able to 'continue' with the code after it:
+for dummy in "once" ; do
+    case "$ID_FS_TYPE" in
+        ext*)
+            USB_LABEL="$( e2label ${RAW_USB_DEVICE}${ReaR_Data_Partition_Number} )"
+            test "REAR-000" = "$USB_LABEL" && continue
+            LogPrint "Setting filesystem label to REAR-000"
+            if ! e2label ${RAW_USB_DEVICE}${ReaR_Data_Partition_Number} REAR-000 ; then
+                Error "Could not label '${RAW_USB_DEVICE}${ReaR_Data_Partition_Number}' with REAR-000"
+            fi
+            USB_LABEL="$( e2label ${RAW_USB_DEVICE}${ReaR_Data_Partition_Number} )"
+            ;;
+        btrfs)
+            USB_LABEL="$( btrfs filesystem label ${RAW_USB_DEVICE}${ReaR_Data_Partition_Number} )"
+            test "REAR-000" = "$USB_LABEL" && continue
+            LogPrint "Setting filesystem label to REAR-000"
+            if ! btrfs filesystem label ${RAW_USB_DEVICE}${ReaR_Data_Partition_Number} REAR-000 ; then
+                Error "Could not label '${RAW_USB_DEVICE}${ReaR_Data_Partition_Number}' with REAR-000"
+            fi
+            USB_LABEL="$( btrfs filesystem label ${RAW_USB_DEVICE}${ReaR_Data_Partition_Number} )"
+            ;;
+    esac
+done
+LogPrint "Device '${RAW_USB_DEVICE}${ReaR_Data_Partition_Number}' has label '$USB_LABEL'"
 
-	ext*)
-		USB_LABEL="$(e2label ${RAW_USB_DEVICE}${ParNr})"
-		if [[ "$USB_LABEL" != "REAR-000" ]]; then
-			LogPrint "Setting filesystem label to REAR-000"
-			e2label ${RAW_USB_DEVICE}${ParNr} REAR-000
-			StopIfError "Could not label '${RAW_USB_DEVICE}${ParNr}' with REAR-000"
-			USB_LABEL="$(e2label ${RAW_USB_DEVICE}${ParNr})"
-		fi
-		;;
-	btrfs)
-		USB_LABEL="$(btrfs filesystem label ${RAW_USB_DEVICE}${ParNr})"
-		if [[ "$USB_LABEL" != "REAR-000" ]]; then
-			LogPrint "Setting filesystem label to REAR-000"
-			btrfs filesystem label ${RAW_USB_DEVICE}${ParNr} REAR-000
-			StopIfError "Could not label '${RAW_USB_DEVICE}${ParNr}' with REAR-000"
-			USB_LABEL="$(btrfs filesystem label ${RAW_USB_DEVICE}${ParNr})"
-		fi
-		;;
-esac
-Log "Device '${RAW_USB_DEVICE}${ParNr}' has label $USB_LABEL"
