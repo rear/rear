@@ -21,7 +21,7 @@ test $USB_PARTITION_ALIGN_BLOCK_SIZE -ge 1 || USB_PARTITION_ALIGN_BLOCK_SIZE="1"
 # so that parted is called with bytes 'B' as unit to be backward compatible:
 MiB_bytes=$(( 1024 * 1024 ))
 
-if [[ "$EFI" == "y" ]] ; then
+if is_true "$EFI" ; then
     LogPrint "The --efi toggle was used with format - making an EFI bootable device '$RAW_USB_DEVICE'"
     # Prompt user for size of EFI system partition on USB disk if no valid value is specified:
     while ! [[ "$USB_UEFI_PART_SIZE" =~ ^[0-9]+$ && $USB_UEFI_PART_SIZE > 0 ]] ; do
@@ -50,8 +50,8 @@ if [[ "$EFI" == "y" ]] ; then
     # Calculate byte value for the start of the subsequent ReaR data partition:
     data_partition_start_byte=$(( efi_partition_end_byte + 1 ))
     # Partition 1 is the EFI system partition (vfat partition) on which EFI/BOOT/BOOTX86.EFI resides.
-    # ReaR_Data_Partition_Number is used below and in the subsequent 350_label_usb_disk.sh script for the ReaR data partition:
-    ReaR_Data_Partition_Number=2
+    # rear_data_partition_number is used below and in the subsequent 350_label_usb_disk.sh script for the ReaR data partition:
+    rear_data_partition_number=2
 else
     # If not set use fallback value 'msdos' (same as the default value in default.conf):
     test "msdos" = "$USB_DEVICE_PARTED_LABEL" -o "gpt" = "$USB_DEVICE_PARTED_LABEL" || USB_DEVICE_PARTED_LABEL="msdos"
@@ -62,8 +62,8 @@ else
     LogPrint "Creating ReaR data partition up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
     # Calculate byte value for the start of the subsequent ReaR data partition:
     data_partition_start_byte=$(( USB_PARTITION_ALIGN_BLOCK_SIZE * MiB_bytes ))
-    # ReaR_Data_Partition_Number is used below and in the subsequent 350_label_usb_disk.sh script for the ReaR data partition:
-    ReaR_Data_Partition_Number=1
+    # rear_data_partition_number is used below and in the subsequent 350_label_usb_disk.sh script for the ReaR data partition:
+    rear_data_partition_number=1
 fi
 LogPrint "Creating ReaR data partition up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
 # Older parted versions (at least GNU Parted 1.6.25.1 on SLE10) support the '%' unit (cf. https://github.com/rear/rear/issues/1270):
@@ -94,7 +94,7 @@ partprobe $RAW_USB_DEVICE
 # Wait until udev has had the time to kick in
 sleep 5
 
-if [[ "$EFI" == "y" ]] ; then
+if is_true "$EFI" ; then
     LogPrint "Creating vfat filesystem on EFI system partition on '${RAW_USB_DEVICE}1'"
     if ! mkfs.vfat $v -F 16 -n REAR-EFI ${RAW_USB_DEVICE}1 >&2 ; then
         Error "Failed to create vfat filesystem on '${RAW_USB_DEVICE}1'"
@@ -105,13 +105,15 @@ if [[ "$EFI" == "y" ]] ; then
     sleep 5
 fi
 
-LogPrint "Creating $USB_DEVICE_FILESYSTEM filesystem with label 'REAR-000' on '${RAW_USB_DEVICE}${ReaR_Data_Partition_Number}'"
-if ! mkfs.$USB_DEVICE_FILESYSTEM -L REAR-000 ${USB_DEVICE_FILESYSTEM_PARAMS} ${RAW_USB_DEVICE}${ReaR_Data_Partition_Number} >&2 ; then
-    Error "Failed to create $USB_DEVICE_FILESYSTEM filesystem on '${RAW_USB_DEVICE}${ReaR_Data_Partition_Number}'"
+local rear_data_partition_device="$RAW_USB_DEVICE$rear_data_partition_number"
+
+LogPrint "Creating $USB_DEVICE_FILESYSTEM filesystem with label 'REAR-000' on '$rear_data_partition_device'"
+if ! mkfs.$USB_DEVICE_FILESYSTEM -L REAR-000 ${USB_DEVICE_FILESYSTEM_PARAMS} $rear_data_partition_device >&2 ; then
+    Error "Failed to create $USB_DEVICE_FILESYSTEM filesystem on '$rear_data_partition_device'"
 fi
 
-LogPrint "Adjusting filesystem parameters on '${RAW_USB_DEVICE}${ReaR_Data_Partition_Number}'"
-if ! tune2fs -c 0 -i 0 -o acl,journal_data,journal_data_ordered ${RAW_USB_DEVICE}${ReaR_Data_Partition_Number} >&2 ; then
-    Error "Failed to adjust filesystem parameters on '${RAW_USB_DEVICE}${ReaR_Data_Partition_Number}'"
+LogPrint "Adjusting filesystem parameters on '$rear_data_partition_device'"
+if ! tune2fs -c 0 -i 0 -o acl,journal_data,journal_data_ordered $rear_data_partition_device >&2 ; then
+    Error "Failed to adjust filesystem parameters on '$rear_data_partition_device'"
 fi
 
