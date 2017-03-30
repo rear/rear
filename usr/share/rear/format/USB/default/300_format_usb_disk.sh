@@ -59,7 +59,6 @@ else
     if ! parted -s $RAW_USB_DEVICE mklabel $USB_DEVICE_PARTED_LABEL >&2 ; then
         Error "Failed to create $USB_DEVICE_PARTED_LABEL partition table on '$RAW_USB_DEVICE'"
     fi
-    LogPrint "Creating ReaR data partition up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
     # Calculate byte value for the start of the subsequent ReaR data partition:
     data_partition_start_byte=$(( USB_PARTITION_ALIGN_BLOCK_SIZE * MiB_bytes ))
     # rear_data_partition_number is used below and in the subsequent 350_label_usb_disk.sh script for the ReaR data partition:

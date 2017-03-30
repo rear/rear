@@ -10,7 +10,7 @@ WORKFLOW_format_DESCRIPTION="Format and label medium for use with ReaR"
 WORKFLOWS=( ${WORKFLOWS[@]} format )
 WORKFLOW_format () {
 
-    local device_to_be_formatted=""
+    DEVICE=""
 
     # Parse options
     # (do not use OPTS here because that is readonly in the rear main script):
@@ -30,6 +30,7 @@ WORKFLOW_format () {
                 FORCE=y
                 ;;
             (-h|--help)
+                echo "Use '$PROGRAM format DEVICE' like '$PROGRAM format /dev/sdX'"
                 echo "Valid options are: -e/--efi, -f/--force or -y/--yes"
                 # TODO: Use proper exit codes cf. https://github.com/rear/rear/issues/1134
                 exit 1
@@ -45,8 +46,8 @@ WORKFLOW_format () {
                 break
                 ;;
             (/*)
-                test "$device_to_be_formatted" && Error "Device $device_to_be_formatted already provided, only one argument is accepted"
-                device_to_be_formatted=$1
+                test "$DEVICE" && Error "Device $DEVICE already provided, only one argument is accepted"
+                DEVICE=$1
                 ;;
             (*)
                 Error "Argument $1 is not accepted."
@@ -55,25 +56,31 @@ WORKFLOW_format () {
         shift
     done
 
-    if [[ -z "$device_to_be_formatted" ]] ; then
-        test "$SIMULATE" || Error "No device provided as argument."
-        # Simulation mode should work even without a device specified
-        # see https://github.com/rear/rear/issues/1098#issuecomment-268973536
-        LogPrint "Simulation mode for the format workflow with a USB device /dev/sdX:"
-        OUTPUT=USB
-        SourceStage "format"
-        LogPrint "Simulation mode for the format workflow with a OBDR tape device /dev/stX:"
-        OUTPUT=OBDR
-        SourceStage "format"
-        return 0
+    if test -z "$DEVICE" ; then
+        if is_true "$SIMULATE" ; then
+            # Simulation mode should work even without a device specified
+            # see https://github.com/rear/rear/issues/1098#issuecomment-268973536
+            LogPrint "Simulation mode for the format workflow with a USB device /dev/sdX:"
+            OUTPUT=USB
+            SourceStage "format"
+            LogPrint "Simulation mode for the format workflow with a OBDR tape device /dev/stX:"
+            OUTPUT=OBDR
+            SourceStage "format"
+            return 0
+        else
+            Print "Use '$PROGRAM format DEVICE' like '$PROGRAM format /dev/sdX'"
+            Print "Valid options are: -e/--efi -f/--force -y/--yes"
+            Print "Use '$PROGRAM format -- --help' for more information."
+            Error "No device provided as argument."
+        fi
     fi
 
-    if [[ -c "$device_to_be_formatted" ]] ; then
+    if [[ -c "$DEVICE" ]] ; then
         OUTPUT=OBDR
-    elif [[ -b "$device_to_be_formatted" ]] ; then
+    elif [[ -b "$DEVICE" ]] ; then
         OUTPUT=USB
     else
-        Error "Device $device_to_be_formatted is neither a character, nor a block device."
+        Error "Device $DEVICE is neither a character, nor a block device."
     fi
 
     SourceStage "format"

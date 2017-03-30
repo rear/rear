@@ -40,6 +40,10 @@ for dummy in "once" ; do
             fi
             USB_LABEL="$( btrfs filesystem label $rear_data_partition_device )"
             ;;
+        (*)
+            # ID_FS_TYPE can be 'unknown', cf. format/USB/default/200_check_usb_layout.sh
+            return
+            ;;
     esac
 done
 
