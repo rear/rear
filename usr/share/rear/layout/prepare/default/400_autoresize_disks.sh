@@ -73,7 +73,7 @@ while read type device size junk ; do
             name=${data%|*}
             partition_size=${data#*|}
 
-            new_size=$(echo "$partition_size $resizeable_space $available_space" | awk '{ printf "%d", ($1/$2)*$3; }')
+            new_size=$(( ( $partition_size / $resizeable_space ) * $available_space ))
 
             (( new_size > 0 ))
             BugIfError "Partition $name resized to a negative number."
