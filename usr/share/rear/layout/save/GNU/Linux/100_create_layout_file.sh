@@ -6,6 +6,12 @@ mkdir -p $v $VAR_DIR/layout >&2
 mkdir -p $v $VAR_DIR/recovery >&2
 mkdir -p $v $VAR_DIR/layout/config >&2
 
+# We need directory for XFS options only if XFS is in use
+if [ -n "$(mount -t xfs)" ]; then
+    LAYOUT_XFS_OPT_DIR="$VAR_DIR/layout/xfs"
+    mkdir -p $v $LAYOUT_XFS_OPT_DIR >&2
+fi
+
 DISKLAYOUT_FILE=${DISKLAYOUT_FILE:-$VAR_DIR/layout/disklayout.conf}
 
 if [ -e "$DISKLAYOUT_FILE" ] ; then

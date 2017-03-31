@@ -146,6 +146,8 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 uuid=$(xfs_admin -u $device | cut -d'=' -f 2 | tr -d " ")
                 label=$(xfs_admin -l $device | cut -d'"' -f 2)
                 echo -n " uuid=$uuid label=$label "
+                xfs_info $device > $LAYOUT_XFS_OPT_DIR/$(basename ${device}.xfs)
+                StopIfError "Failed to save XFS options of $device"
                 ;;
             (reiserfs)
                 uuid=$(debugreiserfs $device | grep "UUID" | cut -d":" -f "2" | tr -d " ")
@@ -370,10 +372,10 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
 			# Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
                         for p in chattr lsattr
                         do
-                            if ! IsInArray "$p" "${PROGS[@]}"; then 
+                            if ! IsInArray "$p" "${PROGS[@]}"; then
                                 PROGS=( ${PROGS[@]} "$p" )
                             fi
-                        done 
+                        done
                         echo "btrfsnocopyonwrite $btrfs_subvolume_path"
                     else
                         echo "# $subvolume_mountpoint has the 'no copy on write' attribute set but $findmnt_command does not show its btrfs subvolume path"

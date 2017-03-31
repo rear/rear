@@ -4,9 +4,10 @@ LAYOUT_FILE="$VAR_DIR/layout/disklayout.conf"
 LAYOUT_DEPS="$VAR_DIR/layout/diskdeps.conf"
 LAYOUT_TODO="$VAR_DIR/layout/disktodo.conf"
 LAYOUT_CODE="$VAR_DIR/layout/diskrestore.sh"
+LAYOUT_XFS_OPT_DIR="$VAR_DIR/layout/xfs"
 
 FS_UUID_MAP="$VAR_DIR/layout/fs_uuid_mapping"
-LUN_WWID_MAP="$VAR_DIR/layout/lun_wwid_mapping" 
+LUN_WWID_MAP="$VAR_DIR/layout/lun_wwid_mapping"
 
 # Touchfiles for layout recreation.
 LAYOUT_TOUCHDIR="$TMP_DIR/touch"
@@ -23,7 +24,7 @@ if [ -e $CONFIG_DIR/disklayout.conf ] ; then
     cp $CONFIG_DIR/disklayout.conf $LAYOUT_FILE
     MIGRATION_MODE="true"
     LogPrint "$CONFIG_DIR/disklayout.conf exists, entering Migration mode."
-    
+
     if [ -e $CONFIG_DIR/lun_wwid_mapping.conf ] ; then
         cp $CONFIG_DIR/lun_wwid_mapping.conf $LUN_WWID_MAP
 		LogPrint "$CONFIG_DIR/lun_wwid_mapping.conf exists, creating lun_wwid_mapping"

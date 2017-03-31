@@ -114,19 +114,31 @@ function create_fs () {
             # If available use wipefs to cleanup disk partition:
             test "$has_wipefs" && echo "$wipefs_command" >> "$LAYOUT_CODE"
 
+            # Load xfs options from configuration files saved during
+            # 'rear mkbackup/mkrescue' by xfs_info.
+            # xfs info is called in 230_filesystem_layout.sh (layout/prepare)
+            # xfs_opts will be used as additional parameter for mkfs.xfs and
+            # ensures that xfs filesystem will be created exactly as original.
+            local xfs_opts
+            xfs_opts=$(xfs_parse $LAYOUT_XFS_OPT_DIR/$(basename ${device}.xfs))
+
             # Decide if mkfs.xfs or xfs_admin will set uuid.
             # Uuid set by xfs_admin will set incompatible flag on systems with
             # enabled CRC. This might cause ReaR failure during grub installation.
             # See: https://github.com/rear/rear/issues/1065
             if [ -n "$uuid" ]; then
-                ( echo "if ! mkfs.xfs -f -m uuid=$uuid $device >&2; then"
-                  echo "    mkfs.xfs -f $device >&2"
+                ( echo "if ! mkfs.xfs -f -m uuid=$uuid $xfs_opts $device >&2; then"
+                  echo "    mkfs.xfs -f $xfs_opts $device >&2"
                   echo "    xfs_admin -U $uuid $device >&2"
+                  # xfs_admin -U might cause dirty structure and problems with
+                  # mounting.
+                  # xfs_repair will fix this.
+                  echo "    xfs_repair $device"
                   echo "fi"
                 ) >> "$LAYOUT_CODE"
             else
                 # Actually create the filesystem
-                echo "mkfs.xfs -f $device >&2" >> "$LAYOUT_CODE"
+                echo "mkfs.xfs -f $xfs_opts $device >&2" >> "$LAYOUT_CODE"
             fi
 
             # Set the label:
