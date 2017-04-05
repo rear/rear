@@ -11,6 +11,7 @@ local opath=$(output_path $scheme $path)
 [ -z "$opath" ] && return 0
 
 if [[ "$OUTPUT" == "PXE" && "$scheme" == "nfs" ]]; then
+    # Need directory with read access to everyone for tftp use (nobody user)
     mkdir -p $v -m0755 "${opath}" >&2
 else
     mkdir -p $v -m0750 "${opath}" >&2
