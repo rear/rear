@@ -12,7 +12,12 @@ cat /dev/null > $VAR_DIR/recovery/capabilities
 # getcap and setcap are mandatory when NETFS_RESTORE_CAPABILITIES has a non-empty array member:
 has_binary getcap && has_binary setcap || Error "getcap and setcap are needed when NETFS_RESTORE_CAPABILITIES is non-empty"
 
+# Empty values must be avoided for egrep -v because egrep -v '' or egrep -v 'something|' matches all:
+exclude_directories="$BUILD_DIR"
+test "$ISO_DIR" && exclude_directories="$exclude_directories|$ISO_DIR"
+
+# The actual work:
 for directory in "${NETFS_RESTORE_CAPABILITIES[@]}" ; do
-    getcap -r $directory 2>/dev/null | egrep -v "$TMPDIR|$ISO_DIR" >> $VAR_DIR/recovery/capabilities
+    getcap -r $directory | egrep -v "$exclude_directories" >> $VAR_DIR/recovery/capabilities
 done
 
