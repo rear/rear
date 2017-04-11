@@ -24,6 +24,8 @@ is_true "$NETFS_RESTORE_CAPABILITIES" && NETFS_RESTORE_CAPABILITIES=( '/' )
 # The actual work:
 LogPrint "Saving file capabilities (NETFS_RESTORE_CAPABILITIES)"
 for directory in "${NETFS_RESTORE_CAPABILITIES[@]}" ; do
-    getcap -r $directory | egrep -v "$exclude_directories" >> $VAR_DIR/recovery/capabilities
+    # Ignore stderr to avoid thousands of 'Failed to get capabilities of file'
+    # stderr messages for directories like /proc /sys /dev in case of 'getcap -r /':
+    getcap -r $directory 2>/dev/null | egrep -v "$exclude_directories" >> $VAR_DIR/recovery/capabilities
 done
 
