@@ -7,7 +7,7 @@
 test "${NETFS_RESTORE_CAPABILITIES[*]}" || return 0
 
 # Save capapilities to /var/lib/rear/recovery/capabilities:
-echo /dev/null > $VAR_DIR/recovery/capabilities
+cat /dev/null > $VAR_DIR/recovery/capabilities
 
 # getcap and setcap are mandatory when NETFS_RESTORE_CAPABILITIES has a non-empty array member:
 has_binary getcap && has_binary setcap || Error "getcap and setcap are needed when NETFS_RESTORE_CAPABILITIES is non-empty"
