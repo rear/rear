@@ -22,6 +22,7 @@ test "$ISO_DIR" && exclude_directories="$exclude_directories|$ISO_DIR"
 is_true "$NETFS_RESTORE_CAPABILITIES" && NETFS_RESTORE_CAPABILITIES=( '/' )
 
 # The actual work:
+LogPrint "Saving file capabilities (NETFS_RESTORE_CAPABILITIES)"
 for directory in "${NETFS_RESTORE_CAPABILITIES[@]}" ; do
     getcap -r $directory | egrep -v "$exclude_directories" >> $VAR_DIR/recovery/capabilities
 done

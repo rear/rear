@@ -21,7 +21,7 @@ if ! test "$capabilities_file" ; then
     return 0
 fi
 
-LogPrint "Restoring capabilities (NETFS_RESTORE_CAPABILITIES)"
+LogPrint "Restoring file capabilities (NETFS_RESTORE_CAPABILITIES)"
 while IFS="=" read file cap ; do
     file="${file% }"
     cap="${cap# }"
