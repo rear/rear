@@ -5,6 +5,8 @@
 # For the 'test' one must have all array members as a single word i.e. "${name[*]}" because
 # the test should succeed when there is any non-empty array member, not necessarily the first one:
 test "${NETFS_RESTORE_CAPABILITIES[*]}" || return 0
+# Be backward compatible:
+is_false "$NETFS_RESTORE_CAPABILITIES" && return 0
 
 # Save capapilities to /var/lib/rear/recovery/capabilities:
 cat /dev/null > $VAR_DIR/recovery/capabilities
@@ -15,6 +17,9 @@ has_binary getcap && has_binary setcap || Error "getcap and setcap are needed wh
 # Empty values must be avoided for egrep -v because egrep -v '' or egrep -v 'something|' matches all:
 exclude_directories="$BUILD_DIR"
 test "$ISO_DIR" && exclude_directories="$exclude_directories|$ISO_DIR"
+
+# Be backward compatible:
+is_true "$NETFS_RESTORE_CAPABILITIES" && NETFS_RESTORE_CAPABILITIES=( '/' )
 
 # The actual work:
 for directory in "${NETFS_RESTORE_CAPABILITIES[@]}" ; do

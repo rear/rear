@@ -5,6 +5,8 @@
 # For the 'test' one must have all array members as a single word i.e. "${name[*]}" because
 # the test should succeed when there is any non-empty array member, not necessarily the first one:
 test "${NETFS_RESTORE_CAPABILITIES[*]}" || return 0
+# Be backward compatible:
+is_false "$NETFS_RESTORE_CAPABILITIES" && return 0
 
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" getcap setcap )
 
