@@ -612,3 +612,21 @@ function make_pxelinux_config {
     # end of function make_pxelinux_config
 }
 
+function make_pxelinux_config_grub {
+    # we use this function in case we are using $PXE_CONFIG_URL style of configuration and $PXE_CONFIG_GRUB_STYLE=y
+    # TODO First Draft. Need to complete with all other options (see make_pxelinux_config).
+    echo "menuentry 'Relax-and-Recover v$VERSION' {"
+    echo "insmod tftp"
+    echo "set net_default_server=10.7.19.177"
+    echo "echo 'Network status: '"
+    echo "net_ls_cards"
+    echo "net_ls_addr"
+    echo "net_ls_routes"
+    echo "echo \"Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)\""
+    echo "echo \"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}\""
+    echo "echo 'Loading kernel ...'"
+    echo "linux (tftp)/rear/$PXE_KERNEL"
+    echo "echo 'Loading initial ramdisk ...'"
+    echo "initrd (tftp)/rear/$PXE_INITRD"
+    echo "}"
+}
