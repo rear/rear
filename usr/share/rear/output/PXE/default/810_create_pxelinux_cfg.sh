@@ -59,9 +59,18 @@ case "$PXE_CREATE_LINKS" in
 		ip a | grep inet\ | grep -v inet\ 127 | \
 			while read inet IP junk ; do
 				IP=${IP%/*}
-				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP) >&2
-				# to capture the whole subnet as well
-				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP | cut -c 1-6) >&2
+                # check if gethostip is available.
+                if type gethostip &>/dev/null ; then
+    				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP) >&2
+    				# to capture the whole subnet as well
+    				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP | cut -c 1-6) >&2
+                else
+                # if gethostip is not available on your platform (like ppc64),
+                # use awk to generate IP in hex mode.
+                    ln -sf $v "$PXE_CONFIG_FILE" $(printf '%02X' ${IP//./ }) >&2
+                    # to capture the whole subnet as well
+    				ln -sf $v "$PXE_CONFIG_FILE" $(printf '%02X' ${IP//./ } | cut -c 1-6) >&2
+                fi
 			done
 		;;
 	MAC)
@@ -93,4 +102,3 @@ else
     # Add to result files
     RESULT_FILES=( "${RESULT_FILES[@]}" "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" )
 fi
-
