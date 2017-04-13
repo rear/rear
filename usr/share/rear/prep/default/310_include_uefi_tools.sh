@@ -1,12 +1,13 @@
-# When /boot/efi is mounted we copy the UEFI binaries we might need
-
 # If noefi is set, we can ignore UEFI altogether
 if grep -qw 'noefi' /proc/cmdline; then
     return
 fi
 
-# next step, is checking /boot/efi directory (we need it)
-if [[ ! -d /boot/efi ]]; then
+# When /boot/[eE][fF][iI] is found (mounted) we copy the UEFI binaries we might need
+if [[ ! -d /boot/[eE][fF][iI] ]]; then
+    if [[ $USING_UEFI_BOOTLOADER == 1 ]]; then
+        Error "USING_UEFI_BOOTLOADER = 1 but there is no directory at /boot/efi or /boot/EFI"
+    fi
     return    # must be mounted
 fi
 

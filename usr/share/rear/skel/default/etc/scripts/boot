@@ -34,10 +34,19 @@ cat /proc/mounts >/etc/mtab 2>/dev/null
 ip addr add 127.0.0.1/8 dev lo
 ip link set lo up
 
-# set hostname
-export HOSTNAME="$(cat /etc/HOSTNAME)" # set hostname in THIS shell
-hostname "$HOSTNAME" # set hostname in the system
+# Arch Linux auto sets hostname using /etc/hostname (lowercase).
+# /rescue/default/100_hostname.sh does generate lowercase for systems 
+# that contain lowercase /etc/hostname.
+#
+# Suspect that there is no need to manually set the host name 
+# for /etc/hostname (lowercase) systems. Only do set hostname for 
+# /etc/HOSTNAME (uppercase).
 
-echo Hostname set to $(uname -n)
+if [[ -e /etc/HOSTNAME ]] ; then
+    # set hostname
+    export HOSTNAME="$(cat /etc/HOSTNAME)" # set hostname in THIS shell
+    hostname "$HOSTNAME" # set hostname in the system
 
+    echo Hostname set to $(uname -n)
+fi
 
