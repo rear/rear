@@ -44,7 +44,10 @@ if is_true "$EFI" ; then
     efi_partition_size_bytes=$(( USB_UEFI_PART_SIZE * MiB_bytes ))
     # The end byte is the last byte that belongs to that partition so that one must be careful to use "start_byte + partition_size_in_bytes - 1":
     efi_partition_end_byte=$(( efi_partition_start_byte + efi_partition_size_bytes - 1 ))
-    if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $efi_partition_start_byte $efi_partition_end_byte >&2 ; then
+    # part-type = 'ESP' and not 'primary' is used for EFI system partitions.
+    # Source: https://wiki.archlinux.org/index.php/GNU_Parted#UEFI.2FGPT_examples
+    # and name the partition EFIBOOT
+    if ! parted -s $RAW_USB_DEVICE unit B mkpart ESP fat16 $efi_partition_start_byte $efi_partition_end_byte name 1 EFIBOOT >&2 ; then
         Error "Failed to create EFI system partition on '$RAW_USB_DEVICE'"
     fi
     # Calculate byte value for the start of the subsequent ReaR data partition:
@@ -66,7 +69,7 @@ else
 fi
 LogPrint "Creating ReaR data partition up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
 # Older parted versions (at least GNU Parted 1.6.25.1 on SLE10) support the '%' unit (cf. https://github.com/rear/rear/issues/1270):
-if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $data_partition_start_byte ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% >&2 ; then
+if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $data_partition_start_byte ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% name 2 REARDATA >&2 ; then
     Error "Failed to create ReaR data partition on '$RAW_USB_DEVICE'"
 fi
 
@@ -77,14 +80,19 @@ case "$USB_DEVICE_PARTED_LABEL" in
         boot_flag="boot"
         ;;
     "gpt")
-        boot_flag="legacy_boot"
+        # For modern UEFI/GPT booting set ESP boot_flag
+        if [[ -d /sys/firmware/efi/efivars && -f /boot/EFI/systemd/systemd-bootx64.efi || -f /usr/lib/systemd/boot/efi/systemd-bootx64.efi ]]; then
+            boot_flag="esp"
+        else # Otherwise assume GRUB with legacy MBR
+            boot_flag="legacy_boot"
+        fi
         ;;
     *)
         Error "USB_DEVICE_PARTED_LABEL is incorrectly set, please check your settings."
         ;;
 esac
 
-LogPrint "Setting '$boot_flag' flag on $RAW_USB_DEVICE"
+LogPrint "Setting '$boot_flag' flag on ${RAW_USB_DEVICE}1"
 if ! parted -s $RAW_USB_DEVICE set 1 $boot_flag on >&2 ; then
     Error "Could not make first partition bootable on '$RAW_USB_DEVICE'"
 fi
