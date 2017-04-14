@@ -1,11 +1,17 @@
 # only useful for UEFI systems in combination with grub[2]-efi
 is_true $USING_UEFI_BOOTLOADER || return  # empty or 0 means using BIOS
 
-# check if $TARGET_FS_ROOT/boot/efi is mounted
+# check if $TARGET_FS_ROOT/boot/efi directory exists
+# case-insensitive because Arch Linux uses /boot/EFI
 [[ -d "$TARGET_FS_ROOT/boot/efi" ]]
 StopIfError "Could not find directory $TARGET_FS_ROOT/boot/efi"
 
-BootEfiDev="$( mount | grep "boot/efi" | awk '{print $1}' )"
+BootEfiDev="$( mount | grep "/boot/efi" | awk '{print $1}' )"
+# When zero length (not mounted at boot/efi)
+if [[ -z $BootEfiDev ]]; then
+    # try alternative mount location /boot
+    BootEfiDev="$( mount | grep "/boot" | awk '{print $1}' )"
+fi
 Dev=$( get_device_name $BootEfiDev )    # /dev/sda1 or /dev/mapper/vol34_part2 or /dev/mapper/mpath99p4
 ParNr=$( get_partition_number $Dev )  # 1 (must anyway be a low nr <9)
 Disk=$( echo ${Dev%$ParNr} ) # /dev/sda or /dev/mapper/vol34_part or /dev/mapper/mpath99p
