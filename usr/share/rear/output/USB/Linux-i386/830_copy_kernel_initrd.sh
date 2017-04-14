@@ -1,6 +1,5 @@
-is_true $SYSTEMD_BOOT && return
-
 # copy kernel and initrd to USB dir for Relax-and-Recover
+#
 
 cp -pL $v "$KERNEL_FILE" "$BUILD_DIR/outputfs/$USB_PREFIX/kernel" >&2
 StopIfError "Could not create $BUILD_DIR/outputfs/$USB_PREFIX/kernel"

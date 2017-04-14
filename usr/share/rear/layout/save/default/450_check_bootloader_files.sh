@@ -6,9 +6,6 @@
 myBOOTloader=$( cat $VAR_DIR/recovery/bootloader )
 
 case $myBOOTloader in
-    (SYSTEMD-BOOT)
-        CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /boot/loader/entries/*.conf )
-        ;;
     (EFI|GRUB2-EFI)
         CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /boot/efi/EFI/*/grub*.cfg )
         ;;

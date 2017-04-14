@@ -59,10 +59,8 @@ function SourceStage () {
     stage="$1"
     shift
     STARTSTAGE=$SECONDS
-    Log "======================"
     Log "Running '$stage' stage"
-    Log "======================"
-        scripts=(
+    scripts=(
         $(
         cd $SHARE_DIR/$stage ;
         # We always source scripts in the same subdirectory structure. The {..,..,..} way of writing

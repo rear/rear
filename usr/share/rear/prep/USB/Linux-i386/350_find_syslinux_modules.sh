@@ -4,8 +4,6 @@
 # Purpose here is to define the proper SYSLINUX_DIR (which was already defined to the path were isolinux.bin lives)
 # Of course, only when we find a modules directory
 
-is_true $SYSTEMD_BOOT && return
-
 local syslinux_modules_dir=
 
 syslinux_modules_dir=$( find_syslinux_modules_dir menu.c32 )

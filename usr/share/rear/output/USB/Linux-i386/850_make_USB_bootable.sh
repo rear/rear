@@ -1,5 +1,3 @@
-is_true $SYSTEMD_BOOT && return
-
 # Test for features in dd
 # true if dd supports oflag= option
 FEATURE_DD_OFLAG=

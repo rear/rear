@@ -43,8 +43,6 @@ for dummy in "once" ; do
     done
 
     LogPrint "Trying to find a 'well known file' to be used as UEFI bootloader..."
-    UEFI_BOOTLOADER=$( find /boot/EFI -name 'systemd-bootx64.efi' | tail -1 )
-    test -f "$UEFI_BOOTLOADER" && continue
     UEFI_BOOTLOADER=$( find /boot/efi -name 'grub*.efi' | tail -1 )
     test -f "$UEFI_BOOTLOADER" && continue
     # In case we have an elilo bootloader we might be lucky with next statement:
@@ -55,7 +53,7 @@ for dummy in "once" ; do
     test -f "$UEFI_BOOTLOADER" && continue
     # Try more generic finds in whole /boot with case insensitive filename matching.
     # On older systems where 'find' does not support '-iname' this does not make it really worse because there 'find' just fails.
-    for find_name_pattern in 'systemd-bootx64.efi' 'grub*.efi' 'elilo.efi' 'BOOTX64.EFI' ; do
+    for find_name_pattern in 'grub*.efi' 'elilo.efi' 'BOOTX64.EFI' ; do
         # No need to test if find_name_pattern is empty because 'find' does not find anything with empty '-iname':
         UEFI_BOOTLOADER=$( find /boot -iname "$find_name_pattern" | tail -1 )
         # Continue with the code after the outer 'for' loop:
@@ -127,3 +125,4 @@ cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
 USING_UEFI_BOOTLOADER=$USING_UEFI_BOOTLOADER
 UEFI_BOOTLOADER="$UEFI_BOOTLOADER"
 EOF
+

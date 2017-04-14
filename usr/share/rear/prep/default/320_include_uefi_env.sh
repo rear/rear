@@ -48,12 +48,8 @@ if grep -qw efivars /proc/mounts; then
 fi
 
 # next step, is case-sensitive checking /boot for case-insensitive /efi directory (we need it)
-local output
-output=$( find /boot -maxdepth 1 -iname efi -type d -print -quit )
-if [[ $output ]]; then
-    LogPrint "$output directory found"
-else
-    return    # /boot/EFI not found
+if [[ -n `find /boot -maxdepth 1 -iname efi -type d` ]]; then
+    return    # not found
 fi
 
 # next step, check filesystem partition type (vfat?)
