@@ -64,6 +64,13 @@ while read source target junk ; do
         *rd[/!]c[0-9]d[0-9]|*cciss[/!]c[0-9]d[0-9]|*ida[/!]c[0-9]d[0-9]|*amiraid[/!]ar[0-9]|*emd[/!][0-9]|*ataraid[/!]d[0-9]|*carmel[/!][0-9])
             target="${target}p" # append p between main device and partitions
             ;;
+        *mapper[/!]*)
+            case $OS_VENDOR in
+                SUSE_LINUX)
+                    target="${target}_part"
+                ;;
+            esac
+        ;;
     esac
     sed -i -r "\|$replacement|s|$replacement([0-9]+)|$target\1|g" "$LAYOUT_FILE"
 done < "$MAPPING_FILE"
