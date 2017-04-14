@@ -47,24 +47,28 @@ if grep -qw efivars /proc/mounts; then
     SYSFS_DIR_EFI_VARS=/sys/firmware/efi/efivars
 fi
 
+# next step, is case-sensitive checking /boot for case-insensitive /efi directory (we need it)
+local output
+output=$( find /boot -maxdepth 1 -iname efi -type d -print -quit )
+if [[ $output ]]; then
+    LogPrint "$output directory found"
+else
+    return    # /boot/EFI not found
+fi
+
 # next step, check filesystem partition type (vfat?)
 local efi_mount_point=""
 UEFI_FS_TYPE=$(awk '/\/boot\/efi/ { print $3 }' /proc/mounts)
 # if not mounted at /boot/efi, try /boot itself
 if [[ -z "$UEFI_FS_TYPE" ]]; then
     UEFI_FS_TYPE=$(awk '/\/boot/ { print $3 }' /proc/mounts)
-    if [[ -z "$UEFI_FS_TYHPE" ]]; then
-        efi_mount_point='/\/boot/'
-        ESP_DIR='/boot'
-    fi
+    [[ -z "$UEFI_FS_TYHPE" ]] && efi_mount_point='/\/boot/'
 else
     efi_mount_point='/\/boot\/efi/'
-    ESP_DIR='/boot/efi'
 fi
 
 # ESP must be type vfat (under Linux)
 if [[ "$UEFI_FS_TYPE" != "vfat" ]]; then
-    unset -v ESP_DIR
     return
 fi
 
@@ -72,5 +76,4 @@ fi
 USING_UEFI_BOOTLOADER=1
 LogPrint "Using UEFI Boot Loader for Linux (USING_UEFI_BOOTLOADER=1)"
 
-# save boot disk partition, f.e. /dev/sda1
 awk $efi_mount_point' { print $1 }' /proc/mounts >$VAR_DIR/recovery/bootdisk 2>/dev/null
