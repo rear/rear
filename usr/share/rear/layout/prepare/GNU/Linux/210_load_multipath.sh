@@ -1,5 +1,7 @@
 
-if grep -q '^multipath' "$LAYOUT_FILE" ; then
+# Activating multipath if BOOT_OVER_SAN variable is true
+# or if multipath device are present in LAYOUT_FILE
+if grep -q '^multipath' "$LAYOUT_FILE" || is_true "$BOOT_OVER_SAN" ; then
     Log "Activating multipath"
     modprobe dm-multipath >&2
     multipath >&2
