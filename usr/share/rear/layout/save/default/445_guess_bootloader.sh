@@ -27,7 +27,7 @@ fi
 for block_device in /sys/block/* ; do
     blockd=${block_device#/sys/block/}
     # Continue with the next block device when the current block device is not a disk that can be used for booting:
-    [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = nvme* || $blockd = dasd*  ]] || continue
+    [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = nvme* || $blockd = mmcblk* || $blockd = dasd*  ]] || continue
     disk_device=$( get_device_name $block_device )
     # Check if the disk contains a PPC PreP boot partition (ID=0x41)
     if file -s $disk_device | grep -q "ID=0x41" ; then
