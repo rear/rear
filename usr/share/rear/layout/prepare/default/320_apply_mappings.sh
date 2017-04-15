@@ -69,6 +69,9 @@ while read source target junk ; do
                 SUSE_LINUX)
                     target="${target}_part"
                 ;;
+                RedHatEnterpriseServer)
+                    target="${target}p"
+                ;;
             esac
         ;;
     esac
