@@ -4,6 +4,7 @@
 if grep -q '^multipath' "$LAYOUT_FILE" || is_true "$BOOT_OVER_SAN" ; then
     Log "Activating multipath"
     modprobe dm-multipath >&2
+    [ ! -f /etc/multipath.conf ] && touch /etc/multipath.conf
     multipath >&2
     if [ $? -ne 0 ] ; then
         LogPrint "Failed to activate multipath. Please do this now:"
