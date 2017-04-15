@@ -1,0 +1,11 @@
+Version:     Relax-and-Recover 2.00 / Git
+Validation:  Arch/rolling/i386
+Date:        2017-03-03
+Submitted:   James An <james@jamesan.ca>, Canada
+Features:    LVM, ISO, USB, RAMDISK, SSHFS, RSYNC, DUPLICITY
+Comment:     none
+
+Date:        2017-03-14
+Submitted:   Ceriel Jacobs <2010@probackup.nl>, Pro Backup, The Netherlands
+Features:    USB, UEFI, systemd-boot, EFISTUB boot
+Comment:     EFISTUB booting doesn't seem to work with Arch Linux. AsRock C2750D4I (with AMI iKVM) USB keyboard and mouse fail during recover.

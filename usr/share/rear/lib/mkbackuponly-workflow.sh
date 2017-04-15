@@ -1,14 +1,18 @@
+
 # mkbackup-workflow.sh
 #
 
 WORKFLOW_mkbackuponly_DESCRIPTION="backup system without creating rescue media"
 WORKFLOWS=( ${WORKFLOWS[@]} mkbackuponly )
-WORKFLOW_mkbackuponly () {
 
-	SourceStage "prep"
+function WORKFLOW_mkbackuponly () {
 
-	DISKLAYOUT_FILE=$TMP_DIR/backuplayout.conf
-	SourceStage "layout/save"
+    SourceStage "prep"
 
-	SourceStage "backup"
+    # Let mkbackuponly use the same excludes as the layout code:
+    DISKLAYOUT_FILE=$TMP_DIR/backuplayout.conf
+    SourceStage "layout/save"
+
+    SourceStage "backup"
 }
+

@@ -137,6 +137,7 @@ endif
 install-config:
 	@echo -e "\033[1m== Installing configuration ==\033[0;0m"
 	install -d -m0700 $(DESTDIR)$(sysconfdir)/rear/
+	install -d -m0700 $(DESTDIR)$(sysconfdir)/rear/cert/
 	-[[ ! -e $(DESTDIR)$(sysconfdir)/rear/local.conf ]] && \
 		install -Dp -m0600 etc/rear/local.conf $(DESTDIR)$(sysconfdir)/rear/local.conf
 	-[[ ! -e $(DESTDIR)$(sysconfdir)/rear/os.conf && -e etc/rear/os.conf ]] && \
