@@ -67,10 +67,10 @@ while read source target junk ; do
         *mapper[/!]*)
             case $OS_VENDOR in
                 SUSE_LINUX)
-                    target="${target}_part"
+                    target="${target}_part" # append _part between main device and partitions
                 ;;
                 RedHatEnterpriseServer)
-                    target="${target}p"
+                    target="${target}p" # append p between main device and partitions
                 ;;
             esac
         ;;
