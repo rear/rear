@@ -47,6 +47,27 @@ while read original replacement junk ; do
         *rd[/!]c[0-9]*d[0-9]*|*cciss[/!]c[0-9]*d[0-9]*|*ida[/!]c[0-9]*d[0-9]*|*amiraid[/!]ar[0-9]*|*emd[/!][0-9]*|*ataraid[/!]d[0-9]*|*carmel[/!][0-9]*)
             part_base="${original}p" # append p between main device and partitions
             ;;
+        *mapper[/!]*)
+            case $OS_VENDOR in
+                SUSE_LINUX)
+                    # SUSE Linux put a "_part" between [mpath device name] and [part number].
+                    # For example /dev/mapper/3600507680c82004cf8000000000000d8_part1.
+                    # (verified in version 11 SP4 and 12 SP2).
+                    part_base="${original}_part" # append _part between main device and partitions
+                ;;
+                RedHatEnterpriseServer)
+                    # RHEL 7 and above seems to named partitions on multipathed devices with
+                    # [mpath device name] + [part number] like standard disk.
+                    # For example: /dev/mapper/mpatha1
+
+                    # But the scheme in RHEL 6 need a "p" between [mpath device name] and [part number].
+                    # For exemple: /dev/mapper/mpathap1
+                    if (( $OS_VERSION < 7 )) ; then
+                        part_base="${original}p" # append p between main device and partitions
+                    fi
+                ;;
+            esac
+        ;;
     esac
     sed -i -r "\|$original|s|${part_base}([0-9]+)|$replacement\1|g" "$LAYOUT_FILE"
     # Replace whole devices
@@ -79,7 +100,7 @@ while read source target junk ; do
 
                     # But the scheme in RHEL 6 need a "p" between [mpath device name] and [part number].
                     # For exemple: /dev/mapper/mpathap1
-                    if (( $OS_VERSION -lt 7 )) ; then
+                    if (( $OS_VERSION < 7 )) ; then
                         target="${target}p" # append p between main device and partitions
                     fi
                 ;;
