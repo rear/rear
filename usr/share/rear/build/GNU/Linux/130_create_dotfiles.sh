@@ -12,6 +12,7 @@
 cat <<EOF > $ROOTFS_DIR/root/.bash_history
 : # no more predefined ReaR entries in the bash history
 systemctl start sshd.service           # start SSH daemon
+ip -4 addr                             # get IPv4 address
 dhcpcd eth0                            # start DHCP client
 nano /var/lib/rear/layout/diskrestore.sh # disk restore
 nano /var/lib/rear/layout/disklayout.conf # disk layout
