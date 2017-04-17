@@ -67,7 +67,7 @@ extract_partitions() {
     done
 
     # do a numeric sort to have the partitions in numeric order (see #352)
-    sort -n  $TMP_DIR/partitions_unsorted > $TMP_DIR/partitions
+    sort -un  $TMP_DIR/partitions_unsorted > $TMP_DIR/partitions
 
     if [[ ! -s $TMP_DIR/partitions ]] ; then
         Debug "No partitions found on $device."
