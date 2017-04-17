@@ -629,7 +629,7 @@ function make_pxelinux_config_grub {
     echo "echo \"${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}\""
     echo "echo"
     echo "echo 'Loading kernel ...'"
-    echo "linux (tftp)/$PXE_KERNEL"
+    echo "linux (tftp)/$PXE_KERNEL root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
     echo "echo 'Loading initial ramdisk ...'"
     echo "initrd (tftp)/$PXE_INITRD"
     echo "}"
