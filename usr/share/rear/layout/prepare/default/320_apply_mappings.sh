@@ -50,10 +50,16 @@ while read original replacement junk ; do
         *mapper[/!]*)
             case $OS_VENDOR in
                 SUSE_LINUX)
-                    # SUSE Linux put a "_part" between [mpath device name] and [part number].
-                    # For example /dev/mapper/3600507680c82004cf8000000000000d8_part1.
-                    # (verified in version 11 SP4 and 12 SP2).
+                # SUSE Linux SLE12 put a "-part" between [mpath device name] and [part number].
+                # For example /dev/mapper/3600507680c82004cf8000000000000d8-part1.
+                # But SLES11 uses a "_part" instead. (Let's assume it is the same for SLES10 )
+                if (( $OS_VERSION < 12 )) ; then
+                    # For SUSE before version 12
                     part_base="${original}_part" # append _part between main device and partitions
+                else
+                    # For SUSE 12 or above
+                    part_base="${original}-part" # append -part between main device and partitions
+                fi
                 ;;
                 RedHatEnterpriseServer)
                     # RHEL 7 and above seems to named partitions on multipathed devices with
@@ -88,10 +94,16 @@ while read source target junk ; do
         *mapper[/!]*)
             case $OS_VENDOR in
                 SUSE_LINUX)
-                    # SUSE Linux put a "_part" between [mpath device name] and [part number].
-                    # For example /dev/mapper/3600507680c82004cf8000000000000d8_part1.
-                    # (verified in version 11 SP4 and 12 SP2).
-                    target="${target}_part" # append _part between main device and partitions
+                    # SUSE Linux SLE12 put a "-part" between [mpath device name] and [part number].
+                    # For example /dev/mapper/3600507680c82004cf8000000000000d8-part1.
+                    # But SLES11 uses a "_part" instead. (Let's assume it is the same for SLES10 )
+                    if (( $OS_VERSION < 12 )) ; then
+                        # For SUSE before version 12
+                        target="${target}_part" # append _part between main device and partitions
+                    else
+                        # For SUSE 12 or above
+                        target="${target}-part" # append -part between main device and partitions
+                    fi
                 ;;
                 RedHatEnterpriseServer)
                     # RHEL 7 and above seems to named partitions on multipathed devices with
