@@ -67,6 +67,7 @@ extract_partitions() {
     done
 
     # do a numeric sort to have the partitions in numeric order (see #352)
+    # add a uniq sort "-u" to filter duplicated lines (see #1301) 
     sort -un  $TMP_DIR/partitions_unsorted > $TMP_DIR/partitions
 
     if [[ ! -s $TMP_DIR/partitions ]] ; then
