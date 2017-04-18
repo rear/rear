@@ -45,27 +45,6 @@ if [[ -r "$LAYOUT_FILE" ]]; then
         dd if=/dev/zero of=$part
         # Run grub-install/grub2-install directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
         chroot $TARGET_FS_ROOT $grub_name-install $part
-        # Run bootlist only in PowerVM environment
-        if ! grep -q "PowerNV" /proc/cpuinfo && ! grep -q "emulated by qemu" /proc/cpuinfo ; then
-            #Using $LAYOUT_DEPS file to find the disk device containing the partition.
-            bootdev=$(awk '$1==PART { print $NF}' PART=$part $LAYOUT_DEPS)
-            if [[ -z $bootdev ]]; then
-                bootdev=`echo $part | sed -e 's/[0-9]*$//'`
-            fi
-            LogPrint "Boot device is $bootdev."
-
-            # Test if $bootdev is a multipath device
-            if dmsetup ls --target multipath | grep -w ${bootdev#/dev/mapper/} >/dev/null 2>&1; then
-                LogPrint "Limiting bootlist to 5 entries..."
-                bootlist_path=$(dmsetup deps $bootdev -o devname | awk -F: '{gsub (" ",""); gsub("\\(","/dev/",$2) ; gsub("\\)"," ",$2) ; print $2}' | cut -d" " -f-5)
-                LogPrint "bootlist will be $bootlist_path"
-                bootlist -m normal $bootlist_path
-                LogIfError "Unable to set bootlist. You will have to start in SMS to set it up manually."
-            else
-                LogPrint "bootlist will be $bootdev"
-                bootlist -m normal $bootdev
-            fi
-        fi
         NOBOOTLOADER=
     fi
 fi
