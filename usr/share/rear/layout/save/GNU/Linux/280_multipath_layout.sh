@@ -15,6 +15,7 @@ while read dm_name junk ; do
     LogIfError "Did not find sysfs name for device $dm_name (/sys/block/$name)"
 
     dm_size=$(cat /sys/block/$name/size)
+    test "$dm_size" || Error "Failed to get /sys/block/$name/size"
 
     slaves=""
     for slave in /sys/block/$name/slaves/* ; do
