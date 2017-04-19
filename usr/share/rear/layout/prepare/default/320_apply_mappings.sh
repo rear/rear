@@ -44,7 +44,7 @@ while read original replacement junk ; do
     # Replace partitions (we normalize cciss/c0d0p1 to _REAR5_1)
     part_base="$original"
     case "$original" in
-        *rd[/!]c[0-9]*d[0-9]*|*cciss[/!]c[0-9]*d[0-9]*|*ida[/!]c[0-9]*d[0-9]*|*amiraid[/!]ar[0-9]*|*emd[/!][0-9]*|*ataraid[/!]d[0-9]*|*carmel[/!][0-9]*)
+        *mmcblk[0-9]*|*nvme[0-9]*n[1-9]*|*rd[/!]c[0-9]*d[0-9]*|*cciss[/!]c[0-9]*d[0-9]*|*ida[/!]c[0-9]*d[0-9]*|*amiraid[/!]ar[0-9]*|*emd[/!][0-9]*|*ataraid[/!]d[0-9]*|*carmel[/!][0-9]*)
             part_base="${original}p" # append p between main device and partitions
             ;;
     esac
@@ -61,7 +61,7 @@ while read source target junk ; do
     sed -i -r "\|$replacement|s|$replacement\>|$target|g" "$LAYOUT_FILE"
     # Replace partitions
     case "$target" in
-        *rd[/!]c[0-9]d[0-9]|*cciss[/!]c[0-9]d[0-9]|*ida[/!]c[0-9]d[0-9]|*amiraid[/!]ar[0-9]|*emd[/!][0-9]|*ataraid[/!]d[0-9]|*carmel[/!][0-9])
+        *mmcblk[0-9]|*nvme[0-9]*n[1-9]|*rd[/!]c[0-9]d[0-9]|*cciss[/!]c[0-9]d[0-9]|*ida[/!]c[0-9]d[0-9]|*amiraid[/!]ar[0-9]|*emd[/!][0-9]|*ataraid[/!]d[0-9]|*carmel[/!][0-9])
             target="${target}p" # append p between main device and partitions
             ;;
     esac
