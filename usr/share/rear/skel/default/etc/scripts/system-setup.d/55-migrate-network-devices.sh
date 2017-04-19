@@ -28,9 +28,15 @@ while read orig_dev orig_mac ; do
 	if ip link show | grep -q $orig_mac ; then
 		: noop
 	else
-		MIGRATE_MACS=( ${MIGRATE_MACS[@]} $orig_mac )
-		if ! grep -q $orig_mac "${RULE_FILES[@]}" ; then
-			echo "
+		# look for origin device MAC (orig_mac) into udev rules in udev rules files
+		if grep -q $orig_mac "${RULE_FILES[@]}" ; then
+			MIGRATE_MACS=( ${MIGRATE_MACS[@]} $orig_mac )
+		else
+			# If origin device MAC (orig_mac) cannot be found, look for origin device name (orig_dev)
+			if grep -q $orig_dev "${RULE_FILES[@]}" ; then
+				MIGRATE_DEVNAMES=( ${MIGRATE_DEVNAMES[@]} "$orig_dev")
+			else
+				echo "
 WARNING ! The original network interface $orig_dev $orig_mac is not available
 and I could not find $orig_mac in the udev
 rules (${RULE_FILES[@]}).
@@ -39,12 +45,12 @@ If your system uses persistent network names, it does not configure them with
 udev and you will have to adjust it yourself. If your system does not use
 persistent network names, then everything might or might not work, YMMV.
 "
-			return 0 # skip the remaining script
+			fi
 		fi
 	fi
 done < $ORIG_MACS_FILE
 
-test ${#MIGRATE_MACS[@]} -eq 0 && return 0 # skip this process if all MACs are accounted for
+test ${#MIGRATE_MACS[@]} -eq 0 && test ${#MIGRATE_DEVNAMES[@]} -eq 0 && return 0 # skip this process if all MACs and DEVs are accounted for
 
 # find the MAC addresses that are now available
 # this is an array with values of the form "$dev $mac $driver"
@@ -102,13 +108,22 @@ if ! test $MANUAL_MAC_MAPPING ; then
 			continue # with next line from /etc/mac-addresses
 		else
 			vars=( $choice ) # word splitting
+			new_dev=${vars[0]}
 			new_mac=${vars[1]} # vars = "dev mac driver ..."
 			# remember the old_mac->new_mac mapping for later use
 			mkdir -p /etc/rear/mappings
 			echo "$old_mac $new_mac $old_dev" >>$MAC_MAPPING_FILE
-			# remove the "wrong" line with the new mac address and
-			# replace the old mac address with the new mac address
-			sed -i -e "/$new_mac/d" -e "s#$old_mac#$new_mac#g" "${RULE_FILES[@]}"
+			if grep -q $old_mac "${RULE_FILES[@]}" ; then
+				# remove the "wrong" line with the new mac address and
+				# replace the old mac address with the new mac address
+				sed -i -e "/$new_mac/d" -e "s#$old_mac#$new_mac#g" "${RULE_FILES[@]}"
+			else
+				if grep -q $old_dev "${RULE_FILES[@]}" ; then
+					# remove the "wrong" line with the new mac address and
+					# rename the new device name with the old one
+					sed -i -e "/$old_dev/d" -e "s#$new_dev#$old_dev#g" "${RULE_FILES[@]}"
+				fi
+			fi
 		fi
 
 	done
@@ -124,14 +139,14 @@ if test -s /etc/rear/mappings/mac ; then
 	my_udevtrigger
 	sleep 1
 	my_udevsettle
-    
+
     if [[ $(ps --no-headers -C systemd) ]]; then
         # This might be not mandatory.
         # It will release orphaned (old) device names in systemd
         # Maybe it can be done by some less invazive command, but I didn't found it yet
         systemctl daemon-reload
     fi
-    
+
 	echo "done."
 fi
 
