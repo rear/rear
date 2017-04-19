@@ -33,6 +33,26 @@ sleep 5
 mount -t proc none $TARGET_FS_ROOT/proc
 mount -t sysfs none $TARGET_FS_ROOT/sys
 
+if is_true $BOOT_OVER_SAN ; then
+
+    # Adding multipath config files must be part of the initramfs in order to
+    # for the "root" disk to be a seen as a multipath device.
+
+    # Add multipath option to dracut (real dracut command will be executed later
+    # in this script).
+    dracut_additional_option="$dracut_additional_option -a multipath"
+
+    # create /etc/multipath.conf on the target if it does not exists on the target.
+    if [ ! -f $TARGET_FS_ROOT/etc/multipath.conf ] ; then
+        LogPrint "/etc/multipath.conf not available in target, creating it..."
+        chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/bin:/bin mpathconf --enable --user_friendly_names y --find_multipaths y --with_module y --with_multipathd y --with_chkconfig y'
+    fi
+
+    # Cleaning /etc/multipath/wwids file and update it with new wwids.
+    chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/bin:/bin multipath -W'
+
+fi
+
 # Run dracut directly in chroot without a login shell in between (see https://github.com/rear/rear/issues/862).
 # We need the dracut binary in the chroot environment i.e. the dracut binary in the recreated system.
 # Normally we would use a login shell like: chroot $TARGET_FS_ROOT /bin/bash --login -c 'type -P dracut'
@@ -45,7 +65,7 @@ local dracut_binary=$( chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sbin
 # Use plain $var because when var contains only blanks test "$var" results true because test " " results true:
 if test $dracut_binary ; then
     LogPrint "Running dracut to recreate initrd..."
-    if chroot $TARGET_FS_ROOT $dracut_binary -vf >&2 ; then
+    if chroot $TARGET_FS_ROOT $dracut_binary -f $dracut_additional_option >&2 ; then
         LogPrint "Recreated initrd ($dracut_binary)."
     else
         LogPrint "WARNING:
