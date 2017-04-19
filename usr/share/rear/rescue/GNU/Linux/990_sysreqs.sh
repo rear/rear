@@ -107,8 +107,7 @@ ip addr show | grep inet | grep -v 127.0.0. | sed -e "s/ brd.*//" -e "s/inet6//"
     # Only try to resolve hostnames if at least one DNS server is defined in /etc/resolv.conf
     # Missing DNS server causes every dig call to timeout after ~ 18 seconds, which
     # can sum up to several minutes when multiple IP addresses are in use.
-    # `grep -cv '\#.*nameserver.*$'` skips entries that are commented out
-    if hash dig 2>/dev/null && [ $(grep nameserver /etc/resolv.conf | grep -cv '\#.*nameserver.*$') -gt 0 ] ; then
+    if hash dig 2>/dev/null && [ $(grep -c '^[[:space:]]*nameserver' /etc/resolv.conf) -gt 0 ] ; then
         DNSname="$( dig +short -x ${ip%/*} )"
     else
         DNSname=""
