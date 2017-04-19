@@ -89,7 +89,7 @@ if [[ "$AUTOEXCLUDE_DISKS" =~ ^[yY1] ]] ; then
 fi
 
 ### Prevent partitioning of the underlying devices on multipath
-while read multipath device slaves junk ; do
+while read multipath device dm_size slaves junk ; do
     local -a devices=()
 
     OIFS=$IFS
