@@ -1,1 +1,1 @@
-../i386/170_rebuild_initramfs.sh
+../i386/500_rebuild_initramfs.sh
