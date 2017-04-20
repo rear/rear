@@ -104,11 +104,8 @@ echo "  IP adresses:"
 # If "... DNS name" should not be output when there is no DNS name
 # a test whether or not <<$( dig +short -x ${ip%/*} )>> is empty would help.
 ip addr show | grep inet | grep -v 127.0.0. | sed -e "s/ brd.*//" -e "s/inet6//" -e "s/inet//" | while read ip ; do
-    # Only try to resolve hostnames if at least one DNS server is defined in /etc/resolv.conf
-    # Missing DNS server causes every dig call to timeout after ~ 18 seconds, which
-    # can sum up to several minutes when multiple IP addresses are in use.
-    if hash dig 2>/dev/null && [ $(grep -c '^[[:space:]]*nameserver' /etc/resolv.conf) -gt 0 ] ; then
-        DNSname="$( dig +short -x ${ip%/*} )"
+    if hash dig 2>/dev/null; then
+        DNSname="$( dig +time=1 +tries=1 +short -x ${ip%/*} )"
     else
         DNSname=""
     fi
