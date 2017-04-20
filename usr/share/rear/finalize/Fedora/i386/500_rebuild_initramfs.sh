@@ -28,6 +28,31 @@ and decide yourself, whether the system will boot or not.
     return 0
 fi
 
+# We need to rebuild the initramfs and add multipath files
+# if root filesystems is on a multipath device or if BOOT_OVER_SAN is true.
+
+# Check if / is on multipath device
+root_multipath=$( find_multipath fs:/)
+if [[ ! -z $root_multipath ]] || is_true $BOOT_OVER_SAN ; then
+
+    # Adding multipath config files must be part of the initramfs in order to
+    # for the "root" disk to be a seen as a multipath device.
+
+    # Add multipath option to dracut (real dracut command will be executed later
+    # in this script).
+    dracut_additional_option="$dracut_additional_option -a multipath"
+
+    # create /etc/multipath.conf on the target if it does not exists on the target.
+    if [ ! -f $TARGET_FS_ROOT/etc/multipath.conf ] ; then
+        LogPrint "/etc/multipath.conf not available in target, creating it..."
+        chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/bin:/bin mpathconf --enable --user_friendly_names y --find_multipaths y --with_module y --with_multipathd y --with_chkconfig y'
+    fi
+
+    # Cleaning /etc/multipath/wwids file and update it with new wwids.
+    chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/bin:/bin multipath -W'
+
+fi
+
 # Merge new drivers with previous initrd modules.
 # We only add modules to the initrd, we don't take old ones out.
 # This might be done better, but is not worth the risk.
@@ -102,4 +127,3 @@ and decide yourself, whether the system will boot or not.
 done
 
 umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
-
