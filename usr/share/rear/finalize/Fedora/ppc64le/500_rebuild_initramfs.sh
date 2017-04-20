@@ -33,7 +33,12 @@ sleep 5
 mount -t proc none $TARGET_FS_ROOT/proc
 mount -t sysfs none $TARGET_FS_ROOT/sys
 
-if is_true $BOOT_OVER_SAN ; then
+# We need to rebuild the initramfs and add multipath files
+# if root filesystems is on a multipath device or if BOOT_OVER_SAN is true.
+
+# Check if / is on multipath device
+root_multipath=$( find_multipath fs:/)
+if [[ ! -z $root_multipath ]] || is_true $BOOT_OVER_SAN ; then
 
     # Adding multipath config files must be part of the initramfs in order to
     # for the "root" disk to be a seen as a multipath device.

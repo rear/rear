@@ -1,0 +1,1 @@
+../ppc64le/500_rebuild_initramfs.sh
