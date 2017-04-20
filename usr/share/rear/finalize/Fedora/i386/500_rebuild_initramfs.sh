@@ -38,9 +38,9 @@ if [[ ! -z $root_multipath ]] || is_true $BOOT_OVER_SAN ; then
     # Adding multipath config files must be part of the initramfs in order to
     # for the "root" disk to be a seen as a multipath device.
 
-    # Add multipath option to dracut (real dracut command will be executed later
+    # Add multipath option to mkinitrd (real mkinitrd command will be executed later
     # in this script).
-    dracut_additional_option="$dracut_additional_option -a multipath"
+    mkinitrd_additional_option="$mkinitrd_additional_option -a multipath"
 
     # create /etc/multipath.conf on the target if it does not exists on the target.
     if [ ! -f $TARGET_FS_ROOT/etc/multipath.conf ] ; then
