@@ -47,6 +47,33 @@ while read original replacement junk ; do
         *mmcblk[0-9]*|*nvme[0-9]*n[1-9]*|*rd[/!]c[0-9]*d[0-9]*|*cciss[/!]c[0-9]*d[0-9]*|*ida[/!]c[0-9]*d[0-9]*|*amiraid[/!]ar[0-9]*|*emd[/!][0-9]*|*ataraid[/!]d[0-9]*|*carmel[/!][0-9]*)
             part_base="${original}p" # append p between main device and partitions
             ;;
+        *mapper[/!]*)
+            case $OS_VENDOR in
+                SUSE_LINUX)
+                # SUSE Linux SLE12 put a "-part" between [mpath device name] and [part number].
+                # For example /dev/mapper/3600507680c82004cf8000000000000d8-part1.
+                # But SLES11 uses a "_part" instead. (Let's assume it is the same for SLES10 )
+                if (( $OS_VERSION < 12 )) ; then
+                    # For SUSE before version 12
+                    part_base="${original}_part" # append _part between main device and partitions
+                else
+                    # For SUSE 12 or above
+                    part_base="${original}-part" # append -part between main device and partitions
+                fi
+                ;;
+                RedHatEnterpriseServer)
+                    # RHEL 7 and above seems to named partitions on multipathed devices with
+                    # [mpath device name] + [part number] like standard disk.
+                    # For example: /dev/mapper/mpatha1
+
+                    # But the scheme in RHEL 6 need a "p" between [mpath device name] and [part number].
+                    # For exemple: /dev/mapper/mpathap1
+                    if (( $OS_VERSION < 7 )) ; then
+                        part_base="${original}p" # append p between main device and partitions
+                    fi
+                ;;
+            esac
+        ;;
     esac
     sed -i -r "\|$original|s|${part_base}([0-9]+)|$replacement\1|g" "$LAYOUT_FILE"
     # Replace whole devices
@@ -64,6 +91,33 @@ while read source target junk ; do
         *mmcblk[0-9]|*nvme[0-9]*n[1-9]|*rd[/!]c[0-9]d[0-9]|*cciss[/!]c[0-9]d[0-9]|*ida[/!]c[0-9]d[0-9]|*amiraid[/!]ar[0-9]|*emd[/!][0-9]|*ataraid[/!]d[0-9]|*carmel[/!][0-9])
             target="${target}p" # append p between main device and partitions
             ;;
+        *mapper[/!]*)
+            case $OS_VENDOR in
+                SUSE_LINUX)
+                    # SUSE Linux SLE12 put a "-part" between [mpath device name] and [part number].
+                    # For example /dev/mapper/3600507680c82004cf8000000000000d8-part1.
+                    # But SLES11 uses a "_part" instead. (Let's assume it is the same for SLES10 )
+                    if (( $OS_VERSION < 12 )) ; then
+                        # For SUSE before version 12
+                        target="${target}_part" # append _part between main device and partitions
+                    else
+                        # For SUSE 12 or above
+                        target="${target}-part" # append -part between main device and partitions
+                    fi
+                ;;
+                RedHatEnterpriseServer)
+                    # RHEL 7 and above seems to named partitions on multipathed devices with
+                    # [mpath device name] + [part number] like standard disk.
+                    # For example: /dev/mapper/mpatha1
+
+                    # But the scheme in RHEL 6 need a "p" between [mpath device name] and [part number].
+                    # For exemple: /dev/mapper/mpathap1
+                    if (( $OS_VERSION < 7 )) ; then
+                        target="${target}p" # append p between main device and partitions
+                    fi
+                ;;
+            esac
+        ;;
     esac
     sed -i -r "\|$replacement|s|$replacement([0-9]+)|$target\1|g" "$LAYOUT_FILE"
 done < "$MAPPING_FILE"
