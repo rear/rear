@@ -5,7 +5,7 @@ fi
 
 # If no /boot/[eE][fF][iI] directory can be found we might not be able to copy the UEFI binaries.
 if [[ ! -d /boot/[eE][fF][iI] ]]; then
-    if [[ $USING_UEFI_BOOTLOADER == 1 ]]; then
+    if is_true $USING_UEFI_BOOTLOADER; then
         Error "USING_UEFI_BOOTLOADER = 1 but there is no directory at /boot/efi or /boot/EFI" # abort
     fi
     return # skip
