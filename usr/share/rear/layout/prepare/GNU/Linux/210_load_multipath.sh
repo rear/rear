@@ -17,15 +17,18 @@ if grep -q '^multipath' "$LAYOUT_FILE" || is_true "$BOOT_OVER_SAN" ; then
             mpathconf --enable --user_friendly_names y --find_multipaths y --with_module y --with_multipathd y
         else
             LogPrint "mpathconf not found... activating multipath with minimal options"
-            modprobe dm-multipath >&2
             touch /etc/multipath.conf
         fi
     fi
 
+    modprobe dm-multipath >&2
     multipath >&2
     if [ $? -ne 0 ] ; then
-        LogPrint "Failed to activate multipath. Please do this now:"
+        LogPrint "Failed to activate multipath, or no multipath device found."
         rear_shell "Did you activate the multipath devices?"
+    else
+        LogPrint "multipath activated"
+        dmsetup ls --target multipath
     fi
 fi
 
