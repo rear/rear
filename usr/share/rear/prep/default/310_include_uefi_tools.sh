@@ -1,18 +1,17 @@
-# When /boot/efi is mounted we copy the UEFI binaries we might need
-
 # If noefi is set, we can ignore UEFI altogether
 if grep -qw 'noefi' /proc/cmdline; then
     return
 fi
 
-# Next step, is checking /boot/efi directory case-insensitive for the /EFI part (we need it).
-# If no /boot/[eE][fF][iI] directory can be found we cannot copy the UEFI binaries we might need.
-# TODO: I <jsmeix@suse.de> wonder if plain silent 'return' is really the right way out here
-# or whether there should be some more checks? Perhaps having access to the UEFI binaries
-# is sometimes mandatory (e.g. in case of USING_UEFI_BOOTLOADER=1) so that ReaR might then
-# better abort with a clear Error message instead of proceeding 'bona fide' here?
-test "$( find /boot -maxdepth 1 -iname efi -type d )" || return
+# If no /boot/[eE][fF][iI] directory can be found we might not be able to copy the UEFI binaries.
+if [[ ! -d /boot/[eE][fF][iI] ]]; then
+    if is_true $USING_UEFI_BOOTLOADER; then
+        Error "USING_UEFI_BOOTLOADER = 1 but there is no directory at /boot/efi or /boot/EFI" # abort
+    fi
+    return # skip
+ fi
 
+# We copy the UEFI binaries we might need
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}"
 dosfsck
 efibootmgr
