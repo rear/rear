@@ -1,3 +1,5 @@
+# THIS SCRIPT CONTAINS PPC64/PPC64LE SPECIFIC
+#################################################################
 # Run bootlist only in PowerVM environment
 # which means not in BareMetal(PowerNV) or KVM (emulated by qemu)
 

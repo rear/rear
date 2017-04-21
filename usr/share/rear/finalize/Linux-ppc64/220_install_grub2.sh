@@ -9,7 +9,9 @@
 #    solution is to save and restore the MBR for each disk, but this does not
 #    guarantee a correct boot-order, or even a working boot-lader config (eg.
 #    GRUB stage2 might not be at the exact same location)
-
+################################################################
+# THIS SCRIPT CONTAINS PPC64/PPC64LE SPECIFIC
+#################################################################
 # skip if another bootloader was installed
 if [[ -z "$NOBOOTLOADER" ]] ; then
     return
