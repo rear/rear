@@ -248,13 +248,13 @@ Log "Saving disk partitions."
     for disk in /sys/block/* ; do
         blockd=${disk#/sys/block/}
         if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* || $blockd = nvme* ]] ; then
-            devname=$(get_device_name $disk)
-            devsize=$(get_disk_size ${disk#/sys/block/})
 
             #Check if blockd is a path of a multipath device.
             if is_multipath_path ${blockd} ; then
                 Log "Ignoring $blockd: it is a path of a multipath device"
-            else
+            else    
+                devname=$(get_device_name $disk)
+                devsize=$(get_disk_size ${disk#/sys/block/})
                 disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
 
                 echo "# Disk $devname"
