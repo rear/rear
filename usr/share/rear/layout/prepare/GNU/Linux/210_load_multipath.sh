@@ -1,6 +1,10 @@
 
-# Activating multipath if BOOT_OVER_SAN variable is true
-# or if multipath device are present in LAYOUT_FILE
+# Activating multipath if BOOT_OVER_SAN variable is true.
+# or if multipath device are present in LAYOUT_FILE.
+
+# In case of migration to a BOOT_OVER_SAN server, you need to be able
+# to detect new multipath device even if there are no multipath device present
+# in the Layout file (original machine not multipathed). (#1309)
 if grep -q '^multipath' "$LAYOUT_FILE" || is_true "$BOOT_OVER_SAN" ; then
     Log "Activating multipath"
 
@@ -16,8 +20,26 @@ if grep -q '^multipath' "$LAYOUT_FILE" || is_true "$BOOT_OVER_SAN" ; then
             # load mudules and start multipath discovery
             mpathconf --enable --user_friendly_names y --find_multipaths y --with_module y --with_multipathd y
         else
-            LogPrint "mpathconf not found... activating multipath with minimal options"
-            touch /etc/multipath.conf
+            # Activate multipath with most commonly used options : user_friendly_names, find_multipaths
+            if [[ $OS_VENDOR == SUSE_LINUX ]] && (( $OS_VERSION < 12 )) ; then
+
+                # SLES 11 multipath does not support find_multipaths and does not have /etc/multipath/bindings file
+                # which keep relationship between name and uniq ID...
+                # It is better to not activate those options by default.
+                LogPrint "mpathconf not found... SLES11 detected: activating multipath with minimal options"
+                touch /etc/multipath.conf
+
+            else
+                LogPrint "mpathconf not found... activating multipath with options : user_friendly_names, find_multipaths)"
+            echo "
+defaults {
+        user_friendly_names yes
+        find_multipaths yes
+}
+
+blacklist {
+}" >> /etc/multipath.conf
+            fi
         fi
     fi
 
