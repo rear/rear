@@ -1,0 +1,24 @@
+# multipath configuration used in recovery must be saved to TARGET_FS_ROOT if they
+# don't exists. This should only happen if you migrate from a non-multipath system to
+# a multipath one.
+
+# This phase must be done before rebuilding initramfs.
+
+if multipath ; then
+
+    if [ ! -f $TARGET_FS_ROOT/etc/multipath.conf ] ; then
+        LogPrint "/etc/multipath.conf not available in target, creating it..."
+        if [ -f /etc/multipath.conf ] ; then
+            cp /etc/multipath.conf $TARGET_FS_ROOT/etc/multipath.conf
+        fi
+    fi
+
+    [ ! -d  $TARGET_FS_ROOT/etc/multipath ] && mkdir -p $TARGET_FS_ROOT/etc/multipath
+
+    if [ ! -f $TARGET_FS_ROOT/etc/multipath/binding ] ; then
+        [ -f /etc/multipath/binding ] && cp $TARGET_FS_ROOT/etc/multipath/binding
+    fi
+
+    # Cleaning /etc/multipath/wwids file and update it with new wwids.
+    chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/bin:/bin multipath -W'
+fi
