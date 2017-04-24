@@ -14,12 +14,15 @@ while read dm_name junk ; do
     [[ -e /sys/block/$name ]]
     LogIfError "Did not find sysfs name for device $dm_name (/sys/block/$name)"
 
+    dm_size=$(cat /sys/block/$name/size)
+    test "$dm_size" || Error "Failed to get /sys/block/$name/size"
+
     slaves=""
     for slave in /sys/block/$name/slaves/* ; do
         slaves="$slaves$(get_device_name ${slave##*/}),"
     done
 
-    echo "multipath /dev/mapper/$dm_name ${slaves%,}" >> $DISKLAYOUT_FILE
+    echo "multipath /dev/mapper/$dm_name $dm_size ${slaves%,}" >> $DISKLAYOUT_FILE
 
     extract_partitions "/dev/mapper/$dm_name" >> $DISKLAYOUT_FILE
 done < <( dmsetup ls --target multipath )

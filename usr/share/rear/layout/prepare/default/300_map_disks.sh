@@ -64,7 +64,7 @@ while read disk dev size junk ; do
             break
         fi
     done
-done < <(grep "^disk " "$LAYOUT_FILE")
+done < <(grep -E "^disk |^multipath " "$LAYOUT_FILE")
 
 # For every unmapped disk in the source system.
 while read -u 3 disk dev size junk ; do
@@ -109,7 +109,7 @@ while read -u 3 disk dev size junk ; do
         fi
         break
     done 2>&1 # to get the prompt, otherwise it would go to the logfile
-done 3< <(grep "^disk " "$LAYOUT_FILE")
+done 3< <(grep -E " ^disk |^multipath " "$LAYOUT_FILE")
 
 LogPrint "This is the disk mapping table:"
 LogPrint "$(sed -e 's|^|    |' "$MAPPING_FILE")"
@@ -120,4 +120,4 @@ while read disk dev junk ; do
         mark_as_done "$dev"
         mark_tree_as_done "$dev"
     fi
-done < <(grep "^disk " "$LAYOUT_FILE")
+done < <(grep -E "^disk |^multipath " "$LAYOUT_FILE")

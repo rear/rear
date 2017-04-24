@@ -2,4 +2,4 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 # Save the current disk usage (POSIX output format) in the rescue image
-df -Plh |grep -vE '^(encfs)' > $VAR_DIR/layout/config/df.txt
+df -Plh -x encfs -x tmpfs -x devtmpfs > $VAR_DIR/layout/config/df.txt

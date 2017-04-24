@@ -167,7 +167,7 @@ generate_layout_dependencies() {
                 ;;
             multipath)
                 name=$(echo "$remainder" | cut -d " " -f "1")
-                disks=$(echo "$remainder" | cut -d " " -f "2" | tr "," " ")
+                disks=$(echo "$remainder" | cut -d " " -f "3" | tr "," " ")
 
                 add_component "$name" "multipath"
 
@@ -585,4 +585,8 @@ is_disk_a_pv() {
     else
         return 1
     fi
+}
+
+function is_multipath_path {
+    [ "$1" ] && type multipath &>/dev/null && multipath -c /dev/$1 &>/dev/null
 }

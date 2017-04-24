@@ -23,7 +23,7 @@ while read disk dev size junk ; do
         LogPrint "Device $dev does not exist."
         MIGRATION_MODE="true"
     fi
-done < <(grep "^disk" "$LAYOUT_FILE")
+done < <(grep -E "^disk |^multipath " "$LAYOUT_FILE")
 
 if [ -n "$MIGRATION_MODE" ] ; then
     LogPrint "Switching to manual disk layout configuration."
