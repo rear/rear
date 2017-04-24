@@ -10,14 +10,13 @@ if grep -q '^multipath' "$LAYOUT_FILE" || is_true "$BOOT_OVER_SAN" ; then
 
     # We need to create a multipath.conf if it does not exists (needed by Fedora based OS)
     if [ ! -f /etc/multipath.conf ] ; then
-        if type mpathconf &> /dev/null ; then
+        if has_binary mpathconf &> /dev/null ; then
             LogPrint "Using mpathconf to configure multipath with friendly_names and find_multipath options"
 
             # /etc/multipath dir need to be present before mpathconf runs
             [ ! -d /etc/multipath ] && mkdir -p /etc/multipath
 
             # create default multipath.conf with friendly_names and find_multipath options
-            # load mudules and start multipath discovery
             mpathconf --enable --user_friendly_names y --find_multipaths y --with_module y --with_multipathd y
         else
             # Activate multipath with most commonly used options : user_friendly_names, find_multipaths
