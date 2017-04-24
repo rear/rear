@@ -72,6 +72,13 @@ while read original replacement junk ; do
                         part_base="${original}p" # append p between main device and partitions
                     fi
                 ;;
+                Ubuntu)
+                    # Ubuntu 16.04 (need to check for other version) named muiltipathed partitions with
+                    # [mapth device name] + "-part" + [part number]
+                    # for example : /dev/mapper/mpatha-part1
+                    part_base="${original}-part" # append -part between main device and partitions
+                ;;
+
             esac
         ;;
     esac
@@ -115,6 +122,12 @@ while read source target junk ; do
                     if (( $OS_VERSION < 7 )) ; then
                         target="${target}p" # append p between main device and partitions
                     fi
+                ;;
+                Ubuntu)
+                    # Ubuntu 16.04 (need to check for other version) named muiltipathed partitions with
+                    # [mapth device name] + "-part" + [part number]
+                    # for example : /dev/mapper/mpatha-part1
+                    target="${target}-part" # append -part between main device and partitions
                 ;;
             esac
         ;;
