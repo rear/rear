@@ -586,3 +586,7 @@ is_disk_a_pv() {
         return 1
     fi
 }
+
+function is_multipath_path {
+    [ "$1" ] && type multipath &>/dev/null && multipath -c /dev/$1 &>/dev/null
+}
