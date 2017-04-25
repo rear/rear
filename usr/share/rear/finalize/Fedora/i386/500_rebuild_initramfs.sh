@@ -102,4 +102,3 @@ and decide yourself, whether the system will boot or not.
 done
 
 umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
-
