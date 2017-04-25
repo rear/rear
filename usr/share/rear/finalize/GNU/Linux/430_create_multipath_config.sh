@@ -4,7 +4,7 @@
 
 # This phase must be done before rebuilding initramfs.
 
-if multipath ; then
+if multipath -d >/dev/null ; then
 
     if [ ! -f $TARGET_FS_ROOT/etc/multipath.conf ] ; then
         LogPrint "/etc/multipath.conf not available in target, creating it..."
