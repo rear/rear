@@ -20,5 +20,9 @@ if multipath -d >/dev/null ; then
     fi
 
     # Cleaning /etc/multipath/wwids file and update it with new wwids.
-    chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/bin:/bin multipath -W'
+    if mount -t proc none $TARGET_FS_ROOT/proc ; then
+        chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/bin:/bin multipath -W' || LogPrint "Failed to reset wwids on target"
+    else
+        LogPrint "Failed to mount proc FS on target. multipath wwids not updated."
+    fi
 fi
