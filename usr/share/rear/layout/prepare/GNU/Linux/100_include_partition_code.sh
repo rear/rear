@@ -129,7 +129,7 @@ EOF
             # For the SUSE specific gpt_sync_mbr partitioning scheme
             # see https://github.com/rear/rear/issues/544
             if [[ "$label" == "gpt" || "$label" == "gpt_sync_mbr" ]] ; then
-                device_size=$(( device_size - 33*block_size ))
+                device_size=$( calculate "$device_size - 33*$block_size" )
                 if [[ "$MIGRATION_MODE" ]] ; then
                     Log "Size reductions of GPT partitions probably needed."
                 fi
@@ -175,7 +175,7 @@ EOF
 
         if [[ "$FEATURE_PARTED_ANYUNIT" ]] ; then
             if [[ "$end" ]] ; then
-                end="$(($end-1))B"
+                end=$( calculate "$end - 1" )B
             else
                 end="100%"
             fi
@@ -187,11 +187,11 @@ EOF
         else
             ### Old versions of parted accept only sizes in megabytes...
             if (( $start > 0 )) ; then
-                start_mb=$(( start/1024/1024 ))
+                start_mb=$( calculate "$start / 1024 / 1024" )
             else
                 start_mb=0
             fi
-            end_mb=$(( end/1024/1024 ))
+            end_mb=$( calculate "$end / 1024 / 1024" )
             cat  >> "$LAYOUT_CODE" <<EOF
 my_udevsettle
 parted -s $device mkpart '"$name"' $start_mb $end_mb >&2
@@ -204,14 +204,14 @@ EOF
         # extended partitions have a small actual size as reported by sysfs
         # in front of a logical partition should be at least 512B empty space
         if [ -n "$MIGRATION_MODE" ] && [ "$name" = "logical" ] ; then
-            start=$(( start + ${size%B} + block_size ))
+            start=$( calculate "$start + ${size%B} + $block_size" )
         else
-            start=$(( start + ${size%B} ))
+            start=$( calculate "$start + ${size%B}" )
         fi
 
         # round starting size to next multiple of 4096
         # 4096 is a good match for most device's block size
-        start=$(( $start + 4096 - ( $start % 4096 ) ))
+        start=$( calculate "$start + 4096 - ( $start % 4096 )" )
 
         # Get the partition number from the name
         local number=$(get_partition_number "$partition")

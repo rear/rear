@@ -389,3 +389,11 @@ function is_device_mounted
       echo 1
    fi
 }
+
+# Use 'bc' for calculations because other tools
+# fail in various unexpected ways for big numbers,
+# e.g. see https://github.com/rear/rear/issues/1307
+function calculate()
+{
+    bc -ql <<<"result=$@ ; scale=0 ; result / 1 "
+}
