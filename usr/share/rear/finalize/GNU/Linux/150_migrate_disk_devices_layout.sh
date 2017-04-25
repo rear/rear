@@ -15,6 +15,7 @@ for file in     [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/
 		[b]oot/grub2/{grub.conf,grub.cfg,menu.lst,device.map} \
                 [e]tc/sysconfig/grub [e]tc/sysconfig/bootloader \
                 [e]tc/lilo.conf \
+                [e]tc/yaboot.conf \
                 [e]tc/mtab [e]tc/fstab \
                 [e]tc/mtools.conf \
                 [e]tc/smartd.conf [e]tc/sysconfig/smartmontools \
