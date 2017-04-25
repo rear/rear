@@ -157,7 +157,7 @@ extract_partitions() {
             ### only report flags parted can actually recreate
             flags=""
             for flag in $flaglist ; do
-                if [[ "$flag" = boot || "$flag" = root || "$flag" = swap || "$flag" = hidden || "$flag" = raid || "$flag" = lvm || "$flag" = lba || "$flag" = palo || "$flag" = legacy_boot || "$flag" = bios_grub || "$flag" = prep ]] ; then
+                if [[ "$flag" = boot || "$flag" = esp || "$flag" = root || "$flag" = swap || "$flag" = hidden || "$flag" = raid || "$flag" = lvm || "$flag" = lba || "$flag" = palo || "$flag" = legacy_boot || "$flag" = bios_grub || "$flag" = prep ]] ; then
                     flags="$flags$flag,"
                 elif [[ "$flag" = "type=06" ]] ; then
                     flags="${flags}prep,"
