@@ -6,7 +6,7 @@
 # to detect new multipath device even if there are no multipath device present
 # in the Layout file (original machine not multipathed). (#1309)
 if grep -q '^multipath' "$LAYOUT_FILE" || is_true "$BOOT_OVER_SAN" ; then
-    Log "Activating multipath"
+    LogPrint "Activating multipath"
 
     # We need to create a multipath.conf if it does not exists (needed by Fedora based OS)
     if [ ! -f /etc/multipath.conf ] ; then
@@ -19,26 +19,16 @@ if grep -q '^multipath' "$LAYOUT_FILE" || is_true "$BOOT_OVER_SAN" ; then
             # create default multipath.conf with friendly_names and find_multipath options
             mpathconf --enable --user_friendly_names y --find_multipaths y --with_module y --with_multipathd y
         else
-            # Activate multipath with most commonly used options : user_friendly_names, find_multipaths
-            if [[ $OS_VENDOR == SUSE_LINUX ]] && (( $OS_VERSION < 12 )) ; then
-
-                # SLES 11 multipath does not support find_multipaths and does not have /etc/multipath/bindings file
-                # which keep relationship between name and uniq ID...
-                # It is better to not activate those options by default.
-                LogPrint "mpathconf not found... SLES11 detected: activating multipath with minimal options"
-                touch /etc/multipath.conf
-
-            else
-                LogPrint "mpathconf not found... activating multipath with options : user_friendly_names, find_multipaths)"
+            # Activate multipath with most commonly used options : user_friendly_names
+            LogPrint "mpathconf not found... creating default multipath.conf file with friendly_names"
             echo "
 defaults {
         user_friendly_names yes
-        find_multipaths yes
+        bindings_file "/etc/multipath/bindings"
 }
 
 blacklist {
 }" >> /etc/multipath.conf
-            fi
         fi
     fi
 
