@@ -15,8 +15,8 @@ if multipath ; then
 
     [ ! -d  $TARGET_FS_ROOT/etc/multipath ] && mkdir -p $TARGET_FS_ROOT/etc/multipath
 
-    if [ ! -f $TARGET_FS_ROOT/etc/multipath/binding ] ; then
-        [ -f /etc/multipath/binding ] && cp $TARGET_FS_ROOT/etc/multipath/binding
+    if [ ! -f $TARGET_FS_ROOT/etc/multipath/bindings ] ; then
+        [ -f /etc/multipath/bindings ] && cp /etc/multipath/bindings $TARGET_FS_ROOT/etc/multipath/bindings
     fi
 
     # Cleaning /etc/multipath/wwids file and update it with new wwids.
