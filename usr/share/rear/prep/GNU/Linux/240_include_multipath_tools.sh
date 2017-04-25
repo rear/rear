@@ -4,7 +4,7 @@
 # Run the following only if BOOT_OVER_SAN is true
 is_true "$BOOT_OVER_SAN" || return
 
-PROGS=( "${PROGS[@]}" multipath dmsetup kpartx multipathd scsi_id  )
+PROGS=( "${PROGS[@]}" multipath mpathconf dmsetup kpartx multipathd scsi_id  )
 COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/multipath.conf /etc/multipath/* /lib*/multipath )
 
 # depending to the linux distro and arch, libaio can be located in different dir. (ex: /lib/powerpc64le-linux-gnu)
