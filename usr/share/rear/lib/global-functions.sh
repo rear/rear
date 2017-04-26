@@ -396,7 +396,7 @@ function is_device_mounted
 # The idea of the mathlib_calculate () is to do all
 # calculations with basically unlimited precision
 # and only have the final result as integer.
-# Therefore one cannot use the calculate function
+# Therefore one cannot use the mathlib_calculate ()
 # to get an integer remainder (modulo).
 #
 # e.g.
