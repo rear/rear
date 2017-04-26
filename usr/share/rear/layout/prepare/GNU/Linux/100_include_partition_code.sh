@@ -129,7 +129,7 @@ EOF
             # For the SUSE specific gpt_sync_mbr partitioning scheme
             # see https://github.com/rear/rear/issues/544
             if [[ "$label" == "gpt" || "$label" == "gpt_sync_mbr" ]] ; then
-                device_size=$( calculate "$device_size - 33*$block_size" )
+                device_size=$( mathlib_calculate "$device_size - 33*$block_size" )
                 if [[ "$MIGRATION_MODE" ]] ; then
                     Log "Size reductions of GPT partitions probably needed."
                 fi
@@ -175,7 +175,7 @@ EOF
 
         if [[ "$FEATURE_PARTED_ANYUNIT" ]] ; then
             if [[ "$end" ]] ; then
-                end=$( calculate "$end - 1" )B
+                end=$( mathlib_calculate "$end - 1" )B
             else
                 end="100%"
             fi
@@ -187,11 +187,11 @@ EOF
         else
             ### Old versions of parted accept only sizes in megabytes...
             if (( $start > 0 )) ; then
-                start_mb=$( calculate "$start / 1024 / 1024" )
+                start_mb=$( mathlib_calculate "$start / 1024 / 1024" )
             else
                 start_mb=0
             fi
-            end_mb=$( calculate "$end / 1024 / 1024" )
+            end_mb=$( mathlib_calculate "$end / 1024 / 1024" )
             cat  >> "$LAYOUT_CODE" <<EOF
 my_udevsettle
 parted -s $device mkpart '"$name"' $start_mb $end_mb >&2
@@ -204,9 +204,9 @@ EOF
         # extended partitions have a small actual size as reported by sysfs
         # in front of a logical partition should be at least 512B empty space
         if [ -n "$MIGRATION_MODE" ] && [ "$name" = "logical" ] ; then
-            start=$( calculate "$start + ${size%B} + $block_size" )
+            start=$( mathlib_calculate "$start + ${size%B} + $block_size" )
         else
-            start=$( calculate "$start + ${size%B}" )
+            start=$( mathlib_calculate "$start + ${size%B}" )
         fi
 
         # round starting size to next multiple of 4096

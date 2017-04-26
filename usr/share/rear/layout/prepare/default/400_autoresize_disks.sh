@@ -21,7 +21,7 @@ while read type device size junk ; do
         fi
 
         oldsize="$size"
-        difference=$( calculate "$newsize - $oldsize" ) # can be negative!
+        difference=$( mathlib_calculate "$newsize - $oldsize" ) # can be negative!
         Log "Total resize of ${difference}B"
 
         Log "Searching for resizeable partitions on disk $device (${newsize}B)"
@@ -32,11 +32,11 @@ while read type device size junk ; do
         available_space="$newsize"
         while read type part size start name flags name junk; do
             if [ -n "$(grep "^fs $name /boot\|^swap $name " "$LAYOUT_FILE")" ]; then
-                    available_space=$( calculate "$available_space - ${size%B}" )
+                    available_space=$( mathlib_calculate "$available_space - ${size%B}" )
                     Log "Will not resize partition $name."
             else
                     partitions=( "${partitions[@]}" "$name|${size%B}" )
-                    resizeable_space=$( calculate "$resizeable_space + ${size%B}" )
+                    resizeable_space=$( mathlib_calculate "$resizeable_space + ${size%B}" )
 
                     Log "Will resize partition $name."
             fi
@@ -74,7 +74,7 @@ while read type device size junk ; do
             name=${data%|*}
             partition_size=${data#*|}
 
-            new_size=$( calculate "( $partition_size / $resizeable_space ) * $available_space" )
+            new_size=$( mathlib_calculate "( $partition_size / $resizeable_space ) * $available_space" )
 
             (( new_size > 0 ))
             BugIfError "Partition $name resized to a negative number."

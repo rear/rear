@@ -392,8 +392,24 @@ function is_device_mounted
 
 # Use 'bc' for calculations because other tools
 # fail in various unexpected ways for big numbers,
-# e.g. see https://github.com/rear/rear/issues/1307
-function calculate()
+# c.f. https://github.com/rear/rear/issues/1307
+# The idea of the mathlib_calculate () is to do all
+# calculations with basically unlimited precision
+# and only have the final result as integer.
+# Therefore one cannot use the calculate function
+# to get an integer remainder (modulo).
+#
+# e.g.
+# With bash arithmetic expansion
+#   # start=123456
+#   # echo $(( $start % 4096 ))
+#   # 576
+#
+# But will fail with mathlib_calculate ()
+#   # calculate "$start % 4096"
+#   # 0
+#
+function mathlib_calculate()
 {
     bc -ql <<<"result=$@ ; scale=0 ; result / 1 "
 }
