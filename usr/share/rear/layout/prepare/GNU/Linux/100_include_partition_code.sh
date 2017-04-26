@@ -211,7 +211,7 @@ EOF
 
         # round starting size to next multiple of 4096
         # 4096 is a good match for most device's block size
-        start=$( calculate "$start + 4096 - ( $start % 4096 )" )
+        start=$(( $start + 4096 - ( $start % 4096 ) ))
 
         # Get the partition number from the name
         local number=$(get_partition_number "$partition")
