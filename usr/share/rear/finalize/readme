@@ -7,4 +7,4 @@
 600-699: bootloader installation 
 700-799: 
 800-899: Last Check
-900-999: Remount all TARGET FS in /mnt/local
+900-999: Remount all TARGET FS in /mnt/local + post-recovery (NBU)
