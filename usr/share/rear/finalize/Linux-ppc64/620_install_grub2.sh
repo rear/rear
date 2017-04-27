@@ -1,0 +1,1 @@
+../Linux-ppc64le/620_install_grub2.sh

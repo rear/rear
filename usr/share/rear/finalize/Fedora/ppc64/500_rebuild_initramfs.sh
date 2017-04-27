@@ -1,1 +1,0 @@
-../i386/500_rebuild_initramfs.sh
