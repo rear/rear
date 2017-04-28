@@ -17,9 +17,10 @@ start_seconds=$( date +%s )
 case "$REAR_INITRD_COMPRESSION" in
     (lz4)
         # Create initrd.lz4 with lz4 default -1 compression (fast speed but less compression)
+        # -l is needed to make initramfs boot, this compresses using Legacy format (Linux kernel compression)
         REAR_INITRD_FILENAME="initrd.lz4"
         LogPrint "Creating recovery/rescue system initramfs/initrd $REAR_INITRD_FILENAME with lz4 compression"
-        if find . ! -name "*~" | cpio -H newc --create --quiet | lz4 > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
+        if find . ! -name "*~" | cpio -H newc --create --quiet | lz4 -l > "$TMP_DIR/$REAR_INITRD_FILENAME" ; then
             needed_seconds=$(( $( date +%s ) - start_seconds ))
             LogPrint "Created $REAR_INITRD_FILENAME with lz4 compression ($( stat -c%s $TMP_DIR/$REAR_INITRD_FILENAME ) bytes) in $needed_seconds seconds"
         else

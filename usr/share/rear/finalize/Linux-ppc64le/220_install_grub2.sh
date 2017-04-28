@@ -1,1 +1,0 @@
-../Linux-ppc64/220_install_grub2.sh

@@ -11,11 +11,16 @@
 # -----------------------------------------------------80-|
 cat <<EOF > $ROOTFS_DIR/root/.bash_history
 : # no more predefined ReaR entries in the bash history
-vi /var/lib/rear/layout/diskrestore.sh  # disk restore
-vi /var/lib/rear/layout/disklayout.conf # disk layout
-less /var/log/rear/*                    # log file(s)
-loadkeys -d                             # default keyboard
-rear recover                            # recover system
+systemctl start sshd.service              # start SSH daemon
+ip -4 addr                                # get IPv4 address
+dhcpcd eth0                               # start DHCP client
+nano /var/lib/rear/layout/diskrestore.sh  # disk restore
+nano /var/lib/rear/layout/disklayout.conf # disk layout
+vi /var/lib/rear/layout/diskrestore.sh    # disk restore
+vi /var/lib/rear/layout/disklayout.conf   # disk layout
+less /var/log/rear/*                      # log file(s)
+loadkeys -d                               # default keyboard
+rear recover                              # recover system
 : # there are some predefined entries in the bash history
 EOF
 

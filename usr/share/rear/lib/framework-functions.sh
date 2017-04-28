@@ -59,7 +59,9 @@ function SourceStage () {
     stage="$1"
     shift
     STARTSTAGE=$SECONDS
+    Log "======================"
     Log "Running '$stage' stage"
+    Log "======================"
     scripts=(
         $(
         cd $SHARE_DIR/$stage ;

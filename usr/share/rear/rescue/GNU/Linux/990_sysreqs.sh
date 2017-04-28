@@ -105,7 +105,7 @@ echo "  IP adresses:"
 # a test whether or not <<$( dig +short -x ${ip%/*} )>> is empty would help.
 ip addr show | grep inet | grep -v 127.0.0. | sed -e "s/ brd.*//" -e "s/inet6//" -e "s/inet//" | while read ip ; do
     if hash dig 2>/dev/null; then
-        DNSname="$( dig +short -x ${ip%/*} )"
+        DNSname="$( dig +time=1 +tries=1 +short -x ${ip%/*} )"
     else
         DNSname=""
     fi

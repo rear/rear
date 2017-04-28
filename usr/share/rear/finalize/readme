@@ -1,0 +1,10 @@
+000-099: initialization
+100-199: creating devices on TARGET (/dev)
+200-299: disk device migration
+300-399: network device migration
+400-499: Update some configuration on TARGET (like multipath)
+500-599: rebuild initrd
+600-699: bootloader installation 
+700-799: 
+800-899: Last Check
+900-999: Remount all TARGET FS in /mnt/local + post-recovery (NBU)
