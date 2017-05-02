@@ -25,7 +25,11 @@ fi
 # PXE_CONFIG_PREFIX is a "string" (by default rear-) - is the name of PXE boot configuration of $HOSTNAME
 PXE_CONFIG_FILE="${PXE_CONFIG_PREFIX}$HOSTNAME"
 if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
-    make_pxelinux_config >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE"
+    if is_true "$PXE_CONFIG_GRUB_STYLE" ; then
+        make_pxelinux_config_grub >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE"
+    else
+        make_pxelinux_config >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE"
+    fi
     chmod 444 "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE"
 else
     # legacy way using PXE_LOCAL_PATH default
@@ -53,15 +57,33 @@ if test "$PXE_CREATE_LINKS" -a "$PXE_REMOVE_OLD_LINKS" ; then
 		done
 fi
 
+# When using Grub network boot via tftp/bootp,
+# the client is looking at a file named "grub.cfg-01-<MAC>"
+# or grub.cfg-<IP in hex>. It is like PXE, but prefixed with "grub.cfg-"
+if is_true $PXE_CONFIG_GRUB_STYLE ; then
+    PXE_LINK_PREFIX="grub.cfg-"
+else
+    PXE_LINK_PREFIX=""
+fi
+
 case "$PXE_CREATE_LINKS" in
 	IP)
 		# look only at IPv4 and skip localhost (127...)
 		ip a | grep inet\ | grep -v inet\ 127 | \
 			while read inet IP junk ; do
 				IP=${IP%/*}
-				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP) >&2
-				# to capture the whole subnet as well
-				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP | cut -c 1-6) >&2
+                # check if gethostip is available.
+                if type gethostip &>/dev/null ; then
+    				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP) >&2
+    				# to capture the whole subnet as well
+    				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP | cut -c 1-6) >&2
+                else
+                # if gethostip is not available on your platform (like ppc64),
+                # use awk to generate IP in hex mode.
+                    ln -sf $v "$PXE_CONFIG_FILE" $PXE_LINK_PREFIX$(printf '%02X' ${IP//./ }) >&2
+                    # to capture the whole subnet as well
+    				ln -sf $v "$PXE_CONFIG_FILE" $PXE_LINK_PREFIX$(printf '%02X' ${IP//./ } | cut -c 1-6) >&2
+                fi
 			done
 		;;
 	MAC)
@@ -93,4 +115,3 @@ else
     # Add to result files
     RESULT_FILES=( "${RESULT_FILES[@]}" "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" )
 fi
-

@@ -65,7 +65,7 @@ fi
 
 
 if [[ ! -z "$PXE_TFTP_URL" ]] ; then
-    LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_TFTP_URL"
+    LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_TFTP_URL/$OUTPUT_PREFIX_PXE"
     umount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs
     rmdir $BUILD_DIR/tftpbootfs >&2
     if [[ $? -eq 0 ]] ; then
@@ -77,4 +77,3 @@ else
     # Add to result files
     RESULT_FILES=( "${RESULT_FILES[@]}" "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL" "$PXE_TFTP_LOCAL_PATH/$PXE_INITRD" "$PXE_TFTP_LOCAL_PATH/$PXE_MESSAGE" )
 fi
-
