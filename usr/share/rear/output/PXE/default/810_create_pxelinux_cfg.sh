@@ -73,7 +73,7 @@ case "$PXE_CREATE_LINKS" in
 			while read inet IP junk ; do
 				IP=${IP%/*}
                 # check if gethostip is available.
-                if type gethostip &>/dev/null ; then
+                if has_binary gethostip &>/dev/null ; then
     				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP) >&2
     				# to capture the whole subnet as well
     				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP | cut -c 1-6) >&2
