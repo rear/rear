@@ -61,9 +61,9 @@ fi
 # the client is looking at a file named "grub.cfg-01-<MAC>"
 # or grub.cfg-<IP in hex>. It is like PXE, but prefixed with "grub.cfg-"
 if is_true $PXE_CONFIG_GRUB_STYLE ; then
-    PXE_LINK_PREFIX="grub.cfg-"
+    pxe_link_prefix="grub.cfg-"
 else
-    PXE_LINK_PREFIX=""
+    pxe_link_prefix=""
 fi
 
 case "$PXE_CREATE_LINKS" in
@@ -80,9 +80,9 @@ case "$PXE_CREATE_LINKS" in
                 else
                 # if gethostip is not available on your platform (like ppc64),
                 # use awk to generate IP in hex mode.
-                    ln -sf $v "$PXE_CONFIG_FILE" $PXE_LINK_PREFIX$(printf '%02X' ${IP//./ }) >&2
+                    ln -sf $v "$PXE_CONFIG_FILE" $pxe_link_prefix$(printf '%02X' ${IP//./ }) >&2
                     # to capture the whole subnet as well
-    				ln -sf $v "$PXE_CONFIG_FILE" $PXE_LINK_PREFIX$(printf '%02X' ${IP//./ } | cut -c 1-6) >&2
+    				ln -sf $v "$PXE_CONFIG_FILE" $pxe_link_prefix$(printf '%02X' ${IP//./ } | cut -c 1-6) >&2
                 fi
 			done
 		;;
