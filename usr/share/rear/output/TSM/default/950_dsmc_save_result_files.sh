@@ -1,5 +1,13 @@
 # saving result files via TSM
 
+# If TSM_RESULT_SAVE is false, exit
+is_false $TSM_RESULT_SAVE && return
+
+# When PXE_TFTP_URL is defined, result files are directly copied on the remote
+# PXE/TFTP server, and the local files are deleted (800_copy_to_tftp.sh).
+# So, no need to backup RESULT_FILES when PXE_TFTP_UR is defined.
+[[ ! -z "$PXE_TFTP_URL" ]] && return
+
 [ ${#RESULT_FILES[@]} -gt 0 ]
 StopIfError "No files to copy (RESULT_FILES is empty)"
 
@@ -52,4 +60,3 @@ ret=$?
 # Error code 8 can be ignored
 [ "$ret" -eq 0 -o "$ret" -eq 8 ]
 StopIfError "Could not save result files with dsmc"
-
