@@ -59,7 +59,7 @@ WORKFLOW_dump () {
 	esac
 
 	LogPrint "Output to $OUTPUT"
-	for opt in $(eval echo '${!'"$OUTPUT"'_*}') RESULT_MAILTO ; do
+	for opt in $(eval echo '${!'"$OUTPUT"'_*}' '${!OUTPUT_*}') RESULT_MAILTO ; do
 		LogPrint "$( printf "%40s = %s" "$opt" "$(eval 'echo "${'"$opt"'[@]}"')" )"
 	done
 
