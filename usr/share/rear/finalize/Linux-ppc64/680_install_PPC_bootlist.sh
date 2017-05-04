@@ -1,0 +1,1 @@
+../Linux-ppc64le/680_install_PPC_bootlist.sh
