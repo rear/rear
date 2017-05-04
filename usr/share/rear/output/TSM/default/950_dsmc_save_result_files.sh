@@ -1,7 +1,10 @@
 # saving result files via TSM
 
 # If TSM_RESULT_SAVE is false, exit
-is_false $TSM_RESULT_SAVE && return
+if is_false $TSM_RESULT_SAVE; then
+    Log "Result saving via TSM skipped"
+    return
+fi
 
 # When PXE_TFTP_URL is defined, result files are directly copied on the remote
 # PXE/TFTP server, and the local files are deleted (800_copy_to_tftp.sh).
@@ -43,11 +46,6 @@ if test -s $(get_template "RESULT_usage_$OUTPUT.txt") ; then
     cp $v $(get_template "RESULT_usage_$OUTPUT.txt") "$TSM_RESULT_FILE_PATH/README" >&2
     StopIfError "Could not copy '$(get_template RESULT_usage_$OUTPUT.txt)'"
     TSM_RESULT_FILES=( "${TSM_RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH"/README )
-fi
-
-if [[ "$TSM_RESULT_SAVE" = "n" ]]; then
-    Log "Result saving via TSM skipped"
-    return
 fi
 
 Log "Saving files '${TSM_RESULT_FILES[@]}' with dsmc"
