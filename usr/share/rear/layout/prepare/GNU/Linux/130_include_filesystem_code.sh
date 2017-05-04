@@ -22,39 +22,35 @@ function create_fs () {
     # and https://github.com/rear/rear/issues/1327
     # and https://github.com/rear/rear/issues/799
     # TODO: Enhancements welcome from whoever likes to maintain them ;-)
-    local has_wipefs="" wipefs_command="" wipefs_info_message=""
+    local cleanup_command="" cleanup_info_message=""
     if has_binary wipefs ; then
         # First try wipefs that supports '--force' in order to also erase the partition table on a block device.
         # If that fails and regardless why it fails (i.e. play dumb), try a more conservative approach with 'wipefs --all'.
         # If that also fails and regardless why it fails (play dumb), let dd erase the first 512 bytes as generic fallback.
         # At https://github.com/rear/rear/wiki/Coding-Style see "Try to care about possible errors"
         # and "Maintain backward compatibility" and "Dirty hacks welcome".
-        has_wipefs="yes"
-        # Because the wipefs_command is added to the LAYOUT_CODE script (i.e. diskrestore.sh)
+        # Because the cleanup_command is added to the LAYOUT_CODE script (i.e. diskrestore.sh)
         # and the LAYOUT_CODE script is run with 'set -e' have a final 'true' in order to
         # not let "rear recover" abort only because cleanup of disk partitions failed:
-        wipefs_command="wipefs --all --force $device || wipefs --all $device || dd if=/dev/zero of=$device bs=512 count=1 || true"
-        wipefs_info_message="Using wipefs to cleanup '$device' before creating filesystem."
-        Debug "$wipefs_info_message"
-        echo "# $wipefs_info_message" >> "$LAYOUT_CODE"
+        cleanup_command="wipefs --all --force $device || wipefs --all $device || dd if=/dev/zero of=$device bs=512 count=1 || true"
+        cleanup_info_message="Using wipefs to cleanup '$device' before creating filesystem."
     else
         # As generic fallback use plain dd to erase dos partition tables
         # on systems that do not have wipefs which should at least avoid
         # issues like https://github.com/rear/rear/issues/1327 on all systems.
-        # Simply reuse the 'wipefs' variables regardless that their name is misleading in this case here.
-        has_wipefs="yes"
-        # Because the wipefs_command is added to the LAYOUT_CODE script (i.e. diskrestore.sh)
+        # Because the cleanup_command is added to the LAYOUT_CODE script (i.e. diskrestore.sh)
         # and the LAYOUT_CODE script is run with 'set -e' have a final 'true' in order to
         # not let "rear recover" abort only because cleanup of disk partitions failed:
-        wipefs_command="dd if=/dev/zero of=$device bs=512 count=1 || true"
-        wipefs_info_message="Using dd to cleanup the first 512 bytes on '$device' before creating filesystem."
-        Debug "$wipefs_info_message"
-        echo "# $wipefs_info_message" >> "$LAYOUT_CODE"
+        cleanup_command="dd if=/dev/zero of=$device bs=512 count=1 || true"
+        cleanup_info_message="Using dd to cleanup the first 512 bytes on '$device' before creating filesystem."
     fi
+
     # Tell what will be done:
     local create_filesystem_info_message="Creating filesystem of type '$fstype' with mount point '$mountpoint' on '$device'."
     Debug "$create_filesystem_info_message"
     echo "LogPrint '$create_filesystem_info_message'" >> "$LAYOUT_CODE"
+    Debug "$cleanup_info_message"
+    echo "# $cleanup_info_message" >> "$LAYOUT_CODE"
 
     # Actually do it:
     case "$fstype" in
@@ -95,8 +91,8 @@ function create_fs () {
                         ;;
                 esac
             done
-            # If available use wipefs to cleanup disk partition:
-            test "$has_wipefs" && echo "$wipefs_command" >> "$LAYOUT_CODE"
+            # Cleanup disk partition:
+            echo "$cleanup_command" >> "$LAYOUT_CODE"
             # Use the right program to adjust tunable filesystem parameters on ext2/ext3/ext4 filesystems:
             local tunefs="tune2fs"
             # On RHEL 5, tune2fs does not work on ext4.
@@ -135,8 +131,8 @@ function create_fs () {
             fi
             ;;
         (xfs)
-            # If available use wipefs to cleanup disk partition:
-            test "$has_wipefs" && echo "$wipefs_command" >> "$LAYOUT_CODE"
+            # Cleanup disk partition:
+            echo "$cleanup_command" >> "$LAYOUT_CODE"
 
             # Load xfs options from configuration files saved during
             # 'rear mkbackup/mkrescue' by xfs_info.
@@ -171,8 +167,8 @@ function create_fs () {
             fi
             ;;
         (reiserfs)
-            # If available use wipefs to cleanup disk partition:
-            test "$has_wipefs" && echo "$wipefs_command" >> "$LAYOUT_CODE"
+            # Cleanup disk partition:
+            echo "$cleanup_command" >> "$LAYOUT_CODE"
             # Actually create the filesystem:
             echo "mkfs -t $fstype -q $device" >> "$LAYOUT_CODE"
             # Set the label:
@@ -185,8 +181,8 @@ function create_fs () {
             fi
             ;;
         (btrfs)
-            # If available use wipefs to cleanup disk partition:
-            test "$has_wipefs" && echo "mount | grep -q $device || $wipefs_command" >> "$LAYOUT_CODE"
+            # Cleanup disk partition provided the disk partition is not already mounted:
+            echo "mount | grep -q $device || $cleanup_command" >> "$LAYOUT_CODE"
             # Actually create the filesystem provided the disk partition is not already mounted.
             # User -f [force] to force overwriting an existing btrfs on that disk partition
             # when the disk was already used before, see https://bugzilla.novell.com/show_bug.cgi?id=878870
@@ -221,8 +217,8 @@ EOF
             fi
             ;;
         (vfat)
-            # If available use wipefs to cleanup disk partition:
-            test "$has_wipefs" && echo "$wipefs_command" >> "$LAYOUT_CODE"
+            # Cleanup disk partition:
+            echo "$cleanup_command" >> "$LAYOUT_CODE"
             # Actually create the filesystem with or without label:
             if [ -n "$label" ] ; then
                 # we substituted all " " with "\\b" in savelayout (\\b becomes \b by reading label)
@@ -247,8 +243,8 @@ EOF
             fi
             ;;
         (*)
-            # If available use wipefs to cleanup disk partition:
-            test "$has_wipefs" && echo "$wipefs_command" >> "$LAYOUT_CODE"
+            # Cleanup disk partition:
+            echo "$cleanup_command" >> "$LAYOUT_CODE"
             # Actually create the filesystem:
             echo "mkfs -t $fstype $device >&2" >> "$LAYOUT_CODE"
             ;;
