@@ -1,5 +1,16 @@
 # saving result files via TSM
 
+# If TSM_RESULT_SAVE is false, exit
+if is_false $TSM_RESULT_SAVE; then
+    Log "Result saving via TSM skipped"
+    return
+fi
+
+# When PXE_TFTP_URL is defined, result files are directly copied on the remote
+# PXE/TFTP server, and the local files are deleted (800_copy_to_tftp.sh).
+# So, no need to backup RESULT_FILES when PXE_TFTP_URL is defined.
+[[ ! -z "$PXE_TFTP_URL" ]] && return
+
 [ ${#RESULT_FILES[@]} -gt 0 ]
 StopIfError "No files to copy (RESULT_FILES is empty)"
 
@@ -37,11 +48,6 @@ if test -s $(get_template "RESULT_usage_$OUTPUT.txt") ; then
     TSM_RESULT_FILES=( "${TSM_RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH"/README )
 fi
 
-if [[ "$TSM_RESULT_SAVE" = "n" ]]; then
-    Log "Result saving via TSM skipped"
-    return
-fi
-
 Log "Saving files '${TSM_RESULT_FILES[@]}' with dsmc"
 if [[ -z "$TSM_ARCHIVE_MGMT_CLASS" ]]; then
     LC_ALL=${LANG_RECOVER} dsmc incremental "${TSM_RESULT_FILES[@]}" >&8
@@ -52,4 +58,3 @@ ret=$?
 # Error code 8 can be ignored
 [ "$ret" -eq 0 -o "$ret" -eq 8 ]
 StopIfError "Could not save result files with dsmc"
-
