@@ -4,6 +4,16 @@
 # skip if yaboot conf is not found
 test -f $TARGET_FS_ROOT/etc/yaboot.conf || return
 
+# check if yaboot.conf is managed by lilo, if yes, return
+if test -f $TARGET_FS_ROOT/etc/lilo.conf; then
+    # if the word "initrd-size" is present in yaboot.conf, this mean it should be
+    # managed by lilo.
+    if grep -qw initrd-size $TARGET_FS_ROOT/etc/yaboot.conf; then
+        LogPrint "yaboot.conf found but seems to be managed by lilo."
+        return
+    fi
+fi
+
 # Reinstall yaboot boot loader
 LogPrint "Installing PPC PReP Boot partition."
 
