@@ -83,7 +83,7 @@ local mkinitrd_binary=$( chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sb
 if test $mkinitrd_binary ; then
     # mkinitrd calls other tool like find, xargs, wc ... without full PATH.
     # $PATH MUST BE SET for mkinitrd can run successfully.
-    if chroot $TARGET_FS_ROOT /bin/bash -c $'PATH=/sbin:/usr/sbin:/usr/bin:/bin' $mkinitrd_binary >&2 ; then
+    if chroot $TARGET_FS_ROOT /bin/bash -c "PATH=/sbin:/usr/sbin:/usr/bin:/bin $mkinitrd_binary" >&2 ; then
         LogPrint "Recreated initrd ($mkinitrd_binary)."
     else
         LogPrint "WARNING:
