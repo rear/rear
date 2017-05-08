@@ -47,6 +47,7 @@ Requires: tar
 Requires: openssl
 Requires: gawk
 Requires: attr
+Requires: bc
 
 ### If you require NFS, you may need the below packages
 #Requires: nfsclient portmap rpcbind
