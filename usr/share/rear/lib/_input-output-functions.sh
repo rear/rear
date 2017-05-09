@@ -88,7 +88,7 @@ function trap () {
 # see https://github.com/rear/rear/issues/729
 function has_binary () {
     for bin in $@ ; do
-        if type $bin >&8 2>&1 ; then
+        if type $bin &>/dev/null ; then
             return 0
         fi
     done
@@ -101,7 +101,7 @@ function has_binary () {
 # or function, and returns the name of the disk file that would be executed
 # see https://github.com/rear/rear/issues/729
 function get_path () {
-    type -P $1 2>&8
+    type -P $1 2>/dev/null
 }
 
 function Error () {
@@ -224,6 +224,7 @@ LogPrintIfError() {
 
 # setup dummy progress subsystem as a default
 # not VERBOSE, Progress stuff replaced by dummy/noop
+# cf. https://github.com/rear/rear/issues/887
 exec 8>/dev/null # start ProgressPipe listening at fd 8
 QuietAddExitTask "exec 8>&-" # new method, close fd 8 at exit
 
