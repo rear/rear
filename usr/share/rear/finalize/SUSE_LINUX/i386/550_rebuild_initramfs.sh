@@ -81,7 +81,9 @@ local mkinitrd_binary=$( chroot $TARGET_FS_ROOT /bin/bash -c 'PATH=/sbin:/usr/sb
 # and then "rear recover" cannot be aborted with the usual [Ctrl]+[C] keys.
 # Use plain $var because when var contains only blanks test "$var" results true because test " " results true:
 if test $mkinitrd_binary ; then
-    if chroot $TARGET_FS_ROOT $mkinitrd_binary >&2 ; then
+    # mkinitrd calls other tool like find, xargs, wc ... without full PATH.
+    # $PATH MUST BE SET for mkinitrd can run successfully.
+    if chroot $TARGET_FS_ROOT /bin/bash -c "PATH=/sbin:/usr/sbin:/usr/bin:/bin $mkinitrd_binary" >&2 ; then
         LogPrint "Recreated initrd ($mkinitrd_binary)."
     else
         LogPrint "WARNING:
@@ -99,4 +101,3 @@ and decide yourself, whether the system will boot or not.
 fi
 
 umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
-
