@@ -1,4 +1,5 @@
 rear-*.tar.gz
+rear-*.rpm
 test/
 build-stamp
 /var
