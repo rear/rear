@@ -109,7 +109,7 @@ while read -u 3 disk dev size junk ; do
         fi
         break
     done 2>&1 # to get the prompt, otherwise it would go to the logfile
-done 3< <(grep -E " ^disk |^multipath " "$LAYOUT_FILE")
+done 3< <(grep -E "^disk |^multipath " "$LAYOUT_FILE")
 
 LogPrint "This is the disk mapping table:"
 LogPrint "$(sed -e 's|^|    |' "$MAPPING_FILE")"
