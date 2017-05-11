@@ -17,6 +17,19 @@ if test "none" = "$MODULES" ; then
     return
 fi
 
+# As general condition the /lib/modules/$KERNEL_VERSION directory must exist:
+test "$KERNEL_VERSION" || KERNEL_VERSION="$( uname -r )"
+if ! test -d "/lib/modules/$KERNEL_VERSION" ; then
+    Error "Cannot copy kernel modules because /lib/modules/$KERNEL_VERSION does not exist"
+fi
+
+# Local functions that are 'unset' at the end of this script:
+function modinfo_filename () {
+    local module_name=$1
+    # Older modinfo (e.g. the one in SLES10) does not support '-k':
+    modinfo -k $KERNEL_VERSION -F filename $module_name 2>/dev/null || modinfo -F filename $module_name
+}
+
 # Artificial 'for' clause that is run only once
 # to be able to 'continue' with the code after it
 # when the kernel modules have been copied into the rescue/recovery system
@@ -25,27 +38,25 @@ fi
 for dummy in "once" ; do
 
     # The special user setting MODULES=( 'all' ) enforces that
-    # all files from the /lib/modules/* directories
-    # get included in the rescue/recovery system
-    # regardless of what is set in EXCLUDE_MODULES.
+    # all files in the /lib/modules/$KERNEL_VERSION directory
+    # get included in the rescue/recovery system.
     # Test all MODULES array members to make the 'all' functionality work for
     # MODULES array contents like MODULES=( 'moduleX' 'all' 'moduleY' ):
     if IsInArray "all" "${MODULES[@]}" ; then
-        LogPrint "Copying all kernel modules in /lib/modules/* (MODULES contains 'all')"
-        # The '--parents' is needed to get the '/lib/' directory in the copy:
-        if ! cp $verbose -t $ROOTFS_DIR -a --parents /lib/modules 1>&2 ; then
-            Error "Failed to copy all kernel modules in /lib/modules/*"
+        LogPrint "Copying all kernel modules in /lib/modules/$KERNEL_VERSION (MODULES contains 'all')"
+        # The '--parents' is needed to get the '/lib/modules/' directory in the copy:
+        if ! cp $verbose -t $ROOTFS_DIR -a --parents /lib/modules/$KERNEL_VERSION 1>&2 ; then
+            Error "Failed to copy all kernel modules in /lib/modules/$KERNEL_VERSION"
         fi
         # After successful copying do the the code after the artificial 'for' clause:
         continue
     fi
 
     # The special user setting MODULES=( 'loaded' ) enforces that
-    # exactly those kernel modules get included in the rescue/recovery system
-    # that are currently loaded regardless of what is set in EXCLUDE_MODULES
-    # and regardless of what rescue/GNU/Linux/240_kernel_modules.sh has added.
+    # only those kernel modules that are currently loaded
+    # get included in the rescue/recovery system.
     # Test all MODULES array members to make the 'loaded' functionality work for
-    # MODULES array contents like MODULES=( 'moduleX' 'all' 'moduleY' ):
+    # MODULES array contents like MODULES=( 'moduleX' 'loaded' 'moduleY' ):
     if IsInArray "loaded" "${MODULES[@]}" ; then
         LogPrint "Copying only currently loaded kernel modules (MODULES contains 'loaded')"
         # The rescue/recovery system cannot work when its kernel modules
@@ -60,7 +71,7 @@ for dummy in "once" ; do
         loaded_modules="$( lsmod | tail -n +2 | cut -d ' ' -f 1 )"
         # Can it really happen that a module is currently loaded but 'modinfo -F filename' cannot show its filename?
         # To be on the safe side there is a test even for for such a possibly weird error here:
-        loaded_modules_files="$( for loaded_module in $loaded_modules ; do modinfo -F filename $loaded_module || Error "$loaded_module loaded but no module file?" ; done )"
+        loaded_modules_files="$( for loaded_module in $loaded_modules ; do modinfo_filename $loaded_module || Error "$loaded_module loaded but no module file?" ; done )"
         for loaded_module_file in $loaded_modules_files ; do
             if ! cp $verbose -t $ROOTFS_DIR -L --preserve=all --parents $loaded_module_file 1>&2 ; then
                 Error "Failed to copy $loaded_module_file"
@@ -77,30 +88,22 @@ for dummy in "once" ; do
         module=${module#.o}
         # Strip trailing ".ko" if there:
         module=${module#.ko}
-        # Check if the module is not in the exclude list:
-        for exclude_module in "${EXCLUDE_MODULES[@]}" ; do
-            # Continue with the next module if the current one is in EXCLUDE_MODULES:
-            test "$module" = "$exclude_module" && continue 2
-        done
         # Continue with the next module if the current one does not exist:
         modinfo $module &>/dev/null || continue
-        # Use /etc/modprobe.conf if exists:
-        with_modprobe_conf=""
-        test -e /etc/modprobe.conf && with_modprobe_conf="-C /etc/modprobe.conf"
         # Resolve module dependencies:
-        # I.e. get the module file plus the module files of other needed modules.
+        # Get the module file plus the module files of other needed modules.
         # This is currently only a "best effort" attempt because
-        # in general 'modprobe --show-depends' insufficient to get all needed modules
+        # in general 'modprobe --show-depends' is insufficient to get all needed modules
         # see https://github.com/rear/rear/issues/1355
-        # The --ignore-install is helpful because that converts currently unsupported '^install' output lines
+        # The --ignore-install is helpful because it converts currently unsupported '^install' output lines
         # into supported '^insmod' output lines for the particular module but that is also insufficient
         # see also https://github.com/rear/rear/issues/1355
-        module_files=$( /sbin/modprobe $with_modprobe_conf --ignore-install --set-version $KERNEL_VERSION --show-depends $module 2>/dev/null | awk '/^insmod / { print $2 }' )
+        module_files=$( /sbin/modprobe --ignore-install --set-version $KERNEL_VERSION --show-depends $module 2>/dev/null | awk '/^insmod / { print $2 }' )
         if ! test "$module_files" ; then
             # Fallback is the plain module file without other needed modules (cf. the MODULES=( 'loaded' ) case above):
             # Can it really happen that a module exists (which is tested above) but 'modinfo -F filename' cannot show its filename?
             # To be on the safe side there is a test even for for such a possibly weird error here:
-            module_files="$( modinfo -F filename $module || Error "$module exists but no module file?" )"
+            module_files="$( modinfo_filename $module || Error "It seems $module exists but there is no module file?" )"
         fi
         for module_file in $module_files ; do
             if ! cp $verbose -t $ROOTFS_DIR -L --preserve=all --parents $module_file 1>&2 ; then
@@ -109,21 +112,32 @@ for dummy in "once" ; do
         done
     done
 
+# End of artificial 'for' clause:
 done
 
-# Generate modules.dep and map files in all existing $ROOTFS_DIR/lib/modules/* directories
-# (because of the MODULES=( 'all' ) case several such directories could exist):
-for kernel_version in $( ls $ROOTFS_DIR/lib/modules/ ) ; do
-    if test -d $ROOTFS_DIR/lib/modules/$kernel_version ; then
-        depmod -b "$ROOTFS_DIR" -v "$kernel_version" >/dev/null || Error "depmod failed to configure modules for the rescue/recovery system"
-    fi
+# Remove those modules that are specified in the EXCLUDE_MODULES array:
+for exclude_module in "${EXCLUDE_MODULES[@]}" ; do
+    # Continue with the next module if the current one does not exist:
+    modinfo $exclude_module &>/dev/null || continue
+    # In this case it is ignored when a module exists but 'modinfo -F filename' cannot show its filename
+    # because then it is assumed that also no module file had been copied above:
+    exclude_module_file="$( modinfo_filename $exclude_module 2>/dev/null )"
+    test -e "$ROOTFS_DIR$exclude_module_file" && rm $verbose $ROOTFS_DIR$exclude_module_file 1>&2
 done
 
+# Generate modules.dep and map files that match the actually existing modules in the rescue/recovery system:
+depmod -b "$ROOTFS_DIR" -v "$KERNEL_VERSION" >/dev/null || Error "depmod failed to configure modules for the rescue/recovery system"
+
+# Generate /etc/modules for the rescue/recovery system:
 recovery_system_etc_modules="$ROOTFS_DIR/etc/modules"
 for module_to_be_loaded in "${MODULES_LOAD[@]}" ; do
     echo $module_to_be_loaded
 done >>$recovery_system_etc_modules
-# remove duplicates:
+# Remove duplicates:
 cat $recovery_system_etc_modules | sort -u > $recovery_system_etc_modules.new
 mv -f $recovery_system_etc_modules.new $recovery_system_etc_modules
+
+# Local functions must be 'unset' because bash does not support 'local function ...'
+# cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
+unset -f modinfo_filename
 
