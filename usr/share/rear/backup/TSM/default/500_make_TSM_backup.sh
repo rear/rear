@@ -21,7 +21,7 @@ StopIfError "Error during TSM backup... Check your configuration."
 
 ### Copy progress log to backup media
 if cp $v "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log"; then
-    if dsmc incremental ${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log >/dev/null 2>&1; then
+    if dsmc incremental ${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log; then
         LogPrint "${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log added to the backup"
     else
         LogPrint "Failed to add ${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log to the backup"
