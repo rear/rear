@@ -1,19 +1,18 @@
 # 400_copy_modules.sh
 #
-# Copy kernel modules to the rescue/recovery system.
+# Collect kernel modules and copy them into the rescue/recovery system.
 
-#
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# The special value MODULES=( 'none' ) enforces that
+# The special user setting MODULES=( 'no_modules' ) enforces that
 # no kernel modules get included in the rescue/recovery system
 # regardless of what modules are currently loaded.
 # Test the first MODULES array element because other scripts
 # in particular rescue/GNU/Linux/240_kernel_modules.sh
 # already appended other modules to the MODULES array:
-if test "none" = "$MODULES" ; then
-    LogPrint "Omit copying kernel modules (MODULES contains 'none')"
+if test "no_modules" = "$MODULES" ; then
+    LogPrint "Omit copying kernel modules (MODULES contains 'no_modules')"
     return
 fi
 
@@ -26,8 +25,16 @@ fi
 # Local functions that are 'unset' at the end of this script:
 function modinfo_filename () {
     local module_name=$1
-    # Older modinfo (e.g. the one in SLES10) does not support '-k':
-    modinfo -k $KERNEL_VERSION -F filename $module_name 2>/dev/null || modinfo -F filename $module_name
+    local module_filename=""
+    # Older modinfo (e.g. the one in SLES10) does not support '-k'
+    # but that old modinfo returns a zero exit code when called as 'modinfo -k ...'
+    # and shows a 'modinfo: invalid option -- k ...' message on stderr and nothing on stdout
+    # so that we need to check if we got a non-empty module filename:
+    module_filename=$( modinfo -k $KERNEL_VERSION -F filename $module_name 2>/dev/null )
+    # If 'modinfo -k ...' stdout is empty we retry without '-k' regardless why stdout is empty
+    # but then we do not discard stderr so that error messages appear in the log file:
+    test $module_filename || module_filename=$( modinfo -F filename $module_name )
+    test $module_filename && echo $module_filename
 }
 
 # Artificial 'for' clause that is run only once
@@ -37,13 +44,13 @@ function modinfo_filename () {
 # which avoids dowdy looking code with deeply nested 'if...else' conditions:
 for dummy in "once" ; do
 
-    # The special user setting MODULES=( 'all' ) enforces that
+    # The special user setting MODULES=( 'all_modules' ) enforces that
     # all files in the /lib/modules/$KERNEL_VERSION directory
     # get included in the rescue/recovery system.
-    # Test all MODULES array members to make the 'all' functionality work for
-    # MODULES array contents like MODULES=( 'moduleX' 'all' 'moduleY' ):
-    if IsInArray "all" "${MODULES[@]}" ; then
-        LogPrint "Copying all kernel modules in /lib/modules/$KERNEL_VERSION (MODULES contains 'all')"
+    # Test all MODULES array members to make the 'all_modules' functionality work for
+    # MODULES array contents like MODULES=( 'moduleX' 'all_modules' 'moduleY' ):
+    if IsInArray "all_modules" "${MODULES[@]}" ; then
+        LogPrint "Copying all kernel modules in /lib/modules/$KERNEL_VERSION (MODULES contains 'all_modules')"
         # The '--parents' is needed to get the '/lib/modules/' directory in the copy:
         if ! cp $verbose -t $ROOTFS_DIR -a --parents /lib/modules/$KERNEL_VERSION 1>&2 ; then
             Error "Failed to copy all kernel modules in /lib/modules/$KERNEL_VERSION"
@@ -52,13 +59,13 @@ for dummy in "once" ; do
         continue
     fi
 
-    # The special user setting MODULES=( 'loaded' ) enforces that
+    # The special user setting MODULES=( 'loaded_modules' ) enforces that
     # only those kernel modules that are currently loaded
     # get included in the rescue/recovery system.
-    # Test all MODULES array members to make the 'loaded' functionality work for
-    # MODULES array contents like MODULES=( 'moduleX' 'loaded' 'moduleY' ):
-    if IsInArray "loaded" "${MODULES[@]}" ; then
-        LogPrint "Copying only currently loaded kernel modules (MODULES contains 'loaded')"
+    # Test all MODULES array members to make the 'loaded_modules' functionality work for
+    # MODULES array contents like MODULES=( 'moduleX' 'loaded_modules' 'moduleY' ):
+    if IsInArray "loaded_modules" "${MODULES[@]}" ; then
+        LogPrint "Copying only currently loaded kernel modules (MODULES contains 'loaded_modules')"
         # The rescue/recovery system cannot work when its kernel modules
         # do not match the kernel that gets included in the rescue/recovery system
         # so that "rear mkrescue/mkbackup" errors out to be on the safe side
@@ -72,11 +79,10 @@ for dummy in "once" ; do
         # Can it really happen that a module is currently loaded but 'modinfo -F filename' cannot show its filename?
         # To be on the safe side there is a test even for for such a possibly weird error here:
         loaded_modules_files="$( for loaded_module in $loaded_modules ; do modinfo_filename $loaded_module || Error "$loaded_module loaded but no module file?" ; done )"
-        for loaded_module_file in $loaded_modules_files ; do
-            if ! cp $verbose -t $ROOTFS_DIR -L --preserve=all --parents $loaded_module_file 1>&2 ; then
-                Error "Failed to copy $loaded_module_file"
-            fi
-        done
+        # $loaded_modules_files cannot be empty because modinfo_filename fails when it cannot show a module filename:
+        if ! cp $verbose -t $ROOTFS_DIR -L --preserve=all --parents $loaded_modules_files 1>&2 ; then
+            Error "Failed to copy '$loaded_modules_files'"
+        fi
         # After successful copying do the the code after the artificial 'for' clause:
         continue
     fi
@@ -98,18 +104,17 @@ for dummy in "once" ; do
         # The --ignore-install is helpful because it converts currently unsupported '^install' output lines
         # into supported '^insmod' output lines for the particular module but that is also insufficient
         # see also https://github.com/rear/rear/issues/1355
-        module_files=$( /sbin/modprobe --ignore-install --set-version $KERNEL_VERSION --show-depends $module 2>/dev/null | awk '/^insmod / { print $2 }' )
+        module_files=$( modprobe --ignore-install --set-version $KERNEL_VERSION --show-depends $module 2>/dev/null | awk '/^insmod / { print $2 }' )
         if ! test "$module_files" ; then
-            # Fallback is the plain module file without other needed modules (cf. the MODULES=( 'loaded' ) case above):
+            # Fallback is the plain module file without other needed modules (cf. the MODULES=( 'loaded_modules' ) case above):
             # Can it really happen that a module exists (which is tested above) but 'modinfo -F filename' cannot show its filename?
             # To be on the safe side there is a test even for for such a possibly weird error here:
-            module_files="$( modinfo_filename $module || Error "It seems $module exists but there is no module file?" )"
+            module_files="$( modinfo_filename $module || Error "$module exists but no module file?" )"
         fi
-        for module_file in $module_files ; do
-            if ! cp $verbose -t $ROOTFS_DIR -L --preserve=all --parents $module_file 1>&2 ; then
-                Error "Failed to copy $module_file"
-            fi
-        done
+        # $module_files cannot be empty because modinfo_filename fails when it cannot show a module filename:
+        if ! cp $verbose -t $ROOTFS_DIR -L --preserve=all --parents $module_files 1>&2 ; then
+            Error "Failed to copy '$module_files'"
+        fi
     done
 
 # End of artificial 'for' clause:

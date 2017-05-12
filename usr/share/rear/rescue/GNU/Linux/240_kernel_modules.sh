@@ -5,6 +5,14 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
+# The special user setting MODULES=( 'no_modules' ) enforces that
+# no kernel modules get included in the rescue/recovery system
+# regardless of what modules are currently loaded.
+# Test the first MODULES array element because other scripts
+# in particular rescue/GNU/Linux/240_kernel_modules.sh
+# already appended other modules to the MODULES array:
+test "no_modules" = "$MODULES" && return
+
 # Note: The various DRIVERS list variables are set in the previous script.
 
 # 1. take all kernel modules for network and storage devices
