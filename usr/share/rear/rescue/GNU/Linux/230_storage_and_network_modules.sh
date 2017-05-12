@@ -1,51 +1,38 @@
-# Keep certain drivers for later use
 
-# If we don't have udev then we skip this part and fall through to the old way of taking along
-# all loaded modules (needed on older Linux, e.g. RHEL4)
+# Determine some usually needed kernel drivers (kernel modules)
+# cf. the subsequent rescue/GNU/Linux/240_kernel_modules.sh script.
 
-have_udev || return 0
+# Local functions that are 'unset' at the end of this script:
+function find_modules_in_dirs () {
+    # The '2>/dev/null' drops find error messages mainly for non-existent module directories
+    # cf. https://github.com/rear/rear/pull/1359#issuecomment-300800995
+    # and the
+    #    ... | sed -e 's/^\(.*\)\.ko.*/\1/'
+    # removes the trailing .ko faster via one sed call than many basename calls or shell code:
+    find $@ -type f -name '*.ko*' -printf '%f\n' 2>/dev/null | sed -e 's/^\(.*\)\.ko.*/\1/'
+}
 
 # Include storage drivers
-STORAGE_DRIVERS=(
-	$(
-		find /lib/modules/$KERNEL_VERSION/kernel/drivers/{block,firewire,ide,ata,md,message,scsi,usb/storage} -type f -name '*.ko*' -printf '%f\n' 2>&1 | \
-		sed -e 's/^\(.*\)\.ko.*/\1/'
-		#  ^^^^- remove the .ko, faster one sed call than many basename calls or shell code
-	)
-)
+Log "Including storage drivers"
+STORAGE_DRIVERS=( $( find_modules_in_dirs /lib/modules/$KERNEL_VERSION/kernel/drivers/{block,firewire,ide,ata,md,message,scsi,usb/storage} ) )
 
 # Include network drivers
-NETWORK_DRIVERS=(
-	$(
-		find /lib/modules/$KERNEL_VERSION/kernel/drivers/net -type f -name '*.ko*' -printf '%f\n' 2>&1 | \
-		sed -e 's/^\(.*\)\.ko.*/\1/'
-		#  ^^^^- remove the .ko, faster one sed call than many basename calls or shell code
-	)
-)
+Log "Including network drivers"
+NETWORK_DRIVERS=( $( find_modules_in_dirs /lib/modules/$KERNEL_VERSION/kernel/drivers/net ) )
 
 # Include crypto drivers
-CRYPTO_DRIVERS=(
-	$(
-		find /lib/modules/$KERNEL_VERSION/kernel/crypto -type f -name '*.ko*' -printf '%f\n' 2>&1 | \
-		sed -e 's/^\(.*\)\.ko.*/\1/'
-		#  ^^^^- remove the .ko, faster one sed call than many basename calls or shell code
-	)
-)
+Log "Including crypto drivers"
+CRYPTO_DRIVERS=( $( find_modules_in_dirs /lib/modules/$KERNEL_VERSION/kernel/crypto ) )
 
 # Include virtualization drivers
-VIRTUAL_DRIVERS=(
-	$(
-		find /lib/modules/$KERNEL_VERSION/kernel/drivers/{virtio,xen} -type f -name '*.ko*' -printf '%f\n' 2>&1 | \
-		sed -e 's/^\(.*\)\.ko.*/\1/'
-		#  ^^^^- remove the .ko, faster one sed call than many basename calls or shell code
-	)
-)
+Log "Including virtualization drivers"
+VIRTUAL_DRIVERS=( $( find_modules_in_dirs /lib/modules/$KERNEL_VERSION/kernel/drivers/{virtio,xen} ) )
 
 # Include additional drivers
-EXTRA_DRIVERS=(
-	$(
-		find /lib/modules/$KERNEL_VERSION/{extra,weak-updates} -type f -name '*.ko*' -printf '%f\n' 2>&1 | \
-		sed -e 's/^\(.*\)\.ko.*/\1/'
-		#  ^^^^- remove the .ko, faster one sed call than many basename calls or shell code
-	)
-)
+Log "Including additional drivers"
+EXTRA_DRIVERS=( $( find_modules_in_dirs /lib/modules/$KERNEL_VERSION/{extra,weak-updates} ) )
+
+# Local functions must be 'unset' because bash does not support 'local function ...'
+# cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
+unset -f find_modules_in_dirs
+

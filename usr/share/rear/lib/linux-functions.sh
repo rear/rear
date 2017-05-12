@@ -114,24 +114,6 @@ function BinCopyTo () {
     done
 }
 
-# Copy modules given in $2 $3 ... to directory $1
-function ModulesCopyTo () {
-    local destdir="$1" moddir=""
-    test -d "$destdir" || Error "ModulesCopyTo destination '$destdir' is not a directory"
-    while (( $# > 1 )) ; do
-        shift
-        modfile="$1"
-        # continue with the next one if a module is empty or contains only blanks
-        # there must be no double quotes for the test argument because test " " results true
-        test $modfile || continue
-        moddir="$( dirname "$modfile" )"
-        test -d "$destdir/$moddir" || mkdir -p $v "$destdir/$moddir"
-        if ! cp $verbose --archive --dereference "$modfile" "$destdir/$moddir" >&2 ; then
-            Error "ModulesCopyTo failed to copy '$modfile' to '$destdir/$moddir'"
-        fi
-    done
-}
-
 # Resolve dynamic library dependencies. Returns a list of symbolic links
 # to shared objects and shared object files for the binaries in $@.
 # This is the function copied from mkinitrd off SUSE 9.3
@@ -183,80 +165,6 @@ function SharedObjectFiles () {
         echo $lib
         echo $lib >&2
     done | sort -u
-}
-
-# Resolve module dependencies and parameters
-# for modules given in $2 $3 ... for kernel version $1
-# Returns a list of modules and their parameters.
-function ResolveModules () {
-    local kernel_version=$1 module=""
-    shift
-    for module in "$@" ; do
-        # Strip trailing ".o" if there:
-        module=${module#.o}
-        # Strip trailing ".ko" if there:
-        module=${module#.ko}
-        # Check if the module is not in the exclude list:
-        for exclude_module in "${EXCLUDE_MODULES[@]}" ; do
-            # Continue with the next module if the current one is in EXCLUDE_MODULES:
-            test "$module" = "$exclude_module" && continue 2
-        done
-        # Continue with the next module if the current one does not exist:
-        modinfo $module &>/dev/null || continue
-        # Use modprobe.conf if available:
-        local with_modprobe_conf=""
-        test -e /etc/modprobe.conf && with_modprobe_conf="-C /etc/modprobe.conf"
-        # Resolve module dependencies and parameters:
-        module_list=$( /sbin/modprobe $with_modprobe_conf --ignore-install --set-version $kernel_version \
-                                      --show-depends $module 2>/dev/null | awk '/^insmod / { print $2 }' | sort -u )
-        if test "$module_list" ; then
-            # Output module dependencies if not empty:
-            echo "$module_list"
-            echo "Module $module depends on $module_list" >&2
-        else
-            # Fallback behaviour if module_list is empty:
-            case $module in
-                (scsi_mod|sd_mod|md)
-                    # modularized in 2.4.21
-                    # These modules were previously compiled into the kernel,
-                    # and were modularized later. They will be missing in older
-                    # kernels; ignore error messages.
-                    ;;
-                (ext2|ext3|ext4|reiserfs|btrfs|jfs|xfs)
-                    # they are there or not
-                    ;;
-                (xfs_support)
-                    # gone in 2.4.20
-                    # This module does no longer exist. Do not produce an error
-                    # message, but warn that it should be removed manually.
-                    echo -n "Warning: Module $module no longer exists and should be removed" >&2
-                    if [ -e /etc/sysconfig/kernel ] ; then
-                        echo " from /etc/sysconfig/kernel." >&2
-                    elif [ -e /etc/rc.config ] ; then
-                        echo " from /etc/rc.config." >&2
-                    else
-                        echo "." >&2
-                    fi
-                    ;;
-                (*)
-                    echo "Cannot determine dependencies of module $module. Is modules.dep up to date?" >&2
-                    # Fallback output is the plain module file without dependencies:
-                    find /lib/modules/$kernel_version -name $module.\*
-                    ;;
-            esac
-        fi
-    done | awk '!x[$0]++'
-    # That obfuscated awk command removes duplicates without sorting
-    # because we must not reorder the modules here.
-    # Explanation: This command is telling awk which lines to print.
-    # The variable $0 holds the entire contents of a line and square brackets are array access.
-    # So, for each line of the file, the node of the array x is incremented
-    # and the line printed if the content of that node was not (!) previously set.
-    # This awk command would be easier to understand: awk '!($0 in x){x[$0]++; print $0}
-    # and with traditional commands it could be: cat -n | sort -uk2 | sort -nk1 | cut -f2-
-    # (add line numbers, remove duplicates, resort according to line numbers, output without line numbers)
-    # see http://stackoverflow.com/questions/11532157/unix-removing-duplicate-lines-without-sorting
-    # and http://www.unixcl.com/2008/03/remove-duplicates-without-sorting-file.html
 }
 
 # Provide a shell, with custom exit-prompt and history
