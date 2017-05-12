@@ -32,8 +32,13 @@ function modinfo_filename () {
     # so that we need to check if we got a non-empty module filename:
     module_filename=$( modinfo -k $KERNEL_VERSION -F filename $module_name 2>/dev/null )
     # If 'modinfo -k ...' stdout is empty we retry without '-k' regardless why stdout is empty
-    # but then we do not discard stderr so that error messages appear in the log file:
-    test $module_filename || module_filename=$( modinfo -F filename $module_name )
+    # but then we do not discard stderr so that error messages appear in the log file.
+    # In this case we must additionally ensure that KERNEL_VERSION matches 'uname -r'
+    # otherwise a module file for a wrong kernel version would be found:
+    if ! test $module_filename ; then
+        test "$KERNEL_VERSION" = "$( uname -r )" || Error "modinfo_filename failed because KERNEL_VERSION does not match 'uname -r'"
+        module_filename=$( modinfo -F filename $module_name )
+    fi
     test $module_filename && echo $module_filename
 }
 
