@@ -30,7 +30,7 @@ function modinfo_filename () {
     # but that old modinfo returns a zero exit code when called as 'modinfo -k ...'
     # and shows a 'modinfo: invalid option -- k ...' message on stderr and nothing on stdout
     # so that we need to check if we got a non-empty module filename:
-    module_filename=$( modinfo -k $KERNEL_VERSION -F filename $module_name 2>/dev/null )
+    module_filename=$( modinfo -k $KERNEL_VERSION -F filename $module_name )
     # If 'modinfo -k ...' stdout is empty we retry without '-k' regardless why stdout is empty
     # but then we do not discard stderr so that error messages appear in the log file.
     # In this case we must additionally ensure that KERNEL_VERSION matches 'uname -r'
@@ -100,7 +100,7 @@ for dummy in "once" ; do
         # Strip trailing ".ko" if there:
         module=${module#.ko}
         # Continue with the next module if the current one does not exist:
-        modinfo $module &>/dev/null || continue
+        modinfo $module 1>/dev/null || continue
         # Resolve module dependencies:
         # Get the module file plus the module files of other needed modules.
         # This is currently only a "best effort" attempt because
@@ -109,7 +109,11 @@ for dummy in "once" ; do
         # The --ignore-install is helpful because it converts currently unsupported '^install' output lines
         # into supported '^insmod' output lines for the particular module but that is also insufficient
         # see also https://github.com/rear/rear/issues/1355
-        module_files=$( modprobe --ignore-install --set-version $KERNEL_VERSION --show-depends $module 2>/dev/null | awk '/^insmod / { print $2 }' )
+        # The 'sort -u' removes duplicates only to avoid useless stderr warnings from the subsequent 'cp'
+        # like "cp: warning: source file '/lib/modules/.../foo.ko' specified more than once"
+        # regardless that nothing goes wrong when 'cp' gets duplicate source files
+        # cf. http://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
+        module_files=$( modprobe --ignore-install --set-version $KERNEL_VERSION --show-depends $module | awk '/^insmod / { print $2 }' | sort -u )
         if ! test "$module_files" ; then
             # Fallback is the plain module file without other needed modules (cf. the MODULES=( 'loaded_modules' ) case above):
             # Can it really happen that a module exists (which is tested above) but 'modinfo -F filename' cannot show its filename?
@@ -128,15 +132,15 @@ done
 # Remove those modules that are specified in the EXCLUDE_MODULES array:
 for exclude_module in "${EXCLUDE_MODULES[@]}" ; do
     # Continue with the next module if the current one does not exist:
-    modinfo $exclude_module &>/dev/null || continue
+    modinfo $exclude_module 1>/dev/null || continue
     # In this case it is ignored when a module exists but 'modinfo -F filename' cannot show its filename
     # because then it is assumed that also no module file had been copied above:
-    exclude_module_file="$( modinfo_filename $exclude_module 2>/dev/null )"
+    exclude_module_file="$( modinfo_filename $exclude_module )"
     test -e "$ROOTFS_DIR$exclude_module_file" && rm $verbose $ROOTFS_DIR$exclude_module_file 1>&2
 done
 
 # Generate modules.dep and map files that match the actually existing modules in the rescue/recovery system:
-depmod -b "$ROOTFS_DIR" -v "$KERNEL_VERSION" >/dev/null || Error "depmod failed to configure modules for the rescue/recovery system"
+depmod -b "$ROOTFS_DIR" -v "$KERNEL_VERSION" 1>/dev/null || Error "depmod failed to configure modules for the rescue/recovery system"
 
 # Generate /etc/modules for the rescue/recovery system:
 recovery_system_etc_modules="$ROOTFS_DIR/etc/modules"
