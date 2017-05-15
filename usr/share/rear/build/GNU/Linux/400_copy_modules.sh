@@ -109,7 +109,11 @@ for dummy in "once" ; do
         # The --ignore-install is helpful because it converts currently unsupported '^install' output lines
         # into supported '^insmod' output lines for the particular module but that is also insufficient
         # see also https://github.com/rear/rear/issues/1355
-        module_files=$( modprobe --ignore-install --set-version $KERNEL_VERSION --show-depends $module | awk '/^insmod / { print $2 }' )
+        # The 'sort -u' removes duplicates only to avoid useless stderr warnings from the subsequent 'cp'
+        # like "cp: warning: source file '/lib/modules/.../foo.ko' specified more than once"
+        # regardless that nothing goes wrong when 'cp' gets duplicate source files
+        # cf. http://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
+        module_files=$( modprobe --ignore-install --set-version $KERNEL_VERSION --show-depends $module | awk '/^insmod / { print $2 }' | sort -u )
         if ! test "$module_files" ; then
             # Fallback is the plain module file without other needed modules (cf. the MODULES=( 'loaded_modules' ) case above):
             # Can it really happen that a module exists (which is tested above) but 'modinfo -F filename' cannot show its filename?
