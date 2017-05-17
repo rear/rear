@@ -1,16 +1,24 @@
 
-# Rebuild the initramfs if the drivers changed:
+# Rebuild the initramfs:
 
-# Skip if there is nothing to do.
-# During "rear recover" 260_recovery_storage_drivers.sh creates $TMP_DIR/storage_drivers
-if ! test -s $TMP_DIR/storage_drivers ; then
-    Log "Skip recreating initramfs: No needed storage drivers ('$TMP_DIR/storage_drivers' is empty)"
+# Skip if it is explicitly wanted to not rebuild the initramfs:
+if is_false $REBUILD_INITRAMFS ; then
+    Log "Skip recreating initramfs (REBUILD_INITRAMFS is false)"
     return 0
 fi
-# During "rear mkbackup/mkrescue" 260_storage_drivers.sh creates $VAR_DIR/recovery/storage_drivers
-if cmp -s $TMP_DIR/storage_drivers $VAR_DIR/recovery/storage_drivers ; then
-    Log "Skip recreating initramfs: '$TMP_DIR/storage_drivers' and '$VAR_DIR/recovery/storage_drivers' are the same"
-    return 0
+
+# Skip if not needed but only when it is not explicitly wanted to rebuild the initramfs in any case:
+if ! is_true $REBUILD_INITRAMFS ; then
+    # During "rear recover" 260_recovery_storage_drivers.sh creates $TMP_DIR/storage_drivers
+    if ! test -s $TMP_DIR/storage_drivers ; then
+        Log "Skip recreating initramfs: No needed storage drivers ('$TMP_DIR/storage_drivers' is empty)"
+        return 0
+    fi
+    # During "rear mkbackup/mkrescue" 260_storage_drivers.sh creates $VAR_DIR/recovery/storage_drivers
+    if cmp -s $TMP_DIR/storage_drivers $VAR_DIR/recovery/storage_drivers ; then
+        Log "Skip recreating initramfs: '$TMP_DIR/storage_drivers' and '$VAR_DIR/recovery/storage_drivers' are the same"
+        return 0
+    fi
 fi
 
 # A longer time ago udev was optional on some distros.

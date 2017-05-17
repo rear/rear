@@ -22,5 +22,15 @@ if cmp -s $TMP_DIR/storage_drivers $VAR_DIR/recovery/storage_drivers ; then
     return 0
 fi
 
-LogPrint "Will do driver migration (recreating initramfs/initrd)"
+if is_false $REBUILD_INITRAMFS ; then
+    LogPrint "WARNING:
+Changed storage drivers require recreating initramfs/initrd
+but it will not be recreated (REBUILD_INITRAMFS='$REBUILD_INITRAMFS').
+It might work with the initrd 'as is' from the backup restore.
+Before reboot check the recreated system (mounted at $TARGET_FS_ROOT)
+and decide yourself, if your recreated system will boot or not.
+"
+else
+    LogPrint "Will do driver migration (recreating initramfs/initrd)"
+fi
 
