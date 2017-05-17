@@ -25,12 +25,16 @@ function is_numeric () {
 # because "tertium non datur" (cf. https://en.wikipedia.org/wiki/Law_of_excluded_middle)
 # does not hold for variables because variables could be unset or have empty value
 # and to test if a variable is true or false its value is tested by that functions
-# but the variable may not have a real value (i.e. be unset or have empty value):
+# but the variable may not have a real value (i.e. be unset or have empty value) and
+# because both functions test explicitly '! is_true' is not the same as 'is_false'
+# and '! is_false' is not the same as 'is_true' (see both function comments below):
 
 function is_true () {
     # the argument is usually the value of a variable which needs to be tested
     # only if there is explicitly a 'true' value then is_true returns true
-    # so that an unset variable or an empty value is not true:
+    # so that an unset variable or an empty value is not true
+    # and also for any other value that is not recognized as a 'true' value
+    # by the is_true function the is_true function results false:
     case "$1" in
         ([tT] | [yY] | [yY][eE][sS] | [tT][rR][uU][eE] | 1)
         return 0 ;;
@@ -42,7 +46,9 @@ function is_false () {
     # the argument is usually the value of a variable which needs to be tested
     # only if there is explicitly a 'false' value then is_false returns true
     # so that an unset variable or an empty value is not false
-    # caution: for unset or empty variables is_false is false
+    # (caution: for unset or empty variables is_false is false)
+    # and also for any other value that is not recognized as a 'false' value
+    # by the is_false function the is_false function results false:
     case "$1" in
         ([fF] | [nN] | [nN][oO] | [fF][aA][lL][sS][eE] | 0)
         return 0 ;;
