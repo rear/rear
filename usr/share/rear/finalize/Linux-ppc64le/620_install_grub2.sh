@@ -50,7 +50,7 @@ if [[ -r "$LAYOUT_FILE" ]]; then
             dd if=/dev/zero of=$part
             # Run grub-install/grub2-install directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
             # When software RAID1 is used, grub2 needs correct PATH to access other tools
-            if chroot $TARGET_FS_ROOT /bin/bash -c "PATH=/sbin:/usr/sbin:/usr/bin:/bin $grub_name-install $part" ; then
+            if chroot $TARGET_FS_ROOT /usr/bin/env PATH=/sbin:/usr/sbin:/usr/bin:/bin $grub_name-install $part ; then
                 LogPrint "GRUB2 installed on $part"
                 NOBOOTLOADER=
             else
