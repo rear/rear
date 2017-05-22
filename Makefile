@@ -19,6 +19,9 @@ git_ref := $(shell git symbolic-ref -q HEAD)
 git_branch = $(lastword $(subst /, ,$(git_ref)))
 endif
 else
+ifneq ($(shell which git),)
+git_date := $(shell git log -n 1 --format="%ai")
+endif
 git_branch = rear-$(version)
 endif
 git_branch ?= master
@@ -73,7 +76,7 @@ Relax-and-Recover make variables (optional):\n\
 "
 
 clean:
-	rm -fv $(name)-$(version)*.tar.gz $(name)-$(version)*.rpm
+	rm -f $(name)-$(distversion).tar.gz
 	rm -f build-stamp
 	make -C doc clean
 
@@ -128,16 +131,18 @@ restore:
 	mv -f $(rearbin).orig $(rearbin)
 else
 rewrite:
-	@echo "Nothing to do."
-
-restore:
+	@echo -e "\033[1m== Rewrite : RELEASE_DATE of $(rearbin) ==\033[0;0m"
+	@grep RELEASE_DATE= $(rearbin)
 	@echo "Nothing to do."
 endif
+
+restore:
+	@echo -e "\033[1m== Restore configuration files ==\033[0;0m"
+	@echo "Nothing to do."
 
 install-config:
 	@echo -e "\033[1m== Installing configuration ==\033[0;0m"
 	install -d -m0700 $(DESTDIR)$(sysconfdir)/rear/
-	install -d -m0700 $(DESTDIR)$(sysconfdir)/rear/cert/
 	-[[ ! -e $(DESTDIR)$(sysconfdir)/rear/local.conf ]] && \
 		install -Dp -m0600 etc/rear/local.conf $(DESTDIR)$(sysconfdir)/rear/local.conf
 	-[[ ! -e $(DESTDIR)$(sysconfdir)/rear/os.conf && -e etc/rear/os.conf ]] && \
