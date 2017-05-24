@@ -40,15 +40,24 @@ if [[ -r "$LAYOUT_FILE" ]]; then
     LogIfError "Unable to find /boot/$grub_name/grub.cfg."
 
     # Find PPC PReP Boot partition
-    part=$( awk -F ' ' '/^part / {if ($6 ~ /prep/) {print $7}}' $LAYOUT_FILE )
+    part_list=$( awk -F ' ' '/^part / {if ($6 ~ /prep/) {print $7}}' $LAYOUT_FILE )
 
-    if [ -n "$part" ]; then
-        LogPrint "Boot partition found: $part"
-        dd if=/dev/zero of=$part
-        # Run grub-install/grub2-install directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
-        chroot $TARGET_FS_ROOT $grub_name-install $part
-        NOBOOTLOADER=
-    fi
+    # If software RAID1 is used, several boot device will be found
+    # need to install grub2 on each of them
+    for part in $part_list ; do
+        if [ -n "$part" ]; then
+            LogPrint "Boot partition found: $part"
+            dd if=/dev/zero of=$part
+            # Run grub-install/grub2-install directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
+            # When software RAID1 is used, grub2 needs correct PATH to access other tools
+            if chroot $TARGET_FS_ROOT /usr/bin/env PATH=/sbin:/usr/sbin:/usr/bin:/bin $grub_name-install $part ; then
+                LogPrint "GRUB2 installed on $part"
+                NOBOOTLOADER=
+            else
+                LogPrint "Failed to install GRUB2 on $part"
+            fi
+        fi
+    done
 fi
 
 if [[ "$NOBOOTLOADER" ]]; then
