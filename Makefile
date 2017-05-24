@@ -134,11 +134,11 @@ rewrite:
 	@echo -e "\033[1m== Rewrite : RELEASE_DATE of $(rearbin) ==\033[0;0m"
 	@grep RELEASE_DATE= $(rearbin)
 	@echo "Nothing to do."
-endif
 
 restore:
 	@echo -e "\033[1m== Restore configuration files ==\033[0;0m"
 	@echo "Nothing to do."
+endif
 
 install-config:
 	@echo -e "\033[1m== Installing configuration ==\033[0;0m"
