@@ -412,7 +412,7 @@ function is_device_mounted
 #   # 576
 #
 # But will fail with mathlib_calculate ()
-#   # calculate "$start % 4096"
+#   # mathlib_calculate "$start % 4096"
 #   # 0
 #
 function mathlib_calculate()
