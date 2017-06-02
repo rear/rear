@@ -10,5 +10,10 @@ local opath=$(output_path $scheme $path)
 # if $opath is empty return silently (e.g. scheme tape)
 [ -z "$opath" ] && return 0
 
-mkdir -p $v -m0750 "${opath}" >&2
+if [[ "$OUTPUT" == "PXE" && "$scheme" == "nfs" ]]; then
+    # Need directory with read access to everyone for tftp use (nobody user)
+    mkdir -p $v -m0755 "${opath}" >&2
+else
+    mkdir -p $v -m0750 "${opath}" >&2
+fi
 StopIfError "Could not mkdir '${opath}'"

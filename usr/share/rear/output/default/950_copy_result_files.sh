@@ -38,7 +38,10 @@ test "$RESULT_FILES" || return 0
 case "$scheme" in
     (nfs|cifs|usb|file|sshfs|ftpfs|davfs)
         Log "Copying result files '${RESULT_FILES[@]}' to $opath at $scheme location"
-        cp $v "${RESULT_FILES[@]}" "${opath}/" >&2 || Error "Could not copy result files to $opath at $scheme location"
+        # Use cp -p (preserve option) to keep right access during copy to output directory.
+        # This is important when output is PXE because file are created in mode0444 [800_copy_to_tftp.sh]
+        # to be accessible by nobody user. 
+        cp -p $v "${RESULT_FILES[@]}" "${opath}/" >&2 || Error "Could not copy result files to $opath at $scheme location"
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
         # FIXME: Verify if usage of $array[*] instead of "${array[@]}" is actually intended here
@@ -58,4 +61,3 @@ case "$scheme" in
         Error "Invalid scheme '$scheme' in '$OUTPUT_URL'."
         ;;
 esac
-
