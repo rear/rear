@@ -7,7 +7,7 @@ Relax-and-Recover
   o Development
   o Events
 
-Release Notes for Relax-and-Recover version 2.00
+Release Notes for Relax-and-Recover version 2.1
 
 This document contains the release notes for the open source project
 Relax-and-Recover.
@@ -41,7 +41,7 @@ functionality:
   o Hot maintenance capability. A rescue image can be made online while the
     system is running.
 
-  o Command line interface. Relax-and-Recover doesnot require a graphical
+  o Command line interface. Relax-and-Recover does not require a graphical
     interface to run, nor in creation mode, nor in rescue mode (console is
     enough).
 
@@ -52,11 +52,13 @@ functionality:
   o Selected Hardware RAID and (eg. HP SmartArray) and mirroring solutions
     (eg. DRBD) are supported.
 
+  o NVME and mmcblk disks are supported (New)
+
   o LVM root volumes are supported.
 
   o Multipath support for SAN storage
 
-  o UEFI support (including UEFI USB booting (New))
+  o UEFI support (including UEFI USB booting
 
   o Integrates with internal backup solutions such as:
 
@@ -75,6 +77,9 @@ functionality:
         and local disks
       - rsync over the network (BACKUP=RSYNC, BACKUP_PROG=rsync)
       - Multiple backup methods (read the documentation) (New)
+      - Windows partitions via BACKUP=BLOCKCLONE (New) See the documention
+        about BLOCKCLONE
+      - BACKUP=ZYPPER is SLES12 only (Experimental)
   o Integrates with external backup solutions such as:
 
       - Tivoli Storage Manager (BACKUP=TSM)
@@ -90,7 +95,7 @@ functionality:
       - SEP Sesam (BACKUP=SESAM)
       - FDR/Upstream (BACKUP=FDRUPSTREAM)
       - Novastor NovaBACKUP DC (BACKUP=NBKDC)
-      - Borg Backup (BACKUP=BORG) (New)
+      - Borg Backup (BACKUP=BORG)
   o Integrates with Disaster Recovery Linux Manager (DRLM)
 
   o Udev support (except for some really ancient udev versions) which is the
@@ -157,7 +162,10 @@ functionality:
   o Add timestamp of ReaR run with rc code to the syslog or messages file;
     sending mail report is also possible
 
-NOTE: Features marked experimental are prone to change with future releases.
+  o The possibility to backup Windows partitions via new BACKUP type
+    BLOCKCLONE (New)
+
+NOTE: Features marked Experimental are prone to change with future releases.
 
 Relax-and-Recover Releases
 
@@ -168,6 +176,112 @@ Relax-and-Recover are compatible with previous versions of Relax-and-Recover,
 unless otherwise noted.
 
 The references pointing to fix #nr or issue #nr refer to our issues tracker.
+
+Version 2.1 (June 2017)
+
+  o Support for Grub2 installation with software RAID1 on Linux on POWER
+    (ppc64/ppc64le) (issue #1369)
+
+  o REBUILD_INITRAMFS variable was introduced to avoid rebuilding initrd
+    (issue #1321)
+
+  o ISO_RECOVER_MODE=unattended mode (issue #1351) - required for automated
+    ReaR testing with OUTPUT=ISO
+
+  o MODULES variable supports now special values like 'all_modules',
+    'loaded_modules', 'no_modules' (issues #1202, #1355)
+
+  o Include systemd/network to preserve "Predictable Network Interface Names"
+    (issue #1349)
+
+  o Various improvements regarding multipath (issues #1190, #1309, #1310, #
+    1311, #1314, #1315, #1324, #1325, #1328, #1329, #1344, #1346)
+
+  o Show OUTPUT variables in rear dump (issue #1337)
+
+  o Added support for "grub PXE style" via PXE_CONFIG_GRUB_STYLE and
+    PXE_TFTP_IP on non x86 platform (issue #1339)
+
+  o Try 'wipefs -force' and use 'dd' as fallback to better clean up disk
+    partitions (issue #1327)
+
+  o Reorganized "finalize" scripts ordering and cleanup of the PPC bootloader
+    installation (issue #1323)
+
+  o Avoid long default wait in 'dig' when DNS servers are not set (issue #
+    1319)
+
+  o Fail-safe calculations in partitioning code (issues #1269, #1307)
+
+  o Improved support on ppc/ppc64/ppc64le architectures (issues #1178, #1311,
+    #1313, #1322)
+
+  o Define hostname in both /etc/HOSTNAME and /etc/hostname in rescue image
+    (for Arch) (issue #1316)
+
+  o Rename network interface when MAC not present in udev (issue #1312)
+
+  o Added support for 'nano' editor (in addition to 'vi') (issues #1298, #
+    1306)
+
+  o mmcblk disk types are now supported (issues #1301, #1302)
+
+  o NETFS_RESTORE_CAPABILITIES variable was introduced to restore file
+    capabilities in a proper way (issue #1283)
+
+  o Added required libs and files for 'curl' with HTTPs by default (issues #
+    1267, #1279)
+
+  o More precise XFS file system creation during rear recover (issues #1208,
+    #1213, #1276)
+
+  o DRLM management and security improvements (issue #1252)
+
+  o Improved BOOTLOADER support (issue #1242)
+
+  o DRLM support for multiple backups via multiple config files (issue #1229)
+
+  o FIRMWARE_FILES support to exclude firmware files in rescue image to
+    reduce the size of image (issue #1216)
+
+  o Enable SELinux in the rescue image for tar internal backup method if
+    BACKUP_SELINUX_DISABLE=0 (issue #1215)
+
+  o BOOT_OVER_SAN is now fully supported (issues #1190, #1309, #1314, #1315,
+    #1325, #1329, #1344)
+
+  o NVME disks are now fully supported (issue #1191)
+
+  o Some initial basic support for new backup type ZYPPER was added (issues #
+    1085, #1209)
+
+  o Finding UEFI boot loaders on non standard places (issues #1204, #1225, #
+    1293)
+
+  o The USB UEFI partition size USB_UEFI_PART_SIZE for kernel image has been
+    increased from 100 to 200 MB (issue #1205)
+
+  o REAR_INITRD_COMPRESSION variable was introduced to specify initrd
+    compression (e.g. 'lzma' for PPC64) (issues #1142, #1218, #1290)
+
+  o New backup type BLOCKCLONE was added to backup non-Linux partitions (e.g.
+    Windows NTFS partitions) (issues #1078, #1162, #1172, #1180)
+
+  o Bareos 16.2 is now supported (issue #1169)
+
+  o New USB_PARTITION_ALIGN_BLOCK_SIZE and USB_DEVICE_FILESYSTEM_PARAMS
+    variables were added (issue #1217)
+
+  o Improved the USB backup selection menu during the recovery via USB (issue
+    #1166)
+
+  o USB_SUFFIX variable was introduced to align backup on USB with backup on
+    NFS (issues #1164, #1160, #1145)
+
+  o Forbid incremental backup to work on BACKUP_URL=usb:// (issue #1146)
+
+  o The USB_DEVICE_PARTED_LABEL=gpt setting is now honered while formatting
+    the USB disk (issue #1153)
 
 Version 2.00 (January 2017)
 
@@ -201,9 +315,10 @@ check this.
 
   o Using RUNTIME_LOGFILE in all scripts as needed (issue #1119)
 
-  o New Backup method was added - BORG (issues #1118,
+  o New Backup method was added - BORG (issues #1030, #1037, #1046, #1048, #
+    1118)
 
-  o Multiple backups are now possible (issue #1088, #1102, #1096) - see the
+  o Multiple backups are now possible (issues #1088, #1102, #1096) - see the
     documentation page (New)
 
   o Support partitioning and formatting huge USB devices (issue #1105)
@@ -213,7 +328,7 @@ check this.
   o Fixed and enhanced code for multiple ISOs (issue #1081)
 
   o BACKUP_TYPE=incremental (New) and BACKUP_TYPE=differential were updated
-    (issue #974, #1069)
+    (issues #974, #1069)
 
   o Added support for setting a UUID on XFS with enabled CRC (RHEL 7) (issue
     #1065)
@@ -260,8 +375,8 @@ Version 1.19.0 (October 2016)
   o Introduction of the NETWORKING_PREPARATION_COMMANDS variable to prepare
     network setup in the rescue/recovery system (issue #960)
 
-  o After migration fs_uuid for root partition wasn't changed in ELILO config
-    file /etc/elilo.conf (issue #956)
+  o After migration fs_uuid for root partition was not changed in ELILO
+    config file /etc/elilo.conf (issue #956)
 
   o Clarified rear man page and default.conf file around BACKUP_URL=rsync:
     (issues #930 and #918)
@@ -650,10 +765,10 @@ Version 1.17.0 (March 2015)
   o Adding findmnt command to GNU/Linux.conf file; request from https://
     bugzilla.opensuse.org/show_bug.cgi?id=908854
 
-  o BTRFS code has been rewritten by J. Meixner/G. D'haese to get SUSE
-    rear116 fork back into our master tree of ReaR. BTRFS is now properly
-    recreated on Fedora 20 and 21 and on SLES 12 and openSUSE 13 (issue #233,
-    #497, #538) See also https://bugzilla.opensuse.org/show_bug.cgi?id=908854
+  o BTRFS code has been rewritten by J. Meixner/G. Dhaese to get SUSE rear116
+    fork back into our master tree of ReaR. BTRFS is now properly recreated
+    on Fedora 20 and 21 and on SLES 12 and openSUSE 13 (issue #233, #497, #
+    538) See also https://bugzilla.opensuse.org/show_bug.cgi?id=908854
 
   o Enhanced the systemd start-up of udev daemons which is different on
     Fedora 20 and 21 (issue #507, #531)
@@ -1311,12 +1426,12 @@ as a service (not free of charge).
 
 Supported Operating Systems
 
-We try to keep our wiki page Test Matrix rear 2.00 up-to-date with feedback
-we receive from the community.
+We try to keep our wiki page Test Matrix rear 2.1 up-to-date with feedback we
+receive from the community.
 
-Rear-2.00 is supported on the following Linux based operating systems:
+Rear-2.1 is supported on the following Linux based operating systems:
 
-  o Fedora 22, 23, 24 and 25
+  o Fedora 24 and 25
   o RHEL 5, 6 and 7
   o CentOS 5, 6 and 7
   o ScientificLinux 6 and 7
@@ -1325,10 +1440,10 @@ Rear-2.00 is supported on the following Linux based operating systems:
   o Debian 6, 7 and 8
   o Ubuntu 12, 13, 14 and 15
 
-Rear-2.00 dropped officially support for the following Linux based operating
+Rear-2.1 dropped officially support for the following Linux based operating
 systems:
 
-  o Fedora <22
+  o Fedora <24
   o RHEL 3 and 4
   o SLES 9 and 10
   o openSUSE <11
@@ -1336,26 +1451,26 @@ systems:
   o Ubuntu <12
 
 If you require support for unsupported Linux Operating System you must
-acquire a ReaR support contract (per system).
+acquire a ReaR support contract.
 
 Requests to port ReaR to another Operating System (not Linux) can only be
 achieved with serious sponsoring.
 
 Supported Architectures
 
-Rear-2.00 is supported on:
+Rear-2.1 is supported on:
 
   o Intel x86 type of processors
   o AMD x86 type of processors
 
-Rear-2.00 may or may not fully work on:
+Rear-2.1 may or may not fully work on:
 
   o Intel Itanium processors
   o PPC processors
   o PPC64 processors
   o PPC64LE processors
 
-Rear-2.00 does not support:
+Rear-2.1 does not support:
 
   o ARM type of processors
   o s390x type of processors
