@@ -1437,7 +1437,7 @@ Rear-2.1 is supported on the following Linux based operating systems:
   o CentOS 5, 6 and 7
   o ScientificLinux 6 and 7
   o SLES 11 and 12
-  o openSUSE 11, 12 and 13
+  o openSUSE Leap and openSUSE Tumbleweed
   o Debian 6, 7 and 8
   o Ubuntu 12, 13, 14 and 15
 
@@ -1447,7 +1447,7 @@ systems:
   o Fedora <24
   o RHEL 3 and 4
   o SLES 9 and 10
-  o openSUSE <11
+  o openSUSE <13
   o Debian <6
   o Ubuntu <12
 
