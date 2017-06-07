@@ -60,7 +60,7 @@ readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_
 readonly PRODUCT="Relax-and-Recover"
 readonly PROGRAM=${0##*/}
 readonly VERSION=2.1
-readonly RELEASE_DATE=Git
+readonly RELEASE_DATE="2017-06-07"
 
 # Used in framework-functions.sh to calculate the time spent executing rear:
 readonly STARTTIME=$SECONDS

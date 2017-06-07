@@ -80,6 +80,7 @@ functionality:
       - Windows partitions via BACKUP=BLOCKCLONE (New) See the documention
         about BLOCKCLONE
       - BACKUP=ZYPPER is SLES12 only (Experimental)
+
   o Integrates with external backup solutions such as:
 
       - Tivoli Storage Manager (BACKUP=TSM)
@@ -96,6 +97,7 @@ functionality:
       - FDR/Upstream (BACKUP=FDRUPSTREAM)
       - Novastor NovaBACKUP DC (BACKUP=NBKDC)
       - Borg Backup (BACKUP=BORG)
+
   o Integrates with Disaster Recovery Linux Manager (DRLM)
 
   o Udev support (except for some really ancient udev versions) which is the
@@ -107,6 +109,7 @@ functionality:
       - firmware loading
       - persistent storage device names (though Relax-and-Recover does
         nothing with this)
+
   o System reconfiguration
 
       - enable recovery on hardware, that is not the same as the original
@@ -118,6 +121,7 @@ functionality:
         command line
       - rebuild the initial ramdisk if needed (for new storage drivers)
       - migration to SAN storage (Experimental)
+
   o Support backup software: Bacula, both locally attached tapes (with
     bextract) and network-based backups. Also, in combination with OBDR
     tapes.
@@ -194,8 +198,8 @@ Version 2.1 (June 2017)
   o Include systemd/network to preserve "Predictable Network Interface Names"
     (issue #1349)
 
-  o Various improvements regarding multipath (issues #1190, #1309, #1310, #
-    1311, #1314, #1315, #1324, #1325, #1328, #1329, #1344, #1346)
+  o Various improvements regarding multipath (issues #1190, #1309, #1310,
+    #1311, #1314, #1315, #1324, #1325, #1328, #1329, #1344, #1346)
 
   o Show OUTPUT variables in rear dump (issue #1337)
 
@@ -208,8 +212,8 @@ Version 2.1 (June 2017)
   o Reorganized "finalize" scripts ordering and cleanup of the PPC bootloader
     installation (issue #1323)
 
-  o Avoid long default wait in 'dig' when DNS servers are not set (issue #
-    1319)
+  o Avoid long default wait in 'dig' when DNS servers are not set (issue
+    #1319)
 
   o Fail-safe calculations in partitioning code (issues #1269, #1307)
 
@@ -221,16 +225,16 @@ Version 2.1 (June 2017)
 
   o Rename network interface when MAC not present in udev (issue #1312)
 
-  o Added support for 'nano' editor (in addition to 'vi') (issues #1298, #
-    1306)
+  o Added support for 'nano' editor (in addition to 'vi') (issues #1298,
+    #1306)
 
   o mmcblk disk types are now supported (issues #1301, #1302)
 
   o NETFS_RESTORE_CAPABILITIES variable was introduced to restore file
     capabilities in a proper way (issue #1283)
 
-  o Added required libs and files for 'curl' with HTTPs by default (issues #
-    1267, #1279)
+  o Added required libs and files for 'curl' with HTTPs by default (issues
+    #1267, #1279)
 
   o More precise XFS file system creation during rear recover (issues #1208,
     #1213, #1276)
@@ -252,11 +256,11 @@ Version 2.1 (June 2017)
 
   o NVME disks are now fully supported (issue #1191)
 
-  o Some initial basic support for new backup type ZYPPER was added (issues #
-    1085, #1209)
+  o Some initial basic support for new backup type ZYPPER was added (issues
+    #1085, #1209)
 
-  o Finding UEFI boot loaders on non standard places (issues #1204, #1225, #
-    1293)
+  o Finding UEFI boot loaders on non standard places (issues #1204, #1225,
+    #1293)
 
   o The USB UEFI partition size USB_UEFI_PART_SIZE for kernel image has been
     increased from 100 to 200 MB (issue #1205)
@@ -294,8 +298,8 @@ check this.
   o Bareos support: add missing directory /var/run/bareos in recovery system
     (issue #1148)
 
-  o Forbid BACKUP_URL=usb for BACKUP_TYPE=incremental/differential (issues #
-    1141 and #1145)
+  o Forbid BACKUP_URL=usb for BACKUP_TYPE=incremental/differential (issues
+    #1141 and #1145)
 
   o Improved and added new example configurations (issue #1068, #1058)
 
@@ -303,8 +307,8 @@ check this.
 
   o Fix documentation regarding OUTPUT_URL=null (issues #734, #1130)
 
-  o Better and fail safe progress messages while tar backup restore (issue #
-    1116)
+  o Better and fail safe progress messages while tar backup restore (issue
+    #1116)
 
   o Implement simulation mode with simulation with the workflows validate and
     shell (issue #1098)
@@ -315,8 +319,8 @@ check this.
 
   o Using RUNTIME_LOGFILE in all scripts as needed (issue #1119)
 
-  o New Backup method was added - BORG (issues #1030, #1037, #1046, #1048, #
-    1118)
+  o New Backup method was added - BORG (issues #1030, #1037, #1046, #1048,
+    #1118)
 
   o Multiple backups are now possible (issues #1088, #1102, #1096) - see the
     documentation page (New)
@@ -475,11 +479,11 @@ Version 1.18.0 (March 2016)
   o Added backup capabilities; getcap and setcap are used to backup and
     restore (issue #771)
 
-  o Correct bash syntax so ReaR is compatible with bash v3 and v4 (issue #
-    765, #767)
+  o Correct bash syntax so ReaR is compatible with bash v3 and v4 (issue
+    #765, #767)
 
-  o Added support for new backup method Novastor NovaBACKUP DC (+BACKUP=
-    NBKDC+) (issue #669)
+  o Added support for new backup method Novastor NovaBACKUP DC (BACKUP=
+    NBKDC) (issue #669)
 
   o Code was improved to have network teaming support (issue #655)
 
@@ -523,8 +527,8 @@ Version 1.18.0 (March 2016)
 
   o Support for shim.efi (UEFI booting) added (issue #702)
 
-  o Added support for elilo (used by SLES 11/12) (issue #583, #691, #692, #
-    693)
+  o Added support for elilo (used by SLES 11/12) (issues #583, #691, #692,
+    #693)
 
   o Added option -debugscripts to rear (help-workflow) (issue #688)
 
@@ -619,8 +623,8 @@ Version 1.17.2 (August 2015)
   o Support the Oracle Linux 6 ksplice module (issue #605)
 
   o In script 27_hpraid_layout.sh added the missing
-    HPSSACLI_BIN_INSTALLATION_DIR variable to the COPY_AS_IS array (issue #
-    630)
+    HPSSACLI_BIN_INSTALLATION_DIR variable to the COPY_AS_IS array (issue
+    #630)
 
   o Modified the packaging Makefile and rules for debian to fix the failing
     OBS Debian builds (issue #604)
@@ -635,8 +639,8 @@ Version 1.17.2 (August 2015)
 
   o Support was added for SLES11 on PPC64 hardware (issues #616 and #628)
 
-  o Support was added for new hardware - PPC64LE - RHEL and Ubuntu (issue #
-    627)
+  o Support was added for new hardware - PPC64LE - RHEL and Ubuntu (issue
+    #627)
 
   o FIX the hashed password (SSH_ROOT_PASSWORD variable) and added a missing
     library libfreeblpriv3 (issue #560)
@@ -686,9 +690,6 @@ Version 1.17.1 (June 2015)
     (for UEFI booting) - issue #593
 
     rear -v format -- --efi /dev/<usbdevice>
-
-    However, UEFI booting from an USB disk has not been implemented yet
-    (sponsoring?).
 
   o Simplified the code for ext* fs and added StopIfError calls to prevent
     divide by zero during recovery (issue #598)
@@ -757,8 +758,8 @@ Version 1.17.0 (March 2015)
   o When using /etc/rear/mappings/ip_addresses IPADDR/cidr must be translated
     into IPADDR and NETMASK (for RHEL 5 and 6) (issue #460)
 
-  o mdadm layout code was changed in RHEL 7; code to deal with it (issue #
-    518)
+  o mdadm layout code was changed in RHEL 7; code to deal with it (issue
+    #518)
 
   o Adding missing driver xhci_hcd to GNU/Linux.conf (issue #519)
 
@@ -767,8 +768,8 @@ Version 1.17.0 (March 2015)
 
   o BTRFS code has been rewritten by J. Meixner/G. Dhaese to get SUSE rear116
     fork back into our master tree of ReaR. BTRFS is now properly recreated
-    on Fedora 20 and 21 and on SLES 12 and openSUSE 13 (issue #233, #497, #
-    538) See also https://bugzilla.opensuse.org/show_bug.cgi?id=908854
+    on Fedora 20 and 21 and on SLES 12 and openSUSE 13 (issue #233, #497,
+    #538) See also https://bugzilla.opensuse.org/show_bug.cgi?id=908854
 
   o Enhanced the systemd start-up of udev daemons which is different on
     Fedora 20 and 21 (issue #507, #531)
@@ -776,8 +777,8 @@ Version 1.17.0 (March 2015)
   o BACKUP_PROG_OPTIONS="-anchored" became a default option in default.conf
     (issue #475)
 
-  o Fixed an issue with auto-detection of the client name in BAREOS (issue #
-    542)
+  o Fixed an issue with auto-detection of the client name in BAREOS (issue
+    #542)
 
   o Ubuntu 14.04 did not detect /dev/sda automatically - added upstart script
     99-makedev.sh to create missing block devices like sda (issue #446)
@@ -811,8 +812,8 @@ Version 1.17.0 (March 2015)
 
   o Several fixes with mdadm code (issue #480, #489, #490, #508, #539)
 
-  o Several fixes in the 10_include_partition_code.sh script (issue #487, #
-    492)
+  o Several fixes in the 10_include_partition_code.sh script (issue #487,
+    #492)
 
   o Being a bit more careful when deleting the outputfs directory when ReaR
     finishes (issue #465)
@@ -836,13 +837,13 @@ Version 1.17.0 (March 2015)
 
   o Fixed the error "unary operator expected with BACKUP_TYPE" (issue #422)
 
-  o lvm release 2.02.72 had already the knowledge of -norestorefile (issue #
-    462)
+  o lvm release 2.02.72 had already the knowledge of -norestorefile (issue
+    #462)
 
   o Add prefix $OUTPUT_PREFIX to all PXE related files (issue #464)
 
-  o 55-migrate-network-devices.sh: fixed type with /sys/class/net (issue #
-    459)
+  o 55-migrate-network-devices.sh: fixed type with /sys/class/net (issue
+    #459)
 
   o Removed Get_Start_Date function with Netbackup because (depending on
     backup strategy) it led to partial restore only (issue #456)
@@ -871,8 +872,8 @@ Version 1.17.0 (March 2015)
   o Several improvements around duply and duplicity [Debian related] (issues
     #426, #478)
 
-  o 95_copy_result_files.sh uses now [*] instead of [@] with array (issue #
-    431)
+  o 95_copy_result_files.sh uses now [*] instead of [@] with array (issue
+    #431)
 
   o New variable introduced for TSM in default.conf file called LANG_RECOVER
     (issue #424)
@@ -1090,8 +1091,8 @@ Version 1.15.0 (September 2013)
 
   o Updates required for systemd for fedora 18 and 19.
 
-  o Check if ROOT_FS filesystem was mounted with 'noexec' attribute (issue #
-    150)
+  o Check if ROOT_FS filesystem was mounted with 'noexec' attribute (issue
+    #150)
 
 Version 1.14.0 (September 2012)
 
@@ -1106,10 +1107,10 @@ Version 1.14.0 (September 2012)
 
   o Packaging - introduction of Makefile; cleanup dr workflow (fix #13, #49)
 
-  o Make ReaR working from checkout of git, w.o.w. path is relocatable (fix #
+  o Make ReaR working from checkout of git, w.o.w. path is relocatable (fix 
     53)
 
-  o Add bytes_per_inode information for ext* filesystem to layout.conf (fix #
+  o Add bytes_per_inode information for ext* filesystem to layout.conf (fix
     86)
 
   o Fixing ebuild to be Gentoo compliant (fix #93)

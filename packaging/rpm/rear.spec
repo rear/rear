@@ -1,4 +1,4 @@
-%define rpmrelease %{nil}
+%define rpmrelease %nil
 %define debug_package %{nil}
 
 ### Work-around the fact that openSUSE/SLES _always_ defined both :-/
@@ -15,7 +15,7 @@ Group: Applications/File
 URL: http://relax-and-recover.org/
 
 # as GitHub stopped with download section we need to go back to Sourceforge for downloads
-Source: https://sourceforge.net/projects/rear/files/rear/%{version}/rear-%{version}.tar.gz
+Source: https://sourceforge.net/projects/rear/files/rear/2.1/rear-2.1.tar.gz
 
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -130,7 +130,7 @@ if [ $1 -gt 1 ] ; then
 fi
 
 %prep
-%setup -q
+%setup -q -n rear-2.1
 
 echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
 
