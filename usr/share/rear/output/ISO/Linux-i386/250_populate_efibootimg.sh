@@ -18,7 +18,7 @@ if [[ $(basename ${UEFI_BOOTLOADER}) = shim.efi ]]; then
     # if shim is used, bootloader can be actually anything
     # named as grub*.efi (follow-up loader is shim compile time option)
     # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
-    cp $v $(dirname ${UEFI_BOOTLOADER})/grub*.efi $TMP_DIR/mnt/EFI/BOOT/
+    cp $v $(dirname ${UEFI_BOOTLOADER})/grub*.efi $TMP_DIR/mnt/EFI/BOOT/ >&2
 fi
 
 
