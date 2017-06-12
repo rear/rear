@@ -1,0 +1,1 @@
+../Linux-ppc64le/820_prepare_multiple_iso.sh
