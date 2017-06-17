@@ -1,1 +1,1 @@
-../Linux-ppc64le/800_create_isofs.sh
+usr/share/rear/output/ISO/Linux-ppc64le/800_create_isofs.sh
