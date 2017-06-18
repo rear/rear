@@ -65,8 +65,15 @@ EOF
 # create a grub.cfg
     create_grub2_cfg > $TMP_DIR/mnt/EFI/BOOT/grub.cfg
 fi
-# create BOOTX86.efi
-build_bootx86_efi
+
+# Create BOOTX86.efi but only if we are NOT secure booting.
+# We are not able to create signed boot loader
+# so we need to reuse existing one.
+# See issue #1374
+# build_bootx86_efi () can be safely used for other scenarios.
+if [[ $(basename ${UEFI_BOOTLOADER}) != shim.efi ]]; then
+    build_bootx86_efi
+fi
 
 # we will be using grub-efi or grub2 (with efi capabilities) to boot from ISO
 grubdir=$(ls -d /boot/grub*)
