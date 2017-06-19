@@ -6,10 +6,11 @@
 # to detect new multipath device even if there are no multipath device present
 # in the Layout file (original machine not multipathed). (#1309)
 if grep -q '^multipath' "$LAYOUT_FILE" || is_true "$BOOT_OVER_SAN" ; then
-    LogPrint "Activating multipath"
+    LogPrint "Setting up multipathing"
 
     # We need to create a multipath.conf if it does not exists (needed by Fedora based OS)
-    if [ ! -f /etc/multipath.conf ] ; then
+    # and only if NO multipath device were detecting during the backup (migration) => means no multipath in LAYOUT_FILE
+    if [ ! -f /etc/multipath.conf ] && ! grep -q '^multipath' "$LAYOUT_FILE" ; then
         if has_binary mpathconf &> /dev/null ; then
             LogPrint "Using mpathconf to configure multipath with friendly_names and find_multipath options"
 
@@ -32,6 +33,7 @@ blacklist {
         fi
     fi
 
+    LogPrint "Activating multipath"
     modprobe dm-multipath >&2
     multipath >&2
     if [ $? -ne 0 ] ; then
@@ -40,6 +42,7 @@ blacklist {
     else
         LogPrint "multipath activated"
         dmsetup ls --target multipath
+        multipath -l
     fi
 fi
 
