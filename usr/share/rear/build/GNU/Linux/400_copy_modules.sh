@@ -145,13 +145,12 @@ depmod -b "$ROOTFS_DIR" -v "$KERNEL_VERSION" 1>/dev/null || Error "depmod failed
 # Generate /etc/modules for the rescue/recovery system:
 recovery_system_etc_modules="$ROOTFS_DIR/etc/modules"
 for module_to_be_loaded in "${MODULES_LOAD[@]}" ; do
-    echo $module_to_be_loaded
-done >>$recovery_system_etc_modules
-# Remove duplicates:
-cat $recovery_system_etc_modules | sort -u > $recovery_system_etc_modules.new
-mv -f $recovery_system_etc_modules.new $recovery_system_etc_modules
+    if ! grep -q $module_to_be_loaded $recovery_system_etc_modules ; then
+        # add module only if not exists to remove duplicates
+        echo $module_to_be_loaded >>$recovery_system_etc_modules
+    fi
+done
 
 # Local functions must be 'unset' because bash does not support 'local function ...'
 # cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
 unset -f modinfo_filename
-
