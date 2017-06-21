@@ -14,7 +14,7 @@ StopIfError "Could not create $TMP_DIR/mnt/EFI/BOOT/locale"
 # copy the grub*.efi executable to EFI/BOOT/BOOTX64.efi
 cp  $v "${UEFI_BOOTLOADER}" $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi >&2
 StopIfError "Could not find ${UEFI_BOOTLOADER}"
-if [[ $(basename ${UEFI_BOOTLOADER}) = shim.efi ]]; then
+if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     # if shim is used, bootloader can be actually anything
     # named as grub*.efi (follow-up loader is shim compile time option)
     # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
@@ -27,7 +27,7 @@ fi
 if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" ]]; then
     # See https://github.com/rear/rear/issues/758 why 'test' is used here:
     uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
-    if test "$uefi_bootloader_basename" = "shim.efi" -o "$uefi_bootloader_basename" = "elilo.efi" ; then
+    if test -f "$SECURE_BOOT_BOOTLOADER" -o "$uefi_bootloader_basename" = "elilo.efi" ; then
         # if shim is used, bootloader can be actually anything (also elilo)
         # named as grub*.efi (follow-up loader is shim compile time option)
         # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
@@ -65,8 +65,15 @@ EOF
 # create a grub.cfg
     create_grub2_cfg > $TMP_DIR/mnt/EFI/BOOT/grub.cfg
 fi
-# create BOOTX86.efi
-build_bootx86_efi
+
+# Create BOOTX86.efi but only if we are NOT secure booting.
+# We are not able to create signed boot loader
+# so we need to reuse existing one.
+# See issue #1374
+# build_bootx86_efi () can be safely used for other scenarios.
+if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
+    build_bootx86_efi
+fi
 
 # we will be using grub-efi or grub2 (with efi capabilities) to boot from ISO
 grubdir=$(ls -d /boot/grub*)
