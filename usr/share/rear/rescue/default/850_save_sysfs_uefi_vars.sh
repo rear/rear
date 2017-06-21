@@ -11,6 +11,9 @@ is_true $USING_UEFI_BOOTLOADER || return
 # (the 'for' loop is run only once so that 'continue' is the same as 'break')
 # which avoids dowdy looking code with deeply nested 'if...else' conditions:
 for dummy in "once" ; do
+    if test -f "$SECURE_BOOT_BOOTLOADER" ; then
+      UEFI_BOOTLOADER="$SECURE_BOOT_BOOTLOADER"
+    fi
 
     # When the user has specified UEFI_BOOTLOADER in /etc/rear/local.conf use it if exists and is a regular file.
     # Double quotes are mandatory here because 'test -f' without any (possibly empty) argument results true:

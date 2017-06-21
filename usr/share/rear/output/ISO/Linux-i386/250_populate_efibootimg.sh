@@ -14,7 +14,7 @@ StopIfError "Could not create $TMP_DIR/mnt/EFI/BOOT/locale"
 # copy the grub*.efi executable to EFI/BOOT/BOOTX64.efi
 cp  $v "${UEFI_BOOTLOADER}" $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi >&2
 StopIfError "Could not find ${UEFI_BOOTLOADER}"
-if [[ $(basename ${UEFI_BOOTLOADER}) = $SECURE_BOOT_BOOTLOADER ]]; then
+if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     # if shim is used, bootloader can be actually anything
     # named as grub*.efi (follow-up loader is shim compile time option)
     # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
@@ -71,7 +71,7 @@ fi
 # so we need to reuse existing one.
 # See issue #1374
 # build_bootx86_efi () can be safely used for other scenarios.
-if [[ $(basename ${UEFI_BOOTLOADER}) != $SECURE_BOOT_BOOTLOADER ]]; then
+if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
     build_bootx86_efi
 fi
 
