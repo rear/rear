@@ -92,10 +92,10 @@ case "$(basename ${BACKUP_PROG})" in
 	(rsync)
 		# make sure that the target is a directory
 		mkdir -p $v "$backuparchive" >&2
-		Log $BACKUP_PROG $v "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete \
+		Log $BACKUP_PROG --verbose "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete \
 			--exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded \
 			$(cat $TMP_DIR/backup-include.txt) "$backuparchive"
-		$BACKUP_PROG  $v "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete \
+		$BACKUP_PROG --verbose "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete \
 			--exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded \
 			$(cat $TMP_DIR/backup-include.txt) "$backuparchive" >&2
 	;;
