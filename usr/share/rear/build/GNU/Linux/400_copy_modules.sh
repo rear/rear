@@ -145,7 +145,7 @@ depmod -b "$ROOTFS_DIR" -v "$KERNEL_VERSION" 1>/dev/null || Error "depmod failed
 # Generate /etc/modules for the rescue/recovery system:
 recovery_system_etc_modules="$ROOTFS_DIR/etc/modules"
 for module_to_be_loaded in "${MODULES_LOAD[@]}" ; do
-    if ! grep -q $module_to_be_loaded $recovery_system_etc_modules ; then
+    if ! grep -q "^$module_to_be_loaded\$" $recovery_system_etc_modules ; then
         # add module only if not exists to remove duplicates
         echo $module_to_be_loaded >>$recovery_system_etc_modules
     fi
