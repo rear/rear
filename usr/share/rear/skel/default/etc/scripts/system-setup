@@ -9,13 +9,10 @@
 # (e.g. "ls foo*bar" becomes plain "ls" without "foo*bar: No such file or directory" error).
 shopt -s nullglob
 
-# Sourcing /etc/rear/local.conf as we need some variables.
-# TODO: I <jsmeix@suse.de> wonder why only local.conf (and rescue.conf) are sourced here.
-# What about config files like site.conf or os.conf and WORKFLOW.conf
-# and possibly other various distribution and architecture config files
-# that may also contain 'some variables' that might be needed by system-setup scripts?
-source /etc/rear/local.conf
-test -f /etc/rear/rescue.conf && source /etc/rear/rescue.conf
+# Sourcing user and rescue configuration as we need some variables.
+for conf in local site rescue ; do
+    test -f /etc/rear/$conf.conf && source /etc/rear/$conf.conf
+done
 
 # Use an artificial array to get the kernel command line parameters as array elements
 kernel_command_line=( $( cat /proc/cmdline ) )
@@ -171,4 +168,3 @@ if unattended_recovery ; then
         done 2>&1
     fi
 fi
-
