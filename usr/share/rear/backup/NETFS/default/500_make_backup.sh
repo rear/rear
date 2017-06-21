@@ -97,7 +97,7 @@ case "$(basename ${BACKUP_PROG})" in
 			$(cat $TMP_DIR/backup-include.txt) "$backuparchive"
 		$BACKUP_PROG  $v "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete \
 			--exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded \
-			$(cat $TMP_DIR/backup-include.txt) "$backuparchive"
+			$(cat $TMP_DIR/backup-include.txt) "$backuparchive" >&2
 	;;
 	(*)
 		Log "Using unsupported backup program '$BACKUP_PROG'"
