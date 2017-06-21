@@ -111,13 +111,13 @@ function create_fs () {
                   echo "# but if that fails assume it failed because of missing support for '-U'"
                   echo "# (e.g. in RHEL 5 it fails, see https://github.com/rear/rear/issues/890)"
                   echo "# then fall back to using mkfs without '-U' plus 'tune2fs/tune4fs -U'"
-                  echo "if ! mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} -U $uuid $device >&2 ; then"
-                  echo "    mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} $device >&2"
+                  echo "if ! mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} -U $uuid -F $device >&2 ; then"
+                  echo "    mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} -F $device >&2"
                   echo "    $tunefs -U $uuid $device >&2"
                   echo "fi"
                 ) >> "$LAYOUT_CODE"
             else
-                echo "mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} $device >&2" >> "$LAYOUT_CODE"
+                echo "mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} -F $device >&2" >> "$LAYOUT_CODE"
             fi
             # Adjust tunable filesystem parameters on ext2/ext3/ext4 filesystems:
             # Set the label:
@@ -255,4 +255,3 @@ EOF
 
     Log "End create_fs( $@ )"
 }
-
