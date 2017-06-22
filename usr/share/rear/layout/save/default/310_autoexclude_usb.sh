@@ -22,7 +22,7 @@ do
         esac
     else
         continue  # check next one
-    fi 
+    fi
 
     # Return a proper short device name using udev
     REAL_USB_DEVICE=$(readlink -f $USB_DEVICE)
@@ -36,7 +36,7 @@ do
 
     grep -q "^$REAL_USB_DEVICE " /proc/mounts
     if [[ $? -eq 0 ]]; then
-        local usb_mntpt=$(grep -E "^$REAL_USB_DEVICE\s" /proc/mounts | cut -d" " -f2 | tail -1)
+        local usb_mntpt=$( grep "^$REAL_USB_DEVICE " /proc/mounts | cut -d" " -f2 | tail -1 )
         if ! IsInArray "$usb_mntpt" "${AUTOEXCLUDE_USB_PATH[@]}" ; then
             AUTOEXCLUDE_USB_PATH=( ${AUTOEXCLUDE_USB_PATH[@]} $usb_mntpt )
             Log "Auto-excluding USB path $usb_mntpt [device $REAL_USB_DEVICE]"
