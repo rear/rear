@@ -196,12 +196,18 @@ $(name)-$(distversion).tar.gz:
 	git ls-tree -r --name-only --full-tree $(git_branch) | \
 		tar -czf $(name)-$(distversion).tar.gz --transform='s,^,$(name)-$(distversion)/,S' --files-from=-
 
-rpm: dist
+srpm: dist
+	@echo -e "\033[1m== Building SRPM package $(name)-$(distversion) ==\033[0;0m"
+	rpmbuild -ts --clean \
+		--define "debug_package %{nil}" \
+		--define "_srcrpmdir %(pwd)" $(name)-$(distversion).tar.gz
+
+rpm: srpm
 	@echo -e "\033[1m== Building RPM package $(name)-$(distversion) ==\033[0;0m"
-	rpmbuild -tb --clean \
+	rpmbuild --rebuild --clean \
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
 		--define "debug_package %{nil}" \
-		--define "_rpmdir %(pwd)" $(name)-$(distversion).tar.gz
+		--define "_rpmdir %(pwd)" $(name)-$(version)-1$(rpmrelease).*.src.rpm
 
 deb: dist
 	@echo -e "\033[1m== Building DEB package $(name)-$(distversion) ==\033[0;0m"
