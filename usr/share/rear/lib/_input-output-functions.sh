@@ -269,6 +269,197 @@ LogPrintIfError() {
     fi
 }
 
+# Helper function for UserInput that is intended to output to the original STDOUT
+# regardless whether or not the user launched 'rear' in verbose mode:
+function UserOutput () {
+    # Basically same as the function PrintError but to fd7 and without a MESSAGE_PREFIX:
+    echo -e "$*" >&7 || true
+}
+
+# Helper function for UserInput that is intended to output to the original STDERR
+# regardless whether or not the user launched 'rear' in verbose mode
+# plus logging the output in the log file (basically same as function LogPrintError):
+function LogUserOutput () {
+    Log "$@"
+    UserOutput "$@"
+}
+
+# General function that is intended for basically any user input:
+# Output happens via the original STDOUT and STDERR when 'rear' was launched
+# (which is usually the terminal of the user who launched 'rear')
+# the original STDOUT and STDERR file descriptors are saved as fd7 and fd8.
+function UserInput () {
+    # Set defaults or fallback values:
+    local timeout=60
+    # Avoid stderr if USER_INPUT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_TIMEOUT:
+    test "$USER_INPUT_TIMEOUT" -ge 0 2>/dev/null && timeout=$USER_INPUT_TIMEOUT
+    local prompt="enter a choice number"
+    # Avoid stderr if USER_INPUT_PROMPT is not set or empty:
+    test "$USER_INPUT_PROMPT" 2>/dev/null && prompt="$USER_INPUT_PROMPT"
+    local output_array=""
+    local input_max_chars=1000
+    # Avoid stderr if USER_INPUT_MAX_CHARS is not set or empty and ignore wrong USER_INPUT_MAX_CHARS:
+    test "$USER_INPUT_MAX_CHARS" -ge 0 2>/dev/null && input_max_chars=$USER_INPUT_MAX_CHARS
+    local input_delimiter=""
+    local default_choice=""
+    local user_input_ID=""
+    # Get the options and their arguments:
+    local option=""
+    # Resetting OPTIND is necessary if getopts was used previously in the script
+    # and because we are in a function we can even make OPTIND local:
+    local OPTIND=1
+    while getopts ":t:p:a:n:d:D:" option ; do
+        case $option in
+            (t)
+                test "$OPTARG" -ge 0 2>/dev/null && timeout=$OPTARG || Log "UserInput: Invalid -$option argument '$OPTARG' using fallback '$timeout'"
+                ;;
+            (p)
+                prompt="$OPTARG"
+                ;;
+            (a)
+                output_array="$OPTARG"
+                ;;
+            (n)
+                test "$OPTARG" -ge 0 2>/dev/null && input_max_chars=$OPTARG || Log "UserInput: Invalid -$option argument '$OPTARG' using fallback '$input_max_chars'"
+                ;;
+            (d)
+                input_delimiter="$OPTARG"
+                ;;
+            (D)
+                default_choice="$OPTARG"
+                ;;
+            (I)
+                test "$OPTARG" -ge 0 2>/dev/null && user_input_ID="$OPTARG" || Log "UserInput: Invalid -$option argument '$OPTARG' ignored"
+                ;;
+            (\?)
+                BugError "UserInput: Invalid option: -$OPTARG"
+                ;;
+            (:)
+                BugError "UserInput: Option -$OPTARG requires an argument"
+                ;;
+        esac
+    done
+    # Shift away the options and arguments:
+    shift "$(( OPTIND - 1 ))"
+    # Everything that is now left in "$@" is neither an option nor an option argument
+    # so that now "$@" contains the trailing mass-arguments (POSIX calls them operands):
+    local choices=( "$@" )
+    local choice_index=0
+    if ! test "${choices:=}" ; then
+        # It is possible (it is no error) to specify no choices:
+        Log "UserInput: No choices specified"
+    else
+        if test "$default_choice" -ge 0 2>/dev/null ; then
+            # It is possible (it is no error) to specify a number as default choice that has no matching choice:
+            test "${choices[$default_choice]:=}" || Log "UserInput: Default choice '$default_choice' not in choices"
+        else
+            # When the default choice is no number try to find if it is a choice
+            # and if found use the choice index as default choice number:
+            for choice in "${choices[@]}" ; do
+                test "$default_choice" = "$choice" && default_choice=$choice_index
+                (( choice_index += 1 ))
+            done
+            # It is possible (it is no error) to specify anything as default choice:
+            test "$default_choice" -ge 0 2>/dev/null || Log "UserInput: Default choice not found in choices"
+        fi
+    fi
+    # When an empty prompt was specified (via -p '') do not change that:
+    if test "$prompt" ; then
+        if test "$default_choice" -o "$timeout" -ge 1 2>/dev/null ; then
+            prompt="$prompt ("
+            if test "$default_choice" ; then
+                if test "$default_choice" -ge 0 2>/dev/null ; then
+                    prompt="$prompt default $(( default_choice + 1 ))"
+                else
+                    prompt="$prompt default '$default_choice'"
+                fi
+            fi
+            if test "$timeout" -ge 1 2>/dev/null ; then
+                prompt="$prompt timeout $timeout"
+            fi
+            prompt="$prompt ) "
+        fi
+    fi
+    # The actual work:
+    # Show the choices with leading choice numbers 1) 2) 3) ... as in 'select' (i.e. starting at 1):
+    local choice_number=1
+    Log "UserInput shows the following selection list and prompt:"
+    if test "${choices:=}" ; then
+        for choice in "${choices[@]}" ; do
+            LogUserOutput "$choice_number) $choice"
+            (( choice_number += 1 ))
+        done
+    fi
+    # Show the prompt unless an empty prompt was specified (via -p ''):
+    test "$prompt" && LogUserOutput "$prompt"
+    # Prepare the 'read' call:
+    local read_options_and_arguments=""
+    # When a zero timeout was specified (via -t 0) do not use it:
+    test "$timeout" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -t $timeout"
+    # When no output_array was specified (via -a myarr) do not use it:
+    test "$output_array" && read_options_and_arguments="$read_options_and_arguments -a $output_array"
+    # When zero input_max_chars was specified (via -n 0) do not use it:
+    test "$input_max_chars" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -n $input_max_chars"
+    # When no input_delimiter was specified (via -d x) do not use it:
+    test "$input_delimiter" && read_options_and_arguments="$read_options_and_arguments -d $input_delimiter"
+    # Read the user input:
+    local user_input=""
+    if read $read_options_and_arguments user_input ; then
+        Log "UserInput: 'read' got as user input '$user_input'"
+    else
+        # Continue in any case because in case of errors the default choice is used:
+        if test "$timeout" -ge 1 2>/dev/null ; then
+            Log "UserInput: 'read' finished with non-zero exit code probably because 'read' timed out"
+        else
+            Log "UserInput: 'read' finished with non-zero exit code"
+        fi
+    fi
+    # When an output_array was specified it contains all user input words but we need only the first word:
+    test "${output_array:=}" && user_input="${!output_array:=}"
+    Log "UserInput: Actually used user input is '$user_input'"
+    # When there is no user input use the "best" default choice that exists:
+    if ! test "$user_input" ; then
+        if ! test "$default_choice" ; then
+            LogPrint "UserInput: No user input and no default choice so that the result is ''"
+            echo ""
+            return 101
+        fi
+        if ! test "$default_choice" -ge 0 2>/dev/null ; then
+            LogPrint "UserInput: No user input and default choice no possible index in choices so that the result is '$default_choice'"
+            echo "$default_choice"
+            return 102
+        fi
+        if ! test "${choices[$default_choice]:=}" ; then
+            LogPrint "UserInput: No user input and default choice not in choices so that the result is '$default_choice'"
+            echo "$default_choice"
+            return 103
+        fi
+        LogPrint "UserInput: No user input and default choice in choices so that the result is '${choices[$default_choice]}'"
+        echo "${choices[$default_choice]}"
+        return 104
+    fi
+    # When there is user input use it regardless of any default choice:
+    if ! test "$choices" ; then
+        LogPrint "UserInput: User input and no choices so that the result is '$user_input'"
+        echo "$user_input"
+        return 0
+    fi
+    if ! test "$user_input" -ge 1 2>/dev/null ; then
+        LogPrint "UserInput: User input no possible index in choices so that the result is '$user_input'"
+        echo "$user_input"
+        return 105
+    fi
+    choice_index=$(( user_input - 1 ))
+    if ! test "${choices[$choice_index]:=}" ; then
+        LogPrint "UserInput: User input not in choices so that the result is '$user_input'"
+        echo "$user_input"
+        return 106
+    fi
+    LogPrint "UserInput: User input in choices so that the result is '${choices[$choice_index]}'"
+    echo "${choices[$choice_index]}"
+    return 0
+}
+
 # Setup dummy progress subsystem as a default.
 # Progress stuff replaced by dummy/noop
 # cf. https://github.com/rear/rear/issues/887
