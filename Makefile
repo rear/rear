@@ -207,7 +207,7 @@ rpm: srpm
 	rpmbuild --rebuild --clean \
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
 		--define "debug_package %{nil}" \
-		--define "_rpmdir %(pwd)" $(name)-$(version)-1$(rpmrelease).*.src.rpm
+		--define "_rpmdir %(pwd)" $(name)-$(version)-1$(rpmrelease)*.src.rpm
 
 deb: dist
 	@echo -e "\033[1m== Building DEB package $(name)-$(distversion) ==\033[0;0m"
