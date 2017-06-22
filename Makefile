@@ -1,4 +1,4 @@
-# In some dists (e.g. Ubuntu) bash is not the default shell. Statements like 
+# In some dists (e.g. Ubuntu) bash is not the default shell. Statements like
 #   cp -a etc/rear/{mappings,templates} ...
 # assumes bash. So its better to set SHELL
 SHELL=/bin/bash
@@ -15,8 +15,10 @@ version := $(shell awk 'BEGIN { FS="=" } /^readonly VERSION=/ { print $$2}' $(re
 ifeq ($(OFFICIAL),)
 ifneq ($(shell which git),)
 git_date := $(shell git log -n 1 --format="%ai")
-git_ref := $(shell git symbolic-ref -q HEAD)
-git_branch = $(lastword $(subst /, ,$(git_ref)))
+git_ref := $(shell git rev-parse --short HEAD)
+git_count := $(shell git rev-list HEAD --count --no-merges)
+git_branch_suffix = $(shell git symbolic-ref --short HEAD | tr -d /_-)
+git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
 endif
 else
 ifneq ($(shell which git),)
@@ -45,9 +47,9 @@ rpmrelease = %nil
 obsproject = Archiving:Backup:Rear
 obspackage = $(name)-$(version)
 ifeq ($(OFFICIAL),)
-    distversion = $(version)-git$(date)
-    debrelease = 0git$(date)
-    rpmrelease = .git$(date)
+    distversion = $(version)-git.$(git_stamp)
+    debrelease = 0git.$(git_stamp)
+    rpmrelease = .git.$(git_stamp)
     obsproject = Archiving:Backup:Rear:Snapshot
     obspackage = $(name)
 endif
@@ -63,20 +65,20 @@ help:
   validate        - Check source code\n\
   install         - Install Relax-and-Recover (may replace files)\n\
   uninstall       - Uninstall Relax-and-Recover (may remove files)\n\
-  dist            - Create tar file\n\
-  deb             - Create DEB package\n\
-  rpm             - Create RPM package\n\
+  dist            - Create tar file in dist/\n\
+  deb             - Create DEB package in dist/\n\
+  rpm             - Create RPM package in dist/\n\
   pacman          - Create Pacman package\n\
   obs             - Initiate OBS builds\n\
 \n\
 Relax-and-Recover make variables (optional):\n\
 \n\
   DESTDIR=        - Location to install/uninstall\n\
-  OFFICIAL=       - Build an official release\n\
+  OFFICIAL=1      - Build an official release\n\
 "
 
 clean:
-	rm -fv $(name)-$(version)*.tar.gz $(name)-$(version)*.rpm
+	rm -Rf dist build
 	rm -f build-stamp
 	make -C doc clean
 
@@ -106,39 +108,6 @@ man:
 doc:
 	@echo -e "\033[1m== Prepare documentation ==\033[0;0m"
 	make -C doc docs
-
-ifneq ($(git_date),)
-rewrite:
-	@echo -e "\033[1m== Rewriting $(specfile), $(dscfile) and $(rearbin) ==\033[0;0m"
-	sed -i.orig \
-		-e 's#^Source:.*#Source: https://sourceforge.net/projects/rear/files/rear/${version}/$(name)-${distversion}.tar.gz#' \
-		-e 's#^Version:.*#Version: $(version)#' \
-		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
-		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
-		$(specfile)
-	sed -i.orig \
-		-e 's#^Version:.*#Version: $(version)-$(debrelease)#' \
-		$(dscfile)
-	sed -i.orig \
-		-e 's#^readonly VERSION=.*#readonly VERSION=$(distversion)#' \
-		-e 's#^readonly RELEASE_DATE=.*#readonly RELEASE_DATE="$(release_date)"#' \
-		$(rearbin)
-
-restore:
-	@echo -e "\033[1m== Restoring $(specfile) and $(rearbin) ==\033[0;0m"
-	mv -f $(specfile).orig $(specfile)
-	mv -f $(dscfile).orig $(dscfile)
-	mv -f $(rearbin).orig $(rearbin)
-else
-rewrite:
-	@echo -e "\033[1m== Rewrite : RELEASE_DATE of $(rearbin) ==\033[0;0m"
-	@grep RELEASE_DATE= $(rearbin)
-	@echo "Nothing to do."
-
-restore:
-	@echo -e "\033[1m== Restore configuration files ==\033[0;0m"
-	@echo "Nothing to do."
-endif
 
 install-config:
 	@echo -e "\033[1m== Installing configuration ==\033[0;0m"
@@ -178,7 +147,7 @@ install-doc:
 		-e 's,/usr/share/doc/packages,$(datadir)/doc,' \
 		$(DESTDIR)$(mandir)/man8/rear.8
 
-install: validate man install-config rewrite install-bin restore install-data install-var install-doc
+install: validate man install-config install-bin install-data install-var install-doc
 
 uninstall:
 	@echo -e "\033[1m== Uninstalling Relax-and-Recover ==\033[0;0m"
@@ -188,35 +157,52 @@ uninstall:
 #	rm -rv $(DESTDIR)$(sysconfdir)/rear/
 #	rm -rv $(DESTDIR)$(localstatedir)/lib/rear/
 
-dist: clean validate man rewrite $(name)-$(distversion).tar.gz restore
+dist: clean validate man dist/$(name)-$(distversion).tar.gz
 
-$(name)-$(distversion).tar.gz:
+dist/$(name)-$(distversion).tar.gz:
 	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
-	git checkout $(git_branch)
-	git ls-tree -r --name-only --full-tree $(git_branch) | \
-		tar -czf $(name)-$(distversion).tar.gz --transform='s,^,$(name)-$(distversion)/,S' --files-from=-
+	rm -Rf build/$(name)-$(distversion)
+	mkdir -p dist build/$(name)-$(distversion)
+	tar -c --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" * | \
+		tar -C build/$(name)-$(distversion) -x
+	@echo -e "\033[1m== Rewriting $(specfile), $(dscfile) and $(rearbin) ==\033[0;0m"
+	sed -i.orig \
+		-e 's#^Source:.*#Source: https://sourceforge.net/projects/rear/files/rear/${version}/$(name)-${distversion}.tar.gz#' \
+		-e 's#^Version:.*#Version: $(version)#' \
+		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
+		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
+		build/$(name)-$(distversion)/$(specfile)
+	sed -i.orig \
+		-e 's#^readonly VERSION=.*#readonly VERSION=$(distversion)#' \
+		-e 's#^readonly RELEASE_DATE=.*#readonly RELEASE_DATE="$(release_date)"#' \
+		build/$(name)-$(distversion)/$(rearbin)
+	tar -czf dist/$(name)-$(distversion).tar.gz -C build $(name)-$(distversion)
 
 srpm: dist
 	@echo -e "\033[1m== Building SRPM package $(name)-$(distversion) ==\033[0;0m"
-	rpmbuild -ts --clean \
+	rpmbuild -ts --clean --nodeps \
+		--define="_topdir $(CURDIR)/build/rpmbuild" \
+		--define="_sourcedir $(CURDIR)/dist" \
+		--define="_srcrpmdir $(CURDIR)/dist" \
 		--define "debug_package %{nil}" \
-		--define "_srcrpmdir %(pwd)" $(name)-$(distversion).tar.gz
+		dist/$(name)-$(distversion).tar.gz
 
 rpm: srpm
 	@echo -e "\033[1m== Building RPM package $(name)-$(distversion) ==\033[0;0m"
 	rpmbuild --rebuild --clean \
+		--define="_topdir $(CURDIR)/build/rpmbuild" \
+		--define="_sourcedir $(CURDIR)/dist" \
+		--define="_rpmdir $(CURDIR)/dist" \
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
 		--define "debug_package %{nil}" \
-		--define "_rpmdir %(pwd)" $(name)-$(version)-1$(rpmrelease)*.src.rpm
+		dist/$(name)-$(version)-1*.src.rpm
 
 deb: dist
 	@echo -e "\033[1m== Building DEB package $(name)-$(distversion) ==\033[0;0m"
-	cp -r packaging/debian/ .
-	chmod 755 debian/rules
-	fakeroot debian/rules clean
-	fakeroot dh_install
-	fakeroot debian/rules binary
-	-rm -rf debian/
+	cp -r build/$(name)-$(distversion)/packaging/debian/ build/$(name)-$(distversion)/
+	cd build/$(name)-$(distversion) ; dch -v $(distversion) -b -M build package
+	cd build/$(name)-$(distversion) ; debuild -us -uc -i -b --lintian-opts --profile debian
+	mv build/$(name)_*deb dist/
 
 pacman: BUILD_DIR = /tmp/rear-$(distversion)
 pacman: dist
