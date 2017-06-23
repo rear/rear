@@ -14,11 +14,11 @@ version := $(shell awk 'BEGIN { FS="=" } /^readonly VERSION=/ { print $$2}' $(re
 ### Get the branch information from git
 ifeq ($(OFFICIAL),)
 ifneq ($(shell which git),)
-git_date := $(shell git log -n 1 --format="%ai")
-git_ref := $(shell git rev-parse --short HEAD)
-git_count := $(shell git rev-list HEAD --count --no-merges)
-git_branch_suffix = $(shell git symbolic-ref --short HEAD | tr -d /_-)
-git_status := $(shell git status --porcelain)
+git_date := $(shell git log -n 1 --format="%ai" 2>/dev/null || echo now)
+git_ref := $(shell git rev-parse --short HEAD 2>/dev/null || echo 0)
+git_count := $(shell git rev-list HEAD --count --no-merges 2>/dev/null || echo 0)
+git_branch_suffix = $(shell { git symbolic-ref --short HEAD 2>/dev/null || echo unknown ; } | tr -d /_-)
+git_status := $(shell git status --porcelain 2>/dev/null)
 git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
 ifneq ($(git_status),)
 git_stamp := $(git_stamp).dirty
