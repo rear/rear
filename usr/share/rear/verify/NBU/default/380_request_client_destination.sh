@@ -1,6 +1,6 @@
 # 380_request_client_destination.sh
 
-# Request the user to input the new Client name if the restore is a clone.       
+# Request the user to input the new Client name if the restore is a clone.
 # OR Request the user to hit ENTER to do a normal restore to the same client.
 
 # read NBU vars from NBU config file bp.conf
@@ -12,7 +12,9 @@ LogPrint ""
 LogPrint "Netbackup Client Source For This Restore is:  $NBU_CLIENT_SOURCE"
 LogPrint "> If this is a normal restore to the same client press ENTER."
 LogPrint "> If this is a restore to a CLONE enter the new client name."
-read -t $WAIT_SECS -r -p "Enter Cloned Client name or press ENTER [$WAIT_SECS secs]: " 2>&1
+# Use the original STDIN STDOUT and STDERR when rear was launched by the user
+# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+read -t $WAIT_SECS -r -p "Enter Cloned Client name or press ENTER [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
 
 # validate input
 if test -z "${REPLY}"; then
@@ -27,5 +29,7 @@ else
         LogPrint ""
         LogPrint "bp.conf defined servers: " ; cat /usr/openv/netbackup/bp.conf | grep -i server
         LogPrint ""
-        read -t $WAIT_SECS -r -p "Press any key to continue....[$WAIT_SECS secs]"   2>&1
+        # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+        # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+        read -t $WAIT_SECS -r -p "Press any key to continue ... [$WAIT_SECS secs] " 0<&6 1>&7 2>&8
 fi

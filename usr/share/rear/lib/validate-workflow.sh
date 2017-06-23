@@ -16,19 +16,19 @@ WORKFLOW_validate () {
         return 0
     fi
 
-	Print "
+    Print "
 Thank you for your time and effort to try out $PRODUCT and your
 willingness to report about $PRODUCT in your environment back
 to us. This kind of user support is greatly appreciated and helps a lot
 to improve $PRODUCT.
 
 --- The $PRODUCT development team
+"
+    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    read -e -p "Press ENTER to continue ... " 0<&6 1>&7 2>&8
 
-	"
-
-	read -e -p "Press ENTER to continue ..." 2>&1
-
-	Print "
+Print "
 The purpose of submitting validation info is to assist you with informing us
 about the correct functioning of $PRODUCT (or major parts of it) to
 establish a database of validated systems and environments.
@@ -42,11 +42,12 @@ Please answer the following questions and email the resulting information to
 the $PRODUCT development team at <contact@relax-and-recover.org>. You
 should only include information that you are willing to see published on the
 $PRODUCT website and contained within $PRODUCT.
+"
+    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    read -e -p "Press ENTER to continue ... " 0<&6 1>&7 2>&8
 
-	"
-	read -e -p "Press ENTER to continue ..." 2>&1
-
-	Print "
+    Print "
 1. Submitter
 -------------------
 Please tell us (if you are willing), who you are and how to reach you. If you
@@ -57,11 +58,12 @@ will be...
 
 Example: Your Name <email-address>, Company/Organisation, Country
 "
-	read -e -p "Submitted By: " 2>&1
-	SUBMITTED_BY="$REPLY"
+    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    read -e -p "Submitted By: " 0<&6 1>&7 2>&8
+    SUBMITTED_BY="$REPLY"
 
-	Print "
-
+    Print "
 2. Features
 -------------------
 Please tell us (as exactly as possible) about the $PRODUCT features you
@@ -70,11 +72,12 @@ as configuration types like LVM, MD etc.
 
 Example: LVM, MD, SCSI, $BACKUP, $OUTPUT, EMAIL, ...
 "
-	read -e -p "Features: " 2>&1
-	FEATURES="$REPLY"
+    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    read -e -p "Features: " 0<&6 1>&7 2>&8
+    FEATURES="$REPLY"
 
-	Print "
-
+    Print "
 3. Comments
 -------------------
 Please let us know any comments you have about $PRODUCT in your
@@ -88,11 +91,12 @@ Example: Need to install binutils, wodim and syslinux manually
 Example: Works out-of-the-box flawless with all features
 Example: We modified path/to/file in order to support foo-bar better
 "
-	read -e -p "Comments: " 2>&1
-	COMMENTS="$REPLY"
+    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    read -e -p "Comments: " 0<&6 1>&7 2>&8
+    COMMENTS="$REPLY"
 
-	Print "
-
+    Print "
 Thank you very much for your information. Please copy-and-paste the part
 between the two lines into an email to contact@relax-and-recover.org.
 Please feel free to add anything else you want to tell us about
@@ -107,10 +111,10 @@ Features:    $FEATURES
 Comment:     $COMMENTS
 ---------------------------------->8------------------------------------------
 
-You can also find this information in /tmp/rear-validate.txt !
+You can also find this information in /tmp/rear-validate.txt
+"
 
-	"
-	cat <<EOF >/tmp/rear-validate.txt
+    cat <<EOF >/tmp/rear-validate.txt
 Version:     $PRODUCT $VERSION / $RELEASE_DATE
 Validation:  $OS_VENDOR_VERSION_ARCH
 Submitted:   $SUBMITTED_BY

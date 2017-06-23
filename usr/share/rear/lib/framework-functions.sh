@@ -33,7 +33,11 @@ function Source () {
     # Usage of the external variable BREAKPOINT: sudo BREAKPOINT="*foo*" rear mkrescue
     # an empty default value is set to avoid 'set -eu' error exit if BREAKPOINT is unset:
     : ${BREAKPOINT:=}
-    [[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ) ]] && read -p "Press ENTER to include '$source_file' ..." 2>&1
+    if [[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ) ]] ; then
+        # Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user
+        # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+        read -p "Press ENTER to include '$source_file' ... " 0<&6 1>&7 2>&8
+    fi
     Log "Including $relname"
     # DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
@@ -49,7 +53,11 @@ function Source () {
         apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands"
     fi
     # Breakpoint if needed:
-    [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] && read -p "Press ENTER to continue ..." 2>&1
+    if [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] ; then
+        # Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user
+        # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+        read -p "Press ENTER to continue ... " 0<&6 1>&7 2>&8
+    fi
 }
 
 # collect scripts given in $1 in the standard subdirectories and

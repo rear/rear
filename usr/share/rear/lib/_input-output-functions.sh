@@ -80,14 +80,21 @@ builtin trap "DoExitTasks" EXIT
 # Keep PID of main process (i.e. the main script that the user had launched as 'rear'):
 readonly MASTER_PID=$$
 
-# Prepare that STDOUT and STDERR can be later redirected to anywhere
+# Prepare that STDIN STDOUT and STDERR can be later redirected to anywhere
 # (e.g. both STDOUT and STDERR can be later redirected to the log file).
-# To be able to output on the original STDOUT and STDERR when 'rear' was launched
-# (which is usually the terminal of the user who launched 'rear')
-# the original STDOUT and STDERR file descriptors are saved as fd7 and fd8
+# To be able to output on the original STDOUT and STDERR when 'rear' was launched and
+# to be able to input (i.e. 'read') from the original STDIN when 'rear' was launched
+# (which is usually the keyboard and display of the user who launched 'rear')
+# the original STDIN STDOUT and STDERR file descriptors are saved as fd6 fd7 and fd8
 # so that ReaR functions for actually intended user messages can use fd7 and fd8
-# to show messages to the user regardless whereto STDOUT and STDERR are redirected.
-# Duplicate STDOUT to fd7 to be used by the Print function:
+# to show messages to the user regardless whereto STDOUT and STDERR are redirected
+# and fd6 to get input from the user regardless whereto STDIN is redirected.
+# Duplicate STDIN to fd6 to be used by 'read' in the UserInput function
+# cf. http://tldp.org/LDP/abs/html/x17974.html
+exec 6<&0
+# Close fd6 when exiting:
+QuietAddExitTask "exec 6<&-"
+# Duplicate STDOUT to fd7 to be used by the Print and UserOutput functions:
 exec 7>&1
 # Close fd7 when exiting:
 QuietAddExitTask "exec 7>&-"
@@ -95,6 +102,8 @@ QuietAddExitTask "exec 7>&-"
 exec 8>&2
 # Close fd8 when exiting:
 QuietAddExitTask "exec 8>&-"
+# TODO: I <jsmeix@suse.de> wonder if it is really needed to explicitly close stuff when exiting
+# because during exit all open files (and file descriptors) should be closed automatically.
 
 # USR1 is used to abort on errors.
 # It is not using PrintError but does direct output to the original STDERR:
@@ -276,7 +285,7 @@ function UserOutput () {
     echo -e "$*" >&7 || true
 }
 
-# Helper function for UserInput that is intended to output to the original STDERR
+# Helper function for UserInput that is intended to output to the original STDOUT
 # regardless whether or not the user launched 'rear' in verbose mode
 # plus logging the output in the log file (basically same as function LogPrintError):
 function LogUserOutput () {
@@ -402,9 +411,9 @@ function UserInput () {
     test "$input_max_chars" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -n $input_max_chars"
     # When no input_delimiter was specified (via -d x) do not use it:
     test "$input_delimiter" && read_options_and_arguments="$read_options_and_arguments -d $input_delimiter"
-    # Read the user input:
+    # Read the user input from the original STDIN that is saved as fd6 (see above):
     local user_input=""
-    if read $read_options_and_arguments user_input ; then
+    if read $read_options_and_arguments user_input 0<&6 ; then
         Log "UserInput: 'read' got as user input '$user_input'"
     else
         # Continue in any case because in case of errors the default choice is used:

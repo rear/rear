@@ -69,7 +69,9 @@ $(echo "$TSM_FILESPACE_TEXT" | sed -e 's/^/\t\t/')
 Please enter the numbers of the filespaces we should restore.
 Pay attention to enter the filesystems in the correct order
 (like restore / before /var/log) ! "
-read -t $WAIT_SECS -p "(default: ${TSM_FILESPACE_INCLUDED_NUMS[*]}): [$WAIT_SECS secs] " -r TSM_RESTORE_FILESPACE_NUMS 2>&1
+# Use the original STDIN STDOUT and STDERR when rear was launched by the user
+# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+read -t $WAIT_SECS -p "(default: ${TSM_FILESPACE_INCLUDED_NUMS[*]}): [$WAIT_SECS secs] " -r TSM_RESTORE_FILESPACE_NUMS 0<&6 1>&7 2>&8
 if test -z "$TSM_RESTORE_FILESPACE_NUMS" ; then
 	TSM_RESTORE_FILESPACE_NUMS="${TSM_FILESPACE_INCLUDED_NUMS[*]}" # set default on ENTER
 	Log "User pressed ENTER, setting default of ${TSM_FILESPACE_INCLUDED_NUMS[*]}"
@@ -84,7 +86,9 @@ LogPrint "We will now restore the following filesystems:"
 for num in $TSM_RESTORE_FILESPACE_NUMS ; do
         LogPrint "${TSM_FILESPACES[$num]}"
 done
-read -t $WAIT_SECS -r -p "Is this selection correct ? (Y|n) [$WAIT_SECS secs] " 2>&1
+# Use the original STDIN STDOUT and STDERR when rear was launched by the user
+# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+read -t $WAIT_SECS -r -p "Is this selection correct ? (Y|n) [$WAIT_SECS secs] " 0<&6 1>&7 2>&8
 case "$REPLY" in
 	""|y|Y)	Log "User confirmed filespace selection" ;;
 	*)	Error "User aborted filespace confirmation." ;;

@@ -22,7 +22,9 @@ restored_controllers=()
 
 # Start by clearing all controllers
 while read -u 3 type name junk ; do
-    read -p "To recreate HP SmartArray controller $name, type exactly YES: " 2>&1
+    # Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    read -p "To recreate HP SmartArray controller $name, type exactly 'YES': " 0<&6 1>&7 2>&8
     if [ "$REPLY" = "YES" ] ; then
         create_device "$name" "smartarray"
         restored_controllers=( "${restored_controllers[@]}" $name )
