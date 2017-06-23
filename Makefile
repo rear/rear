@@ -18,7 +18,11 @@ git_date := $(shell git log -n 1 --format="%ai")
 git_ref := $(shell git rev-parse --short HEAD)
 git_count := $(shell git rev-list HEAD --count --no-merges)
 git_branch_suffix = $(shell git symbolic-ref --short HEAD | tr -d /_-)
+git_status := $(shell git status --porcelain)
 git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
+ifneq ($(git_status),)
+git_stamp := $(git_stamp).dirty
+endif
 endif
 else
 ifneq ($(shell which git),)
@@ -191,7 +195,6 @@ rpm: srpm
 	@echo -e "\033[1m== Building RPM package $(name)-$(distversion) ==\033[0;0m"
 	rpmbuild --rebuild --clean \
 		--define="_topdir $(CURDIR)/build/rpmbuild" \
-		--define="_sourcedir $(CURDIR)/dist" \
 		--define="_rpmdir $(CURDIR)/dist" \
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
 		--define "debug_package %{nil}" \
