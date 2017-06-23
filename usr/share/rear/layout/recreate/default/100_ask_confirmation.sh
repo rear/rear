@@ -16,6 +16,8 @@ choices=(
     "Abort Relax-and-Recover"
 )
 
+# Use the original STDIN STDOUT and STDERR when rear was launched by the user
+# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
 select choice in "${choices[@]}"; do
     case "$REPLY" in
         (1) less $LAYOUT_CODE;;
@@ -34,7 +36,7 @@ less $LAYOUT_CODE
     for (( i=1; i <= ${#choices[@]}; i++ )); do
         Print "$i) ${choices[$i-1]}"
     done
-done 2>&1
+done 0<&6 1>&7 2>&8
 
 Log "User selected: $REPLY) ${choices[$REPLY-1]}"
 

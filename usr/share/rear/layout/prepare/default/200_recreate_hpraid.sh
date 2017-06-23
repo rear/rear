@@ -77,6 +77,8 @@ if [ ${#restored_controllers} -ne 0 ] ; then
             )
 
             timestamp=$(stat --format="%Y" "$LAYOUT_CODE")
+            # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+            # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
             select choice in "${choices[@]}"; do
                 timestamp=$(stat --format="%Y" "$LAYOUT_FILE")
                 case "$REPLY" in
@@ -101,7 +103,7 @@ $HPSSACLI ctrl all show config
                 for (( i=1; i <= ${#choices[@]}; i++ )); do
                     Print "$i) ${choices[$i-1]}"
                 done
-            done 2>&1
+            done 0<&6 1>&7 2>&8
 
             Log "User selected: $REPLY) ${choices[$REPLY-1]}"
 
