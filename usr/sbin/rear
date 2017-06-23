@@ -362,16 +362,33 @@ if ! test "$can_run_simultaneously" ; then
     done
 fi
 
+# Source usr/share/rear/lib/_input-output-functions.sh because therein
+# the original STDIN STDOUT and STDERR file descriptors are saved as fd6 fd7 and fd8
+# so that ReaR functions for actually intended user messages can use fd7 and fd8
+# to show messages to the user regardless whereto STDOUT and STDERR are redirected
+# and fd6 to get input from the user regardless whereto STDIN is redirected:
+source $SHARE_DIR/lib/_input-output-functions.sh
+
 # Keep old log file:
 test -r "$RUNTIME_LOGFILE" && mv -f "$RUNTIME_LOGFILE" "$RUNTIME_LOGFILE".old 2>/dev/null
 
 # Start logging:
-mkdir -p $LOG_DIR
-exec 2>"$RUNTIME_LOGFILE" || echo "ERROR: Could not create $RUNTIME_LOGFILE" >&2
+mkdir -p $LOG_DIR || echo "ERROR: Could not create $LOG_DIR" >&2
+cat /dev/null >"$RUNTIME_LOGFILE"
+# Redirect both STDOUT and STDERR into the log file.
+# To be more on the safe side append to the log file '>>' instead of plain writing to it '>'
+# because when a program (bash in this case) is plain writing to the log file it can overwrite
+# output of a possibly simultaneously running process that likes to append to the log file
+# (e.g. when a background process runs that also uses the ReaR log file for logging):
+exec 2>>"$RUNTIME_LOGFILE"
+# Make stdout the same what stderr already is.
+# This keeps strict ordering of stdout and stderr outputs
+# because now both stdout and stderr use one same file descriptor:
+exec 1>&2
 
 # Include functions after RUNTIME_LOGFILE is set and readonly
 # so that functions can use a fixed RUNTIME_LOGFILE value:
-for script in $SHARE_DIR/lib/*.sh ; do
+for script in $SHARE_DIR/lib/[a-z]*.sh ; do
     source $script
 done
 
