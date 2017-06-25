@@ -15,8 +15,12 @@ if multipath -d >/dev/null ; then
 
     [ ! -d  $TARGET_FS_ROOT/etc/multipath ] && mkdir -p $TARGET_FS_ROOT/etc/multipath
 
-    if [ ! -f $TARGET_FS_ROOT/etc/multipath/bindings ] ; then
-        [ -f /etc/multipath/bindings ] && cp /etc/multipath/bindings $TARGET_FS_ROOT/etc/multipath/bindings
+    # Always copy multipath bindings file to the $TARGET_FS_ROOT. In case of migration to different multipath diks (migration)
+    # /etc/multipath/bindings has been updated in the recovery image and result must ALWAYS be copied to the TARGET_FS_ROOT
+    # before mkinitrd operation.
+    if [ -f /etc/multipath/bindings ] ; then
+        cp /etc/multipath/bindings $TARGET_FS_ROOT/etc/multipath/bindings && LogPrint "/etc/multipath/bindings copied to $TARGET_FS_ROOT"
+        LogIfError "Failed to copy /etc/multipath/bindings to $TARGET_FS_ROOT"
     fi
 
     # Cleaning /etc/multipath/wwids file and update it with new wwids.
