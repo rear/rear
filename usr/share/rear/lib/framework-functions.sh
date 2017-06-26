@@ -25,7 +25,7 @@ function Source () {
     # Clip leading standard path to rear files (usually /usr/share/rear/):
     local relname="${source_file##$SHARE_DIR/}"
     # Simulate sourcing the scripts in $SHARE_DIR
-    if test "$SIMULATE" && expr "$source_file" : "$SHARE_DIR" >&8; then
+    if test "$SIMULATE" && expr "$source_file" : "$SHARE_DIR" >/dev/null; then
         LogPrint "Source $relname"
         return
     fi

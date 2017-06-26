@@ -3,7 +3,7 @@
 #
 #
 # create missing directories
-pushd $TARGET_FS_ROOT >&8
+pushd $TARGET_FS_ROOT >/dev/null
 mkdir -p mnt proc sys tmp dev/pts dev/shm
 chmod 1777 tmp
-popd >&8
+popd >/dev/null

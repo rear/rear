@@ -7,7 +7,7 @@
 export PATH=$PATH:/opt/simpana/Base
 
 # we first try to run a Galaxy command and try to logon if it fails
-qlist backupset -c $HOSTNAME -a Q_LINUX_FS >&8
+qlist backupset -c $HOSTNAME -a Q_LINUX_FS >/dev/null
 let ret=$?
 [ $ret -eq 0 -o $ret -eq 2 ]
 StopIfError "Unknown error in qlist [$ret], check log file"

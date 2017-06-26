@@ -45,7 +45,7 @@ EOF
 fi
 
 
-pushd "$PXE_LOCAL_PATH" >&8
+pushd "$PXE_LOCAL_PATH" >/dev/null
 StopIfError "PXE_CONFIG_PATH [$PXE_CONFIG_PATH] does not exist !"
 if test "$PXE_CREATE_LINKS" -a "$PXE_REMOVE_OLD_LINKS" ; then
 	# remove old links
@@ -100,7 +100,7 @@ case "$PXE_CREATE_LINKS" in
 		Error "Invalid PXE_CREATE_LINKS specified, must be MAC or IP or ''"
 		;;
 esac
-popd >&8
+popd >/dev/null
 
 if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
     LogPrint "Created pxelinux config '${PXE_CONFIG_PREFIX}$HOSTNAME' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_URL"

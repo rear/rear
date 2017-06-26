@@ -17,7 +17,7 @@ case $RSYNC_PROTO in
 
 	(ssh)
 		LogPrint "Calculating size of $RSYNC_HOST:$RSYNC_PATH"
-		ssh -l $RSYNC_USER $RSYNC_HOST "df -P ${RSYNC_PATH}" >$TMP_DIR/rs_size 2>&8
+		ssh -l $RSYNC_USER $RSYNC_HOST "df -P ${RSYNC_PATH}" >$TMP_DIR/rs_size 2>/dev/null
 		StopIfError "Failed to determine size of ${RSYNC_PATH}"
 		_div=1	# 1024-blocks
 		grep -q "512-blocks" $TMP_DIR/rs_size && _div=2 # HPUX: divide with 2 to get kB size

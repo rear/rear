@@ -8,9 +8,9 @@ for libdir in /lib* /usr/lib* ; do
             mkdir $v -p $ROOTFS_DIR$target >&2
         fi
         ### move into ROOTFS_DIR to create 'absolute' symlinks
-        pushd $ROOTFS_DIR >&8
+        pushd $ROOTFS_DIR >/dev/null
         ln $v -sf ${target#/} ${libdir#/} >&2
-        popd >&8
+        popd >/dev/null
     else
         mkdir $v -p $ROOTFS_DIR$libdir >&2
     fi

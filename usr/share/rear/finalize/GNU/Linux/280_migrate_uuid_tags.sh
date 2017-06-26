@@ -15,7 +15,7 @@ done < <(sort -u $FS_UUID_MAP)
 Log "$SED_SCRIPT"
 
 # now run sed
-pushd $TARGET_FS_ROOT >&8
+pushd $TARGET_FS_ROOT >/dev/null
 # the funny [] around the first letter make sure that shopt -s nullglob removes this file from the list if it does not exist
 # the files without a [] are mandatory, like fstab
 for file in 	[b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* \
@@ -53,4 +53,4 @@ for file in 	[b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* \
 	StopIfError "Patching '$file' with sed failed."
 done
 
-popd >&8
+popd >/dev/null

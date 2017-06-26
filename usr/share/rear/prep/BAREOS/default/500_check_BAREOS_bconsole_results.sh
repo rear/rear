@@ -17,7 +17,7 @@ BAREOS_DIRECTOR=$(bconsole -xc | grep -i address | awk '{ print $3 }')
 StopIfError "Director not configured in bconsole"
 
 if test "$PING"; then
-	ping -c 2 -q  $BAREOS_DIRECTOR >&8
+	ping -c 2 -q  $BAREOS_DIRECTOR >/dev/null
 	StopIfError "Backup host [$BAREOS_DIRECTOR] not reachable."
 else
 	Log "Skipping ping test"

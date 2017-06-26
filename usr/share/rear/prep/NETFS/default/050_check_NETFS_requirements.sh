@@ -45,7 +45,7 @@ if [[ "$BACKUP_URL" ]] ; then
         # because hosts can be accessible via certain ports but do not respond to a 'ping'
         # cf. https://bugzilla.opensuse.org/show_bug.cgi?id=616706
         # TODO: it would be better to test if it is accessible via the actually needed port(s)
-        ping -c 2 "$hostname" >&8
+        ping -c 2 "$hostname" >/dev/null
         LogPrintIfError "Host '$hostname' in BACKUP_URL '$BACKUP_URL' does not respond to a 'ping'."
     else
         Log "Skipping 'ping' test for host '$hostname' in BACKUP_URL '$BACKUP_URL'"

@@ -26,7 +26,7 @@ RULE_FILES=( $( echo /etc/udev/rules.d/*persistent*{names,net,cd}.rules ) )
 # preserving a backup in /root/rear-*.old
 for rule in "${RULE_FILES[@]}" ; do
     rulefile="$(basename "$rule")"
-    if test -s "$rule" && ! diff -q "$rule" $TARGET_FS_ROOT/"$rule" >&8 ; then
+    if test -s "$rule" && ! diff -q "$rule" $TARGET_FS_ROOT/"$rule" >/dev/null ; then
         LogPrint "Updating udev configuration ($rulefile)"
         # test for file $TARGET_FS_ROOT/"$rule" as BACKUP_RESTORE_MOVE_AWAY_FILES variable
         # may have prevented the restore of one of these files

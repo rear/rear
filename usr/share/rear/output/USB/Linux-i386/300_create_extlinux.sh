@@ -97,7 +97,7 @@ esac
 
 USB_REAR_DIR="$BUILD_DIR/outputfs/$USB_PREFIX"
 if [ ! -d "$USB_REAR_DIR" ]; then
-    mkdir -p $v "$USB_REAR_DIR" >&8
+    mkdir -p $v "$USB_REAR_DIR" >/dev/null
     StopIfError "Could not create USB ReaR dir [$USB_REAR_DIR] !"
 fi
 
@@ -160,13 +160,13 @@ if ! test $USB_SUFFIX ; then
             backup_count=$((backup_count - 1))
             if (( backup_count < 0 )); then
                 Log "Remove older backup directory $rear_run"
-                rm -rf $v $rear_run >&8
+                rm -rf $v $rear_run >/dev/null
             fi
         else
             rescue_count=$((rescue_count - 1))
             if (( rescue_count < 0 )); then
                 Log "Remove older rescue directory $rear_run"
-                rm -rf $v $rear_run >&8
+                rm -rf $v $rear_run >/dev/null
             fi
         fi
     done
@@ -251,7 +251,7 @@ EOF
 } 4>"$BUILD_DIR/outputfs/rear/syslinux.cfg"
 
 if [ ! -d "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" ]; then
-    mkdir -p $v "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" >&8
+    mkdir -p $v "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" >/dev/null
     StopIfError "Could not create USB syslinux dir [$BUILD_DIR/outputfs/$SYSLINUX_PREFIX] !"
 fi
 
@@ -264,7 +264,7 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
     # Enable serial console, unless explicitly disabled
     if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
         for devnode in $(ls /dev/ttyS[0-9]* | sort); do
-            speed=$(stty -F $devnode 2>&8 | awk '/^speed / { print $2 }')
+            speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
             if [ "$speed" ]; then
                 syslinux_write "serial ${devnode##/dev/ttyS} $speed"
             fi
@@ -295,7 +295,7 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
     syslinux_has "libutil.c32"
 
     if [ -r $(get_template "rear.help") ]; then
-        cp $v $(get_template "rear.help") "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/rear.help" >&8
+        cp $v $(get_template "rear.help") "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/rear.help" >/dev/null
         syslinux_write <<EOF
 say F1 - Show help
 F1 /boot/syslinux/rear.help
@@ -391,12 +391,12 @@ EOF
 
     if syslinux_has "hdt.c32"; then
         if [ -r "/usr/share/hwdata/pci.ids" ]; then
-            cp $v "/usr/share/hwdata/pci.ids" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/pci.ids" >&8
+            cp $v "/usr/share/hwdata/pci.ids" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/pci.ids" >/dev/null
         elif [ -r "/usr/share/pci.ids" ]; then
-            cp $v "/usr/share/pci.ids" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/pci.ids" >&8
+            cp $v "/usr/share/pci.ids" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/pci.ids" >/dev/null
         fi
         if [ -r "/lib/modules/$(uname -r)/modules.pcimap" ]; then
-            cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/modules.pcimap" >&8
+            cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/modules.pcimap" >/dev/null
         fi
         syslinux_write <<EOF
 label hdt
@@ -411,9 +411,9 @@ EOF
     fi
 
     # You need the memtest86+ package installed for this to work
-    MEMTEST_BIN=$(ls -d /boot/memtest86+-* 2>&8 | tail -1)
+    MEMTEST_BIN=$(ls -d /boot/memtest86+-* 2>/dev/null | tail -1)
     if [[ "$MEMTEST_BIN" != "." && -r "$MEMTEST_BIN" ]]; then
-        cp $v "$MEMTEST_BIN" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/memtest" >&8
+        cp $v "$MEMTEST_BIN" "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/memtest" >/dev/null
         syslinux_write <<EOF
 label memtest
     say memtest - Run memtest86+

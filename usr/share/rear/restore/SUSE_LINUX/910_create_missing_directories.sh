@@ -17,7 +17,7 @@
 # I assume that the switch from /media to /run/media matches reasonably well
 # with the switch from /etc/SuSE-release to /etc/os-release so that
 # this test is also (hopefully) somewhat future-proof (e.g. for SLE13):
-pushd $TARGET_FS_ROOT >&8
+pushd $TARGET_FS_ROOT >/dev/null
 test -f etc/os-release || mkdir -p media/cdrom media/floppy
-popd >&8
+popd >/dev/null
 

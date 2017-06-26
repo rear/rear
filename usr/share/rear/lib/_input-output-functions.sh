@@ -107,7 +107,7 @@ QuietAddExitTask "exec 8>&-"
 
 # USR1 is used to abort on errors.
 # It is not using PrintError but does direct output to the original STDERR:
-builtin trap "echo '${MESSAGE_PREFIX}Aborting due to an error, check $RUNTIME_LOGFILE for details' >&8 ; kill $MASTER_PID" USR1
+builtin trap "echo '${MESSAGE_PREFIX}Aborting due to an error, check $RUNTIME_LOGFILE for details' 1>&8 ; kill $MASTER_PID" USR1
 
 # Make sure nobody else can use trap:
 function trap () {
@@ -123,7 +123,7 @@ function Print () {
 # For actually intended user error messages output to the original STDERR
 # regardless whether or not the user launched 'rear' in verbose mode:
 function PrintError () {
-    echo -e "${MESSAGE_PREFIX}$*" >&8 || true
+    echo -e "${MESSAGE_PREFIX}$*" 1>&8 || true
 }
 
 # For messages that should only appear in the log file output to the current STDERR
@@ -171,7 +171,8 @@ LogToSyslog() {
 # see https://github.com/rear/rear/issues/729
 function has_binary () {
     for bin in $@ ; do
-        if type $bin &>/dev/null ; then
+        # Have all output on stderr to get all output in the log file regardless whereto stdout goes:
+        if type $bin 1>&2 ; then
             return 0
         fi
     done
@@ -184,7 +185,7 @@ function has_binary () {
 # or function, and returns the name of the disk file that would be executed
 # see https://github.com/rear/rear/issues/729
 function get_path () {
-    type -P $1 2>/dev/null
+    type -P $1
 }
 
 # Error exit:
@@ -320,6 +321,7 @@ function UserInput () {
     while getopts ":t:p:a:n:d:D:" option ; do
         case $option in
             (t)
+                # Avoid stderr if OPTARG is not set or empty or not an integer value:
                 test "$OPTARG" -ge 0 2>/dev/null && timeout=$OPTARG || Log "UserInput: Invalid -$option argument '$OPTARG' using fallback '$timeout'"
                 ;;
             (p)
@@ -329,6 +331,7 @@ function UserInput () {
                 output_array="$OPTARG"
                 ;;
             (n)
+                # Avoid stderr if OPTARG is not set or empty or not an integer value:
                 test "$OPTARG" -ge 0 2>/dev/null && input_max_chars=$OPTARG || Log "UserInput: Invalid -$option argument '$OPTARG' using fallback '$input_max_chars'"
                 ;;
             (d)
@@ -338,6 +341,7 @@ function UserInput () {
                 default_choice="$OPTARG"
                 ;;
             (I)
+                # Avoid stderr if OPTARG is not set or empty or not an integer value:
                 test "$OPTARG" -ge 0 2>/dev/null && user_input_ID="$OPTARG" || Log "UserInput: Invalid -$option argument '$OPTARG' ignored"
                 ;;
             (\?)
@@ -358,6 +362,7 @@ function UserInput () {
         # It is possible (it is no error) to specify no choices:
         Log "UserInput: No choices specified"
     else
+        # Avoid stderr if default_choice is not set or empty or not an integer value:
         if test "$default_choice" -ge 0 2>/dev/null ; then
             # It is possible (it is no error) to specify a number as default choice that has no matching choice:
             test "${choices[$default_choice]:=}" || Log "UserInput: Default choice '$default_choice' not in choices"
@@ -368,21 +373,25 @@ function UserInput () {
                 test "$default_choice" = "$choice" && default_choice=$choice_index
                 (( choice_index += 1 ))
             done
-            # It is possible (it is no error) to specify anything as default choice:
+            # It is possible (it is no error) to specify anything as default choice.
+            # Avoid stderr if default_choice is not set or empty or not an integer value:
             test "$default_choice" -ge 0 2>/dev/null || Log "UserInput: Default choice not found in choices"
         fi
     fi
     # When an empty prompt was specified (via -p '') do not change that:
     if test "$prompt" ; then
+        # Avoid stderr if default_choice or timeout is not set or empty or not an integer value:
         if test "$default_choice" -o "$timeout" -ge 1 2>/dev/null ; then
             prompt="$prompt ("
             if test "$default_choice" ; then
+                # Avoid stderr if default_choice is not set or empty or not an integer value:
                 if test "$default_choice" -ge 0 2>/dev/null ; then
                     prompt="$prompt default $(( default_choice + 1 ))"
                 else
                     prompt="$prompt default '$default_choice'"
                 fi
             fi
+            # Avoid stderr if timeout is not set or empty or not an integer value:
             if test "$timeout" -ge 1 2>/dev/null ; then
                 prompt="$prompt timeout $timeout"
             fi
@@ -403,11 +412,13 @@ function UserInput () {
     test "$prompt" && LogUserOutput "$prompt"
     # Prepare the 'read' call:
     local read_options_and_arguments=""
-    # When a zero timeout was specified (via -t 0) do not use it:
+    # When a zero timeout was specified (via -t 0) do not use it.
+    # Avoid stderr if timeout is not set or empty or not an integer value:
     test "$timeout" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -t $timeout"
     # When no output_array was specified (via -a myarr) do not use it:
     test "$output_array" && read_options_and_arguments="$read_options_and_arguments -a $output_array"
-    # When zero input_max_chars was specified (via -n 0) do not use it:
+    # When zero input_max_chars was specified (via -n 0) do not use it.
+    # Avoid stderr if input_max_chars is not set or empty or not an integer value:
     test "$input_max_chars" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -n $input_max_chars"
     # When no input_delimiter was specified (via -d x) do not use it:
     test "$input_delimiter" && read_options_and_arguments="$read_options_and_arguments -d $input_delimiter"
@@ -416,7 +427,8 @@ function UserInput () {
     if read $read_options_and_arguments user_input 0<&6 ; then
         Log "UserInput: 'read' got as user input '$user_input'"
     else
-        # Continue in any case because in case of errors the default choice is used:
+        # Continue in any case because in case of errors the default choice is used.
+        # Avoid stderr if timeout is not set or empty or not an integer value:
         if test "$timeout" -ge 1 2>/dev/null ; then
             Log "UserInput: 'read' finished with non-zero exit code probably because 'read' timed out"
         else
@@ -433,6 +445,7 @@ function UserInput () {
             echo ""
             return 101
         fi
+        # Avoid stderr if default_choice is not set or empty or not an integer value:
         if ! test "$default_choice" -ge 0 2>/dev/null ; then
             LogPrint "UserInput: No user input and default choice no possible index in choices so that the result is '$default_choice'"
             echo "$default_choice"
@@ -453,6 +466,7 @@ function UserInput () {
         echo "$user_input"
         return 0
     fi
+    # Avoid stderr if user_input is not set or empty or not an integer value:
     if ! test "$user_input" -ge 1 2>/dev/null ; then
         LogPrint "UserInput: User input no possible index in choices so that the result is '$user_input'"
         echo "$user_input"

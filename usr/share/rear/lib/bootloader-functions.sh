@@ -204,7 +204,7 @@ function make_syslinux_config {
     # Enable serial console, unless explicitly disabled (only last entry is used :-/)
     if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
         for devnode in $(ls /dev/ttyS[0-9]* | sort); do
-            speed=$(stty -F $devnode 2>&8 | awk '/^speed / { print $2 }')
+            speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
             if [ "$speed" ]; then
                 echo "serial ${devnode##/dev/ttyS} $speed"
             fi
@@ -407,7 +407,7 @@ function make_syslinux_config {
 	fi
 
 	# You need the memtest86+ package installed for this to work
-	MEMTEST_BIN=$(ls -d /boot/memtest86+-* 2>&8 | tail -1)
+	MEMTEST_BIN=$(ls -d /boot/memtest86+-* 2>/dev/null | tail -1)
 	if [[ "$MEMTEST_BIN" != "." && -r "$MEMTEST_BIN" ]]; then
 		cp $v "$MEMTEST_BIN" "$BOOT_DIR/memtest" >&2
 		echo "memtest - Run memtest86+"

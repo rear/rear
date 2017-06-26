@@ -18,9 +18,9 @@ if test -z "${REPLY}"; then
 else
         BAD_ENDTIME=0
         # validate date
-        NBU_ENDTIME_DATE=$( date -d "$REPLY" +%m/%d/%Y 2>&8 ) || BAD_ENDTIME=1
+        NBU_ENDTIME_DATE=$( date -d "$REPLY" +%m/%d/%Y 2>/dev/null ) || BAD_ENDTIME=1
         # validate time
-        NBU_ENDTIME_TIME=$( date -d "$REPLY" +%T 2>&8 ) || BAD_ENDTIME=1
+        NBU_ENDTIME_TIME=$( date -d "$REPLY" +%T 2>/dev/null ) || BAD_ENDTIME=1
         [ ${BAD_ENDTIME} -ne 1 ]
         BugIfError "Incorrect date and/or time definition used: ${REPLY} Ending NetBackup Restore Attempt..."
         if test "$NBU_ENDTIME_TIME" = "00:00:00"; then

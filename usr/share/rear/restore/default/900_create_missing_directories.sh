@@ -3,7 +3,7 @@
 #
 #
 # create missing directories
-pushd $TARGET_FS_ROOT >&8
+pushd $TARGET_FS_ROOT >/dev/null
 if [[ -f "$VAR_DIR/recovery/mountpoint_permissions" ]] ; then
     LogPrint "Restore the Mountpoints (with permissions) from $VAR_DIR/recovery/mountpoint_permissions"
     while read _dir mode userid groupid
@@ -26,4 +26,4 @@ else
     done
 fi
 chmod 1777 tmp
-popd >&8
+popd >/dev/null

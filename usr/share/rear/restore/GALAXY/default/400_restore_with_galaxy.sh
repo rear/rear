@@ -63,6 +63,6 @@
 StopIfError "Galaxy aborted"
 
 # create missing directories
-pushd $TARGET_FS_ROOT >&8
+pushd $TARGET_FS_ROOT >/dev/null
 mkdir -p opt/galaxy/Base/Temp opt/galaxy/Updates opt/galaxy/iDataAgent/jobResults
-popd >&8
+popd >/dev/null

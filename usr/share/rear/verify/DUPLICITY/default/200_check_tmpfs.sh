@@ -5,6 +5,6 @@
 mount | grep -q /tmp
 if [[ $? -ne 0 ]]; then
     LogPrint "File system /tmp not present - try to mount it via tmpfs"
-    mount -t tmpfs  tmpfs  /tmp >&8
+    mount -t tmpfs  tmpfs  /tmp >/dev/null
     LogIfError "Could not mount tmpfs on /tmp"
 fi

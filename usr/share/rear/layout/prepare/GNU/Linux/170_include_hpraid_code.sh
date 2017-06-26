@@ -7,7 +7,7 @@ create_smartarray() {
     read sa slotnr junk < <(grep "^smartarray ${1#sma:} " "$LAYOUT_FILE")
     cat <<EOF >>"$LAYOUT_CODE"
 LogPrint "Clearing HP SmartArray controller $slotnr"
-if ! $HPSSACLI ctrl slot=$slotnr delete forced >&8; then
+if ! $HPSSACLI ctrl slot=$slotnr delete forced >/dev/null; then
     Log "Failed to clear HP SmartArray controller $slotnr, this is not necessarily fatal."
 fi
 EOF
