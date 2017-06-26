@@ -171,8 +171,8 @@ LogToSyslog() {
 # see https://github.com/rear/rear/issues/729
 function has_binary () {
     for bin in $@ ; do
-        # Have all output on stderr to get all output in the log file regardless whereto stdout goes:
-        if type $bin 1>&2 ; then
+        # Suppress success output via stdout (but keep failure output via stderr):
+        if type $bin 1>/dev/null ; then
             return 0
         fi
     done
