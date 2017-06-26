@@ -9,9 +9,9 @@ case $RSYNC_PROTO in
 
 	(ssh)
 		$BACKUP_PROG -a "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log.gz" \
-		"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/${BACKUP_PROG_ARCHIVE}-${Timestamp}.log.gz" 2>&8
+		"${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/${BACKUP_PROG_ARCHIVE}-${Timestamp}.log.gz" 2>/dev/null
 
-		$BACKUP_PROG -a "$RUNTIME_LOGFILE" "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/rear-${Timestamp}.log" 2>&8
+		$BACKUP_PROG -a "$RUNTIME_LOGFILE" "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/rear-${Timestamp}.log" 2>/dev/null
 		;;
 
 	(rsync)

@@ -171,24 +171,19 @@ function SharedObjectFiles () {
 function rear_shell () {
     local prompt=$1
     local history=$2
-
-    if [[ -z "$prompt" ]]; then
-        prompt="Are you sure you want to exit the Relax-and-Recover shell ?"
-    fi
-
+    # Set fallback exit prompt:
+    test "$prompt" || prompt="Are you sure you want to exit the Relax-and-Recover shell ?"
+    # Set some history:
     local histfile="$TMP_DIR/.bash_history"
-    if [[ "$history" ]]; then
-        echo -e "exit\n$history" >$histfile
-    else
-        echo "exit" >$histfile
-    fi
-
+    echo "exit" >$histfile
+    test "$history" && echo -e "exit\n$history" >$histfile
+    # Setup .bashrc:
     local bashrc="$TMP_DIR/.bashrc"
     cat <<EOF >$bashrc
 export PS1="rear> "
 ask_exit() {
     read -p "$prompt " REPLY
-    if [[ "\$REPLY" =~ ^[Yy1] ]]; then
+    if [[ "\$REPLY" =~ ^[Yy1] ]] ; then
         \exit
     fi
 }
@@ -202,8 +197,9 @@ alias reboot=ask_exit
 alias shutdown=ask_exit
 cd $VAR_DIR
 EOF
-
-    HISTFILE="$histfile" bash --noprofile --rcfile $bashrc 8>&- 7>&- 2>&1
+    # Run 'bash' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    HISTFILE="$histfile" bash --noprofile --rcfile $bashrc 0<&6 1>&7 2>&8
 }
 
 # Return the filesystem name related to a path

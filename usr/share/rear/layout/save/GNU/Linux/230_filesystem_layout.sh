@@ -102,7 +102,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 tunefs="tune2fs"
                 # on RHEL 5 tune2fs does not work on ext4, needs tune4fs
                 if [ "$fstype" = "ext4" ] ; then
-                    if ! tune2fs -l $device >&8; then
+                    if ! tune2fs -l $device >/dev/null; then
                         tunefs="tune4fs"
                     fi
                 fi

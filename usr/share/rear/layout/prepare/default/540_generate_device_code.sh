@@ -9,7 +9,7 @@ LogPrint "Start system layout restoration."
 
 mkdir -p $TARGET_FS_ROOT
 if create_component "vgchange" "rear" ; then
-    lvm vgchange -a n >&8
+    lvm vgchange -a n >/dev/null
     component_created "vgchange" "rear"
 fi
 

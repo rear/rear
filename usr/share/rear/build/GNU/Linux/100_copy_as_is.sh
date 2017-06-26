@@ -11,14 +11,14 @@ Log "Files being excluded: ${COPY_AS_IS_EXCLUDE[@]}"
 for f in "${COPY_AS_IS_EXCLUDE[@]}" ; do echo "$f" ; done >$TMP_DIR/copy-as-is-exclude
 tar -v -X $TMP_DIR/copy-as-is-exclude \
 	-P -C / -c "${COPY_AS_IS[@]}" 2>$TMP_DIR/copy-as-is-filelist | \
-	tar $v -C $ROOTFS_DIR/ -x >&8
+	tar $v -C $ROOTFS_DIR/ -x >/dev/null
 StopIfError "Could not copy files and directories"
 Log "Finished copying COPY_AS_IS"
 
 # fix ReaR directory if running from checkout
 if [[ "$REAR_DIR_PREFIX" ]] ; then
     for dir in /usr/share/rear /var/lib/rear ; do
-        ln $v -sf $REAR_DIR_PREFIX$dir $ROOTFS_DIR$dir>&8
+        ln $v -sf $REAR_DIR_PREFIX$dir $ROOTFS_DIR$dir>/dev/null
     done
 fi
 
@@ -35,7 +35,7 @@ while read -r ; do
 	if [[ ! -d "$REPLY" && -x "$REPLY" ]]; then
 		COPY_AS_IS_EXELIST=( "${COPY_AS_IS_EXELIST[@]}" "$REPLY" )
 	fi
-	echo "$REPLY" >&8
+	echo "$REPLY" >/dev/null
 done <$TMP_DIR/copy-as-is-filelist
 
 Log "Checking COPY_AS_IS_EXELIST"
@@ -50,4 +50,4 @@ while read -r ; do
 	else
 		echo "$lib is part of COPY_AS_IS_EXELIST"
 	fi
-done >&8 < <( SharedObjectFiles "${COPY_AS_IS_EXELIST[@]}" | sed -e 's#^#/#' )
+done >/dev/null < <( SharedObjectFiles "${COPY_AS_IS_EXELIST[@]}" | sed -e 's#^#/#' )

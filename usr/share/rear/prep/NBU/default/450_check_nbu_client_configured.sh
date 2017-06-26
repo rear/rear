@@ -4,6 +4,6 @@
 
 Log "Running: /usr/openv/netbackup/bin/bplist command"
 LANG=C /usr/openv/netbackup/bin/bplist -l -s `date -d "-5 days" \
-	"+%m/%d/%Y"` / >&8
+	"+%m/%d/%Y"` / >/dev/null
 [ $? -gt 0 ] && LogPrint "WARNING: Netbackup bplist check failed with error code $?.
 See $RUNTIME_LOGFILE for more details."

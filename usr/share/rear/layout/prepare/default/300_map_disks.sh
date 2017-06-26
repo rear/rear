@@ -98,6 +98,8 @@ while read -u 3 disk dev size junk ; do
     done
 
     LogPrint "Original disk $(get_device_name $dev) does not exist in the target system. Please choose an appropriate replacement."
+    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
     select choice in "${possible_targets[@]}" "Do not map disk." ; do
         n=( $REPLY ) # trim blanks from reply
         let n-- # because bash arrays count from 0
@@ -108,7 +110,7 @@ while read -u 3 disk dev size junk ; do
             add_mapping "$dev" "$choice"
         fi
         break
-    done 2>&1 # to get the prompt, otherwise it would go to the logfile
+    done 0<&6 1>&7 2>&8
 done 3< <(grep -E "^disk |^multipath " "$LAYOUT_FILE")
 
 LogPrint "This is the disk mapping table:"

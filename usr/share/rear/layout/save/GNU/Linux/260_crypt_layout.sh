@@ -30,7 +30,7 @@ while read dm_name junk ; do
         device="$(get_device_name ${slave##*/})"
     done
 
-    if ! cryptsetup isLuks $device >&8 2>&1; then
+    if ! cryptsetup isLuks $device >/dev/null 2>&1; then
         continue
     fi
 

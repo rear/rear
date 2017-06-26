@@ -10,7 +10,9 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     LogPrint "Restoring backup with $BACKUP_PROG from $DUPLICITY_HOST/$DUPLICITY_PATH/$(hostname)"
     LogPrint "========================================================================"
 
-    read -p "ENTER for start restore: " 2>&1
+    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    read -p "ENTER for start restore: " 0<&6 1>&7 2>&8
 
     export TMPDIR=$TARGET_FS_ROOT
 

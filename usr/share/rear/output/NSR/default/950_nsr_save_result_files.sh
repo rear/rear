@@ -12,13 +12,13 @@ NSR_RESULT_FILES=()
 test -z "$NSR_RESULT_FILE_PATH" && NSR_RESULT_FILE_PATH=$TMP_DIR
 
 if ! test -d "$NSR_RESULT_FILE_PATH" ; then
-	 mkdir -v -p "$NSR_RESULT_FILE_PATH" 1>&8
+	 mkdir -v -p "$NSR_RESULT_FILE_PATH" 1>/dev/null
 	 StopIfError "Could not create '$NSR_RESULT_FILE_PATH'"
 fi
 
 
 if test "$NSR_RESULT_FILE_PATH" != "$TMP_DIR" ; then
-	cp -v  "${RESULT_FILES[@]}" "$NSR_RESULT_FILE_PATH" 1>&8
+	cp -v  "${RESULT_FILES[@]}" "$NSR_RESULT_FILE_PATH" 1>/dev/null
 	StopIfError "Could not copy result files to '$NSR_RESULT_FILE_PATH'"
 	NSR_RESULT_FILES=( 
 		$(
@@ -32,7 +32,7 @@ else
 fi
 
 if test -s "$CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt" ; then
-	cp -v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "$NSR_RESULT_FILE_PATH/README" 1>&8
+	cp -v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "$NSR_RESULT_FILE_PATH/README" 1>/dev/null
 	StopIfError "Could not copy '$CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt'"
 	NSR_RESULT_FILES=( "${NSR_RESULT_FILES[@]}" "$NSR_RESULT_FILE_PATH"/README )
 fi
@@ -51,7 +51,7 @@ fi
 
 Log "Saving files '${NSR_RESULT_FILES[@]}' with save"
 SNAME="REAR.$(date +%Y%m%d)"
-save -s $NSRSERVER -c $CLIENTNAME -N "${SNAME}" -b "$POOLNAME" -y "$NSR_RETENTION_TIME" "${NSR_RESULT_FILES[@]}" 1>&8
+save -s $NSRSERVER -c $CLIENTNAME -N "${SNAME}" -b "$POOLNAME" -y "$NSR_RETENTION_TIME" "${NSR_RESULT_FILES[@]}" 1>/dev/null
 StopIfError "Could not save result files with save"
 
 # show the saved result files

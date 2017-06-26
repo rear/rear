@@ -31,7 +31,7 @@ menuentry "Relax-and-Recover" {
 EOF
 
 grub_name=grub2
-$grub_name-mkimage --version >&8
+$grub_name-mkimage --version >/dev/null
 if [ $? -ne 0 ]; then
     grub_name=grub
 fi

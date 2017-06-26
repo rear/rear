@@ -50,9 +50,9 @@ fi
 
 Log "Saving files '${TSM_RESULT_FILES[@]}' with dsmc"
 if [[ -z "$TSM_ARCHIVE_MGMT_CLASS" ]]; then
-    LC_ALL=${LANG_RECOVER} dsmc incremental "${TSM_RESULT_FILES[@]}" >&8
+    LC_ALL=${LANG_RECOVER} dsmc incremental "${TSM_RESULT_FILES[@]}" >/dev/null
 else
-    LC_ALL=${LANG_RECOVER} dsmc archive -archmc="$TSM_ARCHIVE_MGMT_CLASS" "${TSM_RESULT_FILES[@]}" >&8
+    LC_ALL=${LANG_RECOVER} dsmc archive -archmc="$TSM_ARCHIVE_MGMT_CLASS" "${TSM_RESULT_FILES[@]}" >/dev/null
 fi
 ret=$?
 # Error code 8 can be ignored

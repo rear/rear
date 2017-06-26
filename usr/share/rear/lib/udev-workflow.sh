@@ -38,7 +38,7 @@ WORKFLOW_udev () {
 
     # Turn the UID led on
     if has_binary hpasmcli && [[ "$UDEV_UID_LED" =~ ^[yY1] ]]; then
-        hpasmcli -s "set uid on" >&8
+        hpasmcli -s "set uid on" >/dev/null
     fi
 
     # Run udev workflow
@@ -46,11 +46,11 @@ WORKFLOW_udev () {
 
     # Blink the UID led and turn it off
     if has_binary hpasmcli && [[ "$UDEV_UID_LED" =~ ^[yY1] ]]; then
-        hpasmcli -s "set uid off" >&8; sleep 0.5
-        hpasmcli -s "set uid on" >&8; sleep 0.5
-        hpasmcli -s "set uid off" >&8; sleep 0.5
-        hpasmcli -s "set uid on" >&8; sleep 0.5
-        hpasmcli -s "set uid off" >&8
+        hpasmcli -s "set uid off" >/dev/null; sleep 0.5
+        hpasmcli -s "set uid on" >/dev/null; sleep 0.5
+        hpasmcli -s "set uid off" >/dev/null; sleep 0.5
+        hpasmcli -s "set uid on" >/dev/null; sleep 0.5
+        hpasmcli -s "set uid off" >/dev/null
     fi
 
     # Suspend USB port (works fine on RHEL6, fails on RHEL5 and older)
@@ -74,7 +74,7 @@ WORKFLOW_udev () {
             if has_binary beep; then
                 # After testing in a noisy datacenter, this seems the best
                 # (although it takes up 4 seconds)
-                beep -f 2000 -l 1000 -d 500 -r 3 >&8
+                beep -f 2000 -l 1000 -d 500 -r 3 >/dev/null
             else
                 for i in $(seq 1 15); do
                     echo -en "\a" >/dev/tty0

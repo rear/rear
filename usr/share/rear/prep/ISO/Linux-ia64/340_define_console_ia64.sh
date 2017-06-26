@@ -2,7 +2,7 @@
 # therefore, we need to add ttyS0 or ttyS1 to isolinux command line to see something
 # default settings
 CONSOLE="console=tty0 console=ttyS0"
-dmesg | grep console | grep MMIO | grep ttyS1 >&8 2>&1
+dmesg | grep console | grep MMIO | grep ttyS1 >/dev/null 2>&1
 if [ $? -eq 0 ]; then
 	# ttyS1 found
 	CONSOLE="console=tty1 console=ttyS1"

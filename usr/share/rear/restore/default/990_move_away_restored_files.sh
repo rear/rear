@@ -26,7 +26,7 @@
 # in default.conf what files or directories are moved away by default.
 
 # Go to the recovery system root directory:
-pushd $TARGET_FS_ROOT >&8
+pushd $TARGET_FS_ROOT >/dev/null
 # Artificial 'for' clause that is run only once to be able to 'continue' in case of errors
 # (because the 'for' loop is run only once 'continue' is the same as 'break'):
 for dummy in "once" ; do
@@ -76,5 +76,5 @@ for dummy in "once" ; do
     done
 done
 # Go back from the recovery system root directory:
-popd >&8
+popd >/dev/null
 

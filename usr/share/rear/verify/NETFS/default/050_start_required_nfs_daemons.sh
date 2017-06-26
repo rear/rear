@@ -13,7 +13,7 @@
 #
 # we do not use the progress bar any more
 # therefore all references to FD8 are removed
-# in particular '>&8 2>&1' is replaced by '&>/dev/null'
+# in particular '>/dev/null 2>&1' is replaced by '&>/dev/null'
 # because the progress bar mechanism had swallowed all data
 # see https://github.com/rear/rear/pull/874
 # and https://github.com/rear/rear/issues/887

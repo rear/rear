@@ -8,7 +8,9 @@ LogPrint ""
 LogPrint "Netbackup restores by default the latest backup data. Alternatively you can specify"
 LogPrint "a different date and time to enable Point-In-Time Restore. Press ENTER to"
 LogPrint "use the most recent available backup"
-read -t $WAIT_SECS -r -p "Enter date (mm/dd/yyyy) or date/time (mm/dd/yyyy HH:MM:SS) or press ENTER [$WAIT_SECS secs]: " 2>&1
+# Use the original STDIN STDOUT and STDERR when rear was launched by the user
+# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+read -t $WAIT_SECS -r -p "Enter date (mm/dd/yyyy) or date/time (mm/dd/yyyy HH:MM:SS) or press ENTER [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
 
 # validate input
 if test -z "${REPLY}"; then
@@ -16,9 +18,9 @@ if test -z "${REPLY}"; then
 else
         BAD_ENDTIME=0
         # validate date
-        NBU_ENDTIME_DATE=$( date -d "$REPLY" +%m/%d/%Y 2>&8 ) || BAD_ENDTIME=1
+        NBU_ENDTIME_DATE=$( date -d "$REPLY" +%m/%d/%Y 2>/dev/null ) || BAD_ENDTIME=1
         # validate time
-        NBU_ENDTIME_TIME=$( date -d "$REPLY" +%T 2>&8 ) || BAD_ENDTIME=1
+        NBU_ENDTIME_TIME=$( date -d "$REPLY" +%T 2>/dev/null ) || BAD_ENDTIME=1
         [ ${BAD_ENDTIME} -ne 1 ]
         BugIfError "Incorrect date and/or time definition used: ${REPLY} Ending NetBackup Restore Attempt..."
         if test "$NBU_ENDTIME_TIME" = "00:00:00"; then

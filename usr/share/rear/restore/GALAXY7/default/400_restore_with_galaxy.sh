@@ -71,8 +71,8 @@ else
 fi
 
 # create missing directories
-pushd $TARGET_FS_ROOT >&8
+pushd $TARGET_FS_ROOT >/dev/null
 for dir in opt/galaxy/Base/Temp opt/galaxy/Updates opt/galaxy/iDataAgent/jobResults ; do
 	mkdir -p "$dir"
 done
-popd >&8
+popd >/dev/null

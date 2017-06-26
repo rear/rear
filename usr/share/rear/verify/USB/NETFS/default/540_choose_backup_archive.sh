@@ -70,6 +70,8 @@ LogPrint "Select a backup archive."
 # http://stackoverflow.com/questions/13195655/bash-set-x-without-it-being-printed
 # shows that when 'set -x' is set calling '{ set +x ; } 2>/dev/null' runs silently:
 { set +x ; } 2>/dev/null
+# Use the original STDIN STDOUT and STDERR when rear was launched by the user
+# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
 select choice in "${backup_times[@]}" ; do
     # trim blanks from reply
     n=( $REPLY )
@@ -84,7 +86,7 @@ select choice in "${backup_times[@]}" ; do
     fi
     backuparchive=${backups[$n]}
     break
-done 2>&7
+done 0<&6 1>&7 2>&8
 # Go back from "set +x" to the defaults:
 apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
 RESTORE_ARCHIVES=( "$backuparchive" )

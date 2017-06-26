@@ -20,9 +20,9 @@ StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
 mkdir -p $v "$TMP_DIR/isofs" >&2
 mkdir -p $v "$TMP_DIR/isofs/boot" >&2
 mv -f $v $TMP_DIR/boot.img "$TMP_DIR/isofs/boot" >&2
-pushd $TMP_DIR/isofs >&8 # so that relative paths will work
+pushd $TMP_DIR/isofs >/dev/null # so that relative paths will work
 $ISO_MKISOFS_BIN $v -o "$ISO_DIR/$ISO_PREFIX.iso" -b boot/boot.img -c boot/boot.catalog \
-	-no-emul-boot -R -T -J -volid "$ISO_VOLID" -v . >&8
+	-no-emul-boot -R -T -J -volid "$ISO_VOLID" -v . >/dev/null
 StopIfError "Could not create ISO image"
 
 iso_image_size=( $(du -h "$ISO_DIR/$ISO_PREFIX.iso") )

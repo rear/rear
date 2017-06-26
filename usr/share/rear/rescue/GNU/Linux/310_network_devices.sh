@@ -140,7 +140,7 @@ for physical_network_interface in $physical_network_interfaces ; do
         # This should work for virtio_net, xennet and vmxnet on older kernels (2.6.18):
         driver=$( basename $( readlink $sysfspath/driver ) )
     elif [[ -z "$driver" ]] && has_binary ethtool ; then
-        driver=$( ethtool -i $physical_network_interface 2>&8 | grep driver: | cut -d: -f2 )
+        driver=$( ethtool -i $physical_network_interface 2>/dev/null | grep driver: | cut -d: -f2 )
     fi
     if [[ "$driver" ]] ; then
         grep -q $driver /proc/modules || LogPrint "Driver '$driver' for '$physical_network_interface' not loaded - is that okay?"

@@ -72,7 +72,9 @@ DPChooseBackup() {
     LogPrint "      Media(s)....: $MEDIA"
     LogPrint ""
     unset REPLY
-    read -t $WAIT_SECS -r -n 1 -p "press ENTER or choose H,D,S [$WAIT_SECS secs]: " 2>&1
+    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    read -t $WAIT_SECS -r -n 1 -p "press ENTER or choose H,D,S [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
 
     if test -z "${REPLY}"; then
       echo $HOST > $TMP_DIR/dp_recovery_host
@@ -113,7 +115,9 @@ DPChangeHost() {
   valid=0
   while test $valid -eq 0; do
     echo ""
-    read -r -p "Enter host: " 2>&1
+    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    read -r -p "Enter host: " 0<&6 1>&7 2>&8
     if test -z "${REPLY}"; then
       DPChooseBackup
       return
@@ -141,8 +145,10 @@ DPChangeDataList() {
     done
     i=$(cat $TMP_DIR/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | wc -l)
     LogPrint ""
-    read -r -p "Please choose datalist [1-$i]: " 2>&1
-    if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>&8; then
+    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    read -r -p "Please choose datalist [1-$i]: " 0<&6 1>&7 2>&8
+    if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>/dev/null ; then
       DL=$(cat $TMP_DIR/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | head -${REPLY} | tail -1)
       valid=1
     else
@@ -166,8 +172,10 @@ DPChangeSession() {
     done
     i=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | wc -l)
     echo
-    read -r -p "Please choose session [1-$i]: " 2>&1
-    if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>&8; then
+    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
+    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    read -r -p "Please choose session [1-$i]: " 0<&6 1>&7 2>&8
+    if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>/dev/null ; then
       SESS=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | head -${REPLY} | tail -1)
       valid=1
     else

@@ -31,7 +31,7 @@ create_device() {
 if create_component "$device" "$type" ; then
 EOF
     echo "# Create $device ($type)" >> "$LAYOUT_CODE"
-    if type -t create_$type >&8 ; then
+    if type -t create_$type >/dev/null ; then
         create_$type "$device"
     fi
     cat <<EOF >> "$LAYOUT_CODE"
@@ -324,7 +324,7 @@ get_partition_number() {
     local number=$(echo "$partition" | grep -o -E "[0-9]+$")
 
     # Test if $number is a positive integer, if not it is a bug
-    [ $number -gt 0 ] 2>&8
+    [ $number -gt 0 ] 2>/dev/null
     StopIfError "Partition number '$number' of partition $partition is not a valid number."
 
     # Catch if $number is too big, report it as a bug
@@ -350,7 +350,7 @@ get_partition_start() {
         devname=${devname#/dev/mapper/}
 
         # 0 536846303 linear 253:7 536895488
-        read junk junk junk junk start_block < <( dmsetup table ${devname} 2>&8 )
+        read junk junk junk junk start_block < <( dmsetup table ${devname} 2>/dev/null )
     fi
     if [[ -z $start_block ]]; then
         Log "Could not determine start of partition $partition_name."
@@ -427,7 +427,7 @@ get_sysfs_name() {
     fi
 
     # Accommodate for mapper/test -> dm-? mapping.
-    local dev_number=$(dmsetup info -c --noheadings -o major,minor ${name##*/} 2>&8 )
+    local dev_number=$(dmsetup info -c --noheadings -o major,minor ${name##*/} 2>/dev/null )
     if [[ "$dev_number" ]] ; then
         local dev_name sysfs_device
         for sysfs_device in /sys/block/*/dev ; do
@@ -470,7 +470,7 @@ get_device_name() {
             ### loop over all block devices
             dev_number=$( < /sys/block/$name/dev)
             for device in /dev/mapper/* ; do
-                mapper_number=$(dmsetup info -c --noheadings -o major,minor ${device#/dev/mapper/} 2>&8 )
+                mapper_number=$(dmsetup info -c --noheadings -o major,minor ${device#/dev/mapper/} 2>/dev/null )
                 if [ "$dev_number" = "$mapper_number" ] ; then
                     echo "$device"
                     return 0
