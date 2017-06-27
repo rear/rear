@@ -300,11 +300,18 @@ function LogUserOutput () {
 # input is read from the original STDIN when 'rear' was launched
 # (which is usually the keyboard of the user who launched 'rear').
 # Synopsis:
-#   UserInput [-t timeout] [-p prompt] [-a output_array] [-n input_max_chars] [-d input_delimiter] [-D default_choice] [choices]
+#   UserInput [-t timeout] [-p prompt] [-a output_array] [-n input_max_chars] [-d input_delimiter] [-D default_choice] [-I user_input_ID] [choices]
 #   The options -t -p -a -n -d  match the ones for the 'read' bash builtin.
 #   The option [choices] are the values that are shown to the user as available choices as in the select bash keyword.
 #   The option [-D default_choice] is one of the choices values or an index of one of the choices (the first choice has index 0)
-#   that is used as default response when the user does not enter a valid choice.
+#       that is used as default response when the user does not enter a valid choice.
+#   The option [-I user_input_ID] is intended to make UserInput working full automated (e.g. when ReaR runs unattended)
+#       via a user-specified array of user input values like
+#           USER_INPUT_VALUES[123]='input for UserInput -I 123'
+#           USER_INPUT_VALUES[456]='input for UserInput -I 456'
+#           USER_INPUT_VALUES[789]='input for UserInput -I 789'
+#       where each USER_INPUT_VALUES array member index that matches a user_input_ID of a particular 'UserInput -I' call
+#       that will be autoresponded (without any possible real user input) with the matching value of the user input array.
 # Usage examples:
 #   Wait endlessly until the user hits the [Enter] key (without '-t 0' a default timeout is used):
 #       UserInput -t 0 -p 'Press [Enter] to continue...'
@@ -341,6 +348,16 @@ function LogUserOutput () {
 #       until IsInArray "$choice" "${choices[@]}" ; do
 #           choice="$( UserInput -t 60 -p 'Hit a choice number key' -D 0 -n 1 "${choices[@]}" )"
 #       done
+#  To to let UserInput autorespond full automated a predefined user input value specify the user input value
+#  with a matching index in the USER_INPUT_VALUES array (e.g. specify that it in your local.conf file) like
+#       USER_INPUT_VALUES[123]='third choice'
+#  and call UserInput with that USER_INPUT_VALUES array index as the '-I' oprion value like
+#       input_value="$( UserInput -p 'Select a choice' -D 1 -I 123 'first choice' 'second choice' 'third choice' )"
+#  which lets UserInput autorespond (without any possible real user input) with 'third choice'.
+#  This means a precondition for an automated response is that a UserInput call has a user_input_ID specified.
+#  No predefined user input value must exist to get real user input for a 'UserInput -I 123' call
+#  or an existing predefined user input value must be unset before 'UserInput -I 123' is called like
+#       unset 'USER_INPUT_VALUES[123]'
 function UserInput () {
     # Set defaults or fallback values:
     # Have a relatively big default timeout of 5 minutes to avoid that the timeout interrupts ongoing user input:
@@ -356,10 +373,6 @@ function UserInput () {
     test "$USER_INPUT_MAX_CHARS" -ge 0 2>/dev/null && input_max_chars=$USER_INPUT_MAX_CHARS
     local input_delimiter=""
     local default_choice=""
-    # The user_input_ID is intended to make UserInput working full automated (e.g. when ReaR runs unattended)
-    # via a user-specified array of user input values like USER_INPUT_VALUES=( 'input for UserInput -I 0' 'input for UserInput -I 1' ... )
-    # where each USER_INPUT_VALUES array member index that matches a user_input_ID of a particular 'UserInput -I' call
-    # will be autoresponded (without any possible real user input) with the matching value of the user input array:
     local user_input_ID=0
     # Get the options and their arguments:
     local option=""
