@@ -294,13 +294,50 @@ function LogUserOutput () {
     UserOutput "$@"
 }
 
-# General function that is intended for basically any user input:
+# General function that is intended for basically any user input.
 # Output happens via the original STDOUT and STDERR when 'rear' was launched
-# (which is usually the terminal of the user who launched 'rear')
-# the original STDOUT and STDERR file descriptors are saved as fd7 and fd8.
+# (which is usually the terminal of the user who launched 'rear') and
+# input is read from the original STDIN when 'rear' was launched
+# (which is usually the keyboard of the user who launched 'rear').
+# Synopsis:
+#   UserInput [-t timeout] [-p prompt] [-a output_array] [-n input_max_chars] [-d input_delimiter] [-D default_choice] [choices]
+#   The options -t -p -a -n -d  match the ones for the 'read' bash builtin.
+#   The option [choices] are the values that are shown to the user as available choices as in the select bash keyword.
+#   The option [-D default_choice] is one of the choices values or an index of one of the choices (the first choice has index 0)
+#   that is used as default response when the user does not enter a valid choice.
+# Usage examples:
+#   Wait endlessly until the user hits the [Enter] key (without '-t 0' a default timeout is used):
+#       UserInput -t 0 -p 'Press [Enter] to continue...'
+#   Wait up to 30 seconds until the user hits the [Enter] key (i.e. proceed automatically after 30 seconds):
+#       UserInput -t 30 -p 'Press [Enter] to continue...'
+#   Get an input value from the user (proceed automatically with empty input_value after the default timeout).
+#   Leading and trailing spaces are cut from the actual user input:
+#       input_value="$( UserInput -p 'Enter the input value' )"
+#   Get an input value from the user (proceed automatically with the 'default input' after 2 minutes).
+#   The timeout interrupts ongoing user input so that 'default input' is used when the user
+#   does not hit the [Enter] key to finish his input before the timeout happens:
+#       input_value="$( UserInput -t 120 -p 'Enter the input value' -D 'default input' )"
+#   Get an input value from the user by offering him possible choices (proceed with the default choice after the default timeout).
+#   The choices index starts with 0 so that '-D 1' specifies the second choice as default choice:
+#       input_value="$( UserInput -p 'Select a choice' -D 1 'first choice' 'second choice' 'third choice' )"
+#   When the user enters an arbitrary value like 'foo bar' this actual user input is used as input_value.
+#   The UserInput function provides the actual user input and its caller needs to check the actual user input.
+#   To enforce that the actual user input is one of the choices an endless retrying loop could be used like:
+#       choices=( 'first choice' 'second choice' 'third choice' )
+#       until IsInArray "$input_value" "${choices[@]}" ; do
+#           input_value="$( UserInput -p 'Select a choice' -D 'second choice' "${choices[@]}" )"
+#       done
+#   Because the default choice is one of the choices the endless loop does not contradict that ReaR can run unattended.
+#   When that code runs unattended (i.e. without actual user input) the default choice is used after the default timeout.
+#   But the default choice can be anything as in:
+#       input_value="$( UserInput -p 'Select a choice' -D 'fallback value' -n 1 'first choice' 'second choice' 'third choice' )"
+#   The caller needs to check the actual input_value which could be 'fallback value' when the user hits the [Enter] key
+#   or one of 'first choice' 'second choice' 'third choice' when the user hits the [1] [2] or [3] key respectively
+#   or any other character as actual user input ('-n 1' limits the actual user input to one single character).
 function UserInput () {
     # Set defaults or fallback values:
-    local timeout=60
+    # Have a relatively big default timeout of 5 minutes to avoid that the timeout interrupts ongoing user input:
+    local timeout=300
     # Avoid stderr if USER_INPUT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_TIMEOUT:
     test "$USER_INPUT_TIMEOUT" -ge 0 2>/dev/null && timeout=$USER_INPUT_TIMEOUT
     local prompt="enter a choice number"
@@ -312,7 +349,10 @@ function UserInput () {
     test "$USER_INPUT_MAX_CHARS" -ge 0 2>/dev/null && input_max_chars=$USER_INPUT_MAX_CHARS
     local input_delimiter=""
     local default_choice=""
-    local user_input_ID=""
+    # The user_input_ID is intended for a later enhancement to make UserInput working when ReaR runs unattended
+    # via a user-specified array of user input values each one for each user_input_ID so that then a
+    # UserInput call with a user_input_ID can autorespond with the matching value of the user input array:
+    local user_input_ID=0
     # Get the options and their arguments:
     local option=""
     # Resetting OPTIND is necessary if getopts was used previously in the script
@@ -399,11 +439,13 @@ function UserInput () {
         fi
     fi
     # The actual work:
-    # Show the choices with leading choice numbers 1) 2) 3) ... as in 'select' (i.e. starting at 1):
+    # # This comment contains the opening parentheses ( ( ( to keep paired parentheses:
+    # Show the choices usually with leading choice numbers 1) 2) 3) ... as in 'select' (i.e. starting at 1):
     local choice_number=1
     Log "UserInput shows the following selection list and prompt:"
     if test "${choices:=}" ; then
         for choice in "${choices[@]}" ; do
+            # This comment contains the opening parenthesis ( to keep paired parenthesis:
             LogUserOutput "$choice_number) $choice"
             (( choice_number += 1 ))
         done
