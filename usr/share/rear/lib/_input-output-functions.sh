@@ -356,16 +356,17 @@ function UserInput () {
     test "$USER_INPUT_MAX_CHARS" -ge 0 2>/dev/null && input_max_chars=$USER_INPUT_MAX_CHARS
     local input_delimiter=""
     local default_choice=""
-    # The user_input_ID is intended for a later enhancement to make UserInput working when ReaR runs unattended
-    # via a user-specified array of user input values each one for each user_input_ID so that then a
-    # UserInput call with a user_input_ID can autorespond with the matching value of the user input array:
+    # The user_input_ID is intended to make UserInput working full automated (e.g. when ReaR runs unattended)
+    # via a user-specified array of user input values like USER_INPUT_VALUES=( 'input for UserInput -I 0' 'input for UserInput -I 1' ... )
+    # where each USER_INPUT_VALUES array member index that matches a user_input_ID of a particular 'UserInput -I' call
+    # will be autoresponded (without any possible real user input) with the matching value of the user input array:
     local user_input_ID=0
     # Get the options and their arguments:
     local option=""
     # Resetting OPTIND is necessary if getopts was used previously in the script
     # and because we are in a function we can even make OPTIND local:
     local OPTIND=1
-    while getopts ":t:p:a:n:d:D:" option ; do
+    while getopts ":t:p:a:n:d:D:I:" option ; do
         case $option in
             (t)
                 # Avoid stderr if OPTARG is not set or empty or not an integer value:
@@ -471,22 +472,42 @@ function UserInput () {
     test "$input_max_chars" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -n $input_max_chars"
     # When no input_delimiter was specified (via -d x) do not use it:
     test "$input_delimiter" && read_options_and_arguments="$read_options_and_arguments -d $input_delimiter"
-    # Read the user input from the original STDIN that is saved as fd6 (see above):
+    # Get the user input:
     local user_input=""
-    if read $read_options_and_arguments user_input 0<&6 ; then
-        Log "UserInput: 'read' got as user input '$user_input'"
-    else
-        # Continue in any case because in case of errors the default choice is used.
-        # Avoid stderr if timeout is not set or empty or not an integer value:
-        if test "$timeout" -ge 1 2>/dev/null ; then
-            Log "UserInput: 'read' finished with non-zero exit code probably because 'read' timed out"
-        else
-            Log "UserInput: 'read' finished with non-zero exit code"
+    # Try to get automated user input.
+    # Avoid stderr if user_input_ID is not set or empty or not an integer value:
+    if test "$user_input_ID" -ge 0 2>/dev/null ; then
+        # When a (non empty) predefined user input value exists use that as automated user input:
+        if test "${USER_INPUT_VALUES[$user_input_ID]:-}" ; then
+            user_input="${USER_INPUT_VALUES[$user_input_ID]}"
+            LogPrint "UserInput: Using predefined user input '$user_input' from USER_INPUT_VALUES[$user_input_ID]"
+            # When a (non empty) output_array was specified it must contain all user input words:
+            test "$output_array" && read -a "$output_array" <<<"$user_input"
         fi
     fi
-    # When an output_array was specified it contains all user input words but we need only the first word:
-    test "${output_array:=}" && user_input="${!output_array:=}"
-    Log "UserInput: Actually used user input is '$user_input'"
+    # When there is no (non empty) automated user input read the user input:
+    if ! test "$user_input" ; then
+        # Read the user input from the original STDIN that is saved as fd6 (see above):
+        if read $read_options_and_arguments user_input 0<&6 ; then
+            Log "UserInput: 'read' got as user input '$user_input'"
+        else
+            # Continue in any case because in case of errors the default choice is used.
+            # Avoid stderr if timeout is not set or empty or not an integer value:
+            if test "$timeout" -ge 1 2>/dev/null ; then
+                Log "UserInput: 'read' finished with non-zero exit code probably because 'read' timed out"
+            else
+                Log "UserInput: 'read' finished with non-zero exit code"
+            fi
+        fi
+    fi
+    # When an output_array was specified it contains all user input words and then output_array is meant for the actual result.
+    # To be able to return something via 'echo' even when an output_array was specified we use only the first word here
+    # which should be sufficient because when the complete user input is needed the output_array can and must be used:
+    if test "$output_array" ; then
+        Log "UserInput: The output array '$output_array' contains all user input words."
+        user_input="${!output_array}"
+        Log "UserInput: To return something only the first user input word '$user_input' is used."
+    fi
     # When there is no user input use the "best" default choice that exists:
     if ! test "$user_input" ; then
         if ! test "$default_choice" ; then
