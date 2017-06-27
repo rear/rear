@@ -1,8 +1,6 @@
-rear-*.tar.gz
-rear-*.rpm
-test/
-build/
-dist/
+/test/
+/build/
+/dist/
 build-stamp
 /var
-etc/rear/site.conf
+/etc/rear/site.conf
