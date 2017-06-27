@@ -21,7 +21,7 @@ git_branch_suffix = $(shell { git symbolic-ref --short HEAD 2>/dev/null || echo 
 git_status := $(shell git status --porcelain 2>/dev/null)
 git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
 ifneq ($(git_status),)
-git_stamp := $(git_stamp).dirty
+git_stamp := $(git_stamp).changed
 endif
 endif
 else
