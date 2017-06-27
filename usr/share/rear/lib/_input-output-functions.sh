@@ -295,10 +295,10 @@ function LogUserOutput () {
 }
 
 # General function that is intended for basically any user input.
-# Output happens via the original STDOUT and STDERR when 'rear' was launched
-# (which is usually the terminal of the user who launched 'rear') and
-# input is read from the original STDIN when 'rear' was launched
-# (which is usually the keyboard of the user who launched 'rear').
+#   Output happens via the original STDOUT and STDERR when 'rear' was launched
+#   (which is usually the terminal of the user who launched 'rear') and
+#   input is read from the original STDIN when 'rear' was launched
+#   (which is usually the keyboard of the user who launched 'rear').
 # Synopsis:
 #   UserInput [-t timeout] [-p prompt] [-a output_array] [-n input_max_chars] [-d input_delimiter] [-D default_choice] [-I user_input_ID] [choices]
 #   The options -t -p -a -n -d  match the ones for the 'read' bash builtin.
@@ -313,21 +313,21 @@ function LogUserOutput () {
 #       where each USER_INPUT_VALUES array member index that matches a user_input_ID of a particular 'UserInput -I' call
 #       that will be autoresponded (without any possible real user input) with the matching value of the user input array.
 # Usage examples:
-#   Wait endlessly until the user hits the [Enter] key (without '-t 0' a default timeout is used):
+# * Wait endlessly until the user hits the [Enter] key (without '-t 0' a default timeout is used):
 #       UserInput -t 0 -p 'Press [Enter] to continue...'
-#   Wait up to 30 seconds until the user hits the [Enter] key (i.e. proceed automatically after 30 seconds):
+# * Wait up to 30 seconds until the user hits the [Enter] key (i.e. proceed automatically after 30 seconds):
 #       UserInput -t 30 -p 'Press [Enter] to continue...'
-#   Get an input value from the user (proceed automatically with empty input_value after the default timeout).
+# * Get an input value from the user (proceed automatically with empty input_value after the default timeout).
 #   Leading and trailing spaces are cut from the actual user input:
 #       input_value="$( UserInput -p 'Enter the input value' )"
-#   Get an input value from the user (proceed automatically with the 'default input' after 2 minutes).
+# * Get an input value from the user (proceed automatically with the 'default input' after 2 minutes).
 #   The timeout interrupts ongoing user input so that 'default input' is used when the user
 #   does not hit the [Enter] key to finish his input before the timeout happens:
 #       input_value="$( UserInput -t 120 -p 'Enter the input value' -D 'default input' )"
-#   Get an input value from the user by offering him possible choices (proceed with the default choice after the default timeout).
+# * Get an input value from the user by offering him possible choices (proceed with the default choice after the default timeout).
 #   The choices index starts with 0 so that '-D 1' specifies the second choice as default choice:
 #       input_value="$( UserInput -p 'Select a choice' -D 1 'first choice' 'second choice' 'third choice' )"
-#   When the user enters an arbitrary value like 'foo bar' this actual user input is used as input_value.
+# * When the user enters an arbitrary value like 'foo bar' this actual user input is used as input_value.
 #   The UserInput function provides the actual user input and its caller needs to check the actual user input.
 #   To enforce that the actual user input is one of the choices an endless retrying loop could be used like:
 #       choices=( 'first choice' 'second choice' 'third choice' )
@@ -336,27 +336,27 @@ function LogUserOutput () {
 #       done
 #   Because the default choice is one of the choices the endless loop does not contradict that ReaR can run unattended.
 #   When that code runs unattended (i.e. without actual user input) the default choice is used after the default timeout.
-#   But the default choice can be anything as in:
+# * The default choice can be anything as in:
 #       input_value="$( UserInput -p 'Select a choice' -D 'fallback value' -n 1 'first choice' 'second choice' 'third choice' )"
 #   The caller needs to check the actual input_value which could be 'fallback value' when the user hits the [Enter] key
 #   or one of 'first choice' 'second choice' 'third choice' when the user hits the [1] [2] or [3] key respectively
 #   or any other character as actual user input ('-n 1' limits the actual user input to one single character).
-#   When up to 9 possible choices are shown using '-n 1' lets the user choose one by only pressing a [1] ... [9] key
+# * When up to 9 possible choices are shown using '-n 1' lets the user choose one by only pressing a [1] ... [9] key
 #   without the additional [Enter] key that is normally needed to submit the input. With an endless loop that retries
 #   when the actual user input is not one of the choices it is possible to implement valid and convenient user input:
 #       choices=( 'default choice' 'first alternative choice' 'second alternative choice' )
 #       until IsInArray "$choice" "${choices[@]}" ; do
 #           choice="$( UserInput -t 60 -p 'Hit a choice number key' -D 0 -n 1 "${choices[@]}" )"
 #       done
-#  To to let UserInput autorespond full automated a predefined user input value specify the user input value
-#  with a matching index in the USER_INPUT_VALUES array (e.g. specify that it in your local.conf file) like
+# * To to let UserInput autorespond full automated a predefined user input value specify the user input value
+#   with a matching index in the USER_INPUT_VALUES array (e.g. specify that it in your local.conf file) like
 #       USER_INPUT_VALUES[123]='third choice'
-#  and call UserInput with that USER_INPUT_VALUES array index as the '-I' oprion value like
+#   and call UserInput with that USER_INPUT_VALUES array index as the '-I' oprion value like
 #       input_value="$( UserInput -p 'Select a choice' -D 1 -I 123 'first choice' 'second choice' 'third choice' )"
-#  which lets UserInput autorespond (without any possible real user input) with 'third choice'.
-#  This means a precondition for an automated response is that a UserInput call has a user_input_ID specified.
-#  No predefined user input value must exist to get real user input for a 'UserInput -I 123' call
-#  or an existing predefined user input value must be unset before 'UserInput -I 123' is called like
+#   which lets UserInput autorespond (without any possible real user input) with 'third choice'.
+#   This means a precondition for an automated response is that a UserInput call has a user_input_ID specified.
+#   No predefined user input value must exist to get real user input for a 'UserInput -I 123' call
+#   or an existing predefined user input value must be unset before 'UserInput -I 123' is called like
 #       unset 'USER_INPUT_VALUES[123]'
 function UserInput () {
     # Set defaults or fallback values:
