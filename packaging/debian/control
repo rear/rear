@@ -1,17 +1,15 @@
 Source: rear
 Section: misc
 Priority: optional
-Maintainer: Dag Wieers <dag@wieers.com>
+Maintainer: Schlomo Schapiro <schlomo+packaging@schapiro.org>
+Standards-Version: 3.9.8
 Homepage: http://relax-and-recover.org/
+Build-Depends: debhelper (>= 9)
 
 Package: rear
 Architecture: i386 ia64 amd64 ppc64el
 Provides: rear
-Build-Depends: debhelper
 Depends: syslinux[!ppc64el], syslinux-common[!ppc64el], ethtool, ${shlibs:Depends}, lsb-release, xorriso, iproute, iputils-ping, isolinux, dosfstools, binutils, parted, openssl, gawk, attr, bc, ${misc:Depends}
 Recommends: nfs-client, portmap
 Description: Relax-and-Recover is a bare metal disaster recovery and system
  migration framework. See http://relax-and-recover.org/ for all the details.
- We are still looking for a Debian package maintainer who would write better
- packages. Please contact us to volunteer for maintaining Relax-and-Recover
- in Debian and Ubuntu.
