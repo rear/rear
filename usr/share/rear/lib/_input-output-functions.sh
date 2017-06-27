@@ -334,13 +334,20 @@ function LogUserOutput () {
 #   The caller needs to check the actual input_value which could be 'fallback value' when the user hits the [Enter] key
 #   or one of 'first choice' 'second choice' 'third choice' when the user hits the [1] [2] or [3] key respectively
 #   or any other character as actual user input ('-n 1' limits the actual user input to one single character).
+#   When up to 9 possible choices are shown using '-n 1' lets the user choose one by only pressing a [1] ... [9] key
+#   without the additional [Enter] key that is normally needed to submit the input. With an endless loop that retries
+#   when the actual user input is not one of the choices it is possible to implement valid and convenient user input:
+#       choices=( 'default choice' 'first alternative choice' 'second alternative choice' )
+#       until IsInArray "$choice" "${choices[@]}" ; do
+#           choice="$( UserInput -t 60 -p 'Hit a choice number key' -D 0 -n 1 "${choices[@]}" )"
+#       done
 function UserInput () {
     # Set defaults or fallback values:
     # Have a relatively big default timeout of 5 minutes to avoid that the timeout interrupts ongoing user input:
     local timeout=300
     # Avoid stderr if USER_INPUT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_TIMEOUT:
     test "$USER_INPUT_TIMEOUT" -ge 0 2>/dev/null && timeout=$USER_INPUT_TIMEOUT
-    local prompt="enter a choice number"
+    local prompt="enter your input"
     # Avoid stderr if USER_INPUT_PROMPT is not set or empty:
     test "$USER_INPUT_PROMPT" 2>/dev/null && prompt="$USER_INPUT_PROMPT"
     local output_array=""
