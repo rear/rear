@@ -371,6 +371,8 @@ function LogUserOutput () {
 #   or an existing predefined user input value must be unset before 'UserInput -I 123' is called like
 #       unset 'USER_INPUT_VALUES[123]'
 function UserInput () {
+    # First and foremost log how UserInput was actually called so that subsequent 'Log' messages are comprehensible:
+    Log "UserInput $*"
     # Set defaults or fallback values:
     # Have a relatively big default timeout of 5 minutes to avoid that the timeout interrupts ongoing user input:
     local timeout=300
@@ -492,7 +494,11 @@ function UserInput () {
     else
         LogPrint "'UserInput needed in '$caller_source'"
     fi
-    # Show the choices (if exists):
+    # First of all show the prompt unless an empty prompt was specified (via -p '')
+    # so that the prompt can be used as some kind of header line that introduces the user input
+    # and separates the following user input from arbitrary other output lines before:
+    test "$prompt" && LogUserOutput "$prompt"
+    # List the choices (if exists):
     if test "${choices:=}" ; then
         # This comment contains the opening parentheses ( ( ( to keep paired parentheses:
         # Show the choices with leading choice numbers 1) 2) 3) ... as in 'select' (i.e. starting at 1):
@@ -503,9 +509,7 @@ function UserInput () {
             (( choice_number += 1 ))
         done
     fi
-    # Show the prompt unless an empty prompt was specified (via -p ''):
-    test "$prompt" && LogUserOutput "$prompt"
-    # Show the default and/or the timeout (if exists):
+    # Finally show the default and/or the timeout (if exists):
     test "$default_and_timeout" && LogUserOutput "( $default_and_timeout )"
     # Prepare the 'read' call:
     local read_options_and_arguments=""
