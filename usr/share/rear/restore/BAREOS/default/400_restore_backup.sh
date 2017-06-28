@@ -159,7 +159,7 @@ in the provided shell. When finished, type exit in the shell to continue
 recovery.
 "
 
-if [ "$ISO_DEFAULT" != "unattended" ]
+if [ "$ISO_DEFAULT" != "automatic" ]
 then
 
     rear_shell "Did the backup successfully restore to '$TARGET_FS_ROOT' ? Ready to continue ?" \
