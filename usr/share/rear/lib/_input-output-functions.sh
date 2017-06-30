@@ -219,23 +219,34 @@ function StopIfError () {
     fi
 }
 
-# Exit if there is a bug in ReaR:
-function BugError () {
+# Output the source file of the actual caller script:
+function CallerSource () {
     # Get the source file of actual caller script.
-    # Usually this is ${BASH_SOURCE[1]} but BugError is also called
-    # from (wrapper) functions in this script like BugIfError below.
+    # Usually this is ${BASH_SOURCE[1]} but CallerSource is also called
+    # from functions in this script like BugError and UserInput below
+    # and BugError is again called from BugIfError in this script.
     # When BugIfError is called the actual caller is the script
-    # that had called BugIfError which is ${BASH_SOURCE[2]} because when
-    # BugIfError is called ${BASH_SOURCE[0]} and ${BASH_SOURCE[1]}
-    # are the same (i.e. this '_input-output-functions.sh' file).
-    # Currently it is sufficient to test up to ${BASH_SOURCE[2]}
-    # (i.e. currently there is at most one indirection).
+    # that had called BugIfError which is ${BASH_SOURCE[3]}
+    # because when BugIfError is called from a script
+    # ${BASH_SOURCE[0]} is '_input-output-functions.sh' for the CallerSource call
+    # ${BASH_SOURCE[1]} is '_input-output-functions.sh' for the BugError call
+    # ${BASH_SOURCE[2]} is '_input-output-functions.sh' for the BugIfError call
+    # ${BASH_SOURCE[3]} is the script that had called BugIfError.
+    # Currently it is sufficient to inspect the execution call stack up to ${BASH_SOURCE[3]}
+    # (i.e. currently there are at most three indirections as described above).
     # With bash >= 3 the BASH_SOURCE array variable is supported and even
     # for older bash it should be fail-safe when unset variables evaluate to empty:
     local this_script="${BASH_SOURCE[0]}"
     local caller_source="${BASH_SOURCE[1]}"
     test "$caller_source" = "$this_script" && caller_source="${BASH_SOURCE[2]}"
+    test "$caller_source" = "$this_script" && caller_source="${BASH_SOURCE[3]}"
     test "$caller_source" || caller_source="Relax-and-Recover"
+    echo "$caller_source"
+}
+
+# Exit if there is a bug in ReaR:
+function BugError () {
+    local caller_source="$( CallerSource )"
     Error "
 ====================
 BUG in $caller_source:
@@ -294,16 +305,81 @@ function LogUserOutput () {
     UserOutput "$@"
 }
 
-# General function that is intended for basically any user input:
-# Output happens via the original STDOUT and STDERR when 'rear' was launched
-# (which is usually the terminal of the user who launched 'rear')
-# the original STDOUT and STDERR file descriptors are saved as fd7 and fd8.
+# General function that is intended for basically any user input.
+#   Output happens via the original STDOUT and STDERR when 'rear' was launched
+#   (which is usually the terminal of the user who launched 'rear') and
+#   input is read from the original STDIN when 'rear' was launched
+#   (which is usually the keyboard of the user who launched 'rear').
+# Synopsis:
+#   UserInput [-t timeout] [-p prompt] [-a output_array] [-n input_max_chars] [-d input_delimiter] [-D default_input] [-I user_input_ID] [choices]
+#   The options -t -p -a -n -d  match the ones for the 'read' bash builtin.
+#   The option [choices] are the values that are shown to the user as available choices as in the select bash keyword.
+#   The option [-D default_input] specifies what is used as default response when the user does not enter a valid choice.
+#       Usuallly this is one of the choices values or an index of one of the choices (the first choice has index 0)
+#       but the default input can be anything else (in particular for free input without predefined choices).
+#   The option [-I user_input_ID] is intended to make UserInput working full automated (e.g. when ReaR runs unattended)
+#       via a user-specified array of user input values like
+#           USER_INPUT_VALUES[123]='input for UserInput -I 123'
+#           USER_INPUT_VALUES[456]='input for UserInput -I 456'
+#           USER_INPUT_VALUES[789]='input for UserInput -I 789'
+#       where each USER_INPUT_VALUES array member index that matches a user_input_ID of a particular 'UserInput -I' call
+#       that will be autoresponded (without any possible real user input) with the matching value of the user input array.
+# Usage examples:
+# * Wait endlessly until the user hits the [Enter] key (without '-t 0' a default timeout is used):
+#       UserInput -t 0 -p 'Press [Enter] to continue...'
+# * Wait up to 30 seconds until the user hits the [Enter] key (i.e. proceed automatically after 30 seconds):
+#       UserInput -t 30 -p 'Press [Enter] to continue...'
+# * Get an input value from the user (proceed automatically with empty input_value after the default timeout).
+#   Leading and trailing spaces are cut from the actual user input:
+#       input_value="$( UserInput -p 'Enter the input value' )"
+# * Get an input value from the user (proceed automatically with the 'default input' after 2 minutes).
+#   The timeout interrupts ongoing user input so that 'default input' is used when the user
+#   does not hit the [Enter] key to finish his input before the timeout happens:
+#       input_value="$( UserInput -t 120 -p 'Enter the input value' -D 'default input' )"
+# * Get an input value from the user by offering him possible choices (proceed with the default choice after the default timeout).
+#   The choices index starts with 0 so that '-D 1' specifies the second choice as default choice:
+#       input_value="$( UserInput -p 'Select a choice' -D 1 'first choice' 'second choice' 'third choice' )"
+# * When the user enters an arbitrary value like 'foo bar' this actual user input is used as input_value.
+#   The UserInput function provides the actual user input and its caller needs to check the actual user input.
+#   To enforce that the actual user input is one of the choices an endless retrying loop could be used like:
+#       choices=( 'first choice' 'second choice' 'third choice' )
+#       until IsInArray "$input_value" "${choices[@]}" ; do
+#           input_value="$( UserInput -p 'Select a choice' -D 'second choice' "${choices[@]}" )"
+#       done
+#   Because the default choice is one of the choices the endless loop does not contradict that ReaR can run unattended.
+#   When that code runs unattended (i.e. without actual user input) the default choice is used after the default timeout.
+# * The default choice can be anything as in:
+#       input_value="$( UserInput -p 'Select a choice' -D 'fallback value' -n 1 'first choice' 'second choice' 'third choice' )"
+#   The caller needs to check the actual input_value which could be 'fallback value' when the user hits the [Enter] key
+#   or one of 'first choice' 'second choice' 'third choice' when the user hits the [1] [2] or [3] key respectively
+#   or any other character as actual user input ('-n 1' limits the actual user input to one single character).
+# * When up to 9 possible choices are shown using '-n 1' lets the user choose one by only pressing a [1] ... [9] key
+#   without the additional [Enter] key that is normally needed to submit the input. With an endless loop that retries
+#   when the actual user input is not one of the choices it is possible to implement valid and convenient user input:
+#       choices=( 'default choice' 'first alternative choice' 'second alternative choice' )
+#       until IsInArray "$choice" "${choices[@]}" ; do
+#           choice="$( UserInput -t 60 -p 'Hit a choice number key' -D 0 -n 1 "${choices[@]}" )"
+#       done
+# * To to let UserInput autorespond full automated a predefined user input value specify the user input value
+#   with a matching index in the USER_INPUT_VALUES array (e.g. specify that it in your local.conf file) like
+#       USER_INPUT_VALUES[123]='third choice'
+#   and call UserInput with that USER_INPUT_VALUES array index as the '-I' oprion value like
+#       input_value="$( UserInput -p 'Select a choice' -D 1 -I 123 'first choice' 'second choice' 'third choice' )"
+#   which lets UserInput autorespond (without any possible real user input) with 'third choice'.
+#   This means a precondition for an automated response is that a UserInput call has a user_input_ID specified.
+#   No predefined user input value must exist to get real user input for a 'UserInput -I 123' call
+#   or an existing predefined user input value must be unset before 'UserInput -I 123' is called like
+#       unset 'USER_INPUT_VALUES[123]'
 function UserInput () {
+    # First and foremost log how UserInput was actually called so that subsequent 'Log' messages are comprehensible:
+    Log "UserInput $*"
     # Set defaults or fallback values:
-    local timeout=60
+    # Have a relatively big default timeout of 5 minutes to avoid that the timeout interrupts ongoing user input:
+    local timeout=300
     # Avoid stderr if USER_INPUT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_TIMEOUT:
     test "$USER_INPUT_TIMEOUT" -ge 0 2>/dev/null && timeout=$USER_INPUT_TIMEOUT
-    local prompt="enter a choice number"
+    local default_prompt="enter your input"
+    local prompt="$default_prompt"
     # Avoid stderr if USER_INPUT_PROMPT is not set or empty:
     test "$USER_INPUT_PROMPT" 2>/dev/null && prompt="$USER_INPUT_PROMPT"
     local output_array=""
@@ -311,14 +387,14 @@ function UserInput () {
     # Avoid stderr if USER_INPUT_MAX_CHARS is not set or empty and ignore wrong USER_INPUT_MAX_CHARS:
     test "$USER_INPUT_MAX_CHARS" -ge 0 2>/dev/null && input_max_chars=$USER_INPUT_MAX_CHARS
     local input_delimiter=""
-    local default_choice=""
+    local default_input=""
     local user_input_ID=""
     # Get the options and their arguments:
     local option=""
     # Resetting OPTIND is necessary if getopts was used previously in the script
     # and because we are in a function we can even make OPTIND local:
     local OPTIND=1
-    while getopts ":t:p:a:n:d:D:" option ; do
+    while getopts ":t:p:a:n:d:D:I:" option ; do
         case $option in
             (t)
                 # Avoid stderr if OPTARG is not set or empty or not an integer value:
@@ -338,7 +414,7 @@ function UserInput () {
                 input_delimiter="$OPTARG"
                 ;;
             (D)
-                default_choice="$OPTARG"
+                default_input="$OPTARG"
                 ;;
             (I)
                 # Avoid stderr if OPTARG is not set or empty or not an integer value:
@@ -358,58 +434,83 @@ function UserInput () {
     # so that now "$@" contains the trailing mass-arguments (POSIX calls them operands):
     local choices=( "$@" )
     local choice_index=0
-    if ! test "${choices:=}" ; then
-        # It is possible (it is no error) to specify no choices:
-        Log "UserInput: No choices specified"
-    else
-        # Avoid stderr if default_choice is not set or empty or not an integer value:
-        if test "$default_choice" -ge 0 2>/dev/null ; then
-            # It is possible (it is no error) to specify a number as default choice that has no matching choice:
-            test "${choices[$default_choice]:=}" || Log "UserInput: Default choice '$default_choice' not in choices"
+    if test "${choices:=}" ; then
+        # Avoid stderr if default_input is not set or empty or not an integer value:
+        if test "$default_input" -ge 0 2>/dev/null ; then
+            # It is possible (it is no error) to specify a number as default input that has no matching choice:
+            test "${choices[$default_input]:=}" || Log "UserInput: Default choice '$default_input' not in choices"
         else
-            # When the default choice is no number try to find if it is a choice
-            # and if found use the choice index as default choice number:
+            # When the default input is no number try to find if it is a choice
+            # and if found use the choice index as default input:
             for choice in "${choices[@]}" ; do
-                test "$default_choice" = "$choice" && default_choice=$choice_index
+                test "$default_input" = "$choice" && default_input=$choice_index
                 (( choice_index += 1 ))
             done
-            # It is possible (it is no error) to specify anything as default choice.
-            # Avoid stderr if default_choice is not set or empty or not an integer value:
-            test "$default_choice" -ge 0 2>/dev/null || Log "UserInput: Default choice not found in choices"
+            # It is possible (it is no error) to specify anything as default input.
+            # Avoid stderr if default_input is not set or empty or not an integer value:
+            test "$default_input" -ge 0 2>/dev/null || Log "UserInput: Default choice not found in choices"
         fi
+        # Use a better default prompt if no prompt was specified when there are choices:
+        test "$default_prompt" = "$prompt" && prompt="enter a choice number"
+    else
+        # It is possible (it is no error) to specify no choices:
+        Log "UserInput: No choices specified"
     fi
-    # When an empty prompt was specified (via -p '') do not change that:
-    if test "$prompt" ; then
-        # Avoid stderr if default_choice or timeout is not set or empty or not an integer value:
-        if test "$default_choice" -o "$timeout" -ge 1 2>/dev/null ; then
-            prompt="$prompt ("
-            if test "$default_choice" ; then
-                # Avoid stderr if default_choice is not set or empty or not an integer value:
-                if test "$default_choice" -ge 0 2>/dev/null ; then
-                    prompt="$prompt default $(( default_choice + 1 ))"
+    # Prepare what to show as default and/or timeout:
+    local default_and_timeout=""
+    # Avoid stderr if default_input or timeout is not set or empty or not an integer value:
+    if test "$default_input" -o "$timeout" -ge 1 2>/dev/null ; then
+        if test "$default_input" ; then
+            # Avoid stderr if default_input is not set or empty or not an integer value:
+            if test "$default_input" -ge 0 2>/dev/null ; then
+                if test "${choices[$default_input]:=}" ; then
+                    # When the default input is a number that is a valid choice index,
+                    # show the default as the choice number that is shown (cf. choice_number below):
+                    default_and_timeout="default $(( default_input + 1 ))"
                 else
-                    prompt="$prompt default '$default_choice'"
+                    # When the default input number is not a valid choice index, show it as is:
+                    default_and_timeout="default $default_input"
                 fi
+            else
+                default_and_timeout="default '$default_input'"
             fi
-            # Avoid stderr if timeout is not set or empty or not an integer value:
-            if test "$timeout" -ge 1 2>/dev/null ; then
-                prompt="$prompt timeout $timeout"
+        fi
+        # Avoid stderr if timeout is not set or empty or not an integer value:
+        if test "$timeout" -ge 1 2>/dev/null ; then
+            if test "$default_and_timeout" ; then
+                default_and_timeout="$default_and_timeout timeout $timeout"
+            else
+                default_and_timeout="timeout $timeout"
             fi
-            prompt="$prompt ) "
         fi
     fi
     # The actual work:
-    # Show the choices with leading choice numbers 1) 2) 3) ... as in 'select' (i.e. starting at 1):
-    local choice_number=1
-    Log "UserInput shows the following selection list and prompt:"
+    local caller_source="$( CallerSource )"
+    # In verbose mode show the user the script that called UserInput and what user_input_ID that UserInput call has
+    # so that the user can prepare an automated response for that UserInput call (without digging in the code).
+    # Avoid stderr if user_input_ID is not set or empty or not an integer value:
+    if test "$user_input_ID" -ge 0 2>/dev/null ; then
+        LogPrint "'UserInput -I $user_input_ID needed in '$caller_source'"
+    else
+        LogPrint "'UserInput needed in '$caller_source'"
+    fi
+    # First of all show the prompt unless an empty prompt was specified (via -p '')
+    # so that the prompt can be used as some kind of header line that introduces the user input
+    # and separates the following user input from arbitrary other output lines before:
+    test "$prompt" && LogUserOutput "$prompt"
+    # List the choices (if exists):
     if test "${choices:=}" ; then
+        # This comment contains the opening parentheses ( ( ( to keep paired parentheses:
+        # Show the choices with leading choice numbers 1) 2) 3) ... as in 'select' (i.e. starting at 1):
+        local choice_number=1
         for choice in "${choices[@]}" ; do
+            # This comment contains the opening parenthesis ( to keep paired parenthesis:
             LogUserOutput "$choice_number) $choice"
             (( choice_number += 1 ))
         done
     fi
-    # Show the prompt unless an empty prompt was specified (via -p ''):
-    test "$prompt" && LogUserOutput "$prompt"
+    # Finally show the default and/or the timeout (if exists):
+    test "$default_and_timeout" && LogUserOutput "( $default_and_timeout )"
     # Prepare the 'read' call:
     local read_options_and_arguments=""
     # When a zero timeout was specified (via -t 0) do not use it.
@@ -422,45 +523,65 @@ function UserInput () {
     test "$input_max_chars" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -n $input_max_chars"
     # When no input_delimiter was specified (via -d x) do not use it:
     test "$input_delimiter" && read_options_and_arguments="$read_options_and_arguments -d $input_delimiter"
-    # Read the user input from the original STDIN that is saved as fd6 (see above):
+    # Get the user input:
     local user_input=""
-    if read $read_options_and_arguments user_input 0<&6 ; then
-        Log "UserInput: 'read' got as user input '$user_input'"
-    else
-        # Continue in any case because in case of errors the default choice is used.
-        # Avoid stderr if timeout is not set or empty or not an integer value:
-        if test "$timeout" -ge 1 2>/dev/null ; then
-            Log "UserInput: 'read' finished with non-zero exit code probably because 'read' timed out"
-        else
-            Log "UserInput: 'read' finished with non-zero exit code"
+    # Try to get automated user input.
+    # Avoid stderr if user_input_ID is not set or empty or not an integer value:
+    if test "$user_input_ID" -ge 0 2>/dev/null ; then
+        # When a (non empty) predefined user input value exists use that as automated user input:
+        if test "${USER_INPUT_VALUES[$user_input_ID]:-}" ; then
+            user_input="${USER_INPUT_VALUES[$user_input_ID]}"
+            LogPrint "UserInput: Using predefined user input '$user_input' from USER_INPUT_VALUES[$user_input_ID]"
+            # When a (non empty) output_array was specified it must contain all user input words:
+            test "$output_array" && read -a "$output_array" <<<"$user_input"
         fi
     fi
-    # When an output_array was specified it contains all user input words but we need only the first word:
-    test "${output_array:=}" && user_input="${!output_array:=}"
-    Log "UserInput: Actually used user input is '$user_input'"
-    # When there is no user input use the "best" default choice that exists:
+    # When there is no (non empty) automated user input read the user input:
     if ! test "$user_input" ; then
-        if ! test "$default_choice" ; then
-            LogPrint "UserInput: No user input and no default choice so that the result is ''"
+        # Read the user input from the original STDIN that is saved as fd6 (see above):
+        if read $read_options_and_arguments user_input 0<&6 ; then
+            Log "UserInput: 'read' got as user input '$user_input'"
+        else
+            # Continue in any case because in case of errors the default input is used.
+            # Avoid stderr if timeout is not set or empty or not an integer value:
+            if test "$timeout" -ge 1 2>/dev/null ; then
+                Log "UserInput: 'read' finished with non-zero exit code probably because 'read' timed out"
+            else
+                Log "UserInput: 'read' finished with non-zero exit code"
+            fi
+        fi
+    fi
+    # When an output_array was specified it contains all user input words and then output_array is meant for the actual result.
+    # To be able to return something via 'echo' even when an output_array was specified we use only the first word here
+    # which should be sufficient because when the complete user input is needed the output_array can and must be used:
+    if test "$output_array" ; then
+        Log "UserInput: The output array '$output_array' contains all user input words."
+        user_input="${!output_array}"
+        Log "UserInput: To return something only the first user input word '$user_input' is used."
+    fi
+    # When there is no user input use the "best" fallback or default that exists:
+    if ! test "$user_input" ; then
+        if ! test "$default_input" ; then
+            LogPrint "UserInput: No user input and no default input so that the result is ''"
             echo ""
             return 101
         fi
-        # Avoid stderr if default_choice is not set or empty or not an integer value:
-        if ! test "$default_choice" -ge 0 2>/dev/null ; then
-            LogPrint "UserInput: No user input and default choice no possible index in choices so that the result is '$default_choice'"
-            echo "$default_choice"
+        # Avoid stderr if default_input is not set or empty or not an integer value:
+        if ! test "$default_input" -ge 0 2>/dev/null ; then
+            LogPrint "UserInput: No user input and default input no possible index in choices so that the result is '$default_input'"
+            echo "$default_input"
             return 102
         fi
-        if ! test "${choices[$default_choice]:=}" ; then
-            LogPrint "UserInput: No user input and default choice not in choices so that the result is '$default_choice'"
-            echo "$default_choice"
+        if ! test "${choices[$default_input]:=}" ; then
+            LogPrint "UserInput: No user input and default input not in choices so that the result is '$default_input'"
+            echo "$default_input"
             return 103
         fi
-        LogPrint "UserInput: No user input and default choice in choices so that the result is '${choices[$default_choice]}'"
-        echo "${choices[$default_choice]}"
+        LogPrint "UserInput: No user input but default input in choices so that the result is '${choices[$default_input]}'"
+        echo "${choices[$default_input]}"
         return 104
     fi
-    # When there is user input use it regardless of any default choice:
+    # When there is user input use it regardless of any default input:
     if ! test "$choices" ; then
         LogPrint "UserInput: User input and no choices so that the result is '$user_input'"
         echo "$user_input"

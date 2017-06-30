@@ -20,10 +20,8 @@ fi
 EOF
 
     # Ask if we need to become primary.
-    # Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
-    read -p "Type 'yes' if you want DRBD resource $resource to become primary: " 0<&6 1>&7 2>&8
-    if [ "$REPLY" = "yes" ] ; then
+    user_input="$( UserInput -p "Type 'yes' if you want DRBD resource $resource to become primary" )"
+    if [ "$user_input" = "yes" ] ; then
         cat >> "$LAYOUT_CODE" <<-EOF
         if ! drbdadm role $resource &>/dev/null ; then
            drbdadm up $resource
