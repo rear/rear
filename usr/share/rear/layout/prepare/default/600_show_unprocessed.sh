@@ -12,7 +12,7 @@ choices[2]="Go to Relax-and-Recover shell"
 choices[3]="Continue '$rear_workflow'"
 choices[4]="Abort '$rear_workflow'"
 
-while read -u 3 status name type junk ; do
+while read status name type junk ; do
     missing_component="$name ($type)"
     LogUserOutput "No code has been generated to recreate $missing_component.
     To recreate it manually add code to $LAYOUT_CODE or abort."
@@ -42,8 +42,8 @@ while read -u 3 status name type junk ; do
                 abort_recreate
                 Error "User chose to abort '$rear_workflow' in ${BASH_SOURCE[0]}"
                 ;;
-            # No default case is needed here because the outer 'while true' loop repeats for invalid user input.
+            # No default case is needed here because the 'while true' loop repeats for invalid user input.
         esac
     done
-done 3< <(grep "^todo" "$LAYOUT_TODO")
+done < <(grep "^todo" "$LAYOUT_TODO")
 
