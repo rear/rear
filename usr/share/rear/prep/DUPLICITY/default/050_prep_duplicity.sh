@@ -40,8 +40,6 @@ COPY_AS_IS=(
 /usr/lib64/python2.7
 /usr/lib/python3
 /usr/lib/python3.1
-/usr/lib/ssl
-/usr/share/ca-certificates
 /usr/share/pycentral-data
 /usr/share/pyshared
 /usr/share/pyshared-data
