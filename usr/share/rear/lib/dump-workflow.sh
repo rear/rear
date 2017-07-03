@@ -65,7 +65,7 @@ WORKFLOW_dump () {
 
 	Print ""
 
-	echo "$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt"
+	UserOutput "$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt"
 	if test -s "$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt" ; then
 		LogPrint "Your system is validated with the following details:"
 		while read -r ; do
