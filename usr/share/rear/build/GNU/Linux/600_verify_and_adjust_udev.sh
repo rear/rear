@@ -20,8 +20,7 @@ while read file location ; do
 	# check for file in ROOTFS_DIR (if full path) or in lib/udev or in bin (if name without path)
 	if [[ -x $ROOTFS_DIR/$file || -x $ROOTFS_DIR/lib/udev/$file || -x $ROOTFS_DIR/bin/$file ]]; then
 		# everything is fine
-		# Log "matched external call to $file in $location"
-		echo "matched external call to $file in $location" >/dev/null
+		Log "matched external call to $file in $location"
 	else
 		Debug "WARNING: unmatched external call to '$file' in $location"
 	fi

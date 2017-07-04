@@ -134,7 +134,6 @@ case "$( basename $BACKUP_PROG )" in
 			#blocks="$(stat -c %b ${backuparchive})"
 			#size="$((blocks*512))"
 			size="$(stat -c %s ${backuparchive}* | awk '{s+=$1} END {print s}')"
-			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec] "
 		done
 		;;
@@ -147,7 +146,6 @@ case "$( basename $BACKUP_PROG )" in
 		let old_disk_used="$(get_disk_used "$backuparchive")"
 		while sleep $PROGRESS_WAIT_SECONDS ; kill -0 $BackupPID 2>/dev/null; do
 			let disk_used="$(get_disk_used "$backuparchive")" size=disk_used-old_disk_used
-			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec] "
 		done
 		;;
@@ -158,7 +156,6 @@ case "$( basename $BACKUP_PROG )" in
 				ProgressError
 				Error "$(basename $BACKUP_PROG) failed to create the archive file"
 			}
-			#echo -en "\e[2K\rArchived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec] "
 		done
 		;;

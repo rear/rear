@@ -241,7 +241,7 @@ function bond_setup () {
                 # it is safe to just call vlan_setup because that set up an interface only once:
                 vlan_setup $bonding_group_member
             else
-                echo "No vlan_setup for bonding group member '$bonding_group_member' because it is not a vlan."
+                Log "No vlan_setup for bonding group member '$bonding_group_member' because it is not a vlan."
             fi
         done
     done
