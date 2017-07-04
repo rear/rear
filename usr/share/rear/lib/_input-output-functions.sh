@@ -465,6 +465,7 @@ function UserInput () {
         if test "$default_input" ; then
             # Avoid stderr if default_input is not set or empty or not an integer value:
             if test "$default_input" -ge 0 2>/dev/null ; then
+                # The default input is a number:
                 if test "${choices[$default_input]:=}" ; then
                     # When the default input is a number that is a valid choice index,
                     # show the default as the choice number that is shown (cf. choice_number below):
@@ -474,15 +475,16 @@ function UserInput () {
                     default_and_timeout="default $default_input"
                 fi
             else
+                # Show the default input string as is:
                 default_and_timeout="default '$default_input'"
             fi
         fi
         # Avoid stderr if timeout is not set or empty or not an integer value:
         if test "$timeout" -ge 1 2>/dev/null ; then
             if test "$default_and_timeout" ; then
-                default_and_timeout="$default_and_timeout timeout $timeout"
+                default_and_timeout="$default_and_timeout timeout $timeout seconds"
             else
-                default_and_timeout="timeout $timeout"
+                default_and_timeout="timeout $timeout seconds"
             fi
         fi
     fi
@@ -492,9 +494,9 @@ function UserInput () {
     # so that the user can prepare an automated response for that UserInput call (without digging in the code).
     # Avoid stderr if user_input_ID is not set or empty or not an integer value:
     if test "$user_input_ID" -ge 0 2>/dev/null ; then
-        LogPrint "'UserInput -I $user_input_ID needed in '$caller_source'"
+        LogPrint "UserInput -I $user_input_ID needed in $caller_source"
     else
-        LogPrint "'UserInput needed in '$caller_source'"
+        LogPrint "UserInput needed in $caller_source"
     fi
     # First of all show the prompt unless an empty prompt was specified (via -p '')
     # so that the prompt can be used as some kind of header line that introduces the user input

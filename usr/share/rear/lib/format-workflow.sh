@@ -12,11 +12,15 @@ WORKFLOW_format () {
 
     DEVICE=""
 
+    # Log the options and arguments how the format workflow is actually called:
+    Log "Command line options of the format workflow: $*"
+
     # Parse options
     # (do not use OPTS here because that is readonly in the rear main script):
     format_workflow_opts="$( getopt -n "$PROGRAM format" -o "efhy" -l "efi,force,help,yes" -- "$@" )"
     if (( $? != 0 )) ; then
-        echo "Use '$PROGRAM format -- --help' for more information."
+        LogPrintError "Use '$PROGRAM format -- --help' for more information."
+        # TODO: Use proper exit codes cf. https://github.com/rear/rear/issues/1134
         exit 1
     fi
 
@@ -30,8 +34,8 @@ WORKFLOW_format () {
                 FORCE=y
                 ;;
             (-h|--help)
-                echo "Use '$PROGRAM format DEVICE' like '$PROGRAM format /dev/sdX'"
-                echo "Valid options are: -e/--efi, -f/--force or -y/--yes"
+                LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- -f /dev/sdX'"
+                LogPrintError "Valid format workflow options are: -e/--efi -f/--force -y/--yes"
                 # TODO: Use proper exit codes cf. https://github.com/rear/rear/issues/1134
                 exit 1
                 ;;
@@ -68,9 +72,9 @@ WORKFLOW_format () {
             SourceStage "format"
             return 0
         else
-            Print "Use '$PROGRAM format DEVICE' like '$PROGRAM format /dev/sdX'"
-            Print "Valid options are: -e/--efi -f/--force -y/--yes"
-            Print "Use '$PROGRAM format -- --help' for more information."
+            LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- -f /dev/sdX'"
+            LogPrintError "Valid format workflow options are: -e/--efi -f/--force -y/--yes"
+            LogPrintError "Use '$PROGRAM format -- --help' for more information."
             Error "No device provided as argument."
         fi
     fi
