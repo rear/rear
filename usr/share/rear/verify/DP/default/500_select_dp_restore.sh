@@ -114,7 +114,7 @@ DPChooseBackup() {
 DPChangeHost() {
   valid=0
   while test $valid -eq 0; do
-    echo ""
+    UserOutput ""
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
     # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
     read -r -p "Enter host: " 0<&6 1>&7 2>&8
