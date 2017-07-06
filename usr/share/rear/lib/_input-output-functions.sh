@@ -154,6 +154,13 @@ function Debug () {
     test "$DEBUG" && Log "$@" || true
 }
 
+# For messages that should appear in the log file when the user launched 'rear -d' in debug mode and
+# that also appear on the user's terminal when the user also launched 'rear -d -v' in verbose mode:
+function DebugPrint () {
+    Debug "$@"
+    test "$DEBUG" && Print "$@" || true
+}
+
 # For messages that should appear in the log file and also
 # on the user's terminal when the user launched 'rear -v' in verbose mode:
 function LogPrint () {
@@ -490,13 +497,13 @@ function UserInput () {
     fi
     # The actual work:
     local caller_source="$( CallerSource )"
-    # In verbose mode show the user the script that called UserInput and what user_input_ID that UserInput call has
+    # In verbose plus debug mode show the user the script that called UserInput and what user_input_ID it has
     # so that the user can prepare an automated response for that UserInput call (without digging in the code).
     # Avoid stderr if user_input_ID is not set or empty or not an integer value:
     if test "$user_input_ID" -ge 0 2>/dev/null ; then
-        LogPrint "UserInput -I $user_input_ID needed in $caller_source"
+        DebugPrint "UserInput -I $user_input_ID needed in $caller_source"
     else
-        LogPrint "UserInput needed in $caller_source"
+        DebugPrint "UserInput needed in $caller_source"
     fi
     # First of all show the prompt unless an empty prompt was specified (via -p '')
     # so that the prompt can be used as some kind of header line that introduces the user input
