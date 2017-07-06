@@ -155,7 +155,7 @@ function Debug () {
 }
 
 # For messages that should appear in the log file when the user launched 'rear -d' in debug mode and
-# that also appear on the user's terminal when the user also launched 'rear -d -v' in verbose mode:
+# that also appear on the user's terminal (in debug mode the verbose mode is set automatically):
 function DebugPrint () {
     Debug "$@"
     test "$DEBUG" && Print "$@" || true

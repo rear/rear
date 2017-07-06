@@ -19,23 +19,22 @@ NovaBACKUP DataCenter Agent started ..."
     fi
 fi
 
-
-LogPrint "
-
-The System is now ready for restore. Please start the restore task
-from the NovaBACKUP DataCenter Central Management!
-It's assumed that you know what is necessary
+LogUserOutput "
+The System is now ready for restore.
+Start the restore task from the
+NovaBACKUP DataCenter Central Management.
+It is assumed that you know what is necessary
 to restore - typically it will be a full backup.
 
-!!! Remember that the restore target must be set to '$TARGET_FS_ROOT' !!!
+Attention!
+The restore target must be set to '$TARGET_FS_ROOT'.
 
 For further documentation see the following link:
- http://www.novastor.com/help-html/dc/en-US/index.html
+http://www.novastor.com/help-html/dc/en-US/index.html
 
-
-Please verify that the backup has been restored correctly to '$TARGET_FS_ROOT'.
-
+Verify that the backup has been restored correctly to '$TARGET_FS_ROOT'.
 "
+
 #When finished, type 'exit' to continue recovery.
 #"
 
@@ -47,14 +46,16 @@ Please verify that the backup has been restored correctly to '$TARGET_FS_ROOT'.
 # Now we can make the motd available for further use
 #mv ~/.hushlogin /etc/motd
 
-while true ;do
-    echo -n "Have you successfully restored the backup to $TARGET_FS_ROOT ? Are you ready ro continue recovery? (y/n) "
-    read INP
-    if [[ "$INP" =~ ^[Yy1] ]]; then
-        LogPrint "Done with restore. Continuing recovery."
+user_input_prompt="
+Have you successfully restored the backup to $TARGET_FS_ROOT ?
+Are you ready ro continue recovery? (y/n)"
+
+while true ; do
+    # Restoring the backup may take arbitrary long time so that with explicit '-t 0' it wait endlessly for user input:
+    if is_true "$( UserInput -t 0 -p "$user_input_prompt" )" ; then
+        LogUserOutput "Done with restore. Continuing recovery."
         break
     fi
 done
-
 
 # continue with restore scripts
