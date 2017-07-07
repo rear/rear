@@ -372,7 +372,9 @@ umount_mountpoint() {
 function change_default
 {
     local response
-    read response
+    # Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user
+    # because 'read' outputs non-error stuff also to STDERR (e.g. its prompt):
+    read response 0<&6 1>&7 2>&8
 
     if [ -n "$response" ]; then
         eval $1=\$response
