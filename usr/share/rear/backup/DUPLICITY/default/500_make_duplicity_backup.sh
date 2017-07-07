@@ -44,7 +44,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     GPG_KEY="$BACKUP_DUPLICITY_GPG_ENC_KEY"
     PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
 
-    echo "GPG_OPT = $GPG_OPT"
+    LogUserOutput "GPG_OPT = $GPG_OPT"
 
     # EXCLUDES="${TMP_DIR}/backup_exclude.lst"
 
@@ -64,7 +64,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
         EXCLUDES="$EXCLUDES --exclude $EXDIR"
     done
 
-    echo EXCLUDES = $EXCLUDES
+    LogUserOutput "EXCLUDES = $EXCLUDES"
 
     # Setting the pass phrase to encrypt the backup files
     export PASSPHRASE

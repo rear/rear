@@ -16,9 +16,8 @@ local opath=$( backup_path $scheme $path )
 if [ ! -b "$BLOCKCLONE_SOURCE_DEV" ]; then
     LogPrint "Did not found $BLOCKCLONE_SOURCE_DEV, trying to create it"
 
-    echo "Device $BLOCKCLONE_SOURCE_DEV was not found."
-    echo -n "Restore partition layout to (^c to abort): \
-[$BLOCKCLONE_SAVE_MBR_DEV] "
+    LogUserOutput "Device $BLOCKCLONE_SOURCE_DEV was not found."
+    LogUserOutput "Restore partition layout to (^c to abort): [$BLOCKCLONE_SAVE_MBR_DEV]"
     change_default BLOCKCLONE_SAVE_MBR_DEV
 
     if [ -b "$BLOCKCLONE_SAVE_MBR_DEV" ]; then
@@ -46,17 +45,18 @@ if [ ! -b "$BLOCKCLONE_SOURCE_DEV" ]; then
             LogPrint "$BLOCKCLONE_SAVE_MBR_DEV is not \
 the parent of $BLOCKCLONE_SOURCE_DEV"
 
-            echo "WARNING: $BLOCKCLONE_SAVE_MBR_DEV looks not to be a \
+            LogUserOutput "WARNING: $BLOCKCLONE_SAVE_MBR_DEV looks not to be a \
 parent of $BLOCKCLONE_SOURCE_DEV.
 You might be attempting to create partitions on wrong disk.
 This might lead to corruption of existing data and \
 overall failure of restore."
-            echo -n "Would you like to continue? [Y/N] "
-
+            LogUserOutput "Would you like to continue? [Y/N]"
             local tmp_continue
-            read tmp_continue
+            # Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user
+            # because 'read' outputs non-error stuff also to STDERR (e.g. its prompt):
+            read tmp_continue 0<&6 1>&7 2>&8
 
-            if [[ "$tmp_continue" = "Y" ]]; then
+            if is_true "$tmp_continue" ; then
                 LogPrint "User confirmed continue with restore operation"
             else
                 Error "Operation aborted by user"

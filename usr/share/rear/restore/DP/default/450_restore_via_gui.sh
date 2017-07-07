@@ -5,7 +5,7 @@
 
 Log "Request for a manual restore via the GUI"
 
-echo "
+LogUserOutput "
 **********************************************************************
 **  Please try to push the backups of the latest session from DP GUI
 **  Make sure you select \"overwrite\" (destination tab) and make the
@@ -13,4 +13,7 @@ echo "
 **  When the restore is complete press ANY key to continue!
 **********************************************************************
 "
-   read answer
+# Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user
+# because 'read' outputs non-error stuff also to STDERR (e.g. its prompt):
+read answer 0<&6 1>&7 2>&8
+

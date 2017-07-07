@@ -8,12 +8,12 @@
 LogPrint "Copying binaries and libraries"
 
 # calculate binaries from needed progs
-echo "Determining binaries from PROGS and REQUIRED_PROGS" >&2
+Log "Determining binaries from PROGS and REQUIRED_PROGS"
 declare -a BINARIES=( $( for bin in "${PROGS[@]}" "${REQUIRED_PROGS[@]}" ; do
                              file="$( get_path "$bin" )"
                              if [[ -x "$file" ]] ; then
                                  echo $file
-                                 echo "Found binary $file" >&2
+                                 Log "Found binary $file"
                              fi
                          done | sort -u ) )
 

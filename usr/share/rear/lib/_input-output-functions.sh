@@ -63,8 +63,8 @@ function DoExitTasks () {
     # an empty default value is used to avoid 'set -eu' error exit if $JOBS is unset:
     if test -n ${JOBS:-""} ; then
         Log "The following jobs are still active:"
-        jobs -l >&2
-        kill -9 "${JOBS[@]}" >&2
+        jobs -l 1>&2
+        kill -9 "${JOBS[@]}" 1>&2
         # allow system to clean up after killed jobs
         sleep 1
     fi
@@ -117,7 +117,17 @@ function trap () {
 # For actually intended user messages output to the original STDOUT
 # but only when the user launched 'rear -v' in verbose mode:
 function Print () {
-    test "$VERBOSE" && echo -e "${MESSAGE_PREFIX}$*" >&7 || true
+    test "$VERBOSE" && echo -e "${MESSAGE_PREFIX}$*" 1>&7 || true
+}
+
+# For normal output messages that are intended for user dialogs.
+# For error messages that are intended for the user use 'PrintError'.
+# In contrast to the 'Print' function output to the original STDOUT
+# regardless whether or not the user launched 'rear' in verbose mode
+# but output to the original STDOUT without a MESSAGE_PREFIX because
+# MESSAGE_PREFIX is not helpful in normal user dialog output messages:
+function UserOutput () {
+    echo -e "$*" 1>&7 || true
 }
 
 # For actually intended user error messages output to the original STDERR
@@ -136,7 +146,7 @@ function Log () {
         echo "${MESSAGE_PREFIX}${timestamp}$*" || true
     else
         echo "${MESSAGE_PREFIX}${timestamp}$( cat )" || true
-    fi >&2
+    fi 1>&2
 }
 
 # For messages that should only appear in the log file when the user launched 'rear -d' in debug mode:
@@ -144,11 +154,25 @@ function Debug () {
     test "$DEBUG" && Log "$@" || true
 }
 
+# For messages that should appear in the log file when the user launched 'rear -d' in debug mode and
+# that also appear on the user's terminal (in debug mode the verbose mode is set automatically):
+function DebugPrint () {
+    Debug "$@"
+    test "$DEBUG" && Print "$@" || true
+}
+
 # For messages that should appear in the log file and also
 # on the user's terminal when the user launched 'rear -v' in verbose mode:
 function LogPrint () {
     Log "$@"
     Print "$@"
+}
+
+# For output plus logging that is intended for user dialogs.
+# 'LogUserOutput' belongs to 'UserOutput' like 'LogPrint' belongs to 'Print':
+function LogUserOutput () {
+    Log "$@"
+    UserOutput "$@"
 }
 
 # For messages that should appear in the log file and also
@@ -206,7 +230,7 @@ function Error () {
                        '
             echo "${MESSAGE_PREFIX}Message: $*"
             echo "== ${MESSAGE_PREFIX}End stack trace =="
-        ) >&2
+        ) 1>&2
     fi
     # Make sure Error exits the master process, even if called from child processes:
     kill -USR1 $MASTER_PID
@@ -288,21 +312,6 @@ LogPrintIfError() {
     if (( $? != 0 )) ; then
         LogPrintError "$@"
     fi
-}
-
-# Helper function for UserInput that is intended to output to the original STDOUT
-# regardless whether or not the user launched 'rear' in verbose mode:
-function UserOutput () {
-    # Basically same as the function PrintError but to fd7 and without a MESSAGE_PREFIX:
-    echo -e "$*" >&7 || true
-}
-
-# Helper function for UserInput that is intended to output to the original STDOUT
-# regardless whether or not the user launched 'rear' in verbose mode
-# plus logging the output in the log file (basically same as function LogPrintError):
-function LogUserOutput () {
-    Log "$@"
-    UserOutput "$@"
 }
 
 # General function that is intended for basically any user input.
@@ -463,6 +472,7 @@ function UserInput () {
         if test "$default_input" ; then
             # Avoid stderr if default_input is not set or empty or not an integer value:
             if test "$default_input" -ge 0 2>/dev/null ; then
+                # The default input is a number:
                 if test "${choices[$default_input]:=}" ; then
                     # When the default input is a number that is a valid choice index,
                     # show the default as the choice number that is shown (cf. choice_number below):
@@ -472,27 +482,28 @@ function UserInput () {
                     default_and_timeout="default $default_input"
                 fi
             else
+                # Show the default input string as is:
                 default_and_timeout="default '$default_input'"
             fi
         fi
         # Avoid stderr if timeout is not set or empty or not an integer value:
         if test "$timeout" -ge 1 2>/dev/null ; then
             if test "$default_and_timeout" ; then
-                default_and_timeout="$default_and_timeout timeout $timeout"
+                default_and_timeout="$default_and_timeout timeout $timeout seconds"
             else
-                default_and_timeout="timeout $timeout"
+                default_and_timeout="timeout $timeout seconds"
             fi
         fi
     fi
     # The actual work:
     local caller_source="$( CallerSource )"
-    # In verbose mode show the user the script that called UserInput and what user_input_ID that UserInput call has
+    # In verbose plus debug mode show the user the script that called UserInput and what user_input_ID it has
     # so that the user can prepare an automated response for that UserInput call (without digging in the code).
     # Avoid stderr if user_input_ID is not set or empty or not an integer value:
     if test "$user_input_ID" -ge 0 2>/dev/null ; then
-        LogPrint "'UserInput -I $user_input_ID needed in '$caller_source'"
+        DebugPrint "UserInput -I $user_input_ID needed in $caller_source"
     else
-        LogPrint "'UserInput needed in '$caller_source'"
+        DebugPrint "UserInput needed in $caller_source"
     fi
     # First of all show the prompt unless an empty prompt was specified (via -p '')
     # so that the prompt can be used as some kind of header line that introduces the user input

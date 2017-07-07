@@ -25,28 +25,27 @@ fi
 
 # Display list of archives in repository.
 # Display header.
-echo ""
-echo "=== Borg archives list ==="
-echo "Host:       $BORGBACKUP_HOST"
-echo "Repository: $BORGBACKUP_REPO"
-echo ""
+LogUserOutput "
+=== Borg archives list ===
+Host:       $BORGBACKUP_HOST
+Repository: $BORGBACKUP_REPO
+"
 
 # Display BORGBACKUP_ARCHIVE_CACHE file content
 # and prompt user for archive to restore.
 # Always ask which archive to restore (even if there is only one).
 # This gives possibility to abort restore if repository doesn't contain
 # desired archive, hence saves some time.
-while(true); do
-    cat -n $BORGBACKUP_ARCHIVE_CACHE | awk '{print "["$1"]", $2,"\t"$3,$4,$5}'
+while true ; do
+    LogUserOutput "$( cat -n $BORGBACKUP_ARCHIVE_CACHE | awk '{print "["$1"]", $2,"\t"$3,$4,$5}' )"
 
     # Show "Exit" option.
-    echo ""
-    echo "[$(($archive_cache_lines+1))]" Exit
-    echo ""
+    UserOutput ""
+    LogUserOutput "[$(($archive_cache_lines+1))]" Exit
+    UserOutput ""
 
     # Read user input.
-    echo -n "Choose archive to recover from: "
-    read choice
+    choice="$( UserInput -p "Choose archive to recover from" )"
 
     # Evaluate user selection and save archive name to restore.
     # Valid pick

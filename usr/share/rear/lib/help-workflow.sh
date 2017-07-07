@@ -9,7 +9,8 @@ LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} help )
 
 function WORKFLOW_help () {
 
-cat <<EOF
+# Output the help text to the original STDOUT but keep STDERR in the log file:
+cat 1>&7 <<EOF
 Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [--] COMMAND [ARGS...]
 
 $PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
@@ -31,6 +32,7 @@ Available options:
 List of commands:
 EOF
 
+# Output all workflow descriptions to the original STDOUT but keep STDERR in the log file:
 for workflow in ${WORKFLOWS[@]} ; do
     description=WORKFLOW_${workflow}_DESCRIPTION
     # in some workflows WORKFLOW_${workflow}_DESCRIPTION
@@ -38,9 +40,10 @@ for workflow in ${WORKFLOWS[@]} ; do
     # WORKFLOW_savelayout_DESCRIPTION WORKFLOW_shell_DESCRIPTION WORKFLOW_udev_DESCRIPTION
     # so that an empty default is used to avoid that ${!description} is an unbound variable:
     test "${!description:-}" && printf " %-16s%s\n" $workflow "${!description:-}"
-done
+done 1>&7
 
-test "$VERBOSE" || echo "Use 'rear -v help' for more advanced commands."
+# Output the text to the original STDOUT but keep STDERR in the log file:
+test "$VERBOSE" || echo "Use 'rear -v help' for more advanced commands." 1>&7
 
 }
 

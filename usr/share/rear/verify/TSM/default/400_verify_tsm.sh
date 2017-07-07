@@ -63,7 +63,7 @@ done < <((grep -A 10000 '^  1' | awk '{print $1 " " $NF}') <<<"$TSM_FILESPACE_TE
 Log "Available filespaces:
 $TSM_FILESPACE_TEXT"
 
-echo "
+LogUserOutput "
 The TSM Server reports the following for this node:
 $(echo "$TSM_FILESPACE_TEXT" | sed -e 's/^/\t\t/')
 Please enter the numbers of the filespaces we should restore.

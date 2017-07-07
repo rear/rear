@@ -7,5 +7,5 @@ local archive_name=${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}\
 ${BACKUP_PROG_COMPRESS_SUFFIX}
 
 # Allow user to change restore destination
-echo -n "Restore $archive_name to device: [$BLOCKCLONE_SOURCE_DEV] "
+LogUserOutput "Restore $archive_name to device: [$BLOCKCLONE_SOURCE_DEV]"
 change_default BLOCKCLONE_SOURCE_DEV

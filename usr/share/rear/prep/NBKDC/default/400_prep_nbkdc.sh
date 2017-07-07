@@ -8,11 +8,11 @@
 if [ ! -f "$NBKDC_DIR/conf/client.properties" ]; then
     NBKDC_DIR=$(readlink -f /proc/$(pgrep -nx rcmd-executor)/exe | sed 's/\/rcmd-executor*//g')
     if  [ ! -f "$NBKDC_DIR/conf/client.properties" ] ; then
-        echo "Cannot find running NovaBACKUP DataCenter Agent!!"
-        echo "Locating the NovaBACKUP DataCenter Agent via /Hiback"
+        LogUserOutput "Cannot find running NovaBACKUP DataCenter Agent!!"
+        LogUserOutput "Locating the NovaBACKUP DataCenter Agent via /Hiback"
         NBKDC_DIR=$(readlink /Hiback | sed 's/\/Hiback$//g')
-        if [ ! -f "$NBKDC_DIR/conf/client.properties" ]; then 
-            echo "No NovaBACKUP DataCenter Software installed"
+        if [ ! -f "$NBKDC_DIR/conf/client.properties" ]; then
+            LogPrintError "No NovaBACKUP DataCenter Software installed"
             Error "No NBKDC found, exiting NBKDC prep"
         fi
     fi

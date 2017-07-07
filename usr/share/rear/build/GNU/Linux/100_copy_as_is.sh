@@ -35,19 +35,19 @@ while read -r ; do
 	if [[ ! -d "$REPLY" && -x "$REPLY" ]]; then
 		COPY_AS_IS_EXELIST=( "${COPY_AS_IS_EXELIST[@]}" "$REPLY" )
 	fi
-	echo "$REPLY" >/dev/null
 done <$TMP_DIR/copy-as-is-filelist
+Log "COPY_AS_IS_EXELIST = ${COPY_AS_IS_EXELIST[@]}"
 
-Log "Checking COPY_AS_IS_EXELIST"
+Log "Adding required libraries to LIBS with checking COPY_AS_IS_EXELIST"
 # add required libraries to LIBS, skip libraries that are part of the copied files.
 while read -r ; do
 	lib="$REPLY"
 	if ! IsInArray "$lib" "${COPY_AS_IS_EXELIST[@]}"; then
 		# if $lib is NOT part of the copy-as-is fileset, then add it to the global libs
 		LIBS=( ${LIBS[@]} $lib )
-		Log "Adding required $lib to LIBS"
-		echo "adding $lib to LIBS"
 	else
-		echo "$lib is part of COPY_AS_IS_EXELIST"
+		Log "Not adding $lib to LIBS because it is already in COPY_AS_IS_EXELIST"
 	fi
-done >/dev/null < <( SharedObjectFiles "${COPY_AS_IS_EXELIST[@]}" | sed -e 's#^#/#' )
+done < <( SharedObjectFiles "${COPY_AS_IS_EXELIST[@]}" | sed -e 's#^#/#' )
+Log "LIBS = ${LIBS[@]}"
+
