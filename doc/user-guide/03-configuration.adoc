@@ -61,6 +61,9 @@ Write the ISO image using +lftp+ and the HTTP (PUT) procotol.
 OUTPUT_URL=https://::
 Write the ISO image using +lftp+ and the HTTPS (PUT) protocol.
 
+OUTPUT_URL=nfs://::
+Write the ISO image using +nfs+ and the NFS protocol.
+
 OUTPUT_URL=sftp://::
 Write the ISO image using +lftp+ and the secure FTP (SFTP) protocol.
 
