@@ -383,8 +383,11 @@ cat /dev/null >"$RUNTIME_LOGFILE"
 exec 2>>"$RUNTIME_LOGFILE"
 # Make stdout the same what stderr already is.
 # This keeps strict ordering of stdout and stderr outputs
-# because now both stdout and stderr use one same file descriptor:
-exec 1>&2
+# because now both stdout and stderr use one same file descriptor.
+# Have stdout redirected only when not in verbose mode so that
+# users who miss user dialogs could get them back via "rear -v ..."
+# cf. https://github.com/rear/rear/issues/1398#issuecomment-315097768
+test "$VERBOSE" || exec 1>&2
 
 # Include functions after RUNTIME_LOGFILE is set and readonly
 # so that functions can use a fixed RUNTIME_LOGFILE value:
