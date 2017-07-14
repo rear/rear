@@ -261,11 +261,27 @@ function CallerSource () {
     # With bash >= 3 the BASH_SOURCE array variable is supported and even
     # for older bash it should be fail-safe when unset variables evaluate to empty:
     local this_script="${BASH_SOURCE[0]}"
+    # Note the "off by one" for the BASH_LINENO array index because
+    # https://www.gnu.org/software/bash/manual/html_node/Bash-Variables.html
+    # reads (excerpt):
+    # ${BASH_LINENO[$i]} is the line number in the source file (${BASH_SOURCE[$i+1]}) where ${FUNCNAME[$i]} was called
+    # (or ${BASH_LINENO[$i-1]} if referenced within another shell function). Use LINENO to obtain the current line number.
     local caller_source="${BASH_SOURCE[1]}"
-    test "$caller_source" = "$this_script" && caller_source="${BASH_SOURCE[2]}"
-    test "$caller_source" = "$this_script" && caller_source="${BASH_SOURCE[3]}"
-    test "$caller_source" || caller_source="Relax-and-Recover"
-    echo "$caller_source"
+    local caller_source_lineno="${BASH_LINENO[0]}"
+    if test "$caller_source" = "$this_script" ; then
+        caller_source="${BASH_SOURCE[2]}"
+        caller_source_lineno="${BASH_LINENO[1]}"
+    fi
+    if test "$caller_source" = "$this_script" ; then
+        caller_source="${BASH_SOURCE[3]}"
+        caller_source_lineno="${BASH_LINENO[2]}"
+    fi
+    if test "$caller_source" ; then
+        echo "$caller_source line $caller_source_lineno"
+        return 0
+    fi
+    # Fallback output:
+    echo "Relax-and-Recover"
 }
 
 # Exit if there is a bug in ReaR:
@@ -335,9 +351,9 @@ LogPrintIfError() {
 #       that will be autoresponded (without any possible real user input) with the matching value of the user input array.
 # Usage examples:
 # * Wait endlessly until the user hits the [Enter] key (without '-t 0' a default timeout is used):
-#       UserInput -t 0 -p 'Press [Enter] to continue...'
+#       UserInput -t 0 -p 'Press [Enter] to continue'
 # * Wait up to 30 seconds until the user hits the [Enter] key (i.e. proceed automatically after 30 seconds):
-#       UserInput -t 30 -p 'Press [Enter] to continue...'
+#       UserInput -t 30 -p 'Press [Enter] to continue'
 # * Get an input value from the user (proceed automatically with empty input_value after the default timeout).
 #   Leading and trailing spaces are cut from the actual user input:
 #       input_value="$( UserInput -p 'Enter the input value' )"
@@ -496,14 +512,51 @@ function UserInput () {
         fi
     fi
     # The actual work:
-    local caller_source="$( CallerSource )"
-    # In verbose plus debug mode show the user the script that called UserInput and what user_input_ID it has
-    # so that the user can prepare an automated response for that UserInput call (without digging in the code).
+    # Have caller_source as an array so that plain $caller_source is only the filename (with path):
+    local caller_source=( $( CallerSource ) )
     # Avoid stderr if user_input_ID is not set or empty or not an integer value:
     if test "$user_input_ID" -ge 0 2>/dev/null ; then
-        DebugPrint "UserInput -I $user_input_ID needed in $caller_source"
+        # In debug mode show the user the script that called UserInput and what user_input_ID was specified
+        # so that the user can prepare an automated response for that UserInput call (without digging in the code):
+        DebugPrint "UserInput -I $user_input_ID needed in ${caller_source[@]}"
     else
-        DebugPrint "UserInput needed in $caller_source"
+        # Generate a unique default user_input_ID if it was not specified:
+        # The generated user_input_ID should be different for different
+        # scripts wherefrom the UserInput is called (i.e. different caller_source) and different
+        # visual appearence to the user (i.e. different choices, prompt, and default_input)
+        # but it should be independent of the caller script path (ReaR installation path must not matter)
+        # and it should be independent of non-meaningful characters in what is shown to the user like
+        # whitespaces and special characters so that it only depends on letters (case insensitive) and digits.
+        # Intentionally same caller script basename in different ReaR subdirectories
+        # (e.g. the various 400_restore_backup.sh scripts for different backup methods)
+        # does not result different generated user_input_ID so that UserInput calls with same visual appearence
+        # (regarding meaningful characters) in caller scripts with same basename get same generated user_input_ID.
+        # E.g. when several scripts with same basename call the same
+        #   UserInput -p 'Press [Enter] to continue'
+        # then same UserInput calls for same purpose (same basename callers is considered same purpose)
+        # get same generated user_input_ID. If this is not wanted user_input_ID must be explicitly specified.
+        local caller_source_filename="$( basename $caller_source )"
+        local md5sum_input=$( echo "$caller_source_filename" "${choices[@]}" "$prompt" "$default_input" | tr -c -d '[:alnum:]' )
+        # Have md5sum_hex as an array so that plain $md5sum_hex is the actual md5sum
+        # because 'md5sum' outputs the actual md5sum plus the filename (which is '-' here for stdin):
+        local md5sum_hex=( $( echo "$md5sum_input" | md5sum ) )
+        # The actual md5sum is a 32 characters hex-number like 'b1946ac92492d2347c6235b4d2611184'
+        # which results a decimal integer up to 340282366920938463463374607431768211455 (it has 39 digits) as result of
+        #   echo "ibase=16; FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" | bc -l
+        # (note that 'bc' requires upper case characters for hex-number input):
+        local md5sum_uppercase=$( echo $md5sum_hex | tr '[:lower:]' '[:upper:]' )
+        local md5sum_decimal=$( echo "ibase=16 ; $md5sum_uppercase" | bc -l )
+        # But in bash 3.x the array index must be a decimal integer number up to 2^63 - 1 = 9223372036854775807 (it has 19 digits)
+        # the md5sum output is converted into a decimal integer number with 18 digits.
+        # Because all substrings of a good hash (and md5 is reasonably good despite being cryptographically unsafe)
+        # are equally random one can take any bits you like from the string, cf.
+        # https://crypto.stackexchange.com/questions/26850/what-is-degree-of-randomness-in-individual-bits-of-md5-hash
+        # https://stackoverflow.com/questions/3819712/is-any-substring-of-a-hash-md5-sha1-more-random-than-another
+        # we take the first 18 digits of the up to 39 digits from the decimal integer md5sum as generated user_input_ID:
+        user_input_ID=$( echo $md5sum_decimal | head -c 18 )
+        # In debug mode show the user the script that called UserInput and what generated user_input_ID it has
+        # so that the user can prepare an automated response for that UserInput call (without digging in the code):
+        DebugPrint "UserInput (generated ID $user_input_ID) needed in ${caller_source[@]}"
     fi
     # First of all show the prompt unless an empty prompt was specified (via -p '')
     # so that the prompt can be used as some kind of header line that introduces the user input
@@ -536,16 +589,18 @@ function UserInput () {
     test "$input_delimiter" && read_options_and_arguments="$read_options_and_arguments -d $input_delimiter"
     # Get the user input:
     local user_input=""
-    # Try to get automated user input.
-    # Avoid stderr if user_input_ID is not set or empty or not an integer value:
-    if test "$user_input_ID" -ge 0 2>/dev/null ; then
-        # When a (non empty) predefined user input value exists use that as automated user input:
-        if test "${USER_INPUT_VALUES[$user_input_ID]:-}" ; then
-            user_input="${USER_INPUT_VALUES[$user_input_ID]}"
-            LogPrint "UserInput: Using predefined user input '$user_input' from USER_INPUT_VALUES[$user_input_ID]"
-            # When a (non empty) output_array was specified it must contain all user input words:
-            test "$output_array" && read -a "$output_array" <<<"$user_input"
-        fi
+    # When a (non empty) predefined user input value exists use that as automated user input:
+    if test "${USER_INPUT_VALUES[$user_input_ID]:-}" ; then
+        user_input="${USER_INPUT_VALUES[$user_input_ID]}"
+        LogPrint "UserInput: Using predefined user input '$user_input' from USER_INPUT_VALUES[$user_input_ID]"
+        # When a (non empty) output_array was specified it must contain all user input words:
+        test "$output_array" && read -a "$output_array" <<<"$user_input"
+        # Have a one second delay when an automated user input is used to be somewhat fail-safe against
+        # a possibly false specified predefined user input value for an endless retrying loop of UserInput calls
+        # that would (without the one second delay) run in a tight loop that wastes resources (e.g. CPU)
+        # and fills up the ReaR log file (and the disk) with several KiB log data each second:
+        Log "One second delay for automated user input to avoid possibly tight loop of endless retrying UserInput calls"
+        sleep 1
     fi
     # When there is no (non empty) automated user input read the user input:
     if ! test "$user_input" ; then
@@ -570,8 +625,9 @@ function UserInput () {
         user_input="${!output_array}"
         Log "UserInput: To return something only the first user input word '$user_input' is used."
     fi
-    # When there is no user input use the "best" fallback or default that exists:
-    if ! test "$user_input" ; then
+    # When there is no user input or when the user input is only spaces use the "best" fallback or default that exists
+    # (to test for non-empty and no-spaces user input there must be no double quotes because test " " results true):
+    if ! test $user_input ; then
         if ! test "$default_input" ; then
             LogPrint "UserInput: No user input and no default input so that the result is ''"
             echo ""
