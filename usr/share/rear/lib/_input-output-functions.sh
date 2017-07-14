@@ -514,24 +514,27 @@ function UserInput () {
     # The actual work:
     # Have caller_source as an array so that plain $caller_source is only the filename (with path):
     local caller_source=( $( CallerSource ) )
-    # Generate a unique default user_input_ID if it was not specified.
     # Avoid stderr if user_input_ID is not set or empty or not an integer value:
-    if ! test "$user_input_ID" -ge 0 2>/dev/null ; then
+    if test "$user_input_ID" -ge 0 2>/dev/null ; then
+        # In debug mode show the user the script that called UserInput and what user_input_ID was specified
+        # so that the user can prepare an automated response for that UserInput call (without digging in the code):
+        DebugPrint "UserInput -I $user_input_ID needed in ${caller_source[@]}"
+    else
+        # Generate a unique default user_input_ID if it was not specified:
         # The generated user_input_ID should be different for different
         # scripts wherefrom the UserInput is called (i.e. different caller_source) and different
         # visual appearence to the user (i.e. different choices, prompt, and default_input)
-        # but it should be independent
-        # of the path of the caller script (so that ReaR installation path does not matter)
-        # and it should be independent of whitespaces in what is shown to the user.
+        # but it should be independent of the caller script path (ReaR installation path must not matter)
+        # and it should be independent of non-meaningful characters in what is shown to the user like
+        # whitespaces and special characters so that it only depends on letters (case insensitive) and digits.
         # Intentionally same caller script basename in different ReaR subdirectories
         # (e.g. the various 400_restore_backup.sh scripts for different backup methods)
-        # alone does not result different generated user_input_ID which is intentional
-        # so that UserInput calls with same visual appearence to the user
-        # in caller scripts with same basename get same generated user_input_ID.
+        # does not result different generated user_input_ID so that UserInput calls with same visual appearence
+        # (regarding meaningful characters) in caller scripts with same basename get same generated user_input_ID.
         # E.g. when several scripts with same basename call the same
         #   UserInput -p 'Press [Enter] to continue'
-        # then same UserInput calls for same purpose (i.e. in same basename callers)
-        # get same generated user_input_ID. If this is not wanted specify '-I' explicitly.
+        # then same UserInput calls for same purpose (same basename callers is considered same purpose)
+        # get same generated user_input_ID. If this is not wanted user_input_ID must be explicitly specified.
         local caller_source_filename="$( basename $caller_source )"
         local md5sum_input=$( echo "$caller_source_filename" "${choices[@]}" "$prompt" "$default_input" | tr -c -d '[:alnum:]' )
         # Have md5sum_hex as an array so that plain $md5sum_hex is the actual md5sum
@@ -551,10 +554,10 @@ function UserInput () {
         # https://stackoverflow.com/questions/3819712/is-any-substring-of-a-hash-md5-sha1-more-random-than-another
         # we take the first 18 digits of the up to 39 digits from the decimal integer md5sum as generated user_input_ID:
         user_input_ID=$( echo $md5sum_decimal | head -c 18 )
+        # In debug mode show the user the script that called UserInput and what generated user_input_ID it has
+        # so that the user can prepare an automated response for that UserInput call (without digging in the code):
+        DebugPrint "UserInput (generated ID $user_input_ID) needed in ${caller_source[@]}"
     fi
-    # In verbose plus debug mode show the user the script that called UserInput and what user_input_ID it has
-    # so that the user can prepare an automated response for that UserInput call (without digging in the code):
-    DebugPrint "UserInput -I $user_input_ID needed in ${caller_source[@]}"
     # First of all show the prompt unless an empty prompt was specified (via -p '')
     # so that the prompt can be used as some kind of header line that introduces the user input
     # and separates the following user input from arbitrary other output lines before:
@@ -592,6 +595,12 @@ function UserInput () {
         LogPrint "UserInput: Using predefined user input '$user_input' from USER_INPUT_VALUES[$user_input_ID]"
         # When a (non empty) output_array was specified it must contain all user input words:
         test "$output_array" && read -a "$output_array" <<<"$user_input"
+        # Have a one second delay when an automated user input is used to be somewhat fail-safe against
+        # a possibly false specified predefined user input value for an endless retrying loop of UserInput calls
+        # that would (without the one second delay) run in a tight loop that wastes resources (e.g. CPU)
+        # and fills up the ReaR log file (and the disk) with several KiB log data each second:
+        Log "One second delay for automated user input to avoid possibly tight loop of endless retrying UserInput calls"
+        sleep 1
     fi
     # When there is no (non empty) automated user input read the user input:
     if ! test "$user_input" ; then
