@@ -384,7 +384,10 @@ exec 2>>"$RUNTIME_LOGFILE"
 # Make stdout the same what stderr already is.
 # This keeps strict ordering of stdout and stderr outputs
 # because now both stdout and stderr use one same file descriptor:
-exec 1>&2
+# The redirection of stdout into the log file is postponed for ReaR v2.2
+# see https://github.com/rear/rear/issues/1398#issuecomment-315318878
+# for ReaR v2.3 it should be re-enabled (unless severe issues appear):
+# exec 1>&2
 
 # Include functions after RUNTIME_LOGFILE is set and readonly
 # so that functions can use a fixed RUNTIME_LOGFILE value:
