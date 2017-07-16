@@ -530,10 +530,7 @@ get_disk_size() {
 
     local block_size=$(get_block_size ${disk_name%/*})
 
-    [ -r /sys/block/$disk_name/size ]
-    BugIfError "Could not determine size of disk $disk_name, please file a bug."
-
-    local nr_blocks=$( < /sys/block/$disk_name/size)
+    local nr_blocks=$(retry_command "cat /sys/block/$disk_name/size")
     local disk_size=$(( nr_blocks * block_size ))
 
     ### Make sure we always return a number
@@ -589,4 +586,28 @@ is_disk_a_pv() {
 
 function is_multipath_path {
     [ "$1" ] && type multipath &>/dev/null && multipath -c /dev/$1 &>/dev/null
+}
+
+# retry_command () is binded with REAR_SLEEP_DELAY and REAR_MAX_RETRIES.
+# This function will do maximum of REAR_MAX_RETRIES command execution
+# and will sleep REAR_SLEEP_DELAY after each unsuccessful command execution.
+# Function returns command result as soon as it succeeded.
+function retry_command () {
+    command="$1"
+
+    for pass in trial verification ; do
+        until result=$($command); do
+            sleep $REAR_SLEEP_DELAY
+
+            retry=$((retry+1))
+
+            if [[ $retry -eq $REAR_MAX_RETRIES ]]; then
+                # No success until now, we should end function and throw error.
+                Error  "Could not successfully finish command: '$command'"
+                break 2;
+            fi
+        done
+    done
+
+    echo $result
 }
