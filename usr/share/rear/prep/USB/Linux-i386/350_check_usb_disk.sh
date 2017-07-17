@@ -9,8 +9,8 @@ REAL_USB_DEVICE=$(readlink -f $USB_DEVICE)
 StopIfError "USB device '$USB_DEVICE' is not a block device"
 
 # Check if REAR-000 USB device is not accidentally mounted on other than $BUILD_DIR location.
-if res=$(grep -v $BUILD_DIR /proc/mounts | grep "^$REAL_USB_DEVICE" ) ; then
-    Error "USB device '$REAL_USB_DEVICE' is already mounted: $res"
+if res=( $(grep -v $BUILD_DIR /proc/mounts | grep "^$REAL_USB_DEVICE" ) ) ; then
+    Error "USB device '$REAL_USB_DEVICE' is already mounted on '${res[2]}'"
 fi
 
 # We cannot use the layout dependency code in the backup phase (yet)
