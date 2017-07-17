@@ -530,7 +530,7 @@ get_disk_size() {
 
     local block_size=$(get_block_size ${disk_name%/*})
 
-    local nr_blocks=$(retry_command "cat /sys/block/$disk_name/size")
+    local nr_blocks=$(retry_command "Failed to get number of blocks from /sys/block/$disk_name/size" "cat /sys/block/$disk_name/size")
     local disk_size=$(( nr_blocks * block_size ))
 
     ### Make sure we always return a number
@@ -592,22 +592,23 @@ function is_multipath_path {
 # This function will do maximum of REAR_MAX_RETRIES command execution
 # and will sleep REAR_SLEEP_DELAY after each unsuccessful command execution.
 # Function returns command result as soon as it succeeded.
-function retry_command () {
-    command="$1"
+# Function accepts two parameters:
+# 1. Message that should be displayed in case that command did not succeed in REAR_MAX_RETRIES times.
+# 2. Command that should be repeated REAR_MAX_RETRIES, or return on success
+function retry_command ()
+{
+    local retry=0
+    local msg="$1"
+    shift
 
-    for pass in trial verification ; do
-        until result=$($command); do
-            sleep $REAR_SLEEP_DELAY
+    until eval "$@"; do
+        sleep $REAR_SLEEP_DELAY
 
-            retry=$((retry+1))
+        let retry++
 
-            if [[ $retry -eq $REAR_MAX_RETRIES ]]; then
-                # No success until now, we should end function and throw error.
-                Error  "Could not successfully finish command: '$command'"
-                break 2;
-            fi
-        done
+        if (( retry >= REAR_MAX_RETRIES )) ; then
+            Error $msg "\nFailed to execute command after $REAR_MAX_RETRIES retries with ${REAR_SLEEP_DELAY}s interval: '"$@"'"
+            break 2
+        fi
     done
-
-    echo $result
 }
