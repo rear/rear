@@ -4,6 +4,16 @@
 # For older Linux distros we fall back to manually load the modules that where loaded at the time
 # of rear mkrescue
 
+# load specified modules first
+if test -s /etc/modules ; then
+    while read module options ; do
+        case "$module" in
+            (\#*|"") ;;
+            (*) modprobe -v $module $options;;
+        esac
+    done </etc/modules
+fi
+
 # load udev or load modules manually
 # again, check if current systemd is present
 systemd_version=$( systemd-notify --version 2>/dev/null | grep systemd | awk '{ print $2; }' )
@@ -35,30 +45,9 @@ if [[ $systemd_version -gt 190 ]] || [[ -s /etc/udev/rules.d/00-rear.rules ]] ; 
         my_udevsettle
         echo "done."
     fi
-    # When udevd or systemd is in place then our /etc/modules content could be normally skipped,
-    # however, we need it for e.g. loading fuse (cf. https://github.com/rear/rear/pull/905)
-    # or any other module that is intended to be loaded via the MODULES_LOAD array.
-    # There might be other kernel modules added by the user on demand, therefore,
-    # we always load the modules in /etc/modules (same code as just below):
-    if test -s /etc/modules ; then
-        while read module options ; do
-            case "$module" in
-                (\#*|"") ;;
-                (*) modprobe -v $module $options;;
-            esac
-        done </etc/modules
-    fi
 else
     # no udev, use manual method to deal with modules
-    # load specified modules (same code as just above):
-    if test -s /etc/modules ; then
-        while read module options ; do
-            case "$module" in
-                (\#*|"") ;;
-                (*) modprobe -v $module $options;;
-            esac
-        done </etc/modules
-    fi
+
     # load block device modules, probably not in the right order
     # we load ata drivers after ide drivers to support older systems running in compatibility mode
     # most probably these lines are the cause for most problems with wrong disk order and missing block devices
@@ -80,4 +69,3 @@ fi
 
 # device mapper gets a special treatment here because there is no dependency to load it
 modprobe -q dm-mod
-

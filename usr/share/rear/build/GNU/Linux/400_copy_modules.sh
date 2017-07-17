@@ -142,16 +142,26 @@ done
 # Generate modules.dep and map files that match the actually existing modules in the rescue/recovery system:
 depmod -b "$ROOTFS_DIR" -v "$KERNEL_VERSION" 1>/dev/null || Error "depmod failed to configure modules for the rescue/recovery system"
 
-# Generate /etc/modules for the rescue/recovery system:
+# Generate /etc/modules for the rescue/recovery system.
+# We use a little trick here. In COPY_AS_IS we also include /etc/modules and COPY_AS_IS is copied BEFORE
+# this script. So here we already might have the original /etc/modules of the source system which is why
+# we only append lines. That way the original module order AND module parameters are preserved
+
+# We first append the initrd modules file for Debian before adding the modules that
+# we collected from various sources in the MODULES_LOAD array, e.g. in 220_load_modules_from_initrd.sh
 recovery_system_etc_modules="$ROOTFS_DIR/etc/modules"
+if test -s /etc/initramfs-tools/modules ; then
+    cat </etc/initramfs-tools/modules >>$recovery_system_etc_modules
+fi
+
+# Finally append MODULES_LOAD
 for module_to_be_loaded in "${MODULES_LOAD[@]}" ; do
-    echo $module_to_be_loaded
-done >>$recovery_system_etc_modules
-# Remove duplicates:
-cat $recovery_system_etc_modules | sort -u > $recovery_system_etc_modules.new
-mv -f $recovery_system_etc_modules.new $recovery_system_etc_modules
+    if ! grep -E -q "^$module_to_be_loaded(\s|\$)" $recovery_system_etc_modules ; then
+        # add module only if not exists to remove duplicates
+        echo $module_to_be_loaded >>$recovery_system_etc_modules
+    fi
+done
 
 # Local functions must be 'unset' because bash does not support 'local function ...'
 # cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
 unset -f modinfo_filename
-

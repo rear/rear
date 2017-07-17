@@ -1,7 +1,8 @@
 #!/bin/bash
 # check inittab for "ssh:23:respawn:/bin/sshd -D"
 if $(grep -q ^ssh: /etc/inittab) ; then
-        sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-        sed -i 's/^ClientAliveInterval.*/ClientAliveInterval 0/' /etc/ssh/sshd_config
+    sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+    sed -i 's/^ClientAliveInterval.*/ClientAliveInterval 0/' /etc/ssh/sshd_config
+    mkdir -p /run/sshd
 	exec /bin/sshd -D
 fi

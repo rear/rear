@@ -31,5 +31,6 @@ COPY_AS_IS=(
     "${COPY_AS_IS[@]}"
     /lib/modules/$KERNEL_VERSION/modules.*
     /etc/modules*
+    /etc/modules-load?d
     /etc/modprobe*
 )
