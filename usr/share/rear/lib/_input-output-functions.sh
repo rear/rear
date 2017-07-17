@@ -403,6 +403,14 @@ function UserInput () {
     local timeout=300
     # Avoid stderr if USER_INPUT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_TIMEOUT:
     test "$USER_INPUT_TIMEOUT" -ge 0 2>/dev/null && timeout=$USER_INPUT_TIMEOUT
+    # Have some seconds (at least one second) delay when an automated user input is used to be fail-safe against
+    # a possibly false specified predefined user input value for an endless retrying loop of UserInput calls
+    # that would (without the delay) run in a tight loop that wastes resources (CPU, diskspace, and memory)
+    # and fills up the ReaR log file (and the disk - which is a ramdisk for 'rear recover')
+    # with some KiB data each second that may let 'rear recover' fail with 'out of diskspace/memory':
+    local automated_input_interrupt_timeout=3
+    # Avoid stderr if USER_INPUT_INTERRUPT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_INTERRUPT_TIMEOUT:
+    test "$USER_INPUT_INTERRUPT_TIMEOUT" -ge 1 2>/dev/null && automated_input_interrupt_timeout=$USER_INPUT_INTERRUPT_TIMEOUT
     local default_prompt="enter your input"
     local prompt="$default_prompt"
     # Avoid stderr if USER_INPUT_PROMPT is not set or empty:
@@ -574,7 +582,7 @@ function UserInput () {
         done
     fi
     # Finally show the default and/or the timeout (if exists):
-    test "$default_and_timeout" && LogUserOutput "( $default_and_timeout )"
+    test "$default_and_timeout" && LogUserOutput "($default_and_timeout)"
     # Prepare the 'read' call:
     local read_options_and_arguments=""
     # When a zero timeout was specified (via -t 0) do not use it.
@@ -591,16 +599,20 @@ function UserInput () {
     local user_input=""
     # When a (non empty) predefined user input value exists use that as automated user input:
     if test "${USER_INPUT_VALUES[$user_input_ID]:-}" ; then
-        user_input="${USER_INPUT_VALUES[$user_input_ID]}"
-        LogPrint "UserInput: Using predefined user input '$user_input' from USER_INPUT_VALUES[$user_input_ID]"
-        # When a (non empty) output_array was specified it must contain all user input words:
-        test "$output_array" && read -a "$output_array" <<<"$user_input"
-        # Have a one second delay when an automated user input is used to be somewhat fail-safe against
-        # a possibly false specified predefined user input value for an endless retrying loop of UserInput calls
-        # that would (without the one second delay) run in a tight loop that wastes resources (e.g. CPU)
-        # and fills up the ReaR log file (and the disk) with several KiB log data each second:
-        Log "One second delay for automated user input to avoid possibly tight loop of endless retrying UserInput calls"
-        sleep 1
+        LogUserOutput "UserInput: Will use predefined input '${USER_INPUT_VALUES[$user_input_ID]}' from USER_INPUT_VALUES[$user_input_ID]"
+        # Let the user interrupt the automated user input:
+        LogUserOutput "Hit any key to interrupt the automated input (timeout $automated_input_interrupt_timeout seconds)"
+        # automated_input_interrupt_timeout is at least 1 second (see above) and do not echo the input (it is meaningless here):
+        if read -t $automated_input_interrupt_timeout -n 1 -s 0<&6 ; then
+            Log "UserInput: automated input interrupted by user"
+            # Show the prompt again (or at least the default prompt) to signal the user that now he can and must enter something:
+            test "$prompt" && LogUserOutput "$prompt" || LogUserOutput "$default_prompt"
+            test "$default_and_timeout" && LogUserOutput "($default_and_timeout)"
+        else
+            user_input="${USER_INPUT_VALUES[$user_input_ID]}"
+            # When a (non empty) output_array was specified it must contain all user input words:
+            test "$output_array" && read -a "$output_array" <<<"$user_input"
+        fi
     fi
     # When there is no (non empty) automated user input read the user input:
     if ! test "$user_input" ; then
