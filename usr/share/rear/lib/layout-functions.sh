@@ -530,7 +530,7 @@ get_disk_size() {
 
     local block_size=$(get_block_size ${disk_name%/*})
 
-    local nr_blocks=$(retry_command "Failed to get number of blocks from /sys/block/$disk_name/size" "cat /sys/block/$disk_name/size")
+    local nr_blocks=$(retry_command "Failed to get number of blocks from /sys/block/$disk_name/size" cat /sys/block/$disk_name/size)
     local disk_size=$(( nr_blocks * block_size ))
 
     ### Make sure we always return a number
@@ -601,14 +601,17 @@ function retry_command ()
     local msg="$1"
     shift
 
-    until eval "$@"; do
+    until command_stdout=$(eval "$@"); do
         sleep $REAR_SLEEP_DELAY
 
         let retry++
 
         if (( retry >= REAR_MAX_RETRIES )) ; then
-            Error $msg "\nFailed to execute command after $REAR_MAX_RETRIES retries with ${REAR_SLEEP_DELAY}s interval: '"$@"'"
+            Error "$msg\nFailed to execute command after $REAR_MAX_RETRIES retries with ${REAR_SLEEP_DELAY}s interval: '$@'"
+            # need this for clean exit, maybe bug
             break
         fi
     done
+
+    echo "$command_stdout"
 }
