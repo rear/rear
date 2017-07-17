@@ -608,7 +608,7 @@ function retry_command ()
 
         if (( retry >= REAR_MAX_RETRIES )) ; then
             Error $msg "\nFailed to execute command after $REAR_MAX_RETRIES retries with ${REAR_SLEEP_DELAY}s interval: '"$@"'"
-            break 2
+            break
         fi
     done
 }
