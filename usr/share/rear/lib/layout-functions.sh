@@ -530,7 +530,9 @@ get_disk_size() {
 
     local block_size=$(get_block_size ${disk_name%/*})
 
-    local nr_blocks=$(retry_command "Failed to get number of blocks from /sys/block/$disk_name/size" cat /sys/block/$disk_name/size)
+    $(retry_command test -r /sys/block/$disk_name/size) || Error "Could not determine size of disk $disk_name"
+
+    local nr_blocks=$( < /sys/block/$disk_name/size)
     local disk_size=$(( nr_blocks * block_size ))
 
     ### Make sure we always return a number
@@ -598,8 +600,6 @@ function is_multipath_path {
 function retry_command ()
 {
     local retry=0
-    local msg="$1"
-    shift
 
     until command_stdout=$(eval "$@"); do
         sleep $REAR_SLEEP_DELAY
@@ -607,9 +607,7 @@ function retry_command ()
         let retry++
 
         if (( retry >= REAR_MAX_RETRIES )) ; then
-            Error "$msg\nFailed to execute command after $REAR_MAX_RETRIES retries with ${REAR_SLEEP_DELAY}s interval: '$@'"
-            # need this for clean exit, maybe bug
-            break
+            return 1
         fi
     done
 
