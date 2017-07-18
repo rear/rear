@@ -593,11 +593,8 @@ function is_multipath_path {
 # retry_command () is binded with REAR_SLEEP_DELAY and REAR_MAX_RETRIES.
 # This function will do maximum of REAR_MAX_RETRIES command execution
 # and will sleep REAR_SLEEP_DELAY after each unsuccessful command execution.
-# Function returns command result as soon as it succeeded.
-# Function accepts two parameters:
-# 1. Message that should be displayed in case that command did not succeed in REAR_MAX_RETRIES times.
-# 2. Command that should be repeated REAR_MAX_RETRIES, or return on success
-function retry_command ()
+# Function returns command result as soon as it succeeded or 1 on failure.
+retry_command ()
 {
     local retry=0
 
