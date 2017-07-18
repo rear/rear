@@ -530,8 +530,7 @@ get_disk_size() {
 
     local block_size=$(get_block_size ${disk_name%/*})
 
-    [ -r /sys/block/$disk_name/size ]
-    BugIfError "Could not determine size of disk $disk_name, please file a bug."
+    retry_command test -r /sys/block/$disk_name/size || Error "Could not determine size of disk $disk_name"
 
     local nr_blocks=$( < /sys/block/$disk_name/size)
     local disk_size=$(( nr_blocks * block_size ))
@@ -589,4 +588,26 @@ is_disk_a_pv() {
 
 function is_multipath_path {
     [ "$1" ] && type multipath &>/dev/null && multipath -c /dev/$1 &>/dev/null
+}
+
+# retry_command () is binded with REAR_SLEEP_DELAY and REAR_MAX_RETRIES.
+# This function will do maximum of REAR_MAX_RETRIES command execution
+# and will sleep REAR_SLEEP_DELAY after each unsuccessful command execution.
+# It outputs command stdout if succeeded or returns 1 on failure.
+retry_command ()
+{
+    local retry=0
+
+    until command_stdout=$(eval "$@"); do
+        sleep $REAR_SLEEP_DELAY
+
+        let retry++
+
+        if (( retry >= REAR_MAX_RETRIES )) ; then
+            Log "retry_command '$*' failed"
+            return 1
+        fi
+    done
+    # Have no additional trailing newline for the command stdout:
+    echo -n "$command_stdout"
 }
