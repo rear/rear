@@ -339,7 +339,7 @@ LogPrintIfError() {
 #   UserInput [-t timeout] [-p prompt] [-a output_array] [-n input_max_chars] [-d input_delimiter] [-D default_input] [-I user_input_ID] [choices]
 #   The options -t -p -a -n -d  match the ones for the 'read' bash builtin.
 #   The option [choices] are the values that are shown to the user as available choices as in the select bash keyword.
-#   The option [-D default_input] specifies what is used as default response when the user does not enter a valid choice.
+#   The option [-D default_input] specifies what is used as default response when the user does not enter something.
 #       Usuallly this is one of the choices values or an index of one of the choices (the first choice has index 0)
 #       but the default input can be anything else (in particular for free input without predefined choices).
 #   The option [-I user_input_ID] is intended to make UserInput working full automated (e.g. when ReaR runs unattended)
@@ -348,7 +348,7 @@ LogPrintIfError() {
 #           USER_INPUT_VALUES[456]='input for UserInput -I 456'
 #           USER_INPUT_VALUES[789]='input for UserInput -I 789'
 #       where each USER_INPUT_VALUES array member index that matches a user_input_ID of a particular 'UserInput -I' call
-#       that will be autoresponded (without any possible real user input) with the matching value of the user input array.
+#       that will be autoresponded with the matching value of the user input array.
 # Usage examples:
 # * Wait endlessly until the user hits the [Enter] key (without '-t 0' a default timeout is used):
 #       UserInput -t 0 -p 'Press [Enter] to continue'
@@ -388,13 +388,14 @@ LogPrintIfError() {
 # * To to let UserInput autorespond full automated a predefined user input value specify the user input value
 #   with a matching index in the USER_INPUT_VALUES array (e.g. specify that it in your local.conf file) like
 #       USER_INPUT_VALUES[123]='third choice'
-#   and call UserInput with that USER_INPUT_VALUES array index as the '-I' oprion value like
+#   and call UserInput with that USER_INPUT_VALUES array index as the '-I' option value like
 #       input_value="$( UserInput -p 'Select a choice' -D 1 -I 123 'first choice' 'second choice' 'third choice' )"
-#   which lets UserInput autorespond (without any possible real user input) with 'third choice'.
+#   which lets UserInput autorespond with 'third choice'.
 #   This means a precondition for an automated response is that a UserInput call has a user_input_ID specified.
-#   No predefined user input value must exist to get real user input for a 'UserInput -I 123' call
-#   or an existing predefined user input value must be unset before 'UserInput -I 123' is called like
+#   No predefined user input value should exist to get real user input for a 'UserInput -I 123' call
+#   or an existing predefined user input value should be unset before 'UserInput -I 123' is called like
 #       unset 'USER_INPUT_VALUES[123]'
+#   or the user can interupt any automated response within a relatively short time (minimum is only 1 second).
 function UserInput () {
     # First and foremost log how UserInput was actually called so that subsequent 'Log' messages are comprehensible:
     Log "UserInput $*"
@@ -407,8 +408,10 @@ function UserInput () {
     # a possibly false specified predefined user input value for an endless retrying loop of UserInput calls
     # that would (without the delay) run in a tight loop that wastes resources (CPU, diskspace, and memory)
     # and fills up the ReaR log file (and the disk - which is a ramdisk for 'rear recover')
-    # with some KiB data each second that may let 'rear recover' fail with 'out of diskspace/memory':
-    local automated_input_interrupt_timeout=3
+    # with some KiB data each second that may let 'rear recover' fail with 'out of diskspace/memory'.
+    # The default automated input interrupt timeout is 5 seconds to give the user a reasonable chance
+    # to recognize the right automated input on his screen and interrupt it when needed:
+    local automated_input_interrupt_timeout=5
     # Avoid stderr if USER_INPUT_INTERRUPT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_INTERRUPT_TIMEOUT:
     test "$USER_INPUT_INTERRUPT_TIMEOUT" -ge 1 2>/dev/null && automated_input_interrupt_timeout=$USER_INPUT_INTERRUPT_TIMEOUT
     local default_prompt="enter your input"
@@ -529,9 +532,9 @@ function UserInput () {
         DebugPrint "UserInput -I $user_input_ID needed in ${caller_source[@]}"
     else
         # Generate a unique default user_input_ID if it was not specified:
-        # The generated user_input_ID should be different for different
-        # scripts wherefrom the UserInput is called (i.e. different caller_source) and different
-        # visual appearence to the user (i.e. different choices, prompt, and default_input)
+        # The generated user_input_ID should be different for different scripts
+        # wherefrom the UserInput is called (i.e. different caller_source) and it should be different
+        # for different visual appearence to the user (i.e. different choices, prompt, and default_input)
         # but it should be independent of the caller script path (ReaR installation path must not matter)
         # and it should be independent of non-meaningful characters in what is shown to the user like
         # whitespaces and special characters so that it only depends on letters (case insensitive) and digits.
@@ -544,24 +547,37 @@ function UserInput () {
         # then same UserInput calls for same purpose (same basename callers is considered same purpose)
         # get same generated user_input_ID. If this is not wanted user_input_ID must be explicitly specified.
         local caller_source_filename="$( basename $caller_source )"
-        local md5sum_input=$( echo "$caller_source_filename" "${choices[@]}" "$prompt" "$default_input" | tr -c -d '[:alnum:]' )
-        # Have md5sum_hex as an array so that plain $md5sum_hex is the actual md5sum
-        # because 'md5sum' outputs the actual md5sum plus the filename (which is '-' here for stdin):
-        local md5sum_hex=( $( echo "$md5sum_input" | md5sum ) )
+        local hash_input=$( echo "$caller_source_filename" "${choices[@]}" "$prompt" "$default_input" | tr -c -d '[:alnum:]' | tr '[:upper:]' '[:lower:]' )
+        # Neither 'sum' nor 'cksum' is in PROGS nor REQUIRED_PROGS so that 'md5sum' is used if it is there.
+        # Because 'md5sum' is only in PROGS but not in REQUIRED_PROGS do a simple fallback if 'md5sum' is not there:
+        local hash_hex=""
+        if has_binary md5sum ; then
+            # Have hash_hex as an array so that plain $hash_hex is the actual md5sum
+            # because 'md5sum' outputs the actual md5sum plus the filename (which is '-' here for stdin):
+            hash_hex=( $( echo "$hash_input" | md5sum ) )
+        else
+            Log "No 'md5sum' there, using simple fallback to generate user_input_ID"
+            # The md5sum is a 32 characters hex-number so that we produce that also as fallback.
+            # The main drawback of the simple fallback is that only the first 32 input characters matter:
+            local lower_alnum='0123456789abcdefghijklmnopqrstuvwxyz'
+            # Avoid possibly leading '0' digits to get a hex-number with 32 significant digits:
+            local hex_no_null='123456789abcdef123456789abcdef123456'
+            hash_hex=$( echo "$hash_input" | tr -c -d "$lower_alnum" | tr "$lower_alnum" "$hex_no_null" | head -c 32 )
+        fi
         # The actual md5sum is a 32 characters hex-number like 'b1946ac92492d2347c6235b4d2611184'
         # which results a decimal integer up to 340282366920938463463374607431768211455 (it has 39 digits) as result of
         #   echo "ibase=16; FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" | bc -l
-        # (note that 'bc' requires upper case characters for hex-number input):
-        local md5sum_uppercase=$( echo $md5sum_hex | tr '[:lower:]' '[:upper:]' )
-        local md5sum_decimal=$( echo "ibase=16 ; $md5sum_uppercase" | bc -l )
-        # But in bash 3.x the array index must be a decimal integer number up to 2^63 - 1 = 9223372036854775807 (it has 19 digits)
-        # the md5sum output is converted into a decimal integer number with 18 digits.
+        # Note that 'bc' requires upper case characters for hex-number input:
+        local hash_uppercase=$( echo $hash_hex | tr '[:lower:]' '[:upper:]' )
+        local hash_decimal=$( echo "ibase=16 ; $hash_uppercase" | bc -l )
+        # In bash 3.x the array index must be a decimal integer number up to 2^63 - 1 = 9223372036854775807 (it has 19 digits)
+        # so that the md5sum output must be converted into a decimal integer number with 18 digits.
         # Because all substrings of a good hash (and md5 is reasonably good despite being cryptographically unsafe)
         # are equally random one can take any bits you like from the string, cf.
         # https://crypto.stackexchange.com/questions/26850/what-is-degree-of-randomness-in-individual-bits-of-md5-hash
         # https://stackoverflow.com/questions/3819712/is-any-substring-of-a-hash-md5-sha1-more-random-than-another
         # we take the first 18 digits of the up to 39 digits from the decimal integer md5sum as generated user_input_ID:
-        user_input_ID=$( echo $md5sum_decimal | head -c 18 )
+        user_input_ID=$( echo $hash_decimal | head -c 18 )
         # In debug mode show the user the script that called UserInput and what generated user_input_ID it has
         # so that the user can prepare an automated response for that UserInput call (without digging in the code):
         DebugPrint "UserInput (generated ID $user_input_ID) needed in ${caller_source[@]}"
