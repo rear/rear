@@ -1,6 +1,6 @@
 = rear(8)
-:version: v2.1
-:date: 7 June 2017
+:version: v2.2
+:date: 20 July 2017
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -228,8 +228,8 @@ was defined by variable +BACKUP_URL+. And, the ISO image will then be copied to 
 location as your backup of the system disk(s).
 
 The +ISO_DEFAULT+ variable defines what default boot option is used on the rescue image.
-Possible values are `manual`, `boothd` or `unattended`. Manual will make you boot into
-the shell directly by default, boothd will boot to the first disk (default) or unattended
+Possible values are `manual`, `boothd` or `automatic`. Manual will make you boot into
+the shell directly by default, boothd will boot to the first disk (default) or automatic
 will automatically start in recovery mode.
 
 == BACKUP SOFTWARE INTEGRATION
@@ -503,7 +503,7 @@ _/usr/share/doc_.
 
 
 == AUTHORS
-Gratien Dhaese, Schlomo Schapiro, Johannes Meixner, Jeroen Hoekx and Dag Wieers.
+Gratien Dhaese, Schlomo Schapiro, Johannes Meixner, Vladimir Gozora, Jeroen Hoekx and Dag Wieers.
 
 Lars Pinne (original man page).
 
@@ -521,6 +521,8 @@ Schlomo Schapiro
 Gratien Dhaese, IT3 Consultants
 
 Johannes Meixner, SUSE
+
+Vladimir Gozora
 
 Jeroen Hoekx
 

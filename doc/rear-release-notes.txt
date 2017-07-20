@@ -7,14 +7,14 @@ Relax-and-Recover
   o Development
   o Events
 
-Release Notes for Relax-and-Recover version 2.1
+Release Notes for Relax-and-Recover version 2.2
 
 This document contains the release notes for the open source project
 Relax-and-Recover.
 
 Relax-and-Recover website
 
-Github project
+GitHub project
 
 This document is distributed with the following license: "Creative Commons
 Attribution-NoDerivs 3.0 Unported (CC BY-ND 3.0)". To read the license deed
@@ -177,13 +177,78 @@ unless otherwise noted.
 
 The references pointing to fix #nr or issue #nr refer to our issues tracker.
 
+Version 2.2 (July 2017)
+
+  o Let the get_disk_size() function retry several times to be more fail-safe
+    when udev needs some time until device files appear. This introduces the
+    new generic helper function retry_command() plus the new config variables
+    REAR_SLEEP_DELAY and REAR_MAX_RETRIES. For details see default.conf and
+    lib/layout-functions.sh (issue #1370)
+
+  o ReaR failed to continue due incorrect check of presence of USB device
+    (REAR-000) in /proc/mounts, despite foregoing script
+    (060_mount_NETFS_path.sh) did mounting of this device (issue #1415)
+
+  o Add missing privilege separation dir to start sshd on Debian 9 (issue #
+    1381)
+
+  o Redirect rsync verbose output to backup log (issue #1387)
+
+  o Load storage controllers in rescue system in same order as on host system
+    (issue #1384):
+      - Copy over modules from initrd on SUSE LINUX
+      - Prevent sorting of MODULES_LOAD array to keep the order intended
+
+  o Add /yaboot to ISO_FILE when running SUSE ppc64 (issue #1414)
+
+  o Add SSL cert directories so we can interact with Google Cloud Storage
+    (issue #1402)
+
+  o Modified the "unattended" into "automatic" with ISO_DEFAULT required for
+    automated recovery tests (issue #1397)
+
+  o Use the original fds when ReaR was launched (which are now saved as fd6,
+    fd7, and fd8 for stdin, stdout, and stderr respectively) for actually
+    intended user input and user output. To keep backward compatible
+    behaviour all old deprecated usage of '>&8' is converted into '>/dev/
+    null' but /dev/null usage in general should be cleaned up later (issues #
+    887, #1395)
+
+  o Added new generic UserInput and UserOutput plus LogUserOutput functions
+    that are intended to replace current user input functionality that calls
+    select or read directly. For the next ReaR version 2.3 it is planned to
+    also redirect stdout into the log file in addition to stderr (issues #
+    885, #1366, #1398, #1399)
+
+  o The 'make rpm' now relies on 'make srpm' which creates the src.rpm
+    package first. This src.rpm package can then be easily copied to another
+    computer to rebuild a rpm package from it without needed the sources
+    itself (or git checkout) (issue #1389)
+
+  o Replaced some perl regexp with grep native extended regexp (issue #1376)
+
+  o Introducing SECURE_BOOT_BOOTLOADER variable in default.conf This variable
+    should enable users booting with Secure Boot, to use whatever custom
+    signed boot loader they like, and removes hard coded entry "shim.efi"
+    from ReaRs code (issue #1374)
+
+  o Enhanced and cleaned up making ISO on POWER (ppc64/ppc64le). Now the
+    backup can be stored in the ISO (via BACKUP_URL=iso...) and even multiple
+    ISOs work on POWER now (issues #697, #1383)
+
+  o Create multipath.conf only during migration (from non-mulitpath to
+    multipath), and always copy /etc/multipath/bindings to the TARGET_FS_ROOT
+    (issues #1382, #1393)
+
 Version 2.1 (June 2017)
 
   o Support for Grub2 installation with software RAID1 on Linux on POWER
     (ppc64/ppc64le) (issue #1369)
 
-  o REBUILD_INITRAMFS variable was introduced to avoid rebuilding initrd
-    (issue #1321)
+  o REBUILD_INITRAMFS variable was introduced. The new default.conf setting
+    REBUILD_INITRAMFS="yes" rebuilds the initramfs/initrd during "rear
+    recover" to be more on the safe side. With REBUILD_INITRAMFS="" the old
+    behaviour can still be specified (issue #1321)
 
   o ISO_RECOVER_MODE=unattended mode (issue #1351) - required for automated
     ReaR testing with OUTPUT=ISO
@@ -357,9 +422,9 @@ Version 1.19.0 (October 2016)
     system in case of systemd (issue #953)
 
   o If TSM parameters contain a dot, the dot is replaced by an underscore in
-    the TSM_SYS variable names (issue #985 and #986)
+    the TSM_SYS variable names (issues #985 and #986)
 
-  o Check if /dev/disk/by-label/RELAXRECOVER exist (issue #979 and #326)
+  o Check if /dev/disk/by-label/RELAXRECOVER exist (issues #979 and #326)
 
   o Added PRE_BACKUP_SCRIPT and POST_BACKUP_SCRIPT to be able to do custom
     tasks in the mkbackup/mkbackuponly workflows (issue #977)
@@ -368,7 +433,7 @@ Version 1.19.0 (October 2016)
 
   o USE_STATIC_NETWORKING now really overrides USE_DHCLIENT (issue #964)
 
-  o Make it safe against wrong btrfs subvolumes on SLES12 (issue #963, #966)
+  o Make it safe against wrong btrfs subvolumes on SLES12 (issues #963, #966)
 
   o Encrypted incremental backup cannot read the tar label (issue #952)
 
@@ -478,8 +543,8 @@ Version 1.18.0 (March 2016)
   o Correct bash syntax so ReaR is compatible with bash v3 and v4 (issue #
     765, #767)
 
-  o Added support for new backup method Novastor NovaBACKUP DC (+BACKUP=
-    NBKDC+) (issue #669)
+  o Added support for new backup method Novastor NovaBACKUP DC (BACKUP=NBKDC)
+    (issue #669)
 
   o Code was improved to have network teaming support (issue #655)
 
@@ -490,7 +555,7 @@ Version 1.18.0 (March 2016)
 
   o remove the noatime mount option for cifs mount (issue #752)
 
-  o Replace option 'grep -P' to 'grep -E' due to SELinux errors (issue #565,
+  o Replace option 'grep -P' to 'grep -E' due to SELinux errors (issues #565,
     #737)
 
   o Hidding the encryption key while doing the restore in the rear.log (issue
@@ -532,7 +597,7 @@ Version 1.18.0 (March 2016)
     (issue #694)
 
   o Bareos team added BAREOS_FILESET and ISO_DEFAULT to default.conf (for
-    automated DR tests executed by Bareos team; issue #686, #719)
+    automated DR tests executed by Bareos team; issues #686, #719)
 
   o Fix getty/agetty with upstart (issue #685)
 
@@ -580,7 +645,7 @@ Version 1.18.0 (March 2016)
   o Added ebiso support within ReaR (required for UEFI booting with SLES 11 &
     12 (issue #657)
 
-  o FDR/Upstream (BACKUP=FDRUPSTREAM) (NEW!) (issue #659)
+  o FDR/Upstream (BACKUP=FDRUPSTREAM) (New) (issue #659)
 
 Version 1.17.2 (August 2015)
 
@@ -687,9 +752,6 @@ Version 1.17.1 (June 2015)
 
     rear -v format -- --efi /dev/<usbdevice>
 
-    However, UEFI booting from an USB disk has not been implemented yet
-    (sponsoring?).
-
   o Simplified the code for ext* fs and added StopIfError calls to prevent
     divide by zero during recovery (issue #598)
 
@@ -771,7 +833,7 @@ Version 1.17.0 (March 2015)
     538) See also https://bugzilla.opensuse.org/show_bug.cgi?id=908854
 
   o Enhanced the systemd start-up of udev daemons which is different on
-    Fedora 20 and 21 (issue #507, #531)
+    Fedora 20 and 21 (issues #507, #531)
 
   o BACKUP_PROG_OPTIONS="-anchored" became a default option in default.conf
     (issue #475)
@@ -1031,7 +1093,7 @@ Version 1.15.0 (September 2013)
 
   o Fix SELinux autorelabelling (issue #270 and #274)
 
-  o Rear supports now more then 9 partitions (see issue #263)
+  o ReaR supports now more then 9 partitions (see issue #263)
 
   o systemd support added for Fedora 19/20 and openSUSE 12.x/13.x
 
@@ -1043,22 +1105,21 @@ Version 1.15.0 (September 2013)
 
     CLONE_ALL_USERS_GROUPS=n
 
-  o Example prep script to detect missing lftp (fix #247)
+  o Example prep script to detect missing lftp (issue #247)
 
-  o Using POSIX output format in df.txt (fix #248)
+  o Using POSIX output format in df.txt (issue #248)
 
   o Recognize OracleServer as a Fedora derivate
 
   o Allow basic network configuration from the command line
 
-  o Create directory $PXE_TFTP_LOCAL_PATH if it does not exist (fix #244,
-    issue #244)
+  o Create directory $PXE_TFTP_LOCAL_PATH if it does not exist (issue #244)
 
   o Support booting syslinux v5 (issue #238)
 
   o Fix installing grub when /boot is inside the root filesystem (issue #210)
 
-  o Deal with BTRFS subvolumes correctly (issue #233 and #252)
+  o Deal with BTRFS subvolumes correctly (issues #233 and #252)
 
   o Recognize OracleServer as a Fedora derivate
 
@@ -1097,34 +1158,35 @@ Version 1.14.0 (September 2012)
 
   o Added duply/duplicity with one new backup method duplicity (Experimental)
 
-  o Systemd supported on Fedora 17 and openSUSE 12.2 (fix #115, #126)
+  o Systemd supported on Fedora 17 and openSUSE 12.2 (issues #115, #126)
 
-  o Create correct yaboot dir on ppc (fix #109)
+  o Create correct yaboot dir on ppc (issue #109)
 
   o Add new RAMDISK output method. This writes the kernel and the initramfs
     to the location given in OUTPUT_URL.
 
-  o Packaging - introduction of Makefile; cleanup dr workflow (fix #13, #49)
+  o Packaging - introduction of Makefile; cleanup dr workflow (issues #13, #
+    49)
 
-  o Make ReaR working from checkout of git, w.o.w. path is relocatable (fix #
-    53)
+  o Make ReaR working from checkout of git, w.o.w. path is relocatable (issue
+    #53)
 
-  o Add bytes_per_inode information for ext* filesystem to layout.conf (fix #
-    86)
+  o Add bytes_per_inode information for ext* filesystem to layout.conf (issue
+    #86)
 
-  o Fixing ebuild to be Gentoo compliant (fix #93)
+  o Fixing ebuild to be Gentoo compliant (issue #93)
 
-  o fix shutdown with upstart (fix #41)
+  o fix shutdown with upstart (issue #41)
 
-  o multiarch support library support (fix #82)
+  o multiarch support library support (issue #82)
 
-  o Fix serial console on ubuntu 11.04 (fix #83)
+  o Fix serial console on ubuntu 11.04 (issue #83)
 
-  o Several fixes in layout file (fix #85)
+  o Several fixes in layout file (issue #85)
 
-  o Added fix for DAT320 tape drive (fix for #35)
+  o Added fix for DAT320 tape drive (issue #35)
 
-  o Use generic grub code for all distributions (fix for #77)
+  o Use generic grub code for all distributions (issue #77)
 
   o list Xen paravirtualized disks in disklayout.conf (fixes #74 and
     SF3520992)
@@ -1429,26 +1491,26 @@ Supported Operating Systems
 We try to keep our wiki page Test Matrix rear 2.1 up-to-date with feedback we
 receive from the community.
 
-Rear-2.1 is supported on the following Linux based operating systems:
+ReaR-2.2 is supported on the following Linux based operating systems:
 
   o Fedora 24 and 25
   o RHEL 5, 6 and 7
   o CentOS 5, 6 and 7
   o ScientificLinux 6 and 7
   o SLES 11 and 12
-  o openSUSE 11, 12 and 13
+  o openSUSE Leap and openSUSE Tumbleweed
   o Debian 6, 7 and 8
   o Ubuntu 12, 13, 14 and 15
 
-Rear-2.1 dropped officially support for the following Linux based operating
+ReaR-2.2 dropped officially support for the following Linux based operating
 systems:
 
-  o Fedora <24
+  o Fedora < 24
   o RHEL 3 and 4
   o SLES 9 and 10
-  o openSUSE <11
-  o Debian <6
-  o Ubuntu <12
+  o openSUSE <= 13
+  o Debian < 6
+  o Ubuntu < 12
 
 If you require support for unsupported Linux Operating System you must
 acquire a ReaR support contract.
@@ -1458,19 +1520,19 @@ achieved with serious sponsoring.
 
 Supported Architectures
 
-Rear-2.1 is supported on:
+ReaR-2.2 is supported on:
 
   o Intel x86 type of processors
   o AMD x86 type of processors
 
-Rear-2.1 may or may not fully work on:
+ReaR-2.2 may or may not fully work on:
 
   o Intel Itanium processors
   o PPC processors
   o PPC64 processors
   o PPC64LE processors
 
-Rear-2.1 does not support:
+ReaR-2.2 does not support:
 
   o ARM type of processors
   o s390x type of processors
@@ -1481,20 +1543,26 @@ official developers.
 
 Supported ReaR versions
 
-ReaR has a long history (since 2006) and we cannot supported all released
-versions anymore. If you have a problem we urge you to install the latest
-stable ReaR version or the development version (available on github) before
-submitting an issue.
+ReaR has a long history (since 2006) and we cannot support all released
+versions. If you have a problem we urge you to install the latest stable ReaR
+version or the development version (available on GitHub) before submitting an
+issue.
 
 However, we do understand that it is not always possible to install on
-hundreds of systems the latest and greatest version so we are willing to
-support previous versions of ReaR if you buy a support contract. Why do we
-change our policy? We cannot handle the big support requests anymore and we
-must give paid projects priority, therefore, we urge our customers to buy a
-support contract for one or more systems. You buy time with our core
-developers...
+hundreds of systems the latest version so we are willing to support previous
+versions of ReaR if you buy a support contract. Why do we change our policy?
+We cannot handle the big support requests anymore and we must give paid
+projects priority, therefore, we urge our customers to buy a support contract
+for one or more systems. You buy time with our core developers.
 
 Known Problems and Workarounds
+
+Issue Description: rear package on ubuntu 14.04 depends on isolinux package
+(which does not exist)
+
+  o Workaround:
+
+Read the comments in issue #1403
 
 Issue Description: tar -test-label is not supported on Centos 5 who have tar
 version 1.15
@@ -1609,7 +1677,7 @@ Issue Description: ERROR: FindStorageDrivers called but STORAGE_DRIVERS is
 empty
 
 Above error message might be seen after a fresh installation of the GNU/Linux
-kernel. Rear got confused between the running kernel version number and the
+kernel. ReaR got confused between the running kernel version number and the
 actual fresh kernel available.
 
   o Workaround:
