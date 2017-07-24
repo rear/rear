@@ -1,6 +1,3860 @@
-Schlomo Schapiro
-Gratien D'haese
-Stefan Semmelroggen
-Peer Heinlein
-Dag Wieers
-Jeroen Hoekx
+
+This file is generated from within a git checkout with
+
+  git shortlog -e -s -n
+
+which shows the number of git commits
+that provides a reasonable short overview about
+who the main contributors are (or have been in the past)
+
+and
+
+  for src in $( git ls-files ) ; do
+      test -f $src || continue
+      test -L $src && continue
+      echo
+      echo $src
+      git log --minimal -w -U0 --follow $src \
+          | egrep -o '^Author: .*|^\+' \
+          | egrep -v '^\+\+' \
+          | while read key value ; do
+                if test "Author:" = "$key" ; then
+                    author="$value"
+                    continue
+                fi
+                echo $author
+            done | sort | uniq -c | sort -n -r
+  done
+
+which shows for each source file how much a person contributed
+i.e. it shows for each source file how many lines of real code
+a person contributed (ignoring whitespace-only changes)
+cf. https://github.com/rear/rear/issues/1427
+
+In both cases same persons could be listed several times under
+different git author IDs.
+
+The 'git shortlog -e -s -n' output:
+
+   902	Gratien D'haese <gratien.dhaese@gmail.com>
+   491	Johannes Meixner <jsmeix@suse.com>
+   317	Dag Wieers <dag@wieers.com>
+   223	Jeroen Hoekx <jeroen.hoekx@hamok.be>
+   198	Schlomo Schapiro <github@schlomo.schapiro.org>
+    98	Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+    95	Dag Wieërs <dag@wieers.com>
+    45	Vladimir Gozora <c@gozora.sk>
+    28	Didac Oliveira <didac@brainupdaters.net>
+    27	gozora <c@gozora.sk>
+    26	Jeroen Hoekx <jeroen@hoekx.be>
+    25	schabrolles <s.chabrolles@fr.ibm.com>
+    21	Pavol Domin <pavol.domin@hpe.com>
+    21	Schlomo Schapiro <schlomo@schapiro.org>
+    19	Florent <florent.rochette@gmail.com>
+    19	Yoann Laissus <yoann.laissus@gmail.com>
+    16	ProBackup-nl <b1686429@prtnx.com>
+    15	Thomas Schumm <thomas.schumm@gmx.de>
+    15	rowens275 <rowens@fdrinnovation.com>
+    13	Robin Schneider <ypid23@aol.de>
+    10	Andreas von Bülow <andreas.vonbuelow@novastor.com>
+    10	ProBackup-nl <noreply@probackup.nl>
+     9	Schlomo Schapiro <schlomo+github@schapiro.org>
+     8	root <root@mail.vogler.tv>
+     7	Reiner <Reiner.Keller@gmx.de>
+     7	gdha <gratien.dhaese@gmail.com>
+     6	Masanori Mitsugi <mitsugi@linux.vnet.ibm.com>
+     6	Robert Paschedag <robert.paschedag@web.de>
+     6	tbsky <tbskyd@gmail.com>
+     5	Jesper Sander Lindgren <jsl@tdchosting.dk>
+     5	Vladimir Gozora <gozora@users.noreply.github.com>
+     5	jayfurmanek <furmanek@us.ibm.com>
+     4	D'Haese <gdhaese1@witsbebelnx02.janbe.eu.jnj.com>
+     4	Markus Anglmaier <markus@oderdoch.net>
+     4	Michael Ablassmeier <support@sep.de>
+     4	Sebastian Lederer <slederer@dass-it.de>
+     4	Sebastien Termeau <st@tdchosting.dk>
+     4	aussendorf <maik.aussendorf@bareos.com>
+     3	Andreas Vogler <andreas@vogler.name>
+     3	Carlos Ramos <carragom@gmail.com>
+     3	Dinar Valeev <dvaleev@suse.com>
+     3	Petr Hracek <phracek@redhat.com>
+     3	Schlomo Schapiro <schlomo.schapiro@zalando.de>
+     3	Stephan Joerrens <Stephan.Joerrens@fiduciagad.de>
+     3	goldzahn <tim.einmahl@kba.de>
+     3	ltomasik <ltomasik+github@gmail.com>
+     3	root <root@bot.lhy.com.tw>
+     2	Andr� <andre.hoogendoorn@gmail.com>
+     2	Dan MacDonald <allcoms@gmail.com>
+     2	HannesGIT <johannes.link@atos.net>
+     2	Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+     2	Ralf Germann <rg-fine@users.noreply.github.com>
+     2	Robert Navarro <rnavarro@stitchlabs.com>
+     2	SvenVD <svenvd.github@gmail.com>
+     2	Sébastien Chabrolles <s.chabrolles@fr.ibm.com>
+     2	Tuan Nguyen <amtuannguyen@gmail.com>
+     2	davixd <david@dimovski.de>
+     2	dragon299 <blooddragon@gmx.com>
+     2	fhoeppner <rear@proficom.de>
+     2	gdha <gratien.dhaese@gmailcom>
+     2	gsbit <guido.scheidegger@bit.admin.ch>
+     2	ma <ma@sep.de>
+     2	mkosmach <mkosmach@gmail.com>
+     2	root <root@eabuild2.(none)>
+     2	root <root@itsustdcrhvm02.dfdev.jnj.com>
+     2	root <root@rear02.(none)>
+     2	sjoerrens <Stephan.Joerrens@gad.de>
+     1	Brian Wiborg <baccenfutter@c-base.org>
+     1	Bruno Marsal <bruno@marsal.biz>
+     1	Christian Haase <krissi@users.noreply.github.com>
+     1	Dominik Russenberger <dominik.russenberger@terreactive.ch>
+     1	Dominique Barton <dbarton@MBA.local>
+     1	Evgeni Golov <evgeni@golov.de>
+     1	Florent <florent.rochette@bull.net>
+     1	HazCod <HazCod@users.noreply.github.com>
+     1	Kirk VanOpdorp <kirk.vanopdorp@gmail.com>
+     1	Lars <info@dl5rcw.de>
+     1	Lukas Tomasik <ltomasik+github@gmail.com>
+     1	Maik Aussendorf <maik.aussendorf@bareos.com>
+     1	Michael Vetter <jubalh@openmailbox.org>
+     1	Peter Oliver <git@mavit.org.uk>
+     1	Peter Oliver <git@mavitsys.co.uk>
+     1	Reto Vogel <reto@vogel.vu>
+     1	Rich Alloway <richard.alloway@roguewave.com>
+     1	Robert Navarro <crshman@gmail.com>
+     1	Schlomo Schapiro <rear@schlomo.schapiro.org>
+     1	Schlomo Schapiro <schlomo+packaging@schapiro.org>
+     1	Thitho007 <thierry.tholle@gmail.com>
+     1	Timo Eissler <timo@teissler.de>
+     1	Yann 'Meow' Bordenave <meow@meo.wf>
+     1	andreas-tarp <andreas-tarp@users.noreply.github.com>
+     1	corin <corin@duckster.net>
+     1	exedor <jdbrokaw@gmail.com>
+     1	jezzaaa <jlaidman@rebel-it.com.au>
+     1	morlix <morlix@morlix.de>
+     1	nebelong <mne@kmd.dk>
+     1	root <root@lxcentos7-build.kba.de>
+     1	root <root@msgs88i.msg.de>
+     1	rpasche <robert.paschedag@web.de>
+     1	stermeau <st@tdchosting.dk>
+     1	styerd <styerd@users.noreply.github.com>
+     1	test <kreitz@Dev-Server.mhknet.de>
+     1	vhaeuss <volker.hm@gmx.de>
+     1	wzwei <w.zweimueller@salk.at>
+
+Output that shows for each source file how many lines of real code
+a person contributed (ignoring whitespace-only changes):
+
+.editorconfig
+      7 Schlomo Schapiro <schlomo@schapiro.org>
+
+.github/CONTRIBUTING.md
+     43 Gratien D'haese <gratien.dhaese@gmail.com>
+
+.github/ISSUE_TEMPLATE.md
+     24 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Johannes Meixner <jsmeix@suse.com>
+
+.gitignore
+     10 Schlomo Schapiro <schlomo@schapiro.org>
+      5 Robin Schneider <ypid23@aol.de>
+      4 ProBackup-nl <noreply@probackup.nl>
+      2 Schlomo Schapiro <schlomo.schapiro@zalando.de>
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+.travis.yml
+      6 Dag Wieers <dag@wieers.com>
+
+AUTHORS
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+      7 Dag Wieërs <dag@wieers.com>
+
+COPYING
+    618 Petr Hracek <phracek@redhat.com>
+    341 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+Makefile
+    371 Dag Wieërs <dag@wieers.com>
+     79 Gratien D'haese <gratien.dhaese@gmail.com>
+     58 Schlomo Schapiro <schlomo@schapiro.org>
+     49 Dag Wieers <dag@wieers.com>
+     38 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     28 Jeroen Hoekx <jeroen@hoekx.be>
+     27 Thomas Schumm <thomas.schumm@gmx.de>
+      7 Pavol Domin <pavol.domin@hpe.com>
+      4 Michael Ablassmeier <support@sep.de>
+      2 Schlomo Schapiro <schlomo.schapiro@zalando.de>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Didac Oliveira <didac@brainupdaters.net>
+
+README.adoc
+    144 Schlomo Schapiro <github@schlomo.schapiro.org>
+     99 Dag Wieers <dag@wieers.com>
+     87 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     73 Dag Wieërs <dag@wieers.com>
+     44 Gratien D'haese <gratien.dhaese@gmail.com>
+     18 Johannes Meixner <jsmeix@suse.com>
+      2 Vladimir Gozora <c@gozora.sk>
+      2 gozora <c@gozora.sk>
+
+doc/Makefile
+     34 Dag Wieërs <dag@wieers.com>
+     14 Thomas Schumm <thomas.schumm@gmx.de>
+     12 Dag Wieers <dag@wieers.com>
+      6 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+doc/mappings/disk_devices.example
+      3 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+doc/mappings/ip_addresses.example
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+doc/mappings/mac.example
+      4 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+doc/mappings/routes.example
+      4 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+doc/rear-presentation.adoc
+    357 Dag Wieers <dag@wieers.com>
+     30 Dag Wieërs <dag@wieers.com>
+     19 Johannes Meixner <jsmeix@suse.com>
+      2 Vladimir Gozora <c@gozora.sk>
+      2 rowens275 <rowens@fdrinnovation.com>
+      2 gozora <c@gozora.sk>
+
+doc/rear-release-notes.txt
+   2457 Gratien D'haese <gratien.dhaese@gmail.com>
+    433 Dag Wieers <dag@wieers.com>
+     90 Dag Wieërs <dag@wieers.com>
+     22 Johannes Meixner <jsmeix@suse.com>
+      9 Peter Oliver <git@mavit.org.uk>
+      3 Schlomo Schapiro <schlomo@schapiro.org>
+      2 rowens275 <rowens@fdrinnovation.com>
+
+doc/rear.8
+   1090 Gratien D'haese <gratien.dhaese@gmail.com>
+    562 Dag Wieers <dag@wieers.com>
+    249 Schlomo Schapiro <github@schlomo.schapiro.org>
+     58 Dag Wieërs <dag@wieers.com>
+     56 Johannes Meixner <jsmeix@suse.com>
+     26 gdha <gratien.dhaese@gmailcom>
+     15 Thomas Schumm <thomas.schumm@gmx.de>
+      6 rowens275 <rowens@fdrinnovation.com>
+      3 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+      2 Michael Vetter <jubalh@openmailbox.org>
+
+doc/rear.8.adoc
+    463 Dag Wieers <dag@wieers.com>
+    160 Gratien D'haese <gratien.dhaese@gmail.com>
+     74 Dag Wieërs <dag@wieers.com>
+     56 Johannes Meixner <jsmeix@suse.com>
+     27 gdha <gratien.dhaese@gmailcom>
+     25 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      5 gozora <c@gozora.sk>
+      4 rowens275 <rowens@fdrinnovation.com>
+      4 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+      3 HazCod <HazCod@users.noreply.github.com>
+      2 Vladimir Gozora <c@gozora.sk>
+      2 Michael Vetter <jubalh@openmailbox.org>
+
+doc/user-guide/01-introduction.adoc
+    144 Dag Wieërs <dag@wieers.com>
+     19 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Vladimir Gozora <c@gozora.sk>
+      4 Robin Schneider <ypid23@aol.de>
+      3 gozora <c@gozora.sk>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+doc/user-guide/02-getting-started.adoc
+    135 Dag Wieërs <dag@wieers.com>
+     53 Gratien D'haese <gratien.dhaese@gmail.com>
+     11 Johannes Meixner <jsmeix@suse.com>
+
+doc/user-guide/03-configuration.adoc
+    141 Dag Wieërs <dag@wieers.com>
+     75 Gratien D'haese <gratien.dhaese@gmail.com>
+     36 Johannes Meixner <jsmeix@suse.com>
+     11 Thomas Schumm <thomas.schumm@gmx.de>
+     10 aussendorf <maik.aussendorf@bareos.com>
+      8 Vladimir Gozora <c@gozora.sk>
+      7 gdha <gratien.dhaese@gmailcom>
+      4 rowens275 <rowens@fdrinnovation.com>
+      4 gozora <c@gozora.sk>
+      3 test <kreitz@Dev-Server.mhknet.de>
+
+doc/user-guide/04-scenarios.adoc
+   1733 Dag Wieers <dag@wieers.com>
+    226 Dag Wieërs <dag@wieers.com>
+    126 gozora <c@gozora.sk>
+     79 Vladimir Gozora <c@gozora.sk>
+     34 Gratien D'haese <gratien.dhaese@gmail.com>
+     21 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      4 Robin Schneider <ypid23@aol.de>
+      2 rowens275 <rowens@fdrinnovation.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+doc/user-guide/05-integration.adoc
+     82 Dag Wieërs <dag@wieers.com>
+      3 Johannes Meixner <jsmeix@suse.com>
+      2 Robin Schneider <ypid23@aol.de>
+
+doc/user-guide/06-layout-configuration.adoc
+    595 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+    103 Dag Wieërs <dag@wieers.com>
+     27 Gratien D'haese <gratien.dhaese@gmail.com>
+     15 Robin Schneider <ypid23@aol.de>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+doc/user-guide/07-tips-and-tricks.adoc
+     46 Dag Wieërs <dag@wieers.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+doc/user-guide/08-troubleshooting.adoc
+    132 Dag Wieërs <dag@wieers.com>
+      5 Robin Schneider <ypid23@aol.de>
+
+doc/user-guide/09-design-concepts.adoc
+    285 Dag Wieers <dag@wieers.com>
+     42 Gratien D'haese <gratien.dhaese@gmail.com>
+     24 Dag Wieërs <dag@wieers.com>
+     11 Robin Schneider <ypid23@aol.de>
+     10 Johannes Meixner <jsmeix@suse.com>
+      4 rowens275 <rowens@fdrinnovation.com>
+      2 Vladimir Gozora <c@gozora.sk>
+      2 gozora <c@gozora.sk>
+      2 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+
+doc/user-guide/10-integrating-external-backup.adoc
+     93 Gratien D'haese <gratien.dhaese@gmail.com>
+     23 Johannes Meixner <jsmeix@suse.com>
+      4 gozora <c@gozora.sk>
+      2 Evgeni Golov <evgeni@golov.de>
+
+doc/user-guide/11-multiple-backups.adoc
+    498 Johannes Meixner <jsmeix@suse.com>
+     33 Gratien D'haese <gratien.dhaese@gmail.com>
+
+doc/user-guide/12-BLOCKCLONE.adoc
+    642 Vladimir Gozora <c@gozora.sk>
+
+doc/user-guide/Makefile
+     19 Dag Wieërs <dag@wieers.com>
+      8 Thomas Schumm <thomas.schumm@gmx.de>
+      8 Dag Wieers <dag@wieers.com>
+
+doc/user-guide/relax-and-recover-user-guide.adoc
+     25 Dag Wieërs <dag@wieers.com>
+     19 Dag Wieers <dag@wieers.com>
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      3 Vladimir Gozora <c@gozora.sk>
+
+etc/rear/local.conf
+     25 Gratien D'haese <gratien.dhaese@gmail.com>
+     24 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 rowens275 <rowens@fdrinnovation.com>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+etc/udev/rules.d/62-rear-usb.rules
+      2 Dag Wieers <dag@wieers.com>
+
+packaging/arch/PKGBUILD
+     61 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 Jeroen Hoekx <jeroen@hoekx.be>
+      2 Florent <florent.rochette@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+packaging/arch/PKGBUILD.local
+     30 Jeroen Hoekx <jeroen@hoekx.be>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Florent <florent.rochette@gmail.com>
+
+packaging/debian/changelog
+     78 Gratien D'haese <gratien.dhaese@gmail.com>
+     53 Dag Wieërs <dag@wieers.com>
+     11 Carlos Ramos <carragom@gmail.com>
+      5 Dag Wieers <dag@wieers.com>
+      2 Reiner <Reiner.Keller@gmx.de>
+
+packaging/debian/compat
+      2 Schlomo Schapiro <schlomo@schapiro.org>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+packaging/debian/conffiles
+     11 Dag Wieërs <dag@wieers.com>
+      1 Reiner <Reiner.Keller@gmx.de>
+
+packaging/debian/control
+     25 Dag Wieërs <dag@wieers.com>
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 gdha <gratien.dhaese@gmail.com>
+      4 Schlomo Schapiro <schlomo@schapiro.org>
+      3 Masanori Mitsugi <mitsugi@linux.vnet.ibm.com>
+      3 Christian Haase <krissi@users.noreply.github.com>
+      2 Schlomo Schapiro <schlomo.schapiro@zalando.de>
+      2 Robin Schneider <ypid23@aol.de>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Florent <florent.rochette@gmail.com>
+      2 Carlos Ramos <carragom@gmail.com>
+
+packaging/debian/copyright
+    679 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Schlomo Schapiro <schlomo@schapiro.org>
+      2 Dag Wieërs <dag@wieers.com>
+
+packaging/debian/rules
+     89 Dag Wieërs <dag@wieers.com>
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 gdha <gratien.dhaese@gmail.com>
+      4 Reiner <Reiner.Keller@gmx.de>
+      3 Schlomo Schapiro <schlomo@schapiro.org>
+      2 Robert Paschedag <robert.paschedag@web.de>
+      2 Didac Oliveira <didac@brainupdaters.net>
+      1 rpasche <robert.paschedag@web.de>
+
+packaging/debian/source/format
+      2 Schlomo Schapiro <schlomo@schapiro.org>
+
+packaging/gentoo/rear.ebuild
+     44 Dag Wieërs <dag@wieers.com>
+     23 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Florent <florent.rochette@gmail.com>
+
+packaging/rpm/rear.spec
+    265 Dag Wieërs <dag@wieers.com>
+    139 Gratien D'haese <gratien.dhaese@gmail.com>
+     39 Johannes Meixner <jsmeix@suse.com>
+     11 Dag Wieers <dag@wieers.com>
+     10 Thomas Schumm <thomas.schumm@gmx.de>
+      3 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+      2 Schlomo Schapiro <schlomo.schapiro@zalando.de>
+      2 Robin Schneider <ypid23@aol.de>
+      2 Florent <florent.rochette@gmail.com>
+      2 Didac Oliveira <didac@brainupdaters.net>
+
+usr/sbin/rear
+    874 Johannes Meixner <jsmeix@suse.com>
+    525 Schlomo Schapiro <github@schlomo.schapiro.org>
+    164 Gratien D'haese <gratien.dhaese@gmail.com>
+    161 Dag Wieers <dag@wieers.com>
+     49 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     32 Dag Wieërs <dag@wieers.com>
+     13 Didac Oliveira <didac@brainupdaters.net>
+      6 Thomas Schumm <thomas.schumm@gmx.de>
+      3 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/backup/BLOCKCLONE/default/400_copy_disk_struct_files.sh
+     24 Vladimir Gozora <c@gozora.sk>
+
+usr/share/rear/backup/BLOCKCLONE/default/500_start_clone.sh
+     35 Vladimir Gozora <c@gozora.sk>
+
+usr/share/rear/backup/BORG/default/100_get_suffix.sh
+     26 gozora <c@gozora.sk>
+      7 Vladimir Gozora <c@gozora.sk>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/backup/BORG/default/500_make_backup.sh
+     44 gozora <c@gozora.sk>
+     15 Vladimir Gozora <c@gozora.sk>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/backup/BORG/default/800_prune_old_backups.sh
+     65 gozora <c@gozora.sk>
+      5 Vladimir Gozora <c@gozora.sk>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/backup/DUPLICITY/default/500_make_duplicity_backup.sh
+    125 fhoeppner <rear@proficom.de>
+     19 Johannes Meixner <jsmeix@suse.com>
+      5 Reiner <Reiner.Keller@gmx.de>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/backup/EXTERNAL/default/500_make_backup_with_external.sh
+     14 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/backup/NETFS/GNU/Linux/600_start_selinux.sh
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Yoann Laissus <yoann.laissus@gmail.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/backup/NETFS/default/100_mount_NETFS_path.sh
+     25 Dag Wieers <dag@wieers.com>
+     23 Schlomo Schapiro <github@schlomo.schapiro.org>
+     16 Gratien D'haese <gratien.dhaese@gmail.com>
+     14 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/backup/NETFS/default/150_save_copy_of_prefix_dir.sh
+     41 Gratien D'haese <gratien.dhaese@gmail.com>
+     13 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     11 Dag Wieers <dag@wieers.com>
+      3 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/backup/NETFS/default/200_make_prefix_dir.sh
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Schlomo Schapiro <github@schlomo.schapiro.org>
+      7 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      7 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/backup/NETFS/default/250_create_lock.sh
+     24 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/backup/NETFS/default/400_create_include_exclude_files.sh
+     22 Schlomo Schapiro <github@schlomo.schapiro.org>
+     20 Johannes Meixner <jsmeix@suse.com>
+      6 Robert Paschedag <robert.paschedag@web.de>
+      5 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/backup/NETFS/default/500_make_backup.sh
+    170 Schlomo Schapiro <github@schlomo.schapiro.org>
+     80 Dag Wieërs <dag@wieers.com>
+     45 Johannes Meixner <jsmeix@suse.com>
+     44 Gratien D'haese <gratien.dhaese@gmail.com>
+     26 Dag Wieers <dag@wieers.com>
+     25 Yoann Laissus <yoann.laissus@gmail.com>
+     24 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     17 HannesGIT <johannes.link@atos.net>
+      5 Schlomo Schapiro <schlomo@schapiro.org>
+      5 Florent <florent.rochette@gmail.com>
+      4 davixd <david@dimovski.de>
+      3 test <kreitz@Dev-Server.mhknet.de>
+
+usr/share/rear/backup/NETFS/default/970_remove_lock.sh
+     17 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Dag Wieers <dag@wieers.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/backup/NETFS/default/980_umount_NETFS_dir.sh
+     16 Schlomo Schapiro <github@schlomo.schapiro.org>
+     16 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     12 Dag Wieers <dag@wieers.com>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/backup/OBDR/default/510_rewind_tape_drive.sh
+     22 Dag Wieers <dag@wieers.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/backup/RSYNC/GNU/Linux/310_stop_selinux.sh
+     13 Schlomo Schapiro <github@schlomo.schapiro.org>
+     11 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/backup/RSYNC/GNU/Linux/610_start_selinux.sh
+     41 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieers <dag@wieers.com>
+      3 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/backup/RSYNC/GNU/Linux/620_force_autorelabel.sh
+     58 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      5 Dag Wieers <dag@wieers.com>
+      4 Yoann Laissus <yoann.laissus@gmail.com>
+      3 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/backup/RSYNC/default/200_check_rsync_relative_option.sh
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/backup/RSYNC/default/450_calculate_req_space.sh
+     41 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      3 Dag Wieers <dag@wieers.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/backup/RSYNC/default/500_make_rsync_backup.sh
+    172 Gratien D'haese <gratien.dhaese@gmail.com>
+     16 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      8 Johannes Meixner <jsmeix@suse.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/backup/RSYNC/default/700_copy_backup_log.sh
+     26 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+      5 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/backup/ZYPPER/default/500_make_backup.sh
+     75 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/backup/default/005_valid_backup_methods.sh
+     20 Johannes Meixner <jsmeix@suse.com>
+     11 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/backup/default/010_pre_backup_script.sh
+      8 Didac Oliveira <didac@brainupdaters.net>
+
+usr/share/rear/backup/default/990_post_backup_script.sh
+      8 Didac Oliveira <didac@brainupdaters.net>
+
+usr/share/rear/backup/readme
+     11 Schlomo Schapiro <github@schlomo.schapiro.org>
+     11 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/build/DUPLICITY/default/600_create_python_symlink.sh
+     22 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/build/Debian/610_jessie_link_systemd_lib.sh
+     19 ma <ma@sep.de>
+
+usr/share/rear/build/Debian/i386/600_fix_debian_stuff.sh
+     22 Schlomo Schapiro <github@schlomo.schapiro.org>
+     14 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/build/GNU/Linux/005_create_symlinks.sh
+     58 Schlomo Schapiro <github@schlomo.schapiro.org>
+     36 Dag Wieers <dag@wieers.com>
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Dag Wieërs <dag@wieers.com>
+      4 ProBackup-nl <b1686429@prtnx.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/build/GNU/Linux/090_create_lib_directories_and_symlinks.sh
+     30 Dag Wieers <dag@wieers.com>
+     28 Gratien D'haese <gratien.dhaese@gmail.com>
+     26 Schlomo Schapiro <github@schlomo.schapiro.org>
+     24 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/build/GNU/Linux/100_copy_as_is.sh
+     38 Schlomo Schapiro <github@schlomo.schapiro.org>
+     16 Johannes Meixner <jsmeix@suse.com>
+     16 Dag Wieers <dag@wieers.com>
+      9 gozora <c@gozora.sk>
+      9 Dag Wieërs <dag@wieers.com>
+      8 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      6 Jeroen Hoekx <jeroen@hoekx.be>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+      1 Vladimir Gozora <c@gozora.sk>
+
+usr/share/rear/build/GNU/Linux/110_touch_empty_files.sh
+     26 Schlomo Schapiro <github@schlomo.schapiro.org>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Johannes Meixner <jsmeix@suse.com>
+      5 Dag Wieërs <dag@wieers.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/build/GNU/Linux/130_create_dotfiles.sh
+     48 Schlomo Schapiro <github@schlomo.schapiro.org>
+     25 Dag Wieers <dag@wieers.com>
+     15 Johannes Meixner <jsmeix@suse.com>
+      7 ProBackup-nl <b1686429@prtnx.com>
+      6 Dag Wieërs <dag@wieers.com>
+      5 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/build/GNU/Linux/150_adjust_permissions.sh
+     11 Schlomo Schapiro <github@schlomo.schapiro.org>
+     11 Dag Wieers <dag@wieers.com>
+      3 Johannes Meixner <jsmeix@suse.com>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/build/GNU/Linux/390_copy_binaries_libraries.sh
+    110 Schlomo Schapiro <github@schlomo.schapiro.org>
+     35 Dag Wieers <dag@wieers.com>
+     32 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     18 Johannes Meixner <jsmeix@suse.com>
+     10 Dag Wieërs <dag@wieers.com>
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/build/GNU/Linux/400_copy_modules.sh
+    223 Johannes Meixner <jsmeix@suse.com>
+     39 Schlomo Schapiro <github@schlomo.schapiro.org>
+     22 Schlomo Schapiro <schlomo@schapiro.org>
+     10 Dag Wieers <dag@wieers.com>
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/build/GNU/Linux/420_copy_firmware_files.sh
+     69 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/build/GNU/Linux/450_symlink_mingetty.sh
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/build/GNU/Linux/600_verify_and_adjust_udev.sh
+     90 Schlomo Schapiro <github@schlomo.schapiro.org>
+     14 Dag Wieers <dag@wieers.com>
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/build/GNU/Linux/610_verify_and_adjust_udev_systemd.sh
+     40 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/build/GNU/Linux/620_verify_os_release_file.sh
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/build/GNU/Linux/630_simplify_systemd_reboot_halt_poweroff_shutdown.sh
+     97 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/build/GNU/Linux/630_verify_resolv_conf_file.sh
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/build/NSR/default/550_add_nsr_libs_to_ldsoconf.sh
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/build/SUSE_LINUX/610_link_systemd_lib.sh
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/build/USB/default/800_enforce_usb_output.sh
+     14 Dag Wieers <dag@wieers.com>
+      4 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/build/default/500_patch_sshd_config.sh
+     25 Schlomo Schapiro <github@schlomo.schapiro.org>
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Florent <florent.rochette@gmail.com>
+      5 mkosmach <mkosmach@gmail.com>
+
+usr/share/rear/build/default/960_remove_encryption_keys.sh
+     13 HannesGIT <johannes.link@atos.net>
+      2 Reiner <Reiner.Keller@gmx.de>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/build/default/970_add_rear_release.sh
+      4 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/build/default/980_verify_rootfs.sh
+     13 Dag Wieers <dag@wieers.com>
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/build/default/990_update_os_conf.sh
+     16 Schlomo Schapiro <github@schlomo.schapiro.org>
+      9 Johannes Meixner <jsmeix@suse.com>
+      3 Michael Ablassmeier <support@sep.de>
+      3 Jeroen Hoekx <jeroen@hoekx.be>
+      3 Bruno Marsal <bruno@marsal.biz>
+
+usr/share/rear/conf/Debian/ia64.conf
+     13 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/conf/GNU/Linux.conf
+    224 Schlomo Schapiro <github@schlomo.schapiro.org>
+     57 Gratien D'haese <gratien.dhaese@gmail.com>
+     33 Didac Oliveira <didac@brainupdaters.net>
+     22 Johannes Meixner <jsmeix@suse.com>
+     17 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     17 Dag Wieers <dag@wieers.com>
+      7 Jeroen Hoekx <jeroen@hoekx.be>
+      5 Vladimir Gozora <c@gozora.sk>
+      5 Robert Navarro <rnavarro@stitchlabs.com>
+      2 Schlomo Schapiro <schlomo+packaging@schapiro.org>
+      1 ProBackup-nl <b1686429@prtnx.com>
+
+usr/share/rear/conf/Linux-i386.conf
+     15 Schlomo Schapiro <github@schlomo.schapiro.org>
+      6 Johannes Meixner <jsmeix@suse.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/conf/Linux-ia64.conf
+     24 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/conf/Linux-ppc64.conf
+     32 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Johannes Meixner <jsmeix@suse.com>
+      5 Masanori Mitsugi <mitsugi@linux.vnet.ibm.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/conf/Linux-ppc64le.conf
+     32 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Johannes Meixner <jsmeix@suse.com>
+      4 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      3 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/conf/SUSE_LINUX.conf
+      4 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/conf/Ubuntu.conf
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/conf/Ubuntu/7.10.conf
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/conf/default.conf
+   1126 Johannes Meixner <jsmeix@suse.com>
+    530 Schlomo Schapiro <github@schlomo.schapiro.org>
+    344 Gratien D'haese <gratien.dhaese@gmail.com>
+    133 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     91 Vladimir Gozora <c@gozora.sk>
+     91 gozora <c@gozora.sk>
+     67 fhoeppner <rear@proficom.de>
+     67 Dag Wieers <dag@wieers.com>
+     66 Didac Oliveira <didac@brainupdaters.net>
+     33 Dag Wieërs <dag@wieers.com>
+     21 ProBackup-nl <noreply@probackup.nl>
+     20 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+     20 rowens275 <rowens@fdrinnovation.com>
+     19 Jeroen Hoekx <jeroen@hoekx.be>
+     17 root <root@msgs88i.msg.de>
+     15 Andreas von Bülow <andreas.vonbuelow@novastor.com>
+     13 aussendorf <maik.aussendorf@bareos.com>
+     10 Schlomo Schapiro <schlomo@schapiro.org>
+     10 Michael Ablassmeier <support@sep.de>
+      9 Yoann Laissus <yoann.laissus@gmail.com>
+      9 Florent <florent.rochette@gmail.com>
+      8 Schlomo Schapiro <schlomo+github@schapiro.org>
+      8 Robert Paschedag <robert.paschedag@web.de>
+      7 Markus Anglmaier <markus@oderdoch.net>
+      7 HannesGIT <johannes.link@atos.net>
+      6 sjoerrens <Stephan.Joerrens@gad.de>
+      5 Carlos Ramos <carragom@gmail.com>
+      4 gdha <gratien.dhaese@gmail.com>
+      3 Maik Aussendorf <maik.aussendorf@bareos.com>
+      3 Jesper Sander Lindgren <jsl@tdchosting.dk>
+      2 ProBackup-nl <b1686429@prtnx.com>
+      2 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+      2 Andr� <andre.hoogendoorn@gmail.com>
+
+usr/share/rear/conf/examples/PXE-booting-example-with-URL-style.conf
+     42 Gratien D'haese <gratien.dhaese@gmail.com>
+     24 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 rowens275 <rowens@fdrinnovation.com>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/conf/examples/RHEL6-NETFS-of-NBU-master-example.conf
+     20 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/conf/examples/RHEL7-PPC64LE-Mulitpath-PXE-GRUB.conf
+     45 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+
+usr/share/rear/conf/examples/SLE11-SLE12-SAP-HANA-UEFI-example.conf
+     65 Johannes Meixner <jsmeix@suse.com>
+      5 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/conf/examples/SLE11-ext3-example.conf
+     31 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/conf/examples/SLE12-SP1-btrfs-example.conf
+     89 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/conf/examples/SLE12-SP2-btrfs-example.conf
+    107 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/conf/examples/SLE12-btrfs-example.conf
+     66 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/conf/examples/USB-and-Samba-example.conf
+     24 Dan MacDonald <allcoms@gmail.com>
+      3 Johannes Meixner <jsmeix@suse.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/conf/examples/borg-example.conf
+     32 Vladimir Gozora <c@gozora.sk>
+
+usr/share/rear/conf/examples/rescue-and-backup-on-same-ISO-image-example.conf
+     14 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/conf/templates/EFI_readme.txt
+     80 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/conf/templates/PXE_pxelinux.cfg
+      9 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/conf/templates/RESULT_mailbody.txt
+      3 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/conf/templates/RESULT_usage_ISO.txt
+      6 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/conf/templates/RESULT_usage_PXE.txt
+     15 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Dag Wieërs <dag@wieers.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/conf/templates/RESULT_usage_RAMDISK.txt
+      6 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/conf/templates/RESULT_usage_USB.txt
+     14 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Dag Wieërs <dag@wieers.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/conf/templates/rear.help
+     26 Dag Wieers <dag@wieers.com>
+      4 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/finalize/Debian/i386/550_rebuild_initramfs.sh
+    100 Johannes Meixner <jsmeix@suse.com>
+     50 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Dag Wieers <dag@wieers.com>
+      2 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+
+usr/share/rear/finalize/Fedora/i386/550_rebuild_initramfs.sh
+     98 Johannes Meixner <jsmeix@suse.com>
+     48 Schlomo Schapiro <github@schlomo.schapiro.org>
+     31 goldzahn <tim.einmahl@kba.de>
+     30 schabrolles <s.chabrolles@fr.ibm.com>
+     16 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Dag Wieers <dag@wieers.com>
+      2 rowens275 <rowens@fdrinnovation.com>
+      2 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+
+usr/share/rear/finalize/GNU/Linux/250_migrate_disk_devices_layout.sh
+     39 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     11 Johannes Meixner <jsmeix@suse.com>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/finalize/GNU/Linux/250_migrate_lun_wwid.sh
+     53 Schlomo Schapiro <github@schlomo.schapiro.org>
+     29 Gratien D'haese <gratien.dhaese@gmail.com>
+     11 ltomasik <ltomasik+github@gmail.com>
+      8 Dag Wieers <dag@wieers.com>
+      7 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Lukas Tomasik <ltomasik+github@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/finalize/GNU/Linux/260_rename_diskbyid.sh
+    106 Gratien D'haese <gratien.dhaese@gmail.com>
+     30 Pavol Domin <pavol.domin@hpe.com>
+      5 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/finalize/GNU/Linux/280_migrate_uuid_tags.sh
+     53 Schlomo Schapiro <github@schlomo.schapiro.org>
+     29 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Dag Wieers <dag@wieers.com>
+      7 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      5 Johannes Meixner <jsmeix@suse.com>
+      2 ltomasik <ltomasik+github@gmail.com>
+
+usr/share/rear/finalize/GNU/Linux/300_create_mac_mapping.sh
+     18 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/finalize/GNU/Linux/310_migrate_udev_rules.sh
+     35 Schlomo Schapiro <github@schlomo.schapiro.org>
+      7 Johannes Meixner <jsmeix@suse.com>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/finalize/GNU/Linux/320_migrate_network_configuration_files.sh
+     75 Schlomo Schapiro <github@schlomo.schapiro.org>
+     27 Gratien D'haese <gratien.dhaese@gmail.com>
+     11 Dag Wieers <dag@wieers.com>
+      8 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/finalize/GNU/Linux/430_create_multipath_config.sh
+     25 schabrolles <s.chabrolles@fr.ibm.com>
+     18 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+
+usr/share/rear/finalize/Linux-i386/610_install_grub.sh
+    103 Dag Wieers <dag@wieers.com>
+     87 Johannes Meixner <jsmeix@suse.com>
+     21 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     17 Schlomo Schapiro <github@schlomo.schapiro.org>
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Yoann Laissus <yoann.laissus@gmail.com>
+      8 Sebastien Termeau <st@tdchosting.dk>
+      4 Jesper Sander Lindgren <jsl@tdchosting.dk>
+
+usr/share/rear/finalize/Linux-i386/620_install_elilo.sh
+     52 Gratien D'haese <gratien.dhaese@gmail.com>
+     11 Johannes Meixner <jsmeix@suse.com>
+      4 Pavol Domin <pavol.domin@hpe.com>
+
+usr/share/rear/finalize/Linux-i386/620_install_grub2.sh
+    100 Dag Wieers <dag@wieers.com>
+     37 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     29 Gratien D'haese <gratien.dhaese@gmail.com>
+     19 Johannes Meixner <jsmeix@suse.com>
+     17 Schlomo Schapiro <github@schlomo.schapiro.org>
+      8 Sebastien Termeau <st@tdchosting.dk>
+      4 Yoann Laissus <yoann.laissus@gmail.com>
+
+usr/share/rear/finalize/Linux-i386/630_run_efibootmgr.sh
+     28 Pavol Domin <pavol.domin@hpe.com>
+     21 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+      4 Yoann Laissus <yoann.laissus@gmail.com>
+      2 Robin Schneider <ypid23@aol.de>
+
+usr/share/rear/finalize/Linux-ia64/600_install_elilo.sh
+      6 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/finalize/Linux-ppc64/600_install_yaboot.sh
+     38 Gratien D'haese <gratien.dhaese@gmail.com>
+     21 schabrolles <s.chabrolles@fr.ibm.com>
+     19 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+     16 Johannes Meixner <jsmeix@suse.com>
+      6 Masanori Mitsugi <mitsugi@linux.vnet.ibm.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/finalize/Linux-ppc64/610_install_lilo.sh
+     39 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+
+usr/share/rear/finalize/Linux-ppc64le/620_install_grub2.sh
+     62 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+     38 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+     12 Johannes Meixner <jsmeix@suse.com>
+      2 Masanori Mitsugi <mitsugi@linux.vnet.ibm.com>
+
+usr/share/rear/finalize/Linux-ppc64le/680_install_PPC_bootlist.sh
+     47 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+
+usr/share/rear/finalize/NBU/default/990_copy_bplogrestorelog.sh
+      8 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Johannes Meixner <jsmeix@suse.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/finalize/NETFS/default/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/finalize/SUSE_LINUX/i386/550_rebuild_initramfs.sh
+    100 Johannes Meixner <jsmeix@suse.com>
+     48 Schlomo Schapiro <github@schlomo.schapiro.org>
+     19 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      7 Dag Wieers <dag@wieers.com>
+      5 Markus Anglmaier <markus@oderdoch.net>
+      2 rowens275 <rowens@fdrinnovation.com>
+      2 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+
+usr/share/rear/finalize/default/010_prepare_checks.sh
+     21 Johannes Meixner <jsmeix@suse.com>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/finalize/default/100_populate_dev.sh
+      8 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/finalize/default/880_check_for_mount_by_id.sh
+     42 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/finalize/default/890_finish_checks.sh
+     37 Schlomo Schapiro <github@schlomo.schapiro.org>
+     24 Johannes Meixner <jsmeix@suse.com>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/finalize/default/900_remount_sync.sh
+     25 Johannes Meixner <jsmeix@suse.com>
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/finalize/readme
+     13 schabrolles <s.chabrolles@fr.ibm.com>
+
+usr/share/rear/format/BACULA/default/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/format/BAREOS/default/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/format/USB/default/200_check_usb_layout.sh
+     44 Gratien D'haese <gratien.dhaese@gmail.com>
+     27 Dag Wieers <dag@wieers.com>
+     20 Thomas Schumm <thomas.schumm@gmx.de>
+     19 Schlomo Schapiro <github@schlomo.schapiro.org>
+     19 Johannes Meixner <jsmeix@suse.com>
+      2 Robin Schneider <ypid23@aol.de>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/format/USB/default/300_format_usb_disk.sh
+    150 Johannes Meixner <jsmeix@suse.com>
+     40 Dag Wieers <dag@wieers.com>
+     33 Gratien D'haese <gratien.dhaese@gmail.com>
+     28 gozora <c@gozora.sk>
+     17 Vladimir Gozora <c@gozora.sk>
+     11 ProBackup-nl <noreply@probackup.nl>
+
+usr/share/rear/format/USB/default/350_label_usb_disk.sh
+     53 Johannes Meixner <jsmeix@suse.com>
+     46 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/init/default/010_set_drlm_env.sh
+     49 Didac Oliveira <didac@brainupdaters.net>
+      3 Schlomo Schapiro <schlomo@schapiro.org>
+
+usr/share/rear/init/default/030_update_recovery_system.sh
+    105 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/init/default/050_check_rear_recover_mode.sh
+     20 Johannes Meixner <jsmeix@suse.com>
+      8 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/layout/compare/default/500_compare_layout.sh
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Dag Wieers <dag@wieers.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/layout/compare/default/510_compare_files.sh
+     37 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/layout/precompare/default/110_check_layout_file.sh
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/prepare/GNU/Linux/100_include_partition_code.sh
+    266 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     79 Johannes Meixner <jsmeix@suse.com>
+     48 Dag Wieers <dag@wieers.com>
+     39 Gratien D'haese <gratien.dhaese@gmail.com>
+     38 Vladimir Gozora <c@gozora.sk>
+     32 Robin Schneider <ypid23@aol.de>
+     16 root <root@bot.lhy.com.tw>
+      6 gsbit <guido.scheidegger@bit.admin.ch>
+
+usr/share/rear/layout/prepare/GNU/Linux/110_include_lvm_code.sh
+    112 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     29 Dag Wieers <dag@wieers.com>
+     26 Robin Schneider <ypid23@aol.de>
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 root <root@itsustdcrhvm02.dfdev.jnj.com>
+      5 Robert Paschedag <robert.paschedag@web.de>
+
+usr/share/rear/layout/prepare/GNU/Linux/120_include_raid_code.sh
+     63 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     17 Dag Wieers <dag@wieers.com>
+      8 Robin Schneider <ypid23@aol.de>
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/layout/prepare/GNU/Linux/130_include_filesystem_code.sh
+    147 Johannes Meixner <jsmeix@suse.com>
+    145 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+    144 Gratien D'haese <gratien.dhaese@gmail.com>
+     59 Robin Schneider <ypid23@aol.de>
+     36 gozora <c@gozora.sk>
+     17 Vladimir Gozora <c@gozora.sk>
+     16 Dag Wieers <dag@wieers.com>
+     11 Yoann Laissus <yoann.laissus@gmail.com>
+      8 Pavol Domin <pavol.domin@hpe.com>
+      8 D'Haese <gdhaese1@witsbebelnx02.janbe.eu.jnj.com>
+      7 exedor <jdbrokaw@gmail.com>
+      6 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+      5 root <root@itsustdcrhvm02.dfdev.jnj.com>
+      4 Schlomo Schapiro <schlomo@schapiro.org>
+      3 Jeroen Hoekx <jeroen@hoekx.be>
+      2 Florent <florent.rochette@gmail.com>
+
+usr/share/rear/layout/prepare/GNU/Linux/130_include_mount_filesystem_code.sh
+    111 Gratien D'haese <gratien.dhaese@gmail.com>
+     65 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/layout/prepare/GNU/Linux/130_include_mount_subvolumes_code.sh
+    343 Johannes Meixner <jsmeix@suse.com>
+    209 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/layout/prepare/GNU/Linux/140_include_swap_code.sh
+     25 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     13 Dag Wieërs <dag@wieers.com>
+      7 Robin Schneider <ypid23@aol.de>
+      4 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/prepare/GNU/Linux/150_include_drbd_code.sh
+     45 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      9 tbsky <tbskyd@gmail.com>
+      9 Robin Schneider <ypid23@aol.de>
+      8 dragon299 <blooddragon@gmx.com>
+      7 Johannes Meixner <jsmeix@suse.com>
+      4 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/prepare/GNU/Linux/160_include_luks_code.sh
+     56 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     16 Robin Schneider <ypid23@aol.de>
+      5 Dag Wieers <dag@wieers.com>
+      4 SvenVD <svenvd.github@gmail.com>
+
+usr/share/rear/layout/prepare/GNU/Linux/170_include_hpraid_code.sh
+     75 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     20 Dag Wieers <dag@wieers.com>
+     11 Robin Schneider <ypid23@aol.de>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/layout/prepare/GNU/Linux/210_load_multipath.sh
+     70 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+     20 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      7 Sébastien Chabrolles <s.chabrolles@fr.ibm.com>
+      4 Robin Schneider <ypid23@aol.de>
+
+usr/share/rear/layout/prepare/default/010_prepare_files.sh
+     61 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      7 ltomasik <ltomasik+github@gmail.com>
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Jeroen Hoekx <jeroen@hoekx.be>
+      3 Dag Wieers <dag@wieers.com>
+      2 Vladimir Gozora <c@gozora.sk>
+      2 Robin Schneider <ypid23@aol.de>
+
+usr/share/rear/layout/prepare/default/200_recreate_hpraid.sh
+     99 Dag Wieers <dag@wieers.com>
+     45 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     13 Johannes Meixner <jsmeix@suse.com>
+     12 Robin Schneider <ypid23@aol.de>
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Jeroen Hoekx <jeroen@hoekx.be>
+      4 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/layout/prepare/default/250_compare_disks.sh
+     39 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Robin Schneider <ypid23@aol.de>
+      2 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+
+usr/share/rear/layout/prepare/default/270_overrule_migration_mode.sh
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+     11 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/layout/prepare/default/300_map_disks.sh
+    202 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     18 Robin Schneider <ypid23@aol.de>
+     12 Dag Wieers <dag@wieers.com>
+      4 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      3 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/layout/prepare/default/320_apply_mappings.sh
+     83 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+     78 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     17 Robin Schneider <ypid23@aol.de>
+      3 ProBackup-nl <b1686429@prtnx.com>
+
+usr/share/rear/layout/prepare/default/400_autoresize_disks.sh
+    145 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     14 Robin Schneider <ypid23@aol.de>
+     13 Vladimir Gozora <c@gozora.sk>
+      5 Andr� <andre.hoogendoorn@gmail.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/layout/prepare/default/500_confirm_layout.sh
+     36 Dag Wieers <dag@wieers.com>
+     18 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      6 Robin Schneider <ypid23@aol.de>
+      6 Johannes Meixner <jsmeix@suse.com>
+      4 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/layout/prepare/default/510_list_dependencies.sh
+    121 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Robin Schneider <ypid23@aol.de>
+
+usr/share/rear/layout/prepare/default/520_exclude_components.sh
+     26 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      4 Robin Schneider <ypid23@aol.de>
+      2 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+
+usr/share/rear/layout/prepare/default/540_generate_device_code.sh
+     61 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     21 Dag Wieers <dag@wieers.com>
+     16 Robin Schneider <ypid23@aol.de>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/layout/prepare/default/550_finalize_script.sh
+     11 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/layout/prepare/default/600_show_unprocessed.sh
+     54 Johannes Meixner <jsmeix@suse.com>
+     17 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Robin Schneider <ypid23@aol.de>
+
+usr/share/rear/layout/prepare/default/610_exclude_from_restore.sh
+     29 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     12 Robin Schneider <ypid23@aol.de>
+
+usr/share/rear/layout/recreate/default/100_ask_confirmation.sh
+     36 Dag Wieers <dag@wieers.com>
+     20 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      6 Johannes Meixner <jsmeix@suse.com>
+      4 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/layout/recreate/default/200_run_script.sh
+     71 Dag Wieers <dag@wieers.com>
+     39 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      8 Johannes Meixner <jsmeix@suse.com>
+      4 Robin Schneider <ypid23@aol.de>
+      4 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/layout/recreate/default/250_verify_mount.sh
+      7 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      6 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/save/GNU/Linux/100_create_layout_file.sh
+     22 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     17 Dag Wieers <dag@wieers.com>
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Vladimir Gozora <c@gozora.sk>
+
+usr/share/rear/layout/save/GNU/Linux/150_save_diskbyid_mappings.sh
+     21 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/layout/save/GNU/Linux/200_partition_layout.sh
+    400 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     66 Gratien D'haese <gratien.dhaese@gmail.com>
+     24 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+     11 Johannes Meixner <jsmeix@suse.com>
+      8 Dag Wieers <dag@wieers.com>
+      5 Dinar Valeev <dvaleev@suse.com>
+      4 Pavol Domin <pavol.domin@hpe.com>
+      3 jayfurmanek <furmanek@us.ibm.com>
+      2 Thitho007 <thierry.tholle@gmail.com>
+      2 ProBackup-nl <b1686429@prtnx.com>
+      2 gozora <c@gozora.sk>
+
+usr/share/rear/layout/save/GNU/Linux/210_raid_layout.sh
+     88 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     22 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 tbsky <tbskyd@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/save/GNU/Linux/220_lvm_layout.sh
+     41 Gratien D'haese <gratien.dhaese@gmail.com>
+     19 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/save/GNU/Linux/230_filesystem_layout.sh
+    295 Gratien D'haese <gratien.dhaese@gmail.com>
+    166 Johannes Meixner <jsmeix@suse.com>
+     53 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     40 Pavol Domin <pavol.domin@hpe.com>
+     19 Didac Oliveira <didac@brainupdaters.net>
+      9 Thomas Schumm <thomas.schumm@gmx.de>
+      7 Dag Wieers <dag@wieers.com>
+      6 Yoann Laissus <yoann.laissus@gmail.com>
+      6 root <root@itsustdcrhvm02.dfdev.jnj.com>
+      5 Vladimir Gozora <c@gozora.sk>
+      5 jayfurmanek <furmanek@us.ibm.com>
+
+usr/share/rear/layout/save/GNU/Linux/240_swaps_layout.sh
+     36 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      4 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/save/GNU/Linux/250_drbd_layout.sh
+     13 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      8 tbsky <tbskyd@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/save/GNU/Linux/260_crypt_layout.sh
+     77 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      6 Dag Wieers <dag@wieers.com>
+      5 SvenVD <svenvd.github@gmail.com>
+      5 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/layout/save/GNU/Linux/270_hpraid_layout.sh
+     81 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     45 Gratien D'haese <gratien.dhaese@gmail.com>
+     22 Dag Wieers <dag@wieers.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/layout/save/GNU/Linux/280_multipath_layout.sh
+     49 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     22 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/save/GNU/Linux/340_false_blacklisted.sh
+     38 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/layout/save/GNU/Linux/350_copy_drbdtab.sh
+      9 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/save/GNU/Linux/500_extract_vgcfg.sh
+     13 Dag Wieers <dag@wieers.com>
+      9 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/layout/save/GNU/Linux/510_current_disk_usage.sh
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Dominique Barton <dbarton@MBA.local>
+      2 Robin Schneider <ypid23@aol.de>
+      2 ProBackup-nl <b1686429@prtnx.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/layout/save/NSR/default/650_check_iso_recoverable.sh
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/layout/save/default/310_autoexclude_usb.sh
+     47 gdha <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      2 Petr Hracek <phracek@redhat.com>
+
+usr/share/rear/layout/save/default/310_include_exclude.sh
+    121 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     13 Robert Paschedag <robert.paschedag@web.de>
+
+usr/share/rear/layout/save/default/320_autoexclude.sh
+    113 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     16 Gratien D'haese <gratien.dhaese@gmail.com>
+     15 gdha <gratien.dhaese@gmail.com>
+      4 Yoann Laissus <yoann.laissus@gmail.com>
+      2 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      2 Florent <florent.rochette@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/save/default/330_remove_exclusions.sh
+     72 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     19 Robin Schneider <ypid23@aol.de>
+      5 root <root@itsustdcrhvm02.dfdev.jnj.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/layout/save/default/335_remove_excluded_multipath_vgs.sh
+     43 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/layout/save/default/340_generate_mountpoint_device.sh
+     29 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      4 Jeroen Hoekx <jeroen@hoekx.be>
+      2 Robin Schneider <ypid23@aol.de>
+      1 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/layout/save/default/350_save_partitions.sh
+     53 Vladimir Gozora <c@gozora.sk>
+
+usr/share/rear/layout/save/default/400_check_backup_special_files.sh
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 rowens275 <rowens@fdrinnovation.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/layout/save/default/445_guess_bootloader.sh
+     63 Johannes Meixner <jsmeix@suse.com>
+     50 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      2 Yann 'Meow' Bordenave <meow@meo.wf>
+      2 ProBackup-nl <b1686429@prtnx.com>
+
+usr/share/rear/layout/save/default/450_check_bootloader_files.sh
+     35 Johannes Meixner <jsmeix@suse.com>
+     23 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      2 Vladimir Gozora <c@gozora.sk>
+
+usr/share/rear/layout/save/default/450_check_network_files.sh
+     17 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/layout/save/default/600_snapshot_files.sh
+     27 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/lib/_input-output-functions.sh
+    916 Johannes Meixner <jsmeix@suse.com>
+    316 Schlomo Schapiro <github@schlomo.schapiro.org>
+    150 Dag Wieers <dag@wieers.com>
+     88 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      5 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/lib/array-functions.sh
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+     14 Schlomo Schapiro <github@schlomo.schapiro.org>
+     14 Johannes Meixner <jsmeix@suse.com>
+      4 Dag Wieers <dag@wieers.com>
+      2 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+
+usr/share/rear/lib/bashrc.rear
+     39 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/lib/bootloader-functions.sh
+    247 Schlomo Schapiro <github@schlomo.schapiro.org>
+    222 Gratien D'haese <gratien.dhaese@gmail.com>
+    178 Dag Wieers <dag@wieers.com>
+    102 Pavol Domin <pavol.domin@hpe.com>
+     34 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+     19 schabrolles <s.chabrolles@fr.ibm.com>
+     19 gozora <c@gozora.sk>
+     18 aussendorf <maik.aussendorf@bareos.com>
+     17 Johannes Meixner <jsmeix@suse.com>
+     15 jayfurmanek <furmanek@us.ibm.com>
+     11 Florent <florent.rochette@gmail.com>
+      4 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      4 Jeroen Hoekx <jeroen@hoekx.be>
+      4 Dag Wieërs <dag@wieers.com>
+      2 Schlomo Schapiro <schlomo@schapiro.org>
+
+usr/share/rear/lib/borg-functions.sh
+     65 gozora <c@gozora.sk>
+     39 Vladimir Gozora <c@gozora.sk>
+
+usr/share/rear/lib/checklayout-workflow.sh
+     38 Schlomo Schapiro <github@schlomo.schapiro.org>
+     16 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieërs <dag@wieers.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      4 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      4 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/columns-functions.sh
+    149 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/lib/config-functions.sh
+     94 Schlomo Schapiro <github@schlomo.schapiro.org>
+     83 Johannes Meixner <jsmeix@suse.com>
+     10 Jeroen Hoekx <jeroen@hoekx.be>
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      5 Dag Wieërs <dag@wieers.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/drlm-functions.sh
+    102 Didac Oliveira <didac@brainupdaters.net>
+      5 Schlomo Schapiro <schlomo@schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/dump-workflow.sh
+    101 Schlomo Schapiro <github@schlomo.schapiro.org>
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Dag Wieërs <dag@wieers.com>
+      4 Dag Wieers <dag@wieers.com>
+      2 Schlomo Schapiro <schlomo@schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/lib/filesystems-functions.sh
+    188 Vladimir Gozora <c@gozora.sk>
+
+usr/share/rear/lib/finalizeonly-workflow.sh
+     34 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/lib/format-workflow.sh
+     83 Johannes Meixner <jsmeix@suse.com>
+     58 Dag Wieers <dag@wieers.com>
+     34 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/framework-functions.sh
+    133 Johannes Meixner <jsmeix@suse.com>
+    112 Schlomo Schapiro <github@schlomo.schapiro.org>
+     29 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Dag Wieers <dag@wieers.com>
+      7 Dag Wieërs <dag@wieers.com>
+      4 root <root@lxcentos7-build.kba.de>
+      4 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 ProBackup-nl <b1686429@prtnx.com>
+      3 Petr Hracek <phracek@redhat.com>
+
+usr/share/rear/lib/global-functions.sh
+    182 Johannes Meixner <jsmeix@suse.com>
+    116 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     83 Gratien D'haese <gratien.dhaese@gmail.com>
+     58 Vladimir Gozora <c@gozora.sk>
+     35 Schlomo Schapiro <github@schlomo.schapiro.org>
+     24 Yoann Laissus <yoann.laissus@gmail.com>
+     18 Dag Wieërs <dag@wieers.com>
+     15 fhoeppner <rear@proficom.de>
+      6 SvenVD <svenvd.github@gmail.com>
+      5 Dag Wieers <dag@wieers.com>
+      4 tbsky <tbskyd@gmail.com>
+
+usr/share/rear/lib/help-workflow.sh
+     69 Johannes Meixner <jsmeix@suse.com>
+     56 Schlomo Schapiro <github@schlomo.schapiro.org>
+     28 Dag Wieers <dag@wieers.com>
+     20 Dag Wieërs <dag@wieers.com>
+      3 Jeroen Hoekx <jeroen@hoekx.be>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/lib/hp_raid-functions.sh
+     26 Schlomo Schapiro <github@schlomo.schapiro.org>
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/layout-functions.sh
+    632 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     88 Pavol Domin <pavol.domin@hpe.com>
+     86 Dag Wieers <dag@wieers.com>
+     59 Vladimir Gozora <c@gozora.sk>
+     38 Thomas Schumm <thomas.schumm@gmx.de>
+     38 Gratien D'haese <gratien.dhaese@gmail.com>
+     32 Robin Schneider <ypid23@aol.de>
+     17 tbsky <tbskyd@gmail.com>
+     17 Sebastien Termeau <st@tdchosting.dk>
+     14 Yoann Laissus <yoann.laissus@gmail.com>
+     14 Johannes Meixner <jsmeix@suse.com>
+      7 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      7 root <root@itsustdcrhvm02.dfdev.jnj.com>
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/lib/layoutonly-workflow.sh
+     29 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/lib/linux-functions.sh
+    347 Schlomo Schapiro <github@schlomo.schapiro.org>
+    259 Dag Wieers <dag@wieers.com>
+    146 Johannes Meixner <jsmeix@suse.com>
+     32 Dag Wieërs <dag@wieers.com>
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Florent <florent.rochette@gmail.com>
+      5 Timo Eissler <timo@teissler.de>
+      4 Reiner <Reiner.Keller@gmx.de>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/lib/mail-functions.sh
+     69 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/mkbackup-workflow.sh
+     34 Schlomo Schapiro <github@schlomo.schapiro.org>
+     11 Dag Wieers <dag@wieers.com>
+      8 Yoann Laissus <yoann.laissus@gmail.com>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      1 Didac Oliveira <didac@brainupdaters.net>
+      1 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/lib/mkbackuponly-workflow.sh
+     31 Schlomo Schapiro <github@schlomo.schapiro.org>
+      6 Johannes Meixner <jsmeix@suse.com>
+      4 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Dag Wieers <dag@wieers.com>
+      1 Didac Oliveira <didac@brainupdaters.net>
+
+usr/share/rear/lib/mkrescue-functions.sh
+    238 Schlomo Schapiro <github@schlomo.schapiro.org>
+     20 Dag Wieers <dag@wieers.com>
+      8 Johannes Meixner <jsmeix@suse.com>
+      1 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/mkrescue-workflow.sh
+     46 Schlomo Schapiro <github@schlomo.schapiro.org>
+      6 Dag Wieers <dag@wieers.com>
+      6 Dag Wieërs <dag@wieers.com>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      1 Didac Oliveira <didac@brainupdaters.net>
+
+usr/share/rear/lib/network-functions.sh
+    759 Gratien D'haese <gratien.dhaese@gmail.com>
+     17 Dag Wieers <dag@wieers.com>
+      4 gozora <c@gozora.sk>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/lib/output-functions.sh
+     28 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/progresssubsystem.nosh
+    111 Schlomo Schapiro <github@schlomo.schapiro.org>
+     66 Johannes Meixner <jsmeix@suse.com>
+      8 Dag Wieers <dag@wieers.com>
+      5 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/lib/recover-workflow.sh
+     38 Schlomo Schapiro <github@schlomo.schapiro.org>
+      8 Dag Wieërs <dag@wieers.com>
+      7 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/restoreonly-workflow.sh
+     26 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/lib/savelayout-workflow.sh
+     35 Schlomo Schapiro <github@schlomo.schapiro.org>
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieërs <dag@wieers.com>
+      4 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/sesam-functions.sh
+     42 Johannes Meixner <jsmeix@suse.com>
+     19 Michael Ablassmeier <support@sep.de>
+      5 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/shell-workflow.sh
+     23 Schlomo Schapiro <github@schlomo.schapiro.org>
+      8 Johannes Meixner <jsmeix@suse.com>
+      4 Dag Wieers <dag@wieers.com>
+      1 Didac Oliveira <didac@brainupdaters.net>
+
+usr/share/rear/lib/udev-workflow.sh
+    133 Dag Wieers <dag@wieers.com>
+      8 Johannes Meixner <jsmeix@suse.com>
+      5 Dag Wieërs <dag@wieers.com>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/lib/uefi-functions.sh
+     63 Gratien D'haese <gratien.dhaese@gmail.com>
+     47 Pavol Domin <pavol.domin@hpe.com>
+      3 gozora <c@gozora.sk>
+      2 Robin Schneider <ypid23@aol.de>
+
+usr/share/rear/lib/validate-workflow.sh
+    131 Schlomo Schapiro <github@schlomo.schapiro.org>
+     42 Dag Wieërs <dag@wieers.com>
+     24 Johannes Meixner <jsmeix@suse.com>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/validated/Arch/rolling/i386.txt
+     14 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/validated/CentOS/5.5/i386.txt
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/validated/CentOS/5.6/i386.txt
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/validated/Debian/6.0.7/i386.txt
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/validated/Debian/7.3/i386.txt
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/validated/Fedora/14/i386.txt
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/validated/Fedora/15/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/lib/validated/Fedora/21/i386.txt
+      7 Schlomo Schapiro <schlomo@schapiro.org>
+
+usr/share/rear/lib/validated/Fedora/9/i386.txt
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/validated/Gentoo/2.2/i386.txt
+     17 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/validated/LinuxMint/17.3/i386.txt
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/validated/RedHatEnterpriseServer/5.6/i386.txt
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/validated/RedHatEnterpriseServer/5/i386.txt
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/validated/RedHatEnterpriseServer/6/i386.txt
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/lib/validated/RedHatEnterpriseServer/7/i386.txt
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/validated/SUSE_LINUX/10/i386.txt
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/lib/validated/SUSE_LINUX/11.2/i386.txt
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/lib/validated/SUSE_LINUX/11.4/i386.txt
+      4 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/lib/validated/SUSE_LINUX/11/i386.txt
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/lib/validated/SUSE_LINUX/12.2/i386.txt
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/validated/SUSE_LINUX/12/i386.txt
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/lib/validated/Ubuntu/10.04/i386.txt
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/lib/validated/Ubuntu/12.04/i386.txt
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/output/DP/default/950_dp_save_result_files.sh
+     58 Gratien D'haese <gratien.dhaese@gmail.com>
+     12 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/output/ISO/Linux-i386/250_populate_efibootimg.sh
+    111 Gratien D'haese <gratien.dhaese@gmail.com>
+     42 Pavol Domin <pavol.domin@hpe.com>
+     39 Vladimir Gozora <c@gozora.sk>
+     22 Yoann Laissus <yoann.laissus@gmail.com>
+     16 Johannes Meixner <jsmeix@suse.com>
+      5 gozora <c@gozora.sk>
+
+usr/share/rear/output/ISO/Linux-i386/300_create_isolinux.sh
+    204 Dag Wieers <dag@wieers.com>
+     52 Schlomo Schapiro <github@schlomo.schapiro.org>
+     17 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/output/ISO/Linux-i386/700_create_efibootimg.sh
+     60 gozora <c@gozora.sk>
+     12 Vladimir Gozora <c@gozora.sk>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/output/ISO/Linux-i386/800_create_isofs.sh
+     47 Schlomo Schapiro <github@schlomo.schapiro.org>
+     21 Dag Wieers <dag@wieers.com>
+     19 Gratien D'haese <gratien.dhaese@gmail.com>
+     12 Dag Wieërs <dag@wieers.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+      6 gozora <c@gozora.sk>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/output/ISO/Linux-i386/810_prepare_multiple_iso.sh
+     61 Yoann Laissus <yoann.laissus@gmail.com>
+     47 Johannes Meixner <jsmeix@suse.com>
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/output/ISO/Linux-i386/820_create_iso_image.sh
+     36 Gratien D'haese <gratien.dhaese@gmail.com>
+     16 Johannes Meixner <jsmeix@suse.com>
+     12 Vladimir Gozora <c@gozora.sk>
+      4 gozora <c@gozora.sk>
+
+usr/share/rear/output/ISO/Linux-i386/850_check_for_errors.sh
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/output/ISO/Linux-ia64/200_mount_bootimg.sh
+     10 Dag Wieers <dag@wieers.com>
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/output/ISO/Linux-ia64/300_create_bootimg.sh
+     48 Schlomo Schapiro <github@schlomo.schapiro.org>
+     15 Dag Wieers <dag@wieers.com>
+      8 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      7 Johannes Meixner <jsmeix@suse.com>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/output/ISO/Linux-ia64/400_create_local_efi_dir.sh
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Dag Wieers <dag@wieers.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/output/ISO/Linux-ia64/700_umount_bootimg.sh
+      6 Dag Wieers <dag@wieers.com>
+      4 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/output/ISO/Linux-ia64/800_create_isofs.sh
+     46 Schlomo Schapiro <github@schlomo.schapiro.org>
+     28 Dag Wieers <dag@wieers.com>
+     13 Dag Wieërs <dag@wieers.com>
+      7 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/output/ISO/Linux-ppc64/300_create_yaboot.sh
+     32 Gratien D'haese <gratien.dhaese@gmail.com>
+     28 Schlomo Schapiro <github@schlomo.schapiro.org>
+     27 jayfurmanek <furmanek@us.ibm.com>
+     14 Dag Wieers <dag@wieers.com>
+      9 Dag Wieërs <dag@wieers.com>
+      8 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      7 Masanori Mitsugi <mitsugi@linux.vnet.ibm.com>
+      5 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      3 Dinar Valeev <dvaleev@suse.com>
+
+usr/share/rear/output/ISO/Linux-ppc64/310_create_grub2.sh
+     50 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+      7 Masanori Mitsugi <mitsugi@linux.vnet.ibm.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/output/ISO/Linux-ppc64le/300_create_grub2.sh
+     50 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/output/ISO/Linux-ppc64le/800_create_isofs.sh
+     40 Schlomo Schapiro <github@schlomo.schapiro.org>
+     17 Dag Wieers <dag@wieers.com>
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      7 Dag Wieërs <dag@wieers.com>
+      5 Johannes Meixner <jsmeix@suse.com>
+      5 jayfurmanek <furmanek@us.ibm.com>
+      1 schabrolles <s.chabrolles@fr.ibm.com>
+      1 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+
+usr/share/rear/output/ISO/Linux-ppc64le/820_create_iso_image.sh
+     27 schabrolles <s.chabrolles@fr.ibm.com>
+
+usr/share/rear/output/NSR/default/950_nsr_save_result_files.sh
+     81 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Schlomo Schapiro <schlomo+github@schapiro.org>
+      5 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/output/OBDR/default/500_set_obdr_blocksize.sh
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/output/OBDR/default/810_write_image.sh
+     24 Dag Wieers <dag@wieers.com>
+     22 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/output/PXE/default/800_copy_to_tftp.sh
+     73 Gratien D'haese <gratien.dhaese@gmail.com>
+     39 Schlomo Schapiro <github@schlomo.schapiro.org>
+     10 Johannes Meixner <jsmeix@suse.com>
+      9 Dag Wieers <dag@wieers.com>
+      5 Dag Wieërs <dag@wieers.com>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+
+usr/share/rear/output/PXE/default/810_create_pxelinux_cfg.sh
+     80 Schlomo Schapiro <github@schlomo.schapiro.org>
+     45 Gratien D'haese <gratien.dhaese@gmail.com>
+     31 Didac Oliveira <didac@brainupdaters.net>
+     18 Dag Wieers <dag@wieers.com>
+     17 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+     16 schabrolles <s.chabrolles@fr.ibm.com>
+     11 Johannes Meixner <jsmeix@suse.com>
+      2 Jeroen Hoekx <jeroen@hoekx.be>
+      2 andreas-tarp <andreas-tarp@users.noreply.github.com>
+
+usr/share/rear/output/PXE/default/820_copy_to_net.sh
+     37 Gratien D'haese <gratien.dhaese@gmail.com>
+     16 Johannes Meixner <jsmeix@suse.com>
+      2 fhoeppner <rear@proficom.de>
+
+usr/share/rear/output/RAMDISK/Linux-i386/900_copy_ramdisk.sh
+     61 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     14 Johannes Meixner <jsmeix@suse.com>
+      5 Dag Wieërs <dag@wieers.com>
+      2 fhoeppner <rear@proficom.de>
+
+usr/share/rear/output/RSYNC/default/200_make_prefix_dir.sh
+     23 Gratien D'haese <gratien.dhaese@gmail.com>
+     12 Dag Wieers <dag@wieers.com>
+      8 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/output/RSYNC/default/900_copy_result_files.sh
+     50 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      9 Dag Wieers <dag@wieers.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+      2 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/output/TSM/default/950_dsmc_save_result_files.sh
+     49 Schlomo Schapiro <github@schlomo.schapiro.org>
+     21 Gratien D'haese <gratien.dhaese@gmail.com>
+     18 Dag Wieers <dag@wieers.com>
+     16 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      5 sjoerrens <Stephan.Joerrens@gad.de>
+      4 Jeroen Hoekx <jeroen@hoekx.be>
+      3 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/output/TSM/default/960_dsmc_verify_isofile.sh
+     21 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Johannes Meixner <jsmeix@suse.com>
+      5 nebelong <mne@kmd.dk>
+
+usr/share/rear/output/USB/Linux-i386/100_create_efiboot.sh
+    168 gozora <c@gozora.sk>
+     12 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/output/USB/Linux-i386/300_create_extlinux.sh
+    469 Dag Wieers <dag@wieers.com>
+     50 Johannes Meixner <jsmeix@suse.com>
+     24 Schlomo Schapiro <github@schlomo.schapiro.org>
+     24 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     12 Dag Wieërs <dag@wieers.com>
+     11 Florent <florent.rochette@gmail.com>
+      4 Jeroen Hoekx <jeroen@hoekx.be>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/output/USB/Linux-i386/830_copy_kernel_initrd.sh
+     21 Dag Wieers <dag@wieers.com>
+     15 Johannes Meixner <jsmeix@suse.com>
+     12 Schlomo Schapiro <github@schlomo.schapiro.org>
+      9 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/output/USB/Linux-i386/850_make_USB_bootable.sh
+    107 Dag Wieers <dag@wieers.com>
+     34 Gratien D'haese <gratien.dhaese@gmail.com>
+     26 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Johannes Meixner <jsmeix@suse.com>
+      4 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Vladimir Gozora <c@gozora.sk>
+      2 Petr Hracek <phracek@redhat.com>
+
+usr/share/rear/output/default/010_set_umask.sh
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/output/default/100_mount_output_path.sh
+     21 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Petr Hracek <phracek@redhat.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/output/default/150_save_copy_of_prefix_dir.sh
+     31 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/output/default/200_make_boot_dir.sh
+      7 Dag Wieers <dag@wieers.com>
+      4 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/output/default/200_make_prefix_dir.sh
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Schlomo Schapiro <github@schlomo.schapiro.org>
+      7 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      7 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/output/default/250_create_lock.sh
+     25 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/output/default/940_grub2_rescue.sh
+    339 Johannes Meixner <jsmeix@suse.com>
+    163 Jesper Sander Lindgren <jsl@tdchosting.dk>
+    129 gozora <c@gozora.sk>
+     43 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/output/default/940_grub_rescue.sh
+    144 Dag Wieers <dag@wieers.com>
+     26 Johannes Meixner <jsmeix@suse.com>
+     23 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      5 Yoann Laissus <yoann.laissus@gmail.com>
+      4 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/output/default/950_copy_result_files.sh
+     92 Gratien D'haese <gratien.dhaese@gmail.com>
+     64 Johannes Meixner <jsmeix@suse.com>
+     35 Schlomo Schapiro <github@schlomo.schapiro.org>
+     28 Dag Wieers <dag@wieers.com>
+     19 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      4 Dag Wieërs <dag@wieers.com>
+      2 Jeroen Hoekx <jeroen@hoekx.be>
+      2 fhoeppner <rear@proficom.de>
+
+usr/share/rear/output/default/950_email_result_files.sh
+     36 Schlomo Schapiro <github@schlomo.schapiro.org>
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Dag Wieers <dag@wieers.com>
+      4 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Jeroen Hoekx <jeroen@hoekx.be>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/output/default/970_remove_lock.sh
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Dag Wieers <dag@wieers.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/output/default/980_umount_output_dir.sh
+     23 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Petr Hracek <phracek@redhat.com>
+
+usr/share/rear/pack/Debian/ia64/300_copy_kernel.sh
+     60 Schlomo Schapiro <github@schlomo.schapiro.org>
+     20 Dag Wieers <dag@wieers.com>
+      5 Dag Wieërs <dag@wieers.com>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/pack/Fedora/ia64/300_copy_kernel.sh
+     60 Schlomo Schapiro <github@schlomo.schapiro.org>
+     20 Dag Wieers <dag@wieers.com>
+      5 Dag Wieërs <dag@wieers.com>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/pack/GNU/Linux/900_create_initramfs.sh
+     87 Johannes Meixner <jsmeix@suse.com>
+     32 Schlomo Schapiro <github@schlomo.schapiro.org>
+     26 ProBackup-nl <noreply@probackup.nl>
+      8 Dag Wieers <dag@wieers.com>
+      7 Dag Wieërs <dag@wieers.com>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 ProBackup-nl <b1686429@prtnx.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/pack/Linux-i386/300_copy_kernel.sh
+     68 Schlomo Schapiro <github@schlomo.schapiro.org>
+     30 Dag Wieers <dag@wieers.com>
+     17 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      9 morlix <morlix@morlix.de>
+      5 Dag Wieërs <dag@wieers.com>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/pack/Linux-ppc64/300_copy_kernel.sh
+     67 Schlomo Schapiro <github@schlomo.schapiro.org>
+     27 Dag Wieers <dag@wieers.com>
+      5 Dag Wieërs <dag@wieers.com>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/pack/Linux-ppc64le/300_copy_kernel.sh
+     67 Schlomo Schapiro <github@schlomo.schapiro.org>
+     27 Dag Wieers <dag@wieers.com>
+      5 Dag Wieërs <dag@wieers.com>
+      4 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/prep/BACULA/default/400_prep_bacula.sh
+      8 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/BACULA/default/450_check_BACULA_client_configured.sh
+     42 Gratien D'haese <gratien.dhaese@gmail.com>
+     14 Dag Wieers <dag@wieers.com>
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/prep/BACULA/default/500_check_BACULA_bconsole_results.sh
+     57 Gratien D'haese <gratien.dhaese@gmail.com>
+     16 Dag Wieers <dag@wieers.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/BAREOS/default/400_prep_bareos.sh
+     11 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/BAREOS/default/450_check_BAREOS_client_configured.sh
+     29 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Maik Aussendorf <maik.aussendorf@bareos.com>
+      2 Tuan Nguyen <amtuannguyen@gmail.com>
+
+usr/share/rear/prep/BAREOS/default/500_check_BAREOS_bconsole_results.sh
+     48 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Sebastian Lederer <slederer@dass-it.de>
+      4 Maik Aussendorf <maik.aussendorf@bareos.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      3 Tuan Nguyen <amtuannguyen@gmail.com>
+
+usr/share/rear/prep/BAREOS/default/550_check_bareos_restore_jobs.sh
+     32 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Tuan Nguyen <amtuannguyen@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/BAREOS/default/560_check_bareos_filesets.sh
+     29 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/BORG/default/100_set_vars.sh
+     22 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Dag Wieërs <dag@wieers.com>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 gozora <c@gozora.sk>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/BORG/default/200_prep_borg.sh
+     37 gozora <c@gozora.sk>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/BORG/default/300_init_archive.sh
+     36 gozora <c@gozora.sk>
+      7 Vladimir Gozora <c@gozora.sk>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/DP/default/400_prep_dp.sh
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/DP/default/450_check_dp_client_configured.sh
+     12 Schlomo Schapiro <github@schlomo.schapiro.org>
+      8 Dag Wieers <dag@wieers.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/DUPLICITY/default/050_prep_duplicity.sh
+     40 Thomas Schumm <thomas.schumm@gmx.de>
+     28 Schlomo Schapiro <github@schlomo.schapiro.org>
+     26 Gratien D'haese <gratien.dhaese@gmail.com>
+     20 fhoeppner <rear@proficom.de>
+      5 Dag Wieërs <dag@wieers.com>
+      3 Robert Navarro <crshman@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+      1 Robert Navarro <rnavarro@stitchlabs.com>
+
+usr/share/rear/prep/DUPLICITY/default/200_find_duply_profile.sh
+     58 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Johannes Meixner <jsmeix@suse.com>
+      3 Reiner <Reiner.Keller@gmx.de>
+      3 fhoeppner <rear@proficom.de>
+
+usr/share/rear/prep/DUPLICITY/default/220_define_backup_prog.sh
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/DUPLICITY/default/250_find_all_libs.sh
+     73 root <root@mail.vogler.tv>
+     13 gdha <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/EXTERNAL/default/050_check_external.sh
+      9 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/FDRUPSTREAM/default/400_prep_fdrupstream.sh
+     14 rowens275 <rowens@fdrinnovation.com>
+
+usr/share/rear/prep/GALAXY/default/400_prep_galaxy.sh
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/prep/GALAXY10/default/400_prep_galaxy.sh
+     14 root <root@msgs88i.msg.de>
+
+usr/share/rear/prep/GALAXY7/default/400_prep_galaxy.sh
+     14 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/prep/GNU/Linux/200_include_getty.sh
+     24 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/GNU/Linux/200_include_serial_console.sh
+     26 Gratien D'haese <gratien.dhaese@gmail.com>
+     25 Dag Wieers <dag@wieers.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      3 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/prep/GNU/Linux/210_include_dhclient.sh
+    150 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Dag Wieers <dag@wieers.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      4 Jeroen Hoekx <jeroen@hoekx.be>
+      4 gozora <c@gozora.sk>
+      3 Dag Wieërs <dag@wieers.com>
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/prep/GNU/Linux/220_include_lvm_tools.sh
+     14 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      4 Dag Wieers <dag@wieers.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/GNU/Linux/230_include_md_tools.sh
+     13 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/GNU/Linux/240_include_multipath_tools.sh
+     12 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 schabrolles <s.chabrolles@fr.ibm.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/GNU/Linux/280_include_systemd.sh
+     22 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/prep/GNU/Linux/280_include_vmware_tools.sh
+     13 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/prep/GNU/Linux/290_include_drbd.sh
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/GNU/Linux/300_check_backup_and_output_url.sh
+     32 Dag Wieërs <dag@wieers.com>
+     28 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/GNU/Linux/300_include_grub_tools.sh
+     28 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 Jesper Sander Lindgren <jsl@tdchosting.dk>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/prep/GNU/Linux/310_include_cap_utils.sh
+     23 Johannes Meixner <jsmeix@suse.com>
+      8 Markus Anglmaier <markus@oderdoch.net>
+
+usr/share/rear/prep/ISO/GNU/Linux/320_verify_mkisofs.sh
+      8 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Dag Wieers <dag@wieers.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 gozora <c@gozora.sk>
+
+usr/share/rear/prep/ISO/GNU/Linux/340_add_isofs_module.sh
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/ISO/Linux-i386/330_find_isolinux.sh
+     17 Dag Wieers <dag@wieers.com>
+     15 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/ISO/Linux-ia64/330_find_elilo_efi.sh
+     15 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/ISO/Linux-ia64/340_define_console_ia64.sh
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/ISO/default/300_check_iso_dir.sh
+      6 Dag Wieërs <dag@wieers.com>
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/ISO/default/320_check_cdrom_size.sh
+     17 Schlomo Schapiro <github@schlomo.schapiro.org>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/NBKDC/default/400_prep_nbkdc.sh
+    110 Andreas von Bülow <andreas.vonbuelow@novastor.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/NBU/default/400_prep_nbu.sh
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/prep/NBU/default/450_check_nbu_client_configured.sh
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Johannes Meixner <jsmeix@suse.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/NETFS/default/050_check_NETFS_requirements.sh
+     98 Schlomo Schapiro <github@schlomo.schapiro.org>
+     88 Johannes Meixner <jsmeix@suse.com>
+     63 Gratien D'haese <gratien.dhaese@gmail.com>
+     48 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      7 Dag Wieers <dag@wieers.com>
+      4 Dag Wieërs <dag@wieers.com>
+      1 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/prep/NETFS/default/070_set_backup_archive.sh
+    483 Johannes Meixner <jsmeix@suse.com>
+     42 test <kreitz@Dev-Server.mhknet.de>
+     19 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      8 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Yoann Laissus <yoann.laissus@gmail.com>
+
+usr/share/rear/prep/NETFS/default/090_check_encrypted_backup.sh
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/NETFS/default/100_check_nfs_version.sh
+     35 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/NETFS/default/150_save_rsync_version.sh
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/NETFS/default/400_automatic_exclude_recreate.sh
+     44 Johannes Meixner <jsmeix@suse.com>
+     26 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/prep/NSR/default/400_prep_nsr.sh
+      8 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/NSR/default/450_check_nsr_client.sh
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/OBDR/BACULA/default/030_bextract_tape_device.sh
+     24 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/OBDR/default/040_change_tape_name.sh
+     12 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/prep/OBDR/default/500_check_tape_label.sh
+     29 Dag Wieers <dag@wieers.com>
+     14 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/prep/OBDR/default/700_write_OBDR_header.sh
+     25 Dag Wieers <dag@wieers.com>
+     14 Gratien D'haese <gratien.dhaese@gmail.com>
+     11 Schlomo Schapiro <github@schlomo.schapiro.org>
+      9 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      3 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/prep/RBME/default/050_include_rbme_requirements.sh
+     16 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/prep/README
+     12 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/RSYNC/GNU/Linux/200_selinux_in_use.sh
+     73 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Rich Alloway <richard.alloway@roguewave.com>
+      7 Florent <florent.rochette@gmail.com>
+
+usr/share/rear/prep/RSYNC/default/050_prep_rsync.sh
+     61 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/RSYNC/default/100_check_rsync.sh
+    151 Gratien D'haese <gratien.dhaese@gmail.com>
+      8 Johannes Meixner <jsmeix@suse.com>
+      6 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/RSYNC/default/150_check_rsync_protocol_version.sh
+     65 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+      4 Robin Schneider <ypid23@aol.de>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/SESAM/default/400_prep_sesam.sh
+     65 Michael Ablassmeier <support@sep.de>
+      1 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/TAPE/default/400_check_tape_drive.sh
+     31 Dag Wieers <dag@wieers.com>
+     16 Schlomo Schapiro <github@schlomo.schapiro.org>
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/TAPE/default/500_set_tape_blocksize.sh
+     11 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/prep/TSM/default/400_prep_tsm.sh
+     15 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/prep/USB/Linux-i386/340_find_mbr_bin.sh
+     19 Vladimir Gozora <c@gozora.sk>
+      8 Dag Wieers <dag@wieers.com>
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/prep/USB/Linux-i386/350_check_usb_disk.sh
+     33 Gratien D'haese <gratien.dhaese@gmail.com>
+     19 Schlomo Schapiro <github@schlomo.schapiro.org>
+     11 Dag Wieers <dag@wieers.com>
+      4 Vladimir Gozora <c@gozora.sk>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/USB/Linux-i386/350_find_syslinux_modules.sh
+     11 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/USB/Linux-i386/400_check_extlinux.sh
+      5 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/USB/default/040_set_NETFS_requirements.sh
+     25 Dag Wieers <dag@wieers.com>
+      5 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/prep/USB/default/060_set_usb_device.sh
+     23 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     18 Johannes Meixner <jsmeix@suse.com>
+      4 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/prep/USB/default/380_copy_usb_fs_module.sh
+     11 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/ZYPPER/default/400_prep_zypper.sh
+     65 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/default/005_remove_workflow_conf.sh
+     17 Schlomo Schapiro <github@schlomo.schapiro.org>
+      8 Dag Wieers <dag@wieers.com>
+      3 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/prep/default/020_translate_url.sh
+     64 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     14 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/default/030_translate_tape.sh
+     32 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      9 Dag Wieërs <dag@wieers.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/default/040_check_output_scheme.sh
+     10 D'Haese <gdhaese1@witsbebelnx02.janbe.eu.jnj.com>
+      4 Yoann Laissus <yoann.laissus@gmail.com>
+
+usr/share/rear/prep/default/050_check_keep_old_output_copy_var.sh
+      5 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/default/100_init_workflow_conf.sh
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/prep/default/310_include_uefi_tools.sh
+     75 Gratien D'haese <gratien.dhaese@gmail.com>
+     23 Dag Wieers <dag@wieers.com>
+     12 Johannes Meixner <jsmeix@suse.com>
+     11 ProBackup-nl <b1686429@prtnx.com>
+      3 ProBackup-nl <noreply@probackup.nl>
+      3 Florent <florent.rochette@bull.net>
+      2 Pavol Domin <pavol.domin@hpe.com>
+
+usr/share/rear/prep/default/320_include_uefi_env.sh
+     61 Gratien D'haese <gratien.dhaese@gmail.com>
+     31 ProBackup-nl <noreply@probackup.nl>
+     23 Dag Wieers <dag@wieers.com>
+     20 Johannes Meixner <jsmeix@suse.com>
+      4 Vladimir Gozora <c@gozora.sk>
+      3 Florent <florent.rochette@bull.net>
+
+usr/share/rear/prep/default/400_save_mountpoint_details.sh
+     17 Gratien D'haese <gratien.dhaese@gmail.com>
+     10 Pavol Domin <pavol.domin@hpe.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/prep/default/950_check_missing_programs.sh
+     36 Johannes Meixner <jsmeix@suse.com>
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Markus Anglmaier <markus@oderdoch.net>
+
+usr/share/rear/rescue/DP/default/450_prepare_omni_xinetd.sh
+     12 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/rescue/GALAXY10/default/600_add_galaxy_group.sh
+      8 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 root <root@msgs88i.msg.de>
+
+usr/share/rear/rescue/GALAXY7/default/600_add_galaxy_group.sh
+      8 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/rescue/GNU/Linux/220_load_modules_from_initrd.sh
+     43 Schlomo Schapiro <schlomo@schapiro.org>
+
+usr/share/rear/rescue/GNU/Linux/230_storage_and_network_modules.sh
+     51 Schlomo Schapiro <github@schlomo.schapiro.org>
+     30 Dag Wieers <dag@wieers.com>
+     27 Johannes Meixner <jsmeix@suse.com>
+      6 Reiner <Reiner.Keller@gmx.de>
+
+usr/share/rear/rescue/GNU/Linux/240_kernel_modules.sh
+     42 Schlomo Schapiro <github@schlomo.schapiro.org>
+     12 Dag Wieers <dag@wieers.com>
+     11 Johannes Meixner <jsmeix@suse.com>
+      5 Dag Wieërs <dag@wieers.com>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Schlomo Schapiro <schlomo@schapiro.org>
+
+usr/share/rear/rescue/GNU/Linux/250_udev.sh
+     29 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieers <dag@wieers.com>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/rescue/GNU/Linux/260_collect_initrd_modules.sh
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/rescue/GNU/Linux/260_storage_drivers.sh
+      6 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/rescue/GNU/Linux/270_fc_transport_info.sh
+     11 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/rescue/GNU/Linux/300_dns.sh
+     22 Schlomo Schapiro <github@schlomo.schapiro.org>
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieërs <dag@wieers.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/GNU/Linux/310_network_devices.sh
+    325 Johannes Meixner <jsmeix@suse.com>
+    196 Schlomo Schapiro <github@schlomo.schapiro.org>
+    135 corin <corin@duckster.net>
+     80 Gratien D'haese <gratien.dhaese@gmail.com>
+     35 Dag Wieers <dag@wieers.com>
+     17 Jeroen Hoekx <jeroen@hoekx.be>
+     10 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      8 jezzaaa <jlaidman@rebel-it.com.au>
+      5 Dag Wieërs <dag@wieers.com>
+      2 Peter Oliver <git@mavit.org.uk>
+      2 Didac Oliveira <didac@brainupdaters.net>
+
+usr/share/rear/rescue/GNU/Linux/320_inet6.sh
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/GNU/Linux/350_routing.sh
+     78 Schlomo Schapiro <github@schlomo.schapiro.org>
+     34 Gratien D'haese <gratien.dhaese@gmail.com>
+     10 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      6 Dag Wieers <dag@wieers.com>
+      5 Ralf Germann <rg-fine@users.noreply.github.com>
+      5 Dag Wieërs <dag@wieers.com>
+      2 Peter Oliver <git@mavit.org.uk>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/GNU/Linux/360_teaming.sh
+    108 Ralf Germann <rg-fine@users.noreply.github.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/rescue/GNU/Linux/390_check_usb_modules.sh
+     16 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/rescue/GNU/Linux/400_use_serial_console.sh
+     39 Dag Wieers <dag@wieers.com>
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/GNU/Linux/410_use_xen_console.sh
+     11 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/rescue/GNU/Linux/500_clone_keyboard_mappings.sh
+      8 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/rescue/GNU/Linux/550_copy_ldconfig.sh
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/rescue/GNU/Linux/600_unset_TMPDIR_in_rescue_conf.sh
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/rescue/GNU/Linux/950_cfg2html.sh
+     42 Dag Wieers <dag@wieers.com>
+     22 Gratien D'haese <gratien.dhaese@gmail.com>
+     20 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Johannes Meixner <jsmeix@suse.com>
+      2 Robin Schneider <ypid23@aol.de>
+
+usr/share/rear/rescue/GNU/Linux/960_collect_MC_serviceguard_infos.sh
+     38 Schlomo Schapiro <github@schlomo.schapiro.org>
+     12 Dag Wieers <dag@wieers.com>
+      5 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/GNU/Linux/990_sysreqs.sh
+    126 Gratien D'haese <gratien.dhaese@gmail.com>
+     57 Johannes Meixner <jsmeix@suse.com>
+     19 ProBackup-nl <b1686429@prtnx.com>
+     11 Vladimir Gozora <c@gozora.sk>
+
+usr/share/rear/rescue/Linux-ppc64/410_use_hvc_console.sh
+      9 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+      3 Johannes Meixner <jsmeix@suse.com>
+      2 Masanori Mitsugi <mitsugi@linux.vnet.ibm.com>
+
+usr/share/rear/rescue/Linux-ppc64le/410_use_hvc_console.sh
+      9 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+      3 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/NBU/default/450_prepare_netbackup.sh
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/NBU/default/450_prepare_xinetd.sh
+     15 Schlomo Schapiro <github@schlomo.schapiro.org>
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Dag Wieers <dag@wieers.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/NETFS/default/600_store_NETFS_variables.sh
+      7 Johannes Meixner <jsmeix@suse.com>
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 schabrolles <s.chabrolles@fr.ibm.com>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/rescue/NETFS/default/610_save_capabilities.sh
+     41 Johannes Meixner <jsmeix@suse.com>
+      6 Markus Anglmaier <markus@oderdoch.net>
+
+usr/share/rear/rescue/NSR/default/450_prepare_networker_startup.sh
+     18 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/NSR/default/460_save_nsr_server_name.sh
+     20 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/NSR/default/470_safe_filesystems.sh
+      8 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/RSYNC/default/600_store_RSYNC_variables.sh
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/rescue/default/010_merge_skeletons.sh
+     45 Schlomo Schapiro <github@schlomo.schapiro.org>
+     10 Dag Wieers <dag@wieers.com>
+      7 Johannes Meixner <jsmeix@suse.com>
+      7 Dag Wieërs <dag@wieers.com>
+      4 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/rescue/default/100_hostname.sh
+     22 Schlomo Schapiro <github@schlomo.schapiro.org>
+     16 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      8 ProBackup-nl <b1686429@prtnx.com>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieërs <dag@wieers.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/default/200_etc_issue.sh
+     28 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Dag Wieërs <dag@wieers.com>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/rescue/default/430_prepare_timesync.sh
+     37 Schlomo Schapiro <github@schlomo.schapiro.org>
+     13 Peter Oliver <git@mavitsys.co.uk>
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/rescue/default/500_ssh.sh
+     51 Schlomo Schapiro <github@schlomo.schapiro.org>
+     34 Gratien D'haese <gratien.dhaese@gmail.com>
+     11 Florent <florent.rochette@gmail.com>
+      9 Dag Wieers <dag@wieers.com>
+      8 Johannes Meixner <jsmeix@suse.com>
+      7 Jesper Sander Lindgren <jsl@tdchosting.dk>
+      7 Dag Wieërs <dag@wieers.com>
+      2 mkosmach <mkosmach@gmail.com>
+
+usr/share/rear/rescue/default/550_vagrant.sh
+     32 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/rescue/default/850_save_sysfs_uefi_vars.sh
+    178 Johannes Meixner <jsmeix@suse.com>
+     94 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 ProBackup-nl <b1686429@prtnx.com>
+      4 Vladimir Gozora <c@gozora.sk>
+      4 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/rescue/default/900_clone_users_and_groups.sh
+     40 Schlomo Schapiro <github@schlomo.schapiro.org>
+      6 Yoann Laissus <yoann.laissus@gmail.com>
+
+usr/share/rear/rescue/default/910_copy_logfile.sh
+     16 Johannes Meixner <jsmeix@suse.com>
+      6 Schlomo Schapiro <github@schlomo.schapiro.org>
+      6 Dag Wieers <dag@wieers.com>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/restore/BACULA/default/400_restore_backup.sh
+     98 Dag Wieers <dag@wieers.com>
+     92 Gratien D'haese <gratien.dhaese@gmail.com>
+     19 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/BAREOS/default/400_restore_backup.sh
+    106 Gratien D'haese <gratien.dhaese@gmail.com>
+     98 Dag Wieers <dag@wieers.com>
+     45 Sebastian Lederer <slederer@dass-it.de>
+     21 Johannes Meixner <jsmeix@suse.com>
+     15 aussendorf <maik.aussendorf@bareos.com>
+      2 Maik Aussendorf <maik.aussendorf@bareos.com>
+
+usr/share/rear/restore/BLOCKCLONE/default/381_change_restore_defaults.sh
+     12 Vladimir Gozora <c@gozora.sk>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/BLOCKCLONE/default/390_create_partitions.sh
+     99 Vladimir Gozora <c@gozora.sk>
+      9 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/BLOCKCLONE/default/400_restore_clone.sh
+     26 Vladimir Gozora <c@gozora.sk>
+
+usr/share/rear/restore/BORG/default/300_load_archives.sh
+     94 gozora <c@gozora.sk>
+     15 Vladimir Gozora <c@gozora.sk>
+     14 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/BORG/default/400_restore_backup.sh
+     32 gozora <c@gozora.sk>
+      6 Vladimir Gozora <c@gozora.sk>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/DP/default/300_create_dp_restore_fs_list.sh
+     19 Schlomo Schapiro <github@schlomo.schapiro.org>
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 root <root@eabuild2.(none)>
+      3 Dag Wieers <dag@wieers.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/DP/default/400_restore_with_dp.sh
+     53 Schlomo Schapiro <github@schlomo.schapiro.org>
+     20 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+      6 Dag Wieers <dag@wieers.com>
+      3 root <root@eabuild2.(none)>
+      3 Reto Vogel <reto@vogel.vu>
+
+usr/share/rear/restore/DP/default/450_restore_via_gui.sh
+     17 Schlomo Schapiro <github@schlomo.schapiro.org>
+     15 Johannes Meixner <jsmeix@suse.com>
+      2 root <root@eabuild2.(none)>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/restore/DP/default/460_press_y_to_continue.sh
+     22 Gratien D'haese <gratien.dhaese@gmail.com>
+     16 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/DUPLICITY/default/100_restore_duply.sh
+     36 Gratien D'haese <gratien.dhaese@gmail.com>
+     14 fhoeppner <rear@proficom.de>
+     10 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/DUPLICITY/default/200_prompt_user_to_start_restore.sh
+     28 Schlomo Schapiro <github@schlomo.schapiro.org>
+     12 fhoeppner <rear@proficom.de>
+     11 Thomas Schumm <thomas.schumm@gmx.de>
+      8 Johannes Meixner <jsmeix@suse.com>
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/restore/DUPLICITY/default/400_restore_duplicity.sh
+     74 fhoeppner <rear@proficom.de>
+     16 Johannes Meixner <jsmeix@suse.com>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+
+usr/share/rear/restore/EXTERNAL/default/500_restore_with_external.sh
+     14 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/restore/FDRUPSTREAM/default/200_start_fdrupstream.sh
+     13 rowens275 <rowens@fdrinnovation.com>
+
+usr/share/rear/restore/FDRUPSTREAM/default/250_wait_for_restore.sh
+     14 Johannes Meixner <jsmeix@suse.com>
+     11 rowens275 <rowens@fdrinnovation.com>
+
+usr/share/rear/restore/FDRUPSTREAM/default/260_copy_log_and_report.sh
+     15 rowens275 <rowens@fdrinnovation.com>
+      3 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/FDRUPSTREAM/default/270_selinux_considerations.sh
+     36 Johannes Meixner <jsmeix@suse.com>
+     23 rowens275 <rowens@fdrinnovation.com>
+
+usr/share/rear/restore/Fedora/050_copy_dev_files.sh
+      9 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/GALAXY/default/390_create_ramdisk.sh
+     25 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Johannes Meixner <jsmeix@suse.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/restore/GALAXY/default/400_restore_with_galaxy.sh
+     70 Schlomo Schapiro <github@schlomo.schapiro.org>
+      8 Dag Wieers <dag@wieers.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/GALAXY10/default/400_restore_with_galaxy.sh
+     78 Schlomo Schapiro <github@schlomo.schapiro.org>
+     11 Andreas Vogler <andreas@vogler.name>
+      9 Dag Wieers <dag@wieers.com>
+      7 root <root@msgs88i.msg.de>
+      6 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/GALAXY7/default/400_restore_with_galaxy.sh
+     78 Schlomo Schapiro <github@schlomo.schapiro.org>
+      9 Dag Wieers <dag@wieers.com>
+      6 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/NBKDC/default/400_restore_backup.sh
+     54 Andreas von Bülow <andreas.vonbuelow@novastor.com>
+     22 Johannes Meixner <jsmeix@suse.com>
+     16 Michael Ablassmeier <support@sep.de>
+
+usr/share/rear/restore/NBU/default/300_create_nbu_restore_fs_list.sh
+     22 Gratien D'haese <gratien.dhaese@gmail.com>
+     19 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Johannes Meixner <jsmeix@suse.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/restore/NBU/default/400_restore_with_nbu.sh
+     68 Schlomo Schapiro <github@schlomo.schapiro.org>
+     35 Gratien D'haese <gratien.dhaese@gmail.com>
+     19 Johannes Meixner <jsmeix@suse.com>
+     11 Dag Wieers <dag@wieers.com>
+      2 wzwei <w.zweimueller@salk.at>
+
+usr/share/rear/restore/NETFS/Linux-i386/510_selinux_fixfiles_exclude_dirs.sh
+     18 Johannes Meixner <jsmeix@suse.com>
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/restore/NETFS/default/380_prepare_multiple_isos.sh
+     18 Yoann Laissus <yoann.laissus@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/NETFS/default/400_restore_backup.sh
+    369 Johannes Meixner <jsmeix@suse.com>
+    108 Schlomo Schapiro <github@schlomo.schapiro.org>
+     68 Yoann Laissus <yoann.laissus@gmail.com>
+     40 Gratien D'haese <gratien.dhaese@gmail.com>
+     17 test <kreitz@Dev-Server.mhknet.de>
+     14 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     13 HannesGIT <johannes.link@atos.net>
+      7 Florent <florent.rochette@gmail.com>
+      3 Dag Wieers <dag@wieers.com>
+      2 gdha <gratien.dhaese@gmail.com>
+
+usr/share/rear/restore/NETFS/default/500_selinux_autorelabel.sh
+      8 Johannes Meixner <jsmeix@suse.com>
+      6 Schlomo Schapiro <github@schlomo.schapiro.org>
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Yoann Laissus <yoann.laissus@gmail.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/restore/NETFS/default/510_set_capabilities.sh
+     32 Johannes Meixner <jsmeix@suse.com>
+     20 Markus Anglmaier <markus@oderdoch.net>
+
+usr/share/rear/restore/NSR/default/400_restore_with_nsr.sh
+     26 Johannes Meixner <jsmeix@suse.com>
+     24 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/restore/OBDR/default/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/restore/RBME/default/400_restore_backup.sh
+     41 Gratien D'haese <gratien.dhaese@gmail.com>
+     22 Jeroen Hoekx <jeroen@hoekx.be>
+      8 Johannes Meixner <jsmeix@suse.com>
+      2 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+
+usr/share/rear/restore/REQUESTRESTORE/default/200_prompt_user_to_start_restore.sh
+     23 Dag Wieers <dag@wieers.com>
+      9 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/RSYNC/default/200_remove_relative_rsync_option.sh
+     18 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/RSYNC/default/400_restore_rsync_backup.sh
+    114 Gratien D'haese <gratien.dhaese@gmail.com>
+     11 Johannes Meixner <jsmeix@suse.com>
+     10 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      4 Dag Wieers <dag@wieers.com>
+      2 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+
+usr/share/rear/restore/RSYNC/default/800_copy_restore_log.sh
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+     10 Johannes Meixner <jsmeix@suse.com>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/restore/SESAM/default/400_restore_backup.sh
+     16 Michael Ablassmeier <support@sep.de>
+      3 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/SESAM/default/900_create_missing_directories.sh
+     12 Schlomo Schapiro <github@schlomo.schapiro.org>
+      6 Dag Wieers <dag@wieers.com>
+      5 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/SUSE_LINUX/910_create_missing_directories.sh
+     30 Johannes Meixner <jsmeix@suse.com>
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+      6 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/restore/TSM/default/400_restore_with_tsm.sh
+     40 Schlomo Schapiro <github@schlomo.schapiro.org>
+     34 Johannes Meixner <jsmeix@suse.com>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/restore/ZYPPER/default/400_restore_backup.sh
+    209 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/ZYPPER/default/940_generate_fstab.sh
+     83 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/ZYPPER/default/950_grub2_mkconfig.sh
+     48 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/ZYPPER/default/970_set_root_password.sh
+     39 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/ZYPPER/default/980_initial_network_setup.sh
+     76 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/default/050_remount_async.sh
+     31 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/default/500_selinux_autorelabel.sh
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      2 Florent <florent.rochette@gmail.com>
+
+usr/share/rear/restore/default/900_create_missing_directories.sh
+     12 Schlomo Schapiro <github@schlomo.schapiro.org>
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+     11 fhoeppner <rear@proficom.de>
+      6 Dag Wieers <dag@wieers.com>
+      5 Johannes Meixner <jsmeix@suse.com>
+      2 gdha <gratien.dhaese@gmail.com>
+
+usr/share/rear/restore/default/990_move_away_restored_files.sh
+    107 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/default/995_remount_sync.sh
+     40 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/restore/readme
+     13 Schlomo Schapiro <github@schlomo.schapiro.org>
+     11 Johannes Meixner <jsmeix@suse.com>
+      3 Dag Wieërs <dag@wieers.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/setup/default/010_pre_recovery_script.sh
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/BACULA/etc/bacula/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/BACULA/var/lib/bacula/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/BACULA/var/run/bacula/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/BAREOS/etc/bareos/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/BAREOS/var/lib/bareos/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/BAREOS/var/run/bareos/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/DP/etc/xinetd.d/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/DP/opt/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/DP/var/opt/omni/enhincrdb/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/DP/var/opt/omni/log/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/DP/var/opt/omni/tmp/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/Debian/default.tar.gz
+
+usr/share/rear/skel/Fedora/16/lib/systemd/system/udev-settle.service
+     26 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/Fedora/16/lib/systemd/system/udev-trigger.service
+     11 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/Fedora/16/lib/systemd/system/udev.service
+     14 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/Fedora/17/usr/lib/systemd/system/udev-settle.service
+     28 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/Fedora/17/usr/lib/systemd/system/udev-trigger.service
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/Fedora/17/usr/lib/systemd/system/udev.service
+     16 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/Fedora/default/etc/sysconfig/network-scripts/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/GALAXY/var/log/galaxy/Log_Files/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/GALAXY10/var/log/galaxy/Log_Files/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/GALAXY7/var/log/galaxy/Log_Files/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/Linux-ia64/etc/securetty
+     25 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/Linux-ppc64/etc/event.d/serial
+      9 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/Linux-ppc64/etc/inittab
+     22 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/skel/NBKDC/etc/scripts/system-setup.d/90-start-nbkdc.sh
+     52 Andreas von Bülow <andreas.vonbuelow@novastor.com>
+
+usr/share/rear/skel/NBU/etc/xinetd.d/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/NBU/usr/openv/netbackup/logs/bpbkar/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/NBU/usr/openv/netbackup/logs/bpcd/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/NBU/usr/openv/netbackup/logs/bprestore/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/NBU/usr/openv/netbackup/logs/user_ops/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/NBU/usr/openv/var/auth/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/NBU/usr/openv/var/vnetd/.gitignore
+
+usr/share/rear/skel/NBU/usr/openv/var/vxss/credentials/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/NSR/usr/lib/nsr/.gitignore
+
+usr/share/rear/skel/OBDR/etc/scripts/system-setup.d/43-init-cciss.sh
+     37 Gratien D'haese <gratien.dhaese@gmail.com>
+     28 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/skel/SESAM/etc/scripts/system-setup.d/59-start-sesam-client.sh
+     24 Michael Ablassmeier <support@sep.de>
+
+usr/share/rear/skel/SESAM/usr/lib/systemd/system/multi-user.target.wants/sesam.service
+      2 ma <ma@sep.de>
+
+usr/share/rear/skel/SESAM/usr/lib/systemd/system/sesam.service
+     10 ma <ma@sep.de>
+
+usr/share/rear/skel/default/bin/dhclient-script
+    208 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/bin/dhcpcd.sh
+     48 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/bin/ifup
+      4 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/bin/login
+      8 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/dev/net/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/dev/pts/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/dev/shm/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/etc/dhclient.conf
+     35 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/etc/ethers
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/boot
+      6 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/halt
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/logd
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/reboot
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/ssh
+      9 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/syslog
+      9 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/system-setup
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/tty1
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/tty2
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/tty3
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/tty4
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/event.d/tty5
+     10 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/fstab
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/group
+      6 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/hosts
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/init/control-alt-delete.conf
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/etc/init/rcS.conf
+     36 Gratien D'haese <gratien.dhaese@gmail.com>
+     12 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/etc/init/shutdown.conf
+     18 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/etc/init/start-serial.conf
+      8 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/etc/init/start-sshd.conf
+      8 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/etc/init/start-syslog.conf
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/etc/init/start-ttys.conf
+     16 Gratien D'haese <gratien.dhaese@gmail.com>
+     11 jayfurmanek <furmanek@us.ibm.com>
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/etc/init/tty.conf
+     14 Masanori Mitsugi <mitsugi@linux.vnet.ibm.com>
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/etc/inittab
+     35 Schlomo Schapiro <github@schlomo.schapiro.org>
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/skel/default/etc/ld.so.conf
+      3 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/lilo.conf
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/moduli
+    187 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/motd
+      4 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Johannes Meixner <jsmeix@suse.com>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/skel/default/etc/nsswitch.conf
+     12 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/passwd
+      2 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/etc/profile
+     55 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/skel/default/etc/rsyslog.conf
+     15 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/skel/default/etc/scripts/boot
+     28 Schlomo Schapiro <github@schlomo.schapiro.org>
+     25 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/skel/default/etc/scripts/do-shutdown
+     21 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/scripts/run-serial
+     11 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/etc/scripts/run-sshd
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 Stephan Joerrens <Stephan.Joerrens@fiduciagad.de>
+      2 Schlomo Schapiro <schlomo@schapiro.org>
+
+usr/share/rear/skel/default/etc/scripts/run-syslog
+     19 Schlomo Schapiro <github@schlomo.schapiro.org>
+     19 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      6 Jeroen Hoekx <jeroen@hoekx.be>
+      3 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/etc/scripts/system-setup
+    140 Johannes Meixner <jsmeix@suse.com>
+     82 Schlomo Schapiro <github@schlomo.schapiro.org>
+     44 Florent <florent.rochette@gmail.com>
+     39 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Schlomo Schapiro <schlomo@schapiro.org>
+      3 styerd <styerd@users.noreply.github.com>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/00-functions.sh
+     24 Schlomo Schapiro <github@schlomo.schapiro.org>
+      8 Vladimir Gozora <c@gozora.sk>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/01-run-ldconfig.sh
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/10-console-setup.sh
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/20-check-boot-options.sh
+     28 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/40-start-udev-or-load-modules.sh
+     55 Schlomo Schapiro <github@schlomo.schapiro.org>
+     30 Gratien D'haese <gratien.dhaese@gmail.com>
+     26 Johannes Meixner <jsmeix@suse.com>
+     12 Schlomo Schapiro <schlomo@schapiro.org>
+     12 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+      9 Dag Wieers <dag@wieers.com>
+      6 Robert Paschedag <robert.paschedag@web.de>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/41-load-special-modules.sh
+      7 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/42-engage-scsi.sh
+     13 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/45-serial-console.sh
+     36 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/55-migrate-network-devices.sh
+    135 Schlomo Schapiro <github@schlomo.schapiro.org>
+     19 Sebastien Chabrolles <s.chabrolles@fr.ibm.com>
+      9 Vladimir Gozora <c@gozora.sk>
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Jesper Sander Lindgren <jsl@tdchosting.dk>
+      2 gsbit <guido.scheidegger@bit.admin.ch>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/58-start-dhclient.sh
+     71 Gratien D'haese <gratien.dhaese@gmail.com>
+     14 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 gozora <c@gozora.sk>
+      4 Florent <florent.rochette@gmail.com>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/65-sysctl.sh
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/67-check-by-label-cdrom.sh
+     14 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/etc/scripts/system-setup.d/99-makedev.sh
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/etc/scripts/system-status.sh
+     57 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/syslog-ng-v3.conf
+     14 Schlomo Schapiro <github@schlomo.schapiro.org>
+      7 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/etc/syslog-ng.conf
+     14 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/syslog.conf
+      4 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/skel/default/etc/systemd/system.conf
+     27 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/etc/systemd/system/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/mnt/cdrom/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/mnt/local/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/proc/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/root/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/run/lvm/.gitignore
+
+usr/share/rear/skel/default/run/resolvconf/.gitignore
+
+usr/share/rear/skel/default/run/systemd/journal/syslog/.gitignore
+
+usr/share/rear/skel/default/run/udev/.gitignore
+
+usr/share/rear/skel/default/selinux/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/sys/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/tmp/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/usr/include/.gitignore
+
+usr/share/rear/skel/default/usr/lib/systemd/system/basic.target
+     16 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/basic.target.wants/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/dbus.service
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/dbus.socket
+      6 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/final.target
+     16 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/getty.target
+     11 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/getty@.service
+     59 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/halt.service
+     18 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/halt.target
+     20 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/multi-user.target
+     20 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/poweroff.service
+     18 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/poweroff.target
+     21 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/rear-boot-helper.service
+      8 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/reboot.service
+     18 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/reboot.target
+     21 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/rpcbind.target
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/rsyslog.service
+      8 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Jeroen Hoekx <jeroen@hoekx.be>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/run-system-setup.service
+      8 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/serial-getty@.service
+     30 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/shutdown.target
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/sockets.target
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/sshd.service
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Jeroen Hoekx <jeroen@hoekx.be>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/sysinit.service
+     14 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Jeroen Hoekx <jeroen@hoekx.be>
+      3 Dag Wieers <dag@wieers.com>
+      3 Dag Wieërs <dag@wieers.com>
+      2 Masanori Mitsugi <mitsugi@vnet.linux.ibm.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/sysinit.target
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/syslog.socket
+     29 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/syslog.target
+     19 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/systemd-journald.service
+     32 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/systemd-journald.socket
+     32 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/systemd-logger.service
+     19 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/systemd-logger.socket
+     18 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/systemd-shutdownd.service
+     18 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/systemd-shutdownd.socket
+     18 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/systemd-udev-trigger.service
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/systemd-udevd-control.socket
+     20 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/systemd-udevd-kernel.socket
+     20 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/systemd-udevd.service
+     25 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/udev-control.socket
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/udev-kernel.socket
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/udev-settle.service
+     28 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/udev-trigger.service
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/udev.service
+     16 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/systemd/system/umount.target
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/usr/lib/udev/.gitignore
+
+usr/share/rear/skel/default/var/empty/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/var/lib/dhclient/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/var/lib/dhcpcd/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/var/lib/empty/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/var/lib/nfs/statd/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      1 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/skel/default/var/lib/syslog-ng/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/var/lock/lockdev/.gitignore
+
+usr/share/rear/skel/default/var/lock/lvm/.gitignore
+
+usr/share/rear/skel/default/var/lock/subsys/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/var/log/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/var/run/klogd/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/skel/default/var/run/systemd/generator/.gitignore
+
+usr/share/rear/skel/default/var/run/systemd/journal/.gitignore
+
+usr/share/rear/skel/default/var/tmp/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/verify/BACULA/default/050_check_requirements.sh
+     47 Gratien D'haese <gratien.dhaese@gmail.com>
+     13 Dag Wieers <dag@wieers.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/BACULA/default/100_start_bacula-fd.sh
+     22 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/BAREOS/default/030_bextract_tape_device.sh
+     24 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/BAREOS/default/050_check_requirements.sh
+     35 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Maik Aussendorf <maik.aussendorf@bareos.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/BAREOS/default/100_start_bareos-fd.sh
+     20 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Maik Aussendorf <maik.aussendorf@bareos.com>
+
+usr/share/rear/verify/DP/default/400_verify_dp.sh
+     18 Schlomo Schapiro <github@schlomo.schapiro.org>
+     10 Dag Wieers <dag@wieers.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/DP/default/450_request_gui_restore.sh
+     15 root <root@eabuild2.(none)>
+      9 Johannes Meixner <jsmeix@suse.com>
+      5 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/verify/DP/default/500_select_dp_restore.sh
+    223 Gratien D'haese <gratien.dhaese@gmail.com>
+     17 Johannes Meixner <jsmeix@suse.com>
+      9 Dag Wieers <dag@wieers.com>
+      4 root <root@eabuild2.(none)>
+
+usr/share/rear/verify/DUPLICITY/default/200_check_tmpfs.sh
+     13 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/DUPLICITY/default/250_check_duply_profile.sh
+     10 Gratien D'haese <gratien.dhaese@gmail.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/GALAXY/default/400_start_galaxy_daemons.sh
+     20 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/GALAXY10/default/390_create_ramdisk.sh
+     31 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Johannes Meixner <jsmeix@suse.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/GALAXY10/default/400_start_galaxy_daemons.sh
+     19 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 root <root@msgs88i.msg.de>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/verify/GALAXY10/default/410_ping_commcell.sh
+     17 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/GALAXY10/default/420_login_to_galaxy_and_setup_environment.sh
+     23 Schlomo Schapiro <github@schlomo.schapiro.org>
+      7 Dag Wieers <dag@wieers.com>
+      2 root <root@msgs88i.msg.de>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/GALAXY10/default/500_select_backupset.sh
+     24 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Johannes Meixner <jsmeix@suse.com>
+      3 root <root@msgs88i.msg.de>
+
+usr/share/rear/verify/GALAXY10/default/550_request_point_in_time_restore_parameters.sh
+     22 Andreas Vogler <andreas@vogler.name>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/GALAXY7/default/390_create_ramdisk.sh
+     31 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Johannes Meixner <jsmeix@suse.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/GALAXY7/default/400_start_galaxy_daemons.sh
+     19 Schlomo Schapiro <github@schlomo.schapiro.org>
+      2 Dag Wieers <dag@wieers.com>
+      2 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/verify/GALAXY7/default/410_ping_commcell.sh
+     17 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/GALAXY7/default/420_login_to_galaxy_and_setup_environment.sh
+     23 Schlomo Schapiro <github@schlomo.schapiro.org>
+      7 Dag Wieers <dag@wieers.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/GALAXY7/default/500_select_backupset.sh
+     24 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/GNU/Linux/050_sane_recovery_check.sh
+     34 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Dag Wieërs <dag@wieers.com>
+      4 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 Dag Wieers <dag@wieers.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/GNU/Linux/260_recovery_storage_drivers.sh
+     33 Johannes Meixner <jsmeix@suse.com>
+     24 Schlomo Schapiro <github@schlomo.schapiro.org>
+      4 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/NBU/default/380_request_client_destination.sh
+     35 Gratien D'haese <gratien.dhaese@gmail.com>
+      9 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/NBU/default/390_request_point_in_time_restore_parameters.sh
+     39 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Johannes Meixner <jsmeix@suse.com>
+      7 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/NBU/default/400_verify_nbu.sh
+     17 Schlomo Schapiro <github@schlomo.schapiro.org>
+      5 Dag Wieers <dag@wieers.com>
+      4 Johannes Meixner <jsmeix@suse.com>
+      1 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/verify/NETFS/default/050_start_required_nfs_daemons.sh
+     80 Johannes Meixner <jsmeix@suse.com>
+     43 Schlomo Schapiro <github@schlomo.schapiro.org>
+     15 Dag Wieers <dag@wieers.com>
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+      5 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/verify/NETFS/default/090_set_readonly_options.sh
+      6 Schlomo Schapiro <github@schlomo.schapiro.org>
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/verify/NETFS/default/550_check_backup_archive.sh
+     46 Johannes Meixner <jsmeix@suse.com>
+     19 Schlomo Schapiro <github@schlomo.schapiro.org>
+     15 Dag Wieers <dag@wieers.com>
+     12 Gratien D'haese <gratien.dhaese@gmail.com>
+     10 Yoann Laissus <yoann.laissus@gmail.com>
+      8 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      7 Florent <florent.rochette@gmail.com>
+      5 root <root@rear02.(none)>
+      3 test <kreitz@Dev-Server.mhknet.de>
+      2 Dominik Russenberger <dominik.russenberger@terreactive.ch>
+
+usr/share/rear/verify/NETFS/default/600_check_encryption_key.sh
+      9 HannesGIT <johannes.link@atos.net>
+      2 Jeroen Hoekx <jeroen@hoekx.be>
+      2 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/verify/NSR/default/400_verify_nsr.sh
+     26 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/NSR/default/410_verify_nsr_paths.sh
+      5 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/OBDR/NETFS/default/540_set_backup_compression.sh
+      5 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/verify/OBDR/default/570_seek_backup.sh
+     16 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/RBME/default/150_check_nobody_uid_nfs.sh
+     10 gdha <gratien.dhaese@gmailcom>
+      2 Jeroen Hoekx <jeroen@hoekx.be>
+
+usr/share/rear/verify/RBME/default/540_choose_backup.sh
+     58 Jeroen Hoekx <jeroen@hoekx.be>
+      5 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/RSYNC/GNU/Linux/600_check_rsync_xattr.sh
+     14 Gratien D'haese <gratien.dhaese@gmail.com>
+
+usr/share/rear/verify/RSYNC/default/550_check_remote_backup_archive.sh
+     15 Gratien D'haese <gratien.dhaese@gmail.com>
+      3 Johannes Meixner <jsmeix@suse.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/TSM/default/390_request_point_in_time_restore_parameters.sh
+     34 Schlomo Schapiro <github@schlomo.schapiro.org>
+      9 Gratien D'haese <gratien.dhaese@gmail.com>
+      7 Johannes Meixner <jsmeix@suse.com>
+      3 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/TSM/default/400_verify_tsm.sh
+     72 Schlomo Schapiro <github@schlomo.schapiro.org>
+     20 Kirk VanOpdorp <kirk.vanopdorp@gmail.com>
+     14 Dag Wieers <dag@wieers.com>
+     13 Johannes Meixner <jsmeix@suse.com>
+      7 Sebastien Termeau <st@tdchosting.dk>
+      7 Gratien D'haese <gratien.dhaese@gmail.com>
+      6 Stephan Joerrens <Stephan.Joerrens@fiduciagad.de>
+      3 vhaeuss <volker.hm@gmx.de>
+
+usr/share/rear/verify/USB/NETFS/default/540_choose_backup_archive.sh
+    105 Johannes Meixner <jsmeix@suse.com>
+     34 Dag Wieers <dag@wieers.com>
+      9 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+      5 Dag Wieërs <dag@wieers.com>
+
+usr/share/rear/verify/USB/default/.gitignore
+      3 Jeroen Hoekx <jeroen.hoekx@hamok.be>
+
+usr/share/rear/verify/default/020_cciss_scsi_engage.sh
+     17 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/verify/default/040_validate_variables.sh
+     11 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/verify/default/050_create_mappings_dir.sh
+      8 Gratien D'haese <gratien.dhaese@gmail.com>
+      2 Johannes Meixner <jsmeix@suse.com>
+
+usr/share/rear/wrapup/default/500_post_recovery_script.sh
+      5 Schlomo Schapiro <github@schlomo.schapiro.org>
+
+usr/share/rear/wrapup/default/980_good_bye.sh
+     11 Schlomo Schapiro <github@schlomo.schapiro.org>
+      7 Johannes Meixner <jsmeix@suse.com>
+      5 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/wrapup/default/990_copy_logfile.sh
+     66 Johannes Meixner <jsmeix@suse.com>
+     13 Schlomo Schapiro <github@schlomo.schapiro.org>
+      6 Dag Wieers <dag@wieers.com>
+
+usr/share/rear/wrapup/readme
+      4 Schlomo Schapiro <github@schlomo.schapiro.org>
+
