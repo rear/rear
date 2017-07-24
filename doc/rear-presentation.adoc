@@ -1,4 +1,4 @@
-= Relax-and-Recover: Disaster Recovery and System Migration solution
+= Relax-and-Recover: Disaster Recovery and System Migration solution (2015)
 Dag Wieers <dag@wieers.com>
 
 _This presentation is written in AsciiDoc and can be converted to
@@ -351,4 +351,3 @@ Any questions, ideas, pull-requests ?
   - Create VM with 4GB disk and boot VM
   - Show bash history and perform: +rear recover+
   - Show menu system and modify sizes
-

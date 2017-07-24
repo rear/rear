@@ -503,12 +503,13 @@ _/usr/share/doc_.
 
 
 == AUTHORS
-Gratien Dhaese, Schlomo Schapiro, Johannes Meixner, Vladimir Gozora, Jeroen Hoekx and Dag Wieers.
+The ReaR project was initiated in 2006 by Schlomo Schapiro (https://github.com/schlomo) and Gratien D'haese (https://github.com/gdha) and has since then seen a lot of contributions by many authors. As ReaR deals with bare metal disaster recovery, there is a large amount of code that was contributed by owners and users of specialized hardware and software. Without their combined efforts and contributions ReaR would not be the universal Linux bare metal disaster recovery solution that it is today.
 
-Lars Pinne (original man page).
+As time passed the project was lucky to get the support of additional developers to also help as maintainers: Dag Wieers (https://github.com/dagwieers), Jeroen Hoekx (https://github.com/jhoekx), Johannes Meixner (https://github.com/jsmeix) and Vladimir Gozora (https://github.com/gozora). We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers.
 
-Relax-and-Recover is a collaborative process using Github at:
-http://github.com/rear/
+To see the full list of authors and their contributions please look at the git history (https://github.com/rear/rear/graphs/contributors). We are very thankful to all authors and encourage anybody interested to take a look at our source code and to contribute what you find important.
+
+Relax-and-Recover is a collaborative process using Github at http://github.com/rear/
 
 The Relax-and-Recover website is located at: http://relax-and-recover.org/
 
@@ -516,17 +517,7 @@ The Relax-and-Recover website is located at: http://relax-and-recover.org/
 == COPYRIGHT
 (c) 2006-2017
 
-Schlomo Schapiro
-
-Gratien Dhaese, IT3 Consultants
-
-Johannes Meixner, SUSE
-
-Vladimir Gozora
-
-Jeroen Hoekx
-
-Dag Wieers, Dagit Linux Solutions
+The copyright is held by the original authors of the respective code pieces as can be seen in the git history at https://github.com/rear/rear/graphs/contributors
 
 Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details
 see the GNU General Public License at http://www.gnu.org/licenses/gpl.html
