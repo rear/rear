@@ -1,0 +1,1 @@
+../../ZYPPER/default/970_set_root_password.sh
