@@ -24,9 +24,12 @@ if has_binary sshd; then
     Log "Adding required libfreeblpriv3.so to LIBS"
 
     # copy ssh user
-    if PASSWD_SSH=$(grep ssh /etc/passwd) ; then
+    if PASSWD_SSH=$(egrep "^sshd{0,1}:" /etc/passwd) ; then
     # sshd:x:71:65:SSH daemon:/var/lib/sshd:/bin/false
-        echo "$PASSWD_SSH" >>$ROOTFS_DIR/etc/passwd
+	# skip if this user exists already in the restore system
+	if ! egrep -q "^sshd{0,1}:" $TARGET_FS_ROOT/etc/passwd ; then
+		echo "$PASSWD_SSH" >>$ROOTFS_DIR/etc/passwd
+	fi
         IFS=: read user ex uid gid gecos homedir junk <<<"$PASSWD_SSH"
         # add ssh group to be collected later
         CLONE_GROUPS=( "${CLONE_GROUPS[@]}" "$gid" )

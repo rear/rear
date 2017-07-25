@@ -12,8 +12,10 @@ for u in "${CLONE_USERS[@]}" ; do
 		# pwd="daemon:x:2:2:Daemon:/sbin:/bin/bash"
 		# if the user exists, add to the passwd in rescue system
 		# skip if this user exists already in the rescue system
-		grep -q "^$pwd:" $ROOTFS_DIR/etc/passwd && continue
-		echo "$pwd" >>$ROOTFS_DIR/etc/passwd
+		user=${pwd%%:*}
+		if ! grep -q "^$user:" $ROOTFS_DIR/etc/passwd ; then
+			echo "$pwd" >>$ROOTFS_DIR/etc/passwd
+		fi
 		# strip gid from passwd line
 		pwd="${pwd#*:*:*:}"
 		gid=${pwd%%:*}
@@ -31,7 +33,8 @@ for g in "${CLONE_GROUPS[@]}" ; do
 		# grp="daemon:x:2:"
 		# if the group  exists, add to the group in rescue system
 		# skip if this user exists already in the rescue system
-		grep -q "^$grp" $ROOTFS_DIR/etc/group && continue
+		grpname=${grp%%:*}
+		grep -q "^$grpname:" $ROOTFS_DIR/etc/group && continue
 		echo "$grp" >>$ROOTFS_DIR/etc/group
 	else
 		Debug "WARNING: Could not collect group info for '$g'"
