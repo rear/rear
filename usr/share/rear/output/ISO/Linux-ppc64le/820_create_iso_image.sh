@@ -10,7 +10,14 @@ if [ -d isofs ] ; then
 fi
 
 # mkisofs command for ppc64/ppc64le arch
-$ISO_MKISOFS_BIN $v -o "$ISO_DIR/$ISO_PREFIX.iso" -U -chrp-boot -R -J -volid "$ISO_VOLID" -v -graft-points "${ISO_FILES[@]}" >&2
+# Adapt the chrp-boot option if xorrisofs is used.
+if [[ "$(basename $ISO_MKISOFS_BIN)" == "xorrisofs" ]]; then
+    chrp_boot_option="-chrp-boot-part"
+else
+    chrp_boot_option="-chrp-boot"
+fi
+
+$ISO_MKISOFS_BIN $v -o "$ISO_DIR/$ISO_PREFIX.iso" -U $chrp_boot_option -R -J -volid "$ISO_VOLID" -v -graft-points "${ISO_FILES[@]}" >&2
 
 StopIfError "Could not create ISO image (with $ISO_MKISOFS_BIN)"
 popd >&2
