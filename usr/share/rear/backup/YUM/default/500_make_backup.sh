@@ -34,8 +34,8 @@ test -d $yum_backup_dir || mkdir $verbose -p -m 755 $yum_backup_dir
 # Catalog all files provided by RPM packages
 for file in $(rpm -Vva | grep '^\.\.\.\.\.\.\.\.\.' | grep -v '^...........c' | cut -c 14-); do [ -f $file ] && echo $file; done > $yum_backup_dir/rpm_provided_files.dat
 
-# Gather RPM verification data
-rpm -Va > $yum_backup_dir/rpm_verification.dat
+# Gather RPM verification data (ignore failure here as we're just capturing the current RPM verification info)
+rpm -Va > $yum_backup_dir/rpm_verification.dat || true
 
 # Use the RPM verification data to catalog RPM-provided files which have been modified...
 grep -v ^missing $yum_backup_dir/rpm_verification.dat | cut -c 14- > $yum_backup_dir/rpm_modified_files.dat
