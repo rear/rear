@@ -251,7 +251,11 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 # to not let "rear recover" fail because of such kind of wrong btrfs subvolumes:
                 snapper_base_subvolume="@/.snapshots"
                 # Exclude usual snapshot subvolumes and subvolumes that belong to snapper:
-                subvolumes_exclude_pattern="$snapshot_subvolumes_pattern|$snapper_base_subvolume"
+                if [[ -z $snapshot_subvolumes_pattern ]]; then
+                    subvolumes_exclude_pattern=$snapper_base_subvolume
+                else
+                    subvolumes_exclude_pattern="$snapshot_subvolumes_pattern|$snapper_base_subvolume"
+                fi
                 # Output header:
                 echo "# Btrfs normal subvolumes for $btrfs_device at $btrfs_mountpoint"
                 echo "# Format: btrfsnormalsubvol <device> <mountpoint> <btrfs_subvolume_ID> <btrfs_subvolume_path>"
@@ -390,4 +394,3 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
 ) >> $DISKLAYOUT_FILE
 # End writing output to DISKLAYOUT_FILE.
 Log "End saving filesystem layout"
-
