@@ -1,5 +1,6 @@
 
-# Map source disks to target disks.
+# Map source disks (i.e. 'disk' devices and 'multipath' devices in the LAYOUT_FILE)
+# to target disks (i.e. current devices in the currently running recovery system).
 
 # Skip if not in migration mode:
 is_true "$MIGRATION_MODE" || return 0
@@ -7,53 +8,60 @@ is_true "$MIGRATION_MODE" || return 0
 generate_layout_dependencies
 
 mapping_file_basename="disk_mappings"
-
 MAPPING_FILE="$VAR_DIR/layout/$mapping_file_basename"
-: > "$MAPPING_FILE"
+
+# Local functions that are 'unset' at the end of this script:
 
 # Add a disk mapping from source $1 to target $2.
 # Source and target should be like "sda" "cciss/c1d0".
-add_mapping() {
-    echo "$1 $2" >> "$MAPPING_FILE"
+function add_mapping () {
+    echo "$1 $2" >>"$MAPPING_FILE"
 }
 
 # Return 0 if a mapping for $1 exists
 # i.e. if $1 is used as source in the mapping file
 # (grep returns 0 if found and 1 or 2 otherwise):
-is_mapping_source() {
+function is_mapping_source () {
     grep -q "^$1 " "$MAPPING_FILE"
 }
 
 # Return 0 if $1 is used as a target in a mapping
 # (grep returns 0 if found and 1 or 2 otherwise):
-is_mapping_target() {
+function is_mapping_target () {
     grep -q " $1$" "$MAPPING_FILE"
 }
 
+# Start with an empty mapping file unless there is a user provided mapping file.
 # If etc/rear/mappings/disk_mappings or etc/rear/mappings/disk_devices exists
 # use that as mapping file where etc/rear/mappings/disk_mappings is preferred
 # and etc/rear/mappings/disk_devices is only kept for backward compatibility:
-for user_provided_mapping_file in disk_devices $mapping_file_basename ; do
-    test -f "$user_provided_mapping_file" && cp "$user_provided_mapping_file" "$MAPPING_FILE"
+cat /dev/null >"$MAPPING_FILE"
+for user_provided_mapping_file in $mapping_file_basename disk_devices ; do
+    if test -f "$user_provided_mapping_file" ; then
+        cp "$user_provided_mapping_file" "$MAPPING_FILE"
+        LogPrint "Using user provided mapping file $user_provided_mapping_file"
+        break
+    fi
 done
 
-# Automap old 'disk' devices and old 'multipath' devices in the LAYOUT_FILE
+# Automap original 'disk' devices and 'multipath' devices in the LAYOUT_FILE
 # to current block devices in the currently running recovery system:
-while read keyword old_device old_size junk ; do
-    # Continue with next old device when it is already used as source in the mapping file:
-    is_mapping_source "$old_device" && continue
-    # First, try to find if there is a current disk with same name and same size as the old one:
-    sysfs_device_name="$( get_sysfs_name "$old_device" )"
+while read keyword orig_device orig_size junk ; do
+    # Continue with next original device when it is already used as source in the mapping file:
+    is_mapping_source "$orig_device" && continue
+    # First, try to find if there is a current disk with same name and same size as the original:
+    sysfs_device_name="$( get_sysfs_name "$orig_device" )"
     current_device="/sys/block/$sysfs_device_name"
     if test -e $current_device ; then
         current_size=$( get_disk_size $sysfs_device_name )
-        if test "$old_size" -eq "$current_size" ; then
-            add_mapping "$old_device" "$current_device"
-            # Continue with next old device in the LAYOUT_FILE:
+        if test "$orig_size" -eq "$current_size" ; then
+            add_mapping "$orig_device" "$current_device"
+            Log "Disk $current_device will be used as replacement for $orig_device"
+            # Continue with next original device in the LAYOUT_FILE:
             continue
         fi
     fi
-    # Else, loop over all current block devices to find one of the same size:
+    # Else, loop over all current block devices to find one of the same size as the original:
     for current_device_path in /sys/block/* ; do
         # Continue with next block device if the current one has no queue directory:
         test -d $current_device_path/queue || continue
@@ -65,70 +73,87 @@ while read keyword old_device old_size junk ; do
         # Continue with next one if the current one is already used as target in the mapping file:
         is_mapping_target "$preferred_target_device_name" && continue
         # Use the current one if it is of same size as the old one:
-        if test "$old_size" -eq "$current_size" ; then
-            LogUserOutput "Disk $preferred_target_device_name will be used as replacement for $old_device"
-            add_mapping "$old_device" "$preferred_target_device_name"
-            # Continue with next old device in the LAYOUT_FILE:
+        if test "$orig_size" -eq "$current_size" ; then
+            add_mapping "$orig_device" "$preferred_target_device_name"
+            LogPrint "Disk $preferred_target_device_name will be used as replacement for $orig_device"
+            # Continue with next original device in the LAYOUT_FILE:
             break
         fi
     done
-done < <(grep -E "^disk |^multipath " "$LAYOUT_FILE")
+done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
 
-# For every unmapped old 'disk' devices and old 'multipath' devices in the LAYOUT_FILE
+# For every unmapped original 'disk' devices and 'multipath' devices in the LAYOUT_FILE
 # let the user choose from the still unmapped disks in the currently running recovery system:
-while read -u 3 keyword old_device old_size junk ; do
-    # Continue with next old device when it is already used as source in the mapping file
+while read keyword orig_device orig_size junk ; do
+    # Continue with next original device when it is already used as source in the mapping file
     # i.e. when it is already mapped to one in the currently running recovery system:
-    is_mapping_source "$old_device" && continue
-    # Inform the user about the unmapped old device:
-    preferred_old_device_name="$( get_device_name $old_device )"
-    LogUserOutput "Original disk $preferred_old_device_name does not exist in the target system."
-    # Build the set of still unmapped disks wherefrom the user can choose:
+    is_mapping_source "$orig_device" && continue
+    # Inform the user about the unmapped original device:
+    preferred_orig_device_name="$( get_device_name $orig_device )"
+    LogUserOutput "Original disk $preferred_orig_device_name does not exist in the target system."
+    # Build the set of still unmapped current disks wherefrom the user can choose:
     possible_targets=()
     # Loop over all current block devices to find appropriate ones wherefrom the user can choose:
     for current_device_path in /sys/block/* ; do
-        # Do not include removable devices in the choices for the user:
-        test "$( < $current_device_path/removable )" = "1" && continue
-        # Do not include devices in EXCLUDE_DEVICE_MAPPING in the choices for the user:
         current_device_basename="${current_device_path##*/}"
+        # Do not include removable devices in the choices for the user:
+        if test "$( < $current_device_path/removable )" = "1" ; then
+            Log "$current_device_basename excluded from device mapping choices (is a removable device)"
+            continue
+        fi
+        # Do not include devices in EXCLUDE_DEVICE_MAPPING in the choices for the user.
         # One cannot use IsInArray here because EXCLUDE_DEVICE_MAPPING contains patterns
         # (e.g. "loop*" and "ram*" see default.conf) so that 'case' pattern matching is used:
         for pattern in "${EXCLUDE_DEVICE_MAPPING[@]}" ; do
             case "$current_device_basename" in
                 ($pattern)
+                    Log "$current_device_basename excluded from device mapping choices (matches '$pattern' in EXCLUDE_DEVICE_MAPPING)"
                     # Continue with next block device:
                     continue 2
                     ;;
             esac
         done
         preferred_target_device_name="$( get_device_name $current_device_path )"
+        # Continue with next block device if the current one has no queue directory:
+        if ! test -d $current_device_path/queue ; then
+            Log "$preferred_target_device_name excluded from device mapping choices (has no queue directory)"
+            continue
+        fi
         # Continue with next block device if the current one is already used as target in the mapping file:
-        is_mapping_target "$preferred_target_device_name" && continue
-        # If the current device has a queue directory add the current device as possible choice for the user:
-        test -d $current_device_path/queue && possible_targets=( "${possible_targets[@]}" "$preferred_target_device_name" )
+        if is_mapping_target "$preferred_target_device_name" ; then
+            Log "$preferred_target_device_name excluded from device mapping choices (is already used as mapping target)"
+            continue
+        fi
+        # Add the current device as possible choice for the user:
+        possible_targets=( "${possible_targets[@]}" "$preferred_target_device_name" )
     done
-    # Continue with next old device when no appropriate current block device is found whereto map it.
-    test "${possible_targets[*]}" || continue
+    # Continue with next original device when no appropriate current block device is found whereto it could be mapped:
+    if ! test "${possible_targets[*]}" ; then
+        LogUserOutput "No device found whereto $preferred_orig_device_name could be mapped so that it will not be recreated"
+        continue
+    fi
     # Show the appropriate current block devices and let the user choose:
-    skip_choice="Do not map $preferred_old_device_name"
-    choices=( "${possible_targets[@]}" "$skip_choice" )
-    prompt="Choose an appropriate replacement for $preferred_old_device_name"
-    until IsInArray "$choice" "${choices[@]}" ; do
-        choice="$( UserInput -p "$prompt" -D 0 "${choices[@]}" )"
+    skip_choice="Do not map $preferred_orig_device_name"
+    regular_choices=( "${possible_targets[@]}" "$skip_choice" )
+    rear_shell_choice="Use Relax-and-Recover shell and return back to here"
+    prompt="Choose an appropriate replacement for $preferred_orig_device_name"
+    choice=""
+    until IsInArray "$choice" "${regular_choices[@]}" ; do
+        choice="$( UserInput -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )"
+        test "$rear_shell_choice" = "$choice" && rear_shell
     done
-    # Continue with next old device when the user selected to not map it:
+    # Continue with next original device when the user selected to not map it:
     if test "$skip_choice" = "$choice" ; then
-        LogUserOutput "No mapping for $preferred_old_device_name so that it will not be recreated"
+        LogUserOutput "No mapping for $preferred_orig_device_name so that it will not be recreated"
         continue
     fi
     # Use what the user selected:
-    LogUserOutput "Disk $choice will be used as replacement for $old_device"
-    add_mapping "$old_device" "$choice"
-done 3< <(grep -E "^disk |^multipath " "$LAYOUT_FILE")
+    LogUserOutput "Disk $choice will be used as replacement for $orig_device"
+    add_mapping "$orig_device" "$choice"
+done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
 
-LogUserOutput "This is the disk mapping table:"
-LogUserOutput "    source-disk target-disk"
-LogUserOutput "$( sed -e 's|^|    |' "$MAPPING_FILE" )"
+LogPrint 'This is the disk mapping table (source -> target):'
+LogPrint "$( sed -e 's|^|    |' "$MAPPING_FILE" )"
 
 # Mark unmapped 'disk' devices and 'multipath' devices in the LAYOUT_FILE as done
 # so that unmapped 'disk' and 'multipath' devices will not be recreated:
@@ -138,5 +163,11 @@ while read keyword device junk ; do
         mark_as_done "$device"
         mark_tree_as_done "$device"
     fi
-done < <(grep -E "^disk |^multipath " "$LAYOUT_FILE")
+done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
+
+# Local functions must be 'unset' because bash does not support 'local function ...'
+# cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
+unset -f add_mapping
+unset -f is_mapping_source
+unset -f is_mapping_target
 

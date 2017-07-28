@@ -657,44 +657,44 @@ function UserInput () {
     # (to test for non-empty and no-spaces user input there must be no double quotes because test " " results true):
     if ! test $user_input ; then
         if ! test "$default_input" ; then
-            LogPrint "UserInput: No user input and no default input so that the result is ''"
+            DebugPrint "UserInput: No user input and no default input so that the result is ''"
             echo ""
             return 101
         fi
         # Avoid stderr if default_input is not set or empty or not an integer value:
         if ! test "$default_input" -ge 0 2>/dev/null ; then
-            LogPrint "UserInput: No user input and default input no possible index in choices so that the result is '$default_input'"
+            DebugPrint "UserInput: No user input and default input no possible index in choices so that the result is '$default_input'"
             echo "$default_input"
             return 102
         fi
         if ! test "${choices[$default_input]:=}" ; then
-            LogPrint "UserInput: No user input and default input not in choices so that the result is '$default_input'"
+            DebugPrint "UserInput: No user input and default input not in choices so that the result is '$default_input'"
             echo "$default_input"
             return 103
         fi
-        LogPrint "UserInput: No user input but default input in choices so that the result is '${choices[$default_input]}'"
+        DebugPrint "UserInput: No user input but default input in choices so that the result is '${choices[$default_input]}'"
         echo "${choices[$default_input]}"
         return 104
     fi
     # When there is user input use it regardless of any default input:
     if ! test "$choices" ; then
-        LogPrint "UserInput: User input and no choices so that the result is '$user_input'"
+        DebugPrint "UserInput: User input and no choices so that the result is '$user_input'"
         echo "$user_input"
         return 0
     fi
     # Avoid stderr if user_input is not set or empty or not an integer value:
     if ! test "$user_input" -ge 1 2>/dev/null ; then
-        LogPrint "UserInput: User input no possible index in choices so that the result is '$user_input'"
+        DebugPrint "UserInput: User input no possible index in choices so that the result is '$user_input'"
         echo "$user_input"
         return 105
     fi
     choice_index=$(( user_input - 1 ))
     if ! test "${choices[$choice_index]:=}" ; then
-        LogPrint "UserInput: User input not in choices so that the result is '$user_input'"
+        DebugPrint "UserInput: User input not in choices so that the result is '$user_input'"
         echo "$user_input"
         return 106
     fi
-    LogPrint "UserInput: User input in choices so that the result is '${choices[$choice_index]}'"
+    DebugPrint "UserInput: User input in choices so that the result is '${choices[$choice_index]}'"
     echo "${choices[$choice_index]}"
     return 0
 }
