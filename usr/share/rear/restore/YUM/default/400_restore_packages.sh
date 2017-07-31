@@ -170,7 +170,7 @@ fi
 for missing_file in $( cat $yum_backup_dir/rpm_missing_files.dat )
 do
 	LogPrint "Removing $missing_file from restored system (it was missing on the source system)"
-	rm -f $TARGET_FS_ROOT/$missing_file
+	rm -rf $TARGET_FS_ROOT/$missing_file || true 	# ignore errors so 'rear recover' doesn't fail on individual file removal failures
 done
 
 # Restore the ReaR default bash flags and options (see usr/sbin/rear):
