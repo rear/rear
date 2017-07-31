@@ -63,7 +63,7 @@ for rpm_package in $rpms_in_installion_order ; do
     rpm_package_name_version=${rpm_package%-*}
     rpm_package_name=${rpm_package_name_version%-*}
     test "gpg-pubkey" = "$rpm_package_name" && rpm_package_name=$rpm_package
-    yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT -y reinstall "$rpm_package_name" 1>&2 || echo -n \! >&7 # print a '!' to ignore errors so 'rear recover' doesn't fail on individual pkg failures
+    yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) --installroot=$TARGET_FS_ROOT -y reinstall "$rpm_package_name" 1>&2 || echo -n \! >&7 # print a '!' to ignore errors so 'rear recover' doesn't fail on individual pkg failures
 done
 # One newline ends the "something is still going on" indicator:
 echo "" >&7
@@ -100,11 +100,11 @@ if test "independent_RPMs" = "$YUM_INSTALL_RPMS" ; then
         # so that the exact "gpg-pubkey" package with version and release must be specified to be installed:
         test "gpg-pubkey" = "$rpm_package_name" && rpm_package_name=$rpm_package
         # Report when a non-basic package cannot be installed but do not treat that as an error that aborts "rear recover":
-  	if yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name_version" 1>&2 ; then
+  	if yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name_version" 1>&2 ; then
             Log "Installed '$rpm_package_name_version'"
         else
             Log "Failed to install '$rpm_package_name_version', falling back to '$rpm_package_name'"
-	    if yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name" 1>&2 ; then
+	    if yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name" 1>&2 ; then
                 Log "Installed '$rpm_package_name'"
 	    else
             	echo "!" >&7
@@ -136,11 +136,11 @@ else
         # so that the exact "gpg-pubkey" package with version and release must be specified to be installed:
         test "gpg-pubkey" = "$rpm_package_name" && rpm_package_name=$rpm_package
         # Report when a non-basic package cannot be installed but do not treat that as an error that aborts "rear recover":
-  	if yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name_version" 1>&2 ; then
+  	if yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name_version" 1>&2 ; then
             Log "Installed '$rpm_package_name_version'"
         else
             Log "Failed to install '$rpm_package_name_version', falling back to '$rpm_package_name'"
-	    if yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name" 1>&2 ; then
+	    if yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name" 1>&2 ; then
                 Log "Installed '$rpm_package_name'"
 	    else
                 echo -n "!" >&7

@@ -52,7 +52,8 @@ for rpm_package in $( cut -d ' ' -f1 $yum_backup_dir/installed_RPMs ) ; do
 done
 
 # Store releasever since the ReaR restore image won't have this info
-rpm -q --provides $(rpm -q --whatprovides "system-release(releasever)") | grep "system-release(releasever)" | cut -d ' ' -f 3 > $yum_backup_dir/releasever.dat
+rpm -q --provides $(rpm -q --whatprovides "system-release(releasever)") | grep "system-release(releasever)" | cut -d ' ' -f 3 > $yum_backup_dir/releasever.dat || \
+	/usr/bin/python -c 'import yum;yb=yum.YumBase();yb.doConfigSetup(init_plugins=False); print yb.conf.yumvar["releasever"]' > $yum_backup_dir/releasever.dat
 
 LogPrint "Wrote RPM packages data to $yum_backup_dir"
 

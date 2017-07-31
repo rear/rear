@@ -1,1 +1,0 @@
-../../DUPLICITY/default/600_create_python_symlink.sh

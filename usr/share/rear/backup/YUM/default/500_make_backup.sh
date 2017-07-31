@@ -40,7 +40,7 @@ rpm -Va > $yum_backup_dir/rpm_verification.dat || true
 # Use the RPM verification data to catalog RPM-provided files which have been modified...
 grep -v ^missing $yum_backup_dir/rpm_verification.dat | cut -c 14- > $yum_backup_dir/rpm_modified_files.dat
 # ...or are missing
-grep ^missing $yum_backup_dir/rpm_verification.dat | cut -c 14- > $yum_backup_dir/rpm_missing_files.dat
+grep ^missing $yum_backup_dir/rpm_verification.dat | cut -c 14- > $yum_backup_dir/rpm_missing_files.dat || true		# don't fail is no files are missing
 
 # Create an exclusion file which is a list of the RPM-provided files which have NOT been modified
 grep -Fvxf $yum_backup_dir/rpm_modified_files.dat $yum_backup_dir/rpm_provided_files.dat > $yum_backup_dir/rpm_backup_exclude_files.dat
