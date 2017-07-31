@@ -44,11 +44,11 @@ for u in "${CLONE_USERS[@]}" ; do
 		user=${pwd%%:*}
 		grep -q "^$user:" $TARGET_FS_ROOT/etc/passwd || continue
 		# strip passwd from shadow line
-		pass=$(grep "^${pwd%%:*}:" /etc/shadow)
-		pass=${pwd#*:}
-		pass=${pwd%%:*}
+		pass=$(grep "^$user:" /etc/shadow)
+		pass=${pass#*:}
+		pass=${pass%%:*}
 		# set passwd
-		echo "$pwd:$pass" | chpasswd -e --root $TARGET_FS_ROOT
+		echo "$user:$pass" | chpasswd -e --root $TARGET_FS_ROOT
 	else
 		Debug "WARNING: Could not collect user info for '$u'"
 	fi
