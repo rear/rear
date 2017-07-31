@@ -250,8 +250,18 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 # any btrfs subvolume under '@/.snapshots/' is excluded here from being recreated
                 # to not let "rear recover" fail because of such kind of wrong btrfs subvolumes:
                 snapper_base_subvolume="@/.snapshots"
-                # Exclude usual snapshot subvolumes and subvolumes that belong to snapper:
-                subvolumes_exclude_pattern="$snapshot_subvolumes_pattern|$snapper_base_subvolume"
+                # Exclude usual snapshot subvolumes and subvolumes that belong to snapper.
+                # When SLES12 SP1 (or later) is setup to use btrfs without snapshots
+                # $snapshot_subvolumes_pattern variable will be empty. This special case
+                # must be handled properly when setting up $subvolumes_exclude_pattern
+                # otherwise ReaR would not recreate the btrfs subvolumes during recovery
+                # because an empty pattern in the below egrep -v '|...' command would
+                # exclude all lines (see https://github.com/rear/rear/pull/1435):
+                if test -z "$snapshot_subvolumes_pattern" ; then
+                    subvolumes_exclude_pattern="$snapper_base_subvolume"
+                else
+                    subvolumes_exclude_pattern="$snapshot_subvolumes_pattern|$snapper_base_subvolume"
+                fi
                 # Output header:
                 echo "# Btrfs normal subvolumes for $btrfs_device at $btrfs_mountpoint"
                 echo "# Format: btrfsnormalsubvol <device> <mountpoint> <btrfs_subvolume_ID> <btrfs_subvolume_path>"
@@ -390,4 +400,3 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
 ) >> $DISKLAYOUT_FILE
 # End writing output to DISKLAYOUT_FILE.
 Log "End saving filesystem layout"
-
