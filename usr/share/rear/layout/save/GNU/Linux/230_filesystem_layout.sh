@@ -256,8 +256,9 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 # $snapshot_subvolumes_pattern variable will be empty. This special case
                 # must be handled properly when setting up $subvolumes_exclude_pattern
                 # otherwise ReaR would not recreate the btrfs subvolumes during recovery
-                # (see https://github.com/rear/rear/pull/1435):
-                if [[ -z $snapshot_subvolumes_pattern ]]; then
+                # because an empty pattern in the below egrep -v '|...' command would
+                # exclude all lines (see https://github.com/rear/rear/pull/1435):
+                if test -z "$snapshot_subvolumes_pattern " ; then
                     subvolumes_exclude_pattern=$snapper_base_subvolume
                 else
                     subvolumes_exclude_pattern="$snapshot_subvolumes_pattern|$snapper_base_subvolume"
