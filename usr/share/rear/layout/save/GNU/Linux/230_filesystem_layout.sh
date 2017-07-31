@@ -252,10 +252,11 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 snapper_base_subvolume="@/.snapshots"
                 #
                 # Exclude usual snapshot subvolumes and subvolumes that belong to snapper.
-                # WARNING: When SLES12 SP1 (or above) is setup to use btrfs without snapshots
+                # When SLES12 SP1 (or later) is setup to use btrfs without snapshots
                 # $snapshot_subvolumes_pattern variable will be empty. This special case
-                # must be handled properly when setting up $subvolumes_exclude_pattern variable
-                # or the ReaR may failed recreating btrfs subvolume during recovery. (see #1345)
+                # must be handled properly when setting up $subvolumes_exclude_pattern
+                # otherwise ReaR would not recreate the btrfs subvolumes during recovery
+                # (see https://github.com/rear/rear/pull/1435):
                 if [[ -z $snapshot_subvolumes_pattern ]]; then
                     subvolumes_exclude_pattern=$snapper_base_subvolume
                 else
