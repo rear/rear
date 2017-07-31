@@ -147,8 +147,9 @@ while read keyword orig_device orig_size junk ; do
     rear_shell_choice="Use Relax-and-Recover shell and return back to here"
     prompt="Choose an appropriate replacement for $preferred_orig_device_name"
     choice=""
+    userinput=""
     until IsInArray "$choice" "${regular_choices[@]}" ; do
-        choice="$( UserInput -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )"
+        choice="$( UserInput -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )" && userinput="yes" || userinput="no"
         test "$rear_shell_choice" = "$choice" && rear_shell
     done
     # Continue with next original device when the user selected to not map it:
@@ -158,7 +159,11 @@ while read keyword orig_device orig_size junk ; do
     fi
     # Use what the user selected:
     add_mapping "$orig_device" "$choice"
-    LogUserOutput "Using $choice (chosen by user) as replacement for $orig_device"
+    if is_true "$userinput" ; then
+        LogUserOutput "Using $choice (chosen by user) as replacement for $orig_device"
+    else
+        LogUserOutput "Using $choice (default choice) as replacement for $orig_device"
+    fi
 done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
 
 # Show the mappings to the user and let him confirm the mappings
@@ -170,12 +175,17 @@ choices[0]="Confirm disk mapping and continue '$rear_workflow'"
 choices[1]="Edit disk mapping ($MAPPING_FILE)"
 choices[2]="Use Relax-and-Recover shell and return back to here"
 choices[3]="Abort '$rear_workflow'"
+prompt="Confirm or edit the disk mapping"
+choice=""
+userinput=""
 while true ; do
     LogUserOutput 'Current disk mapping table (source -> target):'
     LogUserOutput "$( sed -e 's|^|    |' "$MAPPING_FILE" )"
-    case "$( UserInput -p "Confirm or edit the disk mapping" -D "${choices[0]}" "${choices[@]}" )" in
+    choice="$( UserInput -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && userinput="yes" || userinput="no"
+    case "$choice" in
         (${choices[0]})
             # Continue recovery:
+            is_true "$userinput" && LogPrint "User confirmed disk mapping" || LogPrint "Continuing '$rear_workflow' by default"
             break
             ;;
         (${choices[1]})
