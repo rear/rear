@@ -25,7 +25,7 @@ if ! is_true "$YUM_BACKUP_SELINUX_CONTEXTS" ; then
 fi
 
 LogPrint "Restoring SELinux contexts (YUM_BACKUP_SELINUX_CONTEXTS=$YUM_BACKUP_SELINUX_CONTEXTS)"
-cat $( dirname "$backuparchive" )/selinux_contexts.dat | chroot $TARGET_FS_ROOT/ xargs -n 2 chcon -h -v
+cat $( dirname "$backuparchive" )/selinux_contexts.dat | chroot $TARGET_FS_ROOT/ xargs -n 2 chcon -h $v
 
 # SELinux policy can become invalid if installed too early in the restore process, so reinstall it to ensure
 # that it is valid after we've restored the SELinux contexts
