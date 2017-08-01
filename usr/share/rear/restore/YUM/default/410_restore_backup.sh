@@ -112,6 +112,12 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                     if tar --usage | grep -q selinux ; then
                         BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --selinux"
                     fi
+                    if tar --usage | grep -wq -- --xattrs ; then
+                        BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --xattrs"
+                    fi
+                    if tar --usage | grep -wq -- --xattrs-include ; then
+                        BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --xattrs-include=\"*.*\""
+                    fi
                 fi
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
                     #BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
@@ -119,8 +125,8 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                     cp -a $TMP_DIR/restore-exclude-list.txt $TARGET_FS_ROOT/tmp
                     BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=/tmp/restore-exclude-list.txt "
                 fi
-                Log dd if=$restore_input \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --xattrs --xattrs-include="*.*" --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C / -x -f -
-                dd if=$restore_input | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --xattrs --xattrs-include="*.*" --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C / -x -f -
+                Log dd if=$restore_input \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C / -x -f -
+                dd if=$restore_input | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C / -x -f -
                 ;;
             (rsync)
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
