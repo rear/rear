@@ -56,7 +56,7 @@ while read keyword orig_device orig_size junk ; do
         current_size=$( get_disk_size $sysfs_device_name )
         if test "$orig_size" -eq "$current_size" ; then
             add_mapping "$orig_device" "$current_device"
-            Log "Using $current_device (same name and same size) as replacement for $orig_device"
+            LogPrint "Using $current_device (same name and same size) for recreating $orig_device"
             # Continue with next original device in the LAYOUT_FILE:
             continue
         fi
@@ -75,7 +75,7 @@ while read keyword orig_device orig_size junk ; do
         # Use the current one if it is of same size as the old one:
         if test "$orig_size" -eq "$current_size" ; then
             add_mapping "$orig_device" "$preferred_target_device_name"
-            LogPrint "Using $preferred_target_device_name (same size) as replacement for $orig_device"
+            LogPrint "Using $preferred_target_device_name (same size) for recreating $orig_device"
             # Break looping over all current block devices to find one
             # and continue with next original device in the LAYOUT_FILE:
             break
@@ -137,7 +137,7 @@ while read keyword orig_device orig_size junk ; do
     # At the end the mapping file is shown and the user can edit it if he does not like an automated mapping:
     if test "1" -eq "${#possible_targets[@]}" ; then
         add_mapping "$orig_device" "$possible_targets"
-        LogPrint "Using $possible_targets (the only appropriate) as replacement for $orig_device"
+        LogPrint "Using $possible_targets (the only appropriate) for recreating $orig_device"
         # Continue with next original device in the LAYOUT_FILE:
         continue
     fi
@@ -147,9 +147,9 @@ while read keyword orig_device orig_size junk ; do
     rear_shell_choice="Use Relax-and-Recover shell and return back to here"
     prompt="Choose an appropriate replacement for $preferred_orig_device_name"
     choice=""
-    userinput=""
+    wilful_input=""
     until IsInArray "$choice" "${regular_choices[@]}" ; do
-        choice="$( UserInput -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )" && userinput="yes" || userinput="no"
+        choice="$( UserInput -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )" && wilful_input="yes" || wilful_input="no"
         test "$rear_shell_choice" = "$choice" && rear_shell
     done
     # Continue with next original device when the user selected to not map it:
@@ -159,10 +159,10 @@ while read keyword orig_device orig_size junk ; do
     fi
     # Use what the user selected:
     add_mapping "$orig_device" "$choice"
-    if is_true "$userinput" ; then
-        LogUserOutput "Using $choice (chosen by user) as replacement for $orig_device"
+    if is_true "$wilful_input" ; then
+        LogUserOutput "Using $choice (chosen by user) for recreating $orig_device"
     else
-        LogUserOutput "Using $choice (default choice) as replacement for $orig_device"
+        LogUserOutput "Using $choice (default choice) for recreating $orig_device"
     fi
 done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
 
@@ -177,15 +177,15 @@ choices[2]="Use Relax-and-Recover shell and return back to here"
 choices[3]="Abort '$rear_workflow'"
 prompt="Confirm or edit the disk mapping"
 choice=""
-userinput=""
+wilful_input=""
 while true ; do
     LogUserOutput 'Current disk mapping table (source -> target):'
     LogUserOutput "$( sed -e 's|^|    |' "$MAPPING_FILE" )"
-    choice="$( UserInput -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && userinput="yes" || userinput="no"
+    choice="$( UserInput -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
     case "$choice" in
         (${choices[0]})
             # Continue recovery:
-            is_true "$userinput" && LogPrint "User confirmed disk mapping" || LogPrint "Continuing '$rear_workflow' by default"
+            is_true "$wilful_input" && LogPrint "User confirmed disk mapping" || LogPrint "Continuing '$rear_workflow' by default"
             break
             ;;
         (${choices[1]})
