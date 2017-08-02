@@ -6,8 +6,8 @@
 # (i.e. so that GRUB is installed in the target system).
 #
 
-# If /sbin/grubby does not exist on the target system, we cannot run it
-test -e $TARGET_FS_ROOT/sbin/grubby || return
+# If /sbin/grub-install does not exist on the target system, we don't have grub (legacy)
+test -e $TARGET_FS_ROOT/sbin/grub-install || return
 
 # Try to care about possible errors
 # see https://github.com/rear/rear/wiki/Coding-Style
