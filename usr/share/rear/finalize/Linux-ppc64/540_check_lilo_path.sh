@@ -1,4 +1,10 @@
-# THIS SCRIPT CONTAINS PPC64/PPC64LE SPECIFIC
+# THIS SCRIPT CONTAINS PPC64 SPECIFIC
+#################################################################
+# The purpose of this script is to check if the "part" variable in /etc/lilo.conf
+# is an existing disk partition on the local system. If not replace it with the PReP
+# partition path.
+#
+# This script must be run before 610_intall_lilo.sh and 550_rebuild_initramfs.sh
 #################################################################
 
 # skip if lilo conf is not found
