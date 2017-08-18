@@ -21,19 +21,21 @@ if test -f $TARGET_FS_ROOT/etc/lilo.conf; then
 fi
 
 # Find PPC PReP Boot partitions
-part=$( awk -F '=' '/^boot/ {print $2}' $TARGET_FS_ROOT/etc/yaboot.conf )
+PREP_BOOT_PART=$( awk -F '=' '/^boot/ {print $2}' $TARGET_FS_ROOT/etc/yaboot.conf )
 
-# test $part is not null and is an existing partition on the current system.
-if ( test -n "$part" ) && ( fdisk -l 2>/dev/null | grep -q "$part" ) ; then
-    LogPrint "Boot partion found in yaboot.conf: $part"
+# test $PREP_BOOT_PART is not null and is an existing partition on the current system.
+if ( test -n "$PREP_BOOT_PART" ) && ( fdisk -l 2>/dev/null | grep -q "$PREP_BOOT_PART" ) ; then
+    LogPrint "Boot partion found in yaboot.conf: $PREP_BOOT_PART"
     # Run mkofboot directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
 else
     # If the device found in yaboot.conf is not valid, find prep partition in
     # disklayout file and use it in yaboot.conf.
     LogPrint "Can't find a valid partition in yaboot.conf"
     LogPrint "Looking for PPC PReP partition in $DISKLAYOUT_FILE"
-    newpart=$( awk -F ' ' '/^part / {if ($6 ~ /prep/) {print $7}}' $DISKLAYOUT_FILE )
-    LogPrint "Updating boot = $newpart in lilo.conf"
-    sed -i -e "s|^boot.*|boot = $newpart|" $TARGET_FS_ROOT/etc/yaboot.conf
-    part=$newpart
+    new_boot_part=$( awk -F ' ' '/^part / {if ($6 ~ /prep/) {print $7}}' $DISKLAYOUT_FILE )
+    LogPrint "Updating boot = $new_boot_part in lilo.conf"
+    sed -i -e "s|^boot.*|boot = $new_boot_part|" $TARGET_FS_ROOT/etc/yaboot.conf
+    PREP_BOOT_PART="$new_boot_part"
 fi
+
+export PREP_BOOT_PART

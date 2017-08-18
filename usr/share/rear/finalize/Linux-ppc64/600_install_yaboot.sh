@@ -17,8 +17,10 @@ fi
 # Reinstall yaboot boot loader
 LogPrint "Installing PPC PReP Boot partition."
 
+test -z "$PREP_BOOT_PART" && LogPrint "PReP boot partition not found."
+
 LogPrint "Running mkofboot ..."
-chroot $TARGET_FS_ROOT /sbin/mkofboot -b $part --filesystem raw -f
+chroot $TARGET_FS_ROOT /sbin/mkofboot -b "$PREP_BOOT_PART" --filesystem raw -f
 [ $? -eq 0 ] && NOBOOTLOADER=
 
 test $NOBOOTLOADER && LogPrint "No bootloader configuration found. Install boot partition manually."
