@@ -6,6 +6,11 @@
 UdevQueryName=""
 type -p udevinfo >/dev/null && UdevQueryName="udevinfo -r -q name -n"
 type -p udevadm >/dev/null && UdevQueryName="udevadm info --query=name --name"
+# udevinfo is deprecated by udevadm (SLES 10 still uses udevinfo)
+UdevSymlinkName=""
+type -p udevinfo >/dev/null && UdevSymlinkName="udevinfo -r / -q symlink -n"
+type -p udevadm >/dev/null &&  UdevSymlinkName="udevadm info --root --query=symlink --name"
+
 [[ -z "$UdevQueryName" ]] && {
 	LogPrint "Could not find udevinfo nor udevadm (skip diskbyid_mappings)"
 	return
@@ -13,8 +18,24 @@ type -p udevadm >/dev/null && UdevQueryName="udevadm info --query=name --name"
 
 ls /dev/disk/by-id | while read ID;
 do
+	# create diskbyid_mappings file:
+	# /dev/disk/by-id/XXXXX /dev/YYYYY
 	ID_NEW=$($UdevQueryName /dev/disk/by-id/$ID)
-	echo $ID $ID_NEW
-done >$VAR_DIR/recovery/diskbyid_mappings  
+	if [[ $ID_NEW =~ ^dm- ]]; then
+		# If dm- device is a multipath, get its /dev/mapper/name instead of /dev/dm-X
+		# as /dev/dm-X can change across reboot
+		SYMLINKS=$($UdevSymlinkName /dev/$ID_NEW)
+	    set -- $SYMLINKS
+	    while [ $# -gt 0 ]; do
+	     	if [[ $1 =~ /dev/mapper/ ]]; then
+	        	ID_NEW=${1#/dev/}
+	        	break
+	      else
+	        	shift
+	      fi
+	    done
+	fi
+	echo /dev/disk/by-id/$ID /dev/$ID_NEW
+done >$VAR_DIR/recovery/diskbyid_mappings
 
 [[ -f $VAR_DIR/recovery/diskbyid_mappings ]] &&  Log "Saved diskbyid_mappings"

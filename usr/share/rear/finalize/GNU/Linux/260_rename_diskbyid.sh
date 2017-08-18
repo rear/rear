@@ -17,7 +17,7 @@
 # Those devices have already been adjusted in
 # verify/GNU/Linux/21_migrate_recovery_configuration.sh
 
-FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg /boot/grub/device.map /boot/efi/*/*/grub.cfg /etc/lvm/lvm.conf"
+FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg /boot/grub/device.map /boot/efi/*/*/grub.cfg /etc/lvm/lvm.conf /etc/lilo.conf /etc/yaboot.conf /etc/default/grub_installdevice"
 
 OLD_ID_FILE=${VAR_DIR}/recovery/diskbyid_mappings
 NEW_ID_FILE=$TMP_DIR/diskbyid_mappings
@@ -25,12 +25,18 @@ NEW_ID_FILE=$TMP_DIR/diskbyid_mappings
 [ ! -s "$OLD_ID_FILE" ] && return 0
 [ -z "$FILES" ] && return 0
 
+# Apply device mapping to replace device in case of migration.  
+tmp_layout=$LAYOUT_FILE
+LAYOUT_FILE="$OLD_ID_FILE"
+source $SHARE_DIR/layout/prepare/default/320_apply_mappings.sh
+LAYOUT_FILE=$tmp_layout
+
 # udevinfo is deprecated by udevadm (SLES 10 still uses udevinfo)
 UdevSymlinkName=""
 type -p udevinfo >/dev/null && UdevSymlinkName="udevinfo -r / -q symlink -n"
 type -p udevadm >/dev/null &&  UdevSymlinkName="udevadm info --root --query=symlink --name"
 [[ -z "$UdevSymlinkName" ]] && {
-	LogPrint "Could not find udevinfo nor udevadm (skip 160_rename_diskbyid.sh)"
+	LogPrint "Could not find udevinfo nor udevadm (skip 260_rename_diskbyid.sh)"
 	return
 	}
 
@@ -49,7 +55,7 @@ while read ID DEV_NAME; do
     while [ $# -gt 0 ]; do
       if [[ $1 =~ /dev/disk/by-id ]]; then
         # bingo, we found what we are looking for
-        ID_NEW=${1#/dev/disk/by-id/} # cciss-3600508b1001cd2b56e1aeab1f82dd70d
+        ID_NEW=${1}
         break
       else
         shift
@@ -69,8 +75,8 @@ for file in $FILES; do
 	while read ID DEV_NAME ID_NEW; do
 		if [ -n "$ID_NEW" ]; then
 			# great, we found a new device
-			ID_FULL=/dev/disk/by-id/$ID
-			ID_NEW_FULL=/dev/disk/by-id/$ID_NEW
+			ID_FULL=$ID
+			ID_NEW_FULL=$ID_NEW
 			sed -i "s#$ID_FULL\([^-a-zA-Z0-9]\)#$ID_NEW_FULL\1#g" \
 				$realfile
 			#                 ^^^^^^^^^^^^^^^
@@ -83,7 +89,7 @@ for file in $FILES; do
 			# lets try with the DEV_NAME as fallback
 			[ -z "$DEV_NAME" ] && continue
 			# not even DEV_NAME exists, we can't do anything
-			ID_FULL=/dev/disk/by-id/$ID
+			ID_FULL=$ID
 			sed -i "s#$ID_FULL\([^-a-zA-Z0-9]\)#/dev/$DEV_NAME\1#g" \
 				$realfile
 			sed -i "s#$ID_FULL\$#/dev/$DEV_NAME#g" $realfile
