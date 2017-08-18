@@ -81,6 +81,9 @@ for file in $FILES; do
 			ID_FULL=$ID
 			ID_NEW_FULL=$ID_NEW
 
+			# If ID is the same, no need to change, go the next device.
+			[[ "$ID" == "$ID_NEW" ]] && continue
+
 			# Using w flag to store changes made by sed in a output file $sed_change_monitor
 			# if no change is made, $sed_change_monitor will stay empty.
 			sed -i "s#$ID_FULL\([^-a-zA-Z0-9]\)#$ID_NEW_FULL\1#w $sed_change_monitor" \
