@@ -24,7 +24,7 @@ fi
 part=$( awk -F '=' '/^boot/ {print $2}' $TARGET_FS_ROOT/etc/yaboot.conf )
 
 # test $part is not null and is an existing partition on the current system.
-if ( test -n $part ) && ( fdisk -l 2>/dev/null | grep -q $part ) ; then
+if ( test -n "$part" ) && ( fdisk -l 2>/dev/null | grep -q "$part" ) ; then
     LogPrint "Boot partion found in yaboot.conf: $part"
     # Run mkofboot directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
 else
