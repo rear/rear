@@ -37,8 +37,9 @@ blacklist {
     modprobe dm-multipath >&2
     multipath >&2
     if [ $? -ne 0 ] ; then
-        # Asking to the User what to do next multipath command return 1
+        # Asking to the User what to do after multipath command return 1.
         # It could be because no multipath device were found (sles11/rhel6)
+        # or a real problem in the multipath configuration.
         LogPrint "Failed to activate multipath, or no multipath device found."
 
         rear_workflow="rear $WORKFLOW"
