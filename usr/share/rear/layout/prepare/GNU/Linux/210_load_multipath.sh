@@ -37,11 +37,52 @@ blacklist {
     modprobe dm-multipath >&2
     multipath >&2
     if [ $? -ne 0 ] ; then
+        # Asking to the User what to do next multipath command return 1
+        # It could be because no multipath device were found (sles11/rhel6)
         LogPrint "Failed to activate multipath, or no multipath device found."
-        user_input="$(UserInput -t 30 -p "Do you need to enter in rear_shell to manually activate multipath ? [type 'yes']")"
-        if [ $user_input == "yes" ]; then
-            rear_shell "Did you activate the multipath devices?"
-        fi
+
+        rear_workflow="rear $WORKFLOW"
+        unset choices
+        choices[0]="Multipath is not needed, please continue recovery."
+        choices[1]="Run multipath with debug options."
+        choices[2]="Enter into rear-shell to manually debug multipath."
+        choices[3]="Abort '$rear_workflow'"
+        prompt="Choice:"
+        choice=""
+        wilful_input=""
+
+        while true ; do
+            echo
+            choice="$( UserInput -t 30 -p "$prompt" -D "${choices[0]}" "${choices[@]}")"&& wilful_input="yes" || wilful_input="no"
+            case "$choice" in
+                (${choices[0]})
+                    # continue recovery without multipath
+                    is_true "$wilful_input" && LogPrint "User confirmed continuing without multipath" || LogPrint "Continuing '$rear_workflow' by default"
+                    LogPrint "If you don't need multipath on this server, you should consider removing BOOT_ON_SAN parameter from your rear configuration file."
+                    break
+                    ;;
+                (${choices[1]})
+                    # Run multipath in debug level
+                    LogPrint "starting multipath -v3 (debug mode)"
+                    multipath -v3
+                    ;;
+                (${choices[2]})
+                    # Exit to shell to debug multipathing issue
+                    rear_shell "Do you want to go back to '$rear_workflow' ?"
+                    ;;
+                (${choices[3]})
+                    # Abort rear recovery
+                    abort_recreate
+                    Error "User chose to abort '$rear_workflow' in ${BASH_SOURCE[0]}"
+                    ;;
+            esac
+            # if no more error, break the loop and continue recovery.
+            multipath >&2 && break
+        done
+
+        LogPrint "multipath activated"
+        dmsetup ls --target multipath
+        multipath -l
     else
         LogPrint "multipath activated"
         dmsetup ls --target multipath
