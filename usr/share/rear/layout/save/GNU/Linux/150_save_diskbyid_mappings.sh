@@ -39,7 +39,7 @@ do
 	      fi
 	    done
 	fi
-	echo /dev/disk/by-id/$ID /dev/$ID_NEW
+	echo $ID /dev/$ID_NEW
 done >$VAR_DIR/recovery/diskbyid_mappings
 
 [[ -f $VAR_DIR/recovery/diskbyid_mappings ]] &&  Log "Saved diskbyid_mappings"
