@@ -38,7 +38,7 @@ blacklist {
     multipath >&2
     if [ $? -ne 0 ] ; then
         LogPrint "Failed to activate multipath, or no multipath device found."
-        user_input="$(UserInput -t 30 -p "Type 'yes' to enter in rear_shell")"
+        user_input="$(UserInput -t 30 -p "Do you need to enter in rear_shell to manually activate multipath ? [type 'yes']")"
         if [ $user_input == "yes" ]; then
             rear_shell "Did you activate the multipath devices?"
         fi
