@@ -5,15 +5,18 @@
 #  (like finalize/GNU/Linux/250_migrate_disk_devices_layout.sh)
 #
 # OLD_ID_FILE contains entries like these (last 2 lines are multipath targets)
-# /dev/disk/by-id/dm-name-rootvg-lv_swap /dev/mapper/rootvg-lv_swap
-# /dev/disk/by-id/dm-name-rootvg-lvroot /dev/mapper/rootvg-lvroot
-# /dev/disk/by-id/dm-uuid-LVM-AkjnD2jS2SCCZKbxkZeaByuZLNdHc6qCYp35NGzNbhMaL3YZYtRxuPoerlAkOcj3 /dev/mapper/rootvg-lvroot
-# /dev/disk/by-id/dm-uuid-LVM-AkjnD2jS2SCCZKbxkZeaByuZLNdHc6qCeXNhvq6sxq6LQh4aksjr1WUANFuCKooc /dev/mapper/rootvg-lv_swap
-# /dev/disk/by-id/scsi-0QEMU_QEMU_CD-ROM_drive-scsi0-0-0-0 /dev/sr0
-# /dev/disk/by-id/virtio-a1bd20bf-f66d-442c-8 /dev/vda
-# /dev/disk/by-id/virtio-a1bd20bf-f66d-442c-8-part1 /dev/vda1
-# /dev/disk/by-id/virtio-a1bd20bf-f66d-442c-8-part2 /dev/vda2
-# /dev/disk/by-id/virtio-a1bd20bf-f66d-442c-8-part3 /dev/vda3
+# dm-name-rootvg-lv_swap /dev/mapper/rootvg-lv_swap
+# dm-name-rootvg-lvroot /dev/mapper/rootvg-lvroot
+# dm-uuid-LVM-AkjnD2jS2SCCZKbxkZeaByuZLNdHc6qCYp35NGzNbhMaL3YZYtRxuPoerlAkOcj3 /dev/mapper/rootvg-lvroot
+# dm-uuid-LVM-AkjnD2jS2SCCZKbxkZeaByuZLNdHc6qCeXNhvq6sxq6LQh4aksjr1WUANFuCKooc /dev/mapper/rootvg-lv_swap
+# scsi-0QEMU_QEMU_CD-ROM_drive-scsi0-0-0-0 /dev/sr0
+# virtio-a1bd20bf-f66d-442c-8 /dev/vda
+# virtio-a1bd20bf-f66d-442c-8-part1 /dev/vda1
+# virtio-a1bd20bf-f66d-442c-8-part2 /dev/vda2
+# virtio-a1bd20bf-f66d-442c-8-part3 /dev/vda3
+#
+# cciss-3600508b100104c3953573830524b0004 /dev/cciss/c0d0
+# cciss-3600508b100104c3953573830524b0004-part1 /dev/cciss/c0d0p1
 
 FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg /boot/grub/device.map /boot/efi/*/*/grub.cfg /etc/lvm/lvm.conf /etc/lilo.conf /etc/yaboot.conf /etc/default/grub_installdevice"
 
@@ -53,7 +56,7 @@ while read ID DEV_NAME; do
     while [ $# -gt 0 ]; do
       if [[ $1 =~ /dev/disk/by-id ]]; then
         # bingo, we found what we are looking for
-        ID_NEW=${1}
+        ID_NEW=${1#/dev/disk/by-id/} # cciss-3600508b1001cd2b56e1aeab1f82dd70d
         break
       else
         shift
@@ -77,12 +80,13 @@ for file in $FILES; do
 		sed_change=0
 
 		if [ -n "$ID_NEW" ]; then
-			# great, we found a new device
-			ID_FULL=$ID
-			ID_NEW_FULL=$ID_NEW
 
-			# If ID is the same, no need to change, go the next device.
-			[[ "$ID" == "$ID_NEW" ]] && continue
+      # If ID and ID_NEW are the same, no need to change, go the next device.
+      [[ "$ID" == "$ID_NEW" ]] && continue
+
+			# great, we found a new device
+			ID_FULL=/dev/disk/by-id/$ID
+			ID_NEW_FULL=/dev/disk/by-id/$ID_NEW
 
 			# Using w flag to store changes made by sed in a output file $sed_change_monitor
 			# if no change is made, $sed_change_monitor will stay empty.
