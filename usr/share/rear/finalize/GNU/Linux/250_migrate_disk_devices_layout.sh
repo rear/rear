@@ -4,7 +4,6 @@ if [[ ! -s "$MAPPING_FILE" ]] ; then
     return
 fi
 
-### reuse the script in layout/prepare/default/320_apply_mappings.sh
 # FIXME: Why is there is no matching popd for this pushd?
 # Cf. finalize/GNU/Linux/150_migrate_uuid_tags.sh where a popd is at the end.
 # If there is intentionally no popd here an explanation why there is no popd is missing.
@@ -37,8 +36,5 @@ for file in     [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/
                 fi
         fi
 
-        tmp_layout=$LAYOUT_FILE
-        LAYOUT_FILE="$file"
-        source $SHARE_DIR/layout/prepare/default/320_apply_mappings.sh
-        LAYOUT_FILE=$tmp_layout
+        apply-mappings $file
 done
