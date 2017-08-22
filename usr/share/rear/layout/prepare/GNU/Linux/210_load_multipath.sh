@@ -52,14 +52,16 @@ blacklist {
         choice=""
         wilful_input=""
 
-        while true ; do
+        # looping on this menu while multipath failed to list device.
+        # Note: On sles11/rhel6, multipath failed if no multipath device is found.
+        while ! multipath ; do
             echo
             choice="$( UserInput -t 30 -p "$prompt" -D "${choices[0]}" "${choices[@]}")"&& wilful_input="yes" || wilful_input="no"
             case "$choice" in
                 (${choices[0]})
                     # continue recovery without multipath
                     is_true "$wilful_input" && LogPrint "User confirmed continuing without multipath" || LogPrint "Continuing '$rear_workflow' by default"
-                    LogPrint "If you don't need multipath on this server, you should consider removing BOOT_ON_SAN parameter from your rear configuration file."
+                    LogPrint "WARNING: If you don't need multipath on this server, you should consider removing BOOT_ON_SAN parameter from your rear configuration file."
                     break
                     ;;
                 (${choices[1]})
@@ -77,8 +79,6 @@ blacklist {
                     Error "User chose to abort '$rear_workflow' in ${BASH_SOURCE[0]}"
                     ;;
             esac
-            # if no more error, break the loop and continue recovery.
-            multipath >&2 && break
         done
 
         LogPrint "multipath activated"
