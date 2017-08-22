@@ -27,10 +27,12 @@ NEW_ID_FILE="$TMP_DIR/diskbyid_mappings"
 [ -z "$FILES" ] && return 0
 
 # Apply device mapping to replace device in case of migration.
-tmp_layout="$LAYOUT_FILE"
-LAYOUT_FILE="$OLD_ID_FILE"
-source $SHARE_DIR/layout/prepare/default/320_apply_mappings.sh
-LAYOUT_FILE="$tmp_layout"
+apply-mappings $OLD_ID_FILE
+
+# tmp_layout="$LAYOUT_FILE"
+# LAYOUT_FILE="$OLD_ID_FILE"
+# source $SHARE_DIR/layout/prepare/default/320_apply_mappings.sh
+# LAYOUT_FILE="$tmp_layout"
 
 # udevinfo is deprecated by udevadm (SLES 10 still uses udevinfo)
 UdevSymlinkName=""
