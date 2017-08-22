@@ -6,13 +6,14 @@
 UdevQueryName=""
 type -p udevinfo >/dev/null && UdevQueryName="udevinfo -r -q name -n"
 type -p udevadm >/dev/null && UdevQueryName="udevadm info --query=name --name"
+
 # udevinfo is deprecated by udevadm (SLES 10 still uses udevinfo)
 UdevSymlinkName=""
 type -p udevinfo >/dev/null && UdevSymlinkName="udevinfo -r / -q symlink -n"
 type -p udevadm >/dev/null &&  UdevSymlinkName="udevadm info --root --query=symlink --name"
 
-[[ -z "$UdevQueryName" ]] && {
-	LogPrint "Could not find udevinfo nor udevadm (skip diskbyid_mappings)"
+( test -z "$UdevQueryName" || test -z "$UdevSymlinkName" ) && {
+	LogPrint "Could not find udevinfo nor udevadm (skip 260_rename_diskbyid.sh)"
 	return
 	}
 
