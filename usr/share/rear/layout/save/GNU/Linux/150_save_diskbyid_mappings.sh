@@ -3,7 +3,7 @@
 ls /dev/disk/by-id | while read ID;
 do
 	# create diskbyid_mappings file:
-	# we need to keep absolute PATH for device in order to be able to easily use 320_apply_mappings.sh
+	# we need to keep absolute PATH for device in order to be able to easily use apply_mappings() function.
 	# and apply disk mapping during migration.
 	#
 	# example:	scsi-360060e8015268c000001268c000065c0-part4 /dev/sda4
