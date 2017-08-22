@@ -29,15 +29,6 @@ NEW_ID_FILE="$TMP_DIR/diskbyid_mappings"
 # Apply device mapping to replace device in case of migration.
 apply-mappings $OLD_ID_FILE
 
-# udevinfo is deprecated by udevadm (SLES 10 still uses udevinfo)
-UdevSymlinkName=""
-type -p udevinfo >/dev/null && UdevSymlinkName="udevinfo -r / -q symlink -n"
-type -p udevadm >/dev/null &&  UdevSymlinkName="udevadm info --root --query=symlink --name"
-[[ -z "$UdevSymlinkName" ]] && {
-	LogPrint "Could not find udevinfo nor udevadm (skip 260_rename_diskbyid.sh)"
-	return
-	}
-
 # replace the device names with the real devices
 
 while read ID DEV_NAME; do
@@ -48,7 +39,7 @@ while read ID DEV_NAME; do
     # we delete DEV_NAME to make sure it won't get used
     DEV_NAME=""
   else
-    SYMLINKS=$($UdevSymlinkName $DEV_NAME)
+    SYMLINKS=$(UdevSymlinkName $DEV_NAME)
     set -- $SYMLINKS
     while [ $# -gt 0 ]; do
       if [[ $1 =~ /dev/disk/by-id ]]; then

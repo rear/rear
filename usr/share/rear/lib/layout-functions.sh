@@ -611,3 +611,52 @@ retry_command ()
     # Have no additional trailing newline for the command stdout:
     echo -n "$command_stdout"
 }
+
+# UdevSymlinkName (device) return all the udev symlink created by udev to the device.
+# example:
+# UdevSymlinkName /dev/sda1
+#  /dev/disk/by-id/ata-SAMSUNG_MZNLN512HMJP-000L7_S2XANX0H603095-part1 /dev/disk/by-id/wwn-0x5002538d00000000-part1 /dev/disk/by-label/boot /dev/disk/by-partuuid/7d51513d-01 /dev/disk/by-path/pci-0000:00:17.0-ata-1-part1 /dev/disk/by-uuid/b3c0fd92-28cf-4591-b4f5-1a32913f4319
+function UdevSymlinkName() {
+    unset device
+    device="$1"
+
+    # Exit with Error if no argument is provided to UdevSymlinkName
+    test -z "$device" && BugIfError "Empty string passed to UdevSymlinkName()"
+
+    # udevinfo is deprecated by udevadm (SLES 10 still uses udevinfo)
+    type -p udevinfo >/dev/null && UdevSymlinkName="udevinfo -r / -q symlink -n"
+    type -p udevadm >/dev/null && UdevSymlinkName="udevadm info --root --query=symlink --name"
+
+    if test -z "$UdevSymlinkName" ; then
+        LogPrint "Could not find udevinfo nor udevadm. UdevSymlinkName($device) failed."
+        return 1
+    fi
+
+    $UdevSymlinkName $device
+}
+
+# UdevQueryName (device) return all the real device name from udev symlink.
+# example:
+# UdevQueryName /dev/disk/by-id/wwn-0x5002538d00000000-part1
+#  sda1
+# WARNING: like udevadm, this function return device name (sda1) not absolute PATH (/dev/sda1)
+function UdevQueryName() {
+    unset device_link
+    device_link="$1"
+
+    # Exit with Error if no argument is provided to UdevSymlinkName
+    test -z "$device_link" && BugIfError "Empty string passed to UdevQueryName()"
+
+    # be careful udevinfo is old, now we have udevadm
+    # udevinfo -r -q name -n /dev/disk/by-id/scsi-360060e8015268c000001268c000065c0-part4
+    # udevadm info --query=name --name /dev/disk/by-id/dm-name-vg_fedora-lv_root
+    type -p udevinfo >/dev/null && UdevQueryName="udevinfo -r -q name -n"
+    type -p udevadm >/dev/null && UdevQueryName="udevadm info --query=name --name"
+
+    if test -z "$UdevQueryName" ; then
+        LogPrint "Could not find udevinfo nor udevadm. UdevQueryName($device_link) failed."
+        return 1
+    fi
+
+    $UdevQueryName $device_link
+}
