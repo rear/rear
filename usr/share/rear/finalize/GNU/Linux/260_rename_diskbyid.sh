@@ -27,6 +27,7 @@ NEW_ID_FILE="$TMP_DIR/diskbyid_mappings"
 [ -z "$FILES" ] && return 0
 
 # Apply device mapping to replace device in case of migration.
+# apply-mappings() function defined in lib/layout-function.sh
 apply-mappings $OLD_ID_FILE
 
 # replace the device names with the real devices
@@ -39,6 +40,8 @@ while read ID DEV_NAME; do
     # we delete DEV_NAME to make sure it won't get used
     DEV_NAME=""
   else
+    # get symlinks defined by udev from a device
+    # UdevSymlinkName() defined in lib/layout-function.sh
     SYMLINKS=$(UdevSymlinkName $DEV_NAME)
     set -- $SYMLINKS
     while [ $# -gt 0 ]; do
