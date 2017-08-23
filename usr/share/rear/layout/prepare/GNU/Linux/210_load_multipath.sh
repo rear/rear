@@ -60,7 +60,7 @@ blacklist {
                 (${choices[0]})
                     # continue recovery without multipath
                     is_true "$wilful_input" && LogPrint "User confirmed continuing without multipath" || LogPrint "Continuing '$rear_workflow' by default"
-                    LogPrint "WARNING: If you don't need multipath on this server, you should consider removing BOOT_ON_SAN parameter from your rear configuration file."
+                    LogPrint "You should consider removing BOOT_ON_SAN parameter from your rear configuration file if you don't need multipath on this server."
                     break
                     ;;
                 (${choices[1]})
