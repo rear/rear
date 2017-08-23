@@ -40,15 +40,14 @@ blacklist {
         # Asking to the User what to do after multipath command return 1.
         # It could be because no multipath device were found (sles11/rhel6)
         # or a real problem in the multipath configuration.
-        LogPrint "Failed to activate multipath, or no multipath device found."
+        prompt="Failed to activate multipath, or no multipath device found."
 
         rear_workflow="rear $WORKFLOW"
         unset choices
-        choices[0]="Multipath is not needed, please continue recovery."
+        choices[0]="Multipath is not needed. Continue recovery."
         choices[1]="Run multipath with debug options."
         choices[2]="Enter into rear-shell to manually debug multipath."
         choices[3]="Abort '$rear_workflow'"
-        prompt="Choice:"
         choice=""
         wilful_input=""
 
@@ -56,7 +55,7 @@ blacklist {
         # Note: On sles11/rhel6, multipath failed if no multipath device is found.
         while ! multipath ; do
             echo
-            choice="$( UserInput -t 30 -p "$prompt" -D "${choices[0]}" "${choices[@]}")"&& wilful_input="yes" || wilful_input="no"
+            choice="$( UserInput -p "$prompt" -D "${choices[0]}" "${choices[@]}")"&& wilful_input="yes" || wilful_input="no"
             case "$choice" in
                 (${choices[0]})
                     # continue recovery without multipath
