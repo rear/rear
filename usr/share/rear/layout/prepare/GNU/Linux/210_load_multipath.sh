@@ -89,11 +89,3 @@ blacklist {
         LogPrint "$(dmsetup ls --target multipath 2>&1)"
     fi
 fi
-
-### Create multipath devices (at least partitions on them).
-create_multipath() {
-    local multipath device
-    read multipath device junk < <(grep "multipath $1 " "$LAYOUT_FILE")
-
-    create_partitions "$device"
-}
