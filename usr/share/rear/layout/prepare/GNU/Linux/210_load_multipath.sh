@@ -86,7 +86,7 @@ blacklist {
     # Search and list mpath device.
     if is_true $list_mpath_device ; then
         LogPrint "Listing multipath device found"
-        dmsetup ls --target multipath
+        LogPrint "$(dmsetup ls --target multipath 2>&1)"
     fi
 fi
 
