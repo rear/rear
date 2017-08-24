@@ -621,7 +621,7 @@ function UdevSymlinkName() {
     device="$1"
 
     # Exit with Error if no argument is provided to UdevSymlinkName
-    test -z "$device" && BugIfError "Empty string passed to UdevSymlinkName()"
+    test $device || Error "Empty string passed to UdevSymlinkName()"
 
     # udevinfo is deprecated by udevadm (SLES 10 still uses udevinfo)
     type -p udevinfo >/dev/null && UdevSymlinkName="udevinfo -r / -q symlink -n"
@@ -645,7 +645,7 @@ function UdevQueryName() {
     device_link="$1"
 
     # Exit with Error if no argument is provided to UdevSymlinkName
-    test -z "$device_link" && BugIfError "Empty string passed to UdevQueryName()"
+    test $device_link || Error "Empty string passed to UdevQueryName()"
 
     # be careful udevinfo is old, now we have udevadm
     # udevinfo -r -q name -n /dev/disk/by-id/scsi-360060e8015268c000001268c000065c0-part4
