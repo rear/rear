@@ -17,11 +17,11 @@ pushd $TARGET_FS_ROOT 1>/dev/null
 local tmp_directories="tmp var/tmp"
 # First of all some generic directories that are created in any case:
 for directory in mnt proc run sys dev/pts dev/shm $tmp_directories ; do
-    test -d "$directory" || mkdir $v -p $directory
+    test -d "$directory" || mkdir $v -p $directory 1>&2
 done
 # Set permissions for 'tmp' directories (cf. issue #1455):
 for tmp_dir in $tmp_directories ; do
-    test -d "$tmp_dir" && chmod $v 1777 $tmp_dir
+    test -d "$tmp_dir" && chmod $v 1777 $tmp_dir 1>&2
 done
 
 # Recreate mountpoints with permissions from the mountpoint_permissions file:
@@ -29,9 +29,9 @@ local mountpoint_permissions_file="$VAR_DIR/recovery/mountpoint_permissions"
 if test -f "$mountpoint_permissions_file" ; then
     LogPrint "Creating mountpoints (with permissions) from $mountpoint_permissions_file"
     while read directory mode userid groupid junk ; do
-        test -d "$directory" || mkdir $v -p $directory
-        chmod $v $mode $directory
-        chown $v $userid:$groupid $directory
+        test -d "$directory" || mkdir $v -p $directory 1>&2
+        chmod $v $mode $directory 1>&2
+        chown $v $userid:$groupid $directory 1>&2
     done < <( grep -v '^#' "$mountpoint_permissions_file" )
 fi
 
@@ -41,7 +41,7 @@ test "$MOUNTPOINTS_TO_RESTORE" && DIRECTORIES_TO_CREATE="$DIRECTORIES_TO_CREATE 
 if test "$DIRECTORIES_TO_CREATE" ; then
     LogPrint "Creating directories from DIRECTORIES_TO_CREATE"
     for directory in $DIRECTORIES_TO_CREATE ; do
-        test -d "$directory" || mkdir $v -p $directory
+        test -d "$directory" || mkdir $v -p $directory 1>&2
     done
 fi
 
