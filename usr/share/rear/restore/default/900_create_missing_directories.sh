@@ -26,4 +26,13 @@ else
     done
 fi
 chmod 1777 tmp
+
+# /var/tmp is used as default by mkinitrd (Dracut) when rebuilding initrd.
+# If user for whatever reason excluded whole /var/tmp directory,
+# initrd recreation might fail. (c.f. issue #1455)
+if [ ! -d var/tmp ]; then
+    mkdir -p var/tmp
+    chmod 1777 var/tmp
+fi
+
 popd >/dev/null
