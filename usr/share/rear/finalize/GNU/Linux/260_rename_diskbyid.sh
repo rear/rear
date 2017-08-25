@@ -67,9 +67,6 @@ for file in $FILES; do
 	# we should consider creating a sed script within a string
 	# and then call sed once (as done other times)
 	while read ID DEV_NAME ID_NEW; do
-		# initialize a sed_change variable to monitor if sed change a file
-		sed_change=0
-
 		if [ -n "$ID_NEW" ]; then
 
       # If ID and ID_NEW are the same, no need to change, go the next device.
@@ -79,38 +76,30 @@ for file in $FILES; do
 			ID_FULL=/dev/disk/by-id/$ID
 			ID_NEW_FULL=/dev/disk/by-id/$ID_NEW
 
-			# Using w flag to store changes made by sed in a output file $sed_change_monitor
+			# Using w flag to store changes made by sed in a output file /dev/stdout
+      # then, we redirect output to $sed_change_monitor.
 			# if no change is made, $sed_change_monitor will stay empty.
-			sed -i "s#$ID_FULL\([^-a-zA-Z0-9]\)#$ID_NEW_FULL\1#w $sed_change_monitor" \
-				"$realfile"
+			sed -i "s#$ID_FULL\([^-a-zA-Z0-9]\)#$ID_NEW_FULL\1#gw /dev/stdout" "$realfile" >> "$sed_change_monitor"
 			#                 ^^^^^^^^^^^^^^^
 			# This is to make sure we get the full ID (and not
 			# a substring) because we ask sed for a char other then
 			# those contained in IDs.
             # This does not work with IDs at line end: substitute also those:
 
-			# Check if sed made chage on the current file.
-			# (when size of $sed_change_monitor is not null)
-			test -s "$sed_change_monitor" && sed_change=1
-
-			sed -i "s#$ID_FULL\$#$ID_NEW_FULL#w $sed_change_monitor" $realfile
-			test -s "$sed_change_monitor" && sed_change=1
+			sed -i "s#$ID_FULL\$#$ID_NEW_FULL#gw /dev/stdout" "$realfile" >> "$sed_change_monitor"
 		else
 			# lets try with the DEV_NAME as fallback
 			[ -z "$DEV_NAME" ] && continue
 			# not even DEV_NAME exists, we can't do anything
 			ID_FULL=$ID
-			sed -i "s#$ID_FULL\([^-a-zA-Z0-9]\)#/dev/$DEV_NAME\1#w $sed_change_monitor" \
-				"$realfile"
-			test -s "$sed_change_monitor" && sed_change=1
+			sed -i "s#$ID_FULL\([^-a-zA-Z0-9]\)#/dev/$DEV_NAME\1#gw /dev/stdout" "$realfile" >> "$sed_change_monitor"
 
-			sed -i "s#$ID_FULL\$#/dev/$DEV_NAME#w $sed_change_monitor" "$realfile"
-			test -s "$sed_change_monitor" && sed_change=1
+			sed -i "s#$ID_FULL\$#/dev/$DEV_NAME#gw /dev/null" "$realfile" >> "$sed_change_monitor"
 		fi
 
 		# Checking if sed change something in a file (by using w sed flag)
 		# LogPrint only when a change was made.
-		if test $sed_change -eq 1 ; then
+		if test -s "$sed_change_monitor" ; then
 			LogPrint "Patching $file: Replacing [$ID_FULL] by [$ID_NEW_FULL]"
 			rm "$sed_change_monitor"
 		fi
