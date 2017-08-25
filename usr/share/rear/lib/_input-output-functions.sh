@@ -330,7 +330,7 @@ function LogPrintIfError () {
     fi
 }
 
-# General function that is intended for basically any user input.
+# UserInput is a general function that is intended for basically any user input.
 #   Output happens via the original STDOUT and STDERR when 'rear' was launched
 #   (which is usually the terminal of the user who launched 'rear') and
 #   input is read from the original STDIN when 'rear' was launched
@@ -338,7 +338,7 @@ function LogPrintIfError () {
 # Synopsis:
 #   UserInput [-t timeout] [-p prompt] [-a output_array] [-n input_max_chars] [-d input_delimiter] [-D default_input] [-I user_input_ID] [choices]
 #   The options -t -p -a -n -d  match the ones for the 'read' bash builtin.
-#   The option [choices] are the values that are shown to the user as available choices as in the select bash keyword.
+#   The option [choices] are the values that are shown to the user as available choices like if a 'select' bash keyword was used.
 #   The option [-D default_input] specifies what is used as default response when the user does not enter something.
 #       Usuallly this is one of the choices values or an index of one of the choices (the first choice has index 0)
 #       but the default input can be anything else (in particular for free input without predefined choices).
