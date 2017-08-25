@@ -21,7 +21,7 @@ for directory in mnt proc run sys dev/pts dev/shm $tmp_directories ; do
 done
 # Set permissions for 'tmp' directories (cf. issue #1455):
 for tmp_dir in $tmp_directories ; do
-    test -d "$tmp_dir" && chmod $v 1777 $tmp_dir 1>&2
+    chmod $v 1777 $tmp_dir 1>&2
 done
 
 # Recreate mountpoints with permissions from the mountpoint_permissions file:
