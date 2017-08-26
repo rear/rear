@@ -188,7 +188,7 @@ function create_fs () {
             # when the disk was already used before, see https://bugzilla.novell.com/show_bug.cgi?id=878870
             (   echo "# if $device is already mounted, skip"
                 echo "# force overwriting existing btrfs when the disk was already used before"
-                echo "mount | grep -q $device || mkfs -t $fstype -f $device"
+                echo "mount | grep -q $device || mkfs -t $fstype -U $uuid -f $device || mkfs -t $fstype -f $device"
             ) >> "$LAYOUT_CODE"
             # Set the label:
             if [ -n "$label" ] ; then
@@ -196,7 +196,7 @@ function create_fs () {
             fi
             # Set the UUID:
             if [ -n "$uuid" ] ; then
-                # Problem with btrfs is that UUID cannot be set during mkfs! So, we must map it and
+                # Problem with old btrfs version is that UUID cannot be set during mkfs! So, we must map it and
                 # change later the /etc/fstab, /boot/grub/menu.lst, etc.
                 cat >> "$LAYOUT_CODE" <<EOF
 new_uuid=\$( btrfs filesystem show $device 2>/dev/null | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )
