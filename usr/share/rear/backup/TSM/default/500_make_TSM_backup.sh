@@ -11,12 +11,16 @@ if [[ ! -d "$backup_tsm_log" ]]; then
     mkdir -p $v $backup_tsm_log
 fi
 
+# Create TSM friendly include list.
+for i in $(cat $TMP_DIR/backup-include.txt); do
+    include_list+=("$i ")
+done
+
 LogPrint ""
-LogPrint "Starting Backup with TSM"
-LC_ALL=${LANG_RECOVER} dsmc incremental\
--verbose \
--subdir=yes \
--tapeprompt=no "${TSM_DSMC_BACKUP_OPTIONS[@]}" | tee "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
+LogPrint "Starting Backup with TSM [ ${include_list[@]} ]"
+LC_ALL=${LANG_RECOVER} dsmc incremental \
+-verbose -tapeprompt=no "${TSM_DSMC_BACKUP_OPTIONS[@]}" \
+${include_list[@]} > "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
 StopIfError "Error during TSM backup... Check your configuration."
 
 ### Copy progress log to backup media
