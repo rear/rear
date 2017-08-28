@@ -33,11 +33,12 @@ fi
 included_mountpoints=( $(grep ^fs $VAR_DIR/layout/disklayout.conf  | awk '{print $3}') $(grep ^btrfsmountedsubvol $VAR_DIR/layout/disklayout.conf | awk '{print $3}' | grep -v "/.snapshots") )
 included_mountpoints=($(tr ' ' '\n' <<<"${included_mountpoints[@]}" | awk '!u[$0]++' |  tr '\n' ' '))
 
-# TSM does not restore the mountpoints for filesystems it does not recover. Setting the
-# MOUNTPOINTS_TO_RESTORE variable allows this to be recreated in the restore
-# default 900_create_missing_directories.sh script
-excluded_mountpoints=( $(grep ^#fs $VAR_DIR/layout/disklayout.conf  | awk '{print $3}') )
-MOUNTPOINTS_TO_RESTORE=${excluded_mountpoints[@]#/}
+# TSM does not restore the mountpoints for filesystems it does not recover.
+# Appending excluded mountpoint directories to the DIRECTORIES_TO_CREATE variable
+# (there could be already user specified directories in the DIRECTORIES_TO_CREATE variable)
+# allows them to be recreated in the restore default 900_create_missing_directories.sh script:
+excluded_mountpoints=( $( grep '^#fs' $VAR_DIR/layout/disklayout.conf | awk '{print $3}' ) )
+DIRECTORIES_TO_CREATE="$DIRECTORIES_TO_CREATE ${excluded_mountpoints[@]#/}"
 
 # find out which filespaces (= mountpoints) are available for restore
 LC_ALL=${LANG_RECOVER} dsmc query filespace -date=2 -time=1 -scrollprompt=no | grep -A 10000 'File' >$TMP_DIR/tsm_filespaces
