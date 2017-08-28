@@ -91,9 +91,10 @@ blacklist {
 fi
 
 ### Create multipath devices (at least partitions on them).
-create_multipath() {
-    local multipath device
-    read multipath device junk < <(grep "multipath $1 " "$LAYOUT_FILE")
-
-    create_partitions "$device"
+function create_multipath() {
+    local device=$1
+    if grep "^multipath $device " "$LAYOUT_FILE" 1>&2 ; then
+        Log "Found current or former multipath device $device in $LAYOUT_FILE: Creating partitions on it"
+        create_partitions "$device"
+    fi
 }
