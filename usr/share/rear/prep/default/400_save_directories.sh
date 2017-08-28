@@ -36,12 +36,12 @@ done
 # Then save FHS directories.
 # The list of FHS directories was derived from https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 FHSdirectories="/bin /boot /dev /etc /etc/opt /etc/sgml /etc/X11 /etc/xml /home /lib* /media /mnt /opt /proc /root /run /sbin /srv /sys /tmp /usr /usr/bin /usr/include /usr/lib* /usr/local /usr/sbin /usr/share /usr/src /usr/X11R6 /var /var/cache /var/lib /var/lock /var/log /var/mail /var/opt /var/run /var/spool /var/spool/mail /var/tmp"
-local directories
+local directoryglob
 # FHSdirectories contains directories with bash globbing like /lib* and /usr/lib* that need to be expanded:
 for directoryglob in $FHSdirectories ; do
     for directory in $( echo $directoryglob ) ; do
         # Skip when it is already listed in the directories_permissions_owner_group file:
-        grep -q "^$directory" "$directories_permissions_owner_group_file" && continue
+        grep "^$directory" "$directories_permissions_owner_group_file" 1>&2 && continue
         # Skip when it is neither a normal directory nor a symbolic links that points to a normal directory
         # which means: Skip when it does not exist on the currently running system:
         if ! test -d "$directory" ; then
