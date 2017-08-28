@@ -183,7 +183,7 @@ function LogPrintError () {
 }
 
 # For messages that should only appear in the syslog:
-LogToSyslog() {
+function LogToSyslog () {
     # Send a line to syslog or messages file with input string with the tag 'rear':
     logger -t rear -i "${MESSAGE_PREFIX}$*"
 }
@@ -306,7 +306,7 @@ function BugIfError () {
 }
 
 # Show the user if there is an error:
-PrintIfError() {
+function PrintIfError () {
     # If return code is non-zero, show that on the user's terminal
     # regardless whether or not the user launched 'rear' in verbose mode:
     if (( $? != 0 )) ; then
@@ -315,14 +315,14 @@ PrintIfError() {
 }
 
 # Log if there is an error;
-LogIfError() {
+function LogIfError () {
     if (( $? != 0 )) ; then
         Log "$@"
     fi
 }
 
 # Log if there is an error and also show it to the user:
-LogPrintIfError() {
+function LogPrintIfError () {
     # If return code is non-zero, show that on the user's terminal
     # regardless whether or not the user launched 'rear' in verbose mode:
     if (( $? != 0 )) ; then
@@ -330,7 +330,7 @@ LogPrintIfError() {
     fi
 }
 
-# General function that is intended for basically any user input.
+# UserInput is a general function that is intended for basically any user input.
 #   Output happens via the original STDOUT and STDERR when 'rear' was launched
 #   (which is usually the terminal of the user who launched 'rear') and
 #   input is read from the original STDIN when 'rear' was launched
@@ -338,7 +338,7 @@ LogPrintIfError() {
 # Synopsis:
 #   UserInput [-t timeout] [-p prompt] [-a output_array] [-n input_max_chars] [-d input_delimiter] [-D default_input] [-I user_input_ID] [choices]
 #   The options -t -p -a -n -d  match the ones for the 'read' bash builtin.
-#   The option [choices] are the values that are shown to the user as available choices as in the select bash keyword.
+#   The option [choices] are the values that are shown to the user as available choices like if a 'select' bash keyword was used.
 #   The option [-D default_input] specifies what is used as default response when the user does not enter something.
 #       Usuallly this is one of the choices values or an index of one of the choices (the first choice has index 0)
 #       but the default input can be anything else (in particular for free input without predefined choices).
@@ -349,6 +349,18 @@ LogPrintIfError() {
 #           USER_INPUT_VALUES[789]='input for UserInput -I 789'
 #       where each USER_INPUT_VALUES array member index that matches a user_input_ID of a particular 'UserInput -I' call
 #       that will be autoresponded with the matching value of the user input array.
+# Result:
+#   Any actual user input or an automated user input or the default response is output via STDOUT.
+# Return code:
+#   The UserInput return code is the return code of the 'read' bash builtin that is called to get user input.
+#   When the UserInput function is called with right syntax its return code is 0
+#   for any actual user input and in case of any (non empty) automated user input.
+#   The return code is 1 when the 'read' call timed out (i.e. when there was no actual user input)
+#   so that one can distinguish between an explicitly provided user input and no actual user input
+#   even if the explicitly provided user input is the same as the default so that it makes a difference
+#   whether or not the user explicitly chose and confirmed that the default is what he actually wants
+#   or if he let things "just happen" inattentively via timeout where it is important to have a big timeout
+#   so that an attentive user will actively provide user input to proceed even if it is same as the default.
 # Usage examples:
 # * Wait endlessly until the user hits the [Enter] key (without '-t 0' a default timeout is used):
 #       UserInput -t 0 -p 'Press [Enter] to continue'
@@ -631,22 +643,24 @@ function UserInput () {
         fi
     fi
     # When there is no (non empty) automated user input read the user input:
+    local return_code=0
     if ! test "$user_input" ; then
         # Read the user input from the original STDIN that is saved as fd6 (see above):
         if read $read_options_and_arguments user_input 0<&6 ; then
             Log "UserInput: 'read' got as user input '$user_input'"
         else
+            return_code=1
             # Continue in any case because in case of errors the default input is used.
             # Avoid stderr if timeout is not set or empty or not an integer value:
             if test "$timeout" -ge 1 2>/dev/null ; then
-                Log "UserInput: 'read' finished with non-zero exit code probably because 'read' timed out"
+                Log "UserInput: 'read' timed out with non-zero exit code"
             else
                 Log "UserInput: 'read' finished with non-zero exit code"
             fi
         fi
     fi
     # When an output_array was specified it contains all user input words and then output_array is meant for the actual result.
-    # To be able to return something via 'echo' even when an output_array was specified we use only the first word here
+    # To be able to return something via STDOUT even when an output_array was specified we use only the first word here
     # which should be sufficient because when the complete user input is needed the output_array can and must be used:
     if test "$output_array" ; then
         Log "UserInput: The output array '$output_array' contains all user input words."
@@ -659,62 +673,62 @@ function UserInput () {
         if ! test "$default_input" ; then
             DebugPrint "UserInput: No user input and no default input so that the result is ''"
             echo ""
-            return 101
+            return $return_code
         fi
         # Avoid stderr if default_input is not set or empty or not an integer value:
         if ! test "$default_input" -ge 0 2>/dev/null ; then
             DebugPrint "UserInput: No user input and default input no possible index in choices so that the result is '$default_input'"
             echo "$default_input"
-            return 102
+            return $return_code
         fi
         if ! test "${choices[$default_input]:=}" ; then
             DebugPrint "UserInput: No user input and default input not in choices so that the result is '$default_input'"
             echo "$default_input"
-            return 103
+            return $return_code
         fi
         DebugPrint "UserInput: No user input but default input in choices so that the result is '${choices[$default_input]}'"
         echo "${choices[$default_input]}"
-        return 104
+        return $return_code
     fi
     # When there is user input use it regardless of any default input:
     if ! test "$choices" ; then
         DebugPrint "UserInput: User input and no choices so that the result is '$user_input'"
         echo "$user_input"
-        return 0
+        return $return_code
     fi
     # Avoid stderr if user_input is not set or empty or not an integer value:
     if ! test "$user_input" -ge 1 2>/dev/null ; then
         DebugPrint "UserInput: User input no possible index in choices so that the result is '$user_input'"
         echo "$user_input"
-        return 105
+        return $return_code
     fi
     choice_index=$(( user_input - 1 ))
     if ! test "${choices[$choice_index]:=}" ; then
         DebugPrint "UserInput: User input not in choices so that the result is '$user_input'"
         echo "$user_input"
-        return 106
+        return $return_code
     fi
     DebugPrint "UserInput: User input in choices so that the result is '${choices[$choice_index]}'"
     echo "${choices[$choice_index]}"
-    return 0
+    return $return_code
 }
 
 # Setup dummy progress subsystem as a default.
 # Progress stuff replaced by dummy/noop
 # cf. https://github.com/rear/rear/issues/887
-ProgressStart() {
+function ProgressStart () {
     : ;
 }
-ProgressStop() {
+function ProgressStop () {
     : ;
 }
-ProgressError() {
+function ProgressError () {
     : ;
 }
-ProgressStep() {
+function ProgressStep () {
     : ;
 }
-ProgressInfo() {
+function ProgressInfo () {
     : ;
 }
 
