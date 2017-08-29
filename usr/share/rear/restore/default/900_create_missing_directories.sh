@@ -1,49 +1,87 @@
 #
-# Create missing directories.
-# For background information and reasoning see
-# https://github.com/rear/rear/issues/1455#issuecomment-324904017
-# that reads:
-#   Typical backup software assumes that the restore always happens
-#   on top of a system that was installed the traditional way,
-#   so that for the backup software it is safe to assume that
-#   those directories are present. From the perspective
-#   of the backup software there is therefore no need
-#   to include such directories in a full backup.
-#   Bottom line is, it is the duty of ReaR to make sure
-#   that these special directories really do exist.
+# 900_create_missing_directories.sh
 #
-pushd $TARGET_FS_ROOT 1>/dev/null
+# Create still missing directories and symbolic links
+# after the backup was restored.
+#
 
-local tmp_directories="tmp var/tmp"
-# First of all some generic directories that are created in any case:
-for directory in mnt proc run sys dev/pts dev/shm $tmp_directories ; do
-    test -d "$directory" || mkdir $v -p $directory 1>&2
-done
-# Set permissions for 'tmp' directories (cf. issue #1455):
-for tmp_dir in $tmp_directories ; do
-    chmod $v 1777 $tmp_dir 1>&2
-done
+# The directories_permissions_owner_group file was created by 400_save_mountpoint_details.sh
+# to save permissions, owner, group or symbolic link name and target of basic directories:
+local directories_permissions_owner_group_file="$VAR_DIR/recovery/directories_permissions_owner_group"
 
-# Recreate mountpoints with permissions from the mountpoint_permissions file:
-local mountpoint_permissions_file="$VAR_DIR/recovery/mountpoint_permissions"
-if test -f "$mountpoint_permissions_file" ; then
-    LogPrint "Creating mountpoints (with permissions) from $mountpoint_permissions_file"
-    while read directory mode userid groupid junk ; do
-        test -d "$directory" || mkdir $v -p $directory 1>&2
-        chmod $v $mode $directory 1>&2
-        chown $v $userid:$groupid $directory 1>&2
-    done < <( grep -v '^#' "$mountpoint_permissions_file" )
-fi
-
-# Finally recreate possibly user-specified DIRECTORIES_TO_CREATE and
-# also add MOUNTPOINTS_TO_RESTORE for backward compatibility (see issue #1455):
-test "$MOUNTPOINTS_TO_RESTORE" && DIRECTORIES_TO_CREATE="$DIRECTORIES_TO_CREATE $MOUNTPOINTS_TO_RESTORE"
-if test "$DIRECTORIES_TO_CREATE" ; then
-    LogPrint "Creating directories from DIRECTORIES_TO_CREATE"
-    for directory in $DIRECTORIES_TO_CREATE ; do
-        test -d "$directory" || mkdir $v -p $directory 1>&2
+# Append other directories or symlinks in the DIRECTORIES_TO_CREATE array
+# to the directories_permissions_owner_group file.
+# For the 'test' one must have all array members as a single word i.e. "${name[*]}"
+# because it should succeed when there is any non-empty array member, not necessarily the first one:
+if test "${DIRECTORIES_TO_CREATE[*]}" ; then
+    for directory_permissions_owner_group in "${DIRECTORIES_TO_CREATE[@]}" ; do
+        test "$directory_permissions_owner_group" || continue
+        # Using no double quotes for the variable in the echo command
+        # condenses multiple spaces into one and strips leading and trailing spaces:
+        echo $directory_permissions_owner_group >>"$directories_permissions_owner_group_file"
     done
 fi
 
-popd 1>/dev/null
+pushd $TARGET_FS_ROOT 1>&2
+# Recreate directories from the directories_permissions_owner_group file:
+if test -f "$directories_permissions_owner_group_file" ; then
+    LogPrint "Recreating directories (with permissions) from $directories_permissions_owner_group_file"
+    local directory mode owner group junk
+    while read directory mode owner group junk ; do
+        # At least the directory name must exist:
+        test $directory || continue
+        # Strip leading slash from directory because we need a relative directory inside TARGET_FS_ROOT:
+        directory=${directory#/}
+        # Normal directories are strored in lines like (e.g. on a SLES12 system):
+        # /tmp 1777 root root
+        # /usr 755 root root
+        # Symbolic links are strored in lines like (e.g. on a SLES12 system)
+        # note the difference between absolute and relative symbolic link target:
+        # /var/lock -> /run/lock
+        # /var/mail -> spool/mail
+        # Accordingly when mode is '->' it is a symbolic link:
+        if test '->' = "$mode" ; then
+            local symlink_name=$directory
+            local symlink_target=$owner
+            # Create only symlinks if the symbolic link name does not yet exist (regardless in what form)
+            # so that things that have been already restored from the backup do not get changed here:
+            test -e $symlink_name || test -L $symlink_name && continue
+            # The symbolic link target may not exist so that dangling symlinks can be created
+            # (it is not ReaR's job to prevent the user from creating dangling symlinks)
+            # because a symbolic link target directory may be created later by this script
+            # depending on the ordering in the directories_permissions_owner_group file:
+            ln $v -s $symlink_target $symlink_name 1>&2 || LogPrintError "Failed to create symlink $symlink_name -> $symlink_target"
+        else
+            # Create only directories if nothing with that name already exists (regardless in what form)
+            # so that things that have been already restored from the backup do not get changed here:
+            test -e $directory || test -L $directory && continue
+            mkdir $v -p $directory 1>&2 || LogPrintError "Failed to create directory $directory"
+            # mode, owner, and group are optional with this syntax: [ mode [ owner [ group ] ] ]
+            # (e.g. to specify owner also mode must be specified).
+            # When no mode is specified the default 'rwxr-xr-x root root' gets used as fallback:
+            if test $mode ; then
+                chmod $v $mode $directory 1>&2 || LogPrintError "Failed to 'chmod $mode $directory'"
+                # owner and group are optional with this syntax: [ owner [ group ] ]
+                # When no owner is specified the default 'root root' gets used as fallback:
+                if test $owner ; then
+                    # When owner is specified but no group then group is set same as the owner
+                    # (this way e.g. 'lp lp' can be abbreviated to only 'lp'):
+                    test $group || group=$owner
+                    # In the ReaR recovery system there exist only a few users
+                    # ("cut -d ':' -f1 /etc/passwd" shows only root, sshd, daemon, rpc, and nobody)
+                    # so that 'chroot' into the recreated system is needed to 'chown' to other users.
+                    # Use a login shell in between so that one has in the chrooted environment
+                    # all the advantages of a "normal working shell" which means one can write
+                    # the commands inside 'chroot' as one would type them in a normal working shell.
+                    # In particular one can call programs (like 'chown') by their basename without path
+                    # cf. https://github.com/rear/rear/issues/862#issuecomment-274068914
+                    if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "chown $v $owner:$group $directory" 1>&2 ; then
+                        LogPrintError "Failed to 'chown $owner:$group $directory' "
+                    fi
+                fi
+            fi
+        fi
+    done < <( grep -v '^#' "$directories_permissions_owner_group_file" )
+fi
+popd 1>&2
 
