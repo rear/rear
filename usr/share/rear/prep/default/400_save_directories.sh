@@ -12,9 +12,19 @@ local directories_permissions_owner_group_file="$VAR_DIR/recovery/directories_pe
 cat /dev/null >"$directories_permissions_owner_group_file"
 
 # First save directories that are used as mountpoints:
-# BUILD_DIR can be used in 'grep -v "...|$BUILD_DIR|..."' because it is never empty (see usr/sbin/rear)
-# because with any empty part 'grep  -v "...||..."' would output nothing at all:
-local mountpoints="$( mount | grep -vE "cgroup|fuse|nfsd|/sys/|$BUILD_DIR|REAR-000" | awk '{print $3}' )"
+# FIXME: To exclude unwanted "noise" from mountpoints a simple 'grep -vE "this|that"'
+# is not fail safe because it excludes any lines that contain 'this' or 'that'.
+# Using 'grep -vE "type (this|that) "' makes it look like bloatware code
+# cf. https://github.com/rear/rear/pull/1459#discussion_r135744282
+# but currently I <jsmeix@suse.de> prefer "bloatware code" that works fail safe
+# over simple code that sometimes fails, cf. "Dirty hacks welcome"
+# at https://github.com/rear/rear/wiki/Coding-Style
+local excluded_fs_types="cgroup|fuse.*|nfsd"
+# BUILD_DIR can be used in 'grep -vE "this|$BUILD_DIR|that"' because it is never empty (see usr/sbin/rear)
+# because with any empty part 'grep  -vE "this||that"' would output nothing at all:
+local excluded_other_stuff="/sys/|$BUILD_DIR|REAR-000"
+# The trailing space in 'type ($excluded_fs_types) |' is intentional:
+local mountpoints="$( mount | grep -vE "type ($excluded_fs_types) |$excluded_other_stuff" | awk '{print $3}' )"
 local directory
 for directory in $mountpoints ; do
     # Skip the root directory '/':
@@ -33,7 +43,7 @@ for directory in $mountpoints ; do
     # /run/user/0 700 root root
 done
 
-# Then save FHS directories.
+# Then save FHS directories:
 # The list of FHS directories was derived from https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 FHSdirectories="/bin /boot /dev /etc /etc/opt /etc/sgml /etc/X11 /etc/xml /home /lib* /media /mnt /opt /proc /root /run /sbin /srv /sys /tmp /usr /usr/bin /usr/include /usr/lib* /usr/local /usr/sbin /usr/share /usr/src /usr/X11R6 /var /var/cache /var/lib /var/lock /var/log /var/mail /var/opt /var/run /var/spool /var/spool/mail /var/tmp"
 local directoryglob
