@@ -198,6 +198,7 @@ function create_fs () {
                     echo "  if ! mkfs -t $fstype -U $uuid -f $device >&2 ; then"
                     # Problem with old btrfs version is that UUID cannot be set during mkfs! So, we must map it and
                     # change later the /etc/fstab, /boot/grub/menu.lst, etc.
+                    echo "      mkfs -t $fstype -f $device >&2"
                     echo "      new_uuid=\$( btrfs filesystem show $device 2>/dev/null | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )"
                     echo "      if [ "$uuid" != "\$new_uuid" ] ; then"
                     echo "          # The following grep command intentionally also"
