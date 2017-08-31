@@ -625,6 +625,20 @@ function make_pxelinux_config_grub {
         else
             # Get IP address from PXE_TFTP_URL (ex:http://xx.yy.zz.aa:port/foo/bar)
             PXE_TFTP_IP=$(echo "$PXE_TFTP_URL" | awk -F'[/:]' '{ print $4 }')
+
+            # If PXE_TFTP_IP is not an IP, it could be a FQDM that must be resolved to IP.
+            # is_ip() function is defined in network-function.sh
+            if ! is_ip $PXE_TFTP_IP ; then
+
+                Log "Trying to resolve [$PXE_TFTP_IP] to a valid IP."
+                # get_ip_from_fqdn() function is defined in network-function.sh
+                PXE_TFTP_IP=$(get_ip_from_fqdn $PXE_TFTP_IP)
+
+                if ! is_ip $PXE_TFTP_IP ; then
+                    LogPrint "Can't find a valid  boot/tftp server IP. Please update your ReaR configuration file with PXE_TFTP_IP."
+                fi
+            fi
+            LogPrint "Using $PXE_TFTP_IP as boot/tftp server IP."
         fi
     fi
 
