@@ -723,3 +723,14 @@ is_bonding_device ()
    [ -f "/sys/class/net/$1/bonding/slaves" ]
 }
 
+
+function get_ip4_from_fqdn()
+{
+    local fqdn=$1
+    [ -z $fqdn ] && BugError "function get_ip_from_name() called without argument."
+
+    local ip4_address=$(getent ahostsv4 $fqdn | awk '$1~/^[0-9][0-9]?[0-9]?\.[0-9]?[0-9]?[0-9]\.[0-9]?[0-9]?[0-9]\.[0-9]?[0-9]?[0-9]$/ && NR==1 { print $1 }' )
+    #^((1?[0-9]{1,2}|2([0-4][0-9]|5[0-5]))\.){3}(1?[0-9]{1,2}|2([0-4][0-9]|5[0-5]))$
+
+    echo "$ip4_address"
+}
