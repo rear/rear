@@ -200,7 +200,7 @@ function create_fs () {
                     # change later the /etc/fstab, /boot/grub/menu.lst, etc.
                     echo "      mkfs -t $fstype -f $device >&2"
                     echo "      new_uuid=\$( btrfs filesystem show $device 2>/dev/null | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )"
-                    echo "      if [ "$uuid" != "\$new_uuid" ] ; then"
+                    echo "      if [ $uuid != \$new_uuid ] ; then"
                     echo "          # The following grep command intentionally also"
                     echo "          # fails when there is not yet a FS_UUID_MAP file"
                     echo "          # and then the FS_UUID_MAP file will be created:"
@@ -212,7 +212,7 @@ function create_fs () {
                     echo "              SED_SCRIPT=";/${uuid}/s/\${old_uuid}/\${new_uuid}/g""
                     echo "              sed -i "\$SED_SCRIPT" "$FS_UUID_MAP""
                     echo "          fi"
-                    echo "      fi # end of [ "$uuid" != "\$new_uuid" ]"
+                    echo "      fi # end of [ $uuid != $new_uuid ]"
                     echo "  fi"
                 ) >> "$LAYOUT_CODE"
             else
