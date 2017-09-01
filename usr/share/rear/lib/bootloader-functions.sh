@@ -620,7 +620,7 @@ function make_pxelinux_config_grub {
     # else set it based on PXE_TFTP_UR variable.
     if [[ -z $PXE_TFTP_IP ]] ; then
         if [[ -z $PXE_TFTP_URL ]] ; then
-            LogPrint "Can't find TFTP IP information. Variable TFTP_SERVER_IP or PXE_TFTP_URL with clear IP address must be set."
+            LogPrintError "Can't find TFTP IP information. Variable TFTP_SERVER_IP or PXE_TFTP_URL with clear IP address must be set."
             return
         else
             # Get IP address from PXE_TFTP_URL (ex:http://xx.yy.zz.aa:port/foo/bar)
@@ -635,17 +635,20 @@ function make_pxelinux_config_grub {
                 PXE_TFTP_IP=$(get_ip_from_fqdn $PXE_TFTP_IP)
 
                 if ! is_ip $PXE_TFTP_IP ; then
-                    LogPrint "Can't find a valid  boot/tftp server IP. Please update your ReaR configuration file with PXE_TFTP_IP."
+                    LogPrintError "Can't find a valid  boot/tftp server IP. Please update your ReaR configuration file with PXE_TFTP_IP."
+                    return
                 fi
             fi
-            LogPrint "Using $PXE_TFTP_IP as boot/tftp server IP."
         fi
     fi
 
-    if [ ! -z $PXE_TFTP_IP ]; then
+    # If PXE_TFTP_IP is a valid IP, set `net_default_server_opt` grub2 option.
+    if  is_ip $PXE_TFTP_IP ; then
+        LogPrint "Using $PXE_TFTP_IP as boot/tftp server IP."
         net_default_server_opt="set net_default_server=$PXE_TFTP_IP"
     else
-        LogPrint "WARNING: No valid TFTP IP found. GRUB menu will be generated without net_default_server"
+        LogPrintError "No valid TFTP IP found. Please update your ReaR configuration file with PXE_TFTP_IP."
+        return
     fi
 
     # we use this function only when $PXE_CONFIG_URL is set and $PXE_CONFIG_GRUB_STYLE=y
