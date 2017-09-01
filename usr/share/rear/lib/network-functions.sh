@@ -743,9 +743,9 @@ function get_ip_from_fqdn()
     [ -z "$fqdn" ] && BugError "function get_ip_from_name() called without argument."
 
     # Get a list of potential IPs that resolve $fqdn
-    ip=( $(getent ahostsv4 $fqdn) ) || Error "Could not resolve $fqdn"
+    ip=( $(getent ahostsv4 $fqdn) ) || Error "Could not resolve $fqdn to IP"
     # Check if $ip is a valide IP
     is_ip "$ip" || Error "Got '$ip' from resolving $fqdn which is not an IP"
-    Log "$fqdn resolved to ${ip[$i]}"
+    Log "$fqdn resolved to $ip"
     echo "$ip"
 }
