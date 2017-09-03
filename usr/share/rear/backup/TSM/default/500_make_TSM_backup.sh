@@ -21,7 +21,7 @@ LogPrint "Starting Backup with TSM [ ${include_list[@]} ]"
 LC_ALL=${LANG_RECOVER} dsmc incremental \
 -verbose -tapeprompt=no "${TSM_DSMC_BACKUP_OPTIONS[@]}" \
 ${include_list[@]} > "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
-StopIfError "Error during TSM backup... Check your configuration."
+test $? -ge 12 && "Error during TSM backup... Check your configuration."
 
 ### Copy progress log to backup media
 if cp $v "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log"; then
