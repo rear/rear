@@ -14,7 +14,7 @@ StopIfError "Could not change directory to /mnt/local"
 # and should not interfere with remaining stages of rear recover.
 # This is still not the ideal solution, but best I can think of so far :-/.
 LogPrint "Recovering from Borg archive $BORGBACKUP_ARCHIVE"
-LC_ALL=rear.UTF-8 \
+LC_ALL=en_US.UTF-8 \
 borg extract --sparse $BORGBACKUP_OPT_REMOTE_PATH \
 $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO::$BORGBACKUP_ARCHIVE
 StopIfError "Could not successfully finish Borg restore"
