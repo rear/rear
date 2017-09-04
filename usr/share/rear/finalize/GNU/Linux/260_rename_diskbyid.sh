@@ -28,7 +28,7 @@ NEW_ID_FILE="$TMP_DIR/diskbyid_mappings"
 
 # Apply device mapping to replace device in case of migration.
 # apply_layout_mappings() function defined in lib/layout-function.sh
-apply_layout_mappings $OLD_ID_FILE
+apply_layout_mappings "$OLD_ID_FILE"
 
 # replace the device names with the real devices
 

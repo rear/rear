@@ -36,5 +36,5 @@ for file in     [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/
                 fi
         fi
 
-        apply_layout_mappings $file
+        apply_layout_mappings "$file"
 done
