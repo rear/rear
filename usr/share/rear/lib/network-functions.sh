@@ -722,4 +722,3 @@ is_bonding_device ()
 {
    [ -f "/sys/class/net/$1/bonding/slaves" ]
 }
-

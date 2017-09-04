@@ -37,5 +37,3 @@ else
     sed -i -e "s|^boot.*|boot = $new_boot_part|" $TARGET_FS_ROOT/etc/yaboot.conf
     PREP_BOOT_PART="$new_boot_part"
 fi
-
-export PREP_BOOT_PART
