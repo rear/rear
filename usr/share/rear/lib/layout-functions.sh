@@ -662,15 +662,15 @@ function UdevQueryName() {
 }
 
 
-### apply-mappings function
+### apply_layout_mappings function
 #
-# Functions used in apply-mappings() function
+# Functions used in apply_layout_mappings() function
 function add_replacement() {
     echo "$1 _REAR${replaced_count}_" >> "$replacement_file"
     let replaced_count++
 }
 #
-# Functions used in apply-mappings() function
+# Functions used in apply_layout_mappings() function
 function has_replacement() {
     if grep -q "^$1 " "$replacement_file" ; then
         return 0
@@ -679,7 +679,7 @@ function has_replacement() {
     fi
 }
 #
-# Functions used in apply-mappings() function
+# Functions used in apply_layout_mappings() function
 function get_replacement() {
     local item replacement junk
     read item replacement junk < <(grep "^$1 " $replacement_file)
@@ -694,7 +694,7 @@ function get_part_device_name_format() {
     fi
 
     part_name="$device_name"
-    
+
     case "$device_name" in
         (*mmcblk[0-9]*|*nvme[0-9]*n[1-9]*|*rd[/!]c[0-9]*d[0-9]*|*cciss[/!]c[0-9]*d[0-9]*|*ida[/!]c[0-9]*d[0-9]*|*amiraid[/!]ar[0-9]*|*emd[/!][0-9]*|*ataraid[/!]d[0-9]*|*carmel[/!][0-9]*)
             part_name="${device_name}p" # append p between main device and partitions
@@ -745,15 +745,15 @@ function get_part_device_name_format() {
     echo "$part_name"
 }
 #
-# apply-mappings function migrate disk device reference from an old system and
+# apply_layout_mappings function migrate disk device reference from an old system and
 # replace them with new one (from current system).
 # the relationship between OLD and NEW device is provided by $MAPPING_FILE
 # (usually disk_mappings file in $VAR_DIR).
-function apply-mappings() {
+function apply_layout_mappings() {
 
-    # apply-mappings need one argument (file which contains disk device to migrate).
+    # apply_layout_mappings need one argument (file which contains disk device to migrate).
     if [ -z $1 ] ; then
-        BugError "apply-mappings function called without argument (file_to_migrate)"
+        BugError "apply_layout_mappings function called without argument (file_to_migrate)"
     else
         file_to_migrate="$1"
     fi

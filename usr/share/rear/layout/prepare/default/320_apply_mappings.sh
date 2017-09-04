@@ -4,4 +4,4 @@ if [ -z "$MIGRATION_MODE" ] ; then
     return 0
 fi
 
-apply-mappings $LAYOUT_FILE
+apply_layout_mappings $LAYOUT_FILE
