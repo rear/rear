@@ -149,7 +149,7 @@ while read keyword orig_device orig_size junk ; do
     choice=""
     wilful_input=""
     until IsInArray "$choice" "${regular_choices[@]}" ; do
-        choice="$( UserInput -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )" && wilful_input="yes" || wilful_input="no"
+        choice="$( UserInput -I layout_migration_choose_replacement_disk -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )" && wilful_input="yes" || wilful_input="no"
         test "$rear_shell_choice" = "$choice" && rear_shell
     done
     # Continue with next original device when the user selected to not map it:
@@ -181,7 +181,7 @@ wilful_input=""
 while true ; do
     LogUserOutput 'Current disk mapping table (source -> target):'
     LogUserOutput "$( sed -e 's|^|    |' "$MAPPING_FILE" )"
-    choice="$( UserInput -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
+    choice="$( UserInput -I layout_migration_confirm_mappings -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
     case "$choice" in
         (${choices[0]})
             # Continue recovery:

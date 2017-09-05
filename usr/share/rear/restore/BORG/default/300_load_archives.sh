@@ -45,7 +45,7 @@ while true ; do
     UserOutput ""
 
     # Read user input.
-    choice="$( UserInput -p "Choose archive to recover from" )"
+    choice="$( UserInput -I BORGBACKUP_archive_to_recover -p "Choose archive to recover from" )"
 
     # Evaluate user selection and save archive name to restore.
     # Valid pick

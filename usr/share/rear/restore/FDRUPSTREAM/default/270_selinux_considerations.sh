@@ -27,7 +27,7 @@ in order to allow login of the restored system."
 while true ; do
     # According to what is shown to the user "Relabeling ... required ... to allow login"
     # the default (i.e. the automated respose after the timeout) should be 'y':
-    answer="$( UserInput -p "Would you like to relabel on next boot? (y/n)" -D 'y' )"
+    answer="$( UserInput -I SELinux_relabel_on_next_boot -p "Would you like to relabel on next boot? (y/n)" -D 'y' )"
     is_false "$answer" && break
     if is_true "$answer" ; then
         touch $TARGET_FS_ROOT/.autorelabel

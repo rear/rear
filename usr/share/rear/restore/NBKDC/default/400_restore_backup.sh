@@ -48,11 +48,15 @@ Verify that the backup has been restored correctly to '$TARGET_FS_ROOT'.
 
 user_input_prompt="
 Have you successfully restored the backup to $TARGET_FS_ROOT ?
-Are you ready ro continue recovery? (y/n)"
+Are you ready to continue recovery? (y/n)"
 
 while true ; do
-    # Restoring the backup may take arbitrary long time so that with explicit '-t 0' it wait endlessly for user input:
-    if is_true "$( UserInput -t 0 -p "$user_input_prompt" )" ; then
+    # Restoring the backup may take arbitrary long time so that with explicit '-t 0' it waits endlessly for user input.
+    # Automated user input via a predefined UserInput_NBKDC_wait_until_restore_succeeded variable does not make sense here
+    # but the UserInput function must be called with a meaningful '-I user_input_ID' option value explicitly specified.
+    # To avoid that a predefined UserInput_NBKDC_wait_until_restore_succeeded variable could cause harm here it is unset:
+    unset UserInput_NBKDC_wait_until_restore_succeeded
+    if is_true "$( UserInput -I NBKDC_wait_until_restore_succeeded -t 0 -p "$user_input_prompt" )" ; then
         LogUserOutput "Done with restore. Continuing recovery."
         break
     fi

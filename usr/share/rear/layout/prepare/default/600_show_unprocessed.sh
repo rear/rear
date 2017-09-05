@@ -21,7 +21,7 @@ while read status name type junk ; do
         # so that 'rear recover' proceeds after the timeout regardless that it probably fails
         # when the component is not recreated but perhaps it could succeed in migration mode
         # on different replacement hardware where it might be even right to simply "Continue":
-        case "$( UserInput -p "Manually add code that recreates $missing_component" -D "${choices[3]}" "${choices[@]}" )" in
+        case "$( UserInput -I recreating_missing_components -p "Manually add code that recreates $missing_component" -D "${choices[3]}" "${choices[@]}" )" in
             (${choices[0]})
                 # Run 'less' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
                 less $LAYOUT_CODE 0<&6 1>&7 2>&8

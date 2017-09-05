@@ -20,7 +20,7 @@ fi
 EOF
 
     # Ask if we need to become primary.
-    user_input="$( UserInput -p "Type 'yes' if you want DRBD resource $resource to become primary" )"
+    user_input="$( UserInput -I type_yes_for_DRBD_resource_becomes_primary -p "Type 'yes' if you want DRBD resource $resource to become primary" )"
     if [ "$user_input" = "yes" ] ; then
         cat >> "$LAYOUT_CODE" <<-EOF
         if ! drbdadm role $resource &>/dev/null ; then
