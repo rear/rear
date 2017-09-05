@@ -751,9 +751,9 @@ function get_part_device_name_format() {
 # (usually disk_mappings file in $VAR_DIR).
 function apply_layout_mappings() {
 
-    # apply_layout_mappings need one argument (file which contains disk device to migrate).
-    if [ -z $1 ] ; then
-        BugError "apply_layout_mappings function called without argument (file_to_migrate)"
+    # apply_layout_mappings need one argument (a non-empty file which contains disk device to migrate).
+    if [ -s "$1" ] ; then
+        BugError "apply_layout_mappings function called without argument (file_to_migrate) or argument is not a non-empty file."
     else
         file_to_migrate="$1"
     fi
