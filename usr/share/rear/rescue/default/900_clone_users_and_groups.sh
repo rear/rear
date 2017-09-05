@@ -26,8 +26,8 @@ for user in "${CLONE_USERS[@]}" ; do
         continue
     fi
     # Prepare to also add the user's group to the CLONE_GROUPS array:
-    # passwd_entry="user:password:UID:GID:description:HOMEdirectory:shell
-    groupID="$( echo "$passwd_entry" | cut -d ':' -f '4' )"
+    # passwd_entry="user:password:UID:GID:description:HOMEdirectory:shell"
+    groupID="$( cut -d ':' -f '4' <<<"$passwd_entry" )"
     if ! group_entry="$( getent group $groupID )" ; then
         Debug "Cannot clone $user because its group $groupID does not exist"
         continue
@@ -36,7 +36,7 @@ for user in "${CLONE_USERS[@]}" ; do
     echo "$passwd_entry" >>$ROOTFS_DIR/etc/passwd
     # Add the user's group to the CLONE_GROUPS array (unless already there):
     # group_entry="group:passwd:GID:userlist"
-    group="$( echo "$group_entry" | cut -d ':' -f '1' )"
+    group="${group_entry%%:*}"
     # Skip if the group is already in the CLONE_GROUPS array:
     IsInArray "$group" "${CLONE_GROUPS[@]}" && continue
     # Add the user's group to the CLONE_GROUPS array:
