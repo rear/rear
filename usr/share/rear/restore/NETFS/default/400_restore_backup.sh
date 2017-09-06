@@ -106,14 +106,14 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                 # Add the --selinux option to be safe with SELinux context restoration
                 if ! is_true "$BACKUP_SELINUX_DISABLE" ; then
                     if tar --usage | grep -q selinux ; then
-                        BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --selinux"
+                        BACKUP_PROG_OPTIONS=( "${BACKUP_PROG_OPTIONS[@]}" "--selinux" )
                     fi
                 fi
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
-                    BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
+                    BACKUP_PROG_OPTIONS=( "${BACKUP_PROG_OPTIONS[@]}" "--exclude-from=$TMP_DIR/restore-exclude-list.txt" )
                 fi
-                Log dd if=$restore_input \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
-                dd if=$restore_input | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                Log dd if=$restore_input \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                dd if=$restore_input | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
                 ;;
             (rsync)
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
@@ -124,7 +124,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                 ;;
             (*)
                 Log "Using unsupported backup restore program '$BACKUP_PROG'"
-                $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" $BACKUP_PROG_OPTIONS_RESTORE_ARCHIVE $TARGET_FS_ROOT $BACKUP_PROG_OPTIONS $restore_input
+                $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" $BACKUP_PROG_OPTIONS_RESTORE_ARCHIVE $TARGET_FS_ROOT "${BACKUP_PROG_OPTIONS[@]}" $restore_input
                 ;;
         esac >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log"
         # Important trick: The backup prog is the last command in each case entry and the case..esac is the last command

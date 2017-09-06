@@ -11,7 +11,7 @@ else
 fi
 
 # check global settings (see default.conf)
-if [[ "$BACKUP_SELINUX_DISABLE" =~ ^[yY1] ]]; then
+if is_true "$BACKUP_SELINUX_DISABLE" ; then
         cat $SELINUX_ENFORCE  > $TMP_DIR/selinux.mode
         RSYNC_SELINUX=
         return
@@ -43,7 +43,7 @@ case $(basename $BACKUP_PROG) in
 	(tar)
 		if tar --usage | grep -q selinux  ; then
 			# during backup we will NOT disable SELinux
-			BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --selinux"
+			BACKUP_PROG_OPTIONS=( "${BACKUP_PROG_OPTIONS[@]}" "--selinux" )
 
 			# include SELinux utilities and /etc/selinux directory so rescue/restore ReaR image can run with SELinux enabled
 			PROGS=( "${PROGS[@]}" getenforce setenforce sestatus setfiles chcon restorecon )
