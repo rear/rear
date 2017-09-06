@@ -3,27 +3,31 @@
 #
 # Copy users and groups into the ReaR recovery system.
 
-# Copy users and groups on the current system into the ReaR recovery system.
 local cloning_all="no"
-# When CLONE_ALL_USERS_GROUPS contains a 'true' value, copy only
+# When CLONE_ALL_USERS_GROUPS is 'true' or 'all' copy users and groups
+# that exist on the current system into the ReaR recovery system
+# in addition to the users and groups in CLONE_USERS and CLONE_GROUPS
+# and regardless of duplicates because when duplicates exists already
+# in the ReaR recovery system they are skipped (see the code below).
+# When CLONE_ALL_USERS_GROUPS contains a 'true' value, copy also
 # the users and groups from the /etc/passwd and /etc/group files:
 if is_true "$CLONE_ALL_USERS_GROUPS" ; then
     Log "Copying users and groups from /etc/passwd and /etc/group"
     cloning_all="yes"
     # Only keep valid user names (in particular exclude a NIS extension line '+::::::'):
-    CLONE_USERS=( $( grep -o '^[[:alnum:]_][^:]*' /etc/passwd ) )
+    CLONE_USERS=( "${CLONE_USERS[@]}" $( grep -o '^[[:alnum:]_][^:]*' /etc/passwd ) )
     # Only keep valid group names (in particular exclude a NIS extension line '+:::'):
-    CLONE_GROUPS=( $( grep -o '^[[:alnum:]_][^:]*' /etc/group ) )
+    CLONE_GROUPS=( "${CLONE_GROUPS[@]}" $( grep -o '^[[:alnum:]_][^:]*' /etc/group ) )
 fi
-# When CLONE_ALL_USERS_GROUPS is 'all', copy all users and groups
+# When CLONE_ALL_USERS_GROUPS is 'all', copy also all users and groups
 # that are available on the current system into the ReaR recovery system:
 if test 'all' = "$CLONE_ALL_USERS_GROUPS" ; then
     Log "Copying all users and groups that are available via 'getent'"
     cloning_all="yes"
     # Only keep valid user names:
-    CLONE_USERS=( $( getent passwd | grep -o '^[[:alnum:]_][^:]*' ) )
+    CLONE_USERS=( "${CLONE_USERS[@]}" $( getent passwd | grep -o '^[[:alnum:]_][^:]*' ) )
     # Only keep valid group names:
-    CLONE_GROUPS=( $( getent group | grep -o '^[[:alnum:]_][^:]*' ) )
+    CLONE_GROUPS=( "${CLONE_GROUPS[@]}" $( getent group | grep -o '^[[:alnum:]_][^:]*' ) )
 fi
 
 local user=""
