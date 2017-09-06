@@ -44,7 +44,7 @@ for user in "${CLONE_USERS[@]}" ; do
     grep -q "^$user:" $ROOTFS_DIR/etc/passwd && continue
     # Skip if the user does not exist in the current system:
     if ! passwd_entry="$( getent passwd $user )" ; then
-        Debug "Cannot clone $user because it does not exist"
+        Debug "Cannot clone user $user because it does not exist"
         continue
     fi
     # When CLONE_ALL_USERS_GROUPS was used above, assume
@@ -60,7 +60,7 @@ for user in "${CLONE_USERS[@]}" ; do
     # passwd_entry="user:password:UID:GID:description:HOMEdirectory:shell"
     groupID="$( cut -d ':' -f '4' <<<"$passwd_entry" )"
     if ! group_entry="$( getent group $groupID )" ; then
-        Debug "Cannot clone $user because its group $groupID does not exist"
+        Debug "Cannot clone user $user because its group $groupID does not exist"
         continue
     fi
     # Add the user to /etc/passwd in the ReaR recovery system:
@@ -82,7 +82,7 @@ for group in "${CLONE_GROUPS[@]}" ; do
     grep -q "^$group:" $ROOTFS_DIR/etc/group && continue
     # Skip if the group does not exist in the current system:
     if ! group_entry="$( getent group $group )" ; then
-        Debug "Cannot clone $group because it does not exist"
+        Debug "Cannot clone group $group because it does not exist"
         continue
     fi
     # Add the group to /etc/group in the ReaR recovery system:
