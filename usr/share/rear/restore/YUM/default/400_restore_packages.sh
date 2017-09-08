@@ -20,6 +20,8 @@ for repo in $(cat $yum_backup_dir/rpm_repositories.dat)
 do
 	repoList="$repoList --enablerepo=$repo"
 done
+mkdir -p $TARGET_FS_ROOT/etc/yum.repos.d
+cp -a /etc/yum.repos.d/* $TARGET_FS_ROOT/etc/yum.repos.d/
 
 LogPrint "Running yum makecache"
 yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) -y --installroot=$TARGET_FS_ROOT makecache 1>&2
@@ -58,10 +60,10 @@ for rpm_package in $rpms_in_installion_order ; do
     # i.e. to the terminal wherefrom the user has started "rear recover":
     echo -n "." >&7
     # rpm_package is of the form name-version-release.architecture
-    rpm_package_name_version=${rpm_package%-*}
-    rpm_package_name=${rpm_package_name_version%-*}
+    rpm_package_name_version="${rpm_package%-*}"
+    rpm_package_name="${rpm_package_name_version%-*}"
     test "gpg-pubkey" = "$rpm_package_name" && rpm_package_name=$rpm_package
-    yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT -y reinstall "$rpm_package_name" 1>&2 || true # ignore errors so 'rear recover' doesn't fail
+    yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) --installroot=$TARGET_FS_ROOT -y reinstall "$rpm_package_name" 1>&2 || echo -n \! >&7 # print a '!' to ignore errors so 'rear recover' doesn't fail on individual pkg failures
 done
 # One newline ends the "something is still going on" indicator:
 echo "" >&7
@@ -90,23 +92,22 @@ if test "independent_RPMs" = "$YUM_INSTALL_RPMS" ; then
         # i.e. to the terminal wherefrom the user has started "rear recover":
         echo -n "." >&7
         # rpm_package is of the form name-version-release.architecture
-        rpm_package_name_version=${rpm_package%-*}
-        rpm_package_name=${rpm_package_name_version%-*}
+        rpm_package_name_version="${rpm_package%-*}"
+        rpm_package_name="${rpm_package_name_version%-*}"
         # Dirty hack for "gpg-pubkey" packages where several of them with different version and release
         # can be (and actually are) installed at the same time e.g. on my <jsmeix@suse.de> SLES12 system
         # where "rpm -qa | grep gpg-pubkey" results things like gpg-pubkey-1a2b-3c4d and gpg-pubkey-5e6f-7890
         # so that the exact "gpg-pubkey" package with version and release must be specified to be installed:
         test "gpg-pubkey" = "$rpm_package_name" && rpm_package_name=$rpm_package
         # Report when a non-basic package cannot be installed but do not treat that as an error that aborts "rear recover":
-  	if yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name_version" 1>&2 ; then
+  	if yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name_version" 1>&2 ; then
             Log "Installed '$rpm_package_name_version'"
         else
             Log "Failed to install '$rpm_package_name_version', falling back to '$rpm_package_name'"
-	    if yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name" 1>&2 ; then
+	    if yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name" 1>&2 ; then
                 Log "Installed '$rpm_package_name'"
 	    else
-            	# One newline to end the current "something is still going on" indicator:
-            	echo "" >&7
+            	echo "!" >&7
             	# Report also the version because e.g. for gpg-pubkey
             	LogPrint "Failed to install '$rpm_package_name', check the log file"
             fi
@@ -123,8 +124,8 @@ else
         # i.e. to the terminal wherefrom the user has started "rear recover":
         echo -n "." >&7
         # rpm_package is of the form name-version-release.architecture
-        rpm_package_name_version=${rpm_package%-*}
-        rpm_package_name=${rpm_package_name_version%-*}
+        rpm_package_name_version="${rpm_package%-*}"
+        rpm_package_name="${rpm_package_name_version%-*}"
 	if IsInArray "$rpm_package" "${YUM_EXCLUDE_PKGS[@]}" -o IsInArray "$rpm_package_name_version" "${YUM_EXCLUDE_PKGS[@]}" -o IsInArray "$rpm_package_name" "${YUM_EXCLUDE_PKGS[@]}" ; then
             	Log "Skipping '$rpm_package'"
 		continue
@@ -135,15 +136,14 @@ else
         # so that the exact "gpg-pubkey" package with version and release must be specified to be installed:
         test "gpg-pubkey" = "$rpm_package_name" && rpm_package_name=$rpm_package
         # Report when a non-basic package cannot be installed but do not treat that as an error that aborts "rear recover":
-  	if yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name_version" 1>&2 ; then
-            Log "Installed '$rpm_package_name'"
+  	if yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name_version" 1>&2 ; then
+            Log "Installed '$rpm_package_name_version'"
         else
             Log "Failed to install '$rpm_package_name_version', falling back to '$rpm_package_name'"
-	    if yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name" 1>&2 ; then
+	    if yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) --installroot=$TARGET_FS_ROOT -y install "$rpm_package_name" 1>&2 ; then
                 Log "Installed '$rpm_package_name'"
 	    else
-                # One newline to end the current "something is still going on" indicator:
-                echo "" >&7
+                echo -n "!" >&7
                 # Report also the version because e.g. for gpg-pubkey
                 LogPrint "Failed to install '$rpm_package_name', check the log file"
             fi
@@ -170,7 +170,7 @@ fi
 for missing_file in $( cat $yum_backup_dir/rpm_missing_files.dat )
 do
 	LogPrint "Removing $missing_file from restored system (it was missing on the source system)"
-	rm -f $missing_file
+	rm -rf $TARGET_FS_ROOT/$missing_file || true 	# ignore errors so 'rear recover' doesn't fail on individual file removal failures
 done
 
 # Restore the ReaR default bash flags and options (see usr/sbin/rear):

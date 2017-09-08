@@ -38,8 +38,8 @@ cat /dev/null >$yum_backup_dir/independent_RPMs
 local rpm_package=""
 for rpm_package in $( cut -d ' ' -f1 $yum_backup_dir/installed_RPMs ) ; do
     # rpm_package is of the form name-version-release.architecture
-    rpm_package_name_version=${rpm_package%-*}
-    rpm_package_name=${rpm_package_name_version%-*}
+    rpm_package_name_version="${rpm_package%-*}"
+    rpm_package_name="${rpm_package_name_version%-*}"
     # The only reliably working way how to find out if an installed RPM package
     # is needed by another installed RPM package is to test if it can be erased.
     # In particular regarding "rpm -q --whatrequires" versus "rpm -e --test" see
@@ -52,7 +52,8 @@ for rpm_package in $( cut -d ' ' -f1 $yum_backup_dir/installed_RPMs ) ; do
 done
 
 # Store releasever since the ReaR restore image won't have this info
-rpm -q --provides $(rpm -q --whatprovides "system-release(releasever)") | grep "system-release(releasever)" | cut -d ' ' -f 3 > $yum_backup_dir/releasever.dat
+rpm -q --provides $(rpm -q --whatprovides "system-release(releasever)") | grep "system-release(releasever)" | cut -d ' ' -f 3 > $yum_backup_dir/releasever.dat || \
+	/usr/bin/python -c 'import yum;yb=yum.YumBase();yb.doConfigSetup(init_plugins=False); print yb.conf.yumvar["releasever"]' > $yum_backup_dir/releasever.dat
 
 LogPrint "Wrote RPM packages data to $yum_backup_dir"
 
