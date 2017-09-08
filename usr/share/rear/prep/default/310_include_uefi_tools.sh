@@ -8,7 +8,9 @@ if [[ ! -d /boot/[eE][fF][iI] ]]; then
     if is_true $USING_UEFI_BOOTLOADER; then
         Error "USING_UEFI_BOOTLOADER = 1 but there is no directory at /boot/efi or /boot/EFI" # abort
     fi
-    return # skip
+    if ! grep -q '/boot/efi' /proc/mounts; then
+        return # skip
+    fi
  fi
 
 # We copy the UEFI binaries we might need
