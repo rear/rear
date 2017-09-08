@@ -104,11 +104,12 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
     (   case "$BACKUP_PROG" in
             (tar)
                 # Add the --selinux option to be safe with SELinux context restoration
-                if ! is_true "$BACKUP_SELINUX_DISABLE" ; then
-                    if tar --usage | grep -q selinux ; then
-                        BACKUP_PROG_OPTIONS=( "${BACKUP_PROG_OPTIONS[@]}" "--selinux" )
-                    fi
-                fi
+                # This block can be removed as BACKUP_PROG_OPTIONS was written to rescue.conf
+                #if ! is_true "$BACKUP_SELINUX_DISABLE" ; then
+                    #if tar --usage | grep -q selinux ; then
+                        #BACKUP_PROG_OPTIONS=( "${BACKUP_PROG_OPTIONS[@]}" "--selinux" )
+                    #fi
+                #fi
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
                     BACKUP_PROG_OPTIONS=( "${BACKUP_PROG_OPTIONS[@]}" "--exclude-from=$TMP_DIR/restore-exclude-list.txt" )
                 fi
