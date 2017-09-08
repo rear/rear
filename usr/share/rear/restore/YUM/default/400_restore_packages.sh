@@ -60,8 +60,8 @@ for rpm_package in $rpms_in_installion_order ; do
     # i.e. to the terminal wherefrom the user has started "rear recover":
     echo -n "." >&7
     # rpm_package is of the form name-version-release.architecture
-    rpm_package_name_version=${rpm_package%-*}
-    rpm_package_name=${rpm_package_name_version%-*}
+    rpm_package_name_version="${rpm_package%-*}"
+    rpm_package_name="${rpm_package_name_version%-*}"
     test "gpg-pubkey" = "$rpm_package_name" && rpm_package_name=$rpm_package
     yum $verbose --disablerepo=* $repoList --releasever=$(cat $yum_backup_dir/releasever.dat) --installroot=$TARGET_FS_ROOT -y reinstall "$rpm_package_name" 1>&2 || echo -n \! >&7 # print a '!' to ignore errors so 'rear recover' doesn't fail on individual pkg failures
 done
@@ -92,8 +92,8 @@ if test "independent_RPMs" = "$YUM_INSTALL_RPMS" ; then
         # i.e. to the terminal wherefrom the user has started "rear recover":
         echo -n "." >&7
         # rpm_package is of the form name-version-release.architecture
-        rpm_package_name_version=${rpm_package%-*}
-        rpm_package_name=${rpm_package_name_version%-*}
+        rpm_package_name_version="${rpm_package%-*}"
+        rpm_package_name="${rpm_package_name_version%-*}"
         # Dirty hack for "gpg-pubkey" packages where several of them with different version and release
         # can be (and actually are) installed at the same time e.g. on my <jsmeix@suse.de> SLES12 system
         # where "rpm -qa | grep gpg-pubkey" results things like gpg-pubkey-1a2b-3c4d and gpg-pubkey-5e6f-7890
@@ -124,8 +124,8 @@ else
         # i.e. to the terminal wherefrom the user has started "rear recover":
         echo -n "." >&7
         # rpm_package is of the form name-version-release.architecture
-        rpm_package_name_version=${rpm_package%-*}
-        rpm_package_name=${rpm_package_name_version%-*}
+        rpm_package_name_version="${rpm_package%-*}"
+        rpm_package_name="${rpm_package_name_version%-*}"
 	if IsInArray "$rpm_package" "${YUM_EXCLUDE_PKGS[@]}" -o IsInArray "$rpm_package_name_version" "${YUM_EXCLUDE_PKGS[@]}" -o IsInArray "$rpm_package_name" "${YUM_EXCLUDE_PKGS[@]}" ; then
             	Log "Skipping '$rpm_package'"
 		continue
