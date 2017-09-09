@@ -4,12 +4,12 @@ if grep -qw 'noefi' /proc/cmdline; then
 fi
 
 # If no /boot/[eE][fF][iI] directory can be found we might not be able to copy the UEFI binaries.
-if [[ ! -d /boot/[eE][fF][iI] ]]; then
+if [[ ! -d /boot/[eE][fF][iI] || ! mountpoint -q /boot/[eE][fF][iI] ]]; then
     if is_true $USING_UEFI_BOOTLOADER; then
         Error "USING_UEFI_BOOTLOADER = 1 but there is no directory at /boot/efi or /boot/EFI" # abort
     fi
     return # skip
- fi
+fi
 
 # We copy the UEFI binaries we might need
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}"
