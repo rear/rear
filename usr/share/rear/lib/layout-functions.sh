@@ -751,52 +751,51 @@ function get_part_device_name_format() {
 # (usually disk_mappings file in $VAR_DIR).
 function apply_layout_mappings() {
 
-    # apply_layout_mappings need one argument (a non-empty file which contains disk device to migrate).
-    if [ -z $1 ] ; then
-        BugError "apply_layout_mappings function called without argument (file_to_migrate)."
-    else
-        file_to_migrate="$1"
-    fi
+    # apply_layout_mappings need one argument.
+    [ "$1" ] || BugError "apply_layout_mappings function called without argument (file_to_migrate)."
 
     if [ -z "$MIGRATION_MODE" ] ; then
         return 0
     fi
 
-    # We temporarily map all devices in the mapping to new names _REAR[0-9]+_
-    replaced_count=0
-    replacement_file="$TMP_DIR/replacement_file"
-    : > "$replacement_file"
+    # Only apply layout mapping on non-empty file.
+    if [ -s "$1" ] ; then
+        # We temporarily map all devices in the mapping to new names _REAR[0-9]+_
+        replaced_count=0
+        replacement_file="$TMP_DIR/replacement_file"
+        : > "$replacement_file"
 
-    # Generate replacements.
-    while read source target junk ; do
-        if ! has_replacement "$source" ; then
-            add_replacement "$source"
-        fi
+        # Generate replacements.
+        while read source target junk ; do
+            if ! has_replacement "$source" ; then
+                add_replacement "$source"
+            fi
 
-        if ! has_replacement "$target" ; then
-            add_replacement "$target"
-        fi
-    done < "$MAPPING_FILE"
+            if ! has_replacement "$target" ; then
+                add_replacement "$target"
+            fi
+        done < "$MAPPING_FILE"
 
-    # Replace all originals with their replacements.
-    while read original replacement junk ; do
-        # Replace partitions (we normalize cciss/c0d0p1 to _REAR5_1)
-        part_base=$(get_part_device_name_format "$original")
-        sed -i -r "\|$original|s|${part_base}([0-9]+)|$replacement\1|g" "$file_to_migrate"
+        # Replace all originals with their replacements.
+        while read original replacement junk ; do
+            # Replace partitions (we normalize cciss/c0d0p1 to _REAR5_1)
+            part_base=$(get_part_device_name_format "$original")
+            sed -i -r "\|$original|s|${part_base}([0-9]+)|$replacement\1|g" "$file_to_migrate"
 
-        # Replace whole devices
-        ### note that / is a word boundary, so is matched by \<, hence the extra /
-        sed -i -r "\|$original|s|/\<${original#/}\>|${replacement}|g" "$file_to_migrate"
-    done < "$replacement_file"
+            # Replace whole devices
+            ### note that / is a word boundary, so is matched by \<, hence the extra /
+            sed -i -r "\|$original|s|/\<${original#/}\>|${replacement}|g" "$file_to_migrate"
+        done < "$replacement_file"
 
-    # Replace all replacements with their target.
-    while read source target junk ; do
-        replacement=$(get_replacement "$source")
-        # Replace whole device
-        sed -i -r "\|$replacement|s|$replacement\>|$target|g" "$file_to_migrate"
+        # Replace all replacements with their target.
+        while read source target junk ; do
+            replacement=$(get_replacement "$source")
+            # Replace whole device
+            sed -i -r "\|$replacement|s|$replacement\>|$target|g" "$file_to_migrate"
 
-        # Replace partitions
-        target=$(get_part_device_name_format "$target")
-        sed -i -r "\|$replacement|s|$replacement([0-9]+)|$target\1|g" "$file_to_migrate"
-    done < "$MAPPING_FILE"
+            # Replace partitions
+            target=$(get_part_device_name_format "$target")
+            sed -i -r "\|$replacement|s|$replacement([0-9]+)|$target\1|g" "$file_to_migrate"
+        done < "$MAPPING_FILE"
+    fi
 }
