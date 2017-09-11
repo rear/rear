@@ -28,7 +28,7 @@ for file in     [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/
         # - on dead links we warn and skip them
         if [[ -L "$file" ]] ; then
                 linkdest="$(readlink -m "$file" | sed -e "s#^/#$TARGET_FS_ROOT/#" )"
-                if test -f $linkdest ; then
+                if test -f "$linkdest" ; then
                     LogPrint "Patching '$linkdest' instead of '$file'"
                     file="$linkdest"
                 else
