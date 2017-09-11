@@ -687,7 +687,7 @@ function get_replacement() {
 }
 # Guess the part device name from a device, based on the OS distro Level.
 function get_part_device_name_format() {
-    if [ -z $1 ] ; then
+    if [ -z "$1" ] ; then
         BugError "get_part_device_name_format function called without argument (device)"
     else
         device_name="$1"
@@ -754,9 +754,8 @@ function apply_layout_mappings() {
     # apply_layout_mappings need one argument.
     [ "$1" ] || BugError "apply_layout_mappings function called without argument (file_to_migrate)."
 
-    if [ -z "$MIGRATION_MODE" ] ; then
-        return 0
-    fi
+    # Exit if MIGRATION_MODE is not true.
+    is_true "$MIGRATION_MODE" ] || return 0
 
     # Only apply layout mapping on non-empty file.
     if [ -s "$1" ] ; then
