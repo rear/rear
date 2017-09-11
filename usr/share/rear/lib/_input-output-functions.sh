@@ -343,16 +343,21 @@ function LogPrintIfError () {
 #       Usuallly this is one of the choices values or an index of one of the choices (the first choice has index 0)
 #       but the default input can be anything else (in particular for free input without predefined choices).
 #   The option '-I user_input_ID' is required so that UserInput can work full automated (e.g. when ReaR runs unattended)
-#       via user-specified variables named UserInput_user_input_ID that contain user input values like
-#           UserInput_some_user_confirmation='input for UserInput -I some_user_confirmation'
-#           UserInput_let_the_user_choose='input for UserInput -I let_the_user_choose'
-#           UserInput_some_user_dialog='input for UserInput -I some_user_dialog'
-#       that will be autoresponded with the value of the matching UserInput_user_input_ID variable.
+#       via user-specified variables that get named USER_INPUT_user_input_ID (i.e. prefixed with 'USER_INPUT_')
+#       so that the user can (as he needs it) predefine user input values like
+#           USER_INPUT_FOO_CONFIRMATION='input for UserInput -I FOO_CONFIRMATION'
+#           USER_INPUT_BAR_CHOICE='input for UserInput -I BAR_CHOICE'
+#           USER_INPUT_BAZ_DIALOG='input for UserInput -I BAZ_DIALOG'
+#           (with actually meaningful words for FOO, BAR, and BAZ)
+#       that will be autoresponded with the value of the matching USER_INPUT_user_input_ID variable.
 #       Accordingly only a valid variable name can be used as user_input_ID value.
-#       Different UserInput calls must use different '-I user_input_ID' option values.
+#       Different UserInput calls must use different '-I user_input_ID' option values but
+#       same UserInput calls in different scripts can use same '-I user_input_ID' option values.
 #       It is recommended to use meaningful and explanatory user_input_ID values
-#       which helps the user to specify automated input via meaningful UserInput_user_input_ID variables
+#       which helps the user to specify automated input via meaningful USER_INPUT_user_input_ID variables
 #       and it avoids that different UserInput calls accidentally use same user_input_ID values.
+#       It is required to use uppercase user_input_ID values because the USER_INPUT_user_input_ID variables
+#       are user configuration variables and all user configuration variables have uppercase letters.
 # Result:
 #   Any actual user input or an automated user input or the default response is output via STDOUT.
 # Return code:
@@ -367,30 +372,30 @@ function LogPrintIfError () {
 #   so that an attentive user will actively provide user input to proceed even if it is same as the default.
 # Usage examples:
 # * Wait endlessly until the user hits the [Enter] key (without '-t 0' a default timeout is used):
-#       UserInput -I wait_until_enter -t 0 -p 'Press [Enter] to continue'
+#       UserInput -I WAIT_UNTIL_ENTER -t 0 -p 'Press [Enter] to continue'
 # * Wait up to 30 seconds until the user hits the [Enter] key (i.e. proceed automatically after 30 seconds):
-#       UserInput -I wait_for_enter_or_timeout -t 30 -p 'Press [Enter] to continue'
+#       UserInput -I WAIT_FOR_ENTER_OR_TIMEOUT -t 30 -p 'Press [Enter] to continue'
 # * Get an input value from the user (proceed automatically with empty input_value after the default timeout).
 #   Leading and trailing spaces are cut from the actual user input:
-#       input_value="$( UserInput -I some_input -p 'Enter the input value' )"
+#       input_value="$( UserInput -I FOO_INPUT -p 'Enter the input value' )"
 # * Get an input value from the user (proceed automatically with the 'default input' after 2 minutes).
 #   The timeout interrupts ongoing user input so that 'default input' is used when the user
 #   does not hit the [Enter] key to finish his input before the timeout happens:
-#       input_value="$( UserInput -I some_input -t 120 -p 'Enter the input value' -D 'default input' )"
+#       input_value="$( UserInput -I FOO_INPUT -t 120 -p 'Enter the input value' -D 'default input' )"
 # * Get an input value from the user by offering him possible choices (proceed with the default choice after the default timeout).
 #   The choices index starts with 0 so that '-D 1' specifies the second choice as default choice:
-#       input_value="$( UserInput -I some_choice -p 'Select a choice' -D 1 'first choice' 'second choice' 'third choice' )"
+#       input_value="$( UserInput -I BAR_CHOICE -p 'Select a choice' -D 1 'first choice' 'second choice' 'third choice' )"
 # * When the user enters an arbitrary value like 'foo bar' this actual user input is used as input_value.
 #   The UserInput function provides the actual user input and its caller needs to check the actual user input.
 #   To enforce that the actual user input is one of the choices an endless retrying loop could be used like:
 #       choices=( 'first choice' 'second choice' 'third choice' )
 #       until IsInArray "$input_value" "${choices[@]}" ; do
-#           input_value="$( UserInput -I some_choice -p 'Select a choice' -D 'second choice' "${choices[@]}" )"
+#           input_value="$( UserInput -I BAR_CHOICE -p 'Select a choice' -D 'second choice' "${choices[@]}" )"
 #       done
 #   Because the default choice is one of the choices the endless loop does not contradict that ReaR can run unattended.
 #   When that code runs unattended (i.e. without actual user input) the default choice is used after the default timeout.
 # * The default choice can be anything as in:
-#       input_value="$( UserInput -I some_choice -p 'Select a choice' -D 'fallback value' -n 1 'first choice' 'second choice' 'third choice' )"
+#       input_value="$( UserInput -I BAR_CHOICE -p 'Select a choice' -D 'fallback value' -n 1 'first choice' 'second choice' 'third choice' )"
 #   The caller needs to check the actual input_value which could be 'fallback value' when the user hits the [Enter] key
 #   or one of 'first choice' 'second choice' 'third choice' when the user hits the [1] [2] or [3] key respectively
 #   or any other character as actual user input ('-n 1' limits the actual user input to one single character).
@@ -399,13 +404,13 @@ function LogPrintIfError () {
 #   when the actual user input is not one of the choices it is possible to implement valid and convenient user input:
 #       choices=( 'default choice' 'first alternative choice' 'second alternative choice' )
 #       until IsInArray "$choice" "${choices[@]}" ; do
-#           choice="$( UserInput -I some_other_choice -t 60 -p 'Hit a choice number key' -D 0 -n 1 "${choices[@]}" )"
+#           choice="$( UserInput -I BAZ_CHOICE -t 60 -p 'Hit a choice number key' -D 0 -n 1 "${choices[@]}" )"
 #       done
 # * To to let UserInput autorespond full automated a predefined user input value specify the user input value
-#   with a matching UserInput_user_input_ID variable (e.g. specify that it in your local.conf file) like
-#       UserInput_some_choice='third choice'
-#   which lets a 'UserInput -I some_choice' call autorespond with 'third choice'.
-#   No UserInput_some_choice variable should exist to get real user input for a 'UserInput -I some_choice' call
+#   with a matching USER_INPUT_user_input_ID variable (e.g. specify that it in your local.conf file) like
+#       USER_INPUT_BAR_CHOICE='third choice'
+#   which lets a 'UserInput -I BAR_CHOICE' call autorespond with 'third choice'.
+#   No USER_INPUT_BAR_CHOICE variable should exist to get real user input for a 'UserInput -I BAR_CHOICE' call
 #   or the user can interupt any automated response within a relatively short time (minimum is only 1 second).
 function UserInput () {
     # First and foremost log how UserInput was actually called so that subsequent 'Log' messages are comprehensible:
@@ -475,6 +480,7 @@ function UserInput () {
         esac
     done
     test $user_input_ID || BugError "UserInput: Option '-I user_input_ID' required"
+    test "$( echo $user_input_ID | tr -c -d '[:lower:]' )" && BugError "UserInput: Option '-I' argument '$user_input_ID' must not contain lower case letters"
     declare $user_input_ID="dummy" || BugError "UserInput: Option '-I' argument '$user_input_ID' not a valid variable name"
     # Shift away the options and arguments:
     shift "$(( OPTIND - 1 ))"
@@ -572,7 +578,7 @@ function UserInput () {
     # Get the user input:
     local user_input=""
     # When a predefined user input value exists use that as automated user input:
-    local predefined_input_variable_name="UserInput_$user_input_ID"
+    local predefined_input_variable_name="USER_INPUT_$user_input_ID"
     if test "${!predefined_input_variable_name:-}" ; then
         LogUserOutput "UserInput: Will use predefined input in '$predefined_input_variable_name'"
         # Let the user interrupt the automated user input:

@@ -148,8 +148,11 @@ while read keyword orig_device orig_size junk ; do
     prompt="Choose an appropriate replacement for $preferred_orig_device_name"
     choice=""
     wilful_input=""
+    # TODO: Currently only one single USER_INPUT_LAYOUT_MIGRATION_REPLACEMENT_DISK
+    # can be predefined (which is at least better than nothing) but that dialog can appear
+    # several times for several unmapped original 'disk' devices and 'multipath' devices:
     until IsInArray "$choice" "${regular_choices[@]}" ; do
-        choice="$( UserInput -I layout_migration_choose_replacement_disk -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )" && wilful_input="yes" || wilful_input="no"
+        choice="$( UserInput -I LAYOUT_MIGRATION_REPLACEMENT_DISK -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )" && wilful_input="yes" || wilful_input="no"
         test "$rear_shell_choice" = "$choice" && rear_shell
     done
     # Continue with next original device when the user selected to not map it:
@@ -178,10 +181,13 @@ choices[3]="Abort '$rear_workflow'"
 prompt="Confirm or edit the disk mapping"
 choice=""
 wilful_input=""
+# When USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS has any 'true' value be liberal in what you accept
+# and assume choices[0] 'Confirm mapping' was actually meant:
+is_true "$USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS" && USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS="0"
 while true ; do
     LogUserOutput 'Current disk mapping table (source -> target):'
     LogUserOutput "$( sed -e 's|^|    |' "$MAPPING_FILE" )"
-    choice="$( UserInput -I layout_migration_confirm_mappings -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
+    choice="$( UserInput -I LAYOUT_MIGRATION_CONFIRM_MAPPINGS -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
     case "$choice" in
         (${choices[0]})
             # Continue recovery:
