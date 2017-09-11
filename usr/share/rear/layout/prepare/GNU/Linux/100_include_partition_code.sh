@@ -173,6 +173,12 @@ EOF
         # The 'name' could contain spaces (were replaced with 0%20; need to change this again).
         name=$(echo "$name" | sed -e 's/0x20/ /g')
 
+        # Avoid naming multiple partitions "rear-noname" as this will trigger systemd log messages
+        # "Dev dev-disk-by\x2dpartlabel-rear\x2dnoname.device appeared twice with different sysfs paths"
+        if [[ "$name" == "rear-noname" ]]; then
+            name="$(basename "$partition")"
+        fi
+
         if [[ "$FEATURE_PARTED_ANYUNIT" ]] ; then
             if [[ "$end" ]] ; then
                 end=$( mathlib_calculate "$end - 1" )B
@@ -181,7 +187,7 @@ EOF
             fi
             cat >> "$LAYOUT_CODE" <<EOF
 my_udevsettle
-parted -s $device mkpart '"$name"' ${start}B $end >&2
+parted -s $device mkpart '$name' ${start}B $end >&2
 my_udevsettle
 EOF
         else
@@ -194,7 +200,7 @@ EOF
             end_mb=$( mathlib_calculate "$end / 1024 / 1024" )
             cat  >> "$LAYOUT_CODE" <<EOF
 my_udevsettle
-parted -s $device mkpart '"$name"' $start_mb $end_mb >&2
+parted -s $device mkpart '$name' $start_mb $end_mb >&2
 my_udevsettle
 EOF
         fi
@@ -235,7 +241,7 @@ EOF
         if [[ "$label" = "gpt" || "$label" == "gpt_sync_mbr" ]] && [[ "$name" != "rear-noname" ]] ; then
             (
             echo "my_udevsettle"
-            echo "parted -s $device name $number '\"$name\"' >&2"
+            echo "parted -s $device name $number '$name' >&2"
             echo "my_udevsettle"
             ) >> $LAYOUT_CODE
         fi
