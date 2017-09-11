@@ -1,5 +1,4 @@
 #
-# 330_include_uefi_tools.sh
 # Copy UEFI binaries we might need into the ReaR recovery system.
 #
 
