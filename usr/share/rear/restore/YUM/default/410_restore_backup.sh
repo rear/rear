@@ -44,8 +44,8 @@ if test -f $TMP_DIR/backup.splitted ; then
             #   backup.tar.gz.01 878706688 RELAXRECOVER_01
             #   backup.tar.gz.02 758343480 RELAXRECOVER_02
             # The first word is backup file name, the second a size, the last one is the label/vol_name:
-            backup_file_name=${backup_splitted_line%% *}
-            vol_name=${backup_splitted_line##* }
+            backup_file_name="${backup_splitted_line%% *}"
+            vol_name="${backup_splitted_line##* }"
             backup_file_path="$opath/$backup_file_name"
             # Clean up a possibly existing ProgressInfo message before printing a LogPrint message:
             ProgressInfo ""
