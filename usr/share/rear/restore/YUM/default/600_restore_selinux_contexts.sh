@@ -30,8 +30,8 @@ cat $( dirname "$backuparchive" )/selinux_contexts.dat | chroot $TARGET_FS_ROOT/
 # SELinux policy can become invalid if installed too early in the restore process, so reinstall it to ensure
 # that it is valid after we've restored the SELinux contexts
 if rpm_package=$(rpm $v --root $TARGET_FS_ROOT --query selinux-policy-targeted) ; then
-	rpm_package_name_version=${rpm_package%-*}
-	rpm_package_name=${rpm_package_name_version%-*}
+	rpm_package_name_version="${rpm_package%-*}"
+	rpm_package_name="${rpm_package_name_version%-*}"
         LogPrint "Reinstalling $rpm_package_name"
 	# Sometimes the version of the package isn't available to reinstall, so if reinstall
 	# fails, do a regular package upgrade
