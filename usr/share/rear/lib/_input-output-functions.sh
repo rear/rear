@@ -580,7 +580,7 @@ function UserInput () {
     # When a predefined user input value exists use that as automated user input:
     local predefined_input_variable_name="USER_INPUT_$user_input_ID"
     if test "${!predefined_input_variable_name:-}" ; then
-        LogUserOutput "UserInput: Will use predefined input in '$predefined_input_variable_name'"
+        LogUserOutput "UserInput: Will use predefined input in '$predefined_input_variable_name'='${!predefined_input_variable_name}'"
         # Let the user interrupt the automated user input:
         LogUserOutput "Hit any key to interrupt the automated input (timeout $automated_input_interrupt_timeout seconds)"
         # automated_input_interrupt_timeout is at least 1 second (see above) and do not echo the input (it is meaningless here):
