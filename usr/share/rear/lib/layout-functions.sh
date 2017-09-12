@@ -726,77 +726,79 @@ function get_part_device_name_format() {
 # the relationship between OLD and NEW device is provided by $MAPPING_FILE
 # (usually disk_mappings file in $VAR_DIR).
 function apply_layout_mappings() {
+    # --Begining Of TEST section--
+    # Exit if MIGRATION_MODE is not true.
+    is_true "$MIGRATION_MODE" || return 0
+
+    local file_to_migrate="$1"
 
     # apply_layout_mappings need one argument.
-    [ "$1" ] || BugError "apply_layout_mappings function called without argument (file_to_migrate)."
+    [ "$file_to_migrate" ] || BugError "apply_layout_mappings function called without argument (file_to_migrate)."
 
-    # Exit if MIGRATION_MODE is not true.
-    is_true "$MIGRATION_MODE" ] || return 0
+    # Only apply layout mapping on non-empty file:
+    test -s "$file_to_migrate" || return 0
+    # --End Of TEST section--
 
-    # Only apply layout mapping on non-empty file.
-    if [ -s "$1" ] ; then
-        # Generate unique words as replacement placeholders to correctly handle circular replacements (e.g. sda -> sdb and sdb -> sda).
-        # Replacement strategy is
-        # 1) replace all source devices with a unique word (the "replacement" )
-        # 2) replace all unique replacement words with the target device
+    # Generate unique words as replacement placeholders to correctly handle circular replacements (e.g. sda -> sdb and sdb -> sda).
+    # Replacement strategy is
+    # 1) replace all source devices with a unique word (the "replacement" )
+    # 2) replace all unique replacement words with the target device
 
-        file_to_migrate="$1"
+    # Replacement_file initialization.
+    replacement_file="$TMP_DIR/replacement_file"
+    : > "$replacement_file"
 
-        replacement_file="$TMP_DIR/replacement_file"
-        : > "$replacement_file"
+    function add_replacement() {
+        # We temporarily map all devices in the mapping to new names _REAR[0-9]+_
+        echo "$1 _REAR${replaced_count}_" >> "$replacement_file"
+        let replaced_count++
+    }
 
-        function add_replacement() {
-            # We temporarily map all devices in the mapping to new names _REAR[0-9]+_
-            echo "$1 _REAR${replaced_count}_" >> "$replacement_file"
-            let replaced_count++
-        }
+    function has_replacement() {
+        if grep -q "^$1 " "$replacement_file" ; then
+            return 0
+        else
+            return 1
+        fi
+    }
 
-        function has_replacement() {
-            if grep -q "^$1 " "$replacement_file" ; then
-                return 0
-            else
-                return 1
-            fi
-        }
+    # Step-1 replace all source devices with a unique word (the "replacement")
+    let replaced_count=0
+    while read source target junk ; do
+        if ! has_replacement "$source" ; then
+            add_replacement "$source"
+        fi
 
-        # Step-1 replace all source devices with a unique word (the "replacement")
-        let replaced_count=0
-        while read source target junk ; do
-            if ! has_replacement "$source" ; then
-                add_replacement "$source"
-            fi
+        if ! has_replacement "$target" ; then
+            add_replacement "$target"
+        fi
+    done < "$MAPPING_FILE"
 
-            if ! has_replacement "$target" ; then
-                add_replacement "$target"
-            fi
-        done < "$MAPPING_FILE"
+    # Replace all originals with their replacements.
+    while read original replacement junk ; do
+        # Replace partitions (we normalize cciss/c0d0p1 to _REAR5_1)
+        part_base=$(get_part_device_name_format "$original")
+        sed -i -r "\|$original|s|${part_base}([0-9]+)|$replacement\1|g" "$file_to_migrate"
 
-        # Replace all originals with their replacements.
-        while read original replacement junk ; do
-            # Replace partitions (we normalize cciss/c0d0p1 to _REAR5_1)
-            part_base=$(get_part_device_name_format "$original")
-            sed -i -r "\|$original|s|${part_base}([0-9]+)|$replacement\1|g" "$file_to_migrate"
+        # Replace whole devices
+        ### note that / is a word boundary, so is matched by \<, hence the extra /
+        sed -i -r "\|$original|s|/\<${original#/}\>|${replacement}|g" "$file_to_migrate"
+    done < "$replacement_file"
 
-            # Replace whole devices
-            ### note that / is a word boundary, so is matched by \<, hence the extra /
-            sed -i -r "\|$original|s|/\<${original#/}\>|${replacement}|g" "$file_to_migrate"
-        done < "$replacement_file"
+    # Step-2 replace all unique replacement words with the target device
+    function get_replacement() {
+        local item replacement junk
+        read item replacement junk < <(grep "^$1 " $replacement_file)
+        echo "$replacement"
+    }
 
-        # Step-2 replace all unique replacement words with the target device
-        function get_replacement() {
-            local item replacement junk
-            read item replacement junk < <(grep "^$1 " $replacement_file)
-            echo "$replacement"
-        }
+    while read source target junk ; do
+        replacement=$(get_replacement "$source")
+        # Replace whole device
+        sed -i -r "\|$replacement|s|$replacement\>|$target|g" "$file_to_migrate"
 
-        while read source target junk ; do
-            replacement=$(get_replacement "$source")
-            # Replace whole device
-            sed -i -r "\|$replacement|s|$replacement\>|$target|g" "$file_to_migrate"
-
-            # Replace partitions
-            target=$(get_part_device_name_format "$target")
-            sed -i -r "\|$replacement|s|$replacement([0-9]+)|$target\1|g" "$file_to_migrate"
-        done < "$MAPPING_FILE"
-    fi
+        # Replace partitions
+        target=$(get_part_device_name_format "$target")
+        sed -i -r "\|$replacement|s|$replacement([0-9]+)|$target\1|g" "$file_to_migrate"
+    done < "$MAPPING_FILE"
 }
