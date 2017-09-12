@@ -2,7 +2,7 @@ rear (2.2-1) stable; urgency=low
 
   * Mainly bug fixes for SLES 10 (sponsored release)
 
- -- Gratien Dhaese <gratien.dhaese@gmail.com>  Thu, 20 Jul 2017 14:22;30 +0100
+ -- Gratien Dhaese <gratien.dhaese@gmail.com> Thu, 20 Jul 2017 14:22:30 +0100
 rear (2.1-1) stable; urgency=low
 
   * Mainly bug fixes

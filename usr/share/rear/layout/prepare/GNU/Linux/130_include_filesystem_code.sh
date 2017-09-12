@@ -183,38 +183,50 @@ function create_fs () {
         (btrfs)
             # Cleanup disk partition provided the disk partition is not already mounted:
             echo "mount | grep -q $device || $cleanup_command" >> "$LAYOUT_CODE"
+
             # Actually create the filesystem provided the disk partition is not already mounted.
-            # User -f [force] to force overwriting an existing btrfs on that disk partition
-            # when the disk was already used before, see https://bugzilla.novell.com/show_bug.cgi?id=878870
             (   echo "# if $device is already mounted, skip"
                 echo "# force overwriting existing btrfs when the disk was already used before"
-                echo "mount | grep -q $device || mkfs -t $fstype -f $device"
+                echo "if ! mount | grep -q $device >&2 ; then"
             ) >> "$LAYOUT_CODE"
+
+            if [ -n "$uuid" ] ; then
+                # Latest version of btrfs provides -U option to specify UUID druring the filesystem creation.
+                # User -f [force] to force overwriting an existing btrfs on that disk partition
+                # when the disk was already used before, see https://bugzilla.novell.com/show_bug.cgi?id=878870
+                (   echo "  # Try to create btrfs with UUID"
+                    echo "  if ! mkfs -t $fstype -U $uuid -f $device >&2 ; then"
+                    # Problem with old btrfs version is that UUID cannot be set during mkfs! So, we must map it and
+                    # change later the /etc/fstab, /boot/grub/menu.lst, etc.
+                    echo "      mkfs -t $fstype -f $device >&2"
+                    echo "      new_uuid=\$( btrfs filesystem show $device 2>/dev/null | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )"
+                    echo "      if [ $uuid != \$new_uuid ] ; then"
+                    echo "          # The following grep command intentionally also"
+                    echo "          # fails when there is not yet a FS_UUID_MAP file"
+                    echo "          # and then the FS_UUID_MAP file will be created:"
+                    echo "          if ! grep -q $uuid \"$FS_UUID_MAP\" ; then"
+                    echo "              echo \"$uuid \$new_uuid $device\" >> $FS_UUID_MAP"
+                    echo "          else"
+                    echo "              # Required when we restart rear recover (via menu) - UUID changed again."
+                    echo "              old_uuid=\$(grep ${uuid} $FS_UUID_MAP | tail -1 | awk '{print \$2}')"
+                    echo "              SED_SCRIPT=\";/${uuid}/s/\${old_uuid}/\${new_uuid}/g\""
+                    echo "              sed -i \"\$SED_SCRIPT\" \"$FS_UUID_MAP\""
+                    echo "          fi"
+                    echo "      fi # end of [ $uuid != $new_uuid ]"
+                    echo "  fi"
+                ) >> "$LAYOUT_CODE"
+            else
+                # UUID is not provided. Create FS without UUID
+                # Latest version of btrfs provides -U option to specify UUID druring the filesystem creation.
+                echo "  mkfs -t $fstype -f $device" >> "$LAYOUT_CODE"
+            fi
+
             # Set the label:
             if [ -n "$label" ] ; then
-                echo "mount | grep -q $device || btrfs filesystem label $device $label >&2" >> "$LAYOUT_CODE"
+                echo "  btrfs filesystem label $device $label >&2" >> "$LAYOUT_CODE"
             fi
-            # Set the UUID:
-            if [ -n "$uuid" ] ; then
-                # Problem with btrfs is that UUID cannot be set during mkfs! So, we must map it and
-                # change later the /etc/fstab, /boot/grub/menu.lst, etc.
-                cat >> "$LAYOUT_CODE" <<EOF
-new_uuid=\$( btrfs filesystem show $device 2>/dev/null | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )
-if [ "$uuid" != "\$new_uuid" ] ; then
-    # The following grep command intentionally also
-    # fails when there is not yet a FS_UUID_MAP file
-    # and then the FS_UUID_MAP file will be created:
-    if ! grep -q "${uuid}" "$FS_UUID_MAP" ; then
-        echo "$uuid \$new_uuid $device" >> $FS_UUID_MAP
-    else
-        # Required when we restart rear recover (via menu) - UUID changed again.
-        old_uuid=\$(grep ${uuid} $FS_UUID_MAP | tail -1 | awk '{print \$2}')
-        SED_SCRIPT=";/${uuid}/s/\${old_uuid}/\${new_uuid}/g"
-        sed -i "\$SED_SCRIPT" "$FS_UUID_MAP"
-    fi
-fi # end of [ "$uuid" != "\$new_uuid" ]
-EOF
-            fi
+
+            echo "fi" >> "$LAYOUT_CODE"
             ;;
         (vfat)
             # Cleanup disk partition:
