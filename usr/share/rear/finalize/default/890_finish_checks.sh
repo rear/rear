@@ -1,4 +1,4 @@
-# report about checks beeing done
+# report about checks being done
 
 if ls -l /sys/block/*/ | grep -q xen ; then
     # if some disks are xen related then assume this is a XEN PV VM which boots externally

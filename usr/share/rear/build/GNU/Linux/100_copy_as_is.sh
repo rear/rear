@@ -1,7 +1,7 @@
 # 400_copy_as_is.sh
 #
 # copy files and directories that should be copied over as-is to the rescue
-# systems. Checks also for library dependancies of executables and adds
+# systems. Checks also for library dependencies of executables and adds
 # them to the LIBS list, if they are not included in the copied files.
 
 LogPrint "Copying files and directories"

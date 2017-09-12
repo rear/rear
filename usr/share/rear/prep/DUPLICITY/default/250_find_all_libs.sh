@@ -2,7 +2,7 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 # 250_find_all_libs.sh 
-# This is to FInd Out Missing Librarys with Strace, if Strace isnt installed this is skipped
+# This is to FInd Out Missing Librarys with Strace, if Strace isn't installed this is skipped
 
 # Check if Strace Readlink File Is available and Backup_PROG=Duply 
 which strace > /dev/null 2>&1

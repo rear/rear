@@ -14,4 +14,4 @@ mkfifo $FIFO
 cp "${opath}/backup.splitted" ${TMP_DIR}
 cp "${backuparchive}.md5" ${TMP_DIR}/backup.md5
 
-Log "fifo creation succesful !" 
+Log "fifo creation successful !" 

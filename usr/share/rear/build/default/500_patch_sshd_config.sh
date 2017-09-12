@@ -3,7 +3,7 @@
 
 # Patch sshd_config:
 # - disable password authentication because rescue system does not have PAM etc.
-# - disable challange response (Kerberos, skey, ...) for same reason
+# - disable challenge response (Kerberos, skey, ...) for same reason
 # - disable PAM
 # - disable motd printing, our /etc/profile does that
 # - if SSH_ROOT_PASSWORD was defined allow root to login via ssh

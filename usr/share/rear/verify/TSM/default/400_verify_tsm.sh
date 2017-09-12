@@ -4,7 +4,7 @@
 # usually this is a cause for trouble but apparently here it was done on purpose.
 # If this code doesn't work then please try with [@] instead
 #
-# 2009-10-12 Schlomo as part of a code review to fix all occurences of [*]
+# 2009-10-12 Schlomo as part of a code review to fix all occurrences of [*]
 #
 #
 # read TSM vars from TSM config files ( look a bit like an init file with KEY=VALUE pairs )

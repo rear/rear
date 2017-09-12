@@ -61,7 +61,7 @@ tree with:
    make rpm
 
 This will create an RPM for your distribution. The RPM is not platform-
-dependant and should work also on other RPM based distributions.
+dependent and should work also on other RPM based distributions.
 
 On DEB based systems you can execute the command:
 

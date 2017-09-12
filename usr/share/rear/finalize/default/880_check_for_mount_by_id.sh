@@ -9,7 +9,7 @@
 if [ -e $TARGET_FS_ROOT/etc/fstab ] && grep -v swap $TARGET_FS_ROOT/etc/fstab | grep -q by-id ; then
 	LogPrint ""
 	LogPrint "WARNING ! You are mounting some devices by ID. Please be aware that the IDs"
-	LogPrint "are hardware dependant and that you might have to adjust your fstab to match"
+	LogPrint "are hardware dependent and that you might have to adjust your fstab to match"
 	LogPrint "the new IDs. Currently your system has the following disks with LUN IDs:"
 	SCSI_ID_HAVE_RESULT=
 	while read major minor size device ; do

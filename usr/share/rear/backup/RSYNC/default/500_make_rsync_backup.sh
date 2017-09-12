@@ -121,7 +121,7 @@ test "$_rc" -gt 0 && VERBOSE=1 LogPrint "WARNING !
 There was an error (${rsync_err_msg[$_rc]}) during archive creation.
 Please check the archive and see '$RUNTIME_LOGFILE' for more information.
 
-Since errors are oftenly related to files that cannot be saved by
+Since errors are often related to files that cannot be saved by
 $BACKUP_PROG, we will continue the $WORKFLOW process. However, you MUST
 verify the backup yourself before trusting it !
 

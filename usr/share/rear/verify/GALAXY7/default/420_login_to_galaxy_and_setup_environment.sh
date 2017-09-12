@@ -1,5 +1,5 @@
 #
-# Galaxy requires a logon to the backup system that is independant from the system
+# Galaxy requires a logon to the backup system that is independent from the system
 # logon. The logon stores a session file on the system (/opt/galaxy/qsession.0) so that
 # a session might exist already.
 
