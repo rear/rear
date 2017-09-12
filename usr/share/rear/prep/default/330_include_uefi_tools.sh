@@ -1,19 +1,9 @@
 #
-# 310_include_uefi_tools.sh
 # Copy UEFI binaries we might need into the ReaR recovery system.
 #
 
-# If 'noefi' is set on the kernel commandline, ignore UEFI altogether:
-grep -qw 'noefi' /proc/cmdline && return
-
-# If no /boot/[eE][fF][iI] directory can be found
-# we might not be able to copy the UEFI binaries:
-if ! test -d /boot/[eE][fF][iI] ; then
-    if is_true $USING_UEFI_BOOTLOADER; then
-        Error "USING_UEFI_BOOTLOADER is set but there is no directory /boot/efi or /boot/EFI"
-    fi
-    return
-fi
+# Include UEFI tools on demand only
+is_true $USING_UEFI_BOOTLOADER || return
 
 # Copy UEFI binaries we might need:
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" dosfsck efibootmgr )
