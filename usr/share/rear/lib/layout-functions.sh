@@ -759,7 +759,7 @@ function apply_layout_mappings() {
             fi
         }
 
-        # Step-1 replace all source devices with a unique word (the "replacement" )
+        # Step-1 replace all source devices with a unique word (the "replacement")
         let replaced_count=0
         while read source target junk ; do
             if ! has_replacement "$source" ; then
