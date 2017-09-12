@@ -575,8 +575,8 @@ function UserInput () {
     test "$input_max_chars" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -n $input_max_chars"
     # When no input_delimiter was specified (via -d x) do not use it:
     test "$input_delimiter" && read_options_and_arguments="$read_options_and_arguments -d $input_delimiter"
-    # Get the user input:
-    local user_input=""
+    # Get the actual user input value:
+    local user_input_value=""
     # When a predefined user input value exists use that as automated user input:
     local predefined_input_variable_name="USER_INPUT_$user_input_ID"
     if test "${!predefined_input_variable_name:-}" ; then
@@ -590,17 +590,17 @@ function UserInput () {
             test "$prompt" && LogUserOutput "$prompt" || LogUserOutput "$default_prompt"
             test "$default_and_timeout" && LogUserOutput "($default_and_timeout)"
         else
-            user_input="${!predefined_input_variable_name}"
+            user_input_value="${!predefined_input_variable_name}"
             # When a (non empty) output_array was specified it must contain all user input words:
-            test "$output_array" && read -a "$output_array" <<<"$user_input"
+            test "$output_array" && read -a "$output_array" <<<"$user_input_value"
         fi
     fi
     # When there is no (non empty) automated user input read the user input:
     local return_code=0
-    if ! test "$user_input" ; then
+    if ! test "$user_input_value" ; then
         # Read the user input from the original STDIN that is saved as fd6 (see above):
-        if read $read_options_and_arguments user_input 0<&6 ; then
-            Log "UserInput: 'read' got as user input '$user_input'"
+        if read $read_options_and_arguments user_input_value 0<&6 ; then
+            Log "UserInput: 'read' got as user input '$user_input_value'"
         else
             return_code=1
             # Continue in any case because in case of errors the default input is used.
@@ -612,17 +612,19 @@ function UserInput () {
             fi
         fi
     fi
-    # When an output_array was specified it contains all user input words and then output_array is meant for the actual result.
-    # To be able to return something via STDOUT even when an output_array was specified we use only the first word here
-    # which should be sufficient because when the complete user input is needed the output_array can and must be used:
+    # When an output_array was specified it contains all user input words
+    # so that the words in output_array are copied into user_input_value:
     if test "$output_array" ; then
-        Log "UserInput: The output array '$output_array' contains all user input words."
-        user_input="${!output_array}"
-        Log "UserInput: To return something only the first user input word '$user_input' is used."
+        # Regarding how to get all array elements when the array name is in a variable 'output_array', see
+        # https://unix.stackexchange.com/questions/60584/how-to-use-a-variable-as-part-of-an-array-name
+        # Assume output_array="outarr" then output_array_dereferenced="outarr[*]"
+        # and "${!output_array_dereferenced}" becomes "${outarr[*]}":
+        local output_array_dereferenced="$output_array[*]"
+        user_input_value="${!output_array_dereferenced}"
     fi
     # When there is no user input or when the user input is only spaces use the "best" fallback or default that exists
     # (to test for non-empty and no-spaces user input there must be no double quotes because test " " results true):
-    if ! test $user_input ; then
+    if ! test $user_input_value ; then
         if ! test "$default_input" ; then
             DebugPrint "UserInput: No user input and no default input so that the result is ''"
             echo ""
@@ -643,24 +645,27 @@ function UserInput () {
         echo "${choices[$default_input]}"
         return $return_code
     fi
-    # When there is user input use it regardless of any default input:
+    # When there are no choices and there is any user input use it regardless of any default input:
     if ! test "$choices" ; then
-        DebugPrint "UserInput: User input and no choices so that the result is '$user_input'"
-        echo "$user_input"
+        DebugPrint "UserInput: User input and no choices so that the result is '$user_input_value'"
+        echo "$user_input_value"
         return $return_code
     fi
-    # Avoid stderr if user_input is not set or empty or not an integer value:
-    if ! test "$user_input" -ge 1 2>/dev/null ; then
-        DebugPrint "UserInput: User input no possible index in choices so that the result is '$user_input'"
-        echo "$user_input"
+    # When there are choices:
+    # Avoid stderr if user_input_value is not set or empty or not an integer value:
+    if ! test "$user_input_value" -ge 1 2>/dev/null ; then
+        DebugPrint "UserInput: User input no possible index in choices so that the result is '$user_input_value'"
+        echo "$user_input_value"
         return $return_code
     fi
-    choice_index=$(( user_input - 1 ))
+    # When there are choices and the user input is a positive integer value:
+    choice_index=$(( user_input_value - 1 ))
     if ! test "${choices[$choice_index]:=}" ; then
-        DebugPrint "UserInput: User input not in choices so that the result is '$user_input'"
-        echo "$user_input"
+        DebugPrint "UserInput: User input not in choices so that the result is '$user_input_value'"
+        echo "$user_input_value"
         return $return_code
     fi
+    # When there are choices and the user input is a valid choice number:
     DebugPrint "UserInput: User input in choices so that the result is '${choices[$choice_index]}'"
     echo "${choices[$choice_index]}"
     return $return_code
