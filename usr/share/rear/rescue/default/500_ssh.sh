@@ -24,7 +24,9 @@ if has_binary sshd; then
     Log "Adding required libfreeblpriv3.so to LIBS"
 
     # copy ssh user
-    PASSWD_SSH=$(getent passwd ssh sshd)
+    # getent will return all entries that match the key(s) exactly - most systems use 'sshd', some may use 'ssh', none should use both.
+    # Only the first line (first returned entry) will be used by 'read' in 'IFS=: read ... <<<"$PASSWD_SSH"', so we ask for sshd first.
+    PASSWD_SSH=$(getent passwd sshd ssh)
     if test -n "$PASSWD_SSH" ; then
     # sshd:x:71:65:SSH daemon:/var/lib/sshd:/bin/false
         IFS=: read user ex uid gid gecos homedir junk <<<"$PASSWD_SSH"
