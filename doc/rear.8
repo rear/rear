@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: rear
 .\"    Author: [see the "AUTHORS" section]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 06/08/2017
-.\"    Manual: [FIXME: manual]
-.\"    Source: [FIXME: source]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 20 July 2017
+.\"    Manual: \ \&
+.\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "REAR" "8" "06/08/2017" "[FIXME: source]" "[FIXME: manual]"
+.TH "REAR" "8" "20 July 2017" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -58,14 +67,12 @@ additional config file; absolute path or relative to config directory
 .PP
 \-d
 .RS 4
-
 \fBdebug mode\fR
 (log debug messages to log file)
 .RE
 .PP
 \-D
 .RS 4
-
 \fBdebugscript mode\fR
 (log every function call via
 \fIset \-x\fR)
@@ -86,21 +93,18 @@ kernel version to use (by default use running kernel)
 .PP
 \-s
 .RS 4
-
 \fBsimulation mode\fR
 (show what scripts rear would include)
 .RE
 .PP
 \-S
 .RS 4
-
 \fBstep\-by\-step mode\fR
 (acknowledge each script individually)
 .RE
 .PP
 \-v
 .RS 4
-
 \fBverbose mode\fR
 (show progress output)
 .RE
@@ -209,7 +213,6 @@ Create only the Relax\-and\-Recover initramfs\&.
 .PP
 OUTPUT=\fBISO\fR
 .RS 4
-
 \fB(Default)\fR
 Create a bootable ISO9660 image on disk as
 \fIrear\-$(hostname)\&.iso\fR
@@ -329,7 +332,7 @@ BACKUP=NETFS\&.
 .sp
 If you do not specify OUTPUT_URL variable then by default it will be aligned to what was defined by variable BACKUP_URL\&. And, the ISO image will then be copied to the same location as your backup of the system disk(s)\&.
 .sp
-The ISO_DEFAULT variable defines what default boot option is used on the rescue image\&. Possible values are manual, boothd or unattended\&. Manual will make you boot into the shell directly by default, boothd will boot to the first disk (default) or unattended will automatically start in recovery mode\&.
+The ISO_DEFAULT variable defines what default boot option is used on the rescue image\&. Possible values are manual, boothd or automatic\&. Manual will make you boot into the shell directly by default, boothd will boot to the first disk (default) or automatic will automatically start in recovery mode\&.
 .SH "BACKUP SOFTWARE INTEGRATION"
 .sp
 Currently Relax\-and\-Recover supports the following backup methods\&. Please distinguish carefully between Relax\-and\-Recover support for 3rd party backup software and Relax\-and\-Recover internal backup methods\&. The latter also creates a backup of your data while the former will only integrate Relax\-and\-Recover with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself\&.
@@ -342,7 +345,6 @@ The following BACKUP methods are \fIexternal\fR of Relax\-and\-Recover meaning t
 .PP
 BACKUP=\fBREQUESTRESTORE\fR
 .RS 4
-
 \fB(default)\fR
 Not really a backup method at all, Relax\-and\-Recover simply halts the recovery and requests that somebody will restore the data to the appropriate location (e\&.g\&. via SSH)\&. This method works especially well with an rsync based backup that is pushed back to the backup client\&.
 .RE
@@ -692,7 +694,7 @@ Furthermore, we welcome pull requests via GitHub\&.
 Relax\-and\-Recover comes with extensive documentation located in \fI/usr/share/doc\fR\&.
 .SH "AUTHORS"
 .sp
-Gratien Dhaese, Schlomo Schapiro, Johannes Meixner, Jeroen Hoekx and Dag Wieers\&.
+Gratien Dhaese, Schlomo Schapiro, Johannes Meixner, Vladimir Gozora, Jeroen Hoekx and Dag Wieers\&.
 .sp
 Lars Pinne (original man page)\&.
 .sp
@@ -708,6 +710,8 @@ Schlomo Schapiro
 Gratien Dhaese, IT3 Consultants
 .sp
 Johannes Meixner, SUSE
+.sp
+Vladimir Gozora
 .sp
 Jeroen Hoekx
 .sp
