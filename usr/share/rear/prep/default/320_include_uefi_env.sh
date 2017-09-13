@@ -15,17 +15,6 @@ if is_false $USING_UEFI_BOOTLOADER ; then
     Log "We do not want UEFI capabilities in ReaR (USING_UEFI_BOOTLOADER=0)"
     return
 fi
-# FIXME: I <jsmeix@suse.de> wonder if ReaR should also decide via the code below
-# if the variable USING_UEFI_BOOTLOADER has already an explicit 'true' value set.
-# I think if the variable USING_UEFI_BOOTLOADER has an explicit 'true' value set
-# but the code below returns before "it is safe to turn on USING_UEFI_BOOTLOADER=1"
-# then something is probably wrong because the user wants USING_UEFI_BOOTLOADER
-# but the tests in the code below seem to contradict what the user wants
-# so that probably ReaR should better abort here with an error and not
-# blindly proceed and then fail later in arbitrary unpredictable ways
-# cf. https://github.com/rear/rear/issues/801#issuecomment-200353337
-# or is it also usually "safe to proceed with USING_UEFI_BOOTLOADER=1"
-# when the user has explicitly specified that regardless of the tests below?
 
 # Some distributions don't have a builtin efivars kernel module, so we need to load it.
 # Be aware, efivars is not listed with 'lsmod'
@@ -39,6 +28,9 @@ if [[ -d /sys/firmware/efi/vars ]]; then
 elif [[ -d /sys/firmware/efi/efivars ]]; then
     SYSFS_DIR_EFI_VARS=/sys/firmware/efi/efivars
 else
+    if [[ $USING_UEFI_BOOTLOADER == 1 ]]; then
+        Error "USING_UEFI_BOOTLOADER = 1 but there is no /sys/firmware/efi/vars neither /sys/firmware/efi/efivars" # abort
+    fi
     return    # when UEFI is enabled the dir is there
 fi
 
@@ -48,7 +40,15 @@ if grep -qw efivars /proc/mounts; then
 fi
 
 # next step, is case-sensitive checking /boot for case-insensitive /efi directory (we need it)
-test "$( find /boot -maxdepth 1 -iname efi -type d )" || return
+# FIXME: I <2010@probackup.nl> wonder whether it is necessary to have this check here because
+# an identical check is already there in 310_include_uefi_tools.sh 
+# and the next step "check filesystem partition type (vfat?)" has near identical logic.
+if [[ ! -d /boot/[eE][fF][iI] ]]; then
+    if [[ $USING_UEFI_BOOTLOADER == 1 ]]; then
+        Error "USING_UEFI_BOOTLOADER = 1 but there is no /boot/efi neither /boot/EFI directory" # abort
+    fi
+    return # skip
+fi
 
 local esp_mount_point=""
 
@@ -63,6 +63,9 @@ fi
 
 # ESP must be type vfat (under Linux)
 if [[ "$UEFI_FS_TYPE" != "vfat" ]]; then
+    if [[ $USING_UEFI_BOOTLOADER == 1 ]]; then
+        Error "USING_UEFI_BOOTLOADER = 1 but there is no VFAT formatted file system mounted at /boot/efi neither /boot" # abort
+    fi
     return
 fi
 
@@ -70,4 +73,5 @@ fi
 USING_UEFI_BOOTLOADER=1
 LogPrint "Using UEFI Boot Loader for Linux (USING_UEFI_BOOTLOADER=1)"
 
+# save boot disk partition, f.e. /dev/sda1
 awk $esp_mount_point' { print $1 }' /proc/mounts >$VAR_DIR/recovery/bootdisk 2>/dev/null
