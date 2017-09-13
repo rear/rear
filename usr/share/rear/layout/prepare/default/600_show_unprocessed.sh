@@ -21,10 +21,16 @@ while read status name type junk ; do
         # so that 'rear recover' proceeds after the timeout regardless that it probably fails
         # when the component is not recreated but perhaps it could succeed in migration mode
         # on different replacement hardware where it might be even right to simply "Continue".
-        # TODO: Currently only one single USER_INPUT_ADD_CODE_TO_RECREATE_MISSING_COMPONENT
-        # can be predefined (which is at least better than nothing)
-        # but that dialog can appear several times for several missing components:
-        case "$( UserInput -I ADD_CODE_TO_RECREATE_MISSING_COMPONENT -p "Manually add code that recreates $missing_component" -D "${choices[3]}" "${choices[@]}" )" in
+        # Generate a runtime-specific user_input_ID so that for each missing component
+        # a different user_input_ID is used for the UserInput call so that the user can specify
+        # for each missing component a different predefined user input.
+        # Only uppercase letters and digits are used to ensure the user_input_ID is a valid bash variable name
+        # (otherwise the UserInput call could become invalid which aborts 'rear recover' with a BugError) and
+        # hopefully only uppercase letters and digits are sufficient to distinguish different missing components:
+        current_missing_component_alnum_uppercase="$( echo "$missing_component" | tr -d -c '[:alnum:]' | tr '[:lower:]' '[:upper:]' )"
+        test "$current_missing_component_alnum_uppercase" || current_missing_component_alnum_uppercase="COMPONENT"
+        user_input_ID="ADD_CODE_TO_RECREATE_MISSING_$current_missing_component_alnum_uppercase"
+        case "$( UserInput -I $user_input_ID -p "Manually add code that recreates $missing_component" -D "${choices[3]}" "${choices[@]}" )" in
             (${choices[0]})
                 # Run 'less' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
                 less $LAYOUT_CODE 0<&6 1>&7 2>&8
