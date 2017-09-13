@@ -622,29 +622,51 @@ function UserInput () {
         local output_array_dereferenced="$output_array[*]"
         user_input_value="${!output_array_dereferenced}"
     fi
-    # When there is no user input or when the user input is only spaces use the "best" fallback or default that exists
-    # (to test for non-empty and no-spaces user input there must be no double quotes because test " " results true):
-    if ! test $user_input_value ; then
+    # When there is no user input or when the user input is only spaces use the "best" fallback or default that exists.
+    # To test a single word for non-empty and no-spaces there must be no double quotes because test " " results true.
+    # But the user input can be a string of several words and the test must have all the words as one argument
+    # otherwise the test for a string of several (non empty) words fails with 'bash: test: unary operator expected'.
+    # On the other hand the test should not succeed when user_input_value is only spaces.
+    # Therefore 'echo -n' is interposed because the output of foo=' ' ; echo -n $foo
+    # is empty:
+    if ! test "$( echo -n $user_input_value )" ; then
         if ! test "$default_input" ; then
             DebugPrint "UserInput: No user input and no default input so that the result is ''"
             echo ""
             return $return_code
         fi
+        # There is a default input:
+        # When there are no choices and no user input use the default input:
+        if ! test "$choices" ; then
+            DebugPrint "UserInput: No user input and no choices so that the result is '$default_input'"
+            echo "$default_input"
+            return $return_code
+        fi
+        # When there are choices:
         # Avoid stderr if default_input is not set or empty or not an integer value:
-        if ! test "$default_input" -ge 0 2>/dev/null ; then
-            DebugPrint "UserInput: No user input and default input no possible index in choices so that the result is '$default_input'"
+        if test "$default_input" -ge 0 2>/dev/null ; then
+            # There are choices and the default input is a possible index in choices:
+            if test "${choices[$default_input]:=}" ; then
+                DebugPrint "UserInput: No user input but default input in choices so that the result is '${choices[$default_input]}'"
+                echo "${choices[$default_input]}"
+                return $return_code
+            fi
+            # The default input is not in choices:
+            DebugPrint "UserInput: No user input and default input no index in choices so that the result is '$default_input'"
             echo "$default_input"
             return $return_code
         fi
-        if ! test "${choices[$default_input]:=}" ; then
-            DebugPrint "UserInput: No user input and default input not in choices so that the result is '$default_input'"
+        # There are choices but the default input is not an integer value:
+        if IsInArray "$default_input" "${choices[@]}" ; then
+            DebugPrint "UserInput: No user input but default input is a choice so that the result is '$default_input'"
             echo "$default_input"
             return $return_code
         fi
-        DebugPrint "UserInput: No user input but default input in choices so that the result is '${choices[$default_input]}'"
-        echo "${choices[$default_input]}"
+        DebugPrint "UserInput: No user input and default input not in choices so that the result is '$default_input'"
+        echo "$default_input"
         return $return_code
     fi
+    # There is real user input (neither empty nor only spaces):
     # When there are no choices and there is any user input use it regardless of any default input:
     if ! test "$choices" ; then
         DebugPrint "UserInput: User input and no choices so that the result is '$user_input_value'"
@@ -653,21 +675,28 @@ function UserInput () {
     fi
     # When there are choices:
     # Avoid stderr if user_input_value is not set or empty or not an integer value:
-    if ! test "$user_input_value" -ge 1 2>/dev/null ; then
-        DebugPrint "UserInput: User input no possible index in choices so that the result is '$user_input_value'"
-        echo "$user_input_value"
-        return $return_code
-    fi
-    # When there are choices and the user input is a positive integer value:
-    choice_index=$(( user_input_value - 1 ))
-    if ! test "${choices[$choice_index]:=}" ; then
+    if test "$user_input_value" -ge 1 2>/dev/null ; then
+        # There are choices and the user input is a positive integer value:
+        choice_index=$(( user_input_value - 1 ))
+        if test "${choices[$choice_index]:=}" ; then
+            # The user input is a valid choice number:
+            DebugPrint "UserInput: User input in choices so that the result is '${choices[$choice_index]}'"
+            echo "${choices[$choice_index]}"
+            return $return_code
+        fi
+        # The user input is a positive integer but that is not a valid choice number:
         DebugPrint "UserInput: User input not in choices so that the result is '$user_input_value'"
         echo "$user_input_value"
         return $return_code
     fi
-    # When there are choices and the user input is a valid choice number:
-    DebugPrint "UserInput: User input in choices so that the result is '${choices[$choice_index]}'"
-    echo "${choices[$choice_index]}"
+    # There are choices but the user input is not a positive integer:
+    if IsInArray "$user_input_value" "${choices[@]}" ; then
+        DebugPrint "UserInput: User input is a choice so that the result is '$user_input_value'"
+        echo "$user_input_value"
+        return $return_code
+    fi
+    DebugPrint "UserInput: User input not a choice so that the result is '$user_input_value'"
+    echo "$user_input_value"
     return $return_code
 }
 
