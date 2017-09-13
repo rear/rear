@@ -1,6 +1,6 @@
 # Copied from ../../ZYPPER/default/970_set_root_password.sh for YUM
 #
-# restore/ZYPPER/default/970_set_root_password.sh
+# restore/YUM/default/970_set_root_password.sh
 # 970_set_root_password.sh is a finalisation script (see restore/readme)
 # that sets the initial root password in the target system
 # after the files have been restored into the target system
@@ -23,8 +23,8 @@ set -e -u -o pipefail
 local root_password="root"
 # If SSH_ROOT_PASSWORD is specified used that as root password in the target system:
 test "$SSH_ROOT_PASSWORD" && root_password="$SSH_ROOT_PASSWORD"
-# If ZYPPER_ROOT_PASSWORD is specified used that as root password in the target system:
-test "$ZYPPER_ROOT_PASSWORD" && root_password="$ZYPPER_ROOT_PASSWORD"
+# If YUM_ROOT_PASSWORD is specified used that as root password in the target system:
+test "$YUM_ROOT_PASSWORD" && root_password="$YUM_ROOT_PASSWORD"
 
 # Set the root password in the target system.
 # Use a login shell in between so that one has in the chrooted environment
