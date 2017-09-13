@@ -661,33 +661,9 @@ function UdevQueryName() {
     $UdevQueryName $device_link
 }
 
-
-### apply_layout_mappings function
-#
-# Functions used in apply_layout_mappings() function
-function add_replacement() {
-    echo "$1 _REAR${replaced_count}_" >> "$replacement_file"
-    let replaced_count++
-}
-#
-# Functions used in apply_layout_mappings() function
-function has_replacement() {
-    if grep -q "^$1 " "$replacement_file" ; then
-        return 0
-    else
-        return 1
-    fi
-}
-#
-# Functions used in apply_layout_mappings() function
-function get_replacement() {
-    local item replacement junk
-    read item replacement junk < <(grep "^$1 " $replacement_file)
-    echo "$replacement"
-}
 # Guess the part device name from a device, based on the OS distro Level.
 function get_part_device_name_format() {
-    if [ -z $1 ] ; then
+    if [ -z "$1" ] ; then
         BugError "get_part_device_name_format function called without argument (device)"
     else
         device_name="$1"
@@ -750,24 +726,44 @@ function get_part_device_name_format() {
 # the relationship between OLD and NEW device is provided by $MAPPING_FILE
 # (usually disk_mappings file in $VAR_DIR).
 function apply_layout_mappings() {
+    # --Begining Of TEST section--
+    # Exit if MIGRATION_MODE is not true.
+    is_true "$MIGRATION_MODE" || return 0
 
-    # apply_layout_mappings need one argument (a non-empty file which contains disk device to migrate).
-    if [ -s "$1" ] ; then
-        file_to_migrate="$1"
-    else
-        BugError "apply_layout_mappings function called without argument (file_to_migrate) or argument is not a non-empty file."
-    fi
+    local file_to_migrate="$1"
 
-    if [ -z "$MIGRATION_MODE" ] ; then
-        return 0
-    fi
+    # apply_layout_mappings need one argument.
+    [ "$file_to_migrate" ] || BugError "apply_layout_mappings function called without argument (file_to_migrate)."
 
-    # We temporarily map all devices in the mapping to new names _REAR[0-9]+_
-    replaced_count=0
+    # Only apply layout mapping on non-empty file:
+    test -s "$file_to_migrate" || return 0
+    # --End Of TEST section--
+
+    # Generate unique words as replacement placeholders to correctly handle circular replacements (e.g. sda -> sdb and sdb -> sda).
+    # Replacement strategy is
+    # 1) replace all source devices with a unique word (the "replacement" )
+    # 2) replace all unique replacement words with the target device
+
+    # Replacement_file initialization.
     replacement_file="$TMP_DIR/replacement_file"
     : > "$replacement_file"
 
-    # Generate replacements.
+    function add_replacement() {
+        # We temporarily map all devices in the mapping to new names _REAR[0-9]+_
+        echo "$1 _REAR${replaced_count}_" >> "$replacement_file"
+        let replaced_count++
+    }
+
+    function has_replacement() {
+        if grep -q "^$1 " "$replacement_file" ; then
+            return 0
+        else
+            return 1
+        fi
+    }
+
+    # Step-1 replace all source devices with a unique word (the "replacement")
+    let replaced_count=0
     while read source target junk ; do
         if ! has_replacement "$source" ; then
             add_replacement "$source"
@@ -789,7 +785,13 @@ function apply_layout_mappings() {
         sed -i -r "\|$original|s|/\<${original#/}\>|${replacement}|g" "$file_to_migrate"
     done < "$replacement_file"
 
-    # Replace all replacements with their target.
+    # Step-2 replace all unique replacement words with the target device
+    function get_replacement() {
+        local item replacement junk
+        read item replacement junk < <(grep "^$1 " $replacement_file)
+        echo "$replacement"
+    }
+
     while read source target junk ; do
         replacement=$(get_replacement "$source")
         # Replace whole device

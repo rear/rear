@@ -24,17 +24,22 @@ for file in     [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/
 
 	[[ ! -f $file ]] && continue # skip directory or file not found
         # sed -i bails on symlinks, so we follow the symlink and patch the result
-        # on dead links we warn and skip them
-        # TODO: maybe we must put this into a chroot so that absolute symlinks will work correctly
+        # - absolute link are rebased on $TARGET_FS_ROOT (/etc/fstab => $TARGET_FS_ROOT/etc/fstab)
+        # - on dead links we warn and skip them
         if [[ -L "$file" ]] ; then
-                if linkdest="$(readlink -f "$file")" ; then
-                        LogPrint "Patching '$linkdest' instead of '$file'"
-                        file="$linkdest"
+                linkdest="$(readlink -m "$file" | sed -e "s#^/#$TARGET_FS_ROOT/#" )"
+                if test -f "$linkdest" ; then
+                    LogPrint "Patching '$linkdest' instead of '$file'"
+                    file="$linkdest"
                 else
-                        LogPrint "Not patching dead link '$file'"
-                        continue
+                    LogPrint "Not patching dead link '$file' -> '$linkdest'"
+                    continue
                 fi
         fi
 
-        apply_layout_mappings "$file"
+        if test -s "$file" ; then
+            apply_layout_mappings "$file"
+        else
+            LogPrint "Not Patching empty file ($file)"
+        fi
 done
