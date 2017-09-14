@@ -1,5 +1,5 @@
 # 100_create_efiboot.sh
-# USB device needs to be formated with command `rear format -- --efi /dev/<device_name>'
+# USB device needs to be formatted with command `rear format -- --efi /dev/<device_name>'
 
 is_true $USING_UEFI_BOOTLOADER || return
 

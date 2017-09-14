@@ -15,4 +15,4 @@ clean:
 	rm -f *.html *.svg *.xml
 
 %.html: %.adoc
-	asciidoc $<
+	asciidoc -a footer-style=none $<

@@ -22,13 +22,13 @@ clean:
 	make -C user-guide clean
 
 %.8.html: %.8.adoc
-	asciidoc -d manpage $<
+	asciidoc -a footer-style=none -d manpage $<
 
 %.8: %.8.xml
 	xmlto man $<
 
 %.html: %.adoc
-	asciidoc $<
+	asciidoc -a footer-style=none $<
 
 %.8.xml: %.8.adoc
 	asciidoc -b docbook -d manpage $<

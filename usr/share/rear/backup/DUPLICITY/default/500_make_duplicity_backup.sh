@@ -70,10 +70,10 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     export PASSPHRASE
 
     # check and create directory at backup-server
-    # if the target-directory dont exist, duplicity will fail
+    # if the target-directory don't exist, duplicity will fail
     # Note: this is only working if we use duplicity with ssh/rsync and the
     # given user is allowed to create directories/files this way !!
-    # maybe better done in an if or case statment
+    # maybe better done in an if or case statement
     #
     LogPrint "Checking backup-path at server ..."
     ssh ${DUPLICITY_USER}@${DUPLICITY_HOST} "test -d ${DUPLICITY_PATH}/${HOSTNAME} || mkdir -p ${DUPLICITY_PATH}/${HOSTNAME}"
@@ -106,7 +106,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     There was an error during archive creation.
     Please check the archive and see '$RUNTIME_LOGFILE' for more information.
 
-    Since errors are oftenly related to files that cannot be saved by
+    Since errors are often related to files that cannot be saved by
     $BACKUP_PROG, we will continue the $WORKFLOW process. However, you MUST
     verify the backup yourself before trusting it !
     "
