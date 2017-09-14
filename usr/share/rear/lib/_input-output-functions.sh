@@ -336,7 +336,7 @@ function LogPrintIfError () {
 #   input is read from the original STDIN when 'rear' was launched
 #   (which is usually the keyboard of the user who launched 'rear').
 # Synopsis:
-#   UserInput -I user_input_ID [-t timeout] [-p prompt] [-a output_array] [-n input_max_chars] [-d input_delimiter] [-D default_input] [choices]
+#   UserInput -I user_input_ID [-t timeout] [-p prompt] [-a input_words_array_name] [-n input_max_chars] [-d input_delimiter] [-D default_input] [choices]
 #   The options -t -p -a -n -d  match the ones for the 'read' bash builtin.
 #   The option [choices] are the values that are shown to the user as available choices like if a 'select' bash keyword was used.
 #   The option [-D default_input] specifies what is used as default response when the user does not enter something.
@@ -434,7 +434,7 @@ function UserInput () {
     local prompt="$default_prompt"
     # Avoid stderr if USER_INPUT_PROMPT is not set or empty:
     test "$USER_INPUT_PROMPT" 2>/dev/null && prompt="$USER_INPUT_PROMPT"
-    local output_array=""
+    local input_words_array_name=""
     local input_max_chars=1000
     # Avoid stderr if USER_INPUT_MAX_CHARS is not set or empty and ignore wrong USER_INPUT_MAX_CHARS:
     test "$USER_INPUT_MAX_CHARS" -ge 0 2>/dev/null && input_max_chars=$USER_INPUT_MAX_CHARS
@@ -456,7 +456,7 @@ function UserInput () {
                 prompt="$OPTARG"
                 ;;
             (a)
-                output_array="$OPTARG"
+                input_words_array_name="$OPTARG"
                 ;;
             (n)
                 # Avoid stderr if OPTARG is not set or empty or not an integer value:
@@ -568,15 +568,15 @@ function UserInput () {
     # When a zero timeout was specified (via -t 0) do not use it.
     # Avoid stderr if timeout is not set or empty or not an integer value:
     test "$timeout" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -t $timeout"
-    # When no output_array was specified (via -a myarr) do not use it:
-    test "$output_array" && read_options_and_arguments="$read_options_and_arguments -a $output_array"
+    # When no input_words_array_name was specified (via -a myarr) do not use it:
+    test "$input_words_array_name" && read_options_and_arguments="$read_options_and_arguments -a $input_words_array_name"
     # When zero input_max_chars was specified (via -n 0) do not use it.
     # Avoid stderr if input_max_chars is not set or empty or not an integer value:
     test "$input_max_chars" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -n $input_max_chars"
     # When no input_delimiter was specified (via -d x) do not use it:
     test "$input_delimiter" && read_options_and_arguments="$read_options_and_arguments -d $input_delimiter"
     # Get the actual user input value:
-    local user_input_value=""
+    local input_string=""
     # When a predefined user input value exists use that as automated user input:
     local predefined_input_variable_name="USER_INPUT_$user_input_ID"
     if test "${!predefined_input_variable_name:-}" ; then
@@ -590,17 +590,17 @@ function UserInput () {
             test "$prompt" && LogUserOutput "$prompt" || LogUserOutput "$default_prompt"
             test "$default_and_timeout" && LogUserOutput "($default_and_timeout)"
         else
-            user_input_value="${!predefined_input_variable_name}"
-            # When a (non empty) output_array was specified it must contain all user input words:
-            test "$output_array" && read -a "$output_array" <<<"$user_input_value"
+            input_string="${!predefined_input_variable_name}"
+            # When a (non empty) input_words_array_name was specified it must contain all user input words:
+            test "$input_words_array_name" && read -a "$input_words_array_name" <<<"$input_string"
         fi
     fi
     # When there is no (non empty) automated user input read the user input:
     local return_code=0
-    if ! test "$user_input_value" ; then
+    if ! test "$input_string" ; then
         # Read the user input from the original STDIN that is saved as fd6 (see above):
-        if read $read_options_and_arguments user_input_value 0<&6 ; then
-            Log "UserInput: 'read' got as user input '$user_input_value'"
+        if read $read_options_and_arguments input_string 0<&6 ; then
+            Log "UserInput: 'read' got as user input '$input_string'"
         else
             return_code=1
             # Continue in any case because in case of errors the default input is used.
@@ -612,91 +612,59 @@ function UserInput () {
             fi
         fi
     fi
-    # When an output_array was specified it contains all user input words
-    # so that the words in output_array are copied into user_input_value:
-    if test "$output_array" ; then
-        # Regarding how to get all array elements when the array name is in a variable 'output_array', see
+    # When an input_words_array_name was specified it contains all user input words
+    # so that the words in input_words_array_name are copied into input_string:
+    if test "$input_words_array_name" ; then
+        # Regarding how to get all array elements when the array name is in a variable, see
         # https://unix.stackexchange.com/questions/60584/how-to-use-a-variable-as-part-of-an-array-name
-        # Assume output_array="outarr" then output_array_dereferenced="outarr[*]"
-        # and "${!output_array_dereferenced}" becomes "${outarr[*]}":
-        local output_array_dereferenced="$output_array[*]"
-        user_input_value="${!output_array_dereferenced}"
+        # Assume input_words_array_name="myarr" then input_words_array_name_dereferenced="myarr[*]"
+        # and "${!input_words_array_name_dereferenced}" becomes "${myarr[*]}":
+        local input_words_array_name_dereferenced="$input_words_array_name[*]"
+        input_string="${!input_words_array_name_dereferenced}"
     fi
     # When there is no user input or when the user input is only spaces use the "best" fallback or default that exists.
     # To test a single word for non-empty and no-spaces there must be no double quotes because test " " results true.
     # But the user input can be a string of several words and the test must have all the words as one argument
     # otherwise the test for a string of several (non empty) words fails with 'bash: test: unary operator expected'.
-    # On the other hand the test should not succeed when user_input_value is only spaces.
+    # On the other hand the test should not succeed when input_string is only spaces.
     # Therefore 'echo -n' is interposed because the output of foo=' ' ; echo -n $foo
     # is empty:
-    if ! test "$( echo -n $user_input_value )" ; then
-        if ! test "$default_input" ; then
-            DebugPrint "UserInput: No user input and no default input so that the result is ''"
+    if ! test "$( echo -n $input_string )" ; then
+        # There is no real user input (user input is empty or only spaces):
+        if ! test "$( echo -n $default_input )" ; then
+            # There is neither real user input nor a real default input:
+            DebugPrint "UserInput: Neither real user input nor real default input (both empty or only spaces) results ''"
             echo ""
             return $return_code
         fi
-        # There is a default input:
-        # When there are no choices and no user input use the default input:
-        if ! test "$choices" ; then
-            DebugPrint "UserInput: No user input and no choices so that the result is '$default_input'"
-            echo "$default_input"
-            return $return_code
-        fi
-        # When there are choices:
-        # Avoid stderr if default_input is not set or empty or not an integer value:
-        if test "$default_input" -ge 0 2>/dev/null ; then
-            # There are choices and the default input is a possible index in choices:
-            if test "${choices[$default_input]:=}" ; then
-                DebugPrint "UserInput: No user input but default input in choices so that the result is '${choices[$default_input]}'"
-                echo "${choices[$default_input]}"
-                return $return_code
-            fi
-            # The default input is not in choices:
-            DebugPrint "UserInput: No user input and default input no index in choices so that the result is '$default_input'"
-            echo "$default_input"
-            return $return_code
-        fi
-        # There are choices but the default input is not an integer value:
-        if IsInArray "$default_input" "${choices[@]}" ; then
-            DebugPrint "UserInput: No user input but default input is a choice so that the result is '$default_input'"
-            echo "$default_input"
-            return $return_code
-        fi
-        DebugPrint "UserInput: No user input and default input not in choices so that the result is '$default_input'"
-        echo "$default_input"
-        return $return_code
+        # When there is a real default input but no real user input use the default input as user input:
+        DebugPrint "UserInput: No real user input (empty or only spaces) - using default input"
+        input_string="$default_input"
     fi
-    # There is real user input (neither empty nor only spaces):
-    # When there are no choices and there is any user input use it regardless of any default input:
+    # Now there is real input in input_string (neither empty nor only spaces):
+    # When there are no choices result the input as is:
     if ! test "$choices" ; then
-        DebugPrint "UserInput: User input and no choices so that the result is '$user_input_value'"
-        echo "$user_input_value"
+        DebugPrint "UserInput: No choices - result is '$input_string'"
+        echo "$input_string"
         return $return_code
     fi
     # When there are choices:
-    # Avoid stderr if user_input_value is not set or empty or not an integer value:
-    if test "$user_input_value" -ge 1 2>/dev/null ; then
+    # Avoid stderr if input_string is not set or empty or not an integer value:
+    if test "$input_string" -ge 1 2>/dev/null ; then
         # There are choices and the user input is a positive integer value:
-        choice_index=$(( user_input_value - 1 ))
+        choice_index=$(( input_string - 1 ))
         if test "${choices[$choice_index]:=}" ; then
             # The user input is a valid choice number:
-            DebugPrint "UserInput: User input in choices so that the result is '${choices[$choice_index]}'"
+            DebugPrint "UserInput: Valid choice number result '${choices[$choice_index]}'"
             echo "${choices[$choice_index]}"
             return $return_code
         fi
-        # The user input is a positive integer but that is not a valid choice number:
-        DebugPrint "UserInput: User input not in choices so that the result is '$user_input_value'"
-        echo "$user_input_value"
-        return $return_code
     fi
-    # There are choices but the user input is not a positive integer:
-    if IsInArray "$user_input_value" "${choices[@]}" ; then
-        DebugPrint "UserInput: User input is a choice so that the result is '$user_input_value'"
-        echo "$user_input_value"
-        return $return_code
-    fi
-    DebugPrint "UserInput: User input not a choice so that the result is '$user_input_value'"
-    echo "$user_input_value"
+    # When the input is not a a valid choice number or
+    # when the input is an existing choice string or
+    # when the input is anything else:
+    DebugPrint "UserInput: Result is '$input_string'"
+    echo "$input_string"
     return $return_code
 }
 
