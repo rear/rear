@@ -148,11 +148,17 @@ while read keyword orig_device orig_size junk ; do
     prompt="Choose an appropriate replacement for $preferred_orig_device_name"
     choice=""
     wilful_input=""
-    # TODO: Currently only one single USER_INPUT_LAYOUT_MIGRATION_REPLACEMENT_DISK
-    # can be predefined (which is at least better than nothing) but that dialog can appear
-    # several times for several unmapped original 'disk' devices and 'multipath' devices:
+    # Generate a runtime-specific user_input_ID so that for each unmapped original device
+    # a different user_input_ID is used for the UserInput call so that the user can specify
+    # for each unmapped original device a different predefined user input.
+    # Only uppercase letters and digits are used to ensure the user_input_ID is a valid bash variable name
+    # (otherwise the UserInput call could become invalid which aborts 'rear recover' with a BugError) and
+    # hopefully only uppercase letters and digits are sufficient to distinguish different devices:
+    current_orig_device_basename_alnum_uppercase="$( basename "$preferred_orig_device_name" | tr -d -c '[:alnum:]' | tr '[:lower:]' '[:upper:]' )"
+    test "$current_orig_device_basename_alnum_uppercase" || current_orig_device_basename_alnum_uppercase="DISK"
+    user_input_ID="LAYOUT_MIGRATION_REPLACEMENT_$current_orig_device_basename_alnum_uppercase"
     until IsInArray "$choice" "${regular_choices[@]}" ; do
-        choice="$( UserInput -I LAYOUT_MIGRATION_REPLACEMENT_DISK -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )" && wilful_input="yes" || wilful_input="no"
+        choice="$( UserInput -I $user_input_ID -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )" && wilful_input="yes" || wilful_input="no"
         test "$rear_shell_choice" = "$choice" && rear_shell
     done
     # Continue with next original device when the user selected to not map it:
@@ -182,9 +188,8 @@ prompt="Confirm or edit the disk mapping"
 choice=""
 wilful_input=""
 # When USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS has any 'true' value be liberal in what you accept and
-# assume choices[0] 'Confirm mapping' was actually meant which is shown with choice number 1 (not 0) and
-# a predefined user input must match the choice number that is shown to the user (not the choice index):
-is_true "$USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS" && USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS="1"
+# assume choices[0] 'Confirm mapping' was actually meant:
+is_true "$USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS" && USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS="${choices[0]}"
 while true ; do
     LogUserOutput 'Current disk mapping table (source -> target):'
     LogUserOutput "$( sed -e 's|^|    |' "$MAPPING_FILE" )"
