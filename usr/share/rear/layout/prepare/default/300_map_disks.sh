@@ -188,9 +188,8 @@ prompt="Confirm or edit the disk mapping"
 choice=""
 wilful_input=""
 # When USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS has any 'true' value be liberal in what you accept and
-# assume choices[0] 'Confirm mapping' was actually meant which is shown with choice number 1 (not 0) and
-# a predefined user input must match the choice number that is shown to the user (not the choice index):
-is_true "$USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS" && USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS="1"
+# assume choices[0] 'Confirm mapping' was actually meant:
+is_true "$USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS" && USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS="${choices[0]}"
 while true ; do
     LogUserOutput 'Current disk mapping table (source -> target):'
     LogUserOutput "$( sed -e 's|^|    |' "$MAPPING_FILE" )"
