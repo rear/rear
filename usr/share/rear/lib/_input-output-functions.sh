@@ -640,6 +640,13 @@ function UserInput () {
         # When there is a real default input but no real user input use the default input as user input:
         DebugPrint "UserInput: No real user input (empty or only spaces) - using default input"
         input_string="$default_input"
+        # Avoid stderr if default_input is not set or empty or not an integer value:
+        if test "$default_input" -ge 0 2>/dev/null ; then
+            # When there are choices and the default input is a valid choice index
+            # the number that is used as input must be one more because the choices are shown
+            # with choice numbers 1 2 3 ... as in 'select' (i.e. starting at 1):
+            test "$choices" && test "${choices[$default_input]:=}" && input_string=$(( default_input + 1 ))
+        fi
     fi
     # Now there is real input in input_string (neither empty nor only spaces):
     # When there are no choices result the input as is:
