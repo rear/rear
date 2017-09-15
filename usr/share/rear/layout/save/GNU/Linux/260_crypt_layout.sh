@@ -1,4 +1,4 @@
-# Describe luks devices
+# Describe LUKS devices
 # We use /etc/crypttab and cryptsetup for information
 
 if ! has_binary cryptsetup; then
@@ -18,7 +18,7 @@ while read dm_name junk ; do
 
     dev_name=$(get_sysfs_name /dev/mapper/$dm_name)
     if [ -z "$dev_name" ] ; then
-        Log "Could not find device $dev_number in sysfs."
+        Log "Could not find device $dev_name in sysfs."
         continue
     fi
 
@@ -38,8 +38,10 @@ while read dm_name junk ; do
     cipher=$(cryptsetup luksDump $device | grep "Cipher name" | sed -r 's/^.+:\s*(.+)$/\1/')
     ##mode=$(cryptsetup luksDump $device | grep "Cipher mode" | sed -r 's/^.+:\s*(.+)$/\1/')
     mode=$(cryptsetup luksDump $device | grep "Cipher mode" | cut -d: -f2- | awk '{printf("%s",$1)};')
+    key_size=$(cryptsetup luksDump $device | grep "MK bits" | sed -r 's/^.+:\s*(.+)$/\1/')
     hash=$(cryptsetup luksDump $device | grep "Hash spec" | sed -r 's/^.+:\s*(.+)$/\1/')
     uuid=$(cryptsetup luksDump $device | grep "UUID" | sed -r 's/^.+:\s*(.+)$/\1/')
+    keyfile=$([ -f /etc/crypttab ] && awk '$1 == "'"$dm_name"'" { print $3; }' /etc/crypttab)
 
-    echo "crypt /dev/mapper/$dm_name $device cipher=$cipher mode=$mode hash=$hash uuid=${uuid}" >> $DISKLAYOUT_FILE
+    echo "crypt /dev/mapper/$dm_name $device cipher=$cipher-$mode key_size=$key_size hash=$hash uuid=$uuid keyfile=$keyfile" >> $DISKLAYOUT_FILE
 done < <( dmsetup ls --target crypt )

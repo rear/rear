@@ -6,7 +6,7 @@ create_crypt() {
 
     local name=${device#/dev/mapper/}
 
-    local cipher="" hash="" uuid="" keyfile="" password=""
+    local cryptsetup_options="" keyfile="" password=""
     local option key value
     for option in $options ; do
         key=${option%=*}
@@ -14,18 +14,18 @@ create_crypt() {
 
         case "$key" in
             cipher)
-                cipher=" --cipher $value"
+                cryptsetup_options+=" --cipher $value"
                 ;;
-            mode)
-                cipher="$cipher-$value"
+            key_size)
+                cryptsetup_options+=" --key-size $value"
                 ;;
             hash)
-                hash=" --hash $value"
+                cryptsetup_options+=" --hash $value"
                 ;;
             uuid)
-                uuid=" --uuid $value"
+                cryptsetup_options+=" --uuid $value"
                 ;;
-            key)
+            keyfile)
                 keyfile=$value
                 ;;
             password)
@@ -34,17 +34,27 @@ create_crypt() {
         esac
     done
 
+    cryptsetup_options+=" $LUKS_CRYPTSETUP_OPTIONS"
+
     (
     echo "Log \"Creating luks device $name on $encdevice\""
     if [ -n "$keyfile" ] ; then
-        echo "cryptsetup luksFormat -q${cipher}${hash}${uuid} ${encdevice} $keyfile"
+        # Assign a temporary keyfile at this stage so that original keyfiles do not leak onto the rescue medium.
+        # The original keyfile will be restored from the backup and then re-assigned to the LUKS device in the
+        # 'finalize' stage.
+        # The scheme for generating a temporary keyfile path must be the same here and in the 'finalize' stage.
+        keyfile="${TMPDIR:-/tmp}/LUKS-keyfile-$(basename $keyfile)"
+        dd bs=512 count=4 if=/dev/urandom of="$keyfile"
+        chmod u=rw,go=- "$keyfile"
+
+        echo "cryptsetup luksFormat --batch-mode $cryptsetup_options $encdevice $keyfile"
         echo "cryptsetup luksOpen --key-file $keyfile $encdevice $name"
     elif [ -n "$password" ] ; then
-        echo "echo \"$password\" | cryptsetup luksFormat -q${cipher}${hash}${uuid} ${encdevice}"
+        echo "echo \"$password\" | cryptsetup luksFormat --batch-mode $cryptsetup_options $encdevice"
         echo "echo \"$password\" | cryptsetup luksOpen $encdevice $name"
     else
         echo "LogPrint \"Please enter the password for $name($encdevice):\""
-        echo "cryptsetup luksFormat -q${cipher}${hash}${uuid} ${encdevice}"
+        echo "cryptsetup luksFormat --batch-mode $cryptsetup_options $encdevice"
         echo "LogPrint \"Please re-enter the password for $name($encdevice):\""
         echo "cryptsetup luksOpen $encdevice $name"
     fi
