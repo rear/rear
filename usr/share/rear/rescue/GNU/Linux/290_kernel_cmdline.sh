@@ -1,13 +1,10 @@
 # purpose of the script is to detect some important KERNEL CMDLINE options on the current system
 # we should also use in rescue mode (automatically update KERNEL_CMDLINE array variable).
 
-# Scanning current kernel cmdline option to look for important option to include in KERNEL_CMDLINE
+# Scanning current kernel cmdline to look for important option ($CHECK_KERNEL_PARAMETER) to include in KERNEL_CMDLINE
 for current_kernel_option in $( cat /proc/cmdline ); do
-    # If user use options to force or disable biosdevname (persistant inet naming)
-    # we need to have this option in the rescue image in order to properly configure / migrate
-    # the network configuration.
-
-    if [ "${current_kernel_option%=*}" == "net.ifnames" ] || [ "${current_kernel_option%=*}" == "biosdevname" ] ; then
+    # Get only the option name (part before "=") and add it to new_kernel_options_to_add array if it is part of CHECK_KERNEL_PARAMETER array.
+    if IsInArray "${current_kernel_option%=*}" "${CHECK_KERNEL_PARAMETER[@]}" ; then
         new_kernel_options_to_add=( "${new_kernel_options_to_add[@]}" "$current_kernel_option" )
     fi
 done
