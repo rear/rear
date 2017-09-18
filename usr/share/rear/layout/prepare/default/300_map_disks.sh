@@ -158,7 +158,8 @@ while read keyword orig_device orig_size junk ; do
     test "$current_orig_device_basename_alnum_uppercase" || current_orig_device_basename_alnum_uppercase="DISK"
     user_input_ID="LAYOUT_MIGRATION_REPLACEMENT_$current_orig_device_basename_alnum_uppercase"
     until IsInArray "$choice" "${regular_choices[@]}" ; do
-        choice="$( UserInput -I $user_input_ID -p "$prompt" -D 0 "${regular_choices[@]}" "$rear_shell_choice" )" && wilful_input="yes" || wilful_input="no"
+        # Default input is the first regular choice which is the first of the possible targets:
+        choice="$( UserInput -I $user_input_ID -p "$prompt" -D 1 "${regular_choices[@]}" "$rear_shell_choice" )" && wilful_input="yes" || wilful_input="no"
         test "$rear_shell_choice" = "$choice" && rear_shell
     done
     # Continue with next original device when the user selected to not map it:
