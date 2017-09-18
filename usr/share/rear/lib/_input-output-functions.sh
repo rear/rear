@@ -340,8 +340,10 @@ function LogPrintIfError () {
 #   The options -t -p -a -n -d  match the ones for the 'read' bash builtin.
 #   The option [choices] are the values that are shown to the user as available choices like if a 'select' bash keyword was used.
 #   The option [-D default_input] specifies what is used as default response when the user does not enter something.
-#       Usuallly this is one of the choices values or an index of one of the choices (the first choice has index 0)
-#       but the default input can be anything else (in particular for free input without predefined choices).
+#       Usually this is one of the choice values or one of the a choice numbers '1' '2' '3' ...
+#       that are shown to the user (the choice numbers are shown as in 'select' (i.e. starting at 1)
+#       but the default input can be anything else (in particular for free input without predefined choices)
+#       so that e.g. '-D 0' is not the first choice but lets the default input be '0' (regardles of choices).
 #   The option '-I user_input_ID' is required so that UserInput can work full automated (e.g. when ReaR runs unattended)
 #       via user-specified variables that get named USER_INPUT_user_input_ID (i.e. prefixed with 'USER_INPUT_')
 #       so that the user can (as he needs it) predefine user input values like
@@ -383,8 +385,8 @@ function LogPrintIfError () {
 #   does not hit the [Enter] key to finish his input before the timeout happens:
 #       input_value="$( UserInput -I FOO_INPUT -t 120 -p 'Enter the input value' -D 'default input' )"
 # * Get an input value from the user by offering him possible choices (proceed with the default choice after the default timeout).
-#   The choices index starts with 0 so that '-D 1' specifies the second choice as default choice:
-#       input_value="$( UserInput -I BAR_CHOICE -p 'Select a choice' -D 1 'first choice' 'second choice' 'third choice' )"
+#   The shown choice numbers start with 1 so that '-D 2' specifies the second choice as default choice:
+#       input_value="$( UserInput -I BAR_CHOICE -p 'Select a choice' -D 2 'first choice' 'second choice' 'third choice' )"
 # * When the user enters an arbitrary value like 'foo bar' this actual user input is used as input_value.
 #   The UserInput function provides the actual user input and its caller needs to check the actual user input.
 #   To enforce that the actual user input is one of the choices an endless retrying loop could be used like:
@@ -404,7 +406,7 @@ function LogPrintIfError () {
 #   when the actual user input is not one of the choices it is possible to implement valid and convenient user input:
 #       choices=( 'default choice' 'first alternative choice' 'second alternative choice' )
 #       until IsInArray "$choice" "${choices[@]}" ; do
-#           choice="$( UserInput -I BAZ_CHOICE -t 60 -p 'Hit a choice number key' -D 0 -n 1 "${choices[@]}" )"
+#           choice="$( UserInput -I BAZ_CHOICE -t 60 -p 'Hit a choice number key' -D 1 -n 1 "${choices[@]}" )"
 #       done
 # * To to let UserInput autorespond full automated a predefined user input value specify the user input value
 #   with a matching USER_INPUT_user_input_ID variable (e.g. specify that it in your local.conf file) like
@@ -487,22 +489,31 @@ function UserInput () {
     # Everything that is now left in "$@" is neither an option nor an option argument
     # so that now "$@" contains the trailing mass-arguments (POSIX calls them operands):
     local choices=( "$@" )
+    local choice=""
     local choice_index=0
+    local choice_number=1
     if test "${choices:=}" ; then
-        # Avoid stderr if default_input is not set or empty or not an integer value:
-        if test "$default_input" -ge 0 2>/dev/null ; then
-            # It is possible (it is no error) to specify a number as default input that has no matching choice:
-            test "${choices[$default_input]:=}" || Log "UserInput: Default choice '$default_input' not in choices"
-        else
-            # When the default input is no number try to find if it is a choice
-            # and if found use the choice index as default input:
-            for choice in "${choices[@]}" ; do
-                test "$default_input" = "$choice" && default_input=$choice_index
-                (( choice_index += 1 ))
-            done
-            # It is possible (it is no error) to specify anything as default input.
+        if test "$default_input" ; then
             # Avoid stderr if default_input is not set or empty or not an integer value:
-            test "$default_input" -ge 0 2>/dev/null || Log "UserInput: Default choice not found in choices"
+            if test "$default_input" -ge 1 2>/dev/null ; then
+                choice_index=$(( default_input - 1 ))
+                # It is possible (it is no error) to specify a number as default input that has no matching choice:
+                test "${choices[$choice_index]:=}" || Log "UserInput: Default input '$default_input' not in choices"
+            else
+                # When the default input is no number try to find it in the choices
+                # and if found use its choice number as default input:
+                for choice in "${choices[@]}" ; do
+                    if test "$default_input" = "$choice" ; then
+                        Log "UserInput: Default input '$default_input' in choices - using choice number $choice_number as default input"
+                        default_input=$choice_number
+                        break
+                    fi
+                    (( choice_number += 1 ))
+                done
+                # It is possible (it is no error) to specify anything as default input.
+                # Avoid stderr if default_input is not set or empty or not an integer value:
+                test "$default_input" -ge 1 2>/dev/null || Log "UserInput: Default input not found in choices"
+            fi
         fi
         # Use a better default prompt if no prompt was specified when there are choices:
         test "$default_prompt" = "$prompt" && prompt="enter a choice number"
@@ -514,23 +525,7 @@ function UserInput () {
     local default_and_timeout=""
     # Avoid stderr if default_input or timeout is not set or empty or not an integer value:
     if test "$default_input" -o "$timeout" -ge 1 2>/dev/null ; then
-        if test "$default_input" ; then
-            # Avoid stderr if default_input is not set or empty or not an integer value:
-            if test "$default_input" -ge 0 2>/dev/null ; then
-                # The default input is a number:
-                if test "${choices[$default_input]:=}" ; then
-                    # When the default input is a number that is a valid choice index,
-                    # show the default as the choice number that is shown (cf. choice_number below):
-                    default_and_timeout="default $(( default_input + 1 ))"
-                else
-                    # When the default input number is not a valid choice index, show it as is:
-                    default_and_timeout="default $default_input"
-                fi
-            else
-                # Show the default input string as is:
-                default_and_timeout="default '$default_input'"
-            fi
-        fi
+        test "$default_input" && default_and_timeout="default '$default_input'"
         # Avoid stderr if timeout is not set or empty or not an integer value:
         if test "$timeout" -ge 1 2>/dev/null ; then
             if test "$default_and_timeout" ; then
@@ -554,7 +549,7 @@ function UserInput () {
     if test "${choices:=}" ; then
         # This comment contains the opening parentheses ( ( ( to keep paired parentheses:
         # Show the choices with leading choice numbers 1) 2) 3) ... as in 'select' (i.e. starting at 1):
-        local choice_number=1
+        choice_number=1
         for choice in "${choices[@]}" ; do
             # This comment contains the opening parenthesis ( to keep paired parenthesis:
             LogUserOutput "$choice_number) $choice"
@@ -640,13 +635,6 @@ function UserInput () {
         # When there is a real default input but no real user input use the default input as user input:
         DebugPrint "UserInput: No real user input (empty or only spaces) - using default input"
         input_string="$default_input"
-        # Avoid stderr if default_input is not set or empty or not an integer value:
-        if test "$default_input" -ge 0 2>/dev/null ; then
-            # When there are choices and the default input is a valid choice index
-            # the number that is used as input must be one more because the choices are shown
-            # with choice numbers 1 2 3 ... as in 'select' (i.e. starting at 1):
-            test "$choices" && test "${choices[$default_input]:=}" && input_string=$(( default_input + 1 ))
-        fi
     fi
     # Now there is real input in input_string (neither empty nor only spaces):
     # When there are no choices result the input as is:
