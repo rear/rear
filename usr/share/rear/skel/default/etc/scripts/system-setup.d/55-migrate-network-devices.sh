@@ -1,4 +1,5 @@
 #
+# update 60-network-devices.sh and 62-routing.sh system-setup script if needed (inet renamed, migration)
 #
 # migrate network device configuration found in /etc/udev/rules.d/*persistent*{net|names}*.rules to match
 # different hardware from the source system. We assume that udev or static module loading was used to load the
@@ -6,17 +7,13 @@
 #
 # adjusts the udev rule and triggers udev
 #
-# NOTE: We don't do anything on systems that do not manage the persistent network names
-# through udev rules
 
 # get the rule files (though it should be only one)
 RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net}.rules )
 ORIG_MACS_FILE=/etc/mac-addresses
 MAC_MAPPING_FILE=/etc/rear/mappings/mac
 MANUAL_MAC_MAPPING=
-
-test "$RULE_FILES" || return 0 # skip this process if we don't have any udev rule files
-
+network_setup_scripts=( "/etc/scripts/system-setup.d/60-network-devices.sh" "/etc/scripts/system-setup.d/62-routing.sh" )
 
 # first check the existence of the original network devices
 MIGRATE_MACS=() # this array collects the MAC addresses that we need to migrate
@@ -25,28 +22,12 @@ ORIGINAL_DEVICES=() # this array collect the original device names
 while read orig_dev orig_mac ; do
 	ORIGINAL_MACS=( "${ORIGINAL_MACS[@]}" "$orig_mac" )
 	ORIGINAL_DEVICES=( "${ORIGINAL_DEVICES[@]}" "$orig_dev")
-	if ip link show | grep -q $orig_mac ; then
+	if ip link show | grep -q "$orig_mac" ; then
 		: noop
 	else
-		# look for origin device MAC (orig_mac) into udev rules in udev rules files
-		if grep -q $orig_mac "${RULE_FILES[@]}" ; then
-			MIGRATE_MACS=( ${MIGRATE_MACS[@]} $orig_mac )
-		else
-			# If origin device MAC (orig_mac) cannot be found, look for origin device name (orig_dev)
-			if grep -q $orig_dev "${RULE_FILES[@]}" ; then
-				MIGRATE_DEVNAMES=( ${MIGRATE_DEVNAMES[@]} "$orig_dev")
-			else
-				echo "
-WARNING ! The original network interface $orig_dev $orig_mac is not available
-and I could not find $orig_mac in the udev
-rules (${RULE_FILES[@]}).
-
-If your system uses persistent network names, it does not configure them with
-udev and you will have to adjust it yourself. If your system does not use
-persistent network names, then everything might or might not work, YMMV.
-"
-			fi
-		fi
+		#TODO: Check if we really need to store DEVNAMES here.
+		MIGRATE_MACS=( "${MIGRATE_MACS[@]}" "$orig_mac" )
+		MIGRATE_DEVNAMES=( "${MIGRATE_DEVNAMES[@]}" "$orig_dev" )
 	fi
 done < $ORIG_MACS_FILE
 
@@ -59,7 +40,7 @@ NEW_DEVICES=()
 for dev_dir in /sys/class/net/* ; do
 	dev="${dev_dir##*/}" # basename $dev_dir
 	case $dev in
-		lo|pan*|sit*|tun*|tap*|vboxnet*|vmnet*) continue ;; # skip all kind of internal devices
+		(lo|pan*|sit*|tun*|tap*|vboxnet*|vmnet*) continue ;; # skip all kind of internal devices
 	esac
 	test -s $dev_dir/address || continue # skip unless have MAC address
 	read mac junk <$dev_dir/address # read first word from address file
@@ -113,28 +94,41 @@ if ! test $MANUAL_MAC_MAPPING ; then
 			# remember the old_mac->new_mac mapping for later use
 			mkdir -p /etc/rear/mappings
 			echo "$old_mac $new_mac $old_dev" >>$MAC_MAPPING_FILE
-			if grep -q $old_mac "${RULE_FILES[@]}" ; then
+		fi
+	done
+fi
+
+# Initialize reload_udev variable to false
+local reload_udev=false
+
+if test -s $MAC_MAPPING_FILE ; then
+	# valid mac mapping available
+	while read old_mac new_mac old_dev; do
+		# replace old mac address with new one directly in network_setup_scripts
+		sed -i -e "s#$old_mac#$new_mac#gI" "${network_setup_scripts[@]}"
+
+		# Migrate udev persistent-net rules files (if any)
+		if test $RULE_FILES ; then
+			if grep -q "$old_mac" "${RULE_FILES[@]}" ; then
 				# remove the "wrong" line with the new mac address and
 				# replace the old mac address with the new mac address
-				sed -i -e "/$new_mac/d" -e "s#$old_mac#$new_mac#g" "${RULE_FILES[@]}"
+				sed -i -e "/$new_mac/d" -e "s#$old_mac#$new_mac#gI" "${RULE_FILES[@]}"
+				reload_udev=true
 			else
-				if grep -q $old_dev "${RULE_FILES[@]}" ; then
+				if grep -q "$old_dev" "${RULE_FILES[@]}" ; then
+					new_dev=$( get_device_by_hwaddr "$new_mac" )
 					# remove the "wrong" line with the new mac address and
 					# rename the new device name with the old one
-					sed -i -e "/$old_dev/d" -e "s#$new_dev#$old_dev#g" "${RULE_FILES[@]}"
+					sed -i -e "/$old_dev/d" -e "s#$new_dev#$old_dev#gI" "${RULE_FILES[@]}"
+					reload_udev=true
 				fi
 			fi
 		fi
-
-	done
-else # valid mac mapping available
-	while read old_mac new_mac old_dev ; do
-		sed -i -e "/$new_mac/d" -e "s#$old_mac#$new_mac#g" "${RULE_FILES[@]}"
-	done < <( read_and_strip_file $MAC_MAPPING_FILE )
+	done < <( read_and_strip_file "$MAC_MAPPING_FILE" )
 fi
 
 # reload udev if we have MAC mappings
-if test -s /etc/rear/mappings/mac ; then
+if is_true $reload_udev ; then
 	echo -n "Reloading udev ... "
 	my_udevtrigger
 	sleep 1
