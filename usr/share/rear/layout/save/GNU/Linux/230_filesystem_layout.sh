@@ -354,7 +354,17 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 # (i.e. a subvolume path is an absolute path in the particular btrfs filesystem)
                 # see https://btrfs.wiki.kernel.org/index.php/Mount_options
                 test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
-                echo "btrfsmountedsubvol $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
+
+                # Finally, test whether the btrfs subvolume listed as mounted actually exists. A running docker
+                # daemon apparently can convince the system to list a non-existing btrfs volume as mounted.
+                # See https://github.com/rear/rear/issues/1496
+                if btrfs_subvolume_exists "$subvolume_mountpoint" "$btrfs_subvolume_path"; then
+                    echo "btrfsmountedsubvol $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
+                else
+                    LogPrintError "Ignoring non-existing btrfs subvolume listed as mounted: $subvolume_mountpoint"
+                    echo "# Ignoring non-existing btrfs subvolume listed as mounted:"
+                    echo "#btrfsmountedsubvol $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
+                fi
             fi
         done < <( eval $read_mounted_btrfs_subvolumes_command )
         ########################################
