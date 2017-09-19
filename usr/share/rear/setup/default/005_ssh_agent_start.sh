@@ -4,8 +4,14 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-if has_binary ssh-agent; then
+if has_binary ssh-agent && has_binary ssh && strings "$(which ssh)" | grep -iq AddKeysToAgent ; then
+    # Use ssh-agent only if ssh supports the AddKeysToAgent option. Otherwise, we'd have to use ssh-add to
+    # register keys for repeated use but we don't know which keys might be required during 'read recover'.
+
     Log "Starting up ssh-agent"
+
+    AddExitTask "ssh-agent -k >/dev/null"
     eval "$(ssh-agent -s)"
+
     echo -e "\nHost *\nAddKeysToAgent yes\n" >> /root/.ssh/config
 fi
