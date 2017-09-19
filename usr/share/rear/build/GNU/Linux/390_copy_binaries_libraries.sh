@@ -49,5 +49,17 @@ for lib in "${all_libs[@]}" ; do
     fi
 done
 
-#ldconfig $v -r "$ROOTFS_DIR" >&2 || Error "Could not configure libraries with ldconfig"
+# Run ldconfig for the libraries in the recovery system
+# to get the libraries configuration in the recovery system consistent as far as possible
+# because an inconsistent libraries configuration in the recovery system could even cause
+# that the recovery system fails to boot with kernel panic because init fails
+# when a library is involved where init is linked with, for example see
+# https://github.com/rear/rear/issues/1494
+# In case of ldconfig errors report it but do not treat it as fatal (i.e. do not Error out)
+# because currently it is sometimes not possible to get a consistent libraries configuration
+# and usually (i.e. unless one has an unusual special libraries configuration)
+# even an inconsistent libraries configuration works sufficiently, for example see
+# https://github.com/rear/rear/issues/772
+# TODO: Get the libraries configuration in the recovery system consistent in any case.
+ldconfig $v -r "$ROOTFS_DIR" 1>&2 || LogPrintError "Configuring rescue/recovery system libraries with ldconfig failed which may casuse arbitrary failures"
 
