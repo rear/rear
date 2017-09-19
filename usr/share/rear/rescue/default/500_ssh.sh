@@ -47,11 +47,18 @@ if has_binary sshd; then
         LogPrint "TIP: To login as root via ssh you need to set up /root/.ssh/authorized_keys or SSH_ROOT_PASSWORD in your configuration file"
     fi
 
-    # Set the SSH root password; if pw is hashed just copy it otherwise use openssl (for backward compatibility)
-    if [[ "$SSH_ROOT_PASSWORD" ]] ; then
+    # Set the SSH root password; if pw is encrypted just copy it otherwise use openssl (for backward compatibility)
+    # Encryption syntax is detected as a '$D$' or '$Dx$' prefix in the password, where D is a single digit and x is one lowercase character.
+    # For more information on encryption IDs, check out the NOTES section of the man page for crypt(3).
+    # The extglob shell option is required for this to work.
+    if test "$SSH_ROOT_PASSWORD" ; then
         case "$SSH_ROOT_PASSWORD" in
-        '$1$'*) echo "root:$SSH_ROOT_PASSWORD:::::::" > $ROOTFS_DIR/etc/shadow ;;
-        *     ) echo "root:$(echo $SSH_ROOT_PASSWORD | openssl passwd -1 -stdin):::::::" > $ROOTFS_DIR/etc/shadow ;;
+            (\$[0-9]?([a-z])\$*)
+                echo "root:$SSH_ROOT_PASSWORD:::::::" > $ROOTFS_DIR/etc/shadow
+                ;;
+            (*)
+                echo "root:$(echo $SSH_ROOT_PASSWORD | openssl passwd -1 -stdin):::::::" > $ROOTFS_DIR/etc/shadow
+                ;;
         esac
     fi
 fi
