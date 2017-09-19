@@ -16,16 +16,12 @@ remove_second_component() {
 }
 
 # Remove lines in the LAYOUT_FILE.
-while read done name type junk ; do
+while read status name type junk ; do
     case "$type" in
         part)
             ### find the immediate parent
             name=$(grep "^$name " "$LAYOUT_DEPS" | cut -d " " -f 2)
             remove_component "$type" "$name"
-            ;;
-        lvmdev)
-            name=${name#pv:}
-            remove_second_component "$type" "$name"
             ;;
         lvmvol)
             name=${name#/dev/mapper/}
@@ -36,13 +32,9 @@ while read done name type junk ; do
 
             sed -i -r "s|^($type /dev/$vg $lv )|\#\1|" "$LAYOUT_FILE"
             ;;
-        fs)
-            name=${name#fs:}
+        fs|btrfsmountedsubvol|swap|lvmdev)
+            name=${name#$type:}
             remove_second_component "$type" "$name"
-            ;;
-        swap)
-            name=${name#swap:}
-            remove_component "$type" "$name"
             ;;
         *)
             remove_component "$type" "$name"

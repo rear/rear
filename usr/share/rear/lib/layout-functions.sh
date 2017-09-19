@@ -127,26 +127,26 @@ generate_layout_dependencies() {
                 done
                 add_component "$name" "raid"
                 ;;
-            fs)
+            fs|btrfsmountedsubvol)
                 dev=$(echo "$remainder" | cut -d " " -f "1")
                 mp=$(echo "$remainder" | cut -d " " -f "2")
-                add_dependency "fs:$mp" "$dev"
-                add_component "fs:$mp" "fs"
+                add_dependency "$type:$mp" "$dev"
+                add_component "$type:$mp" "$type"
 
                 # find dependencies on other filesystems
-                while read fs bd nmp junk; do
-                    if [ "$nmp" != "/" ] ; then
+                while read dep_type bd dep_mp junk; do
+                    if [ "$dep_mp" != "/" ] ; then
                         # make sure we only match complete paths
                         # e.g. not /data as a parent of /data1
-                        temp_nmp="$nmp/"
+                        temp_dep_mp="$dep_mp/"
                     else
-                        temp_nmp="$nmp"
+                        temp_dep_mp="$dep_mp"
                     fi
 
-                    if [ "${mp#$temp_nmp}" != "${mp}" ] && [ "$mp" != "$nmp" ]; then
-                        add_dependency "fs:$mp" "fs:$nmp"
+                    if [ "${mp#$temp_dep_mp}" != "${mp}" ] && [ "$mp" != "$dep_mp" ]; then
+                        add_dependency "$type:$mp" "$dep_type:$dep_mp"
                     fi
-                done < <(grep "^fs" $LAYOUT_FILE)
+                done < <(awk '$1 ~ /^fs|btrfsmountedsubvol$/ { print; }' $LAYOUT_FILE)
                 ;;
             swap)
                 dev=$(echo "$remainder" | cut -d " " -f "1")
