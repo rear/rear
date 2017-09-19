@@ -749,3 +749,47 @@ function get_ip_from_fqdn()
     Log "$fqdn resolved to $ip"
     echo "$ip"
 }
+
+function linearize_interfaces_file() {
+    # Transform each network_file (debian network interfaces files) into temporary one_line_interfaces file
+    # for easier sed substitution.
+    # ex:
+    #auto eth1
+    #iface eth1 inet static
+    #   address 9.9.9.9
+    #   netmask 255.255.255.0
+    #
+    # will become: auto eth1;iface eth1 inet static;address 9.9.9.9;netmask 255.255.255.0;
+    interfaces_file=$1
+    test -z $interfaces_file && Error "debian_linearize_interface function called without argument (file_to_migrate)"
+
+    awk '
+        /^#/ {print}
+        !/^ *$/ && !/^  *$/ && !/^#/ { PRINT=1 ; gsub("^ *","") ; ITEM=ITEM $0";" }
+        (/^     *$/ || /^ *$/ || /^#/ ) && PRINT==1 { print ITEM ; ITEM="" ; PRINT=0 }
+        END { if( ITEM!="" ) print ITEM }
+    ' < "$interfaces_file"
+}
+
+function rebuild_interfaces_file_from_linearized() {
+    # recreate a Debian/ubuntu network interafces files from a linearized file (see linearize_interfaces_file).
+    # It is the opposite version of linearize_interfaces_file function.
+
+    linearized_interfaces_file=$1
+    test -z $interfaces_file && Error "rebuild_interfaces_file_from_linearized function called without argument (file_to_migrate)"
+
+    awk -F\; '
+    {
+        INDENT=0
+        for(i=1;i<=NF;i++) {
+            if ($i ~ /^iface/) {
+                print $i
+                INDENT=1
+            }
+            else {
+                if (INDENT == 1) print "    "$i ; else print $i
+            }
+        }
+    }
+    ' < $linearized_interfaces_file
+}
