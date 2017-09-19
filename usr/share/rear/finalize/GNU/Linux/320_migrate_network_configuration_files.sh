@@ -25,6 +25,11 @@ if test -s $TMP_DIR/mappings/mac ; then
     SED_SCRIPT=""
     while read old_mac new_mac dev ; do
         SED_SCRIPT="$SED_SCRIPT;s/$old_mac/$new_mac/g"
+        # get device name from mac in case of inet renaming 
+        new_dev=$( get_device_by_hwaddr "$new_mac" )
+        if test "$new_dev" != "$old_dev" ; then
+            SED_SCRIPT="$SED_SCRIPT;s/$dev/$new_dev/g"
+        fi
     done < <( read_and_strip_file $CONFIG_DIR/mappings/mac | sed -e 'p;y/abcdef/ABCDEF/' )
     #                                              ^^^^^^^
     #       this is a nasty hack that prints each line as is (lowercase) and once again in uppercase
