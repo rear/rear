@@ -361,9 +361,15 @@ function LogPrintIfError () {
 #       It is required to use uppercase user_input_ID values because the USER_INPUT_user_input_ID variables
 #       are user configuration variables and all user configuration variables have uppercase letters.
 #   The option [-C] specifies confidential user input mode. In this mode no input values are logged.
-#       This means neither the actual user input nor the default input nor the choices values are logged.
+#       This means that neither the actual user input nor the default input nor the choices values are logged but
+#       the prompt, the actual input, the default value, and the choices are still shown on the user's terminal.
 #       In confidential user input mode the actual input coming from the user's terminal is still echoed
 #       on the user's terminal unless also the -s option is specified.
+#       When usr/sbin/rear is run in debugscripts mode (which runs the scripts with 'set -x') arbitrary values
+#       appear in the log file so that the confidential user input mode does not help in debugscripts mode.
+#       If confidential user input is needed also in debugscripts mode the caller of the UserInput function
+#       must call it in an appropriate (temporary) environment e.g. with STDERR redirected to /dev/null like:
+#           { password="$( UserInput -I PASSWORD -C -r -s -p 'Enter the pasword' )" ; } 2>/dev/null
 # Result:
 #   Any actual user input or an automated user input or the default response is output via STDOUT.
 # Return code:
@@ -578,8 +584,8 @@ function UserInput () {
     fi
     # Prepare the 'read' call:
     local read_options_and_arguments=""
-    is_true "$raw_input" &&  read_options_and_arguments="$read_options_and_arguments -r"
-    is_true "$silent_input" &&  read_options_and_arguments="$read_options_and_arguments -s"
+    is_true "$raw_input" && read_options_and_arguments="$read_options_and_arguments -r"
+    is_true "$silent_input" && read_options_and_arguments="$read_options_and_arguments -s"
     # When a zero timeout was specified (via -t 0) do not use it.
     # Avoid stderr if timeout is not set or empty or not an integer value:
     test "$timeout" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -t $timeout"
