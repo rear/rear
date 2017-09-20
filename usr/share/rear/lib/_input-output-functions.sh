@@ -336,8 +336,8 @@ function LogPrintIfError () {
 #   input is read from the original STDIN when 'rear' was launched
 #   (which is usually the keyboard of the user who launched 'rear').
 # Synopsis:
-#   UserInput -I user_input_ID [-C] [-t timeout] [-p prompt] [-a input_words_array_name] [-n input_max_chars] [-d input_delimiter] [-D default_input] [choices]
-#   The options -t -p -a -n -d  match the ones for the 'read' bash builtin.
+#   UserInput -I user_input_ID [-C] [-r] [-s] [-t timeout] [-p prompt] [-a input_words_array_name] [-n input_max_chars] [-d input_delimiter] [-D default_input] [choices]
+#   The options -r -s -t -p -a -n -d  match the ones for the 'read' bash builtin.
 #   The option [choices] are the values that are shown to the user as available choices like if a 'select' bash keyword was used.
 #   The option [-D default_input] specifies what is used as default response when the user does not enter something.
 #       Usually this is one of the choice values or one of the a choice numbers '1' '2' '3' ...
@@ -361,7 +361,15 @@ function LogPrintIfError () {
 #       It is required to use uppercase user_input_ID values because the USER_INPUT_user_input_ID variables
 #       are user configuration variables and all user configuration variables have uppercase letters.
 #   The option [-C] specifies confidential user input mode. In this mode no input values are logged.
-#       This means neither the actual user input nor the default input nor the choices values are logged.
+#       This means that neither the actual user input nor the default input nor the choices values are logged but
+#       the prompt, the actual input, the default value, and the choices are still shown on the user's terminal.
+#       In confidential user input mode the actual input coming from the user's terminal is still echoed
+#       on the user's terminal unless also the -s option is specified.
+#       When usr/sbin/rear is run in debugscripts mode (which runs the scripts with 'set -x') arbitrary values
+#       appear in the log file so that the confidential user input mode does not help in debugscripts mode.
+#       If confidential user input is needed also in debugscripts mode the caller of the UserInput function
+#       must call it in an appropriate (temporary) environment e.g. with STDERR redirected to /dev/null like:
+#           { password="$( UserInput -I PASSWORD -C -r -s -p 'Enter the pasword' )" ; } 2>/dev/null
 # Result:
 #   Any actual user input or an automated user input or the default response is output via STDOUT.
 # Return code:
@@ -448,12 +456,14 @@ function UserInput () {
     local default_input=""
     local user_input_ID=""
     local confidential_mode="no"
+    local raw_input="no"
+    local silent_input="no"
     # Get the options and their arguments:
     local option=""
     # Resetting OPTIND is necessary if getopts was used previously in the script
     # and because we are in a function we can even make OPTIND local:
     local OPTIND=1
-    while getopts ":t:p:a:n:d:D:I:C" option ; do
+    while getopts ":t:p:a:n:d:D:I:Crs" option ; do
         case $option in
             (t)
                 # Avoid stderr if OPTARG is not set or empty or not an integer value:
@@ -480,6 +490,12 @@ function UserInput () {
                 ;;
             (C)
                 confidential_mode="yes"
+                ;;
+            (r)
+                raw_input="yes"
+                ;;
+            (s)
+                silent_input="yes"
                 ;;
             (\?)
                 BugError "UserInput: Invalid option: -$OPTARG"
@@ -568,6 +584,8 @@ function UserInput () {
     fi
     # Prepare the 'read' call:
     local read_options_and_arguments=""
+    is_true "$raw_input" && read_options_and_arguments="$read_options_and_arguments -r"
+    is_true "$silent_input" && read_options_and_arguments="$read_options_and_arguments -s"
     # When a zero timeout was specified (via -t 0) do not use it.
     # Avoid stderr if timeout is not set or empty or not an integer value:
     test "$timeout" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -t $timeout"
@@ -590,7 +608,8 @@ function UserInput () {
         fi
         # Let the user interrupt the automated user input:
         LogUserOutput "Hit any key to interrupt the automated input (timeout $automated_input_interrupt_timeout seconds)"
-        # automated_input_interrupt_timeout is at least 1 second (see above) and do not echo the input (it is meaningless here):
+        # automated_input_interrupt_timeout is at least 1 second (see above) and do not echo the input (it is meaningless here)
+        # and STDOUT is also meaningless (not used) and STDERR can still go into the log (no 'read -p prompt' is used):
         if read -t $automated_input_interrupt_timeout -n 1 -s 0<&6 ; then
             Log "UserInput: automated input interrupted by user"
             # Show the prompt again (or at least the default prompt) to signal the user that now he can and must enter something:
@@ -606,8 +625,16 @@ function UserInput () {
     fi
     # When there is no (non empty) automated user input read the user input:
     local return_code=0
-    if ! test "$input_string" ; then
-        # Read the user input from the original STDIN that is saved as fd6 (see above):
+    # To test a single word for non-empty and no-spaces there must be no double quotes because test " " results true.
+    # But input_string can be a string of several words and 'test' must have all the words as one argument
+    # because 'test' for a string of several (non empty) words fails with 'bash: test: unary operator expected'.
+    # On the other hand this 'test' should not succeed when input_string is only spaces.
+    # Therefore 'echo -n' is interposed because the output of foo=' ' ; echo -n $foo
+    # is empty:
+    if ! test "$( echo -n $input_string )" ; then
+        # Read the user input from the original STDIN that is saved as fd6 (see above).
+        # STDOUT is meaningless because 'read' echoes input from a terminal directly onto the terminal (not via STDOUT) and
+        # STDERR can still go into the log because no 'read' prompt is used (the prompt is already shown via LogUserOutput):
         if read $read_options_and_arguments input_string 0<&6 ; then
             is_true "$confidential_mode" && Log "UserInput: 'read' got user input" || Log "UserInput: 'read' got as user input '$input_string'"
         else
@@ -632,12 +659,8 @@ function UserInput () {
         input_string="${!input_words_array_name_dereferenced}"
     fi
     # When there is no user input or when the user input is only spaces use the "best" fallback or default that exists.
-    # To test a single word for non-empty and no-spaces there must be no double quotes because test " " results true.
-    # But the user input can be a string of several words and the test must have all the words as one argument
-    # otherwise the test for a string of several (non empty) words fails with 'bash: test: unary operator expected'.
-    # On the other hand the test should not succeed when input_string is only spaces.
-    # Therefore 'echo -n' is interposed because the output of foo=' ' ; echo -n $foo
-    # is empty:
+    # The 'echo -n' is interposed because the output of foo=' ' ; echo -n $foo
+    # is empty (see the same test above):
     if ! test "$( echo -n $input_string )" ; then
         # There is no real user input (user input is empty or only spaces):
         if ! test "$( echo -n $default_input )" ; then
