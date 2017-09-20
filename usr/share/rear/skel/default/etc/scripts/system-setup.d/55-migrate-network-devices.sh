@@ -99,13 +99,14 @@ if ! test $MANUAL_MAC_MAPPING ; then
 fi
 
 # Initialize reload_udev variable to false
-local reload_udev=false
+reload_udev=false
 
 if test -s $MAC_MAPPING_FILE ; then
 	# valid mac mapping available
 	while read old_mac new_mac old_dev; do
-		# replace old mac address with new one directly in network_setup_scripts
-		sed -i -e "s#$old_mac#$new_mac#gI" "${network_setup_scripts[@]}"
+
+		# Get new device name from current MAC address
+		new_dev=$( get_device_by_hwaddr "$new_mac" )
 
 		# Migrate udev persistent-net rules files (if any)
 		if test $RULE_FILES ; then
@@ -116,13 +117,20 @@ if test -s $MAC_MAPPING_FILE ; then
 				reload_udev=true
 			else
 				if grep -q "$old_dev" "${RULE_FILES[@]}" ; then
-					new_dev=$( get_device_by_hwaddr "$new_mac" )
 					# remove the "wrong" line with the new mac address and
 					# rename the new device name with the old one
-					sed -i -e "/$old_dev/d" -e "s#$new_dev#$old_dev#gI" "${RULE_FILES[@]}"
+					test "$new_dev" && sed -i -e "/$old_dev/d" -e "s#$new_dev#$old_dev#g" "${RULE_FILES[@]}"
 					reload_udev=true
+				else
+					# Device is not managed by udev rules.
+					# We have to update the network_setup_scripts with the new interface name.
+					test "$new_dev" && sed -i -e "s#$old_dev#$new_dev#g" "${network_setup_scripts[@]}"
 				fi
 			fi
+		else
+			# Device is not managed by udev rules.
+			# We have to update the network_setup_scripts with the new interface name.
+			test "$new_dev" && sed -i -e "s#$old_dev#$new_dev#g" "${network_setup_scripts[@]}"
 		fi
 	done < <( read_and_strip_file "$MAC_MAPPING_FILE" )
 fi
