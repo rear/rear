@@ -105,9 +105,18 @@ QuietAddExitTask "exec 8>&-"
 # TODO: I <jsmeix@suse.de> wonder if it is really needed to explicitly close stuff when exiting
 # because during exit all open files (and file descriptors) should be closed automatically.
 
+# Verbose exit in case of errors which is in particular needed when 'set -e' is active because
+# otherwise a 'set -e' error exit would happen silently which could look as if all was o.k.
+# cf. https://github.com/rear/rear/issues/700#issuecomment-327755633
+# The separated EXIT_FAIL_MESSAGE variable is used to denote a failure exit.
+# One cannot use EXIT_CODE for that because there are cases where a non-zero exit code
+# is the intended outcome (e.g. in the 'checklayout' workflow, cf. usr/sbin/rear):
+QuietAddExitTask "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WORKFLOW failed, check $RUNTIME_LOGFILE for details' 1>&8"
+
 # USR1 is used to abort on errors.
-# It is not using PrintError but does direct output to the original STDERR:
-builtin trap "echo '${MESSAGE_PREFIX}Aborting due to an error, check $RUNTIME_LOGFILE for details' 1>&8 ; kill $MASTER_PID" USR1
+# It is not using PrintError but does direct output to the original STDERR.
+# Set EXIT_FAIL_MESSAGE to 0 to aviod an additional failed message via the QuietAddExitTask above:
+builtin trap "EXIT_FAIL_MESSAGE=0 ; echo '${MESSAGE_PREFIX}Aborting due to an error, check $RUNTIME_LOGFILE for details' 1>&8 ; kill $MASTER_PID" USR1
 
 # Make sure nobody else can use trap:
 function trap () {
