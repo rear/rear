@@ -602,9 +602,13 @@ function UserInput () {
     local predefined_input_variable_name="USER_INPUT_$user_input_ID"
     if test "${!predefined_input_variable_name:-}" ; then
         if is_true "$confidential_mode" ; then
-            LogUserOutput "UserInput: Will use predefined input in '$predefined_input_variable_name'='${!predefined_input_variable_name}'"
+            if is_true "$silent_input" ; then
+                UserOutput "UserInput: Will use predefined input in $predefined_input_variable_name"
+            else
+                UserOutput "UserInput: Will use predefined input in $predefined_input_variable_name='${!predefined_input_variable_name}'"
+            fi
         else
-            UserOutput "UserInput: Will use predefined input in '$predefined_input_variable_name'='${!predefined_input_variable_name}'"
+            LogUserOutput "UserInput: Will use predefined input in $predefined_input_variable_name='${!predefined_input_variable_name}'"
         fi
         # Let the user interrupt the automated user input:
         LogUserOutput "Hit any key to interrupt the automated input (timeout $automated_input_interrupt_timeout seconds)"
