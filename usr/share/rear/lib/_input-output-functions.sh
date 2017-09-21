@@ -638,13 +638,7 @@ function UserInput () {
     fi
     # When there is no (non empty) automated user input read the user input:
     local return_code=0
-    # To test a single word for non-empty and no-spaces there must be no double quotes because test " " results true.
-    # But input_string can be a string of several words and 'test' must have all the words as one argument
-    # because 'test' for a string of several (non empty) words fails with 'bash: test: unary operator expected'.
-    # On the other hand this 'test' should not succeed when input_string is only spaces.
-    # Therefore 'echo -n' is interposed because the output of foo=' ' ; echo -n $foo
-    # is empty:
-    if ! test "$( echo -n $input_string )" ; then
+    if ! contains_visible_char "$input_string" ; then
         # Read the user input from the original STDIN that is saved as fd6 (see above).
         # STDOUT is meaningless because 'read' echoes input from a terminal directly onto the terminal (not via STDOUT) and
         # STDERR can still go into the log because no 'read' prompt is used (the prompt is already shown via LogUserOutput):
@@ -672,11 +666,9 @@ function UserInput () {
         input_string="${!input_words_array_name_dereferenced}"
     fi
     # When there is no user input or when the user input is only spaces use the "best" fallback or default that exists.
-    # The 'echo -n' is interposed because the output of foo=' ' ; echo -n $foo
-    # is empty (see the same test above):
-    if ! test "$( echo -n $input_string )" ; then
+    if ! contains_visible_char "$input_string" ; then
         # There is no real user input (user input is empty or only spaces):
-        if ! test "$( echo -n $default_input )" ; then
+        if ! contains_visible_char "$default_input" ; then
             # There is neither real user input nor a real default input:
             DebugPrint "UserInput: Neither real user input nor real default input (both empty or only spaces) results ''"
             echo ""
