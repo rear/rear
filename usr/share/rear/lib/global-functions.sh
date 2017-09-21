@@ -21,7 +21,26 @@ function is_numeric () {
     fi
 }
 
-# two explicit functions to be able to test explicitly for true and false (see issue #625)
+# A function to test whether or not its arguments contain at least one 'real value'
+# where 'real value' means to be neither empty nor only blank or control characters.
+# The [:graph:] character class are the visible (a.k.a. printable) characters
+# which is anything except spaces and control characters - i.e. the
+# 7-bit ASCII codes from 0x21 up to 0x7E which are the following
+# alphanumeric characters plus punctuation and symbol characters:
+#  ! " # $ % & ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; < = > ? @
+#  A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ `
+#  a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~
+# cf. http://www.regular-expressions.info/posixbrackets.html
+function contains_visible_char () {
+    # The outermost quotation "..." is dispensable in this particular case because
+    # plain 'test' without an argument (i.e. with an empty argument) returns '1'
+    # and here 'test' cannot get more than one argument ('test' for a string of
+    # several non empty words returns '2' with 'bash: test: unary operator expected')
+    # because 'tr' had removed all IFS characters so that 'test' gets at most one word:
+    test "$( tr -d -c '[:graph:]' <<<"$*" )"
+}
+
+# Two explicit functions to be able to test explicitly for true and false (see issue #625)
 # because "tertium non datur" (cf. https://en.wikipedia.org/wiki/Law_of_excluded_middle)
 # does not hold for variables because variables could be unset or have empty value
 # and to test if a variable is true or false its value is tested by that functions
@@ -30,7 +49,7 @@ function is_numeric () {
 # and '! is_false' is not the same as 'is_true' (see both function comments below):
 
 function is_true () {
-    # the argument is usually the value of a variable which needs to be tested
+    # The argument is usually the value of a variable which needs to be tested
     # only if there is explicitly a 'true' value then is_true returns true
     # so that an unset variable or an empty value is not true
     # and also for any other value that is not recognized as a 'true' value
@@ -43,7 +62,7 @@ function is_true () {
 }
 
 function is_false () {
-    # the argument is usually the value of a variable which needs to be tested
+    # The argument is usually the value of a variable which needs to be tested
     # only if there is explicitly a 'false' value then is_false returns true
     # so that an unset variable or an empty value is not false
     # (caution: for unset or empty variables is_false is false)

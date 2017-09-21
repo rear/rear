@@ -456,8 +456,7 @@ get_device_name() {
     local name=${1#/dev/}
     name=${name#/sys/block/}
 
-    [[ "$name" ]]
-    BugIfError "Empty string passed to get_device_name"
+    contains_visible_char "$name" || BugError "Empty string passed to get_device_name"
 
     ### Translate dm-8 -> mapper/test
     local device dev_number mapper_number
@@ -621,7 +620,7 @@ function UdevSymlinkName() {
     device="$1"
 
     # Exit with Error if no argument is provided to UdevSymlinkName
-    test $device || Error "Empty string passed to UdevSymlinkName()"
+    contains_visible_char "$device" || Error "Empty string passed to UdevSymlinkName()"
 
     # udevinfo is deprecated by udevadm (SLES 10 still uses udevinfo)
     type -p udevinfo >/dev/null && UdevSymlinkName="udevinfo -r / -q symlink -n"
@@ -645,7 +644,7 @@ function UdevQueryName() {
     device_link="$1"
 
     # Exit with Error if no argument is provided to UdevSymlinkName
-    test $device_link || Error "Empty string passed to UdevQueryName()"
+    contains_visible_char "$device_link" || Error "Empty string passed to UdevQueryName()"
 
     # be careful udevinfo is old, now we have udevadm
     # udevinfo -r -q name -n /dev/disk/by-id/scsi-360060e8015268c000001268c000065c0-part4
