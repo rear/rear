@@ -1,9 +1,12 @@
 #
-# update 60-network-devices.sh and 62-routing.sh system-setup script if needed (inet renamed, migration)
+# Propose new network insterface if original interface MAC is not found on the current system.
 #
 # migrate network device configuration found in /etc/udev/rules.d/*persistent*{net|names}*.rules to match
 # different hardware from the source system. We assume that udev or static module loading was used to load the
 # appropriate drivers and do not do anything about driver loading
+#
+# if network interface name is not managed by udev ( > rhel7 and > ubuntu 16.04 ), update 60-network-devices.sh
+# and 62-routing.sh system-setup script (inet renamed, migration)
 #
 # adjusts the udev rule and triggers udev
 #
@@ -25,7 +28,6 @@ while read orig_dev orig_mac ; do
 	if ip link show | grep -q "$orig_mac" ; then
 		: noop
 	else
-		#TODO: Check if we really need to store DEVNAMES here.
 		MIGRATE_MACS=( "${MIGRATE_MACS[@]}" "$orig_mac" )
 		MIGRATE_DEVNAMES=( "${MIGRATE_DEVNAMES[@]}" "$orig_dev" )
 	fi
