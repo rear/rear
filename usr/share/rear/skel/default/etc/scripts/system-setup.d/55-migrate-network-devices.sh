@@ -54,8 +54,6 @@ for dev_dir in /sys/class/net/* ; do
 	NEW_DEVICES=( "${NEW_DEVICES[@]}" "$dev $mac $driver" )
 done
 
-TOTAL_MACS=${#MIGRATE_MACS[@]}
-
 # check the existence of a valid mapping file. The file is valid, if at least one "old" mac is mapped
 # to an existing new one.
 read_and_strip_file $MAC_MAPPING_FILE && while read orig_dev orig_mac ; do
