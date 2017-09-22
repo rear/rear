@@ -1,8 +1,9 @@
-# rewrite all the network configuration files for SUSE LINUX according
-# to the mapping files
+# rewrite all the network configuration files (currently Redhat/Suse/Debian/Ubuntu)
+# accoring to the mapping files
 
 # because the bash option nullglob is set in rear (see usr/sbin/rear)
-# PATCH_FILES is empty if nothing matches $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*
+# PATCH_FILES is empty if nothing matches $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces or $TARGET_FS_ROOT/etc/network/interfaces.d/*
+# $TARGET_FS_ROOT/etc/network/inter[f]aces is a special trick to only add $TARGET_FS_ROOT/etc/network/interfaces if it exists.
 PATCH_FILES=( $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* )
 
 # skip if no network configuration files are found
@@ -24,7 +25,7 @@ if test -s $TMP_DIR/mappings/mac ; then
     SED_SCRIPT=""
     while read old_mac new_mac dev ; do
         SED_SCRIPT="$SED_SCRIPT;s/$old_mac/$new_mac/g"
-        # get device name from mac in case of inet renaming 
+        # get device name from mac in case of inet renaming
         new_dev=$( get_device_by_hwaddr "$new_mac" )
         if test "$new_dev" != "$old_dev" ; then
             SED_SCRIPT="$SED_SCRIPT;s/$dev/$new_dev/g"
