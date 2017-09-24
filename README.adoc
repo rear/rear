@@ -249,7 +249,7 @@ The ReaR project was initiated in 2006 by https://github.com/schlomo[Schlomo Sch
 
 As time passed the project was lucky to get the support of additional developers to also help as maintainers: https://github.com/dagwieers[Dag Wieers], https://github.com/jhoekx[Jeroen Hoekx], https://github.com/jsmeix[Johannes Meixner], https://github.com/gozora[Vladimir Gozora] and https://github.com/schabrolles[Sébastien Chabrolles]. We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers.
 
-To see the full list of authors and their contributions please look at the link:graphs/contributors[git history]. We are very thankful to all authors and encourage anybody interested to take a look at our source code and to contribute what you find important.
+To see the full list of authors and their contributions please look at the https://github.com/rear/rear/graphs/contributors[git history]. We are very thankful to all authors and encourage anybody interested to take a look at our source code and to contribute what you find important.
 
 REFERENCES
 ----------
