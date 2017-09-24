@@ -505,7 +505,7 @@ _/usr/share/doc_.
 == AUTHORS
 The ReaR project was initiated in 2006 by Schlomo Schapiro (https://github.com/schlomo) and Gratien D'haese (https://github.com/gdha) and has since then seen a lot of contributions by many authors. As ReaR deals with bare metal disaster recovery, there is a large amount of code that was contributed by owners and users of specialized hardware and software. Without their combined efforts and contributions ReaR would not be the universal Linux bare metal disaster recovery solution that it is today.
 
-As time passed the project was lucky to get the support of additional developers to also help as maintainers: Dag Wieers (https://github.com/dagwieers), Jeroen Hoekx (https://github.com/jhoekx), Johannes Meixner (https://github.com/jsmeix) and Vladimir Gozora (https://github.com/gozora). We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers.
+As time passed the project was lucky to get the support of additional developers to also help as maintainers: Dag Wieers (https://github.com/dagwieers), Jeroen Hoekx (https://github.com/jhoekx), Johannes Meixner (https://github.com/jsmeix), Vladimir Gozora (https://github.com/gozora) and Sébastien Chabrolles (https://github.com/schabrolles). We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers.
 
 To see the full list of authors and their contributions please look at the git history (https://github.com/rear/rear/graphs/contributors). We are very thankful to all authors and encourage anybody interested to take a look at our source code and to contribute what you find important.
 
