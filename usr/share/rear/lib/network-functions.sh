@@ -723,3 +723,29 @@ is_bonding_device ()
    [ -f "/sys/class/net/$1/bonding/slaves" ]
 }
 
+# Retun 0 if args is a valid IPV4 ip_address
+function is_ip() {
+    local test_ip=$1
+    [ -z "$test_ip" ] && BugError "function is_ip() called without argument."
+
+    # test if $test_ip is a valide IPV4 address: "[0 to 255].[0 to 255].[0 to 255].[0 to 255]"
+    if [[ "$test_ip" =~ ^(([0-9]{1,2}|1[0-9]{2}|2([0-4][0-9]|5[0-5]))\.){3}([0-9]{1,2}|1[0-9]{2}|2([0-4][0-9]|5[0-5]))$ ]] ; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# function which get the ipv4 address from a fqdn
+function get_ip_from_fqdn()
+{
+    local fqdn=$1
+    [ -z "$fqdn" ] && BugError "function get_ip_from_name() called without argument."
+
+    # Get a list of potential IPs that resolve $fqdn
+    ip=( $(getent ahostsv4 $fqdn) ) || Error "Could not resolve $fqdn to IP"
+    # Check if $ip is a valide IP
+    is_ip "$ip" || Error "Got '$ip' from resolving $fqdn which is not an IP"
+    Log "$fqdn resolved to $ip"
+    echo "$ip"
+}

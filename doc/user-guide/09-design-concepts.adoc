@@ -222,7 +222,7 @@ verify/...::
     successfully recover the system
 
 recreate/...::
-    Recreate file systems and their dependancies
+    Recreate file systems and their dependencies
 
 restore/$BACKUP/...::
     Restore data from backup media

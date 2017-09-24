@@ -76,14 +76,14 @@ case "$(basename ${BACKUP_PROG})" in
 		set_tar_features
 		Log $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
 			--no-wildcards-match-slash --one-file-system \
-			--ignore-failed-read $BACKUP_PROG_OPTIONS \
+			--ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}" \
 			$BACKUP_PROG_CREATE_NEWER_OPTIONS \
 			${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
 			-X $TMP_DIR/backup-exclude.txt -C / -c -f - \
 			$(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
 		$BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
 			--no-wildcards-match-slash --one-file-system \
-			--ignore-failed-read $BACKUP_PROG_OPTIONS \
+			--ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}" \
 			$BACKUP_PROG_CREATE_NEWER_OPTIONS \
 			${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
 			-X $TMP_DIR/backup-exclude.txt -C / -c -f - \
@@ -103,11 +103,11 @@ case "$(basename ${BACKUP_PROG})" in
 		Log "Using unsupported backup program '$BACKUP_PROG'"
 		Log $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
 			$BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $TMP_DIR/backup-exclude.txt \
-			$BACKUP_PROG_OPTIONS $backuparchive \
+			"${BACKUP_PROG_OPTIONS[@]}" $backuparchive \
 			$(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
 		$BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
 			$BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $TMP_DIR/backup-exclude.txt \
-			$BACKUP_PROG_OPTIONS $backuparchive \
+			"${BACKUP_PROG_OPTIONS[@]}" $backuparchive \
 			$(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
 	;;
 esac 2> "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"

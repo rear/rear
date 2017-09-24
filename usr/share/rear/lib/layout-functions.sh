@@ -127,26 +127,26 @@ generate_layout_dependencies() {
                 done
                 add_component "$name" "raid"
                 ;;
-            fs)
+            fs|btrfsmountedsubvol)
                 dev=$(echo "$remainder" | cut -d " " -f "1")
                 mp=$(echo "$remainder" | cut -d " " -f "2")
-                add_dependency "fs:$mp" "$dev"
-                add_component "fs:$mp" "fs"
+                add_dependency "$type:$mp" "$dev"
+                add_component "$type:$mp" "$type"
 
                 # find dependencies on other filesystems
-                while read fs bd nmp junk; do
-                    if [ "$nmp" != "/" ] ; then
+                while read dep_type bd dep_mp junk; do
+                    if [ "$dep_mp" != "/" ] ; then
                         # make sure we only match complete paths
                         # e.g. not /data as a parent of /data1
-                        temp_nmp="$nmp/"
+                        temp_dep_mp="$dep_mp/"
                     else
-                        temp_nmp="$nmp"
+                        temp_dep_mp="$dep_mp"
                     fi
 
-                    if [ "${mp#$temp_nmp}" != "${mp}" ] && [ "$mp" != "$nmp" ]; then
-                        add_dependency "fs:$mp" "fs:$nmp"
+                    if [ "${mp#$temp_dep_mp}" != "${mp}" ] && [ "$mp" != "$dep_mp" ]; then
+                        add_dependency "$type:$mp" "$dep_type:$dep_mp"
                     fi
-                done < <(grep "^fs" $LAYOUT_FILE)
+                done < <(awk '$1 ~ /^fs|btrfsmountedsubvol$/ { print; }' $LAYOUT_FILE)
                 ;;
             swap)
                 dev=$(echo "$remainder" | cut -d " " -f "1")
@@ -456,8 +456,7 @@ get_device_name() {
     local name=${1#/dev/}
     name=${name#/sys/block/}
 
-    [[ "$name" ]]
-    BugIfError "Empty string passed to get_device_name"
+    contains_visible_char "$name" || BugError "Empty string passed to get_device_name"
 
     ### Translate dm-8 -> mapper/test
     local device dev_number mapper_number
@@ -610,4 +609,195 @@ retry_command ()
     done
     # Have no additional trailing newline for the command stdout:
     echo -n "$command_stdout"
+}
+
+# UdevSymlinkName (device) return all the udev symlink created by udev to the device.
+# example:
+# UdevSymlinkName /dev/sda1
+#  /dev/disk/by-id/ata-SAMSUNG_MZNLN512HMJP-000L7_S2XANX0H603095-part1 /dev/disk/by-id/wwn-0x5002538d00000000-part1 /dev/disk/by-label/boot /dev/disk/by-partuuid/7d51513d-01 /dev/disk/by-path/pci-0000:00:17.0-ata-1-part1 /dev/disk/by-uuid/b3c0fd92-28cf-4591-b4f5-1a32913f4319
+function UdevSymlinkName() {
+    unset device
+    device="$1"
+
+    # Exit with Error if no argument is provided to UdevSymlinkName
+    contains_visible_char "$device" || Error "Empty string passed to UdevSymlinkName()"
+
+    # udevinfo is deprecated by udevadm (SLES 10 still uses udevinfo)
+    type -p udevinfo >/dev/null && UdevSymlinkName="udevinfo -r / -q symlink -n"
+    type -p udevadm >/dev/null && UdevSymlinkName="udevadm info --root --query=symlink --name"
+
+    if test -z "$UdevSymlinkName" ; then
+        LogPrint "Could not find udevinfo nor udevadm. UdevSymlinkName($device) failed."
+        return 1
+    fi
+
+    $UdevSymlinkName $device
+}
+
+# UdevQueryName (device) return all the real device name from udev symlink.
+# example:
+# UdevQueryName /dev/disk/by-id/wwn-0x5002538d00000000-part1
+#  sda1
+# WARNING: like udevadm, this function return device name (sda1) not absolute PATH (/dev/sda1)
+function UdevQueryName() {
+    unset device_link
+    device_link="$1"
+
+    # Exit with Error if no argument is provided to UdevSymlinkName
+    contains_visible_char "$device_link" || Error "Empty string passed to UdevQueryName()"
+
+    # be careful udevinfo is old, now we have udevadm
+    # udevinfo -r -q name -n /dev/disk/by-id/scsi-360060e8015268c000001268c000065c0-part4
+    # udevadm info --query=name --name /dev/disk/by-id/dm-name-vg_fedora-lv_root
+    type -p udevinfo >/dev/null && UdevQueryName="udevinfo -r -q name -n"
+    type -p udevadm >/dev/null && UdevQueryName="udevadm info --query=name --name"
+
+    if test -z "$UdevQueryName" ; then
+        LogPrint "Could not find udevinfo nor udevadm. UdevQueryName($device_link) failed."
+        return 1
+    fi
+
+    $UdevQueryName $device_link
+}
+
+# Guess the part device name from a device, based on the OS distro Level.
+function get_part_device_name_format() {
+    if [ -z "$1" ] ; then
+        BugError "get_part_device_name_format function called without argument (device)"
+    else
+        device_name="$1"
+    fi
+
+    part_name="$device_name"
+
+    case "$device_name" in
+        (*mmcblk[0-9]*|*nvme[0-9]*n[1-9]*|*rd[/!]c[0-9]*d[0-9]*|*cciss[/!]c[0-9]*d[0-9]*|*ida[/!]c[0-9]*d[0-9]*|*amiraid[/!]ar[0-9]*|*emd[/!][0-9]*|*ataraid[/!]d[0-9]*|*carmel[/!][0-9]*)
+            part_name="${device_name}p" # append p between main device and partitions
+            ;;
+        (*mapper[/!]*)
+            case $OS_MASTER_VENDOR in
+
+                (SUSE)
+                # SUSE Linux SLE12 put a "-part" between [mpath device name] and [part number].
+                # For example /dev/mapper/3600507680c82004cf8000000000000d8-part1.
+                # But SLES11 uses a "_part" instead. (Let's assume it is the same for SLES10 )
+                if (( $OS_MASTER_VERSION < 12 )) ; then
+                    # For SUSE before version 12
+                    part_name="${device_name}_part" # append _part between main device and partitions
+                else
+                    # For SUSE 12 or above
+                    part_name="${device_name}-part" # append -part between main device and partitions
+                fi
+                ;;
+
+                (Fedora)
+                    # RHEL 7 and above seems to named partitions on multipathed devices with
+                    # [mpath device name] + [part number] like standard disk.
+                    # For example: /dev/mapper/mpatha1
+
+                    # But the scheme in RHEL 6 need a "p" between [mpath device name] and [part number].
+                    # For exemple: /dev/mapper/mpathap1
+                    if (( $OS_MASTER_VERSION < 7 )) ; then
+                        part_name="${device_name}p" # append p between main device and partitions
+                    fi
+                ;;
+
+                (Debian)
+                    # Ubuntu 16.04 (need to check for other version) named muiltipathed partitions with
+                    # [mpath device name] + "-part" + [part number]
+                    # for example : /dev/mapper/mpatha-part1
+                    part_name="${device_name}-part" # append -part between main device and partitions
+                ;;
+
+                (*)
+                    # For all the other case, use /dev/mapper/mpatha1 type
+                    part_name="$device_name"
+                ;;
+            esac
+        ;;
+    esac
+
+    echo "$part_name"
+}
+#
+# apply_layout_mappings function migrate disk device reference from an old system and
+# replace them with new one (from current system).
+# the relationship between OLD and NEW device is provided by $MAPPING_FILE
+# (usually disk_mappings file in $VAR_DIR).
+function apply_layout_mappings() {
+    # --Begining Of TEST section--
+    # Exit if MIGRATION_MODE is not true.
+    is_true "$MIGRATION_MODE" || return 0
+
+    local file_to_migrate="$1"
+
+    # apply_layout_mappings need one argument.
+    [ "$file_to_migrate" ] || BugError "apply_layout_mappings function called without argument (file_to_migrate)."
+
+    # Only apply layout mapping on non-empty file:
+    test -s "$file_to_migrate" || return 0
+    # --End Of TEST section--
+
+    # Generate unique words as replacement placeholders to correctly handle circular replacements (e.g. sda -> sdb and sdb -> sda).
+    # Replacement strategy is
+    # 1) replace all source devices with a unique word (the "replacement" )
+    # 2) replace all unique replacement words with the target device
+
+    # Replacement_file initialization.
+    replacement_file="$TMP_DIR/replacement_file"
+    : > "$replacement_file"
+
+    function add_replacement() {
+        # We temporarily map all devices in the mapping to new names _REAR[0-9]+_
+        echo "$1 _REAR${replaced_count}_" >> "$replacement_file"
+        let replaced_count++
+    }
+
+    function has_replacement() {
+        if grep -q "^$1 " "$replacement_file" ; then
+            return 0
+        else
+            return 1
+        fi
+    }
+
+    # Step-1 replace all source devices with a unique word (the "replacement")
+    let replaced_count=0
+    while read source target junk ; do
+        if ! has_replacement "$source" ; then
+            add_replacement "$source"
+        fi
+
+        if ! has_replacement "$target" ; then
+            add_replacement "$target"
+        fi
+    done < "$MAPPING_FILE"
+
+    # Replace all originals with their replacements.
+    while read original replacement junk ; do
+        # Replace partitions (we normalize cciss/c0d0p1 to _REAR5_1)
+        part_base=$(get_part_device_name_format "$original")
+        sed -i -r "\|$original|s|${part_base}([0-9]+)|$replacement\1|g" "$file_to_migrate"
+
+        # Replace whole devices
+        ### note that / is a word boundary, so is matched by \<, hence the extra /
+        sed -i -r "\|$original|s|/\<${original#/}\>|${replacement}|g" "$file_to_migrate"
+    done < "$replacement_file"
+
+    # Step-2 replace all unique replacement words with the target device
+    function get_replacement() {
+        local item replacement junk
+        read item replacement junk < <(grep "^$1 " $replacement_file)
+        echo "$replacement"
+    }
+
+    while read source target junk ; do
+        replacement=$(get_replacement "$source")
+        # Replace whole device
+        sed -i -r "\|$replacement|s|$replacement\>|$target|g" "$file_to_migrate"
+
+        # Replace partitions
+        target=$(get_part_device_name_format "$target")
+        sed -i -r "\|$replacement|s|$replacement([0-9]+)|$target\1|g" "$file_to_migrate"
+    done < "$MAPPING_FILE"
 }

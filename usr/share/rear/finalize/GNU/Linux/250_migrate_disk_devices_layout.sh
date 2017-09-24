@@ -4,7 +4,6 @@ if [[ ! -s "$MAPPING_FILE" ]] ; then
     return
 fi
 
-### reuse the script in layout/prepare/default/320_apply_mappings.sh
 # FIXME: Why is there is no matching popd for this pushd?
 # Cf. finalize/GNU/Linux/150_migrate_uuid_tags.sh where a popd is at the end.
 # If there is intentionally no popd here an explanation why there is no popd is missing.
@@ -25,20 +24,22 @@ for file in     [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/
 
 	[[ ! -f $file ]] && continue # skip directory or file not found
         # sed -i bails on symlinks, so we follow the symlink and patch the result
-        # on dead links we warn and skip them
-        # TODO: maybe we must put this into a chroot so that absolute symlinks will work correctly
+        # - absolute link are rebased on $TARGET_FS_ROOT (/etc/fstab => $TARGET_FS_ROOT/etc/fstab)
+        # - on dead links we warn and skip them
         if [[ -L "$file" ]] ; then
-                if linkdest="$(readlink -f "$file")" ; then
-                        LogPrint "Patching '$linkdest' instead of '$file'"
-                        file="$linkdest"
+                linkdest="$(readlink -m "$file" | sed -e "s#^/#$TARGET_FS_ROOT/#" )"
+                if test -f "$linkdest" ; then
+                    LogPrint "Patching '$linkdest' instead of '$file'"
+                    file="$linkdest"
                 else
-                        LogPrint "Not patching dead link '$file'"
-                        continue
+                    LogPrint "Not patching dead link '$file' -> '$linkdest'"
+                    continue
                 fi
         fi
 
-        tmp_layout=$LAYOUT_FILE
-        LAYOUT_FILE="$file"
-        source $SHARE_DIR/layout/prepare/default/320_apply_mappings.sh
-        LAYOUT_FILE=$tmp_layout
+        if test -s "$file" ; then
+            apply_layout_mappings "$file"
+        else
+            LogPrint "Not Patching empty file ($file)"
+        fi
 done

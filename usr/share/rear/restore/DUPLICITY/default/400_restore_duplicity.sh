@@ -68,7 +68,7 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     LogPrint "========================================================================"
 
     # Save the logfile to the recoverd filesystem for further checking
-    LogPrint "Transfering Logfile $TMP_DIR/duplicity-restore.log to $TARGET_FS_ROOT/tmp/"
+    LogPrint "Transferring Logfile $TMP_DIR/duplicity-restore.log to $TARGET_FS_ROOT/tmp/"
     cp -v $TMP_DIR/duplicity-restore.log $TARGET_FS_ROOT/tmp/
 fi
 

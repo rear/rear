@@ -22,7 +22,7 @@ LogPrint "Setting up GRUB_RESCUE: Adding $grub_rear_menu_entry_name rescue syste
 test "unrestricted" = "$GRUB_RESCUE_USER" && LogPrint "Anyone can boot that and replace the current system via 'rear recover'."
 # Now error out whenever it cannot setup the GRUB_RESCUE functionality.
 
-# We dont need to do grub(2)-probe all the time
+# We don't need to do grub(2)-probe all the time
 # adding $grub_num to whatever grub binary should do the trick
 # e.g. grub${grub_num}-mkimage
 local grub_num=""
@@ -145,7 +145,7 @@ if is_true $USING_UEFI_BOOTLOADER ; then
     root_uuid=$(mount | grep -w 'on /' | awk '{print $1}' | xargs blkid -s UUID -o value)
 
     # Grub2 modules that will be used for booting "Relax-and-Recover"
-    # It might be usefull to make this variable global in the future
+    # It might be useful to make this variable global in the future
     grub2_modules="linux echo all_video part_gpt ext2 btrfs search configfile"
 
     # Create configuration file for "Relax-and-Recover" UEFI boot entry.

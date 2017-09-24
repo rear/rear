@@ -14,7 +14,7 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
                 device=$(readlink -f $device)
             fi
 
-            # We use the detailed mdadm output quite alot
+            # We use the detailed mdadm output quite a lot
             mdadm --misc --detail $device > $TMP_DIR/mdraid
 
             # Gather information

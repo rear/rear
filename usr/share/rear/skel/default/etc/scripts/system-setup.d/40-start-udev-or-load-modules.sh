@@ -56,7 +56,7 @@ else
     # the correct order
     echo "Loading storage modules..."
     for module in $( find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ide,message,ata} -type f 2>/dev/null ) ; do
-        # module extention could be .ko or .ko.xz
+        # module extension could be .ko or .ko.xz
         filename="$( basename $module )"
         # strip everything after the first .
         modulename="${filename%%.*}"
