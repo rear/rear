@@ -31,9 +31,9 @@ possible by its modular framework. Consistent logging and optionally extended
 output help understand the concepts behind Relax-and-Recover, troubleshoot
 during initial configuration and help debug during integration.
 
-https://github.com/rear/rear#references[Professional services and support are available.]
+<<REFERENCES, Professional services and support are available.>>
 
-https://github.com/rear/rear#references[For more detailed information about Relax-and-Recover.]
+See <<REFERENCES>> for more detailed information about Relax-and-Recover.
 
 
 REQUIREMENTS
@@ -241,6 +241,15 @@ backup functions (like +BACKUP=NETFS+)
 To recover your system, start the computer from the rescue system and run
 +rear recover+. Your system will be recovered and you can restart it and
 continue to use it normally.
+
+AUTHORS AND MAINTAINERS
+-----------------------
+
+The ReaR project was initiated in 2006 by https://github.com/schlomo[Schlomo Schapiro] and https://github.com/gdha[Gratien D'haese] and has since then seen a lot of contributions by many authors. As ReaR deals with bare metal disaster recovery, there is a large amount of code that was contributed by owners and users of specialized hardware and software. Without their combined efforts and contributions ReaR would not be the universal Linux bare metal disaster recovery solution that it is today.
+
+As time passed the project was lucky to get the support of additional developers to also help as maintainers: https://github.com/dagwieers[Dag Wieers], https://github.com/jhoekx[Jeroen Hoekx], https://github.com/jsmeix[Johannes Meixner], https://github.com/gozora[Vladimir Gozora] and https://github.com/schabrolles[Sébastien Chabrolles]. We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers. Please refer to the link:MAINTAINERS[MAINTAINERS] file for the list of active and past maintainers.
+
+To see the full list of authors and their contributions please look at the https://github.com/rear/rear/graphs/contributors[git history]. We are very thankful to all authors and encourage anybody interested to take a look at our source code and to contribute what you find important.
 
 REFERENCES
 ----------
