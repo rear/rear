@@ -94,9 +94,8 @@ if [[ "sshfs" = "$scheme" || "ftpfs" = "$scheme" ]] ; then
     # include what is specific for sshfs
     if [[ "sshfs" = "$scheme" ]] ; then
         # see http://sourceforge.net/apps/mediawiki/fuse/index.php?title=SshfsFaq
-        REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" sshfs )
-        # as we're using SSH behind the scenes we need our keys/config file saved
-        COPY_AS_IS=( "${COPY_AS_IS[@]}" $HOME/.ssh )
+        REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" sshfs ssh )
+        # relying on 500_ssh.sh to take a long the SSH related files
     fi
     # include what is specific for ftpfs
     if [[ "ftpfs" = "$scheme" ]] ; then
