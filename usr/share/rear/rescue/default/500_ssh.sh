@@ -10,10 +10,10 @@ has_binary ssh || has_binary sshd || return
 # The funny [] around a letter makes shopt -s nullglob remove this file from the list if it does not exist,
 # files without a [] are mandatory.
 
-COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/ssh* /etc/openssh* /etc/centrifydc/ssh* /root/.ssh )
+COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/ssh* /etc/openssh* /etc/centrifydc/ssh* /root/.s[s]h /root/.shos[t]s )
 PROGS=(
     "${PROGS[@]}"
-    ssh sshd scp sftp ssh-agent
+    ssh sshd scp sftp ssh-agent ssh-keygen
     $(
         read subsys sftp original_file junk < <( grep sftp /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig /etc/centrifydc/ssh/sshd_co[n]fig 2>/dev/null )
         echo $original_file
