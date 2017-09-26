@@ -33,7 +33,10 @@ fi
 # When running ldd for a file that is 'not a dynamic executable' ldd returns non-zero exit code.
 local binary=""
 local broken_binaries=""
-# Catch all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths:
+# Catch all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths.
+# FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
+# see https://github.com/rear/rear/pull/1514#discussion_r141031975
+# and for the general issue see https://github.com/rear/rear/issues/1372
 for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ) ; do
     chroot $ROOTFS_DIR /bin/ldd $binary | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
 done
