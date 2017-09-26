@@ -1,7 +1,7 @@
 Source: rear
 Section: misc
 Priority: optional
-Maintainer: Schlomo Schapiro <schlomo+packaging@schapiro.org>
+Maintainer: ReaR Team <contact@relax-and-recover.org>
 Standards-Version: 3.9.8
 Homepage: http://relax-and-recover.org/
 Build-Depends: debhelper (>= 9)

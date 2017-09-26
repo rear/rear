@@ -1,0 +1,1713 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.9" />
+<title>rear(8)</title>
+<style type="text/css">
+/* Shared CSS for AsciiDoc xhtml11 and html5 backends */
+
+/* Default font. */
+body {
+  font-family: Georgia,serif;
+}
+
+/* Title font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Arial,Helvetica,sans-serif;
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+h5 {
+  font-size: 1.0em;
+}
+
+div.sectionbody {
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+ul > li     { color: #aaa; }
+ul > li > * { color: black; }
+
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
+  padding: 0;
+  margin: 0;
+}
+pre {
+  white-space: pre-wrap;
+}
+
+#author {
+  color: #527bbd;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+#email {
+}
+#revnumber, #revdate, #revremark {
+}
+
+#footer {
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.0em;
+  margin-bottom: 2.0em;
+  margin-right: 10%;
+  color: #606060;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid #dddddd;
+  border-left: 4px solid #f0f0f0;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  background: #f8f8f8;
+  padding: 0.5em;
+}
+
+div.quoteblock, div.verseblock {
+  padding-left: 1.0em;
+  margin-left: 1.0em;
+  margin-right: 10%;
+  border-left: 5px solid #f0f0f0;
+  color: #888;
+}
+
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock > pre.content {
+  font-family: inherit;
+  font-size: inherit;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 3px solid #dddddd;
+}
+
+div.exampleblock > div.content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; vertical-align: text-bottom; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: navy;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: navy;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+.footnote, .footnoteref {
+  font-size: 0.8em;
+}
+
+span.footnote, span.footnoteref {
+  vertical-align: super;
+}
+
+#footnotes {
+  margin: 20px 0 20px 0;
+  padding: 7px 0 0 0;
+}
+
+#footnotes div.footnote {
+  margin: 0 0 5px 0;
+}
+
+#footnotes hr {
+  border: none;
+  border-top: 1px solid silver;
+  height: 1px;
+  text-align: left;
+  margin-left: 0;
+  width: 20%;
+  min-width: 100px;
+}
+
+div.colist td {
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+div.colist td img {
+  margin-top: 0.3em;
+}
+
+@media print {
+  #footer-badges { display: none; }
+}
+
+#toc {
+  margin-bottom: 2.5em;
+}
+
+#toctitle {
+  color: #527bbd;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel0, div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+
+span.aqua { color: aqua; }
+span.black { color: black; }
+span.blue { color: blue; }
+span.fuchsia { color: fuchsia; }
+span.gray { color: gray; }
+span.green { color: green; }
+span.lime { color: lime; }
+span.maroon { color: maroon; }
+span.navy { color: navy; }
+span.olive { color: olive; }
+span.purple { color: purple; }
+span.red { color: red; }
+span.silver { color: silver; }
+span.teal { color: teal; }
+span.white { color: white; }
+span.yellow { color: yellow; }
+
+span.aqua-background { background: aqua; }
+span.black-background { background: black; }
+span.blue-background { background: blue; }
+span.fuchsia-background { background: fuchsia; }
+span.gray-background { background: gray; }
+span.green-background { background: green; }
+span.lime-background { background: lime; }
+span.maroon-background { background: maroon; }
+span.navy-background { background: navy; }
+span.olive-background { background: olive; }
+span.purple-background { background: purple; }
+span.red-background { background: red; }
+span.silver-background { background: silver; }
+span.teal-background { background: teal; }
+span.white-background { background: white; }
+span.yellow-background { background: yellow; }
+
+span.big { font-size: 2em; }
+span.small { font-size: 0.6em; }
+
+span.underline { text-decoration: underline; }
+span.overline { text-decoration: overline; }
+span.line-through { text-decoration: line-through; }
+
+div.unbreakable { page-break-inside: avoid; }
+
+
+/*
+ * xhtml11 specific
+ *
+ * */
+
+div.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+/*
+ * html5 specific
+ *
+ * */
+
+table.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+thead, p.tableblock.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.tableblock {
+  margin-top: 0;
+}
+table.tableblock {
+  border-width: 3px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: #527bbd;
+  border-collapse: collapse;
+}
+th.tableblock, td.tableblock {
+  border-width: 1px;
+  padding: 4px;
+  border-style: solid;
+  border-color: #527bbd;
+}
+
+table.tableblock.frame-topbot {
+  border-left-style: hidden;
+  border-right-style: hidden;
+}
+table.tableblock.frame-sides {
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+}
+table.tableblock.frame-none {
+  border-style: hidden;
+}
+
+th.tableblock.halign-left, td.tableblock.halign-left {
+  text-align: left;
+}
+th.tableblock.halign-center, td.tableblock.halign-center {
+  text-align: center;
+}
+th.tableblock.halign-right, td.tableblock.halign-right {
+  text-align: right;
+}
+
+th.tableblock.valign-top, td.tableblock.valign-top {
+  vertical-align: top;
+}
+th.tableblock.valign-middle, td.tableblock.valign-middle {
+  vertical-align: middle;
+}
+th.tableblock.valign-bottom, td.tableblock.valign-bottom {
+  vertical-align: bottom;
+}
+
+
+/*
+ * manpage specific
+ *
+ * */
+
+body.manpage h1 {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  border-top: 2px solid silver;
+  border-bottom: 2px solid silver;
+}
+body.manpage h2 {
+  border-style: none;
+}
+body.manpage div.sectionbody {
+  margin-left: 3em;
+}
+
+@media print {
+  body.manpage div#toc { display: none; }
+}
+/* Workarounds for IE6's broken and incomplete CSS2. */
+
+div.sidebar-content {
+  background: #ffffee;
+  border: 1px solid silver;
+  padding: 0.5em;
+}
+div.sidebar-title, div.image-title {
+  color: #527bbd;
+  font-family: Arial,Helvetica,sans-serif;
+  font-weight: bold;
+  margin-top: 0.0em;
+  margin-bottom: 0.5em;
+}
+
+div.listingblock div.content {
+  border: 1px solid silver;
+  background: #f4f4f4;
+  padding: 0.5em;
+}
+
+div.quoteblock-attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+pre.verseblock-content {
+  font-family: inherit;
+}
+div.verseblock-attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+
+div.exampleblock-content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+div.imageblock.latex div.image-title { margin-top: 0.5em; }
+
+/* IE6 sets dynamically generated links as visited. */
+div#toc a:visited { color: blue; }
+
+
+</style>
+<script type="text/javascript">
+/*<![CDATA[*/
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
+toc: function (toclevels) {
+
+  function getText(el) {
+    var text = "";
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+        text += i.data;
+      else if (i.firstChild != null)
+        text += getText(i);
+    }
+    return text;
+  }
+
+  function TocEntry(el, text, toclevel) {
+    this.element = el;
+    this.text = text;
+    this.toclevel = toclevel;
+  }
+
+  function tocEntries(el, toclevels) {
+    var result = new Array;
+    var re = new RegExp('[hH]([1-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
+    var iterate = function (el) {
+      for (var i = el.firstChild; i != null; i = i.nextSibling) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+          var mo = re.exec(i.tagName);
+          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
+            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+          }
+          iterate(i);
+        }
+      }
+    }
+    iterate(el);
+    return result;
+  }
+
+  var toc = document.getElementById("toc");
+  if (!toc) {
+    return;
+  }
+
+  // Delete existing TOC entries in case we're reloading the TOC.
+  var tocEntriesToRemove = [];
+  var i;
+  for (i = 0; i < toc.childNodes.length; i++) {
+    var entry = toc.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div'
+     && entry.getAttribute("class")
+     && entry.getAttribute("class").match(/^toclevel/))
+      tocEntriesToRemove.push(entry);
+  }
+  for (i = 0; i < tocEntriesToRemove.length; i++) {
+    toc.removeChild(tocEntriesToRemove[i]);
+  }
+
+  // Rebuild TOC entries.
+  var entries = tocEntries(document.getElementById("content"), toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "_toc_" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    toc.parentNode.removeChild(toc);
+},
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
+footnotes: function () {
+  // Delete existing footnote entries in case we're reloading the footnodes.
+  var i;
+  var noteholder = document.getElementById("footnotes");
+  if (!noteholder) {
+    return;
+  }
+  var entriesToRemove = [];
+  for (i = 0; i < noteholder.childNodes.length; i++) {
+    var entry = noteholder.childNodes[i];
+    if (entry.nodeName.toLowerCase() == 'div' && entry.getAttribute("class") == "footnote")
+      entriesToRemove.push(entry);
+  }
+  for (i = 0; i < entriesToRemove.length; i++) {
+    noteholder.removeChild(entriesToRemove[i]);
+  }
+
+  // Rebuild footnote entries.
+  var cont = document.getElementById("content");
+  var spans = cont.getElementsByTagName("span");
+  var refs = {};
+  var n = 0;
+  for (i=0; i<spans.length; i++) {
+    if (spans[i].className == "footnote") {
+      n++;
+      var note = spans[i].getAttribute("data-note");
+      if (!note) {
+        // Use [\s\S] in place of . so multi-line matches work.
+        // Because JavaScript has no s (dotall) regex flag.
+        note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+        spans[i].innerHTML =
+          "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+        spans[i].setAttribute("data-note", note);
+      }
+      noteholder.innerHTML +=
+        "<div class='footnote' id='_footnote_" + n + "'>" +
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
+        n + "</a>. " + note + "</div>";
+      var id =spans[i].getAttribute("id");
+      if (id != null) refs["#"+id] = n;
+    }
+  }
+  if (n == 0)
+    noteholder.parentNode.removeChild(noteholder);
+  else {
+    // Process footnoterefs.
+    for (i=0; i<spans.length; i++) {
+      if (spans[i].className == "footnoteref") {
+        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
+        n = refs[href];
+        spans[i].innerHTML =
+          "[<a href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+      }
+    }
+  }
+},
+
+install: function(toclevels) {
+  var timerId;
+
+  function reinstall() {
+    asciidoc.footnotes();
+    if (toclevels) {
+      asciidoc.toc(toclevels);
+    }
+  }
+
+  function reinstallAndRemoveTimer() {
+    clearInterval(timerId);
+    reinstall();
+  }
+
+  timerId = setInterval(reinstall, 500);
+  if (document.addEventListener)
+    document.addEventListener("DOMContentLoaded", reinstallAndRemoveTimer, false);
+  else
+    window.onload = reinstallAndRemoveTimer;
+}
+
+}
+asciidoc.install();
+/*]]>*/
+</script>
+</head>
+<body class="manpage">
+<div id="header">
+<h1>
+rear(8) Manual Page
+</h1>
+<h2>NAME</h2>
+<div class="sectionbody">
+<p>rear -
+   bare metal disaster recovery and system migration tool
+</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>rear</strong> [<strong>-h</strong>|<strong>--help</strong>] [<strong>-V</strong>|<strong>--version</strong>] [<strong>-dsSv</strong>] [<strong>-D</strong>|<strong>--debugscripts</strong> <em>SET</em>] [<strong>-c</strong> <em>DIR</em>] [<strong>-C</strong> <em>CONFIG</em>] [<strong>-r</strong> <em>KERNEL</em>] [--] <em>COMMAND</em> [<em>ARGS</em>&#8230;]</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Relax-and-Recover is the leading Open Source disaster recovery solution. It
+is a modular framework with many ready-to-go workflows for common situations.</p></div>
+<div class="paragraph"><p>Relax-and-Recover produces a bootable image. This image can repartition the
+system. Once that is done it initiates a restore from backup. Restores to
+different hardware are possible. Relax-and-Recover can therefore be used as a
+migration tool as well.</p></div>
+<div class="paragraph"><p>Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
+OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
+sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude
+of backup strategies (incl.  IBM Tivoli Storage Manager, HP DataProtector,
+Symantec NetBackup, EMC NetWorker, FDR/Upstream, NovaBACKUP DC, Bareos,
+Bacula, rsync, rbme, Borg). This results in a bootable image that is capable of
+booting via PXE, DVD/CD, bootable tape or virtual provisioning.</p></div>
+<div class="paragraph"><p>Relax-and-Recover was designed to be easy to set up, requires no maintenance
+and is there to assist when disaster strikes. Its setup-and-forget nature
+removes any excuses for not having a disaster recovery solution implemented.</p></div>
+<div class="paragraph"><p>Recovering from disaster is made very straight-forward by a 2-step recovery
+process so that it can be executed by operational teams when required.
+When used interactively (e.g. when used for migrating systems), menus help
+make decisions to restore to a new (hardware) environment.</p></div>
+<div class="paragraph"><p>Extending Relax-and-Recover is made possible by its modular framework.
+Consistent logging and optionally extended output help understand the concepts
+behind Relax-and-Recover and help debug during development.</p></div>
+<div class="paragraph"><p>Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details see
+the GNU General Public License at: <a href="http://www.gnu.org/licenses/gpl.html">http://www.gnu.org/licenses/gpl.html</a></p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">OPTIONS</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_global_options">GLOBAL OPTIONS</h3><div style="clear:left"></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+-h --help
+</dt>
+<dd>
+<p>
+    usage information
+</p>
+</dd>
+<dt class="hdlist1">
+-c DIR
+</dt>
+<dd>
+<p>
+    alternative config directory; instead of /etc/rear
+</p>
+</dd>
+<dt class="hdlist1">
+-C CONFIG
+</dt>
+<dd>
+<p>
+    additional config file; absolute path or relative to config directory
+</p>
+</dd>
+<dt class="hdlist1">
+-d
+</dt>
+<dd>
+<p>
+    <strong>debug mode</strong> (log debug messages to log file)
+</p>
+</dd>
+<dt class="hdlist1">
+-D
+</dt>
+<dd>
+<p>
+    <strong>debugscript mode</strong> (log every function call via <em>set -x</em>)
+</p>
+</dd>
+<dt class="hdlist1">
+--debugscripts SET
+</dt>
+<dd>
+<p>
+    same as -d -v -D but <strong>debugscript mode</strong> with <em>set -SET</em>
+</p>
+</dd>
+<dt class="hdlist1">
+-r KERNEL
+</dt>
+<dd>
+<p>
+    kernel version to use (by default use running kernel)
+</p>
+</dd>
+<dt class="hdlist1">
+-s
+</dt>
+<dd>
+<p>
+    <strong>simulation mode</strong> (show what scripts rear would include)
+</p>
+</dd>
+<dt class="hdlist1">
+-S
+</dt>
+<dd>
+<p>
+    <strong>step-by-step mode</strong> (acknowledge each script individually)
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dd>
+<p>
+    <strong>verbose mode</strong> (show progress output)
+</p>
+</dd>
+<dt class="hdlist1">
+-V --version
+</dt>
+<dd>
+<p>
+    version information
+</p>
+</dd>
+</dl></div>
+</div>
+<div class="sect2">
+<h3 id="_commands">COMMANDS</h3><div style="clear:left"></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>checklayout</strong>
+</dt>
+<dd>
+<p>
+    check if the disk layout has changed since the last run of
+    mkbackup/mkrescue
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>dump</strong>
+</dt>
+<dd>
+<p>
+    dump configuration and system information; please run this to verify
+    your setup
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>format</strong>
+</dt>
+<dd>
+<p>
+    format and label USB or tape media to be used with rear;
+   <br />
+    first argument is the USB or tape device to use, eg. <em>/dev/sdX</em> or
+    <em>/dev/stX</em>
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>help</strong>
+</dt>
+<dd>
+<p>
+    print full list of commands and options
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>mkbackup</strong>
+</dt>
+<dd>
+<p>
+    create rescue media and backup the system (only for internal backup
+    methods)
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>mkbackuponly</strong>
+</dt>
+<dd>
+<p>
+    backup the system (only for internal backup methods) without creating
+    rescue media
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>mkrescue</strong>
+</dt>
+<dd>
+<p>
+    create rescue media only
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>recover</strong>
+</dt>
+<dd>
+<p>
+    recover the system; can be used only when running from the rescue media
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>restoreonly</strong>
+</dt>
+<dd>
+<p>
+    only restore the backup; can be used only when running from the rescue media
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>validate</strong>
+</dt>
+<dd>
+<p>
+    submit validation information
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>Use <em>rear -v help</em> for more advanced commands.</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_background_information">BACKGROUND INFORMATION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The process of bare metal disaster recovery consists of two parts:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Recreate the system layout
+</p>
+</li>
+<li>
+<p>
+Restore the data to the system
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Most backup software solutions are very good at restoring data but do not
+support recreating the system layout. Relax-and-Recover is very good at
+recreating the system layout but works best when used together with
+supported backup software.</p></div>
+<div class="paragraph"><p>In this combination Relax-and-Recover recreates the system layout and calls
+the backup software to restore the actual data. Thus there is no unnecessary
+duplicate data storage and the Relax-and-Recover rescue media can be very small.</p></div>
+<div class="paragraph"><p>For demonstration and special use purposes Relax-and-Recover also includes
+an internal backup method, NETFS, which can be used to create a simple tar.gz
+archive of the system. For all permanent setups we recommend using something
+more professional for backup, either a traditional backup software (open
+source or commercial) or rsync with hardlink based solutions, e.g. RSYNC
+BACKUP MADE EASY.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_rescue_image_configuration">RESCUE IMAGE CONFIGURATION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The <code>OUTPUT</code> variable defines from where our bootable rescue image will be booted and
+the <code>OUTPUT_URL</code> variable defines where the rescue image should be send to.
+Possible <code>OUTPUT</code> setting are:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+OUTPUT=<strong>RAMDISK</strong>
+</dt>
+<dd>
+<p>
+Create only the Relax-and-Recover initramfs.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT=<strong>ISO</strong>
+</dt>
+<dd>
+<p>
+<strong>(Default)</strong> Create a bootable ISO9660 image on disk as <em>rear-$(hostname).iso</em>
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT=<strong>PXE</strong>
+</dt>
+<dd>
+<p>
+Create on a remote PXE/NFS server the required files (such as
+configuration file, kernel and initrd image
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT=<strong>OBDR</strong>
+</dt>
+<dd>
+<p>
+Create a bootable OBDR tape (optionally including the backup archive).
+Specify the OBDR tape device by using <code>TAPE_DEVICE</code>.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT=<strong>USB</strong>
+</dt>
+<dd>
+<p>
+Create a bootable USB disk (using extlinux). Specify the USB storage
+device by using <code>USB_DEVICE</code>.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>When using <code>OUTPUT=ISO</code>, <code>RAMDISK</code>, <code>OBDR</code> or <code>USB</code> you should provide the
+backup target location through the <code>OUTPUT_URL</code> variable. Possible <code>OUTPUT_URL</code>
+settings are:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>file://</strong>
+</dt>
+<dd>
+<p>
+Write the image to disk. The default is in <em>/var/lib/rear/output/</em>.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>nfs://</strong>
+</dt>
+<dd>
+<p>
+Write the image by mounting the target filesystem via NFS.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>cifs://</strong>
+</dt>
+<dd>
+<p>
+Write the image by mounting the target filesystem via CIFS.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>fish://</strong>
+</dt>
+<dd>
+<p>
+Write the image using <code>lftp</code> and the FISH protocol.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>ftp://</strong>
+</dt>
+<dd>
+<p>
+Write the image using <code>lftp</code> and the FTP protocol.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>ftps://</strong>
+</dt>
+<dd>
+<p>
+Write the image using <code>lftp</code> and the FTPS protocol.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>hftp://</strong>
+</dt>
+<dd>
+<p>
+Write the image using <code>lftp</code> and the HFTP protocol.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>http://</strong>
+</dt>
+<dd>
+<p>
+Write the image using <code>lftp</code> and the HTTP (PUT) procotol.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>https://</strong>
+</dt>
+<dd>
+<p>
+Write the image using <code>lftp</code> and the HTTPS (PUT) protocol.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>sftp://</strong>
+</dt>
+<dd>
+<p>
+Write the image using <code>lftp</code> and the secure FTP (SFTP) protocol.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>rsync://</strong>
+</dt>
+<dd>
+<p>
+Write the image using <code>rsync</code> and the RSYNC protocol.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>sshfs://</strong>
+</dt>
+<dd>
+<p>
+Write the image using sshfs and the SSH protocol.
+</p>
+</dd>
+<dt class="hdlist1">
+OUTPUT_URL=<strong>null</strong>
+</dt>
+<dd>
+<p>
+Do not copy the ISO image from <em>/var/lib/rear/output/</em> to a remote output location.
+<code>OUTPUT_URL=null</code> is useful when another program (e.g. an <em>external</em> backup program)
+is used to save the ISO image from the local system to a remote place,
+or with <code>BACKUP_URL=iso:///backup</code> when the backup is included in the ISO image
+to avoid a (big) copy of the ISO image at a remote output location.
+In the latter case the ISO image must be manually saved from the local system to a remote place.
+<code>OUTPUT_URL=null</code> is only supported together with <code>BACKUP=NETFS</code>.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>If you do not specify <code>OUTPUT_URL</code> variable then by default it will be aligned to what
+was defined by variable <code>BACKUP_URL</code>. And, the ISO image will then be copied to the same
+location as your backup of the system disk(s).</p></div>
+<div class="paragraph"><p>The <code>ISO_DEFAULT</code> variable defines what default boot option is used on the rescue image.
+Possible values are <code>manual</code>, <code>boothd</code> or <code>automatic</code>. Manual will make you boot into
+the shell directly by default, boothd will boot to the first disk (default) or automatic
+will automatically start in recovery mode.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_backup_software_integration">BACKUP SOFTWARE INTEGRATION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Currently Relax-and-Recover supports the following backup methods. Please
+distinguish carefully between Relax-and-Recover support for 3rd party
+backup software and Relax-and-Recover internal backup methods. The latter
+also creates a backup of your data while the former will only integrate
+Relax-and-Recover with the backup software to restore the data with the
+help of the backup software without actually creating backups. This means
+that for all non-internal backup software you <strong>must</strong> take care of creating
+backups yourself.</p></div>
+<div class="paragraph"><p>Especially the <code>rear mkbackup</code> command can be confusing as it is only
+useful for the internal backup methods and has no function at all with
+the other (external) backup methods.</p></div>
+<div class="paragraph"><p>The following backup methods need to
+be set in Relax-and-Recover with the <code>BACKUP</code> option. As mentioned we have
+two types of <code>BACKUP</code> methods - <em>internal</em> and <em>external</em>.</p></div>
+<div class="paragraph"><p>The following <code>BACKUP</code> methods are <em>external</em> of Relax-and-Recover meaning
+that you are responsible of backups being made:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+BACKUP=<strong>REQUESTRESTORE</strong>
+</dt>
+<dd>
+<p>
+<strong>(default)</strong> Not really a backup method at all, Relax-and-Recover simply
+halts the recovery and requests that somebody will restore the data
+to the appropriate location (e.g. via SSH). This method works especially
+well with an rsync based backup that is pushed back to the backup
+client.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>EXTERNAL</strong>
+</dt>
+<dd>
+<p>
+Internal backup method that uses an arbitrary external command to
+create a backup and restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>DP</strong>
+</dt>
+<dd>
+<p>
+Use HP Data Protector to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>FDRUPSTREAM</strong>
+</dt>
+<dd>
+<p>
+Use FDR/Upstream to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>GALAXY</strong>
+</dt>
+<dd>
+<p>
+Use CommVault Galaxy 5 to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>GALAXY7</strong>
+</dt>
+<dd>
+<p>
+Use CommVault Galaxy 7 to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>GALAXY10</strong>
+</dt>
+<dd>
+<p>
+Use CommVault Galaxy 10 (or Simpana 10) to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>NBU</strong>
+</dt>
+<dd>
+<p>
+Use Symantec NetBackup to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>TSM</strong>
+</dt>
+<dd>
+<p>
+Use IBM Tivoli Storage Manager to restore the data. The Relax-and-Recover
+result files (e.g. ISO image) are also saved into TSM.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>NSR</strong>
+</dt>
+<dd>
+<p>
+Using EMC NetWorker (Legato) to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>SESAM</strong>
+</dt>
+<dd>
+<p>
+Using SEP Sesam to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>NBKDC</strong>
+</dt>
+<dd>
+<p>
+Using Novastor NovaBACKUP DC to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>RBME</strong>
+</dt>
+<dd>
+<p>
+Use Rsync Backup Made Easy (rbme) to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>BAREOS</strong>
+</dt>
+<dd>
+<p>
+Use Open Source backup solution BAREOS (a fork a BUCULA) to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>BACULA</strong>
+</dt>
+<dd>
+<p>
+Use Open Source backup solution BACULA to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>DUPLICITY</strong>
+</dt>
+<dd>
+<p>
+Use encrypted bandwidth-efficient backup solution using the rsync algorithm to restore the data.
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>BORG</strong>
+</dt>
+<dd>
+<p>
+Use BorgBackup (short Borg) a deduplicating backup program to restore the data.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>The following <code>BACKUP</code> methods are <em>internal</em> of Relax-and-Recover:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+BACKUP=<strong>NETFS</strong>
+</dt>
+<dd>
+<p>
+Internal backup method which can be used to create a simple backup
+(tar archive).
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP=<strong>RSYNC</strong>
+</dt>
+<dd>
+<p>
+Use rsync to restore data.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>If your favourite backup software is missing from this list, please submit
+a patch or ask us to implement it for you.</p></div>
+<div class="paragraph"><p>When using <code>BACKUP=NETFS</code> you should provide the backup target location
+through the <code>BACKUP_URL</code> variable. Possible <code>BACKUP_URL</code> settings are:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+BACKUP_URL=<strong>file://</strong>
+</dt>
+<dd>
+<p>
+To backup to local disk, use <code>BACKUP_URL=file:///directory/path/</code>
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP_URL=<strong>nfs://</strong>
+</dt>
+<dd>
+<p>
+To backup to NFS disk, use <code>BACKUP_URL=nfs://nfs-server-name/share/path</code>
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP_URL=<strong>tape://</strong>
+</dt>
+<dd>
+<p>
+To backup to tape device, use <code>BACKUP_URL=tape:///dev/nst0</code> or alternatively,
+simply define <code>TAPE_DEVICE=/dev/nst0</code>
+</p>
+</dd>
+<dt class="hdlist1">
+BACKUP_URL=<strong>rsync://</strong>
+</dt>
+<dd>
+<p>
+When backup method <code>BACKUP=RSYNC</code> is chosen then we need to define a corresponding <code>BACKUP_URL</code> rule:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>BACKUP_URL=rsync://[user@]host[:port]/path
+BACKUP_URL=rsync://[user@]host[:port]::/path</code></pre>
+</div></div>
+</dd>
+<dt class="hdlist1">
+BACKUP_URL=<strong>cifs://</strong>
+</dt>
+<dd>
+<p>
+To backup to a Samba share (CIFS), use
+<code>BACKUP_URL=cifs://cifs-server-name/share/path</code>. To provide credentials for
+CIFS mounting use a <em>/etc/rear/cifs</em> credentials file and define
+<code>BACKUP_OPTIONS="cred=/etc/rear/cifs"</code> and pass along:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>username=_username_
+password=_secret password_
+domain=_domain_</code></pre>
+</div></div>
+</dd>
+<dt class="hdlist1">
+BACKUP_URL=<strong>usb://</strong>
+</dt>
+<dd>
+<p>
+To backup to USB storage device, use <code>BACKUP_URL=usb:///dev/disk/by-path/REAR-000</code>
+or use a real device node or a specific filesystem label. Alternatively, you
+can specify the device using <code>USB_DEVICE=/dev/disk/by-path/REAR-000</code>.
+</p>
+<div class="paragraph"><p>If you combine this with <code>OUTPUT=USB</code> you will end up with a bootable USB
+device.</p></div>
+</dd>
+<dt class="hdlist1">
+BACKUP_URL=<strong>sshfs://</strong>
+</dt>
+<dd>
+<p>
+To backup to a remote server via sshfs (SSH protocol), use
+<code>BACKUP_URL=sshfs://user@remote-system.domain.org/home/user/backup-dir/</code>
+</p>
+<div class="paragraph"><p>It is advisable to add <strong>ServerAliveInterval 15</strong> in the <code>/root/.ssh/config</code>
+file for the remote system (remote-system.domain.org).</p></div>
+</dd>
+<dt class="hdlist1">
+BACKUP_URL=<strong>iso://</strong>
+</dt>
+<dd>
+<p>
+To include the backup within the ISO image. It is important that the <code>BACKUP_URL</code> and
+<code>OUTPUT_URL</code> variables are different. E.g.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code>BACKUP_URL=iso:///backup/
+OUTPUT_URL=nfs://server/path/</code></pre>
+</div></div>
+</dd>
+</dl></div>
+<div class="paragraph"><p>When using <code>BACKUP=NETFS</code> and BACKUP_PROG=tar there is an option to select
+<code>BACKUP_TYPE=incremental</code> or <code>BACKUP_TYPE=differential</code> to let <code>rear</code> make
+incremental or differential backups until the next full backup day
+e.g. via <code>FULLBACKUPDAY="Mon"</code> is reached or when the last full backup
+is too old after FULLBACKUP_OUTDATED_DAYS has passed.
+Incremental or differential backup is currently only known to work
+with <code>BACKUP_URL=nfs</code>. Other BACKUP_URL schemes may work but
+at least <code>BACKUP_URL=usb</code> requires USB_SUFFIX to be set
+to work with incremental or differential backup.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_configuration">CONFIGURATION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>To configure Relax-and-Recover you have to edit the configuration files in
+<em>/etc/rear/</em>.  All <em>*.conf</em> files there are part of the configuration, but
+only <em>site.conf</em> and <em>local.conf</em> are intended for the user configuration.
+All other configuration files hold defaults for various distributions and
+should not be changed.</p></div>
+<div class="paragraph"><p>In <em>/etc/rear/templates/</em> there are also some template files which are used
+by Relax-and-Recover to create configuration files (mostly for the boot
+environment).  Modify the templates to adjust the information contained in
+the emails produced by Relax-and-Recover. You can use these templates to
+prepend your own configurations to the configuration files created by
+Relax-and-Recover, for example you can edit <em>PXE_pxelinux.cfg</em> to add some
+general pxelinux configuration you use.</p></div>
+<div class="paragraph"><p>In almost all circumstances you have to configure two main settings and their
+parameters: The backup method and the output method.</p></div>
+<div class="paragraph"><p>The backup method defines, how your data was saved and whether Relax-and-Recover
+should backup your data as part of the mkrescue process or whether you use an
+external application, e.g. backup software to archive your data.</p></div>
+<div class="paragraph"><p>The output method defines how the rescue system is written to disk and how you
+plan to boot the failed computer from the rescue system.</p></div>
+<div class="paragraph"><p>See the default configuration file <em>/usr/share/rear/conf/default.conf</em> for
+an overview of the possible methods and their options.</p></div>
+<div class="paragraph"><p>An example to use TSM for backup and ISO for output would be to add
+these lines to <em>/etc/rear/local.conf</em> (no need to define a <code>BACKUP_URL</code>
+when using an external backup solution):</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>BACKUP=TSM
+OUTPUT=ISO</code></pre>
+</div></div>
+<div class="paragraph"><p>And if all your systems use NTP for time synchronisation, you can also
+add these lines to <em>/etc/rear/site.conf</em></p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>TIMESYNC=NTP</code></pre>
+</div></div>
+<div class="paragraph"><p>Do not forget to distribute the <em>site.conf</em> to all your systems.</p></div>
+<div class="paragraph"><p>The resulting ISO image will be created in <em>/var/lib/rear/output/</em>.
+You can now modify the behaviour by copying the appropriate
+configuration variables from <em>default.conf</em> to <em>local.conf</em> and
+changing them to suit your environment.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exit_status">EXIT STATUS</h2>
+<div class="sectionbody">
+<div class="dlist"><dl>
+<dt class="hdlist1">
+0
+</dt>
+<dd>
+<p>
+    Successful program execution.
+</p>
+</dd>
+<dt class="hdlist1">
+&gt;0
+</dt>
+<dd>
+<p>
+    Usage, syntax or execution errors. Check the log file in
+    <em>/var/log/rear/</em> for more information.
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_examples">EXAMPLES</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>To print out the current settings for <code>BACKUP</code> and <code>OUTPUT</code> methods and some
+system information. This command can be used to see the supported features
+for the given release and platform.</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code># rear dump</code></pre>
+</div></div>
+<div class="paragraph"><p>To create a new rescue environment. Do not forget to copy the resulting
+rescue system away so that you can use it in the case of a system failure.</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code># rear -v mkrescue</code></pre>
+</div></div>
+<div class="paragraph"><p>To create a new rescue image together with a complete archive of your local
+system run the command:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><code># rear -v mkbackup</code></pre>
+</div></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_files">FILES</h2>
+<div class="sectionbody">
+<div class="dlist"><dl>
+<dt class="hdlist1">
+/usr/sbin/rear
+</dt>
+<dd>
+<p>
+The program itself.
+</p>
+</dd>
+<dt class="hdlist1">
+/etc/rear/local.conf
+</dt>
+<dd>
+<p>
+System specific configuration can be set here.
+</p>
+</dd>
+<dt class="hdlist1">
+/etc/rear/site.conf
+</dt>
+<dd>
+<p>
+Site specific configuration can be set here (not created by default).
+</p>
+</dd>
+<dt class="hdlist1">
+/var/log/rear/
+</dt>
+<dd>
+<p>
+Directory holding the log files.
+</p>
+</dd>
+<dt class="hdlist1">
+/tmp/rear.####
+</dt>
+<dd>
+<p>
+Relax-and-Recover working directory. If Relax-and-Recover exits with an error,
+you must remove this directory manually.
+</p>
+</dd>
+<dt class="hdlist1">
+/usr/share/rear
+</dt>
+<dd>
+<p>
+Relax-and-Recover script components.
+</p>
+</dd>
+<dt class="hdlist1">
+/usr/share/rear/conf/default.conf
+</dt>
+<dd>
+<p>
+Relax-and-Recover default values. Contains a complete set of parameters
+and its explanation.  Please do not edit or modify. Copy values to
+<em>local.conf</em> or <em>site.conf</em> instead.
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bugs">BUGS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Feedback is welcome, please report any issues or improvements to our
+issue-tracker at: <a href="http://github.com/rear/issues/">http://github.com/rear/issues/</a></p></div>
+<div class="paragraph"><p>Furthermore, we welcome pull requests via GitHub.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Relax-and-Recover comes with extensive documentation located in
+<em>/usr/share/doc</em>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_authors">AUTHORS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The ReaR project was initiated in 2006 by Schlomo Schapiro (<a href="https://github.com/schlomo">https://github.com/schlomo</a>) and Gratien D&#8217;haese (<a href="https://github.com/gdha">https://github.com/gdha</a>) and has since then seen a lot of contributions by many authors. As ReaR deals with bare metal disaster recovery, there is a large amount of code that was contributed by owners and users of specialized hardware and software. Without their combined efforts and contributions ReaR would not be the universal Linux bare metal disaster recovery solution that it is today.</p></div>
+<div class="paragraph"><p>As time passed the project was lucky to get the support of additional developers to also help as maintainers: Dag Wieers (<a href="https://github.com/dagwieers">https://github.com/dagwieers</a>), Jeroen Hoekx (<a href="https://github.com/jhoekx">https://github.com/jhoekx</a>), Johannes Meixner (<a href="https://github.com/jsmeix">https://github.com/jsmeix</a>), Vladimir Gozora (<a href="https://github.com/gozora">https://github.com/gozora</a>) and Sébastien Chabrolles (<a href="https://github.com/schabrolles">https://github.com/schabrolles</a>). We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers.  Please refer to the MAINTAINERS (<a href="https://github.com/rear/rear/blob/master/MAINTAINERS">https://github.com/rear/rear/blob/master/MAINTAINERS</a>) file for the list of active and past maintainers.</p></div>
+<div class="paragraph"><p>To see the full list of authors and their contributions please look at the git history (<a href="https://github.com/rear/rear/graphs/contributors">https://github.com/rear/rear/graphs/contributors</a>). We are very thankful to all authors and encourage anybody interested to take a look at our source code and to contribute what you find important.</p></div>
+<div class="paragraph"><p>Relax-and-Recover is a collaborative process using Github at <a href="http://github.com/rear/">http://github.com/rear/</a></p></div>
+<div class="paragraph"><p>The Relax-and-Recover website is located at: <a href="http://relax-and-recover.org/">http://relax-and-recover.org/</a></p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_copyright">COPYRIGHT</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>(c) 2006-2017</p></div>
+<div class="paragraph"><p>The copyright is held by the original authors of the respective code pieces as can be seen in the git history at <a href="https://github.com/rear/rear/graphs/contributors">https://github.com/rear/rear/graphs/contributors</a></p></div>
+<div class="paragraph"><p>Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details
+see the GNU General Public License at <a href="http://www.gnu.org/licenses/gpl.html">http://www.gnu.org/licenses/gpl.html</a></p></div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+</div>
+</body>
+</html>

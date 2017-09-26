@@ -91,7 +91,7 @@ validate:
 	@echo -e "\033[1m== Validating scripts and configuration ==\033[0;0m"
 	find etc/ usr/share/rear/conf/ -name '*.conf' | xargs -n 1 bash -n
 	bash -n $(rearbin)
-	find . -name '*.sh' | xargs -n 1 bash -n
+	find . -name '*.sh' | xargs -n 1 bash -O extglob -O nullglob -n
 	find usr/share/rear -name '*.sh' | grep -v -E '(lib|skel|conf)' | while read FILE ; do \
 		num=$$(echo $${FILE##*/} | cut -c1-3); \
 		if [[ "$$num" = "000" || "$$num" = "999" ]] ; then \
