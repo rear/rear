@@ -46,8 +46,8 @@ if contains_visible_char "$broken_binaries" ; then
     local fatal_missing_library=""
     local ldd_output=""
     for binary in $broken_binaries ; do
-        if grep -q '/bin/' <<<"$binary" ; then
-            # Only for programs (i.e. files in a .../bin/... directory) treat a missing library as fatal:
+        if grep -q '/[s]*bin/' <<<"$binary" ; then
+            # Only for programs (i.e. files in a .../bin/... or .../sbin/... directory) treat a missing library as fatal:
             fatal_missing_library="yes"
             LogPrintError "$binary requires additional libraries"
             ldd_output="$( chroot $ROOTFS_DIR /bin/ldd $binary )"
