@@ -367,10 +367,10 @@ device.
 
 BACKUP_URL=*sshfs://*::
 To backup to a remote server via sshfs (SSH protocol), use
-+BACKUP_URL=sshfs://user@remote-system.domain.org/home/user/backup-dir/+
++BACKUP_URL=sshfs://user@remote-system.name.org/home/user/backup-dir/+
 +
 It is advisable to add *ServerAliveInterval 15* in the +/root/.ssh/config+
-file for the remote system (remote-system.domain.org).
+file for the remote system (remote-system.name.org).
 
 BACKUP_URL=*iso://*::
 To include the backup within the ISO image. It is important that the +BACKUP_URL+ and
