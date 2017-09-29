@@ -22,7 +22,7 @@ Log "Binaries being copied: ${BINARIES[@]}"
 BinCopyTo "$ROOTFS_DIR/bin" "${BINARIES[@]}" >&2 || Error "Failed to copy binaries"
 
 # copy libraries
-declare -a all_libs=( $( for lib in ${LIBS[@]} $( SharedObjectFiles "${BINARIES[@]}" | sed -e 's#^#/#' ) ; do
+declare -a all_libs=( $( for lib in ${LIBS[@]} $( SharedObjectFiles "${LIBS[@]}" "${BINARIES[@]}" | sed -e 's#^#/#' ) ; do
                              echo $lib
                          done | sort -u ) )
 
