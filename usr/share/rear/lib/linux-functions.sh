@@ -114,57 +114,40 @@ function BinCopyTo () {
     done
 }
 
-# Resolve dynamic library dependencies. Returns a list of symbolic links
-# to shared objects and shared object files for the binaries in $@.
-# This is the function copied from mkinitrd off SUSE 9.3
-function SharedObjectFiles () {
-    has_binary ldd || Error "SharedObjectFiles failed because there is no ldd binary"
-
-    # Default ldd output (when providing more than one argument) has 5 cases:
-    #  1. Line: "file:"                            -> file argument
-    #  2. Line: "	lib =>  (mem-addr)"            -> virtual library
-    #  3. Line: "	lib => not found"              -> print error to stderr
-    #  4. Line: "	lib => /path/lib (mem-addr)"   -> print $3
-    #  5. Line: "	/path/lib (mem-addr)"          -> print $1
-    local -a initrd_libs=( $( ldd "$@" | awk '
-            /^\t.+ => not found/ { print "WARNING: Dynamic library " $1 " not found" > "/dev/stderr" }
-            /^\t.+ => \// { print $3 }
-            /^\t\// { print $1 }
-        ' | sort -u ) )
-
-    ### FIXME: Is this still relevant today ? If so, make it more specific !
-
-    # Evil hack: On some systems we have generic as well as optimized
-    # libraries, but the optimized libraries may not work with all
-    # kernel versions (e.g., the NPTL glibc libraries don't work with
-    # a 2.4 kernel). Use the generic versions of the libraries in the
-    # initrd (and guess the name).
-#	local lib= n= optimized=
-#	for ((n=0; $n<${#initrd_libs[@]}; n++)); do
-#		lib=${initrd_libs[$n]}
-#		optimized="$(echo "$lib" | sed -e 's:.*/\([^/]\+/\)[^/]\+$:\1:')"
-#		lib=${lib/$optimized/}
-#		if [ "${optimized:0:3}" != "lib" -a -f "$lib" ]; then
-#			#echo "[Using $lib instead of ${initrd_libs[$n]}]" >&2
-#			initrd_libs[$n]="${lib/$optimized/}"
-#		fi
-#		echo Deoptimizing "$lib" >&2
-#	done
-
-    local lib="" link=""
-    for lib in "${initrd_libs[@]}" ; do
-        lib="${lib:1}"
-        while [ -L "/$lib" ] ; do
-            echo $lib
-            link="$( readlink "/$lib" )"
-            case "$link" in
-                (/*) lib="${link:1}" ;;
-                (*)  lib="${lib%/*}/$link" ;;
-            esac
-        done
-        echo $lib
-        echo $lib >&2
-    done | sort -u
+# Determine all required shared objects (shared/dynamic libraries)
+# for programs and/or shared objects (binaries) specified in $@.
+# RequiredSharedOjects outputs the required shared objects on STDOUT.
+# The output are absolute paths to the required shared objects.
+# The output can also be symbolic links (also as absolute paths).
+# In case of symbolic links only the link but not the link target is output.
+function RequiredSharedOjects () {
+    has_binary ldd || Error "Cannot run RequiredSharedOjects() because there is no ldd binary"
+    Log "RequiredSharedOjects: Determining required shared objects"
+    # Default ldd output (when providing more than one argument) has 5 cases.
+    # Example (with an intentionally moved library to also get 'not found'):
+    #  # mv /usr/lib64/libparted.so.2.0.0 /usr/lib64/libparted.so.2.0.0.away
+    #  # ldd /usr/bin/cat /usr/sbin/parted | cat -n
+    #     1  /usr/bin/cat:
+    #     2          linux-vdso.so.1 (0x00007ffe13398000)
+    #     3          libc.so.6 => /lib64/libc.so.6 (0x00007fda437a4000)
+    #     4          /lib64/ld-linux-x86-64.so.2 (0x000055847e55e000)
+    #     5  /usr/sbin/parted:
+    #     6          linux-vdso.so.1 (0x00007ffde9f59000)
+    #     7          libparted.so.2 => not found
+    #     8          libtinfo.so.6 => /lib64/libtinfo.so.6 (0x00007f45c41b5000)
+    #     9          libreadline.so.6 => /lib64/libreadline.so.6 (0x00007f45c3f6a000)
+    #    10          libc.so.6 => /lib64/libc.so.6 (0x00007f45c3bc7000)
+    #    11          libtinfo.so.5 => /lib64/libtinfo.so.5 (0x00007f45c3992000)
+    #    12          /lib64/ld-linux-x86-64.so.2 (0x000055801c402000)
+    # So we have to distinguish lines of the following form (indentation is done with tab '\t'):
+    #  1. Line: "/path/to/binary:"                      -> current file argument for ldd
+    #  2. Line: "       lib (mem-addr)"                 -> virtual library
+    #  3. Line: "       lib => not found"               -> print error to stderr
+    #  4. Line: "       lib => /path/to/lib (mem-addr)" -> print $3 '/path/to/lib'
+    #  5. Line: "       /path/to/lib (mem-addr)"        -> print $1 '/path/to/lib'
+    ldd "$@" | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
+                     /^\t.+ => \// { print $3 }
+                     /^\t\// { print $1 } ' | sort -u
 }
 
 # Provide a shell, with custom exit-prompt and history
