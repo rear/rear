@@ -190,7 +190,7 @@ OS_VERSION="13.2"
 
 %files
 %defattr(-, root, root, 0755)
-%doc AUTHORS COPYING README.adoc doc/*.txt
+%doc MAINTAINERS COPYING README.adoc doc/*.txt
 %doc %{_mandir}/man8/rear.8*
 %config(noreplace) %{_sysconfdir}/cron.d/rear
 %config(noreplace) %{_sysconfdir}/rear/
