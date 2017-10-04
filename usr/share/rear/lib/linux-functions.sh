@@ -123,28 +123,64 @@ function BinCopyTo () {
 function RequiredSharedOjects () {
     has_binary ldd || Error "Cannot run RequiredSharedOjects() because there is no ldd binary"
     Log "RequiredSharedOjects: Determining required shared objects"
-    # Default ldd output (when providing more than one argument) has 5 cases.
-    # Example (with an intentionally moved library to also get 'not found'):
+    # It uses 'ldd' to determine all required shared objects because 'ldd' outputs
+    # also transitively required shared objects i.e. libraries needed by libraries,
+    # e.g. for /usr/sbin/parted also the libraries needed by the libparted library:
+    #  # ldd /usr/sbin/parted
+    #          linux-vdso.so.1 (0x00007ffd68fe1000)
+    #          libparted.so.2 => /usr/lib64/libparted.so.2 (0x00007f0c72bee000)
+    #          libtinfo.so.6 => /lib64/libtinfo.so.6 (0x00007f0c729c4000)
+    #          libreadline.so.6 => /lib64/libreadline.so.6 (0x00007f0c72778000)
+    #          libc.so.6 => /lib64/libc.so.6 (0x00007f0c723d5000)
+    #          libuuid.so.1 => /usr/lib64/libuuid.so.1 (0x00007f0c721d0000)
+    #          libdevmapper.so.1.02 => /lib64/libdevmapper.so.1.02 (0x00007f0c71f85000)
+    #          libblkid.so.1 => /usr/lib64/libblkid.so.1 (0x00007f0c71d43000)
+    #          libtinfo.so.5 => /lib64/libtinfo.so.5 (0x00007f0c71b0f000)
+    #          /lib64/ld-linux-x86-64.so.2 (0x000055eff2882000)
+    #          libselinux.so.1 => /lib64/libselinux.so.1 (0x00007f0c718e8000)
+    #          libudev.so.1 => /usr/lib64/libudev.so.1 (0x00007f0c716c8000)
+    #          libpthread.so.0 => /lib64/noelision/libpthread.so.0 (0x00007f0c714ab000)
+    #          libpcre.so.1 => /usr/lib64/libpcre.so.1 (0x00007f0c71244000)
+    #          libdl.so.2 => /lib64/libdl.so.2 (0x00007f0c71040000)
+    #          libcap.so.2 => /lib64/libcap.so.2 (0x00007f0c70e3b000)
+    #          librt.so.1 => /lib64/librt.so.1 (0x00007f0c70c32000)
+    #          libm.so.6 => /lib64/libm.so.6 (0x00007f0c70935000)
+    #          libresolv.so.2 => /lib64/libresolv.so.2 (0x00007f0c7071e000)
+    #  # file /usr/lib64/libparted.so.2
+    #  /usr/lib64/libparted.so.2: symbolic link to `libparted.so.2.0.0'
     #  # mv /usr/lib64/libparted.so.2.0.0 /usr/lib64/libparted.so.2.0.0.away
-    #  # ldd /usr/bin/cat /usr/sbin/parted | cat -n
-    #     1  /usr/bin/cat:
-    #     2          linux-vdso.so.1 (0x00007ffe13398000)
-    #     3          libc.so.6 => /lib64/libc.so.6 (0x00007fda437a4000)
-    #     4          /lib64/ld-linux-x86-64.so.2 (0x000055847e55e000)
-    #     5  /usr/sbin/parted:
-    #     6          linux-vdso.so.1 (0x00007ffde9f59000)
-    #     7          libparted.so.2 => not found
-    #     8          libtinfo.so.6 => /lib64/libtinfo.so.6 (0x00007f45c41b5000)
-    #     9          libreadline.so.6 => /lib64/libreadline.so.6 (0x00007f45c3f6a000)
-    #    10          libc.so.6 => /lib64/libc.so.6 (0x00007f45c3bc7000)
-    #    11          libtinfo.so.5 => /lib64/libtinfo.so.5 (0x00007f45c3992000)
-    #    12          /lib64/ld-linux-x86-64.so.2 (0x000055801c402000)
+    #  # ldd /usr/sbin/parted /usr/lib64/libparted.so.2.0.0.away
+    #  /usr/sbin/parted:
+    #          linux-vdso.so.1 (0x00007ffc38505000)
+    #          libparted.so.2 => not found
+    #          libtinfo.so.6 => /lib64/libtinfo.so.6 (0x00007fe0f4b5e000)
+    #          libreadline.so.6 => /lib64/libreadline.so.6 (0x00007fe0f4913000)
+    #          libc.so.6 => /lib64/libc.so.6 (0x00007fe0f4570000)
+    #          libtinfo.so.5 => /lib64/libtinfo.so.5 (0x00007fe0f433b000)
+    #          /lib64/ld-linux-x86-64.so.2 (0x000055e2549e2000)
+    #  /usr/lib64/libparted.so.2.0.0.away:
+    #          linux-vdso.so.1 (0x00007fffdbb8f000)
+    #          libuuid.so.1 => /usr/lib64/libuuid.so.1 (0x00007f3c9a87d000)
+    #          libdevmapper.so.1.02 => /lib64/libdevmapper.so.1.02 (0x00007f3c9a633000)
+    #          libblkid.so.1 => /usr/lib64/libblkid.so.1 (0x00007f3c9a3f0000)
+    #          libc.so.6 => /lib64/libc.so.6 (0x00007f3c9a04d000)
+    #          /lib64/ld-linux-x86-64.so.2 (0x0000563ffc5f1000)
+    #          libselinux.so.1 => /lib64/libselinux.so.1 (0x00007f3c99e27000)
+    #          libudev.so.1 => /usr/lib64/libudev.so.1 (0x00007f3c99c06000)
+    #          libpthread.so.0 => /lib64/noelision/libpthread.so.0 (0x00007f3c999e9000)
+    #          libpcre.so.1 => /usr/lib64/libpcre.so.1 (0x00007f3c99783000)
+    #          libdl.so.2 => /lib64/libdl.so.2 (0x00007f3c9957e000)
+    #          libcap.so.2 => /lib64/libcap.so.2 (0x00007f3c99379000)
+    #          librt.so.1 => /lib64/librt.so.1 (0x00007f3c99171000)
+    #          libm.so.6 => /lib64/libm.so.6 (0x00007f3c98e73000)
+    #          libresolv.so.2 => /lib64/libresolv.so.2 (0x00007f3c98c5c000)
+    # The 'ldd' output (when providing more than one argument) has 5 cases.
     # So we have to distinguish lines of the following form (indentation is done with tab '\t'):
-    #  1. Line: "/path/to/binary:"                      -> current file argument for ldd
-    #  2. Line: "       lib (mem-addr)"                 -> virtual library
-    #  3. Line: "       lib => not found"               -> print error to stderr
-    #  4. Line: "       lib => /path/to/lib (mem-addr)" -> print $3 '/path/to/lib'
-    #  5. Line: "       /path/to/lib (mem-addr)"        -> print $1 '/path/to/lib'
+    #  1. Line: "/path/to/binary:"                       -> current file argument for ldd
+    #  2. Line: "        lib (mem-addr)"                 -> virtual library
+    #  3. Line: "        lib => not found"               -> print error to stderr
+    #  4. Line: "        lib => /path/to/lib (mem-addr)" -> print $3 '/path/to/lib'
+    #  5. Line: "        /path/to/lib (mem-addr)"        -> print $1 '/path/to/lib'
     ldd "$@" | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
                      /^\t.+ => \// { print $3 }
                      /^\t\// { print $1 } ' | sort -u

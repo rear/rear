@@ -51,12 +51,23 @@ local lib=""
 local link_target=""
 for lib in "${all_libs[@]}" ; do
     if test -L $lib ; then
-        link_target=$( readlink -f $lib )
-        copy_lib $link_target
-        ensure_dir $lib
-        ln $v -sf $link_target $ROOTFS_DIR/$lib 1>&2
+        # None of the link target components may already exist when 'readlink' is called
+        # because they could be first created by the subsequent 'copy_lib $link_target'
+        # so that 'readlink -m' must be used:
+        link_target=$( readlink -m $lib )
+        if test "$link_target" ; then
+            copy_lib $link_target || LogPrintError "Failed to copy symlink target '$link_target'"
+            # If in the original system there was a chain of symbolic links like
+            #   /some/path/to/libfoo.so.1 -> /another/path/to/libfoo.so.1.2 -> /final/path/to/libfoo.so.1.2.3
+            # it gets simplified in the recovery system to
+            #   /some/path/to/libfoo.so.1 -> /final/path/to/libfoo.so.1.2.3
+            ensure_dir $lib || LogPrintError "Failed to create directories of symlink '$lib'"
+            ln $v -sf $link_target $ROOTFS_DIR/$lib 1>&2 || LogPrintError "Failed to link '$link_target' as symlink '$lib'"
+        else
+            LogPrintError "Cannot copy symlink '$lib' because it has no link target"
+        fi
     else
-        copy_lib $lib
+        copy_lib $lib || LogPrintError "Failed to copy '$lib'"
     fi
 done
 
@@ -72,5 +83,5 @@ done
 # even an inconsistent libraries configuration works sufficiently, for example see
 # https://github.com/rear/rear/issues/772
 # TODO: Get the libraries configuration in the recovery system consistent in any case.
-ldconfig $v -r "$ROOTFS_DIR" 1>&2 || LogPrintError "Configuring rescue/recovery system libraries with ldconfig failed which may casuse arbitrary failures"
+ldconfig $v -r "$ROOTFS_DIR" 1>&2 || LogPrintError "ldconfig failed to configure rescue/recovery system libraries which may casuse arbitrary failures"
 
