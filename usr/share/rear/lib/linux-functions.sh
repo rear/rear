@@ -114,57 +114,76 @@ function BinCopyTo () {
     done
 }
 
-# Resolve dynamic library dependencies. Returns a list of symbolic links
-# to shared objects and shared object files for the binaries in $@.
-# This is the function copied from mkinitrd off SUSE 9.3
-function SharedObjectFiles () {
-    has_binary ldd || Error "SharedObjectFiles failed because there is no ldd binary"
-
-    # Default ldd output (when providing more than one argument) has 5 cases:
-    #  1. Line: "file:"                            -> file argument
-    #  2. Line: "	lib =>  (mem-addr)"            -> virtual library
-    #  3. Line: "	lib => not found"              -> print error to stderr
-    #  4. Line: "	lib => /path/lib (mem-addr)"   -> print $3
-    #  5. Line: "	/path/lib (mem-addr)"          -> print $1
-    local -a initrd_libs=( $( ldd "$@" | awk '
-            /^\t.+ => not found/ { print "WARNING: Dynamic library " $1 " not found" > "/dev/stderr" }
-            /^\t.+ => \// { print $3 }
-            /^\t\// { print $1 }
-        ' | sort -u ) )
-
-    ### FIXME: Is this still relevant today ? If so, make it more specific !
-
-    # Evil hack: On some systems we have generic as well as optimized
-    # libraries, but the optimized libraries may not work with all
-    # kernel versions (e.g., the NPTL glibc libraries don't work with
-    # a 2.4 kernel). Use the generic versions of the libraries in the
-    # initrd (and guess the name).
-#	local lib= n= optimized=
-#	for ((n=0; $n<${#initrd_libs[@]}; n++)); do
-#		lib=${initrd_libs[$n]}
-#		optimized="$(echo "$lib" | sed -e 's:.*/\([^/]\+/\)[^/]\+$:\1:')"
-#		lib=${lib/$optimized/}
-#		if [ "${optimized:0:3}" != "lib" -a -f "$lib" ]; then
-#			#echo "[Using $lib instead of ${initrd_libs[$n]}]" >&2
-#			initrd_libs[$n]="${lib/$optimized/}"
-#		fi
-#		echo Deoptimizing "$lib" >&2
-#	done
-
-    local lib="" link=""
-    for lib in "${initrd_libs[@]}" ; do
-        lib="${lib:1}"
-        while [ -L "/$lib" ] ; do
-            echo $lib
-            link="$( readlink "/$lib" )"
-            case "$link" in
-                (/*) lib="${link:1}" ;;
-                (*)  lib="${lib%/*}/$link" ;;
-            esac
-        done
-        echo $lib
-        echo $lib >&2
-    done | sort -u
+# Determine all required shared objects (shared/dynamic libraries)
+# for programs and/or shared objects (binaries) specified in $@.
+# RequiredSharedOjects outputs the required shared objects on STDOUT.
+# The output are absolute paths to the required shared objects.
+# The output can also be symbolic links (also as absolute paths).
+# In case of symbolic links only the link but not the link target is output.
+function RequiredSharedOjects () {
+    has_binary ldd || Error "Cannot run RequiredSharedOjects() because there is no ldd binary"
+    Log "RequiredSharedOjects: Determining required shared objects"
+    # It uses 'ldd' to determine all required shared objects because 'ldd' outputs
+    # also transitively required shared objects i.e. libraries needed by libraries,
+    # e.g. for /usr/sbin/parted also the libraries needed by the libparted library:
+    #  # ldd /usr/sbin/parted
+    #          linux-vdso.so.1 (0x00007ffd68fe1000)
+    #          libparted.so.2 => /usr/lib64/libparted.so.2 (0x00007f0c72bee000)
+    #          libtinfo.so.6 => /lib64/libtinfo.so.6 (0x00007f0c729c4000)
+    #          libreadline.so.6 => /lib64/libreadline.so.6 (0x00007f0c72778000)
+    #          libc.so.6 => /lib64/libc.so.6 (0x00007f0c723d5000)
+    #          libuuid.so.1 => /usr/lib64/libuuid.so.1 (0x00007f0c721d0000)
+    #          libdevmapper.so.1.02 => /lib64/libdevmapper.so.1.02 (0x00007f0c71f85000)
+    #          libblkid.so.1 => /usr/lib64/libblkid.so.1 (0x00007f0c71d43000)
+    #          libtinfo.so.5 => /lib64/libtinfo.so.5 (0x00007f0c71b0f000)
+    #          /lib64/ld-linux-x86-64.so.2 (0x000055eff2882000)
+    #          libselinux.so.1 => /lib64/libselinux.so.1 (0x00007f0c718e8000)
+    #          libudev.so.1 => /usr/lib64/libudev.so.1 (0x00007f0c716c8000)
+    #          libpthread.so.0 => /lib64/noelision/libpthread.so.0 (0x00007f0c714ab000)
+    #          libpcre.so.1 => /usr/lib64/libpcre.so.1 (0x00007f0c71244000)
+    #          libdl.so.2 => /lib64/libdl.so.2 (0x00007f0c71040000)
+    #          libcap.so.2 => /lib64/libcap.so.2 (0x00007f0c70e3b000)
+    #          librt.so.1 => /lib64/librt.so.1 (0x00007f0c70c32000)
+    #          libm.so.6 => /lib64/libm.so.6 (0x00007f0c70935000)
+    #          libresolv.so.2 => /lib64/libresolv.so.2 (0x00007f0c7071e000)
+    #  # file /usr/lib64/libparted.so.2
+    #  /usr/lib64/libparted.so.2: symbolic link to `libparted.so.2.0.0'
+    #  # mv /usr/lib64/libparted.so.2.0.0 /usr/lib64/libparted.so.2.0.0.away
+    #  # ldd /usr/sbin/parted /usr/lib64/libparted.so.2.0.0.away
+    #  /usr/sbin/parted:
+    #          linux-vdso.so.1 (0x00007ffc38505000)
+    #          libparted.so.2 => not found
+    #          libtinfo.so.6 => /lib64/libtinfo.so.6 (0x00007fe0f4b5e000)
+    #          libreadline.so.6 => /lib64/libreadline.so.6 (0x00007fe0f4913000)
+    #          libc.so.6 => /lib64/libc.so.6 (0x00007fe0f4570000)
+    #          libtinfo.so.5 => /lib64/libtinfo.so.5 (0x00007fe0f433b000)
+    #          /lib64/ld-linux-x86-64.so.2 (0x000055e2549e2000)
+    #  /usr/lib64/libparted.so.2.0.0.away:
+    #          linux-vdso.so.1 (0x00007fffdbb8f000)
+    #          libuuid.so.1 => /usr/lib64/libuuid.so.1 (0x00007f3c9a87d000)
+    #          libdevmapper.so.1.02 => /lib64/libdevmapper.so.1.02 (0x00007f3c9a633000)
+    #          libblkid.so.1 => /usr/lib64/libblkid.so.1 (0x00007f3c9a3f0000)
+    #          libc.so.6 => /lib64/libc.so.6 (0x00007f3c9a04d000)
+    #          /lib64/ld-linux-x86-64.so.2 (0x0000563ffc5f1000)
+    #          libselinux.so.1 => /lib64/libselinux.so.1 (0x00007f3c99e27000)
+    #          libudev.so.1 => /usr/lib64/libudev.so.1 (0x00007f3c99c06000)
+    #          libpthread.so.0 => /lib64/noelision/libpthread.so.0 (0x00007f3c999e9000)
+    #          libpcre.so.1 => /usr/lib64/libpcre.so.1 (0x00007f3c99783000)
+    #          libdl.so.2 => /lib64/libdl.so.2 (0x00007f3c9957e000)
+    #          libcap.so.2 => /lib64/libcap.so.2 (0x00007f3c99379000)
+    #          librt.so.1 => /lib64/librt.so.1 (0x00007f3c99171000)
+    #          libm.so.6 => /lib64/libm.so.6 (0x00007f3c98e73000)
+    #          libresolv.so.2 => /lib64/libresolv.so.2 (0x00007f3c98c5c000)
+    # The 'ldd' output (when providing more than one argument) has 5 cases.
+    # So we have to distinguish lines of the following form (indentation is done with tab '\t'):
+    #  1. Line: "/path/to/binary:"                       -> current file argument for ldd
+    #  2. Line: "        lib (mem-addr)"                 -> virtual library
+    #  3. Line: "        lib => not found"               -> print error to stderr
+    #  4. Line: "        lib => /path/to/lib (mem-addr)" -> print $3 '/path/to/lib'
+    #  5. Line: "        /path/to/lib (mem-addr)"        -> print $1 '/path/to/lib'
+    ldd "$@" | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
+                     /^\t.+ => \// { print $3 }
+                     /^\t\// { print $1 } ' | sort -u
 }
 
 # Provide a shell, with custom exit-prompt and history
