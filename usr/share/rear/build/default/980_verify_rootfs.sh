@@ -60,7 +60,7 @@ if contains_visible_char "$broken_binaries" ; then
     done
     # Usually it should be no BugError when there are libraries missing for particular binaries because probably
     # the reason is that the user added only the plain binaries with COPY_AS_IS (instead of using REQUIRED_PROGS):
-    is_true "$fatal_missing_library" && Error "ReaR recovery system in '$ROOTFS_DIR' not usable, check $RUNTIME_LOGFILE for details"
+    is_true "$fatal_missing_library" && Error "ReaR recovery system in '$ROOTFS_DIR' not usable"
     LogPrint "ReaR recovery system in '$ROOTFS_DIR' may need some additional libraries, check $RUNTIME_LOGFILE for details"
 fi
 

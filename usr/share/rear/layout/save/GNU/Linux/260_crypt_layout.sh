@@ -1,4 +1,4 @@
-# Describe luks devices
+# Describe LUKS devices
 # We use /etc/crypttab and cryptsetup for information
 
 if ! has_binary cryptsetup; then
@@ -9,37 +9,38 @@ Log "Saving Encrypted volumes."
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" cryptsetup dmsetup )
 COPY_AS_IS=( "${COPY_AS_IS[@]}" /usr/share/cracklib/\* /etc/security/pwquality.conf )
 
-while read dm_name junk ; do
-    # find the device we're mapping
-    if ! [ -e /dev/mapper/$dm_name ] ; then
-        Log "Device Mapper name $dm_name not found in /dev/mapper."
+while read target_name junk ; do
+    # find the target device we're mapping
+    if ! [ -e /dev/mapper/$target_name ] ; then
+        Log "Device Mapper name $target_name not found in /dev/mapper."
         continue
     fi
 
-    dev_name=$(get_sysfs_name /dev/mapper/$dm_name)
-    if [ -z "$dev_name" ] ; then
-        Log "Could not find device $dev_number in sysfs."
+    sysfs_device=$(get_sysfs_name /dev/mapper/$target_name)
+    if [ -z "$sysfs_device" ] ; then
+        Log "Could not find device $target_name in sysfs."
         continue
     fi
 
-    device=""
-    for slave in /sys/block/$dev_name/slaves/* ; do
-        if ! [ -z "$device" ] ; then
-            BugError "Multiple Device Mapper slaves for crypt $dm_name detected."
+    source_device=""
+    for slave in /sys/block/$sysfs_device/slaves/* ; do
+        if ! [ -z "$source_device" ] ; then
+            BugError "Multiple Device Mapper slaves for crypt $target_name detected."
         fi
-        device="$(get_device_name ${slave##*/})"
+        source_device="$(get_device_name ${slave##*/})"
     done
 
-    if ! cryptsetup isLuks $device >/dev/null 2>&1; then
+    if ! cryptsetup isLuks $source_device >/dev/null 2>&1; then
         continue
     fi
 
     # gather crypt information
-    cipher=$(cryptsetup luksDump $device | grep "Cipher name" | sed -r 's/^.+:\s*(.+)$/\1/')
-    ##mode=$(cryptsetup luksDump $device | grep "Cipher mode" | sed -r 's/^.+:\s*(.+)$/\1/')
-    mode=$(cryptsetup luksDump $device | grep "Cipher mode" | cut -d: -f2- | awk '{printf("%s",$1)};')
-    hash=$(cryptsetup luksDump $device | grep "Hash spec" | sed -r 's/^.+:\s*(.+)$/\1/')
-    uuid=$(cryptsetup luksDump $device | grep "UUID" | sed -r 's/^.+:\s*(.+)$/\1/')
+    cipher=$(cryptsetup luksDump $source_device | grep "Cipher name" | sed -r 's/^.+:\s*(.+)$/\1/')
+    mode=$(cryptsetup luksDump $source_device | grep "Cipher mode" | cut -d: -f2- | awk '{printf("%s",$1)};')
+    key_size=$(cryptsetup luksDump $source_device | grep "MK bits" | sed -r 's/^.+:\s*(.+)$/\1/')
+    hash=$(cryptsetup luksDump $source_device | grep "Hash spec" | sed -r 's/^.+:\s*(.+)$/\1/')
+    uuid=$(cryptsetup luksDump $source_device | grep "UUID" | sed -r 's/^.+:\s*(.+)$/\1/')
+    keyfile_option=$([ -f /etc/crypttab ] && awk '$1 == "'"$target_name"'" && $3 != "none" && $3 != "-" { print "keyfile=" $3; }' /etc/crypttab)
 
-    echo "crypt /dev/mapper/$dm_name $device cipher=$cipher mode=$mode hash=$hash uuid=${uuid}" >> $DISKLAYOUT_FILE
+    echo "crypt /dev/mapper/$target_name $source_device cipher=$cipher-$mode key_size=$key_size hash=$hash uuid=$uuid $keyfile_option" >> $DISKLAYOUT_FILE
 done < <( dmsetup ls --target crypt )

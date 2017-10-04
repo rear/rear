@@ -64,7 +64,7 @@ fs /dev/mapper/system-vmxfs /vmware xfs uuid=7457d2ab-8252-4f41-bab6-60731625997
 fs /dev/mapper/system-kvm /kvm ext4 uuid=173ab1f7-8450-4176-8cf7-c09b47f5e3cc label= blocksize=4096 reserved_blocks=256000 max_mounts=21 check_interval=180d options=rw,noatime,commit=0
 fs /dev/sda1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksize=1024 reserved_blocks=10238 max_mounts=35 check_interval=180d options=rw,commit=0
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
-crypt /dev/mapper/disk /dev/sda2 cipher=aes mode=xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
+crypt /dev/mapper/disk /dev/sda2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 ----------------------------------
 This document will continue to use this example to explore the various options
 available in Relax-and-Recover. The exact syntax of the layout file is
@@ -118,7 +118,7 @@ fs /dev/mapper/system-kvm /kvm ext4 uuid=173ab1f7-8450-4176-8cf7-c09b47f5e3cc la
 fs /dev/sda1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksize=1024 reserved_blocks=10238 max_mounts=35 check_interval=180d options=rw,commit=0
 fs /dev/mapper/backup-backup /media/backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
-crypt /dev/mapper/disk /dev/sda2 cipher=aes mode=xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
+crypt /dev/mapper/disk /dev/sda2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 ----------------------------------
 
 This behavior is controlled by the +AUTOEXCLUDE_DISKS=y+ parameter in
@@ -185,7 +185,7 @@ fs /dev/mapper/system-kvm /kvm ext4 uuid=173ab1f7-8450-4176-8cf7-c09b47f5e3cc la
 fs /dev/sda1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksize=1024 reserved_blocks=10238 max_mounts=35 check_interval=180d options=rw,commit=0
 # fs /dev/mapper/backup-backup /media/backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
-crypt /dev/mapper/disk /dev/sda2 cipher=aes mode=xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
+crypt /dev/mapper/disk /dev/sda2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 ----------------------------------
 
 Another approach would be to exclude the backup volume group. This is achieved by adding this line to the local configuration:
@@ -325,7 +325,7 @@ fs /dev/mapper/system-kvm /kvm ext4 uuid=173ab1f7-8450-4176-8cf7-c09b47f5e3cc la
 fs /dev/sdb1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksize=1024 reserved_blocks=10238 max_mounts=35 check_interval=180d options=rw,commit=0
 # fs /dev/mapper/backup-backup /media/backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
-crypt /dev/mapper/disk /dev/sdb2 cipher=aes mode=xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
+crypt /dev/mapper/disk /dev/sdb2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 
 1) View disk layout (disklayout.conf)
 2) Edit disk layout (disklayout.conf)
@@ -374,7 +374,7 @@ fs /dev/mapper/system-var /var ext4 uuid=a12bb95f-99f2-42c6-854f-1cb3f144d662 la
 fs /dev/sdb1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksize=1024 reserved_blocks=10238 max_mounts=35 check_interval=180d options=rw,commit=0
 # fs /dev/mapper/backup-backup /media/backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
-crypt /dev/mapper/disk /dev/sdb2 cipher=aes mode=xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
+crypt /dev/mapper/disk /dev/sdb2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 ----------------------------------
 
 Let's continue recovery.
@@ -615,7 +615,7 @@ lvmvol /dev/<volume group name> <logical volume name> <number of extents> [<size
 
 === LUKS Devices ===
 ----------------------------------
-crypt /dev/mapper/<name> <device> cipher=<cipher> mode=<cipher mode> hash=<hash function> [uuid=<uuid>]
+crypt /dev/mapper/<name> <device> [cipher=<cipher>] [key_size=<key size>] [hash=<hash function>] [uuid=<uuid>] [keyfile=<keyfile>] [password=<password>]
 ----------------------------------
 
 === DRBD ===
