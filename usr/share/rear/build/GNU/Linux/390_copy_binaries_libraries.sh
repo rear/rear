@@ -5,6 +5,43 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
+# Local functions that are 'unset' at the end of this script:
+
+# Copy binaries given in $2 $3 ... to directory $1.
+# A leading path of the binaries is not copied.
+function copy_binaries () {
+    local destdir="$1"
+    test -d "$destdir" || BugError "copy_binaries destination '$destdir' is not a directory"
+    local binary=""
+    while (( $# > 1 )) ; do
+        shift
+        binary="$1"
+        # Continue with the next one if a binary is empty or contains only blanks:
+        contains_visible_char "$binary" || continue
+        if ! cp $verbose --archive --dereference --force "$binary" "$destdir" 1>&2 ; then
+            Error "Failed to copy '$binary' to '$destdir'"
+        fi
+    done
+}
+
+# Create missing directory components of a filename with path in $1:
+function create_missing_dirs () {
+    # Use dirname because in contrast to bash parameter expansion via ${1%/*}
+    # dirname works even for multiple slash characters as in /path/to///file
+    # and also for trailing slash characters as in /path/to///file///
+    # (where 'dirname /path/to///file///' results '/path/to'):
+    local dir=$( dirname $1 )
+    test -d $ROOTFS_DIR/$dir || mkdir $v -p $ROOTFS_DIR/$dir 1>&2
+}
+
+# Copy library given in $1 with creating directory components as needed:
+function copy_lib () {
+    local lib=$1
+    create_missing_dirs $lib
+    test -e $ROOTFS_DIR/$lib || cp $v -a -f $lib $ROOTFS_DIR/$lib 1>&2
+}
+
+# Start of the actual work:
 LogPrint "Copying binaries and libraries"
 
 # Calculate binaries from needed progs:
@@ -21,7 +58,8 @@ local all_binaries=( $( for bin in "${PROGS[@]}" "${REQUIRED_PROGS[@]}" ; do
 
 # Copy binaries:
 Log "Binaries being copied: ${all_binaries[@]}"
-BinCopyTo "$ROOTFS_DIR/bin" "${all_binaries[@]}" 1>&2 || Error "Failed to copy binaries"
+# No need to check for errors here because copy_binaries already errors out:
+copy_binaries "$ROOTFS_DIR/bin" "${all_binaries[@]}"
 
 # Copy libraries:
 # It is crucial to also have all LIBS itself in all_libs because RequiredSharedOjects()
@@ -35,36 +73,28 @@ BinCopyTo "$ROOTFS_DIR/bin" "${all_binaries[@]}" 1>&2 || Error "Failed to copy b
 # Therefore for symbolic links also the link target gets copied below.
 local all_libs=( "${LIBS[@]}" $( RequiredSharedOjects "${all_binaries[@]}" "${LIBS[@]}" ) )
 
-function ensure_dir() {
-    local dir=${1%/*}
-    test -d $ROOTFS_DIR/$dir || mkdir $v -p $ROOTFS_DIR/$dir 1>&2
-}
-
-function copy_lib() {
-    local lib=$1
-    ensure_dir $lib
-    test -e $ROOTFS_DIR/$lib || cp $v -a -f $lib $ROOTFS_DIR/$lib 1>&2
-}
-
 Log "Libraries being copied: ${all_libs[@]}"
 local lib=""
 local link_target=""
 for lib in "${all_libs[@]}" ; do
     if test -L $lib ; then
-        # None of the link target components may already exist when 'readlink' is called
-        # because they could be first created by the subsequent 'copy_lib $link_target'
-        # so that 'readlink -m' must be used:
-        link_target=$( readlink -m $lib )
+        # Because $lib is a symbolic link on the original system
+        # all of its link target components must exist so that 'readlink -e' is used.
+        # Otherwise report that there is something wrong on the original system and
+        # assume when things work sufficiently on the original system nevertheless
+        # this is no sufficient reason to abort here (i.e. proceed "bona fide"):
+        link_target=$( readlink -e $lib )
         if test "$link_target" ; then
             copy_lib $link_target || LogPrintError "Failed to copy symlink target '$link_target'"
             # If in the original system there was a chain of symbolic links like
             #   /some/path/to/libfoo.so.1 -> /another/path/to/libfoo.so.1.2 -> /final/path/to/libfoo.so.1.2.3
-            # it gets simplified in the recovery system to
+            # where $lib='/some/path/to/libfoo.so.1' and $link_target='/final/path/to/libfoo.so.1.2.3'
+            # the chain of symbolic links gets simplified in the recovery system to $lib -> $link_target like
             #   /some/path/to/libfoo.so.1 -> /final/path/to/libfoo.so.1.2.3
-            ensure_dir $lib || LogPrintError "Failed to create directories of symlink '$lib'"
+            create_missing_dirs $lib || LogPrintError "Failed to create directories of symlink '$lib'"
             ln $v -sf $link_target $ROOTFS_DIR/$lib 1>&2 || LogPrintError "Failed to link '$link_target' as symlink '$lib'"
         else
-            LogPrintError "Cannot copy symlink '$lib' because it has no link target"
+            LogPrintError "Cannot copy symlink '$lib' because 'readlink' cannot determine its link target"
         fi
     else
         copy_lib $lib || LogPrintError "Failed to copy '$lib'"
@@ -84,4 +114,10 @@ done
 # https://github.com/rear/rear/issues/772
 # TODO: Get the libraries configuration in the recovery system consistent in any case.
 ldconfig $v -r "$ROOTFS_DIR" 1>&2 || LogPrintError "ldconfig failed to configure rescue/recovery system libraries which may casuse arbitrary failures"
+
+# Local functions must be 'unset' because bash does not support 'local function ...'
+# cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
+unset -f copy_binaries
+unset -f create_missing_dirs
+unset -f copy_lib
 

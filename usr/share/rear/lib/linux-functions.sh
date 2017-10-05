@@ -98,22 +98,6 @@ function FindStorageDrivers () {
     # always return 0 as the grep return code is meaningless
 }
 
-# Copy binaries given in $2 $3 ... to directory $1
-function BinCopyTo () {
-    local destdir="$1" binary=""
-    test -d "$destdir" || Error "BinCopyTo destination '$destdir' is not a directory"
-    while (( $# > 1 )) ; do
-        shift
-        binary="$1"
-        # continue with the next one if a binary is empty or contains only blanks
-        # there must be no double quotes for the test argument because test " " results true
-        test $binary || continue
-        if ! cp $verbose --archive --dereference --force "$binary" "$destdir" >&2 ; then
-            Error "BinCopyTo failed to copy '$binary' to '$destdir'"
-        fi
-    done
-}
-
 # Determine all required shared objects (shared/dynamic libraries)
 # for programs and/or shared objects (binaries) specified in $@.
 # RequiredSharedOjects outputs the required shared objects on STDOUT.
