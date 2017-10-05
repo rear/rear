@@ -41,26 +41,24 @@ for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ) ; do
     chroot $ROOTFS_DIR /bin/ldd $binary | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
 done
 if contains_visible_char "$broken_binaries" ; then
+    LogPrintError "There are binaries or libraries in the ReaR recovery system that need additional libraries"
     KEEP_BUILD_DIR=1
-    LogPrint "Checking for binaries or libraries in the ReaR recovery system that require additional libraries"
     local fatal_missing_library=""
     local ldd_output=""
     for binary in $broken_binaries ; do
-        if grep -q '/[s]*bin/' <<<"$binary" ; then
-            # Only for programs (i.e. files in a .../bin/... or .../sbin/... directory) treat a missing library as fatal:
-            fatal_missing_library="yes"
-            LogPrintError "$binary requires additional libraries"
-            ldd_output="$( chroot $ROOTFS_DIR /bin/ldd $binary )"
-            Log "$ldd_output"
-            PrintError "$( grep 'not found' <<<"$ldd_output" )"
-        else
-            Log "$binary requires additional libraries"
-            chroot $ROOTFS_DIR /bin/ldd $binary 1>&2
-        fi
+        # Only for programs (i.e. files in a .../bin/... or .../sbin/... directory) treat a missing library as fatal:
+        grep -q '/[s]*bin/' <<<"$binary" && fatal_missing_library="yes"
+        LogPrintError "$binary requires additional libraries"
+        # Run the same ldd call as above but now keep its whole output:
+        ldd_output="$( chroot $ROOTFS_DIR /bin/ldd $binary )"
+        # Have the whole ldd output only in the log:
+        Log "$ldd_output"
+        # Show only the missing libraries to the user to not flood his screen with tons of other ldd output lines:
+        PrintError "$( grep 'not found' <<<"$ldd_output" )"
     done
     # Usually it should be no BugError when there are libraries missing for particular binaries because probably
     # the reason is that the user added only the plain binaries with COPY_AS_IS (instead of using REQUIRED_PROGS):
     is_true "$fatal_missing_library" && Error "ReaR recovery system in '$ROOTFS_DIR' not usable"
-    LogPrint "ReaR recovery system in '$ROOTFS_DIR' may need some additional libraries, check $RUNTIME_LOGFILE for details"
+    LogPrintError "ReaR recovery system in '$ROOTFS_DIR' needs additional libraries, check $RUNTIME_LOGFILE for details"
 fi
 
