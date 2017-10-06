@@ -1,21 +1,22 @@
-# set of functions that will be used by our own implementation
-# of dhclient-script, but these can/could be used by other
-# scripts as well
 #
-# Most of the functions are coming from the fedora-14 dhclient-script
+# Set of functions that will be used by our own implementation of dhclient-script.
+# Most of the functions are coming from an old fedora-14 dhclient-script.
+# See also usr/share/rear/lib/network-functions.sh and
+# cf. https://github.com/rear/rear/issues/1517
+#
 
-readonly -a MASKS=(
-        0
-        2147483648 3221225472 3758096384 4026531840
-        4160749568 4227858432 4261412864 4278190080
-        4286578688 4290772992 4292870144 4293918720
-        4294443008 4294705152 4294836224 4294901760
-        4294934528 4294950912 4294959104 4294963200
-        4294965248 4294966272 4294966784 4294967040
-        4294967168 4294967232 4294967264 4294967280
-        4294967288 4294967292 4294967294 4294967295
-        -1
-)
+# See the comments in usr/share/rear/lib/network-functions.sh
+# what that values mean and how to generate them:
+NETMASKS=( 0
+           2147483648 3221225472 3758096384 4026531840
+           4160749568 4227858432 4261412864 4278190080
+           4286578688 4290772992 4292870144 4293918720
+           4294443008 4294705152 4294836224 4294901760
+           4294934528 4294950912 4294959104 4294963200
+           4294965248 4294966272 4294966784 4294967040
+           4294967168 4294967232 4294967264 4294967280
+           4294967288 4294967292 4294967294 4294967295
+           -1 )
 
 exit_with_hooks() {
     exit_status="${1}"
@@ -205,8 +206,8 @@ my_ipcalc() {
 
     if [[ "$2" ]]; then
         declare -i DEC MASK="$(ip2num "$2")"
-        for BITS in ${!MASKS[@]}; do
-                DEC=${MASKS[$BITS]}
+        for BITS in ${!NETMASKS[@]}; do
+                DEC=${NETMASKS[$BITS]}
                 (( MASK == DEC )) && break
         done
         (( DEC < 0 )) && Error "Main: netmask [$2] seems to be invalid."
@@ -260,7 +261,7 @@ get_network_address() {
 
 prefix2netmask() {
     pf="${1}"
-    echo $(num2ip "${MASKS[$pf]}")
+    echo $(num2ip "${NETMASKS[$pf]}")
 }
 
 get_prefix() {
