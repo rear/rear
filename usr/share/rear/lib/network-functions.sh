@@ -728,8 +728,12 @@ function is_ip() {
     local test_ip=$1
     [ -z "$test_ip" ] && BugError "function is_ip() called without argument."
 
-    # test if $test_ip is a valide IPV4 address: "[0 to 255].[0 to 255].[0 to 255].[0 to 255]"
-    if [[ "$test_ip" =~ ^(([0-9]{1,2}|1[0-9]{2}|2([0-4][0-9]|5[0-5]))\.){3}([0-9]{1,2}|1[0-9]{2}|2([0-4][0-9]|5[0-5]))$ ]] ; then
+    # ip_pattern variable is used to store a regex which validate an IPV4 address: "[0 to 255].[0 to 255].[0 to 255].[0 to 255]".
+    local ip_pattern="^(([0-9]{1,2}|1[0-9]{2}|2([0-4][0-9]|5[0-5]))\.){3}([0-9]{1,2}|1[0-9]{2}|2([0-4][0-9]|5[0-5]))$"
+
+    # $ip_pattern MUST NOT be quoted. Using a variable to store regex is used here to assure
+    # compatiblity with pre-3.2 bash version (SLES10).
+    if [[ "$test_ip" =~ $ip_pattern ]] ; then
         return 0
     else
         return 1
