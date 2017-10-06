@@ -9,12 +9,12 @@
 # to save permissions, owner, group or symbolic link name and target of basic directories:
 local directories_permissions_owner_group_file="$VAR_DIR/recovery/directories_permissions_owner_group"
 
-# Append other directories or symlinks in the DIRECTORIES_TO_CREATE array
+# Append other directories or symlinks in the DIRECTORY_ENTRIES_TO_RECOVER array
 # to the directories_permissions_owner_group file.
 # For the 'test' one must have all array members as a single word i.e. "${name[*]}"
 # because it should succeed when there is any non-empty array member, not necessarily the first one:
-if test "${DIRECTORIES_TO_CREATE[*]}" ; then
-    for directory_permissions_owner_group in "${DIRECTORIES_TO_CREATE[@]}" ; do
+if test "${DIRECTORY_ENTRIES_TO_RECOVER[*]}" ; then
+    for directory_permissions_owner_group in "${DIRECTORY_ENTRIES_TO_RECOVER[@]}" ; do
         test "$directory_permissions_owner_group" || continue
         # Using no double quotes for the variable in the echo command
         # condenses multiple spaces into one and strips leading and trailing spaces:
