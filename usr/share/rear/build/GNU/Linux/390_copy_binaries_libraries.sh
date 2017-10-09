@@ -113,7 +113,7 @@ done
 # even an inconsistent libraries configuration works sufficiently, for example see
 # https://github.com/rear/rear/issues/772
 # TODO: Get the libraries configuration in the recovery system consistent in any case.
-ldconfig $v -r "$ROOTFS_DIR" 1>&2 || LogPrintError "ldconfig failed to configure rescue/recovery system libraries which may casuse arbitrary failures"
+ldconfig $v -r "$ROOTFS_DIR" 1>&2 || LogPrintError "ldconfig failed to configure rescue/recovery system libraries which may cause arbitrary failures"
 
 # Local functions must be 'unset' because bash does not support 'local function ...'
 # cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
