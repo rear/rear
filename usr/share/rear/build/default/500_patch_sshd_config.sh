@@ -84,3 +84,19 @@ for ssh_host_key_type in $ssh_host_key_types ; do
 done
 is_false "$ssh_host_key_exists" && LogPrintError "No SSH host key etc/ssh/ssh_host_TYPE_key of type $ssh_host_key_types in recovery system"
 
+# Create possibly missing directories needed by sshd in the recovery system
+# cf. https://github.com/rear/rear/issues/1529
+# To be on the safe side for other distributions we create the directories
+# when they are not there without additional distribution-specific tests.
+# At least on Red Hat /var/empty/sshd/etc with mode 0711 can be missing:
+if ! test -d "$ROOTFS_DIR/var/empty/sshd/etc" ; then
+    Log "Creating var/empty/sshd/etc with mode 0711 (needed by sshd at least on Red Hat)"
+    mkdir $v -p $ROOTFS_DIR/var/empty/sshd/etc
+    chmod $v 0711 $ROOTFS_DIR/var/empty/sshd/etc
+fi
+# At least on Ubuntu /var/run/sshd can be missing:
+if ! test -d "$ROOTFS_DIR/var/run/sshd" ; then
+    Log "Creating var/run/sshd (needed by sshd at least on Ubuntu)"
+    mkdir $v -p $ROOTFS_DIR/var/run/sshd
+fi
+
