@@ -32,7 +32,7 @@ if test "${sshd_config_files[*]}" ; then
         sed -i  -e 's/PasswordAuthentication.*/PasswordAuthentication no/ig' ${sshd_config_files[@]}
     fi
 else
-     LogPrintError "No sshd configuration files"
+    LogPrintError "No sshd configuration files"
 fi
 
 # Generate new SSH host key in the recovery system when no SSH host key file

@@ -59,7 +59,7 @@ if test "$passswd_ssh" ; then
     # sshd:x:71:65:SSH daemon:/var/lib/sshd:/bin/false
     IFS=: read user ex uid gid gecos homedir junk <<<"$passswd_ssh"
     CLONE_USERS=( "${CLONE_USERS[@]}" $user )
-    DIRECTORIES_TO_CREATE=( "${DIRECTORIES_TO_CREATE[@]}" "$homedir 0700 root root" )
+    DIRECTORY_ENTRIES_TO_RECOVER=( "${DIRECTORY_ENTRIES_TO_RECOVER[@]}" "$homedir 0700 root root" )
 fi
 
 echo "ssh:23:respawn:/bin/sshd -D" >>$ROOTFS_DIR/etc/inittab
