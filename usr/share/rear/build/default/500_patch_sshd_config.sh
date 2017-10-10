@@ -12,7 +12,7 @@
 
 # important for the [n] hack below because we want non-existant patterns to simply disappear
 shopt -s nullglob
-SSH_CONFIG_FILES=( $ROOTFS_DIR/etc/ssh/sshd_co[n]fig $ROOTFS_DIR/etc/sshd_co[n]fig $ROOTFS_DIR/etc/openssh/sshd_co[n]fig )
+SSH_CONFIG_FILES=( ${ROOTFS_DIR:?}/etc/ssh/sshd_co[n]fig ${ROOTFS_DIR:?}/etc/sshd_co[n]fig ${ROOTFS_DIR:?}/etc/openssh/sshd_co[n]fig )
 
 if test "$SSH_CONFIG_FILES" ; then
 sed -i  -e 's/ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/ig' \
@@ -20,8 +20,8 @@ sed -i  -e 's/ChallengeResponseAuthentication.*/ChallengeResponseAuthentication 
     -e 's/ListenAddress.*/ListenAddress 0.0.0.0/ig' \
     -e '1i\PrintMotd no' \
     ${SSH_CONFIG_FILES[@]}
-    
-    if [ -n "$SSH_ROOT_PASSWORD" ] ; then 
+
+    if [ -n "$SSH_ROOT_PASSWORD" ] ; then
         sed -i -e 's/PasswordAuthentication.*/PasswordAuthentication yes/ig' ${SSH_CONFIG_FILES[@]}
         sed -i -e 's/PermitRootLogin.*/PermitRootLogin yes/ig' ${SSH_CONFIG_FILES[@]}
     else
