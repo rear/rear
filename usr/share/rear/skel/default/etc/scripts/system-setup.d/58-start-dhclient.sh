@@ -19,7 +19,8 @@ echo "Attempting to start the DHCP client daemon"
 # To be sure that network is properly initialized (get_device_by_hwaddr sees network interfaces)
 sleep 5
 
-. /usr/share/rear/lib/network-functions.sh
+# Source the network related functions:
+source /etc/scripts/dhcp-setup-functions.sh
 
 # Need to find the devices and their HWADDR (avoid local and virtual devices)
 for dev in `get_device_by_hwaddr` ; do

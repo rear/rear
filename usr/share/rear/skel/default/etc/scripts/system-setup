@@ -85,6 +85,9 @@ for system_setup_script in /etc/scripts/system-setup.d/*.sh ; do
     fi
 done
 echo -e "\nRelax-and-Recover rescue system is ready\n"
+# Wait one second so that the user can see the 'Relax-and-Recover rescue system is ready' message
+# on his screen before the screen gets cleared and replaced by the login screen:
+sleep 1
 
 # In debug mode run the automated 'rear recover' also with debug options.
 # Because the kernel command line option 'debug' means 'set -x' for the system setup scripts

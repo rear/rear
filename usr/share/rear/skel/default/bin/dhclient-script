@@ -9,8 +9,8 @@ ETCDIR="/etc"
 LOGFACILITY="local7"
 LOGLEVEL="notice"
 
-# read the network related functions
-. /usr/share/rear/lib/network-functions.sh
+# Source the network related functions:
+source /etc/scripts/dhcp-setup-functions.sh
 
 ## MAIN
 #
