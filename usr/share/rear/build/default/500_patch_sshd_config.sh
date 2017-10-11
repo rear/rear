@@ -59,13 +59,21 @@ fi
 # the particular type of key also exists on the original system.
 # For example what there is on a default SLES system:
 # On a default SLES10 there is
-#   /etc/ssh/ssh_host_rsa_key
-#   /etc/ssh/ssh_host_dsa_key
+#  /etc/ssh/ssh_host_key
+#  /etc/ssh/ssh_host_key.pub
+#  /etc/ssh/ssh_host_dsa_key
+#  /etc/ssh/ssh_host_dsa_key.pub
+#  /etc/ssh/ssh_host_rsa_key
+#  /etc/ssh/ssh_host_rsa_key.pub
 # On a default SLES11 there is additionally
-#   /etc/ssh/ssh_host_ecdsa_key
+#  /etc/ssh/ssh_host_ecdsa_key
+#  /etc/ssh/ssh_host_ecdsa_key.pub
 # On a default SLES12 there is additionally
-#   /etc/ssh/ssh_host_ed25519_key
-local ssh_host_key_types="rsa1 rsa dsa ecdsa ed25519"
+#  /etc/ssh/ssh_host_ed25519_key
+#  /etc/ssh/ssh_host_ed25519_key.pub
+# The old rsa1 type for SSH protocol version 1 is not supported here.
+# Only SSH protocol version 2 (the default since 2001) is supported:
+local ssh_host_key_types="rsa dsa ecdsa ed25519"
 local ssh_host_key_type=""
 local ssh_host_key_file=""
 local recovery_system_key_file=""
