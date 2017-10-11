@@ -93,6 +93,19 @@ for ssh_host_key_type in $ssh_host_key_types ; do
     mkdir $v -p $( dirname "$recovery_system_key_file" )
     ssh-keygen $v -t "$ssh_host_key_type" -N '' -f "$recovery_system_key_file" && ssh_host_key_exists="yes" || Log "Cannot generate key type $ssh_host_key_type"
 done
+# Generate an rsa key as fallback if there is still no SSH host key in the recovery system
+# (e.g. if there is no rsa key on the original system and generating all other key types had failed).
+# A single key is sufficient because sshd works with one key, and for login purposes, one key is sufficient.
+# For backward compatibility starting with SSH protocol version 2 (the default since 2001),
+# it should be sufficient to generate an rsa key regardless that an ed25519 key would provide
+# better long-term security, but this is probably not necessary for a recovery system:
+if is_false "$ssh_host_key_exists" ; then
+    ssh_host_key_type="rsa"
+    ssh_host_key_file="etc/ssh/ssh_host_${ssh_host_key_type}_key"
+    recovery_system_key_file="$ROOTFS_DIR/$ssh_host_key_file"
+    mkdir $v -p $( dirname "$recovery_system_key_file" )
+    ssh-keygen $v -t "$ssh_host_key_type" -N '' -f "$recovery_system_key_file" && ssh_host_key_exists="yes" || Log "Cannot generate fallback $ssh_host_key_type key"
+fi
 is_false "$ssh_host_key_exists" && LogPrintError "No SSH host key etc/ssh/ssh_host_TYPE_key of any type $ssh_host_key_types in recovery system"
 
 # Create possibly missing directories needed by sshd in the recovery system
