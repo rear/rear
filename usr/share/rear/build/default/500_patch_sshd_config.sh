@@ -29,7 +29,7 @@ if test "${sshd_config_files[*]}" ; then
         sed -i -e 's/PasswordAuthentication.*/PasswordAuthentication yes/ig' ${sshd_config_files[@]}
         sed -i -e 's/PermitRootLogin.*/PermitRootLogin yes/ig' ${sshd_config_files[@]}
     else
-        sed -i  -e 's/PasswordAuthentication.*/PasswordAuthentication no/ig' ${sshd_config_files[@]}
+        sed -i -e 's/PasswordAuthentication.*/PasswordAuthentication no/ig' ${sshd_config_files[@]}
     fi
 else
     LogPrintError "No sshd configuration files"

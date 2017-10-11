@@ -7,7 +7,11 @@
 has_binary ssh || has_binary sshd || return
 
 # Do nothing when not any SSH file should be copied into the recovery system:
-is_false "$SSH_FILES" && return
+if is_false "$SSH_FILES" ; then
+    # Print an info if SSH_ROOT_PASSWORD is set but that cannot work when SSH_FILES is set to a 'false' value:
+    test "$SSH_ROOT_PASSWORD" && LogPrintError "SSH_ROOT_PASSWORD cannot work when SSH_FILES is set to a 'false' value"
+    return
+fi
 
 # Assume that we have openssh with configs in /etc/ssh
 
@@ -36,37 +40,44 @@ else
 fi
 test "${copy_as_is_ssh_files[*]}" && COPY_AS_IS=( "${COPY_AS_IS[@]}" "${copy_as_is_ssh_files[@]}" )
 
-PROGS=(
-    "${PROGS[@]}"
-    ssh sshd scp sftp ssh-agent ssh-keygen
-    $( read subsys sftp original_file junk < <( grep sftp /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig /etc/centrifydc/ssh/sshd_co[n]fig 2>/dev/null )
-       echo $original_file
-     )
-)
+# The output of the below command
+# grep 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig /etc/centrifydc/ssh/sshd_co[n]fig 2>/dev/null
+# looks like
+# /etc/ssh/sshd_config:Subsystem  sftp    /usr/lib/ssh/sftp-server
+local grep_sftp_output=( $( grep 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig /etc/centrifydc/ssh/sshd_co[n]fig 2>/dev/null ) )
+local sftp_program="${grep_sftp_output[2]}"
+PROGS=( "${PROGS[@]}" ssh sshd scp sftp ssh-agent ssh-keygen "$sftp_program" )
 
-# Part 1: SSH server (sshd) - this is for logging into the recovery system via SSH
+# SSH server (sshd) - this is for logging into the recovery system via SSH:
 
-# we need to add some specific NSS lib for shadow passwords to work on RHEL 6/7
-LIBS=( "${LIBS[@]}" /usr/lib64/libfreeblpriv3.* /lib/libfreeblpriv3.* )
+# We need to add some specific NSS lib for shadow passwords to work on RHEL 6/7
 Log "Adding required libfreeblpriv3.so to LIBS"
+LIBS=( "${LIBS[@]}" /usr/lib64/libfreeblpriv3.* /lib/libfreeblpriv3.* )
 
-# Copy ssh user.
+# Copy sshd user.
 # getent will return all entries that match the key(s) exactly - most systems use 'sshd', some may use 'ssh', none should use both.
-# CLONE_USERS will also automatically clone the users' primary group
-# Only the first line (first returned entry) will be used by 'read' in 'IFS=: read ... <<<"$passswd_ssh"', so we ask for sshd first.
-local passswd_ssh=$( getent passwd sshd ssh )
-if test "$passswd_ssh" ; then
+# Only the first line (first returned entry) will be used by 'read' in 'IFS=: read ... <<<"$getent_passswd_ssh"', so we ask for sshd first.
+# CLONE_USERS will also automatically clone the users' primary group.
+local sshd_usernames="sshd ssh"
+local getent_passswd_ssh=$( getent passwd $sshd_usernames )
+if test "$getent_passswd_ssh" ; then
+    # 'getent passwd sshd' output is like
     # sshd:x:71:65:SSH daemon:/var/lib/sshd:/bin/false
-    IFS=: read user ex uid gid gecos homedir junk <<<"$passswd_ssh"
-    CLONE_USERS=( "${CLONE_USERS[@]}" $user )
-    DIRECTORY_ENTRIES_TO_RECOVER=( "${DIRECTORY_ENTRIES_TO_RECOVER[@]}" "$homedir 0700 root root" )
+    local sshd_user sshd_password sshd_uid sshd_gid sshd_gecos sshd_homedir junk
+    IFS=: read sshd_user sshd_password sshd_uid sshd_gid sshd_gecos sshd_homedir junk <<<"$getent_passswd_ssh"
+    CLONE_USERS=( "${CLONE_USERS[@]}" $sshd_user )
+    # Create the sshd user home directory:
+    mkdir $v -p $ROOTFS_DIR/$sshd_homedir
+    chmod $v 0700 $ROOTFS_DIR/$sshd_homedir
 fi
 
+# Launch sshd during recovery system startup for traditional systems without systemd
+# (for systemd there is skel/default/usr/lib/systemd/system/sshd.service):
 echo "ssh:23:respawn:/bin/sshd -D" >>$ROOTFS_DIR/etc/inittab
 
 # Print an info if there is no authorized_keys file for root and no SSH_ROOT_PASSWORD set:
 if ! test -f "/root/.ssh/authorized_keys" -o "$SSH_ROOT_PASSWORD" ; then
-    LogPrint "To log into the recovery system via ssh set up /root/.ssh/authorized_keys or specify SSH_ROOT_PASSWORD"
+    LogPrintError "To log into the recovery system via ssh set up /root/.ssh/authorized_keys or specify SSH_ROOT_PASSWORD"
 fi
 
 # Set the SSH root password; if pw is encrypted just copy it otherwise use openssl (for backward compatibility)
