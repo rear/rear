@@ -102,6 +102,7 @@ done
 if is_false "$ssh_host_key_exists" ; then
     ssh_host_key_type="rsa"
     ssh_host_key_file="etc/ssh/ssh_host_${ssh_host_key_type}_key"
+    LogPrint "Generating fallback SSH host key $ssh_host_key_file in recovery system because no key is there"
     recovery_system_key_file="$ROOTFS_DIR/$ssh_host_key_file"
     mkdir $v -p $( dirname "$recovery_system_key_file" )
     ssh-keygen $v -t "$ssh_host_key_type" -N '' -f "$recovery_system_key_file" && ssh_host_key_exists="yes" || Log "Cannot generate fallback $ssh_host_key_type key"
