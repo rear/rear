@@ -41,10 +41,15 @@ fi
 test "${copy_as_is_ssh_files[*]}" && COPY_AS_IS=( "${COPY_AS_IS[@]}" "${copy_as_is_ssh_files[@]}" )
 
 # The output of the below command
-# grep 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig /etc/centrifydc/ssh/sshd_co[n]fig 2>/dev/null
+# grep -h 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig /etc/centrifydc/ssh/sshd_co[n]fig 2>/dev/null
 # looks like
+# Subsystem  sftp    /usr/lib/ssh/sftp-server
+# The '-h' makes it fail-safe against possible leading spaces that would change the grep_sftp_output array elements
+# because without a leading space and without '-h' the output of 'grep' would look like
 # /etc/ssh/sshd_config:Subsystem  sftp    /usr/lib/ssh/sftp-server
-local grep_sftp_output=( $( grep 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig /etc/centrifydc/ssh/sshd_co[n]fig 2>/dev/null ) )
+# but in contrast with a leading space and without '-h' the output of 'grep' would look like
+# /etc/ssh/sshd_config: Subsystem  sftp    /usr/lib/ssh/sftp-server
+local grep_sftp_output=( $( grep -h 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig /etc/centrifydc/ssh/sshd_co[n]fig 2>/dev/null ) )
 local sftp_program="${grep_sftp_output[2]}"
 PROGS=( "${PROGS[@]}" ssh sshd scp sftp ssh-agent ssh-keygen "$sftp_program" )
 
