@@ -19,17 +19,29 @@ done >$copy_as_is_exclude_file
 
 # Copy files and directories as-is into the recovery system except the excluded ones and
 # remember what files and directories were actually copied in a copy_as_is_filelist_file
-# which is the reason that the first 'tar' must be run in verbose mode:
+# which is the reason that the first 'tar' must be run in verbose mode.
+# It is crucial that pipefail is not set (cf. https://github.com/rear/rear/issues/700)
+# to make it work fail-safe even in case of non-existent files in the COPY_AS_IS array because
+# in case of non-existent files 'tar' is "Exiting with failure status" like in the following example:
+#  # echo foo >foo ; echo baz >baz ; tar -cvf archive.tar foo bar baz ; echo $? ; tar -tvf archive.tar
+#  foo
+#  tar: bar: Cannot stat: No such file or directory
+#  baz
+#  tar: Exiting with failure status due to previous errors
+#  2
+#  -rw-r--r-- root/root         4 2017-10-12 11:31 foo
+#  -rw-r--r-- root/root         4 2017-10-12 11:31 baz
+# Because pipefail is not set it is the second 'tar' in the pipe that determines whether or not the whole operation was successful:
 if ! tar -v -X $copy_as_is_exclude_file -P -C / -c "${COPY_AS_IS[@]}" 2>$copy_as_is_filelist_file | tar $v -C $ROOTFS_DIR/ -x 1>/dev/null ; then
     Error "Failed to copy files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLUDE"
 fi
 Log "Finished copying files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLUDE"
 
-# Build an array of the actual regular files that are executable in all the copied files:
+# Build an array of the actual regular files that are executable in all the copied files.
 local copy_as_is_executables=()
 local copy_as_is_file=""
 while read -r copy_as_is_file ; do
-    # Skip non-regular files (like directories and device files):
+    # Skip non-regular files like directories, device files, and 'tar' error messages (e.g. in case of non-existent files, see above):
     test -f "$copy_as_is_file" || continue
     # Skip symbolic links (only care about symbolic link targets):
     test -L "$copy_as_is_file" && continue
