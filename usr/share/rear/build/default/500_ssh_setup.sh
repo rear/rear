@@ -99,7 +99,10 @@ for ssh_host_key_type in $ssh_host_key_types ; do
     Log "Generating new SSH host key $ssh_host_key_file in recovery system"
     recovery_system_key_file="$ROOTFS_DIR/$ssh_host_key_file"
     mkdir $v -p $( dirname "$recovery_system_key_file" )
-    ssh-keygen $v -t "$ssh_host_key_type" -N '' -f "$recovery_system_key_file" && ssh_host_key_exists="yes" || Log "Cannot generate key type $ssh_host_key_type"
+    # Run ssh-keygen silently with '-q' to be on the safe side that no possibly confidential information
+    # appears in the ReaR log file which is possibly not really securely stored somewhere
+    # cf. https://github.com/rear/rear/pull/1530#issuecomment-335810846
+    ssh-keygen -q -t "$ssh_host_key_type" -N '' -f "$recovery_system_key_file" >/dev/null 2>&1 && ssh_host_key_exists="yes" || Log "Cannot generate $ssh_host_key_type key"
 done
 # Generate an rsa key as fallback if there is still no SSH host key in the recovery system
 # (e.g. if there is no rsa key on the original system and generating all other key types had failed).
@@ -113,7 +116,10 @@ if is_false "$ssh_host_key_exists" ; then
     LogPrint "Generating fallback SSH host key $ssh_host_key_file in recovery system because no key is there"
     recovery_system_key_file="$ROOTFS_DIR/$ssh_host_key_file"
     mkdir $v -p $( dirname "$recovery_system_key_file" )
-    ssh-keygen $v -t "$ssh_host_key_type" -N '' -f "$recovery_system_key_file" && ssh_host_key_exists="yes" || Log "Cannot generate fallback $ssh_host_key_type key"
+    # Run ssh-keygen silently with '-q' to be on the safe side that no possibly confidential information
+    # appears in the ReaR log file which is possibly not really securely stored somewhere
+    # cf. https://github.com/rear/rear/pull/1530#issuecomment-335810846
+    ssh-keygen -q -t "$ssh_host_key_type" -N '' -f "$recovery_system_key_file" >/dev/null 2>&1 && ssh_host_key_exists="yes" || Log "Cannot generate fallback $ssh_host_key_type key"
 fi
 is_false "$ssh_host_key_exists" && LogPrintError "No SSH host key etc/ssh/ssh_host_TYPE_key of any type $ssh_host_key_types in recovery system"
 

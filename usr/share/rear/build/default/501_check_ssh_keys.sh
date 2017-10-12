@@ -19,8 +19,11 @@ for key_file in "${key_files[@]}" ; do
     test -s "$key_file" || continue
     display_key_file=${key_file#$ROOTFS_DIR}
     # There is no simple way to check for unprotected SSH key files.
-    # We therefore try to change the passphrase from empty to empty and if that succeeds then it is unprotected
-    if ssh-keygen -q -p -P '' -N '' -f "$key_file" >/dev/null 2>&1; then
+    # We therefore try to change the passphrase from empty to empty and if that succeeds then it is unprotected.
+    # Run ssh-keygen silently with '-q' to be on the safe side that no possibly confidential information
+    # appears in the ReaR log file which is possibly not really securely stored somewhere
+    # cf. https://github.com/rear/rear/pull/1530#issuecomment-335810846
+    if ssh-keygen -q -p -P '' -N '' -f "$key_file" >/dev/null 2>&1 ; then
         # Handle the unprotected private key file
         Log "Removed private SSH key '$display_key_file' from rescue media because it has no passphrase"
         rm -v "$key_file" 1>&2
