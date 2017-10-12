@@ -37,7 +37,7 @@ if ! tar -v -X $copy_as_is_exclude_file -P -C / -c "${COPY_AS_IS[@]}" 2>$copy_as
 fi
 Log "Finished copying files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLUDE"
 
-# Build an array of the actual regular files that are executable in all the copied files.
+# Build an array of the actual regular files that are executable in all the copied files:
 local copy_as_is_executables=()
 local copy_as_is_file=""
 while read -r copy_as_is_file ; do

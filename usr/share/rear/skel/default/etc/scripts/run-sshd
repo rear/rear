@@ -4,7 +4,7 @@ if $(grep -q ^ssh: /etc/inittab) ; then
     if ! ls /etc/ssh/*key* &>/dev/null ; then
         # generate at least one SSH host key if there is none because
         # a running sshd without any SSH host key is not accessible from remote
-        # (on the remote host one gets "Connection to recovery.syste.IP.address closed.")
+        # (on the remote host one gets "Connection to recovery.system.IP.address closed.")
         # cf. build/default/500_ssh_setup.sh
         ssh-keygen -q -t rsa -N '' -f /etc/ssh/ssh_host_rsa_key
     fi
