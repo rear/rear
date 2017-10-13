@@ -35,6 +35,25 @@ else
     LogPrintError "No sshd configuration files"
 fi
 
+# Create possibly missing directories needed by sshd in the recovery system
+# cf. https://github.com/rear/rear/issues/1529
+# To be on the safe side for other distributions we create these directories
+# in the recovery system when they exist in the original sysetem
+# without additional distribution-specific tests.
+# At least on Red Hat /var/empty/sshd/etc with mode 0711 can be missing:
+local sshd_needed_directory="var/empty/sshd/etc"
+if test -d "/$sshd_needed_directory" ; then
+    Log "Creating $sshd_needed_directory with mode 0711 (needed by sshd at least on Red Hat)"
+    mkdir $v -p $ROOTFS_DIR/$sshd_needed_directory
+    chmod $v 0711 $ROOTFS_DIR/$sshd_needed_directory
+fi
+# At least on Ubuntu /var/run/sshd can be missing:
+sshd_needed_directory="var/run/sshd"
+if test -d "/$sshd_needed_directory" ; then
+    Log "Creating $sshd_needed_directory (needed by sshd at least on Ubuntu)"
+    mkdir $v -p $ROOTFS_DIR/$sshd_needed_directory
+fi
+
 # Generate new SSH host key in the recovery system when no SSH host key file
 # had been copied into the the recovery system in rescue/default/500_ssh.sh
 # cf. https://github.com/rear/rear/issues/1512#issuecomment-331638066
@@ -122,20 +141,4 @@ if is_false "$ssh_host_key_exists" ; then
     ssh-keygen -q -t "$ssh_host_key_type" -N '' -f "$recovery_system_key_file" >/dev/null 2>&1 && ssh_host_key_exists="yes" || Log "Cannot generate fallback $ssh_host_key_type key"
 fi
 is_false "$ssh_host_key_exists" && LogPrintError "No SSH host key etc/ssh/ssh_host_TYPE_key of any type $ssh_host_key_types in recovery system"
-
-# Create possibly missing directories needed by sshd in the recovery system
-# cf. https://github.com/rear/rear/issues/1529
-# To be on the safe side for other distributions we create the directories
-# when they are not there without additional distribution-specific tests.
-# At least on Red Hat /var/empty/sshd/etc with mode 0711 can be missing:
-if ! test -d "$ROOTFS_DIR/var/empty/sshd/etc" ; then
-    Log "Creating var/empty/sshd/etc with mode 0711 (needed by sshd at least on Red Hat)"
-    mkdir $v -p $ROOTFS_DIR/var/empty/sshd/etc
-    chmod $v 0711 $ROOTFS_DIR/var/empty/sshd/etc
-fi
-# At least on Ubuntu /var/run/sshd can be missing:
-if ! test -d "$ROOTFS_DIR/var/run/sshd" ; then
-    Log "Creating var/run/sshd (needed by sshd at least on Ubuntu)"
-    mkdir $v -p $ROOTFS_DIR/var/run/sshd
-fi
 
