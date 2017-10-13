@@ -38,8 +38,10 @@ fi
 # Create possibly missing directories needed by sshd in the recovery system
 # cf. https://github.com/rear/rear/issues/1529
 # To be on the safe side for other distributions we create these directories
-# in the recovery system when they exist in the original sysetem
-# without additional distribution-specific tests.
+# in the recovery system when they exist in the original system
+# without distribution-specific tests to make it work generically,
+# In general why "Linux distribution specific scripts" will not really work
+# see https://github.com/rear/rear/issues/1368#issuecomment-302410707
 # At least on Red Hat /var/empty/sshd/etc with mode 0711 can be missing:
 local sshd_needed_directory="var/empty/sshd/etc"
 if test -d "/$sshd_needed_directory" ; then
