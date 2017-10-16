@@ -6,7 +6,8 @@ if grep -q '^ssh:' /etc/inittab ; then
         # running sshd possibly without any SSH host key which is not accessible from remote
         # (on the remote host one would get "Connection to recovery.system.IP.address closed.")
         # cf. build/default/500_ssh_setup.sh
-        ssh-keygen -q -t rsa -N '' -f /etc/ssh/ssh_host_rsa_key
+        ssh-keygen -t rsa -N '' -f /etc/ssh/ssh_host_rsa_key
+        echo -e "\nSSH fingerprint: $( ssh-keygen -l -f /etc/ssh/ssh_host_rsa_key.pub )\n" >> /etc/issue
     fi
     sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
     sed -i 's/^ClientAliveInterval.*/ClientAliveInterval 0/' /etc/ssh/sshd_config

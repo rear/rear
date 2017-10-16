@@ -59,6 +59,10 @@ fi
 # Generate new SSH host key in the recovery system when no SSH host key file
 # had been copied into the the recovery system in rescue/default/500_ssh.sh
 # cf. https://github.com/rear/rear/issues/1512#issuecomment-331638066
+# but skip that if SSH_UNPROTECTED_PRIVATE_KEYS is false
+# because private host keys are never protected
+# cf. https://github.com/rear/rear/pull/1530#issuecomment-336636983
+is_false "$SSH_UNPROTECTED_PRIVATE_KEYS" && return
 # In SLES12 "man ssh-keygen" reads:
 #   -t dsa | ecdsa | ed25519 | rsa | rsa1
 #      Specifies the type of key to create.
@@ -124,21 +128,5 @@ for ssh_host_key_type in $ssh_host_key_types ; do
     # cf. https://github.com/rear/rear/pull/1530#issuecomment-336405425
     ssh-keygen $v -t "$ssh_host_key_type" -N '' -f "$recovery_system_key_file" && ssh_host_key_exists="yes" || Log "Cannot generate $ssh_host_key_type key"
 done
-# Generate an rsa key as fallback if there is still no SSH host key in the recovery system
-# (e.g. if there is no rsa key on the original system and generating all other key types had failed).
-# A single key is sufficient because sshd works with one key, and for login purposes, one key is sufficient.
-# For backward compatibility starting with SSH protocol version 2 (the default since 2001),
-# it should be sufficient to generate an rsa key regardless that an ed25519 key would provide
-# better long-term security, but this is probably not necessary for a recovery system:
-if is_false "$ssh_host_key_exists" ; then
-    ssh_host_key_type="rsa"
-    ssh_host_key_file="etc/ssh/ssh_host_${ssh_host_key_type}_key"
-    LogPrint "Generating fallback SSH host key $ssh_host_key_file in recovery system because no key is there"
-    recovery_system_key_file="$ROOTFS_DIR/$ssh_host_key_file"
-    mkdir $v -p $( dirname "$recovery_system_key_file" )
-    # Running ssh-keygen with '$v' as usual in ReaR does not reveal possibly confidential information
-    # cf. https://github.com/rear/rear/pull/1530#issuecomment-336405425
-    ssh-keygen $v -t "$ssh_host_key_type" -N '' -f "$recovery_system_key_file" && ssh_host_key_exists="yes" || Log "Cannot generate fallback $ssh_host_key_type key"
-fi
 is_false "$ssh_host_key_exists" && LogPrintError "No SSH host key etc/ssh/ssh_host_TYPE_key of any type $ssh_host_key_types in recovery system"
 

@@ -1,20 +1,24 @@
-# remove unprotected SSH keys unless configured to keep them
+#
+# Remove unprotected SSH keys from the recovery system
+# unless it is explicitly configured to keep them.
+#
 is_true "$SSH_UNPROTECTED_PRIVATE_KEYS" && return
 
-# caveat: this code will only detect SSH key files for root, not for other users
-key_files=(
-    $ROOTFS_DIR/root/.ssh/{identity,id_dsa,id_ecdsa,id_ed25519,id_rsa}
-    # Parse /etc/ssh/ssh_config and /root/.ssh/config for more keys files
-    $(
-    sed -n -e "s#~#$ROOTFS_DIR/root#g" \
-        -e '/^[^#]*identityfile/Is/^.*identityfile[ ]\+\([^ ]\+\).*$/\1/ip' \
-        $ROOTFS_DIR/etc/ssh/ssh_co[n]fig $ROOTFS_DIR/root/.ssh/co[n]fig </dev/null | \
-    sort -u
-    )
-)
-: ${key_files[@]}
+local host_key_files=( $ROOTFS_DIR/etc/ssh/ssh_ho[s]t_* )
+# Caveat: This code will only detect SSH key files for root, not for other users.
+local root_key_files=( $ROOTFS_DIR/root/.ssh/{identity,id_dsa,id_ecdsa,id_ed25519,id_rsa} )
+# Parse etc/ssh/ssh_config and root/.ssh/config to find more key files in the recovery system:
+local more_key_files="$( sed -n -e "s#~#$ROOTFS_DIR/root#g" \
+                                -e '/^[^#]*identityfile/Is/^.*identityfile[ ]\+\([^ ]\+\).*$/\1/ip' \
+                             $ROOTFS_DIR/etc/ssh/ssh_co[n]fig $ROOTFS_DIR/root/.ssh/co[n]fig </dev/null | sort -u )"
+
+local key_files=( "${host_key_files[@]}" "${root_key_files[@]}" "${more_key_files[@]}" )
+
+# Nothing to do when no key files were found:
+test "${key_files[*]}" || return
 
 local removed_keys=0
+local key_file=""
 for key_file in "${key_files[@]}" ; do
     test -s "$key_file" || continue
     display_key_file=${key_file#$ROOTFS_DIR}
@@ -35,3 +39,4 @@ done
 if (( removed_keys > 0 )) ; then
     LogPrint "Removed $removed_keys unprotected SSH keys from the rescue media, set SSH_UNPROTECTED_PRIVATE_KEYS=yes to keep them"
 fi
+
