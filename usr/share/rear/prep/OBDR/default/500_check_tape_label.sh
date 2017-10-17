@@ -23,5 +23,9 @@ TAPE_LABEL=$(dd if=$TAPE_DEVICE count=1)
 StopIfError "Could not read label from tape device '$TAPE_DEVICE'"
 
 # Match label
-[[ "REAR-000" == "${TAPE_LABEL:0:8}" ]]
-StopIfError "Tape ($TAPE_DEVICE) does not have the proper REAR-000 label. Use 'rear format $TAPE_DEVICE' to allow this tape to be used in OBDR mode."
+# FIXME: Probably this only works with the default USB_DEVICE_FILESYSTEM_LABEL='REAR-000'
+# but not with another value of different length (cf. https://github.com/rear/rear/issues/1535)
+# see prep/OBDR/default/700_write_OBDR_header.sh
+[[ "$USB_DEVICE_FILESYSTEM_LABEL" == "${TAPE_LABEL:0:8}" ]]
+StopIfError "Tape ($TAPE_DEVICE) does not have the proper '$USB_DEVICE_FILESYSTEM_LABEL' label. Use 'rear format $TAPE_DEVICE' to allow this tape to be used in OBDR mode."
+

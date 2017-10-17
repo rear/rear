@@ -18,7 +18,9 @@ mt -f "$TAPE_DEVICE" setblk 512
 StopIfError "Could not set block size on tape device '$TAPE_DEVICE'"
 
 ### Make sure we set a tape label and total padding of 20 blocks of size 512
-printf 'REAR-000%10232s' ' ' | tr ' ' '\0' | dd of=$TAPE_DEVICE bs=512 count=20
+# FIXME: Probably this only works with the default USB_DEVICE_FILESYSTEM_LABEL='REAR-000'
+# but not with another value of different length (cf. https://github.com/rear/rear/issues/1535)
+printf "$USB_DEVICE_FILESYSTEM_LABEL%10232s" ' ' | tr ' ' '\0' | dd of=$TAPE_DEVICE bs=512 count=20
 StopIfError "OBDR header could not be written to tape device '$TAPE_DEVICE'"
 
 ### Make sure we jump to block 20 before writing (needed for DAT320)

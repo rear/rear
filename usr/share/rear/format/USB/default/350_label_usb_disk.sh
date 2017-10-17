@@ -16,27 +16,27 @@ local rear_data_partition_device="$RAW_USB_DEVICE$rear_data_partition_number"
 # to be able to 'continue' with the code after it:
 for dummy in "once" ; do
     # TODO: I <jsmeix@suse.de> wonder what the reason is why here
-    # a filesystem label REAR-000 is set via e2label or btrfs filesystem label
+    # a filesystem label USB_DEVICE_FILESYSTEM_LABEL is set via e2label or btrfs filesystem label
     # versus before in format/USB/default/300_format_usb_disk.sh where a so called
     # "volume label for the filesystem" (according to "man mkfs.ext[34]")
-    # was already set via mkfs.$USB_DEVICE_FILESYSTEM -L REAR-000
+    # was already set via mkfs.$USB_DEVICE_FILESYSTEM -L "$USB_DEVICE_FILESYSTEM_LABEL"
     # is this duplicate here or are that different kind of labels?
     case "$ID_FS_TYPE" in
         ext*)
             USB_LABEL="$( e2label $rear_data_partition_device )"
-            test "REAR-000" = "$USB_LABEL" && continue
-            LogPrint "Setting filesystem label to REAR-000"
-            if ! e2label $rear_data_partition_device REAR-000 ; then
-                Error "Could not label $rear_data_partition_device with REAR-000"
+            test "$USB_DEVICE_FILESYSTEM_LABEL" = "$USB_LABEL" && continue
+            LogPrint "Setting filesystem label to '$USB_DEVICE_FILESYSTEM_LABEL'"
+            if ! e2label $rear_data_partition_device "$USB_DEVICE_FILESYSTEM_LABEL" ; then
+                Error "Could not label $rear_data_partition_device with '$USB_DEVICE_FILESYSTEM_LABEL'"
             fi
             USB_LABEL="$( e2label $rear_data_partition_device )"
             ;;
         btrfs)
             USB_LABEL="$( btrfs filesystem label $rear_data_partition_device )"
-            test "REAR-000" = "$USB_LABEL" && continue
-            LogPrint "Setting filesystem label to REAR-000"
-            if ! btrfs filesystem label $rear_data_partition_device REAR-000 ; then
-                Error "Could not label $rear_data_partition_device with REAR-000"
+            test "$USB_DEVICE_FILESYSTEM_LABEL" = "$USB_LABEL" && continue
+            LogPrint "Setting btrfs filesystem label to '$USB_DEVICE_FILESYSTEM_LABEL'"
+            if ! btrfs filesystem label $rear_data_partition_device "$USB_DEVICE_FILESYSTEM_LABEL" ; then
+                Error "Could not label $rear_data_partition_device with '$USB_DEVICE_FILESYSTEM_LABEL'"
             fi
             USB_LABEL="$( btrfs filesystem label $rear_data_partition_device )"
             ;;

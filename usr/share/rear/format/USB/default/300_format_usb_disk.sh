@@ -105,8 +105,8 @@ fi
 
 local rear_data_partition_device="$RAW_USB_DEVICE$rear_data_partition_number"
 
-LogPrint "Creating $USB_DEVICE_FILESYSTEM filesystem with label 'REAR-000' on '$rear_data_partition_device'"
-if ! mkfs.$USB_DEVICE_FILESYSTEM -L REAR-000 ${USB_DEVICE_FILESYSTEM_PARAMS} $rear_data_partition_device >&2 ; then
+LogPrint "Creating $USB_DEVICE_FILESYSTEM filesystem with label '$USB_DEVICE_FILESYSTEM_LABEL' on '$rear_data_partition_device'"
+if ! mkfs.$USB_DEVICE_FILESYSTEM -L "$USB_DEVICE_FILESYSTEM_LABEL" $USB_DEVICE_FILESYSTEM_PARAMS $rear_data_partition_device >&2 ; then
     Error "Failed to create $USB_DEVICE_FILESYSTEM filesystem on '$rear_data_partition_device'"
 fi
 
