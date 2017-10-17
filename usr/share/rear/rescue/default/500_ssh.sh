@@ -14,13 +14,11 @@ if is_false "$SSH_FILES" ; then
 fi
 
 # Assume that we have openssh with configs in /etc/ssh
-
-# The funny [] around a letter makes 'shopt -s nullglob' remove this file from the list if it does not exist.
-# Files without a [] are mandatory.
-
 local copy_as_is_ssh_files=()
+# The funny [] around a letter makes 'shopt -s nullglob' remove this file from the list if it does not exist.
 if is_true "$SSH_FILES" ; then
     # Copy all the "usual SSH files" (including SSH private host keys) to make things "just work"
+    # (provided SSH_UNPROTECTED_PRIVATE_KEYS is not false - otherwise unprotected keys get removed)
     # into the recovery system, cf. https://github.com/rear/rear/issues/1512
     copy_as_is_ssh_files=( /etc/ssh* /etc/openssh* /etc/centrifydc/ssh* /root/.s[s]h /root/.shos[t]s )
 else
