@@ -1,10 +1,12 @@
+#
 # format-workflow.sh
 #
-
 # Usage: rear -v format -- -h /dev/<usb-disk>
-# By default 1 partition will be created with ext3 format and label REAR-000
+# By default 1 partition will be created with ext3 format and label
+# USB_DEVICE_FILESYSTEM_LABEL (cf. https://github.com/rear/rear/issues/1535).
 # With the --efi toggle you get 2 partitions (vfat and ext3) so we are able
-# to make this USB UEFI bootable afterwards
+# to make this USB UEFI bootable afterwards.
+#
 
 WORKFLOW_format_DESCRIPTION="Format and label medium for use with ReaR"
 WORKFLOWS=( ${WORKFLOWS[@]} format )
