@@ -56,7 +56,8 @@ if test -d "/$sshd_needed_directory" ; then
     mkdir $v -p $ROOTFS_DIR/$sshd_needed_directory
 fi
 
-# Generate new SSH host key in the recovery system when no SSH host key file
+# Generate new SSH protocol version 2 host keys in the recovery system
+# when no SSH host key file of the key types rsa, dsa, ecdsa, and ed25519
 # had been copied into the the recovery system in rescue/default/500_ssh.sh
 # cf. https://github.com/rear/rear/issues/1512#issuecomment-331638066
 # but skip that if SSH_UNPROTECTED_PRIVATE_KEYS is false

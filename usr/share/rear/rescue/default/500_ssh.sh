@@ -13,17 +13,20 @@ if is_false "$SSH_FILES" ; then
     return
 fi
 
-# Assume that we have openssh with configs in /etc/ssh
+# Only support OpenSSH >= 3.1 where /etc/ssh/ is the default directory for keys and configuration files
+# according to the OpenSSH release notes for version 3.1/3.1p1 at https://www.openssh.com/releasenotes.html
+# cf. https://github.com/rear/rear/pull/1530#issuecomment-337526810 and subsequent comments.
 local copy_as_is_ssh_files=()
 # The funny [] around a letter makes 'shopt -s nullglob' remove this file from the list if it does not exist.
 if is_true "$SSH_FILES" ; then
-    # Copy all the "usual SSH files" (including SSH private host keys) to make things "just work"
-    # (provided SSH_UNPROTECTED_PRIVATE_KEYS is not false - otherwise unprotected keys get removed)
-    # into the recovery system, cf. https://github.com/rear/rear/issues/1512
-    copy_as_is_ssh_files=( /etc/ssh* /etc/openssh* /etc/centrifydc/ssh* /root/.s[s]h /root/.shos[t]s )
+    # Copy the "usual OpenSSH >= 3.1 files" (including SSH private host keys)
+    # into the recovery system to make remote access "just work" in the recovery system
+    # (provided SSH_UNPROTECTED_PRIVATE_KEYS is not false - otherwise unprotected keys get excluded)
+    # cf. https://github.com/rear/rear/issues/1512 and https://github.com/rear/rear/issues/1511
+    copy_as_is_ssh_files=( /etc/s[s]h /root/.s[s]h /root/.shos[t]s )
 else
     # Use a reasonably secure fallback if SSH_FILES is not set or empty:
-    test "$SSH_FILES" || SSH_FILES="avoid_sensitive_files"
+    contains_visible_char "${SSH_FILES[*]}" || SSH_FILES="avoid_sensitive_files"
     if test "avoid_sensitive_files" = "$SSH_FILES" ; then
         # Avoid copying sensitive SSH files:
         # From /etc/ssh copy only moduli ssh_config sshd_config ssh_known_hosts
@@ -36,10 +39,10 @@ else
         copy_as_is_ssh_files=( "${SSH_FILES[@]}" )
     fi
 fi
-test "${copy_as_is_ssh_files[*]}" && COPY_AS_IS=( "${COPY_AS_IS[@]}" "${copy_as_is_ssh_files[@]}" )
+contains_visible_char "${copy_as_is_ssh_files[*]}" && COPY_AS_IS=( "${COPY_AS_IS[@]}" "${copy_as_is_ssh_files[@]}" )
 
 # The output of the below command
-# grep -h 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig /etc/centrifydc/ssh/sshd_co[n]fig 2>/dev/null
+# grep -h 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig 2>/dev/null
 # looks like
 # Subsystem  sftp    /usr/lib/ssh/sftp-server
 # The '-h' makes it fail-safe against possible leading spaces that would change the grep_sftp_output array elements
@@ -47,7 +50,7 @@ test "${copy_as_is_ssh_files[*]}" && COPY_AS_IS=( "${COPY_AS_IS[@]}" "${copy_as_
 # /etc/ssh/sshd_config:Subsystem  sftp    /usr/lib/ssh/sftp-server
 # but in contrast with a leading space and without '-h' the output of 'grep' would look like
 # /etc/ssh/sshd_config: Subsystem  sftp    /usr/lib/ssh/sftp-server
-local grep_sftp_output=( $( grep -h 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig /etc/centrifydc/ssh/sshd_co[n]fig 2>/dev/null ) )
+local grep_sftp_output=( $( grep -h 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig 2>/dev/null ) )
 local sftp_program="${grep_sftp_output[2]}"
 PROGS=( "${PROGS[@]}" ssh sshd scp sftp ssh-agent ssh-keygen "$sftp_program" )
 
