@@ -32,7 +32,7 @@ if test "$sshd_config_file" ; then
         sed -i -e 's/PasswordAuthentication.*/PasswordAuthentication no/ig' $sshd_config_file
     fi
 else
-    LogPrintError "No sshd configuration files"
+    LogPrintError "No etc/ssh/sshd_config file"
 fi
 
 # Create possibly missing directories needed by sshd in the recovery system
