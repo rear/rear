@@ -46,7 +46,8 @@ PROGS=( "${PROGS[@]}" ssh sshd scp sftp ssh-agent ssh-keygen )
 
 # Copy a sftp-server program (e.g. /usr/lib/ssh/sftp-server) into the recovery system (if exists).
 # Because only OpenSSH >= 3.1 is supported where /etc/ssh/ is the default directory for configuration files
-# only /etc/ssh/sshd_config is inspected to grep for a sftp-server program therein.
+# only /etc/ssh/sshd_config is inspected to grep for a sftp-server program therein
+# cf. https://github.com/rear/rear/pull/1538#issuecomment-337904240
 # The output of the grep command
 # grep 'sftp' /etc/ssh/sshd_config 2>/dev/null
 # looks like

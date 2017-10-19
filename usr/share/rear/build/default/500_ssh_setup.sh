@@ -15,21 +15,21 @@ is_false "$SSH_FILES" && return
 # - if SSH_ROOT_PASSWORD was defined allow root to login via ssh
 # The idea is to allow ssh authorized_keys based access in the recovery system
 # which has to be enabled on the original system to work in the recovery system.
-# The funny [] around a letter makes 'shopt -s nullglob' remove this file from the list if it does not exist.
-# Files without a [] are mandatory.
-local sshd_config_files=( $ROOTFS_DIR/etc/ssh/sshd_co[n]fig $ROOTFS_DIR/etc/sshd_co[n]fig $ROOTFS_DIR/etc/openssh/sshd_co[n]fig )
-if test "${sshd_config_files[*]}" ; then
+# Because only OpenSSH >= 3.1 is supported where /etc/ssh/ is the default directory for configuration files
+# only etc/ssh/sshd_config is used cf. https://github.com/rear/rear/pull/1538#issuecomment-337904240
+local sshd_config_file="$ROOTFS_DIR/etc/ssh/sshd_config"
+if test "$sshd_config_file" ; then
     sed -i -e 's/ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/ig' \
            -e 's/UsePAM.*/UsePam no/ig' \
            -e 's/ListenAddress.*/ListenAddress 0.0.0.0/ig' \
            -e '1i\PrintMotd no' \
-        ${sshd_config_files[@]}
+        $sshd_config_file
     # Allow password authentication in the recovery system only if SSH_ROOT_PASSWORD is specified:
     if test "$SSH_ROOT_PASSWORD" ; then
-        sed -i -e 's/PasswordAuthentication.*/PasswordAuthentication yes/ig' ${sshd_config_files[@]}
-        sed -i -e 's/PermitRootLogin.*/PermitRootLogin yes/ig' ${sshd_config_files[@]}
+        sed -i -e 's/PasswordAuthentication.*/PasswordAuthentication yes/ig' $sshd_config_file
+        sed -i -e 's/PermitRootLogin.*/PermitRootLogin yes/ig' $sshd_config_file
     else
-        sed -i -e 's/PasswordAuthentication.*/PasswordAuthentication no/ig' ${sshd_config_files[@]}
+        sed -i -e 's/PasswordAuthentication.*/PasswordAuthentication no/ig' $sshd_config_file
     fi
 else
     LogPrintError "No sshd configuration files"
