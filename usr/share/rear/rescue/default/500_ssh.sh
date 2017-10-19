@@ -41,24 +41,39 @@ else
 fi
 contains_visible_char "${copy_as_is_ssh_files[*]}" && COPY_AS_IS=( "${COPY_AS_IS[@]}" "${copy_as_is_ssh_files[@]}" )
 
-# The output of the below command
-# grep -h 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig 2>/dev/null
-# looks like
-# Subsystem  sftp    /usr/lib/ssh/sftp-server
-# The '-h' makes it fail-safe against possible leading spaces that would change the grep_sftp_output array elements
-# because without a leading space and without '-h' the output of 'grep' would look like
-# /etc/ssh/sshd_config:Subsystem  sftp    /usr/lib/ssh/sftp-server
-# but in contrast with a leading space and without '-h' the output of 'grep' would look like
-# /etc/ssh/sshd_config: Subsystem  sftp    /usr/lib/ssh/sftp-server
-local grep_sftp_output=( $( grep -h 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig 2>/dev/null ) )
-local sftp_program="${grep_sftp_output[2]}"
-PROGS=( "${PROGS[@]}" ssh sshd scp sftp ssh-agent ssh-keygen "$sftp_program" )
+# Copy the usual SSH programs into the recovery system:
+PROGS=( "${PROGS[@]}" ssh sshd scp sftp ssh-agent ssh-keygen )
 
-# SSH server (sshd) - this is for logging into the recovery system via SSH:
+# Copy a sftp-server program (e.g. /usr/lib/ssh/sftp-server) into the recovery system (if exists).
+# The funny [] around a letter makes 'shopt -s nullglob' remove this file from the list if it does not exist
+# is no longer funny if none of those files exists because then calling directly a command like
+# grep -h 'sftp' /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig 2>/dev/null
+# would become actually (if none of those files exists)
+# grep -h 'sftp' 2>/dev/null
+# which hangs up the whole ReaR because without specified files grep waits endlessly for input on stdin.
+# Accordingly we first test if there are actually files for grep:
+local files_for_grep=( /etc/sshd_co[n]fig /etc/ssh/sshd_co[n]fig /etc/openssh/sshd_co[n]fig )
+if test "${files_for_grep[*]}" ; then
+    # The output of the below command that is something like
+    # grep -h 'sftp' /etc/ssh/sshd_config 2>/dev/null
+    # looks like
+    # Subsystem  sftp    /usr/lib/ssh/sftp-server
+    # The '-h' makes it fail-safe against possible leading spaces that would change the grep_sftp_output array elements
+    # because without a leading space and without '-h' the output of 'grep' would look like
+    # /etc/ssh/sshd_config:Subsystem  sftp    /usr/lib/ssh/sftp-server
+    # but in contrast with a leading space and without '-h' the output of 'grep' would look like
+    # /etc/ssh/sshd_config: Subsystem  sftp    /usr/lib/ssh/sftp-server
+    local grep_sftp_output=( $( grep -h 'sftp' ${files_for_grep[*]} 2>/dev/null ) )
+    local sftp_program="${grep_sftp_output[2]}"
+    test "$sftp_program" && PROGS=( "${PROGS[@]}" "$sftp_program" )
+fi
 
 # We need to add some specific NSS lib for shadow passwords to work on RHEL 6/7
+# cf. https://github.com/rear/rear/issues/560#issuecomment-124578636 and subsequent comments:
 Log "Adding required libfreeblpriv3.so to LIBS"
 LIBS=( "${LIBS[@]}" /usr/lib64/libfreeblpriv3.* /lib/libfreeblpriv3.* )
+
+# SSH server (sshd) - this is for logging into the recovery system via SSH:
 
 # Copy sshd user.
 # getent will return all entries that match the key(s) exactly - most systems use 'sshd', some may use 'ssh', none should use both.
