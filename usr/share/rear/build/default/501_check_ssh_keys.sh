@@ -56,11 +56,15 @@ for key_file in "${key_files[@]}" ; do
     test -s "$ROOTFS_DIR/$key_file" || continue
     # There is no simple way to check for unprotected SSH key files.
     # We therefore try to change the passphrase from empty to empty and if that succeeds then it is unprotected.
+    # Because we do not want to try this with the key files in the original system to find unprotected keys
+    # so that we could add unprotected key files to the COPY_AS_IS_EXCLUDE array in rescue/default/500_ssh.sh
+    # we must do all that inside the recovery system so that we first copy key files into the recovery system
+    # and afterwards we can here check for unprotected keys inside the recovery system and remove them there.
     # Run ssh-keygen silently with '-q' to suppress any output of it (also possible output directly to /dev/tty)
     # because it is used here only as a test, cf. https://github.com/rear/rear/pull/1530#issuecomment-336405425
     if ssh-keygen -q -p -P '' -N '' -f "$ROOTFS_DIR/$key_file" >/dev/null 2>&1 ; then
-        Log "Removed SSH key file '$key_file' from recovery system because it has no passphrase"
         rm -v "$ROOTFS_DIR/$key_file" 1>&2
+        Log "Removed SSH key file '$key_file' from recovery system because it has no passphrase"
         removed_key_files="$removed_key_files $key_file"
     else
         Log "SSH key file '$key_file' has a passphrase and is allowed in the recovery system"
