@@ -5,7 +5,7 @@
 # Add the rescue kernel and initrd to the local GRUB 2 bootloader.
 
 # Only do it when explicitly enabled:
-is_true "$GRUB_RESCUE" || return
+is_true "$GRUB_RESCUE" || return 0
 
 # Only run this script when GRUB 2 is there
 # (grub-probe or grub2-probe only exist in GRUB 2)

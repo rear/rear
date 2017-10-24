@@ -4,7 +4,7 @@
 # See https://github.com/rear/rear/issues/841
 
 # Without a RECOVERY_UPDATE_URL there is nothing to do:
-test "$RECOVERY_UPDATE_URL" || return
+test "$RECOVERY_UPDATE_URL" || return 0
 
 # With a RECOVERY_UPDATE_URL ensure 'curl' is actually there
 # because that 'curl' was added to the default PROGS array

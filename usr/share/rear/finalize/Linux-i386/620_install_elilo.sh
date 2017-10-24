@@ -7,10 +7,10 @@ if [[ -z "$NOBOOTLOADER" ]] ; then
 fi
 
 # for UEFI systems we defined USING_UEFI_BOOTLOADER=1; BIOS based is 0 or ""
-is_true $USING_UEFI_BOOTLOADER || return # when set to 0
+is_true $USING_UEFI_BOOTLOADER || return 0 # when set to 0
 
 # Only for elilo
-[[ "$BOOTLOADER" == "ELILO" ]] || return  # only continue when bootloader is elilo based
+[[ "$BOOTLOADER" == "ELILO" ]] || return 0 # only continue when bootloader is elilo based
 
 [[ $(type -p elilo) ]]
 StopIfError "Could not find elilo executable"

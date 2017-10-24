@@ -8,7 +8,7 @@
 #################################################################
 
 # skip if yaboot conf is not found
-test -f $TARGET_FS_ROOT/etc/yaboot.conf || return
+test -f $TARGET_FS_ROOT/etc/yaboot.conf || return 0
 
 # check if yaboot.conf is managed by lilo, if yes, return
 if test -f $TARGET_FS_ROOT/etc/lilo.conf; then

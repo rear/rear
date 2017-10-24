@@ -1,5 +1,5 @@
 # only useful for UEFI systems in combination with grub[2]-efi
-is_true $USING_UEFI_BOOTLOADER || return  # empty or 0 means using BIOS
+is_true $USING_UEFI_BOOTLOADER || return 0 # empty or 0 means using BIOS
 
 # check if $TARGET_FS_ROOT/boot/efi is mounted
 [[ -d "$TARGET_FS_ROOT/boot/efi" ]]

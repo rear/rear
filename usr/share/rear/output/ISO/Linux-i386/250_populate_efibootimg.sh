@@ -1,6 +1,6 @@
 # 250_populate_efibootimg.sh
 
-is_true $USING_UEFI_BOOTLOADER || return    # empty or 0 means NO UEFI
+is_true $USING_UEFI_BOOTLOADER || return 0 # empty or 0 means NO UEFI
 
 mkdir $v -p $TMP_DIR/mnt/EFI/BOOT >&2
 StopIfError "Could not create $TMP_DIR/mnt/EFI/BOOT"

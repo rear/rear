@@ -1,5 +1,5 @@
 # check if SELinux is in use, if not, just silently return
-[[ -f /selinux/enforce || -f /sys/fs/selinux/enforce ]] || return
+[[ -f /selinux/enforce || -f /sys/fs/selinux/enforce ]] || return 0
 
 if [ -f /selinux/enforce ]; then
         SELINUX_ENFORCE=/selinux/enforce

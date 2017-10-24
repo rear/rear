@@ -2,13 +2,16 @@
 # check if we're using grub2 before doing something...
 [[ ! -d $VAR_DIR/recovery ]] && mkdir -p $VAR_DIR/recovery
 
-grubdir=$(ls -d /boot/grub*)
-[[ ! -d $grubdir ]] && grubdir=/boot/grub	# a safe choice
+# FIXME: Because usr/sbin/rear sets 'shopt -s nullglob' the 'ls' command will list all files
+# in the current working directory if nothing matches the bash globbing pattern '/boot/grub*'
+# which results '.' in 'grubdir' (the plain 'ls -d' output in the current working directory):
+grubdir=$( ls -d /boot/grub* )
+[[ ! -d $grubdir ]] && grubdir=/boot/grub # a safe choice
 
-if has_binary grub-probe; then
-	grub-probe -t device $grubdir > $VAR_DIR/recovery/bootdisk 2>/dev/null || return
-elif has_binary grub2-probe; then
-	grub2-probe -t device $grubdir >$VAR_DIR/recovery/bootdisk 2>/dev/null || return
+if has_binary grub-probe ; then
+    grub-probe -t device $grubdir >$VAR_DIR/recovery/bootdisk 2>/dev/null || return 0
+elif has_binary grub2-probe ; then
+    grub2-probe -t device $grubdir >$VAR_DIR/recovery/bootdisk 2>/dev/null || return 0
 fi
 
 PROGS=( "${PROGS[@]}"

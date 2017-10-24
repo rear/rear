@@ -10,7 +10,7 @@
 test "mkrescue" = "$WORKFLOW" && return
 
 # Without a maximum ISO size all is in one single ISO:
-test "$ISO_MAX_SIZE" || return
+test "$ISO_MAX_SIZE" || return 0
 
 local backup_path=$( url_path $BACKUP_URL )
 local isofs_path=$( dirname $backuparchive )

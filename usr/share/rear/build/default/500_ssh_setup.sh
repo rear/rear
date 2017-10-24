@@ -2,7 +2,7 @@
 # Adapt some SSH configs and as needed regenerate SSH host key:
 
 # There is nothing to do when there are no SSH binaries on the original system:
-has_binary ssh || has_binary sshd || return
+has_binary ssh || has_binary sshd || return 0
 
 # Do nothing when not any SSH file should be copied into the recovery system:
 is_false "$SSH_FILES" && return

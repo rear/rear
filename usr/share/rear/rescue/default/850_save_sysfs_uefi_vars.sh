@@ -3,7 +3,7 @@
 # A simplified uefivars replacement.
 
 # USING_UEFI_BOOTLOADER empty or no explicit 'true' value means NO UEFI:
-is_true $USING_UEFI_BOOTLOADER || return
+is_true $USING_UEFI_BOOTLOADER || return 0
 
 # Artificial 'for' clause that is run only once
 # to be able to 'continue' with the code after it

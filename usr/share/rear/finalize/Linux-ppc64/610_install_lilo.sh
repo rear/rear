@@ -2,7 +2,7 @@
 #################################################################
 
 # skip if lilo conf is not found
-test -f $TARGET_FS_ROOT/etc/lilo.conf || return
+test -f $TARGET_FS_ROOT/etc/lilo.conf || return 0
 
 # Reinstall lilo boot loader
 LogPrint "Installing PPC PReP Boot partition."

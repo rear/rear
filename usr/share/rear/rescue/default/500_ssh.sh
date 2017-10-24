@@ -4,13 +4,13 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 # There is nothing to do when there are no SSH binaries on the original system:
-has_binary ssh || has_binary sshd || return
+has_binary ssh || has_binary sshd || return 0
 
 # Do nothing when not any SSH file should be copied into the recovery system:
 if is_false "$SSH_FILES" ; then
     # Print an info if SSH_ROOT_PASSWORD is set but that cannot work when SSH_FILES is set to a 'false' value:
     test "$SSH_ROOT_PASSWORD" && LogPrintError "SSH_ROOT_PASSWORD cannot work when SSH_FILES is set to a 'false' value"
-    return
+    return 0
 fi
 
 # Only support OpenSSH >= 3.1 where /etc/ssh/ is the default directory for keys and configuration files
