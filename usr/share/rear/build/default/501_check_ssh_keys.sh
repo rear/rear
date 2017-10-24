@@ -9,7 +9,9 @@ is_true "$SSH_UNPROTECTED_PRIVATE_KEYS" && return
 # Have a sufficiently secure fallback if SSH_UNPROTECTED_PRIVATE_KEYS is empty:
 test "$SSH_UNPROTECTED_PRIVATE_KEYS" || SSH_UNPROTECTED_PRIVATE_KEYS='no'
 
-# All paths must be relative paths inside the recovery system:
+# All paths must be relative paths inside the recovery system.
+# Make the current working directory the recovery system ROOTFS_DIR.
+# Caution: From here one cannot "just return" without 'popd' before.
 pushd $ROOTFS_DIR
 
 local key_files=()
@@ -44,17 +46,21 @@ local key_file=""
 for key_file in "${key_files[@]}" ; do
     # All paths must be relative paths inside the recovery system (see above)
     # but the user may have specified absolute paths in SSH_UNPROTECTED_PRIVATE_KEYS
-    # or IdentityFile entries in etc/ssh/ssh_config and root/.ssh/config may contain absolute paths
-    # so that a possibly leading slash must be removed here:
+    # or IdentityFile entries in etc/ssh/ssh_config and root/.ssh/config
+    # may contain absolute paths so that a possibly leading slash is removed:
     key_file=${key_file#/}
-    test -s "$key_file" || continue
+    # To be safe against touching/modifying/removing any file in the original system
+    # (below files get removed and that must never happen in the original system)
+    # ROOTFS_DIR is prepended to work with absoute paths inside the recovery system
+    # (nevertheless the current working directory is still ROOTFS_DIR to be 100% safe):
+    test -s "$ROOTFS_DIR/$key_file" || continue
     # There is no simple way to check for unprotected SSH key files.
     # We therefore try to change the passphrase from empty to empty and if that succeeds then it is unprotected.
     # Run ssh-keygen silently with '-q' to suppress any output of it (also possible output directly to /dev/tty)
     # because it is used here only as a test, cf. https://github.com/rear/rear/pull/1530#issuecomment-336405425
-    if ssh-keygen -q -p -P '' -N '' -f "$key_file" >/dev/null 2>&1 ; then
+    if ssh-keygen -q -p -P '' -N '' -f "$ROOTFS_DIR/$key_file" >/dev/null 2>&1 ; then
         Log "Removed SSH key file '$key_file' from recovery system because it has no passphrase"
-        rm -v "$key_file" 1>&2
+        rm -v "$ROOTFS_DIR/$key_file" 1>&2
         removed_key_files="$removed_key_files $key_file"
     else
         Log "SSH key file '$key_file' has a passphrase and is allowed in the recovery system"
@@ -63,6 +69,6 @@ done
 
 test "$removed_key_files" && LogPrint "Removed SSH key files without passphrase from recovery system (SSH_UNPROTECTED_PRIVATE_KEYS not true):$removed_key_files"
 
-# Go back out of the recovery system:
+# Go back out of the recovery system ROOTFS_DIR:
 popd
 
