@@ -75,9 +75,12 @@ if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
     build_bootx86_efi
 fi
 
-# we will be using grub-efi or grub2 (with efi capabilities) to boot from ISO
-grubdir=$(ls -d /boot/grub*)
-[[ ! -d $grubdir ]] && grubdir=/boot/grub
+# We will be using grub-efi or grub2 (with efi capabilities) to boot from ISO.
+# Because usr/sbin/rear sets 'shopt -s nullglob' the 'echo -n' command
+# outputs nothing if nothing matches the bash globbing pattern '/boot/grub*'
+local grubdir="$( echo -n /boot/grub* )"
+# Use '/boot/grub' as fallback if nothing matches '/boot/grub*'
+test -d "$grubdir" || grubdir='/boot/grub'
 
 if [ -d $(dirname ${UEFI_BOOTLOADER})/fonts ]; then
     cp $v $(dirname ${UEFI_BOOTLOADER})/fonts/* $TMP_DIR/mnt/EFI/BOOT/fonts/ >&2
