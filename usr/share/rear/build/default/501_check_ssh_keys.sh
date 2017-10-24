@@ -51,7 +51,7 @@ for key_file in "${key_files[@]}" ; do
     key_file=${key_file#/}
     # To be safe against touching/modifying/removing any file in the original system
     # (below files get removed and that must never happen in the original system)
-    # ROOTFS_DIR is prepended to work with absoute paths inside the recovery system
+    # ROOTFS_DIR is prepended to work with absolute paths inside the recovery system
     # (nevertheless the current working directory is still ROOTFS_DIR to be 100% safe):
     test -s "$ROOTFS_DIR/$key_file" || continue
     # There is no simple way to check for unprotected SSH key files.
