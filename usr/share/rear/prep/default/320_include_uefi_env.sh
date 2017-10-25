@@ -34,12 +34,12 @@ modprobe -q efivars
 # next step, is checking the presence of UEFI variables directory
 # However, we should first check kernel command line to see whether we hide on purpose the UEFI vars with 'noefi'
 SYSFS_DIR_EFI_VARS=
-if [[ -d /sys/firmware/efi/vars ]]; then
+if [[ -d /sys/firmware/efi/vars ]] ; then
     SYSFS_DIR_EFI_VARS=/sys/firmware/efi/vars
-elif [[ -d /sys/firmware/efi/efivars ]]; then
+elif [[ -d /sys/firmware/efi/efivars ]] ; then
     SYSFS_DIR_EFI_VARS=/sys/firmware/efi/efivars
 else
-    return    # when UEFI is enabled the dir is there
+    return 0 # when UEFI is enabled the dir is there
 fi
 
 # mount-point: efivarfs on /sys/firmware/efi/efivars type efivarfs (rw,nosuid,nodev,noexec,relatime)
@@ -48,7 +48,7 @@ if grep -qw efivars /proc/mounts; then
 fi
 
 # next step, is case-sensitive checking /boot for case-insensitive /efi directory (we need it)
-test "$( find /boot -maxdepth 1 -iname efi -type d )" || return
+test "$( find /boot -maxdepth 1 -iname efi -type d )" || return 0
 
 local esp_mount_point=""
 

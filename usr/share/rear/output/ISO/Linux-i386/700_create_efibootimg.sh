@@ -1,5 +1,5 @@
 # 700_create_efibootimg.sh
-is_true $USING_UEFI_BOOTLOADER || return    # empty or 0 means NO UEFI
+is_true $USING_UEFI_BOOTLOADER || return 0 # empty or 0 means NO UEFI
 
 # Calculate exact size of EFI virtual image (efiboot.img):
 # Get size of directory holding EFI virtual image content.

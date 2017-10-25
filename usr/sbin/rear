@@ -509,9 +509,8 @@ for prog in "${REQUIRED_PROGS[@]}" ; do
     has_binary "$prog" || missing_progs=( "${missing_progs[@]}" "$prog" )
 done
 # Detect when there is any non-empty array member (the first one is always empty, see above)
-# but the test should not succeed when there are only empty or blank array members
-# therefore 'echo -n' is interposed because its output is empty for only empty or blank arrays:
-test "$( echo -n ${missing_progs[*]} )" && Error "Cannot find required programs: ${missing_progs[@]}"
+# but the test should not succeed when there are only empty or blank array members:
+contains_visible_char "${missing_progs[*]}" && Error "Cannot find required programs:${missing_progs[@]}"
 
 readonly VERSION_INFO="
 $PRODUCT $VERSION / $RELEASE_DATE

@@ -1,6 +1,6 @@
 # Include LVM tools if LVM exists
 
-test -c /dev/mapper/control -a -x "$(get_path lvm)" || return    # silently skip
+test -c /dev/mapper/control -a -x "$(get_path lvm)" || return 0 # silently skip
 
 Log "Device mapper found enabled. Including LVM tools."
 

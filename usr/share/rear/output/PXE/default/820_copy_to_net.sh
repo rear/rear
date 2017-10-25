@@ -2,7 +2,7 @@
 # 820_copy_to_net.sh
 
 # Check if we have a target location OUTPUT_URL
-test "$OUTPUT_URL" || return
+test "$OUTPUT_URL" || return 0
 
 local scheme=$( url_scheme $OUTPUT_URL )
 local result_file=""

@@ -3,7 +3,7 @@
 #
 
 # Include UEFI tools on demand only
-is_true $USING_UEFI_BOOTLOADER || return
+is_true $USING_UEFI_BOOTLOADER || return 0
 
 # Copy UEFI binaries we might need:
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" dosfsck efibootmgr )

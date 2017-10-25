@@ -17,7 +17,7 @@
 # cf. https://github.com/rear/rear/issues/1068#issuecomment-282741981
 # Do this test before "set -e -u" is set to be able to "simply return" here without an
 # apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS":
-test "${ZYPPER_NETWORK_SETUP_COMMANDS[*]:-}" || return
+test "${ZYPPER_NETWORK_SETUP_COMMANDS[*]:-}" || return 0
 
 # Try to care about possible errors
 # see https://github.com/rear/rear/wiki/Coding-Style

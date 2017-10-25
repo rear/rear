@@ -410,6 +410,9 @@ Information about your current hardware configuration
 EOF
     fi
 
+    # Because usr/sbin/rear sets 'shopt -s nullglob' the 'ls' command will list all files
+    # in the current working directory if nothing matches the globbing pattern '/boot/memtest86+-*'
+    # which results '.' in MEMTEST_BIN (the plain 'ls -d' output in the current working directory).
     # You need the memtest86+ package installed for this to work
     MEMTEST_BIN=$(ls -d /boot/memtest86+-* 2>/dev/null | tail -1)
     if [[ "$MEMTEST_BIN" != "." && -r "$MEMTEST_BIN" ]]; then

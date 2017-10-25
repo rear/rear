@@ -5,7 +5,7 @@
 
 scheme=$( url_scheme "$BACKUP_URL" )
 # Skip if not backup on USB:
-test "usb" = "$scheme" || return
+test "usb" = "$scheme" || return 0
 
 # When USB_SUFFIX is set the compliance mode is used where
 # backup on USB works in compliance with backup on NFS which means

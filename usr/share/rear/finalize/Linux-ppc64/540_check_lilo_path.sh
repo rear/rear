@@ -8,7 +8,7 @@
 #################################################################
 
 # skip if lilo conf is not found
-test -f $TARGET_FS_ROOT/etc/lilo.conf || return
+test -f $TARGET_FS_ROOT/etc/lilo.conf || return 0
 
 # Find PPC PReP Boot partitions
 part=$( awk -F '=' '/^boot/ {print $2}' $TARGET_FS_ROOT/etc/lilo.conf )

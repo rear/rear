@@ -1,23 +1,46 @@
 # 810_prepare_multiple_iso.sh
 #
-# multiple isos preparation
+# Multiple ISOs preparation.
 #
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# in mkrescue workflow there is no need to check the backups made, otherwise,
-# NB_ISOS=(ls . | wc -l) [side effect is that lots of empty ISOs are made]
-test "mkrescue" = "$WORKFLOW" && return
-
 # Without a maximum ISO size all is in one single ISO:
-test "$ISO_MAX_SIZE" || return
+test "$ISO_MAX_SIZE" || return 0
+
+# When a maximum ISO size is set it means the backup could be split on multiple ISOs.
+# When the backup is split on multiple ISOs, then "rear mkrescue" would destroy it
+# because in the first ISO that is named "rear-HOSTNAME.iso" there is
+# in case of "rear mkbackup" the (bootable) ReaR recovery system
+# plus the first part of the splitted backup (usually named "backup.tar.gz.00")
+# plus the backup.splitted file that contains information about the splitted backup.
+# But "rear mkrescue" would overwrites that first ISO with one that contains only
+# the new ReaR recovery system but no longer the first part of the splitted backup
+# nor the backup.splitted file so that then "rear recover" fails with
+# "ERROR: Backup archive 'backup.tar.gz' not found"
+# see https://github.com/rear/rear/issues/1545
+# Accordingly when a maximum ISO size is set the mkrescue workflow is forbidden
+# to be on the safe side to not possibly destroy an existing backup.
+# Even with a sufficiently big maximum ISO size so that all is in one ISO
+# a "rear mkrescue" would overwrite an existing ISO that contains a backup.
+test "mkrescue" = "$WORKFLOW" && Error "The mkrescue workflow is forbidden when ISO_MAX_SIZE is set"
 
 local backup_path=$( url_path $BACKUP_URL )
 local isofs_path=$( dirname $backuparchive )
 
-NB_ISOS=$( ls ${backuparchive}.?? | wc -l )
+# Because usr/sbin/rear sets 'shopt -s nullglob' the 'echo -n' command
+# outputs nothing if nothing matches the bash globbing pattern '$backuparchive.??'
+# so that number_of_ISOs becomes 0 if nothing matches the bash globbing pattern.
+# Normally number_of_ISOs is the number of backup archive files.
+local number_of_ISOs=$( echo -n $backuparchive.?? | wc -w )
+# Show to the user if the number of backup archive files is not at least 1
+# because in this case something may have failed or will fail:
+test $number_of_ISOs -ge 1 || LogPrintError "Number of backup archive files '$backuparchive.??' is not at least 1"
+# Report if the number of backup archive files exceeds 100
+# because the 'for' loop below counts 01 02 03 ... up to (number_of_ISOs - 1):
+test $number_of_ISOs -le 100 || LogPrint "Number of backup archive files '$backuparchive.??' exceeds 100"
 
-LogPrint "Preparing $NB_ISOS ISO images ..."
+LogPrint "Preparing $number_of_ISOs ISO images"
 
 # Report what the initial (bootable) one will be:
 ISO_NAME="$ISO_PREFIX.iso"
@@ -26,8 +49,8 @@ backup_size="$( stat -c '%s' $backuparchive.00 )"
 echo "$backup_filename $backup_size $iso_label" >> "$isofs_path/backup.splitted"
 LogPrint "Initial (bootable) ISO image will be $ISO_NAME labelled $ISO_VOLID containing $backup_filename ($backup_size bytes)"
 
-# Count 01 02 03 ...
-for iso_number in $( seq -f '%02g' 1 $(( $NB_ISOS - 1 )) ) ; do
+# Count 01 02 03 ... 99 100 101 ...
+for iso_number in $( seq -f '%02g' 1 $(( $number_of_ISOs - 1 )) ) ; do
     TEMP_ISO_DIR="$TMP_DIR/isofs_$iso_number"
     TEMP_BACKUP_DIR="$TEMP_ISO_DIR$backup_path"
     BACKUP_NAME="$backuparchive.$iso_number"
@@ -43,8 +66,9 @@ for iso_number in $( seq -f '%02g' 1 $(( $NB_ISOS - 1 )) ) ; do
     mkdir -p $TEMP_BACKUP_DIR
     mv $BACKUP_NAME $TEMP_BACKUP_DIR
     pushd $TEMP_ISO_DIR 1>/dev/null
-    $ISO_MKISOFS_BIN $v -o "$ISO_OUTPUT_PATH" -R -J -volid "${ISO_VOLID}_$iso_number" -v -iso-level 3 . 1>/dev/null
-    StopIfError "Failed to create ISO image $ISO_NAME (with $ISO_MKISOFS_BIN)"
+    if ! $ISO_MKISOFS_BIN $v -o "$ISO_OUTPUT_PATH" -R -J -volid "${ISO_VOLID}_$iso_number" -v -iso-level 3 . 1>/dev/null ; then
+        Error "Failed to create ISO image $ISO_NAME (with $ISO_MKISOFS_BIN)"
+    fi
     popd 1>/dev/null
     # Report the result:
     iso_image_size=( $( du -h "$ISO_OUTPUT_PATH" ) )

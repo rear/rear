@@ -18,7 +18,7 @@ if [[ -z "$NOBOOTLOADER" ]] ; then
 fi
 
 # Only for GRUB2 - GRUB Legacy will be handled by its own script
-[[ $(type -p grub-probe) || $(type -p grub2-probe) ]] || return
+[[ $(type -p grub-probe) || $(type -p grub2-probe) ]] || return 0
 
 LogPrint "Installing GRUB2 boot loader"
 mount -t proc none $TARGET_FS_ROOT/proc

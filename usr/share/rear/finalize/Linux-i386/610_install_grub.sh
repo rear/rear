@@ -13,7 +13,7 @@
 
 # Skip if another boot loader is already installed
 # (then $NOBOOTLOADER is not a true value cf. finalize/default/010_prepare_checks.sh):
-is_true $NOBOOTLOADER || return
+is_true $NOBOOTLOADER || return 0
 
 # For UEFI systems with grub legacy with should use efibootmgr instead:
 is_true $USING_UEFI_BOOTLOADER && return
@@ -22,7 +22,7 @@ is_true $USING_UEFI_BOOTLOADER && return
 # is not "GRUB" (which means GRUB Legacy) skip this script (which is only for GRUB Legacy)
 # because finalize/Linux-i386/220_install_grub2.sh is for installing GRUB 2
 # and finalize/Linux-i386/220_install_elilo.sh is for installing elilo:
-test "GRUB" = "$BOOTLOADER" || return
+test "GRUB" = "$BOOTLOADER" || return 0
 
 # If the BOOTLOADER variable is "GRUB" (which means GRUB Legacy)
 # do not unconditionally trust that because https://github.com/rear/rear/pull/589
