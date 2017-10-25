@@ -7,6 +7,9 @@
 
 [[ $NBU_version -lt 7 ]] && return	# NBU is using xinetd when version <7.x
 
-cp $v /etc/init.d/netbackup $ROOTFS_DIR/etc/scripts/system-setup.d/90-netbackup.sh
-[ -f $ROOTFS_DIR/etc/scripts/system-setup.d/90-netbackup.sh ] && \
+if [ -e "/etc/init.d/netbackup" ]; then
+	cp $v /etc/init.d/netbackup $ROOTFS_DIR/etc/scripts/system-setup.d/netbackup.real
+	chmod $v +x $ROOTFS_DIR/etc/scripts/system-setup.d/netbackup.real
+	echo "( /etc/scripts/system-setup.d/netbackup.real )" > $ROOTFS_DIR/etc/scripts/system-setup.d/90-netbackup.sh
 	chmod $v +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-netbackup.sh
+fi
