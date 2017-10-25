@@ -33,7 +33,7 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     Log "Running 'dsmc restore ${filespace}* $TARGET_FS_ROOT/$filespace -verbose -subdir=yes -replace=all -tapeprompt=no ${TSM_DSMC_RESTORE_OPTIONS[@]}'"
     # Use the original STDOUT when 'rear' was launched by the user for the 'while read ... echo' output
     # but keep STDERR of the 'while' command going to the log file so that 'rear -D' output goes to the log file:
-    LC_ALL=${LANG_RECOVER} dsmc restore \""${filespace}"\" \""$TARGET_FS_ROOT/${filespace}/"\" \
+    LC_ALL=${LANG_RECOVER} dsmc restore "${filespace}" "$TARGET_FS_ROOT/${filespace}/" \
         -verbose -subdir=yes -replace=all \
         -tapeprompt=no "${TSM_DSMC_RESTORE_OPTIONS[@]}" \
       | while read Line ; do
@@ -50,4 +50,3 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
             fi
         done 1>&7
 done
-
