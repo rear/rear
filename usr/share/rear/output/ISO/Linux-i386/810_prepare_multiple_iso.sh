@@ -5,14 +5,25 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# In mkrescue workflow there is no need to prepare multiple ISOs
-# because multiple ISOs could be only needed when a backup is made
-# because the recovery system must fit onto one (bootable) recovery medium
-# so that the recovery system is always made as a single (bootable) ISO:
-test "mkrescue" = "$WORKFLOW" && return
-
 # Without a maximum ISO size all is in one single ISO:
 test "$ISO_MAX_SIZE" || return 0
+
+# When a maximum ISO size is set it means the backup could be split on multiple ISOs.
+# When the backup is split on multiple ISOs, then "rear mkrescue" would destroy it
+# because in the first ISO that is named "rear-HOSTNAME.iso" there is
+# in case of "rear mkbackup" the (bootable) ReaR recovery system
+# plus the first part of the splitted backup (usually named "backup.tar.gz.00")
+# plus the backup.splitted file that contains information about the splitted backup.
+# But "rear mkrescue" would overwrites that first ISO with one that contains only
+# the new ReaR recovery system but no longer the first part of the splitted backup
+# nor the backup.splitted file so that then "rear recover" fails with
+# "ERROR: Backup archive 'backup.tar.gz' not found"
+# see https://github.com/rear/rear/issues/1545
+# Accordingly when a maximum ISO size is set the mkrescue workflow is forbidden
+# to be on the safe side to not possibly destroy an existing backup.
+# Even with a sufficiently big maximum ISO size so that all is in one ISO
+# a "rear mkrescue" would overwrite an existing ISO that contains a backup.
+test "mkrescue" = "$WORKFLOW" && Error "The mkrescue workflow is forbidden when ISO_MAX_SIZE is set"
 
 local backup_path=$( url_path $BACKUP_URL )
 local isofs_path=$( dirname $backuparchive )
