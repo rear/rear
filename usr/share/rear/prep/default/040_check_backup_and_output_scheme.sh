@@ -27,7 +27,7 @@ else
     # When there is no BACKUP_URL it is not mandatory in general, see in 'man rear'
     # "An example to use TSM for backup and ISO for output"
     # but BACKUP_URL is more or less mandatory in practice for BACKUP=NETFS
-    # cf. https://github.com/rear/rear/pull/1440#issuecomment-323736213
+    # cf. https://github.com/rear/rear/issues/1532#issuecomment-336810460
     # so that we do not error out when there is no BACKUP_URL:
     test "NETFS" = $BACKUP && LogPrintError "BACKUP=NETFS usually requires a BACKUP_URL backup target location"
 fi
