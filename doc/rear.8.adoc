@@ -323,7 +323,7 @@ Use rsync to restore data.
 If your favourite backup software is missing from this list, please submit
 a patch or ask us to implement it for you.
 
-When using +BACKUP=NETFS+ you should provide the backup target location
+When using +BACKUP=NETFS+ you must provide the backup target location
 through the +BACKUP_URL+ variable. Possible +BACKUP_URL+ settings are:
 
 

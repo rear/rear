@@ -24,12 +24,13 @@ if test "$BACKUP_URL" ; then
            ;;
     esac
 else
-    # When there is no BACKUP_URL it is not mandatory in general, see in 'man rear'
+    # A BACKUP_URL is not mandatory in general, see in 'man rear'
     # "An example to use TSM for backup and ISO for output"
-    # but BACKUP_URL is more or less mandatory in practice for BACKUP=NETFS
     # cf. https://github.com/rear/rear/issues/1532#issuecomment-336810460
-    # so that we do not error out when there is no BACKUP_URL:
-    test "NETFS" = $BACKUP && LogPrintError "BACKUP=NETFS usually requires a BACKUP_URL backup target location"
+    # but for BACKUP=NETFS a BACKUP_URL is required in practice
+    # cf. https://github.com/rear/rear/issues/1532#issuecomment-336810460
+    # so that we error out to be safe against possible "rear recover" failures:
+    test "NETFS" = $BACKUP && Error "BACKUP=NETFS requires a BACKUP_URL backup target location"
 fi
 
 if test "$OUTPUT_URL" ; then
