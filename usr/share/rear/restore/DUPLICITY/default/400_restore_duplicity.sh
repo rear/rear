@@ -22,7 +22,9 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     export HOSTNAME=$(hostname)
 
     GPG_OPT="$BACKUP_DUPLICITY_GPG_OPTIONS"
-    GPG_KEY="$BACKUP_DUPLICITY_GPG_ENC_KEY"
+    if [ -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ]; then
+		GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY"
+    fi
     PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
 
     # Setting the pass phrase to decrypt the backup files
@@ -34,9 +36,9 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     mkdir -p /mnt/tmp
     mount -t tmpfs none /mnt/tmp
 
-    LogPrint "with CMD: $DUPLICITY_PROG -v 5 $GPG_OPT --encrypt-key $GPG_KEY --force $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
+    LogPrint "with CMD: $DUPLICITY_PROG -v 5 $GPG_OPT $GPG_KEY --force $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
     LogPrint "Logging to $TMP_DIR/duplicity-restore.log"
-    $DUPLICITY_PROG -v 5 $GPG_OPT --encrypt-key $GPG_KEY --force --tempdir=/mnt/tmp $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT | tee $TMP_DIR/duplicity-restore.log
+    $DUPLICITY_PROG -v 5 $GPG_OPT $GPG_KEY --force --tempdir=/mnt/tmp $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT | tee $TMP_DIR/duplicity-restore.log
     _rc=$?
 
     transfertime="$((SECONDS-$starttime))"
