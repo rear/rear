@@ -22,26 +22,15 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
 
     LogPrint "Creating $BACKUP_PROG archives on '$BACKUP_DUPLICITY_URL'"
 
-    # using some new parameters from config.local
-    #
-    # DUPLICITY_USER
-    # DUPLICITY_HOST
-    # DUPLICITY_PROTO
-    # DUPLICITY_PATH
-    # BACKUP_DUPLICITY_URL
-
-    if [ -n $DUPLICITY_USER -a -n $DUPLICITY_HOST -a -n $DUPLICITY_PROTO -a -n $DUPLICITY_PATH ] ; then
-        BKP_URL="$BACKUP_DUPLICITY_URL"
-        # ToDo: do some more plausibility checks !?
-    else
-        Error "Parameters for BACKUP_DUPLICITY_URL not set correctly, please look at config.local template"
-    fi
-
     # todo: check parameters
+    BKP_URL="$BACKUP_DUPLICITY_URL"
+    
     DUP_OPTIONS="$BACKUP_DUPLICITY_OPTIONS"
     #
     GPG_OPT="${BACKUP_DUPLICITY_GPG_OPTIONS}"
-    GPG_KEY="$BACKUP_DUPLICITY_GPG_ENC_KEY"
+    if [ -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ]; then
+		GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY"
+    fi
     PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
 
     LogUserOutput "GPG_OPT = $GPG_OPT"
@@ -88,9 +77,9 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
 
     # do the backup
-    LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS --encrypt-key $GPG_KEY $GPG_OPT $EXCLUDES \
+    LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $GPG_OPT $EXCLUDES \
      / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-    $DUPLICITY_PROG -v5 $DUP_OPTIONS --encrypt-key $GPG_KEY $GPG_OPT $EXCLUDES \
+    $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $GPG_OPT $EXCLUDES \
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
 
     RC_DUP=$?
