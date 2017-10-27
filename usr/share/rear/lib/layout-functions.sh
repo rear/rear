@@ -517,7 +517,7 @@ get_device_mapping() {
         if [[ -z "$disk_name" ]]; then
             echo $1
         else
-            echo "/dev/$disk_name"
+            echo "$disk_name"
         fi
     fi
 }
