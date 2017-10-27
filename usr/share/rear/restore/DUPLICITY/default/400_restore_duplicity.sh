@@ -10,9 +10,11 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     LogPrint "Restoring backup with $BACKUP_PROG from $DUPLICITY_HOST/$DUPLICITY_PATH/$(hostname)"
     LogPrint "========================================================================"
 
-    # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
-    read -p "ENTER for start restore: " 0<&6 1>&7 2>&8
+    # Ask for Confirmation only if Password is already given
+    if [ -z "$BACKUP_DUPLICITY_ASK_PASSPHRASE" ]; then
+		read -p "ENTER for start restore: " 0<&6 1>&7 2>&8
+		export PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
+	fi
 
     export TMPDIR=$TARGET_FS_ROOT
 
@@ -24,11 +26,6 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     if [ -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ]; then
 		GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY"
     fi
-    
-    if [ -z "$BACKUP_DUPLICITY_ASK_PASSPHRASE" ]; then
-		export PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
-		# Setting the pass phrase to decrypt the backup files
-	fi
 
     starttime=$SECONDS
 
