@@ -55,6 +55,7 @@ LIBS=(
 "${LIBS[@]}"
 /usr/lib/librsync.so.1.0.2
 /usr/lib64/librsync.so.1
+/usr/lib/x86_64-linux-gnu/librsync.so.1.0.2
 /usr/lib64/libexpat.so.1
 /lib/libexpat.so.1
 /lib/x86_64-linux-gnu/libexpat.so.1
