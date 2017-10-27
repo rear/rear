@@ -68,13 +68,11 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     ssh ${DUPLICITY_USER}@${DUPLICITY_HOST} "test -d ${DUPLICITY_PATH}/${HOSTNAME} || mkdir -p ${DUPLICITY_PATH}/${HOSTNAME}"
 
     # first remove everything older than $BACKUP_DUPLICITY_MAX_TIME
-    if [ -z $BACKUP_DUPLICITY_MAX_TIME ] ; then
-        # default: remove old backup after 2 month
-        BACKUP_DUPLICITY_MAX_TIME=2M
+    if [ -n $BACKUP_DUPLICITY_MAX_TIME ] ; then
+		LogPrint "Removing the old stuff from server with CMD:
+	$DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME"
+		$DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
     fi
-    LogPrint "Removing the old stuff from server with CMD:
-    $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME"
-    $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
 
     # do the backup
     LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $GPG_OPT $EXCLUDES \
