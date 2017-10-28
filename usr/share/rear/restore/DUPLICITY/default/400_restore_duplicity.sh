@@ -18,8 +18,8 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
 
     export TMPDIR=$TARGET_FS_ROOT
 
-    export PYTHONHOME=/usr/lib64/python2.6
-    export PYTHONPATH=/usr/lib64/python2.6:/usr/lib64/python2.6/lib-dynload:/usr/lib64/python2.6/site-packages:/usr/lib64/python2.6/site-packages/duplicity
+    #export PYTHONHOME=/usr/lib64/python2.6
+    #export PYTHONPATH=/usr/lib64/python2.6:/usr/lib64/python2.6/lib-dynload:/usr/lib64/python2.6/site-packages:/usr/lib64/python2.6/site-packages/duplicity
     export HOSTNAME=$(hostname)
 
     GPG_OPT="$BACKUP_DUPLICITY_GPG_OPTIONS"
