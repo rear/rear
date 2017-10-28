@@ -1,4 +1,4 @@
-# BACKUP_URL=[proto]://[host]/[share]
+# BACKUP_DUPLICITY_NETFS_URL=[proto]://[host]/[share]
 # example: nfs://lucky/temp/backup
 # example: cifs://lucky/temp
 # example: usb:///dev/sdb1
@@ -8,38 +8,33 @@
 # example: sshfs://user@host/G/rear/
 # example: ftpfs://user:password@host/rear/ (the password part is optional)
 
-# Work around compat Bug
-if [[ $OUTPUT_OPTIONS == $BACKUP_OPTIONS ]]; then
-	OUTPUT_OPTIONS=""
-fi
-
-[[ "$BACKUP_URL" || "$BACKUP_MOUNTCMD" ]]
+[[ "$BACKUP_DUPLICITY_URL" || "$BACKUP_DUPLICITY_NETFS_URL" || "$BACKUP_DUPLICITY_NETFS_MOUNTCMD" ]]
 # FIXME: The above test does not match the error message below.
 # To match the the error message the test should be
-# [[ "$BACKUP_URL" || ( "$BACKUP_MOUNTCMD" && "$BACKUP_UMOUNTCMD" ) ]]
+# [[ "$BACKUP_DUPLICITY_NETFS_URL" || ( "$BACKUP_DUPLICITY_NETFS_MOUNTCMD" && "$BACKUP_DUPLICITY_NETFS_UMOUNTCMD" ) ]]
 # but I <jsmeix@suse.de> cannot decide if there is a subtle reason for the omission.
-StopIfError "You must specify either BACKUP_URL or BACKUP_MOUNTCMD and BACKUP_UMOUNTCMD !"
+StopIfError "You must specify either BACKUP_DUPLICITY_URL or BACKUP_DUPLICITY_NETFS_URL or BACKUP_DUPLICITY_NETFS_MOUNTCMD and BACKUP_DUPLICITY_NETFS_UMOUNTCMD !"
 
-if [[ "$BACKUP_URL" ]] ; then
-    local scheme=$( url_scheme $BACKUP_URL )
-    local hostname=$( url_hostname $BACKUP_URL )
-    local path=$( url_path $BACKUP_URL )
+if [[ "$BACKUP_DUPLICITY_NETFS_URL" ]] ; then
+    local scheme=$( url_scheme $BACKUP_DUPLICITY_NETFS_URL )
+    local hostname=$( url_hostname $BACKUP_DUPLICITY_NETFS_URL )
+    local path=$( url_path $BACKUP_DUPLICITY_NETFS_URL )
 
-    ### check for vaild BACKUP_URL schemes
+    ### check for vaild BACKUP_DUPLICITY_NETFS_URL schemes
     ### see https://github.com/rear/rear/issues/842
     case $scheme in
         (nfs|cifs|usb|tape|file|iso|sshfs|ftpfs)
-            # do nothing for vaild BACKUP_URL schemes
+            # do nothing for vaild BACKUP_DUPLICITY_NETFS_URL schemes
             :
             ;;
         (*)
-            Error "Invalid scheme '$scheme' in BACKUP_URL '$BACKUP_URL' valid schemes: nfs cifs usb tape file iso sshfs ftpfs"
+            Error "Invalid scheme '$scheme' in BACKUP_DUPLICITY_NETFS_URL '$BACKUP_DUPLICITY_NETFS_URL' valid schemes: nfs cifs usb tape file iso sshfs ftpfs"
             ;;
     esac
 
-    ### set other variables from BACKUP_URL
+    ### set other variables from BACKUP_DUPLICITY_NETFS_URL
     if [[ "usb" = "$scheme" ]] ; then
-        # if USB_DEVICE is not explicitly specified it is the path from BACKUP_URL
+        # if USB_DEVICE is not explicitly specified it is the path from BACKUP_DUPLICITY_NETFS_URL
         [[ -z "$USB_DEVICE" ]] && USB_DEVICE="$path"
     fi
 
@@ -51,9 +46,9 @@ if [[ "$BACKUP_URL" ]] ; then
         # cf. https://bugzilla.opensuse.org/show_bug.cgi?id=616706
         # TODO: it would be better to test if it is accessible via the actually needed port(s)
         ping -c 2 "$hostname" >/dev/null
-        LogPrintIfError "Host '$hostname' in BACKUP_URL '$BACKUP_URL' does not respond to a 'ping'."
+        LogPrintIfError "Host '$hostname' in BACKUP_DUPLICITY_NETFS_URL '$BACKUP_DUPLICITY_NETFS_URL' does not respond to a 'ping'."
     else
-        Log "Skipping 'ping' test for host '$hostname' in BACKUP_URL '$BACKUP_URL'"
+        Log "Skipping 'ping' test for host '$hostname' in BACKUP_DUPLICITY_NETFS_URL '$BACKUP_DUPLICITY_NETFS_URL'"
     fi
 
 fi
@@ -72,21 +67,18 @@ esac
 
 # include required programs
 # the code below includes mount.* and umount.* programs for all non-empty schemes
-# (i.e. for any non-empty BACKUP_URL like usb tape file sshfs ftpfs)
-# and it includes 'mount.' for empty schemes (e.g. if BACKUP_URL is not set)
+# (i.e. for any non-empty BACKUP_DUPLICITY_NETFS_URL like usb tape file sshfs ftpfs)
+# and it includes 'mount.' for empty schemes (e.g. if BACKUP_DUPLICITY_NETFS_URL is not set)
 # which is o.k. because it is a catch all rule so we do not miss any
 # important executable needed a certain scheme and it does not hurt
 # see https://github.com/rear/rear/pull/859
 PROGS=( "${PROGS[@]}"
 showmount
-mount.$(url_scheme $BACKUP_URL)
-umount.$(url_scheme $BACKUP_URL)
-$( test "$BACKUP_MOUNTCMD" && echo "${BACKUP_MOUNTCMD%% *}" )
-$( test "$BACKUP_UMOUNTCMD" && echo "${BACKUP_UMOUNTCMD%% *}" )
+mount.$(url_scheme $BACKUP_DUPLICITY_NETFS_URL)
+umount.$(url_scheme $BACKUP_DUPLICITY_NETFS_URL)
+$( test "$BACKUP_DUPLICITY_NETFS_MOUNTCMD" && echo "${BACKUP_DUPLICITY_NETFS_MOUNTCMD%% *}" )
+$( test "$BACKUP_DUPLICITY_NETFS_UMOUNTCMD" && echo "${BACKUP_DUPLICITY_NETFS_UMOUNTCMD%% *}" )
 $BACKUP_PROG
-gzip
-bzip2
-xz
 )
 
 # include required stuff for sshfs or ftpfs (via CurlFtpFS)
@@ -112,9 +104,9 @@ fi
 
 # include required modules, like nfs cifs ...
 # the code below includes modules for all non-empty schemes
-# (i.e. for any non-empty BACKUP_URL like usb tape file sshfs ftpfs)
+# (i.e. for any non-empty BACKUP_DUPLICITY_NETFS_URL like usb tape file sshfs ftpfs)
 # which is o.k. because this must been seen as a catch all rule
 # (one never knows what one could miss)
 # see https://github.com/rear/rear/pull/859
-MODULES=( "${MODULES[@]}" $(url_scheme $BACKUP_URL) )
+MODULES=( "${MODULES[@]}" $(url_scheme $BACKUP_DUPLICITY_NETFS_URL) )
 

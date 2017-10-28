@@ -1,5 +1,5 @@
 # umount mountpoint
-if [ -n $BACKUP_URL ]; then
+if [ -n "$BACKUP_URL" -o -n "$BACKUP_UMOUNTCMD" ]; then
 
 	if [[ "$BACKUP_UMOUNTCMD" ]] ; then
 		BACKUP_URL="var://BACKUP_UMOUNTCMD"

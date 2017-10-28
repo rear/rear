@@ -1,5 +1,5 @@
 # create mount point
-if [ -n $BACKUP_URL ]; then
+if [ -n "$BACKUP_URL" -o -n "$BACKUP_MOUNTCMD" ]; then
 	mkdir -p $v "$BUILD_DIR/outputfs" >&2
 	StopIfError "Could not mkdir '$BUILD_DIR/outputfs'"
 

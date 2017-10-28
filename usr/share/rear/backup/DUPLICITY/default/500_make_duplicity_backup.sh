@@ -70,7 +70,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
 	fi
 	
     # first remove everything older than $BACKUP_DUPLICITY_MAX_TIME
-    if [ -n $BACKUP_DUPLICITY_MAX_TIME ] ; then
+    if [ -n "$BACKUP_DUPLICITY_MAX_TIME" ] ; then
 		LogPrint "Removing the old stuff from server with CMD:
 	$DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME"
 		$DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
