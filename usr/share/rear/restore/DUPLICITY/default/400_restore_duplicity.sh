@@ -31,7 +31,7 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
 
     # ensure we have enougth space to unpack the backups (they are 100M, but neet up to 1G to unpack!)
     mkdir -p /mnt/tmp
-    mount -t tmpfs none /mnt/tmp
+    mount -t tmpfs none /mnt/tmp -o size=8G
 
     LogPrint "with CMD: $DUPLICITY_PROG -v 5 $GPG_OPT $GPG_KEY --force $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
     LogPrint "Logging to $TMP_DIR/duplicity-restore.log"
