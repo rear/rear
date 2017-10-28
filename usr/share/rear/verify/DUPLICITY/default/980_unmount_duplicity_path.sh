@@ -1,11 +1,11 @@
 # umount mountpoint
-if [ -n "$BACKUP_URL" -o -n "$BACKUP_UMOUNTCMD" ]; then
+if [ -n "$BACKUP_DUPLICITY_NETFS_URL" -o -n "$BACKUP_DUPLICITY_NETFS_UMOUNTCMD" ]; then
 
-	if [[ "$BACKUP_UMOUNTCMD" ]] ; then
-		BACKUP_URL="var://BACKUP_UMOUNTCMD"
+	if [[ "$BACKUP_DUPLICITY_NETFS_UMOUNTCMD" ]] ; then
+		BACKUP_DUPLICITY_NETFS_URL="var://BACKUP_DUPLICITY_NETFS_UMOUNTCMD"
 	fi
 
-	umount_url $BACKUP_URL $BUILD_DIR/outputfs
+	umount_url $BACKUP_DUPLICITY_NETFS_URL $BUILD_DIR/outputfs
 
 	rmdir $v $BUILD_DIR/outputfs >&2
 	if [[ $? -eq 0 ]] ; then
