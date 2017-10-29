@@ -2,7 +2,7 @@
 Log "Mirroring lib/ structure."
 for libdir in /lib* /usr/lib* ; do
     if [[ -L $libdir ]] ; then
-        target=$(readlink -f $libdir)
+        target=$(readlink $libdir)
 
         if [[ ! -e $ROOTFS_DIR$target ]] ; then
             mkdir $v -p $ROOTFS_DIR$target >&2
