@@ -124,6 +124,10 @@ function bridge_handling {
 
     [ -d "/sys/class/net/$dev/bridge" -o -d "/sys/class/net/$dev/brport" ] || return
 
+    if [ -z "$already_set_up_bridges" ]; then
+        MODULES=( "${MODULES[@]}" 'bridge' )
+    fi
+
     local bridge
 
     if [ -d "/sys/class/net/$dev/bridge" ]; then
