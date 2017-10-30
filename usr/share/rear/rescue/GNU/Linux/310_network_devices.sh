@@ -126,9 +126,6 @@ function bridge_handling {
 
     local bridge
 
-    if [ -z "$already_set_up_bridges" ]; then
-        REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "brctl" )
-    fi
     if [ -d "/sys/class/net/$dev/bridge" ]; then
         # Device is the bridge device
         bridge=$dev
@@ -140,17 +137,15 @@ function bridge_handling {
         test "$bridge" = "$already_set_up_bridge" && found=1 && break
     done
     if [ $found -eq 0 ]; then
-        stp=$(brctl show $bridge | awk "\$1 == \"$bridge\" { print \$3 }")
-
-        echo "brctl addbr $bridge" >>$network_devices_setup_script
-        echo "brctl stp $bridge $stp" >>$network_devices_setup_script
+        stp=$(cat "/sys/class/net/$bridge/bridge/stp_state")
+        echo "ip link add name $bridge type bridge stp_state $stp" >>$network_devices_setup_script
 
         # Remember that we already dealt with this bridge:
         already_set_up_bridges+=" ${bridge}"
     fi
 
     if [ -d "/sys/class/net/$dev/brport" ]; then
-        echo "brctl addif $bridge $dev" >>$network_devices_setup_script
+        echo "ip link set dev $dev master $bridge" >>$network_devices_setup_script
     fi
 }
 
