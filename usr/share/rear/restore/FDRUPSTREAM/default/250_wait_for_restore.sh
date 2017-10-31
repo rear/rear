@@ -3,7 +3,7 @@
 #
 
 LogUserOutput "
-   Perform your restore using Director or Web Portal.
+   Perform your restore using Director or by submitting a batch job.
 
    IMPORTANT: Restore the entire '/' filesystem to '$TARGET_FS_ROOT'
    on the recovery system.
