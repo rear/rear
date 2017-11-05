@@ -33,10 +33,12 @@ fi
 # When running ldd for a file that is 'not a dynamic executable' ldd returns non-zero exit code.
 local binary=""
 local broken_binaries=""
-# Catch all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths.
+# - Catch all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths.
 # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
 # see https://github.com/rear/rear/pull/1514#discussion_r141031975
 # and for the general issue see https://github.com/rear/rear/issues/1372
+# - You may need to update and export LD_LIBRARY_PATH if third-party software you want to include
+# in the rescue image does not update ldconfig cache. (https://github.com/rear/rear/issues/1533).
 for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ) ; do
     chroot $ROOTFS_DIR /bin/ldd $binary | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
 done
@@ -61,4 +63,3 @@ if contains_visible_char "$broken_binaries" ; then
     is_true "$fatal_missing_library" && Error "ReaR recovery system in '$ROOTFS_DIR' not usable"
     LogPrintError "ReaR recovery system in '$ROOTFS_DIR' needs additional libraries, check $RUNTIME_LOGFILE for details"
 fi
-
