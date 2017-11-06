@@ -33,13 +33,22 @@ fi
 # When running ldd for a file that is 'not a dynamic executable' ldd returns non-zero exit code.
 local binary=""
 local broken_binaries=""
-# Catch all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths.
+# - Catch all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths.
 # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
 # see https://github.com/rear/rear/pull/1514#discussion_r141031975
 # and for the general issue see https://github.com/rear/rear/issues/1372
+local old_LD_LIBRARY_PATH
+test $LD_LIBRARY_PATH && old_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+if test "$BACKUP" = "TSM" ; then
+    # Use a TSM-specific LD_LIBRARY_PATH to find TSM libraries
+    # see https://github.com/rear/rear/issues/1533
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TSM_LD_LIBRARY_PATH
+fi
 for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ) ; do
     chroot $ROOTFS_DIR /bin/ldd $binary | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
 done
+test $old_LD_LIBRARY_PATH && export LD_LIBRARY_PATH=$old_LD_LIBRARY_PATH || unset LD_LIBRARY_PATH
+
 if contains_visible_char "$broken_binaries" ; then
     LogPrintError "There are binaries or libraries in the ReaR recovery system that need additional libraries"
     KEEP_BUILD_DIR=1
@@ -61,4 +70,3 @@ if contains_visible_char "$broken_binaries" ; then
     is_true "$fatal_missing_library" && Error "ReaR recovery system in '$ROOTFS_DIR' not usable"
     LogPrintError "ReaR recovery system in '$ROOTFS_DIR' needs additional libraries, check $RUNTIME_LOGFILE for details"
 fi
-
