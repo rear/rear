@@ -402,3 +402,8 @@ else
     already_set_up_bonding_interfaces=${bonding_interfaces[@]}
 fi
 
+# Local functions must be 'unset' because bash does not support 'local function ...'
+# cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
+unset -f bridge_handling
+unset -f vlan_setup
+unset -f bond_setup
