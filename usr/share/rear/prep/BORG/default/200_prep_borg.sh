@@ -14,10 +14,11 @@ if [[ $BORGBACKUP_ARCHIVE_PREFIX =~ [^a-zA-Z0-9] ]] \
     Error "BORGBACKUP_ARCHIVE_PREFIX must be alphanumeric non-empty value only"
 fi
 
-# Create our own locales, used only for Borg restore.
-mkdir -p $ROOTFS_DIR/usr/lib/locale
-localedef -f UTF-8 -i en_US $ROOTFS_DIR/usr/lib/locale/rear.UTF-8
-StopIfError "Could not create locales"
+# Check existence of default locales, to be used for Borg restore.
+BORG_DEFAULT_LOCALE=en_US.utf8
+if ! [[ $(locale -a | fgrep $BORG_DEFAULT_LOCALE) ]]; then
+    Error "Could not find borg default locale $BORG_DEFAULT_LOCALE"
+fi
 
 # Activate $COPY_AS_IS_BORG from default.conf.
 COPY_AS_IS=( "${COPY_AS_IS[@]}" "${COPY_AS_IS_BORG[@]}" )
