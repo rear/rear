@@ -16,8 +16,6 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
 		export PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
 	fi
 
-    export TMPDIR=$TARGET_FS_ROOT
-
     #export PYTHONHOME=/usr/lib64/python2.6
     #export PYTHONPATH=/usr/lib64/python2.6:/usr/lib64/python2.6/lib-dynload:/usr/lib64/python2.6/site-packages:/usr/lib64/python2.6/site-packages/duplicity
     export HOSTNAME=$(hostname)
@@ -30,17 +28,29 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     starttime=$SECONDS
 
     # ensure we have enougth space to unpack the backups (they are 100M, but neet up to 1G to unpack!)
-    mkdir -p /mnt/tmp
-    mount -t tmpfs none /mnt/tmp -o size=8G
-
-    LogPrint "with CMD: $DUPLICITY_PROG -v 5 $GPG_OPT $GPG_KEY --force $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
+    if [ -n "$BACKUP_DUPLICITY_TEMP_RAMDISK" ]; then
+		mkdir -p /mnt/tmp
+		mount -t tmpfs none /mnt/tmp -o size=100%
+		DUPLICITY_TEMPDIR=/mnt/tmp
+	else
+		DUPLICITY_TEMPDIR="$( mktemp -d -p $TARGET_FS_ROOT rear-duplicity.XXXXXXXXXXXXXXX || Error 'Could not create Temporary Directory for Duplicity' )"
+	fi
+	
+	#Duplicity also saves some big files in $HOME
+	HOME_TMP="$HOME"
+	HOME="$DUPLICITY_TEMPDIR"
+	
+    LogPrint "with CMD: $DUPLICITY_PROG -v 5 $GPG_OPT $GPG_KEY --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
     LogPrint "Logging to $TMP_DIR/duplicity-restore.log"
-    $DUPLICITY_PROG -v 5 $GPG_OPT $GPG_KEY --force --tempdir=/mnt/tmp $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT 0<&6 | tee $TMP_DIR/duplicity-restore.log
+    $DUPLICITY_PROG -v 5 $GPG_OPT $GPG_KEY --force --tempdir="$DUPLICITY_TEMPDIR" $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT 0<&6 | tee $TMP_DIR/duplicity-restore.log
     _rc=$?
 
     transfertime="$((SECONDS-$starttime))"
     sleep 1
-
+	
+	rm -rf "$DUPLICITY_TEMPDIR" || Error "Could not remove Temporary Directory for Duplicity: $DUPLICITY_TEMPDIR"
+	HOME="$HOME_TMP"
+	
     #LogPrint "starttime = $starttime"
     #ogPrint "transfertime = $transfertime"
 
