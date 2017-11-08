@@ -26,6 +26,9 @@ fi
 function modinfo_filename () {
     local module_name=$1
     local module_filename=""
+    local alias_module_name=$(modprobe -n -R $module_name 2>/dev/null)
+    # If the installed modprobe command supports resolving module aliases (-R), use that capability.
+    test $alias_module_name && module_name=$alias_module_name
     # Older modinfo (e.g. the one in SLES10) does not support '-k'
     # but that old modinfo returns a zero exit code when called as 'modinfo -k ...'
     # and shows a 'modinfo: invalid option -- k ...' message on stderr and nothing on stdout
