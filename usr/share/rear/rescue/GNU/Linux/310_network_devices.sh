@@ -105,8 +105,22 @@ for network_interface in $network_interfaces ; do
     # then simple substring search would find "eth0" as substring in "lo virt-eth0"
     # so that to be on the safe side a dumb traditional for-loop approach is used
     # (until someone implements a better solution that works on all bash 3.x versions):
-    if [ ! -d "/sys/class/net/$network_interface/bridge" ]; then
-        # Skip all virtual interfaces, except bridges
+    if [ -d "/sys/class/net/$network_interface/bridge" ]; then
+        # Consider bridges linked to physical interfaces only (directly or not)
+        function is_linked_to_physical () {
+            local devpath=$1
+            # If device is a physical device, return success
+            [ ! -e $devpath/device ] || return 0
+            # Otherwise recurse on lower devices (if any)
+            for dev in $(/bin/readlink -f $devpath/lower_* 2>/dev/null); do
+                ! is_linked_to_physical $dev || return 0
+            done
+            # Device is not a physical device
+            return 1
+        }
+        is_linked_to_physical /sys/class/net/$network_interface || network_interface=""
+    else
+        # Skip all virtual interfaces, except bridges handled above
         for virtual_network_interface in $virtual_network_interfaces ; do
             test "$network_interface" = "$virtual_network_interface" && network_interface=""
         done
