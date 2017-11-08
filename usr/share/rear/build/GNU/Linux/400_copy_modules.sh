@@ -84,8 +84,9 @@ for dummy in "once" ; do
             Error "KERNEL_VERSION='$KERNEL_VERSION' does not match currently running kernel version ('uname -r' shows '$currently_running_kernel_version')"
         fi
         loaded_modules="$( lsmod | tail -n +2 | cut -d ' ' -f 1 )"
-        # Can it really happen that a module is currently loaded but 'modinfo -F filename' cannot show its filename?
-        # To be on the safe side there is a test even for for such a possibly weird error here:
+        # It can happen that a module is loaded but 'modinfo -F filename' cannot show its filename
+        # when it is loaded under a module alias name but the above modinfo_filename function
+        # could not resolve aliases (when the modprobe command does not support -R):
         loaded_modules_files="$( for loaded_module in $loaded_modules ; do modinfo_filename $loaded_module || Error "$loaded_module loaded but no module file?" ; done )"
         # $loaded_modules_files cannot be empty because modinfo_filename fails when it cannot show a module filename:
         if ! cp $verbose -t $ROOTFS_DIR -L --preserve=all --parents $loaded_modules_files 1>&2 ; then
@@ -119,8 +120,9 @@ for dummy in "once" ; do
         module_files=$( modprobe --ignore-install --set-version $KERNEL_VERSION --show-depends $module | awk '/^insmod / { print $2 }' | sort -u )
         if ! test "$module_files" ; then
             # Fallback is the plain module file without other needed modules (cf. the MODULES=( 'loaded_modules' ) case above):
-            # Can it really happen that a module exists (which is tested above) but 'modinfo -F filename' cannot show its filename?
-            # To be on the safe side there is a test even for for such a possibly weird error here:
+            # It can happen that 'modinfo -F filename' cannot show the module filename
+            # when it is specified under a module alias name but the above modinfo_filename function
+            # could not resolve aliases (when the modprobe command does not support -R):
             module_files="$( modinfo_filename $module || Error "$module exists but no module file?" )"
         fi
         # $module_files cannot be empty because modinfo_filename fails when it cannot show a module filename:
