@@ -119,10 +119,14 @@ done
 
 # Add-on for bridge devices
 already_set_up_bridges=""
-function bridge_handling {
-    local dev=$1
+# Handles bridge attached to a network interface
+# when 2nd device is passed, this 2nd device will hold the bridge, instead of
+# the 1st device, this is used in Simplified bonding setup.
+function bridge_handling () {
+    local from_network_interface=$1
+    local to_network_interface=${2:-$from_network_interface}
 
-    [ -d "/sys/class/net/$dev/bridge" -o -d "/sys/class/net/$dev/brport" ] || return
+    [ -d "/sys/class/net/$from_network_interface/bridge" -o -d "/sys/class/net/$from_network_interface/brport" ] || return
 
     if [ -z "$already_set_up_bridges" ]; then
         MODULES=( "${MODULES[@]}" 'bridge' )
@@ -130,11 +134,11 @@ function bridge_handling {
 
     local bridge
 
-    if [ -d "/sys/class/net/$dev/bridge" ]; then
+    if [ -d "/sys/class/net/$from_network_interface/bridge" ]; then
         # Device is the bridge device
-        bridge=$dev
+        bridge=$from_network_interface
     else
-        bridge=$(basename $(readlink "/sys/class/net/$dev/brport/bridge"))
+        bridge=$(basename $(readlink "/sys/class/net/$from_network_interface/brport/bridge"))
     fi
     local found=0
     for already_set_up_bridge in $already_set_up_bridges ; do
@@ -148,8 +152,8 @@ function bridge_handling {
         already_set_up_bridges+=" ${bridge}"
     fi
 
-    if [ -d "/sys/class/net/$dev/brport" ]; then
-        echo "ip link set dev $dev master $bridge" >>$network_devices_setup_script
+    if [ -d "/sys/class/net/$from_network_interface/brport" ]; then
+        echo "ip link set dev $to_network_interface master $bridge" >>$network_devices_setup_script
     fi
 }
 
@@ -386,9 +390,13 @@ else
         if ip link show dev $bonding_interface | grep -q UP ; then
             # Link is up:
 
-            bridge_handling $bonding_interface
-
             bonding_enslaved_interfaces=( $( cat /proc/net/bonding/$bonding_interface | grep "Slave Interface:" | cut -d : -f 2 ) )
+            # Use bonding_enslaved_interfaces[0] instead of bond$c to copy
+            # bridge configuration and IP address from bonding device to the
+            # first enslaved device
+
+            bridge_handling $bonding_interface ${bonding_enslaved_interfaces[0]}
+
             for addr in $( ip a show dev $bonding_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
                 # Use bonding_enslaved_interfaces[0] instead of bond$c
                 # to copy IP address from bonding device to the first enslaved device:
