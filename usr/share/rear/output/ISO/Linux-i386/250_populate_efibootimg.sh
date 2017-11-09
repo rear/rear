@@ -51,7 +51,7 @@ default=0
 timeout 5
 splashimage=/EFI/BOOT/splash.xpm.gz
 title Relax-and-Recover (no Secure Boot)
-    kernel /isolinux/kernel
+    kernel /isolinux/kernel $KERNEL_CMDLINE
     initrd /isolinux/$REAR_INITRD_FILENAME
 
 EOF

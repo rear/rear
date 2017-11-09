@@ -48,14 +48,7 @@ if test "$uefi_bootloader_basename" = "elilo.efi" ; then
     # Create config for elilo
     Log "Creating ${EFI_DST}/elilo.conf"
 
-    cat > ${EFI_DST}/elilo.conf << EOF
-default = rear
-timeout = 5
-
-image = kernel
-    label = rear
-    initrd = $REAR_INITRD_FILENAME
-EOF
+    create_ebiso_elilo_conf > ${EFI_DST}/elilo.conf
 
 # Configure grub for EFI boot or die
 else
@@ -86,7 +79,7 @@ default=0
 timeout=5
 
 title Relax-and-Recover (no Secure Boot)
-    kernel ${EFI_DIR}/kernel
+    kernel ${EFI_DIR}/kernel $KERNEL_CMDLINE
     initrd ${EFI_DIR}/$REAR_INITRD_FILENAME
 EOF
             ;;
@@ -104,7 +97,7 @@ set timeout=5
 set default=0
 
 menuentry "Relax-and-Recover (no Secure Boot)" {
-    linux ${EFI_DIR}/kernel
+    linux ${EFI_DIR}/kernel $KERNEL_CMDLINE
     initrd ${EFI_DIR}/$REAR_INITRD_FILENAME
 }
 EOF
