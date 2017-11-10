@@ -81,6 +81,19 @@ if [[ "\$IPADDR" ]] && [[ "\$NETMASK" ]] ; then
 fi
 EOT
 
+# Function returning whether a device path is somehow linked to some physical device
+function is_linked_to_physical () {
+    local devpath=$1
+    # If device is a physical device, return success
+    [ ! -e $devpath/device ] || return 0
+    # Otherwise recurse on lower devices (if any)
+    for dev in $(/bin/readlink -f $devpath/lower_* 2>/dev/null); do
+        ! is_linked_to_physical $dev || return 0
+    done
+    # Device is not a physical device
+    return 1
+}
+
 # Collect list of all physical network interface cards.
 # Take all interfaces in /sys/class/net and subtract /sys/devices/virtual/net, bonding_masters:
 # Keep Bridges in the list, as if they were physical interfaces: bridges are to
@@ -107,17 +120,6 @@ for network_interface in $network_interfaces ; do
     # (until someone implements a better solution that works on all bash 3.x versions):
     if [ -d "/sys/class/net/$network_interface/bridge" ]; then
         # Consider bridges linked to physical interfaces only (directly or not)
-        function is_linked_to_physical () {
-            local devpath=$1
-            # If device is a physical device, return success
-            [ ! -e $devpath/device ] || return 0
-            # Otherwise recurse on lower devices (if any)
-            for dev in $(/bin/readlink -f $devpath/lower_* 2>/dev/null); do
-                ! is_linked_to_physical $dev || return 0
-            done
-            # Device is not a physical device
-            return 1
-        }
         is_linked_to_physical /sys/class/net/$network_interface || network_interface=""
     else
         # Skip all virtual interfaces, except bridges handled above
@@ -429,3 +431,4 @@ fi
 unset -f bridge_handling
 unset -f vlan_setup
 unset -f bond_setup
+unset -f is_linked_to_physical
