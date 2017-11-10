@@ -42,9 +42,10 @@ echo "# Network devices setup:" >$network_devices_setup_script
 
 # Skip network_devices_setup_script if the kernel command line contains the 'noip' parameter
 # (a kernel command line parameter has precedence over things like NETWORKING_PREPARATION_COMMANDS):
-  ( echo "# Skip network devices setup if the kernel command line parameter 'noip' is specifiled:"
-    echo "grep -q '\<noip\>' /proc/cmdline && return"
-  ) >>$network_devices_setup_script
+cat - <<EOT >>$network_devices_setup_script
+# Skip network devices setup if the kernel command line parameter 'noip' is specified:
+grep -q '\<noip\>' /proc/cmdline && return
+EOT
 
 # Prepend the commands specified in NETWORKING_PREPARATION_COMMANDS.
 # This is done before the DHCP check so that NETWORKING_PREPARATION_COMMANDS
@@ -81,413 +82,696 @@ if [[ "\$IPADDR" ]] && [[ "\$NETMASK" ]] ; then
 fi
 EOT
 
-# Detect whether 'readlink' supports multiple filenames or not
-# e.g. RHEL6 doesn't support that
-if readlink /foo /bar 2>/dev/null; then
-    function resolve () {
-        readlink -e $@
-    }
-else
-    function resolve () {
-        for path in $@; do
-            readlink -e $path
-        done
-    }
-fi
+# ############################################################################
+# EXPLANATION OF THE ALGORITHM USED
+# ############################################################################
+#
+# We are only interested in network interfaces which have all these:
+# - they are UP
+# - they have an IP address
+# - they are somehow linked to a physical device
+#
+# For each such interface, apply the following algorithm (ALGO)
+#
+# - if this is a physical interface, configure it
+#
+# - otherwise determine type of the virtual interface
+#
+#   - if it is a bridge
+#
+#     - if SIMPLIFY_BRIDGE is set
+#       - configure the first UP underlying interface using ALGO
+#       - keep record of interface mapping into new underlying interface
+#     - otherwise
+#       - configure the bridge
+#       - configure all UP underlying interfaces using ALGO
+#
+#   - if it is a bond
+#
+#     - if SIMPLIFY_BONDING is set
+#       - configure the first UP underlying interface using ALGO
+#       - keep record of interface mapping into new underlying interface
+#     - otherwise
+#       - configure the bond
+#       - configure all UP underlying interfaces using ALGO
+#
+#   - if it is a vlan
+#
+#     - configure the vlan based on parent's interface
+#
+#   - if it is a team, only simplification is currently implemented
+#
+#     - configure the first UP underlying interface using ALGO
+#     - keep record of interface mapping into new underlying interface
+#
+# - in any case, a given interface is only configured once; when an interface
+#   has already been configured, configuration code should be ignored by
+#   caller.
+#
+# IMPORTANT NOTE:
+#
+# Because simplification can be used, it may happen that configuring an
+# interface 'someitf' leads to configuring another interface 'anotheritf'
+# instead.
+# For example, when configuring a 'team', the underlying interface (e.g.
+# 'bond0') will be configured instead.
+#
+# This can leads to very deep mapping, as shown in the example below, with all
+# simplifications active:
+#
+# br0: bridge over team0, hosting IP address 1.2.3.4
+# bond0: bond on phys devices eth0 and eth1
+# team0: team on vlan bond0.10 and eth2.10
+#
+# This will result in:
+#
+# eth0.10 configured with IP address 1.2.3.4
+#
+# Explanation:
+#
+# 'br0' is first mapped into 'team0' because of bridge simplification
+# but 'team0' is mapped into 'bond0.10'
+# and 'bond0.10' itself is mapped into 'eth0.10', because 'bond0' is mapped
+#   into 'eth0' because of bonding simplification
+# this results in 'br0' be mapped recursively into 'eth0.10'
+#
+# Because of all this, each time 'handle_interface' is called, the code should
+# be checked to verify whether the configured interface is effectively the
+# expected one, or a mapping occurred instead.
 
-# Detect whether 'lower_*' symlinks for network interfaces exist or not
-# e.g. RHEL6 doesn't have that
-if ls /sys/class/net/* | grep -q ^lower_; then
-    has_lower_links=1
-else
-    has_lower_links=0
-fi
+# Array of mapped network interfaces.
+# Global because it is also used in 350_routing.sh.
+#
+# Each line consists in "source_interface mapped_interface" values.
+# Examples:
+# 1. Map a team 'team0' into lower interface 'eth0': "team0 eth0"
+# 2. Map a bond 'bond0' into lower interface 'eth0': "bond0 eth0"
+# 3. Map vlan 'bond0.441' of mapped 'bond0' into corresponding 'eth0' vlan: "bond0.441 eth0.441"
+MAPPED_NETWORK_INTERFACES=()
 
-# Detect whether 'ip link add name NAME type bridge ...' exists
-ip_link_supports_bridge='false'
-ip link help 2>&1 | grep -qw bridge && ip_link_supports_bridge='true'
+# Function to map an interface to a new interface
+function map_network_interface () {
+    local network_interface=$1
+    local mapped_as=$2
+
+    if $( printf "%s\n" "${MAPPED_NETWORK_INTERFACES[@]}" | grep -qw ^$network_interface ); then
+        # There is an error in the code. This means a handle_* function has
+        # been called on an already mapped interface, which shouldn't happen.
+        BugError "'$network_interface' is already mapped."
+    fi
+
+    DebugPrint "Mapping $network_interface onto $mapped_as"
+
+    MAPPED_NETWORK_INTERFACES+=( "$network_interface $mapped_as" )
+}
+
+# Function returning the new interface when an interface is mapped, otherwise
+# itself
+function get_mapped_network_interface () {
+    local network_interface=$1
+
+    local mapped_as=$( printf "%s\n" "${MAPPED_NETWORK_INTERFACES[@]}" |
+        awk "\$1 == \"$network_interface\" { print \$2 }" )
+
+    echo ${mapped_as:-$network_interface}
+}
 
 # Function returning whether a device path is linked to some physical device
 # return 0 if True
 # return 1 otherwise
 function is_devpath_linked_to_physical () {
     local sysfspath=$1
-
     # If device is a physical device, return success
     [ ! -e $sysfspath/device ] || return 0
-
     # Otherwise recurse on lower devices (if any)
-    local devices
-    if [ $has_lower_links -eq 1 ]; then
-        devices=$( resolve $sysfspath/lower_* 2>/dev/null )
-    else
-        # Fallback to probing as much as we can
-        # - slave_*: for bonding
-        # - brif: for bridges
-        # - xxx.nn: for vlan (using awk, checking for '.')
-        devices="$( resolve $sysfspath/slave_* )"
-        devices+=" $( for d in $( resolve $sysfspath/brif/* ); do dirname $d; done )"
-        devices+=" $( echo $sysfspath | awk -F '.' '$2 { print $1 }' )"
-    fi
     local dev
-    for dev in $devices; do
+    for dev in $(readlink -f $sysfspath/lower_* 2>/dev/null); do
         ! is_devpath_linked_to_physical $dev || return 0
     done
-
     # Device is not linked to a physical device
     return 1
 }
 
-# Collect list of all physical network interface cards.
-# Take all interfaces in /sys/class/net and subtract /sys/devices/virtual/net, bonding_masters:
-# Keep Bridges in the list, as if they were physical interfaces: bridges are to
-# be considered as physical interfaces, otherwise building the configuration on
-# the real physical interface may be too complicated.
-physical_network_interfaces=""
-# e.g. on SLES12 with KVM/QEMU 'ls /sys/devices/virtual/net' may result "br0 lo virbr1 virbr1-nic vnet0"
-virtual_network_interfaces=$( ls /sys/devices/virtual/net )
-# e.g. on SLES12 with KVM/QEMU 'ls /sys/class/net' may result "br0 eth0 lo virbr1 virbr1-nic vnet0"
-network_interfaces=$( ls /sys/class/net )
-# so that in this example using network_interfaces and subtracting virtual_network_interfaces
-# results "eth0" as the only physical network interface.
-# Note that when network_interfaces or virtual_network_interfaces is empty
-# then no commands are executed in the for-loops and the return status is 0
-# which is the right behaviour here (i.e. no additional "if empty" test needed) and
-# because network interface names do not allow spaces they can be just used in for-loops:
-for network_interface in $network_interfaces ; do
-    # See https://github.com/rear/rear/issues/758 why regular expression
-    # cannot be used here (because it does not work on all bash 3.x versions).
-    # Additionally one cannot use simple substring search because assume
-    # virtual_network_interfaces is "lo virt-eth0" and network_interfaces is "eth0 lo virt-eth0"
-    # then simple substring search would find "eth0" as substring in "lo virt-eth0"
-    # so that to be on the safe side a dumb traditional for-loop approach is used
-    # (until someone implements a better solution that works on all bash 3.x versions):
-    if [ -d "/sys/class/net/$network_interface/bridge" ]; then
-        # Consider bridges linked to physical interfaces only (directly or not)
-        is_devpath_linked_to_physical /sys/class/net/$network_interface || network_interface=""
+# Function returning whether an interface is somehow linked to physical
+function is_linked_to_physical () {
+    local network_interface=$1
+    local sysfspath=/sys/class/net/$network_interface
+
+    is_devpath_linked_to_physical $sysfspath
+}
+
+# Function returning lower interfaces of the specified network interface
+function get_lower_interfaces () {
+    local network_interface=$1
+    local sysfspath=/sys/class/net/$network_interface
+
+    local dev
+    for dev in $(readlink -f $sysfspath/lower_* 2>/dev/null); do
+        echo $(get_mapped_network_interface $(basename $dev))
+    done
+}
+
+function get_interface_state () {
+    local network_interface=$1
+    local sysfspath=/sys/class/net/$network_interface
+
+    cat $sysfspath/operstate
+}
+
+function is_interface_up () {
+    local network_interface=$1
+    local sysfspath=/sys/class/net/$network_interface
+
+    local state=$( cat $sysfspath/operstate )
+    if [ "$state" = "down" ]; then
+        return 1
+    elif [ "$state" = "up" ]; then
+        return 0
     else
-        # Skip all virtual interfaces, except bridges handled above
-        for virtual_network_interface in $virtual_network_interfaces ; do
-            test "$network_interface" = "$virtual_network_interface" && network_interface=""
+        BugError "Unexpected operational state '$state' for '$network_interface'."
+    fi
+}
+
+# Configures the IP addresses of the network interface
+function ipaddr_setup () {
+    local network_interface=$1
+    local mapped_as=$( get_mapped_network_interface $network_interface )
+
+    # Handle ip_addresses mapping
+    # FIXME? In old code, the IP addresses were mapped for all devices
+    # specified in the file and nothing more, other devices weren't set up at
+    # all.
+    # Since I believe this was not the intended behaviour, I fixed that by
+    # applying new mapping to devices listed in ip_addresses file only and
+    # still using the system IP address for other devices.
+    # If that was the intended behaviour, then block 'ipaddrs' has to be
+    # modified.
+
+    local ipmapfile=$TMP_DIR/mappings/ip_addresses
+    if [ ! -f $ipmapfile ]; then
+        mkdir -p $v $TMP_DIR/mappings >&2
+        if test -f $CONFIG_DIR/mappings/ip_addresses; then
+            read_and_strip_file $CONFIG_DIR/mappings/ip_addresses > $ipmapfile
+        else
+            touch $ipmapfile
+        fi
+    fi
+
+    local ipaddr
+    local ipaddrs=$(awk "\$1 == \"$network_interface\" { print \$2 }" $TMP_DIR/mappings/ip_addresses)
+    if [ -n "$ipaddrs" ]; then
+        # If some IP is found for the network interface, then use them
+        for ipaddr in $ipaddrs; do
+            echo "ip addr add $ipaddr dev $mapped_as"
+        done
+    else
+        # Otherwise, collect IP addresses for the network interface on the system
+        for ipaddr in $( ip a show dev $network_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
+            echo "ip addr add $ipaddr dev $mapped_as"
         done
     fi
-    # bonding_masters is also no physical network interface:
-    test "$network_interface" = "bonding_masters" && network_interface=""
-    # Now network_interface is non-empty only for physical network interfaces:
-    test "$network_interface" && physical_network_interfaces+=" $network_interface"
-done
+}
 
-# Add-on for bridge devices
+function setup_device_params () {
+    local network_interface=$1
+    local sysfspath=/sys/class/net/$network_interface
+    local mapped_as=$( get_mapped_network_interface $network_interface )
+
+    local state=$( get_interface_state $network_interface )
+    echo "ip link set dev $mapped_as $state"
+
+    # Record interface MTU
+    if test -e "$sysfspath/mtu" ; then
+        mtu="$( cat $sysfspath/mtu )" || LogPrint "Could not read MTU for '$network_interface'."
+        [[ "$mtu" ]] && echo "ip link set dev $mapped_as mtu $mtu"
+    fi
+}
+
+# Return codes for the handle_* functions below
+# rc_success: OK
+# rc_error:   Not supported / some unexpected error occurred
+# rc_ignore:  Nothing to do
+rc_success=0
+rc_error=1
+rc_ignore=2
+
+already_set_up_interfaces=""
+
+function handle_interface () {
+    local network_interface=$1
+    local sysfspath=/sys/class/net/$network_interface
+
+    if [[ " $already_set_up_interfaces " == *\ $network_interface\ * ]]; then
+        DebugPrint "$network_interface already handled..."
+        return $rc_ignore
+    fi
+    already_set_up_interfaces+=" $network_interface"
+
+    local code
+    local rc
+    local tmpfile=$( mktemp )
+    for func in "handle_physdev" "handle_bridge" "handle_team" "handle_bond" "handle_vlan"; do
+        $func $network_interface >$tmpfile
+        rc=$?
+        code="$( cat $tmpfile )"
+        [ $rc -ne $rc_error ] || continue
+        break
+    done
+    rm $tmpfile
+
+    # Falling here means either 'success' or 'error' (no handler matching)
+    if [ $rc -eq $rc_error ]; then
+        LogPrintError "Skipping '$network_interface': not yet supported."
+        return $rc_error
+    fi
+
+    [ $rc -eq $rc_success ] && echo "$code"
+
+    return $rc
+}
+
+# List of bridges already set up
 already_set_up_bridges=""
-# Handles bridge attached to a network interface
-# when 2nd device is passed, this 2nd device will hold the bridge, instead of
-# the 1st device, this is used in Simplified bonding setup.
-function bridge_handling () {
-    local from_network_interface=$1
-    local to_network_interface=${2:-$from_network_interface}
 
-    [ -d "/sys/class/net/$from_network_interface/bridge" -o -d "/sys/class/net/$from_network_interface/brport" ] || return
+function handle_bridge () {
+    local network_interface=$1
+    local sysfspath=/sys/class/net/$network_interface
+
+    if [ ! -d "$sysfspath/bridge" ]; then
+        return $rc_error
+    fi
+
+    DebugPrint "$network_interface is a bridge"
 
     if [ -z "$already_set_up_bridges" ]; then
         MODULES=( "${MODULES[@]}" 'bridge' )
+    elif [[ " $already_set_up_bridges " == *\ $network_interface\ * ]]; then
+        DebugPrint "$network_interface already handled..."
+        return $rc_ignore
     fi
+    already_set_up_bridges+=" $network_interface"
 
-    local bridge
+    local rc
+    local nitfs=0
+    local tmpfile=$( mktemp )
+    local itf
 
-    if [ -d "/sys/class/net/$from_network_interface/bridge" ]; then
-        # Device is the bridge device
-        bridge=$from_network_interface
-    else
-        bridge=$(basename $(readlink -e "/sys/class/net/$from_network_interface/brport/bridge"))
-    fi
-    local found=0
-    for already_set_up_bridge in $already_set_up_bridges ; do
-        test "$bridge" = "$already_set_up_bridge" && found=1 && break
-    done
-    if [ $found -eq 0 ]; then
-        stp=$(cat "/sys/class/net/$bridge/bridge/stp_state")
-        if is_true $ip_link_supports_bridge; then
-            echo "ip link add name $bridge type bridge stp_state $stp" >>$network_devices_setup_script
-        elif [ -x $( which brctl ) ]; then
-            if [[ " ${REQUIRED_PROGS[@]} " != *\ brctl\ * ]]; then
-                REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "brctl" )
+    if test "$SIMPLIFY_BRIDGE"; then
+        for itf in $( get_lower_interfaces $network_interface ); do
+            DebugPrint "$network_interface has lower interface $itf"
+            is_interface_up $itf || continue
+            is_linked_to_physical $itf || continue
+            handle_interface $itf >$tmpfile
+            rc=$?
+            [ $rc -eq $rc_error ] && continue
+            let nitfs++
+            # itf may have been mapped into some other interface
+            itf=$( get_mapped_network_interface $itf )
+            echo "# Original interface was $network_interface, now is $itf"
+            if [ $rc -eq $rc_success ]; then
+                cat $tmpfile
             fi
-            echo "brctl addbr $bridge" >>$network_devices_setup_script
-            echo "brctl stp $bridge $stp" >>$network_devices_setup_script
-        else
-            BugError "No 'brctl' utility nor support for bridges in 'ip'."
+            # We found an interface, so stop here after mapping bridge to lower interface
+            map_network_interface $network_interface $itf
+            break
+        done
+        rm $tmpfile
+
+        # If we didn't find any lower interface, we are in trouble ...
+        if [ $nitfs -eq 0 ]; then
+            LogPrintError "Couldn't find any suitable lower interface for '$network_interface'."
+            return $rc_error
         fi
 
-        # Remember that we already dealt with this bridge:
-        already_set_up_bridges+=" ${bridge}"
+        # setup_device_params has already been called by interface bridge was mapped onto
+
+        return $rc_success
     fi
 
-    if [ -d "/sys/class/net/$from_network_interface/brport" ]; then
-        if is_true $ip_link_supports_bridge; then
-            echo "ip link set dev $to_network_interface master $bridge" >>$network_devices_setup_script
-        elif [ -x $( which brctl ) ]; then
-            echo "brctl addif $bridge $to_network_interface" >>$network_devices_setup_script
-        fi
+    #
+    # Non-simplified bridge mode
+    #
+
+    # Create the bridge
+    # TODO Add more properties if needed
+    stp=$( cat "$sysfspath/bridge/stp_state")
+    echo "ip link add name $network_interface type bridge stp_state $stp"
+
+    for itf in $( get_lower_interfaces $network_interface ); do
+        DebugPrint "$network_interface has lower interface $itf"
+        is_interface_up $itf || continue
+        is_linked_to_physical $itf || continue
+        handle_interface $itf >$tmpfile
+        rc=$?
+        [ $rc -eq $rc_error ] && continue
+        let nitfs++
+        [ $rc -eq $rc_success ] && cat $tmpfile
+        # itf may have been mapped into some other interface
+        itf=$( get_mapped_network_interface $itf )
+        echo "ip link set dev $itf master $network_interface"
+    done
+    rm $tmpfile
+
+    # If we didn't find any lower interface, we are in trouble ...
+    if [ $nitfs -eq 0 ]; then
+        LogPrintError "Couldn't find any suitable lower interface for '$network_interface'."
+        return $rc_error
     fi
+
+    setup_device_params $network_interface
+
+    return $rc_success
 }
 
-# Go over the physical network interfaces and record information.
-# BTW, network interface names luckily do not allow spaces :-)
-for physical_network_interface in $physical_network_interfaces ; do
-    sysfspath=/sys/class/net/$physical_network_interface
-    # Get MAC address:
-    mac="$( cat $sysfspath/address )" || BugError "Could not read a MAC address from '$sysfspath/address'."
-    # Skip fake interfaces without MAC address:
-    test "$mac" == "00:00:00:00:00:00" && continue
-    # TODO: skip bonding (and other dependent) devices from recording their MAC address in /etc/mac-addresses
-    # because such devices mirror the MAC address of (usually the first) real NIC.
-    # I lack experience with bonding setups to write this blindly, so please contribute better code
+already_set_up_teams=""
+
+function handle_team () {
+    local network_interface=$1
+    local sysfspath=/sys/class/net/$network_interface
+
+    if [ "$( ethtool -i $network_interface | awk '$1 == "driver:" { print $2 }' )" != "team" ]; then
+        return $rc_error
+    fi
+
+    DebugPrint "$network_interface is a team"
+
+    if [[ " $already_set_up_teams " == *\ $network_interface\ * ]]; then
+        DebugPrint "$network_interface already handled..."
+        return $rc_ignore
+    fi
+    already_set_up_teams+=" $network_interface"
+
+    # FIXME? Team code below simplifies the configuration, returning first port only
+    # There should a SIMPLIFY_TEAM variable for that
+
+    local rc
+    local nitfs=0
+    local tmpfile=$( mktemp )
+    local itf
+
+    for itf in $( get_lower_interfaces $network_interface ); do
+        DebugPrint "$network_interface has lower interface $itf"
+        is_interface_up $itf || continue
+        is_linked_to_physical $itf || continue
+        handle_interface $itf >$tmpfile
+        rc=$?
+        [ $rc -eq $rc_error ] && continue
+        let nitfs++
+        echo "# Original interface was $network_interface, now is $itf"
+        [ $rc -eq $rc_success ] && cat $tmpfile
+        # itf may have been mapped into some other interface
+        itf=$( get_mapped_network_interface $itf )
+        # We found an interface, so stop here after mapping team to lower interface
+        map_network_interface $network_interface $itf
+        break
+    done
+    rm $tmpfile
+
+    # If we didn't find any lower interface, we are in trouble ...
+    if [ $nitfs -eq 0 ]; then
+        LogPrintError "Couldn't find any suitable lower interface for '$network_interface'."
+        return $rc_error
+    fi
+
+    # setup_device_params has already been called by interface team was mapped onto
+
+    return $rc_success
+}
+
+already_set_up_bonds=""
+
+function handle_bond () {
+    local network_interface=$1
+    local sysfspath=/sys/class/net/$network_interface
+
+    if [ ! -d "$sysfspath/bonding" ]; then
+        return $rc_error
+    fi
+
+    DebugPrint "$network_interface is a bond"
+
+    if [ -z "$already_set_up_bonds" ]; then
+        if ! test "$SIMPLIFY_BONDING"; then
+            echo "modprobe bonding"
+            MODULES=( "${MODULES[@]}" 'bonding' )
+        fi
+    elif [[ " $already_set_up_bonds " == *\ $network_interface\ * ]]; then
+        DebugPrint "$network_interface already handled..."
+        return $rc_ignore
+    fi
+    already_set_up_bonds+=" $network_interface"
+
+    local nitfs=0
+    local tmpfile=$( mktemp )
+    local itf
+
+    if test "$SIMPLIFY_BONDING"; then
+        for itf in $( get_lower_interfaces $network_interface ); do
+            DebugPrint "$network_interface has lower interface $itf"
+            is_interface_up $itf || continue
+            is_linked_to_physical $itf || continue
+            handle_interface $itf >$tmpfile
+            rc=$?
+            [ $rc -eq $rc_error ] && continue
+            let nitfs++
+            # itf may have been mapped into some other interface
+            itf=$( get_mapped_network_interface $itf )
+            echo "# Original interface was $network_interface, now is $itf"
+            if [ $rc -eq $rc_success ]; then
+                cat $tmpfile
+            fi
+            # We found an interface, so stop here after mapping bond to lower interface
+            map_network_interface $network_interface $itf
+            break
+        done
+        rm $tmpfile
+
+        # If we didn't find any lower interface, we are in trouble ...
+        if [ $nitfs -eq 0 ]; then
+            LogPrintError "Couldn't find any suitable lower interface for '$network_interface'."
+            return $rc_error
+        fi
+
+        # setup_device_params has already been called by interface bond was mapped onto
+
+        return $rc_success
+    fi
+
     #
-    # Keep mac address information for rescue system:
-    echo "$physical_network_interface $mac" >>$ROOTFS_DIR/etc/mac-addresses
-    # Take information only from UP devices, we don't care about non-working devices:
-    ip link show dev $physical_network_interface | grep -q UP || continue
-    # Link is up.
-    # Determine the driver to load, relevant only for non-udev environments:
-    if [[ -z "$driver" && -e "$sysfspath/device/driver" ]] ; then
-        # This should work for virtio_net, xennet and vmxnet on recent kernels:
-        driver=$( basename $( readlink $sysfspath/device/driver ) )
-        if test "$driver" -a "$driver" = vif ; then
+    # Non-simplified bonding mode
+    #
+
+    local bonding_mode=$( awk '{ print $2 }' $sysfspath/bonding/mode )
+    local miimon=$( cat $sysfspath/bonding/miimon )
+    local use_carrier=$( cat $sysfspath/bonding/use_carrier )
+
+    cat - << EOT
+if ! grep -qw "$network_interface" /sys/class/net/bonding_masters; then
+    echo "+$network_interface" > /sys/class/net/bonding_masters 2>/dev/null
+fi
+echo "$bonding_mode" > $sysfspath/bonding/mode
+echo "$miimon" > $sysfspath/bonding/miimon
+echo "$use_carrier" > $sysfspath/bonding/use_carrier
+EOT
+
+    echo "ip link set dev $network_interface down"
+
+    for itf in $( get_lower_interfaces $network_interface ); do
+        DebugPrint "$network_interface has lower interface $itf"
+        is_interface_up $itf || continue
+        is_linked_to_physical $itf || continue
+        handle_interface $itf >$tmpfile
+        [ $? -eq $rc_error ] && continue
+        let nitfs++
+        [ $rc -eq $rc_success ] && cat $tmpfile
+        # itf may have been mapped into some other interface
+        itf=$( get_mapped_network_interface $itf )
+        # Make sure lower device is down before joining the bond
+        echo "ip link set dev $itf down"
+        echo "ip link set dev $itf master $network_interface"
+    done
+    rm $tmpfile
+
+    # If we didn't find any lower interface, we are in trouble ...
+    if [ $nitfs -eq 0 ]; then
+        LogPrintError "Couldn't find any suitable lower interface for '$network_interface'."
+        return $rc_error
+    fi
+
+    setup_device_params $network_interface
+
+    return $rc_success
+}
+
+# Variable keeping track of already set up vlans
+already_set_up_vlans=""
+
+# List of generated vlans (see corner case with mapped parent)
+generated_vlans=""
+
+function handle_vlan () {
+    local network_interface=$1
+    local sysfspath=/sys/class/net/$network_interface
+
+    if [ ! -e "/proc/net/vlan/$network_interface" ]; then
+        return $rc_error
+    fi
+
+    DebugPrint "$network_interface is a vlan"
+
+    if [ -z "$already_set_up_vlans" ]; then
+        if [[ -f /proc/net/vlan/config ]] ; then
+            # Config file contains a line like "vlan163        | 163  | bond1" describing the vlan.
+            # Save a copy to our recovery area.
+            # We might need it if we ever want to implement VLAN Migration.
+            cp /proc/net/vlan/config $VAR_DIR/recovery/vlan.config
+        fi
+        echo "modprobe 8021q"
+    elif [[ " $already_set_up_vlans " == *\ $network_interface\ * ]]; then
+        DebugPrint "$network_interface already handled..."
+        return $rc_ignore
+    fi
+    already_set_up_vlans+=" $network_interface"
+
+    local parent=$( get_lower_interfaces $network_interface )
+    [ $( echo "$parent" | wc -w ) -eq 1 ] || BugError "'$network_interface' has more than 1 parent."
+
+    DebugPrint "$network_interface has $parent as parent"
+    handle_interface $parent
+    [ $? -eq $rc_error ] && return $rc_error
+
+    local vlan_id=$( awk '$2 == "VID:" { print $3 }' /proc/net/vlan/$network_interface )
+    [ -n "$vlan_id" ] || BugError "'$network_interface' has no vlan id."
+
+    # parent may have been mapped into some other interface
+    if [ $( get_mapped_network_interface $parent ) != "$parent" ]; then
+        parent=$( get_mapped_network_interface $parent )
+        # Update child device (ourselves) into new device $parent.$vlan_id
+        echo "# Original interface was $network_interface, now is $parent.$vlan_id"
+        map_network_interface $network_interface "$parent.$vlan_id"
+    fi
+
+    local new_network_interface=$( get_mapped_network_interface $network_interface )
+
+    # Check whether parent already has the same vlan id. This is done by
+    # checking 'generated_vlans' with the new network interface.
+    if [[ " $generated_vlans " == *\ $new_network_interface\ * ]]; then
+        LogPrint "Vlan $vlan_id already exists for interface '$parent', skipping"
+        return $rc_ignore
+    fi
+    generated_vlans+=" $new_network_interface"
+
+    echo ip link add link $parent name $new_network_interface type vlan id $vlan_id
+
+    setup_device_params $network_interface
+
+    return $rc_success
+}
+
+# Variable keeping track of already set up physical devices
+already_set_up_physdevs=""
+# Variable keeping track of drivers already included
+already_set_up_physdev_drivers=""
+
+function handle_physdev () {
+    local network_interface=$1
+    local sysfspath=/sys/class/net/$network_interface
+
+    if [ ! -e "$sysfspath/device" ]; then
+        return $rc_error
+    fi
+
+    DebugPrint "$network_interface is a physical device"
+
+    mac="$( cat $sysfspath/address )" || BugError "Could not read a MAC address for '$network_interface'."
+    # Skip fake interfaces without MAC address
+    [ "$mac" != "00:00:00:00:00:00" ] || return $rc_error
+
+    if [[ " $already_set_up_physdevs " == *\ $network_interface\ * ]]; then
+        DebugPrint "$network_interface already handled..."
+        return $rc_ignore
+    fi
+    already_set_up_physdevs+=" $network_interface"
+
+    echo "$network_interface $mac" >>$ROOTFS_DIR/etc/mac-addresses
+
+    # Determine the driver to load, relevant only for non-udev environments
+    local driver
+    if [ -e "$sysfspath/device/driver" ]; then
+        driver=$( basename $( readlink -f $sysfspath/device/driver ) )
+        if [ "$driver" = "vif" ]; then
             # xennet driver announces itself as vif :-(
             driver=xennet
         fi
-    elif [[ -z "$driver" && -e "$sysfspath/driver" ]] ; then
-        # This should work for virtio_net, xennet and vmxnet on older kernels (2.6.18):
-        driver=$( basename $( readlink $sysfspath/driver ) )
-    elif [[ -z "$driver" ]] && has_binary ethtool ; then
-        driver=$( ethtool -i $physical_network_interface 2>/dev/null | grep driver: | cut -d: -f2 )
+    elif [ -e "$sysfspath/driver" ]; then
+        # This should work for virtio_net, xennet and vmxnet on older kernels (2.6.18)
+        driver=$( basename $(readlink -f $sysfspath/driver ) )
+    elif has_binary ethtool; then
+        driver=$( ethtool -i $network_interface 2>/dev/null | awk '$1 == "driver:" { print $2 }' )
+    else
+        LogPrint "Could not determine driver for '$network_interface'. To ensure it gets loaded add it to MODULES_LOAD."
     fi
-    if [[ "$driver" ]] ; then
-        grep -q $driver /proc/modules || LogPrint "Driver '$driver' for '$physical_network_interface' not loaded - is that okay?"
+
+    if [ -n "$driver" ] && [[ " $already_set_up_physdev_drivers " == *\ $driver\ * ]]; then
+        grep -qw ^$driver /proc/modules || LogPrint "Driver '$driver' for '$network_interface' not loaded - is that okay?"
         echo "$driver" >>$ROOTFS_DIR/etc/modules
-    else
-        LogPrint "Could not determine driver for '$physical_network_interface'. To ensure it gets loaded add it to MODULES_LOAD."
-    fi
-    mkdir -p $v $TMP_DIR/mappings >&2
-    test -f $CONFIG_DIR/mappings/ip_addresses && read_and_strip_file $CONFIG_DIR/mappings/ip_addresses > $TMP_DIR/mappings/ip_addresses
-
-    bridge_handling $physical_network_interface
-
-    if test -s $TMP_DIR/mappings/ip_addresses ; then
-        while read network_device ip_address junk ; do
-            Log "New IP-address will be $network_device $ip_address"
-              ( echo "# New IP-address will be $network_device $ip_address:"
-                echo "ip addr add $ip_address dev $network_device"
-                echo "ip link set dev $network_device up"
-              ) >>$network_devices_setup_script
-        done < $TMP_DIR/mappings/ip_addresses
-    else
-        for addr in $( ip a show dev $physical_network_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
-            echo "ip addr add $addr dev $physical_network_interface" >>$network_devices_setup_script
-        done
-        echo "ip link set dev $physical_network_interface up" >>$network_devices_setup_script
+        already_set_up_physdev_drivers+=" $driver"
     fi
 
-    # Record interface MTU:
-    if test -e "$sysfspath/mtu" ; then
-        mtu="$( cat $sysfspath/mtu )" || LogPrint "Could not read a MTU address from '$sysfspath/mtu'!"
-        [[ "$mtu" ]] && echo "ip link set dev $physical_network_interface mtu $mtu" >>$network_devices_setup_script
-    fi
-done
+    setup_device_params $network_interface
 
-# Extract configuration of a given VLAN interface:
-already_set_up_vlans=""
-function vlan_setup () {
-    local network_interface=$1
-    # Check if we already dealt with this interface as a dependency:
-    # See https://github.com/rear/rear/issues/758 why regular expression
-    # cannot be used here (because it does not work on all bash 3.x versions).
-    # Additionally one cannot use simple substring search because assume
-    # already_set_up_vlans is "vlan10" and network_interface is "vlan1"
-    # then simple substring search would find "vlan1" as substring in "vlan10"
-    # so that to be on the safe side a dumb traditional for-loop approach is used
-    # (unitl someone implements a better solution that works on all bash 3.x versions):
-    for already_set_up_vlan in $already_set_up_vlans ; do
-        test "$network_interface" = "$already_set_up_vlan" && return
-    done
-    # Determine the parent interface:
-    local parent_interface=$( grep "^${network_interface}" /proc/net/vlan/config | awk '{print $5}' )
-    # If the VLAN is built on top of a bonding, set that up first:
-    # See https://github.com/rear/rear/issues/758 why regular expression
-    # cannot be used here (because it does not work on all bash 3.x versions)
-    # so that to be on the safe side a dumb traditional for-loop approach is used
-    # (unitl someone implements a better solution that works on all bash 3.x versions):
-    for bonding_interface in ${bonding_interfaces[@]} ; do
-        # it is safe to just call bond_setup because that set up an interface only once:
-        test "$parent_interface" = "$bonding_interface" &&  bond_setup $parent_interface
-    done
-    bridge_handling $network_interface
-    # Determine the VLAN ID:
-    local vlan_id=$( grep "^${network_interface}" /proc/net/vlan/config | awk '{print $3}' )
-    # Set up network device (a.k.a. 'link'):
-    echo ip link add link $parent_interface name $network_interface type vlan id $vlan_id >>$network_devices_setup_script
-    # Set up IP addresses on that device:
-    for ip_address in $( ip ad show dev $network_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
-        echo "ip addr add $ip_address dev $network_interface" >>$network_devices_setup_script
-    done
-    # Enable the network interface:
-    echo "ip link set dev $network_interface up" >>$network_devices_setup_script
-    # Remember that we already dealt with this interface:
-    already_set_up_vlans+=" ${network_interface}"
+    return $rc_success
 }
 
-# Extract configuration of a given bonding interface:
-already_set_up_bonding_interfaces=""
-function bond_setup () {
-    local network_interface=$1
-    # Check if we already dealt with this interface as a dependency:
-    # See https://github.com/rear/rear/issues/758 why regular expression
-    # cannot be used here (because it does not work on all bash 3.x versions).
-    # Additionally one cannot use simple substring search because assume
-    # already_set_up_bonding_interfaces is "bond10" and network_interface is "bond1"
-    # then simple substring search would find "bond1" as substring in "bond10"
-    # so that to be on the safe side a dumb traditional for-loop approach is used
-    # (unitl someone implements a better solution that works on all bash 3.x versions):
-    for already_set_up_bonding_interface in $already_set_up_bonding_interfaces ; do
-        test "$network_interface" = "$already_set_up_bonding_interface" && return
-    done
-    bridge_handling $network_interface
-    # Get list of bonding group members:
-    local bonding_group_members=$( cat /sys/class/net/${network_interface}/bonding/slaves )
-    # If a member of the bonding group is a VLAN, set that up first:
-    for bonding_group_member in $bonding_group_members ; do
-        # See https://github.com/rear/rear/issues/758 why regular expression
-        # cannot be used here (because it does not work on all bash 3.x versions)
-        # so that to be on the safe side a dumb traditional for-loop approach is used
-        # (unitl someone implements a better solution that works on all bash 3.x versions):
-        for vlan_interface in ${vlan_interfaces[@]} ; do
-            if test "$bonding_group_member" = "$vlan_interface" ; then
-                # it is safe to just call vlan_setup because that set up an interface only once:
-                vlan_setup $bonding_group_member
-            else
-                Log "No vlan_setup for bonding group member '$bonding_group_member' because it is not a vlan."
-            fi
-        done
-    done
-    # We first need to "up" the bonding interface, then add the slaves
-    # (ifenslave complains about missing IP adresses, can be ignored),
-    # and then add the IP addresses:
-    echo "ip link set dev $network_interface up" >>$network_devices_setup_script
-    # Enslave slave interfaces which we read from the sysfs status file:
-    if command -v ifenslave >/dev/null 2>&1 ; then
-        # We can use ifenslave(8) and do it all at once:
-        echo "ifenslave $network_interface $bonding_group_members" >>$network_devices_setup_script
-    else
-        # No ifenslave(8) found, hopefully ip(8) can do it:
-        for bonding_group_member in $bonding_group_members ; do
-            echo "ip link set $bonding_group_member master $network_interface" >>$network_devices_setup_script
-        done
+#
+# Collect list of all network interfaces to deal with.
+#
+# These must match all of the following:
+# - interfaces with an IP address and associated route
+# - interfaces linked to a physical device somehow
+#
+
+tmpfile=$( mktemp )
+rc=
+
+# Use output of 'ip r' to keep interfaces with IP addresses and routing only
+for network_interface in $( ip r | awk '$2 == "dev" && $8 == "src" { print $3 }' | sort -u ); do
+    if ! is_linked_to_physical $network_interface; then
+        LogPrint "Skipping '$network_interface': not bound to any physical interface."
+        continue
     fi
-    # FIXME: What is the reason why sleeping hardcoded 5 seconds is "the right thing" that makes it work?
-    echo "sleep 5" >>$network_devices_setup_script
-    # Set up IP addresses on that device:
-    for ip_address in $( ip ad show dev $network_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
-        echo "ip addr add $ip_address dev $network_interface" >>$network_devices_setup_script
-    done
-    # Remember that we already dealt with this interface:
-    already_set_up_bonding_interfaces+=" ${network_interface}"
-}
+    is_interface_up $network_interface || continue
 
-# Load required modules for bonding and collect list of all up bonding interfaces:
-bonding_interfaces=()
-if test -d /proc/net/bonding ; then
-   for bonding_interface in $( ls /proc/net/bonding ) ;	do
-       if ip link show dev $bonding_interface | grep -q UP ; then
-           bonding_interfaces+=($bonding_interface)
-       fi
-    done
-    # Default bonding mode is 1 (active backup):
-    bonding_mode=1
-    grep -q "Bonding Mode: IEEE 802.3ad" /proc/net/bonding/${bonding_interfaces[0]} && bonding_mode=4
-    # Load bonding with the correct amount of bonding devices:
-    echo "modprobe bonding max_bonds=${#bonding_interfaces[@]} miimon=100 mode=$bonding_mode use_carrier=0" >>$network_devices_setup_script
-    MODULES=( "${MODULES[@]}" 'bonding' )
-fi
+    DebugPrint "Handling network interface '$network_interface'"
 
-# Load required modules for VLAN and collect list of all up VLAN interfaces:
-vlan_interfaces=()
-if test -d /proc/net/vlan ; then
-    if [[ -f /proc/net/vlan/config ]] ; then
-        # Config file contains a line like "vlan163        | 163  | bond1" describing the vlan.
-        # Save a copy to our recovery area.
-        # We might need it if we ever want to implement VLAN Migration.
-        cp /proc/net/vlan/config $VAR_DIR/recovery/vlan.config
+    handle_interface $network_interface >$tmpfile
+    rc=$?
+    if [ $rc -eq $rc_error ]; then
+        LogPrintError "Failed to handle network interface '$network_interface'."
+        continue
     fi
-    # Load required modules for VLAN:
-    echo "modprobe 8021q" >>$network_devices_setup_script
-    echo "sleep 5" >>$network_devices_setup_script
-    # Collect list of all up VLAN interfaces:
-    for vlan_interface in $( ls /proc/net/vlan | grep -v config ) ; do
-        if ip link show dev $vlan_interface | grep -q UP ; then
-            vlan_interfaces+=($vlan_interface)
-        fi
-    done
-fi
+    [ $rc -eq $rc_success ] && cat $tmpfile
 
-# Set up all VLANS:
-for vlan_interface in ${vlan_interfaces[@]} ; do
-    vlan_setup $vlan_interface
-done
+    ipaddr_setup $network_interface
 
-# Bonding setup:
-if ! test "$SIMPLIFY_BONDING" ; then
-    for bonding_interface in ${bonding_interfaces[@]} ; do
-        bond_setup $bonding_interface
-    done
-else
-    # Simplified bonding setup by configuring always the first device of a bond:
-    #
-    # The way to simplify the bonding is to copy the IP addresses
-    # from the bonding device to the *first* slave device.
-    #
-    # FIXME: Translate the following comment into globally comprehensible language (i.e. English!)
-    # Anpassung HZD: Hat ein System bei einer SLES10 Installation zwei Bonding-Devices
-    # gibt es Probleme beim Boot mit der ReaR-ISO-Datei. Der Befehl modprobe -o name ...
-    # funkioniert nicht. Dadurch wird nur das erste bonding-Device koniguriert.
-    # Die Konfiguration des zweiten Devices schlaegt fehl und dieses laesst sich auch nicht manuell
-    # nachinstallieren. Daher wurde diese script so angepasst, dass die ReaR-ISO-Datei kein Bonding
-    # konfiguriert, sondern die jeweiligen IP-Adressen einer Netzwerkkarte des Bondingdevices
-    # zuordnet. Dadurch musste aber auch das script 350_routing.sh angepasst werden.
-    #
-    # Go over bondX and record information:
-    bonding_interface_number=0
-    # Unlimited while-loop because there is no real limit how many bonding interfaces could exist:
-    while : ; do
-        bonding_interface=bond$bonding_interface_number
-        # Break while-loop at the first non-existent bonding interface:
-        test -r /proc/net/bonding/$bonding_interface || break
-        if ip link show dev $bonding_interface | grep -q UP ; then
-            # Link is up:
+    DebugPrint "Handled network interface '$network_interface'"
+done >>$network_devices_setup_script
 
-            bonding_enslaved_interfaces=( $( cat /proc/net/bonding/$bonding_interface | grep "Slave Interface:" | cut -d : -f 2 ) )
-            # Use bonding_enslaved_interfaces[0] instead of bond$c to copy
-            # bridge configuration and IP address from bonding device to the
-            # first enslaved device
+rm $tmpfile
 
-            bridge_handling $bonding_interface ${bonding_enslaved_interfaces[0]}
-
-            for addr in $( ip a show dev $bonding_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
-                # Use bonding_enslaved_interfaces[0] instead of bond$c
-                # to copy IP address from bonding device to the first enslaved device:
-                echo "ip addr add $addr dev ${bonding_enslaved_interfaces[0]}" >>$network_devices_setup_script
-            done
-            echo "ip link set dev ${bonding_enslaved_interfaces[0]} up" >>$network_devices_setup_script
-        fi
-        let bonding_interface_number++
-    done
-    # Fake already_set_up_bonding_interfaces, so that no recursive call tries to bring one up the not-simplified way:
-    already_set_up_bonding_interfaces=${bonding_interfaces[@]}
-fi
-
-# Local functions must be 'unset' because bash does not support 'local function ...'
-# cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
-unset -f resolve
-unset -f bridge_handling
-unset -f vlan_setup
-unset -f bond_setup
+unset -f map_network_interface
+# Don't unset 'get_mapped_network_interface' because it is used in 350_routing.sh.
+#unset -f get_mapped_network_interface
 unset -f is_devpath_linked_to_physical
+unset -f is_linked_to_physical
+unset -f get_lower_interfaces
+unset -f get_interface_state
+unset -f is_interface_up
+unset -f ipaddr_setup
+unset -f setup_device_params
+unset -f handle_interface
+unset -f handle_bridge
+unset -f handle_team
+unset -f handle_bond
+unset -f handle_vlan
+unset -f handle_physdev
