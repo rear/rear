@@ -36,13 +36,20 @@ fi
 if test "$OUTPUT_URL" ; then
     local output_scheme=$( url_scheme "$OUTPUT_URL" )
     case $output_scheme in
-       (fish|ftp|ftps|hftp|http|https|sftp)
-          local required_prog='lftp'
-          has_binary $required_prog || Error "The OUTPUT_URL scheme '$output_scheme' requires the '$required_prog' command which is missing"
-          ;;
-       (iso)
-          Error "The OUTPUT_URL scheme cannot be '$output_scheme'"
-          ;;
+        (fish|ftp|ftps|hftp|http|https|sftp)
+            local required_prog='lftp'
+            has_binary $required_prog || Error "The OUTPUT_URL scheme '$output_scheme' requires the '$required_prog' command which is missing"
+            ;;
+        (iso)
+            Error "The OUTPUT_URL scheme cannot be '$output_scheme'"
+            ;;
+        (null)
+            # OUTPUT_URL=null conflicts with OUTPUT=USB
+            # because for OUTPUT=USB output/USB/Linux-i386/850_make_USB_bootable.sh
+            # wants to make the USB device bootable which cannot work with OUTPUT_URL=null
+            # see https://github.com/rear/rear/issues/1571#issuecomment-343467593
+            test "USB" = "$OUTPUT" && Error "'OUTPUT_URL=null' conflicts with 'OUTPUT=USB'"
+            ;;
     esac
 fi
 
