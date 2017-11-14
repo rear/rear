@@ -1,0 +1,5 @@
+NAME="eth2"
+DEVICE="eth2"
+ONBOOT="yes"
+MASTER="bond12"
+SLAVE="yes"

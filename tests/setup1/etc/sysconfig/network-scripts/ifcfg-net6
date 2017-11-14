@@ -1,0 +1,7 @@
+NAME="net6"
+DEVICE="eth10"
+ONBOOT="yes"
+BOOTPROTO="none"
+TYPE="Ethernet"
+IPADDR=6.6.6.6
+PREFIX=16

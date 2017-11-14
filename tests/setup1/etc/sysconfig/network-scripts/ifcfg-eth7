@@ -1,0 +1,4 @@
+NAME="eth7"
+DEVICE="eth7"
+ONBOOT="yes"
+BRIDGE="bridge78"

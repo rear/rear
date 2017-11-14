@@ -1,0 +1,6 @@
+NAME="eth6"
+DEVICE="eth6"
+ONBOOT="yes"
+TEAM_MASTER="team56"
+DEVICETYPE="TeamPort"
+TYPE="Ethernet"
