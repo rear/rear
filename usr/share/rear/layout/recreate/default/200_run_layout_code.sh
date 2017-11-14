@@ -44,12 +44,11 @@ while true ; do
     # so that it exits the running shell in case of an error
     # but that exit must not exit this running bash here:
     ( source $LAYOUT_CODE )
-    # One must explicitly test $? (the exit status of the most recently executed foreground pipeline)
-    # whether or not $? is zero because somehow in this particular case here code like
+    # One must explicitly test whether or not $? is zero because with bash 4.x code like
     #   ( source $LAYOUT_CODE ) && break
-    # does not work because it seems this way the 'set -e' inside LAYOUT_CODE does no longer work
-    # (i.e. then LAYOUT_CODE would no longer exit if a command therein exits with non-zero status)
-    # but on plain command line a sourced script with 'set -e' inside works this way:
+    # does no longer work because then the 'set -e' inside LAYOUT_CODE does no longer work
+    # (i.e. LAYOUT_CODE no longer exits if a command therein exits with non-zero status).
+    # With bash 3.x such code had worked, e.g. on plain command line like:
     #   # echo 'set -e ; cat qqq ; echo hello' >script.sh
     #   # ( source script.sh ) && echo ok || echo failed
     #   cat: qqq: No such file or directory
@@ -59,7 +58,16 @@ while true ; do
     #   QQQ
     #   hello
     #   ok
-    # FIXME: Provide an explanatory comment what the reason is why it behaves this way here.
+    # In contrast with bash 4.x it does no longer work this way:
+    #   # echo 'set -e ; cat qqq ; echo hello' >script.sh
+    #   # ( source script.sh ) && echo ok || echo failed
+    #   cat: qqq: No such file or directory
+    #   hello
+    #   ok
+    #   # ( source script.sh ) ; (( $? == 0 )) && echo ok || echo failed
+    #   cat: qqq: No such file or directory
+    #   failed
+    # See https://github.com/rear/rear/pull/1573#issuecomment-344303590
     # Break the outer while loop when LAYOUT_CODE succeeded:
     (( $? == 0 )) && break
     # Run an inner while loop with a user dialog so that the user can fix things when LAYOUT_CODE failed.
