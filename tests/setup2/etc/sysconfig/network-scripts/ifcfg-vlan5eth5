@@ -1,0 +1,8 @@
+NAME="vlan5eth5"
+DEVICE="eth5.5"
+ONBOOT="yes"
+BOOTPROTO="none"
+VLAN="yes"
+TYPE="Ethernet"
+TEAM_MASTER="team567"
+DEVICETYPE="TeamPort"

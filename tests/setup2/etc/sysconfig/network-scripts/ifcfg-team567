@@ -1,0 +1,9 @@
+DEVICE="team567"
+TEAM_CONFIG=$'{\"device\":\"team567\",\"runner\":{\"name\":\"broadcast\"},\"ports\":{\"bond56\":{},\"eth7\":{}}}'
+PROXY_METHOD="none"
+BROWSER_ONLY="no"
+NAME="team567"
+ONBOOT="yes"
+DEVICETYPE="Team"
+IPADDR=3.3.3.3
+PREFIX=16

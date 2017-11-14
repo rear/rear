@@ -1,0 +1,8 @@
+NAME="vlan1bond12"
+DEVICE="bond12.1"
+ONBOOT="yes"
+BOOTPROTO="none"
+VLAN="yes"
+TYPE="Ethernet"
+IPADDR="1.1.1.1"
+PREFIX=16

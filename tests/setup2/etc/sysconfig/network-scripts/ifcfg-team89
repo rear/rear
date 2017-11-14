@@ -1,0 +1,7 @@
+DEVICE="team89"
+TEAM_CONFIG=$'{\n    \"device\": \"team89\",\n    \"link_watch\": {\n        \"name\": \"ethtool\"\n    },\n    \"ports\": {\n        \"eth8\": {},\n        \"eth9\": {}\n    },\n    \"runner\": {\n        \"name\": \"lacp\",\n        \"tx_hash\": [\n            \"eth\",\n            \"ipv4\",\n            \"ipv6\"\n        ]\n    }\n}'
+PROXY_METHOD="none"
+BROWSER_ONLY="no"
+NAME="team89"
+ONBOOT="yes"
+DEVICETYPE="Team"

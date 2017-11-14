@@ -1,0 +1,7 @@
+NAME="vlan3eth10"
+DEVICE="eth10.3"
+ONBOOT="yes"
+BOOTPROTO="none"
+VLAN="yes"
+TYPE="Ethernet"
+BRIDGE="bridge3"

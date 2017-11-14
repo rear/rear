@@ -1,0 +1,7 @@
+NAME="vlan3team89"
+DEVICE="team89.3"
+ONBOOT="yes"
+BOOTPROTO="none"
+VLAN="yes"
+TYPE="Ethernet"
+BRIDGE="bridge3"
