@@ -2,7 +2,19 @@
 # Ask to recreate HP's Smart Array line of hardware RAID controllers
 # and actually recreate that before the actual restoration takes place.
 #
-# Cf. http://cciss.sourceforge.net/
+# This script is only about HP Smart Array hardware RAID controllers
+# that are supported by the 'cciss' kernel module.
+# Newer HP Smart Array hardware RAID controllers that need
+# the 'hpsa' kernel module are not supported by this script.
+# Cf.
+# http://cciss.sourceforge.net/
+# which reads (excerpt):
+#  The cciss driver has been removed from RHEL7 and SLES12.
+#  If you really want cciss on RHEL7 checkout the elrepo directory.
+#  A new Smart Array driver called "hpsa" has been accepted into
+#  the main line linux kernel as of Dec 18, 2009, in linux-2.6.33-rc1.
+#  This new driver will support new Smart Array products going
+#  forward, and the cciss driver will eventually be deprecated.
 #
 
 # Skip that unless the cciss kernel module
