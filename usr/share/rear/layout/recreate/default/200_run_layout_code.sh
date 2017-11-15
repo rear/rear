@@ -44,31 +44,33 @@ while true ; do
     # so that it exits the running shell in case of an error
     # but that exit must not exit this running bash here:
     ( source $LAYOUT_CODE )
-    # One must explicitly test whether or not $? is zero because with bash 4.x code like
-    #   ( source $LAYOUT_CODE ) && break
-    # does no longer work because then the 'set -e' inside LAYOUT_CODE does no longer work
-    # (i.e. LAYOUT_CODE no longer exits if a command therein exits with non-zero status).
-    # With bash 3.x such code had worked, e.g. on plain command line like:
+    # One must explicitly test whether or not $? is zero in a separated bash command
+    # because with bash 3.x and bash 4.x code like
+    #   # ( set -e ; cat qqq ; echo "hello" ) && echo ok || echo failed
+    #   cat: qqq: No such file or directory
+    #   hello
+    #   ok
+    # does not work as one may expect (cf. what "man bash" describes for 'set -e').
+    # There is a subtle behavioural difference between bash 3.x and bash 4.x
+    # when a script that has 'set -e' set gets sourced:
+    # With bash 3.x the 'set -e' inside the sourced script is effective:
     #   # echo 'set -e ; cat qqq ; echo hello' >script.sh
     #   # ( source script.sh ) && echo ok || echo failed
     #   cat: qqq: No such file or directory
     #   failed
-    #   # echo QQQ >qqq
-    #   # ( source script.sh ) && echo ok || echo failed
-    #   QQQ
-    #   hello
-    #   ok
-    # With bash 4.x that does no longer work ('set -e' inside the sourced script is noneffective):
+    # With bash 4.x the 'set -e' inside the sourced script gets noneffective:
     #   # echo 'set -e ; cat qqq ; echo hello' >script.sh
     #   # ( source script.sh ) && echo ok || echo failed
     #   cat: qqq: No such file or directory
     #   hello
     #   ok
-    # With bash 4.x one must explicitly test whether or not $? is zero in a separated bash command:
+    # With bash 3.x and bash 4.x testing $? in a separated bash command
+    # keeps the 'set -e' inside the sourced script effective:
+    #   # echo 'set -e ; cat qqq ; echo hello' >script.sh
     #   # ( source script.sh ) ; (( $? == 0 )) && echo ok || echo failed
     #   cat: qqq: No such file or directory
     #   failed
-    # See https://github.com/rear/rear/pull/1573#issuecomment-344303590
+    # See also https://github.com/rear/rear/pull/1573#issuecomment-344303590
     # Break the outer while loop when LAYOUT_CODE succeeded:
     (( $? == 0 )) && break
     # Run an inner while loop with a user dialog so that the user can fix things when LAYOUT_CODE failed.
