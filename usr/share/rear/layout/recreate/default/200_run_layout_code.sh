@@ -58,12 +58,13 @@ while true ; do
     #   QQQ
     #   hello
     #   ok
-    # In contrast with bash 4.x it does no longer work this way:
+    # With bash 4.x that does no longer work ('set -e' inside the sourced script is noneffective):
     #   # echo 'set -e ; cat qqq ; echo hello' >script.sh
     #   # ( source script.sh ) && echo ok || echo failed
     #   cat: qqq: No such file or directory
     #   hello
     #   ok
+    # With bash 4.x one must explicitly test whether or not $? is zero in a separated bash command:
     #   # ( source script.sh ) ; (( $? == 0 )) && echo ok || echo failed
     #   cat: qqq: No such file or directory
     #   failed
