@@ -68,14 +68,14 @@ additional config file; absolute path or relative to config directory
 \-d
 .RS 4
 \fBdebug mode\fR
-(log debug messages to log file)
+(log debug messages to log file \- also sets \-v)
 .RE
 .PP
 \-D
 .RS 4
 \fBdebugscript mode\fR
-(log every function call via
-\fIset \-x\fR)
+(log executed commands via
+\fIset \-x\fR \- also sets \-v and \-d)
 .RE
 .PP
 \-\-debugscripts SET
@@ -94,7 +94,7 @@ kernel version to use (by default use running kernel)
 \-s
 .RS 4
 \fBsimulation mode\fR
-(show what scripts rear would include)
+(show what scripts are run without executing them)
 .RE
 .PP
 \-S
@@ -106,7 +106,7 @@ kernel version to use (by default use running kernel)
 \-v
 .RS 4
 \fBverbose mode\fR
-(show progress output)
+(show more output and run many commands in verbose mode)
 .RE
 .PP
 \-V \-\-version

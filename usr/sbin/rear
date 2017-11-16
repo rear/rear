@@ -163,6 +163,8 @@ while true ; do
             VERBOSE=1
             ;;
         (-D)
+            DEBUG=1
+            VERBOSE=1
             DEBUGSCRIPTS=1
             ;;
         (--debugscripts)
