@@ -38,7 +38,10 @@ local broken_binaries=""
 # see https://github.com/rear/rear/pull/1514#discussion_r141031975
 # and for the general issue see https://github.com/rear/rear/issues/1372
 for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ) ; do
-    chroot $ROOTFS_DIR /bin/ldd $binary | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
+    # In order to handle relative paths, we 'cd' to the directory containing $binary before running ldd.
+    # 'cd' will not work in the chroot without calling bash.
+    # For an example of the problem, see:  https://github.com/rear/rear/pull/1560#issuecomment-343504359
+    chroot $ROOTFS_DIR /bin/bash --login -c "cd $(dirname $binary) && ldd $binary" | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
 done
 if contains_visible_char "$broken_binaries" ; then
     LogPrintError "There are binaries or libraries in the ReaR recovery system that need additional libraries"
