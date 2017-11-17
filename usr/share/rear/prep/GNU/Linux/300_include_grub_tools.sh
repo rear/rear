@@ -1,9 +1,5 @@
 #
-# FIXME: I <jsmeix@suse.de> do not understand what the next comment means.
-# Where is the "check if we're using grub2 before doing something"?
-#
 # GRUB2 has much more commands than the legacy grub command, including modules
-# check if we're using grub2 before doing something.
 
 test -d $VAR_DIR/recovery || mkdir -p $VAR_DIR/recovery
 
@@ -13,6 +9,7 @@ local grubdir="$( echo -n /boot/grub* )"
 # Use '/boot/grub' as fallback if nothing matches '/boot/grub*'
 test -d "$grubdir" || grubdir='/boot/grub'
 
+# Check if we're using grub or grub2 before doing something.
 if has_binary grub-probe ; then
     grub-probe -t device $grubdir >$VAR_DIR/recovery/bootdisk 2>/dev/null || return 0
 elif has_binary grub2-probe ; then
@@ -33,5 +30,6 @@ PROGS=( "${PROGS[@]}"
         grub-set-default     grub2-set-default
         grub-setup           grub2-setup )
 
-COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/default/grub /etc/grub.d/* /etc/grub*.cfg /boot/grub* /usr/lib/grub* /usr/share/grub* )
+COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/default/grub /etc/grub.d/* /etc/grub*.cfg /boot/grub*
+             /usr/lib/grub* /usr/share/grub* /etc/tuned/* )
 
