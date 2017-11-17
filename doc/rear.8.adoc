@@ -56,7 +56,6 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 -h --help::
     usage information
 
-
 -c DIR::
     alternative config directory; instead of /etc/rear
 
@@ -64,10 +63,10 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
     additional config file; absolute path or relative to config directory
 
 -d::
-    *debug mode* (log debug messages to log file)
+    *debug mode* (log debug messages to log file - also sets -v)
 
 -D::
-    *debugscript mode* (log every function call via 'set -x')
+    *debugscript mode* (log executed commands via 'set -x' - also sets -v and -d)
 
 --debugscripts SET::
     same as -d -v -D but *debugscript mode* with 'set -SET'
@@ -76,13 +75,13 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
     kernel version to use (by default use running kernel)
 
 -s::
-    *simulation mode* (show what scripts rear would include)
+    *simulation mode* (show what scripts are run without executing them)
 
 -S::
     *step-by-step mode* (acknowledge each script individually)
 
 -v::
-    *verbose mode* (show progress output)
+    *verbose mode* (show more output and run many commands in verbose mode)
 
 -V --version::
     version information

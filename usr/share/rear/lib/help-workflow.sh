@@ -17,16 +17,16 @@ $PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:
- -h --help           usage information
+ -h --help           usage information (this text)
  -c DIR              alternative config directory; instead of /etc/rear
  -C CONFIG           additional config file; absolute path or relative to config directory
- -d                  debug mode; log debug messages
- -D                  debugscript mode; log every function call (via 'set -x')
+ -d                  debug mode; log debug messages (also sets -v verbose mode)
+ -D                  debugscript mode (implies -v -d); log executed commands (via 'set -x')
  --debugscripts SET  same as -d -v -D but debugscript mode with 'set -SET'
  -r KERNEL           kernel version to use; current: '$KERNEL_VERSION'
- -s                  simulation mode; show what scripts rear would include
+ -s                  simulation mode; show what scripts are run (without executing them)
  -S                  step-by-step mode; acknowledge each script individually
- -v                  verbose mode; show more output
+ -v                  verbose mode; show more output (and run many commands in verbose mode)
  -V --version        version information
 
 List of commands:
