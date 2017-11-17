@@ -69,7 +69,9 @@ for dev_dir in /sys/class/net/* ; do
 done
 
 # Check the existence of a valid mapping file.
-# The file is valid, if at least one old MAC is mapped to an existing new one:
+# The file is valid, if at least one old MAC is mapped to an existing new one.
+# The read_and_strip_file() function outputs non-empty and non-comment lines in MAC_MAPPING_FILE
+# so that it is shown to the user what MAC address mappings will be done:
 if read_and_strip_file $MAC_MAPPING_FILE ; then
     while read orig_dev orig_mac junk ; do
         read_and_strip_file $MAC_MAPPING_FILE | grep -q "$orig_mac" && MANUAL_MAC_MAPPING=true
@@ -80,8 +82,8 @@ fi
 # When there is only one original MAC and only one network interface on the current system
 # automatically map the original MAC to the new MAC of the current network interface:
 if test $MANUAL_MAC_MAPPING ; then
-    # Tell the user that his manual network MAC addresses mapping will be done:
-    echo "Mapping MAC addresses as specified in $MAC_MAPPING_FILE"
+    # Tell the user that his predefined network MAC address mappings will be done:
+    echo "Mapping MAC addresses as specified in the above $MAC_MAPPING_FILE lines (old_MAC new_MAC)"
 else
     # Abandon this process if no manual mapping should be done and the ORIGINAL_MACS array is empty
     # because when the ORIGINAL_MACS array is empty it does not make sense to let the user choose something:
