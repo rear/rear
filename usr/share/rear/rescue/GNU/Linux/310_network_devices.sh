@@ -81,8 +81,24 @@ if [[ "\$IPADDR" ]] && [[ "\$NETMASK" ]] ; then
 fi
 EOT
 
+# Function returning whether a device path is somehow linked to some physical device
+function is_linked_to_physical () {
+    local devpath=$1
+    # If device is a physical device, return success
+    [ ! -e $devpath/device ] || return 0
+    # Otherwise recurse on lower devices (if any)
+    for dev in $(/bin/readlink -f $devpath/lower_* 2>/dev/null); do
+        ! is_linked_to_physical $dev || return 0
+    done
+    # Device is not a physical device
+    return 1
+}
+
 # Collect list of all physical network interface cards.
 # Take all interfaces in /sys/class/net and subtract /sys/devices/virtual/net, bonding_masters:
+# Keep Bridges in the list, as if they were physical interfaces: bridges are to
+# be considered as physical interfaces, otherwise building the configuration on
+# the real physical interface may be too complicated.
 physical_network_interfaces=""
 # e.g. on SLES12 with KVM/QEMU 'ls /sys/devices/virtual/net' may result "br0 lo virbr1 virbr1-nic vnet0"
 virtual_network_interfaces=$( ls /sys/devices/virtual/net )
@@ -101,15 +117,61 @@ for network_interface in $network_interfaces ; do
     # virtual_network_interfaces is "lo virt-eth0" and network_interfaces is "eth0 lo virt-eth0"
     # then simple substring search would find "eth0" as substring in "lo virt-eth0"
     # so that to be on the safe side a dumb traditional for-loop approach is used
-    # (unitl someone implements a better solution that works on all bash 3.x versions):
-    for virtual_network_interface in $virtual_network_interfaces ; do
-        test "$network_interface" = "$virtual_network_interface" && network_interface=""
-    done
+    # (until someone implements a better solution that works on all bash 3.x versions):
+    if [ -d "/sys/class/net/$network_interface/bridge" ]; then
+        # Consider bridges linked to physical interfaces only (directly or not)
+        is_linked_to_physical /sys/class/net/$network_interface || network_interface=""
+    else
+        # Skip all virtual interfaces, except bridges handled above
+        for virtual_network_interface in $virtual_network_interfaces ; do
+            test "$network_interface" = "$virtual_network_interface" && network_interface=""
+        done
+    fi
     # bonding_masters is also no physical network interface:
     test "$network_interface" = "bonding_masters" && network_interface=""
-    # Now network_interface is non-epmtry only for physical network interfaces:
+    # Now network_interface is non-empty only for physical network interfaces:
     test "$network_interface" && physical_network_interfaces+=" $network_interface"
 done
+
+# Add-on for bridge devices
+already_set_up_bridges=""
+# Handles bridge attached to a network interface
+# when 2nd device is passed, this 2nd device will hold the bridge, instead of
+# the 1st device, this is used in Simplified bonding setup.
+function bridge_handling () {
+    local from_network_interface=$1
+    local to_network_interface=${2:-$from_network_interface}
+
+    [ -d "/sys/class/net/$from_network_interface/bridge" -o -d "/sys/class/net/$from_network_interface/brport" ] || return
+
+    if [ -z "$already_set_up_bridges" ]; then
+        MODULES=( "${MODULES[@]}" 'bridge' )
+    fi
+
+    local bridge
+
+    if [ -d "/sys/class/net/$from_network_interface/bridge" ]; then
+        # Device is the bridge device
+        bridge=$from_network_interface
+    else
+        bridge=$(basename $(readlink "/sys/class/net/$from_network_interface/brport/bridge"))
+    fi
+    local found=0
+    for already_set_up_bridge in $already_set_up_bridges ; do
+        test "$bridge" = "$already_set_up_bridge" && found=1 && break
+    done
+    if [ $found -eq 0 ]; then
+        stp=$(cat "/sys/class/net/$bridge/bridge/stp_state")
+        echo "ip link add name $bridge type bridge stp_state $stp" >>$network_devices_setup_script
+
+        # Remember that we already dealt with this bridge:
+        already_set_up_bridges+=" ${bridge}"
+    fi
+
+    if [ -d "/sys/class/net/$from_network_interface/brport" ]; then
+        echo "ip link set dev $to_network_interface master $bridge" >>$network_devices_setup_script
+    fi
+}
 
 # Go over the physical network interfaces and record information.
 # BTW, network interface names luckily do not allow spaces :-)
@@ -150,6 +212,8 @@ for physical_network_interface in $physical_network_interfaces ; do
     fi
     mkdir -p $v $TMP_DIR/mappings >&2
     test -f $CONFIG_DIR/mappings/ip_addresses && read_and_strip_file $CONFIG_DIR/mappings/ip_addresses > $TMP_DIR/mappings/ip_addresses
+
+    bridge_handling $physical_network_interface
 
     if test -s $TMP_DIR/mappings/ip_addresses ; then
         while read network_device ip_address junk ; do
@@ -199,6 +263,7 @@ function vlan_setup () {
         # it is safe to just call bond_setup because that set up an interface only once:
         test "$parent_interface" = "$bonding_interface" &&  bond_setup $parent_interface
     done
+    bridge_handling $network_interface
     # Determine the VLAN ID:
     local vlan_id=$( grep "^${network_interface}" /proc/net/vlan/config | awk '{print $3}' )
     # Set up network device (a.k.a. 'link'):
@@ -228,6 +293,7 @@ function bond_setup () {
     for already_set_up_bonding_interface in $already_set_up_bonding_interfaces ; do
         test "$network_interface" = "$already_set_up_bonding_interface" && return
     done
+    bridge_handling $network_interface
     # Get list of bonding group members:
     local bonding_group_members=$( cat /sys/class/net/${network_interface}/bonding/slaves )
     # If a member of the bonding group is a VLAN, set that up first:
@@ -339,7 +405,14 @@ else
         test -r /proc/net/bonding/$bonding_interface || break
         if ip link show dev $bonding_interface | grep -q UP ; then
             # Link is up:
+
             bonding_enslaved_interfaces=( $( cat /proc/net/bonding/$bonding_interface | grep "Slave Interface:" | cut -d : -f 2 ) )
+            # Use bonding_enslaved_interfaces[0] instead of bond$c to copy
+            # bridge configuration and IP address from bonding device to the
+            # first enslaved device
+
+            bridge_handling $bonding_interface ${bonding_enslaved_interfaces[0]}
+
             for addr in $( ip a show dev $bonding_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
                 # Use bonding_enslaved_interfaces[0] instead of bond$c
                 # to copy IP address from bonding device to the first enslaved device:
@@ -353,3 +426,9 @@ else
     already_set_up_bonding_interfaces=${bonding_interfaces[@]}
 fi
 
+# Local functions must be 'unset' because bash does not support 'local function ...'
+# cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
+unset -f bridge_handling
+unset -f vlan_setup
+unset -f bond_setup
+unset -f is_linked_to_physical
