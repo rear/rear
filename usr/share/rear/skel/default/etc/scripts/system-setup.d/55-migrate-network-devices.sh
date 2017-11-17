@@ -69,7 +69,7 @@ for dev_dir in /sys/class/net/* ; do
 done
 
 # Check the existence of a valid mapping file.
-# The file is valid, if at least one "old" mac is mapped to an existing new one:
+# The file is valid, if at least one old MAC is mapped to an existing new one:
 if read_and_strip_file $MAC_MAPPING_FILE ; then
     while read orig_dev orig_mac junk ; do
         read_and_strip_file $MAC_MAPPING_FILE | grep -q "$orig_mac" && MANUAL_MAC_MAPPING=true
@@ -79,7 +79,10 @@ fi
 # Let the user choose replacement network interfaces (unless manual mapping is specified).
 # When there is only one original MAC and only one network interface on the current system
 # automatically map the original MAC to the new MAC of the current network interface:
-if ! test $MANUAL_MAC_MAPPING ; then
+if test $MANUAL_MAC_MAPPING ; then
+    # Tell the user that his manual network MAC addresses mapping will be done:
+    echo "Mapping MAC addresses as specified in $MAC_MAPPING_FILE"
+else
     # Abandon this process if no manual mapping should be done and the ORIGINAL_MACS array is empty
     # because when the ORIGINAL_MACS array is empty it does not make sense to let the user choose something:
     if test ${#ORIGINAL_MACS[@]} -lt 1 ; then
@@ -119,6 +122,7 @@ if ! test $MANUAL_MAC_MAPPING ; then
         # even though maybe some MACs stayed we want to offer the user the option to
         # reassign all MAC addresses. That is why we loop over all the original MACs and
         # not only over the MACs that require reassignment:
+        echo "No network interface mapping is specified in $MAC_MAPPING_FILE"
         for (( index=0 ; index < ${#ORIGINAL_MACS[@]} ; index++ )) ; do
             old_dev=${ORIGINAL_DEVICES[$index]}
             old_mac=${ORIGINAL_MACS[$index]}
@@ -143,6 +147,10 @@ if ! test $MANUAL_MAC_MAPPING ; then
             new_mac=${dev_mac_driver[1]}
             # Output the old_mac->new_mac mapping for later use below:
             echo "$old_mac $new_mac $old_dev" >>$MAC_MAPPING_FILE
+            # Get new device name from current MAC address:
+            new_dev=$( get_device_by_hwaddr "$new_mac" )
+            # Tell the user about the mapping:
+            echo "Mapping $old_dev $old_mac to $new_dev $new_mac"
             # Prepare the 'select' choices for the next MAC address:
             # When one of the NEW_DEVICES array elements was selected
             # replace the selected NEW_DEVICES array element with the empty string
@@ -156,6 +164,19 @@ if ! test $MANUAL_MAC_MAPPING ; then
         done
     fi
 fi
+# TODO: The current code in this script calls
+#   new_dev=$( get_device_by_hwaddr "$new_mac" )
+# three times (at two places above and again below).
+# If the current MAC_MAPPING_FILE entries syntax
+#   $old_mac $new_mac $old_dev
+# could be enhanced to
+#  $old_mac $new_mac $old_dev $new_dev
+# where $new_dev is optional, it would be backward compatible
+# so that there are no regressions for users who manually specify MAC_MAPPING_FILE
+# but now users could also manually specify a $new_dev in MAC_MAPPING_FILE
+# (whatever that could be good for - perhaps for some kind of verification?)
+# and the code above could write $new_dev into MAC_MAPPING_FILE
+# so that the code below could use that (if exists).
 
 # Initialize reload_udev variable to false because
 # below we reload udev only if we actually have MAC mappings:
