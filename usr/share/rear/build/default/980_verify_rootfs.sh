@@ -31,12 +31,14 @@ fi
 # Now test each binary (except links) with ldd and look for 'not found' libraries.
 # In case of 'not found' libraries for dynamically linked executables ldd returns zero exit code.
 # When running ldd for a file that is 'not a dynamic executable' ldd returns non-zero exit code.
-local binary=""
-local broken_binaries=""
-# - Catch all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths.
 # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
 # see https://github.com/rear/rear/pull/1514#discussion_r141031975
 # and for the general issue see https://github.com/rear/rear/issues/1372
+local binary=""
+local broken_binaries=""
+# Third-party backup tools may use LD_LIBRARY_PATH to find their libraries
+# so that for testing such third-party backup tools we must also use
+# their special LD_LIBRARY_PATH here:
 local old_LD_LIBRARY_PATH
 test $LD_LIBRARY_PATH && old_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 if test "$BACKUP" = "TSM" ; then
@@ -44,23 +46,56 @@ if test "$BACKUP" = "TSM" ; then
     # see https://github.com/rear/rear/issues/1533
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TSM_LD_LIBRARY_PATH
 fi
-for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ) ; do
+# Actually test all binaries for 'not found' libraries.
+# Find all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths:
+for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ); do
     # In order to handle relative paths, we 'cd' to the directory containing $binary before running ldd.
-    # 'cd' will not work in the chroot without calling bash.
-    # For an example of the problem, see:  https://github.com/rear/rear/pull/1560#issuecomment-343504359
-    chroot $ROOTFS_DIR /bin/bash --login -c "cd $(dirname $binary) && ldd $binary" | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
+    # In particular third-party backup tools may have shared object dependencies with relative paths.
+    # For an example see https://github.com/rear/rear/pull/1560#issuecomment-343504359 that reads (excerpt):
+    #   # ldd /opt/fdrupstream/uscmd1
+    #       ...
+    #       libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f8a7c449000)
+    #       ./bin/ioOptimizer.so => not found
+    #       libc.so.6 => /lib64/libc.so.6 (0x00007f8a7b52d000)
+    #       ...
+    #   # cd /opt/fdrupstream
+    #   # ldd uscmd1
+    #       ...
+    #       libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f6657ac5000)
+    #       ./bin/ioOptimizer.so (0x00007f665747d000)
+    #       libc.so.6 => /lib64/libc.so.6 (0x00007f6656560000)
+    #       ...
+    # The login shell is there so that we can call commands as in a normal working shell,
+    # cf. https://github.com/rear/rear/issues/862#issuecomment-274068914
+    chroot $ROOTFS_DIR /bin/bash --login -c "cd $( dirname $binary ) && ldd $binary" | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
 done
 test $old_LD_LIBRARY_PATH && export LD_LIBRARY_PATH=$old_LD_LIBRARY_PATH || unset LD_LIBRARY_PATH
-
+# Report binaries with 'not found' shared object dependencies:
 if contains_visible_char "$broken_binaries" ; then
     LogPrintError "There are binaries or libraries in the ReaR recovery system that need additional libraries"
     KEEP_BUILD_DIR=1
     local fatal_missing_library=""
     local ldd_output=""
     for binary in $broken_binaries ; do
-        # Only for programs (i.e. files in a .../bin/... or .../sbin/... directory) treat a missing library as fatal:
-        grep -q '/[s]*bin/' <<<"$binary" && fatal_missing_library="yes"
-        LogPrintError "$binary requires additional libraries"
+        # Only for programs (i.e. files in a .../bin/... or .../sbin/... directory) treat a missing library as fatal
+        # unless specified when a 'not found' reported library is not fatal (when the 'ldd' test was false alarm):
+        if grep -q '/[s]*bin/' <<<"$binary" ; then
+            # With an empty NON_FATAL_BINARIES_WITH_MISSING_LIBRARY egrep -E '' would always match:
+            if test "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" ; then
+                # A program with missing library is treated as fatal when it does not match the pattern:
+                if grep -E -q "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" <<<"$binary" ; then
+                    LogPrintError "$binary requires additional libraries (specified as non-fatal)"
+                else
+                    LogPrintError "$binary requires additional libraries (fatal error)"
+                    fatal_missing_library="yes"
+                fi
+            else
+                LogPrintError "$binary requires additional libraries (fatal error)"
+                fatal_missing_library="yes"
+            fi
+        else
+            LogPrintError "$binary requires additional libraries"
+        fi
         # Run the same ldd call as above but now keep its whole output:
         ldd_output="$( chroot $ROOTFS_DIR /bin/ldd $binary )"
         # Have the whole ldd output only in the log:
@@ -73,3 +108,4 @@ if contains_visible_char "$broken_binaries" ; then
     is_true "$fatal_missing_library" && Error "ReaR recovery system in '$ROOTFS_DIR' not usable"
     LogPrintError "ReaR recovery system in '$ROOTFS_DIR' needs additional libraries, check $RUNTIME_LOGFILE for details"
 fi
+
