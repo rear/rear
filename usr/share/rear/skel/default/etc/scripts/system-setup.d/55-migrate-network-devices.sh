@@ -78,6 +78,13 @@ if read_and_strip_file $MAC_MAPPING_FILE ; then
     done < $ORIG_MACS_FILE
 fi
 
+if unattended_recovery ; then
+    # we gonna cheat a bit and say we have map made (but we did not and just hope that the interfaces
+    # will be in the same order on the recover vm as on the client vm)
+    # For some background info see https://github.com/gdha/rear-automated-testing/issues/36
+    MANUAL_MAC_MAPPING=true
+fi
+
 # Let the user choose replacement network interfaces (unless manual mapping is specified).
 # When there is only one original MAC and only one network interface on the current system
 # automatically map the original MAC to the new MAC of the current network interface:
