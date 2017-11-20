@@ -82,15 +82,21 @@ if unattended_recovery ; then
     # we gonna cheat a bit and say we have map made (but we did not and just hope that the interfaces
     # will be in the same order on the recover vm as on the client vm)
     # For some background info see https://github.com/gdha/rear-automated-testing/issues/36
-    MANUAL_MAC_MAPPING=true
+    test $MANUAL_MAC_MAPPING || MANUAL_MAC_MAPPING=unattended
 fi
 
 # Let the user choose replacement network interfaces (unless manual mapping is specified).
 # When there is only one original MAC and only one network interface on the current system
 # automatically map the original MAC to the new MAC of the current network interface:
 if test $MANUAL_MAC_MAPPING ; then
-    # Tell the user that his predefined network MAC address mappings will be done:
-    echo "Mapping MAC addresses as specified in the above $MAC_MAPPING_FILE lines (old_MAC new_MAC)"
+    if test "unattended" = $MANUAL_MAC_MAPPING ; then
+        # When MANUAL_MAC_MAPPING is 'unattended' there is no valid mapping file
+        # and then we can only proceed in the hope that things will be right:
+        echo "Trying unattended MAC address mapping (no $MAC_MAPPING_FILE file)"
+    else
+        # Tell the user that his predefined network MAC address mappings will be done:
+        echo "Mapping MAC addresses as specified in the above $MAC_MAPPING_FILE lines (old_MAC new_MAC)"
+    fi
 else
     # Abandon this process if no manual mapping should be done and the ORIGINAL_MACS array is empty
     # because when the ORIGINAL_MACS array is empty it does not make sense to let the user choose something:
