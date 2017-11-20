@@ -30,6 +30,8 @@ PROGS=( "${PROGS[@]}"
         grub-set-default     grub2-set-default
         grub-setup           grub2-setup )
 
+# Added /etc/tuned/* to the list as /etc/tuned/bootcmdline is read by grub2-mkconfig, but was missing on
+# a rescue image made on RHEL - more details in #1462
 COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/default/grub /etc/grub.d/* /etc/grub*.cfg /boot/grub*
              /usr/lib/grub* /usr/share/grub* /etc/tuned/* )
 
