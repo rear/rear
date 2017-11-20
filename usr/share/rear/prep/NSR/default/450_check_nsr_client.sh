@@ -1,8 +1,13 @@
 # 450_check_nsr_client.sh
-# this script has a simple goal: check if this client system knows the networker server?
+# 
+# This script checks if a EMC Legato client is installed and running
+#
 
 Log "Backup method is NetWorker (NSR): check nsrexecd"
-[ ! -x /usr/sbin/nsrexecd ] && Error "Please install EMC NetWorker (Legato) client software."
+if [ ! -x /usr/sbin/nsrexecd ] \
+&& [ ! -x /opt/networker/sbin/nsrexecd ]; then
+    Error "Please install EMC NetWorker (Legato) client software."
+fi
 
 ps ax | grep nsrexecd | grep -v grep  1>/dev/null
 StopIfError $? "EMC NetWorker (Legato) nsrexecd was not running on this client."

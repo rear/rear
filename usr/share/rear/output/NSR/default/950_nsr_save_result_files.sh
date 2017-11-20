@@ -1,5 +1,10 @@
-#
+# 950_nsr_save_result_files.sh
 # saving result files via NSR
+
+# In case NSR_CLIENT_MODE is enabled return else continue ...
+if is_true "$NSR_CLIENT_MODE"; then
+    return
+fi
 
 test ${#RESULT_FILES[@]} -gt 0 || Error "No files to copy (RESULT_FILES is empty)"
 
