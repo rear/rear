@@ -80,10 +80,10 @@ if contains_visible_char "$broken_binaries" ; then
         # Only for programs (i.e. files in a .../bin/... or .../sbin/... directory) treat a missing library as fatal
         # unless specified when a 'not found' reported library is not fatal (when the 'ldd' test was false alarm):
         if grep -q '/[s]*bin/' <<<"$binary" ; then
-            # With an empty NON_FATAL_BINARIES_WITH_MISSING_LIBRARY_PATTERN egrep -E '' would always match:
-            if test "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY_PATTERN" ; then
+            # With an empty NON_FATAL_BINARIES_WITH_MISSING_LIBRARY egrep -E '' would always match:
+            if test "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" ; then
                 # A program with missing library is treated as fatal when it does not match the pattern:
-                if grep -E -q "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY_PATTERN" <<<"$binary" ; then
+                if grep -E -q "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" <<<"$binary" ; then
                     LogPrintError "$binary requires additional libraries (specified as non-fatal)"
                 else
                     LogPrintError "$binary requires additional libraries (fatal error)"
