@@ -45,7 +45,10 @@ if test "$BACKUP" = "TSM" ; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TSM_LD_LIBRARY_PATH
 fi
 for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ) ; do
-    chroot $ROOTFS_DIR /bin/ldd $binary | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
+    # In order to handle relative paths, we 'cd' to the directory containing $binary before running ldd.
+    # 'cd' will not work in the chroot without calling bash.
+    # For an example of the problem, see:  https://github.com/rear/rear/pull/1560#issuecomment-343504359
+    chroot $ROOTFS_DIR /bin/bash --login -c "cd $(dirname $binary) && ldd $binary" | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
 done
 test $old_LD_LIBRARY_PATH && export LD_LIBRARY_PATH=$old_LD_LIBRARY_PATH || unset LD_LIBRARY_PATH
 
