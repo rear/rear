@@ -1,0 +1,32 @@
+How to recover your system:
+---------------------------
+
+To recover your system, copy the attached raw disk image onto a disk device (a USB stick will do).
+Do not use a partition (like /dev/sdc1), use the complete disk device (like /dev/sdc).
+Be careful, this will overwrite disk contents.
+
+Example:
+
+   dd if=<image> bs=1M of=<device>
+
+Then boot from the disk device into the rescue system.
+
+
+
+How to install a TCG Opal pre-boot authentication (PBA) image
+-------------------------------------------------------------
+
+
+a) To enable TCG Opal support and install the PBA image onto a disk device:
+
+      sudo rear installopalpba --setup [<image>] <device>
+
+
+b) To replace the PBA image on a disk device where TCG Opal support has been enabled:
+
+      sudo rear installopalpba [<image>] <device>
+
+
+Note: If the <image> parameter is not provided, ReaR will either
+- use the provided image when called on a rescue system, or
+- generate a new image.
