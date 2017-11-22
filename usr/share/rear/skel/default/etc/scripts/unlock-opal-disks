@@ -1,0 +1,132 @@
+#!/bin/bash
+#
+# Unlock TCG Opal-compliant disks and reboot to continue booting the 'real' operating system
+#
+# This script executes the final stage of a TCG Opal pre-boot authentication (PBA) boot.
+# It is expected that this script executes on a volatile system running entirely on RAM file systems.
+# To avoid delays, this script will perform a hard reset or power-off instead of a regular
+# system shutdown.
+
+kernel_cmdline="$(cat /proc/cmdline)"
+
+function opal_debug() {
+    # returns 0 if Opal debug mode is requested
+    [[ " $kernel_cmdline " == *" opal_debug "* ]]
+}
+
+function be_quiet() {
+    # returns 0 if quiet boot is requested
+    [[ " $kernel_cmdline " == *" quiet "* ]]
+}
+
+function use_plymouth() {
+    # returns 0 if plymouth is to be used
+    type -p plymouth &>/dev/null && plymouth --ping
+}
+
+function quit_plymouth() {
+    # quits plymouth if in use
+    use_plymouth && plymouth quit
+}
+
+function ask_for_password() {
+    # asks for a password with prompt $1, setting the variable $password
+    if ! password="$(use_plymouth && plymouth ask-for-password --prompt="$1")"; then
+        echo ""
+        read -s -p "$1: " password
+        echo ""
+    fi
+}
+
+function display_message() {
+    # displays the message $1
+    (use_plymouth && plymouth display-message --text="$1") || echo -e "\n$1"
+}
+
+function instant_reboot() {
+    quit_plymouth
+    # Force immediate hardware reboot via Magic SysRq key
+    echo 1 > /proc/sys/kernel/sysrq
+    echo b > /proc/sysrq-trigger
+    # Fallback if the previous method did not work
+    sleep 1
+    reboot --force
+}
+
+function instant_poweroff() {
+    quit_plymouth
+    # Force immediate hardware poweroff via Magic SysRq key
+    echo 1 > /proc/sys/kernel/sysrq
+    echo o > /proc/sysrq-trigger
+    # Fallback if the previous method did not work
+    sleep 1
+    poweroff --force
+}
+
+
+# Minimal system setup
+# TODO: split system setup scripts into PBA and rescue categories to protect against script renaming
+for system_setup_script in 00-functions.sh 10-console-setup.sh 40-start-udev-or-load-modules.sh; do
+    source "/etc/scripts/system-setup.d/$system_setup_script"
+done
+
+
+# Find TCG Opal 2-compliant disks
+opal_disks=( $(sedutil-cli --scan | awk '$1 ~ /\/dev\// && $2 ~ /2/ { print $1; }') )
+opal_disk_count=${#opal_disks[@]}
+if [[ $opal_disk_count -eq 0 ]]; then
+    if opal_debug; then
+        display_message "Could not detect TCG Opal-compliant disks. Entering shell..."
+        sleep 3
+        quit_plymouth
+        bash --login
+    else
+        display_message "Could not detect TCG Opal-compliant disks. Powering off..."
+        sleep 3
+        instant_poweroff
+    fi
+fi
+
+# Query TCG Opal-compliant disks to determine the maximum number of authentication attempts
+max_authentications=1
+for disk in "${opal_disks[@]}"; do
+    disk_max_authentications="$(sedutil-cli --query "$disk" | sed -r -e '/MaxAuthentications/ { s/.*MaxAuthentications *= *([0-9]+).*/\1/; p }' -e 'd')"
+    if [[ "$disk_max_authentications" -gt 0 ]] && [[ "$disk_max_authentications" -lt "$max_authentications" ]]; then
+        # Limit authentication attempts to the lowest number supported by any disk
+        max_authentications="$disk_max_authentications"
+    fi
+done
+
+# Ask for a password, unlock TCG Opal-compliant disks, reboot if successful
+attempt=0
+while [[ "$attempt" -lt "$max_authentications" ]]; do
+    attempt=$((attempt + 1))
+
+    ask_for_password "Enter password to unlock disks"
+
+    unlocking_successful="no"
+    for disk in "${opal_disks[@]}"; do
+        if sedutil-cli --setLockingRange 0 RW "$password" "$disk" >/dev/null 2>&1; then
+            unlocking_successful=yes
+            sedutil-cli --setMBRDone on "$password" "$disk" >/dev/null 2>&1
+        fi
+    done
+
+    if [[ "$unlocking_successful" == "yes" ]]; then
+        display_message "Unlocking successful, rebooting..."
+        sleep 1
+        instant_reboot
+    elif [[ $opal_disk_count -eq 0 ]]; then
+        display_message "No disks to unlock, rebooting..."
+        sleep 1
+        instant_reboot
+    else
+        display_message "Could not unlock any disk."
+    fi
+done
+
+# If unsuccessful, power off.
+# This is required as TCG Opal-compliant disks will refuse further authentication attempts before being reset.
+display_message "Powering off after $attempt unsuccessful attempts..."
+sleep 3
+instant_poweroff

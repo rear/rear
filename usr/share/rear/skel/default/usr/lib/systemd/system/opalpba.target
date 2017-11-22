@@ -1,0 +1,11 @@
+#  This file is part of systemd.
+#
+# See systemd.special(7) for details
+
+[Unit]
+Description=TCG Opal pre-boot authentication (PBA)
+Requires=sysinit-opalpba.service
+AllowIsolate=yes
+
+[Install]
+Alias=opalpba.target
