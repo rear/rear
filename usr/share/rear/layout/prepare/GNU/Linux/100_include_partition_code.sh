@@ -130,7 +130,7 @@ EOF
             # see https://github.com/rear/rear/issues/544
             if [[ "$label" == "gpt" || "$label" == "gpt_sync_mbr" ]] ; then
                 device_size=$( mathlib_calculate "$device_size - 33*$block_size" )
-                if [[ "$MIGRATION_MODE" ]] ; then
+                if is_true "$MIGRATION_MODE" ; then
                     Log "Size reductions of GPT partitions probably needed."
                 fi
             fi
@@ -146,7 +146,7 @@ EOF
     while read part disk size pstart name flags partition junk; do
 
         ### If not in migration mode and start known, use original start.
-        if [ -z "$MIGRATION_MODE" ] && ! [ "$pstart" = "unknown" ] ; then
+        if ! is_true "$MIGRATION_MODE" && test "$pstart" != "unknown" ; then
             start="$pstart"
         fi
 
@@ -209,7 +209,7 @@ EOF
         # We can't use $end because of extended partitions
         # extended partitions have a small actual size as reported by sysfs
         # in front of a logical partition should be at least 512B empty space
-        if [ -n "$MIGRATION_MODE" ] && [ "$name" = "logical" ] ; then
+        if is_true "$MIGRATION_MODE" && test "$name" = "logical" ; then
             start=$( mathlib_calculate "$start + ${size%B} + $block_size" )
         else
             start=$( mathlib_calculate "$start + ${size%B}" )

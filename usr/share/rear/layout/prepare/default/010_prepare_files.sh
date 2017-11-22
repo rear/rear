@@ -22,8 +22,9 @@ fi
 
 if [ -e $CONFIG_DIR/disklayout.conf ] ; then
     cp $CONFIG_DIR/disklayout.conf $LAYOUT_FILE
-    MIGRATION_MODE="true"
-    LogPrint "$CONFIG_DIR/disklayout.conf exists, entering Migration mode."
+    # Only set MIGRATION_MODE if not already set (could be already enforced via MIGRATION_MODE='TRUE'):
+    is_true "$MIGRATION_MODE" || MIGRATION_MODE='true'
+    LogPrint "Switching to manual disk layout configuration ($CONFIG_DIR/disklayout.conf exists)"
 
     if [ -e $CONFIG_DIR/lun_wwid_mapping.conf ] ; then
         cp $CONFIG_DIR/lun_wwid_mapping.conf $LUN_WWID_MAP
