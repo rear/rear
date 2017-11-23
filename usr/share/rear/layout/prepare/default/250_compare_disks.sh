@@ -141,7 +141,7 @@ else
     local prompt="Proceed with recovery (yes) otherwise manual disk layout configuration is enforced"
     local input_value=""
     local wilful_input=""
-    local input_value="$( UserInput -I DISK_LAYOUT_PROCEED_RESTORE -t "$timeout" -p "$prompt" -D 'yes' )" && wilful_input="yes" || wilful_input="no"
+    local input_value="$( UserInput -I DISK_LAYOUT_PROCEED_RECOVERY -t "$timeout" -p "$prompt" -D 'yes' )" && wilful_input="yes" || wilful_input="no"
     if is_true "$input_value" ; then
         is_true "$wilful_input" && LogPrint "User confirmed to proceed with recovery" || LogPrint "Proceeding with recovery by default"
     else
