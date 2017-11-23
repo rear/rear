@@ -1,8 +1,7 @@
 # Try to automatically resize disks.
 
-if [[ -z "$MIGRATION_MODE" ]] ; then
-    return 0
-fi
+# Skip if not in migration mode:
+is_true "$MIGRATION_MODE" || return 0
 
 # Resize all partitions, except the boot partition.
 # This does not resize volumes on top of the affected partitions.

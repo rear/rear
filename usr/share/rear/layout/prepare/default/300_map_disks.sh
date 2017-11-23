@@ -54,11 +54,20 @@ while read keyword orig_device orig_size junk ; do
     current_device="/sys/block/$sysfs_device_name"
     if test -e $current_device ; then
         current_size=$( get_disk_size $sysfs_device_name )
+        # The current_device (e.g. /sys/block/sda) is not a block device so that
+        # its matching actual block device (e.g. /dev/sda) must be determined:
+        preferred_target_device_name="$( get_device_name $current_device )"
+        # Continue with next one if the current one is already used as target in the mapping file:
+        is_mapping_target "$preferred_target_device_name" && continue
+        # Use the current one if it is of same size as the old one:
         if test "$orig_size" -eq "$current_size" ; then
-            add_mapping "$orig_device" "$current_device"
-            LogPrint "Using $current_device (same name and same size) for recreating $orig_device"
-            # Continue with next original device in the LAYOUT_FILE:
-            continue
+            # Ensure the determined target device is really a block device:
+            if test -b "$preferred_target_device_name" ; then
+                add_mapping "$orig_device" "$preferred_target_device_name"
+                LogPrint "Using $preferred_target_device_name (same name and same size) for recreating $orig_device"
+                # Continue with next original device in the LAYOUT_FILE:
+                continue
+            fi
         fi
     fi
     # Else, loop over all current block devices to find one of the same size as the original:
@@ -69,16 +78,21 @@ while read keyword orig_device orig_size junk ; do
         test -r $current_device_path/size || continue
         current_disk_name="${current_device_path#/sys/block/}"
         current_size=$( get_disk_size $current_disk_name )
+        # The current_device_path (e.g. /sys/block/sdb) is not a block device so that
+        # its matching actual block device (e.g. /dev/sdb) must be determined:
         preferred_target_device_name="$( get_device_name $current_device_path )"
         # Continue with next one if the current one is already used as target in the mapping file:
         is_mapping_target "$preferred_target_device_name" && continue
         # Use the current one if it is of same size as the old one:
         if test "$orig_size" -eq "$current_size" ; then
-            add_mapping "$orig_device" "$preferred_target_device_name"
-            LogPrint "Using $preferred_target_device_name (same size) for recreating $orig_device"
-            # Break looping over all current block devices to find one
-            # and continue with next original device in the LAYOUT_FILE:
-            break
+            # Ensure the determined target device is really a block device:
+            if test -b "$preferred_target_device_name" ; then
+                add_mapping "$orig_device" "$preferred_target_device_name"
+                LogPrint "Using $preferred_target_device_name (same size) for recreating $orig_device"
+                # Break looping over all current block devices to find one
+                # and continue with next original device in the LAYOUT_FILE:
+                break
+            fi
         fi
     done
 done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )

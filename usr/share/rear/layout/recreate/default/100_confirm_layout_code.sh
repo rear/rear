@@ -3,8 +3,8 @@
 # disk layout recreation code (diskrestore.sh) script.
 #
 
-# Skip that unless in migration mode:
-test "$MIGRATION_MODE" || return 0
+# Skip if not in migration mode:
+is_true "$MIGRATION_MODE" || return 0
 
 rear_workflow="rear $WORKFLOW"
 original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"

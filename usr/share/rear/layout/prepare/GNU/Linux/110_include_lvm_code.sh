@@ -34,7 +34,7 @@ create_lvmdev() {
     local uuidopt=""
     local restorefileopt=""
 
-    if [ -z "$MIGRATION_MODE" ] && [ -e "$VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg" ] ; then
+    if ! is_true "$MIGRATION_MODE" && test -e "$VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg" ; then
         # we have a restore file
         restorefileopt=" --restorefile $VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg"
     else
@@ -52,7 +52,7 @@ create_lvmdev() {
 
 # Create a new VG.
 create_lvmgrp() {
-    if [ -z "$MIGRATION_MODE" ] ; then
+    if ! is_true "$MIGRATION_MODE" ; then
         restore_lvmgrp "$1"
         cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Sleeping 3 seconds to let udev or systemd-udevd create their devices..."
@@ -92,7 +92,7 @@ EOF
 
 # Create a LV.
 create_lvmvol() {
-    if [ -z "$MIGRATION_MODE" ] ; then
+    if ! is_true "$MIGRATION_MODE" ; then
         return
     fi
 
