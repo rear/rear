@@ -60,7 +60,7 @@ while read disk dev size junk ; do
     fi
 done < <( grep -E '^disk |^multipath ' "$LAYOUT_FILE" )
 # MIGRATION_MODE is needed when more than one disk with same size is used on the original system:
-if is_true "$more_than_one_same_orig_size"
+if is_true "$more_than_one_same_orig_size" ; then
     LogPrint "Ambiguous disk layout needs manual configuration (more than one disk with same size used in '$LAYOUT_FILE')"
     MIGRATION_MODE='true'
 fi
