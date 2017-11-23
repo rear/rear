@@ -133,10 +133,15 @@ else
     # with a relatively short timeout to avoid too much delay by default
     # but sufficient time for the user to read and understand the message
     # so that the user could deliberately intervene and enforce MIGRATION_MODE:
-    prompt="Proceed with recovery (yes) otherwise manual disk layout configuration is enforced"
-    input_value=""
-    wilful_input=""
-    input_value="$( UserInput -I DISK_LAYOUT_PROCEED_RESTORE -t 30 -p "$prompt" -D 'yes' )" && wilful_input="yes" || wilful_input="no"
+    local timeout=30
+    # Have that timeout not bigger than USER_INPUT_TIMEOUT
+    # e.g. for automated testing a small USER_INPUT_TIMEOUT may be specified and
+    # we do not want to delay it here more than what USER_INPUT_TIMEOUT specifies:
+    test "$timeout" -gt "$USER_INPUT_TIMEOUT" && timeout="$USER_INPUT_TIMEOUT"
+    local prompt="Proceed with recovery (yes) otherwise manual disk layout configuration is enforced"
+    local input_value=""
+    local wilful_input=""
+    local input_value="$( UserInput -I DISK_LAYOUT_PROCEED_RESTORE -t "$timeout" -p "$prompt" -D 'yes' )" && wilful_input="yes" || wilful_input="no"
     if is_true "$input_value" ; then
         is_true "$wilful_input" && LogPrint "User confirmed to proceed with recovery" || LogPrint "Proceeding with recovery by default"
     else
