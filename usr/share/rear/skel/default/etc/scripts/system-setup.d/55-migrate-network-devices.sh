@@ -235,6 +235,7 @@ fi
 # Reload udev if we have MAC mappings:
 if is_true $reload_udev ; then
     echo -n "Reloading udev ... "
+    sleep 1
     my_udevtrigger
     sleep 1
     my_udevsettle
