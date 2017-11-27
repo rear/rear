@@ -236,7 +236,9 @@ fi
 if is_true $reload_udev ; then
     echo -n "Reloading udev ... "
     # Force udev to reload rules (as they were just changed)
-    udevadm control --reload-rules
+    # Failback to "udevadm control --reload" in case of problem (as specify in udevadm manpage in SLES12)
+    # If nothing work, then wait 1 seconf delay. It should let the time for udev to detect changes in the rules files.
+    udevadm control --reload-rules || udevadm control --reload || sleep 1
     my_udevtrigger
     sleep 1
     my_udevsettle
