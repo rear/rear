@@ -3,7 +3,7 @@
 function get_usb_syslinux_version {
     for file in $BUILD_DIR/outputfs/{boot/syslinux,}/{ld,ext}linux.sys; do
         if [[ -s "$file" ]];  then
-            strings $file | grep -E -m1 "^(EXT|SYS)LINUX \\d+.\\d+" | cut -d' ' -f2
+            strings $file | grep -E -m1 "^(EXT|SYS)LINUX " | cut -d' ' -f2
             return 0
         fi
     done
