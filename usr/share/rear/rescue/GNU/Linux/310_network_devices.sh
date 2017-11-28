@@ -82,6 +82,28 @@ if [[ "\$IPADDR" ]] && [[ "\$NETMASK" ]] ; then
 fi
 EOT
 
+# Detect whether 'readlink' supports multiple filenames or not
+# e.g. RHEL6 doesn't support that
+if readlink /foo /bar 2>/dev/null; then
+    function resolve () {
+        readlink -e $@
+    }
+else
+    function resolve () {
+        for path in $@; do
+            readlink -e $path
+        done
+    }
+fi
+
+# Detect whether 'lower_*' symlinks for network interfaces exist or not
+# e.g. RHEL6 doesn't have that
+if ls /sys/class/net/* | grep -q ^lower_; then
+    has_lower_links=1
+else
+    has_lower_links=0
+fi
+
 # ############################################################################
 # EXPLANATION OF THE ALGORITHM USED
 # ############################################################################
@@ -201,13 +223,32 @@ function get_mapped_network_interface () {
 # return 1 otherwise
 function is_devpath_linked_to_physical () {
     local sysfspath=$1
+
     # If device is a physical device, return success
     [ ! -e $sysfspath/device ] || return 0
+
     # Otherwise recurse on lower devices (if any)
+    local devices
+    if [ $has_lower_links -eq 1 ]; then
+        devices=$( resolve $sysfspath/lower_* 2>/dev/null )
+    else
+        # Fallback to probing as much as we can
+        # - slave_*: for bonding
+        # - brif: for bridges
+        # - xxx.nn: for vlan (using awk, checking for '.')
+        # - teams are not supported (at least on RHEL6)
+        devices="$( resolve $sysfspath/slave_* )"
+        devices+=" $( for d in $( resolve $sysfspath/brif/* ); do dirname $d; done )"
+        devices+=" $( echo $sysfspath | awk -F '.' '$2 { print $1 }' )"
+
+        # NOTE: because teams are not supported using this method, they will be
+        # detected as pure virtual devices, hence skipped.
+    fi
     local dev
-    for dev in $(readlink -f $sysfspath/lower_* 2>/dev/null); do
+    for dev in $devices; do
         ! is_devpath_linked_to_physical $dev || return 0
     done
+
     # Device is not linked to a physical device
     return 1
 }
@@ -225,9 +266,22 @@ function get_lower_interfaces () {
     local network_interface=$1
     local sysfspath=/sys/class/net/$network_interface
 
+    local devices
+    if [ $has_lower_links -eq 1 ]; then
+        devices=$( resolve $sysfspath/lower_* 2>/dev/null )
+    else
+        # Fallback to probing as much as we can
+        # - slave_*: for bonding
+        # - brif: for bridges
+        # - xxx.nn: for vlan (using awk, checking for '.')
+        # - teams are not supported (at least on RHEL6)
+        devices="$( resolve $sysfspath/slave_* )"
+        devices+=" $( for d in $( resolve $sysfspath/brif/* ); do dirname $d; done )"
+        devices+=" $( echo $sysfspath | awk -F '.' '$2 { print $1 }' )"
+    fi
     local dev
-    for dev in $(readlink -f $sysfspath/lower_* 2>/dev/null); do
-        echo $(get_mapped_network_interface $(basename $dev))
+    for dev in $devices; do
+        echo $( get_mapped_network_interface $( basename $dev ) )
     done
 }
 
@@ -250,6 +304,32 @@ function is_interface_up () {
     else
         BugError "Unexpected operational state '$state' for '$network_interface'."
     fi
+}
+
+iplink_has_bridge_rc=
+
+# Function returning whether 'ip link add name NAME type bridge ...' exists
+function iplink_has_bridge () {
+    [ -n "$iplink_has_bridge_rc" ] && return $iplink_has_bridge_rc
+    if ip link help 2>&1 | grep -qw bridge; then
+        iplink_has_bridge_rc=0
+    else
+        iplink_has_bridge_rc=1
+    fi
+    return $iplink_has_bridge_rc
+}
+
+iplink_has_master_rc=
+
+# Function returning whether 'ip link set dev NAME master YYY' exists
+function iplink_has_master () {
+    [ -n "$iplink_has_master_rc" ] && return $iplink_has_master_rc
+    if ip link help 2>&1 | grep -qw master; then
+        iplink_has_master_rc=0
+    else
+        iplink_has_master_rc=1
+    fi
+    return $iplink_has_master_rc
 }
 
 # Configures the IP addresses of the network interface
@@ -278,7 +358,7 @@ function ipaddr_setup () {
     fi
 
     local ipaddr
-    local ipaddrs=$(awk "\$1 == \"$network_interface\" { print \$2 }" $TMP_DIR/mappings/ip_addresses)
+    local ipaddrs=$( awk "\$1 == \"$network_interface\" { print \$2 }" $TMP_DIR/mappings/ip_addresses )
     if [ -n "$ipaddrs" ]; then
         # If some IP is found for the network interface, then use them
         for ipaddr in $ipaddrs; do
@@ -415,7 +495,17 @@ function handle_bridge () {
     # Create the bridge
     # TODO Add more properties if needed
     stp=$( cat "$sysfspath/bridge/stp_state")
-    echo "ip link add name $network_interface type bridge stp_state $stp"
+    if iplink_has_bridge; then
+        echo "ip link add name $network_interface type bridge stp_state $stp"
+    elif [ -x $( which brctl ) ]; then
+        if [[ " ${REQUIRED_PROGS[@]} " != *\ brctl\ * ]]; then
+            REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "brctl" )
+        fi
+        echo "brctl addbr $network_interface"
+        echo "brctl stp $network_interface $stp"
+    else
+        BugError "No 'brctl' utility nor support for bridges in 'ip', please try using 'SIMPLIFY_BRIDGE=yes'."
+    fi
 
     for itf in $( get_lower_interfaces $network_interface ); do
         DebugPrint "$network_interface has lower interface $itf"
@@ -428,7 +518,11 @@ function handle_bridge () {
         [ $rc -eq $rc_success ] && cat $tmpfile
         # itf may have been mapped into some other interface
         itf=$( get_mapped_network_interface $itf )
-        echo "ip link set dev $itf master $network_interface"
+        if iplink_has_master && iplink_has_bridge; then
+            echo "ip link set dev $itf master $network_interface"
+        else
+            echo "brctl addif $network_interface $itf"
+        fi
     done
     rm $tmpfile
 
@@ -588,7 +682,7 @@ EOT
         itf=$( get_mapped_network_interface $itf )
         # Make sure lower device is down before joining the bond
         echo "ip link set dev $itf down"
-        echo "ip link set dev $itf master $network_interface"
+        echo "echo \"+$itf\" > /sys/class/net/$network_interface/bonding/slaves 2>/dev/null"
     done
     rm $tmpfile
 
@@ -698,14 +792,14 @@ function handle_physdev () {
     # Determine the driver to load, relevant only for non-udev environments
     local driver
     if [ -e "$sysfspath/device/driver" ]; then
-        driver=$( basename $( readlink -f $sysfspath/device/driver ) )
+        driver=$( basename $( resolve $sysfspath/device/driver ) )
         if [ "$driver" = "vif" ]; then
             # xennet driver announces itself as vif :-(
             driver=xennet
         fi
     elif [ -e "$sysfspath/driver" ]; then
         # This should work for virtio_net, xennet and vmxnet on older kernels (2.6.18)
-        driver=$( basename $(readlink -f $sysfspath/driver ) )
+        driver=$( basename $( resolve $sysfspath/driver ) )
     elif has_binary ethtool; then
         driver=$( ethtool -i $network_interface 2>/dev/null | awk '$1 == "driver:" { print $2 }' )
     else
@@ -759,6 +853,7 @@ done >>$network_devices_setup_script
 
 rm $tmpfile
 
+unset -f resolve
 unset -f map_network_interface
 # Don't unset 'get_mapped_network_interface' because it is used in 350_routing.sh.
 #unset -f get_mapped_network_interface
@@ -768,6 +863,8 @@ unset -f get_lower_interfaces
 unset -f get_interface_state
 unset -f is_interface_up
 unset -f ipaddr_setup
+unset -f iplink_has_bridge
+unset -f iplink_has_master
 unset -f setup_device_params
 unset -f handle_interface
 unset -f handle_bridge
