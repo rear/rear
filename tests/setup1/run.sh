@@ -29,18 +29,26 @@ function read_and_strip_file () {
 	grep -v "^#" $1 2>/dev/null || true
 }
 
+function is_true () {
+	if [ "$1" == "true" ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
 TMP_DIR=/root/tmp
 
 rm -fr $TMP_DIR
 
-# Add to sed -e below to test 'has_lower_links=0' (RHEL6)
-#    -e 's#$has_lower_links#0#' \
+# Add to sed -e below to test "ip_link_supports_bridge='false'" (RHEL6)
+#    -e "s#\$ip_link_supports_bridge#'false'#" \
 
 # Add to sed -e below to test 'readlink' taking only 1 filename (RHEL6)
 #    -e 's#readlink /foo /bar#! readlink /foo /bar#' \
 
 # Add to sed -e below to have code using 'brctl' instead of 'ip link' (RHEL6)
-#    -e 's#^iplink_has_bridge_rc=#iplink_has_bridge_rc=1#' \
+#    -e "s#\$net_devices_have_lower_links#'false'#" \
 sed -e "s#^network_devices_setup_script=.*#network_devices_setup_script=/tmp/60-network-devices.sh#" \
     $REAR_DIR/usr/share/rear/rescue/GNU/Linux/310_network_devices.sh > /tmp/310_network_devices.sh
 sed "s#^netscript=.*#netscript=/tmp/62-routing.sh#" $REAR_DIR/usr/share/rear/rescue/GNU/Linux/350_routing.sh > /tmp/350_routing.sh

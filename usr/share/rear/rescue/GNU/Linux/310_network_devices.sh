@@ -98,11 +98,12 @@ fi
 
 # Detect whether 'lower_*' symlinks for network interfaces exist or not
 # e.g. RHEL6 doesn't have that
-if ls /sys/class/net/* | grep -q ^lower_; then
-    has_lower_links=1
-else
-    has_lower_links=0
-fi
+net_devices_have_lower_links='false'
+ls /sys/class/net/* | grep -q ^lower_ && net_devices_have_lower_links='true'
+
+# Detect whether 'ip link add name NAME type bridge ...' exists or not
+ip_link_supports_bridge='false'
+ip link help 2>&1 | grep -qw bridge && ip_link_supports_bridge='true'
 
 # ############################################################################
 # EXPLANATION OF THE ALGORITHM USED
@@ -229,7 +230,7 @@ function is_devpath_linked_to_physical () {
 
     # Otherwise recurse on lower devices (if any)
     local devices
-    if [ $has_lower_links -eq 1 ]; then
+    if is_true $net_devices_have_lower_links ; then
         devices=$( resolve $sysfspath/lower_* 2>/dev/null )
     else
         # Fallback to probing as much as we can
@@ -267,7 +268,7 @@ function get_lower_interfaces () {
     local sysfspath=/sys/class/net/$network_interface
 
     local devices
-    if [ $has_lower_links -eq 1 ]; then
+    if is_true $net_devices_have_lower_links ; then
         devices=$( resolve $sysfspath/lower_* 2>/dev/null )
     else
         # Fallback to probing as much as we can
@@ -304,32 +305,6 @@ function is_interface_up () {
     else
         BugError "Unexpected operational state '$state' for '$network_interface'."
     fi
-}
-
-iplink_has_bridge_rc=
-
-# Function returning whether 'ip link add name NAME type bridge ...' exists
-function iplink_has_bridge () {
-    [ -n "$iplink_has_bridge_rc" ] && return $iplink_has_bridge_rc
-    if ip link help 2>&1 | grep -qw bridge; then
-        iplink_has_bridge_rc=0
-    else
-        iplink_has_bridge_rc=1
-    fi
-    return $iplink_has_bridge_rc
-}
-
-iplink_has_master_rc=
-
-# Function returning whether 'ip link set dev NAME master YYY' exists
-function iplink_has_master () {
-    [ -n "$iplink_has_master_rc" ] && return $iplink_has_master_rc
-    if ip link help 2>&1 | grep -qw master; then
-        iplink_has_master_rc=0
-    else
-        iplink_has_master_rc=1
-    fi
-    return $iplink_has_master_rc
 }
 
 # Configures the IP addresses of the network interface
@@ -495,7 +470,7 @@ function handle_bridge () {
     # Create the bridge
     # TODO Add more properties if needed
     stp=$( cat "$sysfspath/bridge/stp_state")
-    if iplink_has_bridge; then
+    if is_true $ip_link_supports_bridge ; then
         echo "ip link add name $network_interface type bridge stp_state $stp"
     elif [ -x $( which brctl ) ]; then
         if [[ " ${REQUIRED_PROGS[@]} " != *\ brctl\ * ]]; then
@@ -518,7 +493,7 @@ function handle_bridge () {
         [ $rc -eq $rc_success ] && cat $tmpfile
         # itf may have been mapped into some other interface
         itf=$( get_mapped_network_interface $itf )
-        if iplink_has_master && iplink_has_bridge; then
+        if is_true $ip_link_supports_bridge ; then
             echo "ip link set dev $itf master $network_interface"
         else
             echo "brctl addif $network_interface $itf"
@@ -863,8 +838,6 @@ unset -f get_lower_interfaces
 unset -f get_interface_state
 unset -f is_interface_up
 unset -f ipaddr_setup
-unset -f iplink_has_bridge
-unset -f iplink_has_master
 unset -f setup_device_params
 unset -f handle_interface
 unset -f handle_bridge
