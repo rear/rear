@@ -5,7 +5,7 @@
 # In the ReaR rescue/recovery system /etc/rear-release is unique (it does not exist otherwise):
 test -f /etc/rear-release || return 0
 case "$WORKFLOW" in
-    (recover|layoutonly|restoreonly|finalizeonly)
+    (recover|layoutonly|restoreonly|finalizeonly|opaladmin)
         LogPrint "Running workflow $WORKFLOW within the ReaR rescue/recovery system"
         ;;
     (*)

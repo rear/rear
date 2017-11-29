@@ -7,6 +7,8 @@
 # To avoid delays, this script will perform a hard reset or power-off instead of a regular
 # system shutdown.
 
+source /usr/share/rear/lib/opal-functions.sh
+
 kernel_cmdline="$(cat /proc/cmdline)"
 
 function opal_debug() {
@@ -33,7 +35,7 @@ function ask_for_password() {
     # asks for a password with prompt $1, setting the variable $password
     if ! password="$(use_plymouth && plymouth ask-for-password --prompt="$1")"; then
         echo ""
-        read -s -p "$1: " password
+        read -r -s -p "$1: " password
         echo ""
     fi
 }
@@ -72,9 +74,9 @@ done
 
 
 # Find TCG Opal 2-compliant disks
-opal_disks=( $(sedutil-cli --scan | awk '$1 ~ /\/dev\// && $2 ~ /2/ { print $1; }') )
-opal_disk_count=${#opal_disks[@]}
-if [[ $opal_disk_count -eq 0 ]]; then
+devices=( $(opal_devices) )
+declare -i device_count=${#devices[@]}
+if (( device_count == 0 )); then
     if opal_debug; then
         display_message "Could not detect TCG Opal-compliant disks. Entering shell..."
         sleep 3
@@ -88,35 +90,35 @@ if [[ $opal_disk_count -eq 0 ]]; then
 fi
 
 # Query TCG Opal-compliant disks to determine the maximum number of authentication attempts
-max_authentications=1
-for disk in "${opal_disks[@]}"; do
-    disk_max_authentications="$(sedutil-cli --query "$disk" | sed -r -e '/MaxAuthentications/ { s/.*MaxAuthentications *= *([0-9]+).*/\1/; p }' -e 'd')"
-    if [[ "$disk_max_authentications" -gt 0 ]] && [[ "$disk_max_authentications" -lt "$max_authentications" ]]; then
+declare -i max_authentications=5  # self-imposed limit to begin with
+for device in "${devices[@]}"; do
+    device_max_authentications="$(opal_device_max_authentications "$device")"
+    if (( device_max_authentications > 0 && device_max_authentications < max_authentications )); then
         # Limit authentication attempts to the lowest number supported by any disk
-        max_authentications="$disk_max_authentications"
+        max_authentications=$device_max_authentications
     fi
 done
 
 # Ask for a password, unlock TCG Opal-compliant disks, reboot if successful
-attempt=0
-while [[ "$attempt" -lt "$max_authentications" ]]; do
-    attempt=$((attempt + 1))
+declare -i attempt=0
+while (( attempt < max_authentications )); do
+    attempt+=1
 
     ask_for_password "Enter password to unlock disks"
 
-    unlocking_successful="no"
-    for disk in "${opal_disks[@]}"; do
-        if sedutil-cli --setLockingRange 0 RW "$password" "$disk" >/dev/null 2>&1; then
-            unlocking_successful=yes
-            sedutil-cli --setMBRDone on "$password" "$disk" >/dev/null 2>&1
-        fi
+    # Success in this case is achieved if at least one device can be unlocked.
+    # If other devices require different passwords for unlocking, we assume
+    # that this is intentional and will be dealt with by other means.
+    declare -i unlocked_device_count=0
+    for device in "${devices[@]}"; do
+        opal_device_unlock "$device" "$password" &>/dev/null && unlocked_device_count+=1
     done
 
-    if [[ "$unlocking_successful" == "yes" ]]; then
-        display_message "Unlocking successful, rebooting..."
+    if (( unlocked_device_count > 0 )); then
+        display_message "$unlocked_device_count disk(s) unlocked, rebooting..."
         sleep 1
         instant_reboot
-    elif [[ $opal_disk_count -eq 0 ]]; then
+    elif (( device_count == 0 )); then
         display_message "No disks to unlock, rebooting..."
         sleep 1
         instant_reboot
