@@ -9,8 +9,6 @@ WORKFLOW_mkopalbpa () {
 
 	SourceStage "prep"
 
-	SourceStage "layout/save"
-
 	SourceStage "rescue"
 
 	SourceStage "build"
