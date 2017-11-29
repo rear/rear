@@ -103,6 +103,10 @@ else
     has_lower_links=0
 fi
 
+# Detect whether 'ip link add name NAME type bridge ...' exists
+ip_link_supports_bridge='false'
+ip link help 2>&1 | grep -qw bridge && ip_link_supports_bridge='true'
+
 # Function returning whether a device path is linked to some physical device
 # return 0 if True
 # return 1 otherwise
@@ -173,18 +177,6 @@ for network_interface in $network_interfaces ; do
     test "$network_interface" && physical_network_interfaces+=" $network_interface"
 done
 
-iplink_has_bridge_rc=
-# Function returning whether 'ip link add name NAME type bridge ...' exists
-function iplink_has_bridge () {
-    [ -n "$iplink_has_bridge_rc" ] && return $iplink_has_bridge_rc
-    if ip link help 2>&1 | grep -qw bridge; then
-        iplink_has_bridge_rc=0
-    else
-        iplink_has_bridge_rc=1
-    fi
-    return $iplink_has_bridge_rc
-}
-
 # Add-on for bridge devices
 already_set_up_bridges=""
 # Handles bridge attached to a network interface
@@ -214,7 +206,7 @@ function bridge_handling () {
     done
     if [ $found -eq 0 ]; then
         stp=$(cat "/sys/class/net/$bridge/bridge/stp_state")
-        if iplink_has_bridge; then
+        if is_true $ip_link_supports_bridge; then
             echo "ip link add name $bridge type bridge stp_state $stp" >>$network_devices_setup_script
         elif [ -x $( which brctl ) ]; then
             if [[ " ${REQUIRED_PROGS[@]} " != *\ brctl\ * ]]; then
@@ -231,7 +223,7 @@ function bridge_handling () {
     fi
 
     if [ -d "/sys/class/net/$from_network_interface/brport" ]; then
-        if iplink_has_bridge; then
+        if is_true $ip_link_supports_bridge; then
             echo "ip link set dev $to_network_interface master $bridge" >>$network_devices_setup_script
         elif [ -x $( which brctl ) ]; then
             echo "brctl addif $bridge $to_network_interface" >>$network_devices_setup_script
@@ -495,7 +487,6 @@ fi
 # Local functions must be 'unset' because bash does not support 'local function ...'
 # cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
 unset -f resolve
-unset -f iplink_has_bridge
 unset -f bridge_handling
 unset -f vlan_setup
 unset -f bond_setup
