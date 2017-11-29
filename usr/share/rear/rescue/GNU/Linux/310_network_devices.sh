@@ -81,16 +81,56 @@ if [[ "\$IPADDR" ]] && [[ "\$NETMASK" ]] ; then
 fi
 EOT
 
-# Function returning whether a device path is somehow linked to some physical device
-function is_linked_to_physical () {
-    local devpath=$1
+# Detect whether 'readlink' supports multiple filenames or not
+# e.g. RHEL6 doesn't support that
+if readlink /foo /bar 2>/dev/null; then
+    function resolve () {
+        readlink -e $@
+    }
+else
+    function resolve () {
+        for path in $@; do
+            readlink -e $path
+        done
+    }
+fi
+
+# Detect whether 'lower_*' symlinks for network interfaces exist or not
+# e.g. RHEL6 doesn't have that
+if ls /sys/class/net/* | grep -q ^lower_; then
+    has_lower_links=1
+else
+    has_lower_links=0
+fi
+
+# Function returning whether a device path is linked to some physical device
+# return 0 if True
+# return 1 otherwise
+function is_devpath_linked_to_physical () {
+    local sysfspath=$1
+
     # If device is a physical device, return success
-    [ ! -e $devpath/device ] || return 0
+    [ ! -e $sysfspath/device ] || return 0
+
     # Otherwise recurse on lower devices (if any)
-    for dev in $(/bin/readlink -f $devpath/lower_* 2>/dev/null); do
-        ! is_linked_to_physical $dev || return 0
+    local devices
+    if [ $has_lower_links -eq 1 ]; then
+        devices=$( resolve $sysfspath/lower_* 2>/dev/null )
+    else
+        # Fallback to probing as much as we can
+        # - slave_*: for bonding
+        # - brif: for bridges
+        # - xxx.nn: for vlan (using awk, checking for '.')
+        devices="$( resolve $sysfspath/slave_* )"
+        devices+=" $( for d in $( resolve $sysfspath/brif/* ); do dirname $d; done )"
+        devices+=" $( echo $sysfspath | awk -F '.' '$2 { print $1 }' )"
+    fi
+    local dev
+    for dev in $devices; do
+        ! is_devpath_linked_to_physical $dev || return 0
     done
-    # Device is not a physical device
+
+    # Device is not linked to a physical device
     return 1
 }
 
@@ -120,7 +160,7 @@ for network_interface in $network_interfaces ; do
     # (until someone implements a better solution that works on all bash 3.x versions):
     if [ -d "/sys/class/net/$network_interface/bridge" ]; then
         # Consider bridges linked to physical interfaces only (directly or not)
-        is_linked_to_physical /sys/class/net/$network_interface || network_interface=""
+        is_devpath_linked_to_physical /sys/class/net/$network_interface || network_interface=""
     else
         # Skip all virtual interfaces, except bridges handled above
         for virtual_network_interface in $virtual_network_interfaces ; do
@@ -132,6 +172,18 @@ for network_interface in $network_interfaces ; do
     # Now network_interface is non-empty only for physical network interfaces:
     test "$network_interface" && physical_network_interfaces+=" $network_interface"
 done
+
+iplink_has_bridge_rc=
+# Function returning whether 'ip link add name NAME type bridge ...' exists
+function iplink_has_bridge () {
+    [ -n "$iplink_has_bridge_rc" ] && return $iplink_has_bridge_rc
+    if ip link help 2>&1 | grep -qw bridge; then
+        iplink_has_bridge_rc=0
+    else
+        iplink_has_bridge_rc=1
+    fi
+    return $iplink_has_bridge_rc
+}
 
 # Add-on for bridge devices
 already_set_up_bridges=""
@@ -154,7 +206,7 @@ function bridge_handling () {
         # Device is the bridge device
         bridge=$from_network_interface
     else
-        bridge=$(basename $(readlink "/sys/class/net/$from_network_interface/brport/bridge"))
+        bridge=$(basename $(readlink -e "/sys/class/net/$from_network_interface/brport/bridge"))
     fi
     local found=0
     for already_set_up_bridge in $already_set_up_bridges ; do
@@ -162,14 +214,28 @@ function bridge_handling () {
     done
     if [ $found -eq 0 ]; then
         stp=$(cat "/sys/class/net/$bridge/bridge/stp_state")
-        echo "ip link add name $bridge type bridge stp_state $stp" >>$network_devices_setup_script
+        if iplink_has_bridge; then
+            echo "ip link add name $bridge type bridge stp_state $stp" >>$network_devices_setup_script
+        elif [ -x $( which brctl ) ]; then
+            if [[ " ${REQUIRED_PROGS[@]} " != *\ brctl\ * ]]; then
+                REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "brctl" )
+            fi
+            echo "brctl addbr $bridge" >>$network_devices_setup_script
+            echo "brctl stp $bridge $stp" >>$network_devices_setup_script
+        else
+            BugError "No 'brctl' utility nor support for bridges in 'ip'."
+        fi
 
         # Remember that we already dealt with this bridge:
         already_set_up_bridges+=" ${bridge}"
     fi
 
     if [ -d "/sys/class/net/$from_network_interface/brport" ]; then
-        echo "ip link set dev $to_network_interface master $bridge" >>$network_devices_setup_script
+        if iplink_has_bridge; then
+            echo "ip link set dev $to_network_interface master $bridge" >>$network_devices_setup_script
+        elif [ -x $( which brctl ) ]; then
+            echo "brctl addif $bridge $to_network_interface" >>$network_devices_setup_script
+        fi
     fi
 }
 
@@ -428,7 +494,9 @@ fi
 
 # Local functions must be 'unset' because bash does not support 'local function ...'
 # cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
+unset -f resolve
+unset -f iplink_has_bridge
 unset -f bridge_handling
 unset -f vlan_setup
 unset -f bond_setup
-unset -f is_linked_to_physical
+unset -f is_devpath_linked_to_physical
