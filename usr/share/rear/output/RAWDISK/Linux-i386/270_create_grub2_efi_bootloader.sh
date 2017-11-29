@@ -4,8 +4,8 @@
 
 ### Check prerequisites
 
-# Run only if no EFI bootloader has been created yet and Grub 2 is available
-([[ -n "$RAWDISK_EFI_STAGING_ROOT" ]] || ! has_binary grub-mkimage) && return 0
+# Run only if no EFI bootloader has been created yet and Grub 2 EFI is available
+([[ -n "$RAWDISK_EFI_STAGING_ROOT" ]] || ! has_binary grub-mkimage || ! [[ -d /usr/lib/grub/x86_64-efi ]]) && return 0
 
 if ! is_true ${RAWDISK_INCLUDE_GRUB2_EFI:-yes}; then
     LogPrint "DISABLED: Using Grub 2 to create an EFI bootloader"
