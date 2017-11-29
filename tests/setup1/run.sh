@@ -37,6 +37,10 @@ function is_true () {
 	fi
 }
 
+function has_binary () {
+	which $1 >/dev/null 2>&1
+}
+
 TMP_DIR=/root/tmp
 
 rm -fr $TMP_DIR
