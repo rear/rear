@@ -5,9 +5,9 @@
 
 if [ ! -z $BORGBACKUP_OPT_PRUNE ]; then
     # Purge old archives according user settings.
-    Log "Purging old Borg archives in repository $BORGBACKUP_REPO"
+    LogPrint "Purging old Borg archives in repository $BORGBACKUP_REPO"
 
-    borg prune --verbose --list ${BORGBACKUP_OPT_PRUNE[@]} \
+    borg prune --list ${BORGBACKUP_OPT_PRUNE[@]} \
     $BORGBACKUP_OPT_REMOTE_PATH --prefix ${BORGBACKUP_ARCHIVE_PREFIX}_ \
     $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO
     StopIfError "Failed to purge old backups"

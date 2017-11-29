@@ -202,6 +202,21 @@ function xfs_parse
                 fi
             fi
 
+            # xfsprogs > 4.7.0 evaluates -l sunit=0 "illegal"
+            #
+            # mkfs.xfs -l sunit=0 ...
+            # "Illegal value 0 for -l sunit option. value is too small"
+            #
+            # Skipping -l sunit=0 satisfies mkfs.xfs and does not change
+            # original XFS file system properties.
+            # c.f. ReaR: https://github.com/rear/rear/issues/1579
+            # and https://www.spinics.net/lists/linux-xfs/msg13135.html
+            if [ ${xfs_param_search[$i]} = "log_section" ] &&
+               [ $var = "sunit" ] && [ $val = 0 ]; then
+                i=$((i+1))
+                continue
+            fi
+
             # crc and ftype are mutually exclusive
             if [ $crc -eq 1 ] && [ $var = "ftype" ]; then
                 i=$((i+1))
