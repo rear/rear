@@ -6,6 +6,10 @@ if [ -z "$CASE" ]; then
 	exit 2
 fi
 
+echo
+echo "CASE $CASE"
+echo
+
 DEVICES="$( ls /sys/class/net/ | egrep -wv "(bonding_masters|eth0|lo)" )"
 
 # Cleanup of network interfaces
@@ -38,7 +42,7 @@ echo
 echo "Verifying 'ip a' output"
 echo
 rc=0
-if ! diff -u $CASE/ip_a.expected $tmpfile_ipa; then
+if ! diff -u <(sort $CASE/ip_a.expected) <(sort $tmpfile_ipa); then
 	rc=1
 else
 	/bin/rm $tmpfile_ipa
@@ -48,7 +52,7 @@ fi
 echo
 echo "Verifying 'ip r' output"
 echo
-if ! diff -u $CASE/ip_r.expected $tmpfile_ipr; then
+if ! diff -u <(sort $CASE/ip_r.expected) <(sort $tmpfile_ipr); then
 	rc=1
 else
 	/bin/rm $tmpfile_ipr
