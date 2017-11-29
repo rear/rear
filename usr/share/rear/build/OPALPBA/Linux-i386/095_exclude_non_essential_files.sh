@@ -1,7 +1,7 @@
 # Exclude everything non-essential
 
 COPY_AS_IS_EXCLUDE+=( /etc/ssl /etc/udev/rules.d/*.rules )
-COPY_AS_IS_EXCLUDE+=( /lib/systemd/systemd-cryptsetup /lib/udev/{iphone,ipod}* )
+COPY_AS_IS_EXCLUDE+=( /lib/systemd/systemd-cryptsetup /lib/udev/{iphone,ipod}* /lib/udev/rules.d/*-snap*.rules )
 COPY_AS_IS_EXCLUDE+=( /usr/lib/grub /usr/share/grub )
 COPY_AS_IS_EXCLUDE+=( "$REAR_DIR_PREFIX" )
 
