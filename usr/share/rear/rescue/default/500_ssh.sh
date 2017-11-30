@@ -82,7 +82,7 @@ fi
 
 # Launch sshd during recovery system startup for traditional systems without systemd
 # (for systemd there is skel/default/usr/lib/systemd/system/sshd.service):
-echo "ssh:23:respawn:/bin/sshd -D" >>$ROOTFS_DIR/etc/inittab
+echo "ssh:23:respawn:/etc/scripts/run-sshd" >>$ROOTFS_DIR/etc/inittab
 
 # Print an info if there is no authorized_keys file for root and no SSH_ROOT_PASSWORD set:
 if ! test -f "/root/.ssh/authorized_keys" -o "$SSH_ROOT_PASSWORD" ; then
