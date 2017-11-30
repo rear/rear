@@ -26,6 +26,10 @@ fi
 
 ### Create an initial disk image
 
+# Wait for file systems to settle before trying to determine partition content size
+sync
+sleep 3  # should not be strictly necessary as Linux sync(2) waits until data is written
+
 # Determine the appropriate size (adding 1 MiB for plus 7% for file system overhead/reserve)
 local staged_boot_partition_contents=( "$KERNEL_FILE" "$TMP_DIR/$REAR_INITRD_FILENAME" )
 [[ -n "$RAWDISK_EFI_STAGING_ROOT" ]] && staged_boot_partition_contents+=( "$RAWDISK_EFI_STAGING_ROOT" )
