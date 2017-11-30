@@ -96,6 +96,7 @@ if has_binary syslinux; then
     cat > "$syslinux_installation_dir/syslinux.cfg" << EOF
 DEFAULT rescue
 LABEL rescue
+ SAY
  SAY ${RAWDISK_SYSLINUX_START_INFORMATION:-Starting the rescue system...}
  KERNEL ../$(basename "$KERNEL_FILE")
  APPEND $KERNEL_CMDLINE
