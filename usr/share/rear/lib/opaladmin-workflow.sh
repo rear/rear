@@ -19,14 +19,15 @@ function opaladmin_help() {
     LogPrintError ""
     LogPrintError "Valid options:"
     LogPrintError "  -h, --help                   print this help message and exit"
-    LogPrintError "  --setup                      enable locking on available disk(s) and assign a device password"
-    LogPrintError "  --changePW                   change the device password on available disk(s)"
-    LogPrintError "  --updatePBA                  update the PBA image on disk(s) whose shadow MBR is enabled"
-    LogPrintError "  --unlock                     unlock available disk(s)"
+    LogPrintError "  -i, --info                   print locking information for available disk(s)"
+    LogPrintError "  -s, --setup                  enable locking on available disk(s) and assign a device password"
+    LogPrintError "  -c, --changePW               change the device password on available disk(s)"
+    LogPrintError "  -p, --uploadPBA              upload the PBA image to disk(s) whose shadow MBR is enabled"
+    LogPrintError "  -u, --unlock                 unlock available disk(s)"
     LogPrintError "  --resetDEK=DEVICE            assign a new data encryption key, ERASING ALL DATA ON THE DISK"
     LogPrintError "  --factoryRESET=DEVICE        reset the device to factory defaults, ERASING ALL DATA ON THE DISK"
-    LogPrintError "  -i FILE, --image=FILE        use FILE as the PBA image (default: ${OPALPBA_URL:-none}, if local)"
-    LogPrintError "  -d DEVICE, --device=DEVICE   perform operations on DEVICE only"
+    LogPrintError "  -I FILE, --image=FILE        use FILE as the PBA image (default: ${OPALPBA_URL:-none}, if local)"
+    LogPrintError "  -D DEVICE, --device=DEVICE   perform operations on DEVICE only"
     LogPrintError ""
     LogPrintError "If multiple Opal 2-compliant disks are available and DEVICE is not specified, operations are"
     LogPrintError "performed on each such disk, except for PBA image installation, which is only performed on disks"
@@ -44,7 +45,7 @@ function WORKFLOW_opaladmin() {
     Log "Command line options of the opaladmin workflow: $*"
 
     # Parse options
-    local options="$(getopt -n "$PROGRAM opaladmin" -o "hi:d:" -l "help,setup,changePW,updatePBA,unlock,resetDEK:,factoryRESET:,image:,device:" -- "$@" 2>&8)"
+    local options="$(getopt -n "$PROGRAM opaladmin" -o "hiscpuI:D:" -l "help,info,setup,changePW,uploadPBA,unlock,resetDEK:,factoryRESET:,image:,device:" -- "$@" 2>&8)"
     [[ $? != 0 ]] && opaladmin_usage_error
 
     eval set -- "$options"
@@ -54,19 +55,23 @@ function WORKFLOW_opaladmin() {
                 opaladmin_help
                 return 0
                 ;;
-            (--setup)
+            (-i|--info)
+                actions+=( "info" )
+                shift
+                ;;
+            (-s|--setup)
                 actions+=( "setup" "resetDEK" )
                 shift
                 ;;
-            (--changePW)
+            (-c|--changePW)
                 actions+=( "changePW" )
                 shift
                 ;;
-            (--updatePBA)
-                actions+=( "updatePBA" )
+            (-p|--uploadPBA)
+                actions+=( "uploadPBA" )
                 shift
                 ;;
-            (--unlock)
+            (-u|--unlock)
                 actions+=( "unlock" )
                 shift
                 ;;
@@ -80,11 +85,11 @@ function WORKFLOW_opaladmin() {
                 device="$2"
                 shift 2
                 ;;
-            (-i|--image)
+            (-I|--image)
                 opaladmin_image_file="$2"
                 shift 2
                 ;;
-            (-d|--device)
+            (-D|--device)
                 device="$2"
                 shift 2
                 ;;
@@ -93,7 +98,7 @@ function WORKFLOW_opaladmin() {
                 break
                 ;;
             (*)
-                Error "Internal error during option processing (\"$1\")"
+                Error "Internal error during option processing (\"$1\")."
                 ;;
         esac
     done
@@ -111,7 +116,7 @@ function WORKFLOW_opaladmin() {
         if IsInArray "$device" "${opaladmin_devices[@]}"; then
             opaladmin_devices=( "$device" )
         else
-            Error "Device \"$device\" could not be identified as being an Opal 2-compliant disk"
+            Error "Device \"$device\" could not be identified as being an Opal 2-compliant disk."
         fi
     fi
 
@@ -123,6 +128,12 @@ function WORKFLOW_opaladmin() {
     return 0
 }
 
+function opaladmin_info() {
+    # print locking information for available disk(s).
+
+    LogUserOutput "$(opal_device_information "${opaladmin_devices[@]}")"
+}
+
 function opaladmin_setup() {
     # enables locking on available disk(s) and assigns a device password.
 
@@ -130,23 +141,44 @@ function opaladmin_setup() {
     local -i device_number=1
 
     for device in "${opaladmin_devices[@]}"; do
-        LogUserOutput "Setting up Opal locking on device \"$device\" ($(opal_device_identification "$device"))..."
-        opaladmin_get_password
-        opal_device_setup "$device" "$opaladmin_password"
-        StopIfError "Could not set up device \"$device\"."
-        LogUserOutput "Setup successful."
+        source "$(opal_device_attributes "$device" attributes)"
 
-        local prompt="Shall device \"$device\" act as a boot device for disk unlocking (y/n)? "
-        confirmation="$(opaladmin_choice_input "OPALADMIN_SETUP_BOOT_$device_number" "$prompt" "y" "n")"
+        if [[ "${attributes[support]}" == "n" ]]; then
+            LogUserOutput "SKIPPING: Device \"$device\" ($(opal_device_identification "$device")) does not support locking - skipping setup."
+        elif [[ "${attributes[setup]}" == "y" ]]; then
+            LogUserOutput "SKIPPING: Opal locking on device \"$device\" ($(opal_device_identification "$device")) has already been enabled - skipping setup."
 
-        if [[ "$confirmation" == "y" ]]; then
-            opaladmin_get_image_file
-            LogUserOutput "Enabling and uploading the PBA on device \"$device\", please wait..."
-            opal_device_enable_mbr "$device" "$opaladmin_password"
-            StopIfError "Could not enable the MBR on device \"$device\"."
-            opal_device_load_pba_image "$device" "$opaladmin_password" "$opaladmin_image_file"
-            StopIfError "Could not upload the PBA image to device \"$device\"."
-            LogUserOutput "PBA enabled and uploaded."
+            if [[ "${attributes[locked]}" == "y" ]]; then
+                LogUserOutput "Unlocking device \"$device\"..."
+                opaladmin_get_password
+                opal_device_unlock "$device" "$opaladmin_password"
+                StopIfError "Could not unlock device \"$device\"."
+                LogUserOutput "Device unlocked."
+            fi
+        else
+            LogUserOutput "Setting up Opal locking on device \"$device\" ($(opal_device_identification "$device"))..."
+
+            if [[ -z "$opaladmin_password" ]]; then
+                # If this is the first time a password is being entered, check twice.
+                opaladmin_password="$(opaladmin_checked_password_input "OPALADMIN_PASSWORD" "disk password")"
+            fi
+
+            opal_device_setup "$device" "$opaladmin_password"
+            StopIfError "Could not set up device \"$device\"."
+            LogUserOutput "Setup successful."
+
+            local prompt="Shall device \"$device\" act as a boot device for disk unlocking (y/n)? "
+            confirmation="$(opaladmin_choice_input "OPALADMIN_SETUP_BOOT_$device_number" "$prompt" "y" "n")"
+
+            if [[ "$confirmation" == "y" ]]; then
+                opaladmin_get_image_file
+                LogUserOutput "Enabling and uploading the PBA on device \"$device\"..."
+                opal_device_enable_mbr "$device" "$opaladmin_password"
+                StopIfError "Could not enable the shadow MBR on device \"$device\"."
+                opal_device_load_pba_image "$device" "$opaladmin_password" "$opaladmin_image_file"
+                StopIfError "Could not upload the PBA image to device \"$device\"."
+                LogUserOutput "PBA enabled and uploaded."
+            fi
         fi
 
         device_number+=1
@@ -158,14 +190,7 @@ function opaladmin_changePW() {
 
     local new_password device try_count
 
-    while true; do
-        new_password="$(opaladmin_password_input "OPALADMIN_NEW_PASSWORD" "Enter new disk password: ")"
-        local new_password_repeated="$(opaladmin_password_input "OPALADMIN_NEW_PASSWORD" "Repeat new disk password: ")"
-
-        [[ "$new_password_repeated" == "$new_password" ]] && break
-
-        PrintError "New passwords do not match."
-    done
+    new_password="$(opaladmin_checked_password_input "OPALADMIN_NEW_PASSWORD" "new disk password")"
 
     for device in "${opaladmin_devices[@]}"; do
         LogUserOutput "Changing disk password of device \"$device\" ($(opal_device_identification "$device"))..."
@@ -185,19 +210,19 @@ function opaladmin_changePW() {
     opaladmin_password="$new_password"
 }
 
-function opaladmin_updatePBA() {
-    # updates the PBA image on disk(s) whose shadow MBR is enabled.
+function opaladmin_uploadPBA() {
+    # uploads the PBA image on disk(s) whose shadow MBR is enabled.
 
     local device
 
     for device in "${opaladmin_devices[@]}"; do
         if opal_device_mbr_is_enabled "$device"; then
             opaladmin_get_image_file
-            LogUserOutput "Updating the PBA on device \"$device\" ($(opal_device_identification "$device")), please wait..."
+            LogUserOutput "Uploading the PBA to device \"$device\" ($(opal_device_identification "$device"))..."
             opaladmin_get_password
             opal_device_load_pba_image "$device" "$opaladmin_password" "$opaladmin_image_file"
             StopIfError "Could not upload the PBA image to device \"$device\"."
-            LogUserOutput "PBA updated."
+            LogUserOutput "PBA uploaded."
         fi
     done
 }
@@ -229,10 +254,13 @@ function opaladmin_resetDEK() {
             LogUserOutput "About to reset the data encryption key (DEK) of device \"$device\" ($(opal_device_identification "$device"))..."
             opaladmin_get_password
             opal_device_regenerate_dek_ERASING_ALL_DATA "$device" "$opaladmin_password"
-            StopIfError "Could not reset data encryption key (DEK) of device \"$device\"."
-            LogUserOutput "Data encryption key (DEK) reset, data erased."
+            if (( $? == 0 )); then
+                LogUserOutput "Data encryption key (DEK) reset, data erased."
+            else
+                LogUserOutput "WARNING: Could not reset data encryption key (DEK) of device \"$device\"."
+            fi
         else
-            LogUserOutput "Data encryption key (DEK) of device \"$device\" ($(opal_device_identification "$device")) left untouched."
+            LogUserOutput "SKIPPING: Data encryption key (DEK) of device \"$device\" ($(opal_device_identification "$device")) left untouched."
         fi
     done
 }
@@ -252,7 +280,7 @@ function opaladmin_factoryRESET() {
             StopIfError "Could not reset device \"$device\" to factory defaults."
             LogUserOutput "Device reset to factory defaults, data erased."
         else
-            LogUserOutput "Device \"$device\" ($(opal_device_identification "$device")) left untouched."
+            LogUserOutput "SKIPPING: Device \"$device\" ($(opal_device_identification "$device")) left untouched."
         fi
     done
 }
@@ -309,21 +337,42 @@ function opaladmin_password_input() {
     local prompt="${2:?}"
     # prints secret user input after verifying that it is non-empty.
 
+    local password
+
     while true; do
-        result="$(UserInput -I "$id" -C -r -s -t 0 -p "$prompt")"
-        [[ -n "$result" ]] && break
+        password="$(UserInput -I "$id" -C -r -s -t 0 -p "$prompt")"
+        [[ -n "$password" ]] && break
         PrintError "Please enter a non-empty password."
     done
 
     UserOutput ""
-    echo "$result"
+    echo "$password"
+}
+
+function opaladmin_checked_password_input() {
+    local id="${1:?}"
+    local password_name="${2:?}"
+    # prints secret user input after verifying that it is non-empty and it has been entered identically twice.
+
+    local password
+
+    while true; do
+        password="$(opaladmin_password_input "$id" "Enter $password_name: ")"
+        local result_repeated="$(opaladmin_password_input "$id" "Repeat $password_name: ")"
+
+        [[ "$result_repeated" == "$password" ]] && break
+
+        PrintError "Passwords do not match."
+    done
+
+    echo "$password"
 }
 
 function opaladmin_get_image_file() {
     # ensures that $opaladmin_image_file is the path of a local image file or exits with an error.
 
     : ${opaladmin_image_file:="$(opal_local_pba_image_file)"}
-    [[ -n "$opaladmin_image_file" ]] || Error "Image file not specified and OPALPBA_URL configuration variable not set - cannot acquire a PBA image"
+    [[ -n "$opaladmin_image_file" ]] || Error "Image file not specified and OPALPBA_URL configuration variable not set - cannot access a PBA image."
 
     opal_check_pba_image "$opaladmin_image_file"
     LogPrint "Using local PBA image file \"$opaladmin_image_file\""

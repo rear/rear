@@ -2,7 +2,7 @@
 # TCG Opal 2 functions to manage self-encrypting disks
 #
 # These functions are meant to be used within ReaR as well as independently. Functions do not rely on any external
-# code unless otherwise stated. Return codes must be checked by the caller.
+# script code unless otherwise stated. Return codes must be checked by the caller.
 #
 # References:
 # - TCG Storage Opal SSC Specification Version 2.01 [Opal 2 spec]
@@ -12,11 +12,11 @@
 #
 # Notes:
 # - In Opal, different authorities with different passwords are responsible for device administration and locking.
-#   To avoid confusion we always use (and expect) identical passwords for
+#   To avoid confusion, this code uses (and expects) identical passwords for
 #     1. the SID (Security ID) as the authority of the Administrative Security Provider, and
 #     2. the Admin1 user as the authority of the Locking Security Provider.
-# - sedutil-cli outputs messages geared towards developers on failure. Use redirection to hide such messages
-#   from users and display meaningful user-tailored messages after checking return codes.
+# - sedutil-cli outputs messages geared towards developers on failure. Callers of non-printing functions are expected
+#   to redirect stdout and stderr and to display user-tailored messages after checking return codes.
 
 
 function opal_devices() {
@@ -30,10 +30,10 @@ function opal_device_attributes() {
     local result_variable_name="${2:?}"
     # returns a script assigning the Opal device's attributes to a local array variable:
     #   model=..., firmware=..., serial=..., interface=...
-    #   setup=[yn], locked=[yn], encrypted=[yn], mbr={visible,hidden,disabled},
+    #   support=[yn], setup=[yn], locked=[yn], encrypted=[yn], mbr={visible,hidden,disabled},
     #
     # Usage example:
-    #   source "$(opal_device_attributes "$device")" attributes
+    #   source "$(opal_device_attributes "$device" attributes)"
     #   if [[ "${attributes[setup]}" == "y" ]]; then ...
 
     local result_script="$(mktemp)"
@@ -59,6 +59,7 @@ function opal_device_attributes() {
                     split(field_assignments[field_assignment_index], assignment_parts, "=");
                     raw_fields[assignment_parts[1]] = assignment_parts[2];
                 }
+                printf("[support]=\"%s\" ", tolower(raw_fields["LockingSupported"]));
                 printf("[setup]=\"%s\" ", tolower(raw_fields["LockingEnabled"]));
                 printf("[locked]=\"%s\" ", tolower(raw_fields["Locked"]));
                 printf("[encrypted]=\"%s\" ", tolower(raw_fields["MediaEncrypt"]));
@@ -73,7 +74,7 @@ function opal_device_attributes() {
 function opal_device_attribute() {
     local device="${1:?}"
     local attribute_name="${2:?}"
-    # prints the value of an Opal device attribute
+    # prints the value of an Opal device attribute.
 
     source "$(opal_device_attributes "$device" attributes)"
     echo "${attributes[$attribute_name]}"
@@ -81,10 +82,27 @@ function opal_device_attribute() {
 
 function opal_device_identification() {
     local device="${1:?}"
-    # prints identification information for an Opal device
+    # prints identification information for an Opal device.
 
     source "$(opal_device_attributes "$device" attributes)"
     echo "${attributes["model"]:-?}, interface: ${attributes["interface"]:-?}"
+}
+
+function opal_device_information() {
+    # prints information for Opal devices given as arguments.
+
+    local device
+    local format="%-14s %-30s %-6s %-12s %-5s  %-9s  %-6s  %s\n"
+
+    echo "$(printf "$format" "DEVICE" "MODEL" "I/F" "FIRMWARE" "SETUP" "ENCRYPTED" "LOCKED" "SHADOW MBR")"
+
+    for device in "$@"; do
+        source "$(opal_device_attributes "$device" attributes)"
+
+        printf "$format" "$device" "${attributes[model]}" "${attributes[interface]}" \
+            "${attributes[firmware]}" "${attributes[setup]}" "${attributes[encrypted]}" "${attributes[locked]}" \
+            "${attributes[mbr]}"
+    done
 }
 
 function opal_device_max_authentications() {
@@ -102,7 +120,7 @@ function opal_device_setup() {
     # enables Opal locking, sets an Admin1 and SID password, disables the MBR.
     # Returns 0 on success.
 
-    sedutil-cli --initialSetup "$password" "$device" && opal_device_disable_mbr "$device" "$password"
+    sedutil-cli --initialSetup "$password" "$device" && sedutil-cli --enablelockingrange 0 "$password" "$device"
 }
 
 function opal_device_change_password() {
@@ -152,7 +170,7 @@ function opal_device_mbr_is_enabled() {
 function opal_device_disable_mbr() {
     local device="${1:?}"
     local password="${2:?}"
-    # disables the device's shadow MBR, returns 0 on success
+    # disables the device's shadow MBR, returns 0 on success.
 
     sedutil-cli --setMBREnable off "$password" "$device" && partprobe "$device"
 }
@@ -160,7 +178,7 @@ function opal_device_disable_mbr() {
 function opal_device_enable_mbr() {
     local device="${1:?}"
     local password="${2:?}"
-    # enables the device's shadow MBR in hidden mode, returns 0 on success
+    # enables the device's shadow MBR in hidden mode, returns 0 on success.
 
     sedutil-cli --setMBREnable on "$password" "$device" && opal_device_hide_mbr "$device" "$password"
 }
@@ -191,7 +209,8 @@ function opal_bytes_to_mib() {
 }
 
 function opal_local_pba_image_file() {
-    # prints the path of a local TCG Opal 2 PBA image file, if available, else nothing
+    # prints the path of a local TCG Opal 2 PBA image file, if available, else nothing.
+    # REQUIRES ReaR function 'Error'
 
     if [[ -n "$OPALPBA_URL" ]]; then
         local image_base_scheme="$(url_scheme "$OPALPBA_URL")"
@@ -211,13 +230,15 @@ function opal_check_pba_image() {
     # generates an error if the PBA image is larger than the guaranteed MBR capacity.
     # REQUIRES ReaR function 'Error'
 
-    [[ -f "$pba_image_file" ]] || Error "\"$pba_image_file\" is not a regular file, thus cannot be used as TCG Opal 2 PBA image"
+    [[ -f "$pba_image_file" ]] || Error "\"$pba_image_file\" is not a regular file, thus cannot be used as TCG Opal 2 PBA image."
 
     local -i file_size=$(stat --printf="%s\n" "$pba_image_file")
     local -i mbr_size_limit=$((128 * 1024 * 1024))  # guaranteed minimum MBR size: 128 MiB (Opal 2 spec, section 4.3.5.4)
 
     if (( file_size > mbr_size_limit )); then
-        Error "TCG Opal 2 PBA image file \"$pba_image_file\" is $(opal_bytes_to_mib $file_size) MiB in size, allowed maximum is $(opal_bytes_to_mib $mbr_size_limit) MiB"
+        local file_size_MiB="$(opal_bytes_to_mib $file_size) MiB"
+        local mbr_size_limit_MiB="$(opal_bytes_to_mib $mbr_size_limit) MiB"
+        Error "TCG Opal 2 PBA image file \"$pba_image_file\" is $file_size_MiB in size, allowed maximum is $mbr_size_limit_MiB."
     fi
 }
 
