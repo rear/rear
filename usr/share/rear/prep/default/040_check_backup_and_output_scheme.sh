@@ -17,8 +17,26 @@ if test "$BACKUP_URL" ; then
                    # cf. https://github.com/rear/rear/issues/1547 and https://github.com/rear/rear/issues/1545
                    # and the mkbackuponly workflow exits with exit code 0 but results no ISO at all
                    # cf. https://github.com/rear/rear/issues/1548
-                   # so that mkrescue and mkbackuponly are forbidden for the 'iso' backup scheme:
-                   Error "The $WORKFLOW workflow does not work for the BACKUP_URL scheme '$backup_scheme'"
+                   # so that mkrescue and mkbackuponly usually do not work for the 'iso' backup scheme.
+                   # But there are special cases where mkrescue/mkbackuponly with BACKUP_URL=iso is used
+                   # so that we cannot error out in any case, cf. https://github.com/rear/rear/issues/1613
+                   # Accordingly a UserInput dialog that errors out by default to be on the safe side is used
+                   # to provide a ready for use mean of final power to the user to enforce what ReaR must do:
+                   prompt="Proceed regardless that '$WORKFLOW' could be destructive with a '$backup_scheme' BACKUP_URL ?"
+                   workflow_uppercase="$( tr '[:lower:]' '[:upper:]' <<< $WORKFLOW )"
+                   user_input_ID="BACKUP_URL_ISO_PROCEED_$workflow_uppercase"
+                   input_value=""
+                   wilful_input=""
+                   input_value="$( UserInput -I $user_input_ID -p "$prompt" -D 'No' )" && wilful_input="yes" || wilful_input="no"
+                   if ! is_true "$input_value" ; then
+                       if is_true "$wilful_input" ; then
+                           LogPrint "User confirmed to not proceed '$WORKFLOW' with a '$backup_scheme' BACKUP_URL"
+                       else
+                           LogPrint "Aborting '$WORKFLOW' with a '$backup_scheme' BACKUP_URL by default"
+                       fi
+                       Error "The $WORKFLOW workflow does not work for the BACKUP_URL scheme '$backup_scheme'"
+                   fi
+                   LogPrint "User confirmed to proceed regardless that '$WORKFLOW' could be destructive with a '$backup_scheme' BACKUP_URL"
                    ;;
            esac
            ;;
