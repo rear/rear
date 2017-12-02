@@ -6,3 +6,4 @@ After=systemd-udevd.service
 Type=oneshot
 ExecStart=/etc/scripts/system-setup
 StandardInput=tty
+RemainAfterExit=yes

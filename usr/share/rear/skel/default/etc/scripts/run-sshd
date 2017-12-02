@@ -1,16 +1,27 @@
 #!/bin/bash
-# check inittab for "ssh:23:respawn:/bin/sshd -D"
+# Check /etc/inittab for "ssh:23:respawn:..." which means sshd should be started
+# (that entry is written by rescue/default/500_ssh.sh if sshd should be started):
 if grep -q '^ssh:' /etc/inittab ; then
     if ! test -s /etc/ssh/ssh_host_rsa_key ; then
-        # generate at least an rsa SSH host key if there is none to be fail-safe against
+        # Generate at least an rsa SSH host key if there is none to be fail-safe against
         # running sshd possibly without any SSH host key which is not accessible from remote
         # (on the remote host one would get "Connection to recovery.system.IP.address closed.")
         # cf. build/default/500_ssh_setup.sh
-        ssh-keygen -t rsa -N '' -f /etc/ssh/ssh_host_rsa_key
+        # Run ssh-keygen silently with '-q' to avoid messages about key generation
+        # that swamp the recovery system login screen so that there is be no longer a login prompt visible
+        # cf. https://github.com/rear/rear/issues/1512#issuecomment-348196998
+        ssh-keygen -q -t rsa -N '' -f /etc/ssh/ssh_host_rsa_key
         echo -e "\nSSH fingerprint: $( ssh-keygen -l -f /etc/ssh/ssh_host_rsa_key.pub )\n" >> /etc/issue
     fi
     sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
     sed -i 's/^ClientAliveInterval.*/ClientAliveInterval 0/' /etc/ssh/sshd_config
     mkdir -p /run/sshd
-    exec /bin/sshd -D
+    # Avoid "Could not load host key: /etc/ssh/ssh_host_..._key" messages
+    # that look confusing on the recovery system login screen
+    # cf. https://github.com/rear/rear/issues/1512#issuecomment-348196998
+    # and without '-D' one gets at least on SLES11 with SysVinit
+    #   INIT: Id "ssh" respawning too fast: disabled for 5 minutes
+    # cf. https://github.com/rear/rear/issues/1512#issuecomment-348201905
+    exec /bin/sshd -D 2>/dev/null
 fi
+

@@ -31,6 +31,16 @@ case "$TIMESYNC" in
 		EOF
 
 		;;
+	NTPDATE)
+		[ "$TIMESYNC_SOURCE" ]
+		StopIfError "TIMESYNC_SOURCE not set, please set it to your NTPDATE server in $CONFIG_DIR/local.conf"
+		PROGS=( "${PROGS[@]}" ntpdate )
+		cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-timesync.sh <<-EOF
+			echo "Setting system time via NTPDATE ..."
+			ntpdate -b "$TIMESYNC_SOURCE" # allow for big jumps
+		EOF
+
+		;;
 	"")
 		# no timesync, do nothing
 		;;
