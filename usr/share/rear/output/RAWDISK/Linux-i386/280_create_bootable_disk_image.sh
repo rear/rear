@@ -72,7 +72,17 @@ local boot_partition="${disk_device}p1"
 
 ### Create and populate the boot file system
 
-mkfs.vfat $v -F 32 "$boot_partition" -n "${RAWDISK_BOOT_FS_NAME:-RESCUE SYS}" || Error "Could not create boot file system"
+# Note: Having a small EFI System Partition (ESP) might introduce problems:
+# - The UEFI spec seems to require a FAT32 EFI System Partition (ESP).
+# - syslinux/Legacy BIOS fails to install on small FAT32 partitions with "syslinux: zero FAT sectors (FAT12/16)".
+# - Some firmwares fail to boot from small FAT32 partitions.
+# - Some firmwares fail to boot from FAT16 partitions.
+# See:
+# - http://www.rodsbooks.com/efi-bootloaders/principles.html
+# - http://lists.openembedded.org/pipermail/openembedded-core/2012-January/055999.html
+# As there seems to be no silver bullet, let mkfs.vfat choose the 'right' FAT partition type based on partition size
+# (i.e. do not use the '-F 32' option) and hope for the best...
+mkfs.vfat $v "$boot_partition" -n "${RAWDISK_BOOT_FS_NAME:-RESCUE SYS}" || Error "Could not create boot file system"
 
 local boot_partition_root="$TMP_DIR/boot"
 mkdir -p "$boot_partition_root" || Error "Could not create boot file system mount point"
