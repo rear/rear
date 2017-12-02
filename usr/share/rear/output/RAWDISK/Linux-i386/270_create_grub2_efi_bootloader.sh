@@ -21,7 +21,7 @@ if is_true $USING_UEFI_BOOTLOADER ; then
     LogPrint "TIP: You can achieve a faster EFI boot by installing syslinux for EFI on this system"
 fi
 
-RAWDISK_EFI_STAGING_ROOT="$BUILD_DIR/EFI"
+RAWDISK_EFI_STAGING_ROOT="$TMP_DIR/EFI"
 local efi_boot_directory="$RAWDISK_EFI_STAGING_ROOT/BOOT"
 
 mkdir $v -p "$efi_boot_directory"

@@ -24,7 +24,7 @@ fi
 
 LogPrint "Using syslinux to create an EFI bootloader"
 
-RAWDISK_EFI_STAGING_ROOT="$BUILD_DIR/EFI"
+RAWDISK_EFI_STAGING_ROOT="$TMP_DIR/EFI"
 local efi_boot_directory="$RAWDISK_EFI_STAGING_ROOT/BOOT"
 
 mkdir $v -p "$efi_boot_directory" || Error "Could not create $efi_boot_directory"
