@@ -61,7 +61,10 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             continue
         fi
         # FIXME: I (jsmeix@suse.de) have no idea what the reason for the following is.
-        # If someone knows the reason replace this comment with a description of the the actual root cause.
+        # In an ancient code version, the full mount command output was parsed line by line
+        # At that time the code was [ "${line#/}" = "$line" ]
+        # Then it skipped each mount line that didn't start with a forward slash (/)
+        # https://github.com/rear/rear/blame/e8de02b1c791f4d6b3de6d0d38529eb72375c2f6/usr/share/rear/layout/save/GNU/Linux/23_filesystem_layout.sh
         if [ "${device#/}" = "$device" ] ; then
             Log "\${device#/} = '${device#/}' = \$device, skipping."
             continue
