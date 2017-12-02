@@ -5,19 +5,25 @@ has_binary sedutil-cli || Error "Executable sedutil-cli is missing. Cannot creat
 LogPrint "Re-configuring Relax-and-Recover to create a TCG Opal pre-boot authentication (PBA) image"
 
 # Configure kernel
-KERNEL_CMDLINE+=" quiet splash systemd.volatile=yes systemd.unit=opalpba.target"
-
-# Enable debugging in PBA on request
-is_true "$OPALPBA_DEBUG" && KERNEL_CMDLINE+=" opal_debug"
+KERNEL_CMDLINE+=" quiet splash systemd.volatile=yes systemd.unit=sysinit-opalpba.target"
 
 # Strip kernel files to a reasonable minimum
 FIRMWARE_FILES=( 'no' )
 MODULES=( 'loaded_modules' )
-EXCLUDE_MODULES+=( $(lsmod | tail -n +2 | cut -d ' ' -f 1 | while read m; do modprobe -R $m; done | grep '^nvidia' ) )
+local exclude_modules='kvm.*|nvidia.*|vbox.*'
+EXCLUDE_MODULES+=( $(lsmod | tail -n +2 | cut -d ' ' -f 1 | while read m; do modprobe -R $m; done | grep -E '^('"$exclude_modules"'$)' ) )
+
+# Avoid any information which could hint an attacker
+EXCLUDE_RUNTIME_LOGFILE='yes'
+SSH_ROOT_PASSWORD=''
+
+# Disable non-essential stuff
+SSH_FILES='no'
+USE_DHCLIENT='no'
 
 # Include plymouth boot animation if available
 PROGS+=( plymouth plymouthd clear )
-COPY_AS_IS+=( /usr/lib/x86_64-linux-gnu/plymouth /usr/share/plymouth /etc/alternatives )
+COPY_AS_IS+=( /etc/alternatives /usr/lib/x86_64-linux-gnu/plymouth /usr/share/plymouth )
 
 # Redirect output
 [[ -n "$OPALPBA_URL" ]] || Error "The OPALPBA_URL configuration variable must be set."
