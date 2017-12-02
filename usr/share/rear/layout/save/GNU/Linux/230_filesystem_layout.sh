@@ -146,7 +146,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 uuid=$(xfs_admin -u $device | cut -d'=' -f 2 | tr -d " ")
                 label=$(xfs_admin -l $device | cut -d'"' -f 2)
                 echo -n " uuid=$uuid label=$label "
-                xfs_info $device > $LAYOUT_XFS_OPT_DIR/$(basename ${device}.xfs)
+                xfs_info $mountpoint > $LAYOUT_XFS_OPT_DIR/$(basename ${device}.xfs)
                 StopIfError "Failed to save XFS options of $device"
                 ;;
             (reiserfs)
