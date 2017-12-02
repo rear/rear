@@ -1,0 +1,13 @@
+# inittab for TCG Opal pre-boot authentication (PBA)
+#
+# Runlevel 3 is normal
+#
+id:3:initdefault:
+
+bo::bootwait:/etc/scripts/boot
+ss::bootwait:/etc/scripts/unlock-opal-disks
+
+ha:0:wait:/etc/scripts/do-shutdown halt
+re:6:wait:/etc/scripts/do-shutdown reboot
+
+sy:23:respawn:/etc/scripts/run-syslog
