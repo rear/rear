@@ -2,7 +2,7 @@
 
 has_binary sha256sum || return 0
 
-local deduplication_script="$TMP_DIR/deduplication_script"
+local deduplication_script="$TMP_DIR/deduplicate-files.sh"
 
 # Calculate checksums of executables in the root file system to identify files with identical content.
 # Then use hard links to cross-link such files.
@@ -19,7 +19,7 @@ awk -v path_prefix="$ROOTFS_DIR" '
         if (hash in executables) {
             if (substr(path, 1, path_prefix_length) == path_prefix) {
                 printf("Log '"'"'De-duplicating \"%s\" -> \"%s\"'"'"'\n", executables[hash], path);
-                printf("ln --force '"'"'%s'"'"' '"'"'%s'"'"' || Error 'De-duplication error'\n", executables[hash], path);
+                printf("ln --force '"'"'%s'"'"' '"'"'%s'"'"' || Error '"'"'De-duplication error'"'"'\n", executables[hash], path);
             } else {
                 printf("LogUserOutput '"'"'Cannot de-duplicate \"%s\" -> \"%s\"'"'"'\n", executables[hash], path);
             }
