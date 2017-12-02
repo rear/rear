@@ -49,6 +49,13 @@ define_dhclient_bins()
 
 ##### M A I N #####
 ###################
+
+# Respect an explicit rejection
+if is_false "$USE_DHCLIENT"; then
+    Log "Excluding DHCP client excluded (USE_DHCLIENT=\"$USE_DHCLIENT\")"
+    return 0
+fi
+
 # if DHCP client binaries were predefined (in the /etc/rear/local.conf file)
 # we pick them up here
 DHCLIENT_BIN=${DHCLIENT_BIN##*/}
