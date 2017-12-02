@@ -2,7 +2,7 @@
 # opaladmin-workflow.sh
 #
 
-WORKFLOW_opaladmin_DESCRIPTION="administrate TCG Opal 2-compatible disks"
+WORKFLOW_opaladmin_DESCRIPTION="administrate TCG Opal 2-compliant disks"
 WORKFLOWS+=( opaladmin )
 
 function opaladmin_usage_error() {
@@ -15,7 +15,7 @@ function opaladmin_help() {
     # prints a help message.
 
     LogPrintError "Usage: '$PROGRAM opaladmin -- [OPTIONS]'"
-    LogPrintError "  Administrate TCG Opal 2-compatible disks"
+    LogPrintError "  Administrate TCG Opal 2-compliant disks"
     LogPrintError ""
     LogPrintError "Valid options:"
     LogPrintError "  -h, --help                   print this help message and exit"
