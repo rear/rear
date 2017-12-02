@@ -1,0 +1,5 @@
+# Store settings for the PBA runtime
+
+cat > "$ROOTFS_DIR/.OPALPBA_SETTINGS.sh" << -EOF-
+OPALPBA_DEBUG_PASSWORD="$OPALPBA_DEBUG_PASSWORD"
+-EOF-

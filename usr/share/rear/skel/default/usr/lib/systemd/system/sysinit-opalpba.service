@@ -1,8 +1,8 @@
 [Unit]
 Description=TCG Opal pre-boot authentication (PBA) service
-Requires=systemd-udev-trigger.service systemd-udevd.service rear-boot-helper.service
+Requires=systemd-udev-trigger.service systemd-udevd.service systemd-journald.service rear-boot-helper.service
 Wants=plymouth-start.service
-After=systemd-udev-trigger.service systemd-udevd.service plymouth-start.service rear-boot-helper.service
+After=systemd-udev-trigger.service systemd-udevd.service plymouth-start.service systemd-journald.service rear-boot-helper.service
 
 [Service]
 Type=oneshot
