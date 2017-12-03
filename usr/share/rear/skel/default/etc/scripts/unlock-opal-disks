@@ -142,6 +142,10 @@ for system_setup_script in 00-functions.sh 10-console-setup.sh 40-start-udev-or-
 done
 
 
+# Clear screen if running without plymouth boot animation and if 'clear' is available
+! use_plymouth && type -p clear &>/dev/null && clear
+
+
 # Find TCG Opal 2-compliant disks
 devices=( $(opal_devices) )
 declare -i device_count=${#devices[@]}

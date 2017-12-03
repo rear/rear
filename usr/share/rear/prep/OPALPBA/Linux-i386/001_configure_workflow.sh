@@ -21,7 +21,7 @@ SSH_ROOT_PASSWORD=''
 SSH_FILES='no'
 USE_DHCLIENT='no'
 
-# Include plymouth boot animation if available
+# Include plymouth boot animation and 'clear' if available
 PROGS+=( plymouth plymouthd clear )
 COPY_AS_IS+=( /etc/alternatives /usr/lib/x86_64-linux-gnu/plymouth /usr/share/plymouth )
 
