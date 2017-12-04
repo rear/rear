@@ -120,6 +120,9 @@ function WORKFLOW_opaladmin() {
         fi
     fi
 
+    : ${opaladmin_image_file:="$(opal_local_pba_image_file)"}
+    [[ -n "$opaladmin_image_file" ]] && opal_check_pba_image "$opaladmin_image_file"
+
     for action in "${actions[@]}"; do
         LogPrint "Executing action \"opaladmin_$action\""
         eval "opaladmin_$action"
@@ -139,6 +142,13 @@ function opaladmin_setup() {
 
     local device
     local -i device_number=1
+
+    if [[ -z "$opaladmin_image_file" ]]; then
+        LogUserOutput "A PBA image file was not specified and the OPALPBA_URL configuration variable not set."
+        local prompt="Continue setup without boot disk support (y/n)? "
+        confirmation="$(opaladmin_choice_input "OPALADMIN_SETUP_NO_BOOT_SUPPORT" "$prompt" "y" "n")"
+        [[ "$confirmation" == "y" ]] || Error "Setup aborted."
+    fi
 
     for device in "${opaladmin_devices[@]}"; do
         source "$(opal_device_attributes "$device" attributes)"
@@ -167,17 +177,19 @@ function opaladmin_setup() {
             StopIfError "Could not set up device \"$device\"."
             LogUserOutput "Setup successful."
 
-            local prompt="Shall device \"$device\" act as a boot device for disk unlocking (y/n)? "
-            confirmation="$(opaladmin_choice_input "OPALADMIN_SETUP_BOOT_$device_number" "$prompt" "y" "n")"
+            if [[ -n "$opaladmin_image_file" ]]; then
+                local prompt="Shall device \"$device\" act as a boot device for disk unlocking (y/n)? "
+                confirmation="$(opaladmin_choice_input "OPALADMIN_SETUP_BOOT_$device_number" "$prompt" "y" "n")"
 
-            if [[ "$confirmation" == "y" ]]; then
-                opaladmin_get_image_file
-                LogUserOutput "Enabling and uploading the PBA on device \"$device\"..."
-                opal_device_enable_mbr "$device" "$opaladmin_password"
-                StopIfError "Could not enable the shadow MBR on device \"$device\"."
-                opal_device_load_pba_image "$device" "$opaladmin_password" "$opaladmin_image_file"
-                StopIfError "Could not upload the PBA image to device \"$device\"."
-                LogUserOutput "PBA enabled and uploaded."
+                if [[ "$confirmation" == "y" ]]; then
+                    opaladmin_get_image_file
+                    LogUserOutput "Enabling and uploading the PBA on device \"$device\"..."
+                    opal_device_enable_mbr "$device" "$opaladmin_password"
+                    StopIfError "Could not enable the shadow MBR on device \"$device\"."
+                    opal_device_load_pba_image "$device" "$opaladmin_password" "$opaladmin_image_file"
+                    StopIfError "Could not upload the PBA image to device \"$device\"."
+                    LogUserOutput "PBA enabled and uploaded."
+                fi
             fi
         fi
 
@@ -266,7 +278,7 @@ function opaladmin_resetDEK() {
 }
 
 function opaladmin_factoryRESET() {
-    # resets the device to factory defaults, ERASING ALL DATA ON THE DISK.
+    # resets disks to factory defaults, ERASING ALL DATA ON THE DISK.
 
     local device
 
@@ -371,10 +383,8 @@ function opaladmin_checked_password_input() {
 function opaladmin_get_image_file() {
     # ensures that $opaladmin_image_file is the path of a local image file or exits with an error.
 
-    : ${opaladmin_image_file:="$(opal_local_pba_image_file)"}
     [[ -n "$opaladmin_image_file" ]] || Error "Image file not specified and OPALPBA_URL configuration variable not set - cannot access a PBA image."
 
     opal_check_pba_image "$opaladmin_image_file"
     LogPrint "Using local PBA image file \"$opaladmin_image_file\""
-    echo "$opaladmin_image_file"
 }
