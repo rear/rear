@@ -13,7 +13,7 @@ function SetOSVendorAndVersion () {
     # If these variables are already set, skip doing it again.
     # This is needed, so that they can be overridden in $WORKFLOW.conf
     # if this happens, then ALL the variables OS_* have to be set there.
-    # The test must match OS_VENDOR=generic and OS_VERSION=none in default.conf:
+    # The test must match OS_VENDOR=generic or OS_VERSION=none in default.conf:
     if test "$OS_VENDOR" = generic -o "$OS_VERSION" = none ; then
 
         # Recent Linux distro's with systemd has the /etc/os-release file
