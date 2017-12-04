@@ -8,7 +8,7 @@ Beginning with version 2.4, Relax-and-Recover supports
 
 == Prerequisites
 
-To enable Relax-and-Recover's TCG Opal support, install the `sedutil-cli` (version {sedutil-cli-version}) executable into a directory within root's search path. See <<How to Build sedutil-cli>>.
+To enable Relax-and-Recover's TCG Opal support, install the `sedutil-cli` (version {sedutil-cli-version}) executable into a directory within root's search path. `sedutil-cli` is available for https://github.com/Drive-Trust-Alliance/exec/blob/master/sedutil_LINUX.tgz?raw=true[download from Drive Trust Alliance] (check version compatibility), or see <<How to Build sedutil-cli Version {sedutil-cli-version}>>.
 
 == TCG Opal 2-compliant Self-Encrypting Disks
 
@@ -142,9 +142,9 @@ To *ERASE ALL DATA ON THE DISK* and reset the disk to factory settings:
 
 == Details
 
-=== How to Build sedutil-cli
+=== How to Build sedutil-cli Version {sedutil-cli-version}
 
-. Download https://github.com/Drive-Trust-Alliance/sedutil/archive/{sedutil-cli-version}.tar.gz[Drive-Trust-Alliance/sedutil version {sedutil-cli-version}]
+. Download https://github.com/Drive-Trust-Alliance/sedutil/archive/{sedutil-cli-version}.tar.gz[Drive-Trust-Alliance/sedutil version {sedutil-cli-version}] source code.
 
 . Extract the archive, creating a directory `sedutil-{sedutil-cli-version}`:
 +
