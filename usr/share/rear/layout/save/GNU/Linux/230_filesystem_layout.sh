@@ -310,7 +310,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         # see https://github.com/rear/rear/issues/883
         # therefore use by default the traditional mount command
         read_mounted_btrfs_subvolumes_command="mount -t btrfs | cut -d ' ' -f 1,3,6"
-        # and use findmnd only if "findmnd -o FSROOT" works:
+        # and use findmnt only if "findmnt -o FSROOT" works:
         # Use the (deprecated) "findmnt -m" to avoid issues
         # as in https://github.com/rear/rear/issues/882
         # FIXME: Replace using the deprecated '-m' option with a future proof solution.
