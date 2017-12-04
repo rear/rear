@@ -43,7 +43,7 @@ NOTE: A local directory is preferred as Relax-and-Recover will then automaticall
 
 . Run `sudo rear -v mkopalpba`
 
-* The rescue image will appear below the `OPAL_PBA_URL` directory as `$HOSTNAME/TCG-Opal-PBA-$HOSTNAME.raw`.
+* The PBA image will appear below the `OPAL_PBA_URL` directory as `$HOSTNAME/TCG-Opal-PBA-$HOSTNAME.raw`.
 
 . If you want to test the PBA system image,
 
@@ -52,7 +52,7 @@ NOTE: A local directory is preferred as Relax-and-Recover will then automaticall
 
 To create a rescue system with an integrated PBA system image:
 
-. Set the `OPAL_PBA_URL` configuration variable to a local directory where the PBA system image is stored.
+. Set the `OPAL_PBA_URL` configuration variable to a local directory where the PBA system image is stored or set `OPAL_PBA_FILE_LOCATION` to the image file location.
 
 . Run `sudo rear -v mkrescue`
 

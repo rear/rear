@@ -26,7 +26,7 @@ function opaladmin_help() {
     LogPrintError "  -u, --unlock                 unlock available disk(s)"
     LogPrintError "  --resetDEK=DEVICE            assign a new data encryption key, ERASING ALL DATA ON THE DISK"
     LogPrintError "  --factoryRESET=DEVICE        reset the device to factory defaults, ERASING ALL DATA ON THE DISK"
-    LogPrintError "  -I FILE, --image=FILE        use FILE as the PBA image (default: ${OPAL_PBA_URL:-none}, if local)"
+    LogPrintError "  -I FILE, --image=FILE        use FILE as the PBA image"
     LogPrintError "  -D DEVICE, --device=DEVICE   perform operations on DEVICE only"
     LogPrintError ""
     LogPrintError "If multiple Opal 2-compliant disks are available and DEVICE is not specified, operations are"
@@ -144,7 +144,7 @@ function opaladmin_setup() {
     local -i device_number=1
 
     if [[ -z "$opaladmin_image_file" ]]; then
-        LogUserOutput "A PBA image file was not specified and the OPAL_PBA_URL configuration variable not set."
+        LogUserOutput "Could not find a PBA image file."
         local prompt="Continue setup without boot disk support (y/n)? "
         confirmation="$(opaladmin_choice_input "OPALADMIN_SETUP_NO_BOOT_SUPPORT" "$prompt" "y" "n")"
         [[ "$confirmation" == "y" ]] || Error "Setup aborted."
@@ -383,8 +383,8 @@ function opaladmin_checked_password_input() {
 function opaladmin_get_image_file() {
     # ensures that $opaladmin_image_file is the path of a local image file or exits with an error.
 
-    [[ -n "$opaladmin_image_file" ]] || Error "Image file not specified and OPAL_PBA_URL configuration variable not set - cannot access a PBA image."
+    [[ -n "$opaladmin_image_file" ]] || Error "Could not find a PBA image file."
 
     opal_check_pba_image "$opaladmin_image_file"
-    LogPrint "Using local PBA image file \"$opaladmin_image_file\""
+    LogPrint "Using PBA image file \"$opaladmin_image_file\""
 }
