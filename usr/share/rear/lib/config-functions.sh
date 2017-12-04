@@ -41,10 +41,21 @@ function SetOSVendorAndVersion () {
             fi
         fi
 
-        # For older distro's we try to interprete the /etc/issue file
+        # For older distro's we try to interprete the /etc/SuSE-release or /etc/redhat-release file
+        # The /etc/issue file cannot be trusted as it can contain customer related info instead of release info
         if test "$OS_VENDOR" = generic ; then
-            if [[ -f /etc/issue ]] ; then
-                : 
+            if [[ -f /etc/SuSE-release ]] ; then
+                OS_VENDOR=SUSE_LINUX
+                majornr=$( grep VERSION /etc/SuSE-release | awk '{print $3}' )
+                minornr=$( grep PATCHLEVEL /etc/SuSE-release | awk '{print $3}' )
+                OS_VERSION="$majornr.$minornr" 
+            fi
+
+            if [[ -f /etc/redhat-release ]] ; then
+                OS_VENDOR=RedHatEnterpriseServer
+                majornr=$( grep -o -E '[0-9]+' /etc/system-release | head -1 )
+                minornr=$( grep -o -E '[0-9]+' /etc/system-release | head -2 | tail -1 )
+                OS_VERSION="$majornr.$minornr"
             fi
         fi
 
