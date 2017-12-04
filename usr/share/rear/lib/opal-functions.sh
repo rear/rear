@@ -84,8 +84,7 @@ function opal_device_identification() {
     local device="${1:?}"
     # prints identification information for an Opal device.
 
-    source "$(opal_device_attributes "$device" attributes)"
-    echo "${attributes["model"]:-?}, interface: ${attributes["interface"]:-?}"
+    opal_device_attribute "$device" "model"
 }
 
 function opal_device_information() {
