@@ -13,22 +13,66 @@ function SetOSVendorAndVersion () {
     # If these variables are already set, skip doing it again.
     # This is needed, so that they can be overridden in $WORKFLOW.conf
     # if this happens, then ALL the variables OS_* have to be set there.
-    # The test must match OS_VENDOR=generic and OS_VERSION=none in default.conf:
+    # The test must match OS_VENDOR=generic or OS_VERSION=none in default.conf:
     if test "$OS_VENDOR" = generic -o "$OS_VERSION" = none ; then
 
-        # If OS_VENDOR or OS_VERSION has the default value
-        # the 'lsb_release' command is needed to detect the actual value:
-        if ! has_binary lsb_release ; then
-            Error "The 'lsb_release' command cannot be run.
+        # Recent Linux distro's with systemd has the /etc/os-release file
+        # Try to find all the required information from that file
+        if [[ -f /etc/os-release ]] ; then
+            grep -q -i -E '(centos|redhat|scientific|oracle)' /etc/os-release && OS_VENDOR=RedHatEnterpriseServer
+            grep -q -i 'suse' /etc/os-release && OS_VENDOR=SUSE_LINUX
+            grep -q -i 'fedora' /etc/os-release && OS_VENDOR=Fedora
+            grep -q -i 'debian' /etc/os-release && OS_VENDOR=Debian
+            grep -q -i -E '(ubuntu|linuxmint)' /etc/os-release && OS_VENDOR=Ubuntu
+            grep -q -i 'arch' /etc/os-release && OS_VENDOR=Arch
+            OS_VERSION=$(grep "^VERSION_ID=" /etc/os-release | cut -d\" -f2 ) # 7
+        fi
+
+        # For non-systemd distro's try the /etc/system-release file
+        if test "$OS_VENDOR" = generic ; then
+            if [[ -f /etc/system-release ]] ; then
+                grep -q -i -E '(centos|redhat|scientific|oracle)' /etc/system-release && OS_VENDOR=RedHatEnterpriseServer
+                grep -q -i 'suse' /etc/system-release && OS_VENDOR=SUSE_LINUX
+                grep -q -i 'fedora' /etc/system-release && OS_VENDOR=Fedora
+                grep -q -i 'mandriva' /etc/system-release && OS_VENDOR=Mandriva
+                majornr=$( grep -o -E '[0-9]+' /etc/system-release | head -1 )
+                minornr=$( grep -o -E '[0-9]+' /etc/system-release | head -2 | tail -1 )
+                OS_VERSION="$majornr.$minornr"
+            fi
+        fi
+
+        # For older distro's we try to interprete the /etc/SuSE-release or /etc/redhat-release file
+        # The /etc/issue file cannot be trusted as it can contain customer related info instead of release info
+        if test "$OS_VENDOR" = generic ; then
+            if [[ -f /etc/SuSE-release ]] ; then
+                OS_VENDOR=SUSE_LINUX
+                majornr=$( grep VERSION /etc/SuSE-release | awk '{print $3}' )
+                minornr=$( grep PATCHLEVEL /etc/SuSE-release | awk '{print $3}' )
+                OS_VERSION="$majornr.$minornr" 
+            fi
+
+            if [[ -f /etc/redhat-release ]] ; then
+                OS_VENDOR=RedHatEnterpriseServer
+                majornr=$( grep -o -E '[0-9]+' /etc/system-release | head -1 )
+                minornr=$( grep -o -E '[0-9]+' /etc/system-release | head -2 | tail -1 )
+                OS_VERSION="$majornr.$minornr"
+            fi
+        fi
+
+        # If OS_VENDOR is still generic then use as last resource 'lsb_release' to find out
+        if test "$OS_VENDOR" = generic ; then
+            # When OS_VENDOR is still "generic" we are using a pre-systemd system and need to fallback
+            # to lsb_release, therefore, as it is not a required binary we will check if we have this
+            # executable and when absent bail out with an error
+            if ! has_binary lsb_release ; then
+                Error "The 'lsb_release' command cannot be run.
 Detecting the operating system and its version requires LSB support.
 Install a software package that provides the 'lsb_release' command.
 Alternatively you can manually specify OS_VENDOR and OS_VERSION in
 '$CONFIG_DIR/os.conf' and verify that your setup actually works.
 See '$SHARE_DIR/lib/config-functions.sh' for more details."
-        fi
+           fi
 
-        # If OS_VENDOR has the default value, detect the actual value:
-        if test "$OS_VENDOR" = generic ; then
             OS_VENDOR="$( lsb_release -i -s | tr -s '[:blank:]' '_' )"
             test "$OS_VENDOR" || Error "Failed to detect OS_VENDOR. You may manually specify it in $CONFIG_DIR/os.conf"
             # For all SUSE distributions (SLES and openSUSE) ReaR uses
@@ -42,13 +86,11 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
             # so that the common substring is 'SUSE'.
             # When OS_VENDOR contains the substring 'SUSE', set OS_VENDOR to 'SUSE_LINUX':
             test "${OS_VENDOR#*SUSE}" = "$OS_VENDOR" || OS_VENDOR="SUSE_LINUX"
-        fi
-
-        # If OS_VERSION has the default value, detect the actual value:
-        if test "$OS_VERSION" = none ; then
+            
             OS_VERSION="$( lsb_release -r -s | tr -s '[:blank:]' '_' )"
             test "$OS_VERSION" || Error "Failed to detect OS_VERSION. You may manually specify it in $CONFIG_DIR/os.conf"
         fi
+
     fi
 
     # combined stuff
@@ -57,8 +99,8 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
     OS_VENDOR_VERSION_ARCH="$OS_VENDOR/$OS_VERSION/$MACHINE"
 
     # add OS_MASTER_* vars in case this is a derived OS
-    case "$OS_VENDOR_VERSION" in
-        (*Oracle*|*CentOS*|*FedoraCore*|*RedHat*|*Scientific*)
+    case "$( echo $OS_VENDOR_VERSION | tr '[A-Z]' '[a-z]' )" in
+        (*oracle*|*centos*|*fedora*|*redhat*|*scientific*)
             OS_MASTER_VENDOR="Fedora"
             case "$OS_VERSION" in
                 (5.*)
@@ -79,7 +121,7 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
                 ;;
             esac
             ;;
-        (*Ubuntu*|*LinuxMint*)
+        (*ubuntu*|*linuxmint*)
             OS_MASTER_VENDOR="Debian"
             OS_MASTER_VERSION="$OS_VERSION"
             ;;
@@ -87,7 +129,7 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
             OS_MASTER_VENDOR="Arch"
             OS_MASTER_VERSION="$OS_VERSION"
             ;;
-        (*SUSE*)
+        (*suse*)
             # When OS_VENDOR_VERSION contains 'SUSE', set OS_MASTER_VENDOR to 'SUSE'
             # but do not set OS_MASTER_VENDOR same as OS_VENDOR (i.e. 'SUSE_LINUX')
             # (cf. above: all SUSE distributions ... must be unified to 'SUSE_LINUX')
