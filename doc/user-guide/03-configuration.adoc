@@ -36,8 +36,11 @@ OUTPUT=USB::
 Create a bootable USB disk (using extlinux). Specify the USB storage device by
 using +USB_DEVICE+.
 
-=== Using ISO as output method
-When using +OUTPUT=ISO+ or +OUTPUT=RAMDISK+ you should provide the backup target
+OUTPUT=RAWDISK::
+Create a bootable raw disk image on as `rear-$(hostname).raw`. Supports UEFI boot if syslinux/EFI or Grub 2/EFI is installed. Supports Legacy BIOS boot if syslinux is installed. Supports UEFI/Legacy BIOS dual boot if syslinux _and_ one of the supported EFI bootloaders are installed.
+
+=== Using OUTPUT_URL with ISO, RAMDISK or RAWDISK output methods
+When using +OUTPUT=ISO+, +OUTPUT=RAMDISK+ or +OUTPUT=RAWDISK+ you should provide the backup target
 location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+ settings are:
 
 OUTPUT_URL=file://::
