@@ -5,9 +5,9 @@
 ### Check prerequisites
 
 # Run only if no EFI bootloader has been created yet and Grub 2 EFI is available
-([[ -n "$RAWDISK_EFI_STAGING_ROOT" ]] || ! has_binary grub-mkimage || ! [[ -d /usr/lib/grub/x86_64-efi ]]) && return 0
+([[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] || ! has_binary grub-mkimage || ! [[ -d /usr/lib/grub/x86_64-efi ]]) && return 0
 
-if ! is_true ${RAWDISK_INCLUDE_GRUB2_EFI:-yes}; then
+if is_true "${RAWDISK_BOOT_EXCLUDE_GRUB2_EFI:-no}"; then
     LogPrint "DISABLED: Using Grub 2 to create an EFI bootloader"
     return 0
 fi
@@ -21,8 +21,8 @@ if is_true $USING_UEFI_BOOTLOADER ; then
     LogPrint "TIP: You can achieve a faster EFI boot by installing syslinux for EFI on this system"
 fi
 
-RAWDISK_EFI_STAGING_ROOT="$TMP_DIR/EFI"
-local efi_boot_directory="$RAWDISK_EFI_STAGING_ROOT/BOOT"
+RAWDISK_BOOT_EFI_STAGING_ROOT="$TMP_DIR/EFI"
+local efi_boot_directory="$RAWDISK_BOOT_EFI_STAGING_ROOT/BOOT"
 
 mkdir $v -p "$efi_boot_directory"
 StopIfError "Could not create $efi_boot_directory"
@@ -31,7 +31,7 @@ StopIfError "Could not create $efi_boot_directory"
 cat > "$efi_boot_directory/grub.cfg" << EOF
 set timeout=0
 set default=0
-menuentry "${RAWDISK_GRUB_BOOT_MENUENTRY_TITLE:-Rescue System}" {
+menuentry "${RAWDISK_BOOT_GRUB_MENUENTRY_TITLE:-Rescue System}" {
     linux /$(basename "$KERNEL_FILE") $KERNEL_CMDLINE
     initrd /$REAR_INITRD_FILENAME
 }

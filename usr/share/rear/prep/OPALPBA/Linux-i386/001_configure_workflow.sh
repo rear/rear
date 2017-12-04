@@ -30,8 +30,8 @@ COPY_AS_IS+=( /etc/alternatives /usr/lib/x86_64-linux-gnu/plymouth /usr/share/pl
 OUTPUT_URL="$OPALPBA_URL"
 
 # Configure raw disk output
-RAWDISK_GRUB_BOOT_MENUENTRY_TITLE="TCG Opal pre-boot authentication"
-RAWDISK_PARTITION_NAME="TCG Opal PBA"
-RAWDISK_BOOT_FS_NAME="OPAL PBA"
-RAWDISK_SYSLINUX_START_INFORMATION="Starting TCG Opal pre-boot authentication..."
 RAWDISK_IMAGE_NAME="TCG-Opal-PBA-$HOSTNAME"
+RAWDISK_GPT_PARTITION_NAME="TCG Opal PBA"
+RAWDISK_FAT_VOLUME_LABEL="OPAL PBA"
+RAWDISK_BOOT_GRUB_MENUENTRY_TITLE="TCG Opal pre-boot authentication"
+RAWDISK_BOOT_SYSLINUX_START_INFORMATION="Starting TCG Opal pre-boot authentication..."

@@ -4,7 +4,7 @@
 # respective bootloaders are available. This script expects an EFI bootloader to be prepared in advance in a
 # staging directory.
 #
-# If an EFI bootloader has been prepared, $RAWDISK_EFI_STAGING_ROOT must point to the EFI staging directory.
+# If an EFI bootloader has been prepared, $RAWDISK_BOOT_EFI_STAGING_ROOT must point to the EFI staging directory.
 #
 
 
@@ -12,14 +12,14 @@
 
 local use_syslinux_legacy=no
 if has_binary syslinux; then
-    if is_true ${RAWDISK_INCLUDE_SYSLINUX_LEGACY:-yes}; then
-        use_syslinux_legacy=yes
-    else
+    if is_true "${RAWDISK_BOOT_EXCLUDE_SYSLINUX_LEGACY:-no}"; then
         LogPrint "DISABLED: Using syslinux to create a BIOS Legacy bootloader"
+    else
+        use_syslinux_legacy=yes
     fi
 fi
 
-if ([[ -z "$RAWDISK_EFI_STAGING_ROOT" ]] && ! is_true $use_syslinux_legacy); then
+if ([[ -z "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] && ! is_true $use_syslinux_legacy); then
     Error "Creating a raw disk image requires an EFI bootloader or syslinux"
 fi
 
@@ -32,7 +32,7 @@ sleep 3  # should not be strictly necessary as Linux sync(2) waits until data is
 
 # Determine the appropriate size (adding 1 MiB for plus 7% for file system overhead/reserve)
 local staged_boot_partition_contents=( "$KERNEL_FILE" "$TMP_DIR/$REAR_INITRD_FILENAME" )
-[[ -n "$RAWDISK_EFI_STAGING_ROOT" ]] && staged_boot_partition_contents+=( "$RAWDISK_EFI_STAGING_ROOT" )
+[[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] && staged_boot_partition_contents+=( "$RAWDISK_BOOT_EFI_STAGING_ROOT" )
 local disk_image_size_MiB="$(du -m --summarize --total "${staged_boot_partition_contents[@]}" | awk '$2 == "total" { printf("%.0f\n", 1 + ($1 * 1.07) + .5); }')"
 
 local full_disk_name="${RAWDISK_IMAGE_NAME:-rear-$HOSTNAME}.raw"
@@ -48,12 +48,12 @@ dd if=/dev/zero of="$disk_image" bs=1M count="$disk_image_size_MiB"
 
 # Determine the configuration for the boot partition
 local typecode="8300"  # Linux partition for non-EFI booting
-[[ -n "$RAWDISK_EFI_STAGING_ROOT" ]] && typecode="ef00"  # EFI System partition if an EFI bootloader has been prepared
+[[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] && typecode="ef00"  # EFI System partition if an EFI bootloader has been prepared
 
 local legacy_boot_option=""
 is_true $use_syslinux_legacy && legacy_boot_option="--attributes=1:set:2"  # mark partition as Legacy BIOS-bootable
 
-sgdisk --new 1::0 --typecode=1:"$typecode" --change-name=1:"${RAWDISK_PARTITION_NAME:-Rescue System}" $legacy_boot_option "$disk_image"
+sgdisk --new 1::0 --typecode=1:"$typecode" --change-name=1:"${RAWDISK_GPT_PARTITION_NAME:-Rescue System}" $legacy_boot_option "$disk_image"
 StopIfError "Could not create GPT partition table on $disk_image"
 
 Log "Raw disk image partition table:"
@@ -82,7 +82,7 @@ local boot_partition="${disk_device}p1"
 # - http://lists.openembedded.org/pipermail/openembedded-core/2012-January/055999.html
 # As there seems to be no silver bullet, let mkfs.vfat choose the 'right' FAT partition type based on partition size
 # (i.e. do not use the '-F 32' option) and hope for the best...
-mkfs.vfat $v "$boot_partition" -n "${RAWDISK_BOOT_FS_NAME:-RESCUE SYS}" || Error "Could not create boot file system"
+mkfs.vfat $v "$boot_partition" -n "${RAWDISK_FAT_VOLUME_LABEL:-RESCUE SYS}" || Error "Could not create boot file system"
 
 local boot_partition_root="$TMP_DIR/boot"
 mkdir -p "$boot_partition_root" || Error "Could not create boot file system mount point"
@@ -107,7 +107,7 @@ if has_binary syslinux; then
 DEFAULT rescue
 LABEL rescue
  SAY
- SAY ${RAWDISK_SYSLINUX_START_INFORMATION:-Starting the rescue system...}
+ SAY ${RAWDISK_BOOT_SYSLINUX_START_INFORMATION:-Starting the rescue system...}
  KERNEL ../$(basename "$KERNEL_FILE")
  APPEND $KERNEL_CMDLINE
  INITRD ../$REAR_INITRD_FILENAME
