@@ -5,8 +5,13 @@ WORKFLOW_mkopalpba_DESCRIPTION="create a TCG Opal pre-boot authentication (PBA) 
 WORKFLOWS+=( mkopalpba )
 
 function WORKFLOW_mkopalpba() {
-    BACKUP=OPALPBA  # Makes ReaR create a minimal PBA system
-    OUTPUT=RAWDISK  # A raw disk image is the only valid output for this workflow
+
+    # Change workflow components before SourceStage jumps into action:
+    # This makes the 'mkopalpba' workflow work with the configuration for the 'mkrescue' workflow,
+    # yet produce a different outcome (the PBA instead of the rescue image) with it own set of
+    # component scripts.
+    BACKUP=OPALPBA  # There is no backup inside the PBA, so abuse the BACKUP component to create the PBA
+    OUTPUT=RAWDISK  # The PBA must be a raw disk image, so ignore the regular OUTPUT (which targets the rescue image)
 
 	SourceStage "prep"
 
