@@ -26,8 +26,8 @@ PROGS+=( plymouth plymouthd clear )
 COPY_AS_IS+=( /etc/alternatives /usr/lib/x86_64-linux-gnu/plymouth /usr/share/plymouth )
 
 # Redirect output
-[[ -n "$OPALPBA_URL" ]] || Error "The OPALPBA_URL configuration variable must be set."
-OUTPUT_URL="$OPALPBA_URL"
+[[ -n "$OPAL_PBA_URL" ]] || Error "The OPAL_PBA_URL configuration variable must be set."
+OUTPUT_URL="$OPAL_PBA_URL"
 
 # Configure raw disk output
 RAWDISK_IMAGE_NAME="TCG-Opal-PBA-$HOSTNAME"

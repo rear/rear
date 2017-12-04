@@ -211,9 +211,9 @@ function opal_local_pba_image_file() {
     # prints the path of a local TCG Opal 2 PBA image file, if available, else nothing.
     # REQUIRES ReaR function 'Error'
 
-    if [[ -n "$OPALPBA_URL" ]]; then
-        local image_base_scheme="$(url_scheme "$OPALPBA_URL")"
-        local image_base="$(url_path "$OPALPBA_URL")"
+    if [[ -n "$OPAL_PBA_URL" ]]; then
+        local image_base_scheme="$(url_scheme "$OPAL_PBA_URL")"
+        local image_base="$(url_path "$OPAL_PBA_URL")"
         local image_file_path="$image_base/$HOSTNAME/TCG-Opal-PBA-$HOSTNAME.raw"
 
         if [[ "$image_base_scheme" == "file" && -f "$image_file_path" ]]; then

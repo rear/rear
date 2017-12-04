@@ -8,7 +8,7 @@
 # system shutdown.
 
 source /usr/share/rear/lib/opal-functions.sh
-[[ -f /.OPALPBA_SETTINGS.sh ]] && source /.OPALPBA_SETTINGS.sh
+[[ -f /.OPAL_PBA_SETTINGS.sh ]] && source /.OPAL_PBA_SETTINGS.sh
 
 
 function use_plymouth() {
@@ -39,7 +39,7 @@ function ask_for_password() {
         fi
 
         if [[ -n "$password" ]]; then
-            [[ "$password" == "$OPALPBA_DEBUG_PASSWORD" ]] && exit
+            [[ "$password" == "$OPAL_PBA_DEBUG_PASSWORD" ]] && exit
             break
         else
             display_message "Please enter a non-empty password."
