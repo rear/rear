@@ -67,7 +67,7 @@ To provision SEDs:
 . Boot the Relax-and-Recover rescue system.
 * If SED boot support is required, ensure that the rescue system was built with an integrated PBA system image.
 
-. Run `rear opaladmin +--+ --setup`
+. Run `rear opaladmin +--+ setup`
 
 * This will set up all Opal 2-compliant disks unless the `--device=DEVICE` option is present.
 * You will be asked for a new disk password. The same password will be used for all disks being set up.
@@ -78,15 +78,15 @@ To provision SEDs:
 
 . On UEFI systems, see <<Setting up UEFI Firmware to Boot From a Self-Encrypting Disk>>.
 
-=== Verify Disk Setup
+=== Verifying Disk Setup
 
-To ensure that disks have been set up correctly:
+If you want to ensure that disks have been set up correctly:
 
 . Power off, then power on the system.
 
 . Boot directly into the Relax-and-Recover rescue system.
 
-. Run `rear opaladmin +--+ --info` and verify that output looks like this:
+. Run `rear opaladmin +--+ info` and verify that output looks like this:
 +
 [options="nowrap"]
 ----
@@ -94,11 +94,11 @@ DEVICE         MODEL                          I/F    FIRMWARE     SETUP  ENCRYPT
 /dev/sda       Samsung SSD 850 PRO 256GB      ATA    EXM04B6Q     y      y          y       visible
 ----
 +
-The device should appear with _SETUP_=`y`, _ENCRYPTED_=`y` and _LOCKED_=`y`, _SHADOW MBR_ on boot disks should be `visible`, else `disabled`.
+The device should appear with _SETUP_=`y`, _ENCRYPTED_=`y` and _LOCKED_=`y`, _SHADOW MBR_ on boot disks should be `visible`, otherwise `disabled`.
 
-. Run `rear opaladmin +--+ --unlock`, supplying the correct disk password.
+. Run `rear opaladmin +--+ unlock`, supplying the correct disk password.
 
-. Run `rear opaladmin +--+ --info` and verify that output looks like this:
+. Run `rear opaladmin +--+ info` and verify that output looks like this:
 +
 [options="nowrap"]
 ----
@@ -106,19 +106,19 @@ DEVICE         MODEL                          I/F    FIRMWARE     SETUP  ENCRYPT
 /dev/sda       Samsung SSD 850 PRO 256GB      ATA    EXM04B6Q     y      y          n       hidden
 ----
 +
-The device should appear with _SETUP_=`y`, _ENCRYPTED_=`y` and _LOCKED_=`n`, _SHADOW MBR_ on boot disks should be `hidden`, else `disabled`.
+The device should appear with _SETUP_=`y`, _ENCRYPTED_=`y` and _LOCKED_=`n`, _SHADOW MBR_ on boot disks should be `hidden`, otherwise `disabled`.
 
 === Routine Administrative Tasks
 
 The following tasks can be safely performed on the original system (with `sudo`) or on the rescue system.
 
-* Display disk information: `rear opaladmin +--+ --info`
+* Display disk information: `rear opaladmin +--+ info`
 
-* Change the disk password: `rear opaladmin +--+ --changePW`
+* Change the disk password: `rear opaladmin +--+ changePW`
 
-* Upload the PBA onto the boot disk(s): `rear opaladmin +--+ --uploadPBA`
+* Upload the PBA onto the boot disk(s): `rear opaladmin +--+ uploadPBA`
 
-* Unlock disk(s): `rear opaladmin +--+ --unlock`
+* Unlock disk(s): `rear opaladmin +--+ unlock`
 
 * For help: `rear opaladmin +--+ --help`
 
@@ -128,17 +128,17 @@ To *ERASE ALL DATA ON THE DISK* but retain the setup:
 
 . Boot the Relax-and-Recover rescue system.
 
-. Run `rear opaladmin +--+ --resetDEK=DEVICE` (_DEVICE_ being the disk device path like /dev/sda)
-* If the disk has mounted partitions, the disk's contents will not be erased.
-* If disk partitions are detected, you will be asked whether the disk's contents shall be erased.
+. Run `rear opaladmin +--+ resetDEK DEVICE` (_DEVICE_ being the disk device path like /dev/sda)
+* If mounted disk partitions are detected, the disk's contents will not be erased.
+* If unmounted disk partitions are detected, you will be asked whether the disk's contents shall be erased.
 
 To *ERASE ALL DATA ON THE DISK* and reset the disk to factory settings:
 
 . Boot the Relax-and-Recover rescue system.
 
-. Run `rear opaladmin +--+ --factoryRESET=DEVICE` (_DEVICE_ being the disk device path like /dev/sda)
-* If the disk has mounted partitions, the disk's contents will not be erased.
-* If disk partitions are detected, you will be asked whether the disk's contents shall be erased.
+. Run `rear opaladmin +--+ factoryRESET DEVICE` (_DEVICE_ being the disk device path like /dev/sda)
+* If mounted disk partitions are detected, the disk's contents will not be erased.
+* If unmounted disk partitions are detected, you will be asked whether the disk's contents shall be erased.
 
 == Details
 
