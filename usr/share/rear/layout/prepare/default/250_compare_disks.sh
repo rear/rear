@@ -79,6 +79,8 @@ if ! is_true "$MIGRATION_MODE" ; then
         test -d $current_device_path/queue || continue
         # Continue with next block device if no size can be read for the current one:
         test -r $current_device_path/size || continue
+        # Continue with next block device if the device is a multipath device slave
+        test is_multipath_path /dev/$current_device_path || continue
         current_disk_name="${current_device_path#/sys/block/}"
         current_size=$( get_disk_size $current_disk_name )
         test "$current_size" -gt '0' && replacement_hardware_disk_sizes=( "${replacement_hardware_disk_sizes[@]}" "$current_size" )
