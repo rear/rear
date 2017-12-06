@@ -3,7 +3,7 @@
 
 Beginning with version 2.4, Relax-and-Recover supports
 
-* provisioning self-encrypting disks (SEDs), including assigning a disk password,
+* setting up self-encrypting disks (SEDs), including assigning a disk password,
 * booting from SEDs with a pre-boot authentication (PBA) system to unlock disks.
 
 == Prerequisites
@@ -18,11 +18,15 @@ An Opal 2-compliant self-encrypting disk (SED) encrypts disk contents in hardwar
 
 === Booting From a Self-Encrypting Disk
 
-How can a system boot from a disk which is locked? The Opal solution is metamorphosis. A locked Opal boot disk transforms itself into a different animal: It behaves like a small read-only disk just big enough to contain boot code (the spec guarantees just 128 MB).
+How can a system boot from a disk which is locked? The Opal solution is metamorphosis. An Opal disk hides or presents different contents depending on whether it is locked or not:
 
-The extra area to store such boot code is the (unfortunately named) _shadow MBR_. The shadow MBR, when enabled, can be prepared with a _pre-boot authentication_ (PBA) system.
+* In addition to its regular contents, an Opal disk contains a special area for additional boot code, the (unfortunately named) _shadow MBR_. It is small (the spec guarantees just 128 MB), write-protected, and normally hidden.
 
-The pre-boot authentication (PBA) system is a purpose-built operating system which
+* When *unlocked*, an Opal disk shows its regular contents like any other disk. In this state, the system firmware would boot the regular operating system.
+
+* When *locked*, an Opal boot disk exposes its _shadow MBR_ at the start, followed by zeroed blocks. In this state, the system firmware would boot the code residing in the shadow MBR.
+
+The shadow MBR, when enabled, can be prepared with a _pre-boot authentication_ (PBA) system. The PBA system is a purpose-built operating system which
 
 . is booted by the firmware like any other operating system,
 . asks the user for the disk password,
@@ -37,13 +41,13 @@ NOTE: This is only required if an SED is to be used as boot disk.
 
 To create a pre-boot authentication (PBA) system image:
 
-. Set the `OPAL_PBA_URL` configuration variable to a directory where the PBA system image is to be stored.
+. Set the `OPAL_PBA_OUTPUT_URL` configuration variable to a directory where the PBA system image is to be stored.
 +
-NOTE: A local directory is preferred as Relax-and-Recover will then automatically pick up the PBA when installing it to local disks or when building a rescue system.
+NOTE: If a local directory is specified, Relax-and-Recover will automatically pick up the PBA when installing it to local disks or when building a rescue system.
 
 . Run `sudo rear -v mkopalpba`
 
-* The PBA image will appear below the `OPAL_PBA_URL` directory as `$HOSTNAME/TCG-Opal-PBA-$HOSTNAME.raw`.
+* The PBA image will appear below the `OPAL_PBA_OUTPUT_URL` directory as `$HOSTNAME/TCG-Opal-PBA-$HOSTNAME.raw`.
 
 . If you want to test the PBA system image,
 
@@ -52,24 +56,23 @@ NOTE: A local directory is preferred as Relax-and-Recover will then automaticall
 
 To create a rescue system with an integrated PBA system image:
 
-. Set the `OPAL_PBA_URL` configuration variable to a local directory where the PBA system image is stored or set `OPAL_PBA_FILE_LOCATION` to the image file location.
+. Set the `OPAL_PBA_OUTPUT_URL` configuration variable to a local directory where the PBA system image is stored (see above), or set `OPAL_PBA_IMAGE_FILE` to the image file's full path.
 
 . Run `sudo rear -v mkrescue`
 
-=== Provisioning Disks
+=== Setting Up Self-Encrypting Disks
 
-WARNING: Provisioning an SED normally *ERASES ALL DATA ON THE DISK*, as a new data encryption key (DEK) will be generated.
+WARNING: Setting up an SED normally *ERASES ALL DATA ON THE DISK*, as a new data encryption key (DEK) will be generated. While `rear opaladmin` includes safety measures to avoid accidentally erasing a partitioned disk, do not rely on this solely. *Always back up your data and have a current rescue system available.*
 
-WARNING: While `rear opaladmin` includes safety measures to avoid accidentally erasing a partitioned disk, do not rely on this solely. Always back up your data and have a current rescue system available.
-
-To provision SEDs:
+To set up SEDs:
 
 . Boot the Relax-and-Recover rescue system.
 * If SED boot support is required, ensure that the rescue system was built with an integrated PBA system image.
 
-. Run `rear opaladmin +--+ setup`
+. Run `rear opaladmin setupERASE DEVICE ...`
 
-* This will set up all Opal 2-compliant disks unless the `--device=DEVICE` option is present.
+* _DEVICE_ ist the disk device path like `/dev/sda`, or `ALL` for all available devices
+* This will set up Opal 2-compliant disks specified by the DEVICE arguments.
 * You will be asked for a new disk password. The same password will be used for all disks being set up.
 * If a PBA is available on the rescue system, you will be asked for each disk whether it should act as a boot device for disk unlocking (in which case the PBA will be installed).
 * *DISK CONTENTS WILL BE ERASED*, with the following exceptions:
@@ -86,7 +89,7 @@ If you want to ensure that disks have been set up correctly:
 
 . Boot directly into the Relax-and-Recover rescue system.
 
-. Run `rear opaladmin +--+ info` and verify that output looks like this:
+. Run `rear opaladmin info` and verify that output looks like this:
 +
 [options="nowrap"]
 ----
@@ -96,9 +99,9 @@ DEVICE         MODEL                          I/F    FIRMWARE     SETUP  ENCRYPT
 +
 The device should appear with _SETUP_=`y`, _ENCRYPTED_=`y` and _LOCKED_=`y`, _SHADOW MBR_ on boot disks should be `visible`, otherwise `disabled`.
 
-. Run `rear opaladmin +--+ unlock`, supplying the correct disk password.
+. Run `rear opaladmin unlock`, supplying the correct disk password.
 
-. Run `rear opaladmin +--+ info` and verify that output looks like this:
+. Run `rear opaladmin info` and verify that output looks like this:
 +
 [options="nowrap"]
 ----
@@ -112,15 +115,15 @@ The device should appear with _SETUP_=`y`, _ENCRYPTED_=`y` and _LOCKED_=`n`, _SH
 
 The following tasks can be safely performed on the original system (with `sudo`) or on the rescue system.
 
-* Display disk information: `rear opaladmin +--+ info`
+* Display disk information: `rear opaladmin info`
 
-* Change the disk password: `rear opaladmin +--+ changePW`
+* Change the disk password: `rear opaladmin changePW`
 
-* Upload the PBA onto the boot disk(s): `rear opaladmin +--+ uploadPBA`
+* Upload the PBA onto the boot disk(s): `rear opaladmin uploadPBA`
 
-* Unlock disk(s): `rear opaladmin +--+ unlock`
+* Unlock disk(s): `rear opaladmin unlock`
 
-* For help: `rear opaladmin +--+ --help`
+* For help: `rear opaladmin help`
 
 === Erasing a Self-Encrypting Disk
 
@@ -128,7 +131,8 @@ To *ERASE ALL DATA ON THE DISK* but retain the setup:
 
 . Boot the Relax-and-Recover rescue system.
 
-. Run `rear opaladmin +--+ resetDEK DEVICE` (_DEVICE_ being the disk device path like /dev/sda)
+. Run `rear opaladmin resetDEK DEVICE ...`
+* _DEVICE_ ist the disk device path like `/dev/sda`, or `ALL` for all available devices
 * If mounted disk partitions are detected, the disk's contents will not be erased.
 * If unmounted disk partitions are detected, you will be asked whether the disk's contents shall be erased.
 
@@ -136,7 +140,8 @@ To *ERASE ALL DATA ON THE DISK* and reset the disk to factory settings:
 
 . Boot the Relax-and-Recover rescue system.
 
-. Run `rear opaladmin +--+ factoryRESET DEVICE` (_DEVICE_ being the disk device path like /dev/sda)
+. Run `rear opaladmin factoryRESET DEVICE ...`
+* _DEVICE_ ist the disk device path like `/dev/sda`, or `ALL` for all available devices
 * If mounted disk partitions are detected, the disk's contents will not be erased.
 * If unmounted disk partitions are detected, you will be asked whether the disk's contents shall be erased.
 
