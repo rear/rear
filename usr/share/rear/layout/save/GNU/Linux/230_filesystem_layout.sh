@@ -61,7 +61,10 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             continue
         fi
         # FIXME: I (jsmeix@suse.de) have no idea what the reason for the following is.
-        # If someone knows the reason replace this comment with a description of the the actual root cause.
+        # In an ancient code version, the full mount command output was parsed line by line
+        # At that time the code was [ "${line#/}" = "$line" ]
+        # Then it skipped each mount line that didn't start with a forward slash (/)
+        # https://github.com/rear/rear/blame/e8de02b1c791f4d6b3de6d0d38529eb72375c2f6/usr/share/rear/layout/save/GNU/Linux/23_filesystem_layout.sh
         if [ "${device#/}" = "$device" ] ; then
             Log "\${device#/} = '${device#/}' = \$device, skipping."
             continue
@@ -146,7 +149,10 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 uuid=$(xfs_admin -u $device | cut -d'=' -f 2 | tr -d " ")
                 label=$(xfs_admin -l $device | cut -d'"' -f 2)
                 echo -n " uuid=$uuid label=$label "
-                xfs_info $device > $LAYOUT_XFS_OPT_DIR/$(basename ${device}.xfs)
+                # Save current XFS file system options.
+                # Saved options will be later used in ReaR recovery system for
+                # file system re-creation.
+                xfs_info $mountpoint > $LAYOUT_XFS_OPT_DIR/$(basename ${device}.xfs)
                 StopIfError "Failed to save XFS options of $device"
                 ;;
             (reiserfs)
@@ -304,7 +310,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         # see https://github.com/rear/rear/issues/883
         # therefore use by default the traditional mount command
         read_mounted_btrfs_subvolumes_command="mount -t btrfs | cut -d ' ' -f 1,3,6"
-        # and use findmnd only if "findmnd -o FSROOT" works:
+        # and use findmnt only if "findmnt -o FSROOT" works:
         # Use the (deprecated) "findmnt -m" to avoid issues
         # as in https://github.com/rear/rear/issues/882
         # FIXME: Replace using the deprecated '-m' option with a future proof solution.

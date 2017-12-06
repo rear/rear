@@ -75,6 +75,8 @@ if ! is_true "$MIGRATION_MODE" ; then
     local current_disk_name=''
     local current_size=''
     for current_device_path in /sys/block/* ; do
+        # Continue with next block device if the device is a multipath device slave
+        is_multipath_path ${current_device_path#/sys/block/} || continue
         # Continue with next block device if the current one has no queue directory:
         test -d $current_device_path/queue || continue
         # Continue with next block device if no size can be read for the current one:
@@ -141,7 +143,7 @@ else
     local prompt="Proceed with recovery (yes) otherwise manual disk layout configuration is enforced"
     local input_value=""
     local wilful_input=""
-    local input_value="$( UserInput -I DISK_LAYOUT_PROCEED_RECOVERY -t "$timeout" -p "$prompt" -D 'yes' )" && wilful_input="yes" || wilful_input="no"
+    input_value="$( UserInput -I DISK_LAYOUT_PROCEED_RECOVERY -t "$timeout" -p "$prompt" -D 'yes' )" && wilful_input="yes" || wilful_input="no"
     if is_true "$input_value" ; then
         is_true "$wilful_input" && LogPrint "User confirmed to proceed with recovery" || LogPrint "Proceeding with recovery by default"
     else
