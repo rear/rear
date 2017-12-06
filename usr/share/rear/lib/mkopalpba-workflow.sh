@@ -1,7 +1,7 @@
 # Workflow for TCG Opal pre-boot authentication (PBA) image creation
 #
 
-WORKFLOW_mkopalpba_DESCRIPTION="create a TCG Opal pre-boot authentication (PBA) image"
+WORKFLOW_mkopalpba_DESCRIPTION="create a pre-boot authentication (PBA) image to boot from TCG Opal 2-compliant self-encrypting disks"
 WORKFLOWS+=( mkopalpba )
 
 function WORKFLOW_mkopalpba() {

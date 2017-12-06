@@ -2,7 +2,7 @@
 # opaladmin-workflow.sh
 #
 
-WORKFLOW_opaladmin_DESCRIPTION="administrate TCG Opal 2-compliant disks"
+WORKFLOW_opaladmin_DESCRIPTION="administrate TCG Opal 2-compliant self-encrypting disks"
 WORKFLOWS+=( opaladmin )
 
 function opaladmin_usage_error() {
@@ -15,7 +15,7 @@ function opaladmin_help() {
     # prints a help message.
 
     LogPrintError "Usage: $PROGRAM opaladmin ACTION [-- OPTIONS] [DEVICE ...]"
-    LogPrintError "  Administrate TCG Opal 2-compliant disks"
+    LogPrintError "  Administrate TCG Opal 2-compliant self-encrypting disks"
     LogPrintError ""
     LogPrintError "Options:"
     LogPrintError "  -I FILE, --image=FILE   use FILE as the PBA image (default: auto-detect)"
@@ -104,7 +104,7 @@ function WORKFLOW_opaladmin() {
 
     # Find TCG Opal 2-compliant disks
     OPALADMIN_DEVICES=( $(opal_devices) )
-    (( ${#OPALADMIN_DEVICES[@]} == 0 )) && Error "Could not detect TCG Opal-compliant disks."
+    (( ${#OPALADMIN_DEVICES[@]} == 0 )) && Error "Could not detect TCG Opal 2-compliant disks."
 
     # Device arguments on the command line override auto-detected devices
     if (($# > 0)); then
