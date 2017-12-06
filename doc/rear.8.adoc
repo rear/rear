@@ -153,7 +153,7 @@ BACKUP MADE EASY.
 == RESCUE IMAGE CONFIGURATION
 The +OUTPUT+ variable defines from where our bootable rescue image will be booted and
 the +OUTPUT_URL+ variable defines where the rescue image should be send to.
-Possible +OUTPUT+ setting are:
+Possible +OUTPUT+ settings are:
 
 OUTPUT=*RAMDISK*::
 Create only the Relax-and-Recover initramfs.
@@ -173,7 +173,14 @@ OUTPUT=*USB*::
 Create a bootable USB disk (using extlinux). Specify the USB storage
 device by using +USB_DEVICE+.
 
-When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+ or +USB+ you should provide the
+OUTPUT=*RAWDISK*::
+Create a bootable image file named "rear-$(hostname).raw", which
+
+* supports UEFI boot if syslinux/EFI or Grub 2/EFI is installed,
+* supports Legacy BIOS boot if syslinux is installed,
+* supports UEFI/Legacy BIOS dual boot if syslinux *and* one of the supported EFI bootloaders are installed.
+
+When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+, +USB+, or +RAWDISK+ you should provide the
 backup target location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+
 settings are:
 
@@ -214,16 +221,16 @@ OUTPUT_URL=*sshfs://*::
 Write the image using sshfs and the SSH protocol.
 
 OUTPUT_URL=*null*::
-Do not copy the ISO image from _/var/lib/rear/output/_ to a remote output location.
+Do not copy the rescue image from _/var/lib/rear/output/_ to a remote output location.
 +OUTPUT_URL=null+ is useful when another program (e.g. an _external_ backup program)
-is used to save the ISO image from the local system to a remote place,
-or with +BACKUP_URL=iso:///backup+ when the backup is included in the ISO image
-to avoid a (big) copy of the ISO image at a remote output location.
-In the latter case the ISO image must be manually saved from the local system to a remote place.
+is used to save the rescue image from the local system to a remote place,
+or with +BACKUP_URL=iso:///backup+ when the backup is included in the rescue image
+to avoid a (big) copy of the rescue image at a remote output location.
+In the latter case the rescue image must be manually saved from the local system to a remote place.
 +OUTPUT_URL=null+ is only supported together with +BACKUP=NETFS+.
 
 If you do not specify +OUTPUT_URL+ variable then by default it will be aligned to what
-was defined by variable +BACKUP_URL+. And, the ISO image will then be copied to the same
+was defined by variable +BACKUP_URL+. And, the rescue image will then be copied to the same
 location as your backup of the system disk(s).
 
 The +ISO_DEFAULT+ variable defines what default boot option is used on the rescue image.
