@@ -9,7 +9,7 @@
 # and all other code or scripts that also does this could/should be deleted.
 
 local directories_permissions_owner_group_file="$VAR_DIR/recovery/directories_permissions_owner_group"
-cat /dev/null >"$directories_permissions_owner_group_file"
+: >"$directories_permissions_owner_group_file"
 
 # First save directories that are used as mountpoints:
 # FIXME: To exclude unwanted "noise" from mountpoints a simple 'grep -vE "this|that"'
