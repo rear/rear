@@ -161,8 +161,8 @@ generate_layout_dependencies() {
                 ;;
             crypt)
                 name=$(echo "$remainder" | cut -d " " -f "1")
-                device=$(echo "$remainder" | cut -d " " -f "2")
-                add_dependency "$name" "$device"
+                dev=$(echo "$remainder" | cut -d " " -f "2")
+                add_dependency "$name" "$dev"
                 add_component "$name" "crypt"
                 ;;
             multipath)
@@ -174,6 +174,11 @@ generate_layout_dependencies() {
                 for disk in $disks ; do
                     add_dependency "$name" "$disk"
                 done
+                ;;
+            opaldisk)
+                dev=$(echo "$remainder" | cut -d " " -f "1")
+                add_component "opaldisk:$dev" "opaldisk"
+                add_dependency "$dev" "opaldisk:$dev"
                 ;;
         esac
     done < <(cat $LAYOUT_FILE)

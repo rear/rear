@@ -1,10 +1,14 @@
 = Support for TCG Opal 2-compliant Self-Encrypting Disks
 :sedutil-cli-version: 1.15.1
 
-Beginning with version 2.4, Relax-and-Recover supports
+Beginning with version 2.4, Relax-and-Recover supports self-encrypting disks
+(SEDs) compliant with the TCG Opal 2 specification.
 
-* setting up self-encrypting disks (SEDs), including assigning a disk password,
-* booting from SEDs with a pre-boot authentication (PBA) system to unlock disks.
+Self-encrypting disk support includes
+
+* recovery (saving and restoring the system's SED configuration),
+* setting up SEDs, including assigning a disk password,
+* providing a pre-boot authentication (PBA) system to unlock SEDs at boot time.
 
 == Prerequisites
 

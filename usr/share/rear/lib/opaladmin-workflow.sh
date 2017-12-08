@@ -115,7 +115,7 @@ function WORKFLOW_opaladmin() {
                 set -- "${OPALADMIN_DEVICES[@]}"
                 break
             elif ! IsInArray "$device" "${OPALADMIN_DEVICES[@]}"; then
-                Error "Device \"$device\" could not be identified as being an Opal 2-compliant disk."
+                Error "Device \"$device\" is not a TCG Opal 2-compliant self-encrypting disk."
             fi
         done
 
@@ -134,7 +134,7 @@ function WORKFLOW_opaladmin() {
 #
 # Action functions
 # - take a list of devices as arguments, defaulting to "${OPALADMIN_DEVICES[@]}",
-# - call opaladmin_get_password() before using the password "$OPALADMIN_PASSWORD",
+# - call opaladmin_get_disk_password() before using the password "$OPAL_DISK_PASSWORD",
 # - use the PBA image "$OPALADMIN_IMAGE_FILE" (when empty: there is no PBA image).
 #
 
@@ -155,7 +155,7 @@ function opaladmin_setupERASE_action() {
     if [[ -z "$OPALADMIN_IMAGE_FILE" ]]; then
         LogUserOutput "Could not find a PBA image file."
         local prompt="Continue setup without boot disk support (y/n)? "
-        local confirmation="$(opaladmin_choice_input "OPALADMIN_SETUP_NO_BOOT_SUPPORT" "$prompt" "y" "n")"
+        local confirmation="$(opal_choice_input "OPALADMIN_SETUP_NO_BOOT_SUPPORT" "$prompt" "y" "n")"
         [[ "$confirmation" == "y" ]] || Error "Setup aborted."
     fi
 
@@ -178,28 +178,28 @@ function opaladmin_setupERASE_action() {
 
                 if [[ -n "$OPALADMIN_IMAGE_FILE" ]]; then
                     local prompt="Shall device \"$device\" act as a boot device for disk unlocking (y/n)? "
-                    enable_boot_unlocking="$(opaladmin_choice_input "OPALADMIN_SETUP_BOOT_$device_number" "$prompt" "y" "n")"
+                    enable_boot_unlocking="$(opal_choice_input "OPALADMIN_SETUP_BOOT_$device_number" "$prompt" "y" "n")"
                 fi
 
-                if [[ -z "$OPALADMIN_PASSWORD" ]]; then
+                if [[ -z "$OPAL_DISK_PASSWORD" ]]; then
                     # If this is the first time a password is being entered, check twice.
-                    OPALADMIN_PASSWORD="$(opaladmin_checked_password_input "OPALADMIN_PASSWORD" "disk password")"
+                    OPAL_DISK_PASSWORD="$(opal_checked_password_input "OPAL_DISK_PASSWORD" "disk password")"
                 fi
 
-                opal_device_setup "$device" "$OPALADMIN_PASSWORD"
+                opal_device_setup "$device" "$OPAL_DISK_PASSWORD"
                 StopIfError "Could not set up device \"$device\"."
                 LogUserOutput "Initial setup successful."
 
                 if [[ "$enable_boot_unlocking" == "y" ]]; then
                     opaladmin_use_image_file
                     LogUserOutput "Enabling shadow MBR and uploading the PBA to device \"$device\"..."
-                    opal_device_enable_mbr "$device" "$OPALADMIN_PASSWORD"
+                    opal_device_enable_mbr "$device" "$OPAL_DISK_PASSWORD"
                     StopIfError "Could not enable the shadow MBR on device \"$device\"."
-                    opal_device_load_pba_image "$device" "$OPALADMIN_PASSWORD" "$OPALADMIN_IMAGE_FILE"
+                    opal_device_load_pba_image "$device" "$OPAL_DISK_PASSWORD" "$OPALADMIN_IMAGE_FILE"
                     StopIfError "Could not upload the PBA image to device \"$device\"."
                     LogUserOutput "Shadow MBR enabled and PBA uploaded."
                 else
-                    opal_device_disable_mbr "$device" "$OPALADMIN_PASSWORD"
+                    opal_device_disable_mbr "$device" "$OPAL_DISK_PASSWORD"
                     LogUserOutput "Shadow MBR disabled."
                 fi
             fi
@@ -217,7 +217,7 @@ function opaladmin_changePW_action() {
 
     local new_password device try_count
 
-    new_password="$(opaladmin_checked_password_input "OPALADMIN_NEW_PASSWORD" "new disk password")"
+    new_password="$(opal_checked_password_input "OPALADMIN_NEW_PASSWORD" "new disk password")"
 
     for device in "${devices[@]}"; do
         LogUserOutput ""
@@ -226,12 +226,12 @@ function opaladmin_changePW_action() {
             LogUserOutput "Changing disk password of device $(opal_device_identification "$device")..."
 
             for try_count in $(seq 3); do
-                opaladmin_get_password "old password"
-                if opal_device_change_password "$device" "$OPALADMIN_PASSWORD" "$new_password"; then
+                opaladmin_get_disk_password "old password"
+                if opal_device_change_password "$device" "$OPAL_DISK_PASSWORD" "$new_password"; then
                     LogUserOutput "Password changed."
                     break 2
                 else
-                    OPALADMIN_PASSWORD=""  # Assume that the password for this disk did not fit, retry with a new one
+                    OPAL_DISK_PASSWORD=""  # Assume that the password for this disk did not fit, retry with a new one
                     PrintError "Could not change password."
                 fi
             done
@@ -241,7 +241,7 @@ function opaladmin_changePW_action() {
         fi
     done
 
-    OPALADMIN_PASSWORD="$new_password"
+    OPAL_DISK_PASSWORD="$new_password"
 }
 
 function opaladmin_uploadPBA_action() {
@@ -257,8 +257,8 @@ function opaladmin_uploadPBA_action() {
             if opal_device_mbr_is_enabled "$device"; then
                 opaladmin_use_image_file
                 LogUserOutput "Uploading the PBA to device $(opal_device_identification "$device")..."
-                opaladmin_get_password
-                opal_device_load_pba_image "$device" "$OPALADMIN_PASSWORD" "$OPALADMIN_IMAGE_FILE"
+                opaladmin_get_disk_password
+                opal_device_load_pba_image "$device" "$OPAL_DISK_PASSWORD" "$OPALADMIN_IMAGE_FILE"
                 StopIfError "Could not upload the PBA image to device \"$device\"."
                 LogUserOutput "PBA uploaded."
             else
@@ -308,8 +308,8 @@ function opaladmin_resetDEK_action() {
 
             if [[ "$confirmation" == "YesERASE" ]]; then
                 LogUserOutput "About to reset the data encryption key (DEK) of device $(opal_device_identification "$device")..."
-                opaladmin_get_password
-                opal_device_regenerate_dek_ERASING_ALL_DATA "$device" "$OPALADMIN_PASSWORD"
+                opaladmin_get_disk_password
+                opal_device_regenerate_dek_ERASING_ALL_DATA "$device" "$OPAL_DISK_PASSWORD"
                 if (( $? == 0 )); then
                     LogUserOutput "Data encryption key (DEK) reset, data erased."
                 else
@@ -341,8 +341,8 @@ function opaladmin_factoryRESET_action() {
 
             if [[ "$confirmation" == "YesERASE" ]]; then
                 LogUserOutput "About to reset device $(opal_device_identification "$device") to factory defaults..."
-                opaladmin_get_password
-                opal_device_factory_reset_ERASING_ALL_DATA "$device" "$OPALADMIN_PASSWORD"
+                opaladmin_get_disk_password
+                opal_device_factory_reset_ERASING_ALL_DATA "$device" "$OPAL_DISK_PASSWORD"
                 StopIfError "Could not reset device \"$device\" to factory defaults."
                 LogUserOutput "Device reset to factory defaults, data erased."
             else
@@ -361,77 +361,17 @@ function opaladmin_device_unlock_if_locked() {
 
     if [[ "$(opal_device_attribute "$device" "locked")" == "y" ]]; then
         LogUserOutput "Unlocking device $identification..."
-        opaladmin_get_password
-        opal_device_unlock "$device" "$OPALADMIN_PASSWORD"
+        opaladmin_get_disk_password
+        opal_device_unlock "$device" "$OPAL_DISK_PASSWORD"
         StopIfError "Could not unlock device \"$device\"."
         LogUserOutput "Device unlocked."
     fi
 }
 
-function opaladmin_get_password() {
-    local which="${1:-disk password}"
-    # sets $OPALADMIN_PASSWORD, asking the user if not already done.
-
-    if [[ -z "$OPALADMIN_PASSWORD" ]]; then
-        OPALADMIN_PASSWORD="$(opaladmin_password_input "OPALADMIN_PASSWORD" "Enter $which: ")"
-    fi
-}
-
-function opaladmin_password_input() {
-    local id="${1:?}"
-    local prompt="${2:?}"
-    # prints secret user input after verifying that it is non-empty.
-
-    local password
-
-    while true; do
-        password="$(UserInput -I "$id" -C -r -s -t 0 -p "$prompt")"
-        [[ -n "$password" ]] && break
-        PrintError "Please enter a non-empty password."
-    done
-
-    UserOutput ""
-    echo "$password"
-}
-
-function opaladmin_checked_password_input() {
-    local id="${1:?}"
-    local password_name="${2:?}"
-    # prints secret user input after verifying that it is non-empty and it has been entered identically twice.
-
-    local password
-
-    while true; do
-        password="$(opaladmin_password_input "$id" "Enter $password_name: ")"
-        local password_repeated="$(opaladmin_password_input "$id" "Repeat $password_name: ")"
-
-        [[ "$password_repeated" == "$password" ]] && break
-
-        PrintError "Passwords do not match."
-    done
-
-    echo "$password"
-}
-
-function opaladmin_choice_input() {
-    local id="${1:?}"
-    local prompt="${2:?}"
-    shift 2
-    local choices=( "$@" )
-    # prints user input after verifying that it complies with one of the choices specified.
-
-    while true; do
-        result="$(UserInput -I "$id" -t 0 -p "$prompt")"
-        IsInArray "$result" "${choices[@]}" && break
-    done
-
-    echo "$result"
-}
-
 function opaladmin_erase_confirmation() {
     local device="${1:?}"
     local prompt="${2:?}, ERASING ALL DATA (YesERASE/No)? "
-    # sets $OPALADMIN_PASSWORD, asking the user if not already done.
+    # prints "YesERASE" if $device may be erased, after checking partitions and, if necessary, asking for confirmation
 
     local confirmation="No"
 
@@ -444,13 +384,23 @@ function opaladmin_erase_confirmation() {
         else
             LogUserOutput "Device $(opal_device_identification "$device") contains partitions:"
             LogUserOutput "$(opal_disk_partition_information "$device")"
-            confirmation="$(opaladmin_choice_input "OPALADMIN_ERASE_CONFIRM" "$prompt" "YesERASE" "No")"
+            confirmation="$(opal_choice_input "OPALADMIN_ERASE_CONFIRM" "$prompt" "YesERASE" "No")"
         fi
     else
         confirmation="YesERASE"
     fi
 
     echo "$confirmation"
+}
+
+function opaladmin_get_disk_password() {
+    local which="${1:-disk password}"
+    # sets $OPAL_DISK_PASSWORD, asking the user if not already done.
+    # REQUIRES ReaR functions 'UserInput', 'PrintError'
+
+    if [[ -z "$OPAL_DISK_PASSWORD" ]]; then
+        OPAL_DISK_PASSWORD="$(opal_password_input "OPAL_DISK_PASSWORD" "Enter $which: ")"
+    fi
 }
 
 function opaladmin_use_image_file() {
