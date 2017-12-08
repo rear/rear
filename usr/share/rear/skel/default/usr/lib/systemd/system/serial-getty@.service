@@ -8,16 +8,19 @@ After=dev-%i.device
 # If additional gettys are spawned during boot then we should make
 # sure that this is synchronized before getty.target, even though
 # getty.target didn't actually pull it in.
-After=getty.target
+Before=getty.target
 
 [Service]
 Environment=TERM=vt100
-ExecStart=-/bin/agetty -s %I 115200,38400,9600
+ExecStart=-/sbin/agetty -s %I 115200,38400,9600
 Restart=always
 RestartSec=0
 UtmpIdentifier=%I
-KillMode=process-group
+KillMode=process
 
 # Some login implementations ignore SIGTERM, so we send SIGHUP
 # instead, to ensure that login terminates cleanly.
 KillSignal=SIGHUP
+
+[Install]
+WantedBy=getty.target
