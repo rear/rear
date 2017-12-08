@@ -9,39 +9,37 @@
 # and all other code or scripts that also does this could/should be deleted.
 
 local directories_permissions_owner_group_file="$VAR_DIR/recovery/directories_permissions_owner_group"
-cat /dev/null >"$directories_permissions_owner_group_file"
+: >"$directories_permissions_owner_group_file" # Create empty file
 
-# First save directories that are used as mountpoints:
-# FIXME: To exclude unwanted "noise" from mountpoints a simple 'grep -vE "this|that"'
-# is not fail safe because it excludes any lines that contain 'this' or 'that'.
-# Using 'grep -vE "type (this|that) "' makes it look like bloatware code
-# cf. https://github.com/rear/rear/pull/1459#discussion_r135744282
-# but currently I <jsmeix@suse.de> prefer "bloatware code" that works fail safe
-# over simple code that sometimes fails, cf. "Dirty hacks welcome"
-# at https://github.com/rear/rear/wiki/Coding-Style
-local excluded_fs_types="cgroup|fuse.*|nfsd"
-# BUILD_DIR can be used in 'grep -vE "this|$BUILD_DIR|that"' because it is never empty (see usr/sbin/rear)
-# because with any empty part 'grep  -vE "this||that"' would output nothing at all:
-local excluded_other_stuff="/sys/|$BUILD_DIR|$USB_DEVICE_FILESYSTEM_LABEL"
-# The trailing space in 'type ($excluded_fs_types) |' is intentional:
-local mountpoints="$( mount | grep -vE "type ($excluded_fs_types) |$excluded_other_stuff" | awk '{print $3}' )"
+# First save directories that are used as mountpoints
+local excluded_fs_types='autofs,cgroup,cgroup2,configfs,debugfs,efivarfs,fuse.*,nfsd,pstore,securityfs'
+local mountpoints="$( findmnt -runit $excluded_fs_types -o TARGET )"
 local directory
 for directory in $mountpoints ; do
-    # Skip the root directory '/':
-    test "/" = "$directory" && continue
-    # Output directory name, access rights in octal, user name of owner, group name of owner:
-    stat -c '%n %a %U %G' "$directory" >>"$directories_permissions_owner_group_file"
-    # Output is lines that look like (e.g. on a SLES12 system):
-    # /sys 555 root root
-    # /proc 555 root root
-    # /dev 755 root root
-    # /dev/shm 1777 root root
-    # /dev/pts 755 root root
-    # /run 755 root root
-    # /dev/mqueue 1777 root root
-    # /dev/hugepages 755 root root
-    # /run/user/0 700 root root
+    case $directory in
+        /|/sys/*|/tmp|/tmp/*|/mnt/*|/media/*)
+            # Skip these directories
+            continue 
+            ;;
+        *)
+            # Output directory name, access rights in octal, user name of owner, group name of owner
+            $STAT -c '%n %a %U %G' "$directory" >>"$directories_permissions_owner_group_file"
+            ;;
+    esac
 done
+
+# Output is lines that look like (e.g. on a SLES12 system):
+# /sys 555 root root
+# /proc 555 root root
+# /dev 755 root root
+# /dev/shm 1777 root root
+# /dev/pts 755 root root
+# /run 755 root root
+# /dev/mqueue 1777 root root
+# /dev/hugepages 755 root root
+# /run/user/0 700 root root
+
+
 
 # Then save FHS directories:
 # The list of FHS directories was derived from https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
