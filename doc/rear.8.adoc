@@ -157,9 +157,9 @@ source or commercial) or rsync with hardlink based solutions, e.g. RSYNC
 BACKUP MADE EASY.
 
 == RESCUE IMAGE CONFIGURATION
-The +OUTPUT+ variable defines from where our bootable rescue image will be booted and
-the +OUTPUT_URL+ variable defines where the rescue image should be send to.
-Possible +OUTPUT+ settings are:
+The +OUTPUT+ variable defines from where our bootable rescue image will be
+booted and the +OUTPUT_URL+ variable defines where the rescue image should be
+send to. Possible +OUTPUT+ settings are:
 
 OUTPUT=*RAMDISK*::
 Create only the Relax-and-Recover initramfs.
@@ -184,11 +184,12 @@ Create a bootable image file named "rear-$(hostname).raw", which
 
 * supports UEFI boot if syslinux/EFI or Grub 2/EFI is installed,
 * supports Legacy BIOS boot if syslinux is installed,
-* supports UEFI/Legacy BIOS dual boot if syslinux *and* one of the supported EFI bootloaders are installed.
+* supports UEFI/Legacy BIOS dual boot if syslinux *and* one of the supported EFI
+  bootloaders are installed.
 
-When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+, +USB+, or +RAWDISK+ you should provide the
-backup target location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+
-settings are:
+When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+, +USB+, or +RAWDISK+ you should
+provide the backup target location through the +OUTPUT_URL+ variable. Possible
++OUTPUT_URL+ settings are:
 
 OUTPUT_URL=*file://*::
 Write the image to disk. The default is in _/var/lib/rear/output/_.
@@ -408,11 +409,11 @@ to work with incremental or differential backup.
 Relax-and-Recover supports self-encrypting disks (SEDs) compliant with the TCG
 Opal 2 specification if the `sedutil-cli` executable is installed.
 
-Currently, Relax-and-Recover does not automatically recreate Opal 2 disk
-encryption, but offers support for
+Self-encrypting disk support includes
 
-* setting up self-encrypting disks (SEDs), including assigning a disk password,
-* booting from SEDs with a pre-boot authentication (PBA) system to unlock disks.
+* recovery (saving and restoring the system's SED configuration),
+* setting up SEDs, including assigning a disk password,
+* providing a pre-boot authentication (PBA) system to unlock SEDs at boot time.
 
 To prepare booting from an SED, configure the `OPAL_PBA_OUTPUT_URL`
 configuration variable and run +rear mkopalpba+, then create the rescue system.
