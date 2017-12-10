@@ -52,23 +52,27 @@ function create_opaldisk() {
     fi
 
     {
+        echo "# Protect against passwords appearing in the log file"
+        echo "{ opaldisk_caller_bash_set_options=\"\$-\"; set +x; } 2>/dev/null"  # silently turn off '-x' but remember its state
+
         echo "LogPrint \"Setting up TCG Opal 2 self-encrypting disk $device\""
 
         if [[ -n "$password" ]]; then
-            echo "opal_password='$password'"
+            echo "opaldisk_password='$password'"
         else
             local prompt="password for self-encrypting disk $device"
             echo "# Re-use OPAL_DISK_PASSWORD if multiple self-encrypting disks are present"
             echo ": \${OPAL_DISK_PASSWORD:=\"\$(opal_checked_password_input \"OPAL_DISK_PASSWORD\" \"$prompt\")\"}"
-            echo "opal_password=\"\$OPAL_DISK_PASSWORD\""
+            echo "opaldisk_password=\"\$OPAL_DISK_PASSWORD\""
         fi
 
-        echo "opal_device_recreate_setup \"$device\" \"\$opal_password\""
+        echo "opal_device_recreate_setup \"$device\" \"\$opaldisk_password\""
 
         if [[ "$boot" == "y" ]]; then
-            echo "opal_device_recreate_boot_support \"$device\" \"\$opal_password\" \"$pba_image_file\""
+            echo "opal_device_recreate_boot_support \"$device\" \"\$opaldisk_password\" \"$pba_image_file\""
         fi
 
+        echo "[[ \"\$opaldisk_caller_bash_set_options\" == *x* ]] && set -x"  # restore '-x' to previous state
         echo ""
     } >> "$LAYOUT_CODE"
 }
