@@ -41,11 +41,6 @@ included_mountpoints=( $( tr ' ' '\n' <<<"${included_mountpoints[@]}" | awk '!u[
 excluded_mountpoints=( $( grep '^#fs' $VAR_DIR/layout/disklayout.conf | awk '{print $3}' ) )
 DIRECTORY_ENTRIES_TO_RECOVER=( "${DIRECTORY_ENTRIES_TO_RECOVER[@]}" "${excluded_mountpoints[@]}" )
 
-# Use a first connection to the TSM server to request TSM PASSWD in case this one was not included in the
-# ReaR rescue image.
-# Note: ReaR uses fd6 for user input, fd7 for stdout and fd8 for stderr.
-dsmc query mgmt 0<&6 1>&7 2>&8
-
 # Find out which filespaces (= mountpoints) are available for restore.
 # Error code 8 can be ignored, see bug report at
 # https://sourceforge.net/tracker/?func=detail&atid=859452&aid=1942895&group_id=171835
