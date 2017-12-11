@@ -1,6 +1,6 @@
 # Many Linux distro's are using systemd as init mechanism
 
-# added systemd-tmpfiles and /var/lib/tmpfiles.d for Fedora (and in the future also RHEL) for issue #1575 (rpcbind
+# added systemd-tmpfiles and /{usr|var}/lib/tmpfiles.d for Fedora (and in the future also RHEL) for issue #1575 (rpcbind
 # fails to start within rescue system)
 if ps ax | grep -v grep | grep -q systemd ; then
     PROGS=( "${PROGS[@]}" systemd agetty systemctl systemd-notify systemd-ask-password
@@ -13,7 +13,7 @@ if ps ax | grep -v grep | grep -q systemd ; then
     # 2- Need to add systemd/network subdir in order to preserve rules about network device naming
     #    (predictable naming or persitant naming / like udev).
     #    more info here: https://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
-    COPY_AS_IS=( "${COPY_AS_IS[@]}" /usr/share/systemd /etc/dbus-1 /usr/lib/systemd/systemd-* /lib/systemd/systemd-* /usr/lib/systemd/network /lib/systemd/network /usr/lib/systemd/system-generators/systemd-getty-generator  /lib/systemd/system-generators/systemd-getty-generator /var/lib/tmpfiles.d )
+    COPY_AS_IS=( "${COPY_AS_IS[@]}" /usr/share/systemd /etc/dbus-1 /usr/lib/systemd/systemd-* /lib/systemd/systemd-* /usr/lib/systemd/network /lib/systemd/network /usr/lib/systemd/system-generators/systemd-getty-generator  /lib/systemd/system-generators/systemd-getty-generator /var/lib/tmpfiles.d /usr/lib/tmpfiles.d )
     CLONE_GROUPS=( "${CLONE_GROUPS[@]}" input )
     Log "Including systemd (init replacement) tool-set to bootstrap Relax-and-Recover"
 fi
