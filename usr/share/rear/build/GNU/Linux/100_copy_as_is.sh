@@ -31,9 +31,8 @@ done >$copy_as_is_exclude_file
 #  2
 #  -rw-r--r-- root/root         4 2017-10-12 11:31 foo
 #  -rw-r--r-- root/root         4 2017-10-12 11:31 baz
-# We added the extra option "-h" (dereference or follow the symbolic link) to the tar command - see issue #1635
 # Because pipefail is not set it is the second 'tar' in the pipe that determines whether or not the whole operation was successful:
-if ! tar -v -X $copy_as_is_exclude_file -h -P -C / -c "${COPY_AS_IS[@]}" 2>$copy_as_is_filelist_file | tar $v -C $ROOTFS_DIR/ -x 1>/dev/null ; then
+if ! tar -v -X $copy_as_is_exclude_file -P -C / -c "${COPY_AS_IS[@]}" 2>$copy_as_is_filelist_file | tar $v -C $ROOTFS_DIR/ -x 1>/dev/null ; then
     Error "Failed to copy files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLUDE"
 fi
 Log "Finished copying files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLUDE"
