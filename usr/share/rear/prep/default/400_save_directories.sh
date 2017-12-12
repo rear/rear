@@ -17,11 +17,11 @@ local mountpoints="$( findmnt -runit $excluded_fs_types -o TARGET )"
 local directory
 for directory in $mountpoints ; do
     case $directory in
-        /|/sys/*|/tmp|/tmp/*|/mnt/*|/media/*)
+        (/|/sys/*|/tmp|/tmp/*|/mnt/*|/media/*)
             # Skip these directories
             continue 
             ;;
-        *)
+        (*)
             # Output directory name, access rights in octal, user name of owner, group name of owner
             $STAT -c '%n %a %U %G' "$directory" >>"$directories_permissions_owner_group_file"
             ;;
