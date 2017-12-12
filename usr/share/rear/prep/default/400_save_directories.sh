@@ -29,7 +29,6 @@ for directory in $mountpoints ; do
 done
 
 # Output is lines that look like (e.g. on a SLES12 system):
-# /sys 555 root root
 # /proc 555 root root
 # /dev 755 root root
 # /dev/shm 1777 root root
