@@ -52,7 +52,7 @@ case "$TIMESYNC" in
 		PROGS=( "${PROGS[@]}" rdate )
 		cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-timesync.sh <<-EOF
 			echo "Setting system time via RDATE ..."
-			rdate -s "$TIMESYNC_SOURCE" # allow for big jumps
+			rdate -l -p -s "$TIMESYNC_SOURCE" # allow for big jumps
 		EOF
 
 		;;
