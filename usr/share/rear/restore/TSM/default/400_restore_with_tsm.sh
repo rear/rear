@@ -3,7 +3,7 @@
 # This is done for each filespace.
 local num=0
 local filespace=""
-local dsmc_restore_exit_code=0
+local dsmc_exit_code=0
 for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     filespace="${TSM_FILESPACES[$num]}"
     # Make sure filespace has a trailing / (for dsmc):
@@ -12,7 +12,7 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     Log "Running 'LC_ALL=$LANG_RECOVER dsmc restore $filespace $TARGET_FS_ROOT/$filespace -subdir=yes -replace=all -tapeprompt=no ${TSM_DSMC_RESTORE_OPTIONS[@]}'"
     # Regarding usage of '0<&6 1>&7 2>&8' see "What to do with stdin, stdout, and stderr" in https://github.com/rear/rear/wiki/Coding-Style
     LC_ALL=$LANG_RECOVER dsmc restore "$filespace" "$TARGET_FS_ROOT/$filespace" -subdir=yes -replace=all -tapeprompt=no "${TSM_DSMC_RESTORE_OPTIONS[@]}" 0<&6 1>&7 2>&8
-    dsmc_restore_exit_code=$?
+    dsmc_exit_code=$?
     # When 'dsmc restore' results a non-zero exit code inform the user but do not abort the whole "rear recover" here
     # because it could be an unimportant reason why 'dsmc restore' finished with a non-zero exit code.
     # What usual exit codes mean see http://publib.boulder.ibm.com/tividd/td/TSMC/GC32-0787-04/en_US/HTML/ans10000117.htm
@@ -37,13 +37,13 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     #   The return code for a client macro will be the highest return code issued among the individual commands that comprise the macro.
     #   For example, suppose a macro consists of these commands: If the first command completes with return code 0; the second command completes with return code 8;
     #   and the third command completes with return code 4, the return code for the macro will be 8.
-    if test $dsmc_restore_exit_code -eq 0 ; then
+    if test $dsmc_exit_code -eq 0 ; then
         LogUserOutput "Restoring TSM filespace $filespace completed successfully"
     else
-        LogUserOutput "Restoring TSM filespace $filespace completed with 'dsmc restore' exit code $dsmc_restore_exit_code"
-        test $dsmc_restore_exit_code -eq 4 && LogUserOutput "Restoring $filespace completed successfully, but some files (e.g. in an exclude list) were not processed"
-        test $dsmc_restore_exit_code -eq 8 && LogUserOutput "Restoring $filespace completed with at least one warning message (review the TSM Error Log)"
-        test $dsmc_restore_exit_code -eq 12 && LogUserOutput "Restoring $filespace completed with at least one error message (review the TSM Error Log)"
+        LogUserOutput "Restoring TSM filespace $filespace completed with 'dsmc restore' exit code $dsmc_exit_code"
+        test $dsmc_exit_code -eq 4 && LogUserOutput "Restoring $filespace completed successfully, but some files (e.g. in an exclude list) were not processed"
+        test $dsmc_exit_code -eq 8 && LogUserOutput "Restoring $filespace completed with at least one warning message (review the TSM Error Log)"
+        test $dsmc_exit_code -eq 12 && LogUserOutput "Restoring $filespace completed with at least one error message (review the TSM Error Log)"
     fi
 done
 
