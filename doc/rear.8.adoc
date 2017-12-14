@@ -298,7 +298,7 @@ BACKUP=*RBME*::
 Use Rsync Backup Made Easy (rbme) to restore the data.
 
 BACKUP=*BAREOS*::
-Use Open Source backup solution BAREOS (a fork a BUCULA) to restore the data.
+Use Open Source backup solution BAREOS (a fork a BACULA) to restore the data.
 
 BACKUP=*BACULA*::
 Use Open Source backup solution BACULA to restore the data.
