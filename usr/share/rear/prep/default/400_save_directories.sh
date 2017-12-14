@@ -19,7 +19,7 @@ cat /dev/null >"$directories_permissions_owner_group_file"
 # but currently I <jsmeix@suse.de> prefer "bloatware code" that works fail safe
 # over simple code that sometimes fails, cf. "Dirty hacks welcome"
 # at https://github.com/rear/rear/wiki/Coding-Style
-local excluded_fs_types="cgroup|fuse.*|nfsd"
+local excluded_fs_types="anon_inodefs|autofs|bdev|cgroup|cgroup2|configfs|cpuset|debugfs|devfs|devpts|devtmpfs|dlmfs|efivarfs|fuse.gvfs-fuse-daemon|fusectl|hugetlbfs|mqueue|nfsd|none|nsfs|overlay|pipefs|proc|pstore|ramfs|rootfs|rpc_pipefs|securityfs|sockfs|spufs|sysfs|tmpfs"
 # BUILD_DIR can be used in 'grep -vE "this|$BUILD_DIR|that"' because it is never empty (see usr/sbin/rear)
 # because with any empty part 'grep  -vE "this||that"' would output nothing at all:
 local excluded_other_stuff="/sys/|$BUILD_DIR|$USB_DEVICE_FILESYSTEM_LABEL"
