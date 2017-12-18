@@ -394,7 +394,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                     # (i.e. a subvolume path is an absolute path in the particular btrfs filesystem)
                     # see https://btrfs.wiki.kernel.org/index.php/Mount_options
                     test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
-                    if test -n "btrfs_subvolume_path" ; then
+                    if test -n "$btrfs_subvolume_path" ; then
 			# Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
                         for p in chattr lsattr
                         do
