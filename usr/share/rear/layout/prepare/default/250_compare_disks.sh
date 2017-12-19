@@ -76,7 +76,7 @@ if ! is_true "$MIGRATION_MODE" ; then
     local current_size=''
     for current_device_path in /sys/block/* ; do
         # Continue with next block device if the device is a multipath device slave
-        is_multipath_path ${current_device_path#/sys/block/} || continue
+        is_multipath_path ${current_device_path#/sys/block/} && continue
         # Continue with next block device if the current one has no queue directory:
         test -d $current_device_path/queue || continue
         # Continue with next block device if no size can be read for the current one:
