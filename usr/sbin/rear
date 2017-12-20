@@ -55,7 +55,7 @@ readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_
 # Versioning
 readonly PRODUCT="Relax-and-Recover"
 readonly PROGRAM=${0##*/}
-readonly VERSION=2.2
+readonly VERSION=2.3
 readonly RELEASE_DATE=Git
 
 # Used in framework-functions.sh to calculate the time spent executing rear:

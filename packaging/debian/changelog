@@ -1,3 +1,9 @@
+rear (2.3-1) stable; urgency=low
+
+  * Mainly bug fixes
+  * Enhanced security model around OpenSSH
+
+ -- Gratien Dhaese <gratien.dhaese@gmail.com> Wed, 20 Dec 2017 14:57:10 +0100
 rear (2.2-1) stable; urgency=low
 
   * Mainly bug fixes for SLES 10 (sponsored release)
