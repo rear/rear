@@ -415,8 +415,8 @@ Self-encrypting disk support includes
 * setting up SEDs, including assigning a disk password,
 * providing a pre-boot authentication (PBA) system to unlock SEDs at boot time.
 
-To prepare booting from an SED, configure the `OPAL_PBA_OUTPUT_URL`
-configuration variable and run +rear mkopalpba+, then create the rescue system.
+To prepare booting from an SED, run +rear mkopalpba+, then create the rescue
+system.
 
 To set up an SED, boot the Relax-and-Recover rescue system and run`rear
 opaladmin setupERASE DEVICE` (_DEVICE_ being the disk device path like

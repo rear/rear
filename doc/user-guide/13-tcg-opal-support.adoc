@@ -62,18 +62,10 @@ NOTE: This is only required if an SED is to be used as boot disk.
 
 To create a pre-boot authentication (PBA) system image:
 
-. Set the `OPAL_PBA_OUTPUT_URL` configuration variable to a directory where the
-PBA system image is to be stored.
-
-+
-NOTE: If a local directory is specified, Relax-and-Recover will automatically
-pick up the PBA when installing it to local disks or when building a rescue
-system.
-
 . Run `sudo rear -v mkopalpba`
 
-* The PBA image will appear below the `OPAL_PBA_OUTPUT_URL` directory as
-`$HOSTNAME/TCG-Opal-PBA-$HOSTNAME.raw`.
+* The PBA image will appear below the `OPAL_PBA_OUTPUT_URL` directory (see
+`default.conf`) as `$HOSTNAME/TCG-Opal-PBA-$HOSTNAME.raw`.
 
 . If you want to test the PBA system image,
 
@@ -85,9 +77,9 @@ partition),
 
 To create a rescue system with an integrated PBA system image:
 
-. Set the `OPAL_PBA_OUTPUT_URL` configuration variable to a local directory
-where the PBA system image is stored (see above), or set `OPAL_PBA_IMAGE_FILE`
-to the image file's full path.
+. Verify that the `OPAL_PBA_OUTPUT_URL` configuration variable points to a local
+directory (which is the default), or set `OPAL_PBA_IMAGE_FILE` to the image
+file's full path.
 
 . Run `sudo rear -v mkrescue`
 
