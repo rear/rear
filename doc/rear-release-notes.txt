@@ -7,7 +7,7 @@ Relax-and-Recover
   o Development
   o Events
 
-Release Notes for Relax-and-Recover version 2.2
+Release Notes for Relax-and-Recover version 2.3
 
 This document contains the release notes for the open source project
 Relax-and-Recover.
@@ -17,19 +17,23 @@ Relax-and-Recover website
 GitHub project
 
 This document is distributed with the following license: "Creative Commons
-Attribution-NoDerivs 3.0 Unported (CC BY-ND 3.0)". To read the license deed
+Attribution-NoDerivs 3.0 Unported (CC BY-ND 3.0)". To read the license deed,
 go to http://creativecommons.org/licenses/by-nd/3.0/
 
 Overview
 
-Relax-and-Recover is a GNU/Linux system administrator tool used to create
-disaster recovery images which makes bare metal restore easier. System
-administrators use Relax-and-Recover as part of disaster recovery policy
-which does not replace in any way a good backup policy.
+Relax-and-Recover is a GNU/Linux system administrator tool and framework used
+to create bootable disaster recovery images which makes bare metal disaster
+recovery (including backup restore) easier. System administrators use the
+Relax-and-Recover framework to set up a disaster recovery procedure as part
+of their disaster recovery policy (which does not replace in any way a backup
+policy). Relax-and-Recover does not implement backup but complements it
+because backup (and restore) happens via external backup software that is
+only called by Relax-and-Recover.
 
 Product Features
 
-The following features are supported on the most recent releases of
+The following features are supported by the most recent releases of
 Relax-and-Recover. Anything labeled as (New) was added as the most recent
 release. New functionality for previous releases can be seen in the next
 chapter that details each release.
@@ -38,53 +42,53 @@ The most recent release of Relax-and-Recover is supported on most GNU/Linux
 based systems with kernel 2.6 or higher. It provides the following
 functionality:
 
-  o Hot maintenance capability. A rescue image can be made online while the
-    system is running.
+  o Hot maintenance capability. A recovery/rescue image can be made online
+    while the system is running
 
   o Command line interface. Relax-and-Recover does not require a graphical
-    interface to run, nor in creation mode, nor in rescue mode (console is
-    enough).
+    interface to run, neither in creation mode, nor in recovery mode (console
+    is enough)
 
-  o Support included for most common file systems, such as ext2, ext3, ext4
-    and reiserfs. Other filesystems like jfs, xfs and btrfs are also
+  o Support included for most common file systems, such as ext2, ext3, and
+    ext4. Other filesystems like reiserfs, jfs, xfs, and btrfs are also
     implemented, but are less tested. (Feedback is appreciated)
 
   o Selected Hardware RAID and (eg. HP SmartArray) and mirroring solutions
-    (eg. DRBD) are supported.
+    (eg. DRBD) are supported
 
-  o NVME and mmcblk disks are supported (New)
+  o NVME and mmcblk disks are supported
 
-  o LVM root volumes are supported.
+  o LVM root volumes are supported
 
   o Multipath support for SAN storage
 
-  o UEFI support (including UEFI USB booting
+  o UEFI support (including UEFI USB booting)
 
-  o Integrates with internal backup solutions such as:
+  o Integrates with internal backup programs such as:
 
       - GNU tar (BACKUP=NETFS, BACKUP_PROG=tar)
       - GNU tar (BACKUP=NETFS, BACKUP_PROG=tar, BACKUP_TYPE=incremental,
         FULLBACKUPDAY="Mon") for using incremental backups with a weekly full
         backup. Be aware, old tar archives will not be removed automatically!
-        (New)
       - GNU tar (BACKUP=NETFS, BACKUP_PROG=tar, BACKUP_TYPE=differential,
         FULLBACKUPDAY="Mon") for using differential backups with a weekly
         full backup. Be aware, old tar archives will not be removed
-        automatically! (Updated)
+        automatically!
       - GNU tar with openssl encryption (BACKUP=NETFS, BACKUP_PROG=tar,
         BACKUP_PROG_CRYPT_ENABLED=1)
       - rsync on local devices (BACKUP=NETFS, BACKUP_PROG=rsync), such USB
         and local disks
       - rsync over the network (BACKUP=RSYNC, BACKUP_PROG=rsync)
-      - Multiple backup methods (read the documentation) (New)
-      - Windows partitions via BACKUP=BLOCKCLONE (New) See the documention
-        about BLOCKCLONE
+      - Multiple backup methods (read the documentation)
+      - Any partition (e.g. a Windows partition) via BACKUP=BLOCKCLONE. See
+        the documention about BLOCKCLONE
       - BACKUP=ZYPPER is SLES12 only (Experimental)
+      - BACKUP=YUM is for RedHat architectures ony (Experimental)
   o Integrates with external backup solutions such as:
 
       - Tivoli Storage Manager (BACKUP=TSM)
       - HP Data Protector (BACKUP=DP)
-      - Symantec NetBacakup (BACKUP=NBU)
+      - Symantec NetBackup (BACKUP=NBU)
       - Galaxy 5, 6, and 7 (BACKUP=GALAXY)
       - Galaxy 10 [Commvault Simpana] (BACKUP=GALAXY10)
       - Bacula (BACKUP=BACULA)
@@ -99,7 +103,7 @@ functionality:
   o Integrates with Disaster Recovery Linux Manager (DRLM)
 
   o Udev support (except for some really ancient udev versions) which is the
-    base for many new and important features:
+    base for many important features:
 
       - kernel drivers for network cards and storage adapters are loaded via
         udev
@@ -107,9 +111,11 @@ functionality:
       - firmware loading
       - persistent storage device names (though Relax-and-Recover does
         nothing with this)
-  o System reconfiguration
+  o Systemd support for the more recent Linux distributions
 
-      - enable recovery on hardware, that is not the same as the original
+  o System migration and reconfiguration ('MIGRATION_MODE')
+
+      - facilitate recovery on hardware, that is not the same as the original
         system
       - network and storage drivers are adjusted
       - map hard disks if they do not match (e.g. hda -> sda)
@@ -117,7 +123,7 @@ functionality:
       - use another IP address, or using dhcp via templates or from kernel
         command line
       - rebuild the initial ramdisk if needed (for new storage drivers)
-      - migration to SAN storage (Experimental)
+      - migration to SAN storaged
   o Support backup software: Bacula, both locally attached tapes (with
     bextract) and network-based backups. Also, in combination with OBDR
     tapes.
@@ -128,11 +134,11 @@ functionality:
   o Label the OBDR tape with the method format to avoid accidental overwrites
     with OBDR
 
-  o Create bootable disk (eSATA, USB ...) media with the backup included:
+  o Create bootable disk (eSATA, USB ...) medium with the backup included:
 
     BACKUP_URL=usb:///dev/device
 
-    Together with OUTPUT=USB we have now a complete solution on hard disks
+    Together with OUTPUT=USB we have a complete solution on hard disks
     (booting of it and restoring data).
 
   o DHCP client support (IPv4 and IPv6). Dhcp client activation can be forced
@@ -142,28 +148,32 @@ functionality:
   o USE_STATIC_NETWORKING=y, will cause statically configured network
     settings to be applied even when USE_DHCLIENT is in effect
 
-  o Save layout and compare layouts for easy automation of making
+  o Save layout and compare layouts for automation of making
     Relax-and-Recover snapshots (checklayout option)
 
-  o The layout workflow is the default workflow instead of the deprecated dr
-    workflow. The dr workflow kept all important system information into a
-    directory structure where the new layout workflow use files to keep the
-    information centralized. The dr workflow has been removed in ReaR v1.14!
-
-  o External USB booting now uses extlinux instead of syslinux, and
-    therefore, the USB disk must first be formatted with an ext2, ext3, ext4
-    or btrfs based file system
+  o External USB booting uses extlinux (instead of syslinux), and therefore,
+    the USB disk must first be formatted with an ext2, ext3, ext4 or btrfs
+    based file system
 
   o cron job to check changes in disk layout and trigger rear mkrescue if
     required
 
-  o VLAN tagging support
+  o VLAN tagging and bridge support
 
   o Add timestamp of ReaR run with rc code to the syslog or messages file;
     sending mail report is also possible
 
-  o The possibility to backup Windows partitions via new BACKUP type
-    BLOCKCLONE (New)
+  o The possibility to backup any partition (in particular a Windows
+    partition) via the BACKUP type BLOCKCLONE
+
+  o Unattended ReaR recovery has been improved (New)
+
+  o Improved security model related to SSH keys (New)
+
+      - SSH_FILES='avoid_sensitive_files' (see details in /usr/share/rear/
+        conf/default.conf)
+      - SSH_UNPROTECTED_PRIVATE_KEYS='no' (see details in /usr/share/rear/
+        conf/default.conf)
 
 NOTE: Features marked Experimental are prone to change with future releases.
 
@@ -171,11 +181,262 @@ Relax-and-Recover Releases
 
 The first release of Relax-and-Recover, version 1.0, was posted to the web in
 July 2006. For each release, this chapter lists the new features and defect
-fixes. Note that all releases are cumulative, and that all releases of
-Relax-and-Recover are compatible with previous versions of Relax-and-Recover,
-unless otherwise noted.
+fixes. All releases are cumulative. Unless otherwise noted all releases of
+Relax-and-Recover are intended to work backward compatible with previous
+versions. In addition to the GPL disclaimer of warranty and liability there
+is no guarantee that things work backward compatible. In general the older
+the system is the less likely it is that a newer Relax-and-Recover version
+works. For each Relax-and-Recover version upgrade and for each change of a
+software that is used by Relax-and-Recover and for each change of your basic
+system you must re-validate that your disaster recovery procedure still works
+for you.
 
 The references pointing to fix #nr or issue #nr refer to our issues tracker.
+
+Version 2.3 (December 2017)
+
+Abstract
+
+New features and bigger enhancements:
+
+  o First steps towards running Relax-and-Recover unattended in general.
+    Several user dialogs that had been implemented in ReaR via the bash
+    builtin 'read' or the bash 'select' keyword are now implemented via the
+    new UserInput function. The UserInput function proceeds with a default
+    input value after a timeout so that it is now possible to let ReaR run
+    unattended with its default behaviour. Additionally one can predefine an
+    automated input value for each particular UserInput function call so that
+    it is now also possible for the user to predefine what ReaR should do
+    when running unattended. For details see the USER_INPUT_... config
+    variables in default.conf. Currently not all user dialogs use the
+    UserInput function so that this or that user dialog needs to be adapted
+    when it is reported to us via our issue tracker. In contrast when
+    programs that are called by ReaR work interactively (e.g. third-party
+    backup tools that show user dialogs or password prompts) the program call
+    itself must be adapted to run unattended (if possible), see the section
+    'It should be possible to run ReaR unattended' in our https://github.com/
+    rear/rear/wiki/Coding-Style Wiki article.
+
+  o SSH support in the ReaR rescue/recovery system was overhauled. By default
+    it is now secure which means the recovery system is free of SSH secrets.
+    Individual settings can be specified via the SSH_FILES,
+    SSH_UNPROTECTED_PRIVATE_KEYS, and SSH_ROOT_PASSWORD config variables (for
+    details see default.conf).
+
+  o Improved verification of the ReaR rescue/recovery system contents. Now
+    during 'rear mkrescue/mkbackup' there is a verification step where 'ldd'
+    tests for each program/binary and library in the recovery system whether
+    or not its required binaries/libraries can be found in the recovery
+    system.
+
+  o Improved autodetection during 'rear recover' when disks on the
+    replacement hardware seem to not match compared to what there was on the
+    original system so that ReaR is now more fail-safe against recreating on
+    a possibly wrong disk.
+
+Possibly backward incompatible changes:
+
+  o In addition to STDERR now also STDOUT is redirected into the ReaR log
+    file. Accordingly all output of programs that are called by ReaR is now
+    in the log file so that the log file content is more complete and there
+    is no longer unintended verbose information from programs on the terminal
+    where ReaR was lauched. On the other hand this means when programs prompt
+    via STDOUT to get some user input (e.g. a program prompts for a user
+    confirmation under this or that circumstances) the program's STDOUT
+    prompt is no longer visible to the user when the program was not called
+    properly in the particular ReaR script as described in the section 'What
+    to do with stdin, stdout, and stderr' in our https://github.com/rear/rear
+    /wiki/Coding-Style Wiki article. We tried to fix as many program calls as
+    possible but it is impossible (with reasonable effort / with a reasonable
+    amount of time) to check all program calls in all ReaR scripts so that
+    this or that unnoticed program call will need to be fixed when it is
+    reported to us via our issue tracker.
+
+  o SSH support in the ReaR rescue/recovery system is now secure by default.
+    There are are no longer private SSH keys in the recovery system by
+    default and a RSA key is generated from scratch when starting sshd during
+    recovery system startup. Accordingly it does no longer work by default to
+    use SSH in the recovery system via the SSH keys that exist on the
+    original system. To get SSH keys included in the recovery system use the
+    SSH_FILES and SSH_UNPROTECTED_PRIVATE_KEYS config variables (for details
+    see default.conf).
+
+  o Verification of required binaries/libraries in the ReaR rescue/recovery
+    system. By default it is now fatal when 'ldd' reports a 'not found'
+    library for any file in a /bin/ or /sbin/ directory in the recovery
+    system so that now 'rear mkrescue/mkbackup' may fail where it had
+    (blindly) worked before. In particular third-party backup tools sometimes
+    use their libraries via unexpected ways which can cause 'false alarm' by
+    the 'ldd' test. With the new config variable
+    NON_FATAL_BINARIES_WITH_MISSING_LIBRARY one can specify for which files a
+    'not found' library should be considered as 'false alarm' (for details
+    see default.conf).
+
+  o Improved MIGRATION_MODE autodetection when the disk layout looks
+    ambiguous. Now 'rear recover' switches by default more often into
+    MIGRATION_MODE where manual disk layout configuration happens via several
+    user dialogs so that by default 'rear recover' shows more often user
+    dialogs compared to before but the intended behaviour can be enforced via
+    the MIGRATION_MODE config variable (for details see default.conf).
+
+Details (mostly in chronological order):
+
+  o Use /etc/os-release and /etc/system-release before falling back to
+    lsb_release check in function SetOSVendorAndVersion (issues #1611, #731)
+
+  o Make BACKUP_URL=iso for mkrescue and mkbackuponly no longer fatal (issue
+    #1613)
+
+  o Add ntpdate support (issue #1608)
+
+  o Fix for XFS file system recreation code. In xfsprogs >= 4.7 log section
+    sunit=0 is considered invalid (issue #1603)
+
+  o Changed the macro fedora_release into fedora in the rear.spec file (issue
+    #1192 and bz1419512)
+
+  o Borg backup as back end now displays progress, when ReaR is launched in
+    verbose mode (issue #1594)
+
+  o Better MIGRATION_MODE autodetection (pull request #1593 related to issue
+    #1271)
+
+  o With the new config variable NON_FATAL_BINARIES_WITH_MISSING_LIBRARY the
+    user can specify what programs where the 'ldd' test reports 'not found'
+    libraries are non-fatal so that those programs in the recovery system do
+    not lead to an Error abort of "rear mkrescue/mkbackup". This is a generic
+    method so that the user can avoid issues in particular with third-party
+    backup tools that soemtimes have unexpected ways to use their specific
+    libraries like https://github.com/rear/rear/issues/1533 (for TSM) and
+    https://github.com/rear/rear/pull/1560 (for FDR/Upstream).
+
+  o Add a NSR_CLIENT_MODE to the backup method NSR (issue #1584)
+
+  o Let /bin/ldd detect *.so with relative paths (issue #1560)
+
+  o Add support for Bridge Interfaces(issue #1570). Usually, virtual
+    interfaces are skipped, but for Bridges to work, we consider Bridges as
+    physical interfaces, because the Bridge interface holds the IP address,
+    not the physical interface attached to the Bridge. This patch enables
+    those configurations:
+      - Bridge over simple Ethernet
+      - Bridge over Bond
+      - Bridge over Vlan interface
+  o Use UserInput in some more usual places to improve that 'rear recover'
+    can run unattended in migration mode (issues #1573, #1399)
+
+  o Error out for OUTPUT_URL=null together with OUTPUT=USB (issue #1571)
+
+  o Added/updated paths for FDR/Upstream 4.0 because FDR/Upstream 4.0
+    includes changes to some file paths (issue #1559)
+
+  o Fix copying kernel modules when module aliases are present (issue #1567)
+
+  o Netbackup agents not automatically started on RHEL 7 (issue #1523)
+
+  o Forbid mkrescue and mkbackuponly for iso backup scheme (issues #1547, #
+    1548)
+
+  o Only support OpenSSH 3.1 and later for SSH setup (issue #1530)
+
+  o Implemented USB_DEVICE_FILESYSTEM_LABEL (issue #1535)
+
+  o Split network-functions.sh into DHCP setup and general ReaR functions
+    (issue #1517)
+
+  o Avoid leaking unprotected SSH private key files onto rescue medium
+    (issues #1512, #1513)
+
+  o Improve cryptographic security and user-friendliness for LUKS volumes
+    (issue #1493)
+
+  o Improve ReaR network migration (issues #1605, #1510, #1399)
+
+  o Improved encrypted password detection in 500_ssh.sh (issue #1503)
+
+  o Several code improvements in the way libraries are detected and copied
+    (issues #1521, #1502, #1494)
+
+  o Allow btrfsmountedsubvol to be excluded via EXCLUDE_RECREATE (issue #
+    1497)
+
+  o Avoid recreation of non-existing btrfs subvolumes (issue #1496)
+
+  o Add automatically some important kernel parameters to KERNEL_CMDLINE
+    (issue #1495)
+
+  o Cleanup and simplified default input for the UserInput function (issue #
+    1498)
+
+  o Avoid systemd log messages about multiple disk partitions with identical
+    name that happened because ReaR used a static 'rear-noname' for
+    originally unnamed partitions. Original gpt disk partitions may be
+    unnamed but parted requires a name for each gpt partition. Now ReaR uses
+    the basename of the partition device path (e.g. sda1, sda2) for
+    originally unnamed partitions (issue #1483)
+
+  o Enhanced how the ssh user is copied into the recovery system and improved
+    detection of the ssh user (issue #1489)
+
+  o Use meaningful variable for automated UserInput. Enforce calling
+    UserInput with a UserInput ID so that automated UserInput is always
+    possible for the user. Use and enforce uppercase letters in UserInput IDs
+    because the resulting variable names are meant as user config variables
+    (issue #1473)
+
+  o Fix UEFI tools integration (issues #1477, #1478)
+
+  o Added a new YUM backup method which will recreate the system by
+    installing it from scratch via installing RPM packages. The YUM backup
+    method uses the yum package manager in the same manner as the ZYPPER
+    backup method (issue #1464)
+
+  o BACKUP_PROG_OPTIONS used to be a string variable, turn it into an array
+    (issue #1475)
+
+  o Now CLONE_ALL_USERS_GROUPS always extends the CLONE_USERS and
+    CLONE_GROUPS arrays (issues #1471, #1464)
+
+  o PXE code improvements (issue #1466)
+
+  o Several improvements in the multipath code to allow full migration
+    (issues #1449, #1450)
+
+  o Several improvements on the TSM code (issues #1539, #1461, #1452)
+
+  o Activate btrfs filesystem creation with uuid. Recent btrfs version
+    finally added this option (issue #1463)
+
+  o By default a directories_permissions_owner_group file is created that
+    saves permissions, owner, and group of basic directories plus symbolic
+    link names and link targets of basic directories. Those basic directories
+    are the currently used mountpoints (except some unwanted "noise" from all
+    what there is mounted) plus the directories of the Filesystem Hierarchy
+    Standard (FHS) that actually exist on the system. Additionally with the
+    new DIRECTORIES_TO_CREATE array the user can now explicitly specify
+    directories and symlinks that are still missing in his particular
+    environment (issue #1459)
+
+  o Fix for cryptsetup hang on cryptsetup luksOpen ... when dmsetup is not
+    present in recovery system (issue #1458)
+
+  o Enhance MOUNTPOINTS_TO_RESTORE into DIRECTORIES_TO_CREATE (issue #1455)
+
+  o Several improvements for ppc64le/ppc64 arch. Systemd automatic serial
+    console detection, lilo and yaboot improvements (issue #1446, #1442)
+
+  o Introduction of UserInput in 300_map_disks.sh (issues 1399 and 1431)
+
+  o Adapt /etc/motd when 'rear recover' is running to avoid the additional
+    'Run rear recover to restore your system' message that only makes sense
+    as long as 'rear recover' was not ever started (issue 1433)
+
+  o SLES12 with btrfs but without snapshots failed to recreate/mount btrfs FS
+    /subvolumes during recovery (issue #1036)
+
+  o Adapt chrp-boot option when xorrisofs is used. Xorrisofs use
+    -chrp-boot-part option to generate PPC boot while mkisofs use -chrp
+    (issue #1430)
 
 Version 2.2 (July 2017)
 
@@ -198,7 +459,6 @@ Version 2.2 (July 2017)
     (issue #1384):
       - Copy over modules from initrd on SUSE LINUX
       - Prevent sorting of MODULES_LOAD array to keep the order intended
-
   o Add /yaboot to ISO_FILE when running SUSE ppc64 (issue #1414)
 
   o Add SSL cert directories so we can interact with Google Cloud Storage
@@ -227,10 +487,10 @@ Version 2.2 (July 2017)
 
   o Replaced some perl regexp with grep native extended regexp (issue #1376)
 
-  o Introducing SECURE_BOOT_BOOTLOADER variable in default.conf This variable
-    should enable users booting with Secure Boot, to use whatever custom
-    signed boot loader they like, and removes hard coded entry "shim.efi"
-    from ReaRs code (issue #1374)
+  o Introducing SECURE_BOOT_BOOTLOADER variable in default.conf. This
+    variable should enable users booting with Secure Boot, to use whatever
+    custom signed boot loader they like, and removes hard coded entry
+    'shim.efi' from the ReaR code (issue #1374)
 
   o Enhanced and cleaned up making ISO on POWER (ppc64/ppc64le). Now the
     backup can be stored in the ISO (via BACKUP_URL=iso...) and even multiple
@@ -392,8 +652,8 @@ check this.
 
   o Fixed and enhanced code for multiple ISOs (issue #1081)
 
-  o BACKUP_TYPE=incremental (New) and BACKUP_TYPE=differential were updated
-    (issues #974, #1069)
+  o BACKUP_TYPE=incremental and BACKUP_TYPE=differential were updated (issues
+    #974, #1069)
 
   o Added support for setting a UUID on XFS with enabled CRC (RHEL 7) (issue
     #1065)
@@ -591,7 +851,7 @@ Version 1.18.0 (March 2016)
   o Added support for elilo (used by SLES 11/12) (issue #583, #691, #692, #
     693)
 
-  o Added option -debugscripts to rear (help-workflow) (issue #688)
+  o Added the -debugscripts command line option (help-workflow) (issue #688)
 
   o Removed dosfslabel as required program for vfat UEFI boot partition
     (issue #694)
@@ -677,7 +937,7 @@ Version 1.17.2 (August 2015)
 
   o In packaging/rpm/rear.spec replaced "BuildArch: noarch" with
     "ExclusiveArch: %ix86 x86_64 ppc ppc64" that should tell the user that
-    rear is known to work only on %ix86 x86_64 ppc ppc64 and removed
+    ReaR is known to work only on %ix86 x86_64 ppc ppc64 and removed
     "Requires: yaboot" for ppc ppc64 because that is the default installed
     bootloader on ppc ppc64 (issues #629 and #631)
 
@@ -767,691 +1027,11 @@ Version 1.17.1 (June 2015)
   o For EMC NetWorker server/client we added some exclude items to
     COPY_AS_IS_EXCLUDE_NSR (issue #571)
 
-  o Removed the Warning message from main rear script as it was misleading
-    (issues #563 and #564)
+  o Removed the Warning message from main usr/sbin/rear script as it was
+    misleading (issues #563 and #564)
 
   o output/ISO/Linux-i386/80_create_isofs.sh: make sure ISO_FILES[@] are
     copied to isofs directory (issue #569)
-
-Version 1.17.0 (March 2015)
-
-  o ReaR 1.17 introduced a new stage directory (init) which is called before
-    any workflow. Can be used for extra initialization code, custom
-    configurations and other stuff that should happen each time that ReaR is
-    used (was added especially for DRLM as plugin for their DRLM variables)
-    (issue #557)
-
-  o RHEL 5 could not mount NFS share as portmap daemon was not started yet.
-    Reason was that script verify/NETFS/default/08_start_required_daemons.sh
-    was executed after the mount test instead of before. (issue #547)
-
-  o RHEL 6 on PPC64 architecture has problems with seclabel mount option.
-    There was a fix which cuts the seclabel mount option (as ReaR is by
-    default not using SELinux) (issue #545)
-
-  o Disaster Recovery Linux Manager (DRLM) is a new Open Source project to
-    centrally manage Disaster Recovery for Linux. ReaR 1.17 adds support for
-    DRLM with a new configuration option DRLM_MANAGED=y (issue #522)
-
-  o Adding /etc/crypto-policies/ when openssl is requested (prep/NETFS/
-    default/09_check_encrypted_backup.sh) - required for https://
-    bugzilla.redhat.com/show_bug.cgi?id=1179239 (issue #523)
-
-  o Introduced USING_UEFI_BOOTLOADER in default.conf file and modified all
-    the involved scripts to follow the logic (issue #214)
-
-  o Archicture PPC64 has been enhanced (partition recognition issue #536,
-    console #537)
-
-  o TSM restore filespace has been enhanced (issue #535)
-
-  o Correct the usage of set -e and StopIfError function (issue #534, #541)
-
-  o With BACKUP_TYPE=incremental disable variable NETFS_KEEP_OLD_BACKUP_COPY
-    (mutual exclusive with this mode) (issue #143)
-
-  o Increased to start variable from 32768 to 2097152 in script
-    10_include_partition_code.sh (issue #492)
-
-  o Adding /run/resolvconf/resolv.conf (Ubuntu) to ReaR image when found
-    (issue #520)
-
-  o When using /etc/rear/mappings/ip_addresses IPADDR/cidr must be translated
-    into IPADDR and NETMASK (for RHEL 5 and 6) (issue #460)
-
-  o mdadm layout code was changed in RHEL 7; code to deal with it (issue #
-    518)
-
-  o Adding missing driver xhci_hcd to GNU/Linux.conf (issue #519)
-
-  o Adding findmnt command to GNU/Linux.conf file; request from https://
-    bugzilla.opensuse.org/show_bug.cgi?id=908854
-
-  o BTRFS code has been rewritten by J. Meixner/G. Dhaese to get SUSE rear116
-    fork back into our master tree of ReaR. BTRFS is now properly recreated
-    on Fedora 20 and 21 and on SLES 12 and openSUSE 13 (issue #233, #497, #
-    538) See also https://bugzilla.opensuse.org/show_bug.cgi?id=908854
-
-  o Enhanced the systemd start-up of udev daemons which is different on
-    Fedora 20 and 21 (issues #507, #531)
-
-  o BACKUP_PROG_OPTIONS="-anchored" became a default option in default.conf
-    (issue #475)
-
-  o Fixed an issue with auto-detection of the client name in BAREOS (issue #
-    542)
-
-  o Ubuntu 14.04 did not detect /dev/sda automatically - added upstart script
-    99-makedev.sh to create missing block devices like sda (issue #446)
-
-  o New script usr/share/rear/layout/save/GNU/Linux/34_false_blacklisted.sh
-    added as work-around. Sometimes we might see the HP Smart Storage Array
-    disk listed as a multipath device. Most likely this device was not
-    blacklisted in the blacklist section of the /etc/multipath.conf file (do
-    not forget to rebuilt the initial ramdisk after this) e.g. falsempathdev=
-    $( multipath -l | grep "HP,LOGICAL" | awk '{print $1}' ) # mpatha
-
-  o Added a systemd service script for SEP Sesam to start sesam client
-    automatically (issue #498)
-
-  o Disk Layout Generation with HP SmartArray with more than one Logical
-    Drive correction introduced by issue #208 (issue #455)
-
-  o OUTPUT_URL=null was added to avoid 2 ISO images on the local system
-    (issue #501, #419)
-
-  o Fix drbd restore code so it can handle multiple volumes in single
-    resource (issue #495)
-
-  o Function get_device_name was enhanced to properly translate /dev/vg/lv to
-    /dev/mapper/vg-lv (issue #494)
-
-  o Fixed the "lvm wait yes" problem (issue #493)
-
-  o Device name conflict when grep disklayout file without proper space
-    (issue #491)
-
-  o Several fixes with mdadm code (issue #480, #489, #490, #508, #539)
-
-  o Several fixes in the 10_include_partition_code.sh script (issue #487, #
-    492)
-
-  o Being a bit more careful when deleting the outputfs directory when ReaR
-    finishes (issue #465)
-
-  o Add a new config option USE_STATIC_NETWORKING (issue #488)
-
-  o Resolving library search with duply (issue #482)
-
-  o Improved the RPM package build for SLES, removed the lsb requirement
-    (issue #479)
-
-  o Integrated the patch skip_sysconfig_kernel_if_not_exist.diff from SUSE
-    (issue #477)
-
-  o Debian 7 reference to grub.conf was corrected (issue #473)
-
-  o Debian packing was improved (issue #474, #484)
-
-  o Commercial backup solution Galaxy 10 support added to ReaR (issue #471)
-    Also, point in time recovery was implemented (issue #472)
-
-  o Fixed the error "unary operator expected with BACKUP_TYPE" (issue #422)
-
-  o lvm release 2.02.72 had already the knowledge of -norestorefile (issue #
-    462)
-
-  o Add prefix $OUTPUT_PREFIX to all PXE related files (issue #464)
-
-  o 55-migrate-network-devices.sh: fixed type with /sys/class/net (issue #
-    459)
-
-  o Removed Get_Start_Date function with Netbackup because (depending on
-    backup strategy) it led to partial restore only (issue #456)
-
-  o 26_crypt_layout.sh: fixed issue when cypher contains : (issue #425)
-
-  o 55-migrate-network-devices.sh: rebuild the array instead of unset (issue
-    #452)
-
-  o skel/default/etc/scripts/system-setup : change uname -n by $HOSTNAME to
-    avoid short/long hostname problems (issue #439)
-
-  o Added a mkdir for $VAR_DIR/output if dir does not exist (issue #440)
-
-  o 95_check_missing_programs.sh to find REQUIRED_PROGS before proceeding
-    (issue #418)
-
-  o Added a fix for autorizing and recognizong the boot flag in the partition
-    (issue #443)
-
-  o udev showing error message during startup (issue #442)
-
-  o Prevent "ntpd -q" from waiting forever if, for example, no network is
-    available, by killing it after 10 seconds (issue #438)
-
-  o Several improvements around duply and duplicity [Debian related] (issues
-    #426, #478)
-
-  o 95_copy_result_files.sh uses now [*] instead of [@] with array (issue #
-    431)
-
-  o New variable introduced for TSM in default.conf file called LANG_RECOVER
-    (issue #424)
-
-  o Added Pre check script for removing older releases first during upgrade
-    (RPM - issue #361)
-
-  o Prevent udev rule rewrites if systemd-udevd is running - issue #405
-
-  o Fix "Networker backup fails if pool name contains spaces" (issue #427 and
-    #429)
-
-  o Fix the "More than 128 partitions is not supported" problem (issue #373
-    and #428) during recreating the partition layout
-
-  o A new configuration option, USE_STATIC_NETWORKING=y, will cause
-    statically configured network settings to be applied even when
-    USE_DHCLIENT is in effect (issue #447).
-
-Version 1.16.1 (June 2014)
-
-  o The validate rule for xarg bash -n changed into xarg -n bash -n so that
-    ReaR is working correctly with older bash version 3 as well. Especially
-    required for SLES 10, SLES 11 and EPEL 5 (issue #410).
-
-  o Adding an updated ReaR man page and the correct release notes to the
-    1.16.1 sub-release. In ReaR 1.16.0 these were forgotten.
-
-  o Code style improvements (issue #409).
-
-  o Improvements around btrfs file system recognition and re-creation (issues
-    #408 and #415).
-
-  o Important fix for grub2 with openSUSE 13 (changed LOADER into
-    LOADER_TYPE).
-
-  o Added example prep script to verify if extlinux is present (issue #250) -
-    this type of script could be cloned for other important executables in
-    various workflows.
-
-Version 1.16.0 (May 2014)
-
-  o Network script now deals correctly with VLAN tagging as well
-
-  o Added 2 new variables to default.conf for TSM: TSM_ARCHIVE_MGMT_CLASS
-    which defines a backup class to use with TSM, and TSM_RM_ISOFILE which
-    triggers (if set to y) to remove the original ISO files from local system
-    once the ISO image has been transferred to TSM
-
-  o Guessing the bootloader and saving this in a file in the $VAR_LIB/
-    recovery/bootloader (will be picke dup during recovery to assist us in
-    selecting the proper bootloader [ grub, grub2, uefi ])
-
-  o Various corrections with BACKYP=RSYNC method (issue #200 and #366). In
-    ReaR 1.16 the old and new style are still recognized, but we might drop
-    the old style in later versions.
-
-     OLD STYLE:
-     BACKUP_URL=[USER@]HOST:PATH           # using ssh (no rsh)
-     with rsync protocol PATH is a MODULE name defined in remote /etc/rsyncd.conf file
-     BACKUP_URL=[USER@]HOST::PATH          # using rsync
-
-     NEW STYLE:
-     BACKUP_URL=rsync://[USER@]HOST[:PORT]/PATH    # using ssh
-     BACKUP_URL=rsync://[USER@]HOST[:PORT]::/PATH  # using rsync
-
-  o Checking the bootloader files during savelayout section - see issue #234
-
-  o Backup method BACKUP=DUPLICITY has been fully tested and proven to work
-    well (backup and recover). When using duply and automated recovery is
-    possible. Several updates were made to make duplicity works as well with
-    backup and recover
-
-  o Variable SSH_ROOT_PASSWORD (see default.conf) allows to force a password
-    with the rescue image (issue #362)
-
-  o TSM version >=6.4 is now supported (issue #356), and point in time
-    restore works better now (issue #358)
-
-  o Fix the order of fs lines in checklayout.conf file when mor ethen 9
-    partitions are in use (issue #352)
-
-  o Avoiding CD/DVD type devices to be added in the disklayout.conf file
-    during savelayout (issue #257)
-
-  o Removed mingetty executable from REQUIRED_PROGS list as RHEL 7 does not
-    ship it anymore. agetty is getting more and more the standard now and
-    ReaR will use this one automatically when mingetty is absent
-
-  o New variable in default.conf file was defined BACKUP_TYPE= (empty is full
-    or incremental; only works with the default BACKUP_PROG=tar)
-
-  o Avoid stale NFS hangs with df command (issue #350)
-
-  o For TSM a new variable was introduced in default.conf file:
-    TSM_RESULT_SAVE (to disable the TSM saving; can be used when you saved
-    the result via $ISO_URL, $OUTPUT_URL, $ISO_DIR or something else)
-
-  o /etc/rear/local.conf is now empty by default and /etc/rear/site.conf now
-    contains OUTPUT=ISO setting. This way we are sure that during an upgrade
-    of ReaR we do not loose our original user settings (local.conf tends te
-    be overwritten).
-
-  o Fix for hpacucli where the order logicaldrive and array could be wrong
-    (issue #208)
-
-  o New variable TMPDIR allows to overrule the default /tmp temporary
-    directory (handy when building big ISO images)
-
-  o Added option -iso-level 3 to mkisofs command so we can create ISO image
-    bigger then 4 GB (issue #323)
-
-  o detecting 'out of space' errors while building huge ISO images
-
-  o Add SEP Sesam external backup integration - issues #324 and #325
-
-  o Add automatic recovery mode for Bareos - issue #311
-
-  o Add incremental backup type with GNU tar with weekly backups, define in /
-    etc/rear/local.conf the following (issue #294):
-
-     BACKUP=NETFS
-     BACKUP_TYPE=incremental
-     FULLBACKUPDAY="Mon"
-
-  o Add support for Gentoo kernels - issue #312
-
-Version 1.15.0 (September 2013)
-
-  o Add EMC NetWorker (Legato) support for doing external backup
-
-  o Add Bareos (Backup Archive REcovery Open Sourced) support for doing
-    external backup (bareos is a fork of the open source backup suite Bacula)
-
-  o Align the usage of KEEP_OLD_OUTPUT_COPY and NETFS_KEEP_OLD_BACKUP_COPY
-    and make them behave sane. See also issue #192
-
-  o Add the -selinux option to be safe with SELinux context restoration (with
-    GNU tar)
-
-  o Add an option to exclude modules on the rescue system
-
-    default.conf: EXCLUDE_MODULES=()
-
-  o Add integrity check when BACKUP=NETFS and BACKUP_PROG=tar with the option
-    BACKUP_INTEGRITY_CHECK
-
-  o Add an option to define a root password to allow SSH connection whithout
-    a public/private key pair (#272)
-
-    default.conf: SSH_ROOT_PASSWORD=
-
-  o Implement the "splitted backup to iso" feature. To use that, BACKUP_URL
-    has to use the iso://[subdirs] scheme but a different OUTPUT_URL has to
-    be defined (issues #278 and #287). New parameter ISO_MAX_SIZE introduced.
-
-  o Fix SELinux autorelabelling (issue #270 and #274)
-
-  o ReaR supports now more then 9 partitions (see issue #263)
-
-  o systemd support added for Fedora 19/20 and openSUSE 12.x/13.x
-
-  o Automatic Recover feature on USB devices (label AUTOMATIC RECOVER in rear
-    recover menu)
-
-  o Add an option to copy all users and group. It is usefull in the case we
-    want to restore ACL of all users. See default.conf:
-
-    CLONE_ALL_USERS_GROUPS=n
-
-  o Example prep script to detect missing lftp (issue #247)
-
-  o Using POSIX output format in df.txt (issue #248)
-
-  o Recognize OracleServer as a Fedora derivate
-
-  o Allow basic network configuration from the command line
-
-  o Create directory $PXE_TFTP_LOCAL_PATH if it does not exist (issue #244)
-
-  o Support booting syslinux v5 (issue #238)
-
-  o Fix installing grub when /boot is inside the root filesystem (issue #210)
-
-  o Deal with BTRFS subvolumes correctly (issues #233 and #252)
-
-  o Recognize OracleServer as a Fedora derivate
-
-  o Added UEFI integration within ReaR (including booting ISO images)
-
-  o Improved dataprotector GUI interaction (issue #189)
-
-  o Secure backup was introduced (issue #196)
-
-    Add to /etc/rear/local.conf: BACKUP_PROG_CRYPT_ENABLED=1
-    BACKUP_PROG_CRYPT_KEY="secretkey"
-
-  o Added fixes recomended by RedHat Bugzilla report #882175
-
-  o OUTPUT_URL scheme approvement (issue #37)
-
-  o Netbackup improvement for xinetd (issue #180)
-
-  o LOGFILE variable can be overruled now (issue #56)
-
-  o Support for RBME restores over NFS
-
-  o Packaging support introduced for Arch Linux
-
-  o Added support for sshfs transport with BACKUP=NETFS (issue #171)
-
-  o Re-introduced /dev/disk/by-id migration which was lost since release
-    1.7.22 (issue #22)
-
-  o Updates required for systemd for fedora 18 and 19.
-
-  o Check if ROOT_FS filesystem was mounted with 'noexec' attribute (issue #
-    150)
-
-Version 1.14.0 (September 2012)
-
-  o Added duply/duplicity with one new backup method duplicity (Experimental)
-
-  o Systemd supported on Fedora 17 and openSUSE 12.2 (issues #115, #126)
-
-  o Create correct yaboot dir on ppc (issue #109)
-
-  o Add new RAMDISK output method. This writes the kernel and the initramfs
-    to the location given in OUTPUT_URL.
-
-  o Packaging - introduction of Makefile; cleanup dr workflow (issues #13, #
-    49)
-
-  o Make ReaR working from checkout of git, w.o.w. path is relocatable (issue
-    #53)
-
-  o Add bytes_per_inode information for ext* filesystem to layout.conf (issue
-    #86)
-
-  o Fixing ebuild to be Gentoo compliant (issue #93)
-
-  o fix shutdown with upstart (issue #41)
-
-  o multiarch support library support (issue #82)
-
-  o Fix serial console on ubuntu 11.04 (issue #83)
-
-  o Several fixes in layout file (issue #85)
-
-  o Added fix for DAT320 tape drive (issue #35)
-
-  o Use generic grub code for all distributions (issue #77)
-
-  o list Xen paravirtualized disks in disklayout.conf (fixes #74 and
-    SF3520992)
-
-Version 1.13.0 (April 2012)
-
-  o Support for multipathing was added
-
-  o Several improvements and bug fixes to the layout code (especially with
-    parted backwards compatibility).
-
-  o Added support for ext4 file systems
-
-  o The OUTPUT=USB with BACKUP=NETFS and BACKUP_PROG=rsync was corrected to
-    avoid duplicate work
-
-  o Fedora and RHEL will now rebuild the initial ramdisk if needed (on
-    recovered system)
-
-  o Fix for SF#3475480: datacompression on tape
-
-  o Fix for SF#3481656: missing bacula-console executable for BACKUP=BACULA
-    workflow
-
-  o Fix for SF#3479570: /etc/passwd contains :x: without /etc/shadow
-
-  o Added "migrate HWADDR after cloning" code
-
-  o Improved the systemd code (parts required by Relax-and-Recover only) for
-    Fedora 16/17
-
-  o The DHCLIENT variables were moved from local.conf to rescue.conf. This is
-    done automatically, so the end-user, shouldnot be aware of it.
-
-  o At boot time more kernel options are recognized such as noip, dhcp,
-    debug. The noip will give you a rescue environment without any attempt to
-    start networking. The dhcp variable will try to start dhclient on any
-    network interface it finds activated. The debug variable (which is not
-    new by the way) will give you the chance to debug the code of our
-    Relax-and-Recover code.
-
-  o Relax-and-Recover works again on IA64 architecture (at least with RHEL
-    5.x). Remember, RHEL 6 is not ported to IA64.
-
-Version 1.12.0 (November 2011)
-
-  o Multiple copies of Relax-and-Recover backups (of the same or different
-    systems) can be kept on a USB device (with OUTPUT=USB).
-
-  o (NEW!) BACKUP=RSYNC workflow using rsync executable. Both ssh and rsync
-    methods are supported. E.g.
-
-      BACKUP=RSYNC
-      OUTPUT=ISO
-      BACKUP_URL=rsync://username@hostname/path
-      BACKUP_PROG=/usr/local/bin/rsync #(instead of the default rsync)
-
-  o Added better named EXCLUDE_ variables, better control over what is
-    restored:
-      - EXCLUDE_BACKUP excludes components from backup
-      - EXCLUDE_RECREATE excludes components from the recreate process
-      - EXCLUDE_RESTORE excludes components from the restore process
-  o The layout workflow is now the default instead of the dr workflow. Under
-    /var/lib/rear/layout all information of the system is kept in files.
-
-  o Arch Linux is now supported with Relax-and-Recover.
-
-  o The labeltape command has been superseded by the format command. This can
-    be used with tapes and external (USB, eSATA) devices. Usage:
-
-      rear format [/dev/st0|/dev/sdx]
-
-  o Replaced NETFS_URL and ISO_URL by BACKUP_URL and OUTPUT_URL. However, old
-    references will still be recognized and used.
-
-  o Fedora 16 is supported including GRUB 2, and systemd as init replacement.
-
-  o Added the BACKUP_URL=file:///PATH with BACKUP=NETFS method (as described
-    in configuration-examples.txt)
-
-  o Improved multipath functionality
-
-  o Optional automatic autofs exclusion
-
-  o (NEW! EXPERIMENTAL!) Basic btrfs file system backup and restore works.
-    Advise is not to trust it (yet). At recreation of the btrfs file system
-    the UUID number is automatically renamed in all configuration files (such
-    as /etc/fstab or /boot/grub/menu.lst).
-
-Version 1.11.0 (May 2011)
-
-  o The mkobdr command has been removed. OBDR-enabled tapes can now be
-    created using the mkrescue command and by defining the proper variables
-    in /etc/rear/local.conf:
-
-      BACKUP=NETFS
-      OUTPUT=OBDR
-      BACKUP_URL=tape:///dev/nst0
-
-  o The site configuration file /etc/rear/site.conf has been removed from the
-    Relax-and-Recover package, but can still be used if end-users want. The
-    purpose of this is to enable sites to distribute this file through RPM or
-    DEB packages that do not have a file conflict with the Relax-and-Recover
-    package. The distribution /etc/rear/local.conf file contains only
-    configuration examples as comments in order to not interfere with
-    configurations in site.conf.
-
-  o The rear command is by default quiet, which means if you want the same
-    behavior as in previous versions you need to add the verbose option (-v)
-    with the rear command
-
-  o The output workflow now runs before the mkbackup workflow especially done
-    to make OBDR tape creation possible with the mkbackup workflow as the ISO
-    image must be written first on an OBDR aware tape. Please note that this
-    is a fundamental change with regard to previous versions of
-    Relax-and-Recover. While utmost care has been taken that there would be
-    no adverse side effects of this change. We cannot test all possible usage
-    scenarios.
-
-  o When using OUTPUT=USB then you have to make sure that the destination
-    (USB) disk is formatted as an ext2, ext3, ext4 or btrfs file-system.
-    Extlinux is now the only supported boot loader for bootable disks,
-    syslinux is not supported any more.
-
-  o The Relax-and-Recover boot now shows a boot menu with options to choose
-    from. The actual content of the menu depends on the available syslinux
-    version and its modules (like menu.c32, hdt.c32, reboot.c32,
-    poweroff.com).
-
-  o Relax-and-Recover does properly recognize IPv6 addresses and uses these
-    if configured.
-
-  o NBU backup method now allows to restore to a point in time.
-
-  o Support Fedora 15 (using systemd to boot-up) and RHEL6 and Scientific
-    Linux 6.
-
-  o Improved handling of HP SmartArray controllers.
-
-  o Significantly improved error handling, especially when failing on
-    subshells.
-
-  o Autologin as root in the rescue media (for upstart and systemd based
-    systems).
-
-  o EXCLUDE_MOUNTPOINTS should work correctly now (fixed typo).
-
-  o Support ext4 on RHEL5 and clones.
-
-  o Ignore known errors when using EXTERNAL backup method (set
-    EXTERNAL_IGNORE_ERRORS to an array of return codes to ignore).
-
-  o Use original filesystem mount options for recovery, support attr and facl
-    tools.
-
-  o Support XEN paravirtualized systems (tested only on RHEL5 so far).
-
-  o Performance improvements (removed checksum calculation, PID-based
-    locking).
-
-  o Relax-and-Recover work space is now created with a random part to prevent
-    potential security exploits.
-
-  o Control exit tasks and subprocesses better. Kill subprocesses before
-    exiting.
-
-  o Support adding Relax-and-Recover boot files to local GRUB environment
-    (GRUB_RESCUE) and password protect rescue boot (GRUB_RESCUE_PASSWORD) to
-    avoid accidential recovery.
-
-    The default password is REAR.
-
-  o (experimental!) Transfer ISO image to remote URL (ISO_URL). Please note
-    that this feature will be extended to cover all output methods. It has
-    been renamed to OUTPUT_URL.
-
-  o Removed various warnings, e.g. about NETFS not being a professional
-    backup method.
-
-  o Partial support for Arch Linux has been added, more testing required.
-
-  o (NEW!) shell workflow is now really usable.
-
-  o Make 32/64 bit handling much more robust, especially on systems having /
-    lib32.
-
-  o NETFS backup and restore with rsync working now (BACKUP_PROG=rsync).
-
-  o Support udev on RHEL4.
-
-  o Development snapshot have now a version like 0.0.REV where REV is the SVN
-    revision used to build the development snapshot.
-
-  o Greatly reduced log clutter (lvm warnings about leaked file descriptors,
-    which is a bash bug, various irrelevant error and verbose output).
-
-  o checklayout can now also check arbitrary files (through an md5 checksum),
-    extend the CHECK_CONFIG_FILES array to use this feature.
-
-Version 1.10.0 (February 2011)
-
-An intermediate release only which fixed some hanging issues of version
-1.9.0. Also, a RPM upgrade was fixed by this release from 1.7.25 to 1.9.0,
-which failed because of a wrongly CentOS symbolic link. See bugzilla#680664
-
-Version 1.9.0 (February 2011)
-
-With version 1.9.0 some new methods were added, such as:
-
-  o rear mkobdr : to create an OBDR recovery tape (obsolete since 1.11.0)
-
-  o rear labeltape : goes together with OBDR tapes. To avoid accidental
-    overwrites we force the creation of a label before rear mkbackup will
-    work. (obsolete since 1.11.0)
-
-  o rear checklayout/savelayout : a new method to save the disk layout and
-    check if a new rear mkbackup or rear mkrescue is required.
-
-  o New BACKUP methods were added, Bacula (BACKUP=BACULA) and bextract
-    (BACKUP=BEXTRACT), both are able to work in conjunction with output=TAPE.
-    See under the doc directory (or /usr/share/doc/rear-1.9.0/) the
-    configuration-examples.txt text file for beginners instructions.
-
-  o OUTPUT=USB method has been extended with BACKUP=NETFS and NETFS_URL=usb:/
-    //dev/<device> which makes it possible that the complete archive is
-    stored on the /dev/<device> and Relax-and-Recover will make the USB stick
-    (or disk) bootable too.
-
-  o Udev support (except for some really ancient udev versions) which is the
-    base for many new and important features, like kernel drivers for network
-    cards and storage adapters are now loaded via udev, or deal with network
-    persistent names in udev rules, and firmware loading.
-
-  o DHCP client support (IPv4 and IPv6) has been added. Auto detection is
-    possible with new variable USE_DHCLIENT=yes (define in local.conf), or
-    one can hard-code your special DHCP client with the variables
-    DHCLIENT_BIN (for IPv4), and/or DHCLIENT6_BIN (for IPv6).
-
-Relax-and-Recover version 1.9.0 contain fixes for the following defects:
-
-  o Missing support for Scientific Linux, LinuxMint
-
-  o Sourceforge patch ID 2963804 - support for USBFS, but this patch has been
-    rewritten afterward to incorporate usb support into the NETFS backup
-    method, instead of having a separate USBFS backup method. Now, by using
-    NETFS_URL=usb:///dev/<device> and the NETFS backup method we achieve the
-    same result.
-
-  o Sourceforge bug 3153027 : support for RHEV virtio device files
-
-  o Novell bugzilla 581292 : cannot load NIC firmware because of missing udev
-    support. Version 1.9 does have udev support, but firmware loading was
-    broken. The rule in 00-rear.rules has been changed.
-
-Version 1.7.26 (November 2010)
-
-Relax-and-Recover version 1.7.26 fixed RedHat bugzilla defect 657174 : rescue
-image freezes during the boot while executing init. This was due the new
-upstart mechanism (replaced the sysv init procedure).
-
-Version 1.7.25 (June 2010)
-
-Relax-and-Recover version 1.7.25 fixed RedHat bugzilla defect 600217 : Fedora
-link missing in restore, pack and finalize sub-directories. This broke the
-proper image building on several Fedora versions.
 
 System and Software Requirements
 
@@ -1478,7 +1058,7 @@ Relax-and-Recover compression tests
 
 Support
 
-Relax-and-Recover (rear) is an Open Source project under GPL v3 license which
+Relax-and-Recover (ReaR) is an Open Source project under GPL v3 license which
 means it is free to use and modify. However, the creators of ReaR have spend
 many, many hours in development and support. We will only give free of charge
 support in our free time (and when work/home balance allows it).
@@ -1488,24 +1068,24 @@ as a service (not free of charge).
 
 Supported Operating Systems
 
-We try to keep our wiki page Test Matrix rear 2.1 up-to-date with feedback we
+We try to keep our wiki page Test Matrix rear 2.3 up-to-date with feedback we
 receive from the community.
 
-ReaR-2.2 is supported on the following Linux based operating systems:
+ReaR-2.3 is supported on the following Linux based operating systems:
 
-  o Fedora 24 and 25
+  o Fedora 25 and 26
   o RHEL 5, 6 and 7
   o CentOS 5, 6 and 7
   o ScientificLinux 6 and 7
   o SLES 11 and 12
   o openSUSE Leap and openSUSE Tumbleweed
-  o Debian 6, 7 and 8
+  o Debian 6, 7, 8 and 9
   o Ubuntu 12, 13, 14 and 15
 
-ReaR-2.2 dropped officially support for the following Linux based operating
+ReaR-2.3 dropped officially support for the following Linux based operating
 systems:
 
-  o Fedora < 24
+  o Fedora < 25
   o RHEL 3 and 4
   o SLES 9 and 10
   o openSUSE <= 13
@@ -1520,22 +1100,22 @@ achieved with serious sponsoring.
 
 Supported Architectures
 
-ReaR-2.2 is supported on:
+ReaR-2.3 is supported on:
 
   o Intel x86 type of processors
   o AMD x86 type of processors
-
-ReaR-2.2 may or may not fully work on:
-
-  o Intel Itanium processors
-  o PPC processors
   o PPC64 processors
   o PPC64LE processors
 
-ReaR-2.2 does not support:
+ReaR-2.3 may or may not work on:
+
+  o Intel Itanium processors
+
+ReaR-2.3 does not support:
 
   o ARM type of processors
   o s390x type of processors
+  o old PPC (32bit) processors
 
 If you feel the need to get a fully functional ReaR working on one of the
 above mentioned type of processors please buy consultancy from one of our
@@ -1557,7 +1137,7 @@ for one or more systems. You buy time with our core developers.
 
 Known Problems and Workarounds
 
-Issue Description: rear package on ubuntu 14.04 depends on isolinux package
+Issue Description: 'rear' package on Ubuntu 14.04 depends on isolinux package
 (which does not exist)
 
   o Workaround:
@@ -1570,16 +1150,6 @@ version 1.15
   o Workaround:
 
 Read the comments in issue #1014
-
-Issue Description: Debian 8 initramfs-tools: / on LVM gets mounted by initrd
-with kernel device name /dev/dm-X instead of /dev/mapper/XXX name
-
-Issue #613 goes deeper into the problem with Debian 8 and LVM on /. The
-reporter created also a Debian Bug report #791754 for it.
-
-  o Workaround:
-
-See the fix mentioned in Debian Bug report #791754
 
 Issue Description: BACKUP=NSR on RHEL 6 could break yum
 
@@ -1600,7 +1170,7 @@ will fail.
   o Workaround:
 
 The configuration files are copied to /etc/rear/ into the rescue image, so
-you simply need to type: rear -v recover See issue #512
+you need to type: rear -v recover See issue #512
 
 Issue Description: Is there a possibility to add btrfs subvolume to a rsync
 backup
@@ -1618,17 +1188,6 @@ Issue Description: UEFI ISO booting does not work on openSUSE 12.x, or SLES
 At present (release 1.18.x and higher) genisoimage cannot produce ISO images
 that can boot via UEFI on an openSUSE distribution (and also SLES). However,
 use the ebiso package instead to create UEFI ISO images on SLES.
-
-Issue Description: TSM 7.1.0.0 cp writing dangling symlink
-libxmlutil-7.1.0.0.so on SLES SP3
-
-  o Workaround:
-
-To fix the error (you might see):
-
-ERROR [LipCopyTo] Could not copy '/usr/lib64/../../opt/tivoli/tsm/client/api/bin64/libxmlutil-7.1.0.0.so' to '/tmp/rear.10455/rootfs/lib64'
-
-See issue 476 for the resolution.
 
 Issue Description: System reconfiguration still has some weaknesses.
 
@@ -1664,14 +1223,6 @@ BACKUP_OPTIONS="rw,relatime,seclabel,user_xattr,acl,barrier=1,data=ordered"
 (TIP) BACKUP_SELINUX_DISABLE=1 variable has been introduced in the /usr/share
 /rear/conf/default.conf file to disable SELinux while the backup is running
 (default setting).
-
-Issue Description: Is incremental backup possible?
-
-With our default settings (BACKUP=NETFS and BACKUP_PROG=tar) we support
-incremental backups when we add the following extra variables:
-
-BACKUP_TYPE=incremental
-FULLBACKUPDAY="Mon"
 
 Issue Description: ERROR: FindStorageDrivers called but STORAGE_DRIVERS is
 empty

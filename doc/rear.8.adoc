@@ -1,6 +1,6 @@
 = rear(8)
-:version: v2.2
-:date: 20 July 2017
+:version: v2.3
+:date: 14 December 2017
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -312,7 +312,7 @@ BACKUP=*RBME*::
 Use Rsync Backup Made Easy (rbme) to restore the data.
 
 BACKUP=*BAREOS*::
-Use Open Source backup solution BAREOS (a fork a BUCULA) to restore the data.
+Use Open Source backup solution BAREOS (a fork a BACULA) to restore the data.
 
 BACKUP=*BACULA*::
 Use Open Source backup solution BACULA to restore the data.
@@ -550,7 +550,7 @@ The Relax-and-Recover website is located at: http://relax-and-recover.org/
 
 
 == COPYRIGHT
-(c) 2006-2017
+(c) 2006-2018
 
 The copyright is held by the original authors of the respective code pieces as can be seen in the git history at https://github.com/rear/rear/graphs/contributors
 

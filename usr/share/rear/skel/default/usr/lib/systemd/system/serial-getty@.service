@@ -5,16 +5,19 @@ Description=Serial Getty on %I
 BindTo=dev-%i.device
 After=dev-%i.device
 
-# If additional gettys are spawned during boot then we should make
-# sure that this is synchronized before getty.target, even though
-# getty.target didn't actually pull it in.
-Before=getty.target
+# We must wait for ReaR boot script to finish.
+# this prevents the login serial prompt to
+# be ready before the whole recovery boot process is done
+After=getty.target
 
 [Service]
 Environment=TERM=vt100
 ExecStart=-/sbin/agetty -s %I 115200,38400,9600
-Restart=always
+Restart=on-failure
 RestartSec=0
+StartLimitAction=none
+StartLimitBurst=3
+StartLimitInterval=60
 UtmpIdentifier=%I
 KillMode=process
 

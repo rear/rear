@@ -519,12 +519,12 @@ dhconfig() {
                 ((hoursWest*=-1))
             fi
 
-            tzfile=/usr/share/zoneinfo/Etc/GMT$(printf '%+d' ${hoursWest})
-            if [ -e ${tzfile} ]; then
+            #tzfile=/usr/share/zoneinfo/Etc/GMT$(printf '%+d' ${hoursWest})
+            #if [ -e ${tzfile} ]; then
                 #save_previous /etc/localtime
-                cp -fp ${tzfile} /etc/localtime
-                touch /etc/localtime
-            fi
+            #    cp -fp ${tzfile} /etc/localtime
+            #    touch /etc/localtime
+            #fi
         fi
     fi
 
