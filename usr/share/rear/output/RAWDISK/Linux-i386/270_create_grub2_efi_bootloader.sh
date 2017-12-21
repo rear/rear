@@ -41,7 +41,3 @@ EOF
 local grub_modules=( part_gpt fat normal configfile linux video all_video )
 grub-mkimage -O x86_64-efi -o "$efi_boot_directory/BOOTX64.efi" -p "/EFI/BOOT" "${grub_modules[@]}"
 StopIfError "Error occurred during grub-mkimage of $efi_boot_directory/BOOTX64.efi"
-
-
-# Note: Since the PBA should boot as quietly as possible (and errors are not an option ;-)),
-# this installation sticks to the bare minimum configuration, omitting fonts and locale files.
