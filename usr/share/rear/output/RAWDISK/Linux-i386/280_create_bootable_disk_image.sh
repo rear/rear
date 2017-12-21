@@ -148,6 +148,15 @@ losetup -d "$disk_device" || Error "Could not delete loop device"
 RemoveExitTask "losetup -d $disk_device >&2"
 
 
+### Compress the disk image on request
+if [[ -n "$RAWDISK_IMAGE_COMPRESSION_COMMAND" ]]; then
+    $RAWDISK_IMAGE_COMPRESSION_COMMAND "$disk_image"
+    StopIfError "Could not compress disk image using <<$RAWDISK_IMAGE_COMPRESSION_COMMAND \"$disk_image\">>"
+    disk_image="$(echo "$disk_image"*)"
+    [[ -f "$disk_image" ]] || Error "Could not find compressed disk image ${disk_image}*"
+fi
+
+
 ### Add disk the image to the result files
 
 RESULT_FILES+=( "$disk_image" )

@@ -180,7 +180,7 @@ Create a bootable USB disk (using extlinux). Specify the USB storage
 device by using +USB_DEVICE+.
 
 OUTPUT=*RAWDISK*::
-Create a bootable image file named "rear-$(hostname).raw", which
+Create a bootable image file named "rear-$(hostname).raw.gz", which
 
 * supports UEFI boot if syslinux/EFI or Grub 2/EFI is installed,
 * supports Legacy BIOS boot if syslinux is installed,
