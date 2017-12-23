@@ -247,7 +247,7 @@ Log "Saving disk partitions."
     # format: disk <disk> <sectors> <partition label type>
     for disk in /sys/block/* ; do
         blockd=${disk#/sys/block/}
-        if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* || $blockd = nvme* ]] ; then
+        if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* || $blockd = nvme* || $blockd = mmcblk* ]] ; then
 
             #Check if blockd is a path of a multipath device.
             if is_multipath_path ${blockd} ; then
