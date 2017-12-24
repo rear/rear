@@ -1,13 +1,9 @@
-# 300_copy_kernel.sh
+# 400_guess_kernel.sh
 #
-# copy kernel for Relax-and-Recover
+# guess kernel if not set yet or error out, for diverse Architectures (arm, aarch64, etc.)
 #
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
-
-# find and copy kernel
-# we only try to find the currently running kernel
-# Using another kernel is a TODO for now
 
 if [ ! -s "$KERNEL_FILE" ]; then
     if [ -r "/boot/vmlinuz-$KERNEL_VERSION" ]; then
@@ -49,3 +45,13 @@ if [ ! -s "$KERNEL_FILE" ]; then
         Error "Could not find a matching kernel in /boot !"
     fi
 fi
+
+[ -s "$KERNEL_FILE" ]
+StopIfError "Could not find a suitable kernel. Maybe you have to set KERNEL_FILE [$KERNEL_FILE] ?"
+
+if [ -L $KERNEL_FILE ]; then
+    KERNEL_FILE=$(readlink -f $KERNEL_FILE)
+fi
+
+Log "Guessed kernel $KERNEL_FILE"
+
