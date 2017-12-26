@@ -176,7 +176,7 @@ generate_layout_dependencies() {
                 done
                 ;;
         esac
-    done < <(cat $LAYOUT_FILE)
+    done < $LAYOUT_FILE
 }
 
 # Add a dependency from one component on another
