@@ -257,7 +257,7 @@ Log "Saving disk partitions."
             #Check if blockd is a path of a multipath device.
             if is_multipath_path ${blockd} ; then
                 Log "Ignoring $blockd: it is a path of a multipath device"
-            else    
+            elif [[ ! ($blockd = *rpmb || *[0-9]boot[0-9]) ]]; then # Silently skip Replay Protected Memory Blocks and others  
                 devname=$(get_device_name $disk)
                 devsize=$(get_disk_size ${disk#/sys/block/})
                 disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
