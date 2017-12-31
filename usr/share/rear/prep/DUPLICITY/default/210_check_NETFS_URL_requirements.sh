@@ -8,6 +8,9 @@
 # example: sshfs://user@host/G/rear/
 # example: ftpfs://user:password@host/rear/ (the password part is optional)
 
+# If we are using duply and found a valid a duply profile we skip this script
+[[ "$DUPLY_PROFILE" ]] && return
+
 [[ "$BACKUP_DUPLICITY_URL" || "$BACKUP_DUPLICITY_NETFS_URL" || "$BACKUP_DUPLICITY_NETFS_MOUNTCMD" ]]
 # FIXME: The above test does not match the error message below.
 # To match the the error message the test should be

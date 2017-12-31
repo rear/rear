@@ -32,13 +32,16 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     
     DUP_OPTIONS="$BACKUP_DUPLICITY_OPTIONS"
     #
-    GPG_OPT="${BACKUP_DUPLICITY_GPG_OPTIONS}"
+    if [[ "${BACKUP_DUPLICITY_GPG_OPTIONS}" ]] ; then
+        GPG_OPT="--gpg-options ""${BACKUP_DUPLICITY_GPG_OPTIONS}"""
+        LogUserOutput "GPG_OPT = $GPG_OPT"
+    fi
+
     if [ -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ]; then
 		GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY"
     fi
     PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
 
-    LogUserOutput "GPG_OPT = $GPG_OPT"
 
     # EXCLUDES="${TMP_DIR}/backup_exclude.lst"
 
@@ -84,8 +87,14 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     # do the backup
     LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $GPG_OPT $EXCLUDES \
      / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-    $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $GPG_OPT $EXCLUDES \
+
+    if [[ "$BACKUP_DUPLICITY_GPG_OPTIONS" ]] ; then
+        $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" $EXCLUDES \
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
+    else
+        $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $GPG_OPT $EXCLUDES \
+           / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
+    fi
 
     RC_DUP=$?
 
