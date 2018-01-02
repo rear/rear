@@ -45,5 +45,5 @@ Log "Saving Swap information."
         fi
 
         echo "swap $filename uuid=$uuid label=$label"
-    done < <(cat /proc/swaps)
+    done < /proc/swaps
 ) >> $DISKLAYOUT_FILE
