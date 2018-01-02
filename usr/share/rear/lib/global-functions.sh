@@ -440,3 +440,32 @@ function mathlib_calculate()
 {
     bc -ql <<<"result=$@ ; scale=0 ; result / 1 "
 }
+
+# Purpose is to find a working DUPLY profile configuration
+# Duply is a wrapper script around duplicity - this function is
+# used in the prep phase (for mkbackup) and in the verify phase
+# (to check the TEMP_DIR directory - it must be defined and cannot
+# be /tmp as this is usally a tmpfs file system which is too small) 
+function find_duply_profile ()
+{
+    # there could be more then one profile present - select where SOURCE='/'
+    for CONF in $(echo "$1")
+    do
+        [[ ! -f $CONF ]] && continue
+        source $CONF    # is a normal shell configuration file
+        LogIfError "Could not source $CONF [duply profile]"
+        [[ -z "$SOURCE" ]] && continue
+        [[ -z "$TARGET" ]] && continue
+        # still here?
+        if [[ "$SOURCE" = "/" ]]; then
+            DUPLY_PROFILE_FILE=$CONF
+            DUPLY_PROFILE=$( dirname $CONF  )   # /root/.duply/mycloud/conf -> /root/.duply/mycloud
+            DUPLY_PROFILE=${DUPLY_PROFILE##*/}  # /root/.duply/mycloud      -> mycloud
+            break # the loop
+        else
+            DUPLY_PROFILE=""
+            continue
+        fi
+    done
+}
+

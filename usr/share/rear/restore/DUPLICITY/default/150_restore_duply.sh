@@ -13,6 +13,7 @@ if [ "$BACKUP_PROG" = "duply" ] && has_binary duply; then
 
         # we need to restore on a path that does not exist ;-/
         # that is why we add "restore" to $TARGET_FS_ROOT (by default /mnt/local)
+        LogPrint "Starting restore with duply/duplicity with profile $DUPLY_PROFILE"
         duply "$DUPLY_PROFILE" restore $TARGET_FS_ROOT/restore
         if (( $? > 1 )); then
             LogPrintIfError "duply $DUPLY_PROFILE restore $TARGET_FS_ROOT failed"
