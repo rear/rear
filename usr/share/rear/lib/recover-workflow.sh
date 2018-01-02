@@ -10,9 +10,13 @@ WORKFLOWS=( ${WORKFLOWS[@]} recover )
 function WORKFLOW_recover () {
     # Adapt /etc/motd in the ReaR recovery system when 'rear recover' is running
     # to avoid the additional 'Run "rear recover" to restore your system !' message
-    # that only makes sense as long as 'rear recover' was not ever started, see
-    # https://github.com/rear/rear/issues/1433
-    test -w /etc/motd && echo -e '\nWelcome to Relax-and-Recover.\n' >/etc/motd
+    # that only makes sense as long as 'rear recover' was not ever started,
+    # see https://github.com/rear/rear/issues/1433
+    # but do not (over)-write /etc/motd on the original system via "rear -s recover",
+    # see https://github.com/rear/rear/issues/1670
+    # in the ReaR recovery system /etc/rear-release is unique (it does not exist otherwise)
+    # cf. init/default/050_check_rear_recover_mode.sh
+    test -f /etc/rear-release -a -w /etc/motd && echo -e '\nWelcome to Relax-and-Recover.\n' >/etc/motd
 
     SourceStage "setup"
 
