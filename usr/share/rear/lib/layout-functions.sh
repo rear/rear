@@ -181,7 +181,7 @@ generate_layout_dependencies() {
                 add_dependency "$dev" "opaldisk:$dev"
                 ;;
         esac
-    done < <(cat $LAYOUT_FILE)
+    done < $LAYOUT_FILE
 }
 
 # Add a dependency from one component on another

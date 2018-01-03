@@ -54,15 +54,12 @@ echo
 #
 # CPU & Memory information
 #
-# get number of processor cores
-PROCS=$( cat /proc/cpuinfo | grep "processor" | sort -u | wc -l )
-# get processor speed (assumes all processors have same speed
-SPEED=$( cat /proc/cpuinfo | grep "cpu MHz" | sort -u | cut -d: -f2 )
 # determine the amount of memory in MiB the system had
 # (this excludes kernel memory (how to determine this?))
 memory_in_kB=$( grep MemTotal /proc/meminfo | cut -d: -f2 | sed 's/kB//' )
 
-echo "There are $PROCS CPU core(s) at $SPEED MHz"
+grep 'model name' /proc/cpuinfo #f.e. model name : Intel(R) Atom(TM) CPU  E3815  @ 1.46GHz
+grep 'cpu cores' /proc/cpuinfo  #f.e. cpu cores  : 1
 echo "$(( memory_in_kB / 1024 )) MiB of physical memory"
 echo
 
