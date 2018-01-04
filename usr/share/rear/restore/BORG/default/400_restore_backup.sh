@@ -6,7 +6,7 @@
 # Borg restores to cwd.
 # Switch current working directory or die.
 cd $TARGET_FS_ROOT
-StopIfError "Could not change directory to /mnt/local"
+StopIfError "Could not change directory to $TARGET_FS_ROOT"
 
 # Start actual restore.
 # Scope of LC_ALL is only within run of `borg extract'.
