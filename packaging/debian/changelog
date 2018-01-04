@@ -3,27 +3,27 @@ rear (2.3-1) stable; urgency=low
   * Mainly bug fixes
   * Enhanced security model around OpenSSH
 
- -- Gratien Dhaese <gratien.dhaese@gmail.com> Wed, 20 Dec 2017 14:57:10 +0100
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Wed, 20 Dec 2017 14:57:10 +0100
 rear (2.2-1) stable; urgency=low
 
   * Mainly bug fixes for SLES 10 (sponsored release)
 
- -- Gratien Dhaese <gratien.dhaese@gmail.com> Thu, 20 Jul 2017 14:22:30 +0100
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Thu, 20 Jul 2017 14:22:30 +0100
 rear (2.1-1) stable; urgency=low
 
   * Mainly bug fixes
 
- -- Gratien Dhaese <gratien.dhaese@gmail.com> Wed, 7 Jun 2017 10:05:00 +0100
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Wed, 7 Jun 2017 10:05:00 +0100
 rear (2.00-1) stable; urgency=low
 
   * Added Multiple backups and Borg
 
- -- Gratien Dhaese <gratien.dhaese@gmail.com> Fri, 6 Jan 2017 12:00:00 +0100
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Fri, 6 Jan 2017 12:00:00 +0100
 rear (1.19-1) stable; urgency=low
 
   * minor bug fixes
 
- -- Gratien Dhaese <gratien.dhaese@gmail.com> Tue, 11 Oct 2016 16:46:00 +0100
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Tue, 11 Oct 2016 16:46:00 +0100
 rear (1.18.1-1) stable; urgency=high
 
   * Add missing dependency isolinux
@@ -31,13 +31,13 @@ rear (1.18.1-1) stable; urgency=high
   * Switch to xorriso since Debian's genisoimage does not seem to correctly
     handle UEFI ISO boot.
 
- -- Carlos Ramos <carragom@gmail.com> Fri, 29 Jul 2016 13:25:17 +0100
+ -- Carlos Ramos <carragom@gmail.com>  Fri, 29 Jul 2016 13:25:17 +0100
 rear (1.18-1) stable; urgency=high
 
   * new features
   * lots of bug fixes
 
- -- Gratien Dhaese <gratien.dhaese@gmail.com> Wed, 16 Mar 2016 11:21:17 +0100
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Wed, 16 Mar 2016 11:21:17 +0100
 rear (1.17.2-1) stable; urgency=low
 
   * some security fixes
@@ -64,6 +64,7 @@ rear (1.16.1-1) stable; urgency=low
   * code styling improvements
   * minor bug fixes
 
+ -- Gratien Dhaese <gratien.dhaese@gmail.com>  Mon, 02 Jun 2014 13:44:00 +0100
 rear (1.16-1) stable; urgency=high
 
   * new features
