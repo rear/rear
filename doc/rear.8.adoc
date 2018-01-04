@@ -423,8 +423,7 @@ opaladmin setupERASE DEVICE` (_DEVICE_ being the disk device path like
 `/dev/sda`).
 
 For complete information, consult the section "Support for TCG Opal 2-compliant
-Self-Encrypting Disks" Relax-and-Recover
-in the user guide.
+Self-Encrypting Disks" in the Relax-and-Recover user guide.
 
 == CONFIGURATION
 To configure Relax-and-Recover you have to edit the configuration files in
