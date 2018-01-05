@@ -247,7 +247,6 @@ Log "Saving disk partitions."
     # format: disk <disk> <sectors> <partition label type>
     for disk in /sys/block/* ; do
         blockd=${disk#/sys/block/}
-        FIXME: include mmcblk* devices
         if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* || $blockd = nvme* ]] ; then
 
             #FIXME: exclude *rpmb (Replay Protected Memory Block) for nvme*, mmcblk* and uas
