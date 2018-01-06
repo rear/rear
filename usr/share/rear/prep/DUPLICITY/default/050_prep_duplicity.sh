@@ -15,8 +15,8 @@ fi
 
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" gpg duplicity "$PYTHON_BIN" )
 
-# duply is a really good shell script wrapper for duplicity
-PROGS=( "${PROGS[@]}" duply )
+# duply is a really good shell script wrapper for duplicity (and gpg-agent might be required by duplicity)
+PROGS=( "${PROGS[@]}" duply gpg-agent )
 
 COPY_AS_IS=(
 "${COPY_AS_IS[@]}"
