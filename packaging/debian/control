@@ -10,6 +10,6 @@ Package: rear
 Architecture: i386 ia64 amd64 ppc64el
 Provides: rear
 Depends: syslinux[!ppc64el], syslinux-common[!ppc64el], ethtool, ${shlibs:Depends}, lsb-release, iproute, iputils-ping, dosfstools, binutils, parted, openssl, gawk, attr, bc, ${misc:Depends}
-Recommends: nfs-client, portmap, xorriso, isolinux
+Suggests: nfs-client, portmap, xorriso, isolinux, gdisk, syslinux-efi[!ppc64el]
 Description: Relax-and-Recover is a bare metal disaster recovery and system
  migration framework. See http://relax-and-recover.org/ for all the details.
