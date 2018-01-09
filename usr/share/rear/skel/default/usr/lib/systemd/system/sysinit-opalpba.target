@@ -1,0 +1,7 @@
+[Unit]
+Description=TCG Opal pre-boot authentication (PBA)
+Requires=sysinit-opalpba.service
+AllowIsolate=yes
+
+[Install]
+Alias=sysinit-opalpba.target

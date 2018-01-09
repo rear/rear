@@ -1,0 +1,209 @@
+#!/bin/bash
+#
+# Unlock TCG Opal 2-compliant disks and reboot to continue booting the 'real' operating system
+#
+# This script executes the final stage of a TCG Opal pre-boot authentication (PBA) boot.
+# It is expected that this script executes on a volatile system running entirely on RAM file systems.
+# To avoid delays, this script will perform a hard reset or power-off instead of a regular
+# system shutdown.
+
+source /usr/share/rear/lib/opal-functions.sh
+[[ -f /.OPAL_PBA_SETTINGS.sh ]] && source /.OPAL_PBA_SETTINGS.sh
+
+
+function use_plymouth() {
+    # returns 0 if plymouth is to be used.
+    type -p plymouth &>/dev/null && plymouth --ping
+}
+
+function quit_plymouth() {
+    # quits plymouth if in use.
+    use_plymouth && plymouth quit
+}
+
+function display_message() {
+    local message="${1:?}"
+
+    (use_plymouth && plymouth display-message --text="$message") || echo -e "\n$message"
+}
+
+function ask_for_password() {
+    local prompt="${1:?}"  # a colon will be appended implicitly
+    # asks for a password, setting the variable $password.
+
+    while true; do
+        if ! password="$(use_plymouth && plymouth ask-for-password --prompt="$prompt")"; then
+            echo ""
+            read -r -s -p "$prompt: " password 2>&1
+            echo ""
+        fi
+
+        if [[ -n "$password" ]]; then
+            [[ "$password" == "$OPAL_PBA_DEBUG_PASSWORD" ]] && exit
+            break
+        else
+            display_message "Please enter a non-empty password."
+        fi
+    done
+}
+
+error_log="/error-log.$$"
+exec 2> "$error_log"
+
+function emergency_response() {
+    # drop into an emergency shell if this script terminates unexpectedly.
+
+    exec 2>&1
+
+    display_message "Entering emergency shell..."
+    sleep 3
+    quit_plymouth
+
+    local history_file="/.bash_history.$$" rc_file="/.bashrc.$$"
+
+    cat > "$history_file" << '--EOF--'
+sedutil-cli --help |& less  # help on low-level administration of Opal-compliant disks
+sedutil-cli --scan  # scan for Opal-compliant disks
+sedutil-cli --query /dev/sda
+journalctl  # show system startup log
+exit
+--EOF--
+
+    cat > "$rc_file" << '--EOF--'
+export PS1="OPAL PBA> "
+rear() {
+    echo "ERROR: You cannot run rear from within the OPAL PBA." >&2
+    return 1
+}
+cd /
+--EOF--
+
+    cat > /etc/motd << '--EOF--'
+
+This is the OPAL PBA emergency shell.
+
+See history for useful commands. Exit the shell to shut down the system.
+
+--EOF--
+
+    if [[ -s "$error_log" ]]; then
+        {
+            echo "The following errors occured when executing $0:"
+            cat "$error_log"
+            echo ""
+        } >> /etc/motd
+    fi
+
+    HISTFILE="$history_file" bash --rcfile "$rc_file"
+
+    display_message "Shutting down..."
+    sleep 3
+    shutdown now
+}
+
+trap emergency_response EXIT
+use_plymouth && plymouth update-root-fs --read-write
+
+function stop_error_handling() {
+    trap - EXIT
+}
+
+function instant_reboot() {
+    quit_plymouth
+    stop_error_handling
+
+    # Force immediate hardware reboot via Magic SysRq key
+    echo 1 > /proc/sys/kernel/sysrq
+    echo b > /proc/sysrq-trigger
+
+    # Fallback if the previous method did not work
+    sleep 1
+    reboot --force
+}
+
+function instant_poweroff() {
+    quit_plymouth
+    stop_error_handling
+
+    # Force immediate hardware poweroff via Magic SysRq key
+    echo 1 > /proc/sys/kernel/sysrq
+    echo o > /proc/sysrq-trigger
+
+    # Fallback if the previous method did not work
+    sleep 1
+    poweroff --force
+}
+
+
+# Minimal system setup
+# TODO: split system setup scripts into PBA and rescue categories to protect against script renaming
+for system_setup_script in 00-functions.sh 10-console-setup.sh 40-start-udev-or-load-modules.sh; do
+    source "/etc/scripts/system-setup.d/$system_setup_script"
+done
+
+
+# Clear screen if running without plymouth boot animation and if 'clear' is available
+! use_plymouth && type -p clear &>/dev/null && clear
+
+
+# Find TCG Opal 2-compliant disks
+devices=( $(opal_devices) )
+declare -i device_count=${#devices[@]}
+if (( device_count == 0 )); then
+    display_message "Could not detect TCG Opal 2-compliant disks."
+    echo "Could not detect TCG Opal 2-compliant disks." >&2
+    sleep 3
+    exit
+fi
+
+# Query TCG Opal 2-compliant disks to determine the maximum number of authentication attempts
+declare -i max_authentications=5  # self-imposed limit to begin with
+for device in "${devices[@]}"; do
+    device_max_authentications="$(opal_device_max_authentications "$device")"
+    if (( device_max_authentications > 0 && device_max_authentications < max_authentications )); then
+        # Limit authentication attempts to the lowest number supported by any disk
+        max_authentications=$device_max_authentications
+    fi
+done
+
+# Ask for a password, unlock TCG Opal 2-compliant disks, reboot if successful
+if (( device_count == 1 )); then
+    password_prompt="Enter password to unlock disk"
+    unsuccessful_unlock_response="Could not unlock the disk."
+else
+    password_prompt="Enter password to unlock disks"
+    unsuccessful_unlock_response="Could not unlock any of $device_count disks."
+fi
+
+declare -i attempt=0
+while (( attempt < max_authentications )); do
+    attempt+=1
+
+    ask_for_password "$password_prompt"
+
+    # Success in this case is achieved if at least one device can be unlocked.
+    # If other devices require different passwords for unlocking, we assume
+    # that this is intentional and will be dealt with by other means.
+    declare -i unlocked_device_count=0
+    for device in "${devices[@]}"; do
+        opal_device_unlock "$device" "$password" >/dev/null && unlocked_device_count+=1
+    done
+
+    if (( unlocked_device_count > 0 )); then
+        if (( device_count == 1 && unlocked_device_count == 1 )); then
+            display_message "Disk unlocked, rebooting..."
+        else
+            display_message "$unlocked_device_count of $device_count disks unlocked, rebooting..."
+        fi
+        sleep 1
+        instant_reboot
+    else
+        display_message "$unsuccessful_unlock_response"
+    fi
+done
+
+# If finally unsuccessful, power off.
+# This is required as TCG Opal 2-compliant disks will refuse further authentication attempts before being reset.
+display_message "Powering off after $attempt unsuccessful attempts..."
+sleep 3
+instant_poweroff

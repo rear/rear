@@ -658,6 +658,11 @@ smartarray <slot number>
 logicaldrive <device> <slot nr>|<array name>|<logical drive name> raid=<raid level> drives=<drive1,drive2> [spares=<spare1,spare2>]  [sectors=<sectors>] [stripesize=<stripe size>]
 ----------------------------------
 
+=== TCG Opal 2-compliant Self-Encrypting Disks ===
+----------------------------------
+opaldisk <device> [boot=<[yn]>] [password=<password>]
+----------------------------------
+
 == Disk Restore Script (recover mode) ==
 The +/var/lib/rear/layout/disklayout.conf+ file is being used as input during +rear recover+ to create on-the-fly a script called +/var/lib/rear/layout/diskrestore.sh+.
 When something goes wrong during the recreation of partitions, volume groups you will be thrown in edit mode and you can make the modification needed. However, it is desirable to have a preview mode before doing the recovery so you can review the +diskrestore.sh+ script before doing any recovery. It is better to find mistakes, obsolete arguments and so on before then later, right?

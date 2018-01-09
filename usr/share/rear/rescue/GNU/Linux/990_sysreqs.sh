@@ -5,6 +5,9 @@
 # This is just for your information and the output is nowhere else
 # used by ReaR whatsoever.
 
+# `rear mkopalpba' creates a system where some information gathered below is missing (and not useful anyway): skip it.
+[[ "$WORKFLOW" == "mkopalpba" ]] && return 0
+
 test -d $VAR_DIR/sysreqs || mkdir -m 755 $VAR_DIR/sysreqs
 
 {

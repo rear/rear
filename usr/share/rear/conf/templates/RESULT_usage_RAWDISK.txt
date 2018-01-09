@@ -1,0 +1,18 @@
+How to recover your system:
+---------------------------
+
+1. Copy the attached raw disk image file onto a disk device
+   (a USB stick will do).
+
+   * Always use the complete disk device (like /dev/sdc)
+     instead of just a disk partition (like /dev/sdc1).
+
+   * Be careful to select the right device,
+     DISK CONTENTS WILL BE OVERWRITTEN.
+
+   * Example for a gzip-compressed image:
+
+     sudo zcat IMAGE_FILE.raw.gz | sudo dd bs=1M of=DISK_DEVICE
+
+
+2. Boot from the disk device into the rescue system.

@@ -82,6 +82,8 @@ if [[ "$AUTOEXCLUDE_DISKS" =~ ^[yY1] ]] ; then
         if ! IsInArray "$name" "${used_disks[@]}" ; then
             Log "Disk $name is not used by any mounted filesystem. Excluding."
             mark_as_done "$name"
+            # If this was a self-encrypting disk, remove its entry, too.
+            mark_as_done "opaldisk:$name"
             mark_tree_as_done "$name"
         fi
     done < <(grep ^disk $LAYOUT_FILE)

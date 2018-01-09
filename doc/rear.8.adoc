@@ -122,6 +122,12 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 *restoreonly*::
     only restore the backup; can be used only when running from the rescue media
 
+*mkopalpba*::
+    create a pre-boot authentication (PBA) image to boot from TCG Opal 2-compliant self-encrypting disks
+
+*opaladmin*::
+    administrate TCG Opal 2-compliant self-encrypting disks
+
 *validate*::
     submit validation information
 
@@ -151,9 +157,9 @@ source or commercial) or rsync with hardlink based solutions, e.g. RSYNC
 BACKUP MADE EASY.
 
 == RESCUE IMAGE CONFIGURATION
-The +OUTPUT+ variable defines from where our bootable rescue image will be booted and
-the +OUTPUT_URL+ variable defines where the rescue image should be send to.
-Possible +OUTPUT+ setting are:
+The +OUTPUT+ variable defines from where our bootable rescue image will be
+booted and the +OUTPUT_URL+ variable defines where the rescue image should be
+send to. Possible +OUTPUT+ settings are:
 
 OUTPUT=*RAMDISK*::
 Create only the Relax-and-Recover initramfs.
@@ -173,9 +179,17 @@ OUTPUT=*USB*::
 Create a bootable USB disk (using extlinux). Specify the USB storage
 device by using +USB_DEVICE+.
 
-When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+ or +USB+ you should provide the
-backup target location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+
-settings are:
+OUTPUT=*RAWDISK*::
+Create a bootable image file named "rear-$(hostname).raw.gz", which
+
+* supports UEFI boot if syslinux/EFI or Grub 2/EFI is installed,
+* supports Legacy BIOS boot if syslinux is installed,
+* supports UEFI/Legacy BIOS dual boot if syslinux *and* one of the supported EFI
+  bootloaders are installed.
+
+When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+, +USB+, or +RAWDISK+ you should
+provide the backup target location through the +OUTPUT_URL+ variable. Possible
++OUTPUT_URL+ settings are:
 
 OUTPUT_URL=*file://*::
 Write the image to disk. The default is in _/var/lib/rear/output/_.
@@ -214,16 +228,16 @@ OUTPUT_URL=*sshfs://*::
 Write the image using sshfs and the SSH protocol.
 
 OUTPUT_URL=*null*::
-Do not copy the ISO image from _/var/lib/rear/output/_ to a remote output location.
+Do not copy the rescue image from _/var/lib/rear/output/_ to a remote output location.
 +OUTPUT_URL=null+ is useful when another program (e.g. an _external_ backup program)
-is used to save the ISO image from the local system to a remote place,
-or with +BACKUP_URL=iso:///backup+ when the backup is included in the ISO image
-to avoid a (big) copy of the ISO image at a remote output location.
-In the latter case the ISO image must be manually saved from the local system to a remote place.
+is used to save the rescue image from the local system to a remote place,
+or with +BACKUP_URL=iso:///backup+ when the backup is included in the rescue image
+to avoid a (big) copy of the rescue image at a remote output location.
+In the latter case the rescue image must be manually saved from the local system to a remote place.
 +OUTPUT_URL=null+ is only supported together with +BACKUP=NETFS+.
 
 If you do not specify +OUTPUT_URL+ variable then by default it will be aligned to what
-was defined by variable +BACKUP_URL+. And, the ISO image will then be copied to the same
+was defined by variable +BACKUP_URL+. And, the rescue image will then be copied to the same
 location as your backup of the system disk(s).
 
 The +ISO_DEFAULT+ variable defines what default boot option is used on the rescue image.
@@ -389,6 +403,27 @@ Incremental or differential backup is currently only known to work
 with +BACKUP_URL=nfs+. Other BACKUP_URL schemes may work but
 at least +BACKUP_URL=usb+ requires USB_SUFFIX to be set
 to work with incremental or differential backup.
+
+== SUPPORT FOR SELF-ENCRYPTING DISKS
+
+Relax-and-Recover supports self-encrypting disks (SEDs) compliant with the TCG
+Opal 2 specification if the `sedutil-cli` executable is installed.
+
+Self-encrypting disk support includes
+
+* recovery (saving and restoring the system's SED configuration),
+* setting up SEDs, including assigning a disk password,
+* providing a pre-boot authentication (PBA) system to unlock SEDs at boot time.
+
+To prepare booting from an SED, run +rear mkopalpba+, then create the rescue
+system.
+
+To set up an SED, boot the Relax-and-Recover rescue system and run`rear
+opaladmin setupERASE DEVICE` (_DEVICE_ being the disk device path like
+`/dev/sda`).
+
+For complete information, consult the section "Support for TCG Opal 2-compliant
+Self-Encrypting Disks" in the Relax-and-Recover user guide.
 
 == CONFIGURATION
 To configure Relax-and-Recover you have to edit the configuration files in
