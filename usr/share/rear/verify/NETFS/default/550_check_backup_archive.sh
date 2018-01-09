@@ -26,7 +26,9 @@ for restoreinput in "${RESTORE_ARCHIVES[@]}" ; do
     if is_true "$BACKUP_INTEGRITY_CHECK" && test -f $restoreinput.md5 ; then
         if ! test -f "$backup_splitted_file" ; then
             LogPrint "Checking integrity of $restoreinput_filename"
+            pushd ${restoreinput%/*}
             md5sum -c $restoreinput.md5 || Error "Integrity check failed. Restore aborted because BACKUP_INTEGRITY_CHECK is enabled."
+            popd
         fi
     fi
 done
