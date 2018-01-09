@@ -64,7 +64,7 @@ dsmc_exit_code=$?
 check_TSM_dsmc_return_code $dsmc_exit_code
 
 
-test $dsmc_exit_code -eq 12 && LogUserOutput "Error during TSM backup... Check your configuration."
+test $dsmc_exit_code -eq 12 && Error "Error during TSM backup... Check your configuration."
 
 ### Copy progress log to backup media
 if cp $v "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log"; then
