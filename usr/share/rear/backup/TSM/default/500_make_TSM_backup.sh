@@ -40,12 +40,12 @@ function check_TSM_dsmc_return_code() {
     #   For example, suppose a macro consists of these commands: If the first command completes with return code 0; the second command completes with return code 8;
     #   and the third command completes with return code 4, the return code for the macro will be 8.
     if test $dsmc_exit_code -eq 0 ; then
-        LogUserOutput "[TSM] dsmc operation on filespace $filespace completed successfully"
+        LogUserOutput "[TSM] dsmc backup operation completed successfully"
     else
-        LogUserOutput "[TSM] dsmc operation on filespace $filespace completed with 'dsmc restore' exit code $dsmc_exit_code"
-        test $dsmc_exit_code -eq 4 && LogUserOutput "[TSM] dsmc operation on $filespace completed successfully, but some files (e.g. in an exclude list) were not processed"
-        test $dsmc_exit_code -eq 8 && LogUserOutput "[TSM] dsmc operation on $filespace completed with at least one warning message (review the TSM Error Log)"
-        test $dsmc_exit_code -eq 12 && LogUserOutput "[TSM] dsmc operation on $filespace completed with at least one error message (review the TSM Error Log)"
+        LogUserOutput "[TSM] dsmc backup operation completed with 'dsmc' exit code $dsmc_exit_code"
+        test $dsmc_exit_code -eq 4 && LogUserOutput "[TSM] dsmc backup operation completed successfully, but some files (e.g. in an exclude list) were not processed"
+        test $dsmc_exit_code -eq 8 && LogUserOutput "[TSM] dsmc backup operation completed with at least one warning message (review the TSM Error Log)"
+        test $dsmc_exit_code -eq 12 && LogUserOutput "[TSM] dsmc backup operation completed with at least one error message (review the TSM Error Log)"
     fi
 }
 
@@ -55,17 +55,21 @@ for i in $(cat $TMP_DIR/backup-include.txt); do
 done
 
 LogUserOutput ""
-LogUserOutput "Starting Backup with TSM [ ${include_list[@]} ]"
+LogUserOutput "Starting Incremental Backup with TSM [ ${include_list[@]} ]"
+LogUserOutput "You can follow the backup with [ tail -f ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log ]"
 LC_ALL=${LANG_RECOVER} dsmc incremental \
 -verbose -tapeprompt=no "${TSM_DSMC_BACKUP_OPTIONS[@]}" \
 ${include_list[@]} > "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
 dsmc_exit_code=$?
 check_TSM_dsmc_return_code $dsmc_exit_code
 
+
 test $dsmc_exit_code -eq 12 && LogUserOutput "Error during TSM backup... Check your configuration."
 
 ### Copy progress log to backup media
 if cp $v "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log"; then
+    LogUserOutput "TSM Backup log available: ${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log"
+    LogUserOutput "Adding TSM log file to the backup"
     dsmc incremental ${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log
     dsmc_exit_code=$?
 
