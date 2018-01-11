@@ -43,9 +43,9 @@ function check_TSM_dsmc_return_code() {
         LogUserOutput "[TSM] dsmc backup operation completed successfully"
     else
         LogUserOutput "[TSM] dsmc backup operation completed with 'dsmc' exit code $dsmc_exit_code"
-        test $dsmc_exit_code -eq 4 && LogUserOutput "[TSM] dsmc backup operation completed successfully, but some files (e.g. in an exclude list) were not processed"
-        test $dsmc_exit_code -eq 8 && LogUserOutput "[TSM] dsmc backup operation completed with at least one warning message (review the TSM Error Log)"
-        test $dsmc_exit_code -eq 12 && LogUserOutput "[TSM] dsmc backup operation completed with at least one error message (review the TSM Error Log)"
+        test $dsmc_exit_code -eq 4 && LogUserOutput "[TSM rc=4] dsmc backup operation completed successfully, but some files (e.g. in an exclude list) were not processed"
+        test $dsmc_exit_code -eq 8 && LogUserOutput "[TSM rc=8] dsmc backup operation completed with at least one warning message (review the TSM Error Log)"
+        test $dsmc_exit_code -eq 12 && LogUserOutput "[TSM rc=12] dsmc backup operation completed with at least one error message (review the TSM Error Log)"
     fi
 }
 
