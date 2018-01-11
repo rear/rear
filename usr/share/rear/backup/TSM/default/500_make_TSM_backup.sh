@@ -50,8 +50,8 @@ function check_TSM_dsmc_return_code() {
 }
 
 # Create TSM friendly include list.
-for i in $(cat $TMP_DIR/backup-include.txt); do
-    include_list+=("$i ")
+for backup_include in $(cat $TMP_DIR/backup-include.txt); do
+    include_list+=("$backup_include ")
 done
 
 LogUserOutput ""
@@ -59,10 +59,9 @@ LogUserOutput "Starting Incremental Backup with TSM [ ${include_list[@]} ]"
 LogUserOutput "You can follow the backup with [ tail -f ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log ]"
 LC_ALL=${LANG_RECOVER} dsmc incremental \
 -verbose -tapeprompt=no "${TSM_DSMC_BACKUP_OPTIONS[@]}" \
-${include_list[@]} > "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
+"${include_list[@]}" > "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
 dsmc_exit_code=$?
 check_TSM_dsmc_return_code $dsmc_exit_code
-
 
 test $dsmc_exit_code -eq 12 && Error "Error during TSM backup... Check your configuration."
 
@@ -75,9 +74,9 @@ if cp $v "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${backup_tsm_log}/${BACKUP_PRO
 
     check_TSM_dsmc_return_code $dsmc_exit_code
 
-    if test $dsmc_exit_code -lt 12; then
-        LogUserOutput "${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log added to the backup"
-    else
+    if test $dsmc_exit_code -eq 12; then
         LogUserOutput "Failed to add ${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log to the backup"
+    else
+        LogUserOutput "${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log added to the backup"
     fi
 fi
