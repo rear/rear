@@ -12,7 +12,7 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
 
     # Ask for Passphrase if variable BACKUP_DUPLICITY_ASK_PASSPHRASE=1
     if is_true "$BACKUP_DUPLICITY_ASK_PASSPHRASE" ; then
-        read -t $WAIT_SECS -r -p "Enter 'Passphrase' for the restore [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
+        read -s -t $WAIT_SECS -r -p "Enter 'Passphrase' for the restore [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
         # when REPLY is empty (perhaps due timeout?) we will abort
         test -z "${REPLY}" && Error "Duplicity restore aborted due to missing 'Passphrase'"
         BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE="$REPLY"
@@ -26,7 +26,6 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     #export PYTHONPATH=/usr/lib64/python2.6:/usr/lib64/python2.6/lib-dynload:/usr/lib64/python2.6/site-packages:/usr/lib64/python2.6/site-packages/duplicity
     export HOSTNAME=$(hostname)
 
-    GPG_OPT="--gpg-options ""${BACKUP_DUPLICITY_GPG_OPTIONS}"""
     if [[ -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ]]; then
         GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY"
     fi
@@ -48,7 +47,7 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
 	
     LogPrint "Logging to $TMP_DIR/duplicity-restore.log"
     if [[ -n "${BACKUP_DUPLICITY_GPG_OPTIONS}" ]] ; then
-        LogPrint "with CMD: $DUPLICITY_PROG -v 5 $GPG_KEY $GPG_OPT --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
+        LogPrint "with CMD: $DUPLICITY_PROG -v 5 $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
         $DUPLICITY_PROG -v 5 $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" --force --tempdir="$DUPLICITY_TEMPDIR" $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT 0<&6 | tee $TMP_DIR/duplicity-restore.log
     else
         LogPrint "with CMD: $DUPLICITY_PROG -v 5 $GPG_KEY --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
@@ -59,7 +58,9 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     transfertime="$((SECONDS-$starttime))"
     sleep 1
 	
-    rm -rf "$DUPLICITY_TEMPDIR" || Error "Could not remove Temporary Directory for Duplicity: $DUPLICITY_TEMPDIR"
+    if [[ -d "$DUPLICITY_TEMPDIR" ]] ; then
+        rm -rf "$DUPLICITY_TEMPDIR" || LogPrint "Could not remove Temporary Directory for Duplicity: $DUPLICITY_TEMPDIR"
+    fi
     HOME="$HOME_TMP"
 	
     #LogPrint "starttime = $starttime"
@@ -82,7 +83,7 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     fi
 
     if [ $_rc -eq 0 ] ; then
-        LogPrint "Restore comleted in $transfertime seconds."
+        LogPrint "Restore completed in $transfertime seconds."
     fi
 
     LogPrint "========================================================================"
