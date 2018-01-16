@@ -1,9 +1,12 @@
 # 450_prepare_avagent_startup.sh
-# make sure avagent gets started up in the rescue image
+# make sure avagent startup scripts gets included in the rescue image
+
+mkdir -p $ROOTFS_DIR/etc/systemd/system
+cp /run/systemd/generator.late/avagent.service $ROOTFS_DIR/etc/systemd/system/avagent.service
 
 cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-avagent.sh <<-EOF
 echo "Starting EMC Avamar daemon ..."
-$AVA_ROOT_DIR/bin/avagent.bin --bindir="$AVA_ROOT_DIR/bin" --vardir="$AVA_ROOT_DIR/var" --sysdir="$AVA_ROOT_DIR/etc" --logfile="/tmp/avagent.log"
+systemctl start avagent
 EOF
 
 chmod +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-avagent.sh
