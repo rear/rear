@@ -1,0 +1,5 @@
+NAME="eth10"
+DEVICE="eth10"
+ONBOOT="yes"
+BOOTPROTO="none"
+TYPE="Ethernet"

@@ -1,0 +1,6 @@
+NAME="eth7"
+DEVICE="eth7"
+ONBOOT="yes"
+TEAM_MASTER="team567"
+DEVICETYPE="TeamPort"
+TYPE="Ethernet"

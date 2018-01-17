@@ -30,63 +30,49 @@ EOT
 
 # route mapping is available
 if test -s $TMP_DIR/mappings/routes ; then
-	while read destination gateway device junk ; do
-		echo "ip route add $destination via $gateway dev $device" >>$netscript
-	done < $TMP_DIR/mappings/routes
+    while read destination gateway device junk ; do
+        echo "ip route add $destination via $gateway dev $device" >>$netscript
+    done < $TMP_DIR/mappings/routes
 else # use original routes
 
-	COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/iproute2 ) # for policy routing
+    COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/iproute2 ) # for policy routing
 
-	# find out routing rules
-	RULES=()
-	c=0
-	while read ; do
-		RULES[c]="$REPLY"
-		let c++
-	done < <(
-		ip rule list | \
-		cut -d : -f 2- | \
-		grep -Ev "from all lookup (local|main|default)"
-		)
-	for rule in "${RULES[@]}" ; do
-		echo "ip rule add $rule" >>$netscript
-	done
+    # find out routing rules
+    rules=()
+    c=0
+    while read ; do
+        rules[c]="$REPLY"
+        let c++
+    done < <(
+        ip rule list | \
+        cut -d : -f 2- | \
+        grep -Ev "from all lookup (local|main|default)"
+        )
+    for rule in "${rules[@]}" ; do
+        echo "ip rule add $rule" >>$netscript
+    done
 
-	# for each table, list routes
-	# main is the default table, some distros don't mention it in rt_tables,
-	# so I add it for them and strip doubles with uniq
-	for table in $( { echo "254     main" ; cat /etc/iproute2/rt_tables ; } |\
-			grep -E '^[0-9]+' |\
-			tr -s " \t" " " |\
-			cut -d " " -f 2 | sort -u | grep -Ev '(local|default|unspec)' ) ;
-	do
-		ip route list table $table |\
-			grep -Ev 'scope (link|host)' |\
-			while read destination via gateway dev device junk;
-		do
-			if test "$SIMPLIFY_BONDING" -a -r /proc/net/bonding/$device ; then
-				# if this is a bond we need to simplify then we substitute the route through the bond
-				# by a route to the *first* bonded slave
-				ifslaves=($(cat /proc/net/bonding/$device | grep "Slave Interface:" | cut -d : -f 2))
-				Log "X${ifslaves[@]}X"
-				echo "ip route add $destination $via $gateway $dev ${ifslaves[0]} table $table" >>$netscript
-			# be sure that it is not a teaming-interface
-			elif ! ethtool -i $device | grep -w "driver:" | grep -qw team ; then
-				echo "ip route add $destination $via $gateway $dev $device table $table" >>$netscript
-			fi
-		done
-		ip -6 route list table $table |\
-			grep -Ev 'unreachable|::/96|fe80::' | grep via |\
-			while read destination via gateway dev device junk;
-		do
-			if test "$SIMPLIFY_BONDING" -a -r /proc/net/bonding/$device ; then
-				ifslaves=($(cat /proc/net/bonding/$device | grep "Slave Interface:" | cut -d : -f 2))
-				Log "X${ifslaves[@]}X"
-				echo "ip route add $destination $via $gateway $dev ${ifslaves[0]} table $table" >>$netscript
-			# be sure that it is not a teaming-interface
-			elif ! ethtool -i $device | grep -w "driver:" | grep -qw team ; then
-				echo "ip route add $destination $via $gateway $dev $device table $table" >>$netscript
-			fi
-		done
-	done
+    # for each table, list routes
+    # main is the default table, some distros don't mention it in rt_tables,
+    # so I add it for them and strip doubles with uniq
+    for table in $( { echo "254     main" ; cat /etc/iproute2/rt_tables ; } |\
+            grep -E '^[0-9]+' |\
+            tr -s " \t" " " |\
+            cut -d " " -f 2 | sort -u | grep -Ev '(local|default|unspec)' ) ;
+    do
+        ip route list table $table |\
+            grep -Ev 'scope (link|host)' |\
+            while read destination via gateway dev device junk;
+        do
+            device=$( get_mapped_network_interface $device )
+            echo "ip route add $destination $via $gateway $dev $device table $table" >>$netscript
+        done
+        ip -6 route list table $table |\
+            grep -Ev 'unreachable|::/96|fe80::' | grep via |\
+            while read destination via gateway dev device junk;
+        do
+            device=$( get_mapped_network_interface $device )
+            echo "ip route add $destination $via $gateway $dev $device table $table" >>$netscript
+        done
+    done
 fi

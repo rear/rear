@@ -1,0 +1,7 @@
+NAME="vlan2bond34"
+DEVICE="bond34.2"
+ONBOOT="yes"
+BOOTPROTO="none"
+VLAN="yes"
+TYPE="Ethernet"
+BRIDGE="bridge2"

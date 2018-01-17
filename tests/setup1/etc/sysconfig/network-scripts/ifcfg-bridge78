@@ -1,0 +1,6 @@
+DEVICE="bridge78"
+TYPE="Bridge"
+BOOTPROTO="none"
+IPADDR="4.4.4.4"
+ONBOOT="yes"
+PREFIX=24

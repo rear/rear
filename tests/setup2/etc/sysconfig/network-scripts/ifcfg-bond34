@@ -1,0 +1,5 @@
+DEVICE="bond34"
+BOOTPROTO="none"
+ONBOOT="yes"
+TYPE="Ethernet"
+BONDING_OPTS="mode=1 miimon=100"

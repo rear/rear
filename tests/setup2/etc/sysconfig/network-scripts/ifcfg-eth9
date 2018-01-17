@@ -1,0 +1,6 @@
+NAME="eth9"
+DEVICE="eth9"
+ONBOOT="yes"
+TEAM_MASTER="team89"
+DEVICETYPE="TeamPort"
+TYPE="Ethernet"

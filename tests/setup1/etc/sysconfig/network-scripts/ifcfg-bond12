@@ -1,0 +1,7 @@
+DEVICE="bond12"
+BOOTPROTO="none"
+ONBOOT="yes"
+TYPE="Ethernet"
+BONDING_OPTS="mode=4 miimon=1000"
+IPADDR="1.1.1.1"
+PREFIX=16

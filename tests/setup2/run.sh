@@ -1,0 +1,1 @@
+../setup1/run.sh

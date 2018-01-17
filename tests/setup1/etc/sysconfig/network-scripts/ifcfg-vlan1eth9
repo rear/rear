@@ -1,0 +1,8 @@
+NAME="vlan1eth9"
+DEVICE="eth9.1"
+ONBOOT="yes"
+BOOTPROTO="none"
+IPADDR="5.5.5.5"
+PREFIX=24
+VLAN="yes"
+TYPE="Ethernet"

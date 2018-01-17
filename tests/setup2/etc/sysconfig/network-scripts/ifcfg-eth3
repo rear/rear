@@ -1,0 +1,5 @@
+NAME="eth3"
+DEVICE="eth3"
+ONBOOT="yes"
+MASTER="bond34"
+SLAVE="yes"

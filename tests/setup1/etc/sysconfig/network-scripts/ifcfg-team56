@@ -1,0 +1,9 @@
+DEVICE="team56"
+TEAM_CONFIG=$'{\n    \"device\": \"team56\",\n    \"link_watch\": {\n        \"name\": \"ethtool\"\n    },\n    \"ports\": {\n        \"eth5\": {},\n        \"eth6\": {}\n    },\n    \"runner\": {\n        \"name\": \"lacp\",\n        \"tx_hash\": [\n            \"eth\",\n            \"ipv4\",\n            \"ipv6\"\n        ]\n    }\n}'
+PROXY_METHOD="none"
+BROWSER_ONLY="no"
+NAME="team56"
+ONBOOT="yes"
+DEVICETYPE="Team"
+IPADDR=3.3.3.3
+PREFIX=16

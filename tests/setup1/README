@@ -1,0 +1,183 @@
+                   +----------------------------------+
+                   | Setup #1 (basic functionalities) |
+                   +----------------------------------+
+
+
+You need a VM with 10 network interfaces (eth0 being the main interface).
+All interfaces except eth0 can be non-reachable.
+
+kvm.xml is an example template of such VM.
+
+
+eth0		IP 192.168.122.x/24 default 192.168.122.1 (x=177)
+bond12		eth1 + eth2 mode=4 miimon=1000 IP 1.1.1.1
+bond34		eth3 + eth4 mode=1 miimon=100 IP 2.2.2.2 route 102.0.0.0/8
+team56		eth5 + eth6 IP 3.3.3.3 route 103.0.0.0/8
+bridge78	eth7 + eth8 IP 4.4.4.4 route 104.0.0.0/8
+vlan1eth9	eth9.1 IP 5.5.5.5 route 105.0.0.0/8
+eth10		IP 6.6.6.6 route 106.0.0.0/8
+
+routes:
+default via 192.168.122.1 dev eth0
+102.0.0.0/8 via 2.2.2.254 dev bond34
+103.0.0.0/8 via 3.3.3.254 dev team56
+104.0.0.0/8 via 4.4.4.254 dev bridge78
+105.0.0.0/8 via 5.5.5.254 dev eth9.1
+106.0.0.0/8 via 6.6.6.254 dev eth10
+
+
+Running the unit tests:
+----------------------
+
+After copying the files and making sure the script has been adapted,
+
+from the VM, run the following command:
+
+# for i in $(seq 1 8); do ./tcase$i.sh; done
+
+This will record the generated network+route files.
+
+Then to verify result, run the following command (this will take down the
+network, except eth0):
+
+# for i in $(seq 1 8); do ./verify.sh tcase$i_results; done
+
+
+-------------------------------------------------------------------------------
+
+
+Test Case #1: standard
+------------
+
+Expected results:
+
+team56 -> eth5
+default via 192.168.122.1 dev eth0
+102.0.0.0/8 via 2.2.2.254 dev bond34
+103.0.0.0/8 via 3.3.3.254 dev eth5
+104.0.0.0/8 via 4.4.4.254 dev bridge78
+105.0.0.0/8 via 5.5.5.254 dev eth9.1
+106.0.0.0/8 via 6.6.6.254 dev eth10
+
+
+Test Case #2: simplification
+------------
+
+SIMPLIFY_BONDING=y SIMPLIFY_BRIDGE=y
+
+Expected results:
+
+bond12 -> eth1
+bond34 -> eth3
+team56 -> eth5
+bridge78 -> eth7
+default via 192.168.122.1 dev eth0
+102.0.0.0/8 via 2.2.2.254 dev eth3
+103.0.0.0/8 via 3.3.3.254 dev eth5
+104.0.0.0/8 via 4.4.4.254 dev eth7
+105.0.0.0/8 via 5.5.5.254 dev eth9.1
+106.0.0.0/8 via 6.6.6.254 dev eth10
+
+
+Test Case #3: standard with eth2, eth4, eth6, eth8, eth10 DOWN
+------------
+
+for eth in eth2 eth4 eth6 eth8 eth10; do ifdown $eth; done
+
+Expected results:
+
+eth2, eth4, eth6, eth8, eth10 not in file
+default via 192.168.122.1 dev eth0
+102.0.0.0/8 via 2.2.2.254 dev bond34
+103.0.0.0/8 via 3.3.3.254 dev eth5
+104.0.0.0/8 via 4.4.4.254 dev bridge78
+105.0.0.0/8 via 5.5.5.254 dev eth9.1
+
+
+Test Case #4: simplification with eth2, eth4, eth6, eth8, eth10 DOWN
+------------
+
+for eth in eth2 eth4 eth6 eth8 eth10; do ifdown $eth; done
+
+Expected results:
+
+eth2, eth4, eth6, eth8, eth10 not in file
+default via 192.168.122.1 dev eth0
+102.0.0.0/8 via 2.2.2.254 dev eth3
+103.0.0.0/8 via 3.3.3.254 dev eth5
+104.0.0.0/8 via 4.4.4.254 dev eth7
+105.0.0.0/8 via 5.5.5.254 dev eth9.1
+
+
+Test Case #5: standard with eth1, eth3, eth5, eth7, eth9 DOWN
+------------
+
+for eth in eth1 eth3 eth5 eth7 eth9; do ifdown $eth; done
+
+Expected results:
+
+eth2, eth4, eth6, eth8, eth10 not in file
+default via 192.168.122.1 dev eth0
+102.0.0.0/8 via 2.2.2.254 dev bond34
+103.0.0.0/8 via 3.3.3.254 dev eth6
+104.0.0.0/8 via 4.4.4.254 dev bridge78
+106.0.0.0/8 via 6.6.6.254 dev eth10
+
+
+Test Case #6: simplification with eth1, eth3, eth5, eth7, eth9 DOWN
+------------
+
+for eth in eth1 eth3 eth5 eth7 eth9; do ifdown $eth; done
+
+Expected results:
+
+eth2, eth4, eth6, eth8, eth10 not in file
+default via 192.168.122.1 dev eth0
+102.0.0.0/8 via 2.2.2.254 dev eth4
+103.0.0.0/8 via 3.3.3.254 dev eth6
+104.0.0.0/8 via 4.4.4.254 dev eth8
+106.0.0.0/8 via 6.6.6.254 dev eth10
+
+
+Test Case #7: IP address mapping
+------------
+
+# cat mappings/ip_addresses 
+bond12	1.1.1.100/16
+bond34	2.2.2.100/16
+#team56	3.3.3.100/16
+bridge78	4.4.4.100/24
+#eth9.1	5.5.5.100/24
+eth10	6.6.6.100/16
+
+Expected results:
+
+bond12 -> 1.1.1.100/16
+bond34 -> 2.2.2.100/16
+eth5 -> 3.3.3.3/16 (no mapping)
+bridge78 -> 4.4.4.100/24
+eth9.1 => 5.5.5.5/24 (no mapping)
+eth10 => 6.6.6.100/16
+
+
+Test Case #8: IP address mapping & simplification
+------------
+
+SIMPLIFY_BONDING=y SIMPLIFY_BRIDGE=y
+
+# cat mappings/ip_addresses 
+bond12	1.1.1.100/16
+bond34	2.2.2.100/16
+#team56	3.3.3.100/16
+bridge78	4.4.4.100/24
+#eth9.1	5.5.5.100/24
+eth10	6.6.6.100/16
+
+Expected results:
+
+eth1 => 1.1.1.100/16
+eth3 => 2.2.2.100/16
+eth5 => 3.3.3.3/16 (no mapping)
+eth7 => 4.4.4.100/24
+eth9.1 => 5.5.5.5/24 (no mapping)
+eth10 => 6.6.6.100/16

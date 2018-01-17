@@ -1,0 +1,6 @@
+DEVICE="bridge2"
+TYPE="Bridge"
+BOOTPROTO="none"
+IPADDR="2.2.2.2"
+ONBOOT="yes"
+PREFIX=24
