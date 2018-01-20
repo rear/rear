@@ -5,7 +5,7 @@
 
 # Borg restores to cwd.
 # Switch current working directory or die.
-cd $TARGET_FS_ROOT
+pushd $TARGET_FS_ROOT >/dev/null
 StopIfError "Could not change directory to $TARGET_FS_ROOT"
 
 # Start actual restore.
@@ -20,3 +20,4 @@ $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO::$BORGBACKUP_ARCHIVE
 StopIfError "Could not successfully finish Borg restore"
 
 LogPrint "Borg OS restore finished successfully"
+popd >/dev/null
