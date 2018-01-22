@@ -27,6 +27,7 @@ if [ $rc -ne 0 ]; then
     LogPrint "Failed to list $BORGBACKUP_REPO on $BORGBACKUP_HOST"
     LogPrint "Creating new Borg repository $BORGBACKUP_REPO on $BORGBACKUP_HOST"
     borg init $BORGBACKUP_OPT_ENCRYPTION $BORGBACKUP_OPT_REMOTE_PATH \
+    $BORGBACKUP_OPT_UMASK \
     $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO
     rc=$?
 fi

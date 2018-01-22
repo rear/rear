@@ -45,6 +45,13 @@ function borg_set_vars {
         BORGBACKUP_OPT_REMOTE_PATH="--remote-path $BORGBACKUP_REMOTE_PATH"
     fi
 
+    # Prepare option for Borg umask.
+    # Empty BORGBACKUP_UMASK will default to 0077.
+    BORGBACKUP_OPT_UMASK=""
+    if [ ! -z $BORGBACKUP_UMASK ]; then
+        BORGBACKUP_OPT_UMASK="--umask $BORGBACKUP_UMASK"
+    fi
+
     # Set archive cache file
     BORGBACKUP_ARCHIVE_CACHE=$TMP_DIR/borg_archive
 }
