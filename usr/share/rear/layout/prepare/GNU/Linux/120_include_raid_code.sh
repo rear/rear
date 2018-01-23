@@ -24,16 +24,20 @@ create_raid() {
 
     local mdadmcmd="mdadm --create $device --force"
 
+    local devices_total=0
+    local devices_found=0
     local devices=""
     local option
     for option in $options ; do
         case "$option" in
             (devices=*)
-                list=${option#devices=}
+                local list=${option#devices=}
                 OIFS=$IFS
                 IFS=","
+                local raiddevice
                 for raiddevice in $list ; do
                     devices="$devices$raiddevice "
+                    let devices_found+=1
                 done
                 IFS=$OIFS
                 ;;
@@ -42,11 +46,24 @@ create_raid() {
                     mdadmcmd="$mdadmcmd --$option"
                 fi
                 ;;
+            (raid-devices=*)
+                devices_total=${option#raid-devices=}
+                mdadmcmd="$mdadmcmd --$option"
+                ;;
             (*)
                 mdadmcmd="$mdadmcmd --$option"
                 ;;
         esac
     done
+
+    # If some devices are missing, add 'missing' special devices
+    if [ $devices_found -lt $devices_total ] ; then
+        # Print as many 'missing' as there are missing devices
+        let missing=$devices_total-$devices_found
+        LogPrint "Software RAID $device has not enough physical devices, adding $missing 'missing' devices"
+        devices="$devices $(printf "missing%.0s " $(seq $missing))"
+    fi
+
     # Try to make mdadm non-interactive...
     mdadmcmd="echo \"Y\" | $mdadmcmd $devices"
 
