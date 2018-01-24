@@ -1,10 +1,9 @@
 # verify/default/040_validate_variables.sh
 
-# test if variable WAIT_SECS is an integer, if not, give it the default value
-if [[ ! -z "$WAIT_SECS" ]]; then
-    WAIT_SECS=$( is_numeric $WAIT_SECS )  # if 0 then bsize was not numeric
-    [[ $WAIT_SECS -eq 0 ]] && WAIT_SECS=30
-else
-    WAIT_SECS=30
-fi
+# Test if variable WAIT_SECS is a positive integer,
+# if not, give it the default value from default.conf.
+
+# is_positive_integer outputs '0' and returns 1
+# if its (first) argument is not a positive integer (or empty):
+is_positive_integer $WAIT_SECS 1>/dev/null || WAIT_SECS=30
 

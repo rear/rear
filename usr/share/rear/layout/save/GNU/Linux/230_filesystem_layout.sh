@@ -127,7 +127,8 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 max_mounts=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Maximummountcount:[0-9]*' | cut -d ':' -f 2 )
                 echo -n " max_mounts=$max_mounts"
                 check_interval=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Checkinterval:[0-9]*' | cut -d ':' -f 2 | cut -d '(' -f1 )
-                check_interval=$( is_numeric $check_interval )  # if non-numeric 0 is returned
+                # is_integer outputs '0' if its (first) argument is not an integer (or empty)
+                check_interval=$( is_integer $check_interval )
                 # translate check_interval from seconds to days
                 let check_interval=$check_interval/86400
                 echo -n " check_interval=${check_interval}d"

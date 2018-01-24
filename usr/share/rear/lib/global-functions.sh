@@ -5,20 +5,44 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
+# Extract the real content from a config file provided as argument.
+# In other words it strips comments and new lines:
 function read_and_strip_file () {
-# extracts content from config files. In other words: strips the comments and new lines
     if test -s "$1" ; then
         sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$1"
     fi
 }
 
-function is_numeric () {
-    # simple test if var is an integer
-    if expr $1 + 0 >/dev/null 2>&1 ; then
-        echo $1
-    else
-        echo 0
+# Test if the (first) argument is an integer.
+# If yes output the argument value and return 0
+# otherwise output '0' and return 1:
+function is_integer () {
+    local argument="$1"
+    if test "$argument" -eq "$argument" 2>/dev/null ; then
+        # The arithmetic expansion removes a possible leading '+' in the output
+        # so that e.g. "is_integer +12" outputs '12' (and not '+12')
+        # and "is_integer -0" outputs '0' (and not '-0'):
+        echo $(( argument + 0 ))
+        return 0
     fi
+    echo 0
+    return 1
+}
+
+# Test if the (first) argument is a positive integer (i.e. test for '> 0')
+# If yes output the argument value and return 0
+# otherwise output '0' and return 1
+# (in particular "is_positive_integer 0" outputs '0' but returns 1):
+function is_positive_integer () {
+    local argument="$1"
+    if test "$argument" -gt 0 2>/dev/null ; then
+        # The arithmetic expansion removes a possible leading '+' in the output
+        # so that e.g. "is_positive_integer +12" outputs '12' (and not '+12'):
+        echo $(( argument + 0 ))
+        return 0
+    fi
+    echo 0
+    return 1
 }
 
 # A function to test whether or not its arguments contain at least one 'real value'
