@@ -6,11 +6,12 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 # Extract the real content from a config file provided as argument.
-# In other words it strips comments and new lines:
+# It outputs non-empty and non-comment lines that do not start with a space.
+# In other words it strips comments, empty lines, and lines with leading space(s):
 function read_and_strip_file () {
-    if test -s "$1" ; then
-        sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$1"
-    fi
+    local filename="$1"
+    test -s "$filename" || return 1
+    sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$filename"
 }
 
 # Test if the (first) argument is an integer.
