@@ -77,11 +77,6 @@ The result of the analysis is written into configuration files under
 Relax-and-Recover directories onto the rescue system where the same
 framework runs a different workflow - the recovery workflow.
 
-The recovery workflow is triggered by the fact that '/etc/rear-release'
-exists at the file system. Alternatively a "demo" recovery workflow
-can be started manually. This will simply recover all data into a
-subdirectory and not touch the hard disks (Phase 2).
-
 The recovery workflow consists of these parts (identically named modules
 are indeed the same):
 
@@ -262,5 +257,5 @@ RO means that the framework manages this variable and modules and methods should
   - Cut the overhead - less is better
   - Less choices (=> less errors)
 
-  - **mkCDrec project is not active more**
+  - **mkCDrec project is obsolete**
 

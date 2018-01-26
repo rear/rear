@@ -166,6 +166,16 @@ recover the system; can be used only when running from the rescue media
 only restore the backup; can be used only when running from the rescue media
 .RE
 .PP
+\fBmkopalpba\fR
+.RS 4
+create a pre\-boot authentication (PBA) image to boot from TCG Opal 2\-compliant self\-encrypting disks
+.RE
+.PP
+\fBopaladmin\fR
+.RS 4
+administrate TCG Opal 2\-compliant self\-encrypting disks
+.RE
+.PP
 \fBvalidate\fR
 .RS 4
 submit validation information
@@ -205,7 +215,7 @@ In this combination Relax\-and\-Recover recreates the system layout and calls th
 For demonstration and special use purposes Relax\-and\-Recover also includes an internal backup method, NETFS, which can be used to create a simple tar\&.gz archive of the system\&. For all permanent setups we recommend using something more professional for backup, either a traditional backup software (open source or commercial) or rsync with hardlink based solutions, e\&.g\&. RSYNC BACKUP MADE EASY\&.
 .SH "RESCUE IMAGE CONFIGURATION"
 .sp
-The OUTPUT variable defines from where our bootable rescue image will be booted and the OUTPUT_URL variable defines where the rescue image should be send to\&. Possible OUTPUT setting are:
+The OUTPUT variable defines from where our bootable rescue image will be booted and the OUTPUT_URL variable defines where the rescue image should be send to\&. Possible OUTPUT settings are:
 .PP
 OUTPUT=\fBRAMDISK\fR
 .RS 4
@@ -235,8 +245,48 @@ OUTPUT=\fBUSB\fR
 Create a bootable USB disk (using extlinux)\&. Specify the USB storage device by using
 USB_DEVICE\&.
 .RE
+.PP
+OUTPUT=\fBRAWDISK\fR
+.RS 4
+Create a bootable image file named "rear\-$(hostname)\&.raw\&.gz", which
 .sp
-When using OUTPUT=ISO, RAMDISK, OBDR or USB you should provide the backup target location through the OUTPUT_URL variable\&. Possible OUTPUT_URL settings are:
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+supports UEFI boot if syslinux/EFI or Grub 2/EFI is installed,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+supports Legacy BIOS boot if syslinux is installed,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+supports UEFI/Legacy BIOS dual boot if syslinux
+\fBand\fR
+one of the supported EFI bootloaders are installed\&.
+.RE
+.RE
+.sp
+When using OUTPUT=ISO, RAMDISK, OBDR, USB, or RAWDISK you should provide the backup target location through the OUTPUT_URL variable\&. Possible OUTPUT_URL settings are:
 .PP
 OUTPUT_URL=\fBfile://\fR
 .RS 4
@@ -317,21 +367,21 @@ Write the image using sshfs and the SSH protocol\&.
 .PP
 OUTPUT_URL=\fBnull\fR
 .RS 4
-Do not copy the ISO image from
+Do not copy the rescue image from
 \fI/var/lib/rear/output/\fR
 to a remote output location\&.
 OUTPUT_URL=null
 is useful when another program (e\&.g\&. an
 \fIexternal\fR
-backup program) is used to save the ISO image from the local system to a remote place, or with
+backup program) is used to save the rescue image from the local system to a remote place, or with
 BACKUP_URL=iso:///backup
-when the backup is included in the ISO image to avoid a (big) copy of the ISO image at a remote output location\&. In the latter case the ISO image must be manually saved from the local system to a remote place\&.
+when the backup is included in the rescue image to avoid a (big) copy of the rescue image at a remote output location\&. In the latter case the rescue image must be manually saved from the local system to a remote place\&.
 OUTPUT_URL=null
 is only supported together with
 BACKUP=NETFS\&.
 .RE
 .sp
-If you do not specify OUTPUT_URL variable then by default it will be aligned to what was defined by variable BACKUP_URL\&. And, the ISO image will then be copied to the same location as your backup of the system disk(s)\&.
+If you do not specify OUTPUT_URL variable then by default it will be aligned to what was defined by variable BACKUP_URL\&. And, the rescue image will then be copied to the same location as your backup of the system disk(s)\&.
 .sp
 The ISO_DEFAULT variable defines what default boot option is used on the rescue image\&. Possible values are manual, boothd or automatic\&. Manual will make you boot into the shell directly by default, boothd will boot to the first disk (default) or automatic will automatically start in recovery mode\&.
 .SH "BACKUP SOFTWARE INTEGRATION"
@@ -553,6 +603,50 @@ OUTPUT_URL=nfs://server/path/
 .RE
 .sp
 When using BACKUP=NETFS and BACKUP_PROG=tar there is an option to select BACKUP_TYPE=incremental or BACKUP_TYPE=differential to let rear make incremental or differential backups until the next full backup day e\&.g\&. via FULLBACKUPDAY="Mon" is reached or when the last full backup is too old after FULLBACKUP_OUTDATED_DAYS has passed\&. Incremental or differential backup is currently only known to work with BACKUP_URL=nfs\&. Other BACKUP_URL schemes may work but at least BACKUP_URL=usb requires USB_SUFFIX to be set to work with incremental or differential backup\&.
+.SH "SUPPORT FOR SELF-ENCRYPTING DISKS"
+.sp
+Relax\-and\-Recover supports self\-encrypting disks (SEDs) compliant with the TCG Opal 2 specification if the sedutil\-cli executable is installed\&.
+.sp
+Self\-encrypting disk support includes
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+recovery (saving and restoring the system\(cqs SED configuration),
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+setting up SEDs, including assigning a disk password,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+providing a pre\-boot authentication (PBA) system to unlock SEDs at boot time\&.
+.RE
+.sp
+To prepare booting from an SED, run rear mkopalpba, then create the rescue system\&.
+.sp
+To set up an SED, boot the Relax\-and\-Recover rescue system and run`rear opaladmin setupERASE DEVICE` (\fIDEVICE\fR being the disk device path like /dev/sda)\&.
+.sp
+For complete information, consult the section "Support for TCG Opal 2\-compliant Self\-Encrypting Disks" in the Relax\-and\-Recover user guide\&.
 .SH "CONFIGURATION"
 .sp
 To configure Relax\-and\-Recover you have to edit the configuration files in \fI/etc/rear/\fR\&. All \fI*\&.conf\fR files there are part of the configuration, but only \fIsite\&.conf\fR and \fIlocal\&.conf\fR are intended for the user configuration\&. All other configuration files hold defaults for various distributions and should not be changed\&.
