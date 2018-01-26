@@ -106,17 +106,24 @@ extract_partitions() {
         done < $TMP_DIR/partitions-data
     fi
 
-    ### find partition name for gpt disks.
+    ### Find partition name for GPT disks.
     # For the SUSE specific gpt_sync_mbr partitioning scheme
     # see https://github.com/rear/rear/issues/544
     if [[ "$disk_label" = "gpt" || "$disk_label" == "gpt_sync_mbr" ]] ; then
         if [[ "$FEATURE_PARTED_MACHINEREADABLE" ]] ; then
             while read partition_nr size start junk ; do
+                # In case of GPT the 'type' field contains actually the GPT partition name.
                 type=$(grep "^$partition_nr:" $TMP_DIR/parted | cut -d ":" -f "6")
-                if [[ -z "$type" ]] ; then
-                    type="rear-noname"
-                fi
-                type=$(echo "$type" | sed -e 's/ /0x20/g') # replace spaces with 0x20 in name field
+                # There must not be any empty field in disklayout.conf
+                # because the fields in disklayout.conf are positional parameters
+                # that get assigned to variables via the 'read' shell builtin:
+                test "$type" || type="rear-noname"
+                # There must not be any IFS character in a field in disklayout.conf
+                # because IFS characters are used as field separators
+                # but in particular a GPT partition name can contain spaces
+                # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
+                # so that the partition name is stored as a percent-encoded string:
+                type=$( percent_encode "$type" )
                 sed -i /^$partition_nr\ /s/$/\ $type/ $TMP_DIR/partitions
             done < $TMP_DIR/partitions-data
         else
@@ -136,13 +143,22 @@ extract_partitions() {
                 fi
 
                 number=$(get_columns "$line" "$numberfield" | tr -d " " | tr -d ";")
+
+                # In case of GPT the 'type' field contains actually the GPT partition name.
                 type=$(get_columns "$line" "name" | tr -d " " | tr -d ";")
 
-                if [[ -z "$type" ]] ; then
-                    type="rear-noname"
-                fi
+                # There must not be any empty field in disklayout.conf
+                # because the fields in disklayout.conf are positional parameters
+                # that get assigned to variables via the 'read' shell builtin:
+                test "$type" || type="rear-noname"
 
-                type=$(echo "$type" | sed -e 's/ /0x20/g')
+                # There must not be any IFS character in a field in disklayout.conf
+                # because IFS characters are used as field separators
+                # but in particular a GPT partition name can contain spaces
+                # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
+                # so that the partition name is stored as a percent-encoded string:
+                type=$( percent_encode "$type" )
+
                 sed -i /^$number\ /s/$/\ $type/ $TMP_DIR/partitions
             done < <(grep -E '^[ ]*[0-9]' $TMP_DIR/parted)
         fi

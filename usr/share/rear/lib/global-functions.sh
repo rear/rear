@@ -5,20 +5,45 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
+# Extract the real content from a config file provided as argument.
+# It outputs non-empty and non-comment lines that do not start with a space.
+# In other words it strips comments, empty lines, and lines with leading space(s):
 function read_and_strip_file () {
-# extracts content from config files. In other words: strips the comments and new lines
-    if test -s "$1" ; then
-        sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$1"
-    fi
+    local filename="$1"
+    test -s "$filename" || return 1
+    sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$filename"
 }
 
-function is_numeric () {
-    # simple test if var is an integer
-    if expr $1 + 0 >/dev/null 2>&1 ; then
-        echo $1
-    else
-        echo 0
+# Test if the (first) argument is an integer.
+# If yes output the argument value and return 0
+# otherwise output '0' and return 1:
+function is_integer () {
+    local argument="$1"
+    if test "$argument" -eq "$argument" 2>/dev/null ; then
+        # The arithmetic expansion removes a possible leading '+' in the output
+        # so that e.g. "is_integer +12" outputs '12' (and not '+12')
+        # and "is_integer -0" outputs '0' (and not '-0'):
+        echo $(( argument + 0 ))
+        return 0
     fi
+    echo 0
+    return 1
+}
+
+# Test if the (first) argument is a positive integer (i.e. test for '> 0')
+# If yes output the argument value and return 0
+# otherwise output '0' and return 1
+# (in particular "is_positive_integer 0" outputs '0' but returns 1):
+function is_positive_integer () {
+    local argument="$1"
+    if test "$argument" -gt 0 2>/dev/null ; then
+        # The arithmetic expansion removes a possible leading '+' in the output
+        # so that e.g. "is_positive_integer +12" outputs '12' (and not '+12'):
+        echo $(( argument + 0 ))
+        return 0
+    fi
+    echo 0
+    return 1
 }
 
 # A function to test whether or not its arguments contain at least one 'real value'
@@ -73,6 +98,111 @@ function is_false () {
         return 0 ;;
     esac
     return 1
+}
+
+# Two functions for percent-encoding and percent-decoding cf.
+# https://en.wikipedia.org/wiki/Percent-encoding
+# that are based on the urlencode and urldecode functions on
+# https://askubuntu.com/questions/53770/how-can-i-encode-and-decode-percent-encoded-strings-on-the-command-line
+#   urlencode() {
+#       # urlencode <string>
+#       local length="${#1}"
+#       for (( i = 0; i < length; i++ )); do
+#           local c="${1:i:1}"
+#           case $c in
+#               [a-zA-Z0-9.~_-]) printf "$c" ;;
+#               *) printf '%%%02X' "'$c"
+#           esac
+#       done
+#   }
+#   urldecode() {
+#       # urldecode <string>
+#       local url_encoded="${1//+/ }"
+#       printf '%b' "${url_encoded//%/\\x}"
+#   }
+
+function percent_encode() {
+    # FIXME: the length could be wrong for UTF-8 encoded strings
+    # at least on my <jsmeix@suse.de> SLES11-SP4 system with GNU bash version 3.2.57
+    # like the UTF-8 encoded German word bin[a_umlaut]r
+    # cf. https://en.opensuse.org/SDB:Plain_Text_versus_Locale
+    #
+    #   export LANG=C ; export LC_ALL=C
+    #
+    #   string="$( echo -en "bin\0303\0244r" )"
+    #
+    #   echo -n $string | od -c
+    #   0000000   b   i   n 303 244   r
+    #   0000006
+    #
+    #   length="${#string}"
+    #
+    #   echo $length
+    #   5
+    #
+    # In general the current percent_encode function fails for UTF-8 encoded strings
+    #   percent_encode "$( echo -en "bin\0303\0244r" )"
+    #   bin%FFFFFFFFFFFFFFC3r
+    # and running that with 'set -x' shows the UTF-8 encoded bytes cause it:
+    #   + char=$'\303\244'
+    #   + case $char in
+    #   + printf %%%02X ''\''Ã#'
+    #   %FFFFFFFFFFFFFFC3+
+    # because the '\303\244' UTF-8 bytes should get encoded byte by byte
+    # but not as two bytes at the same time so that the problem is
+    # how to process a string single byte by single byte in bash.
+    # Perhaps this is a bug in GNU bash version 3.2.57 because
+    #
+    #   export LANG=C ; export LC_ALL=C
+    #
+    #   char=$'\303\244'
+    #
+    #   echo -n $char | od -c
+    #   0000000 303 244
+    #   0000002
+    #
+    #   clength="${#char}"
+    #
+    #   # echo $clength
+    #   1
+    #
+    # Again (as above) it seems GNU bash version 3.2.57 results a wrong length
+    # which seems to be the root cause why percent_encode() fails for UTF-8 encoded strings.
+    local string="$*"
+    local length="${#string}"
+    local pos=0
+    local char=""
+    for (( pos = 0 ; pos < length ; pos++ )) ; do
+        char="${string:pos:1}"
+        case $char in
+            # Unreserved characters are a-z A-Z 0-9 . ~ _ - which are not percent-encoded because
+            # for maximum interoperability producers are discouraged from percent-encoding unreserved characters
+            # see https://en.wikipedia.org/wiki/Percent-encoding
+            ([a-zA-Z0-9.~_-])
+                printf "$char"
+                ;;
+            # All non-unreserved characters get percent-encoded:
+            (*)
+                # A literal single-quote in front of a character is interpreted as the character's number
+                # according to the underlying locale setting so that
+                #   printf "%X" "'k"
+                # outputs the hexadecimal number of the k character which is 6B
+                printf '%%%02X' "'$char"
+                ;;
+        esac
+    done
+}
+
+function percent_decode() {
+    # The special handling for '+' characters in a percent-encoded string in the above urldecode function
+    # is not implemented here because I <jsmeix@suse.de> think that case does not happen in ReaR because
+    # the percent_encode function encodes a '+' character in the original string as '%2B'
+    # so that a literal '+' character in a percent-encoded string should not happen.
+    local string="$*"
+    # Convert the percent-encoded string into a backslash-escape hexadecimal encoded string:
+    local backslash_escape_encoded="${string//%/\\x}"
+    # Print the backslash-escape encoded string while interpreting backslash escapes in there:
+    printf '%b' "$backslash_escape_encoded"
 }
 
 ######
@@ -445,7 +575,7 @@ function mathlib_calculate()
 # Duply is a wrapper script around duplicity - this function is
 # used in the prep phase (for mkbackup) and in the verify phase
 # (to check the TEMP_DIR directory - it must be defined and cannot
-# be /tmp as this is usally a tmpfs file system which is too small) 
+# be /tmp as this is usally a tmpfs file system which is too small)
 function find_duply_profile ()
 {
     # there could be more then one profile present - select where SOURCE='/'

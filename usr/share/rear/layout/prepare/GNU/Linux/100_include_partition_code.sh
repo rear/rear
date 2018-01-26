@@ -145,6 +145,13 @@ EOF
     local flags partition
     while read part disk size pstart name flags partition junk; do
 
+        # In layout/save/GNU/Linux/200_partition_layout.sh
+        # in particular a GPT partition name that can contain spaces
+        # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
+        # was stored as a percent-encoded string in disklayout.conf
+        # so that here it needs to be percent-decoded:
+        name=$( percent_decode "$name" )
+
         ### If not in migration mode and start known, use original start.
         if ! is_true "$MIGRATION_MODE" && test "$pstart" != "unknown" ; then
             start="$pstart"
@@ -170,9 +177,6 @@ EOF
             fi
         fi
 
-        # The 'name' could contain spaces (were replaced with 0%20; need to change this again).
-        name=$(echo "$name" | sed -e 's/0x20/ /g')
-
         # Avoid naming multiple partitions "rear-noname" as this will trigger systemd log messages
         # "Dev dev-disk-by\x2dpartlabel-rear\x2dnoname.device appeared twice with different sysfs paths"
         if [[ "$name" == "rear-noname" ]]; then
@@ -185,9 +189,17 @@ EOF
             else
                 end="100%"
             fi
+            # The duplicated quoting "'$name'" is there because
+            # parted's internal parser needs single quotes for values with blanks.
+            # In particular a GPT partition name that can contain spaces
+            # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
+            # so that when calling parted on command line it must be done like
+            #    parted -s /dev/sdb unit MiB mkpart "'partition name'" 12 34
+            # where the outer quoting "..." is for bash so that
+            # the inner quoting '...' is preserved for parted's internal parser:
             cat >> "$LAYOUT_CODE" <<EOF
 my_udevsettle
-parted -s $device mkpart '$name' ${start}B $end >&2
+parted -s $device mkpart "'$name'" ${start}B $end >&2
 my_udevsettle
 EOF
         else
@@ -198,9 +210,17 @@ EOF
                 start_mb=0
             fi
             end_mb=$( mathlib_calculate "$end / 1024 / 1024" )
+            # The duplicated quoting "'$name'" is there because
+            # parted's internal parser needs single quotes for values with blanks.
+            # In particular a GPT partition name that can contain spaces
+            # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
+            # so that when calling parted on command line it must be done like
+            #    parted -s /dev/sdb unit MiB mkpart "'partition name'" 12 34
+            # where the outer quoting "..." is for bash so that
+            # the inner quoting '...' is preserved for parted's internal parser:
             cat  >> "$LAYOUT_CODE" <<EOF
 my_udevsettle
-parted -s $device mkpart '$name' $start_mb $end_mb >&2
+parted -s $device mkpart "'$name'" $start_mb $end_mb >&2
 my_udevsettle
 EOF
         fi
@@ -238,10 +258,19 @@ EOF
         # Explicitly name GPT partitions.
         # For the SUSE specific gpt_sync_mbr partitioning scheme
         # see https://github.com/rear/rear/issues/544
+        # The quoted duplicated quoting \"'$name'\" is there because
+        # parted's internal parser needs single quotes for values with blanks.
+        # In particular a GPT partition name that can contain spaces
+        # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
+        # so that when calling parted on command line it must be done like
+        #    parted -s /dev/sdb unit MiB mkpart "'partition name'" 12 34
+        # where the outer quoting "..." is for bash which neeeds to be quoted \"...\" here
+        # because there is a outermost quoting "..." of the echo command
+        # and the inner quoting '...' is preserved for parted's internal parser:
         if [[ "$label" = "gpt" || "$label" == "gpt_sync_mbr" ]] && [[ "$name" != "rear-noname" ]] ; then
             (
             echo "my_udevsettle"
-            echo "parted -s $device name $number '$name' >&2"
+            echo "parted -s $device name $number \"'$name'\" >&2"
             echo "my_udevsettle"
             ) >> $LAYOUT_CODE
         fi
