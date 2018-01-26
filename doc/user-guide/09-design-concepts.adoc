@@ -77,8 +77,8 @@ The result of the analysis is written into configuration files under
 Relax-and-Recover directories onto the rescue system where the same
 framework runs a different workflow - the recovery workflow.
 
-The recovery workflow is triggered by the fact that the root filesystem is
-mounted in a ram disk or tmpfs. Alternatively a "demo" recovery workflow
+The recovery workflow is triggered by the fact that '/etc/rear-release'
+exists at the file system. Alternatively a "demo" recovery workflow
 can be started manually. This will simply recover all data into a
 subdirectory and not touch the hard disks (Phase 2).
 
