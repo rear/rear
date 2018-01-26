@@ -38,7 +38,7 @@ Relax\-and\-Recover is the leading Open Source disaster recovery solution\&. It 
 .sp
 Relax\-and\-Recover produces a bootable image\&. This image can repartition the system\&. Once that is done it initiates a restore from backup\&. Restores to different hardware are possible\&. Relax\-and\-Recover can therefore be used as a migration tool as well\&.
 .sp
-Currently Relax\-and\-Recover supports various boot media (incl\&. ISO, PXE, OBDR tape, USB or eSATA storage), a variety of network protocols (incl\&. sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude of backup strategies (incl\&. IBM Tivoli Storage Manager, HP DataProtector, Symantec NetBackup, EMC NetWorker, FDR/Upstream, NovaBACKUP DC, Bareos, Bacula, rsync, rbme, Borg)\&. This results in a bootable image that is capable of booting via PXE, DVD/CD, bootable tape or virtual provisioning\&.
+Currently Relax\-and\-Recover supports various boot media (incl\&. ISO, PXE, OBDR tape, USB or eSATA storage), a variety of network protocols (incl\&. sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude of backup strategies (incl\&. IBM Tivoli Storage Manager, HP DataProtector, Symantec NetBackup, EMC NetWorker, EMC Avamar, FDR/Upstream, NovaBACKUP DC, Bareos, Bacula, rsync, rbme, Borg)\&. This results in a bootable image that is capable of booting via PXE, DVD/CD, bootable tape or virtual provisioning\&.
 .sp
 Relax\-and\-Recover was designed to be easy to set up, requires no maintenance and is there to assist when disaster strikes\&. Its setup\-and\-forget nature removes any excuses for not having a disaster recovery solution implemented\&.
 .sp
@@ -443,6 +443,11 @@ Use IBM Tivoli Storage Manager to restore the data\&. The Relax\-and\-Recover re
 BACKUP=\fBNSR\fR
 .RS 4
 Using EMC NetWorker (Legato) to restore the data\&.
+.RE
+.PP
+BACKUP=\fBAVA\fR
+.RS 4
+Using EMC Avamar to restore the data\&.
 .RE
 .PP
 BACKUP=\fBSESAM\fR
