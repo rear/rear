@@ -134,50 +134,6 @@ fi
 
 echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
 
-### Add a specific os.conf so we do not depend on LSB dependencies
-%{?fedora:echo -e "OS_VENDOR=Fedora\nOS_VERSION=%{?fedora}" >etc/rear/os.conf}
-%{?mdkversion:echo -e "OS_VENDOR=Mandriva\nOS_VERSION=%{distro_rel}" >etc/rear/os.conf}
-%{?rhel:echo -e "OS_VENDOR=RedHatEnterpriseServer\nOS_VERSION=%{?rhel}" >etc/rear/os.conf}
-#%{?sles_version:echo -e "OS_VENDOR=SUSE_LINUX\nOS_VERSION=%{?sles_version}" >etc/rear/os.conf}
-#%{?suse_version:echo -e "OS_VENDOR=SUSE_LINUX\nOS_VERSION=%{?suse_version}" >etc/rear/os.conf}
-%if 0%{?suse_version} == 1110
-# SLE 11
-OS_VERSION="11"
-%endif
-%if 0%{?suse_version} == 1130
-# openSUSE 11.3
-OS_VERSION="11.3"
-%endif
-%if 0%{?suse_version} == 1140
-# openSUSE 11.4
-OS_VERSION="11.4"
-%endif
-%if 0%{?suse_version} == 1210
-# openSUSE 12.1
-OS_VERSION="12.1"
-%endif
-%if 0%{?suse_version} == 1220
-# openSUSE 12.2
-OS_VERSION="12.2"
-%endif
-%if 0%{?suse_version} == 1230
-# openSUSE 12.3
-OS_VERSION="12.3"
-%endif
-%if 0%{?suse_version} == 1310
-# openSUSE 13.1
-OS_VERSION="13.1"
-%endif
-%if 0%{?suse_version} == 1315
-# SLE 12
-OS_VERSION="12"
-%endif
-%if 0%{?suse_version} == 1320
-# openSUSE 13.2
-OS_VERSION="13.2"
-%endif
-%{?suse_version:echo -e "OS_VENDOR=SUSE_LINUX\nOS_VERSION=$OS_VERSION" >etc/rear/os.conf}
-
 %build
 
 %install

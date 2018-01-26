@@ -19,9 +19,9 @@ function SetOSVendorAndVersion () {
         # Recent Linux distro's with systemd has the /etc/os-release file
         # Try to find all the required information from that file
         if [[ -f /etc/os-release ]] ; then
+            grep -q -i 'fedora' /etc/os-release && OS_VENDOR=Fedora
             grep -q -i -E '(centos|redhat|scientific|oracle)' /etc/os-release && OS_VENDOR=RedHatEnterpriseServer
             grep -q -i 'suse' /etc/os-release && OS_VENDOR=SUSE_LINUX
-            grep -q -i 'fedora' /etc/os-release && OS_VENDOR=Fedora
             grep -q -i 'debian' /etc/os-release && OS_VENDOR=Debian
             grep -q -i -E '(ubuntu|linuxmint)' /etc/os-release && OS_VENDOR=Ubuntu
             grep -q -i 'arch' /etc/os-release && OS_VENDOR=Arch
@@ -31,9 +31,9 @@ function SetOSVendorAndVersion () {
         # For non-systemd distro's try the /etc/system-release file
         if test "$OS_VENDOR" = generic ; then
             if [[ -f /etc/system-release ]] ; then
+                grep -q -i 'fedora' /etc/system-release && OS_VENDOR=Fedora
                 grep -q -i -E '(centos|redhat|scientific|oracle)' /etc/system-release && OS_VENDOR=RedHatEnterpriseServer
                 grep -q -i 'suse' /etc/system-release && OS_VENDOR=SUSE_LINUX
-                grep -q -i 'fedora' /etc/system-release && OS_VENDOR=Fedora
                 grep -q -i 'mandriva' /etc/system-release && OS_VENDOR=Mandriva
                 majornr=$( grep -o -E '[0-9]+' /etc/system-release | head -1 )
                 minornr=$( grep -o -E '[0-9]+' /etc/system-release | head -2 | tail -1 )
