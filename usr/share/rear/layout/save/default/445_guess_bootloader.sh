@@ -58,6 +58,13 @@ for block_device in /sys/block/* ; do
     Log "End of strings in the first bytes on $disk_device"
 done
 
+if [ "$ARCH" = "Linux-arm" ]; then
+    BOOTLOADER=ARM
+    LogPrint "Using guessed bootloader $BOOTLOADER"
+    echo "$BOOTLOADER" >$bootloader_file
+    return
+fi
+
 # Error out when no bootloader was specified or could be autodetected:
 Error "Cannot autodetect what is used as bootloader, see default.conf about 'BOOTLOADER'"
 

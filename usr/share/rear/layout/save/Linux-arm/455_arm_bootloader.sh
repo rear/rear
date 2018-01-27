@@ -4,4 +4,4 @@
 [ "$BOOTLOADER" = "ARM" ] || return 0
 
 # Currently we just warn
-LogWarn "Warning: BOOTLOADER = ARM is just an Dummy!"
+LogPrint "Warning: BOOTLOADER = ARM is just an Dummy!"
