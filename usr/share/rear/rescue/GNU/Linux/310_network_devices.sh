@@ -290,7 +290,23 @@ function get_interface_state () {
     local network_interface=$1
     local sysfspath=/sys/class/net/$network_interface
 
-    cat $sysfspath/operstate
+    local operstate="$( cat $sysfspath/operstate )"
+    case "$operstate" in
+    down|up)
+            echo "$operstate"
+            ;;
+    *)
+            # Some network drivers do not set "operstate" to "down" or "up", in
+            # such case, rely on "carrier", for which `cat` fails when link is
+            # administratively down, returns 0 when link is down and 1
+            # otherwise.
+            if [ $( cat $sysfspath/carrier 2>/dev/null || echo 0 ) -eq 0 ]; then
+                echo "down"
+            else
+                echo "up"
+            fi
+            ;;
+    esac
 }
 
 function is_interface_up () {
@@ -303,7 +319,15 @@ function is_interface_up () {
     elif [ "$state" = "up" ] ; then
         return 0
     else
-        BugError "Unexpected operational state '$state' for '$network_interface'."
+        # Some network drivers do not set "operstate" to "down" or "up", in
+        # such case, rely on "carrier", for which `cat` fails when link is
+        # administratively down, returns 0 when link is down and 1 otherwise.
+        state=$( cat $sysfspath/carrier 2>/dev/null || echo 0 )
+        if [ $state -eq 0 ]; then
+            return 1
+        else
+            return 0
+        fi
     fi
 }
 
