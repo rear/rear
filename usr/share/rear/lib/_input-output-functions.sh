@@ -15,6 +15,9 @@
 # that works at least down to bash 3.1 in SLES10:
 LF=$'\n'
 
+# Keep PID of main process (i.e. the main script that the user had launched as 'rear'):
+readonly MASTER_PID=$$
+
 # Collect exit tasks in this array.
 # Without the empty string as initial value ${EXIT_TASKS[@]} would be an unbound variable
 # that would result an error exit if 'set -eu' is used:
@@ -54,31 +57,92 @@ function RemoveExitTask () {
     fi
 }
 
+# Output PIDs of all descendant processes of a parent process PID (specified as $1)
+# i.e. the parent and its direct children plus recursively all subsequent children of children
+# (i.e. parent PID, children PIDs, grandchildren PIDs, great-grandchildren PIDs, and so on)
+# where each PID is output on a separated line.
+# The output lists latest descendants PIDs first and the initial parent PID last
+# (i.e. great-grandchildren PIDs, grandchildren PIDs, children PIDs, parent PID)
+# so that the output ordering is already the right ordering to cleanly terminate
+# a sub-tree of processes below a parent process and finally the parent process
+# (i.e. first terminate great-grandchildren processes, then grandchildren processes,
+# then children processes, and finally terminate the parent process itself).
+# This termination functionality is used in the DoExitTasks() function.
+function descendants_pids () { 
+    local parent_pid=$1 ;
+    # Successfully ignore PIDs that do not exist or do no longer exist:
+    kill -0 $parent_pid 2>/dev/null || return 0
+    local child_pid="" ;
+    local children_pids=$( ps --ppid $parent_pid -o pid= ) ;
+    if test "$children_pids" ; then
+        for child_pid in $children_pids ; do
+            descendants_pids $child_pid ;
+        done
+    fi
+    # Only show PIDs that actually still exist which skips PIDs of children
+    # that were running a short time (like called programs by this function)
+    # and had already finished here:
+    kill -0 $parent_pid 2>/dev/null && echo $parent_pid || return 0
+}
+
 # Do all exit tasks:
 function DoExitTasks () {
-    Log "Running exit tasks."
-    # kill all running jobs
-    JOBS=( $( jobs -p ) )
-    # when "jobs -p" results nothing then JOBS is still an unbound variable so that
-    # an empty default value is used to avoid 'set -eu' error exit if $JOBS is unset:
-    if test -n ${JOBS:-""} ; then
-        Log "The following jobs are still active:"
-        jobs -l 1>&2
-        kill -9 "${JOBS[@]}" 1>&2
-        # allow system to clean up after killed jobs
+    LogPrint "Exiting $PROGRAM $WORKFLOW (PID $MASTER_PID) and its descendant processes"
+    # First of all wait one second to let descendant processes terminate on their own
+    # e.g. after Ctrl+C by the user descendant processes should terminate on their own
+    # cf. https://github.com/rear/rear/issues/1712#issuecomment-361588946
+    sleep 1
+    # Terminate all still running descendant processes of $MASTER_PID
+    # but do not termiate the MASTER_PID process itself because
+    # the MASTER_PID process must run the exit tasks below:
+    local descendant_processes="$( descendants_pids $MASTER_PID )"
+    local descendant_process=""
+    local remaining_columns=$(( COLUMNS - 40 ))
+    test $remaining_columns -ge 20 || remaining_columns=20
+    for descendant_process in $descendant_processes ; do
+        # descendant_processes contains at least MASTER_PID
+        # plus the PID of the subshell of the above call
+        #   descendant_processes="$( descendants_pids $MASTER_PID )"
+        # so that it is tested that a descendant_process is not MASTER_PID
+        # and that a descendant_process is still running before SIGTERM is sent:
+        test $MASTER_PID = $descendant_process && continue
+        kill -0 $descendant_process || continue
+        # Do not show
+        LogPrint "Terminating descendant process $descendant_process $( ps -p $descendant_process -o args= | cut -b-$remaining_columns )"
+        kill -SIGTERM $descendant_process 1>&2
+        # Wait one second to let the current descendant_process terminate
         sleep 1
-    fi
-    for task in "${EXIT_TASKS[@]}" ; do
-        Debug "Exit task '$task'"
-        eval "$task"
+        kill -0 $descendant_process && LogPrint "Descendant process $descendant_process not yet terminated"
+    done
+    # Kill all still running descendant processes of $MASTER_PID
+    # but do not kill the MASTER_PID process itself because
+    # the MASTER_PID process must run the exit tasks below:
+    descendant_processes="$( descendants_pids $MASTER_PID )"
+    for descendant_process in $descendant_processes ; do
+        # descendant_processes contains at least MASTER_PID
+        # plus the PID of the subshell of the above call
+        #   descendant_processes="$( descendants_pids $MASTER_PID )"
+        # so that it is tested that a descendant_process is not MASTER_PID
+        # and that a descendant_process is still running before SIGKILL is sent:
+        test $MASTER_PID = $descendant_process && continue
+        kill -0 $descendant_process || continue
+        LogPrint "Killing descendant process $descendant_process $( ps -p $descendant_process -o args= | cut -b-$remaining_columns )"
+        kill -SIGKILL $descendant_process 1>&2
+        # Wait one second to let the kernel remove the killed process
+        sleep 1
+        kill -0 $descendant_process && LogPrint "Killed descendant process $descendant_process still there"
+    done
+    # Finally run the exit tasks:
+    LogPrint "Running exit tasks"
+    local exit_task=""
+    for exit_task in "${EXIT_TASKS[@]}" ; do
+        Debug "Exit task '$exit_task'"
+        eval "$exit_task"
     done
 }
 
 # The command (actually the function) DoExitTasks is executed on exit from the shell:
 builtin trap "DoExitTasks" EXIT
-
-# Keep PID of main process (i.e. the main script that the user had launched as 'rear'):
-readonly MASTER_PID=$$
 
 # Prepare that STDIN STDOUT and STDERR can be later redirected to anywhere
 # (e.g. both STDOUT and STDERR can be later redirected to the log file).
