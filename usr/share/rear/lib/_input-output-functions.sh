@@ -69,16 +69,17 @@ function RemoveExitTask () {
 # then children processes, and finally terminate the parent process itself).
 # This termination functionality is used in the DoExitTasks() function.
 function descendants_pids () { 
-    local parent_pid=$1 ;
+    local parent_pid=$1
     # Successfully ignore PIDs that do not exist or do no longer exist:
     kill -0 $parent_pid 2>/dev/null || return 0
-    local child_pid="" ;
-    local children_pids=$( ps --ppid $parent_pid -o pid= ) ;
-    if test "$children_pids" ; then
-        for child_pid in $children_pids ; do
-            descendants_pids $child_pid ;
-        done
-    fi
+    # Recursively call this function for the actual children:
+    local child_pid="" 
+    for child_pid in $( ps --ppid $parent_pid -o pid= ) ; do
+        # At least the sub-shell of the $( ps --ppid $parent_pid -o pid= )
+        # is always reported as a child_pid so that the following test avoids
+        # that descendants_pids is uselessly recursively called for it:
+        kill -0 $child_pid 2>/dev/null && descendants_pids $child_pid
+    done
     # Only show PIDs that actually still exist which skips PIDs of children
     # that were running a short time (like called programs by this function)
     # and had already finished here:
@@ -94,6 +95,9 @@ function DoExitTasks () {
     # but "background processes" would not terminate on their own after Ctrl+C
     # cf. https://github.com/rear/rear/issues/1712
     sleep 1
+    # Show the descendant processes of MASTER_PID in the log
+    # so that later plain PIDs in the log get comprehensible:
+    Log "$( pstree -Aplau $MASTER_PID )"
     # Some descendant processes commands could be much too long (e.g. a 'tar ...' command)
     # to be usefully shown completely in the below LogPrint information (could be many lines)
     # so that the descendant process command output is truncated after at most remaining_columns:
