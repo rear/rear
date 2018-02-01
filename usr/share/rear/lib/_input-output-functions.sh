@@ -90,48 +90,60 @@ function DoExitTasks () {
     LogPrint "Exiting $PROGRAM $WORKFLOW (PID $MASTER_PID) and its descendant processes"
     # First of all wait one second to let descendant processes terminate on their own
     # e.g. after Ctrl+C by the user descendant processes should terminate on their own
-    # cf. https://github.com/rear/rear/issues/1712#issuecomment-361588946
+    # at least the "foreground processes" (with the current terminal process group ID)
+    # but "background processes" would not terminate on their own after Ctrl+C
+    # cf. https://github.com/rear/rear/issues/1712
     sleep 1
+    # Some descendant processes commands could be much too long (e.g. a 'tar ...' command)
+    # to be usefully shown completely in the below LogPrint information (could be many lines)
+    # so that the descendant process command output is truncated after at most remaining_columns:
+    local remaining_columns=$(( COLUMNS - 40 ))
+    test $remaining_columns -ge 20 || remaining_columns=20
     # Terminate all still running descendant processes of $MASTER_PID
     # but do not termiate the MASTER_PID process itself because
     # the MASTER_PID process must run the exit tasks below:
-    local descendant_processes="$( descendants_pids $MASTER_PID )"
-    local descendant_process=""
-    local remaining_columns=$(( COLUMNS - 40 ))
-    test $remaining_columns -ge 20 || remaining_columns=20
-    for descendant_process in $descendant_processes ; do
-        # descendant_processes contains at least MASTER_PID
-        # plus the PID of the subshell of the above call
-        #   descendant_processes="$( descendants_pids $MASTER_PID )"
-        # so that it is tested that a descendant_process is not MASTER_PID
-        # and that a descendant_process is still running before SIGTERM is sent:
-        test $MASTER_PID = $descendant_process && continue
-        kill -0 $descendant_process || continue
-        # Do not show
-        LogPrint "Terminating descendant process $descendant_process $( ps -p $descendant_process -o args= | cut -b-$remaining_columns )"
-        kill -SIGTERM $descendant_process 1>&2
-        # Wait one second to let the current descendant_process terminate
+    local descendant_pid=""
+    local not_yet_terminated_pids=""
+    for descendant_pid in $( descendants_pids $MASTER_PID ) ; do
+        # The descendant_pids() function outputs at least MASTER_PID
+        # plus the PID of the subshell of the $( descendants_pids $MASTER_PID )
+        # so that it is tested that a descendant_pid is not MASTER_PID
+        # and that a descendant_pid is still running before SIGTERM is sent:
+        test $MASTER_PID -eq $descendant_pid && continue
+        kill -0 $descendant_pid || continue
+        LogPrint "Terminating descendant process $descendant_pid $( ps -p $descendant_pid -o args= | cut -b-$remaining_columns )"
+        kill -SIGTERM $descendant_pid 1>&2
+        # For each descendant process wait one second to let it terminate to be on the safe side
+        # that e.g. grandchildren can actually cleanly terminate before children get SIGTERM sent
+        # i.e. every child process can cleanly terminate before its parent gets SIGTERM:
         sleep 1
-        kill -0 $descendant_process && LogPrint "Descendant process $descendant_process not yet terminated"
+        if kill -0 $descendant_pid ; then
+            # Keep the current ordering also in not_yet_terminated_pids
+            # i.e. grandchildren before children:
+            not_yet_terminated_pids="$not_yet_terminated_pids $descendant_pid"
+            LogPrint "Descendant process $descendant_pid not yet terminated"
+        fi
     done
-    # Kill all still running descendant processes of $MASTER_PID
-    # but do not kill the MASTER_PID process itself because
-    # the MASTER_PID process must run the exit tasks below:
-    descendant_processes="$( descendants_pids $MASTER_PID )"
-    for descendant_process in $descendant_processes ; do
-        # descendant_processes contains at least MASTER_PID
-        # plus the PID of the subshell of the above call
-        #   descendant_processes="$( descendants_pids $MASTER_PID )"
-        # so that it is tested that a descendant_process is not MASTER_PID
-        # and that a descendant_process is still running before SIGKILL is sent:
-        test $MASTER_PID = $descendant_process && continue
-        kill -0 $descendant_process || continue
-        LogPrint "Killing descendant process $descendant_process $( ps -p $descendant_process -o args= | cut -b-$remaining_columns )"
-        kill -SIGKILL $descendant_process 1>&2
-        # Wait one second to let the kernel remove the killed process
-        sleep 1
-        kill -0 $descendant_process && LogPrint "Killed descendant process $descendant_process still there"
-    done
+    # No need to kill a descendant processes if all were already terminated:
+    if test "$not_yet_terminated_pids" ; then
+        # Kill all not yet terminated descendant processes:
+        for descendant_pid in $not_yet_terminated_pids ; do
+            if kill -0 $descendant_pid ; then
+                LogPrint "Killing descendant process $descendant_pid $( ps -p $descendant_pid -o args= | cut -b-$remaining_columns )"
+                kill -SIGKILL $descendant_pid 1>&2
+                # For each killed descendant process wait one second to let it die to be on the safe side
+                # that e.g. grandchildren were actually removed by the kernel before children get SIGKILL sent
+                # i.e. every child process is already gone before its parent process may get SIGKILL so that
+                # the parent (that may wait for its child) has a better chance to still cleanly terminate:
+                sleep 1
+                kill -0 $descendant_pid && LogPrint "Killed descendant process $descendant_pid still there"
+            else
+                # Show a counterpart message to the above 'not yet terminated' message
+                # e.g. after a child process was killed its parent may have terminated on its own:
+                LogPrint "Descendant process $descendant_pid terminated"
+            fi
+        done
+    fi
     # Finally run the exit tasks:
     LogPrint "Running exit tasks"
     local exit_task=""
