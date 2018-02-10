@@ -7,7 +7,5 @@ if [[ -z $BORGBACKUP_HOST ]]; then
     mkdir -p $v "$BUILD_DIR/borg_backup" >&2
     StopIfError "Could not mkdir '$BUILD_DIR/borg_backup'"
 
-    AddExitTask "rm -Rf $v $BUILD_DIR/borg_backup >&2"
-
     mount_url usb://$USB_DEVICE $BUILD_DIR/borg_backup
 fi
