@@ -19,6 +19,6 @@ LC_ALL=rear.UTF-8 \
 borg extract --sparse $BORGBACKUP_OPT_REMOTE_PATH \
 ${repo_dev}${BORGBACKUP_REPO}::$BORGBACKUP_ARCHIVE
 
-StopIfError "Could not successfully finish Borg restore"
+LogPrintIfError "Error was reported during Borg restore"
 LogPrint "Borg OS restore finished successfully"
 popd >/dev/null
