@@ -16,18 +16,22 @@ for i in $(cat $TMP_DIR/backup-include.txt); do
     include_list+=("$i ")
 done
 
-Log "Creating archive ${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
-in repository $BORGBACKUP_REPO on host $BORGBACKUP_HOST"
-
 # Only in ReaR verbose mode also show borg progress output and stats
 local borg_progress=''
 test "$verbose" && borg_progress='--progress --stats'
 
 # Start actual Borg backup.
+if [[ -z $BORGBACKUP_HOST ]]; then
+    mount_url usb://$BORGBACKUP_USB_DEV $BUILD_DIR/borg_backup
+fi
+
+Log "Creating archive ${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
+in repository $BORGBACKUP_REPO"
+
 borg create --one-file-system $borg_progress $verbose \
-$BORGBACKUP_OPT_COMPRESSION $BORGBACKUP_OPT_REMOTE_PATH $BORGBACKUP_OPT_UMASK \
---exclude-from $TMP_DIR/backup-exclude.txt \
-$BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO::\
+$BORGBACKUP_OPT_COMPRESSION $BORGBACKUP_OPT_REMOTE_PATH \
+$BORGBACKUP_OPT_UMASK --exclude-from $TMP_DIR/backup-exclude.txt \
+${repo_dev}${BORGBACKUP_REPO}::\
 ${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
 ${include_list[@]} 0<&6 1>&7 2>&8
 

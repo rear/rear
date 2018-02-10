@@ -6,12 +6,16 @@
 if [ ! -z $BORGBACKUP_OPT_PRUNE ]; then
     # Purge old archives according user settings.
     LogPrint "Purging old Borg archives in repository $BORGBACKUP_REPO"
-
     borg prune --list ${BORGBACKUP_OPT_PRUNE[@]} \
     $BORGBACKUP_OPT_REMOTE_PATH $BORGBACKUP_OPT_UMASK \
     --prefix ${BORGBACKUP_ARCHIVE_PREFIX}_ \
-    $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO
+    ${repo_dev}${BORGBACKUP_REPO}
+
     StopIfError "Failed to purge old backups"
+
+    if [[ -z $BORGBACKUP_HOST ]]; then
+        umount_url usb://$BORGBACKUP_USB_DEV $BUILD_DIR/borg_backup
+    fi
 else
     # Purge is not set.
     Log "Purging of old Borg archives not set, skipping"

@@ -14,10 +14,11 @@ StopIfError "Could not change directory to $TARGET_FS_ROOT"
 # and should not interfere with remaining stages of rear recover.
 # This is still not the ideal solution, but best I can think of so far :-/.
 LogPrint "Recovering from Borg archive $BORGBACKUP_ARCHIVE"
+
 LC_ALL=rear.UTF-8 \
 borg extract --sparse $BORGBACKUP_OPT_REMOTE_PATH \
-$BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO::$BORGBACKUP_ARCHIVE
-StopIfError "Could not successfully finish Borg restore"
+${repo_dev}${BORGBACKUP_REPO}::$BORGBACKUP_ARCHIVE
 
+StopIfError "Could not successfully finish Borg restore"
 LogPrint "Borg OS restore finished successfully"
 popd >/dev/null
