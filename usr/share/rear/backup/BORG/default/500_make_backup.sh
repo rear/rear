@@ -22,7 +22,7 @@ test "$verbose" && borg_progress='--progress --stats'
 
 # Start actual Borg backup.
 if [[ -z $BORGBACKUP_HOST ]]; then
-    mount_url usb://$BORGBACKUP_USB_DEV $BUILD_DIR/borg_backup
+    mount_url usb://$USB_DEVICE $BUILD_DIR/borg_backup
 fi
 
 Log "Creating archive ${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \

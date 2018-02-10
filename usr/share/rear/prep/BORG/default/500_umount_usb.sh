@@ -4,5 +4,5 @@
 # 500_umount_usb.sh
 
 if [[ -z $BORGBACKUP_HOST ]]; then
-    umount_url usb://$BORGBACKUP_USB_DEV $BUILD_DIR/borg_backup
+    umount_url usb://$USB_DEVICE $BUILD_DIR/borg_backup
 fi
