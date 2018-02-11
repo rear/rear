@@ -58,8 +58,8 @@ function borg_set_vars {
 
 # Query Borg server for repository information
 # and store it to BORGBACKUP_ARCHIVE_CACHE.
-# This should avoid repeatingly quering Borg server, which could be slow.
+# This avoids repeatedly querying Borg repository, which could be slow.
 function borg_archive_cache_create {
-    borg list $BORGBACKUP_OPT_REMOTE_PATH ${repo_dev}${BORGBACKUP_REPO} \
+    borg list $BORGBACKUP_OPT_REMOTE_PATH ${borg_dst_dev}${BORGBACKUP_REPO} \
 2> /dev/null > $BORGBACKUP_ARCHIVE_CACHE
 }

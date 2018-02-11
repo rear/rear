@@ -19,7 +19,7 @@ borg_archive_cache_create
 # will be skipped.
 rc=$?
 
-# This might be a Borg connection error, or missing repository.
+# This might be a Borg connection / mount error, or missing repository.
 # If initialization succeeds, we can rule out connection problems.
 # `borg init` has to be triggered in "prep" stage if user decides to include
 # keyfiles to Relax-and-Recover rescue/recovery system using COPY_AS_IS_BORG.
@@ -28,7 +28,7 @@ if [ $rc -ne 0 ]; then
     LogPrint "Creating new Borg repository $BORGBACKUP_REPO"
 
     borg init $BORGBACKUP_OPT_ENCRYPTION $BORGBACKUP_OPT_REMOTE_PATH \
-    $BORGBACKUP_OPT_UMASK ${repo_dev}${BORGBACKUP_REPO}
+    $BORGBACKUP_OPT_UMASK ${borg_dst_dev}${BORGBACKUP_REPO}
     rc=$?
 fi
 

@@ -1,8 +1,9 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 #
-# 500_umount_usb.sh
+# 250_mount_usb.sh
 
+# We need to mount USB destination device prior the backup starts
 if [[ -z $BORGBACKUP_HOST ]]; then
-    umount_url usb://$USB_DEVICE $BUILD_DIR/borg_backup
+    mount_url usb://$USB_DEVICE $borg_dst_dev
 fi

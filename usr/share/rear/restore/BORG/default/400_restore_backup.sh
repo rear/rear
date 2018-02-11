@@ -17,7 +17,7 @@ LogPrint "Recovering from Borg archive $BORGBACKUP_ARCHIVE"
 
 LC_ALL=rear.UTF-8 \
 borg extract --sparse $BORGBACKUP_OPT_REMOTE_PATH \
-${repo_dev}${BORGBACKUP_REPO}::$BORGBACKUP_ARCHIVE
+${borg_dst_dev}${BORGBACKUP_REPO}::$BORGBACKUP_ARCHIVE
 
 LogPrintIfError "Error was reported during Borg restore"
 LogPrint "Borg OS restore finished successfully"
