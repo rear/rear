@@ -384,6 +384,52 @@ BACKUP=NETFS\&.
 If you do not specify OUTPUT_URL variable then by default it will be aligned to what was defined by variable BACKUP_URL\&. And, the rescue image will then be copied to the same location as your backup of the system disk(s)\&.
 .sp
 The ISO_DEFAULT variable defines what default boot option is used on the rescue image\&. Possible values are manual, boothd or automatic\&. Manual will make you boot into the shell directly by default, boothd will boot to the first disk (default) or automatic will automatically start in recovery mode\&.
+.SH "RESCUE IMAGE KERNEL COMMAND LINE OPTIONS"
+.sp
+When booting the rescue image you can edit the kernel command line\&.
+There are some Relax\-and\-Recover specific kernel command line options:
+.PP
+\fBdebug\fR
+.RS 4
+The rescue system start up scripts in /etc/scripts/system-setup.d/
+are run one by one each one after pressing \fIEnter\fR and
+the scripts are run with `set \-x` which prints commands
+and their arguments as they are executed\&.
+.RE
+.PP
+\fBauto_recover\fR or \fBautomatic\fR
+.RS 4
+Launch `rear recover` automatically (without automated reboot)\&.
+Together with \fIdebug\fR it runs `rear recover` in debug mode\&.
+.RE
+.PP
+\fBunattended\fR
+.RS 4
+Launch `rear recover` automatically as with \fIauto_recover\fR
+plus automated reboot after successful `rear recover`\&.
+.RE
+.PP
+\fBip= nm= netdev= gw=\fR
+.RS 4
+If IP address plus optionally netmask (default 255\&.255\&.255\&.0),
+network device (default eth0), and default gateway are specified
+only that single network device is set up\&. Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+ip=192\&.168\&.100\&.2 nm=255\&.255\&.255\&.0 netdev=eth0 gw=192\&.168\&.100\&.1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fBnoip\fR
+.RS 4
+Skip network devices setup by the rescue system start up scripts (overrides \fIip= nm= netdev= gw=\fR)\&.
+.RE
 .SH "BACKUP SOFTWARE INTEGRATION"
 .sp
 Currently Relax\-and\-Recover supports the following backup methods\&. Please distinguish carefully between Relax\-and\-Recover support for 3rd party backup software and Relax\-and\-Recover internal backup methods\&. The latter also creates a backup of your data while the former will only integrate Relax\-and\-Recover with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself\&.
@@ -649,7 +695,7 @@ providing a pre\-boot authentication (PBA) system to unlock SEDs at boot time\&.
 .sp
 To prepare booting from an SED, run rear mkopalpba, then create the rescue system\&.
 .sp
-To set up an SED, boot the Relax\-and\-Recover rescue system and run`rear opaladmin setupERASE DEVICE` (\fIDEVICE\fR being the disk device path like /dev/sda)\&.
+To set up an SED, boot the Relax\-and\-Recover rescue system and run `rear opaladmin setupERASE DEVICE` (\fIDEVICE\fR being the disk device path like /dev/sda)\&.
 .sp
 For complete information, consult the section "Support for TCG Opal 2\-compliant Self\-Encrypting Disks" in the Relax\-and\-Recover user guide\&.
 .SH "CONFIGURATION"
