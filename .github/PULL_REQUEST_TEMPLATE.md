@@ -1,12 +1,16 @@
 #### Relax-and-Recover (ReaR) Pull Request Template
 
-Please fill in the following items before submitting a new Pull Request:
+Please fill in the following items before submitting a new pull request:
 
-##### PR details:
+##### Pull Request Details:
 
-* PR type (**Bug Fixing** / **New Feature** / **Enhancement** / **Other?**):
-* Reference to related issue (issue link): 
-* Impact (**Low** / **High** / **Critical** / **Urgent**):
-* Did you test this PR? 
-* Brief description of the changes in this PR:
+* Type: **Bug Fix** / **New Feature** / **Enhancement** / **Other?**
+
+* Impact: **Low** / **Normal** / **High** / **Critical** / **Urgent**
+
+* Reference to related issue (URL):
+
+* How was this pull request tested?
+
+* Brief description of the changes in this pull request:
 
