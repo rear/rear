@@ -22,12 +22,12 @@ if test -f /etc/sysconfig/bootloader ; then
     fi
 fi
 
-# On ARM, guess the dummy Bootloader
+# On ARM, guess the dummy bootloader:
 if [ "$ARCH" = "Linux-arm" ]; then
     BOOTLOADER=ARM
-    #Warn that we currently do nothing
+    # Inform the user that we do nothing:
     LogPrint "Using guessed bootloader 'ARM'
-Skipping Bootloader Backup, see default.conf"
+Skipping bootloader backup, see default.conf"
     echo "$BOOTLOADER" >$bootloader_file
     return
 fi
