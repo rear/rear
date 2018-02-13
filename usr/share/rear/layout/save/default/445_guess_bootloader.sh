@@ -22,6 +22,16 @@ if test -f /etc/sysconfig/bootloader ; then
     fi
 fi
 
+# On ARM, guess the dummy Bootloader
+if [ "$ARCH" = "Linux-arm" ]; then
+    BOOTLOADER=ARM
+    #Warn that we currently do nothing
+    LogPrint "Using guessed bootloader 'ARM'
+Skipping Bootloader Backup, see default.conf"
+    echo "$BOOTLOADER" >$bootloader_file
+    return
+fi
+
 # Finally guess the used bootloader by inspecting the first bytes on all disks
 # and use the first one that matches a known bootloader string:
 for block_device in /sys/block/* ; do
@@ -57,6 +67,7 @@ for block_device in /sys/block/* ; do
     cat $bootloader_area_strings_file >&2
     Log "End of strings in the first bytes on $disk_device"
 done
+
 
 # Error out when no bootloader was specified or could be autodetected:
 Error "Cannot autodetect what is used as bootloader, see default.conf about 'BOOTLOADER'"

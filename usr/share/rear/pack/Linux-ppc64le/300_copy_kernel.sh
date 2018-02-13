@@ -33,13 +33,3 @@ if [ ! -s "$KERNEL_FILE" ]; then
 		Error "Could not find a matching kernel in /boot !"
 	fi
 fi
-
-[ -s "$KERNEL_FILE" ]
-StopIfError "Could not find a suitable kernel. Maybe you have to set KERNEL_FILE [$KERNEL_FILE] ?"
-
-if [ -L $KERNEL_FILE ]; then
-    KERNEL_FILE=$(readlink -f $KERNEL_FILE)
-fi
-
-Log "Found kernel $KERNEL_FILE"
-#cp -aL $v "$KERNEL_FILE" "$TMP_DIR/kernel" >&2
