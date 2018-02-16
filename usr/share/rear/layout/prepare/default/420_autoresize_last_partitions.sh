@@ -15,8 +15,8 @@
 # only the last active partition on each active disk gets resized.
 #
 # All other values in the AUTORESIZE_PARTITIONS array specify partition device nodes
-# e.g. as in AUTORESIZE_PARTITIONS=( /dev/sda3 /dev/sdb1 /dev/sdb2 )
-# where partitions with those partition device nodes should be resized
+# e.g. as in AUTORESIZE_PARTITIONS=( /dev/sda2 /dev/sdb3 )
+# where last partitions with those partition device nodes should be resized
 # regardless of what is specified in the AUTORESIZE_EXCLUDE_PARTITIONS array.
 #
 # The values in the AUTORESIZE_EXCLUDE_PARTITIONS array specify partition device nodes
@@ -29,7 +29,7 @@
 #  - partitions where its filesystem mountpoint contains 'efi' or 'esp'
 #    or where its GPT name or flags contains 'efi' or 'esp' (anywhere case insensitive)
 # are excluded from being resized e.g. as in
-# AUTORESIZE_EXCLUDE_PARTITIONS=( boot swap efi /dev/sda2 /dev/sdb3 )
+# AUTORESIZE_EXCLUDE_PARTITIONS=( boot swap efi /dev/sdb3 /dev/sdc4 )
 #
 # The last active partition on each active disk gets resized but nothing more.
 # In particular this does not resize volumes on top of the affected partitions.
