@@ -91,7 +91,7 @@ local disk_dev part_size part_start part_type part_flags part_dev
 local last_part_is_resizeable last_part_filesystem_entry last_part_filesystem_mountpoint egrep_pattern
 local last_part_is_boot last_part_is_swap last_part_is_efi
 local MiB new_disk_size_MiB first_byte_after_last_MiB_on_disk new_last_part_size
-local disk_size_difference increase_threshold_difference max_shrink_difference
+local disk_size_difference increase_threshold_difference last_part_shrink_difference max_shrink_difference
 
 # Example 'disk' entry in disklayout.conf:
 #   # Disk /dev/sda
@@ -227,6 +227,7 @@ while read component_type disk_device old_disk_size junk ; do
     disk_size_difference=$( mathlib_calculate "$new_disk_size - $old_disk_size" )
     if test $disk_size_difference -gt 0 ; then
         # The size of the new disk is bigger than the size of the old disk:
+        Log "New $disk_device is $disk_size_difference bigger than old disk"
         increase_threshold_difference=$( mathlib_calculate "$old_disk_size / 100 * $AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE" )
         if test $disk_size_difference -lt $increase_threshold_difference ; then
             if is_true "$last_part_is_resizeable" ; then
@@ -243,17 +244,23 @@ while read component_type disk_device old_disk_size junk ; do
             # Continue with next disk:
             continue
         fi
-        LogPrint "Increasing last partition $last_part_dev up to end of disk (new disk at least $AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE% bigger)"
         test $new_last_part_size -ge $last_part_size || BugError "New last partition size $new_last_part_size is not bigger than old size $last_part_size"
+        LogPrint "Increasing last partition $last_part_dev up to end of disk (new disk at least $AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE% bigger)"
     else
         # The size of the new disk is smaller than the size of the old disk:
-        max_shrink_difference=$( mathlib_calculate "$old_disk_size / 100 * $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE" )
-        # Currently disk_size_difference is negative but the next test needs its absolute value:
+        # Currently disk_size_difference is negative but we prefer to use its absolute value:
         disk_size_difference=$( mathlib_calculate "0 - $disk_size_difference" )
-        test $disk_size_difference -gt $max_shrink_difference || Error "New $disk_device more than $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE% smaller"
-        LogPrint "Shrinking last partition $last_part_dev to end of disk (new disk at most $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE% smaller)"
+        Log "New $disk_device is $disk_size_difference smaller than old disk"
+        last_part_shrink_difference=$( mathlib_calculate "$last_part_size - $new_last_part_size" )
+        LogPrint "Last partition $last_part_dev must be shrinked by $last_part_shrink_difference bytes to still fit on disk"
+        max_shrink_difference=$( mathlib_calculate "$old_disk_size / 100 * $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE" )
+        if test $disk_size_difference -gt $max_shrink_difference ; then
+            Error "Last partition $last_part_dev cannot be shrinked (new disk more than $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE% smaller)"
+        fi
         is_false "$last_part_is_resizeable" && Error "Cannot shrink $last_part_dev (non-resizeable partition)"
         is_positive_integer $( mathlib_calculate "$new_last_part_size - $MiB - 1" ) || Error "New last partition size $new_last_part_size less than 1 MiB"
+        test $new_last_part_size -le $last_part_size || BugError "New last partition size $new_last_part_size is not smaller than old size $last_part_size"
+        LogPrint "Shrinking last partition $last_part_dev to end of disk (new disk at most $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE% smaller)"
     fi
 
     # Replace the size value of the last partition by its new size value in LAYOUT_FILE.resized_last_partition:
