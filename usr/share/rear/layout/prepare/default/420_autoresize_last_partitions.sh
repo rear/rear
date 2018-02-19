@@ -86,11 +86,11 @@ test "$AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE" || AUTOSHRINK_DISK_SIZE_LIMIT_PERC
 local component_type junk
 local disk_device old_disk_size
 local sysfsname new_disk_size
-local max_part_start last_part_dev last_part_start last_part_size last_part_type last_part_flags
+local max_part_start last_part_dev last_part_start last_part_size last_part_type last_part_flags last_part_end
 local disk_dev part_size part_start part_type part_flags part_dev
 local last_part_is_resizeable last_part_filesystem_entry last_part_filesystem_mountpoint egrep_pattern
 local last_part_is_boot last_part_is_swap last_part_is_efi
-local MiB new_disk_size_MiB first_byte_after_last_MiB_on_disk new_last_part_size
+local MiB new_disk_size_MiB new_disk_remainder_start new_last_part_size
 local disk_size_difference increase_threshold_difference last_part_shrink_difference max_shrink_difference
 
 # Example 'disk' entry in disklayout.conf:
@@ -132,6 +132,7 @@ while read component_type disk_device old_disk_size junk ; do
             last_part_size="$part_size"
             last_part_type="$part_type"
             last_part_flags="$part_flags"
+            last_part_end=$( mathlib_calculate "$last_part_start + $last_part_size - 1" )
         fi
     done < <( grep "^part $disk_device" "$LAYOUT_FILE" )
     test "$last_part_dev" || Error "Failed to determine /dev/<partition> for last partition on $disk_device"
@@ -208,18 +209,24 @@ while read component_type disk_device old_disk_size junk ; do
         fi
     fi
 
-    # Determine the new size of the last partition (with 1 MiB alignment):
+    # Determine the desired new size of the last partition (with 1 MiB alignment)
+    # so that the new sized last partition would go up to the end of the new disk:
     Log "Determining new size for last partition $last_part_dev"
     MiB=$( mathlib_calculate "1024 * 1024" )
     # mathlib_calculate cuts integer remainder so that for a disk of e.g. 12345.67 MiB size new_disk_size_MiB = 12345
     new_disk_size_MiB=$( mathlib_calculate "$new_disk_size / $MiB" )
-    # For a disk of 12345.67 MiB size the first_byte_after_last_MiB_on_disk = 12944670720
-    first_byte_after_last_MiB_on_disk=$( mathlib_calculate "$new_disk_size_MiB * $MiB" )
+    # The first byte of the unusable remainder (with 1 MiB alignment) is the first byte after the last MiB on the disk
+    # i.e. the first byte after the last MiB on a disk is the start of the unused disk space remainder at the end.
+    # This value has same semantics as the partition start values (which are the first byte of a partition).
+    # For a disk of 12345.67 MiB size the new_disk_remainder_start = 12944670720
+    new_disk_remainder_start=$( mathlib_calculate "$new_disk_size_MiB * $MiB" )
     # When last_part_start is e.g. at 12300.00 MiB = at the byte 12897484800
     # then new_last_part_size = 12944670720 - 12897484800 = 45.00 MiB
     # so that on a disk of e.g. 12345.67 MiB size the last 0.67 MiB is left unused (as intended for 1 MiB alignment):
-    new_last_part_size=$( mathlib_calculate "$first_byte_after_last_MiB_on_disk - $last_part_start" )
-    # Note that new_last_part_size could be zero or negative here (that error condition is tested below).
+    new_last_part_size=$( mathlib_calculate "$new_disk_remainder_start - $last_part_start" )
+    # When the desired new size of the last partition (with 1 MiB alignment) is negative
+    # the last partition can no longer be on the new disk (when only the last partition is shrinked):
+    is_positive_integer $new_last_part_size || Error "No space for last partition $last_part_dev on disk (new last partition size would be negative)"
 
     # Determine if the last partition actually needs to be increased or shrinked and
     # go on or error out or continue with the next disk depending on the particular case:
@@ -251,6 +258,17 @@ while read component_type disk_device old_disk_size junk ; do
         # Currently disk_size_difference is negative but we prefer to use its absolute value:
         disk_size_difference=$( mathlib_calculate "0 - $disk_size_difference" )
         Log "New $disk_device is $disk_size_difference smaller than old disk"
+        # There is no need to shrink the last partition when the original last partition still fits on the new smaller disk:
+        if test $last_part_end -le $new_disk_remainder_start ; then
+            if is_true "$last_part_is_resizeable" ; then
+                # Inform the user when last partition will not be resized regardless of his setting in AUTORESIZE_PARTITIONS:
+                LogPrint "Last partition $last_part_dev will not be resized (original last partition still fits on the new smaller disk)"
+            else
+                Log "Skip shrinking last partition $last_part_dev (original last partition still fits on the new smaller disk)"
+            fi
+            # Continue with next disk:
+            continue
+        fi
         last_part_shrink_difference=$( mathlib_calculate "$last_part_size - $new_last_part_size" )
         LogPrint "Last partition $last_part_dev must be shrinked by $last_part_shrink_difference bytes to still fit on disk"
         max_shrink_difference=$( mathlib_calculate "$old_disk_size / 100 * $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE" )
