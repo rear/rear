@@ -224,9 +224,9 @@ while read component_type disk_device old_disk_size junk ; do
     # then new_last_part_size = 12944670720 - 12897484800 = 45.00 MiB
     # so that on a disk of e.g. 12345.67 MiB size the last 0.67 MiB is left unused (as intended for 1 MiB alignment):
     new_last_part_size=$( mathlib_calculate "$new_disk_remainder_start - $last_part_start" )
-    # When the desired new size of the last partition (with 1 MiB alignment) is negative
+    # When the desired new size of the last partition (with 1 MiB alignment) is not at least 1 MiB
     # the last partition can no longer be on the new disk (when only the last partition is shrinked):
-    is_positive_integer $new_last_part_size || Error "No space for last partition $last_part_dev on disk (new last partition size would be negative)"
+    test $new_last_part_size -ge $MiB || Error "No space for last partition $last_part_dev on new disk (new last partition size would be less than 1 MiB)"
 
     # Determine if the last partition actually needs to be increased or shrinked and
     # go on or error out or continue with the next disk depending on the particular case:
@@ -276,7 +276,6 @@ while read component_type disk_device old_disk_size junk ; do
             Error "Last partition $last_part_dev cannot be shrinked (new disk more than $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE% smaller)"
         fi
         is_false "$last_part_is_resizeable" && Error "Cannot shrink $last_part_dev (non-resizeable partition)"
-        is_positive_integer $( mathlib_calculate "$new_last_part_size - $MiB - 1" ) || Error "New last partition size $new_last_part_size less than 1 MiB"
         test $new_last_part_size -le $last_part_size || BugError "New last partition size $new_last_part_size is not smaller than old size $last_part_size"
         LogPrint "Shrinking last partition $last_part_dev to end of disk (new disk at most $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE% smaller)"
     fi
