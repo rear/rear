@@ -83,6 +83,9 @@ test "$AUTORESIZE_EXCLUDE_PARTITIONS" || AUTORESIZE_EXCLUDE_PARTITIONS=( boot sw
 test "$AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE" || AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE=10
 test "$AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE" || AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE=2
 
+# The original disk space usage was written by layout/save/GNU/Linux/510_current_disk_usage.sh
+local original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
+
 local component_type junk
 local disk_device old_disk_size
 local sysfsname new_disk_size
@@ -90,7 +93,7 @@ local max_part_start last_part_dev last_part_start last_part_size last_part_type
 local disk_dev part_size part_start part_type part_flags part_dev
 local last_part_is_resizeable last_part_filesystem_entry last_part_filesystem_mountpoint egrep_pattern
 local last_part_is_boot last_part_is_swap last_part_is_efi
-local MiB new_disk_size_MiB new_disk_remainder_start new_last_part_size
+local MiB new_disk_size_MiB new_disk_remainder_start new_last_part_size last_part_disk_space_usage last_part_used_bytes
 local disk_size_difference increase_threshold_difference last_part_shrink_difference max_shrink_difference
 
 # Example 'disk' entry in disklayout.conf:
@@ -224,9 +227,30 @@ while read component_type disk_device old_disk_size junk ; do
     # then new_last_part_size = 12944670720 - 12897484800 = 45.00 MiB
     # so that on a disk of e.g. 12345.67 MiB size the last 0.67 MiB is left unused (as intended for 1 MiB alignment):
     new_last_part_size=$( mathlib_calculate "$new_disk_remainder_start - $last_part_start" )
+
     # When the desired new size of the last partition (with 1 MiB alignment) is not at least 1 MiB
     # the last partition can no longer be on the new disk (when only the last partition is shrinked):
     test $new_last_part_size -ge $MiB || Error "No space for last partition $last_part_dev on new disk (new last partition size would be less than 1 MiB)"
+
+    # When the desired new size of the last partition is not at least its original disk space usage
+    # the new last partition would be too small if the files of the last partition were restored from the backup
+    # but it is unknown here whether any files of the last partition are included in the backup so that
+    # it cannot be an Error() here when the new last partition is smaller than its original disk space usage
+    # but at least the user gets informed here about the possible problem.
+    # Example original_disk_space_usage_file content (in MiB units, 1 MiB = 1024 * 1024 = 1048576):
+    #   Filesystem     1048576-blocks    Used Available Capacity Mounted on
+    #   /dev/sdb5             143653M 115257M    27358M      81% /
+    #   /dev/sdb3                161M      5M      157M       3% /boot/efi
+    #   /dev/sda2             514926M    983M   487765M       1% /data
+    last_part_disk_space_usage=( $( grep "^$last_part_dev " $original_disk_space_usage_file ) )
+    last_part_used_bytes=$( mathlib_calculate "${last_part_disk_space_usage[2]%%M*} * $MiB" )
+    # Neither original_disk_space_usage_file may exist nor may it contain an entry for last_part_dev
+    # so that the two above commands may fail but the next test ensures last_part_used_bytes is valid:
+    if is_positive_integer $last_part_used_bytes ; then
+        # One of the rare cases where a "WARNING" is justified (see above why we cannot error out here)
+        # cf. http://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
+        test $new_last_part_size -ge $last_part_used_bytes || LogUserOutput "WARNING: New size of last partition $last_part_dev will be smaller than its disk usage was"
+    fi
 
     # Determine if the last partition actually needs to be increased or shrinked and
     # go on or error out or continue with the next disk depending on the particular case:
