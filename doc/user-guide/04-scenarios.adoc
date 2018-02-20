@@ -78,8 +78,14 @@ TAPE_DEVICE=/dev/nst0
 ----
 
 
-== Bootable ISO with Borg
+== ReaR with Borg back end
  - Install Borg backup (https://borgbackup.readthedocs.io/en/stable/installation.html).
+
+IMPORTANT:  We strongly recommend to use Borg standalone binary (https://github.com/borgbackup/borg/releases) as it includes all necessities for Borg operations.
+			If you decide to go for different type of Borg installation types, make sure you include all needed files for Borg runtime into ReaR rescue/recovery system.
+			E.g. by using `COPY_AS_IS_BORG=( '/usr/lib64/python3.4*' '/usr/bin/python3*' '/usr/bin/pyvenv*' '/usr/lib/python3.4*' '/usr/lib64/libpython3*' )`
+
+=== Borg -> SSH
  - Setup ssh key infrastructure for user that will be running backup.
 Issuing following command must work without any password prompts or remote host identity confirmation:
 
@@ -117,6 +123,36 @@ export BORG_RELOCATED_REPO_ACCESS_IS_OK="yes"
 export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK="yes"
 
 ----
+=== Borg -> USB
+
+ - Example _local.conf_:
+[source,bash]
+----
+OUTPUT=USB
+BACKUP=BORG
+
+USB_DEVICE=/dev/disk/by-label/REAR-000
+
+BORGBACKUP_REPO="/my_borg_backup"
+BORGBACKUP_UMASK="0002"
+
+BORGBACKUP_PRUNE_WEEKLY=2
+
+BORGBACKUP_ENC_TYPE="keyfile"
+export BORG_PASSPHRASE="S3cr37_P455w0rD"
+
+export BORG_RELOCATED_REPO_ACCESS_IS_OK="yes"
+export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK="yes"
+
+COPY_AS_IS_EXCLUDE=( "${COPY_AS_IS_EXCLUDE[@]}" )
+COPY_AS_IS_BORG=( '/root/.config/borg/keys/' )
+
+SSH_UNPROTECTED_PRIVATE_KEYS="yes"
+SSH_FILES="yes"
+
+
+----
+
 IMPORTANT: If using BORGBACKUP_ENC_TYPE="keyfile", don't forget to make your
            encryption key available for case of restore!
            (using `COPY_AS_IS_BORG=( "/root/.config/borg/keys/" )` is a option to consider).
@@ -125,7 +161,7 @@ IMPORTANT: If using BORGBACKUP_ENC_TYPE="keyfile", don't forget to make your
 
  - Executing `rear mkbackup` will create Relax-and-Recover rescue/recovery system and
  start Borg backup process. Once backup finishes, it will also prune old archives from repository,
- if at least one of BORGBACKUP_PRUNE_* variables is set.
+ if at least one of `BORGBACKUP_PRUNE_*` variables is set.
  - To recover your system, boot Relax-and-Recover rescue/recovery system and trigger `rear recover`.
  You will be prompted which archive to recover from Borg repository, once ReaR finished with layout configuration.
 
