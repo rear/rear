@@ -3,6 +3,13 @@
 # Recreate the same users and groups that exist
 # in the ReaR recovery system also in the target system.
 
+# Do not restore these files from the backup
+Log "Excluding group, password and shadow files from restore"
+for f in etc/passwd etc/group etc/shadow	# no leading slashes
+do
+	echo "$f" >> $TMP_DIR/restore-exclude-list.txt
+done
+
 # Skip if not needed.
 # For the 'test' one must have all array members
 # as a single word i.e. "${name[*]}" because
@@ -14,6 +21,22 @@ IsInArray "yes" "${RECREATE_USERS_GROUPS[@]}" || return
 #local dst_root="$ROOTFS_DIR"	# Default to recreating users & groups in the rescue environment
 #IsInArray $WORKFLOW ${backup_restore_workflows[@]} && dst_root="$TARGET_FS_ROOT"	# Recreate users & groups in the target environment
 
+[ -z "$TMPDIR" ] && TMPDIR=$(mktemp -d -t rear_395.XXXXXXXXXXXXXXX)
+
+# code snippet from restore/NETFS/default/400_restore_backup.sh...
+# Disable BACKUP_PROG_DECRYPT_OPTIONS by replacing the default with 'cat' when encryption is disabled
+# (by default encryption is disabled but the default BACKUP_PROG_DECRYPT_OPTIONS is not 'cat'):
+if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+    # Backup archive decryption is only supported with 'tar':
+    test "tar" = "$BACKUP_PROG" || Error "Backup archive decryption is only supported with BACKUP_PROG=tar"
+    LogPrint "Decrypting backup archive with key defined in variable \$BACKUP_PROG_CRYPT_KEY"
+else
+    Log "Decrypting backup archive is disabled"
+    BACKUP_PROG_DECRYPT_OPTIONS="cat"
+    BACKUP_PROG_CRYPT_KEY=""
+fi
+# ...code snippet from restore/NETFS/default/400_restore_backup.sh
+
 # Extract the passwd, shadow and group files from our backup to our rescue /tmp so we can use those files to repopulate the users in the target system
 dd if=$backuparchive | \
 	$BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | \
@@ -22,21 +45,13 @@ dd if=$backuparchive | \
 RECREATE_USERS=($(cut -d ':' -f '1' $TMPDIR/etc/passwd))
 RECREATE_GROUPS=($(cut -d ':' -f '1' $TMPDIR/etc/group))
 
-# If we're populating system users and groups here,
-# we do not want to restore these files from the backup
-Log "Excluding group, password and shadow files from restore"
-for f in etc/passwd etc/group etc/shadow	# no leading slashes
-do
-	echo "$f" >> $TMP_DIR/restore-exclude-list.txt
-done
-
 # Create a local getent() function to override the system getent.  Required since we want to extract entries from our passwd, shadow and group files in $TMPDIR/etc
-#getent () {
-#	grep "^$2:" $TMPDIR/etc/$1
-#}
+getent () {
+	grep "^$2:" $TMPDIR/etc/$1
+}
 
 # Create a getent alias to override the system getent.  Required since we want to extract entries from our passwd, shadow and group files in $TMPDIR/etc, not /etc
-alias getent="chroot $TMPDIR getent"
+#alias getent="chroot $TMPDIR getent"
 
 Log "Recreating users: ${RECREATE_USERS[@]}"
 for u in "${RECREATE_USERS[@]}" ; do
@@ -54,8 +69,9 @@ for u in "${RECREATE_USERS[@]}" ; do
 		# strip gid from passwd line
 		pwd="${pwd#*:*:*:}"
 		gid="${pwd%%:*}"
+		# No need to do this, we're recreating ALL groups
 		# add gid to groups to collect
-		RECREATE_GROUPS=( "${RECREATE_GROUPS[@]}" "$gid" )
+		#RECREATE_GROUPS=( "${RECREATE_GROUPS[@]}" "$gid" )
 	else
 		Debug "WARNING: Could not collect user info for '$u'"
 	fi
@@ -80,16 +96,21 @@ for g in "${RECREATE_GROUPS[@]}" ; do
 done
 
 # Remove our local definition of getent
-#unset -f getent
+unset -f getent
 
 # Remove our getent alias - we will recreate it if we're also populating passwords (below)
-unalias getent
+#unalias getent
 
 
 IsInArray "passwords" "${RECREATE_USERS_GROUPS[@]}" || return
 
+# Create a local getent() function to override the system getent.  Required since we want to extract entries from our passwd, shadow and group files in $TMPDIR/etc
+getent () {
+	grep "^$2:" $TMPDIR/etc/$1
+}
+
 # Create a getent alias to override the system getent.  Required since we want to extract entries from our passwd, shadow and group files in $TMPDIR/etc, not /etc
-alias getent="chroot /tmp/rear.ETRVSGyACn8UI4Z/rootfs getent"
+#alias getent="chroot $TMPDIR getent"
 
 Log "Recreating existing user passwords: ${RECREATE_USERS[@]}"
 for u in "${RECREATE_USERS[@]}" ; do
@@ -114,6 +135,9 @@ for u in "${RECREATE_USERS[@]}" ; do
 	fi
 done
 
+# Remove our local definition of getent
+unset -f getent
+
 # Remove our getent alias
-unalias getent
+#unalias getent
 
