@@ -10,7 +10,6 @@ PYTHON="$(which python)"
 if [ -h "$PYTHON" ]; then
     PYTHON_BIN=$(basename $(readlink "$PYTHON"))
 else
-    #PYTHON_BIN="python"
     PYTHON_BIN="$PYTHON"
 fi
 
