@@ -2,8 +2,14 @@
 #
 
 if ! is_true "$YUM_BACKUP_FILES" ; then
+        LogPrint "Backup of system files not created ... skipping restore (YUM_BACKUP_FILES=$YUM_BACKUP_FILES)"
         return
 fi
+LogPrint "Restoring system files (YUM_BACKUP_FILES=$YUM_BACKUP_FILES)"
+
+# Try to care about possible errors
+# see https://github.com/rear/rear/wiki/Coding-Style
+set -e -u -o pipefail
 
 local scheme=$(url_scheme $BACKUP_URL)
 local path=$(url_path $BACKUP_URL)
@@ -120,7 +126,6 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                     fi
                 fi
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
-                    #BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=$TMP_DIR/restore-exclude-list.txt "
 		    LogPrint "Copying restore exlusion file from $TMP_DIR/restore-exclude-list.txt to $TARGET_FS_ROOT/tmp"
                     cp -a $TMP_DIR/restore-exclude-list.txt $TARGET_FS_ROOT/tmp
                     BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --exclude-from=/tmp/restore-exclude-list.txt "
@@ -264,4 +269,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
 
 done
 LogPrint "Restoring finished."
+
+# Restore the ReaR default bash flags and options (see usr/sbin/rear):
+apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
 
