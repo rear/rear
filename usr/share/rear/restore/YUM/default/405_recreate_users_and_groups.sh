@@ -1,7 +1,7 @@
-# 395_recreate_users_and_groups.sh
+# 405_recreate_users_and_groups.sh
 #
 # Recreate the same users and groups that exist
-# in the ReaR recovery system also in the target system.
+# in the source system also in the target system.
 
 # Do not restore these files from the backup
 Log "Excluding group, password and shadow files from restore"
@@ -18,10 +18,7 @@ done
 #test "${RECREATE_USERS_GROUPS[*]}" || return
 IsInArray "yes" "${RECREATE_USERS_GROUPS[@]}" || return
 
-#local dst_root="$ROOTFS_DIR"	# Default to recreating users & groups in the rescue environment
-#IsInArray $WORKFLOW ${backup_restore_workflows[@]} && dst_root="$TARGET_FS_ROOT"	# Recreate users & groups in the target environment
-
-[ -z "$TMPDIR" ] && TMPDIR=$(mktemp -d -t rear_395.XXXXXXXXXXXXXXX)
+[ -z "$TMPDIR" ] && TMPDIR=$(mktemp -d -t rear_405.XXXXXXXXXXXXXXX)
 
 # code snippet from restore/NETFS/default/400_restore_backup.sh...
 # Disable BACKUP_PROG_DECRYPT_OPTIONS by replacing the default with 'cat' when encryption is disabled
@@ -50,9 +47,6 @@ getent () {
 	grep "^$2:" $TMPDIR/etc/$1
 }
 
-# Create a getent alias to override the system getent.  Required since we want to extract entries from our passwd, shadow and group files in $TMPDIR/etc, not /etc
-#alias getent="chroot $TMPDIR getent"
-
 Log "Recreating users: ${RECREATE_USERS[@]}"
 for u in "${RECREATE_USERS[@]}" ; do
 	# go over all users
@@ -63,15 +57,10 @@ for u in "${RECREATE_USERS[@]}" ; do
 		user="${pwd%%:*}"
 		if ! grep -q "^$user:" $TARGET_FS_ROOT/etc/passwd ; then
 			echo "$pwd" >>$TARGET_FS_ROOT/etc/passwd
-		#if ! grep -q "^$user:" $dst_root/etc/passwd ; then
-		#	echo "$pwd" >>$dst_root/etc/passwd
 		fi
 		# strip gid from passwd line
 		pwd="${pwd#*:*:*:}"
 		gid="${pwd%%:*}"
-		# No need to do this, we're recreating ALL groups
-		# add gid to groups to collect
-		#RECREATE_GROUPS=( "${RECREATE_GROUPS[@]}" "$gid" )
 	else
 		Debug "WARNING: Could not collect user info for '$u'"
 	fi
@@ -87,30 +76,24 @@ for g in "${RECREATE_GROUPS[@]}" ; do
 		# skip if this user exists already in the restore system
                 group="${grp%%:*}"
                 grep -q "^$group:" $TARGET_FS_ROOT/etc/group && continue
-                #grep -q "^$group:" $dst_root/etc/group && continue
 		echo "$grp" >>$TARGET_FS_ROOT/etc/group
-		#echo "$grp" >>$dst_root/etc/group
 	else
 		Debug "WARNING: Could not collect group info for '$g'"
 	fi
 done
 
 # Remove our local definition of getent
+# We do this here in case we're not recreating the passwords below
 unset -f getent
-
-# Remove our getent alias - we will recreate it if we're also populating passwords (below)
-#unalias getent
 
 
 IsInArray "passwords" "${RECREATE_USERS_GROUPS[@]}" || return
 
 # Create a local getent() function to override the system getent.  Required since we want to extract entries from our passwd, shadow and group files in $TMPDIR/etc
+# We do this again here since we removed it above, just in case
 getent () {
 	grep "^$2:" $TMPDIR/etc/$1
 }
-
-# Create a getent alias to override the system getent.  Required since we want to extract entries from our passwd, shadow and group files in $TMPDIR/etc, not /etc
-#alias getent="chroot $TMPDIR getent"
 
 Log "Recreating existing user passwords: ${RECREATE_USERS[@]}"
 for u in "${RECREATE_USERS[@]}" ; do
@@ -121,15 +104,12 @@ for u in "${RECREATE_USERS[@]}" ; do
 		# skip if this user doesn't exist in the restore system
 		user="${pwd%%:*}"
 		grep -q "^$user:" $TARGET_FS_ROOT/etc/passwd || continue
-		#grep -q "^$user:" $dst_root/etc/passwd || continue
 		# strip passwd from shadow line
-		#pass=$(grep "^$user:" /etc/shadow)
 		pass=$(getent shadow $user)
 		pass="${pass#*:}"
 		pass="${pass%%:*}"
 		# set passwd
 		echo "$user:$pass" | chpasswd -e --root $TARGET_FS_ROOT
-		#echo "$user:$pass" | chpasswd -e --root $dst_root
 	else
 		Debug "WARNING: Could not collect user info for '$u'"
 	fi
@@ -137,7 +117,4 @@ done
 
 # Remove our local definition of getent
 unset -f getent
-
-# Remove our getent alias
-#unalias getent
 
