@@ -34,19 +34,33 @@ test -d $yum_backup_dir || mkdir $verbose -p -m 755 $yum_backup_dir
 # Catalog all files provided by RPM packages
 for file in $(rpm -Vva | grep '^\.\.\.\.\.\.\.\.\.' | grep -v '^...........c' | cut -c 14-); do [ -f $file ] && echo $file; done > $yum_backup_dir/rpm_provided_files.dat
 
-# Gather RPM verification data (ignore failure here as we're just capturing the current RPM verification info)
-rpm -Va > $yum_backup_dir/rpm_verification.dat || true
+# Gather RPM verification data
+rpm -Va > $yum_backup_dir/rpm_verification.dat || true		# don't fail - we're just capturing RPM file verfication
 
 # Use the RPM verification data to catalog RPM-provided files which have been modified...
 grep -v ^missing $yum_backup_dir/rpm_verification.dat | cut -c 14- > $yum_backup_dir/rpm_modified_files.dat
 # ...or are missing
-grep ^missing $yum_backup_dir/rpm_verification.dat | cut -c 14- > $yum_backup_dir/rpm_missing_files.dat || true		# don't fail is no files are missing
+grep ^missing $yum_backup_dir/rpm_verification.dat | cut -c 14- > $yum_backup_dir/rpm_missing_files.dat || true		# don't fail if no files are missing
 
 # Create an exclusion file which is a list of the RPM-provided files which have NOT been modified
 grep -Fvxf $yum_backup_dir/rpm_modified_files.dat $yum_backup_dir/rpm_provided_files.dat > $yum_backup_dir/rpm_backup_exclude_files.dat
 
-# Generate the actual backup archive
-tar --preserve-permissions --same-owner --warning=no-xdev --sparse --block-number --totals --no-wildcards-match-slash --one-file-system --ignore-failed-read --anchored --selinux --gzip -C / -c -f $backuparchive --exclude-from=$yum_backup_dir/rpm_backup_exclude_files.dat -X $TMP_DIR/backup-exclude.txt $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE
+# Add the --selinux option to be safe with SELinux context restoration (from restore/NETFS/default/400_restore_backup.sh)
+if ! is_true "$BACKUP_SELINUX_DISABLE" ; then
+    if tar --usage | grep -q selinux ; then
+        BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --selinux"
+    fi
+    if tar --usage | grep -wq -- --xattrs ; then
+        BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --xattrs"
+    fi
+    if tar --usage | grep -wq -- --xattrs-include ; then
+        BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --xattrs-include=\"*.*\""
+    fi
+fi
+
+# Generate the actual backup archive, excluding all of the RPM-provided files which have NOT been modified
+Log tar --preserve-permissions --same-owner --warning=no-xdev --sparse --block-number --totals --no-wildcards-match-slash --one-file-system --ignore-failed-read $BACKUP_PROG_OPTIONS --gzip -C / -c -f $backuparchive --exclude-from=$yum_backup_dir/rpm_backup_exclude_files.dat -X $TMP_DIR/backup-exclude.txt $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE
+tar --preserve-permissions --same-owner --warning=no-xdev --sparse --block-number --totals --no-wildcards-match-slash --one-file-system --ignore-failed-read $BACKUP_PROG_OPTIONS --gzip -C / -c -f $backuparchive --exclude-from=$yum_backup_dir/rpm_backup_exclude_files.dat -X $TMP_DIR/backup-exclude.txt $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE
 
 # Restore the ReaR default bash flags and options (see usr/sbin/rear):
 apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
