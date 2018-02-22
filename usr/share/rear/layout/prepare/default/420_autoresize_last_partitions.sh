@@ -76,7 +76,7 @@ is_true "$AUTORESIZE_PARTITIONS" && return 0
 # Write new disklayout with resized partitions to LAYOUT_FILE.resized_last_partition:
 local disklayout_resized_last_partition="$LAYOUT_FILE.resized_last_partition"
 cp "$LAYOUT_FILE" "$disklayout_resized_last_partition"
-backup_file "$LAYOUT_FILE"
+save_original_file "$LAYOUT_FILE"
 
 # Set fallbacks if mandatory values are not set (should be set in default.conf):
 test "$AUTORESIZE_EXCLUDE_PARTITIONS" || AUTORESIZE_EXCLUDE_PARTITIONS=( boot swap efi )

@@ -17,7 +17,7 @@ fi
 mkdir -p $LAYOUT_TOUCHDIR
 
 if [ -e $LAYOUT_FILE ] ; then
-    backup_file $LAYOUT_FILE
+    save_original_file $LAYOUT_FILE
 fi
 
 if [ -e $CONFIG_DIR/disklayout.conf ] ; then

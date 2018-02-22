@@ -24,7 +24,7 @@ is_true "$MIGRATION_MODE" || return 0
 is_true "$AUTORESIZE_PARTITIONS" || return 0
 
 cp "$LAYOUT_FILE" "$LAYOUT_FILE.tmp"
-backup_file "$LAYOUT_FILE"
+save_original_file "$LAYOUT_FILE"
 
 while read type device size junk ; do
     sysfsname=$(get_sysfs_name $device)
