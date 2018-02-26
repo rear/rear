@@ -9,16 +9,14 @@ FEATURE_PARTED_MACHINEREADABLE=
 ### Parted used to have slightly different naming
 FEATURE_PARTED_OLDNAMING=
 
-parted_version=$(get_version parted -v)
-[[ "$parted_version" ]]
-BugIfError "Function get_version could not detect parted version."
+parted_version=$( get_version parted -v )
+test "$parted_version" || BugError "Function get_version could not detect parted version."
 
-if version_newer "$parted_version" 1.8.2 ; then
-    FEATURE_PARTED_MACHINEREADABLE=y
-fi
-if ! version_newer "$parted_version" 1.6.23 ; then
-    FEATURE_PARTED_OLDNAMING=y
-fi
+# Function version_newer v1 v2 returns 0 when v1 is greater or equal than v2:
+# Use FEATURE_PARTED_MACHINEREADABLE if parted version is 1.8.2 or newer:
+version_newer "$parted_version" 1.8.2 && FEATURE_PARTED_MACHINEREADABLE=y
+# Use FEATURE_PARTED_OLDNAMING if parted version is older than 1.6.23:
+version_newer "$parted_version" 1.6.23 || FEATURE_PARTED_OLDNAMING=y
 
 # Extract partitioning information of device $1 (full device path)
 # format : part <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>
@@ -241,6 +239,23 @@ extract_partitions() {
                     sed -i /^$partition_nr\ /s/\ primary\ /\ extended\ / $TMP_DIR/partitions
                 fi
             fi
+
+            # Replace currently possibly wrong extended partition size value
+            # by the value that parted reports if those values differ, cf.
+            # https://github.com/rear/rear/pull/1733#issuecomment-368051895
+            # In SLE10 there is GNU Parted 1.6.25.1 which supports 'unit B'
+            # that is documented in 'info parted' (but not yet in 'man parted').
+            # Example of a parted_extended_partition_line:
+            #   # parted -s /dev/sdb unit B print | grep -w '3' | grep -w 'extended'
+            #    3      1266679808B  1790967807B  524288000B  extended                  lba, type=0f
+            # where the size is 524288000B i.e. parted_extended_partition_line[3]
+            parted_extended_partition_line=( $( parted -s $device unit B print | grep -w "$partition_nr" | grep -w 'extended' ) )
+            parted_extended_partition_size="${parted_extended_partition_line[3]%%B*}"
+            if test $size -ne $parted_extended_partition_size ; then
+                 Log "Replacing probably wrong extended partition size $size by what parted reports $parted_extended_partition_size"
+                 sed -i /^$partition_nr\ /s/\ $size\ /\ $parted_extended_partition_size\ / $TMP_DIR/partitions
+            fi
+
         done < $TMP_DIR/partitions-data
     fi
 
