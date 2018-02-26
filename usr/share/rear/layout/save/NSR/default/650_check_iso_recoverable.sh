@@ -1,3 +1,10 @@
+# 650_check_iso_recoverable.sh
+#
+# In case NSR_CLIENT_MODE is enabled return else continue ...
+if is_true "$NSR_CLIENT_MODE"; then
+    return
+fi
+    
 NSRSERVER=$(cat $VAR_DIR/recovery/nsr_server )
 CLIENTNAME=$(hostname)
 
