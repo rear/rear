@@ -24,7 +24,7 @@ local yum_backup_dir=$( dirname "$backuparchive" )
 test -d $yum_backup_dir || mkdir $verbose -p -m 755 $yum_backup_dir
 
 # Determine all installed RPM packages:
-rpm --query --all --last >$yum_backup_dir/installed_RPMs
+rpm --query --all --last > $yum_backup_dir/installed_RPMs
 
 cat $yum_backup_dir/installed_RPMs | awk '{print $1}' | xargs repoquery -i | grep ^Repository | sort | uniq | awk -F: '{print $2}' | tr -d '\n' > $yum_backup_dir/rpm_repositories.dat
 
