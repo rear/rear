@@ -32,7 +32,8 @@ local yum_backup_dir=$(dirname "$backuparchive")
 test -d $yum_backup_dir || mkdir $verbose -p -m 755 $yum_backup_dir
 
 # Catalog all files provided by RPM packages
-for file in $(rpm -Vva | grep '^\.\.\.\.\.\.\.\.\.' | grep -v '^...........c' | cut -c 14-); do [ -f $file ] && echo $file; done > $yum_backup_dir/rpm_provided_files.dat
+LogPrint "Cataloging all unmodified files provided by RPM packages"
+for file in $(rpm -Vva | grep '^\.\.\.\.\.\.\.\.\.' | grep -v '^...........c' | cut -c 14-); do [ -f $file ] && echo $file; done | sort | uniq > $yum_backup_dir/rpm_provided_files.dat
 
 # Gather RPM verification data
 rpm -Va > $yum_backup_dir/rpm_verification.dat || true		# don't fail - we're just capturing RPM file verfication
@@ -43,7 +44,42 @@ grep -v ^missing $yum_backup_dir/rpm_verification.dat | cut -c 14- > $yum_backup
 grep ^missing $yum_backup_dir/rpm_verification.dat | cut -c 14- > $yum_backup_dir/rpm_missing_files.dat || true		# don't fail if no files are missing
 
 # Create an exclusion file which is a list of the RPM-provided files which have NOT been modified
-grep -Fvxf $yum_backup_dir/rpm_modified_files.dat $yum_backup_dir/rpm_provided_files.dat > $yum_backup_dir/rpm_backup_exclude_files.dat
+grep -Fvxf $yum_backup_dir/rpm_modified_files.dat $yum_backup_dir/rpm_provided_files.dat > $yum_backup_dir/rpm_backup_exclude_files.dat.tmp
+
+# Locate all files which share an inode with the files listed in rpm_backup_exclude_files.dat.tmp
+(
+LogPrint "Building comprehensive exclusion list by locating all files which share inodes with the files in the exclusion list."
+LogPrint "This may take some time..."
+count=0; cmd2=""
+let "maxArgLen=$(getconf ARG_MAX) / 100" # Limit how long our find command line will be for each invocation
+#cat $yum_backup_dir/rpm_provided_files.dat.tmp | while read fname
+cat $yum_backup_dir/rpm_backup_exclude_files.dat.tmp | while read fname
+#while read fname
+do
+        [ $count -gt 0 ] && {
+                cmd2=$(echo -n "$cmd2 -o -samefile $fname")
+        } || {
+                cmd2=$(echo -n "$cmd2 -samefile $fname")
+        }
+        curCmdLen=$(echo "$cmd2" | wc -c)
+        [ $curCmdLen -gt $maxLen ] && {
+		# Simple "something is still going on" indicator by printing dots
+		# directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+		# and not using a Print function to always print to the original stdout
+		# i.e. to the terminal wherefrom the user has started "rear recover":
+		echo -n "." >&7
+                find -L / -xdev $cmd2
+                count=0
+                cmd2=""
+        } || {
+                let count++
+        }
+#done < $yum_backup_dir/rpm_backup_exclude_files.dat.tmp > $yum_backup_dir/rpm_backup_exclude_files.dat
+done > $yum_backup_dir/rpm_backup_exclude_files.dat
+rm -f $yum_backup_dir/rpm_backup_exclude_files.dat.tmp
+# One newline ends the "something is still going on" indicator:
+echo "" >&7
+)
 
 # Add the --selinux option to be safe with SELinux context restoration (from restore/NETFS/default/400_restore_backup.sh)
 if ! is_true "$BACKUP_SELINUX_DISABLE" ; then
