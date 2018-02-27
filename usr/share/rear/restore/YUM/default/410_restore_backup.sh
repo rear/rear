@@ -15,8 +15,6 @@ local scheme=$(url_scheme $BACKUP_URL)
 local path=$(url_path $BACKUP_URL)
 local opath=$(backup_path $scheme $path)
 
-mkdir -p "${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
-
 # Disable BACKUP_PROG_DECRYPT_OPTIONS by replacing the default with 'cat' when encryption is disabled
 # (by default encryption is disabled but the default BACKUP_PROG_DECRYPT_OPTIONS is not 'cat'):
 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
