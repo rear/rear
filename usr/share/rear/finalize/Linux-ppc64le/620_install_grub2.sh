@@ -51,6 +51,7 @@ if [[ -r "$LAYOUT_FILE" ]]; then
 
             # Do not update nvram when system is running in PowerNV mode (BareMetal).
             # grub2-install will failed if not run with the --no-nvram option on a PowerNV system.
+            # see https://github.com/rear/rear/pull/1742
             if [[ $(awk '/platform/ {print $NF}' < /proc/cpuinfo) == PowerNV ]] ; then
                 grub2_install_option="--no-nvram"
             fi
