@@ -1,0 +1,295 @@
+== Documentation for the ZYPPER and YUM Methods
+
+=== Background
+
+Both the ZYPPER and YUM methods are used to recreate a system "from scratch" by
+capturing a list of RPMs installed on the source system and installing those RPMs
+on the target system during the restore phase.
+
+As of ReaR 2.4, the YUM method also includes the option to backup certain files.
+
+
+== ZYPPER
+
+NOTE: ZYPPER method support was added to Relax-and-Recover 2.1.
+
+This is not the usual file-based backup/restore method where one gets the files 
+of an old system back as they had been before.
+
+This new kind of "backup" method does not work on files but on RPM packages and
+is intended for use with Linux distributions which use the zypper package
+manager (SUSE, openSUSE, etc).
+
+=== Configuration
+
+*Option: ZYPPER REPOSITORIES*
+
+During `rear mkbackup` it will basically only save a list of installed RPM 
+packages into _var/lib/rear/backup/ZYPPER/installed_RPM_packages_ and during 
+`rear recover` it will basically only install those RPM packages as pristine 
+RPM packages from those zypper repositories that are specified in 
+_ZYPPER_REPOSITORIES_ or in a 
+_var/lib/rear/backup/ZYPPER/zypper_repositories.repo_ file.
+
+Any other files that should be restored (e.g. prepared config files or 
+/home directories) must be done by "Using Multiple Backups for 
+Relax-and-Recover", see doc/user-guide/11-multiple-backups.adoc
+
+For each member _zypper_repository_ in the _ZYPPER_REPOSITORIES_ array, the 
+following command is called
+   `zypper --root $TARGET_FS_ROOT addrepo $zypper_repository ...`
+which means each array member in _ZYPPER_REPOSITORIES_ must be a valid zypper 
+repository URI.  
+
+See what `zypper repos -u` shows as URI and what `zypper repos -u -` returns.  
+Also see `man zypper`.
+
+.Automatic zypper repo detection
+
+The default empty _ZYPPER_REPOSITORIES_ array means that, during `rear mkbackup`, the command
+   `zypper repos --export var/lib/rear/backup/ZYPPER/zypper_repositories.repo`
+is run (_var/lib/rear/backup/ZYPPER/zypper_repositories.repo_ gets included in 
+the ReaR recovery system) and when, during `rear recover` in the ReaR recovery
+system, _/var/lib/rear/backup/ZYPPER/zypper_repositories.repo_ exists,
+   `zypper --root $TARGET_FS_ROOT addrepo --repo /var/lib/rear/backup/ZYPPER/zypper_repositories.repo`
+is run in the ReaR recovery system so that by default during `rear recover` the same
+zypper repositories are used as in the original system. A precondition for that is
+that during `rear recover` those zypper repositories are somehow "just accessible".
+
+ReaR has nothing implemented to make zypper repositories accessible.
+
+If that precondition is not fulfilled one must explicitly specify in 
+_etc/rear/local.conf_ the _ZYPPER_REPOSITORIES_ array with appropriate valid 
+zypper repository URI value(s) that are "just accessible" during `rear recover`.
+
+IMPORTANT: Currently the above described automated zypper repositories usage is not
+implemented.
+The current default is to use a SUSE installation DVD in the first CDROM drive: +
+`ZYPPER_REPOSITORIES=( "cd:///?devices=/dev/sr0" )`
+
+*Option: ZYPPER_INSTALL_RPMS*
+
+ZYPPER_INSTALL_RPMS specifies which kind of RPM packages are installed in which
+way for BACKUP=ZYPPER.  The by default empty ZYPPER_INSTALL_RPMS means that, 
+during `rear recover`, each RPM package that is installed on the original 
+system gets re-installed on the target system.  Plus, all RPM packages that are 
+required by the one that gets re-installed automatically.
+
+The list of all installed RPMs is stored during `rear mkbackup` by default in
+_var/lib/rear/backup/ZYPPER/installed_RPMs_.
+
+With `ZYPPER_INSTALL_RPMS="independent_RPMs"`, only those RPM packages that are 
+not required by other RPM packages on the original system get re-installed 
+on the target system PLUS all RPM packages that are required and recommended 
+by the ones that gets re-installed.
+
+RPM packages that are not required by other RPMs are independently installed 
+RPM packages.  The list of independently installed RPMs is stored during `rear 
+mkbackup` by default in _var/lib/rear/backup/ZYPPER/independent_RPMs_.
+
+Independently installed RPM packages are those that either are intentionally 
+installed by the admin (the ones that are really wanted) or got unintentionally 
+installed as recommended by other RPMs (those are perhaps needed) or are no 
+longer required after other RPMs had been removed (those are probably orphans).
+
+*Option: COPY_AS_IS_ZYPPER and COPY_AS_IS_EXCLUDE_ZYPPER*
+
+The COPY_AS_IS_ZYPPER array contains by default basically what `rpm -qc 
+zypper ; rpm -ql libzypp | egrep -v 'locale|man'` shows (currently determined 
+on openSUSE Leap 42.1) plus the special _/etc/products.d/baseproduct_ link 
+and whereto it points and rpm because that is required by zypper/libzypp and
+finally all kernel modules because otherwise modules like 'isofs' and some 
+'nls*' modules that are needed to mount a iso9660 image (e.g. a SUSE 
+installation medium in a CDROM drive) are not available in the ReaR recovery 
+system which can be a dead end for `rear recover`.
+
+COPY_AS_IS_EXCLUDE_ZYPPER behaves the same as COPY_AS_IS_EXCLUDE, but 
+specifically for the ZYPPER method.
+
+*Option: REQUIRED_PROGS_ZYPPER and PROGS_ZYPPER*
+
+By default, the REQUIRED_PROGS_ZYPPER array contains all zypper, libzypp 
+and libsolv-tools binaries - i.e. all what `rpm -ql zypper | grep bin ; rpm -ql libzypp | grep bin ; rpm -ql libsolv-tools | grep bin`
+shows (currently determined on openSUSE Leap 42.1) and all rpm binaries 
+because RPM is required by zypper/libzypp/libsolv-tools.
+
+The PROGS_ZYPPER array is empty by default and intended to contain additional 
+useful programs that are not strictly required in the ReaR recovery system to 
+run `rear recover`.
+
+*Option: ZYPPER_ROOT_PASSWORD*
+
+ZYPPER_ROOT_PASSWORD specifies the initial root password in the target system.
+This initial root password should not be the actually intended root password
+because its value is stored in usually insecure files (e.g. 
+_/etc/rear/local.conf_) which are included in the ReaR recovery system that 
+is stored in also usually insecure files (like ISO images e.g. 
+`rear-HOSTNAME.iso`) so that the actually intended root password for the 
+target system should be set manually by the admin after `rear recover`.
+
+As fallback `rear recover` sets 'root' as root password in the target system.
+
+If SSH_ROOT_PASSWORD is specified it is used as root password in the target 
+system unless ZYPPER_ROOT_PASSWORD is specified, which is used with highest 
+priority.
+
+*Option: ZYPPER_NETWORK_SETUP_COMMANDS*
+
+ZYPPER_NETWORK_SETUP_COMMANDS specifies the initial network setup for the 
+target system.
+
+This initial network setup is only meant to make the target system accessible
+from remote in a very basic way (e.g. for 'ssh'). The actually intended 
+network setup for the target system should be done manually by the admin 
+after `rear recover`.
+
+The by default empty ZYPPER_NETWORK_SETUP_COMMANDS array means that, during 
+`rear recover`, no network setup happens in the target system.  The 
+ZYPPER_NETWORK_SETUP_COMMANDS array can be used for manual network setup, for 
+example, like `ZYPPER_NETWORK_SETUP_COMMANDS=( 'ip addr add 192.168.100.2/24 dev eth0' 'ip link set dev eth0 up' 'ip route add default via 192.168.100.1' )`
+where each command in ZYPPER_NETWORK_SETUP_COMMANDS is run during 
+`rear recover` in the target system (via 'chroot').  When one of the 
+commands in ZYPPER_NETWORK_SETUP_COMMANDS is the special string 
+'NETWORKING_PREPARATION_COMMANDS', the commands in 
+NETWORKING_PREPARATION_COMMANDS are called inside the target system.
+
+When one of the commands in ZYPPER_NETWORK_SETUP_COMMANDS is the special 
+string 'YAST', initial network setup in the target system happens by 
+calling the hardcoded command `yast2 --ncurses lan add name=eth0 ethdevice=eth0 bootproto=dhcp`.
+
+If something else is needed, an appropriate yast2 command can be manually specified.
+
+=== Example
+[source,bash]
+OUTPUT=ISO
+BACKUP=ZYPPER
+BACKUP_OPTIONS="nfsvers=3,nolock"
+BACKUP_URL=nfs://10.160.4.244/nfs
+SSH_ROOT_PASSWORD="rear"
+USE_DHCLIENT="yes"
+
+== YUM
+
+NOTE: YUM method support was added to Relax-and-Recover 2.3.
+
+YUM is a port of the ZYPPER method for Linux distributions which use the yum
+package manager, such as RHEL, CentOS, Fedora, etc.
+
+Most options are the similar to, or the same as, the ZYPPER options.  If a
+particular option is not documented here, look at the equivalent ZYPPER_*
+option.
+
+*Option: YUM_EXCLUDE_PKGS*
+
+Packages listed in this array will not be installed on the target
+system, even if they are present on the source system.
+
+This can be useful if, for instance, more than one kernel is installed
+and you want to exclude the older kernel(s) from being installed on
+the target system.
+
+=== Example
+[source,bash]
+OUTPUT=ISO
+BACKUP=YUM
+BACKUP_URL=iso://backup
+OUTPUT_URL=null
+YUM_EXCLUDE_PKGS=( 'kernel*327*' 'tree' )
+export http_proxy="http://10.0.2.2:8080"
+
+== YUM+backup
+
+NOTE: YUM with file backup support was added to Relax-and-Recover 2.4.
+
+This extension to the YUM method behaves a little differently than
+folks usually expect:  A full system backup is possible, but the 
+backup archive contains only the bare minimum files required to end
+up with a full restore.
+
+The backup archive is created in a similar manner as that used in 
+the NETFS method (tar.gz), but all files which have been installed
+via RPM, and have not been modified, are excluded.  All other files,
+including those installed via RPM that have been modified, are 
+captured by the backup.  
+
+With file backup, ReaR will capture all modified configuration files, 
+user directories, custom scripts, etc without also storing all of the
+files which ReaR will install as part of a package during recovery.
+
+IMPORTANT: At present, YUM+backup has only been tested with `OUTPUT=ISO`.
+Since files like _/etc/passwd_ will have been modified, they will, by
+default, be included in the backup archive which is stored in the ISO.  
+*Any time that your backup archive is contained on the ISO, such as
+with YUM+backup or NETFS, it is prudent to exercise proper security 
+so that the contents of the ISO do not fall into the wrong hands!*
+
+=== Configuration
+
+*Option: YUM_BACKUP_FILES*
+
+When set to a true value (yes, true, 1, etc), ReaR will create a
+backup archive the files on the source which must be restored after
+the packages are installed in order to result in a fully recovered
+system.
+
+=== Options only available with YUM_BACKUP_FILES=yes
+
+*Option: RECREATE_USERS_GROUPS*
+
+This option determines if/how users and groups that are present on the 
+source system at the time that the backup is created, are recreated on the 
+target system.
+
+By default, users and groups are not added to the target system during
+`rear recover` unless they are added when a package is installed.
+
+The `RECREATE_USERS_GROUPS="yes"` setting will tell ReaR to recreate all 
+users and groups on the target system, but passwords are locked.
+
+Adding "passwords" to the RECREATE_USERS_GROUPS array 
+(`RECREATE_USERS_GROUPS=("yes" "passwords")`) will also set the target
+system passwords.
+
+*Option: YUM_BACKUP_FILES_FULL_EXCL*
+
+This option determines if a comprehensive exclusion list is built 
+during backup.
+
+The reason behind this option is that symlinks in file paths will 
+cause files which have been excluded (usually due to being provided 
+when a package is installed) to be implicitly included via the 
+alternate path(s) present on the system.
+
+.Example
+On a system where _/sbin_ is a symlink to _/usr/sbin_,
+_/usr/sbin/ifup_ will be excluded due to being provided by the
+initscripts package, but _/sbin/ifup_ will still be present in the
+archive due to the alternate path.
+
+[source,bash]
+$ ls -ald /sbin
+lrwxrwxrwx. 1 root root 8 Jun 15  2017 /sbin -> usr/sbin
+
+A full, comprehensive exclusion list will find all paths to excluded 
+files, making the backup archive as small as possible, but can
+potentially take a LOT longer due to the file system scans.
+
+*Option: YUM_BACKUP_SELINUX_CONTEXTS*
+
+ReaR can also capture the SELinux security contexts of every file 
+on the source system and reapply those contexts after the packages 
+have been reinstalled (and the backups, if any, have been extracted).
+
+=== Example
+[source,bash]
+OUTPUT=ISO
+BACKUP=YUM
+BACKUP_URL=iso://backup
+OUTPUT_URL=null
+BACKUP_SELINUX_DISABLE=0
+YUM_BACKUP_FILES=yes
+YUM_BACKUP_FILES_FULL_EXCL=yes
+YUM_BACKUP_SELINUX_CONTEXTS=yes
+RECREATE_USERS_GROUPS=( "yes" "passwords" )
+export http_proxy="http://10.0.2.2:8080"
+
