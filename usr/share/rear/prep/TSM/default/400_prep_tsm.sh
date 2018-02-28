@@ -13,6 +13,6 @@ PROGS=( "${PROGS[@]}" "${PROGS_TSM[@]}" )
 
 # Find gsk lib diriectory and add it to the TSM_LD_LIBRARY_PATH
 # see issue https://github.com/rear/rear/issues/1688
-for gsk_dir in $(ls -d /usr/local/ibm/gsk*/bin* /usr/local/ibm/gsk*/lib* ) ; do
+for gsk_dir in $(ls -d /usr/local/ibm/gsk*/lib* ) ; do
 	TSM_LD_LIBRARY_PATH=$TSM_LD_LIBRARY_PATH:$gsk_dir
 done
