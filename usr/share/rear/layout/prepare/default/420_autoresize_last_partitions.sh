@@ -83,6 +83,10 @@ test "$AUTORESIZE_EXCLUDE_PARTITIONS" || AUTORESIZE_EXCLUDE_PARTITIONS=( boot sw
 test "$AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE" || AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE=10
 test "$AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE" || AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE=2
 
+# Try to care about possible errors
+# see https://github.com/rear/rear/wiki/Coding-Style
+set -e -u -o pipefail
+
 # The original disk space usage was written by layout/save/GNU/Linux/510_current_disk_usage.sh
 local original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
 
@@ -90,18 +94,27 @@ local component_type junk
 local disk_device old_disk_size
 local sysfsname new_disk_size
 local max_part_start last_part_dev last_part_start last_part_size last_part_type last_part_flags last_part_end
+local extended_part_dev extended_part_start extended_part_size
 local disk_dev part_size part_start part_type part_flags part_dev
 local last_part_is_resizeable last_part_filesystem_entry last_part_filesystem_mountpoint egrep_pattern
 local last_part_is_boot last_part_is_swap last_part_is_efi
-local MiB new_disk_size_MiB new_disk_remainder_start new_last_part_size last_part_disk_space_usage last_part_used_bytes
+local extended_part_to_be_increased
+local MiB new_disk_size_MiB new_disk_remainder_start new_last_part_size new_extended_part_size
+local last_part_disk_space_usage last_part_used_bytes
 local disk_size_difference increase_threshold_difference last_part_shrink_difference max_shrink_difference
 
-# Example 'disk' entry in disklayout.conf:
+# Example 'disk' entries in disklayout.conf:
+#
 #   # Disk /dev/sda
 #   # Format: disk <devname> <size(bytes)> <partition label type>
 #   disk /dev/sda 21474836480 msdos
+#
+#   # Disk /dev/sdb
+#   # Format: disk <devname> <size(bytes)> <partition label type>
+#   disk /dev/sdb 2147483648 msdos
+#
 while read component_type disk_device old_disk_size junk ; do
-    Log "Examining $disk_device to automatically resize its last active partition"
+    DebugPrint "Examining $disk_device to automatically resize its last active partition"
 
     sysfsname=$( get_sysfs_name $disk_device )
     test "$sysfsname" || Error "Failed to get_sysfs_name() for $disk_device"
@@ -111,23 +124,51 @@ while read component_type disk_device old_disk_size junk ; do
     is_positive_integer $new_disk_size || Error "Failed to get_disk_size() for $disk_device"
     # Skip if the size of the new disk (e.g. sda) is same as the size of the old disk (e.g. also sda):
     if test $new_disk_size -eq $old_disk_size ; then
-        Log "Skipping $disk_device (size of new disk same as size of old disk)"
+        DebugPrint "Skipping $disk_device (size of new disk same as size of old disk)"
         continue
     fi
 
     # Find the last partition for the current disk in disklayout.conf:
     # Example partitions 'part' entries in disklayout.conf:
+    #
     #   # Partitions on /dev/sda
     #   # Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>
     #   part /dev/sda 1569718272 1048576 primary none /dev/sda1
     #   part /dev/sda 19904069632 1570766848 primary boot /dev/sda2
+    #
+    #   # Partitions on /dev/sdb
+    #   # Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>
+    #   part /dev/sdb 838860800 8388608 primary none /dev/sdb1
+    #   part /dev/sdb 419430400 847249408 primary none /dev/sdb2
+    #   part /dev/sdb 524288000 1266679808 extended lba /dev/sdb3
+    #   part /dev/sdb 95420416 1267728384 logical none /dev/sdb5
+    #   part /dev/sdb 209715200 1468006400 logical none /dev/sdb6
+    #
+    # Note the gaps around the second logical partition /dev/sdb6 and
+    # the gap from the end of the extended partition to the end of the sdb disk
+    # (see above the sdb disk size is 2147483648):
+    #   1208MiB start extended
+    #   1209MiB start logical1
+    #   1300MiB end logical1
+    #   gap
+    #   1400MiB start logical2
+    #   1600MiB end logical2
+    #   gap
+    #   1708MiB end extended
+    #   gap
+    #   2048MiB end disk
+    # cf. https://github.com/rear/rear/pull/1733#issuecomment-367317079
+    #
     # The last partition is the /dev/<partition> with biggest <partition start(bytes)> value.
     max_part_start=0
     last_part_dev=""
     last_part_start=0
     last_part_size=0
+    extended_part_dev=""
+    extended_part_start=0
+    extended_part_size=0
     while read component_type disk_dev part_size part_start part_type part_flags part_dev junk ; do
-        Log "Checking $part_dev if it is the last partition on $disk_device"
+        DebugPrint "Checking $part_dev if it is the last partition on $disk_device"
         if test $part_start -ge $max_part_start ; then
             max_part_start=$part_start
             last_part_dev="$part_dev"
@@ -137,17 +178,30 @@ while read component_type disk_device old_disk_size junk ; do
             last_part_flags="$part_flags"
             last_part_end=$( mathlib_calculate "$last_part_start + $last_part_size - 1" )
         fi
+        # Remember the values of an extended partition to be able
+        # to also adjust the end value of the extended "container" partition
+        # when the last partition is a logical partition
+        # cf. https://github.com/rear/rear/pull/1733#issuecomment-367317079
+        # because only at most one extended partition is allowed
+        # cf. https://de.wikipedia.org/wiki/Master_Boot_Record#Prim%C3%A4re_und_erweiterte_Partitionstabelle
+        # it is sufficient to remember at most one single extended_part_size value:
+        if test "extended" = "$part_type" ; then
+            DebugPrint "Found extended partition $part_dev on $disk_device"
+            extended_part_dev="$part_dev"
+            extended_part_start="$part_start"
+            extended_part_size="$part_size"
+        fi
     done < <( grep "^part $disk_device" "$LAYOUT_FILE" )
-    test "$last_part_dev" || Error "Failed to determine /dev/<partition> for last partition on $disk_device"
+    test "$last_part_dev" || Error "Failed to determine device node for last partition on $disk_device"
     is_positive_integer $last_part_start || Error "Failed to determine partition start for $last_part_dev"
-    Log "Found $last_part_dev as last partition on $disk_device"
+    DebugPrint "Found '$last_part_type' partition $last_part_dev as last partition on $disk_device"
 
     # Determine if the last partition is resizeable:
-    Log "Determining if last partition $last_part_dev is resizeable"
+    DebugPrint "Determining if last partition $last_part_dev is resizeable"
     last_part_is_resizeable=""
     if IsInArray "$last_part_dev" ${AUTORESIZE_PARTITIONS[@]} ; then
         last_part_is_resizeable="yes"
-        Log "Last partition should be resized ($last_part_dev in AUTORESIZE_PARTITIONS)"
+        DebugPrint "Last partition should be resized ($last_part_dev in AUTORESIZE_PARTITIONS)"
     else
         # Example filesystem 'fs' entry in disklayout.conf (excerpt):
         #  # Format: fs <device> <mountpoint> <fstype> ...
@@ -159,7 +213,7 @@ while read component_type disk_device old_disk_size junk ; do
         # Do not resize partitions that are explicitly specified to be excluded from being resized:
         if IsInArray "$last_part_dev" ${AUTORESIZE_EXCLUDE_PARTITIONS[@]} ; then
             last_part_is_resizeable="no"
-            Log "Last partition $last_part_dev not resizeable (excluded from being resized in AUTORESIZE_EXCLUDE_PARTITIONS)"
+            DebugPrint "Last partition $last_part_dev not resizeable (excluded from being resized in AUTORESIZE_EXCLUDE_PARTITIONS)"
         fi
         # Do not resize partitions that are used during boot:
         if IsInArray "boot" ${AUTORESIZE_EXCLUDE_PARTITIONS[@]} ; then
@@ -176,7 +230,7 @@ while read component_type disk_device old_disk_size junk ; do
             grep -E -i "$egrep_pattern" <<< $( echo $last_part_filesystem_mountpoint ) && last_part_is_boot="yes"
             if is_true "$last_part_is_boot" ; then
                 last_part_is_resizeable="no"
-                Log "Last partition $last_part_dev not resizeable (used during boot)"
+                DebugPrint "Last partition $last_part_dev not resizeable (used during boot)"
             fi
         fi
         # Do not resize partitions that are used as swap partitions:
@@ -191,7 +245,7 @@ while read component_type disk_device old_disk_size junk ; do
             grep -i 'swap' <<< $( echo $last_part_flags ) && last_part_is_swap="yes"
             if is_true "$last_part_is_swap" ; then
                 last_part_is_resizeable="no"
-                Log "Last partition $last_part_dev not resizeable (used as swap partition)"
+                DebugPrint "Last partition $last_part_dev not resizeable (used as swap partition)"
             fi
         fi
         # Do not resize partitions that are used for UEFI:
@@ -207,14 +261,24 @@ while read component_type disk_device old_disk_size junk ; do
             grep -E -i "$egrep_pattern" <<< $( echo $last_part_filesystem_mountpoint ) && last_part_is_efi="yes"
             if is_true "$last_part_is_efi" ; then
                 last_part_is_resizeable="no"
-                Log "Last partition $last_part_dev not resizeable (used for UEFI)"
+                DebugPrint "Last partition $last_part_dev not resizeable (used for UEFI)"
             fi
+        fi
+    fi
+
+    # Determine if an extended partition should be increased
+    # independent of whether or not the last partition will be also increased:
+    if test "$extended_part_dev" ; then
+        extended_part_to_be_increased=""
+        if IsInArray "$extended_part_dev" ${AUTORESIZE_PARTITIONS[@]} ; then
+            extended_part_to_be_increased="yes"
+            DebugPrint "Extended partition should be increased ($extended_part_dev in AUTORESIZE_PARTITIONS)"
         fi
     fi
 
     # Determine the desired new size of the last partition (with 1 MiB alignment)
     # so that the new sized last partition would go up to the end of the new disk:
-    Log "Determining new size for last partition $last_part_dev"
+    DebugPrint "Determining new size for last partition $last_part_dev"
     MiB=$( mathlib_calculate "1024 * 1024" )
     # mathlib_calculate cuts integer remainder so that for a disk of e.g. 12345.67 MiB size new_disk_size_MiB = 12345
     new_disk_size_MiB=$( mathlib_calculate "$new_disk_size / $MiB" )
@@ -231,6 +295,17 @@ while read component_type disk_device old_disk_size junk ; do
     # When the desired new size of the last partition (with 1 MiB alignment) is not at least 1 MiB
     # the last partition can no longer be on the new disk (when only the last partition is shrinked):
     test $new_last_part_size -ge $MiB || Error "No space for last partition $last_part_dev on new disk (new last partition size would be less than 1 MiB)"
+
+    # When the last partition is a logical partition determine the desired new size
+    # of its extended "container" partition (with 1 MiB alignment) so that
+    # also the new sized extended partition would go up to the end of the new disk.
+    # When new_extended_part_size is zero it means that there is no extended partition
+    # or it means that an existing extended partition does not need to be resized
+    # (e.g. because the last partition is a primary partition after the extended partition):
+    new_extended_part_size=0
+    if test "logical" = "$last_part_type" ; then
+        new_extended_part_size=$( mathlib_calculate "$new_disk_remainder_start - $extended_part_start" )
+    fi
 
     # When the desired new size of the last partition is not at least its original disk space usage
     # the new last partition would be too small if the files of the last partition were restored from the backup
@@ -252,43 +327,79 @@ while read component_type disk_device old_disk_size junk ; do
         test $new_last_part_size -ge $last_part_used_bytes || LogUserOutput "WARNING: New size of last partition $last_part_dev will be smaller than its disk usage was"
     fi
 
+    # Determine if an extended partition actually needs to be shrinked or should be increased and do it if needed.
+    # If new_extended_part_size has a positive value it means the last partition is a logical partition (cf. above)
+    # which means there is no further partition beyond the end of the extended partition
+    # (only one extended partition is allowed so that all logical partitions must be in one extended partition)
+    # so that the extended partition can actually be shrinked or increased:
+    if is_positive_integer $new_extended_part_size ; then
+        # The extended partition actually needs to be shrinked (regardless if the last partition needs to be shrinked)
+        # if the new size (which is up to the end of the new disk) is smaller than it was on the old disk because
+        # otherwise the end of the extended partition would be beyond the end of the new disk (with 1 MiB alignment):
+        if test $new_extended_part_size -lt $extended_part_size ; then
+            LogPrint "Shrinking extended partition $extended_part_dev to end of disk"
+            sed -r -i "s|^part $disk_device $extended_part_size $extended_part_start (.+) $extended_part_dev\$|part $disk_device $new_extended_part_size $extended_part_start \1 $extended_part_dev|" "$disklayout_resized_last_partition"
+            LogPrint "Shrinked extended partition $extended_part_dev size from $extended_part_size to $new_extended_part_size bytes"
+            # Set new_extended_part_size to zero to avoid that the extended partition
+            # will be also shrinked when the last partition gets actually shrinked below:
+            new_extended_part_size=0
+        fi
+        # The extended partition should be increased independent of whether or not the last partition will be also increased:
+        if is_true "$extended_part_to_be_increased" ; then
+            # The extended partition can only be actually increased (regardless if the last partition will also be increased)
+            # if the new size (which is up to the end of the new disk) is greater than it was on the old disk (with 1 MiB alignment):
+            if test $new_extended_part_size -gt $extended_part_size ; then
+                LogPrint "Increasing extended partition $extended_part_dev to end of disk"
+                sed -r -i "s|^part $disk_device $extended_part_size $extended_part_start (.+) $extended_part_dev\$|part $disk_device $new_extended_part_size $extended_part_start \1 $extended_part_dev|" "$disklayout_resized_last_partition"
+                LogPrint "Increased extended partition $extended_part_dev size from $extended_part_size to $new_extended_part_size bytes"
+                # Set new_extended_part_size to zero to avoid that the extended partition
+                # will be also increased when the last partition gets actually increased below:
+                new_extended_part_size=0
+            else
+                # Inform the user when the extended partition cannot be resized regardless of his setting in AUTORESIZE_PARTITIONS:
+                LogPrint "Extended partition $extended_part_dev cannot be increased (new size less than what it was on old disk)"
+            fi
+        fi
+    fi
+
     # Determine if the last partition actually needs to be increased or shrinked and
     # go on or error out or continue with the next disk depending on the particular case:
-    Log "Determining if last partition $last_part_dev actually needs to be increased or shrinked"
+    DebugPrint "Determining if last partition $last_part_dev actually needs to be increased or shrinked"
     disk_size_difference=$( mathlib_calculate "$new_disk_size - $old_disk_size" )
     if test $disk_size_difference -gt 0 ; then
         # The size of the new disk is bigger than the size of the old disk:
-        Log "New $disk_device is $disk_size_difference bigger than old disk"
+        DebugPrint "New $disk_device is $disk_size_difference bigger than old disk"
         increase_threshold_difference=$( mathlib_calculate "$old_disk_size / 100 * $AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE" )
         if test $disk_size_difference -lt $increase_threshold_difference ; then
             if is_true "$last_part_is_resizeable" ; then
                 # Inform the user when last partition cannot be resized regardless of his setting in AUTORESIZE_PARTITIONS:
                 LogPrint "Last partition $last_part_dev cannot be resized (new disk less than $AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE% bigger)"
             else
-                Log "Skip increasing last partition $last_part_dev (new disk less than $AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE% bigger)"
+                DebugPrint "Skip increasing last partition $last_part_dev (new disk less than $AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE% bigger)"
             fi
             # Continue with next disk:
             continue
         fi
         if is_false "$last_part_is_resizeable" ; then
-            Log "Skip increasing last partition $last_part_dev (not resizeable)"
+            DebugPrint "Skip increasing last partition $last_part_dev (not resizeable)"
             # Continue with next disk:
             continue
         fi
         test $new_last_part_size -ge $last_part_size || BugError "New last partition size $new_last_part_size is not bigger than old size $last_part_size"
         LogPrint "Increasing last partition $last_part_dev up to end of disk (new disk at least $AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE% bigger)"
+        is_positive_integer $new_extended_part_size && LogPrint "Increasing extended partition $extended_part_dev up to end of disk"
     else
         # The size of the new disk is smaller than the size of the old disk:
         # Currently disk_size_difference is negative but we prefer to use its absolute value:
         disk_size_difference=$( mathlib_calculate "0 - $disk_size_difference" )
-        Log "New $disk_device is $disk_size_difference smaller than old disk"
+        DebugPrint "New $disk_device is $disk_size_difference smaller than old disk"
         # There is no need to shrink the last partition when the original last partition still fits on the new smaller disk:
         if test $last_part_end -le $new_disk_remainder_start ; then
             if is_true "$last_part_is_resizeable" ; then
                 # Inform the user when last partition will not be resized regardless of his setting in AUTORESIZE_PARTITIONS:
                 LogPrint "Last partition $last_part_dev will not be resized (original last partition still fits on the new smaller disk)"
             else
-                Log "Skip shrinking last partition $last_part_dev (original last partition still fits on the new smaller disk)"
+                DebugPrint "Skip shrinking last partition $last_part_dev (original last partition still fits on the new smaller disk)"
             fi
             # Continue with next disk:
             continue
@@ -307,9 +418,19 @@ while read component_type disk_device old_disk_size junk ; do
     # Replace the size value of the last partition by its new size value in LAYOUT_FILE.resized_last_partition:
     sed -r -i "s|^part $disk_device $last_part_size $last_part_start (.+) $last_part_dev\$|part $disk_device $new_last_part_size $last_part_start \1 $last_part_dev|" "$disklayout_resized_last_partition"
     LogPrint "Changed last partition $last_part_dev size from $last_part_size to $new_last_part_size bytes"
+    # When the last partition is a logical partition its extended "container" partition may also need to be resized.
+    # The extended partition only needs to be resized if there is a positive new size value for the extended partition (cf. above)
+    # and that only happens when the extended partition needs to be increased (shrinking was already done above if needed):
+    if is_positive_integer $new_extended_part_size ; then
+        sed -r -i "s|^part $disk_device $extended_part_size $extended_part_start (.+) $extended_part_dev\$|part $disk_device $new_extended_part_size $extended_part_start \1 $extended_part_dev|" "$disklayout_resized_last_partition"
+        LogPrint "Increased extended partition $extended_part_dev size from $extended_part_size to $new_extended_part_size bytes"
+    fi
 
 done < <( grep "^disk " "$LAYOUT_FILE" )
 
 # Use the new LAYOUT_FILE.resized_last_partition with the resized partitions:
 mv "$disklayout_resized_last_partition" "$LAYOUT_FILE"
+
+# Restore the ReaR default bash flags and options (see usr/sbin/rear):
+apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
 
