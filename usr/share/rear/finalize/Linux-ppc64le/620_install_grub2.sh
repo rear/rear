@@ -48,9 +48,17 @@ if [[ -r "$LAYOUT_FILE" ]]; then
         if [ -n "$part" ]; then
             LogPrint "Boot partition found: $part"
             dd if=/dev/zero of=$part
+
+            # Do not update nvram when system is running in PowerNV mode (BareMetal).
+            # grub2-install will failed if not run with the --no-nvram option on a PowerNV system.
+            # see https://github.com/rear/rear/pull/1742
+            if [[ $(awk '/platform/ {print $NF}' < /proc/cpuinfo) == PowerNV ]] ; then
+                grub2_install_option="--no-nvram"
+            fi
+
             # Run grub-install/grub2-install directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
             # When software RAID1 is used, grub2 needs correct PATH to access other tools
-            if chroot $TARGET_FS_ROOT /usr/bin/env PATH=/sbin:/usr/sbin:/usr/bin:/bin $grub_name-install $part ; then
+            if chroot $TARGET_FS_ROOT /usr/bin/env PATH=/sbin:/usr/sbin:/usr/bin:/bin $grub_name-install $grub2_install_option $part ; then
                 LogPrint "GRUB2 installed on $part"
                 NOBOOTLOADER=
             else
