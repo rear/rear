@@ -82,6 +82,9 @@ save_original_file "$LAYOUT_FILE"
 test "$AUTORESIZE_EXCLUDE_PARTITIONS" || AUTORESIZE_EXCLUDE_PARTITIONS=( boot swap efi )
 test "$AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE" || AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE=10
 test "$AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE" || AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE=2
+# Avoid 'set -e -u' exit because of "AUTORESIZE_PARTITIONS[@]: unbound variable"
+# note that an empty array AUTORESIZE_PARTITIONS=() does not help here:
+test "$AUTORESIZE_PARTITIONS" || AUTORESIZE_PARTITIONS=''
 
 # Try to care about possible errors
 # see https://github.com/rear/rear/wiki/Coding-Style

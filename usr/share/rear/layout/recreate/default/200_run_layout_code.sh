@@ -23,6 +23,8 @@
 rear_workflow="rear $WORKFLOW"
 original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
 rear_shell_history="$( echo -e "cd $VAR_DIR/layout/\nvi $LAYOUT_CODE\nless $RUNTIME_LOGFILE" )"
+wilful_input=""
+
 unset choices
 choices[0]="Rerun disk recreation script ($LAYOUT_CODE)"
 choices[1]="View '$rear_workflow' log file ($RUNTIME_LOGFILE)"
@@ -32,10 +34,20 @@ choices[4]="Use Relax-and-Recover shell and return back to here"
 choices[5]="Abort '$rear_workflow'"
 prompt="The disk layout recreation script failed"
 choice=""
-wilful_input=""
 # When USER_INPUT_LAYOUT_RUN has any 'true' value be liberal in what you accept and
 # assume choices[0] 'Run disk recreation script again' was actually meant:
 is_true "$USER_INPUT_LAYOUT_CODE_RUN" && USER_INPUT_LAYOUT_CODE_RUN="${choices[0]}"
+
+unset confirm_choices
+confirm_choices[0]="Confirm recreated disk layout and continue '$rear_workflow'"
+confirm_choices[1]="Go back one step to redo disk layout recreation"
+confirm_choices[2]="Use Relax-and-Recover shell and return back to here"
+confirm_choices[3]="Abort '$rear_workflow'"
+confirm_prompt="Confirm the recreated disk layout or go back one step"
+confirm_choice=""
+# When USER_INPUT_LAYOUT_MIGRATED_CONFIRMATION has any 'true' value be liberal in what you accept and
+# assume confirm_choices[0] 'Confirm recreated disk layout and continue' was actually meant:
+is_true "$USER_INPUT_LAYOUT_MIGRATED_CONFIRMATION" && USER_INPUT_LAYOUT_MIGRATED_CONFIRMATION="${confirm_choices[0]}"
 
 # Run the disk layout recreation code (diskrestore.sh)
 # again and again until it succeeds or the user aborts:
@@ -71,8 +83,43 @@ while true ; do
     #   cat: qqq: No such file or directory
     #   failed
     # See also https://github.com/rear/rear/pull/1573#issuecomment-344303590
-    # Break the outer while loop when LAYOUT_CODE succeeded:
-    (( $? == 0 )) && break
+    if (( $? == 0 )) ; then
+        # When LAYOUT_CODE succeeded and when not in migration mode
+        # break the outer while loop and continue the "rear recover" workflow
+        # which means continue with restoring the backup:
+        is_true "$MIGRATION_MODE" || break
+        # When LAYOUT_CODE succeeded in migration mode
+        # let the user explicitly confirm the recreated (and usually migrated) disk layout
+        # before continuing the "rear recover" workflow with restoring the backup.
+        # Run an inner while loop with a user dialog so that the user can inspect the recreated disk layout
+        # and perhaps even manually fix the recreated disk layout if it is not what the user wants
+        # (e.g. by using the Relax-and-Recover shell and returning back to this user dialog):
+        while true ; do
+            confirm_choice="$( UserInput -I LAYOUT_MIGRATED_CONFIRMATION -p "$confirm_prompt" -D "${confirm_choices[0]}" "${confirm_choices[@]}" )" && wilful_input="yes" || wilful_input="no"
+            case "$confirm_choice" in
+                (${confirm_choices[0]})
+                    # Confirm recreated disk layout and continue:
+                    is_true "$wilful_input" && LogPrint "User confirmed recreated disk layout" || LogPrint "Continuing with recreated disk layout by default"
+                    # Break the outer while loop and continue with restoring the backup:
+                    break 2
+                    ;;
+                (${confirm_choices[1]})
+                    # Go back one step to redo disk layout recreation:
+                    # Only break the inner while loop (i.e. this user dialog loop)
+                    # and  continue with the next user dialog below:
+                    break
+                    ;;
+                (${confirm_choices[2]})
+                    # rear_shell runs 'bash' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
+                    rear_shell "" "$rear_shell_history"
+                    ;;
+                (${confirm_choices[3]})
+                    abort_recreate
+                    Error "User did not confirm the recreated disk layout but aborted '$rear_workflow' in ${BASH_SOURCE[0]}"
+                    ;;
+            esac
+        done
+    fi
     # Run an inner while loop with a user dialog so that the user can fix things when LAYOUT_CODE failed.
     # Such a fix does not necessarily mean the user must change the diskrestore.sh script.
     # The user might also fix things by only using the Relax-and-Recover shell.
