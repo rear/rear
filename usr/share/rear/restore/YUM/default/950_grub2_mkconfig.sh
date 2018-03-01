@@ -12,6 +12,9 @@
 # but the recreated system will not boot (stops at "grub>" bootloader prompt).
 #
 
+# If /usr/sbin/grub2-mkconfig does not exist on the target system, we cannot run it
+test -e $TARGET_FS_ROOT/usr/sbin/grub2-mkconfig || return
+
 # Try to care about possible errors
 # see https://github.com/rear/rear/wiki/Coding-Style
 set -e -u -o pipefail

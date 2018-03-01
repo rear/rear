@@ -29,7 +29,7 @@ while read keyword device_node junk ; do
     # Do not use a possibly outdated UUID from LAYOUT_FILE but determine the actual one in the current system:
     uuid=$( for uuid in * ; do readlink -e $uuid | grep -q $device_node && echo $uuid || true ; done  )
     # If fstab already contains an entry for this swap device, do nothing
-    if $(egrep -q "^UUID=$uuid\s+swap" $TARGET_FS_ROOT/etc/fstab) -o $(egrep -q "^$device_node\s+swap" $TARGET_FS_ROOT/etc/fstab) ; then
+    if egrep -q "^UUID=$uuid\s+swap" $TARGET_FS_ROOT/etc/fstab || egrep -q "^$device_node\s+swap" $TARGET_FS_ROOT/etc/fstab ; then
         LogPrint "Skipping addition of swap device $device_node (UUID=$uuid) - already in etc/fstab of the target system"
 	continue
     fi
@@ -57,7 +57,7 @@ while read keyword device_node mountpoint filesystem_type junk ; do
     # Do not use a possibly outdated UUID from LAYOUT_FILE but determine the actual one in the current system:
     uuid=$( for uuid in * ; do readlink -e $uuid | grep -q $device_node && echo $uuid || true ; done  )
     # If fstab already contains an entry for this filesystem, do nothing
-    if $(egrep -q "^UUID=$uuid\s+$mountpoint" $TARGET_FS_ROOT/etc/fstab) -o $(egrep -q "^$device_node\s+$mountpoint" $TARGET_FS_ROOT/etc/fstab) ; then
+    if egrep -q "^UUID=$uuid\s+$mountpoint" $TARGET_FS_ROOT/etc/fstab || egrep -q "^$device_node\s+$mountpoint" $TARGET_FS_ROOT/etc/fstab ; then
         LogPrint "Skipping addition of swap device $device_node (UUID=$uuid) - already in etc/fstab of the target system"
 	continue
     fi
