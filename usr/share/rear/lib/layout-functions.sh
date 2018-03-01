@@ -1,23 +1,38 @@
 # Utility functions for the system layout processing.
 
-DATE=$(date +%Y%m%d)
-# FIXME: Why not using ISO 8601 date? $(date +%F)
+# TODO: Why not using ISO 8601 date 'date +%F' ?
+# Be exact to one second to ensure saved original files
+# of directly subsequent 'rear WORKFLOW' are saved with different filenames
+# that could help to avoid confusion when debugging issues later:
+DATE=$( date +%Y%m%d%H%M%S )
 
-BACKUPS_TAKEN=()
+# Each file will be only saved once by save_original_file()
+# and all subsequent save_original_file() for the same file do nothing
+# because each saved file is remembered in the SAVED_ORIGINAL_FILES array:
+SAVED_ORIGINAL_FILES=()
+SAVED_ORIGINAL_FILE_SUFFIX="orig"
 
-# Copy file $1 to $1.$DATE.
-backup_file() {
-    if [[ ! -r "$1" ]]; then
-        return
-    elif ! IsInArray "$1" "${BACKUPS_TAKEN[@]}" ; then
-        cp -ar $1 $1.$DATE.$$.bak
-        BACKUPS_TAKEN=( "${BACKUPS_TAKEN[@]}" "$1" )
-    fi
+# Save the original content of the file $1 to $1.$DATE.$2.orig
+# or to $1.$DATE.$WORKFLOW.$MASTER_PID.orig when no $2 is specified:
+save_original_file() {
+    local filename="$1"
+    test -r "$filename" || return 1
+    IsInArray "$filename" "${SAVED_ORIGINAL_FILES[@]}" && return 0
+    local extension="$2"
+    test "$extension" || extension=$WORKFLOW.$MASTER_PID
+    local saved_original_file="$filename.$DATE.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
+    cp -ar $filename $saved_original_file && SAVED_ORIGINAL_FILES=( "${SAVED_ORIGINAL_FILES[@]}" "$filename" )
 }
 
-# Restore the backup of $1
-restore_backup() {
-    cp -ar $1.$DATE.$$.bak $1
+# Restore the saved original content of the original file named $1
+# that was saved as $1.$DATE.$2.orig or $1.$DATE.$WORKFLOW.$MASTER_PID.orig
+restore_original_file() {
+    local filename="$1"
+    local extension="$2"
+    test "$extension" || extension=$WORKFLOW.$MASTER_PID
+    local saved_original_file="$filename.$DATE.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
+    test -r "$saved_original_file" || return 1
+    cp -ar $saved_original_file $filename
 }
 
 # Generate code to restore a device $1 of type $2.
@@ -45,8 +60,8 @@ EOF
 
 abort_recreate() {
     Log "Error detected during restore."
-    Log "Restoring backup of $LAYOUT_FILE"
-    restore_backup "$LAYOUT_FILE"
+    Log "Restoring saved original $LAYOUT_FILE"
+    restore_original_file "$LAYOUT_FILE"
 }
 
 # Test and log if a component $1 (type $2) needs to be recreated.

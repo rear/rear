@@ -1,13 +1,30 @@
-# Try to automatically resize disks.
+#
+# layout/prepare/default/430_autoresize_all_partitions.sh
+#
+# Try to automatically resize all active partitions on all active disks
+# (except boot and swap partitions via some special hardcoded rules)
+# if the disk size had changed (i.e. only in migration mode).
+# This does not resize volumes on top of the affected partitions.
+#
+# When AUTORESIZE_PARTITIONS is false, no partition is resized.
+#
+# When AUTORESIZE_PARTITIONS is neither true nor false (the default behaviour)
+# only the last active partition on each active disk gets resized
+# by the separated 420_autoresize_last_partitions.sh script.
+#
+# To automatically resize all active partitions on all active disks
+# AUTORESIZE_PARTITIONS must be explicity set to true.
+#
+# A true or false value must be the first one in the AUTORESIZE_PARTITIONS array.
 
 # Skip if not in migration mode:
 is_true "$MIGRATION_MODE" || return 0
 
-# Resize all partitions, except the boot partition.
-# This does not resize volumes on top of the affected partitions.
+# Skip if resizing all partitions is not explicity wanted:
+is_true "$AUTORESIZE_PARTITIONS" || return 0
 
 cp "$LAYOUT_FILE" "$LAYOUT_FILE.tmp"
-backup_file "$LAYOUT_FILE"
+save_original_file "$LAYOUT_FILE"
 
 while read type device size junk ; do
     sysfsname=$(get_sysfs_name $device)
