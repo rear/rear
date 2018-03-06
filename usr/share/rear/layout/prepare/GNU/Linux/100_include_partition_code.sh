@@ -118,6 +118,11 @@ parted -s $device mklabel $label >&2
 my_udevsettle
 EOF
 
+    # There are certrain conditions below that test for AUTORESIZE_PARTITIONS
+    # but all what belongs to autoresizing partitions must only happen in MIGRATION_MODE:
+    local autoresize_partitions=""
+    is_true "$MIGRATION_MODE" && autoresize_partitions="$AUTORESIZE_PARTITIONS"
+
     local block_size device_size sysfs_name
     if [[ -b $device ]] ; then
         sysfs_name=$(get_sysfs_name "$device")
@@ -133,7 +138,7 @@ EOF
                 # Only if resizing all partitions is explicity wanted
                 # resizing of arbitrary partitions may also happen via the code below
                 # in addition to layout/prepare/default/430_autoresize_all_partitions.sh
-                if is_true "$AUTORESIZE_PARTITIONS" ; then
+                if is_true "$autoresize_partitions" ; then
                     Log "Size reductions of GPT partitions probably needed."
                 fi
             fi
@@ -157,7 +162,7 @@ EOF
 
         # Use the partition start value in disklayout.conf
         # unless resizing all partitions is explicity wanted:
-        if ! is_true "$AUTORESIZE_PARTITIONS" && test "$pstart" != "unknown" ; then
+        if ! is_true "$autoresize_partitions" && test "$pstart" != "unknown" ; then
             start="$pstart"
         fi
 
@@ -172,7 +177,7 @@ EOF
 
         # Extended partitions run to the end of disk (we assume)
         # only if resizing all partitions is explicity wanted:
-        if is_true "$AUTORESIZE_PARTITIONS" ; then
+        if is_true "$autoresize_partitions" ; then
             if [[ "$name" = "extended" ]] ; then
                 if [[ "$device_size" ]] ; then
                     end="$device_size"
@@ -250,7 +255,7 @@ EOF
         #   Daher ergibt sich auch heute noch bei verbreiteten Betriebssystemen eine Lücke
         #   von 63 Sektoren zwischen erweiterter Partitionstabelle und dem Startsektor
         #   der entsprechenden logischen Partition.
-        if is_true "$AUTORESIZE_PARTITIONS" && test "$name" = "logical" ; then
+        if is_true "$autoresize_partitions" && test "$name" = "logical" ; then
             # Without analysis I <jsmeix@suse.de> think by plain looking at the code
             # that this '+ $block_size' results bad alignment because it usually adds 512B
             # to the 'small actual size as reported by sysfs' which is e.g. 2 * 512B
@@ -264,7 +269,7 @@ EOF
         # round starting size to next multiple of 4096
         # 4096 is a good match for most device's block size
         # only if resizing all partitions is explicity wanted:
-        if is_true "$AUTORESIZE_PARTITIONS" ; then
+        if is_true "$autoresize_partitions" ; then
             start=$(( $start + 4096 - ( $start % 4096 ) ))
         fi
 
