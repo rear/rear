@@ -88,6 +88,15 @@ function descendants_pids () {
 
 # Do all exit tasks:
 function DoExitTasks () {
+    # First of all restore the ReaR default bash flags and options (see usr/sbin/rear)
+    # because otherwise in case of a bash error exit when e.g. "set -e -u -o pipefail" was set
+    # all the exit tasks related code would also run with "set -e -u -o pipefail" still set
+    # which may abort exit tasks related code anywhere with a "sudden death" bash error exit
+    # where in particular no longer the EXIT_FAIL_MESSAGE (cf. below) would be shown
+    # so that for the user ReaR would "just somehow silently abort" in this case
+    # cf. https://github.com/rear/rear/issues/1747#issuecomment-371055121
+    # and https://github.com/rear/rear/issues/700#issuecomment-327755633
+    apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
     LogPrint "Exiting $PROGRAM $WORKFLOW (PID $MASTER_PID) and its descendant processes"
     # First of all wait one second to let descendant processes terminate on their own
     # e.g. after Ctrl+C by the user descendant processes should terminate on their own
