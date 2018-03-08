@@ -86,10 +86,6 @@ test "$AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE" || AUTOSHRINK_DISK_SIZE_LIMIT_PERC
 # note that an empty array AUTORESIZE_PARTITIONS=() does not help here:
 test "$AUTORESIZE_PARTITIONS" || AUTORESIZE_PARTITIONS=''
 
-# Try to care about possible errors
-# see https://github.com/rear/rear/wiki/Coding-Style
-set -e -u -o pipefail
-
 # The original disk space usage was written by layout/save/GNU/Linux/510_current_disk_usage.sh
 local original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
 
@@ -433,7 +429,3 @@ done < <( grep "^disk " "$LAYOUT_FILE" )
 
 # Use the new LAYOUT_FILE.resized_last_partition with the resized partitions:
 mv "$disklayout_resized_last_partition" "$LAYOUT_FILE"
-
-# Restore the ReaR default bash flags and options (see usr/sbin/rear):
-apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
-
