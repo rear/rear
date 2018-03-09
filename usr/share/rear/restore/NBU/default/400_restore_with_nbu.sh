@@ -18,7 +18,8 @@ fi
 LogPrint "RUN: /usr/openv/netbackup/bin/bprestore $bprestore_args"
 LogPrint "Restore progress: see $TMP_DIR/bplog.restore"
 LANG=C /usr/openv/netbackup/bin/bprestore $bprestore_args
-if (( $? > 1 )) ; then
-    Error "bprestore failed (return code = $?)"
+rc=$?
+if (( $rc > 1 )) ; then
+    Error "bprestore failed (return code = $rc)"
 fi
 
