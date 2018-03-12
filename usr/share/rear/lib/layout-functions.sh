@@ -572,12 +572,8 @@ get_block_size() {
 # Device is something like /dev/sda1.
 blkid_uuid_of_device() {
     local device=$1
-    local uuid=""
-    for LINE in $(blkid $device  2>/dev/null)
-    do
-        uuid=$( echo "$LINE" | grep "^UUID=" | cut -d= -f2 | sed -e 's/"//g')
-        [[ ! -z "$uuid" ]] && break
-    done
+    local uuid=$(lsblk -no uuid $device  2>/dev/null)
+    [[ ! -z "$uuid" ]] && break
     echo "$uuid"
 }
 
@@ -585,12 +581,8 @@ blkid_uuid_of_device() {
 # Device is something like /dev/sda1.
 blkid_label_of_device() {
     local device=$1
-    local label=""
-    for LINE in $(blkid $device  2>/dev/null)
-    do
-        label=$( echo "$LINE" | grep "^LABEL=" | cut -d= -f2 | sed -e 's/"//g' | sed -e 's/ /\\\\b/g')  # replace all " " with "\\b"
-        [[ ! -z "$label" ]] && break
-    done
+    local label=$(lsblk -no label $device  2>/dev/null)
+    [[ ! -z "$label" ]] && break
     echo "$label"
 }
 
