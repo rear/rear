@@ -61,7 +61,29 @@ function RemoveExitTask () {
 # i.e. the parent and its direct children plus recursively all subsequent children of children
 # (i.e. parent PID, children PIDs, grandchildren PIDs, great-grandchildren PIDs, and so on)
 # where each PID is output on a separated line.
-# The output lists latest descendants PIDs first and the initial parent PID last
+# Calling "ps --ppid $parent_pid -o pid=" recursively is needed
+# because otherwise it does not work on all systems.
+# E.g. on SLES10 and SLES11 it would work to simply call "ps -g $parent_pid -o pid="
+#   # sleep 20 | grep foo & ( sleep 30 | grep bar & ) ; sleep 1 ; ps f -g $$
+#   [1] 3622
+#     PID TTY      STAT   TIME COMMAND
+#    3372 pts/0    Ss     0:00 -bash
+#    3621 pts/0    S      0:00  \_ sleep 20
+#    3622 pts/0    S      0:00  \_ grep foo
+#    3627 pts/0    R+     0:00  \_ ps f -g 3372
+#    3625 pts/0    S      0:00 grep bar
+#    3624 pts/0    S      0:00 sleep 30
+# but this way it does no longer work e.g. on SLES12 or openSUSE Leap 42.3
+#   # sleep 20 | grep foo & ( sleep 30 | grep bar & ) ; sleep 1 ; ps f -g $$ ; ps --ppid $$ -o pid,args
+#   [1] 6518
+#     PID TTY      STAT   TIME COMMAND
+#     PID COMMAND
+#    6517 sleep 20
+#    6518 grep --color=auto foo
+#    6524 ps --ppid 2674 -o pid,args
+# where there is really no longer any output of the "ps f -g $$" command.
+# Because of the recursion the output of the deepest nested call appears first
+# so that it lists latest descendants PIDs first and the initial parent PID last
 # (i.e. great-grandchildren PIDs, grandchildren PIDs, children PIDs, parent PID)
 # so that the output ordering is already the right ordering to cleanly terminate
 # a sub-tree of processes below a parent process and finally the parent process
@@ -97,6 +119,8 @@ function DoExitTasks () {
     # cf. https://github.com/rear/rear/issues/1747#issuecomment-371055121
     # and https://github.com/rear/rear/issues/700#issuecomment-327755633
     apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
+    # Apply debugscript mode also for the exit tasks:
+    test "$DEBUGSCRIPTS" && set -$DEBUGSCRIPTS_ARGUMENT
     LogPrint "Exiting $PROGRAM $WORKFLOW (PID $MASTER_PID) and its descendant processes"
     # First of all wait one second to let descendant processes terminate on their own
     # e.g. after Ctrl+C by the user descendant processes should terminate on their own
@@ -104,14 +128,21 @@ function DoExitTasks () {
     # but "background processes" would not terminate on their own after Ctrl+C
     # cf. https://github.com/rear/rear/issues/1712
     sleep 1
-    # Show the descendant processes of MASTER_PID in the log
-    # so that later plain PIDs in the log get comprehensible:
-    Log "$( pstree -Aplau $MASTER_PID )"
+    # Show descendant processes PIDs with their commands in the log
+    # so that later the plain PIDs in the log get more comprehensible.
+    # What works sufficiently on all systems is "pstree -Aplau $MASTER_PID"
+    # but the pstree command is not available by default in the ReaR recovery system
+    # (cf. https://github.com/rear/rear/issues/1755) so that the ps command is used as fallback.
+    # Because "ps f -g $MASTER_PID -o pid,args" only works on older systems like SLES10 and SLES11
+    # (cf. the above comment for the descendants_pids function)
+    # a last resort fallback "ps --ppid $MASTER_PID -o pid,args" is used for newer systems like SLES12
+    # (at least on SLES12 "ps f -g $MASTER_PID -o pid,args" results non-zero exit code when nothing is shown):
+    Log "$( pstree -Aplau $MASTER_PID || ps f -g $MASTER_PID -o pid,args || ps --ppid $MASTER_PID -o pid,args )"
     # Some descendant processes commands could be much too long (e.g. a 'tar ...' command)
     # to be usefully shown completely in the below LogPrint information (could be many lines)
     # so that the descendant process command output is truncated after at most remaining_columns:
     local remaining_columns=$(( COLUMNS - 40 ))
-    test $remaining_columns -ge 20 || remaining_columns=20
+    test $remaining_columns -ge 40 || remaining_columns=40
     # Terminate all still running descendant processes of $MASTER_PID
     # but do not termiate the MASTER_PID process itself because
     # the MASTER_PID process must run the exit tasks below:
