@@ -52,6 +52,15 @@ for block_device in /sys/block/* ; do
     # Examine the strings in the first bytes on the disk to guess the used bootloader,
     # see layout/save/default/450_check_bootloader_files.sh for the known bootloaders.
     # Test the more specific strings first because the first match wins:
+    # "Hah!IdontNeedEFI" is the text representation of the official GUID number for a GPT
+    # BIOS boot partition: https://en.wikipedia.org/wiki/BIOS_boot_partition (issue #1752)
+    if grep -q "Hah!IdontNeedEFI" $bootloader_area_strings_file ; then
+        if grep -q -i GRUB $bootloader_area_strings_file ; then
+           LogPrint "Using guessed bootloader 'GRUB'"
+           echo "GRUB" >$bootloader_file
+           return
+        fi 
+    fi
     for known_bootloader in GRUB2-EFI EFI GRUB2 GRUB ELILO LILO ; do
         if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
             LogPrint "Using guessed bootloader '$known_bootloader'"
