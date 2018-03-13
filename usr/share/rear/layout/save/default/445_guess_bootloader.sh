@@ -49,8 +49,11 @@ for block_device in /sys/block/* ; do
     bootloader_area_strings_file="$TMP_DIR/bootloader_area_strings"
     block_size=$( get_block_size ${disk_device##*/} )
     dd if=$disk_device bs=$block_size count=4 | strings >$bootloader_area_strings_file
-    # First check for Hah!IdontNeedEFI for GPT BIOS boot (for computers where UEFI could also be possible)
-    # Usually these use GRUB instead of EFI (issue #1752)
+    # Examine the strings in the first bytes on the disk to guess the used bootloader,
+    # see layout/save/default/450_check_bootloader_files.sh for the known bootloaders.
+    # Test the more specific strings first because the first match wins:
+    # "Hah!IdontNeedEFI" is the text representation of the official GUID number for a GPT
+    # BIOS boot partition: https://en.wikipedia.org/wiki/BIOS_boot_partition (issue #1752)
     if grep -q "Hah!IdontNeedEFI" $bootloader_area_strings_file ; then
         if grep -q -i GRUB $bootloader_area_strings_file ; then
            LogPrint "Using guessed bootloader 'GRUB'"
@@ -58,9 +61,6 @@ for block_device in /sys/block/* ; do
            return
         fi 
     fi
-    # Examine the strings in the first bytes on the disk to guess the used bootloader,
-    # see layout/save/default/450_check_bootloader_files.sh for the known bootloaders.
-    # Test the more specific strings first because the first match wins:
     for known_bootloader in GRUB2-EFI EFI GRUB2 GRUB ELILO LILO ; do
         if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
             LogPrint "Using guessed bootloader '$known_bootloader'"
