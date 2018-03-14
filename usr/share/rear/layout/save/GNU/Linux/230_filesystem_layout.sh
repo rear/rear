@@ -79,6 +79,14 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             Log "$device is CD/DVD type device [fstype=$fstype], skipping."
             continue
         fi
+        # docker specific exclude part
+        if service docker status >/dev/null 2>&1  ; then
+            # docker daemon/service is running
+            docker_root_dir=$( docker info 2>/dev/null | grep 'Docker Root Dir' | awk '{print $4}' )
+            # if $docker_root_dir is the begining of the $mountpoint then FS is under docker control
+            # and we better exclude from saving the layout
+            echo "$mountpoint" | grep -q "^$docker_root_dir" && continue
+        fi
         # Replace a symbolic link /dev/disk/by-uuid/a1b2c3 -> ../../sdXn
         # by the fully canonicalized target of the link e.g. /dev/sdXn
         if [[ $device == /dev/disk/by-uuid* ]]; then
