@@ -21,7 +21,7 @@ restored_fstab="$TARGET_FS_ROOT/etc/fstab"
 original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
 rear_shell_history="$( echo -e "chroot $TARGET_FS_ROOT\ncd $TARGET_FS_ROOT/etc/\nvi $restored_fstab\nless $restored_fstab" )"
 unset choices
-choices[0]="Confirm recreate initrd and reinstall bootloader and continue '$rear_workflow'"
+choices[0]="Confirm it is OK to recreate initrd and reinstall bootloader and continue '$rear_workflow'"
 choices[1]="Edit restored etc/fstab ($restored_fstab)"
 choices[2]="View restored etc/fstab ($restored_fstab)"
 choices[3]="Use Relax-and-Recover shell and return back to here"
