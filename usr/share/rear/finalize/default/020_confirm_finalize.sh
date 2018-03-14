@@ -33,7 +33,7 @@ wilful_input=""
 # assume choices[0] 'Confirm recreate initrd and reinstall bootloader' was actually meant:
 is_true "$USER_INPUT_RESTORED_FILES_CONFIRMATION" && USER_INPUT_RESTORED_FILES_CONFIRMATION="${choices[0]}"
 while true ; do
-    choice="$( UserInput -I LAYOUT_FILE_CONFIRMATION -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
+    choice="$( UserInput -I RESTORED_FILES_CONFIRMATION -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
     case "$choice" in
         (${choices[0]})
             # Confirm restored config files and continue:
