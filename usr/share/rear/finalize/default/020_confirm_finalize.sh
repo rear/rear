@@ -1,6 +1,6 @@
 #
-# In migration mode let the user confirm the
-# up to that point recreated system
+# In migration mode let the user confirm that
+# the up to that point recreated system
 # (i.e. recreated disk layout plus restored backup)
 # is ready to run the finalize stage
 # (i.e. to recreate the initrd and to reinstall the bootloader).
@@ -18,7 +18,6 @@ is_true "$MIGRATION_MODE" || return 0
 
 rear_workflow="rear $WORKFLOW"
 restored_fstab="$TARGET_FS_ROOT/etc/fstab"
-original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
 rear_shell_history="$( echo -e "chroot $TARGET_FS_ROOT\ncd $TARGET_FS_ROOT/etc/\nvi $restored_fstab\nless $restored_fstab" )"
 unset choices
 choices[0]="Confirm it is OK to recreate initrd and reinstall bootloader and continue '$rear_workflow'"
