@@ -49,6 +49,15 @@ fi
 # The sorting relies on that mount and findmnt output the first mounted thing first
 # so that in particular what is mounted at '/' is output before other stuff.
 read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
+
+# docker daemon mounts file systems for its docker containers
+# see also https://docs.docker.com/storage/storagedriver/device-mapper-driver/#configure-direct-lvm-mode-for-production
+# As it is for container usage only we do not to backup these up or recreate as this disk device is completely under
+# control by docker itself (even the recreation of it incl, the creation of the volume group). Usually this is
+# done via a kind of cookbook (Chef, puppet or ansible)
+docker_is_running=""
+service docker status >/dev/null 2>&1 && docker_is_running="yes"
+
 # Begin writing output to DISKLAYOUT_FILE:
 (
     echo "# Filesystems (only $supported_filesystems are supported)."
@@ -78,6 +87,16 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         if [ "$fstype" = "iso9660" ] ; then
             Log "$device is CD/DVD type device [fstype=$fstype], skipping."
             continue
+        fi
+        # docker specific exclude part
+        if is_true $docker_is_running ; then
+            # docker daemon/service is running
+            docker_root_dir=$( docker info 2>/dev/null | grep 'Docker Root Dir' | awk '{print $4}' )
+            # If $docker_root_dir is in the beginning of the $mountpoint string then FS is under docker control
+            # and we better exclude from saving the layout,
+            # see https://github.com/rear/rear/issues/1749
+            Log "$device is mounted below $docker_root_dir (mount point $mountpoint is under docker control), skipping."
+            echo "$mountpoint" | grep -q "^$docker_root_dir" && continue
         fi
         # Replace a symbolic link /dev/disk/by-uuid/a1b2c3 -> ../../sdXn
         # by the fully canonicalized target of the link e.g. /dev/sdXn
