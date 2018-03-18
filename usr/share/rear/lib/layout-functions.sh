@@ -780,9 +780,9 @@ function apply_layout_mappings() {
 
     # Replace all originals with their replacements.
     while read original replacement junk ; do
-        # Replace partitions (we normalize cciss/c0d0p1 to _REAR5_1)
-        part_base=$(get_part_device_name_format "$original")
-        sed -i -r "\|$original|s|${part_base}([0-9]+)|$replacement\1|g" "$file_to_migrate"
+        # Replace partitions with uniq replacement PATTERN (we normalize cciss/c0d0p1 to _REAR5_1)
+        # Due to multipath partion naming complexity, all known partition naming type (mpatha1,mpathap1,mpatha-part1,mpatha_part1) will be replaced by _REAR"X"_1 
+        sed -i -r "\|$original|s|$original(p)*([-_]part)*([0-9]+)|$replacement\3|g" "$file_to_migrate"
 
         # Replace whole devices
         ### note that / is a word boundary, so is matched by \<, hence the extra /
