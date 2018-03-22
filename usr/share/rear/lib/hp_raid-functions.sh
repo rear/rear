@@ -4,11 +4,13 @@
 #
 
 function define_HPSSACLI() {
-    # HP Smart Storage Administrator CLI is either hpacucli or hpssacli
+    # HP Smart Storage Administrator CLI is either hpacucli, hpssacli or ssacli
     if has_binary hpacucli ; then
         HPSSACLI=hpacucli
     elif has_binary hpssacli ; then
         HPSSACLI=hpssacli
+    elif has_binary ssacli ; then
+        HPSSACLI=ssacli
     fi
 }
 

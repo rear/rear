@@ -11,8 +11,16 @@ fi
 
 # Add $HPSSACLI to the rescue image
 PROGS=( "${PROGS[@]}" $HPSSACLI )
+# How the "eval $(grep ON_DIR= $(get_path $HPSSACLI))" command works:
+# Prerequisit: $HPSSACLI (e.g. /sbin/ssacli) is a shell script.
+# That $HPSSACLI script contains a command (e.g. in case of /sbin/ssacli) like
+#   export SSACLI_BIN_INSTALLATION_DIR=/opt/smartstorageadmin/ssacli/bin/
+# This command is searched for with "grep ON_DIR="
+# executed with eval so that the variable therein gets set
+# which is finally used/evaluated in the COPY_AS_IS array setting
+# cf. https://github.com/rear/rear/pull/1759#discussion_r175835287
 eval $(grep ON_DIR= $(get_path $HPSSACLI))
-COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR"  "$HPSSACLI_BIN_INSTALLATION_DIR" )
+COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR" "$HPSSACLI_BIN_INSTALLATION_DIR" "$SSACLI_BIN_INSTALLATION_DIR")
 
 # determine the version of HPSSACLI - required to know for a bug with version '9.30.15' (see issue #455)
 HPSSACLI_VERSION=$( get_version $HPSSACLI version )
