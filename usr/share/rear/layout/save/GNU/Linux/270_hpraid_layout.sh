@@ -20,7 +20,7 @@ PROGS=( "${PROGS[@]}" $HPSSACLI )
 # which is finally used/evaluated in the COPY_AS_IS array setting
 # cf. https://github.com/rear/rear/pull/1759#discussion_r175835287
 eval $(grep ON_DIR= $(get_path $HPSSACLI))
-COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR" "$HPSSACLI_BIN_INSTALLATION_DIR" "$HPSSACLI_BIN_INSTALLATION_DIR")
+COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR" "$HPSSACLI_BIN_INSTALLATION_DIR" "$SSACLI_BIN_INSTALLATION_DIR")
 
 # determine the version of HPSSACLI - required to know for a bug with version '9.30.15' (see issue #455)
 HPSSACLI_VERSION=$( get_version $HPSSACLI version )
