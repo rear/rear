@@ -159,8 +159,7 @@ in the provided shell. When finished, type exit in the shell to continue
 recovery.
 "
 
-if [ "$ISO_DEFAULT" != "automatic" ]
-then
+if [[ "$ISO_RECOVER_MODE" != "unattended" ]] || [[ "$PXE_RECOVER_MODE" != "unattended" ]] ; then
 
     rear_shell "Did the backup successfully restore to '$TARGET_FS_ROOT' ? Ready to continue ?" \
             "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
@@ -168,7 +167,7 @@ vi bootstrap.txt
 bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE $TARGET_FS_ROOT"
 fi
 
-fi
+fi # end of [[ "$BEXTRACT_DEVICE" || "$BEXTRACT_VOLUME" ]]
 
 
 mkdir $TARGET_FS_ROOT/var/lib/bareos && chroot $TARGET_FS_ROOT chown bareos: /var/lib/bareos
