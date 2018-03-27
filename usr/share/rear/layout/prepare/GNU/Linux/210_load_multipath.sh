@@ -83,6 +83,12 @@ blacklist {
         esac
     done
 
+    # start multipathd
+    if has_binary multipathd &> /dev/null ; then
+        LogPrint "Starting multipath daemon"
+        multipathd >&2 && LogPrint "multipathd started" || LogPrint "Failed to start multipathd"
+    fi
+
     # Search and list mpath device.
     if is_true $list_mpath_device ; then
         LogPrint "Listing multipath device found"
