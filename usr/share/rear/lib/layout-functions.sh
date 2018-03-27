@@ -680,26 +680,39 @@ function get_part_device_name_format() {
             part_name="${device_name}p" # append p between main device and partitions
             ;;
         (*mapper[/!]*)
+
+            # check if multipath if using the "user_friendly_names" by default in the current configuration.
+            user_friendly_names=$(echo "show config" | multipathd -k | awk '/user_friendly_names/ { gsub("\"","") ; print $2 }' | head -n 1 )
+
             case $OS_MASTER_VENDOR in
 
                 (SUSE)
-                # SUSE Linux SLE12 put a "-part" between [mpath device name] and [part number].
-                # For example /dev/mapper/3600507680c82004cf8000000000000d8-part1.
-                # But SLES11 uses a "_part" instead. (Let's assume it is the same for SLES10 )
-                if (( $OS_MASTER_VERSION < 12 )) ; then
-                    # For SUSE before version 12
-                    part_name="${device_name}_part" # append _part between main device and partitions
-                else
-                    # For SUSE 12 or above
-                    part_name="${device_name}-part" # append -part between main device and partitions
-                fi
+                    # SUSE Linux SLE12 put a "-part" between [mpath device name] and [part number].
+                    # For example /dev/mapper/3600507680c82004cf8000000000000d8-part1.
+                    # But SLES11 uses a "_part" instead. (Let's assume it is the same for SLES10 )
+                    if (( $OS_MASTER_VERSION < 12 )) ; then
+                        # For SUSE before version 12
+                        part_name="${device_name}_part" # append _part between main device and partitions
+                    else
+                        # For SUSE 12 or above
+                        part_name="${device_name}-part" # append -part between main device and partitions
+                    fi
                 ;;
 
                 (Fedora)
                     # RHEL 7 and above seems to named partitions on multipathed devices with
-                    # [mpath device name] + [part number] like standard disk.
-                    # For example: /dev/mapper/mpatha1
+                    # [mpath device UUID/WWID] + p + [part number] when "user_friendly_names"
+                    # option is FALSE. 
+                    # For example: /dev/mapper/3600507680c82004cf8000000000000d8p1
+                    if is_false "$user_friendly_names" ; then
+                        part_name="${device_name}p" # append p between main device and partitions
+                    fi
 
+                    # RHEL 7 and above seems to named partitions on multipathed devices with
+                    # [mpath device name] + [part number] like standard disk when "user_friendly_names"
+                    # option is used (default).
+                    # For example: /dev/mapper/mpatha1
+                    
                     # But the scheme in RHEL 6 need a "p" between [mpath device name] and [part number].
                     # For exemple: /dev/mapper/mpathap1
                     if (( $OS_MASTER_VERSION < 7 )) ; then
