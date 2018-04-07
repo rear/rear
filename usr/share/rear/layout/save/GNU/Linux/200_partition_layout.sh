@@ -30,14 +30,21 @@ extract_partitions() {
 
     declare path sysfs_path
     if [[ ${#sysfs_paths[@]} -eq 0 ]] ; then
-        ### try to find partitions like /dev/mapper/datalun1p1
         if [[ ${device/mapper//} != ${device} ]] ; then
-            for path in ${device}p[0-9]* ${device}[0-9]* ${device}-part* ${device}_part*; do
-                sysfs_path=$(get_sysfs_name $path)
-                if [[ "$sysfs_path" ]] && [[ -e "/sys/block/$sysfs_path" ]] ; then
-                    sysfs_paths=( "${sysfs_paths[@]}" "/sys/block/$sysfs_path" )
-                fi
-            done
+            ### look like /sys/block/dm-X/holders directory contains partition name in dm-X format.
+            if [ -d /sys/block/$sysfs_name/holders ]; then
+                sysfs_paths=(/sys/block/$sysfs_name/holders/*)
+            else
+                ### if the holders directory does not exisits 
+                ### failback to partition name guessing method.
+                ### try to find partitions like /dev/mapper/datalun1p1
+                for path in ${device}p[0-9]* ${device}[0-9]* ${device}-part* ${device}_part*; do
+                    sysfs_path=$(get_sysfs_name $path)
+                    if [[ "$sysfs_path" ]] && [[ -e "/sys/block/$sysfs_path" ]] ; then
+                        sysfs_paths=( "${sysfs_paths[@]}" "/sys/block/$sysfs_path" )
+                    fi
+                done
+            fi
         fi
     fi
 
