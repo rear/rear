@@ -680,7 +680,21 @@ function get_part_device_name_format() {
             part_name="${device_name}p" # append p between main device and partitions
             ;;
         (*mapper[/!]*)
+            # Every Linux distribution / version has their own rule to name the multipthed partion device.
+            # 
+            # Suse:
+            #     Version <12 : always <device>_part<part_num> (same with/without user_friendly_names)
+            #     Version >=12 : always <device>-part<part_num> (same with/without user_friendly_names)
+            #     Question still open for sles10 ...
+            # RedHat:
+            #     Version <7 : always <device>p<part_num> (same with/without user_friendly_names)
+            #     Version >=7 : if user_friendly_names (default) <device><part_num> else <device>p<part_num>
+            # Debian:
+            #     if user_firendly_names (default) <device>-part<part_num>
+            #     if NOT user_firendly_names <device>p<part_num>
+            # 
 
+            # First we need to know if user_friendly_names is activated (for Fedora/RedHat and Debian/ubuntu)
             if multipathd ; then
                 # check if multipath if using the "user_friendly_names" by default in the current configuration.
                 user_friendly_names=$(echo "show config" | multipathd -k | awk '/user_friendly_names/ { gsub("\"","") ; print $2 }' | head -n 1 )
