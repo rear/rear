@@ -703,6 +703,8 @@ function get_part_device_name_format() {
             case $OS_MASTER_VENDOR in
 
                 (SUSE)
+                    # No need to check if user_friendly_names is activated or not as Suse always apply the same naming convention. 
+
                     # SUSE Linux SLE12 put a "-part" between [mpath device name] and [part number].
                     # For example /dev/mapper/3600507680c82004cf8000000000000d8-part1.
                     # But SLES11 uses a "_part" instead. (Let's assume it is the same for SLES10 )
