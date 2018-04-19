@@ -38,7 +38,23 @@ test "$RESULT_FILES" || return 0
 case "$scheme" in
     (nfs|cifs|usb|file|sshfs|ftpfs|davfs)
         Log "Copying result files '${RESULT_FILES[@]}' to $opath at $scheme location"
-        cp $v "${RESULT_FILES[@]}" "${opath}/" >&2 || Error "Could not copy result files to $opath at $scheme location"
+        # Copy each result file one by one to avoid usually false error exits as in
+        # https://github.com/rear/rear/issues/1711#issuecomment-380009044
+        # where in case of an improper RESULT_FILES array member 'cp' can error out with something like
+        #   cp: will not overwrite just-created '/tmp/rear.XXX/outputfs/f121/rear-f121.log' with '/tmp/rear.XXX/tmp/rear-f121.log'
+        # See
+        # https://stackoverflow.com/questions/4669420/have-you-ever-got-this-message-when-moving-a-file-mv-will-not-overwrite-just-c
+        # which is about the same for 'mv', how to reproduce it:
+        #   mkdir a b c
+        #   touch a/f b/f
+        #   mv a/f b/f c/
+        #     mv: will not overwrite just-created 'c/f' with 'b/f'
+        # It happens because two different files with the same name would be moved to the same place with only one command.
+        # The -f option won't help for this case, it only applies when there already is a target file that will be overwritten.
+        # Accordingly it is sufficient (even without '-f') to copy each result file one by one:
+        for result_file in "${RESULT_FILES[@]}" ; do
+            cp $v "$result_file" "${opath}/" >&2 || Error "Could not copy result file $result_file to $opath at $scheme location"
+        done
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
         # FIXME: Verify if usage of $array[*] instead of "${array[@]}" is actually intended here
