@@ -51,7 +51,7 @@ for block_device in /sys/block/* ; do
     # Examine the strings in the first bytes on the disk to guess the used bootloader,
     # see layout/save/default/450_check_bootloader_files.sh for the known bootloaders.
     # Test the more specific strings first because the first match wins.
-    # Error out in case of a LUKS encrypted boot device:
+    # Skip LUKS encrypted disks when guessing bootloader:
     if grep -q "LUKS" $bootloader_area_strings_file ; then
         LogPrint "Cannot autodetect bootloader on LUKS encrypted disk (found 'LUKS' in first bytes on $disk_device)"
         # Continue guessing the used bootloader by inspecting the first bytes on the next disk:
