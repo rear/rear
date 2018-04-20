@@ -23,11 +23,10 @@ if test -f /etc/sysconfig/bootloader ; then
 fi
 
 # On ARM, guess the dummy bootloader:
-if [ "$ARCH" = "Linux-arm" ]; then
+if [ "$ARCH" = "Linux-arm" ] ; then
     BOOTLOADER=ARM
     # Inform the user that we do nothing:
-    LogPrint "Using guessed bootloader 'ARM'
-Skipping bootloader backup, see default.conf"
+    LogPrint "Using guessed bootloader 'ARM'. Skipping bootloader backup, see default.conf"
     echo "$BOOTLOADER" >$bootloader_file
     return
 fi
@@ -39,9 +38,9 @@ for block_device in /sys/block/* ; do
     # Continue with the next block device when the current block device is not a disk that can be used for booting:
     [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = nvme* || $blockd = mmcblk* || $blockd = dasd*  ]] || continue
     disk_device=$( get_device_name $block_device )
-    # Check if the disk contains a PPC PreP boot partition (ID=0x41)
+    # Check if the disk contains a PPC PreP boot partition (ID=0x41):
     if file -s $disk_device | grep -q "ID=0x41" ; then
-       LogPrint "Using PreP boot partition bootloader 'PPC'"
+       LogPrint "Using guessed bootloader 'PPC' (found PPC PreP boot partition 'ID=0x41' on $disk_device)"
        echo "PPC" >$bootloader_file
        return
     fi
@@ -51,19 +50,33 @@ for block_device in /sys/block/* ; do
     dd if=$disk_device bs=$block_size count=4 | strings >$bootloader_area_strings_file
     # Examine the strings in the first bytes on the disk to guess the used bootloader,
     # see layout/save/default/450_check_bootloader_files.sh for the known bootloaders.
-    # Test the more specific strings first because the first match wins:
-    # "Hah!IdontNeedEFI" is the text representation of the official GUID number for a GPT
-    # BIOS boot partition: https://en.wikipedia.org/wiki/BIOS_boot_partition (issue #1752)
-    if grep -q "Hah!IdontNeedEFI" $bootloader_area_strings_file ; then
-        if grep -q -i GRUB $bootloader_area_strings_file ; then
-           LogPrint "Using guessed bootloader 'GRUB'"
-           echo "GRUB" >$bootloader_file
-           return
-        fi 
+    # Test the more specific strings first because the first match wins.
+    # Skip LUKS encrypted disks when guessing bootloader:
+    if grep -q "LUKS" $bootloader_area_strings_file ; then
+        LogPrint "Cannot autodetect bootloader on LUKS encrypted disk (found 'LUKS' in first bytes on $disk_device)"
+        # Continue guessing the used bootloader by inspecting the first bytes on the next disk:
+        continue
     fi
+    # "Hah!IdontNeedEFI" is the ASCII representation of the official GUID number
+    # for a GPT BIOS boot partition which is 21686148-6449-6E6F-744E-656564454649
+    # see https://en.wikipedia.org/wiki/BIOS_boot_partition (issue #1752):
+    if grep -q "Hah!IdontNeedEFI" $bootloader_area_strings_file ; then
+        # Because the "Hah!IdontNeedEFI" contains the known bootloader "EFI"
+        # the default code below would falsely guess that "EFI" is used
+        # but actually another non-EFI bootloader is used here
+        # cf. https://github.com/rear/rear/issues/1752#issue-303856221
+        for known_bootloader in GRUB2 GRUB ELILO LILO ; do
+            if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
+                LogPrint "Using guessed bootloader '$known_bootloader' (found in first bytes on GPT BIOS boot partition $disk_device)"
+                echo "$known_bootloader" >$bootloader_file
+                return
+            fi
+        done
+    fi
+    # Check the default cases of known bootloaders:
     for known_bootloader in GRUB2-EFI EFI GRUB2 GRUB ELILO LILO ; do
         if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
-            LogPrint "Using guessed bootloader '$known_bootloader'"
+            LogPrint "Using guessed bootloader '$known_bootloader' (found in first bytes on $disk_device)"
             echo "$known_bootloader" >$bootloader_file
             return
         fi
