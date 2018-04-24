@@ -60,6 +60,12 @@ function borg_set_vars {
 # and store it to BORGBACKUP_ARCHIVE_CACHE.
 # This avoids repeatedly querying Borg repository, which could be slow.
 function borg_archive_cache_create {
-    borg list $BORGBACKUP_OPT_REMOTE_PATH ${borg_dst_dev}${BORGBACKUP_REPO} \
+  if [ ! -z $BORGBACKUP_PORT ]; then
+    borg list $BORGBACKUP_OPT_REMOTE_PATH \
+ssh://$BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_PORT/$BORGBACKUP_REPO 2> /dev/null > $BORGBACKUP_ARCHIVE_CACHE
+    else
+    borg list $BORGBACKUP_OPT_REMOTE_PATH \
+$BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO \
 2> /dev/null > $BORGBACKUP_ARCHIVE_CACHE
+    fi
 }
