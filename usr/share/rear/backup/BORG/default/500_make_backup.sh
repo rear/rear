@@ -24,11 +24,20 @@ test "$verbose" && borg_progress='--progress --stats'
 Log "Creating archive ${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
 in repository $BORGBACKUP_REPO"
 
-borg create --one-file-system $borg_progress $verbose \
-$BORGBACKUP_OPT_COMPRESSION $BORGBACKUP_OPT_REMOTE_PATH \
-$BORGBACKUP_OPT_UMASK --exclude-from $TMP_DIR/backup-exclude.txt \
-${borg_dst_dev}${BORGBACKUP_REPO}::\
-${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
-${include_list[@]} 0<&6 1>&7 2>&8
+if [ ! -z $BORGBACKUP_PORT ]; then
+        borg create --one-file-system $borg_progress $verbose \
+        $BORGBACKUP_OPT_COMPRESSION $BORGBACKUP_OPT_REMOTE_PATH \
+        --exclude-from $TMP_DIR/backup-exclude.txt \
+        ssh://$BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_PORT/$BORGBACKUP_REPO::\
+        ${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
+        ${include_list[@]} 0<&6 1>&7 2>&8
+else
+        borg create --one-file-system $borg_progress $verbose \
+        $BORGBACKUP_OPT_COMPRESSION $BORGBACKUP_OPT_REMOTE_PATH \
+        --exclude-from $TMP_DIR/backup-exclude.txt \
+        $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO::\
+        ${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
+        ${include_list[@]} 0<&6 1>&7 2>&8
+fi
 
 StopIfError "Failed to create backup"
