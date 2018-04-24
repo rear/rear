@@ -57,21 +57,30 @@ for block_device in /sys/block/* ; do
         # Continue guessing the used bootloader by inspecting the first bytes on the next disk:
         continue
     fi
-    # "Hah!IdontNeedEFI" is the ASCII representation of the official GUID number
+    # 'Hah!IdontNeedEFI' is the ASCII representation of the official GUID number
     # for a GPT BIOS boot partition which is 21686148-6449-6E6F-744E-656564454649
-    # see https://en.wikipedia.org/wiki/BIOS_boot_partition (issue #1752):
-    if grep -q "Hah!IdontNeedEFI" $bootloader_area_strings_file ; then
-        # Because the "Hah!IdontNeedEFI" contains the known bootloader "EFI"
-        # the default code below would falsely guess that "EFI" is used
+    # see https://en.wikipedia.org/wiki/BIOS_boot_partition (issue #1752).
+    # Use single quotes for 'Hah!IdontNeedEFI' to be on the safe side
+    # because with double quotes the ! would cause history expansion if that is enabled
+    # (non-interactive shells do not perform history expansion by default but better safe than sorry):
+    if grep -q 'Hah!IdontNeedEFI' $bootloader_area_strings_file ; then
+        # Because 'Hah!IdontNeedEFI' contains the known bootloader 'EFI'
+        # the default code below would falsely guess that 'EFI' is used
         # but actually another non-EFI bootloader is used here
         # cf. https://github.com/rear/rear/issues/1752#issue-303856221
+        # so that in the 'Hah!IdontNeedEFI' case only non-EFI bootloaders are tested:
         for known_bootloader in GRUB2 GRUB ELILO LILO ; do
             if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
-                LogPrint "Using guessed bootloader '$known_bootloader' (found in first bytes on GPT BIOS boot partition $disk_device)"
+                LogPrint "Using guessed bootloader '$known_bootloader' (found in first bytes on $disk_device with GPT BIOS boot partition)"
                 echo "$known_bootloader" >$bootloader_file
                 return
             fi
         done
+        # When in the 'Hah!IdontNeedEFI' case no known non-EFI bootloader is found
+        # continue guessing the used bootloader by inspecting the first bytes on the next disk
+        # because otherwise the default code below would falsely guess that 'EFI' is used
+        # cf. https://github.com/rear/rear/pull/1754#issuecomment-383531597
+        continue
     fi
     # Check the default cases of known bootloaders:
     for known_bootloader in GRUB2-EFI EFI GRUB2 GRUB ELILO LILO ; do
