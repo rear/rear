@@ -71,7 +71,7 @@ for block_device in /sys/block/* ; do
         # so that in the 'Hah!IdontNeedEFI' case only non-EFI bootloaders are tested:
         for known_bootloader in GRUB2 GRUB ELILO LILO ; do
             if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
-                LogPrint "Using guessed bootloader '$known_bootloader' (found in first bytes on GPT BIOS boot partition $disk_device)"
+                LogPrint "Using guessed bootloader '$known_bootloader' (found in first bytes on $disk_device with GPT BIOS boot partition)"
                 echo "$known_bootloader" >$bootloader_file
                 return
             fi
