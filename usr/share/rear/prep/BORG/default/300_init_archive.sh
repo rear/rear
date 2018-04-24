@@ -24,12 +24,19 @@ rc=$?
 # `borg init` has to be triggered in "prep" stage if user decides to include
 # keyfiles to Relax-and-Recover rescue/recovery system using COPY_AS_IS_BORG.
 if [ $rc -ne 0 ]; then
-    LogPrint "Failed to list $BORGBACKUP_REPO"
-    LogPrint "Creating new Borg repository $BORGBACKUP_REPO"
-
-    borg init $BORGBACKUP_OPT_ENCRYPTION $BORGBACKUP_OPT_REMOTE_PATH \
-    $BORGBACKUP_OPT_UMASK ${borg_dst_dev}${BORGBACKUP_REPO}
-    rc=$?
+        if [ ! -z $BORGBACKUP_PORT ]; then
+                LogPrint "Failed to list $BORGBACKUP_REPO on $BORGBACKUP_HOST:$BORGBACKUP_PORT"
+                 LogPrint "Creating new Borg repository $BORGBACKUP_REPO on $BORGBACKUP_HOST:$BORGBACKUP_PORT"
+                borg init $BORGBACKUP_OPT_ENCRYPTION $BORGBACKUP_OPT_REMOTE_PATH \
+                ssh://$BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_PORT/$BORGBACKUP_REPO
+                rc=$?
+    else
+                LogPrint "Failed to list $BORGBACKUP_REPO on $BORGBACKUP_HOST"
+                LogPrint "Creating new Borg repository $BORGBACKUP_REPO on $BORGBACKUP_HOST"
+                borg init $BORGBACKUP_OPT_ENCRYPTION $BORGBACKUP_OPT_REMOTE_PATH \
+                $BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO
+                rc=$?
+    fi
 fi
 
 # Borg repository initialization failed in previous step,
