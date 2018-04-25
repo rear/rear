@@ -15,7 +15,7 @@ borg_set_vars
 # (if not already present) by 250_mount_usb.sh script.
 
 if [[ -n $BORGBACKUP_HOST ]]; then
-   borg_dst_dev=ssh://$BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_PORT
+    borg_dst_dev=ssh://$BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_PORT
 else
-   borg_dst_dev=$BUILD_DIR/borg_backup
+    borg_dst_dev=$BUILD_DIR/borg_backup
 fi
