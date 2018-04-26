@@ -29,13 +29,14 @@ dumpkeys -f >$ROOTFS_DIR$original_system_dumpkeys_file
 # which is (currently) not strictly requied by the code below but it is cleaner code here:
 local keymaps_default_directory=""
 for keymaps_default_directory in /usr/share/kbd/keymaps /usr/share/keymaps /lib/kbd/keymaps '' ; do
-    test -d $keymaps_default_directory && break
+    test -d "$keymaps_default_directory" && break
 done
 # Use KEYMAPS_DEFAULT_DIRECTORY if it is explicitly specified by the user:
 test $KEYMAPS_DEFAULT_DIRECTORY && keymaps_default_directory="$KEYMAPS_DEFAULT_DIRECTORY"
 # Report when there is no keymaps default directory because other keyboard mappings (at least 'defkeymap') should get included
-# but that is not a severe error because the current keyboard mapping is dumped and gets used by default and as fallback:
-test -d $keymaps_default_directory || LogPrintError "Cannot include keyboard mappings (no keymaps default directory $keymaps_default_directory)"
+# but that is not a severe error because the current keyboard mapping is dumped and gets used by default and as fallback.
+# test -d without a (possibly empty) argument would falsely result true (while plain test without argument results false):
+test -d "$keymaps_default_directory" || LogPrintError "Cannot include keyboard mappings (no keymaps default directory $keymaps_default_directory)"
 
 # Try to find and include at least the default US keyboard mapping:
 local defkeymap_file="$( find $keymaps_default_directory -name 'defkeymap.*' | head -n1 )"
