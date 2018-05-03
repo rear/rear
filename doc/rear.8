@@ -432,13 +432,13 @@ Skip network devices setup by the rescue system start up scripts (overrides \fIi
 .RE
 .SH "BACKUP SOFTWARE INTEGRATION"
 .sp
-Currently Relax\-and\-Recover supports the following backup methods\&. Please distinguish carefully between Relax\-and\-Recover support for 3rd party backup software and Relax\-and\-Recover internal backup methods\&. The latter also creates a backup of your data while the former will only integrate Relax\-and\-Recover with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself\&.
+Currently Relax\-and\-Recover supports the following backup methods\&. Please distinguish carefully between Relax\-and\-Recover support for 3rd party backup software and Relax\-and\-Recover internal backup methods\&. The latter also creates a backup of your data while the former will only integrate Relax\-and\-Recover with the backup software to restore the data with the help of the backup software without actually creating backups\&. This means that for all non\-internal backup software you \fBmust\fR take care of creating backups yourself (unless otherwise noted)\&.
 .sp
-Especially the rear mkbackup command can be confusing as it is only useful for the internal backup methods and has no function at all with the other (external) backup methods\&.
+Especially the rear mkbackup command can be confusing as it is only useful for the internal backup methods and has usually no function at all with the other (external) backup methods\&.
 .sp
 The following backup methods need to be set in Relax\-and\-Recover with the BACKUP option\&. As mentioned we have two types of BACKUP methods \- \fIinternal\fR and \fIexternal\fR\&.
 .sp
-The following BACKUP methods are \fIexternal\fR of Relax\-and\-Recover meaning that you are responsible of backups being made:
+The following BACKUP methods are \fIexternal\fR of Relax\-and\-Recover meaning that usually you are responsible of backups being made:
 .PP
 BACKUP=\fBREQUESTRESTORE\fR
 .RS 4
@@ -483,7 +483,7 @@ Use Symantec NetBackup to restore the data\&.
 .PP
 BACKUP=\fBTSM\fR
 .RS 4
-Use IBM Tivoli Storage Manager to restore the data\&. The Relax\-and\-Recover result files (e\&.g\&. ISO image) are also saved into TSM\&.
+Use IBM Tivoli Storage Manager to restore the data\&. The Relax\-and\-Recover result files (e\&.g\&. ISO image) are also saved into TSM\&. There is a (currently experimental) first draft implementation that a TSM backup is created by calling `dsmc incremental` during `rear mkbackup`\&.
 .RE
 .PP
 BACKUP=\fBNSR\fR
@@ -528,7 +528,7 @@ Use encrypted bandwidth\-efficient backup solution using the rsync algorithm to 
 .PP
 BACKUP=\fBBORG\fR
 .RS 4
-Use BorgBackup (short Borg) a deduplicating backup program to restore the data\&.
+Use BorgBackup (short Borg) a deduplicating backup program to restore the data\&. Executing `rear mkbackup` will create a Borg backup, see the section \fIReaR with Borg back end\fR in the ReaR user-guide \fIScenarios\fR documentation\&.
 .RE
 .sp
 The following BACKUP methods are \fIinternal\fR of Relax\-and\-Recover:
