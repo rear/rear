@@ -282,10 +282,10 @@ also creates a backup of your data while the former will only integrate
 Relax-and-Recover with the backup software to restore the data with the
 help of the backup software without actually creating backups. This means
 that for all non-internal backup software you *must* take care of creating
-backups yourself.
+backups yourself (unless otherwise noted).
 
 Especially the +rear mkbackup+ command can be confusing as it is only
-useful for the internal backup methods and has no function at all with
+useful for the internal backup methods and has usually no function at all with
 the other (external) backup methods.
 
 The following backup methods need to
@@ -293,7 +293,7 @@ be set in Relax-and-Recover with the +BACKUP+ option. As mentioned we have
 two types of +BACKUP+ methods - _internal_ and _external_.
 
 The following +BACKUP+ methods are _external_ of Relax-and-Recover meaning
-that you are responsible of backups being made:
+that usually you are responsible of backups being made:
 
 BACKUP=*REQUESTRESTORE*::
 *(default)* Not really a backup method at all, Relax-and-Recover simply
@@ -327,6 +327,8 @@ Use Symantec NetBackup to restore the data.
 BACKUP=*TSM*::
 Use IBM Tivoli Storage Manager to restore the data. The Relax-and-Recover
 result files (e.g. ISO image) are also saved into TSM.
+There is a (currently experimental) first draft implementation
+that a TSM backup is created by calling 'dsmc incremental' during 'rear mkbackup'.
 
 BACKUP=*NSR*::
 Using EMC NetWorker (Legato) to restore the data.
@@ -354,6 +356,8 @@ Use encrypted bandwidth-efficient backup solution using the rsync algorithm to r
 
 BACKUP=*BORG*::
 Use BorgBackup (short Borg) a deduplicating backup program to restore the data.
+Executing 'rear mkbackup' will create a Borg backup,
+see the section 'ReaR with Borg back end' in the ReaR user-guide 'Scenarios' documentation.
 
 The following +BACKUP+ methods are _internal_ of Relax-and-Recover:
 
