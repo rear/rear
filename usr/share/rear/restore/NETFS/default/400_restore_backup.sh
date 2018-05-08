@@ -1,11 +1,18 @@
 # 400_restore_backup.sh
 #
 
-local scheme=$(url_scheme $BACKUP_URL)
-local path=$(url_path $BACKUP_URL)
-local opath=$(backup_path $scheme $path)
+local scheme=$( url_scheme $BACKUP_URL )
+local path=$( url_path $BACKUP_URL )
+local opath=$( backup_path $scheme $path )
 
-mkdir -p "${BUILD_DIR}/outputfs/${NETFS_PREFIX}"
+# Create backup restore log file name:
+mkdir -p $VAR_DIR/restore
+local backup_restore_log_file_prefix=$BACKUP_PROG_ARCHIVE
+# Cf. how the contains_visible_char() function in lib/global-functions.sh is implemented:
+test "$CONFIG_APPEND_FILES" && backup_restore_log_file_prefix=$backup_restore_log_file_prefix-$( tr -d -c '[:graph:]' <<<"$CONFIG_APPEND_FILES" )
+local backup_restore_log_file=$VAR_DIR/restore/$backup_restore_log_file_prefix-restore.log
+
+mkdir -p $BUILD_DIR/outputfs/$NETFS_PREFIX
 
 # Disable BACKUP_PROG_DECRYPT_OPTIONS by replacing the default with 'cat' when encryption is disabled
 # (by default encryption is disabled but the default BACKUP_PROG_DECRYPT_OPTIONS is not 'cat'):
@@ -127,7 +134,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                 Log "Using unsupported backup restore program '$BACKUP_PROG'"
                 $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" $BACKUP_PROG_OPTIONS_RESTORE_ARCHIVE $TARGET_FS_ROOT "${BACKUP_PROG_OPTIONS[@]}" $restore_input
                 ;;
-        esac >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log"
+        esac > $backup_restore_log_file
         # Important trick: The backup prog is the last command in each case entry and the case..esac is the last command
         # in the (..) subshell. As a result the exit code of the subshell is the exit code of the backup prog.
     ) &
@@ -152,7 +159,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                     # result correct values (i.e. get the waiting time out of the calculations):
                     restore_start_time=$(( restore_start_time + PROGRESS_WAIT_SECONDS ))
                 else
-                    # Example how the 'tar --verbose' messages in ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log look like
+                    # Example how the 'tar --verbose' messages in $backup_restore_log_file look like
                     #   block 3: ./
                     #   block 6: dev/
                     #   block 9: home/
@@ -162,7 +169,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                     #   block 5882679: ** Block of NULs **
                     # cf. https://github.com/rear/rear/issues/1116#issuecomment-267065150
                     # Use an array to easily separate the parts (i.e. each message word is an array member):
-                    latest_tar_restore_message=( $( tail -n1 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log ) )
+                    latest_tar_restore_message=( $( tail -n1 $backup_restore_log_file ) )
                     # An usual 'tar' restore message looks like 'block 219: etc/fstab'
                     # so that ${latest_tar_restore_message[1]} is '219:' in this example.
                     latest_tar_restore_blocks=$( echo ${latest_tar_restore_message[1]} | tr -c -d '[:digit:]' )
@@ -215,7 +222,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
         # Final info message (now using LogPrint and not ProgressInfo as above):
         case "$BACKUP_PROG" in
             (tar)
-                latest_tar_restore_message=( $( tail -n1 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log ) )
+                latest_tar_restore_message=( $( tail -n1 $backup_restore_log_file ) )
                 latest_tar_restore_blocks=$( echo ${latest_tar_restore_message[1]} | tr -c -d '[:digit:]' )
                 test "$latest_tar_restore_blocks" || latest_tar_restore_blocks=0
                 if test "$latest_tar_restore_blocks" -gt "1" ; then

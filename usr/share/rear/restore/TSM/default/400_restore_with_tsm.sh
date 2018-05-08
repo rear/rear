@@ -4,15 +4,25 @@
 local num=0
 local filespace=""
 local dsmc_exit_code=0
-Print "File restore progression can be followed with tail -f \"$TMP_DIR/TSM-restore.log\""
+
+# Create common backup restore log file name prefix (same for each filespace):
+mkdir -p $VAR_DIR/restore
+local backup_restore_log_file=""
+local backup_restore_log_file_prefix=$BACKUP
+# Cf. how the contains_visible_char() function in lib/global-functions.sh is implemented:
+test "$CONFIG_APPEND_FILES" && backup_restore_log_file_prefix=$backup_restore_log_file_prefix-$( tr -d -c '[:graph:]' <<<"$CONFIG_APPEND_FILES" )
+
 for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     filespace="${TSM_FILESPACES[$num]}"
+    LogUserOutput "Restoring TSM filespace $filespace"
+    # Create backup restore log file name (a different one for each filespace):
+    backup_restore_log_file=$VAR_DIR/restore/$backup_restore_log_file_prefix-$filespace-restore.log
+    UserOutput "Filespace '$filespace' restore progress can be followed with 'tail -f $backup_restore_log_file'"
     # Make sure filespace has a trailing / (for dsmc):
     test "${filespace:0-1}" == "/" || filespace="$filespace/"
-    LogUserOutput "Restoring TSM filespace $filespace"
     Log "Running 'LC_ALL=$LANG_RECOVER dsmc restore $filespace $TARGET_FS_ROOT/$filespace -subdir=yes -replace=all -tapeprompt=no ${TSM_DSMC_RESTORE_OPTIONS[@]}'"
     # Regarding usage of '0<&6 1>&7 2>&8' see "What to do with stdin, stdout, and stderr" in https://github.com/rear/rear/wiki/Coding-Style
-    LC_ALL=$LANG_RECOVER dsmc restore "$filespace" "$TARGET_FS_ROOT/$filespace" -subdir=yes -replace=all -tapeprompt=no "${TSM_DSMC_RESTORE_OPTIONS[@]}" 0<&6 1>"$TMP_DIR/TSM-restore.log" 2>&8
+    LC_ALL=$LANG_RECOVER dsmc restore "$filespace" "$TARGET_FS_ROOT/$filespace" -subdir=yes -replace=all -tapeprompt=no "${TSM_DSMC_RESTORE_OPTIONS[@]}" 0<&6 1>"$backup_restore_log_file" 2>&8
     dsmc_exit_code=$?
     # When 'dsmc restore' results a non-zero exit code inform the user but do not abort the whole "rear recover" here
     # because it could be an unimportant reason why 'dsmc restore' finished with a non-zero exit code.
