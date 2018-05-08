@@ -31,9 +31,9 @@ extract_partitions() {
     declare path sysfs_path
     if [[ ${#sysfs_paths[@]} -eq 0 ]] ; then
         if [[ ${device/mapper//} != ${device} ]] ; then
-            ### look like /sys/block/dm-X/holders directory contains partition name in dm-X format.
+            ### /sys/block/dm-X/holders directory contains partition name in dm-X format.
             if [ -d /sys/block/$sysfs_name/holders ]; then
-                sysfs_paths=(/sys/block/$sysfs_name/holders/*)
+                sysfs_paths=( /sys/block/$sysfs_name/holders/* )
             else
                 ### if the holders directory does not exisits 
                 ### failback to partition name guessing method.
