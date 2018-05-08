@@ -69,7 +69,7 @@ if [[ "$AUTOEXCLUDE_DISKS" =~ ^[yY1] ]] ; then
             continue
         fi
 
-        disks=$(find_disk fs:$mountpoint)
+        disks=$(find_disk_and_multipath fs:$mountpoint)
         for disk in $disks ; do
             if ! IsInArray "$disk" "${used_disks[@]}" ; then
                 used_disks=( "${used_disks[@]}" "$disk" )
@@ -86,7 +86,7 @@ if [[ "$AUTOEXCLUDE_DISKS" =~ ^[yY1] ]] ; then
             mark_as_done "opaldisk:$name"
             mark_tree_as_done "$name"
         fi
-    done < <(grep ^disk $LAYOUT_FILE)
+    done < <(grep -E "^disk|^multipath" $LAYOUT_FILE)
 
 fi
 
