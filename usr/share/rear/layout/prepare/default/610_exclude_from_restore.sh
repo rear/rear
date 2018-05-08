@@ -8,7 +8,7 @@ RESTORE_EXCLUDE_FILE="$TMP_DIR/restore-exclude-list.txt"
 : >"$RESTORE_EXCLUDE_FILE"
 
 for component in "${EXCLUDE_RECREATE[@]}" ; do
-    if ! IsInArray "$component" "${EXCLUDE_RESTORE}" ; then
+    if ! IsInArray "$component" "${EXCLUDE_RESTORE[@]}" ; then
         EXCLUDE_RESTORE=( "${EXCLUDE_RESTORE[@]}" "$component" )
     fi
 done
