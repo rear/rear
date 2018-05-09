@@ -96,7 +96,7 @@ blacklist {
 
         # Search and list mpath device.
         LogPrint "Listing multipath device found"
-        LogPrint "$(dmsetup ls --target multipath 2>&1)"
+        LogPrint "$(multipath -l | awk '$3~/dm-/{ DEVICES=$0} ; $1~/size=/ { print DEVICES" "$1 }' 2>&1)"
     fi
 fi
 
