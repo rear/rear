@@ -30,7 +30,7 @@ extract_partitions() {
 
     declare path sysfs_path
     if [[ ${#sysfs_paths[@]} -eq 0 ]] ; then
-        if [[ ${device/mapper//} != ${device} ]] ; then
+        if [[ $device = *'/mapper/'* ]]; then
             ### /sys/block/dm-X/holders directory contains partition name in dm-X format.
             if [ -d /sys/block/$sysfs_name/holders ]; then
                 sysfs_paths=( /sys/block/$sysfs_name/holders/* )
