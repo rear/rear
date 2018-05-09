@@ -38,7 +38,11 @@ if [[ "$AUTOEXCLUDE_USB_PATH" ]] ; then
 fi
 
 # Automatically exclude disks that do not have filesystems mounted.
-if [[ "$AUTOEXCLUDE_DISKS" =~ ^[yY1] ]] ; then
+# [multipath case]: 
+#   multipath device (like: /dev/mapper/maptha) must be considered as 
+#   a disk because it is the base (or parent) of device like "partition",
+#   "LVM physical volume" or "Filesystem".
+if is_true "$AUTOEXCLUDE_DISKS" ; then 
     used_disks=()
     # List disks used by swap devices
     while read swap device uuid label junk ; do
@@ -69,6 +73,7 @@ if [[ "$AUTOEXCLUDE_DISKS" =~ ^[yY1] ]] ; then
             continue
         fi
 
+        # looking for parent disk or multipath device of a fs:mountpoint
         disks=$(find_disk_and_multipath fs:$mountpoint)
         for disk in $disks ; do
             if ! IsInArray "$disk" "${used_disks[@]}" ; then
@@ -86,6 +91,7 @@ if [[ "$AUTOEXCLUDE_DISKS" =~ ^[yY1] ]] ; then
             mark_as_done "opaldisk:$name"
             mark_tree_as_done "$name"
         fi
+    # looping over each disk or multipath device in layout file.
     done < <(grep -E "^disk|^multipath" $LAYOUT_FILE)
 
 fi
