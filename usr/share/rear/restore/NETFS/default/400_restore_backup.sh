@@ -6,11 +6,19 @@ local path=$( url_path $BACKUP_URL )
 local opath=$( backup_path $scheme $path )
 
 # Create backup restore log file name:
-mkdir -p $VAR_DIR/restore
-local backup_restore_log_file_prefix=$BACKUP_PROG_ARCHIVE
-# Cf. how the contains_visible_char() function in lib/global-functions.sh is implemented:
-test "$CONFIG_APPEND_FILES" && backup_restore_log_file_prefix=$backup_restore_log_file_prefix-$( tr -d -c '[:graph:]' <<<"$CONFIG_APPEND_FILES" )
-local backup_restore_log_file=$VAR_DIR/restore/$backup_restore_log_file_prefix-restore.log
+local backup_restore_log_dir="$VAR_DIR/restore"
+mkdir -p $backup_restore_log_dir
+local backup_restore_log_file=""
+local backup_restore_log_prefix=$WORKFLOW
+local backup_restore_log_suffix="restore.log"
+# E.g. when "rear -C 'general.conf /path/to/special.conf' recover" was called CONFIG_APPEND_FILES is "general.conf /path/to/special.conf"
+# so that in particular '/' characters must be replaced in the backup restore log file (by a colon) and then
+# the backup restore log file name will be like .../restore/recover.generalconf_:path:to:specialconf.backup.tar.gz.1234.restore.log
+# It does not work with $( tr -d -c '[:alnum:]/[:space:]' <<<"$CONFIG_APPEND_FILES" | tr -s '/[:space:]' ':_' )
+# because the <<<"$CONFIG_APPEND_FILES" results a trailing newline that becomes a trailing '_' character so that
+# echo -n $CONFIG_APPEND_FILES (without double quotes) is used to avoid leading and trailing spaces and newlines:
+test "$CONFIG_APPEND_FILES" && backup_restore_log_prefix=$backup_restore_log_prefix.$( echo -n $CONFIG_APPEND_FILES | tr -d -c '[:alnum:]/[:space:]' | tr -s '/[:space:]' ':_' )
+local restore_input_basename=""
 
 mkdir -p $BUILD_DIR/outputfs/$NETFS_PREFIX
 
@@ -83,7 +91,7 @@ if test -f $TMP_DIR/backup.splitted ; then
                     ( cd $( dirname $backuparchive ) && grep $backup_file_name "$TMP_DIR/backup.md5" | md5sum -c )
                     ret=$?
                     if [[ $ret -ne 0 ]] ; then
-                        Error "Integrity check failed. Restore aborted because BACKUP_INTEGRITY_CHECK is enabled."
+                        Error "Integrity check failed, restore aborted because BACKUP_INTEGRITY_CHECK is enabled"
                         return
                     fi
                 fi
@@ -106,17 +114,31 @@ fi
 
 # The actual restoring:
 for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
-    LogPrint "Restoring from '$restore_input'..."
-    # Launch a subshell that runs the backup restore prog:
+    # Create backup restore log file name (a different one for each restore_input).
+    # Each restore_input is a path like '/tmp/rear.XXXX/outputfs/f121/backup.tar.gz':
+    restore_input_basename=$( basename $restore_input )
+    backup_restore_log_file=$backup_restore_log_dir/$backup_restore_log_prefix.$restore_input_basename.$MASTER_PID.$backup_restore_log_suffix
+    cat /dev/null >$backup_restore_log_file
+    LogPrint "Restoring from '$restore_input' (restore log in $backup_restore_log_file) ..."
+    # Launch a subshell that runs the backup restore program.
+    # Important trick: The backup restore program is the last command in each case entry
+    # and the case...esac is the last command in the (...) subshell so that
+    # the exit code of the subshell is the exit code of the backup restore program.
+    # Both stdout and stderr are redirected into the backup restore log file
+    # to have all backup restore program messages in one same log file and
+    # in the right ordering because with 2>&1 both streams are correctly merged
+    # cf. https://github.com/rear/rear/issues/885#issuecomment-310082587
+    # which also means that in '-D' debugscript mode the 'set -x' messages of the case...esac
+    # appear in the backup restore log file which is perfectly fine because in the normal log file
+    # the above LogPrint tells via "restore log in $backup_restore_log_file" where to look and
+    # it is helpful for debugging to also have the related 'set -x' messages in the same log file.
+    # To be more on the safe side append to the log file '>>' instead of plain writing to it '>'
+    # because when a program (bash in this case) is plain writing to the log file it can overwrite
+    # output of a possibly simultaneously running process that likes to append to the log file
+    # (e.g. when background processes run that also uses the log file for logging)
+    # cf. https://github.com/rear/rear/issues/885#issuecomment-310308763
     (   case "$BACKUP_PROG" in
             (tar)
-                # Add the --selinux option to be safe with SELinux context restoration
-                # This block can be removed as BACKUP_PROG_OPTIONS was written to rescue.conf
-                #if ! is_true "$BACKUP_SELINUX_DISABLE" ; then
-                    #if tar --usage | grep -q selinux ; then
-                        #BACKUP_PROG_OPTIONS=( "${BACKUP_PROG_OPTIONS[@]}" "--selinux" )
-                    #fi
-                #fi
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
                     BACKUP_PROG_OPTIONS=( "${BACKUP_PROG_OPTIONS[@]}" "--exclude-from=$TMP_DIR/restore-exclude-list.txt" )
                 fi
@@ -134,9 +156,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                 Log "Using unsupported backup restore program '$BACKUP_PROG'"
                 $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" $BACKUP_PROG_OPTIONS_RESTORE_ARCHIVE $TARGET_FS_ROOT "${BACKUP_PROG_OPTIONS[@]}" $restore_input
                 ;;
-        esac > $backup_restore_log_file
-        # Important trick: The backup prog is the last command in each case entry and the case..esac is the last command
-        # in the (..) subshell. As a result the exit code of the subshell is the exit code of the backup prog.
+        esac 1>>$backup_restore_log_file 2>&1
     ) &
     BackupPID=$!
     Log "Launched backup restore subshell (PID=$BackupPID)"
@@ -253,10 +273,10 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                 ;;
         esac
     else
-        LogPrint "Backup restore program '$BACKUP_PROG' failed with exit code '$backup_prog_exit_code'. Check '$RUNTIME_LOGFILE' and the restored system."
-        is_true "$BACKUP_INTEGRITY_CHECK" && Error "Integrity check failed. Restore aborted because BACKUP_INTEGRITY_CHECK is enabled."
+        LogPrint "Backup restore program $BACKUP_PROG failed with exit code $backup_prog_exit_code, check $RUNTIME_LOGFILE and $backup_restore_log_file and the restored system"
+        is_true "$BACKUP_INTEGRITY_CHECK" && Error "Integrity check failed, restore aborted because BACKUP_INTEGRITY_CHECK is enabled"
     fi
 
 done
-LogPrint "Restoring finished."
+LogPrint "Restoring finished (verify backup restore log messages in $backup_restore_log_file)"
 

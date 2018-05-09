@@ -6,17 +6,28 @@ local filespace=""
 local dsmc_exit_code=0
 
 # Create common backup restore log file name prefix (same for each filespace):
-mkdir -p $VAR_DIR/restore
+local backup_restore_log_dir="$VAR_DIR/restore"
+mkdir -p $backup_restore_log_dir
 local backup_restore_log_file=""
-local backup_restore_log_file_prefix=$BACKUP
-# Cf. how the contains_visible_char() function in lib/global-functions.sh is implemented:
-test "$CONFIG_APPEND_FILES" && backup_restore_log_file_prefix=$backup_restore_log_file_prefix-$( tr -d -c '[:graph:]' <<<"$CONFIG_APPEND_FILES" )
+local backup_restore_log_prefix=$BACKUP
+local backup_restore_log_suffix="restore.log"
+# E.g. when "rear -C 'general.conf /path/to/special.conf' recover" was called CONFIG_APPEND_FILES is "general.conf /path/to/special.conf"
+# so that in particular '/' characters must be replaced in the backup restore log file (by a colon) and then
+# the backup restore log file name will be like .../restore/backup.generalconf_:path:to:specialconf.:var:lib:.1234.restore.log
+# It does not work with $( tr -d -c '[:alnum:]/[:space:]' <<<"$CONFIG_APPEND_FILES" | tr -s '/[:space:]' ':_' )
+# because the <<<"$CONFIG_APPEND_FILES" results a trailing newline that becomes a trailing '_' character so that
+# echo -n $CONFIG_APPEND_FILES (without double quotes) is used to avoid leading and trailing spaces and newlines:
+test "$CONFIG_APPEND_FILES" && backup_restore_log_prefix=$backup_restore_log_prefix.$( echo -n $CONFIG_APPEND_FILES | tr -d -c '[:alnum:]/[:space:]' | tr -s '/[:space:]' ':_' )
+local backup_restore_log_filespace=""
 
 for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     filespace="${TSM_FILESPACES[$num]}"
     LogUserOutput "Restoring TSM filespace $filespace"
-    # Create backup restore log file name (a different one for each filespace):
-    backup_restore_log_file=$VAR_DIR/restore/$backup_restore_log_file_prefix-$filespace-restore.log
+    # Create backup restore log file name (a different one for each filespace).
+    # Each filespace is a path like '/' or '/home/' or '/var/lib/' so that in particular '/' characters must be replaced
+    # (see above why <<<"$filespace" does not work here so that a 'echo -n $filespace' pipe is also used here):
+    backup_restore_log_filespace=$( echo -n $filespace | tr -d -c '[:alnum:]/[:space:]' | tr -s '/[:space:]' ':_' )
+    backup_restore_log_file=$backup_restore_log_dir/$backup_restore_log_prefix.$backup_restore_log_filespace.$MASTER_PID.$backup_restore_log_suffix
     UserOutput "Filespace '$filespace' restore progress can be followed with 'tail -f $backup_restore_log_file'"
     # Make sure filespace has a trailing / (for dsmc):
     test "${filespace:0-1}" == "/" || filespace="$filespace/"
