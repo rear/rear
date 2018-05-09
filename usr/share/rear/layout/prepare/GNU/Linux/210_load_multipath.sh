@@ -64,6 +64,9 @@ blacklist {
 
                 # Avoid to list mpath device.
                 list_mpath_device=0
+                # unload multipath module
+                LogPrint "Unload dm-multipath module"
+                rmmod dm-multipath
                 break
                 ;;
             (${choices[1]})
@@ -83,14 +86,15 @@ blacklist {
         esac
     done
 
-    # start multipathd
-    if has_binary multipathd &> /dev/null ; then
-        LogPrint "Starting multipath daemon"
-        multipathd >&2 && LogPrint "multipathd started" || LogPrint "Failed to start multipathd"
-    fi
-
-    # Search and list mpath device.
     if is_true $list_mpath_device ; then
+
+        # start multipathd
+        if has_binary multipathd &> /dev/null ; then
+            LogPrint "Starting multipath daemon"
+            multipathd >&2 && LogPrint "multipathd started" || LogPrint "Failed to start multipathd"
+        fi
+
+        # Search and list mpath device.
         LogPrint "Listing multipath device found"
         LogPrint "$(dmsetup ls --target multipath 2>&1)"
     fi
