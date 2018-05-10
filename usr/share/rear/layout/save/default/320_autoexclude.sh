@@ -73,7 +73,7 @@ if is_true "$AUTOEXCLUDE_DISKS" ; then
             continue
         fi
 
-        # looking for parent disk or multipath device of a fs:mountpoint
+        # looking for parent in disk AND multipath device for a given fs:mountpoint
         disks=$(find_disk_and_multipath fs:$mountpoint)
         for disk in $disks ; do
             if ! IsInArray "$disk" "${used_disks[@]}" ; then
