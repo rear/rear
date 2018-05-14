@@ -35,14 +35,18 @@ ln -s $recover_log_dir/$final_logfile_name $recovery_system_roots_home_dir/rear-
 # (see AddExitTask in _input-output-functions.sh) the ordering of how AddExitTask is called
 # must begin with the to-be-last-run exit task and end with the to-be-first-run exit task:
 if test "$( echo $VAR_DIR/restore/* )" ; then
-    copy_restore_log_exit_task="mkdir $recovery_system_recover_log_dir/restore && cp -pr $VAR_DIR/restore/* $recovery_system_recover_log_dir/restore || true"
+    # Using 'mkdir -p' primarily because that causes no error if the directory already exists
+    # cf. https://github.com/rear/rear/pull/1803#discussion_r187299984
+    copy_restore_log_exit_task="mkdir -p $recovery_system_recover_log_dir/restore && cp -pr $VAR_DIR/restore/* $recovery_system_recover_log_dir/restore || true"
     AddExitTask "$copy_restore_log_exit_task"
 fi
 
 # Do not copy layout and recovery related files for the 'restoreonly' workflow:
 if ! test $WORKFLOW = "restoreonly" ; then
-    copy_layout_files_exit_task="mkdir $recovery_system_recover_log_dir/layout && cp -pr $VAR_DIR/layout/* $recovery_system_recover_log_dir/layout || true"
-    copy_recovery_files_exit_task="mkdir $recovery_system_recover_log_dir/recovery && cp -pr $VAR_DIR/recovery/* $recovery_system_recover_log_dir/recovery || true"
+    # Using 'mkdir -p' primarily because that causes no error if one of the directories already exists
+    # cf. https://github.com/rear/rear/pull/1803#discussion_r187300107
+    copy_layout_files_exit_task="mkdir -p $recovery_system_recover_log_dir/layout && cp -pr $VAR_DIR/layout/* $recovery_system_recover_log_dir/layout || true"
+    copy_recovery_files_exit_task="mkdir -p $recovery_system_recover_log_dir/recovery && cp -pr $VAR_DIR/recovery/* $recovery_system_recover_log_dir/recovery || true"
     AddExitTask "$copy_recovery_files_exit_task"
     AddExitTask "$copy_layout_files_exit_task"
 fi
