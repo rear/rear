@@ -33,7 +33,12 @@ extract_partitions() {
         if [[ $device = *'/mapper/'* ]]; then
             ### /sys/block/dm-X/holders directory contains partition name in dm-X format.
             if [ -d /sys/block/$sysfs_name/holders ]; then
-                sysfs_paths=( /sys/block/$sysfs_name/holders/* )
+                for potential_partition in /sys/block/$sysfs_name/holders/*; do
+                    uuid=$( cat $potential_partition/dm/uuid )
+                    if [[ $uuid = part* ]]; then
+                        sysfs_paths=( "${sysfs_paths[@]}" "$potential_partition" )
+                    fi
+                done
             else
                 ### if the holders directory does not exisits 
                 ### failback to partition name guessing method.
