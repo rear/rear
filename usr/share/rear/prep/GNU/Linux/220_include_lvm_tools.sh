@@ -13,3 +13,9 @@ fsadm
 COPY_AS_IS=( "${COPY_AS_IS[@]}"
 /etc/lvm
 )
+
+if lvs --noheadings -o thin_count | grep -q -v "^\s*$" ; then
+    # There are Thin Pools on the system, include required binaries
+    PROGS=( "${PROGS[@]}" /usr/sbin/thin_* )
+    LIBS=( "${LIBS[@]}" /usr/lib64/*lvm2* )
+fi

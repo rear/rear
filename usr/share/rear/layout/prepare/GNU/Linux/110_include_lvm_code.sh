@@ -52,17 +52,34 @@ create_lvmdev() {
 
 # Create a new VG.
 create_lvmgrp() {
-    if ! is_true "$MIGRATION_MODE" ; then
-        restore_lvmgrp "$1"
-        cat >> "$LAYOUT_CODE" <<EOF
-LogPrint "Sleeping 3 seconds to let udev or systemd-udevd create their devices..."
-sleep 3 >&2
-EOF
-        return
-    fi
-
     local lvmgrp vgrp extentsize junk
     read lvmgrp vgrp extentsize junk < <(grep "^lvmgrp $1 " "$LAYOUT_FILE")
+
+    # If we are not migrating, then try using "vgcfgrestore", but this can
+    # fail, typically if Thin Pools are used.
+    #
+    # In such case, we need to rely on vgcreate/lvcreate commands which is not
+    # recommended because we are not able to collect all required options yet.
+    # For example, we do not take the '--stripes' option into account, nor
+    # '--mirrorlog', etc.
+    # Also, we likely do not support every layout yet (e.g. 'cachepool').
+
+    if ! is_true "$MIGRATION_MODE" ; then
+        cat >> "$LAYOUT_CODE" <<EOF
+LogPrint "Restoring LVM VG ${vgrp#/dev/}"
+if [ -e "$vgrp" ] ; then
+    rm -rf "$vgrp"
+fi
+if lvm vgcfgrestore -f "$VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg" ${vgrp#/dev/} >&2 ; then
+    lvm vgchange --available y ${vgrp#/dev/} >&2
+
+    LogPrint "Sleeping 3 seconds to let udev or systemd-udevd create their devices..."
+    sleep 3 >&2
+    create_logical_volumes=0
+else
+    LogPrint "Warning: could not restore LVM configuration using 'vgcfgrestore'. Using traditional 'vgcreate/lvcreate' commands instead ..."
+EOF
+    fi
 
     local -a devices=($(grep "^lvmdev $vgrp " "$LAYOUT_FILE" | cut -d " " -f 3))
 
@@ -73,29 +90,19 @@ if [ -e "$vgrp" ] ; then
 fi
 lvm vgcreate --physicalextentsize ${extentsize}k ${vgrp#/dev/} ${devices[@]} >&2
 lvm vgchange --available y ${vgrp#/dev/} >&2
-EOF
-}
 
-# Restore a VG from a backup.
-restore_lvmgrp() {
-    local lvmgrp vgrp extentsize junk
-    read lvmgrp vgrp extentsize junk < <(grep "^lvmgrp $1 " "$LAYOUT_FILE")
-cat >> "$LAYOUT_CODE" <<EOF
-LogPrint "Restoring LVM VG ${vgrp#/dev/}"
-if [ -e "$vgrp" ] ; then
-    rm -rf "$vgrp"
-fi
-lvm vgcfgrestore -f "$VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg" ${vgrp#/dev/} >&2
-lvm vgchange --available y ${vgrp#/dev/} >&2
+create_logical_volumes=1
 EOF
+
+    if ! is_true "$MIGRATION_MODE" ; then
+        cat >> "$LAYOUT_CODE" <<EOF
+fi
+EOF
+    fi
 }
 
 # Create a LV.
 create_lvmvol() {
-    if ! is_true "$MIGRATION_MODE" ; then
-        return
-    fi
-
     local name vg lv
     name=${1#/dev/mapper/}
     ### split between vg and lv is single dash
@@ -103,13 +110,73 @@ create_lvmvol() {
     vg=$(sed "s/\([^-]\)-[^-].*/\1/;s/--/-/g" <<< "$name")
     lv=$(sed "s/.*[^-]-\([^-]\)/\1/;s/--/-/g" <<< "$name")
 
-    local lvmvol vgrp lvname nrextents junk
-    read lvmvol vgrp lvname nrextents junk < <(grep "^lvmvol /dev/$vg $lv " "$LAYOUT_FILE")
+    # kval: "key:value" pairs, separated by spaces
+    local lvmvol vgrp lvname size layout kval
+    read lvmvol vgrp lvname size layout kval < <(grep "^lvmvol /dev/$vg $lv " "$LAYOUT_FILE")
 
-    (
-    echo "LogPrint \"Creating LVM volume ${vgrp#/dev/}/$lvname\""
-    #echo "lvm lvcreate -l $nrextents -n ${lvname} ${vgrp#/dev/} >&2"
-    # remove the '>&2' from lvcreate as sometimes we get an question like "Wipe it? [y/n]"
-    echo "lvm lvcreate -l $nrextents -n ${lvname} ${vgrp#/dev/} <<<y"
-    ) >> "$LAYOUT_CODE"
+    local lvopts=""
+
+    # Handle 'key:value' pairs
+    for kv in $kval ; do
+        local key=$(awk -F ':' '{ print $1 }' <<< "$kv")
+        local value=$(awk -F ':' '{ print $2 }' <<< "$kv")
+        lvopts="${lvopts:+$lvopts }--$key $value"
+    done
+
+    if [[ ,$layout, == *,thin,* ]] ; then
+
+        if [[ ,$layout, == *,pool,* ]] ; then
+            # Thin Pool
+
+            lvopts="${lvopts:+$lvopts }--type thin-pool -L $size"
+
+        else
+            # Thin Volume within Thin Pool
+
+            if [[ ,$layout, == *,sparse,* ]] ; then
+                lvopts="${lvopts:+$lvopts }-V $size"
+            else
+                BugError "Unsupported Thin LV layout '$layout' for LV '$lv'"
+            fi
+
+        fi
+
+    elif [[ ,$layout, == *,linear,* ]] ; then
+
+        lvopts="${lvopts:+$lvopts }-L $size"
+
+    elif [[ ,$layout, == *,mirror,* ]] ; then
+
+        lvopts="${lvopts:+$lvopts }--type mirror -L $size"
+
+    elif [[ ,$layout, == *,raid,* ]] ; then
+
+        local found=0
+        local lvl
+        for lvl in raid0 raid1 raid4 raid5 raid6 raid10 ; do
+            if [[ ,$layout, == *,$lvl,* ]] ; then
+                lvopts="${lvopts:+$lvopts }--type $lvl"
+                found=1
+                break
+            fi
+        done
+
+        [ $found -ne 0 ] || BugError "Unsupported LV layout '$layout' found for LV '$lv'"
+
+        lvopts="${lvopts:+$lvopts }-L $size"
+
+    else
+
+        BugError "Unsupported LV layout '$layout' found for LV '$lv'"
+
+    fi
+
+    cat >> "$LAYOUT_CODE" <<EOF
+if [ "\$create_logical_volumes" -eq 1 ]; then
+    LogPrint "Creating LVM volume ${vgrp#/dev/}/$lvname"
+    lvm lvcreate $lvopts -n ${lvname} ${vgrp#/dev/} <<<y
+fi
+EOF
 }
+
+# vim: set et ts=4 sw=4:
