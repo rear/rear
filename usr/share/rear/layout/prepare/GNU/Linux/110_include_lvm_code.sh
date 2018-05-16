@@ -55,6 +55,13 @@ create_lvmgrp() {
     local lvmgrp vgrp extentsize junk
     read lvmgrp vgrp extentsize junk < <(grep "^lvmgrp $1 " "$LAYOUT_FILE")
 
+    cat >> "$LAYOUT_CODE" <<EOF
+create_volume_group=1
+create_logical_volumes=1
+create_thin_volumes_only=0
+
+EOF
+
     # If we are not migrating, then try using "vgcfgrestore", but this can
     # fail, typically if Thin Pools are used.
     #
@@ -70,35 +77,58 @@ LogPrint "Restoring LVM VG ${vgrp#/dev/}"
 if [ -e "$vgrp" ] ; then
     rm -rf "$vgrp"
 fi
+#
+# Restore layout using 'vgcfgrestore', this may fail if there are Thin volumes
+#
 if lvm vgcfgrestore -f "$VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg" ${vgrp#/dev/} >&2 ; then
     lvm vgchange --available y ${vgrp#/dev/} >&2
 
     LogPrint "Sleeping 3 seconds to let udev or systemd-udevd create their devices..."
     sleep 3 >&2
+    create_volume_group=0
     create_logical_volumes=0
+
+#
+# It failed ... restore layout using 'vgcfgrestore --force', but then remove Thin volumes, they are broken
+#
+elif lvm vgcfgrestore --force -f "$VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg" ${vgrp#/dev/} >&2 ; then
+
+    lvm lvs --noheadings -o lv_name,vg_name,lv_layout | while read lv vg layout ; do
+        # Consider LVs for our VG only
+        [ \$vg == "${vgrp#/dev/}" ] || continue
+        # Consider Thin Pools only
+        [[ ,\$layout, == *,thin,* ]] && [[ ,\$layout, == *,pool,* ]] || continue
+        # Remove twice, the first time it fails because of thin volumes in the pool
+        lvm lvremove -q -f -y \$vg/\$lv || true
+        lvm lvremove -q -f -y \$vg/\$lv
+    done
+
+    # All logical volumes have been created, except Thin volumes and pools
+    create_volume_group=0
+    create_thin_volumes_only=1
+ 
+#
+# It failed also ... restore using 'vgcreate/lvcreate' commands
+#
 else
-    LogPrint "Warning: could not restore LVM configuration using 'vgcfgrestore'. Using traditional 'vgcreate/lvcreate' commands instead ..."
+    LogPrint "Warning: could not restore LVM configuration using 'vgcfgrestore'. Using traditional 'vgcreate/lvcreate' commands instead..."
+fi
+
 EOF
     fi
 
     local -a devices=($(grep "^lvmdev $vgrp " "$LAYOUT_FILE" | cut -d " " -f 3))
 
 cat >> "$LAYOUT_CODE" <<EOF
-LogPrint "Creating LVM VG ${vgrp#/dev/}"
-if [ -e "$vgrp" ] ; then
-    rm -rf "$vgrp"
-fi
-lvm vgcreate --physicalextentsize ${extentsize}k ${vgrp#/dev/} ${devices[@]} >&2
-lvm vgchange --available y ${vgrp#/dev/} >&2
-
-create_logical_volumes=1
-EOF
-
-    if ! is_true "$MIGRATION_MODE" ; then
-        cat >> "$LAYOUT_CODE" <<EOF
-fi
-EOF
+if [ \$create_volume_group -eq 1 ] ; then
+    LogPrint "Creating LVM VG ${vgrp#/dev/}; Warning: some properties may not be preserved..."
+    if [ -e "$vgrp" ] ; then
+        rm -rf "$vgrp"
     fi
+    lvm vgcreate --physicalextentsize ${extentsize}k ${vgrp#/dev/} ${devices[@]} >&2
+    lvm vgchange --available y ${vgrp#/dev/} >&2
+fi
+EOF
 }
 
 # Create a LV.
@@ -123,7 +153,11 @@ create_lvmvol() {
         lvopts="${lvopts:+$lvopts }--$key $value"
     done
 
+    local is_thin=0
+
     if [[ ,$layout, == *,thin,* ]] ; then
+
+        is_thin=1
 
         if [[ ,$layout, == *,pool,* ]] ; then
             # Thin Pool
@@ -175,10 +209,21 @@ create_lvmvol() {
 
     fi
 
+    if [ $is_thin -eq 0 ] ; then
+        cat >> "$LAYOUT_CODE" <<EOF
+if [ "\$create_logical_volumes" -eq 1 ] && [ "\$create_thin_volumes_only" -eq 0 ] ; then
+EOF
+    else
+        cat >> "$LAYOUT_CODE" <<EOF
+if [ "\$create_logical_volumes" -eq 1 ] ; then
+EOF
+    fi
+
     cat >> "$LAYOUT_CODE" <<EOF
-if [ "\$create_logical_volumes" -eq 1 ]; then
-    LogPrint "Creating LVM volume ${vgrp#/dev/}/$lvname"
+
+    LogPrint "Creating LVM volume ${vgrp#/dev/}/$lvname; Warning: some properties may not be preserved..."
     lvm lvcreate $lvopts -n ${lvname} ${vgrp#/dev/} <<<y
+
 fi
 EOF
 }
