@@ -149,6 +149,10 @@ create_lvmvol() {
 
         lvopts="${lvopts:+$lvopts }--type mirror -L $size"
 
+    elif [[ ,$layout, == *,striped,* ]] ; then
+
+        lvopts="${lvopts:+$lvopts }--type striped -L $size"
+
     elif [[ ,$layout, == *,raid,* ]] ; then
 
         local found=0
