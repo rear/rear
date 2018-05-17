@@ -41,4 +41,10 @@ if [ -e /etc/sesam2000.ini ]; then
             /usr/lib*/libssl.so.* 
             /usr/lib*/libcrypto.so.* 
         )
+
+
+        # add sesam installation directory to LD_LIBRARY_PATH
+        # to avoid problems with missing libraries during
+        # rootfs verify
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SM_BIN_SESAM
 fi

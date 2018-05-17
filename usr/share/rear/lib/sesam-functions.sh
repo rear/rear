@@ -9,6 +9,8 @@ if ! test -r $sesam2000ini_file ; then
     return 0
 fi
 
+source $sesam2000ini_file
+
 SM_INI="$( grep SM_INI $sesam2000ini_file 2>/dev/null | cut -d '=' -f 2 )"
 test -z "$SM_INI" && return 0
 
