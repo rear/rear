@@ -31,9 +31,19 @@ extract_partitions() {
     declare path sysfs_path
     if [[ ${#sysfs_paths[@]} -eq 0 ]] ; then
         if [[ $device = *'/mapper/'* ]]; then
-            ### /sys/block/dm-X/holders directory contains partition name in dm-X format.
+            ### As /sys/block/dm-X/holders directory contains partition name or LVM logical volume name in dm-X format,
+            ### we have to filter and keep only partition type device.
             if [ -d /sys/block/$sysfs_name/holders ]; then
-                sysfs_paths=( /sys/block/$sysfs_name/holders/* )
+                # for each dm devices in holders directory, only add partitions to sysfs_path array.
+                # One way is to check if the dm uuid starts with "part"
+                # example: cat /sys/block/dm-2/holders/dm-7/dm/uuid => part3-mpath-3600507680c82004cf8000000000000d8
+                for potential_partition in /sys/block/$sysfs_name/holders/*; do
+                    uuid=$( cat $potential_partition/dm/uuid )
+                    if [[ $uuid = part* ]]; then
+                        # store all the $device partition in sysfs_paths array
+                        sysfs_paths=( "${sysfs_paths[@]}" "$potential_partition" )
+                    fi
+                done
             else
                 ### if the holders directory does not exisits 
                 ### failback to partition name guessing method.
