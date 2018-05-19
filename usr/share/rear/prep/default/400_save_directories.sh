@@ -23,7 +23,7 @@ for directory in $mountpoints ; do
             ;;
         (*)
             # Output directory name, access rights in octal, user name of owner, group name of owner
-            $STAT -c '%n %a %U %G' "$directory" >>"$directories_permissions_owner_group_file"
+            /usr/bin/stat -c '%n %a %U %G' "$directory" >>"$directories_permissions_owner_group_file"
             ;;
     esac
 done
