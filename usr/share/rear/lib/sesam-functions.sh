@@ -9,6 +9,11 @@ if ! test -r $sesam2000ini_file ; then
     return 0
 fi
 
+# for later use in default/980_verify_rootfs.sh to avoid issues
+# with missing library dependencies during rootfs check
+source $sesam2000ini_file
+SESAM_LD_LIBRARY_PATH=$SM_BIN_SESAM
+
 SM_INI="$( grep SM_INI $sesam2000ini_file 2>/dev/null | cut -d '=' -f 2 )"
 test -z "$SM_INI" && return 0
 

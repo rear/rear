@@ -46,6 +46,11 @@ if test "$BACKUP" = "TSM" ; then
     # see https://github.com/rear/rear/issues/1533
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TSM_LD_LIBRARY_PATH
 fi
+if test "$BACKUP" = "SESAM" ; then
+    # Use a SEP sesam-specific LD_LIBRARY_PATH to find sesam client
+    # related libraries
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SESAM_LD_LIBRARY_PATH
+fi
 # Actually test all binaries for 'not found' libraries.
 # Find all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths:
 for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ); do
