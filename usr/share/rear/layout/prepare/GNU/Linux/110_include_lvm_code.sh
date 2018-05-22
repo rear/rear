@@ -6,6 +6,11 @@ if ! has_binary lvm; then
     return
 fi
 
+#
+# Refer to usr/share/rear/layout/save/GNU/Linux/220_lvm_layout.sh for the
+# corresponding information collected during 'mkrescue'.
+#
+
 # Test for features in lvm.
 # Versions higher than 2.02.73 need --norestorefile if no UUID/restorefile.
 FEATURE_LVM_RESTOREFILE=
@@ -25,18 +30,20 @@ create_lvmdev() {
     local lvmdev vgrp device uuid junk
     read lvmdev vgrp device uuid junk < <(grep "^lvmdev.*${1#pv:} " "$LAYOUT_FILE")
 
+    local vg=${vgrp#/dev/}
+
     (
     echo "LogPrint \"Creating LVM PV $device\""
 
     ### Work around automatic volume group activation leading to active disks
-    echo "lvm vgchange -a n ${vgrp#/dev/} || true"
+    echo "lvm vgchange -a n $vg || true"
 
     local uuidopt=""
     local restorefileopt=""
 
-    if ! is_true "$MIGRATION_MODE" && test -e "$VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg" ; then
+    if ! is_true "$MIGRATION_MODE" && test -e "$VAR_DIR/layout/lvm/${vg}.cfg" ; then
         # we have a restore file
-        restorefileopt=" --restorefile $VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg"
+        restorefileopt=" --restorefile $VAR_DIR/layout/lvm/${vg}.cfg"
     else
         if [ -n "$FEATURE_LVM_RESTOREFILE" ] ; then
             restorefileopt=" --norestorefile"
@@ -54,6 +61,8 @@ create_lvmdev() {
 create_lvmgrp() {
     local lvmgrp vgrp extentsize junk
     read lvmgrp vgrp extentsize junk < <(grep "^lvmgrp $1 " "$LAYOUT_FILE")
+
+    local vg=${vgrp#/dev/}
 
     cat >> "$LAYOUT_CODE" <<EOF
 create_volume_group=1
@@ -73,15 +82,15 @@ EOF
 
     if ! is_true "$MIGRATION_MODE" ; then
         cat >> "$LAYOUT_CODE" <<EOF
-LogPrint "Restoring LVM VG ${vgrp#/dev/}"
+LogPrint "Restoring LVM VG '$vg'"
 if [ -e "$vgrp" ] ; then
     rm -rf "$vgrp"
 fi
 #
 # Restore layout using 'vgcfgrestore', this may fail if there are Thin volumes
 #
-if lvm vgcfgrestore -f "$VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg" ${vgrp#/dev/} >&2 ; then
-    lvm vgchange --available y ${vgrp#/dev/} >&2
+if lvm vgcfgrestore -f "$VAR_DIR/layout/lvm/${vg}.cfg" $vg >&2 ; then
+    lvm vgchange --available y $vg >&2
 
     LogPrint "Sleeping 3 seconds to let udev or systemd-udevd create their devices..."
     sleep 3 >&2
@@ -91,11 +100,11 @@ if lvm vgcfgrestore -f "$VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg" ${vgrp#/dev/} >&2
 #
 # It failed ... restore layout using 'vgcfgrestore --force', but then remove Thin volumes, they are broken
 #
-elif lvm vgcfgrestore --force -f "$VAR_DIR/layout/lvm/${vgrp#/dev/}.cfg" ${vgrp#/dev/} >&2 ; then
+elif lvm vgcfgrestore --force -f "$VAR_DIR/layout/lvm/${vg}.cfg" $vg >&2 ; then
 
     lvm lvs --noheadings -o lv_name,vg_name,lv_layout | while read lv vg layout ; do
         # Consider LVs for our VG only
-        [ \$vg == "${vgrp#/dev/}" ] || continue
+        [ \$vg == "$vg" ] || continue
         # Consider Thin Pools only
         [[ ,\$layout, == *,thin,* ]] && [[ ,\$layout, == *,pool,* ]] || continue
         # Remove twice, the first time it fails because of thin volumes in the pool
@@ -121,12 +130,12 @@ EOF
 
 cat >> "$LAYOUT_CODE" <<EOF
 if [ \$create_volume_group -eq 1 ] ; then
-    LogPrint "Creating LVM VG ${vgrp#/dev/}; Warning: some properties may not be preserved..."
+    LogPrint "Creating LVM VG '$vg'; Warning: some properties may not be preserved..."
     if [ -e "$vgrp" ] ; then
         rm -rf "$vgrp"
     fi
-    lvm vgcreate --physicalextentsize ${extentsize}k ${vgrp#/dev/} ${devices[@]} >&2
-    lvm vgchange --available y ${vgrp#/dev/} >&2
+    lvm vgcreate --physicalextentsize ${extentsize}k $vg ${devices[@]} >&2
+    lvm vgchange --available y $vg >&2
 fi
 EOF
 }
@@ -154,6 +163,7 @@ create_lvmvol() {
     done
 
     local is_thin=0
+    local is_raidunknown=0
 
     if [[ ,$layout, == *,thin,* ]] ; then
 
@@ -162,13 +172,13 @@ create_lvmvol() {
         if [[ ,$layout, == *,pool,* ]] ; then
             # Thin Pool
 
-            lvopts="${lvopts:+$lvopts }--type thin-pool -L $size"
+            lvopts="${lvopts:+$lvopts }--type thin-pool -L $size --thinpool $lv"
 
         else
             # Thin Volume within Thin Pool
 
             if [[ ,$layout, == *,sparse,* ]] ; then
-                lvopts="${lvopts:+$lvopts }-V $size"
+                lvopts="${lvopts:+$lvopts }-V $size -n ${lvname}"
             else
                 BugError "Unsupported Thin LV layout '$layout' for LV '$lv'"
             fi
@@ -177,15 +187,15 @@ create_lvmvol() {
 
     elif [[ ,$layout, == *,linear,* ]] ; then
 
-        lvopts="${lvopts:+$lvopts }-L $size"
+        lvopts="${lvopts:+$lvopts }-L $size -n ${lvname}"
 
     elif [[ ,$layout, == *,mirror,* ]] ; then
 
-        lvopts="${lvopts:+$lvopts }--type mirror -L $size"
+        lvopts="${lvopts:+$lvopts }--type mirror -L $size -n ${lvname}"
 
     elif [[ ,$layout, == *,striped,* ]] ; then
 
-        lvopts="${lvopts:+$lvopts }--type striped -L $size"
+        lvopts="${lvopts:+$lvopts }--type striped -L $size -n ${lvname}"
 
     elif [[ ,$layout, == *,raid,* ]] ; then
 
@@ -199,9 +209,17 @@ create_lvmvol() {
             fi
         done
 
-        [ $found -ne 0 ] || BugError "Unsupported LV layout '$layout' found for LV '$lv'"
+        if [ $found -eq 0 ] ; then
+            if [[ ,$layout, == *,RAID_UNKNOWNTYPE,* ]] ; then
+                # Compatibility with older LVM versions (e.g. <= 2.02.98)
+                is_raidunknown=1
+                # Don't set '--type', so will be created as a linear volume
+            else
+                BugError "Unsupported LV layout '$layout' found for LV '$lv'"
+            fi
+        fi
 
-        lvopts="${lvopts:+$lvopts }-L $size"
+        lvopts="${lvopts:+$lvopts }-L $size -n ${lvname}"
 
     else
 
@@ -209,20 +227,28 @@ create_lvmvol() {
 
     fi
 
+    local ifline
+    local warnraidline
+
     if [ $is_thin -eq 0 ] ; then
-        cat >> "$LAYOUT_CODE" <<EOF
-if [ "\$create_logical_volumes" -eq 1 ] && [ "\$create_thin_volumes_only" -eq 0 ] ; then
-EOF
+        ifline="if [ \"\$create_logical_volumes\" -eq 1 ] && [ \"\$create_thin_volumes_only\" -eq 0 ] ; then"
     else
-        cat >> "$LAYOUT_CODE" <<EOF
-if [ "\$create_logical_volumes" -eq 1 ] ; then
-EOF
+        ifline="if [ \"\$create_logical_volumes\" -eq 1 ] ; then"
+    fi
+
+    if [ $is_raidunknown -eq 1 ]; then
+        warnraidline="LogPrint \"Warning: Don't know how to restore RAID volume '$lv', restoring as linear volume\""
+    else
+        warnraidline=""
     fi
 
     cat >> "$LAYOUT_CODE" <<EOF
 
-    LogPrint "Creating LVM volume ${vgrp#/dev/}/$lvname; Warning: some properties may not be preserved..."
-    lvm lvcreate $lvopts -n ${lvname} ${vgrp#/dev/} <<<y
+$ifline
+
+    LogPrint "Creating LVM volume '$vg/$lvname'; Warning: some properties may not be preserved..."
+    $warnraidline
+    lvm lvcreate $lvopts $vg <<<y
 
 fi
 EOF
