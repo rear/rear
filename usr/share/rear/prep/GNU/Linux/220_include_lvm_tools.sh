@@ -16,7 +16,7 @@ COPY_AS_IS=( "${COPY_AS_IS[@]}"
 
 if lvs --noheadings -o thin_count | grep -q -v "^\s*$" ; then
     # There are Thin Pools on the system, include required binaries
-    PROGS=( "${PROGS[@]}" /usr/sbin/thin_* )
+    PROGS=( "${PROGS[@]}" thin_check )
 fi
 
 if lvs --noheadings -o modules | grep -q -v "^\s*$" ; then
