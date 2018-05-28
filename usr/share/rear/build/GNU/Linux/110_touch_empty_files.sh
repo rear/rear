@@ -9,4 +9,5 @@ pushd $ROOTFS_DIR >/dev/null
 	touch var/log/lastlog
 	touch var/lib/nfs/state
 	touch etc/mtab
+	touch etc/udev/rules.d/65-md-incremental.rules
 popd >/dev/null
