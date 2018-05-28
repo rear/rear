@@ -126,13 +126,18 @@ generate_layout_dependencies() {
             lvmvol)
                 vgrp=$(echo "$remainder" | cut -d " " -f "1")
                 lvol=$(echo "$remainder" | cut -d " " -f "2")
+                # When a LV is a Thin, then we need to create the Thin Pool first
+                pool=$(echo "$remainder" | egrep -ow "thinpool:\\S+" | cut -d ":" -f 2)
 
                 # Vgs and Lvs containing - in their name have a double dash in DM
                 dm_vgrp=${vgrp//-/--}
                 dm_lvol=${lvol//-/--}
+                dm_pool=${pool//-/--}
 
-                add_dependency "/dev/mapper/${dm_vgrp#/dev/}-$dm_lvol" "$vgrp"
-                add_component "/dev/mapper/${dm_vgrp#/dev/}-$dm_lvol" "lvmvol"
+                dm_prefix="/dev/mapper/${dm_vgrp#/dev/}"
+                add_dependency "$dm_prefix-$dm_lvol" "$vgrp"
+                [ -z "$pool" ] || add_dependency "$dm_prefix-$dm_lvol" "$dm_prefix-$dm_pool"
+                add_component "$dm_prefix-$dm_lvol" "lvmvol"
                 ;;
             raid)
                 name=$(echo "$remainder" | cut -d " " -f "1")
@@ -862,3 +867,5 @@ function apply_layout_mappings() {
         sed -i -r "\|$replacement|s|$replacement([0-9]+)|$target\1|g" "$file_to_migrate"
     done < "$MAPPING_FILE"
 }
+
+# vim: set et ts=4 sw=4:
