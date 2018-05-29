@@ -43,7 +43,7 @@ if ! test "incremental" = "$BACKUP_TYPE" -o "differential" = "$BACKUP_TYPE" ; th
     # This script is also run during "rear recover/restoreonly" where RESTORE_ARCHIVES must be set.
     local backup_restore_workflows=( "recover" "restoreonly" )
     if IsInArray $WORKFLOW ${backup_restore_workflows[@]} ; then
-        # Only set RESTORE_ARCHIVES the backup archive is actually accessible
+        # Only set RESTORE_ARCHIVES when the backup archive is actually accessible
         # cf. https://github.com/rear/rear/issues/1166
         if test -r "$backuparchive" ; then
             RESTORE_ARCHIVES=( "$backuparchive" )
