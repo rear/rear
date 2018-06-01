@@ -7,6 +7,3 @@ Log "Software RAID detected. Including mdadm tools."
 PROGS=( "${PROGS[@]}"
 mdadm
 )
-COPY_AS_IS=( "${COPY_AS_IS[@]}"
-/etc/mdadm.conf
-)
