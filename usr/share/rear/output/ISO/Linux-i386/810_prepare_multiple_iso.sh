@@ -14,7 +14,7 @@ test "$ISO_MAX_SIZE" || return 0
 # in case of "rear mkbackup" the (bootable) ReaR recovery system
 # plus the first part of the splitted backup (usually named "backup.tar.gz.00")
 # plus the backup.splitted file that contains information about the splitted backup.
-# But "rear mkrescue" would overwrites that first ISO with one that contains only
+# But "rear mkrescue" would overwrite that first ISO with one that contains only
 # the new ReaR recovery system but no longer the first part of the splitted backup
 # nor the backup.splitted file so that then "rear recover" fails with
 # "ERROR: Backup archive 'backup.tar.gz' not found"
