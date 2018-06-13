@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 9)
 Package: rear
 Architecture: i386 ia64 amd64 ppc64el
 Provides: rear
-Depends: syslinux[!ppc64el], syslinux-common[!ppc64el], ethtool, ${shlibs:Depends}, lsb-release, iproute, iputils-ping, dosfstools, binutils, parted, openssl, gawk, attr, bc, ${misc:Depends}
-Suggests: nfs-client, portmap, xorriso, isolinux, gdisk, syslinux-efi[!ppc64el]
+Depends: syslinux[!ppc64el], syslinux-common[!ppc64el], ethtool, ${shlibs:Depends}, lsb-release, iputils-ping, dosfstools, binutils, parted, openssl, gawk, attr, bc, ${misc:Depends}
+Suggests: nfs-client, portmap, xorriso, isolinux, gdisk, syslinux-efi[!ppc64el], iproute, iproute2
 Description: Relax-and-Recover is a bare metal disaster recovery and system
  migration framework. See http://relax-and-recover.org/ for all the details.
