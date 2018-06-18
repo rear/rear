@@ -159,8 +159,9 @@ in the provided shell. When finished, type exit in the shell to continue
 recovery.
 "
 
-if [[ "$ISO_RECOVER_MODE" != "unattended" ]] || [[ "$PXE_RECOVER_MODE" != "unattended" ]] ; then
-
+if [[ "$ISO_RECOVER_MODE" = "unattended" ]] || [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
+    Log "Unattended mode selected"
+else
     rear_shell "Did the backup successfully restore to '$TARGET_FS_ROOT' ? Ready to continue ?" \
             "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
 vi bootstrap.txt
