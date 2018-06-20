@@ -7,7 +7,7 @@ Relax-and-Recover
   o Development
   o Events
 
-Release Notes for Relax-and-Recover version 2.3
+Release Notes for Relax-and-Recover version 2.4
 
 This document contains the release notes for the open source project
 Relax-and-Recover.
@@ -87,7 +87,7 @@ functionality:
   o Integrates with external backup solutions such as:
 
       - Tivoli Storage Manager (BACKUP=TSM)
-      - HP Data Protector (BACKUP=DP)
+      - Data Protector (BACKUP=DP)
       - Symantec NetBackup (BACKUP=NBU)
       - Galaxy 5, 6, and 7 (BACKUP=GALAXY)
       - Galaxy 10 [Commvault Simpana] (BACKUP=GALAXY10)
@@ -96,6 +96,7 @@ functionality:
       - Rsync Backup Made Easy (BACKUP=RBME)
       - Duplicity/Duply (BACKUP=DUPLICITY)
       - EMC Networker, also known as Legato (BACKUP=NSR)
+      - EMC Avamar (BACKUP=AVA)
       - SEP Sesam (BACKUP=SESAM)
       - FDR/Upstream (BACKUP=FDRUPSTREAM)
       - Novastor NovaBACKUP DC (BACKUP=NBKDC)
@@ -158,7 +159,7 @@ functionality:
   o cron job to check changes in disk layout and trigger rear mkrescue if
     required
 
-  o VLAN tagging and bridge support
+  o VLAN tagging, teaming and bridge support
 
   o Add timestamp of ReaR run with rc code to the syslog or messages file;
     sending mail report is also possible
@@ -166,7 +167,7 @@ functionality:
   o The possibility to backup any partition (in particular a Windows
     partition) via the BACKUP type BLOCKCLONE
 
-  o Unattended ReaR recovery has been improved (New)
+  o Unattended ReaR recovery has been improved
 
   o Improved security model related to SSH keys (New)
 
@@ -192,6 +193,192 @@ system you must re-validate that your disaster recovery procedure still works
 for you.
 
 The references pointing to fix #nr or issue #nr refer to our issues tracker.
+
+Version 2.4 (June 2018)
+
+Abstract
+
+New features, bigger enhancements, and possibly backward incompatible
+changes:
+
+  o Major rework and changed default behaviour how ReaR behaves in migration
+    mode when partitions can or must be resized to fit on replacement disks
+    with different size. The new default behaviour is that only the partition
+    end value of the last partition on a disk (and therefore its partition
+    size) may get changed if really needed but no partition start value gets
+    changed to avoid changes of the partition alignment. The new
+    420_autoresize_last_partitions script implements the new behaviour and
+    the old 400_autoresize_disks was renamed into
+    430_autoresize_all_partitions to still provide the old behaviour if that
+    is explicitly requested by the user but the old behaviour may result
+    unexpected changes of arbitrary partitions on a disk. The new config
+    variables AUTORESIZE_PARTITIONS AUTORESIZE_EXCLUDE_PARTITIONS
+    AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE
+    AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE determine how ReaR behaves in
+    migration mode when partitions can or must be resized. With
+    AUTORESIZE_PARTITIONS='yes' the old behaviour is done. With
+    AUTORESIZE_PARTITIONS='no' no partition is resized by ReaR. With the
+    default AUTORESIZE_PARTITIONS='' at most the last active partition on
+    each active disk gets resized but only if really needed which also
+    depends on the settings of the other config variables above. For details
+    see default.conf and the two 'autoresize' scripts. For some examples see
+    https://github.com/rear/rear/pull/1733
+
+  o Network setup was completely reworked to support bonding, bridges, vlans
+    and teaming. There is a full rewrite of the 310_network_devices.sh script
+    generating network interfaces for use during ReaR rescue/recovery system
+    networking setup via the 60-network-devices.sh script. It also handles
+    corner cases/odd setups that can be found from time to time, typically
+    when the administrator uses bonding plus bridges plus vlans as well as
+    teaming.
+
+  o Initial (limited) support for certain ARM based hardware. It should work
+    with Raspberry Pis, most TI and Allwinner devices. There are two ARM
+    specific BOOTLOADER variable values where 'ARM-ALLWINNER' is for
+    Allwinner devices that will backup and restore the 2nd stage bootloader
+    versus plain 'ARM' which is a dummy that does nothing so that on
+    Raspberry Pi and most TI devices you need to include the first FAT
+    partition (with the MLO or bootcode.bin) in your backup.
+
+  o Simplified and enhanced TSM restore plus first draft of TSM backup.
+
+  o EMC Avamar support has been added.
+
+  o Duplicity backup has been seriously enhanced.
+
+  o Support for TCG Opal 2-compliant self-encrypting disks and RAWDISK
+    output.
+
+  o YUM+backup adds the ability to backup and restore files to the YUM
+    method.
+
+Details (mostly in chronological order):
+
+  o Copy backup restore log into recreated system (issue #1803)
+
+  o Sesam integration: add sesam bin directory to LD_LIBRARY_PATH (issue #
+    1817)
+
+  o ReaR recovery fails when the OS contains a Thin Pool/Volume (issues #
+    1380, #1806)
+
+  o Make SLES12-GA/SP0 btrfs recovery work again (issues #1796, #1813)
+
+  o Verify if dm-X is a partition before adding to sysfs_paths (issue #1805)
+
+  o Do not start multipathd when not needed (issue #1804)
+
+  o Better way to get multiapth partion name (issue #1802)
+
+  o Exclude multipath device that does not have mounted fs (issue #1801)
+
+  o Do not print each files restores by TSM in main output (issue #1797)
+
+  o man page BACKUP SOFTWARE INTEGRATION update (issues #1788, #1791)
+
+  o In the DRLM specific function drlm_import_runtime_config() solve problem
+    with some variables loading config from DRLM (issue #1794)
+
+  o Better describe NON_FATAL_BINARIES_WITH_MISSING_LIBRARY in default.conf
+    (issues #1792, #1693)
+
+  o Introduced KEYMAPS_DEFAULT_DIRECTORY and KEYMAP variables, see the
+    default.conf file (issues #1781, #1787)
+
+  o Fix multipath partition replacement and multipath partition naming (issue
+    #1765)
+
+  o Skip LUKS encrypted disks when guessing bootloader (issue #1779)
+
+  o First draft of TSM backup (issue #1348)
+
+  o HP RAID code was updated as the new executable is now called as "ssacli"
+    (issue #1760)
+
+  o Exclude docker file systems from layout (issue #1749)
+
+  o Added migation mode confirmation at beginning of finalize stage (issue #
+    1758)
+
+  o Show descendant processes PIDs with their commands in the log via pstree
+    or ps as fallback (issues #1755, #1756)
+
+  o Check for 'Hah!IdontNeedEFI' GUID number for a GPT BIOS boot partition
+    (issues #1752, #1754, #1780)
+
+  o Fixed invalid reported return code (always 0) upon NBU restoration
+    failure (issue #1751)
+
+  o Run exit tasks code with default bash flags and options (issues #700, #
+    1747, #1748)
+
+  o Major rework and changed default behaviour regarding
+    AUTORESIZE_PARTITIONS (issues #102, #1731, #1733, #1746)
+
+  o YUM+backup adds the ability to backup and restore files to the YUM method
+    (issues #1464, #1740)
+
+  o Add dbus user and group by default (issues #1710, #1743)
+
+  o Add gsk libs to TSM_LD_LIBRARY_PATH (issue #1744)
+
+  o Use 'grub2-install -no-nvram' on PowerNV system (issue #1742)
+
+  o We can use chronyd as time syncing mechanism now as well (issue #1739)
+
+  o Trace and fix broken symbolic links in rootfs (issues #1638, #1734)
+
+  o Borg Backup can now use USB disk as well as backup storage area (issue #
+    1730)
+
+  o Initial support for ARM (issue #1662)
+
+  o Improve the network parameters on the Linux Kernel command line (issue #
+    1725)
+
+  o Clean termination of descendant processes (issues #1712, #1720)
+
+  o Simpler and more fail-safe SLE btrfs-example.conf files (issues #1714, #
+    1716)
+
+  o Use a fallback to get interface state using the 'carrier' status (issues
+    #1701, #1719)
+
+  o Fix duplicity backup (issue #1695)
+
+  o Include Bareos plugin directory to make bareos-fd start reliably (issues
+    #1692, #1708)
+
+  o Again support GPT partition names with blanks (issues #212, #1563, #1706)
+
+  o Improvements around Borg Backup (issues #1698, #1700)
+
+  o Automatically add 'missing' devices to MD arrays with not enough physical
+    devices upon restore (issue #1697)
+
+  o Network setup was completely reworked to support bonding, bridges, vlans
+    and teaming (issue #1574)
+
+  o Fixed restore backup when BACKUP_INTEGRITY_CHECK=1 (issue #1685)
+
+  o Support TCG Opal 2-compliant self-encrypting disks and RAWDISK output
+    (issue #1659)
+
+  o Add EMC Avamar backup (issues #1621, #1677, #1687)
+
+  o Avoid falsely detected changed layout for 'rear checklayout' (issues #
+    1657, #1658, #1673)
+
+  o Simplified TSM dsmc restore and improved TSM connection test (issues #
+    1534, #1643, #1645)
+
+  o Duplicity with duply waits forever (issues #1664, #1672)
+
+  o Duplicity: Add Support for NETFS URLs (issues #1554, #1665, #1668, #1669)
+
+Many minor fixes (too many to list them all - use 'git log' to view them). A
+big thank you to all contributors as without you it would be impossible to
+keep up with the development in the Linux area. We love you all... :-)
 
 Version 2.3 (December 2017)
 
@@ -253,8 +440,8 @@ Possibly backward incompatible changes:
     reported to us via our issue tracker.
 
   o SSH support in the ReaR rescue/recovery system is now secure by default.
-    There are are no longer private SSH keys in the recovery system by
-    default and a RSA key is generated from scratch when starting sshd during
+    There are no longer private SSH keys in the recovery system by default
+    and a RSA key is generated from scratch when starting sshd during
     recovery system startup. Accordingly it does no longer work by default to
     use SSH in the recovery system via the SSH keys that exist on the
     original system. To get SSH keys included in the recovery system use the
@@ -1044,8 +1231,8 @@ bash shell which is standard available on all GNU/Linux based systems. The
 default backup program Relax-and-Recover uses is GNU/tar which is also
 standard available.
 
-Relax-and-Recover is known to work well on x86 and x86_64 based
-architectures. Relax-and-Recover has also been ported to ia64 and ppc
+Relax-and-Recover is known to work well on x86, x86_64 and ppc64(le) based
+architectures. Relax-and-Recover has also been ported to ia64 and arm
 architectures, but these are less tested. Use the 'rear validate' command
 after every successful DR test please and mail us the results.
 
@@ -1068,24 +1255,24 @@ as a service (not free of charge).
 
 Supported Operating Systems
 
-We try to keep our wiki page Test Matrix rear 2.3 up-to-date with feedback we
+We try to keep our wiki page Test Matrix rear 2.4 up-to-date with feedback we
 receive from the community.
 
-ReaR-2.3 is supported on the following Linux based operating systems:
+ReaR-2.4 is supported on the following Linux based operating systems:
 
-  o Fedora 25 and 26
+  o Fedora 26 and 27
   o RHEL 5, 6 and 7
   o CentOS 5, 6 and 7
   o ScientificLinux 6 and 7
-  o SLES 11 and 12
+  o SLES 11, 12 and 15
   o openSUSE Leap and openSUSE Tumbleweed
   o Debian 6, 7, 8 and 9
   o Ubuntu 12, 13, 14 and 15
 
-ReaR-2.3 dropped officially support for the following Linux based operating
+ReaR-2.4 dropped officially support for the following Linux based operating
 systems:
 
-  o Fedora < 25
+  o Fedora < 26
   o RHEL 3 and 4
   o SLES 9 and 10
   o openSUSE <= 13
@@ -1100,20 +1287,20 @@ achieved with serious sponsoring.
 
 Supported Architectures
 
-ReaR-2.3 is supported on:
+ReaR-2.4 is supported on:
 
   o Intel x86 type of processors
   o AMD x86 type of processors
   o PPC64 processors
   o PPC64LE processors
 
-ReaR-2.3 may or may not work on:
+ReaR-2.4 may or may not work on:
 
   o Intel Itanium processors
-
-ReaR-2.3 does not support:
-
   o ARM type of processors
+
+ReaR-2.4 does not support:
+
   o s390x type of processors
   o old PPC (32bit) processors
 
