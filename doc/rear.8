@@ -2,12 +2,12 @@
 .\"     Title: rear
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 14 December 2017
+.\"      Date: 20 June 2018
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "REAR" "8" "14 December 2017" "\ \&" "\ \&"
+.TH "REAR" "8" "20 June 2018" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -386,34 +386,42 @@ If you do not specify OUTPUT_URL variable then by default it will be aligned to 
 The ISO_DEFAULT variable defines what default boot option is used on the rescue image\&. Possible values are manual, boothd or automatic\&. Manual will make you boot into the shell directly by default, boothd will boot to the first disk (default) or automatic will automatically start in recovery mode\&.
 .SH "RESCUE IMAGE KERNEL COMMAND LINE OPTIONS"
 .sp
-When booting the rescue image you can edit the kernel command line\&.
-There are some Relax\-and\-Recover specific kernel command line options:
+When booting the rescue image you can edit the kernel command line\&. There are some Relax\-and\-Recover specific kernel command line options:
 .PP
 \fBdebug\fR
 .RS 4
-The rescue system start up scripts in /etc/scripts/system-setup.d/
-are run one by one each one after pressing \fIEnter\fR and
-the scripts are run with `set \-x` which prints commands
-and their arguments as they are executed\&.
+The rescue system start up scripts in /etc/scripts/system\-setup\&.d/ are run one by one each one after pressing
+\fIEnter\fR
+and the scripts are run with
+\fIset \-x\fR
+which prints commands and their arguments as they are executed\&.
 .RE
 .PP
 \fBauto_recover\fR or \fBautomatic\fR
 .RS 4
-Launch `rear recover` automatically (without automated reboot)\&.
-Together with \fIdebug\fR it runs `rear recover` in debug mode\&.
+Launch
+\fIrear recover\fR
+automatically (without automated reboot)\&. Together with
+\fIdebug\fR
+it runs
+\fIrear recover\fR
+in debug mode\&.
 .RE
 .PP
 \fBunattended\fR
 .RS 4
-Launch `rear recover` automatically as with \fIauto_recover\fR
-plus automated reboot after successful `rear recover`\&.
+Launch
+\fIrear recover\fR
+automatically as with
+\fIauto_recover\fR
+plus automated reboot after successful
+\fIrear recover\fR\&.
 .RE
 .PP
 \fBip= nm= netdev= gw=\fR
 .RS 4
-If IP address plus optionally netmask (default 255\&.255\&.255\&.0),
-network device (default eth0), and default gateway are specified
-only that single network device is set up\&. Example:
+If IP address plus optionally netmask (default 255\&.255\&.255\&.0), network device (default eth0), and a default gateway are specified only that single network device is set up\&. Example:
+.RE
 .sp
 .if n \{\
 .RS 4
@@ -424,11 +432,10 @@ ip=192\&.168\&.100\&.2 nm=255\&.255\&.255\&.0 netdev=eth0 gw=192\&.168\&.100\&.1
 .if n \{\
 .RE
 .\}
-.RE
 .PP
 \fBnoip\fR
 .RS 4
-Skip network devices setup by the rescue system start up scripts (overrides \fIip= nm= netdev= gw=\fR)\&.
+Skip network devices setup by the rescue system start up scripts (overrides ip= nm= netdev= gw=)\&.
 .RE
 .SH "BACKUP SOFTWARE INTEGRATION"
 .sp
@@ -483,7 +490,10 @@ Use Symantec NetBackup to restore the data\&.
 .PP
 BACKUP=\fBTSM\fR
 .RS 4
-Use IBM Tivoli Storage Manager to restore the data\&. The Relax\-and\-Recover result files (e\&.g\&. ISO image) are also saved into TSM\&. There is a (currently experimental) first draft implementation that a TSM backup is created by calling `dsmc incremental` during `rear mkbackup`\&.
+Use IBM Tivoli Storage Manager to restore the data\&. The Relax\-and\-Recover result files (e\&.g\&. ISO image) are also saved into TSM\&. There is a (currently experimental) first draft implementation that a TSM backup is created by calling
+\fIdsmc incremental\fR
+during
+\fIrear mkbackup\fR\&.
 .RE
 .PP
 BACKUP=\fBNSR\fR
@@ -528,7 +538,13 @@ Use encrypted bandwidth\-efficient backup solution using the rsync algorithm to 
 .PP
 BACKUP=\fBBORG\fR
 .RS 4
-Use BorgBackup (short Borg) a deduplicating backup program to restore the data\&. Executing `rear mkbackup` will create a Borg backup, see the section \fIReaR with Borg back end\fR in the ReaR user-guide \fIScenarios\fR documentation\&.
+Use BorgBackup (short Borg) a deduplicating backup program to restore the data\&. Executing
+\fIrear mkbackup\fR
+will create a Borg backup, see the section
+\fIReaR with Borg back end\fR
+in the ReaR user\-guide
+\fIScenarios\fR
+documentation\&.
 .RE
 .sp
 The following BACKUP methods are \fIinternal\fR of Relax\-and\-Recover:
@@ -695,7 +711,7 @@ providing a pre\-boot authentication (PBA) system to unlock SEDs at boot time\&.
 .sp
 To prepare booting from an SED, run rear mkopalpba, then create the rescue system\&.
 .sp
-To set up an SED, boot the Relax\-and\-Recover rescue system and run `rear opaladmin setupERASE DEVICE` (\fIDEVICE\fR being the disk device path like /dev/sda)\&.
+To set up an SED, boot the Relax\-and\-Recover rescue system and run`rear opaladmin setupERASE DEVICE` (\fIDEVICE\fR being the disk device path like /dev/sda)\&.
 .sp
 For complete information, consult the section "Support for TCG Opal 2\-compliant Self\-Encrypting Disks" in the Relax\-and\-Recover user guide\&.
 .SH "CONFIGURATION"
