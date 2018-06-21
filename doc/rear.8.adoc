@@ -454,7 +454,7 @@ Self-encrypting disk support includes
 To prepare booting from an SED, run +rear mkopalpba+, then create the rescue
 system.
 
-To set up an SED, boot the Relax-and-Recover rescue system and run`rear
+To set up an SED, boot the Relax-and-Recover rescue system and run `rear
 opaladmin setupERASE DEVICE` (_DEVICE_ being the disk device path like
 `/dev/sda`).
 
