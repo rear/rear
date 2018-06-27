@@ -65,9 +65,25 @@ fi
 if test "$GRUB2_INSTALL_DEVICES" ; then
     grub2_install_failed="no"
     for grub2_install_device in $GRUB2_INSTALL_DEVICES ; do
-       LogPrint "Installing GRUB2 on $grub2_install_device (specified in GRUB2_INSTALL_DEVICES)"
+       # Consider mapped disks (crucial in MIGRATION_MODE),
+       # cf. https://github.com/rear/rear/issues/1437
+       # MAPPING_FILE (var/lib/rear/layout/disk_mappings)
+       # is set in layout/prepare/default/300_map_disks.sh
+       # but only if MIGRATION_MODE is true:
+       if test -s "$MAPPING_FILE" ; then
+           # Cf. the function apply_layout_mappings() in lib/layout-functions.sh
+           while read source_disk target_disk junk ; do
+               if test "$grub2_install_device" = "$source_disk" ; then
+                   LogPrint "Installing GRUB2 on $target_disk ($source_disk in GRUB2_INSTALL_DEVICES is mapped to $target_disk in $MAPPING_FILE)"
+                   grub2_install_device="$target_disk"
+                   break
+               fi
+           done < "$MAPPING_FILE"
+       else
+           LogPrint "Installing GRUB2 on $grub2_install_device (specified in GRUB2_INSTALL_DEVICES)"
+       fi
        if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_install_device" ; then
-           LogPrintError "Failed to install GRUB2 on the specified $grub2_install_device"
+           LogPrintError "Failed to install GRUB2 on $grub2_install_device"
            grub2_install_failed="yes"
        fi
     done
@@ -133,7 +149,7 @@ for disk in $disks ; do
             # is written to the correct disk. That's why we make all disks bootable:
             continue
         fi
-        LogPrintError "Failed to install GRUB2 on $bootdisk"
+        LogPrintError "Failed to install GRUB2 on possible boot disk $bootdisk"
     fi
 done
 
