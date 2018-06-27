@@ -1,15 +1,23 @@
 #
-# This  script is an improvement over a blind "grub-install (hd0)".
+# This script is an improvement over a blind "grub-install (hd0)".
 #
 # However the following issues still exist:
 #
 # * We don't know what the first disk will be, so we cannot be sure the MBR
 #   is written to the correct disk. That's why we make all disks bootable
-#   as fallback unless GRUB2_INSTALL_DEVICE was specified.
+#   as fallback unless GRUB2_INSTALL_DEVICES was specified. This is also the
+#   reason why more than one disk can be specified in GRUB2_INSTALL_DEVICES.
 #
 # * There is no guarantee that GRUB2 was the boot loader used originally.
 #   One solution is to save and restore the MBR for each disk, but this
 #   does not guarantee a correct boot-order, or even a working bootloader config.
+#
+# This script does not error out because at this late state of "rear recover"
+# (i.e. after the backup was restored) I <jsmeix@suse.d> consider it too hard
+# to abort "rear recover" when it failed to install GRUB2 because in this case
+# the user gets an explicit WARNING via finalize/default/890_finish_checks.sh
+# so that after "rear recover" finished he can manually install the bootloader
+# as appropriate for his particular system.
 
 # Skip if another bootloader was already installed:
 # In this case NOBOOTLOADER is not true,
@@ -18,7 +26,7 @@ is_true $NOBOOTLOADER || return 0
 
 # For UEFI systems with grub2 we should use efibootmgr instead,
 # cf. finalize/Linux-i386/630_run_efibootmgr.sh
-is_true $USING_UEFI_BOOTLOADER && return 
+is_true $USING_UEFI_BOOTLOADER && return
 
 # Only for GRUB2 - GRUB Legacy will be handled by its own script.
 # GRUB2 is detected by testing for grub-probe or grub2-probe which does not exist in GRUB Legacy.
@@ -53,23 +61,28 @@ if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-mkconfig -o /boot/$
     LogPrintError "Failed to generate boot/$grub_name/grub.cfg in $TARGET_FS_ROOT - trying to install GRUB2 nevertheless"
 fi
 
-# When GRUB2_INSTALL_DEVICE is explicitly specified by the user install GRUB2 there:
-if test "$GRUB2_INSTALL_DEVICE" ; then
-    LogPrint "Installing GRUB2 on $GRUB2_INSTALL_DEVICE (specified as GRUB2_INSTALL_DEVICE)"
-    if chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $GRUB2_INSTALL_DEVICE" ; then
-        NOBOOTLOADER=''
-        return
-    fi
-    LogPrintError "Failed to install GRUB2 on the specified $GRUB2_INSTALL_DEVICE"
+# When GRUB2_INSTALL_DEVICES is explicitly specified by the user install GRUB2 there:
+if test "$GRUB2_INSTALL_DEVICES" ; then
+    grub2_install_failed="no"
+    for grub2_install_device in $GRUB2_INSTALL_DEVICES ; do
+       LogPrint "Installing GRUB2 on $grub2_install_device (specified in GRUB2_INSTALL_DEVICES)"
+       if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_install_device" ; then
+           LogPrintError "Failed to install GRUB2 on the specified $grub2_install_device"
+           grub2_install_failed="yes"
+       fi
+    done
+    is_false $grub2_install_failed && NOBOOTLOADER=''
+    # return even if it failed to install GRUB2 on one of the specified GRUB2_INSTALL_DEVICES
+    # because then the user gets an explicit WARNING via finalize/default/890_finish_checks.sh
+    is_true $NOBOOTLOADER && return 1 || return 0
 fi
 
-# If GRUB2_INSTALL_DEVICE is not specified or it failed to install GRUB2 there
-# try to automatically determine where to install GRUB2:
+# If GRUB2_INSTALL_DEVICES is not specified try to automatically determine where to install GRUB2:
 if ! test -r "$LAYOUT_FILE" -a -r "$LAYOUT_DEPS" ; then
     LogPrintError "Cannot determine where to install GRUB2"
     return 1
 fi
-test "$GRUB2_INSTALL_DEVICE" && LogPrint "Determining where to install GRUB2" || LogPrint "Determining where to install GRUB2 (no GRUB2_INSTALL_DEVICE specified)"
+LogPrint "Determining where to install GRUB2 (no GRUB2_INSTALL_DEVICES specified)"
 
 # Find exclusive partition(s) belonging to /boot or / (if /boot is inside root filesystem):
 if test "$( filesystem_name $TARGET_FS_ROOT/boot )" = "$TARGET_FS_ROOT" ; then
@@ -112,6 +125,9 @@ for disk in $disks ; do
     if test "$bootdisk" ; then
         LogPrint "Found possible boot disk $bootdisk - installing GRUB2 there"
         if chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $bootdisk" ; then
+            # In contrast to the above behaviour when GRUB2_INSTALL_DEVICES is specified
+            # consider it here as a successful bootloader installation when GRUB2
+            # got installed on at least one boot disk:
             NOBOOTLOADER=''
             # We don't know what the first disk will be, so we cannot be sure the MBR
             # is written to the correct disk. That's why we make all disks bootable:
@@ -121,6 +137,7 @@ for disk in $disks ; do
     fi
 done
 
-is_true $NOBOOTLOADER && LogPrintError "Failed to install GRUB2 - you may have to manually install it"
+is_true $NOBOOTLOADER || return 0
+LogPrintError "Failed to install GRUB2 - you may have to manually install it"
 return 1
 
