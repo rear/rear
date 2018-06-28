@@ -924,7 +924,6 @@ function apply_layout_mappings() {
     # It is the responsibility of the caller of this apply_layout_mappings function what to do when it failed
     # (e.g. error out, retry, show a user dialog, or whatever is appropriate in the caller's environment):
     is_true $apply_layout_mappings_succeeded && return 0 || return 1
-
 }
 
 # vim: set et ts=4 sw=4:

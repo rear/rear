@@ -35,7 +35,7 @@ NEW_ID_FILE="$TMP_DIR/diskbyid_mappings"
 # cf. https://github.com/rear/rear/issues/1845
 # but hopefully the code below is sufficiently robust
 # so that things work at least for those entries that are correct:
-apply_layout_mappings "$OLD_ID_FILE" ||  LogPrintError "Failed to apply layout mappings to $OLD_ID_FILE"
+apply_layout_mappings "$OLD_ID_FILE" ||  LogPrintError "Failed to apply layout mappings to $OLD_ID_FILE (may cause failures during 'rename_diskbyid')"
 
 # replace the device names with the real devices
 
