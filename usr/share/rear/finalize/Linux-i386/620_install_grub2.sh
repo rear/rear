@@ -13,7 +13,7 @@
 #   does not guarantee a correct boot-order, or even a working bootloader config.
 #
 # This script does not error out because at this late state of "rear recover"
-# (i.e. after the backup was restored) I <jsmeix@suse.d> consider it too hard
+# (i.e. after the backup was restored) I <jsmeix@suse.de> consider it too hard
 # to abort "rear recover" when it failed to install GRUB2 because in this case
 # the user gets an explicit WARNING via finalize/default/890_finish_checks.sh
 # so that after "rear recover" finished he can manually install the bootloader
@@ -35,17 +35,6 @@ type -p grub-probe || type -p grub2-probe || return 0
 
 LogPrint "Installing GRUB2 boot loader..."
 
-# Make /proc /sys /dev available in TARGET_FS_ROOT
-# so that later things work in the "chroot TARGET_FS_ROOT" environment,
-# cf. https://github.com/rear/rear/issues/1828#issuecomment-398717889
-# and do not umount them because it is better when also after "rear recover"
-# things still work in the "chroot TARGET_FS_ROOT" environment
-# so that the user could more easily adapt things after "rear recover":
-for mount_device in proc sys dev ; do
-    umount $TARGET_FS_ROOT/$mount_device && sleep 1
-    mount --bind /$mount_device $TARGET_FS_ROOT/$mount_device
-done
-
 # Check if we find GRUB2 where we expect it (GRUB2 can be in boot/grub or boot/grub2):
 grub_name="grub2"
 if ! test -d "$TARGET_FS_ROOT/boot/$grub_name" ; then
@@ -56,36 +45,52 @@ if ! test -d "$TARGET_FS_ROOT/boot/$grub_name" ; then
     fi
 fi
 
+# Make /proc /sys /dev available in TARGET_FS_ROOT
+# so that later things work in the "chroot TARGET_FS_ROOT" environment,
+# cf. https://github.com/rear/rear/issues/1828#issuecomment-398717889
+# and do not umount them when leaving this script because
+# it is better when also after "rear recover" things still
+# work in the "chroot TARGET_FS_ROOT" environment so that
+# the user could more easily adapt things after "rear recover":
+for mount_device in proc sys dev ; do
+    umount $TARGET_FS_ROOT/$mount_device && sleep 1
+    mount --bind /$mount_device $TARGET_FS_ROOT/$mount_device
+done
+
 # Generate GRUB configuration file anew to be on the safe side (this could be even mandatory in MIGRATION_MODE):
 if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-mkconfig -o /boot/$grub_name/grub.cfg" ; then
     LogPrintError "Failed to generate boot/$grub_name/grub.cfg in $TARGET_FS_ROOT - trying to install GRUB2 nevertheless"
 fi
 
-# When GRUB2_INSTALL_DEVICES is explicitly specified by the user install GRUB2 there:
+# When GRUB2_INSTALL_DEVICES is specified by the user
+# install GRUB2 only there and nowhere else:
 if test "$GRUB2_INSTALL_DEVICES" ; then
     grub2_install_failed="no"
     for grub2_install_device in $GRUB2_INSTALL_DEVICES ; do
-       # Consider mapped disks (crucial in MIGRATION_MODE),
-       # cf. https://github.com/rear/rear/issues/1437
-       # MAPPING_FILE (var/lib/rear/layout/disk_mappings)
-       # is set in layout/prepare/default/300_map_disks.sh
-       # but only if MIGRATION_MODE is true:
-       if test -s "$MAPPING_FILE" ; then
-           # Cf. the function apply_layout_mappings() in lib/layout-functions.sh
-           while read source_disk target_disk junk ; do
-               if test "$grub2_install_device" = "$source_disk" ; then
-                   LogPrint "Installing GRUB2 on $target_disk ($source_disk in GRUB2_INSTALL_DEVICES is mapped to $target_disk in $MAPPING_FILE)"
-                   grub2_install_device="$target_disk"
-                   break
-               fi
-           done < "$MAPPING_FILE"
-       else
-           LogPrint "Installing GRUB2 on $grub2_install_device (specified in GRUB2_INSTALL_DEVICES)"
-       fi
-       if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_install_device" ; then
-           LogPrintError "Failed to install GRUB2 on $grub2_install_device"
-           grub2_install_failed="yes"
-       fi
+        # In MIGRATION_MODE disk mappings (in var/lib/rear/layout/disk_mappings)
+        # are applied when devices in GRUB2_INSTALL_DEVICES match
+        # cf. https://github.com/rear/rear/issues/1437
+        # MAPPING_FILE (var/lib/rear/layout/disk_mappings)
+        # is set in layout/prepare/default/300_map_disks.sh
+        # only if MIGRATION_MODE is true:
+        if test -s "$MAPPING_FILE" ; then
+            # Cf. the function apply_layout_mappings() in lib/layout-functions.sh
+            while read source_disk target_disk junk ; do
+                # Skip lines that have wrong syntax:
+                test "$source_disk" -a "$target_disk" || continue
+                if test "$grub2_install_device" = "$source_disk" ; then
+                    LogPrint "Installing GRUB2 on $target_disk ($source_disk in GRUB2_INSTALL_DEVICES is mapped to $target_disk in $MAPPING_FILE)"
+                    grub2_install_device="$target_disk"
+                    break
+                fi
+            done < <( grep -v '^#' "$MAPPING_FILE" )
+        else
+            LogPrint "Installing GRUB2 on $grub2_install_device (specified in GRUB2_INSTALL_DEVICES)"
+        fi
+        if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_install_device" ; then
+            LogPrintError "Failed to install GRUB2 on $grub2_install_device"
+            grub2_install_failed="yes"
+        fi
     done
     is_false $grub2_install_failed && NOBOOTLOADER=''
     # return even if it failed to install GRUB2 on one of the specified GRUB2_INSTALL_DEVICES

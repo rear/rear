@@ -38,8 +38,11 @@ for file in     [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/
         fi
 
         if test -s "$file" ; then
-            apply_layout_mappings "$file"
+            # Inform the user but do not error out here at this late state of "rear recover"
+            # when it failed to apply the layout mappings to one particular file:
+            apply_layout_mappings "$file" || LogPrintError "Failed to apply layout mappings to $file"
         else
             LogPrint "Not Patching empty file ($file)"
         fi
 done
+
