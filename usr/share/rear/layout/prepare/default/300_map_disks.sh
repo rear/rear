@@ -142,12 +142,12 @@ while read keyword orig_device orig_size junk ; do
         # Add the current device as possible choice for the user:
         possible_targets=( "${possible_targets[@]}" "$preferred_target_device_name" )
     done
-    # Continue with next original device when no appropriate current block device is found whereto it could be mapped:
+    # Continue with next original device when no appropriate current block device is found where to it could be mapped:
     if ! test "${possible_targets[*]}" ; then
-        LogUserOutput "No device found whereto $preferred_orig_device_name could be mapped so that it will not be recreated"
+        LogUserOutput "No device found where to $preferred_orig_device_name could be mapped so that it will not be recreated"
         continue
     fi
-    # Automatically map when only one appropriate current block device is found whereto it could be mapped.
+    # Automatically map when only one appropriate current block device is found where to it could be mapped.
     # At the end the mapping file is shown and the user can edit it if he does not like an automated mapping:
     if test "1" -eq "${#possible_targets[@]}" ; then
         add_mapping "$orig_device" "$possible_targets"

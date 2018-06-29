@@ -371,8 +371,8 @@ fi
 # Source usr/share/rear/lib/_input-output-functions.sh because therein
 # the original STDIN STDOUT and STDERR file descriptors are saved as fd6 fd7 and fd8
 # so that ReaR functions for actually intended user messages can use fd7 and fd8
-# to show messages to the user regardless whereto STDOUT and STDERR are redirected
-# and fd6 to get input from the user regardless whereto STDIN is redirected:
+# to show messages to the user regardless where to STDOUT and STDERR are redirected
+# and fd6 to get input from the user regardless where to STDIN is redirected:
 source $SHARE_DIR/lib/_input-output-functions.sh
 
 # Keep old log file:

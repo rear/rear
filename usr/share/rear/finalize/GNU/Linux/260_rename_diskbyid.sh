@@ -28,7 +28,14 @@ NEW_ID_FILE="$TMP_DIR/diskbyid_mappings"
 
 # Apply device mapping to replace device in case of migration.
 # apply_layout_mappings() function defined in lib/layout-function.sh
-apply_layout_mappings "$OLD_ID_FILE"
+# Inform the user when it failed to apply the layout mappings
+# but do not error out here at this late state of "rear recover"
+# regardless that when apply_layout_mappings failed
+# some entries in OLD_ID_FILE got possibly corrupted,
+# cf. https://github.com/rear/rear/issues/1845
+# but hopefully the code below is sufficiently robust
+# so that things work at least for those entries that are correct:
+apply_layout_mappings "$OLD_ID_FILE" ||  LogPrintError "Failed to apply layout mappings to $OLD_ID_FILE (may cause failures during 'rename_diskbyid')"
 
 # replace the device names with the real devices
 
@@ -108,3 +115,4 @@ for file in $FILES; do
 done
 
 unset ID DEV_NAME ID_NEW SYMLINKS ID_FULL ID_NEW_FULL
+
