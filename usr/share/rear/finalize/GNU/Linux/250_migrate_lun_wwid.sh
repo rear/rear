@@ -14,12 +14,15 @@ done < <(sort -u $LUN_WWID_MAP)
 # debug line:
 Log "$SED_SCRIPT"
 
-# now run sed
+# Careful in case of 'return' after 'pushd' (must call the matching 'popd' before 'return'):
 pushd $TARGET_FS_ROOT >&2
+
+# now run sed
+
 # the funny [] around the first letter make sure that shopt -s nullglob removes this file from the list if it does not exist
 # the files without a [] are mandatory, like fstab
 for file in [e]tc/elilo.conf \
-            [e]tc/fstab 
+            [e]tc/fstab
         do
 
         #[[ -d "$file" ]] && continue # skip directory
@@ -44,4 +47,5 @@ for file in [e]tc/elilo.conf \
         StopIfError "Patching '$file' with sed failed."
 done
 
-popd >&2 
+popd >&2
+

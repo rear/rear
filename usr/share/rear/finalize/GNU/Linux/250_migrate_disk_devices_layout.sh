@@ -6,10 +6,8 @@ test -s "$MAPPING_FILE" || return 0
 
 LogPrint "Applying disk layout mappings in $MAPPING_FILE to certain restored files..."
 
-# FIXME: Why is there is no matching popd for this pushd?
-# Cf. finalize/GNU/Linux/150_migrate_uuid_tags.sh where a popd is at the end.
-# If there is intentionally no popd here an explanation why there is no popd is missing.
-pushd $TARGET_FS_ROOT >/dev/null
+# Careful in case of 'return' after 'pushd' (must call the matching 'popd' before 'return'):
+pushd $TARGET_FS_ROOT >&2
 
 # Save the original restored files because in general any user data is sacrosanct,
 # cf. how BACKUP_RESTORE_MOVE_AWAY is implemented in restore/default/990_move_away_restored_files.sh
@@ -69,4 +67,6 @@ for file in [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/{gru
             LogPrintError "Failed to apply disk layout mappings to restored '$file' (in $TARGET_FS_ROOT)"
         fi
 done
+
+popd >&2
 
