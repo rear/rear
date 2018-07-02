@@ -4,9 +4,13 @@
 # However the following issues still exist:
 #
 # * We don't know what the first disk will be, so we cannot be sure the MBR
-#   is written to the correct disk. That's why we make all disks bootable
-#   as fallback unless GRUB2_INSTALL_DEVICES was specified. This is also the
-#   reason why more than one disk can be specified in GRUB2_INSTALL_DEVICES.
+#   is written to the correct disk.
+#   If software RAID1 is used, several boot devices will be found and
+#   then GRUB2 needs to be installed on each of them.
+#   This is the reason why we make all possible boot disks bootable
+#   as fallback unless GRUB2_INSTALL_DEVICES was specified.
+#   This is also the reason why more than one disk can be specified
+#   in GRUB2_INSTALL_DEVICES.
 #
 # * There is no guarantee that GRUB2 was the boot loader used originally.
 #   One solution is to save and restore the MBR for each disk, but this
@@ -123,6 +127,11 @@ if ! test "$disks" ; then
     return 1
 fi
 
+# We don't know what the first disk will be, so we cannot be sure the MBR
+# is written to the correct disk.
+# If software RAID1 is used, several boot devices will be found and
+# then GRUB2 needs to be installed on each of them.
+# This is the reason why we make all possible boot disks bootable here:
 for disk in $disks ; do
     # Installing GRUB2 on an LVM PV will wipe the metadata so we skip those:
     is_disk_a_pv "$disk" && continue
@@ -150,8 +159,7 @@ for disk in $disks ; do
             # consider it here as a successful bootloader installation when GRUB2
             # got installed on at least one boot disk:
             NOBOOTLOADER=''
-            # We don't know what the first disk will be, so we cannot be sure the MBR
-            # is written to the correct disk. That's why we make all disks bootable:
+            # Continue with the next possible boot disk:
             continue
         fi
         LogPrintError "Failed to install GRUB2 on possible boot disk $bootdisk"

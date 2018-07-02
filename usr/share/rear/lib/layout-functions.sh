@@ -784,7 +784,7 @@ function get_part_device_name_format() {
 
     echo "$part_name"
 }
-#
+
 # apply_layout_mappings function migrate disk device reference from an old system and
 # replace them with new one (from current system).
 # the relationship between OLD and NEW device is provided by $MAPPING_FILE
@@ -803,7 +803,7 @@ function apply_layout_mappings() {
     test -s "$file_to_migrate" || return 0
     # --End Of TEST section--
 
-    # Generate unique words (where unique means that those generated words cannot exist in file_to_migrate)
+    # Generate unique words (where unique means that those generated words cannot already exist in file_to_migrate)
     # as replacement placeholders to correctly handle circular replacements e.g. for "sda -> sdb and sdb -> sda"
     # in the mapping file those generated unique words would be _REAR0_ for sda and _REAR1_ for sdb.
     # The replacement strategy is:
@@ -819,7 +819,7 @@ function apply_layout_mappings() {
     # so that the circular replacement "sda -> sdb and sdb -> sda" is done in file_to_migrate.
     # Step 3:
     # In file_to_migrate verify that there are none of those temporary replacement words from step 1 left
-    # to ensure the replacement was done correctly and complete.
+    # to ensure the replacement was done correctly and completely.
 
     # Replacement_file initialization.
     replacement_file="$TMP_DIR/replacement_file"
@@ -827,8 +827,8 @@ function apply_layout_mappings() {
 
     function add_replacement() {
         # We temporarily map all devices in the mapping to new names _REAR[0-9]+_
-        echo "$1 _REAR${replaced_count}_" >> "$replacement_file"
-        let replaced_count++
+        echo "$1 _REAR${replacement_count}_" >> "$replacement_file"
+        let replacement_count++
     }
 
     function has_replacement() {
@@ -852,7 +852,7 @@ function apply_layout_mappings() {
     #   /dev/sdb _REAR1_
     #   /dev/sdd _REAR2_
     #   /dev/sdc _REAR3_
-    replaced_count=0
+    replacement_count=0
     while read source target junk ; do
         # Skip lines that have wrong syntax:
         test "$source" -a "$target" || continue
@@ -911,7 +911,7 @@ function apply_layout_mappings() {
 
     # Step 3:
     # Verify that there are none of those temporary replacement words from step 1 left in file_to_migrate
-    # to ensure the replacement was done correctly and complete (cf. the above example where '_REAR3_' is left).
+    # to ensure the replacement was done correctly and completely (cf. the above example where '_REAR3_' is left).
     apply_layout_mappings_succeeded="yes"
     while read original replacement junk ; do
         # Skip lines that have wrong syntax:
