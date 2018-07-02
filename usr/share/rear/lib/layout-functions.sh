@@ -785,23 +785,58 @@ function get_part_device_name_format() {
     echo "$part_name"
 }
 
-# apply_layout_mappings function migrate disk device reference from an old system and
-# replace them with new one (from current system).
-# the relationship between OLD and NEW device is provided by $MAPPING_FILE
-# (usually disk_mappings file in $VAR_DIR).
+# The is_completely_identical_layout_mapping function checks
+# if there is a completely identical mapping in the mapping file
+# (usually $MAPPING_FILE is /var/lib/rear/layout/disk_mappings)
+# which is used to avoid that files (in particular restored files)
+# may get needlessly touched and modified for identical mappings
+# see https://github.com/rear/rear/issues/1847
+function is_completely_identical_layout_mapping() {
+    # MAPPING_FILE is set in layout/prepare/default/300_map_disks.sh
+    # only if MIGRATION_MODE is true.
+    # When $MAPPING_FILE is empty the below command
+    #   grep -v '^#' "$MAPPING_FILE"
+    # would hang up endlessly without user notification
+    # because that command would become
+    #   grep -v '^#'
+    # which reads from stdin (i.e. from the user's keyboard).
+    # A non-existent mapping file is considered to be a completely identical mapping
+    # (i.e. 'no mapping' means 'do not change anything' which is the identity map).
+    test -f "$MAPPING_FILE" || return 0
+    # Only non-commented and syntactically valid lines in the mapping file count
+    # so that also an empty mapping file or when there is not at least one valid mapping
+    # are considered to be completely identical mappings
+    # (i.e. 'no valid mapping' means 'do not change anything' which is the identity map):
+    while read source target junk ; do
+        # Skip lines that have wrong syntax:
+        test "$source" -a "$target" || continue
+        test "$source" != "$target" && return 1
+    done < <( grep -v '^#' "$MAPPING_FILE" )
+    Log "Completely identical layout mapping in $MAPPING_FILE"
+    return 0
+}
+
+# apply_layout_mappings function migrate disk device references
+# from an old system and replace them with new ones (from current system).
+# The relationship between OLD and NEW device is provided by the mapping file
+# (usually $MAPPING_FILE is /var/lib/rear/layout/disk_mappings).
 function apply_layout_mappings() {
-    # --Begining Of TEST section--
+    local file_to_migrate="$1"
+
     # Exit if MIGRATION_MODE is not true.
     is_true "$MIGRATION_MODE" || return 0
-
-    local file_to_migrate="$1"
 
     # apply_layout_mappings needs one argument:
     test "$file_to_migrate" || BugError "apply_layout_mappings function called without argument (file_to_migrate)."
 
     # Only apply layout mapping on non-empty file:
     test -s "$file_to_migrate" || return 0
-    # --End Of TEST section--
+
+    # Do not apply layout mappings when there is a completely identical mapping in the mapping file.
+    # This test is run for each call of the apply_layout_mappings function because
+    # in MIGRATION_MODE there are several user dialogs during "rear recover" where
+    # the user can run the ReaR shell and edit the mapping file as he likes:
+    is_completely_identical_layout_mapping && return 0
 
     # Generate unique words (where unique means that those generated words cannot already exist in file_to_migrate)
     # as replacement placeholders to correctly handle circular replacements e.g. for "sda -> sdb and sdb -> sda"
