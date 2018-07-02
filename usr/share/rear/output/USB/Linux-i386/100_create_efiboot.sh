@@ -6,7 +6,8 @@ is_true $USING_UEFI_BOOTLOADER || return 0
 Log "Configuring device for EFI boot"
 
 # $BUILD_DIR is not present at this stage, temp dir will be used instead
-EFI_MPT=$(mktemp -d /tmp/rear-efi.XXXXX)
+# Slackware version of mktemp requires 6 Xs in template
+EFI_MPT=$(mktemp -d /tmp/rear-efi.XXXXXX)
 StopIfError "Failed to create mount point ${EFI_MPT}"
 
 uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
@@ -88,7 +89,8 @@ EOF
 
                 # Create bootloader, this overwrite BOOTX64.efi copied in previous step ...
                 # Fail if BOOTX64.efi can't be created
-                ${GRUB_MKIMAGE} -o ${EFI_DST}/BOOTX64.efi -p ${EFI_DIR} -O x86_64-efi linux part_gpt ext2 normal gfxterm gfxterm_background gfxterm_menu test all_video loadenv fat
+                # Slackware grub doesnt have gfxterm_background or gfxterm_menu...
+                ${GRUB_MKIMAGE} -o ${EFI_DST}/BOOTX64.efi -p ${EFI_DIR} -O x86_64-efi linux part_gpt ext2 normal gfxterm gfxmenu test all_video loadenv fat
                 StopIfError "Failed to create BOOTX64.efi"
 
                 # Create config for grub 2.0
