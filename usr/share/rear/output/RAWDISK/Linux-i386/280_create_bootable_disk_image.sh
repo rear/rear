@@ -73,7 +73,7 @@ local boot_partition="${disk_device}p1"
 
 # 1. partprobe
 if [[ ! -b "$boot_partition" ]] && has_binary partprobe; then
-    partprobe "$disk_device" || Error "partprobe failed to make the kernel recognize loop device partitions"
+    partprobe "$disk_device" || LogPrintError "partprobe failed to make the kernel recognize loop device partitions"
 fi
 
 # 2. Heuristic: wait
