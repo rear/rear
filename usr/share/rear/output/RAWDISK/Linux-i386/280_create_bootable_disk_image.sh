@@ -83,9 +83,15 @@ fi
 local use_kpartx=no
 if [[ ! -b "$boot_partition" ]]; then
     if has_binary kpartx; then
-        kpartx -us "$disk_device"  # detect partitions, create device nodes - synchronized (wait until done)
+        kpartx -as "$disk_device"  # detect partitions, create device nodes - synchronously (wait until done)
         StopIfError "kpartx could not create loop partition device nodes from loop device $disk_device"
         AddExitTask "kpartx -d $disk_device >&2"
+        if [[ ! -b "$boot_partition" ]]; then
+            # Some versions of kpartx (as on CentOS 6) do not create partition device nodes under /dev, but leave
+            # them under /dev/mapper instead. This kludge will pick those up.
+            local alternate_boot_partition="/dev/mapper/"$(basename "$boot_partition")
+            [[ -b "$alternate_boot_partition" ]] && boot_partition="$alternate_boot_partition"
+        fi
         use_kpartx=yes
     else
         LogPrintError "It seems that the current linux kernel does not support loop device partitions."
