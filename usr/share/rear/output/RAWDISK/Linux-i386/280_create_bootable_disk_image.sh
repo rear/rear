@@ -67,8 +67,34 @@ disk_device="$(losetup --show --find "$disk_image")"
 StopIfError "Could not create loop device on $disk_image"
 AddExitTask "losetup -d $disk_device >&2"
 
-partprobe "$disk_device" || Error "Could not make the kernel recognize loop device partitions"
 local boot_partition="${disk_device}p1"
+
+# Try several methods to make the kernel recognize partitions on the loop device, if not already done automatically:
+
+# 1. partprobe
+if [[ ! -b "$boot_partition" ]] && has_binary partprobe; then
+    partprobe "$disk_device" || Error "partprobe failed to make the kernel recognize loop device partitions"
+fi
+
+# 2. Heuristic: wait
+[[ ! -b "$boot_partition" ]] && sleep 5
+
+# 3. kpartx
+local use_kpartx=no
+if [[ ! -b "$boot_partition" ]]; then
+    if has_binary kpartx; then
+        kpartx -us "$disk_device"  # detect partitions, create device nodes - synchronized (wait until done)
+        StopIfError "kpartx could not create loop partition device nodes from loop device $disk_device"
+        AddExitTask "kpartx -d $disk_device >&2"
+        use_kpartx=yes
+    else
+        LogPrintError "It seems that the current linux kernel does not support loop device partitions."
+        LogPrintError "TIP: You might achieve loop device partition support by installing the 'kpartx' tool, if available."
+    fi
+fi
+
+# If unsuccessful, say so.
+[[ -b "$boot_partition" ]] || Error "Cannot prepare boot file system for the RAWDISK image: Missing OS support for loop device partitions."
 
 
 ### Create and populate the boot file system
@@ -144,6 +170,10 @@ fi
 
 umount "$boot_partition_root" || Error "Could not unmount boot file system"
 RemoveExitTask "umount $boot_partition_root >&2"
+if is_true $use_kpartx; then
+    kpartx -d "$disk_device" || Error "Could not delete  partition device nodes from loop device $disk_device"
+    RemoveExitTask "kpartx -d $disk_device >&2"
+fi
 losetup -d "$disk_device" || Error "Could not delete loop device"
 RemoveExitTask "losetup -d $disk_device >&2"
 
