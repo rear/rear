@@ -41,7 +41,7 @@ for file in [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/{gru
             [e]tc/security/pam_mount.conf.xml [b]oot/efi/*/*/grub.cfg
     do
         # Skip directory or file not found:
-	test -f "$file" || continue
+        test -f "$file" || continue
         # sed -i bails on symlinks, so we follow the symlink and patch the result
         # absolute links are rebased on $TARGET_FS_ROOT (/etc/fstab => $TARGET_FS_ROOT/etc/fstab)
         # on dead links we warn and skip them
