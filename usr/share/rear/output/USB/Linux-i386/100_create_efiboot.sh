@@ -6,7 +6,12 @@ is_true $USING_UEFI_BOOTLOADER || return 0
 Log "Configuring device for EFI boot"
 
 # $BUILD_DIR is not present at this stage, temp dir will be used instead
-EFI_MPT=$(mktemp -d /tmp/rear-efi.XXXXX)
+# Slackware version of mktemp requires 6 Xs in template
+if [ -f /etc/slackware-version ] ; then
+    EFI_MPT=$(mktemp -d /tmp/rear-efi.XXXXXX)
+else
+    EFI_MPT=$(mktemp -d /tmp/rear-efi.XXXXX)
+fi
 StopIfError "Failed to create mount point ${EFI_MPT}"
 
 uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
