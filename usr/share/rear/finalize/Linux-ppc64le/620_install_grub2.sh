@@ -11,7 +11,9 @@
 # * We don't know what the first disk will be, so we cannot be sure the MBR
 #   is written to the correct disk.
 #   If software RAID1 is used, several boot devices will be found and
-#   then GRUB2 needs to be installed on each of them.
+#   then GRUB2 needs to be installed on each of them because
+#   "You don't want to lose the first disk and suddenly discover your system won't reboot!"
+#   cf. https://raid.wiki.kernel.org/index.php/Setting_up_a_(new)_system
 #   This is the reason why we make all possible boot disks bootable
 #   as fallback unless GRUB2_INSTALL_DEVICES was specified.
 #   This is also the reason why more than one disk can be specified
