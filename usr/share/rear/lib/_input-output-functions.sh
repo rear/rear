@@ -207,8 +207,8 @@ builtin trap "DoExitTasks" EXIT
 # (which is usually the keyboard and display of the user who launched 'rear')
 # the original STDIN STDOUT and STDERR file descriptors are saved as fd6 fd7 and fd8
 # so that ReaR functions for actually intended user messages can use fd7 and fd8
-# to show messages to the user regardless whereto STDOUT and STDERR are redirected
-# and fd6 to get input from the user regardless whereto STDIN is redirected.
+# to show messages to the user regardless where to STDOUT and STDERR are redirected
+# and fd6 to get input from the user regardless where to STDIN is redirected.
 # Duplicate STDIN to fd6 to be used by 'read' in the UserInput function
 # cf. http://tldp.org/LDP/abs/html/x17974.html
 exec 6<&0

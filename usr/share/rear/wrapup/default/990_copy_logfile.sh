@@ -22,7 +22,7 @@ recovery_system_recover_log_dir=$TARGET_FS_ROOT/$recover_log_dir
 # because in particular logfiles could contain security relevant information.
 # It is no real error when the following exit tasks fail so that they return 'true' in any case:
 copy_log_file_exit_task="mkdir -p -m 0700 $recovery_system_recover_log_dir && cp -p $RUNTIME_LOGFILE $recovery_system_recover_log_dir/$final_logfile_name || true"
-# To be backward compatible with whereto the logfile was copied before
+# To be backward compatible with where to the logfile was copied before
 # have it as a symbolic link that points to where the logfile actually is:
 # ( "roots" in recovery_system_roots_home_dir means root's but ' in a variable name is not so good ;-)
 recovery_system_roots_home_dir=$TARGET_FS_ROOT/root

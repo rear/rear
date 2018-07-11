@@ -10,7 +10,13 @@
 # Using another kernel is a TODO for now
 
 if [ ! -s "$KERNEL_FILE" ]; then
-    if [ -r "/boot/vmlinuz-$KERNEL_VERSION" ]; then
+    # add slackware test on top to prevent error on get_kernel_version
+    if [ -f /etc/slackware-version ]; then
+        # check under /boot/efi/EFI/Slackware
+        [ -f "/boot/efi/EFI/Slackware/vmlinuz" ]
+        StopIfError "Could not find a matching kernel in /boot/efi/EFI/Slackware !"
+        KERNEL_FILE="/boot/efi/EFI/Slackware/vmlinuz"
+    elif [ -r "/boot/vmlinuz-$KERNEL_VERSION" ]; then
         KERNEL_FILE="/boot/vmlinuz-$KERNEL_VERSION"
     elif has_binary get_kernel_version; then
         for src in /boot/* ; do
