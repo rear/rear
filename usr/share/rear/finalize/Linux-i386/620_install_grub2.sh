@@ -1,10 +1,24 @@
 #
 # This script is an improvement over a blind "grub-install (hd0)".
 #
+# The generic way how to install GRUB2 when one is not "inside" the system
+# but "outside" like in the ReaR recovery system or in a rescue system is
+# to install GRUB2 from within the target system environment via 'chroot'
+# basically via commands like the following:
+#
+#   mount --bind /proc /mnt/local/proc
+#   mount --bind /sys /mnt/local/sys
+#   mount --bind /dev /mnt/local/dev
+#   chroot /mnt/local /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+#   chroot /mnt/local /usr/sbin/grub2-install /dev/sda
+#
+# Using 'grub2-install --root-directory' instead of 'chroot' is not a good idea,
+# see https://github.com/rear/rear/issues/1828#issuecomment-398717889
+#
 # However the following issues still exist:
 #
-# * We don't know what the first disk will be, so we cannot be sure the MBR
-#   is written to the correct disk.
+# * We do not know what the first boot device will be, so we cannot be sure
+#   GRUB2 is installed on the correct boot device.
 #   If software RAID1 is used, several boot devices will be found and
 #   then GRUB2 needs to be installed on each of them because
 #   "You don't want to lose the first disk and suddenly discover your system won't reboot!"
@@ -14,9 +28,8 @@
 #   This is also the reason why more than one disk can be specified
 #   in GRUB2_INSTALL_DEVICES.
 #
-# * There is no guarantee that GRUB2 was the boot loader used originally.
-#   One solution is to save and restore the MBR for each disk, but this
-#   does not guarantee a correct boot-order, or even a working bootloader config.
+# * There is no guarantee that GRUB2 was used as bootloader on the original system.
+#   The solution is to specify the BOOTLOADER config variable.
 #
 # This script does not error out because at this late state of "rear recover"
 # (i.e. after the backup was restored) I <jsmeix@suse.de> consider it too hard
@@ -129,8 +142,8 @@ if ! test "$disks" ; then
     return 1
 fi
 
-# We don't know what the first disk will be, so we cannot be sure the MBR
-# is written to the correct disk.
+# We do not know what the first boot device will be, so we cannot be sure
+# GRUB2 is installed on the correct boot device.
 # If software RAID1 is used, several boot devices will be found and
 # then GRUB2 needs to be installed on each of them.
 # This is the reason why we make all possible boot disks bootable here:
