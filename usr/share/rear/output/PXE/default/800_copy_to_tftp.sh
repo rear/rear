@@ -54,6 +54,7 @@ if [[ ! -z "$PXE_TFTP_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
     fi
     syslinux_modules_dir=$( find_syslinux_modules_dir menu.c32 )
     [[ -z "$syslinux_modules_dir" ]] && syslinux_modules_dir=$(dirname $PXELINUX_BIN)
+    cp $v $syslinux_modules_dir/ldlinux.c32 $BUILD_DIR/tftpbootfs >&2
     cp $v $syslinux_modules_dir/menu.c32 $BUILD_DIR/tftpbootfs >&2
     cp $v $syslinux_modules_dir/chain.c32 $BUILD_DIR/tftpbootfs >&2
     cp $v $syslinux_modules_dir/hdt.c32 $BUILD_DIR/tftpbootfs >&2
