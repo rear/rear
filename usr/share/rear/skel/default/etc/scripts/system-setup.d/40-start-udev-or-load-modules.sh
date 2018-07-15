@@ -32,7 +32,13 @@ if [[ $systemd_version -gt 190 ]] || [[ -s /etc/udev/rules.d/00-rear.rules ]] ; 
     else
         # found our "special" module-auto-load rule
         # clean away old device nodes from source system
-        rm -Rf /dev/{sd*,hd*,sr*,cc*,disk}
+        #   except Slackware since it uses eudev and relies on the kernel to create sda
+        if ! grep Slackware /etc/os-release ; then
+            rm -Rf /dev/{sd*,hd*,sr*,cc*,disk}
+        else
+            # Slackware eudev already has a rule to load modules
+            rm -f /etc/udev/rules.d/00-rear.rules 
+        fi
         mkdir -p /dev/disk/by-{id,name,path,label}
         # everybody does that even though it seems to be empty by default..
         test -w /sys/kernel/uevent_helper && echo >/sys/kernel/uevent_helper
