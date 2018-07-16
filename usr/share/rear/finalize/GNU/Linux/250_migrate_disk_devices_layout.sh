@@ -2,7 +2,14 @@
 # Apply disk layout mappings to certain restored files.
 #
 
+# MAPPING_FILE is set in layout/prepare/default/300_map_disks.sh
+# only if MIGRATION_MODE is true.
 test -s "$MAPPING_FILE" || return 0
+
+# Do not apply layout mappings when there is a completely identical mapping in the mapping file
+# to avoid that files (in particular restored files) may get needlessly touched and modified
+# for identical mappings, see https://github.com/rear/rear/issues/1847
+is_completely_identical_layout_mapping && return 0
 
 LogPrint "Applying disk layout mappings in $MAPPING_FILE to certain restored files..."
 
@@ -34,7 +41,7 @@ for file in [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* [b]oot/grub/{gru
             [e]tc/security/pam_mount.conf.xml [b]oot/efi/*/*/grub.cfg
     do
         # Skip directory or file not found:
-	test -f "$file" || continue
+        test -f "$file" || continue
         # sed -i bails on symlinks, so we follow the symlink and patch the result
         # absolute links are rebased on $TARGET_FS_ROOT (/etc/fstab => $TARGET_FS_ROOT/etc/fstab)
         # on dead links we warn and skip them
