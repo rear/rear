@@ -784,26 +784,61 @@ function get_part_device_name_format() {
 
     echo "$part_name"
 }
-#
-# apply_layout_mappings function migrate disk device reference from an old system and
-# replace them with new one (from current system).
-# the relationship between OLD and NEW device is provided by $MAPPING_FILE
-# (usually disk_mappings file in $VAR_DIR).
+
+# The is_completely_identical_layout_mapping function checks
+# if there is a completely identical mapping in the mapping file
+# (usually $MAPPING_FILE is /var/lib/rear/layout/disk_mappings)
+# which is used to avoid that files (in particular restored files)
+# may get needlessly touched and modified for identical mappings
+# see https://github.com/rear/rear/issues/1847
+function is_completely_identical_layout_mapping() {
+    # MAPPING_FILE is set in layout/prepare/default/300_map_disks.sh
+    # only if MIGRATION_MODE is true.
+    # When $MAPPING_FILE is empty the below command
+    #   grep -v '^#' "$MAPPING_FILE"
+    # would hang up endlessly without user notification
+    # because that command would become
+    #   grep -v '^#'
+    # which reads from stdin (i.e. from the user's keyboard).
+    # A non-existent mapping file is considered to be a completely identical mapping
+    # (i.e. 'no mapping' means 'do not change anything' which is the identity map).
+    test -f "$MAPPING_FILE" || return 0
+    # Only non-commented and syntactically valid lines in the mapping file count
+    # so that also an empty mapping file or when there is not at least one valid mapping
+    # are considered to be completely identical mappings
+    # (i.e. 'no valid mapping' means 'do not change anything' which is the identity map):
+    while read source target junk ; do
+        # Skip lines that have wrong syntax:
+        test "$source" -a "$target" || continue
+        test "$source" != "$target" && return 1
+    done < <( grep -v '^#' "$MAPPING_FILE" )
+    Log "Completely identical layout mapping in $MAPPING_FILE"
+    return 0
+}
+
+# apply_layout_mappings function migrate disk device references
+# from an old system and replace them with new ones (from current system).
+# The relationship between OLD and NEW device is provided by the mapping file
+# (usually $MAPPING_FILE is /var/lib/rear/layout/disk_mappings).
 function apply_layout_mappings() {
-    # --Begining Of TEST section--
+    local file_to_migrate="$1"
+
     # Exit if MIGRATION_MODE is not true.
     is_true "$MIGRATION_MODE" || return 0
-
-    local file_to_migrate="$1"
 
     # apply_layout_mappings needs one argument:
     test "$file_to_migrate" || BugError "apply_layout_mappings function called without argument (file_to_migrate)."
 
     # Only apply layout mapping on non-empty file:
     test -s "$file_to_migrate" || return 0
-    # --End Of TEST section--
 
-    # Generate unique words (where unique means that those generated words cannot exist in file_to_migrate)
+    # Do not apply layout mappings when there is a completely identical mapping in the mapping file.
+    # This test is run for each call of the apply_layout_mappings function because
+    # in MIGRATION_MODE there are several user dialogs during "rear recover" where
+    # the user can run the ReaR shell and edit the mapping file as he likes:
+    is_completely_identical_layout_mapping && return 0
+
+    # Generate unique words (where unique means that those generated words cannot already exist in file_to_migrate)
     # as replacement placeholders to correctly handle circular replacements e.g. for "sda -> sdb and sdb -> sda"
     # in the mapping file those generated unique words would be _REAR0_ for sda and _REAR1_ for sdb.
     # The replacement strategy is:
@@ -819,7 +854,7 @@ function apply_layout_mappings() {
     # so that the circular replacement "sda -> sdb and sdb -> sda" is done in file_to_migrate.
     # Step 3:
     # In file_to_migrate verify that there are none of those temporary replacement words from step 1 left
-    # to ensure the replacement was done correctly and complete.
+    # to ensure the replacement was done correctly and completely.
 
     # Replacement_file initialization.
     replacement_file="$TMP_DIR/replacement_file"
@@ -827,8 +862,8 @@ function apply_layout_mappings() {
 
     function add_replacement() {
         # We temporarily map all devices in the mapping to new names _REAR[0-9]+_
-        echo "$1 _REAR${replaced_count}_" >> "$replacement_file"
-        let replaced_count++
+        echo "$1 _REAR${replacement_count}_" >> "$replacement_file"
+        let replacement_count++
     }
 
     function has_replacement() {
@@ -852,7 +887,7 @@ function apply_layout_mappings() {
     #   /dev/sdb _REAR1_
     #   /dev/sdd _REAR2_
     #   /dev/sdc _REAR3_
-    replaced_count=0
+    replacement_count=0
     while read source target junk ; do
         # Skip lines that have wrong syntax:
         test "$source" -a "$target" || continue
@@ -911,7 +946,7 @@ function apply_layout_mappings() {
 
     # Step 3:
     # Verify that there are none of those temporary replacement words from step 1 left in file_to_migrate
-    # to ensure the replacement was done correctly and complete (cf. the above example where '_REAR3_' is left).
+    # to ensure the replacement was done correctly and completely (cf. the above example where '_REAR3_' is left).
     apply_layout_mappings_succeeded="yes"
     while read original replacement junk ; do
         # Skip lines that have wrong syntax:
