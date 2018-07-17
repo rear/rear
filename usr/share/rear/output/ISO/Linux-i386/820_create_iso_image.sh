@@ -4,7 +4,12 @@ LogPrint "Making ISO image"
 
 if is_true $USING_UEFI_BOOTLOADER ; then
     # initialized with 1
-    EFIBOOT="-eltorito-alt-boot -e boot/efiboot.img -no-emul-boot"
+    if [ -f /etc/slackware-version ] ; then
+        # slackware mkisofs uses different command line options
+        EFIBOOT="-eltorito-alt-boot -no-emul-boot -eltorito-platform efi -eltorito-boot boot/efiboot.img"
+    else
+        EFIBOOT="-eltorito-alt-boot -e boot/efiboot.img -no-emul-boot"
+    fi
     Log "Including ISO UEFI boot (as triggered by USING_UEFI_BOOTLOADER=1)"
 else
     EFIBOOT=""
