@@ -1,0 +1,1 @@
+../../ISO/Linux-ppc64le/300_create_grub2.sh
