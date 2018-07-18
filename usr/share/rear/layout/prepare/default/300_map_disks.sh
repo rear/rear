@@ -19,16 +19,78 @@ function add_mapping () {
 }
 
 # Return 0 if a mapping for $1 exists
-# i.e. if $1 is used as source in the mapping file
-# (grep returns 0 if found and 1 or 2 otherwise):
+# i.e. if $1 is used as source in the mapping file:
 function is_mapping_source () {
-    grep -q "^$1 " "$MAPPING_FILE"
+    local test_source="$1"
+    # When $MAPPING_FILE is empty the below command
+    #   grep -v '^#' "$MAPPING_FILE"
+    # would hang up endlessly without user notification
+    # because that command would become
+    #   grep -v '^#'
+    # which reads from stdin (i.e. from the user's keyboard).
+    # A non-existent mapping file means $1 is not used as source in the mapping file:
+    test -f "$MAPPING_FILE" || return 1
+    # Only non-commented and syntactically valid lines in the mapping file count
+    # so that also an empty mapping file or when there is not at least one valid mapping
+    # are considered to be completely identical mappings
+    # (i.e. 'no valid mapping' means 'do not change anything' which is the identity map):
+    while read source target junk ; do
+        # Skip lines that have wrong syntax:
+        test "$source" -a "$target" || continue
+        test "$test_source" = "$source" && return 0
+    done < <( grep -v '^#' "$MAPPING_FILE" )
+    return 1
 }
 
-# Return 0 if $1 is used as a target in a mapping
-# (grep returns 0 if found and 1 or 2 otherwise):
+# Return 0 if $1 is used as a target in a mapping:
 function is_mapping_target () {
-    grep -q " $1$" "$MAPPING_FILE"
+    local test_target="$1"
+    # Cf. the comments in the is_mapping_source function:
+    test -f "$MAPPING_FILE" || return 1
+    while read source target junk ; do
+        test "$source" -a "$target" || continue
+        test "$test_target" = "$target" && return 0
+    done < <( grep -v '^#' "$MAPPING_FILE" )
+    return 1
+}
+
+# Output the valid mappings in the mapping file
+# and inform the user if there is no valid mapping:
+function output_valid_mappings () {
+    local valid_mapping=''
+    echo 'Current disk mapping table (source => target):'
+    # Cf. the comments in the is_mapping_source function:
+    test -f "$MAPPING_FILE" || return 1
+    while read source target junk ; do
+        # Continue until a valid mapping is found:
+        test "$source" -a "$target" || continue
+        # A valid mapping is found:
+        valid_mapping='yes'
+        # The two leading spaces are an intentional indentation for better readability:
+        echo "  $source => $target"
+    done < <( grep -v '^#' "$MAPPING_FILE" )
+    is_true $valid_mapping || echo "  There is no valid disk mapping"
+}
+
+# Output unmapped 'disk' devices and 'multipath' devices that will not be recreated:
+function output_not_recreated_devices () {
+    local header_lines='Currently unmapped disks and dependant devices will not be recreated\n(unless identical disk mapping and proceeding without manual configuration):'
+    while read keyword device junk ; do
+        # Continue until an unmapped disk device is found:
+        is_mapping_source "$device" && continue
+        # Output the header lines only once:
+        if test "$header_lines" ; then 
+            echo -e "$header_lines"
+            header_lines=''
+        fi
+        # The get_child_components function outputs each dependant device on a new line
+        # but the echo command outputs all its command line arguments on one line
+        # each one separated by a single space e.g. the command
+        #   echo ' ' foo $( echo -e ' bar \n baz ' )
+        # results '  foo bar baz' on a single line (note the two leading spaces).
+        # The two leading spaces are an intentional indentation for better readability:
+        echo ' ' $device $( get_child_components "$device" )
+    done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
 }
 
 # Start with an empty mapping file unless there is a user provided mapping file.
@@ -196,9 +258,10 @@ rear_workflow="rear $WORKFLOW"
 rear_shell_history="$( echo -e "vi $MAPPING_FILE\nless $MAPPING_FILE" )"
 unset choices
 choices[0]="Confirm disk mapping and continue '$rear_workflow'"
-choices[1]="Edit disk mapping ($MAPPING_FILE)"
-choices[2]="Use Relax-and-Recover shell and return back to here"
-choices[3]="Abort '$rear_workflow'"
+choices[1]=""
+choices[2]="Edit disk mapping ($MAPPING_FILE)"
+choices[3]="Use Relax-and-Recover shell and return back to here"
+choices[4]="Abort '$rear_workflow'"
 prompt="Confirm or edit the disk mapping"
 choice=""
 wilful_input=""
@@ -206,24 +269,40 @@ wilful_input=""
 # assume choices[0] 'Confirm mapping' was actually meant:
 is_true "$USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS" && USER_INPUT_LAYOUT_MIGRATION_CONFIRM_MAPPINGS="${choices[0]}"
 while true ; do
-    LogUserOutput 'Current disk mapping table (source -> target):'
-    LogUserOutput "$( sed -e 's|^|    |' "$MAPPING_FILE" )"
+    LogUserOutput "$( output_valid_mappings )"
+    LogUserOutput "$( output_not_recreated_devices )"
+    is_completely_identical_layout_mapping && choices[1]="Confirm identical disk mapping and proceed without manual configuration" || choices[1]="n/a"
     choice="$( UserInput -I LAYOUT_MIGRATION_CONFIRM_MAPPINGS -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
     case "$choice" in
         (${choices[0]})
-            # Continue recovery:
+            # Continue recovery in migration mode:
             is_true "$wilful_input" && LogPrint "User confirmed disk mapping" || LogPrint "Continuing '$rear_workflow' by default"
             break
             ;;
         (${choices[1]})
+            if is_completely_identical_layout_mapping ; then
+                # Confirm identical disk mapping and proceed without manual configuration:
+                MIGRATION_MODE='false'
+                # Move the mapping file away because some scripts
+                # test for MAPPING_FILE to determine migration mode
+                # TODO: clean up how for migration mode is tested
+                # cf. https://github.com/rear/rear/issues/1857#issue-340210404
+                mv $verbose -f $MAPPING_FILE $MAPPING_FILE.irrelevant_identical_mapping
+                LogPrint "User confirmed identical disk mapping and proceeding without manual configuration"
+                break
+            else
+                LogPrint "Not applicable (no identical disk mapping)"
+            fi
+            ;;
+        (${choices[2]})
             # Run 'vi' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
             vi $MAPPING_FILE 0<&6 1>&7 2>&8
             ;;
-        (${choices[2]})
+        (${choices[3]})
             # rear_shell runs 'bash' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
             rear_shell "" "$rear_shell_history"
             ;;
-        (${choices[3]})
+        (${choices[4]})
             abort_recreate
             Error "User chose to abort '$rear_workflow' in ${BASH_SOURCE[0]}"
             ;;
@@ -231,18 +310,23 @@ while true ; do
 done
 
 # Mark unmapped 'disk' devices and 'multipath' devices in the LAYOUT_FILE as done
-# so that unmapped 'disk' and 'multipath' devices will not be recreated:
-while read keyword device junk ; do
-    if ! is_mapping_source "$device" ; then
+# so that unmapped 'disk' and 'multipath' devices will not be recreated
+# except we are no longer in migration mode when the user confirmed an
+# identical disk mapping and proceeding without manual configuration:
+if is_true "$MIGRATION_MODE" ; then
+    while read keyword device junk ; do
+        is_mapping_source "$device" && continue
         LogUserOutput "Disk $device and all dependant devices will not be recreated"
         mark_as_done "$device"
         mark_tree_as_done "$device"
-    fi
-done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
+    done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
+fi
 
 # Local functions must be 'unset' because bash does not support 'local function ...'
 # cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
 unset -f add_mapping
 unset -f is_mapping_source
 unset -f is_mapping_target
+unset -f output_valid_mappings
+unset -f output_not_recreated_devices
 

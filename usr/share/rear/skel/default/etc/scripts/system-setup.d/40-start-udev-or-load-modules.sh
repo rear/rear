@@ -22,7 +22,17 @@ test "$systemd_version" || systemd_version=0
 
 if [[ $systemd_version -gt 190 ]] || [[ -s /etc/udev/rules.d/00-rear.rules ]] ; then
     # systemd-udevd case: systemd-udevd is started by systemd
-    if ps ax | grep -v grep | grep -q systemd-udevd ; then
+    # Wait up to 10 seconds for systemd-udevd:
+    for countdown in 4 3 2 1 0 ; do
+        # The first sleep waits one second in any case so that systemd-udevd should be usually there
+        # when 'pidof' test for it so that usually there is no "Waiting for systemd-udevd" message:
+        sleep 1
+        pidof systemd-udevd &>/dev/null && break
+        echo "Waiting for systemd-udevd ($countdown) ... "
+        # The second sleep results a total wait of two seconds for each for loop run:
+        sleep 1
+    done
+    if pidof -s systemd-udevd &>/dev/null ; then
         # check if daemon is actually running
         my_udevtrigger
         echo -n "Waiting for udev ... "
@@ -32,7 +42,13 @@ if [[ $systemd_version -gt 190 ]] || [[ -s /etc/udev/rules.d/00-rear.rules ]] ; 
     else
         # found our "special" module-auto-load rule
         # clean away old device nodes from source system
-        rm -Rf /dev/{sd*,hd*,sr*,cc*,disk}
+        # except Slackware since it uses eudev and relies on the kernel to create sda
+        if ! grep Slackware /etc/os-release ; then
+            rm -Rf /dev/{sd*,hd*,sr*,cc*,disk}
+        else
+            # Slackware eudev already has a rule to load modules
+            rm -f /etc/udev/rules.d/00-rear.rules
+        fi
         mkdir -p /dev/disk/by-{id,name,path,label}
         # everybody does that even though it seems to be empty by default..
         test -w /sys/kernel/uevent_helper && echo >/sys/kernel/uevent_helper
