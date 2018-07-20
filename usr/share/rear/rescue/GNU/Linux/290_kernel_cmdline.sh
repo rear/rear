@@ -3,8 +3,10 @@
 
 # Scanning current kernel cmdline to look for important option ($COPY_KERNEL_PARAMETERS) to include in KERNEL_CMDLINE
 for current_kernel_option in $( cat /proc/cmdline ); do
-    # Get only the option name (part before "=") and add it to new_kernel_options_to_add array if it is part of COPY_KERNEL_PARAMETERS array.
-    if IsInArray "${current_kernel_option%=*}" "${COPY_KERNEL_PARAMETERS[@]}" ; then
+    # Get the current kernel option name (part before leftmost "=") and
+    # add the whole option (with value) to new_kernel_options_to_add array
+    # if the option name is part of COPY_KERNEL_PARAMETERS array:
+    if IsInArray "${current_kernel_option%%=*}" "${COPY_KERNEL_PARAMETERS[@]}" ; then
         new_kernel_options_to_add=( "${new_kernel_options_to_add[@]}" "$current_kernel_option" )
     fi
 done
