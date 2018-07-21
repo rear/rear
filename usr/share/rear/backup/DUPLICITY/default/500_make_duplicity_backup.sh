@@ -21,8 +21,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     # by falk hoeppner
 
     if [ -n "$BACKUP_DUPLICITY_ASK_PASSPHRASE" ]; then
-        LogPrint "Warning !
-    BACKUP_DUPLICITY_ASK_PASSPHRASE set, The Passphrase needs to be provided Interactively on Restore."
+        LogPrint "Warning: BACKUP_DUPLICITY_ASK_PASSPHRASE set, The Passphrase needs to be provided Interactively on Restore."
     fi
 
     LogPrint "Creating $BACKUP_PROG archives on '$BACKUP_DUPLICITY_URL'"
