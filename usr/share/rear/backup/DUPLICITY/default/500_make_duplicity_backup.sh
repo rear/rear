@@ -72,11 +72,24 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
         ssh ${DUPLICITY_USER}@${DUPLICITY_HOST} "test -d ${DUPLICITY_PATH}/${HOSTNAME} || mkdir -p ${DUPLICITY_PATH}/${HOSTNAME}"
     fi
 
-    # first remove everything older than $BACKUP_DUPLICITY_MAX_TIME
+    # First remove old Backups
+    # --force Is needed to actually remove them
+    if [ -n "$BACKUP_DUPLICITY_MAX_SETS" ] ; then
+        LogPrint "Removing the old Backups from the Server with CMD:
+    $DUPLICITY_PROG remove-all-but-n-full --force $BACKUP_DUPLICITY_MAX_SETS -v5 $BKP_URL/$HOSTNAME"
+        $DUPLICITY_PROG remove-all-but-n-full --force $BACKUP_DUPLICITY_MAX_SETS -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+    fi
+
+    if [ -n "$BACKUP_DUPLICITY_MAX_SETS_KEEP_FULL" ] ; then
+        LogPrint "Removing the old Backups from the Server with CMD:
+    $DUPLICITY_PROG remove-all-inc-of-but-n-full --force $BACKUP_DUPLICITY_MAX_SETS_KEEP_FULL -v5 $BKP_URL/$HOSTNAME"
+        $DUPLICITY_PROG remove-all-inc-of-but-n-full --force $BACKUP_DUPLICITY_MAX_SETS_KEEP_FULL -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+    fi
+
     if [ -n "$BACKUP_DUPLICITY_MAX_TIME" ] ; then
-        LogPrint "Removing the old stuff from server with CMD:
-    $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME"
-        $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+        LogPrint "Removing the old Backups from the Server with CMD:
+    $DUPLICITY_PROG remove-older-than --force $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME"
+        $DUPLICITY_PROG remove-older-than --force $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
     fi
 
     # do the backup
