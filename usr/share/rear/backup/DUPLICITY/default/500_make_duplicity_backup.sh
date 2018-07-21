@@ -88,15 +88,23 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
         $DUPLICITY_PROG remove-older-than --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
     fi
 
+    if [ -z "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL" ]; then
+        set -f # Temporarily Stop Evaluation of Patterns By the Shell
+    fi
+
     # do the backup
     if [[ "$BACKUP_DUPLICITY_GPG_OPTIONS" ]] ; then
         LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $DUP_OPTIONS $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" $EXCLUDES \
+        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" $EXCLUDES \
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
     else
         LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $DUP_OPTIONS $GPG_KEY $EXCLUDES \
+        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES \
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
+    fi
+
+    if [ -z "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL" ]; then
+        set +f # Reenable Evaluation of Patterns By the Shell
     fi
 
     RC_DUP=$?
