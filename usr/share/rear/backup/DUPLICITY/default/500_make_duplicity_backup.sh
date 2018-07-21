@@ -69,30 +69,30 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     # --force Is needed to actually remove them
     if [ -n "$BACKUP_DUPLICITY_MAX_SETS" ] ; then
         LogPrint "Removing the old Backups from the Server with CMD:
-    $DUPLICITY_PROG remove-all-but-n-full --force $BACKUP_DUPLICITY_MAX_SETS -v5 $BKP_URL/$HOSTNAME"
-        $DUPLICITY_PROG remove-all-but-n-full --force $BACKUP_DUPLICITY_MAX_SETS -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+    $DUPLICITY_PROG remove-all-but-n-full --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_SETS -v5 $BKP_URL/$HOSTNAME"
+        $DUPLICITY_PROG remove-all-but-n-full --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_SETS -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
     fi
 
     if [ -n "$BACKUP_DUPLICITY_MAX_SETS_KEEP_FULL" ] ; then
         LogPrint "Removing the old Backups from the Server with CMD:
-    $DUPLICITY_PROG remove-all-inc-of-but-n-full --force $BACKUP_DUPLICITY_MAX_SETS_KEEP_FULL -v5 $BKP_URL/$HOSTNAME"
-        $DUPLICITY_PROG remove-all-inc-of-but-n-full --force $BACKUP_DUPLICITY_MAX_SETS_KEEP_FULL -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+    $DUPLICITY_PROG remove-all-inc-of-but-n-full --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_SETS_KEEP_FULL -v5 $BKP_URL/$HOSTNAME"
+        $DUPLICITY_PROG remove-all-inc-of-but-n-full --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_SETS_KEEP_FULL -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
     fi
 
     if [ -n "$BACKUP_DUPLICITY_MAX_TIME" ] ; then
         LogPrint "Removing the old Backups from the Server with CMD:
-    $DUPLICITY_PROG remove-older-than --force $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME"
-        $DUPLICITY_PROG remove-older-than --force $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+    $DUPLICITY_PROG remove-older-than --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME"
+        $DUPLICITY_PROG remove-older-than --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
     fi
 
     # do the backup
     if [[ "$BACKUP_DUPLICITY_GPG_OPTIONS" ]] ; then
-        LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" $EXCLUDES \
+        LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $DUP_OPTIONS $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
+        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $DUP_OPTIONS $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" $EXCLUDES \
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
     else
-        LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $EXCLUDES \
+        LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
+        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $DUP_OPTIONS $GPG_KEY $EXCLUDES \
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
     fi
 
