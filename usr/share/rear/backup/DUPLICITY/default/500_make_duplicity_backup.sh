@@ -37,24 +37,17 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     fi
     PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
 
+    if [ -z "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL" ]; then
+        set -f # Temporarily Stop Evaluation of Patterns By the Shell
+    fi
 
-    # EXCLUDES="${TMP_DIR}/backup_exclude.lst"
-
-    # NMBRS=${#BACKUP_DUPLICITY_EXCLUDE[$@]}
-    # echo NMBRS = $NMBRS
-
-    # for i in $(seq 0 $(($NMBRS - 1)) )
-    # do
-    #     LogPrint "Exclude No $i = ${BACKUP_DUPLICITY_EXCLUDE[$i]}"
-    #     echo "${BACKUP_DUPLICITY_EXCLUDE[$i]}" >> "${EXCLUDES}"
-    # done
-
-    # runs without external file, but all the * in the excludelist
-    # will expanded :-(
-    #
     for EXDIR in ${BACKUP_DUPLICITY_EXCLUDE[@]} ; do
         EXCLUDES="$EXCLUDES --exclude $EXDIR"
     done
+
+    if [ -z "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL" ]; then
+        set +f # Reenable Evaluation of Patterns By the Shell
+    fi
 
     LogUserOutput "EXCLUDES = $EXCLUDES"
 
