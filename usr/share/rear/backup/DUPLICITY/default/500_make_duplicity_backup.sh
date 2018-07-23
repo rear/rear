@@ -20,8 +20,8 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     # make backup using the DUPLICITY method with duplicity
     # by falk hoeppner
 
-    if [ -n "$BACKUP_DUPLICITY_ASK_PASSPHRASE" ]; then
-        LogPrint "Warning: BACKUP_DUPLICITY_ASK_PASSPHRASE set, The Passphrase needs to be provided Interactively on Restore."
+    if is_true "$BACKUP_DUPLICITY_ASK_PASSPHRASE"; then
+        LogPrint "Duplicity passphrase must be provided interactively on restore (BACKUP_DUPLICITY_ASK_PASSPHRASE is set)"
     fi
 
     LogPrint "Creating $BACKUP_PROG archives on '$BACKUP_DUPLICITY_URL'"
@@ -40,7 +40,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     fi
     PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
 
-    if [ -z "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL" ]; then
+    if !is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
         set -f # Temporarily Stop Evaluation of Patterns By the Shell
     fi
 
@@ -48,7 +48,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
         EXCLUDES="$EXCLUDES --exclude $EXDIR"
     done
 
-    if [ -z "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL" ]; then
+    if !is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
         set +f # Reenable Evaluation of Patterns By the Shell
     fi
 
@@ -88,7 +88,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
         $DUPLICITY_PROG remove-older-than --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
     fi
 
-    if [ -z "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL" ]; then
+    if !is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
         set -f # Temporarily Stop Evaluation of Patterns By the Shell
     fi
 
@@ -103,7 +103,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
     fi
 
-    if [ -z "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL" ]; then
+    if !is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
         set +f # Reenable Evaluation of Patterns By the Shell
     fi
 
