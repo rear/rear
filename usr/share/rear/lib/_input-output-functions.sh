@@ -345,6 +345,20 @@ function get_path () {
 function Error () {
     LogPrintError "ERROR: $*"
     LogToSyslog "ERROR: $*"
+    # Show some additional hopefully meaningful output on the user's terminal
+    # (no need to log that again here because it is already in the log file)
+    # in particular the normal stdout and stderr messages of the last called programs
+    # to make the root cause more obvious to the user without the need to analyze the log file
+    # cf. https://github.com/rear/rear/issues/1875#issuecomment-407039065
+    PrintError "Log messages of latest run programs (most significant ones at the bottom):"
+    # Skip 'set -x' lines (i.e. lines that start with one or more '+' characters) and
+    # skip lines of the 'Log' function (the 'Log' function timestamp contains 'date +%Y-%m-%d')
+    # so that only the stdout and stderr messages of the called programs should be left.
+    # Shown only the last 5 lines because more older stuff may cause more confusion than help.
+    # Add two spaces indentation for better readability what those log file lines are.
+    # Some messages could be much too long to be usefully shown on the user's terminal
+    # so that the messages are truncated after 200 bytes:
+    PrintError "$( grep -E -v "^\+|$( date +%Y-%m-%d )" $RUNTIME_LOGFILE | tail -n 5 | sed -e 's/^/  /' | cut -b-200 )"
     # TODO: I <jsmeix@suse.de> wonder if the "has_binary caller" test is still needed nowadays
     # because for me on SLE10 with bash-3.1-24 up to SLE12 with bash-4.2 'caller' is a shell builtin:
     if has_binary caller ; then
