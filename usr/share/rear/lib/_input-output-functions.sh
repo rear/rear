@@ -396,7 +396,7 @@ function Error () {
     # to make the root cause more obvious to the user without the need to analyze the log file
     # cf. https://github.com/rear/rear/issues/1875#issuecomment-407039065
     PrintError "Some latest log messages from the last called script $caller_script_basename:"
-    # Show lines after the last called script was sourced (logged as 'Including /path/to/script.sh').
+    # Show lines after the last called script was sourced (logged as 'Including sub-path/to/script.sh').
     # Skip 'set -x' lines (i.e. lines that start with one or more '+' characters).
     # Shown at most the last 5 lines because more older stuff may cause more confusion than help.
     # Add two spaces indentation for better readability what those log file lines are.
