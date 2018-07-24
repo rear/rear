@@ -341,52 +341,7 @@ function get_path () {
     type -P $1
 }
 
-# Error exit:
-function Error () {
-    LogPrintError "ERROR: $*"
-    LogToSyslog "ERROR: $*"
-    # Show some additional hopefully meaningful output on the user's terminal
-    # (no need to log that again here because it is already in the log file)
-    # in particular the normal stdout and stderr messages of the last called programs
-    # to make the root cause more obvious to the user without the need to analyze the log file
-    # cf. https://github.com/rear/rear/issues/1875#issuecomment-407039065
-    PrintError "Log messages of latest run programs (most significant ones at the bottom):"
-    # Skip 'set -x' lines (i.e. lines that start with one or more '+' characters) and
-    # skip lines of the 'Log' function (the 'Log' function timestamp contains 'date +%Y-%m-%d')
-    # so that only the stdout and stderr messages of the called programs should be left.
-    # Shown only the last 5 lines because more older stuff may cause more confusion than help.
-    # Add two spaces indentation for better readability what those log file lines are.
-    # Some messages could be much too long to be usefully shown on the user's terminal
-    # so that the messages are truncated after 200 bytes:
-    PrintError "$( grep -E -v "^\+|$( date +%Y-%m-%d )" $RUNTIME_LOGFILE | tail -n 5 | sed -e 's/^/  /' | cut -b-200 )"
-    # TODO: I <jsmeix@suse.de> wonder if the "has_binary caller" test is still needed nowadays
-    # because for me on SLE10 with bash-3.1-24 up to SLE12 with bash-4.2 'caller' is a shell builtin:
-    if has_binary caller ; then
-        # Print stack strace in reverse order to the current STDERR which is (usually) the log file:
-        (   echo "==== ${MESSAGE_PREFIX}Stack trace ===="
-            local c=0;
-            while caller $((c++)) ; do
-                # nothing to do
-                :
-            done | awk ' { l[NR]=$3":"$1" "$2 }
-                         END { for (i=NR; i>0;) print "Trace "NR-i": "l[i--] }
-                       '
-            echo "${MESSAGE_PREFIX}Message: $*"
-            echo "== ${MESSAGE_PREFIX}End stack trace =="
-        ) 1>&2
-    fi
-    # Make sure Error exits the master process, even if called from child processes:
-    kill -USR1 $MASTER_PID
-}
-
-# If return code is non-zero, bail out:
-function StopIfError () {
-    if (( $? != 0 )) ; then
-        Error "$@"
-    fi
-}
-
-# Output the source file of the actual caller script:
+# Output the source file of the actual caller script and its line number:
 function CallerSource () {
     # Get the source file of actual caller script.
     # Usually this is ${BASH_SOURCE[1]} but CallerSource is also called
@@ -425,6 +380,56 @@ function CallerSource () {
     fi
     # Fallback output:
     echo "Relax-and-Recover"
+}
+
+# Error exit:
+function Error () {
+    # ${caller_source[@]} is e.g. /usr/share/rear/output/default/200_make_prefix_dir.sh line 18
+    # so that $caller_source is the script where the Error function was called:
+    local caller_source=( $( CallerSource ) )
+    local caller_script_basename="$( basename $caller_source )"
+    # Do not log the error message right now but after the currenly last log messages were shown:
+    PrintError "ERROR: $*"
+    # Show some additional hopefully meaningful output on the user's terminal
+    # (no need to log that again here because it is already in the log file)
+    # in particular the normal stdout and stderr messages of the last called programs
+    # to make the root cause more obvious to the user without the need to analyze the log file
+    # cf. https://github.com/rear/rear/issues/1875#issuecomment-407039065
+    PrintError "Some latest log messages from the last called script $caller_script_basename:"
+    # Show lines after the last called script was sourced (logged as 'Including /path/to/script.sh').
+    # Skip 'set -x' lines (i.e. lines that start with one or more '+' characters).
+    # Shown at most the last 5 lines because more older stuff may cause more confusion than help.
+    # Add two spaces indentation for better readability what those log file lines are.
+    # Some messages could be much too long to be usefully shown on the user's terminal
+    # so that the messages are truncated after 200 bytes:
+    PrintError "$( grep -A 10000 "Including .*/$caller_script_basename" $RUNTIME_LOGFILE | grep -v '^+' | tail -n 5 | sed -e 's/^/  /' | cut -b-200 )"
+    Log "ERROR: $*"
+    LogToSyslog "ERROR: $*"
+    # TODO: I <jsmeix@suse.de> wonder if the "has_binary caller" test is still needed nowadays
+    # because for me on SLE10 with bash-3.1-24 up to SLE12 with bash-4.2 'caller' is a shell builtin:
+    if has_binary caller ; then
+        # Print stack strace in reverse order to the current STDERR which is (usually) the log file:
+        (   echo "===== ${MESSAGE_PREFIX}Stack trace ====="
+            local c=0;
+            while caller $((c++)) ; do
+                # nothing to do
+                :
+            done | awk ' { l[NR]=$3":"$1" "$2 }
+                         END { for (i=NR; i>0;) print "Trace "NR-i": "l[i--] }
+                       '
+            echo "${MESSAGE_PREFIX}Message: $*"
+            echo "=== ${MESSAGE_PREFIX}End stack trace ==="
+        ) 1>&2
+    fi
+    # Make sure Error exits the master process, even if called from child processes:
+    kill -USR1 $MASTER_PID
+}
+
+# If return code is non-zero, bail out:
+function StopIfError () {
+    if (( $? != 0 )) ; then
+        Error "$@"
+    fi
 }
 
 # Exit if there is a bug in ReaR:
