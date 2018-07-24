@@ -384,6 +384,10 @@ function CallerSource () {
 
 # Error exit:
 function Error () {
+    # The initial log messsage starting with 'Aborting ReaR' is needed to limit
+    # up to what line log messages are cut out of the log file below,
+    # for the reason behind see the comment in the BugError function:
+    Log "Aborting ReaR ..."
     # ${caller_source[@]} is e.g. /usr/share/rear/output/default/200_make_prefix_dir.sh line 18
     # so that $caller_source is the script where the Error function was called:
     local caller_source=( $( CallerSource ) )
@@ -396,13 +400,14 @@ function Error () {
     # to make the root cause more obvious to the user without the need to analyze the log file
     # cf. https://github.com/rear/rear/issues/1875#issuecomment-407039065
     PrintError "Some latest log messages from the last called script $caller_script_basename:"
-    # Show lines after the last called script was sourced (logged as 'Including sub-path/to/script.sh').
     # Skip 'set -x' lines (i.e. lines that start with one or more '+' characters).
+    # Show lines after the last called script was sourced (logged as 'Including sub-path/to/script.sh')
+    # but at most up to a line that is logged as 'Aborting ReaR' if exists, otherwise to the end.
     # Shown at most the last 5 lines because more older stuff may cause more confusion than help.
     # Add two spaces indentation for better readability what those log file lines are.
     # Some messages could be much too long to be usefully shown on the user's terminal
     # so that the messages are truncated after 200 bytes:
-    PrintError "$( grep -A 10000 "Including .*/$caller_script_basename" $RUNTIME_LOGFILE | grep -v '^+' | tail -n 5 | sed -e 's/^/  /' | cut -b-200 )"
+    PrintError "$( grep -v '^+' $RUNTIME_LOGFILE | sed -n "/Including .*$caller_script_basename/,/Aborting ReaR/p" | tail -n 5 | sed -e 's/^/  /' | cut -b-200 )"
     Log "ERROR: $*"
     LogToSyslog "ERROR: $*"
     # TODO: I <jsmeix@suse.de> wonder if the "has_binary caller" test is still needed nowadays
@@ -434,6 +439,24 @@ function StopIfError () {
 
 # Exit if there is a bug in ReaR:
 function BugError () {
+    # The initial log messsage starting with 'Aborting ReaR' is needed to limit
+    # up to what line log messages are shown to the user by the Error function
+    # to avoid that useless 'set -x' log messages about the Error function call
+    # are shown to the user when rear runs in debugscript mode with '-D'
+    # because then 'set -x' logs the Error function call in the log file like
+    #   ++ Error '
+    #   ====================
+    #   BUG in /path/to/script.sh line 123:
+    #   Failed to ...
+    #   --------------------
+    #   Please report this issue at https://github.com/rear/rear/issues
+    #   and include the relevant parts from /var/log/rear/rear-f144.log
+    #   preferably with full debug information via 'rear -d -D mkrescue'
+    #   ===================='
+    # i.e. because of the newlines in the error message those lines
+    # appear without a leading '+' character so that those lines are
+    # indistinguishable from normal stdout/stderr output of programs.
+    Log "Aborting ReaR with 'BugError'"
     local caller_source="$( CallerSource )"
     Error "
 ====================
