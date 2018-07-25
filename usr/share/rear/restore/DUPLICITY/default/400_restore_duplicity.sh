@@ -22,10 +22,6 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
         export PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
     fi
 
-    #export PYTHONHOME=/usr/lib64/python2.6
-    #export PYTHONPATH=/usr/lib64/python2.6:/usr/lib64/python2.6/lib-dynload:/usr/lib64/python2.6/site-packages:/usr/lib64/python2.6/site-packages/duplicity
-    export HOSTNAME=$(hostname)
-
     if [[ -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ]]; then
         GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY"
     fi
