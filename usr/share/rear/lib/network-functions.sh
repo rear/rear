@@ -178,3 +178,37 @@ function rebuild_interfaces_file_from_linearized () {
     ' < $linearized_interfaces_file
 }
 
+function is_persistent_ethernet_name () {
+    # this function is borrowed from /usr/lib/dracut/modules.d/40network/net-lib.sh (from CentOS 7)
+    local _netif="$1"
+    local _name_assign_type="0"
+
+    [ -f "/sys/class/net/$_netif/name_assign_type" ] \
+        && _name_assign_type=$(cat "/sys/class/net/$_netif/name_assign_type")
+
+    # NET_NAME_ENUM 1
+    [ "$_name_assign_type" = "1" ] && return 1
+
+    # NET_NAME_PREDICTABLE 2
+    [ "$_name_assign_type" = "2" ] && return 0
+
+    case "$_netif" in
+        # udev persistent interface names
+        eno[0-9]|eno[0-9][0-9]|eno[0-9][0-9][0-9]*)
+            ;;
+        ens[0-9]|ens[0-9][0-9]|ens[0-9][0-9][0-9]*)
+            ;;
+        enp[0-9]s[0-9]*|enp[0-9][0-9]s[0-9]*|enp[0-9][0-9][0-9]*s[0-9]*)
+            ;;
+        enP*p[0-9]s[0-9]*|enP*p[0-9][0-9]s[0-9]*|enP*p[0-9][0-9][0-9]*s[0-9]*)
+            ;;
+        # biosdevname
+        em[0-9]|em[0-9][0-9]|em[0-9][0-9][0-9]*)
+            ;;
+        p[0-9]p[0-9]*|p[0-9][0-9]p[0-9]*|p[0-9][0-9][0-9]*p[0-9]*)
+            ;;
+        *)
+            return 1
+    esac
+    return 0
+}
