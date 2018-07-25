@@ -20,41 +20,37 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     # make backup using the DUPLICITY method with duplicity
     # by falk hoeppner
 
-    if [ -n "$BACKUP_DUPLICITY_ASK_PASSPHRASE" ]; then
-        LogPrint "Warning !
-    BACKUP_DUPLICITY_ASK_PASSPHRASE set, The Passphrase needs to be provided Interactively on Restore."
+    if is_true "$BACKUP_DUPLICITY_ASK_PASSPHRASE"; then
+        LogPrint "Duplicity passphrase must be provided interactively on restore (BACKUP_DUPLICITY_ASK_PASSPHRASE is set)"
     fi
 
     LogPrint "Creating $BACKUP_PROG archives on '$BACKUP_DUPLICITY_URL'"
 
     # todo: check parameters
     BKP_URL="$BACKUP_DUPLICITY_URL"
-    
+
     DUP_OPTIONS="$BACKUP_DUPLICITY_OPTIONS"
+
+    if [ -n "$BACKUP_DUPLICITY_FULL_IF_OLDER_THAN" ]; then
+        FULL_BACKUP="--full-if-older-than $BACKUP_DUPLICITY_FULL_IF_OLDER_THAN"
+    fi
 
     if [ -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ]; then
         GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY"
     fi
     PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
 
+    if !is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
+        set -f # Temporarily Stop Evaluation of Patterns By the Shell
+    fi
 
-    # EXCLUDES="${TMP_DIR}/backup_exclude.lst"
-
-    # NMBRS=${#BACKUP_DUPLICITY_EXCLUDE[$@]}
-    # echo NMBRS = $NMBRS
-
-    # for i in $(seq 0 $(($NMBRS - 1)) )
-    # do
-    #     LogPrint "Exclude No $i = ${BACKUP_DUPLICITY_EXCLUDE[$i]}"
-    #     echo "${BACKUP_DUPLICITY_EXCLUDE[$i]}" >> "${EXCLUDES}"
-    # done
-
-    # runs without external file, but all the * in the excludelist
-    # will expanded :-(
-    #
     for EXDIR in ${BACKUP_DUPLICITY_EXCLUDE[@]} ; do
         EXCLUDES="$EXCLUDES --exclude $EXDIR"
     done
+
+    if !is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
+        set +f # Reenable Evaluation of Patterns By the Shell
+    fi
 
     LogUserOutput "EXCLUDES = $EXCLUDES"
 
@@ -72,22 +68,43 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
         ssh ${DUPLICITY_USER}@${DUPLICITY_HOST} "test -d ${DUPLICITY_PATH}/${HOSTNAME} || mkdir -p ${DUPLICITY_PATH}/${HOSTNAME}"
     fi
 
-    # first remove everything older than $BACKUP_DUPLICITY_MAX_TIME
+    # First remove old Backups
+    # --force Is needed to actually remove them
+    if [ -n "$BACKUP_DUPLICITY_MAX_SETS" ] ; then
+        LogPrint "Removing the old Backups from the Server with CMD:
+    $DUPLICITY_PROG remove-all-but-n-full --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_SETS -v5 $BKP_URL/$HOSTNAME"
+        $DUPLICITY_PROG remove-all-but-n-full --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_SETS -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+    fi
+
+    if [ -n "$BACKUP_DUPLICITY_MAX_SETS_KEEP_FULL" ] ; then
+        LogPrint "Removing the old Backups from the Server with CMD:
+    $DUPLICITY_PROG remove-all-inc-of-but-n-full --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_SETS_KEEP_FULL -v5 $BKP_URL/$HOSTNAME"
+        $DUPLICITY_PROG remove-all-inc-of-but-n-full --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_SETS_KEEP_FULL -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+    fi
+
     if [ -n "$BACKUP_DUPLICITY_MAX_TIME" ] ; then
-        LogPrint "Removing the old stuff from server with CMD:
-    $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME"
-        $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+        LogPrint "Removing the old Backups from the Server with CMD:
+    $DUPLICITY_PROG remove-older-than --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME"
+        $DUPLICITY_PROG remove-older-than --name $BACKUP_DUPLICITY_NAME --force $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+    fi
+
+    if !is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
+        set -f # Temporarily Stop Evaluation of Patterns By the Shell
     fi
 
     # do the backup
     if [[ "$BACKUP_DUPLICITY_GPG_OPTIONS" ]] ; then
-        LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" $EXCLUDES \
+        LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
+        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" $EXCLUDES \
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
     else
-        LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $EXCLUDES \
+        LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
+        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES \
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
+    fi
+
+    if !is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
+        set +f # Reenable Evaluation of Patterns By the Shell
     fi
 
     RC_DUP=$?
