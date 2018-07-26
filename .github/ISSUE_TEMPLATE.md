@@ -7,14 +7,14 @@ Fill in the following items before submitting a new issue
 
 * OS version ("cat /etc/rear/os.conf" or "lsb_release -a" or "cat /etc/os-release"):
 
-* ReaR configuration files ("cat /etc/rear/site.conf" or "cat /etc/rear/local.conf"):
+* ReaR configuration files ("cat /etc/rear/site.conf" and/or "cat /etc/rear/local.conf"):
 
-* Real hardware (PC or PowerNV BareMetal or ARM) and/or virtual machine (KVM guest or PoverVM LPAR):
+* Hardware (PC or PowerNV BareMetal or ARM) or virtual machine (KVM guest or PoverVM LPAR):
 
-* System architecture (x86 compatible or POWER PPC64/PPC64LE or what excat ARM device):
+* System architecture (x86 compatible or PPC64/PPC64LE or what excat ARM device):
 
-* Are you using BIOS or UEFI or another way to boot (Open Firmware or Petitboot)?
+* Firmware (BIOS or UEFI or Open Firmware) and bootloader (GRUB or ELILO or Petitboot):
 
-* Brief description of the issue:
+* Description of the issue (ideally so that others can reproduce it):
 
 * Work-around, if any:
