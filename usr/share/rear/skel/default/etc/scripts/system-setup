@@ -132,7 +132,7 @@ sleep 2
 # Because the kernel command line option 'debug' means 'set -x' for the system setup scripts
 # it also means '-D' (i.e. 'set -x') for the automated 'rear recover' run:
 if rear_debug ; then
-    rear_debug_options='-d -D'
+    rear_debug_options='-D'
 else
     rear_debug_options=''
 fi

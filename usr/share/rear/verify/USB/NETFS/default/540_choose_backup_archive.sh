@@ -64,7 +64,7 @@ fi
 # Let the user choose the backup that should be restored:
 LogPrint "Select a backup archive."
 # Disable printing commands and their arguments as they are executed on stderr
-# which could have been enabled when running e.g. "rear -d -D recover"
+# which could have been enabled when running e.g. "rear -D recover"
 # to not disturb the select output which also happens on stderr.
 # When 'set -x' is set even calling 'set +x 2>/dev/null' would output '+ set +x' but
 # http://stackoverflow.com/questions/13195655/bash-set-x-without-it-being-printed
