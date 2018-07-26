@@ -412,9 +412,9 @@ function Error () {
     # we simply use last_sourced_script_filename in the sed expression.
     # Extract at most up to a line that is usually logged as '++ Error ...' or '++ BugError ...'
     # (but do not stop at lines that are logged like '++ StopIfError ...' or '++ PrintError ...')
-    # if such a '+ Error' or '+ BugError' line exists, otherwise 'sed' proceeds to the end
+    # if such a '+ Error' or '+ BugError' line exists, otherwise sed proceeds to the end
     # (the sed pattern '[Bug]*Error' is fuzzy because it would also match things like 'uuggError').
-    # The reason to stop at a line that contains '+ .*Error ' is that in debugscripts mode '-D'
+    # The reason to stop at a line that contains '+ [Bug]*Error ' is that in debugscripts mode '-D'
     # a BugError or Error function call with a multi line error message (e.g. BugError does that)
     # results 'set -x' debug output of that function call in the log file that looks like:
     #   ++ [Bug]Error 'first error message line
@@ -425,9 +425,9 @@ function Error () {
     # Because of the newlines in the error message subsequent lines appear without a leading '+' character
     # so that those debug output lines are indistinguishable from normal stdout/stderr output of programs,
     # cf. https://github.com/rear/rear/pull/1877
-    # Thereafter ('+ .*Error ' lines were needed above) skip 'set -x' lines (lines that start with a '+' character).
-    # Show at most the last 8 lines because more older stuff may cause more confusion than help.
-    # Add two spaces indentation for better readability what those log file lines are.
+    # Thereafter ('+ [Bug]*Error ' lines were needed before) skip 'set -x' lines (lines that start with a '+' character).
+    # Show at most the last 8 lines because too much before the actual error may cause more confusion than help.
+    # Add two spaces indentation for better readability what those extracted log file lines are.
     # Some messages could be too long to be usefully shown on the user's terminal so that they are truncated after 200 bytes:
     PrintError "$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | grep -v '^+' | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )"
     Log "ERROR: $*"
