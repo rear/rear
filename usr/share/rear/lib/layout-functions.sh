@@ -365,7 +365,9 @@ get_partition_start() {
     local disk_name=$1
     local start_block start
 
-    local block_size=$(get_block_size ${disk_name%/*})
+    # When reading /sys/block/.../start or "dmsetup table", output is always in
+    # 512 bytes blocks
+    local block_size=512
 
     if [[ -r /sys/block/$disk_name/start ]] ; then
         start_block=$(< $path/start)
@@ -548,9 +550,15 @@ get_device_mapping() {
 }
 
 # Get the size in bytes of a disk/partition.
+# For disks, use "sda" as argument.
 # For partitions, use "sda/sda1" as argument.
 get_disk_size() {
     local disk_name=$1
+
+    if has_binary blockdev; then
+        blockdev --getsize64 /dev/${disk_name##*/}  # sda/sda1 -> sda1 ; sda -> sda
+        return 0
+    fi
 
     local block_size=$(get_block_size ${disk_name%/*})
 
@@ -565,9 +573,16 @@ get_disk_size() {
 
 # Get the block size of a disk.
 get_block_size() {
+    local disk_name="${1##*/}" # /some/path/sda -> sda
+
+    if has_binary blockdev; then
+        blockdev --getss /dev/$disk_name
+        return 0
+    fi
+
     # Only newer kernels have an interface to get the block size
-    if [ -r /sys/block/$1/queue/logical_block_size ] ; then
-        echo $( < /sys/block/$1/queue/logical_block_size)
+    if [ -r /sys/block/$disk_name/queue/logical_block_size ] ; then
+        echo $( < /sys/block/$disk_name/queue/logical_block_size)
     else
         echo "512"
     fi
