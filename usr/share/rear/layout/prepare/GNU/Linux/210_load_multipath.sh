@@ -97,7 +97,7 @@ blacklist {
         # Search and list mpath device.
         LogPrint "Listing multipath device found"
         LogPrint "$(multipath -l | awk '/dm-/{ DEVICES=$0 } ; $1~/size=/ { print DEVICES" "$1 }' 2>&1)"
-    f
+    fi
 fi
 
 ### Create multipath devices (at least partitions on them).
