@@ -556,9 +556,8 @@ get_disk_size() {
     local disk_name=$1
 
     if has_binary blockdev; then
-        blockdev --getsize64 /dev/${disk_name##*/}  # sda/sda1 -> sda1 ; sda -> sda
-        StopIfError "Reading the size of disk ${disk_name##*/} failed"
-        return
+        # ${disk_name##*/} translates 'sda/sda1' into 'sda1' and 'sda' into 'sda'
+        blockdev --getsize64 /dev/${disk_name##*/} && return
     fi
 
     # Linux always considers sectors to be 512 bytes long. See the note in the
@@ -580,9 +579,7 @@ get_block_size() {
     local disk_name="${1##*/}" # /some/path/sda -> sda
 
     if has_binary blockdev; then
-        blockdev --getss /dev/$disk_name
-        StopIfError "Reading the block size of disk ${disk_name} failed"
-        return
+        blockdev --getss /dev/$disk_name && return
     fi
 
     # Only newer kernels have an interface to get the block size
