@@ -404,6 +404,7 @@ done
 # Show initial startup messages:
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
+    LogPrint "Running $PROGRAM $WORKFLOW (PID $MASTER_PID)"
     Log "Command line options: $0 ${CMD_OPTS[@]}"
     LogPrint "Using log file: $RUNTIME_LOGFILE"
 fi
