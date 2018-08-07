@@ -555,7 +555,7 @@ get_device_mapping() {
 get_disk_size() {
     local disk_name=$1
     # When a partition is specified (e.g. sda/sda1)
-    # then it has to read /sys/block/sda/sda1/size in the the old code below.
+    # then it has to read /sys/block/sda/sda1/size in the old code below.
     # In contrast the get_block_size() function below is different
     # because it is non-sense asking for block size of a partition,
     # so that the get_block_size() function below is stripping everything
