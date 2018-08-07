@@ -1,5 +1,7 @@
 os:
  - linux
+ - linux-ppc64le
+ 
 
 script:
  - make validate
