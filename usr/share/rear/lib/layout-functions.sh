@@ -365,7 +365,9 @@ get_partition_start() {
     local disk_name=$1
     local start_block start
 
-    local block_size=$(get_block_size ${disk_name%/*})
+    # When reading /sys/block/.../start or "dmsetup table", output is always in
+    # 512 bytes blocks
+    local block_size=512
 
     if [[ -r /sys/block/$disk_name/start ]] ; then
         start_block=$(< $path/start)
@@ -548,11 +550,32 @@ get_device_mapping() {
 }
 
 # Get the size in bytes of a disk/partition.
+# For disks, use "sda" as argument.
 # For partitions, use "sda/sda1" as argument.
 get_disk_size() {
     local disk_name=$1
+    # When a partition is specified (e.g. sda/sda1)
+    # then it has to read /sys/block/sda/sda1/size in the old code below.
+    # In contrast the get_block_size() function below is different
+    # because it is non-sense asking for block size of a partition,
+    # so that the get_block_size() function below is stripping everything
+    # in front of the blockdev basename (e.g. /some/path/sda -> sda)
+    # cf. https://github.com/rear/rear/pull/1885#discussion_r207900308
 
-    local block_size=$(get_block_size ${disk_name%/*})
+    # Preferably use blockdev, see https://github.com/rear/rear/issues/1884
+    if has_binary blockdev; then
+        # ${disk_name##*/} translates 'sda/sda1' into 'sda1' and 'sda' into 'sda'
+        blockdev --getsize64 /dev/${disk_name##*/} && return
+        # If blockdev fails do not error out but fall through to the old code below
+        # because blockdev fails e.g. for a CDROM device when no DVD or ISO is attached to
+        # cf. https://github.com/rear/rear/pull/1885#issuecomment-410676283
+        # and https://github.com/rear/rear/pull/1885#issuecomment-410697398
+    fi
+
+    # Linux always considers sectors to be 512 bytes long. See the note in the
+    # kernel source, specifically, include/linux/types.h regarding the sector_t
+    # type for details.
+    local block_size=512
 
     retry_command test -r /sys/block/$disk_name/size || Error "Could not determine size of disk $disk_name"
 
@@ -565,9 +588,20 @@ get_disk_size() {
 
 # Get the block size of a disk.
 get_block_size() {
+    local disk_name="${1##*/}" # /some/path/sda -> sda
+
+    # Preferably use blockdev, see https://github.com/rear/rear/issues/1884
+    if has_binary blockdev; then
+        blockdev --getss /dev/$disk_name && return
+        # If blockdev fails do not error out but fall through to the old code below
+        # because blockdev fails e.g. for a CDROM device when no DVD or ISO is attached to
+        # cf. https://github.com/rear/rear/pull/1885#issuecomment-410676283
+        # and https://github.com/rear/rear/pull/1885#issuecomment-410697398
+    fi
+
     # Only newer kernels have an interface to get the block size
-    if [ -r /sys/block/$1/queue/logical_block_size ] ; then
-        echo $( < /sys/block/$1/queue/logical_block_size)
+    if [ -r /sys/block/$disk_name/queue/logical_block_size ] ; then
+        echo $( < /sys/block/$disk_name/queue/logical_block_size)
     else
         echo "512"
     fi
