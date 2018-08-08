@@ -7,7 +7,7 @@
 # will be accessed via /dev/disk/by-label/RELAXRECOVER
 # which is required in particular when the ISO image contains the backup.
 # I.e. with BACKUP_URL=iso://... the recovery system ISO image
-# gets mounted by the mount_url functionin lib/global-functions.sh by
+# gets mounted by the mount_url function in lib/global-functions.sh by
 #   mount_cmd="mount /dev/disk/by-label/${ISO_VOLID} $mountpoint"
 # see https://github.com/rear/rear/issues/1891
 # and https://github.com/rear/rear/issues/326
