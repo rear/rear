@@ -53,24 +53,26 @@ if test -b "$relaxrecover_block_device" ; then
 else
     # We found no block device that uses the filesystem label ISO_VOLID
     # which is considered to be a sufficiently severe issue to inform the user:
-    echo "No block device with filesystem label '$ISO_VOLID' found (by the blkid command)"
-    # The url_scheme function was sourced by etc/scripts/system-setup.d/00-functions.sh
-    # and BACKUP_URL is usually specified in the also sourced etc/rear/local.conf
-    backup_scheme=$( url_scheme "$BACKUP_URL" )
-    case $backup_scheme in
-        (iso)
-            echo "Backup restore will fail with 'iso' BACKUP_URL unless things got fixed before running 'rear recover'"
-            ;;
-        (*)
-            echo "Recovery might fail when there is no block device with filesystem label '$ISO_VOLID'"
-            ;;
-    esac
+    echo "No block device with ISO filesystem label '$ISO_VOLID' found (by the blkid command)"
 fi
 
 # At this point we found no block device that uses the filesystem label ISO_VOLID
 # or we found one but it failed to let our symbolic link point to it:
-# Now we try some basically blind fallback actions that might help by chance:
 echo "A symlink '/dev/disk/by-label/$ISO_VOLID' is needed that points to the block device where the ISO is attached to"
+
+# The url_scheme function was sourced by etc/scripts/system-setup.d/00-functions.sh
+# and BACKUP_URL is usually specified in the also sourced etc/rear/local.conf
+backup_scheme=$( url_scheme "$BACKUP_URL" )
+case $backup_scheme in
+    (iso)
+        echo "Backup restore will fail with 'iso' BACKUP_URL unless things got fixed before running 'rear recover'"
+        ;;
+    (*)
+        echo "Recovery might fail without symlink '/dev/disk/by-label/$ISO_VOLID' that points where to the ISO is attached"
+        ;;
+esac
+
+# Now we try some basically blind fallback actions that might help by chance:
 
 # Check if /dev/disk/by-label/$ISO_VOLID exists (as symbolic link or in any other form).
 # If yes blindly assume things are right and proceed 'bona fide':
