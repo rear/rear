@@ -28,7 +28,7 @@ fi
 # Create a new PV.
 create_lvmdev() {
     local lvmdev vgrp device uuid junk
-    read lvmdev vgrp device uuid junk < <(grep "^lvmdev.*${1#pv:} " "$LAYOUT_FILE")
+    read lvmdev vgrp device uuid junk < <(grep -w "^lvmdev.*${1#pv:}" "$LAYOUT_FILE")
 
     local vg=${vgrp#/dev/}
 
