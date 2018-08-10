@@ -637,11 +637,10 @@ blkid_label_of_device() {
 # Returns 0 otherwise or if the device doesn't exists
 is_disk_a_pv() {
     disk=$1
-    if grep -qw "^lvmdev .* ${disk}" $LAYOUT_FILE ; then
-        return 0
-    else
-        return 1
-    fi
+
+    # exit 0 == not a PV, so fallthrough
+    awk "\$1 == \"lvmdev\" && \$3 == \"${disk}\" { exit 1 }" "$LAYOUT_FILE" >/dev/null || return 1
+    return 0
 }
 
 function is_multipath_path {

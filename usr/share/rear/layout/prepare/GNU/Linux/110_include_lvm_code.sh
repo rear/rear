@@ -28,7 +28,7 @@ fi
 # Create a new PV.
 create_lvmdev() {
     local lvmdev vgrp device uuid junk
-    read lvmdev vgrp device uuid junk < <(grep -w "^lvmdev.*${1#pv:}" "$LAYOUT_FILE")
+    read lvmdev vgrp device uuid junk < <(awk "\$1 == \"lvmdev\" && \$3 == \"${1#pv:}\" { print }" "$LAYOUT_FILE")
 
     local vg=${vgrp#/dev/}
 
@@ -126,7 +126,7 @@ fi
 EOF
     fi
 
-    local -a devices=($(grep "^lvmdev $vgrp " "$LAYOUT_FILE" | cut -d " " -f 3))
+    local -a devices=($(awk "\$1 == \"lvmdev\" && \$2 == \"$vgrp\" { print \$3 }" "$LAYOUT_FILE"))
 
 cat >> "$LAYOUT_CODE" <<EOF
 if [ \$create_volume_group -eq 1 ] ; then
