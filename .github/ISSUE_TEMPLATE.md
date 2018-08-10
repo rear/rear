@@ -11,7 +11,7 @@ Fill in the following items before submitting a new issue
 
 * Hardware (PC or PowerNV BareMetal or ARM) or virtual machine (KVM guest or PoverVM LPAR):
 
-* System architecture (x86 compatible or PPC64/PPC64LE or what excat ARM device):
+* System architecture (x86 compatible or PPC64/PPC64LE or what exact ARM device):
 
 * Firmware (BIOS or UEFI or Open Firmware) and bootloader (GRUB or ELILO or Petitboot):
 
