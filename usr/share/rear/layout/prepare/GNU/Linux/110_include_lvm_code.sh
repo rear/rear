@@ -28,7 +28,8 @@ fi
 # Create a new PV.
 create_lvmdev() {
     local lvmdev vgrp device uuid junk
-    # Selects line matching 'lvmdev' (PV) and disk name (column 3).
+    # Selects line matching 'lvmdev' (PV) and disk name (column 3),
+    # cf. https://github.com/rear/rear/pull/1897
     # This should be unique.
     read lvmdev vgrp device uuid junk < <(awk "\$1 == \"lvmdev\" && \$3 == \"${1#pv:}\" { print }" "$LAYOUT_FILE")
 
@@ -128,6 +129,7 @@ fi
 EOF
     fi
 
+    # Cf. https://github.com/rear/rear/pull/1897
     local -a devices=($(awk "\$1 == \"lvmdev\" && \$2 == \"$vgrp\" { print \$3 }" "$LAYOUT_FILE"))
 
 cat >> "$LAYOUT_CODE" <<EOF
