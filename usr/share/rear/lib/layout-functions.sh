@@ -638,7 +638,8 @@ blkid_label_of_device() {
 is_disk_a_pv() {
     disk=$1
 
-    # Using awk, select the 'lvmdev' line for which $disk is the device (column 3).
+    # Using awk, select the 'lvmdev' line for which $disk is the device (column 3),
+    # cf. https://github.com/rear/rear/pull/1897
     # If exit == 1, then there is such line (so $disk is a PV),
     # otherwise exit with default value '0', which falls through to 'return 0' below.
     awk "\$1 == \"lvmdev\" && \$3 == \"${disk}\" { exit 1 }" "$LAYOUT_FILE" >/dev/null || return 1
