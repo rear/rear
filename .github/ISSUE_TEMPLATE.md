@@ -15,6 +15,8 @@ Fill in the following items before submitting a new issue
 
 * Firmware (BIOS or UEFI or Open Firmware) and bootloader (GRUB or ELILO or Petitboot):
 
+* Storage (lokal disk or SSD) and/or SAN (FC or iSCSI or FCoE) and/or multipath (DM or NVMe):
+
 * Description of the issue (ideally so that others can reproduce it):
 
 * Work-around, if any:
