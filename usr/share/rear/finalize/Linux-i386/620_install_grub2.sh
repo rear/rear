@@ -149,7 +149,8 @@ fi
 # This is the reason why we make all possible boot disks bootable here:
 for disk in $disks ; do
     # Installing GRUB2 on an LVM PV will wipe the metadata so we skip those:
-    is_disk_a_pv "$disk" && continue
+    # function is_disk_a_pv returns with 1 if disk is a PV
+    is_disk_a_pv "$disk"  ||  continue
 
     # Use first boot partition by default:
     part=$( echo $bootparts | cut -d' ' -f1 )
