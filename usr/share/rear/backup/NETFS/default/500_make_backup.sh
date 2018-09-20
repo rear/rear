@@ -67,6 +67,10 @@ else
     SPLIT_COMMAND="dd of=$backuparchive"
 fi
 
+# Used by "tar" method to record which pipe command failed
+FAILING_BACKUP_PROG_FILE="$TMP_DIR/failing_backup_prog"
+FAILING_BACKUP_PROG_RC_FILE="$TMP_DIR/failing_backup_prog_rc"
+
 LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 ProgressStart "Preparing archive operation"
 (
@@ -115,21 +119,21 @@ case "$(basename ${BACKUP_PROG})" in
         #   ...
         #   - otherwise return "tar" exit code
         #
-        # When an error occurs, record the program name in $TMP_DIR/failing_backup_prog
-        # and real exit code in $TMP_DIR/failing_backup_prog_rc.
+        # When an error occurs, record the program name in $FAILING_BACKUP_PROG_FILE
+        # and real exit code in $FAILING_BACKUP_PROG_RC_FILE.
 
         let index=${#pipes_rc[@]}-1
         while [ $index -ge 0 ] ; do
             rc=${pipes_rc[$index]}
             if [ $rc -ne 0 ] ; then
-                echo "${backup_prog_shortnames[$index]}" > $TMP_DIR/failing_backup_prog
-                echo "$rc" > $TMP_DIR/failing_backup_prog_rc
+                echo "${backup_prog_shortnames[$index]}" > $FAILING_BACKUP_PROG_FILE
+                echo "$rc" > $FAILING_BACKUP_PROG_RC_FILE
                 if [ $rc -eq 1 ] && [ "${backup_prog_shortnames[$index]}" != "tar" ] ; then
                     rc=2
                 fi
                 exit $rc
             fi
-            # This pipe succeeded, check the previous one
+            # This pipe command succeeded, check the previous one
             let index--
         done
         # This was a success
@@ -223,8 +227,10 @@ sleep 1
 # everyone should see this warning, even if not verbose
 case "$(basename $BACKUP_PROG)" in
     (tar)
-        if (( $backup_prog_rc == 1 )); then
-            LogPrint "WARNING: $(cat $TMP_DIR/failing_backup_prog) ended with return code $backup_prog_rc and below output:
+        if (( $backup_prog_rc != 0 )); then
+            prog="$(cat $FAILING_BACKUP_PROG_FILE)"
+            if (( $backup_prog_rc == 1 )); then
+                LogUserOutput "WARNING: $prog ended with return code 1 and below output:
   ---snip---
 $(grep '^tar: ' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | sed -e 's/^/  /' | tail -n3)
   ----------
@@ -234,15 +240,17 @@ or may not be a perfect copy of the system. Relax-and-Recover
 will continue, however it is highly advisable to verify the
 backup in order to be sure to safely recover this system.
 "
-        elif (( $backup_prog_rc > 1 )); then
-            Error "$(cat $TMP_DIR/failing_backup_prog) failed with return code $(cat $TMP_DIR/failing_backup_prog_rc) and below output:
+            else
+                rc=$(cat $FAILING_BACKUP_PROG_RC_FILE)
+                Error "$prog failed with return code $rc and below output:
   ---snip---
-$(grep "^$(cat $TMP_DIR/failing_backup_prog): " "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | sed -e 's/^/  /' | tail -n3)
+$(grep "^$prog: " "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | sed -e 's/^/  /' | tail -n3)
   ----------
 This means that the archiving process ended prematurely, or did
 not even start. As a result it is unlikely you can recover this
 system properly. Relax-and-Recover is therefore aborting execution.
 "
+            fi
         fi
         ;;
     (*)
