@@ -81,13 +81,59 @@ case "$(basename ${BACKUP_PROG})" in
             ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
             -X $TMP_DIR/backup-exclude.txt -C / -c -f - \
             $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
-        $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
-            --no-wildcards-match-slash --one-file-system \
-            --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}" \
-            $BACKUP_PROG_CREATE_NEWER_OPTIONS \
-            ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
-            -X $TMP_DIR/backup-exclude.txt -C / -c -f - \
-            $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE | $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $SPLIT_COMMAND
+
+        # Variable used to record the short name of piped commands in case of
+        # error, e.g. ( "tar" "cat" "dd" ) in case of unencrypted and unsplit backup.
+        backup_prog_shortnames=(
+            "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
+            "$(basename $(echo "$BACKUP_PROG_CRYPT_OPTIONS" | awk '{ print $1 }'))"
+            "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
+        )
+        for index in ${!backup_prog_shortnames[@]} ; do
+            [ -n "${backup_prog_shortnames[$index]}" ] || BugError "No computed shortname for pipe component $index"
+        done
+
+        $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
+            --no-wildcards-match-slash --one-file-system                        \
+            --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
+            $BACKUP_PROG_CREATE_NEWER_OPTIONS                                   \
+            ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                       \
+            "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                \
+            -X $TMP_DIR/backup-exclude.txt -C / -c -f -                         \
+            $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |   \
+                                                                    \
+        $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY |         \
+                                                                    \
+        $SPLIT_COMMAND
+        pipes_rc=( ${PIPESTATUS[@]} )
+
+        # Exit code logic:
+        # - never return rc=1 (this is reserved for "tar" warning about modified files)
+        # - process exit code in pipe's reverse order
+        #   - if last command failed (e.g. "dd"), return an error
+        #   - otherwise if previous command failed (e.g. "encrypt"), return an error
+        #   ...
+        #   - otherwise return "tar" exit code
+        #
+        # When an error occurs, record the program name in $TMP_DIR/failing_backup_prog
+        # and real exit code in $TMP_DIR/failing_backup_prog_rc.
+
+        let index=${#pipes_rc[@]}-1
+        while [ $index -ge 0 ] ; do
+            rc=${pipes_rc[$index]}
+            if [ $rc -ne 0 ] ; then
+                echo "${backup_prog_shortnames[$index]}" > $TMP_DIR/failing_backup_prog
+                echo "$rc" > $TMP_DIR/failing_backup_prog_rc
+                if [ $rc -eq 1 ] && [ "${backup_prog_shortnames[$index]}" != "tar" ] ; then
+                    rc=2
+                fi
+                exit $rc
+            fi
+            # This pipe succeeded, check the previous one
+            let index--
+        done
+        # This was a success
+        exit 0
     ;;
     (rsync)
         # make sure that the target is a directory
@@ -178,9 +224,9 @@ sleep 1
 case "$(basename $BACKUP_PROG)" in
     (tar)
         if (( $backup_prog_rc == 1 )); then
-            LogPrint "WARNING: $(basename $BACKUP_PROG) ended with return code $backup_prog_rc and below output:
+            LogPrint "WARNING: $(cat $TMP_DIR/failing_backup_prog) ended with return code $backup_prog_rc and below output:
   ---snip---
-$(grep '^tar: ' $RUNTIME_LOGFILE | sed -e 's/^/  /' | tail -n3)
+$(grep '^tar: ' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | sed -e 's/^/  /' | tail -n3)
   ----------
 This means that files have been modified during the archiving
 process. As a result the backup may not be completely consistent
@@ -189,15 +235,16 @@ will continue, however it is highly advisable to verify the
 backup in order to be sure to safely recover this system.
 "
         elif (( $backup_prog_rc > 1 )); then
-            Error "$(basename $BACKUP_PROG) failed with return code $backup_prog_rc and below output:
+            Error "$(cat $TMP_DIR/failing_backup_prog) failed with return code $(cat $TMP_DIR/failing_backup_prog_rc) and below output:
   ---snip---
-$(grep '^tar: ' $RUNTIME_LOGFILE | sed -e 's/^/  /' | tail -n3)
+$(grep "^$(cat $TMP_DIR/failing_backup_prog): " "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | sed -e 's/^/  /' | tail -n3)
   ----------
 This means that the archiving process ended prematurely, or did
 not even start. As a result it is unlikely you can recover this
 system properly. Relax-and-Recover is therefore aborting execution.
 "
-        fi;;
+        fi
+        ;;
     (*)
         if (( $backup_prog_rc > 0 )) ; then
             Error "$(basename $BACKUP_PROG) failed with return code $backup_prog_rc
