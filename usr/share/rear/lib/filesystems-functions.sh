@@ -217,8 +217,13 @@ function xfs_parse
                 continue
             fi
 
-            # crc and ftype are mutually exclusive
-            if [ $crc -eq 1 ] && [ $var = "ftype" ]; then
+            # crc and ftype are mutually exclusive.
+            # crc option might be even completely missing in older versions of
+            # xfsprogs, which would cause behaviour like described in
+            # https://github.com/rear/rear/issues/1915.
+            # To avoid messages like "[: -eq: unary operator expected",
+            # we will set default value for $crc variable to 0.
+            if [ ${crc:-0} -eq 1 ] && [ $var = "ftype" ]; then
                 i=$((i+1))
                 continue
             fi
