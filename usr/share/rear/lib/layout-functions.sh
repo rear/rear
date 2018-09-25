@@ -166,7 +166,7 @@ generate_layout_dependencies() {
                     if [ "${mp#$temp_dep_mp}" != "${mp}" ] && [ "$mp" != "$dep_mp" ]; then
                         add_dependency "$type:$mp" "$dep_type:$dep_mp"
                     fi
-                done < <(awk '$1 ~ /^fs|btrfsmountedsubvol$/ { print; }' $LAYOUT_FILE)
+                done < <( egrep '^fs |^btrfsmountedsubvol ' $LAYOUT_FILE )
                 ;;
             swap)
                 dev=$(echo "$remainder" | cut -d " " -f "1")
