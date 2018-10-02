@@ -428,6 +428,7 @@ fi
 # Combine configuration files:
 Debug "Combining configuration files"
 # Use this file to manually override the OS detection:
+test -f "$CONFIG_DIR" && Error "Configuration directory $CONFIG_DIR is not a directory" || true
 test -r "$CONFIG_DIR/os.conf" && Source "$CONFIG_DIR/os.conf" || true
 test -r "$CONFIG_DIR/$WORKFLOW.conf" && Source "$CONFIG_DIR/$WORKFLOW.conf" || true
 SetOSVendorAndVersion
