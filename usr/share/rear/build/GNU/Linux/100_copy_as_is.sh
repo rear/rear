@@ -20,6 +20,9 @@ done >$copy_as_is_exclude_file
 # Copy files and directories as-is into the recovery system except the excluded ones and
 # remember what files and directories were actually copied in a copy_as_is_filelist_file
 # which is the reason that the first 'tar' must be run in verbose mode.
+# Symbolic links must be copied as symbolic links ('tar -h' must not be used here)
+# because 'tar -h' does not finish and blows up the recovery system to Gigabytes,
+# see https://github.com/rear/rear/pull/1636
 # It is crucial that pipefail is not set (cf. https://github.com/rear/rear/issues/700)
 # to make it work fail-safe even in case of non-existent files in the COPY_AS_IS array because
 # in case of non-existent files 'tar' is "Exiting with failure status" like in the following example:
