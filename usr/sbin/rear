@@ -447,7 +447,7 @@ if test "$CONFIG_APPEND_FILES" ; then
     # Treat missing additional config files (almost) same as other missing config files
     # which means that missing additional config files do not let ReaR abort with an Error
     # but in contrast to other missing config files missing additional config files
-    # are reported to the user via 'LogPrint' so that the user is at least informed
+    # are reported to the user via 'LogPrintError' so that the user is at least informed
     # if what he requested via the '-C' command line option cannot be fulfilled.
     # An intended positive side-effect when missing additional config files are no Error
     # is that then it also works (not relly cleanly but it works) for DRLM_MANAGED=y
@@ -470,7 +470,7 @@ if test "$CONFIG_APPEND_FILES" ; then
                 else if test -r "$config_append_file_path.conf" ; then
                          COPY_AS_IS=( "${COPY_AS_IS[@]}" "$config_append_file_path.conf" )
                      else
-                         LogPrint "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
+                         LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
                      fi
                 fi
                 ;;
@@ -487,7 +487,7 @@ if test "$CONFIG_APPEND_FILES" ; then
                  LogPrint "Sourcing additional configuration file '$config_append_file_path.conf'"
                  Source "$config_append_file_path.conf"
              else
-                 LogPrint "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
+                 LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
              fi
         fi
     done
@@ -546,7 +546,7 @@ if has_binary WORKFLOW_$WORKFLOW ; then
     Log "Finished running $WORKFLOW workflow"
 else
     VERBOSE=1
-    LogPrint "ERROR: The specified command '$WORKFLOW' does not exist!"
+    LogPrintError "ERROR: The specified command '$WORKFLOW' does not exist!"
     EXIT_CODE=1
 fi
 
