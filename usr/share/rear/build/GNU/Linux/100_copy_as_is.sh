@@ -79,6 +79,10 @@ mkdir $v -p $ROOTFS_DIR/etc/rear
 # This will do same job as lines below.
 # On top of that, it does not throw log warning like:
 # "cp: missing destination file operand after"
-# if hidden file (.<filename>) is missing in $CONFIG_DIR
-cp $v -r $CONFIG_DIR/. $ROOTFS_DIR/etc/rear/ 1>&2
-
+# if hidden file (.<filename>) is missing in $CONFIG_DIR.
+# To avoid dangling symlinks copy the content of the symlink target via '-L'
+# which could lead to same content that exists in two independent regular files but
+# for configuration files there is no other option than copying dereferenced files
+# since files in $CONFIG_DIR specified with '-c /path' get copied into '/etc/rear'
+# in the ReaR recovery system, cf. https://github.com/rear/rear/issues/1923
+cp $v -r -L $CONFIG_DIR/. $ROOTFS_DIR/etc/rear/
