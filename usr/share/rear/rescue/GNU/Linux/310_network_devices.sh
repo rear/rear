@@ -146,7 +146,7 @@ ip link help 2>&1 | grep -qw bridge && ip_link_supports_bridge='true'
 #
 #   - if it is a bond
 #
-#     - if SIMPLIFY_BONDING is set
+#     - if SIMPLIFY_BONDING is set and mode is not 4 (IEEE 802.3ad policy)
 #       - configure the first UP underlying interface using ALGO
 #       - keep record of interface mapping into new underlying interface
 #     - otherwise
@@ -607,6 +607,7 @@ function handle_team () {
 }
 
 already_set_up_bonds=""
+bond_initialized=
 
 function handle_bond () {
     local network_interface=$1
@@ -618,22 +619,19 @@ function handle_bond () {
 
     DebugPrint "$network_interface is a bond"
 
-    if [ -z "$already_set_up_bonds" ] ; then
-        if ! test "$SIMPLIFY_BONDING" ; then
-            echo "modprobe bonding"
-            MODULES=( "${MODULES[@]}" 'bonding' )
-        fi
-    elif [[ " $already_set_up_bonds " == *\ $network_interface\ * ]] ; then
+    if [[ " $already_set_up_bonds " == *\ $network_interface\ * ]] ; then
         DebugPrint "$network_interface already handled..."
         return $rc_ignore
     fi
     already_set_up_bonds+=" $network_interface"
 
+    local rc
     local nitfs=0
     local tmpfile=$( mktemp )
     local itf
+    local bonding_mode=$( awk '{ print $2 }' $sysfspath/bonding/mode )
 
-    if test "$SIMPLIFY_BONDING" ; then
+    if test "$SIMPLIFY_BONDING" && [ $bonding_mode -ne 4 ] ; then
         for itf in $( get_lower_interfaces $network_interface ) ; do
             DebugPrint "$network_interface has lower interface $itf"
             is_interface_up $itf || continue
@@ -663,13 +661,23 @@ function handle_bond () {
         # setup_device_params has already been called by interface bond was mapped onto
 
         return $rc_success
+    elif test "$SIMPLIFY_BONDING" ; then
+        # Bond mode '4' (IEEE 802.3ad policy) cannot be simplified because
+        # there is some special setup on the switch itself, requiring to keep
+        # the system's network interface's configuration intact.
+        LogPrint "Note: not simplifying network configuration for '$network_interface' because bonding mode is '4' (IEEE 802.3ad policy)."
     fi
 
     #
     # Non-simplified bonding mode
     #
 
-    local bonding_mode=$( awk '{ print $2 }' $sysfspath/bonding/mode )
+    if [ -z "$bond_initialized" ] ; then
+        echo "modprobe bonding"
+        MODULES=( "${MODULES[@]}" 'bonding' )
+        bond_initialized="y"
+    fi
+
     local miimon=$( cat $sysfspath/bonding/miimon )
     local use_carrier=$( cat $sysfspath/bonding/use_carrier )
 
@@ -689,7 +697,8 @@ EOT
         is_interface_up $itf || continue
         is_linked_to_physical $itf || continue
         handle_interface $itf >$tmpfile
-        [ $? -eq $rc_error ] && continue
+        rc=$?
+        [ $rc -eq $rc_error ] && continue
         let nitfs++
         [ $rc -eq $rc_success ] && cat $tmpfile
         # itf may have been mapped into some other interface
@@ -884,3 +893,5 @@ unset -f handle_team
 unset -f handle_bond
 unset -f handle_vlan
 unset -f handle_physdev
+
+# vim: set et ts=4 sw=4:
