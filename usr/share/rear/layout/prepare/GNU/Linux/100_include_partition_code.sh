@@ -1,8 +1,8 @@
 # Generate code to partition the disks.
 
-if ! has_binary parted; then
-    return
-fi
+# The parted command is mandatory,
+# see https://github.com/rear/rear/issues/1933#issuecomment-430207057
+has_binary parted || Error "Cannot find 'parted' command"
 
 # Test for features of parted.
 
@@ -12,10 +12,9 @@ FEATURE_PARTED_ANYUNIT=
 FEATURE_PARTED_ALIGNMENT=
 
 # Test by using the parted version numbers...
-parted_version=$(get_version parted -v)
+parted_version=$( get_version parted -v )
 
-[ "$parted_version" ]
-BugIfError "Function get_version could not detect parted version."
+test "$parted_version" || BugError "Function get_version could not detect parted version"
 
 if version_newer "$parted_version" 2.0 ; then
     # All features supported
