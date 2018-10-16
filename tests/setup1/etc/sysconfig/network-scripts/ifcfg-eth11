@@ -1,0 +1,6 @@
+NAME="eth11"
+DEVICE="eth11"
+ONBOOT="yes"
+TEAM_MASTER="team1112"
+DEVICETYPE="TeamPort"
+TYPE="Ethernet"

@@ -2,8 +2,8 @@
 
 unset CONFIG_DIR
 
-for eth in eth1 eth3 eth5 eth7 eth9; do ifdown $eth; done
+for eth in eth1 eth3 eth5 eth7 eth9 eth11; do ifdown $eth; done
 
 . "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"/run.sh
 
-for eth in eth1 eth3 eth5 eth7 eth9; do ifup $eth; done
+for eth in eth1 eth3 eth5 eth7 eth9 eth11; do ifup $eth; done

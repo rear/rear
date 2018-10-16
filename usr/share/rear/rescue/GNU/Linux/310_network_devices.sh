@@ -552,6 +552,7 @@ function handle_bridge () {
 }
 
 already_set_up_teams=""
+team_initialized=
 
 function handle_team () {
     local network_interface=$1
@@ -569,13 +570,58 @@ function handle_team () {
     fi
     already_set_up_teams+=" $network_interface"
 
-    # FIXME? Team code below simplifies the configuration, returning first port only
-    # There should a SIMPLIFY_TEAM variable for that
-
     local rc
     local nitfs=0
     local tmpfile=$( mktemp )
     local itf
+    local teaming_runner="$( teamdctl "$network_interface" state item get setup.runner_name )"
+
+    if test "$SIMPLIFY_TEAMING" && [ $teaming_runner != "lacp" ] ; then
+
+        for itf in $( get_lower_interfaces $network_interface ) ; do
+            DebugPrint "$network_interface has lower interface $itf"
+            is_interface_up $itf || continue
+            is_linked_to_physical $itf || continue
+            handle_interface $itf >$tmpfile
+            rc=$?
+            [ $rc -eq $rc_error ] && continue
+            let nitfs++
+            echo "# Original interface was $network_interface, now is $itf"
+            [ $rc -eq $rc_success ] && cat $tmpfile
+            # itf may have been mapped into some other interface
+            itf=$( get_mapped_network_interface $itf )
+            # We found an interface, so stop here after mapping team to lower interface
+            map_network_interface $network_interface $itf
+            break
+        done
+        rm $tmpfile
+
+        # If we didn't find any lower interface, we are in trouble ...
+        if [ $nitfs -eq 0 ] ; then
+            LogPrintError "Couldn't find any suitable lower interface for '$network_interface'."
+            return $rc_error
+        fi
+
+        # setup_device_params has already been called by interface team was mapped onto
+
+        return $rc_success
+    elif test "$SIMPLIFY_TEAMING" ; then
+        # Teaming runner 'lacp' (IEEE 802.3ad policy) cannot be simplified
+        # because there is some special setup on the switch itself, requiring
+        # to keep the system's network interface's configuration intact.
+        LogPrint "Note: not simplifying network configuration for '$network_interface' because teaming runner is 'lacp' (IEEE 802.3ad policy)."
+    fi
+
+    #
+    # Non-simplified teaming mode
+    #
+
+    if [ -z "$team_initialized" ] ; then
+        PROGS=( "${PROGS[@]}" 'teamd' 'teamdctl' )
+        team_initialized="y"
+    fi
+
+    local teamconfig="$( teamdctl -o "$network_interface" config dump actual )"
 
     for itf in $( get_lower_interfaces $network_interface ) ; do
         DebugPrint "$network_interface has lower interface $itf"
@@ -585,13 +631,15 @@ function handle_team () {
         rc=$?
         [ $rc -eq $rc_error ] && continue
         let nitfs++
-        echo "# Original interface was $network_interface, now is $itf"
         [ $rc -eq $rc_success ] && cat $tmpfile
         # itf may have been mapped into some other interface
-        itf=$( get_mapped_network_interface $itf )
-        # We found an interface, so stop here after mapping team to lower interface
-        map_network_interface $network_interface $itf
-        break
+        local newitf=$( get_mapped_network_interface $itf )
+        if [ "$itf" != "$newitf" ] ; then
+            # Fix the teaming configuration
+            teamconfig="$( echo "$teamconfig" | sed "s/\"$itf\"/\"$newitf\"/g" )"
+        fi
+        # Make sure lower device is down before configuring the team
+        echo "ip link set dev $itf down"
     done
     rm $tmpfile
 
@@ -601,7 +649,9 @@ function handle_team () {
         return $rc_error
     fi
 
-    # setup_device_params has already been called by interface team was mapped onto
+    echo "teamd -d -c '$teamconfig'"
+
+    setup_device_params $network_interface
 
     return $rc_success
 }

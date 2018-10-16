@@ -64,7 +64,7 @@ team89 -> eth8
 Test Case #2: simplification
 ------------
 
-SIMPLIFY_BONDING=y SIMPLIFY_BRIDGE=y
+SIMPLIFY_BONDING=y SIMPLIFY_BRIDGE=y SIMPLIFY_TEAMING=y
 
 Expected results:
 
@@ -72,7 +72,7 @@ bond12 -> bond12 (not simplified, because mode=4)
 bond34 -> eth3
 bridge2 -> eth3.2
 team567 -> eth5.5
-team89 -> eth8
+team89 -> team89 (not simplified, because runner=lacp)
 bridge3 -> eth10.3
 
 
@@ -166,7 +166,7 @@ bridge3 -> 4.4.4.100/24
 Test Case #8: IP address mapping & simplification
 ------------
 
-SIMPLIFY_BONDING=y SIMPLIFY_BRIDGE=y
+SIMPLIFY_BONDING=y SIMPLIFY_BRIDGE=y SIMPLIFY_TEAMING=y
 
 # cat mappings/ip_addresses 
 bond12.1	1.1.1.100/16
