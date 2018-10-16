@@ -268,7 +268,12 @@ extract_partitions() {
             # where the size is 524288000B i.e. parted_extended_partition_line[3]
             parted_extended_partition_line=( $( parted -s $device unit B print | grep -w "$partition_nr" | grep -w 'extended' ) )
             parted_extended_partition_size="${parted_extended_partition_line[3]%%B*}"
-            if test $size -ne $parted_extended_partition_size ; then
+            # parted_extended_partition_size is empty (or perhaps whatever string that is not an integer number)
+            # when it is no extended partition (i.e. when it is a primary partition or a logical partition)
+            # so that the subsequent 'test' intentionally also fails when parted_extended_partition_size is not an integer
+            # with bash stderr messages like 'unary operator expected' or 'integer expression expected'
+            # that are suppressed here to not appear in the log, cf. https://github.com/rear/rear/issues/1931
+            if test $size -ne $parted_extended_partition_size 2>/dev/null ; then
                  Log "Replacing probably wrong extended partition size $size by what parted reports $parted_extended_partition_size"
                  sed -i /^$partition_nr\ /s/\ $size\ /\ $parted_extended_partition_size\ / $TMP_DIR/partitions
             fi
