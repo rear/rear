@@ -474,7 +474,7 @@ function handle_bridge () {
     local tmpfile=$( mktemp )
     local itf
 
-    if test "$SIMPLIFY_BRIDGE" ; then
+    if is_true "$SIMPLIFY_BRIDGE" ; then
         for itf in $( get_lower_interfaces $network_interface ) ; do
             DebugPrint "$network_interface has lower interface $itf"
             is_interface_up $itf || continue
@@ -685,7 +685,7 @@ function handle_bond () {
     local itf
     local bonding_mode=$( awk '{ print $2 }' $sysfspath/bonding/mode )
 
-    if test "$SIMPLIFY_BONDING" && [ $bonding_mode -ne 4 ] ; then
+    if is_true "$SIMPLIFY_BONDING" && [ $bonding_mode -ne 4 ] ; then
         for itf in $( get_lower_interfaces $network_interface ) ; do
             DebugPrint "$network_interface has lower interface $itf"
             is_interface_up $itf || continue
@@ -715,7 +715,7 @@ function handle_bond () {
         # setup_device_params has already been called by interface bond was mapped onto
 
         return $rc_success
-    elif test "$SIMPLIFY_BONDING" ; then
+    elif is_true "$SIMPLIFY_BONDING" ; then
         # Bond mode '4' (IEEE 802.3ad policy) cannot be simplified because
         # there is some special setup on the switch itself, requiring to keep
         # the system's network interface's configuration intact.
