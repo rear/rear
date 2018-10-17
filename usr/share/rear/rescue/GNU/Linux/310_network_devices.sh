@@ -157,10 +157,14 @@ ip link help 2>&1 | grep -qw bridge && ip_link_supports_bridge='true'
 #
 #     - configure the vlan based on parent's interface
 #
-#   - if it is a team, only simplification is currently implemented
+#   - if it is a team
 #
-#     - configure the first UP underlying interface using ALGO
-#     - keep record of interface mapping into new underlying interface
+#     - if SIMPLIFY_TEAMING is set and runner is not 'lacp' (IEEE 802.3ad policy)
+#       - configure the first UP underlying interface using ALGO
+#       - keep record of interface mapping into new underlying interface
+#     - otherwise
+#       - configure the team
+#       - configure all UP underlying interfaces using ALGO
 #
 # - in any case, a given interface is only configured once; when an interface
 #   has already been configured, configuration code should be ignored by
@@ -576,7 +580,7 @@ function handle_team () {
     local itf
     local teaming_runner="$( teamdctl "$network_interface" state item get setup.runner_name )"
 
-    if test "$SIMPLIFY_TEAMING" && [ $teaming_runner != "lacp" ] ; then
+    if is_true "$SIMPLIFY_TEAMING" && [ "$teaming_runner" != "lacp" ] ; then
 
         for itf in $( get_lower_interfaces $network_interface ) ; do
             DebugPrint "$network_interface has lower interface $itf"
@@ -605,7 +609,7 @@ function handle_team () {
         # setup_device_params has already been called by interface team was mapped onto
 
         return $rc_success
-    elif test "$SIMPLIFY_TEAMING" ; then
+    elif is_true "$SIMPLIFY_TEAMING" ; then
         # Teaming runner 'lacp' (IEEE 802.3ad policy) cannot be simplified
         # because there is some special setup on the switch itself, requiring
         # to keep the system's network interface's configuration intact.
