@@ -34,11 +34,11 @@ done
 # Use KEYMAPS_DEFAULT_DIRECTORY if it is explicitly specified by the user:
 test $KEYMAPS_DEFAULT_DIRECTORY && keymaps_default_directory="$KEYMAPS_DEFAULT_DIRECTORY"
 
-if test $keymaps_default_directory ; then
+if test "$keymaps_default_directory" ; then
     # Try to find and include at least the default US keyboard mapping:
     if test -d "$keymaps_default_directory" ; then
         local defkeymap_file="$( find $keymaps_default_directory -name 'defkeymap.*' | head -n1 )"
-        if test -f $defkeymap_file ; then
+        if test "$defkeymap_file" ; then
             COPY_AS_IS=( "${COPY_AS_IS[@]}" $defkeymap_file )
         else
             LogPrintError "Cannot include default keyboard mapping (no 'defkeymap.*' found in $keymaps_default_directory)"
