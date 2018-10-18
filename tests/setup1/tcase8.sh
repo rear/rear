@@ -1,8 +1,9 @@
 #!/bin/bash
 
-CONFIG_DIR=/root
+CONFIG_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 export SIMPLIFY_BONDING=y
 export SIMPLIFY_BRIDGE=y
+export SIMPLIFY_TEAMING=y
 
-. ./run.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"/run.sh

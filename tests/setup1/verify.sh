@@ -32,7 +32,7 @@ DEVICES="$( ls /sys/class/net/ | egrep -wv "(bonding_masters|eth0|lo)" )"
 
 for dev in $DEVICES; do
 	ip addr show dev $dev
-done 2>/dev/null | egrep -w "(mtu|inet)" | sed "s/^[0-9]*: //" > $tmpfile_ipa
+done 2>/dev/null | egrep -w "(mtu|inet)" | sed -e "s/^[0-9]*: //" -e "s/ group \S* / /" > $tmpfile_ipa
 
 for dev in $DEVICES; do
 	ip r show dev $dev

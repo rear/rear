@@ -1,0 +1,9 @@
+DEVICE="team1112"
+TEAM_CONFIG='{"device":"team1112","runner":{"name":"activebackup"},"link_watch":{"name":"ethtool"},"ports":{"eth11":{"prio":-10,"sticky":true},"eth12":{"prio":100}}}'
+PROXY_METHOD="none"
+BROWSER_ONLY="no"
+NAME="team1112"
+ONBOOT="yes"
+DEVICETYPE="Team"
+IPADDR=7.7.7.7
+PREFIX=16

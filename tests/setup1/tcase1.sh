@@ -1,6 +1,5 @@
 #!/bin/bash
 
 unset CONFIG_DIR
-#CONFIG_DIR=/root
 
-. ./run.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"/run.sh

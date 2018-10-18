@@ -3,7 +3,7 @@
                    +----------------------------------+
 
 
-You need a VM with 10 network interfaces (eth0 being the main interface).
+You need a VM with 11 network interfaces (eth0 being the main interface).
 All interfaces except eth0 can be non-reachable.
 
 kvm.xml is an example template of such VM.
@@ -31,18 +31,18 @@ default via 192.168.122.1 dev eth0
 Running the unit tests:
 ----------------------
 
-After copying the files and making sure the script has been adapted,
+After copying the network configuration files and rebooting the system,
 
 from the VM, run the following command:
 
-# for i in $(seq 1 8); do ./tcase$i.sh; done
+# for i in $(seq 1 8); do ./tcase${i}.sh; done
 
 This will record the generated network+route files.
 
 Then to verify result, run the following command (this will take down the
 network, except eth0):
 
-# for i in $(seq 1 8); do ./verify.sh tcase$i_results; done
+# for i in $(seq 1 8); do ./verify.sh tcase${i}_results; done
 
 
 -------------------------------------------------------------------------------
@@ -64,15 +64,15 @@ team89 -> eth8
 Test Case #2: simplification
 ------------
 
-SIMPLIFY_BONDING=y SIMPLIFY_BRIDGE=y
+SIMPLIFY_BONDING=y SIMPLIFY_BRIDGE=y SIMPLIFY_TEAMING=y
 
 Expected results:
 
-bond12 -> eth1
+bond12 -> bond12 (not simplified, because mode=4)
 bond34 -> eth3
 bridge2 -> eth3.2
 team567 -> eth5.5
-team89 -> eth8
+team89 -> team89 (not simplified, because runner=lacp)
 bridge3 -> eth10.3
 
 
@@ -100,7 +100,6 @@ for eth in eth2 eth4 eth6 eth8 eth10; do ifdown $eth; done
 Expected results:
 
 eth2, eth4, eth6, eth8, eth10 not in file
-bond12 -> eth1
 bond34 -> eth3
 bridge2 -> eth3.2
 team567 -> eth5.5
@@ -136,7 +135,6 @@ for eth in eth1 eth3 eth5 eth7 eth9; do ifdown $eth; done
 Expected results:
 
 eth2, eth4, eth6, eth8, eth10 not in file
-bond12 -> eth2
 bond34 -> eth4
 team567 -> eth6
 team89 -> eth8
@@ -168,7 +166,7 @@ bridge3 -> 4.4.4.100/24
 Test Case #8: IP address mapping & simplification
 ------------
 
-SIMPLIFY_BONDING=y SIMPLIFY_BRIDGE=y
+SIMPLIFY_BONDING=y SIMPLIFY_BRIDGE=y SIMPLIFY_TEAMING=y
 
 # cat mappings/ip_addresses 
 bond12.1	1.1.1.100/16

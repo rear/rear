@@ -106,6 +106,14 @@
       <model type='virtio'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x12' function='0x0'/>
     </interface>
+    <interface type='network'>
+      <model type='virtio'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x13' function='0x0'/>
+    </interface>
+    <interface type='network'>
+      <model type='virtio'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x14' function='0x0'/>
+    </interface>
     <serial type='pty'>
       <target port='0'/>
     </serial>

@@ -146,7 +146,7 @@ ip link help 2>&1 | grep -qw bridge && ip_link_supports_bridge='true'
 #
 #   - if it is a bond
 #
-#     - if SIMPLIFY_BONDING is set
+#     - if SIMPLIFY_BONDING is set and mode is not 4 (IEEE 802.3ad policy)
 #       - configure the first UP underlying interface using ALGO
 #       - keep record of interface mapping into new underlying interface
 #     - otherwise
@@ -157,10 +157,14 @@ ip link help 2>&1 | grep -qw bridge && ip_link_supports_bridge='true'
 #
 #     - configure the vlan based on parent's interface
 #
-#   - if it is a team, only simplification is currently implemented
+#   - if it is a team
 #
-#     - configure the first UP underlying interface using ALGO
-#     - keep record of interface mapping into new underlying interface
+#     - if SIMPLIFY_TEAMING is set and runner is not 'lacp' (IEEE 802.3ad policy)
+#       - configure the first UP underlying interface using ALGO
+#       - keep record of interface mapping into new underlying interface
+#     - otherwise
+#       - configure the team
+#       - configure all UP underlying interfaces using ALGO
 #
 # - in any case, a given interface is only configured once; when an interface
 #   has already been configured, configuration code should be ignored by
@@ -470,7 +474,7 @@ function handle_bridge () {
     local tmpfile=$( mktemp )
     local itf
 
-    if test "$SIMPLIFY_BRIDGE" ; then
+    if is_true "$SIMPLIFY_BRIDGE" ; then
         for itf in $( get_lower_interfaces $network_interface ) ; do
             DebugPrint "$network_interface has lower interface $itf"
             is_interface_up $itf || continue
@@ -552,6 +556,7 @@ function handle_bridge () {
 }
 
 already_set_up_teams=""
+team_initialized=
 
 function handle_team () {
     local network_interface=$1
@@ -569,13 +574,58 @@ function handle_team () {
     fi
     already_set_up_teams+=" $network_interface"
 
-    # FIXME? Team code below simplifies the configuration, returning first port only
-    # There should a SIMPLIFY_TEAM variable for that
-
     local rc
     local nitfs=0
     local tmpfile=$( mktemp )
     local itf
+    local teaming_runner="$( teamdctl "$network_interface" state item get setup.runner_name )"
+
+    if is_true "$SIMPLIFY_TEAMING" && [ "$teaming_runner" != "lacp" ] ; then
+
+        for itf in $( get_lower_interfaces $network_interface ) ; do
+            DebugPrint "$network_interface has lower interface $itf"
+            is_interface_up $itf || continue
+            is_linked_to_physical $itf || continue
+            handle_interface $itf >$tmpfile
+            rc=$?
+            [ $rc -eq $rc_error ] && continue
+            let nitfs++
+            echo "# Original interface was $network_interface, now is $itf"
+            [ $rc -eq $rc_success ] && cat $tmpfile
+            # itf may have been mapped into some other interface
+            itf=$( get_mapped_network_interface $itf )
+            # We found an interface, so stop here after mapping team to lower interface
+            map_network_interface $network_interface $itf
+            break
+        done
+        rm $tmpfile
+
+        # If we didn't find any lower interface, we are in trouble ...
+        if [ $nitfs -eq 0 ] ; then
+            LogPrintError "Couldn't find any suitable lower interface for '$network_interface'."
+            return $rc_error
+        fi
+
+        # setup_device_params has already been called by interface team was mapped onto
+
+        return $rc_success
+    elif is_true "$SIMPLIFY_TEAMING" ; then
+        # Teaming runner 'lacp' (IEEE 802.3ad policy) cannot be simplified
+        # because there is some special setup on the switch itself, requiring
+        # to keep the system's network interface's configuration intact.
+        LogPrint "Note: not simplifying network configuration for '$network_interface' because teaming runner is 'lacp' (IEEE 802.3ad policy)."
+    fi
+
+    #
+    # Non-simplified teaming mode
+    #
+
+    if [ -z "$team_initialized" ] ; then
+        PROGS=( "${PROGS[@]}" 'teamd' 'teamdctl' )
+        team_initialized="y"
+    fi
+
+    local teamconfig="$( teamdctl -o "$network_interface" config dump actual )"
 
     for itf in $( get_lower_interfaces $network_interface ) ; do
         DebugPrint "$network_interface has lower interface $itf"
@@ -585,13 +635,15 @@ function handle_team () {
         rc=$?
         [ $rc -eq $rc_error ] && continue
         let nitfs++
-        echo "# Original interface was $network_interface, now is $itf"
         [ $rc -eq $rc_success ] && cat $tmpfile
         # itf may have been mapped into some other interface
-        itf=$( get_mapped_network_interface $itf )
-        # We found an interface, so stop here after mapping team to lower interface
-        map_network_interface $network_interface $itf
-        break
+        local newitf=$( get_mapped_network_interface $itf )
+        if [ "$itf" != "$newitf" ] ; then
+            # Fix the teaming configuration
+            teamconfig="$( echo "$teamconfig" | sed "s/\"$itf\"/\"$newitf\"/g" )"
+        fi
+        # Make sure lower device is down before configuring the team
+        echo "ip link set dev $itf down"
     done
     rm $tmpfile
 
@@ -601,12 +653,15 @@ function handle_team () {
         return $rc_error
     fi
 
-    # setup_device_params has already been called by interface team was mapped onto
+    echo "teamd -d -c '$teamconfig'"
+
+    setup_device_params $network_interface
 
     return $rc_success
 }
 
 already_set_up_bonds=""
+bond_initialized=
 
 function handle_bond () {
     local network_interface=$1
@@ -618,22 +673,19 @@ function handle_bond () {
 
     DebugPrint "$network_interface is a bond"
 
-    if [ -z "$already_set_up_bonds" ] ; then
-        if ! test "$SIMPLIFY_BONDING" ; then
-            echo "modprobe bonding"
-            MODULES=( "${MODULES[@]}" 'bonding' )
-        fi
-    elif [[ " $already_set_up_bonds " == *\ $network_interface\ * ]] ; then
+    if [[ " $already_set_up_bonds " == *\ $network_interface\ * ]] ; then
         DebugPrint "$network_interface already handled..."
         return $rc_ignore
     fi
     already_set_up_bonds+=" $network_interface"
 
+    local rc
     local nitfs=0
     local tmpfile=$( mktemp )
     local itf
+    local bonding_mode=$( awk '{ print $2 }' $sysfspath/bonding/mode )
 
-    if test "$SIMPLIFY_BONDING" ; then
+    if is_true "$SIMPLIFY_BONDING" && [ $bonding_mode -ne 4 ] ; then
         for itf in $( get_lower_interfaces $network_interface ) ; do
             DebugPrint "$network_interface has lower interface $itf"
             is_interface_up $itf || continue
@@ -663,13 +715,23 @@ function handle_bond () {
         # setup_device_params has already been called by interface bond was mapped onto
 
         return $rc_success
+    elif is_true "$SIMPLIFY_BONDING" ; then
+        # Bond mode '4' (IEEE 802.3ad policy) cannot be simplified because
+        # there is some special setup on the switch itself, requiring to keep
+        # the system's network interface's configuration intact.
+        LogPrint "Note: not simplifying network configuration for '$network_interface' because bonding mode is '4' (IEEE 802.3ad policy)."
     fi
 
     #
     # Non-simplified bonding mode
     #
 
-    local bonding_mode=$( awk '{ print $2 }' $sysfspath/bonding/mode )
+    if [ -z "$bond_initialized" ] ; then
+        echo "modprobe bonding"
+        MODULES=( "${MODULES[@]}" 'bonding' )
+        bond_initialized="y"
+    fi
+
     local miimon=$( cat $sysfspath/bonding/miimon )
     local use_carrier=$( cat $sysfspath/bonding/use_carrier )
 
@@ -689,7 +751,8 @@ EOT
         is_interface_up $itf || continue
         is_linked_to_physical $itf || continue
         handle_interface $itf >$tmpfile
-        [ $? -eq $rc_error ] && continue
+        rc=$?
+        [ $rc -eq $rc_error ] && continue
         let nitfs++
         [ $rc -eq $rc_success ] && cat $tmpfile
         # itf may have been mapped into some other interface
@@ -884,3 +947,5 @@ unset -f handle_team
 unset -f handle_bond
 unset -f handle_vlan
 unset -f handle_physdev
+
+# vim: set et ts=4 sw=4:

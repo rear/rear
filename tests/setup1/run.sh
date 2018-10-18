@@ -4,9 +4,9 @@ echo
 echo "$0"
 echo
 
-REAR_DIR="/path/to/rear/sources"
+REAR_DIR="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")/../..")"
 
-RESULT_DIR="/root/$(basename $0 .sh)_results"
+RESULT_DIR="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")/$(basename $0 .sh)_results"
 mkdir -p $RESULT_DIR
 
 function DebugPrint () {
@@ -41,9 +41,10 @@ function has_binary () {
 	which $1 >/dev/null 2>&1
 }
 
-TMP_DIR=/root/tmp
+TMP_DIR="/tmp/$(basename "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")"
 
-rm -fr $TMP_DIR
+rm -fr $TMP_DIR >/dev/null 2>&1
+mkdir -p $TMP_DIR
 
 # Add to sed -e below to test "ip_link_supports_bridge='false'" (RHEL6)
 #    -e "s#\$ip_link_supports_bridge#'false'#" \
@@ -53,13 +54,13 @@ rm -fr $TMP_DIR
 
 # Add to sed -e below to have code using 'brctl' instead of 'ip link' (RHEL6)
 #    -e "s#\$net_devices_have_lower_links#'false'#" \
-sed -e "s#^network_devices_setup_script=.*#network_devices_setup_script=/tmp/60-network-devices.sh#" \
-    $REAR_DIR/usr/share/rear/rescue/GNU/Linux/310_network_devices.sh > /tmp/310_network_devices.sh
-sed "s#^netscript=.*#netscript=/tmp/62-routing.sh#" $REAR_DIR/usr/share/rear/rescue/GNU/Linux/350_routing.sh > /tmp/350_routing.sh
+sed -e "s#^network_devices_setup_script=.*#network_devices_setup_script=$TMP_DIR/60-network-devices.sh#" \
+    $REAR_DIR/usr/share/rear/rescue/GNU/Linux/310_network_devices.sh > $TMP_DIR/310_network_devices.sh
+sed "s#^network_routing_setup_script=.*#network_routing_setup_script=$TMP_DIR/62-routing.sh#" $REAR_DIR/usr/share/rear/rescue/GNU/Linux/350_routing.sh > $TMP_DIR/350_routing.sh
 
-. /tmp/310_network_devices.sh
-. /tmp/350_routing.sh
+. $TMP_DIR/310_network_devices.sh
+. $TMP_DIR/350_routing.sh
 
-for f in /tmp/60-network-devices.sh /tmp/62-routing.sh; do
+for f in $TMP_DIR/60-network-devices.sh $TMP_DIR/62-routing.sh; do
 	grep -v "dev eth0" $f > $RESULT_DIR/$(basename $f)
 done
