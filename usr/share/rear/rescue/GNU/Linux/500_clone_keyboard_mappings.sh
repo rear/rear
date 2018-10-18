@@ -33,14 +33,22 @@ for keymaps_default_directory in /usr/share/kbd/keymaps /usr/share/keymaps /lib/
 done
 # Use KEYMAPS_DEFAULT_DIRECTORY if it is explicitly specified by the user:
 test $KEYMAPS_DEFAULT_DIRECTORY && keymaps_default_directory="$KEYMAPS_DEFAULT_DIRECTORY"
-# Report when there is no keymaps default directory because other keyboard mappings (at least 'defkeymap') should get included
-# but that is not a severe error because the current keyboard mapping is dumped and gets used by default and as fallback.
-# test -d without a (possibly empty) argument would falsely result true (while plain test without argument results false):
-test -d "$keymaps_default_directory" || LogPrintError "Cannot include keyboard mappings (no keymaps default directory '$keymaps_default_directory')"
 
-# Try to find and include at least the default US keyboard mapping:
-local defkeymap_file="$( find $keymaps_default_directory -name 'defkeymap.*' | head -n1 )"
-test $defkeymap_file && COPY_AS_IS=( "${COPY_AS_IS[@]}" $defkeymap_file )
+if test "$keymaps_default_directory" ; then
+    # Try to find and include at least the default US keyboard mapping:
+    if test -d "$keymaps_default_directory" ; then
+        local defkeymap_file="$( find $keymaps_default_directory -name 'defkeymap.*' | head -n1 )"
+        if test "$defkeymap_file" ; then
+            COPY_AS_IS=( "${COPY_AS_IS[@]}" $defkeymap_file )
+        else
+            LogPrintError "Cannot include default keyboard mapping (no 'defkeymap.*' found in $keymaps_default_directory)"
+        fi
+    else
+        LogPrintError "Cannot include default keyboard mapping (no keymaps default directory '$keymaps_default_directory')"
+    fi
+else
+    LogPrintError "Cannot include default keyboard mapping (no KEYMAPS_DEFAULT_DIRECTORY specified)"
+fi
 
 # Additionally include other keyboard mappings to also support users with a non-US keyboard
 # who can then manually switch to their keyboard mapping (e.g. via a command like "loadkeys de-latin1")
@@ -55,5 +63,9 @@ test $defkeymap_file && COPY_AS_IS=( "${COPY_AS_IS[@]}" $defkeymap_file )
 local keymaps_directories=$keymaps_default_directory
 # Use KEYMAPS_DIRECTORIES if it is explicitly specified by the user:
 contains_visible_char "$KEYMAPS_DIRECTORIES" && keymaps_directories="$KEYMAPS_DIRECTORIES"
-COPY_AS_IS=( "${COPY_AS_IS[@]}" $keymaps_directories )
+if test "$keymaps_directories" ; then
+    COPY_AS_IS=( "${COPY_AS_IS[@]}" $keymaps_directories )
+else
+    LogPrintError "Cannot include keyboard mappings (neither KEYMAPS_DEFAULT_DIRECTORY nor KEYMAPS_DIRECTORIES specified)"
+fi
 
