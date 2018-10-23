@@ -41,6 +41,12 @@ function opaladmin_help() {
 function WORKFLOW_opaladmin() {
     # ReaR command 'opaladmin'
 
+    # Do nothing in simulation mode, cf. https://github.com/rear/rear/issues/1939
+    if is_true "$SIMULATE" ; then
+        LogPrint "${BASH_SOURCE[0]} administrates TCG Opal 2-compliant self-encrypting disks"
+        return 0
+    fi
+
     [[ -n "$DEBUGSCRIPTS" ]] && set -$DEBUGSCRIPTS_ARGUMENT
 
     Log "Command line options of the opaladmin workflow: $*"

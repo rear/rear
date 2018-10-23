@@ -10,6 +10,13 @@ if [[ "$VERBOSE" ]]; then
 fi
 WORKFLOWS=( ${WORKFLOWS[@]} udev )
 WORKFLOW_udev () {
+
+    # Do nothing in simulation mode, cf. https://github.com/rear/rear/issues/1939
+    if is_true "$SIMULATE" ; then
+        LogPrint "${BASH_SOURCE[0]} is a udev handler; triggered by udev rule"
+        return 0
+    fi
+
     # If no udev workflow has been defined, exit cleanly
     if [[ -z "$UDEV_WORKFLOW" ]]; then
         Log "Variable UDEV_WORKFLOW not set, skipping udev workflow."
