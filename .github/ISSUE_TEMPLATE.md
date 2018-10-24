@@ -19,4 +19,6 @@ Fill in the following items before submitting a new issue
 
 * Description of the issue (ideally so that others can reproduce it):
 
-* Work-around, if any:
+* Workaround, if any:
+
+* Attachments, if applicable ("rear -D mkrescue/mkbackup/recover" debug log file):
