@@ -9,6 +9,12 @@ LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} help )
 
 function WORKFLOW_help () {
 
+# Do nothing in simulation mode, cf. https://github.com/rear/rear/issues/1939
+if is_true "$SIMULATE" ; then
+    LogPrint "${BASH_SOURCE[0]} outputs usage information"
+    return 0
+fi
+
 # Output the help text to the original STDOUT but keep STDERR in the log file:
 cat 1>&7 <<EOF
 Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [--] COMMAND [ARGS...]
@@ -32,14 +38,20 @@ Available options:
 List of commands:
 EOF
 
-# Output all workflow descriptions to the original STDOUT but keep STDERR in the log file:
-for workflow in ${WORKFLOWS[@]} ; do
-    description=WORKFLOW_${workflow}_DESCRIPTION
+# Output all workflow descriptions of the currently usable workflows
+# to the original STDOUT but keep STDERR in the log file:
+currently_usable_workflows="${WORKFLOWS[@]}"
+# See init/default/050_check_rear_recover_mode.sh what the usable workflows are in the ReaR rescue/recovery system.
+# In the ReaR rescue/recovery system /etc/rear-release is unique (it does not exist otherwise):
+test -f /etc/rear-release && currently_usable_workflows="recover layoutonly restoreonly finalizeonly opaladmin help"
+for workflow in $currently_usable_workflows ; do
+    description_variable_name=WORKFLOW_${workflow}_DESCRIPTION
     # in some workflows WORKFLOW_${workflow}_DESCRIPTION
-    # is only defined if "$VERBOSE" is set - currently (18. Nov. 2015) for those
+    # is only defined if "$VERBOSE" is set - currently (23. Oct. 2018) for those
     # WORKFLOW_savelayout_DESCRIPTION WORKFLOW_shell_DESCRIPTION WORKFLOW_udev_DESCRIPTION
-    # so that an empty default is used to avoid that ${!description} is an unbound variable:
-    test "${!description:-}" && printf " %-16s%s\n" $workflow "${!description:-}"
+    # WORKFLOW_layoutonly_DESCRIPTION WORKFLOW_finalizeonly_DESCRIPTION
+    # so that an empty default is used to avoid that ${!description_variable_name} is an unbound variable:
+    test "${!description_variable_name:-}" && printf " %-16s%s\n" $workflow "${!description_variable_name:-}"
 done 1>&7
 
 # Output the text to the original STDOUT but keep STDERR in the log file:

@@ -9,6 +9,13 @@ LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} dump )
 WORKFLOW_dump_DESCRIPTION="dump configuration and system information"
 WORKFLOWS=( ${WORKFLOWS[@]} dump )
 WORKFLOW_dump () {
+
+        # Do nothing in simulation mode, cf. https://github.com/rear/rear/issues/1939
+        if is_true "$SIMULATE" ; then
+            LogPrint "${BASH_SOURCE[0]} dumps configuration and system information"
+            return 0
+        fi
+
 	LogPrint "Dumping out configuration and system information"
 
 	if [ "$ARCH" != "$REAL_ARCH" ] ; then

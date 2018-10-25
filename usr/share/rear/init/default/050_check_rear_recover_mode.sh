@@ -1,12 +1,14 @@
 # In the ReaR rescue/recovery system the only possible workflows are
 # - 'recover' and its partial workflows 'layoutonly' 'restoreonly' 'finalizeonly'
 # - 'opaladmin'
+# - 'help'
 # cf. https://github.com/rear/rear/issues/987
 # and https://github.com/rear/rear/issues/1088
+# and https://github.com/rear/rear/issues/1901
 # In the ReaR rescue/recovery system /etc/rear-release is unique (it does not exist otherwise):
 test -f /etc/rear-release || return 0
 case "$WORKFLOW" in
-    (recover|layoutonly|restoreonly|finalizeonly|opaladmin)
+    (recover|layoutonly|restoreonly|finalizeonly|opaladmin|help)
         LogPrint "Running workflow $WORKFLOW within the ReaR rescue/recovery system"
         ;;
     (*)
