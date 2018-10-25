@@ -1,7 +1,8 @@
 [Unit]
 Description=D-Bus System Message Bus
 Requires=dbus.socket
-After=syslog.target
+# Regarding After=syslog.target see https://github.com/rear/rear/pull/1937
+#After=syslog.target
 
 [Service]
 ExecStartPre=/bin/dbus-uuidgen --ensure
