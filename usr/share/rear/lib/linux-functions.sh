@@ -82,6 +82,14 @@ function my_udevinfo () {
 # optionally $1 specifies the directory where to search for
 # drivers files
 function FindStorageDrivers () {
+    # The special user setting MODULES=( 'no_modules' ) enforces that
+    # no kernel modules get included in the rescue/recovery system
+    # regardless of what modules are currently loaded.
+    # Test the first MODULES array element because other scripts
+    # in particular rescue/GNU/Linux/240_kernel_modules.sh
+    # already appended other modules to the MODULES array:
+    test "no_modules" = "$MODULES" && return
+
     if (( ${#STORAGE_DRIVERS[@]} == 0 )) ; then
         if ! grep -E 'kernel/drivers/(block|firewire|ide|ata|md|message|scsi|usb/storage)' /lib/modules/$KERNEL_VERSION/modules.builtin ; then
             Error "FindStorageDrivers called but STORAGE_DRIVERS is empty and no builtin storage modules found"
