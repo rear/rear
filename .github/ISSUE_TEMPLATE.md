@@ -21,4 +21,4 @@ Fill in the following items before submitting a new issue
 
 * Workaround, if any:
 
-* Attachments, if applicable ("rear -D mkrescue/mkbackup/recover" debug log file):
+* Attachments, if applicable ("rear -D mkrescue/mkbackup/recover" debug log files):
