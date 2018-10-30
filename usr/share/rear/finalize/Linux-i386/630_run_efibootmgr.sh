@@ -1,16 +1,28 @@
+
 # only useful for UEFI systems in combination with grub[2]-efi
-is_true $USING_UEFI_BOOTLOADER || return 0 # empty or 0 means using BIOS
 
-# check if $TARGET_FS_ROOT/boot/efi is mounted
-[[ -d "$TARGET_FS_ROOT/boot/efi" ]]
-StopIfError "Could not find directory $TARGET_FS_ROOT/boot/efi"
+# USING_UEFI_BOOTLOADER empty or not true means using BIOS
+is_true $USING_UEFI_BOOTLOADER || return 0
 
-BootEfiDev="$( mount | grep "boot/efi" | awk '{print $1}' )"
-Dev=$( get_device_name $BootEfiDev )    # /dev/sda1 or /dev/mapper/vol34_part2 or /dev/mapper/mpath99p4
-ParNr=$( get_partition_number $Dev )  # 1 (must anyway be a low nr <9)
-Disk=$( echo ${Dev%$ParNr} ) # /dev/sda or /dev/mapper/vol34_part or /dev/mapper/mpath99p
+# UEFI_BOOTLOADER empty or not a regular file means using BIOS cf. rescue/default/850_save_sysfs_uefi_vars.sh
+# Double quotes are mandatory here because 'test -f' without any (possibly empty) argument results true:
+test -f "$UEFI_BOOTLOADER" || return 0
 
-if [[ ${Dev/mapper//} != $Dev ]] ; then # we have 'mapper' in devname
+# Determine where the EFI System Prtition (ESP) is mounted in the currently running recovery system:
+esp_mountpoint=$( df -P "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" | tail -1 | awk '{print $6}' )
+# Use TARGET_FS_ROOT/boot/efi as fallback ESP mountpoint:
+test "$esp_mountpoint" || esp_mountpoint="$TARGET_FS_ROOT/boot/efi"
+
+BootEfiDev="$( mount | grep "$esp_mountpoint" | awk '{print $1}' )"
+# /dev/sda1 or /dev/mapper/vol34_part2 or /dev/mapper/mpath99p4
+Dev=$( get_device_name $BootEfiDev )
+# 1 (must anyway be a low nr <9)
+ParNr=$( get_partition_number $Dev )
+# /dev/sda or /dev/mapper/vol34_part or /dev/mapper/mpath99p
+Disk=$( echo ${Dev%$ParNr} )
+
+# we have 'mapper' in devname
+if [[ ${Dev/mapper//} != $Dev ]] ; then
     # we only expect mpath_partX  or mpathpX or mpath-partX
     case $Disk in
         (*p)     Disk=${Disk%p} ;;
@@ -19,10 +31,16 @@ if [[ ${Dev/mapper//} != $Dev ]] ; then # we have 'mapper' in devname
         (*)      Log "Unsupported kpartx partition delimiter for $Dev"
     esac
 fi
-BootLoader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' ) # EFI\fedora\shim.efi
-Log efibootmgr --create --gpt --disk ${Disk} --part ${ParNr} --write-signature --label \"${OS_VENDOR} ${OS_VERSION}\" --loader \"\\${BootLoader}\"
-efibootmgr --create --gpt --disk ${Disk} --part ${ParNr} --write-signature --label "${OS_VENDOR} ${OS_VERSION}" --loader "\\${BootLoader}"
-LogIfError "Problem occurred with creating an efibootmgr entry"
 
-# ok, boot loader has been set-up - tell rear we are done using following var.
-NOBOOTLOADER=
+# EFI\fedora\shim.efi
+BootLoader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
+LogPrint "Creating  EFI Boot Manager entry '$OS_VENDOR $OS_VERSION' for '$BootLoader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER')"
+Log efibootmgr --create --gpt --disk ${Disk} --part ${ParNr} --write-signature --label \"${OS_VENDOR} ${OS_VERSION}\" --loader \"\\${BootLoader}\"
+if efibootmgr --create --gpt --disk ${Disk} --part ${ParNr} --write-signature --label "${OS_VENDOR} ${OS_VERSION}" --loader "\\${BootLoader}" ; then
+    # ok, boot loader has been set-up - tell rear we are done using following var.
+    NOBOOTLOADER=''
+    return
+fi
+
+LogPrintError "efibootmgr failed to create EFI Boot Manager entry for '$BootLoader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER')"
+
