@@ -6,6 +6,12 @@
 # see https://github.com/rear/rear/issues/1638
 # and https://github.com/rear/rear/pull/1734
 
+# FIXME: The following code fails if symlinks or their targets contain characters from IFS (e.g. blanks),
+# cf. the same kind of comments in build/default/980_verify_rootfs.sh
+# and layout/prepare/GNU/Linux/130_include_mount_subvolumes_code.sh
+# see https://github.com/rear/rear/pull/1514#discussion_r141031975
+# and for the general issue see https://github.com/rear/rear/issues/1372
+
 # Find broken symbolic links inside the recovery system via 'chroot $ROOTFS_DIR find . -xtype l'
 # (but exclude the special proc sys dev directories inside the recovery system)
 # because 'pushd $ROOTFS_DIR ; find . -xtype l ; popd' would not find symlinks that are broken
