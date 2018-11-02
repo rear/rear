@@ -57,6 +57,11 @@ function SetOSVendorAndVersion () {
                 minornr=$( grep -o -E '[0-9]+' /etc/system-release | head -2 | tail -1 )
                 OS_VERSION="$majornr.$minornr"
             fi
+
+            if [[ -f /etc/slackware-version ]] ; then
+                OS_VENDOR=Slackware
+                OS_VERSION=$(cat /etc/slackware-version  | sed -r -e 's/slackware\s*//i')
+            fi
         fi
 
         # If OS_VENDOR is still generic then use as last resource 'lsb_release' to find out
