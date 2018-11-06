@@ -12,7 +12,7 @@ is_true $USING_UEFI_BOOTLOADER && return
 # Only for lilo
 [[ "$BOOTLOADER" == "LILO" ]] || return 0 # only continue when bootloader is lilo based
 
-[[ $(type -p lilo) ]]
+type -p $TARGET_FS_ROOT/sbin/lilo
 StopIfError "Could not find lilo executable"
 
 
@@ -27,8 +27,7 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
 
     # Find the disks that need a new LILO
     disks=$(grep '^disk \|^multipath ' $LAYOUT_FILE | cut -d' ' -f2)
-    [[ "$disks" ]]
-    StopIfError "Unable to find any disks"
+    [[ "$disks" ]] || Error "Unable to find any disks to install LILO on"
 
 
     chroot $TARGET_FS_ROOT /sbin/lilo -v >&2
