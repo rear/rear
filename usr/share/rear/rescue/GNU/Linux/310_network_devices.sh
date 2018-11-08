@@ -854,7 +854,11 @@ function handle_physdev () {
 
     DebugPrint "$network_interface is a physical device"
 
-    mac="$( cat $sysfspath/address )" || BugError "Could not read a MAC address for '$network_interface'."
+    if [ -e $sysfspath/bonding_slave/perm_hwaddr ] ; then
+        mac="$( cat $sysfspath/bonding_slave/perm_hwaddr )"
+    else
+        mac="$( cat $sysfspath/address )" || BugError "Could not read a MAC address for '$network_interface'."
+    fi
     # Skip fake interfaces without MAC address
     [ "$mac" != "00:00:00:00:00:00" ] || return $rc_error
 
