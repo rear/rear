@@ -4,3 +4,4 @@
 build-stamp
 /var
 /etc/rear/site.conf
+.DS_Store
