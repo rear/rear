@@ -1,0 +1,1 @@
+../../init/default/950_check_missing_programs.sh
