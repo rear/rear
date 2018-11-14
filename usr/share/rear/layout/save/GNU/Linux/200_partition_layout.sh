@@ -1,12 +1,12 @@
 # Save the partition layout
-### This works on a per device basis.
-### The main function is extract_partitions
-### Temporary caching of data in $TMP_DIR/partitions
-### Temporary caching of parted data in $TMP_DIR/parted
+# This works on a per device basis.
+# The main function is extract_partitions
+# Temporary caching of data in $TMP_DIR/partitions
+# Temporary caching of parted data in $TMP_DIR/parted
 
-### Parted can output machine parseable information
+# Parted can output machine parseable information
 FEATURE_PARTED_MACHINEREADABLE=
-### Parted used to have slightly different naming
+# Parted used to have slightly different naming
 FEATURE_PARTED_OLDNAMING=
 
 parted_version=$( get_version parted -v )
@@ -324,5 +324,9 @@ Log "Saving disk partitions."
             fi
         fi
     done
-
 ) >> $DISKLAYOUT_FILE
+
+# parted is required in the recovery system if disklayout.conf contains at least one 'disk' or 'part' entry
+# cf. https://github.com/rear/rear/issues/1963
+egrep -q '^disk |^part ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" parted ) || true
+
