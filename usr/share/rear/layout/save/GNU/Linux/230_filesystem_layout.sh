@@ -456,9 +456,11 @@ service docker status >/dev/null 2>&1 && docker_is_running="yes"
 # End writing output to DISKLAYOUT_FILE.
 
 # mkfs is required in the recovery system if disklayout.conf contains at least one 'fs' entry
+# see the create_fs function in layout/prepare/GNU/Linux/130_include_filesystem_code.sh
+# what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
 grep -q '^fs ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mkfs )
-# other filesystem creating tools are required in the recovery system
+# Other filesystem creating tools are required in the recovery system
 # depending on which filesystem types entries exist in disklayout.conf
 # (see above supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"):
 required_mkfs_tools=""
@@ -468,8 +470,13 @@ done
 # Remove duplicates because in disklayout.conf there can be many entries with same filesystem type:
 required_mkfs_tools="$( echo $required_mkfs_tools | tr ' ' '\n' | sort -u | tr '\n' ' ' )"
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" $required_mkfs_tools )
-# mke2fs is also required in the recovery system if any 'mkfs.ext*' filesystem creating tool is required:
-echo $required_mkfs_tools | grep -q 'mkfs.ext' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mke2fs )
+# mke2fs is also required in the recovery system if any 'mkfs.ext*' filesystem creating tool is required
+# and tunefs is used to set tunable filesystem parameters on ext2/ext3/ext4:
+echo $required_mkfs_tools | grep -q 'mkfs.ext' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mke2fs tunefs )
+# xfs_admin is also required in the recovery system if 'mkfs.xfs' is required:
+echo $required_mkfs_tools | grep -q 'mkfs.xfs' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" xfs_admin )
+# reiserfstune is also required in the recovery system if 'mkfs.reiserfs' is required:
+echo $required_mkfs_tools | grep -q 'mkfs.reiserfs' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" reiserfstune )
 
 Log "End saving filesystem layout"
 

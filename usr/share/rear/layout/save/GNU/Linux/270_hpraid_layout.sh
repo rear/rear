@@ -3,13 +3,15 @@
 
 # Collect HP Smartarray information
 
-define_HPSSACLI  # call function to find proper Smart Storage Administrator CLI command - define $HPSSACLI var
+# The define_HPSSACLI function finds the proper HP Smart Storage Administrator CLI (HPSSACLI) command and
+# defines the HPSSACLI variable that contains the HP Smart Storage Administrator CLI command (without path):
+define_HPSSACLI
 
-if ! has_binary $HPSSACLI ; then
-    return
-fi
+# TODO: What if HP Smart Storage is used but no HP Smart Storage Administrator CLI command is found?
+# Shouldn't then "rear mkrescue/mkbackup" better error out than to ignore that HP Smart Storage is used? 
+has_binary $HPSSACLI || return 0
 
-# Add $HPSSACLI to the rescue image
+# Add $HPSSACLI to the rescue image (and added to REQUIRED_PROGS below when it is actually required):
 PROGS=( "${PROGS[@]}" $HPSSACLI )
 # How the "eval $(grep ON_DIR= $(get_path $HPSSACLI))" command works:
 # Prerequisit: $HPSSACLI (e.g. /sbin/ssacli) is a shell script.
@@ -113,3 +115,11 @@ write_logicaldrive
 for controller in "${controllers[@]}" ; do
     echo "smartarray $controller" >> $DISKLAYOUT_FILE
 done
+
+# The HP Smart Storage Administrator CLI command $HPSSACLI (from the define_HPSSACLI function in lib/hp_raid-functions.sh)
+# is required in the recovery system if disklayout.conf contains at least one 'logicaldrive' or 'smartarray' entry
+# see the create_logicaldrive and create_smartarray functions in layout/prepare/GNU/Linux/170_include_hpraid_code.sh
+# what program calls are written to diskrestore.sh
+# cf. https://github.com/rear/rear/issues/1963
+egrep -q '^logicaldrive |^smartarray ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" $HPSSACLI ) || true
+

@@ -91,4 +91,12 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
             extract_partitions "$device"
         done < <(mdadm --detail --scan --config=partitions)
     ) >> $DISKLAYOUT_FILE
+
+    # mdadm is required in the recovery system if disklayout.conf contains at least one 'raid' entry
+    # see the create_raid function in layout/prepare/GNU/Linux/120_include_raid_code.sh
+    # what program calls are written to diskrestore.sh
+    # cf. https://github.com/rear/rear/issues/1963
+    grep -q '^raid ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mdadm ) || true
+
 fi
+

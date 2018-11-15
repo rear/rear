@@ -44,3 +44,10 @@ while read target_name junk ; do
 
     echo "crypt /dev/mapper/$target_name $source_device cipher=$cipher-$mode key_size=$key_size hash=$hash uuid=$uuid $keyfile_option" >> $DISKLAYOUT_FILE
 done < <( dmsetup ls --target crypt )
+
+# cryptsetup is required in the recovery system if disklayout.conf contains at least one 'crypt' entry
+# see the create_crypt function in layout/prepare/GNU/Linux/160_include_luks_code.sh
+# what program calls are written to diskrestore.sh
+# cf. https://github.com/rear/rear/issues/1963
+grep -q '^crypt ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" cryptsetup ) || true
+

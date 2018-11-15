@@ -326,7 +326,10 @@ Log "Saving disk partitions."
     done
 ) >> $DISKLAYOUT_FILE
 
-# parted is required in the recovery system if disklayout.conf contains at least one 'disk' or 'part' entry
+# parted and partprobe are required in the recovery system if disklayout.conf contains at least one 'disk' or 'part' entry
+# see the create_disk and create_partitions functions in layout/prepare/GNU/Linux/100_include_partition_code.sh
+# what program calls are written to diskrestore.sh and which programs will be run during "rear recover" in any case
+# e.g. mdadm is not called in any case and sfdisk is only used in case of BLOCKCLONE_STRICT_PARTITIONING
 # cf. https://github.com/rear/rear/issues/1963
-egrep -q '^disk |^part ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" parted ) || true
+egrep -q '^disk |^part ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" parted partprobe ) || true
 
