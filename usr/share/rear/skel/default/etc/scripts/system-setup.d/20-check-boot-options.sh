@@ -1,7 +1,7 @@
 # purpose of 20-check-boot-options.sh is to find out if at boot time
 # we entered special boot options, such as:
 # dhcp to force DHCLIENT to be started instead of the network scripts
-# ip=10.10.10.10 was defined to force an IPADDR od our choice instead
+# ip=10.10.10.10 was defined to force an IPADDR of our choice instead
 # of the original IP address of the source system (useful for cloning purposes)
 # nm=255.255.255.0 to set the netmask (may be skipped)
 
