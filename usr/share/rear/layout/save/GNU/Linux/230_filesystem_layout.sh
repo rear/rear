@@ -477,6 +477,9 @@ echo $required_mkfs_tools | grep -q 'mkfs.ext' && REQUIRED_PROGS=( "${REQUIRED_P
 echo $required_mkfs_tools | grep -q 'mkfs.xfs' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" xfs_admin )
 # reiserfstune is also required in the recovery system if 'mkfs.reiserfs' is required:
 echo $required_mkfs_tools | grep -q 'mkfs.reiserfs' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" reiserfstune )
+# btrfs is also required in the recovery system if 'mkfs.btrfs' is required
+# cf. what prepare/GNU/Linux/130_include_mount_subvolumes_code.sh writes to diskrestore.sh
+echo $required_mkfs_tools | grep -q 'mkfs.btrfs' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" btrfs )
 
 Log "End saving filesystem layout"
 
