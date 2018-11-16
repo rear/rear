@@ -471,8 +471,9 @@ done
 required_mkfs_tools="$( echo $required_mkfs_tools | tr ' ' '\n' | sort -u | tr '\n' ' ' )"
 REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" $required_mkfs_tools )
 # mke2fs is also required in the recovery system if any 'mkfs.ext*' filesystem creating tool is required
-# and tunefs is used to set tunable filesystem parameters on ext2/ext3/ext4:
-echo $required_mkfs_tools | grep -q 'mkfs.ext' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mke2fs tunefs )
+# and tune2fs or tune4fs is used to set tunable filesystem parameters on ext2/ext3/ext4
+# see above how $tunefs is set to tune2fs or tune4fs
+echo $required_mkfs_tools | grep -q 'mkfs.ext' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mke2fs $tunefs )
 # xfs_admin is also required in the recovery system if 'mkfs.xfs' is required:
 echo $required_mkfs_tools | grep -q 'mkfs.xfs' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" xfs_admin )
 # reiserfstune is also required in the recovery system if 'mkfs.reiserfs' is required:
