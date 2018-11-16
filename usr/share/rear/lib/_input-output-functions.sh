@@ -235,7 +235,7 @@ QuietAddExitTask "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WO
 
 # USR1 is used to abort on errors.
 # It is not using PrintError but does direct output to the original STDERR.
-# Set EXIT_FAIL_MESSAGE to 0 to aviod an additional failed message via the QuietAddExitTask above:
+# Set EXIT_FAIL_MESSAGE to 0 to avoid an additional failed message via the QuietAddExitTask above:
 builtin trap "EXIT_FAIL_MESSAGE=0 ; echo '${MESSAGE_PREFIX}Aborting due to an error, check $RUNTIME_LOGFILE for details' 1>&8 ; kill $MASTER_PID" USR1
 
 # Make sure nobody else can use trap:
