@@ -46,6 +46,10 @@ function Source () {
         set -$DEBUGSCRIPTS_ARGUMENT
     fi
     # The actual work (source the source file):
+    # Blindly proceed when 'source' fails (i.e. when 'source' returns a non-zero exit code)
+    # because scripts usually "blindly return" the exit code of the last command and
+    # currently we do not care about that exit code,
+    # cf. https://github.com/rear/rear/issues/1965#issuecomment-439330017
     source "$source_file"
     # Undo DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
