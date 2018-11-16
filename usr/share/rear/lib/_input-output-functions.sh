@@ -398,6 +398,9 @@ function Error () {
     # The last_sourced_script_log_entry contains: Including sub-path/to/script_file_name.sh
     local last_sourced_script_sub_path="${last_sourced_script_log_entry[1]}"
     local last_sourced_script_filename="$( basename $last_sourced_script_sub_path )"
+    # When it errors out in sbin/rear last_sourced_script_filename is empty which would result bad looking output
+    # cf. https://github.com/rear/rear/issues/1965#issuecomment-439437868
+    test "$last_sourced_script_filename" || last_sourced_script_filename="$SCRIPT_FILE"
     # Do not log the error message right now but after the currenly last log messages were shown:
     PrintError "ERROR: $*"
     # Show some additional hopefully meaningful output on the user's terminal
