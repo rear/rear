@@ -37,7 +37,7 @@ test "$RESULT_FILES" || return 0
 # The real work (actually copying resulting files to the network output location):
 case "$scheme" in
     (nfs|cifs|usb|file|sshfs|ftpfs|davfs)
-        Log "Copying result files '${RESULT_FILES[@]}' to $opath at $scheme location"
+        LogPrint "Copying result files '${RESULT_FILES[@]}' to $opath at $scheme location"
         # Copy each result file one by one to avoid usually false error exits as in
         # https://github.com/rear/rear/issues/1711#issuecomment-380009044
         # where in case of an improper RESULT_FILES array member 'cp' can error out with something like
