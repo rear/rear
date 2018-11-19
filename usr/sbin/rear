@@ -440,7 +440,11 @@ for config in "$ARCH" "$OS" \
 done
 # User configuration files, last thing is to overwrite variables if we are in the rescue system:
 for config in site local rescue ; do
-    test -r "$CONFIG_DIR/$config.conf" && Source "$CONFIG_DIR/$config.conf" || true
+    if test -r "$CONFIG_DIR/$config.conf" ; then
+        # Delete all characters except '\r' and error out if the resulting string is not empty:
+        test "$( tr -d -c '\r' < $CONFIG_DIR/$config.conf )" && Error "Carriage return character in $CONFIG_DIR/$config.conf (perhaps DOS or Mac format)"
+        Source "$CONFIG_DIR/$config.conf" || true
+    fi
 done
 # Finally source additional configuration files if specified on the command line:
 if test "$CONFIG_APPEND_FILES" ; then
