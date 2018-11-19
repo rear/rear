@@ -55,7 +55,7 @@ function Source () {
     # cf. https://github.com/rear/rear/pull/1418#issuecomment-316004608
     source "$source_file"
     source_return_code=$?
-    test "0" -eq "$source_return_code" || Log "Source function: 'source $source_file' returns $source_return_code"
+    test "0" -eq "$source_return_code" || Debug "Source function: 'source $source_file' returns $source_return_code"
     # Undo DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
         Debug "Leaving debugscripts mode (back to previous bash flags and options settings)."
