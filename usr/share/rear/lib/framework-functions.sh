@@ -10,6 +10,7 @@
 # source a file given in $1
 function Source () {
     local source_file="$1"
+    local source_return_code=0
     # Skip if source file name is empty:
     if test -z "$source_file" ; then
         Debug "Skipping Source() because it was called with empty source file name"
@@ -46,15 +47,23 @@ function Source () {
         set -$DEBUGSCRIPTS_ARGUMENT
     fi
     # The actual work (source the source file):
-    # Blindly proceed when 'source' fails (i.e. when 'source' returns a non-zero exit code)
-    # because scripts usually "blindly return" the exit code of the last command and
-    # currently we do not care about that exit code,
+    # Do not error out here when 'source' fails (i.e. when 'source' returns a non-zero exit code)
+    # because scripts usually return the exit code of their last command
     # cf. https://github.com/rear/rear/issues/1965#issuecomment-439330017
+    # and in general ReaR should not error out in a (helper) function but instead
+    # a function should return an error code so that its caller can decide what to do
+    # cf. https://github.com/rear/rear/pull/1418#issuecomment-316004608
     source "$source_file"
+    source_return_code=$?
+    test "0" -eq "$source_return_code" || Log "Source function: 'source $source_file' returns $source_return_code"
     # Undo DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
         Debug "Leaving debugscripts mode (back to previous bash flags and options settings)."
-        apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands"
+        # The only known way how to do 'set +x' after 'set -x' without 'set -x' output for the 'set +x' call
+        # is a current shell environment where stderr is redirected to /dev/null before 'set +x' is run via
+        #   { set +x ; } 2>/dev/null
+        # here we avoid much useless 'set -x' debug output for the apply_bash_flags_and_options_commands call:
+        { apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands" ; } 2>/dev/null
     fi
     # Breakpoint if needed:
     if [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] ; then
@@ -62,6 +71,8 @@ function Source () {
         # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
         read -p "Press ENTER to continue ... " 0<&6 1>&7 2>&8
     fi
+    # Return the return value of the actual work (source the source file):
+    return $source_return_code
 }
 
 # Collect scripts given in the stage directory $1
