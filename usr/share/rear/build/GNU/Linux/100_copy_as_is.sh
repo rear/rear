@@ -58,7 +58,11 @@ Log "copy_as_is_executables = ${copy_as_is_executables[@]}"
 Log "Adding required libraries of executables in all the copied files to LIBS"
 local required_library=""
 for required_library in $( RequiredSharedOjects "${copy_as_is_executables[@]}" ) ; do
-    # Skip when the required library was already actually copied by 'tar' above:
+    # Skip when the required library was already actually copied by 'tar' above.
+    # grep for a full line (copy_as_is_filelist_file contains 1 file name per line)
+    # to avoid that libraries get skipped when their library path is a substring
+    # of another already copied library, e.g. do not skip /path/to/lib when
+    # /other/path/to/lib was already copied, cf. https://github.com/rear/rear/pull/1976
     grep -q "^${required_library}\$" $copy_as_is_filelist_file && continue
     # Skip when the required library is already in LIBS:
     IsInArray "$required_library" "${LIBS[@]}" && continue
