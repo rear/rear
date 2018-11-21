@@ -59,7 +59,7 @@ Log "Adding required libraries of executables in all the copied files to LIBS"
 local required_library=""
 for required_library in $( RequiredSharedOjects "${copy_as_is_executables[@]}" ) ; do
     # Skip when the required library was already actually copied by 'tar' above:
-    grep -q "$required_library" $copy_as_is_filelist_file && continue
+    grep -q "^${required_library}\$" $copy_as_is_filelist_file && continue
     # Skip when the required library is already in LIBS:
     IsInArray "$required_library" "${LIBS[@]}" && continue
     Log "Adding required library '$required_library' to LIBS"
