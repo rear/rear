@@ -13,6 +13,10 @@ esp_mountpoint=$( df -P "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" | tail -1 | awk '{pri
 # Use TARGET_FS_ROOT/boot/efi as fallback ESP mountpoint:
 test "$esp_mountpoint" || esp_mountpoint="$TARGET_FS_ROOT/boot/efi"
 
+# Skip if there is no esp_mountpoint directory (e.g. the fallback ESP mountpoint may not exist).
+# Double quotes are mandatory here because 'test -d' without any (possibly empty) argument results true:
+test -d "$esp_mountpoint" || return 0
+
 BootEfiDev="$( mount | grep "$esp_mountpoint" | awk '{print $1}' )"
 # /dev/sda1 or /dev/mapper/vol34_part2 or /dev/mapper/mpath99p4
 Dev=$( get_device_name $BootEfiDev )
