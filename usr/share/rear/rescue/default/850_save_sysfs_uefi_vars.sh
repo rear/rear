@@ -12,7 +12,7 @@ is_true $USING_UEFI_BOOTLOADER || return 0
 # which avoids dowdy looking code with deeply nested 'if...else' conditions:
 for dummy in "once" ; do
     if test -f "$SECURE_BOOT_BOOTLOADER" ; then
-      UEFI_BOOTLOADER="$SECURE_BOOT_BOOTLOADER"
+        UEFI_BOOTLOADER="$SECURE_BOOT_BOOTLOADER"
     fi
 
     # When the user has specified UEFI_BOOTLOADER in /etc/rear/local.conf use it if exists and is a regular file.
