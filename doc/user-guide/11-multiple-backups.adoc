@@ -40,7 +40,7 @@ an additional ReaR configuration file can be specified.
 Have common settings in /etc/rear/local.conf
 
 For each particular backup specify its parameters in
-a separated additional configuration files like
+separated additional configuration files like
 
 ----
 /etc/rear/basic_system.conf
