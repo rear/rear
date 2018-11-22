@@ -1,5 +1,5 @@
 
-# only useful for UEFI systems in combination with grub[2]-efi
+# Only useful for UEFI systems in combination with grub[2]-efi
 
 # USING_UEFI_BOOTLOADER empty or not true means using BIOS
 is_true $USING_UEFI_BOOTLOADER || return 0
@@ -8,7 +8,7 @@ is_true $USING_UEFI_BOOTLOADER || return 0
 # Double quotes are mandatory here because 'test -f' without any (possibly empty) argument results true:
 test -f "$UEFI_BOOTLOADER" || return 0
 
-# Determine where the EFI System Prtition (ESP) is mounted in the currently running recovery system:
+# Determine where the EFI System Partition (ESP) is mounted in the currently running recovery system:
 esp_mountpoint=$( df -P "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" | tail -1 | awk '{print $6}' )
 # Use TARGET_FS_ROOT/boot/efi as fallback ESP mountpoint:
 test "$esp_mountpoint" || esp_mountpoint="$TARGET_FS_ROOT/boot/efi"
