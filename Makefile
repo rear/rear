@@ -216,10 +216,10 @@ pacman: dist
 	rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
 	cp packaging/arch/PKGBUILD.local $(BUILD_DIR)/PKGBUILD
-	cp $(name)-$(distversion).tar.gz $(BUILD_DIR)/
+	cp dist/$(name)-$(distversion).tar.gz $(BUILD_DIR)/
 	cd $(BUILD_DIR) ; sed -i -e 's/VERSION/$(date)/' \
 		-e 's/SOURCE/$(name)-$(distversion).tar.gz/' \
-		-e 's/MD5SUM/$(shell md5sum $(name)-$(distversion).tar.gz | cut -d' ' -f1)/' \
+		-e 's/MD5SUM/$(shell md5sum dist/$(name)-$(distversion).tar.gz | cut -d' ' -f1)/' \
 		PKGBUILD ; makepkg -c
 	cp $(BUILD_DIR)/*.pkg.* .
 	rm -rf $(BUILD_DIR)
