@@ -16,7 +16,7 @@ cat >"$TMP_DIR/ppc/bootinfo.txt" <<EOF
 <chrp-boot>
 <description>Relax-and-Recover</description>
 <os-name>Linux</os-name>
-<boot-script>boot &device;:\boot\grub\powerpc.elf</boot-script>
+<boot-script>boot &device;:,\boot\grub\powerpc.elf</boot-script>
 </chrp-boot>
 EOF
 
