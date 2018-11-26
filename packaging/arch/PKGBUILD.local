@@ -19,6 +19,7 @@ md5sums=(MD5SUM)
 package() {
   cd $srcdir/rear-*/
   make DESTDIR="${pkgdir}/" install
+  mv ${pkgdir}/usr/sbin ${pkgdir}/usr/bin
 }
 
 # vim:set ts=2 sw=2 et:
