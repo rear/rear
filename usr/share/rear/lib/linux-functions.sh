@@ -108,13 +108,13 @@ function FindStorageDrivers () {
 
 # Determine all required shared objects (shared/dynamic libraries)
 # for programs and/or shared objects (binaries) specified in $@.
-# RequiredSharedOjects outputs the required shared objects on STDOUT.
+# RequiredSharedObjects outputs the required shared objects on STDOUT.
 # The output are absolute paths to the required shared objects.
 # The output can also be symbolic links (also as absolute paths).
 # In case of symbolic links only the link but not the link target is output.
-function RequiredSharedOjects () {
-    has_binary ldd || Error "Cannot run RequiredSharedOjects() because there is no ldd binary"
-    Log "RequiredSharedOjects: Determining required shared objects"
+function RequiredSharedObjects () {
+    has_binary ldd || Error "Cannot run RequiredSharedObjects() because there is no ldd binary"
+    Log "RequiredSharedObjects: Determining required shared objects"
     # It uses 'ldd' to determine all required shared objects because 'ldd' outputs
     # also transitively required shared objects i.e. libraries needed by libraries,
     # e.g. for /usr/sbin/parted also the libraries needed by the libparted library:

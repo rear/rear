@@ -327,7 +327,7 @@ function has_binary () {
         # Suppress success output via stdout which is crucial when has_binary is called
         # in other functions that provide their intended function results via stdout
         # to not pollute intended function results with intermixed has_binary stdout
-        # (e.g. the RequiredSharedOjects function) but keep failure output via stderr:
+        # (e.g. the RequiredSharedObjects function) but keep failure output via stderr:
         type $bin 1>/dev/null && return 0
     done
     return 1

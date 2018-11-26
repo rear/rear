@@ -57,7 +57,7 @@ Log "copy_as_is_executables = ${copy_as_is_executables[@]}"
 # add them to the LIBS list if they are not yet included in the copied files:
 Log "Adding required libraries of executables in all the copied files to LIBS"
 local required_library=""
-for required_library in $( RequiredSharedOjects "${copy_as_is_executables[@]}" ) ; do
+for required_library in $( RequiredSharedObjects "${copy_as_is_executables[@]}" ) ; do
     # Skip when the required library was already actually copied by 'tar' above.
     # grep for a full line (copy_as_is_filelist_file contains 1 file name per line)
     # to avoid that libraries get skipped when their library path is a substring

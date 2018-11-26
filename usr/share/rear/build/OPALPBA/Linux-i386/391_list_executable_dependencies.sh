@@ -8,7 +8,7 @@ if is_true $KEEP_BUILD_DIR; then
     executable_dependencies_list="$TMP_DIR/executable-dependencies"
 
     for executable in "${executables[@]}"; do
-        dependents=( $(RequiredSharedOjects "$ROOTFS_DIR/$executable") )
+        dependents=( $(RequiredSharedObjects "$ROOTFS_DIR/$executable") )
         echo "$executable: ${dependents[*]}"
     done > "$executable_dependencies_list"
 
