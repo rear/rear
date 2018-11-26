@@ -62,16 +62,16 @@ Log "Binaries being copied: ${all_binaries[@]}"
 copy_binaries "$ROOTFS_DIR/bin" "${all_binaries[@]}"
 
 # Copy libraries:
-# It is crucial to also have all LIBS itself in all_libs because RequiredSharedOjects()
+# It is crucial to also have all LIBS itself in all_libs because RequiredSharedObjects()
 # outputs only those libraries that are required by a library but not the library itself
 # so that without all LIBS itself in all_libs those libraries in LIBS are missing that
 # are not needed by a binary in all_binaries (all_binaries were already copied above).
-# RequiredSharedOjects outputs the required shared objects on STDOUT.
+# RequiredSharedObjects outputs the required shared objects on STDOUT.
 # The output are absolute paths to the required shared objects.
 # The output can also be symbolic links (also as absolute paths).
 # In case of symbolic links only the link but not the link target is output.
 # Therefore for symbolic links also the link target gets copied below.
-local all_libs=( "${LIBS[@]}" $( RequiredSharedOjects "${all_binaries[@]}" "${LIBS[@]}" ) )
+local all_libs=( "${LIBS[@]}" $( RequiredSharedObjects "${all_binaries[@]}" "${LIBS[@]}" ) )
 
 Log "Libraries being copied: ${all_libs[@]}"
 local lib=""

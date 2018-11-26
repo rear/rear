@@ -108,13 +108,13 @@ function FindStorageDrivers () {
 
 # Determine all required shared objects (shared/dynamic libraries)
 # for programs and/or shared objects (binaries) specified in $@.
-# RequiredSharedOjects outputs the required shared objects on STDOUT.
+# RequiredSharedObjects outputs the required shared objects on STDOUT.
 # The output are absolute paths to the required shared objects.
 # The output can also be symbolic links (also as absolute paths).
 # In case of symbolic links only the link but not the link target is output.
-function RequiredSharedOjects () {
-    has_binary ldd || Error "Cannot run RequiredSharedOjects() because there is no ldd binary"
-    Log "RequiredSharedOjects: Determining required shared objects"
+function RequiredSharedObjects () {
+    has_binary ldd || Error "Cannot run RequiredSharedObjects() because there is no ldd binary"
+    Log "RequiredSharedObjects: Determining required shared objects"
     # It uses 'ldd' to determine all required shared objects because 'ldd' outputs
     # also transitively required shared objects i.e. libraries needed by libraries,
     # e.g. for /usr/sbin/parted also the libraries needed by the libparted library:
@@ -172,10 +172,11 @@ function RequiredSharedOjects () {
     #  2. Line: "        lib (mem-addr)"                 -> virtual library
     #  3. Line: "        lib => not found"               -> print error to stderr
     #  4. Line: "        lib => /path/to/lib (mem-addr)" -> print $3 '/path/to/lib'
-    #  5. Line: "        /path/to/lib (mem-addr)"        -> print $1 '/path/to/lib'
+    #  5. Line: "        /path/to/lib => /path/to/lib2 (mem-addr)" -> print $3 '/path/to/lib2'
+    #  6. Line: "        /path/to/lib (mem-addr)"        -> print $1 '/path/to/lib'
     ldd "$@" | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
                      /^\t.+ => \// { print $3 }
-                     /^\t\// { print $1 } ' | sort -u
+                     /^\t\// && !/ => / { print $1 } ' | sort -u
 }
 
 # Provide a shell, with custom exit-prompt and history

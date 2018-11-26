@@ -54,6 +54,11 @@ if test "$BACKUP" = "SESAM" ; then
     # related libraries
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SESAM_LD_LIBRARY_PATH
 fi
+if test "$BACKUP" = "NBU" ; then
+    # Use a NBU-specific LD_LIBRARY_PATH to find NBU libraries
+    # see https://github.com/rear/rear/issues/1974
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NBU_LD_LIBRARY_PATH
+fi
 # Actually test all binaries for 'not found' libraries.
 # Find all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths:
 for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ); do
