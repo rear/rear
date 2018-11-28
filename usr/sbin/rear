@@ -410,7 +410,7 @@ if test "$WORKFLOW" != "help" ; then
 fi
 
 # In DEBUG mode keep by default the build area but that can be overridden in user config files
-# therefore no readonly KEEP_BUILD_DIR (it is also set to 1 in build/default/980_verify_rootfs.sh):
+# therefore no readonly KEEP_BUILD_DIR (it is also set to 1 in build/default/990_verify_rootfs.sh):
 test "$DEBUG" && KEEP_BUILD_DIR=1 || true
 
 # Check if we are in recovery mode:

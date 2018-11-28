@@ -7,7 +7,7 @@
 # and https://github.com/rear/rear/pull/1734
 
 # FIXME: The following code fails if symlinks or their targets contain characters from IFS (e.g. blanks),
-# cf. the same kind of comments in build/default/980_verify_rootfs.sh
+# cf. the same kind of comments in build/default/990_verify_rootfs.sh
 # and layout/prepare/GNU/Linux/130_include_mount_subvolumes_code.sh
 # see https://github.com/rear/rear/pull/1514#discussion_r141031975
 # and for the general issue see https://github.com/rear/rear/issues/1372
