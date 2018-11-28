@@ -9,12 +9,13 @@
 # therefore ELILO_BIN for sure contains the full path to elilo.efi
 
 mkdir $v -p $TMP_DIR/mnt/boot
-cp -L $v "$ELILO_BIN" $TMP_DIR/mnt/boot || Error "Could not copy ELILO_BIN=$ELILO_BIN"
 
-cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/mnt/boot || Error "Could not copy REAR_INITRD_FILENAME=$REAR_INITRD_FILENAME"
+cp -L $v "$ELILO_BIN" $TMP_DIR/mnt/boot || Error "Failed to copy ELILO_BIN '$ELILO_BIN'"
+
+cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/mnt/boot || Error "Failed to copy REAR_INITRD_FILENAME '$REAR_INITRD_FILENAME'"
 
 # KERNEL_FILE is defined in prep/GNU/Linux/400_guess_kernel.sh
-cp $v "$KERNEL_FILE" $TMP_DIR/mnt/boot/kernel || Error "Could not copy KERNEL_FILE=$KERNEL_FILE"
+cp $v "$KERNEL_FILE" $TMP_DIR/mnt/boot/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE'"
 
 echo "$VERSION_INFO" >$TMP_DIR/mnt/boot/message
 
