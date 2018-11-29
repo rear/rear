@@ -25,26 +25,21 @@ if [[ ! -b ${EFI_PART} ]]; then
 fi
 
 # Mount EFI partition
-mount ${EFI_PART} ${EFI_MPT}
-StopIfError "Failed to mount EFI partition ${EFI_PART} to ${EFI_MPT}"
+mount $EFI_PART $EFI_MPT || Error "Failed to mount EFI partition '$EFI_PART' at '$EFI_MPT'"
 
 # Create EFI friendly dir structure
-mkdir -p ${EFI_DST}
-StopIfError "Failed to create ${EFI_DST}"
+mkdir -p $EFI_DST || Error "Failed to create directory '$EFI_DST'"
 
 # Copy boot loader
-cp $v ${UEFI_BOOTLOADER} "${EFI_DST}/BOOTX64.efi"
-StopIfError "Could not copy EFI bootloader to ${EFI_DST}/BOOTX64.efi"
+cp $v $UEFI_BOOTLOADER "$EFI_DST/BOOTX64.efi" || Error "Failed to copy UEFI_BOOTLOADER '$UEFI_BOOTLOADER' to $EFI_DST/BOOTX64.efi"
 
 # Copy kernel
-cp -pL $v "${KERNEL_FILE}" "${EFI_DST}/kernel" >&2
-StopIfError "Could not copy ${KERNEL_FILE} to ${EFI_DST}/kernel"
+cp -pL $v "$KERNEL_FILE" "$EFI_DST/kernel" || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE' to $EFI_DST/kernel"
 
 # Copy initrd
-cp -p $v "${TMP_DIR}/$REAR_INITRD_FILENAME" "${EFI_DST}/$REAR_INITRD_FILENAME" >&2
-StopIfError "Could not copy ${TMP_DIR}/$REAR_INITRD_FILENAME to ${EFI_DST}/$REAR_INITRD_FILENAME"
+cp -p $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$EFI_DST/$REAR_INITRD_FILENAME" || Error "Failed to copy initrd to $EFI_DST/$REAR_INITRD_FILENAME"
 
-Log "Copied kernel and $REAR_INITRD_FILENAME to ${EFI_DST}"
+Log "Copied kernel $KERNEL_FILE and initrd $REAR_INITRD_FILENAME to $EFI_DST"
 
 # Configure elilo for EFI boot
 if test "$uefi_bootloader_basename" = "elilo.efi" ; then
@@ -128,3 +123,4 @@ else
 fi
 
 Log "Created EFI configuration for USB"
+

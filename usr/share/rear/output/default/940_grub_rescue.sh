@@ -27,11 +27,9 @@ if version_newer "$grub_version" 1.0; then
     return
 fi
 
-[[ -r "$KERNEL_FILE" ]]
-StopIfError "Failed to find kernel, updating GRUB failed."
+test -r "$KERNEL_FILE" || Error "Failed to find kernel '$KERNEL_FILE', updating GRUB failed."
 
-[[ -r "$TMP_DIR/$REAR_INITRD_FILENAME" ]]
-StopIfError "Failed to find $REAR_INITRD_FILENAME, updating GRUB failed."
+test -r "$TMP_DIR/$REAR_INITRD_FILENAME" || Error "Failed to find initrd '$REAR_INITRD_FILENAME', updating GRUB failed."
 
 function total_filesize {
     stat --format '%s' $@ 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
@@ -98,15 +96,14 @@ fi
 
 if [[ $(stat -L -c '%d' $KERNEL_FILE) == $(stat -L -c '%d' /boot/) ]]; then
     # Hardlink file, if possible
-    cp -pLlf $v $KERNEL_FILE /boot/rear-kernel >&2
+    cp -pLlf $v $KERNEL_FILE /boot/rear-kernel || BugError "Failed to hardlink '$KERNEL_FILE' to /boot/rear-kernel"
 elif [[ $(stat -L -c '%s %Y' $KERNEL_FILE) == $(stat -L -c '%s %Y' /boot/rear-kernel 2>/dev/null) ]]; then
     # If existing file has exact same size and modification time, assume the same
     :
 else
     # In all other cases, replace
-    cp -pLf $v $KERNEL_FILE /boot/rear-kernel >&2
+    cp -pLf $v $KERNEL_FILE /boot/rear-kernel || BugError "Failed to copy '$KERNEL_FILE' to /boot/rear-kernel"
 fi
-BugIfError "Unable to copy '$KERNEL_FILE' to /boot"
 
-cp -af $v $TMP_DIR/$REAR_INITRD_FILENAME /boot/rear-$REAR_INITRD_FILENAME >&2
-BugIfError "Unable to copy '$TMP_DIR/$REAR_INITRD_FILENAME' to /boot"
+cp -af $v $TMP_DIR/$REAR_INITRD_FILENAME /boot/rear-$REAR_INITRD_FILENAME || BugError "Failed to copy '$TMP_DIR/$REAR_INITRD_FILENAME' to '/boot/rear-$REAR_INITRD_FILENAME'"
+
