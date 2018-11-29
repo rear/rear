@@ -9,8 +9,21 @@
 # When KERNEL_FILE is specified by the user use that
 # (KERNEL_FILE is empty in default.conf):
 if test "$KERNEL_FILE" ; then
-    LogPrint "Using specified KERNEL_FILE '$KERNEL_FILE' as kernel in the recovery system"
-    return
+    if test -L "$KERNEL_FILE" ; then
+        # If KERNEL_FILE is a symlink, use its (final) target:
+        KERNEL_FILE="$( readlink $v -e "$KERNEL_FILE" )"
+        if test -s "$KERNEL_FILE" ; then
+            LogPrint "Using symlink target '$KERNEL_FILE' of specified KERNEL_FILE as kernel in the recovery system"
+            return
+        fi
+        # KERNEL_FILE is empty here because readlink results nothing when there is no symlink target: 
+        Error "Specified KERNEL_FILE is a broken symbolic link"
+    fi
+    if test -s "$KERNEL_FILE" ; then
+        LogPrint "Using specified KERNEL_FILE '$KERNEL_FILE' as kernel in the recovery system"
+        return
+    fi
+    Error "Specified KERNEL_FILE '$KERNEL_FILE' does not exist"
 fi
 
 # Artificial 'for' clause that is run only once
