@@ -1,26 +1,33 @@
 # 400_guess_kernel.sh
 #
-# Guess kernel if not set yet or error out,
-# for diverse Architectures (arm, aarch64, etc.)
+# Guess what to use as kernel in the recovery system if not specified or error out,
 #
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# When KERNEL_FILE is specified by the user use that
+# When KERNEL_FILE is specified by the user use that as is or error out
+# cf. https://github.com/rear/rear/pull/1985#discussion_r237451729
 # (KERNEL_FILE is empty in default.conf):
 if test "$KERNEL_FILE" ; then
     if test -L "$KERNEL_FILE" ; then
         # If KERNEL_FILE is a symlink, use its (final) target:
+        local specified_kernel="$KERNEL_FILE"
         KERNEL_FILE="$( readlink $v -e "$KERNEL_FILE" )"
+        # readlink results nothing when there is no symlink target:
         if test -s "$KERNEL_FILE" ; then
-            LogPrint "Using symlink target '$KERNEL_FILE' of specified KERNEL_FILE as kernel in the recovery system"
+            LogPrint "Using symlink target '$KERNEL_FILE' of specified KERNEL_FILE '$specified_kernel' as kernel in the recovery system"
+            # Report to the user but do not error out when it does not look as if it is actually a kernel
+            # because what the user has specified must be used "as is" by ReaR:
+            file "$KERNEL_FILE" | grep -qi 'kernel' || LogPrintError "WARNING: 'file $KERNEL_FILE' does not show it is a 'kernel'"
             return
         fi
-        # KERNEL_FILE is empty here because readlink results nothing when there is no symlink target: 
-        Error "Specified KERNEL_FILE is a broken symbolic link"
+        Error "Specified KERNEL_FILE '$specified_kernel' is a broken symbolic link"
     fi
     if test -s "$KERNEL_FILE" ; then
         LogPrint "Using specified KERNEL_FILE '$KERNEL_FILE' as kernel in the recovery system"
+        # Report to the user but do not error out when it does not look as if it is actually a kernel
+        # because what the user has specified must be used "as is" by ReaR:
+        file "$KERNEL_FILE" | grep -qi 'kernel' || LogPrintError "WARNING: 'file $KERNEL_FILE' does not show it is a 'kernel'"
         return
     fi
     Error "Specified KERNEL_FILE '$KERNEL_FILE' does not exist"
@@ -104,9 +111,27 @@ for dummy in "once" ; do
  
 done
 
-# If KERNEL_FILE is a symlink, use its (final) target:
-test -L "$KERNEL_FILE" && KERNEL_FILE="$( readlink -e "$KERNEL_FILE" )"
-
-# Show to the user what will actually be used as kernel in the recovery system:
-LogPrint "Using '$KERNEL_FILE' as kernel in the recovery system"
+# Show to the user what will actually be used as kernel in the recovery system or error out
+# cf. the code at the beginning "When KERNEL_FILE is specified by the user":
+if test -L "$KERNEL_FILE" ; then
+    # If KERNEL_FILE is a symlink, use its (final) target:
+    local autodetected_kernel="$KERNEL_FILE"
+    KERNEL_FILE="$( readlink $v -e "$KERNEL_FILE" )"
+    # readlink results nothing when there is no symlink target:
+    if test -s "$KERNEL_FILE" ; then
+        LogPrint "Using symlink target '$KERNEL_FILE' of autodetected kernel '$autodetected_kernel' as kernel in the recovery system"
+        # Do not use an autodetected file unless 'file' shows it is a 'kernel' - the user can enforce using it by manually specifying it:
+        file "$KERNEL_FILE" | grep -qi 'kernel' || Error "'file $KERNEL_FILE' does not show it is a 'kernel', you have to manually specify KERNEL_FILE in $CONFIG_DIR/local.conf"
+        return
+    fi
+    Error "Autodetected kernel '$autodetected_kernel' is a broken symbolic link"
+fi
+if test -s "$KERNEL_FILE" ; then
+    LogPrint "Using autodetected kernel '$KERNEL_FILE' as kernel in the recovery system"
+    # Do not use an autodetected file unless 'file' shows it is a 'kernel' - the user can enforce using it by manually specifying it:
+    file "$KERNEL_FILE" | grep -qi 'kernel' || Error "'file $KERNEL_FILE' does not show it is a 'kernel', you have to manually specify KERNEL_FILE in $CONFIG_DIR/local.conf"
+    return
+fi
+# There must be a bug in the autodetection code above when a file is autodetected but does not exist:
+BugError "Autodetected kernel '$KERNEL_FILE' does not exist"
 
