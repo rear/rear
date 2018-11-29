@@ -39,8 +39,8 @@ if test "ebiso" = "$( basename $ISO_MKISOFS_BIN )" ; then
         # elilo is not smart enough to look for them outside ...
         Log "Copying kernel"
         # copy initrd and kernel inside efi_boot image as
-        cp -pL $v $KERNEL_FILE $efi_boot_tmp_dir/kernel || Error "Could not copy $KERNEL_FILE into $efi_boot_tmp_dir"
-        cp $v $TMP_DIR/$REAR_INITRD_FILENAME $efi_boot_tmp_dir/$REAR_INITRD_FILENAME || Error "Could not copy $REAR_INITRD_FILENAME into $efi_boot_tmp_dir"
+        cp -pL $v $KERNEL_FILE $efi_boot_tmp_dir/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE' to $efi_boot_tmp_dir/kernel"
+        cp $v $TMP_DIR/$REAR_INITRD_FILENAME $efi_boot_tmp_dir/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME' into $efi_boot_tmp_dir"
         create_ebiso_elilo_conf > $efi_boot_tmp_dir/elilo.conf
         create_grub2_cfg > $efi_boot_tmp_dir/grub.cfg
     fi
@@ -117,6 +117,5 @@ else
 fi
 
 # FIXME: What is that assignment actually trying to do?
-#        ISO_FILES is nowhere else used in this script.
 ISO_FILES=( "${ISO_FILES[@]}" )
 

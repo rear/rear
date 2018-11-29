@@ -6,9 +6,10 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# When KERNEL_FILE is specified use that:
-if test -s "$KERNEL_FILE" ; then
-    LogPrint "Using specified kernel KERNEL_FILE=$KERNEL_FILE"
+# When KERNEL_FILE is specified by the user use that
+# (KERNEL_FILE is empty in default.conf):
+if test "$KERNEL_FILE" ; then
+    LogPrint "Using specified KERNEL_FILE '$KERNEL_FILE' as kernel in the recovery system"
     return
 fi
 
@@ -23,7 +24,7 @@ for dummy in "once" ; do
     # Try /boot/vmlinuz-$KERNEL_VERSION:
     KERNEL_FILE="/boot/vmlinuz-$KERNEL_VERSION"
     test -s "$KERNEL_FILE" && continue
-    Log "No kernel file $KERNEL_FILE found"
+    Log "No kernel file '$KERNEL_FILE' found"
 
     # Try all files in /boot if one matches KERNEL_VERSION="$( uname -r )" cf. default.conf: 
     if has_binary get_kernel_version ; then
@@ -36,7 +37,7 @@ for dummy in "once" ; do
         done
         # The usually expected case is that a kernel is found in /boot that matches KERNEL_VERSION
         # so that we show to the user when the usually expected case does not hold on his system:
-        LogPrint "No kernel found in /boot that matches KERNEL_VERSION=$KERNEL_VERSION"
+        LogPrint "No kernel found in /boot that matches KERNEL_VERSION '$KERNEL_VERSION'"
     else
         Log "No get_kernel_version binary, skipping searching for kernel file in /boot"
     fi
@@ -46,7 +47,7 @@ for dummy in "once" ; do
     if test -f /etc/slackware-version ; then
         KERNEL_FILE="/boot/efi/EFI/Slackware/vmlinuz"
         test -s "$KERNEL_FILE" && continue
-        Log "No Slackware kernel file $KERNEL_FILE found"
+        Log "No Slackware kernel file '$KERNEL_FILE' found"
     fi
 
     # Red Hat kernel may not have been found above under /boot
@@ -54,7 +55,7 @@ for dummy in "once" ; do
     if test -f /etc/redhat-release ; then
         KERNEL_FILE="/boot/efi/efi/redhat/vmlinuz-$KERNEL_VERSION"
         test -s "$KERNEL_FILE" && continue
-        Log "No Red Hat kernel file $KERNEL_FILE found"
+        Log "No Red Hat kernel file '$KERNEL_FILE' found"
     fi
 
     # Debian kernel may not have been found above under /boot
@@ -62,7 +63,7 @@ for dummy in "once" ; do
     if test  -f /etc/debian_version ; then
         KERNEL_FILE="/boot/efi/efi/debian/vmlinuz-$KERNEL_VERSION"
         test -s "$KERNEL_FILE" && continue
-        Log "No Debian kernel file $KERNEL_FILE found"
+        Log "No Debian kernel file '$KERNEL_FILE' found"
     fi
 
     # Arch Linux kernel may not have been found above under /boot
@@ -71,7 +72,7 @@ for dummy in "once" ; do
         for KERNEL_FILE in /boot/vmlinuz-linux /boot/vmlinuz26 ; do
             # Continue with the code after the outer 'for' loop:
             test -s "$KERNEL_FILE" && continue 2
-            Log "No Arch Linux kernel file $KERNEL_FILE found"
+            Log "No Arch Linux kernel file '$KERNEL_FILE' found"
         done
     fi
     
@@ -81,7 +82,7 @@ for dummy in "once" ; do
         for KERNEL_FILE in "/boot/kernel-genkernel-$REAL_MACHINE-$KERNEL_VERSION" "/boot/kernel-$KERNEL_VERSION" ; do
             # Continue with the code after the outer 'for' loop:
             test -s "$KERNEL_FILE" && continue 2
-            Log "No Gentoo kernel file $KERNEL_FILE found"
+            Log "No Gentoo kernel file '$KERNEL_FILE' found"
         done
     fi
 

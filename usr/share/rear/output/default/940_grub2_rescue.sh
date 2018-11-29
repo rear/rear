@@ -237,20 +237,20 @@ fi
 # Provide the kernel as boot_kernel_file (i.e. /boot/rear-kernel):
 if [[ $( stat -L -c '%d' $KERNEL_FILE ) == $( stat -L -c '%d' $boot_dir/ ) ]] ; then
     # Hardlink file, if possible:
-    cp -pLlf $v $KERNEL_FILE $boot_kernel_file >&2 || BugError "Unable to hardlink '$KERNEL_FILE' to '$boot_kernel_file'."
+    cp -pLlf $v $KERNEL_FILE $boot_kernel_file || BugError "Failed to hardlink '$KERNEL_FILE' to '$boot_kernel_file'."
 elif [[ $( stat -L -c '%s %Y' $KERNEL_FILE ) == $( stat -L -c '%s %Y' $boot_kernel_file ) ]] ; then
     # If an already existing boot_kernel_file has exact same size and modification time
     # as the current KERNEL_FILE, assume both are the same and do nothing:
     :
 else
     # In all other cases, replace boot_kernel_file with the current KERNEL_FILE:
-    cp -pLf $v $KERNEL_FILE $boot_kernel_file >&2 || BugError "Unable to copy '$KERNEL_FILE' to '$boot_kernel_file'."
+    cp -pLf $v $KERNEL_FILE $boot_kernel_file || BugError "Failed to copy '$KERNEL_FILE' to '$boot_kernel_file'."
 fi
 
 # Provide the rear recovery system in initrd_file (i.e. TMP_DIR/initrd.cgz or TMP_DIR/initrd.xz)
 # as boot_initrd_file (i.e. /boot/rear-initrd.cgz or /boot/rear-initrd.xz)
 # (regarding '.cgz' versus '.xz' see https://github.com/rear/rear/issues/1142)
-cp -af $v $initrd_file $boot_initrd_file >&2 || BugError "Unable to copy '$initrd_file' to '$boot_initrd_file'."
+cp -af $v $initrd_file $boot_initrd_file || BugError "Failed to copy '$initrd_file' to '$boot_initrd_file'."
 
 LogPrint "Finished GRUB_RESCUE setup: Added '$grub_rear_menu_entry_name' GRUB 2 menu entry."
 

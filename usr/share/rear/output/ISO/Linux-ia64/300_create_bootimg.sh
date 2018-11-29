@@ -10,9 +10,9 @@
 
 mkdir $v -p $TMP_DIR/mnt/boot
 
-cp -L $v "$ELILO_BIN" $TMP_DIR/mnt/boot || Error "Failed to copy ELILO_BIN '$ELILO_BIN'"
+cp -L $v "$ELILO_BIN" $TMP_DIR/mnt/boot || Error "Failed to copy elilo.efi '$ELILO_BIN'"
 
-cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/mnt/boot || Error "Failed to copy REAR_INITRD_FILENAME '$REAR_INITRD_FILENAME'"
+cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/mnt/boot || Error "Failed to copy initrd '$REAR_INITRD_FILENAME'"
 
 # KERNEL_FILE is defined in prep/GNU/Linux/400_guess_kernel.sh
 cp $v "$KERNEL_FILE" $TMP_DIR/mnt/boot/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE'"
@@ -30,5 +30,6 @@ image=kernel
 	append="ramdisk=512000 $CONSOLE  rhgb selinux=0"
 EOF
 
+# FIXME: What is that assignment actually trying to do?
 ISO_FILES=( "${ISO_FILES[@]}" )
 
