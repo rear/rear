@@ -1,6 +1,6 @@
 # 400_guess_kernel.sh
 #
-# Guess what to use as kernel in the recovery system if not specified or error out,
+# Guess what to use as kernel in the recovery system if not specified or error out.
 #
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
@@ -14,23 +14,13 @@ if test "$KERNEL_FILE" ; then
         local specified_kernel="$KERNEL_FILE"
         KERNEL_FILE="$( readlink $v -e "$KERNEL_FILE" )"
         # readlink results nothing when there is no symlink target:
-        if test -s "$KERNEL_FILE" ; then
-            LogPrint "Using symlink target '$KERNEL_FILE' of specified KERNEL_FILE '$specified_kernel' as kernel in the recovery system"
-            # Report to the user but do not error out when it does not look as if it is actually a kernel
-            # because what the user has specified must be used "as is" by ReaR:
-            file "$KERNEL_FILE" | grep -qi 'kernel' || LogPrintError "WARNING: 'file $KERNEL_FILE' does not show it is a 'kernel'"
-            return
-        fi
-        Error "Specified KERNEL_FILE '$specified_kernel' is a broken symbolic link"
-    fi
-    if test -s "$KERNEL_FILE" ; then
-        LogPrint "Using specified KERNEL_FILE '$KERNEL_FILE' as kernel in the recovery system"
-        # Report to the user but do not error out when it does not look as if it is actually a kernel
-        # because what the user has specified must be used "as is" by ReaR:
-        file "$KERNEL_FILE" | grep -qi 'kernel' || LogPrintError "WARNING: 'file $KERNEL_FILE' does not show it is a 'kernel'"
+        test -s "$KERNEL_FILE" || Error "Specified KERNEL_FILE '$specified_kernel' is a broken symbolic link"
+        LogPrint "Using symlink target '$KERNEL_FILE' of specified KERNEL_FILE '$specified_kernel' as kernel in the recovery system"
         return
     fi
-    Error "Specified KERNEL_FILE '$KERNEL_FILE' does not exist"
+    test -s "$KERNEL_FILE" || Error "Specified KERNEL_FILE '$KERNEL_FILE' does not exist"
+    LogPrint "Using specified KERNEL_FILE '$KERNEL_FILE' as kernel in the recovery system"
+    return
 fi
 
 # Artificial 'for' clause that is run only once
@@ -118,20 +108,11 @@ if test -L "$KERNEL_FILE" ; then
     local autodetected_kernel="$KERNEL_FILE"
     KERNEL_FILE="$( readlink $v -e "$KERNEL_FILE" )"
     # readlink results nothing when there is no symlink target:
-    if test -s "$KERNEL_FILE" ; then
-        LogPrint "Using symlink target '$KERNEL_FILE' of autodetected kernel '$autodetected_kernel' as kernel in the recovery system"
-        # Do not use an autodetected file unless 'file' shows it is a 'kernel' - the user can enforce using it by manually specifying it:
-        file "$KERNEL_FILE" | grep -qi 'kernel' || Error "'file $KERNEL_FILE' does not show it is a 'kernel', you have to manually specify KERNEL_FILE in $CONFIG_DIR/local.conf"
-        return
-    fi
-    Error "Autodetected kernel '$autodetected_kernel' is a broken symbolic link"
-fi
-if test -s "$KERNEL_FILE" ; then
-    LogPrint "Using autodetected kernel '$KERNEL_FILE' as kernel in the recovery system"
-    # Do not use an autodetected file unless 'file' shows it is a 'kernel' - the user can enforce using it by manually specifying it:
-    file "$KERNEL_FILE" | grep -qi 'kernel' || Error "'file $KERNEL_FILE' does not show it is a 'kernel', you have to manually specify KERNEL_FILE in $CONFIG_DIR/local.conf"
+    test -s "$KERNEL_FILE" || Error "Autodetected kernel '$autodetected_kernel' is a broken symbolic link"
+    LogPrint "Using symlink target '$KERNEL_FILE' of autodetected kernel '$autodetected_kernel' as kernel in the recovery system"
     return
 fi
 # There must be a bug in the autodetection code above when a file is autodetected but does not exist:
-BugError "Autodetected kernel '$KERNEL_FILE' does not exist"
+test -s "$KERNEL_FILE" || BugError "Autodetected kernel '$KERNEL_FILE' does not exist"
+LogPrint "Using autodetected kernel '$KERNEL_FILE' as kernel in the recovery system"
 
