@@ -17,7 +17,9 @@ else
     chrp_boot_option="-chrp-boot"
 fi
 
-$ISO_MKISOFS_BIN $v -o "$ISO_DIR/$ISO_PREFIX.iso" -U $chrp_boot_option -R -J -volid "$ISO_VOLID" -v -graft-points "${ISO_FILES[@]}" >&2
+$ISO_MKISOFS_BIN $v $ISO_MKISOFS_OPTS -o "$ISO_DIR/$ISO_PREFIX.iso" \
+    -U $chrp_boot_option -R -J -volid "$ISO_VOLID" -v -graft-points \
+    "${ISO_FILES[@]}" >&2
 
 StopIfError "Could not create ISO image (with $ISO_MKISOFS_BIN)"
 popd >&2
@@ -27,3 +29,5 @@ LogPrint "Wrote ISO image: $ISO_DIR/$ISO_PREFIX.iso ($iso_image_size)"
 
 # Add ISO image to result files
 RESULT_FILES=( "${RESULT_FILES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
+
+# vim: set et ts=4 sw=4:
