@@ -66,7 +66,7 @@ for iso_number in $( seq -f '%02g' 1 $(( $number_of_ISOs - 1 )) ) ; do
     mkdir -p $TEMP_BACKUP_DIR
     mv $BACKUP_NAME $TEMP_BACKUP_DIR
     pushd $TEMP_ISO_DIR 1>/dev/null
-    if ! $ISO_MKISOFS_BIN $v -o "$ISO_OUTPUT_PATH" -R -J -volid "${ISO_VOLID}_$iso_number" -v -iso-level 3 . 1>/dev/null ; then
+    if ! $ISO_MKISOFS_BIN $v $ISO_MKISOFS_OPTS -o "$ISO_OUTPUT_PATH" -R -J -volid "${ISO_VOLID}_$iso_number" -v -iso-level 3 . 1>/dev/null ; then
         Error "Failed to create ISO image $ISO_NAME (with $ISO_MKISOFS_BIN)"
     fi
     popd 1>/dev/null
@@ -77,3 +77,4 @@ for iso_number in $( seq -f '%02g' 1 $(( $number_of_ISOs - 1 )) ) ; do
     RESULT_FILES=( "${RESULT_FILES[@]}" "$ISO_OUTPUT_PATH" )
 done
 
+# vim: set et ts=4 sw=4:
