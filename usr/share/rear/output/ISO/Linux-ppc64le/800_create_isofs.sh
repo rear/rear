@@ -11,9 +11,9 @@ test -x "$ISO_MKISOFS_BIN" || Error "No executable ISO_MKISOFS_BIN '$ISO_MKISOFS
 Log "Copying kernel"
 cp -pL $v $KERNEL_FILE $TMP_DIR/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE'"
 
-test -s "$REAR_INITRD_FILENAME" || Error "No initrd '$REAR_INITRD_FILENAME'"
+test -s "$TMP_DIR/$REAR_INITRD_FILENAME" || Error "No initrd '$TMP_DIR/$REAR_INITRD_FILENAME'"
 
-ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/kernel $REAR_INITRD_FILENAME )
+ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/kernel $TMP_DIR/$REAR_INITRD_FILENAME )
 Log "Starting '$ISO_MKISOFS_BIN'"
 LogPrint "Making ISO image"
 
