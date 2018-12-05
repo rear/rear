@@ -520,6 +520,10 @@ Build date: $( date -R )
 if test "$WORKFLOW" != "help" ; then
     # Create temporary work area and register removal exit task:
     BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
+    # Since 'mktemp' doesn't always return a path under /tmp, the build
+    # directory has always to be excluded for safety
+    BACKUP_PROG_EXCLUDE+=( "$BUILD_DIR" )
+
     QuietAddExitTask cleanup_build_area_and_end_program
     Log "Using build area '$BUILD_DIR'"
     ROOTFS_DIR=$BUILD_DIR/rootfs
@@ -575,3 +579,5 @@ if test "$WORKFLOW" != "help" ; then
 fi
 
 exit $EXIT_CODE
+
+# vim: set et ts=4 sw=4:
