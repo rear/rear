@@ -10,17 +10,19 @@ if [[ -z "$USE_SERIAL_CONSOLE" ]]; then
     done
 fi
 
-# Always include binaries as we don't know in advance whether they are useful
-if has_binary getty; then
+# Always include getty or agetty as we don't know in advance whether they are needed
+# (the user may boot the recovery system with manually specified kernel options
+# to get serial console support in his recovery system):
+local getty_binary=""
+if has_binary getty ; then
     # Debian, Ubuntu,...
-    GETTY=getty
-elif has_binary agetty; then
+    getty_binary="getty"
+elif has_binary agetty ; then
     # Fedora, RHEL, SLES,...
-    GETTY=agetty
+    getty_binary="agetty"
 else
-    # being desperate (not sure this is the best choice?)
-    BugError "Could not find a suitable (a)getty for serial console. Please fix
-$SHARE_DIR/prep/GNU/Linux/200_include_serial_console.sh"
+    # The user must have the programs in REQUIRED_PROGS installed on his system:
+    Error "Failed to find 'getty' or 'agetty' for serial console"
 fi
 
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "${GETTY}" stty )
+REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "$getty_binary" stty )
