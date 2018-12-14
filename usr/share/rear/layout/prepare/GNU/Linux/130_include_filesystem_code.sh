@@ -131,6 +131,7 @@ function create_fs () {
             fi
             ;;
         (xfs)
+            Log "Begin generating code to create XFS on $device ..."
             # Cleanup disk partition:
             echo "$cleanup_command" >> "$LAYOUT_CODE"
 
@@ -138,10 +139,39 @@ function create_fs () {
             # 'rear mkbackup/mkrescue' by xfs_info.
             # xfs info is called in 230_filesystem_layout.sh (layout/prepare)
             # xfs_opts will be used as additional parameter for mkfs.xfs and
-            # ensures that xfs filesystem will be created exactly as original.
+            # ensures that xfs filesystem will be created exactly as original
+            # unless the user has explicitly specified XFS filesystem options:
             local xfs_opts
-            xfs_opts=$(xfs_parse $LAYOUT_XFS_OPT_DIR/$(basename ${device}.xfs))
-
+            local xfs_device_basename="$( basename $device )"
+            # Only uppercase letters and digits are used to ensure mkfs_xfs_device_options_variable_name is a valid bash variable name
+            # even in case of complicated device nodes e.g. things like /dev/mapper/SIBM_2810XIV_78033E7012F-part3 
+            # cf. current_orig_device_basename_alnum_uppercase in layout/prepare/default/300_map_disks.sh
+            local xfs_device_basename_alnum_uppercase="$( echo $xfs_device_basename | tr -d -c '[:alnum:]' | tr '[:lower:]' '[:upper:]' )"
+            # cf. predefined_input_variable_name in the function UserInput in lib/_input-output-functions.sh
+            local mkfs_xfs_device_options_variable_name="MKFS_XFS_OPTIONS_$xfs_device_basename_alnum_uppercase"
+            # Set which options to use for mkfs.xfs:
+            if test "${!mkfs_xfs_device_options_variable_name:-}" ; then
+                # When the user has specified device specific options for mkfs.xfs e.g. in MKFS_XFS_OPTIONS_SDA2 use that:
+                Log "Using device specific options for mkfs.xfs as specified in $mkfs_xfs_device_options_variable_name"
+                xfs_opts="${!mkfs_xfs_device_options_variable_name:-}"
+            else
+                if test "$MKFS_XFS_OPTIONS" ; then
+                    # When the user has specified global options for mkfs.xfs in MKFS_XFS_OPTIONS use that:
+                    Log "Using global options for mkfs.xfs as specified in MKFS_XFS_OPTIONS"
+                    xfs_opts="$MKFS_XFS_OPTIONS"
+                else
+                    # When the user has not specified any options for mkfs.xfs
+                    # recreate the XFS filesystem on that particular device as it originally was
+                    # cf. https://github.com/rear/rear/issues/1998#issuecomment-445149675
+                    # The function xfs_parse in lib/filesystems-functions.sh falls back to mkfs.xfs defaults
+                    # when there is no file $LAYOUT_XFS_OPT_DIR/$xfs_device_basename.xfs where the
+                    # XFS filesystem options of that particular device on the original system were saved:
+                    Log "Using device specific options for mkfs.xfs from $LAYOUT_XFS_OPT_DIR/$xfs_device_basename.xfs"
+                    xfs_opts=$( xfs_parse $LAYOUT_XFS_OPT_DIR/$xfs_device_basename.xfs )
+                fi
+            fi
+            # In case of fallback to mkfs.xfs defaults xfs_opts is empty:
+            test "$xfs_opts" && Log "Using mkfs.xfs options: $xfs_opts" || Log "Using mkfs.xfs defaults"
             # Decide if mkfs.xfs or xfs_admin will set uuid.
             # Uuid set by xfs_admin will set incompatible flag on systems with
             # enabled CRC. This might cause ReaR failure during grub installation.
@@ -165,6 +195,7 @@ function create_fs () {
             if [ -n "$label" ] ; then
                 echo "xfs_admin -L $label $device >&2" >> "$LAYOUT_CODE"
             fi
+            Log "End of generating code to create XFS on $device"
             ;;
         (reiserfs)
             # Cleanup disk partition:
