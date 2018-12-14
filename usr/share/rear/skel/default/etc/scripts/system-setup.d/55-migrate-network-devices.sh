@@ -26,6 +26,10 @@ ORIGINAL_MACS=()
 # The ORIGINAL_DEVICES collects the original device names:
 ORIGINAL_DEVICES=()
 # The ORIG_MACS_FILE contains lines of the form: network_interface mac_address
+
+# Temporary rear_mappings_mac used when interfaces have been renamed
+tmp_mac_mapping_file=$(mktemp)
+
 # TODO: What should happen if there is no ORIG_MACS_FILE or when it is empty?
 while read orig_dev orig_mac junk ; do
     ORIGINAL_DEVICES=( "${ORIGINAL_DEVICES[@]}" "$orig_dev")
@@ -39,7 +43,7 @@ while read orig_dev orig_mac junk ; do
         # source system).
         # Create a temporary mac mapping, we don't want finalize() to update
         # the ifcfg-* files!
-        echo "$orig_mac $orig_mac $orig_dev" >> /tmp/mac
+        echo "$orig_mac $orig_mac $orig_dev" >> $tmp_mac_mapping_file
     else
         MIGRATE_MACS+=( "$orig_mac" )
     fi
@@ -49,17 +53,18 @@ done < $ORIG_MACS_FILE
 if [ ${#MIGRATE_MACS[@]} -ne 0 ] ; then
     # If some MACs were not found (MIGRATE_MACS not empty) then, we need a migration
     :
-elif [ -s /tmp/mac ] ; then
+elif [ -s $tmp_mac_mapping_file ] ; then
     # Else, if some devices were renamed, we also need a migration, but it will
-    # be automatic thanks to the /tmp/mac mapping file
+    # be automatic thanks to the $tmp_mac_mapping_file mapping file
 
     # We do not need the $MAC_MAPPING_FILE file from the user, just overwrite it
     # Later, we will remove that file to not have finalize() modify the ifcfg-*
     # files.
     mkdir -p $(dirname $MAC_MAPPING_FILE)
-    cp /tmp/mac $MAC_MAPPING_FILE
+    cp $tmp_mac_mapping_file $MAC_MAPPING_FILE
 else
     # Skip this process if all MACs and network interfaces (devices) are accounted for
+    unset tmp_mac_mapping_file
     return 0
 fi
 
@@ -279,8 +284,10 @@ fi
 # apply them to the files in the recovered system, unless we did the mapping
 # automatically, which means some device has been renamed and will probably
 # gets its name back upon reboot.
-if [ -s /tmp/mac ] ; then
-    rm $MAC_MAPPING_FILE /tmp/mac
+if [ -s $tmp_mac_mapping_file ] ; then
+    rm $MAC_MAPPING_FILE $tmp_mac_mapping_file
 fi
+
+unset tmp_mac_mapping_file
 
 # vim: set et ts=4 sw=4:
