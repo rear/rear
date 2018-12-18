@@ -26,18 +26,47 @@ ORIGINAL_MACS=()
 # The ORIGINAL_DEVICES collects the original device names:
 ORIGINAL_DEVICES=()
 # The ORIG_MACS_FILE contains lines of the form: network_interface mac_address
+
+# Temporary rear_mappings_mac used when interfaces have been renamed
+tmp_mac_mapping_file=$(mktemp)
+
 # TODO: What should happen if there is no ORIG_MACS_FILE or when it is empty?
 while read orig_dev orig_mac junk ; do
     ORIGINAL_DEVICES=( "${ORIGINAL_DEVICES[@]}" "$orig_dev")
     ORIGINAL_MACS=( "${ORIGINAL_MACS[@]}" "$orig_mac" )
-    # Continue with the next original MAC address if it is found on the current system:
-    ip link show | grep -q "$orig_mac" && continue
-    MIGRATE_DEVNAMES=( "${MIGRATE_DEVNAMES[@]}" "$orig_dev" )
-    MIGRATE_MACS=( "${MIGRATE_MACS[@]}" "$orig_mac" )
+    # Continue with the next original MAC address if it is found on the current
+    # system, otherwise we consider it needs migration:
+    new_dev=$( get_device_by_hwaddr "$orig_mac" )
+    if [ -n "$new_dev" ] ; then
+        [ "$new_dev" = "$orig_dev" ] && continue
+        # The device was found but has been renamed (it was customized in
+        # source system).
+        # Create a temporary mac mapping, we don't want finalize() to update
+        # the ifcfg-* files!
+        echo "$orig_mac $orig_mac $orig_dev" >> $tmp_mac_mapping_file
+    else
+        MIGRATE_MACS+=( "$orig_mac" )
+    fi
 done < $ORIG_MACS_FILE
 
-# Skip this process if all MACs and network interfacs (devices) are accounted for:
-test ${#MIGRATE_MACS[@]} -eq 0 && test ${#MIGRATE_DEVNAMES[@]} -eq 0 && return 0
+
+if [ ${#MIGRATE_MACS[@]} -ne 0 ] ; then
+    # If some MACs were not found (MIGRATE_MACS not empty) then, we need a migration
+    :
+elif [ -s $tmp_mac_mapping_file ] ; then
+    # Else, if some devices were renamed, we also need a migration, but it will
+    # be automatic thanks to the $tmp_mac_mapping_file mapping file
+
+    # We do not need the $MAC_MAPPING_FILE file from the user, just overwrite it
+    # Later, we will remove that file to not have finalize() modify the ifcfg-*
+    # files.
+    mkdir -p $(dirname $MAC_MAPPING_FILE)
+    cp $tmp_mac_mapping_file $MAC_MAPPING_FILE
+else
+    # Skip this process if all MACs and network interfaces (devices) are accounted for
+    unset tmp_mac_mapping_file
+    return 0
+fi
 
 # Find the MAC addresses that are now available.
 # This is an array with values of the form "$dev $mac $driver"
@@ -74,7 +103,7 @@ done
 # so that it is shown to the user what MAC address mappings will be done:
 if read_and_strip_file $MAC_MAPPING_FILE ; then
     while read orig_dev orig_mac junk ; do
-        read_and_strip_file $MAC_MAPPING_FILE | grep -q "$orig_mac" && MANUAL_MAC_MAPPING=true
+        read_and_strip_file $MAC_MAPPING_FILE | grep -qw "^$orig_mac" && MANUAL_MAC_MAPPING=true
     done < $ORIG_MACS_FILE
 fi
 
@@ -237,7 +266,7 @@ if is_true $reload_udev ; then
     echo -n "Reloading udev ... "
     # Force udev to reload rules (as they were just changed)
     # Failback to "udevadm control --reload" in case of problem (as specify in udevadm manpage in SLES12)
-    # If nothing work, then wait 1 seconf delay. It should let the time for udev to detect changes in the rules files.
+    # If nothing work, then wait 1 second delay. It should let the time for udev to detect changes in the rules files.
     udevadm control --reload-rules || udevadm control --reload || sleep 1
     my_udevtrigger
     sleep 1
@@ -252,5 +281,13 @@ if is_true $reload_udev ; then
 fi
 
 # A later script in finalize/* will also go over the MAC mappings file and
-# apply them to the files in the recovered system.
+# apply them to the files in the recovered system, unless we did the mapping
+# automatically, which means some device has been renamed and will probably
+# gets its name back upon reboot.
+if [ -s $tmp_mac_mapping_file ] ; then
+    rm $MAC_MAPPING_FILE $tmp_mac_mapping_file
+fi
 
+unset tmp_mac_mapping_file
+
+# vim: set et ts=4 sw=4:
