@@ -16,7 +16,8 @@ for i in $(cat $TMP_DIR/backup-include.txt); do
     include_list+=("$i ")
 done
 
-# Only in ReaR verbose mode also show borg progress output and stats
+# User might specify some additional output options in Borg.
+# Output shown by Borg is not controlled by `rear --verbose' nor `rear --debug'
 local borg_additional_options=''
 
 is_true $BORGBACKUP_SHOW_PROGRESS && borg_additional_options+='--progress '
