@@ -17,7 +17,7 @@
 		;;
 
 	(rsync)
-		$BACKUP_PROG -a "${TMP_DIR}/selinux.autorelabel" \
+		$BACKUP_PROG -a "${TMP_DIR}/selinux.autorelabel" ${BACKUP_RSYNC_OPTIONS[@]} \
 		 "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup/.autorelabel"
 		_rc=$?
 		if [ $_rc -ne 0 ]; then

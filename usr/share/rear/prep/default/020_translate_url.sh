@@ -23,6 +23,7 @@ if [[ "$RSYNC_URL" ]] ; then
 fi
 
 if [[ "$RSYNC_OPTIONS" ]] ; then
+    Log "Using RSYNC_OPTIONS is deprecated. Use BACKUP_RSYNC_OPTIONS instead."
     BACKUP_RSYNC_OPTIONS=$RSYNC_OPTIONS
 fi
 
