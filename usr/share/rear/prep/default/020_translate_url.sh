@@ -22,9 +22,7 @@ if [[ "$RSYNC_URL" ]] ; then
     BACKUP_URL=$RSYNC_URL
 fi
 
-if [[ "$RSYNC_OPTIONS" ]] ; then
-    BACKUP_RSYNC_OPTIONS=$RSYNC_OPTIONS
-fi
+test "$RSYNC_OPTIONS" && Error "RSYNC_OPTIONS is no longer supported. Use BACKUP_RSYNC_OPTIONS instead."
 
 if [[ "$ISO_URL" ]] ; then
     Log "Using ISO_URL is deprecated. Use OUTPUT_URL instead."

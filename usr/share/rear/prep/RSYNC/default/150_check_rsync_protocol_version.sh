@@ -45,6 +45,10 @@ if [ "${RSYNC_USER}" != "root" ]; then
             BACKUP_RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --rsync-path="""rsync --fake-super""" )
         fi
     else
-        Error "rsync --fake-super not possible on system ($RSYNC_HOST) (please upgrade rsync to 3.x)"
+        if [ ${BACKUP_RSYNC_OPTIONS[@]/--fake-super/} != ${BACKUP_RSUNC_OPTIONS[@]} ]; then
+            Error "rsync --fake-super not possible on system ($RSYNC_HOST) (please upgrade rsync to 3.x)"
+        else
+            Log "Warning: rsync --fake-super not possible on system ($RSYNC_HOST) (please upgrade rsync to 3.x)"
+        fi
     fi
 fi
