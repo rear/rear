@@ -10,43 +10,58 @@ WORKFLOW_dump_DESCRIPTION="dump configuration and system information"
 WORKFLOWS=( ${WORKFLOWS[@]} dump )
 WORKFLOW_dump () {
 
-    # The dump workflow is always verbose (see usr/sbin/rear).
-
     # Do nothing in simulation mode, cf. https://github.com/rear/rear/issues/1939
     if is_true "$SIMULATE" ; then
         LogPrint "${BASH_SOURCE[0]} dumps configuration and system information"
         return 0
     fi
 
-    # Get all array variable names in an array:
-    array_variable_names=( $( declare -a | cut -d ' ' -f3 | cut -d '=' -f1 ) )
+    function output_variable_assignment () {
+        local variable_name=$1
+        test -v "$variable_name" || return 1
+        if test "$DEBUG" ; then
+            # In debug mode show the 'declare -p' output as is (only indented by two spaces):
+            LogUserOutput "$( declare -p $variable_name | sed -e 's/^/  /' )"
+        else
+            # When not in debug mode beautify/simplify the 'declare -p' output
+            # for example for ARRAY=( '' 'this' ' ' 'that' 'something else' ) the 'declare -p' output is
+            #   declare -a ARRAY=([0]="" [1]="this" [2]=" " [3]="that" [4]="something else")
+            # which gets beautified/simplified for better readability via 'sed' into 
+            #   ARRAY=("" "this" " " "that" "something else")
+            # see https://github.com/rear/rear/pull/2014#issuecomment-453503218
+            # but that 'sed' modification does not work fully fail safe in any case
+            # see https://github.com/rear/rear/pull/2014#issuecomment-453509407
+            # but it is considered to not cause harm for arrays that are actually used in ReaR
+            # see https://github.com/rear/rear/pull/2014#issuecomment-453996364
+            LogUserOutput "$( declare -p $variable_name | sed -e 's/^declare -[[:alpha:]-]* /  /' -e 's/\([( ]\)\[[[:digit:]]\+\]=/\1/g' )"
+        fi
+    }
 
-    LogPrint "Dumping out configuration and system information"
+    LogUserOutput "# Begin dumping out configuration and system information:"
 
     if [ "$ARCH" != "$REAL_ARCH" ] ; then
-        LogPrint "This is a '$REAL_ARCH' system, compatible with '$ARCH'."
+        LogUserOutput "# This is a '$REAL_ARCH' system, compatible with '$ARCH'."
     fi
 
-    LogPrint "System definition:"
-    for var in "ARCH" "OS" \
-               "OS_MASTER_VENDOR" "OS_MASTER_VERSION" "OS_MASTER_VENDOR_ARCH" "OS_MASTER_VENDOR_VERSION" "OS_MASTER_VENDOR_VERSION_ARCH" \
-               "OS_VENDOR" "OS_VERSION" "OS_VENDOR_ARCH" "OS_VENDOR_VERSION" "OS_VENDOR_VERSION_ARCH" ; do
-        LogPrint "$( printf "%40s='%s'" "$var" "${!var}" )"
-    done
-
-    LogPrint "Configuration tree:"
+    LogUserOutput "# Configuration tree:"
     for config in "$ARCH" "$OS" \
                   "$OS_MASTER_VENDOR" "$OS_MASTER_VENDOR_ARCH" "$OS_MASTER_VENDOR_VERSION" "$OS_MASTER_VENDOR_VERSION_ARCH" \
                   "$OS_VENDOR" "$OS_VENDOR_ARCH" "$OS_VENDOR_VERSION" "$OS_VENDOR_VERSION_ARCH" ; do
-        if [ "$config" ] ; then
-            LogPrint "$( printf "%40s : %s" "$config".conf "$( test -s $SHARE_DIR/conf/"$config".conf && echo OK || echo missing/empty )" )"
-        fi
+        test "$config" || continue
+        LogUserOutput "  # $config.conf : $( test -s $SHARE_DIR/conf/$config.conf && echo OK || echo missing/empty )"
     done
     for config in site local ; do
-        LogPrint "$( printf "%40s : %s" "$config".conf "$( test -s $CONFIG_DIR/"$config".conf && echo OK || echo missing/empty )" )"
+        LogUserOutput "  # $config.conf : $( test -s $CONFIG_DIR/"$config".conf && echo OK || echo missing/empty )"
     done
 
-    LogPrint "Backup with $BACKUP:"
+    LogUserOutput "# System definition:"
+    for variable_name in "ARCH" "OS" \
+               "OS_MASTER_VENDOR" "OS_MASTER_VERSION" "OS_MASTER_VENDOR_ARCH" "OS_MASTER_VENDOR_VERSION" "OS_MASTER_VENDOR_VERSION_ARCH" \
+               "OS_VENDOR" "OS_VERSION" "OS_VENDOR_ARCH" "OS_VENDOR_VERSION" "OS_VENDOR_VERSION_ARCH" ; do
+        output_variable_assignment $variable_name
+    done
+
+    LogUserOutput "# Backup with $BACKUP:"
     # Output all $BACKUP_* config variable values e.g. for BACKUP=NETFS as something like
     #   NETFS_CONFIG_STRING='string of words'
     # or when it is an array variable than as
@@ -56,30 +71,7 @@ WORKFLOW_dump () {
         # to all $BACKUP_* config variable names e.g. for BACKUP=NETFS to something like:
         #   ++ eval echo '${!NETFS_*}'
         #   +++ echo NETFS_CONFIG_STRING NETFS_CONFIG_ARRAY ...
-        if IsInArray $variable_name "${array_variable_names[@]}" ; then
-            variable_values="$( eval 'for array_element in "${'"$variable_name"'[@]:-}" ; do echo -n "'"'"'$array_element'"'"' " ; done' )"
-            # Using an empty default value ( via "${ARRAY[@]:-}" ) in the above 'for' loop is needed for empty array variables because
-            # otherwise the 'for' loop would not be run at all for empty arrays like ARRAY=( ) which would result variable_values=
-            # instead of the intended variable_values="'' " that is output as ARRAY='' to explicitly show an empty '' value.
-            # Welcome to the quoting hell in the command substitution for the variable_values assignment above:
-            # cf. "How to escape single quotes within single quoted strings?" at
-            # https://stackoverflow.com/questions/1250079/how-to-escape-single-quotes-within-single-quoted-strings
-            # that reads (excerpts and a bit changed here):
-            #   To use single quotes in the outermost layer ... you can glue both kinds of quotation.
-            #   Example:
-            #     eval ' ... '"'"' ... '"'"' ... '
-            #   Explanation of how '"'"' is interpreted as just ' :
-            #   1. ' end first quotation which uses single quotes
-            #   2. " start second quotation using double-quotes
-            #   3. ' quoted character
-            #   4. " end second quotation using double-quotes
-            #   5. ' start third quotation using single quotes
-            # If you do not place any whitespaces between (1) and (2) or between (4) and (5)
-            # the shell will interpret that string as a one long word.
-            LogPrint "$( printf "%40s=( %s )" "$variable_name" "$variable_values" )"
-        else
-            LogPrint "$( printf "%40s='%s'" "$variable_name" "${!variable_name}" )"
-        fi
+        output_variable_assignment $variable_name
     done
     # Output all BACKUP_* config variable values e.g. as something like
     #   BACKUP_CONFIG_STRING='string of words'
@@ -90,34 +82,24 @@ WORKFLOW_dump () {
 	    (BACKUP_PROG*)
                 ;;
             (*)
-                if IsInArray $variable_name "${array_variable_names[@]}" ; then
-                    variable_values="$( eval 'for array_element in "${'"$variable_name"'[@]:-}" ; do echo -n "'"'"'$array_element'"'"' " ; done' )"
-                    LogPrint "$( printf "%40s=( %s )" "$variable_name" "$variable_values" )"
-                else
-                    LogPrint "$( printf "%40s='%s'" "$variable_name" "${!variable_name}" )"
-                fi
+                output_variable_assignment $variable_name
                 ;;
         esac
     done
     case "$BACKUP" in
         (NETFS)
-            LogPrint "Backup program is '$BACKUP_PROG':"
+            LogUserOutput "# Backup program is '$BACKUP_PROG':"
             # Output all BACKUP_PROG_* config variable values e.g. as something like
             #   BACKUP_PROG_STRING='string of words'
             # or when it is an array variable than as
             #   BACKUP_PROG_ARRAY='first element' 'second element' ...
             for variable_name in $( eval echo '${!BACKUP_PROG_*}' ) ; do
-                if IsInArray $variable_name "${array_variable_names[@]}" ; then
-                    variable_values="$( eval 'for array_element in "${'"$variable_name"'[@]:-}" ; do echo -n "'"'"'$array_element'"'"' " ; done' )"
-                    LogPrint "$( printf "%40s=( %s )" "$variable_name" "$variable_values" )"
-                else
-                    LogPrint "$( printf "%40s='%s'" "$variable_name" "${!variable_name}" )"
-                fi
+                output_variable_assignment $variable_name
             done
         ;;
     esac
 
-    LogPrint "Output to $OUTPUT:"
+    LogUserOutput "# Output to $OUTPUT:"
     # Output all $OUTPUT_* config variable values e.g. for OUTPUT=ISO as something like
     #   ISO_CONFIG_STRING='string of words'
     # or when it is an array variable than as
@@ -128,35 +110,31 @@ WORKFLOW_dump () {
     #   OUTPUT_CONFIG_ARRAY='first element' 'second element' ...
     # and finally output the RESULT_MAILTO config variable value:
     for variable_name in $( eval echo '${!'"$OUTPUT"'_*}' '${!OUTPUT_*}' ) RESULT_MAILTO ; do
-        if IsInArray $variable_name "${array_variable_names[@]}" ; then
-            variable_values="$( eval 'for array_element in "${'"$variable_name"'[@]:-}" ; do echo -n "'"'"'$array_element'"'"' " ; done' )"
-            LogPrint "$( printf "%40s=( %s )" "$variable_name" "$variable_values" )"
-        else
-            LogPrint "$( printf "%40s='%s'" "$variable_name" "${!variable_name}" )"
-        fi
+        output_variable_assignment $variable_name
     done
 
-    Print ""
-
-    UserOutput "$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt"
+    LogUserOutput "# Validation status:"
+    validation_file="$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt"
+    Print "  $validation_file : $( test -s $validation_file && echo OK || echo missing/empty )"
     if test -s "$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt" ; then
-        LogPrint "Your system is validated with the following details:"
+        LogUserOutput "  # Your system is validated with the following details:"
         while read -r ; do
-            LogPrint "$REPLY"
+            LogUserOutput "  # $REPLY"
         done <"$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt"
     else
-        LogPrint "Your system is not yet validated. Please carefully check all functions"
-        LogPrint "and create a validation record with '$PROGRAM validate'. This will help others"
-        LogPrint "to know about the validation status of $PRODUCT on this system."
-        # if the master OS is validated print out a suitable hint
+        LogUserOutput "  # Your system is not yet validated. Please carefully check all functions"
+        LogUserOutput "  # and create a validation record with '$PROGRAM validate'. This will help others"
+        LogUserOutput "  # to know about the validation status of $PRODUCT on this system."
+        # If the master OS is validated print out a suitable hint
         if test -s "$SHARE_DIR/lib/validated/$OS_MASTER_VENDOR_VERSION_ARCH.txt" ; then
-            LogPrint ""
-            LogPrint "Your system is derived from $OS_MASTER_VENDOR_VERSION which is validated:"
+            LogUserOutput "  # Your system is derived from $OS_MASTER_VENDOR_VERSION which is validated:"
             while read -r ; do
-                LogPrint "$REPLY"
+                LogUserOutput "  # $REPLY"
             done <"$SHARE_DIR/lib/validated/$OS_MASTER_VENDOR_VERSION_ARCH.txt"
         fi
     fi
+
+    LogUserOutput "# End of dump configuration and system information."
 
 }
 
