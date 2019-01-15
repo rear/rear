@@ -63,9 +63,9 @@ WORKFLOW_dump () {
 
     LogUserOutput "# Backup with $BACKUP:"
     # Output all $BACKUP_* config variable values e.g. for BACKUP=NETFS as something like
-    #   NETFS_CONFIG_STRING='string of words'
+    #   NETFS_CONFIG_STRING="string of words"
     # or when it is an array variable than as
-    #   NETFS_CONFIG_ARRAY='first element' 'second element' ...
+    #   NETFS_CONFIG_ARRAY=("first element" "second element" ... )
     for variable_name in $( eval echo '${!'"$BACKUP"'_*}' ) ; do
         # The command substitution for the list of items in the above 'for' loop evaluates
         # to all $BACKUP_* config variable names e.g. for BACKUP=NETFS to something like:
@@ -74,9 +74,9 @@ WORKFLOW_dump () {
         output_variable_assignment $variable_name
     done
     # Output all BACKUP_* config variable values e.g. as something like
-    #   BACKUP_CONFIG_STRING='string of words'
+    #   BACKUP_CONFIG_STRING="string of words"
     # or when it is an array variable than as
-    #   BACKUP_CONFIG_ARRAY='first element' 'second element' ...
+    #   BACKUP_CONFIG_ARRAY=("first element" "second element" ... )
     for variable_name in $( eval echo '${!BACKUP_*}' ) ; do
         case $variable_name in
 	    (BACKUP_PROG*)
@@ -90,9 +90,9 @@ WORKFLOW_dump () {
         (NETFS)
             LogUserOutput "# Backup program is '$BACKUP_PROG':"
             # Output all BACKUP_PROG_* config variable values e.g. as something like
-            #   BACKUP_PROG_STRING='string of words'
+            #   BACKUP_PROG_STRING="string of words"
             # or when it is an array variable than as
-            #   BACKUP_PROG_ARRAY='first element' 'second element' ...
+            #   BACKUP_PROG_ARRAY=("first element" "second element" ... )
             for variable_name in $( eval echo '${!BACKUP_PROG_*}' ) ; do
                 output_variable_assignment $variable_name
             done
@@ -101,13 +101,13 @@ WORKFLOW_dump () {
 
     LogUserOutput "# Output to $OUTPUT:"
     # Output all $OUTPUT_* config variable values e.g. for OUTPUT=ISO as something like
-    #   ISO_CONFIG_STRING='string of words'
+    #   ISO_CONFIG_STRING="string of words"
     # or when it is an array variable than as
-    #   ISO_CONFIG_ARRAY='first element' 'second element' ...
+    #   ISO_CONFIG_ARRAY=("first element" "second element" ... )
     # and output all OUTPUT_* config variable values e.g. as something like
-    #   OUTPUT_CONFIG_STRING='string of words'
+    #   OUTPUT_CONFIG_STRING="string of words"
     # or when it is an array variable than as
-    #   OUTPUT_CONFIG_ARRAY='first element' 'second element' ...
+    #   OUTPUT_CONFIG_ARRAY=("first element" "second element" ... )
     # and finally output the RESULT_MAILTO config variable value:
     for variable_name in $( eval echo '${!'"$OUTPUT"'_*}' '${!OUTPUT_*}' ) RESULT_MAILTO ; do
         output_variable_assignment $variable_name
@@ -116,21 +116,23 @@ WORKFLOW_dump () {
     LogUserOutput "# Validation status:"
     validation_file="$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt"
     LogUserOutput "  # $validation_file : $( test -s $validation_file && echo OK || echo missing/empty )"
-    if test -s "$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt" ; then
+    if test -s "$validation_file" ; then
         LogUserOutput "  # Your system is validated with the following details:"
         while read -r ; do
             LogUserOutput "  # $REPLY"
-        done <"$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt"
+        done <"$validation_file"
     else
         LogUserOutput "  # Your system is not yet validated. Please carefully check all functions"
         LogUserOutput "  # and create a validation record with '$PROGRAM validate'. This will help others"
         LogUserOutput "  # to know about the validation status of $PRODUCT on this system."
-        # If the master OS is validated print out a suitable hint
-        if test -s "$SHARE_DIR/lib/validated/$OS_MASTER_VENDOR_VERSION_ARCH.txt" ; then
+        # Show a hint when there is no OS_VENDOR_VERSION_ARCH.txt but OS_MASTER_VENDOR_VERSION_ARCH.txt exists:
+        validation_file="$SHARE_DIR/lib/validated/$OS_MASTER_VENDOR_VERSION_ARCH.txt"
+        if test -s "$validation_file" ; then
+            LogUserOutput "  # $validation_file : OK"
             LogUserOutput "  # Your system is derived from $OS_MASTER_VENDOR_VERSION which is validated:"
             while read -r ; do
                 LogUserOutput "  # $REPLY"
-            done <"$SHARE_DIR/lib/validated/$OS_MASTER_VENDOR_VERSION_ARCH.txt"
+            done <"$validation_file"
         fi
     fi
 
