@@ -115,7 +115,7 @@ WORKFLOW_dump () {
 
     LogUserOutput "# Validation status:"
     validation_file="$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt"
-    Print "  $validation_file : $( test -s $validation_file && echo OK || echo missing/empty )"
+    LogUserOutput "  # $validation_file : $( test -s $validation_file && echo OK || echo missing/empty )"
     if test -s "$SHARE_DIR/lib/validated/$OS_VENDOR_VERSION_ARCH.txt" ; then
         LogUserOutput "  # Your system is validated with the following details:"
         while read -r ; do
