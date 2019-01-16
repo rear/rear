@@ -246,7 +246,7 @@ function trap () {
 # For actually intended user messages output to the original STDOUT
 # but only when the user launched 'rear -v' in verbose mode:
 function Print () {
-    test "$VERBOSE" && echo -e "${MESSAGE_PREFIX}$*" 1>&7 || true
+    test "$VERBOSE" && echo "${MESSAGE_PREFIX}$*" 1>&7 || true
 }
 
 # For normal output messages that are intended for user dialogs.
@@ -256,13 +256,13 @@ function Print () {
 # but output to the original STDOUT without a MESSAGE_PREFIX because
 # MESSAGE_PREFIX is not helpful in normal user dialog output messages:
 function UserOutput () {
-    echo -e "$*" 1>&7 || true
+    echo "$*" 1>&7 || true
 }
 
 # For actually intended user error messages output to the original STDERR
 # regardless whether or not the user launched 'rear' in verbose mode:
 function PrintError () {
-    echo -e "${MESSAGE_PREFIX}$*" 1>&8 || true
+    echo "${MESSAGE_PREFIX}$*" 1>&8 || true
 }
 
 # For messages that should only appear in the log file output to the current STDERR
