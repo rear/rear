@@ -45,20 +45,20 @@ fi
 #   ... the keyword (e.g., nameserver) must start the line.
 #   The value follows the keyword, separated by white space.
 local only_loopback_nameservers="yes"
-local keyword nameserver_IP_address junk
-while read keyword nameserver_IP_address junk ; do
-    test "$nameserver_IP_address" || continue
+local nameserver_keyword nameserver_value junk
+while read nameserver_keyword nameserver_value junk ; do
+    test "$nameserver_value" || continue
     # One non-empty and non-loopback nameserver IP address is considered to be valid
     # (i.e. we do not verify here if a nameserver does actually work):
-    if grep -q '^127\.' <<<"$nameserver_IP_address" ; then
-        Log "Useless loopback nameserver IP address $nameserver_IP_address in $ROOTFS_DIR/etc/resolv.conf"
+    if grep -q '^127\.' <<<"$nameserver_value" ; then
+        Log "Useless loopback nameserver '$nameserver_value' in $ROOTFS_DIR/etc/resolv.conf"
     else
         only_loopback_nameservers="no"
-        Log "Supposedly valid nameserver IP address $nameserver_IP_address in $ROOTFS_DIR/etc/resolv.conf"
+        Log "Supposedly valid nameserver '$nameserver_value' in $ROOTFS_DIR/etc/resolv.conf"
         # We may no 'break' here if we like to 'Log' all supposedly valid nameserver IP addresses:
         break
     fi
-done < <( grep '^nameserver[[:space:]]' $ROOTFS_DIR/etc/resolv.conf )
+done < <( grep '^nameserver[[:space:]]' $ROOTFS_DIR/etc/resolv.conf || echo "nameserver none" )
 # It is o.k. to have an empty /etc/resolv.conf in the recovery system
 # (perhaps no DNS should be used within the recovery system)
 # but when /etc/resolv.conf in the recovery system contains nameserver values
