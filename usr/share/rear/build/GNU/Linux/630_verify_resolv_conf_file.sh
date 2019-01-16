@@ -55,9 +55,13 @@ while read nameserver_keyword nameserver_value junk ; do
     else
         only_loopback_nameservers="no"
         Log "Supposedly valid nameserver '$nameserver_value' in $ROOTFS_DIR/etc/resolv.conf"
-        # We may no 'break' here if we like to 'Log' all supposedly valid nameserver IP addresses:
+        # We may no 'break' here if we like to 'Log' all supposedly valid nameserver values:
         break
     fi
+    # The 'echo "nameserver none"' is needed to allow an empty /etc/resolv.conf in the recovery system
+    # that could be enforced via USE_RESOLV_CONF=" " which must contain at least one space so that
+    # the above 'test "$USE_RESOLV_CONF"' gets true to overwrite the copied (original) resolv.conf
+    # and to set only_loopback_nameservers="no" because 'none' is a "Supposedly valid nameserver":
 done < <( grep '^nameserver[[:space:]]' $ROOTFS_DIR/etc/resolv.conf || echo "nameserver none" )
 # It is o.k. to have an empty /etc/resolv.conf in the recovery system
 # (perhaps no DNS should be used within the recovery system)
