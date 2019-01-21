@@ -92,11 +92,14 @@ service docker status >/dev/null 2>&1 && docker_is_running="yes"
         if is_true $docker_is_running ; then
             # docker daemon/service is running
             docker_root_dir=$( docker info 2>/dev/null | grep 'Docker Root Dir' | awk '{print $4}' )
-            # If $docker_root_dir is in the beginning of the $mountpoint string then FS is under docker control
-            # and we better exclude from saving the layout,
-            # see https://github.com/rear/rear/issues/1749
-            Log "$device is mounted below $docker_root_dir (mount point $mountpoint is under docker control), skipping."
-            echo "$mountpoint" | grep -q "^$docker_root_dir" && continue
+            # If docker_root_dir is in the beginning of the mountpoint string then FS is under docker control
+            # and we better exclude it from saving the layout, see https://github.com/rear/rear/issues/1749
+            # but ensure docker_root_dir is not empty (otherwise any mountpoint string matches "^" which
+            # would skip all mountpoints), see https://github.com/rear/rear/issues/1989#issuecomment-456054278
+            if test "$docker_root_dir" ; then
+                Log "$device is mounted below $docker_root_dir (mount point $mountpoint is under docker control), skipping."
+                echo "$mountpoint" | grep -q "^$docker_root_dir" && continue
+            fi
         fi
         # Replace a symbolic link /dev/disk/by-uuid/a1b2c3 -> ../../sdXn
         # by the fully canonicalized target of the link e.g. /dev/sdXn
