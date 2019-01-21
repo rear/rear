@@ -90,8 +90,10 @@ service docker status >/dev/null 2>&1 && docker_is_running="yes"
         fi
         # docker specific exclude part
         if is_true $docker_is_running ; then
-            # docker daemon/service is running
-            docker_root_dir=$( docker info 2>/dev/null | grep 'Docker Root Dir' | awk '{print $4}' )
+            # When docker daemon/service is running, try to get its 'Docker Root Dir':
+            # Kill 'docker info' with SIGTERM after 5 seconds and with SIGKILL after additional 2 seconds
+            # because there are too many crippled docker installations, cf. ttps://github.com/rear/rear/pull/2021
+            docker_root_dir=$( timeout -k 2s -5s docker info 2>/dev/null | grep 'Docker Root Dir' | awk '{print $4}' )
             # If docker_root_dir is in the beginning of the mountpoint string then FS is under docker control
             # and we better exclude it from saving the layout, see https://github.com/rear/rear/issues/1749
             # but ensure docker_root_dir is not empty (otherwise any mountpoint string matches "^" which
