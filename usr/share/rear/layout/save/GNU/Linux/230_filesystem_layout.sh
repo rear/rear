@@ -50,13 +50,28 @@ fi
 # so that in particular what is mounted at '/' is output before other stuff.
 read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
 
-# docker daemon mounts file systems for its docker containers
-# see also https://docs.docker.com/storage/storagedriver/device-mapper-driver/#configure-direct-lvm-mode-for-production
-# As it is for container usage only we do not to backup these up or recreate as this disk device is completely under
-# control by docker itself (even the recreation of it incl, the creation of the volume group). Usually this is
-# done via a kind of cookbook (Chef, puppet or ansible)
+# The Docker daemon mounts file systems for its Docker containers, see also
+# https://docs.docker.com/storage/storagedriver/device-mapper-driver/#configure-direct-lvm-mode-for-production
+# As it is for container usage only we do not to backup these up or recreate as this disk device is completely
+# under control by Docker itself (even the recreation of it incl, the creation of the volume group).
+# Usually this is done via a kind of cookbook (Chef, puppet or ansible).
 docker_is_running=""
-service docker status >/dev/null 2>&1 && docker_is_running="yes"
+docker_root_dir=""
+if service docker status &>/dev/null ; then
+    docker_is_running="yes"
+    # When the Docker daemon/service is running, try to get its 'Docker Root Dir':
+    # Kill 'docker info' with SIGTERM after 5 seconds and with SIGKILL after additional 2 seconds
+    # because there are too many crippled Docker installations, cf. https://github.com/rear/rear/pull/2021
+    docker_root_dir=$( timeout -k 2s 5s docker info | grep 'Docker Root Dir' | awk '{print $4}' )
+    # Things may go wrong in the 'Docker specific exclude part' below
+    # when Docker is used but its 'Docker Root Dir' cannot be determined
+    # cf. https://github.com/rear/rear/issues/1989
+    if test "$docker_root_dir" ; then
+        LogPrint "Docker is running, skipping filesystems mounted below Docker Root Dir $docker_root_dir"
+    else
+        LogPrintError "Cannot determine Docker Root Dir - things may go wrong - check $DISKLAYOUT_FILE"
+    fi
+fi
 
 # Begin writing output to DISKLAYOUT_FILE:
 (
@@ -64,9 +79,10 @@ service docker status >/dev/null 2>&1 && docker_is_running="yes"
     echo "# Format: fs <device> <mountpoint> <fstype> [uuid=<uuid>] [label=<label>] [<attributes>]"
     # Read the output of the read_filesystems_command:
     while read device mountpoint fstype options junk ; do
+        Log "Processing filesystem '$fstype' on '$device' mounted at '$mountpoint'"
         # Empty device or mountpoint or fstype may may indicate an error. In this case be verbose and inform the user:
         if test -z "$device" -o -z "$mountpoint" -o -z "$fstype" ; then
-            LogPrint "Empty device='$device' or mountpoint='$mountpoint' or fstype='$fstype', skipping saving filesystem layout for it."
+            LogPrintError "Empty device='$device' or mountpoint='$mountpoint' or fstype='$fstype', skipping saving filesystem layout for it."
             continue
         fi
         # FIXME: I (jsmeix@suse.de) have no idea what the reason for the following is.
@@ -88,19 +104,17 @@ service docker status >/dev/null 2>&1 && docker_is_running="yes"
             Log "$device is CD/DVD type device [fstype=$fstype], skipping."
             continue
         fi
-        # docker specific exclude part
+        # Docker specific exclude part:
         if is_true $docker_is_running ; then
-            # When docker daemon/service is running, try to get its 'Docker Root Dir':
-            # Kill 'docker info' with SIGTERM after 5 seconds and with SIGKILL after additional 2 seconds
-            # because there are too many crippled docker installations, cf. ttps://github.com/rear/rear/pull/2021
-            docker_root_dir=$( timeout -k 2s 5s docker info 2>/dev/null | grep 'Docker Root Dir' | awk '{print $4}' )
-            # If docker_root_dir is in the beginning of the mountpoint string then FS is under docker control
+            # If docker_root_dir is the beginning of the mountpoint string then the filesystem is under Docker control
             # and we better exclude it from saving the layout, see https://github.com/rear/rear/issues/1749
             # but ensure docker_root_dir is not empty (otherwise any mountpoint string matches "^" which
             # would skip all mountpoints), see https://github.com/rear/rear/issues/1989#issuecomment-456054278
             if test "$docker_root_dir" ; then
-                Log "$device is mounted below $docker_root_dir (mount point $mountpoint is under docker control), skipping."
-                echo "$mountpoint" | grep -q "^$docker_root_dir" && continue
+                if echo "$mountpoint" | grep -q "^$docker_root_dir" ; then
+                    Log "Filesystem $fstype on $device mounted at $mountpoint is below Docker Root Dir $docker_root_dir, skipping."
+                    continue
+                fi
             fi
         fi
         # Replace a symbolic link /dev/disk/by-uuid/a1b2c3 -> ../../sdXn
@@ -237,7 +251,7 @@ service docker status >/dev/null 2>&1 && docker_is_running="yes"
             test -z "$btrfs_default_subvolume_path" && btrfs_default_subvolume_path="/"
             # Empty btrfs_default_subvolume_ID may may indicate an error. In this case be verbose and inform the user:
             if test -z "$btrfs_default_subvolume_ID" ; then
-                LogPrint "Empty btrfs_default_subvolume_ID, no btrfs default subvolume stored for $btrfs_device at $btrfs_mountpoint"
+                LogPrintError "Empty btrfs_default_subvolume_ID, no btrfs default subvolume stored for $btrfs_device at $btrfs_mountpoint"
             else
                 echo "btrfsdefaultsubvol $btrfs_device $btrfs_mountpoint $btrfs_default_subvolume_ID $btrfs_default_subvolume_path"
             fi
