@@ -118,11 +118,11 @@ WORKFLOW=""
 
 # Parse options
 help_note_text="Use '$PROGRAM --help' or 'man $PROGRAM' for more information."
-readonly OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )"
-if test $? -ne 0 ; then
+if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )" ; then
     echo "$help_note_text"
     exit 1
 fi
+readonly OPTS
 eval set -- "$OPTS"
 while true ; do
     case "$1" in
