@@ -478,6 +478,9 @@ get_sysfs_name() {
 ###     /dev/dm-3 -> /dev/mapper/system-tmp
 ###     /dev/dm-4 -> /dev/mapper/oralun
 ###     /dev/dm-5 -> /dev/mapper/oralunp1
+###     /dev/sda -> /dev/sda
+###
+### Returns 0 on success, 1 if device is not existing
 get_device_name() {
     ### strip common prefixes
     local name=${1#/dev/}
@@ -485,40 +488,31 @@ get_device_name() {
 
     contains_visible_char "$name" || BugError "Empty string passed to get_device_name"
 
-    ### Translate dm-8 -> mapper/test
-    local device dev_number mapper_number
-    if [[ -d /sys/block/$name ]] ; then
-        if [[ -r /sys/block/$name/dm/name ]] ; then
-            ### recent kernels have a dm subfolder
-            echo "/dev/mapper/$( < /sys/block/$name/dm/name)";
-            return 0
-        else
-            ### loop over all block devices
-            dev_number=$( < /sys/block/$name/dev)
-            for device in /dev/mapper/* ; do
-                mapper_number=$(dmsetup info -c --noheadings -o major,minor ${device#/dev/mapper/} 2>/dev/null )
-                if [ "$dev_number" = "$mapper_number" ] ; then
-                    echo "$device"
-                    return 0
-                fi
-            done
-        fi
-    fi
-
-    ### Translate device name to mapper name. ex: vg/lv -> mapper/vg-lv
     if [[ "$name" =~ ^mapper/ ]]; then
         echo "/dev/$name"
         return 0
     fi
-    if my_dm=`readlink /dev/$name`; then
-       for mapper_dev in /dev/mapper/*; do
-           if mapper_dm=`readlink $mapper_dev`; then
-              if [ "$my_dm" = "$mapper_dm" ]; then
-                 echo $mapper_dev
-                 return 0
-              fi
-           fi
-       done
+
+    if [[ -L "/dev/$name" ]] ; then
+        # Map vg/lv into dm-X, which will then be resolved later
+        name="$( basename $(readlink -f /dev/$name) )"
+    fi
+
+    if [[ "$name" =~ ^dm- ]] ; then
+        local device
+        if [[ -r /sys/block/$name/dm/name ]] ; then
+            ### recent kernels have a dm subfolder
+            device="$( < /sys/block/$name/dm/name )"
+        else
+            local dev_number=$( < /sys/block/$name/dev)
+            if [[ ! -r "$TMP_DIR/dmsetup_info.txt" ]] ; then
+                dmsetup info --noheadings -c -o name,major,minor > "$TMP_DIR/dmsetup_info.txt"
+            fi
+            device="$( awk -F ':' "/$dev_number\$/ { print \$1 }" < "$TMP_DIR/dmsetup_info.txt" )"
+            [[ -n "$device" ]] || BugError "No device returned for major/minor $dev_number"
+        fi
+        echo "/dev/mapper/$device"
+        return 0
     fi
 
     ### handle cciss sysfs naming
@@ -526,6 +520,7 @@ get_device_name() {
 
     ### just return the possibly nonexisting name
     echo "/dev/$name"
+    [[ -r "/dev/$name" ]] && return 0
     return 1
 }
 
