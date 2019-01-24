@@ -108,6 +108,7 @@ readonly TARGET_FS_ROOT="/mnt/local"
 DEBUG=""
 DEBUGSCRIPTS=""
 DEBUGSCRIPTS_ARGUMENT="x"
+DISPENSABLE_OUTPUT_DEV="null"
 KEEP_BUILD_DIR=""
 KERNEL_VERSION=""
 RECOVERY_MODE=""
@@ -171,6 +172,7 @@ while true ; do
             DEBUG=1
             VERBOSE=1
             DEBUGSCRIPTS=1
+            DISPENSABLE_OUTPUT_DEV="stderr"
             if [[ "$2" == -* ]] ; then
                 # When the item that follows '--debugscripts' starts with a '-'
                 # it is considered to be the next option and not an argument for '--debugscripts':
@@ -253,12 +255,11 @@ fi
 # Exceptions here:
 # CONFIG_DIR because "rear recover" sets it in /etc/rear/rescue.conf in the recovery system
 # WORKFLOW because for the udev workflow WORKFLOW is set to the actual workflow
-# KERNEL_VERSION because if empty it is set when sourcing config files below
-# VERBOSE because there is a special "VERBOSE=1" setting below:
+# KERNEL_VERSION because if empty it is set when sourcing config files below:
 readonly ARGS
 readonly CONFIG_APPEND_FILES
-readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT
-readonly SIMULATE STEPBYSTEP
+readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DISPENSABLE_OUTPUT_DEV
+readonly SIMULATE STEPBYSTEP VERBOSE
 
 # The udev workflow is a special case because it is only a wrapper workflow
 # that calls an actual workflow that is specified as $UDEV_WORKFLOW
@@ -540,7 +541,6 @@ if has_binary WORKFLOW_$WORKFLOW ; then
     WORKFLOW_$WORKFLOW "${ARGS[@]:-}"
     Log "Finished running $WORKFLOW workflow"
 else
-    VERBOSE=1
     LogPrintError "ERROR: The specified command '$WORKFLOW' does not exist!"
     EXIT_CODE=1
 fi
