@@ -1,3 +1,6 @@
+# don't collect this anymore, this can be very slow
+return 0
+
 # collect output from production SAN disks
 
 find /sys/class/fc_transport -follow -maxdepth 6 \( -name model -o -name vendor -o -name rev -name state -o -name model_name -o -name size -o -name node_name \) 2>/dev/null| egrep -v 'driver|rport|power|drivers|devices' | xargs grep '.' > $VAR_DIR/recovery/fc_transport.info  >&2
