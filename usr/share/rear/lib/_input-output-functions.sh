@@ -246,7 +246,12 @@ function trap () {
 # For actually intended user messages output to the original STDOUT
 # but only when the user launched 'rear -v' in verbose mode:
 function Print () {
-    test "$VERBOSE" && echo "${MESSAGE_PREFIX}$*" 1>&7 || true
+    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV when $DISPENSABLE_OUTPUT_DEV is not 'null'.
+    # In debugscripts mode $DISPENSABLE_OUTPUT_DEV is 'stderr' (see usr/sbin/rear)
+    # and /dev/stderr is fd2 which is redirected to append to RUNTIME_LOGFILE (see usr/sbin/rear)
+    # so that 2>/dev/stderr would truncate RUNTIME_LOGFILE to zero size (see 'REDIRECTION' in "man bash")
+    # but 2>>/dev/stderr does not change things so that fd2 output is still appended to RUNTIME_LOGFILE:
+    { test "$VERBOSE" && echo "${MESSAGE_PREFIX}$*" 1>&7 || true ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # For normal output messages that are intended for user dialogs.
@@ -256,13 +261,13 @@ function Print () {
 # but output to the original STDOUT without a MESSAGE_PREFIX because
 # MESSAGE_PREFIX is not helpful in normal user dialog output messages:
 function UserOutput () {
-    echo "$*" 1>&7 || true
+    { echo "$*" 1>&7 || true ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # For actually intended user error messages output to the original STDERR
 # regardless whether or not the user launched 'rear' in verbose mode:
 function PrintError () {
-    echo "${MESSAGE_PREFIX}$*" 1>&8 || true
+    { echo "${MESSAGE_PREFIX}$*" 1>&8 || true ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # For messages that should only appear in the log file output to the current STDERR
@@ -270,12 +275,15 @@ function PrintError () {
 function Log () {
     # Have a timestamp with nanoseconds precision in any case
     # so that any subsequent Log() calls get logged with precise timestamps:
-    local timestamp=$( date +"%Y-%m-%d %H:%M:%S.%N " )
-    if test $# -gt 0 ; then
-        echo "${MESSAGE_PREFIX}${timestamp}$*" || true
-    else
-        echo "${MESSAGE_PREFIX}${timestamp}$( cat )" || true
-    fi 1>&2
+    { local timestamp=$( date +"%Y-%m-%d %H:%M:%S.%N " )
+      local log_message=""
+      if test $# -gt 0 ; then
+          log_message="${MESSAGE_PREFIX}${timestamp}$*"
+      else
+          log_message="${MESSAGE_PREFIX}${timestamp}$( cat )"
+      fi
+    } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    echo "$log_message" 1>&2 || true
 }
 
 # For messages that should only appear in the log file when the user launched 'rear -d' in debug mode:
@@ -394,13 +402,14 @@ function Error () {
     # but also the outdated scripts with leading 2-digit number get sourced
     # see the SourceStage function in lib/framework-functions.sh
     # so that we grep for script files names with two or more leading numbers:
-    local last_sourced_script_log_entry=( $( grep -o ' Including .*/[0-9][0-9].*\.sh' $RUNTIME_LOGFILE | tail -n 1 ) )
-    # The last_sourced_script_log_entry contains: Including sub-path/to/script_file_name.sh
-    local last_sourced_script_sub_path="${last_sourced_script_log_entry[1]}"
-    local last_sourced_script_filename="$( basename $last_sourced_script_sub_path )"
-    # When it errors out in sbin/rear last_sourced_script_filename is empty which would result bad looking output
-    # cf. https://github.com/rear/rear/issues/1965#issuecomment-439437868
-    test "$last_sourced_script_filename" || last_sourced_script_filename="$SCRIPT_FILE"
+    { local last_sourced_script_log_entry=( $( grep -o ' Including .*/[0-9][0-9].*\.sh' $RUNTIME_LOGFILE | tail -n 1 ) )
+      # The last_sourced_script_log_entry contains: Including sub-path/to/script_file_name.sh
+      local last_sourced_script_sub_path="${last_sourced_script_log_entry[1]}"
+      local last_sourced_script_filename="$( basename $last_sourced_script_sub_path )"
+      # When it errors out in sbin/rear last_sourced_script_filename is empty which would result bad looking output
+      # cf. https://github.com/rear/rear/issues/1965#issuecomment-439437868
+      test "$last_sourced_script_filename" || last_sourced_script_filename="$SCRIPT_FILE"
+    } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # Do not log the error message right now but after the currenly last log messages were shown:
     PrintError "ERROR: $*"
     # Show some additional hopefully meaningful output on the user's terminal
@@ -433,25 +442,20 @@ function Error () {
     # Show at most the last 8 lines because too much before the actual error may cause more confusion than help.
     # Add two spaces indentation for better readability what those extracted log file lines are.
     # Some messages could be too long to be usefully shown on the user's terminal so that they are truncated after 200 bytes:
-    PrintError "$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | grep -v '^+' | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )"
+    { local last_sourced_script_log_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | grep -v '^+' | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    PrintError "$last_sourced_script_log_messages"
     Log "ERROR: $*"
     LogToSyslog "ERROR: $*"
-    # TODO: I <jsmeix@suse.de> wonder if the "has_binary caller" test is still needed nowadays
-    # because for me on SLE10 with bash-3.1-24 up to SLE12 with bash-4.2 'caller' is a shell builtin:
-    if has_binary caller ; then
-        # Print stack strace in reverse order to the current STDERR which is (usually) the log file:
-        (   echo "===== ${MESSAGE_PREFIX}Stack trace ====="
-            local c=0;
-            while caller $((c++)) ; do
-                # nothing to do
-                :
-            done | awk ' { l[NR]=$3":"$1" "$2 }
-                         END { for (i=NR; i>0;) print "Trace "NR-i": "l[i--] }
-                       '
-            echo "${MESSAGE_PREFIX}Message: $*"
-            echo "=== ${MESSAGE_PREFIX}End stack trace ==="
-        ) 1>&2
-    fi
+    # Print stack strace in reverse order to the current STDERR which is (usually) the log file:
+    ( echo "===== ${MESSAGE_PREFIX}Stack trace ====="
+      local c=0;
+      while caller $((c++)) ; do
+          :
+      done | awk ' { l[NR]=$3":"$1" "$2 }
+                   END { for (i=NR; i>0;) print "Trace "NR-i": "l[i--] }
+                 '
+      echo "=== ${MESSAGE_PREFIX}End stack trace ==="
+    ) 1>&2
     # Make sure Error exits the master process, even if called from child processes:
     kill -USR1 $MASTER_PID
 }
@@ -465,7 +469,7 @@ function StopIfError () {
 
 # Exit if there is a bug in ReaR:
 function BugError () {
-    local caller_source="$( CallerSource )"
+    { local caller_source="$( CallerSource )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     Error "
 ====================
 BUG in $caller_source:
