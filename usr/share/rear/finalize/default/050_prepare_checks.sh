@@ -17,4 +17,3 @@ NOBOOTLOADER=1
 local bootloader_file="$VAR_DIR/recovery/bootloader"
 # The output is stored in an artificial bash array so that $BOOTLOADER is the first word:
 test -s $bootloader_file && BOOTLOADER=( $( grep -v '^[[:space:]]*#' $bootloader_file ) )
-

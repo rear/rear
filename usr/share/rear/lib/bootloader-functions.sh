@@ -462,19 +462,23 @@ EOF
 EOF
 }
 
+function get_root_disk_UUID {
+    # SLES12 SP1 boot throw kernel panic without root= set
+    # cf. https://github.com/rear/rear/commit/b81693f27a41482ed89da36a9af664fe808f8186
+    # Use grep ' on / ' with explicitly specified spaces as separators instead of
+    # grep -w 'on /' because on SLES with btrfs and snapper the latter results two matches
+    #   # mount | grep -w 'on /'
+    #   /dev/sda2 on / type btrfs (rw,relatime,space_cache,subvolid=267,subvol=/@/.snapshots/1/snapshot)
+    #   /dev/sda2 on /.snapshots type btrfs (rw,relatime,space_cache,subvolid=266,subvol=/@/.snapshots)
+    # because /.snapshots is one word for grep -w and then those two matches result
+    # two same UUIDs (with newline) that end up (with newline) in the boot menuentry
+    # cf. https://github.com/rear/rear/issues/1871
+    echo $(mount | grep ' on / ' | awk '{print $1}' | xargs blkid -s UUID -o value)
+}
+
 # Create configuration grub
 function create_grub2_cfg {
-# SLES12 SP1 boot throw kernel panic without root= set
-# cf. https://github.com/rear/rear/commit/b81693f27a41482ed89da36a9af664fe808f8186
-# Use grep ' on / ' with explicitly specified spaces as separators instead of
-# grep -w 'on /' because on SLES with btrfs and snapper the latter results two matches
-#   # mount | grep -w 'on /'
-#   /dev/sda2 on / type btrfs (rw,relatime,space_cache,subvolid=267,subvol=/@/.snapshots/1/snapshot)
-#   /dev/sda2 on /.snapshots type btrfs (rw,relatime,space_cache,subvolid=266,subvol=/@/.snapshots)
-# because /.snapshots is one word for grep -w and then those two matches result
-# two same UUIDs (with newline) that end up (with newline) in the boot menuentry
-# cf. https://github.com/rear/rear/issues/1871
-root_uuid=$( mount | grep ' on / ' | awk '{print $1}' | xargs blkid -s UUID -o value )
+root_uuid=$(get_root_disk_UUID)
 
 cat << EOF
 set default="0"

@@ -1,4 +1,6 @@
 
+is_true $EFI_STUB && return 0
+
 Log "Starting '$ISO_MKISOFS_BIN'"
 LogPrint "Making ISO image"
 

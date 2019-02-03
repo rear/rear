@@ -3,6 +3,10 @@
 # Skip if no UEFI is used:
 is_true $USING_UEFI_BOOTLOADER || return 0
 
+# Use 260_populate_efistub.sh instead.
+# There much of Grub/Elilo code here exclude it in menaningfull way.
+is_true $EFI_STUB && return 0
+
 local efi_boot_tmp_dir="$TMP_DIR/mnt/EFI/BOOT"
 mkdir $v -p $efi_boot_tmp_dir || Error "Could not create $efi_boot_tmp_dir"
 mkdir $v -p $efi_boot_tmp_dir/fonts || Error "Could not create $efi_boot_tmp_dir/fonts"

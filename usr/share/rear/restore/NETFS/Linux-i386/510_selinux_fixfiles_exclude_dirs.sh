@@ -13,6 +13,10 @@ test -d $TARGET_FS_ROOT/etc/selinux || return 0
 # USING_UEFI_BOOTLOADER empty or not true means using BIOS
 is_true $USING_UEFI_BOOTLOADER || return 0
 
+# We can't rely on standard detection of ESP.
+# For EFI_STUB we consider ESP to be mountpoint holding EFISTUB capable kernel.
+is_true $EFI_STUB && return 0
+
 # UEFI_BOOTLOADER empty or not a regular file means using BIOS cf. rescue/default/850_save_sysfs_uefi_vars.sh
 # Double quotes are mandatory here because 'test -f' without any (possibly empty) argument results true:
 test -f "$UEFI_BOOTLOADER" || return 0

@@ -4,6 +4,9 @@
 
 # Add the rescue kernel and initrd to the local GRUB 2 bootloader.
 
+# With EFI_STUB enabled there will be no Grub entry.
+is_true "$EFI_STUB" && return 0
+
 # Only do it when explicitly enabled:
 is_true "$GRUB_RESCUE" || return 0
 
@@ -142,7 +145,7 @@ fi
 if is_true $USING_UEFI_BOOTLOADER ; then
     # SLES12 SP1 throw kernel panic if root= variable was not set
     # probably a bug, as I was able to boot with value set to root=anything
-    root_uuid=$(mount | grep -w 'on /' | awk '{print $1}' | xargs blkid -s UUID -o value)
+    root_uuid=$(get_root_disk_UUID)
 
     # Grub2 modules that will be used for booting "Relax-and-Recover"
     # It might be useful to make this variable global in the future

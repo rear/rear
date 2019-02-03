@@ -5,6 +5,9 @@
 # USING_UEFI_BOOTLOADER empty or no explicit 'true' value means NO UEFI:
 is_true $USING_UEFI_BOOTLOADER || return 0
 
+# Don't do any guess work for boot loader, we will use systemd-bootx64.efi.
+is_true $EFI_STUB && return 0
+
 # Artificial 'for' clause that is run only once
 # to be able to 'continue' with the code after it
 # as soon as an usable UEFI bootloader file is found

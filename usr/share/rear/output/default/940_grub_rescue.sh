@@ -5,10 +5,11 @@
 ### Add the rescue kernel and initrd to the local GRUB Legacy
 ###
 
-### Only do when explicitely enabled
-if [[ ! "$GRUB_RESCUE" =~ ^[yY1] ]]; then
-    return
-fi
+# With EFI_STUB enabled there will be no Grub entry.
+is_true "$EFI_STUB" && return 0
+
+# Only do it when explicitly enabled:
+is_true "$GRUB_RESCUE" || return 0
 
 ### Only do when system has GRUB Legacy
 [[ $(type -p grub-probe) || $(type -p grub2-probe) ]] && return
