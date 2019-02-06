@@ -16,10 +16,6 @@ mkdir $v -p $efi_boot_tmp_dir || Error "Could not create $efi_boot_tmp_dir"
 # In theory we don't need to have any boot loader for ReaR rescue system,
 # since kernel can be loaded directly by UEFI, but not everyone is familiar
 # or comfortable with EFI shell.
-# Let user to specify location of Systemd boot loader.
-if [[ -z $OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER ]]; then
-    OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER="/usr/lib/systemd/boot/efi/systemd-bootx64.efi"
-fi
 
 Log "EFI_STUB: will use $OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER as ReaR rescue system boot loader"
 

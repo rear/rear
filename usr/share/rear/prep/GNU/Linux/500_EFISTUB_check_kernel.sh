@@ -8,11 +8,8 @@ Log "EFI_STUB: Checking if Kernel file: $KERNEL_FILE is hosted on vfat filesyste
 esp_mountpoint=$( df -P "${KERNEL_FILE}" | tail -1 | awk '{print $6}' )
 uefi_fs_type=$(df -T "$esp_mountpoint" | tail -n +2 | head -n 1 | awk '{print $2}')
 
-if [[ "$uefi_fs_type" != "vfat" ]]; then
-    Error "EFI_STUB: Kernel file: $KERNEL_FILE is not hosted on vfat filesystem"
-else
-    Log "EFI_STUB: Kernel file: $KERNEL_FILE is hosted on vfat filesystem"
-fi
+[[ "$uefi_fs_type" != "vfat" ]] && Error "EFI_STUB: Kernel file: $KERNEL_FILE is not hosted on vfat filesystem"
+Log "EFI_STUB: Kernel file: $KERNEL_FILE is hosted on vfat filesystem"
 
 local info_file=$VAR_DIR/layout/config/EFI_STUB_info.txt
 
