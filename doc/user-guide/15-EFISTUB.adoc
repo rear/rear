@@ -27,7 +27,7 @@ If operating system is set to boot using intermediate boot loaders and despite t
 ## Checks done by ReaR
 When user enables EFISTUB, ReaR does some basic checks and tries to ensure that ReaR recovery runs without problems and resulting operating system is able to boot. However it is very hard to cover all configuration possibilities and corner cases, so it is important to ALWAYS TEST full ReaR backup and restore before relying on it. Short list of checks done by ReaR during `rear mkbackup/mkrescue` includes:
 
-- check if Systemd boot loader (systemd-boox64.efi) exists and is regular file
+- check if Systemd boot loader (systemd-bootx64.efi) exists and is regular file
 - check if some of basic EFISTUB symbols are present in Linux kernel file in use
 - check if Linux kernel in use is located on vfat partition
 
