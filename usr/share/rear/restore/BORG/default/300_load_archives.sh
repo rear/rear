@@ -5,16 +5,6 @@
 
 LogPrint "Starting Borg restore"
 
-# Do we have Borg binary?
-has_binary borg
-BugIfError "Could not find Borg binary"
-
-# Query Borg server for repository information
-# and store it to BORGBACKUP_ARCHIVE_CACHE.
-# This should avoid repeatingly quering Borg server, which could be slow.
-borg_archive_cache_create
-StopIfError "Could not list Borg archive"
-
 # Store number of lines in BORGBACKUP_ARCHIVE_CACHE file for later use.
 archive_cache_lines=$(wc -l $BORGBACKUP_ARCHIVE_CACHE | awk '{print $1}')
 
