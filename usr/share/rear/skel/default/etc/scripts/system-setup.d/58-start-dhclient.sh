@@ -45,7 +45,7 @@ for DEVICE in `get_device_by_hwaddr` ; do
 	# IPv4 DHCP clients
 	case $DHCLIENT_BIN in
 		(dhclient)
-			dhclient -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.pid -cf /etc/dhclient.conf ${DEVICE}
+			dhclient -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.${DEVICE}.pid -cf /etc/dhclient.conf ${DEVICE}
 		;;
 		(dhcpcd)
 			dhcpcd ${DEVICE}
