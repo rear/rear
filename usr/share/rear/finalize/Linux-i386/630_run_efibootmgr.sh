@@ -4,6 +4,9 @@
 # USING_UEFI_BOOTLOADER empty or not true means using BIOS
 is_true $USING_UEFI_BOOTLOADER || return 0
 
+# EFISTUB will handle boot entry creation separately.
+is_true $EFI_STUB && return 0
+
 # UEFI_BOOTLOADER empty or not a regular file means using BIOS cf. rescue/default/850_save_sysfs_uefi_vars.sh
 # Double quotes are mandatory here because 'test -f' without any (possibly empty) argument results true:
 test -f "$UEFI_BOOTLOADER" || return 0
