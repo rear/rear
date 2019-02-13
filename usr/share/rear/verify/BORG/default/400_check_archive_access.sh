@@ -10,12 +10,14 @@ Log "Command \"borg list $BORGBACKUP_OPT_REMOTE_PATH ${borg_dst_dev}${BORGBACKUP
 borg_list
 
 rear_workflow="rear $WORKFLOW"
+
+unset choices
 choices[0]="View '$rear_workflow' log file ($RUNTIME_LOGFILE)"
 choices[1]="Use Relax-and-Recover shell and return back to here"
 choices[2]="Continue '$rear_workflow'"
 choices[3]="Abort '$rear_workflow'"
 
-prompt="Do you want to continue?"
+prompt="Make Borg archive manually accessible"
 choice=""
 wilful_input=""
 
@@ -33,11 +35,12 @@ while true ; do
             rear_shell "" "$rear_shell_history"
         ;;
         (${choices[2]})
-            # Continue recovery in migration mode:
+            # Continue recovery:
             LogPrint "User confirmed to continue with '$rear_workflow'"
             break
         ;;
         (${choices[3]})
+            # Abort recovery:
             abort_recreate
             is_true "$wilful_input" && Error "User chose to abort '$rear_workflow' in ${BASH_SOURCE[0]}" || Error "Aborting '$rear_workflow' by default"
         ;;
