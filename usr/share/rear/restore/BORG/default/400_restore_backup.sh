@@ -15,9 +15,15 @@ StopIfError "Could not change directory to $TARGET_FS_ROOT"
 # This is still not the ideal solution, but best I can think of so far :-/.
 LogPrint "Recovering from Borg archive $BORGBACKUP_ARCHIVE"
 
+# User might specify some additional output options in Borg.
+# Output shown by Borg is not controlled by `rear --verbose' nor `rear --debug'
+local borg_additional_options=''
+
+is_true $BORGBACKUP_SHOW_PROGRESS && borg_additional_options+='--progress '
+
 LC_ALL=rear.UTF-8 \
-borg extract --sparse $BORGBACKUP_OPT_REMOTE_PATH \
-${borg_dst_dev}${BORGBACKUP_REPO}::$BORGBACKUP_ARCHIVE
+borg extract --sparse $borg_additional_options $BORGBACKUP_OPT_REMOTE_PATH \
+${borg_dst_dev}${BORGBACKUP_REPO}::$BORGBACKUP_ARCHIVE 0<&6 1>&7 2>&8
 
 LogPrintIfError "Error was reported during Borg restore"
 LogPrint "Borg OS restore finished successfully"
