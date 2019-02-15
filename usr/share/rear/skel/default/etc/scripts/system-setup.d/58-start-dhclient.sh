@@ -55,7 +55,7 @@ for DEVICE in `get_device_by_hwaddr` ; do
 	# IPv6 DHCP clients
 	case $DHCLIENT6_BIN in
 		(dhclient6)
-			dhclient6 -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.pid -cf /etc/dhclient.conf ${DEVICE}
+			dhclient6 -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.${DEVICE}.pid -cf /etc/dhclient.conf ${DEVICE}
 		;;
 		(dhcp6c)
 			dhcp6c  ${DEVICE}
