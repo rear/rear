@@ -34,6 +34,13 @@ for file in 	[b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* \
 		[e]tc/security/pam_mount.conf.xml [b]oot/efi/*/*/grub.cfg
 	do
 
+	# $TARGET_FS_ROOT/etc/mtab is no longer regular file but symbolic link
+	# pointing to /proc/mounts resp /proc/self/mounts.
+	# We should not poke around /proc with `sed -i` for this reason we will
+	# check if $TARGET_FS_ROOT/etc/mtab is symbolic link and skip all further
+	# replacements.
+	[[ "$file" = "etc/mtab" && -L "$file" ]] && continue
+
 	#[[ -d "$file" ]] && continue # skip directory
 	[[ ! -f "$file" ]] && continue # skip directory and file not found
 	# sed -i bails on symlinks, so we follow the symlink and patch the result
