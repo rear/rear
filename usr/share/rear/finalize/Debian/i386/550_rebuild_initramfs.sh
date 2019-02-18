@@ -44,9 +44,6 @@ fi
 INITRD_MODULES="$( sort -t " " -k 1 -u $TMP_DIR/storage_drivers $TARGET_FS_ROOT/etc/initramfs-tools/module[s] )"
 echo "$INITRD_MODULES" >$TARGET_FS_ROOT/etc/initramfs-tools/modules
 
-mount -t proc none $TARGET_FS_ROOT/proc
-mount -t sysfs none $TARGET_FS_ROOT/sys
-
 # Handle mdadm.conf Debian style:
 if [ -r /proc/mdstat -a -r $TARGET_FS_ROOT/etc/mdadm/mdadm.conf -a -x $TARGET_FS_ROOT/usr/share/mdadm/mkconf ] ; then
     if chroot $TARGET_FS_ROOT /bin/bash --login -c "/usr/share/mdadm/mkconf >/etc/mdadm/mdadm.conf" ; then
@@ -90,6 +87,4 @@ Check the recreated system (mounted at $TARGET_FS_ROOT)
 and decide yourself, whether the system will boot or not.
 "
 fi
-
-umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
 

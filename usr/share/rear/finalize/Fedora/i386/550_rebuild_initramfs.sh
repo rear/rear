@@ -63,9 +63,6 @@ INITRD_MODULES="${OLD_INITRD_MODULES[@]} ${NEW_INITRD_MODULES[@]}"
 
 WITH_INITRD_MODULES=$( printf '%s\n' ${INITRD_MODULES[@]} | awk '{printf "--with=%s ", $1}' )
 
-mount -t proc none $TARGET_FS_ROOT/proc
-mount -t sysfs none $TARGET_FS_ROOT/sys
-
 # Recreate any initrd or initramfs image under $TARGET_FS_ROOT/boot/ with new drivers
 # Images ignored:
 # kdump images as they are build by kdump
@@ -109,4 +106,3 @@ and decide yourself, whether the system will boot or not.
     fi
 done
 
-umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys

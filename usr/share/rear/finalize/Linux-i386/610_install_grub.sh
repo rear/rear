@@ -54,8 +54,6 @@ LogPrint "Installing GRUB Legacy boot loader:"
 # Installing GRUB Legacy boot loader requires an executable "grub":
 type -p grub >&2 || Error "Cannot install GRUB Legacy boot loader because there is no 'grub' program."
 
-mount -t proc none $TARGET_FS_ROOT/proc
-
 if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]] ; then
 
     # Check if we find GRUB stage 2 where we expect it
@@ -140,4 +138,3 @@ fi
 # This script is meant to get the GRUB Legacy boot loader installed:
 is_true $NOBOOTLOADER && Error "Failed to install GRUB Legacy boot loader."
 
-umount $TARGET_FS_ROOT/proc
