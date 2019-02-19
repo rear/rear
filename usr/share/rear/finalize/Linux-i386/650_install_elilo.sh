@@ -15,7 +15,7 @@ is_true $USING_UEFI_BOOTLOADER || return 0 # when set to 0
 # FIXME:
 # This tests for elilo in the recovery system but below elilo is called inside chroot in the target system
 # furthermore why such a complicated test instead of testing with plain "type -p elilo || Error ..."
-# cf. the better looking code in finalize/Linux-i386/610_install_lilo.sh
+# cf. the better looking code in finalize/Linux-i386/640_install_lilo.sh
 [[ $(type -p elilo) ]] || Error "Could not find elilo executable"
 
 LogPrint "Installing ELILO boot loader"

@@ -8,7 +8,7 @@
 test -d $TARGET_FS_ROOT/etc/selinux || return 0
 
 # The following four code parts are same also in
-# finalize/Linux-i386/630_run_efibootmgr.sh
+# finalize/Linux-i386/670_run_efibootmgr.sh
 
 # USING_UEFI_BOOTLOADER empty or not true means using BIOS
 is_true $USING_UEFI_BOOTLOADER || return 0

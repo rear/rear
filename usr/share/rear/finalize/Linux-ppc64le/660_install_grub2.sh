@@ -56,7 +56,7 @@
 is_true $NOBOOTLOADER || return 0
 
 # For UEFI systems with grub2 we should use efibootmgr instead,
-# cf. finalize/Linux-i386/630_run_efibootmgr.sh
+# cf. finalize/Linux-i386/670_run_efibootmgr.sh
 # Perhaps this does not apply on PPC64/PPC64LE because
 # probably there is no UEFI on usual PPC64/PPC64LE systems
 # but https://github.com/andreiw/ppc64le-edk2 reads (excerpts):

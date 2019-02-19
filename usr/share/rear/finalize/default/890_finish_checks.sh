@@ -13,8 +13,8 @@ Please contribute appropriate code to the $PRODUCT project,
 see http://relax-and-recover.org/development/
 Take a look at the scripts in $SHARE_DIR/finalize,
 for example see the scripts
-$SHARE_DIR/finalize/Linux-i386/210_install_grub.sh
-$SHARE_DIR/finalize/Linux-i386/220_install_grub2.sh
+$SHARE_DIR/finalize/Linux-i386/630_install_grub.sh
+$SHARE_DIR/finalize/Linux-i386/660_install_grub2.sh
 
 ---------------------------------------------------
 |  IF YOU DO NOT INSTALL A BOOT LOADER MANUALLY,  |

@@ -44,7 +44,7 @@
 is_true $NOBOOTLOADER || return 0
 
 # For UEFI systems with grub2 we should use efibootmgr instead,
-# cf. finalize/Linux-i386/630_run_efibootmgr.sh
+# cf. finalize/Linux-i386/670_run_efibootmgr.sh
 is_true $USING_UEFI_BOOTLOADER && return
 
 # Only for GRUB2 - GRUB Legacy will be handled by its own script.
