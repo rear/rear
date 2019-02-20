@@ -12,7 +12,7 @@
 #
 
 # Get the rule files (though it should be only one):
-RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net}.rules /etc/udev/rules.d/*eno-fix.rules )
+RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net,cd}.rules /etc/udev/rules.d/*eno-fix.rules )
 ORIG_MACS_FILE=/etc/mac-addresses
 MAC_MAPPING_FILE=/etc/rear/mappings/mac
 MANUAL_MAC_MAPPING=

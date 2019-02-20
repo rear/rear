@@ -6,7 +6,7 @@
 have_udev || return 0
 
 # we treat only these rules
-RULE_FILES=( $( echo /etc/udev/rules.d/*persistent*{names,net,cd}.rules /etc/udev/rules.d/*eno-fix.rules ) )
+RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net,cd}.rules /etc/udev/rules.d/*eno-fix.rules )
 # the result looks like this on various systems:
 #   rear-centos4: ERROR
 #   rear-debian5: /etc/udev/rules.d/70-persistent-cd.rules
