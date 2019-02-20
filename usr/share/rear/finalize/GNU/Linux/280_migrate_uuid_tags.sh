@@ -3,17 +3,17 @@
 # skip if no mappings
 test -s "$FS_UUID_MAP" || return 0
 
-# FIXME: WTF does that "TAG-15-migrate" mean?
+# FIXME: What the heck does that "TAG-15-migrate" mean?
 Log "TAG-15-migrate: $FS_UUID_MAP"
 
-# create the SED_SCRIPT
-SED_SCRIPT=""
+# create the sed script
+local sed_script=""
+local old_uuid new_uuid device
 while read old_uuid new_uuid device ; do
-    SED_SCRIPT="$SED_SCRIPT;/${old_uuid}/s/${old_uuid}/${new_uuid}/g"
-done < <(sort -u $FS_UUID_MAP)
-
+    sed_script="$sed_script;/${old_uuid}/s/${old_uuid}/${new_uuid}/g"
+done < <( sort -u $FS_UUID_MAP )
 # debug line:
-Debug "$SED_SCRIPT"
+Debug "$sed_script"
 
 # Careful in case of 'return' after 'pushd' (must call the matching 'popd' before 'return'):
 pushd $TARGET_FS_ROOT >&2
@@ -22,6 +22,7 @@ pushd $TARGET_FS_ROOT >&2
 LogPrint "Migrating filesystem UUIDs in certain restored files in $TARGET_FS_ROOT to current UUIDs ..."
 
 local symlink_target=""
+local restored_file=""
 # the funny [] around the first letter make sure that shopt -s nullglob removes this file from the list if it does not exist
 # the files without a [] are mandatory, like fstab FIXME: but below there is [e]tc/fstab not etc/fstab - why?
 for restored_file in [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* \
@@ -39,13 +40,13 @@ do
     test -f "$restored_file" || continue
     # 'sed -i' bails out on symlinks, so we follow the symlink and patch the symlink target
     # on dead links we inform the user and skip them
-    # TODO: We should put this into a chroot so that absolute symlinks will work correctly
+    # TODO: We should do this inside 'chroot $TARGET_FS_ROOT' so that absolute symlinks will work correctly
     # cf. https://github.com/rear/rear/issues/1338
     if test -L "$restored_file" ; then
         if symlink_target="$( readlink -f "$restored_file" )" ; then
             # symlink_target is an absolute path in the recovery system
             # e.g. the symlink target of etc/mtab is /mnt/local/proc/12345/mounts
-            # because we did 'pushd $TARGET_FS_ROOT' but not 'chroot $TARGET_FS_ROOT'.
+            # because we use only 'pushd $TARGET_FS_ROOT' but not 'chroot $TARGET_FS_ROOT'.
             # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
             # the symlink target is considered to not be a restored file that needs to be patched
             # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
@@ -62,7 +63,7 @@ do
     fi
     LogPrint "Patching filesystem UUIDs in $restored_file to current UUIDs"
     # Do not error out at this late state of "rear recover" (after the backup was restored) but inform the user:
-    sed -i "$SED_SCRIPT" "$restored_file" || LogPrintError "Migrating filesystem UUIDs in $restored_file to current UUIDs failed"
+    sed -i "$sed_script" "$restored_file" || LogPrintError "Migrating filesystem UUIDs in $restored_file to current UUIDs failed"
 done
 
 popd >&2
