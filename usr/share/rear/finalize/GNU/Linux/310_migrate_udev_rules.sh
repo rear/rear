@@ -32,7 +32,6 @@ for rule in "${RULE_FILES[@]}" ; do
         # may have prevented the restore of one of these files
         [[ -f $TARGET_FS_ROOT/"$rule" ]] && cp $v $TARGET_FS_ROOT/"$rule" $TARGET_FS_ROOT/root/rear-"$rulefile".old >&2
         # copy the $rule from the rescue image to $TARGET_FS_ROOT/
-        cp $v "$rule" $TARGET_FS_ROOT/"$rule" >&2
-        StopIfError "Could not copy '$rule' -> '$TARGET_FS_ROOT/$rule'"
+        cp $v "$rule" $TARGET_FS_ROOT/"$rule" || LogPrintError "Failed to copy '$rule' -> '$TARGET_FS_ROOT/$rule'"
     fi
 done
