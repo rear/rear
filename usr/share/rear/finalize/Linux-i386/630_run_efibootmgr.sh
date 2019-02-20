@@ -9,7 +9,7 @@ is_true $EFI_STUB && return 0
 
 # UEFI_BOOTLOADER empty or not a regular file means using BIOS cf. rescue/default/850_save_sysfs_uefi_vars.sh
 # Double quotes are mandatory here because 'test -f' without any (possibly empty) argument results true:
-test -f "$UEFI_BOOTLOADER" || return 0
+test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" || return 0
 
 # Determine where the EFI System Partition (ESP) is mounted in the currently running recovery system:
 esp_mountpoint=$( df -P "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" | tail -1 | awk '{print $6}' )
