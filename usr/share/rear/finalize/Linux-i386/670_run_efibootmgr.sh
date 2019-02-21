@@ -1,15 +1,22 @@
 
 # Only useful for UEFI systems in combination with grub[2]-efi
 
-# USING_UEFI_BOOTLOADER empty or not true means using BIOS
+# USING_UEFI_BOOTLOADER empty or not true means using BIOS:
 is_true $USING_UEFI_BOOTLOADER || return 0
 
-# EFISTUB will handle boot entry creation separately.
-is_true $EFI_STUB && return 0
+# EFISTUB will handle boot entry creation separately
+# (cf. finalize/Linux-i386/610_EFISTUB_run_efibootmgr.sh): 
+is_true $EFI_STUB && return
 
-# UEFI_BOOTLOADER empty or not a regular file means using BIOS cf. rescue/default/850_save_sysfs_uefi_vars.sh
-# Double quotes are mandatory here because 'test -f' without any (possibly empty) argument results true:
-test -f "$UEFI_BOOTLOADER" || return 0
+# When UEFI_BOOTLOADER is not a regular file in the restored target system
+# (cf. how esp_mountpoint is set below) it means BIOS is used
+# (cf. rescue/default/850_save_sysfs_uefi_vars.sh)
+# which includes that also an empty UEFI_BOOTLOADER means using BIOS
+# because when UEFI_BOOTLOADER is empty the test below evaluates to
+#   test -f /mnt/local/
+# which also returns false because /mnt/local/ is a directory
+# (cf. https://github.com/rear/rear/pull/2051/files#r258826856):
+test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" || return 0
 
 # Determine where the EFI System Partition (ESP) is mounted in the currently running recovery system:
 esp_mountpoint=$( df -P "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" | tail -1 | awk '{print $6}' )

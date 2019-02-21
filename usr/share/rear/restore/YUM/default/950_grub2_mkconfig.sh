@@ -5,9 +5,9 @@
 # after the files have been restored into the target system
 # (i.e. so that GRUB2 is installed in the target system).
 # Running grub2-mkconfig is needed as prerequirement
-# for running grub2-install in finalize/Linux-i386/220_install_grub2.sh
+# for running grub2-install in finalize/Linux-i386/660_install_grub2.sh
 # otherwise there is no /boot/grub2/grub.cfg in the target system
-# and then finalize/Linux-i386/220_install_grub2.sh still "just works"
+# and then finalize/Linux-i386/660_install_grub2.sh still "just works"
 # (i.e. it does not error out when there is no /boot/grub2/grub.cfg)
 # but the recreated system will not boot (stops at "grub>" bootloader prompt).
 #
@@ -36,7 +36,7 @@ mount -o bind /dev $TARGET_FS_ROOT/dev || true
 # In particular grub2-mkconfig is a shell script that calls other shell scripts:
 chroot $TARGET_FS_ROOT /bin/bash --login -c '/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg'
 
-# FIXME: This should not be needed here but work via finalize/Linux-i386/220_install_grub2.sh
+# FIXME: This should not be needed here but work via finalize/Linux-i386/660_install_grub2.sh
 # Install bootloader in the target system:
 chroot $TARGET_FS_ROOT /usr/sbin/grub2-install --force /dev/sda
 

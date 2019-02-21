@@ -20,15 +20,15 @@ is_true $USING_UEFI_BOOTLOADER && return
 
 # If the BOOTLOADER variable (read by finalize/default/010_prepare_checks.sh)
 # is not "GRUB" (which means GRUB Legacy) skip this script (which is only for GRUB Legacy)
-# because finalize/Linux-i386/220_install_grub2.sh is for installing GRUB 2
-# and finalize/Linux-i386/220_install_elilo.sh is for installing elilo:
+# because finalize/Linux-i386/660_install_grub2.sh is for installing GRUB 2
+# and finalize/Linux-i386/650_install_elilo.sh is for installing elilo:
 test "GRUB" = "$BOOTLOADER" || return 0
 
 # If the BOOTLOADER variable is "GRUB" (which means GRUB Legacy)
 # do not unconditionally trust that because https://github.com/rear/rear/pull/589
 # reads (excerpt):
 #   Problems found:
-#   The 210_install_grub.sh checked for GRUB2 which is not part
+#   The ..._install_grub.sh checked for GRUB2 which is not part
 #   of the first 2048 bytes of a disk - only GRUB was present -
 #   thus the check for grub-probe/grub2-probe
 # and https://github.com/rear/rear/commit/079de45b3ad8edcf0e3df54ded53fe955abded3b
@@ -42,7 +42,7 @@ test "GRUB" = "$BOOTLOADER" || return 0
 # grub-probe or grub2-probe is only installed in case of GRUB 2
 # and when GRUB 2 is installed we assume GRUB 2 is used as boot loader
 # so that then we skip this script (which is only for GRUB Legacy)
-# because finalize/Linux-i386/220_install_grub2.sh is for installing GRUB 2:
+# because finalize/Linux-i386/660_install_grub2.sh is for installing GRUB 2:
 if type -p grub-probe >&2 || type -p grub2-probe >&2 ; then
     LogPrint "Skip installing GRUB Legacy boot loader because GRUB 2 is installed (grub-probe or grub2-probe exist)."
     return
@@ -53,8 +53,6 @@ LogPrint "Installing GRUB Legacy boot loader:"
 
 # Installing GRUB Legacy boot loader requires an executable "grub":
 type -p grub >&2 || Error "Cannot install GRUB Legacy boot loader because there is no 'grub' program."
-
-mount -t proc none $TARGET_FS_ROOT/proc
 
 if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]] ; then
 
@@ -140,4 +138,3 @@ fi
 # This script is meant to get the GRUB Legacy boot loader installed:
 is_true $NOBOOTLOADER && Error "Failed to install GRUB Legacy boot loader."
 
-umount $TARGET_FS_ROOT/proc

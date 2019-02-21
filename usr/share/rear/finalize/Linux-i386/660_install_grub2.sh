@@ -44,7 +44,7 @@
 is_true $NOBOOTLOADER || return 0
 
 # For UEFI systems with grub2 we should use efibootmgr instead,
-# cf. finalize/Linux-i386/630_run_efibootmgr.sh
+# cf. finalize/Linux-i386/670_run_efibootmgr.sh
 is_true $USING_UEFI_BOOTLOADER && return
 
 # Only for GRUB2 - GRUB Legacy will be handled by its own script.
@@ -63,18 +63,6 @@ if ! test -d "$TARGET_FS_ROOT/boot/$grub_name" ; then
         return 1
     fi
 fi
-
-# Make /proc /sys /dev available in TARGET_FS_ROOT
-# so that later things work in the "chroot TARGET_FS_ROOT" environment,
-# cf. https://github.com/rear/rear/issues/1828#issuecomment-398717889
-# and do not umount them when leaving this script because
-# it is better when also after "rear recover" things still
-# work in the "chroot TARGET_FS_ROOT" environment so that
-# the user could more easily adapt things after "rear recover":
-for mount_device in proc sys dev ; do
-    umount $TARGET_FS_ROOT/$mount_device && sleep 1
-    mount --bind /$mount_device $TARGET_FS_ROOT/$mount_device
-done
 
 # Generate GRUB configuration file anew to be on the safe side (this could be even mandatory in MIGRATION_MODE):
 if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-mkconfig -o /boot/$grub_name/grub.cfg" ; then

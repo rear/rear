@@ -12,13 +12,9 @@ is_true $USING_UEFI_BOOTLOADER && return
 # Only for lilo
 [[ "$BOOTLOADER" == "LILO" ]] || return 0 # only continue when bootloader is lilo based
 
-type -p $TARGET_FS_ROOT/sbin/lilo
-StopIfError "Could not find lilo executable"
-
+type -p $TARGET_FS_ROOT/sbin/lilo || Error "BOOTLOADER is LILO but there is no $TARGET_FS_ROOT/sbin/lilo"
 
 LogPrint "Installing LILO boot loader"
-mount -t proc none $TARGET_FS_ROOT/proc
-#for virtual_filesystem in /dev /dev/pts /proc /sys ; do mount -B $virtual_filesystem $TARGET_FS_ROOT$virtual_filesystem ; done
 
 if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
 
@@ -26,9 +22,8 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
     LogIfError "Unable to find /etc/lilo.conf"
 
     # Find the disks that need a new LILO
-    disks=$(grep '^disk \|^multipath ' $LAYOUT_FILE | cut -d' ' -f2)
+    disks=$( grep '^disk \|^multipath ' $LAYOUT_FILE | cut -d' ' -f2 )
     [[ "$disks" ]] || Error "Unable to find any disks to install LILO on"
-
 
     chroot $TARGET_FS_ROOT /sbin/lilo -v >&2
 
@@ -37,6 +32,3 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
     fi
 fi
 
-
-#for virtual_filesystem in /dev /dev/pts /proc /sys ; do umount $TARGET_FS_ROOT$virtual_filesystem ; done
-umount $TARGET_FS_ROOT/proc

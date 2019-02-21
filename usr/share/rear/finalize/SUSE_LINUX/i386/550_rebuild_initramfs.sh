@@ -74,8 +74,6 @@ fi
 
 my_udevtrigger
 sleep 5
-mount -t proc none $TARGET_FS_ROOT/proc
-mount -t sysfs none $TARGET_FS_ROOT/sys
 
 LogPrint "Running mkinitrd..."
 # Run mkinitrd directly in chroot without a login shell in between (see https://github.com/rear/rear/issues/862).
@@ -108,4 +106,3 @@ and decide yourself, whether the system will boot or not.
 "
 fi
 
-umount $TARGET_FS_ROOT/proc $TARGET_FS_ROOT/sys
