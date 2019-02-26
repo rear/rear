@@ -1,4 +1,5 @@
 # remove existing disk-by-id mappings
+# FIXME: Don't we actually not 'remove' but 'replace' or 'migrate' disk-by-id mappings?
 #
 # We call sed once for each substituation
 # it would be better to build one sed script and use this later
@@ -35,7 +36,7 @@ NEW_ID_FILE="$TMP_DIR/diskbyid_mappings"
 # cf. https://github.com/rear/rear/issues/1845
 # but hopefully the code below is sufficiently robust
 # so that things work at least for those entries that are correct:
-apply_layout_mappings "$OLD_ID_FILE" ||  LogPrintError "Failed to apply layout mappings to $OLD_ID_FILE (may cause failures during 'rename_diskbyid')"
+apply_layout_mappings "$OLD_ID_FILE" || LogPrintError "Failed to apply layout mappings to $OLD_ID_FILE (may cause failures during 'rename_diskbyid')"
 
 # replace the device names with the real devices
 
@@ -66,11 +67,49 @@ done < "$OLD_ID_FILE" > "$NEW_ID_FILE"
 
 sed_change_monitor="$TMP_DIR/by-id_change"
 
+LogPrint "Migrating disk-by-id mappings in certain restored files in $TARGET_FS_ROOT to current disk-by-id mappings ..."
+
+local file=""
+local realfile=""
+local symlink_target=""
 for file in $FILES; do
     realfile="$TARGET_FS_ROOT/$file"
-    [ ! -f "$realfile" ] && continue	# if file is not there continue with next one
+    # Silently skip directories and file not found:
+    test -f "$realfile" || continue
+    # 'sed -i' bails out on symlinks, so we follow the symlink and patch the symlink target
+    # on dead links we inform the user and skip them
+    # TODO: We should do this inside 'chroot $TARGET_FS_ROOT' so that absolute symlinks will work correctly
+    # cf. https://github.com/rear/rear/issues/1338
+    if test -L "$realfile" ; then
+        if symlink_target="$( readlink -f "$realfile" )" ; then
+            # symlink_target is an absolute path in the recovery system
+            # e.g. the symlink target of etc/mtab is /mnt/local/proc/12345/mounts
+            # because we use only 'pushd $TARGET_FS_ROOT' but not 'chroot $TARGET_FS_ROOT'.
+            # If the symlink target does not start with /mnt/local/ (i.e. if it does not start with $TARGET_FS_ROOT)
+            # it is an absolute symlink (e.g. inside $TARGET_FS_ROOT a symlink points to /absolute/path/file)
+            # and the target of an absolute symlink is not within the recreated system but in the recovery system
+            # where it does not make sense to patch files, cf. https://github.com/rear/rear/issues/1338
+            # so that we skip patching symlink targets that are not within the recreated system:
+            if ! echo $symlink_target | grep -q "^$TARGET_FS_ROOT/" ; then
+                LogPrint "Skip patching symlink $realfile target $symlink_target not within $TARGET_FS_ROOT"
+                continue
+            fi
+            # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
+            # the symlink target is considered to not be a restored file that needs to be patched
+            # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
+            if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
+                LogPrint "Skip patching symlink $realfile target $symlink_target on /proc/ /sys/ /dev/ or /run/"
+                continue
+            fi
+            LogPrint "Patching symlink $realfile target $symlink_target"
+            realfile="$symlink_target"
+        else
+            LogPrint "Skip patching dead symlink $realfile"
+            continue
+        fi
+    fi
     # keep backup
-    cp "$realfile" "${realfile}.rearbak"
+    cp $v "$realfile" "${realfile}.rearbak"
     # we should consider creating a sed script within a string
     # and then call sed once (as done other times)
     while read ID DEV_NAME ID_NEW; do
@@ -104,15 +143,16 @@ for file in $FILES; do
             sed -i "s#$ID_FULL\$#/dev/$DEV_NAME#gw /dev/null" "$realfile" >> "$sed_change_monitor"
         fi
 
-        # Checking if sed change something in a file (by using w sed flag)
+        # Checking if sed changed something in a file (by using w sed flag)
         # LogPrint only when a change was made.
         if test -s "$sed_change_monitor" ; then
-            LogPrint "Patching $file: Replacing [$ID_FULL] by [$ID_NEW_FULL]"
+            LogPrint "Replaced '$ID_FULL' by '$ID_NEW_FULL' in $realfile"
             rm "$sed_change_monitor"
         fi
 
     done < $NEW_ID_FILE
 done
 
+# TODO: Use 'local' variables for that:
 unset ID DEV_NAME ID_NEW SYMLINKS ID_FULL ID_NEW_FULL
 
