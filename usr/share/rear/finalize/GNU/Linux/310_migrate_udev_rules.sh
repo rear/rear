@@ -20,25 +20,28 @@ RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net,cd}.rules /etc/udev/rules.
 #    rear-sles11: /etc/udev/rules.d/70-persistent-cd.rules
 #    rear-sles11: /etc/udev/rules.d/70-persistent-net.rules
 #     rear-sles9: ERROR
+# SLES12-SP4 and openSUSE Leap 15.0: /etc/udev/rules.d/70-persistent-net.rules
 
-# for each rule file compare the version in the rescue system with the version in the restores backup
+# For each rule file compare the version in the rescue system with the version in the restored backup
 # and, if they differ, copy the version from the rescue system into the recovered system, of course
 # preserving a backup in /root/rear-*.old
 for rule in "${RULE_FILES[@]}" ; do
-    rulefile="$( basename "$rule" )"
+    # Skip if there was no such udev rule file restored from the backup
+    # because we must not put files into the recreated system that have not been there
+    # in particular no udev rule files because wrong udev rules can cause severe issues.
+    # E.g. nowadays /etc/udev/rules.d/70-persistent-net.rules is created and maintained
+    # by systemd/udev (see https://github.com/rear/rear/issues/770) so that we must not
+    # mess around with systemd/udev by creating udev rules in the recreated system:
+    test -f "$TARGET_FS_ROOT/$rule" || continue
     # Skip if the one in the rescue system does not exists or is empty:
     test -s "$rule" || continue
-    # Skip if the one in the rescue system is the same as the one from the restores backup:
-    cmp -s "$rule" $TARGET_FS_ROOT/"$rule" && continue
-    # Test for file $TARGET_FS_ROOT/$rule as BACKUP_RESTORE_MOVE_AWAY_FILES variable
-    # may have prevented the restore of one of these files:
-    test -f "$TARGET_FS_ROOT/$rule" && cp $v "$TARGET_FS_ROOT/$rule" $TARGET_FS_ROOT/root/rear-"$rulefile".old
-    # Copy the rule from the rescue system to TARGET_FS_ROOT even if it did not exist in TARGET_FS_ROOT.
-    # FIXME: It does not look right to test for $TARGET_FS_ROOT/$rule before making a backup in /root/rear-*.old
-    # but to copy it from the rescue system into TARGET_FS_ROOT in any case even if it did not exist before
-    # (why do we put files into the target system that were not restored from the backup?)
-    # or when BACKUP_RESTORE_MOVE_AWAY_FILES has explicitly moved it away:
-    LogPrint "Updating udev rule '$rulefile' with the one from the Relax-and-Recover rescue system"
+    # Skip if the one in the rescue system is the same as the one from the restored backup:
+    cmp -s "$rule" "$TARGET_FS_ROOT/$rule" && continue
+    # Save the one that was restored from the backup:
+    rulefile="$( basename "$rule" )"
+    cp $v "$TARGET_FS_ROOT/$rule" $TARGET_FS_ROOT/root/rear-"$rulefile".old
+    # Overwrite the one that was restored from the backup with the one from the rescue system:
+    LogPrint "Replacing restored udev rule '$TARGET_FS_ROOT/$rule' with the one from the ReaR rescue system"
     cp $v "$rule" "$TARGET_FS_ROOT/$rule" || LogPrintError "Failed to copy '$rule' to '$TARGET_FS_ROOT/$rule'"
 done
 
