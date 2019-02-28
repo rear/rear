@@ -1,16 +1,22 @@
 #
 # In migration mode let the user confirm that
 # the up to that point recreated system
-# (i.e. recreated disk layout plus restored backup)
-# is ready to run the finalize stage
-# (i.e. to recreate the initrd and to reinstall the bootloader).
+# (i.e. recreated disk layout plus restored backup plus
+#  migrated certain restored files by 'finalize' scripts
+#  that were run before this user confirmation dialog appears)
+# is ready to recreate the initrd and to reinstall the bootloader
+# or let the user adapt his restored config files as he needs it
+# cf. https://github.com/rear/rear/pull/2055#issuecomment-468193571
 # For example in case of a changed disk layout certain config files
-# that were restored from the backup could contain outdated content
-# which may need manual adaptions before the initrd gets recreated
-# and the bootloader gets reinstalled.
+# that were restored from the backup could contain outdated or false content
+# which may need manual adaptions (in addition to what 'finalize' scripts did
+# that were run before or to correct what those scripts may have falsely done)
+# before the initrd gets recreated and the bootloader gets reinstalled.
 # In particular in case of a changed disk layout the restored etc/fstab
-# is usually outdated and needs to be manually adapted to get
-# the recreated system ready to run the scripts of the finalize stage.
+# is usually outdated and may need to be manually adapted to get
+# the recreated system ready to run the subsequent 'finalize' scripts
+# that recreate the initrd and reinstall the bootloader
+# via 'chroot' from within the recreated system.
 #
 
 # Skip if not in migration mode:
@@ -25,7 +31,7 @@ choices[1]="Edit restored etc/fstab ($restored_fstab)"
 choices[2]="View restored etc/fstab ($restored_fstab)"
 choices[3]="Use Relax-and-Recover shell and return back to here"
 choices[4]="Abort '$rear_workflow'"
-prompt="Confirm restored config files or edit them"
+prompt="Confirm restored config files are OK or adapt them as needed"
 choice=""
 wilful_input=""
 # When USER_INPUT_RESTORED_FILES_CONFIRMATION has any 'true' value be liberal in what you accept and

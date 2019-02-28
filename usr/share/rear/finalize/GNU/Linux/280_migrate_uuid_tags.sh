@@ -47,6 +47,15 @@ do
             # symlink_target is an absolute path in the recovery system
             # e.g. the symlink target of etc/mtab is /mnt/local/proc/12345/mounts
             # because we use only 'pushd $TARGET_FS_ROOT' but not 'chroot $TARGET_FS_ROOT'.
+            # If the symlink target does not start with /mnt/local/ (i.e. if it does not start with $TARGET_FS_ROOT)
+            # it is an absolute symlink (i.e. inside $TARGET_FS_ROOT a symlink points to /absolute/path/file)
+            # and the target of an absolute symlink is not within the recreated system but in the recovery system
+            # where it does not make sense to patch files, cf. https://github.com/rear/rear/issues/1338
+            # so that we skip patching symlink targets that are not within the recreated system:
+            if ! echo $symlink_target | grep -q "^$TARGET_FS_ROOT/" ; then
+                LogPrint "Skip patching symlink $restored_file target $symlink_target not within $TARGET_FS_ROOT"
+                continue
+            fi
             # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
             # the symlink target is considered to not be a restored file that needs to be patched
             # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
