@@ -14,6 +14,16 @@ function read_and_strip_file () {
     sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$filename"
 }
 
+# Three functions to test
+#   if the argument is an integer
+#   if the argument is a positive integer (i.e. test for '> 0')
+#   if the argument is a nonnegative integer (i.e. test for '>= 0')
+# where the argument is limted by the bash integer arithmetic range limitation
+# from - ( 2^63 ) = -9223372036854775808 to 9223372036854775807 = + ( 2^63 - 1 )
+# e.g. "is_nonnegative_integer 9223372036854775807" works (tested down to SLES11 on 32-bit x86)
+# but "is_nonnegative_integer 9223372036854775808" is out of range and returns a wrong result, cf.
+# https://github.com/rear/rear/issues/1269#issuecomment-290006467
+
 # Test if the (first) argument is an integer.
 # If yes output the argument value and return 0
 # otherwise output '0' and return 1:
@@ -39,6 +49,23 @@ function is_positive_integer () {
     if test "$argument" -gt 0 2>/dev/null ; then
         # The arithmetic expansion removes a possible leading '+' in the output
         # so that e.g. "is_positive_integer +12" outputs '12' (and not '+12'):
+        echo $(( argument + 0 ))
+        return 0
+    fi
+    echo 0
+    return 1
+}
+
+# Test if the (first) argument is a nonnegative integer (i.e. test for '>= 0')
+# If yes output the argument value and return 0
+# otherwise output '0' and return 1
+# (in particular "is_nonnegative_integer -00" outputs '0' and returns 0):
+function is_nonnegative_integer () {
+    local argument="$1"
+    if test "$argument" -ge 0 2>/dev/null ; then
+        # The arithmetic expansion removes a possible leading '+' in the output
+        # so that e.g. "is_nonnegative_integer +12" outputs '12' (and not '+12')
+        # and "is_nonnegative_integer -0" outputs '0' (and not '-0'):
         echo $(( argument + 0 ))
         return 0
     fi
@@ -146,7 +173,7 @@ function percent_encode() {
     # and running that with 'set -x' shows the UTF-8 encoded bytes cause it:
     #   + char=$'\303\244'
     #   + case $char in
-    #   + printf %%%02X ''\''Ã#'
+    #   + printf %%%02X ''\''A#'
     #   %FFFFFFFFFFFFFFC3+
     # because the '\303\244' UTF-8 bytes should get encoded byte by byte
     # but not as two bytes at the same time so that the problem is
