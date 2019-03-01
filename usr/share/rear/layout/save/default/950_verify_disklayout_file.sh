@@ -35,6 +35,7 @@ local highest_used_part_num part_num
 local unused_part_nums=()
 local non_consecutive_part_found unused_part_num
 local non_consecutive_part_errors=()
+local highest_used_mbr_primary_part_num
 while read keyword disk_dev disk_size parted_mklabel junk ; do
     test -b "$disk_dev" || broken_disk_errors=( "${broken_disk_errors[@]}" "$disk_dev is not a block device" )
     is_positive_integer $disk_size || broken_disk_errors=( "${broken_disk_errors[@]}" "$disk_dev size $disk_size is not a positive integer" )
@@ -79,11 +80,11 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
     # Skip testing for non consecutive partitions when no highest used partition number > 0 was found
     # because that indicates partitions of another form than /dev/sdX1 /dev/sdX2 /dev/sdX3 are used:
     if test $highest_used_part_num -gt 0 ; then
-        non_consecutive_part_found=""
-        unused_part_nums=()
         case $parted_mklabel in
             (gpt)
                 # For the GPT partitioning scheme the partitions must have consecutive numbers 1 2 3 ..
+                non_consecutive_part_found=""
+                unused_part_nums=()
                 for part_num in $( seq $highest_used_part_num ) ; do
                     # Probably there is a better way to implement that as with dumb nested 'for' loops
                     # but note that the partitions in $partitions do not need to be sorted.
@@ -107,7 +108,7 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
                 done
                 if is_true "$non_consecutive_part_found" ; then
                     for unused_part_num in "${unused_part_nums[@]}" ; do
-                        non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "Partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
+                        non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "GPT partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
                     done
                 fi
                 ;;
@@ -119,30 +120,55 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
                 # and the logical partitions starting at 5 (there are no partitions with numbers 3 and 4)
                 # cf. https://github.com/rear/rear/issues/1681#issue-286345908
                 # Testing consecutive partitions from number 1 up to 4 (i.e. testing consecutive primary an extended partitions):
-                unused_part_num=5
-                for part_num in $( seq 4 ) ; do
-                    for partition in "${partitions[@]}" ; do
-                        if test $partition = $disk_dev$part_num ; then
-                            test $part_num -lt $unused_part_num && continue 2
-                            non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "Partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
-                            continue 2
-                        fi
-                    done
-                    unused_part_num=$part_num
+                non_consecutive_part_found=""
+                unused_part_nums=()
+                # Determine the highest used MBR primary or extended partition number:
+                highest_used_mbr_primary_part_num=0
+                for partition in "${partitions[@]}" ; do
+                    # We test only partitions of the form /dev/sdX1 /dev/sdX2 /dev/sdX3 (i.e. of the form $disk_dev$part_num).
+                    part_num=${partition#$disk_dev}
+                    # The partitions in $partitions do not need to be sorted so we must test all partitions
+                    # and not 'break' the 'for' loop when a partition with partition number > 4 was found:
+                    if test $part_num -lt 5 ; then
+                        test $part_num -gt $highest_used_mbr_primary_part_num && highest_used_mbr_primary_part_num=$part_num
+                    fi
                 done
-                # Testing consecutive partitions starting at 5 (i.e. testing consecutive logical partitions).
-                # There cannot be more logical partitions than the total number of partitions on that disk device:
-                unused_part_num=$(( highest_used_part_num + 1 ))
-                for part_num in $( seq 5 $unused_part_num ) ; do
-                    for partition in "${partitions[@]}" ; do
-                        if test $partition = $disk_dev$part_num ; then
-                            test $part_num -lt $unused_part_num && continue 2
-                            non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "Partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
-                            continue 2
-                        fi
+                # Skip testing for non consecutive MBR partitions when no highest used MBR primary or extended partition number > 0 was found:
+                if test $highest_used_mbr_primary_part_num -gt 0 ; then
+                    for part_num in $( seq $highest_used_mbr_primary_part_num ) ; do
+                        for partition in "${partitions[@]}" ; do
+                            if test $partition = $disk_dev$part_num ; then
+                                test $unused_part_nums || continue 2
+                                test $part_num -gt $unused_part_nums && non_consecutive_part_found="yes"
+                                continue 2
+                            fi
+                        done
+                        unused_part_nums=( "${unused_part_nums[@]}" $part_num )
                     done
-                    unused_part_num=$part_num
-                done
+                    if is_true "$non_consecutive_part_found" ; then
+                        for unused_part_num in "${unused_part_nums[@]}" ; do
+                            non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "MBR primary and extended partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
+                        done
+                    fi
+                    # Testing consecutive partitions starting at 5 (i.e. testing consecutive logical partitions):
+                    non_consecutive_part_found=""
+                    unused_part_nums=()
+                    for part_num in $( seq 5 $highest_used_part_num ) ; do
+                        for partition in "${partitions[@]}" ; do
+                            if test $partition = $disk_dev$part_num ; then
+                                test $unused_part_nums || continue 2
+                                test $part_num -gt $unused_part_nums && non_consecutive_part_found="yes"
+                                continue 2
+                            fi
+                        done
+                        unused_part_nums=( "${unused_part_nums[@]}" $part_num )
+                    done
+                    if is_true "$non_consecutive_part_found" ; then
+                        for unused_part_num in "${unused_part_nums[@]}" ; do
+                            non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "MBR logical partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
+                        done
+                    fi
+                fi
                 ;;
             (*)
                 broken_disk_errors=( "${broken_disk_errors[@]}" "$disk_dev partitioning scheme '$parted_mklabel' is neither 'gpt' nor 'msdos'" )
