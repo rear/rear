@@ -16,7 +16,7 @@ local keyword dummy junk
 
 Log "Verifying that the 'disk' entries in $DISKLAYOUT_FILE are correct"
 # The section "Disk layout file syntax" in doc/user-guide/06-layout-configuration.adoc reads (excerpt)
-#   disk <name> <size(B)> <partition label> 
+#   disk <name> <size(B)> <partition label>
 # which is the theory and in practice what matters is what the scripts need that use the 'disk' entries
 #   # find usr/share/rear/layout/prepare -type f | xargs grep -l '\^disk'
 #   usr/share/rear/layout/prepare/default/300_map_disks.sh
