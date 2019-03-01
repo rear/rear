@@ -26,16 +26,16 @@ Log "Verifying that the 'disk' entries in $DISKLAYOUT_FILE are correct"
 #   usr/share/rear/layout/prepare/GNU/Linux/100_include_partition_code.sh
 # where layout/prepare/GNU/Linux/100_include_partition_code.sh is the most important one
 # so that it is used here as reference to decide whether or not the entries are correct:
-local broken_disk_entries=()
+local broken_disk_errors=()
 local disk_dev disk_size parted_mklabel
-local broken_part_entries=()
+local broken_part_errors=()
 local part_size part_start part_name part_flags part_dev
 local partitions=()
 local number_of_partitions unused_part_num part_num
-local non_consecutive_partitions=()
+local non_consecutive_part_errors=()
 while read keyword disk_dev disk_size parted_mklabel junk ; do
-    test -b "$disk_dev" || broken_disk_entries=( "${broken_disk_entries[@]}" "$disk_dev is not a block device" )
-    is_positive_integer $disk_size || broken_disk_entries=( "${broken_disk_entries[@]}" "$disk_dev size $disk_size is not a positive integer" )
+    test -b "$disk_dev" || broken_disk_errors=( "${broken_disk_errors[@]}" "$disk_dev is not a block device" )
+    is_positive_integer $disk_size || broken_disk_errors=( "${broken_disk_errors[@]}" "$disk_dev size $disk_size is not a positive integer" )
     # Here we ignore testing parted_mklabel because create_partitions() in prepare/GNU/Linux/100_include_partition_code.sh has fallbacks
 
     Log "Verifying that the 'part' entries for $disk_dev in $DISKLAYOUT_FILE are correct"
@@ -43,11 +43,11 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
     #   part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <partition name>
     # as above layout/prepare/GNU/Linux/100_include_partition_code.sh is the most important one
     # so that it is used here as reference to decide whether or not the entries are correct:
-    partitions=""
+    partitions=()
     while read keyword dummy part_size part_start part_name part_flags part_dev junk ; do
-        test -b "$part_dev" || broken_part_entries=( "${broken_part_entries[@]}" "$part_dev is not a block device" )
-        is_positive_integer $part_size || broken_part_entries=( "${broken_part_entries[@]}" "$part_dev size $part_size is not a positive integer" )
-        is_nonnegative_integer $part_start || broken_part_entries=( "${broken_part_entries[@]}" "$part_dev start $part_start is not a nonnegative integer" )
+        test -b "$part_dev" || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev is not a block device" )
+        is_positive_integer $part_size || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev size $part_size is not a positive integer" )
+        is_nonnegative_integer $part_start || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev start $part_start is not a nonnegative integer" )
         partitions=( "${partitions[@]}" "$part_dev" )
         # Using the parted_mklabel fallback behaviour in create_partitions() in prepare/GNU/Linux/100_include_partition_code.sh
         # only when there is no parted_mklabel value, but when there is a parted_mklabel value use it as is:
@@ -87,8 +87,8 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
                         # and the found partition number is not higher than an unused partition number:
                         test $part_num -lt $unused_part_num && continue 2
                         # otherwise a partition was found where an unused partition number was skipped:
-                        non_consecutive_partitions=( "${non_consecutive_partitions[@]}" "Partitions on $disk_dev not consecutive $disk_dev$unused_part_num missing" )
-                        break 2
+                        non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "Partitions on $disk_dev not consecutive $disk_dev$unused_part_num missing" )
+                        continue 2
                     fi
                 done
                 # When no partition with the current number was found there must not be one with a higher number:
@@ -96,12 +96,11 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
             done
             ;;
         (msdos)
-            # TODO:
             # For the MBR partitioning scheme the partitions must not have consecutive numbers.
             # Only primary partitions and a possible extended partition must have consecutive numbers from 1 up to 4.
             # Possible logical partitions must have consecutive numbers 5 6 7 ...
-            # There can be a gap between primary/extended partitions
-            # e.g. with number 1 and 2 and logical partitions starting at 5
+            # There can be a gap between the primary/extended partitions e.g. with number 1 and 2
+            # and the logical partitions starting at 5 (there are no partitions with numbers 3 and 4)
             # cf. https://github.com/rear/rear/issues/1681#issue-286345908
             # Testing consecutive partitions from number 1 up to 4 (i.e. testing consecutive primary an extended partitions):
             unused_part_num=5
@@ -109,28 +108,29 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
                 for partition in "${partitions[@]}" ; do
                     if test $partition = $disk_dev$part_num ; then
                         test $part_num -lt $unused_part_num && continue 2
-                        non_consecutive_partitions=( "${non_consecutive_partitions[@]}" "Partitions on $disk_dev not consecutive $disk_dev$unused_part_num missing" )
-                        break 2
+                        non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "Partitions on $disk_dev not consecutive $disk_dev$unused_part_num missing" )
+                        continue 2
                     fi
                 done
                 unused_part_num=$part_num
             done
-            # Testing consecutive partitions starting at 5 (i.e. testing consecutive logical partitions):
-            unused_part_num=$(( number_of_partitions + 1 ))
+            # Testing consecutive partitions starting at 5 (i.e. testing consecutive logical partitions).
             # There cannot be more logical partitions than the total number of partitions on that disk device:
-            for part_num in $( seq $number_of_partitions ) ; do
+            unused_part_num=$(( 5 + number_of_partitions + 1 ))
+            # Counting from 5 up to (5 + number_of_partitions - 1) would be sufficient but counting up to (5 + number_of_partitions + 1) doesn't matter:
+            for part_num in $( seq 5 $unused_part_num ) ; do
                 for partition in "${partitions[@]}" ; do
                     if test $partition = $disk_dev$part_num ; then
                         test $part_num -lt $unused_part_num && continue 2
-                        non_consecutive_partitions=( "${non_consecutive_partitions[@]}" "Partitions on $disk_dev not consecutive $disk_dev$unused_part_num missing" )
-                        break 2
+                        non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "Partitions on $disk_dev not consecutive $disk_dev$unused_part_num missing" )
+                        continue 2
                     fi
                 done
                 unused_part_num=$part_num
             done
             ;;
         (*)
-            broken_disk_entries=( "${broken_disk_entries[@]}" "$disk_dev partitioning scheme '$parted_mklabel' is neither 'gpt' nor 'msdos'" )
+            broken_disk_errors=( "${broken_disk_errors[@]}" "$disk_dev partitioning scheme '$parted_mklabel' is neither 'gpt' nor 'msdos'" )
             ;;
     esac
 
@@ -145,24 +145,26 @@ done < <( grep "^disk " "$DISKLAYOUT_FILE" )
 # should error out when it cannot create a valid entry
 # (e.g. because of whatever reasons outside of ReaR):
 local disklayout_file_is_broken=""
-local broken_entry
-for broken_entry in "${broken_disk_entries[@]}" ; do
-    contains_visible_char "$broken_entry" || continue
-    LogPrintError "$broken_entry"
+local non_consecutive_partitions=""
+local error_message
+for error_message in "${broken_disk_errors[@]}" ; do
+    contains_visible_char "$error_message" || continue
+    LogPrintError "$error_message"
     disklayout_file_is_broken="yes"
 done
-for broken_entry in "${broken_part_entries[@]}" ; do
-    contains_visible_char "$broken_entry" || continue
-    LogPrintError "$broken_entry"
+for error_message in "${broken_part_errors[@]}" ; do
+    contains_visible_char "$error_message" || continue
+    LogPrintError "$error_message"
     disklayout_file_is_broken="yes"
 done
-for broken_entry in "${non_consecutive_partitions[@]}" ; do
-    contains_visible_char "$broken_entry" || continue
-    LogPrintError "$broken_entry"
-    disklayout_file_is_broken="yes"
+for error_message in "${non_consecutive_part_errors[@]}" ; do
+    contains_visible_char "$error_message" || continue
+    LogPrintError "$error_message"
+    non_consecutive_partitions="yes"
 done
 is_true "$disklayout_file_is_broken" && BugError "Entries in $DISKLAYOUT_FILE are broken ('rear recover' would fail)"
+is_true "$non_consecutive_partitions" && Error "There are non consecutive partitions ('rear recover' would fail)"
 
-# Finish this script successfully:
+# Finish this script successfully in the normal case (i.e. when both 'is_true' above result non zero return code):
 true
 
