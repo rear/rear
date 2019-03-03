@@ -37,6 +37,8 @@ blacklist {
     # This could avoid situation like https://github.com/rear/rear/issues/2016 and https://github.com/rear/rear/issues/2002
     udevadm control --reload-rules
     udevadm trigger
+    # Wait for udev trigger to finish device detection/creation
+    udevadm settle
 
     # multipath activation. 
     LogPrint "Activating multipath"
