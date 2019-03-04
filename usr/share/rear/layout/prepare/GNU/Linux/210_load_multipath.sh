@@ -33,6 +33,14 @@ blacklist {
         fi
     fi
 
+    # it is recommended to reload udev in order to have /sys updated with information from all the device path before activating multipath. 
+    # This could avoid situation like https://github.com/rear/rear/issues/2016 and https://github.com/rear/rear/issues/2002
+    udevadm control --reload-rules
+    udevadm trigger
+    # Wait for udev trigger to finish device detection/creation
+    udevadm settle
+
+    # multipath activation. 
     LogPrint "Activating multipath"
     list_mpath_device=1
     modprobe dm-multipath >&2 && LogPrint "multipath activated" || LogPrint "Failed to load dm-multipath module"
