@@ -862,7 +862,7 @@ function handle_physdev () {
     local mac=""
 
     if has_binary ethtool ; then
-        mac="$( ethtool -P $network_interface 2>/dev/null | awk '{ print $3 }' )"
+        mac="$( ethtool -P $network_interface 2>/dev/null | awk '{ print $NF }' )"
     fi
     if [ -z "$mac" ] ; then
         if [ -e $sysfspath/bonding_slave/perm_hwaddr ] ; then
