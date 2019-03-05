@@ -3,6 +3,10 @@
 
 # FIXME: backuparchive is no local variable (regardless that it is lowercased)
 
+# To avoid logging of 'Using backup archive' on the screen and in the log file
+# during a mkrescue run we add the following - #1363
+[[ "$WORKFLOW" = "mkrescue" ]] && return
+
 # If TAPE_DEVICE is specified, use that:
 if test "$TAPE_DEVICE" ; then
     backuparchive="$TAPE_DEVICE"
