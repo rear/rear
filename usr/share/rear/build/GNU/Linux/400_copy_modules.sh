@@ -52,9 +52,10 @@ function modinfo_filename () {
 # which avoids dowdy looking code with deeply nested 'if...else' conditions:
 for dummy in "once" ; do
 
-    # The special user setting MODULES=( 'all_modules' ) enforces that
-    # all files in the /lib/modules/$KERNEL_VERSION directory
-    # get included in the rescue/recovery system.
+    # Since ReaR version 2.5 we have MODULES=( 'all_modules' ) in default.conf
+    # see https://github.com/rear/rear/issues/2041
+    # which results that all files in the /lib/modules/$KERNEL_VERSION
+    # directory get included in the recovery system.
     # Test all MODULES array members to make the 'all_modules' functionality work for
     # MODULES array contents like MODULES=( 'moduleX' 'all_modules' 'moduleY' ):
     if IsInArray "all_modules" "${MODULES[@]}" ; then
@@ -67,9 +68,8 @@ for dummy in "once" ; do
         continue
     fi
 
-    # The special user setting MODULES=( 'loaded_modules' ) enforces that
-    # only those kernel modules that are currently loaded
-    # get included in the rescue/recovery system.
+    # The setting MODULES=( 'loaded_modules' ) results that only those kernel modules
+    # that are currently loaded get included in the recovery system.
     # Test all MODULES array members to make the 'loaded_modules' functionality work for
     # MODULES array contents like MODULES=( 'moduleX' 'loaded_modules' 'moduleY' ):
     if IsInArray "loaded_modules" "${MODULES[@]}" ; then
@@ -96,8 +96,38 @@ for dummy in "once" ; do
         continue
     fi
 
-    # Finally the default case:
-    LogPrint "Copying kernel modules"
+    # Finally the fallback cases, i.e. when the user has specified
+    # MODULES=() which means the currently loaded kernel modules get included in the recovery system
+    # plus the modules that get added above plus kernel modules for certain kernel drivers like
+    # storage drivers, network drivers, crypto drivers, virtualization drivers, and some extra drivers
+    # (see rescue/GNU/Linux/230_storage_and_network_modules.sh
+    #  and rescue/GNU/Linux/240_kernel_modules.sh)
+    # or when the user has specified
+    # MODULES=( 'moduleX' 'moduleY' ) where additional kernel modules can be specified
+    # to be included in the recovery system in addition to the ones via an empty MODULES=() setting:
+    LogPrint "Copying kernel modules as specified by MODULES"
+    # Before ReaR version 2.5 the below added modules had been added via conf/GNU/Linux.conf
+    # which is sourced in usr/sbin/rear before user config files like etc/rear/local.conf
+    # so that the user had to specify MODULES=( "${MODULES[@]}" 'moduleX' 'moduleY' )
+    # to not lose the below added modules but with MODULES=( 'all_modules' ) in default.conf
+    # this would keep the 'all_modules' default value in any case in the MODULES array
+    # which would trigger the above 'all_modules' case in any case.
+    # As a way out of this dilemma we add the below listed modules no longer via conf/GNU/Linux.conf
+    # but here after the user config files were sourced so that now the user can specify
+    # MODULES=( 'moduleX' 'moduleY' ) in etc/rear/local.conf to get additional kernel modules
+    # included in the recovery system in addition to the ones via an empty MODULES=() setting:
+    MODULES=( "${MODULES[@]}"
+              vfat
+              nls_iso8859_1 nls_utf8 nls_cp437
+              af_packet
+              unix
+              nfs nfsv4 nfsv3 lockd sunrpc
+              cifs
+              usbcore usb_storage usbhid uhci_hcd ehci_hcd xhci_hcd ohci_hcd
+              sr_mod ide_cd cdrom
+              zlib zlib-inflate zlib-deflate
+              libcrc32c crc32c crc32c-intel )
+    # Include the modules in MODULES plus their dependant modules:
     for module in "${MODULES[@]}" ; do
         # Strip trailing ".o" if there:
         module=${module#.o}
@@ -170,3 +200,4 @@ done
 # Local functions must be 'unset' because bash does not support 'local function ...'
 # cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
 unset -f modinfo_filename
+
