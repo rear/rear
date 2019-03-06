@@ -47,7 +47,7 @@ if test -r $TARGET_FS_ROOT/etc/sysconfig/kernel ; then
     # Since SLE12 RC3 /etc/sysconfig/kernel does no longer exist, see bnc#895084 where
     # in particular https://bugzilla.novell.com/show_bug.cgi?id=895084#c7 reads
     #   Best would be to add something like that:
-    #   # This replaces old INIRD_MODULES= variable from /etc/sysconfig/kernel
+    #   # This replaces old INITRD_MODULES= variable from /etc/sysconfig/kernel
     #   # force_drivers+="kernel_module1 kernel_module2 ..."
     #   in our /etc/dracut.conf.d/01-dist.conf file.
     #   And a similar comment to /etc/sysconfig/kernel
