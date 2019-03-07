@@ -64,6 +64,8 @@ gdisk -l "$disk_image" >&2
 
 local disk_device  # separate 'local' statement to avoid losing $(...) exit status - cf. https://stackoverflow.com/a/10397996
 # Set up the loop device, trying the '--partscan' option first (introduced in util-linux v2.21)
+# Trying '--partscan' here first avoids a situation where all of the methods below fail to make the kernel recognize
+# partitions on the loop device (cf. https://github.com/rear/rear/pull/2071).
 disk_device="$(losetup --show --find "$disk_image" --partscan || losetup --show --find "$disk_image")"
 StopIfError "Could not create loop device on $disk_image"
 AddExitTask "losetup -d $disk_device >&2"
