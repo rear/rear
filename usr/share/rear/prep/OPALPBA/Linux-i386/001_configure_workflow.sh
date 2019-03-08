@@ -28,6 +28,10 @@ COPY_AS_IS+=( /etc/alternatives /usr/lib/x86_64-linux-gnu/plymouth /usr/share/pl
 # Redirect output
 [[ -n "$OPAL_PBA_OUTPUT_URL" ]] || Error "The OPAL_PBA_OUTPUT_URL configuration variable must be set."
 OUTPUT_URL="$OPAL_PBA_OUTPUT_URL"
+if [[ "$(url_scheme "$OPAL_PBA_OUTPUT_URL")" == "file" ]]; then
+    # Do not include any PBA into another PBA
+    COPY_AS_IS_EXCLUDE+=( "$(url_path "$OPAL_PBA_OUTPUT_URL")" )
+fi
 
 # Configure raw disk output
 RAWDISK_IMAGE_NAME="TCG-Opal-PBA-$HOSTNAME"
