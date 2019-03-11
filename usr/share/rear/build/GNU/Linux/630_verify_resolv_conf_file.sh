@@ -85,7 +85,7 @@ is_true "$valid_nameserver" && return 0
 # but we inform the user when he runs ReaR in verbose mode (no LogPrintError needed):
 if is_true "$USE_DHCLIENT" ; then
     if ! is_true "$USE_STATIC_NETWORKING" ; then
-        LogPrint "No nameserver or only loopback addresses in $ROOTFS_DIR/etc/resolv.conf"
+        LogPrint "No nameserver or only loopback addresses in $ROOTFS_DIR/etc/resolv.conf should not matter because USE_DHCLIENT is true"
         return 0
     fi
 fi
