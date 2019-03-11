@@ -90,10 +90,11 @@ if test -s "/md5sums.txt" ; then
     # and /etc/scripts/run-sshd is run by SysVinit or systemd
     # (via /etc/inittab and /etc/init/start-sshd.conf or /usr/lib/systemd/system/sshd.service)
     # so that /etc/issue may get modified before its md5sum is verified here.
+    # run-sshd also modifies /etc/ssh/sshd_config, so this is excluded as well.
     # Also /etc/udev/rules.d/70-persistent-net.rules is always excluded to avoid false alarm
     # because it seems it can be modified even before this md5sum verification here runs,
     # see https://github.com/rear/rear/issues/1883#issuecomment-409875733
-    egrep_pattern="/etc/issue|/etc/udev/rules.d/70-persistent-net.rules"
+    egrep_pattern="/etc/issue|/etc/ssh/sshd_config|/etc/udev/rules.d/70-persistent-net.rules"
     test "$EXCLUDE_MD5SUM_VERIFICATION" && egrep_pattern="$egrep_pattern|$EXCLUDE_MD5SUM_VERIFICATION"
     # Regardless of '--quiet' md5sum shows "FAILED" messages nevertheless (cf. 'man md5sum'):
     if grep -E -v "$egrep_pattern" md5sums.txt | md5sum --quiet --check ; then
