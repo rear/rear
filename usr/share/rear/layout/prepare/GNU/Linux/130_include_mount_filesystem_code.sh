@@ -76,33 +76,8 @@ mount_fs() {
             # Call the right btrfs_subvolumes_setup_* function for the btrfs filesystem that was mounted above via an
             # artificial 'for' clause that is run only once to be able to 'continue' with the code after it:
             for dummy in "once" ; do
-                # When both BTRFS_SUBVOLUME_GENERIC_SETUP and BTRFS_SUBVOLUME_SLES_SETUP are explicity set to false
-                # no special btrfs subvolumes setup is done which may lead to a falsely recreated system
-                # but we do what the user has explicity specified:
-                if is_false "$BTRFS_SUBVOLUME_GENERIC_SETUP" && is_false "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
-                    LogPrint "Skipping btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_GENERIC_SETUP and BTRFS_SUBVOLUME_SLES_SETUP false)"
-                    continue
-                fi
-                if is_true "$BTRFS_SUBVOLUME_GENERIC_SETUP" ; then
-                    LogPrint "Doing generic btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_GENERIC_SETUP true)"
-                    btrfs_subvolumes_setup_generic $device $mountpoint $mountopts
-                    continue
-                fi
-                if is_true "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
-                    LogPrint "Doing SLES-like btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_SLES_SETUP true)"
-                    btrfs_subvolumes_setup_SLES $device $mountpoint $mountopts
-                    continue
-                fi
-                if is_false "$BTRFS_SUBVOLUME_GENERIC_SETUP" ; then
-                    LogPrint "Doing SLES-like btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_GENERIC_SETUP false)"
-                    btrfs_subvolumes_setup_SLES $device $mountpoint $mountopts
-                    continue
-                fi
-                if is_false "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
-                    LogPrint "Doing generic btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_SLES_SETUP false)"
-                    btrfs_subvolumes_setup_generic $device $mountpoint $mountopts
-                    continue
-                fi
+                # First of all test what is explicitly specified to be done for particular devices because
+                # what is explicitly specified for a particular device must be done with highest priority:
                 if IsInArray "$device" ${BTRFS_SUBVOLUME_GENERIC_SETUP[@]} ; then
                     LogPrint "Doing generic btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_GENERIC_SETUP contains $device)"
                     btrfs_subvolumes_setup_generic $device $mountpoint $mountopts
@@ -113,8 +88,43 @@ mount_fs() {
                     btrfs_subvolumes_setup_SLES $device $mountpoint $mountopts
                     continue
                 fi
-                # Final fallback to be backward compatible (btrfs_subvolumes_setup_SLES is the old way):
-                LogPrint "Doing SLES-like btrfs subvolumes setup for $device on $mountpoint (no match in BTRFS_SUBVOLUME_GENERIC_SETUP or BTRFS_SUBVOLUME_SLES_SETUP)"
+                # Then test what is explicitly specified to be done globally (i.e. for all devices)
+                # where doing a generic btrfs subvolumes setup has precedence over doing a SLES-like btrfs subvolumes setup so that
+                # when both BTRFS_SUBVOLUME_GENERIC_SETUP and BTRFS_SUBVOLUME_SLES_SETUP are true, the generic one is done:
+                if is_true "$BTRFS_SUBVOLUME_GENERIC_SETUP" ; then
+                    LogPrint "Doing generic btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_GENERIC_SETUP true)"
+                    btrfs_subvolumes_setup_generic $device $mountpoint $mountopts
+                    continue
+                fi
+                if is_true "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
+                    LogPrint "Doing SLES-like btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_SLES_SETUP true)"
+                    btrfs_subvolumes_setup_SLES $device $mountpoint $mountopts
+                    continue
+                fi
+                # Then test if it is explicitly specified to do nothing at all.
+                # When both BTRFS_SUBVOLUME_GENERIC_SETUP and BTRFS_SUBVOLUME_SLES_SETUP are explicitly set to false
+                # no special btrfs subvolumes setup is done which may lead to a falsely recreated system
+                # but we do what the user has explicity specified:
+                if is_false "$BTRFS_SUBVOLUME_GENERIC_SETUP" && is_false "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
+                    LogPrint "Skipping btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_GENERIC_SETUP and BTRFS_SUBVOLUME_SLES_SETUP false)"
+                    continue
+                fi
+                # Then test if it is explicitly specified to not do a certain kind of btrfs subvolumes setup
+                # i.e. the meaning when one kind of btrfs subvolumes setup is set to false is
+                # that then the other kind of btrfs subvolumes setup should be done
+                # (unless both are set to false which was already tested before):
+                if is_false "$BTRFS_SUBVOLUME_GENERIC_SETUP" ; then
+                    LogPrint "Doing SLES-like btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_GENERIC_SETUP false)"
+                    btrfs_subvolumes_setup_SLES $device $mountpoint $mountopts
+                    continue
+                fi
+                if is_false "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
+                    LogPrint "Doing generic btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_SLES_SETUP false)"
+                    btrfs_subvolumes_setup_generic $device $mountpoint $mountopts
+                    continue
+                fi
+                # Final fallback to be backward compatible (btrfs_subvolumes_setup_SLES is the old way) when nothing is specified:
+                LogPrint "Fallback SLES-like btrfs subvolumes setup for $device on $mountpoint (no match in BTRFS_SUBVOLUME_GENERIC_SETUP or BTRFS_SUBVOLUME_SLES_SETUP)"
                 btrfs_subvolumes_setup_SLES $device $mountpoint $mountopts
             done
             ;;
