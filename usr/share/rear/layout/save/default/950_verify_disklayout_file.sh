@@ -10,6 +10,15 @@
 #   Error: Partition doesn't exist
 # cf. https://github.com/rear/rear/issues/1681
 #
+# THIS LIMITATION APPLIES TO parted NOT BEING ABLE TO SPECIFY PARTITIONS IN
+# BYTES ONLY.
+#
+
+# Test by using the parted version numbers...
+parted_version=$( get_version parted -v )
+
+test "$parted_version" || BugError "Function get_version could not detect parted version"
+version_newer "$parted_version" 2.0 && return 0
 
 LogPrint "Verifying that the entries in $DISKLAYOUT_FILE are correct ..."
 local keyword dummy junk
@@ -209,3 +218,4 @@ is_true "$non_consecutive_partitions" && Error "There are non consecutive partit
 # Finish this script successfully in the normal case (i.e. when both 'is_true' above result non zero return code):
 true
 
+# vim: set et ts=4 sw=4:

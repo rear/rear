@@ -62,6 +62,7 @@ fi
 Log "Erasing MBR of disk $disk"
 dd if=/dev/zero of=$disk bs=512 count=1
 sync
+
 EOF
 
     create_partitions "$disk" "$label"
@@ -70,6 +71,10 @@ EOF
 # Make sure device nodes are visible (eg. in RHEL4)
 my_udevtrigger
 my_udevsettle
+
+# Clean up transient partitions are resize shrinked ones
+delete_dummy_partitions_and_resize_real_ones
+
 EOF
 }
 
@@ -111,10 +116,7 @@ create_partitions() {
     # so that $label is not empty but still set to 'gpt_sync_mbr' here.
 
     cat >> "$LAYOUT_CODE" <<EOF
-LogPrint "Creating partitions for disk $device ($label)"
-my_udevsettle
-parted -s $device mklabel $label >&2
-my_udevsettle
+create_disk_label $device $label
 EOF
 
     # There are certrain conditions below that test for AUTORESIZE_PARTITIONS
@@ -144,13 +146,32 @@ EOF
         fi
     fi
 
-    local start end start_mb end_mb
+    local start end start_mb end_mb number last_number
     # let start=32768 # start after one cylinder 63*512 + multiple of 4k = 64*512
     let start=2097152 # start after cylinder 4096*512 (for grub2 - see issue #492)
     let end=0
+    let last_number=0
 
     local flags partition
     while read part disk size pstart name flags partition junk; do
+
+        # Get the partition number from the name
+        number=$( get_partition_number "$partition" )
+
+        # Because parted creates partitions starting at number 1 consecutively,
+        # we expect the partition numbers to be increasing. Failing to do so
+        # will make the parted command setting the file system type die in
+        # error.
+
+        if [[ $number -lt $last_number ]] ; then
+            # Admin probably reordered entries in disklayout.conf, die
+            Error "Device '$disk': partitions are not defined in expected order (partitions must be specified in ascending number)"
+        elif [[ $number -eq $last_number ]] ; then
+            Error "Device '$disk': partition with number $number is already defined"
+        elif [[ $( mathlib_calculate "$number - $last_number" ) -gt 1 ]] && [[ -z "$FEATURE_PARTED_ANYUNIT" ]] ; then 
+            Error "Device '$disk': there are gaps between partitions, this is not supported"
+        fi
+        let last_number=$number
 
         # In layout/save/GNU/Linux/200_partition_layout.sh
         # in particular a GPT partition name that can contain spaces
@@ -196,24 +217,10 @@ EOF
 
         if [[ "$FEATURE_PARTED_ANYUNIT" ]] ; then
             if [[ "$end" ]] ; then
-                end=$( mathlib_calculate "$end - 1" )B
-            else
-                # FIXME: I <jsmeix@suse.de> think one cannot silently set the end of a partition to 100%
-                # if there is no partition end value, I think in this case "rear recover" should error out:
-                end="100%"
+                end=$( mathlib_calculate "$end - 1" )
             fi
-            # The duplicated quoting "'$name'" is there because
-            # parted's internal parser needs single quotes for values with blanks.
-            # In particular a GPT partition name that can contain spaces
-            # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
-            # so that when calling parted on command line it must be done like
-            #    parted -s /dev/sdb unit MiB mkpart "'partition name'" 12 34
-            # where the outer quoting "..." is for bash so that
-            # the inner quoting '...' is preserved for parted's internal parser:
             cat >> "$LAYOUT_CODE" <<EOF
-my_udevsettle
-parted -s $device mkpart "'$name'" ${start}B $end >&2
-my_udevsettle
+create_disk_partition "$device" "$name" $number $start $end
 EOF
         else
             ### Old versions of parted accept only sizes in megabytes...
@@ -271,9 +278,6 @@ EOF
         if is_true "$autoresize_partitions" ; then
             start=$(( $start + 4096 - ( $start % 4096 ) ))
         fi
-
-        # Get the partition number from the name
-        local number=$( get_partition_number "$partition" )
 
         local flags="$( echo $flags | tr ',' ' ' )"
         local flag
@@ -354,3 +358,4 @@ EOF
     ) >> "$LAYOUT_CODE"
 }
 
+# vim: set et ts=4 sw=4:
