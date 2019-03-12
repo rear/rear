@@ -78,12 +78,12 @@ mount_fs() {
             for dummy in "once" ; do
                 # First of all test what is explicitly specified to be done for particular devices because
                 # what is explicitly specified for a particular device must be done with highest priority:
-                if IsInArray "$device" ${BTRFS_SUBVOLUME_GENERIC_SETUP[@]} ; then
+                if IsInArray "$device" "${BTRFS_SUBVOLUME_GENERIC_SETUP[@]}" ; then
                     LogPrint "Doing generic btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_GENERIC_SETUP contains $device)"
                     btrfs_subvolumes_setup_generic $device $mountpoint $mountopts
                     continue
                 fi
-                if IsInArray "$device" ${BTRFS_SUBVOLUME_SLES_SETUP[@]} ; then
+                if IsInArray "$device" "${BTRFS_SUBVOLUME_SLES_SETUP[@]}" ; then
                     LogPrint "Doing SLES-like btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_SLES_SETUP contains $device)"
                     btrfs_subvolumes_setup_SLES $device $mountpoint $mountopts
                     continue
