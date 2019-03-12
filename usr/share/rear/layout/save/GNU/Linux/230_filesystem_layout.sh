@@ -302,7 +302,7 @@ fi
                 # cf. similar code in layout/prepare/GNU/Linux/130_include_mount_subvolumes_code.sh
                 SLES12SP1_btrfs_detection_string="@/.snapshots/"
                 if btrfs subvolume get-default $btrfs_mountpoint | grep -q "$SLES12SP1_btrfs_detection_string" ; then
-                    info_message="Doing SLES12-SP1 (and later) btrfs subvolumes setup because the default subvolume path contains '$SLES12SP1_btrfs_detection_string'"
+                    info_message="SLES12-SP1 (and later) btrfs subvolumes setup needed (default subvolume path contains '$SLES12SP1_btrfs_detection_string')"
                     LogPrint $info_message
                     echo "# $info_message"
                     # SLES 12 SP1 (or later) normal subvolumes that belong to snapper are excluded from being recreated:
