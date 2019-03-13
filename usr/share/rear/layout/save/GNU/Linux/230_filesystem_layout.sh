@@ -303,8 +303,22 @@ fi
                 SLES12SP1_btrfs_detection_string="@/.snapshots/"
                 if btrfs subvolume get-default $btrfs_mountpoint | grep -q "$SLES12SP1_btrfs_detection_string" ; then
                     info_message="SLES12-SP1 (and later) btrfs subvolumes setup needed (default subvolume path contains '$SLES12SP1_btrfs_detection_string')"
+                    is_false "$BTRFS_SUBVOLUME_SLES_SETUP" && Error "BTRFS_SUBVOLUME_SLES_SETUP is false but $info_message"
                     LogPrint $info_message
                     echo "# $info_message"
+                    # Append all btrfs filesystem device nodes with SLES12-SP1 (and later) btrfs subvolumes setup needed
+                    # to the BTRFS_SUBVOLUME_SLES_SETUP array (unless such a device is already in that array)
+                    # to enforce during "rear recover" btrfs_subvolumes_setup_SLES() is called to setup that btrfs filesystem
+                    # regardless what there already is in BTRFS_SUBVOLUME_SLES_SETUP - e.g. if BTRFS_SUBVOLUME_SLES_SETUP=( 'false' )
+                    # but /dev/sda3 is a btrfs filesystem device node with SLES12-SP1 (and later) btrfs subvolumes setup needed
+                    # it will become BTRFS_SUBVOLUME_SLES_SETUP=( 'false' '/dev/sda3' ) which avoids btrfs_subvolumes_setup_SLES()
+                    # for all devices except '/dev/sda3' where btrfs_subvolumes_setup_SLES() is called to setup that btrfs filesystem
+                    # cf. https://github.com/rear/rear/pull/2080#discussion_r265046317 and see the code in the
+                    # usr/share/rear/layout/prepare/GNU/Linux/133_include_mount_filesystem_code.sh script:
+                    if ! IsInArray "$btrfs_device" "${BTRFS_SUBVOLUME_SLES_SETUP[@]}" ; then
+                        BTRFS_SUBVOLUME_SLES_SETUP=( "${BTRFS_SUBVOLUME_SLES_SETUP[@]}" "$btrfs_device" )
+                        updated_btrfs_subvolume_sles_setup_variable="yes"
+                    fi
                     # SLES 12 SP1 (or later) normal subvolumes that belong to snapper are excluded from being recreated:
                     # Snapper's base subvolume '/@/.snapshots' is excluded because during "rear recover"
                     # that one will be created by "snapper/installation-helper --step 1" which fails if it already exists
@@ -500,6 +514,20 @@ echo $required_mkfs_tools | grep -q 'mkfs.reiserfs' && REQUIRED_PROGS=( "${REQUI
 # btrfs is also required in the recovery system if 'mkfs.btrfs' is required
 # cf. what prepare/GNU/Linux/130_include_mount_subvolumes_code.sh writes to diskrestore.sh
 echo $required_mkfs_tools | grep -q 'mkfs.btrfs' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" btrfs )
+
+if is_true "$updated_btrfs_subvolume_sles_setup_variable" ; then
+    # Save the updated BTRFS_SUBVOLUME_SLES_SETUP array variable that is needed in recover mode into the rescue.conf file:
+cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
+# During "rear mkbackup/mkrescue" via usr/share/rear/layout/save/GNU/Linux/230_filesystem_layout.sh
+# all btrfs filesystem device nodes with SLES12-SP1 (and later) btrfs subvolumes setup needed
+# were appended to the BTRFS_SUBVOLUME_SLES_SETUP array (unless such a device was already in that array)
+# to enforce during "rear recover" btrfs_subvolumes_setup_SLES() gets called to setup that btrfs filesystem
+# (see the usr/share/rear/layout/prepare/GNU/Linux/133_include_mount_filesystem_code.sh script):
+BTRFS_SUBVOLUME_SLES_SETUP=( "${BTRFS_SUBVOLUME_SLES_SETUP[@]}" )
+EOF
+    # The rescue.conf file is sourced last by usr/sbin/rear i.e. after site.conf and local.conf
+    # so that the settings in rescue.conf have highest priority.
+fi
 
 Log "End saving filesystem layout"
 
