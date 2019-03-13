@@ -1,13 +1,16 @@
 
-# New implementation for btrfs subvolume handling.
+# New implementation for generic btrfs subvolume handling.
+# This is "new" compared to the old code in 130_include_mount_subvolumes_code.sh.
 
-# Enable this version only when explicitly configured to do so.
-[[ "$BTRFS_SETUP_IMPLEMENTATION" == "new" ]] || return 0
+# Btrfs filesystems with subvolumes need a special handling.
+# This script layout/prepare/GNU/Linux/131_include_new_btrfs_subvolumes_code.sh contains the function
+# btrfs_subvolumes_setup_generic for generic btrfs subvolumes setup (e.g. for Ubuntu 18.04)
+# cf. https://github.com/rear/rear/pull/2079
+# The script layout/prepare/GNU/Linux/130_include_mount_subvolumes_code.sh contains the function
+# btrfs_subvolumes_setup_SLES for SLES 12 (and later) special btrfs subvolumes setup.
+# For a plain btrfs filesystem without subvolumes the btrfs_subvolumes_setup_generic function does nothing.
 
-# NOTE: This function intentionally overrides the identically named function 'btrfs_subvolumes_setup' from
-# '130_include_mount_subvolumes_code.sh'.
-
-btrfs_subvolumes_setup() {
+btrfs_subvolumes_setup_generic() {
     # Invocation: btrfs_subvolumes_setup $device $top_level_mountpoint [...]
     #
     # This function
@@ -72,7 +75,7 @@ btrfs_subvolumes_setup() {
             echo "# $info_message"
             echo "chattr +C '$target_subvolume_path'"
         fi
-    done < <( grep "^btrfsmountedsubvol $device " "$LAYOUT_FILE" | LC_COLLATE=C sort -k 5 -u )  >> "$LAYOUT_CODE"
+    done < <( grep "^btrfsmountedsubvol $device " "$LAYOUT_FILE" | LC_COLLATE=C sort -k 5 -u ) >> "$LAYOUT_CODE"
 
     # Generate code to mount subvolumes, sorted in mount-point order (top-down):
     while read ignore_keyword ignore_device subvolume_mountpoint subvolume_mount_options subvolume_path ignore_rest; do
@@ -114,8 +117,9 @@ btrfs_subvolumes_setup() {
             fi
             echo "mount -t btrfs -o '$subvolume_mount_options,subvol=$subvolume_path' '$device' '$target_subvolume_mountpoint'"
         fi
-    done < <( grep "^btrfsmountedsubvol $device " "$LAYOUT_FILE" | LC_COLLATE=C sort -k 3 )  >> "$LAYOUT_CODE"
+    done < <( grep "^btrfsmountedsubvol $device " "$LAYOUT_FILE" | LC_COLLATE=C sort -k 3 ) >> "$LAYOUT_CODE"
 
     Log "End btrfs_subvolumes_setup( $* ) - new implementation"
     true
 }
+

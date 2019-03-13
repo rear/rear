@@ -73,7 +73,7 @@ if service docker status &>/dev/null ; then
     fi
 fi
 
-# Begin writing output to DISKLAYOUT_FILE:
+# Begin of the subshell that appends its stdout to DISKLAYOUT_FILE:
 (
     echo "# Filesystems (only $supported_filesystems are supported)."
     echo "# Format: fs <device> <mountpoint> <fstype> [uuid=<uuid>] [label=<label>] [<attributes>]"
@@ -220,8 +220,9 @@ fi
         echo
     done < <( eval $read_filesystems_command )
 
-    # Btrfs subvolume layout if a btrfs filesystem exists:
+    # Begin btrfs subvolume layout if a btrfs filesystem exists:
     if test -n "$btrfs_devices_and_mountpoints" ; then
+        btrfs_subvolume_sles_setup_devices=""
         ########################################
         # Btrfs subvolumes (regardless if mounted or not):
         for btrfs_device_and_mountpoint in $btrfs_devices_and_mountpoints ; do
@@ -302,9 +303,29 @@ fi
                 # cf. similar code in layout/prepare/GNU/Linux/130_include_mount_subvolumes_code.sh
                 SLES12SP1_btrfs_detection_string="@/.snapshots/"
                 if btrfs subvolume get-default $btrfs_mountpoint | grep -q "$SLES12SP1_btrfs_detection_string" ; then
-                    info_message="Doing SLES12-SP1 (and later) btrfs subvolumes setup because the default subvolume path contains '$SLES12SP1_btrfs_detection_string'"
+                    info_message="SLES12-SP1 (and later) btrfs subvolumes setup needed for $btrfs_device (default subvolume path contains '$SLES12SP1_btrfs_detection_string')"
+                    if is_false "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
+                        Error "BTRFS_SUBVOLUME_SLES_SETUP is false but $info_message"
+                        # Sleep one second because we are in a subshell and
+                        # Error() does 'kill -USR1 $MASTER_PID' where USR1 has a trap that does 'kill $MASTER_PID'
+                        # whicht triggers another trap on EXIT that calls DoExitTasks() which need some time
+                        # so that this subshell continues to run a bit until it gets actually killed
+                        # but we do not want that this subshell continues with the commands below
+                        # so that we better just sleep and wait here to be actually killed:
+                        sleep 1
+                    fi
                     LogPrint $info_message
                     echo "# $info_message"
+                    # Append all btrfs filesystem device nodes with SLES12-SP1 (and later) btrfs subvolumes setup needed
+                    # to the BTRFS_SUBVOLUME_SLES_SETUP array (unless such a device is already in that array)
+                    # to enforce during "rear recover" btrfs_subvolumes_setup_SLES() is called to setup that btrfs filesystem
+                    # regardless what there already is in BTRFS_SUBVOLUME_SLES_SETUP - e.g. if BTRFS_SUBVOLUME_SLES_SETUP=( 'false' )
+                    # but /dev/sda3 is a btrfs filesystem device node with SLES12-SP1 (and later) btrfs subvolumes setup needed
+                    # it will become BTRFS_SUBVOLUME_SLES_SETUP=( 'false' '/dev/sda3' ) which avoids btrfs_subvolumes_setup_SLES()
+                    # for all devices except '/dev/sda3' where btrfs_subvolumes_setup_SLES() is called to setup that btrfs filesystem
+                    # cf. https://github.com/rear/rear/pull/2080#discussion_r265046317 and see the code in the
+                    # usr/share/rear/layout/prepare/GNU/Linux/133_include_mount_filesystem_code.sh script:
+                    IsInArray "$btrfs_device" "${BTRFS_SUBVOLUME_SLES_SETUP[@]}" || btrfs_subvolume_sles_setup_devices="$btrfs_subvolume_sles_setup_devices $btrfs_device"
                     # SLES 12 SP1 (or later) normal subvolumes that belong to snapper are excluded from being recreated:
                     # Snapper's base subvolume '/@/.snapshots' is excluded because during "rear recover"
                     # that one will be created by "snapper/installation-helper --step 1" which fails if it already exists
@@ -469,10 +490,31 @@ fi
         else
             echo "# Attributes cannot be determined because no executable 'lsattr' and/or 'findmnt' command(s) found that supports 'FSROOT'."
         fi
+
+        # This needs to be done inside the subshell (that appends its stdout to DISKLAYOUT_FILE)
+        # because outside the subshell the inside the subshell set variables would be lost:
+        if test "$btrfs_subvolume_sles_setup_devices" ; then
+            # Save the updated BTRFS_SUBVOLUME_SLES_SETUP array variable that is needed in recover mode into the rescue.conf file:
+            cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
+# During "rear mkbackup/mkrescue" via usr/share/rear/layout/save/GNU/Linux/230_filesystem_layout.sh
+# all btrfs filesystem device nodes with SLES12-SP1 (and later) btrfs subvolumes setup needed
+# were appended to the BTRFS_SUBVOLUME_SLES_SETUP array (unless such a device was already in that array)
+# to enforce during "rear recover" btrfs_subvolumes_setup_SLES() gets called to setup that btrfs filesystem
+# (see the usr/share/rear/layout/prepare/GNU/Linux/133_include_mount_filesystem_code.sh script):
+BTRFS_SUBVOLUME_SLES_SETUP=( ${BTRFS_SUBVOLUME_SLES_SETUP[@]} $btrfs_subvolume_sles_setup_devices )
+
+EOF
+            # The rescue.conf file is sourced last by usr/sbin/rear i.e. after site.conf and local.conf
+            # so that the settings in rescue.conf have highest priority.
+            LogPrint "Added $btrfs_subvolume_sles_setup_devices to BTRFS_SUBVOLUME_SLES_SETUP in $ROOTFS_DIR/etc/rear/rescue.conf"
+        fi
+
+
+    # End btrfs subvolume layout if a btrfs filesystem exists:
     fi
 
 ) >> $DISKLAYOUT_FILE
-# End writing output to DISKLAYOUT_FILE.
+# End of the subshell that appends its stdout to DISKLAYOUT_FILE.
 
 # mkfs is required in the recovery system if disklayout.conf contains at least one 'fs' entry
 # see the create_fs function in layout/prepare/GNU/Linux/130_include_filesystem_code.sh
