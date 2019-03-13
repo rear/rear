@@ -80,7 +80,7 @@ mount_fs() {
                 # what is explicitly specified for a particular device must be done with highest priority:
                 if IsInArray "$device" "${BTRFS_SUBVOLUME_GENERIC_SETUP[@]}" ; then
                     LogPrint "Doing generic btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_GENERIC_SETUP contains $device)"
-                    btrfs_subvolumes_setup_generic $device $mountpoint $mountopts
+                    btrfs_subvolumes_setup_generic $device $mountpoint
                     continue
                 fi
                 if IsInArray "$device" "${BTRFS_SUBVOLUME_SLES_SETUP[@]}" ; then
@@ -93,7 +93,7 @@ mount_fs() {
                 # when both BTRFS_SUBVOLUME_GENERIC_SETUP and BTRFS_SUBVOLUME_SLES_SETUP are true, the generic one is done:
                 if is_true "$BTRFS_SUBVOLUME_GENERIC_SETUP" ; then
                     LogPrint "Doing generic btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_GENERIC_SETUP true)"
-                    btrfs_subvolumes_setup_generic $device $mountpoint $mountopts
+                    btrfs_subvolumes_setup_generic $device $mountpoint
                     continue
                 fi
                 if is_true "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
@@ -120,7 +120,7 @@ mount_fs() {
                 fi
                 if is_false "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
                     LogPrint "Doing generic btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_SLES_SETUP false)"
-                    btrfs_subvolumes_setup_generic $device $mountpoint $mountopts
+                    btrfs_subvolumes_setup_generic $device $mountpoint
                     continue
                 fi
                 # Final fallback to be backward compatible (btrfs_subvolumes_setup_SLES is the old way) when nothing is specified:
