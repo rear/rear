@@ -562,7 +562,12 @@ function handle_team () {
     local network_interface=$1
     local sysfspath=/sys/class/net/$network_interface
 
-    if [ "$( ethtool -i $network_interface | awk '$1 == "driver:" { print $2 }' )" != "team" ] ; then
+    if has_binary ethtool ; then
+        if [ "$( ethtool -i $network_interface | awk '$1 == "driver:" { print $2 }' )" != "team" ] ; then
+            return $rc_error
+        fi
+    else
+        LogPrintError "Couldn't determine if network interface '$network_interface' is a Team, skipping."
         return $rc_error
     fi
 
@@ -854,10 +859,17 @@ function handle_physdev () {
 
     DebugPrint "$network_interface is a physical device"
 
-    if [ -e $sysfspath/bonding_slave/perm_hwaddr ] ; then
-        mac="$( cat $sysfspath/bonding_slave/perm_hwaddr )"
-    else
-        mac="$( cat $sysfspath/address )" || BugError "Could not read a MAC address for '$network_interface'."
+    local mac=""
+
+    if has_binary ethtool ; then
+        mac="$( ethtool -P $network_interface 2>/dev/null | awk '{ print $NF }' )"
+    fi
+    if [ -z "$mac" ] ; then
+        if [ -e $sysfspath/bonding_slave/perm_hwaddr ] ; then
+            mac="$( cat $sysfspath/bonding_slave/perm_hwaddr )"
+        else
+            mac="$( cat $sysfspath/address )" || BugError "Could not read a MAC address for '$network_interface'."
+        fi
     fi
     # Skip fake interfaces without MAC address
     [ "$mac" != "00:00:00:00:00:00" ] || return $rc_error
