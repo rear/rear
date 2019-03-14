@@ -101,9 +101,6 @@ See history for useful commands. Exit the shell to shut down the system.
     shutdown now
 }
 
-trap emergency_response EXIT
-use_plymouth && plymouth update-root-fs --read-write
-
 function stop_error_handling() {
     trap - EXIT
 }
@@ -135,15 +132,23 @@ function instant_poweroff() {
 }
 
 
+trap emergency_response EXIT
+
+
+if use_plymouth; then
+    # Initialize boot splash screen animation if available
+    plymouth update-root-fs --read-write
+else
+    # Clear screen if running without plymouth boot animation and if 'clear' is available
+    type -p clear &>/dev/null && clear
+fi
+
+
 # Minimal system setup
 # TODO: split system setup scripts into PBA and rescue categories to protect against script renaming
 for system_setup_script in 00-functions.sh 10-console-setup.sh 40-start-udev-or-load-modules.sh; do
     source "/etc/scripts/system-setup.d/$system_setup_script"
 done
-
-
-# Clear screen if running without plymouth boot animation and if 'clear' is available
-! use_plymouth && type -p clear &>/dev/null && clear
 
 
 # Find TCG Opal 2-compliant disks
