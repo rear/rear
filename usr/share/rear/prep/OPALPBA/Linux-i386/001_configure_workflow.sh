@@ -20,10 +20,11 @@ SSH_ROOT_PASSWORD=''
 # Disable non-essential stuff
 SSH_FILES='no'
 USE_DHCLIENT='no'
+USE_RESOLV_CONF='no'
 
 # Include plymouth boot animation and 'clear' if available
 PROGS+=( plymouth plymouthd clear )
-COPY_AS_IS+=( /etc/alternatives /usr/lib/x86_64-linux-gnu/plymouth /usr/share/plymouth )
+COPY_AS_IS+=( /etc/alternatives/*plymouth* /usr/lib/x86_64-linux-gnu/plymouth /usr/share/plymouth )
 
 # Redirect output
 [[ -n "$OPAL_PBA_OUTPUT_URL" ]] || Error "The OPAL_PBA_OUTPUT_URL configuration variable must be set."

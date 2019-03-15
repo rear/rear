@@ -1,7 +1,8 @@
 [Unit]
 Description=Show Plymouth Boot Screen
 DefaultDependencies=no
-Before=systemd-udev-trigger.service systemd-udevd.service
+After=systemd-udev-trigger.service systemd-udevd.service rear-boot-helper.service
+Before=systemd-journald.service
 ConditionKernelCommandLine=!plymouth.enable=0
 ConditionKernelCommandLine=!nosplash
 ConditionKernelCommandLine=splash
