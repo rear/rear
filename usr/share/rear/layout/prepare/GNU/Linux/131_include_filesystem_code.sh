@@ -301,7 +301,7 @@ EOF
             ;;
     esac
 
-    # Call the mount_fs function with argument $1 (device):
+    # Call the mount_fs function (in 133_include_mount_filesystem_code.sh) with argument $1 (device):
     mount_fs ${1}
 
     Log "End create_fs( $@ )"

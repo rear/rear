@@ -1,17 +1,17 @@
 
 # New implementation for generic btrfs subvolume handling.
-# This is "new" compared to the old code in 130_include_mount_subvolumes_code.sh.
+# This is "new" compared to the old code in 136_include_btrfs_subvolumes_SLES_code.sh.
 
 # Btrfs filesystems with subvolumes need a special handling.
-# This script layout/prepare/GNU/Linux/131_include_new_btrfs_subvolumes_code.sh contains the function
-# btrfs_subvolumes_setup_generic for generic btrfs subvolumes setup (e.g. for Ubuntu 18.04)
+# This script layout/prepare/GNU/Linux/135_include_btrfs_subvolumes_generic_code.sh
+# contains the function btrfs_subvolumes_setup_generic for generic btrfs subvolumes setup (e.g. for Ubuntu 18.04)
 # cf. https://github.com/rear/rear/pull/2079
-# The script layout/prepare/GNU/Linux/130_include_mount_subvolumes_code.sh contains the function
-# btrfs_subvolumes_setup_SLES for SLES 12 (and later) special btrfs subvolumes setup.
+# The script layout/prepare/GNU/Linux/136_include_btrfs_subvolumes_SLES_code.sh
+# contains the function btrfs_subvolumes_setup_SLES for SLES 12 (and later) special btrfs subvolumes setup.
 # For a plain btrfs filesystem without subvolumes the btrfs_subvolumes_setup_generic function does nothing.
 
 btrfs_subvolumes_setup_generic() {
-    # Invocation: btrfs_subvolumes_setup $device $top_level_mountpoint [...]
+    # Invocation: btrfs_subvolumes_setup_generic $device $top_level_mountpoint [...]
     #
     # This function
     # (1) assumes that code present so far in $LAYOUT_FILE has
@@ -27,10 +27,10 @@ btrfs_subvolumes_setup_generic() {
     local top_level_mountpoint="$2"  # the btrfs file system's top-level subvolume mount point
 
     if test -z "$device" -o -z "$top_level_mountpoint"; then
-        StopIfError "btrfs_subvolumes_setup: missing required parameter: device='$device', top_level_mountpoint='$top_level_mountpoint'"
+        StopIfError "btrfs_subvolumes_setup_generic: missing required parameter: device='$device', top_level_mountpoint='$top_level_mountpoint'"
     fi
 
-    Log "Begin btrfs_subvolumes_setup( $* ) - new implementation"
+    Log "Begin btrfs_subvolumes_setup_generic( $* )"
 
     # Generate code to create all mounted non top-level subvolumes sorted
     # - in subvolume path order,
@@ -119,7 +119,7 @@ btrfs_subvolumes_setup_generic() {
         fi
     done < <( grep "^btrfsmountedsubvol $device " "$LAYOUT_FILE" | LC_COLLATE=C sort -k 3 ) >> "$LAYOUT_CODE"
 
-    Log "End btrfs_subvolumes_setup( $* ) - new implementation"
+    Log "End btrfs_subvolumes_setup_generic( $* )"
     true
 }
 
