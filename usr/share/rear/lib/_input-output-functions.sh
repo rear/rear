@@ -458,6 +458,25 @@ function Error () {
     ) 1>&2
     # Make sure Error exits the master process, even if called from child processes:
     kill -USR1 $MASTER_PID
+    # That USR1 has a trap (see above) that does 'kill $MASTER_PID' whicht triggers another trap on EXIT
+    # that calls DoExitTasks() and all that signaling needs a bit of time until things get actually aborted.
+    # The Error function must not return immediately to its caller because then the caller could continue
+    # with the code after its Error function call which may result further unexpected messages in the log file
+    # or even further Error function calls with error messages on the user's terminal from subsequent failures
+    # after the initial error, e.g. see https://github.com/rear/rear/issues/2087#issue-421604286 that shows
+    #   ERROR: Partition number '0' of partition mmcblk0boot0 is not a valid number.
+    #   ERROR: Partition number '' of partition mmcblk0rpmb is not a valid number.
+    #   ERROR: Partition mmcblk0rpmb is numbered ''. More than 128 partitions is not supported.
+    #   Aborting due to an error, check /var/log/rear/rear-testvm02.log for details
+    # where only the first error message should have been shown and then a direct abort.
+    # See also https://github.com/rear/rear/pull/2080/commits/f4a7d22f0dc07e518b750f445159320cac397952
+    # therein the part about "Sleep one second ... we better just sleep and wait here to be actually killed".
+    # But the Error function must not wait endlessly here (e.g. via "while true ; do sleep 1 ; done")
+    # (i.e. the Error function must return to its caller) because otherwise things would hang up
+    # when the Error function is called in a subshell (cf. layout/save/GNU/Linux/230_filesystem_layout.sh) like 
+    #   ( echo "additional content for file" || Error "failed to append content to file" ) >> file
+    # so that we do a single dumb hardcoded sleep for one second before we return from the Error function:
+    sleep 1
 }
 
 # If return code is non-zero, bail out:
