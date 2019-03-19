@@ -189,20 +189,32 @@ function terminate_descendants_from_children_to_grandchildren () {
     test $remaining_columns -ge 40 || remaining_columns=40
     # Terminate all still running descendant processes of MASTER_PID
     # but do not terminate the MASTER_PID process itself because
-    # the MASTER_PID process must run the exit tasks below:
+    # the MASTER_PID process must run the exit tasks below
+    # and do not terminate the current process that runs this code here.
+    local current_pid=""
     local descendant_pid=""
     local not_yet_terminated_pids=""
     local descendant_pids_from_children_to_parent="$( descendants_pids $MASTER_PID )"
+
     # Reverse the ordering of the PIDs to get them from parent to children:
     local descendant_pids_from_parent_to_children=""
     for descendant_pid in $descendant_pids_from_children_to_parent ; do
         descendant_pids_from_parent_to_children="$descendant_pid $descendant_pids_from_parent_to_children"
     done
-    # Send SIGTERM to all still running descendant processes of MASTER_PID:
+    # Send SIGTERM to all still running descendant processes of MASTER_PID
+    # except the current process that runs this code here which is usually MASTER_PID
+    # but this code here could be also run within a (possibly deeply nested) subshell.
+    # Since bash 4.x BASHPID is the current bash process
+    # but for bash 3.x we need to determine the current PID indirectly
+    # cf. https://stackoverflow.com/questions/20725925/get-pid-of-current-subshell
+    # here by calling a subshell via command substitution and therein get its partent PID
+    # ("man bash" reads: "Command substitution ... are invoked in a subshell environment"):
+    test "$BASHPID" && current_pid="$BASHPID" || current_pid="$( bash -c 'echo $PPID' )"
     for descendant_pid in $descendant_pids_from_parent_to_children ; do
-        # Test that a descendant_pid is not MASTER_PID
+        # Test that a descendant_pid is not MASTER_PID or the current process that runs this code here
         # and that a descendant_pid is still running before SIGTERM is sent:
         test $MASTER_PID -eq $descendant_pid && continue
+        test $current_pid -eq $descendant_pid && continue
         kill -0 $descendant_pid || continue
         LogPrint "Terminating child process $descendant_pid $( ps -p $descendant_pid -o args= | cut -b-$remaining_columns )"
         kill -SIGTERM $descendant_pid 1>&2
@@ -215,8 +227,11 @@ function terminate_descendants_from_children_to_grandchildren () {
     # Wait one second to let the above processes that got SIGTERM actually terminate
     # before determining which did not yet terminate and should get a SIGKILL:
     sleep 1
-    # Determine which of the above processes that got SIGTERM did not yet terminate:
+    # Determine which of the above processes that got SIGTERM did not yet terminate
+    # except MASTER_PID and the current process that runs this code here:
     for descendant_pid in $descendant_pids_from_parent_to_children ; do
+        test $MASTER_PID -eq $descendant_pid && continue
+        test $current_pid -eq $descendant_pid && continue
         if kill -0 $descendant_pid ; then
             # Keep the current ordering also in not_yet_terminated_pids
             # i.e. children before grandchildren:
@@ -226,7 +241,7 @@ function terminate_descendants_from_children_to_grandchildren () {
     done
     # No need to kill a descendant processes if all were already terminated:
     test "$not_yet_terminated_pids" || return 0
-    # Kill all not yet terminated descendant processes:
+    # Kill all not yet terminated descendant processes that already got SIGTERM above:
     for descendant_pid in $not_yet_terminated_pids ; do
         if kill -0 $descendant_pid ; then
             LogPrint "Killing child process $descendant_pid $( ps -p $descendant_pid -o args= | cut -b-$remaining_columns )"
@@ -263,12 +278,12 @@ function DoExitTasks () {
     # Apply debugscript mode also for the exit tasks:
     test "$DEBUGSCRIPTS" && set -$DEBUGSCRIPTS_ARGUMENT
     LogPrint "Exiting $PROGRAM $WORKFLOW (PID $MASTER_PID) and its descendant processes ..."
-    # First of all wait one second to let descendant processes terminate on their own
+    # Wait some time to let descendant processes terminate on their own
     # e.g. after Ctrl+C by the user descendant processes should terminate on their own
     # at least the "foreground processes" (with the current terminal process group ID)
     # but "background processes" would not terminate on their own after Ctrl+C
     # cf. https://github.com/rear/rear/issues/1712
-    # also the Error function terminates descendant processes on its own via
+    # and also the Error function terminates descendant processes on its own via
     # terminate_descendants_from_children_to_grandchildren that sleeps two times one second
     # so that we wait here three seconds to be on the safe side that a possibly running
     # terminate_descendants_from_children_to_grandchildren has done its job and finished
@@ -628,8 +643,20 @@ function Error () {
     log_descendants_pids
     # Terminate all still running descendant processes of MASTER_PID
     # but do not terminate the MASTER_PID process itself because
-    # the MASTER_PID process must run the exit tasks via DoExitTasks (see above):
+    # the MASTER_PID process must run the exit tasks via DoExitTasks (see above)
+    # and do not terminate the current process that runs this code here
+    # because the terminate_descendants_from_children_to_grandchildren function
+    # should run to its end because it may have to kill descendant processes:
     terminate_descendants_from_children_to_grandchildren
+    # Now only the process that runs this code here is left.
+    # If that process is MASTER_PID all is o.k. but if that process is run within a subshell
+    # we must not return here from the Error funtion to its caller because that would let
+    # the subshell continue with all its code after the Error function until the subshell finishes
+    # so that if we are in a subshell here we exit from that subshell here:
+    if test $BASH_SUBSHELL -gt 0 ; then
+        LogPrint "Exiting subshell $BASH_SUBSHELL"
+        exit 0
+    fi
 }
 
 # If return code is non-zero, bail out:
