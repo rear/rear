@@ -26,7 +26,18 @@ extract_partitions() {
     declare sysfs_name=$(get_sysfs_name $device)
 
     ### check if we can find any partitions
-    declare -a sysfs_paths=(/sys/block/$sysfs_name/$sysfs_name*)
+    declare -a sysfs_paths_unfiltered=(/sys/block/$sysfs_name/$sysfs_name*)
+
+    ### initialize array
+    declare -a sysfs_paths=()
+
+    ### Silently skip invalid partitions on eMMC devices of type *rpmb or *boot[0-9],
+    ### see also github issue #2087. 
+    for possible_sysfs_partition in ${sysfs_paths_unfiltered[@]}; do
+	if [[ ! ( $possible_sysfs_partition = *'/mmcblk'[0-9]'rpmb' || $possible_sysfs_partition = *'/mmcblk'[0-9]'boot'[0-9] ) ]] ; then
+	    sysfs_paths+=($possible_sysfs_partition)
+        fi    
+    done
 
     declare path sysfs_path
     if [[ ${#sysfs_paths[@]} -eq 0 ]] ; then
