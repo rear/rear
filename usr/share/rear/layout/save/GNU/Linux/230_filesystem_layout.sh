@@ -306,13 +306,6 @@ fi
                     info_message="SLES12-SP1 (and later) btrfs subvolumes setup needed for $btrfs_device (default subvolume path contains '$SLES12SP1_btrfs_detection_string')"
                     if is_false "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
                         Error "BTRFS_SUBVOLUME_SLES_SETUP is false but $info_message"
-                        # Sleep one second because we are in a subshell and
-                        # Error() does 'kill -USR1 $MASTER_PID' where USR1 has a trap that does 'kill $MASTER_PID'
-                        # whicht triggers another trap on EXIT that calls DoExitTasks() which need some time
-                        # so that this subshell continues to run a bit until it gets actually killed
-                        # but we do not want that this subshell continues with the commands below
-                        # so that we better just sleep and wait here to be actually killed:
-                        sleep 1
                     fi
                     LogPrint $info_message
                     echo "# $info_message"

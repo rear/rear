@@ -108,49 +108,38 @@ function descendants_pids () {
     kill -0 $parent_pid 2>/dev/null && echo $parent_pid || return 0
 }
 
-# Do all exit tasks:
-function DoExitTasks () {
-    # First of all restore the ReaR default bash flags and options (see usr/sbin/rear)
-    # because otherwise in case of a bash error exit when e.g. "set -e -u -o pipefail" was set
-    # all the exit tasks related code would also run with "set -e -u -o pipefail" still set
-    # which may abort exit tasks related code anywhere with a "sudden death" bash error exit
-    # where in particular no longer the EXIT_FAIL_MESSAGE (cf. below) would be shown
-    # so that for the user ReaR would "just somehow silently abort" in this case
-    # cf. https://github.com/rear/rear/issues/1747#issuecomment-371055121
-    # and https://github.com/rear/rear/issues/700#issuecomment-327755633
-    apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
-    # Apply debugscript mode also for the exit tasks:
-    test "$DEBUGSCRIPTS" && set -$DEBUGSCRIPTS_ARGUMENT
-    LogPrint "Exiting $PROGRAM $WORKFLOW (PID $MASTER_PID) and its descendant processes"
-    # First of all wait one second to let descendant processes terminate on their own
-    # e.g. after Ctrl+C by the user descendant processes should terminate on their own
-    # at least the "foreground processes" (with the current terminal process group ID)
-    # but "background processes" would not terminate on their own after Ctrl+C
-    # cf. https://github.com/rear/rear/issues/1712
-    sleep 1
-    # Show descendant processes PIDs with their commands in the log
-    # so that later the plain PIDs in the log get more comprehensible.
-    # What works sufficiently on all systems is "pstree -Aplau $MASTER_PID"
+# Show descendant processes PIDs with their commands in the log
+# so that later the plain PIDs in the log get more comprehensible
+# (e.g. when terminate_descendants_pids is called afterwards):
+function log_descendants_pids () {
+    # What works sufficiently on all systems is "pstree -Aplau MASTER_PID"
     # but the pstree command is not available by default in the ReaR recovery system
     # (cf. https://github.com/rear/rear/issues/1755) so that the ps command is used as fallback.
-    # Because "ps f -g $MASTER_PID -o pid,args" only works on older systems like SLES10 and SLES11
+    # Because "ps f -g MASTER_PID -o pid,args" only works on older systems like SLES10 and SLES11
     # (cf. the above comment for the descendants_pids function)
-    # a last resort fallback "ps --ppid $MASTER_PID -o pid,args" is used for newer systems like SLES12
-    # (at least on SLES12 "ps f -g $MASTER_PID -o pid,args" results non-zero exit code when nothing is shown):
+    # a last resort fallback "ps --ppid MASTER_PID -o pid,args" is used for newer systems like SLES12
+    # (at least on SLES12 "ps f -g MASTER_PID -o pid,args" results non-zero exit code when nothing is shown):
     Log "$( pstree -Aplau $MASTER_PID || ps f -g $MASTER_PID -o pid,args || ps --ppid $MASTER_PID -o pid,args )"
+}
+
+# Terminate all still running descendant processes of MASTER_PID but do not terminate the MASTER_PID process itself.
+# First terminate great-grandchildren processes, then grandchildren processes, then children processes.
+# This termination functionality is used in the DoExitTasks() function.
+function terminate_descendants_from_grandchildren_to_children () {
     # Some descendant processes commands could be much too long (e.g. a 'tar ...' command)
     # to be usefully shown completely in the below LogPrint information (could be many lines)
     # so that the descendant process command output is truncated after at most remaining_columns:
     local remaining_columns=$(( COLUMNS - 40 ))
     test $remaining_columns -ge 40 || remaining_columns=40
-    # Terminate all still running descendant processes of $MASTER_PID
-    # but do not termiate the MASTER_PID process itself because
+    # Terminate all still running descendant processes of MASTER_PID
+    # but do not terminate the MASTER_PID process itself because
     # the MASTER_PID process must run the exit tasks below:
     local descendant_pid=""
     local not_yet_terminated_pids=""
+    # Send SIGTERM to all still running descendant processes of MASTER_PID:
     for descendant_pid in $( descendants_pids $MASTER_PID ) ; do
         # The descendant_pids() function outputs at least MASTER_PID
-        # plus the PID of the subshell of the $( descendants_pids $MASTER_PID )
+        # plus the PID of the subshell of the $( descendants_pids MASTER_PID )
         # so that it is tested that a descendant_pid is not MASTER_PID
         # and that a descendant_pid is still running before SIGTERM is sent:
         test $MASTER_PID -eq $descendant_pid && continue
@@ -169,25 +158,159 @@ function DoExitTasks () {
         fi
     done
     # No need to kill a descendant processes if all were already terminated:
-    if test "$not_yet_terminated_pids" ; then
-        # Kill all not yet terminated descendant processes:
-        for descendant_pid in $not_yet_terminated_pids ; do
-            if kill -0 $descendant_pid ; then
-                LogPrint "Killing descendant process $descendant_pid $( ps -p $descendant_pid -o args= | cut -b-$remaining_columns )"
-                kill -SIGKILL $descendant_pid 1>&2
-                # For each killed descendant process wait one second to let it die to be on the safe side
-                # that e.g. grandchildren were actually removed by the kernel before children get SIGKILL sent
-                # i.e. every child process is already gone before its parent process may get SIGKILL so that
-                # the parent (that may wait for its child) has a better chance to still cleanly terminate:
-                sleep 1
-                kill -0 $descendant_pid && LogPrint "Killed descendant process $descendant_pid still there"
-            else
-                # Show a counterpart message to the above 'not yet terminated' message
-                # e.g. after a child process was killed its parent may have terminated on its own:
-                LogPrint "Descendant process $descendant_pid terminated"
-            fi
-        done
+    test "$not_yet_terminated_pids" || return 0
+    # Kill all not yet terminated descendant processes:
+    for descendant_pid in $not_yet_terminated_pids ; do
+        if kill -0 $descendant_pid ; then
+            LogPrint "Killing descendant process $descendant_pid $( ps -p $descendant_pid -o args= | cut -b-$remaining_columns )"
+            kill -SIGKILL $descendant_pid 1>&2
+            # For each killed descendant process wait one second to let it die to be on the safe side
+            # that e.g. grandchildren were actually removed by the kernel before children get SIGKILL sent
+            # i.e. every child process is already gone before its parent process may get SIGKILL so that
+            # the parent (that may wait for its child) has a better chance to still cleanly terminate:
+            sleep 1
+            kill -0 $descendant_pid && LogPrint "Killed descendant process $descendant_pid still there"
+        else
+            # Show a counterpart message to the above 'not yet terminated' message
+            # e.g. after a child process was killed its parent may have terminated on its own:
+            LogPrint "Descendant process $descendant_pid terminated"
+        fi
+    done
+}
+
+# Terminate all still running descendant processes of MASTER_PID but do not terminate the MASTER_PID process itself.
+# First children processes, then grandchildren processes, then great-grandchildren processes.
+# This termination functionality is used in the Error() function.
+# The following code is basically the same as in terminate_descendants_from_grandchildren_to_children (see there for explanatory comments)
+# except small but crucial differences here which is the reason why that kind of code exists two times.
+function terminate_descendants_from_children_to_grandchildren () {
+    # Some descendant processes commands could be much too long (e.g. a 'tar ...' command):
+    local remaining_columns=$(( COLUMNS - 40 ))
+    test $remaining_columns -ge 40 || remaining_columns=40
+    # Terminate all still running descendant processes of MASTER_PID
+    # but do not terminate the MASTER_PID process itself because
+    # the MASTER_PID process must run the exit tasks below
+    # and do not terminate the current process that runs this code here.
+    local current_pid=""
+    local descendant_pid=""
+    local not_yet_terminated_pids=""
+    local descendant_pids_from_children_to_parent="$( descendants_pids $MASTER_PID )"
+    # Reverse the ordering of the PIDs to get them from parent to children:
+    local descendant_pids_from_parent_to_children=""
+    for descendant_pid in $descendant_pids_from_children_to_parent ; do
+        descendant_pids_from_parent_to_children="$descendant_pid $descendant_pids_from_parent_to_children"
+    done
+    # Send SIGTERM to all still running descendant processes of MASTER_PID
+    # except the current process that runs this code here which is usually MASTER_PID
+    # but this code here could be also run within a (possibly deeply nested) subshell.
+    # Since bash 4.x BASHPID is the current bash process but
+    # for bash 3.x we need to determine our current PID indirectly via a temporary file:
+    local proc_self_stat_tmpfile=$( mktemp )
+    if test "$BASHPID" ; then
+        current_pid=$BASHPID
+    else
+        # When there is no BASHPID we need to determine our current PID indirectly.
+        # Things like https://stackoverflow.com/questions/20725925/get-pid-of-current-subshell
+        # to get the current PID by calling a subshell like "( : ; bash -c 'echo $PPID' )"
+        # do not work when the current PID is already a (possibly deeply nested) subshell.
+        # The only way that I <jsmeix@suse.de> found out by trial and error is as follows:
+        # Our current PID here is the parent PID of a command that is called directly here.
+        # Any indirection via another subshell like "current_pid=$( whatever_command )"
+        # or via another subshell when using a pipe like "cat /proc/self/stat | cut -d ' ' -f4"
+        # leads to madness so that I call directly the plain command "cat /proc/self/stat"
+        # and redirect its output into a temporary file that I can then process as needed:
+        cat /proc/self/stat >$proc_self_stat_tmpfile
+        # The parent PID is the fourth field in /proc/self/stat:
+        current_pid=$( cut -d ' ' -f4 $proc_self_stat_tmpfile )
+        rm $proc_self_stat_tmpfile
     fi
+    for descendant_pid in $descendant_pids_from_parent_to_children ; do
+        # Test that a descendant_pid is not MASTER_PID or the current process that runs this code here
+        # and that a descendant_pid is still running before SIGTERM is sent:
+        test $MASTER_PID -eq $descendant_pid && continue
+        test $current_pid -eq $descendant_pid && continue
+        kill -0 $descendant_pid || continue
+        LogPrint "Terminating child process $descendant_pid $( ps -p $descendant_pid -o args= | cut -b-$remaining_columns )"
+        kill -SIGTERM $descendant_pid 1>&2
+    done
+    # In contrast to the terminate_descendants_from_grandchildren_to_children function above
+    # we do not wait here one second for each processes when it gets SIGTERM above
+    # because we send SIGTERM first to children then to grandchildren
+    # so that it does not make sense to give a grandchild one second
+    # to let it cleanly terminate before its paretnt child gets SIGTERM.
+    # Wait one second to let the above processes that got SIGTERM actually terminate
+    # before determining which did not yet terminate and should get a SIGKILL:
+    sleep 1
+    # Determine which of the above processes that got SIGTERM did not yet terminate
+    # except MASTER_PID and the current process that runs this code here:
+    for descendant_pid in $descendant_pids_from_parent_to_children ; do
+        test $MASTER_PID -eq $descendant_pid && continue
+        test $current_pid -eq $descendant_pid && continue
+        if kill -0 $descendant_pid ; then
+            # Keep the current ordering also in not_yet_terminated_pids
+            # i.e. children before grandchildren:
+            not_yet_terminated_pids="$not_yet_terminated_pids $descendant_pid"
+            LogPrint "Child process $descendant_pid not yet terminated"
+        fi
+    done
+    # No need to kill a descendant processes if all were already terminated:
+    test "$not_yet_terminated_pids" || return 0
+    # Kill all not yet terminated descendant processes that already got SIGTERM above:
+    for descendant_pid in $not_yet_terminated_pids ; do
+        if kill -0 $descendant_pid ; then
+            LogPrint "Killing child process $descendant_pid $( ps -p $descendant_pid -o args= | cut -b-$remaining_columns )"
+            kill -SIGKILL $descendant_pid 1>&2
+        else
+            # Show a counterpart message to the above 'not yet terminated' message:
+            LogPrint "Child process $descendant_pid terminated"
+        fi
+    done
+    # In contrast to the terminate_descendants_from_grandchildren_to_children function above
+    # we do not wait here one second for each processes when it gets SIGKILL above
+    # with the same reasoning behind as above where SIGTERM was sent.
+    # Wait one second the let the killed descendant processes actually die:
+    sleep 1
+    # Show which killed descendant processes are still there:
+    for descendant_pid in $not_yet_terminated_pids ; do
+        kill -0 $descendant_pid && LogPrint "Killed child process $descendant_pid still there"
+    done
+}
+
+# Do all exit tasks:
+function DoExitTasks () {
+    # First of all restore the ReaR default bash flags and options (see usr/sbin/rear)
+    # because otherwise in case of a bash error exit when e.g. "set -e -u -o pipefail" was set
+    # all the exit tasks related code would also run with "set -e -u -o pipefail" still set
+    # which may abort exit tasks related code anywhere with a "sudden death" bash error exit
+    # where in particular no longer the EXIT_FAIL_MESSAGE (cf. below) would be shown
+    # so that for the user ReaR would "just somehow silently abort" in this case
+    # cf. https://github.com/rear/rear/issues/1747#issuecomment-371055121
+    # and https://github.com/rear/rear/issues/700#issuecomment-327755633
+    # To avoid useless 'set -x' debug output for the apply_bash_flags_and_options_commands call
+    # run it in the current shell environment where stderr is redirected to /dev/null before:
+    { apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS" ; } 2>/dev/null
+    # Apply debugscript mode also for the exit tasks:
+    test "$DEBUGSCRIPTS" && set -$DEBUGSCRIPTS_ARGUMENT
+    LogPrint "Exiting $PROGRAM $WORKFLOW (PID $MASTER_PID) and its descendant processes ..."
+    # Wait some time to let descendant processes terminate on their own
+    # e.g. after Ctrl+C by the user descendant processes should terminate on their own
+    # at least the "foreground processes" (with the current terminal process group ID)
+    # but "background processes" would not terminate on their own after Ctrl+C
+    # cf. https://github.com/rear/rear/issues/1712
+    # and also the Error function terminates descendant processes on its own via
+    # terminate_descendants_from_children_to_grandchildren that sleeps two times one second
+    # so that we wait here three seconds to be on the safe side that a possibly running
+    # terminate_descendants_from_children_to_grandchildren has done its job and finished
+    # to avoid that two functions run in parallel that terminate descendant processes:
+    sleep 3
+    # Show descendant processes PIDs with their commands in the log
+    # so that the plain PIDs in the log get more comprehensible
+    # when terminate_descendants_from_grandchildren_to_children is called afterwards:
+    log_descendants_pids
+    # Terminate all still running descendant processes of MASTER_PID
+    # but do not terminate the MASTER_PID process itself because
+    # the MASTER_PID process must run the exit tasks below:
+    terminate_descendants_from_grandchildren_to_children
     # Finally run the exit tasks:
     LogPrint "Running exit tasks"
     local exit_task=""
@@ -456,8 +579,98 @@ function Error () {
                  '
       echo "=== ${MESSAGE_PREFIX}End stack trace ==="
     ) 1>&2
-    # Make sure Error exits the master process, even if called from child processes:
+    # Make sure Error exits the master process, even if called from child processes.
+    # We must send USR1 to MASTER_PID before we terminate all still running descendant processes of MASTER_PID below
+    # because when the Error function is called from a subshell we are one of those still running descendant processes:
     kill -USR1 $MASTER_PID
+    # That USR1 has a trap (see above) that does 'kill MASTER_PID' whicht triggers another trap on EXIT that calls DoExitTasks().
+    # When the Error function is called from within a subshell (cf. layout/save/GNU/Linux/230_filesystem_layout.sh) like 
+    #   ( echo "additional content for file" || Error "failed to append content to file" ) >> file
+    # the Error function does not let MASTER_PID exit because the parent shell waits until its subshell has finished
+    # so that the USR1 that was sent above to MASTER_PID will be processed only after the subshell has finished
+    # cf. https://github.com/rear/rear/issues/2089#issuecomment-474260332 that reads (excerpts)
+    #    A nice clean reproducer on plain command line (needs a recent bash that supports BASHPID):
+    #       # export MASTERPID=$BASHPID
+    #       # trap "echo $MASTERPID got USR1" USR1
+    #       # ( echo begin subshell $BASHPID parent $MASTERPID
+    #           pstree -Aplau $MASTERPID
+    #           kill -USR1 $MASTERPID
+    #           echo sent USR1 to $MASTERPID in subshell
+    #           echo other stuff in subshell
+    #           echo subshell done )
+    #    Running that reproducer results:
+    #       begin subshell 26109 parent 26108
+    #       bash,26108
+    #         `-bash,26109
+    #             `-pstree,26110 -Aplau 26108
+    #       sent USR1 to 26108 in subshell
+    #       other stuff in subshell
+    #       subshell done
+    #       26108 got USR1
+    #   It shows that the parent waits until its subshell child has finished and then the parent processes the signal.
+    #   This behaviour matches what "man bash" reads for "SIGNALS":
+    #      If bash is waiting for a command to complete
+    #      and receives a signal for which a trap has been set,
+    #      the trap will not be executed until the command completes.
+    # This means when the Error function is called from within a subshell only USR1 is sent to MASTER_PID
+    # and the subshell continues with all its code after the Error function until the subshell finishes.
+    # This would result unintendedly executed code (with all its unexpected messages in the log file) and
+    # also further Error function calls with error messages on the user's terminal from subsequent failures
+    # after the initial error, e.g. see https://github.com/rear/rear/issues/2087#issue-421604286 that shows
+    #   ERROR: Partition number '0' of partition mmcblk0boot0 is not a valid number.
+    #   ERROR: Partition number '' of partition mmcblk0rpmb is not a valid number.
+    #   ERROR: Partition mmcblk0rpmb is numbered ''. More than 128 partitions is not supported.
+    #   Aborting due to an error, check /var/log/rear/rear-testvm02.log for details
+    # where only the first error message should have been shown and a direct abort should have happened.
+    # This is the reason why we have to terminate all still running descendant processes of MASTER_PID
+    # but do not terminate the MASTER_PID process itself because the MASTER_PID process must run
+    # the exit tasks via DoExitTasks via trap on EXIT via trap on USR1 (see above).
+    # How to cleanly error out from within a lower level of nested subshells as in this code:
+    #   ( LogPrint "Begin first subshell"
+    #     ( LogPrint "Begin second subshell"
+    #       Error "First error"
+    #       Error "Second error"
+    #       LogPrint "End second subshell"
+    #     )
+    #     LogPrint "Code in first subshell after second subshell"
+    #     LogPrint "End of first subshell"
+    #   )
+    # It should error out at "First error" and not execute any code after that.
+    # If we terminate the second subshell here (i.e. the one that currently runs this 'Error "First error"' function)
+    # we could avoid that the second subshell unintendedly continues and runs the 'Error "Second error"' function
+    # but its parent (i.e. the first subshell that has waited for its second subshell child to finish)
+    # would then continue and unintendedly execute the "Code in first subshell after second subshell".
+    # Therefore we terminate all still running processes (except MASTER_PID) starting with children to grandchildren
+    # so that we terminate first the first subshell and then the second subshell.
+    # This way when the second subshell gets terminated its parent was already terminated
+    # so that in the end there will be no unintendedly executed code after the "First error".
+    # The following code is basically the same as in DoExitTasks (see there for explanatory comments)
+    # except small but crucial differences here which is the reason why that kind of code exists two times.
+    # First of all restore the ReaR default bash flags and options of MASTER_PID (i.e. of usr/sbin/rear):
+    { apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS" ; } 2>/dev/null
+    # Kepp debugscript mode also here if it was used before:
+    test "$DEBUGSCRIPTS" && set -$DEBUGSCRIPTS_ARGUMENT
+    LogPrint "Error exit of $PROGRAM $WORKFLOW (PID $MASTER_PID) and its descendant processes"
+    # Show descendant processes PIDs with their commands in the log
+    # so that the plain PIDs in the log get more comprehensible
+    # when terminate_descendants_from_children_to_grandchildren is called afterwards:
+    log_descendants_pids
+    # Terminate all still running descendant processes of MASTER_PID
+    # but do not terminate the MASTER_PID process itself because
+    # the MASTER_PID process must run the exit tasks via DoExitTasks (see above)
+    # and do not terminate the current process that runs this code here
+    # because the terminate_descendants_from_children_to_grandchildren function
+    # should run to its end because it may have to kill descendant processes:
+    terminate_descendants_from_children_to_grandchildren
+    # Now only the process that runs this code here is left.
+    # If that process is MASTER_PID all is o.k. but if that process is run within a subshell
+    # we must not return here from the Error funtion to its caller because that would let
+    # the subshell continue with all its code after the Error function until the subshell finishes
+    # so that if we are in a subshell here we exit from that subshell here:
+    if test $BASH_SUBSHELL -gt 0 ; then
+        LogPrint "Exiting subshell $BASH_SUBSHELL (where the actual error happened)"
+        test $EXIT_CODE -gt 1 && exit $EXIT_CODE || exit 1
+    fi
 }
 
 # If return code is non-zero, bail out:
