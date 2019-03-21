@@ -26,7 +26,23 @@ extract_partitions() {
     declare sysfs_name=$(get_sysfs_name $device)
 
     ### check if we can find any partitions
-    declare -a sysfs_paths=(/sys/block/$sysfs_name/$sysfs_name*)
+    declare -a sysfs_paths_unfiltered=(/sys/block/$sysfs_name/$sysfs_name*)
+
+    ### initialize array
+    declare -a sysfs_paths=()
+
+    ### Silently skip invalid partitions on eMMC devices
+    ### of type *rpmb or *boot[0-9] like /dev/mmcblk0rpmb or /dev/mmcblk0boot0
+    ### because sysfs for (some?) eMMC disks recognises partitions,
+    ### which are no usual partitions, but special areas on the eMMC.
+    ### When trying to get the partition layout for such disks, ReaR would exit with an error.
+    ### Therefore we ignore these special partitions, see also
+    ### https://github.com/rear/rear/issues/2087
+    for possible_sysfs_partition in "${sysfs_paths_unfiltered[@]}"; do
+	if [[ ! ( $possible_sysfs_partition = *'/mmcblk'+([0-9])'rpmb' || $possible_sysfs_partition = *'/mmcblk'+([0-9])'boot'+([0-9]) ) ]] ; then
+	    sysfs_paths+=($possible_sysfs_partition)
+        fi    
+    done
 
     declare path sysfs_path
     if [[ ${#sysfs_paths[@]} -eq 0 ]] ; then
