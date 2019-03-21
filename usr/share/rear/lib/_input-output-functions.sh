@@ -203,8 +203,9 @@ function terminate_descendants_from_children_to_grandchildren () {
     # Send SIGTERM to all still running descendant processes of MASTER_PID
     # except the current process that runs this code here which is usually MASTER_PID
     # but this code here could be also run within a (possibly deeply nested) subshell.
-    # Since bash 4.x BASHPID is the current bash process
-    # but for bash 3.x we need to determine our current PID indirectly.
+    # Since bash 4.x BASHPID is the current bash process but
+    # for bash 3.x we need to determine our current PID indirectly via a temporary file:
+    local proc_self_stat_tmpfile=$( mktemp )
     if test "$BASHPID" ; then
         current_pid=$BASHPID
     else
@@ -217,12 +218,11 @@ function terminate_descendants_from_children_to_grandchildren () {
         # Any indirection via another subshell like "current_pid=$( whatever_command )"
         # or via another subshell when using a pipe like "cat /proc/self/stat | cut -d ' ' -f4"
         # leads to madness so that I call directly the plain command "cat /proc/self/stat"
-        # and redirect its output into a temporary file that I can then process as needed.
-        # I use /tmp/ hardcoded, cf. rescue/GNU/Linux/600_unset_TMPDIR_in_rescue_conf.sh
-        cat /proc/self/stat >/tmp/rear.proc.self.stat
+        # and redirect its output into a temporary file that I can then process as needed:
+        cat /proc/self/stat >$proc_self_stat_tmpfile
         # The parent PID is the fourth field in /proc/self/stat:
-        current_pid=$( cut -d ' ' -f4 /tmp/rear.proc.self.stat )
-        rm /tmp/rear.proc.self.stat
+        current_pid=$( cut -d ' ' -f4 $proc_self_stat_tmpfile )
+        rm $proc_self_stat_tmpfile
     fi
     for descendant_pid in $descendant_pids_from_parent_to_children ; do
         # Test that a descendant_pid is not MASTER_PID or the current process that runs this code here
