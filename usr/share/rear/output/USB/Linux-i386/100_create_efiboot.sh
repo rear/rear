@@ -5,14 +5,11 @@ is_true $USING_UEFI_BOOTLOADER || return 0
 
 Log "Configuring device for EFI boot"
 
-# $BUILD_DIR is not present at this stage, temp dir will be used instead
-# Slackware version of mktemp requires 6 Xs in template
-if [ -f /etc/slackware-version ] ; then
-    EFI_MPT=$(mktemp -d /tmp/rear-efi.XXXXXX)
-else
-    EFI_MPT=$(mktemp -d /tmp/rear-efi.XXXXX)
-fi
-StopIfError "Failed to create mount point ${EFI_MPT}"
+# $BUILD_DIR is not present at this stage, temp dir will be used instead.
+# Slackware version of mktemp requires 6 Xs in template and
+# plain 'mktemp' uses XXXXXXXXXX by default (at least on SLES11 and openSUSE Leap 15.0)
+# so that we comply with the 'mktemp' default to avoid 'mktemp' errors "too few X's in template":
+EFI_MPT=$( mktemp -d /tmp/rear-efi.XXXXXXXXXX ) || Error "mktemp failed to create mount point '/tmp/rear-efi.XXXXXXXXXX' for EFI partition"
 
 uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
 EFI_PART="/dev/disk/by-label/REAR-EFI"
