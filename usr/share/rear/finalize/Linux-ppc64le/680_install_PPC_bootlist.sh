@@ -46,7 +46,7 @@ if [[ ${#boot_list[@]} -gt 5 ]]; then
 fi
 
 if [[ ${#boot_list[@]} -gt 0 ]]; then
-    LogPrint "Set LPAR bootlist to '${boot_list[@]}'"
+    LogPrint "Set LPAR bootlist to '${boot_list[*]}'"
     bootlist -m normal "${boot_list[@]}"
     LogPrintIfError "Unable to set bootlist. You will have to start in SMS to set it up manually."
 fi
