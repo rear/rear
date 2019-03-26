@@ -43,6 +43,11 @@ create_disk() {
     StopIfError "Disk $disk has size $disk_size, unable to continue."
 
     cat >> "$LAYOUT_CODE" <<EOF
+
+#
+# Code handling disk '$disk'
+#
+
 Log "Stop mdadm"
 if grep -q md /proc/mdstat &>/dev/null; then
     mdadm --stop -s >&2 || echo "stop mdadm failed"
@@ -72,8 +77,12 @@ EOF
 my_udevtrigger
 my_udevsettle
 
-# Clean up transient partitions are resize shrinked ones
+# Clean up transient partitions and resize shrinked ones
 delete_dummy_partitions_and_resize_real_ones
+
+#
+# End of code handling disk '$disk'
+#
 
 EOF
 }
