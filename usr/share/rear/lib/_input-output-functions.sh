@@ -202,10 +202,7 @@ function terminate_descendants_from_children_to_grandchildren () {
     done
     # Send SIGTERM to all still running descendant processes of MASTER_PID
     # except the current process that runs this code here which is usually MASTER_PID
-    # but this code here could be also run within a (possibly deeply nested) subshell.
-    # Since bash 4.x BASHPID is the current bash process but
-    # for bash 3.x we need to determine our current PID indirectly via a temporary file:
-    local proc_self_stat_tmpfile=$( mktemp )
+    # but this code here could be also run within a (possibly deeply nested) subshell:
     if test "$BASHPID" ; then
         current_pid=$BASHPID
     else
@@ -213,16 +210,14 @@ function terminate_descendants_from_children_to_grandchildren () {
         # Things like https://stackoverflow.com/questions/20725925/get-pid-of-current-subshell
         # to get the current PID by calling a subshell like "( : ; bash -c 'echo $PPID' )"
         # do not work when the current PID is already a (possibly deeply nested) subshell.
-        # The only way that I <jsmeix@suse.de> found out by trial and error is as follows:
-        # Our current PID here is the parent PID of a command that is called directly here.
-        # Any indirection via another subshell like "current_pid=$( whatever_command )"
-        # or via another subshell when using a pipe like "cat /proc/self/stat | cut -d ' ' -f4"
-        # leads to madness so that I call directly the plain command "cat /proc/self/stat"
-        # and redirect its output into a temporary file that I can then process as needed:
-        cat /proc/self/stat >$proc_self_stat_tmpfile
-        # The parent PID is the fourth field in /proc/self/stat:
-        current_pid=$( cut -d ' ' -f4 $proc_self_stat_tmpfile )
-        rm $proc_self_stat_tmpfile
+        # Interestingly on command line "mypid=$( bash -c 'echo $PPID' )"
+        # works even in a nested subshell but it does no longer work when it is used in a sourced script.
+        # One way that works is that our current PID is the parent PID of a command that is called directly here
+        # (without any indirection via another subshell like "current_pid=$( whatever_command )" or when using a pipe)
+        # like "tmpfile=$( mktemp ) ; cat /proc/self/stat >$tmpfile ; current_pid=$( cut -d ' ' -f4 $tmpfile ) ; rm $tmpfile"
+        # but the simplest way is using the bash builtin 'read' to get our current PID directly from /proc/self/stat
+        # (our current PID is the first field in /proc/self/stat and our parent PID is the fourth field):
+        read current_pid junk </proc/self/stat
     fi
     for descendant_pid in $descendant_pids_from_parent_to_children ; do
         # Test that a descendant_pid is not MASTER_PID or the current process that runs this code here
