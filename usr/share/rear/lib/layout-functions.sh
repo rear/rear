@@ -996,7 +996,6 @@ has_binary parted || Error "Cannot find 'parted' command"
 
 FEATURE_PARTED_RESIZEPART=y
 FEATURE_PARTED_RESIZE=n
-FEATURE_PARTED_RESIZE_NEED_START=n
 
 if parted --help | awk '$1 == "resizepart" { exit 1 }' ; then
     # No 'resizepart', check for 'resize'
@@ -1004,7 +1003,18 @@ if parted --help | awk '$1 == "resizepart" { exit 1 }' ; then
     if ! parted --help | awk '$1 == "resize" { exit 1 }' ; then
         FEATURE_PARTED_RESIZE=y
         if ! parted --help | awk '$1 == "resize" && $3 == "START" { exit 1 }' ; then
-            FEATURE_PARTED_RESIZE_NEED_START=y
+            # 'parted resize NUM START END' tries resizing the file system,
+            # which is known to fail, as shown below (output from parted):
+            #
+            # # parted -s -m /dev/sdc resize 3 1074790400B 2149580799B
+            # WARNING: you are attempting to use parted to operate on (resize) a file system.
+            # parted's file system manipulation code is not as robust as what you'll find in
+            # dedicated, file-system-specific packages like e2fsprogs.  We recommend
+            # you use parted only to manipulate partition tables, whenever possible.
+            # Support for performing most operations on most types of file systems
+            # will be removed in an upcoming release.
+            # No Implementation: Support for opening ext4 file systems is not implemented yet.
+            FEATURE_PARTED_RESIZE=n
         fi
     fi
 fi
@@ -1023,8 +1033,8 @@ last_partition_number=0
 dummy_partitions_to_delete=()
 
 # Keeps track of partitions to resize to original size for the current disk
-# Contains a list of partition tuples (number, start_in_bytes, end_in_bytes)
-# e.g. partitions_to_resize=( 3 1024748 2096127 6 7340032 8388607 )
+# Contains a list of partition tuples (number, end_in_bytes)
+# e.g. partitions_to_resize=( 3 2096127 6 8388607 )
 partitions_to_resize=()
 
 # Keeps track of the label for the current disk
@@ -1150,7 +1160,7 @@ create_disk_partition() {
         parted -s -m $disk rm $num
     fi
 
-    partitions_to_resize+=( $number $startB $endB )
+    partitions_to_resize+=( $number $endB )
 
     local -i logical_sector_size=$( parted -m -s $disk unit B print | awk -F ':' "\$1 == \"$disk\" { print \$4 }" )
 
@@ -1183,7 +1193,16 @@ create_disk_partition() {
     last_partition_number=$number
 }
 
+#
+# delete_dummy_partitions_and_resize_real_ones()
+#
+# When current disk has non-consecutive partitions, delete temporary partitions
+# that have been created and resize the temporary shrinked partitions to their
+# expected size.
+#
 delete_dummy_partitions_and_resize_real_ones() {
+    # If parted doesn't support resizing, this is a no-op function
+    # (dummy_partitions_to_delete will be empty).
     if [[ ${#dummy_partitions_to_delete[@]} -eq 0 ]] ; then
         partitions_to_resize=()
         current_disk=""
@@ -1203,18 +1222,15 @@ delete_dummy_partitions_and_resize_real_ones() {
 
     # Resize previously shrinked partitions (to make place for dummy
     # partitions) to expected size
-    local -i startB
     local -i endB
-    while read num startB endB ; do
+    while read num endB ; do
         LogPrint "Disk '$current_disk': resizing partition number $num to original size"
         if is_true $FEATURE_PARTED_RESIZEPART ; then
             parted -s -m $current_disk resizepart $num "${endB}B"
-        elif is_true $FEATURE_PARTED_RESIZE_NEED_START ; then
-            parted -s -m $current_disk resize $num "${startB}B" "${endB}B"
         else
             parted -s -m $current_disk resize $num "${endB}B"
         fi
-    done <<< "$(printf "%d %d %d\n" "${partitions_to_resize[@]}")"
+    done <<< "$(printf "%d %d\n" "${partitions_to_resize[@]}")"
     partitions_to_resize=()
     my_udevsettle
 
