@@ -44,6 +44,12 @@ if [[ ${Dev/mapper//} != $Dev ]] ; then
         (*_part) Disk=${Disk%_part} ;;
         (*)      Log "Unsupported kpartx partition delimiter for $Dev"
     esac
+# For eMMC devices the trailing "p" in the disk device name
+# needs to be stripped, otherwise the efibootmgr call will fail
+# because of a wrong disk device name. See also
+# https://github.com/rear/rear/issues/2103
+elif [[ $Disk = *'/mmcblk'+([0-9])p ]] ; then
+    Disk=${Disk%p}
 fi
 
 # EFI\fedora\shim.efi
