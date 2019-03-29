@@ -4,7 +4,10 @@
 # see https://github.com/rear/rear/issues/1933#issuecomment-430207057
 has_binary parted || Error "Cannot find 'parted' command"
 
-# Test for features of parted.
+#
+# TODO: clean up that old code when parted doesn't support any unit.
+# It's there since ages!
+#
 
 # True if parted accepts values in units other than mebibytes.
 FEATURE_PARTED_ANYUNIT=
