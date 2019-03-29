@@ -992,6 +992,23 @@ function apply_layout_mappings() {
     is_true $apply_layout_mappings_succeeded && return 0 || return 1
 }
 
+has_binary parted || Error "Cannot find 'parted' command"
+
+FEATURE_PARTED_RESIZEPART=y
+FEATURE_PARTED_RESIZE=n
+FEATURE_PARTED_RESIZE_NEED_START=n
+
+if parted --help | awk '$1 == "resizepart" { exit 1 }' ; then
+    # No 'resizepart', check for 'resize'
+    FEATURE_PARTED_RESIZEPART=n
+    if ! parted --help | awk '$1 == "resize" { exit 1 }' ; then
+        FEATURE_PARTED_RESIZE=y
+        if ! parted --help | awk '$1 == "resize" && $3 == "START" { exit 1 }' ; then
+            FEATURE_PARTED_RESIZE_NEED_START=y
+        fi
+    fi
+fi
+
 # Keeps track of the current disk being processed
 # e.g. /dev/sdb
 current_disk=""
@@ -1006,8 +1023,8 @@ last_partition_number=0
 dummy_partitions_to_delete=()
 
 # Keeps track of partitions to resize to original size for the current disk
-# Contains a list of partition tuples ( number, end_in_bytes )
-# e.g. partitions_to_resize=( 3 2096127 6 8388607 )
+# Contains a list of partition tuples (number, start_in_bytes, end_in_bytes)
+# e.g. partitions_to_resize=( 3 1024748 2096127 6 7340032 8388607 )
 partitions_to_resize=()
 
 # Keeps track of the label for the current disk
@@ -1087,6 +1104,10 @@ create_disk_partition() {
         return 0
     fi
 
+    if is_false $FEATURE_PARTED_RESIZEPART && is_false $FEATURE_PARTED_RESIZE ; then
+        Error "Disk '$disk': trying to create partition number $number which isn't consecutive with previous partition but 'parted' doesn't support this feature"
+    fi
+
     # "parted" is only capable of creating partitions consecutively. Since
     # there is a gap between the previous partition and this partition, dummy
     # partitions must be created, and later will be removed once disks are
@@ -1129,7 +1150,7 @@ create_disk_partition() {
         parted -s -m $disk rm $num
     fi
 
-    partitions_to_resize+=( $number $endB )
+    partitions_to_resize+=( $number $startB $endB )
 
     local -i logical_sector_size=$( parted -m -s $disk unit B print | awk -F ':' "\$1 == \"$disk\" { print \$4 }" )
 
@@ -1182,11 +1203,18 @@ delete_dummy_partitions_and_resize_real_ones() {
 
     # Resize previously shrinked partitions (to make place for dummy
     # partitions) to expected size
+    local -i startB
     local -i endB
-    while read num endB ; do
+    while read num startB endB ; do
         LogPrint "Disk '$current_disk': resizing partition number $num to original size"
-        parted -s -m $current_disk resizepart $num "${endB}B"
-    done <<< "$(printf "%d %d\n" "${partitions_to_resize[@]}")"
+        if is_true $FEATURE_PARTED_RESIZEPART ; then
+            parted -s -m $current_disk resizepart $num "${endB}B"
+        elif is_true $FEATURE_PARTED_RESIZE_NEED_START ; then
+            parted -s -m $current_disk resize $num "${startB}B" "${endB}B"
+        else
+            parted -s -m $current_disk resize $num "${endB}B"
+        fi
+    done <<< "$(printf "%d %d %d\n" "${partitions_to_resize[@]}")"
     partitions_to_resize=()
     my_udevsettle
 

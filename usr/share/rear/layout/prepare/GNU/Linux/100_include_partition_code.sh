@@ -8,19 +8,13 @@ has_binary parted || Error "Cannot find 'parted' command"
 
 # True if parted accepts values in units other than mebibytes.
 FEATURE_PARTED_ANYUNIT=
-# True if parted can align partitions.
-FEATURE_PARTED_ALIGNMENT=
 
 # Test by using the parted version numbers...
 parted_version=$( get_version parted -v )
 
 test "$parted_version" || BugError "Function get_version could not detect parted version"
 
-if version_newer "$parted_version" 2.0 ; then
-    # All features supported
-    FEATURE_PARTED_ANYUNIT="y"
-    FEATURE_PARTED_ALIGNMENT="y"
-elif version_newer "$parted_version" 1.6.23 ; then
+if version_newer "$parted_version" 1.6.23 ; then
     FEATURE_PARTED_ANYUNIT="y"
 fi
 

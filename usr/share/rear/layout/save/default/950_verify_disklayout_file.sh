@@ -203,20 +203,19 @@ for error_message in "${broken_part_errors[@]}" ; do
 done
 
 #
-# Non consecutive partitions are now supported, unless parted < 2.0
+# Non consecutive partitions are supported unless parted tells otherwise
 #
-local parted_version=$( get_version parted -v )
-test "$parted_version" || BugError "Function get_version could not detect parted version"
-if ! version_newer "$parted_version" 2.0 ; then
+if is_false $FEATURE_PARTED_RESIZEPART && is_false $FEATURE_PARTED_RESIZE ; then
     for error_message in "${non_consecutive_part_errors[@]}" ; do
         contains_visible_char "$error_message" || continue
         LogPrintError "$error_message"
         non_consecutive_partitions="yes"
     done
-    is_true "$non_consecutive_partitions" && Error "There are non consecutive partitions ('rear recover' would fail)"
 fi
 
 is_true "$disklayout_file_is_broken" && BugError "Entries in $DISKLAYOUT_FILE are broken ('rear recover' would fail)"
+
+is_true "$non_consecutive_partitions" && Error "There are non consecutive partitions ('rear recover' would fail)"
 
 # Finish this script successfully in the normal case (i.e. when both 'is_true' above result non zero return code):
 true
