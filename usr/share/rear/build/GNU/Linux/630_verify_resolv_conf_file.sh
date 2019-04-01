@@ -1,4 +1,3 @@
-
 # Try to verify that the /etc/resolv.conf file in the ReaR recovery system
 # contains content that is actually usable within the recovery system.
 #
@@ -42,7 +41,12 @@ fi
 # so that we need to remove the link and have the actual content in /etc/resolv.conf
 if test -h $ROOTFS_DIR/etc/resolv.conf ; then
     rm -f $ROOTFS_DIR/etc/resolv.conf
-    cp $v /etc/resolv.conf $ROOTFS_DIR/etc/resolv.conf
+    if [[ -f /run/systemd/resolve/resolv.conf ]] ; then
+        # ubuntu18.x real resolv.conf file: quick hack on #2018
+        cp /run/systemd/resolve/resolv.conf $ROOTFS_DIR/etc/resolv.conf
+    else
+        cp $v /etc/resolv.conf $ROOTFS_DIR/etc/resolv.conf
+    fi
 fi
 
 # Check that the content in /etc/resolv.conf in the recovery system
@@ -98,4 +102,3 @@ if is_true "$USE_DHCLIENT" ; then
     fi
 fi
 Error "No nameserver or only loopback addresses in $ROOTFS_DIR/etc/resolv.conf, specify a real nameserver via USE_RESOLV_CONF"
-
