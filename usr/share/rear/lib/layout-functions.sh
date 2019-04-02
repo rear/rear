@@ -1170,7 +1170,7 @@ create_disk_partition() {
             local partname="dummy$i"
             [[ "$disk_label" != "msdos" ]] || partname="primary"
             dummy_partitions_to_delete+=( $i )
-            LogPrint "Disk '$disk': creating partition number $i with name '$partname' (will be deleted later)"
+            LogPrint "Disk '$disk': creating dummy partition number $i with name '$partname' (will be deleted later)"
             parted -s -m $disk mkpart "$partname" "${endB}B" "${endB}B"
             my_udevsettle
             let endB-=$logical_sector_size
