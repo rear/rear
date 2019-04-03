@@ -35,9 +35,10 @@ ParNr=$( get_partition_number $Dev )
 # /dev/sda or /dev/mapper/vol34_part or /dev/mapper/mpath99p or /dev/mmcblk0p
 Disk=$( echo ${Dev%$ParNr} )
 
-# we have 'mapper' in devname
+# Strip trailing partition remainders like '_part' or '-part' or 'p'
+# if we have 'mapper' in disk device name:
 if [[ ${Dev/mapper//} != $Dev ]] ; then
-    # we only expect mpath_partX  or mpathpX or mpath-partX
+    # we only expect mpath_partX or mpathpX or mpath-partX
     case $Disk in
         (*p)     Disk=${Disk%p} ;;
         (*-part) Disk=${Disk%-part} ;;
@@ -46,10 +47,11 @@ if [[ ${Dev/mapper//} != $Dev ]] ; then
     esac
 fi
 
-# For eMMC devices the trailing "p" in the disk device name
-# needs to be stripped, otherwise the efibootmgr call will fail
-# because of a wrong disk device name. See also
-# https://github.com/rear/rear/issues/2103
+# For eMMC devices the trailing 'p' in the Disk value
+# (as in /dev/mmcblk0p that is derived from /dev/mmcblk0p1)
+# needs to be stripped (to get /dev/mmcblk0), otherwise the
+# efibootmgr call fails because of a wrong disk device name.
+# See also https://github.com/rear/rear/issues/2103
 if [[ $Disk = *'/mmcblk'+([0-9])p ]] ; then
     Disk=${Disk%p}
 fi
@@ -65,4 +67,3 @@ if efibootmgr --create --gpt --disk ${Disk} --part ${ParNr} --write-signature --
 fi
 
 LogPrintError "efibootmgr failed to create EFI Boot Manager entry for '$BootLoader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER')"
-
