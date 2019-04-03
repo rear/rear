@@ -32,7 +32,7 @@ BootEfiDev="$( mount | grep "$esp_mountpoint" | awk '{print $1}' )"
 Dev=$( get_device_name $BootEfiDev )
 # 1 (must anyway be a low nr <9)
 ParNr=$( get_partition_number $Dev )
-# /dev/sda or /dev/mapper/vol34_part or /dev/mapper/mpath99p
+# /dev/sda or /dev/mapper/vol34_part or /dev/mapper/mpath99p or /dev/mmcblk0p
 Disk=$( echo ${Dev%$ParNr} )
 
 # we have 'mapper' in devname
@@ -44,6 +44,14 @@ if [[ ${Dev/mapper//} != $Dev ]] ; then
         (*_part) Disk=${Disk%_part} ;;
         (*)      Log "Unsupported kpartx partition delimiter for $Dev"
     esac
+fi
+
+# For eMMC devices the trailing "p" in the disk device name
+# needs to be stripped, otherwise the efibootmgr call will fail
+# because of a wrong disk device name. See also
+# https://github.com/rear/rear/issues/2103
+if [[ $Disk = *'/mmcblk'+([0-9])p ]] ; then
+    Disk=${Disk%p}
 fi
 
 # EFI\fedora\shim.efi
