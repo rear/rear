@@ -93,15 +93,17 @@ if ! is_true "$MIGRATION_MODE" ; then
     local found_orig_size_on_replacement_hardware=0
     local orig_size=''
     for orig_size in "${original_system_used_disk_sizes[@]}" ; do
+        found_orig_size_on_replacement_hardware=0
         for current_size in "${replacement_hardware_disk_sizes[@]}" ; do
             test "$current_size" -eq "$orig_size" && (( found_orig_size_on_replacement_hardware += 1 ))
+            # MIGRATION_MODE is needed when more than one possible target disk exists for a disk on the original system:
+            if test "$found_orig_size_on_replacement_hardware" -gt 1 ; then
+                MIGRATION_MODE='true'
+                break 2
+            fi
         done
     done
-    # MIGRATION_MODE is needed when more than one possible target disk exists for a disk on the original system:
-    if test "$found_orig_size_on_replacement_hardware" -gt 1 ; then
-        LogPrint "Ambiguous possible target disks need manual configuration (more than one with same size found)"
-        MIGRATION_MODE='true'
-    fi
+    is_true "$MIGRATION_MODE" && LogPrint "Ambiguous possible target disks need manual configuration (more than one with same size found)"
 fi
 
 # No further disk comparisons are needed when MIGRATION_MODE is already set true above:

@@ -135,10 +135,11 @@ fi
 # If software RAID1 is used, several boot devices will be found and
 # then GRUB2 needs to be installed on each of them.
 # This is the reason why we make all possible boot disks bootable here:
+grub2_installed_disks=()
 for disk in $disks ; do
     # Installing GRUB2 on an LVM PV will wipe the metadata so we skip those:
     # function is_disk_a_pv returns with 1 if disk is a PV
-    is_disk_a_pv "$disk"  ||  continue
+    is_disk_a_pv "$disk" || continue
 
     # Use first boot partition by default:
     part=$( echo $bootparts | cut -d' ' -f1 )
@@ -157,8 +158,15 @@ for disk in $disks ; do
 
     # Install GRUB2 on the boot disk if one was found:
     if test "$bootdisk" ; then
+        # Continue with the next possible boot disk when GRUB2 was already installed on the current one.
+        # When there are more disks like /dev/sda and /dev/sdb it can happen that
+        # for /dev/sda bootdisk=/dev/sda and GRUB2 gets installed on /dev/sda and
+        # also for /dev/sdb bootdisk=/dev/sda and GRUB2 would get installed again there
+        # so we avoid that GRUB2 gets needlessly installed two times on the same device:
+        IsInArray "$bootdisk" "${grub2_installed_disks[@]}" && continue
         LogPrint "Found possible boot disk $bootdisk - installing GRUB2 there"
         if chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $bootdisk" ; then
+            grub2_installed_disks+=( "$bootdisk" )
             # In contrast to the above behaviour when GRUB2_INSTALL_DEVICES is specified
             # consider it here as a successful bootloader installation when GRUB2
             # got installed on at least one boot disk:
