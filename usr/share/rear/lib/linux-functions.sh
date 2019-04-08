@@ -174,9 +174,9 @@ function RequiredSharedObjects () {
     #  4. Line: "        lib => /path/to/lib (mem-addr)" -> print $3 '/path/to/lib'
     #  5. Line: "        /path/to/lib => /path/to/lib2 (mem-addr)" -> print $3 '/path/to/lib2'
     #  6. Line: "        /path/to/lib (mem-addr)"        -> print $1 '/path/to/lib'
-    ldd "$@" | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
-                     /^\t.+ => \// { print $3 }
-                     /^\t\// && !/ => / { print $1 } ' | sort -u
+    ldd "$@" | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr"; next }
+                     /^\t.+ => \// { print $3; next }
+                     /^\t\// && !/ => / { print $1; next } ' | sort -u
 }
 
 # Provide a shell, with custom exit-prompt and history
