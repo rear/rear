@@ -1,4 +1,5 @@
-# in conf/default.conf we defined an empty variable USING_UEFI_BOOTLOADER
+
+# In conf/default.conf we defined an empty variable USING_UEFI_BOOTLOADER
 # This script will try to guess if we're using UEFI or not, and if yes,
 # then add all the required executables, kernel modules, etc...
 # Most likely, only recent OSes will be UEFI capable, such as SLES11, RHEL6, Ubuntu 12.10, Fedora 18, Arch Linux
@@ -8,7 +9,7 @@ if grep -qw 'noefi' /proc/cmdline; then
     return
 fi
 
-# by default the variable USING_UEFI_BOOTLOADER is empty which means ReaR will decide (this script)
+# By default the variable USING_UEFI_BOOTLOADER is empty which means ReaR will decide (this script)
 # except when the variable USING_UEFI_BOOTLOADER has an explicit 'false' value set:
 if is_false $USING_UEFI_BOOTLOADER ; then
     # we forced the variable to zero (in local.conf) so we do not want UEFI stuff
@@ -31,8 +32,8 @@ fi
 # Be aware, efivars is not listed with 'lsmod'
 modprobe -q efivars
 
-# next step, is checking the presence of UEFI variables directory
-# However, we should first check kernel command line to see whether we hide on purpose the UEFI vars with 'noefi'
+# Next step is checking the presence of UEFI variables directory.
+# However, we should first check kernel command line to see whether we hide on purpose the UEFI vars with 'noefi':
 SYSFS_DIR_EFI_VARS=
 if [[ -d /sys/firmware/efi/vars ]] ; then
     SYSFS_DIR_EFI_VARS=/sys/firmware/efi/vars
@@ -43,11 +44,11 @@ else
 fi
 
 # mount-point: efivarfs on /sys/firmware/efi/efivars type efivarfs (rw,nosuid,nodev,noexec,relatime)
-if grep -qw efivars /proc/mounts; then
+if grep -qw efivars /proc/mounts ; then
     SYSFS_DIR_EFI_VARS=/sys/firmware/efi/efivars
 fi
 
-# next step, is case-sensitive checking /boot for case-insensitive /efi directory (we need it)
+# Next step is case-sensitive checking /boot for case-insensitive /efi directory (we need it):
 test "$( find /boot -maxdepth 1 -iname efi -type d )" || return 0
 
 # Next step is to get the EFI (Extensible Firmware Interface) system partition (ESP):
@@ -66,7 +67,7 @@ local esp_proc_mounts_line=()
 # First try /boot/efi:
 esp_proc_mounts_line=( $( grep ' /boot/efi ' /proc/mounts || echo false ) )
 if is_false $esp_proc_mounts_line ; then
-    # If nothing is mounted on on /boot/efi try /boot:
+    # If nothing is mounted on /boot/efi try /boot:
     esp_proc_mounts_line=( $( grep ' /boot ' /proc/mounts || echo false ) )
     if is_false $esp_proc_mounts_line ; then
         DebugPrint "No EFI system partition found (nothing mounted on /boot/efi or /boot)"
