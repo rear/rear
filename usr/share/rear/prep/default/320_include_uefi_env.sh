@@ -54,8 +54,14 @@ test "$( find /boot -maxdepth 1 -iname efi -type d )" || return 0
 local esp_proc_mounts_line=()
 # The output of
 #   egrep ' /boot/efi | /boot ' /proc/mounts
-# may look like (here on a openSUSE Leap 15.0 system)
+# may look like the following examples
+# on a openSUSE Leap 15.0 system
 #   /dev/sda1 /boot/efi vfat rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro 0 0
+# cf. https://github.com/rear/rear/issues/2095#issuecomment-475548960
+# or like this on a Debian buster system
+#   /dev/sda1 /boot/efi vfat rw,relatime,fmask=0077,dmask=0077,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro 0 0
+# cf. https://github.com/rear/rear/issues/2095#issuecomment-475684942
+# and https://github.com/rear/rear/issues/2095#issuecomment-481739166
 # The ESP could be mounted on /boot/efi or on /boot.
 # First try /boot/efi:
 esp_proc_mounts_line=( $( grep ' /boot/efi ' /proc/mounts || echo false ) )
