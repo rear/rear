@@ -39,7 +39,7 @@ for mount_olddir in proc sys dev run ; do
         Log "/$mount_olddir not mounted - cannot bind-mount it at $TARGET_FS_ROOT/$mount_olddir"
         if test "dev" = $mount_olddir ; then
             # Special case code to keep things still working on SLES11:
-            # On SLES11 it does not work to bind-mount /dev at TARGET_FS_ROOT/dev
+            # On SLES11 it does not work to bind-mount /dev on TARGET_FS_ROOT/dev
             # see https://github.com/rear/rear/issues/2045#issuecomment-481195463
             # because within the recovery system /dev is no mountpoint
             # (in a running SLES11 system 'mount' shows "udev on /dev type tmpfs") and
@@ -48,6 +48,12 @@ for mount_olddir in proc sys dev run ; do
             # like in a normal running system where e.g. /dev/sda2 is mounted on /
             # but within the recovery system / is the plain content of ReaR's initrd
             # so /dev does not belong to any mountpoint and that lets bind-mount fail.
+            # It also does not make things work to mount 'devtmpfs' on TARGET_FS_ROOT/dev
+            # because "mount -t devtmpfs none $TARGET_FS_ROOT/dev" works but it results
+            # that in TARGET_FS_ROOT/dev only the plain kernel device nodes exist
+            # but none of their symlinks (e.g. in /dev/disk/by-id and /dev/disk/by-uuid)
+            # that are created by udev (because udev does not run inside TARGET_FS_ROOT)
+            # and without those device node symlinks 'mkinitrd' fails.
             # To keep things still working on SLES11 we do here basically the same
             # as we did in our old finalize/default/100_populate_dev.sh that was:
             #   # many systems now use udev and thus have an empty /dev
@@ -60,15 +66,15 @@ for mount_olddir in proc sys dev run ; do
             # it would copy device node files into TARGET_FS_ROOT after the backup was restored
             # (i.e. it would write and modify files on the sacrosanct user's target system disk)
             # and it would be especially sneaky because usually on the rebooted target system
-            # something will be mounted at /dev (e.g. on SLES11 "udev on /dev type tmpfs" is mounted)
+            # something will be mounted on /dev (e.g. on SLES11 "udev on /dev type tmpfs")
             # so that our copied device nodes on the target system disk would get obscured and
-            # hidden behind what is mounted at /dev in the normal running target system.
-            # To avoid such dirtiness and sneakiness we first mount TARGET_FS_ROOT/dev as tmpfs
+            # hidden behind what is mounted on /dev in the normal running target system.
+            # To avoid such dirtiness and sneakiness we first mount TARGET_FS_ROOT/dev as 'tmpfs'
             # and then copy all /dev contents from the recovery system into TARGET_FS_ROOT/dev
             # which makes the recovery system /dev contents available at TARGET_FS_ROOT/dev
             # only as long as the recovery system runs but on the rebooted target system
-            # its original unmodifies /dev contents will be there again:
-            mount -t tmpfs tmpfs $TARGET_FS_ROOT/dev || DebugPrint "Failed to mount a tmpfs on $TARGET_FS_ROOT/dev"
+            # its original unmodified /dev will be there again:
+            mount -t tmpfs tmpfs $TARGET_FS_ROOT/dev || DebugPrint "Failed to mount 'tmpfs' on $TARGET_FS_ROOT/dev"
             # Do not error out at this late state of "rear recover" but inform the user:
             cp -a /dev/. $TARGET_FS_ROOT/dev || LogPrintError "Failed to copy /dev contents from ReaR recovery system to $TARGET_FS_ROOT/dev"
         fi
