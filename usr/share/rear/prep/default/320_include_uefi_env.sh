@@ -50,24 +50,37 @@ fi
 # next step, is case-sensitive checking /boot for case-insensitive /efi directory (we need it)
 test "$( find /boot -maxdepth 1 -iname efi -type d )" || return 0
 
-local esp_mount_point=""
-
-# next step, check filesystem partition type (vfat?)
-esp_mount_point='/\/boot\/efi/'
-UEFI_FS_TYPE=$(awk $esp_mount_point' { print $3 }' /proc/mounts)
-# if not mounted at /boot/efi, try /boot
-if [[ -z "$UEFI_FS_TYPE" ]]; then
-    esp_mount_point='/\/boot/'
-    UEFI_FS_TYPE=$(awk $esp_mount_point' { print $3 }' /proc/mounts)
+# Next step is to get the EFI (Extensible Firmware Interface) system partition (ESP):
+local esp_proc_mounts_line=()
+# The output of
+#   egrep ' /boot/efi | /boot ' /proc/mounts
+# may look like (here on a openSUSE Leap 15.0 system)
+#   /dev/sda1 /boot/efi vfat rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro 0 0
+# The ESP could be mounted on /boot/efi or on /boot.
+# First try /boot/efi:
+esp_proc_mounts_line=( $( grep ' /boot/efi ' /proc/mounts || echo false ) )
+if is_false $esp_proc_mounts_line ; then
+    # If nothing is mounted on on /boot/efi try /boot:
+    esp_proc_mounts_line=( $( grep ' /boot ' /proc/mounts || echo false ) )
+    if is_false $esp_proc_mounts_line ; then
+        DebugPrint "No EFI system partition found (nothing mounted on /boot/efi or /boot)"
+        return
+    fi
 fi
 
-# ESP must be type vfat (under Linux)
-if [[ "$UEFI_FS_TYPE" != "vfat" ]]; then
-    return
+# The ESP filesystem type must be vfat (under Linux):
+if ! test "vfat" = "${esp_proc_mounts_line[2]}" ; then
+    DebugPrint "No 'vfat' EFI system partition found (${esp_proc_mounts_line[0]} on ${esp_proc_mounts_line[1]} is type ${esp_proc_mounts_line[2]})"
+    return 0
 fi
 
-# we are still here? Ok, now it is safe to turn on USING_UEFI_BOOTLOADER=1
+# When we are still here we have a filesystem type 'vfat' mounted on /boot/efi or on /boot.
+# In this case we assume what is mounted there actually is a EFI system partition (ESP)
+# so we assume it is safe to turn on USING_UEFI_BOOTLOADER=1
+DebugPrint "Found EFI system partition ${esp_proc_mounts_line[0]} on ${esp_proc_mounts_line[1]} type ${esp_proc_mounts_line[2]}"
 USING_UEFI_BOOTLOADER=1
 LogPrint "Using UEFI Boot Loader for Linux (USING_UEFI_BOOTLOADER=1)"
 
-awk $esp_mount_point' { print $1 }' /proc/mounts >$VAR_DIR/recovery/bootdisk 2>/dev/null
+# Remember the ESP device node in VAR_DIR/recovery/bootdisk:
+echo "${esp_proc_mounts_line[0]}" >$VAR_DIR/recovery/bootdisk
+
