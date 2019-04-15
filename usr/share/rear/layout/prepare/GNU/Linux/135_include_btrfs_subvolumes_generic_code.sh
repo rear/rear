@@ -64,7 +64,8 @@ btrfs_subvolumes_setup_generic() {
                 info_message="Setting default subvolume to $subvolume_path"
                 Log "$info_message"
                 echo "# $info_message"
-                echo "btrfs subvolume set-default '$target_subvolume_path'"
+                echo "subvolumeID=\$( btrfs subvolume list -a '$target_subvolume_path' | sed -e 's/<FS_TREE>\///' | grep ' $subvolume_path\$' | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2 )"
+                echo "btrfs subvolume set-default \$subvolumeID '$target_subvolume_path'"
             fi
         fi
 
