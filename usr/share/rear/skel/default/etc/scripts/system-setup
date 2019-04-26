@@ -67,7 +67,7 @@ if rear_debug ; then
 fi
 
 # Sourcing of the conf/default.conf file as we may use some defined variables or arrays
-# E.g. UDEV_RULE_FILES is used by script 55-migrate-network-devices.sh
+# E.g. UDEV_NET_MAC_RULE_FILES is used by script 55-migrate-network-devices.sh
 test -f /usr/share/rear/conf/default.conf && source /usr/share/rear/conf/default.conf
 # Sourcing user and rescue configuration as we need some variables
 # (EXCLUDE_MD5SUM_VERIFICATION right now and other variables in the system setup scripts):
