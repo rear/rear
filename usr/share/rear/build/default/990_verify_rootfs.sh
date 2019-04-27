@@ -81,7 +81,8 @@ for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ); do
     # The login shell is there so that we can call commands as in a normal working shell,
 
     # cf. https://github.com/rear/rear/issues/862#issuecomment-274068914
-    chroot $ROOTFS_DIR /bin/bash --login -c "cd $( dirname $binary ) && ldd $binary" | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
+    # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120.
+    chroot $ROOTFS_DIR /bin/bash --login -c "cd $( dirname $binary ) && ldd $binary" < /dev/null | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
 done
 test $old_LD_LIBRARY_PATH && export LD_LIBRARY_PATH=$old_LD_LIBRARY_PATH || unset LD_LIBRARY_PATH
 
@@ -132,7 +133,8 @@ for program in "${PROGS[@]}" ; do
     type $program || continue
     # Use the basename because the path within the recovery system is usually different compared to the path on the original system:
     program=$( basename $program )
-    chroot $ROOTFS_DIR /bin/bash --login -c "type $program" || missing_programs="$missing_programs $program"
+    # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120.
+    chroot $ROOTFS_DIR /bin/bash --login -c "type $program" < /dev/null || missing_programs="$missing_programs $program"
 done
 
 # Report programs in the PROGS array that cannot be found as executable command within the recovery system:
@@ -150,7 +152,8 @@ local fatal_missing_program=""
 for required_program in "${REQUIRED_PROGS[@]}" ; do
     # Use the basename because the path within the recovery system is usually different compared to the path on the original system:
     required_program=$( basename $required_program )
-    chroot $ROOTFS_DIR /bin/bash --login -c "type $required_program" || missing_required_programs="$missing_required_programs $required_program"
+    # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120.
+    chroot $ROOTFS_DIR /bin/bash --login -c "type $required_program" < /dev/null || missing_required_programs="$missing_required_programs $required_program"
 done
 # Report programs in the REQUIRED_PROGS array that cannot be found as executable command within the recovery system:
 if contains_visible_char "$missing_required_programs" ; then
