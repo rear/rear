@@ -982,7 +982,7 @@ function apply_layout_mappings() {
     while read original replacement junk ; do
         # Skip lines that have wrong syntax:
         test "$original" -a "$replacement" || continue
-        if grep -q "'^[^#].*$replacement" "$file_to_migrate" ; then
+        if grep -q "$replacement" "$file_to_migrate" ; then
             apply_layout_mappings_succeeded="no"
             LogPrintError "Failed to apply layout mappings to $file_to_migrate for $original (probably no mapping for $original in $MAPPING_FILE)"
         fi
