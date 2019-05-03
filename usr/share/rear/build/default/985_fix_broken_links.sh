@@ -52,7 +52,7 @@ pushd $ROOTFS_DIR
         #   /usr/share/zoneinfo/Europe/Berlin  (e.g. the link target of /etc/localtime)
         #   /proc/1234/mounts                  (e.g. the link target of /etc/mtab)
         #   /usr/share/misc/termcap            (e.g. the link target of /etc/termcap)
-        #   /path/to/file                      (e.g. the link target of /dir1h/dir2/relative_symlink_to_file)
+        #   /path/to/file                      (e.g. the link target of /dir1/dir2/relative_symlink_to_file)
         #   /path/to/directory                 (e.g. the link target of /dir3/relative_symlink_to_directory)
         if [[ -d "$link_target" ]]; then
             LogPrintError "Symlink '$broken_symlink' -> '$link_target' refers to a non-existing directory on the recovery system."
