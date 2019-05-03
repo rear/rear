@@ -37,12 +37,6 @@ pushd $ROOTFS_DIR
         # the chain of symbolic links gets simplified in the recovery system to $broken_symlink -> $link_target like
         #   /some/path/to/file1 -> /final/path/to/file3
         link_target=$( readlink $v -e $broken_symlink )
-        if [[ "$link_target" != /* ]]; then
-            # Convert a relative link target into an absolute one. This code will possibly never execute. It exists
-            # as a safety net as the readlink(1) manual page does not state clearly whether 'readlink -e' will always
-            # return an absolute path. Cf. https://github.com/rear/rear/pull/2131#discussion_r280424161
-            link_target="$broken_symlink/$link_target"
-        fi
         if [[ -d "$link_target" ]]; then
             LogPrintError "Symlink '$broken_symlink' -> '$link_target' refers to a non-existing directory on the recovery system."
             LogPrintError "It will not be copied by default. You can include '$link_target' via the 'COPY_AS_IS' configuration variable."
