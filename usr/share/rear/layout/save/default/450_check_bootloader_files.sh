@@ -30,6 +30,9 @@ case $used_bootloader in
     (ARM|ARM-ALLWINNER)
         CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /boot/boot.scr )
         ;;
+    (zIPL)
+        CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/zipl.conf )
+        ;;
     (*)
         BugError "Unknown bootloader ($used_bootloader) - ask for sponsoring to get this fixed"
         ;;
