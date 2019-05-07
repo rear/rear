@@ -3,6 +3,11 @@
 
 test -d $VAR_DIR/recovery || mkdir -p $VAR_DIR/recovery
 
+echo 'arch' $ARCH
+# s390 zlinux does not use grub
+[ "$ARCH" = "Linux-s390x" ] || return 0
+[ "$ARCH" = "Linux-s390"  ] || return 0
+
 # Because usr/sbin/rear sets 'shopt -s nullglob' the 'echo -n' command
 # outputs nothing if nothing matches the bash globbing pattern '/boot/grub*'
 local grubdir="$( echo -n /boot/grub* )"
