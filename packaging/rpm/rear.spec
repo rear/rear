@@ -133,22 +133,17 @@ fi
 %prep
 %setup -q
 
-echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
-
 %build
 
 %install
 %{__rm} -rf %{buildroot}
 %{__make} install DESTDIR="%{buildroot}"
-%{__install} -Dp -m0644 rear.cron %{buildroot}%{_sysconfdir}/cron.d/rear
-
 
 %files
 # defattr: is required for SLES 11 and RHEL/CentOS 5 builds on openSUSE Build Service (#2135)
 %defattr(-, root, root, 0755)
 %doc MAINTAINERS COPYING README.adoc doc/*.txt
 %doc %{_mandir}/man8/rear.8*
-%config(noreplace) %{_sysconfdir}/cron.d/rear
 %config(noreplace) %{_sysconfdir}/rear/
 %config(noreplace) %{_sysconfdir}/rear/cert/
 %{_datadir}/rear/
