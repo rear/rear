@@ -4,7 +4,12 @@
 test -d $VAR_DIR/recovery || mkdir -p $VAR_DIR/recovery
 
 echo 'arch' $ARCH
-# s390 zlinux does not use grub
+# cf. https://github.com/rear/rear/issues/2137
+# s390 zlinux does not use grub 
+# *********************************************************************************
+# **** please review and recommend a better way to handle ****
+# NEED TPO TEST SLES - sles will probably need to use all of the grub tools below
+# *********************************************************************************
 [ "$ARCH" = "Linux-s390x" ] || return 0
 [ "$ARCH" = "Linux-s390"  ] || return 0
 
