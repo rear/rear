@@ -48,21 +48,19 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
     # so that it is used here as reference to decide whether or not the entries are correct:
     partitions=()
    
+    # cf. https://github.com/rear/rear/issues/2137
+    # s390 - partitions do not list the boot flag
+    # flag is removed from while read ... - this is true for sles also
+    # example
+    # /dev/dasda:24.2GB:dasd:512:4096:dasd:IBM S390 DASD drive:;
+    # 1:98.3kB:524MB:524MB:xfs::;
+    # 2:524MB:24.2GB:23.6GB:::lvm;
     if [ "$ARCH" == "Linux-s390x" ] || [ "$ARCH == "Linux-s390" ] ; then
 	 while read keyword dummy part_size part_start part_name junk ; do
             test -b "$part_dev" || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev is not a block device" )
             is_positive_integer $part_size || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev size $part_size is not a positive integer" )
             is_nonnegative_integer $part_start || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev start $part_start is not a nonnegative integer" )
             partitions=( "${partitions[@]}" "$part_dev" )
-            # Using the parted_mklabel fallback behaviour in create_partitions() in prepare/GNU/Linux/100_include_partition_code.sh
-            # only when there is no parted_mklabel value, but when there is a parted_mklabel value use it as is:
-            if ! test "$parted_mklabel" ; then
-                case $part_name in
-                    (primary|extended|logical)
-                        parted_mklabel="msdos"
-                        ;;
-                esac
-            fi
          done < <( grep "^part $disk_dev " "$DISKLAYOUT_FILE" )
     else
 	 while read keyword dummy part_size part_start part_name part_flags part_dev junk ; do

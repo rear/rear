@@ -69,6 +69,8 @@ for block_device in /sys/block/* ; do
         # but actually another non-EFI bootloader is used here
         # cf. https://github.com/rear/rear/issues/1752#issue-303856221
         # so that in the 'Hah!IdontNeedEFI' case only non-EFI bootloaders are tested:
+	# cf. https://github.com/rear/rear/issues/2137
+	#  s390 - zipl boot loader for rhel, ubuntu
         for known_bootloader in GRUB2 GRUB ELILO LILO zIPL ; do
             if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
                 LogPrint "Using guessed bootloader '$known_bootloader' (found in first bytes on $disk_device with GPT BIOS boot partition)"
@@ -83,6 +85,8 @@ for block_device in /sys/block/* ; do
         continue
     fi
     # Check the default cases of known bootloaders:
+    # cf. https://github.com/rear/rear/issues/2137
+    # s390 - zipl boot loader for rhel, ubuntu
     for known_bootloader in GRUB2-EFI EFI GRUB2 GRUB ELILO LILa zIPL ; do
         if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
             LogPrint "Using guessed bootloader '$known_bootloader' (found in first bytes on $disk_device)"
