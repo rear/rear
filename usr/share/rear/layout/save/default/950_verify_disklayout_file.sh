@@ -56,11 +56,12 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
     # 1:98.3kB:524MB:524MB:xfs::;
     # 2:524MB:24.2GB:23.6GB:::lvm;
     if [ "$ARCH" == "Linux-s390x" ] || [ "$ARCH" == "Linux-s390" ] ; then
-	 while read keyword dummy part_size part_start part_name junk ; do
+	 while read keyword dummy part_size part_start part_flags part_dev junk ; do
             test -b "$part_dev" || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev is not a block device" )
             is_positive_integer $part_size || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev size $part_size is not a positive integer" )
             is_nonnegative_integer $part_start || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev start $part_start is not a nonnegative integer" )
             partitions=( "${partitions[@]}" "$part_dev" )
+            parted_mklabel="msdos"
          done < <( grep "^part $disk_dev " "$DISKLAYOUT_FILE" )
     else
 	 while read keyword dummy part_size part_start part_name part_flags part_dev junk ; do
