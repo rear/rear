@@ -55,7 +55,7 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
     # /dev/dasda:24.2GB:dasd:512:4096:dasd:IBM S390 DASD drive:;
     # 1:98.3kB:524MB:524MB:xfs::;
     # 2:524MB:24.2GB:23.6GB:::lvm;
-    if [ "$ARCH" == "Linux-s390x" ] || [ "$ARCH" == "Linux-s390" ] ; then
+    if [ "$ARCH" == "Linux-s390" ] ; then
 	 while read keyword dummy part_size part_start part_flags part_dev junk ; do
             test -b "$part_dev" || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev is not a block device" )
             is_positive_integer $part_size || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev size $part_size is not a positive integer" )
