@@ -103,7 +103,7 @@ BACKUP=TSM::
 Use IBM Tivoli Storage Manager programs
 
 BACKUP=DP::
-Use HP DataProtector programs
+Use MicroFocus Data Protector programs
 
 BACKUP=FDRUPSTREAM::
 Use FDR/Upstream
