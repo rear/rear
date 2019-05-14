@@ -309,17 +309,23 @@ while true ; do
     esac
 done
 
-# Mark unmapped 'disk' devices and 'multipath' devices in the LAYOUT_FILE as done
-# so that unmapped 'disk' and 'multipath' devices will not be recreated
+# Mark unmapped 'disk', 'multipath' and 'opaldisk' devices in the
+# LAYOUT_FILE as done so that such devices will not be recreated
 # except we are no longer in migration mode when the user confirmed an
 # identical disk mapping and proceeding without manual configuration:
 if is_true "$MIGRATION_MODE" ; then
     while read keyword device junk ; do
         is_mapping_source "$device" && continue
-        LogUserOutput "Disk $device and all dependant devices will not be recreated"
-        mark_as_done "$device"
-        mark_tree_as_done "$device"
-    done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
+        if [[ "$keyword" == "opaldisk" ]]; then
+            Log "TCG Opal 2-compliant self-encrypting disk $device will not be recreated"
+            # Note: dependent devices might still be recreated if $device is mapped as a (non-encrypting) disk
+            mark_as_done "opaldisk:$device"
+        else
+            LogUserOutput "Disk $device and all dependant devices will not be recreated"
+            mark_as_done "$device"
+            mark_tree_as_done "$device"
+        fi
+    done < <( grep -E "^disk |^multipath |^opaldisk " "$LAYOUT_FILE" )
 fi
 
 # Local functions must be 'unset' because bash does not support 'local function ...'

@@ -6,7 +6,8 @@
 have_udev || return 0
 
 # we treat only these rules
-RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net,cd}.rules /etc/udev/rules.d/*eno-fix.rules )
+# RULE_FILES array has been replaced bu UDEV_NET_MAC_RULE_FILES which is defined in the default.conf file
+# RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net,cd}.rules /etc/udev/rules.d/*eno-fix.rules )
 # the result looks like this on various systems:
 #   rear-centos4: ERROR
 #   rear-debian5: /etc/udev/rules.d/70-persistent-cd.rules
@@ -25,7 +26,7 @@ RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net,cd}.rules /etc/udev/rules.
 # For each rule file compare the version in the rescue system with the version in the restored backup
 # and, if they differ, copy the version from the rescue system into the recovered system, of course
 # preserving a backup in /root/rear-*.old
-for rule in "${RULE_FILES[@]}" ; do
+for rule in "${UDEV_NET_MAC_RULE_FILES[@]}" ; do
     # Skip if there was no such udev rule file restored from the backup
     # because we must not put files into the recreated system that have not been there
     # in particular no udev rule files because wrong udev rules can cause severe issues.
@@ -44,4 +45,3 @@ for rule in "${RULE_FILES[@]}" ; do
     LogPrint "Replacing restored udev rule '$TARGET_FS_ROOT/$rule' with the one from the ReaR rescue system"
     cp $v "$rule" "$TARGET_FS_ROOT/$rule" || LogPrintError "Failed to copy '$rule' to '$TARGET_FS_ROOT/$rule'"
 done
-

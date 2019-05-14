@@ -56,7 +56,7 @@ The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices a
 |DUPLICITY   | BACKUP  | Copy files to the Cloud                  | done
 |NSR         | BACKUP  | Use Legato Networker                     | done
 |TSM         | BACKUP  | Use Tivoli Storage Manager               | done
-|DP          | BACKUP  | Use HP DataProtector                     | done
+|DP          | BACKUP  | Use MicroFocus Data Protector            | done
 |NBU         | BACKUP  | Use Symantec NetBackup                   | done
 |BACULA      | BACKUP  | Use Bacula                               | done
 |BAREOS      | BACKUP  | Use fork of Bacula                       | done

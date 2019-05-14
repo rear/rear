@@ -8,7 +8,7 @@
 
 Summary: Relax-and-Recover is a Linux disaster recovery and system migration tool
 Name: rear
-Version: 2.4
+Version: 2.5
 Release: 1%{?rpmrelease}%{?dist}
 License: GPLv3
 Group: Applications/File
@@ -17,7 +17,8 @@ URL: http://relax-and-recover.org/
 # as GitHub stopped with download section we need to go back to Sourceforge for downloads
 Source: https://sourceforge.net/projects/rear/files/rear/%{version}/rear-%{version}.tar.gz
 
-#BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+# BuildRoot: is required for SLES 11 and RHEL/CentOS 5 builds on openSUSE Build Service (#2135)
+BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 # rear contains only bash scripts plus documentation so that on first glance it could be "BuildArch: noarch"
 # but actually it is not "noarch" because it only works on those architectures that are explicitly supported.
@@ -91,7 +92,6 @@ Requires: mkisofs
 
 ### On RHEL/Fedora the genisoimage packages provides mkisofs
 %if %{?centos_version:1}%{?fedora:1}%{?rhel_version:1}0
-Requires: crontabs
 Requires: iproute
 #Requires: mkisofs
 Requires: genisoimage
@@ -114,7 +114,7 @@ a migration tool as well.
 Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
 OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
 sftp, ftp, http, nfs, cifs) as well as a multitude of backup strategies
-(incl.  IBM TSM, HP DataProtector, Symantec NetBackup, EMC NetWorker,
+(incl.  IBM TSM, MircroFocus Data Protector, Symantec NetBackup, EMC NetWorker,
 Bacula, Bareos, BORG, Duplicity, rsync).
 
 Relax-and-Recover was designed to be easy to set up, requires no maintenance
@@ -132,21 +132,17 @@ fi
 %prep
 %setup -q
 
-echo "30 1 * * * root /usr/sbin/rear checklayout || /usr/sbin/rear mkrescue" >rear.cron
-
 %build
 
 %install
 %{__rm} -rf %{buildroot}
 %{__make} install DESTDIR="%{buildroot}"
-%{__install} -Dp -m0644 rear.cron %{buildroot}%{_sysconfdir}/cron.d/rear
-
 
 %files
-#%defattr(-, root, root, 0755)
+# defattr: is required for SLES 11 and RHEL/CentOS 5 builds on openSUSE Build Service (#2135)
+%defattr(-, root, root, 0755)
 %doc MAINTAINERS COPYING README.adoc doc/*.txt
 %doc %{_mandir}/man8/rear.8*
-%config(noreplace) %{_sysconfdir}/cron.d/rear
 %config(noreplace) %{_sysconfdir}/rear/
 %config(noreplace) %{_sysconfdir}/rear/cert/
 %{_datadir}/rear/

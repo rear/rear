@@ -12,7 +12,8 @@
 #
 
 # Get the rule files (though it should be only one):
-RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net,cd}.rules /etc/udev/rules.d/*eno-fix.rules )
+# RULE_FILES array is now global defined in default.conf and renamed as UDEV_NET_MAC_RULE_FILES
+# RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net,cd}.rules /etc/udev/rules.d/*eno-fix.rules )
 ORIG_MACS_FILE=/etc/mac-addresses
 MAC_MAPPING_FILE=/etc/rear/mappings/mac
 MANUAL_MAC_MAPPING=
@@ -235,17 +236,17 @@ if test -s $MAC_MAPPING_FILE ; then
         # Get new device name from current MAC address:
         new_dev=$( get_device_by_hwaddr "$new_mac" )
         # Migrate udev persistent-net rules files (if any):
-        if test $RULE_FILES ; then
-            if grep -q "$old_mac" "${RULE_FILES[@]}" ; then
+        if test $UDEV_NET_MAC_RULE_FILES ; then
+            if grep -q "$old_mac" "${UDEV_NET_MAC_RULE_FILES[@]}" ; then
                 # Remove the "wrong" line with the new mac address and
                 # replace the old mac address with the new mac address:
-                sed -i -e "/$new_mac/d" -e "s#$old_mac#$new_mac#gI" "${RULE_FILES[@]}"
+                sed -i -e "/$new_mac/d" -e "s#$old_mac#$new_mac#gI" "${UDEV_NET_MAC_RULE_FILES[@]}"
                 reload_udev=true
             else
-                if grep -q "$old_dev" "${RULE_FILES[@]}" ; then
+                if grep -q "$old_dev" "${UDEV_NET_MAC_RULE_FILES[@]}" ; then
                     # Remove the "wrong" line with the new mac address and
                     # rename the new device name with the old one:
-                    test "$new_dev" && sed -i -e "/$old_dev/d" -e "s#$new_dev#$old_dev#g" "${RULE_FILES[@]}"
+                    test "$new_dev" && sed -i -e "/$old_dev/d" -e "s#$new_dev#$old_dev#g" "${UDEV_NET_MAC_RULE_FILES[@]}"
                     reload_udev=true
                 else
                     # Device is not managed by udev rules.

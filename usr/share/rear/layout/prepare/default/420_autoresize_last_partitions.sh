@@ -113,6 +113,12 @@ local disk_size_difference increase_threshold_difference last_part_shrink_differ
 #   disk /dev/sdb 2147483648 msdos
 #
 while read component_type disk_device old_disk_size junk ; do
+    # Continue with next disk if the current one has no partitions
+    # (i.e. when there is no 'part' entry in disklayout.conf for the current disk)
+    # otherwise the "Find the last partition for the current disk" code below fails
+    # cf. https://github.com/rear/rear/issues/2134
+    grep -q "^part $disk_device" "$LAYOUT_FILE" || continue
+    
     DebugPrint "Examining $disk_device to automatically resize its last active partition"
 
     sysfsname=$( get_sysfs_name $disk_device )

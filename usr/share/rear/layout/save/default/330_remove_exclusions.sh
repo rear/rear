@@ -32,9 +32,13 @@ while read status name type junk ; do
 
             sed -i -r "s|^($type /dev/$vg $lv )|\#\1|" "$LAYOUT_FILE"
             ;;
-        fs|btrfsmountedsubvol|lvmdev|opaldisk)
+        fs|btrfsmountedsubvol|lvmdev)
             name=${name#$type:}
             remove_second_component "$type" "$name"
+            ;;
+        opaldisk)
+            name=${name#$type:}
+            remove_component "$type" "$name"
             ;;
         swap)
             name=${name#swap:}

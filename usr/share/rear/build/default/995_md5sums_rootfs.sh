@@ -27,7 +27,10 @@ pushd $ROOTFS_DIR 1>&2
     cat /dev/null >$md5sums_file
     # Do not provide a md5sums.txt in the recovery system if it was not successfully created here.
     # Exclude the md5sums.txt file itself and all .gitignore files here in any case.
-    # Also exclude all regular files in /dev/ (device nodes get already excluded by 'find -type f')
+    # Exclude all files with a trailing '~' in their name because those are also excluded
+    # when the recovery system initrd is made by pack/GNU/Linux/900_create_initramfs.sh
+    # (there via find . ! -name "*~"), see https://github.com/rear/rear/issues/2127
+    # Exclude all regular files in /dev/ (device nodes get already excluded by 'find -type f')
     # because sometimes it could happen that there are regular files in /dev/ in ROOTFS_DIR
     # which won't get copied into the recovery system so that those regular files in /dev/
     # are missing when etc/scripts/system-setup tries to verify their md5sums, for example
@@ -40,6 +43,6 @@ pushd $ROOTFS_DIR 1>&2
     # see http://www-01.ibm.com/support/docview.wss?uid=isg1IV35736
     # Excluding particular files from being verified during recovery system startup
     # happens via EXCLUDE_MD5SUM_VERIFICATION in skel/default/etc/scripts/system-setup
-    find . -xdev -type f | egrep -v '/md5sums\.txt|/\.gitignore|/dev/' | xargs md5sum >>$md5sums_file || cat /dev/null >$md5sums_file
+    find . -xdev -type f | egrep -v '/md5sums\.txt|/\.gitignore|~$|/dev/' | xargs md5sum >>$md5sums_file || cat /dev/null >$md5sums_file
 popd 1>&2
 
