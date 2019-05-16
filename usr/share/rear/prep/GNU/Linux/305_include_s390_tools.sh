@@ -12,9 +12,9 @@ test -d "$bootdir" || $bootdir='/boot/'
 # findmnt -no SOURCE --target /boot
 # --> /dev/dasda1
 #
-# sles will need to be looked at:
-# findmnt returns --> /dev/dasda3[/@/.snapshots/1/snapshot]
-# it's possible that sles can use 300_include_grub_tools.sh instead of this file
+# on sles:
+#   findmnt returns --> /dev/dasda3[/@/.snapshots/1/snapshot]
+#   use 300_include_grub_tools.sh instead of this file (grub2-probe)
 if has_binary findmnt ; then
     findmnt -no SOURCE --target $bootdir >$VAR_DIR/recovery/bootdisk || return 0
 fi
