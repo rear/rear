@@ -1,0 +1,8 @@
+specfile_path: packaging/rpm/rear.spec
+synced_files:
+  - .packit.yaml
+  - src: packaging/rpm/rear.spec
+    dest: rear.spec
+upstream_project_name: rear
+downstream_package_name: rear
+
