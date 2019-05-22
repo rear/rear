@@ -140,7 +140,9 @@ extract_partitions() {
     ### Find partition name for GPT disks.
     # For the SUSE specific gpt_sync_mbr partitioning scheme
     # see https://github.com/rear/rear/issues/544
-    if [[ "$disk_label" = "gpt" || "$disk_label" == "gpt_sync_mbr" ]] ; then
+    # s390 dasd disks, closer to msdos part but gpt gives flexibility, s390 parted does not include part name/type, type rear-noname used
+    # see https://github.com/rear/rear/pull/2142
+    if [[ "$disk_label" = "gpt" || "$disk_label" = "gpt_sync_mbr" || "$disk_label" = "dasd" ]] ; then
         if [[ "$FEATURE_PARTED_MACHINEREADABLE" ]] ; then
             while read partition_nr size start junk ; do
                 # In case of GPT the 'type' field contains actually the GPT partition name.
