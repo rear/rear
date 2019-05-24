@@ -992,4 +992,251 @@ function apply_layout_mappings() {
     is_true $apply_layout_mappings_succeeded && return 0 || return 1
 }
 
+has_binary parted || Error "Cannot find 'parted' command"
+
+FEATURE_PARTED_RESIZEPART=y
+FEATURE_PARTED_RESIZE=n
+
+if parted --help | awk '$1 == "resizepart" { exit 1 }' ; then
+    # No 'resizepart', check for 'resize'
+    FEATURE_PARTED_RESIZEPART=n
+    if ! parted --help | awk '$1 == "resize" { exit 1 }' ; then
+        FEATURE_PARTED_RESIZE=y
+        if ! parted --help | awk '$1 == "resize" && $3 == "START" { exit 1 }' ; then
+            # 'parted resize NUM START END' tries resizing the file system,
+            # which is known to fail, as shown below (output from parted):
+            #
+            # # parted -s -m /dev/sdc resize 3 1074790400B 2149580799B
+            # WARNING: you are attempting to use parted to operate on (resize) a file system.
+            # parted's file system manipulation code is not as robust as what you'll find in
+            # dedicated, file-system-specific packages like e2fsprogs.  We recommend
+            # you use parted only to manipulate partition tables, whenever possible.
+            # Support for performing most operations on most types of file systems
+            # will be removed in an upcoming release.
+            # No Implementation: Support for opening ext4 file systems is not implemented yet.
+            FEATURE_PARTED_RESIZE=n
+        fi
+    fi
+fi
+
+# Keeps track of the current disk being processed
+# e.g. /dev/sdb
+current_disk=""
+
+# Keeps track of last partition created for the current disk
+# e.g. last_partition_number=1
+last_partition_number=0
+
+# Keeps track of dummy partitions created and to be removed (due to parted limitation) for the current disk
+# Contains a list of partition numbers
+# e.g. dummy_partitions_to_delete=( 1 2 4 5 )
+dummy_partitions_to_delete=()
+
+# Keeps track of partitions to resize to original size for the current disk
+# Contains a list of partition tuples (number, end_in_bytes)
+# e.g. partitions_to_resize=( 3 2096127 6 8388607 )
+partitions_to_resize=()
+
+# Keeps track of the label for the current disk
+# e.g. disk_label="gpt"
+disk_label=""
+
+#
+# create_disk_label(disk, label)
+#
+# Sets up the disk label. Must be called before calling create_disk_partition().
+#
+create_disk_label() {
+    local disk="$1" label="$2"
+
+    if [[ "$current_disk" ]] && [[ "$current_disk" != "$disk" ]] ; then
+        BugError "Current disk has changed from '$current_disk' to '$disk' without calling delete_dummy_partitions_and_resize_real_ones() first."
+    fi
+    current_disk="$disk"
+
+    if [[ "$disk_label" ]] && [[ "$disk_label" != "$label" ]] ; then
+        BugError "Disk '$disk': disk label is being assigned multiple times for the same disk."
+    fi
+    disk_label="$label"
+
+    LogPrint "Disk '$disk': creating '$label' partition table"
+    parted -s $disk mklabel $label
+    my_udevsettle
+}
+
+#
+# create_disk_partition(disk, name, partnumber, partstart, [partend])
+#
+# Creates a partition. When changing disk, user must call delete_dummy_partitions_and_resize_real_ones().
+#
+create_disk_partition() {
+    local disk="$1" name="$2" number=$3 startB=$4 endB=$5
+
+    #
+    # FIXME? This code assumes that "parted" is capable of handling sizes in
+    # Bytes. parted supports partitions in Bytes since ages.
+    #
+
+    if [[ "$current_disk" ]] && [[ "$current_disk" != "$disk" ]] ; then
+        BugError "Current disk has changed from '$current_disk' to '$disk' without calling delete_dummy_partitions_and_resize_real_ones() first."
+    fi
+    current_disk="$disk"
+
+    if [[ ! "$disk_label" ]] ; then
+        BugError "Disk '$disk': disk label is unknown."
+    fi
+
+    # The duplicated quoting "'$name'" is there because
+    # parted's internal parser needs single quotes for values with blanks.
+    # In particular a GPT partition name that can contain spaces
+    # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
+    # so that when calling parted on command line it must be done like
+    #    parted -s /dev/sdb unit MiB mkpart "'partition name'" 12 34
+    # where the outer quoting "..." is for bash so that
+    # the inner quoting '...' is preserved for parted's internal parser:
+    [ "$disk_label" == "msdos" ] || name="'$name'"
+
+    if [[ $number -le last_partition_number ]] ; then
+        Error "Disk '$disk': trying to create partition number $number but last created partition was number $last_partition_number"
+    fi
+
+    if [[ $(( $number - $last_partition_number - 1 )) -eq 0 ]] ; then
+        LogPrint "Disk '$disk': creating partition number $number with name '$name'"
+        # FIXME: I <jsmeix@suse.de> think one cannot silently set the end of a partition to 100%
+        # if there is no partition end value, I think in this case "rear recover" should error out:
+        if [[ ! $endB ]] ; then
+            parted -s $disk mkpart "$name" "${startB}B" 100%
+        else
+            parted -s $disk mkpart "$name" "${startB}B" "${endB}B"
+        fi
+        my_udevsettle
+        last_partition_number=$number
+        return 0
+    fi
+
+    if is_false $FEATURE_PARTED_RESIZEPART && is_false $FEATURE_PARTED_RESIZE ; then
+        Error "Disk '$disk': trying to create partition number $number which isn't consecutive with previous partition but 'parted' doesn't support this feature"
+    fi
+
+    # "parted" is only capable of creating partitions consecutively. Since
+    # there is a gap between the previous partition and this partition, dummy
+    # partitions must be created, and later will be removed once disks are
+    # fully partitioned (this is done in
+    # delete_dummy_partitions_and_resize_real_ones()).
+    #
+    # Once the dummy partitions are removed, the real partition needs to be
+    # resized to original size.
+    # Unfortunately, "parted" is only capable of resizing a partition toward
+    # its end, not the beginning, so the only way to create dummy partitions
+    # appropriately is to use some space at the end of the real partition.
+    #
+    # Example: the GPT disk contains only 1 partition numbered 3 named PART
+    #
+    # # parted -m -s /dev/sda unit B print
+    # /dev/sda:21474836480B:scsi:512:512:gpt:QEMU QEMU HARDDISK:;
+    # 3:1048576B:2097151B:1048576B::PART:;
+    #
+    # We need to create these partitions to recreate the exact same partitions:
+    #
+    # # parted -m -s /dev/sda unit B print
+    # /dev/sda:21474836480B:scsi:512:512:gpt:QEMU QEMU HARDDISK:;
+    # 3:1048576B:2096127B:1047552B::PART:;
+    # 2:2096128B:2096639B:512B::dummy2:;
+    # 1:2096640B:2097151B:512B::dummy1:;
+    #
+    # Then delete dummy partition 1 and 2 and resize 3 to its original end.
+    #
+    # For 'msdos' disks, only non-logical partitions are affected.
+
+    if [[ ! $endB ]] ; then
+        # We need to compute '$endB' based on disk size. To do so, create a
+        # partition then get its end
+        LogPrint "Disk '$disk': creating a temporary partition to find out the end of the disk"
+        parted -s -m $disk mkpart "$name" ${startB}B 100%
+        local num
+        read num endB <<< $( parted -s -m $disk unit B print | tail -1 | awk -F ':' '{ print $1, $3 }' | sed 's/\([0-9]*\)B$/\1/' )
+        LogPrint "Disk '$disk': last allocatable byte on disk is '$endB'"
+        LogPrint "Disk '$disk': deleting the temporary partition number $num"
+        parted -s -m $disk rm $num
+    fi
+
+    partitions_to_resize+=( $number $endB )
+
+    local -i logical_sector_size=$( parted -m -s $disk unit B print | awk -F ':' "\$1 == \"$disk\" { print \$4 }" )
+
+    if [[ "$disk_label" != "msdos" ]] || [[ "$name" != "logical" ]] ; then
+        local -i i=$last_partition_number+1
+        while [[ $i -lt $number ]] ; do
+            local partname="dummy$i"
+            [[ "$disk_label" != "msdos" ]] || partname="primary"
+            dummy_partitions_to_delete+=( $i )
+            LogPrint "Disk '$disk': creating dummy partition number $i with name '$partname' (will be deleted later)"
+            parted -s -m $disk mkpart "$partname" "${endB}B" "${endB}B"
+            my_udevsettle
+            let endB-=$logical_sector_size
+            if [[ $endB -lt $startB ]] ; then
+                # Not enough space left for real partition: this happens if the
+                # partition to create is very small and we cannot create dummy
+                # temporary partitions!
+                # e.g. Partition table starts at partition number 2 and partition 2
+                # has only 1 cylinder
+                Error "Disk '$disk': Cannot create partition number $number, the partition is too small to create dummy partitions to work around parted's limitation (parted can only create consecutive partitions)"
+            fi
+            let i++
+        done
+    fi
+
+    LogPrint "Disk '$disk': creating partition number $number with name '$name'"
+    parted -s $disk mkpart "$name" "${startB}B" "${endB}B"
+    my_udevsettle
+
+    last_partition_number=$number
+}
+
+#
+# delete_dummy_partitions_and_resize_real_ones()
+#
+# When current disk has non-consecutive partitions, delete temporary partitions
+# that have been created and resize the temporary shrinked partitions to their
+# expected size.
+#
+delete_dummy_partitions_and_resize_real_ones() {
+    # If parted doesn't support resizing, this is a no-op function
+    # (dummy_partitions_to_delete will be empty).
+    if [[ ${#dummy_partitions_to_delete[@]} -eq 0 ]] ; then
+        partitions_to_resize=()
+        current_disk=""
+        disk_label=""
+        last_partition_number=0
+        return 0
+    fi
+
+    # Delete dummy partitions
+    local -i num
+    for num in ${dummy_partitions_to_delete[@]} ; do
+        LogPrint "Disk '$current_disk': deleting dummy partition number $num"
+        parted -s -m $current_disk rm $num
+    done
+    dummy_partitions_to_delete=()
+    my_udevsettle
+
+    # Resize previously shrinked partitions (to make place for dummy
+    # partitions) to expected size
+    local -i endB
+    while read num endB ; do
+        LogPrint "Disk '$current_disk': resizing partition number $num to original size"
+        if is_true $FEATURE_PARTED_RESIZEPART ; then
+            parted -s -m $current_disk resizepart $num "${endB}B"
+        else
+            parted -s -m $current_disk resize $num "${endB}B"
+        fi
+    done <<< "$(printf "%d %d\n" "${partitions_to_resize[@]}")"
+    partitions_to_resize=()
+    my_udevsettle
+
+    current_disk=""
+    disk_label=""
+    last_partition_number=0
+}
+
 # vim: set et ts=4 sw=4:

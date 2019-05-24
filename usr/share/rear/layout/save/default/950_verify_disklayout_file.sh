@@ -10,6 +10,9 @@
 #   Error: Partition doesn't exist
 # cf. https://github.com/rear/rear/issues/1681
 #
+# THIS LIMITATION APPLIES TO parted NOT BEING ABLE TO SPECIFY PARTITIONS IN
+# BYTES ONLY.
+#
 
 LogPrint "Verifying that the entries in $DISKLAYOUT_FILE are correct ..."
 local keyword dummy junk
@@ -198,14 +201,23 @@ for error_message in "${broken_part_errors[@]}" ; do
     LogPrintError "$error_message"
     disklayout_file_is_broken="yes"
 done
-for error_message in "${non_consecutive_part_errors[@]}" ; do
-    contains_visible_char "$error_message" || continue
-    LogPrintError "$error_message"
-    non_consecutive_partitions="yes"
-done
+
+#
+# Non consecutive partitions are supported unless parted tells otherwise
+#
+if is_false $FEATURE_PARTED_RESIZEPART && is_false $FEATURE_PARTED_RESIZE ; then
+    for error_message in "${non_consecutive_part_errors[@]}" ; do
+        contains_visible_char "$error_message" || continue
+        LogPrintError "$error_message"
+        non_consecutive_partitions="yes"
+    done
+fi
+
 is_true "$disklayout_file_is_broken" && BugError "Entries in $DISKLAYOUT_FILE are broken ('rear recover' would fail)"
+
 is_true "$non_consecutive_partitions" && Error "There are non consecutive partitions ('rear recover' would fail)"
 
 # Finish this script successfully in the normal case (i.e. when both 'is_true' above result non zero return code):
 true
 
+# vim: set et ts=4 sw=4:
