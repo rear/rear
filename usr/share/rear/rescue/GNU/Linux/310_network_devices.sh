@@ -861,7 +861,9 @@ function handle_physdev () {
 
     local mac=""
 
-    if has_binary ethtool ; then
+    if [ "$ARCH" == "Linux-s390" ] ; then
+        mac="$( ifconfig $network_interface 2>/dev/null |grep ether |awk '{ print $2 }' )"
+    elif has_binary ethtool ; then
         mac="$( ethtool -P $network_interface 2>/dev/null | awk '{ print $NF }' )"
     fi
     if [ -z "$mac" ] ; then
