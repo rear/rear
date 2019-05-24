@@ -14,15 +14,15 @@ function find_modules_in_dirs () {
 
 # Include storage drivers
 Log "Including storage drivers"
-STORAGE_DRIVERS=( $( find_modules_in_dirs /lib/modules/$KERNEL_VERSION/kernel/drivers/{block,firewire,ide,ata,md,message,scsi,usb/storage} ) )
+STORAGE_DRIVERS=( $( find_modules_in_dirs /lib/modules/$KERNEL_VERSION/kernel/drivers/{block,firewire,ide,ata,md,message,scsi,usb/storage,s390/block,s390/scsi} ) )
 
 # Include network drivers
 Log "Including network drivers"
-NETWORK_DRIVERS=( $( find_modules_in_dirs /lib/modules/$KERNEL_VERSION/kernel/drivers/net ) )
+NETWORK_DRIVERS=( $( find_modules_in_dirs /lib/modules/$KERNEL_VERSION/kernel/drivers/{net,s390/net} ) )
 
 # Include crypto drivers
 Log "Including crypto drivers"
-CRYPTO_DRIVERS=( $( find_modules_in_dirs /lib/modules/$KERNEL_VERSION/kernel/crypto ) )
+CRYPTO_DRIVERS=( $( find_modules_in_dirs /lib/modules/$KERNEL_VERSION/kernel/{crypto,s390/crypto} ) )
 
 # Include virtualization drivers
 Log "Including virtualization drivers"
