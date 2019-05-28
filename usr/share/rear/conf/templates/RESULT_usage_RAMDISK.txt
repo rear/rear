@@ -1,5 +1,39 @@
 How to recover your system:
 ---------------------------
 
-Use the kernel image and initramfs to wire Relax-and-Recover into your booting
-system. That can be using USB/PXE or even direct boot.
+You need to manually set up what is needed in your case
+to boot the kernel (by default named kernel-HOSTNAME)
+plus initramfs/initrd (by default named initramfs-HOSTNAME.img)
+that contains the Relax-and-Recover rescue/recovery system
+on your replacement hardware.
+
+For example to directly boot the ReaR recovery system from within
+a Linux system that is already running on your replacement hardware
+you may use 'kexec':
+
+1. Copy the kernel and the ReaR recovery system initramfs
+   on your already running Linux system.
+
+2. Load the kernel and ReaR's initramfs and provide an appropriate
+   kernel command line to run the ReaR recovery system in a ramdisk
+   and use standard VGA 80x25 text mode (one single command line):
+
+     kexec -l kernel-HOSTNAME
+           --initrd=initramfs-HOSTNAME.img
+           --command-line='root=/dev/ram0 vga=normal'
+
+3. Boot the loaded kernel (plus ReaR's initrd):
+
+     kexec -e
+
+   That will instantly reboot into the loaded kernel without
+   a clean shutdown of the currently running Linux system.
+
+4. In the booted ReaR recovery system log in as 'root'
+   and recover your system:
+
+     rear recover
+
+   That will completely replace the Linux system from before
+   so it does not matter when it was not cleanly shut down.
+
