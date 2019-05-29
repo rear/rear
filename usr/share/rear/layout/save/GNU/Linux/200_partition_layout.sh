@@ -172,8 +172,9 @@ extract_partitions() {
     #   +++ parted -s /dev/dasda mkpart ''\''dasda1'\''' 98304B 314621951B
     #   parted: invalid token: dasda1
     #   Error: Expecting a file system type.
-    # Therefore we use a hardcoded fixed file system type 'ext2' as dummy which works
-    # and which matches what YaST uses as file system type for 'parted mkpart' on s390,
+    # Therefore we use a hardcoded fixed file system type 'ext2' as dummy for 'parted' which works
+    # because the real file systems are set up afterwards via 'mkfs' commands during "rear recover"
+    # and also YaST uses a fixed 'ext2' dummy file system type for 'parted mkpart' on s390,
     # cf. https://github.com/rear/rear/pull/2142#issuecomment-494813151
     if [[ "$disk_label" = "gpt" || "$disk_label" = "gpt_sync_mbr" || "$disk_label" = "dasd" ]] ; then
         if [[ "$FEATURE_PARTED_MACHINEREADABLE" ]] ; then

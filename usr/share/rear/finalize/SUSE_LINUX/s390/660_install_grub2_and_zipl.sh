@@ -19,7 +19,7 @@
 # On SLES12 and SLES15 booting IBM Z basically works this way:
 #   Initially zipl loads a kernel and
 #   that kernel runs GRUB2 and
-#   GRUB2 loads the actual kernel and does a kexec.
+#   GRUB2 loads the actual kernel and does a kexec
 # cf. https://github.com/rear/rear/issues/2137#issuecomment-490420041
 # and https://www.ibm.com/support/knowledgecenter/en/linuxonibm/com.ibm.linux.z.lhdd/lhdd_c_ipl_vs_boot.html
 #
@@ -35,7 +35,8 @@
 # cf. finalize/default/050_prepare_checks.sh
 is_true $NOBOOTLOADER || return 0
 
-# Only for GRUB2 - GRUB Legacy will be handled by its own script.
+# Only for GRUB2.
+# GRUB Legacy is not supported for this special bootloader setup on s390 on SLES12 and later.
 # GRUB2 is detected by testing for grub-probe or grub2-probe which does not exist in GRUB Legacy.
 # If neither grub-probe nor grub2-probe is there assume GRUB2 is not there:
 type -p grub-probe || type -p grub2-probe || return 0
