@@ -140,67 +140,115 @@ extract_partitions() {
     ### Find partition name for GPT disks.
     # For the SUSE specific gpt_sync_mbr partitioning scheme
     # see https://github.com/rear/rear/issues/544
-    if [[ "$disk_label" = "gpt" || "$disk_label" == "gpt_sync_mbr" ]] ; then
+    # For s390 dasd disks parted does not show a partition name/type.
+    # E.g. on s390 the parted output looks like
+    #   # parted -s /dev/dasda unit MiB print
+    #   Model: IBM S390 DASD drive (dasd)
+    #   Disk /dev/dasda: 7043MiB
+    #   Sector size (logical/physical): 512B/4096B
+    #   Partition Table: dasd
+    #   Disk Flags: 
+    #   Number  Start    End      Size     File system     Flags
+    #    1      0.09MiB  200MiB   200MiB   ext2
+    #    2      200MiB   1179MiB  979MiB   linux-swap(v1)
+    #    3      1179MiB  7043MiB  5864MiB  ext4
+    # while on x86 the parted output looks like
+    #   # parted -s /dev/sda unit MiB print
+    #   Model: ATA WDC WD10EZEX-75M (scsi)
+    #   Disk /dev/sda: 953870MiB
+    #   Sector size (logical/physical): 512B/4096B
+    #   Partition Table: gpt
+    #   Disk Flags: 
+    #   Number  Start      End        Size       File system     Name  Flags
+    #    1      1.00MiB    501MiB     500MiB     fat16                 boot, esp
+    #    2      501MiB     937911MiB  937410MiB  ext4
+    #    3      937911MiB  953870MiB  15959MiB   linux-swap(v1)        swap
+    # cf. https://github.com/rear/rear/pull/2142#discussion_r285594247
+    # But on s390 'parted mkpart fs-type start end' requires a valid file system type
+    # so that the above fallback type="rear-noname" that gets during "rear recover"
+    # replaced with $(basename "$partition") via 100_include_partition_code.sh
+    # does not work on s390 and lets parted fail with "invalid token",
+    # see https://github.com/rear/rear/pull/2142#issuecomment-494742554
+    #   +++ parted -s /dev/dasda mkpart ''\''dasda1'\''' 98304B 314621951B
+    #   parted: invalid token: dasda1
+    #   Error: Expecting a file system type.
+    # Therefore we use a hardcoded fixed file system type 'ext2' as dummy for 'parted' which works
+    # because the real file systems are set up afterwards via 'mkfs' commands during "rear recover"
+    # and also YaST uses a fixed 'ext2' dummy file system type for 'parted mkpart' on s390,
+    # cf. https://github.com/rear/rear/pull/2142#issuecomment-494813151
+    if [[ "$disk_label" = "gpt" || "$disk_label" = "gpt_sync_mbr" || "$disk_label" = "dasd" ]] ; then
         if [[ "$FEATURE_PARTED_MACHINEREADABLE" ]] ; then
             while read partition_nr size start junk ; do
-                # In case of GPT the 'type' field contains actually the GPT partition name.
-                type=$(grep "^$partition_nr:" $TMP_DIR/parted | cut -d ":" -f "6")
-                # There must not be any empty field in disklayout.conf
-                # because the fields in disklayout.conf are positional parameters
-                # that get assigned to variables via the 'read' shell builtin:
-                test "$type" || type="rear-noname"
-                # There must not be any IFS character in a field in disklayout.conf
-                # because IFS characters are used as field separators
-                # but in particular a GPT partition name can contain spaces
-                # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
-                # so that the partition name is stored as a percent-encoded string:
-                type=$( percent_encode "$type" )
+                if [[ "$disk_label" = "dasd" ]] ; then
+                    type="ext2"
+                else
+                    # In case of GPT the 'type' field contains actually the GPT partition name.
+                    type=$(grep "^$partition_nr:" $TMP_DIR/parted | cut -d ":" -f "6")
+                    # There must not be any empty field in disklayout.conf
+                    # because the fields in disklayout.conf are positional parameters
+                    # that get assigned to variables via the 'read' shell builtin:
+                    test "$type" || type="rear-noname"
+                    # There must not be any IFS character in a field in disklayout.conf
+                    # because IFS characters are used as field separators
+                    # but in particular a GPT partition name can contain spaces
+                    # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
+                    # so that the partition name is stored as a percent-encoded string:
+                    type=$( percent_encode "$type" )
+                fi
                 sed -i /^$partition_nr\ /s/$/\ $type/ $TMP_DIR/partitions
             done < $TMP_DIR/partitions-data
         else
             declare line line_length number numberfield
             init_columns "$(grep "Flags" $TMP_DIR/parted)"
             while read line ; do
-                # read throws away leading spaces
-                line_length=${line%% *}
-                if (( "$line_length" < 10 )) ; then
-                    line=" $line"
-                fi
-
-                if [[ "$FEATURE_PARTED_OLDNAMING" ]] ; then
-                    numberfield="minor"
+                if [[ "$disk_label" = "dasd" ]] ; then
+                    type="ext2"
                 else
-                    numberfield="number"
+                    # read throws away leading spaces
+                    line_length=${line%% *}
+                    if (( "$line_length" < 10 )) ; then
+                        line=" $line"
+                    fi
+
+                    if [[ "$FEATURE_PARTED_OLDNAMING" ]] ; then
+                        numberfield="minor"
+                    else
+                        numberfield="number"
+                    fi
+
+                    number=$(get_columns "$line" "$numberfield" | tr -d " " | tr -d ";")
+
+                    # In case of GPT the 'type' field contains actually the GPT partition name.
+                    type=$(get_columns "$line" "name" | tr -d " " | tr -d ";")
+
+                    # There must not be any empty field in disklayout.conf
+                    # because the fields in disklayout.conf are positional parameters
+                    # that get assigned to variables via the 'read' shell builtin:
+                    test "$type" || type="rear-noname"
+
+                    # There must not be any IFS character in a field in disklayout.conf
+                    # because IFS characters are used as field separators
+                    # but in particular a GPT partition name can contain spaces
+                    # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
+                    # so that the partition name is stored as a percent-encoded string:
+                    type=$( percent_encode "$type" )
                 fi
-
-                number=$(get_columns "$line" "$numberfield" | tr -d " " | tr -d ";")
-
-                # In case of GPT the 'type' field contains actually the GPT partition name.
-                type=$(get_columns "$line" "name" | tr -d " " | tr -d ";")
-
-                # There must not be any empty field in disklayout.conf
-                # because the fields in disklayout.conf are positional parameters
-                # that get assigned to variables via the 'read' shell builtin:
-                test "$type" || type="rear-noname"
-
-                # There must not be any IFS character in a field in disklayout.conf
-                # because IFS characters are used as field separators
-                # but in particular a GPT partition name can contain spaces
-                # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
-                # so that the partition name is stored as a percent-encoded string:
-                type=$( percent_encode "$type" )
-
                 sed -i /^$number\ /s/$/\ $type/ $TMP_DIR/partitions
             done < <(grep -E '^[ ]*[0-9]' $TMP_DIR/parted)
         fi
     fi
 
-    ### find the flags given by parted.
     declare flags flaglist
+    ### Find the flags given by parted.
     if [[ "$FEATURE_PARTED_MACHINEREADABLE" ]] ; then
         while read partition_nr size start junk ; do
-            flaglist=$(grep "^$partition_nr:" $TMP_DIR/parted | cut -d ":" -f "7" | tr -d "," | tr -d ";")
-
+            # On s390 the parted output columns differ, see the above parted output on s390 versus on x86.
+            # There is no 'Name' column so that the 'Flags' column is not the 7th column but the 6th column on s390:
+            if [[ "$disk_label" = "dasd" ]] ; then
+                flaglist=$( grep "^$partition_nr:" $TMP_DIR/parted | cut -d ":" -f "6" | tr -d "," | tr -d ";" )
+            else
+                flaglist=$( grep "^$partition_nr:" $TMP_DIR/parted | cut -d ":" -f "7" | tr -d "," | tr -d ";" )
+            fi
             ### only report flags parted can actually recreate
             flags=""
             for flag in $flaglist ; do
@@ -210,10 +258,7 @@ extract_partitions() {
                     flags="${flags}prep,"
                 fi
             done
-
-            if [[ -z "$flags" ]] ; then
-                flags="none"
-            fi
+            test "$flags" || flags="none"
             sed -i /^$partition_nr\ /s/$/\ ${flags%,}/ $TMP_DIR/partitions
         done < $TMP_DIR/partitions-data
     else
@@ -245,10 +290,7 @@ extract_partitions() {
                 fi
             done
 
-            if [[ -z "$flags" ]] ; then
-                flags="none"
-            fi
-
+            test "$flags" || flags="none"
             sed -i /^$number\ /s/$/\ ${flags%,}/ $TMP_DIR/partitions
         done < <(grep -E '^[ ]*[0-9]' $TMP_DIR/parted)
     fi
