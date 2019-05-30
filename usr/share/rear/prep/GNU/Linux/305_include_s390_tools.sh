@@ -1,6 +1,8 @@
 #
 #  s390 zIPL boot loader and grubby for configuring boot loader`
 
+[ "$ARCH" == "Linux-s390"  ] || return 0
+
 test -d $VAR_DIR/recovery || mkdir -p $VAR_DIR/recovery
 
 local bootdir="$( echo -n /boot/ )"
