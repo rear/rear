@@ -23,12 +23,9 @@ fi
 
 # Missing programs in the PROGS array are ignored:
 # zipl and grubby are  added in conf/Linux-s390x.conf
-PROGS+=( findmnt dasd_cio_free dasdfmt dasdinfo dasdstat dasdview dasdconf.sh fdasd qetharp qethconf qethqoat )
-PROGS+=( cmsfscat  cmsfsck  cmsfscp  cmsfslst  cmsfsvol )
-PROGS+=( chccwdev chshut chiucvallow chchp tape390_crypt tape390_display )
+PROGS+=( findmnt dasdfmt dasdinfo fdasd )
 PROGS+=( lsdasd lsqeth lstape )
-PROGS+=( cio_ignore zdump zfcpconf.sh zgetdump ziomon ziomon_mgr ziomon_zfcpdd ziorep_traffic znetconf )
-PROGS+=( fcp_cio_free zfcpdbf zic ziomon_fcpconf ziomon_util ziorep_config ziorep_utilization znet_cio_free zramctl )
+PROGS+=( cio_ignore znetconf )
 
 COPY_AS_IS+=( /etc/zipl.conf /lib/s390-tools )
 
