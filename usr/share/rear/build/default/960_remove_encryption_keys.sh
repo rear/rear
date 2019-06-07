@@ -11,7 +11,7 @@
 # cf. the comment of the UserInput function in lib/_input-output-functions.sh
 # how to keep things confidential when usr/sbin/rear is run in debugscript mode
 # ('2>/dev/null' should be sufficient here because 'test' does not output on stdout):
-{ test "$BACKUP_PROG_CRYPT_KEY" || return 0 ; } 2>/dev/null
+{ test "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null || return 0
 
 # BACKUP_PROG_CRYPT_KEY must be removed regardless if BACKUP_PROG_CRYPT_ENABLED is true or false
 # because when the user has in his etc/rear/local.conf BACKUP_PROG_CRYPT_KEY=my_secret_key

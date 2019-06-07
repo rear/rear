@@ -759,8 +759,13 @@ function LogPrintIfError () {
 #       When usr/sbin/rear is run in debugscript mode (which runs the scripts with 'set -x') arbitrary values
 #       appear in the log file so that the confidential user input mode does not help in debugscript mode.
 #       If confidential user input is needed also in debugscript mode the caller of the UserInput function
-#       must call it in an appropriate (temporary) environment e.g. with STDERR redirected to /dev/null like:
+#       must call it in an appropriate (temporary) environment e.g. with STDERR redirected to /dev/null like
 #           { password="$( UserInput -I PASSWORD -C -r -s -p 'Enter the pasword' )" ; } 2>/dev/null
+#       The redirection must be done via a compound group command { confidential_command ; } 2>/dev/null
+#       even for a single confidential command to ensure STDERR is redirected to /dev/null also for 'set -x'
+#       otherwise the confidential command and its arguments would be shown in the log file, for example
+#           { openssl des3 -salt -k secret_passphrase ; } 2>/dev/null
+#       where the secret passphrase must not appear in the log, cf. https://github.com/rear/rear/issues/2155
 # Result:
 #   Any actual user input or an automated user input or the default response is output via STDOUT.
 # Return code:

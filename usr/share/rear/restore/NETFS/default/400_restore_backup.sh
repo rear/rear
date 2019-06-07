@@ -131,7 +131,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
     # therefore 'Log ... BACKUP_PROG_CRYPT_KEY ...' is used (and not '$BACKUP_PROG_CRYPT_KEY')
     # but '$BACKUP_PROG_CRYPT_KEY' must be used in the actual command call which means
     # the BACKUP_PROG_CRYPT_KEY value would appear in the log when rear is run in debugscript mode
-    # so that stderr of the whole actual command is redirected to /dev/null
+    # so that stderr of the confidential command is redirected to /dev/null
     # cf. the comment of the UserInput function in lib/_input-output-functions.sh
     # how to keep things confidential when rear is run in debugscript mode
     # because it is more important to not leak out user secrets into a log file
@@ -144,7 +144,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                 fi
                 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then 
                     Log "dd if=$restore_input | $BACKUP_PROG_DECRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose ${BACKUP_PROG_OPTIONS[@]} ${BACKUP_PROG_COMPRESS_OPTIONS[@]} -C $TARGET_FS_ROOT/ -x -f -"
-                    { dd if=$restore_input | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f - ; } 2>/dev/null
+                    dd if=$restore_input | { $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY ; } 2>/dev/null | $BACKUP_PROG --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
 
                 else
                     Log "dd if=$restore_input | $BACKUP_PROG --block-number --totals --verbose ${BACKUP_PROG_OPTIONS[@]} ${BACKUP_PROG_COMPRESS_OPTIONS[@]} -C $TARGET_FS_ROOT/ -x -f -"

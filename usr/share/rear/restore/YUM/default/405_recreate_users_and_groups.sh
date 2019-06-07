@@ -25,7 +25,7 @@ IsInArray "yes" "${RECREATE_USERS_GROUPS[@]}" || return
 # therefore 'Log ... BACKUP_PROG_CRYPT_KEY ...' is used (and not '$BACKUP_PROG_CRYPT_KEY')
 # but '$BACKUP_PROG_CRYPT_KEY' must be used in the actual command call which means
 # the BACKUP_PROG_CRYPT_KEY value would appear in the log when rear is run in debugscript mode
-# so that stderr of the whole actual command is redirected to /dev/null
+# so that stderr of the confidential command is redirected to /dev/null
 # cf. the comment of the UserInput function in lib/_input-output-functions.sh
 # how to keep things confidential when rear is run in debugscript mode
 # because it is more important to not leak out user secrets into a log file
@@ -33,9 +33,9 @@ IsInArray "yes" "${RECREATE_USERS_GROUPS[@]}" || return
 # cf. https://github.com/rear/rear/issues/2155
 # Extract the passwd, shadow and group files from our backup to our rescue /tmp so we can use those files to repopulate the users in the target system
 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
-    { dd if=$backuparchive | \
-        $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | \
-        $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TMPDIR -x -f - etc/passwd etc/shadow etc/group ; } 2>/dev/null
+    dd if=$backuparchive | \
+        { $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY ; } 2>/dev/null | \
+        $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TMPDIR -x -f - etc/passwd etc/shadow etc/group
 else
     dd if=$backuparchive | \
         $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TMPDIR -x -f - etc/passwd etc/shadow etc/group
