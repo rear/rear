@@ -20,9 +20,18 @@
 LogPrint "Removing BACKUP_PROG_CRYPT_KEY value from config files in the recovery system"
 for configfile in $( find ${ROOTFS_DIR}/etc/rear ${ROOTFS_DIR}/usr/share/rear/conf -name "*.conf" -type f )
 do
+    # Avoid running 'sed' needlessly on files that do not contain 'BACKUP_PROG_CRYPT_KEY='.
     # Without '-q' grep would output the BACKUP_PROG_CRYPT_KEY value on stdout which is redirected to the log:
     grep -q 'BACKUP_PROG_CRYPT_KEY=' $configfile || continue
-    sed -i -e 's/BACKUP_PROG_CRYPT_KEY=.*/BACKUP_PROG_CRYPT_KEY=""/' $configfile && continue
+    # It must work for simple unquoted assignment as in
+    #   BACKUP_PROG_CRYPT_KEY=my_secret_passphrase
+    # but also for more advanced things like
+    #   { BACKUP_PROG_CRYPT_KEY='my;secret;passphrase'; } 2>/dev/null
+    # cf. the example in doc/user-guide/04-scenarios.adoc
+    # To avoid arbitrary syntax matching via complicated regular expressions
+    # we simply remove all BACKUP_PROG_CRYPT_KEY values in lines that contain 'BACKUP_PROG_CRYPT_KEY='
+    # and we avoid that the BACKUP_PROG_CRYPT_KEY value is shown in debugscript mode as described above:
+    { sed -i -e "/BACKUP_PROG_CRYPT_KEY=/s/$BACKUP_PROG_CRYPT_KEY//g" $configfile ; } 2>/dev/null && continue
     LogPrintError "Failed to remove BACKUP_PROG_CRYPT_KEY value from $configfile"
 done
 
