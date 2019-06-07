@@ -23,6 +23,8 @@ fi
 
 # Missing programs in the PROGS array are ignored:
 # zipl and grubby are  added in conf/Linux-s390x.conf
+# cf. https://github.com/rear/rear/pull/2142#issuecomment-499529607
+# move most progs to local.conf until deemed needed
 PROGS+=( findmnt dasdfmt dasdinfo fdasd )
 PROGS+=( lsdasd lsqeth lstape )
 PROGS+=( cio_ignore znetconf )
