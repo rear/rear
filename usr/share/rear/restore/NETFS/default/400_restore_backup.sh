@@ -1,3 +1,4 @@
+#
 # 400_restore_backup.sh
 #
 
@@ -21,18 +22,6 @@ test "$CONFIG_APPEND_FILES" && backup_restore_log_prefix=$backup_restore_log_pre
 local restore_input_basename=""
 
 mkdir -p $BUILD_DIR/outputfs/$NETFS_PREFIX
-
-# Disable BACKUP_PROG_DECRYPT_OPTIONS by replacing the default with 'cat' when encryption is disabled
-# (by default encryption is disabled but the default BACKUP_PROG_DECRYPT_OPTIONS is not 'cat'):
-if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
-    # Backup archive decryption is only supported with 'tar':
-    test "tar" = "$BACKUP_PROG" || Error "Backup archive decryption is only supported with BACKUP_PROG=tar"
-    LogPrint "Decrypting backup archive with key defined in variable \$BACKUP_PROG_CRYPT_KEY"
-else
-    Log "Decrypting backup archive is disabled"
-    BACKUP_PROG_DECRYPT_OPTIONS="cat"
-    BACKUP_PROG_CRYPT_KEY=""
-fi
 
 # The RESTORE_ARCHIVES array contains the restore input files.
 # If it is not set, RESTORE_ARCHIVES is only one element which is the backup archive:
@@ -137,13 +126,31 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
     # output of a possibly simultaneously running process that likes to append to the log file
     # (e.g. when background processes run that also uses the log file for logging)
     # cf. https://github.com/rear/rear/issues/885#issuecomment-310308763
+    # Do not show the BACKUP_PROG_CRYPT_KEY value in a log file
+    # where BACKUP_PROG_CRYPT_KEY is only used if BACKUP_PROG_CRYPT_ENABLED is true
+    # therefore 'Log ... BACKUP_PROG_CRYPT_KEY ...' is used (and not '$BACKUP_PROG_CRYPT_KEY')
+    # but '$BACKUP_PROG_CRYPT_KEY' must be used in the actual command call which means
+    # the BACKUP_PROG_CRYPT_KEY value would appear in the log when rear is run in debugscript mode
+    # so that stderr of the confidential command is redirected to /dev/null
+    # cf. the comment of the UserInput function in lib/_input-output-functions.sh
+    # how to keep things confidential when rear is run in debugscript mode
+    # because it is more important to not leak out user secrets into a log file
+    # than having stderr error messages when a confidential command fails
+    # cf. https://github.com/rear/rear/issues/2155
     (   case "$BACKUP_PROG" in
             (tar)
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
                     BACKUP_PROG_OPTIONS=( "${BACKUP_PROG_OPTIONS[@]}" "--exclude-from=$TMP_DIR/restore-exclude-list.txt" )
                 fi
-                Log dd if=$restore_input \| $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY \| $BACKUP_PROG --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
-                dd if=$restore_input | $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then 
+                    Log "dd if=$restore_input | $BACKUP_PROG_DECRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose ${BACKUP_PROG_OPTIONS[@]} ${BACKUP_PROG_COMPRESS_OPTIONS[@]} -C $TARGET_FS_ROOT/ -x -f -"
+                    dd if=$restore_input | { $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY ; } 2>/dev/null | $BACKUP_PROG --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+
+                else
+                    Log "dd if=$restore_input | $BACKUP_PROG --block-number --totals --verbose ${BACKUP_PROG_OPTIONS[@]} ${BACKUP_PROG_COMPRESS_OPTIONS[@]} -C $TARGET_FS_ROOT/ -x -f -"
+
+                    dd if=$restore_input | $BACKUP_PROG --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TARGET_FS_ROOT/ -x -f -
+                fi
                 ;;
             (rsync)
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then

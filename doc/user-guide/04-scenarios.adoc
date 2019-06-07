@@ -27,19 +27,41 @@ When using one of the above backup solution (commercial or open source) then the
 
 ReaR will incorporate the needed executables and libraries of your chosen backup solution into the rescue image of ReaR.
 
-== Bootable ISO and storing archive on NFS/NAS
-To create an ISO rescue image and using a central NFS/NAS server to store the archive, you could define:
+== Bootable ISO together with backup archive stored on NFS/NAS
+To create an ISO rescue image and using a central NFS/NAS server to store it together with the backup archive, you could define:
 
 [source,bash]
 ----
 OUTPUT=ISO
 BACKUP=NETFS
-BACKUP_URL=nfs://remote-nfs-server/exports
-#BACKUP_PROG_CRYPT_ENABLED=1
-#BACKUP_PROG_CRYPT_KEY="my_Secret_pw"
+# BACKUP_OPTIONS="nfsvers=3,nolock"
+BACKUP_URL=nfs://your.NFS.server.IP/path/to/your/rear/backup
+# BACKUP_PROG_CRYPT_ENABLED="yes"
+# { BACKUP_PROG_CRYPT_KEY="my_secret_passphrase" ; } 2>/dev/null
 ----
 
-The above example shows that it is even possible to protect the archives with a password.  Be aware, that the password entry +BACKUP_PROG_CRYPT_KEY="my_Secret_pw"+ will be deleted in the +/etc/rear/local.conf+ file within the rescue image. So, it is important to remember the password (if you use the rescue image months later could cause problems I guess).
+The above example shows that it is also possible to encrypt the backup archive.
+Currently only 'tar' is supported for backup archive encryption and decryption.
+When BACKUP_PROG_CRYPT_ENABLED is set to a true value, BACKUP_PROG_CRYPT_KEY must be also set.
+There is no BACKUP_PROG_CRYPT_KEY value in the /etc/rear/local.conf file in the rescue image.
+It gets removed because the ReaR rescue/recovery system must be free of secrets.
+Otherwise the rescue system ISO image and any recovery medium that is made from it
+would have to be carefully protected against any unwanted access.
+Therefore BACKUP_PROG_CRYPT_KEY must be manually set before running "rear recover".
+For example via `export BACKUP_PROG_CRYPT_KEY="my_secret_passphrase"`
+before calling "rear recover" and/or also before calling "rear mkbackup"
+so that there is no need to store it ever in a ReaR config file.
+On the other hand it is crucial to remember the BACKUP_PROG_CRYPT_KEY value
+that was used during "rear mkbackup" so that possibly a long time later that
+rescue image can be used (possibly by someone else) to recover from a disaster.
+If the BACKUP_PROG_CRYPT_KEY value should be set in a ReaR config file
+you should avoid that the BACKUP_PROG_CRYPT_KEY value is shown in a log file
+when 'rear' is run in debugscript mode (where 'set -x' is set) by redirecting
+STDERR to /dev/null via `{ command confidential_argument ; } 2>/dev/null`
+where the redirection must be done via a compound group command even for
+a single confidential command to let the redirection also apply for 'set -x'.
+See the comment of the UserInput function in lib/_input-output-functions.sh
+how to keep things confidential when 'rear' is run in debugscript mode.
 
 
 == Bootable USB device with backup to USB
