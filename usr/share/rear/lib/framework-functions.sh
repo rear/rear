@@ -42,7 +42,7 @@ function Source () {
     Log "Including $relname"
     # DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
-        Debug "Entering debugscripts mode via 'set -$DEBUGSCRIPTS_ARGUMENT'."
+        Debug "Entering debugscript mode via 'set -$DEBUGSCRIPTS_ARGUMENT'."
         local saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )"
         set -$DEBUGSCRIPTS_ARGUMENT
     fi
@@ -58,7 +58,7 @@ function Source () {
     test "0" -eq "$source_return_code" || Debug "Source function: 'source $source_file' returns $source_return_code"
     # Undo DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
-        Debug "Leaving debugscripts mode (back to previous bash flags and options settings)."
+        Debug "Leaving debugscript mode (back to previous bash flags and options settings)."
         # The only known way how to do 'set +x' after 'set -x' without 'set -x' output for the 'set +x' call
         # is a current shell environment where stderr is redirected to /dev/null before 'set +x' is run via
         #   { set +x ; } 2>/dev/null

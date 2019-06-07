@@ -20,24 +20,26 @@ IsInArray "yes" "${RECREATE_USERS_GROUPS[@]}" || return
 
 [ -z "$TMPDIR" ] && TMPDIR=$(mktemp -d -t rear_405.XXXXXXXXXXXXXXX)
 
-# code snippet from restore/NETFS/default/400_restore_backup.sh...
-# Disable BACKUP_PROG_DECRYPT_OPTIONS by replacing the default with 'cat' when encryption is disabled
-# (by default encryption is disabled but the default BACKUP_PROG_DECRYPT_OPTIONS is not 'cat'):
-if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
-    # Backup archive decryption is only supported with 'tar':
-    test "tar" = "$BACKUP_PROG" || Error "Backup archive decryption is only supported with BACKUP_PROG=tar"
-    LogPrint "Decrypting backup archive with key defined in variable \$BACKUP_PROG_CRYPT_KEY"
-else
-    Log "Decrypting backup archive is disabled"
-    BACKUP_PROG_DECRYPT_OPTIONS="cat"
-    BACKUP_PROG_CRYPT_KEY=""
-fi
-# ...code snippet from restore/NETFS/default/400_restore_backup.sh
-
+# Do not show the BACKUP_PROG_CRYPT_KEY value in a log file
+# where BACKUP_PROG_CRYPT_KEY is only used if BACKUP_PROG_CRYPT_ENABLED is true
+# therefore 'Log ... BACKUP_PROG_CRYPT_KEY ...' is used (and not '$BACKUP_PROG_CRYPT_KEY')
+# but '$BACKUP_PROG_CRYPT_KEY' must be used in the actual command call which means
+# the BACKUP_PROG_CRYPT_KEY value would appear in the log when rear is run in debugscript mode
+# so that stderr of the confidential command is redirected to /dev/null
+# cf. the comment of the UserInput function in lib/_input-output-functions.sh
+# how to keep things confidential when rear is run in debugscript mode
+# because it is more important to not leak out user secrets into a log file
+# than having stderr error messages when a confidential command fails
+# cf. https://github.com/rear/rear/issues/2155
 # Extract the passwd, shadow and group files from our backup to our rescue /tmp so we can use those files to repopulate the users in the target system
-dd if=$backuparchive | \
-	$BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY | \
-	$BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TMPDIR -x -f - etc/passwd etc/shadow etc/group
+if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+    dd if=$backuparchive | \
+        { $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY ; } 2>/dev/null | \
+        $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TMPDIR -x -f - etc/passwd etc/shadow etc/group
+else
+    dd if=$backuparchive | \
+        $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TMPDIR -x -f - etc/passwd etc/shadow etc/group
+fi
 
 RECREATE_USERS=($(cut -d ':' -f '1' $TMPDIR/etc/passwd))
 RECREATE_GROUPS=($(cut -d ':' -f '1' $TMPDIR/etc/group))

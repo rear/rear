@@ -365,7 +365,7 @@ function trap () {
 # but only when the user launched 'rear -v' in verbose mode:
 function Print () {
     # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV when $DISPENSABLE_OUTPUT_DEV is not 'null'.
-    # In debugscripts mode $DISPENSABLE_OUTPUT_DEV is 'stderr' (see usr/sbin/rear)
+    # In debugscript mode $DISPENSABLE_OUTPUT_DEV is 'stderr' (see usr/sbin/rear)
     # and /dev/stderr is fd2 which is redirected to append to RUNTIME_LOGFILE (see usr/sbin/rear)
     # so that 2>/dev/stderr would truncate RUNTIME_LOGFILE to zero size (see 'REDIRECTION' in "man bash")
     # but 2>>/dev/stderr does not change things so that fd2 output is still appended to RUNTIME_LOGFILE:
@@ -545,7 +545,7 @@ function Error () {
     # (but do not stop at lines that are logged like '++ StopIfError ...' or '++ PrintError ...')
     # if such a '+ Error' or '+ BugError' line exists, otherwise sed proceeds to the end
     # (the sed pattern '[Bug]*Error' is fuzzy because it would also match things like 'uuggError').
-    # The reason to stop at a line that contains '+ [Bug]*Error ' is that in debugscripts mode '-D'
+    # The reason to stop at a line that contains '+ [Bug]*Error ' is that in debugscript mode '-D'
     # a BugError or Error function call with a multi line error message (e.g. BugError does that)
     # results 'set -x' debug output of that function call in the log file that looks like:
     #   ++ [Bug]Error 'first error message line
@@ -756,11 +756,16 @@ function LogPrintIfError () {
 #       the prompt, the actual input, the default value, and the choices are still shown on the user's terminal.
 #       In confidential user input mode the actual input coming from the user's terminal is still echoed
 #       on the user's terminal unless also the -s option is specified.
-#       When usr/sbin/rear is run in debugscripts mode (which runs the scripts with 'set -x') arbitrary values
-#       appear in the log file so that the confidential user input mode does not help in debugscripts mode.
-#       If confidential user input is needed also in debugscripts mode the caller of the UserInput function
-#       must call it in an appropriate (temporary) environment e.g. with STDERR redirected to /dev/null like:
+#       When usr/sbin/rear is run in debugscript mode (which runs the scripts with 'set -x') arbitrary values
+#       appear in the log file so that the confidential user input mode does not help in debugscript mode.
+#       If confidential user input is needed also in debugscript mode the caller of the UserInput function
+#       must call it in an appropriate (temporary) environment e.g. with STDERR redirected to /dev/null like
 #           { password="$( UserInput -I PASSWORD -C -r -s -p 'Enter the pasword' )" ; } 2>/dev/null
+#       The redirection must be done via a compound group command { confidential_command ; } 2>/dev/null
+#       even for a single confidential command to ensure STDERR is redirected to /dev/null also for 'set -x'
+#       otherwise the confidential command and its arguments would be shown in the log file, for example
+#           { openssl des3 -salt -k secret_passphrase ; } 2>/dev/null
+#       where the secret passphrase must not appear in the log, cf. https://github.com/rear/rear/issues/2155
 # Result:
 #   Any actual user input or an automated user input or the default response is output via STDOUT.
 # Return code:
