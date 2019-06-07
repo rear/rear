@@ -1,3 +1,4 @@
+#
 # 500_make_backup.sh
 #
 
@@ -37,16 +38,16 @@ if [[ "$opath" ]]; then
     mkdir -p $v "${opath}" >&2
 fi
 
-# Disable BACKUP_PROG_CRYPT_OPTIONS by replacing the default with 'cat' when encryption is disabled
-# (by default encryption is disabled but the default BACKUP_PROG_CRYPT_OPTIONS is not 'cat'):
 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
     # Backup archive encryption is only supported with 'tar':
     test "tar" = "$BACKUP_PROG" || Error "Backup archive encryption is only supported with BACKUP_PROG=tar"
-    LogPrint "Encrypting backup archive with key defined in variable \$BACKUP_PROG_CRYPT_KEY"
-else
-    Log "Encrypting backup archive is disabled"
-    BACKUP_PROG_CRYPT_OPTIONS="cat"
-    BACKUP_PROG_CRYPT_KEY=""
+    # Backup archive encryption is impossible without a BACKUP_PROG_CRYPT_KEY value.
+    # Avoid that the BACKUP_PROG_CRYPT_KEY value is shown in debugscript mode
+    # cf. the comment of the UserInput function in lib/_input-output-functions.sh
+    # how to keep things confidential when usr/sbin/rear is run in debugscript mode
+    # ('2>/dev/null' should be sufficient here because 'test' does not output on stdout):
+    { test "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null || Error "BACKUP_PROG_CRYPT_KEY must be set for backup archive encryption"
+    LogPrint "Encrypting backup archive with key defined in BACKUP_PROG_CRYPT_KEY"
 fi
 
 # Check if the backup needs to be splitted or not (on multiple ISOs)
@@ -71,6 +72,17 @@ fi
 FAILING_BACKUP_PROG_FILE="$TMP_DIR/failing_backup_prog"
 FAILING_BACKUP_PROG_RC_FILE="$TMP_DIR/failing_backup_prog_rc"
 
+# Do not show the BACKUP_PROG_CRYPT_KEY value in a log file
+# where BACKUP_PROG_CRYPT_KEY is only used if BACKUP_PROG_CRYPT_ENABLED is true
+# therefore 'Log ... BACKUP_PROG_CRYPT_KEY ...' is used (and not '$BACKUP_PROG_CRYPT_KEY')
+# but '$BACKUP_PROG_CRYPT_KEY' must be used in the actual command call which means
+# the BACKUP_PROG_CRYPT_KEY value would appear in the log when rear is run in debugscript mode
+# so that stderr of the confidential command is redirected to /dev/null
+# cf. the comment of the UserInput function in lib/_input-output-functions.sh
+# how to keep things confidential when rear is run in debugscript mode
+# because it is more important to not leak out user secrets into a log file
+# than having stderr error messages when a confidential command fails
+# cf. https://github.com/rear/rear/issues/2155
 LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 ProgressStart "Preparing archive operation"
 (
@@ -78,13 +90,24 @@ case "$(basename ${BACKUP_PROG})" in
     # tar compatible programs here
     (tar)
         set_tar_features
-        Log $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
-            --no-wildcards-match-slash --one-file-system \
-            --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}" \
-            $BACKUP_PROG_CREATE_NEWER_OPTIONS \
-            ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
-            -X $TMP_DIR/backup-exclude.txt -C / -c -f - \
-            $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
+
+        if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+            Log $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
+                --no-wildcards-match-slash --one-file-system \
+                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}" \
+                $BACKUP_PROG_CREATE_NEWER_OPTIONS \
+                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
+                -X $TMP_DIR/backup-exclude.txt -C / -c -f - \
+                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
+        else
+            Log $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
+                --no-wildcards-match-slash --one-file-system \
+                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}" \
+                $BACKUP_PROG_CREATE_NEWER_OPTIONS \
+                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
+                -X $TMP_DIR/backup-exclude.txt -C / -c -f - \
+                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $SPLIT_COMMAND
+        fi
 
         # Variable used to record the short name of piped commands in case of
         # error, e.g. ( "tar" "cat" "dd" ) in case of unencrypted and unsplit backup.
@@ -97,19 +120,30 @@ case "$(basename ${BACKUP_PROG})" in
             [ -n "${backup_prog_shortnames[$index]}" ] || BugError "No computed shortname for pipe component $index"
         done
 
-        $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
-            --no-wildcards-match-slash --one-file-system                        \
-            --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
-            $BACKUP_PROG_CREATE_NEWER_OPTIONS                                   \
-            ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                       \
-            "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                \
-            -X $TMP_DIR/backup-exclude.txt -C / -c -f -                         \
-            $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |   \
-                                                                    \
-        $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY |         \
-                                                                    \
-        $SPLIT_COMMAND
-        pipes_rc=( ${PIPESTATUS[@]} )
+        if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+            $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
+                --no-wildcards-match-slash --one-file-system                        \
+                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
+                $BACKUP_PROG_CREATE_NEWER_OPTIONS                                   \
+                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                       \
+                "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                \
+                -X $TMP_DIR/backup-exclude.txt -C / -c -f -                         \
+                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |               \
+            { $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY ; } 2>/dev/null |   \
+            $SPLIT_COMMAND
+            pipes_rc=( ${PIPESTATUS[@]} )
+        else
+            $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
+                --no-wildcards-match-slash --one-file-system                        \
+                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
+                $BACKUP_PROG_CREATE_NEWER_OPTIONS                                   \
+                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                       \
+                "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                \
+                -X $TMP_DIR/backup-exclude.txt -C / -c -f -                         \
+                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |               \
+            $SPLIT_COMMAND
+            pipes_rc=( ${PIPESTATUS[@]} )
+        fi
 
         # Exit code logic:
         # - never return rc=1 (this is reserved for "tar" warning about modified files)

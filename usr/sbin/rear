@@ -28,7 +28,7 @@ function get_bash_flags_and_options_commands () {
     # Output bash commands that set the currently set flags
     # in reverse ordering to have "set ... xtrace" (i.e. "set +/- x") first
     # so that this flag is set first via apply_bash_flags_and_options_commands
-    # which results better matching logging output in debugscripts mode:
+    # which results better matching logging output in debugscript mode:
     set +o | tac | tr '\n' ';'
     # Output bash commands that set the currently set options:
     shopt -p | tr '\n' ';'
