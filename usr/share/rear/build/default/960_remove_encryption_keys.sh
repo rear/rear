@@ -18,11 +18,12 @@
 # and BACKUP_PROG_CRYPT_ENABLED=false the BACKUP_PROG_CRYPT_KEY value is still there.
 
 LogPrint "Removing BACKUP_PROG_CRYPT_KEY value from config files in the recovery system"
-for configfile in $( find ${ROOTFS_DIR}/etc/rear ${ROOTFS_DIR}/usr/share/rear/conf -name "*.conf" -type f )
-do
-    # Avoid running 'sed' needlessly on files that do not contain 'BACKUP_PROG_CRYPT_KEY='.
+for configfile in $( find ${ROOTFS_DIR}/etc/rear ${ROOTFS_DIR}/usr/share/rear/conf -name "*.conf" -type f ) ; do
+    # Avoid running 'sed' needlessly on files that do not contain 'BACKUP_PROG_CRYPT_KEY=' with its actual value
+    # which is the case for default.conf that contains the example BACKUP_PROG_CRYPT_KEY="my_secret_passphrase".
+    # Avoid that the BACKUP_PROG_CRYPT_KEY value is shown in debugscript mode as described above.
     # Without '-q' grep would output the BACKUP_PROG_CRYPT_KEY value on stdout which is redirected to the log:
-    grep -q 'BACKUP_PROG_CRYPT_KEY=' $configfile || continue
+    { grep -q "BACKUP_PROG_CRYPT_KEY=.*$BACKUP_PROG_CRYPT_KEY" $configfile ; } 2>/dev/null || continue
     # It must work for simple unquoted assignment as in
     #   BACKUP_PROG_CRYPT_KEY=my_secret_passphrase
     # but also for more advanced things like
