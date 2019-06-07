@@ -31,7 +31,10 @@ do
     # To avoid arbitrary syntax matching via complicated regular expressions
     # we simply remove all BACKUP_PROG_CRYPT_KEY values in lines that contain 'BACKUP_PROG_CRYPT_KEY='
     # and we avoid that the BACKUP_PROG_CRYPT_KEY value is shown in debugscript mode as described above:
-    { sed -i -e "/BACKUP_PROG_CRYPT_KEY=/s/$BACKUP_PROG_CRYPT_KEY//g" $configfile ; } 2>/dev/null && continue
-    LogPrintError "Failed to remove BACKUP_PROG_CRYPT_KEY value from $configfile"
+    if { sed -i -e "/BACKUP_PROG_CRYPT_KEY=/s/$BACKUP_PROG_CRYPT_KEY//g" $configfile ; } 2>/dev/null ; then
+        DebugPrint "Removed BACKUP_PROG_CRYPT_KEY value from $configfile"
+    else
+        LogPrintError "Failed to remove BACKUP_PROG_CRYPT_KEY value from $configfile"
+    fi
 done
 
