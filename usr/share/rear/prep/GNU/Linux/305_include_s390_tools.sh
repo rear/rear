@@ -28,6 +28,7 @@ fi
 PROGS+=( findmnt dasdfmt dasdinfo fdasd )
 PROGS+=( lsdasd lsqeth lstape )
 PROGS+=( cio_ignore znetconf )
+PROGS+=( zipl )
 
 COPY_AS_IS+=( /etc/zipl.conf /lib/s390-tools )
 

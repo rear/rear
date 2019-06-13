@@ -360,6 +360,30 @@ Log "Saving disk partitions."
         blockd=${disk#/sys/block/}
         if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* || $blockd = nvme* || $blockd = mmcblk* ]] ; then
 
+            if [[ $blockd == dasd* && "$ARCH" == "Linux-s390" ]]
+            then
+                devname=$(get_device_name $disk)
+
+                echo "# dasdfmt - disk layout is either cdl for the compatible disk layout (default) or ldl"
+                echo "#  example usage: dasdfmt -b 4096 -d cdl -y /dev/dasda"
+                layout=$(dasdview -x  /dev/dasda|grep "^format"|awk '{print $7}')
+                blocksize=$( dasdview -i  /dev/dasda|grep blocksize|awk '{print $6}' )
+                echo "# dasdfmt $devname"
+                echo "# dasdfmt -b <blocksize> -d <layout> -y <devname>"
+                echo "dasdfmt -b $blocksize -d $layout -y $devname"
+
+                echo "# fdasd $devname"
+                echo "# write fdasd as device [start,end,type]"
+                echo "# repeat [start,end,type] for each partition"
+                echo "# where: start - start track, end - end track"
+                echo "# parse line fdasd_config into a file and call fdasd -c filename $devname"
+                echo "#        type: optional and specifies the partition type. <type> can be one of: native, swap, raid, lvm, or gpfs.  If omitted, 'native' is used"
+
+                config=$( fdasd -ps /dev/dasda|grep "[[:space:]]/dev" |tr -s ' ' |awk '{print "[" $2","$3","$7 "]"}' | tr "\n" " " )
+                echo "# fdasd -c <filename> <devname>"
+                echo "fdasd_config $devname $config"
+            fi
+
             #FIXME: exclude *rpmb (Replay Protected Memory Block) for nvme*, mmcblk* and uas
             # *rpmb = no read access && no write access
             # GNU Parted <= 3.2 -> Input/output error
