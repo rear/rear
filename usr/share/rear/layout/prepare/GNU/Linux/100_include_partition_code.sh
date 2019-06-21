@@ -141,7 +141,8 @@ EOF
             # For the SUSE specific gpt_sync_mbr partitioning scheme
             # see https://github.com/rear/rear/issues/544
             # see https://github.com/rear/rear/pull/2142 for s390 partitioning
-            if [[ "$label" == "gpt" || "$label" == "gpt_sync_mbr" || "$label" == "dasd" ]] ; then
+            #if [[ "$label" == "gpt" || "$label" == "gpt_sync_mbr" || "$label" == "dasd" ]] ; then
+            if [[ "$label" == "gpt" || "$label" == "gpt_sync_mbr" ]] ; then
                 device_size=$( mathlib_calculate "$device_size - 33*$block_size" )
                 # Only if resizing all partitions is explicity wanted
                 # resizing of arbitrary partitions may also happen via the code below

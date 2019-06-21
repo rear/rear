@@ -1239,4 +1239,4 @@ delete_dummy_partitions_and_resize_real_ones() {
     last_partition_number=0
 }
 
-# vim: set et ts=4 sw=4:
+

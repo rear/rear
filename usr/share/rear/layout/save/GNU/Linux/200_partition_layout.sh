@@ -364,24 +364,9 @@ Log "Saving disk partitions."
             then
                 devname=$(get_device_name $disk)
 
-                echo "# dasdfmt - disk layout is either cdl for the compatible disk layout (default) or ldl"
-                echo "#  example usage: dasdfmt -b 4096 -d cdl -y /dev/dasda"
-                layout=$(dasdview -x  /dev/dasda|grep "^format"|awk '{print $7}')
-                blocksize=$( dasdview -i  /dev/dasda|grep blocksize|awk '{print $6}' )
-                echo "# dasdfmt $devname"
-                echo "# dasdfmt -b <blocksize> -d <layout> -y <devname>"
-                echo "dasdfmt -b $blocksize -d $layout -y $devname"
-
-                echo "# fdasd $devname"
-                echo "# write fdasd as device [start,end,type]"
-                echo "# repeat [start,end,type] for each partition"
-                echo "# where: start - start track, end - end track"
-                echo "# parse line fdasd_config into a file and call fdasd -c filename $devname"
-                echo "#        type: optional and specifies the partition type. <type> can be one of: native, swap, raid, lvm, or gpfs.  If omitted, 'native' is used"
-
-                config=$( fdasd -ps /dev/dasda|grep "[[:space:]]/dev" |tr -s ' ' |awk '{print "[" $2","$3","$7 "]"}' | tr "\n" " " )
-                echo "# fdasd -c <filename> <devname>"
-                echo "fdasd_config $devname $config"
+                echo "# active dasd bus and channel"
+                echo "# bus-id <name device> type"
+                echo "dasd_channel $( lsdasd|grep dasd|awk '{ print $1 " "  $2 " "  $3 " "  $4}' )"
             fi
 
             #FIXME: exclude *rpmb (Replay Protected Memory Block) for nvme*, mmcblk* and uas
