@@ -21,7 +21,6 @@ set -x
 
 EOF
 
-
 # Populate diskrestore.sh with further code to (re)-create all disk layout components:
 all_done=
 while [ -z "$all_done" ] ; do

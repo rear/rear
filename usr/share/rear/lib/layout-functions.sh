@@ -1239,4 +1239,3 @@ delete_dummy_partitions_and_resize_real_ones() {
     last_partition_number=0
 }
 
-
