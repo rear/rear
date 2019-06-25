@@ -63,7 +63,7 @@ blacklist {
     # Note: On sles11/rhel6, multipath failed if no multipath device is found.
     while ! multipath ; do
         echo
-        choice="$( UserInput -I MULTIPATH_FAILED_TO_LIST_DEVICE -p "$prompt" -D "${choices[0]}" "${choices[@]}")"&& wilful_input="yes" || wilful_input="no"
+        choice="$( UserInput -I MULTIPATH_FAILED_TO_LIST_DEVICE -p "$prompt" -D "${choices[0]}" "${choices[@]}")" && wilful_input="yes" || wilful_input="no"
         case "$choice" in
             (${choices[0]})
                 # continue recovery without multipath
