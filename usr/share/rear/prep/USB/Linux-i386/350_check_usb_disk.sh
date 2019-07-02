@@ -21,7 +21,7 @@ if [ "$TEMP_USB_DEVICE" -a -b "/dev/$TEMP_USB_DEVICE" ]; then
     RAW_USB_DEVICE="/dev/$(my_udevinfo -q name -n "$TEMP_USB_DEVICE")"
 elif [ "$TEMP_USB_DEVICE" -a -d "/sys/block/$TEMP_USB_DEVICE" ]; then
     RAW_USB_DEVICE="/dev/$(my_udevinfo -q name -p "$TEMP_USB_DEVICE")"
-elif [ -z "$TEMP_USB_DEVICE" ]; then
+elif [ -z "$TEMP_USB_DEVICE" ] || [ -z "$RAW_USB_DEVICE" ] ; then
     RAW_USB_DEVICE="/dev/$(my_udevinfo -q name -n "$REAL_USB_DEVICE")"
 else
     BugError "Unable to determine raw USB device for $REAL_USB_DEVICE"
