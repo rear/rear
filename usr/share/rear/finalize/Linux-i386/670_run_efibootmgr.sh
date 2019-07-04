@@ -56,6 +56,15 @@ if [[ $Disk = *'/mmcblk'+([0-9])p ]] ; then
     Disk=${Disk%p}
 fi
 
+# For NVMe devices the trailing 'p' in the Disk value
+# (as in /dev/nvme0n1p that is derived from /dev/nvme0n1p1)
+# needs to be stripped (to get /dev/nvme0n1), otherwise the
+# efibootmgr call fails because of a wrong disk device name.
+# See also https://github.com/rear/rear/issues/1564
+if [[ $Disk = *'/nvme'+([0-9])n+([0-9])p ]] ; then
+    Disk=${Disk%p}
+fi
+
 # EFI\fedora\shim.efi
 BootLoader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
 LogPrint "Creating  EFI Boot Manager entry '$OS_VENDOR $OS_VERSION' for '$BootLoader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER')"
