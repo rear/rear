@@ -479,7 +479,7 @@ general pxelinux configuration you use.
 In almost all circumstances you have to configure two main settings and their
 parameters: The backup method and the output method.
 
-The backup method defines, how your data was saved and whether Relax-and-Recover
+The backup method defines, how your data is to be saved and whether Relax-and-Recover
 should backup your data as part of the mkrescue process or whether you use an
 external application, e.g. backup software to archive your data.
 
