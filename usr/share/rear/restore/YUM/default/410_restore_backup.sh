@@ -130,7 +130,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                 fi
                 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
                     Log "dd if=$restore_input | $BACKUP_PROG_DECRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS ${BACKUP_PROG_COMPRESS_OPTIONS[@]} -C / -x -f -"
-                    dd if=$restore_input | { $BACKUP_PROG_DECRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY ; } 2>/dev/null | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C / -x -f -
+                    dd if=$restore_input | { $BACKUP_PROG_DECRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C / -x -f -
                 else
                     Log "dd if=$restore_input | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS ${BACKUP_PROG_COMPRESS_OPTIONS[@]} -C / -x -f -"
                     dd if=$restore_input | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose $BACKUP_PROG_OPTIONS "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C / -x -f -

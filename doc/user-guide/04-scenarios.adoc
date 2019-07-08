@@ -37,7 +37,7 @@ BACKUP=NETFS
 # BACKUP_OPTIONS="nfsvers=3,nolock"
 BACKUP_URL=nfs://your.NFS.server.IP/path/to/your/rear/backup
 # BACKUP_PROG_CRYPT_ENABLED="yes"
-# { BACKUP_PROG_CRYPT_KEY="my_secret_passphrase" ; } 2>/dev/null
+# { BACKUP_PROG_CRYPT_KEY='my_secret_passphrase' ; } 2>/dev/null
 ----
 
 The above example shows that it is also possible to encrypt the backup archive.
@@ -48,7 +48,7 @@ It gets removed because the ReaR rescue/recovery system must be free of secrets.
 Otherwise the rescue system ISO image and any recovery medium that is made from it
 would have to be carefully protected against any unwanted access.
 Therefore BACKUP_PROG_CRYPT_KEY must be manually set before running "rear recover".
-For example via `export BACKUP_PROG_CRYPT_KEY="my_secret_passphrase"`
+For example via `export BACKUP_PROG_CRYPT_KEY='my_secret_passphrase'`
 before calling "rear recover" and/or also before calling "rear mkbackup"
 so that there is no need to store it ever in a ReaR config file.
 On the other hand it is crucial to remember the BACKUP_PROG_CRYPT_KEY value
