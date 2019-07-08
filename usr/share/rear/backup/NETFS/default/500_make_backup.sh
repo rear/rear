@@ -129,7 +129,7 @@ case "$(basename ${BACKUP_PROG})" in
                 "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                \
                 -X $TMP_DIR/backup-exclude.txt -C / -c -f -                         \
                 $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |               \
-            { $BACKUP_PROG_CRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null |   \
+            { $BACKUP_PROG_CRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null | \
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         else
