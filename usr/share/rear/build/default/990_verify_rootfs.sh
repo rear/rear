@@ -43,6 +43,7 @@ local broken_binaries=""
 # so that for testing such third-party backup tools we must also use
 # their special LD_LIBRARY_PATH here:
 local old_LD_LIBRARY_PATH
+# Save LD_LIBRARY_PATH only if one is already set:
 test $LD_LIBRARY_PATH && old_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 if test "$BACKUP" = "TSM" ; then
     # Use a TSM-specific LD_LIBRARY_PATH to find TSM libraries
@@ -61,7 +62,14 @@ if test "$BACKUP" = "NBU" ; then
 fi
 # Actually test all binaries for 'not found' libraries.
 # Find all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths:
-for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ); do
+for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ) ; do
+    # Skip the ldd test for kernel modules because in general running ldd on kernel modules does not make sense
+    # and sometimes running ldd on kernel modules causes needless errors because sometimes that segfaults
+    # which results false alarm "ldd: exited with unknown exit code (139)" messages ( 139 - 128 = 11 = SIGSEGV )
+    # cf. https://github.com/rear/rear/issues/2177 which also shows that sometimes kernel modules could be
+    # not only in the usual directory /lib/modules/ but also e.g. in /usr/lib/modules/
+    # so we 'grep' for '/lib/modules/' anywhere in the full path of the binary:
+    grep -q "/lib/modules/" <<<"$binary" && continue
     # In order to handle relative paths, we 'cd' to the directory containing $binary before running ldd.
     # In particular third-party backup tools may have shared object dependencies with relative paths.
     # For an example see https://github.com/rear/rear/pull/1560#issuecomment-343504359 that reads (excerpt):
@@ -79,11 +87,12 @@ for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ); do
     #       libc.so.6 => /lib64/libc.so.6 (0x00007f6656560000)
     #       ...
     # The login shell is there so that we can call commands as in a normal working shell,
-
     # cf. https://github.com/rear/rear/issues/862#issuecomment-274068914
     # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120.
     chroot $ROOTFS_DIR /bin/bash --login -c "cd $( dirname $binary ) && ldd $binary" < /dev/null | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
 done
+# Restore the LD_LIBRARY_PATH if it was saved above (i.e. when LD_LIBRARY_PATH had been set before)
+# otherwise unset a possibly set LD_LIBRARY_PATH (i.e. when LD_LIBRARY_PATH had not been set before):
 test $old_LD_LIBRARY_PATH && export LD_LIBRARY_PATH=$old_LD_LIBRARY_PATH || unset LD_LIBRARY_PATH
 
 # Report binaries with 'not found' shared object dependencies:
