@@ -21,6 +21,10 @@ local path=$( url_path $BACKUP_URL )
 local opath=$( backup_path $scheme $path )
 test "$opath" && mkdir $v -p "$opath"
 
+# In any case show an initial basic info what is currently done
+# so that it is more clear where subsequent messages belong to:
+LogPrint "Making backup (using backup method $BACKUP)"
+
 # Verify that preconditions to make the backup are fulfilled and error out if not:
 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
     # Backup archive encryption is only supported with 'tar':
@@ -31,10 +35,7 @@ if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
     # how to keep things confidential when usr/sbin/rear is run in debugscript mode
     # ('2>/dev/null' should be sufficient here because 'test' does not output on stdout):
     { test "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null || Error "BACKUP_PROG_CRYPT_KEY must be set for backup archive encryption"
-    LogPrint "Encrypting $BACKUP backup archive with key defined in BACKUP_PROG_CRYPT_KEY"
-else
-    # In any case show an info what is done:
-    LogPrint "Making $BACKUP backup"
+    LogPrint "Encrypting backup archive with key defined in BACKUP_PROG_CRYPT_KEY"
 fi
 
 # Log what is included in the backup and what is excluded from the backup
