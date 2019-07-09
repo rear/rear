@@ -2,42 +2,30 @@
 # 500_make_backup.sh
 #
 
-function set_tar_features {
+function set_tar_features () {
     # Default tar options
     TAR_OPTIONS=
-
     # Test for features in tar
     # true if at supports the --warning option (v1.23+)
     FEATURE_TAR_WARNINGS=
-
-    local tar_version=$(get_version tar --version)
-
-    if version_newer "$tar_version" 1.23; then
+    local tar_version=$( get_version tar --version )
+    if version_newer "$tar_version" 1.23 ; then
         FEATURE_TAR_WARNINGS="y"
         TAR_OPTIONS="$TAR_OPTIONS --warning=no-xdev"
     fi
-
     FEATURE_TAR_IS_SET=1
 }
 
+local scheme=$( url_scheme $BACKUP_URL )
+local path=$( url_path $BACKUP_URL )
+local opath=$( backup_path $scheme $path )
+test "$opath" && mkdir $v -p "$opath"
 
-Log "Include list:"
-while read -r ; do
-    Log "  $REPLY"
-done < $TMP_DIR/backup-include.txt
-Log "Exclude list:"
-while read -r ; do
-    Log " $REPLY"
-done < $TMP_DIR/backup-exclude.txt
+# In any case show an initial basic info what is currently done
+# so that it is more clear where subsequent messages belong to:
+LogPrint "Making backup (using backup method $BACKUP)"
 
-local scheme=$(url_scheme $BACKUP_URL)
-local path=$(url_path $BACKUP_URL)
-local opath=$(backup_path $scheme $path)
-
-if [[ "$opath" ]]; then
-    mkdir -p $v "${opath}" >&2
-fi
-
+# Verify that preconditions to make the backup are fulfilled and error out if not:
 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
     # Backup archive encryption is only supported with 'tar':
     test "tar" = "$BACKUP_PROG" || Error "Backup archive encryption is only supported with BACKUP_PROG=tar"
@@ -49,6 +37,17 @@ if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
     { test "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null || Error "BACKUP_PROG_CRYPT_KEY must be set for backup archive encryption"
     LogPrint "Encrypting backup archive with key defined in BACKUP_PROG_CRYPT_KEY"
 fi
+
+# Log what is included in the backup and what is excluded from the backup
+# cf. backup/NETFS/default/400_create_include_exclude_files.sh
+Log "Backup include list (backup-include.txt contents):"
+while read -r backup_include_item ; do
+    test "$backup_include_item" && Log "  $backup_include_item"
+done < $TMP_DIR/backup-include.txt
+Log "Backup exclude list (backup-exclude.txt contents):"
+while read -r backup_exclude_item ; do
+    test "$backup_exclude_item" && Log "  $backup_exclude_item"
+done < $TMP_DIR/backup-exclude.txt
 
 # Check if the backup needs to be splitted or not (on multiple ISOs)
 if [[ -n "$ISO_MAX_SIZE" ]]; then
@@ -129,7 +128,7 @@ case "$(basename ${BACKUP_PROG})" in
                 "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                \
                 -X $TMP_DIR/backup-exclude.txt -C / -c -f -                         \
                 $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |               \
-            { $BACKUP_PROG_CRYPT_OPTIONS $BACKUP_PROG_CRYPT_KEY ; } 2>/dev/null |   \
+            { $BACKUP_PROG_CRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null | \
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         else
