@@ -22,6 +22,10 @@ you may use 'kexec':
            --initrd=initramfs-HOSTNAME.img
            --command-line='root=/dev/ram0 vga=normal'
 
+   You may have to add hardware dependant kernel command line
+   parameters if needed for your replacement hardware,
+   cf. /proc/cmdline of your system.
+
 3. Boot the loaded kernel (plus ReaR's initrd):
 
      kexec -e
@@ -30,10 +34,10 @@ you may use 'kexec':
    a clean shutdown of the currently running Linux system.
 
 4. In the booted ReaR recovery system log in as 'root'
+   (this may only work directly on the system console) 
    and recover your system:
 
      rear recover
 
    That will completely replace the Linux system from before
    so it does not matter when it was not cleanly shut down.
-
