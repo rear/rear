@@ -27,8 +27,8 @@ fi
 # move most progs to local.conf until deemed needed
 PROGS+=( findmnt dasdfmt dasdinfo fdasd )
 PROGS+=( lsdasd lsqeth lstape )
-PROGS+=( cio_ignore znetconf )
-PROGS+=( zipl )
+PROGS+=( cio_ignore znetconf chccwdev )
+PROGS+=( zipl grubby )
 
 COPY_AS_IS+=( /etc/zipl.conf /lib/s390-tools )
 
