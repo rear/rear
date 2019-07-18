@@ -345,10 +345,12 @@ while read component_type disk_device old_disk_size disk_label junk ; do
     #   /dev/sdb5             143653M 115257M    27358M      81% /
     #   /dev/sdb3                161M      5M      157M       3% /boot/efi
     #   /dev/sda2             514926M    983M   487765M       1% /data
-    last_part_disk_space_usage=( $( grep "^$last_part_dev " $original_disk_space_usage_file ) )
+    # Neither original_disk_space_usage_file may exist nor may it contain an entry for last_part_dev and
+    # then we output e.g. "/dev/sda2 No_original_disk_space_usage_info 0M" to get ${last_part_disk_space_usage[2]%%M*} = 0.
+    # Because $original_disk_space_usage_file is not empty, grep cannot hang up here by reading from stdin:
+    last_part_disk_space_usage=( $( grep "^$last_part_dev " $original_disk_space_usage_file || echo $last_part_dev No_original_disk_space_usage_info 0M ) )
     last_part_used_bytes=$( mathlib_calculate "${last_part_disk_space_usage[2]%%M*} * $MiB" )
-    # Neither original_disk_space_usage_file may exist nor may it contain an entry for last_part_dev
-    # so that the two above commands may fail but the next test ensures last_part_used_bytes is valid:
+    # The is_positive_integer test ensures the WARNING could be only shown when last_part_used_bytes is actually valid:
     if is_positive_integer $last_part_used_bytes ; then
         # One of the rare cases where a "WARNING" is justified (see above why we cannot error out here)
         # cf. http://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
