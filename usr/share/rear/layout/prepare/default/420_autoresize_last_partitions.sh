@@ -398,7 +398,7 @@ while read component_type disk_device old_disk_size disk_label junk ; do
     disk_size_difference=$( mathlib_calculate "$new_disk_size - $old_disk_size" )
     if test $disk_size_difference -gt 0 ; then
         # The size of the new disk is bigger than the size of the old disk:
-        DebugPrint "New $disk_device is $disk_size_difference bigger than old disk"
+        DebugPrint "New $disk_device is $disk_size_difference bytes bigger than old disk"
         increase_threshold_difference=$( mathlib_calculate "$old_disk_size / 100 * $AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE" )
         if test $disk_size_difference -lt $increase_threshold_difference ; then
             if is_true "$last_part_is_resizeable" ; then
@@ -422,7 +422,7 @@ while read component_type disk_device old_disk_size disk_label junk ; do
         # The size of the new disk is smaller than the size of the old disk:
         # Currently disk_size_difference is negative but we prefer to use its absolute value:
         disk_size_difference=$( mathlib_calculate "0 - $disk_size_difference" )
-        DebugPrint "New $disk_device is $disk_size_difference smaller than old disk"
+        DebugPrint "New $disk_device is $disk_size_difference bytes smaller than old disk"
         # There is no need to shrink the last partition when the original last partition still fits on the new smaller disk:
         if test $last_part_end -le $new_disk_remainder_start ; then
             if is_true "$last_part_is_resizeable" ; then
