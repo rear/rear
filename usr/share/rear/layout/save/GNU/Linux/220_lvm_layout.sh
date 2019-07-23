@@ -53,6 +53,7 @@ Log "Saving LVM layout."
     done
 
     header_printed=0
+    already_processed_lvs=""
 
     ## Get all logical volumes
     # format: lvmvol <volume_group> <name> <size(bytes)> <layout> [key:value ...]
@@ -61,7 +62,7 @@ Log "Saving LVM layout."
 
     if lvm lvs -o lv_layout >/dev/null 2>&1; then
 
-        lvm 8>&- 7>&- lvs --separator=":" --noheadings --units b --nosuffix -o origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size | while read line ; do
+        lvm 8>&- 7>&- lvs --separator=":" --noheadings --units b --nosuffix -o origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size | while read line ; do
 
             if [ $header_printed -eq 0 ] ; then
                 echo "# Format for LVM LVs"
@@ -72,7 +73,7 @@ Log "Saving LVM layout."
             origin="$(echo "$line" | awk -F ':' '{ print $1 }')"
             # Skip snapshots (useless) or caches (dont know how to handle that)
             if [ -n "$origin" ] ; then
-                echo "# Skipped snapshot of cache information '$line'"
+                echo "# Skipped snapshot or cache information '$line'"
                 continue
             fi
 
@@ -84,25 +85,38 @@ Log "Saving LVM layout."
             chunksize="$(echo "$line" | awk -F ':' '{ print $7 }')"
             stripes="$(echo "$line" | awk -F ':' '{ print $8 }')"
             stripesize="$(echo "$line" | awk -F ':' '{ print $9 }')"
+            segmentsize="$(echo "$line" | awk -F ':' '{ print $10 }')"
 
             kval=""
             [ -z "$thinpool" ] || kval="${kval:+$kval }thinpool:$thinpool"
             [ $chunksize -eq 0 ] || kval="${kval:+$kval }chunksize:${chunksize}b"
             [ $stripesize -eq 0 ] || kval="${kval:+$kval }stripesize:${stripesize}b"
+            [ $segmentsize -eq $size ] || kval="${kval:+$kval }segmentsize:${segmentsize}b"
             if [[ ,$layout, == *,mirror,* ]] ; then
                 kval="${kval:+$kval }mirrors:$(($stripes - 1))"
             elif [[ ,$layout, == *,striped,* ]] ; then
                 kval="${kval:+$kval }stripes:$stripes"
             fi
 
-            echo "lvmvol /dev/$vg $lv ${size}b $layout $kval"
+            if [[ " $already_processed_lvs " == *\ $vg/$lv\ * ]] ; then
+                # The LV has multiple segments; the create_lvmvol() function in
+                # 110_include_lvm_code.sh is not able to recreate this, but
+                # keep the information for the administrator anyway.
+                echo "#lvmvol /dev/$vg $lv ${size}b $layout $kval"
+            else
+                if [ $segmentsize -ne $size ] ; then
+                    echo "# WARNING: Volume $vg/$lv has multiple segments. Restoring it in Migration Mode using 'lvcreate' won't preserve segments and properties of the other segments as well!"
+                fi
+                echo "lvmvol /dev/$vg $lv ${size}b $layout $kval"
+                already_processed_lvs="${already_processed_lvs:+$already_processed_lvs }$vg/$lv"
+            fi
         done
 
     else
         # Compatibility with older LVM versions (e.g. <= 2.02.98)
         # No support for 'lv_layout', too bad, do our best!
 
-        lvm 8>&- 7>&- lvs --separator=":" --noheadings --units b --nosuffix -o origin,lv_name,vg_name,lv_size,modules,pool_lv,chunk_size,stripes,stripe_size | while read line ; do
+        lvm 8>&- 7>&- lvs --separator=":" --noheadings --units b --nosuffix -o origin,lv_name,vg_name,lv_size,modules,pool_lv,chunk_size,stripes,stripe_size,seg_size | while read line ; do
 
             if [ $header_printed -eq 0 ] ; then
                 echo "# Format for LVM LVs"
@@ -125,11 +139,13 @@ Log "Saving LVM layout."
             chunksize="$(echo "$line" | awk -F ':' '{ print $7 }')"
             stripes="$(echo "$line" | awk -F ':' '{ print $8 }')"
             stripesize="$(echo "$line" | awk -F ':' '{ print $9 }')"
+            segmentsize="$(echo "$line" | awk -F ':' '{ print $10 }')"
 
             kval=""
             [ -z "$thinpool" ] || kval="${kval:+$kval }thinpool:$thinpool"
             [ $chunksize -eq 0 ] || kval="${kval:+$kval }chunksize:${chunksize}b"
             [ $stripesize -eq 0 ] || kval="${kval:+$kval }stripesize:${stripesize}b"
+            [ $segmentsize -eq $size ] || kval="${kval:+$kval }segmentsize:${segmentsize}b"
             if [[ "$modules" == "" ]] ; then
                 layout="linear"
                 [ $stripes -eq 0 ] || kval="${kval:+$kval }stripes:$stripes"
@@ -148,7 +164,18 @@ Log "Saving LVM layout."
                 kval="${kval:+$kval }stripes:$stripes"
             fi
 
-            echo "lvmvol /dev/$vg $lv ${size}b $layout $kval"
+            if [[ " $already_processed_lvs " == *\ $vg/$lv\ * ]]; then
+                # The LV has multiple segments; the create_lvmvol() function in
+                # 110_include_lvm_code.sh is not able to recreate this, but
+                # keep the information for the administrator anyway.
+                echo "#lvmvol /dev/$vg $lv ${size}b $layout $kval"
+            else
+                if [ $segmentsize -ne $size ] ; then
+                    echo "# WARNING: Volume $vg/$lv has multiple segments. Restoring it in Migration Mode using 'lvcreate' won't preserve segments and properties of the other segments as well!"
+                fi
+                echo "lvmvol /dev/$vg $lv ${size}b $layout $kval"
+                already_processed_lvs="${already_processed_lvs:+$already_processed_lvs }$vg/$lv"
+            fi
         done
 
     fi
