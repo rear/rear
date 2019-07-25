@@ -90,7 +90,7 @@ test "$AUTORESIZE_PARTITIONS" || AUTORESIZE_PARTITIONS=''
 local original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
 
 local component_type junk
-local disk_device old_disk_size
+local disk_device old_disk_size disk_label
 local sysfsname new_disk_size
 local max_part_start last_part_dev last_part_start last_part_size last_part_type last_part_flags last_part_end
 local extended_part_dev extended_part_start extended_part_size
@@ -98,7 +98,7 @@ local disk_dev part_size part_start part_type part_flags part_dev
 local last_part_is_resizeable last_part_filesystem_entry last_part_filesystem_mountpoint egrep_pattern
 local last_part_is_boot last_part_is_swap last_part_is_efi
 local extended_part_to_be_increased
-local MiB new_disk_size_MiB new_disk_remainder_start new_last_part_size new_extended_part_size
+local MiB new_disk_block_size secondary_GPT_size new_disk_size_MiB new_disk_remainder_start new_last_part_size new_extended_part_size
 local last_part_disk_space_usage last_part_used_bytes
 local disk_size_difference increase_threshold_difference last_part_shrink_difference max_shrink_difference
 
@@ -112,14 +112,22 @@ local disk_size_difference increase_threshold_difference last_part_shrink_differ
 #   # Format: disk <devname> <size(bytes)> <partition label type>
 #   disk /dev/sdb 2147483648 msdos
 #
-while read component_type disk_device old_disk_size junk ; do
+#   # Disk /dev/vda
+#   # Format: disk <devname> <size(bytes)> <partition label type>
+#   disk /dev/vda 53687091200 gpt
+#
+#   # Disk /dev/dasda
+#   # Format: disk <devname> <size(bytes)> <partition label type>
+#   disk /dev/dasda 7385333760 dasd
+#
+while read component_type disk_device old_disk_size disk_label junk ; do
     # Continue with next disk if the current one has no partitions
     # (i.e. when there is no 'part' entry in disklayout.conf for the current disk)
     # otherwise the "Find the last partition for the current disk" code below fails
     # cf. https://github.com/rear/rear/issues/2134
     grep -q "^part $disk_device" "$LAYOUT_FILE" || continue
     
-    DebugPrint "Examining $disk_device to automatically resize its last active partition"
+    DebugPrint "Examining $disk_label disk $disk_device to automatically resize its last active partition"
 
     sysfsname=$( get_sysfs_name $disk_device )
     test "$sysfsname" || Error "Failed to get_sysfs_name() for $disk_device"
@@ -282,15 +290,30 @@ while read component_type disk_device old_disk_size junk ; do
     fi
 
     # Determine the desired new size of the last partition (with 1 MiB alignment)
-    # so that the new sized last partition would go up to the end of the new disk:
+    # so that the new sized last partition would go up to the end of the usable space on the new disk:
     DebugPrint "Determining new size for last partition $last_part_dev"
     MiB=$( mathlib_calculate "1024 * 1024" )
+    # GPT disks need 33 LBA blocks reserved space at the end of the disk
+    # for the secondary GPT (with GPT default size) at the end of the disk
+    # cf. https://en.wikipedia.org/wiki/GUID_Partition_Table
+    # and https://github.com/rear/rear/issues/2182
+    # and the code in layout/prepare/GNU/Linux/100_include_partition_code.sh
+    if test "$disk_label" = "gpt" -o "$disk_label" = "gpt_sync_mbr" ; then
+        new_disk_block_size=$( get_block_size "$sysfsname" )
+        secondary_GPT_size=$( mathlib_calculate "33 * $new_disk_block_size" )
+    else
+        secondary_GPT_size=0
+    fi
     # mathlib_calculate cuts integer remainder so that for a disk of e.g. 12345.67 MiB size new_disk_size_MiB = 12345
-    new_disk_size_MiB=$( mathlib_calculate "$new_disk_size / $MiB" )
-    # The first byte of the unusable remainder (with 1 MiB alignment) is the first byte after the last MiB on the disk
-    # i.e. the first byte after the last MiB on a disk is the start of the unused disk space remainder at the end.
+    # which results the 1 MiB alignment of the end of the used space on the new disk:
+    new_disk_size_MiB=$( mathlib_calculate "( $new_disk_size - $secondary_GPT_size ) / $MiB" )
+    # The first byte of the unusable remainder (with 1 MiB alignment) is the first byte after the last used MiB on the disk
+    # i.e. the first byte after the last used MiB on a disk is the start of the unused disk space remainder at the end.
     # This value has same semantics as the partition start values (which are the first byte of a partition).
-    # For a disk of 12345.67 MiB size the new_disk_remainder_start = 12944670720
+    # For a non-GPT disk of 12345.67 MiB size the new_disk_remainder_start = 12944670720 = 12345 * 1024 * 1024.
+    # For a GPT disk of 6789 MiB size with 512 bytes block size secondary_GPT_size = 16896 = 33 * 512 bytes
+    # so that its usable size = ( 6789 * 1024 * 1024 - 16896 ) / 1024 / 1024 = 6788.98388671875 MiB
+    # which results new_disk_size_MiB = 6788 and new_disk_remainder_start = 7117733888 = 6788 * 1024 * 1024.
     new_disk_remainder_start=$( mathlib_calculate "$new_disk_size_MiB * $MiB" )
     # When last_part_start is e.g. at 12300.00 MiB = at the byte 12897484800
     # then new_last_part_size = 12944670720 - 12897484800 = 45.00 MiB
@@ -322,10 +345,12 @@ while read component_type disk_device old_disk_size junk ; do
     #   /dev/sdb5             143653M 115257M    27358M      81% /
     #   /dev/sdb3                161M      5M      157M       3% /boot/efi
     #   /dev/sda2             514926M    983M   487765M       1% /data
-    last_part_disk_space_usage=( $( grep "^$last_part_dev " $original_disk_space_usage_file ) )
+    # Neither original_disk_space_usage_file may exist nor may it contain an entry for last_part_dev and
+    # then we output e.g. "/dev/sda2 No_original_disk_space_usage_info 0M" to get ${last_part_disk_space_usage[2]%%M*} = 0.
+    # Because $original_disk_space_usage_file is not empty, grep cannot hang up here by reading from stdin:
+    last_part_disk_space_usage=( $( grep "^$last_part_dev " $original_disk_space_usage_file || echo $last_part_dev No_original_disk_space_usage_info 0M ) )
     last_part_used_bytes=$( mathlib_calculate "${last_part_disk_space_usage[2]%%M*} * $MiB" )
-    # Neither original_disk_space_usage_file may exist nor may it contain an entry for last_part_dev
-    # so that the two above commands may fail but the next test ensures last_part_used_bytes is valid:
+    # The is_positive_integer test ensures the WARNING could be only shown when last_part_used_bytes is actually valid:
     if is_positive_integer $last_part_used_bytes ; then
         # One of the rare cases where a "WARNING" is justified (see above why we cannot error out here)
         # cf. http://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
@@ -373,7 +398,7 @@ while read component_type disk_device old_disk_size junk ; do
     disk_size_difference=$( mathlib_calculate "$new_disk_size - $old_disk_size" )
     if test $disk_size_difference -gt 0 ; then
         # The size of the new disk is bigger than the size of the old disk:
-        DebugPrint "New $disk_device is $disk_size_difference bigger than old disk"
+        DebugPrint "New $disk_device is $disk_size_difference bytes bigger than old disk"
         increase_threshold_difference=$( mathlib_calculate "$old_disk_size / 100 * $AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE" )
         if test $disk_size_difference -lt $increase_threshold_difference ; then
             if is_true "$last_part_is_resizeable" ; then
@@ -397,7 +422,7 @@ while read component_type disk_device old_disk_size junk ; do
         # The size of the new disk is smaller than the size of the old disk:
         # Currently disk_size_difference is negative but we prefer to use its absolute value:
         disk_size_difference=$( mathlib_calculate "0 - $disk_size_difference" )
-        DebugPrint "New $disk_device is $disk_size_difference smaller than old disk"
+        DebugPrint "New $disk_device is $disk_size_difference bytes smaller than old disk"
         # There is no need to shrink the last partition when the original last partition still fits on the new smaller disk:
         if test $last_part_end -le $new_disk_remainder_start ; then
             if is_true "$last_part_is_resizeable" ; then

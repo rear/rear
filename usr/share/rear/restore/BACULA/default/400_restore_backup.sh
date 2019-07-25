@@ -110,7 +110,11 @@ WARNING: The new root is mounted under '$TARGET_FS_ROOT'.
 Press ENTER to start bconsole"
     read
 
-    bconsole
+    if bconsole 0<&6 1>&7 2>&8 ; then
+        Log "bconsole finished with zero exit code"
+    else
+        Log "bconsole finished with non-zero exit code $?"
+    fi
 
     LogPrint "
 Please verify that the backup has been restored correctly to '$TARGET_FS_ROOT'
