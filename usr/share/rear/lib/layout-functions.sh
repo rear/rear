@@ -982,7 +982,10 @@ function apply_layout_mappings() {
     while read original replacement junk ; do
         # Skip lines that have wrong syntax:
         test "$original" -a "$replacement" || continue
-        if grep -q "$replacement" "$file_to_migrate" ; then
+        # Only treat leftover temporary replacement words as an error
+        # if they are in a non-comment line (comments have '#' as first non-space character)
+        # cf. https://github.com/rear/rear/issues/2183
+        if grep -v '^[[:space:]]*#' "$file_to_migrate" | grep -q "$replacement" ; then
             apply_layout_mappings_succeeded="no"
             LogPrintError "Failed to apply layout mappings to $file_to_migrate for $original (probably no mapping for $original in $MAPPING_FILE)"
         fi
