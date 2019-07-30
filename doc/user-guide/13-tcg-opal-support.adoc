@@ -236,8 +236,6 @@ cp dist/Release_x86_64/GNU-Linux/sedutil-cli /usr/local/bin
 
 === Setting up UEFI Firmware to Boot From a Self-Encrypting Disk
 
-NOTE: UEFI support currently requires that Secure Boot be turned off.
-
 If the UEFI firmware is configured to boot from the disk _device_ (instead of
 some specific operating system entry), no further configuration is necessary.
 

@@ -11,7 +11,7 @@
 ### Check prerequisites
 
 local use_syslinux_legacy=no
-if has_binary syslinux; then
+if has_binary syslinux && [[ -z "$SECURE_BOOT_BOOTLOADER" ]]; then
     if is_true "${RAWDISK_BOOT_EXCLUDE_SYSLINUX_LEGACY:-no}"; then
         LogPrint "DISABLED: Using syslinux to create a BIOS Legacy bootloader"
     else
@@ -135,7 +135,7 @@ cp -rL $v "${staged_boot_partition_contents[@]}" "$boot_partition_root" >&2 || E
 # After installing a Legacy BIOS bootloader, files on the boot partition should not change: The bootloader file is
 # patched during installation with a list of its exact on-disk block locations.
 
-if has_binary syslinux; then
+if is_true "$RAWDISK_BOOT_USING_SYSLINUX" || is_true $use_syslinux_legacy; then
     # Install syslinux configuration, which may be shared between syslinux/EFI and syslinux/Legacy bootloaders.
     local syslinux_installation_dir="$boot_partition_root/syslinux"
     mkdir -p "$syslinux_installation_dir" || Error "Could not create syslinux bootloader directory"
