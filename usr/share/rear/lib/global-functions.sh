@@ -622,7 +622,8 @@ umount_mountpoint() {
     Log "Unmounting '$mountpoint'"
     umount $v $mountpoint >&2
     if [[ $? -eq 0 ]] ; then
-        return 0
+        echo 0
+	return
     fi
 
     ### otherwise, try to kill all processes that opened files on the mount.
@@ -632,11 +633,13 @@ umount_mountpoint() {
     Log "Forced unmount of '$mountpoint'"
     umount $v -f $mountpoint >&2
     if [[ $? -eq 0 ]] ; then
-        return 0
+        echo 0
+	return
     fi
 
     Log "Unmounting '$mountpoint' failed."
-    return 1
+    echo 1
+    return
 }
 
 # Change $1 to user input or leave default value on empty input
@@ -657,16 +660,28 @@ function change_default
 # more suitable for job then e.g. grep from /proc/mounts
 function is_device_mounted
 {
-   disk=$1
+   local disk=$1
    [ -z "$disk" ] && echo 1
 
-   m=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
+   local m=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
 
    if [ -z $m ]; then
       echo 0
    else
       echo 1
    fi
+}
+
+# Return mountpoint if block device is mounted
+# (based on 'is_device_mounted()' above)
+function get_mountpoint
+{
+   local disk=$1
+   [ -z "$disk" ] && echo ""
+
+   local mp=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
+
+   echo $mp
 }
 
 # Use 'bc' for calculations because other tools
