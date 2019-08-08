@@ -366,7 +366,15 @@ Log "Saving disk partitions."
 
                 echo "# active dasd bus and channel"
                 echo "# bus-id <name device> type"
-                echo "dasd_channel $( lsdasd|grep dasd|awk '{ print $1 " "  $2 " "  $3 " "  $4}' )"
+                echo "dasd_channel $( lsdasd|grep $blockd|awk '{ print $1 " "  $2 " "  $3 " "  $4}' )"
+
+                echo "# dasdfmt - disk layout is either cdl for the compatible disk layout (default) or ldl"
+                echo "#  example usage: dasdfmt -b 4096 -d cdl -y /dev/dasda"
+                layout=$(dasdview -x  /dev/$blockd|grep "^format"|awk '{print $7}')
+                blocksize=$( dasdview -i  /dev/$blockd|grep blocksize|awk '{print $6}' )
+                echo "# dasdfmt $devname"
+                echo "# dasdfmt -b <blocksize> -d <layout> -y <devname>"
+                echo "dasdfmt -b $blocksize -d $layout -y $devname"
             fi
 
             #FIXME: exclude *rpmb (Replay Protected Memory Block) for nvme*, mmcblk* and uas
