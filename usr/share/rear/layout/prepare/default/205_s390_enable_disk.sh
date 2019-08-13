@@ -19,7 +19,7 @@ format_s390_disk() {
         #  y - answer yes
         device=$( echo $line | awk '{ print $7 }' ) 
         blocksize=$( echo $line | awk '{ print $3 }' ) 
-        layout=$( echo $line | awk '{ print $5 }' ) 
+        layout=$( echo $line | awk '{ print tolower($5) }' ) 
         echo 'dasdfmt:' $device ', blocksize:' $blocksize ', layout:' $layout
         # dasd format
         dasdfmt -b $blocksize -d $layout -y $device
@@ -48,17 +48,17 @@ if [ "$ARCH" == "Linux-s390" ]
 then
     case $OS_MASTER_VENDOR in
         (SUSE)
-            format_s390_disk
             enable_s390_disk
+            format_s390_disk
         ;;
         (Fedora)
             # handles RH
-            format_s390_disk
             enable_s390_disk
+            format_s390_disk
         ;;
         (Debian)
-            format_s390_disk
             enable_s390_disk
+            format_s390_disk
             # handles ubuntu also, may need to look at $OS_VENDOR also as dasd disk layout is distro specific
         ;;
         (Arch)
