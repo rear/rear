@@ -60,7 +60,7 @@ function build_bootx86_efi {
     local grub_module=""
     local grub_modules=""
     for grub_module in part_gpt part_msdos fat ext2 normal chain boot configfile linux linuxefi multiboot jfs iso9660 usb usbms usb_keyboard video udf ntfs all_video gzio efi_gop reboot search test echo btrfs ; do
-        test "$( find /boot /usr/lib/grub* -type f -name "$grub_module.mod" 2>/dev/null )" && grub_modules="$grub_modules $grub_module"
+        test "$( find /usr/lib/grub*/x86_64-efi -type f -name "$grub_module.mod" 2>/dev/null )" && grub_modules="$grub_modules $grub_module"
     done
     if ! $gmkimage $v -O x86_64-efi -c $TMP_DIR/mnt/EFI/BOOT/embedded_grub.cfg -o $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi -p "/EFI/BOOT" $grub_modules ; then
         Error "Failed to make bootable EFI image of GRUB2 (error during $gmkimage of BOOTX64.efi)"
