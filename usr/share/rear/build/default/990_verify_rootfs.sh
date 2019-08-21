@@ -5,6 +5,22 @@
 
 LogPrint "Testing that the recovery system in $ROOTFS_DIR contains a usable system"
 
+if tty -s ; then
+    KEEP_BUILD_DIR_ON_ERRORS=1
+else
+    KEEP_BUILD_DIR_ON_ERRORS=
+fi
+
+function keep_build_dir() {
+    KEEP_BUILD_DIR=${KEEP_BUILD_DIR:-${KEEP_BUILD_DIR_ON_ERRORS}}
+    if test "$KEEP_BUILD_DIR" ; then
+        LogPrintError "Build area kept for investigation in $BUILD_DIR, remove it when not needed"
+    else
+        LogPrintError "Build area $BUILD_DIR will be removed"
+        LogPrintError "To preserve it for investigation set KEEP_BUILD_DIR=1 or run ReaR with -d"
+    fi
+}
+
 # In case the filesystem that contains the ROOTFS_DIR is mounted 'noexec' we cannot do the 'chroot' tests.
 # The filesystem_name function in linux-functions.sh returns the mountpoint (not a filesystem name like 'ext4'):
 local rootfs_dir_fs_mountpoint=$( filesystem_name $ROOTFS_DIR )
@@ -17,7 +33,7 @@ fi
 
 # The bash test ensures that we have a working bash in the ReaR recovery system:
 if ! chroot $ROOTFS_DIR /bin/bash -c true ; then
-    KEEP_BUILD_DIR=1
+    keep_build_dir
     BugError "ReaR recovery system in '$ROOTFS_DIR' is broken: 'bash -c true' failed"
 fi
 
@@ -26,7 +42,7 @@ fi
 # First test is 'ldd /bin/bash' to ensure 'ldd' works:
 Log "Testing 'ldd /bin/bash' to ensure 'ldd' works for the subsequent 'ldd' tests within the recovery system"
 if ! chroot $ROOTFS_DIR /bin/ldd /bin/bash 1>&2 ; then
-    KEEP_BUILD_DIR=1
+    keep_build_dir
     BugError "ReaR recovery system in '$ROOTFS_DIR' is broken: 'ldd /bin/bash' failed"
 fi
 
@@ -99,7 +115,6 @@ test $old_LD_LIBRARY_PATH && export LD_LIBRARY_PATH=$old_LD_LIBRARY_PATH || unse
 local fatal_missing_library=""
 if contains_visible_char "$broken_binaries" ; then
     LogPrintError "There are binaries or libraries in the ReaR recovery system that need additional libraries"
-    KEEP_BUILD_DIR=1
     local ldd_output=""
     for binary in $broken_binaries ; do
         # Only for programs (i.e. files in a .../bin/... or .../sbin/... directory) treat a missing library as fatal
@@ -128,6 +143,7 @@ if contains_visible_char "$broken_binaries" ; then
         # Show only the missing libraries to the user to not flood his screen with tons of other ldd output lines:
         PrintError "$( grep 'not found' <<<"$ldd_output" )"
     done
+    keep_build_dir
     LogPrintError "ReaR recovery system in '$ROOTFS_DIR' needs additional libraries, check $RUNTIME_LOGFILE for details"
 fi
 
@@ -166,11 +182,11 @@ for required_program in "${REQUIRED_PROGS[@]}" ; do
 done
 # Report programs in the REQUIRED_PROGS array that cannot be found as executable command within the recovery system:
 if contains_visible_char "$missing_required_programs" ; then
-    KEEP_BUILD_DIR=1
     fatal_missing_program="yes"
     LogPrintError "Required programs cannot be found as executable command in the ReaR recovery system (bug error)"
     LogPrintError "$missing_required_programs"
     LogPrintError "ReaR recovery system in '$ROOTFS_DIR' lacks required programs, check $RUNTIME_LOGFILE for details"
+    keep_build_dir
 fi
 
 # Finally after all tests had been done (so that the user gets all result messages) error out if needed:
