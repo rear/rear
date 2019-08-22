@@ -24,7 +24,8 @@ if is_true "$BLOCKCLONE_TRY_UNMOUNT" && [ "$is_mounted" = "1" ]; then
     mp=$(get_mountpoint $BLOCKCLONE_SOURCE_DEV)
     # try unmount
     if [ ! -z "$mp" ]; then
-        umount_res=$(umount_mountpoint $mp)
+        umount_mountpoint $mp
+	umount_res=$?
     fi
 fi
 

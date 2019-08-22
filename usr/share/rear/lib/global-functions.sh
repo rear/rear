@@ -622,8 +622,7 @@ umount_mountpoint() {
     Log "Unmounting '$mountpoint'"
     umount $v $mountpoint >&2
     if [[ $? -eq 0 ]] ; then
-        echo 0
-	return
+        return 0
     fi
 
     ### otherwise, try to kill all processes that opened files on the mount.
@@ -633,13 +632,11 @@ umount_mountpoint() {
     Log "Forced unmount of '$mountpoint'"
     umount $v -f $mountpoint >&2
     if [[ $? -eq 0 ]] ; then
-        echo 0
-	return
+        return 0
     fi
 
     Log "Unmounting '$mountpoint' failed."
-    echo 1
-    return
+    return 1
 }
 
 # Change $1 to user input or leave default value on empty input
@@ -658,10 +655,10 @@ function change_default
 # Check if block device is mounted
 # lsblk can discover mounted device even if mounted as link, this makes it
 # more suitable for job then e.g. grep from /proc/mounts
-function is_device_mounted
+function is_device_mounted()
 {
    local disk=$1
-   [ -z "$disk" ] && echo 1
+   [ -z "$disk" ] && echo 0 && return
 
    local m=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
 
@@ -674,14 +671,38 @@ function is_device_mounted
 
 # Return mountpoint if block device is mounted
 # (based on 'is_device_mounted()' above)
-function get_mountpoint
+function get_mountpoint()
 {
    local disk=$1
-   [ -z "$disk" ] && echo ""
+   [ -z "$disk" ] && return 1
 
    local mp=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
 
    echo $mp
+}
+
+# Returns the appropriate command to execute in order
+# to re-mount the given mountpoint
+function build_remount_cmd()
+{
+   local mp=$1
+   [ -z "$mp" ] && return 1
+  
+   local -a allopts=()
+   # Get: device, mountpoint, FS type, mount options as string
+   local opt_string=$(mount | grep " $mp " | awk '{ print $1 " " $3 " " $5 " " $6 }')
+   [ -z "$opt_string" ] && return 1
+
+   # Split string, store in array
+   for opt in $opt_string; do
+      allopts=("${allopts[@]}" "$opt")
+   done
+   # Remove parentheses around mount options
+   allopts[3]=${allopts[3]##(}
+   allopts[3]=${allopts[3]%%)}
+
+   # return mount command as result
+   echo "mount $v -t ${allopts[2]} -o ${allopts[3]} ${allopts[0]} ${allopts[1]}"
 }
 
 # Use 'bc' for calculations because other tools
