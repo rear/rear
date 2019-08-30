@@ -15,7 +15,7 @@ if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
     mkdir -p $v "$BUILD_DIR/tftpbootfs" >&2
     StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs'"
     AddExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
-    mount_url $PXE_CONFIG_URL $BUILD_DIR/tftpbootfs
+    mount_url $PXE_CONFIG_URL $BUILD_DIR/tftpbootfs $BACKUP_OPTIONS
     PXE_LOCAL_PATH=$BUILD_DIR/tftpbootfs
 else
     # legacy way using PXE_LOCAL_PATH default
