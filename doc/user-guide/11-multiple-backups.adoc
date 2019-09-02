@@ -182,7 +182,7 @@ so that in practice in particular all files in the /usr directory
 must be restored during the initial basic system recovery
 plus whatever else is needed to boot and run the basic system.
 
-Multiple backups cannot be used to spilt the files of the basic system
+Multiple backups cannot be used to split the files of the basic system
 into several backups. The files of the basic system must be in one
 single backup and that backup must be restored during the initial
 recovery of the basic system.

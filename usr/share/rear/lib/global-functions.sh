@@ -655,18 +655,54 @@ function change_default
 # Check if block device is mounted
 # lsblk can discover mounted device even if mounted as link, this makes it
 # more suitable for job then e.g. grep from /proc/mounts
-function is_device_mounted
+function is_device_mounted()
 {
-   disk=$1
-   [ -z "$disk" ] && echo 1
+   local disk=$1
+   [ -z "$disk" ] && echo 0 && return
 
-   m=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
+   local m=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
 
    if [ -z $m ]; then
       echo 0
    else
       echo 1
    fi
+}
+
+# Return mountpoint if block device is mounted
+# (based on 'is_device_mounted()' above)
+function get_mountpoint()
+{
+   local disk=$1
+   [ -z "$disk" ] && return 1
+
+   local mp=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
+
+   echo $mp
+}
+
+# Returns the appropriate command to execute in order
+# to re-mount the given mountpoint
+function build_remount_cmd()
+{
+   local mp=$1
+   [ -z "$mp" ] && return 1
+  
+   local -a allopts=()
+   # Get: device, mountpoint, FS type, mount options as string
+   local opt_string=$(mount | grep " $mp " | awk '{ print $1 " " $3 " " $5 " " $6 }')
+   [ -z "$opt_string" ] && return 1
+
+   # Split string, store in array
+   for opt in $opt_string; do
+      allopts=("${allopts[@]}" "$opt")
+   done
+   # Remove parentheses around mount options
+   allopts[3]=${allopts[3]##(}
+   allopts[3]=${allopts[3]%%)}
+
+   # return mount command as result
+   echo "mount $v -t ${allopts[2]} -o ${allopts[3]} ${allopts[0]} ${allopts[1]}"
 }
 
 # Use 'bc' for calculations because other tools
