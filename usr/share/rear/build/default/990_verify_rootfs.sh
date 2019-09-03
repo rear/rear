@@ -5,27 +5,28 @@
 
 LogPrint "Testing that the recovery system in $ROOTFS_DIR contains a usable system"
 
-if is_true "$KEEP_BUILD_DIR_ON_ERRORS"; then
-    local effective_keep_build_dir_on_errors=1
-elif is_false "$KEEP_BUILD_DIR_ON_ERRORS"; then
-    # empty = false
-    local effective_keep_build_dir_on_errors=
+if test "$KEEP_BUILD_DIR" = "errors"; then
+    local keep_build_dir_on_errors=1
 else
-    # KEEP_BUILD_DIR_ON_ERRORS not set - effective value depends on whether we are running interactively
+    # KEEP_BUILD_DIR does not say to keep it on errors
+    # - effective value depends on whether we are running interactively
     if tty -s ; then
-        local effective_keep_build_dir_on_errors=1
+        local keep_build_dir_on_errors=1
     else
-        local effective_keep_build_dir_on_errors=
+        local keep_build_dir_on_errors=0
     fi
 fi
 
 function keep_build_dir() {
-    KEEP_BUILD_DIR=${KEEP_BUILD_DIR:-${effective_keep_build_dir_on_errors}}
-    if test "$KEEP_BUILD_DIR" ; then
+    if ! is_true "$KEEP_BUILD_DIR" && ! is_false "$KEEP_BUILD_DIR"; then
+        # is either empty or equal to "errors" ... or some garbage value
+        KEEP_BUILD_DIR="${keep_build_dir_on_errors}"
+    fi
+    if is_true "$KEEP_BUILD_DIR" ; then
         LogPrintError "Build area kept for investigation in $BUILD_DIR, remove it when not needed"
     else
         LogPrintError "Build area $BUILD_DIR will be removed"
-        LogPrintError "To preserve it for investigation set KEEP_BUILD_DIR_ON_ERRORS=y or run ReaR with -d"
+        LogPrintError "To preserve it for investigation set KEEP_BUILD_DIR=errors or run ReaR with -d"
     fi
 }
 
