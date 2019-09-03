@@ -152,7 +152,7 @@ if contains_visible_char "$broken_binaries" ; then
         PrintError "$( grep 'not found' <<<"$ldd_output" )"
     done
     LogPrintError "ReaR recovery system in '$ROOTFS_DIR' needs additional libraries, check $RUNTIME_LOGFILE for details"
-    keep_build_dir
+    is_true "$fatal_missing_library" && keep_build_dir
 fi
 
 # Testing that each program in the PROGS array can be found as executable command within the recovery system
