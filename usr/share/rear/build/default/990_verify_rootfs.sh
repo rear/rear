@@ -20,11 +20,13 @@ fi
 function keep_build_dir() {
     if ! is_true "$KEEP_BUILD_DIR" && ! is_false "$KEEP_BUILD_DIR"; then
         # is either empty or equal to "errors" ... or some garbage value
+        local orig_keep_build_dir="$KEEP_BUILD_DIR"
         KEEP_BUILD_DIR="${keep_build_dir_on_errors}"
     fi
     if is_true "$KEEP_BUILD_DIR" ; then
         LogPrintError "Build area kept for investigation in $BUILD_DIR, remove it when not needed"
-    else
+    elif ! is_false "$orig_keep_build_dir" ; then
+        # if users disabled preserving the build dir explicitly, let's not bother them with messages
         LogPrintError "Build area $BUILD_DIR will be removed"
         LogPrintError "To preserve it for investigation set KEEP_BUILD_DIR=errors or run ReaR with -d"
     fi
