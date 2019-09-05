@@ -14,7 +14,7 @@ In most cases only these two settings are required.
 
 
 == Rescue media (OUTPUT)
-The +OUTPUT+ variable defines where the rescue image should be send to.
+The +OUTPUT+ variable defines where the rescue image should be sent to.
 Possible +OUTPUT+ setting are:
 
 OUTPUT=RAMDISK::
@@ -220,7 +220,7 @@ Incremental or differential backup and NETFS_KEEP_OLD_BACKUP_COPY contradict eac
 +NETFS_KEEP_OLD_BACKUP_COPY+ must not be 'true' in case of incremental or differential backup.
 
 TMPDIR=/bigdisk::
-Define this variable in +/etc/rear/local.conf+ if directoru +/tmp+ is too small to contain the ISO image, e.g. when using
+Define this variable in +/etc/rear/local.conf+ if directory +/tmp+ is too small to contain the ISO image, e.g. when using
 
     OUTPUT=ISO
     BACKUP=NETFS
