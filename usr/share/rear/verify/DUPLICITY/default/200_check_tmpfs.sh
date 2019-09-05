@@ -3,7 +3,5 @@
 
 # mount tmpfs on /tmp if not present
 mountpoint -q /tmp && return 0
-if [[ $? -ne 0 ]]; then
-	LogPrint "File system /tmp not present - mounting it via tmpfs"
-	mount -t tmpfs  tmpfs  /tmp || Error "Failed to mount tmpfs on /tmp"
-fi
+LogPrint "File system /tmp not present - mounting it via tmpfs"
+mount -t tmpfs  tmpfs  /tmp || Error "Failed to mount tmpfs on /tmp"
