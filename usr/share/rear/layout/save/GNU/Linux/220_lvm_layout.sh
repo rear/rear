@@ -88,10 +88,11 @@ Log "Saving LVM layout."
             segmentsize="$(echo "$line" | awk -F ':' '{ print $10 }')"
 
             kval=""
+            infokval=""
             [ -z "$thinpool" ] || kval="${kval:+$kval }thinpool:$thinpool"
             [ $chunksize -eq 0 ] || kval="${kval:+$kval }chunksize:${chunksize}b"
             [ $stripesize -eq 0 ] || kval="${kval:+$kval }stripesize:${stripesize}b"
-            [ $segmentsize -eq $size ] || kval="${kval:+$kval }segmentsize:${segmentsize}b"
+            [ $segmentsize -eq $size ] || infokval="${infokval:+$infokval }segmentsize:${segmentsize}b"
             if [[ ,$layout, == *,mirror,* ]] ; then
                 kval="${kval:+$kval }mirrors:$(($stripes - 1))"
             elif [[ ,$layout, == *,striped,* ]] ; then
@@ -103,11 +104,17 @@ Log "Saving LVM layout."
                 # 110_include_lvm_code.sh is not able to recreate this, but
                 # keep the information for the administrator anyway.
                 echo "#lvmvol /dev/$vg $lv ${size}b $layout $kval"
+                if [ -n "$infokval" ] ; then
+                    echo "# extra parameters for the line above not taken into account when restoring using 'lvcreate': $infokval"
+                fi
             else
                 if [ $segmentsize -ne $size ] ; then
                     echo "# WARNING: Volume $vg/$lv has multiple segments. Restoring it in Migration Mode using 'lvcreate' won't preserve segments and properties of the other segments as well!"
                 fi
                 echo "lvmvol /dev/$vg $lv ${size}b $layout $kval"
+                if [ -n "$infokval" ] ; then
+                    echo "# extra parameters for the line above not taken into account when restoring using 'lvcreate': $infokval"
+                fi
                 already_processed_lvs="${already_processed_lvs:+$already_processed_lvs }$vg/$lv"
             fi
         done
@@ -142,10 +149,11 @@ Log "Saving LVM layout."
             segmentsize="$(echo "$line" | awk -F ':' '{ print $10 }')"
 
             kval=""
+            infokval=""
             [ -z "$thinpool" ] || kval="${kval:+$kval }thinpool:$thinpool"
             [ $chunksize -eq 0 ] || kval="${kval:+$kval }chunksize:${chunksize}b"
             [ $stripesize -eq 0 ] || kval="${kval:+$kval }stripesize:${stripesize}b"
-            [ $segmentsize -eq $size ] || kval="${kval:+$kval }segmentsize:${segmentsize}b"
+            [ $segmentsize -eq $size ] || infokval="${infokval:+$infokval }segmentsize:${segmentsize}b"
             if [[ "$modules" == "" ]] ; then
                 layout="linear"
                 [ $stripes -eq 0 ] || kval="${kval:+$kval }stripes:$stripes"
@@ -169,11 +177,17 @@ Log "Saving LVM layout."
                 # 110_include_lvm_code.sh is not able to recreate this, but
                 # keep the information for the administrator anyway.
                 echo "#lvmvol /dev/$vg $lv ${size}b $layout $kval"
+                if [ -n "$infokval" ] ; then
+                    echo "# extra parameters for the line above not taken into account when restoring using 'lvcreate': $infokval"
+                fi
             else
                 if [ $segmentsize -ne $size ] ; then
                     echo "# WARNING: Volume $vg/$lv has multiple segments. Restoring it in Migration Mode using 'lvcreate' won't preserve segments and properties of the other segments as well!"
                 fi
                 echo "lvmvol /dev/$vg $lv ${size}b $layout $kval"
+                if [ -n "$infokval" ] ; then
+                    echo "# extra parameters for the line above not taken into account when restoring using 'lvcreate': $infokval"
+                fi
                 already_processed_lvs="${already_processed_lvs:+$already_processed_lvs }$vg/$lv"
             fi
         done

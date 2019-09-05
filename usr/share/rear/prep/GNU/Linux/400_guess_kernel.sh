@@ -34,6 +34,9 @@ for dummy in "once" ; do
     # Try /boot/vmlinuz-$KERNEL_VERSION:
     KERNEL_FILE="/boot/vmlinuz-$KERNEL_VERSION"
     test -s "$KERNEL_FILE" && continue
+    # ppc64el uses uncompressed kernel
+    KERNEL_FILE="/boot/vmlinux-$KERNEL_VERSION"
+    test -s "$KERNEL_FILE" && continue
     Log "No kernel file '$KERNEL_FILE' found"
 
     # Try all files in /boot if one matches KERNEL_VERSION="$( uname -r )" cf. default.conf: 
