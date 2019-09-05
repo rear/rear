@@ -163,8 +163,6 @@ create_lvmvol() {
     for kv in $kval ; do
         local key=$(awk -F ':' '{ print $1 }' <<< "$kv")
         local value=$(awk -F ':' '{ print $2 }' <<< "$kv")
-        # Skip 'segmentsize', it's a tip for the administrator only
-        [ "$key" != "segmentsize" ] || continue
         lvopts="${lvopts:+$lvopts }--$key $value"
     done
 

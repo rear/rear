@@ -12,7 +12,7 @@ if [[ ! -z "$PXE_TFTP_URL" ]] ; then
     mkdir -p $v "$BUILD_DIR/tftpbootfs" >&2
     StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs'"
     AddExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
-    mount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs
+    mount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs $BACKUP_OPTIONS
     # However, we copy under $OUTPUT_PREFIX_PXE directory (usually HOSTNAME) to have different clients on one pxe server
     PXE_TFTP_LOCAL_PATH=$BUILD_DIR/tftpbootfs
     # mode must readable for others for pxe and we copy under the client HOSTNAME (=OUTPUT_PREFIX_PXE)

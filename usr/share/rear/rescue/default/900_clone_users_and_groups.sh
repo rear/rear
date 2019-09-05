@@ -40,6 +40,8 @@ local group=""
 # because it should succeed when there is any non-empty array member, not necessarily the first one:
 test "${CLONE_USERS[*]}" && Log "Cloning users: ${CLONE_USERS[@]}"
 for user in "${CLONE_USERS[@]}" ; do
+    # Skip empty user values, cf. https://github.com/rear/rear/issues/2220
+    test $user || continue
     # Skip if the user exists already in the ReaR recovery system:
     grep -q "^$user:" $ROOTFS_DIR/etc/passwd && continue
     # Skip if the user does not exist in the current system:
@@ -78,6 +80,8 @@ done
 # because it should succeed when there is any non-empty array member, not necessarily the first one:
 test "${CLONE_GROUPS[*]}" && Log "Cloning groups: ${CLONE_GROUPS[@]}"
 for group in "${CLONE_GROUPS[@]}" ; do
+    # Skip empty group values, cf. https://github.com/rear/rear/issues/2220
+    test $group || continue
     # Skip if the group exists already in the ReaR recovery system:
     grep -q "^$group:" $ROOTFS_DIR/etc/group && continue
     # Skip if the group does not exist in the current system:
