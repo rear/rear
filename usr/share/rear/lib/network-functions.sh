@@ -184,7 +184,11 @@ function is_persistent_ethernet_name () {
     local _name_assign_type="0"
 
     [ -f "/sys/class/net/$_netif/name_assign_type" ] \
-        && _name_assign_type=$(cat "/sys/class/net/$_netif/name_assign_type")
+        && _name_assign_type=$(cat "/sys/class/net/$_netif/name_assign_type" 2>/dev/null)
+
+    # On RHEL 6 "name_assign_type" does not exist, therefore, the value of _name_assign_type=""
+    # Read https://github.com/rear/rear/issues/2197 for the details
+    [ "$_name_assign_type" = "" ] && return 1
 
     # NET_NAME_ENUM 1
     [ "$_name_assign_type" = "1" ] && return 1
