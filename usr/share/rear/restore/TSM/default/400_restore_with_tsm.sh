@@ -20,9 +20,10 @@ local backup_restore_log_suffix="restore.log"
 # echo -n $CONFIG_APPEND_FILES (without double quotes) is used to avoid leading and trailing spaces and newlines:
 test "$CONFIG_APPEND_FILES" && backup_restore_log_prefix=$backup_restore_log_prefix.$( echo -n $CONFIG_APPEND_FILES | tr -d -c '[:alnum:]/[:space:]' | tr -s '/[:space:]' ':_' )
 local backup_restore_log_filespace=""
+local dsmc_parallel="false"
 
-for num in $TSM_RESTORE_FILESPACE_NUMS ; do
-    filespace="${TSM_FILESPACES[$num]}"
+restoreFilespace () {
+    filespace="$1"
     LogUserOutput "Restoring TSM filespace $filespace"
     # Create backup restore log file name (a different one for each filespace).
     # Each filespace is a path like '/' or '/home/' or '/var/lib/' so that in particular '/' characters must be replaced
@@ -88,5 +89,16 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
         LogUserOutput "$log_message"
         echo "$log_message" >>"$backup_restore_log_file"
     fi
+}
+
+for num in $TSM_RESTORE_FILESPACE_NUMS ; do
+    if test "$dsmc_parallel" == "true" ; then
+        restoreFilespace "${TSM_FILESPACES[$num]}" &
+    else
+        restoreFilespace "${TSM_FILESPACES[$num]}"
+    fi
 done
 
+if test "$dsmc_parallel" == "true" ; then
+    wait
+fi
