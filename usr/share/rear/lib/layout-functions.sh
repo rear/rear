@@ -318,10 +318,8 @@ find_disk() {
 }
 
 find_disk_and_multipath() {
-    res=$(find_disk "$1")
-    if [[ -n "$res" || "$AUTOEXCLUDE_MULTIPATH" =~ ^[yY1] ]]; then
-        echo $res
-    else
+    find_disk "$1"
+    if ! is_true "$AUTOEXCLUDE_MULTIPATH" ; then
         find_multipath "$1"
     fi
 }
