@@ -119,9 +119,10 @@ fi
 
 ### Create multipath devices (at least partitions on them).
 function create_multipath() {
-    local device=$1
-    if grep "^multipath $device " "$LAYOUT_FILE" 1>&2 ; then
+    local component device size label junk
+    read component device size label junk < <(grep "^multipath $1 " "$LAYOUT_FILE")
+    if [[ "$device" ]]; then
         Log "Found current or former multipath device $device in $LAYOUT_FILE: Creating partitions on it"
-        create_partitions "$device"
+        create_partitions "$device" "$label"
     fi
 }
