@@ -110,10 +110,15 @@ elif lvm vgcfgrestore --force -f "$VAR_DIR/layout/lvm/${vg}.cfg" $vg >&2 ; then
         [ \$vg == "$vg" ] || continue
         # Consider Thin Pools only
         [[ ,\$layout, == *,thin,* ]] && [[ ,\$layout, == *,pool,* ]] || continue
-        # Remove twice, the first time it fails because of thin volumes in the pool
-        lvm lvremove -q -f -y \$vg/\$lv || true
-        lvm lvremove -q -f -y \$vg/\$lv
+        # Use "--force" twice to bypass any error due to invalid transaction id
+        lvm lvremove -q -f -f -y $vg/\$lv
     done
+
+    # Once Thin pools have been removed, we can activate the VG
+    lvm vgchange --available y $vg >&2
+
+    LogPrint "Sleeping 3 seconds to let udev or systemd-udevd create their devices..."
+    sleep 3 >&2
 
     # All logical volumes have been created, except Thin volumes and pools
     create_volume_group=0
