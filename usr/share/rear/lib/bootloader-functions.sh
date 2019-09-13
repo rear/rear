@@ -432,13 +432,20 @@ function make_syslinux_config {
         echo ""
     fi
 
-    if [[ -r "$SYSLINUX_DIR/poweroff.com" ]]; then
-        cp $v "$SYSLINUX_DIR/poweroff.com" "$BOOT_DIR/poweroff.com" >&2
+    local prog=
+    if [[ -r "$SYSLINUX_DIR/poweroff.com" ]] ; then
+        prog="$SYSLINUX_DIR/poweroff.com"
+    elif [[ -r "$SYSLINUX_DIR/poweroff.c32" ]] ; then
+        prog="$SYSLINUX_DIR/poweroff.c32"
+    fi
+
+    if [[ -n "$prog" ]] ; then
+        cp $v "$prog" "$BOOT_DIR/" >&2
         echo "say poweroff - Poweroff the system"
         echo "label poweroff"
         syslinux_menu "label ^Power off system"
         syslinux_menu_help "Power off the system now"
-        echo "kernel poweroff.com"
+        echo "kernel $(basename "$prog")"
         echo ""
     fi
 
@@ -609,14 +616,20 @@ function make_pxelinux_config {
         echo "kernel reboot.c32"
         echo "say ----------------------------------------------------------"
     fi
-    if [[ -f $syslinux_modules_dir/poweroff.com ]] ; then
+    local prog=
+    if [[ -r "$syslinux_modules_dir/poweroff.com" ]] ; then
+        prog="$syslinux_modules_dir/poweroff.com"
+    elif [[ -r "$syslinux_modules_dir/poweroff.c32" ]] ; then
+        prog="$syslinux_modules_dir/poweroff.c32"
+    fi
+    if [[ -n "$prog" ]] ; then
         echo "say poweroff - Poweroff the system"
         echo "label poweroff"
         echo "MENU label ^Power off system"
         echo "TEXT HELP"
         echo "Power off the system now"
         echo "ENDTEXT"
-        echo "kernel poweroff.com"
+        echo "kernel $(basename "$prog")"
     fi
 
     # And, finally define the default entry to boot off
