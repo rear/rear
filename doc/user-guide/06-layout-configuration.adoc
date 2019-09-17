@@ -74,7 +74,7 @@ information necessary to restore a system is listed.
 
 It's easy to see that there are 3 disks attached to the system. +/dev/sda+ is the internal disk of the system. Its filesystems are normally mounted. The other devices are external disks. One of them has just normal partitions. The other one has a physical volume on one of the partitions.
 
-== Including/Excluding components
+== Excluding components
 
 === Autoexcludes
 
