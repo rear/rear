@@ -134,7 +134,7 @@ function terminate_descendants_from_grandchildren_to_children () {
     # cf. https://github.com/rear/rear/pull/1720#discussion_r328686592
     local remaining_columns
     test $COLUMNS && remaining_columns=$COLUMNS || remaining_columns=80
-    local remaining_columns=$(( remaining_columns - 40 ))
+    remaining_columns=$(( remaining_columns - 40 ))
     test $remaining_columns -ge 40 || remaining_columns=40
     # Terminate all still running descendant processes of MASTER_PID
     # but do not terminate the MASTER_PID process itself because
@@ -192,7 +192,7 @@ function terminate_descendants_from_children_to_grandchildren () {
     # Some descendant processes commands could be much too long (e.g. a 'tar ...' command):
     local remaining_columns
     test $COLUMNS && remaining_columns=$COLUMNS || remaining_columns=80
-    local remaining_columns=$(( remaining_columns - 40 ))
+    remaining_columns=$(( remaining_columns - 40 ))
     test $remaining_columns -ge 40 || remaining_columns=40
     # Terminate all still running descendant processes of MASTER_PID
     # but do not terminate the MASTER_PID process itself because
