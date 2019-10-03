@@ -26,13 +26,13 @@ prepare_network_devices_script=$ROOTFS_DIR/etc/scripts/system-setup.d/50-prepare
 if [[ "$ARCH" == "Linux-s390" && "$OS_MASTER_VENDOR" != "SUSE_LINUX" ]] ; then
 cat >$prepare_network_devices_script << 'EOF'
 
-unconfig_devices=$( znetconf -u | grep -v "HiperSockets" | awk  'NR>3 { print $1 }'|awk -F"," '{ print $1 " " $2 " " $3 }' )
+echo "run cio_ignore -R"
+cio_ignore -R
 echo "znetconf -u " "$unconfig_devices"
-
-while read id1 id2 id3 
+znetconf -u
+unconfig_devices=$( znetconf -u | grep -v "HiperSockets" | awk  'NR>3 { print $1 }'|awk -F"," '{ print $1 " " $2 " " $3 }' )
+while read id1 id2 id3
 do
-    echo "run cio_ignore -r "  "$id1" "," "$id2" "," "$id3"  
-    cio_ignore -r "$id1","$id2","$id3" 
     echo "znetconf -a " "$id1"
     znetconf -a  "$id1"
 done < <( echo "$unconfig_devices" )

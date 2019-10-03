@@ -135,6 +135,13 @@ mount_fs() {
             echo "mount $device $TARGET_FS_ROOT$mountpoint"
             ) >> "$LAYOUT_CODE"
             ;;
+        (ext2 | ext3 | ext4)
+            (
+            echo "mkdir -p $TARGET_FS_ROOT$mountpoint"
+            echo "mount $mountopts $device $TARGET_FS_ROOT$mountpoint"
+            echo "mount $mountopts,remount,user_xattr $device $TARGET_FS_ROOT$mountpoint"
+            ) >> "$LAYOUT_CODE"
+            ;;
         (*)
             (
             echo "mkdir -p $TARGET_FS_ROOT$mountpoint"
