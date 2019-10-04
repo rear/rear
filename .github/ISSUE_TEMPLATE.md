@@ -22,3 +22,11 @@ Fill in the following items before submitting a new issue
 * Workaround, if any:
 
 * Attachments, as applicable ("rear -D mkrescue/mkbackup/recover" debug log files):
+
+To paste verbatim text like command output or file content,
+include it between a leading and a closing line of three backticks like
+````
+```
+verbatim content
+```
+````
