@@ -1,4 +1,9 @@
+ -- Damani Norman <damani.norman@rubrik.com>  Fri, 4 Oct 2019 16:50:00 -0800
 rear (2.5-1.rubrik) stable; urgency=low
+
+  * Added support for Rubrik CDM
+
+rear (2.5-1) stable; urgency=low
 
   * Mainly bug fixes
 

@@ -194,6 +194,17 @@ for you.
 
 The references pointing to fix #nr or issue #nr refer to our issues tracker.
 
+Version 2.5.rubrik (October 2019)
+
+Abstract
+
+Added support for Rubrik Cloud Data Management (CDM)
+
+New Features:
+
+  o Added support for Rubrik Cloud Data Management (CDM) as an integrated
+    backup application.
+
 Version 2.5 (May 2019)
 
 Abstract

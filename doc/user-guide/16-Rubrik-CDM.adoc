@@ -1,0 +1,81 @@
+= Documentation for the Rubrik (CDM) Method
+
+== Configuration
+
+1. Install and configure ReaR in accordance with:
+- Red Hat 
+   * https://access.redhat.com/solutions/2115051 or 
+   * https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/deployment_guide/ch-relax-and-recover_rear
+- Ubuntu
+   * http://manpages.ubuntu.com/manpages/disco/en/man8/rear.8.html
+- SUSE
+   * https://www.suse.com/documentation/sle-ha-12/book_sleha/data/cha_ha_rear.html
+- Generic
+   * https://github.com/rear/rear
+
+1. Install the Rubrik Client
+1. Edit `/etc/rear/local.conf` and enter:
+
+   OUTPUT=ISO
+   BACKUP=CDM
+
+1. Test `ReaR` by running `rear -v mkrescue`
+1. Configure fileset backup of the client and add `/usr/sbin/rear mkrescue` as a prescript. 
+1. ISOs will be saved as `/var/lib/rear/output/*.iso`
+
+- Recovery 
+
+1. Recover `/var/lib/rear/output/rear-<hostname>.iso` from client to be restored. 
+1. Boot recovery machine using recovered ISO.
+   
+   NOTE: Recovered system will use the same networking as the original machine. Verify no IP conflicts will occur. 
+
+   NOTE: If the same static IP address may be used it will need to be changed if the original machine is still running.
+
+1. Verify Firewall is down on recovery host.
+1. Run `rear recover`
+1. Answer inline questions until `rear>` prompt appears.
+1. Run `ps -eaf` and verify that `backup_agent_main` and `bootstrap_agent_main` are running.
+1. Get the IP address of the system using `ip addr`
+1. Register the new IP with the Rubrik appliance (if needed)
+1. Perform a re-directed export of `/` to `/mnt/local`
+1. Reboot
+1. Recover other file systems as needed.
+
+   Note: that the Rubrik client (RBS) will connect as the original machine now. The client may need to be reinstalled and re-registered if the original machine is still running. 
+
+== Known Issues
+
+* Recovery via IPv6 is not yet supported.
+* Automatic recovery from replica CDM cluster is not supported
+* CDM may take some time to recognize that the IP address has moved from one system to another. When restoring using the same IP give CDM up to 10 minutes to recognize that the agent is running on another machine. This usually comes up during testing when the original machine is shutdown but not being restored to. 
+* Recovery from a replica CDM server is only supported with CDM v4.2.1 and higher.
+* Care must be taken with SUSE systems on DHCP. They tend to request the same IP as the original host. If this is not the desired behavior the system will have to be adjusted after booting from the ReaR ISO.  
+* If multiple restores are performed using the same temporary IP, the temporary IP must first be deleted from Servers & Apps -> Linux and Unix Servers and re-added upon each reuse.
+
+== Troubleshooting
+
+* Verify that ReaR will recover your system without using the CDM backup method. Most errors are due to configuration with ReaR itself and not Rubrik CDM. Use the default backup method to test with. 
+* Follow the OS specific configuration guides as mentioned at the beginning of this document. 
+
+== Test Matrix
+
+.Test Matrix
+[%header,format=csv]
+|===
+Operating System,DHCP,Static IP,Virtual,Physical,LVM Root Disk,Plain Root Disk,EXT3,EXT4,XFS,BTRFS,Original Cluster,Replication Cluster
+CentOS 7.3,,pass,Pass,,Pass,,,,Pass,,Pass,
+CentOS 7.6,Pass,,Pass,,Pass,,,,Pass,,Pass,
+CentOS 5.11,,,,,,,,,,,,
+CentOS 6.10,,,,,,,,,,,,
+RHEL 7.6,Pass,,Pass,,Pass,,,,,,,
+RHEL 7.4,,,,,,,,,,,,
+RHEL 6.10,,,,,,,,,,,,
+SUSE 11 SP4,,,,,,,,,,,,
+SUSE 12 SP4,Pass (uses same IP as original),,Pass,,,,,,,Pass,Pass,
+Ubuntu 14.04 LTS,,,,,,,,,,,,
+Ubuntu 16.04 LTS,Pass,,,,Pass,,,Pass,,,Pass,
+Ubuntu 17.04 LTS,,,,,,,,,,,,
+|===
+
+* Empty cells indicate that no tests were run.
