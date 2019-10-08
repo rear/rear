@@ -28,8 +28,10 @@ fi
 PROGS+=( findmnt dasdfmt dasdinfo fdasd chattr )
 PROGS+=( lsdasd lsqeth lstape )
 PROGS+=( cio_ignore znetconf chccwdev qethconf )
+PROGS+=( getenforce setenforce sestatus setfiles chcon restorecon )
 PROGS+=( zipl grubby ed vmcp )
 
 COPY_AS_IS+=( /etc/zipl.conf /lib/s390-tools )
 
 
+KERNEL_CMDLINE=' selinux=1'
