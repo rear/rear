@@ -5,7 +5,7 @@
 
 Log "Backup method is Rubrik (CDM): check backup_agent_main"
 if [ ! -x /usr/bin/rubrik/backup_agent_main ]; then
-    Error "Please install Rubrik (CDM) client software."
+    StopIfError 1 "Please install Rubrik (CDM) RBS client software."
 fi
 
 ps ax | grep -v grep | grep backup_agent_main
