@@ -1,4 +1,4 @@
-= Documentation for the Rubrik (CDM) Method
+= Documentation for the Rubrik (CDM) Backup and Restore Method
 
 == Configuration
 
@@ -55,7 +55,7 @@
 
 == Troubleshooting
 
-* Verify that ReaR will recover your system without using the CDM backup method. Most errors are due to configuration with ReaR itself and not Rubrik CDM. Use the default backup method to test with. 
+* Verify that ReaR will recover your system without using the CDM backup and restore method. Most errors are due to configuration with ReaR itself and not Rubrik CDM. Use the default ReaR backup and restore method to test with. 
 * Follow the OS specific configuration guides as mentioned at the beginning of this document. 
 
 == Test Matrix
