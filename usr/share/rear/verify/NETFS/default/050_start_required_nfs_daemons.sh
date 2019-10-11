@@ -18,6 +18,14 @@
 # see https://github.com/rear/rear/pull/874
 # and https://github.com/rear/rear/issues/887
 #
+# furthermore all kind of '2>/dev/null' (i.e. also '&>/dev/null')
+# are removed (so that '&>/dev/null' is replaced by '1>/dev/null')
+# because in general '2>/dev/null' is unhelpful here
+# cf. https://github.com/rear/rear/issues/2250#issuecomment-541041571
+# because it needlessly suppresses error messages in the log
+# that would be helpful to see when something fails
+# cf. https://github.com/rear/rear/pull/2142#discussion_r282784504
+#
 # first steps to be prepared for 'set -eu' by
 # using 'command || Error' instead of 'command ; StopIfError'
 # and predefining all used variables
@@ -42,7 +50,7 @@ elif has_binary rpcbind ; then
     portmapper_program="rpcbind"
     # rpcbind cannot be called multiple times
     # so start it only if it is not yet running
-    rpcinfo -p &>/dev/null || rpcbind || Error "Starting RPC portmapper '$portmapper_program' failed."
+    rpcinfo -p 1>/dev/null || rpcbind || Error "Starting RPC portmapper '$portmapper_program' failed."
     LogPrint "Started RPC portmapper '$portmapper_program'".
 else
     Error "Could not find a RPC portmapper program (tried portmap and rpcbind)."
@@ -55,7 +63,7 @@ for attempt in $( seq 5 ) ; do
     #   program vers proto   port  service
     #    100000    2   udp    111  portmapper
     #    100000    4   tcp    111  portmapper
-    rpcinfo -p 2>/dev/null | grep -q 'portmapper' && { attempt="ok" ; break ; }
+    rpcinfo -p | grep -q 'portmapper' && { attempt="ok" ; break ; }
     sleep 1
 done
 test "ok" = $attempt || Error "RPC portmapper '$portmapper_program' unavailable."
@@ -66,7 +74,7 @@ LogPrint "RPC portmapper '$portmapper_program' available."
 #   program vers proto   port  service
 #    100024    1   udp  33482  status
 #    100024    1   tcp  36929  status
-if rpcinfo -p 2>/dev/null | grep -q 'status' ; then
+if rpcinfo -p | grep -q 'status' ; then
     LogPrint "RPC status rpc.statd available."
 else
     # start rpc.statd daemon if found
@@ -78,7 +86,7 @@ else
     fi
     # do a final check if RPC status service is available
     # regardless of the result of starting rpc.statd
-    if rpcinfo -p 2>/dev/null | grep -q 'status' ; then
+    if rpcinfo -p | grep -q 'status' ; then
         LogPrint "RPC status rpc.statd available."
     else
         LogPrint "RPC status rpc.statd unavailable (you may have to mount NFS without locking 'nolock')."
@@ -89,9 +97,9 @@ fi
 if has_binary rpc.idmapd ; then
     # so far it is always a daemon process
     rpc.idmapd $RPCIDMAPDARGS && LogPrint "Started rpc.idmapd." || LogPrint "Starting rpc.idmapd failed."
-    modprobe nfsd  &>/dev/null
-    modprobe nfsv4 &>/dev/null
-    modprobe nfsv3 &>/dev/null
+    modprobe nfsd  1>/dev/null
+    modprobe nfsv4 1>/dev/null
+    modprobe nfsv3 1>/dev/null
     mount -t rpc_pipefs -n sunrpc /var/lib/nfs/rpc_pipefs
     mount -t nfsd -n nfsd /proc/fs/nfsd
 fi
