@@ -12,9 +12,6 @@ if is_true $CDM_NEW_AGENT_UUID; then
 fi
 LogPrint "Make sure all required data is restored to $TARGET_FS_ROOT ."
 LogPrint ""
-LogPrint "When the restore is finished type: 'touch /mnt/local/.autorelabel',"
-LogPrint "to ensure that SELinux relabels the files on the next boot."
-LogPrint "" 
 LogPrint "Next type 'exit' to continue the recovery."
 LogPrint "Info: You can check the recovery process i.e. with the command 'df'."
 LogPrint ""
