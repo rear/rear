@@ -21,7 +21,7 @@ while true ; do
     UserOutput "Please answer 'y' or 'n'"
 done
 
-mv ${CDM_AGENT_UUID} ${CDM_AGENT_UUID}.old
+mv $v ${CDM_AGENT_UUID} ${CDM_AGENT_UUID}.old
 /usr/bin/uuidgen | tee -a ${CDM_AGENT_UUID} >&2
 StopIfError "Unable to generate new UUID"
 

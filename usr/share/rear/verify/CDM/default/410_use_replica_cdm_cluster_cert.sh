@@ -26,18 +26,18 @@ done
 
 CDM_SUNOS_TAR=rubrik-agent-sunos5.10.sparc.tar.gz
 cd /tmp
-/usr/bin/curl -kLOJ https://${CDM_CLUSTER_IP}/connector/${CDM_SUNOS_TAR} 
+/usr/bin/curl $v -kLOJ https://${CDM_CLUSTER_IP}/connector/${CDM_SUNOS_TAR} 
 StopIfError "Could not download https://${CDM_CLUSTER_IP}/connector/${CDM_SUNOS_TAR}"
 
-/usr/bin/tar -xzf  $CDM_SUNOS_TAR
+/usr/bin/tar $v -xzf  $CDM_SUNOS_TAR
 StopIfError "Could not extract $CDM_SUNOS_TAR"
 
-CDM_CERT_FILE=$(find ./ -name "rubrik.crt")
-mv ${CDM_KEYS_DIR}/rubrik.crt ${CDM_KEYS_DIR}/rubrik.crt.orig
-cp $CDM_CERT_FILE $CDM_KEYS_DIR
+CDM_CERT_FILE=$(find $v ./ -name "rubrik.crt")
+mv $v ${CDM_KEYS_DIR}/rubrik.crt ${CDM_KEYS_DIR}/rubrik.crt.orig
+cp $v $CDM_CERT_FILE $CDM_KEYS_DIR
 StopIfError "Could not copy replica CDM cluster certificate"
 
-/usr/bin/chmod 600 ${CDM_KEYS_DIR}/rubrik.crt
+/usr/bin/chmod $v 600 ${CDM_KEYS_DIR}/rubrik.crt
 
 
 LogPrint "Replica Rubrik (CDM) cluster certificate installed."
