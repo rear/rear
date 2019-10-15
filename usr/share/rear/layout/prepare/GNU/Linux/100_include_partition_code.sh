@@ -46,7 +46,7 @@ create_disk() {
 #
 
 Log "Stop mdadm"
-if grep -q md /proc/mdstat &>/dev/null; then
+if grep -q md /proc/mdstat 2>/dev/null; then
     mdadm --stop -s >&2 || echo "stop mdadm failed"
     # Prevent udev waking up mdadm later.
     # Reasoning: At least on RHEL6 when parted created a raid partition on disk,
