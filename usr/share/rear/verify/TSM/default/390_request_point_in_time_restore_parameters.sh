@@ -27,6 +27,8 @@ TSM_DSMC_RESTORE_OPTIONS+=( -date=5 -pitd="$tsm_restore_pit_date" )
 # Validate time:
 tsm_restore_pit_time=$( date -d "$answer" +%T ) || Error "Invalid time specified for TSM recovery: '$answer'"
 # Add valid actual time (i.e. when it is not "00:00:00") to dsmc options:
+# FIXME: Is it right to add '-date=5' here a second time to the TSM_DSMC_RESTORE_OPTIONS array
+# because it was already added above in the "Add valid date to dsmc options" step?
 test "$tsm_restore_pit_time" != "00:00:00" && TSM_DSMC_RESTORE_OPTIONS+=( -date=5 -pitt="$tsm_restore_pit_time" )
 
 LogPrint "Restoring all TSM filespaces from backup before $tsm_restore_pit_date $tsm_restore_pit_time (MM/DD/YYYY HH:mm:ss)"
