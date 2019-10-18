@@ -1,0 +1,1 @@
+../../prepare/default/500_confirm_layout_file.sh

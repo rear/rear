@@ -1,0 +1,1 @@
+../../prepare/default/250_compare_disks.sh
