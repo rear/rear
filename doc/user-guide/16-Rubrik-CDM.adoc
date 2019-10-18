@@ -15,6 +15,7 @@ Bare Metal Recovery is performed by first restoring the ReaR ISO file from Rubri
    * http://manpages.ubuntu.com/manpages/disco/en/man8/rear.8.html
 - SUSE
    * https://en.opensuse.org/SDB:Disaster_Recovery
+   * https://documentation.suse.com/sle-ha/15-SP1/html/SLE-HA-all/cha-ha-rear.html
 - Generic
    * https://github.com/rear/rear
 
