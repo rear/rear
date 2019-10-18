@@ -304,7 +304,7 @@ extract_partitions() {
             if has_binary sfdisk ; then
                 # make sfdisk output safe against unwanted characters (in particular blanks)
                 # cf. https://github.com/rear/rear/issues/1106
-                declare partition_id=$( sfdisk -c $device $partition_nr 2>/dev/null | tr -c -d '[:alnum:]' )
+                declare partition_id=$( sfdisk -c $device $partition_nr | tr -c -d '[:alnum:]' )
                 ### extended partitions are either DOS_EXT, EXT_LBA or LINUX_EXT
                 if [[ "$partition_id" = 5 || "$partition_id" = f || "$partition_id" = 85 ]]; then
                     sed -i /^$partition_nr\ /s/\ primary\ /\ extended\ / $TMP_DIR/partitions
