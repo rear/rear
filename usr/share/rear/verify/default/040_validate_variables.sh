@@ -1,9 +1,16 @@
 # verify/default/040_validate_variables.sh
 
-# Test if variable WAIT_SECS is a positive integer,
-# if not, give it the default value from default.conf.
+# Ensure USER_INPUT_TIMEOUT and WAIT_SECS are positive integers
+# to ensure commands like 'read -t $WAIT_SECS' will not fail.
 
 # is_positive_integer outputs '0' and returns 1
 # if its (first) argument is not a positive integer (or empty):
-is_positive_integer $WAIT_SECS 1>/dev/null || WAIT_SECS=30
+
+# Test if variable USER_INPUT_TIMEOUT is a positive integer,
+# if not, give it the default value as in default.conf:
+is_positive_integer $USER_INPUT_TIMEOUT 1>/dev/null || USER_INPUT_TIMEOUT=300
+
+# Test if variable WAIT_SECS is a positive integer,
+# if not, give it the default value as in default.conf:
+is_positive_integer $WAIT_SECS 1>/dev/null || WAIT_SECS="$USER_INPUT_TIMEOUT"
 
