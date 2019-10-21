@@ -8,6 +8,7 @@ UserOutput "Press only ENTER to restore the most recent available backup."
 UserOutput "Alternatively specify date and time for Point-In-Time restore."
 
 local answer=""
+local valid_date_and_time_input=""
 local tsm_restore_pit_date=""
 local tsm_restore_pit_time=""
 
