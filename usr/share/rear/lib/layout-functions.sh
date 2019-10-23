@@ -355,6 +355,16 @@ get_partition_number() {
     # FIXME: Why are more than 128 partitions not supported?
     # Why is it a bug in ReaR when more than 128 partitions are not supported?
     # A GPT must be for at least 128 partitions but why does ReaR not support bigger GPT?
+    # I <jsmeix@suse.de> found https://github.com/rear/rear/commit/e758bba0a415173952cc588e5cf80570a6385f7e that links to
+    # https://github.com/rear/rear/issues/263 that contains https://github.com/rear/rear/issues/263#issuecomment-20464763
+    # which reads (excerpt): "The GPT standard allows maximum of 128 partitions per disk" which is not true
+    # according to how I understand the German https://de.wikipedia.org/wiki/GUID_Partition_Table that reads (excerpt)
+    # "Die EFI-Spezifikationen schreiben ein Minimum von 16384 Bytes für die Partitionstabelle vor, so dass es Platz für 128 Einträge gibt."
+    # in English "EFI specification mandate a minimum of 16384 bytes for the partition table so that there is space for 128 entries"
+    # which matches the English https://en.wikipedia.org/wiki/GUID_Partition_Table that reads (excerpt)
+    # "The UEFI specification stipulates that a minimum of 16384 bytes ... are allocated for the Partition Entry Array. Each entry has a size of 128 bytes."
+    # and because 16384 / 128 = 128 it results that 128 partition table entries (each of 128 bytes) are possible as a minimum
+    # which means that the GPT standard requires a minimum of 128 possible partitions per disk.
     test $number -le 128 || BugError "Partition $partition is numbered '$number'. More than 128 partitions are not supported."
 
     echo $number
