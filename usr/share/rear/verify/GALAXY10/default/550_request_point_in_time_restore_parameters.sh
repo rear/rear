@@ -9,6 +9,8 @@ UserOutput "Alternatively specify date and time for Point-In-Time restore."
 
 local answer=""
 local valid_date_and_time_input=""
+local galaxy10_restore_pit_date=""
+local galaxy10_restore_pit_time=""
 
 # Let the user enter date and time again and again until the input is valid
 # or the user pressed only ENTER to restore the most recent available backup:
@@ -24,9 +26,9 @@ while true ; do
     # Try to do Galaxy 10 Point-In-Time restore provided the user input is valid date and time:
     valid_date_and_time_input="yes"
     # Validate date:
-    tsm_restore_pit_date=$( date -d "$answer" +%Y.%m.%d ) || valid_date_and_time_input="no"
+    galaxy10_restore_pit_date=$( date -d "$answer" +%Y.%m.%d ) || valid_date_and_time_input="no"
     # Validate time:
-    tsm_restore_pit_time=$( date -d "$answer" +%T ) || valid_date_and_time_input="no"
+    galaxy10_restore_pit_time=$( date -d "$answer" +%T ) || valid_date_and_time_input="no"
     # Exit the while loop when the user input is valid date and time:
     is_true $valid_date_and_time_input && break
     # Show the user that his input is invalid and do the the while loop again:
