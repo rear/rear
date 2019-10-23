@@ -106,7 +106,7 @@ local current_yyyy_mm_dd="${current_date_output[1]}"
 local current_hhmm="${current_date_output[2]}"
 # The date FULLBACKUP_OUTDATED_DAYS ago is needed to check if the latest full backup is too old.
 # When the latest full backup is more than FULLBACKUP_OUTDATED_DAYS ago a new full backup is made.
-# This separated call of the 'date' command which is technically needed because is is
+# This separated call of the 'date' command which is technically needed because it is
 # for another point in time (e.g. 7 days ago) is run after the above call of the 'date'
 # command for the current time to be on the safe side when midnight passes in between
 # both 'date' commands which would then result that a new full backup is made

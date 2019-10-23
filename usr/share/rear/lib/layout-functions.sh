@@ -353,7 +353,7 @@ get_partition_number() {
 
     # Catch if $number is too big, report it as a bug:
     # FIXME: Why are more than 128 partitions not supported?
-    # Why is is a bug in ReaR when more than 128 partitions are not supported?
+    # Why is it a bug in ReaR when more than 128 partitions are not supported?
     # A GPT must be for at least 128 partitions but why does ReaR not support bigger GPT?
     test $number -le 128 || BugError "Partition $partition is numbered '$number'. More than 128 partitions are not supported."
 
