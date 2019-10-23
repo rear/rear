@@ -317,15 +317,13 @@ find_disk() {
     get_parent_components "$1" "disk"
 }
 
-find_disk_and_multipath() {
-    find_disk "$1"
-    if ! is_true "$AUTOEXCLUDE_MULTIPATH" ; then
-        find_multipath "$1"
-    fi
-}
-
 find_multipath() {
     get_parent_components "$1" "multipath"
+}
+
+find_disk_and_multipath() {
+    find_disk "$1"
+    is_true "$AUTOEXCLUDE_MULTIPATH" || find_multipath "$1"
 }
 
 find_partition() {
@@ -341,21 +339,27 @@ find_partition() {
 #   /dev/cciss/c0d0p1
 #
 # Requires: grep v2.5 or higher (option -o)
-
 get_partition_number() {
     local partition=$1
-    local number=$(echo "$partition" | grep -o -E "[0-9]+$")
+    # The partition number is the trailing digits of the partition block device:
+    local number=$( echo "$partition" | grep -o -E '[0-9]+$' )
 
-    # Test if $number is a positive integer, if not it is a bug
-    [ $number -gt 0 ] 2>/dev/null
-    StopIfError "Partition number '$number' of partition $partition is not a valid number."
+    # Test if $number is a positive integer, if not it is a bug.
+    # Because the above 'grep' outputs only trailing digits this BugError gets triggred
+    # when the partition block device does not contain trailing digits so that $number is empty
+    # which can happen when get_partition_number is called with a block device as argument
+    # that is not a partition block device (e.g. /dev/sda instead of /dev/sda1) which is likely a bug in ReaR:
+    test $number -gt 0 || BugError "Partition number '$number' of partition $partition is not a valid partition number."
 
-    # Catch if $number is too big, report it as a bug
-    (( $number <= 128 ))
-    StopIfError "Partition $partition is numbered '$number'. More than 128 partitions is not supported."
+    # Catch if $number is too big, report it as a bug:
+    # FIXME: Why are more than 128 partitions not supported?
+    # Why is is a bug in ReaR when more than 128 partitions are not supported?
+    # A GPT must be for at least 128 partitions but why does ReaR not support bigger GPT?
+    test $number -le 128 || BugError "Partition $partition is numbered '$number'. More than 128 partitions are not supported."
 
     echo $number
 }
+
 # Returns partition start block or 'unknown'
 # sda/sda1 or
 # dm-XX
