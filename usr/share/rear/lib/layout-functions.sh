@@ -317,45 +317,69 @@ find_disk() {
     get_parent_components "$1" "disk"
 }
 
-find_disk_and_multipath() {
-    find_disk "$1"
-    if ! is_true "$AUTOEXCLUDE_MULTIPATH" ; then
-        find_multipath "$1"
-    fi
-}
-
 find_multipath() {
     get_parent_components "$1" "multipath"
+}
+
+find_disk_and_multipath() {
+    find_disk "$1"
+    is_true "$AUTOEXCLUDE_MULTIPATH" || find_multipath "$1"
 }
 
 find_partition() {
     get_parent_components "$1" "part"
 }
 
-# Function returns partition number of partition block device name
-#
+# The get_partition_number function
+# outputs the trailing digits of a partition block device as its partition number.
+# Usually only the basename of the partition block device is used as function argument
+# e.g. "get_partition_number sda2" instead of "get_partition_number /dev/sda2".
+# The implementation requires grep v2.5 or higher (option -o is used).
 # This function should support:
 #   /dev/mapper/36001438005deb05d0000e00005c40000p1
 #   /dev/mapper/36001438005deb05d0000e00005c40000_part1
 #   /dev/sda1
 #   /dev/cciss/c0d0p1
-#
-# Requires: grep v2.5 or higher (option -o)
-
 get_partition_number() {
-    local partition=$1
-    local number=$(echo "$partition" | grep -o -E "[0-9]+$")
+    local partition_block_device=$1
 
-    # Test if $number is a positive integer, if not it is a bug
-    [ $number -gt 0 ] 2>/dev/null
-    StopIfError "Partition number '$number' of partition $partition is not a valid number."
+    # The partition number is the trailing digits of the partition block device:
+    local partition_number=$( echo "$partition_block_device" | grep -o -E '[0-9]+$' )
 
-    # Catch if $number is too big, report it as a bug
-    (( $number <= 128 ))
-    StopIfError "Partition $partition is numbered '$number'. More than 128 partitions is not supported."
+    # Test if partition_number is a positive integer, if not it is likely a bug in ReaR.
+    # Because the above 'grep' outputs only trailing digits this BugError gets triggred
+    # when partition_block_device device does not contain trailing digits so that partition_number is empty
+    # which can happen when get_partition_number is called with a block device as argument
+    # that is not a partition block device (e.g. /dev/sda instead of /dev/sda1) which is likely a bug in ReaR:
+    test $partition_number -gt 0 || BugError "Partition number '$partition_number' of partition $partition_block_device is not a valid partition number."
 
-    echo $number
+    # Test if partition_number is greater than 128 and report it as a bug in ReaR.
+    # FIXME: Why are more than 128 partitions not supported?
+    # Why is it a bug in ReaR when more than 128 partitions are not supported?
+    # A GPT must be for at least 128 partitions but why does ReaR not support bigger GPT?
+    # I <jsmeix@suse.de> found https://github.com/rear/rear/commit/e758bba0a415173952cc588e5cf80570a6385f7e that links to
+    # https://github.com/rear/rear/issues/263 that contains https://github.com/rear/rear/issues/263#issuecomment-20464763
+    # which reads (excerpt): "The GPT standard allows maximum of 128 partitions per disk" which is not true
+    # according to how I understand the German https://de.wikipedia.org/wiki/GUID_Partition_Table that reads (excerpt)
+    # "Die EFI-Spezifikationen schreiben ein Minimum von 16384 Bytes für die Partitionstabelle vor, so dass es Platz für 128 Einträge gibt."
+    # in English "EFI specification mandate a minimum of 16384 bytes for the partition table so that there is space for 128 entries"
+    # which matches the English https://en.wikipedia.org/wiki/GUID_Partition_Table that reads (excerpt)
+    # "The UEFI specification stipulates that a minimum of 16384 bytes ... are allocated for the Partition Entry Array. Each entry has a size of 128 bytes."
+    # and because 16384 / 128 = 128 it results that 128 partition table entries (each of 128 bytes) are possible as a minimum
+    # which means that the GPT standard requires a minimum of 128 possible partitions per disk.
+    # So the current BugError here might be changed into only a user notification, for example something like
+    #   LogPrintError "Partition $partition_block_device is numbered '$partition_number'. More than 128 partitions may not work (GPT must be extra large)."
+    # But on the other hand ReaR errors out relatively often at that place here in particular
+    # when weird partition related errors before had been ignored and it proceeded until it finally errors out here
+    # cf. "Try hard to care about possible errors" in https://github.com/rear/rear/wiki/Coding-Style
+    # so we keep the BugError for the time being as some kind of generic safeguard to catch bugs in ReaR elsewhere
+    # until we fully understand what is going on in our partitioning related code, cf. https://github.com/rear/rear/pull/2260
+    test $partition_number -le 128 || BugError "Partition $partition_block_device is numbered '$partition_number'. More than 128 partitions are not supported."
+
+    # Output the trailing digits of the partition block device as its partition number:
+    echo $partition_number
 }
+
 # Returns partition start block or 'unknown'
 # sda/sda1 or
 # dm-XX
