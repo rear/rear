@@ -7,8 +7,10 @@ if is_true $AUTOEXCLUDE_MULTIPATH ; then
     done < <(grep ^multipath $LAYOUT_FILE)
 fi
 
-### Automatically exclude filesystems under a certain path
-### This should cover automatically attached USB devices.
+# Automatically exclude filesystems with mountpoints that are sub-directories
+# of the directories that are specified in the AUTOEXCLUDE_PATH array.
+# Filesystems with mountpoints in the AUTOEXCLUDE_PATH array are not excluded.
+# This should automatically exclude temporarily mounted things (e.g. USB devices).
 if [[ "$AUTOEXCLUDE_PATH" ]] ; then
     for exclude in "${AUTOEXCLUDE_PATH[@]}" ; do
         while read fs device mountpoint junk ; do
