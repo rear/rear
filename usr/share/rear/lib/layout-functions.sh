@@ -332,7 +332,9 @@ find_partition() {
 
 # The get_partition_number function
 # outputs the trailing digits of a partition block device as its partition number.
-# Requires: grep v2.5 or higher (option -o)
+# Usually only the basename of the partition block device is used as function argument
+# i.e. "get_partition_number sda2" instead of "get_partition_number /dev/sda2".
+# The implementation requires grep v2.5 or higher (option -o is used).
 # This function should support:
 #   /dev/mapper/36001438005deb05d0000e00005c40000p1
 #   /dev/mapper/36001438005deb05d0000e00005c40000_part1
