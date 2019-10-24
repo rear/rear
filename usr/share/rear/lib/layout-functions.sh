@@ -333,7 +333,7 @@ find_partition() {
 # The get_partition_number function
 # outputs the trailing digits of a partition block device as its partition number.
 # Usually only the basename of the partition block device is used as function argument
-# i.e. "get_partition_number sda2" instead of "get_partition_number /dev/sda2".
+# e.g. "get_partition_number sda2" instead of "get_partition_number /dev/sda2".
 # The implementation requires grep v2.5 or higher (option -o is used).
 # This function should support:
 #   /dev/mapper/36001438005deb05d0000e00005c40000p1
@@ -368,7 +368,7 @@ get_partition_number() {
     # and because 16384 / 128 = 128 it results that 128 partition table entries (each of 128 bytes) are possible as a minimum
     # which means that the GPT standard requires a minimum of 128 possible partitions per disk.
     # So the current BugError here might be changed into only a user notification, for example something like
-    #   LogPrintError "Partition $partition_block_device is numbered '$number'. More than 128 partitions may not work (GPT must be extra large)."
+    #   LogPrintError "Partition $partition_block_device is numbered '$partition_number'. More than 128 partitions may not work (GPT must be extra large)."
     # But on the other hand ReaR errors out relatively often at that place here in particular
     # when weird partition related errors before had been ignored and it proceeded until it finally errors out here
     # cf. "Try hard to care about possible errors" in https://github.com/rear/rear/wiki/Coding-Style
