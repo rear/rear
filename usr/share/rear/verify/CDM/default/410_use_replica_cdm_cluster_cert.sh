@@ -32,7 +32,7 @@ StopIfError "Could not download https://${CDM_CLUSTER_IP}/connector/${CDM_SUNOS_
 /usr/bin/tar $v -xzf  $CDM_SUNOS_TAR
 StopIfError "Could not extract $CDM_SUNOS_TAR"
 
-CDM_CERT_FILE=$(find $v ./ -name "rubrik.crt")
+CDM_CERT_FILE=$(find ./ -name "rubrik.crt")
 mv $v ${CDM_KEYS_DIR}/rubrik.crt ${CDM_KEYS_DIR}/rubrik.crt.orig
 cp $v $CDM_CERT_FILE $CDM_KEYS_DIR
 StopIfError "Could not copy replica CDM cluster certificate"
