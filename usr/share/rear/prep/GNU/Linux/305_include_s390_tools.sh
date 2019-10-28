@@ -33,5 +33,3 @@ PROGS+=( zipl grubby ed vmcp )
 
 COPY_AS_IS+=( /etc/zipl.conf /lib/s390-tools )
 
-
-KERNEL_CMDLINE=' selinux=1'
