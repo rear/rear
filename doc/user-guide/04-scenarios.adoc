@@ -1337,17 +1337,29 @@ Instead of using your ReaR image to completely recover your system from bare
 metal (as illustrated in most of the above scenarios), you can also use it
 as a live media to boot a broken but hopefully repairable system.
 
-Once booted on your recovery image, the `repair` workflow will mount all the
-target filesystems (including the most important virtual ones) below 
-`/mnt/local`, making it possible for you to explore your system at will,
+Once booted on your recovery image, the `repair` workflow will:
+
+* activate all Volume Groups
+
+* offer to decrypt any LUKS-encrypted filesystem that may be present
+
+* mount all the target filesystems (including the most important virtual 
+  ones) below `/mnt/local`
+
+thereby making it possible for you to explore your system at will,
 correcting any configuration mistake that may have prevented its startup, 
-or you can even `chroot` into it and further repair it using its own
-administrative tools.
+or allowing you to simply `chroot` into it and further repair it using its 
+own administrative tools.
 
 One important point to remember is that the `repair` workflow on its own 
 won't modify the target system in any way. Of course, once the target 
 filesystems are mounted you, as the administrator, may decide to do so
 manually.
+
+**Beware:** The `repair` workflow can only be used on the system where
+the rescue image was generated, as it bases its logic on the filesystem
+layout description file generated during the run of the `mkrescue` or
+`mkbackup` workflows.
 
 Here are the steps you would typically follow:
 

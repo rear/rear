@@ -1,6 +1,6 @@
 
 # Warn about missing components and for each missing component
-# offer the user a way to manually add code that recreates it.
+# offer the user a way to manually add code that mounts it.
 
 rear_workflow="rear $WORKFLOW"
 rear_shell_history="$( echo -e "vi $LAYOUT_CODE\nless $LAYOUT_CODE" )"
@@ -14,8 +14,8 @@ choices[4]="Abort '$rear_workflow'"
 
 while read status name type junk ; do
     missing_component="$name ($type)"
-    LogUserOutput "No code has been generated to mount $missing_component.
-    To mount it manually add code to $LAYOUT_CODE or abort."
+    LogUserOutput "No code has been generated to mount $missing_component."
+    LogUserOutput "To mount $missing_component manually add code to $LAYOUT_CODE or abort."
     while true ; do
         # The default user input is "Continue" to make it possible to run ReaR unattended
         # so that 'rear recover' proceeds after the timeout regardless that it probably fails
