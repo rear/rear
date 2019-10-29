@@ -6,9 +6,8 @@
 # script tries to fix this
 
 if is_true $AUTOEXCLUDE_MULTIPATH ; then
-    # if all multipath devices are automatically excluded then there is no need
-    # to further investigate if  EXCLUDE_VG or ONLY_INCLUDE_VG was respected
-    # for multipath devices
+    # If all multipath devices are automatically excluded then there is no need
+    # to further investigate if EXCLUDE_VG or ONLY_INCLUDE_VG was respected for multipath devices:
     return
 fi
 

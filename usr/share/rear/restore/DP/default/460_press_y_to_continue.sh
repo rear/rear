@@ -1,30 +1,19 @@
 
-# FIXME: The 'Left' function only works when STDOUT is an ANSI terminal
-# because according to http://ascii-table.com/ansi-escape-sequences.php
-# Esc[<number>D moves the cursor back by the specified <number> of columns
-# so that strange output happens when STDOUT is not an ANSI terminal:
-c_esc="\033"
-Left () {
-   echo -ne ${c_esc}[${1}D
-}
+# restore/DP/default/460_press_y_to_continue.sh
 
 unset REPLY
-# Use the original STDOUT when 'rear' was launched by the user for the 'echo' output
-# and for the 'Left' output in the 'while' loop
-# but keep STDERR going to the log file so that 'rear -D' output goes to the log file:
-echo -ne "Press \"y\" to continue or wait for timeout [30 secs]: " 1>&7
-while true
-do
+while true ; do
     # Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user
     # because 'read' outputs non-error stuff also to STDERR (e.g. its prompt):
-    read -t $WAIT_SECS -r -n 1 0<&6 1>&7 2>&8
+    read -t $WAIT_SECS -r -n 1 -p "Press 'y' to continue or wait for $WAIT_SECS seconds timeout: " 0<&6 1>&7 2>&8
     rc=$?
+    # In case of timeout 'read -t' results exit code 142 = 128 + 14 (14 is SIGALRM timer signal from alarm(2)):
     (( $rc == 142 )) && break
     (( $rc == 1 )) && break
     case $REPLY in
-        y|Y) break ;;
-        *) Left 1 ; continue ;;
+        (y|Y) break ;;
+        (*)   continue ;;
     esac
-done 1>&7
+done
 UserOutput ""
 

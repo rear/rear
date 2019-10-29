@@ -608,6 +608,11 @@ part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <part
 raid /dev/<name> level=<RAID level> raid-devices=<nr of devices> [uuid=<uuid>] [spare-devices=<nr of spares>] [layout=<RAID layout>] [chunk=<chunk size>] devices=<device1,device2,...>
 ----------------------------------
 
+=== Multipath ===
+----------------------------------
+multipath /dev/<name> <size(B)> <partition label> <slave1,slave2,...>
+----------------------------------
+
 === Physical Volumes ===
 ----------------------------------
 lvmdev /dev/<volume group name> <device> <UUID> [<size(K)>]
