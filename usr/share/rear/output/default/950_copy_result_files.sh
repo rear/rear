@@ -56,7 +56,35 @@ case "$scheme" in
         # The -f option won't help for this case, it only applies when there already is a target file that will be overwritten.
         # Accordingly it is sufficient (even without '-f') to copy each result file one by one:
         for result_file in "${RESULT_FILES[@]}" ; do
-            cp $v "$result_file" "${opath}/" || Error "Could not copy result file $result_file to $opath at $scheme location"
+
+            # note: s390 kernel copy is only through nfs
+            #
+            # s390 optional naming override of initrd and kernel to match the s390 filesytem naming conventions
+            # on s390a there is an option to name the initrd and kernel in the form of
+            # file name on s390 are in the form of name type mode
+            # the name is the userid or vm name and the type is initrd or kernel
+            # if the vm name (cp q userid) is HOSTA then the files written will be HOSTA kernel and HOSTA initrd
+            # vars needed:
+            # ZVM_NAMING      - set in local.conf, if Y then enable naming override
+            # ZVM_KERNEL_NAME - keeps track of kernel name in results array
+            # ARCH            - override only if ARCH is Linux-s390
+            # 
+            # initrd name override is handled in 900_create_initramfs.sh
+            # kernel name override is handled in 400_guess_kernel.sh
+            # kernel name override is handled in 950_copy_result_files.sh
+            if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]]
+            then 
+               if [ "$ZVM_KERNEL_NAME" == "$result_file" ]
+               then
+                  VM_UID=$(vmcp q userid |awk '{ print $1 }')
+                  LogPrint "s390 kernel naming override: $result_file will be written as $VM_UID.kernel"
+                  cp $v "$result_file" "${opath}/"$VM_UID".kernel" || Error "Could not copy result file $result_file to $opath at $scheme location"
+               else
+                  cp $v "$result_file" "${opath}/" || Error "Could not copy result file $result_file to $opath at $scheme location"
+               fi
+            else
+               cp $v "$result_file" "${opath}/" || Error "Could not copy result file $result_file to $opath at $scheme location"
+            fi
         done
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)

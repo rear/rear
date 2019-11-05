@@ -25,11 +25,11 @@ fi
 # zipl and grubby are  added in conf/Linux-s390x.conf
 # cf. https://github.com/rear/rear/pull/2142#issuecomment-499529607
 # move most progs to local.conf until deemed needed
-PROGS+=( findmnt dasdfmt dasdinfo fdasd chattr )
+PROGS+=( findmnt dasdfmt dasdinfo dasdview fdasd chattr )
 PROGS+=( lsdasd lsqeth lstape )
 PROGS+=( cio_ignore znetconf chccwdev qethconf )
-PROGS+=( getenforce setenforce sestatus setfiles chcon restorecon )
-PROGS+=( zipl grubby ed vmcp )
+PROGS+=( getenforce setenforce sestatus setfiles chcon restorecon avcstat getsebool matchpathcon selinuxconlist selinuxdefcon selinuxenabled togglesebool )
+PROGS+=( zipl grubby ed vmcp vmur )
 
 COPY_AS_IS+=( /etc/zipl.conf /lib/s390-tools )
 
