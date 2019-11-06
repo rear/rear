@@ -5,7 +5,6 @@ if is_true "$NSR_CLIENT_MODE"; then
     return
 fi
     
-NSRSERVER=$(cat $VAR_DIR/recovery/nsr_server )
 CLIENTNAME=$(hostname)
 
 OBJECTS=$( nsrinfo -s ${NSRSERVER} -N ${ISO_DIR}/${ISO_PREFIX}.iso ${CLIENTNAME} | \
