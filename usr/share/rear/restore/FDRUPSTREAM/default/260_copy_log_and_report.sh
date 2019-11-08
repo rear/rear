@@ -6,6 +6,21 @@ PREFIX="rear_$( date +%F_%T_%N )"
 SERVICENAME=( $(ps -ef | grep uscmd1 | grep servicename | grep -Po 'servicename=\K[^"]+') )
 REARLOGPATH="$FDRUPSTREAM_DATA_PATH/rear/logs"
 
+# If SERVICENAME is empty, then FDR/Upstream is not running and we won't 
+# be able to find the log files.
+if [[ ! ${SERVICENAME[@]} ]]; then 
+	echo
+	LogPrintError "***************"
+	LogPrintError "***************"
+	LogPrintError "No FDR/Upstream services were detected.  Unable to automatically copy logs and reports to the recovered system."
+	LogPrintError "Before rebooting, copy any necessary logs and reports from $FDRUPSTREAM_DATA_PATH into the $TARGET_FS_ROOT file tree."
+	LogPrintError "***************"
+	LogPrintError "***************"
+	echo
+	exit 1
+fi
+
+
 if [[ ! -d $TARGET_FS_ROOT/$REARLOGPATH ]]; then
 	mkdir -p $TARGET_FS_ROOT/$REARLOGPATH
 fi
@@ -33,11 +48,11 @@ for dir in "${SERVICENAME[@]}"; do
 	# variable.
 	if (( $count >= $countmax )); then
 		echo
-		LogPrint "***************"
-		LogPrint "***************"
-		LogPrint "Number of detected FDR/Upstream services has reached $countmax, which is not normal.  Before rebooting, copy any necessary logs and reports from $FDRUPSTREAM_DATA_PATH into the $TARGET_FS_ROOT file tree."
-		LogPrint "***************"
-		LogPrint "***************"
+		LogPrintError "***************"
+		LogPrintError "***************"
+		LogPrintError "Number of detected FDR/Upstream services has reached $countmax, which is not normal.  Before rebooting, copy any necessary logs and reports from $FDRUPSTREAM_DATA_PATH into the $TARGET_FS_ROOT file tree."
+		LogPrintError "***************"
+		LogPrintError "***************"
 		echo
 		break
 	fi
