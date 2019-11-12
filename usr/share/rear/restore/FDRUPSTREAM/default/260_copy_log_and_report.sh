@@ -17,7 +17,7 @@ if [[ ! ${SERVICENAME[@]} ]]; then
 	LogPrintError "***************"
 	LogPrintError "***************"
 	echo
-	exit 1
+	Error exit 1
 fi
 
 
