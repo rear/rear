@@ -5,7 +5,17 @@
 ### Check prerequisites
 
 # Run only if no EFI bootloader has been created yet and Grub 2 EFI is available
-([[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] || ! has_binary grub-mkimage || ! [[ -d /usr/lib/grub/x86_64-efi ]]) && return 0
+
+grub_name="grub2"
+if ! test -d "/boot/$grub_name" ; then
+    grub_name="grub"
+    if ! test -d "/boot/$grub_name" ; then
+        LogPrintError "Cannot install GRUB2 (neither boot/grub nor boot/grub2 directory)"
+        return 1
+    fi
+fi
+
+([[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] || ! has_binary $grub_name"-mkimage" || ! [[ -d /usr/lib/grub/x86_64-efi ]]) && return 0
 
 if is_true "${RAWDISK_BOOT_EXCLUDE_GRUB2_EFI:-no}"; then
     LogPrint "DISABLED: Using Grub 2 to create an EFI bootloader"
@@ -39,5 +49,5 @@ EOF
 
 # Create a Grub 2 EFI core image
 local grub_modules=( part_gpt fat normal configfile linux video all_video )
-grub-mkimage -O x86_64-efi -o "$efi_boot_directory/BOOTX64.efi" -p "/EFI/BOOT" "${grub_modules[@]}"
+$grub_name"-mkimage" -O x86_64-efi -o "$efi_boot_directory/BOOTX64.efi" -p "/EFI/BOOT" "${grub_modules[@]}"
 StopIfError "Error occurred during grub-mkimage of $efi_boot_directory/BOOTX64.efi"
