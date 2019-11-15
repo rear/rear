@@ -58,7 +58,7 @@ fi
 EOF
 }
 
-# Generate code to mount a device $1 of type $2 ('repair' workflow).
+# Generate code to mount a device $1 of type $2 ('mountonly' workflow).
 do_mount_device() {
     local device="$1"
     local type="$2"

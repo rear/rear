@@ -1,19 +1,19 @@
-# recover-workflow.sh
+# mountonly-workflow.sh
 #
-# repair workflow for Relax-and-Recover
+# "mount only" workflow for Relax-and-Recover
 #
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-WORKFLOW_repair_DESCRIPTION="use ReaR as live media to repair the system"
-WORKFLOWS=( ${WORKFLOWS[@]} repair )
-function WORKFLOW_repair () {
-    # Adapt /etc/motd in the ReaR recovery system when 'rear recover' is running
+WORKFLOW_mountonly_DESCRIPTION="use ReaR as live media to mount and repair the system"
+WORKFLOWS=( ${WORKFLOWS[@]} mountonly )
+function WORKFLOW_mountonly () {
+    # Adapt /etc/motd in the ReaR recovery system when 'rear mountonly' is running
     # to avoid the additional 'Run "rear recover" to restore your system !' message
-    # that only makes sense as long as 'rear recover' was not ever started,
+    # that only makes sense as long as 'rear mountonly' was not ever started,
     # see https://github.com/rear/rear/issues/1433
     # but do not (over)-write /etc/motd on the original system
-    # which could happen in simulation mode via 'rear -s recover'
+    # which could happen in simulation mode via 'rear -s mountonly'
     # that simulates sourcing scripts in the Source function
     # but this WORKFLOW_recover function call is not simulated (cf. usr/sbin/rear)
     # see https://github.com/rear/rear/issues/1670
@@ -34,5 +34,6 @@ function WORKFLOW_repair () {
     SourceStage "layout/prep-for-mount"
     SourceStage "layout/do-mount"
 
+    SourceStage "final-mount"
     SourceStage "wrapup"
 }

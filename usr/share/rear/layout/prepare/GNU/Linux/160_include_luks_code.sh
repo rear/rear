@@ -62,7 +62,7 @@ create_crypt() {
     ) >> "$LAYOUT_CODE"
 }
 
-# Function open_crypt() is meant to be used by the 'repair' workflow
+# Function open_crypt() is meant to be used by the 'mountonly' workflow
 open_crypt() {
     local crypt target_device source_device options
     read crypt target_device source_device options < <(grep "^crypt $1 " "$LAYOUT_FILE")
@@ -88,7 +88,7 @@ open_crypt() {
     (
     echo "Log \"Opening LUKS device $target_name on $source_device\""
     if [ -n "$keyfile" ] ; then
-        # During a 'repair' workflow, the original keyfile is supposed to be
+        # During a 'mountonly' workflow, the original keyfile is supposed to be
         # available at this point.
         echo "cryptsetup luksOpen --key-file $keyfile $source_device $target_name"
     elif [ -n "$password" ] ; then

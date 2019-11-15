@@ -14,8 +14,8 @@
 # scripts that do umount plus sync to safely shut down the recovery system,
 # cf. https://github.com/rear/rear/pull/1011
 
-# Skip if not recover WORKFLOW:
-test "recover" = "$WORKFLOW" || return 0
+# Skip if not 'recover' or 'mountonly' WORKFLOW:
+test "recover" = "$WORKFLOW" -o "mountonly" = "$WORKFLOW" || return 0
 
 # Skip if systemd is used
 # systemctl gets copied into the recovery system as /bin/systemctl:

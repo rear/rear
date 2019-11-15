@@ -9,6 +9,10 @@ save_original_file "$LAYOUT_CODE"
 cat <<EOF >"$LAYOUT_CODE"
 #!/bin/bash
 
+# Create "breadcrumb" file (used as interlock by other workflows),
+# defined and checked by ./setup/default/002_clean_start.sh
+echo "$WORKFLOW" > $BREADCRUMB
+
 LogPrint "Start target system mount."
 
 mkdir -p $TARGET_FS_ROOT
@@ -63,17 +67,3 @@ while [ -z "$all_done" ] ; do
     fi
 
 done
-
-# Now mount needed virtual filesystems below the target root to support
-# chrooting into it and running YaST (a.o.)
-cat <<EOF >>"$LAYOUT_CODE"
-
-LogPrint "Mounting virtual filesystems below target root."
-
-mount -t proc proc $TARGET_FS_ROOT/proc
-mount -t sysfs sysfs $TARGET_FS_ROOT/sys
-mount -o rbind /dev $TARGET_FS_ROOT/dev
-
-LogPrint "Target system now ready for chrooting into it."
-
-EOF
