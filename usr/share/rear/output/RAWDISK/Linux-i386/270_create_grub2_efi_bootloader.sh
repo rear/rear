@@ -23,9 +23,9 @@ fi
 
 RAWDISK_BOOT_EFI_STAGING_ROOT="$TMP_DIR/EFI"
 
-# Create a Grub 2 configuration file
-local new_grub_config_file="$TMP_DIR/grub.cfg"
-cat > "$new_grub_config_file" << EOF
+# Set up contents of a Grub 2 configuration file
+local new_grub_configuration
+read -r -d '' new_grub_configuration << EOF
 set timeout=0
 set default=0
 menuentry "${RAWDISK_BOOT_GRUB_MENUENTRY_TITLE:-Recovery System}" {
@@ -41,21 +41,41 @@ if [[ -n "$SECURE_BOOT_BOOTLOADER" ]]; then
     # breaking Secure Boot and we cannot know which companion files are actually required, so we play it safe
     # and copy the entire EFI tree as is.
     local original_efi_root="$(findmnt --noheadings --output TARGET --target "$SECURE_BOOT_BOOTLOADER")/EFI"
+    [[ "$original_efi_root" == "/EFI" ]] && Error "Could not find original EFI root directory"
     LogPrint "Secure Boot: Using the original EFI configuration from '$original_efi_root'"
     cp -a $v "$original_efi_root/." "$RAWDISK_BOOT_EFI_STAGING_ROOT" || Error "Could not copy EFI configuration"
 
+    # If /boot/grub exists, it contains additional Grub modules, which are not compiled into the grub core image.
+    # Pick required ones from there, too.
+    local additional_grub_directory="/boot/grub"
+    local grub_modules_directory="x86_64-efi"
+    local additional_grub_modules=( all_video.mod )
+    if [[ -d "$additional_grub_directory/$grub_modules_directory" ]]; then
+        local grub_target_directory="$(dirname "$(find "$RAWDISK_BOOT_EFI_STAGING_ROOT" -iname grubx64.efi -print)")"
+        [[ "$grub_target_directory" == "." ]] && Error "Could not find Grub executable"  # dirname "" returns "."
+
+        mkdir "$grub_target_directory/$grub_modules_directory" || Error "Could not create Grub modules directory"
+        for module in "${additional_grub_modules[@]}"; do
+            cp -a $v "$additional_grub_directory/$grub_modules_directory/$module" "$grub_target_directory/$grub_modules_directory"
+            StopIfError "Could not copy additional Grub module '$module'"
+            new_grub_configuration="insmod ${module%.mod}"$'\n'"$new_grub_configuration"
+        done
+    fi
+
     # Now we look for existing Grub configuration files and overwrite those with our own configuration. Again, to
     # be safe, we are prepared for the situation where we might find more than one grub.cfg without knowing which
-    # one is effective, so we overwrite every one.
-    find "$RAWDISK_BOOT_EFI_STAGING_ROOT" -iname grub.cfg -print -exec cp $v "$new_grub_config_file" '{}' \;
-    StopIfError "Could not copy Grub configuration"
+    # one is effective, so we overwrite each one.
+    for target_config_path in $(find "$RAWDISK_BOOT_EFI_STAGING_ROOT" -iname grub.cfg -print); do
+        echo "$new_grub_configuration" > "$target_config_path"
+        StopIfError "Could not copy Grub configuration to '$target_config_path'"
+    done
 else
     # Not Using Secure Boot:
     # Populate the EFI file system with a newly created Grub boot loader image and the Grub configuration file.
     local efi_boot_directory="$RAWDISK_BOOT_EFI_STAGING_ROOT/BOOT"
     mkdir $v -p "$efi_boot_directory" || Error "Could not create $efi_boot_directory"
 
-    cp $v "$new_grub_config_file" "$efi_boot_directory/grub.cfg"
+    echo "$new_grub_configuration" > "$efi_boot_directory/grub.cfg"
 
     # Create a Grub 2 EFI core image and install it as boot loader. (NOTE: This version will not be signed.)
     # Use the UEFI default boot loader name, so that firmware will find it without an existing boot entry.
@@ -64,5 +84,3 @@ else
     grub-mkimage -O x86_64-efi -o "$boot_loader" -p "/EFI/BOOT" "${grub_modules[@]}"
     StopIfError "Error occurred during grub-mkimage of $boot_loader"
 fi
-
-rm "$new_grub_config_file"
