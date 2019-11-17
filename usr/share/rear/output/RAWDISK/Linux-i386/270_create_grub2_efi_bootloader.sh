@@ -4,9 +4,22 @@
 
 ### Check prerequisites
 
-# Run only if no EFI bootloader has been created yet and Grub 2 EFI is available
-([[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] || ! has_binary grub-mkimage || ! [[ -d /usr/lib/grub/x86_64-efi ]]) && return 0
+# (1) An EFI bootloader must not have been created yet
+[[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] && return 0
 
+# (2) Grub 2 (which has a *-probe executable while Grub 1 does not) must exist
+if has_binary grub-probe; then
+    grub2_name="grub"  # The name prefixes executables and determines the installation directory under /boot
+elif has_binary grub2-probe; then
+    grub2_name="grub2"
+else
+    return 0
+fi
+
+# (3) Grub 2 EFI components must exist
+[[ -d /usr/lib/grub/x86_64-efi ]] || return 0
+
+# (4) Grub 2 must not have been excluded
 if is_true "${RAWDISK_BOOT_EXCLUDE_GRUB2_EFI:-no}"; then
     LogPrint "DISABLED: Using Grub 2 to create an EFI bootloader"
     return 0
@@ -45,9 +58,9 @@ if [[ -n "$SECURE_BOOT_BOOTLOADER" ]]; then
     LogPrint "Secure Boot: Using the original EFI configuration from '$original_efi_root'"
     cp -a $v "$original_efi_root/." "$RAWDISK_BOOT_EFI_STAGING_ROOT" || Error "Could not copy EFI configuration"
 
-    # If /boot/grub exists, it contains additional Grub modules, which are not compiled into the grub core image.
+    # If /boot/$grub2_name exists, it contains additional Grub modules, which are not compiled into the grub core image.
     # Pick required ones from there, too.
-    local additional_grub_directory="/boot/grub"
+    local additional_grub_directory="/boot/$grub2_name"
     local grub_modules_directory="x86_64-efi"
     local additional_grub_modules=( all_video.mod )
     if [[ -d "$additional_grub_directory/$grub_modules_directory" ]]; then
@@ -81,6 +94,6 @@ else
     # Use the UEFI default boot loader name, so that firmware will find it without an existing boot entry.
     local boot_loader="$efi_boot_directory/BOOTX64.EFI"
     local grub_modules=( part_gpt fat normal configfile linux video all_video )
-    grub-mkimage -O x86_64-efi -o "$boot_loader" -p "/EFI/BOOT" "${grub_modules[@]}"
-    StopIfError "Error occurred during grub-mkimage of $boot_loader"
+    $grub2_name-mkimage -O x86_64-efi -o "$boot_loader" -p "/EFI/BOOT" "${grub_modules[@]}"
+    StopIfError "Error occurred during $grub2_name-mkimage of $boot_loader"
 fi
