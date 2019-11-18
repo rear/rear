@@ -227,9 +227,17 @@ EOF
             if [[ "$end" ]] ; then
                 end=$( mathlib_calculate "$end - 1" )
             fi
-            cat >> "$LAYOUT_CODE" <<EOF
+            if [[ "$ARCH" == "Linux-s390" ]]
+            then
+               # if dasd disk is LDL formated, then do not partition it, because it is partitioned and can take only partition
+               if [[ ! "${listDasdLdl[@]}" =~ "$device" ]]
+               then
+                 echo "not LDL dasd formated disk, create a partition"
+                 cat >> "$LAYOUT_CODE" <<EOF
 create_disk_partition "$device" "$name" $number $start $end
 EOF
+               fi
+            fi
         else
             ### Old versions of parted accept only sizes in megabytes...
             if (( $start > 0 )) ; then
