@@ -456,8 +456,21 @@ Power off the system now
     kernel poweroff.com
 
 EOF
+    elif syslinux_has "poweroff.c32"; then
+        syslinux_write <<EOF
+label poweroff
+    say poweroff - Power off the system
+    menu label ^Power off system
+    text help
+Power off the system now
+    endtext
+    kernel poweroff.c32
+
+EOF
     fi
 
 } 4>"$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/extlinux.conf"
 
 Log "Created extlinux configuration '$SYSLINUX_PREFIX/extlinux.conf'"
+
+# vim: set et ts=4 sw=4

@@ -38,6 +38,8 @@ WORKFLOW_format () {
             (-h|--help)
                 LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- -f /dev/sdX'"
                 LogPrintError "Valid format workflow options are: -e/--efi -f/--force -y/--yes"
+                # No "rear format failed, check ...rear...log for details" message:
+                EXIT_FAIL_MESSAGE=0
                 # TODO: Use proper exit codes cf. https://github.com/rear/rear/issues/1134
                 exit 1
                 ;;

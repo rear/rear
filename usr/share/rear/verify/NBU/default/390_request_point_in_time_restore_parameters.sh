@@ -1,33 +1,46 @@
-# Ask for point in time to recover with NBU.
+
+# Ask for NBU NetBackup Point-In-Time Restore.
 # One point in time is used for all filespaces.
 # This causes the bprecover to use the input date or date/time to be used as the endtime -e option
+# see the usr/share/rear/restore/NBU/default/400_restore_with_nbu.sh script.
 
 NBU_ENDTIME=()
 
-LogPrint ""
-LogPrint "Netbackup restores by default the latest backup data. Alternatively you can specify"
-LogPrint "a different date and time to enable Point-In-Time Restore. Press ENTER to"
-LogPrint "use the most recent available backup"
-# Use the original STDIN STDOUT and STDERR when rear was launched by the user
-# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
-read -t $WAIT_SECS -r -p "Enter date (mm/dd/yyyy) or date/time (mm/dd/yyyy HH:MM:SS) or press ENTER [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
+UserOutput ""
+UserOutput "NetBackup restores by default the latest backup data."
+UserOutput "Press only ENTER to restore the most recent available backup."
+UserOutput "Alternatively specify date (and time) for Point-In-Time Restore."
 
-# validate input
-if test -z "${REPLY}"; then
-        LogPrint "Skipping Point-In-Time Restore, will restore most recent data."
-else
-        BAD_ENDTIME=0
-        # validate date
-        NBU_ENDTIME_DATE=$( date -d "$REPLY" +%m/%d/%Y 2>/dev/null ) || BAD_ENDTIME=1
-        # validate time
-        NBU_ENDTIME_TIME=$( date -d "$REPLY" +%T 2>/dev/null ) || BAD_ENDTIME=1
-        [ ${BAD_ENDTIME} -ne 1 ]
-        BugIfError "Incorrect date and/or time definition used: ${REPLY} Ending NetBackup Restore Attempt..."
-        if test "$NBU_ENDTIME_TIME" = "00:00:00"; then
-            NBU_ENDTIME=( "${NBU_ENDTIME_DATE}" )
-        else
-            NBU_ENDTIME=( "${NBU_ENDTIME_DATE}" "${NBU_ENDTIME_TIME}" )
-        fi
+local answer=""
+local valid_date_and_time_input=""
+local nbu_endtime_date=""
+local nbu_endtime_time=""
 
-        LogPrint "Restoring all filespaces from backup at or before ${NBU_ENDTIME[@]}"
-fi
+# Let the user enter date and time again and again until the input is valid
+# or the user pressed only ENTER to restore the most recent available backup:
+while true ; do
+    answer=$( UserInput -I NBU_RESTORE_PIT -r -p "Enter date (mm/dd/yyyy) or date and time (mm/dd/yyyy HH:MM:SS) or press ENTER" )
+    # When the user pressed only ENTER leave this script to restore the most recent available backup:
+    if test -z "$answer" ; then
+        UserOutput "Skipping NetBackup Point-In-Time Restore, will restore most recent backup."
+        return
+    fi
+    # Try to do NetBackup Point-In-Time Restore provided the user input is valid date and time:
+    valid_date_and_time_input="yes"
+    # Validate date:
+    nbu_endtime_date=$( date -d "$answer" +%m/%d/%Y ) || valid_date_and_time_input="no"
+    # Validate time:
+    nbu_endtime_time=$( date -d "$answer" +%T ) || valid_date_and_time_input="no"
+    # Exit the while loop when the user input is valid date and time:
+    is_true $valid_date_and_time_input && break
+    # Show the user that his input is invalid and do the the while loop again:
+    LogPrintError "Invalid date and/or time '$answer' specified."
+done
+
+# Do NetBackup Point-In-Time Restore:
+NBU_ENDTIME=( "$nbu_endtime_date" )
+# When also an actual time was specified (i.e. when it is not "00:00:00") add it:
+test "$nbu_endtime_time" != "00:00:00" && NBU_ENDTIME+=( "$nbu_endtime_time" )
+
+UserOutput "Doing NetBackup Point-In-Time Restore of all filespaces at or before ${NBU_ENDTIME[@]}"
+

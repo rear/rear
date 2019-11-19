@@ -74,7 +74,7 @@ information necessary to restore a system is listed.
 
 It's easy to see that there are 3 disks attached to the system. +/dev/sda+ is the internal disk of the system. Its filesystems are normally mounted. The other devices are external disks. One of them has just normal partitions. The other one has a physical volume on one of the partitions.
 
-== Including/Excluding components
+== Excluding components
 
 === Autoexcludes
 
@@ -606,6 +606,11 @@ part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <part
 === Software RAID ===
 ----------------------------------
 raid /dev/<name> level=<RAID level> raid-devices=<nr of devices> [uuid=<uuid>] [spare-devices=<nr of spares>] [layout=<RAID layout>] [chunk=<chunk size>] devices=<device1,device2,...>
+----------------------------------
+
+=== Multipath ===
+----------------------------------
+multipath /dev/<name> <size(B)> <partition label> <slave1,slave2,...>
 ----------------------------------
 
 === Physical Volumes ===

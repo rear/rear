@@ -39,3 +39,8 @@ include::12-BLOCKCLONE.adoc[]
 
 include::13-tcg-opal-support.adoc[]
 
+include::14-ZYPPER-and-YUM.adoc[]
+
+include::15-EFISTUB.adoc[]
+
+include::16-Rubrik-CDM.adoc[]

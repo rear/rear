@@ -1,14 +1,13 @@
-# We need to re-engage CCISS scsi subsystem to make sure the tape device is
-# present again
+# We need to re-engage CCISS scsi subsystem to make sure the tape device is present again.
 
-if ! grep -q '^cciss ' /proc/modules; then
-    return
-fi
+# Nothing to do when no cciss kernel module is loaded:
+grep -q '^cciss ' /proc/modules || return 0
 
-# make the CCISS tape device visible
-for host in /proc/driver/cciss/cciss?; do
+# Make the CCISS tape device visible:
+for host in /proc/driver/cciss/cciss? ; do
     Log "Engage SCSI on host $host"
-    echo engage scsi >$host 2>/dev/null
+    echo engage scsi >$host
 done
 
 sleep 2
+

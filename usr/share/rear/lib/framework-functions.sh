@@ -121,7 +121,7 @@ function SourceStage () {
 function cleanup_build_area_and_end_program () {
     # Cleanup build area
     Log "Finished in $((SECONDS-STARTTIME)) seconds"
-    if test "$KEEP_BUILD_DIR" ; then
+    if is_true "$KEEP_BUILD_DIR" ; then
         LogPrint "You should also rm -Rf $BUILD_DIR"
     else
         Log "Removing build area $BUILD_DIR"
@@ -130,8 +130,7 @@ function cleanup_build_area_and_end_program () {
         # line below put in comment due to issue #465
         #rm -Rf $BUILD_DIR/outputfs
         # in worst case it could not umount; so before remove the BUILD_DIR check if above outputfs is gone
-        mount | grep -q "$BUILD_DIR/outputfs"
-        if [[ $? -eq 0 ]]; then
+        if mountpoint -q "$BUILD_DIR/outputfs" ; then
             # still mounted it seems
             LogPrint "Directory $BUILD_DIR/outputfs still mounted - trying lazy umount"
             sleep 2

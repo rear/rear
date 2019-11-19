@@ -14,8 +14,8 @@ choices[4]="Abort '$rear_workflow'"
 
 while read status name type junk ; do
     missing_component="$name ($type)"
-    LogUserOutput "No code has been generated to recreate $missing_component.
-    To recreate it manually add code to $LAYOUT_CODE or abort."
+    LogUserOutput "No code has been generated to recreate $missing_component"
+    LogUserOutput "To recreate $missing_component manually add code to $LAYOUT_CODE or abort"
     while true ; do
         # The default user input is "Continue" to make it possible to run ReaR unattended
         # so that 'rear recover' proceeds after the timeout regardless that it probably fails

@@ -23,7 +23,11 @@ while read dm_name junk ; do
         slaves="$slaves$(get_device_name ${slave##*/}),"
     done
 
-    echo "multipath /dev/mapper/$dm_name $dm_size ${slaves%,}" >> $DISKLAYOUT_FILE
+    dm_disktype=$(parted -s $dev_name print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
+
+    echo "# Multipath /dev/mapper/$dm_name"
+    echo "# Format: multipath <devname> <size(bytes)> <partition label type> <slaves>"
+    echo "multipath /dev/mapper/$dm_name $dm_size $dm_disktype ${slaves%,}" >> $DISKLAYOUT_FILE
 
     extract_partitions "/dev/mapper/$dm_name" >> $DISKLAYOUT_FILE
 done < <( dmsetup ls --target multipath )
