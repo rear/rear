@@ -57,7 +57,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
 # Usually this is done via a kind of cookbook (Chef, puppet or ansible).
 docker_is_running=""
 docker_root_dir=""
-if service docker status &>/dev/null ; then
+if service docker status ; then
     docker_is_running="yes"
     # When the Docker daemon/service is running, try to get its 'Docker Root Dir':
     # Kill 'docker info' with SIGTERM after 5 seconds and with SIGKILL after additional 2 seconds

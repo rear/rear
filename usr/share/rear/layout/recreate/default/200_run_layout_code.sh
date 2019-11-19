@@ -10,14 +10,14 @@
 # TODO: Implement layout/prepare as part of a function ?
 #
 # TODO: Add choices as in layout/prepare/default/500_confirm_layout_file.sh
-#  "View disk layout ($LAYOUT_FILE)"
-#  "Edit disk layout ($LAYOUT_FILE)"
+#   "View disk layout ($LAYOUT_FILE)"
+#   "Edit disk layout ($LAYOUT_FILE)"
 # and for the latter choice some code like
-#   If disklayout.conf has changed, generate new diskrestore.sh
-#     if (( $timestamp < $(stat --format="%Y" $LAYOUT_FILE) )); then
-#         LogPrint "Detected changes to $LAYOUT_FILE, rebuild $LAYOUT_CODE on-the-fly."
-#         SourceStage "layout/prepare" 2>>$RUNTIME_LOGFILE
-#     fi
+#   # If disklayout.conf has changed, generate new diskrestore.sh
+#   if (( $timestamp < $(stat --format="%Y" $LAYOUT_FILE) )); then
+#       LogPrint "Detected changes to $LAYOUT_FILE, rebuild $LAYOUT_CODE on-the-fly."
+#       SourceStage "layout/prepare" 2>>$RUNTIME_LOGFILE
+#   fi
 #
 
 rear_workflow="rear $WORKFLOW"
@@ -34,8 +34,8 @@ choices[4]="Use Relax-and-Recover shell and return back to here"
 choices[5]="Abort '$rear_workflow'"
 prompt="The disk layout recreation script failed"
 choice=""
-# When USER_INPUT_LAYOUT_RUN has any 'true' value be liberal in what you accept and
-# assume choices[0] 'Run disk recreation script again' was actually meant:
+# When USER_INPUT_LAYOUT_CODE_RUN has any 'true' value be liberal in what you accept and
+# assume choices[0] 'Rerun disk recreation script' was actually meant:
 is_true "$USER_INPUT_LAYOUT_CODE_RUN" && USER_INPUT_LAYOUT_CODE_RUN="${choices[0]}"
 
 unset confirm_choices
@@ -155,4 +155,3 @@ while true ; do
         esac
     done
 done
-

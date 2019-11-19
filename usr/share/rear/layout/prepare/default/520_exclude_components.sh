@@ -7,7 +7,7 @@ for component in "${EXCLUDE_RECREATE[@]}" ; do
 done
 
 ### Make sure we have all dependencies for multipath devices in place.
-while read multipath device dm_size slaves junk ; do
+while read multipath device dm_size label slaves junk ; do
     local -a devices=()
 
     OIFS=$IFS
