@@ -61,7 +61,11 @@ if [[ ! -z "$PXE_TFTP_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
     cp $v $syslinux_modules_dir/chain.c32 $BUILD_DIR/tftpbootfs >&2
     cp $v $syslinux_modules_dir/hdt.c32 $BUILD_DIR/tftpbootfs >&2
     cp $v $syslinux_modules_dir/reboot.c32 $BUILD_DIR/tftpbootfs >&2
-    cp $v $syslinux_modules_dir/poweroff.com $BUILD_DIR/tftpbootfs >&2
+    if [[ -r "$syslinux_modules_dir/poweroff.com" ]] ; then
+        cp $v $syslinux_modules_dir/poweroff.com $BUILD_DIR/tftpbootfs >&2
+    elif [[ -r "$syslinux_modules_dir/poweroff.c32" ]] ; then
+        cp $v $syslinux_modules_dir/poweroff.c32 $BUILD_DIR/tftpbootfs >&2
+    fi
     chmod 644 $BUILD_DIR/tftpbootfs/*.c32
     chmod 644 $BUILD_DIR/tftpbootfs/*.0
 fi
@@ -81,3 +85,4 @@ else
     RESULT_FILES=( "${RESULT_FILES[@]}" "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL" "$PXE_TFTP_LOCAL_PATH/$PXE_INITRD" "$PXE_TFTP_LOCAL_PATH/$PXE_MESSAGE" )
 fi
 
+# vim: set et ts=4 sw=4
