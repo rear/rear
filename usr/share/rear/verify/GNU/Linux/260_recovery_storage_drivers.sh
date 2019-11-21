@@ -1,5 +1,8 @@
 # Find the storage drivers for the recovery hardware.
 
+# Skip if not recover WORKFLOW:
+test "recover" = "$WORKFLOW" || return 0
+
 # A longer time ago udev was optional on some distros.
 # This changed and nowadays udev is not optional any more.
 # See https://github.com/rear/rear/pull/1171#issuecomment-274442700

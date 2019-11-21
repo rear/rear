@@ -1390,16 +1390,15 @@ verbose):
 ----
 RESCUE pc-pan:~ # rear mountonly
 Relax-and-Recover 2.5 / Git
-Running rear mountonly (PID 639)
+Running rear mountonly (PID 625)
 Using log file: /var/log/rear/rear-pc-pan.log
 Running workflow mountonly within the ReaR rescue/recovery system
-Will do driver migration (recreating initramfs/initrd)
 Comparing disks
-Device sda has expected (same) size 34359738368 (will be used for recovery)
+Device sda has expected (same) size 34359738368 (will be used for 'mountonly')
 Disk configuration looks identical
 Proceed with 'mountonly' (yes) otherwise manual disk layout configuration is enforced
 (default 'yes' timeout 30 seconds)
-
+yes
 User confirmed to proceed with 'mountonly'
 Start target system mount.
 Mounting filesystem /
@@ -1409,8 +1408,8 @@ Please enter the password for LUKS device cr_vg00-lvol4 (/dev/mapper/vg00-lvol4)
 Enter passphrase for /dev/mapper/vg00-lvol4: 
 Mounting filesystem /products
 Disk layout processed.
-Finished recovering your system. You can explore it under '/mnt/local'.
-Exiting rear mountonly (PID 639) and its descendant processes ...
+Finished 'mountonly'. The target system is mounted at '/mnt/local'.
+Exiting rear mountonly (PID 625) and its descendant processes ...
 Running exit tasks
 ----
 
