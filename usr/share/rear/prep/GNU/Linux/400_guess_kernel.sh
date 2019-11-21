@@ -125,6 +125,8 @@ if test -L "$KERNEL_FILE" ; then
     # If KERNEL_FILE is a symlink, use its (final) target:
     local autodetected_kernel="$KERNEL_FILE"
     KERNEL_FILE="$( readlink $v -e "$KERNEL_FILE" )"
+    ZVM_KERNEL_NAME="$KERNEL_FILE"
+
     # readlink results nothing when there is no symlink target:
     test -s "$KERNEL_FILE" || Error "Autodetected kernel '$autodetected_kernel' is a broken symbolic link"
     LogPrint "Using symlink target '$KERNEL_FILE' of autodetected kernel '$autodetected_kernel' as kernel in the recovery system"
@@ -133,4 +135,5 @@ fi
 # There must be a bug in the autodetection code above when a file is autodetected but does not exist:
 test -s "$KERNEL_FILE" || BugError "Autodetected kernel '$KERNEL_FILE' does not exist"
 LogPrint "Using autodetected kernel '$KERNEL_FILE' as kernel in the recovery system"
+ZVM_KERNEL_NAME="$KERNEL_FILE"
 
