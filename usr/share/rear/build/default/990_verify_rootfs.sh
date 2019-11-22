@@ -58,8 +58,11 @@ if ! chroot $ROOTFS_DIR /bin/ldd /bin/bash 1>&2 ; then
 fi
 
 # Now test each binary (except links) with ldd and look for 'not found' libraries.
-# In case of 'not found' libraries for dynamically linked executables ldd returns zero exit code.
-# When running ldd for a file that is 'not a dynamic executable' ldd returns non-zero exit code.
+# In case of 'not found' libraries for dynamically linked executables ldd returns zero exit code
+# but that is the case that indicates an actual error in the ReaR recovery system so we grep for 'not found'.
+# When running ldd for a file that is 'not a dynamic executable' ldd returns non-zero exit code
+# which is not an error here because we run ldd for all executables (e.g. bash scripts like 'bin/rear')
+# so we ignore when ldd returns non-zero exit code (and we also redirect its stderr to /dev/null).
 # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
 # see https://github.com/rear/rear/pull/1514#discussion_r141031975
 # and for the general issue see https://github.com/rear/rear/issues/1372
@@ -88,15 +91,18 @@ if test "$BACKUP" = "NBU" ; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NBU_LD_LIBRARY_PATH
 fi
 # Actually test all binaries for 'not found' libraries.
-# Find all binaries and libraries also e.g. those that are copied via COPY_AS_IS into other paths:
-for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ) ; do
+# Find all binaries and libraries (in particular what is copied via COPY_AS_IS into arbitrary paths)
+# so find what is a regular file and which is executable or its name is '*.so' or '*.so.[0-9]*'
+# because libraries are not always set to be executable, cf. https://github.com/rear/rear/issues/2279
+for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -name '*.so.[0-9]*' \) -printf '/%P\n' ) ; do
     # Skip the ldd test for kernel modules because in general running ldd on kernel modules does not make sense
     # and sometimes running ldd on kernel modules causes needless errors because sometimes that segfaults
     # which results false alarm "ldd: exited with unknown exit code (139)" messages ( 139 - 128 = 11 = SIGSEGV )
     # cf. https://github.com/rear/rear/issues/2177 which also shows that sometimes kernel modules could be
     # not only in the usual directory /lib/modules/ but also e.g. in /usr/lib/modules/
-    # so we 'grep' for '/lib/modules/' anywhere in the full path of the binary:
-    grep -q "/lib/modules/" <<<"$binary" && continue
+    # so we 'grep' for '/lib/modules/' anywhere in the full path of the binary.
+    # Also skip the ldd test for firmware files where it also does not make sense:
+    egrep -q '/lib/modules/|/lib.*/firmware/' <<<"$binary" && continue
     # In order to handle relative paths, we 'cd' to the directory containing $binary before running ldd.
     # In particular third-party backup tools may have shared object dependencies with relative paths.
     # For an example see https://github.com/rear/rear/pull/1560#issuecomment-343504359 that reads (excerpt):
@@ -115,8 +121,10 @@ for binary in $( find $ROOTFS_DIR -type f -executable -printf '/%P\n' ) ; do
     #       ...
     # The login shell is there so that we can call commands as in a normal working shell,
     # cf. https://github.com/rear/rear/issues/862#issuecomment-274068914
-    # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120.
-    chroot $ROOTFS_DIR /bin/bash --login -c "cd $( dirname $binary ) && ldd $binary" < /dev/null | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
+    # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120
+    # and redirected stderr avoids ldd warnings in the log like "ldd: warning: you do not have execution permission for ..."
+    # cf. https://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
+    chroot $ROOTFS_DIR /bin/bash --login -c "cd $( dirname $binary ) && ldd $binary" </dev/null 2>/dev/null | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
 done
 # Restore the LD_LIBRARY_PATH if it was saved above (i.e. when LD_LIBRARY_PATH had been set before)
 # otherwise unset a possibly set LD_LIBRARY_PATH (i.e. when LD_LIBRARY_PATH had not been set before):
