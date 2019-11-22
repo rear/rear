@@ -139,6 +139,7 @@ mount_fs() {
             (
             echo "mkdir -p $TARGET_FS_ROOT$mountpoint"
             echo "mount $mountopts $device $TARGET_FS_ROOT$mountpoint"
+            # try remount for xattr
             # mount and then try remount for systems supporting xattr
             # add a second mount for extended attr (selinux) 
             # the first mount will do perform the basic mount, the second mount (remount) will try for xattr
