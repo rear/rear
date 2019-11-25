@@ -168,15 +168,44 @@ function RequiredSharedObjects () {
     #          libresolv.so.2 => /lib64/libresolv.so.2 (0x00007f3c98c5c000)
     # The 'ldd' output (when providing more than one argument) has 5 cases.
     # So we have to distinguish lines of the following form (indentation is done with tab '\t'):
-    #  1. Line: "/path/to/binary:"                       -> current file argument for ldd
-    #  2. Line: "        lib (mem-addr)"                 -> virtual library
-    #  3. Line: "        lib => not found"               -> print error to stderr
-    #  4. Line: "        lib => /path/to/lib (mem-addr)" -> print $3 '/path/to/lib'
+    #  1. Line: "/path/to/binary:"                                 -> current file argument for ldd
+    #  2. Line: "        lib (mem-addr)"                           -> virtual library
+    #  3. Line: "        lib => not found"                         -> print error to stderr
+    #  4. Line: "        lib => /path/to/lib (mem-addr)"           -> print $3 '/path/to/lib'
     #  5. Line: "        /path/to/lib => /path/to/lib2 (mem-addr)" -> print $3 '/path/to/lib2'
-    #  6. Line: "        /path/to/lib (mem-addr)"        -> print $1 '/path/to/lib'
-    ldd "$@" | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
-                     /^\t.+ => \// { print $3 }
-                     /^\t\// && !/ => / { print $1 } ' | sort -u
+    #  6. Line: "        /path/to/lib (mem-addr)"                  -> print $1 '/path/to/lib'
+    local file_for_ldd=""
+    local file_owner_ID=""
+    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+    for file_for_ldd in $@ ; do
+        # Skip non-regular files like directories, device files, and non-existent files
+        # cf. similar code in build/GNU/Linux/100_copy_as_is.sh
+        # but here symbolic links must not be skipped (e.g. /sbin/mkfs.ext2 -> /usr/sbin/mkfs.ext2)
+        # otherwise there would be binaries in the recovery system without required libraries:
+        test -f "$file_for_ldd" || continue
+        # Skip the ldd test for kernel modules and firmware files
+        # which could happen via COPY_AS_IS+=( /lib/firmware/my_hardware )
+        # cf. the code in build/default/990_verify_rootfs.sh
+        egrep -q '/lib/modules/|/lib.*/firmware/' <<<"$file_for_ldd" && continue
+        # Skip files that are not owned by 'root' to mitigate possible ldd security issues
+        # because some versions of ldd may directly execute the file (see "man ldd")
+        # which could lead to the execution of arbitrary programs as user 'root'
+        # in particular when directories are specified in COPY_AS_IS that may contain
+        # unexpected files like programs from arbitrary (possibly untrusted) users
+        # like COPY_AS_IS+=( /home/JohnDoe ) when JohnDoe is not a trusted user
+        # so ldd is only run on files that are owned by 'root' becaue the assumption is
+        # a file can be trusted when 'root' is its owner (i.e. when the owner ID is 0).
+        # If there is no 'stat' the test always fails and all files are skipped to be on the safe side.
+        # A permissive alternative would be: file_owner_ID="$( stat -c %u $file_for_ldd || echo 0 )"
+        file_owner_ID="$( stat -c %u $file_for_ldd )"
+        if test "$file_owner_ID" != "0" ; then
+            Log "RequiredSharedObjects: Skipping 'ldd' for '$file_for_ldd' (owner ID '$file_owner_ID' is not 0)"
+            continue
+        fi
+        ldd $file_for_ldd | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
+                                  /^\t.+ => \// { print $3 }
+                                  /^\t\// && !/ => / { print $1 } ' | sort -u
+    done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # Provide a shell, with custom exit-prompt and history
