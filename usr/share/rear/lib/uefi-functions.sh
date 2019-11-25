@@ -37,7 +37,13 @@ function trim {
 }
 
 function build_bootx86_efi {
+    local outfile="$1"
+    local embedded_config=""
     local gmkimage=""
+
+    # Configuration file is optional for image creation.
+    [[ -n "$2" ]] && embedded_config="--config $2"
+
     if has_binary grub-mkimage ; then
         gmkimage=grub-mkimage
     elif has_binary grub2-mkimage ; then
@@ -59,10 +65,19 @@ function build_bootx86_efi {
     # As not all Linux distros have the same GRUB2 modules present we verify what we have (see also https://github.com/rear/rear/pull/2001)
     local grub_module=""
     local grub_modules=""
+
+    # Use a reasonable fallback value, cf. https://github.com/rear/rear/pull/2283
+    test "$GRUB2_MODULES" || GRUB2_MODULES="part_gpt part_msdos fat ext2 \
+normal chain boot configfile linux linuxefi multiboot jfs iso9660 usb \
+usbms usb_keyboard video udf ntfs all_video gzio efi_gop reboot search \
+test echo btrfs lvm"
+
+    LogPrint "Using '$GRUB2_MODULES' modules to build $outfile"
+
     for grub_module in $GRUB2_MODULES ; do
         test "$( find /usr/lib/grub*/x86_64-efi -type f -name "$grub_module.mod" 2>/dev/null )" && grub_modules="$grub_modules $grub_module"
     done
-    if ! $gmkimage $v -O x86_64-efi -c $TMP_DIR/mnt/EFI/BOOT/embedded_grub.cfg -o $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi -p "/EFI/BOOT" $grub_modules ; then
+    if ! $gmkimage $v -O x86_64-efi $embedded_config -o $outfile -p "/EFI/BOOT" $grub_modules ; then
         Error "Failed to make bootable EFI image of GRUB2 (error during $gmkimage of BOOTX64.efi)"
     fi
 }
