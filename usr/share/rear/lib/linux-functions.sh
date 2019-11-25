@@ -175,7 +175,7 @@ function RequiredSharedObjects () {
     #  5. Line: "        /path/to/lib => /path/to/lib2 (mem-addr)" -> print $3 '/path/to/lib2'
     #  6. Line: "        /path/to/lib (mem-addr)"                  -> print $1 '/path/to/lib'
     local file_for_ldd=""
-    local file_owner_ID=""
+    local file_owner_name=""
     # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
     for file_for_ldd in $@ ; do
         # Skip non-regular files like directories, device files, and non-existent files
@@ -187,20 +187,18 @@ function RequiredSharedObjects () {
         # which could happen via COPY_AS_IS+=( /lib/firmware/my_hardware )
         # cf. the code in build/default/990_verify_rootfs.sh
         egrep -q '/lib/modules/|/lib.*/firmware/' <<<"$file_for_ldd" && continue
-        # Skip files that are not owned by 'root' to mitigate possible ldd security issues
+        # Skip files that are not owned by a trusted user to mitigate possible ldd security issues
         # because some versions of ldd may directly execute the file (see "man ldd")
         # which could lead to the execution of arbitrary programs as user 'root'
         # in particular when directories are specified in COPY_AS_IS that may contain
         # unexpected files like programs from arbitrary (possibly untrusted) users
-        # like COPY_AS_IS+=( /home/JohnDoe ) when JohnDoe is not a trusted user
-        # so ldd is only run on files that are owned by 'root' becaue the assumption is
-        # a file can be trusted when 'root' is its owner (i.e. when the owner ID is 0).
-        # If there is no 'stat' the test always fails and all files are skipped to be on the safe side.
-        # A permissive alternative would be: file_owner_ID="$( stat -c %u $file_for_ldd || echo 0 )"
-        file_owner_ID="$( stat -c %u $file_for_ldd )"
-        if test "$file_owner_ID" != "0" ; then
-            Log "RequiredSharedObjects: Skipping 'ldd' for '$file_for_ldd' (owner ID '$file_owner_ID' is not 0)"
-            continue
+        # like COPY_AS_IS+=( /home/JohnDoe ) when JohnDoe is not a trusted user.
+        if test "$TRUSTED_FILE_OWNERS" ; then
+            file_owner_name="$( stat -c %U $file_for_ldd )"
+            if ! IsInArray "$file_owner_name" "${TRUSTED_FILE_OWNERS[@]}" ; then
+                Log "RequiredSharedObjects: Skipping 'ldd' for '$file_for_ldd' (owner '$file_owner_name' not in TRUSTED_FILE_OWNERS)"
+                continue
+            fi
         fi
         ldd $file_for_ldd | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
                                   /^\t.+ => \// { print $3 }
