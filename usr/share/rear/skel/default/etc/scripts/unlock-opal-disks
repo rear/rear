@@ -154,6 +154,7 @@ done
 # Find TCG Opal 2-compliant disks
 devices=( $(opal_devices) )
 declare -i device_count=${#devices[@]}
+[[ -n "$OPAL_PBA_DEBUG_DEVICE_COUNT" ]] && device_count="$OPAL_PBA_DEBUG_DEVICE_COUNT"
 if (( device_count == 0 )); then
     display_message "Could not detect TCG Opal 2-compliant disks."
     echo "Could not detect TCG Opal 2-compliant disks." >&2

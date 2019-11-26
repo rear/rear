@@ -5,7 +5,8 @@ has_binary sedutil-cli || Error "Executable sedutil-cli is missing. Cannot creat
 LogPrint "Re-configuring Relax-and-Recover to create a TCG Opal pre-boot authentication (PBA) image"
 
 # Configure kernel
-KERNEL_CMDLINE+=" quiet splash systemd.volatile=yes systemd.unit=sysinit-opalpba.target"
+KERNEL_CMDLINE+=" quiet splash systemd.volatile=yes systemd.unit=sysinit-opalpba.target $OPAL_PBA_KERNEL_CMDLINE"
+USE_SERIAL_CONSOLE="$OPAL_PBA_USE_SERIAL_CONSOLE"
 
 # Strip kernel files to a reasonable minimum
 FIRMWARE_FILES=( 'no' )
@@ -22,9 +23,14 @@ SSH_FILES='no'
 USE_DHCLIENT='no'
 USE_RESOLV_CONF='no'
 
-# Include plymouth boot animation and 'clear' if available
-PROGS+=( plymouth plymouthd clear )
-COPY_AS_IS+=( /etc/alternatives/*plymouth* /usr/lib/x86_64-linux-gnu/plymouth /usr/share/plymouth )
+# Add programs, files and libraries
+if (( ${#OPAL_PBA_PROGS[@]} == 0 && ${#OPAL_PBA_COPY_AS_IS[@]} == 0)) && has_binary plymouth; then
+    LogPrintError "TIP: Your system seems to include a Plymouth graphical boot animation. You can achieve a nicer user"
+    LogPrintError "     interface for the PBA by setting OPAL_PBA_{PROGS,COPY_AS_IS,LIBS} to include Plymouth components."
+fi
+PROGS+=( "${OPAL_PBA_PROGS[@]}" clear )
+COPY_AS_IS+=( "${OPAL_PBA_COPY_AS_IS[@]}" )
+LIBS+=( "${OPAL_PBA_LIBS[@]}" )
 
 # Redirect output
 [[ -n "$OPAL_PBA_OUTPUT_URL" ]] || Error "The OPAL_PBA_OUTPUT_URL configuration variable must be set."
