@@ -1331,3 +1331,107 @@ Finished recovering your system. You can explore it under '/mnt/local'.
 
 Finished in 361 seconds.
 ----
+
+== Using ReaR to mount and repair your system
+Instead of using your ReaR image to completely recover your system from bare
+metal (as illustrated in most of the above scenarios), you can also use it
+as a live media to boot a broken but hopefully repairable system.
+
+Once booted on your recovery image, the `mountonly` workflow will:
+
+* activate all Volume Groups
+
+* offer to decrypt any LUKS-encrypted filesystem that may be present
+
+* mount all the target filesystems (including the most important virtual 
+  ones) below `/mnt/local`
+
+thereby making it possible for you to explore your system at will,
+correcting any configuration mistake that may have prevented its startup, 
+or allowing you to simply `chroot` into it and further repair it using its 
+own administrative tools.
+
+One important point to remember is that the `mountonly` workflow on its own 
+won't modify the target system in any way. Of course, once the target 
+filesystems are mounted you, as the administrator, may decide to do so
+manually.
+
+**Beware:** The `mountonly` workflow can only be used on the system where
+the rescue image was generated, as it bases its logic on the filesystem
+layout description file generated during the run of the `mkrescue` or
+`mkbackup` workflows.
+
+Here are the steps you would typically follow:
+
+=== Create your recovery image
+Using any of the techniques described in the other scenarios, create a 
+ReaR recovery image for your system (through `rear mkrescue` or `rear 
+mkbackup`). If you only take the `mountonly` workflow into consideration, it 
+doesn't matter whether you also make a backup of your system or not 
+(obviously, you'd better cover all your bases and make sure you'd be able to 
+perform a full `recover` as well should the need occur).
+
+Please note, that by default ReaR only includes in the recovery image the 
+tools it will need to recover the system. If you anticipate the need for 
+some extra tools in the context of a repair operation (e.g. tools that you 
+might need in the event `chroot`ing into the target system doesn't work), you 
+should make sure to include them in your recovery image by adding to the 
+`PROGS` or `REQUIRED_PROGS` configuration variables (please refer to the 
+comments in `default.conf` for the exact meaning of each).
+
+=== Booting on the recovery image
+Arrange for the target system to boot on your recovery image as you would in
+any of the other scenarios.
+
+=== Launching the "mount only" workflow
+Issue the `rear mountonly` command to launch the workflow (that one is always 
+verbose):
+
+----
+RESCUE pc-pan:~ # rear mountonly
+Relax-and-Recover 2.5 / Git
+Running rear mountonly (PID 625)
+Using log file: /var/log/rear/rear-pc-pan.log
+Running workflow mountonly within the ReaR rescue/recovery system
+Comparing disks
+Device sda has expected (same) size 34359738368 (will be used for 'mountonly')
+Disk configuration looks identical
+Proceed with 'mountonly' (yes) otherwise manual disk layout configuration is enforced
+(default 'yes' timeout 30 seconds)
+yes
+User confirmed to proceed with 'mountonly'
+Start target system mount.
+Mounting filesystem /
+Mounting filesystem /home
+Mounting filesystem /boot/efi
+Please enter the password for LUKS device cr_vg00-lvol4 (/dev/mapper/vg00-lvol4):
+Enter passphrase for /dev/mapper/vg00-lvol4: 
+Mounting filesystem /products
+Disk layout processed.
+Finished 'mountonly'. The target system is mounted at '/mnt/local'.
+Exiting rear mountonly (PID 625) and its descendant processes ...
+Running exit tasks
+----
+
+As you can see in the output above, you will first be asked to confirm 
+running the workflow (`Proceed with 'mountonly'`) -- simply press return. 
+All the target filesystems should now be mounted below `/mnt/local` (including 
+LUKS-encrypted ones if present and all needed virtual ones). In case any of 
+them fails to mount, you will be offered to review the mount script and to 
+re-execute it if needed.
+
+Once the system is in the desired state, you can start exploring it, correcting
+any configuration mistake or filesystem corruption that prevented it from 
+booting properly. In this state, the only tools at your disposal are those 
+included by default in ReaR recovery image, or those you saw fit to add
+yourself (see above).
+
+If this is not enough and you need to run the native administrative tools
+hosted inside your target system (such as YaST in the case of SUSE 
+distributions), you are now in a position where you can `chroot` inside 
+your system to reach them (`chroot /mnt/local`).
+
+=== Closing the session
+Once done, don't forget to leave the `chroot` environment if applicable 
+(Ctrl-D), then issue the `shutdown` command. This will ensure that all the 
+target filesystems will be cleanly unmounted before the system is restarted.

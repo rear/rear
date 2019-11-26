@@ -116,7 +116,7 @@ if ! is_true "$MIGRATION_MODE" ; then
             Log "Device /sys/block/$dev exists"
             newsize=$( get_disk_size $dev )
             if test "$newsize" -eq "$size" ; then
-                LogPrint "Device $dev has expected (same) size $size (will be used for recovery)"
+                LogPrint "Device $dev has expected (same) size $size (will be used for '$WORKFLOW')"
             else
                 LogPrint "Device $dev has size $newsize but $size is expected (needs manual configuration)"
                 MIGRATION_MODE='true'
@@ -142,12 +142,12 @@ else
     # e.g. for automated testing a small USER_INPUT_TIMEOUT may be specified and
     # we do not want to delay it here more than what USER_INPUT_TIMEOUT specifies:
     test "$timeout" -gt "$USER_INPUT_TIMEOUT" && timeout="$USER_INPUT_TIMEOUT"
-    local prompt="Proceed with recovery (yes) otherwise manual disk layout configuration is enforced"
+    local prompt="Proceed with '$WORKFLOW' (yes) otherwise manual disk layout configuration is enforced"
     local input_value=""
     local wilful_input=""
     input_value="$( UserInput -I DISK_LAYOUT_PROCEED_RECOVERY -t "$timeout" -p "$prompt" -D 'yes' )" && wilful_input="yes" || wilful_input="no"
     if is_true "$input_value" ; then
-        is_true "$wilful_input" && LogPrint "User confirmed to proceed with recovery" || LogPrint "Proceeding with recovery by default"
+        is_true "$wilful_input" && LogPrint "User confirmed to proceed with '$WORKFLOW'" || LogPrint "Proceeding with '$WORKFLOW' by default"
     else
         # The user enforced MIGRATION_MODE uses the special 'TRUE' value in upper case letters
         # that is needed to overrule the prepare/default/270_overrule_migration_mode.sh script:

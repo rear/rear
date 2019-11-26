@@ -1,0 +1,1 @@
+../../prepare/default/520_exclude_components.sh

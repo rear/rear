@@ -35,7 +35,7 @@ restore_original_file() {
     cp -ar $saved_original_file $filename
 }
 
-# Generate code to restore a device $1 of type $2.
+# Generate code to recreate a device $1 of type $2 and then mount it.
 # Note that we do not handle partitioning here.
 create_device() {
     local device="$1"
@@ -53,6 +53,35 @@ EOF
 component_created "$device" "$type"
 else
     LogPrint "Skipping $device ($type) as it has already been created."
+fi
+
+EOF
+}
+
+# Generate code to mount a device $1 of type $2 ('mountonly' workflow).
+do_mount_device() {
+    local device="$1"
+    local type="$2"
+    local name # used to extract the actual name of the device
+
+    cat <<EOF >> "$LAYOUT_CODE"
+if create_component "$device" "$type" ; then
+EOF
+    # This can be used a.o. to decrypt a LUKS device
+    echo "# Open $device ($type)" >> "$LAYOUT_CODE"
+    if type -t open_$type >/dev/null ; then
+        open_$type "$device"
+    fi
+
+    # If the device is mountable, it will then be mounted
+    echo "# Mount $device ($type)" >> "$LAYOUT_CODE"
+    if type -t mount_$type >/dev/null ; then
+        mount_$type "$device"
+    fi
+    cat <<EOF >> "$LAYOUT_CODE"
+component_created "$device" "$type"
+else
+    LogPrint "Skipping $device ($type) as it has already been mounted."
 fi
 
 EOF
