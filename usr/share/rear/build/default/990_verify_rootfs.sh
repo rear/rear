@@ -103,6 +103,16 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
     # so we 'grep' for '/lib/modules/' anywhere in the full path of the binary.
     # Also skip the ldd test for firmware files where it also does not make sense:
     egrep -q '/lib/modules/|/lib.*/firmware/' <<<"$binary" && continue
+    # Skip the ldd test for files that are not owned by a trusted user to mitigate possible ldd security issues
+    # because some versions of ldd may directly execute the file (see "man ldd") as user 'root' here
+    # cf. the RequiredSharedObjects code in usr/share/rear/lib/linux-functions.sh
+    if test "$TRUSTED_FILE_OWNERS" ; then
+        binary_owner_name="$( stat -c %U $ROOTFS_DIR/$binary )"
+        if ! IsInArray "$binary_owner_name" "${TRUSTED_FILE_OWNERS[@]}" ; then
+            Log "Skipping ldd test for '$binary' (owner '$binary_owner_name' not in TRUSTED_FILE_OWNERS)"
+            continue
+        fi
+    fi
     # In order to handle relative paths, we 'cd' to the directory containing $binary before running ldd.
     # In particular third-party backup tools may have shared object dependencies with relative paths.
     # For an example see https://github.com/rear/rear/pull/1560#issuecomment-343504359 that reads (excerpt):
