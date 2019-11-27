@@ -78,7 +78,7 @@ test echo btrfs lvm"
         test "$( find /usr/lib/grub*/x86_64-efi -type f -name "$grub_module.mod" 2>/dev/null )" && grub_modules="$grub_modules $grub_module"
     done
     if ! $gmkimage $v -O x86_64-efi $embedded_config -o $outfile -p "/EFI/BOOT" $grub_modules ; then
-        Error "Failed to make bootable EFI image of GRUB2 (error during $gmkimage of BOOTX64.efi)"
+        Error "Failed to make bootable EFI image of GRUB2 (error during $gmkimage of $outfile)"
     fi
 }
 
