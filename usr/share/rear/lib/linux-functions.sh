@@ -108,7 +108,7 @@ function FindStorageDrivers () {
 
 # Determine all required shared objects (shared/dynamic libraries)
 # for programs and/or shared objects (binaries) specified in $@.
-# RequiredSharedObjects outputs the required shared objects on STDOUT.
+# RequiredSharedObjects outputs the set of required shared objects on STDOUT.
 # The output are absolute paths to the required shared objects.
 # The output can also be symbolic links (also as absolute paths).
 # In case of symbolic links only the link but not the link target is output.
@@ -200,10 +200,13 @@ function RequiredSharedObjects () {
                 continue
             fi
         fi
-        ldd $file_for_ldd | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
-                                  /^\t.+ => \// { print $3 }
-                                  /^\t\// && !/ => / { print $1 } ' | sort -u
-    done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+        ldd $file_for_ldd
+        # It is crucial to filter the output of all those ldd calls in the 'for' loop
+        # through one "awk ... | sort -u" pipe to output the set of required shared objects
+        # (a mathematical set does not contain duplicate elements):
+    done 2>>/dev/$DISPENSABLE_OUTPUT_DEV | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
+                                                 /^\t.+ => \// { print $3 }
+                                                 /^\t\// && !/ => / { print $1 } ' | sort -u
 }
 
 # Provide a shell, with custom exit-prompt and history
