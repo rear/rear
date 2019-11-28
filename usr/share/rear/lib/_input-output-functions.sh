@@ -408,7 +408,12 @@ function Log () {
           log_message="${MESSAGE_PREFIX}${timestamp}$( cat )"
       fi
     } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
-    echo "$log_message" 1>&2 || true
+    # Append the log message explicitly to the log file to ensure that intended log messages
+    # actually appear in the log file even inside { ... } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # e.g. as in { COMMAND || Log "COMMAND failed" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # cf. the 2>>/dev/$DISPENSABLE_OUTPUT_DEV usage in the RequiredSharedObjects function
+    # and in build/GNU/Linux/100_copy_as_is.sh and build/GNU/Linux/390_copy_binaries_libraries.sh
+    echo "$log_message" >>"$RUNTIME_LOGFILE" || true
 }
 
 # For messages that should only appear in the log file when the user launched 'rear -d' in debug mode:
