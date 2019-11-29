@@ -60,8 +60,9 @@ for dummy in "once" ; do
     # MODULES array contents like MODULES=( 'moduleX' 'all_modules' 'moduleY' ):
     if IsInArray "all_modules" "${MODULES[@]}" ; then
         LogPrint "Copying all kernel modules in /lib/modules/$KERNEL_VERSION (MODULES contains 'all_modules')"
-        # The '--parents' is needed to get the '/lib/modules/' directory in the copy:
-        if ! cp $verbose -t $ROOTFS_DIR -a --parents /lib/modules/$KERNEL_VERSION 1>&2 ; then
+        # The '--parents' is needed to get the '/lib/modules/' directory in the copy.
+        # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+        if ! cp $verbose -t $ROOTFS_DIR -a --parents /lib/modules/$KERNEL_VERSION 2>>/dev/$DISPENSABLE_OUTPUT_DEV 1>&2 ; then
             Error "Failed to copy all kernel modules in /lib/modules/$KERNEL_VERSION"
         fi
         # After successful copying do the the code after the artificial 'for' clause:

@@ -13,6 +13,7 @@ function copy_binaries () {
     local destdir="$1"
     test -d "$destdir" || BugError "copy_binaries destination '$destdir' is not a directory"
     local binary=""
+    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
     while (( $# > 1 )) ; do
         shift
         binary="$1"
@@ -21,7 +22,7 @@ function copy_binaries () {
         if ! cp $verbose --archive --dereference --force "$binary" "$destdir" 1>&2 ; then
             Error "Failed to copy '$binary' to '$destdir'"
         fi
-    done
+    done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # Create missing directory components of a filename with path in $1:
@@ -48,13 +49,14 @@ LogPrint "Copying binaries and libraries"
 Log "Determining binaries from PROGS and REQUIRED_PROGS"
 local bin=""
 local bin_path=""
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
 local all_binaries=( $( for bin in "${PROGS[@]}" "${REQUIRED_PROGS[@]}" ; do
                             bin_path="$( get_path "$bin" )"
                             if test -x "$bin_path" ; then
                                 echo $bin_path
                                 Log "Found binary $bin_path"
                             fi
-                        done | sort -u ) )
+                        done 2>>/dev/$DISPENSABLE_OUTPUT_DEV | sort -u ) )
 
 # Copy binaries:
 Log "Binaries being copied: ${all_binaries[@]}"
@@ -76,6 +78,7 @@ local all_libs=( "${LIBS[@]}" $( RequiredSharedObjects "${all_binaries[@]}" "${L
 Log "Libraries being copied: ${all_libs[@]}"
 local lib=""
 local link_target=""
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
 for lib in "${all_libs[@]}" ; do
     if test -L $lib ; then
         # Because $lib is a symbolic link on the original system
@@ -99,7 +102,7 @@ for lib in "${all_libs[@]}" ; do
     else
         copy_lib $lib || LogPrintError "Failed to copy '$lib'"
     fi
-done
+done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 
 # Run ldconfig for the libraries in the recovery system
 # to get the libraries configuration in the recovery system consistent as far as possible

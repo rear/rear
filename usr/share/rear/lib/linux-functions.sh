@@ -108,7 +108,7 @@ function FindStorageDrivers () {
 
 # Determine all required shared objects (shared/dynamic libraries)
 # for programs and/or shared objects (binaries) specified in $@.
-# RequiredSharedObjects outputs the required shared objects on STDOUT.
+# RequiredSharedObjects outputs the set of required shared objects on STDOUT.
 # The output are absolute paths to the required shared objects.
 # The output can also be symbolic links (also as absolute paths).
 # In case of symbolic links only the link but not the link target is output.
@@ -168,15 +168,45 @@ function RequiredSharedObjects () {
     #          libresolv.so.2 => /lib64/libresolv.so.2 (0x00007f3c98c5c000)
     # The 'ldd' output (when providing more than one argument) has 5 cases.
     # So we have to distinguish lines of the following form (indentation is done with tab '\t'):
-    #  1. Line: "/path/to/binary:"                       -> current file argument for ldd
-    #  2. Line: "        lib (mem-addr)"                 -> virtual library
-    #  3. Line: "        lib => not found"               -> print error to stderr
-    #  4. Line: "        lib => /path/to/lib (mem-addr)" -> print $3 '/path/to/lib'
+    #  1. Line: "/path/to/binary:"                                 -> current file argument for ldd
+    #  2. Line: "        lib (mem-addr)"                           -> virtual library
+    #  3. Line: "        lib => not found"                         -> print error to stderr
+    #  4. Line: "        lib => /path/to/lib (mem-addr)"           -> print $3 '/path/to/lib'
     #  5. Line: "        /path/to/lib => /path/to/lib2 (mem-addr)" -> print $3 '/path/to/lib2'
-    #  6. Line: "        /path/to/lib (mem-addr)"        -> print $1 '/path/to/lib'
-    ldd "$@" | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
-                     /^\t.+ => \// { print $3 }
-                     /^\t\// && !/ => / { print $1 } ' | sort -u
+    #  6. Line: "        /path/to/lib (mem-addr)"                  -> print $1 '/path/to/lib'
+    local file_for_ldd=""
+    local file_owner_name=""
+    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+    for file_for_ldd in $@ ; do
+        # Skip non-regular files like directories, device files, and non-existent files
+        # cf. similar code in build/GNU/Linux/100_copy_as_is.sh
+        # but here symbolic links must not be skipped (e.g. /sbin/mkfs.ext2 -> /usr/sbin/mkfs.ext2)
+        # otherwise there would be binaries in the recovery system without required libraries:
+        test -f "$file_for_ldd" || continue
+        # Skip the ldd test for kernel modules and firmware files
+        # which could happen via COPY_AS_IS+=( /lib/firmware/my_hardware )
+        # cf. the code in build/default/990_verify_rootfs.sh
+        egrep -q '/lib/modules/|/lib.*/firmware/' <<<"$file_for_ldd" && continue
+        # Skip files that are not owned by a trusted user to mitigate possible ldd security issues
+        # because some versions of ldd may directly execute the file (see "man ldd")
+        # which could lead to the execution of arbitrary programs as user 'root'
+        # in particular when directories are specified in COPY_AS_IS that may contain
+        # unexpected files like programs from arbitrary (possibly untrusted) users
+        # like COPY_AS_IS+=( /home/JohnDoe ) when JohnDoe is not a trusted user.
+        if test "$TRUSTED_FILE_OWNERS" ; then
+            file_owner_name="$( stat -c %U $file_for_ldd )"
+            if ! IsInArray "$file_owner_name" "${TRUSTED_FILE_OWNERS[@]}" ; then
+                Log "RequiredSharedObjects: Skipping 'ldd' for '$file_for_ldd' (owner '$file_owner_name' not in TRUSTED_FILE_OWNERS)"
+                continue
+            fi
+        fi
+        ldd $file_for_ldd
+        # It is crucial to filter the output of all those ldd calls in the 'for' loop
+        # through one "awk ... | sort -u" pipe to output the set of required shared objects
+        # (a mathematical set does not contain duplicate elements):
+    done 2>>/dev/$DISPENSABLE_OUTPUT_DEV | awk ' /^\t.+ => not found/ { print "Shared object " $1 " not found" > "/dev/stderr" }
+                                                 /^\t.+ => \// { print $3 }
+                                                 /^\t\// && !/ => / { print $1 } ' | sort -u
 }
 
 # Provide a shell, with custom exit-prompt and history
