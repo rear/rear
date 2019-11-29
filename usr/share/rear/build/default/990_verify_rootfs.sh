@@ -109,7 +109,10 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
     if test "$TRUSTED_FILE_OWNERS" ; then
         binary_owner_name="$( stat -c %U $ROOTFS_DIR/$binary )"
         if ! IsInArray "$binary_owner_name" "${TRUSTED_FILE_OWNERS[@]}" ; then
-            Log "Skipping ldd test for '$binary' (owner '$binary_owner_name' not in TRUSTED_FILE_OWNERS)"
+            # When the ldd test is skipped it can result non working executables in the recovery system
+            # (i.e. executables without their required libraries that are not detected by this ldd test)
+            # so we must ensure the user is notfied about those files where the ldd test is skipped:
+            LogPrintError "Skipped ldd test for '$binary' (owner '$binary_owner_name' not in TRUSTED_FILE_OWNERS)"
             continue
         fi
     fi

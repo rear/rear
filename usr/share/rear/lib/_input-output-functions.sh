@@ -442,8 +442,15 @@ function LogUserOutput () {
     UserOutput "$@"
 }
 
-# For messages that should appear in the log file and also
-# on the user's terminal regardless whether or not the user launched 'rear' in verbose mode:
+# For important messages that should appear in the log file and also
+# on the user's terminal regardless whether or not the user launched 'rear' in verbose mode.
+# LogPrintError does not error out (the Error function is meant to error out).
+# LogPrintError is meant to show error messages when we do not want to error out,
+# (for example when at the end of "rear recover" it failed to install a bootloader).
+# LogPrintError is also meant to show important "error-like" messages to the user
+# (for example when the user must decide if that means a real error in his case)
+# and other important messages that must appear on the user's terminal
+# cf. https://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
 function LogPrintError () {
     Log "$@"
     PrintError "$@"
