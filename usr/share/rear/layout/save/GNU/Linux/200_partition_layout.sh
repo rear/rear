@@ -360,8 +360,7 @@ Log "Saving disk partitions."
         blockd=${disk#/sys/block/}
         if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* || $blockd = nvme* || $blockd = mmcblk* ]] ; then
 
-            if [[ $blockd == dasd* && "$ARCH" == "Linux-s390" ]]
-            then
+            if [[ $blockd == dasd* && "$ARCH" == "Linux-s390" ]] ; then
                 devname=$(get_device_name $disk)
 
                 echo "# active dasd bus and channel"
