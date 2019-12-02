@@ -7,8 +7,7 @@ format_s390_disk() {
     dfmt=$(cat $LAYOUT_FILE | grep "^dasdfmt" )
 
     echo "run dasdfmt"
-    while read line
-    do
+    while read line ; do
         echo 'dasdfmt:' "$line"
         # example format command: dasdfmt -b 4096 -d cdl -y /dev/dasda
         # where
@@ -20,8 +19,7 @@ format_s390_disk() {
         device=$( echo $line | awk '{ print $7 }' ) 
         blocksize=$( echo $line | awk '{ print $3 }' ) 
         layout=$( echo $line | awk '{ print tolower($5) }' ) 
-        if [[ "$layout" == "ldl" ]] 
-        then
+        if [[ "$layout" == "ldl" ]] ; then
             # listDasdLdl contains devices such as /dev/dasdb that are formatted as LDL
             # LDL formatted disks are already partitioned and should not be partitioned with parted or fdasd , it will fail
             # this var, listDasdLdl, is used by 100_include_partition_code.sh to exclude writing partition code to diskrestore.sh for LDL disks
@@ -40,8 +38,7 @@ enable_s390_disk() {
     dch=$(cat $LAYOUT_FILE | grep -v "^#" | grep "^dasd_channel" )
 
     echo "run chccwdev"
-    while read line
-    do
+    while read line ; do
         echo 'dasd channel:' "$line"
         device=$( echo $line | awk '{ print $4 }' ) 
         bus=$( echo $line | awk '{ print $2 }' ) 
@@ -52,8 +49,7 @@ enable_s390_disk() {
     done < <( echo "$dch" )
 }
 
-if [ "$ARCH" == "Linux-s390" ]
-then
+if [ "$ARCH" == "Linux-s390" ] ; then
     case $OS_MASTER_VENDOR in
         (SUSE)
             enable_s390_disk
