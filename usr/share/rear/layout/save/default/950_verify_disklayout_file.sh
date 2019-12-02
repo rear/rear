@@ -40,8 +40,8 @@ local non_consecutive_part_found unused_part_num
 local non_consecutive_part_errors=()
 local highest_used_mbr_primary_part_num
 while read keyword disk_dev disk_size parted_mklabel junk ; do
-    test -b "$disk_dev" || broken_disk_errors=( "${broken_disk_errors[@]}" "$disk_dev is not a block device" )
-    is_positive_integer $disk_size || broken_disk_errors=( "${broken_disk_errors[@]}" "$disk_dev size $disk_size is not a positive integer" )
+    test -b "$disk_dev" || broken_disk_errors+=( "$disk_dev is not a block device" )
+    is_positive_integer $disk_size || broken_disk_errors+=( "$disk_dev size $disk_size is not a positive integer" )
     # Here we ignore testing parted_mklabel because create_partitions() in prepare/GNU/Linux/100_include_partition_code.sh has fallbacks
 
     Log "Verifying that the 'part' entries for $disk_dev in $DISKLAYOUT_FILE are correct"
@@ -51,10 +51,10 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
     # so that it is used here as reference to decide whether or not the entries are correct:
     partitions=()
     while read keyword dummy part_size part_start part_name part_flags part_dev junk ; do
-        test -b "$part_dev" || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev is not a block device" )
-        is_positive_integer $part_size || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev size $part_size is not a positive integer" )
-        is_nonnegative_integer $part_start || broken_part_errors=( "${broken_part_errors[@]}" "$part_dev start $part_start is not a nonnegative integer" )
-        partitions=( "${partitions[@]}" "$part_dev" )
+        test -b "$part_dev" || broken_part_errors+=( "$part_dev is not a block device" )
+        is_positive_integer $part_size || broken_part_errors+=( "$part_dev size $part_size is not a positive integer" )
+        is_nonnegative_integer $part_start || broken_part_errors+=( "$part_dev start $part_start is not a nonnegative integer" )
+        partitions+=( "$part_dev" )
         # Using the parted_mklabel fallback behaviour in create_partitions() in prepare/GNU/Linux/100_include_partition_code.sh
         # only when there is no parted_mklabel value, but when there is a parted_mklabel value use it as is:
         if ! test "$parted_mklabel" ; then
@@ -107,11 +107,11 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
                         fi
                     done
                     # When no partition with the current number was found remember that the current partition number is unused:
-                    unused_part_nums=( "${unused_part_nums[@]}" $part_num )
+                    unused_part_nums+=( $part_num )
                 done
                 if is_true "$non_consecutive_part_found" ; then
                     for unused_part_num in "${unused_part_nums[@]}" ; do
-                        non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "GPT partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
+                        non_consecutive_part_errors+=( "GPT partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
                     done
                 fi
                 ;;
@@ -146,11 +146,11 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
                                 continue 2
                             fi
                         done
-                        unused_part_nums=( "${unused_part_nums[@]}" $part_num )
+                        unused_part_nums+=( $part_num )
                     done
                     if is_true "$non_consecutive_part_found" ; then
                         for unused_part_num in "${unused_part_nums[@]}" ; do
-                            non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "MBR primary and extended partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
+                            non_consecutive_part_errors+=( "MBR primary and extended partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
                         done
                     fi
                     # Testing consecutive partitions starting at 5 (i.e. testing consecutive logical partitions):
@@ -164,22 +164,54 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
                                 continue 2
                             fi
                         done
-                        unused_part_nums=( "${unused_part_nums[@]}" $part_num )
+                        unused_part_nums+=( $part_num )
                     done
                     if is_true "$non_consecutive_part_found" ; then
                         for unused_part_num in "${unused_part_nums[@]}" ; do
-                            non_consecutive_part_errors=( "${non_consecutive_part_errors[@]}" "MBR logical partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
+                            non_consecutive_part_errors+=( "MBR logical partitions on $disk_dev not consecutive: $disk_dev$unused_part_num missing" )
                         done
                     fi
                 fi
                 ;;
             (*)
-                broken_disk_errors=( "${broken_disk_errors[@]}" "$disk_dev partitioning scheme '$parted_mklabel' is neither 'gpt' nor 'msdos'" )
+                broken_disk_errors+=( "$disk_dev partitioning scheme '$parted_mklabel' is neither 'gpt' nor 'msdos'" )
                 ;;
         esac
     fi
 
 done < <( grep "^disk " "$DISKLAYOUT_FILE" )
+
+Log "Verifying that the 'lvm...' entries in $DISKLAYOUT_FILE are correct"
+# For each logical volume 'lvmvol <volume_group> <name> <size(bytes)> <layout> [key:value ...]' there must be
+# a matching volume group 'lvmgrp <volume_group> <extentsize> [<size(extents)>] [<size(bytes)>]' which must have
+# at least one matching physical volume 'lvmdev <volume_group> <device> [<uuid>] [<size(bytes)>]'
+# but also the other way round according to https://github.com/rear/rear/issues/2259#issuecomment-544848531
+# so that a physical volume must have a matching volume group which must be used by a matching logical volume
+# to ensure the 'lvm...' entries are consistent to be useful in practice:
+local local broken_lvm_errors=()
+local volume_group lv_name lv_size lv_layout
+while read keyword volume_group lv_name lv_size lv_layout junk ; do
+   test "$volume_group" || broken_lvm_errors+=( "LVM 'lvmvol' entry without volume_group value" )
+   test "$lv_name" || broken_lvm_errors+=( "LVM 'lvmvol $volume_group' entry without name value" )
+   # Cannot test with "is_positive_integer $lv_size" because the value has a trailing 'b' like '19927138304b'
+   test "$lv_size" || broken_lvm_errors+=( "LVM 'lvmvol $volume_group $lv_name' entry without size value" )
+   test "$lv_layout" || broken_lvm_errors+=( "LVM 'lvmvol $volume_group $lv_name $lv_size' entry without layout value" )
+   # Verify that there is a matching volume group:
+   grep -q "^lvmgrp $volume_group " "$DISKLAYOUT_FILE" || broken_lvm_errors+=( "LVM no 'lvmgrp $volume_group' for 'lvmvol $volume_group'" )
+   # Verify that there is at least one matching physical volume:
+   grep -q "^lvmdev $volume_group " "$DISKLAYOUT_FILE" || broken_lvm_errors+=( "LVM no 'lvmdev $volume_group' for 'lvmvol $volume_group'" )
+done < <( grep "^lvmvol " "$DISKLAYOUT_FILE" )
+# And the other way round:
+local pv_device
+while read keyword volume_group pv_device junk ; do
+   test "$volume_group" || broken_lvm_errors+=( "LVM 'lvmdev' entry without volume_group value" )
+   test "$pv_device" || broken_lvm_errors+=( "LVM 'lvmdev $volume_group' entry without device value" )
+   test -b "$pv_device" || broken_lvm_errors+=( "LVM 'lvmdev $volume_group' entry where device '$pv_device' is not a block device" )
+   # Verify that there is a matching volume group:
+   grep -q "^lvmgrp $volume_group " "$DISKLAYOUT_FILE" || broken_lvm_errors+=( "LVM no 'lvmgrp $volume_group' for 'lvmdev $volume_group'" )
+   # Verify that there is at least one matching logical volume:
+   grep -q "^lvmvol $volume_group " "$DISKLAYOUT_FILE" || broken_lvm_errors+=( "LVM no 'lvmvol $volume_group' for 'lvmdev $volume_group'" )
+done < <( grep "^lvmdev " "$DISKLAYOUT_FILE" )
 
 
 # Finally after all tests had been done (so that the user gets all result messages) error out if needed:
@@ -191,20 +223,19 @@ done < <( grep "^disk " "$DISKLAYOUT_FILE" )
 local disklayout_file_is_broken=""
 local non_consecutive_partitions=""
 local error_message
+# Disk errors:
 for error_message in "${broken_disk_errors[@]}" ; do
     contains_visible_char "$error_message" || continue
     LogPrintError "$error_message"
     disklayout_file_is_broken="yes"
 done
+# Partition errors:
 for error_message in "${broken_part_errors[@]}" ; do
     contains_visible_char "$error_message" || continue
     LogPrintError "$error_message"
     disklayout_file_is_broken="yes"
 done
-
-#
-# Non consecutive partitions are supported unless parted tells otherwise
-#
+# Non consecutive partitions are supported unless parted tells otherwise:
 if is_false $FEATURE_PARTED_RESIZEPART && is_false $FEATURE_PARTED_RESIZE ; then
     for error_message in "${non_consecutive_part_errors[@]}" ; do
         contains_visible_char "$error_message" || continue
@@ -212,9 +243,17 @@ if is_false $FEATURE_PARTED_RESIZEPART && is_false $FEATURE_PARTED_RESIZE ; then
         non_consecutive_partitions="yes"
     done
 fi
+# LVM errors:
+for error_message in "${broken_lvm_errors[@]}" ; do
+    contains_visible_char "$error_message" || continue
+    LogPrintError "$error_message"
+    disklayout_file_is_broken="yes"
+done
 
 is_true "$disklayout_file_is_broken" && BugError "Entries in $DISKLAYOUT_FILE are broken ('rear recover' would fail)"
 
+# It is not a BugError when non consecutive partitions are not supported
+# but an Error because the used parted is insufficient:
 is_true "$non_consecutive_partitions" && Error "There are non consecutive partitions ('rear recover' would fail)"
 
 # Finish this script successfully in the normal case (i.e. when both 'is_true' above result non zero return code):
