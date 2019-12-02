@@ -59,7 +59,7 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
         # Using the parted_mklabel fallback behaviour in create_partitions() in prepare/GNU/Linux/100_include_partition_code.sh
         # only when there is no parted_mklabel value, but when there is a parted_mklabel value use it as is:
         if ! test "$parted_mklabel" ; then
-           case $part_name in
+            case $part_name in
                 (primary|extended|logical)
                     parted_mklabel="msdos"
                     ;;
