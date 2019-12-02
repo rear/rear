@@ -1,17 +1,23 @@
 # Save LVM layout
 
-if ! has_binary lvm; then
-    return
-fi
+# TODO: What if there are logical volumes on the system but there is no 'lvm' binary?
+# Shouldn't then "rear mkrescue" better error out here than to silently skip LVM altogether?
+# Cf. "Try hard to care about possible errors in https://github.com/rear/rear/wiki/Coding-Style
+# Think about a minimal system that was set up by a (full featured) installation system
+# but tools to set up things were not installed in the (now running) installed system.
+# For example 'parted' is usually no longer needed in the installed system.
+# Perhaps this cannot happen for LVM so an 'lvm' binary must exist when LVM is used?
+has_binary lvm || return 0
 
 Log "Saving LVM layout."
 
+# Begin of subshell that appends to DISKLAYOUT_FILE:
 (
     header_printed=0
 
     ## Get physical_device configuration
     # format: lvmdev <volume_group> <device> [<uuid>] [<size(bytes)>]
-    lvm 8>&- 7>&- pvdisplay -c | while read line ; do
+    lvm pvdisplay -c | while read line ; do
         pdev=$(echo $line | cut -d ":" -f "1")
 
         if [ "${pdev#/}" = "$pdev" ] ; then
@@ -37,7 +43,7 @@ Log "Saving LVM layout."
 
     ## Get the volume group configuration
     # format: lvmgrp <volume_group> <extentsize> [<size(extents)>] [<size(bytes)>]
-    lvm 8>&- 7>&- vgdisplay -c | while read line ; do
+    lvm vgdisplay -c | while read line ; do
         vgrp=$(echo $line | cut -d ":" -f "1")
         size=$(echo $line | cut -d ":" -f "12")
         extentsize=$(echo $line | cut -d ":" -f "13")
@@ -58,11 +64,34 @@ Log "Saving LVM layout."
     ## Get all logical volumes
     # format: lvmvol <volume_group> <name> <size(bytes)> <layout> [key:value ...]
 
-    # Check for 'lvs' support of lv_layout
+    # To be on the safe side check for all needed 'lvs' fields because
+    # when one of the 'lvs' fields is not supported by the currently used LVM version
+    # the 'lvs' command fails and that results no 'lvmvol' entries in disklayout.conf
+    # which finally result that "rear recover" fails, cf.
+    # https://github.com/rear/rear/issues/2259
+    # On SLES11 up to openSUSE Leap 15.0 the 'lvs -o help' output looks like
+    #  Logical Volume Fields
+    #  ---------------------
+    #    lv_all               - All fields in this section.
+    #    lv_uuid              - Unique identifier.
+    #  ...
+    # where lines that list a 'lvs' field have a '-' as delimiter:
+    lvs_supported_fields=( $( lvs -o help 2>&1 | cut -s -d '-' -f 1 ) )
 
-    if lvm lvs -o lv_layout >/dev/null 2>&1; then
+    # Check silently for 'lvs' support of lv_layout:
 
-        lvm 8>&- 7>&- lvs --separator=":" --noheadings --units b --nosuffix -o origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size | while read line ; do
+    if lvm lvs -o lv_layout &>/dev/null ; then
+
+        # To be on the safe side check for all needed 'lvs' fields
+        # cf. above https://github.com/rear/rear/issues/2259
+        lvs_needed_fields="origin lv_name vg_name lv_size lv_layout pool_lv chunk_size stripes stripe_size seg_size"
+        lvs_missing_fields=""
+        for lvs_needed_field in $lvs_needed_fields ; do
+            IsInArray "$lvs_needed_field" "${lvs_supported_fields[@]}" || lvs_missing_fields="$lvs_needed_field $lvs_missing_fields"
+        done
+        test "$lvs_missing_fields" && Error "Insufficient LVM version: 'lvs' does not support the needed field(s) $lvs_missing_fields"
+
+        lvm lvs --separator=":" --noheadings --units b --nosuffix -o origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size | while read line ; do
 
             if [ $header_printed -eq 0 ] ; then
                 echo "# Format for LVM LVs"
@@ -123,7 +152,16 @@ Log "Saving LVM layout."
         # Compatibility with older LVM versions (e.g. <= 2.02.98)
         # No support for 'lv_layout', too bad, do our best!
 
-        lvm 8>&- 7>&- lvs --separator=":" --noheadings --units b --nosuffix -o origin,lv_name,vg_name,lv_size,modules,pool_lv,chunk_size,stripes,stripe_size,seg_size | while read line ; do
+        # To be on the safe side check for all needed 'lvs' fields
+        # cf. above https://github.com/rear/rear/issues/2259
+        lvs_needed_fields="origin lv_name vg_name lv_size modules pool_lv chunk_size stripes stripe_size seg_size"
+        lvs_missing_fields=""
+        for lvs_needed_field in $lvs_needed_fields ; do
+            IsInArray "$lvs_needed_field" "${lvs_supported_fields[@]}" || lvs_missing_fields="$lvs_needed_field $lvs_missing_fields"
+        done
+        test "$lvs_missing_fields" && Error "Insufficient LVM version: 'lvs' does not support the needed field(s) $lvs_missing_fields"
+
+        lvm lvs --separator=":" --noheadings --units b --nosuffix -o origin,lv_name,vg_name,lv_size,modules,pool_lv,chunk_size,stripes,stripe_size,seg_size | while read line ; do
 
             if [ $header_printed -eq 0 ] ; then
                 echo "# Format for LVM LVs"
@@ -195,6 +233,7 @@ Log "Saving LVM layout."
     fi
 
 ) >> $DISKLAYOUT_FILE
+# End of subshell that appends to DISKLAYOUT_FILE
 
 # lvm is required in the recovery system if disklayout.conf contains at least one 'lvmdev' or 'lvmgrp' or 'lvmvol' entry
 # see the create_lvmdev create_lvmgrp create_lvmvol functions in layout/prepare/GNU/Linux/110_include_lvm_code.sh
