@@ -2,6 +2,8 @@
 #  s390 zIPL boot loader and grubby for configuring boot loader`
 
 [ "$ARCH" == "Linux-s390"  ] || return 0
+# TODO: have it as an architecture specific script
+# usr/share/rear/prep/Linux-s390/305_include_s390_tools.sh
 
 test -d $VAR_DIR/recovery || mkdir -p $VAR_DIR/recovery
 
