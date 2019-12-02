@@ -72,10 +72,8 @@ case "$scheme" in
             # initrd name override is handled in 900_create_initramfs.sh
             # kernel name override is handled in 400_guess_kernel.sh
             # kernel name override is handled in 950_copy_result_files.sh
-            if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]]
-            then 
-               if [ "$ZVM_KERNEL_NAME" == "$result_file" ]
-               then
+            if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then 
+               if [ "$ZVM_KERNEL_NAME" == "$result_file" ] ; then
                   VM_UID=$(vmcp q userid |awk '{ print $1 }')
                   LogPrint "s390 kernel naming override: $result_file will be written as $VM_UID.kernel"
                   cp $v "$result_file" "${opath}/"$VM_UID".kernel" || Error "Could not copy result file $result_file to $opath at $scheme location"
