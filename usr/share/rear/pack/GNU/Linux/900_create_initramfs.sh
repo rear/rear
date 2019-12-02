@@ -33,8 +33,7 @@
 # kernel name override is handled in 950_copy_result_files.sh
 
 echo $ARCH
-if [ "$ARCH" == "Linux-s390" ]
-then
+if [ "$ARCH" == "Linux-s390" ] ; then
    VM_UID=$(vmcp q userid |awk '{ print $1 }')
 fi
 
@@ -44,8 +43,7 @@ case "$REAR_INITRD_COMPRESSION" in
     (lz4)
         # Create initrd.lz4 with lz4 default -1 compression (fast speed but less compression)
         # -l is needed to make initramfs boot, this compresses using Legacy format (Linux kernel compression)
-        if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]]
-        then
+        if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then
             REAR_INITRD_FILENAME=$VM_UID".initrd"
         else
             REAR_INITRD_FILENAME="initrd.lz4"
@@ -61,8 +59,7 @@ case "$REAR_INITRD_COMPRESSION" in
         ;;
     (lzma)
         # Create initrd.xz with xz and use the lzma compression, see https://github.com/rear/rear/issues/1142
-        if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]]
-        then
+        if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then
             REAR_INITRD_FILENAME=$VM_UID".initrd"
         else
             REAR_INITRD_FILENAME="initrd.xz"
@@ -78,8 +75,7 @@ case "$REAR_INITRD_COMPRESSION" in
         ;;
     (fast)
         # Create initrd.cgz with gzip --fast compression (fast speed but less compression)
-        if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]]
-        then
+        if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then
             REAR_INITRD_FILENAME=$VM_UID".initrd"
         else
             REAR_INITRD_FILENAME="initrd.cgz"
@@ -95,8 +91,7 @@ case "$REAR_INITRD_COMPRESSION" in
         ;;
     (best)
         # Create initrd.cgz with gzip --best compression (best compression but slow speed)
-        if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]]
-        then
+        if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then
             REAR_INITRD_FILENAME=$VM_UID".initrd"
         else
             REAR_INITRD_FILENAME="initrd.cgz"
@@ -111,8 +106,7 @@ case "$REAR_INITRD_COMPRESSION" in
         fi
         ;;
     (*)
-        if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]]
-        then
+        if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then
             REAR_INITRD_FILENAME=$VM_UID".initrd"
         else
             REAR_INITRD_FILENAME="initrd.cgz"
