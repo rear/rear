@@ -9,189 +9,197 @@
 # Perhaps this cannot happen for LVM so an 'lvm' binary must exist when LVM is used?
 has_binary lvm || return 0
 
-Log "Saving LVM layout."
+Log "Begin saving LVM layout ..."
 
-# Begin of subshell that appends to DISKLAYOUT_FILE:
-(
-    header_printed=0
+local header_printed
+local pdev vgrp size uuid pvdisplay_exit_code
+local extentsize nrextents vgdisplay_exit_code
+local already_processed_lvs=()
+local lv_layout_supported lvs_fields
+local origin lv vg
+local layout modules
+local thinpool chunksize stripes stripesize segmentsize
+local kval infokval
+local lvs_exit_code
 
-    ## Get physical_device configuration
-    # format: lvmdev <volume_group> <device> [<uuid>] [<size(bytes)>]
+# Begin of group command that appends its stdout to DISKLAYOUT_FILE:
+{
+
+    # Get physical_device configuration.
+    # Format: lvmdev <volume_group> <device> [<uuid>] [<size(bytes)>]
+    header_printed="no"
+    # Example output of "lvm pvdisplay -c":
+    #   /dev/sda1:system:41940992:-1:8:8:-1:4096:5119:2:5117:7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7
+    # There are two leading blanks in the output (at least on SLES12-SP4 with LVM 2.02.180).
     lvm pvdisplay -c | while read line ; do
-        pdev=$(echo $line | cut -d ":" -f "1")
 
-        if [ "${pdev#/}" = "$pdev" ] ; then
-            # Skip lines that are not describing physical devices
+        # With the above example pdev=/dev/sda1
+        # (the "echo $line" makes the leading blanks disappear)
+        pdev=$( echo $line | cut -d ":" -f "1" )
+
+        # Skip lines that are not describing physical devices
+        # i.e. lines where pdev does not start with a leading / character:
+        test "${pdev#/}" = "$pdev" && continue
+
+        # Output lvmdev header only once to DISKLAYOUT_FILE:
+        if is_false $header_printed ; then
+            echo "# Format for LVM PVs"
+            echo "# lvmdev <volume_group> <device> [<uuid>] [<size(bytes)>]"
+            header_printed="yes"
+        fi
+
+        # With the above example vgrp=system
+        vgrp=$( echo $line | cut -d ":" -f "2" )
+        # With the above example size=41940992
+        size=$( echo $line | cut -d ":" -f "3" )
+        # With the above example uuid=7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7
+        uuid=$( echo $line | cut -d ":" -f "12" )
+
+        # Translate pdev through diskbyid_mappings file:
+        pdev=$( get_device_mapping $pdev )
+        # Translate a sysfs name or device name to the name preferred in ReaR:
+        pdev=$( get_device_name $pdev )
+
+        # Output lvmdev entry to DISKLAYOUT_FILE:
+        # With the above example the output is:
+        # lvmdev /dev/system /dev/sda1 7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7 41940992
+        echo "lvmdev /dev/$vgrp $pdev $uuid $size"
+
+    done
+    # Check the exit code of "lvm pvdisplay -c"
+    # in the "lvm pvdisplay -c | while read line ; do ... done" pipe:
+    pvdisplay_exit_code=${PIPESTATUS[0]}
+    test $pvdisplay_exit_code -eq 0 || Error "LVM command 'lvm pvdisplay -c' failed with exit code $pvdisplay_exit_code"
+
+    # Get the volume group configuration:
+    # Format: lvmgrp <volume_group> <extentsize> [<size(extents)>] [<size(bytes)>]
+    header_printed="no"
+    # Example output of "lvm vgdisplay -c":
+    #   system:r/w:772:-1:0:2:2:-1:0:1:1:20967424:4096:5119:5117:2:lqIC4T-u5KW-f57o-TpIZ-AYxD-rm3f-06sa6J
+    # There are two leading blanks in the output (at least on SLES12-SP4 with LVM 2.02.180).
+    lvm vgdisplay -c | while read line ; do
+        # With the above example vgrp=system
+        # (the "echo $line" makes the leading blanks disappear)
+        vgrp=$( echo $line | cut -d ":" -f "1" )
+        # With the above example size=20967424
+        # ( size = 20967424 = 4096 * 5119 = extentsize * nrextents )
+        size=$( echo $line | cut -d ":" -f "12" )
+        # With the above example extentsize=4096
+        extentsize=$( echo $line | cut -d ":" -f "13" )
+        # With the above example nrextents=5119
+        nrextents=$( echo $line | cut -d ":" -f "14" )
+
+        # Output lvmgrp header only once to DISKLAYOUT_FILE:
+        if is_false $header_printed ; then
+            echo "# Format for LVM VGs"
+            echo "# lvmgrp <volume_group> <extentsize> [<size(extents)>] [<size(bytes)>]"
+            header_printed="yes"
+        fi
+
+        # Output lvmgrp entry to DISKLAYOUT_FILE:
+        # With the above example the output is:
+        # lvmgrp /dev/system 4096 5119 20967424
+        echo "lvmgrp /dev/$vgrp $extentsize $nrextents $size"
+
+    done
+    # Check the exit code of "lvm vgdisplay -c"
+    # in the "lvm vgdisplay -c | while read line ; do ... done" pipe:
+    vgdisplay_exit_code=${PIPESTATUS[0]}
+    test $vgdisplay_exit_code -eq 0 || Error "LVM command 'lvm vgdisplay -c' failed with exit code $vgdisplay_exit_code"
+
+    # Get all logical volumes:
+    # Format: lvmvol <volume_group> <name> <size(bytes)> <layout> [key:value ...]
+    header_printed="no"
+    already_processed_lvs=()
+
+    # Check for 'lvs' support of the 'lv_layout' field:
+    lvm lvs -o lv_layout &>/dev/null && lv_layout_supported="yes" || lv_layout_supported="no"
+
+    # Specify the fields for the lvs command depending on whether or not the 'lv_layout' field is supported:
+    if is_true $lv_layout_supported ; then
+        lvs_fields="origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size"
+    else
+        # Use the 'modules' field as fallback replacement when the 'lv_layout' field is not supported:
+        lvs_fields="origin,lv_name,vg_name,lv_size,modules,pool_lv,chunk_size,stripes,stripe_size,seg_size"
+    fi
+
+    # Example output of "lvs --separator=":" --noheadings --units b --nosuffix -o $lvs_fields"
+    # with lvs_fields="origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size"
+    # i.e. when the 'lv_layout' field is supported:
+    #   :root:system:19927138304:linear::0:1:0:19927138304
+    #   :swap:system:1535115264:linear::0:1:0:1535115264
+    # There are two leading blanks in the output (at least on SLES12-SP4 with LVM 2.02.180).
+    lvm lvs --separator=":" --noheadings --units b --nosuffix -o $lvs_fields | while read line ; do
+
+        # Output lvmvol header only once to DISKLAYOUT_FILE:
+        if is_false $header_printed ; then
+            echo "# Format for LVM LVs"
+            echo "# lvmvol <volume_group> <name> <size(bytes)> <layout> [key:value ...]"
+            header_printed="yes"
+        fi
+
+        # With the above example origin=""
+        # (the "echo $line" makes the leading blanks disappear)
+        origin="$( echo "$line" | awk -F ':' '{ print $1 }' )"
+        # Skip snapshots (useless) or caches (dont know how to handle that)
+        if test "$origin" ; then
+            echo "# Skipped snapshot or cache information '$line'"
             continue
         fi
 
-        if [ $header_printed -eq 0 ] ; then
-            echo "# Format for LVM PVs"
-            echo "# lvmdev <volume_group> <device> [<uuid>] [<size(bytes)>]"
-            header_printed=1
+        # With the above example lv=root and lv=swap
+        lv="$( echo "$line" | awk -F ':' '{ print $2 }' )"
+
+        # With the above example vg=system
+        vg="$( echo "$line" | awk -F ':' '{ print $3 }' )"
+
+        # With the above example size=19927138304 and size=1535115264
+        size="$( echo "$line" | awk -F ':' '{ print $4 }' )"
+
+        if is_true $lv_layout_supported ; then
+            # With the above example layout=linear
+            layout="$( echo "$line" | awk -F ':' '{ print $5 }' )"
+        else
+            modules="$( echo "$line" | awk -F ':' '{ print $5 }' )"
         fi
 
-        vgrp=$(echo $line | cut -d ":" -f "2")
-        size=$(echo $line | cut -d ":" -f "3")
-        uuid=$(echo $line | cut -d ":" -f "12")
+        # With the above example thinpool=""
+        thinpool="$( echo "$line" | awk -F ':' '{ print $6 }' )"
 
-        pdev=$(get_device_mapping $pdev)  # xlate through diskbyid_mappings file
-        echo "lvmdev /dev/$vgrp $(get_device_name $pdev) $uuid $size"
-    done
+        # With the above example chunksize=0
+        chunksize="$( echo "$line" | awk -F ':' '{ print $7 }' )"
 
-    header_printed=0
+        # With the above example stripes=1
+        stripes="$( echo "$line" | awk -F ':' '{ print $8 }' )"
 
-    ## Get the volume group configuration
-    # format: lvmgrp <volume_group> <extentsize> [<size(extents)>] [<size(bytes)>]
-    lvm vgdisplay -c | while read line ; do
-        vgrp=$(echo $line | cut -d ":" -f "1")
-        size=$(echo $line | cut -d ":" -f "12")
-        extentsize=$(echo $line | cut -d ":" -f "13")
-        nrextents=$(echo $line | cut -d ":" -f "14")
+        # With the above example stripesize=0
+        stripesize="$( echo "$line" | awk -F ':' '{ print $9 }' )"
 
-        if [ $header_printed -eq 0 ] ; then
-            echo "# Format for LVM VGs"
-            echo "# lvmgrp <volume_group> <extentsize> [<size(extents)>] [<size(bytes)>]"
-            header_printed=1
-        fi
+        # With the above example segmentsize=19927138304 and segmentsize=1535115264
+        segmentsize="$( echo "$line" | awk -F ':' '{ print $10 }' )"
 
-        echo "lvmgrp /dev/$vgrp $extentsize $nrextents $size"
-    done
+        # TODO: Explain what that code is meant to do.
+        # In particular a more explanatory variable name than 'kval' might help.
+        # In 110_include_lvm_code.sh there is a comment what 'kval' means there
+        #   # kval: "key:value" pairs, separated by spaces
+        # so probably 'kval' means the same here, but what is 'infokval'?
+        kval=""
+        infokval=""
+        [ -z "$thinpool" ] || kval="${kval:+$kval }thinpool:$thinpool"
+        [ $chunksize -eq 0 ] || kval="${kval:+$kval }chunksize:${chunksize}b"
+        [ $stripesize -eq 0 ] || kval="${kval:+$kval }stripesize:${stripesize}b"
+        [ $segmentsize -eq $size ] || infokval="${infokval:+$infokval }segmentsize:${segmentsize}b"
 
-    header_printed=0
-    already_processed_lvs=""
-
-    ## Get all logical volumes
-    # format: lvmvol <volume_group> <name> <size(bytes)> <layout> [key:value ...]
-
-    # To be on the safe side check for all needed 'lvs' fields because
-    # when one of the 'lvs' fields is not supported by the currently used LVM version
-    # the 'lvs' command fails and that results no 'lvmvol' entries in disklayout.conf
-    # which finally result that "rear recover" fails, cf.
-    # https://github.com/rear/rear/issues/2259
-    # On SLES11 up to openSUSE Leap 15.0 the 'lvs -o help' output looks like
-    #  Logical Volume Fields
-    #  ---------------------
-    #    lv_all               - All fields in this section.
-    #    lv_uuid              - Unique identifier.
-    #  ...
-    # where lines that list a 'lvs' field have a '-' as delimiter:
-    lvs_supported_fields=( $( lvs -o help 2>&1 | cut -s -d '-' -f 1 ) )
-
-    # Check silently for 'lvs' support of lv_layout:
-
-    if lvm lvs -o lv_layout &>/dev/null ; then
-
-        # To be on the safe side check for all needed 'lvs' fields
-        # cf. above https://github.com/rear/rear/issues/2259
-        lvs_needed_fields="origin lv_name vg_name lv_size lv_layout pool_lv chunk_size stripes stripe_size seg_size"
-        lvs_missing_fields=""
-        for lvs_needed_field in $lvs_needed_fields ; do
-            IsInArray "$lvs_needed_field" "${lvs_supported_fields[@]}" || lvs_missing_fields="$lvs_needed_field $lvs_missing_fields"
-        done
-        test "$lvs_missing_fields" && Error "Insufficient LVM version: 'lvs' does not support the needed field(s) $lvs_missing_fields"
-
-        lvm lvs --separator=":" --noheadings --units b --nosuffix -o origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size | while read line ; do
-
-            if [ $header_printed -eq 0 ] ; then
-                echo "# Format for LVM LVs"
-                echo "# lvmvol <volume_group> <name> <size(bytes)> <layout> [key:value ...]"
-                header_printed=1
-            fi
-
-            origin="$(echo "$line" | awk -F ':' '{ print $1 }')"
-            # Skip snapshots (useless) or caches (dont know how to handle that)
-            if [ -n "$origin" ] ; then
-                echo "# Skipped snapshot or cache information '$line'"
-                continue
-            fi
-
-            lv="$(echo "$line" | awk -F ':' '{ print $2 }')"
-            vg="$(echo "$line" | awk -F ':' '{ print $3 }')"
-            size="$(echo "$line" | awk -F ':' '{ print $4 }')"
-            layout="$(echo "$line" | awk -F ':' '{ print $5 }')"
-            thinpool="$(echo "$line" | awk -F ':' '{ print $6 }')"
-            chunksize="$(echo "$line" | awk -F ':' '{ print $7 }')"
-            stripes="$(echo "$line" | awk -F ':' '{ print $8 }')"
-            stripesize="$(echo "$line" | awk -F ':' '{ print $9 }')"
-            segmentsize="$(echo "$line" | awk -F ':' '{ print $10 }')"
-
-            kval=""
-            infokval=""
-            [ -z "$thinpool" ] || kval="${kval:+$kval }thinpool:$thinpool"
-            [ $chunksize -eq 0 ] || kval="${kval:+$kval }chunksize:${chunksize}b"
-            [ $stripesize -eq 0 ] || kval="${kval:+$kval }stripesize:${stripesize}b"
-            [ $segmentsize -eq $size ] || infokval="${infokval:+$infokval }segmentsize:${segmentsize}b"
+        # TODO: Explain what that code is meant to do:
+        if is_true $lv_layout_supported ; then
+            # TODO: Explain what that code is meant to do:
             if [[ ,$layout, == *,mirror,* ]] ; then
                 kval="${kval:+$kval }mirrors:$(($stripes - 1))"
             elif [[ ,$layout, == *,striped,* ]] ; then
                 kval="${kval:+$kval }stripes:$stripes"
             fi
-
-            if [[ " $already_processed_lvs " == *\ $vg/$lv\ * ]] ; then
-                # The LV has multiple segments; the create_lvmvol() function in
-                # 110_include_lvm_code.sh is not able to recreate this, but
-                # keep the information for the administrator anyway.
-                echo "#lvmvol /dev/$vg $lv ${size}b $layout $kval"
-                if [ -n "$infokval" ] ; then
-                    echo "# extra parameters for the line above not taken into account when restoring using 'lvcreate': $infokval"
-                fi
-            else
-                if [ $segmentsize -ne $size ] ; then
-                    echo "# WARNING: Volume $vg/$lv has multiple segments. Restoring it in Migration Mode using 'lvcreate' won't preserve segments and properties of the other segments as well!"
-                fi
-                echo "lvmvol /dev/$vg $lv ${size}b $layout $kval"
-                if [ -n "$infokval" ] ; then
-                    echo "# extra parameters for the line above not taken into account when restoring using 'lvcreate': $infokval"
-                fi
-                already_processed_lvs="${already_processed_lvs:+$already_processed_lvs }$vg/$lv"
-            fi
-        done
-
-    else
-        # Compatibility with older LVM versions (e.g. <= 2.02.98)
-        # No support for 'lv_layout', too bad, do our best!
-
-        # To be on the safe side check for all needed 'lvs' fields
-        # cf. above https://github.com/rear/rear/issues/2259
-        lvs_needed_fields="origin lv_name vg_name lv_size modules pool_lv chunk_size stripes stripe_size seg_size"
-        lvs_missing_fields=""
-        for lvs_needed_field in $lvs_needed_fields ; do
-            IsInArray "$lvs_needed_field" "${lvs_supported_fields[@]}" || lvs_missing_fields="$lvs_needed_field $lvs_missing_fields"
-        done
-        test "$lvs_missing_fields" && Error "Insufficient LVM version: 'lvs' does not support the needed field(s) $lvs_missing_fields"
-
-        lvm lvs --separator=":" --noheadings --units b --nosuffix -o origin,lv_name,vg_name,lv_size,modules,pool_lv,chunk_size,stripes,stripe_size,seg_size | while read line ; do
-
-            if [ $header_printed -eq 0 ] ; then
-                echo "# Format for LVM LVs"
-                echo "# lvmvol <volume_group> <name> <size(bytes)> <layout> [key:value ...]"
-                header_printed=1
-            fi
-
-            origin="$(echo "$line" | awk -F ':' '{ print $1 }')"
-            # Skip snapshots (useless) or caches (dont know how to handle that)
-            if [ -n "$origin" ] ; then
-                echo "# Skipped snapshot of cache information '$line'"
-                continue
-            fi
-
-            lv="$(echo "$line" | awk -F ':' '{ print $2 }')"
-            vg="$(echo "$line" | awk -F ':' '{ print $3 }')"
-            size="$(echo "$line" | awk -F ':' '{ print $4 }')"
-            modules="$(echo "$line" | awk -F ':' '{ print $5 }')"
-            thinpool="$(echo "$line" | awk -F ':' '{ print $6 }')"
-            chunksize="$(echo "$line" | awk -F ':' '{ print $7 }')"
-            stripes="$(echo "$line" | awk -F ':' '{ print $8 }')"
-            stripesize="$(echo "$line" | awk -F ':' '{ print $9 }')"
-            segmentsize="$(echo "$line" | awk -F ':' '{ print $10 }')"
-
-            kval=""
-            infokval=""
-            [ -z "$thinpool" ] || kval="${kval:+$kval }thinpool:$thinpool"
-            [ $chunksize -eq 0 ] || kval="${kval:+$kval }chunksize:${chunksize}b"
-            [ $stripesize -eq 0 ] || kval="${kval:+$kval }stripesize:${stripesize}b"
-            [ $segmentsize -eq $size ] || infokval="${infokval:+$infokval }segmentsize:${segmentsize}b"
+        else
+            # TODO: Explain what that code is meant to do:
             if [[ "$modules" == "" ]] ; then
                 layout="linear"
                 [ $stripes -eq 0 ] || kval="${kval:+$kval }stripes:$stripes"
@@ -205,41 +213,51 @@ Log "Saving LVM layout."
                     layout="thin,sparse"
                 fi
             elif [[ ,$modules, == *,raid,* ]] ; then
-                LogPrint "Warning: don't know how to collect RAID information for LV '$lv'. Automatic disk layout recovery may fail."
+                LogPrintError "LVM: Collecting RAID information for LV '$lv' unsupported ('lv_layout' field not supported). Automatic disk layout recovery may fail."
                 layout="raid,RAID_UNKNOWNTYPE"
                 kval="${kval:+$kval }stripes:$stripes"
             fi
+        fi
 
-            if [[ " $already_processed_lvs " == *\ $vg/$lv\ * ]]; then
-                # The LV has multiple segments; the create_lvmvol() function in
-                # 110_include_lvm_code.sh is not able to recreate this, but
-                # keep the information for the administrator anyway.
-                echo "#lvmvol /dev/$vg $lv ${size}b $layout $kval"
-                if [ -n "$infokval" ] ; then
-                    echo "# extra parameters for the line above not taken into account when restoring using 'lvcreate': $infokval"
-                fi
-            else
-                if [ $segmentsize -ne $size ] ; then
-                    echo "# WARNING: Volume $vg/$lv has multiple segments. Restoring it in Migration Mode using 'lvcreate' won't preserve segments and properties of the other segments as well!"
-                fi
-                echo "lvmvol /dev/$vg $lv ${size}b $layout $kval"
-                if [ -n "$infokval" ] ; then
-                    echo "# extra parameters for the line above not taken into account when restoring using 'lvcreate': $infokval"
-                fi
-                already_processed_lvs="${already_processed_lvs:+$already_processed_lvs }$vg/$lv"
+        # Output lvmvol entry to DISKLAYOUT_FILE:
+        if IsInArray "$vg/$lv" "${already_processed_lvs[@]}" ; then
+            # The LV has multiple segments.
+            # The create_lvmvol() function in 110_include_lvm_code.sh is not able to recreate this.
+            # But we keep the information for the administrator anyway:
+            echo "#lvmvol /dev/$vg $lv ${size}b $layout $kval"
+            if [ -n "$infokval" ] ; then
+                echo "# Extra parameters for the '#lvmvol /dev/$vg $lv' line above not taken into account when restoring using 'lvcreate': $infokval"
             fi
-        done
+        else
+            if [ $segmentsize -ne $size ] ; then
+                echo "# Volume $vg/$lv has multiple segments. Recreating it by 'lvcreate' will not preserve segments and properties of the other segments as well"
+            fi
+            # With the above example the output is:
+            # lvmvol /dev/system root 19927138304b linear 
+            # lvmvol /dev/system swap 1535115264b linear 
+            echo "lvmvol /dev/$vg $lv ${size}b $layout $kval"
+            if [ -n "$infokval" ] ; then
+                echo "# Extra parameters for the 'lvmvol /dev/$vg $lv' line above not taken into account when restoring using 'lvcreate': $infokval"
+            fi
+            already_processed_lvs+=( "$vg/$lv" )
+        fi
 
-    fi
+    done
+    # Check the exit code of "lvm lvs --separator=":" --noheadings --units b --nosuffix -o $lvs_fields"
+    # in the "lvm lvs --separator=":" --noheadings --units b --nosuffix -o $lvs_fields | while read line ; do ... done" pipe:
+    lvs_exit_code=${PIPESTATUS[0]}
+    test $lvs_exit_code -eq 0 || Error "LVM command 'lvs ... -o $lvs_fields' failed with exit code $lvs_exit_code"
 
-) >> $DISKLAYOUT_FILE
-# End of subshell that appends to DISKLAYOUT_FILE
+} 1>>$DISKLAYOUT_FILE
+# End of group command that appends its stdout to DISKLAYOUT_FILE
 
-# lvm is required in the recovery system if disklayout.conf contains at least one 'lvmdev' or 'lvmgrp' or 'lvmvol' entry
+Log "End saving LVM layout"
+
+# 'lvm' is required in the recovery system if disklayout.conf contains at least one 'lvmdev' or 'lvmgrp' or 'lvmvol' entry
 # see the create_lvmdev create_lvmgrp create_lvmvol functions in layout/prepare/GNU/Linux/110_include_lvm_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-egrep -q '^lvmdev |^lvmgrp |^lvmvol ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" lvm ) || true
+egrep -q '^lvmdev |^lvmgrp |^lvmvol ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( lvm ) || true
 
 # vim: set et ts=4 sw=4:
 
