@@ -61,11 +61,6 @@ title Relax-and-Recover (no Secure Boot)
 
 EOF
 else
-    # create small embedded grub.cfg file for grub-mkimage
-    cat > $efi_boot_tmp_dir/embedded_grub.cfg <<EOF
-set prefix=(cd0)/EFI/BOOT
-configfile /EFI/BOOT/grub.cfg
-EOF
     # create a grub.cfg
     create_grub2_cfg > $efi_boot_tmp_dir/grub.cfg
 fi
@@ -76,7 +71,7 @@ fi
 # See issue #1374
 # build_bootx86_efi () can be safely used for other scenarios.
 if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
-    build_bootx86_efi $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi $TMP_DIR/mnt/EFI/BOOT/embedded_grub.cfg
+    build_bootx86_efi $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi $efi_boot_tmp_dir/grub.cfg
 fi
 
 # We will be using grub-efi or grub2 (with efi capabilities) to boot from ISO.
