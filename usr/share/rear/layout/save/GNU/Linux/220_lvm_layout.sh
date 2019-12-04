@@ -22,6 +22,44 @@ local thinpool chunksize stripes stripesize segmentsize
 local kval infokval
 local lvs_exit_code
 
+# General explanation why in this script we use pipes of the form
+#   COMMAND | while read ... do ... done
+# instead of how we usually do it via bash process substitution of the form
+#   while read ... do ... done < <( COMMAND )
+# The reason is that in case of process substitution COMMAND seems to be run "very asynchronously"
+# where it seems it it not possible (in a simple and clean way) to get the exit status of COMMAND.
+# At least not with bash version 3.2.57 on SLES11-SP4 and not with bash version 4.3.42 on SLES12-SP4
+# where I <jsmeix@suse.de> get with both bash versions the same "always fail" result
+#   # while read line ; do echo $line ; done < <( pstree -Aplau $$ ) ; wait $! && echo OK || echo FAIL
+#   bash,885
+#   `-bash,5627
+#   `-pstree,5628 -Aplau 885
+#   -bash: wait: pid 5627 is not a child of this shell
+#   FAIL
+# which looks like a bug in bash at least up to version 4.3.42 because
+# pstree reports pid 5627 as a child of pid 885 in contrast to what bash reports.
+# It seems that works with bash version 4.4.23 on openSUSE Leap 15.0
+#   # while read line ; do echo $line ; done < <( pstree -Aplau $$ ) ; wait $! && echo OK || echo FAIL
+#   bash,5821
+#   `-bash,14287
+#   `-pstree,14288 -Aplau 5821
+#   OK
+#   # while read line ; do echo $line ; done < <( cat qqq ) ; wait $! && echo OK || echo FAIL
+#   cat: qqq: No such file or directory
+#   FAIL
+# Because ReaR must work with bash version 3.x we cannot use 'wait $!' to get
+# the exit status of a COMMAND that is run asynchronously via process substitution.
+# In contrast for a pipe ${PIPESTATUS[0]} provides the exit status of its first command
+# (in contrast to $? that provides the exit status of the last command in a pipe
+#  unless 'set -o pipefail' is set which lets $? provide the exit status of
+#  the last command in a pipe that failed - or 0 if none failed - so $? does
+#  not provide a reliable way to get the exit status of the first command in a pipe).
+# The drawback of using a pipe is that the "while read ... do ... done" part
+# is run as separated process (in a subshell) so that e.g. one cannot set variables
+# in the "while read ... do ... done" part that are meant to be used after the pipe.
+# In contrast with the process substitution method the "while read ... do ... done" part
+# runs in the current shell (but then COMMAND seems to be somewhat "out of control").
+
 # Begin of group command that appends its stdout to DISKLAYOUT_FILE:
 {
 
@@ -123,13 +161,13 @@ local lvs_exit_code
         lvs_fields="origin,lv_name,vg_name,lv_size,modules,pool_lv,chunk_size,stripes,stripe_size,seg_size"
     fi
 
-    # Example output of "lvs --separator=":" --noheadings --units b --nosuffix -o $lvs_fields"
+    # Example output of "lvs --separator=':' --noheadings --units b --nosuffix -o $lvs_fields"
     # with lvs_fields="origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size"
     # i.e. when the 'lv_layout' field is supported:
     #   :root:system:19927138304:linear::0:1:0:19927138304
     #   :swap:system:1535115264:linear::0:1:0:1535115264
     # There are two leading blanks in the output (at least on SLES12-SP4 with LVM 2.02.180).
-    lvm lvs --separator=":" --noheadings --units b --nosuffix -o $lvs_fields | while read line ; do
+    lvm lvs --separator=':' --noheadings --units b --nosuffix -o $lvs_fields | while read line ; do
 
         # Output lvmvol header only once to DISKLAYOUT_FILE:
         if is_false $header_printed ; then
@@ -243,8 +281,8 @@ local lvs_exit_code
         fi
 
     done
-    # Check the exit code of "lvm lvs --separator=":" --noheadings --units b --nosuffix -o $lvs_fields"
-    # in the "lvm lvs --separator=":" --noheadings --units b --nosuffix -o $lvs_fields | while read line ; do ... done" pipe:
+    # Check the exit code of "lvm lvs --separator=':' --noheadings --units b --nosuffix -o $lvs_fields"
+    # in the "lvm lvs --separator=':' --noheadings --units b --nosuffix -o $lvs_fields | while read line ; do ... done" pipe:
     lvs_exit_code=${PIPESTATUS[0]}
     test $lvs_exit_code -eq 0 || Error "LVM command 'lvs ... -o $lvs_fields' failed with exit code $lvs_exit_code"
 
