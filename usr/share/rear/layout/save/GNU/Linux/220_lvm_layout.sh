@@ -29,24 +29,28 @@ local lvs_exit_code
 # The reason is that in case of process substitution COMMAND seems to be run "very asynchronously"
 # where it seems it it not possible (in a simple and clean way) to get the exit status of COMMAND.
 # At least not with bash version 3.2.57 on SLES11-SP4 and not with bash version 4.3.42 on SLES12-SP4
-# where I <jsmeix@suse.de> get with both bash versions the same "always fail" result
-#   # while read line ; do echo $line ; done < <( pstree -Aplau $$ ) ; wait $! && echo OK || echo FAIL
+# where I <jsmeix@suse.de> get with both bash versions the same "always failed with exit status 127" result
+#   # while read line ; do echo $line ; done < <( pstree -Aplau $$ ) ; wait $! && echo OK || echo FAILED with $?
 #   bash,885
 #   `-bash,5627
 #   `-pstree,5628 -Aplau 885
 #   -bash: wait: pid 5627 is not a child of this shell
-#   FAIL
-# which looks like a bug in bash at least up to version 4.3.42 because
-# pstree reports pid 5627 as a child of pid 885 in contrast to what bash reports.
-# It seems that works with bash version 4.4.23 on openSUSE Leap 15.0
-#   # while read line ; do echo $line ; done < <( pstree -Aplau $$ ) ; wait $! && echo OK || echo FAIL
+#   FAILED with 127
+#   # while read line ; do echo $line ; done < <( echo | grep -Q foo ) ; wait $! && echo OK || echo FAILED with $?
+#   grep: invalid option -- 'Q'
+#   -bash: wait: pid 6030 is not a child of this shell
+#   FAILED with 127
+# which looks like a bug in bash at least up to version 4.3.42 because I think
+# pstree correctly reports pid 5627 as a child of pid 885 in contrast to what bash reports.
+# It seems that works with bash version 4.4.23 on openSUSE Leap 15.0 where I get
+#   # while read line ; do echo $line ; done < <( pstree -Aplau $$ ) ; wait $! && echo OK || echo FAILED with $?
 #   bash,5821
 #   `-bash,14287
 #   `-pstree,14288 -Aplau 5821
 #   OK
-#   # while read line ; do echo $line ; done < <( cat qqq ) ; wait $! && echo OK || echo FAIL
-#   cat: qqq: No such file or directory
-#   FAIL
+#   # while read line ; do echo $line ; done < <( echo | grep -Q foo ) ; wait $! && echo OK || echo FAILED with $?
+#   grep: invalid option -- 'Q'
+#   FAILED with 2
 # Because ReaR must work with bash version 3.x we cannot use 'wait $!' to get
 # the exit status of a COMMAND that is run asynchronously via process substitution.
 # In contrast for a pipe ${PIPESTATUS[0]} provides the exit status of its first command
