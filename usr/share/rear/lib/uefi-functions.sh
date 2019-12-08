@@ -40,12 +40,21 @@ function build_bootx86_efi {
     local outfile="$1"
     local embedded_config=""
     local gmkstandalone=""
+    local gprobe=""
+    local dirs=()
     # modules is the list of modules to load
     # If GRUB2_MODULES is nonempty, it determines both what modules to install and to load
     local modules=( ${GRUB2_MODULES:+"${GRUB2_MODULES[@]}"} )
 
     # Configuration file is optional for image creation.
-    [[ -n "$2" ]] && embedded_config="/boot/grub/grub.cfg=$2"
+    shift
+    if [[ -n "$1" ]] ; then
+        # graft point syntax. $1 will appear as /boot/grub/grub.cfg in the image
+        embedded_config="/boot/grub/grub.cfg=$1"
+        shift
+        # directories that should be accessible by GRUB2 (e.g. because they contain the kernel)
+        dirs=( ${@:+"$@"} )
+    fi
 
     if has_binary grub-mkstandalone ; then
         gmkstandalone=grub-mkstandalone
@@ -58,6 +67,36 @@ function build_bootx86_efi {
         # (normally a function should not exit out but return to its caller with a non-zero return code):
         Error "Cannot make bootable EFI image of GRUB2 (neither grub-mkstandalone nor grub2-mkstandalone found)"
     fi
+
+    # Determine what modules need to be loaded in order to access given directories
+    # (if the list of modules is not overriden by GRUB2_MODULES)
+    if (( ${#dirs[@]} )) && ! (( ${#modules[@]} )) ; then
+        if has_binary grub-probe ; then
+            gprobe=grub-probe
+        elif has_binary grub2-probe ; then
+            # At least SUSE systems use 'grub2' prefixed names for GRUB2 programs:
+            gprobe=grub2-probe
+        else
+            LogWarn "Neither grub-probe nor grub2-probe found"
+            if test /usr/lib/grub*/x86_64-efi/partmap.lst ; then
+                LogWarn "including all partition modules"
+                modules=( $(cat /usr/lib/grub*/x86_64-efi/partmap.lst) )
+            else
+                Error "Can not determine partition modules, ${dirs[*]} would be likely inaccessible in GRUB2"
+            fi
+        fi
+
+        if [ -n "$gprobe" ]; then
+            # this is unfortunately only a crude approximation of the Grub internal probe_mods() function
+            modules=( $( for p in "${dirs[@]}" ; do
+                             $gprobe --target=fs "$p"
+                             $gprobe --target=partmap "$p" | sed -e 's/^/part_/'
+                             $gprobe --target=abstraction "$p"
+                         done | sort -u ) )
+        fi
+        Log "GRUB2 modules to load: ${modules:+${modules[*]}}"
+    fi
+
     # grub-mkimage needs /usr/lib/grub/x86_64-efi/moddep.lst (cf. https://github.com/rear/rear/issues/1193)
     # and at least on SUSE systems grub2-mkimage needs /usr/lib/grub2/x86_64-efi/moddep.lst (in 'grub2' directory)
     # so that we error out if grub-mkimage or grub2-mkimage would fail when its moddep.lst is missing.
