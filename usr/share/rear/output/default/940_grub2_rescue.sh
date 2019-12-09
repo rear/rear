@@ -147,10 +147,6 @@ if is_true $USING_UEFI_BOOTLOADER ; then
     # probably a bug, as I was able to boot with value set to root=anything
     root_uuid=$(get_root_disk_UUID)
 
-    # Grub2 modules that will be used for booting "Relax-and-Recover"
-    # It might be useful to make this variable global in the future
-    grub2_modules="linux echo all_video part_gpt ext2 btrfs search configfile"
-
     # Create configuration file for "Relax-and-Recover" UEFI boot entry.
     # This file will not interact with existing Grub2 configuration in any way.
     (   echo "menuentry '$grub_rear_menu_entry_name' --class os {"
@@ -172,9 +168,7 @@ if is_true $USING_UEFI_BOOTLOADER ; then
     ) > $grub_config_dir/rear_embed.cfg
 
     # Create rear.efi at UEFI default boot directory location.
-    if ! grub${grub_num}-mkimage -o $boot_dir/efi/EFI/BOOT/rear.efi -O x86_64-efi -c $grub_config_dir/rear_embed.cfg -p /EFI/BOOT $grub2_modules ; then
-        Error "Could not create UEFI boot image"
-    fi
+    build_bootx86_efi $boot_dir/efi/EFI/BOOT/rear.efi $grub_config_dir/rear_embed.cfg
 
     # If UEFI boot entry for "Relax-and-Recover" does not exist, create it.
     # This will also add "Relax-and-Recover" to boot order because if UEFI entry is not listed in BootOrder,

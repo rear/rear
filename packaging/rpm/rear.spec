@@ -38,7 +38,7 @@ Requires: syslinux
 # (in addition to the default installed bootloader grub2) while on ppc ppc64 the
 # default installed bootloader yaboot is also useed to make the bootable ISO image.
 
-### Dependencies on all distributions
+### Mandatory dependencies on all distributions:
 Requires: binutils
 Requires: ethtool
 Requires: gzip
@@ -49,6 +49,19 @@ Requires: openssl
 Requires: gawk
 Requires: attr
 Requires: bc
+
+### Non-mandatory dependencies should be specified as RPM weak dependency via
+### Recommends: RPM_package_name
+### because missing RPM Recommends do not cause hard errors during installation
+### and using Recommends instead of Requires has the additional advantage
+### that the user can use ReaR without unneeded hard requirements when
+### he does not use functionality in ReaR that uses the hard requirements
+### e.g. when he does not need genisoimage or mkisofs to make an ISO image
+### (i.e. when he does not use "OUTPUT=ISO"), cf.
+### https://github.com/rear/rear/issues/2289
+### When particular functionality in ReaR requires certain programs
+### those programs need to be specified in the ReaR scripts in the
+### REQUIRED_PROGS config array but not here in the RPM spec file.
 
 ### If you require NFS, you may need the below packages
 #Requires: nfsclient portmap rpcbind
@@ -68,14 +81,19 @@ Requires: bc
 
 %if %{?suse_version:1}0
 Requires: iproute2
-### recent SUSE versions have an extra nfs-client package
-### and switched to genisoimage/wodim
-%if 0%{?suse_version} >= 1020
-Requires: genisoimage
-%else
-Requires: mkisofs
-%endif
-###
+### Since SLES11 there is an extra nfs-client package:
+Recommends: nfs-client
+### In SLES11 and SLES12 there is
+### /usr/bin/genisoimage provided by the genisoimage RPM and there is
+### /usr/bin/mkisofs provided by the cdrkit-cdrtools-compat RPM and
+### both RPMs are installed by default.
+### In openSUSE Leap 15.0 and SLES15 there is (at least by default)
+### no longer /usr/bin/genisoimage but there is
+### only /usr/bin/mkisofs provided by the mkisofs RPM
+### so we recommend all of them to get any of them if available:
+Recommends: cdrkit-cdrtools-compat
+Recommends: genisoimage
+Recommends: mkisofs
 %endif
 
 %if %{?mandriva_version:1}0

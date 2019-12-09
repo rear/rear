@@ -236,7 +236,7 @@ ARGS=( "$@" )
 
 # The following workflows are always verbose:
 case "$WORKFLOW" in
-    (validate|shell|recover)
+    (validate|shell|recover|mountonly)
         VERBOSE=1
         ;;
 esac
