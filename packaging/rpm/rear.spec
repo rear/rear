@@ -83,7 +83,7 @@ Requires: bc
 Requires: iproute2
 ### Since SLES11 there is an extra nfs-client package:
 Recommends: nfs-client
-### In SLES11 and SLERS12 there is
+### In SLES11 and SLES12 there is
 ### /usr/bin/genisoimage provided by the genisoimage RPM and there is
 ### /usr/bin/mkisofs provided by the cdrkit-cdrtools-compat RPM and
 ### both RPMs are installed by default.
