@@ -76,7 +76,7 @@ fi
 # See issue #1374
 # build_bootx86_efi () can be safely used for other scenarios.
 if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
-    build_bootx86_efi
+    build_bootx86_efi $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi $TMP_DIR/mnt/EFI/BOOT/embedded_grub.cfg
 fi
 
 # We will be using grub-efi or grub2 (with efi capabilities) to boot from ISO.

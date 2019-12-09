@@ -670,7 +670,7 @@ smartarray <slot number>
 
 === HP SmartArray Logical Drives ===
 ----------------------------------
-logicaldrive <device> <slot nr>|<array name>|<logical drive name> raid=<raid level> drives=<drive1,drive2> [spares=<spare1,spare2>]  [sectors=<sectors>] [stripesize=<stripe size>]
+logicaldrive <device> <slot nr>|<array name>|<logical drive name> raid=<raid level> drives=<drive1,drive2> [spares=<spare1,spare2>] [sectors=<sectors>] [stripesize=<stripe size>]
 ----------------------------------
 
 === TCG Opal 2-compliant Self-Encrypting Disks ===

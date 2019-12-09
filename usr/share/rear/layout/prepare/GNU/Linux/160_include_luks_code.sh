@@ -1,4 +1,4 @@
-# Code to recreate LUKS volumes.
+# Code to recreate and/or open LUKS volumes.
 
 create_crypt() {
     local crypt target_device source_device options
@@ -56,6 +56,45 @@ create_crypt() {
         echo "LogPrint \"Please enter the password for LUKS device $target_name ($source_device):\""
         echo "cryptsetup luksFormat --batch-mode $cryptsetup_options $source_device"
         echo "LogPrint \"Please re-enter the password for LUKS device $target_name ($source_device):\""
+        echo "cryptsetup luksOpen $source_device $target_name"
+    fi
+    echo ""
+    ) >> "$LAYOUT_CODE"
+}
+
+# Function open_crypt() is meant to be used by the 'mountonly' workflow
+open_crypt() {
+    local crypt target_device source_device options
+    read crypt target_device source_device options < <(grep "^crypt $1 " "$LAYOUT_FILE")
+
+    local target_name=${target_device#/dev/mapper/}
+
+    local cryptsetup_options="" keyfile="" password=""
+    local option key value
+    for option in $options ; do
+        key=${option%=*}
+        value=${option#*=}
+
+        case "$key" in
+            keyfile)
+                keyfile=$value
+                ;;
+            password)
+                password=$value
+                ;;
+        esac
+    done
+
+    (
+    echo "Log \"Opening LUKS device $target_name on $source_device\""
+    if [ -n "$keyfile" ] ; then
+        # During a 'mountonly' workflow, the original keyfile is supposed to be
+        # available at this point.
+        echo "cryptsetup luksOpen --key-file $keyfile $source_device $target_name"
+    elif [ -n "$password" ] ; then
+        echo "echo \"$password\" | cryptsetup luksOpen $source_device $target_name"
+    else
+        echo "LogPrint \"Please enter the password for LUKS device $target_name ($source_device):\""
         echo "cryptsetup luksOpen $source_device $target_name"
     fi
     echo ""

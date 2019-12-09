@@ -43,6 +43,7 @@ Log "Finished copying files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLU
 # Build an array of the actual regular files that are executable in all the copied files:
 local copy_as_is_executables=()
 local copy_as_is_file=""
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
 while read -r copy_as_is_file ; do
     # Skip non-regular files like directories, device files, and 'tar' error messages (e.g. in case of non-existent files, see above):
     test -f "$copy_as_is_file" || continue
@@ -50,13 +51,14 @@ while read -r copy_as_is_file ; do
     test -L "$copy_as_is_file" && continue
     # Remember actual regular files that are executable:
     test -x "$copy_as_is_file" && copy_as_is_executables=( "${copy_as_is_executables[@]}" "$copy_as_is_file" )
-done <$copy_as_is_filelist_file
+done <$copy_as_is_filelist_file 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 Log "copy_as_is_executables = ${copy_as_is_executables[@]}"
 
 # Check for library dependencies of executables in all the copied files and
 # add them to the LIBS list if they are not yet included in the copied files:
 Log "Adding required libraries of executables in all the copied files to LIBS"
 local required_library=""
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
 for required_library in $( RequiredSharedObjects "${copy_as_is_executables[@]}" ) ; do
     # Skip when the required library was already actually copied by 'tar' above.
     # grep for a full line (copy_as_is_filelist_file contains 1 file name per line)
@@ -68,7 +70,7 @@ for required_library in $( RequiredSharedObjects "${copy_as_is_executables[@]}" 
     IsInArray "$required_library" "${LIBS[@]}" && continue
     Log "Adding required library '$required_library' to LIBS"
     LIBS=( "${LIBS[@]}" "$required_library" )
-done
+done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 Log "LIBS = ${LIBS[@]}"
 
 # Fix ReaR directories when running from checkout:
@@ -93,3 +95,4 @@ mkdir $v -p $ROOTFS_DIR/etc/rear
 # since files in $CONFIG_DIR specified with '-c /path' get copied into '/etc/rear'
 # in the ReaR recovery system, cf. https://github.com/rear/rear/issues/1923
 cp $v -r -L $CONFIG_DIR/. $ROOTFS_DIR/etc/rear/
+

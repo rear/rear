@@ -1,0 +1,1 @@
+../../prepare/default/300_map_disks.sh
