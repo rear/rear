@@ -121,8 +121,39 @@ fi
 function create_multipath() {
     local component device size label junk
     read component device size label junk < <(grep "^multipath $1 " "$LAYOUT_FILE")
-    if [[ "$device" ]]; then
-        Log "Found current or former multipath device $device in $LAYOUT_FILE: Creating partitions on it"
-        create_partitions "$device" "$label"
-    fi
+    [[ "$device" ]] || return 0
+
+    Log "Found current or former multipath device $device in $LAYOUT_FILE: Creating partitions on it"
+
+    # A Multipath device is a standard disk, but we cannot reuse the
+    # create_disk() code because it's not a block device *and* we don't
+    # have the 'disk' entry.
+
+    cat >> "$LAYOUT_CODE" <<EOF
+
+#
+# Code handling Multipath Device '$device'
+#
+
+Log "Erasing MBR of device $device"
+dd if=/dev/zero of=$device bs=512 count=1
+sync
+
+EOF
+
+    create_partitions "$device" "$label"
+
+    cat >> "$LAYOUT_CODE" <<EOF
+# Make sure device nodes are visible (eg. in RHEL4)
+my_udevtrigger
+my_udevsettle
+
+# Clean up transient partitions and resize shrinked ones
+delete_dummy_partitions_and_resize_real_ones
+
+#
+# End of code handling Multipath Device '$device'
+#
+
+EOF
 }
