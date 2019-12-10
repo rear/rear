@@ -80,13 +80,6 @@ if test "$BACKUP" = "TSM" ; then
     # see https://github.com/rear/rear/issues/1533
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TSM_LD_LIBRARY_PATH
 fi
-#TODO remove
-#if test "$BACKUP" = "FDRUPSTREAM" ; then
-    # Use a FDRUPSTREAM-specific LD_LIBRARY_PATH to find FDR libraries
-    # see https://github.com/rear/rear/issues/1533
-#    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:opt/fdrupstream/bin
-#fi
-
 if test "$BACKUP" = "SESAM" ; then
     # Use a SEP sesam-specific LD_LIBRARY_PATH to find sesam client
     # related libraries
