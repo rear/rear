@@ -11,6 +11,7 @@ has_binary lvm || return 0
 
 Log "Begin saving LVM layout ..."
 
+local disklayout_filename=$( basename $DISKLAYOUT_FILE )
 local header_printed
 local pdev vgrp size uuid pvdisplay_exit_code
 local extentsize nrextents vgdisplay_exit_code
@@ -29,7 +30,7 @@ local lvs_exit_code
 # The reason is that in case of process substitution COMMAND seems to be run "very asynchronously"
 # where it seems it it not possible (in a simple and clean way) to get the exit status of COMMAND.
 # At least not with bash version 3.2.57 on SLES11-SP4 and not with bash version 4.3.42 on SLES12-SP4
-# where I <jsmeix@suse.de> get with both bash versions the same "always failed with exit status 127" result
+# where I <jsmeix@suse.de> get with both bash versions the same "always failed with exit status 127" result:
 #   # while read line ; do echo $line ; done < <( pstree -Aplau $$ ) ; wait $! && echo OK || echo FAILED with $?
 #   bash,885
 #   `-bash,5627
@@ -40,9 +41,9 @@ local lvs_exit_code
 #   grep: invalid option -- 'Q'
 #   -bash: wait: pid 6030 is not a child of this shell
 #   FAILED with 127
-# which looks like a bug in bash at least up to version 4.3.42 because I think
+# This looks like a bug in bash at least up to version 4.3.42 because I think
 # pstree correctly reports pid 5627 as a child of pid 885 in contrast to what bash reports.
-# It seems that works with bash version 4.4.23 on openSUSE Leap 15.0 where I get
+# It seems that works with bash version 4.4.23 on openSUSE Leap 15.0 where I get:
 #   # while read line ; do echo $line ; done < <( pstree -Aplau $$ ) ; wait $! && echo OK || echo FAILED with $?
 #   bash,5821
 #   `-bash,14287
@@ -107,6 +108,24 @@ local lvs_exit_code
         # lvmdev /dev/system /dev/sda1 7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7 41940992
         echo "lvmdev /dev/$vgrp $pdev $uuid $size"
 
+        # After the 'lvmdev' line was written to disklayout.conf so that the user can inspect it
+        # check that the required positional parameters in the 'lvmdev' line are non-empty
+        # because an empty positional parameter would result an invalid 'lvmdev' line
+        # which would cause invalid parameters are 'read' as input during "rear recover"
+        # cf. "Verifying ... 'lvm...' entries" in layout/save/default/950_verify_disklayout_file.sh
+        # The variables are not quoted because plain 'test' without argument results non-zero exit code
+        # and 'test foo bar' fails with "bash: test: foo: unary operator expected"
+        # so that this also checks that the variables do not contain blanks or more than one word
+        # because blanks (actually $IFS charactesr) are used as field separators in disklayout.conf
+        # which means the positional parameter values must be exactly one non-empty word.
+        # Two separated simple 'test $vgrp && test $pdev' commands are used here because
+        # 'test $vgrp -a $pdev' does not work when $vgrp is empty or only blanks
+        # because '-a' has two different meanings: "EXPR1 -a EXPR2" and "-a FILE" (see "help test")
+        # so that when $vgrp is empty 'test $vgrp -a $pdev' tests if file $pdev exists
+        # which is usually true because $pdev is usually a partition device node (e.g. /dev/sda1)
+        # so that when $vgrp is empty 'test $vgrp -a $pdev' would falsely succeed:
+        test $vgrp && test $pdev || Error "LVM 'lvmdev' entry in $disklayout_filename where volume_group or device is empty"
+
     done
     # Check the exit code of "lvm pvdisplay -c"
     # in the "lvm pvdisplay -c | while read line ; do ... done" pipe:
@@ -142,6 +161,10 @@ local lvs_exit_code
         # With the above example the output is:
         # lvmgrp /dev/system 4096 5119 20967424
         echo "lvmgrp /dev/$vgrp $extentsize $nrextents $size"
+
+        # Check that the required positional parameters in the 'lvmgrp' line are non-empty
+        # cf. the code above to "check that the required positional parameters in the 'lvmdev' line are non-empty":
+        test $vgrp && test $extentsize || Error "LVM 'lvmgrp' entry in $disklayout_filename where volume_group or extentsize is empty"
 
     done
     # Check the exit code of "lvm vgdisplay -c"
@@ -275,13 +298,16 @@ local lvs_exit_code
                 echo "# Volume $vg/$lv has multiple segments. Recreating it by 'lvcreate' will not preserve segments and properties of the other segments as well"
             fi
             # With the above example the output is:
-            # lvmvol /dev/system root 19927138304b linear 
-            # lvmvol /dev/system swap 1535115264b linear 
+            # lvmvol /dev/system root 19927138304b linear
+            # lvmvol /dev/system swap 1535115264b linear
             echo "lvmvol /dev/$vg $lv ${size}b $layout $kval"
             if [ -n "$infokval" ] ; then
                 echo "# Extra parameters for the 'lvmvol /dev/$vg $lv' line above not taken into account when restoring using 'lvcreate': $infokval"
             fi
             already_processed_lvs+=( "$vg/$lv" )
+            # Check that the required positional parameters in the 'lvmvol' line are non-empty
+            # cf. the code above to "check that the required positional parameters in the 'lvmdev' line are non-empty":
+            test $vg && test $lv && test $size && test $layout || Error "LVM 'lvmvol' entry in $disklayout_filename where volume_group or name or size or layout is empty"
         fi
 
     done
