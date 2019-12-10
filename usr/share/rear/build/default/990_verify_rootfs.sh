@@ -81,14 +81,19 @@ if test "$BACKUP" = "TSM" ; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TSM_LD_LIBRARY_PATH
 fi
 if test "$BACKUP" = "SESAM" ; then
-    # Use a SEP sesam-specific LD_LIBRARY_PATH to find sesam client
-    # related libraries
+    # Use a SEP sesam-specific LD_LIBRARY_PATH to find sesam client related libraries
+    # see https://github.com/rear/rear/pull/1817
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SESAM_LD_LIBRARY_PATH
 fi
 if test "$BACKUP" = "NBU" ; then
     # Use a NBU-specific LD_LIBRARY_PATH to find NBU libraries
     # see https://github.com/rear/rear/issues/1974
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NBU_LD_LIBRARY_PATH
+fi
+if test "$BACKUP" = "FDRUPSTREAM" ; then
+   # Use a FDRUPSTREAM-specific LD_LIBRARY_PATH to find FDR libraries
+   # see https://github.com/rear/rear/pull/2296
+   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$FDRUPSTREAM_INSTALL_PATH/bin
 fi
 # Actually test all binaries for 'not found' libraries.
 # Find all binaries and libraries (in particular what is copied via COPY_AS_IS into arbitrary paths)
