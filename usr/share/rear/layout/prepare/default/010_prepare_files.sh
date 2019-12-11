@@ -11,37 +11,40 @@ LUN_WWID_MAP="$VAR_DIR/layout/lun_wwid_mapping"
 
 # Touchfiles for layout recreation.
 LAYOUT_TOUCHDIR="$TMP_DIR/touch"
-if [ -e $LAYOUT_TOUCHDIR ] ; then
-    rm -rf $LAYOUT_TOUCHDIR
-fi
+test -e $LAYOUT_TOUCHDIR && rm -rf $LAYOUT_TOUCHDIR
 mkdir -p $LAYOUT_TOUCHDIR
 
-if [ -e $LAYOUT_FILE ] ; then
-    save_original_file $LAYOUT_FILE
-fi
+test -e $LAYOUT_FILE && save_original_file $LAYOUT_FILE
 
-if [ -e $CONFIG_DIR/disklayout.conf ] ; then
+if test -e $CONFIG_DIR/disklayout.conf ; then
     cp $CONFIG_DIR/disklayout.conf $LAYOUT_FILE
     # Only set MIGRATION_MODE if not already set (could be already specified by the user):
     if ! test "$MIGRATION_MODE" ; then
         MIGRATION_MODE='true'
         LogPrint "Switching to manual disk layout configuration ($CONFIG_DIR/disklayout.conf exists)"
     fi
-
-    if [ -e $CONFIG_DIR/lun_wwid_mapping.conf ] ; then
+    # For the LUN WWIDs migration code see finalize/GNU/Linux/250_migrate_lun_wwid.sh
+    # TODO: Why are LUN WWIDs migrated only if also $CONFIG_DIR/disklayout.conf exists?
+    # Why are LUN WWIDs not always migrated when only $CONFIG_DIR/lun_wwid_mapping.conf exists?
+    # That part was added by
+    # https://github.com/rear/rear/commit/e822ad69a8ce8dec6132741806008db9c6c3b429
+    # but there is no comment that explains why LUN WWIDs migration happens
+    # only if also $CONFIG_DIR/disklayout.conf exists.
+    if test -e $CONFIG_DIR/lun_wwid_mapping.conf ; then
         cp $CONFIG_DIR/lun_wwid_mapping.conf $LUN_WWID_MAP
-        LogPrint "$CONFIG_DIR/lun_wwid_mapping.conf exists, creating lun_wwid_mapping"
+        LogPrint "Will migrate LUN WWIDs after backup restore ($CONFIG_DIR/lun_wwid_mapping.conf exists)"
     fi
 fi
 
-if [ ! -e $LAYOUT_FILE ] ; then
-    Log "Disklayout file does not exist, creating empty file."
+if ! test -e $LAYOUT_FILE ; then
+    # TODO: This script layout/prepare/default/010_prepare_files.sh is only run during "rear recover"
+    # and I <jsmeix@suse.de> wonder if "rear recover" can work at all without a disklayout.conf file?
+    LogPrint "$LAYOUT_FILE file does not exist, creating empty file"
     : > $LAYOUT_FILE
 fi
 
-if [ -e $FS_UUID_MAP ] ; then
-    rm -f $FS_UUID_MAP  # Make sure old data is deleted.
-fi
-
+# Make sure old data is deleted:
+test -e $FS_UUID_MAP && rm -f $FS_UUID_MAP
 : > $LAYOUT_TODO
 : > $LAYOUT_DEPS
+

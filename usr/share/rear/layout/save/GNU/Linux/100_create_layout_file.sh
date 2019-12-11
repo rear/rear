@@ -1,23 +1,39 @@
 # Create the layout file
 
 LogPrint "Creating disk layout"
-Log "Preparing layout directory."
-mkdir -p $v $VAR_DIR/layout >&2
-mkdir -p $v $VAR_DIR/recovery >&2
-mkdir -p $v $VAR_DIR/layout/config >&2
 
-# We need directory for XFS options only if XFS is in use
-if [ -n "$(mount -t xfs)" ]; then
+Log "Creating layout directories (when not existing)"
+mkdir -p $v $VAR_DIR/layout
+mkdir -p $v $VAR_DIR/recovery
+mkdir -p $v $VAR_DIR/layout/config
+
+# We need directory for XFS options only if XFS is in use:
+if test "$( mount -t xfs )" ; then
     LAYOUT_XFS_OPT_DIR="$VAR_DIR/layout/xfs"
-    mkdir -p $v $LAYOUT_XFS_OPT_DIR >&2
+    mkdir -p $v $LAYOUT_XFS_OPT_DIR
 fi
 
-DISKLAYOUT_FILE=${DISKLAYOUT_FILE:-$VAR_DIR/layout/disklayout.conf}
+# Use exiting DISKLAYOUT_FILE value or use the default:
+test "$DISKLAYOUT_FILE" || DISKLAYOUT_FILE=$VAR_DIR/layout/disklayout.conf
 
-if [ -e "$DISKLAYOUT_FILE" ] ; then
-    Log "Removing old layout file."
-fi
-: > $DISKLAYOUT_FILE
+# Inform the user (he may have specified his DISKLAYOUT_FILE value, see above):
+test -e "$DISKLAYOUT_FILE" && LogPrint "Overwriting existing disk layout file $DISKLAYOUT_FILE"
+
+# Initialize disklayout.conf:
+# See lib/layout-functions.sh how DATE is set: DATE=$( date +%Y%m%d%H%M%S )
+echo "Disk layout dated $DATE (YYYYmmddHHMMSS)" >$DISKLAYOUT_FILE
+# Have the actual storage layout as header comment in disklayout.conf
+# so that it is easier to make sense of the values in the subsequent entries.
+# First try the command
+#   lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT
+# but on older systems (like SLES11) that do not support all that lsblk things
+# try the simpler command
+#   lsblk -io NAME,KNAME,FSTYPE,SIZE,MOUNTPOINT
+# and as fallback try 'lsblk -i' and finally try plain 'lsblk'.
+# When there is no 'lsblk' command there is no output (bad luck, no harm):
+{ lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT || lsblk -io NAME,KNAME,FSTYPE,SIZE,MOUNTPOINT || lsblk -i || lsblk ; } >>$DISKLAYOUT_FILE
+# Make all lines in disklayout.conf up to now as header comments:
+sed -i -e 's/^/# /' $DISKLAYOUT_FILE
 
 LAYOUT_FILE="$DISKLAYOUT_FILE"
 LAYOUT_DEPS="$VAR_DIR/layout/diskdeps.conf"
@@ -30,3 +46,4 @@ LAYOUT_TODO="$VAR_DIR/layout/disktodo.conf"
 # $LAYOUT_TODO is a list of:
 # [todo|done] <type> <item>
 : > $LAYOUT_TODO
+
