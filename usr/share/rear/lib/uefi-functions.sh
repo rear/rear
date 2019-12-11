@@ -43,8 +43,8 @@ function build_bootx86_efi {
     local gprobe=""
     local dirs=()
     # modules is the list of modules to load
-    # If GRUB2_MODULES is nonempty, it determines both what modules to install and to load
-    local modules=( ${GRUB2_MODULES:+"${GRUB2_MODULES[@]}"} )
+    # If GRUB2_MODULES_LOAD is nonempty, it determines what modules to load
+    local modules=( ${GRUB2_MODULES_LOAD:+"${GRUB2_MODULES_LOAD[@]}"} )
 
     # Configuration file is optional for image creation.
     shift
@@ -69,7 +69,7 @@ function build_bootx86_efi {
     fi
 
     # Determine what modules need to be loaded in order to access given directories
-    # (if the list of modules is not overriden by GRUB2_MODULES)
+    # (if the list of modules is not overriden by GRUB2_MODULES_LOAD)
     if (( ${#dirs[@]} )) && ! (( ${#modules[@]} )) ; then
         if has_binary grub-probe ; then
             gprobe=grub-probe
