@@ -11,7 +11,6 @@ has_binary lvm || return 0
 
 Log "Begin saving LVM layout ..."
 
-local disklayout_filename=$( basename $DISKLAYOUT_FILE )
 local header_printed
 local pdev vgrp size uuid pvdisplay_exit_code
 local extentsize nrextents vgdisplay_exit_code
@@ -116,7 +115,7 @@ local lvs_exit_code
         # The variables are not quoted because plain 'test' without argument results non-zero exit code
         # and 'test foo bar' fails with "bash: test: foo: unary operator expected"
         # so that this also checks that the variables do not contain blanks or more than one word
-        # because blanks (actually $IFS charactesr) are used as field separators in disklayout.conf
+        # because blanks (actually $IFS characters) are used as field separators in disklayout.conf
         # which means the positional parameter values must be exactly one non-empty word.
         # Two separated simple 'test $vgrp && test $pdev' commands are used here because
         # 'test $vgrp -a $pdev' does not work when $vgrp is empty or only blanks
@@ -124,7 +123,7 @@ local lvs_exit_code
         # so that when $vgrp is empty 'test $vgrp -a $pdev' tests if file $pdev exists
         # which is usually true because $pdev is usually a partition device node (e.g. /dev/sda1)
         # so that when $vgrp is empty 'test $vgrp -a $pdev' would falsely succeed:
-        test $vgrp && test $pdev || Error "LVM 'lvmdev' entry in $disklayout_filename where volume_group or device is empty"
+        test $vgrp && test $pdev || Error "LVM 'lvmdev' entry in $DISKLAYOUT_FILE where volume_group or device is empty or more than one word"
 
     done
     # Check the exit code of "lvm pvdisplay -c"
@@ -164,7 +163,7 @@ local lvs_exit_code
 
         # Check that the required positional parameters in the 'lvmgrp' line are non-empty
         # cf. the code above to "check that the required positional parameters in the 'lvmdev' line are non-empty":
-        test $vgrp && test $extentsize || Error "LVM 'lvmgrp' entry in $disklayout_filename where volume_group or extentsize is empty"
+        test $vgrp && test $extentsize || Error "LVM 'lvmgrp' entry in $DISKLAYOUT_FILE where volume_group or extentsize is empty or more than one word"
 
     done
     # Check the exit code of "lvm vgdisplay -c"
@@ -307,7 +306,7 @@ local lvs_exit_code
             already_processed_lvs+=( "$vg/$lv" )
             # Check that the required positional parameters in the 'lvmvol' line are non-empty
             # cf. the code above to "check that the required positional parameters in the 'lvmdev' line are non-empty":
-            test $vg && test $lv && test $size && test $layout || Error "LVM 'lvmvol' entry in $disklayout_filename where volume_group or name or size or layout is empty"
+            test $vg && test $lv && test $size && test $layout || Error "LVM 'lvmvol' entry in $DISKLAYOUT_FILE where volume_group or name or size or layout is empty or more than one word"
         fi
 
     done
