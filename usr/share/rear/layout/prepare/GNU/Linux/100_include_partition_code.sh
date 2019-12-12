@@ -92,7 +92,7 @@ create_partitions() {
 
     ### List partition types/names to detect disk label type.
     local -a names=()
-    local part size pstart name junk
+    local part disk size pstart name junk
     while read part disk size pstart name junk ; do
         names=( "${names[@]}" $name )
         case $name in

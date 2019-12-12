@@ -67,13 +67,35 @@ create_raid() {
     # Try to make mdadm non-interactive...
     mdadmcmd="echo \"Y\" | $mdadmcmd $devices"
 
-cat <<EOF >> "$LAYOUT_CODE"
+    cat >> "$LAYOUT_CODE" <<EOF
+
+#
+# Code handling Software Raid '$device'
+#
+
 LogPrint "Creating software RAID $device"
 test -b $device && mdadm --stop $device
 
 $mdadmcmd >&2
 EOF
 
-    ### Create partitions on MD.
+    ### Create partitions on MD (if any).
+    # 'label' argument is not specified here because we don't know (there may
+    # be none), but it will be computed automatically by create_partitions.
     create_partitions "$device"
+
+    cat >> "$LAYOUT_CODE" <<EOF
+
+# Make sure device nodes are visible (eg. in RHEL4)
+my_udevtrigger
+my_udevsettle
+
+# Clean up transient partitions and resize shrinked ones
+delete_dummy_partitions_and_resize_real_ones
+
+#
+# End of code handling Software Raid '$device'
+#
+
+EOF
 }
