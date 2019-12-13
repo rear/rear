@@ -615,17 +615,17 @@ multipath /dev/<name> <size(B)> <partition label> <slave1,slave2,...>
 
 === Physical Volumes ===
 ----------------------------------
-lvmdev /dev/<volume group name> <device> <UUID> [<size(K)>]
+lvmdev /dev/<volume_group> <device> [<uuid>] [<size(bytes)>]
 ----------------------------------
 
 === Volume Groups ===
 ----------------------------------
-lvmgrp /dev/<volume group name> <extent size(B)> [<number of extents>] [<size(K)>]
+lvmgrp <volume_group> <extentsize> [<size(extents)>] [<size(bytes)>]
 ----------------------------------
 
 === Logical Volumes ===
 ----------------------------------
-lvmvol /dev/<volume group name> <logical volume name> <number of extents> [<size(K)>]
+lvmvol <volume_group> <name> <size(bytes)> <layout> [key:value ...]
 ----------------------------------
 
 === LUKS Devices ===
