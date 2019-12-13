@@ -7,6 +7,7 @@ is_true $USING_UEFI_BOOTLOADER || return 0
 # There much of Grub/Elilo code here exclude it in menaningfull way.
 is_true $EFI_STUB && return 0
 
+local boot_dir="/boot"
 local efi_boot_tmp_dir="$TMP_DIR/mnt/EFI/BOOT"
 mkdir $v -p $efi_boot_tmp_dir || Error "Could not create $efi_boot_tmp_dir"
 mkdir $v -p $efi_boot_tmp_dir/fonts || Error "Could not create $efi_boot_tmp_dir/fonts"
@@ -77,9 +78,9 @@ fi
 # We will be using grub-efi or grub2 (with efi capabilities) to boot from ISO.
 # Because usr/sbin/rear sets 'shopt -s nullglob' the 'echo -n' command
 # outputs nothing if nothing matches the bash globbing pattern '/boot/grub*'
-local grubdir="$( echo -n /boot/grub* )"
+local grubdir="$( echo -n ${boot_dir}/grub* )"
 # Use '/boot/grub' as fallback if nothing matches '/boot/grub*'
-test -d "$grubdir" || grubdir='/boot/grub'
+test -d "$grubdir" || grubdir="${boot_dir}/grub"
 
 local font_files_dir=""
 local grub_font_files="no_fonts"
