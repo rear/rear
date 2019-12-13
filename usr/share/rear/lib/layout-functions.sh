@@ -693,7 +693,18 @@ is_disk_a_pv() {
 }
 
 function is_multipath_path {
-    [ "$1" ] && type multipath &>/dev/null && multipath -c /dev/$1 &>/dev/null
+    # Return 'false' if there is no device as argument:
+    test "$1" || return 1
+    # Return 'false' if there is no multipath command:
+    type multipath &>/dev/null || return 1
+    # Return 'false' if multipath is not used, see https://github.com/rear/rear/issues/2298
+    # Because "multipath -l" always returns zero exit code we check if it has real output via grep -q '[[:alnum:]]'
+    # so that no "multipath -l" output could clutter the log (the "multipath -l" output is irrelevant here)
+    # in contrast to e.g. test "$( multipath -l )" that would falsely succeed with blank output
+    # and the output would appear in the log in 'set -x' debugscript mode:
+    multipath -l | grep -q '[[:alnum:]]' || return 1
+    # Check if a block device should be a path in a multipath device:
+    multipath -c /dev/$1 &>/dev/null
 }
 
 # retry_command () is binded with REAR_SLEEP_DELAY and REAR_MAX_RETRIES.
