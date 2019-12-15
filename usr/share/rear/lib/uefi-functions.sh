@@ -94,7 +94,6 @@ function build_bootx86_efi {
                              $gprobe --target=abstraction "$p"
                          done | sort -u ) )
         fi
-        Log "GRUB2 modules to load: ${modules:+${modules[*]}}"
     fi
 
     # grub-mkimage needs /usr/lib/grub/x86_64-efi/moddep.lst (cf. https://github.com/rear/rear/issues/1193)
@@ -104,6 +103,10 @@ function build_bootx86_efi {
     # and 'test -f' succeeds with empty argument so that we cannot use 'test -f /usr/lib/grub*/x86_64-efi/moddep.lst'
     # also 'test -n' succeeds with empty argument but (fortunately/intentionally?) plain 'test' fails with empty argument:
     test /usr/lib/grub*/x86_64-efi/moddep.lst || Error "$gmkstandalone would not make bootable EFI image of GRUB2 (no /usr/lib/grub*/x86_64-efi/moddep.lst file)"
+
+    (( ${#GRUB2_MODULES[@]} )) && LogPrint "Installing only ${GRUB2_MODULES[*]} modules into $outfile memdisk"
+    (( ${#modules[@]} )) && LogPrint "GRUB2 modules to load: ${modules[*]}"
+
     if ! $gmkstandalone $v ${GRUB2_MODULES:+"--install-modules=${GRUB2_MODULES[*]}"} ${modules:+"--modules=${modules[*]}"} -O x86_64-efi -o $outfile $embedded_config ; then
         Error "Failed to make bootable EFI image of GRUB2 (error during $gmkstandalone of $outfile)"
     fi
