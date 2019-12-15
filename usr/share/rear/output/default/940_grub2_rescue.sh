@@ -150,6 +150,13 @@ if is_true $USING_UEFI_BOOTLOADER ; then
     # Create configuration file for "Relax-and-Recover" UEFI boot entry.
     # This file will not interact with existing Grub2 configuration in any way.
     (   echo "set btrfs_relative_path=y"
+        echo "insmod efi_gop"
+        echo "insmod efi_uga"
+        echo "insmod video_bochs"
+        echo "insmod video_cirrus"
+        echo "insmod all_video"
+        echo ""
+        echo "set gfxpayload=keep"
         echo ""
         echo "menuentry '$grub_rear_menu_entry_name' --class os {"
         echo "          search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
