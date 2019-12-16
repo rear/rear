@@ -33,6 +33,21 @@ for dummy in "once" ; do
 
     # Try /boot/vmlinuz-$KERNEL_VERSION:
     KERNEL_FILE="/boot/vmlinuz-$KERNEL_VERSION"
+    # s390 optional naming override of initrd and kernel to match the s390 filesytem naming conventions
+    # on s390a there is an option to name the initrd and kernel in the form of
+    # file name on s390 are in the form of name type mode
+    # the name is the userid or vm name and the type is initrd or kernel
+    # if the vm name (cp q userid) is HOSTA then the files written will be HOSTA kernel and HOSTA initrd
+    # vars needed:
+    # ZVM_NAMING      - set in local.conf, if Y then enable naming override
+    # ZVM_KERNEL_NAME - keeps track of kernel name in results array
+    # ARCH            - override only if ARCH is Linux-s390
+    # 
+    # initrd name override is handled in 900_create_initramfs.sh
+    # kernel name override is handled in 400_guess_kernel.sh
+    # kernel name override is handled in 950_copy_result_files.sh
+    ZVM_KERNEL_NAME="$KERNEL_FILE"
+
     test -s "$KERNEL_FILE" && continue
     # ppc64el uses uncompressed kernel
     KERNEL_FILE="/boot/vmlinux-$KERNEL_VERSION"
@@ -110,6 +125,8 @@ if test -L "$KERNEL_FILE" ; then
     # If KERNEL_FILE is a symlink, use its (final) target:
     local autodetected_kernel="$KERNEL_FILE"
     KERNEL_FILE="$( readlink $v -e "$KERNEL_FILE" )"
+    ZVM_KERNEL_NAME="$KERNEL_FILE"
+
     # readlink results nothing when there is no symlink target:
     test -s "$KERNEL_FILE" || Error "Autodetected kernel '$autodetected_kernel' is a broken symbolic link"
     LogPrint "Using symlink target '$KERNEL_FILE' of autodetected kernel '$autodetected_kernel' as kernel in the recovery system"
@@ -118,4 +135,5 @@ fi
 # There must be a bug in the autodetection code above when a file is autodetected but does not exist:
 test -s "$KERNEL_FILE" || BugError "Autodetected kernel '$KERNEL_FILE' does not exist"
 LogPrint "Using autodetected kernel '$KERNEL_FILE' as kernel in the recovery system"
+ZVM_KERNEL_NAME="$KERNEL_FILE"
 

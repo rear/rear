@@ -16,6 +16,30 @@
 # /etc/scripts/system-setup.d/60-network-devices.sh
 # is run to setup the network devices:
 network_devices_setup_script=$ROOTFS_DIR/etc/scripts/system-setup.d/60-network-devices.sh
+prepare_network_devices_script=$ROOTFS_DIR/etc/scripts/system-setup.d/50-prepare-network-devices.sh
+
+
+# This script will also generate commands to prepare or enable a network device
+# Example:  on s390 (zLinux) network devices must be removed from the ignore list and configured
+# cf. https://github.com/rear/rear/pull/2142
+# TODO: add case statement for different os vendors
+if [[ "$ARCH" == "Linux-s390" && "$OS_MASTER_VENDOR" != "SUSE_LINUX" ]] ; then
+cat >$prepare_network_devices_script << 'EOF'
+
+echo "run cio_ignore -R"
+cio_ignore -R
+echo "znetconf -u " "$unconfig_devices"
+znetconf -u
+unconfig_devices=$( znetconf -u | grep -v "HiperSockets" | awk  'NR>3 { print $1 }'|awk -F"," '{ print $1 " " $2 " " $3 }' )
+while read id1 id2 id3
+do
+    echo "znetconf -a " "$id1"
+    znetconf -a  "$id1"
+done < <( echo "$unconfig_devices" )
+EOF
+fi
+
+
 
 # This script (rescue/GNU/Linux/310_network_devices.sh) is intended to
 # autogenerate network devices setup code in the network_devices_setup_script
@@ -861,7 +885,9 @@ function handle_physdev () {
 
     local mac=""
 
-    if has_binary ethtool ; then
+    if [ "$ARCH" == "Linux-s390" ] ; then
+        mac="$( ifconfig $network_interface 2>/dev/null |grep ether |awk '{ print $2 }' )"
+    elif has_binary ethtool ; then
         mac="$( ethtool -P $network_interface 2>/dev/null | awk '{ print $NF }' )"
     fi
     if [ -z "$mac" ] ; then

@@ -140,6 +140,8 @@ EOF
             ### GPT disks need 33 LBA blocks at the end of the disk
             # For the SUSE specific gpt_sync_mbr partitioning scheme
             # see https://github.com/rear/rear/issues/544
+            # see https://github.com/rear/rear/pull/2142 for s390 partitioning
+            #if [[ "$label" == "gpt" || "$label" == "gpt_sync_mbr" || "$label" == "dasd" ]] ; then
             if [[ "$label" == "gpt" || "$label" == "gpt_sync_mbr" ]] ; then
                 device_size=$( mathlib_calculate "$device_size - 33*$block_size" )
                 # Only if resizing all partitions is explicity wanted
@@ -225,9 +227,20 @@ EOF
             if [[ "$end" ]] ; then
                 end=$( mathlib_calculate "$end - 1" )
             fi
-            cat >> "$LAYOUT_CODE" <<EOF
+            if [[ "$ARCH" == "Linux-s390" ]] ; then
+                # if dasd disk is LDL formated, then do not partition it, because it is partitioned and can take only partition
+                if [[ ! "${listDasdLdl[@]}" =~ "$device" ]] ; then
+                    echo "not LDL dasd formated disk, create a partition"
+                    cat >> "$LAYOUT_CODE" <<EOF
 create_disk_partition "$device" "$name" $number $start $end
 EOF
+                fi
+            else
+                # default case when $ARCH is not "Linux-s390":
+                cat >> "$LAYOUT_CODE" <<EOF
+create_disk_partition "$device" "$name" $number $start $end
+EOF
+            fi
         else
             ### Old versions of parted accept only sizes in megabytes...
             if (( $start > 0 )) ; then

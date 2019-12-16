@@ -135,6 +135,18 @@ mount_fs() {
             echo "mount $device $TARGET_FS_ROOT$mountpoint"
             ) >> "$LAYOUT_CODE"
             ;;
+        (ext2 | ext3 | ext4)
+            (
+            echo "mkdir -p $TARGET_FS_ROOT$mountpoint"
+            echo "mount $mountopts $device $TARGET_FS_ROOT$mountpoint"
+            # try remount for xattr
+            # mount and then try remount for systems supporting xattr
+            # add a second mount for extended attr (selinux) 
+            # the first mount will do perform the basic mount, the second mount (remount) will try for xattr
+            # if xattr are not support, the mount will fail, however, the first mount will still be in effect and not cause any errors
+            echo "mount $mountopts,remount,user_xattr $device $TARGET_FS_ROOT$mountpoint"
+            ) >> "$LAYOUT_CODE"
+            ;;
         (*)
             (
             echo "mkdir -p $TARGET_FS_ROOT$mountpoint"

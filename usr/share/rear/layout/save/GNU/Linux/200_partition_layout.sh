@@ -360,6 +360,22 @@ Log "Saving disk partitions."
         blockd=${disk#/sys/block/}
         if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* || $blockd = nvme* || $blockd = mmcblk* ]] ; then
 
+            if [[ $blockd == dasd* && "$ARCH" == "Linux-s390" ]] ; then
+                devname=$(get_device_name $disk)
+
+                echo "# active dasd bus and channel"
+                echo "# bus-id <name device> type"
+                echo "dasd_channel $( lsdasd|grep $blockd|awk '{ print $1 " "  $2 " "  $3 " "  $4}' )"
+
+                echo "# dasdfmt - disk layout is either cdl for the compatible disk layout (default) or ldl"
+                echo "#  example usage: dasdfmt -b 4096 -d cdl -y /dev/dasda"
+                layout=$(dasdview -x  /dev/$blockd|grep "^format"|awk '{print $7}')
+                blocksize=$( dasdview -i  /dev/$blockd|grep blocksize|awk '{print $6}' )
+                echo "# dasdfmt $devname"
+                echo "# dasdfmt -b <blocksize> -d <layout> -y <devname>"
+                echo "dasdfmt -b $blocksize -d $layout -y $devname"
+            fi
+
             #FIXME: exclude *rpmb (Replay Protected Memory Block) for nvme*, mmcblk* and uas
             # *rpmb = no read access && no write access
             # GNU Parted <= 3.2 -> Input/output error

@@ -3,6 +3,14 @@
 
 test -d $VAR_DIR/recovery || mkdir -p $VAR_DIR/recovery
 
+# cf. https://github.com/rear/rear/issues/2137
+# s390 zlinux does not use grub 
+# *********************************************************************************
+# **** please review and recommend a better way to handle ****
+# NEED TO TEST SLES - sles will probably need to use all of the grub tools below
+# *********************************************************************************
+[ "$ARCH" == "Linux-s390"  ] && return 0
+
 # Because usr/sbin/rear sets 'shopt -s nullglob' the 'echo -n' command
 # outputs nothing if nothing matches the bash globbing pattern '/boot/grub*'
 local grubdir="$( echo -n /boot/grub* )"

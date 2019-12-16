@@ -30,6 +30,11 @@ case $used_bootloader in
     (ARM|ARM-ALLWINNER)
         CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /boot/boot.scr )
         ;;
+    (ZIPL)
+        # cf. https://github.com/rear/rear/issues/2137
+        # s390 - for rhel, ubuntu zipl config must be exist for restore.  sles > 11 does not use zipl directly
+        CHECK_CONFIG_FILES=( ${CHECK_CONFIG_FILES[@]} /etc/zipl.conf )
+        ;;
     (*)
         BugError "Unknown bootloader ($used_bootloader) - ask for sponsoring to get this fixed"
         ;;
