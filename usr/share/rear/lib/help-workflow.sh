@@ -43,7 +43,7 @@ EOF
 currently_usable_workflows="${WORKFLOWS[@]}"
 # See init/default/050_check_rear_recover_mode.sh what the usable workflows are in the ReaR rescue/recovery system.
 # In the ReaR rescue/recovery system /etc/rear-release is unique (it does not exist otherwise):
-test -f /etc/rear-release && currently_usable_workflows="recover layoutonly restoreonly finalizeonly opaladmin help"
+test -f /etc/rear-release && currently_usable_workflows="recover layoutonly restoreonly finalizeonly mountonly opaladmin help"
 for workflow in $currently_usable_workflows ; do
     description_variable_name=WORKFLOW_${workflow}_DESCRIPTION
     # in some workflows WORKFLOW_${workflow}_DESCRIPTION
