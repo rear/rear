@@ -1,21 +1,21 @@
-09Relax-and-Recover recovery mode07
-01~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~07
-0fRelax-and-Recover07 is a disaster recovery and system migration tool.
+Relax-and-Recover recovery mode
+===============================
+Relax-and-Recover (ReaR) is a disaster recovery tool.
 
-This help is part of the rescue image, you are here because you plan to recover
-or migrate a previously made backup of your system, including the disk layout
-as it was when the rescue environment was created.
+This help is part of the ReaR rescue image. You are here when you need
+to recover your system by restoring a backup that you had made before
+plus recreating the disk layout (partitions, filesystems) as it was
+when you had made the rescue image (via "rear mkbackup/mkrescue).
 
-The menu gives an overview of the various system rescue environments stored on
-the boot media you used for booting this screen (either USB, PXE or ISO). For
-each of the systems one or more rescue environments are stored, when browsing
-through the images more information is shown below the menu.
+The menu lists the rescue images (or recovery environments) stored
+on this boot medium (USB, PXE, ISO) that is used to boot this menu.
+For each system one or more rescue images can be stored.
+When browsing through them more information is shown.
 
-Once you boot into one of the rescue images, you can start recover the system.
-You can do this by typing: 0erear recover07
+After you booted into a ReaR rescue image, you can recover that system
+by logging in as 'root' and starting the recovery with "rear recover".
 
-cfCAUTION:0f Once you start recovery, it is likely the actions cannot be undone and
-         you may loose anything stored on the physical disks of the system.07
-
+CAUTION: Once you launched the recovery, its actions cannot be undone.
+         It will overwrite all what is stored on the system disk(s).
 
 Press ENTER to return to the menu.

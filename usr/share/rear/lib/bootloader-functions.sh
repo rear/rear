@@ -306,6 +306,11 @@ function make_syslinux_config {
             echo "default boothd0"
             syslinux_menu "default"
         fi
+        if test "boothd0" = "$ISO_DEFAULT" ; then
+            # the user has explicitly specified to boot via boothd0 by default
+            echo "default boothd0"
+            syslinux_menu "default"
+        fi
         echo "kernel chain.c32"
         echo "append hd0"
         echo ""
@@ -316,6 +321,11 @@ function make_syslinux_config {
         if [[ "$flavour" == "extlinux" ]] && [ "$ISO_DEFAULT" == "boothd" ]; then
             # for extlinux local boot means boot from second disk because the boot disk became the first disk
             # which usually allows us to access the original first disk as second disk
+            echo "default boothd1"
+            syslinux_menu "default"
+        fi
+        if test "boothd1" = "$ISO_DEFAULT" ; then
+            # the user has explicitly specified to boot via boothd1 by default
             echo "default boothd1"
             syslinux_menu "default"
         fi
