@@ -26,8 +26,21 @@ copy_log_file_exit_task="mkdir -p -m 0700 $recovery_system_recover_log_dir && cp
 # have it as a symbolic link that points to where the logfile actually is:
 # ( "roots" in recovery_system_roots_home_dir means root's but ' in a variable name is not so good ;-)
 recovery_system_roots_home_dir=$TARGET_FS_ROOT/root
-test -d $recovery_system_roots_home_dir || mkdir $verbose -m 0700 $recovery_system_roots_home_dir >&2
-ln -s $recover_log_dir/$final_logfile_name $recovery_system_roots_home_dir/rear-$( date -Iseconds ).log || true
+test -d $recovery_system_roots_home_dir || mkdir $verbose -m 0700 $recovery_system_roots_home_dir
+log_file_symlink_target=$recover_log_dir/$final_logfile_name
+# Remove existing and now outdated symlinks that would falsely point to the same target cf. https://github.com/rear/rear/issues/2301
+# The symlink name rear-$( date -Iseconds ).log is for example rear-2019-12-17T09:40:36+01:00.log or rear-2006-08-14T02:34:56-06:00.log
+# so a matching globbing pattern is rear-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9]*.log ('*' for the UTC offset):
+for log_file_symlink in $recovery_system_roots_home_dir/rear-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9]*.log ; do
+    # Skip if a file that matches the globbing pattern is not a symlink (it could be even a directory full of user's sacrocanct files):
+    test -L $log_file_symlink || continue
+    # Remove also outdated dangling symlinks where their target does not exist by using 'readlink -m':
+    test "$log_file_symlink_target" = "$( readlink -m $log_file_symlink )" || continue
+    rm $verbose $log_file_symlink
+done
+# Create symlink with current timestamp that points to where the logfile actually is:
+log_file_symlink=$recovery_system_roots_home_dir/rear-$( date -Iseconds ).log
+ln $verbose -s $log_file_symlink_target $log_file_symlink || true
 
 # Copy backup restore related files (in particular the backup restore log file) if exists.
 # This will be done as the last one of the exit tasks of this script because
