@@ -352,7 +352,7 @@ EOF
     if syslinux_has "chain.c32" ; then
         # Boot from boothd0 (which is usually the same USB disk where this syslinux boot menue is currently shown)
         # only as boot default when that was explicitly specified by the user (results usually a boot loop):
-        if test "boothd0" = "$USB_BOOT_DEFAULT" ; then
+        if test "boothd0" = "$USB_BIOS_BOOT_DEFAULT" ; then
             syslinux_write <<EOF
 ontimeout boothd0
 label boothd0
@@ -376,7 +376,7 @@ Usually hd1 is the local harddisk
 
 EOF
         else
-            # Boot from boothd1 (which is usually the local harddisk) by default (i.e. when USB_BOOT_DEFAULT is not boothd0):
+            # Boot from boothd1 (which is usually the local harddisk) by default (i.e. when USB_BIOS_BOOT_DEFAULT is not boothd0):
             syslinux_write <<EOF
 label boothd0
     say boothd0 - boot first local disk
