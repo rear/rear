@@ -214,7 +214,7 @@ EOF
 menu begin $system
     menu label $system
     text help
-Recover backup of $system to this system.
+Recover backup of $system to this system
     endtext
 
 EOF
@@ -341,7 +341,7 @@ EOF
 label help
     menu label ^Help for Relax-and-Recover
     text help
-More information about Relax-and-Recover and the steps for recovering your system
+Information about Relax-and-Recover and steps for recovering your system
     endtext
     menu help rear.help
 
@@ -349,26 +349,70 @@ EOF
     fi
 
     # Use chain booting for booting disk, if chain.c32 is available
-    if syslinux_has "chain.c32"; then
-        syslinux_write <<EOF
+    if syslinux_has "chain.c32" ; then
+        # Boot from boothd0 (which is usually the same USB disk where this syslinux boot menue is currently shown)
+        # only as boot default when that was explicitly specified by the user (results usually a boot loop):
+        if test "boothd0" = "$USB_BIOS_BOOT_DEFAULT" ; then
+            syslinux_write <<EOF
+ontimeout boothd0
+label boothd0
+    say boothd0 - boot first local disk
+    menu label Boot ^First local disk (hd0)
+    text help
+Usually hd0 is the USB disk wherefrom currently is booted
+    endtext
+    menu default
+    kernel chain.c32
+    append hd0
+
+label boothd1
+    say boothd1 - boot second local disk
+    menu label Boot ^Second local disk (hd1)
+    text help
+Usually hd1 is the local harddisk
+    endtext
+    kernel chain.c32
+    append hd1
+
+EOF
+        else
+            # Boot from boothd1 (which is usually the local harddisk) by default (i.e. when USB_BIOS_BOOT_DEFAULT is not boothd0):
+            syslinux_write <<EOF
+label boothd0
+    say boothd0 - boot first local disk
+    menu label Boot ^First local disk (hd0)
+    text help
+Usually hd0 is the USB disk wherefrom currently is booted
+    endtext
+    kernel chain.c32
+    append hd0
+
 ontimeout boothd1
 label boothd1
     say boothd1 - boot second local disk
-    menu label Boot ^Local disk (hd1)
+    menu label Boot ^Second local disk (hd1)
+    text help
+Usually hd1 is the local harddisk
+    endtext
     menu default
     kernel chain.c32
     append hd1
 
+EOF
+        fi
+
+        syslinux_write <<EOF
 label bootlocal
     say bootlocal - boot second local bios disk
     menu label Boot ^BIOS disk (0x81)
     text help
-Use this when booting from local disk 0x81 does not work !
+Try this when booting from local disk does not work
     endtext
     localboot 0x81
 
 EOF
     else
+        # Fallback when chain.c32 is not available:
         syslinux_write <<EOF
 ontimeout bootlocal
 label bootlocal
@@ -383,7 +427,7 @@ EOF
 label bootnext
     menu label Boot ^Next device
     text help
-Boot from the next device in the BIOS boot order list.
+Boot from the next device in the BIOS boot order list
     endtext
     localboot -1
 

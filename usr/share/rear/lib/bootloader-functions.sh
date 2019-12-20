@@ -112,12 +112,10 @@ function set_syslinux_features {
     FEATURE_SYSLINUX_MENU_HIDDEN=
     # true if syslinux supports TEXT HELP directive
     FEATURE_SYSLINUX_TEXT_HELP=
-        # true if syslinux supports modules sub-dir (Version > 5.00)
-        FEATURE_SYSLINUX_MODULES=
-    # If ISO_DEFAULT is not set, set it to default 'boothd'
-    if [ -z "$ISO_DEFAULT" ]; then
-        ISO_DEFAULT="boothd"
-    fi
+    # true if syslinux supports modules sub-dir (Version > 5.00)
+    FEATURE_SYSLINUX_MODULES=
+    # If ISO_DEFAULT is not set or empty or only blanks, set it to default 'boothd'
+    test $ISO_DEFAULT || ISO_DEFAULT="boothd"
     # Define the syslinux directory for later usage (since version 5 the bins and c32 are in separate dirs)
     if [[ -z "$SYSLINUX_DIR" ]]; then
         ISOLINUX_BIN=$(find_syslinux_file isolinux.bin)
@@ -261,9 +259,9 @@ function make_syslinux_config {
     echo "kernel kernel"
     echo "append initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
     if [ "$ISO_DEFAULT" == "manual" ] ; then
-               echo "default rear"
-               syslinux_menu "default"
-        fi
+        echo "default rear"
+        syslinux_menu "default"
+    fi
     echo ""
 
     echo "say rear - Recover $HOSTNAME"
@@ -275,10 +273,10 @@ function make_syslinux_config {
     echo "append initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover $ISO_RECOVER_MODE"
 
     if [ "$ISO_DEFAULT" == "automatic" ] ; then
-               echo "default rear-automatic"
-               syslinux_menu "default"
-               echo "timeout 50"
-        fi
+        echo "default rear-automatic"
+        syslinux_menu "default"
+        echo "timeout 50"
+    fi
     echo ""
 
     syslinux_menu separator
@@ -306,6 +304,11 @@ function make_syslinux_config {
             echo "default boothd0"
             syslinux_menu "default"
         fi
+        if test "boothd0" = "$ISO_DEFAULT" ; then
+            # the user has explicitly specified to boot via boothd0 by default
+            echo "default boothd0"
+            syslinux_menu "default"
+        fi
         echo "kernel chain.c32"
         echo "append hd0"
         echo ""
@@ -316,6 +319,11 @@ function make_syslinux_config {
         if [[ "$flavour" == "extlinux" ]] && [ "$ISO_DEFAULT" == "boothd" ]; then
             # for extlinux local boot means boot from second disk because the boot disk became the first disk
             # which usually allows us to access the original first disk as second disk
+            echo "default boothd1"
+            syslinux_menu "default"
+        fi
+        if test "boothd1" = "$ISO_DEFAULT" ; then
+            # the user has explicitly specified to boot via boothd1 by default
             echo "default boothd1"
             syslinux_menu "default"
         fi
