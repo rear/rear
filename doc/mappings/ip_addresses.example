@@ -1,4 +1,4 @@
-# device name 	ip-address/cidr or dhcp
-#
-#eth0 213.203.238.113/25
-#eth0 dhcp
+# interface	IP-address/CIDR or 'dhcp'
+eth0 192.168.100.101/24
+eth1 dhcp
+eth2 172.16.200.202/16
