@@ -1,22 +1,51 @@
-# rewrite all the network configuration files (currently Redhat/Suse/Debian/Ubuntu)
-# according to the mapping files
 
-# because the bash option nullglob is set in rear (see usr/sbin/rear)
-# PATCH_FILES is empty if nothing matches $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces or $TARGET_FS_ROOT/etc/network/interfaces.d/*
-# $TARGET_FS_ROOT/etc/network/inter[f]aces is a special trick to only add $TARGET_FS_ROOT/etc/network/interfaces if it exists.
-PATCH_FILES=( $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* )
+# This script finalize/GNU/Linux/320_migrate_network_configuration_files.sh
+# rewrites some network configuration files (cf. network_configuration_files below)
+# (currently for Red Hat, SUSE, Debian, Ubuntu)
+# as specified in the mapping files
+#   /etc/rear/mappings/mac
+#   /etc/rear/mappings/ip_addresses
+#   /etc/rear/mappings/routes
+# in the currently running ReaR recovery system.
+# For the mapping files syntax see
+#   doc/mappings/mac.example
+#   doc/mappings/routes.example
+#   doc/mappings/ip_addresses.example
 
-# skip if no network configuration files are found
-test $PATCH_FILES || return 0
+local network_configuration_files=()
+local mapping_file_name=""
+local mapping_file_content="no"
+local sed_script=""
+local old_mac new_mac interface junk
+local new_interface
+local current_mac
 
-# Strip all comments and empty lines from the mapping files and copy the results to a temporary directory.
+# Because the bash option nullglob is set in rear (see usr/sbin/rear) network_configuration_files is empty if nothing matches
+# $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* or $TARGET_FS_ROOT/etc/network/inter[f]aces or $TARGET_FS_ROOT/etc/network/interfaces.d/*
+# and $TARGET_FS_ROOT/etc/network/inter[f]aces is a special trick to only add $TARGET_FS_ROOT/etc/network/interfaces if it exists:
+network_configuration_files=( $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* )
+
+# Skip if no network configuration files are found:
+test $network_configuration_files || return 0
+
+# Create a temporary directory for plain mapping files content without comments and empty lines.
 # Do not error out at this late state of "rear recover" (after the backup was restored) but inform the user:
 if ! mkdir $v -p $TMP_DIR/mappings ; then
     LogPrintError "Cannot migrate network configuration files according to the mapping files (could not create $TMP_DIR/mappings)"
+    return 1
 fi
-for mapping_file in mac ip_addresses routes ; do
-    read_and_strip_file $CONFIG_DIR/mappings/$mapping_file > $TMP_DIR/mappings/$mapping_file
+
+# Strip all comments and empty lines from the mapping files and have plain mapping files content in the temporary directory.
+# The plain mapping files content without comments or empty lines is needed to cleanly create the sed scripts below.
+for mapping_file_name in mac ip_addresses routes ; do
+    read_and_strip_file $CONFIG_DIR/mappings/$mapping_file_name > $TMP_DIR/mappings/$mapping_file_name
 done
+
+# Skip if there is not any mapping file content:
+for mapping_file_name in mac ip_addresses routes ; do
+    test -s $TMP_DIR/mappings/$mapping_file_name && mapping_file_content="yes"
+done
+is_true $mapping_file_content || return 0
 
 LogPrint "Migrating network configuration files according to the mapping files ..."
 
@@ -28,51 +57,60 @@ LogPrint "Migrating network configuration files according to the mapping files .
 # See the symlink handling code in finalize/GNU/Linux/280_migrate_uuid_tags.sh and other such files,
 # cf. https://github.com/rear/rear/pull/2055 and https://github.com/rear/rear/issues/1338
 
-# rewrite the changed mac addresses if a valid mapping exists
+# Rewrite changed MAC addresses when there is content in the matching mapping file .../mappings/mac:
 if test -s $TMP_DIR/mappings/mac ; then
-
-    # create sed script
+    Log "Rewriting changed MAC addresses"
+    # Create sed script:
     sed_script=""
-    while read old_mac new_mac dev ; do
-        sed_script="$sed_script;s/$old_mac/$new_mac/g"
-        # get device name from mac in case of inet renaming
-        new_dev=$( get_device_by_hwaddr "$new_mac" )
-        if test "$new_dev" != "$old_dev" ; then
-            sed_script="$sed_script;s/$dev/$new_dev/g"
+    while read old_mac new_mac interface junk ; do
+        test "$old_mac" -a "$new_mac" -a "$old_mac" != "$new_mac" && sed_script="$sed_script ; s/$old_mac/$new_mac/g"
+        # Get new interface name from the MAC address in case of inet renaming:
+        new_interface=$( get_device_by_hwaddr "$new_mac" )
+        test "$interface" -a "$new_interface" -a "$interface" != "$new_interface" && sed_script="$sed_script ; s/$interface/$new_interface/g"
+    done < <( sed -e 'p ; y/abcdef/ABCDEF/' $TMP_DIR/mappings/mac )
+    # This "sed -e 'p ; y/abcdef/ABCDEF/'" hack prints each line as is and once again with upper case hex letters.
+    # The reason is that the mac mappings have lower case hex letters (cf. doc/mappings/mac.example)
+    # but some systems seem to have MAC adresses with upper case hex letters in the config files.
+    # We do not want to mess with that so we do each replacement two times both case-sensitive.
+    Debug "sed_script for rewriting changed MAC addresses: '$sed_script'"
+    # Apply the sed script on the network configuration files:
+    for network_configuration_file in "${network_configuration_files[@]}" ; do
+        sed -i -e "$sed_script" "$network_configuration_file" || LogPrintError "Migrating network configuration in $network_configuration_file failed"
+    done
+    # Rename network configuration files where the file name contains the MAC address or the interface name:
+    for network_configuration_file in "${network_configuration_files[@]}" ; do
+        # E.g. when the interface has changed from eth0 to eth1 the sed_script contains "... ; s/eth0/eth1/g"
+        # so when that sed_script is applied on the network configuration file name $TARGET_FS_ROOT/etc/sysconfig/network/ifcfg-eth0
+        # the new_file_name becomes $TARGET_FS_ROOT/etc/sysconfig/network/ifcfg-eth1
+        new_file_name="$( sed -e "$sed_script" <<<"$network_configuration_file" )"
+        test "$new_file_name" -a "$network_configuration_file" != "$new_file_name" && mv $v "$network_configuration_file" "$new_file_name"
+    done
+else
+    # When .../mappings/ip_addresses or .../mappings/routes exists but .../mappings/mac is missing or has no content
+    # we need a .../mappings/mac file because otherwise the logic to rewrite IP addresses or routes would fail.
+    # We try to generate one from .../mappings/ip_addresses with old_mac=new_mac for non-migrated interfaces:
+    if test -s $TMP_DIR/mappings/ip_addresses ; then
+        for interface in $( cut -f 1 -d " " $TMP_DIR/mappings/ip_addresses ) ; do
+            # /sys/class/net/$interface/address contains the MAC address with lower case hex letters (cf. above):
+            current_mac=$( cat /sys/class/net/$interface/address )
+            echo "$mac $mac $interface" >> $TMP_DIR/mappings/mac
+        done
+        # Verify we could generate a fallback $TMP_DIR/mappings/mac file with acual content (i.e. non-empty):
+        if test -s $TMP_DIR/mappings/mac ; then
+            Log "Using generated fallback $TMP_DIR/mappings/mac file (/etc/rear/mappings/mac is missing or has no content)"
+        else
+            # Do not error out at this late state of "rear recover" (after the backup was restored) but inform the user:
+            LogPrintError "Cannot migrate network configuration files (/etc/rear/mappings/ip_addresses exits but /etc/rear/mappings/mac is missing or has no content)"
+            return 1
         fi
-    done < <( read_and_strip_file $CONFIG_DIR/mappings/mac | sed -e 'p;y/abcdef/ABCDEF/' )
-    #                                              ^^^^^^^
-    #       this is a nasty hack that prints each line as is (lowercase) and once again in uppercase
-    #       the reason is that the mac mappings are in lower case but some systems seem to keep
-    #       the MAC adresses in upper case and since I don't want to mess with this I treat it as
-    #       separate things and do the replacement case-sensitive
-
-    Debug "sed_script: '$sed_script'"
-
-    for patch_file in "${PATCH_FILES[@]}" ; do
-        sed -i -e "$sed_script" "$patch_file" || LogPrintError "Migrating network configuration in $patch_file failed"
-    done
-
-    # rename files
-    for file in "${PATCH_FILES[@]}"; do
-        new_file="$(sed -e "$sed_script" <<<"$file")"
-        if test "$new_file" -a "$new_file" != "$file" ; then
-            mv $v "$file" "$new_file" >&2
+    else
+        # When .../mappings/routes exists but neither .../mappings/mac nor .../mappings/ip_addresses exist or neither have content we give up:
+        if test -s $TMP_DIR/mappings/routes ; then
+            # Do not error out at this late state of "rear recover" (after the backup was restored) but inform the user:
+            LogPrintError "Cannot migrate network configuration files (/etc/rear/mappings/routes exits but /etc/rear/mappings/mac is missing or has no content)"
+            return 1
         fi
-    done
-fi
-
-# for the unlikely case where an ip address or routes mapping is supplied but a mac
-# mapping is missing, we have to fake a mac mapping file. Otherwise the
-# logic to rewrite the ip addresses or routes will fail.
-# The easiest way is to be sure to always provide a mac mapping files with "old_mac new_mac interface" format
-# with old_mac=new_mac for non-migrated interfaces.
-
-if ! test -s $TMP_DIR/mappings/mac ; then
-    for interface in $(cut -f 1 -d " " $TMP_DIR/mappings/ip_addresses) ; do
-        mac=$(cat /sys/class/net/$interface/address)
-        echo "$mac $mac $interface" >> $TMP_DIR/mappings/mac
-    done
+    fi
 fi
 
 # change the ip addresses in the configuration files if a mapping is available
