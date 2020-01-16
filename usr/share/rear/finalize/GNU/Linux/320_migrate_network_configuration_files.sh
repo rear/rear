@@ -13,8 +13,7 @@
 #   doc/mappings/ip_addresses.example
 
 local network_configuration_files=()
-local mapping_file_name=""
-local mapping_file_content="no"
+local mapping_file_name mapping_file_interface_field mapping_file_content
 local sed_script=""
 local old_mac new_mac interface junk
 local new_interface
@@ -37,11 +36,31 @@ fi
 
 # Strip all comments and empty lines from the mapping files and have plain mapping files content in the temporary directory.
 # The plain mapping files content without comments or empty lines is needed to cleanly create the sed scripts below.
+# Furthermore the lines in the mapping files must be sorted by the network interface field because later
+# the lines of two mapping files are combined via 'join' on the common field interface:
 for mapping_file_name in mac ip_addresses routes ; do
-    read_and_strip_file $CONFIG_DIR/mappings/$mapping_file_name > $TMP_DIR/mappings/$mapping_file_name
+    case "$mapping_file_name" in
+        (mac)
+            # The network interface is the 3rd field in mappings/mac
+            mapping_file_interface_field=3
+            ;;
+        (ip_addresses)
+            # The network interface is the 1st field in mappings/ip_addresses
+            mapping_file_interface_field=1
+            ;;
+        (routes)
+            # The network interface is the 3rd field in mappings/routes
+            mapping_file_interface_field=3
+            ;;
+        (*)
+            BugError "Unsupported mapping file name '$mapping_file_name' used in ${BASH_SOURCE[0]}"
+            ;;
+    esac
+    read_and_strip_file $CONFIG_DIR/mappings/$mapping_file_name | sort -b -k $mapping_file_interface_field >$TMP_DIR/mappings/$mapping_file_name
 done
 
 # Skip if there is not any mapping file content:
+mapping_file_content="no"
 for mapping_file_name in mac ip_addresses routes ; do
     test -s $TMP_DIR/mappings/$mapping_file_name && mapping_file_content="yes"
 done
@@ -57,30 +76,31 @@ LogPrint "Migrating network configuration files according to the mapping files .
 # See the symlink handling code in finalize/GNU/Linux/280_migrate_uuid_tags.sh and other such files,
 # cf. https://github.com/rear/rear/pull/2055 and https://github.com/rear/rear/issues/1338
 
-# Rewrite changed MAC addresses when there is content in the matching mapping file .../mappings/mac:
+# Change MAC addresses and network interfaces in network configuration files when there is content in .../mappings/mac:
 if test -s $TMP_DIR/mappings/mac ; then
     Log "Rewriting changed MAC addresses"
     # Create sed script:
     sed_script=""
     while read old_mac new_mac interface junk ; do
         test "$old_mac" -a "$new_mac" -a "$old_mac" != "$new_mac" && sed_script="$sed_script ; s/$old_mac/$new_mac/g"
-        # Get new interface name from the MAC address in case of inet renaming:
+        # Get new interface from the MAC address in case of inet renaming:
         new_interface=$( get_device_by_hwaddr "$new_mac" )
         test "$interface" -a "$new_interface" -a "$interface" != "$new_interface" && sed_script="$sed_script ; s/$interface/$new_interface/g"
     done < <( sed -e 'p ; y/abcdef/ABCDEF/' $TMP_DIR/mappings/mac )
     # This "sed -e 'p ; y/abcdef/ABCDEF/'" hack prints each line as is and once again with upper case hex letters.
-    # The reason is that the mac mappings have lower case hex letters (cf. doc/mappings/mac.example)
+    # The reason is that .../mappings/mac has lower case hex letters (cf. doc/mappings/mac.example)
     # but some systems seem to have MAC adresses with upper case hex letters in the config files.
-    # We do not want to mess with that so we do each replacement two times both case-sensitive.
-    Debug "sed_script for rewriting changed MAC addresses: '$sed_script'"
-    # Apply the sed script on the network configuration files:
+    # We do not want to mess around with that so we do each replacement two times both case-sensitive
+    # one with lower case hex letters and the other one with upper case hex letters in the sed script.
+    Debug "sed_script for changing MAC addresses and network interfaces: '$sed_script'"
+    # Apply the sed script to the network configuration files:
     for network_configuration_file in "${network_configuration_files[@]}" ; do
         sed -i -e "$sed_script" "$network_configuration_file" || LogPrintError "Migrating network configuration in $network_configuration_file failed"
     done
     # Rename network configuration files where the file name contains the MAC address or the interface name:
     for network_configuration_file in "${network_configuration_files[@]}" ; do
-        # E.g. when the interface has changed from eth0 to eth1 the sed_script contains "... ; s/eth0/eth1/g"
-        # so when that sed_script is applied on the network configuration file name $TARGET_FS_ROOT/etc/sysconfig/network/ifcfg-eth0
+        # E.g. when the interface has changed from eth0 to eth1 the sed_script contains "... ; s/eth0/eth1/g" (cf. "Get new interface" above)
+        # so when this sed_script is applied to a network configuration file name like $TARGET_FS_ROOT/etc/sysconfig/network/ifcfg-eth0
         # the new_file_name becomes $TARGET_FS_ROOT/etc/sysconfig/network/ifcfg-eth1
         new_file_name="$( sed -e "$sed_script" <<<"$network_configuration_file" )"
         test "$new_file_name" -a "$network_configuration_file" != "$new_file_name" && mv $v "$network_configuration_file" "$new_file_name"
@@ -113,7 +133,7 @@ else
     fi
 fi
 
-# change the ip addresses in the configuration files if a mapping is available
+# Change IP addresses and CIDR or netmask in network configuration files when there is content in .../mappings/ip_addresses:
 if test -s $TMP_DIR/mappings/ip_addresses ; then
 
     join -1 3 $TMP_DIR/mappings/mac $TMP_DIR/mappings/ip_addresses |\
