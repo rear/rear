@@ -1,3 +1,6 @@
+# What routing destination/CIDR and gateway-IP
+# belongs to which interface.
+# Syntax:
 # destination/CIDR gateway-IP interface
 default 10.100.200.1 eth0
 192.168.100.0/24 172.16.200.202 eth1
