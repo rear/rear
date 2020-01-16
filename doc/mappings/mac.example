@@ -1,3 +1,4 @@
+# What old and new MAC-addresses belong to which interface.
 # Mapping of MAC-addresses is a prerequirement
 # for mapping of IP-addresses and/or routes.
 # Letters in MAC-addresses must be lower case.
