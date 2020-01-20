@@ -18,6 +18,7 @@ local sed_script=""
 local old_mac new_mac interface junk
 local new_interface
 local current_mac
+local new_ip_cidr new_ip new_cidr new_netmask
 
 # Because the bash option nullglob is set in rear (see usr/sbin/rear) network_configuration_files is empty if nothing matches
 # $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* or $TARGET_FS_ROOT/etc/network/inter[f]aces or $TARGET_FS_ROOT/etc/network/interfaces.d/*
@@ -133,23 +134,80 @@ else
     fi
 fi
 
+# TODO: Exlpain the reason behind why in this script we use pipes of the form
+#   COMMAND | while read ... do ... done
+# instead of how we usually do it via bash process substitution of the form
+#   while read ... do ... done < <( COMMAND )
+# The drawback of using a pipe is that the "while read ... do ... done" part
+# is run as separated process (in a subshell) so that e.g. one cannot set variables
+# in the "while read ... do ... done" part that are meant to be used after the pipe.
+# In contrast with the process substitution method the "while read ... do ... done" part
+# runs in the current shell (but then COMMAND seems to be somewhat "out of control"),
+# cf. the comment about that in layout/save/GNU/Linux/220_lvm_layout.sh
+
 # Change IP addresses and CIDR or netmask in network configuration files when there is content in .../mappings/ip_addresses:
 if test -s $TMP_DIR/mappings/ip_addresses ; then
-
-    join -1 3 $TMP_DIR/mappings/mac $TMP_DIR/mappings/ip_addresses |\
-    while read dev old_mac new_mac new_ip ; do
-
-        # RHEL 4, 5,... cannot handle IPADDR="x.x.x.x/cidr"
-        nmask=$(prefix2netmask ${new_ip#*/})    # ipaddress/cidr (recalculate the cidr)
-        if [[ "$nmask" = "0.0.0.0" ]]; then
-            nmask=""
-            nip="$new_ip"           # keep ipaddress/cidr
-        else
-            nip="${new_ip%%/*}"     # only keep ipaddress
+    # mappings/mac is e.g. (old-MAC-address new-MAC-address interface):
+    #   00:11:85:c2:b8:d5 00:50:56:b3:75:ad eth0
+    #   00:11:85:c2:b8:d7 00:50:56:b3:08:8c eth2
+    #   00:11:85:c2:b8:d9 00:50:56:b3:08:8e eth3
+    # and mappings/ip_addresses is e.g. (interface IP-address/CIDR or 'dhcp'):
+    #   eth0 192.168.100.101/24
+    #   eth1 172.16.200.202/16
+    #   eth2 dhcp
+    # so that "join -1 3 -2 1 mappings/mac mappings/ip_addresses" results (interface old-MAC-address new-MAC-address IP-address/CIDR or 'dhcp'):
+    #   eth0 00:11:85:c2:b8:d5 00:50:56:b3:75:ad 192.168.100.101/24
+    #   eth2 00:11:85:c2:b8:d7 00:50:56:b3:08:8c dhcp
+    join -1 3 -2 1 $TMP_DIR/mappings/mac $TMP_DIR/mappings/ip_addresses | \
+    while read interface old_mac new_mac new_ip_cidr junk ; do
+        # No interface value means no input at all (i.e. an empty line) that can be silently skipped:
+        test "$interface" || continue
+        # No new IP-address/CIDR value indicates an issue, so tell the user about it:
+        if ! test "$new_ip_cidr" ; then
+            LogPrintError "Cannot migrate network configuration for '$interface' (no new IP-address/CIDR value)"
+            continue
         fi
+        # No old-MAC-address or new-MAC-address value indicates an issue, so tell the user about it:
+        if ! test "$old_mac" -a "$new_mac" ; then 
+            LogPrintError "Cannot migrate network configuration for '$interface' (no old or new MAC-address value)"
+            continue
+        fi
+        # FIXME: Currently I <jsmeix@suse.de> do not know what to do in case of new_ip_cidr="dhcp"
+        # so I skip this case verbosely so that the user is at least informed:
+        if test "dhcp" = "$new_ip_cidr" ; then
+            LogPrintError "Skipped migrating network configuration for '$interface' (special new IP-address/CIDR value 'dhcp')"
+            continue
+        fi
+        # Log what will be done to make debugging easier:
+        Log "Migrating network configuration for '$interface' '$old_mac' '$new_mac' '$new_ip_cidr' (interface old-MAC-address new-MAC-address IP-address/CIDR)"
+        # Only the IP-address part of IP-address/CIDR:
+        new_ip="${new_ip_cidr%%/*}"
+        # Only the CIDR part of IP-address/CIDR:
+        new_cidr=${new_ip_cidr#*/}
+        # RHEL 4, 5,... cannot handle IPADDR="x.x.x.x/cidr" in ifcfg configuration files
+        # but only plain IPADDR="x.x.x.x" plus a separated NETMASK="y.y.y.y" entry
+        # so we convert the CIDR to a netmask (e.g. "24" -> "255.255.255.0").
+        # See the prefix2netmask function in lib/network-functions.sh
+        # e.g. "prefix2netmask 24" results "255.255.255.0":
+        new_netmask=$( prefix2netmask ${new_ip#*/} )
+        # If prefix2netmask results no real netmask use an empty fallback value:
+        test "0.0.0.0" = "$new_netmask" && new_netmask=""
+        # Now we have for example for the following input (cf. the example above)
+        #   eth0 00:11:85:c2:b8:d5 00:50:56:b3:75:ad 192.168.100.101/24
+        # those variables set:
+        #   $interface="eth0"
+        #   $old_mac="00:11:85:c2:b8:d5"
+        #   $new_mac="00:50:56:b3:75:ad"
+        #   $new_ip_cidr="192.168.100.101/24"
+        #   $new_ip=192.168.100.101"
+        #   $new_cidr="24"
+        #   $new_netmask="255.255.255.0"
 
-        # Fedora/Suse Family
-        for network_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${new_mac}* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${dev}*; do
+# FIXME: Currently work in progress up to here. The lines below need to be done.
+BugError "${BASH_SOURCE[0]} unfinished work in progress https://github.com/rear/rear/pull/2313"
+
+        # Fedora and SUSE network configuration files case (with sysconfig ifcfg configuration files):
+        for network_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${new_mac}* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${dev}* ; do
             # TODO: what if NETMASK keyword is not defined? Should be keep new_ip then??
             sed_script="s#^IPADDR=.*#IPADDR='${nip}'#g;s#^NETMASK=.*#NETMASK='${nmask}'#g;s#^NETWORK=.*#NETWORK=''#g;s#^BROADCAST=.*#BROADCAST=''#g;s#^BOOTPROTO=.*#BOOTPROTO='static'#g;s#STARTMODE='[mo].*#STARTMODE='auto'#g;/^IPADDR_/d;/^LABEL_/d;/^NETMASK_/d"
             Debug "sed_script: '$sed_script'"
@@ -157,7 +215,7 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
             sed -i -e "$sed_script" "$network_file" || LogPrintError "Migrating network configuration in $network_file failed"
         done
 
-        #Debian / ubuntu Family (with network interfaces configuration files)
+        # Debian and Ubuntu network configuration files case (with network interfaces configuration files):
         for network_file in $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
             new_dev=$( get_device_by_hwaddr "$new_mac" )
             sed_script="\
@@ -178,7 +236,7 @@ fi
 # set the new routes if a mapping file is available
 if test -s $TMP_DIR/mappings/routes ; then
 
-    join -1 3 -2 3  $TMP_DIR/mappings/mac $TMP_DIR/mappings/routes |\
+    join -1 3 -2 3  $TMP_DIR/mappings/mac $TMP_DIR/mappings/routes | \
     while read dev old_mac new_mac destination gateway device junk ; do
         #   echo "$destination $gateway - $device" >> $TARGET_FS_ROOT/etc/sysconfig/network/routes
         if [[ "$destination" = "default" ]]; then
