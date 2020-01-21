@@ -24,6 +24,7 @@ opath=$( output_path $scheme $path )
 if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then 
       VM_UID=$(vmcp q userid |awk '{ print $1 }')
       LogPrint "s390 dislayout.conf will be saved as $(opath)/$VM_UID.disklayout.conf"
+      mkdir -p ${opath}/"$VM_UID"
       cp $v $DISKLAYOUT_FILE ${opath}/"$VM_UID".disklayout.conf || Error "Failed to copy disklayout.conf ($DISKLAYOUT_FILE) to ${opath}/"$VM_UID".disklayout.conf"
 fi
 
