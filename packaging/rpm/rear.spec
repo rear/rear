@@ -10,7 +10,11 @@ Summary: Relax-and-Recover is a Linux disaster recovery and system migration too
 Name: rear
 Version: 2.5
 Release: 1%{?rpmrelease}%{?dist}
-License: GPLv3
+# Since some time the license value 'GPLv3' causes build failures in the openSUSE Build Service
+# cf. https://github.com/rear/rear/issues/2289#issuecomment-559713101
+# so we use now 'GPL-3.0' that is known to work (at least for now) according to
+# https://github.com/rear/rear/issues/2289#issuecomment-576625186
+License: GPL-3.0
 Group: Applications/File
 URL: http://relax-and-recover.org/
 
