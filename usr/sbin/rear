@@ -22,13 +22,11 @@
 
 # The ReaR scripts require bash as interpreter from the very beginning
 # (cf. the get_bash_flags_and_options_commands function that is called below)
-# so we verify that the specified interpreter /bin/bash actually is bash
-# because the initial line "#!/bin/bash" alone might not be sufficient
-# cf. https://github.com/rear/rear/issues/2307#issuecomment-577591217
-# so we check that the currently used interpreter program is 'bash'
+# so we verify that the specified interpreter /bin/bash actually is bash.
+# First and foremost we check that the currently used interpreter program is 'bash'
 # cf. https://unix.stackexchange.com/questions/71121/determine-shell-in-script-during-runtime
-# The unfriendly plain 'exit 1' without an error messsage is used
-# to make it also work for non bash/sh shells in particular for csh and ksh:
+# The unfriendly plain 'exit 1' without an error messsage is used here to make
+# this error exit also work for non bash/sh shells in particular for csh and ksh:
 readlink -e /proc/$$/exe | grep -q 'bash' || exit 1
 # When the interpreter is 'bash' we test if it is really bash (and not /bin/sh):
 if ! echo $BASH | grep -q 'bash' ; then
