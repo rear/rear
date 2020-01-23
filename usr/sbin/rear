@@ -25,18 +25,21 @@
 # so we verify that the specified interpreter /bin/bash actually is bash
 # because the initial line "#!/bin/bash" alone might not be sufficient
 # cf. https://github.com/rear/rear/issues/2307#issuecomment-577591217
-# so we check what the currently used interpreter program is
+# so we check that the currently used interpreter program is 'bash'
 # cf. https://unix.stackexchange.com/questions/71121/determine-shell-in-script-during-runtime
-# and then we check what that program tells about itself
-# but we skip that if "readlink -e /proc/$$/exe" does not work and proceed "bona fide":
-INTERPRETER="$( readlink -e /proc/$$/exe )"
-if test -x "$INTERPRETER" ; then
-    if ! $INTERPRETER --version | grep -q 'bash' ; then
-        echo "ERROR: Relax-and-Recover needs 'bash' ('$INTERPRETER --version' does not show 'bash')" >&2
-        exit 1
-    fi
-    # TODO: Check that bash version 3.x or newer is used
-    # cf. https://github.com/rear/rear/wiki/Coding-Style
+# The unfriendly plain 'exit 1' without an error messsage is used
+# to make it also work for non bash/sh shells in particular for csh and ksh:
+readlink -e /proc/$$/exe | grep -q 'bash' || exit 1
+# When the interpreter is 'bash' we test if it is really bash (and not /bin/sh):
+if ! echo $BASH | grep -q 'bash' ; then
+    echo "ERROR: Relax-and-Recover needs 'bash' (BASH is '$BASH')" >&2
+    exit 1
+fi
+# Finally we check that the version is '3.x' or higher (up to '9.x').
+# TODO: Enhance that test when a bash version '10.x' or higher appears.
+if ! echo $BASH_VERSION | grep -q '^[3456789]\.' ; then
+    echo "ERROR: Relax-and-Recover needs bash version 3.x or higher (BASH_VERSION is '$BASH_VERSION')" >&2
+    exit 1
 fi
 
 # Usually functions belong to the library scripts (i.e. $SHARE_DIR/lib/*.sh),
