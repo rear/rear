@@ -1,7 +1,7 @@
 #!/bin/bash
 # $Id$
 #
-# Relax-and-Recover
+# Relax-and-Recover (ReaR)
 #
 #    Relax-and-Recover is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -19,6 +19,23 @@
 #
 # Authors:
 # See https://github.com/rear/rear/graphs/contributors for full list of authors
+
+# The ReaR scripts require bash as interpreter from the very beginning
+# (cf. the get_bash_flags_and_options_commands function that is called below)
+# so we verify that the specified interpreter /bin/bash actually is bash
+# because the initial line "#!/bin/bash" alone might not be sufficient
+# cf. https://github.com/rear/rear/issues/2307#issuecomment-577591217
+# so we check what the currently used interpreter program tells about itself
+# but we skip that if "readlink -e /proc/$$/exe" does not work and proceed "bona fide":
+INTERPRETER="$( readlink -e /proc/$$/exe )"
+if test -x "$INTERPRETER" ; then
+    if ! $INTERPRETER --version | grep -q 'bash' ; then
+        echo "ERROR: Relax-and-Recover needs 'bash' ('$INTERPRETER --version' does not show 'bash')" >&2
+        exit 1
+    fi
+    # TODO: Check that bash version 3.x or newer is used
+    # cf. https://github.com/rear/rear/wiki/Coding-Style
+fi
 
 # Usually functions belong to the library scripts (i.e. $SHARE_DIR/lib/*.sh),
 # but these 2 are exceptions on the rule because the complementary global functions
