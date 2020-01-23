@@ -7,6 +7,7 @@ is_true $USING_UEFI_BOOTLOADER || return 0
 # There much of Grub/Elilo code here exclude it in menaningfull way.
 is_true $EFI_STUB && return 0
 
+local boot_dir="/boot"
 local efi_boot_tmp_dir="$TMP_DIR/mnt/EFI/BOOT"
 mkdir $v -p $efi_boot_tmp_dir || Error "Could not create $efi_boot_tmp_dir"
 mkdir $v -p $efi_boot_tmp_dir/fonts || Error "Could not create $efi_boot_tmp_dir/fonts"
@@ -61,11 +62,6 @@ title Relax-and-Recover (no Secure Boot)
 
 EOF
 else
-    # create small embedded grub.cfg file for grub-mkimage
-    cat > $efi_boot_tmp_dir/embedded_grub.cfg <<EOF
-set prefix=(cd0)/EFI/BOOT
-configfile /EFI/BOOT/grub.cfg
-EOF
     # create a grub.cfg
     create_grub2_cfg > $efi_boot_tmp_dir/grub.cfg
 fi
@@ -76,15 +72,15 @@ fi
 # See issue #1374
 # build_bootx86_efi () can be safely used for other scenarios.
 if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
-    build_bootx86_efi $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi $TMP_DIR/mnt/EFI/BOOT/embedded_grub.cfg
+    build_bootx86_efi $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi $efi_boot_tmp_dir/grub.cfg "$boot_dir" "$UEFI_BOOTLOADER"
 fi
 
 # We will be using grub-efi or grub2 (with efi capabilities) to boot from ISO.
 # Because usr/sbin/rear sets 'shopt -s nullglob' the 'echo -n' command
 # outputs nothing if nothing matches the bash globbing pattern '/boot/grub*'
-local grubdir="$( echo -n /boot/grub* )"
+local grubdir="$( echo -n ${boot_dir}/grub* )"
 # Use '/boot/grub' as fallback if nothing matches '/boot/grub*'
-test -d "$grubdir" || grubdir='/boot/grub'
+test -d "$grubdir" || grubdir="${boot_dir}/grub"
 
 local font_files_dir=""
 local grub_font_files="no_fonts"
