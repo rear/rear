@@ -19,6 +19,7 @@ local old_mac new_mac interface junk
 local new_interface
 local current_mac
 local new_ip_cidr new_ip new_cidr new_netmask
+local ifcfg_file
 
 # Because the bash option nullglob is set in rear (see usr/sbin/rear) network_configuration_files is empty if nothing matches
 # $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* or $TARGET_FS_ROOT/etc/network/inter[f]aces or $TARGET_FS_ROOT/etc/network/interfaces.d/*
@@ -202,12 +203,64 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
         #   $new_ip=192.168.100.101"
         #   $new_cidr="24"
         #   $new_netmask="255.255.255.0"
+        # Fedora and SUSE network configuration files case (with sysconfig ifcfg configuration files):
+        for ifcfg_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$new_mac* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$interface* ; do
+            sed_script=""
+            # On a SLES15-like openSUSE Leap 15.0 system /etc/sysconfig/network/ifcfg.template shows in particular
+            #   If using a static configuration you have to set an IP address and a netmask
+            #   or prefix length. The following examples are equivalent:
+            #   1) IPADDR=192.168.1.1/24     # NETMASK and PREFIXLEN will be ignored
+            #   2) IPADDR=192.168.1.1
+            #      PREFIXLEN=24              # NETMASK will be ignored
+            #   3) IPADDR=192.168.1.1
+            #      NETMASK=255.255.255.0
+            # so we need to adapt the ifcfg configuration file depending on what kind of syntax there is currently used
+            # because this script works on the user's restored files of his target system in /mnt/local
+            # so what it does must match what there is on the user's target system:
+            if grep -q "^IPADDR=['0-9A-Fa-f][.:0-9A-Fa-f]*/[0-9'][0-9']*" $ifcfg_file ; then
+                # Case 1) where the syntax is like IPADDR=192.168.1.1/24 or IPADDR='192.168.1.1/24'
+                # replace the old IPADDR value with the new_ip_cidr value (always in the IPADDR='...' form) and
+                # set NETMASK and PREFIXLEN empty (to remove useless old values that may not match the new_ip_cidr value):
+                sed_script="$sed_script ; s|^IPADDR=.*|IPADDR='$new_ip_cidr'|g ; s|^NETMASK=.*|NETMASK=''|g ; s|^PREFIXLEN=.*|PREFIXLEN=''|g"
+                Debug "sed_script for setting new IP-address/CIDR: '$sed_script'"
+            else # Case 2) plain IPADDR plus PREFIXLEN or case 3) plain IPADDR plus NETMASK:
+                if grep -q "^IPADDR=['0-9A-Fa-f][.:0-9A-Fa-f]*" $ifcfg_file ; then
+                    # Plain IPADDR like IPADDR=192.168.1.1 found (the IPADDR with CIDR case like IPADDR=192.168.1.1/24 was found above).
+                    # Replace the old plain IPADDR value with the new_ip value (always in the IPADDR='...' form):
+                    # set NETMASK and PREFIXLEN empty (to remove useless old values that may not match the new_ip value):
+                    sed_script="$sed_script ; s|^IPADDR=.*|IPADDR='$new_ip'|g ; s|^NETMASK=.*|NETMASK=''|g ; s|^PREFIXLEN=.*|PREFIXLEN=''|g"
+                    if grep -q "^PREFIXLEN=['0-9][0-9']*" $ifcfg_file ; then
+                        # Case 2) plain IPADDR plus PREFIXLEN like PREFIXLEN=24 found.
+                        # Replace the old PREFIXLEN value with the new_cidr value (always in the PREFIXLEN='...' form)
+                        # and set NETMASK empty (to remove a useless old value that may not match the new_cidr value):
+                        sed_script="$sed_script ; s|^PREFIXLEN=.*|PREFIXLEN='$new_cidr'|g ; s|^NETMASK=.*|NETMASK=''|g"
+                        Debug "sed_script for setting new IP-address plus PREFIXLEN: '$sed_script'"
+                    else
+                        # Case 3) plain IPADDR plus NETMASK:
+                        if grep -q "^NETMASK=['0-9][.0-9']*" $ifcfg_file ; then
+                            # NETMASK like NETMASK=255.255.255.0 found:
+                            # Replace the old NETMASK value with the new_netmask value (always in the NETMASK='...' form)
+                            # and set PREFIXLEN empty (to remove a useless old value that may not match the new_netmask value):
+                            sed_script="$sed_script ; s|^NETMASK=.*|NETMASK='$new_netmask'|g ; s|^PREFIXLEN=.*|PREFIXLEN=''|g"
+                            Debug "sed_script for setting new IP-address plus NETMASK: '$sed_script'"
+                        else
+                            # Neither PREFIXLEN nor NETMASK:
+                            LogPrintError "Cannot set netmask or prefix length for new IP-address '$new_ip' (neither PREFIXLEN nor NETMASK in $ifcfg_file)"
+                            # Do not 'continue' with the next ifcfg_file because the plain new_ip can be set o it is set without netmask or prefix length.
+                        fi
+                    fi
+                else
+                    # Neither IPADDR with CIDR nor plain IPADDR:
+                    LogPrintError "Cannot set new IP-address '$new_ip' (no IPADDR in $ifcfg_file)"
+                    continue
+                fi
+            fi
+            # Apply the sed script to the ifcfg_file:
+            sed -i -e "$sed_script" "$ifcfg_file" || LogPrintError "Migrating network configuration in $ifcfg_file failed"
 
 # FIXME: Currently work in progress up to here. The lines below need to be done.
 BugError "${BASH_SOURCE[0]} unfinished work in progress https://github.com/rear/rear/pull/2313"
 
-        # Fedora and SUSE network configuration files case (with sysconfig ifcfg configuration files):
-        for network_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${new_mac}* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${dev}* ; do
             # TODO: what if NETMASK keyword is not defined? Should be keep new_ip then??
             sed_script="s#^IPADDR=.*#IPADDR='${nip}'#g;s#^NETMASK=.*#NETMASK='${nmask}'#g;s#^NETWORK=.*#NETWORK=''#g;s#^BROADCAST=.*#BROADCAST=''#g;s#^BOOTPROTO=.*#BOOTPROTO='static'#g;s#STARTMODE='[mo].*#STARTMODE='auto'#g;/^IPADDR_/d;/^LABEL_/d;/^NETMASK_/d"
             Debug "sed_script: '$sed_script'"
@@ -230,6 +283,7 @@ BugError "${BASH_SOURCE[0]} unfinished work in progress https://github.com/rear/
 
             rebuild_interfaces_file_from_linearized "$tmp_network_file" > "$network_file"
         done
+
     done
 fi
 
