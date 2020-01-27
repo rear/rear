@@ -36,9 +36,7 @@ if [ "$ARCH" == "Linux-s390" ] ; then
    VM_UID=$(vmcp q userid |awk '{ print $1 }')
 
    if [[ -z $VM_UID && "$ZVM_NAMING" == "Y" ]] ; then
-      LogPrint "VM UID is not set, VM UID is set from call to vmcp.  Please make sure vmcp is available and 'vmcp q userid' returns VM ID"
-      LogPrint "VM UID for initrd will be set to 'DEFAULT'"
-      VM_UID="DEFAULT"
+      Error "VM UID is not set, VM UID is set from call to vmcp.  Please make sure vmcp is available and 'vmcp q userid' returns VM ID"
    fi      
 fi
 

@@ -23,13 +23,12 @@ opath=$( output_path $scheme $path )
 
 if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then 
       VM_UID=$(vmcp q userid |awk '{ print $1 }')
+	
       if [[ -z $VM_UID ]] ; then
-            LogPrint "VM UID is not set, VM UID is set from call to vmcp.  Please make sure vmcp is available and 'vmcp q userid' returns the vm login id"
-            LogPrint "VM UID for disklayout.conf will be set to 'DEFAULT'"
-            VM_UID="DEFAULT"
+            Error "VM UID is not set, VM UID is set from call to vmcp.  Please make sure vmcp is available and 'vmcp q userid' returns the vm login id"
       fi
       if [[ -z $opath ]] ; then
-            LogPrint "Warning: output path is not set, please check OUTPUT_URL in local.conf."
+            Error "Output path is not set, please check OUTPUT_URL in local.conf."
       fi
 
       LogPrint "s390 disklayout.conf will be saved as $opath/$VM_UID.disklayout.conf"

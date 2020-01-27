@@ -75,16 +75,14 @@ case "$scheme" in
 
             if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then 
                if [[ -z $opath ]] ; then
-                  LogPrint "Warning: output path is not set, please check OUTPUT_URL in local.conf."
+                  Error "Output path is not set, please check OUTPUT_URL in local.conf."
                fi  
 
                if [ "$ZVM_KERNEL_NAME" == "$result_file" ] ; then
                   VM_UID=$(vmcp q userid |awk '{ print $1 }')
 
                   if [[ -z $VM_UID ]] ; then
-                     LogPrint "VM UID is not set, VM UID is set from call to vmcp.  Please make sure vmcp is available and 'vmcp q userid' returns VM ID"
-                     LogPrint "VM UID for kernel will be set to 'DEFAULT'"
-                     VM_UID="DEFAULT"
+                     Error "VM UID is not set, VM UID is set from call to vmcp.  Please make sure vmcp is available and 'vmcp q userid' returns VM ID"
                   fi      
 
                   LogPrint "s390 kernel naming override: $result_file will be written as $VM_UID.kernel"
