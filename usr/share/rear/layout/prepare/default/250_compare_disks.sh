@@ -116,9 +116,9 @@ if ! is_true "$MIGRATION_MODE" ; then
             Log "Device /sys/block/$dev exists"
             newsize=$( get_disk_size $dev )
             if test "$newsize" -eq "$size" ; then
-                LogPrint "Device $dev has expected (same) size $size (will be used for '$WORKFLOW')"
+                LogPrint "Device $dev has expected (same) size $size bytes (will be used for '$WORKFLOW')"
             else
-                LogPrint "Device $dev has size $newsize but $size is expected (needs manual configuration)"
+                LogPrint "Device $dev has size $newsize bytes but $size bytes is expected (needs manual configuration)"
                 MIGRATION_MODE='true'
             fi
         else
