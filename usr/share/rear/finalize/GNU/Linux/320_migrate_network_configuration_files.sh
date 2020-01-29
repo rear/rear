@@ -7,11 +7,16 @@
 #   /etc/rear/mappings/ip_addresses
 #   /etc/rear/mappings/routes
 # in the currently running ReaR recovery system.
+# In particular /etc/rear/mappings/mac gets automatically created during recovery system startup
+# via [usr/share/rear/skel/default]/etc/scripts/system-setup.d/55-migrate-network-devices.sh
+# if the original interface MAC is not found in the currently running recovery system
+# so rewriting of MAC addresses happens usually automatically on replacement hardware.
 # For the mapping files syntax see
 #   doc/mappings/mac.example
 #   doc/mappings/routes.example
 #   doc/mappings/ip_addresses.example
 
+local restored_file symlink_target
 local network_configuration_files=()
 local mapping_file_name mapping_file_interface_field mapping_file_content
 local sed_script sed_script_reason
@@ -21,12 +26,53 @@ local current_mac
 local new_ip_cidr new_ip new_cidr new_netmask
 local ifcfg_file multiple_addresses_keyword
 
-# Because the bash option nullglob is set in rear (see usr/sbin/rear) network_configuration_files is empty if nothing matches
+# All finalize scripts that patch restored files within TARGET_FS_ROOT should do the same symlink handling which means:
+# 1. Skip patching symlink targets that are not within TARGET_FS_ROOT (i.e. when it is an absolute symlink)
+# 2. Skip patching if the symlink target contains /proc/ /sys/ /dev/ or /run/
+# 3. Skip patching dead symlinks
+# See the symlink handling code in finalize/GNU/Linux/280_migrate_uuid_tags.sh and other such files,
+# cf. https://github.com/rear/rear/pull/2055 and https://github.com/rear/rear/issues/1338
+# Because the bash option nullglob is set in rear (see usr/sbin/rear) restored_file is empty if nothing matches
 # $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* or $TARGET_FS_ROOT/etc/network/inter[f]aces or $TARGET_FS_ROOT/etc/network/interfaces.d/*
 # and $TARGET_FS_ROOT/etc/network/inter[f]aces is a special trick to only add $TARGET_FS_ROOT/etc/network/interfaces if it exists:
-network_configuration_files=( $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* )
+for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
+    # Silently skip directories and file not found:
+    test -f "$restored_file" || continue
+    # 'sed -i' bails out on symlinks, so we follow the symlink and patch the symlink target
+    # on dead links we inform the user and skip them
+    # TODO: We should do this inside 'chroot $TARGET_FS_ROOT' so that absolute symlinks will work correctly
+    # cf. https://github.com/rear/rear/issues/1338
+    if test -L "$restored_file" ; then
+        if symlink_target="$( readlink -f "$restored_file" )" ; then
+            # symlink_target is an absolute path in the recovery system
+            # e.g. the symlink target of etc/mtab is /mnt/local/proc/12345/mounts
+            # If the symlink target does not start with /mnt/local/ (i.e. if it does not start with $TARGET_FS_ROOT)
+            # it is an absolute symlink (i.e. inside $TARGET_FS_ROOT a symlink points to /absolute/path/file)
+            # and the target of an absolute symlink is not within the recreated system but in the recovery system
+            # where it does not make sense to patch files, cf. https://github.com/rear/rear/issues/1338
+            # so that we skip patching symlink targets that are not within the recreated system:
+            if ! echo $symlink_target | grep -q "^$TARGET_FS_ROOT/" ; then
+                Log "Skip patching symlink $restored_file target $symlink_target not within $TARGET_FS_ROOT"
+                continue
+            fi
+            # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
+            # the symlink target is considered to not be a restored file that needs to be patched
+            # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
+            if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
+                Log "Skip patching symlink $restored_file target $symlink_target on /proc/ /sys/ /dev/ or /run/"
+                continue
+            fi
+            Log "Patching symlink $restored_file target $symlink_target"
+            restored_file="$symlink_target"
+        else
+            Log "Skip patching dead symlink $restored_file"
+            continue
+        fi
+    fi
+    network_configuration_files+=( $restored_file )
+done
 
-# Skip if no network configuration files are found:
+# Skip if no valid restored network configuration files are found:
 test $network_configuration_files || return 0
 
 # Create a temporary directory for plain mapping files content without comments and empty lines.
@@ -68,15 +114,7 @@ for mapping_file_name in mac ip_addresses routes ; do
 done
 is_true $mapping_file_content || return 0
 
-LogPrint "Migrating network configuration files according to the mapping files ..."
-
-# TODO:
-# All finalize scripts that patch restored files within TARGET_FS_ROOTshould do the same symlink handling which means:
-# 1. Skip patching symlink targets that are not within TARGET_FS_ROOT (i.e. when it is an absolute symlink)
-# 2. Skip patching if the symlink target contains /proc/ /sys/ /dev/ or /run/
-# 3. Skip patching dead symlinks
-# See the symlink handling code in finalize/GNU/Linux/280_migrate_uuid_tags.sh and other such files,
-# cf. https://github.com/rear/rear/pull/2055 and https://github.com/rear/rear/issues/1338
+LogPrint "Migrating restored network configuration files according to the mapping files ..."
 
 # Change MAC addresses and network interfaces in network configuration files when there is content in .../mappings/mac:
 if test -s $TMP_DIR/mappings/mac ; then
@@ -148,17 +186,6 @@ else
     fi
 fi
 
-# TODO: Exlpain the reason behind why in this script we use pipes of the form
-#   COMMAND | while read ... do ... done
-# instead of how we usually do it via bash process substitution of the form
-#   while read ... do ... done < <( COMMAND )
-# The drawback of using a pipe is that the "while read ... do ... done" part
-# is run as separated process (in a subshell) so that e.g. one cannot set variables
-# in the "while read ... do ... done" part that are meant to be used after the pipe.
-# In contrast with the process substitution method the "while read ... do ... done" part
-# runs in the current shell (but then COMMAND seems to be somewhat "out of control"),
-# cf. the comment about that in layout/save/GNU/Linux/220_lvm_layout.sh
-
 # Change IP addresses and CIDR or netmask in network configuration files when there is content in .../mappings/ip_addresses:
 if test -s $TMP_DIR/mappings/ip_addresses ; then
     Log "Changing IP addresses and CIDR or netmask in network configuration files"
@@ -173,7 +200,9 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
     # so that "join -1 3 -2 1 mappings/mac mappings/ip_addresses" results (interface old-MAC-address new-MAC-address IP-address/CIDR or 'dhcp'):
     #   eth0 00:11:85:c2:b8:d5 00:50:56:b3:75:ad 192.168.100.101/24
     #   eth2 00:11:85:c2:b8:d7 00:50:56:b3:08:8c dhcp
-    join -1 3 -2 1 $TMP_DIR/mappings/mac $TMP_DIR/mappings/ip_addresses | \
+    # Keep the join result in a file to make debugging easier in the recovery system after "rear recover":
+    join -1 3 -2 1 $TMP_DIR/mappings/mac $TMP_DIR/mappings/ip_addresses > $TMP_DIR/mappings/join_mac_ip_addresses
+    # Read $TMP_DIR/mappings/join_mac_ip_addresses contents:
     while read interface old_mac new_mac new_ip_cidr junk ; do
         # No interface value means no input at all (i.e. an empty line) that can be silently skipped:
         test "$interface" || continue
@@ -219,7 +248,41 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
         #   $new_netmask="255.255.255.0"
         # Handle Fedora and SUSE network configuration files (with sysconfig ifcfg configuration files).
         # Because the bash option nullglob is set in rear (see usr/sbin/rear) nothing is done if no file matches:
-        for ifcfg_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$new_mac* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$interface* ; do
+        for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$new_mac* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$interface* ; do
+            # Silently skip directories and file not found:
+            test -f "$restored_file" || continue
+            # 'sed -i' bails out on symlinks, so we follow the symlink and patch the symlink target
+            # on dead links we inform the user and skip them
+            # TODO: We should do this inside 'chroot $TARGET_FS_ROOT' so that absolute symlinks will work correctly
+            # cf. https://github.com/rear/rear/issues/1338
+            if test -L "$restored_file" ; then
+                if symlink_target="$( readlink -f "$restored_file" )" ; then
+                    # symlink_target is an absolute path in the recovery system
+                    # e.g. the symlink target of etc/mtab is /mnt/local/proc/12345/mounts
+                    # If the symlink target does not start with /mnt/local/ (i.e. if it does not start with $TARGET_FS_ROOT)
+                    # it is an absolute symlink (i.e. inside $TARGET_FS_ROOT a symlink points to /absolute/path/file)
+                    # and the target of an absolute symlink is not within the recreated system but in the recovery system
+                    # where it does not make sense to patch files, cf. https://github.com/rear/rear/issues/1338
+                    # so that we skip patching symlink targets that are not within the recreated system:
+                    if ! echo $symlink_target | grep -q "^$TARGET_FS_ROOT/" ; then
+                        Log "Skip patching symlink $restored_file target $symlink_target not within $TARGET_FS_ROOT"
+                        continue
+                    fi
+                    # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
+                    # the symlink target is considered to not be a restored file that needs to be patched
+                    # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
+                    if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
+                        Log "Skip patching symlink $restored_file target $symlink_target on /proc/ /sys/ /dev/ or /run/"
+                        continue
+                    fi
+                    Log "Patching symlink $restored_file target $symlink_target"
+                    restored_file="$symlink_target"
+                else
+                    Log "Skip patching dead symlink $restored_file"
+                    continue
+                fi
+            fi
+            ifcfg_file=$restored_file
             sed_script=""
             sed_script_reason=""
             # On a SLES15-like openSUSE Leap 15.0 system /etc/sysconfig/network/ifcfg.template shows in particular
@@ -319,15 +382,17 @@ LogPrintError "${BASH_SOURCE[0]} unfinished work in progress, cf. https://github
             rebuild_interfaces_file_from_linearized "$tmp_network_file" > "$network_file"
             # End handling Debian and Ubuntu network configuration files (with network interfaces configuration files):
         done
+
         # End of "while read interface old_mac new_mac new_ip_cidr":
-    done
+    done < $TMP_DIR/mappings/join_mac_ip_addresses
     # End changing IP addresses and CIDR or netmask in network configuration files when there is content in .../mappings/ip_addresses:
 fi
 
-# set the new routes if a mapping file is available
+# Set the new routes if a mapping file is available:
 if test -s $TMP_DIR/mappings/routes ; then
-
-    join -1 3 -2 3  $TMP_DIR/mappings/mac $TMP_DIR/mappings/routes | \
+    # Keep the join result in a file to make debugging easier in the recovery system after "rear recover":
+    join -1 3 -2 3  $TMP_DIR/mappings/mac $TMP_DIR/mappings/routes > $TMP_DIR/mappings/join_mac_routes
+    # Read $TMP_DIR/mappings/join_mac_routes contents:
     while read dev old_mac new_mac destination gateway device junk ; do
         #   echo "$destination $gateway - $device" >> $TARGET_FS_ROOT/etc/sysconfig/network/routes
         if [[ "$destination" = "default" ]]; then
@@ -357,6 +422,6 @@ if test -s $TMP_DIR/mappings/routes ; then
                 LogPrint "Cannot migrate network configuration in $network_file - you need to do that manually"
             done
         fi
-    done
+    done < $TMP_DIR/mappings/join_mac_routes
 fi
 
