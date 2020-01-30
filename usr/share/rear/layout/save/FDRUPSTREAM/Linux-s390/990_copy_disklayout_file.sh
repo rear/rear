@@ -23,7 +23,16 @@ opath=$( output_path $scheme $path )
 
 if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then 
       VM_UID=$(vmcp q userid |awk '{ print $1 }')
-      LogPrint "s390 dislayout.conf will be saved as $(opath)/$VM_UID.disklayout.conf"
-      cp $v $DISKLAYOUT_FILE ${opath}/"$VM_UID".disklayout.conf || Error "Failed to copy disklayout.conf ($DISKLAYOUT_FILE) to ${opath}/"$VM_UID".disklayout.conf"
+	
+      if [[ -z $VM_UID ]] ; then
+            Error "VM UID is not set, VM UID is set from call to vmcp.  Please make sure vmcp is available and 'vmcp q userid' returns the vm login id"
+      fi
+      if [[ -z $opath ]] ; then
+            Error "Output path is not set, please check OUTPUT_URL in local.conf."
+      fi
+
+      LogPrint "s390 disklayout.conf will be saved as $opath/$VM_UID.disklayout.conf"
+      mkdir -pv $opath
+      cp $v $DISKLAYOUT_FILE $opath/$VM_UID.disklayout.conf || Error "Failed to copy disklayout.conf ($DISKLAYOUT_FILE) to opath/$VM_UID.disklayout.conf"
 fi
 

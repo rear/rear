@@ -32,9 +32,12 @@
 # kernel name override is handled in 400_guess_kernel.sh
 # kernel name override is handled in 950_copy_result_files.sh
 
-echo $ARCH
 if [ "$ARCH" == "Linux-s390" ] ; then
    VM_UID=$(vmcp q userid |awk '{ print $1 }')
+
+   if [[ -z $VM_UID && "$ZVM_NAMING" == "Y" ]] ; then
+      Error "VM UID is not set, VM UID is set from call to vmcp.  Please make sure vmcp is available and 'vmcp q userid' returns VM ID"
+   fi      
 fi
 
 pushd "$ROOTFS_DIR" >/dev/null
