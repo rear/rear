@@ -25,6 +25,7 @@ local new_interface
 local current_mac
 local new_ip_cidr new_ip new_cidr new_netmask
 local ifcfg_file multiple_addresses_keyword
+local network_interfaces_file linearized_network_interfaces_file
 
 # All finalize scripts that patch restored files within TARGET_FS_ROOT should do the same symlink handling which means:
 # 1. Skip patching symlink targets that are not within TARGET_FS_ROOT (i.e. when it is an absolute symlink)
@@ -34,7 +35,10 @@ local ifcfg_file multiple_addresses_keyword
 # cf. https://github.com/rear/rear/pull/2055 and https://github.com/rear/rear/issues/1338
 # Because the bash option nullglob is set in rear (see usr/sbin/rear) restored_file is empty if nothing matches
 # $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* or $TARGET_FS_ROOT/etc/network/inter[f]aces or $TARGET_FS_ROOT/etc/network/interfaces.d/*
-# and $TARGET_FS_ROOT/etc/network/inter[f]aces is a special trick to only add $TARGET_FS_ROOT/etc/network/interfaces if it exists:
+# and $TARGET_FS_ROOT/etc/network/inter[f]aces is a special trick to only add $TARGET_FS_ROOT/etc/network/interfaces if it exists.
+# FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
+# see https://github.com/rear/rear/pull/1514#discussion_r141031975
+# and for the general issue see https://github.com/rear/rear/issues/1372
 for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
     # Silently skip directories and file not found:
     test -f "$restored_file" || continue
@@ -233,7 +237,7 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
         # so we convert the CIDR to a netmask (e.g. "24" -> "255.255.255.0").
         # See the prefix2netmask function in lib/network-functions.sh
         # e.g. "prefix2netmask 24" results "255.255.255.0":
-        new_netmask=$( prefix2netmask ${new_ip#*/} )
+        new_netmask=$( prefix2netmask $new_cidr )
         # If prefix2netmask results no real netmask use an empty fallback value:
         test "0.0.0.0" = "$new_netmask" && new_netmask=""
         # Now we have for example for the following input (cf. the example above)
@@ -246,8 +250,12 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
         #   $new_ip=192.168.100.101"
         #   $new_cidr="24"
         #   $new_netmask="255.255.255.0"
+
         # Handle Fedora and SUSE network configuration files (with sysconfig ifcfg configuration files).
-        # Because the bash option nullglob is set in rear (see usr/sbin/rear) nothing is done if no file matches:
+        # Because the bash option nullglob is set in rear (see usr/sbin/rear) nothing is done if no file matches.
+        # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
+        # see https://github.com/rear/rear/pull/1514#discussion_r141031975
+        # and for the general issue see https://github.com/rear/rear/issues/1372
         for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$new_mac* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$interface* ; do
             # Silently skip directories and file not found:
             test -f "$restored_file" || continue
@@ -362,24 +370,74 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
             # End handling Fedora and SUSE network configuration files (with sysconfig ifcfg configuration files):
         done
 
-# TODO: Currently work in progress. Up to here it may work (not yet tested). The lines below need to be done.
-LogPrintError "${BASH_SOURCE[0]} unfinished work in progress, cf. https://github.com/rear/rear/pull/2313"
-
         # Handle Debian and Ubuntu network configuration files (with network interfaces configuration files).
-        # Because the bash option nullglob is set in rear (see usr/sbin/rear) nothing is done if no file matches:
-        for network_file in $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
-            new_dev=$( get_device_by_hwaddr "$new_mac" )
-            sed_script="\
-                /iface $new_dev/ s/;address [0-9.]*;/;address ${nip};/g ;\
-                /iface $new_dev/ s/;netmask [0-9.]*;/;netmask ${nmask};/g"
-            Debug "sed_script: '$sed_script'"
-
-            tmp_network_file="$TMP_DIR/${network_file##*/}"
-            linearize_interfaces_file "$network_file" > "$tmp_network_file"
-
-            sed -i -e "$sed_script" "$tmp_network_file" || LogPrintError "Migrating network configuration for $network_file in $tmp_network_file failed"
-
-            rebuild_interfaces_file_from_linearized "$tmp_network_file" > "$network_file"
+        # Because the bash option nullglob is set in rear (see usr/sbin/rear) nothing is done if no file matches.
+        # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
+        # see https://github.com/rear/rear/pull/1514#discussion_r141031975
+        # and for the general issue see https://github.com/rear/rear/issues/1372
+        for restored_file in $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
+            # Silently skip directories and file not found:
+            test -f "$restored_file" || continue
+            # 'sed -i' bails out on symlinks, so we follow the symlink and patch the symlink target
+            # on dead links we inform the user and skip them
+            # TODO: We should do this inside 'chroot $TARGET_FS_ROOT' so that absolute symlinks will work correctly
+            # cf. https://github.com/rear/rear/issues/1338
+            if test -L "$restored_file" ; then
+                if symlink_target="$( readlink -f "$restored_file" )" ; then
+                    # symlink_target is an absolute path in the recovery system
+                    # e.g. the symlink target of etc/mtab is /mnt/local/proc/12345/mounts
+                    # If the symlink target does not start with /mnt/local/ (i.e. if it does not start with $TARGET_FS_ROOT)
+                    # it is an absolute symlink (i.e. inside $TARGET_FS_ROOT a symlink points to /absolute/path/file)
+                    # and the target of an absolute symlink is not within the recreated system but in the recovery system
+                    # where it does not make sense to patch files, cf. https://github.com/rear/rear/issues/1338
+                    # so that we skip patching symlink targets that are not within the recreated system:
+                    if ! echo $symlink_target | grep -q "^$TARGET_FS_ROOT/" ; then
+                        Log "Skip patching symlink $restored_file target $symlink_target not within $TARGET_FS_ROOT"
+                        continue
+                    fi
+                    # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
+                    # the symlink target is considered to not be a restored file that needs to be patched
+                    # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
+                    if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
+                        Log "Skip patching symlink $restored_file target $symlink_target on /proc/ /sys/ /dev/ or /run/"
+                        continue
+                    fi
+                    Log "Patching symlink $restored_file target $symlink_target"
+                    restored_file="$symlink_target"
+                else
+                    Log "Skip patching dead symlink $restored_file"
+                    continue
+                fi
+            fi
+            # To be on the safe side we do not use 'interfaces_file' as variable name here because
+            # that name is used as non-local name in the linearize_interfaces_file function which is called below
+            # regardless that currently the linearize_interfaces_file function would not change an outer interfaces_file value
+            # because it is called with the outer interfaces_file value as $1 and then it sets interfaces_file=$1
+            network_interfaces_file=$restored_file
+            Log "Migrating network configuration for $network_interfaces_file"
+            # Get new interface from the MAC address in case of inet renaming:
+            new_interface=$( get_device_by_hwaddr "$new_mac" )
+            if test "$new_cidr" ; then
+                # We have IP-address/CIDR like 192.168.100.101/24 so we use that without a separated netmask setting:
+                sed_script="/iface $new_interface/ s/;address [0-9.]*;/;address $new_ip_cidr;/g"
+            else
+                # We have a plain IP-address like 192.168.100.101 without CIDR:
+                if test "$new_netmask" ; then
+                    # We also have a netmask so we use the plain IP-address plus a separated netmask setting:
+                    sed_script="/iface $new_interface/ s/;address [0-9.]*;/;address $new_ip;/g ; /iface $new_interface/ s/;netmask [0-9.]*;/;netmask $new_netmask;/g"
+                else
+                    # We have only a plain IP-address like 192.168.100.101 but no netmask so we can use only the plain IP-address
+                    # but only a plain IP-address without netmask is likely insufficient so we tell the user about it:
+                    LogPrintError "Only plain IP-address $new_ip without netmask can be set in $network_interfaces_file (likely insufficient)"
+                    sed_script="/iface $new_interface/ s/;address [0-9.]*;/;address $new_ip;/g"
+                fi
+            fi
+            linearized_network_interfaces_file="$TMP_DIR/${network_interfaces_file##*/}.linearized"
+            linearize_interfaces_file "$network_interfaces_file" > "$linearized_network_interfaces_file"
+            # Apply the sed script:
+            Debug "sed_script for migrating network configuration for $network_interfaces_file in $linearized_network_interfaces_file: '$sed_script'"
+            sed -i -e "$sed_script" "$linearized_network_interfaces_file" || LogPrintError "Failed to migrate network configuration in $linearized_network_interfaces_file"
+            rebuild_interfaces_file_from_linearized "$linearized_network_interfaces_file" > "$network_interfaces_file"
             # End handling Debian and Ubuntu network configuration files (with network interfaces configuration files):
         done
 
@@ -387,6 +445,9 @@ LogPrintError "${BASH_SOURCE[0]} unfinished work in progress, cf. https://github
     done < $TMP_DIR/mappings/join_mac_ip_addresses
     # End changing IP addresses and CIDR or netmask in network configuration files when there is content in .../mappings/ip_addresses:
 fi
+
+# TODO: Currently work in progress. Up to here it may work (not yet tested). The lines below need to be done.
+LogPrintError "${BASH_SOURCE[0]} unfinished work in progress, cf. https://github.com/rear/rear/pull/2313"
 
 # Set the new routes if a mapping file is available:
 if test -s $TMP_DIR/mappings/routes ; then
