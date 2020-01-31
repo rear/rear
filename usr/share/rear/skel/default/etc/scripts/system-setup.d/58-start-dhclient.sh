@@ -1,7 +1,7 @@
 # start dhclient daemon script
 #
-# check if we have USE_DHCLIENT=y, if not then we run 60/62 scripts
-[[ -z "$USE_DHCLIENT"  ]] && return
+# Skip execution if USE_DHCLIENT is set to 'false' or empty.
+[[ -z "$USE_DHCLIENT" ]] || is_false $USE_DHCLIENT && return
 
 # with USE_STATIC_NETWORKING no networking setup via DHCP must happen
 # see default.conf: USE_STATIC_NETWORKING overrules USE_DHCLIENT
