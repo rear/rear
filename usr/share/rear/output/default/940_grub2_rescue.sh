@@ -165,6 +165,11 @@ if is_true $USING_UEFI_BOOTLOADER ; then
         echo "          echo 'Loading initrd $boot_initrd_file (may take a while) ...'"
         echo "          initrd $grub_boot_dir/$boot_initrd_name"
         echo "}"
+        echo ""
+        echo "menuentry 'Boot original system' {"
+        echo "          search --fs-uuid --no-floppy --set=esp $esp_disk_uuid"
+        echo "          chainloader (\$esp)$esp_relative_bootloader"
+        echo "}"
     ) > $grub_config_dir/rear.cfg
 
     # Create rear.efi at UEFI default boot directory location.
