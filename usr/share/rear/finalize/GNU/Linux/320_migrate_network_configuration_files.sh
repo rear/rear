@@ -388,17 +388,17 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
                 # We have IP-address/CIDR like 192.168.100.101/24 so we use that without a separated netmask setting.
                 # The usual sed 's/regexp/replacement/flags' command delimiter character / is replaced by # here because
                 # the delimiter character must not appear in regexp or replacement but e.g. 192.168.100.101/24 contains it:
-                sed_script="/iface $new_interface/ s/;address [0-9.]*;/;address $new_ip_cidr;/g"
+                sed_script="/iface $new_interface/ s#;address [0-9.]*;#;address $new_ip_cidr;#g"
             else
                 # We have a plain IP-address like 192.168.100.101 without CIDR:
                 if test "$new_netmask" ; then
                     # We also have a netmask so we use the plain IP-address plus a separated netmask setting:
-                    sed_script="/iface $new_interface/ s/;address [0-9.]*;/;address $new_ip;/g ; /iface $new_interface/ s/;netmask [0-9.]*;/;netmask $new_netmask;/g"
+                    sed_script="/iface $new_interface/ s#;address [0-9.]*;#;address $new_ip;#g ; /iface $new_interface/ s#;netmask [0-9.]*;#;netmask $new_netmask;#g"
                 else
                     # We have only a plain IP-address like 192.168.100.101 but no netmask so we can use only the plain IP-address
                     # but only a plain IP-address without netmask is likely insufficient so we tell the user about it:
                     LogPrintError "Only plain IP-address $new_ip without netmask can be set in $network_interfaces_file (likely insufficient)"
-                    sed_script="/iface $new_interface/ s/;address [0-9.]*;/;address $new_ip;/g"
+                    sed_script="/iface $new_interface/ s#;address [0-9.]*;#;address $new_ip;#g"
                 fi
             fi
             linearized_network_interfaces_file="$TMP_DIR/${network_interfaces_file##*/}.linearized"
