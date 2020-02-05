@@ -16,7 +16,7 @@
 #   doc/mappings/routes.example
 #   doc/mappings/ip_addresses.example
 
-local restored_file symlink_target
+local restored_file network_configuration_file
 local network_configuration_files=()
 local mapping_file_name mapping_file_interface_field mapping_file_content
 local sed_script sed_script_reason
@@ -27,12 +27,74 @@ local new_ip_cidr new_ip new_cidr new_netmask
 local ifcfg_file multiple_addresses_keyword
 local network_interfaces_file linearized_network_interfaces_file
 
-# All finalize scripts that patch restored files within TARGET_FS_ROOT should do the same symlink handling which means:
-# 1. Skip patching symlink targets that are not within TARGET_FS_ROOT (i.e. when it is an absolute symlink)
+# All finalize scripts that patch restored files within TARGET_FS_ROOT
+# should do the same directory and file and symlink handling which means:
+# 0. Skip patching non-regular files like directories, device nodes, or files that do not exist
+# When the regular file is a symlink:
+# 1. Try to patch the symlink target when the regular file is a symlink
 # 2. Skip patching if the symlink target contains /proc/ /sys/ /dev/ or /run/
-# 3. Skip patching dead symlinks
+# 3. Skip patching symlink targets that are non-regular files like directories, device nodes, or files that do not exist
+# 4. Skip patching dead symlinks
 # See the symlink handling code in finalize/GNU/Linux/280_migrate_uuid_tags.sh and other such files,
 # cf. https://github.com/rear/rear/pull/2055 and https://github.com/rear/rear/issues/1338
+# The restored file argument $1 must be provided as an absolute path in the recovery system
+# i.e. as $TARGET_FS_ROOT/path/to/restored_file (usually /mnt/local/path/to/restored_file).
+# The valid_restored_file_for_patching function returns 0 and outputs on stdout
+# the absolute path in the recovery system of the file that should be used for patching
+# when the restored file is a valid regular file or a symlink with a valid symlink target
+# otherwise the valid_restored_file_for_patching function returns 1 and outputs nothing:
+function valid_restored_file_for_patching () {
+    local restored_file="$1"
+    local symlink_target
+    # Silently skip non-regular files like directories, device nodes, or file not found:
+    test -f "$restored_file" || return 1
+    if ! test -L "$restored_file" ; then
+        # No symlink but a normal existing regular file:
+        Log "Patching $restored_file"
+        echo -n "$restored_file"
+        return 0
+    fi
+    # Symlink handling:
+    # 'sed -i' bails out on symlinks so we patch the symlink target if it exists within TARGET_FS_ROOT.
+    # TODO: We may do this inside 'chroot $TARGET_FS_ROOT' so that absolute symlinks will work correctly
+    # cf. https://github.com/rear/rear/issues/1338
+    # Currently we prepend absolute symlink targets with $TARGET_FS_ROOT and try to use that instead.
+    # Get the symlink target regardless of which of its components exist:
+    if ! symlink_target="$( readlink -m "$restored_file" )" ; then
+        # Skip when readlink cannot resolve the symlink:
+        Log "Skip patching symlink $restored_file (readlink could not resolve it)"
+        return 1
+    fi
+    # symlink_target is an absolute path in the recovery system
+    # e.g. the symlink target of etc/mtab is /mnt/local/proc/12345/mounts
+    # If the symlink target does not start with /mnt/local/ (i.e. if it does not start with $TARGET_FS_ROOT)
+    # it is an absolute symlink (i.e. inside $TARGET_FS_ROOT a symlink points to /absolute/path/file)
+    # and the target of an absolute symlink is not within the recreated system but in the recovery system
+    # where it does not make sense to patch files, cf. https://github.com/rear/rear/issues/1338
+    # so that we prepend $TARGET_FS_ROOT to get the symlink target as absolute path in the recovery system
+    # (e.g. /absolute/path/file becomes $TARGET_FS_ROOT/absolute/path/file):
+    if ! echo $symlink_target | grep -q "^$TARGET_FS_ROOT/" ; then
+        Log "Symlink $restored_file target $symlink_target not within $TARGET_FS_ROOT trying $TARGET_FS_ROOT/$symlink_target instead"
+        symlink_target="$TARGET_FS_ROOT/$symlink_target"
+    fi
+    # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
+    # the symlink target is considered to not be a restored file that needs to be patched
+    # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
+    if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
+        Log "Skip patching symlink $restored_file target $symlink_target on /proc/ /sys/ /dev/ or /run/"
+        return 1
+    fi
+    # Skip symlink targets that are non-regular files like directories, device nodes, or file not found (i.e. dead symlinks):
+    if ! test -f "$symlink_target" ; then
+        Log "Skip patching symlink $restored_file target $symlink_target is not a regular file"
+        return 1
+    fi
+    # Patch symlink targets that are regular files within TARGET_FS_ROOT:
+    Log "Patching symlink $restored_file target $symlink_target"
+    echo -n "$symlink_target"
+    return 0
+}
+
 # Because the bash option nullglob is set in rear (see usr/sbin/rear) restored_file is empty if nothing matches
 # $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* or $TARGET_FS_ROOT/etc/network/inter[f]aces or $TARGET_FS_ROOT/etc/network/interfaces.d/*
 # and $TARGET_FS_ROOT/etc/network/inter[f]aces is a special trick to only add $TARGET_FS_ROOT/etc/network/interfaces if it exists.
@@ -40,43 +102,12 @@ local network_interfaces_file linearized_network_interfaces_file
 # see https://github.com/rear/rear/pull/1514#discussion_r141031975
 # and for the general issue see https://github.com/rear/rear/issues/1372
 for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
-    # Silently skip directories and file not found:
-    test -f "$restored_file" || continue
-    # 'sed -i' bails out on symlinks, so we follow the symlink and patch the symlink target
-    # on dead links we inform the user and skip them
-    # TODO: We should do this inside 'chroot $TARGET_FS_ROOT' so that absolute symlinks will work correctly
-    # cf. https://github.com/rear/rear/issues/1338
-    if test -L "$restored_file" ; then
-        if symlink_target="$( readlink -f "$restored_file" )" ; then
-            # symlink_target is an absolute path in the recovery system
-            # e.g. the symlink target of etc/mtab is /mnt/local/proc/12345/mounts
-            # If the symlink target does not start with /mnt/local/ (i.e. if it does not start with $TARGET_FS_ROOT)
-            # it is an absolute symlink (i.e. inside $TARGET_FS_ROOT a symlink points to /absolute/path/file)
-            # and the target of an absolute symlink is not within the recreated system but in the recovery system
-            # where it does not make sense to patch files, cf. https://github.com/rear/rear/issues/1338
-            # so that we skip patching symlink targets that are not within the recreated system:
-            if ! echo $symlink_target | grep -q "^$TARGET_FS_ROOT/" ; then
-                Log "Skip patching symlink $restored_file target $symlink_target not within $TARGET_FS_ROOT"
-                continue
-            fi
-            # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
-            # the symlink target is considered to not be a restored file that needs to be patched
-            # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
-            if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
-                Log "Skip patching symlink $restored_file target $symlink_target on /proc/ /sys/ /dev/ or /run/"
-                continue
-            fi
-            Log "Patching symlink $restored_file target $symlink_target"
-            restored_file="$symlink_target"
-        else
-            Log "Skip patching dead symlink $restored_file"
-            continue
-        fi
-    fi
-    network_configuration_files+=( $restored_file )
+    network_configuration_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
+    network_configuration_files+=( $network_configuration_file )
 done
 
-# Skip if no valid restored network configuration files are found:
+# Skip if no valid restored network configuration files are found
+# i.e. when the network_configuration_files array does not even have a first (non empty) element:
 test $network_configuration_files || return 0
 
 # Create a temporary directory for plain mapping files content without comments and empty lines.
@@ -257,40 +288,7 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
         # see https://github.com/rear/rear/pull/1514#discussion_r141031975
         # and for the general issue see https://github.com/rear/rear/issues/1372
         for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$new_mac* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$interface* ; do
-            # Silently skip directories and file not found:
-            test -f "$restored_file" || continue
-            # 'sed -i' bails out on symlinks, so we follow the symlink and patch the symlink target
-            # on dead links we inform the user and skip them
-            # TODO: We should do this inside 'chroot $TARGET_FS_ROOT' so that absolute symlinks will work correctly
-            # cf. https://github.com/rear/rear/issues/1338
-            if test -L "$restored_file" ; then
-                if symlink_target="$( readlink -f "$restored_file" )" ; then
-                    # symlink_target is an absolute path in the recovery system
-                    # e.g. the symlink target of etc/mtab is /mnt/local/proc/12345/mounts
-                    # If the symlink target does not start with /mnt/local/ (i.e. if it does not start with $TARGET_FS_ROOT)
-                    # it is an absolute symlink (i.e. inside $TARGET_FS_ROOT a symlink points to /absolute/path/file)
-                    # and the target of an absolute symlink is not within the recreated system but in the recovery system
-                    # where it does not make sense to patch files, cf. https://github.com/rear/rear/issues/1338
-                    # so that we skip patching symlink targets that are not within the recreated system:
-                    if ! echo $symlink_target | grep -q "^$TARGET_FS_ROOT/" ; then
-                        Log "Skip patching symlink $restored_file target $symlink_target not within $TARGET_FS_ROOT"
-                        continue
-                    fi
-                    # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
-                    # the symlink target is considered to not be a restored file that needs to be patched
-                    # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
-                    if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
-                        Log "Skip patching symlink $restored_file target $symlink_target on /proc/ /sys/ /dev/ or /run/"
-                        continue
-                    fi
-                    Log "Patching symlink $restored_file target $symlink_target"
-                    restored_file="$symlink_target"
-                else
-                    Log "Skip patching dead symlink $restored_file"
-                    continue
-                fi
-            fi
-            ifcfg_file=$restored_file
+            ifcfg_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
             sed_script=""
             sed_script_reason=""
             # On a SLES15-like openSUSE Leap 15.0 system /etc/sysconfig/network/ifcfg.template shows in particular
@@ -312,7 +310,9 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
             if grep -q "^IPADDR=[':0-9A-Fa-f][.:0-9A-Fa-f]*/[0-9'][0-9']*" $ifcfg_file ; then
                 # Case 1) where the syntax is like IPADDR=192.168.1.1/24 or IPADDR='192.168.1.1/24'
                 # replace the old IPADDR value with the new_ip_cidr value (always in the IPADDR='...' form) and
-                # set NETMASK and PREFIXLEN empty (to remove useless old values that may not match the new_ip_cidr value):
+                # set NETMASK and PREFIXLEN empty (to remove useless old values that may not match the new_ip_cidr value).
+                # The usual sed 's/regexp/replacement/flags' command delimiter character / is replaced by # here because
+                # the delimiter character must not appear in regexp or replacement but e.g. 192.168.1.1/24 contains it:
                 sed_script+=" ; s#^IPADDR=.*#IPADDR='$new_ip_cidr'#g ; s#^NETMASK=.*#NETMASK=''#g ; s#^PREFIXLEN=.*#PREFIXLEN=''#g"
                 sed_script_reason="setting new IP-address/CIDR"
             else # Case 2) plain IPADDR plus PREFIXLEN or case 3) plain IPADDR plus NETMASK:
@@ -376,49 +376,18 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
         # see https://github.com/rear/rear/pull/1514#discussion_r141031975
         # and for the general issue see https://github.com/rear/rear/issues/1372
         for restored_file in $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
-            # Silently skip directories and file not found:
-            test -f "$restored_file" || continue
-            # 'sed -i' bails out on symlinks, so we follow the symlink and patch the symlink target
-            # on dead links we inform the user and skip them
-            # TODO: We should do this inside 'chroot $TARGET_FS_ROOT' so that absolute symlinks will work correctly
-            # cf. https://github.com/rear/rear/issues/1338
-            if test -L "$restored_file" ; then
-                if symlink_target="$( readlink -f "$restored_file" )" ; then
-                    # symlink_target is an absolute path in the recovery system
-                    # e.g. the symlink target of etc/mtab is /mnt/local/proc/12345/mounts
-                    # If the symlink target does not start with /mnt/local/ (i.e. if it does not start with $TARGET_FS_ROOT)
-                    # it is an absolute symlink (i.e. inside $TARGET_FS_ROOT a symlink points to /absolute/path/file)
-                    # and the target of an absolute symlink is not within the recreated system but in the recovery system
-                    # where it does not make sense to patch files, cf. https://github.com/rear/rear/issues/1338
-                    # so that we skip patching symlink targets that are not within the recreated system:
-                    if ! echo $symlink_target | grep -q "^$TARGET_FS_ROOT/" ; then
-                        Log "Skip patching symlink $restored_file target $symlink_target not within $TARGET_FS_ROOT"
-                        continue
-                    fi
-                    # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
-                    # the symlink target is considered to not be a restored file that needs to be patched
-                    # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
-                    if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
-                        Log "Skip patching symlink $restored_file target $symlink_target on /proc/ /sys/ /dev/ or /run/"
-                        continue
-                    fi
-                    Log "Patching symlink $restored_file target $symlink_target"
-                    restored_file="$symlink_target"
-                else
-                    Log "Skip patching dead symlink $restored_file"
-                    continue
-                fi
-            fi
             # To be on the safe side we do not use 'interfaces_file' as variable name here because
             # that name is used as non-local name in the linearize_interfaces_file function which is called below
             # regardless that currently the linearize_interfaces_file function would not change an outer interfaces_file value
             # because it is called with the outer interfaces_file value as $1 and then it sets interfaces_file=$1
-            network_interfaces_file=$restored_file
+            network_interfaces_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
             Log "Migrating network configuration for $network_interfaces_file"
             # Get new interface from the MAC address in case of inet renaming:
             new_interface=$( get_device_by_hwaddr "$new_mac" )
             if test "$new_cidr" ; then
-                # We have IP-address/CIDR like 192.168.100.101/24 so we use that without a separated netmask setting:
+                # We have IP-address/CIDR like 192.168.100.101/24 so we use that without a separated netmask setting.
+                # The usual sed 's/regexp/replacement/flags' command delimiter character / is replaced by # here because
+                # the delimiter character must not appear in regexp or replacement but e.g. 192.168.100.101/24 contains it:
                 sed_script="/iface $new_interface/ s/;address [0-9.]*;/;address $new_ip_cidr;/g"
             else
                 # We have a plain IP-address like 192.168.100.101 without CIDR:
@@ -485,4 +454,6 @@ if test -s $TMP_DIR/mappings/routes ; then
         fi
     done < $TMP_DIR/mappings/join_mac_routes
 fi
+
+unset valid_restored_file_for_patching
 
