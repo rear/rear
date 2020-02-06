@@ -26,6 +26,7 @@ local current_mac
 local new_ip_cidr new_ip new_cidr new_netmask
 local ifcfg_file multiple_addresses_keyword
 local network_interfaces_file linearized_network_interfaces_file
+local destination gateway
 
 # All finalize scripts that patch restored files within TARGET_FS_ROOT
 # should do the same directory and file and symlink handling which means:
@@ -415,17 +416,44 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
     # End changing IP addresses and CIDR or netmask in network configuration files when there is content in .../mappings/ip_addresses:
 fi
 
-# TODO: Currently work in progress. Up to here it may work (not yet tested). The lines below need to be done.
-LogPrintError "${BASH_SOURCE[0]} unfinished work in progress, cf. https://github.com/rear/rear/pull/2313"
-
-# Set the new routes if a mapping file is available:
+# Set new routes if a mapping file is available:
 if test -s $TMP_DIR/mappings/routes ; then
+    Log "Setting new routes in network configuration files"
+    # mappings/mac is e.g. (old-MAC-address new-MAC-address interface):
+    #   00:11:85:c2:b8:d5 00:50:56:b3:75:ad eth0
+    #   00:11:85:c2:b8:d7 00:50:56:b3:08:8c eth2
+    #   00:11:85:c2:b8:d9 00:50:56:b3:08:8e eth3
+    # and mappings/routes is e.g. (destination/CIDR gateway-IP interface):
+    #   default 10.100.200.1 eth0
+    #   192.168.100.0/24 172.16.200.202 eth3
+    # so that "join -1 3 -2 3 mappings/mac mappings/routes" results on stdout (interface old-MAC-address new-MAC-address destination/CIDR gateway-IP):
+    #   eth0 00:11:85:c2:b8:d5 00:50:56:b3:75:ad default 10.100.200.1
+    #   eth3 00:11:85:c2:b8:d9 00:50:56:b3:08:8e 192.168.100.0/24 172.16.200.202
     # Keep the join result in a file to make debugging easier in the recovery system after "rear recover":
-    join -1 3 -2 3  $TMP_DIR/mappings/mac $TMP_DIR/mappings/routes > $TMP_DIR/mappings/join_mac_routes
+    join -1 3 -2 3 $TMP_DIR/mappings/mac $TMP_DIR/mappings/routes > $TMP_DIR/mappings/join_mac_routes
     # Read $TMP_DIR/mappings/join_mac_routes contents:
-    while read dev old_mac new_mac destination gateway device junk ; do
-        #   echo "$destination $gateway - $device" >> $TARGET_FS_ROOT/etc/sysconfig/network/routes
-        if [[ "$destination" = "default" ]]; then
+    while read interface old_mac new_mac destination gateway junk ; do
+
+        if test "$destination" = "default" ; then
+
+            # Handle Fedora and SUSE network configuration files (with sysconfig ifcfg configuration files).
+            # Because the bash option nullglob is set in rear (see usr/sbin/rear) nothing is done if no file matches.
+            # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
+            # see https://github.com/rear/rear/pull/1514#discussion_r141031975
+            # and for the general issue see https://github.com/rear/rear/issues/1372
+            for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$new_mac* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$interface* $TARGET_FS_ROOT/etc/sysconfig/ne[t]work ; do
+                ifcfg_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
+                sed_script=""
+                sed_script_reason=""
+
+
+
+            done
+
+# TODO: Currently work in progress. Up to here it may work (not yet tested). The lines below need to be done.
+#LogPrintError "${BASH_SOURCE[0]} unfinished work in progress, cf. https://github.com/rear/rear/pull/2313"
+BugError "${BASH_SOURCE[0]} incomplete work in progress, cf. https://github.com/rear/rear/pull/2313"
+
             # Fedora/Suse Family
             for network_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*${device}* $TARGET_FS_ROOT/etc/sysconfig/network ; do
                 sed_script="s#^GATEWAY=.*#GATEWAY='$gateway'#g;s#^GATEWAYDEV=.*#GATEWAYDEV='$device'#g"
@@ -446,12 +474,15 @@ if test -s $TMP_DIR/mappings/routes ; then
 
                 rebuild_interfaces_file_from_linearized "$tmp_network_file" > "$network_file"
             done
-        else
-            # static-routes or route-<device> settings?
-            for network_file in $TARGET_FS_ROOT/etc/sysconfig/*/route-*${device}* $TARGET_FS_ROOT/etc/sysconfig/static-routes ; do
-                LogPrint "Cannot migrate network configuration in $network_file - you need to do that manually"
-            done
+
+            continue
         fi
+
+        # static-routes or route-<device> settings?
+        for network_file in $TARGET_FS_ROOT/etc/sysconfig/*/route-*${device}* $TARGET_FS_ROOT/etc/sysconfig/static-routes ; do
+            LogPrint "Cannot migrate network configuration in $network_file - you need to do that manually"
+        done
+
     done < $TMP_DIR/mappings/join_mac_routes
 fi
 
