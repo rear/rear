@@ -26,7 +26,7 @@ local current_mac
 local new_ip_cidr new_ip new_cidr new_netmask
 local ifcfg_file multiple_addresses_keyword
 local network_interfaces_file linearized_network_interfaces_file
-local destination gateway routing_config_file
+local routing_config_file destination gateway
 
 # All finalize scripts that patch restored files within TARGET_FS_ROOT
 # should do the same directory and file and symlink handling which means:
@@ -418,6 +418,14 @@ fi
 
 # Setting new default routing when there is content in ...mappings/routes:
 if test -s $TMP_DIR/mappings/routes ; then
+    # Tell the user to do things manually in case of route-<interface> or static-routes configuration files.
+    # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
+    # see https://github.com/rear/rear/pull/1514#discussion_r141031975
+    # and for the general issue see https://github.com/rear/rear/issues/1372
+    for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/route-*$interface* $TARGET_FS_ROOT/etc/sysconfig/static-rou[t]es ; do
+        routing_config_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
+        LogPrintError "Cannot set routing in $routing_config_file - you need to do that manually"
+    done
     # mappings/mac is e.g. (old-MAC-address new-MAC-address interface):
     #   00:11:85:c2:b8:d5 00:50:56:b3:75:ad eth0
     #   00:11:85:c2:b8:d7 00:50:56:b3:08:8c eth2
@@ -432,55 +440,49 @@ if test -s $TMP_DIR/mappings/routes ; then
     join -1 3 -2 3 $TMP_DIR/mappings/mac $TMP_DIR/mappings/routes > $TMP_DIR/mappings/join_mac_routes
     # Read $TMP_DIR/mappings/join_mac_routes contents:
     while read interface old_mac new_mac destination gateway junk ; do
-        # Set default routing:
-        if test "$destination" = "default" ; then
-            Log "Setting new default routing in network configuration files"
-            # Handle Fedora and SUSE default routing configuration files (with sysconfig ifcfg configuration files).
-            # Because the bash option nullglob is set in rear (see usr/sbin/rear) nothing is done if no file matches.
-            # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
-            # see https://github.com/rear/rear/pull/1514#discussion_r141031975
-            # and for the general issue see https://github.com/rear/rear/issues/1372
-            for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$new_mac* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$interface* $TARGET_FS_ROOT/etc/sysconfig/ne[t]work ; do
-                routing_config_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
-                # etc/sysconfig/network syntay (excerpts):
-                #   GATEWAY=gwip where gwip is the IP address of the remote network gateway if available
-                #   GATEWAYDEV=gwdev where gwdev is the device name eth# you use to access the remote gateway
-                sed_script="s#^GATEWAY=.*#GATEWAY='$gateway'#g ; s#^GATEWAYDEV=.*#GATEWAYDEV='$interface'#g"
-                # Apply the sed script:
-                Debug "sed_script for setting default routing in $routing_config_file: '$sed_script'"
-                sed -i -e "$sed_script" "$routing_config_file" || LogPrintError "Failed to set default routing in $routing_config_file"
-            done
-            # Handle Debian and Ubuntu network configuration files (with network interfaces configuration files).
-            # Because the bash option nullglob is set in rear (see usr/sbin/rear) nothing is done if no file matches.
-            # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
-            # see https://github.com/rear/rear/pull/1514#discussion_r141031975
-            # and for the general issue see https://github.com/rear/rear/issues/1372
-            for restored_file in $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
-                # To be on the safe side we do not use 'interfaces_file' as variable name here because
-                # that name is used as non-local name in the linearize_interfaces_file function which is called below
-                # regardless that currently the linearize_interfaces_file function would not change an outer interfaces_file value
-                # because it is called with the outer interfaces_file value as $1 and then it sets interfaces_file=$1
-                network_interfaces_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
-                Log "Migrating network configuration for $network_interfaces_file"
-                # Get new interface from the MAC address in case of inet renaming:
-                new_interface=$( get_device_by_hwaddr "$new_mac" )
-                sed_script="/iface $new_interface/ s#;gateway [0-9.]*;#;gateway $gateway;#g"
-                linearized_network_interfaces_file="$TMP_DIR/${network_interfaces_file##*/}.linearized"
-                linearize_interfaces_file "$network_interfaces_file" > "$linearized_network_interfaces_file"
-                # Apply the sed script:
-                Debug "sed_script for setting default routing for $network_interfaces_file in $linearized_network_interfaces_file: '$sed_script'"
-                sed -i -e "$sed_script" "$linearized_network_interfaces_file" || LogPrintError "Failed to set default routing in $linearized_network_interfaces_file"
-                rebuild_interfaces_file_from_linearized "$linearized_network_interfaces_file" > "$network_interfaces_file"
-            done
+        if ! test "$destination" = "default" ; then
+            # Tell the user to set non-default routing manually (i.e. non-default destination like 192.168.100.0/24)
+            LogPrintError "Cannot set routing for non-default destination $destination via gateway $gateway and interface $interface - you need to do that manually"
             continue
-            # End set default routing:
         fi
-        # Tell the user to set non-default routing manually (i.e. non-default destination like 192.168.100.0/24)
-        LogPrintError "Cannot set routing for non-default destination $destination via gateway $gateway and interface $interface - you need to do that manually"
-        # Tell the user to do things manually in case of route-<interface> or static-routes configuration files:
-        for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/route-*$interface* $TARGET_FS_ROOT/etc/sysconfig/static-rou[t]es ; do
+        # Set default routing:
+        Log "Setting new default routing in network configuration files"
+        # Handle Fedora and SUSE default routing configuration files (with sysconfig ifcfg configuration files).
+        # Because the bash option nullglob is set in rear (see usr/sbin/rear) nothing is done if no file matches.
+        # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
+        # see https://github.com/rear/rear/pull/1514#discussion_r141031975
+        # and for the general issue see https://github.com/rear/rear/issues/1372
+        for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$new_mac* $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-*$interface* $TARGET_FS_ROOT/etc/sysconfig/ne[t]work ; do
             routing_config_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
-            LogPrintError "Cannot set routing in $routing_config_file - you need to do that manually"
+            # etc/sysconfig/network syntay (excerpts):
+            #   GATEWAY=gwip where gwip is the IP address of the remote network gateway if available
+            #   GATEWAYDEV=gwdev where gwdev is the device name eth# you use to access the remote gateway
+            sed_script="s#^GATEWAY=.*#GATEWAY='$gateway'#g ; s#^GATEWAYDEV=.*#GATEWAYDEV='$interface'#g"
+            # Apply the sed script:
+            Debug "sed_script for setting default routing in $routing_config_file: '$sed_script'"
+            sed -i -e "$sed_script" "$routing_config_file" || LogPrintError "Failed to set default routing in $routing_config_file"
+        done
+        # Handle Debian and Ubuntu network configuration files (with network interfaces configuration files).
+        # Because the bash option nullglob is set in rear (see usr/sbin/rear) nothing is done if no file matches.
+        # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
+        # see https://github.com/rear/rear/pull/1514#discussion_r141031975
+        # and for the general issue see https://github.com/rear/rear/issues/1372
+        for restored_file in $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
+            # To be on the safe side we do not use 'interfaces_file' as variable name here because
+            # that name is used as non-local name in the linearize_interfaces_file function which is called below
+            # regardless that currently the linearize_interfaces_file function would not change an outer interfaces_file value
+            # because it is called with the outer interfaces_file value as $1 and then it sets interfaces_file=$1
+            network_interfaces_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
+            Log "Migrating network configuration for $network_interfaces_file"
+            # Get new interface from the MAC address in case of inet renaming:
+            new_interface=$( get_device_by_hwaddr "$new_mac" )
+            sed_script="/iface $new_interface/ s#;gateway [0-9.]*;#;gateway $gateway;#g"
+            linearized_network_interfaces_file="$TMP_DIR/${network_interfaces_file##*/}.linearized"
+            linearize_interfaces_file "$network_interfaces_file" > "$linearized_network_interfaces_file"
+            # Apply the sed script:
+            Debug "sed_script for setting default routing for $network_interfaces_file in $linearized_network_interfaces_file: '$sed_script'"
+            sed -i -e "$sed_script" "$linearized_network_interfaces_file" || LogPrintError "Failed to set default routing in $linearized_network_interfaces_file"
+            rebuild_interfaces_file_from_linearized "$linearized_network_interfaces_file" > "$network_interfaces_file"
         done
         # End of "while read interface old_mac new_mac destination gateway":
     done < $TMP_DIR/mappings/join_mac_routes
