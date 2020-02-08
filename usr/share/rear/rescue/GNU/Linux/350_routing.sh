@@ -34,7 +34,7 @@ EOT
 # Skip network_routing_setup_script if dhclient will be used
 cat - <<EOT >>$network_routing_setup_script
 # If USE_DHCLIENT=y then skip the rest as DHCP also does the routing setup as needed:
-[[ ! -z "\$USE_DHCLIENT" && -z "\$USE_STATIC_NETWORKING" ]] && return
+is_true \$USE_DHCLIENT && ! is_true \$USE_STATIC_NETWORKING && return
 EOT
 
 # make route mapping available
