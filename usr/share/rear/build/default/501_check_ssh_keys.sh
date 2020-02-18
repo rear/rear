@@ -20,13 +20,13 @@ if is_false "$SSH_UNPROTECTED_PRIVATE_KEYS" ; then
     # When SSH_UNPROTECTED_PRIVATE_KEYS is false let ReaR find SSH key files:
     local host_key_files=( etc/ssh/ssh_host_* )
     # Caveat: This code will only detect SSH key files for root, not for other users.
-    local root_key_files=( root/.ssh/identi[t]y root/.ssh/id_* )
+    local root_key_files=( ./$ROOT_HOME_DIR/.ssh/identi[t]y ./$ROOT_HOME_DIR/.ssh/id_* )
     # Parse etc/ssh/ssh_config and root/.ssh/config (if exists) to find more key files
     # that could be specified via (not commented) IdentityFile entries (if exists)
     # and replace '~' in things like '~/.ssh/id_rsa' with 'root/.ssh/id_rsa':
     local more_key_files="$( sed -n -e "s#~#root#g" \
                                     -e '/^[^#]*identityfile/Is/^.*identityfile[ ]\+\([^ ]\+\).*$/\1/ip' \
-                                 etc/ssh/ssh_co[n]fig root/.ssh/co[n]fig </dev/null )"
+                                 etc/ssh/ssh_co[n]fig ./$ROOT_HOME_DIR/.ssh/co[n]fig </dev/null )"
     # Combine the found key files:
     key_files=( $( echo "${host_key_files[@]}" "${root_key_files[@]}" "${more_key_files[@]}" | tr -s '[:space:]' '\n' | sort -u ) )
 else
