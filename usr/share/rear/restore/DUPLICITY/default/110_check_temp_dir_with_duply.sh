@@ -10,7 +10,7 @@
 # if DUPLY_PROFILE="" then we have nonsense defined in our ReaR configuration
 [[ -z "$DUPLY_PROFILE" ]] && return
 
-DUPLY_PROFILE_FILE=$( ls /etc/duply/$DUPLY_PROFILE/conf /root/.duply/$DUPLY_PROFILE/conf 2>/dev/null )
+DUPLY_PROFILE_FILE=$( ls /etc/duply/$DUPLY_PROFILE/conf $ROOT_HOME_DIR/.duply/$DUPLY_PROFILE/conf 2>/dev/null )
 # Assuming we have a duply configuration we must have a path, right?
 [[ -z "$DUPLY_PROFILE_FILE" ]] && return
 find_duply_profile "$DUPLY_PROFILE_FILE"
