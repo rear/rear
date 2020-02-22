@@ -25,7 +25,7 @@ copy_log_file_exit_task="mkdir -p -m 0700 $recovery_system_recover_log_dir && cp
 # To be backward compatible with where to the logfile was copied before
 # have it as a symbolic link that points to where the logfile actually is:
 # ( "roots" in recovery_system_roots_home_dir means root's but ' in a variable name is not so good ;-)
-recovery_system_roots_home_dir=$TARGET_FS_ROOT/root
+recovery_system_roots_home_dir=$TARGET_FS_ROOT/$ROOT_HOME_DIR
 test -d $recovery_system_roots_home_dir || mkdir $verbose -m 0700 $recovery_system_roots_home_dir
 log_file_symlink_target=$recover_log_dir/$final_logfile_name
 # Remove existing and now outdated symlinks that would falsely point to the same target cf. https://github.com/rear/rear/issues/2301

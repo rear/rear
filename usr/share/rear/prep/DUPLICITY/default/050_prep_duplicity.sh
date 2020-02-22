@@ -24,9 +24,9 @@ COPY_AS_IS=(
 /etc/python
 /etc/python2.6
 /etc/python2.7
-/root/.duply
-/root/.duplicity
-/root/.gnupg
+$ROOT_HOME_DIR/.duply
+$ROOT_HOME_DIR/.duplicity
+$ROOT_HOME_DIR/.gnupg
 /usr/lib/pymodules
 /usr/lib/pyshared
 /usr/lib/python2.6

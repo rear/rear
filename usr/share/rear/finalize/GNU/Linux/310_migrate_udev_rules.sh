@@ -40,7 +40,7 @@ for rule in "${UDEV_NET_MAC_RULE_FILES[@]}" ; do
     cmp -s "$rule" "$TARGET_FS_ROOT/$rule" && continue
     # Save the one that was restored from the backup:
     rulefile="$( basename "$rule" )"
-    cp $v "$TARGET_FS_ROOT/$rule" $TARGET_FS_ROOT/root/rear-"$rulefile".old
+    cp $v "$TARGET_FS_ROOT/$rule" $TARGET_FS_ROOT/$ROOT_HOME_DIR/rear-"$rulefile".old
     # Overwrite the one that was restored from the backup with the one from the rescue system:
     LogPrint "Replacing restored udev rule '$TARGET_FS_ROOT/$rule' with the one from the ReaR rescue system"
     cp $v "$rule" "$TARGET_FS_ROOT/$rule" || LogPrintError "Failed to copy '$rule' to '$TARGET_FS_ROOT/$rule'"

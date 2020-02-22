@@ -9,7 +9,7 @@
 # use this ruler to make sure the comments stay in a single line:
 # the bash prompt is: 'RESCUE $HOSTNAME:~ #
 # -----------------------------------------------------80-|
-cat <<EOF > $ROOTFS_DIR/root/.bash_history
+cat <<EOF > $ROOTFS_DIR/$ROOT_HOME_DIR/.bash_history
 : # no more predefined ReaR entries in the bash history
 systemctl start sshd.service              # start SSH daemon
 ip -4 addr                                # get IPv4 address
@@ -24,6 +24,6 @@ rear recover                              # recover system
 : # there are some predefined entries in the bash history
 EOF
 
-chmod $v 0644 $ROOTFS_DIR/root/.bash_history >&2
+chmod $v 0644 $ROOTFS_DIR/$ROOT_HOME_DIR/.bash_history >&2
 
 # any other dot files should be listed below

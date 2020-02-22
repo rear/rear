@@ -13,5 +13,5 @@ if has_binary ssh-agent && has_binary ssh && grep -iq AddKeysToAgent "$(type -P 
     AddExitTask "ssh-agent -k >/dev/null"
     eval "$(ssh-agent -s)"
 
-    echo -e "\nHost *\nAddKeysToAgent yes\n" >> /root/.ssh/config
+    echo -e "\nHost *\nAddKeysToAgent yes\n" >> $ROOT_HOME_DIR/.ssh/config
 fi

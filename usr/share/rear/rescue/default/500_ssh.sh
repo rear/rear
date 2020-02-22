@@ -23,17 +23,17 @@ if is_true "$SSH_FILES" ; then
     # into the recovery system to make remote access "just work" in the recovery system
     # (provided SSH_UNPROTECTED_PRIVATE_KEYS is not false - otherwise unprotected keys get excluded)
     # cf. https://github.com/rear/rear/issues/1512 and https://github.com/rear/rear/issues/1511
-    copy_as_is_ssh_files=( /etc/s[s]h /root/.s[s]h /root/.shos[t]s )
+    copy_as_is_ssh_files=( /etc/s[s]h $ROOT_HOME_DIR/.s[s]h $ROOT_HOME_DIR/.shos[t]s )
 else
     # Use a reasonably secure fallback if SSH_FILES is not set or empty:
     contains_visible_char "${SSH_FILES[*]}" || SSH_FILES="avoid_sensitive_files"
     if test "avoid_sensitive_files" = "$SSH_FILES" ; then
         # Avoid copying sensitive SSH files:
         # From /etc/ssh copy only moduli ssh_config sshd_config ssh_known_hosts
-        # and from /root/.ssh copy only authorized_keys known_hosts (if exists)
+        # and from $ROOT_HOME_DIR/.ssh copy only authorized_keys known_hosts (if exists)
         # cf. https://github.com/rear/rear/issues/1512#issuecomment-331638066
         copy_as_is_ssh_files=( /etc/ssh/modu[l]i /etc/ssh/ssh_co[n]fig /etc/ssh/sshd_co[n]fig /etc/ssh/ssh_known_hos[t]s )
-        copy_as_is_ssh_files=( "${copy_as_is_ssh_files[@]}" /root/.ssh/authorized_ke[y]s /root/.ssh/known_hos[t]s )
+        copy_as_is_ssh_files=( "${copy_as_is_ssh_files[@]}" $ROOT_HOME_DIR/.ssh/authorized_ke[y]s $ROOT_HOME_DIR/.ssh/known_hos[t]s )
     else
         # Copy exactly what is specified:
         copy_as_is_ssh_files=( "${SSH_FILES[@]}" )
@@ -85,8 +85,8 @@ fi
 echo "ssh:23:respawn:/etc/scripts/run-sshd" >>$ROOTFS_DIR/etc/inittab
 
 # Print an info if there is no authorized_keys file for root and no SSH_ROOT_PASSWORD set:
-if ! test -f "/root/.ssh/authorized_keys" -o "$SSH_ROOT_PASSWORD" ; then
-    LogPrintError "To log into the recovery system via ssh set up /root/.ssh/authorized_keys or specify SSH_ROOT_PASSWORD"
+if ! test -f "$ROOT_HOME_DIR/.ssh/authorized_keys" -o "$SSH_ROOT_PASSWORD" ; then
+    LogPrintError "To log into the recovery system via ssh set up $ROOT_HOME_DIR/.ssh/authorized_keys or specify SSH_ROOT_PASSWORD"
 fi
 
 # Set the SSH root password; if pw is encrypted just copy it otherwise use openssl (for backward compatibility)
