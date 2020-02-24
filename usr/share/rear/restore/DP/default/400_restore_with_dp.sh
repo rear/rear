@@ -35,7 +35,7 @@ do
 	if grep -q "^${fs} " ${VAR_DIR}/recovery/mountpoint_device; then
 		LogPrint "Restore filesystem ${object}"
 		SessionID=`cat $TMP_DIR/dp_recovery_session`
-		${OMNIR} -filesystem ${host_fs} "${label}" -session ${SessionID} -tree ${fs} -into $TARGET_FS_ROOT -sparse -target `hostname` >/dev/null
+		${OMNIR} -filesystem ${host_fs} "${label}" -session ${SessionID} -full -tree ${fs} -into $TARGET_FS_ROOT -sparse -target `hostname` >/dev/null
 		case $? in
 			0)  Log "Restore of ${fs} was successful." ;;
 			10) Log "Restore of ${fs} finished with warnings." ;;
