@@ -166,11 +166,11 @@ DPChangeSession() {
     LogPrint ""
     i=0
     if test ! -s $TMP_DIR/backup.list.part; then cp $TMP_DIR/backup.list $TMP_DIR/backup.list.part; fi
-    cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | while read s; do
+    cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r -V | while read s; do
       i=$(expr $i + 1)
       LogPrint "  [$i] $s"
     done
-    i=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | wc -l)
+    i=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r -V | wc -l)
     echo
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
     # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
