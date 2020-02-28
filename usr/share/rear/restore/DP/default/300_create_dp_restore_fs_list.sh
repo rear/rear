@@ -6,7 +6,9 @@
 
 [ -f $TMP_DIR/DP_GUI_RESTORE ] && return # GUI restore explicetely requested
 
-/opt/omni/bin/omnidb -session $(cat $TMP_DIR/dp_recovery_session) | cut -d"'" -f -2 > $TMP_DIR/list_of_fs_objects
+OMNIDB=/opt/omni/bin/omnidb
+
+${OMNIDB} -session $(cat $TMP_DIR/dp_recovery_session) | grep `cat $TMP_DIR/dp_recovery_host` | cut -d"'" -f -2 > $TMP_DIR/list_of_fs_objects
 [ -s $TMP_DIR/list_of_fs_objects ]
 StopIfError "Data Protector did not find any file system objects for $(hostname)"
 

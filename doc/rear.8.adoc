@@ -307,7 +307,7 @@ Internal backup method that uses an arbitrary external command to
 create a backup and restore the data.
 
 BACKUP=*DP*::
-Use MicroFocus Data Protector to restore the data.
+Use Micro Focus Data Protector to restore the data.
 
 BACKUP=*FDRUPSTREAM*::
 Use FDR/Upstream to restore the data.

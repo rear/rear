@@ -23,8 +23,10 @@
 
 [ -f $TMP_DIR/DP_GUI_RESTORE ] && return # GUI restore explicetely requested
 
-# we will loop over all objects listed in $TMP_DIR/dp_list_of_fs_objects
-cat $TMP_DIR/dp_list_of_fs_objects | while read object
+OMNIR=/opt/omni/bin/omnir
+
+# we will loop over all objects listed in $TMP_DIR/list_of_fs_objects
+cat $TMP_DIR/list_of_fs_objects | while read object
 do
 	host_fs=`echo ${object} | awk '{print $1}'`
 	fs=`echo ${object} | awk '{print $1}' | cut -d: -f 2`
@@ -33,8 +35,7 @@ do
 	if grep -q "^${fs} " ${VAR_DIR}/recovery/mountpoint_device; then
 		LogPrint "Restore filesystem ${object}"
 		SessionID=`cat $TMP_DIR/dp_recovery_session`
-		Device=`/opt/omni/bin/omnidb -session ${SessionID} -detail | grep Device | sort -u | tail -n 1 | awk '{print $4}'`
-		/opt/omni/bin/omnir -filesystem ${host_fs} "${label}" -full -session ${SessionID} -tree ${fs} -into $TARGET_FS_ROOT -sparse -device ${Device} -target `hostname` -log >/dev/null
+		${OMNIR} -filesystem ${host_fs} "${label}" -session ${SessionID} -full -omit_unrequired_object_versions -no_resumable -overwrite -tree ${fs} -into $TARGET_FS_ROOT -sparse -target `hostname` >/dev/null
 		case $? in
 			0)  Log "Restore of ${fs} was successful." ;;
 			10) Log "Restore of ${fs} finished with warnings." ;;

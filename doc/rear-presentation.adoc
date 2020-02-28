@@ -87,7 +87,7 @@ recovery process until the system runs:
   - NFS, CIFS, rsync, HTTP, FTP, SFTP, ...
 
 * Back-up backends
-  - IBM TSM, MicroFocus Data Protector, Symantec NetBackup,
+  - IBM TSM, Micro Focus Data Protector, Symantec NetBackup,
     FDR/Upstream, Bacula, tar, rsync, Borg
 
 

@@ -34,7 +34,7 @@ DPGetBackupList() {
     label=`echo "${object}" | cut -d"'" -f 2`
     ${OMNIDB} -filesystem $host_fs "$label" | grep -v "^SessionID" | grep -v "^===========" | awk '{ print $1 }' >> $TMP_DIR/dp_list_of_sessions.in
   done
-  sort -u -r < $TMP_DIR/dp_list_of_sessions.in > $TMP_DIR/dp_list_of_sessions
+  sort -u -r -V < $TMP_DIR/dp_list_of_sessions.in > $TMP_DIR/dp_list_of_sessions
   cat $TMP_DIR/dp_list_of_sessions | while read sessid; do
     datalist=$(${OMNIDB} -session $sessid -report | grep BSM | cut -d\" -f 2 | head -1)
     device=$(${OMNIDB} -session $sessid -detail | grep "Device name" | cut -d: -f 2 | awk '{ print $1 }' | sort -u)
@@ -166,17 +166,17 @@ DPChangeSession() {
     LogPrint ""
     i=0
     if test ! -s $TMP_DIR/backup.list.part; then cp $TMP_DIR/backup.list $TMP_DIR/backup.list.part; fi
-    cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | while read s; do
+    cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r -V | while read s; do
       i=$(expr $i + 1)
       LogPrint "  [$i] $s"
     done
-    i=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | wc -l)
+    i=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r -V | wc -l)
     echo
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
     # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
     read -r -p "Please choose session [1-$i]: " 0<&6 1>&7 2>&8
     if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>/dev/null ; then
-      SESS=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r | head -${REPLY} | tail -1)
+      SESS=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r -V | head -${REPLY} | tail -1)
       valid=1
     else
       LogPrint "Invalid number '${REPLY}!"
