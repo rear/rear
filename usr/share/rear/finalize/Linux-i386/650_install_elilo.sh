@@ -23,10 +23,10 @@ LogPrint "Installing ELILO boot loader"
 if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]]; then
 
     # Check if we find the vfat file system /boot/efi where we expect it
-    [[ -d "$TARGET_FS_ROOT/boot/efi" ]] || Error "Could not find directory /boot/efi"
+    [[ -d "$TARGET_FS_ROOT/boot/efi" ]] || Error "Could not find directory $TARGET_FS_ROOT/boot/efi"
 
     # the UEFI_BOOTLOADER was saved in /etc/rear/rescue.conf file by rear mkrescue/mkbackup
-    [[ -f "$TARGET_FS_ROOT$UEFI_BOOTLOADER" ]] || Error "Could not find elilo.efi"
+    [[ -f "$TARGET_FS_ROOT$UEFI_BOOTLOADER" ]] || Error "Could not find elilo.efi $TARGET_FS_ROOT$UEFI_BOOTLOADER"
 
     [[ -r "$TARGET_FS_ROOT/etc/elilo.conf" ]]
     LogIfError "Unable to find /etc/elilo.conf"
