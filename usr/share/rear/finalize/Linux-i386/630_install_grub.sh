@@ -57,9 +57,9 @@ type -p grub >&2 || Error "Cannot install GRUB Legacy boot loader because there 
 if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]] ; then
 
     # Check if we find GRUB stage 2 where we expect it
-    test -d "$TARGET_FS_ROOT/boot" || Error "Could not find directory /boot."
-    test -d "$TARGET_FS_ROOT/boot/grub" || Error "Could not find directory /boot/grub."
-    test -r "$TARGET_FS_ROOT/boot/grub/stage2" || Error "Unable to find /boot/grub/stage2."
+    test -d "$TARGET_FS_ROOT/boot" || Error "Could not find directory $TARGET_FS_ROOT/boot"
+    test -d "$TARGET_FS_ROOT/boot/grub" || Error "Could not find directory $TARGET_FS_ROOT/boot/grub"
+    test -r "$TARGET_FS_ROOT/boot/grub/stage2" || Error "Unable to find $TARGET_FS_ROOT/boot/grub/stage2"
 
     # Find exclusive partition(s) belonging to /boot
     # or / (if /boot is inside root filesystem)
