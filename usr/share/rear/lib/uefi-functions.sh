@@ -96,13 +96,17 @@ function build_bootx86_efi {
         fi
     fi
 
-    # grub-mkimage needs /usr/lib/grub/x86_64-efi/moddep.lst (cf. https://github.com/rear/rear/issues/1193)
-    # and at least on SUSE systems grub2-mkimage needs /usr/lib/grub2/x86_64-efi/moddep.lst (in 'grub2' directory)
-    # so that we error out if grub-mkimage or grub2-mkimage would fail when its moddep.lst is missing.
-    # Careful: usr/sbin/rear sets nullglob so that /usr/lib/grub*/x86_64-efi/moddep.lst gets empty if nothing matches
-    # and 'test -f' succeeds with empty argument so that we cannot use 'test -f /usr/lib/grub*/x86_64-efi/moddep.lst'
+    # grub-mkstandalone needs a .../grub*/x86_64-efi/moddep.lst file (cf. https://github.com/rear/rear/issues/1193)
+    # At least on SUSE systems that is in different 'grub2' directories (cf. https://github.com/rear/rear/issues/2338)
+    # e.g. on openSUSE Leap 15.0 it is in /usr/lib/grub2/x86_64-efi/moddep.lst
+    # but on openSUSE Leap 15.1 that was moved to /usr/share/grub2/x86_64-efi/moddep.lst
+    # and the one in /boot/grub2/x86_64-efi/moddep.lst is a copy of the one in /usr/*/grub2/x86_64-efi/moddep.lst
+    # so we do not error out if we do not find a /x86_64-efi/moddep.lst file because it could be "anywhere else" in the future
+    # but we inform the user here in advance about possible problems when there is no /x86_64-efi/moddep.lst file.
+    # Careful: usr/sbin/rear sets nullglob so that /usr/*/grub*/x86_64-efi/moddep.lst gets empty if nothing matches
+    # and 'test -f' succeeds with empty argument so that we cannot use 'test -f /usr/*/grub*/x86_64-efi/moddep.lst'
     # also 'test -n' succeeds with empty argument but (fortunately/intentionally?) plain 'test' fails with empty argument:
-    test /usr/lib/grub*/x86_64-efi/moddep.lst || Error "$gmkstandalone would not make bootable EFI image of GRUB2 (no /usr/lib/grub*/x86_64-efi/moddep.lst file)"
+    test /usr/*/grub*/x86_64-efi/moddep.lst || LogPrintError "$gmkstandalone may fail to make a bootable EFI image of GRUB2 (no /usr/*/grub*/x86_64-efi/moddep.lst file)"
 
     (( ${#GRUB2_MODULES[@]} )) && LogPrint "Installing only ${GRUB2_MODULES[*]} modules into $outfile memdisk"
     (( ${#modules[@]} )) && LogPrint "GRUB2 modules to load: ${modules[*]}"
