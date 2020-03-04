@@ -1,7 +1,9 @@
 # Exclude everything non-essential
 
 # bootloaders
-COPY_AS_IS_EXCLUDE+=( /boot /etc/grub.d /etc/default/grub /usr/lib/grub /usr/share/grub )
+# Since openSUSE Leap 15.1 things were moved from /usr/lib/grub2/ to /usr/share/grub2/
+# cf. https://github.com/rear/rear/issues/2338#issuecomment-594432946
+COPY_AS_IS_EXCLUDE+=( /boot /etc/grub.d /etc/default/grub /usr/lib/grub /usr/share/grub /usr/lib/grub2 /usr/share/grub2 )
 # udev (hwdb.d files are compiled into binaries hwdb.bin by systemd-hwdb(8))
 COPY_AS_IS_EXCLUDE+=( /etc/udev/hwdb.d /etc/udev/rules.d/*.rules /lib/udev/hwdb.d )
 COPY_AS_IS_EXCLUDE+=( /lib/udev/{hwdb.d,cdrom_id,iphone*,ipod*,mtp*,snap*,udev-*-printer,v4l_id} )
