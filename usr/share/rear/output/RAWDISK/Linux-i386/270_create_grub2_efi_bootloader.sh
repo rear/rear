@@ -17,7 +17,9 @@ else
 fi
 
 # (3) Grub 2 EFI components must exist
-[[ -d /usr/lib/grub/x86_64-efi ]] || return 0
+# Since openSUSE Leap 15.1 things were moved from /usr/lib/grub2/ to /usr/share/grub2/
+# cf. https://github.com/rear/rear/issues/2338#issuecomment-594432946
+[[ -d /usr/lib/grub/x86_64-efi ]] || [[ -d /usr/lib/grub2/x86_64-efi ]] || [[ -d /usr/share/grub2/x86_64-efi ]] || return 0
 
 # (4) Grub 2 must not have been excluded
 if is_true "${RAWDISK_BOOT_EXCLUDE_GRUB2_EFI:-no}"; then
