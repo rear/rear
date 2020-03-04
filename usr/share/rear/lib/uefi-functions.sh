@@ -77,10 +77,12 @@ function build_bootx86_efi {
             # At least SUSE systems use 'grub2' prefixed names for GRUB2 programs:
             gprobe=grub2-probe
         else
-            LogWarn "Neither grub-probe nor grub2-probe found"
-            if test /usr/lib/grub*/x86_64-efi/partmap.lst ; then
-                LogWarn "including all partition modules"
-                modules=( $(cat /usr/lib/grub*/x86_64-efi/partmap.lst) )
+            LogPrint "Neither grub-probe nor grub2-probe found"
+            # Since openSUSE Leap 15.1 things were moved from /usr/lib/grub2/ to /usr/share/grub2/
+            # cf. https://github.com/rear/rear/issues/2338#issuecomment-594432946
+            if test /usr/*/grub*/x86_64-efi/partmap.lst ; then
+                LogPrint "including all partition modules"
+                modules=( $( cat /usr/*/grub*/x86_64-efi/partmap.lst ) )
             else
                 Error "Can not determine partition modules, ${dirs[*]} would be likely inaccessible in GRUB2"
             fi
