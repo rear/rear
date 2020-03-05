@@ -107,7 +107,10 @@ function build_bootx86_efi {
     # but we inform the user here in advance about possible problems when there is no /x86_64-efi/moddep.lst file.
     # Careful: usr/sbin/rear sets nullglob so that /usr/*/grub*/x86_64-efi/moddep.lst gets empty if nothing matches
     # and 'test -f' succeeds with empty argument so that we cannot use 'test -f /usr/*/grub*/x86_64-efi/moddep.lst'
-    # also 'test -n' succeeds with empty argument but (fortunately/intentionally?) plain 'test' fails with empty argument:
+    # also 'test -n' succeeds with empty argument but (fortunately/intentionally?) plain 'test' fails with empty argument.
+    # Another implicit condition that this 'test' works is that '/usr/*/grub*/x86_64-efi/moddep.lst' matches at most one file
+    # because otherwise e.g. "test /usr/*/grub*/x86_64-efi/mod*" where two files moddep.lst and modinfo.sh match
+    # would falsely fail with "bash: test: ... unary operator expected":
     test /usr/*/grub*/x86_64-efi/moddep.lst || LogPrintError "$gmkstandalone may fail to make a bootable EFI image of GRUB2 (no /usr/*/grub*/x86_64-efi/moddep.lst file)"
 
     (( ${#GRUB2_MODULES[@]} )) && LogPrint "Installing only ${GRUB2_MODULES[*]} modules into $outfile memdisk"
