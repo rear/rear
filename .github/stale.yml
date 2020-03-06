@@ -1,5 +1,5 @@
 # Number of days of inactivity before an issue becomes stale
-# three month plus one weekend plus one more workday 31+30+31+2+1=96
+# three month plus one weekend plus one more workday 31+30+31+2+1=95
 daysUntilStale: 95
 # Number of days of inactivity before a stale issue is closed
 # two weeks plus one weekend plus one more workday 7+7+2+1=17
