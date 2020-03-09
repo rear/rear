@@ -202,7 +202,7 @@ else
         for interface in $( cut -f 1 -d " " $TMP_DIR/mappings/ip_addresses ) ; do
             # /sys/class/net/$interface/address contains the MAC address with lower case hex letters (cf. above):
             current_mac=$( cat /sys/class/net/$interface/address )
-            echo "$mac $mac $interface" >> $TMP_DIR/mappings/mac
+            echo "$current_mac $current_mac $interface" >> $TMP_DIR/mappings/mac
         done
         # Verify we could generate a fallback $TMP_DIR/mappings/mac file with acual content (i.e. non-empty):
         if test -s $TMP_DIR/mappings/mac ; then
