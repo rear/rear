@@ -12,7 +12,8 @@ Log "Configuring device for EFI boot"
 EFI_MPT=$( mktemp -d /tmp/rear-efi.XXXXXXXXXX ) || Error "mktemp failed to create mount point '/tmp/rear-efi.XXXXXXXXXX' for EFI partition"
 
 uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
-EFI_PART="/dev/disk/by-label/REAR-EFI"
+EFI_LABEL="REAR-EFI"
+EFI_PART="/dev/disk/by-label/${EFI_LABEL}"
 EFI_DIR="/EFI/BOOT"
 EFI_DST="${EFI_MPT}/${EFI_DIR}"
 
@@ -58,7 +59,6 @@ else
             NUM=2
         fi
 
-        GRUB_MKIMAGE=grub${NUM}-mkimage
         GRUB_INSTALL=grub${NUM}-install
 
         # What version of grub are we using
@@ -82,22 +82,18 @@ EOF
             ;;
             2)
                 Log "Configuring grub 2.0 for EFI boot"
-
-                # Create bootloader, this overwrite BOOTX64.efi copied in previous step ...
-                # Fail if BOOTX64.efi can't be created
-                ${GRUB_MKIMAGE} -o ${EFI_DST}/BOOTX64.efi -p ${EFI_DIR} -O x86_64-efi linux part_gpt ext2 normal gfxterm gfxterm_background gfxterm_menu test all_video loadenv fat
-                StopIfError "Failed to create BOOTX64.efi"
+                # We need to explicitly set $root variable to $EFI_LABEL
+                # (currently "REAR-EFI") in Grub because default $root would
+                # point to memdisk, where kernel and initrd are NOT present.
+                # Variable grub2_set_usb_root will be used in later call of
+                # create_grub2_cfg().
+                grub2_set_usb_root="search --no-floppy --set=root --label ${EFI_LABEL}"
 
                 # Create config for grub 2.0
-                cat > ${EFI_DST}/grub.cfg << EOF
-set timeout=5
-set default=0
+                create_grub2_cfg ${EFI_DIR}/kernel ${EFI_DIR}/$REAR_INITRD_FILENAME > ${EFI_DST}/grub.cfg
 
-menuentry "Relax-and-Recover (no Secure Boot)" {
-    linux ${EFI_DIR}/kernel $KERNEL_CMDLINE
-    initrd ${EFI_DIR}/$REAR_INITRD_FILENAME
-}
-EOF
+                # Create bootloader, this overwrite BOOTX64.efi copied in previous step ...
+                build_bootx86_efi ${EFI_DST}/BOOTX64.efi ${EFI_DST}/grub.cfg "/boot" "$UEFI_BOOTLOADER"
             ;;
             *)
                 BugError "Neither grub 0.97 nor 2.0"
