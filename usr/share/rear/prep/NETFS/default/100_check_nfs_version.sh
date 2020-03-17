@@ -10,7 +10,7 @@ done
 
 # add any nfs related user to the rescue environment
 # rpcuser  : default
-# rpc      : used in for RHEL7.x
+# rpc      : used in RHEL7.x
 # _rpc     : used in Debian 10
 CLONE_USERS=( ${CLONE_USERS[@]} rpcuser rpc _rpc )
 
