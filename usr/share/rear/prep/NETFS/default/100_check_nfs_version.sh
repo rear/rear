@@ -9,9 +9,9 @@ for module in $(lsmod|grep nfs|awk '{print $1}') ; do
 done
 
 # add any nfs related user to the rescue environment
-# rpcuser   : Default
-# rpc       : Added for RHEL7.x
-# _rpc      : Debian 10
+# rpcuser  : default
+# rpc      : used in for RHEL7.x
+# _rpc     : used in Debian 10
 CLONE_USERS=( ${CLONE_USERS[@]} rpcuser rpc _rpc )
 
 # copy nfs related configuration files
