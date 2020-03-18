@@ -15,9 +15,9 @@ if is_true "$CLONE_ALL_USERS_GROUPS" ; then
     Log "Copying users and groups from /etc/passwd and /etc/group"
     cloning_all="yes"
     # Only keep valid user names (in particular exclude a NIS extension line '+::::::'):
-    CLONE_USERS=( "${CLONE_USERS[@]}" $( grep -o '^[[:alnum:]_][^:]*' /etc/passwd ) )
+    CLONE_USERS+=( $( grep -o '^[[:alnum:]_][^:]*' /etc/passwd ) )
     # Only keep valid group names (in particular exclude a NIS extension line '+:::'):
-    CLONE_GROUPS=( "${CLONE_GROUPS[@]}" $( grep -o '^[[:alnum:]_][^:]*' /etc/group ) )
+    CLONE_GROUPS+=( $( grep -o '^[[:alnum:]_][^:]*' /etc/group ) )
 fi
 # When CLONE_ALL_USERS_GROUPS is 'all', copy also all users and groups
 # that are available on the current system into the ReaR recovery system:
@@ -25,9 +25,9 @@ if test 'all' = "$CLONE_ALL_USERS_GROUPS" ; then
     Log "Copying all users and groups that are available via 'getent'"
     cloning_all="yes"
     # Only keep valid user names:
-    CLONE_USERS=( "${CLONE_USERS[@]}" $( getent passwd | grep -o '^[[:alnum:]_][^:]*' ) )
+    CLONE_USERS+=( $( getent passwd | grep -o '^[[:alnum:]_][^:]*' ) )
     # Only keep valid group names:
-    CLONE_GROUPS=( "${CLONE_GROUPS[@]}" $( getent group | grep -o '^[[:alnum:]_][^:]*' ) )
+    CLONE_GROUPS+=( $( getent group | grep -o '^[[:alnum:]_][^:]*' ) )
 fi
 
 local user=""
@@ -73,7 +73,7 @@ for user in "${CLONE_USERS[@]}" ; do
     # Skip if the group is already in the CLONE_GROUPS array:
     IsInArray "$group" "${CLONE_GROUPS[@]}" && continue
     # Add the user's group to the CLONE_GROUPS array:
-    CLONE_GROUPS=( "${CLONE_GROUPS[@]}" "$group" )
+    CLONE_GROUPS+=( "$group" )
 done
 
 # For the 'test' one must have all array members as a single word i.e. "${name[*]}"
