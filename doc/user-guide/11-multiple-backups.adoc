@@ -127,7 +127,7 @@ BACKUP_URL=nfs://your.NFS.server.IP/path/to/your/rear/backup
 ----
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
-BACKUP_PROG_EXCLUDE=( "${BACKUP_PROG_EXCLUDE[@]}" '/home/*' '/opt/*' )
+BACKUP_PROG_EXCLUDE+=( '/home/*' '/opt/*' )
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 ----
 
@@ -204,8 +204,8 @@ The configuration files could be like the following:
 [source,bash]
 ----
 OUTPUT=ISO
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" borg locale )
-COPY_AS_IS=( "${COPY_AS_IS[@]}" "/borg/keys" )
+REQUIRED_PROGS+=( borg locale )
+COPY_AS_IS+=( "/borg/keys" )
 ----
 
 ./etc/rear/basic_system.conf
@@ -213,7 +213,7 @@ COPY_AS_IS=( "${COPY_AS_IS[@]}" "/borg/keys" )
 ----
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
-BACKUP_PROG_EXCLUDE=( "${BACKUP_PROG_EXCLUDE[@]}" '/home/*' )
+BACKUP_PROG_EXCLUDE+=( '/home/*' )
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 BACKUP=NETFS
 BACKUP_OPTIONS="nfsvers=3,nolock"
@@ -358,7 +358,7 @@ PROGRESS_WAIT_SECONDS="3"
 ----
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
-BACKUP_PROG_EXCLUDE=( "${BACKUP_PROG_EXCLUDE[@]}" '/home/*' '/opt/*' )
+BACKUP_PROG_EXCLUDE+=( '/home/*' '/opt/*' )
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 ----
 
