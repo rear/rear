@@ -17,8 +17,12 @@ else
     chrp_boot_option="-chrp-boot"
 fi
 
+# Have a hardcoded '-iso-level 3' option also here because it is
+# also hardcoded in output/ISO/Linux-i386/820_create_iso_image.sh
+# and it seems to also work in general on POWER architecture
+# cf. https://github.com/rear/rear/issues/2344#issuecomment-601949828
 $ISO_MKISOFS_BIN $v $ISO_MKISOFS_OPTS -o "$ISO_DIR/$ISO_PREFIX.iso" \
-    -U $chrp_boot_option -R -J -volid "$ISO_VOLID" -v -graft-points \
+    -U $chrp_boot_option -R -J -volid "$ISO_VOLID" -v -iso-level 3 -graft-points \
     "${ISO_FILES[@]}" >&2
 
 StopIfError "Could not create ISO image (with $ISO_MKISOFS_BIN)"
