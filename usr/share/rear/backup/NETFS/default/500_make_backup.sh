@@ -54,8 +54,11 @@ done < $TMP_DIR/backup-exclude.txt
 SPLIT_COMMAND="dd of=$backuparchive"
 if test $ISO_MAX_SIZE ; then
     is_positive_integer $ISO_MAX_SIZE || Error "ISO_MAX_SIZE must be a positive integer value"
-    # Tell the user when ISO_MAX_SIZE is less than 400MiB because then things will likely not work:
-    test $ISO_MAX_SIZE -ge 400 || LogPrintError "ISO_MAX_SIZE should be at least 400 MiB"
+    # Tell the user when ISO_MAX_SIZE is less than 600MiB because then things will likely not work
+    # because a usual recovery system with FIRMWARE_FILES is more than 300MiB
+    # cf. https://github.com/rear/rear/pull/2347#issuecomment-602812451
+    # so that there is less than 300MiB left for the actual backup split chunk size:
+    test $ISO_MAX_SIZE -ge 600 || LogPrintError "ISO_MAX_SIZE should be at least 600 MiB"
     # Computation of the actual backup split chunk size
     # by subtracting the recovery system file sizes (kernel, initrd, ISOLINUX files, UEFI files if used)
     # from the ISO_MAX_SIZE value, see the ISO_MAX_SIZE explanation in default.conf why that is done.
