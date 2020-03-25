@@ -49,22 +49,45 @@ while read -r backup_exclude_item ; do
     test "$backup_exclude_item" && Log "  $backup_exclude_item"
 done < $TMP_DIR/backup-exclude.txt
 
-# Check if the backup needs to be splitted or not (on multiple ISOs)
-if [[ -n "$ISO_MAX_SIZE" ]]; then
-    # Computation of the real backup maximum size by excluding bootable files size on the first ISO (EFI, kernel, ramdisk)
-    # Don't use that on max size less than 200MB which would result in too many backups
-    if [[ $ISO_MAX_SIZE -gt 200 ]]; then
-        INITRD_SIZE=$(stat -c '%s' $TMP_DIR/$REAR_INITRD_FILENAME)
-        KERNEL_SIZE=$(stat -c '%s' $KERNEL_FILE)
-        # We add 15MB which is the average size of all isolinux binaries
-        BASE_ISO_SIZE=$(((${INITRD_SIZE}+${KERNEL_SIZE})/1024/1024+15))
-        # If we are EFI, add 30MB (+ previous 15MB), UEFI files can't exceed this size
-        is_true $USING_UEFI_BOOTLOADER && BASE_ISO_SIZE=$((${BASE_ISO_SIZE}+30))
-        ISO_MAX_SIZE=$((${ISO_MAX_SIZE}-${BASE_ISO_SIZE}))
-    fi
-    SPLIT_COMMAND="split -d -b ${ISO_MAX_SIZE}m - ${backuparchive}."
-else
-    SPLIT_COMMAND="dd of=$backuparchive"
+# Check if the backup needs to be splitted or not (on multiple ISOs).
+# Dummy split command when the backup is not splitted (the default case):
+SPLIT_COMMAND="dd of=$backuparchive"
+if test $ISO_MAX_SIZE ; then
+    is_positive_integer $ISO_MAX_SIZE || Error "ISO_MAX_SIZE must be a positive integer value"
+    # Tell the user when ISO_MAX_SIZE is less than 600MiB because then things will likely not work
+    # because a usual recovery system with FIRMWARE_FILES is more than 300MiB
+    # cf. https://github.com/rear/rear/pull/2347#issuecomment-602812451
+    # so that there is less than 300MiB left for the actual backup split chunk size:
+    test $ISO_MAX_SIZE -ge 600 || LogPrintError "ISO_MAX_SIZE should be at least 600 MiB"
+    # Computation of the actual backup split chunk size
+    # by subtracting the recovery system file sizes (kernel, initrd, ISOLINUX files, UEFI files if used)
+    # from the ISO_MAX_SIZE value, see the ISO_MAX_SIZE explanation in default.conf why that is done.
+    # Size of the recovery system initrd in bytes:
+    INITRD_BYTES=$( stat -c '%s' $TMP_DIR/$REAR_INITRD_FILENAME )
+    is_positive_integer $INITRD_BYTES || Error "Cannot determine size of the recovery system initrd $TMP_DIR/$REAR_INITRD_FILENAME"
+    # Size of the recovery system initrd in MiB + 1MiB to be safe against integer (floor) rounding:
+    INITRD_SIZE=$(( INITRD_BYTES / 1024 / 1024 + 1 ))
+    # Size of the recovery system kernel in bytes:
+    KERNEL_BYTES=$( stat -c '%s' $KERNEL_FILE )
+    is_positive_integer $KERNEL_BYTES || Error "Cannot determine size of the recovery system kernel $KERNEL_FILE"
+    # Size of the recovery system kernel in MiB + 1MiB to be safe against integer (floor) rounding:
+    KERNEL_SIZE=$(( KERNEL_BYTES / 1024 / 1024 + 1 ))
+    # We assume 15MiB is sufficient size for the ISOLINUX bootloader files:
+    ISOLINUX_SIZE=15
+    # We assume 30MiB is sufficient size for additional UEFI bootloader files:
+    UEFI_SIZE=0
+    is_true $USING_UEFI_BOOTLOADER && UEFI_SIZE=30
+    # Size of the recovery system and its bootloader in MiB:
+    RECOVERY_SYSTEM_SIZE=$(( INITRD_SIZE + KERNEL_SIZE + ISOLINUX_SIZE + UEFI_SIZE ))
+    # Tell the user when the recovery system plus ISO bootloader is extraordinarily large because that may indicate a problem elsewehre:
+    test $RECOVERY_SYSTEM_SIZE -gt 1000 && LogPrintError "Extraordinarily large recovery system plus ISO bootloader $RECOVERY_SYSTEM_SIZE MiB"
+    # Size of the actual backup split chunk size in MiB:
+    BACKUP_SPLIT_CHUNK_SIZE=$(( ISO_MAX_SIZE - RECOVERY_SYSTEM_SIZE ))
+    # When the actual backup split chunk size is less than 100MiB we consider it too small to be useful in practice:
+    test $BACKUP_SPLIT_CHUNK_SIZE -ge 100 || Error "Backup split chunk size $BACKUP_SPLIT_CHUNK_SIZE less than 100 MiB (ISO_MAX_SIZE too small?)"
+    # Split the 'tar' backup (at stdin) in chunks of BACKUP_SPLIT_CHUNK_SIZE MiB using 'backup.tar.gz.' as prefix with numeric suffixes:
+    LogPrint "Backup gets split in chunks of $BACKUP_SPLIT_CHUNK_SIZE MiB (ISO_MAX_SIZE $ISO_MAX_SIZE minus recovery system size $RECOVERY_SYSTEM_SIZE)"
+    SPLIT_COMMAND="split -d -b ${BACKUP_SPLIT_CHUNK_SIZE}m - ${backuparchive}."
 fi
 
 # Used by "tar" method to record which pipe command failed
