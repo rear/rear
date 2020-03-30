@@ -234,14 +234,13 @@ function opaladmin_changePW_action() {
             for try_count in $(seq 3); do
                 opaladmin_get_disk_password "old password"
                 if opal_device_change_password "$device" "$OPAL_DISK_PASSWORD" "$new_password"; then
-                    LogUserOutput "Password changed."
-                    break 2
+                    LogUserOutput "Password changed on device $(opal_device_identification "$device")."
+                    break
                 else
                     OPAL_DISK_PASSWORD=""  # Assume that the password for this disk did not fit, retry with a new one
-                    PrintError "Could not change password."
+                    PrintError "Could not change password on device $(opal_device_identification "$device")."
                 fi
             done
-            PrintError "Changing disk password of device \"$device\" unsuccessful."
         else
             LogUserOutput "SKIPPING: Device $(opal_device_identification "$device") has not been setup, cannot change password."
         fi
