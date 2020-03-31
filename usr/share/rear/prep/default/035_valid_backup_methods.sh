@@ -10,6 +10,7 @@
 # see https://github.com/rear/rear/issues/914
 # and https://github.com/rear/rear/issues/159
 # and https://github.com/rear/rear/issues/2337#issuecomment-596471615
+# and https://github.com/rear/rear/issues/2351
 
 if ! test -d "$SHARE_DIR/restore/$BACKUP" ; then
     Error "The BACKUP method '$BACKUP' is not supported (no $SHARE_DIR/restore/$BACKUP directory)"
