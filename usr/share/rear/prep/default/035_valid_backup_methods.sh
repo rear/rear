@@ -14,4 +14,3 @@
 if ! test -d "$SHARE_DIR/restore/$BACKUP" ; then
     Error "The BACKUP method '$BACKUP' is not supported (no $SHARE_DIR/restore/$BACKUP directory)"
 fi
-
