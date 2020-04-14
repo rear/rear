@@ -115,7 +115,3 @@ if test "$( type -p grub )" ; then
 else
     cp $v $TMP_DIR/isofs/EFI/BOOT/grub.cfg $TMP_DIR/isofs/boot/grub/ || Error "Could not copy EFI/BOOT/grub.cfg to isofs/boot/grub"
 fi
-
-# FIXME: What is that assignment actually trying to do?
-ISO_FILES=( "${ISO_FILES[@]}" )
-
