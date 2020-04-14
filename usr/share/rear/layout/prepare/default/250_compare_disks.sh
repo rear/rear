@@ -56,7 +56,7 @@ while read disk dev size junk ; do
     if IsInArray "$size" "${original_system_used_disk_sizes[@]}" ; then
         more_than_one_same_orig_size='true'
     else
-        original_system_used_disk_sizes=( "${original_system_used_disk_sizes[@]}" "$size" )
+        original_system_used_disk_sizes+=( "$size" )
     fi
 done < <( grep -E '^disk |^multipath ' "$LAYOUT_FILE" )
 # MIGRATION_MODE is needed when more than one disk with same size is used on the original system:
@@ -83,7 +83,7 @@ if ! is_true "$MIGRATION_MODE" ; then
         test -r $current_device_path/size || continue
         current_disk_name="${current_device_path#/sys/block/}"
         current_size=$( get_disk_size $current_disk_name )
-        test "$current_size" -gt '0' && replacement_hardware_disk_sizes=( "${replacement_hardware_disk_sizes[@]}" "$current_size" )
+        test "$current_size" -gt '0' && replacement_hardware_disk_sizes+=( "$current_size" )
     done
     # For each of the used disk sizes on the original system
     # determine if that disk size exists more than once on the replacement hardware.
