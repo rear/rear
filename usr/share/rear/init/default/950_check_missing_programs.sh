@@ -13,17 +13,15 @@
 # (via the symbolic link build/default/950_check_missing_programs.sh -> init/default/950_check_missing_programs.sh)
 # cf. https://github.com/rear/rear/issues/892
 
-# Without the empty string as initial value missing_progs ${missing_progs[*]} ${missing_progs[@]}
-# would all be unbound variables that would result an error exit if 'set -eu' is used:
-missing_progs=( '' )
+local prog
+local missing_progs=()
 
 # Check for required binaries:
 for prog in "${REQUIRED_PROGS[@]}" ; do
-    has_binary "$prog" || missing_progs=( "${missing_progs[@]}" "$prog" )
+    has_binary "$prog" || missing_progs+=( "$prog" )
 done
 
 # Have all array members as a single word like "${arr[*]}" because it should detect
-# when there is any non-empty array member (not necessarily the first one) and here
-# the first array member is always the empty string because of missing_progs=( '' ) above:
+# when there is any non-empty array member (not necessarily the first one):
 contains_visible_char "${missing_progs[*]}" && Error "Cannot find required programs: ${missing_progs[@]}"
 
