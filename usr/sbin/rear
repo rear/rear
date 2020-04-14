@@ -471,9 +471,9 @@ if test "$CONFIG_APPEND_FILES" ; then
                 # If "-C foo" was specified on the command line but 'foo' does not exist
                 # try if 'foo.conf' exists and if yes, use that:
                 if test -r "$config_append_file_path" ; then
-                    COPY_AS_IS=( "${COPY_AS_IS[@]}" "$config_append_file_path" )
+                    COPY_AS_IS+=( "$config_append_file_path" )
                 else if test -r "$config_append_file_path.conf" ; then
-                         COPY_AS_IS=( "${COPY_AS_IS[@]}" "$config_append_file_path.conf" )
+                         COPY_AS_IS+=( "$config_append_file_path.conf" )
                      else
                          LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
                      fi
