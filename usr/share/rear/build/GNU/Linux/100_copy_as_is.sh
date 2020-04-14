@@ -50,7 +50,7 @@ while read -r copy_as_is_file ; do
     # Skip symbolic links (only care about symbolic link targets):
     test -L "$copy_as_is_file" && continue
     # Remember actual regular files that are executable:
-    test -x "$copy_as_is_file" && copy_as_is_executables=( "${copy_as_is_executables[@]}" "$copy_as_is_file" )
+    test -x "$copy_as_is_file" && copy_as_is_executables+=( "$copy_as_is_file" )
 done <$copy_as_is_filelist_file 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 Log "copy_as_is_executables = ${copy_as_is_executables[@]}"
 
@@ -69,7 +69,7 @@ for required_library in $( RequiredSharedObjects "${copy_as_is_executables[@]}" 
     # Skip when the required library is already in LIBS:
     IsInArray "$required_library" "${LIBS[@]}" && continue
     Log "Adding required library '$required_library' to LIBS"
-    LIBS=( "${LIBS[@]}" "$required_library" )
+    LIBS+=( "$required_library" )
 done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 Log "LIBS = ${LIBS[@]}"
 
