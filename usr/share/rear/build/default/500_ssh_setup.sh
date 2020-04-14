@@ -8,31 +8,62 @@ has_binary ssh || has_binary sshd || return 0
 is_false "$SSH_FILES" && return
 
 # Patch sshd_config:
-# - disable password authentication because rescue system does not have PAM etc.
-# - disable challenge response (Kerberos, skey, ...) for same reason
-# - disable PAM
-# - disable motd printing, our /etc/profile does that
-# - if SSH_ROOT_PASSWORD was defined allow root to login via ssh
-# The idea is to allow ssh authorized_keys based access in the recovery system
-# which has to be enabled on the original system to work in the recovery system.
 # Because only OpenSSH >= 3.1 is supported where /etc/ssh/ is the default directory for configuration files
 # only etc/ssh/sshd_config is used cf. https://github.com/rear/rear/pull/1538#issuecomment-337904240
 local sshd_config_file="$ROOTFS_DIR/etc/ssh/sshd_config"
-if test "$sshd_config_file" ; then
-    sed -i -e 's/ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/ig' \
-           -e 's/UsePAM.*/UsePam no/ig' \
-           -e 's/ListenAddress.*/ListenAddress 0.0.0.0/ig' \
-           -e '1i\PrintMotd no' \
-        $sshd_config_file
-    # Allow password authentication in the recovery system only if SSH_ROOT_PASSWORD is specified:
-    if test "$SSH_ROOT_PASSWORD" ; then
-        sed -i -e 's/PasswordAuthentication.*/PasswordAuthentication yes/ig' $sshd_config_file
-        sed -i -e 's/PermitRootLogin.*/PermitRootLogin yes/ig' $sshd_config_file
-    else
-        sed -i -e 's/PasswordAuthentication.*/PasswordAuthentication no/ig' $sshd_config_file
-    fi
+if [[ -f "$sshd_config_file" ]]; then
+    # Enable root login with a password only if SSH_ROOT_PASSWORD is set
+    local password_authentication_value=no
+    [[ -n "$SSH_ROOT_PASSWORD" ]] && password_authentication_value=yes
+
+    # List of setting overrides required for the rescue system's sshd - see sshd_config(5)
+    # Each list element must be a string of the form 'keyword [value]' or a comment '#...'.
+    # If value is missing, the respective keyword will effectively be set to its default value.
+    sshd_setting_overrides=(
+        # Start comment
+        "### BEGIN ReaR overrides"
+        # Avoid printing a message of the day, our /etc/profile does that
+        "PrintMotd no"
+        # Allow or disallow root login with a password
+        "PasswordAuthentication $password_authentication_value"
+        # Allow root login via SSH (authenticated via password or public/private keys)
+        "PermitRootLogin yes"
+        # Disable challenge response (Kerberos, skey, ...) as the rescue system does not provide it
+        "ChallengeResponseAuthentication no"
+        # Disable PAM as the rescue system does not provide it
+        "UsePAM no"
+        # Do not restrict interfaces to listen on, use defaults
+        "ListenAddress"
+        # Use default handling of idle messages
+        "ClientAliveInterval"
+        # End comment
+        "### END ReaR overrides"
+    )
+
+    # Create sed options containing a list of commands to patch the existing sshd configuration file.
+    local sed_patch_options=()
+    for sshd_option in "${sshd_setting_overrides[@]}"; do
+        read -r keyword value <<<"$sshd_option"
+
+        # When a value is specified: Insert a keyword/value setting at the top of the configuration.
+        # This ensures that such settings are always part of the configuration's global section and not
+        # of a possible 'Match' conditional block.
+        [[ -n "$value" ]] && sed_patch_options+=("-e" "1i\\$keyword $value")
+
+        # For each keyword (whether specified with a value or not): Comment out each setting elsewhere
+        # in the configuration file. Note that there might be multiple occurrences of a keyword in the
+        # configuration file and some might belong to 'Match' conditional blocks. We comment out all of
+        # those to ensure that the global setting is always effective.
+        if [[ "$keyword" != "#"* ]]; then
+            sed_patch_options+=("-e" "s/^[ \\t]*${keyword}[ \\t].*/#& (ReaR override)/ig")
+        fi
+    done
+
+    # Patch the sshd configuration file.
+    sed -i "${sed_patch_options[@]}" "$sshd_config_file"
+
 else
-    LogPrintError "No etc/ssh/sshd_config file"
+    LogPrintError "There is no sshd configuration at $sshd_config_file - logging into the rescue sytem via ssh may not work"
 fi
 
 # Create possibly missing directories needed by sshd in the recovery system
