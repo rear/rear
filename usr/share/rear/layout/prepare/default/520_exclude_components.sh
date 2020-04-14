@@ -13,7 +13,7 @@ while read multipath device dm_size label slaves junk ; do
     OIFS=$IFS
     IFS=","
     for slave in $slaves ; do
-        devices=( "${devices[@]}" "$slave" )
+        devices+=( "$slave" )
     done
     IFS=$OIFS
 
