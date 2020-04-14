@@ -109,7 +109,7 @@ for dummy in "once" ; do
     LogPrint "Copying kernel modules as specified by MODULES"
     # Before ReaR version 2.5 the below added modules had been added via conf/GNU/Linux.conf
     # which is sourced in usr/sbin/rear before user config files like etc/rear/local.conf
-    # so that the user had to specify MODULES=( "${MODULES[@]}" 'moduleX' 'moduleY' )
+    # so that the user had to specify MODULES+=( 'moduleX' 'moduleY' )
     # to not lose the below added modules but with MODULES=( 'all_modules' ) in default.conf
     # this would keep the 'all_modules' default value in any case in the MODULES array
     # which would trigger the above 'all_modules' case in any case.
@@ -117,17 +117,16 @@ for dummy in "once" ; do
     # but here after the user config files were sourced so that now the user can specify
     # MODULES=( 'moduleX' 'moduleY' ) in etc/rear/local.conf to get additional kernel modules
     # included in the recovery system in addition to the ones via an empty MODULES=() setting:
-    MODULES=( "${MODULES[@]}"
-              vfat
-              nls_iso8859_1 nls_utf8 nls_cp437
-              af_packet
-              unix
-              nfs nfsv4 nfsv3 lockd sunrpc
-              cifs
-              usbcore usb_storage usbhid uhci_hcd ehci_hcd xhci_hcd ohci_hcd
-              sr_mod ide_cd cdrom
-              zlib zlib-inflate zlib-deflate
-              libcrc32c crc32c crc32c-intel )
+    MODULES+=( vfat
+               nls_iso8859_1 nls_utf8 nls_cp437
+               af_packet
+               unix
+               nfs nfsv4 nfsv3 lockd sunrpc
+               cifs
+               usbcore usb_storage usbhid uhci_hcd ehci_hcd xhci_hcd ohci_hcd
+               sr_mod ide_cd cdrom
+               zlib zlib-inflate zlib-deflate
+               libcrc32c crc32c crc32c-intel )
     # Include the modules in MODULES plus their dependant modules:
     for module in "${MODULES[@]}" ; do
         # Strip trailing ".o" if there:
