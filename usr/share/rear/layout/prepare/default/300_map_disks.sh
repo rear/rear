@@ -202,7 +202,7 @@ while read keyword orig_device orig_size junk ; do
             continue
         fi
         # Add the current device as possible choice for the user:
-        possible_targets=( "${possible_targets[@]}" "$preferred_target_device_name" )
+        possible_targets+=( "$preferred_target_device_name" )
     done
     # Continue with next original device when no appropriate current block device is found where to it could be mapped:
     if ! test "${possible_targets[*]}" ; then
