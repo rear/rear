@@ -9,7 +9,7 @@ if [ -e $VAR_DIR/layout/config/files.md5sum ] ; then
         fi
     done
     md5sum "${config_files[@]}" > $TMP_DIR/files.md5sum
-    if ! diff -u $TMP_DIR/files.md5sum $VAR_DIR/layout/config/files.md5sum >&2; then
+    if ! diff -u $TMP_DIR/files.md5sum $VAR_DIR/layout/config/files.md5sum ; then
         LogPrint "Configuration files have changed."
         EXIT_CODE=1
     fi
