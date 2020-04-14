@@ -23,13 +23,12 @@ TSM_RESULT_FILES=()
 test -z "$TSM_RESULT_FILE_PATH" && TSM_RESULT_FILE_PATH=$TMP_DIR
 
 if ! test -d "$TSM_RESULT_FILE_PATH" ; then
-    mkdir -p $v "$TSM_RESULT_FILE_PATH" >&2
+    mkdir -p $v "$TSM_RESULT_FILE_PATH"
     StopIfError "Could not create '$TSM_RESULT_FILE_PATH'"
 fi
 
-
 if test "$TSM_RESULT_FILE_PATH" != "$TMP_DIR" ; then
-    cp $v  "${RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH" >&2
+    cp $v "${RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH"
     StopIfError "Could not copy result files to '$TSM_RESULT_FILE_PATH'"
     TSM_RESULT_FILES=(
        $(
@@ -43,9 +42,9 @@ else
 fi
 
 if test -s $(get_template "RESULT_usage_$OUTPUT.txt") ; then
-    cp $v $(get_template "RESULT_usage_$OUTPUT.txt") "$TSM_RESULT_FILE_PATH/README" >&2
+    cp $v $(get_template "RESULT_usage_$OUTPUT.txt") "$TSM_RESULT_FILE_PATH/README"
     StopIfError "Could not copy '$(get_template RESULT_usage_$OUTPUT.txt)'"
-    TSM_RESULT_FILES=( "${TSM_RESULT_FILES[@]}" "$TSM_RESULT_FILE_PATH"/README )
+    TSM_RESULT_FILES+=( "$TSM_RESULT_FILE_PATH"/README )
 fi
 
 Log "Saving files '${TSM_RESULT_FILES[@]}' with dsmc"
