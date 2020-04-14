@@ -79,7 +79,7 @@ for iso_number in $( seq -f '%02g' 1 $(( $number_of_ISOs - 1 )) ) ; do
     iso_image_size=( $( du -h "$ISO_OUTPUT_PATH" ) )
     LogPrint "Wrote ISO image: $ISO_OUTPUT_PATH ($iso_image_size)"
     # Add ISO images path to result files:
-    RESULT_FILES=( "${RESULT_FILES[@]}" "$ISO_OUTPUT_PATH" )
+    RESULT_FILES+=( "$ISO_OUTPUT_PATH" )
 done
 
 # vim: set et ts=4 sw=4:
