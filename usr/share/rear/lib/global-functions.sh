@@ -695,7 +695,7 @@ function build_remount_cmd()
 
    # Split string, store in array
    for opt in $opt_string; do
-      allopts=("${allopts[@]}" "$opt")
+      allopts+=( "$opt" )
    done
    # Remove parentheses around mount options
    allopts[3]=${allopts[3]##(}
