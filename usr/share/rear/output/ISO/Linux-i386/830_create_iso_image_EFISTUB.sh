@@ -17,4 +17,4 @@ iso_image_size=( $(du -h "$ISO_DIR/$ISO_PREFIX.iso") )
 LogPrint "EFI_STUB: Wrote ISO image: $ISO_DIR/$ISO_PREFIX.iso ($iso_image_size)"
 
 # Add ISO image to result files
-RESULT_FILES=( "${RESULT_FILES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
+RESULT_FILES+=( "$ISO_DIR/$ISO_PREFIX.iso" )
