@@ -96,7 +96,7 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
     # see the create_raid function in layout/prepare/GNU/Linux/120_include_raid_code.sh
     # what program calls are written to diskrestore.sh
     # cf. https://github.com/rear/rear/issues/1963
-    grep -q '^raid ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mdadm ) || true
+    grep -q '^raid ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( mdadm ) || true
 
 fi
 
