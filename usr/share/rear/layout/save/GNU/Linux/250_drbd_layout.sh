@@ -19,5 +19,5 @@ fi
 # see the create_drbd function in layout/prepare/GNU/Linux/150_include_drbd_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-grep -q '^drbd ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" drbdadm ) || true
+grep -q '^drbd ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( drbdadm ) || true
 
