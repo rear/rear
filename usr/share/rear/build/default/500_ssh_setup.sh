@@ -19,7 +19,7 @@ if [[ -f "$sshd_config_file" ]]; then
     # List of setting overrides required for the rescue system's sshd - see sshd_config(5)
     # Each list element must be a string of the form 'keyword [value]' or a comment '#...'.
     # If value is missing, the respective keyword will effectively be set to its default value.
-    sshd_setting_overrides=(
+    local sshd_setting_overrides=(
         # Start comment
         "### BEGIN ReaR overrides"
         # Avoid printing a message of the day, our /etc/profile does that
@@ -42,6 +42,7 @@ if [[ -f "$sshd_config_file" ]]; then
 
     # Create sed options containing a list of commands to patch the existing sshd configuration file.
     local sed_patch_options=()
+    local keyword value
     for sshd_option in "${sshd_setting_overrides[@]}"; do
         read -r keyword value <<<"$sshd_option"
 
