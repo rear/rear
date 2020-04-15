@@ -1,5 +1,5 @@
 
-# build/default/985_fix_broken_links.sh
+# build/default/490_fix_broken_links.sh
 #
 # Check for broken symbolic links inside the recovery system in ROOTFS_DIR
 # and add missing symlink targets to the recovery system
