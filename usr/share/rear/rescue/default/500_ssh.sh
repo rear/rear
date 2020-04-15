@@ -33,16 +33,16 @@ else
         # and from $ROOT_HOME_DIR/.ssh copy only authorized_keys known_hosts (if exists)
         # cf. https://github.com/rear/rear/issues/1512#issuecomment-331638066
         copy_as_is_ssh_files=( /etc/ssh/modu[l]i /etc/ssh/ssh_co[n]fig /etc/ssh/sshd_co[n]fig /etc/ssh/ssh_known_hos[t]s )
-        copy_as_is_ssh_files=( "${copy_as_is_ssh_files[@]}" $ROOT_HOME_DIR/.ssh/authorized_ke[y]s $ROOT_HOME_DIR/.ssh/known_hos[t]s )
+        copy_as_is_ssh_files+=( $ROOT_HOME_DIR/.ssh/authorized_ke[y]s $ROOT_HOME_DIR/.ssh/known_hos[t]s )
     else
         # Copy exactly what is specified:
         copy_as_is_ssh_files=( "${SSH_FILES[@]}" )
     fi
 fi
-contains_visible_char "${copy_as_is_ssh_files[*]}" && COPY_AS_IS=( "${COPY_AS_IS[@]}" "${copy_as_is_ssh_files[@]}" )
+contains_visible_char "${copy_as_is_ssh_files[*]}" && COPY_AS_IS+=( "${copy_as_is_ssh_files[@]}" )
 
 # Copy the usual SSH programs into the recovery system:
-PROGS=( "${PROGS[@]}" ssh sshd scp sftp ssh-agent ssh-keygen )
+PROGS+=( ssh sshd scp sftp ssh-agent ssh-keygen )
 
 # Copy a sftp-server program (e.g. /usr/lib/ssh/sftp-server) into the recovery system (if exists).
 # Because only OpenSSH >= 3.1 is supported where /etc/ssh/ is the default directory for configuration files
@@ -54,12 +54,12 @@ PROGS=( "${PROGS[@]}" ssh sshd scp sftp ssh-agent ssh-keygen )
 # Subsystem  sftp    /usr/lib/ssh/sftp-server
 local grep_sftp_output=( $( grep 'sftp' /etc/ssh/sshd_config 2>/dev/null ) )
 local sftp_program="${grep_sftp_output[2]}"
-test "$sftp_program" && PROGS=( "${PROGS[@]}" "$sftp_program" )
+test "$sftp_program" && PROGS+=( "$sftp_program" )
 
 # We need to add some specific NSS lib for shadow passwords to work on RHEL 6/7
 # cf. https://github.com/rear/rear/issues/560#issuecomment-124578636 and subsequent comments:
 Log "Adding required libfreeblpriv3.so to LIBS"
-LIBS=( "${LIBS[@]}" /usr/lib64/libfreeblpriv3.* /lib/libfreeblpriv3.* )
+LIBS+=( /usr/lib64/libfreeblpriv3.* /lib/libfreeblpriv3.* )
 
 # SSH server (sshd) - this is for logging into the recovery system via SSH:
 
@@ -74,7 +74,7 @@ if test "$getent_passswd_ssh" ; then
     # sshd:x:71:65:SSH daemon:/var/lib/sshd:/bin/false
     local sshd_user sshd_password sshd_uid sshd_gid sshd_gecos sshd_homedir junk
     IFS=: read sshd_user sshd_password sshd_uid sshd_gid sshd_gecos sshd_homedir junk <<<"$getent_passswd_ssh"
-    CLONE_USERS=( "${CLONE_USERS[@]}" $sshd_user )
+    CLONE_USERS+=( $sshd_user )
     # Create the sshd user home directory:
     mkdir $v -p $ROOTFS_DIR/$sshd_homedir
     chmod $v 0700 $ROOTFS_DIR/$sshd_homedir
