@@ -2,8 +2,8 @@
 
 case "$TIMESYNC" in
 	NTP)
-		PROGS=( "${PROGS[@]}" ntpd )
-		COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/ntp.conf "/etc/ntp" )
+		PROGS+=( ntpd )
+		COPY_AS_IS+=( /etc/ntp.conf "/etc/ntp" )
 		if [ ! -x /bin/systemctl ] ; then
 			echo "NT:2345:respawn:/bin/ntpd -n -g -p /var/run/ntpd.pid" >>$ROOTFS_DIR/etc/inittab
 		else
@@ -26,8 +26,8 @@ case "$TIMESYNC" in
 		EOF
 		;;
 	CHRONY)
-		PROGS=( "${PROGS[@]}" chronyd )
-		COPY_AS_IS=( "${COPY_AS_IS[@]}" "/etc/chrony*" "/var/lib/chrony" )
+		PROGS+=( chronyd )
+		COPY_AS_IS+=( "/etc/chrony*" "/var/lib/chrony" )
 		cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-timesync.sh <<-EOF
 			echo "Setting system time via CHRONY ..."
 			# Older chronyd does not have a timeout parameter.  Newer ones can be set to timeout with '-t <sec>'.
@@ -49,7 +49,7 @@ case "$TIMESYNC" in
 	RDATE)
 		[ "$TIMESYNC_SOURCE" ]
 		StopIfError "TIMESYNC_SOURCE not set, please set it to your RDATE server in $CONFIG_DIR/local.conf"
-		PROGS=( "${PROGS[@]}" rdate )
+		PROGS+=( rdate )
 		cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-timesync.sh <<-EOF
 			echo "Setting system time via RDATE ..."
 			rdate -l -p -s "$TIMESYNC_SOURCE" # allow for big jumps
@@ -59,7 +59,7 @@ case "$TIMESYNC" in
 	NTPDATE)
 		[ "$TIMESYNC_SOURCE" ]
 		StopIfError "TIMESYNC_SOURCE not set, please set it to your NTPDATE server in $CONFIG_DIR/local.conf"
-		PROGS=( "${PROGS[@]}" ntpdate )
+		PROGS+=( ntpdate )
 		cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-timesync.sh <<-EOF
 			echo "Setting system time via NTPDATE ..."
 			ntpdate -b "$TIMESYNC_SOURCE" # allow for big jumps
