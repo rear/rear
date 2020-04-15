@@ -39,7 +39,7 @@ if test "$keymaps_default_directory" ; then
     if test -d "$keymaps_default_directory" ; then
         local defkeymap_file="$( find $keymaps_default_directory -name 'defkeymap.*' | head -n1 )"
         if test "$defkeymap_file" ; then
-            COPY_AS_IS=( "${COPY_AS_IS[@]}" $defkeymap_file )
+            COPY_AS_IS+=( $defkeymap_file )
         else
             LogPrintError "Cannot include default keyboard mapping (no 'defkeymap.*' found in $keymaps_default_directory)"
         fi
@@ -64,7 +64,7 @@ local keymaps_directories=$keymaps_default_directory
 # Use KEYMAPS_DIRECTORIES if it is explicitly specified by the user:
 contains_visible_char "$KEYMAPS_DIRECTORIES" && keymaps_directories="$KEYMAPS_DIRECTORIES"
 if test "$keymaps_directories" ; then
-    COPY_AS_IS=( "${COPY_AS_IS[@]}" $keymaps_directories )
+    COPY_AS_IS+=( $keymaps_directories )
 else
     LogPrintError "Cannot include keyboard mappings (neither KEYMAPS_DEFAULT_DIRECTORY nor KEYMAPS_DIRECTORIES specified)"
 fi
