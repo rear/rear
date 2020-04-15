@@ -4,10 +4,10 @@
 have_udev || return 0
 
 # basic udev stuff
-COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/udev /etc/sysconfig/udev /lib/udev /usr/lib/udev )
+COPY_AS_IS+=( /etc/udev /etc/sysconfig/udev /lib/udev /usr/lib/udev )
 
 # some distros keep many udev binaries outside of /lib/udev
-PROGS=( "${PROGS[@]}"
+PROGS+=(
 ata_id
 cdrom_id
 edd_id
