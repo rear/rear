@@ -6,8 +6,8 @@ if ! has_binary cryptsetup; then
 fi
 
 Log "Saving Encrypted volumes."
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" cryptsetup dmsetup )
-COPY_AS_IS=( "${COPY_AS_IS[@]}" /usr/share/cracklib/\* /etc/security/pwquality.conf )
+REQUIRED_PROGS+=( cryptsetup dmsetup )
+COPY_AS_IS+=( /usr/share/cracklib/\* /etc/security/pwquality.conf )
 
 while read target_name junk ; do
     # find the target device we're mapping
@@ -49,5 +49,5 @@ done < <( dmsetup ls --target crypt )
 # see the create_crypt function in layout/prepare/GNU/Linux/160_include_luks_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-grep -q '^crypt ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" cryptsetup ) || true
+grep -q '^crypt ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( cryptsetup ) || true
 
