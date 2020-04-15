@@ -8,11 +8,11 @@
 excluded_mountpoints=()
 while read fs device mountpoint junk ; do
     if IsInArray "fs:$mountpoint" "${EXCLUDE_BACKUP[@]}" ; then
-        excluded_mountpoints=( "${excluded_mountpoints[@]}" $mountpoint )
+        excluded_mountpoints+=( $mountpoint )
     fi
     for component in $(get_parent_components "fs:$mountpoint" | sort -u) ; do
         if IsInArray "$component" "${EXCLUDE_BACKUP[@]}" ; then
-            excluded_mountpoints=( "${excluded_mountpoints[@]}" $mountpoint )
+            excluded_mountpoints+=( $mountpoint )
         fi
     done
 done < <(grep ^fs $LAYOUT_FILE)
