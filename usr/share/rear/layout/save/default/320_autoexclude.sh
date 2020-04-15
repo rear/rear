@@ -56,7 +56,7 @@ if is_true "$AUTOEXCLUDE_DISKS" ; then
         disks=$(find_disk_and_multipath swap:$device)
         for disk in $disks ; do
             if ! IsInArray "$disk" "${used_disks[@]}" ; then
-                used_disks=( "${used_disks[@]}" "$disk" )
+                used_disks+=( "$disk" )
             fi
         done
 
@@ -79,7 +79,7 @@ if is_true "$AUTOEXCLUDE_DISKS" ; then
         disks=$(find_disk_and_multipath fs:$mountpoint)
         for disk in $disks ; do
             if ! IsInArray "$disk" "${used_disks[@]}" ; then
-                used_disks=( "${used_disks[@]}" "$disk" )
+                used_disks+=( "$disk" )
             fi
         done
     done < <(grep ^fs $LAYOUT_FILE)
@@ -105,7 +105,7 @@ while read multipath device dm_size label slaves junk ; do
     OIFS=$IFS
     IFS=","
     for slave in $slaves ; do
-        devices=( "${devices[@]}" "$slave" )
+        devices+=( "$slave" )
     done
     IFS=$OIFS
 
@@ -124,6 +124,6 @@ done < <(grep ^multipath $LAYOUT_FILE)
 ### Automatically exclude autofs devices
 if [[ -n "$AUTOEXCLUDE_AUTOFS" ]] ; then
     while read name mountpoint junk ; do
-        BACKUP_PROG_EXCLUDE=( "${BACKUP_PROG_EXCLUDE[@]}" "$mountpoint" )
+        BACKUP_PROG_EXCLUDE+=( "$mountpoint" )
     done < <(grep " autofs " /proc/mounts)
 fi
