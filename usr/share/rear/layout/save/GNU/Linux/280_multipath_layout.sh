@@ -36,19 +36,19 @@ if grep -q ^multipath $DISKLAYOUT_FILE ; then
     # See REQUIRED_PROGS below regarding what is actually required.
     # TODO: It seems this code here is a duplicate of what is done in prep/GNU/Linux/240_include_multipath_tools.sh
     # but (in contrast to here) the actual code in 240_include_multipath_tools.sh is only run if BOOT_OVER_SAN is true:
-    PROGS=( "${PROGS[@]}" multipath kpartx multipathd mpathconf )
-    COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/multipath.conf /etc/multipath/* /lib*/multipath )
+    PROGS+=( multipath kpartx multipathd mpathconf )
+    COPY_AS_IS+=( /etc/multipath.conf /etc/multipath/* /lib*/multipath )
 
     # depending to the linux distro and arch, libaio can be located in different dir. (ex: /lib/powerpc64le-linux-gnu)
     for libdir in $(ldconfig -p | awk '/libaio.so/ { print $NF }' | xargs -n1 dirname | sort -u); do
         libaio2add="$libaio2add $libdir/libaio*"
     done
-    LIBS=( "${LIBS[@]}" $libaio2add )
+    LIBS+=( $libaio2add )
 fi
 
 # multipath is required in the recovery system if disklayout.conf contains at least one 'multipath' entry
 # see layout/prepare/GNU/Linux/210_load_multipath.sh which programs will be run during "rear recover" in any case
 # e.g. mpathconf is not called in any case and multipathd is only used when $list_mpath_device is true
 # cf. https://github.com/rear/rear/issues/1963
-grep -q '^multipath ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" multipath ) || true
+grep -q '^multipath ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( multipath ) || true
 
