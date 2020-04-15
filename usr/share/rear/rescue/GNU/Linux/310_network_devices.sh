@@ -40,7 +40,6 @@ EOF
 fi
 
 
-
 # This script (rescue/GNU/Linux/310_network_devices.sh) is intended to
 # autogenerate network devices setup code in the network_devices_setup_script
 # according to the network devices setup in the currently running system
@@ -486,7 +485,7 @@ function handle_bridge () {
     DebugPrint "$network_interface is a bridge"
 
     if [ -z "$already_set_up_bridges" ] ; then
-        MODULES=( "${MODULES[@]}" 'bridge' )
+        MODULES+=( 'bridge' )
     elif [[ " $already_set_up_bridges " == *\ $network_interface\ * ]] ; then
         DebugPrint "$network_interface already handled..."
         return $rc_ignore
@@ -541,7 +540,7 @@ function handle_bridge () {
         echo "ip link add name $network_interface type bridge stp_state $stp"
     elif has_binary brctl ; then
         if [[ " ${REQUIRED_PROGS[@]} " != *\ brctl\ * ]] ; then
-            REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "brctl" )
+            REQUIRED_PROGS+=( "brctl" )
         fi
         echo "brctl addbr $network_interface"
         echo "brctl stp $network_interface $stp"
@@ -650,7 +649,7 @@ function handle_team () {
     #
 
     if [ -z "$team_initialized" ] ; then
-        PROGS=( "${PROGS[@]}" 'teamd' 'teamdctl' )
+        PROGS+=( 'teamd' 'teamdctl' )
         team_initialized="y"
     fi
 
@@ -757,7 +756,7 @@ function handle_bond () {
 
     if [ -z "$bond_initialized" ] ; then
         echo "modprobe bonding"
-        MODULES=( "${MODULES[@]}" 'bonding' )
+        MODULES+=( 'bonding' )
         bond_initialized="y"
     fi
 
