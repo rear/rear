@@ -40,8 +40,8 @@ for rear_run in $BUILD_DIR/outputfs/rear/$HOSTNAME/* ; do
     backup_name=$rear_run/${BACKUP_PROG_ARCHIVE}${BACKUP_PROG_SUFFIX}${BACKUP_PROG_COMPRESS_SUFFIX}
     if test -r "$backup_name" ; then
         LogPrint "Backup archive $backup_name detected."
-        backups=( "${backups[@]}" "$backup_name" )
-        backup_times=( "${backup_times[@]}" "${rear_run##*/}" )
+        backups+=( "$backup_name" )
+        backup_times+=( "${rear_run##*/}" )
     fi
 done
 
