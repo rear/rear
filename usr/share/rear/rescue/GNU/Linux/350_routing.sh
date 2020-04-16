@@ -48,7 +48,7 @@ if test -s $TMP_DIR/mappings/routes ; then
     done < $TMP_DIR/mappings/routes
 else # use original routes
 
-    COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/iproute2 ) # for policy routing
+    COPY_AS_IS+=( /etc/iproute2 ) # for policy routing
 
     # find out routing rules
     rules=()
