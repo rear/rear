@@ -140,7 +140,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
     (   case "$BACKUP_PROG" in
             (tar)
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
-                    BACKUP_PROG_OPTIONS=( "${BACKUP_PROG_OPTIONS[@]}" "--exclude-from=$TMP_DIR/restore-exclude-list.txt" )
+                    BACKUP_PROG_OPTIONS+=( "--exclude-from=$TMP_DIR/restore-exclude-list.txt" )
                 fi
                 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then 
                     Log "dd if=$restore_input | $BACKUP_PROG_DECRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY | $BACKUP_PROG --block-number --totals --verbose ${BACKUP_PROG_OPTIONS[@]} ${BACKUP_PROG_COMPRESS_OPTIONS[@]} -C $TARGET_FS_ROOT/ -x -f -"
@@ -154,7 +154,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                 ;;
             (rsync)
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
-                    BACKUP_RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --exclude-from=$TMP_DIR/restore-exclude-list.txt )
+                    BACKUP_RSYNC_OPTIONS+=( --exclude-from=$TMP_DIR/restore-exclude-list.txt )
                 fi
                 Log $BACKUP_PROG $v "${BACKUP_RSYNC_OPTIONS[@]}" "$restore_input"/ $TARGET_FS_ROOT/
                 $BACKUP_PROG $v "${BACKUP_RSYNC_OPTIONS[@]}" "$restore_input"/ $TARGET_FS_ROOT/
