@@ -21,7 +21,7 @@ save_original_file() {
     local extension="$2"
     test "$extension" || extension=$WORKFLOW.$MASTER_PID
     local saved_original_file="$filename.$DATE.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
-    cp -ar $filename $saved_original_file && SAVED_ORIGINAL_FILES=( "${SAVED_ORIGINAL_FILES[@]}" "$filename" )
+    cp -ar $filename $saved_original_file && SAVED_ORIGINAL_FILES+=( "$filename" )
 }
 
 # Restore the saved original content of the original file named $1
@@ -277,12 +277,14 @@ get_child_components() {
                 if IsInArray "$child" "${children[@]}" ; then
                     continue
                 fi
-                devlist=( "${devlist[@]}" "$child" )
-                children=( "${children[@]}" "$child" )
+                devlist+=( "$child" )
+                children+=( "$child" )
             fi
         done < $LAYOUT_DEPS
 
-        ### remove the current element from the array and re-index it
+        # remove the current element from the array and re-index it because
+        # "unset does not remove the element it just sets null string to the particular index in array"
+        # see https://stackoverflow.com/questions/16860877/remove-an-element-from-a-bash-array
         unset "devlist[0]"
         devlist=( "${devlist[@]}" )
     done
@@ -317,12 +319,14 @@ get_parent_components() {
                     continue
                 fi
                 ### ...and add them to the list
-                devlist=( "${devlist[@]}" "$parent" )
-                ancestors=( "${ancestors[@]}" "$parent" )
+                devlist+=( "$parent" )
+                ancestors+=( "$parent" )
             fi
         done < $LAYOUT_DEPS
 
-        ### remove the current element from the array and re-index it
+        # remove the current element from the array and re-index it because
+        # "unset does not remove the element it just sets null string to the particular index in array"
+        # see https://stackoverflow.com/questions/16860877/remove-an-element-from-a-bash-array
         unset "devlist[0]"
         devlist=( "${devlist[@]}" )
     done
