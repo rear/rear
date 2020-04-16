@@ -1,7 +1,7 @@
 if [[ "$VERBOSE" ]]; then
     WORKFLOW_shell_DESCRIPTION="start a bash within rear; development tool"
 fi
-WORKFLOWS=( "${WORKFLOWS[@]}" shell )
+WORKFLOWS+=( shell )
 WORKFLOW_shell () {
     if test "$SIMULATE" ; then
         LogPrint "${BASH_SOURCE[0]} starts a bash within rear"
