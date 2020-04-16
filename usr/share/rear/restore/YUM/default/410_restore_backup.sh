@@ -138,7 +138,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                 ;;
             (rsync)
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
-                    BACKUP_RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --exclude-from=$TMP_DIR/restore-exclude-list.txt )
+                    BACKUP_RSYNC_OPTIONS+=( --exclude-from=$TMP_DIR/restore-exclude-list.txt )
                 fi
                 Log $BACKUP_PROG $v "${BACKUP_RSYNC_OPTIONS[@]}" "$restore_input"/ $TARGET_FS_ROOT/
                 $BACKUP_PROG $v "${BACKUP_RSYNC_OPTIONS[@]}" "$restore_input"/ $TARGET_FS_ROOT/
