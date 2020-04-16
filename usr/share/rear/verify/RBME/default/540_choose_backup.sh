@@ -14,7 +14,7 @@ backups=()
 backup_times=()
 for backup in $BUILD_DIR/outputfs/$RBME_HOSTNAME/????-??-?? ;do
     Debug "RBME backup $backup detected."
-    backups=( "${backups[@]}" ${backup##*/} )
+    backups+=( ${backup##*/} )
 done
 
 (( ${#backups[@]} > 0 ))
