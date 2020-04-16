@@ -115,6 +115,12 @@ fi
                     Log "Filesystem $fstype on $device mounted at $mountpoint is below Docker Root Dir $docker_root_dir, skipping."
                     continue
                 fi
+                # In case Longhorn is rebuilding a replica device it will show up as a pseudo-device and when that is the
+                # case then you would find traces of it in the /var/lib/rear/layout/disklayout.conf file, which would
+                # break the recovery as Longhorn Engine replica's are under control of Rancher Longhorn software and these are
+                # rebuild automatically via kubernetes longhorn-engine pods.
+                # Issue where we discovered this behavior was #2365
+                # In normal situations you will find traces of longhorn in the log saying skipping non-block devices.
                 if echo "$mountpoint" | grep -q "^/dev/longhorn/pvc-" ; then
                     Log "Longhorn Engine replica $device, skipping."
                     continue
