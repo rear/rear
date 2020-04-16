@@ -1,6 +1,6 @@
 # write the OBDR header to tape
 
-PROGS=( "${PROGS[@]}" dd )
+PROGS+=( dd )
 
 LogPrint "Writing OBDR header to tape in drive '$TAPE_DEVICE'"
 
