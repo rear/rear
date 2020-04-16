@@ -18,7 +18,7 @@ ProgressStart "Running archive operation"
 	case "$(basename $BACKUP_PROG)" in
 
 		(rsync)
-			BACKUP_RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete --exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded )
+			BACKUP_RSYNC_OPTIONS+=( --one-file-system --delete --exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded )
 
 			case $RSYNC_PROTO in
 
