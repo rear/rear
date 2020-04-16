@@ -115,6 +115,10 @@ fi
                     Log "Filesystem $fstype on $device mounted at $mountpoint is below Docker Root Dir $docker_root_dir, skipping."
                     continue
                 fi
+                if echo "$mountpoint" | grep -q "^/dev/longhorn/pvc-" ; then
+                    Log "Longhorn Engine replica $device, skipping."
+                    continue
+                fi
             fi
         fi
         # Replace a symbolic link /dev/disk/by-uuid/a1b2c3 -> ../../sdXn
