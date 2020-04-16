@@ -190,6 +190,12 @@ Log "Testing that each program in the PROGS array can be found as executable com
 local program=""
 local missing_programs=""
 for program in "${PROGS[@]}" ; do
+    # Skip empty values because without that test either
+    # 'type' without argument succeeds and then 'basename' without argument fails
+    # or 'type ""' with empty argument fails
+    # so both result unwanted error messages and unwanted proceeding
+    # cf. https://github.com/rear/rear/issues/2372
+    test $program || continue
     # There are many programs in the PROGS array that may or may not exist on the original system
     # so that only those programs in the PROGS array that exist on the original system are tested:
     type $program || continue
@@ -212,6 +218,12 @@ local required_program=""
 local missing_required_programs=""
 local fatal_missing_program=""
 for required_program in "${REQUIRED_PROGS[@]}" ; do
+    # Skip empty values because without that test
+    # either 'basename without argument fails
+    # or 'basename ""' with empty argument falsely succeeds
+    # so both result unwanted error messages and unwanted proceeding
+    # cf. https://github.com/rear/rear/issues/2372
+    test $required_program || continue
     # Use the basename because the path within the recovery system is usually different compared to the path on the original system:
     required_program=$( basename $required_program )
     # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120.
