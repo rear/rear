@@ -85,19 +85,19 @@ LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 # Add the --selinux option to be safe with SELinux context restoration (from restore/NETFS/default/400_restore_backup.sh)
 if ! is_true "$BACKUP_SELINUX_DISABLE" ; then
     if tar --usage | grep -q selinux ; then
-        BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --selinux"
+        BACKUP_PROG_OPTIONS+=( --selinux )
     fi
     if tar --usage | grep -wq -- --xattrs ; then
-        BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --xattrs"
+        BACKUP_PROG_OPTIONS+=( --xattrs )
     fi
     if tar --usage | grep -wq -- --xattrs-include ; then
-        BACKUP_PROG_OPTIONS="$BACKUP_PROG_OPTIONS --xattrs-include=\"*.*\""
+        BACKUP_PROG_OPTIONS+=( '--xattrs-include="*.*"' )
     fi
 fi
 
 # Generate the actual backup archive, excluding all of the RPM-provided files which have NOT been modified
-Log tar --preserve-permissions --same-owner --warning=no-xdev --sparse --block-number --totals --no-wildcards-match-slash --one-file-system --ignore-failed-read $BACKUP_PROG_OPTIONS --gzip -C / -c -f $backuparchive --exclude-from=$yum_backup_dir/rpm_backup_exclude_files.dat -X $TMP_DIR/backup-exclude.txt $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE
-tar --preserve-permissions --same-owner --warning=no-xdev --sparse --block-number --totals --no-wildcards-match-slash --one-file-system --ignore-failed-read $BACKUP_PROG_OPTIONS --gzip -C / -c -f $backuparchive --exclude-from=$yum_backup_dir/rpm_backup_exclude_files.dat -X $TMP_DIR/backup-exclude.txt $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE
+Log tar --preserve-permissions --same-owner --warning=no-xdev --sparse --block-number --totals --no-wildcards-match-slash --one-file-system --ignore-failed-read ${BACKUP_PROG_OPTIONS[@]} --gzip -C / -c -f $backuparchive --exclude-from=$yum_backup_dir/rpm_backup_exclude_files.dat -X $TMP_DIR/backup-exclude.txt $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE
+tar --preserve-permissions --same-owner --warning=no-xdev --sparse --block-number --totals --no-wildcards-match-slash --one-file-system --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}" --gzip -C / -c -f $backuparchive --exclude-from=$yum_backup_dir/rpm_backup_exclude_files.dat -X $TMP_DIR/backup-exclude.txt $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE
 
 # Restore the ReaR default bash flags and options (see usr/sbin/rear):
 apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
