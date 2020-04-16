@@ -154,9 +154,7 @@ if automatic_recovery ; then
     # The recover workflow is always verbose (see usr/sbin/rear):
     if rear $rear_debug_options recover ; then
         echo -e "\n'rear recover' finished successfully\n"
-        choices=( "${choices[@]}"
-                  "Reboot"
-                )
+        choices+=( "Reboot" )
     else
         echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
     fi
