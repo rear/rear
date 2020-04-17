@@ -6,8 +6,8 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 WORKFLOW_checklayout_DESCRIPTION="check if the disk layout has changed"
-WORKFLOWS=( ${WORKFLOWS[@]} checklayout )
-LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} checklayout )
+WORKFLOWS+=( checklayout )
+LOCKLESS_WORKFLOWS+=( checklayout )
 
 function WORKFLOW_checklayout () {
     ORIG_LAYOUT=$VAR_DIR/layout/disklayout.conf
