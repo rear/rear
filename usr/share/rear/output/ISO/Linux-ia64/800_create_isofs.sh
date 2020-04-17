@@ -9,7 +9,7 @@
 [ -x "$ISO_MKISOFS_BIN" ]
 StopIfError "ISO_MKISOFS_BIN [$ISO_MKISOFS_BIN] not an executable !"
 
-ISO_FILES=( ${ISO_FILES[@]} boot/boot.img )
+ISO_FILES+=( boot/boot.img )
 Log "Starting '$ISO_MKISOFS_BIN'"
 LogPrint "Making ISO image"
 
