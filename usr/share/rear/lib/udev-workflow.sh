@@ -8,7 +8,7 @@
 if [[ "$VERBOSE" ]]; then
     WORKFLOW_udev_DESCRIPTION="udev handler; triggered by udev rule"
 fi
-WORKFLOWS=( ${WORKFLOWS[@]} udev )
+WORKFLOWS+=( udev )
 WORKFLOW_udev () {
 
     # Do nothing in simulation mode, cf. https://github.com/rear/rear/issues/1939
