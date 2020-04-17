@@ -22,6 +22,7 @@ define_dhclients_variable()
 }
 
 dhcp_interfaces_active() {
+    # Strategy 1: Check if some DHCP client process is running
     local my_dhclients
     my_dhclients=${dhclients}
     my_dhclients=${dhclients// /|}
@@ -31,11 +32,40 @@ dhcp_interfaces_active() {
         # include DHCP CLIENT support in Relax-and-Recover
         Log "Running DHCP client found, enabling USE_DHCLIENT"
         USE_DHCLIENT=y
+        return  # no additional checks needed
+    fi
+
+    # Strategy 2: Check if systemd-networkd is active and configured to use its built-in DHCP client
+    if type systemctl &>/dev/null && systemctl is-active --quiet systemd-networkd; then
+        # Check the systemd.network(5) configuration for an effective configuration file enabling DHCP
+        # for some network interface. Configuration files live in {/etc,/run,/lib}/systemd/network/*.network and
+        # systemd configuration file priorities apply. Note that we do not check for additional *.conf files in
+        # "drop-in" directories (*.network.d) as this would add an additional layer of complexity.
+        # (Life could be easier if there was something like 'systemctl show *.network', but there isn't yet.)
+        local config_bases=(/etc /run /lib)  # priority: high to low
+        local config_files=()  # relative paths to config bases
+        local config_base config_file
+
+        # Read relative config file paths into the 'config_files' array variable (safe in case of blanks).
+        while IFS='' read -r config_file; do config_files+=("$config_file"); done < <(for config_base in "${config_bases[@]}"; do (cd "$config_base" && find systemd/network -name '*.network' -print) done | sort -u)
+
+        for config_file in "${config_files[@]}"; do
+            for config_base in "${config_bases[@]}"; do
+                if [[ -f "$config_base/$config_file" ]]; then
+                    if grep -Eq '^[[:space:]]*DHCP[[:space:]]*=[[:space:]]*(yes|ip)' "$config_base/$config_file"; then
+                        Log "Detected an active systemd-networkd configured to use its built-in DHCP client, enabling USE_DHCLIENT"
+                        USE_DHCLIENT=y
+                        return  # no additional checks needed
+                    fi
+                    break  # do not consider lower-priority config files
+                fi
+            done
+        done
     fi
 }
 
 define_dhclient_bins()
-{   # purpuse is to define which binaries are being used on this system
+{   # purpose is to define which binaries are being used on this system
     # other dhcp clients should be hard-coded in the /etc/rear/[site|local].conf file
     case ${1##*/} in
         dhcpcd) DHCLIENT_BIN=dhcpcd ;;
