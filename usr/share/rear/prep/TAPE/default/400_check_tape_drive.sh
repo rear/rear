@@ -1,10 +1,10 @@
 # Check tape drive
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mt )
+REQUIRED_PROGS+=( mt )
 
 # Test for cciss driver and include the necessary tools
 if grep -q '^cciss ' /proc/modules; then
-    PROGS=( "${PROGS[@]}" "${PROGS_OBDR[@]}" )
-    REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "${REQUIRED_PROGS_OBDR[@]}" )
+    PROGS+=( "${PROGS_OBDR[@]}" )
+    REQUIRED_PROGS+=( "${REQUIRED_PROGS_OBDR[@]}" )
 fi
 
 # Is a tape device provided
