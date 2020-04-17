@@ -6,6 +6,6 @@ local scheme=$(url_scheme $BACKUP_URL)
 
 case "$scheme" in
     (iso)
-        MODULES=( ${MODULES[@]} isofs )
+        MODULES+=( isofs )
         ;;
 esac
