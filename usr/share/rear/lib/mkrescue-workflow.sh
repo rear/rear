@@ -6,7 +6,7 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 WORKFLOW_mkrescue_DESCRIPTION="create rescue media only"
-WORKFLOWS=( ${WORKFLOWS[@]} mkrescue )
+WORKFLOWS+=( mkrescue )
 WORKFLOW_mkrescue () {
 
 	SourceStage "prep"
