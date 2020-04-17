@@ -2,6 +2,10 @@
 # Prepare for the BACKUP=YUM method.
 #
 
+# BACKUP=YUM does not support BACKUP_PROG_CRYPT_ENABLED
+# see https://github.com/rear/rear/issues/2374
+is_true "$BACKUP_PROG_CRYPT_ENABLED" && Error "BACKUP=YUM does not support BACKUP_PROG_CRYPT_ENABLED"
+
 # Try to care about possible errors
 # see https://github.com/rear/rear/wiki/Coding-Style
 set -e -u -o pipefail
