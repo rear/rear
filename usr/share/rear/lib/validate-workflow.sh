@@ -8,7 +8,7 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 WORKFLOW_validate_DESCRIPTION="submit validation information"
-WORKFLOWS=( ${WORKFLOWS[@]} validate )
+WORKFLOWS+=( validate )
 WORKFLOW_validate () {
 
     if test "$SIMULATE" ; then
