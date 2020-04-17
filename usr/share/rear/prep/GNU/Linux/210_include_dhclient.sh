@@ -13,12 +13,12 @@ define_dhclients_variable()
         dhcp6c dhclient6 ;
     do
         [ "x$x" == x ] && continue
-        for d in ${dhclients[@]} ; do
+        for d in "${dhclients[@]}" ; do
             [ "x$d" = "x$x" ] && continue 2
         done
-        dhclients=(${dhclients[@]} "$x")
+        dhclients+=("$x")
     done
-    dhclients=${dhclients[@]}
+    dhclients="${dhclients[*]}"
 }
 
 dhcp_interfaces_active() {
@@ -127,8 +127,8 @@ fi
 
 # we made our own /etc/dhclient.conf and /bin/dhclient-script files (no need to copy these
 # from the local Linux system for dhclient). For dhcpcd we have /bin/dhcpcd.sh foreseen.
-COPY_AS_IS=( "${COPY_AS_IS[@]}" "/etc/localtime" "/usr/lib/dhcpcd/*" )
-PROGS=( "${PROGS[@]}" arping ipcalc usleep "${dhclients[@]}" )
+COPY_AS_IS+=( "/etc/localtime" "/usr/lib/dhcpcd/*" )
+PROGS+=( arping ipcalc usleep "${dhclients[@]}" )
 
 # At this point we want DHCP client support:
 if test "$USE_DHCLIENT" ; then
