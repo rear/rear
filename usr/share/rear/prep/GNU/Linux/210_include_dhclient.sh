@@ -47,15 +47,29 @@ dhcp_interfaces_active() {
         local config_base config_file
 
         # Read relative config file paths into the 'config_files' array variable (safe in case of blanks).
-        while IFS='' read -r config_file; do config_files+=("$config_file"); done < <(for config_base in "${config_bases[@]}"; do (cd "$config_base" && find systemd/network -name '*.network' -print) done | sort -u)
+        while IFS='' read -r config_file; do
+            config_files+=("$config_file")
+        done < <(
+            for config_base in "${config_bases[@]}"; do
+                (cd "$config_base" && find systemd/network -name '*.network' -print)
+            done | sort -u
+        )
+
+        # Determine the list of active network interface devic names.
+        local ip_device_regexp="$(ip link show | awk -F '[: ]+' '/state UP/ { printf("%s%s", sep, $2); sep="|"; }')"
 
         for config_file in "${config_files[@]}"; do
             for config_base in "${config_bases[@]}"; do
-                if [[ -f "$config_base/$config_file" ]]; then
-                    if grep -Eq '^[[:space:]]*DHCP[[:space:]]*=[[:space:]]*(yes|ip)' "$config_base/$config_file"; then
-                        Log "Detected an active systemd-networkd configured to use its built-in DHCP client, enabling USE_DHCLIENT"
-                        USE_DHCLIENT=y
-                        return  # no additional checks needed
+                if [[ -r "$config_base/$config_file" ]]; then
+                    # Check only configuration files matching an active network interface devic name. (Note:
+                    # configuration files allow other types of matching, which is ignored here for simplicity.)
+                    if grep -Eq "^[[:space:]]*Name[[:space:]]*=[[:space:]]*($ip_device_regexp)[[:space:]]*$" "$config_base/$config_file"; then
+                        # Check if DHCP is enabled for an interface.
+                        if grep -Eq '^[[:space:]]*DHCP[[:space:]]*=[[:space:]]*(yes|ip)' "$config_base/$config_file"; then
+                            Log "Detected an active systemd-networkd configured to use its built-in DHCP client, enabling USE_DHCLIENT"
+                            USE_DHCLIENT=y
+                            return  # no additional checks needed
+                        fi
                     fi
                     break  # do not consider lower-priority config files
                 fi
