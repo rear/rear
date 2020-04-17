@@ -6,7 +6,7 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 WORKFLOW_recover_DESCRIPTION="recover the system"
-WORKFLOWS=( ${WORKFLOWS[@]} recover )
+WORKFLOWS+=( recover )
 function WORKFLOW_recover () {
     # Adapt /etc/motd in the ReaR recovery system when 'rear recover' is running
     # to avoid the additional 'Run "rear recover" to restore your system !' message
