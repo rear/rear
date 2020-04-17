@@ -5,9 +5,9 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} dump )
+LOCKLESS_WORKFLOWS+=( dump )
 WORKFLOW_dump_DESCRIPTION="dump configuration and system information"
-WORKFLOWS=( ${WORKFLOWS[@]} dump )
+WORKFLOWS+=( dump )
 WORKFLOW_dump () {
 
     # Do nothing in simulation mode, cf. https://github.com/rear/rear/issues/1939
