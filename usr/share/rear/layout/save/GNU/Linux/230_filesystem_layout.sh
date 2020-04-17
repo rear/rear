@@ -467,13 +467,8 @@ fi
                     # see https://btrfs.wiki.kernel.org/index.php/Mount_options
                     test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
                     if test -n "$btrfs_subvolume_path" ; then
-			# Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
-                        for p in chattr lsattr
-                        do
-                            if ! IsInArray "$p" "${PROGS[@]}"; then
-                                PROGS=( ${PROGS[@]} "$p" )
-                            fi
-                        done
+                        # Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
+                        PROGS+=( chattr lsattr )
                         echo "btrfsnocopyonwrite $btrfs_subvolume_path"
                     else
                         echo "# $subvolume_mountpoint has the 'no copy on write' attribute set but $findmnt_command does not show its btrfs subvolume path"
@@ -494,7 +489,7 @@ fi
 # were appended to the BTRFS_SUBVOLUME_SLES_SETUP array (unless such a device was already in that array)
 # to enforce during "rear recover" btrfs_subvolumes_setup_SLES() gets called to setup that btrfs filesystem
 # (see the usr/share/rear/layout/prepare/GNU/Linux/133_include_mount_filesystem_code.sh script):
-BTRFS_SUBVOLUME_SLES_SETUP=( ${BTRFS_SUBVOLUME_SLES_SETUP[@]} $btrfs_subvolume_sles_setup_devices )
+BTRFS_SUBVOLUME_SLES_SETUP+=( $btrfs_subvolume_sles_setup_devices )
 
 EOF
             # The rescue.conf file is sourced last by usr/sbin/rear i.e. after site.conf and local.conf
