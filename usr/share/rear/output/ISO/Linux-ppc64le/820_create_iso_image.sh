@@ -6,7 +6,7 @@ pushd $TMP_DIR
 
 # If isofs directory exists, add its content to ISO_FILES (when backup must be part of the ISO images)
 if [ -d isofs ] ; then
-    ISO_FILES=( ${ISO_FILES[@]} isofs )
+    ISO_FILES+=( isofs )
 fi
 
 # mkisofs command for ppc64/ppc64le arch
