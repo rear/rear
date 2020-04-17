@@ -5,7 +5,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} help )
+LOCKLESS_WORKFLOWS+=( help )
 
 function WORKFLOW_help () {
 
