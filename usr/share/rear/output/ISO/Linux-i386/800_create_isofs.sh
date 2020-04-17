@@ -17,11 +17,11 @@ else
     cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/isofs/isolinux/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME'"
 fi
 
-#ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/kernel $TMP_DIR/$REAR_INITRD_FILENAME )
+#ISO_FILES+=( $TMP_DIR/kernel $TMP_DIR/$REAR_INITRD_FILENAME )
 # in case the user populates this array manually we must not forget to copy
 # these files to our temporary isofs
 if test "${#ISO_FILES[@]}" -gt 0 ; then
-    cp -pL $v ${ISO_FILES[@]}  $TMP_DIR/isofs/isolinux/ || Error "Failed to copy ISO_FILES '${ISO_FILES[@]}'"
+    cp -pL $v ${ISO_FILES[@]} $TMP_DIR/isofs/isolinux/ || Error "Failed to copy ISO_FILES '${ISO_FILES[@]}'"
 fi
 
 mkdir -p $v "$ISO_DIR" || Error "Failed to create ISO_DIR '$ISO_DIR'"
