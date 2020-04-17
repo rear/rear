@@ -8,11 +8,7 @@ case $BACKUP_PROG in
 esac
 
 
-PROGS=( "${PROGS[@]}"
-$BACKUP_PROG
-gzip
-bzip2
-)
+PROGS+=( $BACKUP_PROG gzip bzip2 )
 
 rsync_err_msg=(
 "Success"
