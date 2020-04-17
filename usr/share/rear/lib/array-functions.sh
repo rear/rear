@@ -22,7 +22,7 @@ function RmInArray() {
       declare -a nArray  # we will build a new array
       while shift ; do
           if [[ "$needle" != "$1" ]] ; then
-              nArray=( ${nArray[@]} "$1" )
+              nArray+=( "$1" )
           fi
       done
     } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
