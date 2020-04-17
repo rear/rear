@@ -25,7 +25,7 @@ if [[ "$SUSE_STYLE" ]] ; then
   #SUSE type distos
   cp $v $ISO_YABOOT_BIN $TMP_DIR/yaboot
   # SUSE ppc64 use /yaboot, need to add it to ISO_FILES see #1407
-  ISO_FILES=( ${ISO_FILES[@]} yaboot )
+  ISO_FILES+=( yaboot )
 
 cat >"$TMP_DIR/ppc/bootinfo.txt" <<EOF
 <chrp-boot>
