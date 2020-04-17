@@ -20,9 +20,9 @@ localedef -f UTF-8 -i en_US $ROOTFS_DIR/usr/lib/locale/rear.UTF-8
 StopIfError "Could not create locales"
 
 # Activate $COPY_AS_IS_BORG from default.conf.
-COPY_AS_IS=( "${COPY_AS_IS[@]}" "${COPY_AS_IS_BORG[@]}" )
+COPY_AS_IS+=( "${COPY_AS_IS_BORG[@]}" )
 
 # Activate $PROGS_BORG from default.conf.
 # Avoid user to accidentally override `borg' and `locale' and exclude them
 # from Relax-and-Recover rescue/recovery system.
-PROGS=( "${PROGS[@]}" "${PROGS_BORG[@]}" borg locale )
+PROGS+=( "${PROGS_BORG[@]}" borg locale )
