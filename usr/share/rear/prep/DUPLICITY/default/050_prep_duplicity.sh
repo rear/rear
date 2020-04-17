@@ -13,13 +13,12 @@ else
     PYTHON_BIN="python"
 fi
 
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" gpg duplicity "$PYTHON_BIN" )
+REQUIRED_PROGS+=( gpg duplicity "$PYTHON_BIN" )
 
 # duply is a really good shell script wrapper for duplicity (and gpg-agent might be required by duplicity)
-PROGS=( "${PROGS[@]}" duply gpg-agent )
+PROGS+=( duply gpg-agent )
 
-COPY_AS_IS=(
-"${COPY_AS_IS[@]}"
+COPY_AS_IS+=(
 /etc/duply
 /etc/python
 /etc/python2.6
@@ -51,8 +50,7 @@ $ROOT_HOME_DIR/.gnupg
 /usr/include/python2.7/pyconfig.h
 )
 
-LIBS=(
-"${LIBS[@]}"
+LIBS+=(
 /usr/lib/librsync.so*
 /usr/lib64/librsync.so*
 /usr/lib/*/librsync.so*
