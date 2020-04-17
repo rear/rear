@@ -9,7 +9,7 @@
 #
 
 WORKFLOW_format_DESCRIPTION="Format and label medium for use with ReaR"
-WORKFLOWS=( ${WORKFLOWS[@]} format )
+WORKFLOWS+=( format )
 WORKFLOW_format () {
 
     DEVICE=""
