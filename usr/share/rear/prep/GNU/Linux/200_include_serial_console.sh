@@ -25,4 +25,4 @@ else
     Error "Failed to find 'getty' or 'agetty' for serial console"
 fi
 
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "$getty_binary" stty )
+REQUIRED_PROGS+=( "$getty_binary" stty )
