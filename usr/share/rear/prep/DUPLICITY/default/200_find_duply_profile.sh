@@ -74,7 +74,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] && has_binary duply; then
     local scheme=$( url_scheme $TARGET )
     case $scheme in
        (sftp|rsync|scp)
-           PROGS=( "${PROGS[@]}" $scheme )
+           PROGS+=( $scheme )
     esac
 fi
 
