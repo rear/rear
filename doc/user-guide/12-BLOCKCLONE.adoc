@@ -146,7 +146,7 @@ OUTPUT=ISO
 BACKUP=NETFS
 BACKUP_OPTIONS="nfsvers=3,nolock"
 BACKUP_URL=nfs://<hostname>/mnt/rear
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" ntfsclone )
+REQUIRED_PROGS+=( ntfsclone )
 ```
 
 Now we will define backup parameters for Linux.
@@ -156,7 +156,7 @@ Now we will define backup parameters for Linux.
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
-BACKUP_PROG_EXCLUDE=( ${BACKUP_PROG_EXCLUDE[@]} '/media/*' )
+BACKUP_PROG_EXCLUDE+=( '/media/*' )
 ```
 
 Our Windows 10 is by default installed on two separate partitions
@@ -273,7 +273,7 @@ TIP: As Linux part is still mounted under _/mnt/local_, you can do some
 
 TIP: ReaR will by default not include tools for mounting NTFS file systems. You
  can do it manually by adding
- `REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" ntfsclone mount.ntfs-3g )`
+ `REQUIRED_PROGS+=( ntfsclone mount.ntfs-3g )`
  to your _local.conf_
 
 === 3. Backup/restore of Linux / Windows 10 dual boot setup sharing same disk
@@ -292,7 +292,7 @@ OUTPUT=ISO
 BACKUP=NETFS
 BACKUP_OPTIONS="nfsvers=3,nolock"
 BACKUP_URL=nfs://<hostname>/mnt/rear
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" ntfsclone )
+REQUIRED_PROGS+=( ntfsclone )
 
 BLOCKCLONE_STRICT_PARTITIONING="yes"
 BLOCKCLONE_SAVE_MBR_DEV="/dev/sda"
@@ -312,7 +312,7 @@ Linux configuration
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
-BACKUP_PROG_EXCLUDE=( ${BACKUP_PROG_EXCLUDE[@]} '/media/*' )
+BACKUP_PROG_EXCLUDE+=( '/media/*' )
 ```
 
 Windows 10 boot partition configuration
@@ -400,7 +400,7 @@ BACKUP_URL=usb:///dev/disk/by-label/REAR-000
 USB_SUFFIX="USB_backups"
 
 GRUB_RESCUE=n
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" ntfsclone )
+REQUIRED_PROGS+=( ntfsclone )
 
 BLOCKCLONE_STRICT_PARTITIONING="yes"
 BLOCKCLONE_SAVE_MBR_DEV="/dev/sda"
@@ -421,7 +421,7 @@ BACKUP_URL=usb:///dev/disk/by-label/REAR-000
 USB_SUFFIX="USB_backups"
 
 GRUB_RESCUE=n
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" ntfsclone )
+REQUIRED_PROGS+=( ntfsclone )
 
 BLOCKCLONE_STRICT_PARTITIONING="yes"
 BLOCKCLONE_SAVE_MBR_DEV="/dev/sda"
@@ -674,7 +674,7 @@ Options used for the base OS backup:
 # cat base_system.conf
 this_file_name=$( basename ${BASH_SOURCE[0]} )
 LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
-BACKUP_PROG_EXCLUDE=( "${BACKUP_PROG_EXCLUDE[@]}" '/products/*' )
+BACKUP_PROG_EXCLUDE+=( '/products/*' )
 BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 BACKUP=NETFS
 ```
