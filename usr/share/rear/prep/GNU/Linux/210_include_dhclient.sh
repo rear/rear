@@ -13,24 +13,17 @@ fi
 # Array of known DHCP clients, which must also be known to skel/default/etc/scripts/system-setup.d/58-start-dhclient.sh
 local dhcp_clients=(dhcpcd dhclient dhcp6c dhclient6)
 
-# If DHCP client binaries were predefined (in the /etc/rear/local.conf file)
-# we pick them up here (but strip any directory components first).
-# FIXME: Neither DHCLIENT_BIN nor DHCLIENT6_BIN are described in default.conf
-DHCLIENT_BIN=${DHCLIENT_BIN##*/}
-DHCLIENT6_BIN=${DHCLIENT6_BIN##*/}
-
+# DHCLIENT_BIN, if set, specifies the DHCP client binary to use on the rescue system.
+# Must be one of the binaries listed in $dhcp_clients. Default (empty): try to auto-detect.
+# FIXME: DHCLIENT_BIN could be documented in default.conf as needed.
 if [[ -n "$DHCLIENT_BIN" ]]; then
     has_binary "$DHCLIENT_BIN" || Error "DHCLIENT_BIN='$DHCLIENT_BIN' but such a binary could not be found"
     [[ "${dhcp_clients[*]}" == *" $DHCLIENT_BIN "* ]] || Error "DHCLIENT_BIN='$DHCLIENT_BIN' is not among known DHCP clients (${dhcp_clients[*]})"
 fi
-if [[ -n "$DHCLIENT6_BIN" ]]; then
-    has_binary "$DHCLIENT6_BIN" || Error "DHCLIENT6_BIN='$DHCLIENT6_BIN' but such a binary could not be found"
-    [[ "${dhcp_clients[*]}" == *" $DHCLIENT6_BIN "* ]] || Error "DHCLIENT6_BIN='$DHCLIENT6_BIN' is not among known DHCP clients (${dhcp_clients[*]})"
-fi
 
 
 function dhcp_client_is_active() {
-    # Strategy 1: Check if any DHCP client process is running
+    # Strategy 1: Check if any DHCP client process is running (does not need to be the one specified by DHCLIENT_BIN)
     local dhcp_clients_regexp="${dhcp_clients[*]}"
     dhcp_clients_regexp=${dhcp_clients_regexp// /|}
     ps -e | grep -qEs "[ /]($dhcp_clients_regexp)"
@@ -94,38 +87,32 @@ elif [[ -n "$DHCLIENT_BIN" ]]; then
     # explicitly configured DHCLIENT_BIN but forgot to set USE_DHCLIENT=y
     USE_DHCLIENT=y
     Log "Enabling DHCP on the rescue system (DHCLIENT_BIN='$DHCLIENT_BIN')"
-elif [[ -n "$DHCLIENT6_BIN" ]]; then
-    # explicitly configured DHCLIENT6_BIN but forgot to set USE_DHCLIENT=y
-    USE_DHCLIENT=y
-    Log "Enabling DHCP on the rescue system (DHCLIENT6_BIN='$DHCLIENT6_BIN')"
 fi
 
 
 if is_true "$USE_DHCLIENT"; then
-    # Set DHCLIENT[6]_BIN if not already done
-    local dhclient_bin
-    for dhclient_bin in "${dhcp_clients[@]}" ; do
-        if has_binary "$dhclient_bin"; then
-            if [[ "$dhclient_bin" == *6* ]]; then
-                [[ -z "$DHCLIENT6_BIN" ]] && DHCLIENT6_BIN="$dhclient_bin"
-            else
-                [[ -z "$DHCLIENT_BIN" ]] && DHCLIENT_BIN="$dhclient_bin"
+    # Set DHCLIENT_BIN if not already done
+    if [[ -z "$DHCLIENT_BIN" ]]; then
+        local dhclient_bin
+        for dhclient_bin in "${dhcp_clients[@]}" ; do
+            if has_binary "$dhclient_bin"; then
+                DHCLIENT_BIN="$dhclient_bin"
+                break
             fi
-        fi
-    done
+        done
 
-    if [[ -z "$DHCLIENT_BIN" && -z "$DHCLIENT6_BIN" ]]; then
-        Error "DHCP is enabled but no DHCP client binary (${dhcp_clients[*]}) was found"
+        if [[ -z "$DHCLIENT_BIN" ]]; then
+            Error "DHCP is enabled but no DHCP client binary (${dhcp_clients[*]}) was found"
+        fi
     fi
 
-    REQUIRED_PROGS+=( $DHCLIENT_BIN $DHCLIENT6_BIN )
+    REQUIRED_PROGS+=( "$DHCLIENT_BIN" )
 
     # Append variables to rescue.conf to configure DHCP on the rescue system:
     cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
-# The following 3 lines were added through 210_include_dhclient.sh
+# The following 2 lines were added by 210_include_dhclient.sh
 USE_DHCLIENT=$USE_DHCLIENT
 DHCLIENT_BIN=$DHCLIENT_BIN
-DHCLIENT6_BIN=$DHCLIENT6_BIN
 
 EOF
 fi
