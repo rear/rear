@@ -111,7 +111,7 @@ fi
             # but ensure docker_root_dir is not empty (otherwise any mountpoint string matches "^" which
             # would skip all mountpoints), see https://github.com/rear/rear/issues/1989#issuecomment-456054278
             if test "$docker_root_dir" ; then
-                if echo "$mountpoint" | grep -q "^${docker_root_dir}/" ; then
+                if echo "$device" | grep -q "^${docker_root_dir}/" ; then
                     Log "Filesystem $fstype on $device mounted at $mountpoint is below Docker Root Dir $docker_root_dir, skipping."
                     continue
                 fi
