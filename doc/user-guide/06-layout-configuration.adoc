@@ -149,7 +149,7 @@ EXCLUDE_RESTORE=()
 
 To prevent an inadvertently mounted backup filesystem being added to the restore list, the easiest way is to add the filesystem to the +EXCLUDE_RECREATE+ array.
 ----------------------------------
-EXCLUDE_RECREATE=( "${EXCLUDE_RECREATE[@]}" "fs:/media/backup" )
+EXCLUDE_RECREATE+=( "fs:/media/backup" )
 ----------------------------------
 
 The layout file is as expected:
@@ -190,7 +190,7 @@ crypt /dev/mapper/disk /dev/sda2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9
 
 Another approach would be to exclude the backup volume group. This is achieved by adding this line to the local configuration:
 ----------------------------------
-EXCLUDE_RECREATE=( "${EXCLUDE_RECREATE[@]}" "/dev/backup" )
+EXCLUDE_RECREATE+=( "/dev/backup" )
 ----------------------------------
 
 == Restore to the same hardware
