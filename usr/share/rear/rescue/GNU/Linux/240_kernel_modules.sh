@@ -17,18 +17,16 @@ test "no_modules" = "$MODULES" && return
 
 # 1. take all kernel modules for network and storage devices
 # 2. collect running kernel modules
-MODULES=(
-    ${MODULES[@]}
+MODULES+=(
     ${STORAGE_DRIVERS[@]}
     ${NETWORK_DRIVERS[@]}
     ${CRYPTO_DRIVERS[@]}
     ${VIRTUAL_DRIVERS[@]}
     ${EXTRA_DRIVERS[@]}
-    $(lsmod | grep -v '^Modul' | cut -d ' ' -f 1)
+    $( lsmod | grep -v '^Modul' | cut -d ' ' -f 1 )
 )
 
-COPY_AS_IS=(
-    "${COPY_AS_IS[@]}"
+COPY_AS_IS+=(
     /lib/modules/$KERNEL_VERSION/modules.*
     /etc/modules*
     /etc/modules-load?d
