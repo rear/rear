@@ -58,35 +58,32 @@ NBKDC_HIB_LOG=$NBKDC_HIBLOG_DIR
 EOF
 
 
-
 # include DataCenter executables and configuration files 
-COPY_AS_IS=( 
-        "${COPY_AS_IS[@]}" 
-        "${COPY_AS_IS_NBKDC[@]}" 
-        $NBKDC_DIR/conf
-        $NBKDC_DIR/log
-        $NBKDC_DIR/rcmd-executor 
-        $NBKDC_HIB_DIR 
+COPY_AS_IS+=(
+    "${COPY_AS_IS_NBKDC[@]}" 
+    $NBKDC_DIR/conf
+    $NBKDC_DIR/log
+    $NBKDC_DIR/rcmd-executor 
+    $NBKDC_HIB_DIR 
 )
 
 # do not include certain DataCenter folders as generated boot
 # image will grow too big if DataCenter listing and temporary
 # files are included
-COPY_AS_IS_EXCLUDE=( 
-        "${COPY_AS_IS_EXCLUDE[@]}" 
-        "${COPY_AS_IS_EXCLUDE_NBKDC[@]}"
-        $NBKDC_DIR/rcmd-executor/tmp/*        
-        $NBKDC_DIR/log/*
-        $NBKDC_HIBTMP_DIR 
-        $NBKDC_HIBLIS_DIR 
-        $NBKDC_HIBTPD_DIR/*.tpd
-        $NBKDC_HIB_DIR/ora* 
-        $NBKDC_HIB_DIR/ndmp 
-        $NBKDC_HIB_DIR/mm 
-        $NBKDC_HIB_DIR/hui 
-        $NBKDC_HIB_DIR/stp
-        $NBKDC_HIB_DIR/svn
-        $NBKDC_HIB_DIR/vmgr
-        $NBKDC_HIB_DIR/svm
-        /var/run/rcmd-executor.pid
+COPY_AS_IS_EXCLUDE+=(
+    "${COPY_AS_IS_EXCLUDE_NBKDC[@]}"
+    $NBKDC_DIR/rcmd-executor/tmp/*        
+    $NBKDC_DIR/log/*
+    $NBKDC_HIBTMP_DIR 
+    $NBKDC_HIBLIS_DIR 
+    $NBKDC_HIBTPD_DIR/*.tpd
+    $NBKDC_HIB_DIR/ora* 
+    $NBKDC_HIB_DIR/ndmp 
+    $NBKDC_HIB_DIR/mm 
+    $NBKDC_HIB_DIR/hui 
+    $NBKDC_HIB_DIR/stp
+    $NBKDC_HIB_DIR/svn
+    $NBKDC_HIB_DIR/vmgr
+    $NBKDC_HIB_DIR/svm
+    /var/run/rcmd-executor.pid
 )
