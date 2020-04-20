@@ -6,5 +6,5 @@ PROGS+=( "${PROGS_BAREOS[@]}" )
 
 ### Include mt when we are restoring from Bareos tape (for troubleshooting)
 if [[ "$TAPE_DEVICE" || "$BEXTRACT_DEVICE" ]] ; then
-    COPY_AS_IS+=( mt )
+    PROGS+=( mt )
 fi
