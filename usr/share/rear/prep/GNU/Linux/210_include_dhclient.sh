@@ -18,7 +18,7 @@ local dhcp_clients=(dhcpcd dhclient dhcp6c dhclient6)
 # FIXME: DHCLIENT_BIN could be documented in default.conf as needed.
 if [[ -n "$DHCLIENT_BIN" ]]; then
     has_binary "$DHCLIENT_BIN" || Error "DHCLIENT_BIN='$DHCLIENT_BIN' but such a binary could not be found"
-    [[ "${dhcp_clients[*]}" == *" $DHCLIENT_BIN "* ]] || Error "DHCLIENT_BIN='$DHCLIENT_BIN' is not among known DHCP clients (${dhcp_clients[*]})"
+    IsInArray "$DHCLIENT_BIN" "${dhcp_clients[@]}" || Error "DHCLIENT_BIN='$DHCLIENT_BIN' is not among known DHCP clients (${dhcp_clients[*]})"
 fi
 
 
@@ -26,8 +26,7 @@ function dhcp_client_is_active() {
     # Strategy 1: Check if any DHCP client process is running (does not need to be the one specified by DHCLIENT_BIN)
     local dhcp_clients_regexp="${dhcp_clients[*]}"
     dhcp_clients_regexp=${dhcp_clients_regexp// /|}
-    ps -e | grep -qEs "[ /]($dhcp_clients_regexp)"
-    if [ $? -eq 0 ]; then
+    if ps -e | grep -qEs "[ /]($dhcp_clients_regexp)"; then
         Log "Detected an active DHCP client process"
         return 0
     fi
