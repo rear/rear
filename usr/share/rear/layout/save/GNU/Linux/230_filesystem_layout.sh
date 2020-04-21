@@ -111,8 +111,37 @@ fi
             # but ensure docker_root_dir is not empty (otherwise any mountpoint string matches "^" which
             # would skip all mountpoints), see https://github.com/rear/rear/issues/1989#issuecomment-456054278
             if test "$docker_root_dir" ; then
-                if echo "$mountpoint" | grep -q "^$docker_root_dir" ; then
+                if echo "$mountpoint" | grep -q "^${docker_root_dir}/" ; then
                     Log "Filesystem $fstype on $device mounted at $mountpoint is below Docker Root Dir $docker_root_dir, skipping."
+                    continue
+                fi
+                # In case Longhorn is rebuilding a replica device it will show up as a pseudo-device and when that is the
+                # case then you would find traces of it in the /var/lib/rear/layout/disklayout.conf file, which would
+                # break the recovery as Longhorn Engine replica's are under control of Rancher Longhorn software and these are
+                # rebuild automatically via kubernetes longhorn-engine pods.
+                # Issue where we discovered this behavior was #2365
+                # In normal situations you will find traces of longhorn in the log saying skipping non-block devices.
+                # For example an output of the 'df' command:
+                # /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792   82045336    4500292   77528660   6% /var/lib/kubelet/pods/7f47aa55-30e2-4e7b-8fec-ec9a1e761352/volumes/kubernetes.io~csi/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792/mount
+                # lsscsi shows it as:
+                # [34:0:0:0]   storage IET      Controller       0001  -
+                # [34:0:0:1]   disk    IET      VIRTUAL-DISK     0001  /dev/sdf
+                # ls -l /dev/sdf /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792
+                # brw-rw---- 1 root disk 8, 80 Apr 17 12:02 /dev/sdf
+                # brw-rw---- 1 root root 8, 64 Apr 17 10:36 /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792
+                # and parted says:
+                # parted /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792 print
+                # Model: IET VIRTUAL-DISK (scsi)
+                # Disk /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792: 85.9GB
+                # Sector size (logical/physical): 512B/512B
+                # Partition Table: loop
+                # Disk Flags:
+                # Number  Start  End     Size    File system  Flags
+                # 1      0.00B  85.9GB  85.9GB  ext4
+                # => as result (without the next if clausule) we would end up with an entry in the disklayout.conf file:
+                # fs /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792 /var/lib/kubelet/pods/61ed399a-d51b-40b8-8fe8-a78e84a1dd0b/volumes/kubernetes.io~csi/pvc-c65df331-f1c5-466a-9731-b2aa5e6da714/mount ext4 uuid=4fafdd40-a9ae-4b62-8bfb-f29036dbe3b9 label= blocksize=4096 reserved_blocks=0% max_mounts=-1 check_interval=0d bytes_per_inode=16384 default_mount_options=user_xattr,acl options=rw,relatime,data=ordered
+                if echo "$device" | grep -q "^/dev/longhorn/pvc-" ; then
+                    Log "Longhorn Engine replica $device, skipping."
                     continue
                 fi
             fi
