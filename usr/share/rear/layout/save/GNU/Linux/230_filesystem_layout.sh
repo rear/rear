@@ -111,7 +111,7 @@ fi
             # but ensure docker_root_dir is not empty (otherwise any mountpoint string matches "^" which
             # would skip all mountpoints), see https://github.com/rear/rear/issues/1989#issuecomment-456054278
             if test "$docker_root_dir" ; then
-                if echo "$device" | grep -q "^${docker_root_dir}/" ; then
+                if echo "$mountpoint" | grep -q "^${docker_root_dir}/" ; then
                     Log "Filesystem $fstype on $device mounted at $mountpoint is below Docker Root Dir $docker_root_dir, skipping."
                     continue
                 fi
@@ -140,7 +140,7 @@ fi
                 # 1      0.00B  85.9GB  85.9GB  ext4
                 # => as result (without the next if clausule) we would end up with an entry in the disklayout.conf file:
                 # fs /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792 /var/lib/kubelet/pods/61ed399a-d51b-40b8-8fe8-a78e84a1dd0b/volumes/kubernetes.io~csi/pvc-c65df331-f1c5-466a-9731-b2aa5e6da714/mount ext4 uuid=4fafdd40-a9ae-4b62-8bfb-f29036dbe3b9 label= blocksize=4096 reserved_blocks=0% max_mounts=-1 check_interval=0d bytes_per_inode=16384 default_mount_options=user_xattr,acl options=rw,relatime,data=ordered
-                if echo "$mountpoint" | grep -q "^/dev/longhorn/pvc-" ; then
+                if echo "$device" | grep -q "^/dev/longhorn/pvc-" ; then
                     Log "Longhorn Engine replica $device, skipping."
                     continue
                 fi
