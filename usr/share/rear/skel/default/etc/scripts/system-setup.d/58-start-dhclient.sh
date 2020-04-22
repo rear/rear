@@ -44,23 +44,15 @@ for DEVICE in `get_device_by_hwaddr` ; do
 		ISALIAS=no
 	fi
 
-	# IPv4 DHCP clients
-	case $DHCLIENT_BIN in
-		(dhclient)
-			dhclient -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.${DEVICE}.pid -cf /etc/dhclient.conf ${DEVICE}
-		;;
-		(dhcpcd)
-			dhcpcd ${DEVICE}
-		;;
-	esac
-
-	# IPv6 DHCP clients
-	case $DHCLIENT6_BIN in
-		(dhclient6)
-			dhclient6 -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.${DEVICE}.pid -cf /etc/dhclient.conf ${DEVICE}
-		;;
-		(dhcp6c)
-			dhcp6c  ${DEVICE}
-		;;
+	case "$DHCLIENT_BIN" in
+		(dhclient*)
+			"$DHCLIENT_BIN" -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.${DEVICE}.pid -cf /etc/dhclient.conf ${DEVICE}
+		    ;;
+		(dhcpcd*)
+			"$DHCLIENT_BIN" ${DEVICE}
+		    ;;
+		(*)
+		    echo "Could not start DHCP client as DHCLIENT_BIN specifies an unsupported binary '$DHCLIENT_BIN'"
+		    ;;
 	esac
 done
