@@ -92,6 +92,15 @@ Log "Finished copying files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLU
 # Build an array of the actual regular files that are executable in all the copied files:
 local copy_as_is_executables=()
 local copy_as_is_file=""
+# Remove duplicates in the copy_as_is_filelist_file
+# with 'sort -u' because here the ordering does not matter.
+# Duplicates in the copy_as_is_filelist_file can happen
+# even if there are no duplicates in COPY_AS_IS
+# e.g. when COPY_AS_IS contains
+#   /path/to/somedir ... /path/to/somedir/subdir
+# then 'tar' copies things in /path/to/somedir/subdir two times
+# and reports them twice in the copy_as_is_filelist_file
+# cf. https://github.com/rear/rear/pull/2378
 # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
 while read -r copy_as_is_file ; do
     # Skip non-regular files like directories, device files, and 'tar' error messages (e.g. in case of non-existent files, see above):
