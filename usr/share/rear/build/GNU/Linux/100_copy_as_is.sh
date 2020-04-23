@@ -5,6 +5,55 @@
 # add them to the LIBS list if they are not yet included in the copied files.
 
 LogPrint "Copying files and directories"
+
+# Filter out duplicate entries in COPY_AS_IS but keep the ordering of the elements
+# (i.e. only the first occurrence of an element is kept)
+# cf. https://github.com/rear/rear/issues/2377
+local copy_as_is_without_duplicates=()
+# The basic deduplication algorithm that is used here is to 'printf' each COPY_AS_IS element
+# on a separated line (i.e. this algorithm fails when elements contain newline characters)
+# and then filter those lines by 'awk' that outputs only the first occurrence of a line.
+# To remove duplicate lines and keep the ordering one could use ... | cat -n | sort -uk2 | sort -nk1 | cut -f2-
+# cf. https://stackoverflow.com/questions/11532157/remove-duplicate-lines-without-sorting/11532197#11532197
+# that also explains an awk command that prints each line provided the line was not seen before.
+# The awk variable $0 holds an entire line and square brackets is associative array access in awk.
+# For each line the node of the associative array 'seen' is incremented and the line is printed
+# if the content of that node was not '!' previously set (i.e. if the line was not previously seen)
+# cf. https://www.thegeekstuff.com/2010/03/awk-arrays-explained-with-5-practical-examples/
+{ while read line ; do
+    # A new temporary array is used to store the deduplicated elements for two reasons:
+    # I <jsmeix@suse.de> found no way how to do rewrite COPY_AS_IS in one command
+    # that also works reliably with spaces or special characters in the elements and
+    # the intermediate array is used to test if the deduplication result looks right:
+    copy_as_is_without_duplicates+=( "$line" )
+  done < <( printf '%s\n' "${COPY_AS_IS[@]}" | awk '!seen[$0]++' )
+} 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+# If the deduplication result does not looks reasonable keep using the unchanged COPY_AS_IS
+# also keep using the unchanged COPY_AS_IS when there was no duplicate element
+# which avoids a useless copy of the copy_as_is_without_duplicates array to COPY_AS_IS.
+# The hardcoded condition that copy_as_is_without_duplicates contains more than 100 elements
+# is based on the finding that usually COPY_AS_IS has about 130 elements without duplicates
+# cf. https://github.com/rear/rear/issues/2377#issuecomment-618301702
+# so if deduplication results less than 100 elements things look fishy (possibly falsely removed elements)
+# and then we fall back using the original COPY_AS_IS because things still work
+# when we let 'tar' needlessly copy duplicated things several times:
+if test ${#copy_as_is_without_duplicates[@]} -gt 100 -a ${#COPY_AS_IS[@]} -gt ${#copy_as_is_without_duplicates[@]} ; then
+    Log "COPY_AS_IS has ${#COPY_AS_IS[@]} elements with duplicates"
+    # The simplest way to copy a non-associative array in bash is COPY=( "$ARRAY[@]" )
+    # but it will compress a sparse array and re-index an array with non-contiguous indices e.g.
+    #   # arr=( zero one two three )
+    #   # unset arr[0] arr[2]
+    #   # declare -p arr
+    #   declare -a arr=([1]="one" [3]="three")
+    #   # arr2=( "${arr[@]}" )
+    #   # declare -p arr2
+    #   declare -a arr2=([0]="one" [1]="three")
+    # which is even an advantage when COPY_AS_IS gets re-indexed (without changing its ordering)
+    # cf. https://stackoverflow.com/questions/19417015/how-to-copy-an-array-in-bash
+    COPY_AS_IS=( "${copy_as_is_without_duplicates[@]}" )
+    Log "COPY_AS_IS has ${#COPY_AS_IS[@]} elements without duplicates"
+fi
+
 Log "Files being copied: ${COPY_AS_IS[@]}"
 Log "Files being excluded: ${COPY_AS_IS_EXCLUDE[@]}"
 
@@ -51,7 +100,7 @@ while read -r copy_as_is_file ; do
     test -L "$copy_as_is_file" && continue
     # Remember actual regular files that are executable:
     test -x "$copy_as_is_file" && copy_as_is_executables+=( "$copy_as_is_file" )
-done <$copy_as_is_filelist_file 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+done < <( sort -u $copy_as_is_filelist_file ) 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 Log "copy_as_is_executables = ${copy_as_is_executables[@]}"
 
 # Check for library dependencies of executables in all the copied files and
