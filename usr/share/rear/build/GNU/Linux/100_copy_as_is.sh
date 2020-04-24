@@ -28,7 +28,7 @@ local copy_as_is_without_duplicates=()
     copy_as_is_without_duplicates+=( "$line" )
   done < <( printf '%s\n' "${COPY_AS_IS[@]}" | awk '!seen[$0]++' )
 } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
-# If the deduplication result does not looks reasonable keep using the unchanged COPY_AS_IS
+# If the deduplication result does not look reasonable keep using the unchanged COPY_AS_IS
 # also keep using the unchanged COPY_AS_IS when there was no duplicate element
 # which avoids a useless copy of the copy_as_is_without_duplicates array to COPY_AS_IS.
 # The hardcoded condition that copy_as_is_without_duplicates contains more than 100 elements
