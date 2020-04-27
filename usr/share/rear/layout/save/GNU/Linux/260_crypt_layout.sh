@@ -45,7 +45,7 @@ while read target_name junk ; do
     # LUKS version 2 is not yet suppported, see https://github.com/rear/rear/issues/2204
     # When LUKS version 2 is used the above code fails at least to determine the hash value
     # so we use an empty hash value as a simple test if gathering crypt information was successful:
-    test "$hash" || Error "No hash value for LUKS device /dev/mapper/$target_name at $source_device (only LUKS version 1 is supported)"
+    test "$hash" || Error "No hash value for LUKS device '$target_name' at '$source_device' (only LUKS version 1 is supported)"
 
     echo "crypt /dev/mapper/$target_name $source_device cipher=$cipher-$mode key_size=$key_size hash=$hash uuid=$uuid $keyfile_option" >> $DISKLAYOUT_FILE
 done < <( dmsetup ls --target crypt )
