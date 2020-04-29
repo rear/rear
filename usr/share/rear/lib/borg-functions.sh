@@ -60,11 +60,15 @@ function borg_set_vars {
 
     # Set archive cache file
     BORGBACKUP_ARCHIVE_CACHE=$TMP_DIR/borg_archive
+
+    # Set file to save borg stderr output
+    BORGBACKUP_STDERR_FILE=$TMP_DIR/borg_stderr
 }
 
 function borg_list
 {
-    borg list $BORGBACKUP_OPT_REMOTE_PATH ${borg_dst_dev}${BORGBACKUP_REPO}
+    borg list $BORGBACKUP_OPT_REMOTE_PATH ${borg_dst_dev}${BORGBACKUP_REPO} \
+    2> $BORGBACKUP_STDERR_FILE
 }
 
 # Query Borg server for repository information
@@ -72,5 +76,5 @@ function borg_list
 # This avoids repeatedly querying Borg repository, which could be slow.
 function borg_archive_cache_create
 {
-    borg_list 2> /dev/null > $BORGBACKUP_ARCHIVE_CACHE
+    borg_list > $BORGBACKUP_ARCHIVE_CACHE
 }
