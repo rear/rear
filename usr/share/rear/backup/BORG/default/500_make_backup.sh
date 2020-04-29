@@ -22,6 +22,11 @@ local borg_additional_options=''
 
 is_true $BORGBACKUP_SHOW_PROGRESS && borg_additional_options+='--progress '
 is_true $BORGBACKUP_SHOW_STATS && borg_additional_options+='--stats '
+is_true $BORGBACKUP_SHOW_LIST && borg_additional_options+='--list --filter=AME '
+is_true $BORGBACKUP_SHOW_RC && borg_additional_options+='--show-rc '
+is_true $BORGBACKUP_EXCLUDE_CACHES && borg_additional_options+='--exclude-caches '
+is_true $BORGBACKUP_EXCLUDE_IF_NOBACKUP && borg_additional_options+='--exclude-if-present .nobackup '
+[[ -n $BORGBACKUP_TIMESTAMP ]] && borg_additional_options+="--timestamp $BORGBACKUP_TIMESTAMP "
 
 # Start actual Borg backup.
 Log "Creating archive ${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
