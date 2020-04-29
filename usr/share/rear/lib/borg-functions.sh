@@ -91,3 +91,19 @@ in Borg repository $BORGBACKUP_REPO on ${BORGBACKUP_HOST:-USB}"
     ${borg_dst_dev}${BORGBACKUP_REPO}::${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
     ${include_list[@]}
 }
+
+function borg_extract
+{
+    # Scope of LC_ALL is only within run of `borg extract'.
+    # This avoids Borg problems with restoring UTF-8 encoded files names in archive
+    # and should not interfere with remaining stages of rear recover.
+    # This is still not the ideal solution, but best I can think of so far :-/.
+
+    LogPrint "Recovering from backup archive $BORGBACKUP_REPO::$BORGBACKUP_ARCHIVE \
+on ${BORGBACKUP_HOST:-USB}"
+
+    LC_ALL=rear.UTF-8 \
+    borg extract $verbose --sparse $borg_additional_options \
+    $BORGBACKUP_OPT_REMOTE_PATH \
+    ${borg_dst_dev}${BORGBACKUP_REPO}::$BORGBACKUP_ARCHIVE
+}
