@@ -18,6 +18,7 @@ done
 
 # User might specify some additional output options in Borg.
 # Output shown by Borg is not controlled by `rear --verbose' nor `rear --debug'
+# only, if BORGBACKUP_SHOW_PROGRESS is true.
 local borg_additional_options=''
 
 is_true $BORGBACKUP_SHOW_PROGRESS && borg_additional_options+='--progress '
@@ -28,15 +29,23 @@ is_true $BORGBACKUP_EXCLUDE_CACHES && borg_additional_options+='--exclude-caches
 is_true $BORGBACKUP_EXCLUDE_IF_NOBACKUP && borg_additional_options+='--exclude-if-present .nobackup '
 [[ -n $BORGBACKUP_TIMESTAMP ]] && borg_additional_options+="--timestamp $BORGBACKUP_TIMESTAMP "
 
+# Borg writes all log output to stderr by default.
+# See https://borgbackup.readthedocs.io/en/stable/usage/general.html#logging
+#
+# If we want to have log output from Borg appearing in rear logs, we don't have
+# to do anything, since Borg logs to stderr and that is what rear is saving in
+# Logfile.
+#
+# If `--progress` is used for `borg create` we don't want the output in rear
+# log file, since it contains control sequences. If not used, we want Borg
+# output in rear log file, the amount of logs written by Borg is determined by
+# other options above e.g. by `--stats` or `--list --filter=AME`.
+
 # Start actual Borg backup.
-Log "Creating archive ${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
-in repository $BORGBACKUP_REPO"
+if is_true $BORGBACKUP_SHOW_PROGRESS; then
+  borg_create 0<&6 1>&7 2>&8
+else
+  borg_create
+fi
 
-borg create --one-file-system $borg_additional_options $verbose \
-$BORGBACKUP_OPT_COMPRESSION $BORGBACKUP_OPT_REMOTE_PATH \
-$BORGBACKUP_OPT_UMASK --exclude-from $TMP_DIR/backup-exclude.txt \
-${borg_dst_dev}${BORGBACKUP_REPO}::\
-${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
-${include_list[@]} 0<&6 1>&7 2>&8
-
-StopIfError "Failed to create backup"
+StopIfError "Borg failed to create backup archive, borg rc $?!"

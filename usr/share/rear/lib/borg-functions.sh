@@ -78,3 +78,16 @@ function borg_archive_cache_create
 {
     borg_list > $BORGBACKUP_ARCHIVE_CACHE
 }
+
+function borg_create
+{
+    LogPrint "Creating backup archive \
+'${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX' \
+in Borg repository $BORGBACKUP_REPO on ${BORGBACKUP_HOST:-USB}"
+
+    borg create $verbose --one-file-system $borg_additional_options \
+    $BORGBACKUP_OPT_COMPRESSION $BORGBACKUP_OPT_REMOTE_PATH \
+    $BORGBACKUP_OPT_UMASK --exclude-from $TMP_DIR/backup-exclude.txt \
+    ${borg_dst_dev}${BORGBACKUP_REPO}::${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX \
+    ${include_list[@]}
+}
