@@ -20,6 +20,8 @@ LogPrint "Recovering from Borg archive $BORGBACKUP_ARCHIVE"
 local borg_additional_options=''
 
 is_true $BORGBACKUP_SHOW_PROGRESS && borg_additional_options+='--progress '
+is_true $BORGBACKUP_SHOW_LIST && borg_additional_options+='--list '
+is_true $BORGBACKUP_SHOW_RC && borg_additional_options+='--show-rc '
 
 LC_ALL=rear.UTF-8 \
 borg extract --sparse $borg_additional_options $BORGBACKUP_OPT_REMOTE_PATH \
