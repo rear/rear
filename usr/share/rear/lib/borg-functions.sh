@@ -8,6 +8,12 @@ function borg_set_vars {
     # No need to check config values of $BORG_PRUNE* family
     # Borg will bail out with error if values are wrong.
     BORGBACKUP_OPT_PRUNE=()
+    if [ ! -z $BORGBACKUP_PRUNE_WITHIN ]; then
+        BORGBACKUP_OPT_PRUNE+=("--keep-within=$BORGBACKUP_PRUNE_WITHIN ")
+    fi
+    if [ ! -z $BORGBACKUP_PRUNE_LAST ]; then
+        BORGBACKUP_OPT_PRUNE+=("--keep-last=$BORGBACKUP_PRUNE_LAST ")
+    fi
     if [ ! -z $BORGBACKUP_PRUNE_HOURLY ]; then
         BORGBACKUP_OPT_PRUNE+=("--keep-hourly=$BORGBACKUP_PRUNE_HOURLY ")
     fi
