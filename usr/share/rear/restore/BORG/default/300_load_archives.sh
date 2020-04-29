@@ -10,14 +10,14 @@ archive_cache_lines=$(wc -l $BORGBACKUP_ARCHIVE_CACHE | awk '{print $1}')
 
 # This means empty repository.
 if [ $archive_cache_lines -eq 0 ]; then
-    Error "Borg repository $BORGBACKUP_REPO on $BORGBACKUP_HOST is empty"
+    Error "Borg repository $BORGBACKUP_REPO on ${BORGBACKUP_HOST:-USB} is empty!"
 fi
 
 # Display list of archives in repository.
 # Display header.
 LogUserOutput "
 === Borg archives list ===
-Host:       $BORGBACKUP_HOST
+Location:   ${BORGBACKUP_HOST:-USB}
 Repository: $BORGBACKUP_REPO
 "
 
