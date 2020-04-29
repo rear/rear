@@ -12,15 +12,16 @@ is_true $BORGBACKUP_SHOW_LIST && borg_additional_options+='--list '
 is_true $BORGBACKUP_SHOW_RC && borg_additional_options+='--show-rc '
 
 if [ ! -z $BORGBACKUP_OPT_PRUNE ]; then
-    # Purge old archives according user settings.
-    LogPrint "Purging old Borg archives in repository $BORGBACKUP_REPO"
+    # Prune old backup archives according to user settings.
+    LogPrint "Pruning old backup archives in Borg repository $BORGBACKUP_REPO \
+on ${BORGBACKUP_HOST:-USB}"
     borg prune $verbose $borg_additional_options ${BORGBACKUP_OPT_PRUNE[@]} \
     $BORGBACKUP_OPT_REMOTE_PATH $BORGBACKUP_OPT_UMASK \
     --prefix ${BORGBACKUP_ARCHIVE_PREFIX}_ \
     ${borg_dst_dev}${BORGBACKUP_REPO}
 
-    StopIfError "Failed to purge old backups"
+    StopIfError "Borg failed to prune old backup archives, borg rc $?!"
 else
-    # Purge is not set.
-    Log "Purging of old Borg archives not set, skipping"
+    # Pruning is not set.
+    Log "Pruning of old backup archives is not set, skipping."
 fi
