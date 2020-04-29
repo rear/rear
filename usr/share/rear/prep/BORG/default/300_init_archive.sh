@@ -7,6 +7,11 @@
 has_binary borg
 StopIfError "Could not find Borg binary"
 
+# User might specify some additional options in Borg.
+local borg_additional_options=''
+
+is_true $BORGBACKUP_INIT_MAKE_PARENT_DIRS && borg_additional_options+='--make-parent-dirs '
+
 # Query Borg server for repository information
 # and store it to BORGBACKUP_ARCHIVE_CACHE.
 # This should avoid repeatingly quering Borg server, which could be slow.
@@ -27,7 +32,8 @@ if [ $rc -ne 0 ]; then
     LogPrint "Failed to list $BORGBACKUP_REPO"
     LogPrint "Creating new Borg repository $BORGBACKUP_REPO"
 
-    borg init $BORGBACKUP_OPT_ENCRYPTION $BORGBACKUP_OPT_REMOTE_PATH \
+    borg init $verbose $borg_additional_options \
+    $BORGBACKUP_OPT_ENCRYPTION $BORGBACKUP_OPT_REMOTE_PATH \
     $BORGBACKUP_OPT_UMASK ${borg_dst_dev}${BORGBACKUP_REPO}
     rc=$?
 fi
