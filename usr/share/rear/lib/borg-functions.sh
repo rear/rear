@@ -92,6 +92,17 @@ in Borg repository $BORGBACKUP_REPO on ${BORGBACKUP_HOST:-USB}"
     ${include_list[@]}
 }
 
+function borg_prune
+{
+    LogPrint "Pruning old backup archives in Borg repository $BORGBACKUP_REPO \
+on ${BORGBACKUP_HOST:-USB}"
+
+    borg prune $verbose $borg_additional_options ${BORGBACKUP_OPT_PRUNE[@]} \
+    $BORGBACKUP_OPT_REMOTE_PATH $BORGBACKUP_OPT_UMASK \
+    --prefix ${BORGBACKUP_ARCHIVE_PREFIX}_ \
+    ${borg_dst_dev}${BORGBACKUP_REPO}
+}
+
 function borg_extract
 {
     # Scope of LC_ALL is only within run of `borg extract'.
