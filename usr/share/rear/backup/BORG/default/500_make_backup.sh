@@ -63,11 +63,11 @@ is_true $BORGBACKUP_EXCLUDE_IF_NOBACKUP && borg_additional_options+='--exclude-i
 
 # Start actual Borg backup.
 if is_true $BORGBACKUP_CREATE_SHOW_PROGRESS; then
-  borg_create 0<&6 1>&7 2>&8
+    borg_create 0<&6 1>&7 2>&8
 elif is_true $VERBOSE; then
-  borg_create 0<&6 1>&7 2>> >( tee -a $RUNTIME_LOGFILE 1>&8 )
+    borg_create 0<&6 1>> >( tee -a $RUNTIME_LOGFILE 1>&7 ) 2>> >( tee -a $RUNTIME_LOGFILE 1>&8 )
 else
-  borg_create 0<&6 1>&7
+    borg_create 0<&6
 fi
 
 StopIfError "Borg failed to create backup archive, borg rc $?!"
