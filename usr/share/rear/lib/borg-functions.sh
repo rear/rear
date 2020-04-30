@@ -44,6 +44,7 @@ function borg_set_vars {
     # Empty BORGBACKUP_ENC_TYPE will default to "repokey".
     BORGBACKUP_OPT_ENCRYPTION=()
     if [[ -n $BORGBACKUP_ENC_TYPE ]]; then
+        # shellcheck disable=SC2034
         BORGBACKUP_OPT_ENCRYPTION=( --encryption "$BORGBACKUP_ENC_TYPE" )
     fi
 

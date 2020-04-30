@@ -40,6 +40,7 @@ while true ; do
     # Evaluate user selection and save archive name to restore.
     # Valid pick
     if [[ $choice -ge 1 && $choice -le $archive_cache_lines ]]; then
+        # shellcheck disable=SC2034
         BORGBACKUP_ARCHIVE=$(sed "$choice!d" "$BORGBACKUP_ARCHIVE_CACHE" \
         | awk '{print $1}')
         break;
