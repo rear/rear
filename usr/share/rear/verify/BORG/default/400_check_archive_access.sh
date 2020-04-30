@@ -44,7 +44,11 @@ while true ; do
         (${choices[3]})
             # Abort recovery:
             abort_recreate
-            is_true "$wilful_input" && Error "User chose to abort '$rear_workflow' in ${BASH_SOURCE[0]}" || Error "Aborting '$rear_workflow' by default"
+            if is_true "$wilful_input"; then
+                Error "User chose to abort '$rear_workflow' in ${BASH_SOURCE[0]}"
+            else
+                Error "Aborting '$rear_workflow' by default"
+            fi
         ;;
     esac
 done
