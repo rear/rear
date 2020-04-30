@@ -13,9 +13,9 @@ if [ ! -r "$TMP_DIR/backup-include.txt" ]; then
 fi
 
 # Create Borg friendly include list.
-for i in $( cat "$TMP_DIR/backup-include.txt" ); do
-    include_list+=("$i ")
-done
+while IFS= read -r include; do
+    include_list+=( "$include" )
+done < "$TMP_DIR/backup-include.txt"
 
 # User might specify some additional output options in Borg.
 # Output shown by Borg is not controlled by `rear --verbose' nor `rear --debug'
