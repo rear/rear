@@ -50,8 +50,12 @@ while read -r backup_exclude_item ; do
 done < $TMP_DIR/backup-exclude.txt
 
 # Check if the backup needs to be splitted or not (on multiple ISOs).
-# Dummy split command when the backup is not splitted (the default case):
-SPLIT_COMMAND="dd of=$backuparchive"
+# Dummy split command when the backup is not splitted (the default case).
+# Let 'dd' read and write up to 1M=1024*1024 bytes at a time to speed up things
+# for example from only 500KiB/s (with the 'dd' default of 512 bytes)
+# via a 100MBit network connection to about its full capacity
+# cf. https://github.com/rear/rear/issues/2369
+SPLIT_COMMAND="dd of=$backuparchive bs=1M"
 if test $ISO_MAX_SIZE ; then
     is_positive_integer $ISO_MAX_SIZE || Error "ISO_MAX_SIZE must be a positive integer value"
     # Tell the user when ISO_MAX_SIZE is less than 600MiB because then things will likely not work
