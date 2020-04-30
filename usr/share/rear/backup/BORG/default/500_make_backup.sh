@@ -41,6 +41,21 @@ is_true $BORGBACKUP_EXCLUDE_IF_NOBACKUP && borg_additional_options+='--exclude-i
 # output in rear log file, the amount of logs written by Borg is determined by
 # other options above e.g. by `--stats` or `--list --filter=AME`.
 
+# https://github.com/rear/rear/pull/2382#issuecomment-621707505
+# Depending on BORGBACKUP_SHOW_PROGRESS and VERBOSE variables
+# 3 cases are there for `borg_create` to log to rear log file or not.
+#
+# 1. BORGBACKUP_SHOW_PROGRESS true:
+#    No logging to rear log file because of control characters.
+#
+# 2. VERBOSE true:
+#    stderr (2) is copied to real stderr (8):
+#    2 is going to rear logfile
+#    8 is shown because of VERBOSE true
+#
+# 3. Third case:
+#    stderr (2) is untouched, hence only going to rear logfile.
+
 # Start actual Borg backup.
 if is_true $BORGBACKUP_SHOW_PROGRESS; then
   borg_create 0<&6 1>&7 2>&8

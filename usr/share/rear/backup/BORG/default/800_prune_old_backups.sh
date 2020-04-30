@@ -13,6 +13,21 @@ is_true $BORGBACKUP_SHOW_STATS && borg_additional_options+='--stats '
 is_true $BORGBACKUP_SHOW_LIST && borg_additional_options+='--list '
 is_true $BORGBACKUP_SHOW_RC && borg_additional_options+='--show-rc '
 
+# https://github.com/rear/rear/pull/2382#issuecomment-621707505
+# Depending on BORGBACKUP_SHOW_PROGRESS and VERBOSE variables
+# 3 cases are there for `borg_prune` to log to rear log file or not.
+#
+# 1. BORGBACKUP_SHOW_PROGRESS true:
+#    No logging to rear log file because of control characters.
+#
+# 2. VERBOSE true:
+#    stderr (2) is copied to real stderr (8):
+#    2 is going to rear logfile
+#    8 is shown because of VERBOSE true
+#
+# 3. Third case:
+#    stderr (2) is untouched, hence only going to rear logfile.
+
 if [ ! -z $BORGBACKUP_OPT_PRUNE ]; then
     # Prune old backup archives according to user settings.
     if is_true $BORGBACKUP_SHOW_PROGRESS; then
