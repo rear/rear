@@ -5,8 +5,8 @@
 
 # Borg restores to cwd.
 # Switch current working directory or die.
-pushd "$TARGET_FS_ROOT" >/dev/null
-StopIfError "Could not change directory to $TARGET_FS_ROOT!"
+pushd "$TARGET_FS_ROOT" >/dev/null \
+    || Error "Could not change directory to $TARGET_FS_ROOT!"
 
 # User might specify some additional output options in Borg.
 # Output shown by Borg is not controlled by `rear --verbose' nor `rear --debug'
@@ -49,4 +49,5 @@ fi
 
 LogPrintIfError "Borg reported error during restore, borg rc $?!"
 LogPrint 'Borg OS restore finished successfully.'
-popd >/dev/null
+popd >/dev/null \
+    || Error "Could not change back directory from $TARGET_FS_ROOT!"
