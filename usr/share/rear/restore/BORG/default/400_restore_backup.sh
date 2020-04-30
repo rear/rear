@@ -40,7 +40,7 @@ is_true $BORGBACKUP_EXTRACT_SHOW_RC && borg_additional_options+='--show-rc '
 if is_true $BORGBACKUP_EXTRACT_SHOW_PROGRESS; then
     borg_extract 0<&6 1>&7 2>&8
 elif is_true $VERBOSE; then
-    borg_extract 0<&6 1>&7 2> >(tee >(cat 1>&2) >&8)
+    borg_extract 0<&6 1>&7 2> >( tee -a $RUNTIME_LOGFILE 1>&8 )
 else
     borg_extract 0<&6 1>&7
 fi
