@@ -8,56 +8,56 @@ function borg_set_vars {
     # No need to check config values of $BORG_PRUNE* family
     # Borg will bail out with error if values are wrong.
     BORGBACKUP_OPT_PRUNE=()
-    if [ ! -z $BORGBACKUP_PRUNE_WITHIN ]; then
+    if [[ -n $BORGBACKUP_PRUNE_WITHIN ]]; then
         BORGBACKUP_OPT_PRUNE+=("--keep-within=$BORGBACKUP_PRUNE_WITHIN ")
     fi
-    if [ ! -z $BORGBACKUP_PRUNE_LAST ]; then
+    if [[ -n $BORGBACKUP_PRUNE_LAST ]]; then
         BORGBACKUP_OPT_PRUNE+=("--keep-last=$BORGBACKUP_PRUNE_LAST ")
     fi
-    if [ ! -z $BORGBACKUP_PRUNE_MINUTELY ]; then
+    if [[ -n $BORGBACKUP_PRUNE_MINUTELY ]]; then
         BORGBACKUP_OPT_PRUNE+=("--keep-minutely=$BORGBACKUP_PRUNE_MINUTELY ")
     fi
-    if [ ! -z $BORGBACKUP_PRUNE_HOURLY ]; then
+    if [[ -n $BORGBACKUP_PRUNE_HOURLY ]]; then
         BORGBACKUP_OPT_PRUNE+=("--keep-hourly=$BORGBACKUP_PRUNE_HOURLY ")
     fi
-    if [ ! -z $BORGBACKUP_PRUNE_DAILY ]; then
+    if [[ -n $BORGBACKUP_PRUNE_DAILY ]]; then
         BORGBACKUP_OPT_PRUNE+=("--keep-daily=$BORGBACKUP_PRUNE_DAILY ")
     fi
-    if [ ! -z $BORGBACKUP_PRUNE_WEEKLY ]; then
+    if [[ -n $BORGBACKUP_PRUNE_WEEKLY ]]; then
         BORGBACKUP_OPT_PRUNE+=("--keep-weekly=$BORGBACKUP_PRUNE_WEEKLY ")
     fi
-    if [ ! -z $BORGBACKUP_PRUNE_MONTHLY ]; then
+    if [[ -n $BORGBACKUP_PRUNE_MONTHLY ]]; then
         BORGBACKUP_OPT_PRUNE+=("--keep-monthly=$BORGBACKUP_PRUNE_MONTHLY ")
     fi
-    if [ ! -z $BORGBACKUP_PRUNE_YEARLY ]; then
+    if [[ -n $BORGBACKUP_PRUNE_YEARLY ]]; then
         BORGBACKUP_OPT_PRUNE+=("--keep-yearly=$BORGBACKUP_PRUNE_YEARLY ")
     fi
 
     # Prepare option for Borg compression.
     # Empty BORGBACKUP_COMPRESSION will default to "none" compression.
     BORGBACKUP_OPT_COMPRESSION=""
-    if [ ! -z $BORGBACKUP_COMPRESSION ]; then
+    if [[ -n $BORGBACKUP_COMPRESSION ]]; then
         BORGBACKUP_OPT_COMPRESSION="--compression $BORGBACKUP_COMPRESSION"
     fi
 
     # Prepare option for Borg encryption.
     # Empty BORGBACKUP_ENC_TYPE will default to "repokey".
     BORGBACKUP_OPT_ENCRYPTION=""
-    if [ ! -z $BORGBACKUP_ENC_TYPE ]; then
+    if [[ -n $BORGBACKUP_ENC_TYPE ]]; then
         BORGBACKUP_OPT_ENCRYPTION="--encryption $BORGBACKUP_ENC_TYPE"
     fi
 
     # Prepare option for Borg remote-path.
     # Empty BORGBACKUP_REMOTE_PATH will default to "borg".
     BORGBACKUP_OPT_REMOTE_PATH=""
-    if [ ! -z $BORGBACKUP_REMOTE_PATH ]; then
+    if [[ -n $BORGBACKUP_REMOTE_PATH ]]; then
         BORGBACKUP_OPT_REMOTE_PATH="--remote-path $BORGBACKUP_REMOTE_PATH"
     fi
 
     # Prepare option for Borg umask.
     # Empty BORGBACKUP_UMASK will default to 0077.
     BORGBACKUP_OPT_UMASK=""
-    if [ ! -z $BORGBACKUP_UMASK ]; then
+    if [[ -n $BORGBACKUP_UMASK ]]; then
         BORGBACKUP_OPT_UMASK="--umask $BORGBACKUP_UMASK"
     fi
 

@@ -33,7 +33,7 @@ is_true $BORGBACKUP_PRUNE_SHOW_RC && borg_additional_options+='--show-rc '
 # 3. Third case:
 #    stderr (2) is untouched, hence only going to rear logfile.
 
-if [ ! -z $BORGBACKUP_OPT_PRUNE ]; then
+if [[ -n $BORGBACKUP_OPT_PRUNE ]]; then
     # Prune old backup archives according to user settings.
     if is_true $BORGBACKUP_PRUNE_SHOW_PROGRESS; then
         borg_prune 0<&6 1>&7 2>&8
