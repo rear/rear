@@ -15,8 +15,8 @@ if [[ $BORGBACKUP_ARCHIVE_PREFIX =~ [^a-zA-Z0-9] ]] \
 fi
 
 # Create our own locales, used only for Borg restore.
-mkdir -p $ROOTFS_DIR/usr/lib/locale
-localedef -f UTF-8 -i en_US $ROOTFS_DIR/usr/lib/locale/rear.UTF-8
+mkdir -p "$ROOTFS_DIR/usr/lib/locale"
+localedef -f UTF-8 -i en_US "$ROOTFS_DIR/usr/lib/locale/rear.UTF-8"
 StopIfError "Could not create locales"
 
 # Activate $COPY_AS_IS_BORG from default.conf.

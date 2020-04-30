@@ -8,9 +8,9 @@ has_binary borg
 StopIfError "Could not find Borg binary"
 
 # User might specify some additional options in Borg.
-local borg_additional_options=''
+local borg_additional_options=()
 
-is_true $BORGBACKUP_INIT_MAKE_PARENT_DIRS && borg_additional_options+='--make-parent-dirs '
+is_true "$BORGBACKUP_INIT_MAKE_PARENT_DIRS" && borg_additional_options+=( --make-parent-dirs )
 
 # Query Borg server for repository information
 # and store it to BORGBACKUP_ARCHIVE_CACHE.
@@ -42,10 +42,12 @@ if [ $rc -ne 0 ]; then
             LogPrint "Borg: $( cat "$BORGBACKUP_STDERR_FILE" )"
             LogPrint "Hence initializing new Borg repository '$BORGBACKUP_REPO' on ${BORGBACKUP_HOST:-USB}"
 
-            borg init $verbose $borg_additional_options \
-            $BORGBACKUP_OPT_ENCRYPTION $BORGBACKUP_OPT_REMOTE_PATH \
-            $BORGBACKUP_OPT_UMASK ${borg_dst_dev}${BORGBACKUP_REPO} \
-            2> $BORGBACKUP_STDERR_FILE
+            # Has to be $verbose, not "$verbose", since it's used as option.
+            # shellcheck disable=SC2086
+            borg init $verbose "${borg_additional_options[@]}" \
+            "${BORGBACKUP_OPT_ENCRYPTION[@]}" "${BORGBACKUP_OPT_REMOTE_PATH[@]}" \
+            "${BORGBACKUP_OPT_UMASK[@]}" "${borg_dst_dev}${BORGBACKUP_REPO}" \
+            2> "$BORGBACKUP_STDERR_FILE"
             rc=$?
         fi
     fi

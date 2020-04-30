@@ -6,10 +6,10 @@
 LogPrint "Starting Borg restore"
 
 # Store number of lines in BORGBACKUP_ARCHIVE_CACHE file for later use.
-archive_cache_lines=$(wc -l $BORGBACKUP_ARCHIVE_CACHE | awk '{print $1}')
+archive_cache_lines=$( wc -l "$BORGBACKUP_ARCHIVE_CACHE" | awk '{print $1}' )
 
 # This means empty repository.
-if [ $archive_cache_lines -eq 0 ]; then
+if [ "$archive_cache_lines" -eq 0 ]; then
     Error "Borg repository $BORGBACKUP_REPO on ${BORGBACKUP_HOST:-USB} is empty!"
 fi
 
@@ -27,7 +27,7 @@ Repository: $BORGBACKUP_REPO
 # This gives possibility to abort restore if repository doesn't contain
 # desired archive, hence saves some time.
 while true ; do
-    LogUserOutput "$( cat -n $BORGBACKUP_ARCHIVE_CACHE | awk '{print "["$1"]", $2,"\t"$3,$4,$5}' )"
+    LogUserOutput "$( cat -n "$BORGBACKUP_ARCHIVE_CACHE" | awk '{print "["$1"]", $2,"\t"$3,$4,$5}' )"
 
     # Show "Exit" option.
     UserOutput ""
@@ -40,7 +40,7 @@ while true ; do
     # Evaluate user selection and save archive name to restore.
     # Valid pick
     if [[ $choice -ge 1 && $choice -le $archive_cache_lines ]]; then
-        BORGBACKUP_ARCHIVE=$(sed "$choice!d" $BORGBACKUP_ARCHIVE_CACHE \
+        BORGBACKUP_ARCHIVE=$(sed "$choice!d" "$BORGBACKUP_ARCHIVE_CACHE" \
         | awk '{print $1}')
         break;
     # Exit

@@ -28,7 +28,7 @@ while true ; do
     case "$choice" in
         (${choices[0]})
             # Run 'less' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
-            less $RUNTIME_LOGFILE 0<&6 1>&7 2>&8
+            less "$RUNTIME_LOGFILE" 0<&6 1>&7 2>&8
         ;;
         (${choices[1]})
             # rear_shell runs 'bash' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
