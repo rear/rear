@@ -6,6 +6,8 @@
 # User might specify some additional output options in Borg.
 # Output shown by Borg is not controlled by `rear --verbose` nor `rear --debug`
 # only, if BORGBACKUP_SHOW_PROGRESS is true.
+
+# shellcheck disable=SC2168
 local borg_additional_options=()
 
 BORGBACKUP_PRUNE_SHOW_PROGRESS=${BORGBACKUP_PRUNE_SHOW_PROGRESS:-$BORGBACKUP_SHOW_PROGRESS}

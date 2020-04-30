@@ -8,6 +8,8 @@ has_binary borg
 StopIfError "Could not find Borg binary"
 
 # User might specify some additional options in Borg.
+
+# shellcheck disable=SC2168
 local borg_additional_options=()
 
 is_true "$BORGBACKUP_INIT_MAKE_PARENT_DIRS" && borg_additional_options+=( --make-parent-dirs )

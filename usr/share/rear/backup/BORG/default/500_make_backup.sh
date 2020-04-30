@@ -3,7 +3,8 @@
 #
 # 500_make_backup.sh
 
-include_list=()
+# shellcheck disable=SC2168
+local include_list=()
 
 # Check if backup-include.txt (created by 400_create_include_exclude_files.sh),
 # really exists.
@@ -19,6 +20,8 @@ done
 # User might specify some additional output options in Borg.
 # Output shown by Borg is not controlled by `rear --verbose' nor `rear --debug'
 # only, if BORGBACKUP_SHOW_PROGRESS is true.
+
+# shellcheck disable=SC2168
 local borg_additional_options=()
 
 BORGBACKUP_CREATE_SHOW_PROGRESS=${BORGBACKUP_CREATE_SHOW_PROGRESS:-$BORGBACKUP_SHOW_PROGRESS}

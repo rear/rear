@@ -11,6 +11,8 @@ StopIfError "Could not change directory to $TARGET_FS_ROOT!"
 # User might specify some additional output options in Borg.
 # Output shown by Borg is not controlled by `rear --verbose' nor `rear --debug'
 # only, if BORGBACKUP_SHOW_PROGRESS is true.
+
+# shellcheck disable=SC2168
 local borg_additional_options=()
 
 BORGBACKUP_EXTRACT_SHOW_PROGRESS=${BORGBACKUP_EXTRACT_SHOW_PROGRESS:-$BORGBACKUP_SHOW_PROGRESS}
