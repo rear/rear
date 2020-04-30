@@ -58,3 +58,5 @@ if [ $rc -ne 0 ]; then
     LogPrint "Borg: $( cat "$BORGBACKUP_STDERR_FILE" )"
     Error "Failed to initialize Borg repository, borg rc $rc!"
 fi
+
+LogPrint 'Successfully initialized Borg repository.'
