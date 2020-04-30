@@ -45,7 +45,7 @@ if [ $rc -ne 0 ]; then
             LogPrint "Hence initializing new Borg repository '$BORGBACKUP_REPO' on ${BORGBACKUP_HOST:-USB}"
 
             # Has to be $verbose, not "$verbose", since it's used as option.
-            # shellcheck disable=SC2086
+            # shellcheck disable=SC2086,2154
             borg init $verbose "${borg_additional_options[@]}" \
             "${BORGBACKUP_OPT_ENCRYPTION[@]}" "${BORGBACKUP_OPT_REMOTE_PATH[@]}" \
             "${BORGBACKUP_OPT_UMASK[@]}" "${borg_dst_dev}${BORGBACKUP_REPO}" \

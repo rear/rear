@@ -9,7 +9,7 @@
 # backup destination will be handled internally by Borg it self.
 if [[ -z $BORGBACKUP_HOST ]]; then
     # Has to be $verbose, not "$verbose", since it's used as option.
-    # shellcheck disable=SC2086
+    # shellcheck disable=SC2086,SC2154
     mkdir -p $verbose "$borg_dst_dev" >&2
     StopIfError "Could not mkdir '$borg_dst_dev'"
 

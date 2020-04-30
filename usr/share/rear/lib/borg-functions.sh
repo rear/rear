@@ -71,6 +71,7 @@ function borg_set_vars {
 
 function borg_list
 {
+    # shellcheck disable=SC2154
     borg list "${BORGBACKUP_OPT_REMOTE_PATH[@]}" "${borg_dst_dev}${BORGBACKUP_REPO}" \
     2> "$BORGBACKUP_STDERR_FILE"
 }
@@ -90,7 +91,7 @@ function borg_create
 in Borg repository $BORGBACKUP_REPO on ${BORGBACKUP_HOST:-USB}"
 
     # Has to be $verbose, not "$verbose", since it's used as option.
-    # shellcheck disable=SC2086
+    # shellcheck disable=SC2086,SC2154
     borg create $verbose --one-file-system "${borg_additional_options[@]}" \
     "${BORGBACKUP_OPT_COMPRESSION[@]}" "${BORGBACKUP_OPT_REMOTE_PATH[@]}" \
     "${BORGBACKUP_OPT_UMASK[@]}" --exclude-from "$TMP_DIR/backup-exclude.txt" \

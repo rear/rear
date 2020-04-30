@@ -6,6 +6,7 @@ borg_archive_cache_create && return
 
 LogPrint "Failed to list Borg archive."
 LogPrint "If you decide to continue, ReaR will partition your disks, but most probably will NOT be able to restore your data!"
+# shellcheck disable=SC2154
 LogPrint "Command \"borg list $BORGBACKUP_OPT_REMOTE_PATH ${borg_dst_dev}${BORGBACKUP_REPO}\" returned: "
 LogPrint "Borg: $( cat "$BORGBACKUP_STDERR_FILE" )"
 
@@ -32,6 +33,7 @@ while true ; do
         ;;
         (${choices[1]})
             # rear_shell runs 'bash' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
+            # shellcheck disable=SC2154
             rear_shell "" "$rear_shell_history"
         ;;
         (${choices[2]})
