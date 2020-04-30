@@ -1,7 +1,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 #
-# 400_restore_backup.sk
+# 400_restore_backup.sh
 
 # Borg restores to cwd.
 # Switch current working directory or die.
