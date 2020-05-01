@@ -16,7 +16,7 @@ case "$scheme" in
         LogPrint "Transferring PXE files to $OUTPUT_URL"
         for result_file in "${RESULT_FILES[@]}" ; do
             LogPrint "Transferring file: $result_file"
-            lftp -c "open $OUTPUT_URL; mput $result_file" || Error "Problem transferring '$result_file' to $OUTPUT_URL"
+            lftp -c "open $OUTPUT_URL; $LFTP_PARAM mput $result_file" || Error "Problem transferring '$result_file' to $OUTPUT_URL"
         done
         ;;
     (rsync)
