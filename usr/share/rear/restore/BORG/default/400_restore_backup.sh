@@ -13,9 +13,13 @@ StopIfError "Could not change directory to $TARGET_FS_ROOT!"
 # only, if BORGBACKUP_SHOW_PROGRESS is true.
 local borg_additional_options=''
 
-is_true $BORGBACKUP_SHOW_PROGRESS && borg_additional_options+='--progress '
-is_true $BORGBACKUP_SHOW_LIST && borg_additional_options+='--list '
-is_true $BORGBACKUP_SHOW_RC && borg_additional_options+='--show-rc '
+BORGBACKUP_EXTRACT_SHOW_PROGRESS=${BORGBACKUP_EXTRACT_SHOW_PROGRESS:-$BORGBACKUP_SHOW_PROGRESS}
+BORGBACKUP_EXTRACT_SHOW_LIST=${BORGBACKUP_EXTRACT_SHOW_LIST:-$BORGBACKUP_SHOW_LIST}
+BORGBACKUP_EXTRACT_SHOW_RC=${BORGBACKUP_EXTRACT_SHOW_RC:-$BORGBACKUP_SHOW_RC}
+
+is_true $BORGBACKUP_EXTRACT_SHOW_PROGRESS && borg_additional_options+='--progress '
+is_true $BORGBACKUP_EXTRACT_SHOW_LIST && borg_additional_options+='--list '
+is_true $BORGBACKUP_EXTRACT_SHOW_RC && borg_additional_options+='--show-rc '
 
 # https://github.com/rear/rear/pull/2382#issuecomment-621707505
 # Depending on BORGBACKUP_SHOW_PROGRESS and VERBOSE variables
@@ -33,7 +37,7 @@ is_true $BORGBACKUP_SHOW_RC && borg_additional_options+='--show-rc '
 #    stderr (2) is untouched, hence only going to rear logfile.
 
 # Start actual restore.
-if is_true $BORGBACKUP_SHOW_PROGRESS; then
+if is_true $BORGBACKUP_EXTRACT_SHOW_PROGRESS; then
     borg_extract 0<&6 1>&7 2>&8
 elif is_true $VERBOSE; then
     borg_extract 0<&6 1>&7 2> >(tee >(cat 1>&2) >&8)
