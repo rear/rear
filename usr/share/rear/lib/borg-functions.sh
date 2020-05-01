@@ -14,6 +14,9 @@ function borg_set_vars {
     if [ ! -z $BORGBACKUP_PRUNE_LAST ]; then
         BORGBACKUP_OPT_PRUNE+=("--keep-last=$BORGBACKUP_PRUNE_LAST ")
     fi
+    if [ ! -z $BORGBACKUP_PRUNE_MINUTELY ]; then
+        BORGBACKUP_OPT_PRUNE+=("--keep-minutely=$BORGBACKUP_PRUNE_MINUTELY ")
+    fi
     if [ ! -z $BORGBACKUP_PRUNE_HOURLY ]; then
         BORGBACKUP_OPT_PRUNE+=("--keep-hourly=$BORGBACKUP_PRUNE_HOURLY ")
     fi
