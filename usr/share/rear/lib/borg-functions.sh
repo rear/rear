@@ -8,28 +8,52 @@ function borg_set_vars {
     # No need to check config values of $BORG_PRUNE* family
     # Borg will bail out with error if values are wrong.
     BORGBACKUP_OPT_PRUNE=()
-    if [[ -n $BORGBACKUP_PRUNE_WITHIN ]]; then
+    if [[ -n $BORGBACKUP_PRUNE_KEEP_WITHIN ]]; then
+        BORGBACKUP_OPT_PRUNE+=( --keep-within "$BORGBACKUP_PRUNE_KEEP_WITHIN" )
+    elif [[ -n $BORGBACKUP_PRUNE_WITHIN ]]; then
+        LogPrint "BORGBACKUP_PRUNE_WITHIN is deprecated, use BORGBACKUP_PRUNE_KEEP_WITHIN instead!"
         BORGBACKUP_OPT_PRUNE+=( --keep-within "$BORGBACKUP_PRUNE_WITHIN" )
     fi
-    if [[ -n $BORGBACKUP_PRUNE_LAST ]]; then
+    if [[ -n $BORGBACKUP_PRUNE_KEEP_LAST ]]; then
+        BORGBACKUP_OPT_PRUNE+=( --keep-last "$BORGBACKUP_PRUNE_KEEP_LAST" )
+    elif [[ -n $BORGBACKUP_PRUNE_LAST ]]; then
+        LogPrint "BORGBACKUP_PRUNE_LAST is deprecated, use BORGBACKUP_PRUNE_KEEP_LAST instead!"
         BORGBACKUP_OPT_PRUNE+=( --keep-last "$BORGBACKUP_PRUNE_LAST" )
     fi
-    if [[ -n $BORGBACKUP_PRUNE_MINUTELY ]]; then
-        BORGBACKUP_OPT_PRUNE+=("--keep-minutely=$BORGBACKUP_PRUNE_MINUTELY ")
+    if [[ -n $BORGBACKUP_PRUNE_KEEP_MINUTELY ]]; then
+        BORGBACKUP_OPT_PRUNE+=( --keep-minutely "$BORGBACKUP_PRUNE_KEEP_MINUTELY" )
+    elif [[ -n $BORGBACKUP_PRUNE_MINUTELY ]]; then
+        LogPrint "BORGBACKUP_PRUNE_MINUTELY is deprecated, use BORGBACKUP_PRUNE_KEEP_MINUTELY instead!"
+        BORGBACKUP_OPT_PRUNE+=( --keep-minutely "$BORGBACKUP_PRUNE_MINUTELY" )
     fi
-    if [[ -n $BORGBACKUP_PRUNE_HOURLY ]]; then
+    if [[ -n $BORGBACKUP_PRUNE_KEEP_HOURLY ]]; then
+        BORGBACKUP_OPT_PRUNE+=( --keep-hourly "$BORGBACKUP_PRUNE_KEEP_HOURLY" )
+    elif [[ -n $BORGBACKUP_PRUNE_HOURLY ]]; then
+        LogPrint "BORGBACKUP_PRUNE_HOURLY is deprecated, use BORGBACKUP_PRUNE_KEEP_HOURLY instead!"
         BORGBACKUP_OPT_PRUNE+=( --keep-hourly "$BORGBACKUP_PRUNE_HOURLY" )
     fi
-    if [[ -n $BORGBACKUP_PRUNE_DAILY ]]; then
+    if [[ -n $BORGBACKUP_PRUNE_KEEP_DAILY ]]; then
+        BORGBACKUP_OPT_PRUNE+=( --keep-daily "$BORGBACKUP_PRUNE_KEEP_DAILY" )
+    elif [[ -n $BORGBACKUP_PRUNE_DAILY ]]; then
+        LogPrint "BORGBACKUP_PRUNE_DAILY is deprecated, use BORGBACKUP_PRUNE_KEEP_DAILY instead!"
         BORGBACKUP_OPT_PRUNE+=( --keep-daily "$BORGBACKUP_PRUNE_DAILY" )
     fi
-    if [[ -n $BORGBACKUP_PRUNE_WEEKLY ]]; then
+    if [[ -n $BORGBACKUP_PRUNE_KEEP_WEEKLY ]]; then
+        BORGBACKUP_OPT_PRUNE+=( --keep-weekly "$BORGBACKUP_PRUNE_KEEP_WEEKLY" )
+    elif [[ -n $BORGBACKUP_PRUNE_WEEKLY ]]; then
+        LogPrint "BORGBACKUP_PRUNE_WEEKLY is deprecated, use BORGBACKUP_PRUNE_KEEP_WEEKLY instead!"
         BORGBACKUP_OPT_PRUNE+=( --keep-weekly "$BORGBACKUP_PRUNE_WEEKLY" )
     fi
-    if [[ -n $BORGBACKUP_PRUNE_MONTHLY ]]; then
+    if [[ -n $BORGBACKUP_PRUNE_KEEP_MONTHLY ]]; then
+        BORGBACKUP_OPT_PRUNE+=( --keep-monthly "$BORGBACKUP_PRUNE_KEEP_MONTHLY" )
+    elif [[ -n $BORGBACKUP_PRUNE_MONTHLY ]]; then
+        LogPrint "BORGBACKUP_PRUNE_MONTHLY is deprecated, use BORGBACKUP_PRUNE_KEEP_MONTHLY instead!"
         BORGBACKUP_OPT_PRUNE+=( --keep-monthly "$BORGBACKUP_PRUNE_MONTHLY" )
     fi
-    if [[ -n $BORGBACKUP_PRUNE_YEARLY ]]; then
+    if [[ -n $BORGBACKUP_PRUNE_KEEP_YEARLY ]]; then
+        BORGBACKUP_OPT_PRUNE+=( --keep-yearly "$BORGBACKUP_PRUNE_KEEP_YEARLY" )
+    elif [[ -n $BORGBACKUP_PRUNE_YEARLY ]]; then
+        LogPrint "BORGBACKUP_PRUNE_YEARLY is deprecated, use BORGBACKUP_PRUNE_KEEP_YEARLY instead!"
         BORGBACKUP_OPT_PRUNE+=( --keep-yearly "$BORGBACKUP_PRUNE_YEARLY" )
     fi
 
