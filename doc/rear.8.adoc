@@ -240,6 +240,8 @@ If you do not specify +OUTPUT_URL+ variable then by default it will be aligned t
 was defined by variable +BACKUP_URL+. And, the rescue image will then be copied to the same
 location as your backup of the system disk(s).
 
+When using _fish, ftp, ftps, hftp, http, https or sftp_, you can set *LFTP_PARAM* to pass additional parameters to _lftp_. For example: `_LFTP_PARAM="set ftp:ssl-force true; set ftp:ssl-protect-data true;"`
+
 The +ISO_DEFAULT+ variable defines what default boot option is used on the rescue image.
 Possible values are `manual`, `boothd` or `automatic`. Manual will make you boot into
 the shell directly by default, boothd will boot to the first disk (default) or automatic
