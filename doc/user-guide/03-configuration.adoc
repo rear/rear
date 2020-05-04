@@ -93,6 +93,7 @@ The default boot option of the created ISO is boothd / "boot from first harddisk
 e.g. because you integrate REAR into some automation process, you can change the default using
 _ISO_DEFAULT={manual,automatic,boothd}_
 
+
 == Backup/Restore strategy (BACKUP)
 The +BACKUP+ setting defines our backup/restore strategy. The +BACKUP+ can be handled via internal archive executable (+tar+ or +rsync+) or by an external backup program (commercial or open source).
 
