@@ -99,8 +99,8 @@ case "$scheme" in
         # FIXME: Verify if usage of $array[*] instead of "${array[@]}" is actually intended here
         # see https://github.com/rear/rear/issues/1068
         LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
-        Log "lftp -c open $OUTPUT_URL; $LFTP_PARAM mput ${RESULT_FILES[*]}"
-        lftp -c "open $OUTPUT_URL; $LFTP_PARAM mput ${RESULT_FILES[*]}" || Error "Problem transferring result files to $OUTPUT_URL"
+        Log "lftp -c open $OUTPUT_URL; $LFTP_PARAMS mput ${RESULT_FILES[*]}"
+        lftp -c "open $OUTPUT_URL; $LFTP_PARAMS mput ${RESULT_FILES[*]}" || Error "Problem transferring result files to $OUTPUT_URL"
         ;;
     (rsync)
         # If BACKUP = RSYNC output/RSYNC/default/900_copy_result_files.sh took care of it:
