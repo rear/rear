@@ -93,8 +93,6 @@ The default boot option of the created ISO is boothd / "boot from first harddisk
 e.g. because you integrate REAR into some automation process, you can change the default using
 _ISO_DEFAULT={manual,automatic,boothd}_
 
-When using _fish, ftp, ftps, hftp, http, https or sftp_, you can set *LFTP_PARAM* to pass additional parameters (https://lftp.yar.ru/lftp-man.html) to _lftp_. For example: `LFTP_PARAM="set ftp:ssl-force true; set ftp:ssl-protect-data true;"`
-
 == Backup/Restore strategy (BACKUP)
 The +BACKUP+ setting defines our backup/restore strategy. The +BACKUP+ can be handled via internal archive executable (+tar+ or +rsync+) or by an external backup program (commercial or open source).
 
