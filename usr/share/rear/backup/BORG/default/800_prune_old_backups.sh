@@ -20,20 +20,31 @@ is_true "$BORGBACKUP_PRUNE_SHOW_STATS" && borg_additional_options+=( --stats )
 is_true "$BORGBACKUP_PRUNE_SHOW_LIST" && borg_additional_options+=( --list )
 is_true "$BORGBACKUP_PRUNE_SHOW_RC" && borg_additional_options+=( --show-rc )
 
+# Borg writes all log output to stderr by default.
+# See https://borgbackup.readthedocs.io/en/stable/usage/general.html#logging
+#
+# If we want to have the Borg log output appearing in the rear logfile, we
+# don't have to do anything, since Borg writes all log output to stderr and
+# that is what rear is saving in the rear logfile.
+#
+# If `--progress` is used for `borg prune` we don't want the Borg log output
+# in the rear logfile, since it contains control sequences. If not used, we
+# want the Borg output in the rear logfile. The amount of log output written by
+# Borg is determined by other options above e.g. by `--stats` or `--list`.
+
 # https://github.com/rear/rear/pull/2382#issuecomment-621707505
 # Depending on BORGBACKUP_SHOW_PROGRESS and VERBOSE variables
-# 3 cases are there for `borg_prune` to log to rear log file or not.
+# 3 cases are there for `borg_prune` to log to rear logfile or not.
 #
 # 1. BORGBACKUP_SHOW_PROGRESS true:
-#    No logging to rear log file because of control characters.
+#    No logging to rear logfile because of control characters.
 #
 # 2. VERBOSE true:
-#    stderr (2) is copied to real stderr (8):
-#    2 is going to rear logfile
-#    8 is shown because of VERBOSE true
+#    stdout (1) is going to rear logfile and copied to real stdout (7).
+#    stderr (2) is going to rear logfile and copied to real stderr (8).
 #
 # 3. Third case:
-#    stderr (2) is untouched, hence only going to rear logfile.
+#    stdout (1) and stderr (2) are untouched, hence only going to rear logfile.
 
 if [[ -n $BORGBACKUP_OPT_PRUNE ]]; then
     # Prune old backup archives according to user settings.

@@ -40,29 +40,29 @@ is_true "$BORGBACKUP_EXCLUDE_IF_NOBACKUP" && borg_additional_options+=( --exclud
 # Borg writes all log output to stderr by default.
 # See https://borgbackup.readthedocs.io/en/stable/usage/general.html#logging
 #
-# If we want to have log output from Borg appearing in rear logs, we don't have
-# to do anything, since Borg logs to stderr and that is what rear is saving in
-# Logfile.
+# If we want to have the Borg log output appearing in the rear logfile, we
+# don't have to do anything, since Borg writes all log output to stderr and
+# that is what rear is saving in the rear logfile.
 #
-# If `--progress` is used for `borg create` we don't want the output in rear
-# log file, since it contains control sequences. If not used, we want Borg
-# output in rear log file, the amount of logs written by Borg is determined by
-# other options above e.g. by `--stats` or `--list --filter=AME`.
+# If `--progress` is used for `borg create` we don't want the Borg log output
+# in the rear logfile, since it contains control sequences. If not used, we
+# want the Borg output in the rear logfile. The amount of log output written by
+# Borg is determined by other options above e.g. by `--stats` or
+# `--list --filter=AME`.
 
 # https://github.com/rear/rear/pull/2382#issuecomment-621707505
 # Depending on BORGBACKUP_SHOW_PROGRESS and VERBOSE variables
-# 3 cases are there for `borg_create` to log to rear log file or not.
+# 3 cases are there for `borg_create` to log to rear logfile or not.
 #
 # 1. BORGBACKUP_SHOW_PROGRESS true:
-#    No logging to rear log file because of control characters.
+#    No logging to rear logfile because of control characters.
 #
 # 2. VERBOSE true:
-#    stderr (2) is copied to real stderr (8):
-#    2 is going to rear logfile
-#    8 is shown because of VERBOSE true
+#    stdout (1) is going to rear logfile and copied to real stdout (7).
+#    stderr (2) is going to rear logfile and copied to real stderr (8).
 #
 # 3. Third case:
-#    stderr (2) is untouched, hence only going to rear logfile.
+#    stdout (1) and stderr (2) are untouched, hence only going to rear logfile.
 
 # Start actual Borg backup.
 if is_true "$BORGBACKUP_CREATE_SHOW_PROGRESS"; then
