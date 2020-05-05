@@ -51,6 +51,10 @@ if [ $rc -ne 0 ]; then
             "${BORGBACKUP_OPT_UMASK[@]}" "${borg_dst_dev}${BORGBACKUP_REPO}" \
             2> "$BORGBACKUP_STDERR_FILE"
             rc=$?
+
+            if [ $rc -eq 0 ]; then
+              LogPrint 'Successfully initialized Borg repository.'
+            fi
         fi
     fi
 fi
@@ -62,5 +66,3 @@ if [ $rc -ne 0 ]; then
     LogPrint "Borg: $( cat "$BORGBACKUP_STDERR_FILE" )"
     Error "Failed to initialize Borg repository, borg rc $rc!"
 fi
-
-LogPrint 'Successfully initialized Borg repository.'
