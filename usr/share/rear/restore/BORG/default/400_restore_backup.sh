@@ -19,9 +19,9 @@ BORGBACKUP_EXTRACT_SHOW_PROGRESS=${BORGBACKUP_EXTRACT_SHOW_PROGRESS:-$BORGBACKUP
 BORGBACKUP_EXTRACT_SHOW_LIST=${BORGBACKUP_EXTRACT_SHOW_LIST:-$BORGBACKUP_SHOW_LIST}
 BORGBACKUP_EXTRACT_SHOW_RC=${BORGBACKUP_EXTRACT_SHOW_RC:-$BORGBACKUP_SHOW_RC}
 
-is_true "$BORGBACKUP_SHOW_PROGRESS" && borg_additional_options+=( --progress )
-is_true "$BORGBACKUP_SHOW_LIST" && borg_additional_options+=( --list )
-is_true "$BORGBACKUP_SHOW_RC" && borg_additional_options+=( --show-rc )
+is_true "$BORGBACKUP_EXTRACT_SHOW_PROGRESS" && borg_additional_options+=( --progress )
+is_true "$BORGBACKUP_EXTRACT_SHOW_LIST" && borg_additional_options+=( --list )
+is_true "$BORGBACKUP_EXTRACT_SHOW_RC" && borg_additional_options+=( --show-rc )
 
 # https://github.com/rear/rear/pull/2382#issuecomment-621707505
 # Depending on BORGBACKUP_SHOW_PROGRESS and VERBOSE variables
