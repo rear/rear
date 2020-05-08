@@ -506,8 +506,6 @@ set default="$GRUB2_DEFAULT_BOOT"
 
 insmod efi_gop
 insmod efi_uga
-insmod video_bochs
-insmod video_cirrus
 insmod all_video
 
 set gfxpayload=keep
