@@ -17,5 +17,6 @@ borg_set_vars
 if [[ -n $BORGBACKUP_HOST ]]; then
     borg_dst_dev=ssh://$BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_PORT
 else
+    # shellcheck disable=SC2034
     borg_dst_dev=$BUILD_DIR/borg_backup
 fi
