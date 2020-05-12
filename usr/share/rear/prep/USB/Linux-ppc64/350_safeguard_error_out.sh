@@ -1,7 +1,7 @@
 
-# prep/USB/Linux-<non-i386-architectures>/350_safeguard_error_out.sh
+# prep/USB/<non-i386-architectures>/350_safeguard_error_out.sh
 # are safeguard scripts to let "rear mkrescue/mkbackup" error out in case of
-# false usage of OUTPUT=USB on non PC-compatible (i386/x86/x86_64) architectures
+# false usage of OUTPUT=USB on non-PC-compatible architectures (non-i386/x86/x86_64)
 # because with OUTPUT=USB on those architectures the USB medium cannot be booted
 # (for those architectures there are no scripts that install a bootloader)
 # so OUTPUT=USB on those architectures does not provide what the user expects
