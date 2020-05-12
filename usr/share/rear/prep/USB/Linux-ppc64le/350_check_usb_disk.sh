@@ -1,1 +1,0 @@
-../Linux-ppc64/350_check_usb_disk.sh
