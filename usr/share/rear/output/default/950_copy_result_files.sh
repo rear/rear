@@ -100,7 +100,7 @@ case "$scheme" in
         # see https://github.com/rear/rear/issues/1068
         LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
         Log "lftp -c open $OUTPUT_URL; $OUTPUT_LFTP_OPTIONS mput ${RESULT_FILES[*]}"
-        lftp -c "open $OUTPUT_URL; $OUTPUT_LFTP_OPTIONS mput ${RESULT_FILES[*]}" || Error "Problem transferring result files to $OUTPUT_URL"
+        lftp -c "open $OUTPUT_URL; $OUTPUT_LFTP_OPTIONS mput ${RESULT_FILES[*]}" || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
         ;;
     (rsync)
         # If BACKUP = RSYNC output/RSYNC/default/900_copy_result_files.sh took care of it:
