@@ -504,8 +504,6 @@ function create_grub2_cfg {
     cat << EOF
 set default="$GRUB2_DEFAULT_BOOT"
 
-insmod efi_gop
-insmod efi_uga
 insmod all_video
 
 set gfxpayload=keep
