@@ -13,6 +13,11 @@ case "$scheme" in
         return 0
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
+        if [[ ! "$OUTPUT_LFTP_OPTIONS" =~ ';'$ ]] ; then
+            OUTPUT_LFTP_OPTIONS="$OUTPUT_LFTP_OPTIONS;"
+            Log "Automatically fixed missing semicolon at end in OUTPUT_LFTP_OPTIONS"
+        fi
+
         LogPrint "Transferring PXE files to $OUTPUT_URL"
         for result_file in "${RESULT_FILES[@]}" ; do
             LogPrint "Transferring file: $result_file"

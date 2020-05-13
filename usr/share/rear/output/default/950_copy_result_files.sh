@@ -96,6 +96,11 @@ case "$scheme" in
         done
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
+        if [[ ! "$OUTPUT_LFTP_OPTIONS" =~ ';'$ ]] ; then
+            OUTPUT_LFTP_OPTIONS="$OUTPUT_LFTP_OPTIONS;"
+            Log "Automatically fixed missing semicolon at end in OUTPUT_LFTP_OPTIONS"
+		fi
+
         # FIXME: Verify if usage of $array[*] instead of "${array[@]}" is actually intended here
         # see https://github.com/rear/rear/issues/1068
         LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
