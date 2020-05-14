@@ -33,3 +33,5 @@ done
 # when there is any non-empty array member (not necessarily the first one):
 contains_visible_char "${missing_progs[*]}" && Error "Cannot find required programs: ${missing_progs[@]}"
 
+# Finish successfully:
+return 0
