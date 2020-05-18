@@ -6,6 +6,7 @@ test "$OUTPUT_URL" || return 0
 
 local scheme=$( url_scheme $OUTPUT_URL )
 local result_file=""
+local dest_dir=""
 
 case "$scheme" in
     (nfs|cifs|usb|tape|file|davfs)
@@ -20,7 +21,7 @@ case "$scheme" in
             # Using `cut' for printing 4th field with "/" delimiter (.. | cut -d/ -f4-),
             # will strip leading "<protocol>://<hostname>/" from OUTPUT_URL
             # and by prefixing "/" we will get absolute path to destination directory.
-            local dest_dir="/$(echo $OUTPUT_URL | cut -d/ -f4-)"
+            dest_dir="/$(echo $OUTPUT_URL | cut -d/ -f4-)"
 
             # Make sure that destination directory exists, otherwise lftp would copy
             # RESULT_FILES into last available directory in the path.
