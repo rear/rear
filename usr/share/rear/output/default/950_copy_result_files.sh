@@ -98,9 +98,22 @@ case "$scheme" in
     (fish|ftp|ftps|hftp|http|https|sftp)
         # FIXME: Verify if usage of $array[*] instead of "${array[@]}" is actually intended here
         # see https://github.com/rear/rear/issues/1068
+
         LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
         Log "lftp -c open $OUTPUT_URL; $OUTPUT_LFTP_OPTIONS mput ${RESULT_FILES[*]}"
-        lftp -c "open $OUTPUT_URL; mkdir -fp /$(echo $OUTPUT_URL | cut -d"/" -f4-)"
+
+        # OUTPUT_URL for lftp transfers will look something like:
+        # "<fish|ftp|ftps|hftp|http|https|sftp>://<host_name>/<destination_directory>"
+        # Using `cut' for printing 4th field with "/" delimiter (.. | cut -d/ -f4-),
+        # will strip leading "<protocol>://<hostname>/" from OUTPUT_URL
+        # and by prefixing "/" we will get absolute path to destination directory.
+        local dest_dir="/$(echo $OUTPUT_URL | cut -d/ -f4-)"
+
+        # Make sure that destination directory exists, otherwise lftp would copy
+        # RESULT_FILES into last available directory in the path.
+        # e.g. OUTPUT_URL=sftp://<host_name>/iso/server1 and have "/iso/server1"
+        # directory missing, would upload RESULT_FILES into sftp://<host_name>/iso/
+        lftp -c "open $OUTPUT_URL; mkdir -fp ${dest_dir}"
         lftp -c "open $OUTPUT_URL; $OUTPUT_LFTP_OPTIONS mput ${RESULT_FILES[*]}" || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
         ;;
     (rsync)
