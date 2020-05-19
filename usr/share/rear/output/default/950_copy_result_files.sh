@@ -68,22 +68,22 @@ case "$scheme" in
             # ZVM_NAMING      - set in local.conf, if Y then enable naming override
             # ZVM_KERNEL_NAME - keeps track of kernel name in results array
             # ARCH            - override only if ARCH is Linux-s390
-            # 
+            #
             # initrd name override is handled in 900_create_initramfs.sh
             # kernel name override is handled in 400_guess_kernel.sh
             # kernel name override is handled in 950_copy_result_files.sh
 
-            if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then 
+            if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then
                if [[ -z $opath ]] ; then
                   Error "Output path is not set, please check OUTPUT_URL in local.conf."
-               fi  
+               fi
 
                if [ "$ZVM_KERNEL_NAME" == "$result_file" ] ; then
                   VM_UID=$(vmcp q userid |awk '{ print $1 }')
 
                   if [[ -z $VM_UID ]] ; then
                      Error "VM UID is not set, VM UID is set from call to vmcp.  Please make sure vmcp is available and 'vmcp q userid' returns VM ID"
-                  fi      
+                  fi
 
                   LogPrint "s390 kernel naming override: $result_file will be written as $VM_UID.kernel"
                   cp $v "$result_file" $opath/$VM_UID.kernel || Error "Could not copy result file $result_file to $opath/$VM_UID.kernel at $scheme location"
@@ -100,6 +100,12 @@ case "$scheme" in
         # see https://github.com/rear/rear/issues/1068
         LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
         Log "lftp -c open $OUTPUT_URL; $OUTPUT_LFTP_OPTIONS mput ${RESULT_FILES[*]}"
+
+        # Make sure that destination directory exists, otherwise lftp would copy
+        # RESULT_FILES into last available directory in the path.
+        # e.g. OUTPUT_URL=sftp://<host_name>/iso/server1 and have "/iso/server1"
+        # directory missing, would upload RESULT_FILES into sftp://<host_name>/iso/
+        lftp -c "open $OUTPUT_URL; mkdir -fp ${path}"
         lftp -c "open $OUTPUT_URL; $OUTPUT_LFTP_OPTIONS mput ${RESULT_FILES[*]}" || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
         ;;
     (rsync)
