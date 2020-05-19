@@ -8,15 +8,18 @@
 # example: sshfs://user@host/G/rear/
 # example: ftpfs://user:password@host/rear/ (the password part is optional)
 
-[[ "$BACKUP_URL" || "$BACKUP_MOUNTCMD" ]]
-# FIXME: The above test does not match the error message below.
+# FIXME: The test does not match the error message below.
 # To match the the error message the test should be
 # [[ "$BACKUP_URL" || ( "$BACKUP_MOUNTCMD" && "$BACKUP_UMOUNTCMD" ) ]]
-# but I <jsmeix@suse.de> cannot decide if there is a subtle reason for the omission.
+# but I <jsmeix@suse.de> cannot decide if there is a subtle reason for the omission:
+[[ "$BACKUP_URL" || "$BACKUP_MOUNTCMD" ]]
 StopIfError "You must specify either BACKUP_URL or BACKUP_MOUNTCMD and BACKUP_UMOUNTCMD !"
 
+# url_scheme results the empty string when $BACKUP_URL is empty:
+local scheme=$( url_scheme $BACKUP_URL )
+
 if [[ "$BACKUP_URL" ]] ; then
-    local scheme=$( url_scheme $BACKUP_URL )
+
     local hostname=$( url_hostname $BACKUP_URL )
     local path=$( url_path $BACKUP_URL )
 
@@ -74,8 +77,8 @@ esac
 # see https://github.com/rear/rear/pull/859
 PROGS+=(
 showmount
-mount.$(url_scheme $BACKUP_URL)
-umount.$(url_scheme $BACKUP_URL)
+mount.$scheme
+umount.$scheme
 $( test "$BACKUP_MOUNTCMD" && echo "${BACKUP_MOUNTCMD%% *}" )
 $( test "$BACKUP_UMOUNTCMD" && echo "${BACKUP_UMOUNTCMD%% *}" )
 $BACKUP_PROG
@@ -111,5 +114,5 @@ fi
 # which is o.k. because this must been seen as a catch all rule
 # (one never knows what one could miss)
 # see https://github.com/rear/rear/pull/859
-MODULES+=( $(url_scheme $BACKUP_URL) )
+MODULES+=( $scheme )
 
