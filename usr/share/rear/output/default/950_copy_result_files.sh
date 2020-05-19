@@ -98,11 +98,9 @@ case "$scheme" in
     (fish|ftp|ftps|hftp|http|https|sftp)
         # FIXME: Verify if usage of $array[*] instead of "${array[@]}" is actually intended here
         # see https://github.com/rear/rear/issues/1068
-
         LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
         Log "lftp -c open $OUTPUT_URL; $OUTPUT_LFTP_OPTIONS mput ${RESULT_FILES[*]}"
 
-        local path=$(url_path $OUTPUT_URL)
         # Make sure that destination directory exists, otherwise lftp would copy
         # RESULT_FILES into last available directory in the path.
         # e.g. OUTPUT_URL=sftp://<host_name>/iso/server1 and have "/iso/server1"
