@@ -7,7 +7,7 @@ fi
 
 Log "Saving Encrypted volumes."
 REQUIRED_PROGS+=( cryptsetup dmsetup )
-COPY_AS_IS+=( /usr/share/cracklib/\* /etc/security/pwquality.conf )
+COPY_AS_IS+=( /usr/share/cracklib/* /etc/security/pwquality.conf )
 
 while read target_name junk ; do
     # find the target device we're mapping
