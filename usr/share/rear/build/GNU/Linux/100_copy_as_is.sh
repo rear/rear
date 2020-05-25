@@ -83,8 +83,18 @@ done >$copy_as_is_exclude_file
 #  2
 #  -rw-r--r-- root/root         4 2017-10-12 11:31 foo
 #  -rw-r--r-- root/root         4 2017-10-12 11:31 baz
-# Because pipefail is not set it is the second 'tar' in the pipe that determines whether or not the whole operation was successful:
-if ! tar -v -X $copy_as_is_exclude_file -P -C / -c "${COPY_AS_IS[@]}" 2>$copy_as_is_filelist_file | tar $v -C $ROOTFS_DIR/ -x 1>/dev/null ; then
+# Because pipefail is not set it is the second 'tar' in the pipe that determines whether or not the whole operation was successful.
+# Intentionally we use ${COPY_AS_IS[*]} as a dirty hack to get rid of quoted array elements
+# to ensure "things work as usually expected" for any combination of the methods
+# COPY_AS_IS=( "${COPY_AS_IS[@]}" '/path/to/directory/*' )
+# COPY_AS_IS=( ${COPY_AS_IS[@]} /path/to/directory/* )
+# COPY_AS_IS+=( '/path/to/directory/*' )
+# COPY_AS_IS+=( /path/to/directory/* )
+# which are used in our scripts and by users in their etc/rear/local.conf
+# cf. https://github.com/rear/rear/pull/2405#issuecomment-633512932
+# FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
+# cf. https://github.com/rear/rear/issues/1372
+if ! tar -v -X $copy_as_is_exclude_file -P -C / -c ${COPY_AS_IS[*]} 2>$copy_as_is_filelist_file | tar $v -C $ROOTFS_DIR/ -x 1>/dev/null ; then
     Error "Failed to copy files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLUDE"
 fi
 Log "Finished copying files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLUDE"
