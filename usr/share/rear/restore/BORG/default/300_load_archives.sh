@@ -37,6 +37,9 @@ Number of archives: $archive_cache_lines"
 
 archive_cache_last_shown=0
 
+# For timestamp output of Borg archives ISO 8601 format is used:
+# YYYY-MM-DDThh:mm:ss, e.g.: 2020-05-26T00:25:00
+
 while true ; do
     UserOutput ""
     if [[ $BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER -eq 0 ]]; then
