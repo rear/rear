@@ -91,6 +91,8 @@ function borg_set_vars {
 
     # Set file to save borg stderr output
     BORGBACKUP_STDERR_FILE=$TMP_DIR/borg_stderr
+
+    BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER=${BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER:-10}
 }
 
 function borg_list
