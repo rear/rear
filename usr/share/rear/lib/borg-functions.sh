@@ -148,7 +148,7 @@ on ${BORGBACKUP_HOST:-USB}"
 
     # Has to be $verbose, not "$verbose", since it's used as option.
     # shellcheck disable=SC2086
-    LC_ALL=rear.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
     borg extract $verbose --sparse "${borg_additional_options[@]}" \
     "${BORGBACKUP_OPT_REMOTE_PATH[@]}" \
     "${borg_dst_dev}${BORGBACKUP_REPO}::$BORGBACKUP_ARCHIVE"
