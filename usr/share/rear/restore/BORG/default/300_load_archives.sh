@@ -27,10 +27,13 @@ Number of archives: $archive_cache_lines"
 # Always ask which archive to restore (even if there is only one).
 # This gives possibility to abort restore if repository doesn't contain
 # desired archive, hence saves some time.
+
+# Pagination for selecting archives:
 # Show BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER archives at a time, starting
 # with the current ones.
 # If no valid choice is given, cycle through older archives.
-# To disable this pagination set BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER=0.
+# Enabled by default (BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER=10).
+# To disable pagination set BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER=0.
 
 archive_cache_last_shown=0
 
