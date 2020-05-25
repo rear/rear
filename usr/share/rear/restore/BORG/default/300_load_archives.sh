@@ -17,10 +17,10 @@ fi
 # Display header.
 LogUserOutput "
 === Borg archives list ===
+
 Location:           ${BORGBACKUP_HOST:-USB}
 Repository:         $BORGBACKUP_REPO
-Number of archives: $archive_cache_lines
-"
+Number of archives: $archive_cache_lines"
 
 # Display BORGBACKUP_ARCHIVE_CACHE file content
 # and prompt user for archive to restore.
@@ -35,6 +35,7 @@ Number of archives: $archive_cache_lines
 archive_cache_last_shown=0
 
 while true ; do
+    UserOutput ""
     if [[ $BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER -eq 0 ]]; then
         LogUserOutput "$( cat -n "$BORGBACKUP_ARCHIVE_CACHE" \
             | awk '{ print "["$1"]", $4 "T" $5, $2 }' )"
@@ -58,6 +59,7 @@ while true ; do
     fi
 
     # Show "Exit" option.
+    UserOutput ""
     LogUserOutput "[$(( archive_cache_lines + 1 ))]" Exit
     UserOutput ""
 
