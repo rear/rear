@@ -40,28 +40,25 @@ archive_cache_last_shown=0
 # For timestamp output of Borg archives ISO 8601 format is used:
 # YYYY-MM-DDThh:mm:ss, e.g.: 2020-05-26T00:25:00
 
+# When pagination is disabled by the user, show everything
+[[ $BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER -eq 0 ]] \
+    && BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER=$archive_cache_lines
+
 while true ; do
     UserOutput ""
-    if [[ $BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER -eq 0 ]]; then
-        LogUserOutput "$( cat -n "$BORGBACKUP_ARCHIVE_CACHE" \
-            | awk '{ print "["$1"]", $4 "T" $5, $2 }' )"
-        UserOutput ""
-        LogUserOutput "[0] Show all archives again"
+    LogUserOutput "$( cat -n "$BORGBACKUP_ARCHIVE_CACHE" \
+        | tac \
+        | awk '{print "["$1"]", $4 "T" $5, $2 }' \
+        | tail -n +$(( archive_cache_last_shown + 1 )) \
+        | head -n "$BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER" \
+        | tac )"
+    (( archive_cache_last_shown += BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER ))
+    UserOutput ""
+    if [[ $archive_cache_last_shown -lt $archive_cache_lines ]]; then
+        LogUserOutput "[0] Show (up to) $BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER older archives"
     else
-        LogUserOutput "$( cat -n "$BORGBACKUP_ARCHIVE_CACHE" \
-            | tac \
-            | awk '{print "["$1"]", $4 "T" $5, $2 }' \
-            | tail -n +$(( archive_cache_last_shown + 1 )) \
-            | head -n "$BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER" \
-            | tac )"
-        (( archive_cache_last_shown += BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER ))
-        UserOutput ""
-        if [[ $archive_cache_last_shown -lt $archive_cache_lines ]]; then
-            LogUserOutput "[0] Show (up to) $BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER older archives"
-        else
-            archive_cache_last_shown=0
-            LogUserOutput "[0] Show all archives again"
-        fi
+        archive_cache_last_shown=0
+        LogUserOutput "[0] Show all archives again"
     fi
 
     # Show "Exit" option.
