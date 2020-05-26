@@ -5,6 +5,9 @@
 
 LogPrint "Starting Borg restore"
 
+# shellcheck disable=SC2168
+local archive_cache_lines
+
 # Store number of lines in BORGBACKUP_ARCHIVE_CACHE file for later use.
 archive_cache_lines=$( wc -l "$BORGBACKUP_ARCHIVE_CACHE" | awk '{print $1}' )
 
@@ -35,7 +38,8 @@ Number of archives: $archive_cache_lines"
 # Enabled by default (BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX=10).
 # To disable pagination set BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX=0.
 
-archive_cache_last_shown=0
+# shellcheck disable=SC2168
+local archive_cache_last_shown=0
 
 # For timestamp output of Borg archives ISO 8601 format is used:
 # YYYY-MM-DDThh:mm:ss, e.g.: 2020-05-26T00:25:00
