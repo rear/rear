@@ -9,7 +9,7 @@ LogPrint "Starting Borg restore"
 local archive_cache_lines
 
 # Store number of lines in BORGBACKUP_ARCHIVE_CACHE file for later use.
-archive_cache_lines=$( wc -l "$BORGBACKUP_ARCHIVE_CACHE" | awk '{print $1}' )
+archive_cache_lines=$( wc -l "$BORGBACKUP_ARCHIVE_CACHE" | awk '{ print $1 }' )
 
 # This means empty repository.
 if [ "$archive_cache_lines" -eq 0 ]; then
@@ -51,7 +51,7 @@ local archive_cache_last_shown=0
 while true ; do
     UserOutput ""
     LogUserOutput "$( cat -n "$BORGBACKUP_ARCHIVE_CACHE" \
-        | awk '{print "["$1"]", $4 "T" $5, $2 }' \
+        | awk '{ print "["$1"]", $4 "T" $5, $2 }' \
         | head -n $(( archive_cache_lines - archive_cache_last_shown )) \
         | tail -n "$BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX" )"
     (( archive_cache_last_shown += BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX ))
@@ -75,8 +75,8 @@ while true ; do
     # Valid pick
     if [[ $choice -ge 1 && $choice -le $archive_cache_lines ]]; then
         # shellcheck disable=SC2034
-        BORGBACKUP_ARCHIVE=$(sed "$choice!d" "$BORGBACKUP_ARCHIVE_CACHE" \
-            | awk '{print $1}')
+        BORGBACKUP_ARCHIVE=$( sed "$choice!d" "$BORGBACKUP_ARCHIVE_CACHE" \
+            | awk '{ print $1 }' )
         break
     # Exit
     elif [[ $choice -eq $(( archive_cache_lines + 1 )) ]]; then
