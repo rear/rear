@@ -29,11 +29,11 @@ Number of archives: $archive_cache_lines"
 # desired archive, hence saves some time.
 
 # Pagination for selecting archives:
-# Show BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER archives at a time, starting
+# Show BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX archives at a time, starting
 # with the current ones.
 # If no valid choice is given, cycle through older archives.
-# Enabled by default (BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER=10).
-# To disable pagination set BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER=0.
+# Enabled by default (BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX=10).
+# To disable pagination set BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX=0.
 
 archive_cache_last_shown=0
 
@@ -41,19 +41,19 @@ archive_cache_last_shown=0
 # YYYY-MM-DDThh:mm:ss, e.g.: 2020-05-26T00:25:00
 
 # When pagination is disabled by the user, show everything
-[[ $BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER -eq 0 ]] \
-    && BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER=$archive_cache_lines
+[[ $BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX -eq 0 ]] \
+    && BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX=$archive_cache_lines
 
 while true ; do
     UserOutput ""
     LogUserOutput "$( cat -n "$BORGBACKUP_ARCHIVE_CACHE" \
         | awk '{print "["$1"]", $4 "T" $5, $2 }' \
         | head -n $(( archive_cache_lines - archive_cache_last_shown )) \
-        | tail -n "$BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER" )"
-    (( archive_cache_last_shown += BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER ))
+        | tail -n "$BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX" )"
+    (( archive_cache_last_shown += BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX ))
     UserOutput ""
     if [[ $archive_cache_last_shown -lt $archive_cache_lines ]]; then
-        LogUserOutput "[0] Show (up to) $BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER older archives"
+        LogUserOutput "[0] Show (up to) $BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX older archives"
     else
         archive_cache_last_shown=0
         LogUserOutput "[0] Show all archives again"
