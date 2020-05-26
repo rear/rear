@@ -22,10 +22,10 @@ case "$scheme" in
             # RESULT_FILES into last available directory in the path.
             # e.g. OUTPUT_URL=sftp://<host_name>/iso/server1 and have "/iso/server1"
             # directory missing, would upload RESULT_FILES into sftp://<host_name>/iso/
-            lftp -c "open $OUTPUT_URL; mkdir -fp ${path}"
+            lftp -c "$OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mkdir -fp ${path}"
 
             LogPrint "Transferring file: $result_file"
-            lftp -c "open $OUTPUT_URL; $OUTPUT_LFTP_OPTIONS mput $result_file" || Error "lftp failed to transfer '$result_file' to '$OUTPUT_URL' (lftp exit code: $?)"
+            lftp -c "$OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mput $result_file" || Error "lftp failed to transfer '$result_file' to '$OUTPUT_URL' (lftp exit code: $?)"
         done
         ;;
     (rsync)
