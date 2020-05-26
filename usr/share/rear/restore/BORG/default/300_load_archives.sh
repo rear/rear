@@ -47,11 +47,9 @@ archive_cache_last_shown=0
 while true ; do
     UserOutput ""
     LogUserOutput "$( cat -n "$BORGBACKUP_ARCHIVE_CACHE" \
-        | tac \
         | awk '{print "["$1"]", $4 "T" $5, $2 }' \
-        | tail -n +$(( archive_cache_last_shown + 1 )) \
-        | head -n "$BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER" \
-        | tac )"
+        | head -n $(( archive_cache_lines - archive_cache_last_shown )) \
+        | tail -n "$BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER" )"
     (( archive_cache_last_shown += BORGBACKUP_RESTORE_ARCHIVES_SHOW_NUMBER ))
     UserOutput ""
     if [[ $archive_cache_last_shown -lt $archive_cache_lines ]]; then
