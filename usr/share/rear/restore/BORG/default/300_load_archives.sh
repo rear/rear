@@ -77,6 +77,5 @@ while true ; do
     # Exit
     elif [[ $choice -eq $(( archive_cache_lines + 1 )) ]]; then
         Error "Operation aborted by user"
-        break
     fi
 done
