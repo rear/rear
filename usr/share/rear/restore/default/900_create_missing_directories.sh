@@ -5,7 +5,7 @@
 # after the backup was restored.
 #
 
-# The directories_permissions_owner_group file was created by 400_save_mountpoint_details.sh
+# The directories_permissions_owner_group file was created by prep/default/400_save_directories.sh
 # to save permissions, owner, group or symbolic link name and target of basic directories:
 local directories_permissions_owner_group_file="$VAR_DIR/recovery/directories_permissions_owner_group"
 
