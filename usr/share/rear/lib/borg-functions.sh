@@ -91,6 +91,11 @@ function borg_set_vars {
 
     # Set file to save borg stderr output
     BORGBACKUP_STDERR_FILE=$TMP_DIR/borg_stderr
+
+    BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX=${BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX:-10}
+
+    [[ $BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX -ge 0 ]] \
+        || Error "BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX '$BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX' must be >= 0"
 }
 
 function borg_list
