@@ -72,6 +72,8 @@ for directoryglob in $FHSdirectories ; do
             #   '/var/mail' -> 'spool/mail'
             # so we remove the characters ' and ` (octal \047 and \140) to get plain
             #   /var/mail -> spool/mail
+            # FIXME: This code fails when the symlink or its target contains special characters
+            # cf. https://github.com/rear/rear/issues/1372
             stat -c '%N' "$directory" | tr -d '\047\140' >>"$directories_permissions_owner_group_file"
             # Symbolic links are output like (e.g. on a SLES12 system)
             # note the difference between absolute and relative symbolic link target:
