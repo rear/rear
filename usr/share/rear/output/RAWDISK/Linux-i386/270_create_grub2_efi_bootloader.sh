@@ -19,7 +19,15 @@ fi
 # (3) Grub 2 EFI components must exist
 # Since openSUSE Leap 15.1 things were moved from /usr/lib/grub2/ to /usr/share/grub2/
 # cf. https://github.com/rear/rear/issues/2338#issuecomment-594432946
-[[ -d /usr/lib/grub/x86_64-efi ]] || [[ -d /usr/lib/grub2/x86_64-efi ]] || [[ -d /usr/share/grub2/x86_64-efi ]] || return 0
+local efi_modules_directory
+local dir
+for dir in /usr/lib/grub/x86_64-efi /usr/lib/grub2/x86_64-efi /usr/share/grub2/x86_64-efi; do
+    if [[ -d "$dir" ]]; then
+        efi_modules_directory="$dir"
+        break
+    fi
+done
+[[ -z "$efi_modules_directory" ]] && return 0
 
 # (4) Grub 2 must not have been excluded
 if is_true "${RAWDISK_BOOT_EXCLUDE_GRUB2_EFI:-no}"; then
@@ -96,6 +104,7 @@ else
     # Use the UEFI default boot loader name, so that firmware will find it without an existing boot entry.
     local boot_loader="$efi_boot_directory/BOOTX64.EFI"
     local grub_modules=( part_gpt fat normal configfile linux video all_video )
+    [[ -f "$efi_modules_directory/linuxefi.mod" ]] && grub_modules+=("$efi_modules_directory/linuxefi.mod")
     $grub2_name-mkimage -O x86_64-efi -o "$boot_loader" -p "/EFI/BOOT" "${grub_modules[@]}"
     StopIfError "Error occurred during $grub2_name-mkimage of $boot_loader"
 fi
