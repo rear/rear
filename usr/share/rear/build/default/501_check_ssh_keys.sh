@@ -37,11 +37,11 @@ if is_false "$SSH_UNPROTECTED_PRIVATE_KEYS" ; then
     # where the leading slashes will get removed below in the "for key_file" loop.
     # The "find ./etc/ssh" ensures that SSH 'Include' config files e.g. in /etc/ssh/ssh_config.d/
     # are also parsed, cf. https://github.com/rear/rear/issues/2421
-    local host_identity_files=( $( find ./etc/ssh -type f | xargs grep -ih '^[^#]*IdentityFile.*' | tr -d ' "=' | sed -e 's/identityfile//I' -e "s#~#$ROOT_HOME_DIR#g" ) )
+    local host_identity_files=( $( find ./etc/ssh -type f | xargs grep -ih '^[^#]*IdentityFile' | tr -d ' "=' | sed -e 's/identityfile//I' -e "s#~#$ROOT_HOME_DIR#g" ) )
     # If $ROOTFS_DIR/root/.ssh/config exists parse it for IdentityFile values in the same way as above:
     local root_identity_files=()
     local root_ssh_config="./$ROOT_HOME_DIR/.ssh/config"
-    test -s $root_ssh_config && root_identity_files=( $( grep -i '^[^#]*IdentityFile.*' $root_ssh_config | tr -d ' "=' | sed -e 's/identityfile//I' -e "s#~#$ROOT_HOME_DIR#g" ) )
+    test -s $root_ssh_config && root_identity_files=( $( grep -i '^[^#]*IdentityFile' $root_ssh_config | tr -d ' "=' | sed -e 's/identityfile//I' -e "s#~#$ROOT_HOME_DIR#g" ) )
     # Combine the found key files:
     key_files=( $( echo "${host_key_files[@]}" "${root_key_files[@]}" "${host_identity_files[@]}" "${root_identity_files[@]}" | tr -s '[:space:]' '\n' | sort -u ) )
 else
