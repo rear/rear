@@ -34,14 +34,22 @@ if is_false "$SSH_UNPROTECTED_PRIVATE_KEYS" ; then
     #   /root/.ssh/id_dsa
     #   /root/.ssh/id_ecdsa
     #   /root/.ssh/id_ed25519
-    # where the leading slashes will get removed below in the "for key_file" loop.
+    # but the './' prefix for './$ROOT_HOME_DIR' in sed ... -e "s#~#./$ROOT_HOME_DIR#g"
+    # makes the sed result match the above root_key_files=( ... ./$ROOT_HOME_DIR/.ssh/id_* )
+    # which is e.g. .//root/.ssh/id_dsa so the above example actually results
+    #   .//root/.ssh/id_dsa
+    #   .//root/.ssh/id_ecdsa
+    #   .//root/.ssh/id_ed25519
+    # which ensures that all paths are relative paths inside the recovery system and
+    # duplicates (e.g. $ROOTFS_DIR/.//root/.ssh/id_dsa and $ROOTFS_DIR//root/.ssh/id_dsa are the same file)
+    # can be found and filtered out by the below key_files=( $( echo ... | sort -u ) )
     # The "find ./etc/ssh" ensures that SSH 'Include' config files e.g. in /etc/ssh/ssh_config.d/
     # are also parsed, cf. https://github.com/rear/rear/issues/2421
-    local host_identity_files=( $( find ./etc/ssh -type f | xargs grep -ih '^[^#]*IdentityFile' | tr -d ' "=' | sed -e 's/identityfile//I' -e "s#~#$ROOT_HOME_DIR#g" ) )
+    local host_identity_files=( $( find ./etc/ssh -type f | xargs grep -ih '^[^#]*IdentityFile' | tr -d ' "=' | sed -e 's/identityfile//I' -e "s#~#./$ROOT_HOME_DIR#g" ) )
     # If $ROOTFS_DIR/root/.ssh/config exists parse it for IdentityFile values in the same way as above:
     local root_identity_files=()
     local root_ssh_config="./$ROOT_HOME_DIR/.ssh/config"
-    test -s $root_ssh_config && root_identity_files=( $( grep -i '^[^#]*IdentityFile' $root_ssh_config | tr -d ' "=' | sed -e 's/identityfile//I' -e "s#~#$ROOT_HOME_DIR#g" ) )
+    test -s $root_ssh_config && root_identity_files=( $( grep -i '^[^#]*IdentityFile' $root_ssh_config | tr -d ' "=' | sed -e 's/identityfile//I' -e "s#~#./$ROOT_HOME_DIR#g" ) )
     # Combine the found key files:
     key_files=( $( echo "${host_key_files[@]}" "${root_key_files[@]}" "${host_identity_files[@]}" "${root_identity_files[@]}" | tr -s '[:space:]' '\n' | sort -u ) )
 else
