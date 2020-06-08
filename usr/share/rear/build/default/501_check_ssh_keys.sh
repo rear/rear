@@ -21,14 +21,29 @@ if is_false "$SSH_UNPROTECTED_PRIVATE_KEYS" ; then
     local host_key_files=( etc/ssh/ssh_host_* )
     # Caveat: This code will only detect SSH key files for root, not for other users.
     local root_key_files=( ./$ROOT_HOME_DIR/.ssh/identi[t]y ./$ROOT_HOME_DIR/.ssh/id_* )
-    # Parse etc/ssh/ssh_config and root/.ssh/config (if exists) to find more key files
-    # that could be specified via (not commented) IdentityFile entries (if exists)
-    # and replace '~' in things like '~/.ssh/id_rsa' with 'root/.ssh/id_rsa':
-    local more_key_files="$( sed -n -e "s#~#root#g" \
-                                    -e '/^[^#]*identityfile/Is/^.*identityfile[ ]\+\([^ ]\+\).*$/\1/ip' \
-                                 etc/ssh/ssh_co[n]fig ./$ROOT_HOME_DIR/.ssh/co[n]fig </dev/null )"
+    # Parse SSH config files in $ROOTFS_DIR/etc/ssh for non-commented IdentityFile keywords and values
+    # (keywords are case-insensitive and values can be in double quotes and may have a single '=' separator, see "man ssh_config")
+    # and replace in the IdentityFile values '~' in things like '~/.ssh/id_rsa' usually with '/root/.ssh/id_rsa'
+    # (in default.conf $ROOT_HOME_DIR is '~root' which usually evaluates to '/root')
+    # so for example in /etc/ssh/ssh_config entries like
+    #   #   IdentityFile ~/.ssh/id_rsa
+    #   IdentityFile    ~/.ssh/id_dsa
+    #    IdentityFile = ~/.ssh/id_ecdsa
+    #     identityfile "~/.ssh/id_ed25519"
+    # would result
+    #   /root/.ssh/id_dsa
+    #   /root/.ssh/id_ecdsa
+    #   /root/.ssh/id_ed25519
+    # where the leading slashes will get removed below in the "for key_file" loop.
+    # The "find ./etc/ssh" ensures that SSH 'Include' config files e.g. in /etc/ssh/ssh_config.d/
+    # are also parsed, cf. https://github.com/rear/rear/issues/2421
+    local host_identity_files=( $( find ./etc/ssh -type f | xargs grep -ih '^[^#]*IdentityFile.*' | tr -d ' "=' | sed -e 's/identityfile//I' -e "s#~#$ROOT_HOME_DIR#g" ) )
+    # If $ROOTFS_DIR/root/.ssh/config exists parse it for IdentityFile values in the same way as above:
+    local root_identity_files=()
+    local root_ssh_config="./$ROOT_HOME_DIR/.ssh/config"
+    test -s $root_ssh_config && root_identity_files=( $( grep -i '^[^#]*IdentityFile.*' $root_ssh_config | tr -d ' "=' | sed -e 's/identityfile//I' -e "s#~#$ROOT_HOME_DIR#g" ) )
     # Combine the found key files:
-    key_files=( $( echo "${host_key_files[@]}" "${root_key_files[@]}" "${more_key_files[@]}" | tr -s '[:space:]' '\n' | sort -u ) )
+    key_files=( $( echo "${host_key_files[@]}" "${root_key_files[@]}" "${host_identity_files[@]}" "${root_identity_files[@]}" | tr -s '[:space:]' '\n' | sort -u ) )
 else
     # When SSH_UNPROTECTED_PRIVATE_KEYS is neither true nor false
     # it is interpreted as bash globbing patterns that match SSH key files.
