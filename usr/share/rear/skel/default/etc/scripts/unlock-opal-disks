@@ -88,7 +88,7 @@ See history for useful commands. Exit the shell to shut down the system.
 
     if [[ -s "$error_log" ]]; then
         {
-            echo "The following errors occured when executing $0:"
+            echo "The following errors occurred when executing $0:"
             cat "$error_log"
             echo ""
         } >> /etc/motd
