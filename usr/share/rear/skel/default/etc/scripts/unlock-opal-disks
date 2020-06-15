@@ -206,7 +206,7 @@ while (( attempt < max_authentications )); do
             # Symptom: Boot hangs when Grub hands over control to the Linux kernel. Seen on an HPE ML10Gen9 server.
             # Cf. https://github.com/rear/rear/issues/2425
             read -r field_name current_boot_number field_junk <<<"$(efibootmgr 2>/dev/null | grep 'BootCurrent:')"
-            if [[ "$current_boot_number" =~ ^[0-9a-zA-Z]+$ ]]; then
+            if [[ "$current_boot_number" =~ ^[0-9a-fA-F]+$ ]]; then
                 # Set the current boot number as the boot entry for the next boot. This does not make much sense,
                 # except that we can be sure that we're setting a valid boot entry which we can then remove.
                 efibootmgr --bootnext "$current_boot_number" --quiet
