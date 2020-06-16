@@ -249,7 +249,7 @@ else
     cp -pLf $v $KERNEL_FILE $boot_kernel_file || BugError "Failed to copy '$KERNEL_FILE' to '$boot_kernel_file'."
 fi
 
-# Provide the rear recovery system in initrd_file (i.e. TMP_DIR/initrd.cgz or TMP_DIR/initrd.xz)
+# Provide the ReaR recovery system in initrd_file (i.e. TMP_DIR/initrd.cgz or TMP_DIR/initrd.xz)
 # as boot_initrd_file (i.e. /boot/rear-initrd.cgz or /boot/rear-initrd.xz)
 # (regarding '.cgz' versus '.xz' see https://github.com/rear/rear/issues/1142)
 cp -af $v $initrd_file $boot_initrd_file || BugError "Failed to copy '$initrd_file' to '$boot_initrd_file'."
