@@ -51,13 +51,13 @@ function dhcp_client_is_active() {
             done | sort -u
         )
 
-        # Determine the list of active network interface devic names.
+        # Determine the list of active network interface device names.
         local ip_device_regexp="$(ip link show | awk -F '[: ]+' '/state UP/ { printf("%s%s", sep, $2); sep="|"; }')"
 
         for config_file in "${config_files[@]}"; do
             for config_base in "${config_bases[@]}"; do
                 if [[ -r "$config_base/$config_file" ]]; then
-                    # Check only configuration files matching an active network interface devic name. (Note:
+                    # Check only configuration files matching an active network interface device name. (Note:
                     # configuration files allow other types of matching, which is ignored here for simplicity.)
                     if grep -Eq "^[[:space:]]*Name[[:space:]]*=[[:space:]]*($ip_device_regexp)[[:space:]]*$" "$config_base/$config_file"; then
                         # Check if DHCP is enabled for an interface.
@@ -70,6 +70,22 @@ function dhcp_client_is_active() {
                 fi
             done
         done
+    fi
+
+    # Strategy 3: Check if Network Manager has been used for DHCP client setup
+    if type nmcli &>/dev/null; then
+        local conn_name
+        while read -r conn_name; do
+            if [[ -n "$conn_name" ]]; then
+                if [[ "$(nmcli --get-values ipv4.method connection show "$conn_name")" == "auto" ]]; then
+                    Log "Detected an active Network Manager connection '$conn_name' set up via DHCPv4"
+                    return 0
+                elif [[ "$(nmcli --get-values ipv6.method connection show "$conn_name")" == "auto" ]]; then
+                    Log "Detected an active Network Manager connection '$conn_name' set up via DHCPv6"
+                    return 0
+                fi
+            fi
+        done <<<"$(nmcli --get-values NAME connection show --active)"
     fi
 
     return 1
@@ -86,6 +102,8 @@ elif [[ -n "$DHCLIENT_BIN" ]]; then
     # explicitly configured DHCLIENT_BIN but forgot to set USE_DHCLIENT=y
     USE_DHCLIENT=y
     Log "Enabling DHCP on the rescue system (DHCLIENT_BIN='$DHCLIENT_BIN')"
+else
+    Log "No DHCP client could be auto-detected: DHCP will not be enabled on the rescue system"
 fi
 
 
