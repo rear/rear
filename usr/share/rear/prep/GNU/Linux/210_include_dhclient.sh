@@ -73,6 +73,8 @@ function dhcp_client_is_active() {
     fi
 
     # Strategy 3: Check if Network Manager has been used for DHCP client setup
+    # This auto-detection tests for an nmcli command which supports the '--get-values' option. It will silently
+    # skip the test otherwise.
     if type nmcli &>/dev/null; then
         local conn_name
         while read -r conn_name; do
@@ -85,7 +87,7 @@ function dhcp_client_is_active() {
                     return 0
                 fi
             fi
-        done <<<"$(nmcli --get-values NAME connection show --active)"
+        done <<<"$(nmcli --get-values NAME connection show --active 2>/dev/null)"  # ignore if '--get-values' is not supported
     fi
 
     return 1
