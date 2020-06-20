@@ -10,6 +10,7 @@ mkdir -p $v $VAR_DIR/layout/config
 # We need directory for XFS options only if XFS is in use:
 if test "$( mount -t xfs )" ; then
     LAYOUT_XFS_OPT_DIR="$VAR_DIR/layout/xfs"
+    rm -rf $LAYOUT_XFS_OPT_DIR
     mkdir -p $v $LAYOUT_XFS_OPT_DIR
 fi
 
