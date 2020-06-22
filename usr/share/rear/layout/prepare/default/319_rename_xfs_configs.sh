@@ -27,8 +27,9 @@ while read source target junk ; do
         cp "$v" "$LAYOUT_XFS_OPT_DIR/$base_source.xfs" \
          "$LAYOUT_XFS_OPT_DIR_RESTORE/$base_target.xfs"
 
-        # Replace old disk name in XFS configuration file as well.
-        sed -i s#"$base_source"#"$base_target"# \
+        # Replace old device name in meta-data= option in XFS
+        # configuration file as well.
+        sed -i s#"meta-data=${source}\(\s\)"#"meta-data=${target}\1"# \
           "$LAYOUT_XFS_OPT_DIR_RESTORE/$base_target.xfs"
 
         # Mark XFS config file as processed to avoid copying it again later.
@@ -43,13 +44,16 @@ while read source target junk ; do
         if [[ "$source" = "$layout_device" ]]; then
             base_src_layout_partition=$(basename "$layout_partition")
             base_dst_layout_partition=${base_src_layout_partition//$base_source/$base_target}
+            dst_layout_partition=${layout_partition//$base_source/$base_target}
+
             if [ -e "$LAYOUT_XFS_OPT_DIR/$base_src_layout_partition.xfs" ]; then
                 Log "Migrating XFS configuration $base_src_layout_partition.xfs to $base_dst_layout_partition.xfs"
                 cp "$v" "$LAYOUT_XFS_OPT_DIR/$base_src_layout_partition.xfs" \
                  "$LAYOUT_XFS_OPT_DIR_RESTORE/$base_dst_layout_partition.xfs"
 
-                # Replace old disk name in XFS configuration file as well.
-                sed -i s#"$base_src_layout_partition"#"$base_dst_layout_partition"# \
+                # Replace old device name in meta-data= option in XFS
+                # configuration file as well.
+                sed -i s#"meta-data=${layout_partition}\(\s\)"#"meta-data=${dst_layout_partition}\1"# \
                   "$LAYOUT_XFS_OPT_DIR_RESTORE/$base_dst_layout_partition.xfs"
 
                 # Mark XFS config file as processed to avoid copying it again later.
