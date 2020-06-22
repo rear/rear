@@ -143,9 +143,9 @@ function create_fs () {
             # unless the user has explicitly specified XFS filesystem options:
             local xfs_opts
             local xfs_device_basename="$( basename $device )"
-            local xfs_info_filename="$LAYOUT_XFS_OPT_DIR/$xfs_device_basename.xfs"
+            local xfs_info_filename="$LAYOUT_XFS_OPT_DIR_RESTORE/$xfs_device_basename.xfs"
             # Only uppercase letters and digits are used to ensure mkfs_xfs_options_variable_name is a valid bash variable name
-            # even in case of complicated device nodes e.g. things like /dev/mapper/SIBM_2810XIV_78033E7012F-part3 
+            # even in case of complicated device nodes e.g. things like /dev/mapper/SIBM_2810XIV_78033E7012F-part3
             # cf. current_orig_device_basename_alnum_uppercase in layout/prepare/default/300_map_disks.sh
             local xfs_device_basename_alnum_uppercase="$( echo $xfs_device_basename | tr -d -c '[:alnum:]' | tr '[:lower:]' '[:upper:]' )"
             # cf. predefined_input_variable_name in the function UserInput in lib/_input-output-functions.sh

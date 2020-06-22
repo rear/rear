@@ -5,6 +5,7 @@ LAYOUT_DEPS="$VAR_DIR/layout/diskdeps.conf"
 LAYOUT_TODO="$VAR_DIR/layout/disktodo.conf"
 LAYOUT_CODE="$VAR_DIR/layout/diskrestore.sh"
 LAYOUT_XFS_OPT_DIR="$VAR_DIR/layout/xfs"
+LAYOUT_XFS_OPT_DIR_RESTORE="$LAYOUT_XFS_OPT_DIR/restore"
 
 FS_UUID_MAP="$VAR_DIR/layout/fs_uuid_mapping"
 LUN_WWID_MAP="$VAR_DIR/layout/lun_wwid_mapping"
