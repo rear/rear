@@ -63,6 +63,7 @@ title Relax-and-Recover (no Secure Boot)
 EOF
 else
     # create a grub.cfg
+    grub2_set_root=cd0
     create_grub2_cfg > $efi_boot_tmp_dir/grub.cfg
 fi
 
