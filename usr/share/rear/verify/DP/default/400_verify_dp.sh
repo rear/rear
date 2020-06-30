@@ -1,5 +1,6 @@
 # 400_verify_dp.sh
-# read DP vars from config file
+# read Data Protector vars from config file
+
 CELL_SERVER="`cat /etc/opt/omni/client/cell_server`"
 
 # check that cell server is actually available (ping)
@@ -8,9 +9,9 @@ StopIfError "Data Protector Cell Manager not set in /etc/opt/omni/client/cell_se
 
 if test "$PING" ; then
 	ping -c 1 "${CELL_SERVER}" >/dev/null 2>&1
-	StopIfError "Sorry, but cannot reach Data Protector Cell Manager ${CELL_SERVER}"
+	StopIfError "Data Protector Cell Manager ${CELL_SERVER} not responding to ping."
 
-	Log "Data Protector Cell Manager ${CELL_SERVER} seems to be up and running."
+	Log "Data Protector Cell Manager ${CELL_SERVER} seems to be reachable."
 else
 	Log "Skipping ping test"
 fi

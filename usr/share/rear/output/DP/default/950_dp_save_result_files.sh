@@ -1,10 +1,10 @@
-#
-# saving result files via DP
+# 950_dp_save_result_files.sh
+# Saving result files via Data Protector
 
 [ ${#RESULT_FILES[@]} -gt 0 ]
 StopIfError "No files to copy (RESULT_FILES is empty)"
 
-LogPrint "Saving result files with DP"
+LogPrint "Saving result files with Data Protector"
 #DP_RESULT_FILES=()
 
 # if DP_RESULT_FILES_PATH is unset, then save the result files where they are
@@ -16,4 +16,4 @@ if ! test -d "$DP_RESULT_FILES_PATH" ; then
 fi
 
 cp -r $v "$VAR_DIR/recovery" "$DP_RESULT_FILES_PATH" >&2
-StopIfError "Could not save result files with dataprotector"
+StopIfError "Could not save result files with Data Protector"

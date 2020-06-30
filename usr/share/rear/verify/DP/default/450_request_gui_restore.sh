@@ -1,5 +1,4 @@
-##############################################################################
-#
+# 450_request_gui_restore.sh
 # Press [gG] to fall back to GUI restore
 
 #set -e
