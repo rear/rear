@@ -201,6 +201,26 @@ function opal_device_unlock() {
     sedutil-cli --setLockingRange 0 RW "$password" "$device" && opal_device_hide_mbr "$device" "$password"
 }
 
+function opal_device_deactivate_locking() {
+    local device="${1:?}"
+    local password="${2:?}"
+    # attempts to permanently deactivate the locking mechanism (locking range 0 spanning the entire disk) on device
+    # and disable the MBR.
+    # Returns 0 on success.
+
+    sedutil-cli --disableLockingRange 0 "$password" "$device" && opal_device_disable_mbr "$device" "$password"
+}
+
+function opal_device_reactivate_locking() {
+    local device="${1:?}"
+    local password="${2:?}"
+    # attempts to permanently reactivate the locking mechanism (locking range 0 spanning the entire disk) on device
+    # and re-enable the MBR.
+    # Returns 0 on success.
+
+    sedutil-cli --enableLockingRange 0 "$password" "$device" && opal_device_enable_mbr "$device" "$password"
+}
+
 function opal_disk_partition_information() {
     local device="${1:?}"
     # prints disk and partition information.
