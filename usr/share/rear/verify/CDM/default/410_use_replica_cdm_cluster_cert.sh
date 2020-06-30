@@ -25,12 +25,18 @@ while true; do
 done
 
 CDM_SUNOS_TAR=rubrik-agent-sunos5.10.sparc.tar.gz
+CDM_SOLARIS_TAR=rubrik-agent-solaris.sparc.tar.gz
+CDM_TAR_FILE=$CDM_SUNOS_TAR
 cd /tmp
-/usr/bin/curl $v -kLOJ https://${CDM_CLUSTER_IP}/connector/${CDM_SUNOS_TAR} 
-StopIfError "Could not download https://${CDM_CLUSTER_IP}/connector/${CDM_SUNOS_TAR}"
+/usr/bin/curl $v -fskLOJ https://${CDM_CLUSTER_IP}/connector/${CDM_TAR_FILE} 
+if [[ $? -gt 0 ]];  then
+    CDM_TAR_FILE=$CDM_SOLARIS_TAR
+    /usr/bin/curl $v -fkLOJ https://${CDM_CLUSTER_IP}/connector/${CDM_TAR_FILE} 
+fi
+StopIfError "Could not download cluster certificate extraction."
 
-/usr/bin/tar $v -xzf  $CDM_SUNOS_TAR
-StopIfError "Could not extract $CDM_SUNOS_TAR"
+/usr/bin/tar $v -xzf  $CDM_TAR_FILE
+StopIfError "Could not extract $CDM_TAR_FILE"
 
 CDM_CERT_FILE=$(find ./ -name "rubrik.crt")
 mv $v ${CDM_KEYS_DIR}/rubrik.crt ${CDM_KEYS_DIR}/rubrik.crt.orig
