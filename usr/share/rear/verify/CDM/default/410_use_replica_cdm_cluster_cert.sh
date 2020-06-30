@@ -24,6 +24,11 @@ while true; do
     PrintError "Please enter a non-empty CDM cluster IP."
 done
 
+# The name of the tar file that is being downloaded has changed in Rubrik CDM v5.1.
+# Before Rubrik CDM v5.1 it was rubrik-agent-sunos5.10.sparc.tar.gz
+# since Rubrik CDM v5.1 it is rubrik-agent-solaris.sparc.tar.gz
+# cf. https://github.com/rear/rear/issues/2441
+
 CDM_SUNOS_TAR=rubrik-agent-sunos5.10.sparc.tar.gz
 CDM_SOLARIS_TAR=rubrik-agent-solaris.sparc.tar.gz
 CDM_TAR_FILE=$CDM_SUNOS_TAR
@@ -33,7 +38,7 @@ if [[ $? -gt 0 ]];  then
     CDM_TAR_FILE=$CDM_SOLARIS_TAR
     /usr/bin/curl $v -fkLOJ https://${CDM_CLUSTER_IP}/connector/${CDM_TAR_FILE} 
 fi
-StopIfError "Could not download cluster certificate extraction."
+StopIfError "Could not download Rubrik agent from https://${CDM_CLUSTER_IP}/connector/${CDM_SUNOS_TAR} or https://${CDM_CLUSTER_IP}/connector/${CDM_SOLARIS_TAR}."
 
 /usr/bin/tar $v -xzf  $CDM_TAR_FILE
 StopIfError "Could not extract $CDM_TAR_FILE"
