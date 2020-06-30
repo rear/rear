@@ -13,7 +13,7 @@ StopIfError "Please install Data Protector Disk Agent (DA component) on the clie
 [ -x ${OMNIR} ]
 StopIfError "Please install Data Protector User Interface (CC component) on the client."
 
-${OMNIDB} -filesystem | grep $(hostname}
+${OMNIDB} -filesystem | grep $(hostname)
 StopIfError "Data Protector check failed, error code $?.
-Check if the root user is configured in Data Protector UserList and if backups for this client exist in the IDB.
+Check if the user root is configured in Data Protector UserList and if backups for this client exist in the IDB.
 See $RUNTIME_LOGFILE for more details."
