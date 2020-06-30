@@ -2,17 +2,13 @@
 # read Data Protector vars from config file
 
 CELL_SERVER="`cat /etc/opt/omni/client/cell_server`"
+OMNICHECK=/opt/omni/bin/omnicheck
 
-# check that cell server is actually available (ping)
+# the Cell Manager must be configured on the client
 [ "${CELL_SERVER}" ]
-StopIfError "Data Protector Cell Manager not set in /etc/opt/omni/client/cell_server (TCPSERVERADDRESS) !"
+StopIfError "Data Protector Cell Manager TCPSERVERADDRESS not set in /etc/opt/omni/client/cell_server"
 
-if test "$PING" ; then
-	ping -c 1 "${CELL_SERVER}" >/dev/null 2>&1
-	StopIfError "Data Protector Cell Manager ${CELL_SERVER} not responding to ping."
-
-	Log "Data Protector Cell Manager ${CELL_SERVER} seems to be reachable."
-else
-	Log "Skipping ping test"
-fi
-
+# check that the Cell Manager is responding on the INET port
+${OMNICHECK} -patches -host ${CELL_SERVER}
+StopIfError "Data Protector Cell Manager is not responding, error code $?.
+See $RUNTIME_LOGFILE for more details."

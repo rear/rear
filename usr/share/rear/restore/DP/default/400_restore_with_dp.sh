@@ -44,7 +44,7 @@ done
 # parallel restore of all objects previously collected
 LogPrint "Parallel restore of backup objects started. See Data Protector GUI for restore progress."
 chmod 755 ${TMP_DIR}/restore_cmd
-${TMP_DIR}/restore_cmd > /dev/null
+${TMP_DIR}/restore_cmd
 
 case $? in
 	0)  LogPrint "Restore was successful." ;;
