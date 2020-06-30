@@ -39,5 +39,8 @@ StopIfError "Could not copy replica CDM cluster certificate"
 
 /usr/bin/chmod $v 600 ${CDM_KEYS_DIR}/rubrik.crt
 
+mv $v ${CDM_KEYS_DIR}/agent.crt ${CDM_KEYS_DIR}/agent.crt.orig
+mv $v ${CDM_KEYS_DIR}/agent.pem ${CDM_KEYS_DIR}/agent.pem.orig
+/etc/rubrik/rba-keygen.sh
 
 LogPrint "Replica Rubrik (CDM) cluster certificate installed."
