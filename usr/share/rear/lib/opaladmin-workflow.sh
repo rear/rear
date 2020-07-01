@@ -426,6 +426,21 @@ function opaladmin_reactivate_locking() {
 
     LogUserOutput "Reactivate the locking mechanism on device $identification..."
     opaladmin_get_disk_password
+
+    # Explicitly issuing an unlock command before reactivating locking seems strange as the device is not supposed
+    # to be locked currently. However, this extra unlock command ensures that the device remains in an
+    # unlocked state when locking is reactivated.
+    # Otherwise, if (1) a system boots up with a locked device, (2) locking is deactivated, (3) locking is reactivated
+    # without issuing an extra unlock command before, the device will lock immediately. A locked device may trigger lots
+    # of kernel disk access errors:
+    #    [...]
+    #    kernel: ata1.00: status: { DRDY ERR }
+    #    kernel: ata1.00: error: { ABRT }
+    #    kernel: ata1.00: supports DRM functions and may not be fully accessible
+    #    kernel: ata1.00: NCQ Send/Recv Log not supported
+    #    [...]
+    opal_device_unlock "$device" "$OPAL_DISK_PASSWORD"  # errors are intentionally ignored here
+
     opal_device_reactivate_locking "$device" "$OPAL_DISK_PASSWORD" ||
         Error "Could not reactivate locking on device '$device'."
     LogUserOutput "Locking reactivated."
