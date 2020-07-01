@@ -701,7 +701,7 @@ preferably with full debug information via 'rear -D $WORKFLOW'
 ===================="
 }
 
-# Using the  ...IfError functions can result unexpected behaviour in certain cases.
+# Using the ...IfError functions can result unexpected behaviour in certain cases.
 #
 # Using $? in an ...IfError function message like
 #   COMMAND
@@ -744,7 +744,7 @@ preferably with full debug information via 'rear -D $WORKFLOW'
 # When $? should be used in the Error function message it must be before $( COMMAND2 ).
 # When $? is before $( COMMAND2 ) it evaluates to the exit code of COMMAND1.
 # When $? is after $( COMMAND2 ) it evaluates to the exit code of COMMAND2.
-# At least with bash-4.4 in openSUSE Laep 15.1 one gets
+# At least with bash-4.4 in openSUSE Leap 15.1 one gets
 #   # cat QQQ || echo "ERROR $? $( grep -Q ' / ' /etc/fstab ) $?" 
 #   cat: QQQ: No such file or directory
 #   grep: invalid option -- 'Q'
