@@ -687,13 +687,6 @@ function Error () {
     fi
 }
 
-# If return code is non-zero, bail out:
-function StopIfError () {
-    if (( $? != 0 )) ; then
-        Error "$@"
-    fi
-}
-
 # Exit if there is a bug in ReaR:
 function BugError () {
     { local caller_source="$( CallerSource )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
@@ -706,6 +699,70 @@ Please report this issue at https://github.com/rear/rear/issues
 and include the relevant parts from $RUNTIME_LOGFILE
 preferably with full debug information via 'rear -D $WORKFLOW'
 ===================="
+}
+
+# Using the  ...IfError functions can result unexpected behaviour in certain cases.
+#
+# Using $? in an ...IfError function message like
+#   COMMAND
+#   StopIfError "COMMAND failed with error code $?"
+# lets $? evaluate to an unintended value (usually 0) for example as in
+#   # cat QQQ ; if (( $? != 0 )) ; then echo "ERROR $?" ; fi
+#   cat: QQQ: No such file or directory
+#   ERROR 0
+# In contrast using bash directly as in
+#   # cat QQQ || echo "ERROR $?"
+#   cat: QQQ: No such file or directory
+#   ERROR 1
+# works as expected.
+#
+# The ...IfError functions fail when 'set -e' is set
+# cf. https://github.com/rear/rear/issues/534
+# for example code like
+#   set -e
+#   COMMAND
+#   StopIfError "COMMAND failed"
+# cannot work because 'set -e' exits the script when COMMAND results non-zero exit code
+# so that the subsequent StopIfError is never reached.
+# In contrast using bash directly as in
+#   set -e
+#   COMMAND || Error "COMMAND failed"
+# works as expected.
+#
+# The ...IfError functions fail when $( COMMAND )
+# command substitution is used in the ...IfError functions message
+# cf. https://github.com/rear/rear/issues/1415#issuecomment-315692391
+# for example code like
+#   COMMAND1
+#   StopIfError "... $( COMMAND2 ) ..."
+# cannot work because $? that is tested in the ...IfError functions
+# will be the one from COMMAND2 and not the one from COMMAND1
+# so that StopIfError errors out when COMMAND2 fails but not when COMMAND1 fails.
+# In contrast using bash directly as in
+#   COMMAND1 || Error "... $( COMMAND2 ) ..."
+# works as expected when $? is not used in the Error function message.
+# When $? should be used in the Error function message it must be before $( COMMAND2 ).
+# When $? is before $( COMMAND2 ) it evaluates to the exit code of COMMAND1.
+# When $? is after $( COMMAND2 ) it evaluates to the exit code of COMMAND2.
+# At least with bash-4.4 in openSUSE Laep 15.1 one gets
+#   # cat QQQ || echo "ERROR $? $( grep -Q ' / ' /etc/fstab ) $?" 
+#   cat: QQQ: No such file or directory
+#   grep: invalid option -- 'Q'
+#   Usage: grep [OPTION]... PATTERN [FILE]...
+#   Try 'grep --help' for more information.
+#   ERROR 1  2
+# when COMMAND1 fails with exit code 1 and COMMAND2 fails with exit code 2
+# versus
+#   # cat QQQ || echo "ERROR $? $( grep -q ' / ' /etc/fstab ) $?" 
+#   cat: QQQ: No such file or directory
+#   ERROR 1  0
+# when COMMAND1 fails with exit code 1 and COMMAND2 succeeds.
+
+# If return code is non-zero, bail out:
+function StopIfError () {
+    if (( $? != 0 )) ; then
+        Error "$@"
+    fi
 }
 
 # If return code is non-zero, there is a bug in ReaR:
