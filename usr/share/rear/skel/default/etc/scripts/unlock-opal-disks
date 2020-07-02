@@ -21,6 +21,11 @@ function quit_plymouth() {
     use_plymouth && plymouth quit
 }
 
+function enter_plymouth_shutdown_mode() {
+    # puts plymouth into shutdown mode, if in use.
+    use_plymouth && plymouth change-mode --shutdown
+}
+
 function display_message() {
     local message="${1:?}"
 
@@ -106,7 +111,7 @@ function stop_error_handling() {
 }
 
 function instant_reboot() {
-    quit_plymouth
+    enter_plymouth_shutdown_mode
     stop_error_handling
 
     # Force immediate hardware reboot via Magic SysRq key
@@ -119,7 +124,7 @@ function instant_reboot() {
 }
 
 function instant_poweroff() {
-    quit_plymouth
+    enter_plymouth_shutdown_mode
     stop_error_handling
 
     # Force immediate hardware poweroff via Magic SysRq key

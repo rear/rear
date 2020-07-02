@@ -13,7 +13,7 @@ COPY_AS_IS_EXCLUDE+=( /lib/systemd/systemd-{cryptsetup,logind,networkd*,resolved
 # SSL
 COPY_AS_IS_EXCLUDE+=( /etc/pki /etc/ssl /usr/lib/ssl /usr/share/ca-certificates)
 # ReaR
-COPY_AS_IS_EXCLUDE+=( "$REAR_DIR_PREFIX" )
+COPY_AS_IS_EXCLUDE+=( "$SHARE_DIR" "$VAR_DIR" "$LOG_DIR" )
 
 local progs_to_exclude=()
 # networking

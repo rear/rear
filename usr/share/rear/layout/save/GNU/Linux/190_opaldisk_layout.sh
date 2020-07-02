@@ -10,7 +10,7 @@ for device in "${devices[@]}"; do
     [[ "${attributes[setup]}" == "y" ]] || continue
 
     if [[ "${attributes[locked]}" == "y" ]]; then
-        LogPrintError "TCG Opal 2 self-encrypting disk \"$device\" is locked: excluding from layout."
+        LogPrintError "TCG Opal 2 self-encrypting disk '$device' is locked: excluding from layout."
         continue
     fi
 

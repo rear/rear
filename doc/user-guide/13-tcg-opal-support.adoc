@@ -161,6 +161,10 @@ or on the rescue system.
 
 * Unlock disk(s): `rear opaladmin unlock`
 
+* Persistently deactivate the locking mechanism on disk(s): `rear opaladmin deactivate`
+
+* Reactivate the locking mechanism on disk(s): `rear opaladmin reactivate`
+
 * For help: `rear opaladmin help`
 
 === Erasing a Self-Encrypting Disk

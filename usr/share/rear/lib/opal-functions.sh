@@ -85,7 +85,7 @@ function opal_device_identification() {
     local device="${1:?}"
     # prints identification information for an Opal device.
 
-    echo "\"$device\" ($(opal_device_attribute "$device" "model"))"
+    echo "'$device' ($(opal_device_attribute "$device" "model"))"
 }
 
 function opal_device_information() {
@@ -201,6 +201,26 @@ function opal_device_unlock() {
     sedutil-cli --setLockingRange 0 RW "$password" "$device" && opal_device_hide_mbr "$device" "$password"
 }
 
+function opal_device_deactivate_locking() {
+    local device="${1:?}"
+    local password="${2:?}"
+    # attempts to permanently deactivate the locking mechanism (locking range 0 spanning the entire disk) on device
+    # and disable the MBR.
+    # Returns 0 on success.
+
+    sedutil-cli --disableLockingRange 0 "$password" "$device" && opal_device_disable_mbr "$device" "$password"
+}
+
+function opal_device_reactivate_locking() {
+    local device="${1:?}"
+    local password="${2:?}"
+    # attempts to permanently reactivate the locking mechanism (locking range 0 spanning the entire disk) on device
+    # and re-enable the MBR.
+    # Returns 0 on success.
+
+    sedutil-cli --enableLockingRange 0 "$password" "$device" && opal_device_enable_mbr "$device" "$password"
+}
+
 function opal_disk_partition_information() {
     local device="${1:?}"
     # prints disk and partition information.
@@ -240,7 +260,7 @@ function opal_check_pba_image() {
     # generates an error if the PBA image is larger than the guaranteed MBR capacity.
     # REQUIRES ReaR.
 
-    [[ -f "$pba_image_file" ]] || Error "\"$pba_image_file\" is not a regular file, thus cannot be used as TCG Opal 2 PBA image."
+    [[ -f "$pba_image_file" ]] || Error "'$pba_image_file' is not a regular file, thus cannot be used as TCG Opal 2 PBA image."
 
     local -i file_size=$(stat --printf="%s\n" "$pba_image_file")
     local -i mbr_size_limit=$((128 * 1024 * 1024))  # guaranteed minimum MBR size: 128 MiB (Opal 2 spec, section 4.3.5.4)
@@ -248,7 +268,7 @@ function opal_check_pba_image() {
     if (( file_size > mbr_size_limit )); then
         local file_size_MiB="$(opal_bytes_to_mib $file_size) MiB"
         local mbr_size_limit_MiB="$(opal_bytes_to_mib $mbr_size_limit) MiB"
-        Error "TCG Opal 2 PBA image file \"$pba_image_file\" is $file_size_MiB in size, allowed maximum is $mbr_size_limit_MiB."
+        Error "TCG Opal 2 PBA image file '$pba_image_file' is $file_size_MiB in size, allowed maximum is $mbr_size_limit_MiB."
     fi
 }
 
@@ -344,12 +364,11 @@ function opal_device_recreate_setup() {
         Log "Opal 2 disk $device reset to factory defaults, data erased."
     fi
 
-    opal_device_setup "$device" "$password"
-    StopIfError "Could not set up $device."
+    opal_device_setup "$device" "$password" || Error "Could not set up $device."
     Log "Opal 2 disk $device set up."
 
-    opal_device_regenerate_dek_ERASING_ALL_DATA "$device" "$password"
-    StopIfError "Could not reset data encryption key (DEK) of Opal 2 disk $device."
+    opal_device_regenerate_dek_ERASING_ALL_DATA "$device" "$password" ||
+        Error "Could not reset data encryption key (DEK) of Opal 2 disk $device."
     Log "Data encryption key (DEK) of Opal 2 disk $device reset, data erased."
 }
 
@@ -360,9 +379,9 @@ function opal_device_recreate_boot_support() {
     # prepares the device for booting.
     # REQUIRES ReaR.
 
-    opal_device_enable_mbr "$device" "$password"
-    StopIfError "Could not enable the shadow MBR on Opal 2 disk $device."
-    opal_device_load_pba_image "$device" "$password" "$pba_image_file"
-    StopIfError "Could not upload the PBA image \"$pba_image_file\" to Opal 2 disk $device."
+    opal_device_enable_mbr "$device" "$password" ||
+        Error "Could not enable the shadow MBR on Opal 2 disk $device."
+    opal_device_load_pba_image "$device" "$password" "$pba_image_file" ||
+        Error "Could not upload the PBA image '$pba_image_file' to Opal 2 disk $device."
     Log "Opal 2 disk $device: Shadow MBR enabled and PBA uploaded."
 }
