@@ -1,4 +1,4 @@
-# 81_create_pxelinux_cfg.sh
+# 810_create_pxelinux_cfg.sh
 #
 # create pxelinux config on PXE server for Relax-and-Recover
 #
@@ -32,18 +32,49 @@ if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
     fi
     chmod 444 "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE"
 else
-    # legacy way using PXE_LOCAL_PATH default
-    cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
-    $(test -s $(get_template "PXE_pxelinux.cfg") && cat $(get_template "PXE_pxelinux.cfg"))
-    display $OUTPUT_PREFIX_PXE/$PXE_MESSAGE
-    say ----------------------------------------------------------
-    say rear = disaster recover this system with Relax-and-Recover
-    label rear
-	kernel $OUTPUT_PREFIX_PXE/$PXE_KERNEL
-	append initrd=$OUTPUT_PREFIX_PXE/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE
+    # UEFI case, cf. https://github.com/rear/rear/issues/2359
+    EFIMT="$( mount -v | grep /sys/firmware/efi/efivars | wc -l )"
+    EFIMGR="$( efibootmgr -v | grep "BootOrder" | wc -l )"
+    if [[ x$EFIMT = x1 && x$EFIMGR = x1 ]] ; then
+        cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
+set menu_color_normal=white/black
+set menu_color_highlight=black/light-gray
+set timeout=30
+insmod png
+insmod efi_gop
+insmod efi_uga
+insmod video_bochs
+insmod video_cirrus
+insmod all_video
+set gfxpayload=keep
+insmod gzio
+insmod part_gpt
+insmod ext2
+menuentry 'Relax-and-Recover' {
+  echo 'Loading kernel ...'
+  linuxefi $OUTPUT_PREFIX_PXE/$PXE_KERNEL
+  initrdefi $OUTPUT_PREFIX_PXE/$PXE_INITRD
+}
+menuentry "Reboot" {
+  reboot
+}
+menuentry "Exit to EFI Shell" {
+  exit
+}
 EOF
+    else
+        # legacy way using PXE_LOCAL_PATH default
+        cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
+$(test -s $(get_template "PXE_pxelinux.cfg") && cat $(get_template "PXE_pxelinux.cfg"))
+display $OUTPUT_PREFIX_PXE/$PXE_MESSAGE
+say ----------------------------------------------------------
+say rear = disaster recover this system with Relax-and-Recover
+label rear
+kernel $OUTPUT_PREFIX_PXE/$PXE_KERNEL
+append initrd=$OUTPUT_PREFIX_PXE/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE
+EOF
+    fi
 fi
-
 
 pushd "$PXE_LOCAL_PATH" >/dev/null
 StopIfError "PXE_CONFIG_PATH [$PXE_CONFIG_PATH] does not exist !"
