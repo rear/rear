@@ -58,6 +58,13 @@ readonly PROGRAM=${0##*/}
 readonly VERSION=2.6
 readonly RELEASE_DATE=Git
 
+# Set machine readable and human readable start date and time values.
+# START_SECONDS is set to have a single fixed point in time
+# so that other date and time formats can be derived from it in an consistent way
+# (e.g. START_DATE_TIME_STRING matches START_DATE_TIME_NUMBER even if the second advances in between):
+readonly START_SECONDS=$( date +%s )
+readonly START_DATE_TIME_NUMBER=$( date -d@$START_SECONDS +%Y%m%d%H%M%S )
+readonly START_DATE_TIME_STRING=$( date -d@$START_SECONDS +'%F %T' )
 # Used in framework-functions.sh to calculate the time spent executing rear:
 readonly STARTTIME=$SECONDS
 
@@ -405,7 +412,7 @@ done
 # Show initial startup messages:
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
-    LogPrint "Running $PROGRAM $WORKFLOW (PID $MASTER_PID)"
+    LogPrint "Running $PROGRAM $WORKFLOW (PID $MASTER_PID date $START_DATE_TIME_STRING)"
     Log "Command line options: $0 ${CMD_OPTS[@]}"
     LogPrint "Using log file: $RUNTIME_LOGFILE"
 fi
