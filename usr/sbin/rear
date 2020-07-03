@@ -60,8 +60,11 @@ readonly RELEASE_DATE=Git
 
 # Set machine readable and human readable start date and time values.
 # START_SECONDS is set to have a single fixed point in time
-# so that other date and time formats can be derived from it in an consistent way
-# (e.g. START_DATE_TIME_STRING matches START_DATE_TIME_NUMBER even if the second advances in between):
+# where other date and time formats can be derived from in a consistent way.
+# One cannot call the 'date' command several times because then there would be
+# a small probability that the clock advances by a second between two 'date' calls
+# and then START_DATE_TIME_STRING would be a bit later than START_DATE_TIME_NUMBER
+# where "a bit later" could be even the next day when midnight passes in between:
 readonly START_SECONDS=$( date +%s )
 readonly START_DATE_TIME_NUMBER=$( date -d@$START_SECONDS +%Y%m%d%H%M%S )
 readonly START_DATE_TIME_STRING=$( date -d@$START_SECONDS +'%F %T' )
