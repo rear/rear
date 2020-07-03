@@ -21,8 +21,7 @@ test "$DISKLAYOUT_FILE" || DISKLAYOUT_FILE=$VAR_DIR/layout/disklayout.conf
 test -e "$DISKLAYOUT_FILE" && LogPrint "Overwriting existing disk layout file $DISKLAYOUT_FILE"
 
 # Initialize disklayout.conf:
-# See lib/layout-functions.sh how DATE is set: DATE=$( date +%Y%m%d%H%M%S )
-echo "Disk layout dated $DATE (YYYYmmddHHMMSS)" >$DISKLAYOUT_FILE
+echo "Disk layout dated $START_DATE_TIME_NUMBER (YYYYmmddHHMMSS)" >$DISKLAYOUT_FILE
 # Have the actual storage layout as header comment in disklayout.conf
 # so that it is easier to make sense of the values in the subsequent entries.
 # First try the command
