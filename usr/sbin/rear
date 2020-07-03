@@ -65,8 +65,6 @@ readonly RELEASE_DATE=Git
 readonly START_SECONDS=$( date +%s )
 readonly START_DATE_TIME_NUMBER=$( date -d@$START_SECONDS +%Y%m%d%H%M%S )
 readonly START_DATE_TIME_STRING=$( date -d@$START_SECONDS +'%F %T' )
-# Used in framework-functions.sh to calculate the time spent executing rear:
-readonly STARTTIME=$SECONDS
 
 # Provide the command line options in an array so that other scripts may read them:
 readonly CMD_OPTS=( "$@" )
