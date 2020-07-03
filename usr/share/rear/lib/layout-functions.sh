@@ -1,36 +1,30 @@
 # Utility functions for the system layout processing.
 
-# TODO: Why not using ISO 8601 date 'date +%F' ?
-# Be exact to one second to ensure saved original files
-# of directly subsequent 'rear WORKFLOW' are saved with different filenames
-# that could help to avoid confusion when debugging issues later:
-DATE=$( date +%Y%m%d%H%M%S )
-
 # Each file will be only saved once by save_original_file()
 # and all subsequent save_original_file() for the same file do nothing
 # because each saved file is remembered in the SAVED_ORIGINAL_FILES array:
 SAVED_ORIGINAL_FILES=()
 SAVED_ORIGINAL_FILE_SUFFIX="orig"
 
-# Save the original content of the file $1 to $1.$DATE.$2.orig
-# or to $1.$DATE.$WORKFLOW.$MASTER_PID.orig when no $2 is specified:
+# Save the original content of the file $1 to $1.$START_DATE_TIME_NUMBER.$2.orig
+# or to $1.$START_DATE_TIME_NUMBER.$WORKFLOW.$MASTER_PID.orig when no $2 is specified:
 save_original_file() {
     local filename="$1"
     test -r "$filename" || return 1
     IsInArray "$filename" "${SAVED_ORIGINAL_FILES[@]}" && return 0
     local extension="$2"
     test "$extension" || extension=$WORKFLOW.$MASTER_PID
-    local saved_original_file="$filename.$DATE.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
+    local saved_original_file="$filename.$START_DATE_TIME_NUMBER.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
     cp -ar $filename $saved_original_file && SAVED_ORIGINAL_FILES+=( "$filename" )
 }
 
 # Restore the saved original content of the original file named $1
-# that was saved as $1.$DATE.$2.orig or $1.$DATE.$WORKFLOW.$MASTER_PID.orig
+# that was saved as $1.$START_DATE_TIME_NUMBER.$2.orig or $1.$START_DATE_TIME_NUMBER.$WORKFLOW.$MASTER_PID.orig
 restore_original_file() {
     local filename="$1"
     local extension="$2"
     test "$extension" || extension=$WORKFLOW.$MASTER_PID
-    local saved_original_file="$filename.$DATE.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
+    local saved_original_file="$filename.$START_DATE_TIME_NUMBER.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
     test -r "$saved_original_file" || return 1
     cp -ar $saved_original_file $filename
 }
