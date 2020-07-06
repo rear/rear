@@ -745,7 +745,7 @@ preferably with full debug information via 'rear -D $WORKFLOW'
 # When $? is before $( COMMAND2 ) it evaluates to the exit code of COMMAND1.
 # When $? is after $( COMMAND2 ) it evaluates to the exit code of COMMAND2.
 # At least with bash-4.4 in openSUSE Leap 15.1 one gets
-#   # cat QQQ || echo "ERROR $? $( grep -Q ' / ' /etc/fstab ) $?" 
+#   # cat QQQ || echo "ERROR $? $( grep -Q '/' /etc/fstab ) $?" 
 #   cat: QQQ: No such file or directory
 #   grep: invalid option -- 'Q'
 #   Usage: grep [OPTION]... PATTERN [FILE]...
@@ -753,7 +753,7 @@ preferably with full debug information via 'rear -D $WORKFLOW'
 #   ERROR 1  2
 # when COMMAND1 fails with exit code 1 and COMMAND2 fails with exit code 2
 # versus
-#   # cat QQQ || echo "ERROR $? $( grep -q ' / ' /etc/fstab ) $?" 
+#   # cat QQQ || echo "ERROR $? $( grep -q '/' /etc/fstab ) $?" 
 #   cat: QQQ: No such file or directory
 #   ERROR 1  0
 # when COMMAND1 fails with exit code 1 and COMMAND2 succeeds.
