@@ -1,24 +1,38 @@
 # 500_restore_ssc.sh
 # Purpose: Make Secure Socket Communication useable after restoring the client system
 
-SSCPATH=/etc/opt/omni/client/sscertificates
-OMNICC=/opt/omni/bin/omnicc
-
 # Only needed for Data Protector 10.x and later with Secure Communication is configured
-if test -s /etc/opt/omni/client/ssconfig; then
+test -s /etc/opt/omni/client/ssconfig || return 0
 
-    cp $v ${SSCPATH}/localhost_cert.pem /mnt/local/${SSCPATH}/localhost_cert.pem || Error "Could not copy localhost_cert.pem"
-    cp $v ${SSCPATH}/localhost_key.pem  /mnt/local/${SSCPATH}/localhost_key.pem  || Error "Could not copy localhost_key.pem"
+local sscpath=/etc/opt/omni/client/sscertificates
+local certfile=$sscpath/localhost_cert.pem
+local keyfile=$sscpath/localhost_key.pem
 
-    if test -s /mnt/local/${SSCPATH}/localhost_cert.pem -a -s /mnt/local/${SSCPATH}/localhost_key.pem
-	    
-        LogPrint "Client certificate properly restored."
-	  
-    else
+# Nothing to do when the certificate files already exist in the recreated system:
+test -s $TARGET_FS_ROOT/$certfile -a -s $TARGET_FS_ROOT/$keyfile && return
 
-        LogPrint "Client certificate not properly restored. A new certificate will be generated now."
-        chroot /mnt/local ${OMNICC} -secure_comm -regenerate_cert
-	chroot /mnt/local ${OMNICC} -secure_comm -get_fingerprint
-        LogPrint "Run omnicc -secure_comm -configure_peer <Client> on the Cell Manager after rebooting the client system"
+# Tell what will be done so that subsequent (error) messages make sense for the user:
+LogPrint "Restoring Data Protector client certificate ($certfile $keyfile)"
 
+# Inform the user but do not error out here at this late state of "rear recover"
+# when it failed to copy specific files into the recreated system:
+cp $v $certfile $TARGET_FS_ROOT/$certfile || LogPrintError "Failed to copy $certfile"
+cp $v $keyfileS $TARGET_FS_ROOT/$keyfile || LogPrintError "Failed to copy $keyfile"
+
+# All is done when the certificate files exist now in the recreated system:
+test -s $TARGET_FS_ROOT/$certfile -a -s $TARGET_FS_ROOT/$keyfile && return
+
+LogPrint "Client certificate not properly restored. A new certificate will be generated now"
+local omnicc=/opt/omni/bin/omnicc
+# Inform the user but do not error out here at this late state of "rear recover"
+# when it failed to generate the certificate:
+if ! chroot $TARGET_FS_ROOT $omnicc -secure_comm -regenerate_cert ; then
+    LogPrintError "Failed to regenerate certificate"
+    return 1
 fi
+if ! chroot $TARGET_FS_ROOT $omnicc -secure_comm -get_fingerprint ; then
+    LogPrintError "Failed to get fingerprint"
+    return 1
+fi
+LogPrint "Generated new Data Protector client certificate"
+LogPrint "Run 'omnicc -secure_comm -configure_peer <Client>' on the Cell Manager after rebooting the client system"
