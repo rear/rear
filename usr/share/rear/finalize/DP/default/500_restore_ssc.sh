@@ -12,7 +12,7 @@ local keyfile=$sscpath/localhost_key.pem
 test -s $TARGET_FS_ROOT/$certfile -a -s $TARGET_FS_ROOT/$keyfile && return 0
 
 # Tell what will be done so that subsequent (error) messages make sense for the user:
-LogPrint "Restoring Data Protector client certificate:
+LogPrint "Restoring Data Protector client certificate:"
 LogPrint "- $certfile"
 LogPrint "- $keyfile"
 
