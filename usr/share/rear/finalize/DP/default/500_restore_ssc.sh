@@ -13,8 +13,8 @@ test -s $TARGET_FS_ROOT/$certfile -a -s $TARGET_FS_ROOT/$keyfile && return 0
 
 # Tell what will be done so that subsequent (error) messages make sense for the user:
 LogPrint "Restoring Data Protector client certificate:"
-LogPrint "- $certfile"
-LogPrint "- $keyfile"
+LogPrint "$certfile"
+LogPrint "$keyfile"
 
 # Inform the user but do not error out here at this late state of "rear recover"
 # when it failed to copy specific files into the recreated system:
@@ -36,5 +36,5 @@ if ! chroot $TARGET_FS_ROOT $omnicc -secure_comm -get_fingerprint ; then
     LogPrintError "Failed to get fingerprint"
     return 1
 fi
-LogPrint "Generated new Data Protector client certificate"
+LogPrint "Generated a new Data Protector client certificate"
 LogPrint "Run 'omnicc -secure_comm -configure_peer <Client>' on the Cell Manager after rebooting the client"
