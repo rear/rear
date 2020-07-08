@@ -1,7 +1,15 @@
 # 500_restore_ssc.sh
-# Purpose: Make Secure Socket Communication useable after restoring the client system
+# Purpose:
+# Make Secure Socket Communication useable after restoring the client system.
+# Reasoning:
+# The client certificate is currently excluded from a Data Protector backup due to security concerns.
+# This means it is not restored using BACKUP=DP. This might change within Data Protector (in the future).
+# The current implementation in ReaR will get the required files from the running client,
+# use it during "rear recover" and place it on the recovered/recreated system (if not found there).
+# This allows to resume backup and restore operation without manual intervention.
+# The current implementation will not replace the certificate if it gets restored using BACKUP=DP (in the future).
 
-# Only needed for Data Protector 10.x and later with Secure Communication is configured
+# Only needed for Data Protector 10.x and later when Secure Communication is configured:
 test -s /etc/opt/omni/client/ssconfig || return 0
 
 local sscpath=/etc/opt/omni/client/sscertificates
