@@ -17,7 +17,7 @@ COPY_AS_IS_EXCLUDE+=( "$SHARE_DIR" "$VAR_DIR" "$LOG_DIR" )
 
 local progs_to_exclude=()
 # networking
-progs_to_exclude+=( arping curl dhclient dhclient-script ethtool ifconfig ip nameif netcat netstat nslookup route rsync scp sftp ssh strace tar traceroute vi )
+progs_to_exclude+=( arping curl dhclient dhclient-script efibootmgr ethtool ifconfig ip nameif netcat netstat nslookup route rsync scp sftp ssh strace tar traceroute vi )
 # file system tools
 progs_to_exclude+=( btrfs cfdisk fdisk fsck 'fsck\..*' gdisk mkfs 'mkfs\..*' parted sfdisk tune2fs '.*fsck' )
 # others

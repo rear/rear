@@ -2,7 +2,7 @@
 
 has_binary sedutil-cli || return 0
 
-PROGS+=( sedutil-cli lsblk efibootmgr )
+PROGS+=( sedutil-cli lsblk )
 KERNEL_CMDLINE+=" libata.allow_tpm=1"
 
 # Exclude specific udev rules producing error messages when sedutil-cli accesses disks.
