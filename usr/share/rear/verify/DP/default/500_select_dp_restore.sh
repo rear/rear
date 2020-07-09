@@ -1,5 +1,4 @@
-##############################################################################
-#
+# 500_select_dp_restore.sh
 # Select dataprotector backup to be restored
 #
 # Ends in:
@@ -51,7 +50,7 @@ DPChooseBackup() {
   else
     HOST="`hostname`"
   fi >&2
-  LogPrint "Scanning for DP backups for Host ${HOST}"
+  LogPrint "Scanning for protected backups for client ${HOST}"
   DPGetBackupList $HOST > $TMP_DIR/backup.list
   > $TMP_DIR/backup.list.part
 
@@ -63,9 +62,9 @@ DPChooseBackup() {
 
   while true; do
     LogPrint ""
-    LogPrint "Found DP-Backup:"
+    LogPrint "Found Backup:"
     LogPrint ""
-    LogPrint "  [H] Host........: $HOST"
+    LogPrint "  [C] Client......: $HOST"
     LogPrint "  [D] Datalist....: $DATALIST"
     LogPrint "  [S] Session.....: $SESSION"
     LogPrint "      Device(s)...: $DEVS"
@@ -74,7 +73,7 @@ DPChooseBackup() {
     unset REPLY
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
     # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
-    read -t $WAIT_SECS -r -n 1 -p "press ENTER or choose H,D,S [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
+    read -t $WAIT_SECS -r -n 1 -p "press ENTER or choose C,D,S [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
 
     if test -z "${REPLY}"; then
       echo $HOST > $TMP_DIR/dp_recovery_host
@@ -83,7 +82,7 @@ DPChooseBackup() {
       echo $DEVS > $TMP_DIR/dp_recovery_devs
       LogPrint "ok"
       return
-    elif test "${REPLY}" = "h" -o "${REPLY}" = "H"; then
+    elif test "${REPLY}" = "c" -o "${REPLY}" = "C"; then
       DPChangeHost
       return
     elif test "${REPLY}" = "d" -o "${REPLY}" = "D"; then
@@ -117,7 +116,7 @@ DPChangeHost() {
     UserOutput ""
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
     # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
-    read -r -p "Enter host: " 0<&6 1>&7 2>&8
+    read -r -p "Enter client name: " 0<&6 1>&7 2>&8
     if test -z "${REPLY}"; then
       DPChooseBackup
       return
@@ -136,7 +135,7 @@ DPChangeDataList() {
   while test $valid -eq 0; do
     LogPrint ""
     LogPrint ""
-    LogPrint "Available datalists for host:"
+    LogPrint "Available datalists for client:"
     LogPrint ""
     i=0
     cat $TMP_DIR/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | while read s; do

@@ -1,5 +1,4 @@
-
-# restore/DP/default/460_press_y_to_continue.sh
+# 460_press_y_to_continue.sh
 
 unset REPLY
 while true ; do
