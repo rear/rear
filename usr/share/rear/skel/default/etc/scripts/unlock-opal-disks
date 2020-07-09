@@ -177,6 +177,16 @@ for device in "${devices[@]}"; do
     fi
 done
 
+if [[ "$OPAL_PBA_UNLOCK_MODE" == "permanent" ]]; then
+    # Unlock devices permanently. A workaround mode for systems requiring a power cycle after transient unlocking.
+    unlock_command=opal_device_deactivate_locking
+    result_state_message="unlocked permanently"
+else
+    # Unlock devices transiently until powering off. This is the normal operation for protection at rest.
+    unlock_command=opal_device_unlock
+    result_state_message="unlocked"
+fi
+
 # Ask for a password, unlock TCG Opal 2-compliant disks, reboot if successful
 if (( device_count == 1 )); then
     password_prompt="Enter password to unlock disk"
@@ -197,14 +207,14 @@ while (( attempt < max_authentications )); do
     # that this is intentional and will be dealt with by other means.
     declare -i unlocked_device_count=0
     for device in "${devices[@]}"; do
-        opal_device_unlock "$device" "$password" >/dev/null && unlocked_device_count+=1
+        "$unlock_command" "$device" "$password" >/dev/null && unlocked_device_count+=1
     done
 
     if (( unlocked_device_count > 0 )); then
         if (( device_count == 1 && unlocked_device_count == 1 )); then
-            display_message "Disk unlocked, rebooting..."
+            display_message "Disk $result_state_message, rebooting..."
         else
-            display_message "$unlocked_device_count of $device_count disks unlocked, rebooting..."
+            display_message "$unlocked_device_count of $device_count disks $result_state_message, rebooting..."
         fi
         if type -p efibootmgr &>/dev/null; then
             # Workaround for EFI firmware glitch which prevents booting the real OS after unlocking SEDs.
