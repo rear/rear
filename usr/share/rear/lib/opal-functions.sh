@@ -218,6 +218,20 @@ function opal_device_reactivate_locking() {
     # and re-enable the MBR.
     # Returns 0 on success.
 
+    # Explicitly issuing an unlock command before reactivating locking seems strange as the device is not supposed
+    # to be locked currently. However, this extra unlock command ensures that the device remains in an
+    # unlocked state when locking is reactivated.
+    # Otherwise, if (1) a system boots up with a locked device, (2) locking is deactivated, (3) locking is reactivated
+    # without issuing an extra unlock command before, the device will lock immediately. A locked device may trigger lots
+    # of kernel disk access errors:
+    #    [...]
+    #    kernel: ata1.00: status: { DRDY ERR }
+    #    kernel: ata1.00: error: { ABRT }
+    #    kernel: ata1.00: supports DRM functions and may not be fully accessible
+    #    kernel: ata1.00: NCQ Send/Recv Log not supported
+    #    [...]
+    opal_device_unlock "$device" "$password"  # errors are intentionally ignored here
+
     sedutil-cli --enableLockingRange 0 "$password" "$device" && opal_device_enable_mbr "$device" "$password"
 }
 
