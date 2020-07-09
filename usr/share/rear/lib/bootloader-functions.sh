@@ -502,6 +502,7 @@ function create_grub2_cfg {
     test $esp_initrd || esp_initrd="/isolinux/$REAR_INITRD_FILENAME"
 
     cat << EOF
+${grub2_set_root:+"set root=$grub2_set_root"}
 set default="$GRUB2_DEFAULT_BOOT"
 
 insmod all_video

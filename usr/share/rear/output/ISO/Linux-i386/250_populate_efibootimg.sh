@@ -62,7 +62,15 @@ title Relax-and-Recover (no Secure Boot)
 
 EOF
 else
-    # create a grub.cfg
+    # Create a grub.cfg:
+    # Sometimes the search command in GRUB2 used in UEFI ISO does not find the root device.
+    # This was seen at least in Debian Buster running in Qemu
+    # (VirtualBox works fine, RHEL/CentOS in Qemu works fine as well).
+    # The GRUB2 image created by grub-mkstandalone has 'root' set to memdisk, which can't work.
+    # To make ReaR work in this case, set 'root' to a sensible value 'cd0' before trying search
+    # (via ${grub2_set_root:+"set root=$grub2_set_root"} in the create_grub2_cfg function)
+    # cf. https://github.com/rear/rear/issues/2434 and https://github.com/rear/rear/pull/2453
+    grub2_set_root=cd0
     create_grub2_cfg > $efi_boot_tmp_dir/grub.cfg
 fi
 
