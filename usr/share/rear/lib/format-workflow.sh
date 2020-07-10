@@ -76,7 +76,7 @@ WORKFLOW_format () {
             SourceStage "format"
             return 0
         else
-            LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- -f /dev/sdX'"
+            LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- --efi /dev/sdX'"
             LogPrintError "Valid format workflow options are: -e/--efi -f/--force -y/--yes"
             LogPrintError "Use '$PROGRAM format -- --help' for more information."
             Error "No device provided as argument."
