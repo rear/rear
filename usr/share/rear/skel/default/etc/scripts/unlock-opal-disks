@@ -44,7 +44,7 @@ function ask_for_password() {
         fi
 
         if [[ -n "$password" ]]; then
-            [[ "$password" == "$OPAL_PBA_DEBUG_PASSWORD" ]] && exit
+            is_debug_password "$password" && emergency_shell
             break
         else
             display_message "Please enter a non-empty password."
@@ -52,11 +52,30 @@ function ask_for_password() {
     done
 }
 
+function is_debug_password() {
+    local password="${1:?}"
+    # returns true (0) if $password matches the configured debug password.
+    # Will return false (1) if there is no openssl executable to verify the password hash.
+
+    [[ -z "$OPAL_PBA_DEBUG_PASSWORD" ]] && return 1  # debug password not configured
+    type -p openssl &>/dev/null || return 1  # openssl not available
+
+    # Extract hash algorithm and salt from the configured hash signature
+    local method salt _
+    IFS='\$' read -r _ method salt _ <<<"$OPAL_PBA_DEBUG_PASSWORD"
+
+    # Compute signature of the password to verify
+    password_signature="$(openssl passwd -"$method" -salt "$salt" "$password")"
+
+    # Return the verification result
+    [[ "$password_signature" == "$OPAL_PBA_DEBUG_PASSWORD" ]]
+}
+
 error_log="/error-log.$$"
 exec 2> "$error_log"
 
-function emergency_response() {
-    # drop into an emergency shell if this script terminates unexpectedly.
+function emergency_shell() {
+    # drop into an emergency shell, then shutdown.
 
     exec 2>&1
 
@@ -101,9 +120,7 @@ See history for useful commands. Exit the shell to shut down the system.
 
     HISTFILE="$history_file" bash --rcfile "$rc_file"
 
-    display_message "Shutting down..."
-    sleep 3
-    shutdown now
+    exit  # Terminate the shell, initiating a shutdown.
 }
 
 function stop_error_handling() {
@@ -136,8 +153,16 @@ function instant_poweroff() {
     poweroff --force
 }
 
+function handle_termination() {
+    # handle script termination because of an error, interrupt, or a user exiting the debug shell.
 
-trap emergency_response EXIT
+    display_message "Shutting down..."
+    sleep 3
+    instant_poweroff
+}
+
+
+trap handle_termination EXIT
 
 
 if use_plymouth; then
