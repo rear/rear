@@ -36,7 +36,7 @@ WORKFLOW_format () {
                 FORCE=y
                 ;;
             (-h|--help)
-                LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- -f /dev/sdX'"
+                LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- --efi /dev/sdX'"
                 LogPrintError "Valid format workflow options are: -e/--efi -f/--force -y/--yes"
                 # No "rear format failed, check ...rear...log for details" message:
                 EXIT_FAIL_MESSAGE=0
@@ -58,7 +58,7 @@ WORKFLOW_format () {
                 DEVICE=$1
                 ;;
             (*)
-                Error "Argument $1 is not accepted."
+                Error "Argument '$1' not accepted. Use '$PROGRAM format -- --help' for more information."
                 ;;
         esac
         shift
