@@ -24,7 +24,7 @@ MiB_bytes=$(( 1024 * 1024 ))
 if is_true "$EFI" ; then
     LogPrint "The --efi toggle was used with format - making an EFI bootable device '$RAW_USB_DEVICE'"
     # Prompt user for size of EFI system partition on USB disk if no valid value is specified:
-    while ! is_positive_integer $USB_UEFI_PART_SIZE do
+    while ! is_positive_integer $USB_UEFI_PART_SIZE ; do
         # When USB_UEFI_PART_SIZE is empty, do not falsely complain about "Invalid EFI partition size":
         test "$USB_UEFI_PART_SIZE" && LogPrintError "Invalid EFI system partition size USB_UEFI_PART_SIZE='$USB_UEFI_PART_SIZE' (must be positive integer)"
         USB_UEFI_PART_SIZE="$( UserInput -I USB_DEVICE_EFI_PARTITION_MIBS -p "Enter size for EFI system partition on '$RAW_USB_DEVICE' in MiB (default 400 MiB)" )"
