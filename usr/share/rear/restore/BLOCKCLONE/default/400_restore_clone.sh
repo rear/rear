@@ -43,8 +43,12 @@ case "$(basename ${BLOCKCLONE_PROG})" in
         -O $BLOCKCLONE_SOURCE_DEV $backuparchive
     ;;
     (dd)
-        dd $BLOCKCLONE_PROG_OPTS of=$BLOCKCLONE_SOURCE_DEV \
-        if=$backuparchive
+        # Let 'dd' read and write up to 1M=1024*1024 bytes at a time to speed up things
+        # cf. https://github.com/rear/rear/issues/2369 and https://github.com/rear/rear/issues/2458
+        # Have "bs=1M" before BLOCKCLONE_PROG_OPTS because when BLOCKCLONE_PROG_OPTS
+        # contains already e.g. "bs=4k" (cf. doc/user-guide/12-BLOCKCLONE.adoc)
+        # the last of the two "bs=..." settings wins (at least with 'dd' on openSUSE Leap 15.1)
+        dd bs=1M $BLOCKCLONE_PROG_OPTS of=$BLOCKCLONE_SOURCE_DEV if=$backuparchive
     ;;
 esac
 
