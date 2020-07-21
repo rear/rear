@@ -18,7 +18,7 @@ while true ; do
     UserOutput "Please answer 'y' or 'n'"
 done
 
-while true; do
+while true ; do
     CDM_CLUSTER_IP="$(UserInput -I USER_INPUT_CDM_CLUSTER_IP -r -t 0 -p "Enter one of the IP addresses for the replica CDM cluster: ")"
     [[ -n "$CDM_CLUSTER_IP" ]] && break
     PrintError "Please enter a non-empty CDM cluster IP."
@@ -32,23 +32,27 @@ done
 CDM_SUNOS_TAR=rubrik-agent-sunos5.10.sparc.tar.gz
 CDM_SOLARIS_TAR=rubrik-agent-solaris.sparc.tar.gz
 CDM_TAR_FILE=$CDM_SUNOS_TAR
+# FIXME: 'cd /tmp' changes the working directory hardcoded to /tmp but why not to $TMPDIR ?
+# cf. https://github.com/rear/rear/pull/2445/files#r448155637
+# Additionally I <jsmeix@suse.de> am missing the counterpart that changes the working directory
+# back to what it was before, i.e. via 'pushd $TMPDIR' plus 'popd' at the end of the script
+# e.g. as in output/ISO/Linux-ppc64le/820_create_iso_image.sh
+# (careful in case of 'return' after 'pushd': must call the matching 'popd' before 'return'):
 cd /tmp
-/usr/bin/curl $v -fskLOJ https://${CDM_CLUSTER_IP}/connector/${CDM_TAR_FILE} 
-if [[ $? -gt 0 ]];  then
+if ! curl $v -fskLOJ https://${CDM_CLUSTER_IP}/connector/${CDM_TAR_FILE} ; then
     CDM_TAR_FILE=$CDM_SOLARIS_TAR
-    /usr/bin/curl $v -fkLOJ https://${CDM_CLUSTER_IP}/connector/${CDM_TAR_FILE} 
+    if ! curl $v -fkLOJ https://${CDM_CLUSTER_IP}/connector/${CDM_TAR_FILE} ; then
+        Error "Could not download Rubrik agent from https://${CDM_CLUSTER_IP}/connector/${CDM_SUNOS_TAR} or https://${CDM_CLUSTER_IP}/connector/${CDM_SOLARIS_TAR}."
+    fi
 fi
-StopIfError "Could not download Rubrik agent from https://${CDM_CLUSTER_IP}/connector/${CDM_SUNOS_TAR} or https://${CDM_CLUSTER_IP}/connector/${CDM_SOLARIS_TAR}."
 
-/usr/bin/tar $v -xzf  $CDM_TAR_FILE
-StopIfError "Could not extract $CDM_TAR_FILE"
+tar $v -xzf  $CDM_TAR_FILE || Error "Could not extract $CDM_TAR_FILE"
 
 CDM_CERT_FILE=$(find ./ -name "rubrik.crt")
 mv $v ${CDM_KEYS_DIR}/rubrik.crt ${CDM_KEYS_DIR}/rubrik.crt.orig
-cp $v $CDM_CERT_FILE $CDM_KEYS_DIR
-StopIfError "Could not copy replica CDM cluster certificate"
+cp $v $CDM_CERT_FILE $CDM_KEYS_DIR || Error "Could not copy replica CDM cluster certificate"
 
-/usr/bin/chmod $v 600 ${CDM_KEYS_DIR}/rubrik.crt
+chmod $v 600 ${CDM_KEYS_DIR}/rubrik.crt
 
 mv $v ${CDM_KEYS_DIR}/agent.crt ${CDM_KEYS_DIR}/agent.crt.orig
 mv $v ${CDM_KEYS_DIR}/agent.pem ${CDM_KEYS_DIR}/agent.pem.orig
