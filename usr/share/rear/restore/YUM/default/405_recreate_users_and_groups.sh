@@ -20,6 +20,8 @@ IsInArray "yes" "${RECREATE_USERS_GROUPS[@]}" || return
 
 [ -z "$TMPDIR" ] && TMPDIR=$(mktemp -d -t rear_405.XXXXXXXXXXXXXXX)
 
+# Extract the passwd, shadow and group files from our backup to our rescue /tmp
+# so we can use those files to repopulate the users in the target system:
 # Do not show the BACKUP_PROG_CRYPT_KEY value in a log file
 # where BACKUP_PROG_CRYPT_KEY is only used if BACKUP_PROG_CRYPT_ENABLED is true
 # therefore 'Log ... BACKUP_PROG_CRYPT_KEY ...' is used (and not '$BACKUP_PROG_CRYPT_KEY')
@@ -31,13 +33,14 @@ IsInArray "yes" "${RECREATE_USERS_GROUPS[@]}" || return
 # because it is more important to not leak out user secrets into a log file
 # than having stderr error messages when a confidential command fails
 # cf. https://github.com/rear/rear/issues/2155
-# Extract the passwd, shadow and group files from our backup to our rescue /tmp so we can use those files to repopulate the users in the target system
+# Let 'dd' read and write up to 1M=1024*1024 bytes at a time to speed up things
+# cf. https://github.com/rear/rear/issues/2369 and https://github.com/rear/rear/issues/2458
 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
-    dd if=$backuparchive | \
+    dd if=$backuparchive bs=1M | \
         { $BACKUP_PROG_DECRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null | \
         $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TMPDIR -x -f - etc/passwd etc/shadow etc/group
 else
-    dd if=$backuparchive | \
+    dd if=$backuparchive bs=1M | \
         $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $TMPDIR -x -f - etc/passwd etc/shadow etc/group
 fi
 

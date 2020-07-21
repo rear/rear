@@ -81,7 +81,9 @@ if test -f $TMP_DIR/backup.splitted ; then
                 ProgressInfo ""
                 LogPrint "Processing $backup_file_name ..."
                 # The actual feeder program:
-                dd if="$backup_file_path" of="$FIFO"
+                # Let 'dd' read and write up to 1M=1024*1024 bytes at a time to speed up things
+                # cf. https://github.com/rear/rear/issues/2369 and https://github.com/rear/rear/issues/2458
+                dd if="$backup_file_path" of="$FIFO" bs=1M
             else
                 StopIfError "$backup_file_name could not be found on the $vol_name medium!"
             fi
@@ -124,16 +126,18 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                     fi
                 fi
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
-		    LogPrint "Copying restore exlusion file from $TMP_DIR/restore-exclude-list.txt to $TARGET_FS_ROOT/tmp"
+                    LogPrint "Copying restore exlusion file from $TMP_DIR/restore-exclude-list.txt to $TARGET_FS_ROOT/tmp"
                     cp -a $TMP_DIR/restore-exclude-list.txt $TARGET_FS_ROOT/tmp
                     BACKUP_PROG_OPTIONS+=( --exclude-from=/tmp/restore-exclude-list.txt )
                 fi
+                # Let 'dd' read and write up to 1M=1024*1024 bytes at a time to speed up things
+                # cf. https://github.com/rear/rear/issues/2369 and https://github.com/rear/rear/issues/2458
                 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
-                    Log "dd if=$restore_input | $BACKUP_PROG_DECRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose ${BACKUP_PROG_OPTIONS[@]} ${BACKUP_PROG_COMPRESS_OPTIONS[@]} -C / -x -f -"
-                    dd if=$restore_input | { $BACKUP_PROG_DECRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C / -x -f -
+                    Log "dd if=$restore_input bs=1M | $BACKUP_PROG_DECRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose ${BACKUP_PROG_OPTIONS[@]} ${BACKUP_PROG_COMPRESS_OPTIONS[@]} -C / -x -f -"
+                    dd if=$restore_input bs=1M | { $BACKUP_PROG_DECRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C / -x -f -
                 else
-                    Log "dd if=$restore_input | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose ${BACKUP_PROG_OPTIONS[@]} ${BACKUP_PROG_COMPRESS_OPTIONS[@]} -C / -x -f -"
-                    dd if=$restore_input | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C / -x -f -
+                    Log "dd if=$restore_input bs=1M | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose ${BACKUP_PROG_OPTIONS[@]} ${BACKUP_PROG_COMPRESS_OPTIONS[@]} -C / -x -f -"
+                    dd if=$restore_input bs=1M | chroot $TARGET_FS_ROOT/ $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C / -x -f -
                 fi
                 ;;
             (rsync)

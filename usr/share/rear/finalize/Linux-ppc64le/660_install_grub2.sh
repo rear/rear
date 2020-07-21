@@ -168,7 +168,8 @@ for part in $part_list ; do
     # Install GRUB2 on the PPC PReP boot partition if one was found:
     if test "$part" ; then
         LogPrint "Found PPC PReP boot partition $part - installing GRUB2 there"
-        # Erase the first 512 bytes of the PPC PReP boot partition:
+        # Zero out the PPC PReP boot partition
+        # cf. https://github.com/rear/rear/pull/673
         dd if=/dev/zero of=$part
         if chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_install_option $part" ; then
             # In contrast to the above behaviour when GRUB2_INSTALL_DEVICES is specified
