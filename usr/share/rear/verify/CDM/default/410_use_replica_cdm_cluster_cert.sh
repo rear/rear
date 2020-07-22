@@ -1,7 +1,7 @@
 # 410_use_replica_cdm_cluster_cert.sh
-# If restoring from a replica Rubrik (CDM) cluster use it's cert for RBS.
+# If restoring from a replica Rubrik (CDM) cluster use its cert for RBS.
 
-LogPrint "If restoring from a replica Rubrik (CDM) cluster it's cert will be downloaded and used for RBS"
+LogPrint "If restoring from a replica Rubrik (CDM) cluster its cert will be downloaded and used for RBS"
 
 CDM_RBA_DIR=/etc/rubrik
 CDM_KEYS_DIR=${CDM_RBA_DIR}/keys
