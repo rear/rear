@@ -23,7 +23,7 @@ while true ; do
         fi
         break
     fi
-    is_true "$input_value" ; then
+    if is_true "$input_value" ; then
         LogPrint "User confirmed the data is being restored from the original CDM Cluster"
         return 0
     fi
