@@ -43,7 +43,7 @@ create_crypt() {
         # The original keyfile will be restored from the backup and then re-assigned to the LUKS device in the
         # 'finalize' stage.
         # The scheme for generating a temporary keyfile path must be the same here and in the 'finalize' stage.
-        keyfile="${TMPDIR:-/tmp}/LUKS-keyfile-$target_name"
+        keyfile="$TMP_DIR/LUKS-keyfile-$target_name"
         dd bs=512 count=4 if=/dev/urandom of="$keyfile"
         chmod u=rw,go=- "$keyfile"
 
