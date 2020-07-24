@@ -34,7 +34,7 @@ LogPrint "Downloading cert from replica CDM cluster"
 # cf. https://github.com/rear/rear/issues/2441
 CDM_SUNOS_TAR=rubrik-agent-sunos5.10.sparc.tar.gz
 CDM_SOLARIS_TAR=rubrik-agent-solaris.sparc.tar.gz
-pushd $TMPDIR
+pushd $TMP_DIR
 while true ; do
     prompt="Enter one of the IP addresses for the replica CDM cluster (or 'no' to cancel)"
     CDM_CLUSTER_IP="$( UserInput -I CDM_CLUSTER_IP -r -t 0 -p "$prompt" )"
