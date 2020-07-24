@@ -24,9 +24,9 @@ awk '
 while read target_name source_device original_keyfile; do
     Log "Re-assigning keyfile $original_keyfile to LUKS device $target_name ($source_device)"
 
-    # The scheme for generating a temporary keyfile path must be the same here and in the 'layout/prepare' stage.
-    temp_keyfile="${TMPDIR:-/tmp}/LUKS-keyfile-$target_name"
-    [ -f "$temp_keyfile" ] || BugError "temporary keyfile $temp_keyfile not found"
+    # The scheme for generating a temporary keyfile path must be the same here and in the 'layout/prepare' stage:
+    temp_keyfile="$TMP_DIR/LUKS-keyfile-$target_name"
+    test -f "$temp_keyfile" || BugError "temporary LUKS keyfile $temp_keyfile not found"
 
     target_keyfile="$TARGET_FS_ROOT/$original_keyfile"
 
