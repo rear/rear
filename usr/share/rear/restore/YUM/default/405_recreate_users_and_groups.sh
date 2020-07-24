@@ -47,7 +47,7 @@ fi
 RECREATE_USERS=( $( cut -d ':' -f '1' $tmp_dir/etc/passwd ) )
 RECREATE_GROUPS=( $( cut -d ':' -f '1' $tmp_dir/etc/group ) )
 
-# Create a get_entry() function which does same as getent but for our needs here because
+# Create a local get_entry() function which does same as getent but for our needs here because
 # we want to extract entries from our passwd, shadow and group files in $tmp_dir/etc
 get_entry () {
     grep "^$2:" $tmp_dir/etc/$1
@@ -89,8 +89,8 @@ done
 
 # Skip recreating passwords if not explicitly requested:
 if ! IsInArray "passwords" "${RECREATE_USERS_GROUPS[@]}" ; then
-    # Remove our local definition of getent
-    unset -f getent
+    # Unset local function:
+    unset -f get_entry
     return 0
 fi
 
@@ -114,5 +114,5 @@ for u in "${RECREATE_USERS[@]}" ; do
     fi
 done
 
-# Remove our local definition of getent
+# Unset local function:
 unset -f get_entry
