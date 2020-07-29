@@ -55,52 +55,44 @@ get_entry () {
 
 Log "Recreating users: ${RECREATE_USERS[@]}"
 for u in "${RECREATE_USERS[@]}" ; do
-    # go over all users
-    if pwd=$( get_entry passwd "$u" ) ; then
-        # pwd="daemon:x:2:2:Daemon:/sbin:/bin/bash"
-        # if the user exists, add it to the passwd in the target system
-        # skip if this user exists already in the target system
-        user="${pwd%%:*}"
-        if ! grep -q "^$user:" $TARGET_FS_ROOT/etc/passwd ; then
-            echo "$pwd" >>$TARGET_FS_ROOT/etc/passwd
-        fi
-        # strip gid from passwd line
-        pwd="${pwd#*:*:*:}"
-        gid="${pwd%%:*}"
-    else
-        Debug "Could not recreate user '$u' (could not get user info for '$u')"
+    if ! pwd=$( get_entry passwd "$u" ) ; then
+        Debug "Could not recreate user '$u' (could not get its user entry)"
+        continue
     fi
+    # pwd="daemon:x:2:2:Daemon:/sbin:/bin/bash"
+    # If user entry exists, add it to etc/passwd in the target system
+    # skip if this user exists already in the target system:
+    user="${pwd%%:*}"
+    grep -q "^$user:" $TARGET_FS_ROOT/etc/passwd || echo "$pwd" >>$TARGET_FS_ROOT/etc/passwd
+    # strip gid from passwd line
+    pwd="${pwd#*:*:*:}"
+    gid="${pwd%%:*}"
 done
 
 Log "Recreating groups: ${RECREATE_GROUPS[@]}"
 for g in "${RECREATE_GROUPS[@]}" ; do
-    # go over all users
-    if grp=$( get_entry group "$g" ) ; then
-        # grp="daemon:x:2:"
-        # if the group exists, add it to the group in the target system
-        # skip if this group exists already in the target system
-        group="${grp%%:*}"
-        grep -q "^$group:" $TARGET_FS_ROOT/etc/group && continue
-        echo "$grp" >>$TARGET_FS_ROOT/etc/group
-    else
-        Debug "Could not recreate group '$g' (could not get group info for '$g'"
-    fi
+    if ! grp=$( get_entry group "$g" ) ; then
+        Debug "Could not recreate group '$g' (could not get its group entry)"
+        continue
+    fi 
+    # grp="daemon:x:2:"
+    # If group entry exists, add it to etc/group in the target system
+    # skip if this group exists already in the target system:
+    group="${grp%%:*}"
+    grep -q "^$group:" $TARGET_FS_ROOT/etc/group || echo "$grp" >>$TARGET_FS_ROOT/etc/group
 done
 
-# Skip recreating passwords if not explicitly requested:
-if ! IsInArray "passwords" "${RECREATE_USERS_GROUPS[@]}" ; then
-    # Unset local function:
-    unset -f get_entry
-    return 0
-fi
-
-Log "Recreating existing user passwords: ${RECREATE_USERS[@]}"
-for u in "${RECREATE_USERS[@]}" ; do
-    # go over all users
-    if pwd=$( get_entry passwd "$u" ) ; then
+# Recreate passwords only if explicitly requested:
+if IsInArray "passwords" "${RECREATE_USERS_GROUPS[@]}" ; then
+    Log "Recreating passwords for users: ${RECREATE_USERS[@]}"
+    for u in "${RECREATE_USERS[@]}" ; do
+        if ! pwd=$( get_entry passwd "$u" ) ; then
+            Debug "Could not recreate password for user '$u' (could not get its user entry)"
+            continue
+        fi
         # pwd="daemon:x:2:2:Daemon:/sbin:/bin/bash"
-        # if the user exists, recreate the password in the target system
-        # skip if this user doesn't exist in the target system
+        # If the user entry exists, recreate the user's password in the target system
+        # skip if this user doesn't exist in the target system:
         user="${pwd%%:*}"
         grep -q "^$user:" $TARGET_FS_ROOT/etc/passwd || continue
         # strip passwd from shadow line
@@ -108,11 +100,9 @@ for u in "${RECREATE_USERS[@]}" ; do
         pass="${pass#*:}"
         pass="${pass%%:*}"
         # set passwd
-        echo "$user:$pass" | chpasswd -e --root $TARGET_FS_ROOT
-    else
-        Debug "Could not recreate password for user '$u' (could not get user info for '$u')"
-    fi
-done
+        echo "$user:$pass" | chpasswd -e --root $TARGET_FS_ROOT      
+    done
+fi
 
 # Unset local function:
 unset -f get_entry
