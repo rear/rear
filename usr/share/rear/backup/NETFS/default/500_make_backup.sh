@@ -292,7 +292,7 @@ case "$(basename $BACKUP_PROG)" in
             if (( $backup_prog_rc == 1 )); then
                 LogUserOutput "WARNING: $prog ended with return code 1 and below output:
   ---snip---
-$(grep '^tar: ' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | sed -e 's/^/  /' | tail -n3)
+$(sed -n -e '/^tar: .*\(socket ignored\|Removing leading\)/d;/^'"$prog"':/s/^/  /p' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | tail -n3)
   ----------
 This means that files have been modified during the archiving
 process. As a result the backup may not be completely consistent
@@ -304,7 +304,7 @@ backup in order to be sure to safely recover this system.
                 rc=$(cat $FAILING_BACKUP_PROG_RC_FILE)
                 Error "$prog failed with return code $rc and below output:
   ---snip---
-$(grep "^$prog: " "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | sed -e 's/^/  /' | tail -n3)
+$(sed -n -e '/^tar: .*\(socket ignored\|Removing leading\)/d;/^'"$prog"':/s/^/  /p' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | tail -n3)
   ----------
 This means that the archiving process ended prematurely, or did
 not even start. As a result it is unlikely you can recover this
