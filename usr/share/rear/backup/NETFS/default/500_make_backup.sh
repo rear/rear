@@ -36,26 +36,16 @@ if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
     # ('2>/dev/null' should be sufficient here because 'test' does not output on stdout):
     { test "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null || Error "BACKUP_PROG_CRYPT_KEY must be set for backup archive encryption"
     LogPrint "Encrypting backup archive with key defined in BACKUP_PROG_CRYPT_KEY"
+else
+    # The default case is that the backup will not be encrypted:
+    # In any case BACKUP_PROG_CRYPT_OPTIONS must be set and 'cat' is used as dummy program in the pipe
+    # to let the exit code logic via 'pipes_rc=( ${PIPESTATUS[@]} )' and 'backup_prog_shortnames' work:
+    Log "Backup archive will not be encrypted (using 'cat' as dummy program in the pipe)"
+    BACKUP_PROG_CRYPT_OPTIONS="cat"
+    BACKUP_PROG_CRYPT_KEY=""
 fi
 
-# Log what is included in the backup and what is excluded from the backup
-# cf. backup/NETFS/default/400_create_include_exclude_files.sh
-Log "Backup include list (backup-include.txt contents):"
-while read -r backup_include_item ; do
-    test "$backup_include_item" && Log "  $backup_include_item"
-done < $TMP_DIR/backup-include.txt
-Log "Backup exclude list (backup-exclude.txt contents):"
-while read -r backup_exclude_item ; do
-    test "$backup_exclude_item" && Log "  $backup_exclude_item"
-done < $TMP_DIR/backup-exclude.txt
-
 # Check if the backup needs to be splitted or not (on multiple ISOs).
-# Dummy split command when the backup is not splitted (the default case).
-# Let 'dd' read and write up to 1M=1024*1024 bytes at a time to speed up things
-# for example from only 500KiB/s (with the 'dd' default of 512 bytes)
-# via a 100MBit network connection to about its full capacity
-# cf. https://github.com/rear/rear/issues/2369
-SPLIT_COMMAND="dd of=$backuparchive bs=1M"
 if test $ISO_MAX_SIZE ; then
     is_positive_integer $ISO_MAX_SIZE || Error "ISO_MAX_SIZE must be a positive integer value"
     # Tell the user when ISO_MAX_SIZE is less than 600MiB because then things will likely not work
@@ -92,7 +82,27 @@ if test $ISO_MAX_SIZE ; then
     # Split the 'tar' backup (at stdin) in chunks of BACKUP_SPLIT_CHUNK_SIZE MiB using 'backup.tar.gz.' as prefix with numeric suffixes:
     LogPrint "Backup gets split in chunks of $BACKUP_SPLIT_CHUNK_SIZE MiB (ISO_MAX_SIZE $ISO_MAX_SIZE minus recovery system size $RECOVERY_SYSTEM_SIZE)"
     SPLIT_COMMAND="split -d -b ${BACKUP_SPLIT_CHUNK_SIZE}m - ${backuparchive}."
+else
+    # The default case is that the backup will not be split:
+    Log "Backup archive will not be split (using 'dd' as dummy program in the pipe)"
+    # Dummy split command when the backup is not splitted (the default case).
+    # Let 'dd' read and write up to 1M=1024*1024 bytes at a time to speed up things
+    # for example from only 500KiB/s (with the 'dd' default of 512 bytes)
+    # via a 100MBit network connection to about its full capacity
+    # cf. https://github.com/rear/rear/issues/2369
+    SPLIT_COMMAND="dd of=$backuparchive bs=1M"
 fi
+
+# Log what is included in the backup and what is excluded from the backup
+# cf. backup/NETFS/default/400_create_include_exclude_files.sh
+Log "Backup include list (backup-include.txt contents):"
+while read -r backup_include_item ; do
+    test "$backup_include_item" && Log "  $backup_include_item"
+done < $TMP_DIR/backup-include.txt
+Log "Backup exclude list (backup-exclude.txt contents):"
+while read -r backup_exclude_item ; do
+    test "$backup_exclude_item" && Log "  $backup_exclude_item"
+done < $TMP_DIR/backup-exclude.txt
 
 # Used by "tar" method to record which pipe command failed
 FAILING_BACKUP_PROG_FILE="$TMP_DIR/failing_backup_prog"
@@ -111,6 +121,8 @@ FAILING_BACKUP_PROG_RC_FILE="$TMP_DIR/failing_backup_prog_rc"
 # cf. https://github.com/rear/rear/issues/2155
 LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 ProgressStart "Preparing archive operation"
+
+# Begin backup subshell:
 (
 case "$(basename ${BACKUP_PROG})" in
     # tar compatible programs here
@@ -126,13 +138,15 @@ case "$(basename ${BACKUP_PROG})" in
                 -X $TMP_DIR/backup-exclude.txt -C / -c -f - \
                 $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
         else
+            # Use hardcoded 'cat' as dummy when encrypting backup archive is disabled to make it obvious
+            # that neither BACKUP_PROG_CRYPT_OPTIONS nor BACKUP_PROG_CRYPT_KEY are used in this case:
             Log $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
                 --no-wildcards-match-slash --one-file-system \
                 --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}" \
                 $BACKUP_PROG_CREATE_NEWER_OPTIONS \
                 ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
                 -X $TMP_DIR/backup-exclude.txt -C / -c -f - \
-                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $SPLIT_COMMAND
+                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| cat \| $SPLIT_COMMAND
         fi
 
         # Variable used to record the short name of piped commands in case of
@@ -159,6 +173,8 @@ case "$(basename ${BACKUP_PROG})" in
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         else
+            # Use hardcoded 'cat' as dummy when encrypting backup archive is disabled to make it obvious
+            # that neither BACKUP_PROG_CRYPT_OPTIONS nor BACKUP_PROG_CRYPT_KEY are used in this case:
             $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
                 --no-wildcards-match-slash --one-file-system                        \
                 --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
@@ -167,21 +183,20 @@ case "$(basename ${BACKUP_PROG})" in
                 "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                \
                 -X $TMP_DIR/backup-exclude.txt -C / -c -f -                         \
                 $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |               \
+            cat |                                                                   \
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         fi
 
         # Exit code logic:
-        # - never return rc=1 (this is reserved for "tar" warning about modified files)
-        # - process exit code in pipe's reverse order
+        # * don't return rc=1 unless from tar (exit code 1 is reserved for "tar" warning about modified files)
+        # * process exit code in pipe's reverse order
         #   - if last command failed (e.g. "dd"), return an error
         #   - otherwise if previous command failed (e.g. "encrypt"), return an error
         #   ...
         #   - otherwise return "tar" exit code
-        #
         # When an error occurs, record the program name in $FAILING_BACKUP_PROG_FILE
         # and real exit code in $FAILING_BACKUP_PROG_RC_FILE.
-
         let index=${#pipes_rc[@]}-1
         while [ $index -ge 0 ] ; do
             rc=${pipes_rc[$index]}
@@ -191,12 +206,13 @@ case "$(basename ${BACKUP_PROG})" in
                 if [ $rc -eq 1 ] && [ "${backup_prog_shortnames[$index]}" != "tar" ] ; then
                     rc=2
                 fi
+                # Exit the subshell with non-zero exit code:
                 exit $rc
             fi
             # This pipe command succeeded, check the previous one
             let index--
         done
-        # This was a success
+        # Success - exit the subshell with zero exit code:
         exit 0
     ;;
     (rsync)
@@ -221,13 +237,17 @@ case "$(basename ${BACKUP_PROG})" in
             $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
     ;;
 esac 2> "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
-# important trick: the backup prog is the last in each case entry and the case .. esac is the last command
-# in the (..) subshell. As a result the return code of the subshell is the return code of the backup prog!
+# For the rsync and default case the backup prog is the last in the case entry
+# and the case .. esac is the last command in the (..) subshell.
+# As a result the return code of the subshell is the return code of the backup prog.
+# For the tar case (where tar is not the last program) special exit code logic is done.
 ) &
 BackupPID=$!
-starttime=$SECONDS
+# End backup subshell.
 
-sleep 1 # Give the backup software a good chance to start working
+starttime=$SECONDS
+# Give the backup software a good chance to start working:
+sleep 1
 
 # return disk usage in bytes
 function get_disk_used() {
@@ -235,7 +255,7 @@ function get_disk_used() {
     echo $used
 }
 
-# While the backup runs in a sub-process, display some progress information to the user.
+# While the backup runs in a subshell, display some progress information to the user.
 # ProgressInfo texts have a space at the end to get the 'OK' from ProgressStop shown separated.
 test "$PROGRESS_WAIT_SECONDS" || PROGRESS_WAIT_SECONDS=1
 case "$( basename $BACKUP_PROG )" in
@@ -273,8 +293,8 @@ esac
 ProgressStop
 transfertime="$((SECONDS-starttime))"
 
-# harvest return code from background job. The kill -0 $BackupPID loop above should
-# have made sure that this wait won't do any real "waiting" :-)
+# Harvest return code from backup subshell.
+# The kill -0 $BackupPID loop above should have made sure that this wait won't do any real "waiting":
 wait $BackupPID
 backup_prog_rc=$?
 
@@ -282,17 +302,24 @@ if [[ $BACKUP_INTEGRITY_CHECK =~ ^[yY1] && "$(basename ${BACKUP_PROG})" = "tar" 
     (cd $(dirname $backuparchive) && md5sum $(basename $backuparchive) > ${backuparchive}.md5 || md5sum $(basename $backuparchive).?? > ${backuparchive}.md5)
 fi
 
+# TODO: Why do we sleep here after 'wait $BackupPID'?
 sleep 1
 
-# everyone should see this warning, even if not verbose
+# Everyone should see this warning, even if not verbose:
 case "$(basename $BACKUP_PROG)" in
     (tar)
         if (( $backup_prog_rc != 0 )); then
             prog="$(cat $FAILING_BACKUP_PROG_FILE)"
             if (( $backup_prog_rc == 1 )); then
-                LogUserOutput "WARNING: $prog ended with return code 1 and below output:
+                # Filter purely informational tar messages like
+                #   tar: Removing leading '/' from hard link targets
+                #   tar: /path/to/socket: socket ignored
+                # but keep those tar messages that tell why tar exit code is 1 like
+                #   tar: /path/to/file: file changed as we read it
+                # cf. https://github.com/rear/rear/issues/2465
+                LogUserOutput "WARNING: $prog ended with return code 1 and below output (last 10 lines):
   ---snip---
-$(grep '^tar: ' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | sed -e 's/^/  /' | tail -n3)
+$( grep '^tar: ' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | grep -F -v -e 'socket ignored' -e 'Removing leading' | sed -e 's/^/  /' | tail )
   ----------
 This means that files have been modified during the archiving
 process. As a result the backup may not be completely consistent
@@ -302,9 +329,9 @@ backup in order to be sure to safely recover this system.
 "
             else
                 rc=$(cat $FAILING_BACKUP_PROG_RC_FILE)
-                Error "$prog failed with return code $rc and below output:
+                Error "$prog failed with return code $rc and below output (last 10 lines):
   ---snip---
-$(grep "^$prog: " "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | sed -e 's/^/  /' | tail -n3)
+$( grep "^$prog: " "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | grep -F -v -e 'socket ignored' -e 'Removing leading' | sed -e 's/^/  /' | tail )
   ----------
 This means that the archiving process ended prematurely, or did
 not even start. As a result it is unlikely you can recover this
