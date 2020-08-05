@@ -135,6 +135,11 @@ for dummy in "once" ; do
         module=${module#.ko}
         # Continue with the next module if the current one does not exist:
         modinfo $module 1>/dev/null || continue
+        # Continue with the next module if the current one is a kernel builtin module
+        # cf. https://github.com/rear/rear/issues/2414#issuecomment-668632798
+        # Quoting the grep search value is mandatory here ($module might be empty or blank),
+        # cf. "Beware of the emptiness" in https://github.com/rear/rear/wiki/Coding-Style
+        grep -q "$( echo $module | tr '_-' '..' )" /lib/modules/$KERNEL_VERSION/modules.builtin && continue
         # Resolve module dependencies:
         # Get the module file plus the module files of other needed modules.
         # This is currently only a "best effort" attempt because
@@ -168,6 +173,11 @@ done
 for exclude_module in "${EXCLUDE_MODULES[@]}" ; do
     # Continue with the next module if the current one does not exist:
     modinfo $exclude_module 1>/dev/null || continue
+    # Continue with the next module if the current one is a kernel builtin module
+    # cf. https://github.com/rear/rear/issues/2414#issuecomment-668632798
+    # Quoting the grep search value is mandatory here ($exclude_module might be empty or blank),
+    # cf. "Beware of the emptiness" in https://github.com/rear/rear/wiki/Coding-Style
+    grep -q "$( echo $exclude_module | tr '_-' '..' )" /lib/modules/$KERNEL_VERSION/modules.builtin && continue
     # In this case it is ignored when a module exists but 'modinfo -F filename' cannot show its filename
     # because then it is assumed that also no module file had been copied above:
     exclude_module_file="$( modinfo_filename $exclude_module )"
