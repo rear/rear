@@ -133,7 +133,7 @@ for dummy in "once" ; do
         module=${module#.o}
         # Strip trailing ".ko" if there:
         module=${module#.ko}
-        # Continue with the next module if the current one does not exist:
+        # Continue with the next module if the current one does not exist as a module file:
         modinfo $module 1>/dev/null || continue
         # Continue with the next module if the current one is a kernel builtin module
         # cf. https://github.com/rear/rear/issues/2414#issuecomment-668632798
@@ -171,13 +171,11 @@ done
 
 # Remove those modules that are specified in the EXCLUDE_MODULES array:
 for exclude_module in "${EXCLUDE_MODULES[@]}" ; do
-    # Continue with the next module if the current one does not exist:
+    # Continue with the next module only if the current one does not exist as a module file
+    # but do not continue with the next module if the current one is a kernel builtin module
+    # so when a module file exists that gets removed regardless if it is also a builtin module
+    # cf. https://github.com/rear/rear/issues/2414#issuecomment-669115481
     modinfo $exclude_module 1>/dev/null || continue
-    # Continue with the next module if the current one is a kernel builtin module
-    # cf. https://github.com/rear/rear/issues/2414#issuecomment-668632798
-    # Quoting the grep search value is mandatory here ($exclude_module might be empty or blank),
-    # cf. "Beware of the emptiness" in https://github.com/rear/rear/wiki/Coding-Style
-    grep -q "$( echo $exclude_module | tr '_-' '..' )" /lib/modules/$KERNEL_VERSION/modules.builtin && continue
     # In this case it is ignored when a module exists but 'modinfo -F filename' cannot show its filename
     # because then it is assumed that also no module file had been copied above:
     exclude_module_file="$( modinfo_filename $exclude_module )"
