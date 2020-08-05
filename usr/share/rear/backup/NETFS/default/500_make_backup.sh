@@ -135,18 +135,12 @@ case "$(basename ${BACKUP_PROG})" in
                 $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $SPLIT_COMMAND
         fi
 
-        # Variable used to record the short name of piped commands in case of
-        # error, e.g. ( "tar" "cat" "dd" ) in case of unencrypted and unsplit backup.
-        backup_prog_shortnames=(
-            "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
-            "$(basename $(echo "$BACKUP_PROG_CRYPT_OPTIONS" | awk '{ print $1 }'))"
-            "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
-        )
-        for index in ${!backup_prog_shortnames[@]} ; do
-            [ -n "${backup_prog_shortnames[$index]}" ] || BugError "No computed shortname for pipe component $index"
-        done
-
         if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+            backup_prog_shortnames=(
+                "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
+                "$(basename $(echo "$BACKUP_PROG_CRYPT_OPTIONS" | awk '{ print $1 }'))"
+                "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
+            )
             $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
                 --no-wildcards-match-slash --one-file-system                        \
                 --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
@@ -159,6 +153,10 @@ case "$(basename ${BACKUP_PROG})" in
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         else
+            backup_prog_shortnames=(
+                "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
+                "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
+            )
             $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
                 --no-wildcards-match-slash --one-file-system                        \
                 --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
@@ -170,6 +168,15 @@ case "$(basename ${BACKUP_PROG})" in
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         fi
+
+        # Variable used to record the short name of piped commands in case of
+        # error, e.g. ( "tar" "cat" "dd" ) in case of unencrypted and unsplit backup.
+        for index in ${!backup_prog_shortnames[@]} ; do
+            [ -n "${backup_prog_shortnames[$index]}" ] || BugError "No computed shortname for pipe component $index"
+        done
+
+        # Ensure that the numbers of pipe components and return codes match.
+        [ ${#backup_prog_shortnames[@]} -eq ${#pipes_rc[@]} ] || BugError "Mismatching numbers of pipe components and return codes"
 
         # Exit code logic:
         # - never return rc=1 (this is reserved for "tar" warning about modified files)
