@@ -289,10 +289,19 @@ case "$(basename $BACKUP_PROG)" in
     (tar)
         if (( $backup_prog_rc != 0 )); then
             prog="$(cat $FAILING_BACKUP_PROG_FILE)"
+            # Suppress purely informational tar messages from output like
+            #   tar: Removing leading / from member names
+            #   tar: Removing leading / from hard link targets
+            #   tar: /var/spool/postfix/private/discard: socket ignored
+            # but keep actual tar error or warning messages like
+            #    tar: /etc/grub.d/README: file changed as we read it
+            # and show only messages that are prefixed with "$prog:" (like 'tar:' or 'dd:')
+            # which works when 'tar' or 'dd' fail but falsely suppresses messages from 'openssl'
+            # FIXME see https://github.com/rear/rear/pull/2466#discussion_r466347471
             if (( $backup_prog_rc == 1 )); then
-                LogUserOutput "WARNING: $prog ended with return code 1 and below output:
+                LogUserOutput "WARNING: $prog ended with return code 1 and below output (last 5 lines):
   ---snip---
-$(sed -n -e '/^tar: .*\(socket ignored\|Removing leading\)/d;/^'"$prog"':/s/^/  /p' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | tail -n3)
+$( sed -n -e '/^tar: .*\(socket ignored\|Removing leading\)/d;/^'"$prog"':/s/^/  /p' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | tail -n5 )
   ----------
 This means that files have been modified during the archiving
 process. As a result the backup may not be completely consistent
@@ -302,9 +311,9 @@ backup in order to be sure to safely recover this system.
 "
             else
                 rc=$(cat $FAILING_BACKUP_PROG_RC_FILE)
-                Error "$prog failed with return code $rc and below output:
+                Error "$prog failed with return code $rc and below output (last 5 lines):
   ---snip---
-$(sed -n -e '/^tar: .*\(socket ignored\|Removing leading\)/d;/^'"$prog"':/s/^/  /p' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | tail -n3)
+$( sed -n -e '/^tar: .*\(socket ignored\|Removing leading\)/d;/^'"$prog"':/s/^/  /p' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | tail -n5 )
   ----------
 This means that the archiving process ended prematurely, or did
 not even start. As a result it is unlikely you can recover this
