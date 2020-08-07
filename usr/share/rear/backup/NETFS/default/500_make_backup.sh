@@ -111,6 +111,7 @@ FAILING_BACKUP_PROG_RC_FILE="$TMP_DIR/failing_backup_prog_rc"
 # cf. https://github.com/rear/rear/issues/2155
 LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 ProgressStart "Preparing archive operation"
+# Begin backup subshell:
 (
 case "$(basename ${BACKUP_PROG})" in
     # tar compatible programs here
@@ -135,18 +136,12 @@ case "$(basename ${BACKUP_PROG})" in
                 $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $SPLIT_COMMAND
         fi
 
-        # Variable used to record the short name of piped commands in case of
-        # error, e.g. ( "tar" "cat" "dd" ) in case of unencrypted and unsplit backup.
-        backup_prog_shortnames=(
-            "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
-            "$(basename $(echo "$BACKUP_PROG_CRYPT_OPTIONS" | awk '{ print $1 }'))"
-            "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
-        )
-        for index in ${!backup_prog_shortnames[@]} ; do
-            [ -n "${backup_prog_shortnames[$index]}" ] || BugError "No computed shortname for pipe component $index"
-        done
-
         if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+            backup_prog_shortnames=(
+                "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
+                "$(basename $(echo "$BACKUP_PROG_CRYPT_OPTIONS" | awk '{ print $1 }'))"
+                "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
+            )
             $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
                 --no-wildcards-match-slash --one-file-system                        \
                 --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
@@ -159,6 +154,10 @@ case "$(basename ${BACKUP_PROG})" in
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         else
+            backup_prog_shortnames=(
+                "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
+                "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
+            )
             $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
                 --no-wildcards-match-slash --one-file-system                        \
                 --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
@@ -171,17 +170,24 @@ case "$(basename ${BACKUP_PROG})" in
             pipes_rc=( ${PIPESTATUS[@]} )
         fi
 
+        # Variable used to record the short name of piped commands in case of
+        # error, e.g. ( "tar" "cat" "dd" ) in case of unencrypted and unsplit backup.
+        for index in ${!backup_prog_shortnames[@]} ; do
+            [ -n "${backup_prog_shortnames[$index]}" ] || BugError "No computed shortname for pipe component $index"
+        done
+
+        # Ensure that the numbers of pipe components and return codes match.
+        [ ${#backup_prog_shortnames[@]} -eq ${#pipes_rc[@]} ] || BugError "Mismatching numbers of pipe components and return codes"
+
         # Exit code logic:
-        # - never return rc=1 (this is reserved for "tar" warning about modified files)
-        # - process exit code in pipe's reverse order
+        # * don't return rc=1 unless from tar (exit code 1 is reserved for "tar" warning about modified files)
+        # * process exit code in pipe's reverse order
         #   - if last command failed (e.g. "dd"), return an error
         #   - otherwise if previous command failed (e.g. "encrypt"), return an error
         #   ...
         #   - otherwise return "tar" exit code
-        #
         # When an error occurs, record the program name in $FAILING_BACKUP_PROG_FILE
         # and real exit code in $FAILING_BACKUP_PROG_RC_FILE.
-
         let index=${#pipes_rc[@]}-1
         while [ $index -ge 0 ] ; do
             rc=${pipes_rc[$index]}
@@ -191,12 +197,13 @@ case "$(basename ${BACKUP_PROG})" in
                 if [ $rc -eq 1 ] && [ "${backup_prog_shortnames[$index]}" != "tar" ] ; then
                     rc=2
                 fi
+                # Exit the backup subshell with non-zero exit code:
                 exit $rc
             fi
             # This pipe command succeeded, check the previous one
             let index--
         done
-        # This was a success
+        # Success - exit the backup subshell with zero exit code:
         exit 0
     ;;
     (rsync)
@@ -221,13 +228,17 @@ case "$(basename ${BACKUP_PROG})" in
             $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
     ;;
 esac 2> "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
-# important trick: the backup prog is the last in each case entry and the case .. esac is the last command
-# in the (..) subshell. As a result the return code of the subshell is the return code of the backup prog!
+# For the rsync and default case the backup prog is the last in the case entry
+# and the case .. esac is the last command in the backup subshell.
+# As a result the return code of the backup subshell is the return code of the backup prog.
+# For the tar case (where tar is not the last program) special exit code logic is done.
 ) &
 BackupPID=$!
-starttime=$SECONDS
+# End backup subshell.
 
-sleep 1 # Give the backup software a good chance to start working
+starttime=$SECONDS
+# Give the backup software a good chance to start working:
+sleep 1
 
 # return disk usage in bytes
 function get_disk_used() {
@@ -235,7 +246,7 @@ function get_disk_used() {
     echo $used
 }
 
-# While the backup runs in a sub-process, display some progress information to the user.
+# While the backup runs in a subshell, display some progress information to the user.
 # ProgressInfo texts have a space at the end to get the 'OK' from ProgressStop shown separated.
 test "$PROGRESS_WAIT_SECONDS" || PROGRESS_WAIT_SECONDS=1
 case "$( basename $BACKUP_PROG )" in
@@ -282,9 +293,10 @@ if [[ $BACKUP_INTEGRITY_CHECK =~ ^[yY1] && "$(basename ${BACKUP_PROG})" = "tar" 
     (cd $(dirname $backuparchive) && md5sum $(basename $backuparchive) > ${backuparchive}.md5 || md5sum $(basename $backuparchive).?? > ${backuparchive}.md5)
 fi
 
+# TODO: Why do we sleep here after 'wait $BackupPID'?
 sleep 1
 
-# everyone should see this warning, even if not verbose
+# Everyone should see this warning, even if not verbose:
 case "$(basename $BACKUP_PROG)" in
     (tar)
         if (( $backup_prog_rc != 0 )); then
