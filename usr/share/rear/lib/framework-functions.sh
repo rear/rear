@@ -46,6 +46,10 @@ function Source () {
         local saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )"
         set -$DEBUGSCRIPTS_ARGUMENT
     fi
+    # The working directory WORKING_DIR="$( pwd )" when usr/sbin/rear was launched
+    # is also the working directory of all other sourced scripts and config files
+    # cf. https://github.com/rear/rear/issues/2461
+    cd "$WORKING_DIR" || LogPrintError "Failed to 'cd $WORKING_DIR'"
     # The actual work (source the source file):
     # Do not error out here when 'source' fails (i.e. when 'source' returns a non-zero exit code)
     # because scripts usually return the exit code of their last command
