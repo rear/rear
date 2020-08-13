@@ -49,6 +49,10 @@ function Source () {
     # The working directory WORKING_DIR="$( pwd )" when usr/sbin/rear was launched
     # is also the working directory of all other sourced scripts and config files
     # cf. https://github.com/rear/rear/issues/2461
+    # Quoting "$WORKING_DIR" is needed to make it behave fail-safe if WORKING_DIR is empty
+    # because cd "" succeeds without changing the current directory
+    # in contrast to plain cd which changes to the home directory (usually /root)
+    # cf. https://github.com/rear/rear/pull/2478#issuecomment-673500099
     cd "$WORKING_DIR" || LogPrintError "Failed to 'cd $WORKING_DIR'"
     # The actual work (source the source file):
     # Do not error out here when 'source' fails (i.e. when 'source' returns a non-zero exit code)
