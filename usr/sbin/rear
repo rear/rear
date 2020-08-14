@@ -100,6 +100,12 @@ CONFIG_DIR="$REAR_DIR_PREFIX/etc/rear"
 VAR_DIR="$REAR_DIR_PREFIX/var/lib/rear"
 LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
 
+# The current working directory when this script (usr/sbin/rear) is launched
+# is also the working directory of all the other scripts and config files
+# that get sourced via the Source() function in lib/framework-functions.sh
+# cf. https://github.com/rear/rear/issues/2461
+readonly WORKING_DIR="$( pwd )"
+
 # Generic global variables that are not meant to be configured by the user
 # (i.e. that do not belong into usr/share/rear/conf/default.conf),
 # see https://github.com/rear/rear/issues/678
