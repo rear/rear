@@ -17,13 +17,29 @@
 
 #
 # Functions in this section are meant to be used independently from ReaR. They do not rely on any external
-# script code unless. Return codes must be checked by the caller.
+# script code unless stated otherwise. Return codes must be checked by the caller.
 #
 
 function opal_devices() {
     # prints a list of TCG Opal 2-compliant devices.
 
     sedutil-cli --scan | awk '$1 ~ /\/dev\// && $2 ~ /2/ { print $1; }'
+}
+
+function opal_device_disks() {
+    local device="${1:?}"
+    # prints all block devices belonging to the given Opal device.
+    # Normally, this is just the Opal device itself, however, NVME devices have one or more namespaces per primary
+    # device and these namespaces act as disks.
+
+    case "$device" in
+        (*/nvme*)
+            echo "$device"n[0-9]  # consider all namespace block devices (NOTE: relies on nullglob)
+            ;;
+        (*)
+            echo "$device"
+            ;;
+    esac
 }
 
 function opal_device_attributes() {
@@ -140,7 +156,7 @@ function opal_device_regenerate_dek_ERASING_ALL_DATA() {
     # This is recommended initially to ensure that the data encryption key is not known by any third party.
     # Returns 0 on success.
 
-    sedutil-cli --rekeyLockingRange 0 "$password" "$device" && partprobe "$device"
+    sedutil-cli --rekeyLockingRange 0 "$password" "$device" && partprobe $(opal_device_disks "$device")
 }
 
 function opal_device_factory_reset_ERASING_ALL_DATA() {
@@ -148,7 +164,7 @@ function opal_device_factory_reset_ERASING_ALL_DATA() {
     local password="${2:?}"
     # factory-resets the device, ERASING ALL DATA ON THE DRIVE, returns 0 on success
 
-    sedutil-cli --reverttper "$password" "$device" && partprobe "$device"
+    sedutil-cli --reverttper "$password" "$device" && partprobe $(opal_device_disks "$device")
 }
 
 function opal_device_load_pba_image() {
@@ -172,7 +188,7 @@ function opal_device_disable_mbr() {
     local password="${2:?}"
     # disables the device's shadow MBR, returns 0 on success.
 
-    sedutil-cli --setMBREnable off "$password" "$device" && partprobe "$device"
+    sedutil-cli --setMBREnable off "$password" "$device" && partprobe $(opal_device_disks "$device")
 }
 
 function opal_device_enable_mbr() {
@@ -189,7 +205,7 @@ function opal_device_hide_mbr() {
     # hides the device's shadow MBR if one has been enabled, does nothing otherwise.
     # Returns 0 on success.
 
-    sedutil-cli --setMBRDone on "$password" "$device" && partprobe "$device"
+    sedutil-cli --setMBRDone on "$password" "$device" && partprobe $(opal_device_disks "$device")
 }
 
 function opal_device_unlock() {

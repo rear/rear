@@ -221,7 +221,9 @@ generate_layout_dependencies() {
             opaldisk)
                 dev=$(echo "$remainder" | cut -d " " -f "1")
                 add_component "opaldisk:$dev" "opaldisk"
-                add_dependency "$dev" "opaldisk:$dev"
+                for disk in $(opal_device_disks "$dev"); do
+                    add_dependency "$disk" "opaldisk:$dev"
+                done
                 ;;
         esac
     done < $LAYOUT_FILE
