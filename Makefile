@@ -84,7 +84,7 @@ Relax-and-Recover make variables (optional):\n\
 clean:
 	rm -Rf dist build
 	rm -f build-stamp
-	make -C doc clean
+	$(MAKE) -C doc clean
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
@@ -107,11 +107,11 @@ validate:
 
 man:
 	@echo -e "\033[1m== Prepare manual ==\033[0;0m"
-	make -C doc man
+	$(MAKE) -C doc man
 
 doc:
 	@echo -e "\033[1m== Prepare documentation ==\033[0;0m"
-	make -C doc docs
+	$(MAKE) -C doc docs
 
 install-config:
 	@echo -e "\033[1m== Installing configuration ==\033[0;0m"
@@ -144,7 +144,7 @@ install-var:
 
 install-doc:
 	@echo -e "\033[1m== Installing documentation ==\033[0;0m"
-	make -C doc install
+	$(MAKE) -C doc install
 	sed -i -e 's,/etc,$(sysconfdir),' \
 		-e 's,/usr/sbin,$(sbindir),' \
 		-e 's,/usr/share,$(datadir),' \
