@@ -1,7 +1,7 @@
 # Automatically exclude multipath devices
 if is_true $AUTOEXCLUDE_MULTIPATH ; then
     while read multipath device devices junk ; do
-        Log "Automatically excluding multipath device $device."
+        Log "Automatically excluding multipath device $device"
         mark_as_done "$device"
         mark_tree_as_done "$device"
     done < <(grep ^multipath $LAYOUT_FILE)
@@ -15,7 +15,7 @@ if [[ "$AUTOEXCLUDE_PATH" ]] ; then
     for exclude in "${AUTOEXCLUDE_PATH[@]}" ; do
         while read fs device mountpoint junk ; do
             if [[ "${mountpoint#${exclude%/}/}" != "$mountpoint" ]] ; then
-                Log "Automatically excluding filesystem $mountpoint."
+                Log "Automatically excluding filesystem $mountpoint"
                 mark_as_done "fs:$mountpoint"
                 mark_tree_as_done "fs:$mountpoint"
                 ### by excluding the filesystem, the device will be excluded by the
@@ -30,7 +30,7 @@ if [[ "$AUTOEXCLUDE_USB_PATH" ]] ; then
     for exclude in "${AUTOEXCLUDE_USB_PATH[@]}" ; do
         while read fs device mountpoint junk ; do
             if [[ "$exclude" = "$mountpoint" ]] ; then
-                Log "Automatically excluding filesystem $mountpoint (USB device $device)."
+                Log "Automatically excluding filesystem $mountpoint (USB device $device)"
                 mark_as_done "fs:$mountpoint"
                 mark_tree_as_done "fs:$mountpoint"
                 ### by excluding the filesystem, the device will also be excluded
@@ -110,7 +110,7 @@ while read multipath device dm_size label slaves junk ; do
     IFS=$OIFS
 
     for slave in "${devices[@]}" ; do
-        Log "Excluding multipath slave $slave."
+        Log "Excluding multipath slave $slave"
         mark_as_done "$slave"
         ### the slave can have partitions, also exclude them
         while read child parent junk ; do
