@@ -45,14 +45,28 @@ while read target_name junk ; do
     # LUKS version 2 is not yet suppported, see https://github.com/rear/rear/issues/2204
     # When LUKS version 2 is used the above code fails at least to determine the hash value
     # so we use an empty hash value as a simple test if gathering crypt information was successful:
-    test "$hash" || Error "No hash value for LUKS device '$target_name' at '$source_device' (only LUKS version 1 is supported)"
+    if ! test "$hash" ; then
+        # Inform the user and write the available info as comment to disklayout.conf so that the user could manually adapt it
+        # but do not error out here because there is no user-friendly way to skip LUKS2 volumes during "rear mkrescue"
+        # and LUKS2 volumes must nnot be automatically (or even silently) skipped during "rear mkrescue"
+        # to let the user find out later (when it is too late) during "rear recover" that LUKS2 volumes are not supported.
+        # The only way to not let "rear mkrescue" process LUKS2 volumes is to 'umount' and 'cryptsetup luksClose' them
+        # before "rear mkrescue" is run so that those volumes are no longer listed by 'dmsetup ls --target crypt'
+        # cf. https://github.com/rear/rear/issues/2491
+        LogPrintError "Error: Incomplete values for LUKS device '$target_name' at '$source_device' (only LUKS version 1 is supported) see $DISKLAYOUT_FILE"
+        echo "# Incomplete values for LUKS device '$target_name' at '$source_device' (only LUKS version 1 is supported):" >> $DISKLAYOUT_FILE
+        echo "#crypt /dev/mapper/$target_name $source_device cipher=$cipher-$mode key_size=$key_size hash=$hash uuid=$uuid $keyfile_option" >> $DISKLAYOUT_FILE
+        continue
+    fi
 
     echo "crypt /dev/mapper/$target_name $source_device cipher=$cipher-$mode key_size=$key_size hash=$hash uuid=$uuid $keyfile_option" >> $DISKLAYOUT_FILE
+    
 done < <( dmsetup ls --target crypt )
 
 # cryptsetup is required in the recovery system if disklayout.conf contains at least one 'crypt' entry
+# (also in case of an incomplete commented '#crypt' entry from a LUKS2 volume for manual setup by the user)
 # see the create_crypt function in layout/prepare/GNU/Linux/160_include_luks_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-grep -q '^crypt ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( cryptsetup ) || true
+grep -q '^#*crypt ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( cryptsetup ) || true
 
