@@ -11,7 +11,7 @@ Log "Saving Encrypted volumes"
 # so we include things in any case so that the user could do a manual setup if needed
 # cf. https://github.com/rear/rear/issues/2491
 # See the create_crypt function in layout/prepare/GNU/Linux/160_include_luks_code.sh
-# what program calls are written to diskrestore.sh abd
+# what program calls are written to diskrestore.sh and
 # see also https://github.com/rear/rear/issues/1963
 REQUIRED_PROGS+=( cryptsetup dmsetup )
 COPY_AS_IS+=( /usr/share/cracklib/\* /etc/security/pwquality.conf )
