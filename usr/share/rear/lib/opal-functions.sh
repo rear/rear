@@ -34,7 +34,8 @@ function opal_device_disks() {
 
     case "$device" in
         (*/nvme*)
-            echo "$device"n[0-9]  # consider all namespace block devices (NOTE: relies on nullglob)
+            # consider all namespace block devices
+            echo "$device"n[1-9] "$device"n[1-9][0-9]  # cover namespace IDs 1..99  (NOTE: relies on nullglob)
             ;;
         (*)
             echo "$device"
