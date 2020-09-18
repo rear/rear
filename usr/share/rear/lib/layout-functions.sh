@@ -241,16 +241,34 @@ add_component() {
     echo "todo $1 $2" >> $LAYOUT_TODO
 }
 
-# Mark device $1 as done.
+# The distinction in the mark_as_done and mark_tree_as_done functions what messages should appear
+# - only in the log file in debug '-d' mode via 'Debug'
+# - in the log file and on the user's terminal in debug '-d' mode via 'DebugPrint'
+# matches the same kind of distinction in the disable_component_... functions
+# in layout/save/default/330_remove_exclusions.sh
+# but no LogPrint is used in the lower-level mark_as_done and mark_tree_as_done functions.
+
+# Mark component $1 as done.
 mark_as_done() {
-    Debug "Marking $1 as done."
+    # The trailing blank in "... $1 " is crucial to not match wrong components
+    # for example the component "... /dev/sda1" must not match accidentally
+    # other components like "... /dev/sda12" in var/lib/rear/layout/disktodo.conf
+    if grep -q "done $1 " $LAYOUT_TODO ; then
+        DebugPrint "Component '$1' is marked as 'done $1' in $LAYOUT_TODO"
+        return 0
+    fi
+    if ! grep -q "todo $1 " $LAYOUT_TODO ; then
+        Debug "Cannot mark component '$1' as done because there is no 'todo $1 ' in $LAYOUT_TODO"
+        return 1
+    fi
+    DebugPrint "Marking component '$1' as done in $LAYOUT_TODO"
     sed -i "s;todo\ $1\ ;done\ $1\ ;" $LAYOUT_TODO
 }
 
-# Mark all devices that depend on $1 as done.
+# Mark all components that depend on component $1 as done.
 mark_tree_as_done() {
-    for component in $(get_child_components "$1") ; do
-        Debug "Marking $component as done (dependent on $1)"
+    for component in $( get_child_components "$1" ) ; do
+        DebugPrint "Marking dependant $component as done because it is a child of component $1"
         mark_as_done "$component"
     done
 }
