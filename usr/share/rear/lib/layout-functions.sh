@@ -268,7 +268,7 @@ mark_as_done() {
 # Mark all components that depend on component $1 as done.
 mark_tree_as_done() {
     for component in $( get_child_components "$1" ) ; do
-        DebugPrint "Marking dependant $component as done because it is a child of component $1"
+        DebugPrint "Dependant component $component is a child of component $1"
         mark_as_done "$component"
     done
 }
