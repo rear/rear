@@ -69,7 +69,7 @@ while read target_name junk ; do
         # The only way to not let "rear mkrescue" process LUKS2 volumes is to 'umount' and 'cryptsetup luksClose' them
         # before "rear mkrescue" is run so that those volumes are no longer listed by 'dmsetup ls --target crypt'
         # cf. https://github.com/rear/rear/issues/2491
-        LogPrintError "Error: Incomplete values for LUKS device '$target_name' at '$source_device' (only LUKS version 1 is supported) see $DISKLAYOUT_FILE"
+        LogPrintError "Incomplete values for LUKS device '$target_name' at '$source_device' (only LUKS version 1 is supported) see $DISKLAYOUT_FILE"
         echo "# Incomplete values for LUKS device '$target_name' at '$source_device' (only LUKS version 1 is supported):" >> $DISKLAYOUT_FILE
         echo "#crypt /dev/mapper/$target_name $source_device cipher=$cipher-$mode key_size=$key_size hash=$hash uuid=$uuid $keyfile_option" >> $DISKLAYOUT_FILE
         continue
