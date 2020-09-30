@@ -396,19 +396,41 @@ test -r "$RUNTIME_LOGFILE" && mv -f "$RUNTIME_LOGFILE" "$RUNTIME_LOGFILE".old 2>
 # Start logging:
 mkdir -p $LOG_DIR || echo "ERROR: Could not create $LOG_DIR" >&2
 cat /dev/null >"$RUNTIME_LOGFILE"
-# Redirect both STDOUT and STDERR into the log file.
-# To be more on the safe side append to the log file '>>' instead of plain writing to it '>'
-# because when a program (bash in this case) is plain writing to the log file it can overwrite
-# output of a possibly simultaneously running process that likes to append to the log file
-# (e.g. when a background process runs that also uses the ReaR log file for logging):
-exec 2>>"$RUNTIME_LOGFILE"
-# Make stdout the same what stderr already is.
-# This keeps strict ordering of stdout and stderr outputs
-# because now both stdout and stderr use one same file descriptor.
-# The redirection of stdout into the log file was postponed for ReaR v2.2
-# see https://github.com/rear/rear/issues/1398#issuecomment-315318878
-# for ReaR v2.3 redirection of stdout into the log file is re-enabled:
-exec 1>&2
+# In "normal operation" mode stdout and stderr are redirected to /dev/null.
+# In verbose mode stderr is /dev/null but stdout is redirected to the log.
+# In debug modes stdout and stderr are redirected to the log.
+# Cf. https://github.com/rear/rear/issues/2416
+if test "$DEBUG" ; then
+    # To be on the safe side append to the log file '>>' instead of plain writing to it '>'
+    # because when a program (bash in this case) is plain writing to the log file it can overwrite
+    # output of a possibly simultaneously running process that likes to append to the log file
+    # (e.g. when a background process runs that also uses the ReaR log file for logging).
+    exec 2>>"$RUNTIME_LOGFILE"
+    # Make stdout the same what stderr already is.
+    # This keeps strict ordering of stdout and stderr outputs
+    # because now both stdout and stderr use one same file descriptor.
+    # The redirection of stdout into the log file was postponed for ReaR v2.2
+    # see https://github.com/rear/rear/issues/1398#issuecomment-315318878
+    # for ReaR v2.3 redirection of stdout into the log file is re-enabled:
+    exec 1>&2
+else
+    # The debug modes are automatically also verbose
+    # so verbose mode means "verbose mode but not a debug mode".
+    if test "$VERBOSE" ; then
+        # In verbose mode stderr is /dev/null but stdout is redirected to the log
+        # to be in compliance with our $v and $verbose usage (see above)
+        # because it seems command verbose output happens usually on stdout
+        # and "man rear" reads "verbose mode (show more output and run many commands in verbose mode)"
+        # cf. https://github.com/rear/rear/issues/2416#issue-629800799
+        exec 2>/dev/null
+        # To be on the safe side append to the log file '>>' instead of plain writing to it '>'
+        exec 1>>"$RUNTIME_LOGFILE"
+    else
+        # Finally "normal operation" mode means neither a debug mode nor verbose:
+        exec 2>/dev/null
+        exec 1>/dev/null
+    fi
+fi
 
 # Include functions after RUNTIME_LOGFILE is set and readonly
 # so that functions can use a fixed RUNTIME_LOGFILE value:
