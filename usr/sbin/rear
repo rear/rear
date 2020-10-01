@@ -412,9 +412,6 @@ if test "$DEBUG" ; then
     # Make stdout the same what stderr already is.
     # This keeps strict ordering of stdout and stderr outputs
     # because now both stdout and stderr use one same file descriptor.
-    # The redirection of stdout into the log file was postponed for ReaR v2.2
-    # see https://github.com/rear/rear/issues/1398#issuecomment-315318878
-    # for ReaR v2.3 redirection of stdout into the log file is re-enabled:
     exec 1>&2
 else
     exec 2>/dev/null
