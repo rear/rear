@@ -34,7 +34,7 @@ rear \- bare metal disaster recovery and system migration tool
 \fBrear\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fB\-dsSv\fR] [\fB\-D\fR|\fB\-\-debugscripts\fR \fISET\fR] [\fB\-c\fR \fIDIR\fR] [\fB\-C\fR \fICONFIG\fR] [\fB\-r\fR \fIKERNEL\fR] [\-\-] \fICOMMAND\fR [\fIARGS\fR\&...]
 .SH "DESCRIPTION"
 .sp
-Relax\-and\-Recover is the leading Open Source disaster recovery solution\&. It is a modular framework with many ready\-to\-go workflows for common situations\&.
+Relax\-and\-Recover (abbreviated ReaR) is the leading Open Source disaster recovery solution\&. It is a modular framework with many ready\-to\-go workflows for common situations\&.
 .sp
 Relax\-and\-Recover produces a bootable image\&. This image can repartition the system\&. Once that is done it initiates a restore from backup\&. Restores to different hardware are possible\&. Relax\-and\-Recover can therefore be used as a migration tool as well\&.
 .sp
@@ -68,7 +68,7 @@ additional config file; absolute path or relative to config directory
 \-d
 .RS 4
 \fBdebug mode\fR
-(log debug messages to log file \- also sets \-v)
+(run many commands verbosely with debug messages in log file \- also sets \-v)
 .RE
 .PP
 \-D
@@ -107,7 +107,7 @@ kernel version to use (by default use running kernel)
 \-v
 .RS 4
 \fBverbose mode\fR
-(show more output and run many commands in verbose mode)
+(show messages what ReaR is doing on the terminal)
 .RE
 .PP
 \-V \-\-version
