@@ -172,7 +172,7 @@ OUTPUT=*ISO*::
 
 OUTPUT=*PXE*::
 Create on a remote PXE/NFS server the required files (such as
-configuration file, kernel and initrd image
+configuration file, kernel and initrd image)
 
 OUTPUT=*OBDR*::
 Create a bootable OBDR tape (optionally including the backup archive).
