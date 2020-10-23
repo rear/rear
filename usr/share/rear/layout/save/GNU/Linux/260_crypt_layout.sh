@@ -39,19 +39,19 @@ while read target_name junk ; do
     fi
 
     if ! blkid -p -o export $source_device >$TMP_DIR/blkid.output ; then
-        LogPrintError "Error: Cannot get attributes for $target_name ('blkid -p -o export  $source_device' failed)"
+        LogPrintError "Error: Cannot get attributes for $target_name ('blkid -p -o export $source_device' failed)"
         continue
     fi
 
     if ! grep -q "TYPE=crypto_LUKS" $TMP_DIR/blkid.output ; then
-        Log "Skipping $target_name (its $source_device is not a LUKS device)"
+        Log "Skipping $target_name (no 'TYPE=crypto_LUKS' in 'blkid -p -o export $source_device' output)"
         continue
     fi
 
     # Detect LUKS version
-    version=$( grep "VERSION" $TMP_DIR/blkid.output | cut -d= -f2 )
-    if !( test $version = "1" || test $version = "2") ; then
-        LogPrintError "Error: Unsupported LUKS version for $target_name"
+    version=$( grep "" $TMP_DIR/blkid.output | cut -d= -f2 )
+    if ! test "$version" = "1" -o "$version" = "2" ; then
+        LogPrintError "Error: Unsupported LUKS version for $target_name ('blkid -p -o export $source_device' shows 'VERSION $version')"
         continue
     fi
     luks_type=luks$version
