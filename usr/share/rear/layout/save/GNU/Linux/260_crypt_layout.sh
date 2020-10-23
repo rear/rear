@@ -48,8 +48,11 @@ while read target_name junk ; do
         continue
     fi
 
-    # Detect LUKS version
-    version=$( grep "" $TMP_DIR/blkid.output | cut -d= -f2 )
+    # Detect LUKS version:
+    # Remove all non-digits in particular to avoid leading or trailing spaces in the version string
+    # cf. "Beware of the emptiness" in https://github.com/rear/rear/wiki/Coding-Style
+    # that could happen if the blkid output contains "VERSION = 2" so that 'cut -d= -f2' results " 2".
+    version=$( grep "VERSION" $TMP_DIR/blkid.output | cut -d= -f2 | tr -c -d '[:digit:]' )
     if ! test "$version" = "1" -o "$version" = "2" ; then
         LogPrintError "Error: Unsupported LUKS version for $target_name ('blkid -p -o export $source_device' shows 'VERSION=$version')"
         continue
