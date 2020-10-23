@@ -51,7 +51,7 @@ while read target_name junk ; do
     # Detect LUKS version
     version=$( grep "" $TMP_DIR/blkid.output | cut -d= -f2 )
     if ! test "$version" = "1" -o "$version" = "2" ; then
-        LogPrintError "Error: Unsupported LUKS version for $target_name ('blkid -p -o export $source_device' shows 'VERSION $version')"
+        LogPrintError "Error: Unsupported LUKS version for $target_name ('blkid -p -o export $source_device' shows 'VERSION=$version')"
         continue
     fi
     luks_type=luks$version
