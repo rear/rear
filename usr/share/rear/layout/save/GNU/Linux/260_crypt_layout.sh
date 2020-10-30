@@ -63,7 +63,7 @@ while read target_name junk ; do
 
     # Gather crypt information:
     if ! cryptsetup luksDump $source_device >$TMP_DIR/cryptsetup.luksDump ; then
-        LogPrintError "Error: Cannot get LUKS values for $target_name ('cryptsetup luksDump $source_device' failed)"
+        LogPrintError "Error: Cannot get LUKS$version values for $target_name ('cryptsetup luksDump $source_device' failed)"
         continue
     fi
     uuid=$( grep "UUID" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+)$/\1/' )
@@ -98,19 +98,19 @@ while read target_name junk ; do
     # Do not error out instantly here but only report errors here so the user can see all missing values
     # and actually error out at the end of this script if there was one missing value:
     if ! test $cipher ; then
-        LogPrintError "Error: No 'cipher' value for LUKS volume $target_name in $source_device"
+        LogPrintError "Error: No 'cipher' value for LUKS$version volume $target_name in $source_device"
         missing_cryptsetup_option_value="yes"
     fi
     if ! test $key_size ; then
-        LogPrintError "Error: No 'key_size' value for LUKS volume $target_name in $source_device"
+        LogPrintError "Error: No 'key_size' value for LUKS$version volume $target_name in $source_device"
         missing_cryptsetup_option_value="yes"
     fi
     if ! test $hash ; then
-        LogPrintError "Error: No 'hash' value for LUKS volume $target_name in $source_device"
+        LogPrintError "Error: No 'hash' value for LUKS$version volume $target_name in $source_device"
         missing_cryptsetup_option_value="yes"
     fi
     if ! test $uuid ; then
-        LogPrintError "Error: No 'uuid' value for LUKS volume $target_name in $source_device" 
+        LogPrintError "Error: No 'uuid' value for LUKS$version volume $target_name in $source_device" 
         missing_cryptsetup_option_value="yes"
     fi
 
@@ -118,4 +118,4 @@ while read target_name junk ; do
 
 done < <( dmsetup ls --target crypt )
 
-is_true $missing_cryptsetup_option_value && Error "Missing LUKS cryptsetup option value in $DISKLAYOUT_FILE"
+is_true $missing_cryptsetup_option_value && Error "Missing LUKS cryptsetup option value(s) in $DISKLAYOUT_FILE"
