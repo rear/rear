@@ -75,7 +75,7 @@ while read target_name junk ; do
     elif test $luks_type = "luks2" ; then
         cipher=$( grep "cipher:" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+)$/\1/' )
         # More than one keyslot may be defined - use key_size from the first slot
-        key_size=$( grep -m 1 "Cipher key" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+) bits$/\1/' )
+        key_size=$( grep -m 1 "Key:" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+) bits$/\1/' )
         hash=$( grep "Hash" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+)$/\1/' )
     fi
 
