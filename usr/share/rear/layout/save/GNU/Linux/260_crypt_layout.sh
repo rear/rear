@@ -13,7 +13,7 @@ Log "Saving Encrypted volumes"
 REQUIRED_PROGS+=( cryptsetup dmsetup )
 COPY_AS_IS+=( /usr/share/cracklib/\* /etc/security/pwquality.conf )
 
-local missing_cryptsetup_option_value="no"
+local invalid_cryptsetup_option_value="no"
 
 while read target_name junk ; do
 
@@ -83,9 +83,9 @@ while read target_name junk ; do
 
     # Basic checks that the cipher key_size hash uuid values exist
     # cf. https://github.com/rear/rear/pull/2504#issuecomment-718729198
-    # because all values are needed (i.e. none can be empty) during "rear recover"
+    # because some values are needed during "rear recover"
     # to set cryptsetup options in layout/prepare/GNU/Linux/160_include_luks_code.sh
-    # and it seems cryptsetup fails when such values are empty
+    # and it seems cryptsetup fails when options with empty values are specified
     # cf. https://github.com/rear/rear/pull/2504#issuecomment-719479724
     # For example a LUKS1 crypt entry in disklayout.conf looks like
     # crypt /dev/mapper/luks1test /dev/sda7 type=luks1 cipher=aes-xts-plain64 key_size=256 hash=sha256 uuid=1b4198c9-d9b0-4c57-b9a3-3433e391e706 
@@ -95,27 +95,29 @@ while read target_name junk ; do
     # Using plain test to ensure a value is a single non empty and non blank word
     # without quoting because test " " would return zero exit code
     # cf. "Beware of the emptiness" in https://github.com/rear/rear/wiki/Coding-Style
-    # Do not error out instantly here but only report errors here so the user can see all missing values
-    # and actually error out at the end of this script if there was one missing value:
+    # Do not error out instantly here but only report errors here so the user can see all messages
+    # and actually error out at the end of this script if there was one actually invalid value:
     if ! test $cipher ; then
-        LogPrintError "Error: No 'cipher' value for LUKS$version volume $target_name in $source_device"
-        missing_cryptsetup_option_value="yes"
+        LogPrint "No 'cipher' value for LUKS$version volume $target_name in $source_device"
     fi
-    if ! test $key_size ; then
-        LogPrintError "Error: No 'key_size' value for LUKS$version volume $target_name in $source_device"
-        missing_cryptsetup_option_value="yes"
+    if test $key_size ; then
+        if ! is_positive_integer $key_size ; then
+            LogPrintError "Error: 'key_size=$key_size' is no positive integer for LUKS$version volume $target_name in $source_device" 
+            invalid_cryptsetup_option_value="yes"
+        fi
+    else
+        LogPrint "No 'key_size' value for LUKS$version volume $target_name in $source_device"   
     fi
     if ! test $hash ; then
-        LogPrintError "Error: No 'hash' value for LUKS$version volume $target_name in $source_device"
-        missing_cryptsetup_option_value="yes"
+        LogPrint "No 'hash' value for LUKS$version volume $target_name in $source_device"
     fi
     if ! test $uuid ; then
         LogPrintError "Error: No 'uuid' value for LUKS$version volume $target_name in $source_device" 
-        missing_cryptsetup_option_value="yes"
+        invalid_cryptsetup_option_value="yes"
     fi
 
     echo "crypt /dev/mapper/$target_name $source_device type=$luks_type cipher=$cipher key_size=$key_size hash=$hash uuid=$uuid $keyfile_option" >> $DISKLAYOUT_FILE
 
 done < <( dmsetup ls --target crypt )
 
-is_true $missing_cryptsetup_option_value && Error "Missing LUKS cryptsetup option value(s) in $DISKLAYOUT_FILE"
+is_true $invalid_cryptsetup_option_value && Error "Invalid or empty LUKS cryptsetup option value(s) in $DISKLAYOUT_FILE"
