@@ -76,8 +76,15 @@ while read target_name junk ; do
         hash=$( grep "Hash spec" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+)$/\1/' )
     elif test $luks_type = "luks2" ; then
         cipher=$( grep "cipher:" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+)$/\1/' )
-        # More than one keyslot may be defined - use key_size from the first slot
-        key_size=$( grep -m 1 "Key:" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+) bits$/\1/' )
+        # More than one keyslot may be defined - use key_size from the first slot.
+        # Depending on the version the "cryptsetup luksDump" command outputs the key_size value
+        # as a line like
+        #         Key:        512 bits
+        # and/or as a line like
+        #         Cipher key: 512 bits
+        # cf. https://github.com/rear/rear/pull/2504#issuecomment-718729198 and subsequent comments
+        # so we grep for both lines but use only the first match from the first slot:
+        key_size=$( egrep -m 1 "Key:|Cipher key:" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+) bits$/\1/' )
         hash=$( grep "Hash" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+)$/\1/' )
     fi
 
