@@ -7,6 +7,7 @@
 # To avoid delays, this script will perform a hard reset or power-off instead of a regular
 # system shutdown.
 
+shopt -s nullglob extglob  # Enable pattern matching extensions required for 'opal-functions.sh'
 source /usr/share/rear/lib/opal-functions.sh
 [[ -f /.OPAL_PBA_SETTINGS.sh ]] && source /.OPAL_PBA_SETTINGS.sh
 

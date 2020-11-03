@@ -18,6 +18,7 @@
 #
 # Functions in this section are meant to be used independently from ReaR. They do not rely on any external
 # script code unless stated otherwise. Return codes must be checked by the caller.
+# Before using these functions ensure that pattern matching extensions are enabled : 'shopt -s nullglob extglob'.
 #
 
 function opal_devices() {
