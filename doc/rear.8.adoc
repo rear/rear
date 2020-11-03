@@ -16,8 +16,8 @@ rear - bare metal disaster recovery and system migration tool
 
 
 == DESCRIPTION
-Relax-and-Recover is the leading Open Source disaster recovery solution. It
-is a modular framework with many ready-to-go workflows for common situations.
+Relax-and-Recover (abbreviated ReaR) is the leading Open Source disaster recovery solution.
+It is a modular framework with many ready-to-go workflows for common situations.
 
 Relax-and-Recover produces a bootable image. This image can repartition the
 system. Once that is done it initiates a restore from backup. Restores to
@@ -63,7 +63,7 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
     additional config file; absolute path or relative to config directory
 
 -d::
-    *debug mode* (log debug messages to log file - also sets -v)
+    *debug mode* (run many commands verbosely with debug messages in log file - also sets -v)
 
 -D::
     *debugscript mode* (log executed commands via 'set -x' - also sets -v and -d)
@@ -81,7 +81,7 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
     *step-by-step mode* (acknowledge each script individually)
 
 -v::
-    *verbose mode* (show more output and run many commands in verbose mode)
+    *verbose mode* (show messages what ReaR is doing on the terminal)
 
 -V --version::
     version information
@@ -172,7 +172,7 @@ OUTPUT=*ISO*::
 
 OUTPUT=*PXE*::
 Create on a remote PXE/NFS server the required files (such as
-configuration file, kernel and initrd image
+configuration file, kernel and initrd image)
 
 OUTPUT=*OBDR*::
 Create a bootable OBDR tape (optionally including the backup archive).

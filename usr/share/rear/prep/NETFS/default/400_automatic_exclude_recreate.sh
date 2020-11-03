@@ -32,6 +32,7 @@ case $scheme in
         test "/" = "$backup_directory_mountpoint" && Error "URL '$BACKUP_URL' has the backup directory '$backup_directory' in the '/' filesystem which is forbidden."
         # When the mountpoint of the backup directory is not yet excluded add its mountpoint to the EXCLUDE_RECREATE array:
         if ! grep -q "$backup_directory_mountpoint" <<< $( echo ${EXCLUDE_RECREATE[@]} ) ; then
+            DebugPrint "Adding backup directory mountpoint 'fs:$backup_directory_mountpoint' to EXCLUDE_RECREATE"
             EXCLUDE_RECREATE+=( "fs:$backup_directory_mountpoint" )
         fi
         ;;

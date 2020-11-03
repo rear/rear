@@ -662,7 +662,7 @@ function Error () {
     # except small but crucial differences here which is the reason why that kind of code exists two times.
     # First of all restore the ReaR default bash flags and options of MASTER_PID (i.e. of usr/sbin/rear):
     { apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS" ; } 2>/dev/null
-    # Kepp debugscript mode also here if it was used before:
+    # Keep debugscript mode also here if it was used before:
     test "$DEBUGSCRIPTS" && set -$DEBUGSCRIPTS_ARGUMENT
     LogPrint "Error exit of $PROGRAM $WORKFLOW (PID $MASTER_PID) and its descendant processes"
     # Show descendant processes PIDs with their commands in the log

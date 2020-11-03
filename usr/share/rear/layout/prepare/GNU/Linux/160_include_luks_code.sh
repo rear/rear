@@ -13,6 +13,9 @@ create_crypt() {
         value=${option#*=}
 
         case "$key" in
+            type)
+                cryptsetup_options+=" --type $value"
+                ;;
             cipher)
                 cryptsetup_options+=" --cipher $value"
                 ;;
