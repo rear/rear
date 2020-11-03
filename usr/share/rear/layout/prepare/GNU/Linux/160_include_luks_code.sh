@@ -68,9 +68,9 @@ create_crypt() {
         echo "echo \"$password\" | cryptsetup luksFormat --batch-mode $cryptsetup_options $source_device"
         echo "echo \"$password\" | cryptsetup luksOpen $source_device $target_name"
     else
-        echo "LogPrint \"Enter the password for LUKS device $target_name (for 'cryptsetup luksFormat' on $source_device):\""
+        echo "LogPrint \"Set the password for LUKS device $target_name (for 'cryptsetup luksFormat' on $source_device):\""
         echo "cryptsetup luksFormat --batch-mode $cryptsetup_options $source_device"
-        echo "LogPrint \"Again enter the password for LUKS device $target_name (for 'cryptsetup luksOpen' on $source_device):\""
+        echo "LogPrint \"Enter the password for LUKS device $target_name (for 'cryptsetup luksOpen' on $source_device):\""
         echo "cryptsetup luksOpen $source_device $target_name"
     fi
     echo ""
