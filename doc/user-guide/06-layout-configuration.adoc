@@ -630,7 +630,7 @@ lvmvol <volume_group> <name> <size(bytes)> <layout> [key:value ...]
 
 === LUKS Devices ===
 ----------------------------------
-crypt /dev/mapper/<name> <device> type=<type> [cipher=<cipher>] [key_size=<key size>] [hash=<hash function>] uuid=<uuid> [keyfile=<keyfile>] [password=<password>]
+crypt /dev/mapper/<name> <device> [type=<type>] [cipher=<cipher>] [key_size=<key size>] [hash=<hash function>] [uuid=<uuid>] [keyfile=<keyfile>] [password=<password>]
 ----------------------------------
 
 === DRBD ===
