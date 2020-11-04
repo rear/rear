@@ -109,18 +109,19 @@ while read target_name junk ; do
     fi
     if test $key_size ; then
         if ! is_positive_integer $key_size ; then
-            LogPrintError "Error: 'key_size=$key_size' is no positive integer for LUKS$version volume $target_name in $source_device" 
+            LogPrintError "Error: 'key_size=$key_size' is no positive integer for LUKS$version volume $target_name in $source_device"
             invalid_cryptsetup_option_value="yes"
         fi
     else
-        LogPrint "No 'key_size' value for LUKS$version volume $target_name in $source_device"   
+        LogPrint "No 'key_size' value for LUKS$version volume $target_name in $source_device"
     fi
     if ! test $hash ; then
         LogPrint "No 'hash' value for LUKS$version volume $target_name in $source_device"
     fi
     if ! test $uuid ; then
-        LogPrintError "Error: No 'uuid' value for LUKS$version volume $target_name in $source_device" 
-        invalid_cryptsetup_option_value="yes"
+        # Report missig uuid value as an error but do not error out because of it
+        # cf. https://github.com/rear/rear/pull/2506#issuecomment-721757810
+        LogPrintError "Error: No 'uuid' value for LUKS$version volume $target_name in $source_device (mounting it may fail)"
     fi
 
     echo "crypt /dev/mapper/$target_name $source_device type=$luks_type cipher=$cipher key_size=$key_size hash=$hash uuid=$uuid $keyfile_option" >> $DISKLAYOUT_FILE
