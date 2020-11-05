@@ -15,10 +15,10 @@ if test -r "$BREADCRUMB"; then
         mountonly)
             case $WORKFLOW in
                 restoreonly|finalizeonly)
-                    # allowed sequence
+                    # allowed sequence of subsequent workflows after 'mountonly' was run
                     ;;
                 *)
-                    Error "The '$last_run' workflow has already run in this session. Slate no longer clean. Please reboot before calling workflow '$WORKFLOW'!"
+                    Error "The '$last_run' workflow was run. Disk state no longer clean. Reboot to run '$WORKFLOW' from clean disk state."
                     ;;
             esac
     esac
