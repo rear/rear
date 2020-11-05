@@ -123,6 +123,7 @@ while read target_name junk ; do
         # but do not error out here because things can be fixed manually during "rear recover"
         # cf. https://github.com/rear/rear/pull/2506#issuecomment-721757810
         # and https://github.com/rear/rear/pull/2506#issuecomment-722315498
+        # and https://github.com/rear/rear/issues/2509
         LogPrintError "Error: No 'uuid' value for LUKS$version volume $target_name in $source_device (mounting it or booting the recreated system may fail)"
     fi
 
