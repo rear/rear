@@ -16,8 +16,13 @@ create_crypt() {
 
     read crypt target_device source_device options < <( grep "^crypt $device_type " "$LAYOUT_FILE" )
 
-    if ! test -b "$source_device" ; then
-        LogPrintError "Skip recreating LUKS volume $device_type on device '$source_device' that is no block device (see the 'crypt $device_type' entry in $LAYOUT_FILE)"
+    # Careful! One cannot 'test -b $source_device' here at the time when this code is run
+    # because the source device is usually a disk partition block device like /dev/sda2
+    # but disk partition block devices usually do not yet exist (in particular not on a new clean disk)
+    # because partitions are actually created later when the diskrestore.sh script is run
+    # but not here when this code is run which only generates the diskrestore.sh script:
+    if ! test $source_device ; then
+        LogPrintError "Skip recreating LUKS volume $device_type: No source device (see the 'crypt $device_type' entry in $LAYOUT_FILE)"
         # FIXME: The return code is ignored in the create_device() function in lib/layout-functions.sh:
         return 1
     fi
