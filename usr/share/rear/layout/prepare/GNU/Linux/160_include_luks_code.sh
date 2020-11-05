@@ -74,6 +74,11 @@ create_crypt() {
                 if test $value ; then
                     cryptsetup_options+=" --uuid $value"
                 else
+                    # Report a missig uuid value as an error to have the user informed
+                    # but do not error out here because things can be fixed manually during "rear recover"
+                    # cf. https://github.com/rear/rear/pull/2506#issuecomment-721757810
+                    # and https://github.com/rear/rear/pull/2506#issuecomment-722315498
+                    # and https://github.com/rear/rear/issues/2509
                     LogPrintError "Error: No 'uuid' value for recreating LUKS volume $mapping_name on $source_device (mounting it or booting the recreated system may fail)"
                 fi
                 ;;
