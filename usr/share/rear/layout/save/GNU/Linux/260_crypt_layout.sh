@@ -119,9 +119,11 @@ while read target_name junk ; do
         LogPrint "No 'hash' value for LUKS$version volume $target_name in $source_device"
     fi
     if ! test $uuid ; then
-        # Report missig uuid value as an error but do not error out because of it
+        # Report a missig uuid value as an error to have the user informed
+        # but do not error out here because things can be fixed manually during "rear recover"
         # cf. https://github.com/rear/rear/pull/2506#issuecomment-721757810
-        LogPrintError "Error: No 'uuid' value for LUKS$version volume $target_name in $source_device (mounting it may fail)"
+        # and https://github.com/rear/rear/pull/2506#issuecomment-722315498
+        LogPrintError "Error: No 'uuid' value for LUKS$version volume $target_name in $source_device (mounting it or booting the recreated system may fail)"
     fi
 
     echo "crypt /dev/mapper/$target_name $source_device type=$luks_type cipher=$cipher key_size=$key_size hash=$hash uuid=$uuid $keyfile_option" >> $DISKLAYOUT_FILE
