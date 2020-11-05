@@ -24,7 +24,7 @@ create_crypt() {
 
     mapping_name=${target_device#/dev/mapper/}
     if ! test $mapping_name ; then
-        LogPrintError "Skip recreating LUKS volume $device_type: No /dev/mapper/... mapping name (see the 'crypt $device_type' entry in $LAYOUT_FILE)"
+        LogPrintError "Skip recreating LUKS volume $device_type on $source_device: No /dev/mapper/... mapping name (see the 'crypt $device_type' entry in $LAYOUT_FILE)"
         # FIXME: The return code is ignored in the create_device() function in lib/layout-functions.sh:
         return 1
     fi
@@ -43,19 +43,39 @@ create_crypt() {
         # cf. "Beware of the emptiness" in https://github.com/rear/rear/wiki/Coding-Style
         case "$key" in
             (type)
-                test $value && cryptsetup_options+=" --type $value"
+                if test $value ; then
+                    cryptsetup_options+=" --type $value"
+                else
+                    LogPrint "No 'type' value for recreating LUKS volume $mapping_name on $source_device (using 'cryptsetup' default)"
+                fi
                 ;;
             (cipher)
-                test $value && cryptsetup_options+=" --cipher $value"
+                if test $value ; then
+                    cryptsetup_options+=" --cipher $value"
+                else
+                    LogPrint "No 'cipher' value for recreating LUKS volume $mapping_name on $source_device (using 'cryptsetup' default)"
+                fi
                 ;;
             (key_size)
-                test $value && cryptsetup_options+=" --key-size $value"
+                if test $value ; then
+                    cryptsetup_options+=" --key-size $value"
+                else
+                    LogPrint "No 'key_size' value for recreating LUKS volume $mapping_name on $source_device (using 'cryptsetup' default)"
+                fi 
                 ;;
             (hash)
-                test $value && cryptsetup_options+=" --hash $value"
+                if test $value ; then
+                    cryptsetup_options+=" --hash $value"
+                else
+                    LogPrint "No 'hash' value for recreating LUKS volume $mapping_name on $source_device (using 'cryptsetup' default)"
+                fi
                 ;;
             (uuid)
-                test $value && cryptsetup_options+=" --uuid $value"
+                if test $value ; then
+                    cryptsetup_options+=" --uuid $value"
+                else
+                    LogPrintError "Error: No 'uuid' value for recreating LUKS volume $mapping_name on $source_device (mounting it or booting the recreated system may fail)"
+                fi
                 ;;
             (keyfile)
                 test $value && keyfile=$value
@@ -120,7 +140,7 @@ open_crypt() {
 
     mapping_name=${target_device#/dev/mapper/}
     if ! test $mapping_name ; then
-        LogPrintError "Skip opening LUKS volume $device_type: No /dev/mapper/... mapping name (see the 'crypt $device_type' entry in $LAYOUT_FILE)"
+        LogPrintError "Skip opening LUKS volume $device_type on $source_device: No /dev/mapper/... mapping name (see the 'crypt $device_type' entry in $LAYOUT_FILE)"
         # FIXME: The return code is ignored in the do_mount_device() function in lib/layout-functions.sh:
         return 1
     fi
