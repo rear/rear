@@ -131,4 +131,5 @@ while read target_name junk ; do
 
 done < <( dmsetup ls --target crypt )
 
-is_true $invalid_cryptsetup_option_value && Error "Invalid or empty LUKS cryptsetup option value(s) in $DISKLAYOUT_FILE"
+# Let this script return successfully when invalid_cryptsetup_option_value is not true:
+is_true $invalid_cryptsetup_option_value && Error "Invalid or empty LUKS cryptsetup option value(s) in $DISKLAYOUT_FILE" || true
