@@ -48,44 +48,19 @@ create_crypt() {
         # cf. "Beware of the emptiness" in https://github.com/rear/rear/wiki/Coding-Style
         case "$key" in
             (type)
-                if test $value ; then
-                    cryptsetup_options+=" --type $value"
-                else
-                    LogPrint "No 'type' value for recreating LUKS volume $mapping_name on $source_device (using 'cryptsetup' default)"
-                fi
+                test $value && cryptsetup_options+=" --type $value"
                 ;;
             (cipher)
-                if test $value ; then
-                    cryptsetup_options+=" --cipher $value"
-                else
-                    LogPrint "No 'cipher' value for recreating LUKS volume $mapping_name on $source_device (using 'cryptsetup' default)"
-                fi
+                test $value && cryptsetup_options+=" --cipher $value"
                 ;;
             (key_size)
-                if test $value ; then
-                    cryptsetup_options+=" --key-size $value"
-                else
-                    LogPrint "No 'key_size' value for recreating LUKS volume $mapping_name on $source_device (using 'cryptsetup' default)"
-                fi 
+                test $value && cryptsetup_options+=" --key-size $value"
                 ;;
             (hash)
-                if test $value ; then
-                    cryptsetup_options+=" --hash $value"
-                else
-                    LogPrint "No 'hash' value for recreating LUKS volume $mapping_name on $source_device (using 'cryptsetup' default)"
-                fi
+                test $value && cryptsetup_options+=" --hash $value"
                 ;;
             (uuid)
-                if test $value ; then
-                    cryptsetup_options+=" --uuid $value"
-                else
-                    # Report a missig uuid value as an error to have the user informed
-                    # but do not error out here because things can be fixed manually during "rear recover"
-                    # cf. https://github.com/rear/rear/pull/2506#issuecomment-721757810
-                    # and https://github.com/rear/rear/pull/2506#issuecomment-722315498
-                    # and https://github.com/rear/rear/issues/2509
-                    LogPrintError "Error: No 'uuid' value for recreating LUKS volume $mapping_name on $source_device (mounting it or booting the recreated system may fail)"
-                fi
+                test $value && cryptsetup_options+=" --uuid $value"
                 ;;
             (keyfile)
                 test $value && keyfile=$value
