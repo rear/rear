@@ -50,7 +50,7 @@ SECURE_BOOT_BOOTLOADER="/boot/efi/EFI/ubuntu/shimx64.efi"
 [arabic]
 . Plug in the USB stick to use.
 . Use `lsblk -o +MODEL` to find the correct disk device path for your USB stick (typically `/dev/sdX`).
-. *RE-CHECK. The following command will overwrite the entire drive.*
+. *RE-CHECK. The following command will overwrite the entire USB stick.*
 . Use the following command, replacing `USB-DEVICE` with the USB stick’s device name.
 +
 [source,bash]
