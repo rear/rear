@@ -4,6 +4,12 @@
 Beginning with version 2.4, Relax-and-Recover supports self-encrypting disks
 (SEDs) compliant with the TCG Opal 2 specification.
 
+The term "SED" refers to any kind of self-encrypting disk.
+A "TCG Opal 2-compliant disk" or short "Opal disk" is a variant of an SED which implements the Opal 2 standard.
+There are/were other SED variants on the market using proprietary protocols.
+
+In general, these disks all provide full disk encryption in hardware, similar to what LUKS does in software. 
+
 Self-encrypting disk support includes
 
 * recovery (saving and restoring the system's SED configuration),
