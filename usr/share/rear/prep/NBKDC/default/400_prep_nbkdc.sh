@@ -98,6 +98,8 @@ COPY_AS_IS_EXCLUDE+=(
     $NBKDC_HIBTMP_DIR 
     $NBKDC_HIBLIS_DIR 
     $NBKDC_HIBTPD_DIR/*.tpd
+    $NBKDC_HIB_DIR/db2
+    $NBKDC_HIB_DIR/onbar
     $NBKDC_HIB_DIR/ora* 
     $NBKDC_HIB_DIR/ndmp 
     $NBKDC_HIB_DIR/mm 
