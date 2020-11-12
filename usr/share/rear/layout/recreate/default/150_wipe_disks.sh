@@ -4,7 +4,7 @@
 # for example like
 #   create_disk_label /dev/sda gpt
 #   create_disk_label /dev/sdb msdos
-# so in this example DISKS_TO_BE_WIPED="/dev/sda /dev/sdb"
+# so in this example DISKS_TO_BE_WIPED="/dev/sda /dev/sdb "
 # cf. layout/recreate/default/120_confirm_wipedisk_disks.sh
 
 # Log the currently existing block devices structure on the unchanged replacement hardware
@@ -66,8 +66,6 @@ for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
             LogPrintError "Skip wiping $device_to_be_wiped (no output for 'lsblk -dbnipo SIZE $device_to_be_wiped' or failed)"
             continue
         fi
-        # The actual work:
-        DebugPrint "Wiping device $device_to_be_wiped"
         # By default wipe 16 MiB at the beginning and at the end of the device:
         bytes_to_be_wiped=$bytes_of_16_MiB
         # Wipe at most the size of the device in bytes:
@@ -76,23 +74,23 @@ for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
         if ! dd bs=1M if=/dev/zero of=$device_to_be_wiped count=$bytes_to_be_wiped conv=notrunc,fsync iflag=count_bytes ; then
             LogPrintError "Failed to wipe first $bytes_to_be_wiped bytes of $device_to_be_wiped ('dd if=/dev/zero of=$device_to_be_wiped count=$bytes_to_be_wiped iflag=count_bytes' failed)"
         else
-            Log "Wiped first $bytes_to_be_wiped bytes of $device_to_be_wiped"
+            DebugPrint "Wiped first $bytes_to_be_wiped bytes of $device_to_be_wiped"
         fi
         # Wipe at the end of the device:
         if ! test $device_to_be_wiped_size_bytes -gt $bytes_to_be_wiped ; then
-            Log "Skip wiping at the end of $device_to_be_wiped (dvice size $device_to_be_wiped_size_bytes is not gerater than the bytes that were wiped)"
+            DebugPrint "Skip wiping at the end of $device_to_be_wiped (dvice size $device_to_be_wiped_size_bytes not greater than the bytes that were wiped)"
             continue
         fi
         # The byte whereto dd should seek to wipe to the end of the device from that point:
         dd_seek_byte=$(( device_to_be_wiped_size_bytes - bytes_to_be_wiped ))
         if ! test $dd_seek_byte -gt 0 ; then
-            Log "Skip wiping at the end of $device_to_be_wiped (dd seek byte would be $dd_seek_byte)"
+            DebugPrint "Skip wiping at the end of $device_to_be_wiped (dd seek byte would be $dd_seek_byte)"
             continue
         fi
         if ! dd bs=1M if=/dev/zero of=$device_to_be_wiped count=$bytes_to_be_wiped seek=$dd_seek_byte conv=notrunc,fsync iflag=count_bytes oflag=seek_bytes ; then
             LogPrintError "Failed to wipe last $bytes_to_be_wiped bytes of $device_to_be_wiped ('dd if=/dev/zero of=$device_to_be_wiped count=$bytes_to_be_wiped seek=$dd_seek_byte iflag=count_bytes oflag=seek_bytes' failed)"
         else
-            Log "Wiped last $bytes_to_be_wiped bytes of $device_to_be_wiped"
+            DebugPrint "Wiped last $bytes_to_be_wiped bytes of $device_to_be_wiped"
         fi
     done
 done
