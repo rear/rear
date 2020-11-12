@@ -42,6 +42,7 @@ while CDV== read key value ; do
         "&tapedir:") NBKDC_HIBTAP_DIR="$value" ;;
         "&msgdir:") NBKDC_HIBMSG_DIR="$value" ;;
         "&logdir:") NBKDC_HIBLOG_DIR="$value" ;;
+        "&ssl-enabled:") NBKDC_HIBSSL_ENABLED="$value" ;;
     esac
 done <"$COND"
 
@@ -55,6 +56,7 @@ NBKDC_HIB_TPD=$NBKDC_HIBTPD_DIR
 NBKDC_HIB_TAP=$NBKDC_HIBTAP_DIR
 NBKDC_HIB_MSG=$NBKDC_HIBMSG_DIR
 NBKDC_HIB_LOG=$NBKDC_HIBLOG_DIR
+NBKDC_HIB_SSL_ENABLED=$NBKDC_HIBSSL_ENABLED
 EOF
 
 

@@ -1,6 +1,36 @@
 
 source $VAR_DIR/recovery/nbkdc_settings
 
+function print_hiback_encryption_help {
+  local condev_ssl_enabled_setting="$1"
+
+  if [ -z "$condev_ssl_enabled_setting" ]; then
+    LogUserOutput "
+It seems this restore image contains a Hiback without encrypted network
+support. If you have updated your NovaStor Datacenter backup server to
+8.0 or higher, and encounter failed connections to it, you may have to
+disable encryption on the backup server temporarily. Ask NovaStor support
+for further info.
+"
+  else
+    local ssl_setting_natural_language
+    local opposite_ssl_setting
+    if [ "false" = "$condev_ssl_enabled_setting" ]; then
+      ssl_setting_natural_language="disabled"
+      opposite_ssl_setting="true"
+    else
+      ssl_setting_natural_language="enabled"
+      opposite_ssl_setting="false"
+    fi
+    LogUserOutput "
+At the time of creating this restore image Hiback network encryption was
+$ssl_setting_natural_language. If you encounter problems to connect to the
+backup server, change the setting '&ssl-enabled:' in $NBKDC_HIB_DIR/CONDEV on
+this live environment to the opposite '$opposite_ssl_setting'.
+"
+  fi
+}
+
 procpid=$(ps -e | grep rcmd-executor | grep -v grep | awk -F\  '{print $1}')
 rcmdpid=$(cat /var/run/rcmd-executor.pid)
 
@@ -28,7 +58,11 @@ to restore - typically it will be a full backup.
 
 Attention!
 The restore target must be set to '$TARGET_FS_ROOT'.
+"
 
+print_hiback_encryption_help "$NBKDC_HIB_SSL_ENABLED"
+
+LogUserOutput "
 For further documentation see the following link:
 https://support.novastor.com/hc/en-us/
 
