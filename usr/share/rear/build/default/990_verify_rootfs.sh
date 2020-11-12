@@ -144,10 +144,6 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
     # cf. https://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
     chroot $ROOTFS_DIR /bin/bash --login -c "cd $( dirname $binary ) && ldd $binary" </dev/null 2>/dev/null | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
 done
-# Restore the LD_LIBRARY_PATH if it was saved above (i.e. when LD_LIBRARY_PATH had been set before)
-# otherwise unset a possibly set LD_LIBRARY_PATH (i.e. when LD_LIBRARY_PATH had not been set before):
-test $old_LD_LIBRARY_PATH && export LD_LIBRARY_PATH=$old_LD_LIBRARY_PATH || unset LD_LIBRARY_PATH
-
 # Report binaries with 'not found' shared object dependencies:
 local fatal_missing_library=""
 if contains_visible_char "$broken_binaries" ; then
@@ -183,6 +179,9 @@ if contains_visible_char "$broken_binaries" ; then
     LogPrintError "ReaR recovery system in '$ROOTFS_DIR' needs additional libraries, check $RUNTIME_LOGFILE for details"
     is_true "$fatal_missing_library" && keep_build_dir
 fi
+# Restore the LD_LIBRARY_PATH if it was saved above (i.e. when LD_LIBRARY_PATH had been set before)
+# otherwise unset a possibly set LD_LIBRARY_PATH (i.e. when LD_LIBRARY_PATH had not been set before):
+test $old_LD_LIBRARY_PATH && export LD_LIBRARY_PATH=$old_LD_LIBRARY_PATH || unset LD_LIBRARY_PATH
 
 # Testing that each program in the PROGS array can be found as executable command within the recovery system
 # provided the program exist on the original system:
