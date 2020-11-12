@@ -108,3 +108,9 @@ COPY_AS_IS_EXCLUDE+=(
     $NBKDC_HIB_DIR/svm
     /var/run/rcmd-executor.pid
 )
+
+# The files of NovaStor DataCenter installation belong to 'novastor'
+TRUSTED_FILE_OWNERS+=(
+    "${TRUSTED_FILE_OWNERS[@]}"
+    novastor
+)
