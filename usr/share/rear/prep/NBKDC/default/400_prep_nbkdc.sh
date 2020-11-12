@@ -61,6 +61,7 @@ EOF
 # include DataCenter executables and configuration files 
 COPY_AS_IS+=(
     "${COPY_AS_IS_NBKDC[@]}" 
+    $NBKDC_DIR/etc/ssl
     $NBKDC_DIR/conf
     $NBKDC_DIR/log
     $NBKDC_DIR/rcmd-executor 

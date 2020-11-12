@@ -30,21 +30,10 @@ Attention!
 The restore target must be set to '$TARGET_FS_ROOT'.
 
 For further documentation see the following link:
-http://www.novastor.com/help-html/dc/en-US/index.html
+https://support.novastor.com/hc/en-us/
 
 Verify that the backup has been restored correctly to '$TARGET_FS_ROOT'.
 "
-
-#When finished, type 'exit' to continue recovery.
-#"
-
-# Suppress the motd, as it is only confusing at this stage
-#mv /etc/motd ~/.hushlogin
-
-#rear_shell "Did you restore the backup to $TARGET_FS_ROOT ? Are you ready to continue recovery ?"
-
-# Now we can make the motd available for further use
-#mv ~/.hushlogin /etc/motd
 
 user_input_prompt="
 Have you successfully restored the backup to $TARGET_FS_ROOT ?
