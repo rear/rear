@@ -9,7 +9,7 @@
 # for example like
 #   create_disk_label /dev/sda gpt
 #   create_disk_label /dev/sdb msdos
-# so in this example DISKS_TO_BE_WIPED="/dev/sda /dev/sdb"
+# so in this example DISKS_TO_BE_WIPED="/dev/sda /dev/sdb "
 DISKS_TO_BE_WIPED="$( grep '^ *create_disk_label /dev/' $LAYOUT_CODE | grep -o '/dev/[^ ]*' | sort -u | tr -s '[:space:]' ' ' )"
 
 # The DISKS_TO_BE_WIPED string is needed in any case
