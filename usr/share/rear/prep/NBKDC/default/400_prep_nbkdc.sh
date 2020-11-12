@@ -2,37 +2,55 @@
 # prepare stuff for NovaBACKUP DataCenter
 #
 
-# detect where and if DataCenter client is installed on the system running
-# REAR and include the needed bits in the recovery ISO
+# Note: unlike in C/C++, in bash `if function param..` uses the then branch, if
+# the function returns 0
+function is_nbkdc_dir() {
+  local candidate="$1"
+  if [ -x $candidate/rcmd-executor/rcmd-executor ]; then
+    return 0
+  else
+    return 1
+  fi
+}
 
-if [ ! -f "$NBKDC_DIR/conf/client.properties" ]; then
-    NBKDC_DIR=$(readlink -f /proc/$(pgrep -nx rcmd-executor)/exe | sed 's/\/rcmd-executor*//g')
-    if  [ ! -f "$NBKDC_DIR/conf/client.properties" ] ; then
-        LogUserOutput "Cannot find running NovaBACKUP DataCenter Agent!!"
-        LogUserOutput "Locating the NovaBACKUP DataCenter Agent via /Hiback"
-        NBKDC_DIR=$(readlink /Hiback | sed 's/\/Hiback$//g')
-        if [ ! -f "$NBKDC_DIR/conf/client.properties" ]; then
-            LogPrintError "No NovaBACKUP DataCenter Software installed"
-            Error "No NBKDC found, exiting NBKDC prep"
-        fi
+function find_nbkdc_dir() {
+  for candidate in \
+    "$NBKDC_DIR" \
+    "$(readlink -f /proc/$(pgrep -nx rcmd-executor)/exe | sed 's/\/rcmd-executor*//g')" \
+    "$(readlink /Hiback | sed 's/\/Hiback$//g')"
+  do
+    if is_nbkdc_dir "$candidate"; then
+      NBKDC_DIR="$candidate"
+      return 0
     fi
+  done
+  return 1
+}
+
+if find_nbkdc_dir; then
+  Log "Detected NovaStor DC Installation in $NBKDC_DIR"
+else
+  LogPrintError "No NovaBACKUP DataCenter Software installed"
+  Error "No NBKDC found, exiting NBKDC prep"
 fi
 
-Log "Detected NovaBACKUP DC Installation in $NBKDC_DIR"
-
 CLIENT_INI=$NBKDC_DIR/conf/client.properties
-[[ -z "$CLIENT_INI" ]] && return
-
-while IFS== read key value ; do
-    case "$key" in
-        hiback_install_dir) NBKDC_HIB_DIR="$value" ;;
-        hiback_version) NBKDC_HIB_VER="$value" ;;
-    esac
-done <"$CLIENT_INI"
+if [ -r "$CLIENT_INI" ]; then
+  while IFS== read key value ; do
+      case "$key" in
+          hiback_install_dir) NBKDC_HIB_DIR="$value" ;;
+          hiback_version) NBKDC_HIB_VER="$value" ;;
+      esac
+  done <"$CLIENT_INI"
+else
+  # The client.properties is no longer installed with recent DataCenter
+  # installations (8.0.0 or newer)
+  NBKDC_HIB_DIR="$NBKDC_DIR/Hiback"
+fi
 
 
 COND=$NBKDC_HIB_DIR/CONDEV
-[[ -z "$COND" ]] && return
+[[ ! -r "$COND" ]] && Error "CONDEV file '$COND' can not be read"
 
 while CDV== read key value ; do
     case "$key" in
