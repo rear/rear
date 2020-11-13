@@ -31,22 +31,46 @@ this live environment to the opposite '$opposite_ssl_setting'.
   fi
 }
 
-procpid=$(ps -e | grep rcmd-executor | grep -v grep | awk -F\  '{print $1}')
-rcmdpid=$(cat /var/run/rcmd-executor.pid)
+function rcmd_executor_is_running {
+  local procpid=$(ps -e | grep rcmd-executor | grep -v grep | awk -F\  '{print $1}')
+  if [ -n "$procpid" ]; then
+    return 0
+  fi
+  return 1
+}
 
-if [ -e /var/run/rcmd-executor.pid ]; then
-    if [ $procpid = $rcmdpid ]; then
-        LogPrint "
-NovaStor DataCenter Agent started ..."
-    else
-        Error "NovaStor DataCenter Agent rcmd-executor is NOT running ...
-        Please check check the logfiles
-        $NBKDC_DIR/log/rcmd-executor.log and
-        $NBKDC_DIR/log/rcmd-executor.service.log
-        and start the agent found in $NBKDC_DIR/rcmd-executor/
-        $NBKDC_DIR/rcmd-executor/rcmd-executor start
-        "
-    fi
+function make_sure_rcmd_executor_is_running {
+  if rcmd_executor_is_running; then
+    return 0
+  fi
+
+  # Try to start as service
+  $NBKDC_DIR/rcmd-executor/rcmd-executor start
+  if rcmd_executor_is_running; then
+    return 0
+  fi
+
+  # Try to start in background on command line
+  $NBKDC_DIR/rcmd-executor/rcmd-executor run &
+  if rcmd_executor_is_running; then
+    return 0
+  fi
+
+  # Failed to start rcmd-executor
+  return 1
+}
+
+if make_sure_rcmd_executor_is_running; then
+  LogPrint "NovaStor DataCenter Agent runs ..."
+else
+  Error "
+NovaStor DataCenter Agent rcmd-executor is NOT running ...
+Please check the logfiles
+$NBKDC_DIR/log/rcmd-executor.log and
+$NBKDC_DIR/log/rcmd-executor.service.log
+and start the agent found in $NBKDC_DIR/rcmd-executor/
+$NBKDC_DIR/rcmd-executor/rcmd-executor run &
+"
 fi
 
 LogUserOutput "
