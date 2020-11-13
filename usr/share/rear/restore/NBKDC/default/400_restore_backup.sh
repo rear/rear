@@ -37,9 +37,9 @@ rcmdpid=$(cat /var/run/rcmd-executor.pid)
 if [ -e /var/run/rcmd-executor.pid ]; then
     if [ $procpid = $rcmdpid ]; then
         LogPrint "
-NovaBACKUP DataCenter Agent started ..."
+NovaStor DataCenter Agent started ..."
     else
-        Error "NovaBACKUP DataCenter Agent rcmd-executor is NOT running ...
+        Error "NovaStor DataCenter Agent rcmd-executor is NOT running ...
         Please check check the logfiles
         $NBKDC_DIR/log/rcmd-executor.log and
         $NBKDC_DIR/log/rcmd-executor.service.log
@@ -52,7 +52,7 @@ fi
 LogUserOutput "
 The System is now ready for restore.
 Start the restore task from the
-NovaBACKUP DataCenter Central Management.
+NovaStor DataCenter Central Management.
 It is assumed that you know what is necessary
 to restore - typically it will be a full backup.
 

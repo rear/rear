@@ -1,5 +1,5 @@
 #
-# prepare stuff for NovaBACKUP DataCenter
+# prepare stuff for NovaStor DataCenter
 #
 
 # Note: unlike in C/C++, in bash `if function param..` uses the then branch, if
@@ -30,7 +30,7 @@ function find_nbkdc_dir() {
 if find_nbkdc_dir; then
   Log "Detected NovaStor DC Installation in $NBKDC_DIR"
 else
-  LogPrintError "No NovaBACKUP DataCenter Software installed"
+  LogPrintError "No NovaStor DataCenter Software installed"
   Error "No NBKDC found, exiting NBKDC prep"
 fi
 
