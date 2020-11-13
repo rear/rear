@@ -68,7 +68,8 @@ is visible.
 When 16 MiB are wiped at the beginning and at the end of /dev/sda2
 it should also wipe the LVM metadata at the beginning and
 at the end of /dev/mapper/cr_ata-QEMU_HARDDISK_QM00001-part2
-and metadata at the beginning of /dev/mapper/system-swap
+and metadata at the beginning of the /dev/mapper/system-swap
+and at the end of the /dev/mapper/system-home LVs.
 
 What is still on the disk when 16 MiB were wiped at the beginning and end of /dev/sda2
 is metadata at the end of /dev/mapper/system-swap and
