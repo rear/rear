@@ -1,8 +1,115 @@
 How to wipe metadata from block devices:
 
+Reliably wiping all metadata from all block devices
+that belong to a (possibly deeply) nested structure of block devices
+is impossible in practice from within the running ReaR recovery system.
+
+Reason:
+
+After booting the ReaR recovery system a nested structure of block devices
+is not visible regardless that it actually exists on the disk.
+
+For an example see
+https://github.com/rear/rear/pull/2514#issuecomment-726116193
+that reads (excerpts):
+
+On the original system the structure of block devices is:
+
+# lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT
+NAME                                               KNAME     PKNAME    TRAN TYPE  FSTYPE       SIZE MOUNTPOINT
+/dev/sda                                           /dev/sda            ata  disk                20G
+|-/dev/sda1                                        /dev/sda1 /dev/sda       part                 8M
+`-/dev/sda2                                        /dev/sda2 /dev/sda       part  crypto_LUKS   20G
+  `-/dev/mapper/cr_ata-QEMU_HARDDISK_QM00001-part2 /dev/dm-0 /dev/sda2      crypt LVM2_member   20G
+    |-/dev/mapper/system-swap                      /dev/dm-1 /dev/dm-0      lvm   swap           2G [SWAP]
+    |-/dev/mapper/system-root                      /dev/dm-2 /dev/dm-0      lvm   btrfs       12.6G /
+    `-/dev/mapper/system-home                      /dev/dm-3 /dev/dm-0      lvm   xfs          5.4G /home
+
+That structure is recreated via an initial "rear recover" run on the replacement hardware
+so that the same structure is now also on the disks of the replacement hardware.
+
+When booting the ReaR recovery system again on that replacement hatdware
+only this partial storage structure is visible (i.e. only disks with their partitions):
+
+RESCUE # lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT
+NAME        KNAME     PKNAME   TRAN TYPE FSTYPE       SIZE MOUNTPOINT
+/dev/sda    /dev/sda           ata  disk               20G
+|-/dev/sda1 /dev/sda1 /dev/sda      part                8M
+`-/dev/sda2 /dev/sda2 /dev/sda      part crypto_LUKS   20G
+
+The usual tool to wipe signatures (i.e. metadata) from a device is wipefs.
+But wipefs only wipes metadata that belongs to the specified device
+and wipefs does not descend into nested "child" devices (wipefs has no "recursive" option).
+Even if wipefs could descend into nested "child" devices it would not help
+in the ReaR recovery system where deeper nested "child" devices are not visible.
+
+So a more generic and more efficient method is needed
+that also wipes metadata from deeper nested block devices
+even if they are not visible.
+
+The basic idea is to use 'dd' to zero out a sufficient amount of bytes (16 MiB - see at the bottom)
+at the beginning and at the end of a block device to also wipe metadata
+from deeper nested block devices even if they are not visible.
+
+In the above example look at /dev/sda2 with its deeper nested block devices
+
+`-/dev/sda2                                        /dev/sda2 /dev/sda       part  crypto_LUKS   20G
+  `-/dev/mapper/cr_ata-QEMU_HARDDISK_QM00001-part2 /dev/dm-0 /dev/sda2      crypt LVM2_member   20G
+    |-/dev/mapper/system-swap                      /dev/dm-1 /dev/dm-0      lvm   swap           2G [SWAP]
+    |-/dev/mapper/system-root                      /dev/dm-2 /dev/dm-0      lvm   btrfs       12.6G /
+    `-/dev/mapper/system-home                      /dev/dm-3 /dev/dm-0      lvm   xfs          5.4G /home
+
+where in the ReaR recovery system only
+
+`-/dev/sda2 /dev/sda2 /dev/sda      part crypto_LUKS   20G
+
+is visible.
+
+When 16 MiB are wiped at the beginning and at the end of /dev/sda2
+it should also wipe the LVM metadata at the beginning and
+at the end of /dev/mapper/cr_ata-QEMU_HARDDISK_QM00001-part2
+and metadata at the beginning of /dev/mapper/system-swap
+
+What is still on the disk when 16 MiB were wiped at the beginning and end of /dev/sda2
+is metadata at the end of /dev/mapper/system-swap and
+at the beginning and end of /dev/mapper/system-root and
+at the beginning of /dev/mapper/system-home
+and as a consequence so that remaining metadata could get in the way
+when recreating the /dev/mapper/system-swap and /dev/mapper/system-root
+and /dev/mapper/system-home LVs.
+
+So the only really reliably working way to wipe all metadata from all block devices
+that could belong to a (possibly deeply) nested structure of block devices
+is to prepare replacement hardware for disaster recovery in advance
+which means in particular to completely zero out all replacement storage,
+see the section "Prepare replacement hardware for disaster recovery" in
+https://en.opensuse.org/SDB:Disaster_Recovery
+
+But zeroing out storage space may take a long time on big disks this is not possible
+when the replacement hardware is the original system hardware which is the case when
+disaster recovery is done because of software errors (e.g. corrupted file systems
+or destroyed disk partitioning).
+
+When the replacement hardware is the original system hardware
+some best-effort attempt needs to be done to wipe as much metadata as possible
+(with reasonable effort within a reasonable time) from all block devices.
+
+Such a best-effort attempt is to use 'dd' to zero out 16 MiB (see at the bottom)
+at the beginning and at the end of each block device that is visible from
+inside the running ReaR recovery system and will be actually used for disaster recovery.
+
+Those block devices are the disks where in diskrestore.sh the create_disk_label function
+is called (the create_disk_label function calls "parted -s $disk mklabel $label")
+i.e. the disks that will be completely overwritten by "rear recover"
+and all their child devices (in particular all partitions on those disks).
+
+The following sections are about using 'dd' and how much metadata is stored
+for LUKS, RAID, and LVM plus a summary how much data should be wiped
+when there are nested RAID plus LVM plus LUKS block devices (which results 16 MiB).
+
 =============================================================================================
 
-dd from the end of the device
+'dd' from the end of the device
 
 https://unix.stackexchange.com/questions/108858/seek-argument-in-command-dd
 excerpts:
