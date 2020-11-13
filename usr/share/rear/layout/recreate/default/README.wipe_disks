@@ -94,11 +94,11 @@ or destroyed disk partitioning).
 
 When the replacement hardware is the original system hardware
 some best-effort attempt needs to be done to wipe as much metadata as possible
-(with reasonable effort within a reasonable time) from all block devices.
+(with reasonable effort within a reasonable time) from all needed block devices.
 
 Such a best-effort attempt is to use 'dd' to zero out 16 MiB (see at the bottom)
-at the beginning and at the end of each block device that is visible from
-inside the running ReaR recovery system and will be actually used for disaster recovery.
+at the beginning and at the end of each block device that is visible from inside
+the running ReaR recovery system and that will be actually used for disaster recovery.
 
 Those block devices are the disks where in diskrestore.sh the create_disk_label function
 is called (the create_disk_label function calls "parted -s $disk mklabel $label")
