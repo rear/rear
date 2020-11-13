@@ -86,7 +86,7 @@ which means in particular to completely zero out all replacement storage,
 see the section "Prepare replacement hardware for disaster recovery" in
 https://en.opensuse.org/SDB:Disaster_Recovery
 
-But zeroing out storage space may take a long time on big disks
+But completely zeroing out storage space may take a long time on big disks
 so this is not possible in practice during "rear recover" (where time matters)
 when the replacement hardware is the original system hardware which is the case when
 disaster recovery is done because of non-hardware-errors (e.g. corrupted file systems
