@@ -26,10 +26,11 @@ NAME                                               KNAME     PKNAME    TRAN TYPE
     `-/dev/mapper/system-home                      /dev/dm-3 /dev/dm-0      lvm   xfs          5.4G /home
 
 That structure is recreated via an initial "rear recover" run on the replacement hardware
-so that the same structure is now also on the disks of the replacement hardware.
+so that the same structure is now also on the disk of the replacement hardware.
 
-When booting the ReaR recovery system again on that replacement hatdware
-only this partial storage structure is visible (i.e. only disks with their partitions):
+But when booting the ReaR recovery system again on that replacement hardware
+only this partial structure of the block devices is visible
+(only the disk and partitions but no nested block devices inside the partitions):
 
 RESCUE # lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT
 NAME        KNAME     PKNAME   TRAN TYPE FSTYPE       SIZE MOUNTPOINT
@@ -37,15 +38,77 @@ NAME        KNAME     PKNAME   TRAN TYPE FSTYPE       SIZE MOUNTPOINT
 |-/dev/sda1 /dev/sda1 /dev/sda      part                8M
 `-/dev/sda2 /dev/sda2 /dev/sda      part crypto_LUKS   20G
 
+The reason why nested block devices are not visible is that /dev/sda2 is LUKS encrypted
+so nothing what there is inside of /dev/sda2 could make any sense
+for any program or tool that scans for nested block devices in /dev/sda2
+unless /dev/sda2 gets unencrypted with "cryptsetup luksOpen":
+
+RESCUE # cryptsetup luksOpen /dev/sda2 luks1sda2
+Enter passphrase for /dev/sda2:
+...
+
+RESCUE # lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT
+NAME                      KNAME     PKNAME    TRAN TYPE  FSTYPE       SIZE MOUNTPOINT
+/dev/sda                  /dev/sda            ata  disk                20G
+|-/dev/sda1               /dev/sda1 /dev/sda       part                 8M
+`-/dev/sda2               /dev/sda2 /dev/sda       part  crypto_LUKS   20G
+  `-/dev/mapper/luks1sda2 /dev/dm-0 /dev/sda2      crypt LVM2_member   20G
+
+Now the LUKS volume symbolic link /dev/mapper/luks1sda2 that points to its matching
+kernel block device /dev/dm-0 (with parent kernel block device /dev/sda2) is there
+and the LVM storage objects that are inside the LUKS volume become visible:
+
+RESCUE # pvscan
+  PV /dev/mapper/luks1sda2   VG system          lvm2 [19.98 GiB / 0    free]
+  Total: 1 [19.98 GiB] / in use: 1 [19.98 GiB] / in no VG: 0 [0   ]
+
+RESCUE # vgscan
+  Reading all physical volumes.  This may take a while...
+  Found volume group "system" using metadata type lvm2
+
+RESCUE # lvscan
+  inactive          '/dev/system/swap' [2.00 GiB] inherit
+  inactive          '/dev/system/home' [5.39 GiB] inherit
+  inactive          '/dev/system/root' [12.59 GiB] inherit
+
+The LVM logical volumes are inactive so they need to be activated with 'vgchange -ay'
+which will create the symbolic links /dev/VGName/LVName (/dev/system/{swap|home|root})
+pointing to matching kernel device nodes /dev/dm-{1|2|3} (all child devices of /dev/dm-0):
+
+RESCUE # vgchange -ay
+  3 logical volume(s) in volume group "system" now active
+
+RESCUE # lsblk -bipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT
+NAME                          KNAME     PKNAME    TRAN TYPE  FSTYPE             SIZE MOUNTPOINT
+/dev/sda                      /dev/sda            ata  disk              21474836480
+|-/dev/sda1                   /dev/sda1 /dev/sda       part                  8388608
+`-/dev/sda2                   /dev/sda2 /dev/sda       part  crypto_LUKS 21465382400
+  `-/dev/mapper/luks1sda2     /dev/dm-0 /dev/sda2      crypt LVM2_member 21463285248
+    |-/dev/mapper/system-swap /dev/dm-1 /dev/dm-0      lvm   swap         2147483648
+    |-/dev/mapper/system-home /dev/dm-2 /dev/dm-0      lvm   xfs          5792333824
+    `-/dev/mapper/system-root /dev/dm-3 /dev/dm-0      lvm   btrfs       13518241792
+
+So it is possible to make the whole structure of nested block devices visible and accessible.
+
+But when there are LUKS encrypted block devices that contain nested block devices
+the LUKS passphrase is mandatory to 'luksOpen' LUKS encrypted devices
+to be able to wipe nested block devices inside LUKS volumes.
+
+When "rear recover" is run on arbitrary replacement hardware it could happen
+that there are LUKS encrypted block devices that contain nested block devices
+but the LUKS passphrase is unknown by the admin at that point in time and
+then it is impossible to wipe nested block devices inside LUKS volumes.
+
 The usual tool to wipe signatures (i.e. metadata) from a device is wipefs.
 But wipefs only wipes metadata that belongs to the specified device
-and wipefs does not descend into nested "child" devices (wipefs has no "recursive" option).
-Even if wipefs could descend into nested "child" devices it would not help
-in the ReaR recovery system where deeper nested "child" devices are not visible.
+and wipefs does not descend into nested child devices (wipefs has no "recursive" option).
+Even if wipefs could descend into nested child devices it would not help
+in the ReaR recovery system when deeper nested child devices cannot be made visible
+(e.g. when there are nested block devices inside LUKS volumes with unknown LUKS passphrase).
 
 So a more generic and more efficient method is needed
-that also wipes metadata from deeper nested block devices
-even if they are not visible.
+that also wipes metadata from nested block devices
+even if the nested block devices are not visible.
 
 The basic idea is to use 'dd' to zero out a sufficient amount of bytes (16 MiB - see at the bottom)
 at the beginning and at the end of a block device to also wipe metadata
