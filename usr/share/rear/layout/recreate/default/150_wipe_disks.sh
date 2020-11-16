@@ -12,6 +12,62 @@
 Log "Block devices structure on the unchanged replacement hardware before the disks $DISKS_TO_BE_WIPED will be wiped (lsblk):"
 Log "$( lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT || lsblk -io NAME,KNAME,FSTYPE,SIZE,MOUNTPOINT || lsblk -i || lsblk )"
 
+# Plain wiping a disk with LVM storage objects leads to errors later when "parted -s $disk mklabel $label" is called
+# in the diskrestore.sh script because then 'parted' fails (which lets diskrestore.sh fail which lets "rear recover" fail)
+# with the following error message:
+#   Partitions ... have been written, but we have been unable to inform the kernel of the change,
+#   probably because it/they are in use. As a result, the old partition(s) will remain in use.
+#   You should probably reboot now before making further changes.
+# In this case it works to reboot the recovery system and then a second "rear recover" usually succeeds
+# because after plain wiping a disk with LVM storage objects the LVM metadata/signatures is no longer there
+# so that LVM cannot be in use in the rebooted recovery system and "parted -s $disk mklabel $label" can succeed.
+# But we like to do all in one single "rear recover" run so we need to clean up LVM storage objects properly.
+# LVM storage objects must be properly detected and removed with LVM tools step by step from LVs to VGs to PVs:
+local detected_LVs detected_VGs detected_PVs detected_LV detected_VG detected_PV
+# Detect LVs:
+# The 'lvscan' output in the recovery system looks like:
+#   inactive          '/dev/system/swap' [2.00 GiB] inherit
+#   inactive          '/dev/system/home' [5.39 GiB] inherit
+#   inactive          '/dev/system/root' [12.59 GiB] inherit
+# cf. layout/recreate/default/README.wipe_disks
+detected_LVs="$( lvscan -y | cut -s -d "'" -f2 | tr -s '[:space:]' ' ' )"
+# Detect VGs:
+# The 'vgscan' output in the recovery system looks like:
+#   Reading all physical volumes.  This may take a while...
+#   Found volume group "system" using metadata type lvm2
+# cf. layout/recreate/default/README.wipe_disks
+detected_VGs="$( vgscan -y | grep 'Found volume group' |cut -s -d '"' -f2 | tr -s '[:space:]' ' ' )"
+# Detect PVs:
+# The 'pvscan' output in the recovery system looks like:
+#   PV /dev/mapper/luks1sda2   VG system          lvm2 [19.98 GiB / 0    free]
+#   Total: 1 [19.98 GiB] / in use: 1 [19.98 GiB] / in no VG: 0 [0   ]
+# cf. layout/recreate/default/README.wipe_disks
+detected_PVs="$( pvscan -y | grep -o 'PV /dev/[^ ]*' | cut -s -d ' ' -f2 | tr -s '[:space:]' ' ' )"
+# Remove detected LVs ('for' does nothing when $detected_LVs is empty):
+for detected_LV in $detected_LVs ; do
+    if lvremove -f -y $detected_LV ; then
+        DebugPrint "Removed LVM logical volume $detected_LV"
+    else
+        LogPrintError "Failed to remove LVM logical volume $detected_LV ('lvremove $detected_LV' failed)"
+    fi
+done
+# Remove detected VGs ('for' does nothing when $detected_VGs is empty):
+for detected_VG in $detected_VGs ; do
+    if vgremove -ff -y $detected_VG ; then
+        DebugPrint "Removed LVM volume group $detected_VG"
+    else
+        LogPrintError "Failed to remove LVM volume group $detected_VG ('vgremove $detected_VG' failed)"
+    fi
+done
+# Remove detected PVs ('for' does nothing when $detected_PVs is empty):
+for detected_PV in $detected_PVs ; do
+    if pvremove -f -y $detected_PV ; then
+        DebugPrint "Removed LVM physical volume $detected_PV"
+    else
+        LogPrintError "Failed to remove LVM physical volume $detected_PV ('pvremove $detected_PV' failed)"
+    fi
+done
+
 # Wipe RAID plus LVM plus LUKS metadata.
 # To wipe RAID Superblocks it is sufficient to wipe 133 KiB at the beginning and at the end of the device.
 # To wipe to wipe LVM metadata is should be sufficient to wipe 4 MiB at the beginning and at the end of the device.
