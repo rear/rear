@@ -93,7 +93,7 @@ for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
     #       |-/dev/mapper/system-swap                      /dev/dm-1 /dev/dm-0 lvm   swap           2G [SWAP]
     #       |-/dev/mapper/system-root                      /dev/dm-2 /dev/dm-0 lvm   btrfs       12.6G /
     #       `-/dev/mapper/system-home                      /dev/dm-3 /dev/dm-0 lvm   xfs          5.4G /home
-    # then "lsblk -nipo KNAME /dev/sda | tac" shows
+    # then "lsblk -nlpo KNAME /dev/sda | tac" shows
     #   /dev/dm-3
     #   /dev/dm-2
     #   /dev/dm-1
@@ -101,11 +101,11 @@ for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
     #   /dev/sda2
     #   /dev/sda1
     #   /dev/sda
-    children_to_be_wiped="$( lsblk -nipo KNAME $disk_to_be_wiped | tac | tr -s '[:space:]' ' ' )"
-    # "lsblk -nipo KNAME $disk_to_be_wiped" does not work on SLES11-SP4 which is no longer supported since ReaR 2.6
+    children_to_be_wiped="$( lsblk -nlpo KNAME $disk_to_be_wiped | tac | tr -s '[:space:]' ' ' )"
+    # "lsblk -nlpo KNAME $disk_to_be_wiped" does not work on SLES11-SP4 which is no longer supported since ReaR 2.6
     # but it works at least on SLES12-SP5 so we test that children_to_be_wiped is not empty to avoid issues on older systems:
     if ! test "$children_to_be_wiped" ; then
-        LogPrintError "Skip wiping $disk_to_be_wiped (no output for 'lsblk -nipo KNAME $disk_to_be_wiped' or failed)"
+        LogPrintError "Skip wiping $disk_to_be_wiped (no output for 'lsblk -nlpo KNAME $disk_to_be_wiped' or failed)"
         continue
     fi
     LogPrint "Wiping child devices of $disk_to_be_wiped in reverse ordering: $children_to_be_wiped"
@@ -117,9 +117,9 @@ for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
         # Get the size of the device in bytes which could be smaller than 16 MiB.
         # For example a 'bios_grub' partition could be smaller (e.g only 8 MiB on SUSE systems)
         # cf. the "lsblk -ipo NAME,KNAME,PKNAME,TYPE,FSTYPE,SIZE,MOUNTPOINT /dev/sda" output above.
-        device_to_be_wiped_size_bytes="$( lsblk -dbnipo SIZE $device_to_be_wiped )"
+        device_to_be_wiped_size_bytes="$( lsblk -dbnlpo SIZE $device_to_be_wiped )"
         if ! test -b $device_to_be_wiped_size_byte ; then
-            LogPrintError "Skip wiping $device_to_be_wiped (no output for 'lsblk -dbnipo SIZE $device_to_be_wiped' or failed)"
+            LogPrintError "Skip wiping $device_to_be_wiped (no output for 'lsblk -dbnlpo SIZE $device_to_be_wiped' or failed)"
             continue
         fi
         # By default wipe 16 MiB at the beginning and at the end of the device:
