@@ -33,7 +33,7 @@ local luks_mapping_names=""
 crypto_LUKS_kernel_devices="$( lsblk -nlpo KNAME,FSTYPE | grep ' crypto_LUKS$' | cut -s -d ' ' -f1 | tr -s '[:space:]' ' ' )"
 for luks_device in $crypto_LUKS_kernel_devices ; do
     luks_mapping_name=luks-$( basename $luks_device )
-    LogUserOutput "Enter the password to open LUKS device $luks_device temporarily as $luks_mapping_name (or skip with plain 'enter')"
+    LogUserOutput "Enter the password to open LUKS device $luks_device temporarily as $luks_mapping_name (or skip with [Ctrl]+[C])"
     if ! cryptsetup luksOpen $luks_device $luks_mapping_name 0<&6 1>&7 2>&8 ; then
         DebugPrint "LUKS device $luks_device not opened"
         continue
