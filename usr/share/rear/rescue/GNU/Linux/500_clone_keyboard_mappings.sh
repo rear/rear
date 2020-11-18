@@ -13,7 +13,9 @@
 # Dump current keyboard mapping so that it can be set during recovery system startup
 # by etc/scripts/system-setup.d/10-console-setup.sh via "loadkeys /etc/dumpkeys.out":
 local original_system_dumpkeys_file="/etc/dumpkeys.out"
+local dumpkeys_success="no"
 if dumpkeys -f >$ROOTFS_DIR$original_system_dumpkeys_file ; then
+    dumpkeys_success="yes"
     DebugPrint "Included current keyboard mapping (via 'dumpkeys -f')"
 else
     LogPrintError "Error: Failed to include current keyboard mapping ('dumpkeys -f' failed)"
@@ -49,21 +51,26 @@ done
 # Use KEYMAPS_DEFAULT_DIRECTORY if it is explicitly specified by the user:
 test $KEYMAPS_DEFAULT_DIRECTORY && keymaps_default_directory="$KEYMAPS_DEFAULT_DIRECTORY"
 
+local info_message=""
 if test "$keymaps_default_directory" ; then
     # Try to find and include at least the default US keyboard mapping as fallback:
     if test -d "$keymaps_default_directory" ; then
         local defkeymap_file="$( find $keymaps_default_directory -name 'defkeymap.*' | head -n1 )"
         if test "$defkeymap_file" ; then
             COPY_AS_IS+=( $defkeymap_file )
-            DebugPrint "Included fallback US keyboard mapping $defkeymap_file"
+            info_message="Included default US keyboard mapping $defkeymap_file"
+            is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrint "$info_message"
         else
-            LogPrintError "No fallback US keyboard mapping included (no 'defkeymap.*' found in $keymaps_default_directory)"
+            info_message="No default US keyboard mapping included (no 'defkeymap.*' found in $keymaps_default_directory)"
+            is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrintError "$info_message"
         fi
     else
-        LogPrintError "No fallback US keyboard mapping included (no keymaps default directory '$keymaps_default_directory')"
+        info_message="No default US keyboard mapping included (no keymaps default directory '$keymaps_default_directory')"
+        is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrintError "$info_message"
     fi
 else
-    LogPrintError "No fallback US keyboard mapping included (no KEYMAPS_DEFAULT_DIRECTORY specified)"
+    info_message="No default US keyboard mapping included (no KEYMAPS_DEFAULT_DIRECTORY specified)"
+    is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrintError "$info_message"
 fi
 
 # Additionally include other keyboard mappings to also support users with a non-US keyboard
@@ -81,7 +88,9 @@ local keymaps_directories=$keymaps_default_directory
 contains_visible_char "$KEYMAPS_DIRECTORIES" && keymaps_directories="$KEYMAPS_DIRECTORIES"
 if test "$keymaps_directories" ; then
     COPY_AS_IS+=( $keymaps_directories )
-    DebugPrint "Included other keyboard mappings in $keymaps_directories"
+    info_message="Included other keyboard mappings in $keymaps_directories"
+    is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrint "$info_message"
 else
-    LogPrintError "No support for different keyboard layouts (neither KEYMAPS_DEFAULT_DIRECTORY nor KEYMAPS_DIRECTORIES specified)"
+    info_message="No support for different keyboard layouts (neither KEYMAPS_DEFAULT_DIRECTORY nor KEYMAPS_DIRECTORIES specified)"
+    is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrintError "$info_message"
 fi
