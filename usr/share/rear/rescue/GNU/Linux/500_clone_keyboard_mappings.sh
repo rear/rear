@@ -1,8 +1,35 @@
 
+# Include at least the current keyboard mapping in the recovery system.
+# Additionally try to include the default US keyboard mapping as fallback.
+# Furthermore try to also include other keyboard mappings to support different keyboard layouts
+# that is needed when "rear recover" runs on replacement hardware with a different keyboard,
+# see https://github.com/rear/rear/pull/1781
+# Inform the user about possible issues with keyboard usage in the recovery system
+# but use neutral wording for those user messages to avoid false alarm
+# except when it fails to include the current keyboard mapping
+# (which is no fatal Error because the US keyboard mapping is included as fallback)
+# cf. https://github.com/rear/rear/issues/2519
+# Only when including the current keyboard mapping failed (i.e. when 'dumpkeys' failed)
+# it shows subsequent messages on the user's terminal in any case (via LogPrint and LogPrintError)
+# but normally it shows subsequent messages only in debug mode (via DebugPrint).
+# On first glance it may look like over-sophisticated vode but actually it is user-friendly:
+# ReaR follows what Linux distributions have decided (and what their users are used to).
+# If the distro provides console-multi-keyboard support, ReaR includes it (without being verbose).
+# If the distro has decided that this is not necessary, ReaR aligns with it (without being verbose).
+# If the user has installed multi-keyboard support, ReaR aligns with it (without being verbose).
+# For details and background information see https://github.com/rear/rear/pull/2520 in particular
+# https://github.com/rear/rear/pull/2520#issuecomment-729681053
+
 # Dump current keyboard mapping so that it can be set during recovery system startup
 # by etc/scripts/system-setup.d/10-console-setup.sh via "loadkeys /etc/dumpkeys.out":
 local original_system_dumpkeys_file="/etc/dumpkeys.out"
-dumpkeys -f >$ROOTFS_DIR$original_system_dumpkeys_file
+local dumpkeys_success="no"
+if dumpkeys -f >$ROOTFS_DIR$original_system_dumpkeys_file ; then
+    dumpkeys_success="yes"
+    DebugPrint "Included current keyboard mapping (via 'dumpkeys -f')"
+else
+    LogPrintError "Error: Failed to include current keyboard mapping ('dumpkeys -f' failed)"
+fi
 
 # Determine the default directory for keymaps:
 # Different Linux distributions use a different default directory for keymaps,
@@ -21,6 +48,11 @@ dumpkeys -f >$ROOTFS_DIR$original_system_dumpkeys_file
 #   /usr/share/kbd/keymaps is used by SUSE and Arch Linux
 #   /usr/share/keymaps is used by Debian and Ubuntu
 #   /lib/kbd/keymaps is used by Centos and Fedora and Red Hat
+# It seems newer Debian-based systems (including Ubuntu)
+# no longer contain any keymaps directory as part of the base system
+# so those distros do no longer provide console-multi-keyboard support by default.
+# Optionally installing one (under /usr/share/keymaps) is possible via the console-data package
+# cf. https://github.com/rear/rear/issues/2519#issuecomment-729264699
 # We do not test and distinguish by Linux distribution identifier strings
 # because such tests result an endless nightmare to keep them up-to-date.
 # We prefer (whenever possible) to generically test "some real thing".
@@ -34,20 +66,26 @@ done
 # Use KEYMAPS_DEFAULT_DIRECTORY if it is explicitly specified by the user:
 test $KEYMAPS_DEFAULT_DIRECTORY && keymaps_default_directory="$KEYMAPS_DEFAULT_DIRECTORY"
 
+local info_message=""
 if test "$keymaps_default_directory" ; then
-    # Try to find and include at least the default US keyboard mapping:
+    # Try to find and include at least the default US keyboard mapping as fallback:
     if test -d "$keymaps_default_directory" ; then
         local defkeymap_file="$( find $keymaps_default_directory -name 'defkeymap.*' | head -n1 )"
         if test "$defkeymap_file" ; then
             COPY_AS_IS+=( $defkeymap_file )
+            info_message="Included default US keyboard mapping $defkeymap_file"
+            is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrint "$info_message"
         else
-            LogPrintError "Cannot include default keyboard mapping (no 'defkeymap.*' found in $keymaps_default_directory)"
+            info_message="No default US keyboard mapping included (no 'defkeymap.*' found in $keymaps_default_directory)"
+            is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrintError "$info_message"
         fi
     else
-        LogPrintError "Cannot include default keyboard mapping (no keymaps default directory '$keymaps_default_directory')"
+        info_message="No default US keyboard mapping included (no keymaps default directory '$keymaps_default_directory')"
+        is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrintError "$info_message"
     fi
 else
-    LogPrintError "Cannot include default keyboard mapping (no KEYMAPS_DEFAULT_DIRECTORY specified)"
+    info_message="No default US keyboard mapping included (no KEYMAPS_DEFAULT_DIRECTORY specified)"
+    is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrintError "$info_message"
 fi
 
 # Additionally include other keyboard mappings to also support users with a non-US keyboard
@@ -65,7 +103,9 @@ local keymaps_directories=$keymaps_default_directory
 contains_visible_char "$KEYMAPS_DIRECTORIES" && keymaps_directories="$KEYMAPS_DIRECTORIES"
 if test "$keymaps_directories" ; then
     COPY_AS_IS+=( $keymaps_directories )
+    info_message="Included other keyboard mappings in $keymaps_directories"
+    is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrint "$info_message"
 else
-    LogPrintError "Cannot include keyboard mappings (neither KEYMAPS_DEFAULT_DIRECTORY nor KEYMAPS_DIRECTORIES specified)"
+    info_message="No support for different keyboard layouts (neither KEYMAPS_DEFAULT_DIRECTORY nor KEYMAPS_DIRECTORIES specified)"
+    is_true $dumpkeys_success && DebugPrint "$info_message" || LogPrintError "$info_message"
 fi
-
