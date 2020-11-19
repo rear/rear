@@ -9,6 +9,16 @@
 # except when it fails to include the current keyboard mapping
 # (which is no fatal Error because the US keyboard mapping is included as fallback)
 # cf. https://github.com/rear/rear/issues/2519
+# Only when including the current keyboard mapping failed (i.e. when 'dumpkeys' failed)
+# it shows subsequent messages on the user's terminal in any case (via LogPrint and LogPrintError)
+# but normally it shows subsequent messages only in debug mode (via DebugPrint).
+# On first glance it may look like over-sophisticated vode but actually it is user-friendly:
+# ReaR follows what Linux distributions have decided (and what their users are used to).
+# If the distro provides console-multi-keyboard support, ReaR includes it (without being verbose).
+# If the distro has decided that this is not necessary, ReaR aligns with it (without being verbose).
+# If the user has installed multi-keyboard support, ReaR aligns with it (without being verbose).
+# For details and background information see https://github.com/rear/rear/pull/2520 in particular
+# https://github.com/rear/rear/pull/2520#issuecomment-729681053
 
 # Dump current keyboard mapping so that it can be set during recovery system startup
 # by etc/scripts/system-setup.d/10-console-setup.sh via "loadkeys /etc/dumpkeys.out":
@@ -38,6 +48,11 @@ fi
 #   /usr/share/kbd/keymaps is used by SUSE and Arch Linux
 #   /usr/share/keymaps is used by Debian and Ubuntu
 #   /lib/kbd/keymaps is used by Centos and Fedora and Red Hat
+# It seems newer Debian-based systems (including Ubuntu)
+# no longer contain any keymaps directory as part of the base system
+# so those distros do no longer provide console-multi-keyboard support by default.
+# Optionally installing one (under /usr/share/keymaps) is possible via the console-data package
+# cf. https://github.com/rear/rear/issues/2519#issuecomment-729264699
 # We do not test and distinguish by Linux distribution identifier strings
 # because such tests result an endless nightmare to keep them up-to-date.
 # We prefer (whenever possible) to generically test "some real thing".
