@@ -12,7 +12,7 @@
 # Only when including the current keyboard mapping failed (i.e. when 'dumpkeys' failed)
 # it shows subsequent messages on the user's terminal in any case (via LogPrint and LogPrintError)
 # but normally it shows subsequent messages only in debug mode (via DebugPrint).
-# On first glance it may look like over-sophisticated vode but actually it is user-friendly:
+# On first glance it may look like over-sophisticated code but actually it is user-friendly:
 # ReaR follows what Linux distributions have decided (and what their users are used to).
 # If the distro provides console-multi-keyboard support, ReaR includes it (without being verbose).
 # If the distro has decided that this is not necessary, ReaR aligns with it (without being verbose).
