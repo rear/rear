@@ -111,7 +111,6 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
     # (programs in the recovery system get all copied into /bin/ so it is /bin/rear)
     # cf. https://github.com/rear/rear/issues/2519#issuecomment-731196820
     egrep -q "/lib/modules/|/lib.*/firmware/|$SHARE_DIR|/bin/rear$" <<<"$binary" && continue
-    egrep -q '/lib/modules/|/lib.*/firmware/' <<<"$binary" && continue
     # Skip the ldd test for files that are not owned by a trusted user to mitigate possible ldd security issues
     # because some versions of ldd may directly execute the file (see "man ldd") as user 'root' here
     # cf. the RequiredSharedObjects code in usr/share/rear/lib/linux-functions.sh
@@ -157,7 +156,7 @@ if contains_visible_char "$broken_binaries" ; then
         # Only for programs (i.e. files in a .../bin/... or .../sbin/... directory) treat a missing library as fatal
         # unless specified when a 'not found' reported library is not fatal (when the 'ldd' test was false alarm):
         if grep -q '/[s]*bin/' <<<"$binary" ; then
-            # With an empty NON_FATAL_BINARIES_WITH_MISSING_LIBRARY egrep -E '' would always match:
+            # With an empty NON_FATAL_BINARIES_WITH_MISSING_LIBRARY grep -E '' would always match:
             if test "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" ; then
                 # A program with missing library is treated as fatal when it does not match the pattern:
                 if grep -E -q "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" <<<"$binary" ; then
