@@ -106,7 +106,11 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
     # cf. https://github.com/rear/rear/issues/2177 which also shows that sometimes kernel modules could be
     # not only in the usual directory /lib/modules/ but also e.g. in /usr/lib/modules/
     # so we 'grep' for '/lib/modules/' anywhere in the full path of the binary.
-    # Also skip the ldd test for firmware files where it also does not make sense:
+    # Skip the ldd test for firmware files where it also does not make sense.
+    # Skip the ldd test for ReaR files (mainly bash scripts) where it does not make sense
+    # (programs in the recovery system get all copied into /bin/ so it is /bin/rear)
+    # cf. https://github.com/rear/rear/issues/2519#issuecomment-731196820
+    egrep -q "/lib/modules/|/lib.*/firmware/|$SHARE_DIR|/bin/rear$" <<<"$binary" && continue
     egrep -q '/lib/modules/|/lib.*/firmware/' <<<"$binary" && continue
     # Skip the ldd test for files that are not owned by a trusted user to mitigate possible ldd security issues
     # because some versions of ldd may directly execute the file (see "man ldd") as user 'root' here
