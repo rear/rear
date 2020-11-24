@@ -29,7 +29,7 @@ for file_for_iso in $( find -L . -type f ) ; do
     is_positive_integer $file_for_iso_size || continue
     # Continue testing the next one when this one is below the file size limit:
     test $file_for_iso_size -lt $ISO_FILE_SIZE_LIMIT && continue
-    Error "File for ISO $file_for_iso size greater or equal ISO_FILE_SIZE_LIMIT=$ISO_FILE_SIZE_LIMIT"
+    Error "File for ISO $( basename $file_for_iso ) size $file_for_iso_size greater or equal ISO_FILE_SIZE_LIMIT=$ISO_FILE_SIZE_LIMIT"
 done
 
 # ebiso uses different command line options and parameters:
