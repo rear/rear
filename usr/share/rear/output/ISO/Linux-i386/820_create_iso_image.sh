@@ -19,18 +19,9 @@ fi
 
 pushd $TMP_DIR/isofs >/dev/null
 
-# Error out when files greater or equal ISO_FILE_SIZE_LIMIT should be included in the ISO (cf. default.conf):
-is_positive_integer $ISO_FILE_SIZE_LIMIT || ISO_FILE_SIZE_LIMIT=2147483648
-local file_for_iso file_for_iso_size
+# Error out when files greater or equal ISO_FILE_SIZE_LIMIT should be included in the ISO (cf. default.conf).
 # Consider all regular files and follow symbolic links to also get regular files where symlinks point to:
-for file_for_iso in $( find -L . -type f ) ; do
-    file_for_iso_size=$( stat -L -c '%s' $file_for_iso )
-    # Continue "bona fide" with testing the next one if size could not be determined (assume the current one is OK):
-    is_positive_integer $file_for_iso_size || continue
-    # Continue testing the next one when this one is below the file size limit:
-    test $file_for_iso_size -lt $ISO_FILE_SIZE_LIMIT && continue
-    Error "File for ISO $( basename $file_for_iso ) size $file_for_iso_size greater or equal ISO_FILE_SIZE_LIMIT=$ISO_FILE_SIZE_LIMIT"
-done
+assert_ISO_FILE_SIZE_LIMIT $( find -L . -type f )
 
 # ebiso uses different command line options and parameters:
 if test "ebiso" = $( basename $ISO_MKISOFS_BIN ) ; then
