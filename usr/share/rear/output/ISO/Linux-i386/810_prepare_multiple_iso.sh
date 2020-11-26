@@ -71,6 +71,9 @@ for iso_number in $( seq -f '%02g' 1 $(( $number_of_ISOs - 1 )) ) ; do
     mkdir -p $TEMP_BACKUP_DIR
     mv $BACKUP_NAME $TEMP_BACKUP_DIR
     pushd $TEMP_ISO_DIR 1>/dev/null
+    # Error out when files greater or equal ISO_FILE_SIZE_LIMIT should be included in the ISO (cf. default.conf).
+    # Consider all regular files and follow symbolic links to also get regular files where symlinks point to:
+    assert_ISO_FILE_SIZE_LIMIT $( find -L . -type f )
     if ! $ISO_MKISOFS_BIN $v $ISO_MKISOFS_OPTS -o "$ISO_OUTPUT_PATH" -R -J -volid "${ISO_VOLID}_$iso_number" -v -iso-level 3 . 1>/dev/null ; then
         Error "Failed to create ISO image $ISO_NAME (with $ISO_MKISOFS_BIN)"
     fi
