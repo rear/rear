@@ -37,7 +37,7 @@ function FindUsbDevices () {
 # It errors out for the first file that is greater or equal ISO_FILE_SIZE_LIMIT and shows only this one to the user
 # so if there are also other files greater or equal ISO_FILE_SIZE_LIMIT they are not shown. At least for now
 # this should be sufficient because more than one file greater or equal ISO_FILE_SIZE_LIMIT is not expected
-# and the "assert" meaning is that this error exit is there only as safeguard for a very exceptional case.
+# and the "assert" meaning is that this error exit is there only as safeguard for exceptional cases.
 function assert_ISO_FILE_SIZE_LIMIT () {
     # Use fallback ISO_FILE_SIZE_LIMIT 2GiB (2147483648 bytes) if not set (cf. default.conf):
     is_positive_integer $ISO_FILE_SIZE_LIMIT || ISO_FILE_SIZE_LIMIT=2147483648
