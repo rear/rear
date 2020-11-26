@@ -547,7 +547,7 @@ function Error () {
       # cf. https://github.com/rear/rear/issues/1965#issuecomment-439437868
       test "$last_sourced_script_filename" || last_sourced_script_filename="$SCRIPT_FILE"
     } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
-    # Do not log the error message right now but after the currenly last log messages were shown:
+    # Do not log the error message right now but after the currently last log messages were shown:
     PrintError "ERROR: $*"
     # Show some additional hopefully meaningful output on the user's terminal
     # (no need to log that again here because it is already in the log file)
