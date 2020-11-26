@@ -33,10 +33,7 @@ this live environment to the opposite '$opposite_ssl_setting'.
 
 function rcmd_executor_is_running {
   local procpid=$(ps -e | grep rcmd-executor | grep -v grep | awk -F\  '{print $1}')
-  if [ -n "$procpid" ]; then
-    return 0
-  fi
-  return 1
+  test -n "$procpid" 
 }
 
 function make_sure_rcmd_executor_is_running {

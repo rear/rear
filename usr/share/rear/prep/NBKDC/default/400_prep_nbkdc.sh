@@ -2,15 +2,9 @@
 # prepare stuff for NovaStor DataCenter
 #
 
-# Note: unlike in C/C++, in bash `if function param..` uses the then branch, if
-# the function returns 0
 function is_nbkdc_dir() {
   local candidate="$1"
-  if [ -x $candidate/rcmd-executor/rcmd-executor ]; then
-    return 0
-  else
-    return 1
-  fi
+  test -x $candidate/rcmd-executor/rcmd-executor
 }
 
 function find_nbkdc_dir() {
