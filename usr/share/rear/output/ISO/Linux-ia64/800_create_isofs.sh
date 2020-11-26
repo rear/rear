@@ -24,6 +24,10 @@ mv -f $v $TMP_DIR/boot.img "$TMP_DIR/isofs/boot"
 # Careful in case of 'return' after 'pushd' (must call the matching 'popd' before 'return'):
 pushd $TMP_DIR/isofs # so that relative paths will work
 
+# Error out when files greater or equal ISO_FILE_SIZE_LIMIT should be included in the ISO (cf. default.conf).
+# Consider all regular files and follow symbolic links to also get regular files where symlinks point to:
+assert_ISO_FILE_SIZE_LIMIT $( find -L . -type f )
+
 $ISO_MKISOFS_BIN $v $ISO_MKISOFS_OPTS -o "$ISO_DIR/$ISO_PREFIX.iso" \
     -b boot/boot.img -c boot/boot.catalog \
     -no-emul-boot -R -T -J -volid "$ISO_VOLID" -v . >/dev/null
