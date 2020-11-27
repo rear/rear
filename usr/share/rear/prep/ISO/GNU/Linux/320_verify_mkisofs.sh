@@ -6,6 +6,7 @@
 # and mkisofs and genisoimage as second and third option
 # but for UEFI bootable systems 'ISO_MKISOFS_BIN=/usr/bin/ebiso' is used.
 test -x "$ISO_MKISOFS_BIN" || Error "Could not find program to make ISO9660 filesystem. Install 'mkisofs', 'genisoimage' or 'ebiso' or specify ISO_MKISOFS_BIN (currently $ISO_MKISOFS_BIN)"
+DebugPrint "Using '$ISO_MKISOFS_BIN' to create ISO filesystem images"
 
 # Include 'udf' module which is required if backup archive is >= 4GiB and mkisofs/genisoimage is used:
 IsInArray "all_modules" "${MODULES[@]}" || MODULES+=( udf )
@@ -56,7 +57,5 @@ if test "ebiso" = "$( basename $ISO_MKISOFS_BIN )" ; then
     # 2 GiB =  2 * 1024 * 1024 * 1024 bytes = 2147483648 bytes:
     test $ISO_FILE_SIZE_LIMIT -le 2147483648 || Error "ebiso has a 2GiB file size limit but ISO_FILE_SIZE_LIMIT is greater than 2GiB"
 fi
-
-DebugPrint "Using '$ISO_MKISOFS_BIN' to create ISO filesystem images"
 
 # vim: set et ts=4 sw=4:
