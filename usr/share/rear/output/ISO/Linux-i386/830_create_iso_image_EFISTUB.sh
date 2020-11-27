@@ -5,6 +5,10 @@ LogPrint "EFI_STUB: Making ISO image"
 
 pushd $TMP_DIR/isofs >/dev/null
 
+# Error out when files greater or equal ISO_FILE_SIZE_LIMIT should be included in the ISO (cf. default.conf).
+# Consider all regular files and follow symbolic links to also get regular files where symlinks point to:
+assert_ISO_FILE_SIZE_LIMIT $( find -L . -type f )
+
 $ISO_MKISOFS_BIN $v $ISO_MKISOFS_OPTS -o "$ISO_DIR/$ISO_PREFIX.iso" \
     -b isolinux/isolinux.bin -c isolinux/boot.cat \
     -no-emul-boot -boot-load-size 4 -boot-info-table \
