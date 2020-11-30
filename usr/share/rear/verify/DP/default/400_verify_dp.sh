@@ -6,7 +6,10 @@
 test -s /etc/opt/omni/client/cell_server || Error "Data Protector Cell Manager not configured in /etc/opt/omni/client/cell_server"
 CELL_SERVER="$( cat /etc/opt/omni/client/cell_server )"
 
-OMNICHECK=/opt/omni/bin/omnicheck
-# check that the Cell Manager is responding on the INET port
-${OMNICHECK} -patches -host ${CELL_SERVER} || Error "Data Protector Cell Manager is not responding, error code $?.
-See $RUNTIME_LOGFILE for more details."
+if [ $ARCH == "Linux-i386" ] || [ $ARCH == "Linux-x86_64" ] || [ $ARCH == "Linux-ia64" ]; then
+    OMNICHECK=/opt/omni/bin/omnicheck
+
+    # check that the Cell Manager is responding on the INET port
+    ${OMNICHECK} -patches -host ${CELL_SERVER} || Error "Data Protector Cell Manager is not responding, error code $?.
+    See $RUNTIME_LOGFILE for more details."
+fi
