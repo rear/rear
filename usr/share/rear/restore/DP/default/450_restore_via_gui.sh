@@ -8,7 +8,7 @@ Log "Request for a manual restore via the GUI"
 LogUserOutput "
 **********************************************************************
 * The Data Protector client is available on the network. Restore a
-* backup from the Data Protector GUI. Make sure you select \"overwrite\"
+* backup from the Data Protector GUI. Make sure you select 'Overwrite'
 * from Destination tab and $TARGET_FS_ROOT as destination.
 *
 * When the restore is complete press ANY key to continue!

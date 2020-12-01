@@ -6,7 +6,7 @@
 # ensure the flag DP GUI restore request does not exists
 rm -f $TMP_DIR/DP_GUI_RESTORE
 
-if [ $ARCH == "Linux-i386" ] || [ $ARCH == "Linux-x86_64" ] || [ $ARCH == "Linux-ia64" ]; then
+if [ $ARCH == "Linux-i386" ] || [ $ARCH == "Linux-ia64" ]; then
     unset REPLY
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
     # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
