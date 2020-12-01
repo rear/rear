@@ -12,7 +12,7 @@ Log "Backup method is DP: check Data Protector requirements"
 test -x $VBDA || Error "Cannot execute $VBDA
 Install Data Protector Disk Agent (DA component) on the client."
 
-if [ $ARCH == "Linux-i386" ] || [ $ARCH == "Linux-x86_64" ] || [ $ARCH == "Linux-ia64" ]; then
+if [ $ARCH == "Linux-i386" ] || [ $ARCH == "Linux-ia64" ]; then
     test -x $OMNIR || Error "Cannot execute $OMNIR
     Install Data Protector User Interface (CC component) on the client."
 
