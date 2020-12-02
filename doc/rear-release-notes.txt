@@ -99,7 +99,7 @@ functionality:
       - EMC Avamar (BACKUP=AVA)
       - SEP Sesam (BACKUP=SESAM)
       - FDR/Upstream (BACKUP=FDRUPSTREAM)
-      - Novastor NovaBACKUP DC (BACKUP=NBKDC)
+      - NovaStor DataCenter (BACKUP=NBKDC)
       - Borg Backup (BACKUP=BORG)
       - Rubrik Cloud Data Management (BACKUP=CDM) (New)
   o Integrates with Disaster Recovery Linux Manager (DRLM)
