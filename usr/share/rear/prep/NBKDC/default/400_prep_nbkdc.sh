@@ -44,7 +44,7 @@ fi
 
 
 COND=$NBKDC_HIB_DIR/CONDEV
-[[ ! -r "$COND" ]] && Error "CONDEV file '$COND' can not be read"
+[[ -r "$COND" ]] || Error "CONDEV file '$COND' can not be read"
 
 while CDV== read key value ; do
     case "$key" in
