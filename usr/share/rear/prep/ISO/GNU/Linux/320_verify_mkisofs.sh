@@ -50,10 +50,13 @@ if $ISO_MKISOFS_BIN --help 2>&1 >/dev/null | grep -qw -- -allow-limited-size ; t
     ISO_MKISOFS_OPTS+=" -allow-limited-size"
 fi
 
-# ebiso has a 2GiB file size limit
-# cf. https://github.com/gozora/ebiso/issues/12
-# so ISO_FILE_SIZE_LIMIT must not be greater than 2GiB
+# ebiso has a 2GiB file size limit cf. https://github.com/gozora/ebiso/issues/12
+# so an actual ISO_FILE_SIZE_LIMIT value must be set that is not greater than 2GiB:
 if test "ebiso" = "$( basename $ISO_MKISOFS_BIN )" ; then
+    # For ebiso the ISO_FILE_SIZE_LIMIT test must not be skipped with ISO_FILE_SIZE_LIMIT=0
+    # because it would be disastrous when e.g. a backup.tar.gz in the ISO becomes bigger than 2GiB
+    # that gets corrupted in the ISO so the backup is lost and restore via "rear recover" cannot work:
+    is_positive_integer $ISO_FILE_SIZE_LIMIT || Error "ebiso has a 2GiB file size limit but ISO_FILE_SIZE_LIMIT is not set accordingly"
     # 2 GiB =  2 * 1024 * 1024 * 1024 bytes = 2147483648 bytes:
     test $ISO_FILE_SIZE_LIMIT -le 2147483648 || Error "ebiso has a 2GiB file size limit but ISO_FILE_SIZE_LIMIT is greater than 2GiB"
 fi
