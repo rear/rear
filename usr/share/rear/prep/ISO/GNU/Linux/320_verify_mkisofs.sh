@@ -11,10 +11,11 @@ DebugPrint "Using '$ISO_MKISOFS_BIN' to create ISO filesystem images"
 # Include 'udf' module which is required if backup archive is >= 4GiB and mkisofs/genisoimage is used:
 IsInArray "all_modules" "${MODULES[@]}" || MODULES+=( udf )
 # Enforce 2GiB ISO_FILE_SIZE_LIMIT when the MODULES array contains 'loaded_modules'
-# because MODULES+=( udf ) has no effect in this case unless it is loaded (which normally isn't)
+# because in this case MODULES+=( udf ) has no effect (unless it is loaded which normally isn't)
 # except the user has specified to skip the ISO_FILE_SIZE_LIMIT test with ISO_FILE_SIZE_LIMIT=0
+# but keep what the user has specified if ISO_FILE_SIZE_LIMIT is specified less than 2GiB:
 if IsInArray "loaded_modules" "${MODULES[@]}" ; then
-    if is_positive_integer $ISO_FILE_SIZE_LIMIT ; then
+    if is_positive_integer $ISO_FILE_SIZE_LIMIT && test $ISO_FILE_SIZE_LIMIT -gt 2147483648 ; then
         DebugPrint "Enforcing 2GiB ISO_FILE_SIZE_LIMIT (MODULES contains 'loaded_modules')"
         ISO_FILE_SIZE_LIMIT=2147483648
     fi
