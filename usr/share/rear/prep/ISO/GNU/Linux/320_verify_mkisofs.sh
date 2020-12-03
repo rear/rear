@@ -10,6 +10,15 @@ DebugPrint "Using '$ISO_MKISOFS_BIN' to create ISO filesystem images"
 
 # Include 'udf' module which is required if backup archive is >= 4GiB and mkisofs/genisoimage is used:
 IsInArray "all_modules" "${MODULES[@]}" || MODULES+=( udf )
+# Enforce 2GiB ISO_FILE_SIZE_LIMIT when the MODULES array contains 'loaded_modules'
+# because MODULES+=( udf ) has no effect in this case unless it is loaded (which normally isn't)
+# except the user has specified to skip the ISO_FILE_SIZE_LIMIT test with ISO_FILE_SIZE_LIMIT=0
+if IsInArray "loaded_modules" "${MODULES[@]}" ; then
+    if is_positive_integer $ISO_FILE_SIZE_LIMIT ; then
+        DebugPrint "Enforcing 2GiB ISO_FILE_SIZE_LIMIT (MODULES contains 'loaded_modules')"
+        ISO_FILE_SIZE_LIMIT=2147483648
+    fi
+fi
 # "man mkisofs" (at least on SLES12-SP5 for /usr/bin/mkisofs from the cdrkit-cdrtools-compat RPM) reads (excerpts):
 #   -allow-limited-size
 #     When processing files larger than 2GiB which cannot be represented in ISO9660 level 1 or 2,
