@@ -13,7 +13,10 @@ IsInArray "all_modules" "${MODULES[@]}" || MODULES+=( udf )
 # Enforce 2GiB ISO_FILE_SIZE_LIMIT when the MODULES array contains 'loaded_modules'
 # because in this case MODULES+=( udf ) has no effect (unless it is loaded which normally isn't)
 # except the user has specified to skip the ISO_FILE_SIZE_LIMIT test with ISO_FILE_SIZE_LIMIT=0
-# but keep what the user has specified if ISO_FILE_SIZE_LIMIT is specified less than 2GiB:
+# but keep what the user has specified if ISO_FILE_SIZE_LIMIT is specified less than 2GiB.
+# Do nothing when the MODULES array contains 'no_modules' because that is meant for experts usually
+# when they have all needed modules (they have to know what they need) compiled into their kernel
+# (in default.conf a 2GiB ISO_FILE_SIZE_LIMIT is set so by default things should behave safe):
 if IsInArray "loaded_modules" "${MODULES[@]}" ; then
     if is_positive_integer $ISO_FILE_SIZE_LIMIT && test $ISO_FILE_SIZE_LIMIT -gt 2147483648 ; then
         DebugPrint "Enforcing 2GiB ISO_FILE_SIZE_LIMIT (MODULES contains 'loaded_modules')"
