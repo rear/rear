@@ -39,8 +39,8 @@ function FindUsbDevices () {
 # this should be sufficient because more than one file greater or equal ISO_FILE_SIZE_LIMIT is not expected
 # and the "assert" meaning is that this error exit is there only as safeguard for exceptional cases.
 function assert_ISO_FILE_SIZE_LIMIT () {
-    # Use fallback ISO_FILE_SIZE_LIMIT 2GiB (2147483648 bytes) if not set (cf. default.conf):
-    is_positive_integer $ISO_FILE_SIZE_LIMIT || ISO_FILE_SIZE_LIMIT=2147483648
+    # Skip when there is no usable ISO_FILE_SIZE_LIMIT set:
+    is_positive_integer $ISO_FILE_SIZE_LIMIT || return 0
     local file_for_iso file_for_iso_size
     for file_for_iso in $@ ; do
         file_for_iso_size=$( stat -L -c '%s' $file_for_iso )
