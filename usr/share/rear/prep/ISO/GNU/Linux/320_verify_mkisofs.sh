@@ -10,6 +10,19 @@ DebugPrint "Using '$ISO_MKISOFS_BIN' to create ISO filesystem images"
 
 # Include 'udf' module which is required if backup archive is >= 4GiB and mkisofs/genisoimage is used:
 IsInArray "all_modules" "${MODULES[@]}" || MODULES+=( udf )
+# Enforce 2GiB ISO_FILE_SIZE_LIMIT when the MODULES array contains 'loaded_modules'
+# because in this case MODULES+=( udf ) has no effect (unless it is loaded which normally isn't)
+# except the user has specified to skip the ISO_FILE_SIZE_LIMIT test with ISO_FILE_SIZE_LIMIT=0
+# but keep what the user has specified if ISO_FILE_SIZE_LIMIT is specified less than 2GiB.
+# Do nothing when the MODULES array contains 'no_modules' because that is meant for experts usually
+# when they have all needed modules (they have to know what they need) compiled into their kernel
+# (in default.conf a 2GiB ISO_FILE_SIZE_LIMIT is set so by default things should behave safe):
+if IsInArray "loaded_modules" "${MODULES[@]}" ; then
+    if is_positive_integer $ISO_FILE_SIZE_LIMIT && test $ISO_FILE_SIZE_LIMIT -gt 2147483648 ; then
+        DebugPrint "Enforcing 2GiB ISO_FILE_SIZE_LIMIT (MODULES contains 'loaded_modules')"
+        ISO_FILE_SIZE_LIMIT=2147483648
+    fi
+fi
 # "man mkisofs" (at least on SLES12-SP5 for /usr/bin/mkisofs from the cdrkit-cdrtools-compat RPM) reads (excerpts):
 #   -allow-limited-size
 #     When processing files larger than 2GiB which cannot be represented in ISO9660 level 1 or 2,
@@ -50,10 +63,13 @@ if $ISO_MKISOFS_BIN --help 2>&1 >/dev/null | grep -qw -- -allow-limited-size ; t
     ISO_MKISOFS_OPTS+=" -allow-limited-size"
 fi
 
-# ebiso has a 2GiB file size limit
-# cf. https://github.com/gozora/ebiso/issues/12
-# so ISO_FILE_SIZE_LIMIT must not be greater than 2GiB
+# ebiso has a 2GiB file size limit cf. https://github.com/gozora/ebiso/issues/12
+# so an actual ISO_FILE_SIZE_LIMIT value must be set that is not greater than 2GiB:
 if test "ebiso" = "$( basename $ISO_MKISOFS_BIN )" ; then
+    # For ebiso the ISO_FILE_SIZE_LIMIT test must not be skipped with ISO_FILE_SIZE_LIMIT=0
+    # because it would be disastrous when e.g. a backup.tar.gz in the ISO becomes bigger than 2GiB
+    # that gets corrupted in the ISO so the backup is lost and restore via "rear recover" cannot work:
+    is_positive_integer $ISO_FILE_SIZE_LIMIT || Error "ebiso has a 2GiB file size limit but ISO_FILE_SIZE_LIMIT is not set accordingly"
     # 2 GiB =  2 * 1024 * 1024 * 1024 bytes = 2147483648 bytes:
     test $ISO_FILE_SIZE_LIMIT -le 2147483648 || Error "ebiso has a 2GiB file size limit but ISO_FILE_SIZE_LIMIT is greater than 2GiB"
 fi
