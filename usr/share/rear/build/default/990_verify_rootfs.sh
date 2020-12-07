@@ -210,7 +210,7 @@ is_true $fatal_missing_library && keep_build_dir
 
 # Testing that each program in the PROGS array can be found as executable command within the recovery system
 # provided the program exist on the original system:
-DebugPrint "Testing that each program in the PROGS array can be found as executable command within the recovery system"
+DebugPrint "Testing that the existing programs in the PROGS array can be found as executable command within the recovery system"
 local program=""
 local missing_programs=""
 for program in "${PROGS[@]}" ; do
