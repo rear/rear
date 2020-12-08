@@ -10,25 +10,25 @@ if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
       BEXTRACT_VOLUME=*
    fi
 
-   [ -x /usr/sbin/bextract ]
+   [ -x $BACULA_BIN_DIR/bextract ]
    StopIfError "Bacula executable (bextract) missing or not executable"
 
-   [ -s /etc/bacula/bacula-sd.conf ]
+   [ -s $BACULA_CONF_DIR/bacula-sd.conf ]
    StopIfError "Bacula configuration file (bacula-sd.conf) missing"
 
 else
 
    ### Bacula support using bconsole
-   [ -x /usr/sbin/bacula-fd ]
+   [ -x $BACULA_BIN_DIR/bacula-fd ]
    StopIfError "Bacula executable (bacula-fd) missing or not executable"
 
-   [ -s /etc/bacula/bacula-fd.conf ]
+   [ -s $BACULA_CONF_DIR/bacula-fd.conf ]
    StopIfError "Bacula configuration file (bacula-fd.conf) missing"
 
-   [ -x /usr/sbin/bconsole ]
+   [ -x $BACULA_BIN_DIR/bconsole ]
    StopIfError "Bacula executable (bconsole) missing or not executable"
 
-   [ -s /etc/bacula/bconsole.conf ]
+   [ -s $BACULA_CONF_DIR/bconsole.conf ]
    StopIfError "Bacula configuration file (bconsole.conf) missing"
 
 fi

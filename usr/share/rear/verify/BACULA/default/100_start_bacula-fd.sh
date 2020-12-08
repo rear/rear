@@ -13,7 +13,7 @@ if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
 else
 
    ### Bacula support using bconsole
-   bacula-fd -u root -g bacula -c /etc/bacula/bacula-fd.conf
+   bacula-fd -u root -g bacula -c $BACULA_CONF_DIR/bacula-fd.conf
    StopIfError "Cannot start bacula-fd file daemon"
 
 fi
