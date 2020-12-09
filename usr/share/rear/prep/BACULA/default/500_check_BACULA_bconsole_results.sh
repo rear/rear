@@ -29,11 +29,11 @@ fi
 # and that the director can connect to the file daemon on this system.
 # "Connecting to Director 'director_name-fd:9101'"
 # "Connecting to Client 'bacula_client_name-fd at FQDN:9102"
-BACULA_CLIENT=`grep $(hostname -s) $BACULA_CONF_DIR/bacula-fd.conf | grep "\-fd" | awk '{print $3}' | sed -e "s/-fd//g"`
+BACULA_CLIENT=$(grep $(hostname -s) $BACULA_CONF_DIR/bacula-fd.conf | grep "\-fd" | awk '{print $3}' | sed -e "s/-fd//g")
 [ "${BACULA_CLIENT}" ]
 StopIfError "Client $(hostname -s) not defined in $BACULA_CONF_DIR/bacula-fd.conf"
 
-BACULA_RESULT=( `echo -e " status client=${BACULA_CLIENT}-fd" | bconsole | grep Connect ` )
+BACULA_RESULT=( $(echo -e " status client=${BACULA_CLIENT}-fd" | bconsole | grep Connect) )
 
 director=${BACULA_RESULT[3]}
 client=${BACULA_RESULT[9]}

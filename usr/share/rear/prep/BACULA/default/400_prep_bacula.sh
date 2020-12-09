@@ -2,7 +2,7 @@
 if ! test -d "$BACULA_CONF_DIR" ; then
     test -d "/etc/bacula" && BACULA_CONF_DIR="/etc/bacula"
     # bacula-enterprise-client uses /opt/bacula/etc
-    test -d "/opt/bacula/etc" && BACULA_CONFIG_DIR="/opt/bacula/etc"
+    test -d "/opt/bacula/etc" && BACULA_CONF_DIR="/opt/bacula/etc"
 fi
 test -d "$BACULA_CONF_DIR" || Error "No BACULA_CONF_DIR"
 if ! test -d "$BACULA_BIN_DIR" ; then
