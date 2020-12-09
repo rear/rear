@@ -5,7 +5,7 @@ Relax-and-Recover (ReaR) is a disaster recovery tool.
 This help is part of the ReaR rescue image. You are here when you need
 to recover your system by restoring a backup that you had made before
 plus recreating the disk layout (partitions, filesystems) as it was
-when you had made the rescue image (via "rear mkbackup/mkrescue).
+when you had made the rescue image (via "rear mkbackup/mkrescue").
 
 The menu lists the rescue images (or recovery environments) stored
 on this boot medium (USB, PXE, ISO) that is used to boot this menu.
