@@ -15,12 +15,6 @@ fi
 BACULA_DIRECTOR=$(grep -i address $BACULA_CONF_DIR/bconsole.conf | awk '{ print $3 }')
 [ "${BACULA_DIRECTOR}" ] || Error "Director not defined in $BACULA_CONF_DIR/bconsole.conf"
 
-if test "$PING"; then
-	ping -c 2 -q  $BACULA_DIRECTOR >/dev/null || Error "Backup host [$BACULA_DIRECTOR] not reachable."
-else
-	Log "Skipping ping test"
-fi
-
 # does the director allow connections from this client? bconsole knows!
 #
 # We want these two lines to show that we can connect to the director
