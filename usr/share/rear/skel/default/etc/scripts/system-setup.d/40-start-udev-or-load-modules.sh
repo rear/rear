@@ -6,6 +6,7 @@
 
 # load specified modules first
 if test -s /etc/modules ; then
+    echo "Loading modules specified in /etc/modules ..."
     while read module options ; do
         case "$module" in
             (\#*|"") ;;
@@ -70,7 +71,7 @@ else
     # FIXME: Please submit any better ideas !!
     # Especially how to analyse a running system and load the same drivers and bind them to the same devices in
     # the correct order
-    echo "Loading storage modules..."
+    echo "Loading storage modules ..."
     for module in $( find /lib/modules/$(uname -r)/kernel/drivers/{scsi,block,ide,message,ata} -type f 2>/dev/null ) ; do
         # module extension could be .ko or .ko.xz
         filename="$( basename $module )"
