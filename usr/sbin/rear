@@ -122,6 +122,7 @@ readonly TARGET_FS_ROOT="/mnt/local"
 DEBUG=""
 DEBUGSCRIPTS=""
 DEBUGSCRIPTS_ARGUMENT="x"
+DEBUG_OUTPUT_DEV="null"
 DISPENSABLE_OUTPUT_DEV="null"
 KEEP_BUILD_DIR=""
 KERNEL_VERSION=""
@@ -176,16 +177,19 @@ while true ; do
         (-d)
             DEBUG=1
             VERBOSE=1
+            DEBUG_OUTPUT_DEV="stderr"
             ;;
         (-D)
             DEBUG=1
             VERBOSE=1
             DEBUGSCRIPTS=1
+            DEBUG_OUTPUT_DEV="stderr"
             ;;
         (--debugscripts)
             DEBUG=1
             VERBOSE=1
             DEBUGSCRIPTS=1
+            DEBUG_OUTPUT_DEV="stderr"
             DISPENSABLE_OUTPUT_DEV="stderr"
             if [[ "$2" == -* ]] ; then
                 # When the item that follows '--debugscripts' starts with a '-'
@@ -276,7 +280,7 @@ fi
 # KERNEL_VERSION because if empty it is set when sourcing config files below:
 readonly ARGS
 readonly CONFIG_APPEND_FILES
-readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DISPENSABLE_OUTPUT_DEV
+readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DEBUG_OUTPUT_DEV DISPENSABLE_OUTPUT_DEV
 readonly SIMULATE STEPBYSTEP VERBOSE
 
 # The udev workflow is a special case because it is only a wrapper workflow
