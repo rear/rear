@@ -19,7 +19,7 @@ if has_binary syslinux && [[ -z "$SECURE_BOOT_BOOTLOADER" ]]; then
     fi
 fi
 
-if ([[ -z "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] && ! is_true $use_syslinux_legacy); then
+if [[ -z "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] && ! is_true $use_syslinux_legacy; then
     Error "Creating a raw disk image requires an EFI bootloader or syslinux"
 fi
 
@@ -185,6 +185,37 @@ if is_true $use_kpartx; then
 fi
 losetup -d "$disk_device" || Error "Could not delete loop device"
 RemoveExitTask "losetup -d $disk_device >&2"
+
+
+### Copy the EFI boot partition to local disk partitions named "$RAWDISK_INSTALL_GPT_PARTITION_NAME" if configured
+
+if [[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" && -n "$RAWDISK_INSTALL_GPT_PARTITION_NAME" ]]; then
+    local detected_fs_type detected_mount_point install_partition install_partition_count=0
+
+    LogPrint "Installing the EFI rescue system to partitions labeled '$RAWDISK_INSTALL_GPT_PARTITION_NAME'"
+
+    for install_partition in $(lsblk --paths --list --noheadings --output=NAME,PARTLABEL | awk "/ $RAWDISK_INSTALL_GPT_PARTITION_NAME"'$/ { print $1; }'); do
+        local cannot_install_partition="Cannot install the EFI rescue system to partition '$install_partition'"
+
+        detected_fs_type="$(lsblk --output FSTYPE --noheadings "$install_partition")"
+        if [[ "$detected_fs_type" != "" && "$detected_fs_type" != "vfat" ]]; then
+            LogPrintError "$cannot_install_partition with type '$detected_fs_type' (must be 'vfat' or empty)"
+            continue
+        fi
+
+        detected_mount_point="$(lsblk --output MOUNTPOINT --noheadings "$install_partition")"
+        if [[ -n "$detected_mount_point" ]]; then
+            LogPrintError "$cannot_install_partition as it is currently mounted at '$detected_mount_point'"
+            continue
+        fi
+
+        LogPrint "Installing the EFI rescue system to partition '$install_partition'"
+        dd if="$boot_partition" bs=1024 of="$install_partition"
+        install_partition_count=$((install_partition_count + 1))
+    done
+
+    ((install_partition_count == 0)) && LogPrint "Could not detect suitable partitions labeled '$RAWDISK_INSTALL_GPT_PARTITION_NAME'"
+fi
 
 
 ### Compress the disk image on request
