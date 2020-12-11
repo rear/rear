@@ -185,6 +185,9 @@ if [[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" && -n "$RAWDISK_INSTALL_GPT_PARTITION_
     for install_partition in $(lsblk --paths --list --noheadings --output=NAME,PARTLABEL | awk "/ $RAWDISK_INSTALL_GPT_PARTITION_NAME"'$/ { print $1; }'); do
         local cannot_install_partition="Cannot install the EFI rescue system to partition '$install_partition'"
 
+        # The loop device partition we have just created will most probably have the required partition name: Ignore it.
+        [[ "$install_partition" == "$boot_partition" ]] && continue
+
         detected_fs_type="$(lsblk --output FSTYPE --noheadings "$install_partition")" || Error "Could not analyze the file system type on '$install_partition'"
         if [[ "$detected_fs_type" != "" && "$detected_fs_type" != "vfat" ]]; then
             LogPrintError "$cannot_install_partition with type '$detected_fs_type' (must be 'vfat' or empty)"
