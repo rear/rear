@@ -175,6 +175,15 @@ if is_true ${RAWDISK_DEBUG:-no}; then
 fi
 
 
+### Unmount the boot partition
+
+# Note: Unmounting before possibly copying the boot partition to local disk partitions ensures that
+#       the file system contents are completely flushed from its caches and the boot partition is synced.
+
+umount "$boot_partition_root" 2>>"$RUNTIME_LOGFILE" || Error "Could not unmount boot file system"
+RemoveExitTask "umount $boot_partition_root >&2"
+
+
 ### Copy the EFI boot partition to local disk partitions named "$RAWDISK_INSTALL_GPT_PARTITION_NAME" if configured
 
 if [[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" && -n "$RAWDISK_INSTALL_GPT_PARTITION_NAME" ]]; then
@@ -209,10 +218,8 @@ if [[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" && -n "$RAWDISK_INSTALL_GPT_PARTITION_
 fi
 
 
-### Unmount the boot partition, release the loop device
+### Release the loop device
 
-umount "$boot_partition_root" || Error "Could not unmount boot file system"
-RemoveExitTask "umount $boot_partition_root >&2"
 if is_true $use_kpartx; then
     kpartx -d "$disk_device" || Error "Could not delete  partition device nodes from loop device $disk_device"
     RemoveExitTask "kpartx -d $disk_device >&2"
