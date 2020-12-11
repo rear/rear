@@ -17,7 +17,7 @@ if [[ -f "$sshd_config_file" ]]; then
     local password_authentication_value=no
     # Avoid that the SSH_ROOT_PASSWORD value is shown in debugscript mode
     # cf. the comment of the UserInput function in lib/_input-output-functions.sh
-    # how to keep things confidential when usr/sbin/rear is run in debugscript mode:
+    # how to keep things confidential when usr/sbin/rear is run in debugscript mode
     # ('2>/dev/null' should be sufficient here because 'test' does not output on stdout):
     { test "$SSH_ROOT_PASSWORD" ; } 2>/dev/null && password_authentication_value=yes
 
