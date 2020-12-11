@@ -20,18 +20,27 @@ set -e -u -o pipefail
 # As fallback use 'root' as root password in the target system.
 # A non-empty fallback is needed because 'passwd' does not accept empty input:
 local root_password="root"
-# If SSH_ROOT_PASSWORD is specified used that as root password in the target system:
-test "$SSH_ROOT_PASSWORD" && root_password="$SSH_ROOT_PASSWORD"
-# If ZYPPER_ROOT_PASSWORD is specified used that as root password in the target system:
-test "$ZYPPER_ROOT_PASSWORD" && root_password="$ZYPPER_ROOT_PASSWORD"
 
-# Set the root password in the target system.
-# Use a login shell in between so that one has in the chrooted environment
-# all the advantages of a "normal working shell" which means one can write
-# the commands inside 'chroot' as one would type them in a normal working shell.
-# In particular one can call programs (like 'passwd') by their basename without path
-# cf. https://github.com/rear/rear/issues/862#issuecomment-274068914
-chroot $TARGET_FS_ROOT /bin/bash --login -c "echo -e '$root_password\n$root_password' | passwd root"
+# Avoid that the SSH_ROOT_PASSWORD or the ZYPPER_ROOT_PASSWORD value is shown in debugscript mode
+# cf. the comment of the UserInput function in lib/_input-output-functions.sh
+# how to keep things confidential when usr/sbin/rear is run in debugscript mode
+# ('2>/dev/null' should be sufficient here because 'test' does not output on stdout):
+{ # If SSH_ROOT_PASSWORD is specified used that as root password in the target system:
+  test "$SSH_ROOT_PASSWORD" && root_password="$SSH_ROOT_PASSWORD"
+  # If ZYPPER_ROOT_PASSWORD is specified used that as root password in the target system:
+  test "$ZYPPER_ROOT_PASSWORD" && root_password="$ZYPPER_ROOT_PASSWORD"
+  # Set the root password in the target system.
+  # Use a login shell in between so that one has in the chrooted environment
+  # all the advantages of a "normal working shell" which means one can write
+  # the commands inside 'chroot' as one would type them in a normal working shell.
+  # In particular one can call programs (like 'passwd') by their basename without path
+  # cf. https://github.com/rear/rear/issues/862#issuecomment-274068914
+  if chroot $TARGET_FS_ROOT /bin/bash --login -c "echo -e '$root_password\n$root_password' | passwd root" ; then
+      Log "Set root password in the target system"
+  else
+      LogPrintError "Failed to set root password in the target system"
+  fi
+} 2>/dev/null
 
 # Restore the ReaR default bash flags and options (see usr/sbin/rear):
 apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
