@@ -197,13 +197,13 @@ if [[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" && -n "$RAWDISK_INSTALL_GPT_PARTITION_
     for install_partition in $(lsblk --paths --list --noheadings --output=NAME,PARTLABEL | awk "/ $RAWDISK_INSTALL_GPT_PARTITION_NAME"'$/ { print $1; }'); do
         local cannot_install_partition="Cannot install the EFI rescue system to partition '$install_partition'"
 
-        detected_fs_type="$(lsblk --output FSTYPE --noheadings "$install_partition")"
+        detected_fs_type="$(lsblk --output FSTYPE --noheadings "$install_partition")" || Error "Could not analyze the file system type on '$install_partition'"
         if [[ "$detected_fs_type" != "" && "$detected_fs_type" != "vfat" ]]; then
             LogPrintError "$cannot_install_partition with type '$detected_fs_type' (must be 'vfat' or empty)"
             continue
         fi
 
-        detected_mount_point="$(lsblk --output MOUNTPOINT --noheadings "$install_partition")"
+        detected_mount_point="$(lsblk --output MOUNTPOINT --noheadings "$install_partition")" || Error "Could not detect whether '$install_partition' is mounted"
         if [[ -n "$detected_mount_point" ]]; then
             LogPrintError "$cannot_install_partition as it is currently mounted at '$detected_mount_point'"
             continue
