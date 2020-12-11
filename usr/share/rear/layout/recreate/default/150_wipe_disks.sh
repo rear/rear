@@ -136,13 +136,13 @@ for detected_PV in $detected_PVs ; do
     #     PV /dev/mapper/luks1sda2 is used by VG system so please use vgreduce first.
     #     (If you are certain you need pvremove, then confirm by using --force twice.)
     #     /dev/mapper/luks1sda2: physical volume label not removed.
-    #   RESCUE linux-uxxi:~ # vgreduce -f system /dev/mapper/luks1sda2
+    #   RESCUE # vgreduce -f system /dev/mapper/luks1sda2
     #     Physical volume "/dev/mapper/luks1sda2" still in use
-    #   RESCUE linux-uxxi:~ # pvremove -f -f -y /dev/mapper/luks1sda2
+    #   RESCUE # pvremove -f -f -y /dev/mapper/luks1sda2
     #     WARNING: PV /dev/mapper/luks1sda2 is used by VG system.
     #     WARNING: Wiping physical volume label from /dev/mapper/luks1sda2 of volume group "system".
     #     Labels on physical volume "/dev/mapper/luks1sda2" successfully wiped.
-    #   RESCUE linux-uxxi:~ # pvscan
+    #   RESCUE # pvscan
     #     No matching physical volumes found
     # So all we can do is using force twice because only that works (with warnings):
     if pvremove --force --force -y $detected_PV ; then
