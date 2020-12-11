@@ -12,9 +12,14 @@ is_false "$SSH_FILES" && return
 # only etc/ssh/sshd_config is used cf. https://github.com/rear/rear/pull/1538#issuecomment-337904240
 local sshd_config_file="$ROOTFS_DIR/etc/ssh/sshd_config"
 if [[ -f "$sshd_config_file" ]]; then
+
     # Enable root login with a password only if SSH_ROOT_PASSWORD is set
     local password_authentication_value=no
-    [[ -n "$SSH_ROOT_PASSWORD" ]] && password_authentication_value=yes
+    # Avoid that the SSH_ROOT_PASSWORD value is shown in debugscript mode
+    # cf. the comment of the UserInput function in lib/_input-output-functions.sh
+    # how to keep things confidential when usr/sbin/rear is run in debugscript mode:
+    # ('2>/dev/null' should be sufficient here because 'test' does not output on stdout):
+    { test "$SSH_ROOT_PASSWORD" ; } 2>/dev/null && password_authentication_value=yes
 
     # List of setting overrides required for the rescue system's sshd - see sshd_config(5)
     # Each list element must be a string of the form 'keyword [value]' or a comment '#...'.
