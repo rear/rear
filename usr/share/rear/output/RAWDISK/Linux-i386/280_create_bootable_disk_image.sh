@@ -198,7 +198,7 @@ if [[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" && -n "$RAWDISK_INSTALL_GPT_PARTITION_
         fi
 
         LogPrint "Installing the EFI rescue system to partition '$install_partition'"
-        dd if="$boot_partition.x" bs=1024 of="$install_partition" 2>>"$RUNTIME_LOGFILE" || Error "Could not copy the EFI rescue system to partition '$install_partition'"
+        dd if="$boot_partition" bs=1024 of="$install_partition" 2>>"$RUNTIME_LOGFILE" || Error "Could not copy the EFI rescue system to partition '$install_partition'"
         install_partition_count=$((install_partition_count + 1))
     done
 
