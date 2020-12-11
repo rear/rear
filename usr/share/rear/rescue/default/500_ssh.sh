@@ -8,8 +8,12 @@ has_binary ssh || has_binary sshd || return 0
 
 # Do nothing when not any SSH file should be copied into the recovery system:
 if is_false "$SSH_FILES" ; then
-    # Print an info if SSH_ROOT_PASSWORD is set but that cannot work when SSH_FILES is set to a 'false' value:
-    test "$SSH_ROOT_PASSWORD" && LogPrintError "SSH_ROOT_PASSWORD cannot work when SSH_FILES is set to a 'false' value"
+    # Print an info if SSH_ROOT_PASSWORD is set but that cannot work when SSH_FILES is set to a 'false' value.
+    # Avoid that the SSH_ROOT_PASSWORD value is shown in debugscript mode
+    # cf. the comment of the UserInput function in lib/_input-output-functions.sh
+    # how to keep things confidential when usr/sbin/rear is run in debugscript mode
+    # ('2>/dev/null' should be sufficient here because 'test' does not output on stdout):
+    { test "$SSH_ROOT_PASSWORD" ; } 2>/dev/null && LogPrintError "SSH_ROOT_PASSWORD cannot work when SSH_FILES is set to a 'false' value"
     return 0
 fi
 
@@ -89,18 +93,26 @@ if ! test -f "$ROOT_HOME_DIR/.ssh/authorized_keys" -o "$SSH_ROOT_PASSWORD" ; the
     LogPrintError "To log into the recovery system via ssh set up $ROOT_HOME_DIR/.ssh/authorized_keys or specify SSH_ROOT_PASSWORD"
 fi
 
-# Set the SSH root password; if pw is encrypted just copy it otherwise use openssl (for backward compatibility)
+# Set the SSH root password in the recovery system:
+# If the password is encrypted just copy it otherwise use openssl (for backward compatibility).
 # Encryption syntax is detected as a '$D$' or '$Dx$' prefix in the password, where D is a single digit and x is one lowercase character.
 # For more information on encryption IDs, check out the NOTES section of the man page for crypt(3).
 # The extglob shell option is required for this to work.
-if test "$SSH_ROOT_PASSWORD" ; then
+# Avoid that the SSH_ROOT_PASSWORD value is shown in debugscript mode
+# cf. the comment of the UserInput function in lib/_input-output-functions.sh
+# how to keep things confidential when usr/sbin/rear is run in debugscript mode
+# ('2>/dev/null' should be sufficient here because 'test' does not output on stdout):
+{ if test "$SSH_ROOT_PASSWORD" ; then
     case "$SSH_ROOT_PASSWORD" in
         (\$[0-9]?([a-z])\$*)
+            Log "Setting encrypted SSH_ROOT_PASSWORD as is in $ROOTFS_DIR/etc/shadow"
             echo "root:$SSH_ROOT_PASSWORD:::::::" > $ROOTFS_DIR/etc/shadow
             ;;
         (*)
+            Log "Setting openssl encrypted SSH_ROOT_PASSWORD in $ROOTFS_DIR/etc/shadow"
             echo "root:$( echo $SSH_ROOT_PASSWORD | openssl passwd -1 -stdin ):::::::" > $ROOTFS_DIR/etc/shadow
             ;;
     esac
-fi
+  fi
+} 2>/dev/null
 
