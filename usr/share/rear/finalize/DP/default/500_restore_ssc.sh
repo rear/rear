@@ -13,8 +13,8 @@
 test -s /etc/opt/omni/client/ssconfig || return 0
 
 local sscpath=/etc/opt/omni/client/sscertificates
-local certfile=$sscpath/localhost_cert.pem
-local keyfile=$sscpath/localhost_key.pem
+local certfile=$sscpath/localhost_cert.*
+local keyfile=$sscpath/localhost_key.*
 
 # Nothing to do when the certificate files already exist in the recreated system:
 test -s $TARGET_FS_ROOT/$certfile -a -s $TARGET_FS_ROOT/$keyfile && return 0
