@@ -95,6 +95,10 @@ if test "$BACKUP" = "FDRUPSTREAM" ; then
     # see https://github.com/rear/rear/pull/2296
     test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$FDRUPSTREAM_INSTALL_PATH/bin || backup_tool_LD_LIBRARY_PATH=$FDRUPSTREAM_INSTALL_PATH/bin
 fi
+if test "$BACKUP" = "DP" ; then
+    # Use a DP-specific LD_LIBRARY_PATH to find DP libraries
+    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DP_LD_LIBRARY_PATH || backup_tool_LD_LIBRARY_PATH=$DP_LD_LIBRARY_PATH
+fi
 # Actually test all binaries for 'not found' libraries.
 # Find all binaries and libraries (in particular what is copied via COPY_AS_IS into arbitrary paths)
 # so find what is a regular file and which is executable or its name is '*.so' or '*.so.[0-9]*'
