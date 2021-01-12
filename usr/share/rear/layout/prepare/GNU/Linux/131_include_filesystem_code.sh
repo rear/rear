@@ -278,9 +278,27 @@ function create_fs () {
                     label2="$(echo $label | sed -e 's/\\b/ /g')" # replace \b with a " "
                     label="$label2"
                 fi
-                echo "mkfs.vfat -n \"$label\" $device" >> "$LAYOUT_CODE"
+                # Create FS with UUID if possible
+                if [ -n "$uuid" ]; then
+                    ( echo "#Try to create with old uuid but when -i is not available fallback to a newly created one."
+                      echo "if ! mkfs.vfat -n "$label" -i "$(echo $uuid | sed s/-//)" $device >&2 ; then"
+                      echo "    mkfs.vfat -n "$label" $device >&2"
+                      echo "fi"
+                    ) >> "$LAYOUT_CODE"
+                else
+                    echo "mkfs.vfat -n \"$label\" $device" >> "$LAYOUT_CODE"
+                fi
             else
-                echo "mkfs.vfat $device" >> "$LAYOUT_CODE"
+                # Create FS with UUID if possible
+                if [ -n "$uuid" ]; then
+                    ( echo "#Try to create with old uuid but when -i is not available fallback to a newly created one."
+                    echo "if ! mkfs.vfat -i "$(echo $uuid | sed s/-//)" $device >&2 ; then"
+                    echo "    mkfs.vfat $device >&2"
+                    echo "fi"
+                    ) >> "$LAYOUT_CODE"
+                else
+                    echo "mkfs.vfat $device" >> "$LAYOUT_CODE"
+                fi
             fi
             # Set the UUID:
             if [ -n "$uuid" ]; then
