@@ -924,7 +924,7 @@ changes:
   o Now there is in default.conf MODULES=( 'all_modules' ) which means that
     now by default all kernel modules get included in the recovery system
     (issue #2041). Usually this is required when migrating to different
-    hardware. Additionaly it makes the recovery system better prepared when
+    hardware. Additionally it makes the recovery system better prepared when
     this or that additional kernel module is needed, e.g. to ensure a USB
     keyboard is usable in the recovery system (issue #1870) or to ensure data
     on external medium (e.g. iso9660) can be read (issue #1202). Furthermore
