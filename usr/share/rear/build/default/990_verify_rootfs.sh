@@ -97,6 +97,7 @@ if test "$BACKUP" = "FDRUPSTREAM" ; then
 fi
 if test "$BACKUP" = "DP" ; then
     # Use a DP-specific LD_LIBRARY_PATH to find DP libraries
+    # see https://github.com/rear/rear/pull/2549
     test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DP_LD_LIBRARY_PATH || backup_tool_LD_LIBRARY_PATH=$DP_LD_LIBRARY_PATH
 fi
 # Actually test all binaries for 'not found' libraries.
