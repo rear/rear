@@ -19,7 +19,7 @@ if has_binary syslinux && [[ -z "$SECURE_BOOT_BOOTLOADER" ]]; then
     fi
 fi
 
-if ([[ -z "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] && ! is_true $use_syslinux_legacy); then
+if [[ -z "$RAWDISK_BOOT_EFI_STAGING_ROOT" ]] && ! is_true $use_syslinux_legacy; then
     Error "Creating a raw disk image requires an EFI bootloader or syslinux"
 fi
 
@@ -57,7 +57,7 @@ sgdisk --new 1::0 --typecode=1:"$typecode" --change-name=1:"${RAWDISK_GPT_PARTIT
 StopIfError "Could not create GPT partition table on $disk_image"
 
 Log "Raw disk image partition table:"
-gdisk -l "$disk_image" >&2
+gdisk -l "$disk_image" >>"$RUNTIME_LOGFILE"
 
 
 ### Create block devices representing the raw disk image
@@ -118,11 +118,11 @@ fi
 # - http://lists.openembedded.org/pipermail/openembedded-core/2012-January/055999.html
 # As there seems to be no silver bullet, let mkfs.vfat choose the 'right' FAT partition type based on partition size
 # (i.e. do not use the '-F 32' option) and hope for the best...
-mkfs.vfat $v "$boot_partition" -n "${RAWDISK_FAT_VOLUME_LABEL:-RESCUE SYS}" || Error "Could not create boot file system"
+mkfs.vfat $v "$boot_partition" -n "${RAWDISK_FAT_VOLUME_LABEL:-RESCUE SYS}" 2>>"$RUNTIME_LOGFILE" || Error "Could not create boot file system"
 
 local boot_partition_root="$TMP_DIR/boot"
-mkdir -p "$boot_partition_root" || Error "Could not create boot file system mount point"
-mount "$boot_partition" "$boot_partition_root" || Error "Could not mount boot file system"
+mkdir -p "$boot_partition_root" 2>>"$RUNTIME_LOGFILE" || Error "Could not create boot file system mount point"
+mount "$boot_partition" "$boot_partition_root" 2>>"$RUNTIME_LOGFILE" || Error "Could not mount boot file system"
 AddExitTask "umount $boot_partition_root >&2"
 
 # Populate the boot file system with kernel, initrd and possibly EFI bootloader
@@ -138,7 +138,7 @@ cp -rL $v "${staged_boot_partition_contents[@]}" "$boot_partition_root" >&2 || E
 if is_true "$RAWDISK_BOOT_USING_SYSLINUX" || is_true $use_syslinux_legacy; then
     # Install syslinux configuration, which may be shared between syslinux/EFI and syslinux/Legacy bootloaders.
     local syslinux_installation_dir="$boot_partition_root/syslinux"
-    mkdir -p "$syslinux_installation_dir" || Error "Could not create syslinux bootloader directory"
+    mkdir -p "$syslinux_installation_dir" 2>>"$RUNTIME_LOGFILE" || Error "Could not create syslinux bootloader directory"
     cat > "$syslinux_installation_dir/syslinux.cfg" << EOF
 DEFAULT rescue
 LABEL rescue
@@ -164,7 +164,7 @@ EOF
 fi
 
 Log "Raw disk boot partition capacity after copying:"
-df -h "$boot_partition_root" >&2
+df -h "$boot_partition_root" >>"$RUNTIME_LOGFILE"
 
 
 ### Allow examining the boot file system and loop device for debugging
@@ -175,15 +175,56 @@ if is_true ${RAWDISK_DEBUG:-no}; then
 fi
 
 
-### Unmount the boot partition, release the loop device
+### Unmount the boot partition
 
-umount "$boot_partition_root" || Error "Could not unmount boot file system"
+# Note: Unmounting before possibly copying the boot partition to local disk partitions ensures that
+#       the file system contents are completely flushed from its caches and the boot partition is synced.
+
+umount "$boot_partition_root" 2>>"$RUNTIME_LOGFILE" || Error "Could not unmount boot file system"
 RemoveExitTask "umount $boot_partition_root >&2"
+
+
+### Copy the EFI boot partition to local disk partitions named "$RAWDISK_INSTALL_GPT_PARTITION_NAME" if configured
+
+if [[ -n "$RAWDISK_BOOT_EFI_STAGING_ROOT" && -n "$RAWDISK_INSTALL_GPT_PARTITION_NAME" ]]; then
+    local detected_fs_type detected_mount_point install_partition install_partition_count=0
+
+    LogPrint "Installing the EFI rescue system to partitions labeled '$RAWDISK_INSTALL_GPT_PARTITION_NAME'"
+
+    for install_partition in $(lsblk --paths --list --noheadings --output=NAME,PARTLABEL | awk "/ $RAWDISK_INSTALL_GPT_PARTITION_NAME"'$/ { print $1; }'); do
+        local cannot_install_partition="Cannot install the EFI rescue system to partition '$install_partition'"
+
+        # The loop device partition we have just created will most probably have the required partition name: Ignore it.
+        [[ "$install_partition" == "$boot_partition" ]] && continue
+
+        detected_fs_type="$(lsblk --output FSTYPE --noheadings "$install_partition")" 2>>"$RUNTIME_LOGFILE" || Error "Could not analyze the file system type on '$install_partition'"
+        if [[ "$detected_fs_type" != "" && "$detected_fs_type" != "vfat" ]]; then
+            LogPrintError "$cannot_install_partition with type '$detected_fs_type' (must be 'vfat' or empty)"
+            continue
+        fi
+
+        detected_mount_point="$(lsblk --output MOUNTPOINT --noheadings "$install_partition")" 2>>"$RUNTIME_LOGFILE" || Error "Could not detect whether '$install_partition' is mounted"
+        if [[ -n "$detected_mount_point" ]]; then
+            LogPrintError "$cannot_install_partition as it is currently mounted at '$detected_mount_point'"
+            continue
+        fi
+
+        LogPrint "Installing the EFI rescue system to partition '$install_partition'"
+        dd if="$boot_partition" bs=1024 of="$install_partition" 2>>"$RUNTIME_LOGFILE" || Error "Could not copy the EFI rescue system to partition '$install_partition'"
+        install_partition_count=$((install_partition_count + 1))
+    done
+
+    ((install_partition_count == 0)) && LogPrint "Could not detect suitable partitions labeled '$RAWDISK_INSTALL_GPT_PARTITION_NAME'"
+fi
+
+
+### Release the loop device
+
 if is_true $use_kpartx; then
-    kpartx -d "$disk_device" || Error "Could not delete  partition device nodes from loop device $disk_device"
+    kpartx -d "$disk_device" 2>>"$RUNTIME_LOGFILE" || Error "Could not delete  partition device nodes from loop device $disk_device"
     RemoveExitTask "kpartx -d $disk_device >&2"
 fi
-losetup -d "$disk_device" || Error "Could not delete loop device"
+losetup -d "$disk_device" 2>>"$RUNTIME_LOGFILE" || Error "Could not delete loop device"
 RemoveExitTask "losetup -d $disk_device >&2"
 
 

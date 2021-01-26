@@ -55,3 +55,4 @@ RAWDISK_GPT_PARTITION_NAME="TCG Opal PBA"
 RAWDISK_FAT_VOLUME_LABEL="OPAL PBA"
 RAWDISK_BOOT_GRUB_MENUENTRY_TITLE="TCG Opal pre-boot authentication"
 RAWDISK_BOOT_SYSLINUX_START_INFORMATION="Starting TCG Opal pre-boot authentication..."
+RAWDISK_INSTALL_GPT_PARTITION_NAME=''  # Never install a PBA in a rescue system partition
