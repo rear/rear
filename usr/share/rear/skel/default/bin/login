@@ -1,4 +1,44 @@
 #!/bin/bash
+#
+# This is a minimal version of login(1). It will be called by agetty for console and serial terminal logins.
+#
+
+function authenticate_user() {
+    # Authenticates the (only) user if a terminal login password is configured.
+    # Returns if successful or if no password is configured, exits after some failed attempts.
+    # The login name is always ignored as the recovery system knows only one user.
+    if [[ -f /.TTY_ROOT_PASSWORD ]]; then
+        trap '' SIGINT SIGQUIT SIGTSTP
+
+        # Read the configured hash signature from its file
+        read -r TTY_ROOT_PASSWORD </.TTY_ROOT_PASSWORD
+        # Extract hash algorithm and salt from the configured hash signature
+        IFS='$' read -r _ method salt _ </.TTY_ROOT_PASSWORD
+
+        for _ in 1 2 3; do
+            read -r -s -p "Password: " password 2>&1
+            echo ""
+
+            # Compute signature of the password to verify
+            password_signature="$(openssl passwd -"$method" -salt "$salt" "$password")"
+
+            if [[ "$password_signature" == "$TTY_ROOT_PASSWORD" ]]; then  # Password matches: Success!
+                trap - SIGINT SIGQUIT SIGTSTP
+                return
+            fi
+
+            sleep 5
+            echo -e "\nLogin incorrect"
+            read -r -p "$(hostname) login: " _ 2>&1 # Fake a login prompt although the user name is not used.
+        done
+
+        exit 1 # Exit after several unsuccessful attempts
+    fi
+}
+
+# Authenticate the (only) user if a password is configured.
+authenticate_user
+
 # setup standard environment for root user
 # ATM root is the only user who can logon at the rescue system
 export HOME=/root
