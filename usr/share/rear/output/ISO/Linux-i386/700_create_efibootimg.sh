@@ -13,7 +13,7 @@ efi_img_sz=( $( du --block-size=32M --summarize $TMP_DIR/mnt ) ) || Error "Faile
 # "cp: error writing '/tmp/rear.XXX/tmp/efi_virt/./EFI/BOOT/...': No space left on device"
 # where the above calculated $efi_img_sz is a bit too small in practice
 # cf. https://github.com/rear/rear/issues/2552
-efi_img_sz=$(( efi_img_sz + 2 ))
+(( efi_img_sz += 2 ))
 # Prepare EFI virtual image aligned to 32MiB blocks:
 dd if=/dev/zero of=$TMP_DIR/efiboot.img count=$efi_img_sz bs=32M
 mkfs.vfat $v -F 16 $TMP_DIR/efiboot.img >&2
