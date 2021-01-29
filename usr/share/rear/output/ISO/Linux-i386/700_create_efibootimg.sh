@@ -9,8 +9,8 @@ is_true $USING_UEFI_BOOTLOADER || return 0 # empty or 0 means NO UEFI
 # so that $efi_img_sz can be simply used to get the first word
 # which is the disk usage of the directory measured in 32MiB blocks:
 efi_img_sz=( $( du --block-size=32M --summarize $TMP_DIR/mnt ) ) || Error "Failed to determine disk usage of EFI virtual image content directory."
-# We add 2 more 32MiB blocks to be on the safe side against inexplicaple failures like
-# "cp: error writing '/tmp/rear.XXX/tmp/efi_virt/./EFI/BOOT/elilo.conf': No space left on device"
+# We add 2 more 32MiB blocks to be on the safe side against inexplicable failures like
+# "cp: error writing '/tmp/rear.XXX/tmp/efi_virt/./EFI/BOOT/...': No space left on device"
 # where the above calculated $efi_img_sz is a bit too small in practice
 # cf. https://github.com/rear/rear/issues/2552
 efi_img_sz=$(( efi_img_sz + 2 ))
