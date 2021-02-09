@@ -11,10 +11,20 @@ while read dm_name junk ; do
     # we try to find the sysfs name
     name=$(get_sysfs_name $dev_name)
 
+    # FIXME: I (jsmeix@suse.de) wonder if it is really right to proceed here
+    # even if it could not find sysfs name for device - i.e. I wonder if it could be better
+    # to skip the current multipath device and 'continue' with the next one in the loop
+    # or to even error out here during "rear mkrescue" where the user can fix things, cf.
+    # "Try hard to care about possible errors" at https://github.com/rear/rear/wiki/Coding-Style
     [[ -e /sys/block/$name ]]
     LogIfError "Did not find sysfs name for device $dm_name (/sys/block/$name)"
 
     dm_size=$(get_disk_size $name)
+    # FIXME: I (jsmeix@suse.de) wonder if it is really right to proceed here even if it failed
+    # to get size of the device. Perhaps dm_size is a required value in disklayout.conf?
+    # I wonder if it is better to skip the current multipath device and 'continue' with the next one
+    # or to even error out here during "rear mkrescue" where the user can fix things, cf.
+    # "Try hard to care about possible errors" at https://github.com/rear/rear/wiki/Coding-Style
     test "$dm_size"
     LogIfError "Failed to get size of $name with get_disk_size"
 
@@ -24,6 +34,11 @@ while read dm_name junk ; do
     done
 
     dm_disktype=$(parted -s $dev_name print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
+    # FIXME: I (jsmeix@suse.de) wonder if it is really right to proceed here even if it failed
+    # to determine dm_disktype. Perhaps dm_disktype is a required value in disklayout.conf?
+    # I wonder if it is better to skip the current multipath device and 'continue' with the next one
+    # or to even error out here during "rear mkrescue" where the user can fix things, cf.
+    # "Try hard to care about possible errors" at https://github.com/rear/rear/wiki/Coding-Style
 
     echo "# Multipath /dev/mapper/$dm_name" >> $DISKLAYOUT_FILE
     echo "# Format: multipath <devname> <size(bytes)> <partition label type> <slaves>" >> $DISKLAYOUT_FILE
