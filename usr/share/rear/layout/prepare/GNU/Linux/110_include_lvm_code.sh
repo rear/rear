@@ -140,6 +140,7 @@ EOF
 cat >> "$LAYOUT_CODE" <<EOF
 if [ \$create_volume_group -eq 1 ] ; then
     LogPrint "Creating LVM VG '$vg'; Warning: some properties may not be preserved..."
+    lvm vgremove --force --force --yes $vg >&2 || true
     if [ -e "$vgrp" ] ; then
         rm -rf "$vgrp"
     fi
