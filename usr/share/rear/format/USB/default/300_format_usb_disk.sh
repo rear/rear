@@ -93,7 +93,10 @@ partprobe $RAW_USB_DEVICE
 sleep 5
 
 if is_true "$EFI" ; then
-    # detect loopback device parition naming"
+    # detect loopback device parition naming
+    # on loop devices the first partition is named e.g. loop0p1
+    # instead of e.g. sdb1 on usual (USB) disks
+    # cf. https://github.com/rear/rear/pull/2555
     local rear_efi_partition_device="${RAW_USB_DEVICE}1"
     if [ ! -b "$rear_efi_partition_device" ] && [ -b "${RAW_USB_DEVICE}p1" ] ; then
         rear_efi_partition_device="${RAW_USB_DEVICE}p1"
@@ -108,7 +111,7 @@ if is_true "$EFI" ; then
     sleep 5
 fi
 
-# detect loopback device parition naming"
+# detect loopback device parition naming (same logic as above)
 local rear_data_partition_device="$RAW_USB_DEVICE$rear_data_partition_number"
 if [ ! -b "$rear_data_partition_device" ] && [ -b "${RAW_USB_DEVICE}p${rear_data_partition_number}" ] ; then
     rear_data_partition_device="${RAW_USB_DEVICE}p${rear_data_partition_number}"
