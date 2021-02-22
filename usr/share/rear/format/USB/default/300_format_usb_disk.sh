@@ -93,9 +93,17 @@ partprobe $RAW_USB_DEVICE
 sleep 5
 
 if is_true "$EFI" ; then
-    LogPrint "Creating vfat filesystem on EFI system partition on '${RAW_USB_DEVICE}1'"
-    if ! mkfs.vfat $v -F 16 -n REAR-EFI ${RAW_USB_DEVICE}1 >&2 ; then
-        Error "Failed to create vfat filesystem on '${RAW_USB_DEVICE}1'"
+    # detect loopback device parition naming
+    # on loop devices the first partition is named e.g. loop0p1
+    # instead of e.g. sdb1 on usual (USB) disks
+    # cf. https://github.com/rear/rear/pull/2555
+    local rear_efi_partition_device="${RAW_USB_DEVICE}1"
+    if [ ! -b "$rear_efi_partition_device" ] && [ -b "${RAW_USB_DEVICE}p1" ] ; then
+        rear_efi_partition_device="${RAW_USB_DEVICE}p1"
+    fi
+    LogPrint "Creating vfat filesystem on EFI system partition on '$rear_efi_partition_device'"
+    if ! mkfs.vfat $v -F 16 -n REAR-EFI $rear_efi_partition_device >&2 ; then
+        Error "Failed to create vfat filesystem on '$rear_efi_partition_device'"
     fi
     # create link for EFI partition in /dev/disk/by-label
     partprobe $RAW_USB_DEVICE
@@ -103,7 +111,11 @@ if is_true "$EFI" ; then
     sleep 5
 fi
 
+# detect loopback device parition naming (same logic as above)
 local rear_data_partition_device="$RAW_USB_DEVICE$rear_data_partition_number"
+if [ ! -b "$rear_data_partition_device" ] && [ -b "${RAW_USB_DEVICE}p${rear_data_partition_number}" ] ; then
+    rear_data_partition_device="${RAW_USB_DEVICE}p${rear_data_partition_number}"
+fi
 
 LogPrint "Creating $USB_DEVICE_FILESYSTEM filesystem with label '$USB_DEVICE_FILESYSTEM_LABEL' on '$rear_data_partition_device'"
 if ! mkfs.$USB_DEVICE_FILESYSTEM -L "$USB_DEVICE_FILESYSTEM_LABEL" $USB_DEVICE_FILESYSTEM_PARAMS $rear_data_partition_device >&2 ; then
