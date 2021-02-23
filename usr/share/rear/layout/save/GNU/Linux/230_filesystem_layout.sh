@@ -60,9 +60,11 @@ docker_root_dir=""
 if service docker status ; then
     docker_is_running="yes"
     # When the Docker daemon/service is running, try to get its 'Docker Root Dir':
-    # Kill 'docker info' with SIGTERM after 5 seconds and with SIGKILL after additional 2 seconds
+    # Kill 'docker info' with SIGTERM after 10 seconds and with SIGKILL after additional 2 seconds
     # because there are too many crippled Docker installations, cf. https://github.com/rear/rear/pull/2021
-    docker_root_dir=$( timeout -k 2s 5s docker info | grep 'Docker Root Dir' | awk '{print $4}' )
+    # and https://github.com/rear/rear/pull/2572#issuecomment-784110872 why the timeout is 10 seconds
+    # i.e. it seems sometimes 'docker info' needs several (more than 5) seconds to finish:
+    docker_root_dir=$( timeout -k 2s 10s docker info | grep 'Docker Root Dir' | awk '{print $4}' )
     # Things may go wrong in the 'Docker specific exclude part' below
     # when Docker is used but its 'Docker Root Dir' cannot be determined
     # cf. https://github.com/rear/rear/issues/1989
