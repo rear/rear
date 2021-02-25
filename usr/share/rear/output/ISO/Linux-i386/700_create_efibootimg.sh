@@ -16,13 +16,13 @@ efi_img_sz=( $( du --block-size=32M --summarize $TMP_DIR/mnt ) ) || Error "Faile
 (( efi_img_sz += 2 ))
 # Prepare EFI virtual image aligned to 32MiB blocks:
 dd if=/dev/zero of=$TMP_DIR/efiboot.img count=$efi_img_sz bs=32M
-mkfs.vfat $v -F 16 $TMP_DIR/efiboot.img >&2
-mkdir -p $v $TMP_DIR/efi_virt >&2
-mount $v -o loop -t vfat -o fat=16 $TMP_DIR/efiboot.img $TMP_DIR/efi_virt >&2
+mkfs.vfat $v -F 16 $TMP_DIR/efiboot.img
+mkdir -p $v $TMP_DIR/efi_virt
+mount $v -o loop -t vfat $TMP_DIR/efiboot.img $TMP_DIR/efi_virt || Error "Failed to loop mount efiboot.img"
 
-# copy files from staging directory
+# Copy files from staging directory into efiboot.img
 cp $v -r $TMP_DIR/mnt/. $TMP_DIR/efi_virt
+umount $v $TMP_DIR/efiboot.img
 
-umount $v $TMP_DIR/efiboot.img >&2
-mv $v -f $TMP_DIR/efiboot.img $TMP_DIR/isofs/boot/efiboot.img >&2
-StopIfError "Could not move efiboot.img file"
+# Move efiboot.img into ISO directory:
+mv $v -f $TMP_DIR/efiboot.img $TMP_DIR/isofs/boot/efiboot.img || Error "Failed to move efiboot.img to isofs/boot/efiboot.img"
