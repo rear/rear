@@ -42,7 +42,7 @@ if [ "${RSYNC_USER}" != "root" ]; then
             StopIfError "Remote file system $_mntpt does not have user_xattr mount option set!"
             #BACKUP_RSYNC_OPTIONS+=( --xattrs --rsync-path="""rsync --fake-super""" )
             # see issue #366 for explanation of removing --xattrs
-            BACKUP_RSYNC_OPTIONS+=( --rsync-path="""rsync --fake-super""" )
+            BACKUP_RSYNC_OPTIONS+=( --rsync-path=\"rsync --fake-super\" )
         fi
     else
         if [ ${BACKUP_RSYNC_OPTIONS[@]/--fake-super/} != ${BACKUP_RSUNC_OPTIONS[@]} ]; then
