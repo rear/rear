@@ -102,7 +102,13 @@ if is_true "$EFI" ; then
         rear_efi_partition_device="${RAW_USB_DEVICE}p1"
     fi
     LogPrint "Creating vfat filesystem on EFI system partition on '$rear_efi_partition_device'"
-    if ! mkfs.vfat $v -F 16 -n REAR-EFI $rear_efi_partition_device >&2 ; then
+    # Make a FAT filesystem on the EFI system partition
+    # cf. https://github.com/rear/rear/issues/2575
+    # and output/ISO/Linux-i386/700_create_efibootimg.sh
+    # and output/RAWDISK/Linux-i386/280_create_bootable_disk_image.sh
+    # Let mkfs.vfat automatically select the FAT type based on the size.
+    # I.e. do not use a '-F 16' or '-F 32' option and hope for the best:
+    if ! mkfs.vfat $v -n REAR-EFI $rear_efi_partition_device >&2 ; then
         Error "Failed to create vfat filesystem on '$rear_efi_partition_device'"
     fi
     # create link for EFI partition in /dev/disk/by-label
