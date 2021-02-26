@@ -19,12 +19,26 @@ efi_img_sz=( $( du --block-size=32M --summarize $TMP_DIR/mnt ) ) || Error "Faile
 # Prepare EFI virtual image aligned to 32MiB blocks:
 dd if=/dev/zero of=$TMP_DIR/efiboot.img count=$efi_img_sz bs=32M
 
-mkfs.vfat $v -F 16 $TMP_DIR/efiboot.img
-mkdir -p $v $TMP_DIR/efi_virt
-
-# Do not specify '-o fat=16' when loop mounting efiboot.img file
-# but rely on the automatic FAT type detection when mounting
+# Make a FAT filesystem on the efiboot.img file and loop mount it
 # cf. https://github.com/rear/rear/issues/2575
+# See output/RAWDISK/Linux-i386/280_create_bootable_disk_image.sh
+# Having a small EFI System Partition (ESP) might introduce problems:
+# - The UEFI spec seems to require a FAT32 EFI System Partition (ESP).
+# - syslinux/Legacy BIOS fails to install on small FAT32 partitions with "syslinux: zero FAT sectors (FAT12/16)".
+# - Some firmwares fail to boot from small FAT32 partitions.
+# - Some firmwares fail to boot from FAT16 partitions.
+# See:
+# - http://www.rodsbooks.com/efi-bootloaders/principles.html
+# - http://lists.openembedded.org/pipermail/openembedded-core/2012-January/055999.html
+# Let mkfs.vfat automatically select the FAT type based on the size.
+# See what "man mkfs.vfat" reads for the '-F' option:
+#  "If nothing is specified, mkfs.fat will automatically select
+#   between 12, 16 and 32 bit, whatever fits better for the filesystem size"
+# I.e. do not use a '-F 16' or '-F 32' option and hope for the best:
+mkfs.vfat $v $TMP_DIR/efiboot.img
+mkdir -p $v $TMP_DIR/efi_virt
+# Do not specify '-o fat=16' or '-o fat=32' when loop mounting the efiboot.img FAT file
+# but rely on the automatic FAT type detection (see what "man 8 mount" reads for 'fat=...'):
 mount $v -o loop -t vfat $TMP_DIR/efiboot.img $TMP_DIR/efi_virt || Error "Failed to loop mount efiboot.img"
 
 # Copy files from staging directory into efiboot.img
