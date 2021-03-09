@@ -144,8 +144,12 @@ for dummy in "once" ; do
     # As a way out of this dilemma we add the below listed modules no longer via conf/GNU/Linux.conf
     # but here after the user config files were sourced so that now the user can specify
     # MODULES=( 'moduleX' 'moduleY' ) in etc/rear/local.conf to get additional kernel modules
-    # included in the recovery system in addition to the ones via an empty MODULES=() setting:
-    MODULES+=( vfat
+    # included in the recovery system in addition to the ones via an empty MODULES=() setting.
+    # nvram could be a module in particular on POWER architecture,
+    # cf. https://github.com/rear/rear/issues/2554#issuecomment-764720180
+    # and https://github.com/rear/rear/pull/2580#issuecomment-791344794
+    MODULES+=( nvram
+               vfat
                nls_iso8859_1 nls_utf8 nls_cp437
                af_packet
                unix
