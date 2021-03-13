@@ -6,7 +6,7 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 WORKFLOW_restoreonly_DESCRIPTION="only restore the backup"
-WORKFLOWS=( ${WORKFLOWS[@]} restoreonly )
+WORKFLOWS+=( restoreonly )
 # The restoreonly workflow is a part (a strict subset) of the recover workflow
 # by skipping those part of the recover workflow that are not needed
 # (like layout/prepare) or would be destructive (like layout/recreate)

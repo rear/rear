@@ -14,7 +14,7 @@
 # BYTES ONLY.
 #
 
-LogPrint "Verifying that the entries in $DISKLAYOUT_FILE are correct ..."
+LogPrint "Verifying that the entries in $DISKLAYOUT_FILE are correct"
 local keyword dummy junk
 
 Log "Verifying that the 'disk' entries in $DISKLAYOUT_FILE are correct"
@@ -256,6 +256,9 @@ is_true "$disklayout_file_is_broken" && BugError "Entries in $DISKLAYOUT_FILE ar
 # It is not a BugError when non consecutive partitions are not supported
 # but an Error because the used parted is insufficient:
 is_true "$non_consecutive_partitions" && Error "There are non consecutive partitions ('rear recover' would fail)"
+
+# Matching message to "Creating disk layout" in layout/save/GNU/Linux/100_create_layout_file.sh
+LogPrint "Created disk layout (check the results in $DISKLAYOUT_FILE)"
 
 # Finish this script successfully in the normal case (i.e. when both 'is_true' above result non zero return code):
 true

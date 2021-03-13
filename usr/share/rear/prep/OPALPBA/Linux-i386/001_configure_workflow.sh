@@ -9,7 +9,14 @@ KERNEL_CMDLINE+=" quiet splash systemd.volatile=yes systemd.unit=sysinit-opalpba
 USE_SERIAL_CONSOLE="$OPAL_PBA_USE_SERIAL_CONSOLE"
 
 # Strip kernel files to a reasonable minimum
-FIRMWARE_FILES=( 'no' )
+if (( ${#OPAL_PBA_FIRMWARE_FILES[@]} > 0 )); then
+    # Prefer OPAL_PBA_FIRMWARE_FILES if non-empty.
+    FIRMWARE_FILES=( "${OPAL_PBA_FIRMWARE_FILES[@]}" )
+elif [[ -z "${FIRMWARE_FILES[*]}" ]] || is_true "$FIRMWARE_FILES"; then
+    # Always override an empty or 'yes'-like setting for FIRMWARE_FILES
+    # as this will make the PBA exceed its allowable size.
+    FIRMWARE_FILES=( 'no' )
+fi
 MODULES=( 'loaded_modules' )
 local exclude_modules='kvm.*|nvidia.*|vbox.*'
 EXCLUDE_MODULES+=( $(lsmod | tail -n +2 | cut -d ' ' -f 1 | while read m; do modprobe -R $m; done | grep -E '^('"$exclude_modules"'$)' ) )
@@ -29,6 +36,7 @@ if (( ${#OPAL_PBA_PROGS[@]} == 0 && ${#OPAL_PBA_COPY_AS_IS[@]} == 0)) && has_bin
     LogPrintError "     interface for the PBA by setting OPAL_PBA_{PROGS,COPY_AS_IS,LIBS} to include Plymouth components."
 fi
 PROGS+=( "${OPAL_PBA_PROGS[@]}" clear )
+[[ -n "$OPAL_PBA_DEBUG_PASSWORD" ]] && REQUIRED_PROGS+=( openssl )
 COPY_AS_IS+=( "${OPAL_PBA_COPY_AS_IS[@]}" )
 LIBS+=( "${OPAL_PBA_LIBS[@]}" )
 
@@ -47,3 +55,4 @@ RAWDISK_GPT_PARTITION_NAME="TCG Opal PBA"
 RAWDISK_FAT_VOLUME_LABEL="OPAL PBA"
 RAWDISK_BOOT_GRUB_MENUENTRY_TITLE="TCG Opal pre-boot authentication"
 RAWDISK_BOOT_SYSLINUX_START_INFORMATION="Starting TCG Opal pre-boot authentication..."
+RAWDISK_INSTALL_GPT_PARTITION_NAME=''  # Never install a PBA in a rescue system partition

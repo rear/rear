@@ -5,6 +5,6 @@
 # for the default values see the standard definition in conf/default.conf file
 
 if ! grep -q relative <<< $(echo ${BACKUP_RSYNC_OPTIONS[@]}); then
-    BACKUP_RSYNC_OPTIONS=( ${BACKUP_RSYNC_OPTIONS[@]} --relative )
+    BACKUP_RSYNC_OPTIONS+=( --relative )
     Log "Added option '--relative' to the BACKUP_RSYNC_OPTIONS array during $WORKFLOW workflow"
 fi

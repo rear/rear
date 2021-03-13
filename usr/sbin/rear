@@ -55,11 +55,19 @@ readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_
 # Versioning
 readonly PRODUCT="Relax-and-Recover"
 readonly PROGRAM=${0##*/}
-readonly VERSION=2.5
+readonly VERSION=2.6
 readonly RELEASE_DATE=Git
 
-# Used in framework-functions.sh to calculate the time spent executing rear:
-readonly STARTTIME=$SECONDS
+# Set machine readable and human readable start date and time values.
+# START_SECONDS is set to have a single fixed point in time
+# where other date and time formats can be derived from in a consistent way.
+# One cannot call the 'date' command several times because then there would be
+# a small probability that the clock advances by a second between two 'date' calls
+# and then START_DATE_TIME_STRING would be a bit later than START_DATE_TIME_NUMBER
+# where "a bit later" could be even the next day when midnight passes in between:
+readonly START_SECONDS=$( date +%s )
+readonly START_DATE_TIME_NUMBER=$( date -d@$START_SECONDS +%Y%m%d%H%M%S )
+readonly START_DATE_TIME_STRING=$( date -d@$START_SECONDS +'%F %T' )
 
 # Provide the command line options in an array so that other scripts may read them:
 readonly CMD_OPTS=( "$@" )
@@ -92,6 +100,12 @@ CONFIG_DIR="$REAR_DIR_PREFIX/etc/rear"
 VAR_DIR="$REAR_DIR_PREFIX/var/lib/rear"
 LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
 
+# The current working directory when this script (usr/sbin/rear) is launched
+# is also the working directory of all the other scripts and config files
+# that get sourced via the Source() function in lib/framework-functions.sh
+# cf. https://github.com/rear/rear/issues/2461
+readonly WORKING_DIR="$( pwd )"
+
 # Generic global variables that are not meant to be configured by the user
 # (i.e. that do not belong into usr/share/rear/conf/default.conf),
 # see https://github.com/rear/rear/issues/678
@@ -108,6 +122,7 @@ readonly TARGET_FS_ROOT="/mnt/local"
 DEBUG=""
 DEBUGSCRIPTS=""
 DEBUGSCRIPTS_ARGUMENT="x"
+DEBUG_OUTPUT_DEV="null"
 DISPENSABLE_OUTPUT_DEV="null"
 KEEP_BUILD_DIR=""
 KERNEL_VERSION=""
@@ -162,16 +177,19 @@ while true ; do
         (-d)
             DEBUG=1
             VERBOSE=1
+            DEBUG_OUTPUT_DEV="stderr"
             ;;
         (-D)
             DEBUG=1
             VERBOSE=1
             DEBUGSCRIPTS=1
+            DEBUG_OUTPUT_DEV="stderr"
             ;;
         (--debugscripts)
             DEBUG=1
             VERBOSE=1
             DEBUGSCRIPTS=1
+            DEBUG_OUTPUT_DEV="stderr"
             DISPENSABLE_OUTPUT_DEV="stderr"
             if [[ "$2" == -* ]] ; then
                 # When the item that follows '--debugscripts' starts with a '-'
@@ -243,10 +261,14 @@ esac
 
 # Set the variables v and verbose to be used in called programs
 # that support the '-v' or '--verbose' options like
-# "cp $v ..." or "rm $verbose ..." and so on:
+# "cp $v ..." or "rm $verbose ..." and so on.
+# Normally stdout and stderr are redirected to /dev/null (see below).
+# In debug modes stdout and stderr are redirected to the log
+# so setting that variables only makes sense in debug modes.
+# Cf. https://github.com/rear/rear/issues/2416
 v=""
 verbose=""
-if test "$VERBOSE" ; then
+if test "$DEBUG" ; then
     v="-v"
     verbose="--verbose"
 fi
@@ -258,7 +280,7 @@ fi
 # KERNEL_VERSION because if empty it is set when sourcing config files below:
 readonly ARGS
 readonly CONFIG_APPEND_FILES
-readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DISPENSABLE_OUTPUT_DEV
+readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DEBUG_OUTPUT_DEV DISPENSABLE_OUTPUT_DEV
 readonly SIMULATE STEPBYSTEP VERBOSE
 
 # The udev workflow is a special case because it is only a wrapper workflow
@@ -382,19 +404,23 @@ test -r "$RUNTIME_LOGFILE" && mv -f "$RUNTIME_LOGFILE" "$RUNTIME_LOGFILE".old 2>
 # Start logging:
 mkdir -p $LOG_DIR || echo "ERROR: Could not create $LOG_DIR" >&2
 cat /dev/null >"$RUNTIME_LOGFILE"
-# Redirect both STDOUT and STDERR into the log file.
-# To be more on the safe side append to the log file '>>' instead of plain writing to it '>'
-# because when a program (bash in this case) is plain writing to the log file it can overwrite
-# output of a possibly simultaneously running process that likes to append to the log file
-# (e.g. when a background process runs that also uses the ReaR log file for logging):
-exec 2>>"$RUNTIME_LOGFILE"
-# Make stdout the same what stderr already is.
-# This keeps strict ordering of stdout and stderr outputs
-# because now both stdout and stderr use one same file descriptor.
-# The redirection of stdout into the log file was postponed for ReaR v2.2
-# see https://github.com/rear/rear/issues/1398#issuecomment-315318878
-# for ReaR v2.3 redirection of stdout into the log file is re-enabled:
-exec 1>&2
+# Normally stdout and stderr are redirected to /dev/null.
+# In debug modes stdout and stderr are redirected to the log.
+# Cf. https://github.com/rear/rear/issues/2416
+if test "$DEBUG" ; then
+    # To be on the safe side append to the log file '>>' instead of plain writing to it '>'
+    # because when a program (bash in this case) is plain writing to the log file it can overwrite
+    # output of a possibly simultaneously running process that likes to append to the log file
+    # (e.g. when a background process runs that also uses the ReaR log file for logging).
+    exec 2>>"$RUNTIME_LOGFILE"
+    # Make stdout the same what stderr already is.
+    # This keeps strict ordering of stdout and stderr outputs
+    # because now both stdout and stderr use one same file descriptor.
+    exec 1>&2
+else
+    exec 2>/dev/null
+    exec 1>/dev/null
+fi
 
 # Include functions after RUNTIME_LOGFILE is set and readonly
 # so that functions can use a fixed RUNTIME_LOGFILE value:
@@ -405,7 +431,7 @@ done
 # Show initial startup messages:
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
-    LogPrint "Running $PROGRAM $WORKFLOW (PID $MASTER_PID)"
+    LogPrint "Running $PROGRAM $WORKFLOW (PID $MASTER_PID date $START_DATE_TIME_STRING)"
     Log "Command line options: $0 ${CMD_OPTS[@]}"
     LogPrint "Using log file: $RUNTIME_LOGFILE"
 fi
@@ -471,9 +497,9 @@ if test "$CONFIG_APPEND_FILES" ; then
                 # If "-C foo" was specified on the command line but 'foo' does not exist
                 # try if 'foo.conf' exists and if yes, use that:
                 if test -r "$config_append_file_path" ; then
-                    COPY_AS_IS=( "${COPY_AS_IS[@]}" "$config_append_file_path" )
+                    COPY_AS_IS+=( "$config_append_file_path" )
                 else if test -r "$config_append_file_path.conf" ; then
-                         COPY_AS_IS=( "${COPY_AS_IS[@]}" "$config_append_file_path.conf" )
+                         COPY_AS_IS+=( "$config_append_file_path.conf" )
                      else
                          LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
                      fi

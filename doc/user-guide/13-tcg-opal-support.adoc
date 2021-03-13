@@ -4,6 +4,12 @@
 Beginning with version 2.4, Relax-and-Recover supports self-encrypting disks
 (SEDs) compliant with the TCG Opal 2 specification.
 
+The term "SED" refers to any kind of self-encrypting disk.
+A "TCG Opal 2-compliant disk" or short "Opal disk" is a variant of an SED which implements the Opal 2 standard.
+There are/were other SED variants on the market using proprietary protocols.
+
+In general, these disks all provide full disk encryption in hardware, similar to what LUKS does in software. 
+
 Self-encrypting disk support includes
 
 * recovery (saving and restoring the system's SED configuration),
@@ -18,6 +24,83 @@ path. `sedutil-cli` is available for
 https://github.com/Drive-Trust-Alliance/exec/blob/master/sedutil_LINUX.tgz?raw=true[download from Drive Trust Alliance]
 (check version compatibility), or see
 <<How to Build sedutil-cli Version {sedutil-cli-version}>>.
+
+== Quick Start: Setting up Self-Encrypting Disks
+
+NOTE: This section assumes that ReaR was installed from a package repository. If you are using ReaR locally from GitHub: `cd` into the project's base directory, use the configuration file `etc/rear/local.conf`, invoke `usr/sbin/rear`.
+
+=== Step 1: Install Prerequisites
+[arabic]
+. Download the low-level utility `sedutil-cli` (version 1.15.1) from https://github.com/Drive-Trust-Alliance/exec/blob/master/sedutil_LINUX.tgz?raw=true[Drive-Trust-Alliance on GitHub].
+. Install it into a directory within root’s search path (e.g. `/usr/local/sbin`).
+
+=== Step 2: Create Disk Images for PBA and Rescue System
+[arabic]
+. In `/etc/rear/local.conf` add these two lines:
++
+[source,bash]
+----
+OUTPUT=RAWDISK
+OUTPUT_URL="file:///var/lib/rear/output"
+----
+** To support secure boot, add another line specifying your secure boot loader, e.g. on Ubuntu:
++
+[source,bash]
+----
+SECURE_BOOT_BOOTLOADER="/boot/efi/EFI/ubuntu/shimx64.efi"
+----
+. Run `sudo rear mkopalpba` (ignore messages about keyboard mappings)
+. Run `sudo rear mkrescue` (ignore messages about keyboard mappings)
+
+=== Step 3: Create a Bootable USB Stick with the Rescue System
+[arabic]
+. Plug in the USB stick to use.
+. Use `lsblk -o +MODEL` to find the correct disk device path for your USB stick (typically `/dev/sdX`).
+. *RE-CHECK. The following command will overwrite the entire USB stick.*
+. Use the following command, replacing `USB-DEVICE` with the USB stick’s device name.
++
+[source,bash]
+----
+sudo zcat "/var/lib/rear/output/$(hostname)/rear-$(hostname).raw.gz" | sudo dd bs=1M of=/dev/USB-DEVICE
+----
+
+=== Step 4: Set up Opal 2 Disk Drives
+
+WARNING: Setting up an SED normally *ERASES ALL DATA ON THE DISK*, as a new data
+encryption key (DEK) will be generated. While `rear opaladmin` includes safety
+measures to avoid accidentally erasing a partitioned disk, do not rely on this
+solely. *Always back up your data and have a current rescue system available.*
+
+. Boot the rescue system just created.
+. *RE-CHECK. The following command will erase selected disks.*
+. Run `rear opaladmin setupERASE _DEVICE_ ...`
+* `_DEVICE_` is the disk device path like `/dev/sda`, or `ALL` for all available
+devices.
+. Verify that disk unlocking works:
+.. Turn off power.
+.. Remove the rescue USB stick.
+.. Turn on power.
+.. Check the PBA boots and unlocks disks.
++
+NOTE: After unlocking, there is no OS. This is expected.
+
+=== Step 5: Install the Operating System
+. Boot the rescue system.
+. Deactivate locking:
++
+[source,bash]
+----
+rear opaladmin deactivate
+----
+. Install the Operating System.
+. Boot the rescue system.
+. Reactivate locking:
++
+[source,bash]
+----
+rear opaladmin reactivate
+----
+. Remove the rescue USB stick and shutdown the system.
 
 == TCG Opal 2-compliant Self-Encrypting Disks
 
@@ -62,14 +145,14 @@ NOTE: This is only required if an SED is to be used as boot disk.
 
 To create a pre-boot authentication (PBA) system image:
 
-. Run `sudo rear -v mkopalpba`
+. Run `sudo rear mkopalpba`
 
 * The PBA image will appear below the `OPAL_PBA_OUTPUT_URL` directory (see
 `default.conf`) as `$HOSTNAME/TCG-Opal-PBA-$HOSTNAME.raw`.
 
 . If you want to test the PBA system image,
 
-* copy it it onto a disk boot medium (an USB stick will do) with `dd
+* copy it onto a disk boot medium (a USB stick will do) with `dd
 if="$image_file" bs=1MB of="$usb_device"` (use the entire disk device, not a
 partition),
 
@@ -81,7 +164,7 @@ To create a rescue system with an integrated PBA system image:
 directory (which is the default), or set `OPAL_PBA_IMAGE_FILE` to the image
 file's full path.
 
-. Run `sudo rear -v mkrescue`
+. Run `sudo rear mkrescue`
 
 === Setting Up Self-Encrypting Disks
 
@@ -97,11 +180,11 @@ To set up SEDs:
 * If SED boot support is required, ensure that the rescue system was built with
 an integrated PBA system image.
 
-. Run `rear opaladmin setupERASE DEVICE ...`
+. Run `rear opaladmin setupERASE _DEVICE_ ...`
 
-* _DEVICE_ is the disk device path like `/dev/sda`, or `ALL` for all available
+* `_DEVICE_` is the disk device path like `/dev/sda`, or `ALL` for all available
 devices
-* This will set up Opal 2-compliant disks specified by the DEVICE arguments.
+* This will set up Opal 2-compliant disks specified by the `_DEVICE_` arguments.
 * You will be asked for a new disk password. The same password will be used for
 all disks being set up.
 * If a PBA is available on the rescue system, you will be asked for each disk
@@ -161,6 +244,10 @@ or on the rescue system.
 
 * Unlock disk(s): `rear opaladmin unlock`
 
+* Persistently deactivate the locking mechanism on disk(s): `rear opaladmin deactivate`
+
+* Reactivate the locking mechanism on disk(s): `rear opaladmin reactivate`
+
 * For help: `rear opaladmin help`
 
 === Erasing a Self-Encrypting Disk
@@ -169,8 +256,8 @@ To *ERASE ALL DATA ON THE DISK* but retain the setup:
 
 . Boot the Relax-and-Recover rescue system.
 
-. Run `rear opaladmin resetDEK DEVICE ...`
-* _DEVICE_ is the disk device path like `/dev/sda`, or `ALL` for all available
+. Run `rear opaladmin resetDEK _DEVICE_ ...`
+* `_DEVICE_` is the disk device path like `/dev/sda`, or `ALL` for all available
 devices
 * If mounted disk partitions are detected, the disk's contents will not be
 erased.
@@ -181,8 +268,8 @@ To *ERASE ALL DATA ON THE DISK* and reset the disk to factory settings:
 
 . Boot the Relax-and-Recover rescue system.
 
-. Run `rear opaladmin factoryRESET DEVICE ...`
-* _DEVICE_ is the disk device path like `/dev/sda`, or `ALL` for all available
+. Run `rear opaladmin factoryRESET _DEVICE_ ...`
+* `_DEVICE_` is the disk device path like `/dev/sda`, or `ALL` for all available
 devices
 * If mounted disk partitions are detected, the disk's contents will not be
 erased.
@@ -239,7 +326,7 @@ cp dist/Release_x86_64/GNU-Linux/sedutil-cli /usr/local/bin
 If the UEFI firmware is configured to boot from the disk _device_ (instead of
 some specific operating system entry), no further configuration is necessary.
 
-Otherwise the UEFI firmware (formerly BIOS setup) must be configured to boot two
+Otherwise, the UEFI firmware (formerly BIOS setup) must be configured to boot two
 different targets:
 
 . The PBA system (which is only accessible while the disk is locked).

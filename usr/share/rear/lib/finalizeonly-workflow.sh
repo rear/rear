@@ -6,7 +6,7 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 test "$VERBOSE" && WORKFLOW_finalizeonly_DESCRIPTION="only finalize the recovery (does not yet work)"
-WORKFLOWS=( ${WORKFLOWS[@]} finalizeonly )
+WORKFLOWS+=( finalizeonly )
 # The finalizeonly workflow is a part (a strict subset) of the recover workflow
 # by skipping those part of the recover workflow that are not needed
 # when the task is to only finalize the recovery (and nothing else).

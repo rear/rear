@@ -52,5 +52,5 @@ Log "Saving Swap information."
 # see the create_swap function in layout/prepare/GNU/Linux/140_include_swap_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-grep -q '^swap ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mkswap ) || true
+grep -q '^swap ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( mkswap ) || true
 

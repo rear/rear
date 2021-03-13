@@ -13,11 +13,11 @@ COPY_AS_IS_EXCLUDE+=( /lib/systemd/systemd-{cryptsetup,logind,networkd*,resolved
 # SSL
 COPY_AS_IS_EXCLUDE+=( /etc/pki /etc/ssl /usr/lib/ssl /usr/share/ca-certificates)
 # ReaR
-COPY_AS_IS_EXCLUDE+=( "$REAR_DIR_PREFIX" )
+COPY_AS_IS_EXCLUDE+=( "$SHARE_DIR" "$VAR_DIR" "$LOG_DIR" )
 
 local progs_to_exclude=()
 # networking
-progs_to_exclude+=( arping curl dhclient dhclient-script ethtool ifconfig ip nameif netcat netstat nslookup route rsync scp sftp ssh strace tar traceroute vi )
+progs_to_exclude+=( arping curl dhclient dhclient-script efibootmgr ethtool ifconfig ip nameif netcat netstat nslookup route rsync scp sftp ssh strace tar traceroute vi )
 # file system tools
 progs_to_exclude+=( btrfs cfdisk fdisk fsck 'fsck\..*' gdisk mkfs 'mkfs\..*' parted sfdisk tune2fs '.*fsck' )
 # others

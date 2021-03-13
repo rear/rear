@@ -440,7 +440,7 @@ dhconfig() {
                     if [ $? -ne 0 ]; then
                         logmessage "failed to create static route: ${target}/${prefix} via ${gateway} dev ${interface} ${metric}"
                     else
-                        route_targets=(${route_targets[@]} ${target})
+                        route_targets+=( ${target} )
                     fi
                 fi
             done
@@ -474,7 +474,7 @@ dhconfig() {
                         continue
                     fi
 
-                    default_routers=(${default_routers[@]} ${router})
+                    default_routers+=( ${router} )
                     add_default_gateway ${router} ${metric}
                     let i=i+1
                     metric=${i}

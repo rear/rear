@@ -13,7 +13,7 @@ cp -pL $v $KERNEL_FILE $TMP_DIR/kernel || Error "Failed to copy KERNEL_FILE '$KE
 
 test -s "$TMP_DIR/$REAR_INITRD_FILENAME" || Error "No initrd '$TMP_DIR/$REAR_INITRD_FILENAME'"
 
-ISO_FILES=( ${ISO_FILES[@]} $TMP_DIR/kernel $TMP_DIR/$REAR_INITRD_FILENAME )
+ISO_FILES+=( $TMP_DIR/kernel $TMP_DIR/$REAR_INITRD_FILENAME )
 Log "Starting '$ISO_MKISOFS_BIN'"
 LogPrint "Making ISO image"
 

@@ -9,7 +9,7 @@ RESTORE_EXCLUDE_FILE="$TMP_DIR/restore-exclude-list.txt"
 
 for component in "${EXCLUDE_RECREATE[@]}" ; do
     if ! IsInArray "$component" "${EXCLUDE_RESTORE[@]}" ; then
-        EXCLUDE_RESTORE=( "${EXCLUDE_RESTORE[@]}" "$component" )
+        EXCLUDE_RESTORE+=( "$component" )
     fi
 done
 

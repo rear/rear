@@ -104,9 +104,39 @@ fi
 # Do not update nvram when system is running in PowerNV mode (BareMetal).
 # grub2-install will fail if not run with the --no-nvram option on a PowerNV system,
 # see https://github.com/rear/rear/pull/1742
-grub2_install_option=""
+grub2_no_nvram_option=""
 if [[ $(awk '/platform/ {print $NF}' < /proc/cpuinfo) == PowerNV ]] ; then
-    grub2_install_option="--no-nvram"
+    grub2_no_nvram_option="--no-nvram"
+fi
+# Also do not update nvram when no character device node /dev/nvram exists.
+# On POWER architecture the nvram kernel driver could be also built as a kernel module
+# that gets loaded via etc/scripts/system-setup.d/41-load-special-modules.sh
+# but whether or not the nvram kernel driver will then create /dev/nvram
+# depends on whether or not the hardware platform supports nvram.
+# I <jsmeix@suse.de> asked on a SUSE internal mailing list
+# and got the following reply (excerpts):
+# ----------------------------------------------------------------
+# > I would like to know when /dev/nvram exists and when not.
+# > I assume /dev/nvram gets created as other device nodes
+# > by the kernel (probably together with udev).
+# > I would like to know under what conditions /dev/nvram
+# > gets created and when it is not created.
+# > It seems on PPC /dev/nvram usually exist but sometimes not.
+# In case of powerpc, it gets created by nvram driver
+# (nvram_module_init) whenever the powerpc platform driver
+# has ppc_md.nvram_size greater than zero in it's machine
+# description structure.
+# How exactly ppc_md.nvram_size gets gets populated by platform
+# code depends on the platform, e.g. on most modern systems
+# it gets populated from 'nvram' device tree node
+# (and only if such node has #bytes > 0).
+# ----------------------------------------------------------------
+# So /dev/nvram may not exist regardless that the nvram kernel driver is there
+# and then grub2-install must be called with the '--no-nvram' option
+# because otherwise installing the bootloader fails
+# cf. https://github.com/rear/rear/issues/2554
+if ! test -c /dev/nvram ; then
+    grub2_no_nvram_option="--no-nvram"
 fi
 
 # When GRUB2_INSTALL_DEVICES is specified by the user
@@ -134,7 +164,7 @@ if test "$GRUB2_INSTALL_DEVICES" ; then
         else
             LogPrint "Installing GRUB2 on $grub2_install_device (specified in GRUB2_INSTALL_DEVICES)"
         fi
-        if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_install_option $grub2_install_device" ; then
+        if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_no_nvram_option $grub2_install_device" ; then
             LogPrintError "Failed to install GRUB2 on $grub2_install_device"
             grub2_install_failed="yes"
         fi
@@ -168,9 +198,10 @@ for part in $part_list ; do
     # Install GRUB2 on the PPC PReP boot partition if one was found:
     if test "$part" ; then
         LogPrint "Found PPC PReP boot partition $part - installing GRUB2 there"
-        # Erase the first 512 bytes of the PPC PReP boot partition:
+        # Zero out the PPC PReP boot partition
+        # cf. https://github.com/rear/rear/pull/673
         dd if=/dev/zero of=$part
-        if chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_install_option $part" ; then
+        if chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_no_nvram_option $part" ; then
             # In contrast to the above behaviour when GRUB2_INSTALL_DEVICES is specified
             # consider it here as a successful bootloader installation when GRUB2
             # got installed on at least one PPC PReP boot partition:

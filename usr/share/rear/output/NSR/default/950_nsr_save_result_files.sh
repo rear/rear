@@ -39,7 +39,7 @@ fi
 if test -s "$CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt" ; then
 	cp -v $CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt "$NSR_RESULT_FILE_PATH/README" 1>/dev/null
 	StopIfError "Could not copy '$CONFIG_DIR/templates/RESULT_usage_$OUTPUT.txt'"
-	NSR_RESULT_FILES=( "${NSR_RESULT_FILES[@]}" "$NSR_RESULT_FILE_PATH"/README )
+	NSR_RESULT_FILES+=( "$NSR_RESULT_FILE_PATH"/README )
 fi
 
 NSRSERVER=$(cat $VAR_DIR/recovery/nsr_server )

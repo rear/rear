@@ -8,18 +8,43 @@ is_true $USING_UEFI_BOOTLOADER || return 0 # empty or 0 means NO UEFI
 # The du output is stored in an artificial bash array
 # so that $efi_img_sz can be simply used to get the first word
 # which is the disk usage of the directory measured in 32MiB blocks:
-efi_img_sz=( $( du --block-size=32M --summarize $TMP_DIR/mnt ) )
-StopIfError "Failed to determine disk usage of EFI virtual image content directory."
+efi_img_sz=( $( du --block-size=32M --summarize $TMP_DIR/mnt ) ) || Error "Failed to determine disk usage of EFI virtual image content directory."
 
-# prepare EFI virtual image aligned to 32MiB blocks:
+# We add 2 more 32MiB blocks to be on the safe side against inexplicable failures like
+# "cp: error writing '/tmp/rear.XXX/tmp/efi_virt/./EFI/BOOT/...': No space left on device"
+# where the above calculated $efi_img_sz is a bit too small in practice
+# cf. https://github.com/rear/rear/issues/2552
+(( efi_img_sz += 2 ))
+
+# Prepare EFI virtual image aligned to 32MiB blocks:
 dd if=/dev/zero of=$TMP_DIR/efiboot.img count=$efi_img_sz bs=32M
-mkfs.vfat $v -F 16 $TMP_DIR/efiboot.img >&2
-mkdir -p $v $TMP_DIR/efi_virt >&2
-mount $v -o loop -t vfat -o fat=16 $TMP_DIR/efiboot.img $TMP_DIR/efi_virt >&2
 
-# copy files from staging directory
+# Make a FAT filesystem on the efiboot.img file and loop mount it
+# cf. https://github.com/rear/rear/issues/2575
+# See output/RAWDISK/Linux-i386/280_create_bootable_disk_image.sh
+# Having a small EFI System Partition (ESP) might introduce problems:
+# - The UEFI spec seems to require a FAT32 EFI System Partition (ESP).
+# - syslinux/Legacy BIOS fails to install on small FAT32 partitions with "syslinux: zero FAT sectors (FAT12/16)".
+# - Some firmwares fail to boot from small FAT32 partitions.
+# - Some firmwares fail to boot from FAT16 partitions.
+# See:
+# - http://www.rodsbooks.com/efi-bootloaders/principles.html
+# - http://lists.openembedded.org/pipermail/openembedded-core/2012-January/055999.html
+# Let mkfs.vfat automatically select the FAT type based on the size.
+# See what "man mkfs.vfat" reads for the '-F' option:
+#  "If nothing is specified, mkfs.fat will automatically select
+#   between 12, 16 and 32 bit, whatever fits better for the filesystem size"
+# I.e. do not use a '-F 16' or '-F 32' option and hope for the best:
+mkfs.vfat $v $TMP_DIR/efiboot.img
+mkdir -p $v $TMP_DIR/efi_virt
+# Do not specify '-o fat=16' or '-o fat=32' when loop mounting the efiboot.img FAT file
+# but rely on the automatic FAT type detection (see what "man 8 mount" reads for 'fat=...'):
+mount $v -o loop -t vfat $TMP_DIR/efiboot.img $TMP_DIR/efi_virt || Error "Failed to loop mount efiboot.img"
+
+# Copy files from staging directory into efiboot.img
 cp $v -r $TMP_DIR/mnt/. $TMP_DIR/efi_virt
 
-umount $v $TMP_DIR/efiboot.img >&2
-mv $v -f $TMP_DIR/efiboot.img $TMP_DIR/isofs/boot/efiboot.img >&2
-StopIfError "Could not move efiboot.img file"
+umount $v $TMP_DIR/efiboot.img
+
+# Move efiboot.img into ISO directory:
+mv $v -f $TMP_DIR/efiboot.img $TMP_DIR/isofs/boot/efiboot.img || Error "Failed to move efiboot.img to isofs/boot/efiboot.img"

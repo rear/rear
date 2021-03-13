@@ -15,5 +15,5 @@ fi
 # Be backward compatible:
 is_false "$NETFS_RESTORE_CAPABILITIES" && return 0
 
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" getcap setcap )
+REQUIRED_PROGS+=( getcap setcap )
 

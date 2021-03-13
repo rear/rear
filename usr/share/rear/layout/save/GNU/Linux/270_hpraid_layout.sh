@@ -12,7 +12,7 @@ define_HPSSACLI
 has_binary $HPSSACLI || return 0
 
 # Add $HPSSACLI to the rescue image (and added to REQUIRED_PROGS below when it is actually required):
-PROGS=( "${PROGS[@]}" $HPSSACLI )
+PROGS+=( $HPSSACLI )
 # How the "eval $(grep ON_DIR= $(get_path $HPSSACLI))" command works:
 # Prerequisit: $HPSSACLI (e.g. /sbin/ssacli) is a shell script.
 # That $HPSSACLI script contains a command (e.g. in case of /sbin/ssacli) like
@@ -22,7 +22,7 @@ PROGS=( "${PROGS[@]}" $HPSSACLI )
 # which is finally used/evaluated in the COPY_AS_IS array setting
 # cf. https://github.com/rear/rear/pull/1759#discussion_r175835287
 eval $(grep ON_DIR= $(get_path $HPSSACLI))
-COPY_AS_IS=( "${COPY_AS_IS[@]}" "$HPACUCLI_BIN_INSTALLATION_DIR" "$HPSSACLI_BIN_INSTALLATION_DIR" "$SSACLI_BIN_INSTALLATION_DIR")
+COPY_AS_IS+=( "$HPACUCLI_BIN_INSTALLATION_DIR" "$HPSSACLI_BIN_INSTALLATION_DIR" "$SSACLI_BIN_INSTALLATION_DIR")
 
 # determine the version of HPSSACLI - required to know for a bug with version '9.30.15' (see issue #455)
 HPSSACLI_VERSION=$( get_version $HPSSACLI version )
@@ -60,7 +60,7 @@ write_logicaldrive() {
         echo "logicaldrive $devname $slotnr|$arrayname|$ldname raid=$raidlevel drives=$drives spares=$spares sectors=$sectors stripesize=$stripesize" >> $DISKLAYOUT_FILE
         # We only want controllers that have a logical drive in the layout file.
         if ! IsInArray "$slotnr" "${controllers[@]}" ; then
-            controllers=( "${controllers[@]}" "$slotnr" )
+            controllers+=( "$slotnr" )
         fi
     fi
     drives=""
@@ -121,5 +121,5 @@ done
 # see the create_logicaldrive and create_smartarray functions in layout/prepare/GNU/Linux/170_include_hpraid_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-egrep -q '^logicaldrive |^smartarray ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" $HPSSACLI ) || true
+egrep -q '^logicaldrive |^smartarray ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( $HPSSACLI ) || true
 

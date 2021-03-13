@@ -17,13 +17,30 @@
 
 #
 # Functions in this section are meant to be used independently from ReaR. They do not rely on any external
-# script code unless. Return codes must be checked by the caller.
+# script code unless stated otherwise. Return codes must be checked by the caller.
+# Before using these functions ensure that pattern matching extensions are enabled : 'shopt -s nullglob extglob'.
 #
 
 function opal_devices() {
     # prints a list of TCG Opal 2-compliant devices.
 
     sedutil-cli --scan | awk '$1 ~ /\/dev\// && $2 ~ /2/ { print $1; }'
+}
+
+function opal_device_disks() {
+    local device="${1:?}"
+    # prints all block devices belonging to the given Opal device.
+    # Normally, this is just the Opal device itself, however, NVME devices have one or more namespaces per primary
+    # device and these namespaces act as disks.
+
+    case "$device" in
+        (*/nvme*)
+            echo "$device"n+([0-9])  # consider all namespace block devices (NOTE: relies on nullglob extglob)
+            ;;
+        (*)
+            echo "$device"
+            ;;
+    esac
 }
 
 function opal_device_attributes() {
@@ -85,7 +102,7 @@ function opal_device_identification() {
     local device="${1:?}"
     # prints identification information for an Opal device.
 
-    echo "\"$device\" ($(opal_device_attribute "$device" "model"))"
+    echo "'$device' ($(opal_device_attribute "$device" "model"))"
 }
 
 function opal_device_information() {
@@ -140,7 +157,7 @@ function opal_device_regenerate_dek_ERASING_ALL_DATA() {
     # This is recommended initially to ensure that the data encryption key is not known by any third party.
     # Returns 0 on success.
 
-    sedutil-cli --rekeyLockingRange 0 "$password" "$device" && partprobe "$device"
+    sedutil-cli --rekeyLockingRange 0 "$password" "$device" && partprobe $(opal_device_disks "$device")
 }
 
 function opal_device_factory_reset_ERASING_ALL_DATA() {
@@ -148,7 +165,7 @@ function opal_device_factory_reset_ERASING_ALL_DATA() {
     local password="${2:?}"
     # factory-resets the device, ERASING ALL DATA ON THE DRIVE, returns 0 on success
 
-    sedutil-cli --reverttper "$password" "$device" && partprobe "$device"
+    sedutil-cli --reverttper "$password" "$device" && partprobe $(opal_device_disks "$device")
 }
 
 function opal_device_load_pba_image() {
@@ -172,7 +189,7 @@ function opal_device_disable_mbr() {
     local password="${2:?}"
     # disables the device's shadow MBR, returns 0 on success.
 
-    sedutil-cli --setMBREnable off "$password" "$device" && partprobe "$device"
+    sedutil-cli --setMBREnable off "$password" "$device" && partprobe $(opal_device_disks "$device")
 }
 
 function opal_device_enable_mbr() {
@@ -189,7 +206,7 @@ function opal_device_hide_mbr() {
     # hides the device's shadow MBR if one has been enabled, does nothing otherwise.
     # Returns 0 on success.
 
-    sedutil-cli --setMBRDone on "$password" "$device" && partprobe "$device"
+    sedutil-cli --setMBRDone on "$password" "$device" && partprobe $(opal_device_disks "$device")
 }
 
 function opal_device_unlock() {
@@ -199,6 +216,40 @@ function opal_device_unlock() {
     # Returns 0 on success.
 
     sedutil-cli --setLockingRange 0 RW "$password" "$device" && opal_device_hide_mbr "$device" "$password"
+}
+
+function opal_device_deactivate_locking() {
+    local device="${1:?}"
+    local password="${2:?}"
+    # attempts to permanently deactivate the locking mechanism (locking range 0 spanning the entire disk) on device
+    # and disable the MBR.
+    # Returns 0 on success.
+
+    sedutil-cli --disableLockingRange 0 "$password" "$device" && opal_device_disable_mbr "$device" "$password"
+}
+
+function opal_device_reactivate_locking() {
+    local device="${1:?}"
+    local password="${2:?}"
+    # attempts to permanently reactivate the locking mechanism (locking range 0 spanning the entire disk) on device
+    # and re-enable the MBR.
+    # Returns 0 on success.
+
+    # Explicitly issuing an unlock command before reactivating locking seems strange as the device is not supposed
+    # to be locked currently. However, this extra unlock command ensures that the device remains in an
+    # unlocked state when locking is reactivated.
+    # Otherwise, if (1) a system boots up with a locked device, (2) locking is deactivated, (3) locking is reactivated
+    # without issuing an extra unlock command before, the device will lock immediately. A locked device may trigger lots
+    # of kernel disk access errors:
+    #    [...]
+    #    kernel: ata1.00: status: { DRDY ERR }
+    #    kernel: ata1.00: error: { ABRT }
+    #    kernel: ata1.00: supports DRM functions and may not be fully accessible
+    #    kernel: ata1.00: NCQ Send/Recv Log not supported
+    #    [...]
+    opal_device_unlock "$device" "$password"  # errors are intentionally ignored here
+
+    sedutil-cli --enableLockingRange 0 "$password" "$device" && opal_device_enable_mbr "$device" "$password"
 }
 
 function opal_disk_partition_information() {
@@ -240,7 +291,7 @@ function opal_check_pba_image() {
     # generates an error if the PBA image is larger than the guaranteed MBR capacity.
     # REQUIRES ReaR.
 
-    [[ -f "$pba_image_file" ]] || Error "\"$pba_image_file\" is not a regular file, thus cannot be used as TCG Opal 2 PBA image."
+    [[ -f "$pba_image_file" ]] || Error "'$pba_image_file' is not a regular file, thus cannot be used as TCG Opal 2 PBA image."
 
     local -i file_size=$(stat --printf="%s\n" "$pba_image_file")
     local -i mbr_size_limit=$((128 * 1024 * 1024))  # guaranteed minimum MBR size: 128 MiB (Opal 2 spec, section 4.3.5.4)
@@ -248,7 +299,7 @@ function opal_check_pba_image() {
     if (( file_size > mbr_size_limit )); then
         local file_size_MiB="$(opal_bytes_to_mib $file_size) MiB"
         local mbr_size_limit_MiB="$(opal_bytes_to_mib $mbr_size_limit) MiB"
-        Error "TCG Opal 2 PBA image file \"$pba_image_file\" is $file_size_MiB in size, allowed maximum is $mbr_size_limit_MiB."
+        Error "TCG Opal 2 PBA image file '$pba_image_file' is $file_size_MiB in size, allowed maximum is $mbr_size_limit_MiB."
     fi
 }
 
@@ -344,12 +395,11 @@ function opal_device_recreate_setup() {
         Log "Opal 2 disk $device reset to factory defaults, data erased."
     fi
 
-    opal_device_setup "$device" "$password"
-    StopIfError "Could not set up $device."
+    opal_device_setup "$device" "$password" || Error "Could not set up $device."
     Log "Opal 2 disk $device set up."
 
-    opal_device_regenerate_dek_ERASING_ALL_DATA "$device" "$password"
-    StopIfError "Could not reset data encryption key (DEK) of Opal 2 disk $device."
+    opal_device_regenerate_dek_ERASING_ALL_DATA "$device" "$password" ||
+        Error "Could not reset data encryption key (DEK) of Opal 2 disk $device."
     Log "Data encryption key (DEK) of Opal 2 disk $device reset, data erased."
 }
 
@@ -360,9 +410,9 @@ function opal_device_recreate_boot_support() {
     # prepares the device for booting.
     # REQUIRES ReaR.
 
-    opal_device_enable_mbr "$device" "$password"
-    StopIfError "Could not enable the shadow MBR on Opal 2 disk $device."
-    opal_device_load_pba_image "$device" "$password" "$pba_image_file"
-    StopIfError "Could not upload the PBA image \"$pba_image_file\" to Opal 2 disk $device."
+    opal_device_enable_mbr "$device" "$password" ||
+        Error "Could not enable the shadow MBR on Opal 2 disk $device."
+    opal_device_load_pba_image "$device" "$password" "$pba_image_file" ||
+        Error "Could not upload the PBA image '$pba_image_file' to Opal 2 disk $device."
     Log "Opal 2 disk $device: Shadow MBR enabled and PBA uploaded."
 }

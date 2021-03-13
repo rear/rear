@@ -64,7 +64,17 @@ for directoryglob in $FHSdirectories ; do
         fi
         # Symbolic links are output different than normal directories:
         if test -L "$directory" ; then
-            stat -c '%N' "$directory" | tr -d '\047' >>"$directories_permissions_owner_group_file"
+            # On SLES11 symbolic links are output e.g. like
+            #   # stat -c '%N' "/var/mail"
+            #   `/var/mail' -> `spool/mail'
+            # while since SLES12 symbolic links are output e.g. like
+            #   # stat -c '%N' "/var/mail"
+            #   '/var/mail' -> 'spool/mail'
+            # so we remove the characters ' and ` (octal \047 and \140) to get plain
+            #   /var/mail -> spool/mail
+            # FIXME: This code fails when the symlink or its target contains special characters
+            # cf. https://github.com/rear/rear/issues/1372
+            stat -c '%N' "$directory" | tr -d '\047\140' >>"$directories_permissions_owner_group_file"
             # Symbolic links are output like (e.g. on a SLES12 system)
             # note the difference between absolute and relative symbolic link target:
             # /var/lock -> /run/lock

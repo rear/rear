@@ -127,7 +127,7 @@ BORGBACKUP_REMOTE_PATH="/usr/local/bin/borg"
 
 # Automatic archive pruning
 # (https://borgbackup.readthedocs.io/en/stable/usage/prune.html)
-BORGBACKUP_PRUNE_WEEKLY=2
+BORGBACKUP_PRUNE_KEEP_WEEKLY=2
 
 # Archive compression
 # (https://borgbackup.readthedocs.io/en/stable/usage/create.html)
@@ -158,7 +158,7 @@ USB_DEVICE=/dev/disk/by-label/REAR-000
 BORGBACKUP_REPO="/my_borg_backup"
 BORGBACKUP_UMASK="0002"
 
-BORGBACKUP_PRUNE_WEEKLY=2
+BORGBACKUP_PRUNE_KEEP_WEEKLY=2
 
 BORGBACKUP_ENC_TYPE="keyfile"
 export BORG_PASSPHRASE='S3cr37_P455w0rD'
@@ -183,7 +183,7 @@ IMPORTANT: If using BORGBACKUP_ENC_TYPE="keyfile", don't forget to make your
 
  - Executing `rear mkbackup` will create Relax-and-Recover rescue/recovery system and
  start Borg backup process. Once backup finishes, it will also prune old archives from repository,
- if at least one of `BORGBACKUP_PRUNE_*` variables is set.
+ if at least one of `BORGBACKUP_PRUNE_KEEP_*` variables is set.
  - To recover your system, boot Relax-and-Recover rescue/recovery system and trigger `rear recover`.
  You will be prompted which archive to recover from Borg repository, once ReaR finished with layout configuration.
 

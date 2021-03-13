@@ -7,6 +7,7 @@
 # To avoid delays, this script will perform a hard reset or power-off instead of a regular
 # system shutdown.
 
+shopt -s nullglob extglob  # Enable pattern matching extensions required for 'opal-functions.sh'
 source /usr/share/rear/lib/opal-functions.sh
 [[ -f /.OPAL_PBA_SETTINGS.sh ]] && source /.OPAL_PBA_SETTINGS.sh
 
@@ -19,6 +20,11 @@ function use_plymouth() {
 function quit_plymouth() {
     # quits plymouth if in use.
     use_plymouth && plymouth quit
+}
+
+function enter_plymouth_shutdown_mode() {
+    # puts plymouth into shutdown mode, if in use.
+    use_plymouth && plymouth change-mode --shutdown
 }
 
 function display_message() {
@@ -39,7 +45,7 @@ function ask_for_password() {
         fi
 
         if [[ -n "$password" ]]; then
-            [[ "$password" == "$OPAL_PBA_DEBUG_PASSWORD" ]] && exit
+            is_debug_password "$password" && emergency_shell
             break
         else
             display_message "Please enter a non-empty password."
@@ -47,11 +53,30 @@ function ask_for_password() {
     done
 }
 
+function is_debug_password() {
+    local password="${1:?}"
+    # returns true (0) if $password matches the configured debug password.
+    # Will return false (1) if there is no openssl executable to verify the password hash.
+
+    [[ -z "$OPAL_PBA_DEBUG_PASSWORD" ]] && return 1  # debug password not configured
+    type -p openssl &>/dev/null || return 1  # openssl not available
+
+    # Extract hash algorithm and salt from the configured hash signature
+    local method salt _
+    IFS='\$' read -r _ method salt _ <<<"$OPAL_PBA_DEBUG_PASSWORD"
+
+    # Compute signature of the password to verify
+    password_signature="$(openssl passwd -"$method" -salt "$salt" "$password")"
+
+    # Return the verification result
+    [[ "$password_signature" == "$OPAL_PBA_DEBUG_PASSWORD" ]]
+}
+
 error_log="/error-log.$$"
 exec 2> "$error_log"
 
-function emergency_response() {
-    # drop into an emergency shell if this script terminates unexpectedly.
+function emergency_shell() {
+    # drop into an emergency shell, then shutdown.
 
     exec 2>&1
 
@@ -88,7 +113,7 @@ See history for useful commands. Exit the shell to shut down the system.
 
     if [[ -s "$error_log" ]]; then
         {
-            echo "The following errors occured when executing $0:"
+            echo "The following errors occurred when executing $0:"
             cat "$error_log"
             echo ""
         } >> /etc/motd
@@ -96,9 +121,7 @@ See history for useful commands. Exit the shell to shut down the system.
 
     HISTFILE="$history_file" bash --rcfile "$rc_file"
 
-    display_message "Shutting down..."
-    sleep 3
-    shutdown now
+    exit  # Terminate the shell, initiating a shutdown.
 }
 
 function stop_error_handling() {
@@ -106,7 +129,7 @@ function stop_error_handling() {
 }
 
 function instant_reboot() {
-    quit_plymouth
+    enter_plymouth_shutdown_mode
     stop_error_handling
 
     # Force immediate hardware reboot via Magic SysRq key
@@ -119,7 +142,7 @@ function instant_reboot() {
 }
 
 function instant_poweroff() {
-    quit_plymouth
+    enter_plymouth_shutdown_mode
     stop_error_handling
 
     # Force immediate hardware poweroff via Magic SysRq key
@@ -131,8 +154,16 @@ function instant_poweroff() {
     poweroff --force
 }
 
+function handle_termination() {
+    # handle script termination because of an error, interrupt, or a user exiting the debug shell.
 
-trap emergency_response EXIT
+    display_message "Shutting down..."
+    sleep 3
+    instant_poweroff
+}
+
+
+trap handle_termination EXIT
 
 
 if use_plymouth; then
@@ -172,6 +203,16 @@ for device in "${devices[@]}"; do
     fi
 done
 
+if [[ "$OPAL_PBA_UNLOCK_MODE" == "permanent" ]]; then
+    # Unlock devices permanently. A workaround mode for systems requiring a power cycle after transient unlocking.
+    unlock_command=opal_device_deactivate_locking
+    result_state_message="unlocked permanently"
+else
+    # Unlock devices transiently until powering off. This is the normal operation for protection at rest.
+    unlock_command=opal_device_unlock
+    result_state_message="unlocked"
+fi
+
 # Ask for a password, unlock TCG Opal 2-compliant disks, reboot if successful
 if (( device_count == 1 )); then
     password_prompt="Enter password to unlock disk"
@@ -192,14 +233,14 @@ while (( attempt < max_authentications )); do
     # that this is intentional and will be dealt with by other means.
     declare -i unlocked_device_count=0
     for device in "${devices[@]}"; do
-        opal_device_unlock "$device" "$password" >/dev/null && unlocked_device_count+=1
+        "$unlock_command" "$device" "$password" >/dev/null && unlocked_device_count+=1
     done
 
     if (( unlocked_device_count > 0 )); then
         if (( device_count == 1 && unlocked_device_count == 1 )); then
-            display_message "Disk unlocked, rebooting..."
+            display_message "Disk $result_state_message, rebooting..."
         else
-            display_message "$unlocked_device_count of $device_count disks unlocked, rebooting..."
+            display_message "$unlocked_device_count of $device_count disks $result_state_message, rebooting..."
         fi
         sleep 1
         instant_reboot

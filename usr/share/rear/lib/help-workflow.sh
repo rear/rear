@@ -5,7 +5,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-LOCKLESS_WORKFLOWS=( ${LOCKLESS_WORKFLOWS[@]} help )
+LOCKLESS_WORKFLOWS+=( help )
 
 function WORKFLOW_help () {
 
@@ -24,15 +24,15 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:
  -h --help           usage information (this text)
- -c DIR              alternative config directory; instead of /etc/rear
+ -c DIR              alternative config directory; instead of $CONFIG_DIR
  -C CONFIG           additional config file; absolute path or relative to config directory
- -d                  debug mode; log debug messages (also sets -v verbose mode)
- -D                  debugscript mode (implies -v -d); log executed commands (via 'set -x')
+ -d                  debug mode; run many commands verbosely with debug messages in log file (also sets -v)
+ -D                  debugscript mode; log executed commands via 'set -x' (also sets -v and -d)
  --debugscripts SET  same as -d -v -D but debugscript mode with 'set -SET'
- -r KERNEL           kernel version to use; current: '$KERNEL_VERSION'
+ -r KERNEL           kernel version to use; currently '$KERNEL_VERSION'
  -s                  simulation mode; show what scripts are run (without executing them)
  -S                  step-by-step mode; acknowledge each script individually
- -v                  verbose mode; show more output (and run many commands in verbose mode)
+ -v                  verbose mode; show messages what $PRODUCT is doing on the terminal
  -V --version        version information
 
 List of commands:

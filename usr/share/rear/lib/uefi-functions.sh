@@ -43,8 +43,8 @@ function build_bootx86_efi {
     local gprobe=""
     local dirs=()
     # modules is the list of modules to load
-    # If GRUB2_MODULES_LOAD is nonempty, it determines what modules to load
-    local modules=( ${GRUB2_MODULES_LOAD:+"${GRUB2_MODULES_LOAD[@]}"} )
+    # If GRUB2_MODULES_UEFI_LOAD is nonempty, it determines what modules to load
+    local modules=( ${GRUB2_MODULES_UEFI_LOAD:+"${GRUB2_MODULES_UEFI_LOAD[@]}"} )
 
     # Configuration file is optional for image creation.
     shift
@@ -69,7 +69,7 @@ function build_bootx86_efi {
     fi
 
     # Determine what modules need to be loaded in order to access given directories
-    # (if the list of modules is not overriden by GRUB2_MODULES_LOAD)
+    # (if the list of modules is not overriden by GRUB2_MODULES_UEFI_LOAD)
     if (( ${#dirs[@]} )) && ! (( ${#modules[@]} )) ; then
         if has_binary grub-probe ; then
             gprobe=grub-probe
@@ -113,10 +113,10 @@ function build_bootx86_efi {
     # would falsely fail with "bash: test: ... unary operator expected":
     test /usr/*/grub*/x86_64-efi/moddep.lst || LogPrintError "$gmkstandalone may fail to make a bootable EFI image of GRUB2 (no /usr/*/grub*/x86_64-efi/moddep.lst file)"
 
-    (( ${#GRUB2_MODULES[@]} )) && LogPrint "Installing only ${GRUB2_MODULES[*]} modules into $outfile memdisk"
+    (( ${#GRUB2_MODULES_UEFI[@]} )) && LogPrint "Installing only ${GRUB2_MODULES_UEFI[*]} modules into $outfile memdisk"
     (( ${#modules[@]} )) && LogPrint "GRUB2 modules to load: ${modules[*]}"
 
-    if ! $gmkstandalone $v ${GRUB2_MODULES:+"--install-modules=${GRUB2_MODULES[*]}"} ${modules:+"--modules=${modules[*]}"} -O x86_64-efi -o $outfile $embedded_config ; then
+    if ! $gmkstandalone $v ${GRUB2_MODULES_UEFI:+"--install-modules=${GRUB2_MODULES_UEFI[*]}"} ${modules:+"--modules=${modules[*]}"} -O x86_64-efi -o $outfile $embedded_config ; then
         Error "Failed to make bootable EFI image of GRUB2 (error during $gmkstandalone of $outfile)"
     fi
 }

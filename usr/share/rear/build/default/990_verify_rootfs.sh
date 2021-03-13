@@ -66,34 +66,39 @@ fi
 # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
 # see https://github.com/rear/rear/pull/1514#discussion_r141031975
 # and for the general issue see https://github.com/rear/rear/issues/1372
-Log "Testing each binary (except links) with ldd and look for 'not found' libraries within the recovery system"
+DebugPrint "Testing each binary with 'ldd' and look for 'not found' libraries within the recovery system"
+local backup_tool_LD_LIBRARY_PATH=""
 local binary=""
-local broken_binaries=""
+local broken_binary_LD_LIBRARY_PATH=""
+local broken_binaries="no"
+local fatal_missing_library="no"
+local ldd_output=""
 # Third-party backup tools may use LD_LIBRARY_PATH to find their libraries
-# so that for testing such third-party backup tools we must also use
-# their special LD_LIBRARY_PATH here:
-local old_LD_LIBRARY_PATH
-# Save LD_LIBRARY_PATH only if one is already set:
-test $LD_LIBRARY_PATH && old_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+# so that for testing such third-party backup tools we must also use their special LD_LIBRARY_PATH here:
 if test "$BACKUP" = "TSM" ; then
     # Use a TSM-specific LD_LIBRARY_PATH to find TSM libraries
     # see https://github.com/rear/rear/issues/1533
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TSM_LD_LIBRARY_PATH
+    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TSM_LD_LIBRARY_PATH || backup_tool_LD_LIBRARY_PATH=$TSM_LD_LIBRARY_PATH
 fi
 if test "$BACKUP" = "SESAM" ; then
     # Use a SEP sesam-specific LD_LIBRARY_PATH to find sesam client related libraries
     # see https://github.com/rear/rear/pull/1817
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SESAM_LD_LIBRARY_PATH
+    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SESAM_LD_LIBRARY_PATH || backup_tool_LD_LIBRARY_PATH=$SESAM_LD_LIBRARY_PATH
 fi
 if test "$BACKUP" = "NBU" ; then
     # Use a NBU-specific LD_LIBRARY_PATH to find NBU libraries
     # see https://github.com/rear/rear/issues/1974
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NBU_LD_LIBRARY_PATH
+    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NBU_LD_LIBRARY_PATH || backup_tool_LD_LIBRARY_PATH=$NBU_LD_LIBRARY_PATH
 fi
 if test "$BACKUP" = "FDRUPSTREAM" ; then
-   # Use a FDRUPSTREAM-specific LD_LIBRARY_PATH to find FDR libraries
-   # see https://github.com/rear/rear/pull/2296
-   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$FDRUPSTREAM_INSTALL_PATH/bin
+    # Use a FDRUPSTREAM-specific LD_LIBRARY_PATH to find FDR libraries
+    # see https://github.com/rear/rear/pull/2296
+    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$FDRUPSTREAM_INSTALL_PATH/bin || backup_tool_LD_LIBRARY_PATH=$FDRUPSTREAM_INSTALL_PATH/bin
+fi
+if test "$BACKUP" = "DP" ; then
+    # Use a DP-specific LD_LIBRARY_PATH to find DP libraries
+    # see https://github.com/rear/rear/pull/2549
+    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DP_LD_LIBRARY_PATH || backup_tool_LD_LIBRARY_PATH=$DP_LD_LIBRARY_PATH
 fi
 # Actually test all binaries for 'not found' libraries.
 # Find all binaries and libraries (in particular what is copied via COPY_AS_IS into arbitrary paths)
@@ -106,8 +111,11 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
     # cf. https://github.com/rear/rear/issues/2177 which also shows that sometimes kernel modules could be
     # not only in the usual directory /lib/modules/ but also e.g. in /usr/lib/modules/
     # so we 'grep' for '/lib/modules/' anywhere in the full path of the binary.
-    # Also skip the ldd test for firmware files where it also does not make sense:
-    egrep -q '/lib/modules/|/lib.*/firmware/' <<<"$binary" && continue
+    # Skip the ldd test for firmware files where it also does not make sense.
+    # Skip the ldd test for ReaR files (mainly bash scripts) where it does not make sense
+    # (programs in the recovery system get all copied into /bin/ so it is /bin/rear)
+    # cf. https://github.com/rear/rear/issues/2519#issuecomment-731196820
+    egrep -q "/lib/modules/|/lib.*/firmware/|$SHARE_DIR|/bin/rear$" <<<"$binary" && continue
     # Skip the ldd test for files that are not owned by a trusted user to mitigate possible ldd security issues
     # because some versions of ldd may directly execute the file (see "man ldd") as user 'root' here
     # cf. the RequiredSharedObjects code in usr/share/rear/lib/linux-functions.sh
@@ -142,54 +150,81 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
     # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120
     # and redirected stderr avoids ldd warnings in the log like "ldd: warning: you do not have execution permission for ..."
     # cf. https://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
-    chroot $ROOTFS_DIR /bin/bash --login -c "cd $( dirname $binary ) && ldd $binary" </dev/null 2>/dev/null | grep -q 'not found' && broken_binaries="$broken_binaries $binary"
-done
-# Restore the LD_LIBRARY_PATH if it was saved above (i.e. when LD_LIBRARY_PATH had been set before)
-# otherwise unset a possibly set LD_LIBRARY_PATH (i.e. when LD_LIBRARY_PATH had not been set before):
-test $old_LD_LIBRARY_PATH && export LD_LIBRARY_PATH=$old_LD_LIBRARY_PATH || unset LD_LIBRARY_PATH
-
-# Report binaries with 'not found' shared object dependencies:
-local fatal_missing_library=""
-if contains_visible_char "$broken_binaries" ; then
-    LogPrintError "There are binaries or libraries in the ReaR recovery system that need additional libraries"
-    local ldd_output=""
-    for binary in $broken_binaries ; do
-        # Only for programs (i.e. files in a .../bin/... or .../sbin/... directory) treat a missing library as fatal
-        # unless specified when a 'not found' reported library is not fatal (when the 'ldd' test was false alarm):
-        if grep -q '/[s]*bin/' <<<"$binary" ; then
-            # With an empty NON_FATAL_BINARIES_WITH_MISSING_LIBRARY egrep -E '' would always match:
-            if test "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" ; then
-                # A program with missing library is treated as fatal when it does not match the pattern:
-                if grep -E -q "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" <<<"$binary" ; then
-                    LogPrintError "$binary requires additional libraries (specified as non-fatal)"
-                else
-                    LogPrintError "$binary requires additional libraries (fatal error)"
-                    fatal_missing_library="yes"
-                fi
+    # The login shell in the ReaR recovery system should behave same as when 'root' has logged in into the recovery system.
+    # Usually there is no LD_LIBRARY_PATH set when 'root' has logged in into the recovery system
+    # (in particular there is nothing about LD_LIBRARY_PATH in usr/share/rear/skel/*).
+    # First test the binary explicitly without any LD_LIBRARY_PATH setting inside the recovery system.
+    # Continue testing the next binary if this one succeeded (i.e. when it has no 'not found' shared object dependency):
+    chroot $ROOTFS_DIR /bin/bash --login -c "unset LD_LIBRARY_PATH && cd $( dirname $binary ) && ldd $binary" </dev/null 2>/dev/null | grep -q 'not found' || continue
+    broken_binary_LD_LIBRARY_PATH=""
+    Log "$binary requires additional libraries (no LD_LIBRARY_PATH set)"
+    # Second test for the binary with same LD_LIBRARY_PATH as what is currently set while "rear mkrecue/mkbackup" is running.
+    # The current LD_LIBRARY_PATH is explicitly set because the login shell in the recovery system has usually no LD_LIBRARY_PATH set.
+    if test $LD_LIBRARY_PATH ; then
+        Log "Another test for $binary with LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        # Continue testing the next binary if this one succeeded (i.e. when it has no 'not found' shared object dependency):
+        chroot $ROOTFS_DIR /bin/bash --login -c "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH && cd $( dirname $binary ) && ldd $binary" </dev/null 2>/dev/null | grep -q 'not found' || continue
+        broken_binary_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+        Log "$binary requires additional libraries with LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+    fi
+    # Third test for the binary with backup_tool_LD_LIBRARY_PATH if such a backup_tool_LD_LIBRARY_PATH was set above:
+    if test $backup_tool_LD_LIBRARY_PATH ; then
+        Log "Final test for $binary with LD_LIBRARY_PATH=$backup_tool_LD_LIBRARY_PATH"
+        # Continue testing the next binary if this one succeeded (i.e. when it has no 'not found' shared object dependency):
+        chroot $ROOTFS_DIR /bin/bash --login -c "export LD_LIBRARY_PATH=$backup_tool_LD_LIBRARY_PATH && cd $( dirname $binary ) && ldd $binary" </dev/null 2>/dev/null | grep -q 'not found' || continue
+        broken_binary_LD_LIBRARY_PATH=$backup_tool_LD_LIBRARY_PATH
+        Log "$binary requires additional libraries with backup tool specific LD_LIBRARY_PATH=$backup_tool_LD_LIBRARY_PATH"
+    fi
+    # All tests had a 'not found' shared object dependency so the binary requires additional libraries
+    # without LD_LIBRARY_PATH and with LD_LIBRARY_PATH and with backup tool specific LD_LIBRARY_PATH:
+    broken_binaries="yes"
+    # Only for programs (i.e. files in a .../bin/... or .../sbin/... directory) treat a missing library as fatal
+    # unless specified when a 'not found' reported library is not fatal (when the 'ldd' test was false alarm):
+    if grep -q '/[s]*bin/' <<<"$binary" ; then
+        # With an empty NON_FATAL_BINARIES_WITH_MISSING_LIBRARY grep -E '' would always match:
+        if test "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" ; then
+            # A program with missing library is treated as fatal when it does not match the pattern:
+            if grep -E -q "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" <<<"$binary" ; then
+                LogPrintError "$binary requires additional libraries (specified as non-fatal)"
             else
                 LogPrintError "$binary requires additional libraries (fatal error)"
                 fatal_missing_library="yes"
             fi
         else
-            LogPrintError "$binary requires additional libraries"
+            LogPrintError "$binary requires additional libraries (fatal error)"
+            fatal_missing_library="yes"
         fi
-        # Run the same ldd call as above but now keep its whole output:
-        ldd_output="$( chroot $ROOTFS_DIR /bin/ldd $binary )"
-        # Have the whole ldd output only in the log:
-        Log "$ldd_output"
-        # Show only the missing libraries to the user to not flood his screen with tons of other ldd output lines:
-        PrintError "$( grep 'not found' <<<"$ldd_output" )"
-    done
-    LogPrintError "ReaR recovery system in '$ROOTFS_DIR' needs additional libraries, check $RUNTIME_LOGFILE for details"
-    is_true "$fatal_missing_library" && keep_build_dir
-fi
+    else
+        LogPrintError "$binary requires additional libraries"
+    fi
+    # Run the same ldd call as above but now keep its whole stdout output.
+    # The ldd call that results the final 'not found' shared object is the last of the above ldd calls that was run.
+    # Run that ldd call with the same LD_LIBRARY_PATH setting as it was run above:
+    if test $broken_binary_LD_LIBRARY_PATH ; then
+        ldd_output="$( chroot $ROOTFS_DIR /bin/bash --login -c "export LD_LIBRARY_PATH=$broken_binary_LD_LIBRARY_PATH && cd $( dirname $binary ) && ldd $binary" </dev/null 2>/dev/null )"
+    else
+        ldd_output="$( chroot $ROOTFS_DIR /bin/bash --login -c "unset LD_LIBRARY_PATH && cd $( dirname $binary ) && ldd $binary" </dev/null 2>/dev/null )"
+    fi
+    # Have the whole ldd output only in the log:
+    Log "$ldd_output"
+    # Show only the missing libraries to the user to not flood his screen with tons of other ldd output lines:
+    PrintError "$( grep 'not found' <<<"$ldd_output" )"
+done
+is_true $broken_binaries && LogPrintError "ReaR recovery system in '$ROOTFS_DIR' needs additional libraries, check $RUNTIME_LOGFILE for details"
+is_true $fatal_missing_library && keep_build_dir
 
 # Testing that each program in the PROGS array can be found as executable command within the recovery system
 # provided the program exist on the original system:
-Log "Testing that each program in the PROGS array can be found as executable command within the recovery system"
+DebugPrint "Testing that the existing programs in the PROGS array can be found as executable command within the recovery system"
 local program=""
 local missing_programs=""
 for program in "${PROGS[@]}" ; do
+    # Skip empty values because without that test either
+    # 'type' without argument succeeds and then 'basename' without argument fails
+    # or 'type ""' with empty argument fails
+    # so both result unwanted error messages and unwanted proceeding
+    # cf. https://github.com/rear/rear/issues/2372
+    test $program || continue
     # There are many programs in the PROGS array that may or may not exist on the original system
     # so that only those programs in the PROGS array that exist on the original system are tested:
     type $program || continue
@@ -207,11 +242,17 @@ if contains_visible_char "$missing_programs" ; then
 fi
 
 # Testing that each program in the REQUIRED_PROGS array can be found as executable command within the recovery system:
-Log "Testing that each program in the REQUIRED_PROGS array can be found as executable command within the recovery system"
+DebugPrint "Testing that each program in the REQUIRED_PROGS array can be found as executable command within the recovery system"
 local required_program=""
 local missing_required_programs=""
 local fatal_missing_program=""
 for required_program in "${REQUIRED_PROGS[@]}" ; do
+    # Skip empty values because without that test
+    # either 'basename without argument fails
+    # or 'basename ""' with empty argument falsely succeeds
+    # so both result unwanted error messages and unwanted proceeding
+    # cf. https://github.com/rear/rear/issues/2372
+    test $required_program || continue
     # Use the basename because the path within the recovery system is usually different compared to the path on the original system:
     required_program=$( basename $required_program )
     # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120.
@@ -241,4 +282,3 @@ is_true "$fatal_missing_library" && Error "ReaR recovery system in '$ROOTFS_DIR'
 
 # Finish this script successfully:
 true
-

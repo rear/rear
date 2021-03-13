@@ -17,7 +17,7 @@ if is_true "$BACKUP_SELINUX_DISABLE" ; then
         return
 fi
 
-#PROGS=( "${PROGS[@]}" setfiles chcon restorecon )
+#PROGS+=( setfiles chcon restorecon )
 
 # SELinux is found to be available on this system; depending on backup program we may need to do different things
 # So far, only rsync and tar has special options for selinux. Others, just disable SELinux during backup only!
@@ -34,7 +34,7 @@ case $(basename $BACKUP_PROG) in
 		else
 			# if --xattrs is already set; no need to do it again
 			if ! grep -q xattrs <<< $(echo ${BACKUP_RSYNC_OPTIONS[@]}); then
-				BACKUP_RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --xattrs )
+				BACKUP_RSYNC_OPTIONS+=( --xattrs )
 			fi
 			RSYNC_SELINUX=1		# variable used in recover mode (means using xattr and not disable SELinux)
 		fi
@@ -43,11 +43,11 @@ case $(basename $BACKUP_PROG) in
 	(tar)
 		if tar --usage | grep -q selinux  ; then
 			# during backup we will NOT disable SELinux
-			BACKUP_PROG_OPTIONS=( "${BACKUP_PROG_OPTIONS[@]}" "--selinux" )
+			BACKUP_PROG_OPTIONS+=( "--selinux" )
 
 			# include SELinux utilities and /etc/selinux directory so rescue/restore ReaR image can run with SELinux enabled
-			PROGS=( "${PROGS[@]}" getenforce setenforce sestatus setfiles chcon restorecon )
-			COPY_AS_IS=( ${COPY_AS_IS[@]} /etc/selinux )
+			PROGS+=( getenforce setenforce sestatus setfiles chcon restorecon )
+			COPY_AS_IS+=( /etc/selinux )
 			# alter kernel command line to explicitly enable SELinux (append "selinux=1" if no selinux=0 exists)
 			KERNEL_CMDLINE=$(echo $KERNEL_CMDLINE | sed -e 's/selinux=0/selinux=1/')
 			echo $KERNEL_CMDLINE | grep -q 'selinux=1' || KERNEL_CMDLINE="$KERNEL_CMDLINE selinux=1"	

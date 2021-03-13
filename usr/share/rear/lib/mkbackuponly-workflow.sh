@@ -3,7 +3,7 @@
 #
 
 WORKFLOW_mkbackuponly_DESCRIPTION="backup system without creating rescue media"
-WORKFLOWS=( ${WORKFLOWS[@]} mkbackuponly )
+WORKFLOWS+=( mkbackuponly )
 
 function WORKFLOW_mkbackuponly () {
 

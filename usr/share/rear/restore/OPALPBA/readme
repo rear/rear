@@ -1,0 +1,5 @@
+This directory is intentionally left empty (except this readme file).
+It exists to pass the test for a $SHARE_DIR/restore/$BACKUP directory
+in prep/default/035_valid_backup_methods.sh because the mkopalpba workflow
+abuses the (nonexistent) BACKUP method OPALPBA to create a PBA image,
+cf. https://github.com/rear/rear/issues/2351

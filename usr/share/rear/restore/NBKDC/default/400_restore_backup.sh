@@ -1,50 +1,94 @@
 
 source $VAR_DIR/recovery/nbkdc_settings
 
-procpid=$(ps -e | grep rcmd-executor | grep -v grep | awk -F\  '{print $1}')
-rcmdpid=$(cat /var/run/rcmd-executor.pid)
+function print_hiback_encryption_help {
+  local condev_ssl_enabled_setting="$1"
 
-if [ -e /var/run/rcmd-executor.pid ]; then
-    if [ $procpid = $rcmdpid ]; then
-        LogPrint "
-NovaBACKUP DataCenter Agent started ..."
+  if [ -z "$condev_ssl_enabled_setting" ]; then
+    LogUserOutput "
+It seems this restore image contains a Hiback without encrypted network
+support. If you have updated your NovaStor Datacenter backup server to
+8.0 or higher, and encounter failed connections to it, you may have to
+disable encryption on the backup server temporarily. Ask NovaStor support
+for further info.
+"
+  else
+    local ssl_setting_natural_language
+    local opposite_ssl_setting
+    if [ "false" = "$condev_ssl_enabled_setting" ]; then
+      ssl_setting_natural_language="disabled"
+      opposite_ssl_setting="true"
     else
-        Error "NovaBACKUP DataCenter Agent rcmd-executor is NOT running ...
-        Please check check the logfiles
-        $NBKDC_DIR/log/rcmd-executor.log and
-        $NBKDC_DIR/log/rcmd-executor.service.log
-        and start the agent found in $NBKDC_DIR/rcmd-executor/
-        $NBKDC_DIR/rcmd-executor/rcmd-executor start
-        "
+      ssl_setting_natural_language="enabled"
+      opposite_ssl_setting="false"
     fi
+    LogUserOutput "
+At the time of creating this restore image Hiback network encryption was
+$ssl_setting_natural_language. If you encounter problems to connect to the
+backup server, change the setting '&ssl-enabled:' in $NBKDC_HIB_DIR/CONDEV on
+this live environment to the opposite '$opposite_ssl_setting'.
+"
+  fi
+}
+
+function rcmd_executor_is_running {
+  local procpid=$(ps -e | grep rcmd-executor | grep -v grep | awk -F\  '{print $1}')
+  test -n "$procpid" 
+}
+
+function make_sure_rcmd_executor_is_running {
+  if rcmd_executor_is_running; then
+    return 0
+  fi
+
+  # Try to start as service
+  $NBKDC_DIR/rcmd-executor/rcmd-executor start
+  if rcmd_executor_is_running; then
+    return 0
+  fi
+
+  # Try to start in background on command line
+  $NBKDC_DIR/rcmd-executor/rcmd-executor run &
+  if rcmd_executor_is_running; then
+    return 0
+  fi
+
+  # Failed to start rcmd-executor
+  return 1
+}
+
+if make_sure_rcmd_executor_is_running; then
+  LogPrint "NovaStor DataCenter Agent runs ..."
+else
+  Error "
+NovaStor DataCenter Agent rcmd-executor is NOT running ...
+Please check the logfiles
+$NBKDC_DIR/log/rcmd-executor.log and
+$NBKDC_DIR/log/rcmd-executor.service.log
+and start the agent found in $NBKDC_DIR/rcmd-executor/
+$NBKDC_DIR/rcmd-executor/rcmd-executor run &
+"
 fi
 
 LogUserOutput "
 The System is now ready for restore.
 Start the restore task from the
-NovaBACKUP DataCenter Central Management.
+NovaStor DataCenter Central Management.
 It is assumed that you know what is necessary
 to restore - typically it will be a full backup.
 
 Attention!
 The restore target must be set to '$TARGET_FS_ROOT'.
+"
 
+print_hiback_encryption_help "$NBKDC_HIB_SSL_ENABLED"
+
+LogUserOutput "
 For further documentation see the following link:
-http://www.novastor.com/help-html/dc/en-US/index.html
+https://support.novastor.com/hc/en-us/
 
 Verify that the backup has been restored correctly to '$TARGET_FS_ROOT'.
 "
-
-#When finished, type 'exit' to continue recovery.
-#"
-
-# Suppress the motd, as it is only confusing at this stage
-#mv /etc/motd ~/.hushlogin
-
-#rear_shell "Did you restore the backup to $TARGET_FS_ROOT ? Are you ready to continue recovery ?"
-
-# Now we can make the motd available for further use
-#mv ~/.hushlogin /etc/motd
 
 user_input_prompt="
 Have you successfully restored the backup to $TARGET_FS_ROOT ?

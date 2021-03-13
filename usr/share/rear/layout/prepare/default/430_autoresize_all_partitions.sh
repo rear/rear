@@ -51,7 +51,7 @@ while read type device size junk ; do
                     available_space=$( mathlib_calculate "$available_space - ${size%B}" )
                     Log "Will not resize partition $name."
             else
-                    partitions=( "${partitions[@]}" "$name|${size%B}" )
+                    partitions+=( "$name|${size%B}" )
                     resizeable_space=$( mathlib_calculate "$resizeable_space + ${size%B}" )
 
                     Log "Will resize partition $name."

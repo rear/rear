@@ -1,6 +1,6 @@
 = rear(8)
-:version: v2.5
-:date: 10 May 2019
+:version: v2.6
+:date: 17 June 2020
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -16,8 +16,8 @@ rear - bare metal disaster recovery and system migration tool
 
 
 == DESCRIPTION
-Relax-and-Recover is the leading Open Source disaster recovery solution. It
-is a modular framework with many ready-to-go workflows for common situations.
+Relax-and-Recover (abbreviated ReaR) is the leading Open Source disaster recovery solution.
+It is a modular framework with many ready-to-go workflows for common situations.
 
 Relax-and-Recover produces a bootable image. This image can repartition the
 system. Once that is done it initiates a restore from backup. Restores to
@@ -28,8 +28,8 @@ Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
 OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
 sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude
 of backup strategies (incl.  IBM Tivoli Storage Manager, MircoFocus Data Protector,
-Symantec NetBackup, EMC NetWorker, EMC Avamar, FDR/Upstream, NovaBACKUP DC, Bareos,
-Bacula, rsync, rbme, Borg). This results in a bootable image that is capable of
+Symantec NetBackup, EMC NetWorker, EMC Avamar, FDR/Upstream, NovaStor DC, Rubrik Cloud Data Management (CDM),
+Bareos, Bacula, rsync, rbme, Borg). This results in a bootable image that is capable of
 booting via PXE, DVD/CD, bootable tape or virtual provisioning.
 
 Relax-and-Recover was designed to be easy to set up, requires no maintenance
@@ -63,7 +63,7 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
     additional config file; absolute path or relative to config directory
 
 -d::
-    *debug mode* (log debug messages to log file - also sets -v)
+    *debug mode* (run many commands verbosely with debug messages in log file - also sets -v)
 
 -D::
     *debugscript mode* (log executed commands via 'set -x' - also sets -v and -d)
@@ -81,7 +81,7 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
     *step-by-step mode* (acknowledge each script individually)
 
 -v::
-    *verbose mode* (show more output and run many commands in verbose mode)
+    *verbose mode* (show messages what ReaR is doing on the terminal)
 
 -V --version::
     version information
@@ -115,6 +115,9 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 *mkrescue*::
     create rescue media only
+
+*mountonly*::
+    use ReaR as live media to mount and repair the system
 
 *recover*::
     recover the system; can be used only when running from the rescue media
@@ -169,7 +172,7 @@ OUTPUT=*ISO*::
 
 OUTPUT=*PXE*::
 Create on a remote PXE/NFS server the required files (such as
-configuration file, kernel and initrd image
+configuration file, kernel and initrd image)
 
 OUTPUT=*OBDR*::
 Create a bootable OBDR tape (optionally including the backup archive).
@@ -340,7 +343,10 @@ BACKUP=*SESAM*::
 Using SEP Sesam to restore the data.
 
 BACKUP=*NBKDC*::
-Using Novastor NovaBACKUP DC to restore the data.
+Using NovaStor DC to restore the data.
+
+BACKUP=*CDM*::
+Using Rubrik Cloud Data Management (CDM) to restore the data.
 
 BACKUP=*RBME*::
 Use Rsync Backup Made Easy (rbme) to restore the data.
@@ -585,7 +591,7 @@ The Relax-and-Recover website is located at: http://relax-and-recover.org/
 
 
 == COPYRIGHT
-(c) 2006-2019
+(c) 2006-2020
 
 The copyright is held by the original authors of the respective code pieces as can be seen in the git history at https://github.com/rear/rear/graphs/contributors
 

@@ -77,5 +77,10 @@ if ! /usr/sbin/rear checklayout; then
 fi
 ----
 
-We also monitor the _/var/log/rear/rear-system.log_ file for +ERROR:+ and +BUG BUG BUG+
+We also monitor the _/var/log/rear/rear-system.log_ file for +ERROR:+ and +BUG+
 strings, so that in case of problems the operator is notified immediately.
+
+Note that error messages may not come from ReaR itself but from programs that are called by ReaR
+because stdout and stderr are redirected into ReaR's log file (see the section
+"What to do with stdin, stdout, and stderr" in https://github.com/rear/rear/wiki/Coding-Style)
+so in case of error messages one must check if that is actually an error or only false alarm.

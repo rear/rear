@@ -1,5 +1,11 @@
-os:
- - linux
+language: shell
+
+arch:
+  - amd64
+  - ppc64le
+
+os: linux
 
 script:
- - make validate
+  - make validate
+  - sudo make install

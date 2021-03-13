@@ -49,22 +49,49 @@ while read -r backup_exclude_item ; do
     test "$backup_exclude_item" && Log "  $backup_exclude_item"
 done < $TMP_DIR/backup-exclude.txt
 
-# Check if the backup needs to be splitted or not (on multiple ISOs)
-if [[ -n "$ISO_MAX_SIZE" ]]; then
-    # Computation of the real backup maximum size by excluding bootable files size on the first ISO (EFI, kernel, ramdisk)
-    # Don't use that on max size less than 200MB which would result in too many backups
-    if [[ $ISO_MAX_SIZE -gt 200 ]]; then
-        INITRD_SIZE=$(stat -c '%s' $TMP_DIR/$REAR_INITRD_FILENAME)
-        KERNEL_SIZE=$(stat -c '%s' $KERNEL_FILE)
-        # We add 15MB which is the average size of all isolinux binaries
-        BASE_ISO_SIZE=$(((${INITRD_SIZE}+${KERNEL_SIZE})/1024/1024+15))
-        # If we are EFI, add 30MB (+ previous 15MB), UEFI files can't exceed this size
-        is_true $USING_UEFI_BOOTLOADER && BASE_ISO_SIZE=$((${BASE_ISO_SIZE}+30))
-        ISO_MAX_SIZE=$((${ISO_MAX_SIZE}-${BASE_ISO_SIZE}))
-    fi
-    SPLIT_COMMAND="split -d -b ${ISO_MAX_SIZE}m - ${backuparchive}."
-else
-    SPLIT_COMMAND="dd of=$backuparchive"
+# Check if the backup needs to be splitted or not (on multiple ISOs).
+# Dummy split command when the backup is not splitted (the default case).
+# Let 'dd' read and write up to 1M=1024*1024 bytes at a time to speed up things
+# for example from only 500KiB/s (with the 'dd' default of 512 bytes)
+# via a 100MBit network connection to about its full capacity
+# cf. https://github.com/rear/rear/issues/2369
+SPLIT_COMMAND="dd of=$backuparchive bs=1M"
+if test $ISO_MAX_SIZE ; then
+    is_positive_integer $ISO_MAX_SIZE || Error "ISO_MAX_SIZE must be a positive integer value"
+    # Tell the user when ISO_MAX_SIZE is less than 600MiB because then things will likely not work
+    # because a usual recovery system with FIRMWARE_FILES is more than 300MiB
+    # cf. https://github.com/rear/rear/pull/2347#issuecomment-602812451
+    # so that there is less than 300MiB left for the actual backup split chunk size:
+    test $ISO_MAX_SIZE -ge 600 || LogPrintError "ISO_MAX_SIZE should be at least 600 MiB"
+    # Computation of the actual backup split chunk size
+    # by subtracting the recovery system file sizes (kernel, initrd, ISOLINUX files, UEFI files if used)
+    # from the ISO_MAX_SIZE value, see the ISO_MAX_SIZE explanation in default.conf why that is done.
+    # Size of the recovery system initrd in bytes:
+    INITRD_BYTES=$( stat -c '%s' $TMP_DIR/$REAR_INITRD_FILENAME )
+    is_positive_integer $INITRD_BYTES || Error "Cannot determine size of the recovery system initrd $TMP_DIR/$REAR_INITRD_FILENAME"
+    # Size of the recovery system initrd in MiB + 1MiB to be safe against integer (floor) rounding:
+    INITRD_SIZE=$(( INITRD_BYTES / 1024 / 1024 + 1 ))
+    # Size of the recovery system kernel in bytes:
+    KERNEL_BYTES=$( stat -c '%s' $KERNEL_FILE )
+    is_positive_integer $KERNEL_BYTES || Error "Cannot determine size of the recovery system kernel $KERNEL_FILE"
+    # Size of the recovery system kernel in MiB + 1MiB to be safe against integer (floor) rounding:
+    KERNEL_SIZE=$(( KERNEL_BYTES / 1024 / 1024 + 1 ))
+    # We assume 15MiB is sufficient size for the ISOLINUX bootloader files:
+    ISOLINUX_SIZE=15
+    # We assume 30MiB is sufficient size for additional UEFI bootloader files:
+    UEFI_SIZE=0
+    is_true $USING_UEFI_BOOTLOADER && UEFI_SIZE=30
+    # Size of the recovery system and its bootloader in MiB:
+    RECOVERY_SYSTEM_SIZE=$(( INITRD_SIZE + KERNEL_SIZE + ISOLINUX_SIZE + UEFI_SIZE ))
+    # Tell the user when the recovery system plus ISO bootloader is extraordinarily large because that may indicate a problem elsewehre:
+    test $RECOVERY_SYSTEM_SIZE -gt 1000 && LogPrintError "Extraordinarily large recovery system plus ISO bootloader $RECOVERY_SYSTEM_SIZE MiB"
+    # Size of the actual backup split chunk size in MiB:
+    BACKUP_SPLIT_CHUNK_SIZE=$(( ISO_MAX_SIZE - RECOVERY_SYSTEM_SIZE ))
+    # When the actual backup split chunk size is less than 100MiB we consider it too small to be useful in practice:
+    test $BACKUP_SPLIT_CHUNK_SIZE -ge 100 || Error "Backup split chunk size $BACKUP_SPLIT_CHUNK_SIZE less than 100 MiB (ISO_MAX_SIZE too small?)"
+    # Split the 'tar' backup (at stdin) in chunks of BACKUP_SPLIT_CHUNK_SIZE MiB using 'backup.tar.gz.' as prefix with numeric suffixes:
+    LogPrint "Backup gets split in chunks of $BACKUP_SPLIT_CHUNK_SIZE MiB (ISO_MAX_SIZE $ISO_MAX_SIZE minus recovery system size $RECOVERY_SYSTEM_SIZE)"
+    SPLIT_COMMAND="split -d -b ${BACKUP_SPLIT_CHUNK_SIZE}m - ${backuparchive}."
 fi
 
 # Used by "tar" method to record which pipe command failed
@@ -84,6 +111,7 @@ FAILING_BACKUP_PROG_RC_FILE="$TMP_DIR/failing_backup_prog_rc"
 # cf. https://github.com/rear/rear/issues/2155
 LogPrint "Creating $BACKUP_PROG archive '$backuparchive'"
 ProgressStart "Preparing archive operation"
+# Begin backup subshell:
 (
 case "$(basename ${BACKUP_PROG})" in
     # tar compatible programs here
@@ -108,18 +136,12 @@ case "$(basename ${BACKUP_PROG})" in
                 $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $SPLIT_COMMAND
         fi
 
-        # Variable used to record the short name of piped commands in case of
-        # error, e.g. ( "tar" "cat" "dd" ) in case of unencrypted and unsplit backup.
-        backup_prog_shortnames=(
-            "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
-            "$(basename $(echo "$BACKUP_PROG_CRYPT_OPTIONS" | awk '{ print $1 }'))"
-            "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
-        )
-        for index in ${!backup_prog_shortnames[@]} ; do
-            [ -n "${backup_prog_shortnames[$index]}" ] || BugError "No computed shortname for pipe component $index"
-        done
-
         if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
+            backup_prog_shortnames=(
+                "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
+                "$(basename $(echo "$BACKUP_PROG_CRYPT_OPTIONS" | awk '{ print $1 }'))"
+                "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
+            )
             $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
                 --no-wildcards-match-slash --one-file-system                        \
                 --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
@@ -132,6 +154,10 @@ case "$(basename ${BACKUP_PROG})" in
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         else
+            backup_prog_shortnames=(
+                "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
+                "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
+            )
             $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
                 --no-wildcards-match-slash --one-file-system                        \
                 --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
@@ -144,17 +170,24 @@ case "$(basename ${BACKUP_PROG})" in
             pipes_rc=( ${PIPESTATUS[@]} )
         fi
 
+        # Variable used to record the short name of piped commands in case of
+        # error, e.g. ( "tar" "cat" "dd" ) in case of unencrypted and unsplit backup.
+        for index in ${!backup_prog_shortnames[@]} ; do
+            [ -n "${backup_prog_shortnames[$index]}" ] || BugError "No computed shortname for pipe component $index"
+        done
+
+        # Ensure that the numbers of pipe components and return codes match.
+        [ ${#backup_prog_shortnames[@]} -eq ${#pipes_rc[@]} ] || BugError "Mismatching numbers of pipe components and return codes"
+
         # Exit code logic:
-        # - never return rc=1 (this is reserved for "tar" warning about modified files)
-        # - process exit code in pipe's reverse order
+        # * don't return rc=1 unless from tar (exit code 1 is reserved for "tar" warning about modified files)
+        # * process exit code in pipe's reverse order
         #   - if last command failed (e.g. "dd"), return an error
         #   - otherwise if previous command failed (e.g. "encrypt"), return an error
         #   ...
         #   - otherwise return "tar" exit code
-        #
         # When an error occurs, record the program name in $FAILING_BACKUP_PROG_FILE
         # and real exit code in $FAILING_BACKUP_PROG_RC_FILE.
-
         let index=${#pipes_rc[@]}-1
         while [ $index -ge 0 ] ; do
             rc=${pipes_rc[$index]}
@@ -164,12 +197,13 @@ case "$(basename ${BACKUP_PROG})" in
                 if [ $rc -eq 1 ] && [ "${backup_prog_shortnames[$index]}" != "tar" ] ; then
                     rc=2
                 fi
+                # Exit the backup subshell with non-zero exit code:
                 exit $rc
             fi
             # This pipe command succeeded, check the previous one
             let index--
         done
-        # This was a success
+        # Success - exit the backup subshell with zero exit code:
         exit 0
     ;;
     (rsync)
@@ -194,13 +228,17 @@ case "$(basename ${BACKUP_PROG})" in
             $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
     ;;
 esac 2> "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
-# important trick: the backup prog is the last in each case entry and the case .. esac is the last command
-# in the (..) subshell. As a result the return code of the subshell is the return code of the backup prog!
+# For the rsync and default case the backup prog is the last in the case entry
+# and the case .. esac is the last command in the backup subshell.
+# As a result the return code of the backup subshell is the return code of the backup prog.
+# For the tar case (where tar is not the last program) special exit code logic is done.
 ) &
 BackupPID=$!
-starttime=$SECONDS
+# End backup subshell.
 
-sleep 1 # Give the backup software a good chance to start working
+starttime=$SECONDS
+# Give the backup software a good chance to start working:
+sleep 1
 
 # return disk usage in bytes
 function get_disk_used() {
@@ -208,7 +246,7 @@ function get_disk_used() {
     echo $used
 }
 
-# While the backup runs in a sub-process, display some progress information to the user.
+# While the backup runs in a subshell, display some progress information to the user.
 # ProgressInfo texts have a space at the end to get the 'OK' from ProgressStop shown separated.
 test "$PROGRESS_WAIT_SECONDS" || PROGRESS_WAIT_SECONDS=1
 case "$( basename $BACKUP_PROG )" in
@@ -255,17 +293,27 @@ if [[ $BACKUP_INTEGRITY_CHECK =~ ^[yY1] && "$(basename ${BACKUP_PROG})" = "tar" 
     (cd $(dirname $backuparchive) && md5sum $(basename $backuparchive) > ${backuparchive}.md5 || md5sum $(basename $backuparchive).?? > ${backuparchive}.md5)
 fi
 
+# TODO: Why do we sleep here after 'wait $BackupPID'?
 sleep 1
 
-# everyone should see this warning, even if not verbose
+# Everyone should see this warning, even if not verbose:
 case "$(basename $BACKUP_PROG)" in
     (tar)
         if (( $backup_prog_rc != 0 )); then
             prog="$(cat $FAILING_BACKUP_PROG_FILE)"
+            # Suppress purely informational tar messages from output like
+            #   tar: Removing leading / from member names
+            #   tar: Removing leading / from hard link targets
+            #   tar: /var/spool/postfix/private/discard: socket ignored
+            # but keep actual tar error or warning messages like
+            #    tar: /etc/grub.d/README: file changed as we read it
+            # and show only messages that are prefixed with "$prog:" (like 'tar:' or 'dd:')
+            # which works when 'tar' or 'dd' fail but falsely suppresses messages from 'openssl'
+            # FIXME see https://github.com/rear/rear/pull/2466#discussion_r466347471
             if (( $backup_prog_rc == 1 )); then
-                LogUserOutput "WARNING: $prog ended with return code 1 and below output:
+                LogUserOutput "WARNING: $prog ended with return code 1 and below output (last 5 lines):
   ---snip---
-$(grep '^tar: ' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | sed -e 's/^/  /' | tail -n3)
+$( sed -n -e '/^tar: .*\(socket ignored\|Removing leading\)/d;/^'"$prog"':/s/^/  /p' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | tail -n5 )
   ----------
 This means that files have been modified during the archiving
 process. As a result the backup may not be completely consistent
@@ -275,9 +323,9 @@ backup in order to be sure to safely recover this system.
 "
             else
                 rc=$(cat $FAILING_BACKUP_PROG_RC_FILE)
-                Error "$prog failed with return code $rc and below output:
+                Error "$prog failed with return code $rc and below output (last 5 lines):
   ---snip---
-$(grep "^$prog: " "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | sed -e 's/^/  /' | tail -n3)
+$( sed -n -e '/^tar: .*\(socket ignored\|Removing leading\)/d;/^'"$prog"':/s/^/  /p' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | tail -n5 )
   ----------
 This means that the archiving process ended prematurely, or did
 not even start. As a result it is unlikely you can recover this

@@ -40,9 +40,9 @@ if [ "${RSYNC_USER}" != "root" ]; then
             _mntpt=$(ssh ${RSYNC_USER}@${RSYNC_HOST} 'cd ${RSYNC_PATH}; df -P .' 2>/dev/null | tail -1 | awk '{print $6}')
             ssh ${RSYNC_USER}@${RSYNC_HOST} "cd ${RSYNC_PATH} && touch .is_xattr_supported && setfattr -n user.comment -v 'File created by ReaR to test if this filesystems supports extended attributes.' .is_xattr_supported && getfattr -n user.comment .is_xattr_supported 1>/dev/null; find .is_xattr_supported -empty -delete"
             StopIfError "Remote file system $_mntpt does not have user_xattr mount option set!"
-            #BACKUP_RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --xattrs --rsync-path="""rsync --fake-super""" )
+            #BACKUP_RSYNC_OPTIONS+=( --xattrs --rsync-path="""rsync --fake-super""" )
             # see issue #366 for explanation of removing --xattrs
-            BACKUP_RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --rsync-path="""rsync --fake-super""" )
+            BACKUP_RSYNC_OPTIONS+=( --rsync-path="""rsync --fake-super""" )
         fi
     else
         if [ ${BACKUP_RSYNC_OPTIONS[@]/--fake-super/} != ${BACKUP_RSUNC_OPTIONS[@]} ]; then

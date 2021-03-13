@@ -13,10 +13,9 @@ else
     PYTHON_BIN="$PYTHON"
 fi
 
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" "$PYTHON_BIN" )
+REQUIRED_PROGS+=( "$PYTHON_BIN" )
 
-COPY_AS_IS=(
-"${COPY_AS_IS[@]}"
+COPY_AS_IS+=(
 /etc/python
 /etc/python2.6
 /etc/python2.7
@@ -41,8 +40,7 @@ COPY_AS_IS=(
 /usr/include/python2.7/pyconfig.h
 )
 
-LIBS=(
-"${LIBS[@]}"
+LIBS+=(
 /usr/lib/librsync.so.1.0.2
 /usr/lib64/librsync.so.1
 /usr/lib64/libexpat.so.1

@@ -33,8 +33,8 @@ tmp_mac_mapping_file=$(mktemp)
 
 # TODO: What should happen if there is no ORIG_MACS_FILE or when it is empty?
 while read orig_dev orig_mac junk ; do
-    ORIGINAL_DEVICES=( "${ORIGINAL_DEVICES[@]}" "$orig_dev")
-    ORIGINAL_MACS=( "${ORIGINAL_MACS[@]}" "$orig_mac" )
+    ORIGINAL_DEVICES+=( "$orig_dev")
+    ORIGINAL_MACS+=( "$orig_mac" )
     # Continue with the next original MAC address if it is found on the current
     # system, otherwise we consider it needs migration:
     new_dev=$( get_device_by_hwaddr "$orig_mac" )
@@ -95,7 +95,7 @@ for dev_dir in /sys/class/net/* ; do
     # where only non-empty values get stored in the drivers array:
     drivers=( $( my_udevinfo -a -p /sys/class/net/$dev | sed -ne '/DRIVER.*=".\+"/s/.*"\(.*\)".*/\1/p' ) )
     # The drivers array contains a list of drivers, but I care only about the first one:
-    NEW_DEVICES=( "${NEW_DEVICES[@]}" "$dev $mac $drivers" )
+    NEW_DEVICES+=( "$dev $mac $drivers" )
 done
 
 # Check the existence of a valid mapping file.

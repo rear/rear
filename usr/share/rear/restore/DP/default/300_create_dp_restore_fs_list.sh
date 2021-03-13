@@ -9,8 +9,7 @@
 OMNIDB=/opt/omni/bin/omnidb
 
 ${OMNIDB} -session $(cat $TMP_DIR/dp_recovery_session) | grep `cat $TMP_DIR/dp_recovery_host` | cut -d"'" -f -2 > $TMP_DIR/list_of_fs_objects
-[ -s $TMP_DIR/list_of_fs_objects ]
-StopIfError "Data Protector did not find any file system objects for $(hostname)"
+test -s $TMP_DIR/list_of_fs_objects || Error "Data Protector did not find any file system objects for $(hostname)"
 
 # check if we need to exclude a file system - exclude fs list =  $VAR_DIR/recovery/exclude_mountpoints
 if [ -f $VAR_DIR/recovery/exclude_mountpoints ]; then

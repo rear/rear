@@ -1,8 +1,14 @@
-PROGS=( "${PROGS[@]}" xinetd )
-COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/xinetd.conf /etc/xinetd.d/omni )
+# 450_prepare_omni_systemd.sh
+# Make sure Data Protector INET gets included in the rescue image (if xinetd is used)
+
+# Nothing to do when xinetd is not used
+test -r "/etc/xinetd.d/omni" || return 0
+
+PROGS+=( xinetd )
+COPY_AS_IS+=( /etc/xinetd.conf /etc/xinetd.d/omni )
 cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-xinetd.sh <<-EOF
-# Data Protector needs omni service to be started from xinetd
-echo "Starting a minimal xinetd daemon ..."
+echo "Starting Data Protector daemon using xinetd ..."
 xinetd
 EOF
-chmod $v +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-xinetd.sh >&2
+chmod $v +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-xinetd.sh
+Log "Created the Data Protector start-up script (90-omni.sh) for ReaR using xinetd"

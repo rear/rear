@@ -493,15 +493,18 @@ function get_root_disk_UUID {
 
 # Create configuration grub
 function create_grub2_cfg {
-root_uuid=$(get_root_disk_UUID)
+    root_uuid=$(get_root_disk_UUID)
 
-cat << EOF
-set default="0"
+    local esp_kernel="$1"
+    local esp_initrd="$2"
 
-insmod efi_gop
-insmod efi_uga
-insmod video_bochs
-insmod video_cirrus
+    test $esp_kernel || esp_kernel="/isolinux/kernel"
+    test $esp_initrd || esp_initrd="/isolinux/$REAR_INITRD_FILENAME"
+
+    cat << EOF
+${grub2_set_root:+"set root=$grub2_set_root"}
+set default="$GRUB2_DEFAULT_BOOT"
+
 insmod all_video
 
 set gfxpayload=keep
@@ -512,20 +515,25 @@ insmod ext2
 set timeout=5
 
 search --no-floppy --file /boot/efiboot.img --set
-#set root=(cd0)
+$grub2_set_usb_root
 
 menuentry "Relax-and-Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
      echo 'Loading kernel ...'
-     linux /isolinux/kernel root=UUID=$root_uuid $KERNEL_CMDLINE
+     linux $esp_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
      echo 'Loading initial ramdisk ...'
-     initrd /isolinux/$REAR_INITRD_FILENAME
+     initrd $esp_initrd
 }
 
 menuentry "Relax-and-Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
      echo 'Loading kernel ...'
-     linuxefi /isolinux/kernel root=UUID=$root_uuid $KERNEL_CMDLINE
+     linuxefi $esp_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
      echo 'Loading initial ramdisk ...'
-     initrdefi /isolinux/$REAR_INITRD_FILENAME
+     initrdefi $esp_initrd
+}
+
+menuentry "Boot original system" {
+    search --fs-uuid --no-floppy --set=esp $esp_disk_uuid
+    chainloader (\$esp)$esp_relative_bootloader
 }
 
 menuentry "Reboot" {

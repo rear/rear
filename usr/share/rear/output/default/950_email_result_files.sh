@@ -14,9 +14,8 @@ Log "Sending Email from $RESULT_MAILFROM to ${RESULT_MAILTO[@]}"
 # We will remove the ISO files from the RESULT_FILES array (is becoming too big - issue #397)
 c=${#RESULT_FILES[@]} # amount of element is array RESULT_FILES
 i=0
-while (( $i < $c ))
-do
-    echo ${RESULT_FILES[i]} | grep -q "\.iso$" || MAIL_FILES=( ${MAIL_FILES[@]} ${RESULT_FILES[i]} )
+while (( $i < $c )) ; do
+    echo ${RESULT_FILES[i]} | grep -q "\.iso$" || MAIL_FILES+=( ${RESULT_FILES[i]} )
     i=$(( i + 1 ))
 done
  

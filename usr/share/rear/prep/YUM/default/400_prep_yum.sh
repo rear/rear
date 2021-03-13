@@ -2,16 +2,21 @@
 # Prepare for the BACKUP=YUM method.
 #
 
+# BACKUP=YUM does not support BACKUP_PROG_CRYPT_ENABLED
+# see https://github.com/rear/rear/issues/2374
+is_true "$BACKUP_PROG_CRYPT_ENABLED" && Error "BACKUP=YUM does not support BACKUP_PROG_CRYPT_ENABLED"
+
 # Try to care about possible errors
 # see https://github.com/rear/rear/wiki/Coding-Style
 set -e -u -o pipefail
 
 # What files and programs need to be included in the ReaR recovery system.
-# Use "${ARRAY[@]:-}" to avoid unbound variable "${ARRAY[@]}" when ARRAY=():
-COPY_AS_IS=( "${COPY_AS_IS[@]:-}" "${COPY_AS_IS_YUM[@]:-}" )
-COPY_AS_IS_EXCLUDE=( "${COPY_AS_IS_EXCLUDE[@]:-}" "${COPY_AS_IS_EXCLUDE_YUM[@]:-}" )
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]:-}" "${REQUIRED_PROGS_YUM[@]:-}" )
-PROGS=( "${PROGS[@]:-}" "${PROGS_YUM[@]:-}" )
+# Use "${ARRAY[*]:-}" to avoid unbound variable "${ARRAY[*@]}" when ARRAY=() for bash 3.x
+# and "ARRAY[*]" is needed to have all elements as one single argument for 'test':
+test "${COPY_AS_IS_YUM[*]:-}" && COPY_AS_IS+=( "${COPY_AS_IS_YUM[@]}" )
+test "${COPY_AS_IS_EXCLUDE_YUM[*]:-}" && COPY_AS_IS_EXCLUDE+=( "${COPY_AS_IS_EXCLUDE_YUM[@]}" )
+test "${REQUIRED_PROGS_YUM[*]:-}" && REQUIRED_PROGS+=( "${REQUIRED_PROGS_YUM[@]}" )
+test "${PROGS_YUM[*]:-}" && PROGS+=( "${PROGS_YUM[@]}" )
 
 # RPM packages data that need to be included in the ReaR recovery system:
 LogPrint "Determining RPM packages data..."

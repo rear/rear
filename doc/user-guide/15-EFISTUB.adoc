@@ -135,11 +135,11 @@ OUTPUT_URL=nfs://backup.virtual.sk/mnt/rear/iso
 
 BACKUP_OPTIONS="nfsvers=3,nolock"
 
-BACKUP_PROG_EXCLUDE=( ${BACKUP_PROG_EXCLUDE[@]} /mnt )
+BACKUP_PROG_EXCLUDE+=( /mnt )
 
 #BTRFS stuff
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" snapper chattr lsattr xfs_repair )
-COPY_AS_IS=( "${COPY_AS_IS[@]}" /usr/lib/snapper/installation-helper /etc/snapper/config-templates/default )
+REQUIRED_PROGS+=( snapper chattr lsattr xfs_repair )
+COPY_AS_IS+=( /usr/lib/snapper/installation-helper /etc/snapper/config-templates/default )
 BACKUP_PROG_INCLUDE=( $(findmnt -n -r -t btrfs | cut -d ' ' -f 1 | grep -v '^/$' | egrep -v 'snapshots|crash' ) )
 
 EFI_STUB=y

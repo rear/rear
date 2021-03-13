@@ -22,7 +22,7 @@ while read lvmdev name mpdev junk ; do
         # Now we need to comment all lines that contain "$devices" in the LAYOUT_FILE
         sed -i "s|^$LINE|\#$LINE|" "$LAYOUT_FILE"
     done < <(grep "$device" $LAYOUT_FILE | grep -v "^#")
-    Log "Excluding multipath device $device"
+    DebugPrint "Disabling multipath device $device belonging to disabled 'lvmdev $name' in $LAYOUT_FILE"
 done < <(grep "^#lvmdev" $LAYOUT_FILE)
 
 # Double check if we did not leave unused multipath devices uncommented
@@ -35,7 +35,6 @@ while read LINE ; do
     if [ $num -lt 2 ] ; then
         # If the $device is only seen once (in a uncommented line) then the multipath is not in use
         sed -i "s|^$LINE|\#$LINE|" "$LAYOUT_FILE"
-        Log "Excluding multipath device $device"
+        DebugPrint "Disabling multipath device $device only seen once in $LAYOUT_FILE"
     fi
 done < <(grep "^multipath" $LAYOUT_FILE)
-

@@ -6,5 +6,6 @@
 # After BORG operations are over, we can finally umount USB_DEVICE.
 # This will force final sync of data that can still sit in cache.
 if [[ -z $BORGBACKUP_HOST ]]; then
-    umount_url usb://$USB_DEVICE $borg_dst_dev
+    # shellcheck disable=SC2154
+    umount_url "usb://$USB_DEVICE" "$borg_dst_dev"
 fi

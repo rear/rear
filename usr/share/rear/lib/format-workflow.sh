@@ -9,7 +9,7 @@
 #
 
 WORKFLOW_format_DESCRIPTION="Format and label medium for use with ReaR"
-WORKFLOWS=( ${WORKFLOWS[@]} format )
+WORKFLOWS+=( format )
 WORKFLOW_format () {
 
     DEVICE=""
@@ -36,7 +36,7 @@ WORKFLOW_format () {
                 FORCE=y
                 ;;
             (-h|--help)
-                LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- -f /dev/sdX'"
+                LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- --efi /dev/sdX'"
                 LogPrintError "Valid format workflow options are: -e/--efi -f/--force -y/--yes"
                 # No "rear format failed, check ...rear...log for details" message:
                 EXIT_FAIL_MESSAGE=0
@@ -58,7 +58,7 @@ WORKFLOW_format () {
                 DEVICE=$1
                 ;;
             (*)
-                Error "Argument $1 is not accepted."
+                Error "Argument '$1' not accepted. Use '$PROGRAM format -- --help' for more information."
                 ;;
         esac
         shift
@@ -76,7 +76,7 @@ WORKFLOW_format () {
             SourceStage "format"
             return 0
         else
-            LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- -f /dev/sdX'"
+            LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- --efi /dev/sdX'"
             LogPrintError "Valid format workflow options are: -e/--efi -f/--force -y/--yes"
             LogPrintError "Use '$PROGRAM format -- --help' for more information."
             Error "No device provided as argument."

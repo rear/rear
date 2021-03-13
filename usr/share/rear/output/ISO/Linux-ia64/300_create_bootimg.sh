@@ -29,7 +29,3 @@ image=kernel
 	read-only
 	append="ramdisk=512000 $CONSOLE  rhgb selinux=0"
 EOF
-
-# FIXME: What is that assignment actually trying to do?
-ISO_FILES=( "${ISO_FILES[@]}" )
-

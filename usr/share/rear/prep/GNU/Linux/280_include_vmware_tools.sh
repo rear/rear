@@ -6,7 +6,7 @@
 
 if lsmod | grep -q -E '^vmxnet\b'; then
 	if ! modinfo vmxnet >/dev/null 2>&1; then
-		COPY_AS_IS=( "${COPY_AS_IS[@]}" /usr/lib*/vmware-tools )
+		COPY_AS_IS+=( /usr/lib*/vmware-tools )
 		Log "Including '/usr/lib*/vmware-tools'"
 	fi
 fi

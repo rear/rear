@@ -3,10 +3,11 @@
 # Skip execution if USE_DHCLIENT is empty or set to 'false'.
 ! is_true $USE_DHCLIENT && return
 
-# with USE_STATIC_NETWORKING no networking setup via DHCP must happen
-# see default.conf: USE_STATIC_NETWORKING overrules USE_DHCLIENT
-# Skip execution if USE_STATIC_NETWORKING is set to any string except 'false'.
-! is_false $USE_STATIC_NETWORKING && return
+# When USE_STATIC_NETWORKING is set to a 'true' value
+# (by default USE_STATIC_NETWORKING is empty)
+# no networking setup via DHCP must happen because
+# USE_STATIC_NETWORKING overrules USE_DHCLIENT (see default.conf):
+is_true $USE_STATIC_NETWORKING && return
 
 # if 'noip' is gicen on boot prompt then skip dhcp start-up
 if [[ -e /proc/cmdline ]] ; then
@@ -43,23 +44,15 @@ for DEVICE in `get_device_by_hwaddr` ; do
 		ISALIAS=no
 	fi
 
-	# IPv4 DHCP clients
-	case $DHCLIENT_BIN in
-		(dhclient)
-			dhclient -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.${DEVICE}.pid -cf /etc/dhclient.conf ${DEVICE}
-		;;
-		(dhcpcd)
-			dhcpcd ${DEVICE}
-		;;
-	esac
-
-	# IPv6 DHCP clients
-	case $DHCLIENT6_BIN in
-		(dhclient6)
-			dhclient6 -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.${DEVICE}.pid -cf /etc/dhclient.conf ${DEVICE}
-		;;
-		(dhcp6c)
-			dhcp6c  ${DEVICE}
-		;;
+	case "$DHCLIENT_BIN" in
+		(dhclient*)
+			"$DHCLIENT_BIN" -lf /var/lib/dhclient/dhclient.leases.${DEVICE} -pf /var/run/dhclient.${DEVICE}.pid -cf /etc/dhclient.conf ${DEVICE}
+		    ;;
+		(dhcpcd*)
+			"$DHCLIENT_BIN" ${DEVICE}
+		    ;;
+		(*)
+		    echo "Could not start DHCP client as DHCLIENT_BIN specifies an unsupported binary '$DHCLIENT_BIN'"
+		    ;;
 	esac
 done

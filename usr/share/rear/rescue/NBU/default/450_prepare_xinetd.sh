@@ -8,8 +8,8 @@
 
 [[ $NBU_version -ge 7 ]] && return	# NBU is not using xinetd when version >=7.x
 
-PROGS=( "${PROGS[@]}" xinetd )
-COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/xinetd.conf /etc/xinetd.d/bpcd /etc/xinetd.d/vnetd /etc/xinetd.d/vopied )
+PROGS+=( xinetd )
+COPY_AS_IS+=( /etc/xinetd.conf /etc/xinetd.d/bpcd /etc/xinetd.d/vnetd /etc/xinetd.d/vopied )
 cat >$ROOTFS_DIR/etc/scripts/system-setup.d/90-xinetd.sh <<-EOF
 echo "Starting a minimal xinetd daemon ..."
 xinetd
@@ -20,4 +20,4 @@ if [ ! -f /etc/xinetd.d/bpcd ]; then
         /usr/openv/netbackup/bin/bpcd -standalone
 fi
 EOF
-chmod $v +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-xinetd.sh >&2
+chmod $v +x $ROOTFS_DIR/etc/scripts/system-setup.d/90-xinetd.sh

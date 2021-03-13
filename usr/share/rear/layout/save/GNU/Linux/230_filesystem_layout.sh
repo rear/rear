@@ -6,7 +6,7 @@ Log "Begin saving filesystem layout"
 # and https://github.com/rear/rear/issues/649#issuecomment-148725865
 # Therefore if wipefs exists here in the original system it is added to REQUIRED_PROGS
 # so that it will become also available in the recovery system (cf. 260_crypt_layout.sh):
-has_binary wipefs && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" wipefs ) || true
+has_binary wipefs && REQUIRED_PROGS+=( wipefs ) || true
 # Comma separated list of filesystems that is used for "mount/findmnt -t <list,of,filesystems>" below:
 supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"
 # Read filesystem information from the system by default using the traditional mount command
@@ -60,9 +60,11 @@ docker_root_dir=""
 if service docker status ; then
     docker_is_running="yes"
     # When the Docker daemon/service is running, try to get its 'Docker Root Dir':
-    # Kill 'docker info' with SIGTERM after 5 seconds and with SIGKILL after additional 2 seconds
+    # Kill 'docker info' with SIGTERM after 10 seconds and with SIGKILL after additional 2 seconds
     # because there are too many crippled Docker installations, cf. https://github.com/rear/rear/pull/2021
-    docker_root_dir=$( timeout -k 2s 5s docker info | grep 'Docker Root Dir' | awk '{print $4}' )
+    # and https://github.com/rear/rear/pull/2572#issuecomment-784110872 why the timeout is 10 seconds
+    # i.e. it seems sometimes 'docker info' needs several (more than 5) seconds to finish:
+    docker_root_dir=$( timeout -k 2s 10s docker info | grep 'Docker Root Dir' | awk '{print $4}' )
     # Things may go wrong in the 'Docker specific exclude part' below
     # when Docker is used but its 'Docker Root Dir' cannot be determined
     # cf. https://github.com/rear/rear/issues/1989
@@ -111,8 +113,37 @@ fi
             # but ensure docker_root_dir is not empty (otherwise any mountpoint string matches "^" which
             # would skip all mountpoints), see https://github.com/rear/rear/issues/1989#issuecomment-456054278
             if test "$docker_root_dir" ; then
-                if echo "$mountpoint" | grep -q "^$docker_root_dir" ; then
+                if echo "$mountpoint" | grep -q "^${docker_root_dir}/" ; then
                     Log "Filesystem $fstype on $device mounted at $mountpoint is below Docker Root Dir $docker_root_dir, skipping."
+                    continue
+                fi
+                # In case Longhorn is rebuilding a replica device it will show up as a pseudo-device and when that is the
+                # case then you would find traces of it in the /var/lib/rear/layout/disklayout.conf file, which would
+                # break the recovery as Longhorn Engine replica's are under control of Rancher Longhorn software and these are
+                # rebuild automatically via kubernetes longhorn-engine pods.
+                # Issue where we discovered this behavior was #2365
+                # In normal situations you will find traces of longhorn in the log saying skipping non-block devices.
+                # For example an output of the 'df' command:
+                # /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792   82045336    4500292   77528660   6% /var/lib/kubelet/pods/7f47aa55-30e2-4e7b-8fec-ec9a1e761352/volumes/kubernetes.io~csi/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792/mount
+                # lsscsi shows it as:
+                # [34:0:0:0]   storage IET      Controller       0001  -
+                # [34:0:0:1]   disk    IET      VIRTUAL-DISK     0001  /dev/sdf
+                # ls -l /dev/sdf /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792
+                # brw-rw---- 1 root disk 8, 80 Apr 17 12:02 /dev/sdf
+                # brw-rw---- 1 root root 8, 64 Apr 17 10:36 /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792
+                # and parted says:
+                # parted /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792 print
+                # Model: IET VIRTUAL-DISK (scsi)
+                # Disk /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792: 85.9GB
+                # Sector size (logical/physical): 512B/512B
+                # Partition Table: loop
+                # Disk Flags:
+                # Number  Start  End     Size    File system  Flags
+                # 1      0.00B  85.9GB  85.9GB  ext4
+                # => as result (without the next if clausule) we would end up with an entry in the disklayout.conf file:
+                # fs /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792 /var/lib/kubelet/pods/61ed399a-d51b-40b8-8fe8-a78e84a1dd0b/volumes/kubernetes.io~csi/pvc-c65df331-f1c5-466a-9731-b2aa5e6da714/mount ext4 uuid=4fafdd40-a9ae-4b62-8bfb-f29036dbe3b9 label= blocksize=4096 reserved_blocks=0% max_mounts=-1 check_interval=0d bytes_per_inode=16384 default_mount_options=user_xattr,acl options=rw,relatime,data=ordered
+                if echo "$device" | grep -q "^/dev/longhorn/pvc-" ; then
+                    Log "Longhorn Engine replica $device, skipping."
                     continue
                 fi
             fi
@@ -467,13 +498,8 @@ fi
                     # see https://btrfs.wiki.kernel.org/index.php/Mount_options
                     test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
                     if test -n "$btrfs_subvolume_path" ; then
-			# Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
-                        for p in chattr lsattr
-                        do
-                            if ! IsInArray "$p" "${PROGS[@]}"; then
-                                PROGS=( ${PROGS[@]} "$p" )
-                            fi
-                        done
+                        # Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
+                        PROGS+=( chattr lsattr )
                         echo "btrfsnocopyonwrite $btrfs_subvolume_path"
                     else
                         echo "# $subvolume_mountpoint has the 'no copy on write' attribute set but $findmnt_command does not show its btrfs subvolume path"
@@ -494,7 +520,7 @@ fi
 # were appended to the BTRFS_SUBVOLUME_SLES_SETUP array (unless such a device was already in that array)
 # to enforce during "rear recover" btrfs_subvolumes_setup_SLES() gets called to setup that btrfs filesystem
 # (see the usr/share/rear/layout/prepare/GNU/Linux/133_include_mount_filesystem_code.sh script):
-BTRFS_SUBVOLUME_SLES_SETUP=( ${BTRFS_SUBVOLUME_SLES_SETUP[@]} $btrfs_subvolume_sles_setup_devices )
+BTRFS_SUBVOLUME_SLES_SETUP+=( $btrfs_subvolume_sles_setup_devices )
 
 EOF
             # The rescue.conf file is sourced last by usr/sbin/rear i.e. after site.conf and local.conf
@@ -513,7 +539,7 @@ EOF
 # see the create_fs function in layout/prepare/GNU/Linux/130_include_filesystem_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-grep -q '^fs ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mkfs )
+grep -q '^fs ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( mkfs )
 # Other filesystem creating tools are required in the recovery system
 # depending on which filesystem types entries exist in disklayout.conf
 # (see above supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"):
@@ -523,18 +549,18 @@ for filesystem_type in $( echo $supported_filesystems | tr ',' ' ' ) ; do
 done
 # Remove duplicates because in disklayout.conf there can be many entries with same filesystem type:
 required_mkfs_tools="$( echo $required_mkfs_tools | tr ' ' '\n' | sort -u | tr '\n' ' ' )"
-REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" $required_mkfs_tools )
+REQUIRED_PROGS+=( $required_mkfs_tools )
 # mke2fs is also required in the recovery system if any 'mkfs.ext*' filesystem creating tool is required
 # and tune2fs or tune4fs is used to set tunable filesystem parameters on ext2/ext3/ext4
 # see above how $tunefs is set to tune2fs or tune4fs
-echo $required_mkfs_tools | grep -q 'mkfs.ext' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" mke2fs $tunefs )
+echo $required_mkfs_tools | grep -q 'mkfs.ext' && REQUIRED_PROGS+=( mke2fs $tunefs )
 # xfs_admin is also required in the recovery system if 'mkfs.xfs' is required:
-echo $required_mkfs_tools | grep -q 'mkfs.xfs' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" xfs_admin )
+echo $required_mkfs_tools | grep -q 'mkfs.xfs' && REQUIRED_PROGS+=( xfs_admin )
 # reiserfstune is also required in the recovery system if 'mkfs.reiserfs' is required:
-echo $required_mkfs_tools | grep -q 'mkfs.reiserfs' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" reiserfstune )
+echo $required_mkfs_tools | grep -q 'mkfs.reiserfs' && REQUIRED_PROGS+=( reiserfstune )
 # btrfs is also required in the recovery system if 'mkfs.btrfs' is required
 # cf. what prepare/GNU/Linux/130_include_mount_subvolumes_code.sh writes to diskrestore.sh
-echo $required_mkfs_tools | grep -q 'mkfs.btrfs' && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" btrfs )
+echo $required_mkfs_tools | grep -q 'mkfs.btrfs' && REQUIRED_PROGS+=( btrfs )
 
 Log "End saving filesystem layout"
 

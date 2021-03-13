@@ -6,7 +6,7 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 WORKFLOW_mountonly_DESCRIPTION="use ReaR as live media to mount and repair the system"
-WORKFLOWS=( ${WORKFLOWS[@]} mountonly )
+WORKFLOWS+=( mountonly )
 function WORKFLOW_mountonly () {
     # Adapt /etc/motd in the ReaR recovery system when 'rear mountonly' is running
     # to avoid the additional 'Run "rear recover" to restore your system !' message

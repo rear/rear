@@ -1,36 +1,30 @@
 # Utility functions for the system layout processing.
 
-# TODO: Why not using ISO 8601 date 'date +%F' ?
-# Be exact to one second to ensure saved original files
-# of directly subsequent 'rear WORKFLOW' are saved with different filenames
-# that could help to avoid confusion when debugging issues later:
-DATE=$( date +%Y%m%d%H%M%S )
-
 # Each file will be only saved once by save_original_file()
 # and all subsequent save_original_file() for the same file do nothing
 # because each saved file is remembered in the SAVED_ORIGINAL_FILES array:
 SAVED_ORIGINAL_FILES=()
 SAVED_ORIGINAL_FILE_SUFFIX="orig"
 
-# Save the original content of the file $1 to $1.$DATE.$2.orig
-# or to $1.$DATE.$WORKFLOW.$MASTER_PID.orig when no $2 is specified:
+# Save the original content of the file $1 to $1.$START_DATE_TIME_NUMBER.$2.orig
+# or to $1.$START_DATE_TIME_NUMBER.$WORKFLOW.$MASTER_PID.orig when no $2 is specified:
 save_original_file() {
     local filename="$1"
     test -r "$filename" || return 1
     IsInArray "$filename" "${SAVED_ORIGINAL_FILES[@]}" && return 0
     local extension="$2"
     test "$extension" || extension=$WORKFLOW.$MASTER_PID
-    local saved_original_file="$filename.$DATE.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
-    cp -ar $filename $saved_original_file && SAVED_ORIGINAL_FILES=( "${SAVED_ORIGINAL_FILES[@]}" "$filename" )
+    local saved_original_file="$filename.$START_DATE_TIME_NUMBER.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
+    cp -ar $filename $saved_original_file && SAVED_ORIGINAL_FILES+=( "$filename" )
 }
 
 # Restore the saved original content of the original file named $1
-# that was saved as $1.$DATE.$2.orig or $1.$DATE.$WORKFLOW.$MASTER_PID.orig
+# that was saved as $1.$START_DATE_TIME_NUMBER.$2.orig or $1.$START_DATE_TIME_NUMBER.$WORKFLOW.$MASTER_PID.orig
 restore_original_file() {
     local filename="$1"
     local extension="$2"
     test "$extension" || extension=$WORKFLOW.$MASTER_PID
-    local saved_original_file="$filename.$DATE.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
+    local saved_original_file="$filename.$START_DATE_TIME_NUMBER.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
     test -r "$saved_original_file" || return 1
     cp -ar $saved_original_file $filename
 }
@@ -227,7 +221,9 @@ generate_layout_dependencies() {
             opaldisk)
                 dev=$(echo "$remainder" | cut -d " " -f "1")
                 add_component "opaldisk:$dev" "opaldisk"
-                add_dependency "$dev" "opaldisk:$dev"
+                for disk in $(opal_device_disks "$dev"); do
+                    add_dependency "$disk" "opaldisk:$dev"
+                done
                 ;;
         esac
     done < $LAYOUT_FILE
@@ -247,16 +243,34 @@ add_component() {
     echo "todo $1 $2" >> $LAYOUT_TODO
 }
 
-# Mark device $1 as done.
+# The distinction in the mark_as_done and mark_tree_as_done functions what messages should appear
+# - only in the log file in debug '-d' mode via 'Debug'
+# - in the log file and on the user's terminal in debug '-d' mode via 'DebugPrint'
+# matches the same kind of distinction in the disable_component_... functions
+# in layout/save/default/330_remove_exclusions.sh
+# but no LogPrint is used in the lower-level mark_as_done and mark_tree_as_done functions.
+
+# Mark component $1 as done.
 mark_as_done() {
-    Debug "Marking $1 as done."
+    # The trailing blank in "... $1 " is crucial to not match wrong components
+    # for example the component "... /dev/sda1" must not match accidentally
+    # other components like "... /dev/sda12" in var/lib/rear/layout/disktodo.conf
+    if grep -q "done $1 " $LAYOUT_TODO ; then
+        DebugPrint "Component '$1' is marked as 'done $1' in $LAYOUT_TODO"
+        return 0
+    fi
+    if ! grep -q "todo $1 " $LAYOUT_TODO ; then
+        Debug "Cannot mark component '$1' as done because there is no 'todo $1 ' in $LAYOUT_TODO"
+        return 1
+    fi
+    DebugPrint "Marking component '$1' as done in $LAYOUT_TODO"
     sed -i "s;todo\ $1\ ;done\ $1\ ;" $LAYOUT_TODO
 }
 
-# Mark all devices that depend on $1 as done.
+# Mark all components that depend on component $1 as done.
 mark_tree_as_done() {
-    for component in $(get_child_components "$1") ; do
-        Debug "Marking $component as done (dependent on $1)"
+    for component in $( get_child_components "$1" ) ; do
+        DebugPrint "Dependant component $component is a child of component $1"
         mark_as_done "$component"
     done
 }
@@ -277,12 +291,14 @@ get_child_components() {
                 if IsInArray "$child" "${children[@]}" ; then
                     continue
                 fi
-                devlist=( "${devlist[@]}" "$child" )
-                children=( "${children[@]}" "$child" )
+                devlist+=( "$child" )
+                children+=( "$child" )
             fi
         done < $LAYOUT_DEPS
 
-        ### remove the current element from the array and re-index it
+        # remove the current element from the array and re-index it because
+        # "unset does not remove the element it just sets null string to the particular index in array"
+        # see https://stackoverflow.com/questions/16860877/remove-an-element-from-a-bash-array
         unset "devlist[0]"
         devlist=( "${devlist[@]}" )
     done
@@ -317,12 +333,14 @@ get_parent_components() {
                     continue
                 fi
                 ### ...and add them to the list
-                devlist=( "${devlist[@]}" "$parent" )
-                ancestors=( "${ancestors[@]}" "$parent" )
+                devlist+=( "$parent" )
+                ancestors+=( "$parent" )
             fi
         done < $LAYOUT_DEPS
 
-        ### remove the current element from the array and re-index it
+        # remove the current element from the array and re-index it because
+        # "unset does not remove the element it just sets null string to the particular index in array"
+        # see https://stackoverflow.com/questions/16860877/remove-an-element-from-a-bash-array
         unset "devlist[0]"
         devlist=( "${devlist[@]}" )
     done

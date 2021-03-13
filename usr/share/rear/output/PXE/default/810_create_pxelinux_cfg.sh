@@ -109,9 +109,8 @@ if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
     if [[ $? -eq 0 ]] ; then
         RemoveExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
     fi
-    RESULT_FILES=( "${RESULT_FILES[@]}" )
 else
     LogPrint "Created pxelinux config '${PXE_CONFIG_PREFIX}$HOSTNAME' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
     # Add to result files
-    RESULT_FILES=( "${RESULT_FILES[@]}" "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" )
+    RESULT_FILES+=( "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" )
 fi

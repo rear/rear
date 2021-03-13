@@ -273,7 +273,7 @@ if ! IsInArray $WORKFLOW ${recovery_workflows[@]} ; then
         (incremental)
             local new_incremental_backup_file_name="$current_yyyy_mm_dd-$current_hhmm-$incremental_backup_marker$backup_file_suffix"
             backuparchive="$backup_directory/$new_incremental_backup_file_name"
-            # Get the latest latest incremental backup that is based on the latest full backup (if exists):
+            # Get the latest incremental backup that is based on the latest full backup (if exists):
             local incremental_backup_glob_regex="$date_time_glob_regex-$incremental_backup_marker$backup_file_suffix"
             # First get the latest full backup plus all later incremental backups (cf. how RESTORE_ARCHIVES is set in case of incremental backup)
             # then grep only the incremental backups and from the incremental backups use only the last one (if exists):

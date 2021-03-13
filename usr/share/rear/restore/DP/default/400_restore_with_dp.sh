@@ -18,31 +18,38 @@
 #	Backup ID          : n/a
 #	Copy ID            : 20 (Orig)
 
-# The list of file systems to restore is listed in file $TMP_DIR/list_of_fs_objects
+# The list of file systems to restore is listed in file ${TMP_DIR}/list_of_fs_objects
 # per line we have something like: test.internal.it3.be:/ '/'
 
-[ -f $TMP_DIR/DP_GUI_RESTORE ] && return # GUI restore explicetely requested
+[ -f ${TMP_DIR}/DP_GUI_RESTORE ] && return # GUI restore explicetely requested
 
 OMNIR=/opt/omni/bin/omnir
+echo -n ${OMNIR} > ${TMP_DIR}/restore_cmd
 
-# we will loop over all objects listed in $TMP_DIR/list_of_fs_objects
-cat $TMP_DIR/list_of_fs_objects | while read object
+# we will loop over all objects listed in ${TMP_DIR}/list_of_fs_objects
+cat ${TMP_DIR}/list_of_fs_objects | while read object
 do
 	host_fs=`echo ${object} | awk '{print $1}'`
 	fs=`echo ${object} | awk '{print $1}' | cut -d: -f 2`
 	label=`echo "${object}" | cut -d"'" -f 2`
 	# only retain the latest backup which was completed successfully
 	if grep -q "^${fs} " ${VAR_DIR}/recovery/mountpoint_device; then
-		LogPrint "Restore filesystem ${object}"
-		SessionID=`cat $TMP_DIR/dp_recovery_session`
-		${OMNIR} -filesystem ${host_fs} "${label}" -session ${SessionID} -full -omit_unrequired_object_versions -no_resumable -overwrite -tree ${fs} -into $TARGET_FS_ROOT -sparse -target `hostname` >/dev/null
-		case $? in
-			0)  Log "Restore of ${fs} was successful." ;;
-			10) Log "Restore of ${fs} finished with warnings." ;;
-			*)  LogPrint "Restore of ${fs} failed."
-				> $TMP_DIR/DP_GUI_RESTORE
-				break # get out of the loop
-				;;
-		esac
-	fi # if grep "^${fs}
+		LogPrint "Filesystem ${object} added to restore command"
+		SessionID=`cat ${TMP_DIR}/dp_recovery_session`
+		# append objects to restore command
+		echo -n " -filesystem ${host_fs} '${label}' -session ${SessionID} -full -omit_unrequired_object_versions -no_resumable -overwrite -tree ${fs} -into $TARGET_FS_ROOT -sparse -target `hostname`" >> ${TMP_DIR}/restore_cmd
+	fi
 done
+
+# parallel restore of all objects previously collected
+LogPrint "Parallel restore of backup objects started. See Data Protector GUI for restore progress."
+chmod 755 ${TMP_DIR}/restore_cmd
+${TMP_DIR}/restore_cmd
+
+case $? in
+	0)  LogPrint "Restore was successful." ;;
+	10) LogPrint "Restore finished with warnings." ;;
+	*)  LogPrint "Restore failed."
+		> ${TMP_DIR}/DP_GUI_RESTORE
+		;;
+esac

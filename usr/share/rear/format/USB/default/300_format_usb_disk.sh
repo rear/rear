@@ -24,12 +24,12 @@ MiB_bytes=$(( 1024 * 1024 ))
 if is_true "$EFI" ; then
     LogPrint "The --efi toggle was used with format - making an EFI bootable device '$RAW_USB_DEVICE'"
     # Prompt user for size of EFI system partition on USB disk if no valid value is specified:
-    while ! [[ "$USB_UEFI_PART_SIZE" =~ ^[0-9]+$ && $USB_UEFI_PART_SIZE > 0 ]] ; do
-        # When USB_UEFI_PART_SIZE is empty, do not falsely complain about "Invalid EFI partition size value":
-        test "$USB_UEFI_PART_SIZE" && LogPrintError "Invalid EFI system partition size value '$USB_UEFI_PART_SIZE' (must be unsigned integer larger than 0)"
-        USB_UEFI_PART_SIZE="$( UserInput -I USB_DEVICE_EFI_PARTITION_MIBS -p "Enter size for EFI system partition on '$RAW_USB_DEVICE' in MiB (plain 'Enter' defaults to 200 MiB)" )"
-        # Plain 'Enter' defaults to 200 MiB (same as the default value in default.conf):
-        test "$USB_UEFI_PART_SIZE" || USB_UEFI_PART_SIZE="200"
+    while ! is_positive_integer $USB_UEFI_PART_SIZE ; do
+        # When USB_UEFI_PART_SIZE is empty, do not falsely complain about "Invalid EFI partition size":
+        test "$USB_UEFI_PART_SIZE" && LogPrintError "Invalid EFI system partition size USB_UEFI_PART_SIZE='$USB_UEFI_PART_SIZE' (must be positive integer)"
+        USB_UEFI_PART_SIZE="$( UserInput -I USB_DEVICE_EFI_PARTITION_MIBS -p "Enter size for EFI system partition on '$RAW_USB_DEVICE' in MiB (default 400 MiB)" )"
+        # Plain 'Enter' defaults to 400 MiB (same as the default value in default.conf):
+        test "$USB_UEFI_PART_SIZE" || USB_UEFI_PART_SIZE="400"
     done
     LogPrint "Creating GUID partition table (GPT) on '$RAW_USB_DEVICE'"
     if ! parted -s $RAW_USB_DEVICE mklabel gpt >&2 ; then
@@ -93,9 +93,23 @@ partprobe $RAW_USB_DEVICE
 sleep 5
 
 if is_true "$EFI" ; then
-    LogPrint "Creating vfat filesystem on EFI system partition on '${RAW_USB_DEVICE}1'"
-    if ! mkfs.vfat $v -F 16 -n REAR-EFI ${RAW_USB_DEVICE}1 >&2 ; then
-        Error "Failed to create vfat filesystem on '${RAW_USB_DEVICE}1'"
+    # detect loopback device parition naming
+    # on loop devices the first partition is named e.g. loop0p1
+    # instead of e.g. sdb1 on usual (USB) disks
+    # cf. https://github.com/rear/rear/pull/2555
+    local rear_efi_partition_device="${RAW_USB_DEVICE}1"
+    if [ ! -b "$rear_efi_partition_device" ] && [ -b "${RAW_USB_DEVICE}p1" ] ; then
+        rear_efi_partition_device="${RAW_USB_DEVICE}p1"
+    fi
+    LogPrint "Creating vfat filesystem on EFI system partition on '$rear_efi_partition_device'"
+    # Make a FAT filesystem on the EFI system partition
+    # cf. https://github.com/rear/rear/issues/2575
+    # and output/ISO/Linux-i386/700_create_efibootimg.sh
+    # and output/RAWDISK/Linux-i386/280_create_bootable_disk_image.sh
+    # Let mkfs.vfat automatically select the FAT type based on the size.
+    # I.e. do not use a '-F 16' or '-F 32' option and hope for the best:
+    if ! mkfs.vfat $v -n REAR-EFI $rear_efi_partition_device >&2 ; then
+        Error "Failed to create vfat filesystem on '$rear_efi_partition_device'"
     fi
     # create link for EFI partition in /dev/disk/by-label
     partprobe $RAW_USB_DEVICE
@@ -103,7 +117,11 @@ if is_true "$EFI" ; then
     sleep 5
 fi
 
+# detect loopback device parition naming (same logic as above)
 local rear_data_partition_device="$RAW_USB_DEVICE$rear_data_partition_number"
+if [ ! -b "$rear_data_partition_device" ] && [ -b "${RAW_USB_DEVICE}p${rear_data_partition_number}" ] ; then
+    rear_data_partition_device="${RAW_USB_DEVICE}p${rear_data_partition_number}"
+fi
 
 LogPrint "Creating $USB_DEVICE_FILESYSTEM filesystem with label '$USB_DEVICE_FILESYSTEM_LABEL' on '$rear_data_partition_device'"
 if ! mkfs.$USB_DEVICE_FILESYSTEM -L "$USB_DEVICE_FILESYSTEM_LABEL" $USB_DEVICE_FILESYSTEM_PARAMS $rear_data_partition_device >&2 ; then

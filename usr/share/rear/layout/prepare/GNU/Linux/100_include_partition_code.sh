@@ -94,7 +94,7 @@ create_partitions() {
     local -a names=()
     local part disk size pstart name junk
     while read part disk size pstart name junk ; do
-        names=( "${names[@]}" $name )
+        names+=( $name )
         case $name in
             (primary|extended|logical)
                 if [[ -z "$label" ]] ; then

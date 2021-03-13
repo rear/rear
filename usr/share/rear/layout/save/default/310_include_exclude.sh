@@ -15,7 +15,7 @@
 # If you somehow need this functionality, it's advised to exclude the
 # device or volume group
 #for mountpoint in "${EXCLUDE_MOUNTPOINTS[@]}" ; do
-#    LogPrint "Excluding mountpoint $mountpoint."
+#    LogPrint "Excluding mountpoint $mountpoint in EXCLUDE_MOUNTPOINTS"
 #    mark_as_done "fs:$mountpoint"
 #    mark_tree_as_done "fs:$mountpoint"
 #done
@@ -25,7 +25,7 @@
 if [ "${MANUAL_INCLUDE:-NO}" == "YES" ] ; then
     while read fs device mountpoint junk ; do
         if ! IsInArray "$mountpoint" "${BACKUP_PROG_INCLUDE[@]}" ; then
-            LogPrint "Excluding mountpoint $mountpoint. (MANUAL_INCLUDE mode)"
+            LogPrint "Excluding mountpoint $mountpoint not in BACKUP_PROG_INCLUDE (MANUAL_INCLUDE mode)"
             mark_as_done "fs:$mountpoint"
             mark_tree_as_done "fs:$mountpoint"
         fi
@@ -33,13 +33,13 @@ if [ "${MANUAL_INCLUDE:-NO}" == "YES" ] ; then
 fi
 
 for md in "${EXCLUDE_MD[@]}" ; do
-    LogPrint "Excluding RAID $md."
+    LogPrint "Excluding RAID $md in EXCLUDE_MD"
     mark_as_done "/dev/$md"
     mark_tree_as_done "/dev/$md"
 done
 
 for vg in "${EXCLUDE_VG[@]}" ; do
-    LogPrint "Excluding Volume Group $vg."
+    LogPrint "Excluding Volume Group $vg in EXCLUDE_VG"
     mark_as_done "/dev/$vg"
     mark_tree_as_done "/dev/$vg"
 done
@@ -47,7 +47,7 @@ done
 if [ ${#ONLY_INCLUDE_VG[@]} -gt 0 ] ; then
     while read lvmgrp name junk ; do
         if ! IsInArray "${name#/dev/}" "${ONLY_INCLUDE_VG[@]}" ; then
-            LogPrint "Excluding Volume Group ${name#/dev/}"
+            LogPrint "Excluding Volume Group ${name#/dev/} not in ONLY_INCLUDE_VG"
             mark_as_done "$name"
             mark_tree_as_done "$name"
         fi
@@ -55,13 +55,13 @@ if [ ${#ONLY_INCLUDE_VG[@]} -gt 0 ] ; then
 fi
 
 for component in "${EXCLUDE_COMPONENTS[@]}" ; do
-    LogPrint "Excluding component $component."
+    LogPrint "Excluding component $component in EXCLUDE_COMPONENTS"
     mark_as_done "$component"
     mark_tree_as_done "$component"
 done
 
 for component in "${EXCLUDE_RECREATE[@]}" ; do
-    LogPrint "Excluding component $component"
+    LogPrint "Excluding component $component in EXCLUDE_RECREATE"
     mark_as_done "$component"
     mark_tree_as_done "$component"
 done

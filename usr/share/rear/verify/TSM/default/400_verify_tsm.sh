@@ -31,7 +31,7 @@ fi
 # Use the included_mountpoints array derived from the disklayout.conf to determine the default TSM filespaces
 # to include in a restore (all filesystems plus all mounted btrfs subvolumes except SUSE snapshot subvolumes):
 included_mountpoints=( $( grep '^fs' $VAR_DIR/layout/disklayout.conf | awk '{print $3}' ) )
-included_mountpoints=( "${included_mountpoints[@]}" $( grep '^btrfsmountedsubvol' $VAR_DIR/layout/disklayout.conf | awk '{print $3}' | grep -v '/.snapshots' ) )
+included_mountpoints+=( $( grep '^btrfsmountedsubvol' $VAR_DIR/layout/disklayout.conf | awk '{print $3}' | grep -v '/.snapshots' ) )
 included_mountpoints=( $( tr ' ' '\n' <<<"${included_mountpoints[@]}" | awk '!u[$0]++' | tr '\n' ' ' ) )
 
 # TSM does not restore the mountpoints for filesystems it does not recover.
@@ -39,7 +39,7 @@ included_mountpoints=( $( tr ' ' '\n' <<<"${included_mountpoints[@]}" | awk '!u[
 # (there could be already user specified directories in the DIRECTORY_ENTRIES_TO_RECOVER array)
 # allows them to be recreated in the restore default 900_create_missing_directories.sh script:
 excluded_mountpoints=( $( grep '^#fs' $VAR_DIR/layout/disklayout.conf | awk '{print $3}' ) )
-DIRECTORY_ENTRIES_TO_RECOVER=( "${DIRECTORY_ENTRIES_TO_RECOVER[@]}" "${excluded_mountpoints[@]}" )
+DIRECTORY_ENTRIES_TO_RECOVER+=( "${excluded_mountpoints[@]}" )
 
 # Find out which filespaces (= mountpoints) are available for restore.
 # Error code 8 can be ignored, see bug report at

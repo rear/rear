@@ -1,7 +1,7 @@
 # Automatically exclude multipath devices
 if is_true $AUTOEXCLUDE_MULTIPATH ; then
     while read multipath device devices junk ; do
-        Log "Automatically excluding multipath device $device."
+        DebugPrint "Automatically excluding multipath device $device"
         mark_as_done "$device"
         mark_tree_as_done "$device"
     done < <(grep ^multipath $LAYOUT_FILE)
@@ -15,7 +15,7 @@ if [[ "$AUTOEXCLUDE_PATH" ]] ; then
     for exclude in "${AUTOEXCLUDE_PATH[@]}" ; do
         while read fs device mountpoint junk ; do
             if [[ "${mountpoint#${exclude%/}/}" != "$mountpoint" ]] ; then
-                Log "Automatically excluding filesystem $mountpoint."
+                DebugPrint "Automatically excluding filesystem $mountpoint"
                 mark_as_done "fs:$mountpoint"
                 mark_tree_as_done "fs:$mountpoint"
                 ### by excluding the filesystem, the device will be excluded by the
@@ -30,7 +30,7 @@ if [[ "$AUTOEXCLUDE_USB_PATH" ]] ; then
     for exclude in "${AUTOEXCLUDE_USB_PATH[@]}" ; do
         while read fs device mountpoint junk ; do
             if [[ "$exclude" = "$mountpoint" ]] ; then
-                Log "Automatically excluding filesystem $mountpoint (USB device $device)."
+                DebugPrint "Automatically excluding filesystem $mountpoint (USB device $device)"
                 mark_as_done "fs:$mountpoint"
                 mark_tree_as_done "fs:$mountpoint"
                 ### by excluding the filesystem, the device will also be excluded
@@ -56,7 +56,7 @@ if is_true "$AUTOEXCLUDE_DISKS" ; then
         disks=$(find_disk_and_multipath swap:$device)
         for disk in $disks ; do
             if ! IsInArray "$disk" "${used_disks[@]}" ; then
-                used_disks=( "${used_disks[@]}" "$disk" )
+                used_disks+=( "$disk" )
             fi
         done
 
@@ -79,7 +79,7 @@ if is_true "$AUTOEXCLUDE_DISKS" ; then
         disks=$(find_disk_and_multipath fs:$mountpoint)
         for disk in $disks ; do
             if ! IsInArray "$disk" "${used_disks[@]}" ; then
-                used_disks=( "${used_disks[@]}" "$disk" )
+                used_disks+=( "$disk" )
             fi
         done
     done < <(grep ^fs $LAYOUT_FILE)
@@ -87,9 +87,10 @@ if is_true "$AUTOEXCLUDE_DISKS" ; then
     # Find out which disks were not in the list and remove them.
     while read disk name junk ; do
         if ! IsInArray "$name" "${used_disks[@]}" ; then
-            Log "Disk $name is not used by any mounted filesystem. Excluding."
+            DebugPrint "Automatically excluding disk $name (not used by any mounted filesystem)"
             mark_as_done "$name"
             # If this was a self-encrypting disk, remove its entry, too.
+            Debug "Also automatically excluding opaldisk $name if exists"
             mark_as_done "opaldisk:$name"
             mark_tree_as_done "$name"
         fi
@@ -105,16 +106,17 @@ while read multipath device dm_size label slaves junk ; do
     OIFS=$IFS
     IFS=","
     for slave in $slaves ; do
-        devices=( "${devices[@]}" "$slave" )
+        devices+=( "$slave" )
     done
     IFS=$OIFS
 
     for slave in "${devices[@]}" ; do
-        Log "Excluding multipath slave $slave."
+        DebugPrint "Automatically excluding multipath slave $slave"
         mark_as_done "$slave"
         ### the slave can have partitions, also exclude them
         while read child parent junk ; do
             if [[ "$child" != "$device" ]] ; then
+                DebugPrint "Automatically excluding multipath child $child"
                 mark_as_done "$child"
             fi
         done < <(grep "$slave$" $LAYOUT_DEPS)
@@ -124,6 +126,7 @@ done < <(grep ^multipath $LAYOUT_FILE)
 ### Automatically exclude autofs devices
 if [[ -n "$AUTOEXCLUDE_AUTOFS" ]] ; then
     while read name mountpoint junk ; do
-        BACKUP_PROG_EXCLUDE=( "${BACKUP_PROG_EXCLUDE[@]}" "$mountpoint" )
+        DebugPrint "Automatically excluding autofs filesystem $mountpoint"
+        BACKUP_PROG_EXCLUDE+=( "$mountpoint" )
     done < <(grep " autofs " /proc/mounts)
 fi

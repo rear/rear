@@ -165,7 +165,7 @@ OUTPUT=ISO
 BACKUP=ZYPPER
 BACKUP_OPTIONS="nfsvers=3,nolock"
 BACKUP_URL=nfs://10.160.4.244/nfs
-SSH_ROOT_PASSWORD="rear"
+SSH_ROOT_PASSWORD='password_on_the_rear_recovery_system'
 USE_DHCLIENT="yes"
 
 == YUM

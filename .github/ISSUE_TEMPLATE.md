@@ -5,7 +5,7 @@ Fill in the following items before submitting a new issue
 
 * ReaR version ("/usr/sbin/rear -V"):
 
-* OS version ("cat /etc/rear/os.conf" or "lsb_release -a" or "cat /etc/os-release"):
+* OS version ("cat /etc/os-release" or "lsb_release -a" or "cat /etc/rear/os.conf"):
 
 * ReaR configuration files ("cat /etc/rear/site.conf" and/or "cat /etc/rear/local.conf"):
 

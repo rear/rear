@@ -1,17 +1,15 @@
 # 400_verify_dp.sh
-# read DP vars from config file
-CELL_SERVER="`cat /etc/opt/omni/client/cell_server`"
+# read Data Protector vars from config file
 
-# check that cell server is actually available (ping)
-[ "${CELL_SERVER}" ]
-StopIfError "Data Protector Cell Manager not set in /etc/opt/omni/client/cell_server (TCPSERVERADDRESS) !"
+# the Cell Manager must be configured on the client
+# if /etc/opt/omni/client/cell_server exists and contains something, we're good
+test -s /etc/opt/omni/client/cell_server || Error "Data Protector Cell Manager not configured in /etc/opt/omni/client/cell_server"
+CELL_SERVER="$( cat /etc/opt/omni/client/cell_server )"
 
-if test "$PING" ; then
-	ping -c 1 "${CELL_SERVER}" >/dev/null 2>&1
-	StopIfError "Sorry, but cannot reach Data Protector Cell Manager ${CELL_SERVER}"
+OMNICHECK=/opt/omni/bin/omnicheck
 
-	Log "Data Protector Cell Manager ${CELL_SERVER} seems to be up and running."
-else
-	Log "Skipping ping test"
+if [ $ARCH == "Linux-i386" ] || [ $ARCH == "Linux-ia64" ]; then
+    # check that the Cell Manager is responding on the INET port
+    ${OMNICHECK} -patches -host ${CELL_SERVER} || Error "Data Protector Cell Manager is not responding, error code $?.
+    See $RUNTIME_LOGFILE for more details."
 fi
-

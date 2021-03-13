@@ -57,7 +57,7 @@ extract_partitions() {
                     uuid=$( cat $potential_partition/dm/uuid )
                     if [[ $uuid = part* ]]; then
                         # store all the $device partition in sysfs_paths array
-                        sysfs_paths=( "${sysfs_paths[@]}" "$potential_partition" )
+                        sysfs_paths+=( "$potential_partition" )
                     fi
                 done
             else
@@ -67,7 +67,7 @@ extract_partitions() {
                 for path in ${device}p[0-9]* ${device}[0-9]* ${device}-part* ${device}_part*; do
                     sysfs_path=$(get_sysfs_name $path)
                     if [[ "$sysfs_path" ]] && [[ -e "/sys/block/$sysfs_path" ]] ; then
-                        sysfs_paths=( "${sysfs_paths[@]}" "/sys/block/$sysfs_path" )
+                        sysfs_paths+=( "/sys/block/$sysfs_path" )
                     fi
                 done
             fi
@@ -405,5 +405,5 @@ Log "Saving disk partitions."
 # what program calls are written to diskrestore.sh and which programs will be run during "rear recover" in any case
 # e.g. mdadm is not called in any case and sfdisk is only used in case of BLOCKCLONE_STRICT_PARTITIONING
 # cf. https://github.com/rear/rear/issues/1963
-egrep -q '^disk |^part ' $DISKLAYOUT_FILE && REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" parted partprobe ) || true
+egrep -q '^disk |^part ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( parted partprobe ) || true
 

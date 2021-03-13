@@ -7,7 +7,7 @@
 
 # Old SUSE style
 if test -s /etc/sysconfig/kernel ; then
-    MODULES_LOAD=( "${MODULES_LOAD[@]}"
+    MODULES_LOAD+=(
       $(
         INITRD_MODULES=
         source /etc/sysconfig/kernel
@@ -18,7 +18,7 @@ fi
 
 # Fedora, Red Hat & new SUSE uses dracut
 if test -s /etc/dracut.conf ; then
-    MODULES_LOAD=( "${MODULES_LOAD[@]}"
+    MODULES_LOAD+=(
         $(
             add_drivers=
             source /etc/dracut.conf
@@ -34,7 +34,7 @@ fi
 # append the initrd modules file to the general modules file. Nevertheless we must ensure that those
 # modules are actually included in the rescue system
 if test -s /etc/initramfs-tools/modules ; then
-    MODULES_LOAD=( "${MODULES_LOAD[@]}"
+    MODULES_LOAD+=(
         $( sed -n -e 's/^\([a-z0-9]\+\).*/\1/p' < /etc/initramfs-tools/modules )
     )
 fi

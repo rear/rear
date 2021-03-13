@@ -75,7 +75,7 @@ esac
 # which is o.k. because it is a catch all rule so we do not miss any
 # important executable needed a certain scheme and it does not hurt
 # see https://github.com/rear/rear/pull/859
-PROGS=( "${PROGS[@]}"
+PROGS+=(
 showmount
 mount.$(url_scheme $BACKUP_DUPLICITY_NETFS_URL)
 umount.$(url_scheme $BACKUP_DUPLICITY_NETFS_URL)
@@ -87,21 +87,21 @@ $BACKUP_PROG
 # include required stuff for sshfs or ftpfs (via CurlFtpFS)
 if [[ "sshfs" = "$scheme" || "ftpfs" = "$scheme" ]] ; then
     # both sshfs and ftpfs (via CurlFtpFS) are based on FUSE
-    PROGS=( "${PROGS[@]}" fusermount mount.fuse )
-    MODULES=( "${MODULES[@]}" fuse )
-    MODULES_LOAD=( "${MODULES_LOAD[@]}" fuse )
-    COPY_AS_IS=( "${COPY_AS_IS[@]}" /etc/fuse.conf )
+    PROGS+=( fusermount mount.fuse )
+    MODULES+=( fuse )
+    MODULES_LOAD+=( fuse )
+    COPY_AS_IS+=( /etc/fuse.conf )
     # include what is specific for sshfs
     if [[ "sshfs" = "$scheme" ]] ; then
         # see http://sourceforge.net/apps/mediawiki/fuse/index.php?title=SshfsFaq
-        REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" sshfs ssh )
+        REQUIRED_PROGS+=( sshfs ssh )
         # relying on 500_ssh.sh to take a long the SSH related files
     fi
     # include what is specific for ftpfs
     if [[ "ftpfs" = "$scheme" ]] ; then
         # see http://curlftpfs.sourceforge.net/
         # and https://github.com/rear/rear/issues/845
-        REQUIRED_PROGS=( "${REQUIRED_PROGS[@]}" curlftpfs )
+        REQUIRED_PROGS+=( curlftpfs )
     fi
 fi
 
@@ -111,5 +111,5 @@ fi
 # which is o.k. because this must been seen as a catch all rule
 # (one never knows what one could miss)
 # see https://github.com/rear/rear/pull/859
-MODULES=( "${MODULES[@]}" $(url_scheme $BACKUP_DUPLICITY_NETFS_URL) )
+MODULES+=( $(url_scheme $BACKUP_DUPLICITY_NETFS_URL) )
 

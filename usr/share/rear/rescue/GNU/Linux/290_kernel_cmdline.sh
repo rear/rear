@@ -7,7 +7,7 @@ for current_kernel_option in $( cat /proc/cmdline ); do
     # add the whole option (with value) to new_kernel_options_to_add array
     # if the option name is part of COPY_KERNEL_PARAMETERS array:
     if IsInArray "${current_kernel_option%%=*}" "${COPY_KERNEL_PARAMETERS[@]}" ; then
-        new_kernel_options_to_add=( "${new_kernel_options_to_add[@]}" "$current_kernel_option" )
+        new_kernel_options_to_add+=( "$current_kernel_option" )
     fi
 done
 

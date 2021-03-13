@@ -61,7 +61,7 @@ while read type name junk ; do
         is_true "$wilful_input" && LogPrint "User confirmed recreating HP Smart Array controller '$name'" || LogPrint "Recreating HP Smart Array controller '$name' by default"
         echo "# Recreate HP Smart Array controller '$name'" >>$LAYOUT_CODE
         create_device "$name" 'smartarray'
-        controllers_to_be_recreated=( "${controllers_to_be_recreated[@]}" $name )
+        controllers_to_be_recreated+=( $name )
     fi
 done < <( grep '^smartarray ' $LAYOUT_FILE )
 

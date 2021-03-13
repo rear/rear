@@ -18,6 +18,11 @@ else
 fi
 
 pushd $TMP_DIR/isofs >/dev/null
+
+# Error out when files greater or equal ISO_FILE_SIZE_LIMIT should be included in the ISO (cf. default.conf).
+# Consider all regular files and follow symbolic links to also get regular files where symlinks point to:
+assert_ISO_FILE_SIZE_LIMIT $( find -L . -type f )
+
 # ebiso uses different command line options and parameters:
 if test "ebiso" = $( basename $ISO_MKISOFS_BIN ) ; then
     # ebiso currently works only with UEFI:
@@ -40,6 +45,6 @@ iso_image_size=( $(du -h "$ISO_DIR/$ISO_PREFIX.iso") )
 LogPrint "Wrote ISO image: $ISO_DIR/$ISO_PREFIX.iso ($iso_image_size)"
 
 # Add ISO image to result files
-RESULT_FILES=( "${RESULT_FILES[@]}" "$ISO_DIR/$ISO_PREFIX.iso" )
+RESULT_FILES+=( "$ISO_DIR/$ISO_PREFIX.iso" )
 
 # vim: set et ts=4 sw=4:
