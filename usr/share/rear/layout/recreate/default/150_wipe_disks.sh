@@ -1,3 +1,7 @@
+
+# Skip it when the user has explicitly specified to not wipe disks:
+is_false "$DISKS_TO_BE_WIPED" && return 0
+
 # The disks that will be completely wiped are those disks
 # where in diskrestore.sh the create_disk_label function is called
 # (the create_disk_label function calls "parted -s $disk mklabel $label")
