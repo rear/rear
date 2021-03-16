@@ -46,6 +46,17 @@ for luks_device in $crypto_LUKS_kernel_devices ; do
     luks_mapping_names+="$luks_mapping_name "
 done
 
+# Wiping LVM storage objects:
+# The only way to get rid of LVM stuff is to deconstruct the LVM stuff
+# with LVM tools step by step from LVs to VGs to PVs.
+# But deconstructing LVM stuff step by step from LVs to VGs to PVs gets impossible
+# when there are LVs that belong to VGs that contain disks that should not be wiped,
+# cf. https://github.com/rear/rear/pull/2514#issuecomment-729009274
+# Currently only PVs are removed and the code to remove VGs and LVs is commented out for now
+# because currently it is too complicated to autodetect to which disks VGs and LVs belong
+# (VGs and LVs can be spread over various disks) to be able to avoid that VGs and LVs
+# may get accidentally changed on disks that should not be touched at all,
+# cf. https://github.com/rear/rear/pull/2514#issuecomment-743049696
 # Plain wiping a disk with LVM storage objects leads to errors later when "parted -s $disk mklabel $label" is called
 # in the diskrestore.sh script because then 'parted' fails (which lets diskrestore.sh fail which lets "rear recover" fail)
 # with the following error message:
