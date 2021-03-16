@@ -1,4 +1,7 @@
-#
+
+# Skip it when the user has explicitly specified to not wipe disks:
+is_false "$DISKS_TO_BE_WIPED" && return 0
+
 # In migration mode let the user confirm the disks
 # that will be completely wiped (as far as possible)
 # so that the disk layout recreation code (diskrestore.sh)
