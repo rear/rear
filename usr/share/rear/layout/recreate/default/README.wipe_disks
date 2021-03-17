@@ -1,0 +1,639 @@
+How to wipe metadata from block devices:
+
+Reliably wiping all metadata from all block devices
+that belong to a (possibly deeply) nested structure of block devices
+is impossible in practice from within the running ReaR recovery system.
+
+Reason:
+
+After booting the ReaR recovery system a nested structure of block devices
+is not visible regardless that it actually exists on the disk.
+
+For an example see
+https://github.com/rear/rear/pull/2514#issuecomment-726116193
+that reads (excerpts):
+
+On the original system the structure of block devices is:
+
+# lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT
+NAME                                               KNAME     PKNAME    TRAN TYPE  FSTYPE       SIZE MOUNTPOINT
+/dev/sda                                           /dev/sda            ata  disk                20G
+|-/dev/sda1                                        /dev/sda1 /dev/sda       part                 8M
+`-/dev/sda2                                        /dev/sda2 /dev/sda       part  crypto_LUKS   20G
+  `-/dev/mapper/cr_ata-QEMU_HARDDISK_QM00001-part2 /dev/dm-0 /dev/sda2      crypt LVM2_member   20G
+    |-/dev/mapper/system-swap                      /dev/dm-1 /dev/dm-0      lvm   swap           2G [SWAP]
+    |-/dev/mapper/system-root                      /dev/dm-2 /dev/dm-0      lvm   btrfs       12.6G /
+    `-/dev/mapper/system-home                      /dev/dm-3 /dev/dm-0      lvm   xfs          5.4G /home
+
+That structure is recreated via an initial "rear recover" run on the replacement hardware
+so that the same structure is now also on the disk of the replacement hardware.
+
+But when booting the ReaR recovery system again on that replacement hardware
+only this partial structure of the block devices is visible
+(only the disk and partitions but no nested block devices inside the partitions):
+
+RESCUE # lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT
+NAME        KNAME     PKNAME   TRAN TYPE FSTYPE       SIZE MOUNTPOINT
+/dev/sda    /dev/sda           ata  disk               20G
+|-/dev/sda1 /dev/sda1 /dev/sda      part                8M
+`-/dev/sda2 /dev/sda2 /dev/sda      part crypto_LUKS   20G
+
+The reason why nested block devices are not visible is that /dev/sda2 is LUKS encrypted
+so nothing what there is inside of /dev/sda2 could make any sense
+for any program or tool that scans for nested block devices in /dev/sda2
+unless /dev/sda2 gets unencrypted with "cryptsetup luksOpen":
+
+RESCUE # cryptsetup luksOpen /dev/sda2 luks1sda2
+Enter passphrase for /dev/sda2:
+...
+
+RESCUE # lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT
+NAME                      KNAME     PKNAME    TRAN TYPE  FSTYPE       SIZE MOUNTPOINT
+/dev/sda                  /dev/sda            ata  disk                20G
+|-/dev/sda1               /dev/sda1 /dev/sda       part                 8M
+`-/dev/sda2               /dev/sda2 /dev/sda       part  crypto_LUKS   20G
+  `-/dev/mapper/luks1sda2 /dev/dm-0 /dev/sda2      crypt LVM2_member   20G
+
+Now the LUKS volume symbolic link /dev/mapper/luks1sda2 that points to its matching
+kernel block device /dev/dm-0 (with parent kernel block device /dev/sda2) is there
+and the LVM storage objects that are inside the LUKS volume become visible:
+
+RESCUE # pvscan
+  PV /dev/mapper/luks1sda2   VG system          lvm2 [19.98 GiB / 0    free]
+  Total: 1 [19.98 GiB] / in use: 1 [19.98 GiB] / in no VG: 0 [0   ]
+
+RESCUE # vgscan
+  Reading all physical volumes.  This may take a while...
+  Found volume group "system" using metadata type lvm2
+
+RESCUE # lvscan
+  inactive          '/dev/system/swap' [2.00 GiB] inherit
+  inactive          '/dev/system/home' [5.39 GiB] inherit
+  inactive          '/dev/system/root' [12.59 GiB] inherit
+
+The LVM logical volumes are inactive so they need to be activated with 'vgchange -ay'
+which will create the symbolic links /dev/VGName/LVName (/dev/system/{swap|home|root})
+pointing to matching kernel device nodes /dev/dm-{1|2|3} (all child devices of /dev/dm-0):
+
+RESCUE # vgchange -ay
+  3 logical volume(s) in volume group "system" now active
+
+RESCUE # lsblk -bipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT
+NAME                          KNAME     PKNAME    TRAN TYPE  FSTYPE             SIZE MOUNTPOINT
+/dev/sda                      /dev/sda            ata  disk              21474836480
+|-/dev/sda1                   /dev/sda1 /dev/sda       part                  8388608
+`-/dev/sda2                   /dev/sda2 /dev/sda       part  crypto_LUKS 21465382400
+  `-/dev/mapper/luks1sda2     /dev/dm-0 /dev/sda2      crypt LVM2_member 21463285248
+    |-/dev/mapper/system-swap /dev/dm-1 /dev/dm-0      lvm   swap         2147483648
+    |-/dev/mapper/system-home /dev/dm-2 /dev/dm-0      lvm   xfs          5792333824
+    `-/dev/mapper/system-root /dev/dm-3 /dev/dm-0      lvm   btrfs       13518241792
+
+So it is possible to make the whole structure of nested block devices visible and accessible.
+
+But when there are LUKS encrypted block devices that contain nested block devices
+the LUKS passphrase is mandatory to 'luksOpen' LUKS encrypted devices
+to be able to wipe nested block devices inside LUKS volumes.
+
+When "rear recover" is run on arbitrary replacement hardware it could happen
+that there are LUKS encrypted block devices that contain nested block devices
+but the LUKS passphrase is unknown by the admin at that point in time and
+then it is impossible to wipe nested block devices inside LUKS volumes.
+
+The usual tool to wipe signatures (i.e. metadata) from a device is wipefs.
+But wipefs only wipes metadata that belongs to the specified device
+and wipefs does not descend into nested child devices (wipefs has no "recursive" option).
+Even if wipefs could descend into nested child devices it would not help
+in the ReaR recovery system when deeper nested child devices cannot be made visible
+(e.g. when there are nested block devices inside LUKS volumes with unknown LUKS passphrase).
+
+So a more generic and more efficient method is needed
+that also wipes metadata from nested block devices
+even if the nested block devices are not visible.
+
+The basic idea is to use 'dd' to zero out a sufficient amount of bytes (16 MiB - see at the bottom)
+at the beginning and at the end of a block device to also wipe metadata
+from deeper nested block devices even if they are not visible.
+
+In the above example look at /dev/sda2 with its deeper nested block devices
+
+`-/dev/sda2                                        /dev/sda2 /dev/sda       part  crypto_LUKS   20G
+  `-/dev/mapper/cr_ata-QEMU_HARDDISK_QM00001-part2 /dev/dm-0 /dev/sda2      crypt LVM2_member   20G
+    |-/dev/mapper/system-swap                      /dev/dm-1 /dev/dm-0      lvm   swap           2G [SWAP]
+    |-/dev/mapper/system-root                      /dev/dm-2 /dev/dm-0      lvm   btrfs       12.6G /
+    `-/dev/mapper/system-home                      /dev/dm-3 /dev/dm-0      lvm   xfs          5.4G /home
+
+where in the ReaR recovery system only
+
+`-/dev/sda2 /dev/sda2 /dev/sda      part crypto_LUKS   20G
+
+is visible.
+
+When 16 MiB are wiped at the beginning and at the end of /dev/sda2
+it should also wipe the LVM metadata at the beginning and
+at the end of /dev/mapper/cr_ata-QEMU_HARDDISK_QM00001-part2
+and metadata at the beginning of the /dev/mapper/system-swap
+and at the end of the /dev/mapper/system-home LVs.
+
+What is still on the disk when 16 MiB were wiped at the beginning and end of /dev/sda2
+is metadata at the end of /dev/mapper/system-swap and
+at the beginning and end of /dev/mapper/system-root and
+at the beginning of /dev/mapper/system-home
+and as a consequence so that remaining metadata could get in the way
+when recreating the /dev/mapper/system-swap and /dev/mapper/system-root
+and /dev/mapper/system-home LVs.
+
+So the only really reliably working way to wipe all metadata from all block devices
+that could belong to a (possibly deeply) nested structure of block devices
+is to prepare replacement hardware for disaster recovery in advance
+which means in particular to completely zero out all replacement storage,
+see the section "Prepare replacement hardware for disaster recovery" in
+https://en.opensuse.org/SDB:Disaster_Recovery
+
+But completely zeroing out storage space may take a long time on big disks
+so this is not possible in practice during "rear recover" (where time matters)
+when the replacement hardware is the original system hardware which is the case when
+disaster recovery is done because of non-hardware-errors (e.g. corrupted file systems
+or destroyed disk partitioning).
+
+When the replacement hardware is the original system hardware
+some best-effort attempt needs to be done to wipe as much metadata as possible
+(with reasonable effort within a reasonable time) from all needed block devices.
+
+Such a best-effort attempt is to use 'dd' to zero out 16 MiB (see at the bottom)
+at the beginning and at the end of each block device that is visible from inside
+the running ReaR recovery system and that will be actually used for disaster recovery.
+
+Those block devices are the disks where in diskrestore.sh the create_disk_label function
+is called (the create_disk_label function calls "parted -s $disk mklabel $label")
+i.e. the disks that will be completely overwritten by "rear recover"
+and all their child devices (in particular all partitions on those disks).
+
+The following sections are about using 'dd' and how much metadata is stored
+for LUKS, RAID, and LVM plus a summary how much data should be wiped
+when there are nested RAID plus LVM plus LUKS block devices (which results 16 MiB).
+
+=============================================================================================
+
+'dd' from the end of the device
+
+https://unix.stackexchange.com/questions/108858/seek-argument-in-command-dd
+excerpts:
+---------------------------------------------------------------------------------------------
+you can see what dd does with strace
+
+strace dd if=/dev/urandom bs=4096 seek=7 count=2 of=file_with_holes
+
+It opens /dev/urandom for reading (if=/dev/urandom),
+opens file_with_holes for create/write (of=file_with_holes).
+Then it truncates file_with_holes to 4096*7=28672 bytes (bs=4096 seek=7).
+The truncate means that file contents after that position are lost.
+(Add conv=notrunc to avoid this step).
+Then it seeks to 28672 bytes.
+Then it reads 4096 bytes (bs=4096 used as ibs) from /dev/urandom,
+writes 4096 bytes (bs=4096 used as obs) to file_with_holes,
+followed by another read and write (count=2).
+Then it closes /dev/urandom, closes file_with_holes, and prints that it copied 2*4096 = 8192 bytes.
+Finally it exits without error (0).
+---------------------------------------------------------------------------------------------
+
+https://unix.stackexchange.com/questions/13848/wipe-last-1mb-of-a-hard-drive
+excerpts:
+---------------------------------------------------------------------------------------------
+dd bs=512 if=/dev/zero of=/dev/sdx count=2048 seek=$((`blockdev --getsz /dev/sdx` - 2048))
+
+Using the seek to get to the end of the drive works very well, i.e.:
+
+    seek=$((blockdev --getsz /dev/sda - 2048))
+
+However, when you use this, I recommend that you either know that your count value is correct,
+or not use it at all. The reason I say this is that drives can have either 512 byte sectors
+or 4k sectors, and if you use this solution with a drive that has 4k sectors on it,
+you won't go to the end of the drive with that count value,
+and may miss the RAID information at the end
+
+/sys/block/sdx/queue/physical_block_size may give you the information
+but some newer disks play fast and loose with the sector size they report.
+It's probably better to read the label on the disk or look it up in the manufacturers data sheet.
+
+The size of every partition is available in /proc/partitions.
+The following command shows the size of sdx (in kB units):
+
+awk '$4 == "sdx" {print $3}' </proc/partitions
+
+Thus:
+
+dd if=/dev/zero of=/dev/sdx bs=1k count=1024 \
+   seek=$(($(awk '$4 == "sdx" {print $3}' </proc/partitions) - 1024))
+---------------------------------------------------------------------------------------------
+
+=============================================================================================
+
+LUKS
+
+man cryptsetup
+excerpts:
+---------------------------------------------------------------------------------------------
+  --align-payload <number of 512 byte sectors>
+  Align payload at a boundary of value 512-byte sectors.
+  This option is relevant for luksFormat.
+  If not specified, cryptsetup tries to use the topology info provided by the kernel
+  for the underlying device to get the optimal alignment.
+  If not available (or the calculated value is a multiple of the default)
+  data is by default aligned to a 1MiB boundary (i.e. 2048 512-byte sectors).
+
+  --header <device or file storing the LUKS header>
+  ...
+  For luksFormat with a file name as the argument to --header,
+  the file will be automatically created if it does not  exist.
+  See the cryptsetup FAQ for header size calculation.
+
+  The cryptsetup FAQ, contained in the distribution package and online at
+  https://gitlab.com/cryptsetup/cryptsetup/wikis/FrequentlyAskedQuestions
+
+---------------------------------------------------------------------------------------------
+
+https://gitlab.com/cryptsetup/cryptsetup/wikis/FrequentlyAskedQuestions
+excerpts:
+---------------------------------------------------------------------------------------------
+
+6.12 What does the on-disk structure of LUKS1 look like?
+
+Note: For LUKS2, refer to the LUKS2 document referenced in Item 1.2
+[ https://gitlab.com/cryptsetup/LUKS2-docs that leads to
+  https://gitlab.com/cryptsetup/LUKS2-docs/blob/master/luks2_doc_wip.pdf ]
+
+A LUKS1 partition consists of a header, followed by 8 key-slot descriptors,
+followed by 8 key slots, followed by the encrypted data area.
+
+Header and key-slot descriptors fill the first 592 bytes.
+...
+Due to 2MiB default alignment, start of the data area for cryptsetup 1.3 and later is at 2MiB, i.e. at 0x200000.
+For older versions, it is at 0x101000, i.e. at 1'052'672 bytes, i.e. at 1MiB + 4096 bytes from the start of the partition.
+
+---------------------------------------------------------------------------------------------
+
+https://gitlab.com/cryptsetup/LUKS2-docs/blob/master/luks2_doc_wip.pdf
+excerpts:
+---------------------------------------------------------------------------------------------
+2 LUKS2 On-Disk Format
+
+The LUKS2 header is located at the beginning (sector 0) of the block device
+
+The LUKS2 header contains three logical areas:
+* binary structured header (one 4096-byte sector, only 512-bytes are used),
+* area for metadata stored in the JSON format and
+* keyslot area (keyslots binary data).
+The binary and JSON areas are stored twice on the device (primary and secondary header)
+and under normal circumstances contain same functional metadata.
+The binary header size ensures that the binary header is always written to only one sector (atomic write).
+Binary data in the keyslots area is allocated on-demand. There is no redundancy in the binary keyslots area
+...
+To allow for an easy recovery, the secondary header must start at a fixed offset listed in Table 1.
+ Offset            JSON area
+[bytes]     (hexa)      [kB]
+  16384 (0x004000)       12
+  32768 (0x008000)       28
+  65536 (0x010000)       60
+ 131072 (0x020000)      124
+ 262144 (0x040000)      252
+ 524288 (0x080000)      508
+1048576 (0x100000)     1020
+2097152 (0x200000)     2044
+4194304 (0x400000)     4092
+Table 1:  Possible LUKS2 secondary header offsets and JSON area size.
+...
+The JSON area starts immediately after the binary header
+(end of JSON area must be aligned to 4096-byte sector offset)
+---------------------------------------------------------------------------------------------
+
+So a LUKS 2 header can be at most 4194304 bytes = 4 MiB
+because the secondary header starts at least at offset 4194304
+so a whole LUKS 2 header (primary plus secondary) can be at most 2 * 4194304 bytes = 8 MiB.
+
+Summary:
+
+To wipe a LUKS1 header is should be sufficient to wipe 2 MiB at the beginning of the device.
+
+To wipe a LUKS2 header is should be sufficient to wipe 8 MiB at the beginning of the device.
+
+=============================================================================================
+
+RAID
+
+From
+https://raid.wiki.kernel.org/index.php/RAID_superblock_formats#A_Note_about_kernel_autodetection_of_different_superblock_formats
+excerpts:
+
+---------------------------------------------------------------------------------------------
+The version-0.90 Superblock Format
+
+The superblock is 4K long and is written into a 64K aligned block
+that starts at least 64K and less than 128K from the end of the device
+(i.e. to get the address of the superblock round the size of the device
+ down to a multiple of 64K and then subtract 64K).
+The available size of each device is the amount of space before the super block,
+so between 64K and 128K is lost when a device in incorporated into an MD array.
+
+The version-1 Superblock Format
+
+The version-1 superblock is capable of supporting arrays with 384+ component devices,
+and supports arrays with 64-bit sector lengths.
+
+Note: Current version-1 superblocks use an unsigned 32-bit number for the dev_number
+but only index the dev_numbers using an array of unsigned 16-bit numbers
+(so the theoretical range of device numbers in a single array is 0x0000 - 0xFFFD),
+which allows for 65,534 devices.
+
+The "version-1" superblock format is currently used in three different "sub-versions".
+
+Sub-Version  Superblock Position on Device
+0.9          At the end of the device
+1.0          At the end of the device
+1.1          At the beginning of the device
+1.2          4K from the beginning of the device
+
+The version-1 superblock format on-disk layout
+Total Size of superblock
+Total Size of superblock: 256 Bytes, plus 2 bytes per device in the array
+---------------------------------------------------------------------------------------------
+
+Summary:
+
+Version-0.90 Superblock is at most 128K from the end of the device.
+
+Version-1 Superblock is at most 256 Bytes + ( 2 bytes * 65534 devices ) = 131324 bytes = 128.24609375 KiB
+additionally possibly plus 4K from the beginning of the device = 129 KiB + 4 KiB = 133 KiB
+
+Result:
+
+To wipe RAID Superblocks it is sufficient to wipe at least 133 KiB at the beginning and at the end of the device.
+
+https://www.systutorials.com/how-to-clean-raid-signatures-on-linux/
+excerpts:
+---------------------------------------------------------------------------------------------
+Show RAID devices
+
+Show the RAID devices by
+
+# dmraid -r
+
+It will show the results like
+
+/dev/sdb: ddf1, ".ddf1_disks", GROUP, ok, 3904294912 sectors, data@ 0
+
+You may find the device at:
+
+# ls /dev/mapper/ddf*
+
+Remove RAID device
+
+Here, there are many methods.
+I show the most easier one to the most hard one.
+The example here shows that all except the last dd method failed.
+
+Use dmsetup
+
+Trying directly by dmsetup may fail like:
+
+# dmsetup remove /dev/mapper/ddfs1_...
+
+The result:
+
+device-mapper: remove ioctl on ddf1_49424d202020202010000073101403b141c2c9e96c8236dbp1 failed: Device or resource busy
+Command failed
+
+We may try the dmraid tool. Assume the disk is /dev/sdb:
+
+DEVICE=/dev/sdb
+
+Remove RAID status by dmraid:
+
+# dmraid -r -E $DEVICE
+
+In this example, it still failed showing errors as follows.
+
+Do you really want to erase "ddf1" ondisk metadata on /dev/sdb ? [y/n] :y
+
+ERROR: ddf1: seeking device "/dev/sdb" to 1024204253954048
+ERROR: writing metadata to /dev/sdb, offset 2000398933504 sectors, size 0 bytes returned 0
+ERROR: erasing ondisk metadata on /dev/sdb
+
+If all failed, you may try the powerful dd:
+
+# dd if=/dev/zero of=$DEVICE bs=512 seek=$(( $(blockdev --getsz $DEVICE) - 1024 )) count=1024
+
+1024+0 records in
+1024+0 records out
+524288 bytes (524 kB) copied, 0.00216637 s, 242 MB/s
+
+Check the RAID devices again by
+
+dmraid -r
+
+Now it shows:
+
+no raid disks
+
+Now the RAID signature on the disk is successfully cleaned.
+---------------------------------------------------------------------------------------------
+
+=============================================================================================
+
+LVM
+
+https://unix.stackexchange.com/questions/185057/where-does-lvm-store-its-configuration
+excerpts:
+---------------------------------------------------------------------------------------------
+
+I am not aware of a command that you can use to view the metadata,
+but the command vgcfgbackup can be used to backup the metadata
+and you can open a backup file thus created to view the metadata
+
+vgcfgbackup -f /path/of/your/choice/file <your_vg_name>
+
+The /path/of/your/choice/file created by the above command will contain
+the PV, VG and LVM metadata. One of the sections will look like below:
+
+physical_volumes {
+
+                pv0 {
+                        id = "abCDe-TuvwX-DEfgh-daEb-Xys-6Efcgh-LkmNo"
+                        device = "/dev/sdc1"    # Hint only
+
+                        status = ["ALLOCATABLE"]
+                        flags = []
+                        dev_size = 10477194     # 4.99592 Gigabytes
+                        pe_start = 2048
+                        pe_count = 1278 # 4.99219 Gigabytes
+                }
+        }
+---------------------------------------------------------------------------------------------
+
+In the above example
+the size unit for dev_size is 512 bytes
+because 10477194 * 512 / 1024 / 1024 / 1024 = 4.99591541290283203125
+and
+the size unit for pe_count is the extent_size which is 4 MiB
+because 1278 * 4 * 1024 * 1024 / 1024 / 1024 / 1024 = 4.99218750000000000000
+
+Unallocated bytes:
+dev_size in bytes = 10477194 * 512 = 5364323328
+allocated (pe_count) bytes = 1278 * 4 * 1024 * 1024 = 5360320512
+so that unallocated bytes = 5364323328 - 5360320512 = 4002816 = 3.8173828125 MiB
+
+Cf.
+https://github.com/libyal/libvslvm/blob/master/documentation/Logical%20Volume%20Manager%20(LVM)%20format.asciidoc
+excerpts:
+---------------------------------------------------------------------------------------------
+extent_size
+The size of an extent
+The value contains the number of sectors
+Note that the sector size is currently assumed to be 512 bytes.
+
+...
+
+dev_size
+The physical volume size including non-usable space
+The value contains the number of sectors
+Note that the sector size is currently assumed to be 512 bytes.
+
+pe_start
+The start extent
+TODO: what is this value used for?
+
+pe_count
+The number of (allocated) extents in the physical volume
+
+...
+
+myvg {
+  id = "0zd3UT-wbYT-lDHq-lMPs-EjoE-0o18-wL28X4"
+  seqno = 3
+  status = ["RESIZEABLE", "READ", "WRITE"]
+  extent_size = 8192    # 4 Megabytes
+  max_lv = 0
+  max_pv = 0
+
+  physical_volumes {
+
+    pv0 {
+      id = "ZBW5qW-dXF2-0bGw-ZCad-2RlV-phwu-1c1RFt"
+      device = "/dev/sda"   # Hint only
+
+      status = ["ALLOCATABLE"]
+      dev_size = 35964301   # 17.1491 Gigabytes
+      pe_start = 384
+      pe_count = 4390 # 17.1484 Gigabytes
+    }
+---------------------------------------------------------------------------------------------
+
+In this example
+dev_size in bytes = 35964301 * 512 bytes = 18413722112 bytes =
+                  = 18413722112 / 1024 / 1024 / 1024 GiB = 17.14911508560180664062 GiB
+allocated bytes = 4390 * 8192 * 512 bytes = 18412994560 bytes =
+                = 18412994560 / 1024 / 1024 / 1024 GiB = 17.14843750000000000000 GiB
+unallocated bytes = 18413722112 bytes - 18412994560 bytes = 727552 bytes =
+                  = 727552 / 1024 / 1024 MiB = 0.69384765625 MiB
+
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/5/html/logical_volume_manager_administration/lvm_metadata
+excerpts:
+---------------------------------------------------------------------------------------------
+By default, an identical copy of the metadata is maintained
+in every metadata area in every physical volume within the volume group.
+LVM volume group metadata is stored as ASCII.
+---------------------------------------------------------------------------------------------
+
+https://grox.net/sysadm/unix/nuke.lvm
+excerpts:
+---------------------------------------------------------------------------------------------
+#! /bin/bash
+
+# dom0 is on sd{a,b}. ignore 'em.
+# disks not done by the installer:
+dom1db=/dev/sdc
+dom1data=/dev/sdd
+dom2db=/dev/sde
+dom2data=/dev/sdf
+disks="$dom1db $dom1data $dom2db $dom2data"
+
+# remove existings lvm configs
+echo "clearing LVM on: $disks ..."
+for _vol in `lvdisplay | awk '/LV Name.*domu/{print $3}'`
+do
+  umount -f $_vol >/dev/null 2>/dev/null
+  lvchange -an $_vol
+  lvremove -f $_vol
+done
+
+for _vol in `vgdisplay | awk '/VG Name.*domu/{print $3}'`
+do
+  vgchange -an $_vol
+  vgremove -f $_vol
+done
+
+# last step didn't get 'em all...
+for _vol in /dev/mapper/domu*
+do
+  dd if=/dev/zero of=$_vol bs=512 count=12
+done
+
+for _pv in `pvdisplay | awk '/PV Name.*dev.sd[c-f]/{print $3}'`
+do
+  pvremove -ff $_pv
+done
+
+# just in case some were missed... (some always are)
+for _pv in $disks
+do
+  pvremove -ff $_pv
+  dd if=/dev/zero of=$_pv bs=512 count=255
+done
+
+# see what else the system still knows about
+# and get rid of them, too.
+# note that we ignore 'sd*' partitions and that this
+# assumes that we don't need dm-? for the system
+# that we're running on. i know, big assumption.
+#
+for _part in `awk '/dm-/{print $4}' /proc/partitions`
+do
+  pvremove -ff $_part
+  dd if=/dev/zero of=$_part bs=512 count=255
+done
+
+# okay. now we should have clean disk partitions to use.
+---------------------------------------------------------------------------------------------
+
+man pvcreate
+excerpts:
+---------------------------------------------------------------------------------------------
+  --[pv]metadatacopies 0|1|2
+  The number of metadata areas to set aside on a PV for storing VG metadata.
+  When 2, one copy of the VG metadata is stored at the front of the PV
+  and a second copy is stored at the end.
+  When 1, one copy of the VG metadata is stored at the front of the PV
+  (starting in the 5th sector).
+  When 0, no copies of the VG metadata are stored on the given PV.
+---------------------------------------------------------------------------------------------
+
+In the two above examples the unallocated bytes are 3.8173828125 MiB and 0.69384765625 MiB
+so it seems
+to wipe a LVM metadata is should be sufficient to wipe 4 MiB
+at the beginning and at the end of the device.
+
+=============================================================================================
+
+RAID plus LVM plus LUKS
+
+To wipe RAID Superblocks it is sufficient to wipe 133 KiB at the beginning and at the end of the device.
+
+To wipe to wipe LVM metadata is should be sufficient to wipe 4 MiB at the beginning and at the end of the device.
+
+To wipe LUKS headers is should be sufficient to wipe 8 MiB at the beginning of the device.
+
+To wipe RAID superblocks plus LVM metadata plus LUKS headers it should be sufficient to
+wipe 8 MiB + 4 MiB + 1 MiB = 13 MiB at the beginning of the device and to
+wipe 4 MiB + 1 MiB = 5 MiB at the end of the device.
+
+To be future proof (perhaps LUKS may add a backup header at the end of the device)
+wiping 16 MiB at the beginning and at the end of the device should be sufficiently safe.
