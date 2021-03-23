@@ -442,7 +442,10 @@ while read component_type disk_device old_disk_size disk_label junk ; do
             # so the user knows what he could change which helps to move forward when "rear recover" errors out here:
             Error "Last partition $last_part_dev cannot be shrinked (new disk more than $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE% smaller, see AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE)"
         fi
-        is_false "$last_part_is_resizeable" && Error "Cannot shrink $last_part_dev (non-resizeable partition)"
+        if is_false "$last_part_is_resizeable" ; then
+            # Show also the config variable name AUTORESIZE_EXCLUDE_PARTITIONS so the user knows what he could change:
+            Error "Cannot shrink $last_part_dev (non-resizeable partition, see AUTORESIZE_EXCLUDE_PARTITIONS)"
+        fi
         test $new_last_part_size -le $last_part_size || BugError "New last partition size $new_last_part_size is not smaller than old size $last_part_size"
         LogPrint "Shrinking last partition $last_part_dev to end of disk (new disk at most $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE% smaller)"
     fi
