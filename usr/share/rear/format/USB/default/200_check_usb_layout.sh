@@ -55,6 +55,7 @@ ID_FS_TYPE=$(
 [[ "$ID_FS_TYPE" == btr* || "$ID_FS_TYPE" == ext* ]]
 if (( $? != 0 )) && [[ -z "$YES" ]]; then
     LogUserOutput "USB or disk device $REAL_USB_DEVICE is not formatted with ext2/3/4 or btrfs filesystem"
+    LogUserOutput "Formatting $REAL_USB_DEVICE will remove all currently existing data on that whole device"
     # When USER_INPUT_USB_DEVICE_CONFIRM_FORMAT has any 'true' value be liberal in what you accept and assume exactly 'Yes' was actually meant:
     is_true "$USER_INPUT_USB_DEVICE_CONFIRM_FORMAT" && USER_INPUT_USB_DEVICE_CONFIRM_FORMAT="Yes"
     USB_format_answer="$( UserInput -I USB_DEVICE_CONFIRM_FORMAT -p "Type exactly 'Yes' to format $REAL_USB_DEVICE with $USB_DEVICE_FILESYSTEM filesystem" -D 'No' )"
