@@ -68,7 +68,7 @@ WORKFLOW_format () {
         if is_true "$SIMULATE" ; then
             # Simulation mode should work even without a device specified
             # see https://github.com/rear/rear/issues/1098#issuecomment-268973536
-            LogPrint "Simulation mode for the format workflow with a USB device /dev/sdX:"
+            LogPrint "Simulation mode for the format workflow with a USB or disk device /dev/sdX:"
             OUTPUT=USB
             SourceStage "format"
             LogPrint "Simulation mode for the format workflow with a OBDR tape device /dev/stX:"
