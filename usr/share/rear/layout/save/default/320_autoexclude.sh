@@ -30,7 +30,7 @@ if [[ "$AUTOEXCLUDE_USB_PATH" ]] ; then
     for exclude in "${AUTOEXCLUDE_USB_PATH[@]}" ; do
         while read fs device mountpoint junk ; do
             if [[ "$exclude" = "$mountpoint" ]] ; then
-                DebugPrint "Automatically excluding filesystem $mountpoint (USB device $device)"
+                DebugPrint "Automatically excluding filesystem $mountpoint (USB or disk device $device)"
                 mark_as_done "fs:$mountpoint"
                 mark_tree_as_done "fs:$mountpoint"
                 ### by excluding the filesystem, the device will also be excluded
