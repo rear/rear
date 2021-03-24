@@ -18,9 +18,9 @@ function FindUsbDevices () {
         if [ -f $sysfspath/${device}1/partition ] ; then
             # find a device node matching this device in /dev
             DeviceNameToNode "$device" || return 1
-            Log "USB device $device selected."
+            Log "USB or disk device $device selected."
         else
-            Log "USB device /dev/$device does not contain a valid partition table - skip device."
+            Log "USB or disk device /dev/$device does not contain a valid partition table - skip device."
         fi
     done
 }
