@@ -273,6 +273,9 @@ $ifline
             LogPrint "Created LVM volume '$vg/$lvname' using fallback options lvcreate $fallbacklvopts $vg"
         else
             LogPrintError "Also failed to create LVM volume '$vg/$lvname' with lvcreate $fallbacklvopts $vg"
+            # Explicit 'false' is needed to let the whole 'if then else fi' command exit with non zero exit state
+            # to let diskrestore.sh abort here as usual when a command fails (diskrestore.sh runs with 'set -e'):
+            false
         fi
     fi
 fi
