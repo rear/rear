@@ -270,7 +270,7 @@ $ifline
     if ! lvm lvcreate $lvopts $vg <<<y ; then
         LogPrintError "Failed to create LVM volume '$vg/$lvname' with lvcreate $lvopts $vg"
         if lvm lvcreate $fallbacklvopts $vg <<<y ; then
-            LogPrint "Created LVM volume '$vg/$lvname' using fallback options lvcreate $fallbacklvopts $vg"
+            LogPrintError "Created LVM volume '$vg/$lvname' using fallback options lvcreate $fallbacklvopts $vg"
         else
             LogPrintError "Also failed to create LVM volume '$vg/$lvname' with lvcreate $fallbacklvopts $vg"
             # Explicit 'false' is needed to let the whole 'if then else fi' command exit with non zero exit state
