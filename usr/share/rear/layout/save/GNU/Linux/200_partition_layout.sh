@@ -356,7 +356,7 @@ Log "Saving disk partitions."
 (
     # Disk sizes
     # format: disk <disk> <sectors> <partition label type>
-    for disk in /sys/block/* ; do
+    for disk in ${ONLY_INCLUDE_DISKS[@]:-/sys/block/*} ; do
         blockd=${disk#/sys/block/}
         if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* || $blockd = nvme* || $blockd = mmcblk* ]] ; then
 
