@@ -105,7 +105,12 @@ local lvs_exit_code
         # Output lvmdev entry to DISKLAYOUT_FILE:
         # With the above example the output is:
         # lvmdev /dev/system /dev/sda1 7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7 41940992
-        echo "lvmdev /dev/$vgrp $pdev $uuid $size"
+        if [[ -z "$vgrp" ]]; then
+            echo "# PV $pdev is not part of any knowm VG (yet) - skipping device:"
+            echo "# lvmdev /dev/$vgrp $pdev $uuid $size"
+        else
+            echo "lvmdev /dev/$vgrp $pdev $uuid $size"
+        fi
 
         # After the 'lvmdev' line was written to disklayout.conf so that the user can inspect it
         # check that the required positional parameters in the 'lvmdev' line are non-empty
@@ -123,7 +128,7 @@ local lvs_exit_code
         # so that when $vgrp is empty 'test $vgrp -a $pdev' tests if file $pdev exists
         # which is usually true because $pdev is usually a partition device node (e.g. /dev/sda1)
         # so that when $vgrp is empty 'test $vgrp -a $pdev' would falsely succeed:
-        test $vgrp && test $pdev || Error "LVM 'lvmdev' entry in $DISKLAYOUT_FILE where volume_group or device is empty or more than one word"
+        test $vgrp && test $pdev || LogPrint "WARNING: LVM 'lvmdev' entry in $DISKLAYOUT_FILE where volume_group or device is empty or more than one word"
 
     done
     # Check the exit code of "lvm pvdisplay -c"
