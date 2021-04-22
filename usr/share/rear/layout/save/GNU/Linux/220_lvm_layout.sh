@@ -112,7 +112,7 @@ local lvs_exit_code
         # so that this also checks that the variables do not contain blanks or more than one word
         # because blanks (actually $IFS characters) are used as field separators in disklayout.conf
         # which means the positional parameter values must be exactly one non-empty word.
-        test $pdev || Error "Cannot to make 'lvmdev' entry in disklayout.conf (PV device '$pdev' empty or more than one word)"
+        test $pdev || Error "Cannot make 'lvmdev' entry in disklayout.conf (PV device '$pdev' empty or more than one word)"
         if ! test $vgrp ; then
             # Valid $pdev but invalid $vgrp (empty or more than one word):
             DebugPrint "Skipping PV $pdev that is not part of a valid VG (VG '$vgrp' empty or more than one word)"
