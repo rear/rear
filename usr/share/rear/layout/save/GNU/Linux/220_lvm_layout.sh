@@ -103,8 +103,6 @@ local lvs_exit_code
         pdev=$( get_device_name $pdev )
 
         # Output lvmdev entry to DISKLAYOUT_FILE:
-        # With the above example the output is:
-        # lvmdev /dev/system /dev/sda1 7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7 41940992
         # Check that the required positional parameters in the 'lvmdev' line are non-empty
         # because an empty positional parameter would result an invalid 'lvmdev' line
         # which would cause invalid parameters are 'read' as input during "rear recover"
@@ -114,19 +112,8 @@ local lvs_exit_code
         # so that this also checks that the variables do not contain blanks or more than one word
         # because blanks (actually $IFS characters) are used as field separators in disklayout.conf
         # which means the positional parameter values must be exactly one non-empty word.
-        # Two separated simple 'test $vgrp && test $pdev' commands are used here because
-        # 'test $vgrp -a $pdev' does not work when $vgrp is empty or only blanks
-        # because '-a' has two different meanings: "EXPR1 -a EXPR2" and "-a FILE" (see "help test")
-        # so that when $vgrp is empty 'test $vgrp -a $pdev' tests if file $pdev exists
-        # which is usually true because $pdev is usually a partition device node (e.g. /dev/sda1)
-        # so that when $vgrp is empty 'test $vgrp -a $pdev' would falsely succeed:
-        if test $vgrp && test $pdev ; then
-            echo "lvmdev /dev/$vgrp $pdev $uuid $size"
-            # Continue with the next line in the output of "lvm pvdisplay -c"
-            continue
-        fi
-        # Invalid $vgrp or $pdev or both (empty or more than one word):
-        if test $pdev ; then
+        test $pdev || Error "Cannot to make 'lvmdev' entry in disklayout.conf (PV device '$pdev' empty or more than one word)"
+        if ! test $vgrp ; then
             # Valid $pdev but invalid $vgrp (empty or more than one word):
             DebugPrint "Skipping PV $pdev that is not part of a valid VG (VG '$vgrp' empty or more than one word)"
             echo "# Skipping PV $pdev that is not part of a valid VG (VG '$vgrp' empty or more than one word):"
@@ -135,8 +122,9 @@ local lvs_exit_code
             # Continue with the next line in the output of "lvm pvdisplay -c"
             continue
         fi
-        # Invalid $pdev (empty or more than one word):
-        Error "Cannot to make 'lvmdev' entry in disklayout.conf (PV device '$pdev' empty or more than one word)"
+        # With the above example the output is:
+        # lvmdev /dev/system /dev/sda1 7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7 41940992
+        echo "lvmdev /dev/$vgrp $pdev $uuid $size"
 
     done
     # Check the exit code of "lvm pvdisplay -c"
