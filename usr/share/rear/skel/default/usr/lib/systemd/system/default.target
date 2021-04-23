@@ -1,11 +1,1 @@
-#  This file is part of systemd.
-#
-# See systemd.special(7) for details
-
-[Unit]
-Description=Multi-User
-Requires=sysinit.target
-AllowIsolate=yes
-
-[Install]
-Alias=default.target
+multi-user.target

@@ -242,13 +242,6 @@ To recover your system, start the computer from the rescue system and run
 +rear recover+. Your system will be recovered and you can restart it and
 continue to use it normally.
 
-SUPPORT
--------
-
-* Please don't write mails directly to the maintainers.
-* Use the Github issue tracker instead.
-* See http://relax-and-recover.org/support/[Relax-and-Recover Support] for additional options to request for support
-
 AUTHORS AND MAINTAINERS
 -----------------------
 

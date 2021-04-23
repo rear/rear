@@ -1,7 +1,7 @@
 '\" t
 .\"     Title: rear
 .\"    Author: [see the "AUTHORS" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
 .\"      Date: 17 June 2020
 .\"    Manual: \ \&
 .\"    Source: \ \&
@@ -680,7 +680,7 @@ OUTPUT_URL=nfs://server/path/
 .RE
 .sp
 When using BACKUP=NETFS and BACKUP_PROG=tar there is an option to select BACKUP_TYPE=incremental or BACKUP_TYPE=differential to let rear make incremental or differential backups until the next full backup day e\&.g\&. via FULLBACKUPDAY="Mon" is reached or when the last full backup is too old after FULLBACKUP_OUTDATED_DAYS has passed\&. Incremental or differential backup is currently only known to work with BACKUP_URL=nfs\&. Other BACKUP_URL schemes may work but at least BACKUP_URL=usb requires USB_SUFFIX to be set to work with incremental or differential backup\&.
-.SH "SUPPORT FOR SELF\-ENCRYPTING DISKS"
+.SH "SUPPORT FOR SELF-ENCRYPTING DISKS"
 .sp
 Relax\-and\-Recover supports self\-encrypting disks (SEDs) compliant with the TCG Opal 2 specification if the sedutil\-cli executable is installed\&.
 .sp
