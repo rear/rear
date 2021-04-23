@@ -1,1 +1,14 @@
-reboot.target
+#  This file is part of systemd.
+#
+# See systemd.special(7) for details
+
+[Unit]
+Description=Reboot
+DefaultDependencies=no
+Names=runlevel6.target
+Requires=reboot.service
+After=reboot.service
+AllowIsolate=yes
+
+[Install]
+Alias=ctrl-alt-del.target

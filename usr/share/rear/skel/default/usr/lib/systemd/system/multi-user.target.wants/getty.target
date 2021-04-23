@@ -1,1 +1,5 @@
-../getty.target
+#  This file is part of systemd.
+#
+
+[Unit]
+Description=Login Prompts

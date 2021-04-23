@@ -1,1 +1,12 @@
-../dbus.service
+[Unit]
+Description=D-Bus System Message Bus
+Requires=dbus.socket
+# Regarding After=syslog.target see https://github.com/rear/rear/pull/1937
+#After=syslog.target
+
+[Service]
+ExecStartPre=/bin/dbus-uuidgen --ensure
+ExecStartPre=-/bin/rm -f /var/run/messagebus.pid
+ExecStart=/bin/dbus-daemon --system --address=systemd: --nofork --systemd-activation
+ExecReload=/bin/dbus-send --print-reply --system --type=method_call --dest=org.freedesktop.DBus / org.freedesktop.DBus.ReloadConfig
+OOMScoreAdjust=-900

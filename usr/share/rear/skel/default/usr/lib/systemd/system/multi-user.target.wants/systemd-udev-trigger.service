@@ -1,1 +1,10 @@
-../systemd-udev-trigger.service
+[Unit]
+Description=udev Coldplug all Devices
+Wants=systemd-udevd.service
+After=systemd-udevd-kernel.socket systemd-udevd-control.socket
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/udevadm trigger --type=subsystems --action=add ; /usr/bin/udevadm trigger --type=devices --action=add
