@@ -318,10 +318,18 @@ get_child_components() {
 
 # Return all ancestors of component $1 [ of type $2 [ skipping types $3 during resolution ] ]
 get_parent_components() {
-    declare -a ancestors devlist
-    declare current child parent
+    declare -a ancestors devlist ignoretypes
+    declare current child parent parenttype
 
     devlist=( "$1" )
+    if [[ "$3" ]] ; then
+        # third argument should, if present, be a space-separated list
+        # of types to ignore when walking up the dependency tree.
+        # Convert it to array
+        ignoretypes=( $3 )
+    else
+        ignoretypes=()
+    fi
     while (( ${#devlist[@]} )) ; do
         current=${devlist[0]}
 
@@ -331,6 +339,13 @@ get_parent_components() {
                 ### ...test if we visited them already...
                 if IsInArray "$parent" "${ancestors[@]}" ; then
                     continue
+                fi
+                ### ...test if parent is of a correct type if requested...
+                if [[ ${#ignoretypes[@]} -gt 0 ]] ; then
+                    parenttype=$(get_component_type "$parent")
+                    if IsInArray "$parenttype" "${ignoretypes[@]}" ; then
+                        continue
+                    fi
                 fi
                 ### ...and add them to the list
                 devlist+=( "$parent" )
@@ -359,22 +374,24 @@ get_parent_components() {
 }
 
 # find_devices <other>
+# ${2+"$2"} in the following functions ensures that $2 gets passed down quoted if present
+# and ignored if not present
 # Find the disk device(s) component $1 resides on.
 find_disk() {
-    get_parent_components "$1" "disk"
+    get_parent_components "$1" "disk" ${2+"$2"}
 }
 
 find_multipath() {
-    get_parent_components "$1" "multipath"
+    get_parent_components "$1" "multipath" ${2+"$2"}
 }
 
 find_disk_and_multipath() {
-    find_disk "$1"
-    is_true "$AUTOEXCLUDE_MULTIPATH" || find_multipath "$1"
+    find_disk "$1" ${2+"$2"}
+    is_true "$AUTOEXCLUDE_MULTIPATH" || find_multipath "$1" ${2+"$2"}
 }
 
 find_partition() {
-    get_parent_components "$1" "part"
+    get_parent_components "$1" "part" ${2+"$2"}
 }
 
 # The get_partition_number function
