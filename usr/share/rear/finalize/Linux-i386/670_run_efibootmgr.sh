@@ -19,9 +19,9 @@ is_true $EFI_STUB && return
 test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" || return 0
 
 # Determine where the EFI System Partition (ESP) is mounted in the currently running recovery system:
-esp_mountpoint=$( df -P "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" | tail -1 | awk '{print $6}' )
+esp_mountpoint=$( filesystem_name "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" )
 # Use TARGET_FS_ROOT/boot/efi as fallback ESP mountpoint:
-test "$esp_mountpoint" || esp_mountpoint="$TARGET_FS_ROOT/boot/efi"
+test "$esp_mountpoint" != "/" || esp_mountpoint="$TARGET_FS_ROOT/boot/efi"
 
 # Skip if there is no esp_mountpoint directory (e.g. the fallback ESP mountpoint may not exist).
 # Double quotes are mandatory here because 'test -d' without any (possibly empty) argument results true:
