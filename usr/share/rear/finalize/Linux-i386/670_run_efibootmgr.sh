@@ -32,39 +32,7 @@ BootEfiDev="$( mount | grep "$esp_mountpoint" | awk '{print $1}' )"
 Dev=$( get_device_name $BootEfiDev )
 # 1 (must anyway be a low nr <9)
 ParNr=$( get_partition_number $Dev )
-# /dev/sda or /dev/mapper/vol34_part or /dev/mapper/mpath99p or /dev/mmcblk0p
-Disk=$( echo ${Dev%$ParNr} )
-
-# Strip trailing partition remainders like '_part' or '-part' or 'p'
-# if we have 'mapper' in disk device name:
-if [[ ${Dev/mapper//} != $Dev ]] ; then
-    # we only expect mpath_partX or mpathpX or mpath-partX
-    case $Disk in
-        (*p)     Disk=${Disk%p} ;;
-        (*-part) Disk=${Disk%-part} ;;
-        (*_part) Disk=${Disk%_part} ;;
-        (*)      Log "Unsupported kpartx partition delimiter for $Dev"
-    esac
-fi
-
-# For eMMC devices the trailing 'p' in the Disk value
-# (as in /dev/mmcblk0p that is derived from /dev/mmcblk0p1)
-# needs to be stripped (to get /dev/mmcblk0), otherwise the
-# efibootmgr call fails because of a wrong disk device name.
-# See also https://github.com/rear/rear/issues/2103
-if [[ $Disk = *'/mmcblk'+([0-9])p ]] ; then
-    Disk=${Disk%p}
-fi
-
-# For NVMe devices the trailing 'p' in the Disk value
-# (as in /dev/nvme0n1p that is derived from /dev/nvme0n1p1)
-# needs to be stripped (to get /dev/nvme0n1), otherwise the
-# efibootmgr call fails because of a wrong disk device name.
-# See also https://github.com/rear/rear/issues/1564
-if [[ $Disk = *'/nvme'+([0-9])n+([0-9])p ]] ; then
-    Disk=${Disk%p}
-fi
-
+Disk=$( get_device_from_partition $Dev $ParNr )
 # EFI\fedora\shim.efi
 BootLoader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
 LogPrint "Creating  EFI Boot Manager entry '$OS_VENDOR $OS_VERSION' for '$BootLoader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER')"

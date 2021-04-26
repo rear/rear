@@ -316,7 +316,7 @@ get_child_components() {
     done
 }
 
-# Return all ancestors of component $1 [ of type $2 ]
+# Return all ancestors of component $1 [ of type $2 [ skipping types $3 during resolution ] ]
 get_parent_components() {
     declare -a ancestors devlist
     declare current child parent
@@ -425,6 +425,53 @@ get_partition_number() {
 
     # Output the trailing digits of the partition block device as its partition number:
     echo $partition_number
+}
+
+# Extract the underlying device name from the full partition device name.
+# Underlying device may be a disk, a multipath device or other devices that can be partitioned.
+# Should we use the information in $LAYOUT_DEPS, like get_parent_component does,
+# instead of string munging?
+function get_device_from_partition() {
+    local partition_block_device
+    local device
+    local partition_number
+
+    partition_block_device=$1
+    partition_number=${2-$(get_partition_number $partition_block_device )}
+    # /dev/sda or /dev/mapper/vol34_part or /dev/mapper/mpath99p or /dev/mmcblk0p
+    device=${partition_block_device%$partition_number}
+
+    # Strip trailing partition remainders like '_part' or '-part' or 'p'
+    # if we have 'mapper' in disk device name:
+    if [[ ${partition_block_device/mapper//} != $partition_block_device ]] ; then
+        # we only expect mpath_partX or mpathpX or mpath-partX
+        case $device in
+            (*p)     device=${device%p} ;;
+            (*-part) device=${device%-part} ;;
+            (*_part) device=${device%_part} ;;
+            (*)      Log "Unsupported kpartx partition delimiter for $partition_block_device"
+        esac
+    fi
+
+    # For eMMC devices the trailing 'p' in the $device value
+    # (as in /dev/mmcblk0p that is derived from /dev/mmcblk0p1)
+    # needs to be stripped (to get /dev/mmcblk0), otherwise the
+    # efibootmgr call fails because of a wrong disk device name.
+    # See also https://github.com/rear/rear/issues/2103
+    if [[ $device = *'/mmcblk'+([0-9])p ]] ; then
+        device=${device%p}
+    fi
+
+    # For NVMe devices the trailing 'p' in the $device value
+    # (as in /dev/nvme0n1p that is derived from /dev/nvme0n1p1)
+    # needs to be stripped (to get /dev/nvme0n1), otherwise the
+    # efibootmgr call fails because of a wrong disk device name.
+    # See also https://github.com/rear/rear/issues/1564
+    if [[ $device = *'/nvme'+([0-9])n+([0-9])p ]] ; then
+        device=${device%p}
+    fi
+
+    echo $device
 }
 
 # Returns partition start block or 'unknown'
