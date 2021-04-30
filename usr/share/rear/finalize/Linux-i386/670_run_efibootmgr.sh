@@ -8,6 +8,8 @@ is_true $USING_UEFI_BOOTLOADER || return 0
 # (cf. finalize/Linux-i386/610_EFISTUB_run_efibootmgr.sh): 
 is_true $EFI_STUB && return
 
+local esp_mountpoint esp_mountpoint_inside boot_efi_parts boot_efi_dev
+
 # When UEFI_BOOTLOADER is not a regular file in the restored target system
 # (cf. how esp_mountpoint is set below) it means BIOS is used
 # (cf. rescue/default/850_save_sysfs_uefi_vars.sh)
@@ -56,6 +58,8 @@ if ! test "$boot_efi_parts" ; then
     fi
     LogPrint "Using fallback EFI boot partition(s) $boot_efi_parts (unable to find ESP $esp_mountpoint_inside in layout)"
 fi
+
+local bootloader partition_block_device partition_number disk efipart
 
 # EFI\fedora\shim.efi
 bootloader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
