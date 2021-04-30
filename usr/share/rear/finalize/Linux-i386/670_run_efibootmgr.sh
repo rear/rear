@@ -18,6 +18,7 @@ is_true $EFI_STUB && return
 # (cf. https://github.com/rear/rear/pull/2051/files#r258826856):
 test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" || return 0
 
+LogPrint "Creating EFI Boot Manager entries..."
 # Determine where the EFI System Partition (ESP) is mounted in the currently running recovery system:
 esp_mountpoint=$( filesystem_name "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" )
 # Use TARGET_FS_ROOT/boot/efi as fallback ESP mountpoint (filesystem_name returns "/"
