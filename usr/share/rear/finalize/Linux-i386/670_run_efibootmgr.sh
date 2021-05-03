@@ -18,7 +18,10 @@ local esp_mountpoint esp_mountpoint_inside boot_efi_parts boot_efi_dev
 #   test -f /mnt/local/
 # which also returns false because /mnt/local/ is a directory
 # (cf. https://github.com/rear/rear/pull/2051/files#r258826856):
-test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" || return 0
+if ! test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" ; then
+    LogPrintError "Failed to create EFI Boot Manager entries (UEFI bootloader $UEFI_BOOTLOADER not found under target $TARGET_FS_ROOT)"
+    return 1
+fi
 
 LogPrint "Creating EFI Boot Manager entries..."
 # Determine where the EFI System Partition (ESP) is mounted in the currently running recovery system:
@@ -32,7 +35,10 @@ fi
 
 # Skip if there is no esp_mountpoint directory (e.g. the fallback ESP mountpoint may not exist).
 # Double quotes are mandatory here because 'test -d' without any (possibly empty) argument results true:
-test -d "$esp_mountpoint" || return 0
+if ! test -d "$esp_mountpoint" ; then
+    LogPrintError "Failed to create EFI Boot Manager entries (no ESP mountpoint directory $esp_mountpoint)"
+    return 1
+fi
 
 # Mount point inside the target system,
 # accounting for possible trailing slashes in TARGET_FS_ROOT
