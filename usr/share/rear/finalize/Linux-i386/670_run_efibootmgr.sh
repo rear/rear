@@ -75,7 +75,11 @@ for efipart in $boot_efi_parts ; do
     partition_block_device=$( get_device_name $efipart )
     # 1 or 2 or 4 for the examples above
     partition_number=$( get_partition_number $partition_block_device )
-    disk=$( get_device_from_partition $partition_block_device $partition_number )
+    if ! disk=$( get_device_from_partition $partition_block_device $partition_number ) ; then
+        LogPrintError "Cannot create EFI Boot Manager entry for ESP $partition_block_device (unable to find the underlying disk)"
+        # do not error out - we may be able to locate other disks if there are more of them
+        continue
+    fi
     LogPrint "Creating  EFI Boot Manager entry '$OS_VENDOR $OS_VERSION' for '$bootloader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER') "
     Log efibootmgr --create --gpt --disk $disk --part $partition_number --write-signature --label \"${OS_VENDOR} ${OS_VERSION}\" --loader \"\\${bootloader}\"
     if efibootmgr --create --gpt --disk $disk --part $partition_number --write-signature --label "${OS_VENDOR} ${OS_VERSION}" --loader "\\${bootloader}" ; then

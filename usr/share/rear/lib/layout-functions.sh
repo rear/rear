@@ -454,6 +454,7 @@ function get_device_from_partition() {
     local partition_number
 
     partition_block_device=$1
+    test -b "$partition_block_device" || BugError "get_device_from_partition called with '$partition_block_device' that is no block device"
     partition_number=${2-$(get_partition_number $partition_block_device )}
     # /dev/sda or /dev/mapper/vol34_part or /dev/mapper/mpath99p or /dev/mmcblk0p
     device=${partition_block_device%$partition_number}
@@ -488,7 +489,7 @@ function get_device_from_partition() {
         device=${device%p}
     fi
 
-    echo $device
+    test -b "$device" && echo $device
 }
 
 # Returns partition start block or 'unknown'
