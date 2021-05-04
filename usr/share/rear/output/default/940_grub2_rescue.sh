@@ -151,11 +151,9 @@ if is_true $USING_UEFI_BOOTLOADER ; then
 
     # Create configuration file for 'Relax-and-Recover' UEFI boot entry.
     # This file will not interact with existing Grub2 configuration in any way.
+    # Regarding "insmod" of GRUB2 modules see what the create_grub2_cfg function does
+    # cf. https://github.com/rear/rear/pull/2609#issuecomment-831883795
     (   echo "set btrfs_relative_path=y"
-        echo "insmod efi_gop"
-        echo "insmod efi_uga"
-        echo "insmod video_bochs"
-        echo "insmod video_cirrus"
         echo "insmod all_video"
         echo ""
         echo "set gfxpayload=keep"
