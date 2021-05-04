@@ -103,12 +103,7 @@ local lvs_exit_code
         pdev=$( get_device_name $pdev )
 
         # Output lvmdev entry to DISKLAYOUT_FILE:
-        # With the above example the output is:
-        # lvmdev /dev/system /dev/sda1 7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7 41940992
-        echo "lvmdev /dev/$vgrp $pdev $uuid $size"
-
-        # After the 'lvmdev' line was written to disklayout.conf so that the user can inspect it
-        # check that the required positional parameters in the 'lvmdev' line are non-empty
+        # Check that the required positional parameters in the 'lvmdev' line are non-empty
         # because an empty positional parameter would result an invalid 'lvmdev' line
         # which would cause invalid parameters are 'read' as input during "rear recover"
         # cf. "Verifying ... 'lvm...' entries" in layout/save/default/950_verify_disklayout_file.sh
@@ -117,13 +112,24 @@ local lvs_exit_code
         # so that this also checks that the variables do not contain blanks or more than one word
         # because blanks (actually $IFS characters) are used as field separators in disklayout.conf
         # which means the positional parameter values must be exactly one non-empty word.
-        # Two separated simple 'test $vgrp && test $pdev' commands are used here because
-        # 'test $vgrp -a $pdev' does not work when $vgrp is empty or only blanks
-        # because '-a' has two different meanings: "EXPR1 -a EXPR2" and "-a FILE" (see "help test")
-        # so that when $vgrp is empty 'test $vgrp -a $pdev' tests if file $pdev exists
-        # which is usually true because $pdev is usually a partition device node (e.g. /dev/sda1)
-        # so that when $vgrp is empty 'test $vgrp -a $pdev' would falsely succeed:
-        test $vgrp && test $pdev || Error "LVM 'lvmdev' entry in $DISKLAYOUT_FILE where volume_group or device is empty or more than one word"
+        test $pdev || Error "Cannot make 'lvmdev' entry in disklayout.conf (PV device '$pdev' empty or more than one word)"
+        if ! test $vgrp ; then
+            # Valid $pdev but invalid $vgrp (empty or more than one word):
+            # When $vgrp is empty it means it is a PV that is not part of a VG so the PV exists but it is not used.
+            # PVs that are not part of a VG are documented as comment in disklayout.conf but they are not recreated
+            # because they were not used on the original system so there is no need to recreate them by "rear recover"
+            # (the user can manually recreate them later in his recreated system when needed)
+            # cf. https://github.com/rear/rear/issues/2596
+            DebugPrint "Skipping PV $pdev that is not part of a valid VG (VG '$vgrp' empty or more than one word)"
+            echo "# Skipping PV $pdev that is not part of a valid VG (VG '$vgrp' empty or more than one word):"
+            contains_visible_char "$vgrp" || vgrp='<missing_VG>'
+            echo "# lvmdev /dev/$vgrp $pdev $uuid $size"
+            # Continue with the next line in the output of "lvm pvdisplay -c"
+            continue
+        fi
+        # With the above example the output is:
+        # lvmdev /dev/system /dev/sda1 7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7 41940992
+        echo "lvmdev /dev/$vgrp $pdev $uuid $size"
 
     done
     # Check the exit code of "lvm pvdisplay -c"
@@ -161,8 +167,15 @@ local lvs_exit_code
         # lvmgrp /dev/system 4096 5119 20967424
         echo "lvmgrp /dev/$vgrp $extentsize $nrextents $size"
 
-        # Check that the required positional parameters in the 'lvmgrp' line are non-empty
-        # cf. the code above to "check that the required positional parameters in the 'lvmdev' line are non-empty":
+        # Check that the required positional parameters in the 'lvmgrp' line are non-empty.
+        # The tested variables are intentionally not quoted here, cf. the code above to
+        # "check that the required positional parameters in the 'lvmdev' line are non-empty".
+        # Two separated simple 'test $vgrp && test $extentsize' commands are used here because
+        # 'test $vgrp -a $extentsize' does not work when $vgrp is empty or only blanks
+        # because '-a' has two different meanings: "EXPR1 -a EXPR2" and "-a FILE" (see "help test")
+        # so with empty $vgrp it becomes 'test -a $extentsize' that tests if a file $extentsize exists
+        # which is unlikely to be true but it is not impossible that a file $extentsize exists
+        # so when $vgrp is empty (or blanks) 'test $vgrp -a $extentsize' might falsely succeed:
         test $vgrp && test $extentsize || Error "LVM 'lvmgrp' entry in $DISKLAYOUT_FILE where volume_group or extentsize is empty or more than one word"
 
     done
@@ -349,7 +362,8 @@ local lvs_exit_code
             fi
             already_processed_lvs+=( "$vg/$lv" )
             # Check that the required positional parameters in the 'lvmvol' line are non-empty
-            # cf. the code above to "check that the required positional parameters in the 'lvmdev' line are non-empty":
+            # cf. the code above to "check that the required positional parameters in the 'lvmdev' line are non-empty"
+            # and the code above to "check that the required positional parameters in the 'lvmgrp' line are non-empty":
             test $vg && test $lv && test $size && test $layout || Error "LVM 'lvmvol' entry in $DISKLAYOUT_FILE where volume_group or name or size or layout is empty or more than one word"
         fi
 
