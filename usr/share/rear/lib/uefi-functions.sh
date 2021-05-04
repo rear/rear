@@ -63,8 +63,9 @@ function build_bootx86_efi {
         gmkstandalone=grub2-mkstandalone
     else
         # This build_bootx86_efi function is only called in output/ISO/Linux-i386/250_populate_efibootimg.sh
-        # which runs only if UEFI is used so that we simply error out here if we cannot make a bootable EFI image of GRUB2
-        # (normally a function should not exit out but return to its caller with a non-zero return code):
+        # and output/USB/Linux-i386/100_create_efiboot.sh and output/default/940_grub2_rescue.sh
+        # only if UEFI is used so that we simply error out here if we cannot make a bootable EFI image of GRUB2
+        # (normally a function should not exit but return to its caller with a non-zero return code):
         Error "Cannot make bootable EFI image of GRUB2 (neither grub-mkstandalone nor grub2-mkstandalone found)"
     fi
 
