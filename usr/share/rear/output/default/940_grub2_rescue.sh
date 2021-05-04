@@ -2,7 +2,9 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# Add the rescue kernel and initrd to the local GRUB 2 bootloader.
+# Either add the rescue kernel and initrd to the local GRUB 2 bootloader in case of BIOS
+# or don't modify grub.cfg but create a separate UEFI boot entry in case of UEFI
+# cf. https://github.com/rear/rear/pull/954
 
 # With EFI_STUB enabled there will be no Grub entry.
 is_true "$EFI_STUB" && return 0
@@ -68,7 +70,8 @@ if (( available_space < required_space )) ; then
     Error "Cannot setup GRUB_RESCUE: Not enough disk space in $boot_dir for $grub_rear_menu_entry_name rescue system (required: $required_MiB MiB, available: $available_MiB MiB)"
 fi
 
-# UEFI 'Relax-and-Recover' boot entry motivation:
+# UEFI 'Relax-and-Recover' boot entry motivation
+# (cf. https://github.com/rear/rear/pull/954):
 #
 # If UEFI boot is in use, we will not modify grub.cfg, but setup 'Relax-and-Recover' entry in UEFI boot menu instead.
 # This looks to be simplest and safest approach since finding out what mechanisms were used to boot OS in UEFI mode,
