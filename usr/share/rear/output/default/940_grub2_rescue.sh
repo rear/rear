@@ -175,6 +175,7 @@ if is_true $USING_UEFI_BOOTLOADER ; then
     ) > $grub_config_dir/rear.cfg
 
     # Create rear.efi at UEFI default boot directory location.
+    # The build_bootx86_efi errors out if it cannot make a bootable EFI image of GRUB2:
     build_bootx86_efi $boot_dir/efi/EFI/BOOT/rear.efi $grub_config_dir/rear.cfg "$boot_dir" "$UEFI_BOOTLOADER"
 
     # If UEFI boot entry for 'Relax-and-Recover' does not exist, create it.
