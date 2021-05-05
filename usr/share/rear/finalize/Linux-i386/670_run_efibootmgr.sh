@@ -23,7 +23,7 @@ local esp_mountpoint esp_mountpoint_inside boot_efi_parts boot_efi_dev
 # but using BIOS conflicts with USING_UEFI_BOOTLOADER is true
 # i.e. we should create EFI Boot Manager entries but we cannot:
 if ! test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" ; then
-    LogPrintError "Failed to create EFI Boot Manager entries (UEFI bootloader $UEFI_BOOTLOADER not found under target $TARGET_FS_ROOT)"
+    LogPrintError "Failed to create EFI Boot Manager entries (UEFI bootloader '$UEFI_BOOTLOADER' not found under target $TARGET_FS_ROOT)"
     return 1
 fi
 
