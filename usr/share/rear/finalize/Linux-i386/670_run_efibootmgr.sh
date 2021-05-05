@@ -8,6 +8,8 @@ is_true $USING_UEFI_BOOTLOADER || return 0
 # (cf. finalize/Linux-i386/610_EFISTUB_run_efibootmgr.sh): 
 is_true $EFI_STUB && return
 
+LogPrint "Creating EFI Boot Manager entries..."
+
 local esp_mountpoint esp_mountpoint_inside boot_efi_parts boot_efi_dev
 
 # When UEFI_BOOTLOADER is not a regular file in the restored target system
@@ -23,7 +25,6 @@ if ! test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" ; then
     return 1
 fi
 
-LogPrint "Creating EFI Boot Manager entries..."
 # Determine where the EFI System Partition (ESP) is mounted in the currently running recovery system:
 esp_mountpoint=$( filesystem_name "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" )
 # Use TARGET_FS_ROOT/boot/efi as fallback ESP mountpoint (filesystem_name returns "/"
