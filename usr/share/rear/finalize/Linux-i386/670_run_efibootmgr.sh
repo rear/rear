@@ -8,6 +8,10 @@ is_true $USING_UEFI_BOOTLOADER || return 0
 # (cf. finalize/Linux-i386/610_EFISTUB_run_efibootmgr.sh): 
 is_true $EFI_STUB && return
 
+LogPrint "Creating EFI Boot Manager entries..."
+
+local esp_mountpoint esp_mountpoint_inside boot_efi_parts boot_efi_dev
+
 # When UEFI_BOOTLOADER is not a regular file in the restored target system
 # (cf. how esp_mountpoint is set below) it means BIOS is used
 # (cf. rescue/default/850_save_sysfs_uefi_vars.sh)
@@ -15,64 +19,80 @@ is_true $EFI_STUB && return
 # because when UEFI_BOOTLOADER is empty the test below evaluates to
 #   test -f /mnt/local/
 # which also returns false because /mnt/local/ is a directory
-# (cf. https://github.com/rear/rear/pull/2051/files#r258826856):
-test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" || return 0
+# (cf. https://github.com/rear/rear/pull/2051/files#r258826856)
+# but using BIOS conflicts with USING_UEFI_BOOTLOADER is true
+# i.e. we should create EFI Boot Manager entries but we cannot:
+if ! test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" ; then
+    LogPrintError "Failed to create EFI Boot Manager entries (UEFI bootloader '$UEFI_BOOTLOADER' not found under target $TARGET_FS_ROOT)"
+    return 1
+fi
 
 # Determine where the EFI System Partition (ESP) is mounted in the currently running recovery system:
-esp_mountpoint=$( df -P "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" | tail -1 | awk '{print $6}' )
-# Use TARGET_FS_ROOT/boot/efi as fallback ESP mountpoint:
-test "$esp_mountpoint" || esp_mountpoint="$TARGET_FS_ROOT/boot/efi"
+esp_mountpoint=$( filesystem_name "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" )
+# Use TARGET_FS_ROOT/boot/efi as fallback ESP mountpoint (filesystem_name returns "/"
+# if mountpoint not found otherwise):
+if [ "$esp_mountpoint" = "/" ] ; then
+    esp_mountpoint="$TARGET_FS_ROOT/boot/efi"
+    LogPrint "Mountpoint of $TARGET_FS_ROOT/$UEFI_BOOTLOADER not found, trying $esp_mountpoint"
+fi
 
 # Skip if there is no esp_mountpoint directory (e.g. the fallback ESP mountpoint may not exist).
 # Double quotes are mandatory here because 'test -d' without any (possibly empty) argument results true:
-test -d "$esp_mountpoint" || return 0
-
-BootEfiDev="$( mount | grep "$esp_mountpoint" | awk '{print $1}' )"
-# /dev/sda1 or /dev/mapper/vol34_part2 or /dev/mapper/mpath99p4
-Dev=$( get_device_name $BootEfiDev )
-# 1 (must anyway be a low nr <9)
-ParNr=$( get_partition_number $Dev )
-# /dev/sda or /dev/mapper/vol34_part or /dev/mapper/mpath99p or /dev/mmcblk0p
-Disk=$( echo ${Dev%$ParNr} )
-
-# Strip trailing partition remainders like '_part' or '-part' or 'p'
-# if we have 'mapper' in disk device name:
-if [[ ${Dev/mapper//} != $Dev ]] ; then
-    # we only expect mpath_partX or mpathpX or mpath-partX
-    case $Disk in
-        (*p)     Disk=${Disk%p} ;;
-        (*-part) Disk=${Disk%-part} ;;
-        (*_part) Disk=${Disk%_part} ;;
-        (*)      Log "Unsupported kpartx partition delimiter for $Dev"
-    esac
+if ! test -d "$esp_mountpoint" ; then
+    LogPrintError "Failed to create EFI Boot Manager entries (no ESP mountpoint directory $esp_mountpoint)"
+    return 1
 fi
 
-# For eMMC devices the trailing 'p' in the Disk value
-# (as in /dev/mmcblk0p that is derived from /dev/mmcblk0p1)
-# needs to be stripped (to get /dev/mmcblk0), otherwise the
-# efibootmgr call fails because of a wrong disk device name.
-# See also https://github.com/rear/rear/issues/2103
-if [[ $Disk = *'/mmcblk'+([0-9])p ]] ; then
-    Disk=${Disk%p}
+# Mount point inside the target system,
+# accounting for possible trailing slashes in TARGET_FS_ROOT
+esp_mountpoint_inside="${esp_mountpoint#${TARGET_FS_ROOT%%*(/)}}"
+
+boot_efi_parts=$( find_partition "fs:$esp_mountpoint_inside" fs )
+if ! test "$boot_efi_parts" ; then
+    LogPrint "Unable to find ESP $esp_mountpoint_inside in layout"
+    LogPrint "Trying to determine device currently mounted at $esp_mountpoint as fallback"
+    boot_efi_dev="$( mount | grep "$esp_mountpoint" | awk '{print $1}' )"
+    if ! test "$boot_efi_dev" ; then
+        LogPrintError "Cannot create EFI Boot Manager entry (unable to find ESP $esp_mountpoint among mounted devices)"
+        return 1
+    fi
+    if test $(get_component_type "$boot_efi_dev") = part ; then
+        boot_efi_parts="$boot_efi_dev"
+    else
+        boot_efi_parts=$( find_partition "$boot_efi_dev" )
+    fi
+    if ! test "$boot_efi_parts" ; then
+        LogPrintError "Cannot create EFI Boot Manager entry (unable to find partition for $boot_efi_dev)"
+        return 1
+    fi
+    LogPrint "Using fallback EFI boot partition(s) $boot_efi_parts (unable to find ESP $esp_mountpoint_inside in layout)"
 fi
 
-# For NVMe devices the trailing 'p' in the Disk value
-# (as in /dev/nvme0n1p that is derived from /dev/nvme0n1p1)
-# needs to be stripped (to get /dev/nvme0n1), otherwise the
-# efibootmgr call fails because of a wrong disk device name.
-# See also https://github.com/rear/rear/issues/1564
-if [[ $Disk = *'/nvme'+([0-9])n+([0-9])p ]] ; then
-    Disk=${Disk%p}
-fi
+local bootloader partition_block_device partition_number disk efipart
 
 # EFI\fedora\shim.efi
-BootLoader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
-LogPrint "Creating  EFI Boot Manager entry '$OS_VENDOR $OS_VERSION' for '$BootLoader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER')"
-Log efibootmgr --create --gpt --disk ${Disk} --part ${ParNr} --write-signature --label \"${OS_VENDOR} ${OS_VERSION}\" --loader \"\\${BootLoader}\"
-if efibootmgr --create --gpt --disk ${Disk} --part ${ParNr} --write-signature --label "${OS_VENDOR} ${OS_VERSION}" --loader "\\${BootLoader}" ; then
-    # ok, boot loader has been set-up - tell rear we are done using following var.
-    NOBOOTLOADER=''
-    return
-fi
+bootloader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
 
-LogPrintError "efibootmgr failed to create EFI Boot Manager entry for '$BootLoader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER')"
+for efipart in $boot_efi_parts ; do
+    # /dev/sda1 or /dev/mapper/vol34_part2 or /dev/mapper/mpath99p4
+    partition_block_device=$( get_device_name $efipart )
+    # 1 or 2 or 4 for the examples above
+    partition_number=$( get_partition_number $partition_block_device )
+    if ! disk=$( get_device_from_partition $partition_block_device $partition_number ) ; then
+        LogPrintError "Cannot create EFI Boot Manager entry for ESP $partition_block_device (unable to find the underlying disk)"
+        # do not error out - we may be able to locate other disks if there are more of them
+        continue
+    fi
+    LogPrint "Creating  EFI Boot Manager entry '$OS_VENDOR $OS_VERSION' for '$bootloader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER') "
+    Log efibootmgr --create --gpt --disk $disk --part $partition_number --write-signature --label \"${OS_VENDOR} ${OS_VERSION}\" --loader \"\\${bootloader}\"
+    if efibootmgr --create --gpt --disk $disk --part $partition_number --write-signature --label "${OS_VENDOR} ${OS_VERSION}" --loader "\\${bootloader}" ; then
+        # ok, boot loader has been set-up - continue with other disks (ESP can be on RAID)
+        NOBOOTLOADER=''
+    else
+        LogPrintError "efibootmgr failed to create EFI Boot Manager entry on $disk partition $partition_number (ESP $partition_block_device )"
+    fi
+done
+
+is_true $NOBOOTLOADER || return 0
+LogPrintError "efibootmgr failed to create EFI Boot Manager entry for '$bootloader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER')"
+return 1
