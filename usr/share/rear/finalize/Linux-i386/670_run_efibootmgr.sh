@@ -95,3 +95,4 @@ done
 
 is_true $NOBOOTLOADER || return 0
 LogPrintError "efibootmgr failed to create EFI Boot Manager entry for '$bootloader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER')"
+return 1
