@@ -19,7 +19,9 @@ local esp_mountpoint esp_mountpoint_inside boot_efi_parts boot_efi_dev
 # because when UEFI_BOOTLOADER is empty the test below evaluates to
 #   test -f /mnt/local/
 # which also returns false because /mnt/local/ is a directory
-# (cf. https://github.com/rear/rear/pull/2051/files#r258826856):
+# (cf. https://github.com/rear/rear/pull/2051/files#r258826856)
+# but using BIOS conflicts with USING_UEFI_BOOTLOADER is true
+# i.e. we should create EFI Boot Manager entries but we cannot:
 if ! test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" ; then
     LogPrintError "Failed to create EFI Boot Manager entries (UEFI bootloader $UEFI_BOOTLOADER not found under target $TARGET_FS_ROOT)"
     return 1
