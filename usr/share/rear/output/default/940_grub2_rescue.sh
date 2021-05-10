@@ -17,8 +17,8 @@ is_true "$GRUB_RESCUE" || return 0
 # in particular do not run this script when GRUB Legacy is used
 # (for GRUB Legacy output/default/940_grub_rescue.sh is run):
 if [[ ! $( type -p grub-probe ) && ! $( type -p grub2-probe ) ]] ; then
-    LogPrint "Cannot do GRUB_RESCUE setup: GRUB 2 not found (neither grub-probe nor grub2-probe)"
-    return 1
+    Log "Skipping GRUB_RESCUE setup for GRUB 2 (no GRUB 2 found)"
+    return
 fi
 
 # Now GRUB_RESCUE is explicitly wanted and this script is the right one to set it up.
