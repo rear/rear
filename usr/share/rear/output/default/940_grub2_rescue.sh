@@ -185,6 +185,9 @@ if is_true $USING_UEFI_BOOTLOADER ; then
     if efibootmgr | grep -q $grub_rear_menu_entry_name ; then
         LogPrint "Skip creating new 'Relax-and-Recover' UEFI boot entry (it is already there)"
     else
+        # TODO: Probably this part won't work properly in case of ESP on MD RAID.
+        # When the ESP is located on MD RAID we need to determine the physical RAID components
+        # and call efibootmgr on each of them, cf. https://github.com/rear/rear/pull/2608
         # This part might not go that well with drivers like HPEs cciss ...
         # However UEFI booting is present since Gen8 (AFAIK), and cciss drivers were replaced by hpsa long time ago,
         # so it looks like impossible configuration, lets wait ...
