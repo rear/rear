@@ -25,10 +25,14 @@ local directories_permissions_owner_group_file="$VAR_DIR/recovery/directories_pe
 # see https://github.com/rear/rear/pull/1648
 local excluded_fs_types="anon_inodefs|autofs|bdev|cgroup|cgroup2|configfs|cpuset|debugfs|devfs|devpts|devtmpfs|dlmfs|efivarfs|fuse.gvfs-fuse-daemon|fusectl|hugetlbfs|mqueue|nfsd|none|nsfs|overlay|pipefs|proc|pstore|ramfs|rootfs|rpc_pipefs|securityfs|sockfs|spufs|sysfs|tmpfs"
 # Mountpoints of "type autofs" are excluded via excluded_fs_types above.
-# Also exclude mountpoints that are below mountpoints of "type autofs"
-# because automounted NFS filesystems can cause this script to hang up if NFS server fails
-# because the below 'stat' command may then wait indefinitely for the NFS server to respond,
+# Also exclude mountpoints that are below mountpoints of "type autofs",
 # see https://github.com/rear/rear/issues/2610
+# Such mountpoints are below an ancestor mountpoint that is owned/created by the automounter.
+# It is possible to create a sub-mountpoint below an automounted mountpoint
+# but the fact that the sub-mountpoint is not local means it should be excluded
+# (i.e. there is no need to recreate the non-local sub-mountpoint directory).
+# Furthermore automounted NFS filesystems can cause this script to hang up if NFS server fails
+# because the below 'stat' command may then wait indefinitely for the NFS server to respond.
 # Assume 'mount' shows (excerpts)
 # <something> on /some/mp type autofs (...)
 # <some_NFS_export> on /some/mp/sub_mp type nfs (...)
