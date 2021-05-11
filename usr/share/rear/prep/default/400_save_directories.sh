@@ -49,7 +49,9 @@ if test "$autofs_mountpoints" ; then
     local autofs_and_below_mountpoints=()
     local autofs_mountpoint
     for autofs_mountpoint in $autofs_mountpoints ; do
-        autofs_and_below_mountpoints+=( $( findmnt -R -M $autofs_mountpoint -n -o TARGET --raw ) )
+        # Using findmnt option '-T' but not '-M' which is not supported on Fedora based distributions
+        # at least not on RHEL 7.9 cf. https://github.com/rear/rear/pull/2613#pullrequestreview-654678482
+        autofs_and_below_mountpoints+=( $( findmnt -R -T $autofs_mountpoint -n -o TARGET --raw ) )
     done
     exclude_autofs_and_below_mountpoints="$( tr ' ' '|' <<<"${autofs_and_below_mountpoints[@]}" )"
 fi
