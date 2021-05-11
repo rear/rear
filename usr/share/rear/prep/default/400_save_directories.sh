@@ -97,8 +97,8 @@ local directoryglob
 for directoryglob in $FHSdirectories ; do
     for directory in $( echo $directoryglob ) ; do
         # Skip when it is already listed in the directories_permissions_owner_group file:
-        grep "^$directory" "$directories_permissions_owner_group_file" 1>&2 && continue
-        # Skip when it is neither a normal directory nor a symbolic links that points to a normal directory
+        grep -q "^$directory " "$directories_permissions_owner_group_file" && continue
+        # Skip when it is neither a normal directory nor a symbolic link that points to a normal directory
         # which means: Skip when it does not exist on the currently running system:
         if ! test -d "$directory" ; then
             Log "FHS directory $directory does not exist"
