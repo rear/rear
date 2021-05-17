@@ -117,7 +117,7 @@ _rc="$(cat $TMP_DIR/retval)"
 
 sleep 1
 # everyone should see this warning, even if not verbose
-test "$_rc" -gt 0 && VERBOSE=1 LogPrint "WARNING !
+test "$_rc" -gt 0 && LogPrintError "WARNING !
 There was an error (${rsync_err_msg[$_rc]}) during archive creation.
 Please check the archive and see '$RUNTIME_LOGFILE' for more information.
 
