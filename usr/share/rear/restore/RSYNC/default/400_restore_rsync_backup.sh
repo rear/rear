@@ -36,6 +36,7 @@ ProgressStart "Restore operation"
 			# no other backup programs foreseen then rsync so far
 			:
 			;;
+
 	esac
 	echo $? >$TMP_DIR/retval
 ) >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" &
@@ -65,6 +66,7 @@ case "$(basename $BACKUP_PROG)" in
 			ProgressStep
 		done
 		;;
+
 esac
 ProgressStop
 
