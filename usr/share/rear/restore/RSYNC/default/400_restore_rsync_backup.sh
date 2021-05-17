@@ -74,8 +74,10 @@ transfertime="$((SECONDS-starttime))"
 
 # harvest return code from background job. The kill -0 $BackupPID loop above should
 # have made sure that this wait won't do any real "waiting" :-)
-wait $BackupPID
-_rc=$?
+wait $BackupPID || LogPrintError "Restore job returned a nonzero exit code $?"
+# harvest the actual return code of rsync. Finishing the pipeline with an error code above is actually unlikely,
+# because rsync is not the last command in it. But error returns from rsync are common and must be handled.
+_rc="$(cat $TMP_DIR/retval)"
 
 sleep 1
 test "$_rc" -gt 0 && LogPrint "WARNING !
