@@ -33,7 +33,7 @@ ProgressStart "Restore operation"
 			;;
 
 		(*)
-			# no other backup programs foreseen then rsync so far
+			# no other backup programs foreseen than rsync so far
 			:
 			;;
 
