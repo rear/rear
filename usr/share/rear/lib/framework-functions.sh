@@ -143,12 +143,12 @@ function cleanup_build_area_and_end_program () {
             LogPrint "Directory $BUILD_DIR/outputfs still mounted - trying lazy umount"
             sleep 2
             umount -f -l $BUILD_DIR/outputfs >&2
-            rm -Rf $v $BUILD_DIR/outputfs >&2
+            rmdir $v $BUILD_DIR/outputfs >&2
         else
             # not mounted so we can safely delete $BUILD_DIR/outputfs
             rm -Rf $BUILD_DIR/outputfs
         fi
-        rm -Rf $v $BUILD_DIR >&2
+        rmdir $v $BUILD_DIR >&2
     fi
     Log "End of program reached"
 }
