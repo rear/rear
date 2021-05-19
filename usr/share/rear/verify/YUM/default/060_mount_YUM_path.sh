@@ -1,1 +1,1 @@
-../../../backup/NETFS/default/100_mount_NETFS_path.sh
+../../../restore/YUM/default/100_mount_YUM_path.sh

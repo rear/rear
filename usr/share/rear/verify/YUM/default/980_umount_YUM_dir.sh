@@ -1,1 +1,1 @@
-../../../backup/NETFS/default/980_umount_NETFS_dir.sh
+../../../restore/YUM/default/980_umount_YUM_dir.sh
