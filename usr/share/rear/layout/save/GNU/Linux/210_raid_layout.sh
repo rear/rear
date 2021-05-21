@@ -68,7 +68,14 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
                 sparedevices=""
             fi
 
-            if [ -n "$layout" ] ; then
+            # mdadm can print '-unknown-' for a RAID layout
+            # which got recently (2019-12-02) added to RAID0 (it existed before for RAID5 and RAID6 and RAID10) see
+            # https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/Detail.c?id=329dfc28debb58ffe7bd1967cea00fc583139aca
+            # so we treat '-unknown-' same as an empty value to avoid that layout/prepare/GNU/Linux/120_include_raid_code.sh
+            # will create a 'mdadm' command in diskrestore.sh like "mdadm ... --layout=-unknown- ..." which would fail
+            # during "rear recover" with something like "mdadm: layout -unknown- not understood for raid0"
+            # see https://github.com/rear/rear/issues/2616
+            if test "$layout" -a '-unknown-' != "$layout" ; then
                 layout=" layout=$layout"
             else
                 layout=""
