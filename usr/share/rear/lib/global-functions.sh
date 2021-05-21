@@ -342,7 +342,7 @@ function url_path() {
     echo /${url_without_scheme#*/}
 }
 
-backup_path() {
+function backup_path() {
     local scheme=$1
     local path=$2
     case $scheme in
@@ -368,7 +368,7 @@ backup_path() {
     echo "$path"
 }
 
-output_path() {
+function output_path() {
     local scheme=$1
     local path=$2
     case $scheme in
@@ -387,7 +387,7 @@ output_path() {
 
 
 ### Mount URL $1 at mountpoint $2[, with options $3]
-mount_url() {
+function mount_url() {
     local url=$1
     local mountpoint=$2
     local defaultoptions="rw,noatime"
@@ -567,7 +567,7 @@ mount_url() {
 }
 
 ### Unmount url $1 at mountpoint $2
-umount_url() {
+function umount_url() {
     local url=$1
     local mountpoint=$2
 
@@ -615,7 +615,7 @@ umount_url() {
 }
 
 ### Unmount mountpoint $1
-umount_mountpoint() {
+function umount_mountpoint() {
     local mountpoint=$1
 
     ### First, try a normal unmount,
