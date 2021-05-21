@@ -342,6 +342,27 @@ function url_path() {
     echo /${url_without_scheme#*/}
 }
 
+
+### Returns true if URLs with the given scheme corresponds to a path inside
+### a mountable fileystem and one can put files directly into it.
+### The actual path will be returned by backup_path() / output_path().
+### If returns false, using backup_path() / output_path() has no sense
+### and one must use a scheme-specific method (like lftp or writing them to a tape)
+### to upload files to the destination instead of just "cp" or other direct filesystem access.
+### Returning true does not imply that the URL is currently mounted at a filesystem and usable,
+### only that it can be mounted (use mount_url() first)
+function scheme_supports_filesystem() {
+    local scheme=$1
+    case $scheme in
+        (null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp)
+            return 1
+            ;;
+        (*)
+            return 0
+            ;;
+    esac
+}
+
 function backup_path() {
     local scheme=$1
     local path=$2
