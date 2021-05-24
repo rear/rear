@@ -22,6 +22,6 @@ test "$opath" || return 0
 # Create $OUTPUT_PREFIX sub-directory:
 mkdir -p $v -m0750 "$opath" && return
 
-# A failure to cerate the $OUTPUT_PREFIX sub-directory is fatal: 
+# A failure to create the $OUTPUT_PREFIX sub-directory is fatal:
 Error "Failed to create '$opath' directory for $url=${!url}"
 
