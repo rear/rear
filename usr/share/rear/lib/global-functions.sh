@@ -354,7 +354,7 @@ function url_path() {
 function scheme_supports_filesystem() {
     local scheme=$1
     case $scheme in
-        (null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp)
+        (null|tape|obdr|rsync|fish|ftp|ftps|hftp|http|https|sftp)
             return 1
             ;;
         (*)
