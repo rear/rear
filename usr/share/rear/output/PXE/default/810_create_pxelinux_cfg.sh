@@ -11,6 +11,12 @@ if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
     # E.g. PXE_CONFIG_URL=nfs://server/export/nfs/tftpboot/pxelinux.cfg
     # Better be sure that on 'server' the directory /export/nfs/tftpboot/pxelinux.cfg exists
     local scheme=$( url_scheme $PXE_CONFIG_URL )
+
+    # We need filesystem access to the destination (schemes like ftp:// are not supported)
+    if ! scheme_supports_filesystem $scheme ; then
+        Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
+    fi
+
     mkdir -p $v "$BUILD_DIR/tftpbootfs" >&2
     StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs'"
     AddExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"

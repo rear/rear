@@ -8,6 +8,12 @@
 if [[ ! -z "$PXE_TFTP_URL" ]] ; then
     # E.g. PXE_TFTP_URL=nfs://server/export/nfs/tftpboot
     local scheme=$( url_scheme $PXE_TFTP_URL )
+
+    # We need filesystem access to the destination (schemes like ftp:// are not supported)
+    if ! scheme_supports_filesystem $scheme ; then
+        Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
+    fi
+
     mkdir -p $v "$BUILD_DIR/tftpbootfs" >&2
     StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs'"
     AddExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
