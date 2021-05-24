@@ -11,7 +11,6 @@ if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
     # E.g. PXE_CONFIG_URL=nfs://server/export/nfs/tftpboot/pxelinux.cfg
     # Better be sure that on 'server' the directory /export/nfs/tftpboot/pxelinux.cfg exists
     local scheme=$( url_scheme $PXE_CONFIG_URL )
-    local path=$( url_path $PXE_CONFIG_URL )
     mkdir -p $v "$BUILD_DIR/tftpbootfs" >&2
     StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs'"
     AddExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"

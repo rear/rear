@@ -8,7 +8,6 @@
 if [[ ! -z "$PXE_TFTP_URL" ]] ; then
     # E.g. PXE_TFTP_URL=nfs://server/export/nfs/tftpboot
     local scheme=$( url_scheme $PXE_TFTP_URL )
-    local path=$( url_path $PXE_TFTP_URL )
     mkdir -p $v "$BUILD_DIR/tftpbootfs" >&2
     StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs'"
     AddExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
