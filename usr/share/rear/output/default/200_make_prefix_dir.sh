@@ -3,17 +3,12 @@
 # The $OUTPUT_PREFIX directory defaults to $HOSTNAME.
 #
 # This happens usually under a mounted network filesystem share
-# e.g. in case of BACKUP_URL=nfs://NFS.server.IP.address/remote/nfs/share
-# but it is also happens for local stuff like BACKUP_URL=usb:///dev/disk/by-label/REAR-000
+# e.g. in case of OUTPUT_URL=nfs://NFS.server.IP.address/remote/nfs/share
+# but it is also happens for local stuff like OUTPUT_URL=usb:///dev/disk/by-label/REAR-000
 #
 # Do not do this for tapes and special attention for file:///path
-
-# Generate url variable name that depends on the current stage,
-# e.g. BACKUP_URL or OUTPUT_URL:
-url="$( echo $stage | tr '[:lower:]' '[:upper:]' )_URL"
-
-local scheme=$( url_scheme ${!url} )
-local path=$( url_path ${!url} )
+local scheme=$( url_scheme $OUTPUT_URL )
+local path=$( url_path $OUTPUT_URL )
 local opath=$( output_path $scheme $path )
 
 # If $opath is empty return silently (e.g. scheme tape):
@@ -23,5 +18,5 @@ test "$opath" || return 0
 mkdir -p $v -m0750 "$opath" && return
 
 # A failure to create the $OUTPUT_PREFIX sub-directory is fatal:
-Error "Failed to create '$opath' directory for $url=${!url}"
+Error "Failed to create '$opath' directory for OUTPUT_URL=$OUTPUT_URL"
 

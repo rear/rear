@@ -2,9 +2,8 @@
 # made by a previous mkrescue run when the variable KEEP_OLD_OUTPUT_COPY has been set
 
 # do not do this for tapes and special attention for file:///path
-url="$( echo $stage | tr '[:lower:]' '[:upper:]' )_URL"
-local scheme=$( url_scheme ${!url} )
-local path=$( url_path ${!url} )
+local scheme=$( url_scheme $OUTPUT_URL )
+local path=$( url_path $OUTPUT_URL )
 local opath=$( output_path $scheme $path )
 
 # if $opath is empty return silently (e.g. scheme tape)
