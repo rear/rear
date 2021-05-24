@@ -13,10 +13,8 @@ local opath=$( backup_path $scheme $path )
 
 if ! test -f "${opath}/.lockfile" ; then
     if test -d "${opath}" ; then
-        rm -rf $v "${opath}.old" >&2
-        StopIfError "Could not remove '${opath}.old'"
-        mv -f $v "${opath}" "${opath}.old" >&2
-        StopIfError "Could not move '${opath}'"
+        rm -rf $v "${opath}.old" || Error "Could not remove '${opath}.old'"
+        mv -f $v "${opath}" "${opath}.old" || Error "Could not move '${opath}'"
     fi
 else
     # lockfile was already made through the output workflow (hands off)

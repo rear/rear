@@ -11,6 +11,5 @@ local opath=$( backup_path $scheme $path )
 [ -z "$opath" ] && return 0
 
 if test -d "${opath}" ; then
-	> "${opath}/.lockfile"
-	StopIfError "Could not create '${opath}/.lockfile'"
+	> "${opath}/.lockfile" || Error "Could not create '${opath}/.lockfile'"
 fi
