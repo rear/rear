@@ -9,10 +9,11 @@
 # Do not do this for tapes and special attention for file:///path
 local scheme=$( url_scheme $OUTPUT_URL )
 local path=$( url_path $OUTPUT_URL )
-local opath=$( output_path $scheme $path )
 
-# If $opath is empty return silently (e.g. scheme tape):
-test "$opath" || return 0
+# If filesystem access to url is unsupported return silently (e.g. scheme tape)
+scheme_supports_filesystem $scheme || return 0
+
+local opath=$( output_path $scheme $path )
 
 # Create $OUTPUT_PREFIX sub-directory:
 mkdir -p $v -m0750 "$opath" && return

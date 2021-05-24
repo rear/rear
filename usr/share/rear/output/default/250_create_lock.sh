@@ -4,10 +4,11 @@
 # do not do this for tapes and special attention for file:///path
 local scheme=$( url_scheme $OUTPUT_URL )
 local path=$( url_path $OUTPUT_URL )
-local opath=$( output_path $scheme $path )
 
-# if $opath is empty return silently (e.g. scheme tape)
-[ -z "$opath" ] && return 0
+# if filesystem access to url is unsupported return silently (e.g. scheme tape)
+scheme_supports_filesystem $scheme || return 0
+
+local opath=$( output_path $scheme $path )
 
 if test -d "${opath}" ; then
     > "${opath}/.lockfile" || Error "Could not create '${opath}/.lockfile'"
