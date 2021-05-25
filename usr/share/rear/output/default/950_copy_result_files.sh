@@ -50,7 +50,7 @@ case "$scheme" in
     (nfs|cifs|usb|file|sshfs|ftpfs|davfs)
         local opath
         opath=$( output_path $scheme $path )
-        LogPrint "Copying result files '${RESULT_FILES[@]}' to $opath at $scheme location"
+        LogPrint "Copying result files '${RESULT_FILES[*]}' to $opath at $scheme location"
         # Copy each result file one by one to avoid usually false error exits as in
         # https://github.com/rear/rear/issues/1711#issuecomment-380009044
         # where in case of an improper RESULT_FILES array member 'cp' can error out with something like
@@ -106,8 +106,6 @@ case "$scheme" in
         done
         ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
-        # FIXME: Verify if usage of $array[*] instead of "${array[@]}" is actually intended here
-        # see https://github.com/rear/rear/issues/1068
         LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
         Log "lftp -c $OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mput ${RESULT_FILES[*]}"
 
@@ -121,8 +119,8 @@ case "$scheme" in
     (rsync)
         # If BACKUP = RSYNC output/RSYNC/default/900_copy_result_files.sh took care of it:
         test "$BACKUP" = "RSYNC" && return 0
-        LogPrint "Copying result files '${RESULT_FILES[@]}' to $scheme location"
-        Log "rsync -a $v ${RESULT_FILES[@]} ${host}:${path}"
+        LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
+        Log "rsync -a $v ${RESULT_FILES[*]} ${host}:${path}"
         rsync -a $v "${RESULT_FILES[@]}" "${host}:${path}" || Error "Problem transferring result files to $OUTPUT_URL"
         ;;
     (*)
