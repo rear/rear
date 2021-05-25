@@ -5,7 +5,7 @@
 
 # For example for "rear mkbackuponly" there are usually no result files
 # that would need to be copied here to the output location:
-test "$RESULT_FILES" || return 0
+test "${RESULT_FILES[*]:-}" || return 0
 
 local scheme=$( url_scheme $OUTPUT_URL )
 local host=$( url_host $OUTPUT_URL )
