@@ -342,6 +342,22 @@ function url_path() {
     echo /${url_without_scheme#*/}
 }
 
+### Returns true if one can upload files to the URL
+function scheme_accepts_files() {
+    local scheme=$1
+    case $scheme in
+        (null|tape|obdr)
+            # tapes do not support uploading arbitrary files, one has to handle them
+            # as special case (usually passing the tape device as argument to tar)
+            # null means do not upload anything anywhere, leave the files under /var/lib/rear/output
+            return 1
+            ;;
+        (*)
+            # most URL schemes support uploading files
+            return 0
+            ;;
+    esac
+}
 
 ### Returns true if URLs with the given scheme corresponds to a path inside
 ### a mountable fileystem and one can put files directly into it.
