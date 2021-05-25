@@ -408,10 +408,18 @@ function backup_path() {
 function output_path() {
     local scheme=$1
     local path=$2
+
+    # Abort for unmountable schemes ("tape-like" or "ftp-like" schemes).
+    # Returning an empty string for them is not satisfactory: it could lead to caller putting its files
+    # under / instead of the intended location if the result is not checked for emptiness.
+    # Returning ${BUILD_DIR}/outputfs/${OUTPUT_PREFIX} for unmountable URLs is also not satisfactory:
+    # caller could put its files there expecting them to be safely at their destination,
+    # but if the directory is not a mountpoint, they would get silently lost.
+    # The caller needs to check the URL/scheme using scheme_supports_filesystem()
+    # before calling this function.
+    scheme_supports_filesystem $scheme || BugError "output_path() called with scheme $scheme that does not support filesystem access"
+
     case $scheme in
-       (null|tape)  # no path for tape required
-           path=""
-           ;;
        (file)  # type file needs a local path (must be mounted by user)
            path="$path/${OUTPUT_PREFIX}"
            ;;
