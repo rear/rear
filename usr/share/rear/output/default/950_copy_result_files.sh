@@ -10,11 +10,19 @@ test "${RESULT_FILES[*]:-}" || return 0
 local scheme=$( url_scheme $OUTPUT_URL )
 local host=$( url_host $OUTPUT_URL )
 local path=$( url_path $OUTPUT_URL )
-local opath=$( output_path $scheme $path )
 
-# if $opath is empty return silently (e.g. scheme tape)
-if [[ -z "$opath" || -z "$OUTPUT_URL" || "$scheme" == "obdr" || "$scheme" == "tape" ]] ; then
-    return 0
+# TODO should we check for empty $OUTPUT_URL here? Most likely plenty of things got broken before reaching this point if it is empty
+if [ -z "$OUTPUT_URL" ] || ! scheme_accepts_files $scheme ; then
+    if [ "$scheme" == "null" ] ; then
+        # There are result files to copy, but OUTPUT_URL=null indicates that we are not interested in them
+        return 0
+    else
+        # There are files to copy, but schemes like tape: do not allow files to be stored. The files would be lost.
+        # Do not allow that.
+        # Schemes like obdr: that store the results themselves should clear RESULT_FILES to indicate that nothing is to be done.
+        # Is this considered a bug in ReaR (BugError), or a user misconfiguration (Error) when this happens?
+        BugError "Output scheme $scheme does not accept result files ${RESULT_FILES[*]}, use OUTPUT_URL=null if you don't want to copy them anywhere."
+    fi
 fi
 
 LogPrint "Copying resulting files to $scheme location"
@@ -40,6 +48,8 @@ LogPrint "Saving $RUNTIME_LOGFILE as $final_logfile_name to $scheme location"
 # The real work (actually copying resulting files to the output location):
 case "$scheme" in
     (nfs|cifs|usb|file|sshfs|ftpfs|davfs)
+        local opath
+        opath=$( output_path $scheme $path )
         LogPrint "Copying result files '${RESULT_FILES[@]}' to $opath at $scheme location"
         # Copy each result file one by one to avoid usually false error exits as in
         # https://github.com/rear/rear/issues/1711#issuecomment-380009044
