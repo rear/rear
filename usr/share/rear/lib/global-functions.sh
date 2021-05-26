@@ -611,6 +611,10 @@ function mount_url() {
     return 0
 }
 
+function remove_temporary_mountpoint() {
+    rmdir $v "$1" >&2
+}
+
 ### Unmount url $1 at mountpoint $2
 function umount_url() {
     local url=$1
