@@ -652,8 +652,7 @@ function umount_url() {
             ;;
     esac
 
-    umount_mountpoint $mountpoint
-    StopIfError "Unmounting '$mountpoint' failed."
+    umount_mountpoint $mountpoint || Error "Unmounting '$mountpoint' failed."
 
     RemoveExitTask "umount -f $v '$mountpoint' >&2"
     return 0
