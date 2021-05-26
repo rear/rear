@@ -626,19 +626,18 @@ function umount_url() {
                 return 0
             fi
             ;;
-	    (sshfs)
-	        umount_cmd="fusermount -u $mountpoint"
-	    ;;
-	    (davfs)
-	        umount_cmd="umount $mountpoint"
+        (sshfs)
+            umount_cmd="fusermount -u $mountpoint"
+            ;;
+        (davfs)
+            umount_cmd="umount $mountpoint"
             # Wait for 3 sek. then remove the cache-dir /var/cache/davfs
             sleep 30
             # ToDo: put in here the cache-dir from /etc/davfs2/davfs.conf
             # and delete only the just used cache
             #rm -rf /var/cache/davfs2/*<mountpoint-hash>*
             rm -rf /var/cache/davfs2/*outputfs*
-
-	    ;;
+            ;;
         (var)
             local var=$(url_host $url)
             umount_cmd="${!var} $mountpoint"
