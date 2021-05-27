@@ -675,6 +675,7 @@ function umount_url() {
     # umount_url() is a wrapper that takes care of exit tasks and error handling and mountpoint cleanup.
     # Therefore it also determines if exit task and mountpoint handling is required and returns early if not.
     # The actual umount job is performed inside perform_umount_url().
+    # We do not request lazy umount here because we want umount errors to be reliably reported.
     perform_umount_url $url $mountpoint || Error "Unmounting '$mountpoint' failed."
 
     RemoveExitTask "umount -f $v '$mountpoint' >&2"
@@ -683,45 +684,67 @@ function umount_url() {
     return 0
 }
 
-### Unmount url $1 at mountpoint $2
+### Unmount url $1 at mountpoint $2 [ lazily if $3 is set and normal unmount fails ]
 function perform_umount_url() {
     local url=$1
     local mountpoint=$2
+    local lazy=${3:-}
 
     case $(url_scheme $url) in
         (sshfs)
-            fusermount -u $mountpoint
+            fusermount -u ${lazy:+'-z'} $mountpoint
             ;;
         (davfs)
-            umount_mountpoint $mountpoint && {
-                # Wait for 3 sek. then remove the cache-dir /var/cache/davfs
-                sleep 30
-                # ToDo: put in here the cache-dir from /etc/davfs2/davfs.conf
-                # and delete only the just used cache
-                #rm -rf /var/cache/davfs2/*<mountpoint-hash>*
-                rm -rf /var/cache/davfs2/*outputfs*
-            }
+            umount_davfs $mountpoint $lazy
             ;;
         (var)
             local var
             var=$(url_host $url)
             Log "Unmounting with '${!var} $mountpoint'"
+            # lazy unmount not supported with custom umount command
             ${!var} $mountpoint
             ;;
         (*)
             # usual umount command
-            umount_mountpoint $mountpoint
+            umount_mountpoint $mountpoint $lazy
     esac
     # The switch above must be the last statement in this function and the umount commands must be
     # the last commands (or part of) in each branch. This ensures proper exit code propagation
     # to the caller even when set -e is used.
 }
 
-### Unmount mountpoint $1
+### Helper which unmounts davfs mountpoint $1 and cleans up the cache,
+### performing lazy unmount if $2 is nonempty and normal unmount fails.
+function umount_davfs() {
+    local mountpoint=$1
+    local lazy="${2:-}"
+    if umount_mountpoint $mountpoint ; then
+        # Wait for 3 sek. then remove the cache-dir /var/cache/davfs
+        sleep 30
+        # TODO: put in here the cache-dir from /etc/davfs2/davfs.conf
+        # and delete only the just used cache
+        #rm -rf /var/cache/davfs2/*<mountpoint-hash>*
+        rm -rf /var/cache/davfs2/*outputfs*
+    else
+        local retval=$?
+
+        if test $lazy ; then
+            # try again to unmount lazily and this time do not delete the cache, it is still in use.
+            LogPrintError "davfs cache /var/cache/davfs2/*outputfs* needs to be cleaned up manually after the lazy unmount finishes"
+            umount_mountpoint_lazy $mountpoint
+        else
+            # propagate errors from umount
+            return $retval
+        fi
+    fi
+}
+
+### Unmount mountpoint $1 [ lazily if $2 is nonempty ]
 ### Default implementation for filesystems that don't need anything fancy
 ### For special umount commands use perform_umount_url()
 function umount_mountpoint() {
     local mountpoint=$1
+    local lazy=${2:-}
 
     ### First, try a normal unmount,
     Log "Unmounting '$mountpoint'"
@@ -741,7 +764,21 @@ function umount_mountpoint() {
     fi
 
     Log "Unmounting '$mountpoint' failed."
-    return 1
+
+    if test $lazy ; then
+        umount_mountpoint_lazy $mountpoint
+    else
+        return 1
+    fi
+}
+
+### Unmount mountpoint $1 lazily
+### Preferably use "umount_mountpoint $mountpoint y", which attempts non-lazy unmount first.
+function umount_mountpoint_lazy() {
+    local mountpoint=$1
+
+    LogPrint "Directory $mountpoint still mounted - trying lazy umount"
+    umount $v -f -l $mountpoint >&2
 }
 
 # Change $1 to user input or leave default value on empty input
