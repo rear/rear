@@ -627,7 +627,7 @@ function mount_url() {
     # eval is required when mount_cmd contains single quoted stuff (e.g. see the above mount_cmd for curlftpfs)
     eval $mount_cmd || Error "Mount command '$mount_cmd' failed."
 
-    AddExitTask "umount -f $v '$mountpoint' >&2"
+    AddExitTask "perform_umount_url '$url' '$mountpoint' y"
     return 0
 }
 
@@ -678,7 +678,7 @@ function umount_url() {
     # We do not request lazy umount here because we want umount errors to be reliably reported.
     perform_umount_url $url $mountpoint || Error "Unmounting '$mountpoint' failed."
 
-    RemoveExitTask "umount -f $v '$mountpoint' >&2"
+    RemoveExitTask "perform_umount_url '$url' '$mountpoint' y"
 
     remove_temporary_mountpoint '$mountpoint' && RemoveExitTask "remove_temporary_mountpoint '$mountpoint'"
     return 0
