@@ -603,6 +603,10 @@ function mount_url() {
             ;;
     esac
 
+    # create mount point
+    mkdir -p $v "$mountpoint" >&2 || Error "Could not mkdir '$mountpoint'"
+    AddExitTask "remove_temporary_mountpoint '$mountpoint'"
+
     Log "Mounting with '$mount_cmd'"
     # eval is required when mount_cmd contains single quoted stuff (e.g. see the above mount_cmd for curlftpfs)
     eval $mount_cmd || Error "Mount command '$mount_cmd' failed."
@@ -615,7 +619,7 @@ function remove_temporary_mountpoint() {
     rmdir $v "$1" >&2
 }
 
-### Unmount url $1 at mountpoint $2
+### Unmount url $1 at mountpoint $2, perform mountpoint cleanup and exit task + error handling
 function umount_url() {
     local url=$1
     local mountpoint=$2
@@ -630,38 +634,61 @@ function umount_url() {
                 return 0
             fi
             ;;
-        (sshfs)
-            umount_cmd="fusermount -u $mountpoint"
-            ;;
-        (davfs)
-            umount_cmd="umount $mountpoint"
-            # Wait for 3 sek. then remove the cache-dir /var/cache/davfs
-            sleep 30
-            # ToDo: put in here the cache-dir from /etc/davfs2/davfs.conf
-            # and delete only the just used cache
-            #rm -rf /var/cache/davfs2/*<mountpoint-hash>*
-            rm -rf /var/cache/davfs2/*outputfs*
-            ;;
-        (var)
-            local var=$(url_host $url)
-            umount_cmd="${!var} $mountpoint"
-
-            Log "Unmounting with '$umount_cmd'"
-            $umount_cmd
-            StopIfError "Unmounting failed."
-
-            RemoveExitTask "umount -f $v '$mountpoint' >&2"
-            return 0
-            ;;
+        (*)
+            # Schemes that actually need nontrivial umount are handled below.
+            # We do not handle them in the default branch because in the case of iso:
+            # it depends on the current workflow whether umount is needed or not.
+            :
     esac
 
-    umount_mountpoint $mountpoint || Error "Unmounting '$mountpoint' failed."
+    # umount_url() is a wrapper that takes care of exit tasks and error handling and mountpoint cleanup.
+    # Therefore it also determines if exit task and mountpoint handling is required and returns early if not.
+    # The actual umount job is performed inside perform_umount_url().
+    perform_umount_url $url $mountpoint || Error "Unmounting '$mountpoint' failed."
 
     RemoveExitTask "umount -f $v '$mountpoint' >&2"
+
+    remove_temporary_mountpoint '$mountpoint' && RemoveExitTask "remove_temporary_mountpoint '$mountpoint'"
     return 0
 }
 
+### Unmount url $1 at mountpoint $2
+function perform_umount_url() {
+    local url=$1
+    local mountpoint=$2
+
+    case $(url_scheme $url) in
+        (sshfs)
+            fusermount -u $mountpoint
+            ;;
+        (davfs)
+            umount_mountpoint $mountpoint && {
+                # Wait for 3 sek. then remove the cache-dir /var/cache/davfs
+                sleep 30
+                # ToDo: put in here the cache-dir from /etc/davfs2/davfs.conf
+                # and delete only the just used cache
+                #rm -rf /var/cache/davfs2/*<mountpoint-hash>*
+                rm -rf /var/cache/davfs2/*outputfs*
+            }
+            ;;
+        (var)
+            local var
+            var=$(url_host $url)
+            Log "Unmounting with '${!var} $mountpoint'"
+            ${!var} $mountpoint
+            ;;
+        (*)
+            # usual umount command
+            umount_mountpoint $mountpoint
+    esac
+    # The switch above must be the last statement in this function and the umount commands must be
+    # the last commands (or part of) in each branch. This ensures proper exit code propagation
+    # to the caller even when set -e is used.
+}
+
 ### Unmount mountpoint $1
+### Default implementation for filesystems that don't need anything fancy
+### For special umount commands use perform_umount_url()
 function umount_mountpoint() {
     local mountpoint=$1
 
