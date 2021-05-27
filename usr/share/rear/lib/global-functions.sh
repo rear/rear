@@ -692,6 +692,7 @@ function perform_umount_url() {
 
     case $(url_scheme $url) in
         (sshfs)
+            # does ftpfs need this special case as well?
             fusermount -u ${lazy:+'-z'} $mountpoint
             ;;
         (davfs)
