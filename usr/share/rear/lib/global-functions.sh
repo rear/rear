@@ -437,12 +437,28 @@ function mount_url() {
     local mountpoint=$2
     local defaultoptions="rw,noatime"
     local options=${3:-"$defaultoptions"}
+    local scheme
+
+    scheme=$( url_scheme $url )
+
+    # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
+    # They thus need to be kept in sync with umount_url() so that RemoveExitTasks is used
+    # iff AddExitTask was used in mount_url().
+
+    if ! scheme_supports_filesystem $scheme ; then
+        ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
+        ### Don't need to umount anything for these.
+        ### file: supports filesystem access, but is not mounted and unmounted,
+        ### so it has to be handled specially below.
+        ### Similarly for iso: which gets mounted and unmounted only during recovery.
+        return 0
+    fi
 
     ### Generate a mount command
     local mount_cmd
-    case $(url_scheme $url) in
-        (null|tape|file|rsync|fish|ftp|ftps|hftp|http|https|sftp)
-            ### Don't need to mount anything for these
+    case $scheme in
+        (file)
+            ### Don't need to mount anything for file:, it is already mounted by user
             return 0
             ;;
         (iso)
@@ -623,10 +639,25 @@ function remove_temporary_mountpoint() {
 function umount_url() {
     local url=$1
     local mountpoint=$2
+    local scheme
 
-    case $(url_scheme $url) in
-        (null|tape|file|rsync|fish|ftp|ftps|hftp|http|https|sftp)
-            ### Don't need to umount anything for these
+    scheme=$( url_scheme $url )
+
+    # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
+    # They thus need to be kept in sync with mount_url() so that RemoveExitTasks is used
+    # iff AddExitTask was used in mount_url().
+
+    if ! scheme_supports_filesystem $scheme ; then
+        ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
+        ### Don't need to umount anything for these.
+        ### file: supports filesystem access, but is not mounted and unmounted,
+        ### so it has to be handled specially below.
+        ### Similarly for iso: which gets mounted and unmounted only during recovery.
+        return 0
+    fi
+
+    case $scheme in
+        (file)
             return 0
             ;;
         (iso)
