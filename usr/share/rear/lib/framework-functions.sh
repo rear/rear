@@ -143,11 +143,8 @@ function cleanup_build_area_and_end_program () {
             LogPrint "Directory $BUILD_DIR/outputfs still mounted - trying lazy umount"
             sleep 2
             umount -f -l $BUILD_DIR/outputfs >&2
-            rmdir $v $BUILD_DIR/outputfs >&2
-        else
-            # not mounted so we can safely delete $BUILD_DIR/outputfs
-            rm -Rf $BUILD_DIR/outputfs
         fi
+        remove_temporary_mountpoint '$BUILD_DIR/outputfs' || BugError "Directory $BUILD_DIR/outputfs not empty, can not remove"
         rmdir $v $BUILD_DIR >&2
     fi
     Log "End of program reached"
