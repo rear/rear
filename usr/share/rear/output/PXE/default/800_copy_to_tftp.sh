@@ -14,9 +14,6 @@ if [[ ! -z "$PXE_TFTP_URL" ]] ; then
         Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
     fi
 
-    mkdir -p $v "$BUILD_DIR/tftpbootfs" >&2
-    StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs'"
-    AddExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
     mount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs $BACKUP_OPTIONS
     # However, we copy under $OUTPUT_PREFIX_PXE directory (usually HOSTNAME) to have different clients on one pxe server
     PXE_TFTP_LOCAL_PATH=$BUILD_DIR/tftpbootfs
@@ -79,10 +76,6 @@ fi
 if [[ ! -z "$PXE_TFTP_URL" ]] ; then
     LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_TFTP_URL/$OUTPUT_PREFIX_PXE"
     umount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs
-    rmdir $BUILD_DIR/tftpbootfs >&2
-    if [[ $? -eq 0 ]] ; then
-        RemoveExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
-    fi
 else
     # legacy way PXE_TFTP_PATH
     LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_TFTP_PATH"

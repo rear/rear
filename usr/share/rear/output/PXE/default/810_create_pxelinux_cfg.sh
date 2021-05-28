@@ -17,9 +17,6 @@ if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
         Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
     fi
 
-    mkdir -p $v "$BUILD_DIR/tftpbootfs" >&2
-    StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs'"
-    AddExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
     mount_url $PXE_CONFIG_URL $BUILD_DIR/tftpbootfs $BACKUP_OPTIONS
     PXE_LOCAL_PATH=$BUILD_DIR/tftpbootfs
 else
@@ -110,10 +107,6 @@ popd >/dev/null
 if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
     LogPrint "Created pxelinux config '${PXE_CONFIG_PREFIX}$HOSTNAME' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_URL"
     umount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs
-    rmdir $BUILD_DIR/tftpbootfs >&2
-    if [[ $? -eq 0 ]] ; then
-        RemoveExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
-    fi
 else
     LogPrint "Created pxelinux config '${PXE_CONFIG_PREFIX}$HOSTNAME' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
     # Add to result files
