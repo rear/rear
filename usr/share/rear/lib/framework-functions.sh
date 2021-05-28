@@ -140,9 +140,8 @@ function cleanup_build_area_and_end_program () {
         # in worst case it could not umount; so before remove the BUILD_DIR check if above outputfs is gone
         if mountpoint -q "$BUILD_DIR/outputfs" ; then
             # still mounted it seems
-            LogPrint "Directory $BUILD_DIR/outputfs still mounted - trying lazy umount"
             sleep 2
-            umount -f -l $BUILD_DIR/outputfs >&2
+            umount_mountpoint_lazy $BUILD_DIR/outputfs
         fi
         remove_temporary_mountpoint '$BUILD_DIR/outputfs' || BugError "Directory $BUILD_DIR/outputfs not empty, can not remove"
         rmdir $v $BUILD_DIR >&2
