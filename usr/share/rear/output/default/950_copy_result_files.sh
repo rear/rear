@@ -11,10 +11,11 @@ local scheme=$( url_scheme $OUTPUT_URL )
 local host=$( url_host $OUTPUT_URL )
 local path=$( url_path $OUTPUT_URL )
 
-# TODO should we check for empty $OUTPUT_URL here? Most likely plenty of things got broken before reaching this point if it is empty
 if [ -z "$OUTPUT_URL" ] || ! scheme_accepts_files $scheme ; then
-    if [ "$scheme" == "null" ] ; then
+    if [ "$scheme" == "null" -o -z "$OUTPUT_URL" ] ; then
         # There are result files to copy, but OUTPUT_URL=null indicates that we are not interested in them
+        # TODO: empty OUTPUT_URL seems to be equivalent to null, should we continue to allow that,
+        # or enforce setting it explicitly?
         return 0
     else
         # There are files to copy, but schemes like tape: do not allow files to be stored. The files would be lost.
