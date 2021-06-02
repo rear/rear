@@ -632,7 +632,9 @@ function mount_url() {
 }
 
 function remove_temporary_mountpoint() {
-    rmdir $v "$1" >&2
+    if test -d "$1" ; then
+        rmdir $v "$1" >&2
+    fi
 }
 
 ### Unmount url $1 at mountpoint $2, perform mountpoint cleanup and exit task + error handling
