@@ -123,8 +123,8 @@ while read keyword orig_device orig_size junk ; do
         is_mapping_target "$preferred_target_device_name" && continue
         # Use the current one if it is of same size as the old one:
         if test "$orig_size" -eq "$current_size" ; then
-            # Ensure the determined target device is really a block device:
-            if test -b "$preferred_target_device_name" ; then
+            # Ensure the determined target device is really a block device and not write-protected:
+            if test -b "$preferred_target_device_name" && ! is_write_protected "$preferred_target_device_name"; then
                 add_mapping "$orig_device" "$preferred_target_device_name"
                 LogPrint "Using $preferred_target_device_name (same name and same size) for recreating $orig_device"
                 # Continue with next original device in the LAYOUT_FILE:
@@ -147,8 +147,8 @@ while read keyword orig_device orig_size junk ; do
         is_mapping_target "$preferred_target_device_name" && continue
         # Use the current one if it is of same size as the old one:
         if test "$orig_size" -eq "$current_size" ; then
-            # Ensure the determined target device is really a block device:
-            if test -b "$preferred_target_device_name" ; then
+            # Ensure the determined target device is really a block device and not write-protected:
+            if test -b "$preferred_target_device_name" && ! is_write_protected "$preferred_target_device_name"; then
                 add_mapping "$orig_device" "$preferred_target_device_name"
                 LogPrint "Using $preferred_target_device_name (same size) for recreating $orig_device"
                 # Break looping over all current block devices to find one
