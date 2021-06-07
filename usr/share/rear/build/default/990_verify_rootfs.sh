@@ -224,10 +224,10 @@ for program in "${PROGS[@]}" ; do
     # or 'type ""' with empty argument fails
     # so both result unwanted error messages and unwanted proceeding
     # cf. https://github.com/rear/rear/issues/2372
-    test $program || continue
+    has_binary $program || continue
     # There are many programs in the PROGS array that may or may not exist on the original system
     # so that only those programs in the PROGS array that exist on the original system are tested:
-    type $program || continue
+    has_binary $program || continue
     # Use the basename because the path within the recovery system is usually different compared to the path on the original system:
     program=$( basename $program )
     # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120.

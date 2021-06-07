@@ -462,18 +462,33 @@ function LogToSyslog () {
     logger -t rear -i "${MESSAGE_PREFIX}$*"
 }
 
+# Invoke a command which is expected to output a message on stderr as part of its normal operation.
+# The stderr message is suppressed normally, but logged in verbose (and above) logging modes.
+function expect_stderr() {
+    local stderr_output exit_status
+    if [[ "$VERBOSE" ]]; then
+        { stderr_output=$("$@" 2>&1 1>&9-) ;} 9>&1
+        exit_status=$?
+        [[ -n "$stderr_output" ]] && Log "[THIS MESSAGE IS EXPECTED] $stderr_output"
+    else
+        "$@" 2>/dev/null
+        exit_status=$?
+    fi
+    return $exit_status
+}
+
 # Check if any of the arguments is executable (logical OR condition).
 # Using plain "type" without any option because has_binary is intended
 # to know if there is a program that one can call regardless if it is
 # an alias, builtin, function, or a disk file that would be executed
 # see https://github.com/rear/rear/issues/729
 function has_binary () {
-    for bin in $@ ; do
+    for bin in "$@"; do
         # Suppress success output via stdout which is crucial when has_binary is called
         # in other functions that provide their intended function results via stdout
         # to not pollute intended function results with intermixed has_binary stdout
-        # (e.g. the RequiredSharedObjects function) but keep failure output via stderr:
-        type $bin 1>/dev/null && return 0
+        # (e.g. the RequiredSharedObjects function) but handle failure output via stderr:
+        expect_stderr type "$bin" 1>/dev/null && return 0
     done
     return 1
 }
