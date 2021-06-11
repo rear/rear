@@ -30,10 +30,10 @@ case $RSYNC_PROTO in
     ;;
 
     (rsync)
-    Log "$BACKUP_PROG -a ${TMP_DIR}/rsync/${RSYNC_PREFIX}/ ${BACKUP_RSYNC_OPTIONS[@]} ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/"
+    Log "$BACKUP_PROG -a ${TMP_DIR}/rsync/${RSYNC_PREFIX}/ ${BACKUP_RSYNC_OPTIONS[*]} ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/"
     # FIXME: Add an explanatory comment why "2>/dev/null" is useful here
     # or remove it according to https://github.com/rear/rear/issues/1395
-    $BACKUP_PROG -a "${TMP_DIR}/rsync/${RSYNC_PREFIX}/" ${BACKUP_RSYNC_OPTIONS[@]} "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/" 2>/dev/null \
+    $BACKUP_PROG -a "${TMP_DIR}/rsync/${RSYNC_PREFIX}/" "${BACKUP_RSYNC_OPTIONS[@]}" "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/" 2>/dev/null \
         || Error "Could not copy '${RESULT_FILES[@]}' to $OUTPUT_URL location"
     ;;
 

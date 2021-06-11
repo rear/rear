@@ -13,7 +13,7 @@ case $RSYNC_PROTO in
 		;;
 
 	(rsync)
-		$BACKUP_PROG -a $v -r "${TMP_DIR}/rsync/${RSYNC_PREFIX}" ${BACKUP_RSYNC_OPTIONS[@]} "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/" >/dev/null \
+		$BACKUP_PROG -a $v -r "${TMP_DIR}/rsync/${RSYNC_PREFIX}" "${BACKUP_RSYNC_OPTIONS[@]}" "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/" >/dev/null \
                     || Error "Could not create '${RSYNC_PATH}/${RSYNC_PREFIX}' on remote ${RSYNC_HOST}"
 		;;
 

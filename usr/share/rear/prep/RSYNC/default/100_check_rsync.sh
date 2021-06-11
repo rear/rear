@@ -88,8 +88,8 @@ fi
 case "$RSYNC_PROTO" in
 
     (rsync)
-        Log "Test: $BACKUP_PROG ${BACKUP_RSYNC_OPTIONS[@]} ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/"
-        $BACKUP_PROG ${BACKUP_RSYNC_OPTIONS[@]} ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/ >/dev/null \
+        Log "Test: $BACKUP_PROG ${BACKUP_RSYNC_OPTIONS[*]} ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/"
+        $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/ >/dev/null \
             || Error "Rsync daemon not running on $RSYNC_HOST"
         ;;
 
