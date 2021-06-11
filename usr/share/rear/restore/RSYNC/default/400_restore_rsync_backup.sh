@@ -7,9 +7,6 @@ get_size() {
 local backup_prog_rc
 local restore_log_message
 
-mkdir -p "${TMP_DIR}/rsync/${NETFS_PREFIX}"
-StopIfError "Could not mkdir '$TMP_DIR/rsync/${NETFS_PREFIX}'"
-
 LogPrint "Restoring $BACKUP_PROG archive from '${RSYNC_HOST}:${RSYNC_PATH}'"
 
 ProgressStart "Restore operation"
