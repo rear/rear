@@ -2,6 +2,8 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
+local backup_prog_rc
+
 Log "Include list:"
 while read -r ; do
 	Log "  $REPLY"
@@ -113,12 +115,12 @@ ProgressStop
 wait $BackupPID
 
 transfertime="$((SECONDS-starttime))"
-_rc="$(cat $TMP_DIR/retval)"
+backup_prog_rc="$(cat $TMP_DIR/retval)"
 
 sleep 1
 # everyone should see this warning, even if not verbose
-test "$_rc" -gt 0 && LogPrintError "WARNING !
-There was an error (${rsync_err_msg[$_rc]}) during archive creation.
+test "$backup_prog_rc" -gt 0 && LogPrintError "WARNING !
+There was an error (${rsync_err_msg[$backup_prog_rc]}) during archive creation.
 Please check the archive and see '$RUNTIME_LOGFILE' for more information.
 
 Since errors are often related to files that cannot be saved by
@@ -128,7 +130,7 @@ verify the backup yourself before trusting it !
 "
 
 _message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log)"
-if [ $_rc -eq 0 -a "$_message" ] ; then
+if [ $backup_prog_rc -eq 0 -a "$_message" ] ; then
 	LogPrint "$_message in $transfertime seconds."
 elif [ "$size" ]; then
 	LogPrint "Archived $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"

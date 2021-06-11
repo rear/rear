@@ -4,6 +4,8 @@ get_size() {
 	echo $( stat --format '%s' "$TARGET_FS_ROOT/$1" )
 }
 
+local backup_prog_rc
+
 mkdir -p "${TMP_DIR}/rsync/${NETFS_PREFIX}"
 StopIfError "Could not mkdir '$TMP_DIR/rsync/${NETFS_PREFIX}'"
 
@@ -77,18 +79,18 @@ transfertime="$((SECONDS-starttime))"
 wait $BackupPID || LogPrintError "Restore job returned a nonzero exit code $?"
 # harvest the actual return code of rsync. Finishing the pipeline with an error code above is actually unlikely,
 # because rsync is not the last command in it. But error returns from rsync are common and must be handled.
-_rc="$(cat $TMP_DIR/retval)"
+backup_prog_rc="$(cat $TMP_DIR/retval)"
 
 sleep 1
-test "$_rc" -gt 0 && LogPrintError "WARNING !
-There was an error (${rsync_err_msg[$_rc]}) while restoring the archive.
+test "$backup_prog_rc" -gt 0 && LogPrintError "WARNING !
+There was an error (${rsync_err_msg[$backup_prog_rc]}) while restoring the archive.
 Please check '$RUNTIME_LOGFILE' for more information. You should also
 manually check the restored system to see whether it is complete.
 "
 
 _message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log)"
 
-if [ $_rc -eq 0 -a "$_message" ] ; then
+if [ $backup_prog_rc -eq 0 -a "$_message" ] ; then
         LogPrint "$_message in $transfertime seconds."
 elif [ "$size" ]; then
         LogPrint "Restored $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"

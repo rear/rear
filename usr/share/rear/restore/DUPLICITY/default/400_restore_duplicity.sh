@@ -5,6 +5,7 @@
 # Restore from remote backup via DUPLICIY over rsync
 
 if [ "$BACKUP_PROG" = "duplicity" ]; then
+    local backup_prog_rc
 
     LogPrint "========================================================================"
     LogPrint "Restoring backup with $BACKUP_PROG from '$BACKUP_DUPLICITY_URL'"
@@ -49,7 +50,8 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
         LogPrint "with CMD: $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
         $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --force --tempdir="$DUPLICITY_TEMPDIR" $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT 0<&6 | tee $TMP_DIR/duplicity-restore.log
     fi
-    _rc=$?
+    # FIXME: this collects the exit code from "tee", not from $DUPLICITY_PROG
+    backup_prog_rc=$?
 
     transfertime="$((SECONDS-$starttime))"
     sleep 1
@@ -65,7 +67,7 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     LogPrint "========================================================================"
 
 
-    if [ "$_rc" -gt 0 ]; then
+    if [ "$backup_prog_rc" -gt 0 ]; then
         LogPrint "WARNING !
     There was an error while restoring the archive.
     Please check '$RUNTIME_LOGFILE' and $TMP_DIR/duplicity-restore.log for more information.
@@ -78,7 +80,7 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
         LogPrint "$_message"
     fi
 
-    if [ $_rc -eq 0 ] ; then
+    if [ $backup_prog_rc -eq 0 ] ; then
         LogPrint "Restore completed in $transfertime seconds."
     fi
 
