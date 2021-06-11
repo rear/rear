@@ -2,6 +2,9 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 # try to grab the rsync protocol version of rsync on the remote server
+
+local remote_mountpoint
+
 if [ -z "$RSYNC_PROTOCOL_VERSION" ]; then
 
     case $RSYNC_PROTO in
@@ -37,9 +40,9 @@ if [ "${RSYNC_USER}" != "root" ]; then
             Error "rsync --fake-super not possible on system ($RSYNC_HOST) (no xattrs compiled in rsync)"
         else
             # when using --fake-super we must have user_xattr mount options on the remote mntpt
-            _mntpt=$(ssh ${RSYNC_USER}@${RSYNC_HOST} 'cd ${RSYNC_PATH}; df -P .' 2>/dev/null | tail -1 | awk '{print $6}')
+            remote_mountpoint=$(ssh ${RSYNC_USER}@${RSYNC_HOST} 'cd ${RSYNC_PATH}; df -P .' 2>/dev/null | tail -1 | awk '{print $6}')
             ssh ${RSYNC_USER}@${RSYNC_HOST} "cd ${RSYNC_PATH} && touch .is_xattr_supported && setfattr -n user.comment -v 'File created by ReaR to test if this filesystems supports extended attributes.' .is_xattr_supported && getfattr -n user.comment .is_xattr_supported 1>/dev/null; find .is_xattr_supported -empty -delete"
-            StopIfError "Remote file system $_mntpt does not have user_xattr mount option set!"
+            StopIfError "Remote file system $remote_mountpoint does not have user_xattr mount option set!"
             #BACKUP_RSYNC_OPTIONS+=( --xattrs --rsync-path="rsync --fake-super" )
             # see issue #366 for explanation of removing --xattrs
             BACKUP_RSYNC_OPTIONS+=( --rsync-path="rsync --fake-super" )
