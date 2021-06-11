@@ -41,4 +41,4 @@ esac
 
 # cleanup the temporary space (need it for the log file during backup)
 rm -rf "${TMP_DIR}/rsync/${RSYNC_PREFIX}/"
-LogIfError "Could not cleanup temoprary rsync space: ${TMP_DIR}/rsync/${RSYNC_PREFIX}/"
+LogIfError "Could not cleanup temporary rsync space: ${TMP_DIR}/rsync/${RSYNC_PREFIX}/"
