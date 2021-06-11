@@ -5,6 +5,7 @@ get_size() {
 }
 
 local backup_prog_rc
+local restore_log_message
 
 mkdir -p "${TMP_DIR}/rsync/${NETFS_PREFIX}"
 StopIfError "Could not mkdir '$TMP_DIR/rsync/${NETFS_PREFIX}'"
@@ -88,10 +89,10 @@ Please check '$RUNTIME_LOGFILE' for more information. You should also
 manually check the restored system to see whether it is complete.
 "
 
-_message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log)"
+restore_log_message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log)"
 
-if [ $backup_prog_rc -eq 0 -a "$_message" ] ; then
-        LogPrint "$_message in $transfertime seconds."
+if [ $backup_prog_rc -eq 0 -a "$restore_log_message" ] ; then
+        LogPrint "$restore_log_message in $transfertime seconds."
 elif [ "$size" ]; then
         LogPrint "Restored $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"
 fi

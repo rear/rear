@@ -6,6 +6,7 @@
 
 if [ "$BACKUP_PROG" = "duplicity" ]; then
     local backup_prog_rc
+    local restore_log_message
 
     LogPrint "========================================================================"
     LogPrint "Restoring backup with $BACKUP_PROG from '$BACKUP_DUPLICITY_URL'"
@@ -74,10 +75,10 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     You should also manually check the restored system to see whether it is complete.
     "
 
-        _message="$(tail -14 ${TMP_DIR}/duplicity-restore.log)"
+        restore_log_message="$(tail -14 ${TMP_DIR}/duplicity-restore.log)"
 
         LogPrint "Last 14 Lines of ${TMP_DIR}/duplicity-restore.log:"
-        LogPrint "$_message"
+        LogPrint "$restore_log_message"
     fi
 
     if [ $backup_prog_rc -eq 0 ] ; then
