@@ -37,8 +37,7 @@ local backup_prog_rc
 		# probably using the BACKUP=NETFS workflow instead
 		if [ -d "${opath}" ]; then
 			if [ ! -f "${opath}/selinux.autorelabel" ]; then
-				> "${opath}/selinux.autorelabel"
-				StopIfError "Failed to create selinux.autorelabel on ${opath}"
+				> "${opath}/selinux.autorelabel" || Error "Failed to create selinux.autorelabel on ${opath}"
 			fi
 		fi
 		;;
