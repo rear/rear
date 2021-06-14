@@ -12,8 +12,7 @@ if [ -z "$RSYNC_PROTOCOL_VERSION" ]; then
     (ssh)
         ssh ${RSYNC_USER}@${RSYNC_HOST} rsync --version >"$TMP_DIR/rsync_protocol" 2>&1 \
             || Error "Secure shell connection not setup properly [$RSYNC_USER@$RSYNC_HOST]"
-        grep -q "protocol version" "$TMP_DIR/rsync_protocol"
-        if [ $? -eq 0 ]; then
+        if grep -q "protocol version" "$TMP_DIR/rsync_protocol" ; then
             RSYNC_PROTOCOL_VERSION=$(grep 'protocol version' "$TMP_DIR/rsync_protocol" | awk '{print $6}')
         else
             RSYNC_PROTOCOL_VERSION=29   # being conservative (old rsync version < 3.0)
