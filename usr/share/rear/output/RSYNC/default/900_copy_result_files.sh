@@ -5,7 +5,7 @@ LogPrint "Copying resulting files to $OUTPUT_URL location"
 
 # if called as mkbackuponly then we just don't have any result files.
 if test "$RESULT_FILES" ; then
-    Log "Copying files '${RESULT_FILES[@]}' to $OUTPUT_URL location"
+    Log "Copying files '${RESULT_FILES[*]}' to $OUTPUT_URL location"
     cp $v "${RESULT_FILES[@]}" "${TMP_DIR}/rsync/${RSYNC_PREFIX}/" \
         || Error "Could not copy files to local rsync location"
 fi
@@ -26,7 +26,7 @@ case $RSYNC_PROTO in
     # FIXME: Add an explanatory comment why "2>/dev/null" is useful here
     # or remove it according to https://github.com/rear/rear/issues/1395
     $BACKUP_PROG -a "${TMP_DIR}/rsync/${RSYNC_PREFIX}/" "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/" 2>/dev/null \
-        || Error "Could not copy '${RESULT_FILES[@]}' to $OUTPUT_URL location"
+        || Error "Could not copy '${RESULT_FILES[*]}' to $OUTPUT_URL location"
     ;;
 
     (rsync)
@@ -34,7 +34,7 @@ case $RSYNC_PROTO in
     # FIXME: Add an explanatory comment why "2>/dev/null" is useful here
     # or remove it according to https://github.com/rear/rear/issues/1395
     $BACKUP_PROG -a "${TMP_DIR}/rsync/${RSYNC_PREFIX}/" "${BACKUP_RSYNC_OPTIONS[@]}" "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/" 2>/dev/null \
-        || Error "Could not copy '${RESULT_FILES[@]}' to $OUTPUT_URL location"
+        || Error "Could not copy '${RESULT_FILES[*]}' to $OUTPUT_URL location"
     ;;
 
 esac
