@@ -120,13 +120,12 @@ backup_prog_rc="$(cat $TMP_DIR/retval)"
 
 sleep 1
 # everyone should see this warning, even if not verbose
-test "$backup_prog_rc" -gt 0 && LogPrintError "WARNING !
+test "$backup_prog_rc" -gt 0 && Error "
 There was an error (${rsync_err_msg[$backup_prog_rc]}) during backup creation.
 Please check the destination and see '$RUNTIME_LOGFILE' for more information.
 
-Since errors are often related to files that cannot be saved by
-$BACKUP_PROG, we will continue the $WORKFLOW process. However, you MUST
-verify the backup yourself before trusting it !
+If the error is related to files that cannot and should not be saved by
+$BACKUP_PROG, they should be excluded from the backup.
 
 "
 
