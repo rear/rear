@@ -3,6 +3,7 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 local backup_prog_rc
+local backup_log_message
 
 Log "Include list:"
 while read -r ; do
@@ -129,9 +130,9 @@ verify the backup yourself before trusting it !
 
 "
 
-_message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log)"
-if [ $backup_prog_rc -eq 0 -a "$_message" ] ; then
-	LogPrint "$_message in $transfertime seconds."
+backup_log_message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log)"
+if [ $backup_prog_rc -eq 0 -a "$backup_log_message" ] ; then
+	LogPrint "$backup_log_message in $transfertime seconds."
 elif [ "$size" ]; then
 	LogPrint "Archived $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"
 fi
