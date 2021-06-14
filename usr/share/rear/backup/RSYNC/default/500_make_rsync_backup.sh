@@ -14,9 +14,9 @@ while read -r ; do
 	Log " $REPLY"
 done < $TMP_DIR/backup-exclude.txt
 
-LogPrint "Creating $BACKUP_PROG archive on '${RSYNC_HOST}:${RSYNC_PATH}'"
+LogPrint "Creating $BACKUP_PROG backup on '${RSYNC_HOST}:${RSYNC_PATH}'"
 
-ProgressStart "Running archive operation"
+ProgressStart "Running backup operation"
 (
 	case "$(basename $BACKUP_PROG)" in
 
@@ -99,7 +99,7 @@ case "$(basename $BACKUP_PROG)" in
 			;;
 			esac
 
-			ProgressInfo "Archived $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
+			ProgressInfo "Backed up $((size/1024/1024)) MiB [avg $((size/1024/(SECONDS-starttime))) KiB/sec]"
 		done
 		;;
 
@@ -121,8 +121,8 @@ backup_prog_rc="$(cat $TMP_DIR/retval)"
 sleep 1
 # everyone should see this warning, even if not verbose
 test "$backup_prog_rc" -gt 0 && LogPrintError "WARNING !
-There was an error (${rsync_err_msg[$backup_prog_rc]}) during archive creation.
-Please check the archive and see '$RUNTIME_LOGFILE' for more information.
+There was an error (${rsync_err_msg[$backup_prog_rc]}) during backup creation.
+Please check the destination and see '$RUNTIME_LOGFILE' for more information.
 
 Since errors are often related to files that cannot be saved by
 $BACKUP_PROG, we will continue the $WORKFLOW process. However, you MUST
@@ -134,6 +134,6 @@ backup_log_message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log)"
 if [ $backup_prog_rc -eq 0 -a "$backup_log_message" ] ; then
 	LogPrint "$backup_log_message in $transfertime seconds."
 elif [ "$size" ]; then
-	LogPrint "Archived $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"
+	LogPrint "Backed up $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"
 fi
 

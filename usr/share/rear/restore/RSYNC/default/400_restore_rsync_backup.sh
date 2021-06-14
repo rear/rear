@@ -7,7 +7,7 @@ get_size() {
 local backup_prog_rc
 local restore_log_message
 
-LogPrint "Restoring $BACKUP_PROG archive from '${RSYNC_HOST}:${RSYNC_PATH}'"
+LogPrint "Restoring $BACKUP_PROG backup from '${RSYNC_HOST}:${RSYNC_PATH}'"
 
 ProgressStart "Restore operation"
 (
@@ -81,7 +81,7 @@ backup_prog_rc="$(cat $TMP_DIR/retval)"
 
 sleep 1
 test "$backup_prog_rc" -gt 0 && LogPrintError "WARNING !
-There was an error (${rsync_err_msg[$backup_prog_rc]}) while restoring the archive.
+There was an error (${rsync_err_msg[$backup_prog_rc]}) while restoring the backup.
 Please check '$RUNTIME_LOGFILE' for more information. You should also
 manually check the restored system to see whether it is complete.
 "
