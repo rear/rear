@@ -97,3 +97,5 @@ if [ $backup_prog_rc -eq 0 -a "$restore_log_message" ] ; then
 elif [ "$size" ]; then
         LogPrint "Restored $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"
 fi
+
+return $backup_prog_rc
