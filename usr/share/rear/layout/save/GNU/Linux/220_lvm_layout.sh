@@ -103,12 +103,7 @@ local lvs_exit_code
         pdev=$( get_device_name $pdev )
 
         # Output lvmdev entry to DISKLAYOUT_FILE:
-        # With the above example the output is:
-        # lvmdev /dev/system /dev/sda1 7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7 41940992
-        echo "lvmdev /dev/$vgrp $pdev $uuid $size"
-
-        # After the 'lvmdev' line was written to disklayout.conf so that the user can inspect it
-        # check that the required positional parameters in the 'lvmdev' line are non-empty
+        # Check that the required positional parameters in the 'lvmdev' line are non-empty
         # because an empty positional parameter would result an invalid 'lvmdev' line
         # which would cause invalid parameters are 'read' as input during "rear recover"
         # cf. "Verifying ... 'lvm...' entries" in layout/save/default/950_verify_disklayout_file.sh
@@ -117,13 +112,24 @@ local lvs_exit_code
         # so that this also checks that the variables do not contain blanks or more than one word
         # because blanks (actually $IFS characters) are used as field separators in disklayout.conf
         # which means the positional parameter values must be exactly one non-empty word.
-        # Two separated simple 'test $vgrp && test $pdev' commands are used here because
-        # 'test $vgrp -a $pdev' does not work when $vgrp is empty or only blanks
-        # because '-a' has two different meanings: "EXPR1 -a EXPR2" and "-a FILE" (see "help test")
-        # so that when $vgrp is empty 'test $vgrp -a $pdev' tests if file $pdev exists
-        # which is usually true because $pdev is usually a partition device node (e.g. /dev/sda1)
-        # so that when $vgrp is empty 'test $vgrp -a $pdev' would falsely succeed:
-        test $vgrp && test $pdev || Error "LVM 'lvmdev' entry in $DISKLAYOUT_FILE where volume_group or device is empty or more than one word"
+        test $pdev || Error "Cannot make 'lvmdev' entry in disklayout.conf (PV device '$pdev' empty or more than one word)"
+        if ! test $vgrp ; then
+            # Valid $pdev but invalid $vgrp (empty or more than one word):
+            # When $vgrp is empty it means it is a PV that is not part of a VG so the PV exists but it is not used.
+            # PVs that are not part of a VG are documented as comment in disklayout.conf but they are not recreated
+            # because they were not used on the original system so there is no need to recreate them by "rear recover"
+            # (the user can manually recreate them later in his recreated system when needed)
+            # cf. https://github.com/rear/rear/issues/2596
+            DebugPrint "Skipping PV $pdev that is not part of a valid VG (VG '$vgrp' empty or more than one word)"
+            echo "# Skipping PV $pdev that is not part of a valid VG (VG '$vgrp' empty or more than one word):"
+            contains_visible_char "$vgrp" || vgrp='<missing_VG>'
+            echo "# lvmdev /dev/$vgrp $pdev $uuid $size"
+            # Continue with the next line in the output of "lvm pvdisplay -c"
+            continue
+        fi
+        # With the above example the output is:
+        # lvmdev /dev/system /dev/sda1 7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7 41940992
+        echo "lvmdev /dev/$vgrp $pdev $uuid $size"
 
     done
     # Check the exit code of "lvm pvdisplay -c"
@@ -161,8 +167,15 @@ local lvs_exit_code
         # lvmgrp /dev/system 4096 5119 20967424
         echo "lvmgrp /dev/$vgrp $extentsize $nrextents $size"
 
-        # Check that the required positional parameters in the 'lvmgrp' line are non-empty
-        # cf. the code above to "check that the required positional parameters in the 'lvmdev' line are non-empty":
+        # Check that the required positional parameters in the 'lvmgrp' line are non-empty.
+        # The tested variables are intentionally not quoted here, cf. the code above to
+        # "check that the required positional parameters in the 'lvmdev' line are non-empty".
+        # Two separated simple 'test $vgrp && test $extentsize' commands are used here because
+        # 'test $vgrp -a $extentsize' does not work when $vgrp is empty or only blanks
+        # because '-a' has two different meanings: "EXPR1 -a EXPR2" and "-a FILE" (see "help test")
+        # so with empty $vgrp it becomes 'test -a $extentsize' that tests if a file $extentsize exists
+        # which is unlikely to be true but it is not impossible that a file $extentsize exists
+        # so when $vgrp is empty (or blanks) 'test $vgrp -a $extentsize' might falsely succeed:
         test $vgrp && test $extentsize || Error "LVM 'lvmgrp' entry in $DISKLAYOUT_FILE where volume_group or extentsize is empty or more than one word"
 
     done
@@ -190,10 +203,54 @@ local lvs_exit_code
     # Example output of "lvs --separator=':' --noheadings --units b --nosuffix -o $lvs_fields"
     # with lvs_fields="origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size"
     # i.e. when the 'lv_layout' field is supported:
-    #   :root:system:19927138304:linear::0:1:0:19927138304
-    #   :swap:system:1535115264:linear::0:1:0:1535115264
-    # There are two leading blanks in the output (at least on SLES12-SP4 with LVM 2.02.180).
-    lvm lvs --separator=':' --noheadings --units b --nosuffix -o $lvs_fields | while read line ; do
+    
+    #   :home:system:6148849664:linear::0:1:0:6148849664
+    #   :root:system:14050918400:linear::0:1:0:14050918400
+    #   :swap:system:1262485504:linear::0:1:0:1262485504
+    # There are two leading blanks in the output (at least on SLES12-SP4 with LVM 2.02.180 and SLES15-SP3 with LVM 2.03.05).
+    # The 'lvs' output lines ordering does not match the ordering of the LVs kernel device nodes /dev/dm-N
+    #   # lsblk -ipbo NAME,KNAME,TYPE,FSTYPE,SIZE,MOUNTPOINT /dev/sda2
+    #   NAME                      KNAME     TYPE FSTYPE             SIZE MOUNTPOINT
+    #   /dev/sda2                 /dev/sda2 part LVM2_member 21465382400
+    #   |-/dev/mapper/system-swap /dev/dm-0 lvm  swap         1262485504 [SWAP]
+    #   |-/dev/mapper/system-root /dev/dm-1 lvm  btrfs       14050918400 /
+    #   `-/dev/mapper/system-home /dev/dm-2 lvm  xfs          6148849664 /home
+    # This means during "rear recover" the LVs would get recreated according to the ordering of the 'lvs' output lines
+    # because during "rear recover" LVs get recreated according to the ordering of the 'lvmvol' lines in disklayout.conf
+    # so the recreated LVs get different kernel device nodes /dev/dm-N compared to what there was on the original system.
+    # This did not cause any issue at ReaR so far so it seems safe to assume it does not matter in practice
+    # what kernel device node /dev/dm-0 /dev/dm-1 /dev/dm-2 belongs to the LVs
+    # because in practice LVs seem to be always accessed via their symlinks
+    # /dev/mapper/system-swap /dev/mapper/system-root /dev/mapper/system-home
+    # cf. https://github.com/rear/rear/pull/2291#issuecomment-567933705
+    # Therefore we can re-order the 'lvs' output lines as we need it to make "rear recover" behave more fail safe
+    # when it is run on a bit smaller replacement disk(s) so one or more LVs need to be automatically shrinked a bit.
+    # The automated LVs shrinking is not intended when replacement disk(s) are substantially smaller.
+    # To migrate onto a substantially smaller replacement disk the user must in advance
+    # manually adapt his disklayout.conf file before he runs "rear recover".
+    # The basic idea to automatically shrink LVs is to implement a "minimal changes" approach
+    # cf. "minimal changes" in layout/prepare/default/420_autoresize_last_partitions.sh
+    # where the "minimal changes" approach is here to only shrink one single LV per disk if needed.
+    # A LV needs to be shrinked only if it is not possible to recreate all LVs with their specified size
+    # i.e. when during "rear recover" 'lvcreate' fails with "Volume group ... has insufficient free space".
+    # In this case 'lvcreate' is called again where the exact size option of the form '-L 123456b'
+    # is replaced with an option to use all remaining free space in the VG via '-l 100%FREE'
+    # so e.g. 'lvcreate -L 123456b -n LV VG' becomes 'lvcreate -l 100%FREE -n LV VG'
+    # see layout/prepare/GNU/Linux/110_include_lvm_code.sh
+    # The most reasonable LVs that can be shrinked a bit with a "minimal changes" approach are the biggest LVs
+    # because we assume that the data of the backup can still be restored into a big LV after it was shrinked a bit.
+    # So we sort the 'lvs' output lines by the size of the LVs (4th field in the output lines, 1st field is two blanks)
+    # so that the biggest LVs get listed last in disklayout.conf and get recreated last during "rear recover"
+    # so 'lvcreate' may only fail with "Volume group ... has insufficient free space" for some of the biggest LVs.
+    # Additionally it had happened during my <jsmeix@suse.de> initial tests that shrinking the 'swap' LV somehow caused
+    # that the recreated system did not boot (boot screen showed GRUB but there it hung with constant 100% CPU usage)
+    # so automatically shrinking only the biggest LVs avoids that a relatively small 'swap' LV gets shrinked.
+    # With 'sort -n -t ':' -k 4' the above 'lvs' output lines become
+    #   :swap:system:1262485504:linear::0:1:0:1262485504
+    #   :home:system:6148849664:linear::0:1:0:6148849664
+    #   :root:system:14050918400:linear::0:1:0:14050918400
+    # so only the 'root' LV may get automatically shrinked if needed.
+    lvm lvs --separator=':' --noheadings --units b --nosuffix -o $lvs_fields | sort -n -t ':' -k 4 | while read line ; do
 
         # Output lvmvol header only once to DISKLAYOUT_FILE:
         if is_false $header_printed ; then
@@ -305,7 +362,8 @@ local lvs_exit_code
             fi
             already_processed_lvs+=( "$vg/$lv" )
             # Check that the required positional parameters in the 'lvmvol' line are non-empty
-            # cf. the code above to "check that the required positional parameters in the 'lvmdev' line are non-empty":
+            # cf. the code above to "check that the required positional parameters in the 'lvmdev' line are non-empty"
+            # and the code above to "check that the required positional parameters in the 'lvmgrp' line are non-empty":
             test $vg && test $lv && test $size && test $layout || Error "LVM 'lvmvol' entry in $DISKLAYOUT_FILE where volume_group or name or size or layout is empty or more than one word"
         fi
 

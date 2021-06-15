@@ -316,12 +316,20 @@ get_child_components() {
     done
 }
 
-# Return all ancestors of component $1 [ of type $2 ]
+# Return all ancestors of component $1 [ of type $2 [ skipping types $3 during resolution ] ]
 get_parent_components() {
-    declare -a ancestors devlist
-    declare current child parent
+    declare -a ancestors devlist ignoretypes
+    declare current child parent parenttype
 
     devlist=( "$1" )
+    if [[ "$3" ]] ; then
+        # third argument should, if present, be a space-separated list
+        # of types to ignore when walking up the dependency tree.
+        # Convert it to array
+        ignoretypes=( $3 )
+    else
+        ignoretypes=()
+    fi
     while (( ${#devlist[@]} )) ; do
         current=${devlist[0]}
 
@@ -331,6 +339,13 @@ get_parent_components() {
                 ### ...test if we visited them already...
                 if IsInArray "$parent" "${ancestors[@]}" ; then
                     continue
+                fi
+                ### ...test if parent is of a correct type if requested...
+                if [[ ${#ignoretypes[@]} -gt 0 ]] ; then
+                    parenttype=$(get_component_type "$parent")
+                    if IsInArray "$parenttype" "${ignoretypes[@]}" ; then
+                        continue
+                    fi
                 fi
                 ### ...and add them to the list
                 devlist+=( "$parent" )
@@ -359,22 +374,24 @@ get_parent_components() {
 }
 
 # find_devices <other>
+# ${2+"$2"} in the following functions ensures that $2 gets passed down quoted if present
+# and ignored if not present
 # Find the disk device(s) component $1 resides on.
 find_disk() {
-    get_parent_components "$1" "disk"
+    get_parent_components "$1" "disk" ${2+"$2"}
 }
 
 find_multipath() {
-    get_parent_components "$1" "multipath"
+    get_parent_components "$1" "multipath" ${2+"$2"}
 }
 
 find_disk_and_multipath() {
-    find_disk "$1"
-    is_true "$AUTOEXCLUDE_MULTIPATH" || find_multipath "$1"
+    find_disk "$1" ${2+"$2"}
+    is_true "$AUTOEXCLUDE_MULTIPATH" || find_multipath "$1" ${2+"$2"}
 }
 
 find_partition() {
-    get_parent_components "$1" "part"
+    get_parent_components "$1" "part" ${2+"$2"}
 }
 
 # The get_partition_number function
@@ -425,6 +442,54 @@ get_partition_number() {
 
     # Output the trailing digits of the partition block device as its partition number:
     echo $partition_number
+}
+
+# Extract the underlying device name from the full partition device name.
+# Underlying device may be a disk, a multipath device or other devices that can be partitioned.
+# Should we use the information in $LAYOUT_DEPS, like get_parent_component does,
+# instead of string munging?
+function get_device_from_partition() {
+    local partition_block_device
+    local device
+    local partition_number
+
+    partition_block_device=$1
+    test -b "$partition_block_device" || BugError "get_device_from_partition called with '$partition_block_device' that is no block device"
+    partition_number=${2-$(get_partition_number $partition_block_device )}
+    # /dev/sda or /dev/mapper/vol34_part or /dev/mapper/mpath99p or /dev/mmcblk0p
+    device=${partition_block_device%$partition_number}
+
+    # Strip trailing partition remainders like '_part' or '-part' or 'p'
+    # if we have 'mapper' in disk device name:
+    if [[ ${partition_block_device/mapper//} != $partition_block_device ]] ; then
+        # we only expect mpath_partX or mpathpX or mpath-partX
+        case $device in
+            (*p)     device=${device%p} ;;
+            (*-part) device=${device%-part} ;;
+            (*_part) device=${device%_part} ;;
+            (*)      Log "Unsupported kpartx partition delimiter for $partition_block_device"
+        esac
+    fi
+
+    # For eMMC devices the trailing 'p' in the $device value
+    # (as in /dev/mmcblk0p that is derived from /dev/mmcblk0p1)
+    # needs to be stripped (to get /dev/mmcblk0), otherwise the
+    # efibootmgr call fails because of a wrong disk device name.
+    # See also https://github.com/rear/rear/issues/2103
+    if [[ $device = *'/mmcblk'+([0-9])p ]] ; then
+        device=${device%p}
+    fi
+
+    # For NVMe devices the trailing 'p' in the $device value
+    # (as in /dev/nvme0n1p that is derived from /dev/nvme0n1p1)
+    # needs to be stripped (to get /dev/nvme0n1), otherwise the
+    # efibootmgr call fails because of a wrong disk device name.
+    # See also https://github.com/rear/rear/issues/1564
+    if [[ $device = *'/nvme'+([0-9])n+([0-9])p ]] ; then
+        device=${device%p}
+    fi
+
+    test -b "$device" && echo $device
 }
 
 # Returns partition start block or 'unknown'

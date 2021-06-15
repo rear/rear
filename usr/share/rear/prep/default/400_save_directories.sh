@@ -14,7 +14,7 @@ local directories_permissions_owner_group_file="$VAR_DIR/recovery/directories_pe
 # First save directories that are used as mountpoints:
 # FIXME: To exclude unwanted "noise" from mountpoints a simple 'grep -vE "this|that"'
 # is not fail safe because it excludes any lines that contain 'this' or 'that'.
-# Using 'grep -vE "type (this|that) "' makes it look like bloatware code
+# Using 'grep -vE " type (this|that) "' makes it look like bloatware code
 # cf. https://github.com/rear/rear/pull/1459#discussion_r135744282
 # but currently I <jsmeix@suse.de> prefer "bloatware code" that works fail safe
 # over simple code that sometimes fails, cf. "Dirty hacks welcome"
@@ -24,11 +24,53 @@ local directories_permissions_owner_group_file="$VAR_DIR/recovery/directories_pe
 # are considered as unwanted "noise" in this context
 # see https://github.com/rear/rear/pull/1648
 local excluded_fs_types="anon_inodefs|autofs|bdev|cgroup|cgroup2|configfs|cpuset|debugfs|devfs|devpts|devtmpfs|dlmfs|efivarfs|fuse.gvfs-fuse-daemon|fusectl|hugetlbfs|mqueue|nfsd|none|nsfs|overlay|pipefs|proc|pstore|ramfs|rootfs|rpc_pipefs|securityfs|sockfs|spufs|sysfs|tmpfs"
+# Mountpoints of "type autofs" are excluded via excluded_fs_types above.
+# Also exclude mountpoints that are below mountpoints of "type autofs",
+# see https://github.com/rear/rear/issues/2610
+# Such mountpoints are below an ancestor mountpoint that is owned/created by the automounter.
+# It is possible to create a sub-mountpoint below an automounted mountpoint
+# but the fact that the sub-mountpoint is not local means it should be excluded
+# (i.e. there is no need to recreate the non-local sub-mountpoint directory).
+# Furthermore automounted NFS filesystems can cause this script to hang up if NFS server fails
+# because the below 'stat' command may then wait indefinitely for the NFS server to respond.
+# Assume 'mount' shows (excerpts)
+# <something> on /some/mp type autofs (...)
+# <some_NFS_export> on /some/mp/sub_mp type nfs (...)
+# <something_else> on /other/mp type autofs (...)
+# <other_NFS_export> on /other/mp/sub_mp1 type nfs (...)
+# <other_NFS4_export> on /other/mp/sub_mp2 type nfs4 (...)
+# then
+# autofs_mountpoints="/some/mp
+# /other/mp"
+# (there are newlines in between) and
+# autofs_and_below_mountpoints=( /some/mp /some/mp/sub_mp /other/mp /other/mp/sub_mp1 /other/mp/sub_mp2 )
+# and
+# exclude_autofs_and_below_mountpoints="/some/mp|/some/mp/sub_mp|/other/mp|/other/mp/sub_mp1|/other/mp/sub_mp2"
+# otherwise when there is no mountpoint of "type autofs" then exclude_autofs_and_below_mountpoints is empty:
+local exclude_autofs_and_below_mountpoints=''
+local autofs_mountpoints="$( mount | grep " type autofs " | awk '{print $3}' )"
+if test "$autofs_mountpoints" ; then
+    local autofs_and_below_mountpoints=()
+    local autofs_mountpoint
+    for autofs_mountpoint in $autofs_mountpoints ; do
+        # Using findmnt option '-T' but not '-M' which is not supported on Fedora based distributions
+        # at least not on RHEL 7.9 cf. https://github.com/rear/rear/pull/2613#pullrequestreview-654678482
+        autofs_and_below_mountpoints+=( $( findmnt -R -T $autofs_mountpoint -n -o TARGET --raw ) )
+    done
+    exclude_autofs_and_below_mountpoints="$( tr ' ' '|' <<<"${autofs_and_below_mountpoints[@]}" )"
+fi
 # BUILD_DIR can be used in 'grep -vE "this|$BUILD_DIR|that"' because it is never empty (see usr/sbin/rear)
-# because with any empty part 'grep  -vE "this||that"' would output nothing at all:
+# because with any empty part 'grep -vE "this||that"' would output nothing at all:
 local excluded_other_stuff="/sys/|$BUILD_DIR|$USB_DEVICE_FILESYSTEM_LABEL"
 # The trailing space in 'type ($excluded_fs_types) |' is intentional:
-local mountpoints="$( mount | grep -vE "type ($excluded_fs_types) |$excluded_other_stuff" | awk '{print $3}' )"
+local mountpoints
+# Avoid that 'grep -v' outputs nothing when exclude_autofs_and_below_mountpoints is empty
+# i.e. when there is no mountpoint of "type autofs":
+if test "$exclude_autofs_and_below_mountpoints" ; then
+    mountpoints="$( mount | grep -vE " type ($excluded_fs_types) | on ($exclude_autofs_and_below_mountpoints) |$excluded_other_stuff" | awk '{print $3}' )"
+else
+    mountpoints="$( mount | grep -vE " type ($excluded_fs_types) |$excluded_other_stuff" | awk '{print $3}' )"
+fi
 local directory
 for directory in $mountpoints ; do
     # Skip the root directory '/':
@@ -55,8 +97,8 @@ local directoryglob
 for directoryglob in $FHSdirectories ; do
     for directory in $( echo $directoryglob ) ; do
         # Skip when it is already listed in the directories_permissions_owner_group file:
-        grep "^$directory" "$directories_permissions_owner_group_file" 1>&2 && continue
-        # Skip when it is neither a normal directory nor a symbolic links that points to a normal directory
+        grep -q "^$directory " "$directories_permissions_owner_group_file" && continue
+        # Skip when it is neither a normal directory nor a symbolic link that points to a normal directory
         # which means: Skip when it does not exist on the currently running system:
         if ! test -d "$directory" ; then
             Log "FHS directory $directory does not exist"

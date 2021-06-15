@@ -48,3 +48,7 @@ rsync_err_msg=(
 "Error 34"
 "Timeout waiting for daemon connection"
 )
+
+# According issue #2594 we better sleep a few seconds to give the rsync daemon time
+# to wake and getting ready to accept rsync connections:
+sleep 5

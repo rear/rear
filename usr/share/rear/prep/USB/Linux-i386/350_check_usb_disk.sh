@@ -1,15 +1,15 @@
 
-test "$USB_DEVICE" || Error "USB device (USB_DEVICE) is not set."
+test "$USB_DEVICE" || Error "USB or disk device (USB_DEVICE) is not set."
 
 # Attempt to find the real USB device by trying its parent.
 # Return a proper short device name using udev:
 REAL_USB_DEVICE=$( readlink -f $USB_DEVICE )
 
-test -b "$REAL_USB_DEVICE" || Error "USB device '$USB_DEVICE' is not a block device"
+test -b "$REAL_USB_DEVICE" || Error "USB or disk device '$USB_DEVICE' is not a block device"
 
 # Check if the ReaR USB device is not accidentally mounted on other than $BUILD_DIR location:
 if res=( $( grep -v $BUILD_DIR /proc/mounts | grep "^$REAL_USB_DEVICE" ) ) ; then
-    Error "USB device '$REAL_USB_DEVICE' is already mounted on '${res[1]}'"
+    Error "USB or disk device '$REAL_USB_DEVICE' is already mounted on '${res[1]}'"
 fi
 
 # Try to find the parent device (as we don't want to write MBR to a partition)
@@ -30,8 +30,8 @@ elif [ "$TEMP_USB_DEVICE" -a -d "/sys/block/$TEMP_USB_DEVICE" ]; then
 elif [ -z "$TEMP_USB_DEVICE" ] || [ -z "$RAW_USB_DEVICE" ] ; then
     RAW_USB_DEVICE="/dev/$(my_udevinfo -q name -n "$REAL_USB_DEVICE")"
 else
-    BugError "Unable to determine raw USB device for $REAL_USB_DEVICE"
+    BugError "Unable to determine raw device for $REAL_USB_DEVICE"
 fi
 
-test "$RAW_USB_DEVICE" -a -b "$RAW_USB_DEVICE" || Error "Unable to determine raw USB device for $REAL_USB_DEVICE"
+test "$RAW_USB_DEVICE" -a -b "$RAW_USB_DEVICE" || Error "Unable to determine raw device for $REAL_USB_DEVICE"
 

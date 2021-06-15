@@ -30,18 +30,17 @@ WORKFLOW_udev () {
 
     # Set USB_DEVICE based on ID_FS_LABEL or UDEV DEVNAME
     if [[ "$ID_FS_LABEL" && -b "/dev/disk/by-label/$ID_FS_LABEL" ]]; then
-        Log "Using USB device based on udev ID_FS_LABEL '$ID_FS_LABEL'"
+        Log "Using USB or disk device based on udev ID_FS_LABEL '$ID_FS_LABEL'"
         USB_DEVICE="/dev/disk/by-label/$ID_FS_LABEL"
     elif [[ "$DEVNAME" && -b "$DEVNAME" ]]; then
-        Log "Using USB device based on udev DEVNAME '$DEVNAME'"
+        Log "Using USB or disk device based on udev DEVNAME '$DEVNAME'"
         USB_DEVICE="$DEVNAME"
     else
-        Log "We cannot determine USB device from udev, using configuration"
+        Log "We cannot determine USB or disk device from udev, using configuration"
     fi
 
     # If udev workflow does not exist, bail out loudly
-    has_binary WORKFLOW_$WORKFLOW
-    StopIfError "Udev workflow '$UDEV_WORKFLOW' does not exist"
+    has_binary WORKFLOW_$WORKFLOW || Error "Udev workflow '$UDEV_WORKFLOW' does not exist"
 
     # Turn the UID led on
     if has_binary hpasmcli && [[ "$UDEV_UID_LED" =~ ^[yY1] ]]; then
@@ -63,12 +62,12 @@ WORKFLOW_udev () {
     # Suspend USB port (works fine on RHEL6, fails on RHEL5 and older)
     if [[ "$DEVPATH" && "$UDEV_SUSPEND" =~ ^[yY1] ]]; then
         path="/sys$DEVPATH"
-        Log "Trying to suspend USB device at '$path'"
+        Log "Trying to suspend USB or disk device at '$path'"
         while [[ "$path" != "/sys" && ! -w "$path/power/level" ]]; do
             path=$(dirname $path)
         done
         if [[ -w "$path/power/level" ]]; then
-            Log "Suspending USB device at '$path'"
+            Log "Suspending USB or disk device at '$path'"
             echo -n suspend >$path/power/level
         fi
     fi

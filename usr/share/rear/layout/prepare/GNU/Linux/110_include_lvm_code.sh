@@ -128,7 +128,7 @@ elif lvm vgcfgrestore --force -f "$VAR_DIR/layout/lvm/${vg}.cfg" $vg >&2 ; then
 # It failed also ... restore using 'vgcreate/lvcreate' commands
 #
 else
-    LogPrint "Warning: could not restore LVM configuration using 'vgcfgrestore'. Using traditional 'vgcreate/lvcreate' commands instead..."
+    LogPrint "Could not restore LVM configuration using 'vgcfgrestore'. Using traditional 'vgcreate/lvcreate' commands instead"
 fi
 
 EOF
@@ -139,7 +139,7 @@ EOF
 
 cat >> "$LAYOUT_CODE" <<EOF
 if [ \$create_volume_group -eq 1 ] ; then
-    LogPrint "Creating LVM VG '$vg'; Warning: some properties may not be preserved..."
+    LogPrint "Creating LVM VG '$vg' (some properties may not be preserved)"
     lvm vgremove --force --force --yes $vg >&2 || true
     if [ -e "$vgrp" ] ; then
         rm -rf "$vgrp"
@@ -252,14 +252,32 @@ create_lvmvol() {
         warnraidline=""
     fi
 
+    local fallbacklvopts
+    # Assume lvcreate had failed because of "Volume group ... has insufficient free space"
+    # which usually happens when the replacement disk is a bit smaller than the original disk
+    # so that the following fallback attempt to create a LV could work at least once per VG
+    # which is sufficient when the replacement disk is a bit smaller than the original disk
+    # because then the last LV that is created gets shrinked to the remaining space in the VG.
+    # In the lvopts string replace the exact size option of the form '-L 123456b'
+    # with an option to use all remaining free space in the VG via '-l 100%FREE'
+    # so e.g. 'lvcreate -L 123456b -n LV VG' becomes 'lvcreate -l 100%FREE -n LV VG'
+    fallbacklvopts="$( sed -e 's/-L [0-9b]*/-l 100%FREE/' <<< "$lvopts" )"
+
     cat >> "$LAYOUT_CODE" <<EOF
-
 $ifline
-
-    LogPrint "Creating LVM volume '$vg/$lvname'; Warning: some properties may not be preserved..."
+    LogPrint "Creating LVM volume '$vg/$lvname' (some properties may not be preserved)"
     $warnraidline
-    lvm lvcreate $lvopts $vg <<<y
-
+    if ! lvm lvcreate $lvopts $vg <<<y ; then
+        LogPrintError "Failed to create LVM volume '$vg/$lvname' with lvcreate $lvopts $vg"
+        if lvm lvcreate $fallbacklvopts $vg <<<y ; then
+            LogPrintError "Created LVM volume '$vg/$lvname' using fallback options lvcreate $fallbacklvopts $vg"
+        else
+            LogPrintError "Also failed to create LVM volume '$vg/$lvname' with lvcreate $fallbacklvopts $vg"
+            # Explicit 'false' is needed to let the whole 'if then else fi' command exit with non zero exit state
+            # to let diskrestore.sh abort here as usual when a command fails (diskrestore.sh runs with 'set -e'):
+            false
+        fi
+    fi
 fi
 EOF
 }
