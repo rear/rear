@@ -80,11 +80,15 @@ wait $BackupPID || LogPrintError "Restore job returned a nonzero exit code $?"
 backup_prog_rc="$(cat $TMP_DIR/retval)"
 
 sleep 1
-test "$backup_prog_rc" -gt 0 && LogPrintError "WARNING !
+if test "$backup_prog_rc" -gt 0 ; then
+    # TODO: Shouldn't we tell the user to check ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log as well?
+    LogPrintError "WARNING !
 There was an error (${rsync_err_msg[$backup_prog_rc]}) while restoring the backup.
 Please check '$RUNTIME_LOGFILE' for more information. You should also
 manually check the restored system to see whether it is complete.
 "
+    is_true "$BACKUP_INTEGRITY_CHECK" && Error "Integrity check failed, restore aborted because BACKUP_INTEGRITY_CHECK is enabled"
+fi
 
 restore_log_message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log)"
 
