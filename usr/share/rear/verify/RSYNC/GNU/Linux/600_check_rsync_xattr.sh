@@ -4,7 +4,7 @@
 
 	# if --xattrs is already set; no need to do it again
 	if ! grep -q xattrs <<< "${BACKUP_RSYNC_OPTIONS[*]}" ; then
-		RSYNC_OPTIONS=( "${BACKUP_RSYNC_OPTIONS[@]}" --xattrs )
+		BACKUP_RSYNC_OPTIONS+=( --xattrs )
 	fi
 
 }
