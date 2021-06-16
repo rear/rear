@@ -24,7 +24,7 @@ else
     if [ ${#NSR_ENDTIME[@]} -gt 0 ] ; then
         recover_date="${NSR_ENDTIME[@]}"
         recover_args="-t ${recover_date}"
-        LogUserOutput "The recovery date/time is to/until ${recover_date} ."
+        LogUserOutput "The recovery date/time is set to/until ${recover_date} ."
     else
         recover_args=""
         LogUserOutput "The most recent recovery date/time will be used."
