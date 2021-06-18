@@ -32,7 +32,7 @@ else
 
 fi
 
-if [ "${RSYNC_USER}" != "root" ]; then
+if [ "${RSYNC_USER}" != "root" -a $RSYNC_PROTO = "ssh" ]; then
     if [ $RSYNC_PROTOCOL_VERSION -gt 29 ]; then
         if grep -q "no xattrs" "$TMP_DIR/rsync_protocol"; then
             # no xattrs available in remote rsync, so --fake-super is not possible
