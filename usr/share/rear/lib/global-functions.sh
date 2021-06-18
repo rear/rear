@@ -627,7 +627,7 @@ function mount_url() {
     # eval is required when mount_cmd contains single quoted stuff (e.g. see the above mount_cmd for curlftpfs)
     eval $mount_cmd || Error "Mount command '$mount_cmd' failed."
 
-    AddExitTask "perform_umount_url '$url' '$mountpoint' y"
+    AddExitTask "perform_umount_url '$url' '$mountpoint' lazy"
     return 0
 }
 
@@ -680,17 +680,23 @@ function umount_url() {
     # We do not request lazy umount here because we want umount errors to be reliably reported.
     perform_umount_url $url $mountpoint || Error "Unmounting '$mountpoint' failed."
 
-    RemoveExitTask "perform_umount_url '$url' '$mountpoint' y"
+    RemoveExitTask "perform_umount_url '$url' '$mountpoint' lazy"
 
     remove_temporary_mountpoint '$mountpoint' && RemoveExitTask "remove_temporary_mountpoint '$mountpoint'"
     return 0
 }
 
-### Unmount url $1 at mountpoint $2 [ lazily if $3 is set and normal unmount fails ]
+### Unmount url $1 at mountpoint $2 [ lazily if $3 is set to 'lazy' and normal unmount fails ]
 function perform_umount_url() {
     local url=$1
     local mountpoint=$2
     local lazy=${3:-}
+
+    if test $lazy ; then
+        if test $lazy != "lazy" ; then
+            BugError "lazy = $lazy, but it must have the value of 'lazy' or empty"
+        fi
+    fi
 
     case $(url_scheme $url) in
         (sshfs)
@@ -717,10 +723,17 @@ function perform_umount_url() {
 }
 
 ### Helper which unmounts davfs mountpoint $1 and cleans up the cache,
-### performing lazy unmount if $2 is nonempty and normal unmount fails.
+### performing lazy unmount if $2 = 'lazy' and normal unmount fails.
 function umount_davfs() {
     local mountpoint=$1
     local lazy="${2:-}"
+
+    if test $lazy ; then
+        if test $lazy != "lazy" ; then
+            BugError "lazy = $lazy, but it must have the value of 'lazy' or empty"
+        fi
+    fi
+
     if umount_mountpoint $mountpoint ; then
         # Wait for 3 sek. then remove the cache-dir /var/cache/davfs
         sleep 30
@@ -742,12 +755,18 @@ function umount_davfs() {
     fi
 }
 
-### Unmount mountpoint $1 [ lazily if $2 is nonempty ]
+### Unmount mountpoint $1 [ lazily if $2 = 'lazy' ]
 ### Default implementation for filesystems that don't need anything fancy
 ### For special umount commands use perform_umount_url()
 function umount_mountpoint() {
     local mountpoint=$1
     local lazy=${2:-}
+
+    if test $lazy ; then
+        if test $lazy != "lazy" ; then
+            BugError "lazy = $lazy, but it must have the value of 'lazy' or empty"
+        fi
+    fi
 
     ### First, try a normal unmount,
     Log "Unmounting '$mountpoint'"
@@ -776,7 +795,7 @@ function umount_mountpoint() {
 }
 
 ### Unmount mountpoint $1 lazily
-### Preferably use "umount_mountpoint $mountpoint y", which attempts non-lazy unmount first.
+### Preferably use "umount_mountpoint $mountpoint lazy", which attempts non-lazy unmount first.
 function umount_mountpoint_lazy() {
     local mountpoint=$1
 
