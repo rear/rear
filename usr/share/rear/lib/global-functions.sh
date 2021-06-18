@@ -342,7 +342,44 @@ function url_path() {
     echo /${url_without_scheme#*/}
 }
 
-backup_path() {
+### Returns true if one can upload files to the URL
+function scheme_accepts_files() {
+    local scheme=$1
+    case $scheme in
+        (null|tape|obdr)
+            # tapes do not support uploading arbitrary files, one has to handle them
+            # as special case (usually passing the tape device as argument to tar)
+            # null means do not upload anything anywhere, leave the files under /var/lib/rear/output
+            return 1
+            ;;
+        (*)
+            # most URL schemes support uploading files
+            return 0
+            ;;
+    esac
+}
+
+### Returns true if URLs with the given scheme corresponds to a path inside
+### a mountable fileystem and one can put files directly into it.
+### The actual path will be returned by backup_path() / output_path().
+### If returns false, using backup_path() / output_path() has no sense
+### and one must use a scheme-specific method (like lftp or writing them to a tape)
+### to upload files to the destination instead of just "cp" or other direct filesystem access.
+### Returning true does not imply that the URL is currently mounted at a filesystem and usable,
+### only that it can be mounted (use mount_url() first)
+function scheme_supports_filesystem() {
+    local scheme=$1
+    case $scheme in
+        (null|tape|obdr|rsync|fish|ftp|ftps|hftp|http|https|sftp)
+            return 1
+            ;;
+        (*)
+            return 0
+            ;;
+    esac
+}
+
+function backup_path() {
     local scheme=$1
     local path=$2
     case $scheme in
@@ -368,13 +405,21 @@ backup_path() {
     echo "$path"
 }
 
-output_path() {
+function output_path() {
     local scheme=$1
     local path=$2
+
+    # Abort for unmountable schemes ("tape-like" or "ftp-like" schemes).
+    # Returning an empty string for them is not satisfactory: it could lead to caller putting its files
+    # under / instead of the intended location if the result is not checked for emptiness.
+    # Returning ${BUILD_DIR}/outputfs/${OUTPUT_PREFIX} for unmountable URLs is also not satisfactory:
+    # caller could put its files there expecting them to be safely at their destination,
+    # but if the directory is not a mountpoint, they would get silently lost.
+    # The caller needs to check the URL/scheme using scheme_supports_filesystem()
+    # before calling this function.
+    scheme_supports_filesystem $scheme || BugError "output_path() called with scheme $scheme that does not support filesystem access"
+
     case $scheme in
-       (null|tape)  # no path for tape required
-           path=""
-           ;;
        (file)  # type file needs a local path (must be mounted by user)
            path="$path/${OUTPUT_PREFIX}"
            ;;
@@ -387,17 +432,33 @@ output_path() {
 
 
 ### Mount URL $1 at mountpoint $2[, with options $3]
-mount_url() {
+function mount_url() {
     local url=$1
     local mountpoint=$2
     local defaultoptions="rw,noatime"
     local options=${3:-"$defaultoptions"}
+    local scheme
+
+    scheme=$( url_scheme $url )
+
+    # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
+    # They thus need to be kept in sync with umount_url() so that RemoveExitTasks is used
+    # iff AddExitTask was used in mount_url().
+
+    if ! scheme_supports_filesystem $scheme ; then
+        ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
+        ### Don't need to umount anything for these.
+        ### file: supports filesystem access, but is not mounted and unmounted,
+        ### so it has to be handled specially below.
+        ### Similarly for iso: which gets mounted and unmounted only during recovery.
+        return 0
+    fi
 
     ### Generate a mount command
     local mount_cmd
-    case $(url_scheme $url) in
-        (null|tape|file|rsync|fish|ftp|ftps|hftp|http|https|sftp)
-            ### Don't need to mount anything for these
+    case $scheme in
+        (file)
+            ### Don't need to mount anything for file:, it is already mounted by user
             return 0
             ;;
         (iso)
@@ -558,22 +619,47 @@ mount_url() {
             ;;
     esac
 
+    # create mount point
+    mkdir -p $v "$mountpoint" || Error "Could not mkdir '$mountpoint'"
+    AddExitTask "remove_temporary_mountpoint '$mountpoint'"
+
     Log "Mounting with '$mount_cmd'"
     # eval is required when mount_cmd contains single quoted stuff (e.g. see the above mount_cmd for curlftpfs)
     eval $mount_cmd || Error "Mount command '$mount_cmd' failed."
 
-    AddExitTask "umount -f $v '$mountpoint' >&2"
+    AddExitTask "perform_umount_url '$url' '$mountpoint' lazy"
     return 0
 }
 
-### Unmount url $1 at mountpoint $2
-umount_url() {
+function remove_temporary_mountpoint() {
+    if test -d "$1" ; then
+        rmdir $v "$1"
+    fi
+}
+
+### Unmount url $1 at mountpoint $2, perform mountpoint cleanup and exit task + error handling
+function umount_url() {
     local url=$1
     local mountpoint=$2
+    local scheme
 
-    case $(url_scheme $url) in
-        (null|tape|file|rsync|fish|ftp|ftps|hftp|http|https|sftp)
-            ### Don't need to umount anything for these
+    scheme=$( url_scheme $url )
+
+    # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
+    # They thus need to be kept in sync with mount_url() so that RemoveExitTasks is used
+    # iff AddExitTask was used in mount_url().
+
+    if ! scheme_supports_filesystem $scheme ; then
+        ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
+        ### Don't need to umount anything for these.
+        ### file: supports filesystem access, but is not mounted and unmounted,
+        ### so it has to be handled specially below.
+        ### Similarly for iso: which gets mounted and unmounted only during recovery.
+        return 0
+    fi
+
+    case $scheme in
+        (file)
             return 0
             ;;
         (iso)
@@ -581,42 +667,106 @@ umount_url() {
                 return 0
             fi
             ;;
-	    (sshfs)
-	        umount_cmd="fusermount -u $mountpoint"
-	    ;;
-	    (davfs)
-	        umount_cmd="umount $mountpoint"
-            # Wait for 3 sek. then remove the cache-dir /var/cache/davfs
-            sleep 30
-            # ToDo: put in here the cache-dir from /etc/davfs2/davfs.conf
-            # and delete only the just used cache
-            #rm -rf /var/cache/davfs2/*<mountpoint-hash>*
-            rm -rf /var/cache/davfs2/*outputfs*
-
-	    ;;
-        (var)
-            local var=$(url_host $url)
-            umount_cmd="${!var} $mountpoint"
-
-            Log "Unmounting with '$umount_cmd'"
-            $umount_cmd
-            StopIfError "Unmounting failed."
-
-            RemoveExitTask "umount -f $v '$mountpoint' >&2"
-            return 0
-            ;;
+        (*)
+            # Schemes that actually need nontrivial umount are handled below.
+            # We do not handle them in the default branch because in the case of iso:
+            # it depends on the current workflow whether umount is needed or not.
+            :
     esac
 
-    umount_mountpoint $mountpoint
-    StopIfError "Unmounting '$mountpoint' failed."
+    # umount_url() is a wrapper that takes care of exit tasks and error handling and mountpoint cleanup.
+    # Therefore it also determines if exit task and mountpoint handling is required and returns early if not.
+    # The actual umount job is performed inside perform_umount_url().
+    # We do not request lazy umount here because we want umount errors to be reliably reported.
+    perform_umount_url $url $mountpoint || Error "Unmounting '$mountpoint' failed."
 
-    RemoveExitTask "umount -f $v '$mountpoint' >&2"
+    RemoveExitTask "perform_umount_url '$url' '$mountpoint' lazy"
+
+    remove_temporary_mountpoint '$mountpoint' && RemoveExitTask "remove_temporary_mountpoint '$mountpoint'"
     return 0
 }
 
-### Unmount mountpoint $1
-umount_mountpoint() {
+### Unmount url $1 at mountpoint $2 [ lazily if $3 is set to 'lazy' and normal unmount fails ]
+function perform_umount_url() {
+    local url=$1
+    local mountpoint=$2
+    local lazy=${3:-}
+
+    if test $lazy ; then
+        if test $lazy != "lazy" ; then
+            BugError "lazy = $lazy, but it must have the value of 'lazy' or empty"
+        fi
+    fi
+
+    case $(url_scheme $url) in
+        (sshfs)
+            # does ftpfs need this special case as well?
+            fusermount -u ${lazy:+'-z'} $mountpoint
+            ;;
+        (davfs)
+            umount_davfs $mountpoint $lazy
+            ;;
+        (var)
+            local var
+            var=$(url_host $url)
+            Log "Unmounting with '${!var} $mountpoint'"
+            # lazy unmount not supported with custom umount command
+            ${!var} $mountpoint
+            ;;
+        (*)
+            # usual umount command
+            umount_mountpoint $mountpoint $lazy
+    esac
+    # The switch above must be the last statement in this function and the umount commands must be
+    # the last commands (or part of) in each branch. This ensures proper exit code propagation
+    # to the caller even when set -e is used.
+}
+
+### Helper which unmounts davfs mountpoint $1 and cleans up the cache,
+### performing lazy unmount if $2 = 'lazy' and normal unmount fails.
+function umount_davfs() {
     local mountpoint=$1
+    local lazy="${2:-}"
+
+    if test $lazy ; then
+        if test $lazy != "lazy" ; then
+            BugError "lazy = $lazy, but it must have the value of 'lazy' or empty"
+        fi
+    fi
+
+    if umount_mountpoint $mountpoint ; then
+        # Wait for 3 sek. then remove the cache-dir /var/cache/davfs
+        sleep 30
+        # TODO: put in here the cache-dir from /etc/davfs2/davfs.conf
+        # and delete only the just used cache
+        #rm -rf /var/cache/davfs2/*<mountpoint-hash>*
+        rm -rf /var/cache/davfs2/*outputfs*
+    else
+        local retval=$?
+
+        if test $lazy ; then
+            # try again to unmount lazily and this time do not delete the cache, it is still in use.
+            LogPrintError "davfs cache /var/cache/davfs2/*outputfs* needs to be cleaned up manually after the lazy unmount finishes"
+            umount_mountpoint_lazy $mountpoint
+        else
+            # propagate errors from umount
+            return $retval
+        fi
+    fi
+}
+
+### Unmount mountpoint $1 [ lazily if $2 = 'lazy' ]
+### Default implementation for filesystems that don't need anything fancy
+### For special umount commands use perform_umount_url()
+function umount_mountpoint() {
+    local mountpoint=$1
+    local lazy=${2:-}
+
+    if test $lazy ; then
+        if test $lazy != "lazy" ; then
+            BugError "lazy = $lazy, but it must have the value of 'lazy' or empty"
+        fi
+    fi
 
     ### First, try a normal unmount,
     Log "Unmounting '$mountpoint'"
@@ -636,7 +786,21 @@ umount_mountpoint() {
     fi
 
     Log "Unmounting '$mountpoint' failed."
-    return 1
+
+    if test $lazy ; then
+        umount_mountpoint_lazy $mountpoint
+    else
+        return 1
+    fi
+}
+
+### Unmount mountpoint $1 lazily
+### Preferably use "umount_mountpoint $mountpoint lazy", which attempts non-lazy unmount first.
+function umount_mountpoint_lazy() {
+    local mountpoint=$1
+
+    LogPrint "Directory $mountpoint still mounted - trying lazy umount"
+    umount $v -f -l $mountpoint >&2
 }
 
 # Change $1 to user input or leave default value on empty input

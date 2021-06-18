@@ -130,7 +130,7 @@ function cleanup_build_area_and_end_program () {
     # Cleanup build area
     Log "Finished $PROGRAM $WORKFLOW in $(( $( date +%s ) - START_SECONDS )) seconds"
     if is_true "$KEEP_BUILD_DIR" ; then
-        LogPrint "You should also rm -Rf $BUILD_DIR"
+        LogPrint "You should also rm -Rf --one-file-system $BUILD_DIR"
     else
         Log "Removing build area $BUILD_DIR"
         rm -Rf $TMP_DIR
@@ -140,15 +140,11 @@ function cleanup_build_area_and_end_program () {
         # in worst case it could not umount; so before remove the BUILD_DIR check if above outputfs is gone
         if mountpoint -q "$BUILD_DIR/outputfs" ; then
             # still mounted it seems
-            LogPrint "Directory $BUILD_DIR/outputfs still mounted - trying lazy umount"
             sleep 2
-            umount -f -l $BUILD_DIR/outputfs >&2
-            rm -Rf $v $BUILD_DIR/outputfs >&2
-        else
-            # not mounted so we can safely delete $BUILD_DIR/outputfs
-            rm -Rf $BUILD_DIR/outputfs
+            umount_mountpoint_lazy $BUILD_DIR/outputfs
         fi
-        rm -Rf $v $BUILD_DIR >&2
+        remove_temporary_mountpoint '$BUILD_DIR/outputfs' || BugError "Directory $BUILD_DIR/outputfs not empty, can not remove"
+        rmdir $v $BUILD_DIR >&2
     fi
     Log "End of program reached"
 }
