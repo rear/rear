@@ -554,7 +554,6 @@ function Error () {
     # in particular the normal stdout and stderr messages of the last called programs
     # to make the root cause more obvious to the user without the need to analyze the log file
     # cf. https://github.com/rear/rear/issues/1875#issuecomment-407039065
-    PrintError "Some latest log messages since the last called script $last_sourced_script_filename:"
     # Extract lines starting when the last script was sourced (logged as 'Including sub-path/to/script.sh')
     # but do not use last_sourced_script_sub_path because it contains '/' characters that let sed fail with
     #   sed: -e expression #1, char ...: extra characters after command
@@ -579,8 +578,18 @@ function Error () {
     # Show at most the last 8 lines because too much before the actual error may cause more confusion than help.
     # Add two spaces indentation for better readability what those extracted log file lines are.
     # Some messages could be too long to be usefully shown on the user's terminal so that they are truncated after 200 bytes:
-    { local last_sourced_script_log_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | grep -v '^+' | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
-    PrintError "$last_sourced_script_log_messages"
+    { local last_sourced_script_log_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    if test "$last_sourced_script_log_messages" ; then
+        PrintError "Some latest log messages since the last called script $last_sourced_script_filename:"
+        PrintError "$last_sourced_script_log_messages"
+    fi
+    if test -f $STDOUT_STDERR_FILE ; then
+        { local last_sourced_script_stdout_stderr_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $STDOUT_STDERR_FILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+        if test "$last_sourced_script_stdout_stderr_messages" ; then
+            PrintError "Some messages from $STDOUT_STDERR_FILE since the last called script $last_sourced_script_filename:"
+            PrintError "$last_sourced_script_stdout_stderr_messages"
+        fi
+    fi
     Log "ERROR: $*"
     LogToSyslog "ERROR: $*"
     # Print stack strace in reverse order to the current STDERR which is (usually) the log file:
