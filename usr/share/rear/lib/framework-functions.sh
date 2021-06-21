@@ -39,7 +39,10 @@ function Source () {
         # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
         read -p "Press ENTER to include '$source_file' ... " 0<&6 1>&7 2>&8
     fi
+    # The Error function is searching for 'Including .*$last_sourced_script_filename'
+    # in RUNTIME_LOGFILE and/or STDOUT_STDERR_FILE so provide that info in both files:
     Log "Including $relname"
+    echo "Including $relname" >>$STDOUT_STDERR_FILE
     # DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
         Debug "Entering debugscript mode via 'set -$DEBUGSCRIPTS_ARGUMENT'."
