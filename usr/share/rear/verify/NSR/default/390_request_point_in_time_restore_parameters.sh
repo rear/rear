@@ -5,9 +5,12 @@
 
 NSR_ENDTIME=()
 
-# Is the NSR_CLIENT_MODE = YES and NSR_CLIENT_CAN_RECOVER = YES then continue
+# We are requesting point-in-time recovery just in case
+# NSR_CLIENT_MODE = YES and NSR_CLIENT_REQUESTRESTORE = NO (explicitly)
 # else ask for an optional date/time for the recovery
-if is_true "$NSR_CLIENT_MODE" && is_true "$NSR_CLIENT_CAN_RECOVER"; then
+if is_true "$NSR_CLIENT_MODE" && [[ -z "$NSR_CLIENT_REQUESTRESTORE || is_true "$NSR_CLIENT_REQUESTRESTORE" ]]; then
+    Log "Skipping to request an EMC Networker (Legato) point-in-time restore."
+else
     UserOutput ""
     UserOutput "EMC NetWorker (Legato) restores by default the latest backup data."
     UserOutput "Press only ENTER to restore the most recent available backup."
@@ -45,6 +48,4 @@ if is_true "$NSR_CLIENT_MODE" && is_true "$NSR_CLIENT_CAN_RECOVER"; then
     test "$nsr_endtime_time" != "00:00:00" && NSR_ENDTIME+=( "$nsr_endtime_time" )
 
     UserOutput "Doing EMC NetWorker (Legato) Point-In-Time Restore of all filespaces at or before ${NSR_ENDTIME[@]}"
-else
-    Log "Skipping to request an EMC Networker (Legato) point-in-time restore."
 fi

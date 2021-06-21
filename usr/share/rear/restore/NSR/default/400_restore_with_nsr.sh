@@ -1,10 +1,10 @@
 # 400_restore_with_nsr.sh
 #
-# In case the NSR_CLIENT_MODE = YES and NSR_CLIENT_CAN_RECOVER = NO then
-# prompt the user to request the recovery action elsewhere on the NSRSERVER
+# In case the NSR_CLIENT_MODE = YES and NSR_CLIENT_CAN_RECOVER = YES or unset (default)
+# then prompt the user to request the recovery action elsewhere on the NSRSERVER
 # and wait until the restore process has finished.
 #
-if is_true "$NSR_CLIENT_MODE" && is_false "$NSR_CLIENT_CAN_RECOVER"; then
+if is_true "$NSR_CLIENT_MODE" && [[ -z "$NSR_CLIENT_REQUESTRESTORE || is_true "$NSR_CLIENT_REQUESTRESTORE" ]]; then
     LogPrint "Please let the restore process start on Your backup server i.e. $(cat $VAR_DIR/recovery/nsr_server)."
     LogPrint "Make sure all required data is restored to $TARGET_FS_ROOT ."
     LogPrint ""
