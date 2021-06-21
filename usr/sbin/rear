@@ -610,10 +610,11 @@ if test "$RUNTIME_LOGFILE" != "$LOGFILE" ; then
     # Do this only when LOGFILE is a regular file (e.g. do not do this if LOGFILE is /dev/null):
     if test -f "$LOGFILE" ; then
         rm -f "$LOGFILE"
-        test "$WORKFLOW" != "help" && LogPrint "Saving $RUNTIME_LOGFILE as $LOGFILE"
-        cat "$RUNTIME_LOGFILE" > "$LOGFILE"
+        cat /dev/null >"$LOGFILE"
         # The log file may contain sensitive information so only root should be able to read it:
         chmod u=rw,go=- "$LOGFILE"
+        test "$WORKFLOW" != "help" && LogPrint "Saving $RUNTIME_LOGFILE as $LOGFILE"
+        cat "$RUNTIME_LOGFILE" >"$LOGFILE"
     fi
 fi
 
