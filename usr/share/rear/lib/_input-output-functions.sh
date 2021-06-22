@@ -574,7 +574,10 @@ function Error () {
     # Because of the newlines in the error message subsequent lines appear without a leading '+' character
     # so that those debug output lines are indistinguishable from normal stdout/stderr output of programs,
     # cf. https://github.com/rear/rear/pull/1877
-    # Thereafter ('+ [Bug]*Error ' lines were needed before) skip 'set -x' lines (lines that start with a '+' character).
+    # Thereafter ('+ [Bug]*Error ' lines were needed before) skip 'set -x' lines (lines that start with a '+' character)
+    # and skip the initial 'Including sub-path/to/script.sh' line that is always found
+    # to keep only the actual stdout and stderr messages of the last called programs
+    # so we can test if messages were actually found via 'test "string of messages"' for emptiness.
     # Show at most the last 8 lines because too much before the actual error may cause more confusion than help.
     # Add two spaces indentation for better readability what those extracted log file lines are.
     # Some messages could be too long to be usefully shown on the user's terminal so that they are truncated after 200 bytes:
@@ -583,13 +586,32 @@ function Error () {
         PrintError "Some latest log messages since the last called script $last_sourced_script_filename:"
         PrintError "$last_sourced_script_log_messages"
     fi
+    # In non-debug modes stdout and stderr are redirected to STDOUT_STDERR_FILE="$TMP_DIR/rear.$WORKFLOW.stdout_stderr" if possible
+    # but in certain cases (e.g. for the 'help' workflow where no $TMP_DIR exists) STDOUT_STDERR_FILE=/dev/null
+    # so we extract some latest messages only if STDOUT_STDERR_FILE is a regular file:
     if test -f $STDOUT_STDERR_FILE ; then
+        # We use the same extraction pipe as above because STDOUT_STDERR_FILE may also contain 'set -x' and things like that
+        # because scripts could use 'set -x' and things like that as needed (e.g. diskrestore.sh runs with 'set -x'):
         { local last_sourced_script_stdout_stderr_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $STDOUT_STDERR_FILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
         if test "$last_sourced_script_stdout_stderr_messages" ; then
-            PrintError "Some messages from $STDOUT_STDERR_FILE since the last called script $last_sourced_script_filename:"
+            # When stdout and stderr are redirected to STDOUT_STDERR_FILE messages of the last called programs cannot be in the log
+            # so we use LogPrintError and 'echo "string of messages" >>$RUNTIME_LOGFILE' (the latter avoids the timestamp prefix)
+            # to have the extracted messages stored in the log so that they are later available (in contrast to terminal output).
+            # The full stdout and stderr messages are available in STDOUT_STDERR_FILE:
+            LogPrintError "Some messages from $STDOUT_STDERR_FILE since the last called script $last_sourced_script_filename:"
             PrintError "$last_sourced_script_stdout_stderr_messages"
+            echo "$last_sourced_script_stdout_stderr_messages" >>"$RUNTIME_LOGFILE"
         fi
     fi
+    # Show some generic info about debugging:
+    if test "$DEBUG" ; then
+        # We are in debug mode but not in debugscript mode:
+        test "$DEBUGSCRIPTS" || PrintError "You may use debugscript mode '-D' for full debug messages with 'set -x' output"
+    else
+        # We are not in debug mode:
+        PrintError "Use debug mode '-d' for some debug messages or debugscript mode '-D' for full debug messages with 'set -x' output"
+    fi
+    # Log the error message:
     Log "ERROR: $*"
     LogToSyslog "ERROR: $*"
     # Print stack strace in reverse order to the current STDERR which is (usually) the log file:
