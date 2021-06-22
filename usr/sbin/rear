@@ -262,8 +262,8 @@ esac
 # Set the variables v and verbose to be used in called programs
 # that support the '-v' or '--verbose' options like
 # "cp $v ..." or "rm $verbose ..." and so on.
-# Normally stdout and stderr are redirected to /dev/null (see below).
-# In debug modes stdout and stderr are redirected to the log
+# Normally stdout and stderr are not redirected to the log file (see below).
+# Only in debug modes stdout and stderr are redirected to the log
 # so setting that variables only makes sense in debug modes.
 # Cf. https://github.com/rear/rear/issues/2416
 v=""
@@ -411,7 +411,7 @@ fi
 test -r "$RUNTIME_LOGFILE" && mv -f "$RUNTIME_LOGFILE" "$RUNTIME_LOGFILE".old 2>/dev/null
 
 # Start logging:
-mkdir -p $LOG_DIR || echo "ERROR: Could not create $LOG_DIR" >&2
+mkdir -p $LOG_DIR || Error "Could not create $LOG_DIR"
 rm -f "$RUNTIME_LOGFILE"
 cat /dev/null >"$RUNTIME_LOGFILE"
 # The log file may contain sensitive information so only root should be able to read it:
