@@ -470,7 +470,7 @@ if test "$WORKFLOW" != "help" ; then
     LogPrint "Running $PROGRAM $WORKFLOW (PID $MASTER_PID date $START_DATE_TIME_STRING)"
     DebugPrint "Command line options: $0 ${CMD_OPTS[@]}"
     LogPrint "Using log file: $RUNTIME_LOGFILE"
-    DebugPrint "Using build area '$BUILD_DIR'"
+    DebugPrint "Using build area: $BUILD_DIR"
 fi
 
 # In DEBUG mode keep by default the build area but that can be overridden in user config files
