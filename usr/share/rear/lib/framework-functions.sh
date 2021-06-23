@@ -133,6 +133,13 @@ function cleanup_build_area_and_end_program () {
     # Cleanup build area
     Log "Finished $PROGRAM $WORKFLOW in $(( $( date +%s ) - START_SECONDS )) seconds"
     if is_true "$KEEP_BUILD_DIR" ; then
+        local mounted_in_BUILD_DIR
+        mounted_in_BUILD_DIR="$( mount | grep "$BUILD_DIR" | sed -e 's/^/  /' )"
+        if test "$mounted_in_BUILD_DIR" ; then
+            LogPrintError "Caution - there is something mounted within the build area"
+            LogPrintError "$mounted_in_BUILD_DIR"
+            LogPrintError "You must manually umount that before you may remove the build area"
+        fi
         LogPrint "To remove the build area use (with caution): rm -Rf --one-file-system $BUILD_DIR"
     else
         Log "Removing build area $BUILD_DIR"
