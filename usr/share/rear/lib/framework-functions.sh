@@ -143,11 +143,12 @@ function cleanup_build_area_and_end_program () {
         LogPrint "To remove the build area use (with caution): rm -Rf --one-file-system $BUILD_DIR"
     else
         Log "Removing build area $BUILD_DIR"
-        rm -Rf $TMP_DIR
-        rm -Rf $ROOTFS_DIR
-        # line below put in comment due to issue #465
-        #rm -Rf $BUILD_DIR/outputfs
-        # in worst case it could not umount; so before remove the BUILD_DIR check if above outputfs is gone
+        # Use '--one-file-system' to be safe against also deleting by accident
+        # all mounted things below mountpoints in TMP_DIR or ROOTFS_DIR
+        # (regardless if mountpoints in TMP_DIR or ROOTFS_DIR may happen):
+        rm -Rf --one-file-system $TMP_DIR || LogPrintError "Failed to 'rm -Rf --one-file-system $TMP_DIR'"
+        rm -Rf --one-file-system $ROOTFS_DIR || LogPrintError "Failed to 'rm -Rf --one-file-system $ROOTFS_DIR'"
+        # Before removing the BUILD_DIR check if above outputfs is gone:
         if mountpoint -q "$BUILD_DIR/outputfs" ; then
             # still mounted it seems
             sleep 2
