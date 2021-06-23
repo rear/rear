@@ -398,13 +398,28 @@ fi
 # and fd6 to get input from the user regardless where to STDIN is redirected:
 source $SHARE_DIR/lib/_input-output-functions.sh
 
+# Via source usr/share/rear/lib/_input-output-functions.sh
+# those exit tasks are now set to be executed (via bash EXIT trap) in the following order:
+# "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WORKFLOW failed, check $RUNTIME_LOGFILE for details' 1>&8"
+# "exec 8>&-"
+# "exec 7>&-"
+# "exec 6<&-"
+
 if test "$WORKFLOW" != "help" ; then
+    # Prepend temporary working area (BUILD_DIR) removal exit task
+    # so it gets executed directly before the above listed exit tasks.
+    # This must be done before the first possible call of the 'Error' function
+    # otherwise we may error out but leave the build area behind:
+    QuietAddExitTask cleanup_build_area_and_end_program
     # Create temporary working area:
     BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
     ROOTFS_DIR=$BUILD_DIR/rootfs
     TMP_DIR=$BUILD_DIR/tmp
     mkdir -p $ROOTFS_DIR || Error "Could not create $ROOTFS_DIR"
     mkdir -p $TMP_DIR || Error "Could not create $TMP_DIR"
+    # Since the above BUILD_DIR="$( mktemp ... )" does not always return a path under /tmp
+    # the build directory must be excluded from the backup to be on the safe side:
+    BACKUP_PROG_EXCLUDE+=( "$BUILD_DIR" )
 fi
 
 # Keep old log file:
@@ -580,15 +595,6 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 Host $( uname -n ) using Backup $BACKUP and Output $OUTPUT
 Build date: $( date -R )
 "
-
-if test "$WORKFLOW" != "help" ; then
-    # No temporary working area was created for then 'help' workflow (see above).
-    # Register temporary working area (BUILD_DIR) removal exit task:
-    QuietAddExitTask cleanup_build_area_and_end_program
-    # Since the above BUILD_DIR="$( mktemp ... )" does not always return a path under /tmp
-    # the build directory must be excluded from the backup to be on the safe side:
-    BACKUP_PROG_EXCLUDE+=( "$BUILD_DIR" )
-fi
 
 # Check for and run the requested workflow:
 if has_binary WORKFLOW_$WORKFLOW ; then
