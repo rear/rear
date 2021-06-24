@@ -571,14 +571,16 @@ function Error () {
     # but also the outdated scripts with leading 2-digit number get sourced
     # see the SourceStage function in lib/framework-functions.sh
     # so that we grep for script files names with two or more leading numbers:
-    { local last_sourced_script_log_entry=( $( grep -o ' Including .*/[0-9][0-9].*\.sh' $RUNTIME_LOGFILE | tail -n 1 ) )
-      # The last_sourced_script_log_entry contains: Including sub-path/to/script_file_name.sh
-      local last_sourced_script_sub_path="${last_sourced_script_log_entry[1]}"
-      local last_sourced_script_filename="$( basename $last_sourced_script_sub_path )"
-      # When it errors out in sbin/rear last_sourced_script_filename is empty which would result bad looking output
-      # cf. https://github.com/rear/rear/issues/1965#issuecomment-439437868
-      test "$last_sourced_script_filename" || last_sourced_script_filename="$SCRIPT_FILE"
-    } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    if test -s "$RUNTIME_LOGFILE" ; then
+        { local last_sourced_script_log_entry=( $( grep -o ' Including .*/[0-9][0-9].*\.sh' $RUNTIME_LOGFILE | tail -n 1 ) )
+          # The last_sourced_script_log_entry contains: Including sub-path/to/script_file_name.sh
+          local last_sourced_script_sub_path="${last_sourced_script_log_entry[1]}"
+          local last_sourced_script_filename="$( basename $last_sourced_script_sub_path )"
+          # When it errors out in sbin/rear last_sourced_script_filename is empty which would result bad looking output
+          # cf. https://github.com/rear/rear/issues/1965#issuecomment-439437868
+          test "$last_sourced_script_filename" || last_sourced_script_filename="$SCRIPT_FILE"
+        } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    fi
     # Do not log the error message right now but after the currently last log messages were shown:
     PrintError "ERROR: $*"
     # Show some additional hopefully meaningful output on the user's terminal
@@ -613,15 +615,17 @@ function Error () {
     # Show at most the last 8 lines because too much before the actual error may cause more confusion than help.
     # Add two spaces indentation for better readability what those extracted log file lines are.
     # Some messages could be too long to be usefully shown on the user's terminal so that they are truncated after 200 bytes:
-    { local last_sourced_script_log_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
-    if test "$last_sourced_script_log_messages" ; then
-        PrintError "Some latest log messages since the last called script $last_sourced_script_filename:"
-        PrintError "$last_sourced_script_log_messages"
+    if test -s "$RUNTIME_LOGFILE" ; then
+        { local last_sourced_script_log_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+        if test "$last_sourced_script_log_messages" ; then
+            PrintError "Some latest log messages since the last called script $last_sourced_script_filename:"
+            PrintError "$last_sourced_script_log_messages"
+        fi
     fi
     # In non-debug modes stdout and stderr are redirected to STDOUT_STDERR_FILE="$TMP_DIR/rear.$WORKFLOW.stdout_stderr" if possible
     # but in certain cases (e.g. for the 'help' workflow where no $TMP_DIR exists) STDOUT_STDERR_FILE=/dev/null
     # so we extract some latest messages only if STDOUT_STDERR_FILE is a regular file:
-    if test -f $STDOUT_STDERR_FILE ; then
+    if test -f "$STDOUT_STDERR_FILE" ; then
         # We use the same extraction pipe as above because STDOUT_STDERR_FILE may also contain 'set -x' and things like that
         # because scripts could use 'set -x' and things like that as needed (e.g. diskrestore.sh runs with 'set -x'):
         { local last_sourced_script_stdout_stderr_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $STDOUT_STDERR_FILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
@@ -858,6 +862,53 @@ function LogPrintIfError () {
     if (( $? != 0 )) ; then
         LogPrintError "$@"
     fi
+}
+
+function cleanup_build_area_and_end_program () {
+    # Cleanup build area
+    local mounted_in_BUILD_DIR
+    Log "Finished $PROGRAM $WORKFLOW in $(( $( date +%s ) - START_SECONDS )) seconds"
+    if is_true "$KEEP_BUILD_DIR" ; then
+        mounted_in_BUILD_DIR="$( mount | grep "$BUILD_DIR" | sed -e 's/^/  /' )"
+        if test "$mounted_in_BUILD_DIR" ; then
+            LogPrintError "Caution - there is something mounted within the build area"
+            LogPrintError "$mounted_in_BUILD_DIR"
+            LogPrintError "You must manually umount that before you may remove the build area"
+        fi
+        LogPrint "To remove the build area use (with caution): rm -Rf --one-file-system $BUILD_DIR"
+    else
+        Log "Removing build area $BUILD_DIR"
+        # Use '--one-file-system' to be safe against also deleting by accident
+        # all mounted things below mountpoints in TMP_DIR or ROOTFS_DIR
+        # (regardless if mountpoints in TMP_DIR or ROOTFS_DIR may happen):
+        rm -Rf --one-file-system $TMP_DIR || LogPrintError "Failed to 'rm -Rf --one-file-system $TMP_DIR'"
+        rm -Rf --one-file-system $ROOTFS_DIR || LogPrintError "Failed to 'rm -Rf --one-file-system $ROOTFS_DIR'"
+        # Before removing BUILD_DIR check that outputfs is gone (i.e. check that nothing is mounted there):
+        if mountpoint -q "$BUILD_DIR/outputfs" ; then
+            # If still mounted wait a bit (perhaps some ongoing umount needs more time) then try lazy umount:
+            sleep 2
+            # umount_mountpoint_lazy is in lib/global-functions.sh
+            # which is not yet sourced in case of early Error() in usr/sbin/rear
+            has_binary umount_mountpoint_lazy && umount_mountpoint_lazy $BUILD_DIR/outputfs
+        fi
+        # remove_temporary_mountpoint is in lib/global-functions.sh
+        # which is not yet sourced in case of early Error() in usr/sbin/rear
+        if has_binary remove_temporary_mountpoint ; then
+            # It is a bug in ReaR if BUILD_DIR/outputfs was not properly umounted and made empty by the scripts before:
+            remove_temporary_mountpoint '$BUILD_DIR/outputfs' || BugError "Directory $BUILD_DIR/outputfs not empty, cannot remove"
+        fi
+        if ! rmdir $v "$BUILD_DIR" ; then
+            LogPrintError "Could not remove build area $BUILD_DIR (something still exists therein)"
+            mounted_in_BUILD_DIR="$( mount | grep "$BUILD_DIR" | sed -e 's/^/  /' )"
+            if test "$mounted_in_BUILD_DIR" ; then
+                LogPrintError "Something is still mounted within the build area"
+                LogPrintError "$mounted_in_BUILD_DIR"
+                LogPrintError "You must manually umount it, then you could manually remove the build area"
+            fi
+            LogPrintError "To manually remove the build area use (with caution): rm -Rf --one-file-system $BUILD_DIR"
+        fi
+    fi
+    Log "End of program '$PROGRAM' reached"
 }
 
 # UserInput is a general function that is intended for basically any user input.
