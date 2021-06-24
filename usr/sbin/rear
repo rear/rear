@@ -262,8 +262,8 @@ esac
 # Set the variables v and verbose to be used in called programs
 # that support the '-v' or '--verbose' options like
 # "cp $v ..." or "rm $verbose ..." and so on.
-# Normally stdout and stderr are redirected to /dev/null (see below).
-# In debug modes stdout and stderr are redirected to the log
+# Normally stdout and stderr are not redirected to the log file (see below).
+# Only in debug modes stdout and stderr are redirected to the log
 # so setting that variables only makes sense in debug modes.
 # Cf. https://github.com/rear/rear/issues/2416
 v=""
@@ -398,28 +398,79 @@ fi
 # and fd6 to get input from the user regardless where to STDIN is redirected:
 source $SHARE_DIR/lib/_input-output-functions.sh
 
+# Via source usr/share/rear/lib/_input-output-functions.sh
+# those exit tasks are now set to be executed (via bash EXIT trap) in the following order:
+# "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WORKFLOW failed, check $RUNTIME_LOGFILE for details' 1>&8"
+# "exec 8>&-"
+# "exec 7>&-"
+# "exec 6<&-"
+
+if test "$WORKFLOW" != "help" ; then
+    # Prepend temporary working area (BUILD_DIR) removal exit task
+    # so it gets executed directly before the above listed exit tasks.
+    # This must be done before the first possible call of the 'Error' function
+    # otherwise we may error out but leave the build area behind:
+    QuietAddExitTask cleanup_build_area_and_end_program
+    # Create temporary working area:
+    BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
+    ROOTFS_DIR=$BUILD_DIR/rootfs
+    TMP_DIR=$BUILD_DIR/tmp
+    mkdir -p $ROOTFS_DIR || Error "Could not create $ROOTFS_DIR"
+    mkdir -p $TMP_DIR || Error "Could not create $TMP_DIR"
+    # Since the above BUILD_DIR="$( mktemp ... )" does not always return a path under /tmp
+    # the build directory must be excluded from the backup to be on the safe side:
+    BACKUP_PROG_EXCLUDE+=( "$BUILD_DIR" )
+fi
+
 # Keep old log file:
 test -r "$RUNTIME_LOGFILE" && mv -f "$RUNTIME_LOGFILE" "$RUNTIME_LOGFILE".old 2>/dev/null
 
 # Start logging:
-mkdir -p $LOG_DIR || echo "ERROR: Could not create $LOG_DIR" >&2
+mkdir -p $LOG_DIR || Error "Could not create $LOG_DIR"
+rm -f "$RUNTIME_LOGFILE"
 cat /dev/null >"$RUNTIME_LOGFILE"
-# Normally stdout and stderr are redirected to /dev/null.
-# In debug modes stdout and stderr are redirected to the log.
-# Cf. https://github.com/rear/rear/issues/2416
+# The log file may contain sensitive information so only root should be able to read it:
+chmod u=rw,go=- "$RUNTIME_LOGFILE"
+# In debug modes stdout and stderr are redirected to the log
+# cf. https://github.com/rear/rear/issues/2416
+# In non-debug modes (in particular also in verbose mode)
+# stdout and stderr are redirected to a temporary file if possible
+# i.e. when TMP_DIR exists - it does not exist for the 'help' workflow
+# so use /dev/null as fallback because TMP_DIR does not exists for the 'help' workflow:
+STDOUT_STDERR_FILE="/dev/null"
+# In non-debug modes the log cannot contain possibly false alarm messages
+# cf. https://github.com/rear/rear/issues/2416
+# but in non-debug modes stdout and stderr of all programs is still available
+# for the Error function to extract some latest messages
+# cf. https://github.com/rear/rear/issues/2623
 if test "$DEBUG" ; then
     # To be on the safe side append to the log file '>>' instead of plain writing to it '>'
     # because when a program (bash in this case) is plain writing to the log file it can overwrite
     # output of a possibly simultaneously running process that likes to append to the log file
     # (e.g. when a background process runs that also uses the ReaR log file for logging).
     exec 2>>"$RUNTIME_LOGFILE"
-    # Make stdout the same what stderr already is.
-    # This keeps strict ordering of stdout and stderr outputs
-    # because now both stdout and stderr use one same file descriptor.
+    # Make stdout the same what stderr already is because
+    # it is a bad idea to handle stderr and stdout differently
+    # cf. https://github.com/rear/rear/issues/2416#issuecomment-702159687
+    # Here we keep strict ordering of stdout and stderr outputs
+    # because both stdout and stderr use one same file descriptor:
     exec 1>&2
 else
-    exec 2>/dev/null
-    exec 1>/dev/null
+    if test -d $TMP_DIR ; then
+        STDOUT_STDERR_FILE="$TMP_DIR/$PROGRAM.$WORKFLOW.stdout_stderr"
+        # The stdout and stderr file that is used during runtime must not be changed:
+        readonly STDOUT_STDERR_FILE
+        rm -f "$STDOUT_STDERR_FILE"
+        cat /dev/null >"$STDOUT_STDERR_FILE"
+        # Programs stdout and stderr may show sensitive information so only root should be able to read it:
+        chmod u=rw,go=- "$STDOUT_STDERR_FILE"
+    fi
+    # To be on the safe side append stderr to the file (see above):
+    exec 2>>"$STDOUT_STDERR_FILE"
+    # Make stdout the same what stderr already is (see above).
+    # The stdout redirection is intentionally two times there (both for debug modes and non-debug modes)
+    # to make it easier to change the stdout redirection if needed different for both kind of modes:
+    exec 1>&2
 fi
 
 # Include functions after RUNTIME_LOGFILE is set and readonly
@@ -432,8 +483,9 @@ done
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
     LogPrint "Running $PROGRAM $WORKFLOW (PID $MASTER_PID date $START_DATE_TIME_STRING)"
-    Log "Command line options: $0 ${CMD_OPTS[@]}"
+    DebugPrint "Command line options: $0 ${CMD_OPTS[@]}"
     LogPrint "Using log file: $RUNTIME_LOGFILE"
+    DebugPrint "Using build area: $BUILD_DIR"
 fi
 
 # In DEBUG mode keep by default the build area but that can be overridden in user config files
@@ -544,21 +596,6 @@ Host $( uname -n ) using Backup $BACKUP and Output $OUTPUT
 Build date: $( date -R )
 "
 
-if test "$WORKFLOW" != "help" ; then
-    # Create temporary work area and register removal exit task:
-    BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
-    # Since 'mktemp' doesn't always return a path under /tmp, the build
-    # directory has always to be excluded for safety
-    BACKUP_PROG_EXCLUDE+=( "$BUILD_DIR" )
-
-    QuietAddExitTask cleanup_build_area_and_end_program
-    Log "Using build area '$BUILD_DIR'"
-    ROOTFS_DIR=$BUILD_DIR/rootfs
-    TMP_DIR=$BUILD_DIR/tmp
-    mkdir -p $v $ROOTFS_DIR >&2 || Error "Could not create $ROOTFS_DIR"
-    mkdir -p $v $TMP_DIR >&2 || Error "Could not create $TMP_DIR"
-fi
-
 # Check for and run the requested workflow:
 if has_binary WORKFLOW_$WORKFLOW ; then
     Log "Running $WORKFLOW workflow"
@@ -576,8 +613,15 @@ fi
 # but later user config files are sourced where LOGFILE can be set different
 # so that the user config LOGFILE is used as final logfile name:
 if test "$RUNTIME_LOGFILE" != "$LOGFILE" ; then
-    test "$WORKFLOW" != "help" && LogPrint "Saving $RUNTIME_LOGFILE as $LOGFILE"
-    cat "$RUNTIME_LOGFILE" > "$LOGFILE"
+    # Do this only when LOGFILE is a regular file (e.g. do not do this if LOGFILE is /dev/null):
+    if test -f "$LOGFILE" ; then
+        rm -f "$LOGFILE"
+        cat /dev/null >"$LOGFILE"
+        # The log file may contain sensitive information so only root should be able to read it:
+        chmod u=rw,go=- "$LOGFILE"
+        test "$WORKFLOW" != "help" && LogPrint "Saving $RUNTIME_LOGFILE as $LOGFILE"
+        cat "$RUNTIME_LOGFILE" >"$LOGFILE"
+    fi
 fi
 
 # When this point is reached, the workflow is done without a real error because

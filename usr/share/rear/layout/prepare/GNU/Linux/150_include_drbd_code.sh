@@ -27,7 +27,22 @@ EOF
         cat >> "$LAYOUT_CODE" <<-EOF
         if ! drbdadm role $resource &>/dev/null ; then
            drbdadm up $resource
-           drbdadm -- --overwrite-data-of-peer primary $resource
+           # Dirty hack against "DRBD9 restore issue, when trying to become primary"
+           # cf. https://github.com/rear/rear/issues/2634
+           # With DRBD9 there is a new behavior when trying to become primary, without the second node reachable.
+           # In this case the command "drbadm -- --overwrite-data-of-peer primary $resource"
+           # will end with an error "refusing to be primary while peer is not outdated".
+           # A workaround is to use instead the commands
+           #   drbdadm del-peer $resource
+           #   drbdadm primary $resource --force
+           # We assume when "drbadm -- --overwrite-data-of-peer primary $resource"
+           # exits with non-zero exit code it is this issue so we try the other commands
+           # because we hope things won't get worse this way (but we are no DRBD experts)
+           # cf. "Dirty hacks welcome" at https://github.com/rear/rear/wiki/Coding-Style
+           if ! drbdadm -- --overwrite-data-of-peer primary $resource ; then
+               drbdadm del-peer $resource
+               drbdadm primary $resource --force
+           fi
         fi
 	EOF
     else
