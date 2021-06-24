@@ -398,6 +398,8 @@ function PrintError () {
 # For messages that should only appear in the log file output to the current STDERR
 # because (usually) the current STDERR is redirected to the log file:
 function Log () {
+    # RUNTIME_LOGFILE does not yet exists in case of early Error() in usr/sbin/rear
+    test -w "$RUNTIME_LOGFILE" || return 0
     # Have a timestamp with nanoseconds precision in any case
     # so that any subsequent Log() calls get logged with precise timestamps:
     { local timestamp=$( date +"%Y-%m-%d %H:%M:%S.%N " )
@@ -868,7 +870,8 @@ function cleanup_build_area_and_end_program () {
     # Cleanup build area
     local mounted_in_BUILD_DIR
     Log "Finished $PROGRAM $WORKFLOW in $(( $( date +%s ) - START_SECONDS )) seconds"
-    if is_true "$KEEP_BUILD_DIR" ; then
+    # is_true is in lib/global-functions.sh which is not yet sourced in case of early Error() in usr/sbin/rear
+    if has_binary is_true && is_true "$KEEP_BUILD_DIR" ; then
         mounted_in_BUILD_DIR="$( mount | grep "$BUILD_DIR" | sed -e 's/^/  /' )"
         if test "$mounted_in_BUILD_DIR" ; then
             LogPrintError "Caution - there is something mounted within the build area"
