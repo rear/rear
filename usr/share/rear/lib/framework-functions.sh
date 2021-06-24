@@ -131,9 +131,9 @@ function SourceStage () {
 
 function cleanup_build_area_and_end_program () {
     # Cleanup build area
+    local mounted_in_BUILD_DIR
     Log "Finished $PROGRAM $WORKFLOW in $(( $( date +%s ) - START_SECONDS )) seconds"
     if is_true "$KEEP_BUILD_DIR" ; then
-        local mounted_in_BUILD_DIR
         mounted_in_BUILD_DIR="$( mount | grep "$BUILD_DIR" | sed -e 's/^/  /' )"
         if test "$mounted_in_BUILD_DIR" ; then
             LogPrintError "Caution - there is something mounted within the build area"
@@ -148,15 +148,25 @@ function cleanup_build_area_and_end_program () {
         # (regardless if mountpoints in TMP_DIR or ROOTFS_DIR may happen):
         rm -Rf --one-file-system $TMP_DIR || LogPrintError "Failed to 'rm -Rf --one-file-system $TMP_DIR'"
         rm -Rf --one-file-system $ROOTFS_DIR || LogPrintError "Failed to 'rm -Rf --one-file-system $ROOTFS_DIR'"
-        # Before removing the BUILD_DIR check if above outputfs is gone:
+        # Before removing BUILD_DIR check that outputfs is gone (i.e. check that nothing is mounted there):
         if mountpoint -q "$BUILD_DIR/outputfs" ; then
-            # still mounted it seems
+            # If still mounted wait a bit (perhaps some ongoing umount needs more time) then try lazy umount:
             sleep 2
             umount_mountpoint_lazy $BUILD_DIR/outputfs
         fi
-        remove_temporary_mountpoint '$BUILD_DIR/outputfs' || BugError "Directory $BUILD_DIR/outputfs not empty, can not remove"
-        rmdir $v $BUILD_DIR >&2
+        # It is a bug in ReaR if BUILD_DIR/outputfs was not properly umounted and made empty by the scripts before:
+        remove_temporary_mountpoint '$BUILD_DIR/outputfs' || BugError "Directory $BUILD_DIR/outputfs not empty, cannot remove"
+        if ! rmdir $v "$BUILD_DIR" ; then
+            LogPrintError "Could not remove build area $BUILD_DIR (something still exists therein)"
+            mounted_in_BUILD_DIR="$( mount | grep "$BUILD_DIR" | sed -e 's/^/  /' )"
+            if test "$mounted_in_BUILD_DIR" ; then
+                LogPrintError "Something is still mounted within the build area"
+                LogPrintError "$mounted_in_BUILD_DIR"
+                LogPrintError "You must manually umount it, then you could manually remove the build area"
+            fi
+            LogPrintError "To manually remove the build area use (with caution): rm -Rf --one-file-system $BUILD_DIR"
+        fi
     fi
-    Log "End of program reached"
+    Log "End of program '$PROGRAM' reached"
 }
 
