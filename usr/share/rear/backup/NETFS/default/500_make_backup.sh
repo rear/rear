@@ -16,6 +16,8 @@ function set_tar_features () {
     FEATURE_TAR_IS_SET=1
 }
 
+local backup_prog_rc
+
 local scheme=$( url_scheme $BACKUP_URL )
 local path=$( url_path $BACKUP_URL )
 local opath=$( backup_path $scheme $path )

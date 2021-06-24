@@ -33,22 +33,20 @@ RSYNC_PORT=873                  # default port (of rsync server)
 RSYNC_PATH=
 
 
-echo $BACKUP_URL | egrep -q '(::)'      # new style '::' means rsync protocol
-if [[ $? -eq 0 ]]; then
+if egrep -q '(::)' <<< $BACKUP_URL ; then # new style '::' means rsync protocol
     RSYNC_PROTO=rsync
 else
     RSYNC_PROTO=ssh
 fi
 
-echo $host | grep -q '@'
-if [[ $? -eq 0 ]]; then
+if grep -q '@' <<< $host ; then
     RSYNC_USER="${host%%@*}"    # grab user name
 else
     RSYNC_USER=root
 fi
 
 # remove USER@ if present (we don't need it anymore)
-tmp2="${host#*@}"
+local tmp2="${host#*@}"
 
 case "$RSYNC_PROTO" in
 
@@ -56,8 +54,7 @@ case "$RSYNC_PROTO" in
         # tmp2=witsbebelnx02::backup or tmp2=witsbebelnx02::
         RSYNC_HOST="${tmp2%%::*}"
         # path=/gdhaese1@witsbebelnx02::backup or path=/backup
-        echo $path | grep -q '::'
-        if [[ $? -eq 0 ]]; then
+        if grep -q '::' <<< $path ; then
             RSYNC_PATH="${path##*::}"
         else
             RSYNC_PATH="${path##*/}"
@@ -79,8 +76,7 @@ esac
 
 # check if host is reachable
 if test "$PING" ; then
-    ping -c 2 "$RSYNC_HOST" >/dev/null
-    StopIfError "Backup host [$RSYNC_HOST] not reachable."
+    ping -c 2 "$RSYNC_HOST" >/dev/null || Error "Backup host [$RSYNC_HOST] not reachable."
 else
     Log "Skipping ping test"
 fi
@@ -89,15 +85,15 @@ fi
 case "$RSYNC_PROTO" in
 
     (rsync)
-        Log "Test: $BACKUP_PROG ${BACKUP_RSYNC_OPTIONS[@]} ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/"
-        $BACKUP_PROG ${BACKUP_RSYNC_OPTIONS[@]} ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/ >/dev/null
-        StopIfError "Rsync daemon not running on $RSYNC_HOST"
+        Log "Test: $BACKUP_PROG ${BACKUP_RSYNC_OPTIONS[*]} ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/"
+        $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/ >/dev/null \
+            || Error "Rsync daemon not running on $RSYNC_HOST"
         ;;
 
     (ssh)
         Log "Test: ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true"
-        ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true >/dev/null 2>&1
-        StopIfError "Secure shell connection not setup properly [$RSYNC_USER@$RSYNC_HOST]"
+        ssh ${RSYNC_USER}@${RSYNC_HOST} /bin/true >/dev/null 2>&1 \
+            || Error "Secure shell connection not setup properly [$RSYNC_USER@$RSYNC_HOST]"
         ;;
 
 esac
