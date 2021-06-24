@@ -39,7 +39,10 @@ function Source () {
         # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
         read -p "Press ENTER to include '$source_file' ... " 0<&6 1>&7 2>&8
     fi
+    # The Error function is searching for 'Including .*$last_sourced_script_filename'
+    # in RUNTIME_LOGFILE and/or STDOUT_STDERR_FILE so provide that info in both files:
     Log "Including $relname"
+    echo "Including $relname" >>$STDOUT_STDERR_FILE
     # DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
         Debug "Entering debugscript mode via 'set -$DEBUGSCRIPTS_ARGUMENT'."
@@ -125,27 +128,3 @@ function SourceStage () {
     done
     Log "Finished running '$stage' stage in $(( SECONDS - start_SourceStage )) seconds"
 }
-
-function cleanup_build_area_and_end_program () {
-    # Cleanup build area
-    Log "Finished $PROGRAM $WORKFLOW in $(( $( date +%s ) - START_SECONDS )) seconds"
-    if is_true "$KEEP_BUILD_DIR" ; then
-        LogPrint "You should also rm -Rf --one-file-system $BUILD_DIR"
-    else
-        Log "Removing build area $BUILD_DIR"
-        rm -Rf $TMP_DIR
-        rm -Rf $ROOTFS_DIR
-        # line below put in comment due to issue #465
-        #rm -Rf $BUILD_DIR/outputfs
-        # in worst case it could not umount; so before remove the BUILD_DIR check if above outputfs is gone
-        if mountpoint -q "$BUILD_DIR/outputfs" ; then
-            # still mounted it seems
-            sleep 2
-            umount_mountpoint_lazy $BUILD_DIR/outputfs
-        fi
-        remove_temporary_mountpoint '$BUILD_DIR/outputfs' || BugError "Directory $BUILD_DIR/outputfs not empty, can not remove"
-        rmdir $v $BUILD_DIR >&2
-    fi
-    Log "End of program reached"
-}
-
