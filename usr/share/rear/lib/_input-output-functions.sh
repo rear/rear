@@ -401,12 +401,44 @@ function Log () {
     # Have a timestamp with nanoseconds precision in any case
     # so that any subsequent Log() calls get logged with precise timestamps:
     { local timestamp=$( date +"%Y-%m-%d %H:%M:%S.%N " )
+      local prefix="${MESSAGE_PREFIX}${timestamp}"
+      # prefix_blanks has the printable characters in prefix replaced with blanks for indentation:
+      local prefix_blanks="$( tr '[:print:]' ' ' <<<"$prefix" )"
+      local message=""
       local log_message=""
-      if test $# -gt 0 ; then
-          log_message="${MESSAGE_PREFIX}${timestamp}$*"
-      else
-          log_message="${MESSAGE_PREFIX}${timestamp}$( cat )"
-      fi
+      test $# -gt 0 && message="$*" || message="$( cat )"
+      # The first line of message is prefixed with MESSAGE_PREFIX and timestamp
+      # and all subsequent lines in message are indented by prefix_blanks
+      # via bash parameter expansion ${message//$LF/$LF$prefix_blanks}
+      #   ${...}            - interpret ... using parameter expansion
+      #   message           - name of the variable containing the content
+      #   //...             - replace all instances of ...
+      #   $LF               - the literal newline character (see 'LF' above)
+      #   /...              - replace with ...
+      #   $LF$prefix_blanks - the literal newline character followed by the indentation blanks
+      # cf. https://superuser.com/questions/955935/how-can-i-replace-a-newline-with-its-escape-sequence
+      # that uses the literal newline character inline as in ${...//$'\n'/...}
+      # but that results partially wrong parameter expansion with bash version 3.1.17 in SLES10
+      # that seems to get somehow confused by the single quotes within parameter expansion:
+      #   # MESSAGE_PREFIX="message prefix "
+      #   # timestamp=$( date +"%Y-%m-%d %H:%M:%S.%N " )
+      #   # message="$( echo -e 'fist line\nsecond line\nthird line')"
+      #   # prefix="${MESSAGE_PREFIX}${timestamp}"
+      #   # prefix_blanks="$( tr '[:print:]' ' ' <<<"$prefix" )"
+      #   # log_message="${MESSAGE_PREFIX}${timestamp}${message//$'\n'/$'\n'$prefix_blanks}"
+      #   # echo "$log_message"
+      #   message prefix 2021-06-24 10:49:39.824719000 fist line'
+      #   '                                             second line'
+      #   '                                             third line
+      # so we use the LF variable (cf. how LF is set above)
+      #   # LF=$'\n'
+      #   # log_message="${MESSAGE_PREFIX}${timestamp}${message//$LF/$LF$prefix_blanks}"
+      #   # echo "$log_message"
+      #   message prefix 2021-06-24 10:49:39.824719000 fist line
+      #                                                second line
+      #                                                third line
+      # to make that parameter expansion also works with bash version 3.1.17 in SLES10:
+      log_message="${MESSAGE_PREFIX}${timestamp}${message//$LF/$LF$prefix_blanks}"
     } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # Append the log message explicitly to the log file to ensure that intended log messages
     # actually appear in the log file even inside { ... } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
