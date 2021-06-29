@@ -1,10 +1,11 @@
 # 400_restore_with_nsr.sh
 #
-# In case the NSR_CLIENT_MODE = YES and NSR_CLIENT_CAN_RECOVER = YES or unset (default)
-# then prompt the user to request the recovery action elsewhere on the NSRSERVER
-# and wait until the restore process has finished.
-#
-if is_true "$NSR_CLIENT_MODE" && [[ -z "$NSR_CLIENT_REQUESTRESTORE || is_true "$NSR_CLIENT_REQUESTRESTORE" ]]; then
+# The variable NSR_HAS_PROMPT has been set in
+# usr/share/rear/restore/NSR/default/390_request_point_in_time_restore_parameters.sh
+# in case NSR_CLIENT_MODE=YES and NSR_CLIENT_REQUEST_RESTORE=YES or unset.
+# Only these combinations lead to a prompt (see under "BACKUP=NSR" in default.conf for explanation)
+
+if is_true "$NSR_HAS_PROMPT" then
     LogPrint "Please let the restore process start on Your backup server i.e. $(cat $VAR_DIR/recovery/nsr_server)."
     LogPrint "Make sure all required data is restored to $TARGET_FS_ROOT ."
     LogPrint ""
@@ -24,7 +25,7 @@ else
     if [ ${#NSR_ENDTIME[@]} -gt 0 ] ; then
         recover_date="${NSR_ENDTIME[@]}"
         recover_args="-t ${recover_date}"
-        LogUserOutput "The recovery date/time is set to/until ${recover_date} ."
+        LogUserOutput "The recovery date/time is set to ${recover_date} ."
     else
         recover_args=""
         LogUserOutput "The most recent recovery date/time will be used."
