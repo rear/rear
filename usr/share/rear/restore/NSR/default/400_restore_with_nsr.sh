@@ -1,9 +1,10 @@
 # 400_restore_with_nsr.sh
 #
-# The variable NSR_HAS_PROMPT has been set in
+# The variable NSR_HAS_PROMPT has been set in the script
 # usr/share/rear/restore/NSR/default/390_request_point_in_time_restore_parameters.sh
 # in case NSR_CLIENT_MODE=YES and NSR_CLIENT_REQUEST_RESTORE=YES or unset.
-# Only these combinations lead to a prompt (see under "BACKUP=NSR" in default.conf for explanation)
+# These combinations will prompt the user for a recovery
+# (see explanation under "BACKUP=NSR" in default.conf).
 
 if is_true "$NSR_HAS_PROMPT" then
     LogPrint "Please let the restore process start on Your backup server i.e. $(cat $VAR_DIR/recovery/nsr_server)."

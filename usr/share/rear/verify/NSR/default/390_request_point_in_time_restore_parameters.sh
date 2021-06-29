@@ -8,6 +8,7 @@ NSR_HAS_PROMPT=0
 
 # Ask for a point-in-time (PIT) recovery date/time just in case 
 # NSR_CLIENT_MODE = YES and NSR_CLIENT_REQUESTRESTORE = NO else skip
+
 if is_true "$NSR_CLIENT_MODE"; then
     if is_false "$NSR_CLIENT_REQUESTRESTORE"; then
         UserOutput ""
