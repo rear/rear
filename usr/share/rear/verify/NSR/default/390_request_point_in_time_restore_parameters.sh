@@ -1,3 +1,5 @@
+# 390_request_point_in_time_restore_parameters.sh
+#
 # Ask for an EMC NetWorker (Legato) Point-In-Time Restore.
 # One point in time is used for all filespaces.
 # This causes the recover to use the input date or date/time to be used as the endtime -t option
