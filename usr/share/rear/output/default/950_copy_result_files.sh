@@ -5,16 +5,25 @@
 
 # For example for "rear mkbackuponly" there are usually no result files
 # that would need to be copied here to the output location:
-test "$RESULT_FILES" || return 0
+test "${RESULT_FILES[*]:-}" || return 0
 
 local scheme=$( url_scheme $OUTPUT_URL )
 local host=$( url_host $OUTPUT_URL )
 local path=$( url_path $OUTPUT_URL )
-local opath=$( output_path $scheme $path )
 
-# if $opath is empty return silently (e.g. scheme tape)
-if [[ -z "$opath" || -z "$OUTPUT_URL" || "$scheme" == "obdr" || "$scheme" == "tape" ]] ; then
-    return 0
+if [ -z "$OUTPUT_URL" ] || ! scheme_accepts_files $scheme ; then
+    if [ "$scheme" == "null" -o -z "$OUTPUT_URL" ] ; then
+        # There are result files to copy, but OUTPUT_URL=null indicates that we are not interested in them
+        # TODO: empty OUTPUT_URL seems to be equivalent to null, should we continue to allow that,
+        # or enforce setting it explicitly?
+        return 0
+    else
+        # There are files to copy, but schemes like tape: do not allow files to be stored. The files would be lost.
+        # Do not allow that.
+        # Schemes like obdr: that store the results themselves should clear RESULT_FILES to indicate that nothing is to be done.
+        # Is this considered a bug in ReaR (BugError), or a user misconfiguration (Error) when this happens?
+        BugError "Output scheme $scheme does not accept result files ${RESULT_FILES[*]}, use OUTPUT_URL=null if you don't want to copy them anywhere."
+    fi
 fi
 
 LogPrint "Copying resulting files to $scheme location"
@@ -38,66 +47,76 @@ RESULT_FILES+=( "$TMP_DIR/$final_logfile_name" )
 LogPrint "Saving $RUNTIME_LOGFILE as $final_logfile_name to $scheme location"
 
 # The real work (actually copying resulting files to the output location):
+if scheme_supports_filesystem $scheme ; then
+    # We can access the destination as a mounted filesystem. Do nothing special,
+    # simply copy the output files there. (Covers stuff like nfs|cifs|usb|file|sshfs|ftpfs|davfs.)
+    # This won't work for iso:// , but iso can't be a OUTPUT_URL scheme, this is checked in
+    # prep/default/040_check_backup_and_output_scheme.sh
+    # This covers also unknown schemes, because mount_url() will attempt to mount them and fail if this is not possible,
+    # so if we got here, the URL had been mounted successfully.
+    local opath
+    opath=$( output_path $scheme $path )
+    LogPrint "Copying result files '${RESULT_FILES[*]}' to $opath at $scheme location"
+    # Copy each result file one by one to avoid usually false error exits as in
+    # https://github.com/rear/rear/issues/1711#issuecomment-380009044
+    # where in case of an improper RESULT_FILES array member 'cp' can error out with something like
+    #   cp: will not overwrite just-created '/tmp/rear.XXX/outputfs/f121/rear-f121.log' with '/tmp/rear.XXX/tmp/rear-f121.log'
+    # See
+    # https://stackoverflow.com/questions/4669420/have-you-ever-got-this-message-when-moving-a-file-mv-will-not-overwrite-just-c
+    # which is about the same for 'mv', how to reproduce it:
+    #   mkdir a b c
+    #   touch a/f b/f
+    #   mv a/f b/f c/
+    #     mv: will not overwrite just-created 'c/f' with 'b/f'
+    # It happens because two different files with the same name would be moved to the same place with only one command.
+    # The -f option won't help for this case, it only applies when there already is a target file that will be overwritten.
+    # Accordingly it is sufficient (even without '-f') to copy each result file one by one:
+    for result_file in "${RESULT_FILES[@]}" ; do
+
+        # note: s390 kernel copy is only through nfs
+        #
+        # s390 optional naming override of initrd and kernel to match the s390 filesytem naming conventions
+        # on s390a there is an option to name the initrd and kernel in the form of
+        # file name on s390 are in the form of name type mode
+        # the name is the userid or vm name and the type is initrd or kernel
+        # if the vm name (cp q userid) is HOSTA then the files written will be HOSTA kernel and HOSTA initrd
+        # vars needed:
+        # ZVM_NAMING      - set in local.conf, if Y then enable naming override
+        # ZVM_KERNEL_NAME - keeps track of kernel name in results array
+        # ARCH            - override only if ARCH is Linux-s390
+        #
+        # initrd name override is handled in 900_create_initramfs.sh
+        # kernel name override is handled in 400_guess_kernel.sh
+        # kernel name override is handled in 950_copy_result_files.sh
+
+        if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then
+           if [[ -z $opath ]] ; then
+              Error "Output path is not set, please check OUTPUT_URL in local.conf."
+           fi
+
+           if [ "$ZVM_KERNEL_NAME" == "$result_file" ] ; then
+              VM_UID=$(vmcp q userid |awk '{ print $1 }')
+
+              if [[ -z $VM_UID ]] ; then
+                 Error "VM UID is not set, VM UID is set from call to vmcp.  Please make sure vmcp is available and 'vmcp q userid' returns VM ID"
+              fi
+
+              LogPrint "s390 kernel naming override: $result_file will be written as $VM_UID.kernel"
+              cp $v "$result_file" $opath/$VM_UID.kernel || Error "Could not copy result file $result_file to $opath/$VM_UID.kernel at $scheme location"
+           else
+              cp $v "$result_file" $opath/ || Error "Could not copy result file $result_file to $opath at $scheme location"
+           fi
+        else
+           cp $v "$result_file" $opath/ || Error "Could not copy result file $result_file to $opath at $scheme location"
+        fi
+    done
+
+    return 0
+fi
+
+# Filesystem access to output destination not supported, use a scheme-specific tool (rsync, lftp)
 case "$scheme" in
-    (nfs|cifs|usb|file|sshfs|ftpfs|davfs)
-        LogPrint "Copying result files '${RESULT_FILES[@]}' to $opath at $scheme location"
-        # Copy each result file one by one to avoid usually false error exits as in
-        # https://github.com/rear/rear/issues/1711#issuecomment-380009044
-        # where in case of an improper RESULT_FILES array member 'cp' can error out with something like
-        #   cp: will not overwrite just-created '/tmp/rear.XXX/outputfs/f121/rear-f121.log' with '/tmp/rear.XXX/tmp/rear-f121.log'
-        # See
-        # https://stackoverflow.com/questions/4669420/have-you-ever-got-this-message-when-moving-a-file-mv-will-not-overwrite-just-c
-        # which is about the same for 'mv', how to reproduce it:
-        #   mkdir a b c
-        #   touch a/f b/f
-        #   mv a/f b/f c/
-        #     mv: will not overwrite just-created 'c/f' with 'b/f'
-        # It happens because two different files with the same name would be moved to the same place with only one command.
-        # The -f option won't help for this case, it only applies when there already is a target file that will be overwritten.
-        # Accordingly it is sufficient (even without '-f') to copy each result file one by one:
-        for result_file in "${RESULT_FILES[@]}" ; do
-
-            # note: s390 kernel copy is only through nfs
-            #
-            # s390 optional naming override of initrd and kernel to match the s390 filesytem naming conventions
-            # on s390a there is an option to name the initrd and kernel in the form of
-            # file name on s390 are in the form of name type mode
-            # the name is the userid or vm name and the type is initrd or kernel
-            # if the vm name (cp q userid) is HOSTA then the files written will be HOSTA kernel and HOSTA initrd
-            # vars needed:
-            # ZVM_NAMING      - set in local.conf, if Y then enable naming override
-            # ZVM_KERNEL_NAME - keeps track of kernel name in results array
-            # ARCH            - override only if ARCH is Linux-s390
-            #
-            # initrd name override is handled in 900_create_initramfs.sh
-            # kernel name override is handled in 400_guess_kernel.sh
-            # kernel name override is handled in 950_copy_result_files.sh
-
-            if [[ "$ZVM_NAMING" == "Y" && "$ARCH" == "Linux-s390" ]] ; then
-               if [[ -z $opath ]] ; then
-                  Error "Output path is not set, please check OUTPUT_URL in local.conf."
-               fi
-
-               if [ "$ZVM_KERNEL_NAME" == "$result_file" ] ; then
-                  VM_UID=$(vmcp q userid |awk '{ print $1 }')
-
-                  if [[ -z $VM_UID ]] ; then
-                     Error "VM UID is not set, VM UID is set from call to vmcp.  Please make sure vmcp is available and 'vmcp q userid' returns VM ID"
-                  fi
-
-                  LogPrint "s390 kernel naming override: $result_file will be written as $VM_UID.kernel"
-                  cp $v "$result_file" $opath/$VM_UID.kernel || Error "Could not copy result file $result_file to $opath/$VM_UID.kernel at $scheme location"
-               else
-                  cp $v "$result_file" $opath/ || Error "Could not copy result file $result_file to $opath at $scheme location"
-               fi
-            else
-               cp $v "$result_file" $opath/ || Error "Could not copy result file $result_file to $opath at $scheme location"
-            fi
-        done
-        ;;
     (fish|ftp|ftps|hftp|http|https|sftp)
-        # FIXME: Verify if usage of $array[*] instead of "${array[@]}" is actually intended here
-        # see https://github.com/rear/rear/issues/1068
         LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
         Log "lftp -c $OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mput ${RESULT_FILES[*]}"
 
@@ -111,12 +130,15 @@ case "$scheme" in
     (rsync)
         # If BACKUP = RSYNC output/RSYNC/default/900_copy_result_files.sh took care of it:
         test "$BACKUP" = "RSYNC" && return 0
-        LogPrint "Copying result files '${RESULT_FILES[@]}' to $scheme location"
-        Log "rsync -a $v ${RESULT_FILES[@]} ${host}:${path}"
+        LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
+        Log "rsync -a $v ${RESULT_FILES[*]} ${host}:${path}"
         rsync -a $v "${RESULT_FILES[@]}" "${host}:${path}" || Error "Problem transferring result files to $OUTPUT_URL"
         ;;
     (*)
-        Error "Invalid scheme '$scheme' in '$OUTPUT_URL'."
+        # Should be unreachable, if we got here, it is a bug.
+        # Unknown schemes are handled in mount_url(), which tries to mount them and aborts if they are unsupported.
+        # If they can be mounted, they fall under the scheme_supports_filesystem branch above.
+        BugError "Invalid scheme '$scheme' in '$OUTPUT_URL'."
         ;;
 esac
 

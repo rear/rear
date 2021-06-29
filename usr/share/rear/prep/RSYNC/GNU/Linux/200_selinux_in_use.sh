@@ -33,7 +33,7 @@ case $(basename $BACKUP_PROG) in
 			touch $TMP_DIR/force.autorelabel	# after reboot the restored system do a forced SELinux relabeling
 		else
 			# if --xattrs is already set; no need to do it again
-			if ! grep -q xattrs <<< $(echo ${BACKUP_RSYNC_OPTIONS[@]}); then
+			if ! grep -q xattrs <<< "${BACKUP_RSYNC_OPTIONS[*]}" ; then
 				BACKUP_RSYNC_OPTIONS+=( --xattrs )
 			fi
 			RSYNC_SELINUX=1		# variable used in recover mode (means using xattr and not disable SELinux)
