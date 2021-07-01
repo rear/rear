@@ -17,7 +17,9 @@ if is_true "$NSR_HAS_PROMPT"; then
     rear_shell "Has the restore been completed and are You ready to continue the recovery?"
 else
     LogUserOutput "Starting nsrwatch on console 8"
-    TERM=linux nsrwatch -p 1 -s $(cat $VAR_DIR/recovery/nsr_server) </dev/tty8 >/dev/tty8 &
+    # Leaving out the "-p 1" since it is not working at least for EMC networker client 8.4.2
+    # Legacy: nsrwatch -p 1 -s $(cat $VAR_DIR/recovery/nsr_server) </dev/tty8 >/dev/tty8 &
+    TERM=linux nsrwatch -s $(cat $VAR_DIR/recovery/nsr_server) </dev/tty8 >/dev/tty8 &
 
     LogUserOutput "Restore filesystem $(cat $VAR_DIR/recovery/nsr_paths) with recover"
 
