@@ -20,7 +20,18 @@ function copy_binaries () {
         # Continue with the next one if a binary is empty or contains only blanks:
         contains_visible_char "$binary" || continue
         if ! cp $verbose --archive --dereference --force "$binary" "$destdir" 1>&2 ; then
-            Error "Failed to copy '$binary' to '$destdir'"
+            # When a binary should be copied where its target already exists as dangling symlink
+            # e.g. when /sbin/lvcreate should be copied to /tmp/rear.XXX/rootfs/bin/lvcreate
+            # but there is already the dangling symlink /tmp/rear.XXX/rootfs/bin/lvcreate -> lvm
+            # because its link target was not yet copied into the recovery system
+            # cf. "create LVM symlinks" in build/GNU/Linux/005_create_symlinks.sh
+            # then cp fails (regardless of the --force option) with an error message like
+            # cp: not writing through dangling symlink '/tmp/rear.XXX/rootfs/bin/lvcreate'
+            # So we skip cp errors here but add the affected binary to REQUIRED_PROGS
+            # to verify later that the binary actually exists in the recovery system
+            # regardless what the reason was why cp failed here:
+            Debug "copy_binaries skipped binary '$binary' (the binary gets verified later via REQUIRED_PROGS)"
+            REQUIRED_PROGS+=( $( basename "$binary" ) )
         fi
     done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
