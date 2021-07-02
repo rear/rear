@@ -27,10 +27,12 @@ function copy_binaries () {
             # cf. "create LVM symlinks" in build/GNU/Linux/005_create_symlinks.sh
             # then cp fails (regardless of the --force option) with an error message like
             # cp: not writing through dangling symlink '/tmp/rear.XXX/rootfs/bin/lvcreate'
-            # So we skip cp errors here but add the affected binary to REQUIRED_PROGS
-            # to verify later that the binary actually exists in the recovery system
-            # regardless what the reason was why cp failed here:
-            Debug "copy_binaries skipped binary '$binary' (the binary gets verified later via REQUIRED_PROGS)"
+            # so we silently skip cp errors here regardless what the reason is why cp failed here
+            # and add it to REQUIRED_PROGS to error out later if it is actually missing in the recovery system
+            # (for binaries in PROGS copy_binaries is only called when it exists in the original system)
+            # and show the issue in debug mode so the user could see why it errors out at REQUIRED_PROGS
+            # cf. https://github.com/rear/rear/pull/2643
+            DebugPrint "copy_binaries skipped '$binary' (it gets verified later via REQUIRED_PROGS)"
             REQUIRED_PROGS+=( $( basename "$binary" ) )
         fi
     done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
