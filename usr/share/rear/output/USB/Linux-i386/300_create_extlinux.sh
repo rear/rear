@@ -175,6 +175,20 @@ fi
 # We generate a ReaR syslinux.cfg based on existing ReaR syslinux.cfg files.
 Log "Creating /rear/syslinux.cfg"
 {
+    # Enable serial console, unless explicitly disabled
+    if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
+        for devnode in $(ls /dev/ttyS[0-9]* | sort); do
+            # Not sure if using all serial devices do screw up syslinux in general
+            # for me listing more then one serial line in the config screwed it
+            if [[ $SERIAL_CONSOLE_DEVICE == $devnode ]]; then
+                speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
+                if [ "$speed" ]; then
+                    syslinux_write "serial ${devnode##/dev/ttyS} $speed"
+                fi
+            fi
+        done
+    fi
+
     syslinux_write <<EOF
 label rear
     say Relax-and-Recover - Recover $HOSTNAME from $time
@@ -264,9 +278,13 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
     # Enable serial console, unless explicitly disabled
     if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
         for devnode in $(ls /dev/ttyS[0-9]* | sort); do
-            speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
-            if [ "$speed" ]; then
-                syslinux_write "serial ${devnode##/dev/ttyS} $speed"
+            # Not sure if using all serial devices do screw up syslinux in general
+            # for me listing more then one serial line in the config screwed it
+            if [[ $SERIAL_CONSOLE_DEVICE == $devnode ]]; then
+                speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
+                if [ "$speed" ]; then
+                    syslinux_write "serial ${devnode##/dev/ttyS} $speed"
+                fi
             fi
         done
     fi
