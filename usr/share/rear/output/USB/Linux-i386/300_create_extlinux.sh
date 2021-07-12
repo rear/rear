@@ -84,6 +84,12 @@ BEGIN {
     fi
 }
 
+# set nocasematch option
+shopt -s nocasematch
+if [ ! -z $USB_BOOTLOADER ] && [[ ! $USB_BOOTLOADER =~ syslinux|extlinux ]]; then
+    return 0
+fi
+
 if syslinux_needs_update; then
     SYSLINUX_NEEDS_UPDATE="y"
 fi
