@@ -180,6 +180,7 @@ Log "Creating /rear/syslinux.cfg"
         for devnode in $(ls /dev/ttyS[0-9]* | sort); do
             # Not sure if using all serial devices do screw up syslinux in general
             # for me listing more then one serial line in the config screwed it
+            # see https://github.com/rear/rear/pull/2650
             if [ -z $SERIAL_CONSOLE_DEVICE_SYSLINUX ] || [[ $SERIAL_CONSOLE_DEVICE_SYSLINUX == $devnode ]]; then
                 speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
                 if [ "$speed" ]; then
@@ -280,6 +281,7 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
         for devnode in $(ls /dev/ttyS[0-9]* | sort); do
             # Not sure if using all serial devices do screw up syslinux in general
             # for me listing more then one serial line in the config screwed it
+            # see https://github.com/rear/rear/pull/2650
             if [ -z $SERIAL_CONSOLE_DEVICE_SYSLINUX ] || [[ $SERIAL_CONSOLE_DEVICE_SYSLINUX == $devnode ]]; then
                 speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
                 if [ "$speed" ]; then
