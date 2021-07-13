@@ -765,8 +765,8 @@ BUG in $caller_source:
 '$@'
 --------------------
 Please report this issue at https://github.com/rear/rear/issues
-and include the relevant parts from $RUNTIME_LOGFILE
-preferably with full debug information via 'rear -D $WORKFLOW'
+and include at least all related parts from $RUNTIME_LOGFILE
+preferably the whole debug information via 'rear -D $WORKFLOW'
 ===================="
 }
 
