@@ -1,3 +1,8 @@
+# Only run for syslinux and extlinux
+if [ ! -z $USB_BOOTLOADER ] && [[ ! $USB_BOOTLOADER =~ syslinux|extlinux ]]; then
+    return 0
+fi
+
 # Test for features in dd
 # true if dd supports oflag= option
 FEATURE_DD_OFLAG=
