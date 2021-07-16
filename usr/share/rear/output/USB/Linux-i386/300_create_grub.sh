@@ -41,7 +41,7 @@ if has_binary grub-install grub2-install; then
     # What version of grub are we using
     # substr() for awk did not work as expected for this reason cut was used
     # First charecter should be enough to identify grub version
-    grub_version=$($GRUB_INSTALL --version | awk '{print $NF}' | cut -c1-1)
+    grub_version=$(( $GRUB_INSTALL --version | awk '{print $NF}' | cut -c1-1 ))
 
     case ${grub_version} in
         0)
