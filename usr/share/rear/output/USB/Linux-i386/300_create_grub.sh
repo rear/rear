@@ -1,6 +1,4 @@
 # only run for grub
-# set nocasematch option
-shopt -s nocasematch
 if [ -z $USB_BOOTLOADER ] && [[ ! $USB_BOOTLOADER =~ grub ]]; then
     return 0
 fi
