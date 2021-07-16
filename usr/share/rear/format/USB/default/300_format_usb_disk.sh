@@ -63,12 +63,14 @@ else
     rear_data_partition_number=1
 
     if [[ "$USB_DEVICE_PARTED_LABEL" == "gpt" ]] ; then
-        LogPrint "Creating bootloader system partition on '$RAW_USB_DEVICE' from sector 34 to 2047"
+        # Here we create the BIOS boot partition which may hold the second stage - also called core.img in grub
+        LogPrint "Creating BIOS boot partition on '$RAW_USB_DEVICE' from sector 34 to 2047"
         bootloader_partition_start_byte=34
         bootloader_partition_end_byte=2047
         if ! parted -s $RAW_USB_DEVICE unit s mkpart primary $bootloader_partition_start_byte $bootloader_partition_end_byte >&2 ; then
-            Error "Failed to create BOOTLOADER system partition on '$RAW_USB_DEVICE'"
+            Error "Failed to create BIOS boot partition on '$RAW_USB_DEVICE'"
         fi
+        # The parted uses the bios_grub flag to also change the partition type to ef02
         LogPrint "Setting 'bios_grub' flag on $RAW_USB_DEVICE$rear_data_partition_number"
         if ! parted -s $RAW_USB_DEVICE set $rear_data_partition_number bios_grub on >&2 ; then
             Error "Could not make first partition bootloader area on '$RAW_USB_DEVICE$rear_data_partition_number'"
@@ -77,17 +79,18 @@ else
         rear_data_partition_number=$(( rear_data_partition_number + 1 ))
     fi
 
+    # Now we create the boot partition later containing the bootloader config/plugins/modules, the kernel and a system boot image of some sort
     # Round BOOT partition size to nearest block size to make the 2nd partition (the ReaR data partition) also align to the block size:
     test "$USB_BOOT_PART_SIZE" || USB_BOOT_PART_SIZE="$USB_UEFI_PART_SIZE"
     USB_BOOT_PART_SIZE=$(( ( USB_BOOT_PART_SIZE + ( USB_PARTITION_ALIGN_BLOCK_SIZE / 2 ) ) / USB_PARTITION_ALIGN_BLOCK_SIZE * USB_PARTITION_ALIGN_BLOCK_SIZE ))
-    LogPrint "Creating BOOT system partition with size $USB_BOOT_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB on '$RAW_USB_DEVICE'"
+    LogPrint "Creating BOOT partition with size $USB_BOOT_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB on '$RAW_USB_DEVICE'"
     # Calculate byte values:
     boot_partition_start_byte=$(( USB_PARTITION_ALIGN_BLOCK_SIZE * MiB_bytes ))
     boot_partition_size_bytes=$(( USB_BOOT_PART_SIZE * MiB_bytes ))
     # The end byte is the last byte that belongs to that partition so that one must be careful to use "start_byte + partition_size_in_bytes - 1":
     boot_partition_end_byte=$(( boot_partition_start_byte + boot_partition_size_bytes - 1 ))
     if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $boot_partition_start_byte $boot_partition_end_byte >&2 ; then
-        Error "Failed to create BOOT system partition on '$RAW_USB_DEVICE'"
+        Error "Failed to create BOOT partition on '$RAW_USB_DEVICE'"
     fi
     # Choose correct boot flag for partition table (see issue #1153)
     local boot_flag
@@ -96,6 +99,8 @@ else
             boot_flag="boot"
             ;;
         "gpt")
+            # AFAIK legacy_boot is a flag that is normally not set but may be required by some Firmware/BIOS versions
+            # Use USB_BOOT_GPT_LEGACY to change it if needed. When USB_BOOT_GPT_LEGACY is empty the flag will not get set
             test "$USB_BOOT_GPT_LEGACY" || USB_BOOT_GPT_LEGACY="legacy_boot"
             boot_flag="$USB_BOOT_GPT_LEGACY"
             ;;
