@@ -6,19 +6,16 @@ fi
 # we assume that REAL_USB_DEVICE and RAW_USB_DEVICE are both set from the script
 # in prep/USB/Linux-i386/350_check_usb_disk.sh
 
-[ "$RAW_USB_DEVICE" -a "$REAL_USB_DEVICE" ]
-BugIfError "RAW_USB_DEVICE and REAL_USB_DEVICE should be already set"
+[ "$RAW_USB_DEVICE" -a "$REAL_USB_DEVICE" ] || Error "RAW_USB_DEVICE and REAL_USB_DEVICE should be already set"
 
 USB_REAR_DIR="$BUILD_DIR/outputfs/$USB_PREFIX"
 if [ ! -d "$USB_REAR_DIR" ]; then
-    mkdir -p $v "$USB_REAR_DIR" >/dev/null
-    StopIfError "Could not create USB ReaR dir [$USB_REAR_DIR] !"
+    mkdir -p $v "$USB_REAR_DIR" >/dev/null || Error "Could not create USB ReaR dir [$USB_REAR_DIR] !"
 fi
 
 USB_BOOT_DIR="$BUILD_DIR/outputfs/boot"
 if [ ! -d "$USB_BOOT_DIR" ]; then
-    mkdir -p $v "$USB_BOOT_DIR" >/dev/null
-    StopIfError "Could not create USB boot dir [$USB_BOOT_DIR] !"
+    mkdir -p $v "$USB_BOOT_DIR" >/dev/null || Error "Could not create USB boot dir [$USB_BOOT_DIR] !"
 fi
 
 # Hope this assumption is not wrong ...
@@ -35,8 +32,7 @@ if has_binary grub-install grub2-install; then
 
     # install
     Log "installing grub..."
-    $GRUB_INSTALL --boot-directory=${USB_BOOT_DIR} --recheck $RAW_USB_DEVICE
-    StopIfError "Could not install grub on $RAW_USB_DEVICE !"
+    $GRUB_INSTALL --boot-directory=${USB_BOOT_DIR} --recheck $RAW_USB_DEVICE || Error "Could not install grub on $RAW_USB_DEVICE !"
 
     # What version of grub are we using
     # substr() for awk did not work as expected for this reason cut was used

@@ -101,8 +101,7 @@ esac
 
 USB_REAR_DIR="$BUILD_DIR/outputfs/$USB_PREFIX"
 if [ ! -d "$USB_REAR_DIR" ]; then
-    mkdir -p $v "$USB_REAR_DIR" >/dev/null
-    StopIfError "Could not create USB ReaR dir [$USB_REAR_DIR] !"
+    mkdir -p $v "$USB_REAR_DIR" >/dev/null || Error "Could not create USB ReaR dir [$USB_REAR_DIR] !"
 fi
 
 # We generate a single syslinux.cfg for the current system
@@ -255,8 +254,7 @@ EOF
 } 4>"$BUILD_DIR/outputfs/rear/syslinux.cfg"
 
 if [ ! -d "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" ]; then
-    mkdir -p $v "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" >/dev/null
-    StopIfError "Could not create USB syslinux dir [$BUILD_DIR/outputfs/$SYSLINUX_PREFIX] !"
+    mkdir -p $v "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" >/dev/null || Error "Could not create USB syslinux dir [$BUILD_DIR/outputfs/$SYSLINUX_PREFIX] !"
 fi
 
 echo "$VERSION_INFO" >$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/message
