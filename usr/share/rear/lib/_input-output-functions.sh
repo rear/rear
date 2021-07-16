@@ -1038,9 +1038,9 @@ function UserInput () {
     # Avoid stderr if USER_INPUT_PROMPT is not set or empty:
     test "$USER_INPUT_PROMPT" 2>/dev/null && prompt="$USER_INPUT_PROMPT"
     local input_words_array_name=""
-    local input_max_chars=1000
-    # Avoid stderr if USER_INPUT_MAX_CHARS is not set or empty and ignore wrong USER_INPUT_MAX_CHARS:
-    test "$USER_INPUT_MAX_CHARS" -ge 0 2>/dev/null && input_max_chars=$USER_INPUT_MAX_CHARS
+    local input_max_chars=0
+    # Avoid stderr if USER_INPUT_MAX_CHARS is not set or empty and ignore useless '0' or wrong USER_INPUT_MAX_CHARS:
+    test "$USER_INPUT_MAX_CHARS" -ge 1 2>/dev/null && input_max_chars=$USER_INPUT_MAX_CHARS
     local input_delimiter=""
     local default_input=""
     local user_input_ID=""
