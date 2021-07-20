@@ -22,6 +22,7 @@ test $USB_PARTITION_ALIGN_BLOCK_SIZE -ge 1 || USB_PARTITION_ALIGN_BLOCK_SIZE="1"
 MiB_bytes=$(( 1024 * 1024 ))
 
 if is_true "$EFI" ; then
+
     LogPrint "The --efi toggle was used with format - making an EFI bootable device '$RAW_USB_DEVICE'"
     # Prompt user for size of EFI system partition on USB disk if no valid value is specified:
     while ! is_positive_integer $USB_UEFI_PART_SIZE ; do
@@ -32,7 +33,7 @@ if is_true "$EFI" ; then
         test "$USB_UEFI_PART_SIZE" || USB_UEFI_PART_SIZE="512"
     done
     LogPrint "Creating GUID partition table (GPT) on '$RAW_USB_DEVICE'"
-    if ! parted -s $RAW_USB_DEVICE mklabel gpt >&2 ; then
+    if ! parted -s $RAW_USB_DEVICE mklabel gpt ; then
         Error "Failed to create GPT partition table on '$RAW_USB_DEVICE'"
     fi
     # Round UEFI partition size to nearest block size to make the 2nd partition (the ReaR data partition) also align to the block size:
@@ -43,7 +44,7 @@ if is_true "$EFI" ; then
     efi_partition_size_bytes=$(( USB_UEFI_PART_SIZE * MiB_bytes ))
     # The end byte is the last byte that belongs to that partition so that one must be careful to use "start_byte + partition_size_in_bytes - 1":
     efi_partition_end_byte=$(( efi_partition_start_byte + efi_partition_size_bytes - 1 ))
-    if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $efi_partition_start_byte $efi_partition_end_byte >&2 ; then
+    if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $efi_partition_start_byte $efi_partition_end_byte ; then
         Error "Failed to create EFI system partition on '$RAW_USB_DEVICE'"
     fi
     # Calculate byte value for the start of the subsequent ReaR data partition:
@@ -51,81 +52,109 @@ if is_true "$EFI" ; then
     # Partition 1 is the EFI system partition (vfat partition) on which EFI/BOOT/BOOTX86.EFI resides.
     # rear_data_partition_number is used below and in the subsequent 350_label_usb_disk.sh script for the ReaR data partition:
     rear_data_partition_number=2
+
+    # End of EFI case.
 else
+    # Begin non-EFI case:
+
     # If not set use fallback value 'msdos' (same as the default value in default.conf):
     test "msdos" = "$USB_DEVICE_PARTED_LABEL" -o "gpt" = "$USB_DEVICE_PARTED_LABEL" || USB_DEVICE_PARTED_LABEL="msdos"
     LogPrint "Creating partition table of type '$USB_DEVICE_PARTED_LABEL' on '$RAW_USB_DEVICE'"
-    if ! parted -s $RAW_USB_DEVICE mklabel $USB_DEVICE_PARTED_LABEL >&2 ; then
+    if ! parted -s $RAW_USB_DEVICE mklabel $USB_DEVICE_PARTED_LABEL ; then
         Error "Failed to create $USB_DEVICE_PARTED_LABEL partition table on '$RAW_USB_DEVICE'"
     fi
 
-    # rear_data_partition_number is used below and in the subsequent 350_label_usb_disk.sh script for the ReaR data partition:
+    # rear_data_partition_number is used below and also (mis)used as global variable
+    # in the subsequent 350_label_usb_disk.sh script for the ReaR data partition.
+    # The rear_data_partition_number value is (mis)used below also
+    # as BIOS boot partition number and subsequently as boot partition number:
     rear_data_partition_number=1
 
+    # USB_PARTITION_ALIGN_BLOCK_SIZE is the first byte of the boot partition:
+    boot_partition_start_byte=$(( USB_PARTITION_ALIGN_BLOCK_SIZE * MiB_bytes ))
+
     if [[ "$USB_DEVICE_PARTED_LABEL" == "gpt" ]] ; then
-        # Here we create the BIOS boot partition which may hold the second stage - also called core.img in grub
-        LogPrint "Creating BIOS boot partition on '$RAW_USB_DEVICE' from sector 34 to 2047"
-        bootloader_partition_start_byte=34
-        bootloader_partition_end_byte=2047
-        if ! parted -s $RAW_USB_DEVICE unit s mkpart primary $bootloader_partition_start_byte $bootloader_partition_end_byte >&2 ; then
-            Error "Failed to create BIOS boot partition on '$RAW_USB_DEVICE'"
+        # Create BIOS boot partition for GRUB2 second stage 'core.img'
+        # cf. https://en.wikipedia.org/wiki/BIOS_boot_partition
+        # and https://en.wikipedia.org/wiki/GUID_Partition_Table reads (excerpt)
+        #   The UEFI specification stipulates that a minimum of 16,384 bytes,
+        #   regardless of sector size, are allocated for the Partition Entry Array.
+        #   Thus, on a disk with 512-byte sectors, at least 32 sectors are used for the Partition Entry Array,
+        #   and the first usable block is LBA 34 or higher.
+        #   While on a 4096-byte sectors disk, at least 4 sectors are used for the Partition Entry Array,
+        #   and the first usable block is LBA 6 or higher.
+        # So the first possible byte for a BIOS boot partition is
+        # 512 * 34 = 17408 on a disk with 512-byte sectors and
+        # 4096 * 6 = 24576 on a disk with 4096-byte sectors and
+        # we assume using the maximum value 24576 will work for both cases
+        # cf. https://github.com/rear/rear/pull/2656#issuecomment-880528455
+        bios_boot_partition_start_byte=24576
+        LogPrint "Creating BIOS boot partition '$RAW_USB_DEVICE$rear_data_partition_number'"
+        # The BIOS boot partition goes up to (excluding) the byte where the boot partition starts:
+        bios_boot_partition_end_byte=$(( boot_partition_start_byte - 1 ))
+        if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $bios_boot_partition_start_byte $bios_boot_partition_end_byte ; then
+            Error "Failed to create BIOS boot partition '$RAW_USB_DEVICE$rear_data_partition_number'"
         fi
-        # The parted uses the bios_grub flag to also change the partition type to ef02
-        LogPrint "Setting 'bios_grub' flag on $RAW_USB_DEVICE$rear_data_partition_number"
-        if ! parted -s $RAW_USB_DEVICE set $rear_data_partition_number bios_grub on >&2 ; then
-            Error "Could not make first partition bootloader area on '$RAW_USB_DEVICE$rear_data_partition_number'"
+        # parted uses the bios_grub flag to also change the partition type to ef02
+        # The rear_data_partition_number value is here the partition number of the BIOS boot partition:
+        LogPrint "Setting 'bios_grub' flag on BIOS boot partition '$RAW_USB_DEVICE$rear_data_partition_number'"
+        if ! parted -s $RAW_USB_DEVICE set $rear_data_partition_number bios_grub on ; then
+            Error "Failed to set 'bios_grub' flag on BIOS boot partition '$RAW_USB_DEVICE$rear_data_partition_number'"
         fi
-        # move one number up
+        # With a BIOS boot partition the ReaR data partition number is one more as it was before (i.e. now 2):
         rear_data_partition_number=$(( rear_data_partition_number + 1 ))
     fi
 
-    # Now we create the boot partition later containing the bootloader config/plugins/modules, the kernel and a system boot image of some sort
-    # Round BOOT partition size to nearest block size to make the 2nd partition (the ReaR data partition) also align to the block size:
+    # Create the boot partition for the bootloader config/plugins/modules, the kernel and the ReaR recovery system initrd.
+    # Round boot partition size to nearest block size to make the next partition (the ReaR data partition) also align to the block size:
     test "$USB_BOOT_PART_SIZE" || USB_BOOT_PART_SIZE="$USB_UEFI_PART_SIZE"
     USB_BOOT_PART_SIZE=$(( ( USB_BOOT_PART_SIZE + ( USB_PARTITION_ALIGN_BLOCK_SIZE / 2 ) ) / USB_PARTITION_ALIGN_BLOCK_SIZE * USB_PARTITION_ALIGN_BLOCK_SIZE ))
-    LogPrint "Creating BOOT partition with size $USB_BOOT_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB on '$RAW_USB_DEVICE'"
+    LogPrint "Creating boot partition '$RAW_USB_DEVICE$rear_data_partition_number' with size $USB_BOOT_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB"
     # Calculate byte values:
-    boot_partition_start_byte=$(( USB_PARTITION_ALIGN_BLOCK_SIZE * MiB_bytes ))
     boot_partition_size_bytes=$(( USB_BOOT_PART_SIZE * MiB_bytes ))
     # The end byte is the last byte that belongs to that partition so that one must be careful to use "start_byte + partition_size_in_bytes - 1":
     boot_partition_end_byte=$(( boot_partition_start_byte + boot_partition_size_bytes - 1 ))
-    if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $boot_partition_start_byte $boot_partition_end_byte >&2 ; then
-        Error "Failed to create BOOT partition on '$RAW_USB_DEVICE'"
+    if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $boot_partition_start_byte $boot_partition_end_byte ; then
+        Error "Failed to create boot partition '$RAW_USB_DEVICE$rear_data_partition_number'"
     fi
     # Choose correct boot flag for partition table (see issue #1153)
     local boot_flag
     case "$USB_DEVICE_PARTED_LABEL" in
-        "msdos")
+        ("msdos")
             boot_flag="boot"
             ;;
-        "gpt")
-            # AFAIK legacy_boot is a flag that is normally not set but may be required by some Firmware/BIOS versions
-            # Use USB_BOOT_GPT_LEGACY to change it if needed. When USB_BOOT_GPT_LEGACY is empty the flag will not get set
+        ("gpt")
+            # The legacy_boot flag seems to be normally not set but may be required by some Firmware/BIOS versions.
+            # Use USB_BOOT_GPT_LEGACY to specify it if needed.
+            # When USB_BOOT_GPT_LEGACY is empty the flag will not get set:
             test "$USB_BOOT_GPT_LEGACY" || USB_BOOT_GPT_LEGACY="legacy_boot"
             boot_flag="$USB_BOOT_GPT_LEGACY"
             ;;
-        *)
-            Error "USB_DEVICE_PARTED_LABEL is incorrectly set, please check your settings."
+        (*)
+            Error "USB_DEVICE_PARTED_LABEL='$USB_DEVICE_PARTED_LABEL' (neither 'msdos' nor 'gpt')"
             ;;
     esac
-    # set boot flag in case it should get set
+    # Set boot_flag in case it should get set:
     if [ ! -z $boot_flag ] ; then
-        LogPrint "Setting '$boot_flag' flag on $rear_boot_partition_device"
-        if ! parted -s $RAW_USB_DEVICE set $rear_data_partition_number $boot_flag on >&2 ; then
-            Error "Could not make boot partition bootable on '$rear_boot_partition_device'"
+        # The rear_data_partition_number value is here the partition number of the boot partition:
+        LogPrint "Setting '$boot_flag' flag on boot partition '$RAW_USB_DEVICE$rear_data_partition_number'"
+        if ! parted -s $RAW_USB_DEVICE set $rear_data_partition_number $boot_flag on ; then
+            Error "Failed to set '$boot_flag' flag on boot partition '$RAW_USB_DEVICE$rear_data_partition_number'"
         fi
     fi
-    # move one number up
+    # With a boot partition the ReaR data partition number is one more as it was before
+    # i.e. it is now 3 when also a BIOS boot partition was created and 2 otherwise:
     rear_data_partition_number=$(( rear_data_partition_number + 1 ))
 
     # Calculate byte value for the start of the subsequent ReaR data partition:
     data_partition_start_byte=$(( boot_partition_end_byte + 1 ))
+    
 fi
 
-LogPrint "Creating ReaR data partition up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
+LogPrint "Creating ReaR data partition '$RAW_USB_DEVICE$rear_data_partition_number' up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
 # Older parted versions (at least GNU Parted 1.6.25.1 on SLE10) support the '%' unit (cf. https://github.com/rear/rear/issues/1270):
-if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $data_partition_start_byte ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% >&2 ; then
-    Error "Failed to create ReaR data partition on '$RAW_USB_DEVICE'"
+if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $data_partition_start_byte ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% ; then
+    Error "Failed to create ReaR data partition '$RAW_USB_DEVICE$rear_data_partition_number'"
 fi
 
 partprobe $RAW_USB_DEVICE
@@ -148,8 +177,8 @@ if is_true "$EFI" ; then
     # and output/RAWDISK/Linux-i386/280_create_bootable_disk_image.sh
     # Let mkfs.vfat automatically select the FAT type based on the size.
     # I.e. do not use a '-F 16' or '-F 32' option and hope for the best:
-    if ! mkfs.vfat $v -n REAR-EFI $rear_efi_partition_device >&2 ; then
-        Error "Failed to create vfat filesystem on '$rear_efi_partition_device'"
+    if ! mkfs.vfat $v -n REAR-EFI $rear_efi_partition_device ; then
+        Error "Failed to create vfat filesystem on EFI system partition '$rear_efi_partition_device'"
     fi
     # create link for EFI partition in /dev/disk/by-label
     partprobe $RAW_USB_DEVICE
@@ -158,9 +187,9 @@ if is_true "$EFI" ; then
 else
     local rear_boot_partition_device="$RAW_USB_DEVICE$(( $rear_data_partition_number -1 ))"
     test "$USB_DEVICE_BOOT_LABEL" || USB_DEVICE_BOOT_LABEL="REAR-BOOT"
-    LogPrint "Creating ext2 filesystem with label '$USB_DEVICE_BOOT_LABEL' on '$rear_boot_partition_device'"
-    if ! mkfs.ext2 -L "$USB_DEVICE_BOOT_LABEL" $rear_boot_partition_device >&2 ; then
-        Error "Failed to create ext2 filesystem on '$rear_boot_partition_device'"
+    LogPrint "Creating ext2 filesystem with label '$USB_DEVICE_BOOT_LABEL' on boot partition '$rear_boot_partition_device'"
+    if ! mkfs.ext2 -L "$USB_DEVICE_BOOT_LABEL" $rear_boot_partition_device ; then
+        Error "Failed to create ext2 filesystem on boot partition '$rear_boot_partition_device'"
     fi
 fi
 
@@ -170,13 +199,12 @@ if [ ! -b "$rear_data_partition_device" ] && [ -b "${RAW_USB_DEVICE}p${rear_data
     rear_data_partition_device="${RAW_USB_DEVICE}p${rear_data_partition_number}"
 fi
 
-LogPrint "Creating $USB_DEVICE_FILESYSTEM filesystem with label '$USB_DEVICE_FILESYSTEM_LABEL' on '$rear_data_partition_device'"
-if ! mkfs.$USB_DEVICE_FILESYSTEM -L "$USB_DEVICE_FILESYSTEM_LABEL" $USB_DEVICE_FILESYSTEM_PARAMS $rear_data_partition_device >&2 ; then
-    Error "Failed to create $USB_DEVICE_FILESYSTEM filesystem on '$rear_data_partition_device'"
+LogPrint "Creating $USB_DEVICE_FILESYSTEM filesystem with label '$USB_DEVICE_FILESYSTEM_LABEL' on ReaR data partition '$rear_data_partition_device'"
+if ! mkfs.$USB_DEVICE_FILESYSTEM -L "$USB_DEVICE_FILESYSTEM_LABEL" $USB_DEVICE_FILESYSTEM_PARAMS $rear_data_partition_device ; then
+    Error "Failed to create $USB_DEVICE_FILESYSTEM filesystem on ReaR data partition '$rear_data_partition_device'"
 fi
 
-LogPrint "Adjusting filesystem parameters on '$rear_data_partition_device'"
-if ! tune2fs -c 0 -i 0 -o acl,journal_data,journal_data_ordered $rear_data_partition_device >&2 ; then
-    Error "Failed to adjust filesystem parameters on '$rear_data_partition_device'"
+LogPrint "Adjusting filesystem parameters on ReaR data partition '$rear_data_partition_device'"
+if ! tune2fs -c 0 -i 0 -o acl,journal_data,journal_data_ordered $rear_data_partition_device ; then
+    Error "Failed to adjust filesystem parameters on ReaR data partition '$rear_data_partition_device'"
 fi
-
