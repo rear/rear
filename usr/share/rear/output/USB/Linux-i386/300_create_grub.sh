@@ -7,10 +7,10 @@ DebugPrint "Installing GRUB2 as USB bootloader (USB_BOOTLOADER='$USB_BOOTLOADER'
 # Choose right GRUB2 install binary
 # cf. https://github.com/rear/rear/issues/849
 # and error out if there is neither grub-install nor grub2-install:
-GRUB_INSTALL="false"
-has_binary grub-install && GRUB_INSTALL="grub-install"
-has_binary grub2-install && GRUB_INSTALL="grub2-install"
-is_false $GRUB_INSTALL && Error "Cannot install GRUB2 as USB bootloader (neither grub-install nor grub2-install found)"
+local grub_install_binary="false"
+has_binary grub-install && grub_install_binary="grub-install"
+has_binary grub2-install && grub_install_binary="grub2-install"
+is_false $grub_install_binary && Error "Cannot install GRUB2 as USB bootloader (neither grub-install nor grub2-install found)"
 
 # Verify the GRUB version because only GRUB2 is supported.
 # Because substr() for awk did not work as expected for this case here
@@ -21,29 +21,30 @@ is_false $GRUB_INSTALL && Error "Cannot install GRUB2 as USB bootloader (neither
 # grub2-install (GRUB2) 2.04
 # # grub2-install --version | awk '{print $NF}' | cut -c1
 # 2
-grub_version=$( $GRUB_INSTALL --version | awk '{print $NF}' | cut -c1 )
-test "$grub_version" = "2" || Error "Cannot install GRUB as USB bootloader (only GRUB2 is supported, '$GRUB_INSTALL --version' shows '$grub_version')"
+local grub_version
+grub_version=$( $grub_install_binary --version | awk '{print $NF}' | cut -c1 )
+test "$grub_version" = "2" || Error "Cannot install GRUB as USB bootloader (only GRUB2 is supported, '$grub_install_binary --version' shows '$grub_version')"
 
 # We assume REAL_USB_DEVICE and RAW_USB_DEVICE are both set by prep/USB/Linux-i386/350_check_usb_disk.sh
 [ "$RAW_USB_DEVICE" -a "$REAL_USB_DEVICE" ] || BugError "RAW_USB_DEVICE and REAL_USB_DEVICE are not both set"
 
-USB_REAR_DIR="$BUILD_DIR/outputfs/$USB_PREFIX"
-if [ ! -d "$USB_REAR_DIR" ] ; then
-    mkdir -p $v "$USB_REAR_DIR" || Error "Could not create USB ReaR dir '$USB_REAR_DIR'"
-fi
-
-USB_BOOT_DIR="$BUILD_DIR/outputfs/boot"
-if [ ! -d "$USB_BOOT_DIR" ] ; then
-    mkdir -p $v "$USB_BOOT_DIR" || Error "Could not create USB boot dir '$USB_BOOT_DIR'"
+# TODO: Provide a comment here that tells why usb_rear_dir is needed:
+local usb_rear_dir="$BUILD_DIR/outputfs/$USB_PREFIX"
+if [ ! -d "$usb_rear_dir" ] ; then
+    mkdir -p $v "$usb_rear_dir" || Error "Could not create USB ReaR dir '$usb_rear_dir'"
 fi
 
 # Install and configure GRUB2 as USB bootloader:
-$GRUB_INSTALL --boot-directory=$USB_BOOT_DIR --recheck $RAW_USB_DEVICE || Error "Failed to install GRUB2 on $RAW_USB_DEVICE"
+local usb_boot_dir="$BUILD_DIR/outputfs/boot"
+if [ ! -d "$usb_boot_dir" ] ; then
+    mkdir -p $v "$usb_boot_dir" || Error "Could not create USB boot dir '$usb_boot_dir'"
+fi
+$grub_install_binary --boot-directory=$usb_boot_dir --recheck $RAW_USB_DEVICE || Error "Failed to install GRUB2 on $RAW_USB_DEVICE"
 Log "Configuring GRUB2 as USB bootloader for legacy boot"
 # We need to explicitly set $root variable to boot label (currently "REAR-BOOT") in GRUB2
 # because default $root would point to ramdisk, where kernel and initrd are NOT present.
-# Variable grub2_set_usb_root will be used in later call of create_grub2_cfg():
+# grub2_set_usb_root is a global variable that is used in the create_grub2_cfg() function:
 grub2_set_usb_root="search --no-floppy --set=root --label REAR-BOOT"
 # Create config for GRUB2:
 Log "Creating GRUB2 config as USB bootloader"
-create_grub2_cfg /$USB_PREFIX/kernel /$USB_PREFIX/$REAR_INITRD_FILENAME > $USB_BOOT_DIR/grub/grub.cfg
+create_grub2_cfg /$USB_PREFIX/kernel /$USB_PREFIX/$REAR_INITRD_FILENAME > $usb_boot_dir/grub/grub.cfg
