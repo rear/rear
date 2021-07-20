@@ -1,3 +1,8 @@
+# Only run for syslinux and extlinux
+if [ ! -z $USB_BOOTLOADER ] && [[ ! $USB_BOOTLOADER =~ syslinux|extlinux ]]; then
+    return 0
+fi
+
 # Test for features in dd
 # true if dd supports oflag= option
 FEATURE_DD_OFLAG=
@@ -10,8 +15,7 @@ fi
 # we assume that REAL_USB_DEVICE and RAW_USB_DEVICE are both set from the script
 # in prep/USB/Linux-i386/350_check_usb_disk.sh
 
-[ "$RAW_USB_DEVICE" -a "$REAL_USB_DEVICE" ]
-BugIfError "RAW_USB_DEVICE and REAL_USB_DEVICE should be already set"
+[ "$RAW_USB_DEVICE" -a "$REAL_USB_DEVICE" ] || Error "RAW_USB_DEVICE and REAL_USB_DEVICE should be already set"
 
 usb_syslinux_version=$(get_usb_syslinux_version)
 syslinux_version=$(get_syslinux_version)

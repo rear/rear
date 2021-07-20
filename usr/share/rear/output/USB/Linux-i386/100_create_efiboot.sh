@@ -109,8 +109,7 @@ Log "Doing cleanup of ${EFI_MPT}"
 
 umount ${EFI_MPT}
 if [[ $? -eq 0 ]]; then
-    rmdir ${EFI_MPT}
-    LogIfError "Could not remove temporary directory ${EFI_MPT}, please check manually"
+    rmdir ${EFI_MPT} || Error "Could not remove temporary directory ${EFI_MPT}, please check manually"
 else
     Log "Could not umount ${EFI_MPT}, please check manually"
 fi
