@@ -515,7 +515,7 @@ insmod ext2
 set timeout=5
 
 search --no-floppy --file /boot/efiboot.img --set
-$grub2_set_usb_root
+$GRUB2_SET_USB_ROOT
 
 menuentry "Relax-and-Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
      echo 'Loading kernel ...'
