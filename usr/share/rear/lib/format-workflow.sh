@@ -30,10 +30,10 @@ WORKFLOW_format () {
     while true ; do
         case "$1" in
             (-e|--efi)
-                EFI=y
+                FORMAT_EFI=y
                 ;;
             (-f|--force)
-                FORCE=y
+                FORMAT_FORCE=y
                 ;;
             (-h|--help)
                 LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- --efi /dev/sdX'"
@@ -44,7 +44,7 @@ WORKFLOW_format () {
                 exit 1
                 ;;
             (-y|--yes)
-                YES=y
+                FORMAT_YES=y
                 ;;
             (--)
                 shift
