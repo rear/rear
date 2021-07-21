@@ -197,7 +197,8 @@ if is_true "$EFI" ; then
     sleep 5
 else
     local rear_boot_partition_device="$RAW_USB_DEVICE$(( $USB_DATA_PARTITION_NUMBER -1 ))"
-    test "$USB_DEVICE_BOOT_LABEL" || USB_DEVICE_BOOT_LABEL="REAR-BOOT"
+    # To be on the safe side have the boot partition fallback label "REARBOOT" only 8 characters long:
+    test "$USB_DEVICE_BOOT_LABEL" || USB_DEVICE_BOOT_LABEL="REARBOOT"
     LogPrint "Creating ext2 filesystem with label '$USB_DEVICE_BOOT_LABEL' on boot partition $rear_boot_partition_device"
     if ! mkfs.ext2 -L "$USB_DEVICE_BOOT_LABEL" $rear_boot_partition_device ; then
         Error "Failed to create ext2 filesystem on boot partition $rear_boot_partition_device"
