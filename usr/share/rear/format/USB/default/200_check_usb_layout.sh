@@ -7,7 +7,7 @@ test -b "$FORMAT_DEVICE" || Error "Device $FORMAT_DEVICE is not a block device"
 # Return a proper short device name using udev
 REAL_USB_DEVICE=$( readlink -f $FORMAT_DEVICE )
 
-test b "$REAL_USB_DEVICE" || Error "Real device $REAL_USB_DEVICE of $FORMAT_DEVICE is no block device"
+test -b "$REAL_USB_DEVICE" || Error "Real device $REAL_USB_DEVICE of $FORMAT_DEVICE is no block device"
 
 # We cannot use the layout dependency code in the backup phase (yet)
 #RAW_USB_DEVICE=$( find_disk $REAL_USB_DEVICE )
