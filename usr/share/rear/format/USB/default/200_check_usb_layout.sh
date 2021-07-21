@@ -28,7 +28,7 @@ else
     BugError "Unable to determine raw device for $REAL_USB_DEVICE"
 fi
 
-test -b "$RAW_USB_DEVICE" || Error "Unable to determine raw device for $REAL_USB_DEVICE"
+test -b "$RAW_USB_DEVICE" || Error "Raw device $RAW_USB_DEVICE of $REAL_USB_DEVICE is no block device"
 
 # USB_FORMAT_ANSWER is also used in format/USB/default/300_format_usb_disk.sh
 USB_FORMAT_ANSWER=""
