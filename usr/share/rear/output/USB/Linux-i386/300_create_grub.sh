@@ -28,7 +28,10 @@ test "$grub_version" = "2" || Error "Cannot install GRUB as USB bootloader (only
 # We assume REAL_USB_DEVICE and RAW_USB_DEVICE are both set by prep/USB/Linux-i386/350_check_usb_disk.sh
 [ "$RAW_USB_DEVICE" -a "$REAL_USB_DEVICE" ] || BugError "RAW_USB_DEVICE and REAL_USB_DEVICE are not both set"
 
-# TODO: Provide a comment here that tells why usb_rear_dir is needed:
+# The $BUILD_DIR/outputfs/$USB_PREFIX directory is needed by subsequent scripts
+# like output/USB/Linux-i386/830_copy_kernel_initrd.sh to store kernel and initrd
+# and for parts of the syslinux config in 'syslinux.cfg' if syslinux/extlinux is used
+# but output/USB/Linux-i386/300_create_extlinux.sh also creates it if missing:
 local usb_rear_dir="$BUILD_DIR/outputfs/$USB_PREFIX"
 if [ ! -d "$usb_rear_dir" ] ; then
     mkdir -p $v "$usb_rear_dir" || Error "Could not create USB ReaR dir '$usb_rear_dir'"
