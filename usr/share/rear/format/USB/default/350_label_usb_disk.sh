@@ -1,6 +1,7 @@
 
-# USB_format_answer was set before by format/USB/default/200_check_usb_layout.sh
-[[ "$USB_format_answer" == "Yes" || "$FORCE" ]] || return 0
+# USB_FORMAT_ANSWER was set before by format/USB/default/200_check_usb_layout.sh
+# FORMAT_FORCE may have been set by lib/format-workflow.sh
+[[ "$USB_FORMAT_ANSWER" == "Yes" || "$FORMAT_FORCE" ]] || return 0
 
 # USB_DATA_PARTITION_NUMBER was set before by format/USB/default/300_format_usb_disk.sh
 local data_partition_device="$RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER"
