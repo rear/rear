@@ -162,7 +162,7 @@ fi
 # USB_DATA_PARTITION_NUMBER is also needed in the subsequent format/USB/default/350_label_usb_disk.sh
 USB_DATA_PARTITION_NUMBER=$current_partition_number
 
-LogPrint "Creating ReaR data partition $RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of '$RAW_USB_DEVICE'"
+LogPrint "Creating ReaR data partition $RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of $RAW_USB_DEVICE"
 # Older parted versions (at least GNU Parted 1.6.25.1 on SLE10) support the '%' unit (cf. https://github.com/rear/rear/issues/1270):
 if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $data_partition_start_byte ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% ; then
     Error "Failed to create ReaR data partition $RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER"
