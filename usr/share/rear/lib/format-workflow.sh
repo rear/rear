@@ -12,7 +12,7 @@ WORKFLOW_format_DESCRIPTION="Format and label medium for use with ReaR"
 WORKFLOWS+=( format )
 WORKFLOW_format () {
 
-    DEVICE=""
+    FORMAT_DEVICE=""
 
     # Log the options and arguments how the format workflow is actually called:
     Log "Command line options of the format workflow: $*"
@@ -54,8 +54,8 @@ WORKFLOW_format () {
                 break
                 ;;
             (/*)
-                test "$DEVICE" && Error "Device $DEVICE already provided, only one argument is accepted"
-                DEVICE=$1
+                test "$FORMAT_DEVICE" && Error "Device $FORMAT_DEVICE already provided, only one argument is accepted"
+                FORMAT_DEVICE=$1
                 ;;
             (*)
                 Error "Argument '$1' not accepted. Use '$PROGRAM format -- --help' for more information."
@@ -64,7 +64,7 @@ WORKFLOW_format () {
         shift
     done
 
-    if test -z "$DEVICE" ; then
+    if test -z "$FORMAT_DEVICE" ; then
         if is_true "$SIMULATE" ; then
             # Simulation mode should work even without a device specified
             # see https://github.com/rear/rear/issues/1098#issuecomment-268973536
@@ -83,12 +83,12 @@ WORKFLOW_format () {
         fi
     fi
 
-    if [[ -c "$DEVICE" ]] ; then
+    if [[ -c "$FORMAT_DEVICE" ]] ; then
         OUTPUT=OBDR
-    elif [[ -b "$DEVICE" ]] ; then
+    elif [[ -b "$FORMAT_DEVICE" ]] ; then
         OUTPUT=USB
     else
-        Error "Device $DEVICE is neither a character, nor a block device."
+        Error "Device $FORMAT_DEVICE is neither a character, nor a block device."
     fi
 
     SourceStage "format"
