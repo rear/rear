@@ -491,6 +491,27 @@ function get_root_disk_UUID {
     echo $(mount | grep ' on / ' | awk '{print $1}' | xargs blkid -s UUID -o value)
 }
 
+function create_grub2_serial_entry {
+    # Enable serial console, unless explicitly disabled
+    # Note: as for syslinux it may be usefull to reduce it to exact one device since the last 'serial' line wins in grub...
+    if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
+        for devnode in $(ls /dev/ttyS[0-9]* | sort); do
+            speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
+            if [ "$speed" ]; then
+                echo "serial --speed=$speed --unit=${devnode##/dev/ttyS} --word=8 --parity=no --stop=1"
+                # use the first one found - ignore the rest or the last 'serial' line will win
+                break
+            fi
+        done
+        if is_true $GRUB_FORCE_SERIAL ; then
+            cat << EOF
+terminal_input serial
+terminal_output serial
+EOF
+        fi
+    fi
+}
+
 function create_grub2_rear_boot_entry {
     if is_true $USING_UEFI_BOOTLOADER ; then
         cat << EOF
@@ -591,6 +612,8 @@ insmod part_gpt
 insmod ext2
 
 set timeout=5
+
+$(create_grub2_serial_entry)
 
 search --no-floppy --file /boot/efiboot.img --set
 $grub2_set_usb_root
