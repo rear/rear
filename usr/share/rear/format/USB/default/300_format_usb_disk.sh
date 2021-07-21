@@ -1,6 +1,7 @@
 
-# $USB_format_answer was set before by format/USB/default/200_check_usb_layout.sh
-[[ "$USB_format_answer" == "Yes" || "$FORCE" ]] || return 0
+# USB_FORMAT_ANSWER was set before by format/USB/default/200_check_usb_layout.sh
+# FORMAT_FORCE may have been set by lib/format-workflow.sh
+[[ "$USB_FORMAT_ANSWER" == "Yes" || "$FORMAT_FORCE" ]] || return 0
 
 # $REAL_USB_DEVICE was set before by format/USB/default/200_check_usb_layout.sh
 umount $REAL_USB_DEVICE &>/dev/null
