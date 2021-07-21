@@ -44,8 +44,8 @@ Log "Configuring GRUB2 as USB bootloader for legacy boot"
 # We need to explicitly set $root variable to boot label "REARBOOT" in GRUB2
 # (to be on the safe side have that label "REARBOOT" only 8 characters long)
 # because default $root would point to ramdisk, where kernel and initrd are NOT present.
-# grub2_set_usb_root is a global variable that is used in the create_grub2_cfg() function:
-grub2_set_usb_root="search --no-floppy --set=root --label REARBOOT"
+# GRUB2_SET_USB_ROOT is used in the create_grub2_cfg() function:
+GRUB2_SET_USB_ROOT="search --no-floppy --set=root --label REARBOOT"
 # Create config for GRUB2:
 Log "Creating GRUB2 config as USB bootloader"
 create_grub2_cfg /$USB_PREFIX/kernel /$USB_PREFIX/$REAR_INITRD_FILENAME > $usb_boot_dir/grub/grub.cfg
