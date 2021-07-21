@@ -491,6 +491,84 @@ function get_root_disk_UUID {
     echo $(mount | grep ' on / ' | awk '{print $1}' | xargs blkid -s UUID -o value)
 }
 
+function create_grub2_rear_boot_entry {
+    if is_true $USING_UEFI_BOOTLOADER ; then
+        cat << EOF
+menuentry "Relax-and-Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
+    insmod gzio
+    echo 'Loading kernel ...'
+    linux $esp_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
+    echo 'Loading initial ramdisk ...'
+    initrd $esp_initrd
+}
+
+menuentry "Relax-and-Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
+    insmod gzio
+    echo 'Loading kernel ...'
+    linuxefi $esp_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
+    echo 'Loading initial ramdisk ...'
+    initrdefi $esp_initrd
+}
+EOF
+    else
+        cat << EOF
+menuentry "Relax-and-Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
+    insmod gzio
+    echo 'Loading kernel ...'
+    linux $esp_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
+    echo 'Loading initial ramdisk ...'
+    initrd $esp_initrd
+}
+EOF
+    fi
+}
+
+function create_grub2_boot_next_entry {
+    if is_true $USING_UEFI_BOOTLOADER ; then
+        # search next EFI and chainload it
+        cat << EOF
+menuentry "Boot original system" {
+    insmod chain
+    search --fs-uuid --no-floppy --set=esp $esp_disk_uuid
+    chainloader (\$esp)$esp_relative_bootloader
+}
+EOF
+    else
+        # just try booting from next disk
+        cat << EOF
+menuentry "Boot next disk" {
+    insmod chain
+    set root=(hd1)
+    chainloader +1
+}
+EOF
+    fi
+}
+
+function create_grub2_reboot_entry {
+    cat << EOF
+menuentry "Reboot" {
+     reboot
+}
+EOF
+}
+
+function create_grub2_exit_entry {
+    if is_true $USING_UEFI_BOOTLOADER ; then 
+        cat << EOF
+menuentry "Exit to EFI Shell" {
+     exit
+}
+EOF
+    else
+        cat << EOF
+menuentry "Exit to continue bootchain" {
+     exit
+}
+EOF
+    fi
+}
+
 # Create configuration grub
 function create_grub2_cfg {
     root_uuid=$(get_root_disk_UUID)
@@ -508,7 +586,7 @@ set default="$GRUB2_DEFAULT_BOOT"
 insmod all_video
 
 set gfxpayload=keep
-insmod gzio
+
 insmod part_gpt
 insmod ext2
 
@@ -517,32 +595,13 @@ set timeout=5
 search --no-floppy --file /boot/efiboot.img --set
 $grub2_set_usb_root
 
-menuentry "Relax-and-Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
-     echo 'Loading kernel ...'
-     linux $esp_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
-     echo 'Loading initial ramdisk ...'
-     initrd $esp_initrd
-}
+$(create_grub2_rear_boot_entry)
 
-menuentry "Relax-and-Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
-     echo 'Loading kernel ...'
-     linuxefi $esp_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
-     echo 'Loading initial ramdisk ...'
-     initrdefi $esp_initrd
-}
+$(create_grub2_boot_next_entry)
 
-menuentry "Boot original system" {
-    search --fs-uuid --no-floppy --set=esp $esp_disk_uuid
-    chainloader (\$esp)$esp_relative_bootloader
-}
+$(create_grub2_reboot_entry)
 
-menuentry "Reboot" {
-     reboot
-}
-
-menuentry "Exit to EFI Shell" {
-     exit
-}
+$(create_grub2_exit_entry)
 EOF
 }
 
