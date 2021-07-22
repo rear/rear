@@ -609,6 +609,7 @@ insmod all_video
 set gfxpayload=keep
 
 insmod part_gpt
+insmod part_msdos
 insmod ext2
 
 set timeout=5
