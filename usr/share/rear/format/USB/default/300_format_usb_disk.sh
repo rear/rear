@@ -34,6 +34,25 @@ local current_partition_number=1
 # or after the boot partition (and the BIOS boot partition) if those partitions exist:
 local data_partition_start_byte=$(( USB_PARTITION_ALIGN_BLOCK_SIZE * MiB_bytes ))
 
+# Flag for the partition wherefrom is booted which is the boot partition if exists
+# or the data partition as fallback when there is no boot partition:
+local boot_partition_flag="$USB_BOOT_PARTITION_FLAG"
+if ! test $boot_partition_flag ; then
+    # Set the right default flag if none was specified
+    # cf. https://github.com/rear/rear/issues/1153
+    case "$USB_DEVICE_PARTED_LABEL" in
+        (msdos)
+            boot_partition_flag="boot"
+            ;;
+        (gpt)
+            boot_partition_flag="legacy_boot"
+            ;;
+        (*)
+            Error "USB_DEVICE_PARTED_LABEL='$USB_DEVICE_PARTED_LABEL' (neither 'msdos' nor 'gpt')"
+            ;;
+    esac
+fi
+
 # Initialize USB disk via "parted mklabel" and
 # boot partitions setup i.e. either a EFI system partition
 # or a BIOS boot partition if needed and a boot partition:
@@ -128,28 +147,13 @@ else
             Error "Failed to create boot partition $RAW_USB_DEVICE$current_partition_number"
         fi
         # Set the right flag for the boot partition unless no flag should be set:
-        if ! is_false $USB_BOOT_PARTITION_FLAG ; then
-            local boot_partition_flag="$USB_BOOT_PARTITION_FLAG"
-            # Set the right default flag for the boot partition if none was specified
-            # cf. https://github.com/rear/rear/issues/1153
-            case "$USB_DEVICE_PARTED_LABEL" in
-                (msdos)
-                    test $boot_partition_flag || boot_partition_flag="boot"
-                    ;;
-                (gpt)
-                    test $boot_partition_flag || boot_partition_flag="legacy_boot"
-                    ;;
-                (*)
-                    Error "USB_DEVICE_PARTED_LABEL='$USB_DEVICE_PARTED_LABEL' (neither 'msdos' nor 'gpt')"
-                    ;;
-            esac
-            # Set boot_flag if non-empty:
-            if test $boot_partition_flag ; then
-                LogPrint "Setting '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
-                if ! parted -s $RAW_USB_DEVICE set $current_partition_number $boot_partition_flag on ; then
-                    Error "Failed to set '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
-                fi
+        if ! is_false $boot_partition_flag ; then
+            LogPrint "Setting '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
+            if ! parted -s $RAW_USB_DEVICE set $current_partition_number $boot_partition_flag on ; then
+                Error "Failed to set '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
             fi
+            # When the flag was set for the boot partition do not also set this flag for the data partition below:
+            boot_partition_flag="false"
         fi
         # With a boot partition the number of the partition that can be set up next has to be one more
         # i.e. it is now 3 when also a BIOS boot partition was created and 2 otherwise:
@@ -167,6 +171,13 @@ LogPrint "Creating ReaR data partition $RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER
 # Older parted versions (at least GNU Parted 1.6.25.1 on SLE10) support the '%' unit (cf. https://github.com/rear/rear/issues/1270):
 if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $data_partition_start_byte ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% ; then
     Error "Failed to create ReaR data partition $RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER"
+fi
+# Set the right flag for the data partition unless no flag should be set or when it was already set for the boot partition above:
+if ! is_false $boot_partition_flag ; then
+    LogPrint "Setting '$boot_partition_flag' flag on ReaR data partition $RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER"
+    if ! parted -s $RAW_USB_DEVICE set $USB_DATA_PARTITION_NUMBER $boot_partition_flag on ; then
+        Error "Failed to set '$boot_partition_flag' flag on ReaR data partition $RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER"
+    fi
 fi
 
 partprobe $RAW_USB_DEVICE
