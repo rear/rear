@@ -29,9 +29,10 @@ local MiB_bytes=$(( 1024 * 1024 ))
 # i.e. current_partition_number is the number of the partition that can be set up next:
 local current_partition_number=1
 
-# Start byte of the data partition that is after the EFI system partition
-# or after the boot partition (and the BIOS boot partition if exists):
-local data_partition_start_byte
+# Start byte of the data partition that is after the EFI system partition in case of UEFI
+# and otherwise (i.e. in case of BIOS) by default the first possible partitioning alignment
+# or after the boot partition (and the BIOS boot partition) if those partitions exist:
+local data_partition_start_byte=$(( USB_PARTITION_ALIGN_BLOCK_SIZE * MiB_bytes ))
 
 # Initialize USB disk via "parted mklabel" and
 # boot partitions setup i.e. either a EFI system partition
@@ -51,7 +52,7 @@ if is_true "$EFI" ; then
     if ! parted -s $RAW_USB_DEVICE mklabel gpt ; then
         Error "Failed to create GPT partition table on $RAW_USB_DEVICE"
     fi
-    # Round UEFI partition size to nearest block size to make the 2nd partition (the ReaR data partition) also align to the block size:
+    # Round UEFI partition size to nearest block size to make the 2nd partition (the data partition) also align to the block size:
     USB_UEFI_PART_SIZE=$(( ( USB_UEFI_PART_SIZE + ( USB_PARTITION_ALIGN_BLOCK_SIZE / 2 ) ) / USB_PARTITION_ALIGN_BLOCK_SIZE * USB_PARTITION_ALIGN_BLOCK_SIZE ))
     LogPrint "Creating EFI system partition $RAW_USB_DEVICE$current_partition_number with size $USB_UEFI_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB"
     # Calculate byte values:
@@ -114,48 +115,48 @@ else
         current_partition_number=$(( current_partition_number + 1 ))
     fi
 
-    # Create the boot partition for the bootloader config/plugins/modules, the kernel and the ReaR recovery system initrd.
-    # Round boot partition size to nearest block size to make the next partition (the ReaR data partition) also align to the block size:
-    test "$USB_BOOT_PART_SIZE" || USB_BOOT_PART_SIZE="$USB_UEFI_PART_SIZE"
-    USB_BOOT_PART_SIZE=$(( ( USB_BOOT_PART_SIZE + ( USB_PARTITION_ALIGN_BLOCK_SIZE / 2 ) ) / USB_PARTITION_ALIGN_BLOCK_SIZE * USB_PARTITION_ALIGN_BLOCK_SIZE ))
-    LogPrint "Creating boot partition $RAW_USB_DEVICE$current_partition_number with size $USB_BOOT_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB"
-    # Calculate byte values:
-    local boot_partition_size_bytes=$(( USB_BOOT_PART_SIZE * MiB_bytes ))
-    # The end byte is the last byte that belongs to that partition so that one must be careful to use "start_byte + partition_size_in_bytes - 1":
-    local boot_partition_end_byte=$(( boot_partition_start_byte + boot_partition_size_bytes - 1 ))
-    if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $boot_partition_start_byte $boot_partition_end_byte ; then
-        Error "Failed to create boot partition $RAW_USB_DEVICE$current_partition_number"
-    fi
-    # Set the right flag for the boot partition unless no flag should be set:
-    if ! is_false $USB_BOOT_PARTITION_FLAG ; then
-        local boot_partition_flag="$USB_BOOT_PARTITION_FLAG"
-        # Set the right default flag for the boot partition if none was specified
-        # cf. https://github.com/rear/rear/issues/1153
-        case "$USB_DEVICE_PARTED_LABEL" in
-            (msdos)
-                test $boot_partition_flag || boot_partition_flag="boot"
-                ;;
-            (gpt)
-                test $boot_partition_flag || boot_partition_flag="legacy_boot"
-                ;;
-            (*)
-                Error "USB_DEVICE_PARTED_LABEL='$USB_DEVICE_PARTED_LABEL' (neither 'msdos' nor 'gpt')"
-                ;;
-        esac
-        # Set boot_flag if non-empty:
-        if test $boot_partition_flag ; then
-            LogPrint "Setting '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
-            if ! parted -s $RAW_USB_DEVICE set $current_partition_number $boot_partition_flag on ; then
-                Error "Failed to set '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
+    if is_positive_integer $USB_BOOT_PART_SIZE ; then
+        # Create a boot partition for the bootloader config/plugins/modules, the kernel and the ReaR recovery system initrd.
+        # Round boot partition size to nearest block size to make the next partition (the data partition) also align to the block size:
+        USB_BOOT_PART_SIZE=$(( ( USB_BOOT_PART_SIZE + ( USB_PARTITION_ALIGN_BLOCK_SIZE / 2 ) ) / USB_PARTITION_ALIGN_BLOCK_SIZE * USB_PARTITION_ALIGN_BLOCK_SIZE ))
+        LogPrint "Creating boot partition $RAW_USB_DEVICE$current_partition_number with size $USB_BOOT_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB"
+        # Calculate byte values:
+        local boot_partition_size_bytes=$(( USB_BOOT_PART_SIZE * MiB_bytes ))
+        # The end byte is the last byte that belongs to that partition so that one must be careful to use "start_byte + partition_size_in_bytes - 1":
+        local boot_partition_end_byte=$(( boot_partition_start_byte + boot_partition_size_bytes - 1 ))
+        if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $boot_partition_start_byte $boot_partition_end_byte ; then
+            Error "Failed to create boot partition $RAW_USB_DEVICE$current_partition_number"
+        fi
+        # Set the right flag for the boot partition unless no flag should be set:
+        if ! is_false $USB_BOOT_PARTITION_FLAG ; then
+            local boot_partition_flag="$USB_BOOT_PARTITION_FLAG"
+            # Set the right default flag for the boot partition if none was specified
+            # cf. https://github.com/rear/rear/issues/1153
+            case "$USB_DEVICE_PARTED_LABEL" in
+                (msdos)
+                    test $boot_partition_flag || boot_partition_flag="boot"
+                    ;;
+                (gpt)
+                    test $boot_partition_flag || boot_partition_flag="legacy_boot"
+                    ;;
+                (*)
+                    Error "USB_DEVICE_PARTED_LABEL='$USB_DEVICE_PARTED_LABEL' (neither 'msdos' nor 'gpt')"
+                    ;;
+            esac
+            # Set boot_flag if non-empty:
+            if test $boot_partition_flag ; then
+                LogPrint "Setting '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
+                if ! parted -s $RAW_USB_DEVICE set $current_partition_number $boot_partition_flag on ; then
+                    Error "Failed to set '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
+                fi
             fi
         fi
+        # With a boot partition the number of the partition that can be set up next has to be one more
+        # i.e. it is now 3 when also a BIOS boot partition was created and 2 otherwise:
+        current_partition_number=$(( current_partition_number + 1 ))  
+        # Calculate byte value for the start of the subsequent data partition:
+        data_partition_start_byte=$(( boot_partition_end_byte + 1 ))
     fi
-    # With a boot partition the number of the partition that can be set up next has to be one more
-    # i.e. it is now 3 when also a BIOS boot partition was created and 2 otherwise:
-    current_partition_number=$(( current_partition_number + 1 ))  
-    # Calculate byte value for the start of the subsequent ReaR data partition:
-    data_partition_start_byte=$(( boot_partition_end_byte + 1 ))
-    
 fi
 # End of boot partitions setup.
 
