@@ -126,28 +126,28 @@ else
     if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $boot_partition_start_byte $boot_partition_end_byte ; then
         Error "Failed to create boot partition $RAW_USB_DEVICE$current_partition_number"
     fi
-    # Choose correct boot flag for partition table (see issue #1153)
-    local boot_flag
-    case "$USB_DEVICE_PARTED_LABEL" in
-        ("msdos")
-            boot_flag="boot"
-            ;;
-        ("gpt")
-            # The legacy_boot flag seems to be normally not set but may be required by some Firmware/BIOS versions.
-            # Use USB_BOOT_GPT_LEGACY to specify it if needed.
-            # When USB_BOOT_GPT_LEGACY is empty the flag will not get set:
-            test "$USB_BOOT_GPT_LEGACY" || USB_BOOT_GPT_LEGACY="legacy_boot"
-            boot_flag="$USB_BOOT_GPT_LEGACY"
-            ;;
-        (*)
-            Error "USB_DEVICE_PARTED_LABEL='$USB_DEVICE_PARTED_LABEL' (neither 'msdos' nor 'gpt')"
-            ;;
-    esac
-    # Set boot_flag in case it should get set:
-    if [ ! -z $boot_flag ] ; then
-        LogPrint "Setting '$boot_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
-        if ! parted -s $RAW_USB_DEVICE set $current_partition_number $boot_flag on ; then
-            Error "Failed to set '$boot_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
+    # Set the right flag for the boot partition unless no flag should be set:
+    if ! is_false $USB_BOOT_PARTITION_FLAG ; then
+        local boot_partition_flag="$USB_BOOT_PARTITION_FLAG"
+        # Set the right default flag for the boot partition if none was specified
+        # cf. https://github.com/rear/rear/issues/1153
+        case "$USB_DEVICE_PARTED_LABEL" in
+            (msdos)
+                test $boot_partition_flag || boot_partition_flag="boot"
+                ;;
+            (gpt)
+                test $boot_partition_flag || boot_partition_flag="legacy_boot"
+                ;;
+            (*)
+                Error "USB_DEVICE_PARTED_LABEL='$USB_DEVICE_PARTED_LABEL' (neither 'msdos' nor 'gpt')"
+                ;;
+        esac
+        # Set boot_flag if non-empty:
+        if test $boot_partition_flag ; then
+            LogPrint "Setting '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
+            if ! parted -s $RAW_USB_DEVICE set $current_partition_number $boot_partition_flag on ; then
+                Error "Failed to set '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
+            fi
         fi
     fi
     # With a boot partition the number of the partition that can be set up next has to be one more
