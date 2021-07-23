@@ -13,11 +13,11 @@ version_newer "$dd_version" 5.3.0 && FEATURE_DD_OFLAG="y"
 # We assume REAL_USB_DEVICE and RAW_USB_DEVICE are both set by prep/USB/Linux-i386/350_check_usb_disk.sh
 [ "$RAW_USB_DEVICE" -a "$REAL_USB_DEVICE" ] || BugError "RAW_USB_DEVICE and REAL_USB_DEVICE are not both set"
 
+# Check if syslinux needs to be updated:
 usb_syslinux_version=$( get_usb_syslinux_version )
 syslinux_version=$( get_syslinux_version )
-
 if [[ "$usb_syslinux_version" ]] && version_newer "$usb_syslinux_version" "$syslinux_version" ; then
-    Log "No need to update syslinux on USB (version $usb_syslinux_version)"
+    DebugPrint "No need to update syslinux on $RAW_USB_DEVICE that has version $usb_syslinux_version"
     return
 fi
 
