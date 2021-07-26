@@ -45,11 +45,15 @@ if [ ! -d "$usb_rear_dir" ] ; then
     mkdir -p $v "$usb_rear_dir" || Error "Failed to create USB ReaR dir '$usb_rear_dir'"
 fi
 
-# Configure and install GRUB2 as USB bootloader for legacy BIOS boot:
+# Install and configure GRUB2 as USB bootloader for legacy BIOS boot:
 local usb_boot_dir="$BUILD_DIR/outputfs/boot"
 if [ ! -d "$usb_boot_dir" ] ; then
     mkdir -p $v "$usb_boot_dir" || Error "Failed to create USB boot dir '$usb_boot_dir'"
 fi
+DebugPrint "Installing GRUB2 as USB bootloader on $RAW_USB_DEVICE"
+$grub_install_binary --boot-directory=$usb_boot_dir --recheck $RAW_USB_DEVICE || Error "Failed to install GRUB2 on $RAW_USB_DEVICE"
+# grub[2]-install creates the $BUILD_DIR/outputfs/boot/grub[2] sub-directory that is needed
+# to create the GRUB2 config $BUILD_DIR/outputfs/boot/grub[2].cfg in the next step:
 DebugPrint "Creating GRUB2 config for legacy BIOS boot as USB bootloader"
 test "$USB_DEVICE_BOOT_LABEL" || USB_DEVICE_BOOT_LABEL="REARBOOT"
 # We need to set the GRUB environment variable 'root' to the partition device with filesystem label USB_DEVICE_BOOT_LABEL
@@ -58,5 +62,3 @@ test "$USB_DEVICE_BOOT_LABEL" || USB_DEVICE_BOOT_LABEL="REARBOOT"
 # GRUB2_SET_USB_ROOT is used in the create_grub2_cfg() function:
 GRUB2_SET_USB_ROOT="search --no-floppy --set=root --label $USB_DEVICE_BOOT_LABEL"
 create_grub2_cfg /$USB_PREFIX/kernel /$USB_PREFIX/$REAR_INITRD_FILENAME > $usb_boot_dir/$grub_cfg || Error "Failed to create $usb_boot_dir/$grub_cfg"
-DebugPrint "Installing GRUB2 as USB bootloader on $RAW_USB_DEVICE"
-$grub_install_binary --boot-directory=$usb_boot_dir --recheck $RAW_USB_DEVICE || Error "Failed to install GRUB2 on $RAW_USB_DEVICE"
