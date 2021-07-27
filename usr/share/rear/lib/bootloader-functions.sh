@@ -470,7 +470,7 @@ function make_syslinux_config {
 # Create configuration file for elilo
 function create_ebiso_elilo_conf {
 cat << EOF
-timeout = 5
+timeout = 300
 default = "Relax-and-Recover (no Secure Boot)"
 
 image = kernel
@@ -493,57 +493,61 @@ function get_root_disk_UUID {
     # because /.snapshots is one word for grep -w and then those two matches result
     # two same UUIDs (with newline) that end up (with newline) in the boot menuentry
     # cf. https://github.com/rear/rear/issues/1871
-    echo $(mount | grep ' on / ' | awk '{print $1}' | xargs blkid -s UUID -o value)
+    # In most cases it will not error out because only the exit status of the last command in the pipe is tested:
+    mount | grep ' on / ' | awk '{print $1}' | xargs blkid -s UUID -o value || Error "Failed to get root disk UUID"
 }
 
 function create_grub2_serial_entry {
-    # Enable serial console, unless explicitly disabled
-    # Note: as for syslinux it may be usefull to reduce it to exact one device since the last 'serial' line wins in grub...
+    # Enable serial console, unless explicitly disabled.
+    # As for syslinux it may be useful to reduce it to exact one device since the last 'serial' line wins in grub:
     if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
         for devnode in $(ls /dev/ttyS[0-9]* | sort); do
             speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
             if [ "$speed" ]; then
                 echo "serial --speed=$speed --unit=${devnode##/dev/ttyS} --word=8 --parity=no --stop=1"
-                # use the first one found - ignore the rest or the last 'serial' line will win
+                # Use the first one found - ignore the rest (or the last 'serial' line will win):
                 break
             fi
         done
         if is_true $GRUB_FORCE_SERIAL ; then
-            cat << EOF
-terminal_input serial
-terminal_output serial
-EOF
+            echo "terminal_input serial"
+            echo "terminal_output serial"
         fi
     fi
 }
 
 function create_grub2_rear_boot_entry {
+    # "ReaR (BIOS or UEFI without Secure Boot)"
+    # is correct in case you don't use EFI (i.e. for BIOS)
+    # and should work for EFI with secure boot disabled.
+    # "ReaR (UEFI and Secure Boot)"
+    # only works with EFI (and you may need secure boot enabled).
     if is_true $USING_UEFI_BOOTLOADER ; then
         cat << EOF
-menuentry "Relax-and-Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
+menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)"  --class gnu-linux --class gnu --class os {
     insmod gzio
-    echo 'Loading kernel ...'
-    linux $esp_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
-    echo 'Loading initial ramdisk ...'
-    initrd $esp_initrd
+    echo 'Loading kernel $grub2_kernel ...'
+    linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
+    echo 'Loading initial ramdisk $grub2_initrd ...'
+    initrd $grub2_initrd
 }
 
-menuentry "Relax-and-Recover (Secure Boot)"  --class gnu-linux --class gnu --class os {
+menuentry "Relax-and-Recover (UEFI and Secure Boot)"  --class gnu-linux --class gnu --class os {
     insmod gzio
-    echo 'Loading kernel ...'
-    linuxefi $esp_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
-    echo 'Loading initial ramdisk ...'
-    initrdefi $esp_initrd
+    echo 'Loading kernel $grub2_kernel ...'
+    linuxefi $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
+    echo 'Loading initial ramdisk $grub2_initrd ...'
+    initrdefi $grub2_initrd
 }
 EOF
     else
         cat << EOF
-menuentry "Relax-and-Recover (no Secure Boot)"  --class gnu-linux --class gnu --class os {
+menuentry "Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)"  --class gnu-linux --class gnu --class os {
     insmod gzio
-    echo 'Loading kernel ...'
-    linux $esp_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
-    echo 'Loading initial ramdisk ...'
-    initrd $esp_initrd
+    echo 'Loading kernel $grub2_kernel ...'
+    linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
+    echo 'Loading initial ramdisk $grub2_initrd ...'
+    initrd $grub2_initrd
 }
 EOF
     fi
@@ -551,7 +555,12 @@ EOF
 
 function create_grub2_boot_next_entry {
     if is_true $USING_UEFI_BOOTLOADER ; then
-        # search next EFI and chainload it
+        # Search next EFI and chainload it.
+        # FIXME: The "GNU GRUB Manual" https://www.gnu.org/software/grub/manual/grub/grub.html
+        # does not mention a GRUB environment variable 'esp' so "--set=esp" could be wrong.
+        # Perhaps it is a typo and "--set=root $esp_disk_uuid" is meant?
+        # If actually "--set=esp $esp_disk_uuid" is meant provide a comment
+        # that explains what that "--set=esp" is and where it is documented.
         cat << EOF
 menuentry "Boot original system" {
     insmod chain
@@ -560,9 +569,10 @@ menuentry "Boot original system" {
 }
 EOF
     else
-        # just try booting from next disk
+        # Try booting from second disk hd1 that is usually the original system disk
+        # because the first disk hd0 in the USB disk wherefrom currently is booted:
         cat << EOF
-menuentry "Boot next disk" {
+menuentry "Boot from second disk hd1 (usually the original system disk)" {
     insmod chain
     set root=(hd1)
     chainloader +1
@@ -582,13 +592,13 @@ EOF
 function create_grub2_exit_entry {
     if is_true $USING_UEFI_BOOTLOADER ; then 
         cat << EOF
-menuentry "Exit to EFI Shell" {
+menuentry "Exit to EFI shell" {
      exit
 }
 EOF
     else
         cat << EOF
-menuentry "Exit to continue bootchain" {
+menuentry "Exit (possibly continue bootchain)" {
      exit
 }
 EOF
@@ -597,13 +607,13 @@ EOF
 
 # Create configuration grub
 function create_grub2_cfg {
-    root_uuid=$(get_root_disk_UUID)
+    local grub2_kernel="$1"
+    test "$grub2_kernel" || BugError "create_grub2_cfg function called without grub2_kernel argument"
+    local grub2_initrd="$2"
+    test "$grub2_initrd" || BugError "create_grub2_cfg function called without grub2_initrd argument"
 
-    local esp_kernel="$1"
-    local esp_initrd="$2"
-
-    test $esp_kernel || esp_kernel="/isolinux/kernel"
-    test $esp_initrd || esp_initrd="/isolinux/$REAR_INITRD_FILENAME"
+    local root_uuid=$( get_root_disk_UUID )
+    test -b /dev/disk/by-uuid/$root_uuid || Error "root_uuid device '/dev/disk/by-uuid/$root_uuid' is no block device"
 
     cat << EOF
 ${grub2_set_root:+"set root=$grub2_set_root"}
@@ -617,20 +627,20 @@ insmod part_gpt
 insmod part_msdos
 insmod ext2
 
-set timeout=5
+set timeout=300
 
-$(create_grub2_serial_entry)
+$( create_grub2_serial_entry )
 
 search --no-floppy --file /boot/efiboot.img --set
 $GRUB2_SET_USB_ROOT
 
-$(create_grub2_rear_boot_entry)
+$( create_grub2_rear_boot_entry )
 
-$(create_grub2_boot_next_entry)
+$( create_grub2_boot_next_entry )
 
-$(create_grub2_reboot_entry)
+$( create_grub2_reboot_entry )
 
-$(create_grub2_exit_entry)
+$( create_grub2_exit_entry )
 EOF
 }
 
