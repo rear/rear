@@ -67,7 +67,7 @@ else
         grub_version=$($GRUB_INSTALL --version | awk '{print $NF}' | cut -c1-1)
 
         case ${grub_version} in
-            0)
+            (0)
                 Log "Configuring grub 0.97 for EFI boot"
 
                 # Create config for grub 0.97
@@ -80,22 +80,19 @@ title Relax-and-Recover (no Secure Boot)
     initrd ${EFI_DIR}/$REAR_INITRD_FILENAME
 EOF
             ;;
-            2)
+            (2)
                 Log "Configuring grub 2.0 for EFI boot"
                 # We need to explicitly set $root variable to $EFI_LABEL
                 # (currently "REAR-EFI") in Grub because default $root would
                 # point to memdisk, where kernel and initrd are NOT present.
-                # Variable grub2_set_usb_root will be used in later call of
-                # create_grub2_cfg().
-                grub2_set_usb_root="search --no-floppy --set=root --label ${EFI_LABEL}"
-
+                # GRUB2_SET_USB_ROOT is used in the create_grub2_cfg() function:
+                GRUB2_SET_USB_ROOT="search --no-floppy --set=root --label ${EFI_LABEL}"
                 # Create config for grub 2.0
                 create_grub2_cfg ${EFI_DIR}/kernel ${EFI_DIR}/$REAR_INITRD_FILENAME > ${EFI_DST}/grub.cfg
-
                 # Create bootloader, this overwrite BOOTX64.efi copied in previous step ...
                 build_bootx86_efi ${EFI_DST}/BOOTX64.efi ${EFI_DST}/grub.cfg "/boot" "$UEFI_BOOTLOADER"
             ;;
-            *)
+            (*)
                 BugError "Neither grub 0.97 nor 2.0"
             ;;
         esac

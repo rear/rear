@@ -1,5 +1,8 @@
 # Create a suitable syslinux configuration based on capabilities
 
+# Nothing to do here when GRUB2 is specified to be used as USB bootloader:
+test "$USB_BOOTLOADER" = "grub" && return
+
 function get_usb_syslinux_version {
     for file in $BUILD_DIR/outputfs/{boot/syslinux,}/{ld,ext}linux.sys; do
         if [[ -s "$file" ]];  then
@@ -83,10 +86,6 @@ BEGIN {
 }' >&4
     fi
 }
-
-if [ ! -z $USB_BOOTLOADER ] && [[ ! $USB_BOOTLOADER =~ syslinux|extlinux ]]; then
-    return 0
-fi
 
 if syslinux_needs_update; then
     SYSLINUX_NEEDS_UPDATE="y"

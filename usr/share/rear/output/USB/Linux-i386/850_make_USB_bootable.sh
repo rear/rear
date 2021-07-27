@@ -1,8 +1,6 @@
 
-# Only run for syslinux and extlinux
-if [ ! -z $USB_BOOTLOADER ] && [[ ! $USB_BOOTLOADER =~ syslinux|extlinux ]] ; then
-    return 0
-fi
+# Nothing to do here when GRUB2 is specified to be used as USB bootloader:
+test "$USB_BOOTLOADER" = "grub" && return
 
 # Test for features in dd
 # true if dd supports oflag= option
