@@ -663,7 +663,6 @@ $( create_grub2_exit_entry )
 EOF
 
     # Local functions must be 'unset' because bash does not support 'local function ...'
-    # Local functions must be 'unset' because bash does not support 'local function ...'
     # cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
     unset -f create_grub2_serial_entry
     unset -f create_grub2_rear_boot_entry
