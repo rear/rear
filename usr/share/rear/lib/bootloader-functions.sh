@@ -517,7 +517,9 @@ function create_grub2_cfg {
     if ! test "$grub2_set_root_command" ; then
         test "$grub2_set_root" && grub2_set_root_command="set root=$grub2_set_root"
     fi
-    test "$GRUB2_SET_USB_ROOT" && grub2_set_root_command="$GRUB2_SET_USB_ROOT"
+    if ! test "$grub2_set_root_command" ; then
+        test "$GRUB2_SET_USB_ROOT" && grub2_set_root_command="$GRUB2_SET_USB_ROOT"
+    fi
     test "$grub2_set_root_command" || grub2_set_root_command="search --no-floppy --set=root --file /boot/efiboot.img"
     DebugPrint "Configuring GRUB2 root device as '$grub2_set_root_command'"
 
