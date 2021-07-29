@@ -505,7 +505,7 @@ function get_root_disk_UUID {
 # then $1 would have to be /path/to/kernel and $2 would have to be /path/to/initrd
 # $3 is an appropriate GRUB2 command to set its root device (usually via GRUB2's 'root' environment variable)
 # e.g. when the filesystem that contains kernel and initrd has the filesystem label REARBOOT
-# then $3 could be something like 'search --no-floppy --set=root --label REARBOOT'
+# then $3 could be something like 'search --no-floppy --set root --label REARBOOT'
 function create_grub2_cfg {
     local grub2_kernel="$1"
     test "$grub2_kernel" || BugError "create_grub2_cfg function called without grub2_kernel argument"
@@ -623,7 +623,7 @@ EOF
     function create_grub2_reboot_entry {
         cat << EOF
 menuentry "Reboot" --id=reboot {
-     reboot
+    reboot
 }
 EOF
     }
@@ -632,13 +632,13 @@ EOF
         if is_true $USING_UEFI_BOOTLOADER ; then 
             cat << EOF
 menuentry "Exit to EFI shell" --id=exit {
-     exit
+    exit
 }
 EOF
         else
             cat << EOF
 menuentry "Exit (possibly continue bootchain)" --id=exit {
-     exit
+    exit
 }
 EOF
         fi
