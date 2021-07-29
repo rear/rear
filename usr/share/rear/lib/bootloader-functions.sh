@@ -523,6 +523,12 @@ function create_grub2_cfg {
     test "$grub2_set_root_command" || grub2_set_root_command="search --no-floppy --set=root --file /boot/efiboot.img"
     DebugPrint "Configuring GRUB2 root device as '$grub2_set_root_command'"
 
+    local grub2_default_menu_entry="$GRUB2_DEFAULT_BOOT"
+    test "$grub2_default_menu_entry" || grub2_default_menu_entry="chainloader"
+
+    local grub2_timeout="$GRUB2_TIMEOUT"
+    test "$grub2_timeout" || grub2_timeout=300
+
     local root_uuid=$( get_root_disk_UUID )
     test -b /dev/disk/by-uuid/$root_uuid || Error "root_uuid device '/dev/disk/by-uuid/$root_uuid' is no block device"
 
@@ -555,7 +561,7 @@ function create_grub2_cfg {
         # only works with EFI (and you may need secure boot enabled).
         if is_true $USING_UEFI_BOOTLOADER ; then
             cat << EOF
-menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)"  --class gnu-linux --class gnu --class os {
+menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear {
     insmod gzio
     echo 'Loading kernel $grub2_kernel ...'
     linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
@@ -563,7 +569,7 @@ menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)"  --class gnu-li
     initrd $grub2_initrd
 }
 
-menuentry "Relax-and-Recover (UEFI and Secure Boot)"  --class gnu-linux --class gnu --class os {
+menuentry "Relax-and-Recover (UEFI and Secure Boot)" --id=rear_secure_boot {
     insmod gzio
     echo 'Loading kernel $grub2_kernel ...'
     linuxefi $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
@@ -573,7 +579,7 @@ menuentry "Relax-and-Recover (UEFI and Secure Boot)"  --class gnu-linux --class 
 EOF
         else
             cat << EOF
-menuentry "Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)"  --class gnu-linux --class gnu --class os {
+menuentry "Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)" --id=rear {
     insmod gzio
     echo 'Loading kernel $grub2_kernel ...'
     linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
@@ -594,7 +600,7 @@ EOF
             # If actually "--set=esp $esp_disk_uuid" is meant provide a comment
             # that explains what that "--set=esp" is and where it is documented.
             cat << EOF
-menuentry "Boot original system" {
+menuentry "Boot next EFI" --id=chainloader {
     insmod chain
     search --fs-uuid --no-floppy --set=esp $esp_disk_uuid
     chainloader (\$esp)$esp_relative_bootloader
@@ -604,7 +610,7 @@ EOF
             # Try booting from second disk hd1 that is usually the original system disk
             # because the first disk hd0 in the USB disk wherefrom currently is booted:
             cat << EOF
-menuentry "Boot from second disk hd1 (usually the original system disk)" {
+menuentry "Boot from second disk hd1 (usually the original system disk)" --id=chainloader {
     insmod chain
     set root=(hd1)
     chainloader +1
@@ -616,7 +622,7 @@ EOF
 
     function create_grub2_reboot_entry {
         cat << EOF
-menuentry "Reboot" {
+menuentry "Reboot" --id=reboot {
      reboot
 }
 EOF
@@ -625,13 +631,13 @@ EOF
     function create_grub2_exit_entry {
         if is_true $USING_UEFI_BOOTLOADER ; then 
             cat << EOF
-menuentry "Exit to EFI shell" {
+menuentry "Exit to EFI shell" --id=exit {
      exit
 }
 EOF
         else
             cat << EOF
-menuentry "Exit (possibly continue bootchain)" {
+menuentry "Exit (possibly continue bootchain)" --id=exit {
      exit
 }
 EOF
@@ -641,21 +647,22 @@ EOF
     # End of local helper functions for the create_grub2_cfg function
 
     # The actual work starts here.
-    # Create and output GRUB2 configuration:
-    # Sleep 5 seconds before the GRUB2 menu replaces what there is on the screen
+    # Create and output GRUB2 configuration.
+    # Sleep 3 seconds before the GRUB2 menu replaces what there is on the screen
     # so that the user has a chance to see possible (error) messages on the screen.
     cat << EOF
-echo 'Processing GRUB2 configuration...'
-sleep --verbose --interruptible 5
 $grub2_set_root_command
-set default="$GRUB2_DEFAULT_BOOT"
 insmod all_video
 set gfxpayload=keep
 insmod part_gpt
 insmod part_msdos
 insmod ext2
-set timeout=300
 $( create_grub2_serial_entry )
+set timeout="$grub2_timeout"
+set default="$grub2_default_menu_entry"
+set fallback="chainloader"
+echo 'Switching to GRUB2 boot menu...'
+sleep --verbose --interruptible 3
 $( create_grub2_rear_boot_entry )
 $( create_grub2_boot_next_entry )
 $( create_grub2_reboot_entry )
