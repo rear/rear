@@ -5,7 +5,7 @@ bootloader_file="$VAR_DIR/recovery/bootloader"
 
 # When BOOTLOADER is specified use that:
 if test "$BOOTLOADER" ; then
-    LogPrint "Using specified bootloader '$BOOTLOADER'"
+    LogPrint "Using specified bootloader '$BOOTLOADER' for 'rear recover'"
     echo "$BOOTLOADER" | tr '[a-z]' '[A-Z]' >$bootloader_file
     return
 fi
@@ -16,7 +16,7 @@ if test -f /etc/sysconfig/bootloader ; then
     # Getting values from sysconfig files is like sourcing shell scripts so that the last setting wins:
     sysconfig_bootloader=$( grep ^LOADER_TYPE /etc/sysconfig/bootloader | cut -d= -f2 | tail -n1 | sed -e 's/"//g' )
     if test "$sysconfig_bootloader" ; then
-        LogPrint "Using sysconfig bootloader '$sysconfig_bootloader'"
+        LogPrint "Using sysconfig bootloader '$sysconfig_bootloader' for 'rear recover'"
         echo "$sysconfig_bootloader" | tr '[a-z]' '[A-Z]' >$bootloader_file
         return
     fi
@@ -26,7 +26,7 @@ fi
 if [ "$ARCH" = "Linux-arm" ] ; then
     BOOTLOADER=ARM
     # Inform the user that we do nothing:
-    LogPrint "Using guessed bootloader 'ARM'. Skipping bootloader backup, see default.conf"
+    LogPrint "Using guessed bootloader 'ARM'. Skipping bootloader backup, see default.conf about 'BOOTLOADER'"
     echo "$BOOTLOADER" >$bootloader_file
     return
 fi
@@ -40,7 +40,7 @@ for block_device in /sys/block/* ; do
     disk_device=$( get_device_name $block_device )
     # Check if the disk contains a PPC PreP boot partition (ID=0x41):
     if file -s $disk_device | grep -q "ID=0x41" ; then
-       LogPrint "Using guessed bootloader 'PPC' (found PPC PreP boot partition 'ID=0x41' on $disk_device)"
+       LogPrint "Using guessed bootloader 'PPC' for 'rear recover' (found PPC PreP boot partition 'ID=0x41' on $disk_device)"
        echo "PPC" >$bootloader_file
        return
     fi
@@ -73,7 +73,7 @@ for block_device in /sys/block/* ; do
         # cf. https://github.com/rear/rear/issues/2137
         for known_bootloader in GRUB2 GRUB ELILO LILO ZIPL ; do
             if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
-                LogPrint "Using guessed bootloader '$known_bootloader' (found in first bytes on $disk_device with GPT BIOS boot partition)"
+                LogPrint "Using guessed bootloader '$known_bootloader' for 'rear recover' (found in first bytes on $disk_device with GPT BIOS boot partition)"
                 echo "$known_bootloader" >$bootloader_file
                 return
             fi
@@ -89,7 +89,7 @@ for block_device in /sys/block/* ; do
     # cf. https://github.com/rear/rear/issues/2137
     for known_bootloader in GRUB2-EFI EFI GRUB2 GRUB ELILO LILO ZIPL ; do
         if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
-            LogPrint "Using guessed bootloader '$known_bootloader' (found in first bytes on $disk_device)"
+            LogPrint "Using guessed bootloader '$known_bootloader' for 'rear recover' (found in first bytes on $disk_device)"
             echo "$known_bootloader" >$bootloader_file
             return
         fi
