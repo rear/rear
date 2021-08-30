@@ -107,7 +107,7 @@ EOF
     # '--mirrorlog', etc.
     # Also, we likely do not support every layout yet (e.g. 'cachepool').
 
-    if ! is_true "$MIGRATION_MODE" ; then
+    if ! is_true "$MIGRATION_MODE" && lvmgrp_supports_vgcfgrestore "$vgrp" ; then
         cat >> "$LAYOUT_CODE" <<EOF
 LogPrint "Restoring LVM VG '$vg'"
 if [ -e "$vgrp" ] ; then
@@ -124,6 +124,9 @@ if lvm vgcfgrestore -f "$VAR_DIR/layout/lvm/${vg}.cfg" $vg >&2 ; then
     create_volume_group=( \$( RmInArray "$vg" "\${create_volume_group[@]}" ) )
     create_logical_volumes=( \$( RmInArray "$vg" "\${create_logical_volumes[@]}" ) )
 
+EOF
+        if is_true "${FORCE_VGCFGRESTORE-no}"; then
+            cat >> "$LAYOUT_CODE" <<EOF
 #
 # It failed ... restore layout using 'vgcfgrestore --force', but then remove Thin volumes, they are broken
 #
@@ -148,6 +151,9 @@ elif lvm vgcfgrestore --force -f "$VAR_DIR/layout/lvm/${vg}.cfg" $vg >&2 ; then
     create_volume_group=( \$( RmInArray "$vg" "\${create_volume_group[@]}" ) )
     create_thin_volumes_only+=( "$vg" )
  
+EOF
+        fi
+        cat >> "$LAYOUT_CODE" <<EOF
 #
 # It failed also ... restore using 'vgcreate/lvcreate' commands
 #
