@@ -30,15 +30,6 @@ create_disk() {
     [[ -b "$disk" ]]
     BugIfError "Disk $disk is not a block device."
 
-    ### Find out the actual disk size.
-    local disk_size=$( get_disk_size $(get_sysfs_name "$disk") )
-
-    [[ "$disk_size" ]]
-    BugIfError "Could not determine size of disk $disk, please file a bug."
-
-    [[ $disk_size -gt 0 ]]
-    StopIfError "Disk $disk has size $disk_size, unable to continue."
-
     cat >> "$LAYOUT_CODE" <<EOF
 
 #
