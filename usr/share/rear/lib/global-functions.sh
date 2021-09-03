@@ -682,7 +682,7 @@ function umount_url() {
 
     RemoveExitTask "perform_umount_url '$url' '$mountpoint' lazy"
 
-    remove_temporary_mountpoint '$mountpoint' && RemoveExitTask "remove_temporary_mountpoint '$mountpoint'"
+    remove_temporary_mountpoint "$mountpoint" && RemoveExitTask "remove_temporary_mountpoint '$mountpoint'"
     return 0
 }
 
