@@ -369,6 +369,10 @@ function scheme_accepts_files() {
 ### only that it can be mounted (use mount_url() first)
 function scheme_supports_filesystem() {
     local scheme=$1
+    # Return false if scheme is empty or blank (e.g. when OUTPUT_URL is unset or empty or blank)
+    # cf. https://github.com/rear/rear/issues/2676
+    # and https://github.com/rear/rear/issues/2667#issuecomment-914447326
+    test $scheme || return 1
     case $scheme in
         (null|tape|obdr|rsync|fish|ftp|ftps|hftp|http|https|sftp)
             return 1
