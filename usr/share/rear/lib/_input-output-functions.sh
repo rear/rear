@@ -898,7 +898,7 @@ function cleanup_build_area_and_end_program () {
         # which is not yet sourced in case of early Error() in usr/sbin/rear
         if has_binary remove_temporary_mountpoint ; then
             # It is a bug in ReaR if BUILD_DIR/outputfs was not properly umounted and made empty by the scripts before:
-            remove_temporary_mountpoint '$BUILD_DIR/outputfs' || BugError "Directory $BUILD_DIR/outputfs not empty, cannot remove"
+            remove_temporary_mountpoint "$BUILD_DIR/outputfs" || BugError "Directory $BUILD_DIR/outputfs not empty, cannot remove"
         fi
         if ! rmdir $v "$BUILD_DIR" ; then
             LogPrintError "Could not remove build area $BUILD_DIR (something still exists therein)"

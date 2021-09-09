@@ -344,7 +344,20 @@ function url_path() {
 
 ### Returns true if one can upload files to the URL
 function scheme_accepts_files() {
-    local scheme=$1
+    # Be safe against 'set -eu' which would exit 'rear' with "bash: $1: unbound variable"
+    # when scheme_accepts_files is called without an argument
+    # by bash parameter expansion with using an empty default value if $1 is unset or null.
+    # Bash parameter expansion with assigning a default value ${1:=} does not work
+    # (then it would still exit with "bash: $1: cannot assign in this way")
+    # but using a default value is practicable here because $1 is used only once
+    # cf. https://github.com/rear/rear/pull/2675#discussion_r705018956
+    local scheme=${1:-}
+    # Return false if scheme is empty or blank (e.g. when OUTPUT_URL is unset or empty or blank)
+    # cf. https://github.com/rear/rear/issues/2676
+    # and https://github.com/rear/rear/issues/2667#issuecomment-914447326
+    # also return false if scheme is more than one word (so no quoted "$scheme" here)
+    # cf. https://github.com/rear/rear/pull/2675#discussion_r704401462
+    test $scheme || return 1
     case $scheme in
         (null|tape|obdr)
             # tapes do not support uploading arbitrary files, one has to handle them
@@ -368,7 +381,10 @@ function scheme_accepts_files() {
 ### Returning true does not imply that the URL is currently mounted at a filesystem and usable,
 ### only that it can be mounted (use mount_url() first)
 function scheme_supports_filesystem() {
-    local scheme=$1
+    # Be safe against 'set -eu' exit if scheme_supports_filesystem is called without argument
+    local scheme=${1:-}
+    # Return false if scheme is empty or blank or more than one word, cf. scheme_accepts_files() above
+    test $scheme || return 1
     case $scheme in
         (null|tape|obdr|rsync|fish|ftp|ftps|hftp|http|https|sftp)
             return 1
@@ -682,7 +698,7 @@ function umount_url() {
 
     RemoveExitTask "perform_umount_url '$url' '$mountpoint' lazy"
 
-    remove_temporary_mountpoint '$mountpoint' && RemoveExitTask "remove_temporary_mountpoint '$mountpoint'"
+    remove_temporary_mountpoint "$mountpoint" && RemoveExitTask "remove_temporary_mountpoint '$mountpoint'"
     return 0
 }
 
