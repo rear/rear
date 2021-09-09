@@ -346,10 +346,10 @@ function url_path() {
 function scheme_accepts_files() {
     # Be safe against 'set -eu' which would exit 'rear' with "bash: $1: unbound variable"
     # when scheme_accepts_files is called without an argument
-    # by bash parameter expansion with using an empty default value if $1 unset or null.
+    # by bash parameter expansion with using an empty default value if $1 is unset or null.
     # Bash parameter expansion with assigning a default value ${1:=} does not work
     # (then it would still exit with "bash: $1: cannot assign in this way")
-    # but using a default value is sufficient here because $1 is used only once
+    # but using a default value is practicable here because $1 is used only once
     # cf. https://github.com/rear/rear/pull/2675#discussion_r705018956
     local scheme=${1:-}
     # Return false if scheme is empty or blank (e.g. when OUTPUT_URL is unset or empty or blank)
