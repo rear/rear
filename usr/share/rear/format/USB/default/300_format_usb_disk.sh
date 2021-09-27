@@ -56,7 +56,7 @@ fi
 # Initialize USB disk via "parted mklabel" and
 # boot partitions setup i.e. either a EFI system partition
 # or a BIOS boot partition if needed and a boot partition:
-if is_true "$EFI" ; then
+if is_true "$FORMAT_EFI" ; then
 
     LogPrint "The --efi toggle was used with format - making an EFI bootable device $RAW_USB_DEVICE"
     # Prompt user for size of EFI system partition on USB disk if no valid value is specified:
@@ -184,7 +184,7 @@ partprobe $RAW_USB_DEVICE
 # Wait until udev has had the time to kick in
 sleep 5
 
-if is_true "$EFI" ; then
+if is_true "$FORMAT_EFI" ; then
     # Detect loopback device parition naming
     # on loop devices the first partition is named e.g. loop0p1
     # instead of e.g. sdb1 on usual (USB) disks
