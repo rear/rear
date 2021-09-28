@@ -9,7 +9,7 @@ Fill in the following items before submitting a new issue
 
 * ReaR configuration files ("cat /etc/rear/site.conf" and/or "cat /etc/rear/local.conf"):
 
-* Hardware vendor/product (PC or PowerNV BareMetal or ARM) or virtual machine (KVM guest or PoverVM LPAR):
+* Hardware vendor/product (PC or PowerNV BareMetal or ARM) or virtual machine (KVM guest or PowerVM LPAR):
 
 * System architecture (x86 compatible or PPC64/PPC64LE or what exact ARM device):
 
