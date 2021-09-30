@@ -351,12 +351,8 @@ extract_partitions() {
     done < $TMP_DIR/partitions
 }
 
-Log "Saving disk partitions."
-
-(
-    # Disk sizes
-    # format: disk <disk> <sectors> <partition label type>
-    for disk in /sys/block/* ; do
+Log "Saving disks and their partitions"
+(   for disk in /sys/block/* ; do
         blockd=${disk#/sys/block/}
         if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* || $blockd = nvme* || $blockd = mmcblk* ]] ; then
 
