@@ -1,115 +1,103 @@
 # 100_create_efiboot.sh
-# USB device needs to be formatted with command `rear format -- --efi /dev/<device_name>'
+# USB device needs to be formatted with command 'rear format -- --efi /dev/<device_name>'
+# because it sets a hardcoded label REAR-EFI in format/USB/default/300_format_usb_disk.sh
+# for the VFAT EFI filesystem that is needed here.
 
 is_true $USING_UEFI_BOOTLOADER || return 0
 
-Log "Configuring device for EFI boot"
+local uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
+local efi_label="REAR-EFI"
+local efi_part="/dev/disk/by-label/$efi_label"
 
-# $BUILD_DIR is not present at this stage, temp dir will be used instead.
-# Slackware version of mktemp requires 6 Xs in template and
-# plain 'mktemp' uses XXXXXXXXXX by default (at least on SLES11 and openSUSE Leap 15.0)
-# so that we comply with the 'mktemp' default to avoid 'mktemp' errors "too few X's in template":
-EFI_MPT=$( mktemp -d /tmp/rear-efi.XXXXXXXXXX ) || Error "mktemp failed to create mount point '/tmp/rear-efi.XXXXXXXXXX' for EFI partition"
-
-uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
-EFI_LABEL="REAR-EFI"
-EFI_PART="/dev/disk/by-label/${EFI_LABEL}"
-EFI_DIR="/EFI/BOOT"
-EFI_DST="${EFI_MPT}/${EFI_DIR}"
+DebugPrint "Configuring EFI partition '$efi_part' for EFI boot with '$uefi_bootloader_basename'"
 
 # Fail if EFI partition is not present
-if [[ ! -b ${EFI_PART} ]]; then
-    Error "${EFI_PART} is not block device. Use \`rear format -- --efi <USB_device_file>' for correct format"
-fi
+test -b "$efi_part" || Error "EFI partition '$efi_part' is no block device (did you use 'rear format -- --efi ...' for correct format?)"
 
-# Mount EFI partition
-mount $EFI_PART $EFI_MPT || Error "Failed to mount EFI partition '$EFI_PART' at '$EFI_MPT'"
+# $BUILD_DIR is not present at this stage so TMPDIR (by default /var/tmp see default.conf) will be used instead.
+# Slackware version of mktemp requires 6 Xs in template and
+# plain 'mktemp' uses XXXXXXXXXX by default (at least on SLES11 and openSUSE Leap 15.0)
+# so that we comply with the 'mktemp' default to avoid 'mktemp' errors "too few X's in template".
+# We use local var ; var=$( COMMAND ) because local var=$( COMMAND ) || Error "COMMAND failed"
+# will not error out when COMMAND failed, see https://github.com/rear/rear/wiki/Coding-Style
+# and https://github.com/koalaman/shellcheck/wiki/SC2155
+local efi_mpt
+efi_mpt=$( mktemp -d $TMPDIR/rear-efi.XXXXXXXXXX ) || Error "mktemp failed to create mount point '$TMPDIR/rear-efi.XXXXXXXXXX' for EFI partition '$efi_part'"
 
-# Create EFI friendly dir structure
-mkdir -p $EFI_DST || Error "Failed to create directory '$EFI_DST'"
+local efi_dir="/EFI/BOOT"
+local efi_dst="$efi_mpt/$efi_dir"
 
-# Copy boot loader
-cp $v $UEFI_BOOTLOADER "$EFI_DST/BOOTX64.efi" || Error "Failed to copy UEFI_BOOTLOADER '$UEFI_BOOTLOADER' to $EFI_DST/BOOTX64.efi"
+# Mount EFI partition:
+mount $efi_part $efi_mpt || Error "Failed to mount EFI partition '$efi_part' at '$efi_mpt'"
 
-# Copy kernel
-cp -pL $v "$KERNEL_FILE" "$EFI_DST/kernel" || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE' to $EFI_DST/kernel"
+# Create EFI friendly directory structure:
+mkdir -p $efi_dst || Error "Failed to create directory '$efi_dst'"
 
-# Copy initrd
-cp -p $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$EFI_DST/$REAR_INITRD_FILENAME" || Error "Failed to copy initrd to $EFI_DST/$REAR_INITRD_FILENAME"
+# Follow symbolic links to ensure the real content gets copied
+# but do not preserve mode,ownership,timestamps (i.e. no -p option) because that may fail like
+# "cp: failed to preserve ownership for '/tmp/rear-efi.XXXXXXXXXX/EFI/BOOT/kernel': Operation not permitted"
+# because it copies to a VFAT filesystem on the EFI partition (see format/USB/default/300_format_usb_disk.sh)
+# cf. https://github.com/rear/rear/issues/2683
+# Copy boot loader:
+cp -L $v "$UEFI_BOOTLOADER" "$efi_dst/BOOTX64.efi" || Error "Failed to copy UEFI_BOOTLOADER '$UEFI_BOOTLOADER' to $efi_dst/BOOTX64.efi"
+# Copy kernel:
+cp -L $v "$KERNEL_FILE" "$efi_dst/kernel" || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE' to $efi_dst/kernel"
+# Copy initrd:
+cp -L $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$efi_dst/$REAR_INITRD_FILENAME" || Error "Failed to copy initrd to $efi_dst/$REAR_INITRD_FILENAME"
 
-Log "Copied kernel $KERNEL_FILE and initrd $REAR_INITRD_FILENAME to $EFI_DST"
-
-# Configure elilo for EFI boot
+# Configure elilo for EFI boot:
 if test "$uefi_bootloader_basename" = "elilo.efi" ; then
     Log "Configuring elilo for EFI boot"
-
     # Create config for elilo
-    Log "Creating ${EFI_DST}/elilo.conf"
-
-    create_ebiso_elilo_conf > ${EFI_DST}/elilo.conf
-
-# Configure grub for EFI boot or die
+    DebugPrint "Creating $efi_dst/elilo.conf"
+    create_ebiso_elilo_conf > $efi_dst/elilo.conf
+# Configure GRUB for EFI boot:
 else
-    # Hope this assumption is not wrong ...
-    if has_binary grub-install grub2-install; then
-
-        # Choose right grub binary
-        # Issue #849
-        if has_binary grub2-install; then
-            NUM=2
-        fi
-
-        GRUB_INSTALL=grub${NUM}-install
-
-        # What version of grub are we using
-        # substr() for awk did not work as expected for this reason cut was used
-        # First charecter should be enough to identify grub version
-        grub_version=$($GRUB_INSTALL --version | awk '{print $NF}' | cut -c1-1)
-
-        case ${grub_version} in
-            (0)
-                Log "Configuring grub 0.97 for EFI boot"
-
-                # Create config for grub 0.97
-                cat > ${EFI_DST}/BOOTX64.conf << EOF
+    has_binary grub-install grub2-install || Error "Unknown EFI bootloader (no grub-install or grub2-install found)"
+    # Choose right grub binary, cf. https://github.com/rear/rear/issues/849
+    local grub_install_binary="grub-install"
+    has_binary grub2-install && grub_install_binary="grub2-install"
+    # Determine the GRUB version.
+    # Because substr() for awk did not work as expected for this case here
+    # 'cut' is used (awk '{print $NF}' prints the last column which is the version).
+    # Only the first character of the version should be enough (at least for now).
+    # Example output (on openSUSE Leap 15.2)
+    # # grub2-install --version
+    # grub2-install (GRUB2) 2.04
+    # # grub2-install --version | awk '{print $NF}' | cut -c1
+    # 2
+    local grub_version
+    grub_version=$( $grub_install_binary --version | awk '{print $NF}' | cut -c1 )
+    case $grub_version in
+        (0)
+            DebugPrint "Configuring legacy GRUB for EFI boot"
+            cat > $efi_dst/BOOTX64.conf << EOF
 default=0
 timeout=5
-
 title Relax-and-Recover (no Secure Boot)
-    kernel ${EFI_DIR}/kernel $KERNEL_CMDLINE
-    initrd ${EFI_DIR}/$REAR_INITRD_FILENAME
+initrd $efi_dir/$REAR_INITRD_FILENAME
 EOF
-            ;;
-            (2)
-                Log "Configuring grub 2.0 for EFI boot"
-                # We need to explicitly set $root variable to $EFI_LABEL
-                # (currently "REAR-EFI") in Grub because default $root would
-                # point to memdisk, where kernel and initrd are NOT present.
-                # GRUB2_SET_USB_ROOT is used in the create_grub2_cfg() function:
-                GRUB2_SET_USB_ROOT="search --no-floppy --set=root --label ${EFI_LABEL}"
-                # Create config for grub 2.0
-                create_grub2_cfg ${EFI_DIR}/kernel ${EFI_DIR}/$REAR_INITRD_FILENAME > ${EFI_DST}/grub.cfg
-                # Create bootloader, this overwrite BOOTX64.efi copied in previous step ...
-                build_bootx86_efi ${EFI_DST}/BOOTX64.efi ${EFI_DST}/grub.cfg "/boot" "$UEFI_BOOTLOADER"
-            ;;
-            (*)
-                BugError "Neither grub 0.97 nor 2.0"
-            ;;
-        esac
-    else
-        BugIfError "Unknown EFI bootloader"
-    fi
+        ;;
+        (2)
+            DebugPrint "Configuring GRUB2 for EFI boot"
+            # We need to explicitly set GRUB 2 'root' variable to $efi_label (hardcoded "REAR-EFI")
+            # because default $root would point to memdisk, where kernel and initrd are NOT present.
+            # GRUB2_SET_USB_ROOT is used in the create_grub2_cfg() function:
+            GRUB2_SET_USB_ROOT="search --no-floppy --set=root --label $efi_label"
+            # Create config for GRUB 2
+            create_grub2_cfg $efi_dir/kernel $efi_dir/$REAR_INITRD_FILENAME > $efi_dst/grub.cfg
+            # Create bootloader, this overwrite BOOTX64.efi copied in previous step ...
+            build_bootx86_efi $efi_dst/BOOTX64.efi $efi_dst/grub.cfg "/boot" "$UEFI_BOOTLOADER"
+        ;;
+        (*)
+            Error "GRUB version '$grub_version' is neither '0' (legacy GRUB) nor '2' (GRUB 2)"
+        ;;
+    esac
 fi
 
-# Do cleanup of EFI temporary mount point
-Log "Doing cleanup of ${EFI_MPT}"
-
-umount ${EFI_MPT}
-if [[ $? -eq 0 ]]; then
-    rmdir ${EFI_MPT} || Error "Could not remove temporary directory ${EFI_MPT}, please check manually"
+# Cleanup of EFI temporary mount point:
+if umount $efi_mpt ; then
+    rmdir $efi_mpt || LogPrintError "Could not remove temporary directory '$efi_mpt' (you should do it manually)"
 else
-    Log "Could not umount ${EFI_MPT}, please check manually"
+    LogPrintError "Could not umount EFI partition '$efi_part' at '$efi_mpt' (you should do it manually)"
 fi
-
-Log "Created EFI configuration for USB"
-
