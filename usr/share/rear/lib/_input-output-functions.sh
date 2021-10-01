@@ -764,8 +764,8 @@ function BugError () {
 BUG in $caller_source:
 '$@'
 --------------------
-Please report this issue at https://github.com/rear/rear/issues
-and include at least all related parts from $RUNTIME_LOGFILE
+Please report it at $BUG_REPORT_SITE
+and include all related parts from $RUNTIME_LOGFILE
 preferably the whole debug information via 'rear -D $WORKFLOW'
 ===================="
 }
