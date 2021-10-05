@@ -110,7 +110,11 @@ done
 # to current block devices in the currently running recovery system:
 while read keyword orig_device orig_size junk ; do
     # Continue with next original device when it is already used as source in the mapping file:
-    is_mapping_source "$orig_device" && continue
+    if is_mapping_source "$orig_device" ; then
+        DebugPrint "Skip automapping $orig_device (already exists as source in $MAPPING_FILE)"
+        continue
+    fi
+    # The original device is not yet mapped (i.e. not used as source in the mapping file) so it needs to be mapped.
     # First, try to find if there is a current disk with same name and same size as the original:
     sysfs_device_name="$( get_sysfs_name "$orig_device" )"
     current_device="/sys/block/$sysfs_device_name"
@@ -119,20 +123,26 @@ while read keyword orig_device orig_size junk ; do
         # The current_device (e.g. /sys/block/sda) is not a block device so that
         # its matching actual block device (e.g. /dev/sda) must be determined:
         preferred_target_device_name="$( get_device_name $current_device )"
-        # Continue with next one if the current one is already used as target in the mapping file:
-        is_mapping_target "$preferred_target_device_name" && continue
         # Use the current one if it is of same size as the old one:
         if test "$orig_size" -eq "$current_size" ; then
-            # Ensure the determined target device is really a block device:
+            # Ensure the target device is really a block device on the replacement hardware.
+            # Here the target device has same name as the original device which was a block device on the original hardware
+            # but it might perhaps happen that this device name is not a block device on the replacement hardware:
             if test -b "$preferred_target_device_name" ; then
-                add_mapping "$orig_device" "$preferred_target_device_name"
-                LogPrint "Using $preferred_target_device_name (same name and same size) for recreating $orig_device"
-                # Continue with next original device in the LAYOUT_FILE:
-                continue
+                # Do not map if the current one is already used as target in the mapping file:
+                if is_mapping_target "$preferred_target_device_name" ; then
+                    DebugPrint "Cannot use $preferred_target_device_name (same name and same size) for recreating $orig_device ($preferred_target_device_name already exists as target in $MAPPING_FILE)"
+                else
+                    add_mapping "$orig_device" "$preferred_target_device_name"
+                    LogPrint "Using $preferred_target_device_name (same name and same size) for recreating $orig_device"
+                    # Continue with next original device because the current one is now mapped:
+                    continue
+                fi
             fi
         fi
     fi
-    # Else, loop over all current block devices to find one of the same size as the original:
+    # If there is no current disk with same name and same size as the original
+    # loop over all current block devices to find one of same size as the original:
     for current_device_path in /sys/block/* ; do
         # Continue with next block device if the current one has no queue directory:
         test -d $current_device_path/queue || continue
@@ -143,20 +153,26 @@ while read keyword orig_device orig_size junk ; do
         # The current_device_path (e.g. /sys/block/sdb) is not a block device so that
         # its matching actual block device (e.g. /dev/sdb) must be determined:
         preferred_target_device_name="$( get_device_name $current_device_path )"
-        # Continue with next one if the current one is already used as target in the mapping file:
-        is_mapping_target "$preferred_target_device_name" && continue
-        # Use the current one if it is of same size as the old one:
-        if test "$orig_size" -eq "$current_size" ; then
-            # Ensure the determined target device is really a block device:
-            if test -b "$preferred_target_device_name" ; then
-                add_mapping "$orig_device" "$preferred_target_device_name"
-                LogPrint "Using $preferred_target_device_name (same size) for recreating $orig_device"
-                # Break looping over all current block devices to find one
-                # and continue with next original device in the LAYOUT_FILE:
-                break
-            fi
+        # Ensure the determined target device is really a block device (cf. above):
+        test -b "$preferred_target_device_name" || continue
+        # Continue with next current block device if the current one is not of same size as the original:
+        test "$orig_size" -eq "$current_size" || continue
+        # Continue with next current block device if the current one is already used as target in the mapping file:
+        if is_mapping_target "$preferred_target_device_name" ; then
+            DebugPrint "Cannot use $preferred_target_device_name (same size) for recreating $orig_device ($preferred_target_device_name already exists as target in $MAPPING_FILE)"
+            continue
         fi
+        # The first of all current block devices with same size as the original that is not yet used as target gets used:
+        add_mapping "$orig_device" "$preferred_target_device_name"
+        LogPrint "Using $preferred_target_device_name (same size) for recreating $orig_device"
+        # Continue the outer while loop with next original device because the current one is now mapped:
+        continue 2
     done
+    # The original device could not be automapped because there is
+    # neither a current disk with same name and same size as the original
+    # nor is there a current disk with different name but same size as the original
+    # so the user must maually specify the right mapping target:
+    DebugPrint "Could not automap $orig_device (no disk with same size found)"
 done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
 
 # For every unmapped original 'disk' device and 'multipath' device in the LAYOUT_FILE
