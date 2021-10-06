@@ -134,7 +134,7 @@ while read keyword orig_device orig_size junk ; do
                     DebugPrint "Cannot use $preferred_target_device_name (same name and same size) for recreating $orig_device ($preferred_target_device_name already exists as target in $MAPPING_FILE)"
                 else
                     add_mapping "$orig_device" "$preferred_target_device_name"
-                    LogPrint "Using $preferred_target_device_name (same name and same size) for recreating $orig_device"
+                    LogPrint "Using $preferred_target_device_name (same name and same size $current_size) for recreating $orig_device"
                     # Continue with next original device because the current one is now mapped:
                     continue
                 fi
@@ -164,7 +164,7 @@ while read keyword orig_device orig_size junk ; do
         fi
         # The first of all current block devices with same size as the original that is not yet used as target gets used:
         add_mapping "$orig_device" "$preferred_target_device_name"
-        LogPrint "Using $preferred_target_device_name (same size) for recreating $orig_device"
+        LogPrint "Using $preferred_target_device_name (same size $current_size) for recreating $orig_device"
         # Continue the outer while loop with next original device because the current one is now mapped:
         continue 2
     done
@@ -172,7 +172,7 @@ while read keyword orig_device orig_size junk ; do
     # neither a current disk with same name and same size as the original
     # nor is there a current disk with different name but same size as the original
     # so the user must maually specify the right mapping target:
-    DebugPrint "Could not automap $orig_device (no disk with same size found)"
+    DebugPrint "Could not automap $orig_device (no disk with same size $orig_size found)"
 done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
 
 # For every unmapped original 'disk' device and 'multipath' device in the LAYOUT_FILE
