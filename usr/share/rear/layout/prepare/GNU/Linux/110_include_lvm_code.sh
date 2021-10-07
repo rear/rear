@@ -67,6 +67,31 @@ create_lvmgrp() {
 
     local vg=${vgrp#/dev/}
 
+    # If a volume group name is in one of the following lists, it
+    # means that the particular condition is valid for this volume
+    # grup. If it is not in the list, it means that the condition is
+    # not valid for this volume group. To set a condition, add the VG
+    # name to the list. To unset it, remove it from the list.
+
+    # We must represent the conditions using lists, not simple scalar
+    # boolean variables. The conditions shall propagate information
+    # from VG creation to LV creation. A scalar does not work well in
+    # the case of multiple VGs, because the variables are global and
+    # if there are multiple VGs, their values will leak from one VG to
+    # another. (The generated diskrestore.sh script does not guarantee
+    # that the LVs of a given VG are created immediately after their
+    # VG and before creating another VG, actually, the script first
+    # creates all VGs and then all LVs.)  This logic does not apply to
+    # the create_volume_group condition, because it is local to the VG
+    # creation and does not need to be propagated to LV creation. We
+    # use the same approach for symmetry, though.
+
+    # The meanings of conditions corresponding to those lists are:
+    # create_volume_group - VG needs to be created using the vgcreate command
+    # create_logical_volumes - LVs in the VG need to be created using the lvcreate command
+    # create_thin_volumes_only - when the previous condition is true,
+    #   do not create volumes that are not thin volumes.
+
     cat >> "$LAYOUT_CODE" <<EOF
 create_volume_group+=( "$vg" )
 create_logical_volumes+=( "$vg" )
