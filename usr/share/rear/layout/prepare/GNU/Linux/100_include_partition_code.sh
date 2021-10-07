@@ -27,8 +27,7 @@ create_disk() {
     read component disk size label junk < <(grep "^disk $1 " "$LAYOUT_FILE")
 
     ### Disks should be block devices.
-    [[ -b "$disk" ]]
-    BugIfError "Disk $disk is not a block device."
+    [ -b "$disk" ] || BugError "Disk $disk is not a block device."
 
     cat >> "$LAYOUT_CODE" <<EOF
 
