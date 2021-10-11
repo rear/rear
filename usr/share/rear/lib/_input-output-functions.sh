@@ -878,7 +878,12 @@ function cleanup_build_area_and_end_program () {
             LogPrintError "$mounted_in_BUILD_DIR"
             LogPrintError "You must manually umount that before you may remove the build area"
         fi
-        LogPrint "To remove the build area use (with caution): rm -Rf --one-file-system $BUILD_DIR"
+        # Show this message also inside the recovery system (e.g. at the end of "rear -D recover")
+        # because there may be a reason why manually removing the build area is wanted
+        # (e.g. some additional manual things need be done before rebooting).
+        # In any case one must be careful if one wants to remove the build area because
+        # e.g. the NFS share with the backup.tar.gz may still be erroneously mounted therein.
+        LogPrint "To remove the build area you may use (with caution): rm -Rf --one-file-system $BUILD_DIR"
     else
         Log "Removing build area $BUILD_DIR"
         # Use '--one-file-system' to be safe against also deleting by accident
