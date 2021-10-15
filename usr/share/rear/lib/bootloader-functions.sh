@@ -199,7 +199,7 @@ function make_syslinux_config {
 
     # Enable serial console, unless explicitly disabled (only last entry is used on some systems thats where SERIAL_CONSOLE_DEVICE_SYSLINUX comes in :-/)
     if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
-        for devnode in $(ls /dev/ttyS[0-9]* | sort); do
+        for devnode in $(get_serial_devices); do
             # Not sure if using all serial devices do screw up syslinux in general
             # for me listing more then one serial line in the config screwed it
             # see https://github.com/rear/rear/pull/2650
@@ -535,15 +535,17 @@ function create_grub2_cfg {
     # Local helper functions for the create_grub2_cfg function:
 
     function create_grub2_serial_entry {
-        # Enable serial console, unless explicitly disabled.
-        # As for syslinux it may be useful to reduce it to exact one device since the last 'serial' line wins in grub:
+        # Enable serial console, unless explicitly disabled
+        # Note: as for syslinux it may be usefull to reduce it to exact one device since the last 'serial' line wins in grub...
         if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
-            for devnode in $(ls /dev/ttyS[0-9]* | sort); do
-                speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
-                if [ "$speed" ]; then
-                    echo "serial --speed=$speed --unit=${devnode##/dev/ttyS} --word=8 --parity=no --stop=1"
-                    # Use the first one found - ignore the rest (or the last 'serial' line will win):
-                    break
+            for devnode in $(get_serial_devices); do
+                if [ -z $SERIAL_CONSOLE_DEVICE_GRUB ] || [[ $SERIAL_CONSOLE_DEVICE_GRUB == $devnode ]]; then
+                    speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
+                    if [ "$speed" ]; then
+                        echo "serial --speed=$speed --unit=${devnode##/dev/ttyS} --word=8 --parity=no --stop=1"
+                        # use the first one found - ignore the rest or the last 'serial' line will win
+                        break
+                    fi
                 fi
             done
             if is_true $GRUB_FORCE_SERIAL ; then
