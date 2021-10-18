@@ -264,7 +264,7 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
 {
     # Enable serial console, unless explicitly disabled
     if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
-        for devnode in $(get_serial_devices); do
+        for devnode in $(get_serial_console_devices); do
             # Not sure if using all serial devices do screw up syslinux in general
             # for me listing more then one serial line in the config screwed it
             # see https://github.com/rear/rear/pull/2650

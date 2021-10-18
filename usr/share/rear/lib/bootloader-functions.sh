@@ -199,7 +199,7 @@ function make_syslinux_config {
 
     # Enable serial console, unless explicitly disabled (only last entry is used on some systems thats where SERIAL_CONSOLE_DEVICE_SYSLINUX comes in :-/)
     if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
-        for devnode in $(get_serial_devices); do
+        for devnode in $(get_serial_console_devices); do
             # Not sure if using all serial devices do screw up syslinux in general
             # for me listing more then one serial line in the config screwed it
             # see https://github.com/rear/rear/pull/2650
@@ -536,9 +536,9 @@ function create_grub2_cfg {
 
     function create_grub2_serial_entry {
         # Enable serial console, unless explicitly disabled
-        # Note: as for syslinux it may be usefull to reduce it to exact one device since the last 'serial' line wins in grub...
+        # Note: as for syslinux it may be useful to reduce it to exact one device since the last 'serial' line wins in grub...
         if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
-            for devnode in $(get_serial_devices); do
+            for devnode in $(get_serial_console_devices); do
                 if [ -z $SERIAL_CONSOLE_DEVICE_GRUB ] || [[ $SERIAL_CONSOLE_DEVICE_GRUB == $devnode ]]; then
                     speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
                     if [ "$speed" ]; then

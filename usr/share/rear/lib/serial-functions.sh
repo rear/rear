@@ -1,5 +1,5 @@
 # Get available serial devices
-function get_serial_devices {
+function get_serial_console_devices {
     if [ -z $SERIAL_CONSOLE_DEVICES ]; then
         serial_devices=$(ls /dev/ttyS[0-9]* /dev/hvsi[0-9]* | sort)
         echo "$serial_devices"
@@ -8,7 +8,7 @@ function get_serial_devices {
     fi
 }
 
-function build_cmdline {
+function cmdline_add_console {
     # Enable serial console, unless explicitly disabled
     if [[ ! "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
         return
@@ -20,12 +20,12 @@ function build_cmdline {
     for param in $KERNEL_CMDLINE; do
         case "$param" in
             (console=*) ;;
-            (*) cmdline="$cmdline$param ";;
+            (*) cmdline+=" $param";;
         esac
     done
 
-    # add seril config to kernel cmd line
-    serial_devices=$(get_serial_devices)
+    # add serial console config to kernel cmd line
+    serial_devices=$(get_serial_console_devices)
     for devnode in $serial_devices; do
         speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
         if [ "$speed" ]; then
@@ -33,7 +33,7 @@ function build_cmdline {
         fi
     done
 
-    # add serial default if no real serial device was found
+    # add console default if no real serial console device was found
     if [ -z $serial_devices ]; then
         cmdline="${cmdline}console=tty0 "
     fi
