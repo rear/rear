@@ -35,7 +35,7 @@ function cmdline_add_console {
     # Nothing to do when using serial console is not wanted:
     is_true "$USE_SERIAL_CONSOLE" || return 0
 
-    # Ignore existing console kernel cmd parameters:
+    # Strip existing 'console=...' kernel cmd parameters:
     local param cmdline=""
     for param in $KERNEL_CMDLINE ; do
         case "$param" in
