@@ -538,8 +538,26 @@ function create_grub2_cfg {
         # Enable serial console:
         # It may be useful to reduce it to exact one device since the last 'serial' line wins in GRUB.
         if is_true "$USE_SERIAL_CONSOLE" ; then
-            for devnode in $( get_serial_console_devices ) ; do
-                if [ -z $SERIAL_CONSOLE_DEVICE_GRUB ] || [[ $SERIAL_CONSOLE_DEVICE_GRUB == $devnode ]] ; then
+            # When the user has specified SERIAL_CONSOLE_DEVICE_GRUB use only that (no automatisms):
+            if test "$SERIAL_CONSOLE_DEVICE_GRUB" ; then
+                # No quoting lets 'test -c' fail when SERIAL_CONSOLE_DEVICE_GRUB is more than one word:
+                if test -c $SERIAL_CONSOLE_DEVICE_GRUB ; then
+                    # FIXME: ${SERIAL_CONSOLE_DEVICE_GRUB##/dev/ttyS} only works
+                    # when $SERIAL_CONSOLE_DEVICE_GRUB is of the form /dev/ttyS<number>
+                    # but get_serial_console_devices() results both /dev/ttyS[0-9]* and /dev/hvsi[0-9]*
+                    if speed=$( get_serial_device_speed $SERIAL_CONSOLE_DEVICE_GRUB ) ; then
+                        # When speed is set it is a real serial device so set some more serial device parameters:
+                        echo "serial --unit=${SERIAL_CONSOLE_DEVICE_GRUB##/dev/ttyS} --speed=$speed --word=8 --parity=no --stop=1"
+                    else
+                        # When there is no 'speed' do not set serial device parameters:
+                        echo "serial --unit=${SERIAL_CONSOLE_DEVICE_GRUB##/dev/ttyS}"
+                    fi
+                else
+                    # When SERIAL_CONSOLE_DEVICE_GRUB is more than one word use it exactly as specified:
+                    echo "$SERIAL_CONSOLE_DEVICE_GRUB"
+                fi
+            else
+                for devnode in $( get_serial_console_devices ) ; do
                     # Add GRUB serial console config for real serial devices:
                     if speed=$( get_serial_device_speed $devnode ) ; then
                         # FIXME: ${devnode##/dev/ttyS} only works when $devnode is of the form /dev/ttyS<number>
@@ -549,8 +567,8 @@ function create_grub2_cfg {
                         # Use the first one and skip the rest to avoid that the last 'serial' line wins in GRUB:
                         break
                     fi
-                fi
-            done
+                done
+            fi
             if is_true $GRUB_FORCE_SERIAL ; then
                 echo "terminal_input serial"
                 echo "terminal_output serial"
