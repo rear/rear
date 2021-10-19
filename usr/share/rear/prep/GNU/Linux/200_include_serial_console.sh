@@ -1,11 +1,14 @@
-# For serial support we need to include the agetty binary, but Debian distro's
-# use getty instead of agetty.
+# For serial support we need to include the agetty binary,
+# but Debian distro's use getty instead of agetty.
 
-# Enable serial console if possible, when not specified
-if [[ -z "$USE_SERIAL_CONSOLE" ]]; then
-    for devnode in $(ls /dev/ttyS[0-9]* | sort); do
-        if stty -F $devnode >/dev/null 2>&1; then
-            USE_SERIAL_CONSOLE=y
+# If possible auto-enable serial console when not specified:
+if [[ -z "$USE_SERIAL_CONSOLE" ]] ; then
+    local devnode speed=""
+    for devnode in $( get_serial_console_devices ) ; do
+        # Enable serial console when there is at least one real serial device:
+        if speed=$( get_serial_device_speed $devnode ) ; then
+            USE_SERIAL_CONSOLE="yes"
+            break
         fi
     done
 fi
