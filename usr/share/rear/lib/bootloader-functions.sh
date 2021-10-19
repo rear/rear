@@ -535,15 +535,18 @@ function create_grub2_cfg {
     # Local helper functions for the create_grub2_cfg function:
 
     function create_grub2_serial_entry {
-        # Enable serial console, unless explicitly disabled
-        # Note: as for syslinux it may be useful to reduce it to exact one device since the last 'serial' line wins in grub...
-        if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
-            for devnode in $(get_serial_console_devices); do
-                if [ -z $SERIAL_CONSOLE_DEVICE_GRUB ] || [[ $SERIAL_CONSOLE_DEVICE_GRUB == $devnode ]]; then
-                    speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
-                    if [ "$speed" ]; then
-                        echo "serial --speed=$speed --unit=${devnode##/dev/ttyS} --word=8 --parity=no --stop=1"
-                        # use the first one found - ignore the rest or the last 'serial' line will win
+        # Enable serial console:
+        # It may be useful to reduce it to exact one device since the last 'serial' line wins in GRUB.
+        if is_true "$USE_SERIAL_CONSOLE" ; then
+            for devnode in $( get_serial_console_devices ) ; do
+                if [ -z $SERIAL_CONSOLE_DEVICE_GRUB ] || [[ $SERIAL_CONSOLE_DEVICE_GRUB == $devnode ]] ; then
+                    # Add GRUB serial console config for real serial devices:
+                    if speed=$( get_serial_device_speed $devnode ) ; then
+                        # FIXME: ${devnode##/dev/ttyS} only works when $devnode is of the form /dev/ttyS<number>
+                       # but get_serial_console_devices() results both /dev/ttyS[0-9]* and /dev/hvsi[0-9]*
+                        # and the other options "--word=8 --parity=no --stop=1" are hardcoded:
+                        echo "serial --unit=${devnode##/dev/ttyS} --speed=$speed --word=8 --parity=no --stop=1"
+                        # Use the first one and skip the rest to avoid that the last 'serial' line wins in GRUB:
                         break
                     fi
                 fi
