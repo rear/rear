@@ -545,12 +545,13 @@ function create_grub2_cfg {
                     # FIXME: ${SERIAL_CONSOLE_DEVICE_GRUB##/dev/ttyS} only works
                     # when $SERIAL_CONSOLE_DEVICE_GRUB is of the form /dev/ttyS<number>
                     # but get_serial_console_devices() results both /dev/ttyS[0-9]* and /dev/hvsi[0-9]*
+                    unit=${SERIAL_CONSOLE_DEVICE_GRUB##/dev/ttyS}
                     if speed=$( get_serial_device_speed $SERIAL_CONSOLE_DEVICE_GRUB ) ; then
                         # When speed is set it is a real serial device so set some more serial device parameters:
-                        echo "serial --unit=${SERIAL_CONSOLE_DEVICE_GRUB##/dev/ttyS} --speed=$speed --word=8 --parity=no --stop=1"
+                        echo "serial --unit=$unit --speed=$speed --word=8 --parity=no --stop=1"
                     else
                         # When there is no 'speed' do not set serial device parameters:
-                        echo "serial --unit=${SERIAL_CONSOLE_DEVICE_GRUB##/dev/ttyS}"
+                        echo "serial --unit=$unit"
                     fi
                 else
                     # When SERIAL_CONSOLE_DEVICE_GRUB is more than one word use it exactly as specified:
@@ -563,7 +564,8 @@ function create_grub2_cfg {
                         # FIXME: ${devnode##/dev/ttyS} only works when $devnode is of the form /dev/ttyS<number>
                         # but get_serial_console_devices() results both /dev/ttyS[0-9]* and /dev/hvsi[0-9]*
                         # and the other options "--word=8 --parity=no --stop=1" are hardcoded:
-                        echo "serial --unit=${devnode##/dev/ttyS} --speed=$speed --word=8 --parity=no --stop=1"
+                        unit=${devnode##/dev/ttyS}
+                        echo "serial --unit=$unit --speed=$speed --word=8 --parity=no --stop=1"
                         # Use the first one and skip the rest to avoid that the last 'serial' line wins in GRUB:
                         break
                     fi
