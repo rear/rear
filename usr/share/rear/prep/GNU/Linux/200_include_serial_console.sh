@@ -1,5 +1,3 @@
-# For serial support we need to include the agetty binary,
-# but Debian distro's use getty instead of agetty.
 
 # If possible auto-enable serial console when not specified:
 if [[ -z "$USE_SERIAL_CONSOLE" ]] ; then
@@ -15,7 +13,9 @@ fi
 
 # Always include getty or agetty as we don't know in advance whether they are needed
 # (the user may boot the recovery system with manually specified kernel options
-# to get serial console support in his recovery system):
+# to get serial console support in his recovery system).
+# For serial support we need to include the agetty binary,
+# but Debian distro's use getty instead of agetty:
 local getty_binary=""
 if has_binary getty ; then
     # Debian, Ubuntu,...
