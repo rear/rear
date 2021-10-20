@@ -265,16 +265,47 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
     # Enable serial console:
     # For the SERIAL directive to work properly, it must be the first directive in the configuration file,
     # see "SERIAL port" at https://wiki.syslinux.org/wiki/index.php?title=SYSLINUX
+    # It may be useful to reduce it to exact one device since the last 'serial' line wins in SYSLINUX.
     if is_true "$USE_SERIAL_CONSOLE" ; then
-        for devnode in $( get_serial_console_devices ) ; do
-            # Not sure if using all serial devices do screw up SYSLINUX in general
-            # for me listing more then one serial line in the config screwed it
-            # see https://github.com/rear/rear/pull/2650
-            if [ -z $SERIAL_CONSOLE_DEVICE_SYSLINUX ] || [[ $SERIAL_CONSOLE_DEVICE_SYSLINUX == $devnode ]] ; then
-                # Add SYSLINUX serial console config for real serial devices:
-                speed=$( get_serial_device_speed $devnode ) && syslinux_write "serial ${devnode##/dev/ttyS} $speed"
+        # When the user has specified SERIAL_CONSOLE_DEVICE_SYSLINUX use only that (no automatisms):
+        if test "$SERIAL_CONSOLE_DEVICE_SYSLINUX" ; then
+            # SERIAL_CONSOLE_DEVICE_SYSLINUX can be a character device node like "/dev/ttyS0"
+            # or a whole SYSLINUX 'serial' directive like "serial 1 9600" for /dev/ttyS1 at 9600 baud.
+            if test -c "$SERIAL_CONSOLE_DEVICE_SYSLINUX" ; then
+                # The port value for the SYSLINUX 'serial' directive
+                # is the trailing digits of the serial device node
+                # cf. the code of get_partition_number() in lib/layout-functions.sh
+                port=$( echo "$SERIAL_CONSOLE_DEVICE_SYSLINUX" | grep -o -E '[0-9]+$' )
+                # E.g. for /dev/ttyS12 the unit would be 12 but
+                # https://wiki.syslinux.org/wiki/index.php?title=SYSLINUX
+                # reads in the section "SERIAL port [baudrate [flowcontrol]]"
+                # "port values from 0 to 3 mean the first four serial ports detected by the BIOS"
+                # which indicates port values should be less than 4 so we tell the user about it
+                # but we do not error out because the user may have tested that it does work for him:
+                test $port -lt 4 || LogPrintError "$SERIAL_CONSOLE_DEVICE_SYSLINUX may not work (only /dev/ttyS0 up to /dev/ttyS3 should work)"
+                if speed=$( get_serial_device_speed $SERIAL_CONSOLE_DEVICE_SYSLINUX ) ; then
+                    syslinux_write "serial $port $speed"
+                else
+                    syslinux_write "serial $port"
+                fi
+            else
+                # When SERIAL_CONSOLE_DEVICE_SYSLINUX is a whole SYSLINUX 'serial' directive use it as specified:
+                syslinux_write "$SERIAL_CONSOLE_DEVICE_SYSLINUX"
             fi
-        done
+        else
+            for devnode in $( get_serial_console_devices ) ; do
+                # Add SYSLINUX serial console config for real serial devices:
+                if speed=$( get_serial_device_speed $devnode ) ; then
+                    # The port value for the SYSLINUX 'serial' directive
+                    # is the trailing digits of the serial device node
+                    # cf. the code of get_partition_number() in lib/layout-functions.sh
+                    port=$( echo "$devnode" | grep -o -E '[0-9]+$' )
+                    syslinux_write "serial $port $speed"
+                    # Use the first one and skip the rest to avoid that the last 'serial' line wins in SYSLINUX:
+                    break
+                fi
+            done
+        fi
     fi
 
     syslinux_write "display message"
