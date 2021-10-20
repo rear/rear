@@ -197,17 +197,17 @@ function make_syslinux_config {
         SYSLINUX_DIR="$syslinux_modules_dir"
     fi
 
-    # Enable serial console, unless explicitly disabled (only last entry is used on some systems thats where SERIAL_CONSOLE_DEVICE_SYSLINUX comes in :-/)
-    if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
-        for devnode in $(get_serial_console_devices); do
-            # Not sure if using all serial devices do screw up syslinux in general
+    # Enable serial console:
+    # For the SERIAL directive to work properly, it must be the first directive in the configuration file,
+    # see "SERIAL port" at https://wiki.syslinux.org/wiki/index.php?title=SYSLINUX
+    if is_true "$USE_SERIAL_CONSOLE" ; then
+        for devnode in $( get_serial_console_devices ) ; do
+            # Not sure if using all serial devices do screw up SYSLINUX in general
             # for me listing more then one serial line in the config screwed it
             # see https://github.com/rear/rear/pull/2650
-            if [ -z $SERIAL_CONSOLE_DEVICE_SYSLINUX ] || [[ $SERIAL_CONSOLE_DEVICE_SYSLINUX == $devnode ]]; then
-                speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
-                if [ "$speed" ]; then
-                    echo "serial ${devnode##/dev/ttyS} $speed"
-                fi
+            if [ -z $SERIAL_CONSOLE_DEVICE_SYSLINUX ] || [[ $SERIAL_CONSOLE_DEVICE_SYSLINUX == $devnode ]] ; then
+                # Add SYSLINUX serial console config for real serial devices:
+                speed=$( get_serial_device_speed $devnode ) && echo "serial ${devnode##/dev/ttyS} $speed"
             fi
         done
     fi
