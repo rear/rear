@@ -540,12 +540,18 @@ function create_grub2_cfg {
         if is_true "$USE_SERIAL_CONSOLE" ; then
             # When the user has specified SERIAL_CONSOLE_DEVICE_GRUB use only that (no automatisms):
             if test "$SERIAL_CONSOLE_DEVICE_GRUB" ; then
-                # No quoting lets 'test -c' fail when SERIAL_CONSOLE_DEVICE_GRUB is more than one word:
-                if test -c $SERIAL_CONSOLE_DEVICE_GRUB ; then
-                    # FIXME: ${SERIAL_CONSOLE_DEVICE_GRUB##/dev/ttyS} only works
-                    # when $SERIAL_CONSOLE_DEVICE_GRUB is of the form /dev/ttyS<number>
-                    # but get_serial_console_devices() results both /dev/ttyS[0-9]* and /dev/hvsi[0-9]*
-                    unit=${SERIAL_CONSOLE_DEVICE_GRUB##/dev/ttyS}
+                # SERIAL_CONSOLE_DEVICE_GRUB can be a character device node like "/dev/ttyS0"
+                # or a whole GRUB 'serial' command like "serial --unit=1 --speed=9600"
+                if test -c "$SERIAL_CONSOLE_DEVICE_GRUB" ; then
+                    # The unit value for the GRUB 'serial' command
+                    # is the trailing digits of the serial device node
+                    # cf. the code of get_partition_number() in lib/layout-functions.sh
+                    unit=$( echo "$SERIAL_CONSOLE_DEVICE_GRUB" | grep -o -E '[0-9]+$' )
+                    # E.g. for /dev/ttyS12 the unit would be 12 but
+                    # https://www.gnu.org/software/grub/manual/grub/grub.html#serial
+                    # reads "unit is a number in the range 0-3" so we tell the user about it
+                    # but we do not error out because the user may have tested that it does work for him:
+                    test $unit -lt 4 || LogPrintError "$SERIAL_CONSOLE_DEVICE_GRUB may not work (only /dev/ttyS0 up to /dev/ttyS3 should work)"
                     if speed=$( get_serial_device_speed $SERIAL_CONSOLE_DEVICE_GRUB ) ; then
                         # When speed is set it is a real serial device so set some more serial device parameters:
                         echo "serial --unit=$unit --speed=$speed --word=8 --parity=no --stop=1"
@@ -554,7 +560,7 @@ function create_grub2_cfg {
                         echo "serial --unit=$unit"
                     fi
                 else
-                    # When SERIAL_CONSOLE_DEVICE_GRUB is more than one word use it exactly as specified:
+                    # When SERIAL_CONSOLE_DEVICE_GRUB is a whole GRUB 'serial' command use it as specified:
                     echo "$SERIAL_CONSOLE_DEVICE_GRUB"
                 fi
             else
