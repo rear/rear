@@ -282,7 +282,7 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
                 # "port values from 0 to 3 mean the first four serial ports detected by the BIOS"
                 # which indicates port values should be less than 4 so we tell the user about it
                 # but we do not error out because the user may have tested that it does work for him:
-                test $port -lt 4 || LogPrintError "$SERIAL_CONSOLE_DEVICE_SYSLINUX may not work (only /dev/ttyS0 up to /dev/ttyS3 should work)"
+                test $port -lt 4 || LogPrintError "SERIAL_CONSOLE_DEVICE_SYSLINUX '$SERIAL_CONSOLE_DEVICE_SYSLINUX' may not work (only /dev/ttyS0 up to /dev/ttyS3 should work)"
                 if speed=$( get_serial_device_speed $SERIAL_CONSOLE_DEVICE_SYSLINUX ) ; then
                     syslinux_write "serial $port $speed"
                 else
@@ -300,6 +300,7 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
                     # is the trailing digits of the serial device node
                     # cf. the code of get_partition_number() in lib/layout-functions.sh
                     port=$( echo "$devnode" | grep -o -E '[0-9]+$' )
+                    test $port -lt 4 || LogPrintError "$devnode may not work as serial console for SYSLINUX (only /dev/ttyS0 up to /dev/ttyS3 should work)"
                     syslinux_write "serial $port $speed"
                     # Use the first one and skip the rest to avoid that the last 'serial' line wins in SYSLINUX:
                     break
