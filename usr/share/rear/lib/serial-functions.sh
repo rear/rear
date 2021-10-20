@@ -1,13 +1,22 @@
 
 # Get available serial devices:
 function get_serial_console_devices () {
+    test "$SERIAL_CONSOLE_DEVICES" && echo $SERIAL_CONSOLE_DEVICES || ls /dev/ttyS[0-9]* /dev/hvsi[0-9]* | sort
     # Use plain 'sort' which results /dev/ttyS0 /dev/ttyS1 /dev/ttyS10 ... /dev/ttyS19 /dev/ttyS2 /dev/ttyS20 ...
     # to get at least /dev/ttyS0 and /dev/ttyS1 before the other /dev/ttyS* devices because
     # we cannot use "sort -V" which would result /dev/ttyS0 /dev/ttyS1 ... /dev/ttyS9 /dev/ttyS10 ...
     # because in older Linux distributions 'sort' does not support '-V' e.g. SLES10 with GNU coreutils 5.93
     # (SLES11 with GNU coreutils 8.12 supports 'sort -V') but if 'sort' fails there is no output at all
     # cf. "Maintain backward compatibility" at https://github.com/rear/rear/wiki/Coding-Style
-    test "$SERIAL_CONSOLE_DEVICES" && echo $SERIAL_CONSOLE_DEVICES || ls /dev/ttyS[0-9]* /dev/hvsi[0-9]* | sort
+    # Furthermore 'sort' results that /dev/hvsi* devices appear before /dev/ttyS* devices
+    # so the create_grub2_serial_entry function in lib/bootloader-functions.sh
+    # which uses by default the first one and skips the rest will result that
+    # the first /dev/hvsi* device becomes used for the GRUB serial console by default
+    # which looks right because /dev/hvsi* devices should exist only on systems
+    # that have the HVSI driver loaded (a console driver for IBM's p5 servers)
+    # cf. https://lwn.net/Articles/98442/
+    # and it seems right that when special console drivers are loaded
+    # then their devices should be preferred by default.
 }
 
 # Get the serial device speed for those device nodes that belong to actual serial devices.
