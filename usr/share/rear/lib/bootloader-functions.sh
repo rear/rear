@@ -196,20 +196,6 @@ function make_syslinux_config {
     # Enable serial console:
     # For the SERIAL directive to work properly, it must be the first directive in the configuration file,
     # see "SERIAL port" at https://wiki.syslinux.org/wiki/index.php?title=SYSLINUX
-    if is_true "$USE_SERIAL_CONSOLE" ; then
-        for devnode in $( get_serial_console_devices ) ; do
-            # Not sure if using all serial devices do screw up SYSLINUX in general
-            # for me listing more then one serial line in the config screwed it
-            # see https://github.com/rear/rear/pull/2650
-            if [ -z $SERIAL_CONSOLE_DEVICE_SYSLINUX ] || [[ $SERIAL_CONSOLE_DEVICE_SYSLINUX == $devnode ]] ; then
-                # Add SYSLINUX serial console config for real serial devices:
-                speed=$( get_serial_device_speed $devnode ) && echo "serial ${devnode##/dev/ttyS} $speed"
-            fi
-        done
-    fi
-    # Enable serial console:
-    # For the SERIAL directive to work properly, it must be the first directive in the configuration file,
-    # see "SERIAL port" at https://wiki.syslinux.org/wiki/index.php?title=SYSLINUX
     # It may be useful to reduce it to exact one device since the last 'serial' line wins in SYSLINUX.
     if is_true "$USE_SERIAL_CONSOLE" ; then
         # When the user has specified SERIAL_CONSOLE_DEVICE_SYSLINUX use only that (no automatisms):
@@ -228,7 +214,6 @@ function make_syslinux_config {
                 # which indicates port values should be less than 4 so we tell the user about it
                 # but we do not error out because the user may have tested that it does work for him:
                 test $port -lt 4 || LogPrintError "SERIAL_CONSOLE_DEVICE_SYSLINUX '$SERIAL_CONSOLE_DEVICE_SYSLINUX' may not work (only /dev/ttyS0 up to /dev/ttyS3 should work)"
-                if speed=$( get_serial_device_speed $SERIAL_CONSOLE_DEVICE_SYSLINUX ) ; then
                 if speed=$( get_serial_device_speed $SERIAL_CONSOLE_DEVICE_SYSLINUX ) ; then
                     echo "serial $port $speed"
                 else
