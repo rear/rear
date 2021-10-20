@@ -567,10 +567,11 @@ function create_grub2_cfg {
                 for devnode in $( get_serial_console_devices ) ; do
                     # Add GRUB serial console config for real serial devices:
                     if speed=$( get_serial_device_speed $devnode ) ; then
-                        # FIXME: ${devnode##/dev/ttyS} only works when $devnode is of the form /dev/ttyS<number>
-                        # but get_serial_console_devices() results both /dev/ttyS[0-9]* and /dev/hvsi[0-9]*
-                        # and the other options "--word=8 --parity=no --stop=1" are hardcoded:
-                        unit=${devnode##/dev/ttyS}
+                        # The unit value for the GRUB 'serial' command
+                        # is the trailing digits of the serial device node
+                        # cf. the code of get_partition_number() in lib/layout-functions.sh
+                        unit=$( echo "$devnode" | grep -o -E '[0-9]+$' )
+                        # When speed is set it is a real serial device so set some more serial device parameters:
                         echo "serial --unit=$unit --speed=$speed --word=8 --parity=no --stop=1"
                         # Use the first one and skip the rest to avoid that the last 'serial' line wins in GRUB:
                         break
