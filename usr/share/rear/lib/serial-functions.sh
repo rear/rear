@@ -39,7 +39,7 @@ function get_serial_device_speed () {
     ( set -o pipefail ; stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }' )
 }
 
-# Add serial console to /etc/inittab and kernel cmdline:
+# Add serial console to kernel cmdline:
 function cmdline_add_console {
     # Nothing to do when using serial console is not wanted:
     is_true "$USE_SERIAL_CONSOLE" || return 0
@@ -53,14 +53,33 @@ function cmdline_add_console {
         esac
     done
 
-    # Add serial console config to kernel cmd line for real serial devices:
+    # Add serial console config to kernel cmd line:
     local devnode speed=""
-    for devnode in $( get_serial_console_devices ) ; do
-        speed=$( get_serial_device_speed $devnode ) && cmdline+=" console=${devnode##/dev/},$speed"
-    done
-
-    # Add fallback console if no real serial device was found:
-    test "$speed" || cmdline+=" console=tty0"
+    if test "$SERIAL_CONSOLE_DEVICES_KERNEL" ; then
+        # When the user has specified SERIAL_CONSOLE_DEVICES_KERNEL use only that (no automatisms):
+        for devnode in $SERIAL_CONSOLE_DEVICES_KERNEL ; do
+            # devnode can be a character device node like "/dev/ttyS0" or "/dev/lp0" or "/dev/ttyUSB0"
+            # cf. https://www.kernel.org/doc/html/latest/admin-guide/serial-console.html
+            # or devnode can be a 'console=...' kernel cmd parameter like "console=ttyS1,9600"
+            if test -c "$devnode" ; then
+                if speed=$( get_serial_device_speed $devnode ) ; then
+                    cmdline+=" console=${devnode##/dev/},$speed"
+                else
+                    cmdline+=" console=${devnode##/dev/}"
+                fi
+            else
+                # When devnode is a 'console=...' kernel cmd parameter use it as specified:
+                cmdline+=" $devnode"
+            fi
+        done
+    else
+        for devnode in $( get_serial_console_devices ) ; do
+            # Only add for those device nodes that belong to actual serial devices:
+            speed=$( get_serial_device_speed $devnode ) && cmdline+=" console=${devnode##/dev/},$speed"
+        done
+        # Add fallback console if no real serial device was found:
+        test "$speed" || cmdline+=" console=tty0"
+    fi
 
     # Have a trailing space to be on the safe side
     # so that more kernel cmd parameters could be "just appended" by other scripts:
