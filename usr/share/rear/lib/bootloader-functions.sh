@@ -582,10 +582,8 @@ function create_grub2_cfg {
                     # but we do not error out because the user may have tested that it does work for him:
                     test $unit -lt 4 || LogPrintError "SERIAL_CONSOLE_DEVICE_GRUB '$SERIAL_CONSOLE_DEVICE_GRUB' may not work (only /dev/ttyS0 up to /dev/ttyS3 should work)"
                     if speed=$( get_serial_device_speed $SERIAL_CONSOLE_DEVICE_GRUB ) ; then
-                        # When speed is set it is a real serial device so set some more serial device parameters:
-                        echo "serial --unit=$unit --speed=$speed --word=8 --parity=no --stop=1"
+                        echo "serial --unit=$unit --speed=$speed"
                     else
-                        # When there is no 'speed' do not set serial device parameters:
                         echo "serial --unit=$unit"
                     fi
                 else
@@ -601,8 +599,7 @@ function create_grub2_cfg {
                         # cf. the code of get_partition_number() in lib/layout-functions.sh
                         unit=$( echo "$devnode" | grep -o -E '[0-9]+$' )
                         test $unit -lt 4 || LogPrintError "$devnode may not work as serial console for GRUB (only /dev/ttyS0 up to /dev/ttyS3 should work)"
-                        # When speed is set it is a real serial device so set some more serial device parameters:
-                        echo "serial --unit=$unit --speed=$speed --word=8 --parity=no --stop=1"
+                        echo "serial --unit=$unit --speed=$speed"
                         # Use the first one and skip the rest to avoid that the last 'serial' line wins in GRUB:
                         break
                     fi
