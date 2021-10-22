@@ -125,7 +125,7 @@ while read keyword orig_device orig_size junk ; do
         preferred_target_device_name="$( get_device_name $current_device )"
         # Use the current one if it is of same size as the old one:
         if test "$orig_size" -eq "$current_size" ; then
-            # Ensure the determined target device is really a block device:
+            # Ensure the target device is really a block device on the replacement hardware.
             # Here the target device has same name as the original device which was a block device on the original hardware
             # but it might perhaps happen that this device name is not a block device on the replacement hardware:
             if test -b "$preferred_target_device_name" ; then
