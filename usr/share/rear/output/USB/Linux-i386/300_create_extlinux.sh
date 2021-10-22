@@ -1,5 +1,8 @@
 # Create a suitable syslinux configuration based on capabilities
 
+# Nothing to do here when GRUB2 is specified to be used as USB bootloader:
+test "$USB_BOOTLOADER" = "grub" && return
+
 function get_usb_syslinux_version {
     for file in $BUILD_DIR/outputfs/{boot/syslinux,}/{ld,ext}linux.sys; do
         if [[ -s "$file" ]];  then
@@ -97,8 +100,7 @@ esac
 
 USB_REAR_DIR="$BUILD_DIR/outputfs/$USB_PREFIX"
 if [ ! -d "$USB_REAR_DIR" ]; then
-    mkdir -p $v "$USB_REAR_DIR" >/dev/null
-    StopIfError "Could not create USB ReaR dir [$USB_REAR_DIR] !"
+    mkdir -p $v "$USB_REAR_DIR" >/dev/null || Error "Could not create USB ReaR dir [$USB_REAR_DIR] !"
 fi
 
 # We generate a single syslinux.cfg for the current system
@@ -251,8 +253,7 @@ EOF
 } 4>"$BUILD_DIR/outputfs/rear/syslinux.cfg"
 
 if [ ! -d "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" ]; then
-    mkdir -p $v "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" >/dev/null
-    StopIfError "Could not create USB syslinux dir [$BUILD_DIR/outputfs/$SYSLINUX_PREFIX] !"
+    mkdir -p $v "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" >/dev/null || Error "Could not create USB syslinux dir [$BUILD_DIR/outputfs/$SYSLINUX_PREFIX] !"
 fi
 
 echo "$VERSION_INFO" >$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/message
@@ -263,10 +264,15 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
 {
     # Enable serial console, unless explicitly disabled
     if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
-        for devnode in $(ls /dev/ttyS[0-9]* | sort); do
-            speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
-            if [ "$speed" ]; then
-                syslinux_write "serial ${devnode##/dev/ttyS} $speed"
+        for devnode in $(get_serial_console_devices); do
+            # Not sure if using all serial devices do screw up syslinux in general
+            # for me listing more then one serial line in the config screwed it
+            # see https://github.com/rear/rear/pull/2650
+            if [ -z $SERIAL_CONSOLE_DEVICE_SYSLINUX ] || [[ $SERIAL_CONSOLE_DEVICE_SYSLINUX == $devnode ]]; then
+                speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
+                if [ "$speed" ]; then
+                    syslinux_write "serial ${devnode##/dev/ttyS} $speed"
+                fi
             fi
         done
     fi

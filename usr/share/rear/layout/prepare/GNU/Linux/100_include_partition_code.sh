@@ -26,24 +26,14 @@ create_disk() {
     local component disk size label junk
     read component disk size label junk < <(grep "^disk $1 " "$LAYOUT_FILE")
 
-    ### Disks should be block devices.
-    [[ -b "$disk" ]]
-    BugIfError "Disk $disk is not a block device."
-
-    ### Find out the actual disk size.
-    local disk_size=$( get_disk_size $(get_sysfs_name "$disk") )
-
-    [[ "$disk_size" ]]
-    BugIfError "Could not determine size of disk $disk, please file a bug."
-
-    [[ $disk_size -gt 0 ]]
-    StopIfError "Disk $disk has size $disk_size, unable to continue."
-
     cat >> "$LAYOUT_CODE" <<EOF
 
 #
 # Code handling disk '$disk'
 #
+
+### Disks should be block devices.
+[ -b "$disk" ] || BugError "Disk $disk is not a block device."
 
 Log "Stop mdadm"
 if grep -q md /proc/mdstat 2>/dev/null; then

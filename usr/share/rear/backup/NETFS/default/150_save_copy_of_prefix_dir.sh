@@ -3,20 +3,17 @@
 [ -z "${NETFS_KEEP_OLD_BACKUP_COPY}" ] && return
 
 # do not do this for tapes and special attention for file:///path
-url="$( echo $stage | tr '[:lower:]' '[:upper:]')_URL"
-local scheme=$(url_scheme ${!url})
-local path=$(url_path ${!url})
-local opath=$(backup_path $scheme $path)
+local scheme=$( url_scheme $BACKUP_URL )
+local path=$( url_path $BACKUP_URL )
+local opath=$( backup_path $scheme $path )
 
 # if $opath is empty return silently (e.g. scheme tape)
 [ -z "$opath" ] && return 0
 
 if ! test -f "${opath}/.lockfile" ; then
     if test -d "${opath}" ; then
-        rm -rf $v "${opath}.old" >&2
-        StopIfError "Could not remove '${opath}.old'"
-        mv -f $v "${opath}" "${opath}.old" >&2
-        StopIfError "Could not move '${opath}'"
+        rm -rf $v "${opath}.old" || Error "Could not remove '${opath}.old'"
+        mv -f $v "${opath}" "${opath}.old" || Error "Could not move '${opath}'"
     fi
 else
     # lockfile was already made through the output workflow (hands off)

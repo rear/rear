@@ -40,7 +40,7 @@ Requires: syslinux
 # In the end this should tell the user that rear is known to work only on ix86 x86_64 ppc ppc64 ppc64le ia64
 # and on ix86 x86_64 syslinux is explicitly required to make the bootable ISO image
 # (in addition to the default installed bootloader grub2) while on ppc ppc64 the
-# default installed bootloader yaboot is also useed to make the bootable ISO image.
+# default installed bootloader yaboot is also used to make the bootable ISO image.
 
 ### Mandatory dependencies on all distributions:
 Requires: binutils

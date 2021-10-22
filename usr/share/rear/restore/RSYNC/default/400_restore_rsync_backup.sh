@@ -4,10 +4,10 @@ get_size() {
 	echo $( stat --format '%s' "$TARGET_FS_ROOT/$1" )
 }
 
-mkdir -p "${TMP_DIR}/rsync/${NETFS_PREFIX}"
-StopIfError "Could not mkdir '$TMP_DIR/rsync/${NETFS_PREFIX}'"
+local backup_prog_rc
+local restore_log_message
 
-LogPrint "Restoring $BACKUP_PROG archive from '${RSYNC_HOST}:${RSYNC_PATH}'"
+LogPrint "Restoring $BACKUP_PROG backup from '${RSYNC_HOST}:${RSYNC_PATH}'"
 
 ProgressStart "Restore operation"
 (
@@ -33,9 +33,10 @@ ProgressStart "Restore operation"
 			;;
 
 		(*)
-			# no other backup programs foreseen then rsync so far
+			# no other backup programs foreseen than rsync so far
 			:
 			;;
+
 	esac
 	echo $? >$TMP_DIR/retval
 ) >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" &
@@ -65,6 +66,7 @@ case "$(basename $BACKUP_PROG)" in
 			ProgressStep
 		done
 		;;
+
 esac
 ProgressStop
 
@@ -72,20 +74,28 @@ transfertime="$((SECONDS-starttime))"
 
 # harvest return code from background job. The kill -0 $BackupPID loop above should
 # have made sure that this wait won't do any real "waiting" :-)
-wait $BackupPID
-_rc=$?
+wait $BackupPID || LogPrintError "Restore job returned a nonzero exit code $?"
+# harvest the actual return code of rsync. Finishing the pipeline with an error code above is actually unlikely,
+# because rsync is not the last command in it. But error returns from rsync are common and must be handled.
+backup_prog_rc="$(cat $TMP_DIR/retval)"
 
 sleep 1
-test "$_rc" -gt 0 && LogPrint "WARNING !
-There was an error (${rsync_err_msg[$_rc]}) while restoring the archive.
+if test "$backup_prog_rc" -gt 0 ; then
+    # TODO: Shouldn't we tell the user to check ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log as well?
+    LogPrintError "WARNING !
+There was an error (${rsync_err_msg[$backup_prog_rc]}) while restoring the backup.
 Please check '$RUNTIME_LOGFILE' for more information. You should also
 manually check the restored system to see whether it is complete.
 "
+    is_true "$BACKUP_INTEGRITY_CHECK" && Error "Integrity check failed, restore aborted because BACKUP_INTEGRITY_CHECK is enabled"
+fi
 
-_message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log)"
+restore_log_message="$(tail -14 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log)"
 
-if [ $_rc -eq 0 -a "$_message" ] ; then
-        LogPrint "$_message in $transfertime seconds."
+if [ $backup_prog_rc -eq 0 -a "$restore_log_message" ] ; then
+        LogPrint "$restore_log_message in $transfertime seconds."
 elif [ "$size" ]; then
         LogPrint "Restored $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"
 fi
+
+return $backup_prog_rc

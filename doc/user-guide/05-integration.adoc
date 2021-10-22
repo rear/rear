@@ -1,46 +1,61 @@
 = Integration
 
-== Monitoring your system with Relax-and-Recover
-If Relax-and-Recover is not in charge of the backup, but only for creating
-a rescue environment, it can be useful to know when a change to the system
-invalidates your existing/stored rescue environment, requiring one to update
-the rescue environment.
+== Monitoring your disk layout with Relax-and-Recover (ReaR)
 
-For this, Relax-and-Recover has two different targets, one to create a new
-baseline (which is automatically done when creating a new rescue environment
-successfully. And one to verify the (old) baseline to the current situation.
+A crucial part to properly recreate the system is the disk layout,
+i.e. the disk partitioning with filesystems and mount points.
 
-With this, one can monitor or automate generating new rescue environments only
-when it is really needed.
+When you use "rear mkbackup" to create the ReaR rescue/recovery system
+together with a backup of all files and directories of your system
+at the same time, you have both parts (recovery system and backup) in sync
+which is a prerequirement to properly recreate the system with "rear recover".
 
+But when you use "rear mkrescue" to create the ReaR rescue/recovery system
+and call "rear mkbackuponly" separatedly to create the backup
+or you call a third party backup tool separatedly,
+you may not have both parts (recovery system and backup) in sync
+so "rear recover" may not properly recreate the system
+or it may even completely fail to do it.
 
-=== Creating a baseline
-Relax-and-Recover automatically creates a new baseline as soon as it
-successfully has created a new rescue environment. However if for some reason
-you want to recreate the baseline manually, use +rear savelayout+.
+In particular when the disk layout had changed the ReaR rescue/recovery system
+must be created anew.
 
+Caution:
+There are zillions of other ways how the latest created ReaR rescue/recovery system
+could become outdated or even invalid/useless in general.
+Each change of the basic system setup (like disk layout, network environment,...) and
+each change of a software that is used by ReaR (like 'parted', 'mkfs', 'tar',...) and
+of course also each ReaR version upgrade requires that the ReaR rescue/recovery system
+gets created anew together with a matching up-to-date backup as prerequirement
+so that "rear recover" is able to properly recreate the current system.
+Furthermore after such changes you must carefully and completely re-validate
+that "rear recover" still works in your particular case/environment.
 
-=== Detecting changes to the baseline
-When you want to know if the latest rescue environment is still valid, you may
-want to use the +rear checklayout+ command instead.
+The disk layout information is stored in var/lib/rear/layout/disklayout.conf
 
+ReaR provides two specific workflows regarding the disk layout:
+
+=== Saving the current disk layout of the system
+
+ReaR automatically saves the current disk layout of the system
+when it creates a new ReaR rescue/recovery system.
+However if you want to only save the current disk layout manually,
+use "rear savelayout" (this does not update the recovery system).
+
+=== Checking if the disk layout has changed
+
+When you want to know if the current disk layout of the system
+has changed compared to the latest saved disk layout,
+use "rear checklayout".
+If the disk layout has changed, "rear checklayout" results a non-zero return code
+so you could use something like
 ----
-[root@system ~]# rear checklayout
-[root@system ~]# echo $?
-0
+# rear checklayout || rear mkrescue
 ----
+to create a new ReaR recovery system when the disk layout has changed.
 
-If the layout has changed, the return code will indicate this by a non-zero
-return code.
+== Integration with Nagios and Opsview
 
-----
-[root@system ~]# rear checklayout
-[root@system ~]# echo $?
-1
-----
-
-
-=== Integration with Nagios and Opsview
 If having current DR rescue images is important to your organization, but they
 cannot be automated (eg. a tape or USB device needs inserting), we provide a
 Nagios plugin that can send out a notification whenever there is a critical

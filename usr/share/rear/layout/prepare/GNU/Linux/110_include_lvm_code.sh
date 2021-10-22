@@ -17,8 +17,7 @@ FEATURE_LVM_RESTOREFILE=
 
 lvm_version=$(get_version lvm version)
 
-[ "$lvm_version" ]
-BugIfError "Function get_version could not detect lvm version."
+[ "$lvm_version" ] || BugError "Function get_version could not detect lvm version."
 
 # RHEL 6.0 contains lvm with knowledge of --norestorefile (issue #462)
 if version_newer "$lvm_version" 2.02.71 ; then
@@ -67,10 +66,35 @@ create_lvmgrp() {
 
     local vg=${vgrp#/dev/}
 
+    # If a volume group name is in one of the following lists, it
+    # means that the particular condition is valid for this volume
+    # grup. If it is not in the list, it means that the condition is
+    # not valid for this volume group. To set a condition, add the VG
+    # name to the list. To unset it, remove it from the list.
+
+    # We must represent the conditions using lists, not simple scalar
+    # boolean variables. The conditions shall propagate information
+    # from VG creation to LV creation. A scalar does not work well in
+    # the case of multiple VGs, because the variables are global and
+    # if there are multiple VGs, their values will leak from one VG to
+    # another. (The generated diskrestore.sh script does not guarantee
+    # that the LVs of a given VG are created immediately after their
+    # VG and before creating another VG, actually, the script first
+    # creates all VGs and then all LVs.)  This logic does not apply to
+    # the create_volume_group condition, because it is local to the VG
+    # creation and does not need to be propagated to LV creation. We
+    # use the same approach for symmetry, though.
+
+    # The meanings of conditions corresponding to those lists are:
+    # create_volume_group - VG needs to be created using the vgcreate command
+    # create_logical_volumes - LVs in the VG need to be created using the lvcreate command
+    # create_thin_volumes_only - when the previous condition is true,
+    #   do not create volumes that are not thin volumes.
+
     cat >> "$LAYOUT_CODE" <<EOF
-create_volume_group=1
-create_logical_volumes=1
-create_thin_volumes_only=0
+create_volume_group+=( "$vg" )
+create_logical_volumes+=( "$vg" )
+create_thin_volumes_only=( \$( RmInArray "$vg" "\${create_thin_volumes_only[@]}" ) )
 
 EOF
 
@@ -97,8 +121,8 @@ if lvm vgcfgrestore -f "$VAR_DIR/layout/lvm/${vg}.cfg" $vg >&2 ; then
 
     LogPrint "Sleeping 3 seconds to let udev or systemd-udevd create their devices..."
     sleep 3 >&2
-    create_volume_group=0
-    create_logical_volumes=0
+    create_volume_group=( \$( RmInArray "$vg" "\${create_volume_group[@]}" ) )
+    create_logical_volumes=( \$( RmInArray "$vg" "\${create_logical_volumes[@]}" ) )
 
 #
 # It failed ... restore layout using 'vgcfgrestore --force', but then remove Thin volumes, they are broken
@@ -121,8 +145,8 @@ elif lvm vgcfgrestore --force -f "$VAR_DIR/layout/lvm/${vg}.cfg" $vg >&2 ; then
     sleep 3 >&2
 
     # All logical volumes have been created, except Thin volumes and pools
-    create_volume_group=0
-    create_thin_volumes_only=1
+    create_volume_group=( \$( RmInArray "$vg" "\${create_volume_group[@]}" ) )
+    create_thin_volumes_only+=( "$vg" )
  
 #
 # It failed also ... restore using 'vgcreate/lvcreate' commands
@@ -138,7 +162,7 @@ EOF
     local -a devices=($(awk "\$1 == \"lvmdev\" && \$2 == \"$vgrp\" { print \$3 }" "$LAYOUT_FILE"))
 
 cat >> "$LAYOUT_CODE" <<EOF
-if [ \$create_volume_group -eq 1 ] ; then
+if IsInArray $vg "\${create_volume_group[@]}" ; then
     LogPrint "Creating LVM VG '$vg' (some properties may not be preserved)"
     lvm vgremove --force --force --yes $vg >&2 || true
     if [ -e "$vgrp" ] ; then
@@ -241,9 +265,9 @@ create_lvmvol() {
     local warnraidline
 
     if [ $is_thin -eq 0 ] ; then
-        ifline="if [ \"\$create_logical_volumes\" -eq 1 ] && [ \"\$create_thin_volumes_only\" -eq 0 ] ; then"
+        ifline="if IsInArray $vg \"\${create_logical_volumes[@]}\" && ! IsInArray $vg \"\${create_thin_volumes_only[@]}\" ; then"
     else
-        ifline="if [ \"\$create_logical_volumes\" -eq 1 ] ; then"
+        ifline="if IsInArray $vg \"\${create_logical_volumes[@]}\" ; then"
     fi
 
     if [ $is_raidunknown -eq 1 ]; then

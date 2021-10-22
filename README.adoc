@@ -219,10 +219,13 @@ Available options:
 List of commands:
  checklayout     check if the disk layout has changed
  dump            dump configuration and system information
- format          format and label media for use with rear
+ format          Format and label medium for use with ReaR
  mkbackup        create rescue media and backup system
  mkbackuponly    backup system without creating rescue media
+ mkopalpba       create a pre-boot authentication (PBA) image to boot from TCG Opal 2-compliant self-encrypting disks
  mkrescue        create rescue media only
+ mountonly       use ReaR as live media to mount and repair the system
+ opaladmin       administrate TCG Opal 2-compliant self-encrypting disks
  recover         recover the system
  restoreonly     only restore the backup
  validate        submit validation information

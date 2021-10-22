@@ -1,4 +1,4 @@
-# 81_create_pxelinux_cfg.sh
+# 810_create_pxelinux_cfg.sh
 #
 # create pxelinux config on PXE server for Relax-and-Recover
 #
@@ -11,10 +11,12 @@ if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
     # E.g. PXE_CONFIG_URL=nfs://server/export/nfs/tftpboot/pxelinux.cfg
     # Better be sure that on 'server' the directory /export/nfs/tftpboot/pxelinux.cfg exists
     local scheme=$( url_scheme $PXE_CONFIG_URL )
-    local path=$( url_path $PXE_CONFIG_URL )
-    mkdir -p $v "$BUILD_DIR/tftpbootfs" >&2
-    StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs'"
-    AddExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
+
+    # We need filesystem access to the destination (schemes like ftp:// are not supported)
+    if ! scheme_supports_filesystem $scheme ; then
+        Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
+    fi
+
     mount_url $PXE_CONFIG_URL $BUILD_DIR/tftpbootfs $BACKUP_OPTIONS
     PXE_LOCAL_PATH=$BUILD_DIR/tftpbootfs
 else
@@ -105,10 +107,6 @@ popd >/dev/null
 if [[ ! -z "$PXE_CONFIG_URL" ]] ; then
     LogPrint "Created pxelinux config '${PXE_CONFIG_PREFIX}$HOSTNAME' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_URL"
     umount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs
-    rmdir $BUILD_DIR/tftpbootfs >&2
-    if [[ $? -eq 0 ]] ; then
-        RemoveExitTask "rm -Rf $v $BUILD_DIR/tftpbootfs >&2"
-    fi
 else
     LogPrint "Created pxelinux config '${PXE_CONFIG_PREFIX}$HOSTNAME' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
     # Add to result files

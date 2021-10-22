@@ -47,7 +47,7 @@ if test "ebiso" = "$( basename $ISO_MKISOFS_BIN )" ; then
         cp -pL $v $KERNEL_FILE $efi_boot_tmp_dir/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE' to $efi_boot_tmp_dir/kernel"
         cp $v $TMP_DIR/$REAR_INITRD_FILENAME $efi_boot_tmp_dir/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME' into $efi_boot_tmp_dir"
         create_ebiso_elilo_conf > $efi_boot_tmp_dir/elilo.conf
-        create_grub2_cfg > $efi_boot_tmp_dir/grub.cfg
+        create_grub2_cfg /isolinux/kernel /isolinux/$REAR_INITRD_FILENAME > $efi_boot_tmp_dir/grub.cfg
     fi
 fi
 
@@ -71,7 +71,7 @@ else
     # (via ${grub2_set_root:+"set root=$grub2_set_root"} in the create_grub2_cfg function)
     # cf. https://github.com/rear/rear/issues/2434 and https://github.com/rear/rear/pull/2453
     grub2_set_root=cd0
-    create_grub2_cfg > $efi_boot_tmp_dir/grub.cfg
+    create_grub2_cfg /isolinux/kernel /isolinux/$REAR_INITRD_FILENAME > $efi_boot_tmp_dir/grub.cfg
 fi
 
 # Create BOOTX86.efi but only if we are NOT secure booting.
