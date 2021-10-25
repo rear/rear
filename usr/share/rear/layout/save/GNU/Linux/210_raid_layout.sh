@@ -3,6 +3,7 @@
 if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
     Log "Saving Software RAID configuration."
     (
+        ( echo "List of Software Raid devices (mdadm --detail --scan --config=partitions):"; mdadm --detail --scan --config=partitions; echo ) | sed -e 's/^/# /'
         while read array device junk ; do
             if [ "$array" != "ARRAY" ] ; then
                 continue
@@ -15,14 +16,20 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
             fi
 
             # We use the detailed mdadm output quite a lot
-            mdadm --misc --detail $device > $TMP_DIR/mdraid
+            tmpfile="$TMP_DIR/mdraid.$name"
+            mdadm --misc --detail $device > $tmpfile
+            ( echo "mdadm --misc --detail $device" ; cat $tmpfile ) | sed -e 's/^/# /'
 
             # Gather information
-            metadata=$( grep "Version" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
-            level=$( grep "Raid Level" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
-            uuid=$( grep "UUID" $TMP_DIR/mdraid | tr -d " " | cut -d "(" -f "1" | cut -d ":" -f "2-")
-            layout=$( grep "Layout" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
-            chunksize=$( grep "Chunk Size" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2" | sed -r 's/^([0-9]+).+/\1/')
+            metadata=$( grep "Version" $tmpfile | tr -d " " | cut -d ":" -f "2")
+            level=$( grep "Raid Level" $tmpfile | tr -d " " | cut -d ":" -f "2")
+            uuid=$( grep "UUID" $tmpfile | tr -d " " | cut -d "(" -f "1" | cut -d ":" -f "2-")
+            layout=$( grep "Layout" $tmpfile | tr -d " " | cut -d ":" -f "2")
+            chunksize=$( grep "Chunk Size" $tmpfile | tr -d " " | cut -d ":" -f "2" | sed -r 's/^([0-9]+).+/\1/')
+            container=$( grep "Container" $tmpfile | tr -d " " | cut -d ":" -f "2" | cut -d "," -f "1")
+
+            array_size=$( grep "Array Size" $tmpfile | tr -d " " | cut -d ":" -f "2" | cut -d "(" -f "1")
+            used_dev_size=$( grep "Used Dev Size" $tmpfile | tr -d " " | cut -d ":" -f "2" | cut -d "(" -f "1")
 
             # fix up layout for RAID10:
             # > near=2,far=1 -> n2
@@ -39,27 +46,57 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
                 IFS=$OIFS
             fi
 
-            ndevices=$( grep "Raid Devices" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
-            totaldevices=$( grep "Total Devices" $TMP_DIR/mdraid | tr -d " " | cut -d ":" -f "2")
-            let sparedevices=$totaldevices-$ndevices
+            totaldevices=$( grep "Total Devices" $tmpfile | tr -d " " | cut -d ":" -f "2")
+            ndevices=$( grep "Raid Devices" $tmpfile | tr -d " " | cut -d ":" -f "2")
+            if [[ "$ndevices" ]] ; then
+                let sparedevices=$totaldevices-$ndevices
+            else
+                let sparedevices=0
+            fi
 
-            # Find all devices
-            # use the output of mdadm, but skip the array itself
-            # sysfs has the information in RHEL 5+, but RHEL 4 lacks it.
             devices=""
-            for disk in $( grep -o -E "/dev/[^m].*$" $TMP_DIR/mdraid | tr "\n" " ") ; do
-                disk=$( get_device_name $disk )
-                if [ -z "$devices" ] ; then
-                    devices=" devices=$disk"
-                else
-                    devices="$devices,$disk"
+            let size=0
+            if [[ "$container" ]] ; then
+                devices=" devices=$(readlink -f $container)"
+                if [[ "$used_dev_size" ]] ; then
+                    let size=$used_dev_size
+                elif [[ "$array_size" ]] ; then
+                    let size=$array_size/$ndevices
                 fi
-            done
+            else
+                # Find all devices
+                # use the output of mdadm, but skip the array itself
+                # sysfs has the information in RHEL 5+, but RHEL 4 lacks it.
+                for disk in $( grep -o -E "/dev/[^m].*$" $tmpfile | tr "\n" " ") ; do
+                    disk=$( get_device_name $disk )
+                    if [ -z "$devices" ] ; then
+                        devices=" devices=$disk"
+                    else
+                        devices="$devices,$disk"
+                    fi
+                done
+            fi
+
+            if [ "$size" -gt 0 ] ; then
+                size=" size=$size"
+            else
+                size=""
+            fi
 
             # prepare for output
-            metadata=" metadata=$metadata"
+            if [[ "$metadata" ]] ; then
+                metadata=" metadata=$metadata"
+            else
+                metadata=""
+            fi
             level=" level=$level"
-            ndevices=" raid-devices=$ndevices"
+            if [[ "$ndevices" ]] && [ $ndevices -gt 0 ] ; then
+                ndevices=" raid-devices=$ndevices"
+            elif [[ "$totaldevices" ]] ; then
+                ndevices=" raid-devices=$totaldevices"
+            else
+                ndevices=""
+            fi
             uuid=" uuid=$uuid"
 
             if [ "$sparedevices" -gt 0 ] ; then
@@ -93,7 +130,7 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
                 name=""
             fi
 
-            echo "raid ${device}${metadata}${level}${ndevices}${uuid}${name}${sparedevices}${layout}${chunksize}${devices}"
+            echo "raid ${device}${metadata}${level}${ndevices}${uuid}${name}${sparedevices}${layout}${chunksize}${devices}${size}"
 
             extract_partitions "$device"
         done < <(mdadm --detail --scan --config=partitions)
@@ -104,6 +141,7 @@ if [ -e /proc/mdstat ] &&  grep -q blocks /proc/mdstat ; then
     # what program calls are written to diskrestore.sh
     # cf. https://github.com/rear/rear/issues/1963
     grep -q '^raid ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( mdadm ) || true
+    grep -q '^raid ' $DISKLAYOUT_FILE && PROGS+=( mdmon ) || true
 
 fi
 

@@ -18,6 +18,9 @@ if version_newer "$mdadm_version" 2.0 ; then
     FEATURE_MDADM_UUID="y"
 fi
 
+# List of raid devices we already encountered
+raid_devices=()
+
 create_raid() {
     local raid device options
     read raid device options < <(grep "^raid $1 " "$LAYOUT_FILE")
@@ -25,8 +28,7 @@ create_raid() {
     local mdadmcmd="mdadm --create $device --force"
 
     local devices_total=0
-    local devices_found=0
-    local devices=""
+    local devices=()
     local option
     for option in $options ; do
         case "$option" in
@@ -36,8 +38,7 @@ create_raid() {
                 IFS=","
                 local raiddevice
                 for raiddevice in $list ; do
-                    devices="$devices$raiddevice "
-                    let devices_found+=1
+                    devices+=($raiddevice)
                 done
                 IFS=$OIFS
                 ;;
@@ -57,15 +58,20 @@ create_raid() {
     done
 
     # If some devices are missing, add 'missing' special devices
-    if [ $devices_found -lt $devices_total ] ; then
-        # Print as many 'missing' as there are missing devices
-        let missing=$devices_total-$devices_found
-        LogPrint "Software RAID $device has not enough physical devices, adding $missing 'missing' devices"
-        devices="$devices $(printf "missing%.0s " $(seq $missing))"
+    if [ ${#devices[@]} -lt $devices_total ] ; then
+        # Don't consider raid inside a container (it's expected to have 1 device only: the container)
+        if [ ${#devices[@]} -ne 1 ] || ! IsInArray ${devices[0]} "${raid_devices[@]}" ; then
+            # Print as many 'missing' as there are missing devices
+            let missing=$devices_total-${#devices[@]}
+            LogPrint "Software RAID $device has not enough physical devices, adding $missing 'missing' devices"
+            devices="$devices $(printf "missing%.0s " $(seq $missing))"
+        fi
     fi
 
+    raid_devices+=( $device )
+
     # Try to make mdadm non-interactive...
-    mdadmcmd="echo \"Y\" | $mdadmcmd $devices"
+    mdadmcmd="echo \"Y\" | $mdadmcmd ${devices[@]}"
 
     cat >> "$LAYOUT_CODE" <<EOF
 
@@ -75,6 +81,10 @@ create_raid() {
 
 LogPrint "Creating software RAID $device"
 test -b $device && mdadm --stop $device
+
+for dev in ${devices[@]}; do
+    wipefs -a \$dev
+done
 
 $mdadmcmd >&2
 EOF
