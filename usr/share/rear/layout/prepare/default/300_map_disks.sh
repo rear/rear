@@ -133,10 +133,15 @@ while read keyword orig_device orig_size junk ; do
                 if is_mapping_target "$preferred_target_device_name" ; then
                     DebugPrint "Cannot use $preferred_target_device_name (same name and same size) for recreating $orig_device ($preferred_target_device_name already exists as target in $MAPPING_FILE)"
                 else
-                    add_mapping "$orig_device" "$preferred_target_device_name"
-                    LogPrint "Using $preferred_target_device_name (same name and same size $current_size) for recreating $orig_device"
-                    # Continue with next original device because the current one is now mapped:
-                    continue
+                    # Ensure the determined target device is not write-protected:
+                    if is_write_protected "$preferred_target_device_name" ; then
+                        DebugPrint "Cannot use $preferred_target_device_name (same name and same size) for recreating $orig_device ($preferred_target_device_name is write-protected)"
+                    else
+                        add_mapping "$orig_device" "$preferred_target_device_name"
+                        LogPrint "Using $preferred_target_device_name (same name and same size $current_size) for recreating $orig_device"
+                        # Continue with next original device because the current one is now mapped:
+                        continue
+                    fi
                 fi
             fi
         fi
@@ -160,6 +165,11 @@ while read keyword orig_device orig_size junk ; do
         # Continue with next current block device if the current one is already used as target in the mapping file:
         if is_mapping_target "$preferred_target_device_name" ; then
             DebugPrint "Cannot use $preferred_target_device_name (same size) for recreating $orig_device ($preferred_target_device_name already exists as target in $MAPPING_FILE)"
+            continue
+        fi
+        # Ensure the determined target device is not write-protected (cf. above):
+        if is_write_protected "$preferred_target_device_name" ; then
+            DebugPrint "Cannot use $preferred_target_device_name (same size) for recreating $orig_device ($preferred_target_device_name is write-protected)"
             continue
         fi
         # The first of all current block devices with same size as the original that is not yet used as target gets used:
@@ -215,6 +225,14 @@ while read keyword orig_device orig_size junk ; do
         # Continue with next block device if the current one is already used as target in the mapping file:
         if is_mapping_target "$preferred_target_device_name" ; then
             Log "$preferred_target_device_name excluded from device mapping choices (is already used as mapping target)"
+            continue
+        fi
+        if is_write_protected_by_pt_uuid "$preferred_target_device_name"; then
+            Log "$preferred_target_device_name excluded from device mapping choices (write-protected partition table UUID)"
+            continue
+        fi
+        if is_write_protected_by_fs_label "$preferred_target_device_name"; then
+            Log "$preferred_target_device_name excluded from device mapping choices (write-protected file system label)"
             continue
         fi
         # Add the current device as possible choice for the user:

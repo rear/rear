@@ -53,7 +53,10 @@ local typecode="8300"  # Linux partition for non-EFI booting
 local legacy_boot_option=""
 is_true $use_syslinux_legacy && legacy_boot_option="--attributes=1:set:2"  # mark partition as Legacy BIOS-bootable
 
-sgdisk --new 1::0 --typecode=1:"$typecode" --change-name=1:"${RAWDISK_GPT_PARTITION_NAME:-Rescue System}" $legacy_boot_option "$disk_image"
+local guid_option=""
+[[ -n "$RAWDISK_PTUUID" ]] && guid_option="--disk-guid=$RAWDISK_PTUUID"  # Use a pre-determined partition UUID
+
+sgdisk $guid_option --new 1::0 --typecode=1:"$typecode" --change-name=1:"${RAWDISK_GPT_PARTITION_NAME:-Rescue System}" $legacy_boot_option "$disk_image"
 StopIfError "Could not create GPT partition table on $disk_image"
 
 Log "Raw disk image partition table:"

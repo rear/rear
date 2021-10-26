@@ -79,6 +79,8 @@ if ! is_true "$MIGRATION_MODE" ; then
         is_multipath_path ${current_device_path#/sys/block/} && continue
         # Continue with next block device if the current one has no queue directory:
         test -d $current_device_path/queue || continue
+        # Continue with next block device if the current one is designated as write-protected
+        is_write_protected $current_device_path && continue
         # Continue with next block device if no size can be read for the current one:
         test -r $current_device_path/size || continue
         current_disk_name="${current_device_path#/sys/block/}"
@@ -116,7 +118,12 @@ if ! is_true "$MIGRATION_MODE" ; then
             Log "Device /sys/block/$dev exists"
             newsize=$( get_disk_size $dev )
             if test "$newsize" -eq "$size" ; then
-                LogPrint "Device $dev has expected (same) size $size bytes (will be used for '$WORKFLOW')"
+                if is_write_protected "/sys/block/$dev"; then
+                    LogPrint "Device $dev is designated as write-protected (needs manual configuration)"
+                    MIGRATION_MODE='true'
+                else
+                    LogPrint "Device $dev has expected (same) size $size bytes (will be used for '$WORKFLOW')"
+                fi
             else
                 LogPrint "Device $dev has size $newsize bytes but $size bytes is expected (needs manual configuration)"
                 MIGRATION_MODE='true'
