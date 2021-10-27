@@ -15,7 +15,7 @@ function write_protected_candidate_device() {
 }
 
 function write_protection_uuids() {
-    local device="$( write_protected_candidate_device "$1") "
+    local device="$( write_protected_candidate_device "$1" )"
     # Output the UUIDs for write-protection, each UUID on a separated line.
     # UUIDs are those that 'lsblk' reports (which depends on the lsblk version):
     #       UUID filesystem UUID
