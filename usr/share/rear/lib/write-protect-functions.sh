@@ -33,7 +33,7 @@ function write_protection_uuids() {
     # and https://stackoverflow.com/questions/23544804/how-awk-nf-filename-is-working
     # (empty lines appear when a partition does not have a filesystem UUID or for the whole device that has no PARTUUID)
     # and we remove duplicate reported UUIDs (in particular PTUUID is reported also for each partition):
-    for column in UUID PTUUID PARTUUID ; do lsblk -ino $column "$USB_DEVICE" 2>/dev/null ; done | awk NF | sort -u
+    for column in UUID PTUUID PARTUUID ; do lsblk -ino $column "$device" 2>/dev/null ; done | awk NF | sort -u
 }
 
 function is_write_protected_by_uuid() {
