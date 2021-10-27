@@ -227,12 +227,9 @@ while read keyword orig_device orig_size junk ; do
             Log "$preferred_target_device_name excluded from device mapping choices (is already used as mapping target)"
             continue
         fi
-        if is_write_protected_by_pt_uuid "$preferred_target_device_name"; then
-            Log "$preferred_target_device_name excluded from device mapping choices (write-protected partition table UUID)"
-            continue
-        fi
-        if is_write_protected_by_fs_label "$preferred_target_device_name"; then
-            Log "$preferred_target_device_name excluded from device mapping choices (write-protected file system label)"
+        # Continue with next block device if the current one is designated as write-protected:
+        if is_write_protected "$preferred_target_device_name"; then
+            Log "$preferred_target_device_name excluded from device mapping choices (is designated as write-protected)"
             continue
         fi
         # Add the current device as possible choice for the user:
