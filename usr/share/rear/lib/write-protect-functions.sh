@@ -94,7 +94,7 @@ function is_write_protected_by_fs_label() {
             done
         fi
     done < <(lsblk --output LABEL --noheadings "$device")
-
+    Log "$device is not write-protected by file system label"
     return 1
 }
 
