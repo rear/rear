@@ -10,7 +10,7 @@ function write_protected_candidate_device() {
     if [[ "$device" == /sys/block/* ]]; then
         device="$( get_device_name "$device" )"
     fi
-    test -b "$device" || BugError "write_protected_candidate_device called for '$device' which is no block device"
+    test -b "$device" || BugError "write_protected_candidate_device called for '$1' but '$device' is no block device"
     echo "$device"
 }
 
