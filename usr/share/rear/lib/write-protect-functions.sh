@@ -22,6 +22,28 @@ function write_protection_uuids() {
     #     PTUUID partition table identifier (usually UUID)
     #   PARTUUID partition UUID
 
+    # At least for OUTPUT=USB $device is of the form /dev/disk/by-label/$USB_DEVICE_FILESYSTEM_LABEL
+    # which is a symlink to the ReaR data partition (e.g. /dev/sdb3 on a USB disk /dev/sdb).
+    # On a USB disk that was formatted with "rear format" there is only one layer of child devices
+    # (i.e. there are only partitions like /dev/sdb1 /dev/sdb2 /dev/sdb3 on a USB disk /dev/sdb).
+    # So we only need to use the direct parent device to get all UUIDs of the whole disk
+    # because the goal is to write-protect the whole disk by using all its UUIDs
+    # cf. https://github.com/rear/rear/pull/2703#issuecomment-952888484
+    local parent_device=""
+    # Older Linux distributions do not contain lsblk (e.g. SLES10)
+    # and older lsblk versions do not support the output column PKNAME
+    # e.g. lsblk in util-linux 2.19.1 in SLES11 supports NAME and KNAME but not PKNAME
+    # cf. https://github.com/rear/rear/pull/2626#issuecomment-856700823
+    # We ignore lsblk failures and error messages and we skip empty lines in the output via 'awk NF'
+    # cf. https://unix.stackexchange.com/questions/274708/most-elegant-pipe-to-get-rid-of-empty-lines-you-can-think-of
+    # and https://stackoverflow.com/questions/23544804/how-awk-nf-filename-is-working
+    # (an empty line appears for a whole disk device e.g. /dev/sdb that has no PKNAME)
+    # and we use only the topmost reported PKNAME:
+    parent_device="$( lsblk -inpo PKNAME "$device" 2>/dev/null | awk NF | head -n1 )"
+    # parent_device is empty when lsblk does not support PKNAME.
+    # Without quoting an empty parent_device would result plain "test -b" which would (falsely) succeed:
+    test -b "$parent_device" && device="$parent_device"
+
     local column
     # Older lsblk versions do not support all output columns UUID PTUUID PARTUUID
     # e.g. lsblk in util-linux 2.19.1 in SLES11 only supports UUID but neither PTUUID no PARTUUID
@@ -29,8 +51,6 @@ function write_protection_uuids() {
     # When an unsupported output column is specified lsblk aborts with "unknown column" error message
     # without output for supported output columns so we run lsblk for each output column separately
     # and ignore lsblk failures and error messages and we skip empty lines in the output via 'awk NF'
-    # cf. https://unix.stackexchange.com/questions/274708/most-elegant-pipe-to-get-rid-of-empty-lines-you-can-think-of
-    # and https://stackoverflow.com/questions/23544804/how-awk-nf-filename-is-working
     # (empty lines appear when a partition does not have a filesystem UUID or for the whole device that has no PARTUUID)
     # and we remove duplicate reported UUIDs (in particular PTUUID is reported also for each partition):
     for column in UUID PTUUID PARTUUID ; do lsblk -ino $column "$device" 2>/dev/null ; done | awk NF | sort -u
