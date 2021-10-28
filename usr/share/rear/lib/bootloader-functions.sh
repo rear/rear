@@ -175,16 +175,12 @@ function set_syslinux_features {
 }
 
 # Create a suitable syslinux configuration based on capabilities
-# the mandatory first argument is the full path to an existing directory where required
-# binaries will be copied to
+# the mandatory first argument is the full path to an existing directory where required binaries will be copied to
 # the optional second argment is the target flavour and defaults to isolinux
 function make_syslinux_config {
-    [[ -d "$1" ]]
-    BugIfError "Required argument for BOOT_DIR is missing"
-    [[ -d "$SYSLINUX_DIR" ]]
-    BugIfError "Required environment SYSLINUX_DIR ($SYSLINUX_DIR) is not set or not a directory"
-    [[ "$FEATURE_SYSLINUX_IS_SET" ]]
-    BugIfError "You must call set_syslinux_features before"
+    test -d "$1" || BugError "make_syslinux_config: required first argument for BOOT_DIR missing"
+    test -d "$SYSLINUX_DIR" || BugError "make_syslinux_config: required environment SYSLINUX_DIR '$SYSLINUX_DIR' not set or not a directory"
+    test "$FEATURE_SYSLINUX_IS_SET" || BugError "make_syslinux_config: set_syslinux_features must be called before"
 
     local BOOT_DIR="$1" ; shift
     local flavour="${1:-isolinux}" ; shift
@@ -197,22 +193,55 @@ function make_syslinux_config {
         SYSLINUX_DIR="$syslinux_modules_dir"
     fi
 
-    # Enable serial console, unless explicitly disabled (only last entry is used on some systems thats where SERIAL_CONSOLE_DEVICE_SYSLINUX comes in :-/)
-    if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
-        for devnode in $(get_serial_console_devices); do
-            # Not sure if using all serial devices do screw up syslinux in general
-            # for me listing more then one serial line in the config screwed it
-            # see https://github.com/rear/rear/pull/2650
-            if [ -z $SERIAL_CONSOLE_DEVICE_SYSLINUX ] || [[ $SERIAL_CONSOLE_DEVICE_SYSLINUX == $devnode ]]; then
-                speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
-                if [ "$speed" ]; then
-                    echo "serial ${devnode##/dev/ttyS} $speed"
+    # Enable serial console:
+    # For the SERIAL directive to work properly, it must be the first directive in the configuration file,
+    # see "SERIAL port" at https://wiki.syslinux.org/wiki/index.php?title=SYSLINUX
+    # It may be useful to reduce it to exact one device since the last 'serial' line wins in SYSLINUX.
+    if is_true "$USE_SERIAL_CONSOLE" ; then
+        # When the user has specified SERIAL_CONSOLE_DEVICE_SYSLINUX use only that (no automatisms):
+        if test "$SERIAL_CONSOLE_DEVICE_SYSLINUX" ; then
+            # SERIAL_CONSOLE_DEVICE_SYSLINUX can be a character device node like "/dev/ttyS0"
+            # or a whole SYSLINUX 'serial' directive like "serial 1 9600" for /dev/ttyS1 at 9600 baud.
+            if test -c "$SERIAL_CONSOLE_DEVICE_SYSLINUX" ; then
+                # The port value for the SYSLINUX 'serial' directive
+                # is the trailing digits of the serial device node
+                # cf. the code of get_partition_number() in lib/layout-functions.sh
+                port=$( echo "$SERIAL_CONSOLE_DEVICE_SYSLINUX" | grep -o -E '[0-9]+$' )
+                # E.g. for /dev/ttyS12 the unit would be 12 but
+                # https://wiki.syslinux.org/wiki/index.php?title=SYSLINUX
+                # reads in the section "SERIAL port [baudrate [flowcontrol]]"
+                # "port values from 0 to 3 mean the first four serial ports detected by the BIOS"
+                # which indicates port values should be less than 4 so we tell the user about it
+                # but we do not error out because the user may have tested that it does work for him:
+                test $port -lt 4 || LogPrintError "SERIAL_CONSOLE_DEVICE_SYSLINUX '$SERIAL_CONSOLE_DEVICE_SYSLINUX' may not work (only /dev/ttyS0 up to /dev/ttyS3 should work)"
+                if speed=$( get_serial_device_speed $SERIAL_CONSOLE_DEVICE_SYSLINUX ) ; then
+                    echo "serial $port $speed"
+                else
+                    echo "serial $port"
                 fi
+            else
+                # When SERIAL_CONSOLE_DEVICE_SYSLINUX is a whole SYSLINUX 'serial' directive use it as specified:
+                echo "$SERIAL_CONSOLE_DEVICE_SYSLINUX"
             fi
-        done
+        else
+            for devnode in $( get_serial_console_devices ) ; do
+                # Add SYSLINUX serial console config for real serial devices:
+                if speed=$( get_serial_device_speed $devnode ) ; then
+                    # The port value for the SYSLINUX 'serial' directive
+                    # is the trailing digits of the serial device node
+                    # cf. the code of get_partition_number() in lib/layout-functions.sh
+                    port=$( echo "$devnode" | grep -o -E '[0-9]+$' )
+                    test $port -lt 4 || LogPrintError "$devnode may not work as serial console for SYSLINUX (only /dev/ttyS0 up to /dev/ttyS3 should work)"
+                    echo "serial $port $speed"
+                    # Use the first one and skip the rest to avoid that the last 'serial' line wins in SYSLINUX:
+                    break
+                fi
+            done
+        fi
     fi
-
-    # if we have the menu.c32 available we use it. if not we make sure that there will be no menu lines in the result
+    
+    # if we have the menu.c32 available we use it
+    # if not we make sure that there will be no menu lines in the result
     # so that we don't confuse older syslinux
     if [[ -r "$SYSLINUX_DIR/menu.c32" ]] ; then
         cp $v "$SYSLINUX_DIR/menu.c32" "$BOOT_DIR/menu.c32" >&2
@@ -535,19 +564,47 @@ function create_grub2_cfg {
     # Local helper functions for the create_grub2_cfg function:
 
     function create_grub2_serial_entry {
-        # Enable serial console, unless explicitly disabled
-        # Note: as for syslinux it may be useful to reduce it to exact one device since the last 'serial' line wins in grub...
-        if [[ "$USE_SERIAL_CONSOLE" =~ ^[yY1] ]]; then
-            for devnode in $(get_serial_console_devices); do
-                if [ -z $SERIAL_CONSOLE_DEVICE_GRUB ] || [[ $SERIAL_CONSOLE_DEVICE_GRUB == $devnode ]]; then
-                    speed=$(stty -F $devnode 2>/dev/null | awk '/^speed / { print $2 }')
-                    if [ "$speed" ]; then
-                        echo "serial --speed=$speed --unit=${devnode##/dev/ttyS} --word=8 --parity=no --stop=1"
-                        # use the first one found - ignore the rest or the last 'serial' line will win
+        # Enable serial console:
+        # It may be useful to reduce it to exact one device since the last 'serial' line wins in GRUB.
+        if is_true "$USE_SERIAL_CONSOLE" ; then
+            # When the user has specified SERIAL_CONSOLE_DEVICE_GRUB use only that (no automatisms):
+            if test "$SERIAL_CONSOLE_DEVICE_GRUB" ; then
+                # SERIAL_CONSOLE_DEVICE_GRUB can be a character device node like "/dev/ttyS0"
+                # or a whole GRUB 'serial' command like "serial --unit=1 --speed=9600"
+                if test -c "$SERIAL_CONSOLE_DEVICE_GRUB" ; then
+                    # The unit value for the GRUB 'serial' command
+                    # is the trailing digits of the serial device node
+                    # cf. the code of get_partition_number() in lib/layout-functions.sh
+                    unit=$( echo "$SERIAL_CONSOLE_DEVICE_GRUB" | grep -o -E '[0-9]+$' )
+                    # E.g. for /dev/ttyS12 the unit would be 12 but
+                    # https://www.gnu.org/software/grub/manual/grub/grub.html#serial
+                    # reads "unit is a number in the range 0-3" so we tell the user about it
+                    # but we do not error out because the user may have tested that it does work for him:
+                    test $unit -lt 4 || LogPrintError "SERIAL_CONSOLE_DEVICE_GRUB '$SERIAL_CONSOLE_DEVICE_GRUB' may not work (only /dev/ttyS0 up to /dev/ttyS3 should work)"
+                    if speed=$( get_serial_device_speed $SERIAL_CONSOLE_DEVICE_GRUB ) ; then
+                        echo "serial --unit=$unit --speed=$speed"
+                    else
+                        echo "serial --unit=$unit"
+                    fi
+                else
+                    # When SERIAL_CONSOLE_DEVICE_GRUB is a whole GRUB 'serial' command use it as specified:
+                    echo "$SERIAL_CONSOLE_DEVICE_GRUB"
+                fi
+            else
+                for devnode in $( get_serial_console_devices ) ; do
+                    # Add GRUB serial console config for real serial devices:
+                    if speed=$( get_serial_device_speed $devnode ) ; then
+                        # The unit value for the GRUB 'serial' command
+                        # is the trailing digits of the serial device node
+                        # cf. the code of get_partition_number() in lib/layout-functions.sh
+                        unit=$( echo "$devnode" | grep -o -E '[0-9]+$' )
+                        test $unit -lt 4 || LogPrintError "$devnode may not work as serial console for GRUB (only /dev/ttyS0 up to /dev/ttyS3 should work)"
+                        echo "serial --unit=$unit --speed=$speed"
+                        # Use the first one and skip the rest to avoid that the last 'serial' line wins in GRUB:
                         break
                     fi
-                fi
-            done
+                done
+            fi
             if is_true $GRUB_FORCE_SERIAL ; then
                 echo "terminal_input serial"
                 echo "terminal_output serial"
