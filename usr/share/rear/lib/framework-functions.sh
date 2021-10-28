@@ -95,7 +95,7 @@ function SourceStage () {
     local start_SourceStage=$SECONDS
     Log "======================"
     # In debug modes show what stage is run also on the user's terminal:
-    test "$DEBUG" && LogPrint "Running '$stage' stage" || Log "Running '$stage' stage"
+    test "$DEBUG" && LogPrint "Running '$stage' stage ======================" || Log "Running '$stage' stage"
     Log "Running '$stage' stage"
     Log "======================"
     # We always source scripts in the same subdirectory structure.
