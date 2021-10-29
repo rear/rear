@@ -253,7 +253,7 @@ while read keyword orig_device orig_size junk ; do
     # At the end the mapping file is shown and the user can edit it if he does not like an automated mapping:
     if test "1" -eq "${#possible_targets[@]}" ; then
         add_mapping "$orig_device" "$possible_targets"
-        LogPrint "Using $possible_targets (the only appropriate) for recreating $orig_device"
+        LogPrint "Using $possible_targets (the only available of the disks) for recreating $orig_device"
         # Continue with next original device in the LAYOUT_FILE:
         continue
     fi
