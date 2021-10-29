@@ -111,7 +111,12 @@ for dummy in "once" ; do
             uefi_bootloader_DOS_path=$( uefi_extract_bootloader $SYSFS_DIR_EFI_VARS/Boot${boot_current}-* )
             ;;
         (*)
-            BugError "EFI variables directory $SYSFS_DIR_EFI_VARS is neither /sys/firmware/efi/vars nor /sys/firmware/efi/efivars (ReaR supports only those)"
+            LogPrint "EFI variables directory $SYSFS_DIR_EFI_VARS is neither /sys/firmware/efi/vars nor /sys/firmware/efi/efivars (ReaR supports only those)"
+            LogPrint "This is expected if you try to make a UEFI boot media on a BIOS system"
+            # try some path guessing now
+            UEFI_BOOTLOADER=$( find /usr/lib/grub -iname "grubx64.efi" | tail -1 )
+            # Continue with the code after the outer 'for' loop:
+            test -f "$UEFI_BOOTLOADER" && continue 2
             ;;
     esac
     # Replace backslashes with slashes because uefi_bootloader_DOS_path contains path in DOS format:

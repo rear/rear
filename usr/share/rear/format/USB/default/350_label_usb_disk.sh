@@ -41,6 +41,11 @@ for dummy in "once" ; do
     esac
 done
 
+# signal kernel to reread partition table to get /dev/disk/by-label
+partprobe $RAW_USB_DEVICE
+# Wait until udev has had the time to kick in
+sleep 5
+
 # Report the final result to the user:
 LogPrint "Data partition $data_partition_device has filesystem label '$USB_LABEL'"
 
