@@ -115,6 +115,11 @@ while read keyword orig_device orig_size junk ; do
         continue
     fi
     # The original device is not yet mapped (i.e. not used as source in the mapping file) so it needs to be mapped.
+    # Remember when target devices get known by the "same name and same size" tests
+    # that they cannot be used for recreating the current original device
+    # to avoid that already excluded target devices get needlessly
+    # considered again during the subsequent "same size" tests:
+    excluded_target_device_names=()
     # First, try to find if there is a current disk with same name and same size as the original:
     sysfs_device_name="$( get_sysfs_name "$orig_device" )"
     current_device="/sys/block/$sysfs_device_name"
@@ -132,10 +137,12 @@ while read keyword orig_device orig_size junk ; do
                 # Do not map if the current one is already used as target in the mapping file:
                 if is_mapping_target "$preferred_target_device_name" ; then
                     DebugPrint "Cannot use $preferred_target_device_name (same name and same size) for recreating $orig_device ($preferred_target_device_name already exists as target in $MAPPING_FILE)"
+                    excluded_target_device_names+=( "$preferred_target_device_name" )
                 else
                     # Ensure the determined target device is not write-protected:
                     if is_write_protected "$preferred_target_device_name" ; then
                         DebugPrint "Cannot use $preferred_target_device_name (same name and same size) for recreating $orig_device ($preferred_target_device_name is write-protected)"
+                        excluded_target_device_names+=( "$preferred_target_device_name" )
                     else
                         add_mapping "$orig_device" "$preferred_target_device_name"
                         LogPrint "Using $preferred_target_device_name (same name and same size $current_size) for recreating $orig_device"
@@ -160,9 +167,11 @@ while read keyword orig_device orig_size junk ; do
         preferred_target_device_name="$( get_device_name $current_device_path )"
         # Ensure the determined target device is really a block device (cf. above):
         test -b "$preferred_target_device_name" || continue
-        # Continue with next current block device if the current one is not of same size as the original:
+        # Continue with next block device if the current one is not of same size as the original:
         test "$orig_size" -eq "$current_size" || continue
-        # Continue with next current block device if the current one is already used as target in the mapping file:
+        # Continue with next block device if the current one was already excluded by the "same name and same size" tests above:
+        IsInArray "$preferred_target_device_name" "${excluded_target_device_names[@]}" && continue
+        # Continue with next block device if the current one is already used as target in the mapping file:
         if is_mapping_target "$preferred_target_device_name" ; then
             DebugPrint "Cannot use $preferred_target_device_name (same size) for recreating $orig_device ($preferred_target_device_name already exists as target in $MAPPING_FILE)"
             continue
