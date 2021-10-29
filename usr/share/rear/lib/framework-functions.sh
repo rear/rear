@@ -94,10 +94,10 @@ function SourceStage () {
     local stage="$1"
     local start_SourceStage=$SECONDS
     Log "======================"
-    # In debug modes show what stage is run also on the user's terminal:
-    test "$DEBUG" && LogPrint "Running '$stage' stage ======================" || Log "Running '$stage' stage"
     Log "Running '$stage' stage"
     Log "======================"
+    # In debug modes show what stage is run also on the user's terminal:
+    test "$DEBUG" && Print "Running '$stage' stage ======================"
     # We always source scripts in the same subdirectory structure.
     # The {...,...,...} way of writing it is a shell shortcut that expands as intended.
     # The sed pipe is used to sort the scripts by their 3-digit number independent of the directory depth of the script.
