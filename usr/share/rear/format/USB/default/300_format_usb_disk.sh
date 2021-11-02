@@ -73,7 +73,7 @@ fi
 # This partition should be the first one afaik this has a better chance to work with odd BIOS firmwares
 if is_true "$FORMAT_BIOS" ; then
     if [[ "$USB_DEVICE_PARTED_LABEL" == "gpt" ]] ; then
-        LogPrint "The --bios toggle was used with format - making an BIOS bootable device $RAW_USB_DEVICE"
+        LogPrint "Making a BIOS bootable device $RAW_USB_DEVICE"
         # Create BIOS boot partition for GRUB2 second stage 'core.img'
         # cf. https://en.wikipedia.org/wiki/BIOS_boot_partition
         # and https://en.wikipedia.org/wiki/GUID_Partition_Table reads (excerpt)
@@ -108,7 +108,7 @@ fi
 
 # In case of EFI boot we need a EFI system partition
 if is_true "$FORMAT_EFI" ; then
-    LogPrint "The --efi toggle was used with format - making an EFI bootable device $RAW_USB_DEVICE"
+    LogPrint "Making an EFI bootable device $RAW_USB_DEVICE"
     # Prompt user for size of EFI system partition on USB disk if no valid value is specified:
     while ! is_positive_integer $USB_UEFI_PART_SIZE ; do
         # When USB_UEFI_PART_SIZE is empty, do not falsely complain about "Invalid EFI partition size":
