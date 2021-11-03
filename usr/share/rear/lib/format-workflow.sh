@@ -29,6 +29,10 @@ WORKFLOW_format () {
     eval set -- "$format_workflow_opts"
     while true ; do
         case "$1" in
+            (-b|--bios)
+                # Note: is handled the same as if FORMAT_EFI is not set in most scripts
+                FORMAT_BIOS=y
+                ;;
             (-e|--efi)
                 FORMAT_EFI=y
                 ;;
@@ -37,7 +41,7 @@ WORKFLOW_format () {
                 ;;
             (-h|--help)
                 LogPrintError "Use '$PROGRAM format [ -- OPTIONS ] DEVICE' like '$PROGRAM -v format -- --efi /dev/sdX'"
-                LogPrintError "Valid format workflow options are: -e/--efi -f/--force -y/--yes"
+                LogPrintError "Valid format workflow options are: -b/--bios -e/--efi -f/--force -y/--yes"
                 # No "rear format failed, check ...rear...log for details" message:
                 EXIT_FAIL_MESSAGE=0
                 # TODO: Use proper exit codes cf. https://github.com/rear/rear/issues/1134
@@ -63,6 +67,12 @@ WORKFLOW_format () {
         esac
         shift
     done
+
+    # if none of the format options is used then both should be set as default
+    if [ -z "$FORMAT_EFI" ] && [ -z "$FORMAT_BIOS" ] ; then
+        FORMAT_BIOS=y
+        FORMAT_EFI=y
+    fi
 
     if test -z "$FORMAT_DEVICE" ; then
         if is_true "$SIMULATE" ; then
