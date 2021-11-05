@@ -3,7 +3,7 @@
 {
     echo "# The following lines were added by 490_store_write_protect_settings.sh"
 
-    echo "WRITE_PROTECTED_UUIDS=( ${WRITE_PROTECTED_UUIDS[*]} )"
+    echo "WRITE_PROTECTED_IDS=( ${WRITE_PROTECTED_IDS[*]} )"
 
     echo -n "WRITE_PROTECTED_FS_LABEL_PATTERNS=("
     for prefix in "${WRITE_PROTECTED_FS_LABEL_PATTERNS[@]}"; do
