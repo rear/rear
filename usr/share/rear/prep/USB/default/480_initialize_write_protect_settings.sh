@@ -9,7 +9,6 @@
 #       UUID filesystem UUID
 #     PTUUID partition table identifier (usually UUID)
 #   PARTUUID partition UUID
-#     SERIAL disk serial number
 #        WWN unique storage identifier
 local ids
 ids="$( write_protection_ids "$USB_DEVICE" )"
