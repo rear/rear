@@ -21,7 +21,6 @@ function write_protection_ids() {
     #       UUID filesystem UUID
     #     PTUUID partition table identifier (usually UUID)
     #   PARTUUID partition UUID
-    #     SERIAL disk serial number
     #        WWN unique storage identifier
 
     # At least for OUTPUT=USB $device is of the form /dev/disk/by-label/$USB_DEVICE_FILESYSTEM_LABEL
@@ -47,18 +46,17 @@ function write_protection_ids() {
     test -b "$parent_device" && device="$parent_device"
 
     local column
-    # Older lsblk versions do not support all output columns UUID PTUUID PARTUUID SERIAL WWN
-    # e.g. lsblk in util-linux 2.19.1 in SLES11 only supports UUID but neither PTUUID nor PARTUUID nor SERIAL nor WWN
+    # Older lsblk versions do not support all output columns UUID PTUUID PARTUUID WWN
+    # e.g. lsblk in util-linux 2.19.1 in SLES11 only supports UUID but neither PTUUID nor PARTUUID nor WWN
     # cf. https://github.com/rear/rear/pull/2626#issuecomment-856700823
     # When an unsupported output column is specified lsblk aborts with "unknown column" error message
     # without output for supported output columns so we run lsblk for each output column separately
     # and ignore lsblk failures and error messages and we skip empty lines in the output via 'awk NF'
     # (empty lines appear when a partition does not have a filesystem UUID or for the whole device that has no PARTUUID
-    #  or for all child devices because only the whole disk device has a SERIAL number
     #  or for all columns except UUID when a child device is a /dev/mapper/* device
     #  and some devices do not have any WWN set)
     # and we remove duplicate reported IDs (in particular PTUUID is reported also for each partition):
-    for column in UUID PTUUID PARTUUID SERIAL WWN ; do lsblk -ino $column "$device" 2>/dev/null ; done | awk NF | sort -u
+    for column in UUID PTUUID PARTUUID WWN ; do lsblk -ino $column "$device" 2>/dev/null ; done | awk NF | sort -u
 }
 
 function is_write_protected_by_id() {
