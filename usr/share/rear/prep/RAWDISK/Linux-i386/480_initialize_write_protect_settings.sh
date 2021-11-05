@@ -10,7 +10,7 @@ if has_binary uuidgen; then
     # created.
     RAWDISK_PTUUID="$( uuidgen )"
     if test "$RAWDISK_PTUUID"; then
-        WRITE_PROTECTED_UUIDS+=( $RAWDISK_PTUUID )
+        WRITE_PROTECTED_IDS+=( $RAWDISK_PTUUID )
     else
         LogPrintError "Cannot write protect '${RAWDISK_GPT_PARTITION_NAME:-Rescue System}' disk (no partition table UUID)"
     fi
