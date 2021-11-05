@@ -14,20 +14,22 @@ function write_protected_candidate_device() {
     echo "$device"
 }
 
-function write_protection_uuids() {
+function write_protection_ids() {
     local device="$( write_protected_candidate_device "$1" )"
-    # Output the UUIDs for write-protection, each UUID on a separated line.
-    # UUIDs are those that 'lsblk' reports (which depends on the lsblk version):
+    # Output the IDs for write-protection, each ID on a separated line.
+    # IDs are those that 'lsblk' reports (which depends on the lsblk version):
     #       UUID filesystem UUID
     #     PTUUID partition table identifier (usually UUID)
     #   PARTUUID partition UUID
+    #     SERIAL disk serial number
+    #        WWN unique storage identifier
 
     # At least for OUTPUT=USB $device is of the form /dev/disk/by-label/$USB_DEVICE_FILESYSTEM_LABEL
     # which is a symlink to the ReaR data partition (e.g. /dev/sdb3 on a USB disk /dev/sdb).
     # On a USB disk that was formatted with "rear format" there is only one layer of child devices
     # (i.e. there are only partitions like /dev/sdb1 /dev/sdb2 /dev/sdb3 on a USB disk /dev/sdb).
-    # So we only need to use the direct parent device to get all UUIDs of the whole disk
-    # because the goal is to write-protect the whole disk by using all its UUIDs
+    # So we only need to use the direct parent device to get all IDs of the whole disk
+    # because the goal is to write-protect the whole disk by using all its IDs
     # cf. https://github.com/rear/rear/pull/2703#issuecomment-952888484
     local parent_device=""
     # Older Linux distributions do not contain lsblk (e.g. SLES10)
@@ -45,35 +47,40 @@ function write_protection_uuids() {
     test -b "$parent_device" && device="$parent_device"
 
     local column
-    # Older lsblk versions do not support all output columns UUID PTUUID PARTUUID
-    # e.g. lsblk in util-linux 2.19.1 in SLES11 only supports UUID but neither PTUUID no PARTUUID
+    # Older lsblk versions do not support all output columns UUID PTUUID PARTUUID SERIAL WWN
+    # e.g. lsblk in util-linux 2.19.1 in SLES11 only supports UUID but neither PTUUID nor PARTUUID nor SERIAL nor WWN
     # cf. https://github.com/rear/rear/pull/2626#issuecomment-856700823
     # When an unsupported output column is specified lsblk aborts with "unknown column" error message
     # without output for supported output columns so we run lsblk for each output column separately
     # and ignore lsblk failures and error messages and we skip empty lines in the output via 'awk NF'
-    # (empty lines appear when a partition does not have a filesystem UUID or for the whole device that has no PARTUUID)
-    # and we remove duplicate reported UUIDs (in particular PTUUID is reported also for each partition):
-    for column in UUID PTUUID PARTUUID ; do lsblk -ino $column "$device" 2>/dev/null ; done | awk NF | sort -u
+    # (empty lines appear when a partition does not have a filesystem UUID or for the whole device that has no PARTUUID
+    #  or for all child devices because only the whole disk device has a SERIAL number
+    #  or for all columns except UUID when a child device is a /dev/mapper/* device
+    #  and some devices do not have any WWN set)
+    # and we remove duplicate reported IDs (in particular PTUUID is reported also for each partition):
+    for column in UUID PTUUID PARTUUID SERIAL WWN ; do lsblk -ino $column "$device" 2>/dev/null ; done | awk NF | sort -u
 }
 
-function is_write_protected_by_uuid() {
+function is_write_protected_by_id() {
     local device="$(write_protected_candidate_device "$1")"
-    # returns 0 if one of the device's UUID is in the list of write-protected UUIDs.
+    # returns 0 if one of the device's IDs is in the list of write-protected IDs.
 
-    local uuids uuid
-    uuids="$( write_protection_uuids "$device" )"
-    # uuids is a string of UUIDs separated by newline characters
-    if ! test "$uuids" ; then
-        LogPrintError "Cannot check write protection by UUID for $device (no UUID found)"
-        return 1
+    local ids id
+    ids="$( write_protection_ids "$device" )"
+    # ids is a string of IDs separated by newline characters
+    if ! test "$ids" ; then
+        LogPrintError "Cannot check write protection by ID for $device (no ID found)"
+        # It is safer to assume that the disk is protected (and thus return 0)
+        # instead of assuming that it is not protected and blindly proceed:
+        return 0
     fi
-    for uuid in $uuids ; do
-        if IsInArray "$uuid" "${WRITE_PROTECTED_UUIDS[@]}" ; then
-            Log "$device is designated as write-protected by UUID $uuid"
+    for id in $ids ; do
+        if IsInArray "$id" "${WRITE_PROTECTED_IDS[@]}" ; then
+            Log "$device is designated as write-protected by ID $id"
             return 0
         fi
     done
-    Log "$device is not write-protected by UUID"
+    Log "$device is not write-protected by ID"
     return 1
 }
 
@@ -102,5 +109,5 @@ function is_write_protected() {
     local device="$(write_protected_candidate_device "$1")"
     # returns 0 if the device is designated as write-protected by any of the above means.
 
-    is_write_protected_by_uuid "$device" || is_write_protected_by_fs_label "$device"
+    is_write_protected_by_id "$device" || is_write_protected_by_fs_label "$device"
 }
