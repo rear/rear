@@ -17,11 +17,6 @@ function write_protected_candidate_device() {
 function write_protection_ids() {
     local device="$( write_protected_candidate_device "$1" )"
     # Output the IDs for write-protection, each ID on a separated line.
-    # IDs are those that 'lsblk' reports (which depends on the lsblk version):
-    #       UUID filesystem UUID
-    #     PTUUID partition table identifier (usually UUID)
-    #   PARTUUID partition UUID
-    #        WWN unique storage identifier
 
     # At least for OUTPUT=USB $device is of the form /dev/disk/by-label/$USB_DEVICE_FILESYSTEM_LABEL
     # which is a symlink to the ReaR data partition (e.g. /dev/sdb3 on a USB disk /dev/sdb).
@@ -46,6 +41,7 @@ function write_protection_ids() {
     test -b "$parent_device" && device="$parent_device"
 
     local column
+    # The default WRITE_PROTECTED_ID_TYPES are UUID PTUUID PARTUUID WWN.
     # Older lsblk versions do not support all output columns UUID PTUUID PARTUUID WWN
     # e.g. lsblk in util-linux 2.19.1 in SLES11 only supports UUID but neither PTUUID nor PARTUUID nor WWN
     # cf. https://github.com/rear/rear/pull/2626#issuecomment-856700823
@@ -56,7 +52,7 @@ function write_protection_ids() {
     #  or for all columns except UUID when a child device is a /dev/mapper/* device
     #  and some devices do not have any WWN set)
     # and we remove duplicate reported IDs (in particular PTUUID is reported also for each partition):
-    for column in UUID PTUUID PARTUUID WWN ; do lsblk -ino $column "$device" 2>/dev/null ; done | awk NF | sort -u
+    for column in $WRITE_PROTECTED_ID_TYPES ; do lsblk -ino $column "$device" 2>/dev/null ; done | awk NF | sort -u
 }
 
 function is_write_protected_by_id() {
