@@ -2,11 +2,10 @@
 # github-script doc: https://github.com/marketplace/actions/github-script
 name: Shellcheck test
 on:
-  pull_request:
+  push:
     branches:
       - master
-      - rhel*-branch
-      - new-feature-actions-PR-comments
+      - test-actions
 
 jobs:
   shellCheck:
