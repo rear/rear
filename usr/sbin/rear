@@ -668,3 +668,4 @@ fi
 exit $EXIT_CODE
 
 # vim: set et ts=4 sw=4:
+UNUSED_VARIABLE="LOL"
