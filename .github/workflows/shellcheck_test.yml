@@ -31,9 +31,8 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}  
       
       - name: Run shell-check test
-        run: echo "${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}"
-        #run: |
-        #  bash ./.github/workflows/check-shell.sh ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
+        run: |
+          bash ./.github/workflows/check-shell.sh ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
 
       # ! Disable Output, since there is a problem with permissions and GITHUB_TOKEN
       # ! https://github.blog/changelog/2021-04-20-github-actions-control-permissions-for-github_token/
