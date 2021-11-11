@@ -775,17 +775,38 @@ is_disk_a_pv() {
     return 0
 }
 
-function is_multipath_path {
-    # Return 'false' if there is no device as argument:
-    test "$1" || return 1
+function is_multipath_used {
     # Return 'false' if there is no multipath command:
     type multipath &>/dev/null || return 1
-    # Return 'false' if multipath is not used, see https://github.com/rear/rear/issues/2298
+    # 'multipath -l' is the only simple and reliably working commad
+    # to find out in general whether or not multipath is used at all.
+    # But 'multipath -l' scans all devices and the time it takes is proportional
+    # to their number so that time would become rather long (seconds up to minutes)
+    # if 'multipath -l' was called for each one of hundreds or thousands of devices.
+    # So we call 'multipath -l' only once and remember the result
+    # in a global variable and then only use that global variable
+    # so we can call is_multipath_used very many times as often as needed.
+    is_true $MULTIPATH_IS_USED && return 0
+    is_false $MULTIPATH_IS_USED && return 1
+    # When MULTIPATH_IS_USED has neither a true nor false value set it and return accordingly.
     # Because "multipath -l" always returns zero exit code we check if it has real output via grep -q '[[:alnum:]]'
     # so that no "multipath -l" output could clutter the log (the "multipath -l" output is irrelevant here)
     # in contrast to e.g. test "$( multipath -l )" that would falsely succeed with blank output
     # and the output would appear in the log in 'set -x' debugscript mode:
-    multipath -l | grep -q '[[:alnum:]]' || return 1
+    if multipath -l | grep -q '[[:alnum:]]' ; then
+        MULTIPATH_IS_USED='yes'
+        return 0
+    else
+        MULTIPATH_IS_USED='no'
+        return 1
+    fi
+}
+
+function is_multipath_path {
+    # Return 'false' if there is no device as argument:
+    test "$1" || return 1
+    # Return 'false' if multipath is not used, see https://github.com/rear/rear/issues/2298
+    is_multipath_used || return 1
     # Check if a block device should be a path in a multipath device:
     multipath -c /dev/$1 &>/dev/null
 }
