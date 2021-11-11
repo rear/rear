@@ -19,6 +19,34 @@ VERBOSE=1
 for script in $SHARE_DIR/lib/*functions.sh ; do source $script ; done
 source $SHARE_DIR/lib/progresssubsystem.nosh
 
+# Set EXIT_FAIL_MESSAGE to 0 to avoid a false exit failure message from the exit task
+# "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WORKFLOW failed, check $RUNTIME_LOGFILE for details' 1>&8"
+# that is set in lib/_input-output-functions.sh which is sourced above for this shell here.
+# Because we have two shells where ReaR's exit tasks are set (both via lib/_input-output-functions.sh)
+# exiting this bash here runs ReaR's exit tasks and then this workflow finishes
+# which lets the outer bash that runs rear finish which also runs ReaR's exit tasks:
+#   # usr/sbin/rear -v shell
+#   ...
+#   REAR localhost:~/usr/share/rear # pstree -Aplau | grep -B2 -A1 bashrc.rear
+#    `-bash,7549
+#        `-rear,13862 usr/sbin/rear -v shell
+#            `-bash,14076 --rcfile /usr/share/rear/lib/bashrc.rear -i
+#                |-grep,14190 --color=auto -B2 -A1 bashrc.rear
+#                `-pstree,14189 -Aplau
+#   REAR localhost:~/usr/share/rear # exit
+#   exit
+#   Exiting rear shell (PID 14076) and its descendant processes ...
+#   Running exit tasks
+#   Exiting rear shell (PID 13862) and its descendant processes ...
+#   Running exit tasks
+# Without EXIT_FAIL_MESSAGE=0 that would look like
+#   Exiting rear shell (PID 14076) and its descendant processes ...
+#   Running exit tasks
+#   rear shell failed, check /var/log/rear/rear-localhost.log for details
+#   Exiting rear shell (PID 13862) and its descendant processes ...
+#   Running exit tasks
+EXIT_FAIL_MESSAGE=0
+
 echo "
 This is the interactive shell (bash) within $PRODUCT.
 It is intended for development and testing of $PRODUCT
