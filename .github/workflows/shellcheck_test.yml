@@ -2,7 +2,7 @@
 # github-script doc: https://github.com/marketplace/actions/github-script
 name: Shellcheck test
 on:
-  push:
+  pre-commit:
     branches:
       - master
       - test-actions
