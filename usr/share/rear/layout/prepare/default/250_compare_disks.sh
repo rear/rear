@@ -163,3 +163,5 @@ else
     fi
 fi
 
+test -d $current_device_path/queue
+
