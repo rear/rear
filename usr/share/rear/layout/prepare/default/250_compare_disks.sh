@@ -144,7 +144,7 @@ else
     # with a relatively short timeout to avoid too much delay by default
     # but sufficient time for the user to read and understand the message
     # so that the user could deliberately intervene and enforce MIGRATION_MODE:
-    local timeout=30
+    local timeout=3
     # Have that timeout not bigger than USER_INPUT_TIMEOUT
     # e.g. for automated testing a small USER_INPUT_TIMEOUT may be specified and
     # we do not want to delay it here more than what USER_INPUT_TIMEOUT specifies:
