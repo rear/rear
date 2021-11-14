@@ -11,6 +11,10 @@ git_head=$2
 #  FILE PATHS  #
 # ------------ #
 
+#TODEL
+echo "base and head vars"
+echo "$git_base $git_head"
+
 # https://github.com/actions/runner/issues/342
 # get names of files from PR (excluding deleted files)
 git diff --name-only --diff-filter=db "$git_base".."$git_head" > ../pr-changes.txt

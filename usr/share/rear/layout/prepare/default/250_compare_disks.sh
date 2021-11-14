@@ -44,6 +44,8 @@ if is_false "$MIGRATION_MODE" ; then
     return
 fi
 
+UNUSEDVAR="unused var"
+
 # Compare disks to determine whether or not MIGRATION_MODE must be used:
 LogPrint "Comparing disks"
 
