@@ -13,7 +13,7 @@ git_head=$2
 
 #TODEL
 echo "base and head vars"
-echo "$git_base $git_head"
+echo "$1 $2"
 
 # https://github.com/actions/runner/issues/342
 # get names of files from PR (excluding deleted files)
