@@ -6,4 +6,5 @@ build-stamp
 /etc/rear/site.conf
 .DS_Store
 .vscode
+.idea
 servers
