@@ -1,0 +1,53 @@
+# GA doc: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+# github-script doc: https://github.com/marketplace/actions/github-script
+name: Shellcheck test
+on:
+  pull_request:
+    branches:
+      - master
+      - test-actions
+
+jobs:
+  shellCheck:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Install dependencies
+        run: sudo apt update && sudo apt-get install -y cmake help2man libboost-dev libboost-filesystem-dev libboost-program-options-dev libboost-python-dev libboost-regex-dev tree
+      
+      - name: Clone csdiff repository
+        run: cd ../ && git clone --depth=1 https://github.com/csutils/csdiff.git && cd -
+      
+      - name: Build and install csdiff
+        run: cd ../csdiff && sudo make && sudo make install && cd -
+      
+      - name: Repository checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}  
+      
+      - name: Run shell-check test
+        run: |
+          bash ./.github/workflows/check-shell.sh ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
+
+      # ! Disable Output, since there is a problem with permissions and GITHUB_TOKEN
+      # ! https://github.blog/changelog/2021-04-20-github-actions-control-permissions-for-github_token/
+      # TODO: possible solution is to use probot framework to build github app/action
+      # TODO: Set labels based on env.NUMBER_OF_ADDED_ISSUES and env.NUMBER_OF_SOLVED_ISSUES
+      # - name: Output test results
+      #   # Run this step even if previous failed
+      #   if: always()
+      #   uses: actions/github-script@v5
+      #   with:
+      #     # Colored GH comments: https://stackoverflow.com/a/39413824
+      #     script: |
+      #       github.rest.issues.createComment({
+      #         issue_number: context.issue.number,
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         body: '```diff\n@@ Shellcheck test summary @@\n- added issues: ${{ env.NUMBER_OF_ADDED_ISSUES }}\n+ solved issues: ${{ env.NUMBER_OF_SOLVED_ISSUES }}\n\n# list of edited shell scripts:\n${{ env.LIST_OF_SCRIPTS }}\n```'
+      #       })
