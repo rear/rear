@@ -48,9 +48,10 @@ if has_binary portmap ; then
     LogPrint "Started RPC portmapper '$portmapper_program'".
 elif has_binary rpcbind ; then
     portmapper_program="rpcbind"
-    # rpcbind cannot be called multiple times
-    # so start it only if it is not yet running
-    rpcinfo -p 1>/dev/null || rpcbind || Error "Starting RPC portmapper '$portmapper_program' failed."
+    # rpcbind cannot be called multiple times so start it only if it is not yet running
+    # '-s' avoids that in some cases rpcbind is not started / not available in the recovery system
+    # cf. https://github.com/rear/rear/issues/2672
+    rpcinfo -p 1>/dev/null || rpcbind -s || Error "Starting RPC portmapper '$portmapper_program' failed."
     LogPrint "Started RPC portmapper '$portmapper_program'".
 else
     Error "Could not find a RPC portmapper program (tried portmap and rpcbind)."
