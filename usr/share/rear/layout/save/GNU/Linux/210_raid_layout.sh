@@ -20,6 +20,7 @@ local container array_size
 local param copies number
 local component_device
 local raid_layout_entry
+local mdadm_exit_code
 
 # Read 'mdadm --detail --scan --config=partitions' output which looks like
 # ARRAY /dev/md/raid1sdab metadata=1.0 name=any:raid1sdab UUID=8d05eb84:2de831d1:dfed54b2:ad592118
@@ -27,7 +28,14 @@ local raid_layout_entry
 # ARRAY /dev/md/imsm0 metadata=imsm UUID=4d5cf215:80024c95:e19fdff4:2fba35a8
 # ARRAY /dev/md/Volume0_0 container=/dev/md/imsm0 member=0 UUID=ffb80762:127807b3:3d7e4f4d:4532022f
 # cf. https://github.com/rear/rear/pull/2702#issuecomment-968904230
-while read array raiddevice junk ; do
+#
+# For reasoning why
+# COMMAND | while read ... do ... done
+# is usually better than
+# while read ... do ... done < <( COMMAND )
+# see layout/save/GNU/Linux/220_lvm_layout.sh
+
+mdadm --detail --scan --config=partitions | while read array raiddevice junk ; do
 
     # Skip if it is not an "ARRAY":
     test "$array" = "ARRAY" || continue
@@ -211,13 +219,26 @@ while read array raiddevice junk ; do
 
     echo "$raid_layout_entry" >>$DISKLAYOUT_FILE
 
+    # extract_partitions is run as a separated process (in a subshell)
+    # because it runs in the "mdadm ... | while read ... ; do ... done" pipe
+    # so things only work here if extract_partitions does not set variables
+    # that are meant to be used outside of this pipe, check extract_partitions()
+    # in layout/save/GNU/Linux/200_partition_layout.sh
     extract_partitions "$raiddevice" >>$DISKLAYOUT_FILE
 
-done < <( mdadm --detail --scan --config=partitions )
+done
+# Check the exit code of "mdadm --detail --scan --config=partitions"
+# in the "mdadm --detail --scan --config=partitions | while read ... ; do ... done" pipe
+# cf. layout/save/GNU/Linux/220_lvm_layout.sh
+mdadm_exit_code=${PIPESTATUS[0]}
+test $mdadm_exit_code -eq 0 || Error "'mdadm --detail --scan --config=partitions' failed with exit code $mdadm_exit_code"
 
 # mdadm is required in the recovery system if disklayout.conf contains at least one 'raid' entry
 # see the create_raid function in layout/prepare/GNU/Linux/120_include_raid_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-grep -q '^raid ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( mdadm ) || true
-grep -q '^raid ' $DISKLAYOUT_FILE && PROGS+=( mdmon ) || true
+if grep -q '^raid ' $DISKLAYOUT_FILE ; then
+    REQUIRED_PROGS+=( mdadm )
+    # mdmon was added via https://github.com/rear/rear/pull/2702
+    PROGS+=( mdmon )
+fi
