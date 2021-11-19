@@ -11,8 +11,11 @@ has_binary mdadm || return 0
 FEATURE_MDADM_UUID="yes"
 local mdadm_version
 mdadm_version=$( get_version mdadm --version )
-test "$mdadm_version" || LogPrintError "Assuming mdadm supports '--uuid' option (could not detect mdadm version)"
-version_newer "$mdadm_version" 2.0 || FEATURE_MDADM_UUID="no"
+if test "$mdadm_version" ; then
+    version_newer "$mdadm_version" 2.0 || FEATURE_MDADM_UUID="no"
+else
+    LogPrintError "Assuming mdadm supports '--uuid' option (could not detect mdadm version)"
+fi
 
 # For example 'mdadm --detail --scan --config=partitions' output looks like
 # ARRAY /dev/md/raid1sdab metadata=1.0 name=any:raid1sdab UUID=8d05eb84:2de831d1:dfed54b2:ad592118
