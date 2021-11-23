@@ -24,13 +24,13 @@ if test -f "$opath/selinux.autorelabel" ; then
     local policy=$( grep "^SELINUXTYPE" $TARGET_FS_ROOT/etc/selinux/config | sed 's/SELINUXTYPE=//' )
 
     LogPrint "We try to restore the selinux labels before the first reboot because the configuration is enforcing and autorelabel may fail. \n
-        This can take a several minutes."
+        This can take several minutes."
 
     if [[ -d "$TARGET_FS_ROOT/etc/selinux/${policy}/" ]] ; then
          #setfiles -c $TARGET_FS_ROOT/etc/selinux/${policy}/policy/policy.*  $TARGET_FS_ROOT/etc/selinux/${policy}/contexts/files/file_contexts
          chroot $TARGET_FS_ROOT /usr/sbin/setfiles /etc/selinux/${policy}/contexts/files/file_contexts /
     else
-        LogPrint "The configured selinux policy $policy is not accessbible in default path $TARGET_FS_ROOT/etc/selinux/${policy}/. \n
+        LogPrint "The configured selinux policy $policy is not accessible in default path $TARGET_FS_ROOT/etc/selinux/${policy}/. \n
         If the first boot fails, please add 'enforcing=0' on kernel command line, and an autorelabel should fix the labels."
     fi
 fi
