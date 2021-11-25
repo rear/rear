@@ -9,6 +9,7 @@ is_false "$DISKS_TO_BE_WIPED" && return 0
 #   create_disk_label /dev/sda gpt
 #   create_disk_label /dev/sdb msdos
 # so in this example DISKS_TO_BE_WIPED="/dev/sda /dev/sdb "
+# or if the user has specified DISKS_TO_BE_WIPED use only the existing block devices therein
 # cf. layout/recreate/default/120_confirm_wipedisk_disks.sh
 
 # Log the currently existing block devices structure on the unchanged replacement hardware
