@@ -6,14 +6,30 @@ is_false "$DISKS_TO_BE_WIPED" && return 0
 # that will be completely wiped (as far as possible)
 # so that the disk layout recreation code (diskrestore.sh)
 # can run on clean disks that behave like pristine new disks.
-# The disks that will be completely wiped are those disks
-# where in diskrestore.sh the create_disk_label function is called
-# (the create_disk_label function calls "parted -s $disk mklabel $label")
-# for example like
-#   create_disk_label /dev/sda gpt
-#   create_disk_label /dev/sdb msdos
-# so in this example DISKS_TO_BE_WIPED="/dev/sda /dev/sdb "
-DISKS_TO_BE_WIPED="$( grep '^ *create_disk_label /dev/' $LAYOUT_CODE | grep -o '/dev/[^ ]*' | sort -u | tr -s '[:space:]' ' ' )"
+
+if test "$DISKS_TO_BE_WIPED" ; then
+    # If the user has specified DISKS_TO_BE_WIPED (i.e. when it is not empty)
+    # use only those that actually exist as block devices in the recovery system:
+    local disk_to_be_wiped
+    local disks_to_be_wiped=""
+    for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
+        # 'test -b' succeeds when there is no argument but fails when the argument is empty:
+        test -b "$disk_to_be_wiped" || continue
+        # Have a trailing space delimiter to get e.g. disks_to_be_wiped="/dev/sda /dev/sdb "
+        # same as DISKS_TO_BE_WIPED (cf. below) with a trailing space (looks better in user messages):
+        disks_to_be_wiped+="$disk_to_be_wiped "
+    done
+    DISKS_TO_BE_WIPED="$disks_to_be_wiped"
+else
+    # The disks that will be completely wiped are those disks
+    # where in diskrestore.sh the create_disk_label function is called
+    # (the create_disk_label function calls "parted -s $disk mklabel $label")
+    # for example like
+    #   create_disk_label /dev/sda gpt
+    #   create_disk_label /dev/sdb msdos
+    # so in this example DISKS_TO_BE_WIPED="/dev/sda /dev/sdb "
+    DISKS_TO_BE_WIPED="$( grep '^ *create_disk_label /dev/' $LAYOUT_CODE | grep -o '/dev/[^ ]*' | sort -u | tr -s '[:space:]' ' ' )"
+fi
 
 # The DISKS_TO_BE_WIPED string is needed in any case
 # in the subsequent layout/recreate/default/150_wipe_disks.sh script
