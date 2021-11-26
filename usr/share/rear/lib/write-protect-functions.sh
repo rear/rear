@@ -64,9 +64,18 @@ function is_write_protected_by_id() {
     # ids is a string of IDs separated by newline characters
     if ! test "$ids" ; then
         LogPrintError "Cannot check write protection by ID for $device (no ID found)"
-        # It is safer to assume that the disk is protected (and thus return 0)
-        # instead of assuming that it is not protected and blindly proceed:
-        return 0
+        # It would be safer to assume a disk without ID is protected (and return 0)
+        # instead of assuming that it is not protected and proceed.
+        # But in practice that does not work sufficiently well because it can happen
+        # that a disk has no ID (by default non of UUID PTUUID PARTUUID WWN)
+        # which usually means there is nothing on the disk so that empty disks
+        # get excluded as write-protected from being used to recreate the system
+        # cf. https://github.com/rear/rear/pull/2703#discussion_r757393547
+        # By default we write protect ReaR's own disk where the recovery system is and
+        # we assume it cannot happen that this disk has none of UUID PTUUID PARTUUID WWN
+        # so it should be safe to assume a disk without UUID PTUUID PARTUUID WWN is empty
+        # and meant to be used to recreate the system so it should not be write-protected:
+        return 1
     fi
     for id in $ids ; do
         if IsInArray "$id" "${WRITE_PROTECTED_IDS[@]}" ; then
