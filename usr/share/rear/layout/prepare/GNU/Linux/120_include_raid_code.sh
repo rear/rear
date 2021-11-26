@@ -4,19 +4,6 @@
 # Nothing to do when there is no mdadm command:
 has_binary mdadm || return 0
 
-# Whether or not mdadm supports UUID restoration via the '--uuid' option:
-# Since SLE10 mdadm supports '--uuid'
-# cf. https://github.com/rear/rear/pull/2714#issuecomment-973938852
-# so by default we assume mdadm supports the '--uuid' option:
-FEATURE_MDADM_UUID="yes"
-local mdadm_version
-mdadm_version=$( get_version mdadm --version )
-if test "$mdadm_version" ; then
-    version_newer "$mdadm_version" 2.0 || FEATURE_MDADM_UUID="no"
-else
-    LogPrintError "Assuming mdadm supports '--uuid' option (could not detect mdadm version)"
-fi
-
 # For example 'mdadm --detail --scan --config=partitions' output looks like
 # ARRAY /dev/md/raid1sdab metadata=1.0 name=any:raid1sdab UUID=8d05eb84:2de831d1:dfed54b2:ad592118
 # for a RAID1 array and for a RAID CONTAINER with IMSM metadata it looks like
@@ -66,9 +53,6 @@ create_raid() {
             (raid-devices=*)
                 raid_devices=${option#raid-devices=}
                 mdadmcmd+=" --$option"
-                ;;
-            (uuid=*)
-                is_true $FEATURE_MDADM_UUID && mdadmcmd+=" --$option"
                 ;;
             (*)
                 mdadmcmd+=" --$option"
