@@ -217,6 +217,8 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
 
     test $container_size -gt 0 && raid_layout_entry+=" size=$container_size"
 
+    echo "# RAID device $raiddevice" >>$DISKLAYOUT_FILE
+    echo "# Format: raid /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> [name=<array name>] [metadata=<metadata style>] [uuid=<UUID>] [layout=<data layout>] [chunk=<chunk size>] [spare-devices=<nr of spare devices>] [size=<container size>]" >>$DISKLAYOUT_FILE
     echo "$raid_layout_entry" >>$DISKLAYOUT_FILE
 
     # extract_partitions is run as a separated process (in a subshell)
@@ -224,6 +226,8 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
     # so things only work here if extract_partitions does not set variables
     # that are meant to be used outside of this pipe, check extract_partitions()
     # in layout/save/GNU/Linux/200_partition_layout.sh
+    echo "# Partitions on $raiddevice" >>$DISKLAYOUT_FILE
+    echo "# Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>" >>$DISKLAYOUT_FILE
     extract_partitions "$raiddevice" >>$DISKLAYOUT_FILE
 
 done
