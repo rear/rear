@@ -605,7 +605,7 @@ part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <part
 
 === Software RAID ===
 ----------------------------------
-raid /dev/<name> level=<RAID level> raid-devices=<nr of devices> [uuid=<uuid>] [spare-devices=<nr of spares>] [layout=<RAID layout>] [chunk=<chunk size>] devices=<device1,device2,...>
+raid /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> [name=<array name>] [metadata=<metadata style>] [uuid=<UUID>] [layout=<data layout>] [chunk=<chunk size>] [spare-devices=<nr of spare devices>] [size=<container size>]
 ----------------------------------
 
 === Multipath ===
