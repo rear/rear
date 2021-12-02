@@ -19,11 +19,11 @@ if test "$DISKS_TO_BE_WIPED" ; then
         # Write-protection for the disks in DISKS_TO_BE_WIPED
         # cf. https://github.com/rear/rear/pull/2703#issuecomment-979928423
         if is_write_protected "$disk_to_be_wiped" ; then
-          LogPrint "Excluding $disk_to_be_wiped from DISKS_TO_BE_WIPED ($disk_to_be_wiped is write-protected)"
-          continue
+            LogPrint "Excluding $disk_to_be_wiped from DISKS_TO_BE_WIPED ($disk_to_be_wiped is write-protected)"
+            continue
         fi
         # Have a trailing space delimiter to get e.g. disks_to_be_wiped="/dev/sda /dev/sdb "
-        # same as DISKS_TO_BE_WIPED (cf. below) with a trailing space (looks better in user messages):
+        # with a trailing space (looks better in user messages):
         disks_to_be_wiped+="$disk_to_be_wiped "
     done
 else
@@ -43,19 +43,79 @@ else
     # that do not exist as disks on the bare hardware or on a bare virtual machine:
     for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
         # 'test -b' succeeds when there is no argument but fails when the argument is empty:
-        if ! test -b "$disk_to_be_wiped" ; then
-          DebugPrint "Skipping $disk_to_be_wiped to be wiped ($disk_to_be_wiped does not exist as block device)"
-          continue
+        if test -b "$disk_to_be_wiped" ; then
+            # Write-protection for the disks in DISKS_TO_BE_WIPED
+            # cf. https://github.com/rear/rear/pull/2703#issuecomment-979928423
+            if is_write_protected "$disk_to_be_wiped" ; then
+                DebugPrint "Excluding $disk_to_be_wiped to be wiped ($disk_to_be_wiped is write-protected)"
+                continue
+            fi
+            # Have a trailing space delimiter to get e.g. disks_to_be_wiped="/dev/sda /dev/sdb "
+            # with a trailing space (looks better in user messages):
+            disks_to_be_wiped+="$disk_to_be_wiped "
+        else
+            # When the create_disk_label function is called for higher level block devices like RAID devices
+            # e.g. as 'create_disk_label /dev/md127 gpt' the RAID device /dev/md127 is a child of a disk like /dev/sdc
+            # or the RAID device /dev/md127 is a child of a partition like /dev/sdc1 that is a child of the disk /dev/sdc
+            # so we need to find out the parent disk of the RAID device. Because the RAID device does not (yet) exist
+            # in the currently running ReaR recovery system we check disklayout.conf that tells about the original system
+            # but at this point here the devices in disklayout.conf are already migrated to what they are on the recovery system
+            # so we can check disklayout.conf what the parent disk of the RAID device is on the current recovery system,
+            # cf. the code in layout/prepare/GNU/Linux/120_include_raid_code.sh
+            local raid raiddevice options
+            read raid raiddevice options < <(grep "^raid $disk_to_be_wiped " "$LAYOUT_FILE")
+            if ! test "$raiddevice" = "$disk_to_be_wiped" ; then
+                # Continue with the next disk_to_be_wiped when the current one is no RAID device:
+                DebugPrint "Skipping $disk_to_be_wiped to be wiped ($disk_to_be_wiped does not exist as block device)"
+                continue
+            else
+                DebugPrint "RAID device $raiddevice does not exist - trying to determine its parent disks"
+            fi
+            local component_devices=()
+            local option
+            for option in $options ; do
+                case "$option" in
+                    (devices=*)
+                        # E.g. when option is "devices=/dev/sda,/dev/sdb,/dev/sdc"
+                        # then ${option#devices=} is "/dev/sda,/dev/sdb,/dev/sdc"
+                        # so that echo ${option#devices=} | tr ',' ' '
+                        # results "/dev/sda /dev/sdb /dev/sdc"
+                        component_devices=( $( echo ${option#devices=} | tr ',' ' ' ) )
+                        ;;
+                esac
+            done
+            local component_device parent_device added_parent_device="no"
+            for component_device in ${component_devices[@]} ; do
+                # component_device is a disk like /dev/sdc or a partition like /dev/sdc1 (cf. above)
+                # so we get the parent device of it (the parent of a disk is the disk itself)
+                # cf. the code of the function write_protection_ids() in lib/write-protect-functions.sh
+                # Older Linux distributions do not contain lsblk (e.g. SLES10)
+                # and older lsblk versions do not support the output column PKNAME
+                # so we ignore lsblk failures and error messages
+                # and we skip empty lines in the output via 'awk NF'
+                # and we use only the topmost reported PKNAME:
+                parent_device="$( lsblk -inpo PKNAME "$component_device" 2>/dev/null | awk NF | head -n1 )"
+                # parent_device is empty when lsblk does not support PKNAME.
+                # Without quoting an empty parent_device would result plain "test -b" which would (falsely) succeed:
+                if test -b "$parent_device" ; then
+                    DebugPrint "$parent_device is a parent disk of $raiddevice that should be wiped"
+                    # Write-protection for the disks in DISKS_TO_BE_WIPED (see above):
+                    if is_write_protected "$parent_device" ; then
+                        DebugPrint "Excluding parent $parent_device to be wiped ($parent_device is write-protected)"
+                        # Continue with the next component_device
+                        continue
+                    fi
+                    DebugPrint "Adding parent $parent_device to be wiped ($parent_device is not write-protected)"
+                    # Have a trailing space delimiter to get e.g. disks_to_be_wiped="/dev/sda /dev/sdb "
+                    # with a trailing space (looks better in user messages):
+                    disks_to_be_wiped+="$parent_device "
+                    added_parent_device="yes"
+                fi
+            done
+            if is_false $added_parent_device ; then
+                DebugPrint "Skipping RAID device $raiddevice to be wiped (no parent disk found for it)"
+            fi
         fi
-        # Write-protection for the disks in DISKS_TO_BE_WIPED
-        # cf. https://github.com/rear/rear/pull/2703#issuecomment-979928423
-        if is_write_protected "$disk_to_be_wiped" ; then
-          DebugPrint "Excluding $disk_to_be_wiped to be wiped ($disk_to_be_wiped is write-protected)"
-          continue
-        fi
-        # Have a trailing space delimiter to get e.g. disks_to_be_wiped="/dev/sda /dev/sdb "
-        # same as DISKS_TO_BE_WIPED (cf. below) with a trailing space (looks better in user messages):
-        disks_to_be_wiped+="$disk_to_be_wiped "
     done
 fi
 DISKS_TO_BE_WIPED="$disks_to_be_wiped"
