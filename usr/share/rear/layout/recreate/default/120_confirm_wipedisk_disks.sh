@@ -87,15 +87,26 @@ else
             local component_device parent_device added_parent_device="no"
             for component_device in ${component_devices[@]} ; do
                 # component_device is a disk like /dev/sdc or a partition like /dev/sdc1 (cf. above)
-                # so we get the parent device of it (the parent of a disk is the disk itself)
+                # so we get the parent device of it (the parent of a disk will be the disk itself)
                 # cf. the code of the function write_protection_ids() in lib/write-protect-functions.sh
                 # Older Linux distributions do not contain lsblk (e.g. SLES10)
                 # and older lsblk versions do not support the output column PKNAME
                 # so we ignore lsblk failures and error messages
                 # and we skip empty lines in the output via 'awk NF'
-                # and we use only the topmost reported PKNAME:
+                # and we use only the topmost reported PKNAME.
+                # For example in a recovery system with RAID1 of /dev/sda and /dev/sdb
+                #   # lsblk -ipo NAME,KNAME,PKNAME,TYPE,FSTYPE                
+                #   NAME        KNAME     PKNAME   TYPE FSTYPE
+                #   /dev/sda    /dev/sda           disk linux_raid_member
+                #   /dev/sdb    /dev/sdb           disk linux_raid_member
+                #   /dev/sdc    /dev/sdc           disk 
+                #   `-/dev/sdc1 /dev/sdc1 /dev/sdc part
+                # There is no PKNAME for disks so we use KNAME (so the parent of a disk is the disk itself)
+                # and we also use KNAME as fallback when lsblk does not support PKNAME and proceed bona fide
+                # (so we wipe only KNAME of a partition but not its parent disk when PKNAME is not supported)
+                # if parent_device is not one single word (valid device names are single words):
                 parent_device="$( lsblk -inpo PKNAME "$component_device" 2>/dev/null | awk NF | head -n1 )"
-                # parent_device is empty when lsblk does not support PKNAME.
+                test $parent_device || parent_device="$( lsblk -inpo KNAME "$component_device" 2>/dev/null | awk NF | head -n1 )"
                 # Without quoting an empty parent_device would result plain "test -b" which would (falsely) succeed:
                 if test -b "$parent_device" ; then
                     DebugPrint "$parent_device is a parent disk of $raiddevice that should be wiped"
@@ -121,12 +132,11 @@ fi
 DISKS_TO_BE_WIPED="$disks_to_be_wiped"
 # The DISKS_TO_BE_WIPED string is needed in the subsequent layout/recreate/default/150_wipe_disks.sh script
 
-# When not in migration mode show the user confirmation dialog nevertheless
-# but have a predefined user input to automatically proceed after USER_INPUT_INTERRUPT_TIMEOUT
-# provided USER_INPUT_WIPE_DISKS_CONFIRMATION is not already set by the user
-# so that the user can see what disks will be wiped and completely overwritten
-# and needed abort with [Ctrl]+[C] (within USER_INPUT_INTERRUPT_TIMEOUT):
-is_true "$MIGRATION_MODE" || test "$USER_INPUT_WIPE_DISKS_CONFIRMATION" || USER_INPUT_WIPE_DISKS_CONFIRMATION="yes"
+# Show the user confirmation dialog in any case but when not in migration mode
+# automatically proceed with less timeout USER_INPUT_INTERRUPT_TIMEOUT (by default 10 seconds)
+# to avoid longer delays (USER_INPUT_TIMEOUT is by default 300 seconds) in case of unattended recovery:
+local timeout="$USER_INPUT_TIMEOUT"
+is_true "$MIGRATION_MODE" || timeout="$USER_INPUT_INTERRUPT_TIMEOUT"
 
 rear_workflow="rear $WORKFLOW"
 rear_shell_history="lsblk"
@@ -141,7 +151,7 @@ wilful_input=""
 # assume choices[0] 'Confirm disk layout' was actually meant:
 is_true "$USER_INPUT_WIPE_DISKS_CONFIRMATION" && USER_INPUT_WIPE_DISKS_CONFIRMATION="${choices[0]}"
 while true ; do
-    choice="$( UserInput -I WIPE_DISKS_CONFIRMATION -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
+    choice="$( UserInput -I WIPE_DISKS_CONFIRMATION -t "$timeout" -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
     case "$choice" in
         (${choices[0]})
             # Confirm disk that will be completely overwritten and continue:
