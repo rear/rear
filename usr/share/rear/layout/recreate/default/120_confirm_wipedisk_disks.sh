@@ -109,8 +109,11 @@ else
                 test $parent_device || parent_device="$( lsblk -inpo KNAME "$component_device" 2>/dev/null | awk NF | head -n1 )"
                 # Without quoting an empty parent_device would result plain "test -b" which would (falsely) succeed:
                 if test -b "$parent_device" ; then
-                    DebugPrint "$parent_device is a parent disk of $raiddevice that should be wiped"
-                    # Write-protection for the disks in DISKS_TO_BE_WIPED (see above):
+                    # parent_device is usually a disk but in the KNAME fallback case it could be a partition:
+                    DebugPrint "$parent_device is a parent of $raiddevice that should be wiped"
+                    # Write-protection for the disks in DISKS_TO_BE_WIPED (see above).
+                    # When parent_device is a partition the function write_protection_ids() in lib/write-protect-functions.sh
+                    # also tries to determine its parent disk if possible to check the disk device in DISKS_TO_BE_WIPED:
                     if is_write_protected "$parent_device" ; then
                         DebugPrint "Excluding parent $parent_device to be wiped ($parent_device is write-protected)"
                         # Continue with the next component_device
