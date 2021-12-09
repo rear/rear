@@ -2,6 +2,7 @@
 # layout/prepare/default/420_autoresize_last_partitions.sh
 #
 # Try to automatically resize active last partitions on all active disks
+# also on RAID1 disks
 # if the disk size had changed (i.e. only in migration mode).
 #
 # When AUTORESIZE_PARTITIONS is false, no partition is resized.
