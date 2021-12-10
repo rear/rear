@@ -90,9 +90,10 @@ test "$AUTORESIZE_PARTITIONS" || AUTORESIZE_PARTITIONS=''
 local original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
 
 local layout_type junk
-local disk_device old_disk_size disk_label
+local disk_device old_disk_size disk_label new_disk_size new_disk_block_size
+local sysfsname
 local raid_device raid_options raid_option raid_component_devs raid_component_dev
-local raid_component_dev_size raid_component_dev_label raid_component_devs_smallest_size
+local raid_component_dev_size raid_component_dev_label old_smallest_size new_smallest_size
 
 # Example 'disk' entries in disklayout.conf:
 #
@@ -113,10 +114,7 @@ local raid_component_dev_size raid_component_dev_label raid_component_devs_small
 #   disk /dev/dasda 7385333760 dasd
 #
 function autoresize_last_partition () { 
-    local partitions_device=$1
-    local old_disk_size=$2
-    local disk_label=$3
-    local sysfsname new_disk_size
+    local partitions_device
     local max_part_start last_part_dev last_part_start last_part_size last_part_type last_part_flags last_part_end
     local extended_part_dev extended_part_start extended_part_size
     local partitions_dev part_size part_start part_type part_flags part_dev
@@ -125,9 +123,15 @@ function autoresize_last_partition () {
     local egrep_pattern
     local last_part_is_boot last_part_is_swap last_part_is_efi
     local extended_part_to_be_increased
-    local MiB new_disk_block_size secondary_GPT_size new_disk_size_MiB new_disk_remainder_start new_last_part_size new_extended_part_size
+    local MiB secondary_GPT_size new_disk_size_MiB new_disk_remainder_start new_last_part_size new_extended_part_size
     local last_part_disk_space_usage last_part_used_bytes
     local disk_size_difference increase_threshold_difference last_part_shrink_difference max_shrink_difference
+
+    test $1 && partitions_device=$1 || BugError "autoresize_last_partition() called without partitions_device argument"
+    test $2 && old_disk_size=$2 || BugError "autoresize_last_partition() called without old_disk_size argument"
+    test $3 && disk_label=$3 || BugError "autoresize_last_partition() called without disk_label argument"
+    test $4 && new_disk_size=$4 || BugError "autoresize_last_partition() called without new_disk_size argument"
+    test $5 && new_disk_block_size=$5 || BugError "autoresize_last_partition() called without new_disk_block_size argument"
 
     # Continue with next disk if the current one has no partitions
     # (i.e. when there is no 'part' entry in disklayout.conf for the current disk)
@@ -146,12 +150,6 @@ function autoresize_last_partition () {
     
     DebugPrint "Examining $disk_label disk $partitions_device to automatically resize its last active partition"
 
-    sysfsname=$( get_sysfs_name $partitions_device )
-    test "$sysfsname" || Error "Failed to get_sysfs_name() for $partitions_device"
-    test -d "/sys/block/$sysfsname" || Error "No '/sys/block/$sysfsname' directory for $partitions_device"
-
-    new_disk_size=$( get_disk_size "$sysfsname" )
-    is_positive_integer $new_disk_size || Error "Failed to get_disk_size() for $partitions_device"
     # Skip if the size of the new disk (e.g. sda) is same as the size of the old disk (e.g. also sda):
     if test $new_disk_size -eq $old_disk_size ; then
         DebugPrint "Skipping $partitions_device (size of new disk same as size of old disk)"
@@ -335,7 +333,6 @@ function autoresize_last_partition () {
     # and https://github.com/rear/rear/issues/2182
     # and the code in layout/prepare/GNU/Linux/100_include_partition_code.sh
     if test "$disk_label" = "gpt" -o "$disk_label" = "gpt_sync_mbr" ; then
-        new_disk_block_size=$( get_block_size "$sysfsname" )
         secondary_GPT_size=$( mathlib_calculate "33 * $new_disk_block_size" )
     else
         secondary_GPT_size=0
@@ -519,7 +516,15 @@ function autoresize_last_partition () {
 
 # Autoresize the last partition for 'disk' entries in disklayout.conf:
 while read layout_type disk_device old_disk_size disk_label junk ; do
-    autoresize_last_partition $disk_device $old_disk_size $disk_label
+    # Get the new disk size and block size of the current disk device in the recovery system:
+    sysfsname=$( get_sysfs_name $disk_device )
+    test "$sysfsname" || Error "Failed to get_sysfs_name() for $disk_device"
+    test -d "/sys/block/$sysfsname" || Error "No '/sys/block/$sysfsname' directory for $disk_device"
+    new_disk_size=$( get_disk_size "$sysfsname" )
+    is_positive_integer $new_disk_size || Error "Failed to get_disk_size() for $disk_device"
+    new_disk_block_size=$( get_block_size "$sysfsname" )
+    is_positive_integer $new_disk_block_size || Error "Failed to get_block_size() for $disk_device"
+    autoresize_last_partition $disk_device $old_disk_size $disk_label $new_disk_size $new_disk_block_size
 done < <( grep "^disk " "$LAYOUT_FILE" )
 
 # Autoresize the last partition for 'raid' entries in disklayout.conf:
@@ -531,8 +536,8 @@ while read layout_type raid_device junk ; do
         case "$raid_option" in
             (level=*)
                 # Currently only RAID1 is supported for autoresize:
-                if ! test "raid1" = "$raid_option" ; then
-                    DebugPrint "Autoresizing is not supported for RAID level '$raid_option' arrays"
+                if ! test "level=raid1" = "$raid_option" ; then
+                    DebugPrint "Autoresizing is not supported for RAID '$raid_option'"
                     # Continue with the next 'raid' entry in disklayout.conf
                     continue 2
                 fi
@@ -546,38 +551,56 @@ while read layout_type raid_device junk ; do
                 ;;
         esac
     done
-    # Determine the smallest component device and a disk label (GPT or MBR):
+    # Determine the old and new smallest component device and a disk label (GPT or MBR)
+    # and the block size of the new smallest component device.
     # bash works up to numbers of 2^63 - 1 = 9223372036854775807
     # see "bash integer arithmetic range limitation" in lib/global-functions.sh
-    raid_component_devs_smallest_size=9223372036854775807
+    old_smallest_size=9223372036854775807
+    new_smallest_size=9223372036854775807
     for raid_component_dev in $raid_component_devs ; do
-        # Get its disk size and disk label
+        # Get the old component disk size in disklayout.conf
         raid_component_dev_disk_entry=( $( grep "^disk $raid_component_dev " "$LAYOUT_FILE" ) )
         if ! test "$raid_component_dev_disk_entry" ; then
             DebugPrint "No 'disk' entry found for RAID component device $raid_component_dev in $LAYOUT_FILE"
             continue
         fi
         raid_component_dev_size="${raid_component_dev_disk_entry[2]}"
-        test $raid_component_dev_size -lt $raid_component_devs_smallest_size && raid_component_devs_smallest_size=$raid_component_dev_size
-        raid_component_dev_label="${raid_component_dev_disk_entry[3]}"
+        # Set the old smallest component disk size and use its disk label in the autoresize_last_partition() call:
+        if test $raid_component_dev_size -lt $old_smallest_size ; then
+            old_smallest_size=$raid_component_dev_size
+            raid_component_dev_label="${raid_component_dev_disk_entry[3]}"
+        fi
+        # Get the new component disk size of the current disk device in the recovery system
+        # cf. the code above to "Autoresize the last partition for 'disk' entries in disklayout.conf"
+        sysfsname=$( get_sysfs_name $raid_component_dev )
+        test "$sysfsname" || Error "Failed to get_sysfs_name() for RAID component device $raid_component_dev"
+        test -d "/sys/block/$sysfsname" || Error "No '/sys/block/$sysfsname' directory for RAID component device $raid_component_dev"
+        new_disk_size=$( get_disk_size "$sysfsname" )
+        is_positive_integer $new_disk_size || Error "Failed to get_disk_size() for RAID component device $raid_component_dev"
+        # Set the new smallest component disk size and use its block size in the autoresize_last_partition() call:
+        if test $new_disk_size -lt $new_smallest_size ; then
+            new_smallest_size=$new_disk_size
+            new_disk_block_size=$( get_block_size "$sysfsname" )
+            is_positive_integer $new_disk_block_size || Error "Failed to get_block_size() for RAID component device $raid_component_dev"
+        fi
     done
-    if ! test $raid_component_devs_smallest_size -lt 9223372036854775807 ; then
-        # We assume a real RAID1 device size is not 2^63 - 1 or bigger because
-        # 2^63 - 1 = 1024^4 * 1024 * 1024 * 8 - 1 = 1 TiB * 1024 * 1024 * 8 - 1 = 8 EiB -1
-        # and https://en.wikipedia.org/wiki/History_of_hard_disk_drives reads (excerpt dated Dec. 2021)
-        # "As of August 2020, the largest hard drive is 20 TB (while SSDs can be much bigger at 100 TB"
-        # and https://www.alphr.com/largest-hard-drive-you-can-buy/ reads (excerpt dated Dec. 2021)
-        # "There’s a lot of talk right now about 200TB drives and even 1,000TB drives"
-        # which is still several thousand times smaller than 2^63 - 1
-        # but a RAID0 array of very many such drives could exceed the 2^63 - 1 limit in theory
-        # while in practice a RAID0 array of thousands of disks probably will not work reliably:
+    # We assume a real RAID1 device size is not 2^63 - 1 or bigger because
+    # 2^63 - 1 = 1024^4 * 1024 * 1024 * 8 - 1 = 1 TiB * 1024 * 1024 * 8 - 1 = 8 EiB -1
+    # and https://en.wikipedia.org/wiki/History_of_hard_disk_drives reads (excerpt dated Dec. 2021)
+    # "As of August 2020, the largest hard drive is 20 TB (while SSDs can be much bigger at 100 TB"
+    # and https://www.alphr.com/largest-hard-drive-you-can-buy/ reads (excerpt dated Dec. 2021)
+    # "There’s a lot of talk right now about 200TB drives and even 1,000TB drives"
+    # which is still several thousand times smaller than 2^63 - 1
+    # but a RAID0 array of very many such drives could exceed the 2^63 - 1 limit in theory
+    # while in practice a RAID0 array of thousands of disks probably will not work reliably:
+    if ! test $old_smallest_size -lt 9223372036854775807 -a $new_smallest_size -lt 9223372036854775807 ; then
         DebugPrint "Cannot autoresize $raid_device (no disk size found or size not less than 2^63 - 1)"
         continue
     fi
-    # Autoresize the last partition on the RAID1 device (not on each component device of the array):
-    autoresize_last_partition $raid_device $raid_component_devs_smallest_size $raid_component_dev_label
+    # Autoresize the last partition on the RAID1 device like /dev/md127
+    # but not on each component device of the array like /dev/sda and /dev/sdc
+    autoresize_last_partition $raid_device $old_smallest_size $raid_component_dev_label $new_smallest_size $new_disk_block_size
 done < <( grep "^raid " "$LAYOUT_FILE" )
-
 
 # Use the new LAYOUT_FILE.resized_last_partition with the resized partitions:
 mv "$disklayout_resized_last_partition" "$LAYOUT_FILE"
