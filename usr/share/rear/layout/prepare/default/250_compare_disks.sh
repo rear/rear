@@ -48,11 +48,15 @@ fi
 LogPrint "Comparing disks"
 
 # Determine the actually used disk sizes on the original system and
-# remember each one only once in the original_system_used_disk_sizes array:
+# remember each one only once in the original_system_used_disk_sizes array
+# and remember each old/original disk with its size in the old_disks_and_sizes array
+# which is an array of strings that have the form "old_device old_device_size"
+local old_disks_and_sizes=()
 local original_system_used_disk_sizes=()
 local more_than_one_same_orig_size=''
 # Cf. the "Compare disks one by one" code below:
 while read disk dev size junk ; do
+    old_disks_and_sizes+=( "$dev $size" )
     if IsInArray "$size" "${original_system_used_disk_sizes[@]}" ; then
         more_than_one_same_orig_size='true'
     else
@@ -65,28 +69,37 @@ if is_true "$more_than_one_same_orig_size" ; then
     MIGRATION_MODE='true'
 fi
 
+# Determine what non-zero block device sizes exists on the replacement hardware
+# and remember each new disk with its size in the new_disks_and_sizes array
+# which is an array of strings that have the form "new_device new_device_size"
+local new_disks_and_sizes=()
+local replacement_hardware_disk_sizes=()
+local current_device_path=''
+local current_disk_name=''
+local current_size=''
+local current_kname
+local old_disk_and_size
+# Cf. the "loop over all current block devices" code
+# in layout/prepare/default/300_map_disks.sh
+for current_device_path in /sys/block/* ; do
+    # Continue with next block device if the device is a multipath device slave
+    is_multipath_path ${current_device_path#/sys/block/} && continue
+    # Continue with next block device if the current one has no queue directory:
+    test -d $current_device_path/queue || continue
+    # Continue with next block device if the current one is designated as write-protected
+    is_write_protected $current_device_path && continue
+    # Continue with next block device if no size can be read for the current one:
+    test -r $current_device_path/size || continue
+    current_disk_name="${current_device_path#/sys/block/}"
+    current_size=$( get_disk_size $current_disk_name )
+    test "$current_size" -gt '0' && replacement_hardware_disk_sizes+=( "$current_size" )
+    # Add the current one to the old_and_new_disks_and_sizes array:
+    current_kname="/dev/$current_disk_name"
+    new_disks_and_sizes+=( "$current_kname $current_size" )
+done
+
 # No further disk comparisons are needed when MIGRATION_MODE is already set true above:
 if ! is_true "$MIGRATION_MODE" ; then
-    # Determine what non-zero block device sizes exists on the replacement hardware:
-    local replacement_hardware_disk_sizes=()
-    # Cf. the "loop over all current block devices" code
-    # in layout/prepare/default/300_map_disks.sh
-    local current_device_path=''
-    local current_disk_name=''
-    local current_size=''
-    for current_device_path in /sys/block/* ; do
-        # Continue with next block device if the device is a multipath device slave
-        is_multipath_path ${current_device_path#/sys/block/} && continue
-        # Continue with next block device if the current one has no queue directory:
-        test -d $current_device_path/queue || continue
-        # Continue with next block device if the current one is designated as write-protected
-        is_write_protected $current_device_path && continue
-        # Continue with next block device if no size can be read for the current one:
-        test -r $current_device_path/size || continue
-        current_disk_name="${current_device_path#/sys/block/}"
-        current_size=$( get_disk_size $current_disk_name )
-        test "$current_size" -gt '0' && replacement_hardware_disk_sizes+=( "$current_size" )
-    done
     # For each of the used disk sizes on the original system
     # determine if that disk size exists more than once on the replacement hardware.
     # Only the used disk sizes on the original system are tested here
@@ -138,6 +151,44 @@ fi
 # Show the result to the user:
 if is_true "$MIGRATION_MODE" ; then
     LogPrint "Switching to manual disk layout configuration"
+    local old_disk_and_size old_disk old_size old_size_GiB
+    local new_disk_and_size new_disk new_size new_size_GiB
+    # Whole disks that are smaller than one GiB are expected to be so rare
+    # that we do not need to implement special case handling for such disks
+    # so disks less than one GiB are shown as "... size_in_bytes (0 GiB)"
+    # which is OK because the exact size in bytes is always shown:
+    local GiB=$(( 1024 * 1024 * 1024 ))
+    # Show info about old disks:
+    for old_disk_and_size in "${old_disks_and_sizes[@]}" ; do
+        old_disk=${old_disk_and_size%% *}
+        old_size=${old_disk_and_size##* }
+        old_size_GiB=$(( old_size / GiB ))
+        for new_disk_and_size in "${new_disks_and_sizes[@]}" ; do
+            new_disk=${new_disk_and_size%% *}
+            new_size=${new_disk_and_size##* }
+            new_size_GiB=$(( new_size / GiB ))
+            if test "$old_disk" = "$new_disk" ; then
+                if test "$old_size" = "$new_size" ; then
+                    LogPrint "$old_disk has same size $old_size ($old_size_GiB GiB)"
+                else
+                    LogPrint "$old_disk had size $old_size ($old_size_GiB GiB) but is now $new_size ($new_size_GiB GiB)"
+                fi
+                continue 2
+            fi
+        done
+        LogPrint "$old_disk with size $old_size ($old_size_GiB GiB) does no longer exist"
+    done
+    # Show info about actually new disks (i.e. new disks that did not exist as old disk):
+    for new_disk_and_size in "${new_disks_and_sizes[@]}" ; do
+        new_disk=${new_disk_and_size%% *}
+        new_size=${new_disk_and_size##* }
+        new_size_GiB=$(( new_size / GiB ))
+        for old_disk_and_size in "${old_disks_and_sizes[@]}" ; do
+            old_disk=${old_disk_and_size%% *}
+            test "$old_disk" = "$new_disk" && continue 2
+        done
+        LogPrint "$new_disk with size $new_size ($new_size_GiB GiB) did not exist on the original system"
+    done
 else
     LogPrint "Disk configuration looks identical"
     # To be on the safe side a user confirmation dialog is shown here
