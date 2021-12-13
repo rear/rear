@@ -69,6 +69,16 @@ if is_true "$more_than_one_same_orig_size" ; then
     MIGRATION_MODE='true'
 fi
 
+# Determine disabled disks (but not disabled multipath devices) on the original system
+# (perhaps disabled multipath devices should also be remembered?)
+# and remember each one with its size in the old_disabled_disks_and_sizes array
+# which is an array of strings that have the form "old_disabled_device old_device_size"
+local old_disabled_disks_and_sizes=()
+while read disk dev size junk ; do
+    old_disabled_disks_and_sizes+=( "$dev $size" )
+    # Disks are disabled by ReaR in disklayout.conf with a leading '#' without added space (so it is '#disk'):
+done < <( grep '^#disk ' "$LAYOUT_FILE" )
+
 # Determine what non-zero block device sizes exists on the replacement hardware
 # and remember each new disk with its size in the new_disks_and_sizes array
 # which is an array of strings that have the form "new_device new_device_size"
@@ -150,7 +160,7 @@ fi
 
 # Show the result to the user:
 if is_true "$MIGRATION_MODE" ; then
-    LogPrint "Switching to manual disk layout configuration"
+    LogPrint "Switching to manual disk layout configuration (GiB sizes rounded down to integer)"
     local old_disk_and_size old_disk old_size old_size_GiB
     local new_disk_and_size new_disk new_size new_size_GiB
     # Whole disks that are smaller than one GiB are expected to be so rare
@@ -159,7 +169,7 @@ if is_true "$MIGRATION_MODE" ; then
     # which is OK because the exact size in bytes is always shown:
     local GiB=$(( 1024 * 1024 * 1024 ))
     # Show info about old disks:
-    for old_disk_and_size in "${old_disks_and_sizes[@]}" ; do
+    for old_disk_and_size in "${old_disks_and_sizes[@]}" "${old_disabled_disks_and_sizes[@]}" ; do
         old_disk=${old_disk_and_size%% *}
         old_size=${old_disk_and_size##* }
         old_size_GiB=$(( old_size / GiB ))
@@ -176,18 +186,18 @@ if is_true "$MIGRATION_MODE" ; then
                 continue 2
             fi
         done
-        LogPrint "$old_disk with size $old_size ($old_size_GiB GiB) does no longer exist"
+        LogPrint "$old_disk had size $old_size ($old_size_GiB GiB) but it does no longer exist"
     done
-    # Show info about actually new disks (i.e. new disks that did not exist as old disk):
+    # Show info about actually new disks (i.e. new disks that did not exist as old disk or old disabled disk):
     for new_disk_and_size in "${new_disks_and_sizes[@]}" ; do
         new_disk=${new_disk_and_size%% *}
         new_size=${new_disk_and_size##* }
         new_size_GiB=$(( new_size / GiB ))
-        for old_disk_and_size in "${old_disks_and_sizes[@]}" ; do
+        for old_disk_and_size in "${old_disks_and_sizes[@]}" "${old_disabled_disks_and_sizes[@]}" ; do
             old_disk=${old_disk_and_size%% *}
             test "$old_disk" = "$new_disk" && continue 2
         done
-        LogPrint "$new_disk with size $new_size ($new_size_GiB GiB) did not exist on the original system"
+        LogPrint "$new_disk was not used on the original system and has now $new_size ($new_size_GiB GiB)"
     done
 else
     LogPrint "Disk configuration looks identical"
