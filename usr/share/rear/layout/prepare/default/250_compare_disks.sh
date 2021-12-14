@@ -92,15 +92,24 @@ local old_disk_and_size
 # Cf. the "loop over all current block devices" code
 # in layout/prepare/default/300_map_disks.sh
 for current_device_path in /sys/block/* ; do
+    current_disk_name="${current_device_path#/sys/block/}"
     # Continue with next block device if the device is a multipath device slave
-    is_multipath_path ${current_device_path#/sys/block/} && continue
+    is_multipath_path $current_disk_name && continue
     # Continue with next block device if the current one has no queue directory:
     test -d $current_device_path/queue || continue
-    # Continue with next block device if the current one is designated as write-protected
+    # Continue with next block device if the current one is a removable device
+    # for example CDROM is removable because /sys/block/sr0/removable contains '1'
+    # but a USB disk is not removable because /sys/block/sdb/removable contains '0'
+    # so this condition is primarily there to skip CDROM devices
+    # (in particular the device where the ReaR recovery system was booted from)
+    # because we cannot test /sys/block/sr0/ro which usually contains '0'
+    # because that is usually a CD/DVD-RW device that can write (depending on the medium)
+    # cf. https://unix.stackexchange.com/questions/22019/how-can-i-test-whether-a-block-device-is-read-only-from-sys-or-proc
+    test "$( < $current_device_path/removable )" = "1" && continue
+    # Continue with next block device if the current one is designated as write-protected:
     is_write_protected $current_device_path && continue
     # Continue with next block device if no size can be read for the current one:
     test -r $current_device_path/size || continue
-    current_disk_name="${current_device_path#/sys/block/}"
     current_size=$( get_disk_size $current_disk_name )
     test "$current_size" -gt '0' && replacement_hardware_disk_sizes+=( "$current_size" )
     # Add the current one to the old_and_new_disks_and_sizes array:
