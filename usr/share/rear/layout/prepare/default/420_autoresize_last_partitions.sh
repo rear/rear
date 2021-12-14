@@ -63,6 +63,15 @@
 # To migrate a system with a non-active last partition onto a bigger or smaller new disk
 # the user must in advance manually adapt his disklayout.conf file before he runs "rear recover".
 
+# Avoid 'set -e -u' exit e.g. because of "AUTORESIZE_PARTITIONS[@]: unbound variable"
+# note that assigning an empty array like AUTORESIZE_PARTITIONS=() does not help
+# against array elements like AUTORESIZE_PARTITIONS[0] are unbound variables:
+${AUTORESIZE_PARTITIONS:=}
+${AUTORESIZE_EXCLUDE_PARTITIONS:=}
+# Set fallbacks (same as default.conf) if mandatory numbers are not set (the user may set them empty):
+${AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE:=2}
+${AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE:=10}
+
 # Skip if not in migration mode:
 is_true "$MIGRATION_MODE" || return 0
 
@@ -79,14 +88,6 @@ LogPrint "Trying to automatically resize last partition when disk size changed"
 local disklayout_resized_last_partition="$LAYOUT_FILE.resized_last_partition"
 cp "$LAYOUT_FILE" "$disklayout_resized_last_partition"
 save_original_file "$LAYOUT_FILE"
-
-# Set fallbacks if mandatory values are not set (should be set in default.conf):
-test "$AUTORESIZE_EXCLUDE_PARTITIONS" || AUTORESIZE_EXCLUDE_PARTITIONS=( boot swap efi )
-test "$AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE" || AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE=10
-test "$AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE" || AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE=2
-# Avoid 'set -e -u' exit because of "AUTORESIZE_PARTITIONS[@]: unbound variable"
-# note that an empty array AUTORESIZE_PARTITIONS=() does not help here:
-test "$AUTORESIZE_PARTITIONS" || AUTORESIZE_PARTITIONS=''
 
 # The original disk space usage was written by layout/save/GNU/Linux/510_current_disk_usage.sh
 local original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
