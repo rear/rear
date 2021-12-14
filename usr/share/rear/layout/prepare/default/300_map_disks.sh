@@ -208,7 +208,14 @@ while read keyword orig_device orig_size junk ; do
     # Loop over all current block devices to find appropriate ones wherefrom the user can choose:
     for current_device_path in /sys/block/* ; do
         current_device_basename="${current_device_path##*/}"
-        # Do not include removable devices in the choices for the user:
+        # Do not include removable devices in the choices for the user
+        # for example CDROM is removable because /sys/block/sr0/removable contains '1'
+        # but a USB disk is not removable because /sys/block/sdb/removable contains '0'
+        # so this condition is primarily there to skip CDROM devices
+        # (in particular the device where the ReaR recovery system was booted from)
+        # because we cannot test /sys/block/sr0/ro which usually contains '0'
+        # because that is usually a CD/DVD-RW device that can write (depending on the medium)
+        # cf. https://unix.stackexchange.com/questions/22019/how-can-i-test-whether-a-block-device-is-read-only-from-sys-or-proc
         if test "$( < $current_device_path/removable )" = "1" ; then
             Log "$current_device_basename excluded from device mapping choices (is a removable device)"
             continue
