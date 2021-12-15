@@ -135,6 +135,10 @@ for dummy in "once" ; do
     # MODULES=( 'moduleX' 'moduleY' ) where additional kernel modules can be specified
     # to be included in the recovery system in addition to the ones via an empty MODULES=() setting:
     LogPrint "Copying kernel modules as specified by MODULES"
+    # Kernel modules that should be loaded during recovery system startup must be always copied into the recovery system:
+    MODULES+=( "${MODULES_LOAD[@]}" )
+    # Kernel modules that are currently loaded are always copied into the recovery system:
+    MODULES+=( $( lsmod | tail -n +2 | cut -d ' ' -f 1 ) )
     # Before ReaR version 2.5 the below added modules had been added via conf/GNU/Linux.conf
     # which is sourced in usr/sbin/rear before user config files like etc/rear/local.conf
     # so that the user had to specify MODULES+=( 'moduleX' 'moduleY' )
@@ -160,8 +164,7 @@ for dummy in "once" ; do
                zlib zlib-inflate zlib-deflate
                libcrc32c crc32c crc32c-intel )
     # Include the modules in MODULES plus their dependant modules.
-    # Kernel modules that should be loaded during recovery system startup must be always copied into the recovery system:
-    for module in "${MODULES_LOAD[@]}" "${MODULES[@]}" ; do
+    for module in "${MODULES[@]}" ; do
         # Strip trailing ".o" if there:
         module=${module#.o}
         # Strip trailing ".ko" if there:
