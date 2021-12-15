@@ -127,7 +127,7 @@ for dummy in "once" ; do
 
     # Finally the fallback cases, i.e. when the user has specified
     # MODULES=() which means the currently loaded kernel modules get included in the recovery system
-    # plus the modules that get added above plus kernel modules for certain kernel drivers like
+    # plus the kernel modules in MODULES_LOAD plus kernel modules for certain kernel drivers like
     # storage drivers, network drivers, crypto drivers, virtualization drivers, and some extra drivers
     # (see rescue/GNU/Linux/230_storage_and_network_modules.sh
     #  and rescue/GNU/Linux/240_kernel_modules.sh)
