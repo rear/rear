@@ -56,12 +56,19 @@ function modinfo_filename () {
         test "$KERNEL_VERSION" = "$( uname -r )" || Error "modinfo_filename failed because KERNEL_VERSION does not match 'uname -r'"
         module_filename="$( modinfo -F filename $module_name )"
     fi
-    # grep for '(builtin)' in the modinfo stdout to get the builtin kernel "module" case and otherwise
+    # grep for '(builtin)' in the modinfo stdout to get the builtin kernel "module" case
+    grep -q '(builtin)' <<<"$module_filename" && return
+    # Let modinfo_filename return the exit code of 'readlink -e $module_filename'
     # 'readlink -e something' shows the filename when something is one or more files and exits with zero exit code
     # 'readlink -e something' shows the symlink target when something is a symlink and exits with zero exit code
     # 'readlink -e something' shows nothing when something is no file or a broken symlink and exits with exit code 1
     # 'readlink -e something' shows nothing on stdout but an error on stderr when something is empty and exits with exit code 1
-    grep -q '(builtin)' <<<"$module_filename" && echo '' || readlink -e $module_filename
+    # It is crucial to output the original module_filename also when it is a symlink
+    # because in the code below 'cp -L' copies the symlink taget content
+    # as a new regular file with file name as the name of the symlink
+    # so the copied content can be still found under its original name,
+    # cf. https://github.com/rear/rear/issues/2677#issuecomment-997859219
+    readlink -e $module_filename 1>/dev/null && echo "$module_filename"
 }
 
 # Artificial 'for' clause that is run only once
@@ -80,8 +87,10 @@ for dummy in "once" ; do
     if IsInArray "all_modules" "${MODULES[@]}" ; then
         LogPrint "Copying all kernel modules in /lib/modules/$KERNEL_VERSION (MODULES contains 'all_modules')"
         # The '--parents' is needed to get the '/lib/modules/' directory in the copy.
+        # The '-L' copies the actual content to avoid dangling symlinks in the recovery system
+        # cf. https://github.com/rear/rear/issues/2677#issuecomment-997859219
         # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
-        if ! cp $verbose -t $ROOTFS_DIR -a --parents /lib/modules/$KERNEL_VERSION 2>>/dev/$DISPENSABLE_OUTPUT_DEV 1>&2 ; then
+        if ! cp $verbose -t $ROOTFS_DIR -a -L --parents /lib/modules/$KERNEL_VERSION 2>>/dev/$DISPENSABLE_OUTPUT_DEV 1>&2 ; then
             Error "Failed to copy all kernel modules in /lib/modules/$KERNEL_VERSION"
         fi
         # After successful copying do the the code after the artificial 'for' clause:
