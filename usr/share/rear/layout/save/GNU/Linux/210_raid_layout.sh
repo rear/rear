@@ -20,6 +20,7 @@ local container array_size
 local param copies number
 local component_device
 local raid_layout_entry
+local raid_dev_size raid_dev_label
 local mdadm_exit_code
 
 # Read 'mdadm --detail --scan --config=partitions' output which looks like
@@ -220,6 +221,14 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
     echo "# RAID device $raiddevice" >>$DISKLAYOUT_FILE
     echo "# Format: raid /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> [name=<array name>] [metadata=<metadata style>] [uuid=<UUID>] [layout=<data layout>] [chunk=<chunk size>] [spare-devices=<nr of spare devices>] [size=<container size>]" >>$DISKLAYOUT_FILE
     echo "$raid_layout_entry" >>$DISKLAYOUT_FILE
+
+    # cf. the code in layout/save/GNU/Linux/200_partition_layout.sh
+    # $raiddevice is e.g. /dev/md127
+    raid_dev_size=$( get_disk_size ${raiddevice#/dev/} )
+    raid_dev_label=$( parted -s $raiddevice print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " " )
+    echo "# RAID disk $raiddevice" >>$DISKLAYOUT_FILE
+    echo "# Format: raiddisk <devname> <size(bytes)> <partition label type>" >>$DISKLAYOUT_FILE
+    echo "raiddisk $raiddevice $raid_dev_size $raid_dev_label" >>$DISKLAYOUT_FILE
 
     # extract_partitions is run as a separated process (in a subshell)
     # because it runs in the "mdadm ... | while read ... ; do ... done" pipe
