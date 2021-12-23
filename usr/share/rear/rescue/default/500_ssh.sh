@@ -42,7 +42,7 @@ fi
 contains_visible_char "${copy_as_is_ssh_files[*]}" && COPY_AS_IS+=( "${copy_as_is_ssh_files[@]}" )
 
 # Copy the usual SSH programs into the recovery system:
-PROGS+=( ssh sshd scp sftp ssh-agent ssh-keygen )
+PROGS+=( ssh sshd scp sftp ssh-agent ssh-keygen ssh-add )
 
 # Copy a sftp-server program (e.g. /usr/lib/ssh/sftp-server) into the recovery system (if exists).
 # Because only OpenSSH >= 3.1 is supported where /etc/ssh/ is the default directory for configuration files
