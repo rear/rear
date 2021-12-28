@@ -355,6 +355,11 @@ function is_interface_up () {
     local network_interface=$1
     local sysfspath=/sys/class/net/$network_interface
 
+    if IsInArray "$network_interface" "${EXCLUDE_NETWORK_INTERFACES[@]}"; then
+        LogPrint "Excluding '$network_interface' per EXCLUDE_NETWORK_INTERFACES directive."
+        return 1
+    fi
+
     local state=$( cat $sysfspath/operstate )
     if [ "$state" = "down" ] ; then
         return 1
@@ -403,11 +408,19 @@ function ipaddr_setup () {
     if [ -n "$ipaddrs" ] ; then
         # If some IP is found for the network interface, then use them
         for ipaddr in $ipaddrs ; do
+            if IsInArray "${ipaddr%%/*}" "${EXCLUDE_IP_ADDRESSES[@]}"; then
+                LogPrint "Excluding IP address '$ipaddr' per EXCLUDE_IP_ADDRESSES directive even through it's defined in mapping file '$CONFIG_DIR/mappings/ip_addresses'."
+                continue
+            fi
             echo "ip addr add $ipaddr dev $mapped_as"
         done
     else
         # Otherwise, collect IP addresses for the network interface on the system
         for ipaddr in $( ip a show dev $network_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
+            if IsInArray "${ipaddr%%/*}" "${EXCLUDE_IP_ADDRESSES[@]}"; then
+                LogPrint "Excluding IP address '$ipaddr' per EXCLUDE_IP_ADDRESSES directive."
+                continue
+            fi
             echo "ip addr add $ipaddr dev $mapped_as"
         done
     fi
