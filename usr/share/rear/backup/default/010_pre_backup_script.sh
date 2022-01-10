@@ -16,3 +16,5 @@ fi
 for command in "${POST_BACKUP_COMMANDS[@]}"; do
     AddExitTask "$command"
 done
+
+# vim: set et ts=4 sw=4:

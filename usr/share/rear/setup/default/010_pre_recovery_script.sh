@@ -7,3 +7,5 @@ for command in "${PRE_RECOVERY_COMMANDS[@]}"; do
     Log "Running PRE_RECOVERY_COMMANDS: '$command'"
     eval "$command"
 done
+
+# vim: set et ts=4 sw=4:

@@ -9,3 +9,5 @@ for command in "${POST_BACKUP_COMMANDS[@]}"; do
     RemoveExitTask "$command"
     eval "$command"
 done
+
+# vim: set et ts=4 sw=4:
