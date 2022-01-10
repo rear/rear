@@ -3,3 +3,9 @@ if test "$POST_BACKUP_SCRIPT" ; then
     RemoveExitTask "${POST_BACKUP_SCRIPT[@]}"
     eval "${POST_BACKUP_SCRIPT[@]}"
 fi
+
+for command in "${POST_BACKUP_COMMANDS[@]}"; do
+    Log "Running POST_BACKUP_COMMANDS: '$command'"
+    RemoveExitTask "$command"
+    eval "$command"
+done
