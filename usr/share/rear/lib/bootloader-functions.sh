@@ -805,8 +805,8 @@ function make_pxelinux_config {
         echo "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)"
         echo "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
         echo "ENDTEXT"
-        echo "    kernel $PXE_HTTP_URL""/""$PXE_KERNEL"
-        echo "    append initrd=$PXE_HTTP_URL""/""$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
+        echo "    kernel $PXE_HTTP_URL/$PXE_KERNEL"
+        echo "    append initrd=$PXE_HTTP_URL/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
         echo "say ----------------------------------------------------------"
     fi
 
