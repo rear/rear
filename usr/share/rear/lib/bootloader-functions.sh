@@ -782,6 +782,34 @@ function make_pxelinux_config {
     echo "    append initrd=$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
     echo "say ----------------------------------------------------------"
 
+    # start with optional rear http entry if specified
+    if [[ ! -z $PXE_HTTP_URL ]] ; then    
+        case "$PXE_RECOVER_MODE" in
+        "automatic")
+            echo "say rear-automatic-http - Recover $HOSTNAME (HTTP) with auto-recover kernel option"
+            echo "label rear-automatic-http"
+            echo "MENU label ^Automatic Recover $HOSTNAME (HTTP)"
+            ;;
+        "unattended")
+            echo "say rear-unattended-http - Recover $HOSTNAME (HTTP) with unattended kernel option"
+            echo "label rear-unattended-http"
+            echo "MENU label ^Unattended Recover $HOSTNAME (HTTP)"
+            ;;
+        *)
+            echo "say rear-http - Recover $HOSTNAME (HTTP)"
+            echo "label rear-http"
+            echo "MENU label ^Recover $HOSTNAME (HTTP)"
+            ;;
+        esac
+        echo "TEXT HELP"
+        echo "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)"
+        echo "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
+        echo "ENDTEXT"
+        echo "    kernel $PXE_HTTP_URL/$PXE_KERNEL"
+        echo "    append initrd=$PXE_HTTP_URL/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
+        echo "say ----------------------------------------------------------"
+    fi
+
     # start the the other entries like local,...
     echo "say local - Boot from next boot device"
     echo "label local"
