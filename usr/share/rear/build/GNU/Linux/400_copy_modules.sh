@@ -91,7 +91,15 @@ for dummy in "once" ; do
         # cf. https://github.com/rear/rear/issues/2677#issuecomment-997859219
         # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
         if ! cp $verbose -t $ROOTFS_DIR -a -L --parents /lib/modules/$KERNEL_VERSION 2>>/dev/$DISPENSABLE_OUTPUT_DEV 1>&2 ; then
-            Error "Failed to copy all kernel modules in /lib/modules/$KERNEL_VERSION"
+            # Do not error out if 'cp -a -L' failed to to copy all contents of /lib/modules/$KERNEL_VERSION
+            # because dangling symlinks let 'cp -L' fail and there is no cp option to let it skip broken symlinks
+            # and then the cp exit code is 1 so it cannot be used to distinguish this case from other errors
+            # see https://github.com/rear/rear/issues/2739#issuecomment-1012949307
+            # but dangling symlinks in /lib/modules/$KERNEL_VERSION are usually harmless
+            # so we do not want to error out because of dangling symlinks
+            # and only tell the user about the issue so he could inspect his system and decide
+            # see https://github.com/rear/rear/issues/2739#issuecomment-1014304127
+            LogPrintError "Failed to copy all contents of /lib/modules/$KERNEL_VERSION (dangling symlinks could be a reason)"
         fi
         # After successful copying do the the code after the artificial 'for' clause:
         continue
