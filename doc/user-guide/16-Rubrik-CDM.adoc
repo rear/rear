@@ -64,17 +64,6 @@ Bare Metal Recovery is performed by first restoring the ReaR ISO file from Rubri
 * Recovery from a replica CDM cluster is only supported with CDM v4.2.1 and higher.
 * Care must be taken with SUSE systems on DHCP. They tend to request the same IP as the original host. If this is not the desired behavior the system will have to be adjusted after booting from the ReaR ISO.  
 * If multiple restores are performed using the same temporary IP, the temporary IP must first be deleted from Servers & Apps -> Linux and Unix Servers and re-added upon each reuse.
-* ReaR's `ldd` check of other binaries or libraries may result in libraries not being found. This can generally be fixed by adding the path to those libraries to the `LD_LIBRARY_PATH` variable in `/etc/rear/local.conf`. Do this by adding the following line in `/etc/rear/local.conf`:
-+
-  export LD_LIBRARY_PATH-"$LD_LIBRARY_PATH:<path>"
-+
-To make CentoOS v7.7 work the following line was needed:
-+
-  export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib64/bind9-export"
-+
-To make CentOS v8.0 work the following line was needed:
-+
-  export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib64/bind9-export:/usr/lib64/eog:/usr/lib64/python3.6/site-packages:/usr/lib64/samba:/usr/lib64/firefox"
 
 == Troubleshooting
 
