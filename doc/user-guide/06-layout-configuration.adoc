@@ -573,9 +573,24 @@ Relax-and-Recover will use that file instead of the snapshot of the original
 system.
 
 == Disk layout file syntax ==
+
 This section describes the syntax of all components in the Relax-and-Recover
-layout file at +/var/lib/rear/layout/disklayout.conf+. The syntax used to describe it
-is straightforward. Normal text has to be present verbatim in the file. Angle
+layout file at +/var/lib/rear/layout/disklayout.conf+.
+
+The syntax is of the form
+----------------------------------
+keyword vaule1 value2 ...
+----------------------------------
+where keyword denotes one kind of component (dik, partition, filesystem, ...)
+and keyword and the values are separated by single space characters
+so that one can get the lines that belong to a particular component
+with a particular value1 via simple commands like
+----------------------------------
+grep "^keyword value1 " /var/lib/rear/layout/disklayout.conf
+----------------------------------
+(provided there is a value2 after value1 so there is a space after value1).
+
+Normal text has to be present verbatim in the file. Angle
 brackets "<" and ">" delimit a value that can be edited. Quotes " inside the
 angle brackets indicate a verbatim option, often used together with a / to
 indicate multiple options. Parenthesis "(" ")" inside explain the expected unit. No
