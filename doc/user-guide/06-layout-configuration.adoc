@@ -579,7 +579,7 @@ layout file at +/var/lib/rear/layout/disklayout.conf+.
 
 The syntax is of the form
 ----------------------------------
-keyword vaule1 value2 ...
+keyword value1 value2 ...
 ----------------------------------
 where keyword denotes one kind of component (dik, partition, filesystem, ...)
 and keyword and the values are separated by single space characters
