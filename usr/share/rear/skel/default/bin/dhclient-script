@@ -6,8 +6,8 @@
 
 SAVEDIR=/var/lib/dhclient
 ETCDIR="/etc"
-LOGFACILITY="local7"
-LOGLEVEL="notice"
+export LOGFACILITY="local7"
+export LOGLEVEL="notice"
 
 # Source the network related functions:
 source /etc/scripts/dhcp-setup-functions.sh
@@ -15,10 +15,22 @@ source /etc/scripts/dhcp-setup-functions.sh
 ## MAIN
 #
 
+# variable is assigned in:
+# ???
+# shellcheck disable=SC2154
 new_prefix="$(get_prefix ${new_ip_address} ${new_subnet_mask})"
-old_prefix="$(get_prefix ${old_ip_address} ${old_subnet_mask})"
+# variable is assigned in:
+# ???
+# shellcheck disable=SC2154
+# removed due to SC2034: old_prefix="$(get_prefix ${old_ip_address} ${old_subnet_mask})"
+# variable is assigned in:
+# ???
+# shellcheck disable=SC2154
 alias_prefix="$(get_prefix ${alias_ip_address} ${alias_subnet_mask})"
 
+# variable is assigned in:
+# usr/share/rear/finalize/GNU/Linux/320_migrate_network_configuration_files.sh
+# shellcheck disable=SC2154
 case "${reason}" in
     MEDIUM)
         # Linux doesn't handle mediums (media)
@@ -28,9 +40,17 @@ case "${reason}" in
     PREINIT)
         if [ -n "${alias_ip_address}" ]; then
             # Bring down alias interface, its routes will disappear too.
+            # variable is assigned in:
+            # usr/share/rear/finalize/GNU/Linux/320_migrate_network_configuration_files.sh
+            # usr/share/rear/lib/opal-functions.sh
+            # usr/share/rear/rescue/GNU/Linux/310_network_devices.sh
+            # shellcheck disable=SC2154
             ip link set ${interface}:0 down
         fi
 
+        # variable is assigned in:
+        # ???
+        # shellcheck disable=SC2154
         if [ "${keep_old_ip}" = "yes" ]; then
             ip link set ${interface} up
         else
@@ -74,10 +94,16 @@ case "${reason}" in
         ;;
 
     EXPIRE6|RELEASE6|STOP6)
+        # variable is assigned in:
+        # ???
+        # shellcheck disable=SC2154
         if [ -z "${old_ip6_address}" ] || [ -z "${old_ip6_prefixlen}" ]; then
             exit_with_hooks 2
         fi
 
+        # variable is assigned in:
+        # ???
+        # shellcheck disable=SC2154
         ip -6 addr del ${old_ip6_address}/${old_ip6_prefixlen} \
             dev ${interface}
 
@@ -154,6 +180,9 @@ case "${reason}" in
         ;;
 
     TIMEOUT)
+        # variable is assigned in:
+        # usr/share/rear/skel/default/etc/scripts/dhcp-setup-functions.sh
+        # shellcheck disable=SC2154
         if [ -n "${new_routers}" ]; then
             if [ -n "${alias_ip_address}" ]; then
                 ip -4 addr flush dev ${interface}:0 >/dev/null 2>&1
