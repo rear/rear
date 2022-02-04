@@ -15,7 +15,8 @@ function write_protected_candidate_device() {
 }
 
 function write_protection_ids() {
-    local device="$( write_protected_candidate_device "$1" )"
+    local device
+    device="$( write_protected_candidate_device "$1" )"
     # Output the IDs for write-protection, each ID on a separated line.
 
     # At least for OUTPUT=USB $device is of the form /dev/disk/by-label/$USB_DEVICE_FILESYSTEM_LABEL
@@ -56,7 +57,8 @@ function write_protection_ids() {
 }
 
 function is_write_protected_by_id() {
-    local device="$(write_protected_candidate_device "$1")"
+    local device
+    device="$(write_protected_candidate_device "$1")"
     # returns 0 if one of the device's IDs is in the list of write-protected IDs.
 
     local ids id
@@ -88,7 +90,8 @@ function is_write_protected_by_id() {
 }
 
 function is_write_protected_by_fs_label() {
-    local device="$(write_protected_candidate_device "$1")"
+    local device
+    device="$(write_protected_candidate_device "$1")"
     # returns 0 if one of the device's file system labels matches a prefix from the list of write-protected
     # label prefixes.
 
@@ -97,7 +100,7 @@ function is_write_protected_by_fs_label() {
     while read -r partition_label; do
         if [[ -n "$partition_label" ]]; then
             for write_protected_pattern in "${WRITE_PROTECTED_FS_LABEL_PATTERNS[@]}"; do
-                if [[ "$partition_label" == $write_protected_pattern ]]; then
+                if [[ "$partition_label" == "$write_protected_pattern" ]]; then
                     Log "$device is designated as write-protected, its label '$partition_label' matches '$write_protected_pattern'"
                     return 0
                 fi
@@ -109,7 +112,8 @@ function is_write_protected_by_fs_label() {
 }
 
 function is_write_protected() {
-    local device="$(write_protected_candidate_device "$1")"
+    local device
+    device="$(write_protected_candidate_device "$1")"
     # returns 0 if the device is designated as write-protected by any of the above means.
 
     is_write_protected_by_id "$device" || is_write_protected_by_fs_label "$device"
