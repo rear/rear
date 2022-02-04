@@ -62,5 +62,5 @@ sed "s#^network_routing_setup_script=.*#network_routing_setup_script=$TMP_DIR/62
 . $TMP_DIR/350_routing.sh
 
 for f in $TMP_DIR/60-network-devices.sh $TMP_DIR/62-routing.sh; do
-	grep -v "dev eth0" $f > $RESULT_DIR/$(basename $f)
+	grep -v "dev eth0" $f > $RESULT_DIR/"$(basename $f)"
 done
