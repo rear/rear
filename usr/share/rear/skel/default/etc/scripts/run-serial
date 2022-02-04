@@ -4,7 +4,7 @@
 #s1:2345:respawn:/sbin/agetty 115200 ttyS1 vt100
 
 for nr in 0 1 ; do
-    if $(grep -q ^s$nr: /etc/inittab) ; then
+    if grep -q ^s$nr: /etc/inittab ; then
         getty=$(grep ^s$nr: /etc/inittab | cut -d: -f4)
         $getty
     fi
