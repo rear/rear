@@ -22,7 +22,7 @@ if [[ ! -d /dev/pts ]] ; then
 fi
 
 # was missing on ia64 rhel5
-if [[ ! -L /dev/fd ]] ; then 
+if [[ ! -L /dev/fd ]] ; then
     ln -s /proc/self/fd /dev/fd
 fi
 
@@ -35,9 +35,10 @@ ip addr add 127.0.0.1/8 dev lo
 ip link set lo up
 
 # set hostname
-export HOSTNAME="$(cat /etc/HOSTNAME)" # set hostname in THIS shell
+HOSTNAME="$(cat /etc/HOSTNAME)" # set hostname in THIS shell
+export HOSTNAME
 hostname "$HOSTNAME" # set hostname in the system
 
-echo Hostname set to $(uname -n)
+echo Hostname set to "$(uname -n)"
 
 
