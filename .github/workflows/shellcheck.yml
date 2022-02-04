@@ -2,14 +2,18 @@ name: Shellcheck Lint
 
 on:
   push:
-    branches:
+    paths:
       # Run workflow on every push
-      - '**'        # matches every branch
+      # only if a file within the specified paths has been changed:
+      - 'tests/**'
+      - 'usr/**'
 
   pull_request:
-    branches:
+    paths:
       # Run workflow on every push
-      - '**'        # matches every branch
+      # only if a file within the specified paths has been changed:
+      - 'tests/**'
+      - 'usr/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
