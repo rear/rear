@@ -63,7 +63,9 @@ function is_debug_password() {
 
     # Extract hash algorithm and salt from the configured hash signature
     local method salt _
-    IFS='\$' read -r _ method salt _ <<<"$OPAL_PBA_DEBUG_PASSWORD"
+    # changed due to SC2141: This IFS value contains a literal backslash.
+    # IFS='\$' read -r _ method salt _ <<<"$OPAL_PBA_DEBUG_PASSWORD"
+    IFS="$(printf '\$')" read -r _ method salt _ <<<"$OPAL_PBA_DEBUG_PASSWORD"
 
     # Compute signature of the password to verify
     password_signature="$(openssl passwd -"$method" -salt "$salt" "$password")"
@@ -183,7 +185,7 @@ done
 
 
 # Find TCG Opal 2-compliant disks
-devices=( $(opal_devices) )
+mapfile -t devices < <(opal_devices)
 declare -i device_count=${#devices[@]}
 [[ -n "$OPAL_PBA_DEBUG_DEVICE_COUNT" ]] && device_count="$OPAL_PBA_DEBUG_DEVICE_COUNT"
 if (( device_count == 0 )); then
