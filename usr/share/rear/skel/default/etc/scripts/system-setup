@@ -10,7 +10,8 @@
 shopt -s nullglob
 
 # Use an artificial array to get the kernel command line parameters as array elements
-kernel_command_line=( $( cat /proc/cmdline ) )
+#kernel_command_line=( $( cat /proc/cmdline ) )
+mapfile -t kernel_command_line < <( cat /proc/cmdline )
 
 function rear_debug() {
     for kernel_command_line_parameter in "${kernel_command_line[@]}" ; do
@@ -147,6 +148,12 @@ fi
 
 # Launch rear recover automatically:
 if automatic_recovery ; then
+    # variable is assigned in:
+    # usr/share/rear/layout/prepare/default/300_map_disks.sh
+    # usr/share/rear/lib/_input-output-functions.sh
+    # usr/share/rear/lib/opal-functions.sh
+    # usr/share/rear/skel/default/etc/scripts/system-setup
+    # shellcheck disable=SC2034
     choices=( "View Relax-and-Recover log file(s)"
               "Go to Relax-and-Recover shell"
             )
@@ -159,7 +166,8 @@ if automatic_recovery ; then
         echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
     fi
     PS3="Select what to do "
-    select choice in "${choices[@]}" ; do
+    # SC2034: choice appears unused: select choice in "${choices[@]}" ; do
+    select REPLY in "${choices[@]}" ; do
         case "$REPLY" in
             (1)
                 # Do not assume the ReaR log file is named rear-$HOSTNAME.log
@@ -197,7 +205,8 @@ if unattended_recovery ; then
     else
         echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
         PS3="Select what to do "
-        select choice in "${choices[@]}" ; do
+        # SC2034: choice appears unused: select choice in "${choices[@]}" ; do
+        select REPLY in "${choices[@]}" ; do
             case "$REPLY" in
                 (1)
                     # Do not assume the ReaR log file is named rear-$HOSTNAME.log
