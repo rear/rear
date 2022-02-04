@@ -50,7 +50,7 @@ jobs:
       - name: Run Shellcheck
         run: |
           set +e
-          find  ./*/ -type f | while read -r sh; do
+          find  ./*/ -type f | sort | while read -r sh; do
             if [ "$(file --brief --mime-type "$sh")" == 'text/x-shellscript' ]; then
               echo "shellcheck'ing $sh"
               if ! shellcheck --color=always --severity=warning --exclude=SC1091,SC1090 "$sh"; then
