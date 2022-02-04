@@ -41,7 +41,7 @@ function apply_bash_flags_and_options_commands () {
 # At the very beginning save initial bash flags and options in a global readonly variable
 # so that exactly the initial bash flags and options can be restored if needed via
 #   apply_bash_flags_and_options_commands "$INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS"
-readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_commands )"
+# removed due to SC2034: readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_commands )"
 
 # Enable as needed for development of fail-safe code:
 # set -ue -o pipefail
@@ -70,9 +70,13 @@ readonly BUG_REPORT_SITE="https://github.com/rear/rear/issues"
 # where "a bit later" could be even the next day when midnight passes in between:
 readonly START_SECONDS=$( date +%s )
 # START_DATE_TIME_NUMBER has the form YYYYmmddHHMMSS
-readonly START_DATE_TIME_NUMBER=$( date -d@$START_SECONDS +%Y%m%d%H%M%S )
+# variable is used in:
+# share/rear/layout/save/GNU/Linux/100_create_layout_file.sh
+# share/rear/lib/layout-functions.sh
+# shellcheck disable=SC2034
+readonly export START_DATE_TIME_NUMBER=$( date -d@"$START_SECONDS" +%Y%m%d%H%M%S )
 # START_DATE_TIME_STRING has the form YYYY-mm-dd HH:MM:SS
-readonly START_DATE_TIME_STRING=$( date -d@$START_SECONDS +'%F %T' )
+readonly START_DATE_TIME_STRING=$( date -d@"$START_SECONDS" +'%F %T' )
 
 # Provide the command line options in an array so that other scripts may read them:
 readonly CMD_OPTS=( "$@" )
@@ -90,8 +94,8 @@ EXIT_FAIL_MESSAGE=1
 
 # Find out if we're running from checkout
 REAR_DIR_PREFIX=""
-readonly SCRIPT_FILE="$( readlink -f $( type -p "$0" || echo "$0" ) )"
-if test "$SCRIPT_FILE" != "$( readlink -f /usr/sbin/$PROGRAM )" ; then
+readonly SCRIPT_FILE="$( readlink -f "$( type -p "$0" || echo "$0" )" )"
+if test "$SCRIPT_FILE" != "$( readlink -f /usr/sbin/"$PROGRAM" )" ; then
     REAR_DIR_PREFIX=${SCRIPT_FILE%/usr/sbin/$PROGRAM}
 fi
 readonly REAR_DIR_PREFIX
@@ -109,7 +113,10 @@ LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
 # is also the working directory of all the other scripts and config files
 # that get sourced via the Source() function in lib/framework-functions.sh
 # cf. https://github.com/rear/rear/issues/2461
-readonly WORKING_DIR="$( pwd )"
+# variable is assigned in:
+# share/rear/lib/framework-functions.sh
+# shellcheck disable=SC2034
+readonly export WORKING_DIR="$( pwd )"
 
 # Generic global variables that are not meant to be configured by the user
 # (i.e. that do not belong into usr/share/rear/conf/default.conf),
@@ -117,11 +124,14 @@ readonly WORKING_DIR="$( pwd )"
 # and https://github.com/rear/rear/issues/708
 # Location of the disklayout.conf file created by savelayout
 # (no readonly DISKLAYOUT_FILE because it is also set in checklayout-workflow.sh and mkbackuponly-workflow.sh):
-DISKLAYOUT_FILE="$VAR_DIR/layout/disklayout.conf"
+export DISKLAYOUT_FILE="$VAR_DIR/layout/disklayout.conf"
 # Location of the root of the filesystem tree of the target system
 # in particular the root of the filesystem tree of the to-be-recovered-system in the recovery system
 # i.e. the mountpoint in the recovery system where the filesystem tree of the to-be-recovered-system is mounted:
-readonly TARGET_FS_ROOT="/mnt/local"
+# variable is assigned in:
+# many (101) files!
+# shellcheck disable=SC2034
+readonly export TARGET_FS_ROOT="/mnt/local"
 
 # Initialize defaults: empty value means "false"/"no":
 DEBUG=""
@@ -139,7 +149,7 @@ WORKFLOW=""
 
 # Parse options
 help_note_text="Use '$PROGRAM --help' or 'man $PROGRAM' for more information."
-if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )" ; then
+if ! OPTS="$( getopt -n "$PROGRAM" -o "c:C:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )" ; then
     echo "$help_note_text"
     exit 1
 fi
@@ -229,6 +239,9 @@ while true ; do
             break
             ;;
         (-*)
+            # variable is assigned in:
+            # share/rear/lib/_input-output-functions.sh
+            # shellcheck disable=SC2154
             echo "$PROGNAME: unrecognized option '$option'"
             echo "$help_note_text"
             exit 1
@@ -271,11 +284,14 @@ esac
 # Only in debug modes stdout and stderr are redirected to the log
 # so setting that variables only makes sense in debug modes.
 # Cf. https://github.com/rear/rear/issues/2416
-v=""
-verbose=""
+export v=""
+export verbose=""
 if test "$DEBUG" ; then
-    v="-v"
-    verbose="--verbose"
+    export v="-v"
+    # variable is assigned in:
+    # many (29) files!
+    # shellcheck disable=SC2034
+    export verbose="--verbose"
 fi
 
 # Mark variables that are not meant to be changed later as constants (i.e. readonly).
@@ -283,10 +299,42 @@ fi
 # CONFIG_DIR because "rear recover" sets it in /etc/rear/rescue.conf in the recovery system
 # WORKFLOW because for the udev workflow WORKFLOW is set to the actual workflow
 # KERNEL_VERSION because if empty it is set when sourcing config files below:
-readonly ARGS
-readonly CONFIG_APPEND_FILES
-readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DEBUG_OUTPUT_DEV DISPENSABLE_OUTPUT_DEV
-readonly SIMULATE STEPBYSTEP VERBOSE
+readonly export ARGS
+readonly export CONFIG_APPEND_FILES
+# variables are used in:
+# share/rear/lib/_input-output-functions.sh
+# share/rear/lib/framework-functions.sh
+# share/rear/lib/opaladmin-workflow.sh
+# share/rear/output/ISO/Linux-i386/850_check_for_errors.sh
+# shellcheck disable=SC2034
+readonly export DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DEBUG_OUTPUT_DEV DISPENSABLE_OUTPUT_DEV
+# variables are used in:
+# share/rear/backup/BORG/default/500_make_backup.sh
+# share/rear/backup/BORG/default/800_prune_old_backups.sh
+# share/rear/backup/DUPLICITY/default/500_make_duplicity_backup.sh
+# share/rear/lib/_input-output-functions.sh
+# share/rear/lib/bashrc.rear
+# share/rear/lib/dump-workflow.sh
+# share/rear/lib/finalizeonly-workflow.sh
+# share/rear/lib/finalizeonly-workflow.sh
+# share/rear/lib/format-workflow.sh
+# share/rear/lib/framework-functions.sh
+# share/rear/lib/framework-functions.sh
+# share/rear/lib/help-workflow.sh
+# share/rear/lib/help-workflow.sh
+# share/rear/lib/layoutonly-workflow.sh
+# share/rear/lib/mountonly-workflow.sh
+# share/rear/lib/opaladmin-workflow.sh
+# share/rear/lib/recover-workflow.sh
+# share/rear/lib/savelayout-workflow.sh
+# share/rear/lib/shell-workflow.sh
+# share/rear/lib/shell-workflow.sh
+# share/rear/lib/udev-workflow.sh
+# share/rear/lib/udev-workflow.sh
+# share/rear/lib/validate-workflow.sh
+# share/rear/restore/BORG/default/400_restore_backup.sh
+# shellcheck disable=SC2034
+readonly export SIMULATE STEPBYSTEP VERBOSE
 
 # The udev workflow is a special case because it is only a wrapper workflow
 # that calls an actual workflow that is specified as $UDEV_WORKFLOW
@@ -324,7 +372,30 @@ shopt -s nullglob extglob
 # Save the current default bash flags and options in a global readonly variable
 # so that exactly the default bash flags and options can be restored if needed via
 #   apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
-readonly DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_commands )"
+# variables are used in:
+# usr/share/rear/backup/YUM/default/500_make_backup.sh
+# usr/share/rear/backup/YUM/default/600_capture_selinux_contexts.sh
+# usr/share/rear/backup/ZYPPER/default/500_make_backup.sh
+# usr/share/rear/lib/_input-output-functions.sh
+# usr/share/rear/prep/NETFS/default/070_set_backup_archive.sh
+# usr/share/rear/prep/YUM/default/400_prep_yum.sh
+# usr/share/rear/prep/ZYPPER/default/400_prep_zypper.sh
+# usr/share/rear/restore/YUM/default/400_restore_packages.sh
+# usr/share/rear/restore/YUM/default/410_restore_backup.sh
+# usr/share/rear/restore/YUM/default/600_restore_selinux_contexts.sh
+# usr/share/rear/restore/YUM/default/940_generate_fstab.sh
+# usr/share/rear/restore/YUM/default/950_grub2_mkconfig.sh
+# usr/share/rear/restore/YUM/default/950_grub_mkconfig.sh
+# usr/share/rear/restore/YUM/default/970_set_root_password.sh
+# usr/share/rear/restore/YUM/default/980_initial_network_setup.sh
+# usr/share/rear/restore/ZYPPER/default/400_restore_backup.sh
+# usr/share/rear/restore/ZYPPER/default/940_generate_fstab.sh
+# usr/share/rear/restore/ZYPPER/default/950_grub2_mkconfig.sh
+# usr/share/rear/restore/ZYPPER/default/970_set_root_password.sh
+# usr/share/rear/restore/ZYPPER/default/980_initial_network_setup.sh
+# usr/share/rear/verify/USB/NETFS/default/540_choose_backup_archive.sh
+# shellcheck disable=SC2034
+readonly export DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_commands )"
 
 # Forget all remembered full pathnames of commands:
 hash -r
@@ -336,7 +407,7 @@ export LC_CTYPE=C LC_ALL=C LANG=C
 # setting the right RUNTIME_LOGFILE value requires values from default.conf
 # in particular the default LOGFILE value and the values of the
 # LOCKLESS_WORKFLOWS and SIMULTANEOUS_RUNNABLE_WORKFLOWS arrays:
-if ! source $SHARE_DIR/conf/default.conf ; then
+if ! source "$SHARE_DIR"/conf/default.conf ; then
     echo -e "ERROR: BUG in $PRODUCT\nFailed to source $SHARE_DIR/conf/default.conf\nPlease report it at $BUG_REPORT_SITE" >&2
     exit 1
 fi
@@ -404,7 +475,7 @@ fi
 # so that ReaR functions for actually intended user messages can use fd7 and fd8
 # to show messages to the user regardless where to STDOUT and STDERR are redirected
 # and fd6 to get input from the user regardless where to STDIN is redirected:
-if ! source $SHARE_DIR/lib/_input-output-functions.sh ; then
+if ! source "$SHARE_DIR"/lib/_input-output-functions.sh ; then
     echo -e "ERROR: BUG in $PRODUCT\nFailed to source $SHARE_DIR/lib/_input-output-functions.sh\nPlease report it at $BUG_REPORT_SITE" >&2
     exit 1
 fi
@@ -426,8 +497,8 @@ if test "$WORKFLOW" != "help" ; then
     BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
     ROOTFS_DIR=$BUILD_DIR/rootfs
     TMP_DIR=$BUILD_DIR/tmp
-    mkdir -p $ROOTFS_DIR || Error "Could not create $ROOTFS_DIR"
-    mkdir -p $TMP_DIR || Error "Could not create $TMP_DIR"
+    mkdir -p "$ROOTFS_DIR" || Error "Could not create $ROOTFS_DIR"
+    mkdir -p "$TMP_DIR" || Error "Could not create $TMP_DIR"
     # Since the above BUILD_DIR="$( mktemp ... )" does not always return a path under /tmp
     # the build directory must be excluded from the backup to be on the safe side:
     BACKUP_PROG_EXCLUDE+=( "$BUILD_DIR" )
@@ -437,7 +508,7 @@ fi
 test -r "$RUNTIME_LOGFILE" && mv -f "$RUNTIME_LOGFILE" "$RUNTIME_LOGFILE".old 2>/dev/null
 
 # Start logging:
-mkdir -p $LOG_DIR || Error "Could not create $LOG_DIR"
+mkdir -p "$LOG_DIR" || Error "Could not create $LOG_DIR"
 rm -f "$RUNTIME_LOGFILE"
 cat /dev/null >"$RUNTIME_LOGFILE"
 # The log file may contain sensitive information so only root should be able to read it:
@@ -467,7 +538,7 @@ if test "$DEBUG" ; then
     # because both stdout and stderr use one same file descriptor:
     exec 1>&2
 else
-    if test -d $TMP_DIR ; then
+    if test -d "$TMP_DIR" ; then
         STDOUT_STDERR_FILE="$TMP_DIR/$PROGRAM.$WORKFLOW.stdout_stderr"
         # The stdout and stderr file that is used during runtime must not be changed:
         readonly STDOUT_STDERR_FILE
@@ -486,28 +557,55 @@ fi
 
 # Include functions after RUNTIME_LOGFILE is set and readonly
 # so that functions can use a fixed RUNTIME_LOGFILE value:
-for script in $SHARE_DIR/lib/[a-z]*.sh ; do
-    source $script || BugError "Failed to source $script"
+for script in "$SHARE_DIR"/lib/[a-z]*.sh ; do
+    source "$script" || BugError "Failed to source $script"
 done
 
 # Show initial startup messages:
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
     LogPrint "Running $PROGRAM $WORKFLOW (PID $MASTER_PID date $START_DATE_TIME_STRING)"
-    DebugPrint "Command line options: $0 ${CMD_OPTS[@]}"
+    DebugPrint "Command line options: $0 ${CMD_OPTS[*]}"
     LogPrint "Using log file: $RUNTIME_LOGFILE"
     DebugPrint "Using build area: $BUILD_DIR"
 fi
 
 # In DEBUG mode keep by default the build area but that can be overridden in user config files
 # therefore no readonly KEEP_BUILD_DIR (it is also set to 1 in build/default/990_verify_rootfs.sh):
-test "$DEBUG" && KEEP_BUILD_DIR=1 || true
+# variables are used in:
+# share/rear/build/OPALPBA/Linux-i386/391_list_executable_dependencies.sh
+# share/rear/build/default/990_verify_rootfs.sh
+# share/rear/conf/default.conf
+# share/rear/lib/_input-output-functions.sh
+# shellcheck disable=SC2034
+if [ -n "$DEBUG" ]; then
+    KEEP_BUILD_DIR=1
+else
+    true
+fi
+# before SC2015: test "$DEBUG" && KEEP_BUILD_DIR=1 || true
 
 # Check if we are in recovery mode:
-test -e "/etc/rear-release" && RECOVERY_MODE="y" || true
-readonly RECOVERY_MODE
+# before SC2015: test -e "/etc/rear-release" && RECOVERY_MODE="y" || true
+if [ -e "/etc/rear-release" ]; then
+    # variables are used in:
+    # share/rear/restore/BAREOS/default/400_restore_backup.sh
+    # shellcheck disable=SC2034
+    export RECOVERY_MODE='y'
+else
+    true
+fi
+# variables are used in:
+# share/rear/restore/BAREOS/default/400_restore_backup.sh
+# shellcheck disable=SC2034
+readonly export RECOVERY_MODE
 
-test "$SIMULATE" && LogPrint "Simulation mode activated, Relax-and-Recover base directory: $SHARE_DIR" || true
+# before SC2015: test "$SIMULATE" && LogPrint "Simulation mode activated, Relax-and-Recover base directory: $SHARE_DIR" || true
+if [ -n "$SIMULATE" ]; then
+    LogPrint "Simulation mode activated, Relax-and-Recover base directory: $SHARE_DIR"
+else
+    true
+fi
 
 if test "$DEBUGSCRIPTS_ARGUMENT" ; then
     Debug "Current set of flags is '$-'"
@@ -538,7 +636,7 @@ done
 for config in site local rescue ; do
     if test -r "$CONFIG_DIR/$config.conf" ; then
         # Delete all characters except '\r' and error out if the resulting string is not empty:
-        test "$( tr -d -c '\r' < $CONFIG_DIR/$config.conf )" && Error "Carriage return character in $CONFIG_DIR/$config.conf (perhaps DOS or Mac format)"
+        test "$( tr -d -c '\r' < "$CONFIG_DIR"/$config.conf )" && Error "Carriage return character in $CONFIG_DIR/$config.conf (perhaps DOS or Mac format)"
         Source "$CONFIG_DIR/$config.conf" || Error "Failed to Source $CONFIG_DIR/$config.conf"
     fi
 done
@@ -567,11 +665,12 @@ if test "$CONFIG_APPEND_FILES" ; then
                 # try if 'foo.conf' exists and if yes, use that:
                 if test -r "$config_append_file_path" ; then
                     COPY_AS_IS+=( "$config_append_file_path" )
-                else if test -r "$config_append_file_path.conf" ; then
-                         COPY_AS_IS+=( "$config_append_file_path.conf" )
-                     else
-                         LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
-                     fi
+                else
+                    if test -r "$config_append_file_path.conf" ; then
+                        COPY_AS_IS+=( "$config_append_file_path.conf" )
+                    else
+                        LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
+                    fi
                 fi
                 ;;
             (*)
@@ -583,26 +682,49 @@ if test "$CONFIG_APPEND_FILES" ; then
         if test -r "$config_append_file_path" ; then
             LogPrint "Sourcing additional configuration file '$config_append_file_path'"
             Source "$config_append_file_path" || Error "Failed to Source $config_append_file_path"
-        else if test -r "$config_append_file_path.conf" ; then
+        elif test -r "$config_append_file_path.conf" ; then
                  LogPrint "Sourcing additional configuration file '$config_append_file_path.conf'"
                  Source "$config_append_file_path.conf" || Error "Failed to Source $config_append_file_path.conf"
              else
                  LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
              fi
-        fi
+    #    fi
     done
 fi
 
 # Now SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR and KERNEL_VERSION should be set to a fixed value:
-readonly SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR KERNEL_VERSION
+# variables are used in:
+# share/rear/build/GNU/Linux/400_copy_modules.sh
+# share/rear/conf/default.conf
+# share/rear/finalize/Fedora/i386/550_rebuild_initramfs.sh
+# share/rear/lib/bootloader-functions.sh
+# share/rear/lib/help-workflow.sh
+# share/rear/lib/linux-functions.sh
+# share/rear/output/USB/Linux-i386/300_create_extlinux.sh
+# share/rear/prep/GNU/Linux/400_guess_kernel.sh
+# share/rear/rescue/GNU/Linux/230_storage_and_network_modules.sh
+# share/rear/rescue/GNU/Linux/240_kernel_modules.sh
+# share/rear/rescue/GNU/Linux/260_collect_initrd_modules.sh
+# shellcheck disable=SC2034
+readonly export SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR KERNEL_VERSION
 
 # Enable progress subsystem only in verbose mode, set some stuff that others can use:
 if test "$VERBOSE" ; then
-    source $SHARE_DIR/lib/progresssubsystem.nosh || BugError "Failed to source $SHARE_DIR/lib/progresssubsystem.nosh"
+    source "$SHARE_DIR"/lib/progresssubsystem.nosh || BugError "Failed to source $SHARE_DIR/lib/progresssubsystem.nosh"
 fi
 
 SourceStage "init"
 
+# variables are used in:
+# share/rear/lib/bootloader-functions.sh
+# share/rear/output/ISO/Linux-ia64/300_create_bootimg.sh
+# share/rear/output/PXE/default/800_copy_to_tftp.sh
+# share/rear/output/RSYNC/default/900_copy_result_files.sh
+# share/rear/output/USB/Linux-i386/300_create_extlinux.sh
+# share/rear/output/default/950_copy_result_files.sh
+# share/rear/output/default/950_email_result_files.sh
+# share/rear/rescue/default/200_etc_issue.sh
+# shellcheck disable=SC2034
 readonly VERSION_INFO="
 $PRODUCT $VERSION / $RELEASE_DATE
 
@@ -646,7 +768,7 @@ fi
 # then the exit code is usually 143 = 128 + 15 (15 = SIGTERM from the USR1 trap)
 # and the Error function results an "ERROR: ..." syslog message.
 # Set EXIT_FAIL_MESSAGE to 0 to avoid a false exit failure message:
-EXIT_FAIL_MESSAGE=0
+export EXIT_FAIL_MESSAGE=0
 # There should be no syslog message for the help workflow:
 if test "$WORKFLOW" != "help" ; then
     if test $EXIT_CODE -eq 0 ; then
