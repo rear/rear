@@ -2,7 +2,11 @@
 # system-status.sh
 # give s summary information about important system infos
 (
+# variable is assigned in:
+# usr/share/rear/lib/_input-output-functions.sh
+# shaellcheck disable=SC2034
 LF="$(echo)"
+export LF
 echo "---------------------------------------------------------------"
 echo "System Status Overview for $(hostname -f)"
 echo "I am $(uname -a)"
@@ -14,7 +18,7 @@ for k in $(ip l |grep \< | cut -d : -f 2) ; do
 	ethtool -i $k 2>&1
 	ethtool $k 2>&1
 done
-if test $(brctl show | wc -l) -gt 1 ; then
+if test "$(brctl show | wc -l)" -gt 1 ; then
 	echo "---- Bridge configuration:"
 	brctl show
 	for k in $(brctl show | grep '\.' | tr -s "\t " " " | cut -d " " -f 1) ; do
