@@ -19,9 +19,9 @@ while read lvmdev name mpdev junk ; do
     # Remember, multipath devices from a volume group that is "excluded" should be 'commented out'
     device=$(echo $mpdev | cut -c1-45)
     while read LINE ; do
-        # Now we need to comment all lines that contain "$devices" in the LAYOUT_FILE
+        # Now we need to comment all lines that contain "$device" in the LAYOUT_FILE
         sed -i "s|^$LINE|\#$LINE|" "$LAYOUT_FILE"
-    done < <(grep "$device" $LAYOUT_FILE | grep -v "^#")
+    done < <(grep " $device " $LAYOUT_FILE | grep -v "^#")
     DebugPrint "Disabling multipath device $device belonging to disabled 'lvmdev $name' in $LAYOUT_FILE"
 done < <(grep "^#lvmdev" $LAYOUT_FILE)
 
@@ -31,7 +31,7 @@ done < <(grep "^#lvmdev" $LAYOUT_FILE)
 while read LINE ; do
     # multipath /dev/mapper/360060e8007e2e3000030e2e300002065 /dev/sdae,/dev/sdat,/dev/sdbi,/dev/sdp
     device=$(echo $LINE | awk '{print $2}' | cut -c1-45)
-    num=$(grep "$device" $LAYOUT_FILE | grep -v "^#" | wc -l)
+    num=$(grep " $device " $LAYOUT_FILE | grep -v "^#" | wc -l)
     if [ $num -lt 2 ] ; then
         # If the $device is only seen once (in a uncommented line) then the multipath is not in use
         sed -i "s|^$LINE|\#$LINE|" "$LAYOUT_FILE"
