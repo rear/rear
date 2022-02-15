@@ -10,8 +10,7 @@
 shopt -s nullglob
 
 # Use an artificial array to get the kernel command line parameters as array elements
-#kernel_command_line=( $( cat /proc/cmdline ) )
-mapfile -t kernel_command_line < <( cat /proc/cmdline )
+mapfile -t kernel_command_line < /proc/cmdline
 
 function rear_debug() {
     for kernel_command_line_parameter in "${kernel_command_line[@]}" ; do

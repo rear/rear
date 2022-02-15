@@ -63,8 +63,6 @@ function is_debug_password() {
 
     # Extract hash algorithm and salt from the configured hash signature
     local method salt _
-    # changed due to SC2141: This IFS value contains a literal backslash.
-    # IFS='\$' read -r _ method salt _ <<<"$OPAL_PBA_DEBUG_PASSWORD"
     IFS="$(printf '\$')" read -r _ method salt _ <<<"$OPAL_PBA_DEBUG_PASSWORD"
 
     # Compute signature of the password to verify
