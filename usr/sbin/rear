@@ -68,15 +68,18 @@ readonly BUG_REPORT_SITE="https://github.com/rear/rear/issues"
 # a small probability that the clock advances by a second between two 'date' calls
 # and then START_DATE_TIME_STRING would be a bit later than START_DATE_TIME_NUMBER
 # where "a bit later" could be even the next day when midnight passes in between:
-readonly START_SECONDS=$( date +%s )
+START_SECONDS=$( date +%s )
+readonly START_SECONDS
 # START_DATE_TIME_NUMBER has the form YYYYmmddHHMMSS
+START_DATE_TIME_NUMBER=$( date -d@"$START_SECONDS" +%Y%m%d%H%M%S )
 # variable is used in:
 # share/rear/layout/save/GNU/Linux/100_create_layout_file.sh
 # share/rear/lib/layout-functions.sh
 # shellcheck disable=SC2034
-readonly export START_DATE_TIME_NUMBER=$( date -d@"$START_SECONDS" +%Y%m%d%H%M%S )
+readonly export START_DATE_TIME_NUMBER
 # START_DATE_TIME_STRING has the form YYYY-mm-dd HH:MM:SS
-readonly START_DATE_TIME_STRING=$( date -d@"$START_SECONDS" +'%F %T' )
+START_DATE_TIME_STRING=$( date -d@"$START_SECONDS" +'%F %T' )
+readonly START_DATE_TIME_STRING
 
 # Provide the command line options in an array so that other scripts may read them:
 readonly CMD_OPTS=( "$@" )
@@ -94,7 +97,8 @@ EXIT_FAIL_MESSAGE=1
 
 # Find out if we're running from checkout
 REAR_DIR_PREFIX=""
-readonly SCRIPT_FILE="$( readlink -f "$( type -p "$0" || echo "$0" )" )"
+SCRIPT_FILE="$( readlink -f "$( type -p "$0" || echo "$0" )" )"
+readonly SCRIPT_FILE
 if test "$SCRIPT_FILE" != "$( readlink -f /usr/sbin/"$PROGRAM" )" ; then
     REAR_DIR_PREFIX=${SCRIPT_FILE%/usr/sbin/$PROGRAM}
 fi
@@ -109,6 +113,7 @@ CONFIG_DIR="$REAR_DIR_PREFIX/etc/rear"
 VAR_DIR="$REAR_DIR_PREFIX/var/lib/rear"
 LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
 
+WORKING_DIR="$( pwd )"
 # The current working directory when this script (usr/sbin/rear) is launched
 # is also the working directory of all the other scripts and config files
 # that get sourced via the Source() function in lib/framework-functions.sh
@@ -116,7 +121,7 @@ LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
 # variable is assigned in:
 # share/rear/lib/framework-functions.sh
 # shellcheck disable=SC2034
-readonly export WORKING_DIR="$( pwd )"
+readonly export WORKING_DIR
 
 # Generic global variables that are not meant to be configured by the user
 # (i.e. that do not belong into usr/share/rear/conf/default.conf),
@@ -372,6 +377,7 @@ shopt -s nullglob extglob
 # Save the current default bash flags and options in a global readonly variable
 # so that exactly the default bash flags and options can be restored if needed via
 #   apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
+DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_commands )"
 # variables are used in:
 # usr/share/rear/backup/YUM/default/500_make_backup.sh
 # usr/share/rear/backup/YUM/default/600_capture_selinux_contexts.sh
@@ -395,7 +401,7 @@ shopt -s nullglob extglob
 # usr/share/rear/restore/ZYPPER/default/980_initial_network_setup.sh
 # usr/share/rear/verify/USB/NETFS/default/540_choose_backup_archive.sh
 # shellcheck disable=SC2034
-readonly export DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_commands )"
+readonly export DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS
 
 # Forget all remembered full pathnames of commands:
 hash -r
@@ -715,6 +721,15 @@ fi
 
 SourceStage "init"
 
+VERSION_INFO="
+$PRODUCT $VERSION / $RELEASE_DATE
+
+$PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
+the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
+
+Host $( uname -n ) using Backup $BACKUP and Output $OUTPUT
+Build date: $( date -R )
+"
 # variables are used in:
 # share/rear/lib/bootloader-functions.sh
 # share/rear/output/ISO/Linux-ia64/300_create_bootimg.sh
@@ -725,15 +740,7 @@ SourceStage "init"
 # share/rear/output/default/950_email_result_files.sh
 # share/rear/rescue/default/200_etc_issue.sh
 # shellcheck disable=SC2034
-readonly VERSION_INFO="
-$PRODUCT $VERSION / $RELEASE_DATE
-
-$PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
-the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
-
-Host $( uname -n ) using Backup $BACKUP and Output $OUTPUT
-Build date: $( date -R )
-"
+readonly VERSION_INFO
 
 # Check for and run the requested workflow:
 if has_binary WORKFLOW_$WORKFLOW ; then
