@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# removed due to SC2034: CONFIG_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+CONFIG_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+export CONFIG_DIR
 
 export SIMPLIFY_BONDING=y
 export SIMPLIFY_BRIDGE=y

@@ -66,8 +66,7 @@ all:
 help:
 	@echo -e "Relax-and-Recover make targets:\n\
 \n\
-  test            - Shellcheck source code\n\
-  validate        - Check source code\n\
+  validate        - Shellchecking scripts and Validating scripts and configuration\n\
   install         - Install Relax-and-Recover (may replace files)\n\
   uninstall       - Uninstall Relax-and-Recover (may remove files)\n\
   dist            - Create tar file in dist/\n\
@@ -89,6 +88,21 @@ clean:
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
+	@echo -e "\033[1m== Shellchecking script files ==\033[0;0m"
+	type -p shellcheck || { echo "ERROR: shellcheck not installed."; exit 1; }
+	find  ./*/ -type f | sort | while read -r sh; do \
+	if [ "$$(file --brief --mime-type "$$sh")" == 'text/x-shellscript' ]; then \
+		echo "shellcheck'ing $$sh" ; \
+		if ! shellcheck --color=always --severity=warning --exclude=SC1091,SC1090 "$$sh"; then \
+			touch ./some_scripts_have_failed_shellcheck ; \
+		fi \
+	fi \
+	done
+	if [ -f ./some_scripts_have_failed_shellcheck ]; then \
+		echo "Shellcheck failed for one or more shellscript(s)"; \
+		rm ./some_scripts_have_failed_shellcheck ; \
+		exit 1 ; \
+	fi
 	@echo -e "\033[1m== Validating scripts and configuration ==\033[0;0m"
 	find etc/ usr/share/rear/conf/ -name '*.conf' | xargs -n 1 bash -n
 	bash -n $(rearbin)
@@ -113,23 +127,6 @@ man:
 doc:
 	@echo -e "\033[1m== Prepare documentation ==\033[0;0m"
 	$(MAKE) -C doc docs
-
-test:
-	@echo -e "\033[1m== Shellchecking script files ==\033[0;0m"
-	type -p shellcheck || { echo "ERROR: shellcheck not installed."; exit 1; }
-	find  ./*/ -type f | sort | while read -r sh; do \
-	if [ "$$(file --brief --mime-type "$$sh")" == 'text/x-shellscript' ]; then \
-		echo "shellcheck'ing $$sh" ; \
-		if ! shellcheck --color=always --severity=warning --exclude=SC1091,SC1090 "$$sh"; then \
-			touch ./some_scripts_have_failed_shellcheck ; \
-		fi \
-	fi \
-	done
-	if [ -f ./some_scripts_have_failed_shellcheck ]; then \
-		echo "Shellcheck failed for one or more shellscript(s)"; \
-		rm ./some_scripts_have_failed_shellcheck ; \
-		exit 1 ; \
-	fi
 
 install-config:
 	@echo -e "\033[1m== Installing configuration ==\033[0;0m"
