@@ -3,8 +3,13 @@
 
 test -d $VAR_DIR/recovery || mkdir -p $VAR_DIR/recovery
 
-local bootdir="$( echo -n /boot/ )"
-test -d "$bootdir" || $bootdir='/boot/'
+# See the code in prep/GNU/Linux/300_include_grub_tools.sh
+# that sets grubdir via
+#   local grubdir="$( echo -n /boot/grub* )"
+# where 'shopt -s nullglob' results nothing when nothing matches
+# but that is not needed here to set a fixed bootdir="/boot"
+# cf. https://github.com/rear/rear/issues/1040#issuecomment-1034890880
+local bootdir="/boot/"
 
 # cf. https://github.com/rear/rear/issues/2137
 # findmnt is used the same as grub-probe to find the device where /boot is mounted
