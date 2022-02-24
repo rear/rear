@@ -40,19 +40,20 @@ jobstatus=Unknown
 
 if jobid=$(qoperation restore -af $TMP_DIR/commvault.restore.options) ; then
 	jobid=${jobid// /}	# remove trailing blanks
-    prevstatus=
+    	prevstatus=
 
 	LogPrint "Restoring data with Commvault (job $jobid)"
 
 	while true
-    do
+	do
+		sleep 60
 		# output of qlist job -co sc -j ## :
 
-        # STATUS     COMPLETE PERCENTAGE
-        # ------     -------------------
-        # Running    5
+        	# STATUS     COMPLETE PERCENTAGE
+        	# ------     -------------------
+        	# Running    5
 
-        jobstatus=$(/opt/commvault/Base/qlist job -j $job -co sc -tf qsession | tail -n 1)
+        	jobstatus=$(/opt/commvault/Base/qlist job -j $jobid -co sc | tail -n 1)
 		StopIfError "Could not receive job details. Check log file."
 
 		# stop waiting if the job reached a final status
@@ -64,8 +65,8 @@ if jobid=$(qoperation restore -af $TMP_DIR/commvault.restore.options) ; then
 				;;
 			?uspend*|*end*|?unn*|?ait*)
 				printf "\r%-79s" "$(date +"%Y-%m-%d %H:%M:%S") job is $jobstatus"
-                [ "$jobstatus" != "$prevstatus" ] && LogPrint $jobstatus
-                prevstatus="$jobstatus"
+                		[ "$jobstatus" != "$prevstatus" ] && LogPrint $jobstatus
+		                prevstatus="$jobstatus"
 				;;
 			?ail*|?ill*)
 				echo
@@ -76,7 +77,6 @@ if jobid=$(qoperation restore -af $TMP_DIR/commvault.restore.options) ; then
 				Error "Restore job has an unknown state [$jobstatus], aborting."
 				;;
 		esac
-		sleep 10
 	done
 
 else
