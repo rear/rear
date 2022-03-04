@@ -622,6 +622,7 @@ function create_grub2_cfg {
             cat << EOF
 menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear {
     insmod gzio
+    insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
     linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
     echo 'Loading initial ramdisk $grub2_initrd ...'
@@ -630,6 +631,7 @@ menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear {
 
 menuentry "Relax-and-Recover (UEFI and Secure Boot)" --id=rear_secure_boot {
     insmod gzio
+    insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
     linuxefi $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
     echo 'Loading initial ramdisk $grub2_initrd ...'
@@ -640,6 +642,7 @@ EOF
             cat << EOF
 menuentry "Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)" --id=rear {
     insmod gzio
+    insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
     linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
     echo 'Loading initial ramdisk $grub2_initrd ...'
