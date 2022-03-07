@@ -542,15 +542,15 @@ function create_grub2_cfg {
     local grub2_initrd="$2"
     test "$grub2_initrd" || BugError "create_grub2_cfg function called without grub2_initrd argument"
     DebugPrint "Configuring GRUB2 initrd $grub2_initrd"
-    local grub2_set_root_command="$3"
-    if ! test "$grub2_set_root_command" ; then
-        test "$grub2_set_root" && grub2_set_root_command="set root=$grub2_set_root"
+    local grub2_search_root_command="$3"
+    if ! test "$grub2_search_root_command" ; then
+        test "$grub2_set_root" && grub2_search_root_command="set root=$grub2_set_root"
     fi
-    if ! test "$grub2_set_root_command" ; then
-        test "$GRUB2_SET_USB_ROOT" && grub2_set_root_command="$GRUB2_SET_USB_ROOT"
+    if ! test "$grub2_search_root_command" ; then
+        test "$GRUB2_SEARCH_ROOT_COMMAND" && grub2_search_root_command="$GRUB2_SEARCH_ROOT_COMMAND"
     fi
-    test "$grub2_set_root_command" || grub2_set_root_command="search --no-floppy --set=root --file /boot/efiboot.img"
-    DebugPrint "Configuring GRUB2 root device as '$grub2_set_root_command'"
+    test "$grub2_search_root_command" || grub2_search_root_command="search --no-floppy --set=root --file /boot/efiboot.img"
+    DebugPrint "Configuring GRUB2 root device as '$grub2_search_root_command'"
 
     local grub2_default_menu_entry="$GRUB2_DEFAULT_BOOT"
     test "$grub2_default_menu_entry" || grub2_default_menu_entry="chainloader"
@@ -713,7 +713,7 @@ EOF
     # Sleep 3 seconds before the GRUB2 menu replaces what there is on the screen
     # so that the user has a chance to see possible (error) messages on the screen.
     cat << EOF
-$grub2_set_root_command
+$grub2_search_root_command
 insmod all_video
 set gfxpayload=keep
 insmod part_gpt
