@@ -61,7 +61,14 @@ if is_true "$YUM_BACKUP_FILES_FULL_EXCL" ; then
         	} || {
                 	cmd2=$(echo -n "$cmd2 -samefile $fname")
         	}
-        	curCmdLen=$(echo "$cmd2" | wc -c)
+            # Aviod ShellCheck
+            # SC2000: See if you can use ${#variable} instead
+            # https://github.com/koalaman/shellcheck/wiki/SC2000
+            # The code before was
+            # curCmdLen=$(echo "$cmd2" | wc -c)
+            # so curCmdLen is ${#cmd2} + 1 because of the newline of 'echo'
+            # but I <jsmeix@suse.de> don't know for sure if + 1 is needed or not so I keep it:
+        	curCmdLen=$(( ${#cmd2} + 1 ))
         	[ $curCmdLen -gt $maxArgLen ] && {
 			# Simple "something is still going on" indicator by printing dots
 			# directly to stdout which is fd7 (see lib/_input-output-functions.sh)
