@@ -545,15 +545,17 @@ grep -q '^fs ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( mkfs )
 # (see above supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"):
 required_mkfs_tools=""
 for filesystem_type in $( echo $supported_filesystems | tr ',' ' ' ) ; do
-    grep -q "^fs .* $filesystem_type " $DISKLAYOUT_FILE && required_mkfs_tools="$required_mkfs_tools mkfs.$filesystem_type"
+    grep -q "^fs .* $filesystem_type " $DISKLAYOUT_FILE && required_mkfs_tools+=" mkfs.$filesystem_type"
 done
 # Remove duplicates because in disklayout.conf there can be many entries with same filesystem type:
 required_mkfs_tools="$( echo $required_mkfs_tools | tr ' ' '\n' | sort -u | tr '\n' ' ' )"
 REQUIRED_PROGS+=( $required_mkfs_tools )
 # mke2fs is also required in the recovery system if any 'mkfs.ext*' filesystem creating tool is required
 # and tune2fs or tune4fs is used to set tunable filesystem parameters on ext2/ext3/ext4
-# see above how $tunefs is set to tune2fs or tune4fs
-echo $required_mkfs_tools | grep -q 'mkfs.ext' && REQUIRED_PROGS+=( mke2fs $tunefs )
+# cf. above how $tunefs is set to tune2fs or tune4fs inside the subshell
+# i.e. $tunefs is not set here so REQUIRED_PROGS+=( $tunefs ) would do nothing
+# but tune2fs and tune4fs get included via PROGS in conf/GNU/Linux.conf which should be sufficient:
+echo $required_mkfs_tools | grep -q 'mkfs.ext' && REQUIRED_PROGS+=( mke2fs )
 # xfs_admin is also required in the recovery system if 'mkfs.xfs' is required:
 echo $required_mkfs_tools | grep -q 'mkfs.xfs' && REQUIRED_PROGS+=( xfs_admin )
 # reiserfstune is also required in the recovery system if 'mkfs.reiserfs' is required:
