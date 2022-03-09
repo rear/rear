@@ -59,6 +59,6 @@ test "$USB_DEVICE_BOOT_LABEL" || USB_DEVICE_BOOT_LABEL="REARBOOT"
 # We need to set the GRUB environment variable 'root' to the partition device with filesystem label USB_DEVICE_BOOT_LABEL
 # because GRUB's default 'root' (or GRUB's 'root' identifcation heuristics) would point to the ramdisk but neither kernel
 # nor initrd are located on the ramdisk but on the partition device with filesystem label USB_DEVICE_BOOT_LABEL.
-# GRUB2_SET_USB_ROOT is used in the create_grub2_cfg() function:
-GRUB2_SET_USB_ROOT="search --no-floppy --set=root --label $USB_DEVICE_BOOT_LABEL"
+# GRUB2_SEARCH_ROOT_COMMAND is used in the create_grub2_cfg() function:
+GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --label $USB_DEVICE_BOOT_LABEL"
 create_grub2_cfg /$USB_PREFIX/kernel /$USB_PREFIX/$REAR_INITRD_FILENAME > $usb_boot_dir/$grub_cfg || Error "Failed to create $usb_boot_dir/$grub_cfg"

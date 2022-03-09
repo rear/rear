@@ -82,8 +82,8 @@ EOF
             DebugPrint "Configuring GRUB2 for EFI boot"
             # We need to explicitly set GRUB 2 'root' variable to $efi_label (hardcoded "REAR-EFI")
             # because default $root would point to memdisk, where kernel and initrd are NOT present.
-            # GRUB2_SET_USB_ROOT is used in the create_grub2_cfg() function:
-            GRUB2_SET_USB_ROOT="search --no-floppy --set=root --label $efi_label"
+            # GRUB2_SEARCH_ROOT_COMMAND is used in the create_grub2_cfg() function:
+            [[ -z "$GRUB2_SEARCH_ROOT_COMMAND" ]] && GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --label $efi_label"
             # Create config for GRUB 2
             create_grub2_cfg $efi_dir/kernel $efi_dir/$REAR_INITRD_FILENAME > $efi_dst/grub.cfg
             # Create bootloader, this overwrite BOOTX64.efi copied in previous step ...
