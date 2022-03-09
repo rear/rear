@@ -36,8 +36,8 @@ function btrfs_subvolume_exists() {
 
 function xfs_parse
 {
-    xfs_opts=()
     local xfs_opt_file=$1
+    local xfs_opts=""
 
     # Check if we can read configuration file produced by xfs_info.
     # Fall back to mkfs.xfs defaults if trouble with configuration file occur.
