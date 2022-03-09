@@ -164,8 +164,8 @@ generate_layout_dependencies() {
                 ;;
             raid)
                 name=$(echo "$remainder" | cut -d " " -f "1")
-                disks=( $(echo "$remainder" | sed -r "s/.*devices=([^ ]+).*/\1/" | tr ',' ' ') )
-                for disk in "${disks[@]}" ; do
+                disks=$(echo "$remainder" | sed -r "s/.*devices=([^ ]+).*/\1/" | tr ',' ' ')
+                for disk in $disks ; do
                     add_dependency "$name" "$disk"
                 done
                 add_component "$name" "raid"
@@ -211,9 +211,7 @@ generate_layout_dependencies() {
             multipath)
                 name=$(echo "$remainder" | cut -d " " -f "1")
                 disks=$(echo "$remainder" | cut -d " " -f "4" | tr "," " ")
-
                 add_component "$name" "multipath"
-
                 for disk in $disks ; do
                     add_dependency "$name" "$disk"
                 done
