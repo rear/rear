@@ -218,8 +218,10 @@ EOF
                 end=$( mathlib_calculate "$end - 1" )
             fi
             if [[ "$ARCH" == "Linux-s390" ]] ; then
-                # if dasd disk is LDL formated, then do not partition it, because it is partitioned and can take only partition
-                if [[ ! "${listDasdLdl[@]}" =~ "$device" ]] ; then
+                # LDL formatted disks are already partitioned and should not be partitioned with parted or fdasd , it will fail
+                # the listDasdLdl array contains devices such as /dev/dasdb that are formatted as LDL
+                # listDasdLdl is set in layout/prepare/Linux-s390/205_s390_enable_disk.sh 
+                if ! IsInArray "$device" "${listDasdLdl[@]}" ; then
                     echo "not LDL dasd formated disk, create a partition"
                     cat >> "$LAYOUT_CODE" <<EOF
 create_disk_partition "$device" "$name" $number $start $end
