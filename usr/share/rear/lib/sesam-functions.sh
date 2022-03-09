@@ -25,7 +25,6 @@ while IFS== read key value ; do
         (gv_rw_tmp) SESAM_TMP_DIR="$value" ;;
         (gv_rw_lis) SESAM_LIS_DIR="$value" ;;
         (gv_rw_lgc) SESAM_LGC_DIR="$value" ;;
-        (gv_rw_work) SESAM_WORK_DIR="$value" ;;
         (gv_rw_stpd) SESAM_SMS_DIR="$value" ;;
         (gv_rw_prot) SESAM_PROT_DIR="$value" ;;
     esac
