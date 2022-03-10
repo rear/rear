@@ -552,9 +552,7 @@ function handle_bridge () {
     if is_true $ip_link_supports_bridge ; then
         echo "ip link add name $network_interface type bridge stp_state $stp"
     elif has_binary brctl ; then
-        if [[ " ${REQUIRED_PROGS[@]} " != *\ brctl\ * ]] ; then
-            REQUIRED_PROGS+=( "brctl" )
-        fi
+        IsInArray "brctl" "${REQUIRED_PROGS[@]}" || REQUIRED_PROGS+=( "brctl" )
         echo "brctl addbr $network_interface"
         echo "brctl stp $network_interface $stp"
     else
