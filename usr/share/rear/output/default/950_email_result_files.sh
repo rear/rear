@@ -4,13 +4,12 @@
 
 test -z "$RESULT_MAILTO" && return
 
-[ ${#RESULT_FILES[@]} -gt 0 ]
-StopIfError "No files to send (RESULT_FILES is empty)"
+[ ${#RESULT_FILES[@]} -gt 0 ] || Error "No files to send (RESULT_FILES is empty)"
 
-[ -x "$RESULT_SENDMAIL" ]
-StopIfError "No mailer [$RESULT_SENDMAIL] found !"
+[ -x "$RESULT_SENDMAIL" ] || Error "No mailer [$RESULT_SENDMAIL] found !"
 
-Log "Sending Email from $RESULT_MAILFROM to ${RESULT_MAILTO[@]}"
+Log "Sending e-mail from $RESULT_MAILFROM to ${RESULT_MAILTO[*]}"
+
 # We will remove the ISO files from the RESULT_FILES array (is becoming too big - issue #397)
 c=${#RESULT_FILES[@]} # amount of element is array RESULT_FILES
 i=0
@@ -19,7 +18,7 @@ while (( $i < $c )) ; do
     i=$(( i + 1 ))
 done
  
-Log "Attaching files: ${MAIL_FILES[@]}"
+Log "Attaching files: ${MAIL_FILES[*]}"
 
 test -z "$RESULT_MAILSUBJECT" && RESULT_MAILSUBJECT="Relax-and-Recover $HOSTNAME ($OUTPUT)"
 
@@ -41,6 +40,7 @@ test -z "$RESULT_MAILSUBJECT" && RESULT_MAILSUBJECT="Relax-and-Recover $HOSTNAME
 
 MAIL_SIZE=( $(du -h $TMP_DIR/email.bin) )
 
-LogPrint "Mailing resulting files ($MAIL_SIZE) to ${RESULT_MAILTO[@]}"
-$RESULT_SENDMAIL "${RESULT_SENDMAIL_OPTIONS[@]}" <$TMP_DIR/email.bin
-LogPrintIfError "WARNING ! Sending Email with '$RESULT_SENDMAIL "${RESULT_SENDMAIL_OPTIONS[@]}"' failed."
+LogPrint "Mailing resulting files ($MAIL_SIZE) to ${RESULT_MAILTO[*]}"
+if ! $RESULT_SENDMAIL "${RESULT_SENDMAIL_OPTIONS[@]}" <$TMP_DIR/email.bin ; then
+    LogPrintError "WARNING: Sending e-mail with '$RESULT_SENDMAIL ${RESULT_SENDMAIL_OPTIONS[*]}' failed"
+fi
