@@ -365,7 +365,7 @@ builtin trap "EXIT_FAIL_MESSAGE=0 ; echo '${MESSAGE_PREFIX}Aborting due to an er
 
 # Make sure nobody else can use trap:
 function trap () {
-    BugError "Forbidden usage of trap with '$@'. Use AddExitTask instead."
+    BugError "Forbidden usage of trap with '$*'. Use AddExitTask instead."
 }
 
 # For actually intended user messages output to the original STDOUT
@@ -502,7 +502,7 @@ function LogToSyslog () {
 # an alias, builtin, function, or a disk file that would be executed
 # see https://github.com/rear/rear/issues/729
 function has_binary () {
-    for bin in $@ ; do
+    for bin in "$@" ; do
         # Suppress success output via stdout which is crucial when has_binary is called
         # in other functions that provide their intended function results via stdout
         # to not pollute intended function results with intermixed has_binary stdout
@@ -762,7 +762,7 @@ function BugError () {
     Error "
 ====================
 BUG in $caller_source:
-'$@'
+'$*'
 --------------------
 Please report it at $BUG_REPORT_SITE
 and include all related parts from $RUNTIME_LOGFILE
@@ -1020,9 +1020,8 @@ function cleanup_build_area_and_end_program () {
 #   or the user can interupt any automated response within a relatively short time (minimum is only 1 second).
 function UserInput () {
     # First and foremost log that UserInput was called (but be confidential here):
-    # Have caller_source as an array so that plain $caller_source is only the filename (with path):
-    local caller_source=( $( CallerSource ) )
-    Log "UserInput: called in ${caller_source[@]}"
+    local caller_source="$( CallerSource )"
+    Log "UserInput: called in $caller_source"
     # Set defaults or fallback values:
     # Have a relatively big default timeout of 5 minutes to avoid that the timeout interrupts ongoing user input:
     local timeout=300
@@ -1156,7 +1155,7 @@ function UserInput () {
     # The actual work:
     # In debug mode show the user the script that called UserInput and what user_input_ID was specified
     # so that the user can prepare an automated response for that UserInput call (without digging in the code):
-    DebugPrint "UserInput -I $user_input_ID needed in ${caller_source[@]}"
+    DebugPrint "UserInput -I $user_input_ID needed in $caller_source"
     # First of all show the prompt unless an empty prompt was specified (via -p '')
     # so that the prompt can be used as some kind of header line that introduces the user input
     # and separates the following user input from arbitrary other output lines before:
@@ -1246,8 +1245,13 @@ function UserInput () {
         # Regarding how to get all array elements when the array name is in a variable, see
         # https://unix.stackexchange.com/questions/60584/how-to-use-a-variable-as-part-of-an-array-name
         # Assume input_words_array_name="myarr" then input_words_array_name_dereferenced="myarr[*]"
-        # and "${!input_words_array_name_dereferenced}" becomes "${myarr[*]}":
-        local input_words_array_name_dereferenced="$input_words_array_name[*]"
+        # and "${!input_words_array_name_dereferenced}" becomes "${myarr[*]}"
+        # Avoid ShellCheck false error indication for code like
+        #   string_appended="$string[*]"
+        #                    ^-- SC1087: Use braces when expanding arrays, e.g. ${array[idx]}
+        # by appending '[*]' to a string variable in a separated command:
+        local input_words_array_name_dereferenced="$input_words_array_name"
+        input_words_array_name_dereferenced+='[*]'
         input_string="${!input_words_array_name_dereferenced}"
     fi
     # When there is no user input or when the user input is only spaces use the "best" fallback or default that exists.
