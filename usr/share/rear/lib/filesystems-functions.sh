@@ -165,7 +165,7 @@ function xfs_parse
     | grep -oE "crc=[0-9]*" | cut -d "=" -f2)
 
     # Count how many parameter we have
-    for i in ${xfs_param_iname[@]}; do
+    for i in "${xfs_param_iname[@]}" ; do
       xfs_param_count=$((xfs_param_count+1))
     done
 
