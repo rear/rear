@@ -8,7 +8,7 @@
 # cf. https://github.com/rear/rear/issues/987
 # and https://github.com/rear/rear/issues/1088
 recovery_workflows=( "recover" "layoutonly" "restoreonly" )
-IsInArray $WORKFLOW ${recovery_workflows[@]} || return 0
+IsInArray $WORKFLOW "${recovery_workflows[@]}" || return 0
 
 # Copy the logfile:
 # Usually RUNTIME_LOGFILE=/var/log/rear/rear-$HOSTNAME.log
