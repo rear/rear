@@ -124,11 +124,11 @@ EOT
 # e.g. RHEL6 doesn't support that
 if readlink /foo /bar 2>/dev/null ; then
     function resolve () {
-        readlink -e $@
+        readlink -e "$@"
     }
 else
     function resolve () {
-        for path in $@ ; do
+        for path in "$@" ; do
             readlink -e $path
         done
     }
