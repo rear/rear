@@ -85,7 +85,7 @@ else
                 esac
             done
             local component_device parent_device added_parent_device="no"
-            for component_device in ${component_devices[@]} ; do
+            for component_device in "${component_devices[@]}" ; do
                 # component_device is a disk like /dev/sdc or a partition like /dev/sdc1 (cf. above)
                 # so we get the parent device of it (the parent of a disk will be the disk itself)
                 # cf. the code of the function write_protection_ids() in lib/write-protect-functions.sh
