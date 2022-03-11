@@ -42,7 +42,7 @@ function assert_ISO_FILE_SIZE_LIMIT () {
     # Skip when there is no usable ISO_FILE_SIZE_LIMIT set (in particular for ISO_FILE_SIZE_LIMIT=0):
     is_positive_integer $ISO_FILE_SIZE_LIMIT || return 0
     local file_for_iso file_for_iso_size
-    for file_for_iso in $@ ; do
+    for file_for_iso in "$@" ; do
         file_for_iso_size=$( stat -L -c '%s' $file_for_iso )
         # Continue "bona fide" with testing the next one if size could not be determined (assume the current one is OK):
         is_positive_integer $file_for_iso_size || continue
