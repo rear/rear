@@ -21,7 +21,7 @@ format_s390_disk() {
             # LDL formatted disks are already partitioned and should not be partitioned with parted or fdasd , it will fail
             # this var, listDasdLdl, is used by 100_include_partition_code.sh to exclude writing partition code to diskrestore.sh for LDL disks
             listDasdLdl+=( $device )
-            LogPrint "LDL disk added to listDasdLdl:" ${listDasdLdl[@]}
+            LogPrint "LDL disk '$device' will not be partitioned (LDL disks are already partitioned)"
         fi
         LogPrint 'dasdfmt:' $device ', blocksize:' $blocksize ', layout:' $layout
         # dasd format
