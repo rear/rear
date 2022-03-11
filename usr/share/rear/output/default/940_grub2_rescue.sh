@@ -53,7 +53,7 @@ local grub_config_dir="$boot_dir/grub${grub_num}"
 
 # Esure there is sufficient disk space available in /boot for the local Relax-and-Recover rescue system:
 function total_filesize {
-    stat --format '%s' $@ 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
+    stat --format '%s' "$@" 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
 }
 # Free space in /boot:
 local free_space=$( df -Pkl $boot_dir | awk 'END { print $4 * 1024 }' )
