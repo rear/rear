@@ -5,7 +5,7 @@ test "$USB_BOOTLOADER" = "grub" && return
 # Test for features in dd
 # true if dd supports oflag= option
 FEATURE_DD_OFLAG=
-dd_version=$( get_version "dd --version" )
+dd_version=$( get_version dd --version )
 version_newer "$dd_version" 5.3.0 && FEATURE_DD_OFLAG="y"
 
 # We assume REAL_USB_DEVICE and RAW_USB_DEVICE are both set by prep/USB/Linux-i386/350_check_usb_disk.sh
