@@ -20,8 +20,8 @@ if [[ -z "$grub_binary" ]]; then
     return
 fi
 
-### Use strings as grub --version syncs all disks
-#grub_version=$(get_version "grub --version")
+# Use strings because "grub --version" would sync all disks
+# cf. the get_version function in lib/layout-functions.sh
 grub_version=$(strings $grub_binary | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | tail -n 1)
 if version_newer "$grub_version" 1.0; then
     # only for grub-legacy we make special ReaR boot entry in menu.lst
