@@ -33,7 +33,7 @@ test -r "$KERNEL_FILE" || Error "Failed to find kernel '$KERNEL_FILE', updating 
 test -r "$TMP_DIR/$REAR_INITRD_FILENAME" || Error "Failed to find initrd '$REAR_INITRD_FILENAME', updating GRUB failed."
 
 function total_filesize {
-    stat --format '%s' $@ 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
+    stat --format '%s' "$@" 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
 }
 
 available_space=$(df -Pkl /boot | awk 'END { print $4 * 1024 }')
