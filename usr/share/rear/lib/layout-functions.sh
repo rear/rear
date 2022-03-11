@@ -563,7 +563,7 @@ version_newer() {
 
 # Function to get version from tool.
 get_version() {
-  TERM=dumb $@ 2>&1 | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | head -1
+  TERM=dumb "$@" 2>&1 | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | head -1
 }
 
 # Translate a device name to a sysfs name.
@@ -1380,7 +1380,7 @@ delete_dummy_partitions_and_resize_real_ones() {
 
     # Delete dummy partitions
     local -i num
-    for num in ${dummy_partitions_to_delete[@]} ; do
+    for num in "${dummy_partitions_to_delete[@]}" ; do
         LogPrint "Disk '$current_disk': deleting dummy partition number $num"
         parted -s -m $current_disk rm $num
     done
