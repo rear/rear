@@ -67,11 +67,6 @@ WITH_INITRD_MODULES=$( printf '%s\n' $INITRD_MODULES | awk '{printf "--with=%s "
 # kdump images as they are build by kdump
 # initramfs rescue images (>= Rhel 7), which need all modules and are created by new-kernel-pkg
 # initrd-plymouth.img (>= Rhel 7), which contains only files needed for graphical boot via plymouth
-# The unalias originates from https://github.com/rear/rear/commit/d029e0dbe98b9fed496d8f3857bef132c8f165ad
-# This is the only place in ReaR where unalias is called and it unaliases ls also for all subsequent scripts.
-# TODO: Explain why this unalias is needed here and why it is also needed in all subsequent scripts:
-unalias ls 2>/dev/null
-
 for INITRD_IMG in $( ls $TARGET_FS_ROOT/boot/initramfs-*.img $TARGET_FS_ROOT/boot/initrd-*.img | egrep -v '(kdump|rescue|plymouth)' ) ; do
     # Do not use KERNEL_VERSION here because that is readonly in the rear main script:
     kernel_version=$( basename $( echo $INITRD_IMG ) | cut -f2- -d"-" | sed s/"\.img"// )
