@@ -231,6 +231,11 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
         OIFS=$IFS
         IFS=","
         for layout_option in $layout ; do
+            # When a RAID10 layout option is already set for this RAID array an additional one is not supported:
+            if test $layout_option_setting ; then
+                LogPrintError "Ignoring additional RAID10 layout '$layout_option' for $raiddevice (only one RAID10 layout setting is supported)"
+                continue
+            fi
             layout_option_name=${layout_option%=*}
             layout_option_value=${layout_option#*=}
             # The RAID10 layout option value must be "a small number" where "2 is normal, 3 can be useful"
@@ -243,11 +248,6 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
             # Now the RAID10 layout option value is at least a number:
             if ! test $layout_option_value -le 9 ; then
                 LogPrintError "Ignoring RAID10 layout '$layout_option' for $raiddevice (the value is not a small number)"
-                continue
-            fi
-            # When a RAID10 layout option is already set for this RAID array an additional one is not supported:
-            if test $layout_option_setting ; then
-                LogPrintError "Ignoring additional RAID10 layout '$layout_option' for $raiddevice (only one RAID10 layout setting is supported)"
                 continue
             fi
             # Save the RAID10 layout option with the right syntax for the mdadm --layout option value during "rear recover":
