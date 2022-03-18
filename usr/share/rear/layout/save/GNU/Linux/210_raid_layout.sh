@@ -17,7 +17,7 @@ local basename
 local line
 local metadata level raid_devices uuid name spare_devices layout chunksize component_devices container_size
 local container array_size
-local layout_option layout_option_name layout_near_option_value layout_near_option
+local layout_option layout_option_name layout_option_value layout_option_setting
 local component_device
 local raid_layout_entry
 local raid_dev_size raid_dev_label
@@ -186,64 +186,90 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
     uuid=${line[2]}
     test $uuid && raid_layout_entry+=" uuid=$uuid"
 
-    # A "Layout :" line in the detailed mdadm output looks like
+    # A "Layout :" line in the detailed mdadm output normally looks like
     #          Layout : near=2
-    # or
-    #          Layout : near=2, far=2
-    # or
-    #          Layout : near=2, far=1
+    #          Layout : far=3
+    #          Layout : offset=4
+    # cf. https://github.com/rear/rear/pull/2768#issuecomment-1072362485
+    # and https://github.com/rear/rear/pull/2768#issuecomment-1072361069
+    # but it might also look like
+    #          Layout : near=2, far=3
+    # or it might even look like (regardless that this was never seen in practice)
+    #          Layout : near=2, far=3, offset=4
     # cf. https://linux-blog.anracom.com/tag/far-layout/
     # and https://unix.stackexchange.com/questions/280283/is-it-possible-to-create-a-mdadm-raid10-with-both-near-and-far-layout-options
     # and https://ubuntuforums.org/showthread.php?t=1689828&page=4
-    # where for those examples the line array becomes ("declare -p line" outputs):
+    # For the above examples the line array becomes ("declare -p line" outputs):
     # declare -a line=([0]="Layout" [1]=":" [2]="near=2")
-    # declare -a line=([0]="Layout" [1]=":" [2]="near=2," [3]="far=2")
-    # declare -a line=([0]="Layout" [1]=":" [2]="near=2," [3]="far=1")
-    # so "near=..." is array element number 2 and "far=..." is array element number 3 if it exists:
+    # declare -a line=([0]="Layout" [1]=":" [2]="far=3")
+    # declare -a line=([0]="Layout" [1]=":" [2]="offset=4")
+    # declare -a line=([0]="Layout" [1]=":" [2]="near=2," [3]="far=3")
+    # declare -a line=([0]="Layout" [1]=":" [2]="near=2," [3]="far=3," [4]="offset=4")
     line=( $( grep "Layout :" $mdadm_details ) )
-    # We use ${line[3]:-} to be safe against "bash: line[3]: unbound variable" in case of 'set -eu'
+    # We use ${line[3]:-} and ${line[4]:-} to be safe against things like
+    # "bash: line[3]: unbound variable" in case of 'set -eu'
     # so for the above examples the layout string becomes:
     # near=2
-    # near=2,far=2
-    # near=2,far=1
-    layout="${line[2]}${line[3]:-}"
+    # far=3
+    # offest=4
+    # near=2,far=3
+    # near=2,far=3,offset=4
+    layout="${line[2]}${line[3]:-}${line[4]:-}"
     # For RAID10 have the layout value what the mdadm command needs as --layout option value
     # so with the above examples the mdadm command option --layout=... value has to become
-    # near=2       -> n2
-    # near=2,far=2 -> n2
-    # near=2,far=1 -> n2
-    # TODO: Currently the RAID10 layout "far=..." value is ignored because according to
+    # near=2                -> n2
+    # far=3                 -> f3
+    # offset=4              -> o4
+    # near=2,far=3          -> n2
+    # near=2,far=3,offset=4 -> n2
+    # TODO: Currently if there is more than one RAID10 layout value only the first one is used because according to
     # https://unix.stackexchange.com/questions/280283/is-it-possible-to-create-a-mdadm-raid10-with-both-near-and-far-layout-options
     # it seems it is not possible (or it does not make sense in practice) to set both "near=..." and "far=..."
-    # see also the initial implementation https://github.com/rear/rear/commit/4dbbb288057189076d82cb8e477cd994a4ce1851
-    # where no support for the "far=..." value was implemented which had been OK since then (dated May 24, 2011):
+    # and we also assume it is not possible (or it does not make sense in practice) to set more than one RAID10 layout value.
     if test "$level" = "raid10" ; then
-        layout_near_option=""
+        layout_option_setting=""
         OIFS=$IFS
         IFS=","
         for layout_option in $layout ; do
             layout_option_name=${layout_option%=*}
-            # Only use the "near=..." value but at least inform the user:
-            if ! test "$layout_option_name" = "near" ; then
-                LogPrintError "RAID10 layout option '$layout_option' is ignored (only 'near=...' support is implemented)"
+            layout_option_value=${layout_option#*=}
+            # The RAID10 layout option value must be "a small number" where "2 is normal, 3 can be useful"
+            # according to "man mdadm" (of mdadm v4.1 in openSUSE Leap 15.3).
+            # This test also fails when the RAID10 layout option value is not a number:
+            if ! test $layout_option_value -gt 0 ; then
+                LogPrintError "Ignoring RAID10 layout '$layout_option' for $raiddevice (the value is not at least 1)"
                 continue
             fi
-            layout_near_option_value=${layout_option#*=}
-            # TODO: I <jsmeix@suse.de> do not understand why layout=n1 is not set by ReaR because
-            # the default is layout=n2 (according to 'man mdadm' with mdadm v4.1 on openSUSE Leap 15.3)
-            # so when a user has "Layout : near=1" then ReaR should recreate it as it was before
-            # regardless if such a RAID10 layout makes sense in practice
-            # so we tell the user at least in debug mode:
-            if ! test "$layout_near_option_value" -gt 1 ; then
-                DebugPrint "RAID10 layout option '$layout_option' is ignored (its value must be greater than 1)"
+            # Now the RAID10 layout option value is at least a number:
+            if ! test $layout_option_value -le 9 ; then
+                LogPrintError "Ignoring RAID10 layout '$layout_option' for $raiddevice (the value is not a small number)"
                 continue
             fi
-            layout_near_option="n$layout_near_option_value"
+            # When a RAID10 layout option is already set for this RAID array an additional one is not supported:
+            if test $layout_option_setting ; then
+                LogPrintError "Ignoring additional RAID10 layout '$layout_option' for $raiddevice (only one RAID10 layout setting is supported)"
+                continue
+            fi
+            # Save the RAID10 layout option with the right syntax for the mdadm --layout option value during "rear recover":
+            case "$layout_option_name" in
+                (near)
+                    layout_option_setting="n$layout_option_value"
+                    ;;
+                (far)
+                    layout_option_setting="f$layout_option_value"
+                    ;;
+                (offset)
+                    layout_option_setting="o$layout_option_value"
+                    ;;
+                (*)
+                    LogPrintError "Ignoring RAID10 layout '$layout_option' for $raiddevice (only 'near' 'far' and 'offset' are valid)"
+                    ;;
+            esac
         done
         IFS=$OIFS
-        # Ensure $layout_near_option is a single non empty and non blank word
+        # Ensure $layout_option_setting is a single non empty and non blank word
         # (no quoting because test " " returns zero exit code):
-        test $layout_near_option && layout="$layout_near_option" || layout=""
+        test $layout_option_setting && layout="$layout_option_setting" || layout=""
     fi
     # mdadm can print '-unknown-' for a RAID layout
     # which got recently (2019-12-02) added to RAID0 (it existed before for RAID5 and RAID6 and RAID10) see
