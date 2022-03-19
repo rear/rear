@@ -156,6 +156,9 @@ fi
 %prep
 %setup -q
 
+%check
+%{__make} validate
+
 %build
 
 %install
