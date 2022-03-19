@@ -162,6 +162,9 @@ fi
 %{__rm} -rf %{buildroot}
 %{__make} install DESTDIR="%{buildroot}"
 
+%check
+%{__make} validate
+
 %files
 # defattr: is required for SLES 11 and RHEL/CentOS 5 builds on openSUSE Build Service (#2135)
 %defattr(-, root, root, 0755)
