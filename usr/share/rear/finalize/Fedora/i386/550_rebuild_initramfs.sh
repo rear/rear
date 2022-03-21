@@ -52,7 +52,7 @@ Log "Original OLD_INITRD_MODULES=( ${OLD_INITRD_MODULES[*]} )"
 # To achieve this, we list the old modules twice in the variable NEW_INITRD_MODULES and then add the new modules.
 # Then we use "uniq -u" to filter out the modules which only appear once in the list.
 # The resulting array contains only the new modules:
-NEW_INITRD_MODULES=( ${OLD_INITRD_MODULES[@]} ${OLD_INITRD_MODULES[@]} $( cat $TMP_DIR/storage_drivers ) )
+NEW_INITRD_MODULES=( "${OLD_INITRD_MODULES[@]}" "${OLD_INITRD_MODULES[@]}" $( cat $TMP_DIR/storage_drivers ) )
 NEW_INITRD_MODULES=( $( tr " " "\n" <<< "${NEW_INITRD_MODULES[*]}" | sort | uniq -u ) )
 
 # Concatenate the old and new modules into a string:
