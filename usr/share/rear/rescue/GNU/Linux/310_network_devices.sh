@@ -239,7 +239,7 @@ function map_network_interface () {
     local network_interface=$1
     local mapped_as=$2
 
-    if $( printf "%s\n" "${MAPPED_NETWORK_INTERFACES[@]}" | grep -qw ^$network_interface ) ; then
+    if printf "%s\n" "${MAPPED_NETWORK_INTERFACES[@]}" | grep -qw "^$network_interface" ; then
         # There is an error in the code. This means a handle_* function has
         # been called on an already mapped interface, which shouldn't happen.
         BugError "'$network_interface' is already mapped."
