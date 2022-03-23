@@ -47,31 +47,26 @@ if [ -f $VAR_DIR/recovery/initrd_modules ]; then
     OLD_INITRD_MODULES=()
 fi
 
-Log "Original OLD_INITRD_MODULES='${OLD_INITRD_MODULES[@]}'"
-# To see what has been added by the migration process, the new modules are added to the
-# end of the list. To achieve this, we list the old modules twice in the variable
-# NEW_INITRD_MODULES and then add the new modules. Then we use "uniq -u" to filter out
-# the modules which only appear once in the list. The resulting array
-# contains the new modules also.
-NEW_INITRD_MODULES=( ${OLD_INITRD_MODULES[@]} ${OLD_INITRD_MODULES[@]} $( cat $TMP_DIR/storage_drivers ) )
+Log "Original OLD_INITRD_MODULES=( ${OLD_INITRD_MODULES[*]} )"
+# To see what has been added by the migration process, the new modules are added to the end of the list.
+# To achieve this, we list the old modules twice in the variable NEW_INITRD_MODULES and then add the new modules.
+# Then we use "uniq -u" to filter out the modules which only appear once in the list.
+# The resulting array contains only the new modules:
+NEW_INITRD_MODULES=( "${OLD_INITRD_MODULES[@]}" "${OLD_INITRD_MODULES[@]}" $( cat $TMP_DIR/storage_drivers ) )
+NEW_INITRD_MODULES=( $( tr " " "\n" <<< "${NEW_INITRD_MODULES[*]}" | sort | uniq -u ) )
 
-# uniq INITRD_MODULES
-NEW_INITRD_MODULES=( $(tr " " "\n" <<< "${NEW_INITRD_MODULES[*]}" | sort | uniq -u) )
+# Concatenate the old and new modules into a string:
+INITRD_MODULES="${OLD_INITRD_MODULES[*]} ${NEW_INITRD_MODULES[*]}"
+Log "New INITRD_MODULES='$INITRD_MODULES'"
 
-Log "New INITRD_MODULES='${OLD_INITRD_MODULES[@]} ${NEW_INITRD_MODULES[@]}'"
-INITRD_MODULES="${OLD_INITRD_MODULES[@]} ${NEW_INITRD_MODULES[@]}"
-
-WITH_INITRD_MODULES=$( printf '%s\n' ${INITRD_MODULES[@]} | awk '{printf "--with=%s ", $1}' )
+# Do not quote $INITRD_MODULES otherwise printf could not split words as separated arguments on separated lines:
+WITH_INITRD_MODULES=$( printf '%s\n' $INITRD_MODULES | awk '{printf "--with=%s ", $1}' )
 
 # Recreate any initrd or initramfs image under $TARGET_FS_ROOT/boot/ with new drivers
 # Images ignored:
 # kdump images as they are build by kdump
-# initramfs rescue images (>= Rhel 7), which need all modules and
-# are created by new-kernel-pkg
+# initramfs rescue images (>= Rhel 7), which need all modules and are created by new-kernel-pkg
 # initrd-plymouth.img (>= Rhel 7), which contains only files needed for graphical boot via plymouth
-
-unalias ls 2>/dev/null
-
 for INITRD_IMG in $( ls $TARGET_FS_ROOT/boot/initramfs-*.img $TARGET_FS_ROOT/boot/initrd-*.img | egrep -v '(kdump|rescue|plymouth)' ) ; do
     # Do not use KERNEL_VERSION here because that is readonly in the rear main script:
     kernel_version=$( basename $( echo $INITRD_IMG ) | cut -f2- -d"-" | sed s/"\.img"// )
@@ -88,7 +83,7 @@ for INITRD_IMG in $( ls $TARGET_FS_ROOT/boot/initramfs-*.img $TARGET_FS_ROOT/boo
     # and then "rear recover" cannot be aborted with the usual [Ctrl]+[C] keys.
     # Use plain $var because when var contains only blanks test "$var" results true because test " " results true:
     if test $mkinitrd_binary ; then
-        if chroot $TARGET_FS_ROOT $mkinitrd_binary -v -f ${WITH_INITRD_MODULES[@]} $INITRD $kernel_version >&2 ; then
+        if chroot $TARGET_FS_ROOT $mkinitrd_binary -v -f $WITH_INITRD_MODULES $INITRD $kernel_version ; then
             LogPrint "Updated initrd with new drivers for kernel $kernel_version."
         else
             LogPrint "WARNING:
