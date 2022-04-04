@@ -3,10 +3,9 @@ jobs:
 - job: copr_build
   metadata:
     targets:
-    - fedora-29-x86_64
-    - fedora-30-x86_64
-    - fedora-31-x86_64
-    - fedora-rawhide-x86_64
+    - fedora-all
+    - centos-stream-8-x86_64
+    - centos-stream-9-x86_64
   trigger: pull_request
 specfile_path: packaging/rpm/rear.spec
 synced_files:
