@@ -279,8 +279,13 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
     # during "rear recover" with something like "mdadm: layout -unknown- not understood for raid0"
     # see https://github.com/rear/rear/issues/2616
     # and ensure $layout is a single non empty and non blank word
-    # (no quoting because test " " returns zero exit code):
-    test $layout -a '-unknown-' != "$layout" && raid_layout_entry+=" layout=$layout"
+    # (no quoting because test " " returns zero exit code)
+    # and 'test ... && test ...' instead of 'test ... -a ...' to avoid a bash error message
+    # because when $layout is blank or empty test $layout -a '-unknown-' != "$layout"
+    # becomes test -a '-unknown-' != ""
+    # which results "bash: test: too many arguments"
+    # cf. https://github.com/rear/rear/pull/2768#discussion_r843740413
+    test $layout && test '-unknown-' != "$layout" && raid_layout_entry+=" layout=$layout"
 
     chunksize=$( grep "Chunk Size" $mdadm_details | tr -d " " | cut -d ":" -f "2" | sed -r 's/^([0-9]+).+/\1/')
     test $chunksize && raid_layout_entry+=" chunk=$chunksize"
