@@ -573,25 +573,68 @@ Relax-and-Recover will use that file instead of the snapshot of the original
 system.
 
 == Disk layout file syntax ==
+
 This section describes the syntax of all components in the Relax-and-Recover
-layout file at +/var/lib/rear/layout/disklayout.conf+. The syntax used to describe it
-is straightforward. Normal text has to be present verbatim in the file. Angle
-brackets "<" and ">" delimit a value that can be edited. Quotes " inside the
-angle brackets indicate a verbatim option, often used together with a / to
-indicate multiple options. Parenthesis "(" ")" inside explain the expected unit. No
-unit suffix should be present, unless specifically indicated. Square brackets
-"[" and "]" indicate an optional parameter. They can be excluded when
-hand-crafting a layout file line.
+layout file /var/lib/rear/layout/disklayout.conf
+
+One cannot rely on backward compatibility between ReaR versions.
+Normally the layout file /var/lib/rear/layout/disklayout.conf is created from scratch
+for each run of "rear mkrescue/mkbackup" so a newer ReaR version creates it anew
+with the right syntax for this ReaR version which is the exact same ReaR
+that gets included in the ReaR recovery system together with this layout file
+to recreate the disk layout during "rear recover".
+Only when a selfmade /etc/rear/disklayout.conf is used then it must be adapted
+by the user when he upgrades to a newer ReaR version.
+
+The syntax is of the form
+----------------------------------
+keyword value1 value2 ...
+----------------------------------
+where keyword denotes one kind of component (disk, partition, filesystem, ...)
+and keyword and the values are separated by single space characters
+so that one can get the lines that belong to a particular component
+with a particular value1 via simple commands like
+----------------------------------
+grep "^keyword value1 " /var/lib/rear/layout/disklayout.conf
+----------------------------------
+(provided there is a value2 after value1 so there is a space after value1).
 
 No whitespace is allowed at the beginning of lines in the disklayout.conf file.
 Lines that start with a # (number sign, hash, or pound sign) are comments.
-All other lines start with a component keyword. None of the component keywords
-is a leading substring of another component keyword (e.g. disk is not a
-leading substring of opaldisk) so that one can get the lines that
-belong to a particular component via simple commands like
+All other lines start with a component keyword.
+
+None of the component keywords is a leading substring of another component keyword
+(e.g. disk is not a leading substring of opaldisk) so that one can get the lines
+that belong to a particular component via simple commands like
 ----------------------------------
 grep ^keyword /var/lib/rear/layout/disklayout.conf
 ----------------------------------
+
+For most component keywords the values are positional parameters
+(if there is no value a dummy value like 'none' must be used)
+so empty values in between are invalid syntax
+which can result arbitrarily bad failures during "rear recover".
+
+For some component keywords the parameters have a form like
+----------------------------------
+keyword value1 value2 optionA=valueA optionB=valueB ...
+----------------------------------
+where the first ones are positional parameters but not the option=value parameters
+so empty option=value parameters are allowed, for example see the 'raid' keyword.
+
+For details the matching scripts need to be inspected how things actually work
+for a particular component keyword (i.e. what is implemented in the code).
+
+Syntax of the individual component keyword descriptions below:
+
+Normal text has to be present verbatim.
+Angle brackets "<" and ">" delimit a value that can be edited.
+Quotes " inside the angle brackets indicate a verbatim option,
+often used together with a / to indicate multiple options.
+Parenthesis "(" ")" inside explain the expected unit.
+No unit suffix should be present, unless specifically indicated.
+Square brackets "[" and "]" indicate an optional parameter.
+They can be excluded when hand-crafting a layout file line.
 
 === Disks ===
 ----------------------------------
@@ -605,7 +648,7 @@ part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <part
 
 === Software RAID ===
 ----------------------------------
-raid /dev/<name> level=<RAID level> raid-devices=<nr of devices> [uuid=<uuid>] [spare-devices=<nr of spares>] [layout=<RAID layout>] [chunk=<chunk size>] devices=<device1,device2,...>
+raid /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> [name=<array name>] [metadata=<metadata style>] [uuid=<UUID>] [layout=<data layout>] [chunk=<chunk size>] [spare-devices=<nr of spare devices>] [size=<container size>]
 ----------------------------------
 
 === Multipath ===
@@ -678,9 +721,19 @@ logicaldrive <device> <slot nr>|<array name>|<logical drive name> raid=<raid lev
 opaldisk <device> [boot=<[yn]>] [password=<password>]
 ----------------------------------
 
-== Disk Restore Script (recover mode) ==
-The +/var/lib/rear/layout/disklayout.conf+ file is being used as input during +rear recover+ to create on-the-fly a script called +/var/lib/rear/layout/diskrestore.sh+.
-When something goes wrong during the recreation of partitions, volume groups you will be thrown in edit mode and you can make the modification needed. However, it is desirable to have a preview mode before doing the recovery so you can review the +diskrestore.sh+ script before doing any recovery. It is better to find mistakes, obsolete arguments and so on before then later, right?
 
-Gratien wrote a script to accomplish this (script is not part of ReaR) and is meant for debugging reasons only. For more details see http://www.it3.be/2016/06/08/rear-diskrestore/
+== Disk Restore Script (recover mode) ==
+
+The +/var/lib/rear/layout/disklayout.conf+ file is being used as input
+during +rear recover+ to create on-the-fly a script called +/var/lib/rear/layout/diskrestore.sh+.
+
+When something goes wrong during the recreation of partitions, volume groups, ...
+you will be thrown in edit mode and you can make the modification needed.
+However, it is desirable to have a preview mode before doing the recovery
+so you can review the +diskrestore.sh+ script before doing any recovery.
+It is better to find mistakes, obsolete arguments and so on before then later, right?
+
+Gratien wrote a script to accomplish this (script is not part of ReaR)
+and is meant for debugging reasons only.
+For more details see http://www.it3.be/2016/06/08/rear-diskrestore/
 

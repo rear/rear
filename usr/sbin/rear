@@ -494,7 +494,7 @@ done
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
     LogPrint "Running $PROGRAM $WORKFLOW (PID $MASTER_PID date $START_DATE_TIME_STRING)"
-    DebugPrint "Command line options: $0 ${CMD_OPTS[@]}"
+    DebugPrint "Command line options: $0 ${CMD_OPTS[*]}"
     LogPrint "Using log file: $RUNTIME_LOGFILE"
     DebugPrint "Using build area: $BUILD_DIR"
 fi
@@ -567,11 +567,10 @@ if test "$CONFIG_APPEND_FILES" ; then
                 # try if 'foo.conf' exists and if yes, use that:
                 if test -r "$config_append_file_path" ; then
                     COPY_AS_IS+=( "$config_append_file_path" )
-                else if test -r "$config_append_file_path.conf" ; then
-                         COPY_AS_IS+=( "$config_append_file_path.conf" )
-                     else
-                         LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
-                     fi
+                elif test -r "$config_append_file_path.conf" ; then
+                    COPY_AS_IS+=( "$config_append_file_path.conf" )
+                else
+                    LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
                 fi
                 ;;
             (*)
@@ -583,12 +582,11 @@ if test "$CONFIG_APPEND_FILES" ; then
         if test -r "$config_append_file_path" ; then
             LogPrint "Sourcing additional configuration file '$config_append_file_path'"
             Source "$config_append_file_path" || Error "Failed to Source $config_append_file_path"
-        else if test -r "$config_append_file_path.conf" ; then
-                 LogPrint "Sourcing additional configuration file '$config_append_file_path.conf'"
-                 Source "$config_append_file_path.conf" || Error "Failed to Source $config_append_file_path.conf"
-             else
-                 LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
-             fi
+        elif test -r "$config_append_file_path.conf" ; then
+            LogPrint "Sourcing additional configuration file '$config_append_file_path.conf'"
+            Source "$config_append_file_path.conf" || Error "Failed to Source $config_append_file_path.conf"
+        else
+            LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
         fi
     done
 fi

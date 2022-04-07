@@ -1,9 +1,9 @@
 # Number of days of inactivity before an issue becomes stale
-# three month plus one weekend plus two more workdays 31+30+31+2+2=96
-daysUntilStale: 96
+# Let us go for 120 days
+daysUntilStale: 120
 # Number of days of inactivity before a stale issue is closed
-# two weeks plus one weekend plus two more workdays 7+7+2+2=18
-daysUntilClose: 18
+# Pin it to 30 days
+daysUntilClose: 30
 # Issues with these labels will never be considered stale
 exemptLabels:
   - Dedicated Priority Support
@@ -15,8 +15,8 @@ staleLabel: ready-to-close?
 # Comment to post when marking an issue as stale. Set to `false` to disable
 markComment: >
    This issue has been automatically marked as stale
-   because it has not had recent activity for three month.
-   It will be closed if no further activity occurs within two weeks.
+   because it has not had recent activity for 120 days.
+   It will be closed if no further activity occurs within 30 days.
    Thank you for your contribution.
 # Comment to post when closing a stale issue. Set to `false` to disable
 closeComment: false

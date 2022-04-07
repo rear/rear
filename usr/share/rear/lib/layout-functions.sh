@@ -164,8 +164,8 @@ generate_layout_dependencies() {
                 ;;
             raid)
                 name=$(echo "$remainder" | cut -d " " -f "1")
-                disks=( $(echo "$remainder" | sed -r "s/.*devices=([^ ]+).*/\1/" | tr ',' ' ') )
-                for disk in "${disks[@]}" ; do
+                disks=$(echo "$remainder" | sed -r "s/.*devices=([^ ]+).*/\1/" | tr ',' ' ')
+                for disk in $disks ; do
                     add_dependency "$name" "$disk"
                 done
                 add_component "$name" "raid"
@@ -211,9 +211,7 @@ generate_layout_dependencies() {
             multipath)
                 name=$(echo "$remainder" | cut -d " " -f "1")
                 disks=$(echo "$remainder" | cut -d " " -f "4" | tr "," " ")
-
                 add_component "$name" "multipath"
-
                 for disk in $disks ; do
                     add_dependency "$name" "$disk"
                 done
@@ -565,7 +563,7 @@ version_newer() {
 
 # Function to get version from tool.
 get_version() {
-  TERM=dumb $@ 2>&1 | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | head -1
+  TERM=dumb "$@" 2>&1 | sed -rn 's/^[^0-9\.]*([0-9]+\.[-0-9a-z\.]+).*$/\1/p' | head -1
 }
 
 # Translate a device name to a sysfs name.
@@ -1382,7 +1380,7 @@ delete_dummy_partitions_and_resize_real_ones() {
 
     # Delete dummy partitions
     local -i num
-    for num in ${dummy_partitions_to_delete[@]} ; do
+    for num in "${dummy_partitions_to_delete[@]}" ; do
         LogPrint "Disk '$current_disk': deleting dummy partition number $num"
         parted -s -m $current_disk rm $num
     done

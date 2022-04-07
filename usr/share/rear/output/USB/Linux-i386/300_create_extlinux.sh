@@ -57,7 +57,7 @@ function syslinux_has {
 # FIXME: Syslinux older than 3.62 do have menu.c32 but not submenu support
 #        We simplify by disabling MENU support for everything older than 3.62
 function syslinux_write {
-    if [[ "$@" ]]; then
+    if [[ "$*" ]]; then
         echo "$@" | syslinux_write
     elif [[ "$FEATURE_SYSLINUX_SUBMENU" ]]; then
         cat >&4

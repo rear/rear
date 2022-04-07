@@ -21,7 +21,7 @@ fi
 # in case the user populates this array manually we must not forget to copy
 # these files to our temporary isofs
 if test "${#ISO_FILES[@]}" -gt 0 ; then
-    cp -pL $v ${ISO_FILES[@]} $TMP_DIR/isofs/isolinux/ || Error "Failed to copy ISO_FILES '${ISO_FILES[@]}'"
+    cp -pL $v "${ISO_FILES[@]}" $TMP_DIR/isofs/isolinux/ || Error "Failed to copy ISO_FILES ${ISO_FILES[*]}"
 fi
 
 mkdir -p $v "$ISO_DIR" || Error "Failed to create ISO_DIR '$ISO_DIR'"

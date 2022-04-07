@@ -1,21 +1,23 @@
 # 960_dsmc_verify_isofile.sh
-if [[ ! "$TSM_RM_ISOFILE" =~ [yY1] ]] ; then
-    return
-fi
 
-Log "Verify if the files '$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso' were archived correctly with dsmc"
+is_true $TSM_RM_ISOFILE || return 0
+
+Log "Verify if the ISO file '$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso' was archived correctly with dsmc"
 if [[ -z "$TSM_ARCHIVE_MGMT_CLASS" ]]; then
     LC_ALL=${LANG_RECOVER} dsmc q backup "$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso" >/dev/null
 else
     LC_ALL=${LANG_RECOVER} dsmc q archive "$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso" >/dev/null
 fi
 if [[ $? -eq 0 ]]; then
-    Log "Removing the '${TSM_RESULT_FILES[@]}' files to preserve space"
-    rm $v -f ${TSM_RESULT_FILES[@]} >/dev/null
-    Log "Remove the $ISO_DIR/$ISO_PREFIX.iso to preserve space"
-    rm $v -f $ISO_DIR/$ISO_PREFIX.iso >/dev/null
-    LogPrint "The only remaining copy of the ISO file is under TSM:$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso"
+    Log "Removing $ISO_DIR/$ISO_PREFIX.iso to preserve space"
+    if rm $v -f $ISO_DIR/$ISO_PREFIX.iso ; then
+        LogPrint "The only remaining copy of the ISO file is under TSM:$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso"
+        Log "To preserve space also removing the TSM_RESULT_FILES ${TSM_RESULT_FILES[*]}"
+        rm $v -f "${TSM_RESULT_FILES[@]}"
+    else
+        Log "Could not remove $ISO_DIR/$ISO_PREFIX.iso so the local files are kept"
+    fi
 else
-   LogPrint "TSM did not confirm correctly if the ISO file was stored properly - not remove local ISO files"
+   LogPrint "TSM did not confirm that the ISO file was stored properly so the local files are kept"
 fi
 

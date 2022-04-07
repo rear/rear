@@ -2,7 +2,7 @@
 
 # TODO: What if there are logical volumes on the system but there is no 'lvm' binary?
 # Shouldn't then "rear mkrescue" better error out here than to silently skip LVM altogether?
-# Cf. "Try hard to care about possible errors in https://github.com/rear/rear/wiki/Coding-Style
+# Cf. "Try hard to care about possible errors" in https://github.com/rear/rear/wiki/Coding-Style
 # Think about a minimal system that was set up by a (full featured) installation system
 # but tools to set up things were not installed in the (now running) installed system.
 # For example 'parted' is usually no longer needed in the installed system.

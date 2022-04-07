@@ -5,10 +5,12 @@ is_false "$DISKS_TO_BE_WIPED" && return 0
 # The disks that will be completely wiped are those disks
 # where in diskrestore.sh the create_disk_label function is called
 # (the create_disk_label function calls "parted -s $disk mklabel $label")
-# for example like
+# for those that exist as disks on the bare hardware for example like
 #   create_disk_label /dev/sda gpt
 #   create_disk_label /dev/sdb msdos
+#   create_disk_label /dev/md127 gpt
 # so in this example DISKS_TO_BE_WIPED="/dev/sda /dev/sdb "
+# or if the user has specified DISKS_TO_BE_WIPED use only the existing block devices therein
 # cf. layout/recreate/default/120_confirm_wipedisk_disks.sh
 
 # Log the currently existing block devices structure on the unchanged replacement hardware
@@ -16,36 +18,7 @@ is_false "$DISKS_TO_BE_WIPED" && return 0
 Log "Block devices structure on the unchanged replacement hardware before the disks $DISKS_TO_BE_WIPED will be wiped (lsblk):"
 Log "$( lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,SIZE,MOUNTPOINT || lsblk -io NAME,KNAME,FSTYPE,SIZE,MOUNTPOINT || lsblk -i || lsblk )"
 
-# Open LUKS volumes so that nested storage objects inside LUKS volumes become visible.
-# For example in SLES the YaST installer provides a default LUKS encrypted LVM storage structure
-# where LVM storage objects are nested storage objects inside a LUKS encrypted volume as follows (lsblk output):
-#   NAME                                               KNAME     PKNAME    TRAN TYPE  FSTYPE       SIZE MOUNTPOINT
-#   /dev/sda                                           /dev/sda            ata  disk                20G
-#   |-/dev/sda1                                        /dev/sda1 /dev/sda       part                 8M
-#   `-/dev/sda2                                        /dev/sda2 /dev/sda       part  crypto_LUKS   20G
-#     `-/dev/mapper/cr_ata-QEMU_HARDDISK_QM00001-part2 /dev/dm-0 /dev/sda2      crypt LVM2_member   20G
-#       |-/dev/mapper/system-swap                      /dev/dm-1 /dev/dm-0      lvm   swap           2G [SWAP]
-#       |-/dev/mapper/system-root                      /dev/dm-2 /dev/dm-0      lvm   btrfs       12.6G /
-#       `-/dev/mapper/system-home                      /dev/dm-3 /dev/dm-0      lvm   xfs          5.4G /home
-# where /dev/mapper/cr_ata-QEMU_HARDDISK_QM00001-part2 is the (only) PV of a VG 'system'
-# that contains the LVs /dev/system/swap /dev/system/home /dev/system/root
-# To make such LVM storage objects visible for LVM tools like pvscan vgscan lvscan (cf. the LVM related code below)
-# so that those LVM storage objects can be properly removed their parent LUKS volume needs to be opened:
-local crypto_LUKS_kernel_devices luks_device luks_mapping_name
-# The luks_mapping_names where 'cryptsetup luksOpen' succeeded need to be later closed again (see below):
-local luks_mapping_names=""
-crypto_LUKS_kernel_devices="$( lsblk -nlpo KNAME,FSTYPE | grep ' crypto_LUKS$' | cut -s -d ' ' -f1 | tr -s '[:space:]' ' ' )"
-for luks_device in $crypto_LUKS_kernel_devices ; do
-    luks_mapping_name=luks-$( basename $luks_device )
-    LogUserOutput "Enter the password to open LUKS device $luks_device temporarily as $luks_mapping_name (or skip with [Ctrl]+[C])"
-    if ! cryptsetup luksOpen $luks_device $luks_mapping_name 0<&6 1>&7 2>&8 ; then
-        DebugPrint "LUKS device $luks_device not opened"
-        continue
-    fi
-    DebugPrint "LUKS device $luks_device temporarily opened as $luks_mapping_name"
-    luks_mapping_names+="$luks_mapping_name "
-done
-
+local disk_to_be_wiped
 # Wiping LVM storage objects:
 # The only way to get rid of LVM stuff is to deconstruct the LVM stuff
 # with LVM tools step by step from LVs to VGs to PVs.
@@ -90,7 +63,8 @@ detected_VGs="$( vgscan -y | grep 'Found volume group' |cut -s -d '"' -f2 | tr -
 detected_PVs="$( pvscan -y | grep -o 'PV /dev/[^ ]*' | cut -s -d ' ' -f2 | tr -s '[:space:]' ' ' )"
 # From the detected LVs VGs PVs remove only those that belong to one of the disks that will be wiped
 # i.e. keep LVs VGs PVs on disks that will not be wiped (e.g. a separated storage disk with LVM on it).
-local belongs_to_a_disk_to_be_wiped disk_to_be_wiped devices_belonging_to_disk detected_LV detected_VG detected_PV
+local belongs_to_a_disk_to_be_wiped devices_belonging_to_disk
+local detected_LV detected_VG detected_PV
 # Remove detected LVs ('for' does nothing when $detected_LVs is empty):
 #for detected_LV in $detected_LVs ; do
 #    belongs_to_a_disk_to_be_wiped="no"
@@ -165,24 +139,6 @@ for detected_PV in $detected_PVs ; do
     else
         LogPrintError "Failed to remove LVM physical volume $detected_PV ('pvremove $detected_PV' failed)"
     fi
-done
-
-# The luks_mapping_names where 'cryptsetup luksOpen' had succeeded above need to be closed again.
-# Leaving LUKS volumes open leads to errors later when "parted -s $disk mklabel $label" is called
-# in the diskrestore.sh script because then 'parted' fails with the following error message:
-#   Partitions ... have been written, but we have been unable to inform the kernel of the change,
-#   probably because it/they are in use. As a result, the old partition(s) will remain in use.
-#   You should probably reboot now before making further changes.
-# In this case it works to reboot the recovery system and then a second "rear recover" usually succeeds
-# because after plain wiping a disk with LUKS volumes the LUKS metadata/signatures are no longer there
-# so that LUKS cannot be in use in the rebooted recovery system and "parted -s $disk mklabel $label" can succeed.
-# But we like to do all in one single "rear recover" run so we need to clean up LUKS storage objects properly:
-for luks_mapping_name in $luks_mapping_names ; do
-    if ! cryptsetup luksClose $luks_mapping_name ; then
-        LogPrintError "Failed to close LUKS device $luks_device (still opened as $luks_mapping_name)"
-        continue
-    fi
-    DebugPrint "Closed LUKS device $luks_device (was temporarily opened as $luks_mapping_name)"
 done
 
 # Wipe RAID plus LVM plus LUKS metadata.

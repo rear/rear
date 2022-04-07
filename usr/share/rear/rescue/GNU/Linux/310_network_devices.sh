@@ -124,11 +124,11 @@ EOT
 # e.g. RHEL6 doesn't support that
 if readlink /foo /bar 2>/dev/null ; then
     function resolve () {
-        readlink -e $@
+        readlink -e "$@"
     }
 else
     function resolve () {
-        for path in $@ ; do
+        for path in "$@" ; do
             readlink -e $path
         done
     }
@@ -239,7 +239,7 @@ function map_network_interface () {
     local network_interface=$1
     local mapped_as=$2
 
-    if $( printf "%s\n" "${MAPPED_NETWORK_INTERFACES[@]}" | grep -qw ^$network_interface ) ; then
+    if printf "%s\n" "${MAPPED_NETWORK_INTERFACES[@]}" | grep -qw "^$network_interface" ; then
         # There is an error in the code. This means a handle_* function has
         # been called on an already mapped interface, which shouldn't happen.
         BugError "'$network_interface' is already mapped."
@@ -355,6 +355,11 @@ function is_interface_up () {
     local network_interface=$1
     local sysfspath=/sys/class/net/$network_interface
 
+    if IsInArray "$network_interface" "${EXCLUDE_NETWORK_INTERFACES[@]}"; then
+        LogPrint "Excluding '$network_interface' per EXCLUDE_NETWORK_INTERFACES directive."
+        return 1
+    fi
+
     local state=$( cat $sysfspath/operstate )
     if [ "$state" = "down" ] ; then
         return 1
@@ -403,11 +408,19 @@ function ipaddr_setup () {
     if [ -n "$ipaddrs" ] ; then
         # If some IP is found for the network interface, then use them
         for ipaddr in $ipaddrs ; do
+            if IsInArray "${ipaddr%%/*}" "${EXCLUDE_IP_ADDRESSES[@]}"; then
+                LogPrint "Excluding IP address '$ipaddr' per EXCLUDE_IP_ADDRESSES directive even through it's defined in mapping file '$CONFIG_DIR/mappings/ip_addresses'."
+                continue
+            fi
             echo "ip addr add $ipaddr dev $mapped_as"
         done
     else
         # Otherwise, collect IP addresses for the network interface on the system
         for ipaddr in $( ip a show dev $network_interface scope global | grep "inet.*\ " | tr -s " " | cut -d " " -f 3 ) ; do
+            if IsInArray "${ipaddr%%/*}" "${EXCLUDE_IP_ADDRESSES[@]}"; then
+                LogPrint "Excluding IP address '$ipaddr' per EXCLUDE_IP_ADDRESSES directive."
+                continue
+            fi
             echo "ip addr add $ipaddr dev $mapped_as"
         done
     fi
@@ -539,9 +552,7 @@ function handle_bridge () {
     if is_true $ip_link_supports_bridge ; then
         echo "ip link add name $network_interface type bridge stp_state $stp"
     elif has_binary brctl ; then
-        if [[ " ${REQUIRED_PROGS[@]} " != *\ brctl\ * ]] ; then
-            REQUIRED_PROGS+=( "brctl" )
-        fi
+        IsInArray "brctl" "${REQUIRED_PROGS[@]}" || REQUIRED_PROGS+=( "brctl" )
         echo "brctl addbr $network_interface"
         echo "brctl stp $network_interface $stp"
     else

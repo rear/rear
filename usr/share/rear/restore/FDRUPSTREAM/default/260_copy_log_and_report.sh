@@ -8,7 +8,7 @@ REARLOGPATH="$FDRUPSTREAM_DATA_PATH/rear/logs"
 
 # If SERVICENAME is empty, then FDR/Upstream is not running and we won't 
 # be able to find the log files.
-if [[ ! ${SERVICENAME[@]} ]]; then 
+if [[ ! "${SERVICENAME[*]}" ]]; then 
 	echo
 	LogPrintError "***************"
 	LogPrintError "***************"

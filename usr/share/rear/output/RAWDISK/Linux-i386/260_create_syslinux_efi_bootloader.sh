@@ -15,7 +15,9 @@ local syslinux_efi="$(find /usr/lib /usr/share -iname syslinux.efi -print | grep
 local ldlinux_e64="$(find /usr/lib /usr/share -iname ldlinux.e64 -print | head -n 1 )"
 
 # Pass if required syslinux EFI files cannot be found
-([[ -f "$syslinux_efi" ]] && [[ -f "$ldlinux_e64" ]]) || return 0
+# Avoid SC2235: Use { ..; } instead of (..) to avoid subshell overhead
+# cf. https://github.com/koalaman/shellcheck/wiki/SC2235
+{ [[ -f "$syslinux_efi" ]] && [[ -f "$ldlinux_e64" ]] ; } || return 0
 
 if is_true "${RAWDISK_BOOT_EXCLUDE_SYSLINUX_EFI:-no}"; then
     LogPrint "DISABLED: Using syslinux to create an EFI bootloader"

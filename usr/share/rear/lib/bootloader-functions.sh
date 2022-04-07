@@ -542,15 +542,15 @@ function create_grub2_cfg {
     local grub2_initrd="$2"
     test "$grub2_initrd" || BugError "create_grub2_cfg function called without grub2_initrd argument"
     DebugPrint "Configuring GRUB2 initrd $grub2_initrd"
-    local grub2_set_root_command="$3"
-    if ! test "$grub2_set_root_command" ; then
-        test "$grub2_set_root" && grub2_set_root_command="set root=$grub2_set_root"
+    local grub2_search_root_command="$3"
+    if ! test "$grub2_search_root_command" ; then
+        test "$grub2_set_root" && grub2_search_root_command="set root=$grub2_set_root"
     fi
-    if ! test "$grub2_set_root_command" ; then
-        test "$GRUB2_SET_USB_ROOT" && grub2_set_root_command="$GRUB2_SET_USB_ROOT"
+    if ! test "$grub2_search_root_command" ; then
+        test "$GRUB2_SEARCH_ROOT_COMMAND" && grub2_search_root_command="$GRUB2_SEARCH_ROOT_COMMAND"
     fi
-    test "$grub2_set_root_command" || grub2_set_root_command="search --no-floppy --set=root --file /boot/efiboot.img"
-    DebugPrint "Configuring GRUB2 root device as '$grub2_set_root_command'"
+    test "$grub2_search_root_command" || grub2_search_root_command="search --no-floppy --set=root --file /boot/efiboot.img"
+    DebugPrint "Configuring GRUB2 root device as '$grub2_search_root_command'"
 
     local grub2_default_menu_entry="$GRUB2_DEFAULT_BOOT"
     test "$grub2_default_menu_entry" || grub2_default_menu_entry="chainloader"
@@ -622,6 +622,7 @@ function create_grub2_cfg {
             cat << EOF
 menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear {
     insmod gzio
+    insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
     linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
     echo 'Loading initial ramdisk $grub2_initrd ...'
@@ -630,6 +631,7 @@ menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear {
 
 menuentry "Relax-and-Recover (UEFI and Secure Boot)" --id=rear_secure_boot {
     insmod gzio
+    insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
     linuxefi $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
     echo 'Loading initial ramdisk $grub2_initrd ...'
@@ -640,6 +642,7 @@ EOF
             cat << EOF
 menuentry "Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)" --id=rear {
     insmod gzio
+    insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
     linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
     echo 'Loading initial ramdisk $grub2_initrd ...'
@@ -710,7 +713,7 @@ EOF
     # Sleep 3 seconds before the GRUB2 menu replaces what there is on the screen
     # so that the user has a chance to see possible (error) messages on the screen.
     cat << EOF
-$grub2_set_root_command
+$grub2_search_root_command
 insmod all_video
 set gfxpayload=keep
 insmod part_gpt
@@ -781,6 +784,34 @@ function make_pxelinux_config {
     echo "    kernel $PXE_KERNEL"
     echo "    append initrd=$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
     echo "say ----------------------------------------------------------"
+
+    # start with optional rear http entry if specified
+    if [[ ! -z $PXE_HTTP_URL ]] ; then    
+        case "$PXE_RECOVER_MODE" in
+        "automatic")
+            echo "say rear-automatic-http - Recover $HOSTNAME (HTTP) with auto-recover kernel option"
+            echo "label rear-automatic-http"
+            echo "MENU label ^Automatic Recover $HOSTNAME (HTTP)"
+            ;;
+        "unattended")
+            echo "say rear-unattended-http - Recover $HOSTNAME (HTTP) with unattended kernel option"
+            echo "label rear-unattended-http"
+            echo "MENU label ^Unattended Recover $HOSTNAME (HTTP)"
+            ;;
+        *)
+            echo "say rear-http - Recover $HOSTNAME (HTTP)"
+            echo "label rear-http"
+            echo "MENU label ^Recover $HOSTNAME (HTTP)"
+            ;;
+        esac
+        echo "TEXT HELP"
+        echo "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)"
+        echo "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
+        echo "ENDTEXT"
+        echo "    kernel $PXE_HTTP_URL/$PXE_KERNEL"
+        echo "    append initrd=$PXE_HTTP_URL/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
+        echo "say ----------------------------------------------------------"
+    fi
 
     # start the the other entries like local,...
     echo "say local - Boot from next boot device"

@@ -247,8 +247,7 @@ TAPE_DEVICE\&.
 .PP
 OUTPUT=\fBUSB\fR
 .RS 4
-Create a bootable USB disk (using extlinux)\&. Specify the USB storage device by using
-USB_DEVICE\&.
+Create a bootable USB disk\&.
 .RE
 .PP
 OUTPUT=\fBRAWDISK\fR
@@ -638,9 +637,9 @@ domain=_domain_
 BACKUP_URL=\fBusb://\fR
 .RS 4
 To backup to USB storage device, use
-BACKUP_URL=usb:///dev/disk/by\-path/REAR\-000
-or use a real device node or a specific filesystem label\&. Alternatively, you can specify the device using
-USB_DEVICE=/dev/disk/by\-path/REAR\-000\&.
+BACKUP_URL=usb:///dev/disk/by\-label/REAR\-000
+or use a partition device node or a specific filesystem label\&. Alternatively, you may specify
+the partition device using USB_DEVICE=/dev/disk/by\-label/REAR\-000 if needed\&.
 .sp
 If you combine this with
 OUTPUT=USB

@@ -4,7 +4,12 @@
 # OR Request the user to hit ENTER to do a normal restore to the same client.
 
 # read NBU vars from NBU config file bp.conf
-while read KEY VALUE ; do echo "$KEY" | grep -qi '^#' && continue ; test -z "$KEY" && continue ; KEY="$(echo "$KEY" | tr a-z A-Z)" ; export NBU_$KEY="$(echo "$VALUE" | sed -e 's/=//' -e 's/ //g')" ; done </usr/openv/netbackup/bp.conf
+while read KEY VALUE ; do
+    echo "$KEY" | grep -qi '^#' && continue
+    test -z "$KEY" && continue
+    KEY="$( echo "$KEY" | tr '[:lower:]' '[:upper:]' )"
+    export NBU_$KEY="$( echo "$VALUE" | sed -e 's/=//' -e 's/ //g' )"
+done </usr/openv/netbackup/bp.conf
 
 NBU_CLIENT_SOURCE="${NBU_CLIENT_NAME}"
 

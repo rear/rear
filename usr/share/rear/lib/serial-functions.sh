@@ -73,12 +73,15 @@ function cmdline_add_console {
             fi
         done
     else
+        local real_consoles=""
         for devnode in $( get_serial_console_devices ) ; do
             # Only add for those device nodes that belong to actual serial devices:
-            speed=$( get_serial_device_speed $devnode ) && cmdline+=" console=${devnode##/dev/},$speed"
+            speed=$( get_serial_device_speed $devnode ) && real_consoles+=" console=${devnode##/dev/},$speed"
         done
+        cmdline+=" $real_consoles"
+
         # Add fallback console if no real serial device was found:
-        test "$speed" || cmdline+=" console=tty0"
+        test "$real_consoles" || cmdline+=" console=tty0"
     fi
 
     # Have a trailing space to be on the safe side
