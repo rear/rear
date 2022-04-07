@@ -72,7 +72,14 @@ do
     fi
     LogPrint "Patching filesystem UUIDs in $restored_file to current UUIDs"
     # Do not error out at this late state of "rear recover" (after the backup was restored) but inform the user:
-    sed -i "$sed_script" "$restored_file" || LogPrintError "Migrating filesystem UUIDs in $restored_file to current UUIDs failed"
+    sed -i.prerear "$sed_script" "$restored_file" || LogPrintError "Migrating filesystem UUIDs in $restored_file to current UUIDs failed";
+
+    # sed does not print an error if the pattern is not found in the file, thus we keep a backup and compare it to patched file.
+    # This does not cover the issue when multiple UUID must be updated and only one does not match, which should be rare ...
+    if test -f "$restored_file".prerear; then
+        diff "$restored_file" "$restored_file".prerear  >&2 && LogPrintError "WARNING File $restored_file has not been modified during UUID migration, please check if the old UUID is correct: sed script: *$sed_script *"
+	rm -f "$restored_file".prerear
+    fi
 done
 
 popd >&2
