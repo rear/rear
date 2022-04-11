@@ -184,7 +184,10 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
 
     line=( $( grep "UUID :" $mdadm_details ) )
     uuid=${line[2]}
-    test $uuid && raid_layout_entry+=" uuid=$uuid"
+    if test $uuid ; then
+        raid_layout_entry+=" uuid=$uuid"
+        echo "$uuid" >> $VAR_DIR/layout/config/disklayout.uuids
+    fi
 
     # A "Layout :" line in the detailed mdadm output normally looks like
     #          Layout : near=2
