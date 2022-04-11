@@ -179,6 +179,7 @@ fi
                     fi
                 fi
                 uuid=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'UUID:' | cut -d ':' -f 2 )
+                echo "$uuid" >> $VAR_DIR/layout/config/disklayout.uuids
                 echo -n " uuid=$uuid"
                 label=$( e2label $device )
                 echo -n " label=$label"
@@ -213,10 +214,12 @@ fi
             (vfat)
                 label=$(blkid_label_of_device $device)
                 uuid=$(blkid_uuid_of_device $device)
+                echo "$uuid" >> $VAR_DIR/layout/config/disklayout.uuids
                 echo -n " uuid=$uuid label=$label"
                 ;;
             (xfs)
                 uuid=$(xfs_admin -u $device | cut -d'=' -f 2 | tr -d " ")
+                echo "$uuid" >> $VAR_DIR/layout/config/disklayout.uuids
                 label=$(xfs_admin -l $device | cut -d'"' -f 2)
                 echo -n " uuid=$uuid label=$label "
                 # Save current XFS file system options.
@@ -227,6 +230,7 @@ fi
                 ;;
             (reiserfs)
                 uuid=$(debugreiserfs $device | grep "UUID" | cut -d":" -f "2" | tr -d " ")
+                echo "$uuid" >> $VAR_DIR/layout/config/disklayout.uuids
                 label=$(debugreiserfs $device | grep "LABEL" | cut -d":" -f "2" | tr -d " ")
                 echo -n " uuid=$uuid label=$label"
                 ;;
@@ -234,6 +238,7 @@ fi
                 # Remember devices and mountpoints of the btrfs filesystems for the btrfs subvolume layout stuff below:
                 btrfs_devices_and_mountpoints="$btrfs_devices_and_mountpoints $device,$mountpoint"
                 uuid=$( btrfs filesystem show $device | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )
+                echo "$uuid" >> $VAR_DIR/layout/config/disklayout.uuids
                 label=$( btrfs filesystem show $device | grep -o 'Label: [^ ]*' | cut -d ':' -f 2 | tr -d '[:space:]' )
                 test "none" = "$label" && label=
                 echo -n " uuid=$uuid label=$label"
