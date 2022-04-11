@@ -126,6 +126,7 @@ while read target_name junk ; do
         # and https://github.com/rear/rear/issues/2509
         LogPrintError "Error: No 'uuid' value for LUKS$version volume $target_name in $source_device (mounting it or booting the recreated system may fail)"
     fi
+    echo "$uuid" >> $VAR_DIR/layout/config/disklayout.uuids
 
     echo "crypt /dev/mapper/$target_name $source_device type=$luks_type cipher=$cipher key_size=$key_size hash=$hash uuid=$uuid $keyfile_option" >> $DISKLAYOUT_FILE
 
