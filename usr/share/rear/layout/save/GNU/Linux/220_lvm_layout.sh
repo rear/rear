@@ -129,6 +129,7 @@ local lvs_exit_code
         fi
         # With the above example the output is:
         # lvmdev /dev/system /dev/sda1 7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7 41940992
+        echo "$uuid" >> $VAR_DIR/layout/config/disklayout.uuids
         echo "lvmdev /dev/$vgrp $pdev $uuid $size"
 
     done
