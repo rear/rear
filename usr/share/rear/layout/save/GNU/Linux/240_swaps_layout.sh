@@ -44,6 +44,7 @@ Log "Saving Swap information."
 	   done
         fi
 
+        echo "$uuid" >> $VAR_DIR/layout/config/disklayout.uuids
         echo "swap $filename uuid=$uuid label=$label"
     done < /proc/swaps
 ) >> $DISKLAYOUT_FILE
