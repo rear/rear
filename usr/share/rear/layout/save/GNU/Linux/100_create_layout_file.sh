@@ -7,6 +7,9 @@ mkdir -p $v $VAR_DIR/layout
 mkdir -p $v $VAR_DIR/recovery
 mkdir -p $v $VAR_DIR/layout/config
 
+# Use a new VAR_DIR/layout/config/disklayout.uuids from scratch:
+rm -f $VAR_DIR/layout/config/disklayout.uuids
+
 # We need directory for XFS options only if XFS is in use:
 if test "$( mount -t xfs )" ; then
     LAYOUT_XFS_OPT_DIR="$VAR_DIR/layout/xfs"
