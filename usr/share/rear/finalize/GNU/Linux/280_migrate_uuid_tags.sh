@@ -42,6 +42,8 @@ pushd $TARGET_FS_ROOT >/dev/null
 local config_files=()
 local obj
 for obj in "${CHECK_CONFIG_FILES[@]}" ; do
+    # Strip leading slash because we need relative file and directory names inside TARGET_FS_ROOT:
+    obj=${obj#/}
     if test -d "$obj" ; then
         config_files+=( $( find "$obj" -type f ) )
     elif test -e "$obj" ; then
