@@ -1,5 +1,63 @@
 # migrate fs_uuid_mapping
 
+# Check if UUIDs in disklayout.conf still appear in the restored config files.
+# During "rear mkrescue/mkbackup/mkbackuponly/savelayout" various layout/save/ scripts
+# stored the UUIDs in disklayout.conf in var/lib/rear/layout/config/disklayout.uuids
+# (e.g. see layout/save/GNU/Linux/230_filesystem_layout.sh)
+# and finally the script layout/save/default/600_snapshot_files.sh
+# extracted which UUIDs in disklayout.conf appear in a config file in CHECK_CONFIG_FILES
+# and saved those UUIDs as DISKLAYOUT_UUIDS_IN_CONFIG_FILES in etc/rear/rescue.conf
+# which is now used for comparison during "rear recover"
+# if those UUIDs still appear in a restored config file in CHECK_CONFIG_FILES
+# in the restored files of the recreated system under /mnt/local.
+# One reason for this check is that the subsequent UUID mapping code cannot work
+# when restored config files have different UUIDs than those in disklayout.conf because
+# FS_UUID_MAP contains UUIDs that were changed during disk layout recreation in the form
+#   disklayout_conf_UUID recreated_UUID device
+# (see layout/prepare/GNU/Linux/131_include_filesystem_code.sh)
+# from which a sed script is created below that replaces disklayout_conf_UUID by recreated_UUID
+# but this sed script cannot work when restored config files have different UUIDs
+# than those in disklayout.conf because the UUIDs in disklayout.conf will not match.
+# The main reason for this check is that normally UUIDs get recreated as stored in disklayout.conf
+# because nowadays tools (e.g. mkfs) can set UUIDs so normally the UUID mapping code has nothing to do.
+# But when restored config files have different UUIDs than those in disklayout.conf
+# the restored config files have UUIDs that are different than the recreated UUIDs
+# so the restored config files cannot work because their UUIDs do not exist in the recreated system.
+# It is not possible to automatically adjust wrong UUIDs in restored config files with reasonable effort
+# because we know only the UUIDs in disklayout.conf and the UUIDs in the recreated system
+# but we do not know with what UUID a wrong UUID in a restored config file should be replaced
+# because we do not have the config files from the time when disklayout.conf was created.
+# The reason why restored config files can have different UUIDs than those in disklayout.conf
+# is that the backup does not match the ReaR recovery system.
+# E.g. when the backup was made at a different time than when the ReaR recovery system was made
+# (i.e. "rear mkrescue" was run at a different time than when the backup was made).
+# Using "rear mkbackup" avoids such inconsistencies but most external backup methods
+# do not support "rear mkbackup" so the user is responsible to ensure his backup and
+# his ReaR recovery system are consistent, cf https://github.com/rear/rear/issues/2787
+
+# Go to the restored files directory.
+# Careful in case of 'return' after 'pushd' (must call the matching 'popd' before 'return'):
+pushd $TARGET_FS_ROOT >/dev/null
+# Get the restored config files in CHECK_CONFIG_FILES:
+local config_files=()
+local obj
+for obj in "${CHECK_CONFIG_FILES[@]}" ; do
+    if test -d "$obj" ; then
+        config_files+=( $( find "$obj" -type f ) )
+    elif test -e "$obj" ; then
+        config_files+=( "$obj" )
+    fi
+done
+# Check if each UUID that was in at least one of the config files
+# in CHECK_CONFIG_FILES at the time when disklayout.conf was created
+# is now in at least one of the restored config files in CHECK_CONFIG_FILES:
+local uuid
+for uuid in $DISKLAYOUT_UUIDS_IN_CONFIG_FILES ; do
+    grep -q "$uuid" "${config_files[@]}" || LogPrintError "UUID $uuid not found in a restored config file (likely this must be manually corrected)"
+done
+# Go back from the restored files directory:
+popd >/dev/null
+
 # skip if no mappings
 test -s "$FS_UUID_MAP" || return 0
 
