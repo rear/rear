@@ -57,7 +57,7 @@ done
 # is now in at least one of the restored config files in CHECK_CONFIG_FILES:
 local uuid
 for uuid in $DISKLAYOUT_UUIDS_IN_CONFIG_FILES ; do
-    # Do not error out because at this late state of "rear recover" (i.e. after the backup was restored)
+    # Do not error out because at this late state of "rear recover" (after the backup was restored)
     # but show the error to the user so after "rear recover" finished he can manually fix things as needed:
     grep -q "$uuid" "${config_files[@]}" || LogPrintError "Error: UUID $uuid not found in a restored config file (must be manually corrected before reboot)"
 done
@@ -72,15 +72,15 @@ popd >/dev/null
 #   disklayout_conf_UUID recreated_UUID device
 # (see layout/prepare/GNU/Linux/131_include_filesystem_code.sh)
 # from which a sed script is created that replaces disklayout_conf_UUID by recreated_UUID
-# in restored config files.
+# that is run for certain restored config files.
 
-# skip if no mappings
+# Nothing to do when there are no mappings:
 test -s "$FS_UUID_MAP" || return 0
 
 # FIXME: What the heck does that "TAG-15-migrate" mean?
 Log "TAG-15-migrate: $FS_UUID_MAP"
 
-# create the sed script
+# Create the sed script:
 local sed_script=""
 local old_uuid new_uuid device
 while read old_uuid new_uuid device ; do
@@ -90,15 +90,16 @@ done < <( sort -u $FS_UUID_MAP )
 Debug "$sed_script"
 
 # Careful in case of 'return' after 'pushd' (must call the matching 'popd' before 'return'):
-pushd $TARGET_FS_ROOT >&2
+pushd $TARGET_FS_ROOT >/dev/null
 
-# now run sed
 LogPrint "Migrating filesystem UUIDs in certain restored files in $TARGET_FS_ROOT to current UUIDs ..."
 
 local symlink_target=""
 local restored_file=""
-# the funny [] around the first letter make sure that shopt -s nullglob removes this file from the list if it does not exist
-# the files without a [] are mandatory, like fstab FIXME: but below there is [e]tc/fstab not etc/fstab - why?
+# The [] around the first letter triggers bash pathname expansion to ensure
+# that 'shopt -s nullglob' removes this file from the list if it does not exist.
+# Files without [] are mandatory, like fstab.
+# FIXME: Below there is [e]tc/fstab not etc/fstab - why?
 for restored_file in [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* \
                      [b]oot/grub/{grub.conf,grub.cfg,menu.lst,device.map} \
                      [b]oot/grub2/{grub.conf,grub.cfg,menu.lst,device.map} \
@@ -112,8 +113,8 @@ for restored_file in [b]oot/{grub.conf,menu.lst,device.map} [e]tc/grub.* \
 do
     # Silently skip directories and file not found:
     test -f "$restored_file" || continue
-    # 'sed -i' bails out on symlinks, so we follow the symlink and patch the symlink target
-    # on dead links we inform the user and skip them
+    # 'sed -i' bails out on symlinks, so we follow the symlink and patch the symlink target.
+    # On dead links we inform the user and skip them.
     # TODO: We should do this inside 'chroot $TARGET_FS_ROOT' so that absolute symlinks will work correctly
     # cf. https://github.com/rear/rear/issues/1338
     if test -L "$restored_file" ; then
@@ -149,5 +150,5 @@ do
     sed -i "$sed_script" "$restored_file" || LogPrintError "Migrating filesystem UUIDs in $restored_file to current UUIDs failed"
 done
 
-popd >&2
+popd >/dev/null
 
