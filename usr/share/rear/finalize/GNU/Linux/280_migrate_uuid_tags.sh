@@ -1,4 +1,3 @@
-# migrate fs_uuid_mapping
 
 # Check if UUIDs in disklayout.conf still appear in the restored config files.
 # During "rear mkrescue/mkbackup/mkbackuponly/savelayout" various layout/save/ scripts
@@ -19,12 +18,8 @@
 # for those UUIDs that were adapted to the actually recreated UUIDs by the mapping code.
 # One reason for this check is that the subsequent UUID mapping code cannot work
 # when restored config files have different UUIDs than those in disklayout.conf because
-# FS_UUID_MAP contains UUIDs that were changed during disk layout recreation in the form
-#   disklayout_conf_UUID recreated_UUID device
-# (see layout/prepare/GNU/Linux/131_include_filesystem_code.sh)
-# from which a sed script is created below that replaces disklayout_conf_UUID by recreated_UUID
-# but this sed script cannot work when restored config files have different UUIDs
-# than those in disklayout.conf because the UUIDs in disklayout.conf will not match.
+# it adapts disklayout.conf UUIDs in restored config files to the actually recreated UUIDs
+# which cannot work when restored config files do not contain the disklayout.conf UUIDs.
 # The main reason for this check is that normally UUIDs get recreated as stored in disklayout.conf
 # because nowadays tools (e.g. mkfs) can set UUIDs so normally the UUID mapping code has nothing to do.
 # But when restored config files have different UUIDs than those in disklayout.conf
@@ -68,6 +63,16 @@ for uuid in $DISKLAYOUT_UUIDS_IN_CONFIG_FILES ; do
 done
 # Go back from the restored files directory:
 popd >/dev/null
+
+# UUID mapping:
+# UUIDs that were recreated different than what is stored in disklayout.conf
+# need to be adapted in restored config files:
+# FS_UUID_MAP is /var/lib/rear/layout/fs_uuid_mapping which contains UUIDs
+# that were changed during disk layout recreation in the form
+#   disklayout_conf_UUID recreated_UUID device
+# (see layout/prepare/GNU/Linux/131_include_filesystem_code.sh)
+# from which a sed script is created that replaces disklayout_conf_UUID by recreated_UUID
+# in restored config files.
 
 # skip if no mappings
 test -s "$FS_UUID_MAP" || return 0
