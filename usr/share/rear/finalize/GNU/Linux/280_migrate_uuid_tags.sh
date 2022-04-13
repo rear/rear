@@ -10,6 +10,13 @@
 # which is now used for comparison during "rear recover"
 # if those UUIDs still appear in a restored config file in CHECK_CONFIG_FILES
 # in the restored files of the recreated system under /mnt/local.
+# This check must run before the UUID mapping code below because
+# the UUID mapping code may change UUIDs in restored config files
+# but this check is meant to detect if UUIDs in restored config files
+# do not match the UUIDs from the time when disklayout.conf was created
+# (i.e. to detect when the backup does not match the ReaR recovery system)
+# so if this check was run after the UUID mapping code it would report false positives
+# for those UUIDs that were adapted to the actually recreated UUIDs by the mapping code.
 # One reason for this check is that the subsequent UUID mapping code cannot work
 # when restored config files have different UUIDs than those in disklayout.conf because
 # FS_UUID_MAP contains UUIDs that were changed during disk layout recreation in the form
@@ -55,7 +62,9 @@ done
 # is now in at least one of the restored config files in CHECK_CONFIG_FILES:
 local uuid
 for uuid in $DISKLAYOUT_UUIDS_IN_CONFIG_FILES ; do
-    grep -q "$uuid" "${config_files[@]}" || LogPrintError "UUID $uuid not found in a restored config file (likely this must be manually corrected)"
+    # Do not error out because at this late state of "rear recover" (i.e. after the backup was restored)
+    # but show the error to the user so after "rear recover" finished he can manually fix things as needed:
+    grep -q "$uuid" "${config_files[@]}" || LogPrintError "Error: UUID $uuid not found in a restored config file (must be manually corrected before reboot)"
 done
 # Go back from the restored files directory:
 popd >/dev/null
