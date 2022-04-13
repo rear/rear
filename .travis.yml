@@ -1,11 +1,13 @@
-language: shell
-
-arch:
-  - amd64
-  - ppc64le
-
-os: linux
-
-script:
-  - make validate
-  - sudo make install
+# Since June 15th, 2021, the building on travis-ci.org is ceased. Please use travis-ci.com from now on.
+#
+# language: shell
+# 
+# arch:
+#   - amd64
+#   - ppc64le
+# 
+# os: linux
+# 
+# script:
+#   - make validate
+#   - sudo make install
