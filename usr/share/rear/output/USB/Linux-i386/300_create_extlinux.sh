@@ -143,6 +143,13 @@ EOF
 
 # Clean up older images of a given system, but keep USB_RETAIN_BACKUP_NR
 # entries for backup and rescue when backup on USB works in default mode.
+# It keeps by default the two (by default USB_RETAIN_BACKUP_NR=2)
+# topmost directories of the "ls -dt $BUILD_DIR/outputfs/rear/$HOSTNAME/*"
+# output ("ls -t" sorts by time, newest first)
+# regardless whether or not a new backup or a new rescue system was created
+# so when there is no new backup or no new rescue system
+# it keeps the existing directories as is,
+# cf. https://github.com/rear/rear/pull/2794#issuecomment-1106286485
 # When USB_SUFFIX is set the compliance mode is used where
 # backup on USB works in compliance with backup on NFS which means
 # a fixed backup directory and no automated removal of backups or other stuff
