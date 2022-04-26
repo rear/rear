@@ -1,8 +1,6 @@
 Relax-and-Recover
 =================
 
-image:https://travis-ci.org/rear/rear.svg?branch=master["Build Status", link="https://travis-ci.org/rear/rear"]
-
 Relax-and-Recover is the leading Open Source bare metal disaster recovery
 and system migration solution. It is a modular framework with many
 ready-to-go workflows for common situations.
