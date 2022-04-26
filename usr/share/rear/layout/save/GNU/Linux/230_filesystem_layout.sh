@@ -452,8 +452,10 @@ fi
                     # try to find the mountpoint in /etc/fstab and try to read the subvol=... option value if exists
                     # (using subvolid=... can fail because the subvolume ID can be different during system recovery).
                     # Because both "mount ... -o subvol=/path/to/subvolume" and "mount ... -o subvol=path/to/subvolume" work
-                    # the subvolume path can be specified with or without leading '/':
-                    btrfs_subvolume_path=$( egrep "[[:space:]]$subvolume_mountpoint[[:space:]]+btrfs[[:space:]]" /etc/fstab \
+                    # the subvolume path can be specified with or without leading '/'.
+                    # Aviod SC1087 by using ${subvolume_mountpoint} with curly brackets because
+                    # we need the subsequent square brackets literally (subvolume_mountpoint is a string, not an array):
+                    btrfs_subvolume_path=$( egrep "[[:space:]]${subvolume_mountpoint}[[:space:]]+btrfs[[:space:]]" /etc/fstab \
                                             | egrep -v '^[[:space:]]*#' \
                                             | grep -o 'subvol=[^ ]*' | cut -s -d '=' -f 2 )
                 fi
