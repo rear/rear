@@ -261,7 +261,7 @@ else
 fi
 # Code regarding creating a backup is useless during "rear recover" and
 # messages about creating a backup are misleading during "rear recover":
-if ! IsInArray $WORKFLOW ${recovery_workflows[@]} ; then
+if ! IsInArray "$WORKFLOW" "${recovery_workflows[@]}" ; then
     # Set the right variables for creating a backup (but do not actually do anything at this point):
     case "$create_backup_type" in
         (full)
