@@ -322,7 +322,11 @@ function DoExitTasks () {
     done
 }
 
-# The command (actually the function) DoExitTasks is executed on exit from the shell:
+# The command (actually the function) DoExitTasks is executed on exit from the shell.
+# Avoid SC2218 "This function is only defined later. Move the definition up."
+# because it seems ShellCheck falsely thinks 'trap' is the below defined function
+# (i.e. it seems ShellCheck does not recognize 'builtin')
+# shellcheck disable=SC2218
 builtin trap "DoExitTasks" EXIT
 
 # Prepare that STDIN STDOUT and STDERR can be later redirected to anywhere
@@ -360,7 +364,11 @@ QuietAddExitTask "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WO
 
 # USR1 is used to abort on errors.
 # It is not using PrintError but does direct output to the original STDERR.
-# Set EXIT_FAIL_MESSAGE to 0 to avoid an additional failed message via the QuietAddExitTask above:
+# Set EXIT_FAIL_MESSAGE to 0 to avoid an additional failed message via the QuietAddExitTask above.
+# Avoid SC2218 "This function is only defined later. Move the definition up."
+# because it seems ShellCheck falsely thinks 'trap' is the below defined function
+# (i.e. it seems ShellCheck does not recognize 'builtin')
+# shellcheck disable=SC2218
 builtin trap "EXIT_FAIL_MESSAGE=0 ; echo '${MESSAGE_PREFIX}Aborting due to an error, check $RUNTIME_LOGFILE for details' 1>&8 ; kill $MASTER_PID" USR1
 
 # Make sure nobody else can use trap:
