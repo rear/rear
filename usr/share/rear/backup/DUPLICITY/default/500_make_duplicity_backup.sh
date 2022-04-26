@@ -43,11 +43,13 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     if ! is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
         set -f # Temporarily Stop Evaluation of Patterns By the Shell
     fi
-
+    # Disable SC2068: "Double quote array expansions to avoid re-splitting elements."
+    # because whether or not "Evaluation of Patterns By the Shell" (globbing) happens
+    # is controlled by BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL
+    # shellcheck disable=SC2068
     for EXDIR in ${BACKUP_DUPLICITY_EXCLUDE[@]} ; do
-        EXCLUDES="$EXCLUDES --exclude $EXDIR"
+        EXCLUDES+=" --exclude $EXDIR"
     done
-
     if ! is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
         set +f # Reenable Evaluation of Patterns By the Shell
     fi
