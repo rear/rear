@@ -174,7 +174,7 @@ case "$(basename ${BACKUP_PROG})" in
 
         # Variable used to record the short name of piped commands in case of
         # error, e.g. ( "tar" "cat" "dd" ) in case of unencrypted and unsplit backup.
-        for index in ${!backup_prog_shortnames[@]} ; do
+        for index in "${!backup_prog_shortnames[@]}" ; do
             [ -n "${backup_prog_shortnames[$index]}" ] || BugError "No computed shortname for pipe component $index"
         done
 
