@@ -5,7 +5,7 @@
 function FindUsbDevices () {
     local d sysfspath device
     # we use the model to find USB devices
-    for d in $( ls /sys/block/*/device/model ) ; do
+    for d in /sys/block/*/device/model ; do
         grep -q -i -E 'usb|FlashDisk' $d || continue
         # analyzing $d
         # /sys/block/sdb
