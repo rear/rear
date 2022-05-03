@@ -34,7 +34,12 @@ for to_be_checked in "${CHECK_CONFIG_FILES[@]}" ; do
         files_for_md5sum+=( "$to_be_checked")
         continue
     fi
-    # TODO: What about symlinks to directories?
+    # FIXME: What about symlinks to directories?
+    # 'md5sum' cannot check directories:
+    #   # md5sum /etc
+    #   md5sum: /etc: Is a directory
+    # so symlinks to directories must be evaluated to its files
+    # like the directories above.
     Log "Skip $to_be_checked in CHECK_CONFIG_FILES (no such file or directory)"
 done
 
