@@ -49,6 +49,14 @@ done
 pushd / >/dev/null
 # The variable expansion is deliberately not quoted in order to perform
 # pathname expansion on the variable value.
+# FIXME: Plain pathname expansion does not descend into sub-directories
+# e.g. on my openSUSE Leap 15.3 system I (<jsmeix@suse.de>) get
+#   # for file in /etc/* ; do echo "'$file'" ; done | wc -l
+#   331
+#   # find /etc -type f | wc -l
+#   1876
+# so directories must be evaluated to its files
+# like the directories above at CHECK_CONFIG_FILES.
 local to_be_patched absolute_file symlink_target
 for to_be_patched in $FILES_TO_PATCH_PATTERNS ; do
     # Ensure an absolute file name is used:
