@@ -20,27 +20,39 @@ test -s $VAR_DIR/layout/config/files.md5sum || return 0
 local files_for_md5sum=()
 
 # Regenerate the list of files from what is in CHECK_CONFIG_FILES:
-local to_be_checked
+local to_be_checked files_to_be_checked file_to_be_checked
 for to_be_checked in "${CHECK_CONFIG_FILES[@]}" ; do
     # Skip empty or blank elements in CHECK_CONFIG_FILES:
     test $to_be_checked || continue
-    # Include all what is in directories:
-    if test -d "$to_be_checked" ; then
-        files_for_md5sum+=( $( find "$to_be_checked" -type f ) )
+    # Include all what is in regular files, symlinks to regular files, directories and in symlinks to directories:
+    # 'find -L' is needed to follow symbolic links which are reported as the symlink name
+    # which is intended because we want to store the md5sum under its symlink name
+    # because we want to also detect when the symlink changes to a different target
+    # but '-type f' matches against the type of the symlink target
+    # which is also intended because 'md5sum' needs regular files.
+    # Dead symlinks are silenty skipped because '-type f' does not match dead symlinks
+    # because for regular files and symlinks to regular files
+    # 'find -L ... -type f' outputs the regular file name
+    # or the symlink name provided a symlink target (of type 'f') exists:
+    files_to_be_checked="$( find -L "$to_be_checked" -type f )"
+    if ! test "$files_to_be_checked" ; then
+        Log "Skip $to_be_checked in CHECK_CONFIG_FILES (no regular file matches)"
         continue
     fi
-    # Include regular files and symlinks as is:
-    if test -e "$to_be_checked" ; then
-        files_for_md5sum+=( "$to_be_checked")
-        continue
-    fi
-    # FIXME: What about symlinks to directories?
-    # 'md5sum' cannot check directories:
-    #   # md5sum /etc
-    #   md5sum: /etc: Is a directory
-    # so symlinks to directories must be evaluated to its files
-    # like the directories above.
-    Log "Skip $to_be_checked in CHECK_CONFIG_FILES (no such file or directory)"
+    # Now files_to_be_checked contains regular files and symlinks to regular files:
+    for file_to_be_checked in $files_to_be_checked ; do
+        # If it is a symlink and its target contains /proc/ /sys/ /dev/ or /run/ we skip it
+        # because files on those filesystems are expected to change arbitrarily
+        # so validating their md5sums makes no sense:
+        if test -L $file_to_be_checked ; then
+            symlink_target="$( readlink -e "$file_to_be_checked" )"
+            if egrep -q '/proc/|/sys/|/dev/|/run/' <<< $symlink_target ; then
+                Log "Skip $file_to_be_checked from CHECK_CONFIG_FILES (symlink with target $symlink_target in /proc/ /sys/ /dev/ /run/)"
+                continue
+            fi
+        fi
+        files_for_md5sum+=( "$file_to_be_checked" )
+    done
 done
 
 # Append the regenerated list of files with what is in FILES_TO_PATCH_PATTERNS:
@@ -49,38 +61,41 @@ done
 pushd / >/dev/null
 # The variable expansion is deliberately not quoted in order to perform
 # pathname expansion on the variable value.
-# FIXME: Plain pathname expansion does not descend into sub-directories
-# e.g. on my openSUSE Leap 15.3 system I (<jsmeix@suse.de>) get
-#   # for file in /etc/* ; do echo "'$file'" ; done | wc -l
-#   331
-#   # find /etc -type f | wc -l
-#   1876
-# so directories must be evaluated to its files
-# like the directories above at CHECK_CONFIG_FILES.
-local to_be_patched absolute_file symlink_target
+local to_be_patched absolute_file
 for to_be_patched in $FILES_TO_PATCH_PATTERNS ; do
     # Ensure an absolute file name is used:
     absolute_file="/$to_be_patched"
-    IsInArray "$absolute_file" "${files_for_md5sum[@]}" && continue
-    # Symlink handling: replace symlinks by targets (not strictly necessary, but consistent
-    # with 280_migrate_uuid_tags.sh), avoid dead symlinks, and symlinks to files
-    # on dynamic filesystem ( /proc etc.) - they are expected to change
-    # and validating their checksums has no sense:
-    if test -L "$absolute_file" ; then
-        if ! symlink_target="$( readlink -e "$absolute_file" )" ; then
-            LogPrint "Skip dead symlink $to_be_patched in FILES_TO_PATCH_PATTERNS"
-            continue
-        fi
-        # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
-        # the symlink target is considered to not be a restored file that needs to be patched
-        # and thus we don't need to generate and check its hash, either
-        # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
-        if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
-            Log "Skip $to_be_patched in FILES_TO_PATCH_PATTERNS (symlink with target $symlink_target in /proc/ /sys/ /dev/ /run/)"
-            continue
-        fi
+    # Include all what is in regular files, symlinks to regular files, directories and in symlinks to directories:
+    # 'find -L' is needed to follow symbolic links which are reported as the symlink name
+    # which is intended because we want to store the md5sum under its symlink name
+    # because we want to also detect when the symlink changes to a different target
+    # but '-type f' matches against the type of the symlink target
+    # which is also intended because 'md5sum' needs regular files.
+    # Dead symlinks are silenty skipped because '-type f' does not match dead symlinks
+    # because for regular files and symlinks to regular files
+    # 'find -L ... -type f' outputs the regular file name
+    # or the symlink name provided a symlink target (of type 'f') exists:
+    files_to_be_checked="$( find -L "$absolute_file" -type f )"
+    if ! test "$files_to_be_checked" ; then
+        Log "Skip $to_be_patched in FILES_TO_PATCH_PATTERNS (no regular file matches)"
+        continue
     fi
-    files_for_md5sum+=( "$absolute_file" )
+    # Now files_to_be_checked contains regular files and symlinks to regular files:
+    for file_to_be_checked in $files_to_be_checked ; do
+        # Aviod duplicates (i.e. when something in CHECK_CONFIG_FILES and FILES_TO_PATCH_PATTERNS evaluate to the same):
+        IsInArray "$file_to_be_checked" "${files_for_md5sum[@]}" && continue
+        # If it is a symlink and its target contains /proc/ /sys/ /dev/ or /run/ we skip it
+        # because files on those filesystems are expected to change arbitrarily
+        # so validating their md5sums makes no sense:
+        if test -L $file_to_be_checked ; then
+            symlink_target="$( readlink -e "$file_to_be_checked" )"
+            if egrep -q '/proc/|/sys/|/dev/|/run/' <<< $symlink_target ; then
+                Log "Skip $file_to_be_checked from FILES_TO_PATCH_PATTERNS (symlink with target $symlink_target in /proc/ /sys/ /dev/ /run/)"
+                continue
+            fi
+        fi
+        files_for_md5sum+=( "$file_to_be_checked" )
+    done
 done
 popd >/dev/null
 
