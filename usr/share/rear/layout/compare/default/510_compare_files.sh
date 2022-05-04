@@ -36,7 +36,7 @@ for to_be_checked in "${CHECK_CONFIG_FILES[@]}" ; do
     # or the symlink name provided a symlink target (of type 'f') exists:
     files_to_be_checked="$( find -L "$to_be_checked" -type f )"
     if ! test "$files_to_be_checked" ; then
-        Log "Skip $to_be_checked in CHECK_CONFIG_FILES (no regular file matches)"
+        DebugPrint "Skip $to_be_checked in CHECK_CONFIG_FILES (no regular file matches)"
         continue
     fi
     # Now files_to_be_checked contains regular files and symlinks to regular files:
@@ -47,7 +47,7 @@ for to_be_checked in "${CHECK_CONFIG_FILES[@]}" ; do
         if test -L $file_to_be_checked ; then
             symlink_target="$( readlink -e "$file_to_be_checked" )"
             if egrep -q '/proc/|/sys/|/dev/|/run/' <<< $symlink_target ; then
-                Log "Skip $file_to_be_checked from CHECK_CONFIG_FILES (symlink with target $symlink_target in /proc/ /sys/ /dev/ /run/)"
+                DebugPrint "Skip $file_to_be_checked from CHECK_CONFIG_FILES (symlink with target $symlink_target in /proc/ /sys/ /dev/ /run/)"
                 continue
             fi
         fi
@@ -77,7 +77,7 @@ for to_be_patched in $FILES_TO_PATCH_PATTERNS ; do
     # or the symlink name provided a symlink target (of type 'f') exists:
     files_to_be_checked="$( find -L "$absolute_file" -type f )"
     if ! test "$files_to_be_checked" ; then
-        Log "Skip $to_be_patched in FILES_TO_PATCH_PATTERNS (no regular file matches)"
+        DebugPrint "Skip $to_be_patched in FILES_TO_PATCH_PATTERNS (no regular file matches)"
         continue
     fi
     # Now files_to_be_checked contains regular files and symlinks to regular files:
@@ -90,7 +90,7 @@ for to_be_patched in $FILES_TO_PATCH_PATTERNS ; do
         if test -L $file_to_be_checked ; then
             symlink_target="$( readlink -e "$file_to_be_checked" )"
             if egrep -q '/proc/|/sys/|/dev/|/run/' <<< $symlink_target ; then
-                Log "Skip $file_to_be_checked from FILES_TO_PATCH_PATTERNS (symlink with target $symlink_target in /proc/ /sys/ /dev/ /run/)"
+                DebugPrint "Skip $file_to_be_checked from FILES_TO_PATCH_PATTERNS (symlink with target $symlink_target in /proc/ /sys/ /dev/ /run/)"
                 continue
             fi
         fi
@@ -110,7 +110,13 @@ if cmp -s <( sort $VAR_DIR/layout/config/files.md5sum ) <( sort $TMP_DIR/files.m
 else
     # The 'cmp' exit status is 0 if inputs are the same, 1 if different, 2 if trouble.
     # In case of 'trouble' do the same as when the layout has changed to be on the safe side:
-    LogPrint "There are changes related to configuration files and files to be patched"
+    LogPrintError "There are changes related to configuration files and files to be patched"
     # In the log file show the changes:
     diff -U0 <( sort $VAR_DIR/layout/config/files.md5sum ) <( sort $TMP_DIR/files.md5sum )
+    # Store the latest md5sum file and move the previous one away as 'outdated'
+    # so there is no longer an outdated md5sum file (e.g. from a previous "savelayout"):
+    cp -p $TMP_DIR/files.md5sum $VAR_DIR/layout/config/files.md5sum.$WORKFLOW
+    mv -f $VAR_DIR/layout/config/files.md5sum $VAR_DIR/layout/config/files.md5sum.outdated
+    DebugPrint "The current md5sum file is $VAR_DIR/layout/config/files.md5sum.$WORKFLOW"
+    DebugPrint "The old md5sum file is kept as $VAR_DIR/layout/config/files.md5sum.outdated"
 fi
