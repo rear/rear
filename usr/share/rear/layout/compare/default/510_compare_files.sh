@@ -13,8 +13,13 @@
 # (except differences in the ordering of the files therein),
 # cf. https://github.com/rear/rear/pull/2795#issuecomment-1116010676
 
-# Nothing to do when there are no previous md5sums: 
-test -s $VAR_DIR/layout/config/files.md5sum || return 0
+# Inform the user when there are no previous md5sums because likely
+# something went wrong when "rear checklayout" was called but there are no valid md5sums
+# e.g. because a previous "rear checklayout" run moved outdated md5sums away (see at the bottom):
+if ! test -s $VAR_DIR/layout/config/files.md5sum ; then
+    LogPrintError "'$WORKFLOW' cannot compare md5sums without $VAR_DIR/layout/config/files.md5sum"
+    return 1
+fi
 
 # Regenerate the list of files for md5sum comparison:
 local files_for_md5sum=()
