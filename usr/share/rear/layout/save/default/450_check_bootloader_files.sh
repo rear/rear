@@ -17,7 +17,7 @@ case $used_bootloader in
         CHECK_CONFIG_FILES+=( /boot/efi/EFI/*/grub*.cfg )
         ;;
     (GRUB|GRUB2)
-        CHECK_CONFIG_FILES+=( /[e]tc/grub.cfg /[e]tc/grub2.cfg /[b]oot/grub2/grub2.cfg /[b]oot/grub/grub.cfg )
+        CHECK_CONFIG_FILES+=( /[e]tc/grub*.cfg /[b]oot/*/grub*.cfg )
         ;;
     (LILO)
         CHECK_CONFIG_FILES+=( /[e]tc/lilo.conf )
@@ -30,7 +30,7 @@ case $used_bootloader in
         #  - LILO : SLES < 12
         #  - YABOOT : RHEL < 7
         #  - GRUB2 : SLES >= 12, RHEL >= 7, Ubuntu and other new Linux on POWER distro.
-        CHECK_CONFIG_FILES+=( /[e]tc/lilo.conf /[e]tc/yaboot.conf /[e]tc/grub.cfg /[e]tc/grub2.cfg /[b]oot/grub2/grub2.cfg /[b]oot/grub/grub.cfg)
+        CHECK_CONFIG_FILES+=( /[e]tc/lilo.conf /[e]tc/yaboot.conf /[e]tc/grub*.cfg /[b]oot/*/grub*.cfg )
         ;;
     (ARM|ARM-ALLWINNER)
         CHECK_CONFIG_FILES+=( /[b]oot/boot.scr )
