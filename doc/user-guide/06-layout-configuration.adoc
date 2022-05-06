@@ -620,7 +620,7 @@ For some component keywords the parameters have a form like
 keyword value1 value2 optionA=valueA optionB=valueB ...
 ----------------------------------
 where the first ones are positional parameters but not the option=value parameters
-so empty option=value parameters are allowed, for example see the 'raid' keyword.
+so empty option=value parameters are allowed, for example see the 'raidarray' keyword.
 
 For details the matching scripts need to be inspected how things actually work
 for a particular component keyword (i.e. what is implemented in the code).
@@ -646,9 +646,9 @@ disk <name> <size(B)> <partition label>
 part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <partition name>
 ----------------------------------
 
-=== Software RAID ===
+=== Software RAID arrays ===
 ----------------------------------
-raid /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> [name=<array name>] [metadata=<metadata style>] [uuid=<UUID>] [layout=<data layout>] [chunk=<chunk size>] [spare-devices=<nr of spare devices>] [size=<container size>]
+raidarray /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> [name=<array name>] [metadata=<metadata style>] [uuid=<UUID>] [layout=<data layout>] [chunk=<chunk size>] [spare-devices=<nr of spare devices>] [size=<container size>]
 ----------------------------------
 
 === Multipath ===
