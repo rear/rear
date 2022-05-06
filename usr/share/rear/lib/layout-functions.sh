@@ -162,13 +162,13 @@ generate_layout_dependencies() {
                 [ -z "$pool" ] || add_dependency "$dm_prefix-$dm_lvol" "$dm_prefix-$dm_pool"
                 add_component "$dm_prefix-$dm_lvol" "lvmvol"
                 ;;
-            raid)
+            raidarray)
                 name=$(echo "$remainder" | cut -d " " -f "1")
                 disks=$(echo "$remainder" | sed -r "s/.*devices=([^ ]+).*/\1/" | tr ',' ' ')
                 for disk in $disks ; do
                     add_dependency "$name" "$disk"
                 done
-                add_component "$name" "raid"
+                add_component "$name" "raidarray"
                 ;;
             fs|btrfsmountedsubvol)
                 dev=$(echo "$remainder" | cut -d " " -f "1")
