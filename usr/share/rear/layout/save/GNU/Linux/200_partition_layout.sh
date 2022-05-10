@@ -115,6 +115,11 @@ extract_partitions() {
         parted -s $device print > $TMP_DIR/parted
         disk_label=$(grep -E "Partition Table|Disk label" $TMP_DIR/parted | cut -d ":" -f "2" | tr -d " ")
     fi
+    # Ensure $disk_label is valid to determine the partition name/type in the next step at 'declare type'
+    # cf. https://github.com/rear/rear/issues/2801#issuecomment-1122015129
+    if ! [[ "$disk_label" = "msdos" || "$disk_label" = "gpt" || "$disk_label" = "gpt_sync_mbr" || "$disk_label" = "dasd" ]] ; then
+        Error "Unsupported partition table '$disk_label' (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
+    fi
 
 
     cp $TMP_DIR/partitions $TMP_DIR/partitions-data
