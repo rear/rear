@@ -116,12 +116,10 @@ extract_partitions() {
         disk_label=$(grep -E "Partition Table|Disk label" $TMP_DIR/parted | cut -d ":" -f "2" | tr -d " ")
     fi
 
-
     cp $TMP_DIR/partitions $TMP_DIR/partitions-data
 
     declare type
-
-    ### determine partition type for msdos partition tables
+    # Determine partition type for msdos partition tables:
     if [[ "$disk_label" = "msdos" ]] ; then
         declare -i has_logical
         while read partition_nr size start junk ; do
@@ -136,8 +134,7 @@ extract_partitions() {
             fi
         done < $TMP_DIR/partitions-data
     fi
-
-    ### Find partition name for GPT disks.
+    # Find partition name for GPT disks.
     # For the SUSE specific gpt_sync_mbr partitioning scheme
     # see https://github.com/rear/rear/issues/544
     # For s390 dasd disks parted does not show a partition name/type.
@@ -184,16 +181,6 @@ extract_partitions() {
                 else
                     # In case of GPT the 'type' field contains actually the GPT partition name.
                     type=$(grep "^$partition_nr:" $TMP_DIR/parted | cut -d ":" -f "6")
-                    # There must not be any empty field in disklayout.conf
-                    # because the fields in disklayout.conf are positional parameters
-                    # that get assigned to variables via the 'read' shell builtin:
-                    test "$type" || type="rear-noname"
-                    # There must not be any IFS character in a field in disklayout.conf
-                    # because IFS characters are used as field separators
-                    # but in particular a GPT partition name can contain spaces
-                    # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
-                    # so that the partition name is stored as a percent-encoded string:
-                    type=$( percent_encode "$type" )
                 fi
                 sed -i /^$partition_nr\ /s/$/\ $type/ $TMP_DIR/partitions
             done < $TMP_DIR/partitions-data
@@ -209,34 +196,29 @@ extract_partitions() {
                     if (( "$line_length" < 10 )) ; then
                         line=" $line"
                     fi
-
                     if [[ "$FEATURE_PARTED_OLDNAMING" ]] ; then
                         numberfield="minor"
                     else
                         numberfield="number"
                     fi
-
                     number=$(get_columns "$line" "$numberfield" | tr -d " " | tr -d ";")
-
                     # In case of GPT the 'type' field contains actually the GPT partition name.
                     type=$(get_columns "$line" "name" | tr -d " " | tr -d ";")
-
-                    # There must not be any empty field in disklayout.conf
-                    # because the fields in disklayout.conf are positional parameters
-                    # that get assigned to variables via the 'read' shell builtin:
-                    test "$type" || type="rear-noname"
-
-                    # There must not be any IFS character in a field in disklayout.conf
-                    # because IFS characters are used as field separators
-                    # but in particular a GPT partition name can contain spaces
-                    # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
-                    # so that the partition name is stored as a percent-encoded string:
-                    type=$( percent_encode "$type" )
                 fi
                 sed -i /^$number\ /s/$/\ $type/ $TMP_DIR/partitions
             done < <(grep -E '^[ ]*[0-9]' $TMP_DIR/parted)
         fi
     fi
+    # There must not be any IFS character in a field in disklayout.conf
+    # because IFS characters are used as field separators
+    # but in particular a GPT partition name can contain spaces
+    # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
+    # so that the partition name is stored as a percent-encoded string:
+    type=$( percent_encode "$type" )
+    # There must not be any empty field in disklayout.conf
+    # because the fields in disklayout.conf are positional parameters
+    # that get assigned to variables via the 'read' shell builtin:
+    test "$type" || type="rear-noname"
 
     declare flags flaglist
     ### Find the flags given by parted.
