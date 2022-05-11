@@ -604,11 +604,16 @@ Lines that start with a # (number sign, hash, or pound sign) are comments.
 All other lines start with a component keyword.
 
 None of the component keywords is a leading substring of another component keyword
-(e.g. disk is not a leading substring of opaldisk) so that one can get the lines
-that belong to a particular component via simple commands like
+(e.g. disk is not a leading substring of opaldisk) so that one could even get
+only those lines that belong to a particular component via sloppy commands like
 ----------------------------------
 grep ^keyword /var/lib/rear/layout/disklayout.conf
 ----------------------------------
+regardless that the proper command (in particular for scripts) is
+----------------------------------
+grep "^keyword " /var/lib/rear/layout/disklayout.conf
+----------------------------------
+with a single space after the keyword as delimiter.
 
 For most component keywords the values are positional parameters
 (if there is no value a dummy value like 'none' must be used)
@@ -620,7 +625,7 @@ For some component keywords the parameters have a form like
 keyword value1 value2 optionA=valueA optionB=valueB ...
 ----------------------------------
 where the first ones are positional parameters but not the option=value parameters
-so empty option=value parameters are allowed, for example see the 'raid' keyword.
+so empty option=value parameters are allowed, for example see the 'raidarray' keyword.
 
 For details the matching scripts need to be inspected how things actually work
 for a particular component keyword (i.e. what is implemented in the code).
@@ -646,9 +651,14 @@ disk <name> <size(B)> <partition label>
 part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <partition name>
 ----------------------------------
 
-=== Software RAID ===
+=== Software RAID arrays ===
 ----------------------------------
-raid /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> [name=<array name>] [metadata=<metadata style>] [uuid=<UUID>] [layout=<data layout>] [chunk=<chunk size>] [spare-devices=<nr of spare devices>] [size=<container size>]
+raidarray /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> [name=<array name>] [metadata=<metadata style>] [uuid=<UUID>] [layout=<data layout>] [chunk=<chunk size>] [spare-devices=<nr of spare devices>] [size=<container size>]
+----------------------------------
+
+=== Software RAID disks ===
+----------------------------------
+raiddisk <devname> <size(bytes)> <partition label type>
 ----------------------------------
 
 === Multipath ===

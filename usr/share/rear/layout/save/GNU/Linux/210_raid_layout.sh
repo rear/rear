@@ -41,13 +41,14 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
     # Skip if it is not an "ARRAY":
     test "$array" = "ARRAY" || continue
 
-    # 'raid' entries in disklayout.conf look like (cf. the 'mdadm --detail --scan --config=partitions' examples above)
-    # raid /dev/md127 metadata=1.0 level=raid1 raid-devices=2 uuid=8d05eb84:2de831d1:dfed54b2:ad592118 name=raid1sdab devices=/dev/sda,/dev/sdb
+    # 'raidarray' entries in disklayout.conf look like (cf. the 'mdadm --detail --scan --config=partitions' examples above)
+    # raidarray /dev/md127 metadata=1.0 level=raid1 raid-devices=2 uuid=8d05eb84:2de831d1:dfed54b2:ad592118 name=raid1sdab devices=/dev/sda,/dev/sdb
     # for a RAID1 array and for a RAID CONTAINER with IMSM metadata it looks like
-    # raid /dev/md127 metadata=imsm level=container raid-devices=2 uuid=4d5cf215:80024c95:e19fdff4:2fba35a8 name=imsm0 devices=/dev/sda,/dev/sdb
-    # raid /dev/md126 level=raid1 raid-devices=2 uuid=ffb80762:127807b3:3d7e4f4d:4532022f name=Volume0_0 devices=/dev/md127 size=390706176
+    # raidarray /dev/md127 metadata=imsm level=container raid-devices=2 uuid=4d5cf215:80024c95:e19fdff4:2fba35a8 name=imsm0 devices=/dev/sda,/dev/sdb
+    # raidarray /dev/md126 level=raid1 raid-devices=2 uuid=ffb80762:127807b3:3d7e4f4d:4532022f name=Volume0_0 devices=/dev/md127 size=390706176
     # cf. https://github.com/rear/rear/pull/2702#issuecomment-968904230
-    raid_layout_entry="raid"
+    # Each 'raidarray' entry in disklayout.conf starts with the keyword 'raidarray':
+    raid_layout_entry="raidarray"
 
     # Do not use an array name from a previous run of the while loop:
     name=""
@@ -126,12 +127,12 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
     # doc/user-guide/06-layout-configuration.adoc reads
     #   Disk layout file syntax
     #   Software RAID
-    #   raid /dev/<name> level=<RAID level> raid-devices=<nr of devices> [uuid=<uuid>] [spare-devices=<nr of spares>] [layout=<RAID layout>] [chunk=<chunk size>] devices=<device1,device2,...>
+    #   raidarray /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> [name=<array name>] [metadata=<metadata style>] [uuid=<UUID>] [layout=<data layout>] [chunk=<chunk size>] [spare-devices=<nr of spare devices>] [size=<container size>]
     # so the mdadm options --level --raid-devices and the component-devices are mandatory:
 
     line=( $( grep "Raid Level :" $mdadm_details ) )
     level=${line[3]}
-    # A RAID level that is more than one word would make 'read' fail for this 'raid' entry in disklayout.conf
+    # A RAID level that is more than one word would make 'read' fail for this 'raidarray' entry in disklayout.conf
     test $level || Error "RAID $raiddevice level '$level' is not a single word"
     raid_layout_entry+=" level=$level"
 
@@ -167,7 +168,7 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
         for component_device in $(  grep -o '/dev/.*' $mdadm_details | grep -v '/dev/md' | tr "\n" " " ) ; do
             component_device=$( get_device_name $component_device )
             test -b "$component_device" || Error "RAID $raiddevice component device '$component_device' is no block device"
-            # A component device that is more than one word would make 'read' fail for this 'raid' entry in disklayout.conf
+            # A component device that is more than one word would make 'read' fail for this 'raidarray' entry in disklayout.conf
             test $component_device || Error "RAID $raiddevice component device '$component_device' is not a single word"
             # Have the component devices string as "first_component_device,second_component_device,..."
             test $component_devices && component_devices+=",$component_device" || component_devices="$component_device"
@@ -297,7 +298,7 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
     test $container_size -gt 0 && raid_layout_entry+=" size=$container_size"
 
     echo "# RAID device $raiddevice" >>$DISKLAYOUT_FILE
-    echo "# Format: raid /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> [name=<array name>] [metadata=<metadata style>] [uuid=<UUID>] [layout=<data layout>] [chunk=<chunk size>] [spare-devices=<nr of spare devices>] [size=<container size>]" >>$DISKLAYOUT_FILE
+    echo "# Format: raidarray /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> [name=<array name>] [metadata=<metadata style>] [uuid=<UUID>] [layout=<data layout>] [chunk=<chunk size>] [spare-devices=<nr of spare devices>] [size=<container size>]" >>$DISKLAYOUT_FILE
     echo "$raid_layout_entry" >>$DISKLAYOUT_FILE
 
     # cf. the code in layout/save/GNU/Linux/200_partition_layout.sh
@@ -324,11 +325,11 @@ done
 mdadm_exit_code=${PIPESTATUS[0]}
 test $mdadm_exit_code -eq 0 || Error "'mdadm --detail --scan --config=partitions' failed with exit code $mdadm_exit_code"
 
-# mdadm is required in the recovery system if disklayout.conf contains at least one 'raid' entry
-# see the create_raid function in layout/prepare/GNU/Linux/120_include_raid_code.sh
+# mdadm is required in the recovery system if disklayout.conf contains at least one 'raidarray' entry
+# see the create_raidarray function in layout/prepare/GNU/Linux/120_include_raid_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-if grep -q '^raid ' $DISKLAYOUT_FILE ; then
+if grep -q '^raidarray ' $DISKLAYOUT_FILE ; then
     REQUIRED_PROGS+=( mdadm )
     # mdmon was added via https://github.com/rear/rear/pull/2702
     PROGS+=( mdmon )
