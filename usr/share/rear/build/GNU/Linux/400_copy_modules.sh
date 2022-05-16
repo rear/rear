@@ -173,9 +173,14 @@ for dummy in "once" ; do
         modinfo $module 1>/dev/null || continue
         # Continue with the next module if the current one is a kernel builtin module
         # cf. https://github.com/rear/rear/issues/2414#issuecomment-668632798
+        # and have the grep search value with a leading '/' and a trailing '.'
+        # to avoid false substring matches of wrong kernel builtin modules
+        # that would falsely skip non-builtin modules from being included
+        # cf. https://github.com/rear/rear/pull/2728#issuecomment-995799489
+        # and https://github.com/rear/rear/pull/2728#issuecomment-996103272
         # Quoting the grep search value is mandatory here ($module might be empty or blank),
         # cf. "Beware of the emptiness" in https://github.com/rear/rear/wiki/Coding-Style
-        grep -q "$( echo $module | tr '_-' '..' )" /lib/modules/$KERNEL_VERSION/modules.builtin && continue
+        grep -q "/$( echo $module | tr '_-' '..' )\." /lib/modules/$KERNEL_VERSION/modules.builtin && continue
         # Resolve module dependencies:
         # Get the module file plus the module files of other needed modules.
         # This is currently only a "best effort" attempt because
