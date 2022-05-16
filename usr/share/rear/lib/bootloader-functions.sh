@@ -56,6 +56,10 @@ function find_syslinux_modules_dir {
             # not default location? try to find it
             # file=/usr/lib/syslinux/modules/efi32/menu.c32
             # f23: file=/usr/share/syslinux/menu.c32
+            # Because 'find /usr' may take very long time on some systems
+            # cf. https://github.com/rear/rear/issues/2792
+            # tell the user in debug mode what is going on
+            DebugPrint "Searching whole /usr for SYSLINUX modules directory (you may specify SYSLINUX_MODULES_DIR)"
             file=$( find /usr -name "$1" 2>/dev/null | tail -1 )
             syslinux_modules_dir=$( dirname "$file" )        # /usr/lib/syslinux/modules/efi32
             syslinux_modules_dir=${syslinux_modules_dir%/*}  # /usr/lib/syslinux/modules
