@@ -203,7 +203,6 @@ local lvs_exit_code
     # Example output of "lvs --separator=':' --noheadings --units b --nosuffix -o $lvs_fields"
     # with lvs_fields="origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size"
     # i.e. when the 'lv_layout' field is supported:
-    
     #   :home:system:6148849664:linear::0:1:0:6148849664
     #   :root:system:14050918400:linear::0:1:0:14050918400
     #   :swap:system:1262485504:linear::0:1:0:1262485504
