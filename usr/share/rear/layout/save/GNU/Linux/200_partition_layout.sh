@@ -350,13 +350,23 @@ extract_partitions() {
 
     ### Write to layout file
     while read partition_nr size start type flags junk ; do
-        ### determine the name of the partition using the number
-        ### device=/dev/cciss/c0d0 ; partition_prefix=cciss/c0d0p
-        ### device=/dev/md127 ; partition_prefix=md127p
-        ### device=/dev/sda ; partition_prefix=sda
-        ### device=/dev/mapper/mpathbp1 ; partition_prefix=mpathbp
+        # determine the name of the partition using the number
+        # device=/dev/cciss/c0d0 ; partition_prefix=cciss/c0d0p
+        # device=/dev/md127 ; partition_prefix=md127p
+        # device=/dev/sda ; partition_prefix=sda
+        # device=/dev/mapper/mpathbp1 ; partition_prefix=mpathbp
         partition_name="${device%/*}/${partition_prefix#*/}$partition_nr"
-        echo "part $device $size $start $type $flags $(get_device_name $partition_name)"
+        partition_device="$( get_device_name $partition_name )"
+        test -b "$partition_device" || Error "Invalid 'part $device' entry (partition device '$partition_device' is no block device)"
+        # Ensure syntactically correct 'part' entries of the form
+        #   part disk_device partition_size start_byte partition_label flags partition_device
+        # Each value must exist and each value must be a single non-blank word.
+        # When $junk contains something one of the values before was more than a single word:
+        test "$junk" && Error "Invalid 'part $device' entry (some value is more than a single word)"
+        # When $flags is empty at least one value is missing:
+        test "$flags" || Error "Invalid 'part $device' entry (at least one value is missing)"
+        # Some basic checks on the values happen in layout/save/default/950_verify_disklayout_file.sh
+        echo "part $device $size $start $type $flags $partition_device"
     done < $TMP_DIR/partitions
 }
 
@@ -392,6 +402,11 @@ Log "Saving disks and their partitions"
                 devname=$(get_device_name $disk)
                 devsize=$(get_disk_size ${disk#/sys/block/})
                 disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
+                # Ensure syntactically correct 'disk' entries:
+                # Each value must exist and each value must be a single non-blank word so we 'test' without quoting the value:
+                test $devname || Error "Invalid 'disk' entry (no disk device name for '$disk')"
+                test $devsize || Error "Invalid 'disk $devname' entry (no device size for '$devname')"
+                test $disktype || Error "Invalid 'disk $devname' entry (no partition table type for '$devname')"
 
                 echo "# Disk $devname"
                 echo "# Format: disk <devname> <size(bytes)> <partition label type>"
