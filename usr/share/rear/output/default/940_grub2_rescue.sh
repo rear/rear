@@ -229,7 +229,7 @@ else
     fi
       ( echo "          search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
         echo "          echo 'Loading kernel $boot_kernel_file ...'"
-        echo "          linux $grub_boot_dir/$boot_kernel_name $KERNEL_CMDLINE"
+        echo "          linux $grub_boot_dir/$boot_kernel_name root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
         echo "          echo 'Loading initrd $boot_initrd_file (may take a while) ...'"
         echo "          initrd $grub_boot_dir/$boot_initrd_name"
         echo "}"
