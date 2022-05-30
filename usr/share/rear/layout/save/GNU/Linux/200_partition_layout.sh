@@ -406,7 +406,12 @@ Log "Saving disks and their partitions"
                 # Each value must exist and each value must be a single non-blank word so we 'test' without quoting the value:
                 test $devname || Error "Invalid 'disk' entry (no disk device name for '$disk')"
                 test $devsize || Error "Invalid 'disk $devname' entry (no device size for '$devname')"
-                test $disktype || Error "Invalid 'disk $devname' entry (no partition table type for '$devname')"
+                # We do not error out when there is no partition label type value because
+                # "rear recover" works in a special case without partition label type value when there is
+                # only a 'disk' entry but nothing else for this disk exists in disklayout.conf
+                # which can happen when /dev/sdX is an empty SD card slot without medium,
+                # see https://github.com/rear/rear/issues/2810
+                test $disktype || LogPrintError "No partition label type for 'disk $devname' (may cause 'rear recover' failure)"
 
                 echo "# Disk $devname"
                 echo "# Format: disk <devname> <size(bytes)> <partition label type>"
