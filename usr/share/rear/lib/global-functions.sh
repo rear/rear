@@ -478,9 +478,9 @@ function mount_url() {
             return 0
             ;;
         (iso)
-            # Check that there is a symbolic link /dev/disk/by-label/RELAXRECOVER
-            # that points to a block device that uses the filesystem label RELAXRECOVER.
-            # RELAXRECOVER is the default value of the ISO_VOLID config variable.
+            # Check that there is a symbolic link /dev/disk/by-label/REAR-ISO
+            # that points to a block device that uses the filesystem label REAR-ISO.
+            # REAR-ISO is the default value of the ISO_VOLID config variable.
             # If no such symbolic link exists create one because it is needed
             # during "rear recover" when the ISO image contains the backup,
             # see https://github.com/rear/rear/issues/1893
@@ -489,10 +489,10 @@ function mount_url() {
             # so that there is nothing to do here unless during "rear recover":
             test "recover" = "$WORKFLOW" || return 0
             # Try to find a block device that uses the filesystem label ISO_VOLID.
-            # Usually "blkid -L RELAXRECOVER" results '/dev/sr0' or '/dev/sr1'
+            # Usually "blkid -L REAR-ISO" results '/dev/sr0' or '/dev/sr1'
             # cf. https://github.com/rear/rear/issues/1893#issuecomment-411034001
             # but "blkid -L" is not supported on SLES10 (blkid is too old there)
-            # so that the traditional form "blkid -l -o device -t LABEL=RELAXRECOVER"
+            # so that the traditional form "blkid -l -o device -t LABEL=REAR-ISO"
             # is used which also works and is described in "man blkid" on SLES15:
             local relaxrecover_block_device="$( blkid -l -o device -t LABEL="$ISO_VOLID" )"
             # Try to get where the symbolic link /dev/disk/by-label/ISO_VOLID points to.
@@ -534,7 +534,7 @@ function mount_url() {
                     wilful_input=""
                     symlink_target=""
                     # When USER_INPUT_RELAXRECOVER_SYMLINK_TARGET has any 'true' value be liberal in what you accept and
-                    # assume choices[0] 'Let /dev/disk/by-label/RELAXRECOVER point to /dev/cdrom' was actually meant:
+                    # assume choices[0] 'Let /dev/disk/by-label/REAR-ISO point to /dev/cdrom' was actually meant:
                     is_true "$USER_INPUT_RELAXRECOVER_SYMLINK_TARGET" && USER_INPUT_RELAXRECOVER_SYMLINK_TARGET="${choices[0]}"
                     while true ; do
                         choice="$( UserInput -I RELAXRECOVER_SYMLINK_TARGET -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"

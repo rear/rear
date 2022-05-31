@@ -40,9 +40,9 @@ if test -f $TMP_DIR/backup.splitted ; then
         Print ""
         while read backup_splitted_line ; do
             # The lines in backup.splitted are like
-            #   backup.tar.gz.00 878706688 RELAXRECOVER
-            #   backup.tar.gz.01 878706688 RELAXRECOVER_01
-            #   backup.tar.gz.02 758343480 RELAXRECOVER_02
+            #   backup.tar.gz.00 878706688 REAR-ISO
+            #   backup.tar.gz.01 878706688 REAR-ISO_01
+            #   backup.tar.gz.02 758343480 REAR-ISO_02
             # The first word is backup file name, the second a size, the last one is the label/vol_name:
             backup_file_name=${backup_splitted_line%% *}
             vol_name=${backup_splitted_line##* }
