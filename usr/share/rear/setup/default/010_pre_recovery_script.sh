@@ -4,11 +4,11 @@
 
 local command
 for command in "${PRE_RECOVERY_COMMANDS[@]}" ; do
-    Log "Running PRE_RECOVERY_COMMANDS '$command'"
+    LogPrint "Running PRE_RECOVERY_COMMANDS '$command'"
     eval "$command"
 done
 
 if test "$PRE_RECOVERY_SCRIPT" ; then
-    Log "Running PRE_RECOVERY_SCRIPT '${PRE_RECOVERY_SCRIPT[@]}'"
+    LogPrint "Running PRE_RECOVERY_SCRIPT '${PRE_RECOVERY_SCRIPT[@]}'"
     eval "${PRE_RECOVERY_SCRIPT[@]}"
 fi
