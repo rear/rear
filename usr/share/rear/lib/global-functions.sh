@@ -494,34 +494,34 @@ function mount_url() {
             # but "blkid -L" is not supported on SLES10 (blkid is too old there)
             # so that the traditional form "blkid -l -o device -t LABEL=REAR-ISO"
             # is used which also works and is described in "man blkid" on SLES15:
-            local relaxrecover_block_device="$( blkid -l -o device -t LABEL="$ISO_VOLID" )"
+            local iso_block_device="$( blkid -l -o device -t LABEL="$ISO_VOLID" )"
             # Try to get where the symbolic link /dev/disk/by-label/ISO_VOLID points to.
             # "readlink -e symlink" outputs nothing when the symlink or its target does not exist:
-            local relaxrecover_symlink_name="/dev/disk/by-label/$ISO_VOLID"
-            local relaxrecover_symlink_target="$( readlink $verbose -e "$relaxrecover_symlink_name" )"
-            # Everything is o.k. when relaxrecover_block_device and relaxrecover_symlink_target are non-empty
-            # and when the relaxrecover_symlink_target value is the relaxrecover_block_device value.
+            local iso_symlink_name="/dev/disk/by-label/$ISO_VOLID"
+            local iso_symlink_target="$( readlink $verbose -e "$iso_symlink_name" )"
+            # Everything is o.k. when iso_block_device and iso_symlink_target are non-empty
+            # and when the iso_symlink_target value is the iso_block_device value.
             # Usually the right symbolic link /dev/disk/by-label/ISO_VOLID is set up automatically by udev.
-            if ! test "$relaxrecover_block_device" -a "$relaxrecover_symlink_target" -a "$relaxrecover_symlink_target" = "$relaxrecover_block_device" ; then
+            if ! test "$iso_block_device" -a "$iso_symlink_target" -a "$iso_symlink_target" = "$iso_block_device" ; then
                 # If not everything is o.k. first try fix things automatically:
-                Log "Symlink '$relaxrecover_symlink_name' does not exist or does not point to a block device with '$ISO_VOLID' filesystem label"
+                Log "Symlink '$iso_symlink_name' does not exist or does not point to a block device with '$ISO_VOLID' filesystem label"
                 # One of the things that could be not o.k. is that there is no /dev/disk/by-label/ directory.
                 # Usually udev would automatically create it but sometimes that does not work,
                 # cf. https://github.com/rear/rear/issues/1891#issuecomment-411027324
                 # so that we create a /dev/disk/by-label/ directory if it is not there:
                 mkdir $verbose -p /dev/disk/by-label
                 # Try to let the symbolic link point to the block device that uses the filesystem label ISO_VOLID:
-                if test -b "$relaxrecover_block_device" ; then
-                    Log "Making symlink '$relaxrecover_symlink_name' point to '$relaxrecover_block_device' because it has filesystem label '$ISO_VOLID'"
+                if test -b "$iso_block_device" ; then
+                    Log "Making symlink '$iso_symlink_name' point to '$iso_block_device' because it has filesystem label '$ISO_VOLID'"
                     # Below there is a test that /dev/disk/by-label/ISO_VOLID exists which should detect when this 'ln' command failed:
-                    ln $verbose -sf "$relaxrecover_block_device" "$relaxrecover_symlink_name"
+                    ln $verbose -sf "$iso_block_device" "$iso_symlink_name"
                 else
                     # We found no block device that uses the filesystem label ISO_VOLID:
                     Log "No block device with ISO filesystem label '$ISO_VOLID' found (by the blkid command)"
                     # At this point things look not good so that now we need to tell the user about what is wrong:
-                    LogPrintError "A symlink '$relaxrecover_symlink_name' is required that points to the device with the ReaR ISO image"
+                    LogPrintError "A symlink '$iso_symlink_name' is required that points to the device with the ReaR ISO image"
                     rear_workflow="rear $WORKFLOW"
-                    rear_shell_history="$( echo -e "ln -vsf /dev/cdrom $relaxrecover_symlink_name\nls -l $relaxrecover_symlink_name" )"
+                    rear_shell_history="$( echo -e "ln -vsf /dev/cdrom $iso_symlink_name\nls -l $iso_symlink_name" )"
                     unset choices
                     choices[0]="/dev/cdrom is where the ISO is attached to"
                     choices[1]="/dev/sr0 is where the ISO is attached to"
@@ -529,35 +529,35 @@ function mount_url() {
                     choices[3]="Use Relax-and-Recover shell and return back to here"
                     choices[4]="Continue '$rear_workflow'"
                     choices[5]="Abort '$rear_workflow'"
-                    prompt="Create symlink '$relaxrecover_symlink_name' that points to the ReaR ISO image device"
+                    prompt="Create symlink '$iso_symlink_name' that points to the ReaR ISO image device"
                     choice=""
                     wilful_input=""
                     symlink_target=""
-                    # When USER_INPUT_RELAXRECOVER_SYMLINK_TARGET has any 'true' value be liberal in what you accept and
+                    # When USER_INPUT_ISO_SYMLINK_TARGET has any 'true' value be liberal in what you accept and
                     # assume choices[0] 'Let /dev/disk/by-label/REAR-ISO point to /dev/cdrom' was actually meant:
-                    is_true "$USER_INPUT_RELAXRECOVER_SYMLINK_TARGET" && USER_INPUT_RELAXRECOVER_SYMLINK_TARGET="${choices[0]}"
+                    is_true "$USER_INPUT_ISO_SYMLINK_TARGET" && USER_INPUT_ISO_SYMLINK_TARGET="${choices[0]}"
                     while true ; do
-                        choice="$( UserInput -I RELAXRECOVER_SYMLINK_TARGET -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
+                        choice="$( UserInput -I ISO_SYMLINK_TARGET -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
                         case "$choice" in
                             (${choices[0]})
                                 symlink_target="/dev/cdrom"
                                 is_true "$wilful_input" && LogPrint "User confirmed symlink target $symlink_target" || LogPrint "Using symlink target $symlink_target by default"
                                 # Below there is a test that /dev/disk/by-label/ISO_VOLID exists which should detect when this 'ln' command failed:
-                                ln $verbose -sf $symlink_target "$relaxrecover_symlink_name"
+                                ln $verbose -sf $symlink_target "$iso_symlink_name"
                                 break
                                 ;;
                             (${choices[1]})
                                 symlink_target="/dev/sr0"
                                 LogPrint "Using symlink target $symlink_target"
                                 # Below there is a test that /dev/disk/by-label/ISO_VOLID exists which should detect when this 'ln' command failed:
-                                ln $verbose -sf $symlink_target "$relaxrecover_symlink_name"
+                                ln $verbose -sf $symlink_target "$iso_symlink_name"
                                 break
                                 ;;
                             (${choices[2]})
                                 symlink_target="/dev/sr1"
                                 LogPrint "Using symlink target $symlink_target"
                                 # Below there is a test that /dev/disk/by-label/ISO_VOLID exists which should detect when this 'ln' command failed:
-                                ln $verbose -sf $symlink_target "$relaxrecover_symlink_name"
+                                ln $verbose -sf $symlink_target "$iso_symlink_name"
                                 break
                                 ;;
                             (${choices[3]})
@@ -577,8 +577,8 @@ function mount_url() {
                 fi
             fi
             # Check if /dev/disk/by-label/$ISO_VOLID exists (as symbolic link or in any other form), if yes assume things are right:
-            test -e "$relaxrecover_symlink_name" || Error "Cannot mount ISO because there is no '$relaxrecover_symlink_name'"
-            mount_cmd="mount $relaxrecover_symlink_name $mountpoint"
+            test -e "$iso_symlink_name" || Error "Cannot mount ISO because there is no '$iso_symlink_name'"
+            mount_cmd="mount $iso_symlink_name $mountpoint"
             ;;
         (var)
             ### The mount command is given by variable in the url host
