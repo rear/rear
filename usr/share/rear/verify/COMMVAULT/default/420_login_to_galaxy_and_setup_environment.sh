@@ -13,10 +13,19 @@ let ret=$?
 StopIfError "Unknown error in qlist [$ret], check log file"
 
 if test $ret -eq 2 ; then
-	# try to logon
-	Print "Please logon to your Commvault CommServe with suitable credentials:"
-	qlogin $(test "$COMMVAULT_Q_ARGUMENTFILE" && echo "-af $COMMVAULT_Q_ARGUMENTFILE")
-	StopIfError "Could not logon to Commvault CommServe. Check the log file."
+
+        if [ -n "$COMMVAULT_USER" ] && [ -n "$COMMVAULT_PASSWORD" ]; then
+		# try to login with Credentials from env
+		export COMMVAULT_USER
+	        export COMMVAULT_PASSWORD	
+		qlogin -u "${COMMVAULT_USER}" -clp "${COMMVAULT_PASSWORD}"
+                StopIfError "Could not logon to Commvault CommServe. Check the log file."
+	else	
+		# try to logon
+		Print "Please logon to your Commvault CommServe with suitable credentials:"
+		qlogin $(test "$COMMVAULT_Q_ARGUMENTFILE" && echo "-af $COMMVAULT_Q_ARGUMENTFILE")
+		StopIfError "Could not logon to Commvault CommServe. Check the log file."
+	fi
 fi
 
 
