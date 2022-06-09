@@ -98,7 +98,6 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 *format*::
     format and label USB or tape media to be used with rear;
-    +
     first argument is the USB or tape device to use, eg. _/dev/sdX_ or
     _/dev/stX_
 
