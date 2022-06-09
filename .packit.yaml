@@ -6,6 +6,8 @@ jobs:
     - fedora-all
     - centos-stream-8-x86_64
     - centos-stream-9-x86_64
+    - opensuse-leap-15.3-x86_64
+    - opensuse-tumbleweed-x86_64
   trigger: pull_request
 - job: production_build
   metadata:
