@@ -292,7 +292,7 @@ create_lvmvol() {
     # instead we input as many 'y' as asked for by "lvm lvcreate"
     # see https://github.com/rear/rear/issues/513
     # and https://github.com/rear/rear/issues/2820
-    # and suppress needless "yes: standard output: Broken pipe" sderr messages
+    # and suppress needless "yes: standard output: Broken pipe" stderr messages
     # that appear at least with newer 'yes' in coreutils-8.32 in openSUSE Leap 15.3
     cat >> "$LAYOUT_CODE" <<EOF
 $ifline
