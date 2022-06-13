@@ -42,8 +42,6 @@ Requires: syslinux
 # (in addition to the default installed bootloader grub2) while on ppc ppc64 the
 # default installed bootloader yaboot is also used to make the bootable ISO image.
 
-# Needed for Packit builds,
-# see https://github.com/rear/rear/pull/2816
 BuildRequires: make
 
 ### Mandatory dependencies on all distributions:
