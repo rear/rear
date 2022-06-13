@@ -287,13 +287,20 @@ create_lvmvol() {
     # so e.g. 'lvcreate -L 123456b -n LV VG' becomes 'lvcreate -l 100%FREE -n LV VG'
     fallbacklvopts="$( sed -e 's/-L [0-9b]*/-l 100%FREE/' <<< "$lvopts" )"
 
+    # In SLES11 "man lvcreate" does not show '-y' or '--yes'
+    # so we cannot use "lvm lvcreate -y ..."
+    # instead we input as many 'y' as asked for by "lvm lvcreate"
+    # see https://github.com/rear/rear/issues/513
+    # and https://github.com/rear/rear/issues/2820
+    # and suppress needless "yes: standard output: Broken pipe" sderr messages
+    # that appear at least with newer 'yes' in coreutils-8.32 in openSUSE Leap 15.3
     cat >> "$LAYOUT_CODE" <<EOF
 $ifline
     LogPrint "Creating LVM volume '$vg/$lvname' (some properties may not be preserved)"
     $warnraidline
-    if ! lvm lvcreate $lvopts $vg <<<y ; then
+    if ! yes 2>/dev/null | lvm lvcreate $lvopts $vg ; then
         LogPrintError "Failed to create LVM volume '$vg/$lvname' with lvcreate $lvopts $vg"
-        if lvm lvcreate $fallbacklvopts $vg <<<y ; then
+        if yes 2>/dev/null | lvm lvcreate $fallbacklvopts $vg ; then
             LogPrintError "Created LVM volume '$vg/$lvname' using fallback options lvcreate $fallbacklvopts $vg"
         else
             LogPrintError "Also failed to create LVM volume '$vg/$lvname' with lvcreate $fallbacklvopts $vg"
