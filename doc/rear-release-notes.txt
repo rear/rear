@@ -3,9 +3,9 @@ Release Notes for Relax-and-Recover version 2.7
 This document contains the release notes for the open source project
 Relax-and-Recover.
 
-Relax-and-Recover website
+Relax-and-Recover website: http://relax-and-recover.org/
 
-GitHub project
+GitHub project: https://github.com/rear/
 
 This document is distributed with the following license: "Creative Commons
 Attribution-NoDerivs 3.0 Unported (CC BY-ND 3.0)". To read the license deed,
@@ -71,8 +71,10 @@ functionality:
     -   rsync over the network (BACKUP=RSYNC, BACKUP_PROG=rsync)
     -   Multiple backup methods. See the documentation about Using Multiple
         Backups for Relax-and-Recover
+        https://github.com/rear/rear/blob/master/doc/user-guide/11-multiple-backups.adoc
     -   Any partition (e.g. a Windows partition) via BACKUP=BLOCKCLONE. See
         the documention about BLOCKCLONE
+        https://github.com/rear/rear/blob/master/doc/user-guide/12-BLOCKCLONE.adoc
     -   BACKUP=ZYPPER is for SUSE systems only (Experimental)
     -   BACKUP=YUM is for RedHat architectures ony (Experimental)
 
@@ -95,7 +97,7 @@ functionality:
     -   Borg Backup (BACKUP=BORG)
     -   Rubrik Cloud Data Management (BACKUP=CDM)
 
--   Integrates with Disaster Recovery Linux Manager (DRLM)
+-   Integrates with Disaster Recovery Linux Manager (DRLM) http://drlm.org
 
 -   Udev support (except for some really ancient udev versions) which is the
     base for many important features:
@@ -182,7 +184,7 @@ that is used by Relax-and-Recover and for each change of your basic system you
 must re-validate that your disaster recovery procedure still works for you.
 
 The references pointing to fix #nr or issue #nr refer to our GitHub issues
-tracker.
+tracker https://github.com/rear/rear/issues
 
 Version 2.7 (June 2022)
 
@@ -2889,11 +2891,12 @@ New features and bigger enhancements:
     running unattended. For details see the USER_INPUT_... config variables in
     default.conf. Currently not all user dialogs use the UserInput function so
     that this or that user dialog needs to be adapted when it is reported to
-    us via our issue tracker. In contrast when programs that are called by
-    ReaR work interactively (e.g. third-party backup tools that show user
-    dialogs or password prompts) the program call itself must be adapted to
-    run unattended (if possible), see the section 'It should be possible to
-    run ReaR unattended' in our https://github.com/rear/rear/wiki/Coding-Style
+    us via our issue tracker https://github.com/rear/rear/issues
+    In contrast when programs that are called by ReaR work interactively
+    (e.g. third-party backup tools that show user dialogs or password prompts)
+    the program call itself must be adapted to run unattended (if possible),
+    see the section 'It should be possible to run ReaR unattended' in our
+    https://github.com/rear/rear/wiki/Coding-Style
     Wiki article.
 
 -   SSH support in the ReaR rescue/recovery system was overhauled. By default
@@ -2929,7 +2932,8 @@ Possibly backward incompatible changes:
     fix as many program calls as possible but it is impossible (with
     reasonable effort / with a reasonable amount of time) to check all program
     calls in all ReaR scripts so that this or that unnoticed program call will
-    need to be fixed when it is reported to us via our issue tracker.
+    need to be fixed when it is reported to us via our issue tracker
+    https://github.com/rear/rear/issues
 
 -   SSH support in the ReaR rescue/recovery system is now secure by default.
     There are no longer private SSH keys in the recovery system by default and
@@ -3323,7 +3327,9 @@ to check this.
     #1118)
 
 -   Multiple backups are now possible (issues #1088, #1102, #1096) - see the
-    documentation page (New)
+    documentation page
+    https://github.com/rear/rear/blob/master/doc/user-guide/11-multiple-backups.adoc
+    (New)
 
 -   Support partitioning and formatting huge USB devices (issue #1105)
 
@@ -3717,7 +3723,7 @@ System and Software Requirements
 
 Relax-and-Recover works on GNU/Linux kernel with version 2.6 and higher. For
 lower kernel versions Relax-and-Recover cannot be used, and for these systems,
-mkcdrec is still a good alternative.
+mkcdrec http://mkcdrec.sourceforge.net/ is still a good alternative.
 
 As Relax-and-Recover has been solely written in the bash language we need the
 bash shell which is standard available on all GNU/Linux based systems. The
@@ -3735,6 +3741,7 @@ The default backup program with Relax-and-Recover is (BACKUP_PROG=tar) GNU tar
 and the default compression used with tar is gzip. However, is using gzip the
 best choice? We have done some tests and published the results. See
 Relax-and-Recover compression tests
+http://www.it3.be/2013/09/16/NETFS-compression-tests/
 
 Support
 
@@ -3748,8 +3755,9 @@ as a service (not free of charge).
 
 Supported and Unsupported Operating Systems
 
-We try to keep our wiki page Test Matrix ReaR 2.7 up-to-date with feedback we
-receive from the community.
+We try to keep our wiki page Test Matrix ReaR 2.7
+https://github.com/rear/rear/wiki/Test-Matrix-ReaR-2.7
+up-to-date with feedback we receive from the community.
 
 ReaR 2.7 is supported on the following Linux based operating systems:
 
@@ -3850,18 +3858,19 @@ Issue Description: 'rear' package on Ubuntu 14.04 depends on isolinux package
 
 -   Workaround:
 
-Read the comments in issue #1403
+Read the comments in https://github.com/rear/rear/issues/1403
 
 Issue Description: tar -test-label is not supported on Centos 5 who have tar
 version 1.15
 
 -   Workaround:
 
-Read the comments in issue #1014
+Read the comments in https://github.com/rear/rear/issues/1014
 
 Issue Description: BACKUP=NSR on RHEL 6 could break yum
 
-Issue #387 describes a problem seen on RHEL 6 where when rear uses NSR and
+https://github.com/rear/rear/issues/387
+describes a problem seen on RHEL 6 where when rear uses NSR and
 afterwards the link /lib64/libexpat.so.1 has been changed.
 
 -   Workaround:
@@ -3886,7 +3895,8 @@ backup
 -   Workaround:
 
 At present (release 1.18) there is no workaround in place. If you happen to
-know how this could be fixed then add your ideas to issue #417
+know how this could be fixed then add your ideas to
+https://github.com/rear/rear/issues/417
 
 Issue Description: UEFI ISO booting does not work on openSUSE 12.x, or SLES
 11/12
@@ -3895,7 +3905,9 @@ Issue Description: UEFI ISO booting does not work on openSUSE 12.x, or SLES
 
 At present (release 1.18.x and higher) genisoimage cannot produce ISO images
 that can boot via UEFI on an openSUSE distribution (and also SLES). However,
-use the ebiso package instead to create UEFI ISO images on SLES.
+use the ebiso package
+http://download.opensuse.org/repositories/Archiving:/Backup:/Rear/SLE_11_SP3/x86_64/ebiso-0.2.3-1.x86_64.rpm
+instead to create UEFI ISO images on SLES.
 
 Issue Description: System reconfiguration still has some weaknesses.
 
