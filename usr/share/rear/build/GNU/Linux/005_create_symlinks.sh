@@ -8,7 +8,6 @@
 ln -sf $v bin/init $ROOTFS_DIR/init >&2
 ln -sf $v bin $ROOTFS_DIR/sbin >&2
 ln -sf $v bash $ROOTFS_DIR/bin/sh >&2
-ln -sf $v vi $ROOTFS_DIR/bin/vim >&2
 ln -sf $v true $ROOTFS_DIR/bin/pam_console_apply >&2 # RH/Fedora with udev needs this
 ln -sf $v ../bin $ROOTFS_DIR/usr/bin >&2
 ln -sf $v ../bin $ROOTFS_DIR/usr/sbin >&2
