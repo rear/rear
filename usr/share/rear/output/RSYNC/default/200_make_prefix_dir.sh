@@ -6,9 +6,8 @@ local proto host
 proto="$(rsync_proto "$OUTPUT_URL")"
 host="$(rsync_host "$OUTPUT_URL")"
 
-# create temporary local work-spaces to collect files (we already make the remote backup dir with the correct mode!!)
+# create temporary local work-spaces to collect files
 mkdir -p $v -m0750 "${TMP_DIR}/rsync/${RSYNC_PREFIX}" >&2 || Error "Could not mkdir '${TMP_DIR}/rsync/${RSYNC_PREFIX}'"
-mkdir -p $v -m0755 "${TMP_DIR}/rsync/${RSYNC_PREFIX}/backup" >&2 || Error "Could not mkdir '${TMP_DIR}/rsync/${RSYNC_PREFIX}/backup'"
 
 case $proto in
 
@@ -18,6 +17,7 @@ case $proto in
 		;;
 
 	(rsync)
+		# This must run before the backup stage. Otherwise --relative gets added to BACKUP_RSYNC_OPTIONS
 		$BACKUP_PROG -a $v -r "${TMP_DIR}/rsync/${RSYNC_PREFIX}" "${BACKUP_RSYNC_OPTIONS[@]}" "$(rsync_remote "$OUTPUT_URL")/" >/dev/null \
                     || Error "Could not create '$(rsync_path_full "$OUTPUT_URL")' on remote ${host}"
 		;;
