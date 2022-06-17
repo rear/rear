@@ -25,8 +25,10 @@ case $(basename $BACKUP_PROG) in
 
 	(rsync)
 		if grep -q "no xattrs" "$TMP_DIR/rsync_protocol"; then
+			local host
+			host="$(rsync_host "$BACKUP_URL")"
 			# no xattrs compiled in remote rsync, so saving SELinux attributes are not possible
-			Log "WARNING: --xattrs not possible on system ($RSYNC_HOST) (no xattrs compiled in rsync)"
+			Log "WARNING: --xattrs not possible on system ($host) (no xattrs compiled in rsync)"
 			# $TMP_DIR/selinux.mode is a trigger during backup to disable SELinux
 			cat $SELINUX_ENFORCE > $TMP_DIR/selinux.mode
 			RSYNC_SELINUX=		# internal variable used in recover mode (empty means disable SELinux)
