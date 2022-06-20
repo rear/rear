@@ -26,6 +26,7 @@ ProgressStart "Running backup operation"
 	case "$(basename $BACKUP_PROG)" in
 
 		(rsync)
+			# We are in a subshell, so this change will not propagate to later scripts
 			BACKUP_RSYNC_OPTIONS+=( --one-file-system --delete --exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded )
 
 			case $(rsync_proto "$BACKUP_URL") in
