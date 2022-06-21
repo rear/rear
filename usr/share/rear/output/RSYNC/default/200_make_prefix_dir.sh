@@ -1,7 +1,14 @@
 # Create RSYNC_PREFIX under the local TMP_DIR and also on remote rsync server
 # RSYNC_PREFIX=$HOSTNAME as set in default.conf
 
-local proto host
+local proto host scheme
+
+scheme="$(url_scheme "$OUTPUT_URL")"
+
+# we handle only rsync:// output schemes.
+# ToDo: why does handling of the output URL scheme belong under RSYNC (which is a backup method)?
+# OUTPUT_URL is independent on the chosen backup method, so this code should be moved to be backup-independent.
+test "rsync" = "$scheme" || return 0
 
 proto="$(rsync_proto "$OUTPUT_URL")"
 host="$(rsync_host "$OUTPUT_URL")"

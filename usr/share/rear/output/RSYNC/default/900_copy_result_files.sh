@@ -1,7 +1,15 @@
 #
 # copy resulting files to remote network (backup) location
 
-local proto
+local proto scheme
+
+scheme="$(url_scheme "$OUTPUT_URL")"
+
+# we handle only rsync:// output schemes.
+# ToDo: why does handling of the output URL scheme belong under RSYNC (which is a backup method)?
+# OUTPUT_URL is independent on the chosen backup method, so this code should be moved to be backup-independent.
+test "rsync" = "$scheme" || return 0
+
 proto="$(rsync_proto "$OUTPUT_URL")"
 
 LogPrint "Copying resulting files to $OUTPUT_URL location"
