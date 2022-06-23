@@ -493,6 +493,11 @@ function LogUserOutput () {
 # LogPrintError is also meant to show important "error-like" messages to the user
 # (for example when the user must decide if that means a real error in his case)
 # and other important messages that must appear on the user's terminal.
+# In particular when there was already a LogPrintError message
+# subsequent messages that are related to this LogPrintError message
+# must also be shown to the user as LogPrintError messages
+# to ensure the user gets them on his terminal regardless
+# whether or not he launched 'rear' in verbose mode.
 # Messages that are no real error messages should not be prefixed with 'Warning: '
 # cf. https://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
 function LogPrintError () {
