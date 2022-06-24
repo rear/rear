@@ -5,18 +5,17 @@ local mbr_image_file
 
 # Choose right MBR image file for right partition table type (issue #1153)
 case "$USB_DEVICE_PARTED_LABEL" in
-    "msdos")
+    (msdos)
         mbr_image_file="mbr.bin"
-    ;;
-    "gpt")
+        ;;
+    (gpt)
         mbr_image_file="gptmbr.bin"
-    ;;
-    *)
-        Error "USB_DEVICE_PARTED_LABEL is incorrectly set, please check your settings."
-    ;;
+        ;;
+    (*)
+        Error "USB_DEVICE_PARTED_LABEL='$USB_DEVICE_PARTED_LABEL' (neither 'msdos' nor 'gpt')"
+        ;;
 esac
 
-SYSLINUX_MBR_BIN=$(find_syslinux_file $mbr_image_file)
+SYSLINUX_MBR_BIN=$( find_syslinux_file $mbr_image_file )
 
-[[ -s "$SYSLINUX_MBR_BIN" ]]
-StopIfError "Could not find file '$mbr_image_file'. Syslinux version 3.08 or newer is required, 4.x prefered!"
+test -s "$SYSLINUX_MBR_BIN" || Error "Could not find SYSLINUX MBR image file '$mbr_image_file' (at least SYSLINUX 3.08 is required, 4.x preferred)"
