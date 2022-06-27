@@ -43,9 +43,16 @@ local current_partition_start_byte=$(( USB_PARTITION_ALIGN_BLOCK_SIZE * MiB_byte
 # to get hybrid boot supporting BIOS and UEFI from the same medium by default
 # see https://github.com/rear/rear/pull/2705
 # so the ordering of the two settings below is crucial
-# to ensure a GUID partition table is set up for hybrid boot:
-is_true "$FORMAT_BIOS" && USB_DEVICE_PARTED_LABEL="msdos"
-is_true "$FORMAT_EFI" && USB_DEVICE_PARTED_LABEL="gpt"
+# to ensure a GUID partition table is set up for hybrid boot.
+# Set default usb_disk_label="gpt" to be fail-safe if neither FORMAT_BIOS nor FORMAT_EFI is true:
+local usb_disk_label="gpt"
+is_true "$FORMAT_BIOS" && usb_disk_label="msdos"
+is_true "$FORMAT_EFI" && usb_disk_label="gpt"
+# Tell the user when his specified USB_DEVICE_PARTED_LABEL does not match what format workflow needs:
+if test "$USB_DEVICE_PARTED_LABEL" && test "$usb_disk_label" != "$USB_DEVICE_PARTED_LABEL" ; then
+    LogPrintError "Overwriting USB_DEVICE_PARTED_LABEL with '$usb_disk_label' to match format workflow settings"
+fi
+USB_DEVICE_PARTED_LABEL="$usb_disk_label"
 LogPrint "Creating partition table of type $USB_DEVICE_PARTED_LABEL on $RAW_USB_DEVICE"
 if ! parted -s $RAW_USB_DEVICE mklabel $USB_DEVICE_PARTED_LABEL ; then
     Error "Failed to create $USB_DEVICE_PARTED_LABEL partition table on $RAW_USB_DEVICE"
