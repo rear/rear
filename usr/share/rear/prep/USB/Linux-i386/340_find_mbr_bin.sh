@@ -1,7 +1,7 @@
 # The file mbr.bin is only added since syslinux 3.08
 # The extlinux -i option is only added since syslinux 3.20
 
-# Find out what the actual USB device partition table type is
+# Find out what the actual USB disk partition table type is
 # of the USB disk that is the parent device of the USB data partition
 # that is the value of the USB_DEVICE variable.
 # For example
@@ -32,15 +32,21 @@ usb_disk="$( lsblk -inpo PKNAME "$USB_DEVICE" 2>/dev/null | awk NF | head -n1 )"
 # and older lsblk versions do not support the output column PKNAME
 # e.g. lsblk in util-linux 2.19.1 in SLES11 supports NAME and KNAME but not PKNAME
 # see the code of the write_protection_ids() function in lib/write-protect-functions.sh
-# so we use USB_DEVICE_PARTED_LABEL as fallback when the 'lsblk' automatism does not work:
+# so we use USB_DEVICE_PARTED_LABEL as fallback when the 'lsblk' automatism does not work
+# and also when 'parted' does not show "msdos" or "gpt":
 if test -b "$usb_disk" ; then
     usb_disk_label=$( parted -s $usb_disk print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " " )
-else
-    usb_disk_label=$USB_DEVICE_PARTED_LABEL
+    if test "$usb_disk_label" = "msdos" || test "$usb_disk_label" = "gpt" ; then
+        # Tell the user when his specified USB_DEVICE_PARTED_LABEL does not match the actual USB disk partition type:
+        if test "$USB_DEVICE_PARTED_LABEL" && test "$usb_disk_label" != "$USB_DEVICE_PARTED_LABEL" ; then
+            LogPrintError "Overwriting USB_DEVICE_PARTED_LABEL with '$usb_disk_label' to match USB disk partition type"
+        fi
+        USB_DEVICE_PARTED_LABEL="$usb_disk_label"
+    fi
 fi
 
 # Choose the right MBR image file for the partition table type (issue #1153)
-case "$usb_disk_label" in
+case "$USB_DEVICE_PARTED_LABEL" in
     (msdos)
         mbr_image_file="mbr.bin"
         ;;
@@ -48,7 +54,7 @@ case "$usb_disk_label" in
         mbr_image_file="gptmbr.bin"
         ;;
     (*)
-        Error "Unsupported USB disk partition table type '$usb_disk_label' (neither 'msdos' nor 'gpt')"
+        Error "Unsupported USB disk partition table type '$USB_DEVICE_PARTED_LABEL' (neither 'msdos' nor 'gpt')"
         ;;
 esac
 
