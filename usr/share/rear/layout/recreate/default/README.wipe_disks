@@ -627,7 +627,7 @@ RAID plus LVM plus LUKS
 
 To wipe RAID Superblocks it is sufficient to wipe 133 KiB at the beginning and at the end of the device.
 
-To wipe to wipe LVM metadata is should be sufficient to wipe 4 MiB at the beginning and at the end of the device.
+To wipe LVM metadata is should be sufficient to wipe 4 MiB at the beginning and at the end of the device.
 
 To wipe LUKS headers is should be sufficient to wipe 8 MiB at the beginning of the device.
 
