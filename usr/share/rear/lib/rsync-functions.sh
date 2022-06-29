@@ -15,11 +15,12 @@ function rsync_validate () {
     local url="$1"
 
     if [[ "$(url_scheme "$url")" != "rsync" ]]; then # url_scheme still recognizes old style
-        Error "Non-rsync URL $url !"
+        BugError "Non-rsync URL $url !"
     fi
 }
 
 # Determine whether the URL specifies the use of the rsync protocol (rsyncd) or ssh
+# Do not call on non-rsync URLs (use url_scheme first)
 function rsync_proto () {
     local url="$1"
 
