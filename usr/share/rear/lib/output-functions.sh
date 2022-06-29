@@ -28,7 +28,7 @@ function FindUsbDevices () {
 # Error out when files greater or equal ISO_FILE_SIZE_LIMIT should be included in the ISO (cf. default.conf)
 # for files passed as arguments e.g: assert_ISO_FILE_SIZE_LIMIT file1 relative/path/file2 /absolute/path/file3 ...
 # Normally there should be no error exit inside a function but a function should return non-zero exit code
-# and leave it to its caller what to do depending on the callers environment. But this function is an exception.
+# and leave it to its caller what to do depending on the caller's environment. But this function is an exception.
 # It is meant like the "assert" macro in C that outputs a message on stderr and then exits with abort().
 # Furthermore it is less duplicated code to implement the error exit inside this function
 # than to let this function return non-zero exit code and implement the error exit in each caller
