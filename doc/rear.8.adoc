@@ -591,7 +591,7 @@ Johannes Meixner (https://github.com/jsmeix),
 Vladimir Gozora (https://github.com/gozora),
 Sebastien Chabrolles (https://github.com/schabrolles),
 Renaud Metrich (https://github.com/rmetrich) and
-"pcahyna" (https://github.com/pcahyna).
+Pavel Cahyna (https://github.com/pcahyna).
 We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers.
 Refer to the MAINTAINERS (https://github.com/rear/rear/blob/master/MAINTAINERS) file for the list of active and past maintainers.
 
