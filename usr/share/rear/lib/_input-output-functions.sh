@@ -578,6 +578,9 @@ function CallerSource () {
 }
 
 # Error exit:
+# It is an Error when the cause is not in ReaR's code
+# for example when the user specified something wrong
+# or when a called program exits with a fatal error.
 function Error () {
     # Get the last sourced script out of the log file:
     # Using the CallerSource function is not sufficient here because CallerSource results
@@ -771,7 +774,10 @@ function Error () {
     fi
 }
 
-# Exit if there is a bug in ReaR:
+# Exit if there is a bug inside ReaR:
+# It is a BugError when the cause is in ReaR's code,
+# for example when a ReaR function is called with wrong
+# or missing required parameters and things like that.
 function BugError () {
     { local caller_source="$( CallerSource )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     Error "
