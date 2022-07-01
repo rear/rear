@@ -417,38 +417,57 @@ if ! test "$can_run_simultaneously" ; then
     # other 'rear' programs which are not Relax-and-Recover but some different software.
     # Examples how 'rear' looks in the 'ps' output:
     # When Relax-and-Recover is normally installed (e.g. as RPM package) so the 'rear' program is /usr/sbin/rear:
-    #    # type -a rear
-    #    rear is /usr/sbin/rear
-    #    # rear mkrescue
-    #    # ps auxw | grep rear
-    #    ... /bin/bash /usr/sbin/rear mkrescue
-    #    # cd /
-    #    # ./usr/sbin/rear mkrescue
-    #    # ps auxw | grep rear
-    #    ... /bin/bash ./usr/sbin/rear mkrescue
-    #    # cd /usr/sbin
-    #    # ./rear mkrescue
-    #    # ps auxw | grep rear
-    #    ... /bin/bash ./rear mkrescue
+    #   # type -a rear
+    #   rear is /usr/sbin/rear
+    #   # rear mkrescue
+    #   # ps auxw | grep rear
+    #   ... /bin/bash /usr/sbin/rear mkrescue
+    #   # cd /
+    #   # ./usr/sbin/rear mkrescue
+    #   # ps auxw | grep rear
+    #   ... /bin/bash ./usr/sbin/rear mkrescue
+    #   # cd /usr/sbin
+    #   # ./rear mkrescue
+    #   # ps auxw | grep rear
+    #   ... /bin/bash ./rear mkrescue
     # When a Relax-and-Recover GitHub code checkout/clone is used so the 'rear' program is /path/to/checkout/usr/sbin/rear:
-    #    # /path/to/checkout/usr/sbin/rear mkrescue
-    #    # ps auxw | grep rear
-    #    ... /bin/bash /path/to/checkout/usr/sbin/rear mkrescue
-    #    # cd /path/to/checkout
-    #    # usr/sbin/rear mkrescue
-    #    # ps auxw | grep rear
-    #    ... /bin/bash usr/sbin/rear mkrescue
-    #    # ./usr/sbin/rear mkrescue
-    #    # ps auxw | grep rear
-    #    ... /bin/bash ./usr/sbin/rear mkrescue
-    #    # cd /path/to/checkout/usr/sbin
-    #    # ./rear mkrescue
-    #    # ps auxw | grep rear
-    #    ... /bin/bash ./rear mkrescue
+    #   # /path/to/checkout/usr/sbin/rear mkrescue
+    #   # ps auxw | grep rear
+    #   ... /bin/bash /path/to/checkout/usr/sbin/rear mkrescue
+    #   # cd /path/to/checkout
+    #   # usr/sbin/rear mkrescue
+    #   # ps auxw | grep rear
+    #   ... /bin/bash usr/sbin/rear mkrescue
+    #   # ./usr/sbin/rear mkrescue
+    #   # ps auxw | grep rear
+    #   ... /bin/bash ./usr/sbin/rear mkrescue
+    #   # cd /path/to/checkout/usr/sbin
+    #   # ./rear mkrescue
+    #   # ps auxw | grep rear
+    #   ... /bin/bash ./rear mkrescue
     # So we check $SCRIPT_FILE which is /usr/sbin/rear or /path/to/checkout/usr/sbin/rear
     # and /usr/sbin/rear usr/sbin/rear ./usr/sbin/rear ./sbin/rear ./rear ($PROGRAM is 'rear').
     # We need to explicitly check /usr/sbin/rear because $SCRIPT_FILE could be /path/to/checkout/usr/sbin/rear
-    # and then another simultaneously running instance could be /usr/sbin/rear (e.g. from an RPM package):
+    # and then another simultaneously running instance could be /usr/sbin/rear (e.g. from an RPM package).
+    # Things are different when 'rear' is run inside a booted ReaR recovery system:
+    # Inside a booted ReaR recovery system 'rear' is '/bin/rear'
+    # and /sbin /usr/sbin /usr/bin are symbolic links to /bin
+    # and $PATH is only 'bin' so inside a booted ReaR recovery system we have
+    #   RESCUE localhost:~ # type -a rear
+    #   rear is /bin/rear
+    # cf. https://github.com/rear/rear/issues/2826#issuecomment-1172111440
+    # When in the ReaR recovery system 'rear' is called normally like
+    #   RESCUE localhost:~ # rear recover
+    # we get
+    #   RESCUE localhost:~ # ps auwx | grep rear
+    #   ... /bin/bash /bin/rear recover
+    # and $SCRIPT_FILE is /bin/rear so the check below works.
+    # The check below fails when in the ReaR recovery system 'rear' is not called normally like
+    #   RESCUE localhost:~ # pwd
+    #   /root
+    #   RESCUE localhost:~ # ../bin/rear recover
+    # cf. https://github.com/rear/rear/issues/2826#issuecomment-1172138188
+    # This check is not meant to detect any possible way how another rear instance might have been called.
     for pid in $( pidof -x "$SCRIPT_FILE" "/usr/sbin/$PROGRAM" "usr/sbin/$PROGRAM" "./usr/sbin/$PROGRAM" "./sbin/$PROGRAM" "./$PROGRAM" ) ; do
         if test "$pid" != $$ ; then
             echo "ERROR: $PROGRAM is already running with PID $pid, not starting again" >&2
