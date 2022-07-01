@@ -328,6 +328,19 @@ New features, bigger enhancements, and possibly backward incompatible changes:
 
 Details (mostly in chronological order - newest topmost):
 
+-   Set USB_DEVICE_PARTED_LABEL to match format-workflow.sh:
+    In format/USB/default/300_format_usb_disk.sh it is set
+    depending on the format workflow option -b/--bios or -e/--efi
+    and in in prep/USB/Linux-i386/340_find_mbr_bin.sh try to
+    autodetect what the USB disk partition type is and
+    use a specified USB_DEVICE_PARTED_LABEL if autodetection fails
+    see https://github.com/rear/rear/pull/2829
+
+-   In usr/sbin/rear enhanced the check for other simultaneously running 'rear'
+    to let it find running 'rear' instances independent of how it was called by the user
+    in particular also when 'rear' is run from a GitHub checkout/clone
+    cf. https://github.com/rear/rear/issues/2826
+
 -   In usr/share/rear/lib/format-workflow.sh do actually recognise -b/--bios
     options, see https://github.com/rear/rear/pull/2828
 
