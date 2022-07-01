@@ -32,6 +32,32 @@ local current_partition_number=1
 # current start byte of the next partition to add
 local current_partition_start_byte=$(( USB_PARTITION_ALIGN_BLOCK_SIZE * MiB_bytes ))
 
+### Create partition table section
+
+# Initialize USB disk via "parted mklabel" (create partition table)
+# When a format workflow option -b/--bios or -e/--efi was specified set USB_DEVICE_PARTED_LABEL accordingly
+# cf. https://github.com/rear/rear/pull/2828#issuecomment-1164590100
+# and when no format workflow option -b/--bios or -e/--efi was specified
+# then rear/lib/format-workflow.sh sets both FORMAT_BIOS and FORMAT_EFI to 'y'
+# cf. https://github.com/rear/rear/commit/9591fbf77c0c12329738625fcb83bb1d9b419b51
+# to get hybrid boot supporting BIOS and UEFI from the same medium by default
+# see https://github.com/rear/rear/pull/2705
+# so the ordering of the two settings below is crucial
+# to ensure a GUID partition table is set up for hybrid boot.
+# Set default usb_disk_label="gpt" to be fail-safe if neither FORMAT_BIOS nor FORMAT_EFI is true:
+local usb_disk_label="gpt"
+is_true "$FORMAT_BIOS" && usb_disk_label="msdos"
+is_true "$FORMAT_EFI" && usb_disk_label="gpt"
+# Tell the user when his specified USB_DEVICE_PARTED_LABEL does not match what format workflow needs:
+if test "$USB_DEVICE_PARTED_LABEL" && test "$usb_disk_label" != "$USB_DEVICE_PARTED_LABEL" ; then
+    LogPrintError "Overwriting USB_DEVICE_PARTED_LABEL with '$usb_disk_label' to match format workflow settings"
+fi
+USB_DEVICE_PARTED_LABEL="$usb_disk_label"
+LogPrint "Creating partition table of type $USB_DEVICE_PARTED_LABEL on $RAW_USB_DEVICE"
+if ! parted -s $RAW_USB_DEVICE mklabel $USB_DEVICE_PARTED_LABEL ; then
+    Error "Failed to create $USB_DEVICE_PARTED_LABEL partition table on $RAW_USB_DEVICE"
+fi
+
 # Flag for the partition wherefrom is booted which is the boot partition if exists
 # or the data partition as fallback when there is no boot partition:
 local boot_partition_flag="$USB_BOOT_PARTITION_FLAG"
@@ -49,16 +75,6 @@ if ! test $boot_partition_flag ; then
             Error "USB_DEVICE_PARTED_LABEL='$USB_DEVICE_PARTED_LABEL' (neither 'msdos' nor 'gpt')"
             ;;
     esac
-fi
-
-### Create partition table section
-
-# Initialize USB disk via "parted mklabel" (create partition table)
-# If not set use fallback value 'msdos' (same as the default value in default.conf):
-test "msdos" = "$USB_DEVICE_PARTED_LABEL" -o "gpt" = "$USB_DEVICE_PARTED_LABEL" || USB_DEVICE_PARTED_LABEL="msdos"
-LogPrint "Creating partition table of type $USB_DEVICE_PARTED_LABEL on $RAW_USB_DEVICE"
-if ! parted -s $RAW_USB_DEVICE mklabel $USB_DEVICE_PARTED_LABEL ; then
-    Error "Failed to create $USB_DEVICE_PARTED_LABEL partition table on $RAW_USB_DEVICE"
 fi
 
 ### Create partitions section
