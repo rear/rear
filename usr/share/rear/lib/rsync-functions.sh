@@ -74,25 +74,39 @@ function rsync_path () {
     local url="$1"
     local host
     local path
+    local url_without_scheme
+    local url_without_scheme_user
 
     host=$(url_host "$url")
     path=$(url_path "$url")
     local tmp2="${host#*@}"
 
+    url_without_scheme="${url#*//}"
+    url_without_scheme_user="${url_without_scheme#$(rsync_user "$url")@}"
+
     case "$(rsync_proto "$url")" in
 
         (rsync)
-            # path=/gdhaese1@witsbebelnx02::backup or path=/backup
-            if grep -q '::' <<< $path ; then
-                echo "${path##*::}"
+            if grep -q '::' <<< $url_without_scheme_user ; then
+                # we can not use url_path here, it uses / as separator, not ::
+                local url_after_separator="${url_without_scheme_user##*::}"
+                # remove leading / - this is a module name
+                echo "${url_after_separator#/}"
             else
-                # XXX what if path=/backup/sub/directory ? Should we remove
-                # longest prefix?
-                echo "${path##*/}"
+                echo "${path#*/}"
             fi
             ;;
         (ssh)
-            echo "$path"
+            if [ "$url_without_scheme" == "$url" ]; then
+                # no scheme - old-style URL
+                if grep -q ':' <<< $url_without_scheme_user ; then
+                    echo "${url_without_scheme_user##*:}"
+                else
+                    BugError "Old-style rsync URL $url without : !"
+                fi
+            else
+                echo "$path"
+            fi
             ;;
 
     esac
