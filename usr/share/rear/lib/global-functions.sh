@@ -238,7 +238,7 @@ function percent_decode() {
 # URL is the most common form of URI
 # see https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
 # where a generic URI is of the form
-# scheme:[//[user:password@]host[:port]][/]path[?query][#fragment]
+# scheme:[//[[user:password@]host[:port]]/path[?query][#fragment]
 # e.g. for BACKUP_URL=sshfs://user@host/G/rear/
 # url_scheme = 'sshfs' , url_host = 'user@host' , url_hostname = 'host' , url_username = 'user' , url_path = '/G/rear/'
 # e.g. for BACKUP_URL=usb:///dev/sdb1
