@@ -328,6 +328,27 @@ New features, bigger enhancements, and possibly backward incompatible changes:
 
 Details (mostly in chronological order - newest topmost):
 
+-   Refactor rsync URL support, fixes rsync OUTPUT_URL:
+    The code to parse rsync:// URLs was BACKUP_URL specific.
+    If one specified BACKUP=RSYNC and an OUTPUT_URL different from BACKUP_URL,
+    the OUTPUT_URL was ignored and the output files went to BACKUP_URL.
+    Fix by introducing generic functions for rsync URL parsing and
+    use them for both BACKUP_URL and OUTPUT_URL, as appropriate.
+    Replace all uses of global RSYNC_* variables derived
+    from BACKUP_URL by those functions.
+    There also was inconsistent special handling for OUTPUT=PXE which is now removed:
+    An rsync OUTPUT_URL with OUTPUT=PXE now creates the RSYNC_PREFIX directory
+    at the destination and the URL is interpreted as in all other cases.
+    See https://github.com/rear/rear/pull/2831
+    and https://github.com/rear/rear/issues/2781
+
+-   Support creation of EFI system partition on systems
+    with older 'parted' that do not support the 'esp' keyword:
+    In format/USB/default/300_format_usb_disk.sh try
+    'sgdisk ... --typecode="partition_number:EF00"' as fallback
+    when 'parted ... set partition_number esp on' failed
+    see https://github.com/rear/rear/pull/2830
+
 -   Set USB_DEVICE_PARTED_LABEL to match format-workflow.sh:
     In format/USB/default/300_format_usb_disk.sh it is set
     depending on the format workflow option -b/--bios or -e/--efi
@@ -3808,8 +3829,8 @@ up-to-date with feedback we receive from the community.
 
 ReaR 2.7 is supported on the following Linux based operating systems:
 
--   Fedora 29, 30, 31, and 32
--   RHEL 6, 7, and 8
+-   Fedora 29, 30, 31, 32, 33, and 34
+-   RHEL 6, 7, 8, and 9
 -   CentOS 6, 7, and 8
 -   Scientific Linux 6 and 7
 -   SLES 12 and 15
