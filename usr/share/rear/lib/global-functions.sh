@@ -259,7 +259,7 @@ function url_scheme() {
     # the scheme is the leading part up to '://'
     local scheme=${url%%://*}
     # rsync scheme does not have to start with rsync:// it can also be scp style
-    # see the comments in usr/share/rear/prep/RSYNC/default/100_check_rsync.sh
+    # see the comments in usr/share/rear/lib/rsync-functions.sh
     echo $scheme | grep -q ":" && echo rsync || echo $scheme
 }
 

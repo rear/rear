@@ -1,6 +1,17 @@
 #
 # copy resulting files to remote network (backup) location
 
+local proto scheme
+
+scheme="$(url_scheme "$OUTPUT_URL")"
+
+# we handle only rsync:// output schemes.
+# ToDo: why does handling of the output URL scheme belong under RSYNC (which is a backup method)?
+# OUTPUT_URL is independent on the chosen backup method, so this code should be moved to be backup-independent.
+test "rsync" = "$scheme" || return 0
+
+proto="$(rsync_proto "$OUTPUT_URL")"
+
 LogPrint "Copying resulting files to $OUTPUT_URL location"
 
 # if called as mkbackuponly then we just don't have any result files.
@@ -19,21 +30,21 @@ cp $v $(get_template "RESULT_usage_$OUTPUT.txt") "${TMP_DIR}/rsync/${RSYNC_PREFI
 cat "$RUNTIME_LOGFILE" >"${TMP_DIR}/rsync/${RSYNC_PREFIX}/rear.log" \
     || Error "Could not copy $RUNTIME_LOGFILE to local rsync location"
 
-case $RSYNC_PROTO in
+case $proto in
 
     (ssh)
-    Log "$BACKUP_PROG -a ${TMP_DIR}/rsync/${RSYNC_PREFIX}/ ${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/"
+    Log "$BACKUP_PROG -a ${TMP_DIR}/rsync/${RSYNC_PREFIX}/ $(rsync_remote_full "$OUTPUT_URL")/"
     # FIXME: Add an explanatory comment why "2>/dev/null" is useful here
     # or remove it according to https://github.com/rear/rear/issues/1395
-    $BACKUP_PROG -a "${TMP_DIR}/rsync/${RSYNC_PREFIX}/" "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}/${RSYNC_PREFIX}/" 2>/dev/null \
+    $BACKUP_PROG -a "${TMP_DIR}/rsync/${RSYNC_PREFIX}/" "$(rsync_remote_full "$OUTPUT_URL")/" 2>/dev/null \
         || Error "Could not copy '${RESULT_FILES[*]}' to $OUTPUT_URL location"
     ;;
 
     (rsync)
-    Log "$BACKUP_PROG -a ${TMP_DIR}/rsync/${RSYNC_PREFIX}/ ${BACKUP_RSYNC_OPTIONS[*]} ${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/"
+    Log "$BACKUP_PROG -a ${TMP_DIR}/rsync/${RSYNC_PREFIX}/ ${BACKUP_RSYNC_OPTIONS[*]} $(rsync_remote_full "$OUTPUT_URL")/"
     # FIXME: Add an explanatory comment why "2>/dev/null" is useful here
     # or remove it according to https://github.com/rear/rear/issues/1395
-    $BACKUP_PROG -a "${TMP_DIR}/rsync/${RSYNC_PREFIX}/" "${BACKUP_RSYNC_OPTIONS[@]}" "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/" 2>/dev/null \
+    $BACKUP_PROG -a "${TMP_DIR}/rsync/${RSYNC_PREFIX}/" "${BACKUP_RSYNC_OPTIONS[@]}" "$(rsync_remote_full "$OUTPUT_URL")/" 2>/dev/null \
         || Error "Could not copy '${RESULT_FILES[*]}' to $OUTPUT_URL location"
     ;;
 
