@@ -147,7 +147,13 @@ if is_true "$FORMAT_EFI" ; then
     # Set the right flag for the EFI partition:
     LogPrint "Setting 'esp' flag on EFI partition $RAW_USB_DEVICE$current_partition_number"
     if ! parted -s $RAW_USB_DEVICE set $current_partition_number esp on ; then
-        Error "Failed to set 'esp' flag on EFI partition $RAW_USB_DEVICE$current_partition_number"
+        LogPrintError "Failed to set 'esp' flag on EFI partition $RAW_USB_DEVICE$current_partition_number"
+        # parted 3.2 added the support for 'esp' keyword.  Thus, parted 3.1 in RHEL 7 does not support it yet so try a fallback
+        # that sets the corresponding partition type using sgdisk.
+        if ! sgdisk $RAW_USB_DEVICE --typecode="$current_partition_number:EF00" ; then
+            Error "Failed to set 'esp' flag using sgdisk as fallback on EFI partition $RAW_USB_DEVICE$current_partition_number"
+        fi
+        LogPrintError "Set 'esp' flag using sgdisk as fallback on EFI partition $RAW_USB_DEVICE$current_partition_number"
     fi
     # Partition 1 is the EFI system partition (vfat partition) on which EFI/BOOT/BOOTX86.EFI resides
     # so the number of the partition that can be set up next has to be one more (i.e. now 2):
