@@ -243,6 +243,21 @@ function percent_decode() {
 # url_scheme = 'sshfs' , url_host = 'user@host' , url_hostname = 'host' , url_username = 'user' , url_path = '/G/rear/'
 # e.g. for BACKUP_URL=usb:///dev/sdb1
 # url_scheme = 'usb' , url_host = '' , url_hostname = '' , url_username = '' , url_path = '/dev/sdb1'
+# TODO: the url_* functions do not support the minimal scheme:path case of an URL
+# for example
+#   # url='mailto:John.Doe@example.com'
+#   # url_scheme "$url"
+#   rsync
+#   # url_host "$url"
+#   mailto:John.Doe@example.com
+#   # url_hostname "$url"
+#   example.com
+#   # url_username "$url"
+#   mailto
+#   # url_password "$url"
+#   John.Doe
+#   # url_path "$url"
+#   /mailto:John.Doe@example.com
 # FIXME: the ulr_* functions are not safe against special characters
 # for example they break when the password contains spaces
 # but on the other hand permitted characters for values in a URI
