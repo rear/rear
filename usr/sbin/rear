@@ -55,7 +55,7 @@ readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_
 # Versioning
 readonly PRODUCT="Relax-and-Recover"
 readonly PROGRAM=${0##*/}
-readonly VERSION=2.6
+readonly VERSION=2.7
 readonly RELEASE_DATE=Git
 
 # Where users should report bugs:

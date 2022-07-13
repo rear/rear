@@ -1,6 +1,6 @@
 = rear(8)
-:version: v2.6
-:date: 17 June 2020
+:version: v2.7
+:date: 09 June 2022
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -93,12 +93,11 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
     mkbackup/mkrescue
 
 *dump*::
-    dump configuration and system information; please run this to verify
+    dump configuration and system information; run this to verify
     your setup
 
 *format*::
     format and label USB or tape media to be used with rear;
-    +
     first argument is the USB or tape device to use, eg. _/dev/sdX_ or
     _/dev/stX_
 
@@ -277,8 +276,8 @@ ip=192.168.100.2 nm=255.255.255.0 netdev=eth0 gw=192.168.100.1
 Skip network devices setup by the rescue system start up scripts (overrides ip= nm= netdev= gw=).
 
 == BACKUP SOFTWARE INTEGRATION
-Currently Relax-and-Recover supports the following backup methods. Please
-distinguish carefully between Relax-and-Recover support for 3rd party
+Currently Relax-and-Recover supports the following backup methods.
+There is a distinction between Relax-and-Recover support for 3rd party
 backup software and Relax-and-Recover internal backup methods. The latter
 also creates a backup of your data while the former will only integrate
 Relax-and-Recover with the backup software to restore the data with the
@@ -562,12 +561,12 @@ Relax-and-Recover script components.
 
 /usr/share/rear/conf/default.conf::
 Relax-and-Recover default values. Contains a complete set of parameters
-and its explanation.  Please do not edit or modify. Copy values to
-_local.conf_ or _site.conf_ instead.
+and its explanation. Do not edit or modify things therein but
+use _local.conf_ or _site.conf_ for specific settings.
 
 
 == BUGS
-Feedback is welcome, please report any issues or improvements to our
+Feedback is welcome, please report issues or improvements to our
 issue-tracker at: http://github.com/rear/issues/
 
 Furthermore, we welcome pull requests via GitHub.
@@ -578,11 +577,28 @@ _/usr/share/doc_.
 
 
 == AUTHORS
-The ReaR project was initiated in 2006 by Schlomo Schapiro (https://github.com/schlomo) and Gratien D'haese (https://github.com/gdha) and has since then seen a lot of contributions by many authors. As ReaR deals with bare metal disaster recovery, there is a large amount of code that was contributed by owners and users of specialized hardware and software. Without their combined efforts and contributions ReaR would not be the universal Linux bare metal disaster recovery solution that it is today.
+The ReaR project was initiated in 2006 by Schlomo Schapiro (https://github.com/schlomo) and
+Gratien D'haese (https://github.com/gdha) and has since then seen a lot of contributions by many authors.
+As ReaR deals with bare metal disaster recovery, there is a large amount of code
+that was contributed by owners and users of specialized hardware and software.
+Without their combined efforts and contributions ReaR would not be
+the universal Linux bare metal disaster recovery solution that it is today.
 
-As time passed the project was lucky to get the support of additional developers to also help as maintainers: Dag Wieers (https://github.com/dagwieers), Jeroen Hoekx (https://github.com/jhoekx), Johannes Meixner (https://github.com/jsmeix), Vladimir Gozora (https://github.com/gozora) and Sébastien Chabrolles (https://github.com/schabrolles). We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers.  Please refer to the MAINTAINERS (https://github.com/rear/rear/blob/master/MAINTAINERS) file for the list of active and past maintainers.
+As time passed the project was lucky to get the support of additional developers to also help as maintainers:
+Dag Wieers (https://github.com/dagwieers),
+Jeroen Hoekx (https://github.com/jhoekx),
+Johannes Meixner (https://github.com/jsmeix),
+Vladimir Gozora (https://github.com/gozora),
+Sebastien Chabrolles (https://github.com/schabrolles),
+Renaud Metrich (https://github.com/rmetrich) and
+Pavel Cahyna (https://github.com/pcahyna).
+We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers.
+Refer to the MAINTAINERS (https://github.com/rear/rear/blob/master/MAINTAINERS) file for the list of active and past maintainers.
 
-To see the full list of authors and their contributions please look at the git history (https://github.com/rear/rear/graphs/contributors). We are very thankful to all authors and encourage anybody interested to take a look at our source code and to contribute what you find important.
+To see the full list of authors and their contributions
+look at the git history (https://github.com/rear/rear/graphs/contributors).
+We are very thankful to all authors and encourage anybody interested
+to take a look at our source code and to contribute what you find important.
 
 Relax-and-Recover is a collaborative process using Github at http://github.com/rear/
 
@@ -590,7 +606,7 @@ The Relax-and-Recover website is located at: http://relax-and-recover.org/
 
 
 == COPYRIGHT
-(c) 2006-2020
+(c) 2006-2022
 
 The copyright is held by the original authors of the respective code pieces as can be seen in the git history at https://github.com/rear/rear/graphs/contributors
 
