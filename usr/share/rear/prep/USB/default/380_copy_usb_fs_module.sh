@@ -6,7 +6,7 @@
 # moduels in /etc/modules get loaded during recovery system startup via .../system-setup.d/40-start-udev-or-load-modules.sh
 
 local usb_fs
-# TODO: When 'lsblk' is not too old (it must support the needd options like '-o FSTYPE')
+# TODO: When 'lsblk' is not too old (it must support the needed options like '-o FSTYPE')
 # then "lsblk -no FSTYPE $USB_DEVICE" could show the USB filesystem directly
 # in its last output line also when it is called with a direct kernel parent device:
 # For example my <jsmeix@suse.de> encrypted root filesystem on my openSUSE Leap 15.2 laptop is 'ext4':
