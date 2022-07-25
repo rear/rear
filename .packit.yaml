@@ -1,24 +1,22 @@
 downstream_package_name: rear
 jobs:
 - job: copr_build
-  metadata:
-    targets:
-    - fedora-all
-    - centos-stream-8-x86_64
-    - centos-stream-9-x86_64
-    - opensuse-leap-15.3-x86_64
-    - opensuse-tumbleweed-x86_64
+  targets:
+  - fedora-all
+  - centos-stream-8-x86_64
+  - centos-stream-9-x86_64
+  - opensuse-leap-15.3-x86_64
+  - opensuse-tumbleweed-x86_64
   trigger: pull_request
 - job: production_build
-  metadata:
-    scratch: True
-    targets:
-    - fedora-latest-stable
-    - epel-all
+  scratch: True
+  targets:
+  - fedora-latest-stable
+  - epel-all
   trigger: pull_request
 specfile_path: packaging/rpm/rear.spec
-synced_files:
+files_to_sync:
 - .packit.yaml
 - dest: rear.spec
   src: packaging/rpm/rear.spec
-upstream_project_name: rear
+upstream_package_name: rear
