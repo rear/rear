@@ -19,7 +19,7 @@ for new_kernel_option in "${new_kernel_options_to_add[@]}" ; do
     for rear_kernel_option in $KERNEL_CMDLINE ; do
         # Check if a kernel option key without value parameter (everything before =) is not already present in rear KERNEL_CMDLINE array.
         if test "$new_kernel_option_keyword" = "${rear_kernel_option%%=*}" ; then
-            Log "Current kernel option [$new_kernel_option] supperseeded by [$rear_kernel_option] in your rear configuration: (KERNEL_CMDLINE)"
+            LogPrintError "Not adding '$new_kernel_option' (superseded by existing '$rear_kernel_option' in KERNEL_CMDLINE)"
             # Continue with the next new_kernel_option (i.e. continue the outer 'for' loop):
             continue 2
         fi
