@@ -287,28 +287,16 @@ create_lvmvol() {
     # so e.g. 'lvcreate -L 123456b -n LV VG' becomes 'lvcreate -l 100%FREE -n LV VG'
     fallbacklvopts="$( sed -e 's/-L [0-9b]*/-l 100%FREE/' <<< "$lvopts" )"
 
-    # In SLES11 "man lvcreate" does not show '-y' or '--yes'
-    # so we cannot use "lvm lvcreate -y ..."
-    # see https://github.com/rear/rear/issues/2820#issuecomment-1161934013
-    # instead we input as many 'y' as asked for by "lvm lvcreate"
-    # see https://github.com/rear/rear/issues/513
-    # and https://github.com/rear/rear/issues/2820
-    # plus be safe against possible 'set -o pipefail' non-zero exit code of 'yes' via '( yes || true ) | ...'
-    # see https://github.com/rear/rear/issues/2820#issuecomment-1162804476
-    # because 'yes' may get terminated by SIGPIPE when plain 'yes | ...' is used
-    # see https://github.com/rear/rear/issues/2820#issuecomment-1162772415
-    # and suppress needless "yes: standard output: Broken pipe" stderr messages
-    # that appear at least with newer 'yes' in coreutils-8.32 in openSUSE Leap 15.3
     cat >> "$LAYOUT_CODE" <<EOF
 $ifline
     LogPrint "Creating LVM volume '$vg/$lvname' (some properties may not be preserved)"
     $warnraidline
-    if ! ( yes 2>/dev/null || true ) | lvm lvcreate $lvopts $vg ; then
-        LogPrintError "Failed to create LVM volume '$vg/$lvname' with lvcreate $lvopts $vg"
-        if ( yes 2>/dev/null || true ) | lvm lvcreate $fallbacklvopts $vg ; then
-            LogPrintError "Created LVM volume '$vg/$lvname' using fallback options lvcreate $fallbacklvopts $vg"
+    if ! lvm lvcreate -y $lvopts $vg ; then
+        LogPrintError "Failed to create LVM volume '$vg/$lvname' with lvcreate -y $lvopts $vg"
+        if lvm lvcreate -y $fallbacklvopts $vg ; then
+            LogPrintError "Created LVM volume '$vg/$lvname' using fallback options lvcreate -y $fallbacklvopts $vg"
         else
-            LogPrintError "Also failed to create LVM volume '$vg/$lvname' with lvcreate $fallbacklvopts $vg"
+            LogPrintError "Also failed to create LVM volume '$vg/$lvname' with lvcreate -y $fallbacklvopts $vg"
             # Explicit 'false' is needed to let the whole 'if then else fi' command exit with non zero exit state
             # to let diskrestore.sh abort here as usual when a command fails (diskrestore.sh runs with 'set -e'):
             false
