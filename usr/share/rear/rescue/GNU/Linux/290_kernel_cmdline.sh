@@ -19,10 +19,11 @@ done
 # Check if the kernel options we want to add to KERNEL_CMDLINE are already set by the user in KERNEL_CMDLINE.
 # If yes, the user setting has priority and superseds the kernel option from the current system.
 # For the check use the existing KERNEL_CMDLINE when this script is started
-# and not tha modified KERNEL_CMDLINE with already added kernel options
+# and not the modified KERNEL_CMDLINE with already added kernel options
 # to make it possible to add several kernel options by this script
 # with same kernel option keyword like console=ttyS0,9600 console=tty0
-# cf. https://github.com/rear/rear/pull/2749#issuecomment-1197843273
+# see https://github.com/rear/rear/pull/2749#issuecomment-1197843273
+# and https://github.com/rear/rear/pull/2844
 local existing_kernel_cmdline="$KERNEL_CMDLINE"
 local existing_kernel_option new_kernel_option new_kernel_option_keyword
 for new_kernel_option in "${new_kernel_options_to_add[@]}" ; do
