@@ -48,8 +48,8 @@ for new_kernel_option in "${new_kernel_options_to_add[@]}" ; do
     KERNEL_CMDLINE+=" $new_kernel_option"
 done
 
-# The user may hav added 'net.ifnames=0' to KERNEL_CMDLINE in /etc/rear/local.conf
-# but he does not know whether or not persistent naming is used.
+# The user may have added 'net.ifnames=0' to KERNEL_CMDLINE in /etc/rear/local.conf
+# but he may not know whether or not persistent naming is used.
 # So we should protect the rescue/recovery system from doing "stupid things"
 # and remove 'net.ifnames=0' in a preventive way when persistent naming is used:
 if is_true $persistent_naming ; then
