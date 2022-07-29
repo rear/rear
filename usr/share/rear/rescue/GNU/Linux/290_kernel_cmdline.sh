@@ -44,18 +44,17 @@ for new_kernel_option in "${new_kernel_options_to_add[@]}" ; do
             continue
         fi
     fi
-    LogPrint "Adding $new_kernel_option to KERNEL_CMDLINE"
+    LogPrint "Adding '$new_kernel_option' to KERNEL_CMDLINE"
     KERNEL_CMDLINE+=" $new_kernel_option"
 done
 
-# In case we added 'KERNEL_CMDLINE="$KERNEL_CMDLINE net.ifnames=0"' to /etc/rear/local.conf
-# but we have no idea if we are using persistent naming or not
-# then we should protect the rescue image from doing stupid things
-# and remove the keyword (and value) in a preventive way in case "persistent naming is in use".
-# And, to be clear the /proc/cmdline did not contain the keyword net.ifnames
+# The user may hav added 'net.ifnames=0' to KERNEL_CMDLINE in /etc/rear/local.conf
+# but he does not know whether or not persistent naming is used.
+# So we should protect the rescue/recovery system from doing "stupid things"
+# and remove 'net.ifnames=0' in a preventive way when persistent naming is used:
 if is_true $persistent_naming ; then
     if echo $KERNEL_CMDLINE | grep -q 'net.ifnames=0' ; then
         KERNEL_CMDLINE=$( echo $KERNEL_CMDLINE | sed -e 's/net.ifnames=0//' )
-        LogPrint "Removing 'net.ifnames=0' from KERNEL_CMDLINE (persistent network interface naming is used)"
+        LogPrint "Removed 'net.ifnames=0' from KERNEL_CMDLINE (persistent network interface naming is used)"
     fi
 fi
