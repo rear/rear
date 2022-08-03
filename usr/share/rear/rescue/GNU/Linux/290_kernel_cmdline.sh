@@ -13,7 +13,9 @@ for current_kernel_option in $( cat /proc/cmdline ) ; do
     # Get the current kernel option name (part before leftmost "=") and
     # add the whole option (with value) to new_kernel_options_to_add array
     # if the option name is part of COPY_KERNEL_PARAMETERS array:
-    IsInArray "${current_kernel_option%%=*}" "${COPY_KERNEL_PARAMETERS[@]}" && new_kernel_options_to_add+=( "$current_kernel_option" )
+    if IsInArray "${current_kernel_option%%=*}" "${COPY_KERNEL_PARAMETERS[@]}" ; then
+        new_kernel_options_to_add+=( "$current_kernel_option" )
+    fi
 done
 
 # Check if the kernel options we want to add to KERNEL_CMDLINE are already set by the user in KERNEL_CMDLINE.
