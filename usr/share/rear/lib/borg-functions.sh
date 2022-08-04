@@ -126,6 +126,11 @@ in Borg repository $BORGBACKUP_REPO on ${BORGBACKUP_HOST:-USB}"
     "${BORGBACKUP_OPT_UMASK[@]}" --exclude-from "$TMP_DIR/backup-exclude.txt" \
     "${borg_dst_dev}${BORGBACKUP_REPO}::${BORGBACKUP_ARCHIVE_PREFIX}_$BORGBACKUP_SUFFIX" \
     "${include_list[@]}"
+    rc=$?
+    if test "${BORGBACKUP_IGNORE_WARNING}" = "yes" && test ${rc} -eq 1 ; then
+        exit 0
+    fi
+    exit ${rc}
 }
 
 function borg_prune
