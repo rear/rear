@@ -10,7 +10,7 @@ Log "TAG-15-migrate-wwid: $LUN_WWID_MAP"
 local sed_script=""
 local old_wwid new_wwid device
 while read old_wwid new_wwid device ; do
-    sed_script="$sed_script;/${old_wwid}/s/${old_wwid}/${new_wwid}/g"
+    sed_script+=";/${old_wwid}/s/${old_wwid}/${new_wwid}/g"
 done < <( sort -u $LUN_WWID_MAP )
 # debug line:
 Debug "$sed_script"
