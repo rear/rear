@@ -231,7 +231,7 @@ for program in "${PROGS[@]}" ; do
     # Use the basename because the path within the recovery system is usually different compared to the path on the original system:
     program=$( basename $program )
     # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120.
-    chroot $ROOTFS_DIR /bin/bash --login -c "type $program" < /dev/null || missing_programs="$missing_programs $program"
+    chroot $ROOTFS_DIR /bin/bash --login -c "type $program" < /dev/null || missing_programs+=" $program"
 done
 
 # Report programs in the PROGS array that cannot be found as executable command within the recovery system:
@@ -256,7 +256,7 @@ for required_program in "${REQUIRED_PROGS[@]}" ; do
     # Use the basename because the path within the recovery system is usually different compared to the path on the original system:
     required_program=$( basename $required_program )
     # Redirected stdin for login shell avoids motd welcome message, cf. https://github.com/rear/rear/issues/2120.
-    chroot $ROOTFS_DIR /bin/bash --login -c "type $required_program" < /dev/null || missing_required_programs="$missing_required_programs $required_program"
+    chroot $ROOTFS_DIR /bin/bash --login -c "type $required_program" < /dev/null || missing_required_programs+=" $required_program"
 done
 # Report programs in the REQUIRED_PROGS array that cannot be found as executable command within the recovery system:
 if contains_visible_char "$missing_required_programs" ; then
