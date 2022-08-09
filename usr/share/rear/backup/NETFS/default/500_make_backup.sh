@@ -11,7 +11,7 @@ function set_tar_features () {
     local tar_version=$( get_version tar --version )
     if version_newer "$tar_version" 1.23 ; then
         FEATURE_TAR_WARNINGS="y"
-        TAR_OPTIONS="$TAR_OPTIONS --warning=no-xdev"
+        TAR_OPTIONS+=" --warning=no-xdev"
     fi
     FEATURE_TAR_IS_SET=1
 }
