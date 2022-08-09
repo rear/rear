@@ -56,7 +56,7 @@ if grep -q ^multipath $DISKLAYOUT_FILE ; then
 
     # depending to the linux distro and arch, libaio can be located in different dir. (ex: /lib/powerpc64le-linux-gnu)
     for libdir in $(ldconfig -p | awk '/libaio.so/ { print $NF }' | xargs -n1 dirname | sort -u); do
-        libaio2add="$libaio2add $libdir/libaio*"
+        libaio2add+=" $libdir/libaio*"
     done
     LIBS+=( $libaio2add )
 fi
