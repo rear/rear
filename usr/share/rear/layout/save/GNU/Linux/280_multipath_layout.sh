@@ -30,7 +30,7 @@ while read dm_name junk ; do
 
     slaves=""
     for slave in /sys/block/$name/slaves/* ; do
-        slaves="$slaves$(get_device_name ${slave##*/}),"
+        slaves+="$(get_device_name ${slave##*/}),"
     done
 
     dm_disktype=$(parted -s $dev_name print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
