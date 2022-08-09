@@ -77,7 +77,7 @@ btrfs_subvolumes_setup_SLES() {
         # When there is a non-empty subvolume_path, btrfs snapshot subvolume handling is needed:
         Log "Handling snapshot subvolume $subvolume_path for $device at $mountpoint"
         # Remember btrfs snapshot subvolumes to exclude them when mounting all btrfs normal subvolumes below:
-        snapshot_subvolumes_devices_and_paths="$snapshot_subvolumes_devices_and_paths $device,$subvolume_path"
+        snapshot_subvolumes_devices_and_paths+=" $device,$subvolume_path"
         # Be verbose if there are active btrfs snapshot subvolumes entries (snapshot subvolumes cannot be recreated).
         # In this case inform the user that nothing can be done for activated snapshot subvolumes entries:
         if test "btrfssnapshotsubvol" = "$keyword" ; then
