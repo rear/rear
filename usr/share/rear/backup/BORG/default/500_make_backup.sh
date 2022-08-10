@@ -32,9 +32,9 @@ function check_BORG_create_return_code() {
     fi
 
     if test $borg_create_exit_code -eq 0; then
-        LogUserOutput "[BORG] borg create operation completed successfully"
+        LogUserOutput "[BORG] borg create backup operation completed successfully"
     else
-        LogUserOutput "[BORG] borg create operation completed with 'borg create' exit code $borg_create_exit_code"
+        LogUserOutput "[BORG] borg create backup operation completed with 'borg create' exit code $borg_create_exit_code"
         test $borg_create_exit_code -eq 1 && LogUserOutput "[BORG rc=1] borg create backup operation completed with at least one warning message"
         test $borg_create_exit_code -eq 2 && LogUserOutput "[BORG rc=2] borg create backup operation completed with at least one error message"
         test $borg_create_exit_code -ge 128 && LogUserOutput "[BORG rc=$borg_create_exit_code] borg create backup operation was killed by signal"
