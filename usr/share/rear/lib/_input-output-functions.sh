@@ -158,7 +158,7 @@ function terminate_descendants_from_grandchildren_to_children () {
         if kill -0 $descendant_pid ; then
             # Keep the current ordering also in not_yet_terminated_pids
             # i.e. grandchildren before children:
-            not_yet_terminated_pids="$not_yet_terminated_pids $descendant_pid"
+            not_yet_terminated_pids+=" $descendant_pid"
             LogPrint "Descendant process $descendant_pid not yet terminated"
         fi
     done
@@ -251,7 +251,7 @@ function terminate_descendants_from_children_to_grandchildren () {
         if kill -0 $descendant_pid ; then
             # Keep the current ordering also in not_yet_terminated_pids
             # i.e. children before grandchildren:
-            not_yet_terminated_pids="$not_yet_terminated_pids $descendant_pid"
+            not_yet_terminated_pids+=" $descendant_pid"
             LogPrint "Child process $descendant_pid not yet terminated"
         fi
     done
@@ -1167,7 +1167,7 @@ function UserInput () {
         # Avoid stderr if timeout is not set or empty or not an integer value:
         if test "$timeout" -ge 1 2>/dev/null ; then
             if test "$default_and_timeout" ; then
-                default_and_timeout="$default_and_timeout timeout $timeout seconds"
+                default_and_timeout+=" timeout $timeout seconds"
             else
                 default_and_timeout="timeout $timeout seconds"
             fi
@@ -1198,18 +1198,18 @@ function UserInput () {
     fi
     # Prepare the 'read' call:
     local read_options_and_arguments=""
-    is_true "$raw_input" && read_options_and_arguments="$read_options_and_arguments -r"
-    is_true "$silent_input" && read_options_and_arguments="$read_options_and_arguments -s"
+    is_true "$raw_input" && read_options_and_arguments+=" -r"
+    is_true "$silent_input" && read_options_and_arguments+=" -s"
     # When a zero timeout was specified (via -t 0) do not use it.
     # Avoid stderr if timeout is not set or empty or not an integer value:
-    test "$timeout" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -t $timeout"
+    test "$timeout" -ge 1 2>/dev/null && read_options_and_arguments+=" -t $timeout"
     # When no input_words_array_name was specified (via -a myarr) do not use it:
-    test "$input_words_array_name" && read_options_and_arguments="$read_options_and_arguments -a $input_words_array_name"
+    test "$input_words_array_name" && read_options_and_arguments+=" -a $input_words_array_name"
     # When zero input_max_chars was specified (via -n 0) do not use it.
     # Avoid stderr if input_max_chars is not set or empty or not an integer value:
-    test "$input_max_chars" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -n $input_max_chars"
+    test "$input_max_chars" -ge 1 2>/dev/null && read_options_and_arguments+=" -n $input_max_chars"
     # When no input_delimiter was specified (via -d x) do not use it:
-    test "$input_delimiter" && read_options_and_arguments="$read_options_and_arguments -d $input_delimiter"
+    test "$input_delimiter" && read_options_and_arguments+=" -d $input_delimiter"
     # Get the actual user input value:
     local input_string=""
     # When a predefined user input value exists use that as automated user input:
