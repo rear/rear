@@ -18,7 +18,7 @@ LogPrint "Adding rpm repositories from $yum_backup_dir"
 local repoList=""
 for repo in $(cat $yum_backup_dir/rpm_repositories.dat)
 do
-	repoList="$repoList --enablerepo=$repo"
+	repoList+=" --enablerepo=$repo"
 done
 mkdir -p $TARGET_FS_ROOT/etc/yum.repos.d
 cp -a /etc/yum.repos.d/* $TARGET_FS_ROOT/etc/yum.repos.d/
