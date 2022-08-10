@@ -233,7 +233,7 @@ if test "$latest_full_backup" ; then
         # Tell the user what will be restored:
         local restore_archives_file_names=""
         for restore_archive in "${RESTORE_ARCHIVES[@]}" ; do
-            restore_archives_file_names="$restore_archives_file_names $( basename "$restore_archive" )"
+            restore_archives_file_names+=" $( basename "$restore_archive" )"
         done
         LogPrint "For backup restore using $restore_archives_file_names"
     fi
