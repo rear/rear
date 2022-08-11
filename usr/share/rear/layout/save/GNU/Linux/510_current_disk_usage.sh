@@ -11,7 +11,7 @@ local rear_USB_ESP_partition="$( readlink -f /dev/disk/by-label/REAR-EFI )"
 local egrep_pattern=""
 test "$rear_USB_data_partition" && egrep_pattern="^$rear_USB_data_partition"
 if test "$rear_USB_ESP_partition" ; then
-    test "$egrep_pattern" && egrep_pattern="$egrep_pattern|^$rear_USB_ESP_partition" || egrep_pattern="^$rear_USB_ESP_partition"
+    test "$egrep_pattern" && egrep_pattern+="|^$rear_USB_ESP_partition" || egrep_pattern="^$rear_USB_ESP_partition"
 fi
 # The disk usage must be in MiB units '-BM' (and not in arbitrary human readable units via '-h')
 # because the values are used in 420_autoresize_last_partitions.sh to calculate whether or not

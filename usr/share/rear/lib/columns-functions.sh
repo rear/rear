@@ -41,7 +41,7 @@ init_columns() {
                 let start=$i-${#word}
                 word=$( echo "$word" | tr '[:upper:]' '[:lower:]')
 
-                columns="$columns${word%% }=$start;"
+                columns+="${word%% }=$start;"
                 word=""
             fi
         else
@@ -59,7 +59,7 @@ init_columns() {
     # last word
     let start=$i-${#word}
     word=$( echo "$word"| tr '[:upper:]' '[:lower:]')
-    columns="$columns${word%% }=$start;"
+    columns+="${word%% }=$start;"
 
     #echo "c:$columns"
 }
@@ -129,7 +129,7 @@ get_columns() {
         local start=$(get_column_start "$header")
         local size=$(get_column_size "$header")
         #echo "$header $start $size"
-        value="$value${line:$start:$size};"
+        value+="${line:$start:$size};"
     done
     echo "$value"
 }

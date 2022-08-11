@@ -10,7 +10,7 @@ Log "TAG-15-migrate: $FS_UUID_MAP"
 local sed_script=""
 local old_uuid new_uuid device
 while read old_uuid new_uuid device ; do
-    sed_script="$sed_script;/${old_uuid}/s/${old_uuid}/${new_uuid}/g"
+    sed_script+=";/${old_uuid}/s/${old_uuid}/${new_uuid}/g"
 done < <( sort -u $FS_UUID_MAP )
 # debug line:
 Debug "$sed_script"

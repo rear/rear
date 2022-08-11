@@ -48,7 +48,7 @@ fi
 #   /dev/sda2 / btrfs rw,relatime,space_cache
 # The sorting relies on that mount and findmnt output the first mounted thing first
 # so that in particular what is mounted at '/' is output before other stuff.
-read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
+read_filesystems_command+=" | sort -t ' ' -k 1,1 -u"
 
 # The Docker daemon mounts file systems for its Docker containers, see also
 # https://docs.docker.com/storage/storagedriver/device-mapper-driver/#configure-direct-lvm-mode-for-production
@@ -232,7 +232,7 @@ fi
                 ;;
             (btrfs)
                 # Remember devices and mountpoints of the btrfs filesystems for the btrfs subvolume layout stuff below:
-                btrfs_devices_and_mountpoints="$btrfs_devices_and_mountpoints $device,$mountpoint"
+                btrfs_devices_and_mountpoints+=" $device,$mountpoint"
                 uuid=$( btrfs filesystem show $device | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )
                 label=$( btrfs filesystem show $device | grep -o 'Label: [^ ]*' | cut -d ':' -f 2 | tr -d '[:space:]' )
                 test "none" = "$label" && label=
@@ -349,7 +349,7 @@ fi
                     # for all devices except '/dev/sda3' where btrfs_subvolumes_setup_SLES() is called to setup that btrfs filesystem
                     # cf. https://github.com/rear/rear/pull/2080#discussion_r265046317 and see the code in the
                     # usr/share/rear/layout/prepare/GNU/Linux/133_include_mount_filesystem_code.sh script:
-                    IsInArray "$btrfs_device" "${BTRFS_SUBVOLUME_SLES_SETUP[@]}" || btrfs_subvolume_sles_setup_devices="$btrfs_subvolume_sles_setup_devices $btrfs_device"
+                    IsInArray "$btrfs_device" "${BTRFS_SUBVOLUME_SLES_SETUP[@]}" || btrfs_subvolume_sles_setup_devices+=" $btrfs_device"
                     # SLES 12 SP1 (or later) normal subvolumes that belong to snapper are excluded from being recreated:
                     # Snapper's base subvolume '/@/.snapshots' is excluded because during "rear recover"
                     # that one will be created by "snapper/installation-helper --step 1" which fails if it already exists

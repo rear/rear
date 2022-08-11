@@ -16,7 +16,7 @@ has_binary getcap && has_binary setcap || Error "getcap and setcap are needed wh
 
 # Empty values must be avoided for egrep -v because egrep -v '' or egrep -v 'something|' matches all:
 exclude_directories="$BUILD_DIR"
-test "$ISO_DIR" && exclude_directories="$exclude_directories|$ISO_DIR"
+test "$ISO_DIR" && exclude_directories+="|$ISO_DIR"
 
 # Be backward compatible:
 is_true "$NETFS_RESTORE_CAPABILITIES" && NETFS_RESTORE_CAPABILITIES=( '/' )

@@ -418,7 +418,7 @@ function backup_path() {
            path=""
            ;;
        (file)  # type file needs a local path (must be mounted by user)
-           path="$path/${NETFS_PREFIX}"
+           path+="/${NETFS_PREFIX}"
            ;;
        (iso)
            if [[ "$WORKFLOW" = "recover" ]]; then
@@ -452,7 +452,7 @@ function output_path() {
 
     case $scheme in
        (file)  # type file needs a local path (must be mounted by user)
-           path="$path/${OUTPUT_PREFIX}"
+           path+="/${OUTPUT_PREFIX}"
            ;;
        (*)     # nfs, cifs, usb, a.o. need a temporary mount-path
            path="${BUILD_DIR}/outputfs/${OUTPUT_PREFIX}"
