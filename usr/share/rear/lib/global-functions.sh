@@ -92,19 +92,19 @@ function contains_visible_char () {
     test "$( tr -d -c '[:graph:]' <<<"$*" )"
 }
 
-# Two explicit functions to be able to test explicitly for true and false (see issue #625)
+# Two functions to be able to test explicitly for true and false (see issue #625)
 # because "tertium non datur" (cf. https://en.wikipedia.org/wiki/Law_of_excluded_middle)
-# does not hold for variables because variables could be unset or have empty value
-# and to test if a variable is true or false its value is tested by that functions
-# but the variable may not have a real value (i.e. be unset or have empty value) and
-# because both functions test explicitly '! is_true' is not the same as 'is_false'
+# does not hold for variables because variables could be unset or have empty value.
+# To test if a variable is true or false its value is tested by that functions
+# but the variable may not have a real value (i.e. be unset or have empty value).
+# Because both functions test explicitly '! is_true' is not the same as 'is_false'
 # and '! is_false' is not the same as 'is_true' (see both function comments below):
 
 function is_true () {
-    # The argument is usually the value of a variable which needs to be tested
-    # only if there is explicitly a 'true' value then is_true returns true
-    # so that an unset variable or an empty value is not true
-    # and also for any other value that is not recognized as a 'true' value
+    # The argument is usually the value of a variable which needs to be tested.
+    # Only if there is explicitly a 'true' value then is_true returns true
+    # so that an unset variable or an empty value is not true.
+    # Also for any other value that is not recognized as a 'true' value
     # by the is_true function the is_true function results false:
     case "$1" in
         ([tT] | [yY] | [yY][eE][sS] | [tT][rR][uU][eE] | 1)
@@ -114,11 +114,11 @@ function is_true () {
 }
 
 function is_false () {
-    # The argument is usually the value of a variable which needs to be tested
-    # only if there is explicitly a 'false' value then is_false returns true
+    # The argument is usually the value of a variable which needs to be tested.
+    # Only if there is explicitly a 'false' value then is_false returns true
     # so that an unset variable or an empty value is not false
-    # (caution: for unset or empty variables is_false is false)
-    # and also for any other value that is not recognized as a 'false' value
+    # (caution: for unset or empty variables is_false is false).
+    # Also for any other value that is not recognized as a 'false' value
     # by the is_false function the is_false function results false:
     case "$1" in
         ([fF] | [nN] | [nN][oO] | [fF][aA][lL][sS][eE] | 0)
