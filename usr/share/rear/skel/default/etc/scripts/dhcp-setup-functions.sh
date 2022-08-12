@@ -206,7 +206,7 @@ my_ipcalc() {
 
     if [[ "$2" ]]; then
         declare -i DEC MASK="$(ip2num "$2")"
-        for BITS in ${!NETMASKS[@]}; do
+        for BITS in "${!NETMASKS[@]}" ; do
                 DEC=${NETMASKS[$BITS]}
                 (( MASK == DEC )) && break
         done
@@ -420,7 +420,7 @@ dhconfig() {
                 gateway=${static_routes[$i+1]}
 
                 metric=''
-                for t in ${route_targets[@]}; do
+                for t in "${route_targets[@]}" ; do
                     if [ ${t} = ${target} ]; then
                         if [ -z "${metric}" ]; then
                             metric=1
@@ -460,7 +460,7 @@ dhconfig() {
                 for router in ${new_routers} ; do
                     added_router=-
 
-                    for r in ${default_routers[@]} ; do
+                    for r in "${default_routers[@]}" ; do
                         if [ "${r}" = "${router}" ]; then
                             added_router=1
                         fi

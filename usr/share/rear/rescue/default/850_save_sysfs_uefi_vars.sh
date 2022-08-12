@@ -85,6 +85,9 @@ for dummy in "once" ; do
     # See prep/default/320_include_uefi_env.sh how SYSFS_DIR_EFI_VARS is set:
     case "$SYSFS_DIR_EFI_VARS" in
         (/sys/firmware/efi/vars)
+            # Disable SC2045: "Iterating over ls output is fragile. Use globs."
+            # because SYSFS_DIR_EFI_VARS is a directory where we want to 'ls' its contents
+            # shellcheck disable=SC2045
             for uefi_dir in $( ls $SYSFS_DIR_EFI_VARS ) ; do
                 uefi_var=$( echo $uefi_dir | cut -d- -f 1 )
                 [[ "$uefi_var" = "new_var" ]] && continue
@@ -99,6 +102,9 @@ for dummy in "once" ; do
             uefi_bootloader_DOS_path=$( uefi_extract_bootloader $SYSFS_DIR_EFI_VARS/Boot${boot_current}-*/data )
             ;;
         (/sys/firmware/efi/efivars)
+            # Disable SC2045: "Iterating over ls output is fragile. Use globs."
+            # because SYSFS_DIR_EFI_VARS is a directory where we want to 'ls' its contents
+            # shellcheck disable=SC2045
             for uefi_file in $( ls $SYSFS_DIR_EFI_VARS ) ; do
                 uefi_var=$( echo $uefi_file | cut -d- -f 1 )
                 efi_data="$( efibootmgr_read_var $uefi_var $efibootmgr_output )"

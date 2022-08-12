@@ -56,6 +56,10 @@ function find_syslinux_modules_dir {
             # not default location? try to find it
             # file=/usr/lib/syslinux/modules/efi32/menu.c32
             # f23: file=/usr/share/syslinux/menu.c32
+            # Because 'find /usr' may take very long time on some systems
+            # cf. https://github.com/rear/rear/issues/2792
+            # tell the user in debug mode what is going on
+            DebugPrint "Searching whole /usr for SYSLINUX modules directory (you may specify SYSLINUX_MODULES_DIR)"
             file=$( find /usr -name "$1" 2>/dev/null | tail -1 )
             syslinux_modules_dir=$( dirname "$file" )        # /usr/lib/syslinux/modules/efi32
             syslinux_modules_dir=${syslinux_modules_dir%/*}  # /usr/lib/syslinux/modules
@@ -542,15 +546,15 @@ function create_grub2_cfg {
     local grub2_initrd="$2"
     test "$grub2_initrd" || BugError "create_grub2_cfg function called without grub2_initrd argument"
     DebugPrint "Configuring GRUB2 initrd $grub2_initrd"
-    local grub2_set_root_command="$3"
-    if ! test "$grub2_set_root_command" ; then
-        test "$grub2_set_root" && grub2_set_root_command="set root=$grub2_set_root"
+    local grub2_search_root_command="$3"
+    if ! test "$grub2_search_root_command" ; then
+        test "$grub2_set_root" && grub2_search_root_command="set root=$grub2_set_root"
     fi
-    if ! test "$grub2_set_root_command" ; then
-        test "$GRUB2_SET_USB_ROOT" && grub2_set_root_command="$GRUB2_SET_USB_ROOT"
+    if ! test "$grub2_search_root_command" ; then
+        test "$GRUB2_SEARCH_ROOT_COMMAND" && grub2_search_root_command="$GRUB2_SEARCH_ROOT_COMMAND"
     fi
-    test "$grub2_set_root_command" || grub2_set_root_command="search --no-floppy --set=root --file /boot/efiboot.img"
-    DebugPrint "Configuring GRUB2 root device as '$grub2_set_root_command'"
+    test "$grub2_search_root_command" || grub2_search_root_command="search --no-floppy --set=root --file /boot/efiboot.img"
+    DebugPrint "Configuring GRUB2 root device as '$grub2_search_root_command'"
 
     local grub2_default_menu_entry="$GRUB2_DEFAULT_BOOT"
     test "$grub2_default_menu_entry" || grub2_default_menu_entry="chainloader"
@@ -622,6 +626,7 @@ function create_grub2_cfg {
             cat << EOF
 menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear {
     insmod gzio
+    insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
     linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
     echo 'Loading initial ramdisk $grub2_initrd ...'
@@ -630,6 +635,7 @@ menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear {
 
 menuentry "Relax-and-Recover (UEFI and Secure Boot)" --id=rear_secure_boot {
     insmod gzio
+    insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
     linuxefi $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
     echo 'Loading initial ramdisk $grub2_initrd ...'
@@ -640,6 +646,7 @@ EOF
             cat << EOF
 menuentry "Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)" --id=rear {
     insmod gzio
+    insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
     linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
     echo 'Loading initial ramdisk $grub2_initrd ...'
@@ -710,7 +717,7 @@ EOF
     # Sleep 3 seconds before the GRUB2 menu replaces what there is on the screen
     # so that the user has a chance to see possible (error) messages on the screen.
     cat << EOF
-$grub2_set_root_command
+$grub2_search_root_command
 insmod all_video
 set gfxpayload=keep
 insmod part_gpt

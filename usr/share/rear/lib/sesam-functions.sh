@@ -17,7 +17,12 @@ SESAM_LD_LIBRARY_PATH=$SM_BIN_SESAM
 SM_INI="$( grep SM_INI $sesam2000ini_file 2>/dev/null | cut -d '=' -f 2 )"
 test -z "$SM_INI" && return 0
 
-while IFS== read key value ; do
+# Avoid ShellCheck false error indication
+# SC1097: Unexpected ==. For assignment, use =
+# for code like
+#   while IFS== read key value
+# by quoting the assigned character:
+while IFS='=' read key value ; do
     case "$key" in
         (gv_ro) SESAM_BIN_DIR="$value" ;;
         (gv_rw) SESAM_VAR_DIR="$value" ;;
@@ -25,7 +30,6 @@ while IFS== read key value ; do
         (gv_rw_tmp) SESAM_TMP_DIR="$value" ;;
         (gv_rw_lis) SESAM_LIS_DIR="$value" ;;
         (gv_rw_lgc) SESAM_LGC_DIR="$value" ;;
-        (gv_rw_work) SESAM_WORK_DIR="$value" ;;
         (gv_rw_stpd) SESAM_SMS_DIR="$value" ;;
         (gv_rw_prot) SESAM_PROT_DIR="$value" ;;
     esac

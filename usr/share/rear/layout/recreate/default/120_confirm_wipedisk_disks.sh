@@ -62,15 +62,19 @@ else
             # but at this point here the devices in disklayout.conf are already migrated to what they are on the recovery system
             # so we can check disklayout.conf what the parent disk of the RAID device is on the current recovery system,
             # cf. the code in layout/prepare/GNU/Linux/120_include_raid_code.sh
-            local raid raiddevice options
-            read raid raiddevice options < <(grep "^raid $disk_to_be_wiped " "$LAYOUT_FILE")
+            local keyword raiddevice options
+            # The disklayout.conf keyword for a RAID array is 'raidarray' and $raiddevice is e.g. /dev/md127
+            # and $options is a string that should contain a word like devices=/dev/sda,/dev/sdb,/dev/sdc
+            read keyword raiddevice options < <( grep "^raidarray $disk_to_be_wiped " "$LAYOUT_FILE" )
             if ! test "$raiddevice" = "$disk_to_be_wiped" ; then
-                # Continue with the next disk_to_be_wiped when the current one is no RAID device:
+                # Continue with the next disk_to_be_wiped when the current one is no RAID device.
+                # We are in the 'else' clause of the outer 'if' so disk_to_be_wiped does not exist as block device:
                 DebugPrint "Skipping $disk_to_be_wiped to be wiped ($disk_to_be_wiped does not exist as block device)"
                 continue
-            else
-                DebugPrint "RAID device $raiddevice does not exist - trying to determine its parent disks"
             fi
+            # The current disk_to_be_wiped is a RAID device like /dev/md127 that does not (yet) exist
+            # as block device in the currently running ReaR recovery system:
+            DebugPrint "RAID device $raiddevice does not exist - trying to determine the parent disks of its component devices"
             local component_devices=()
             local option
             for option in $options ; do
@@ -85,7 +89,7 @@ else
                 esac
             done
             local component_device parent_device added_parent_device="no"
-            for component_device in ${component_devices[@]} ; do
+            for component_device in "${component_devices[@]}" ; do
                 # component_device is a disk like /dev/sdc or a partition like /dev/sdc1 (cf. above)
                 # so we get the parent device of it (the parent of a disk will be the disk itself)
                 # cf. the code of the function write_protection_ids() in lib/write-protect-functions.sh
@@ -103,14 +107,13 @@ else
                 #   `-/dev/sdc1 /dev/sdc1 /dev/sdc part
                 # There is no PKNAME for disks so we use KNAME (so the parent of a disk is the disk itself)
                 # and we also use KNAME as fallback when lsblk does not support PKNAME and proceed bona fide
-                # (so we wipe only KNAME of a partition but not its parent disk when PKNAME is not supported)
-                # if parent_device is not one single word (valid device names are single words):
+                # (so we wipe only KNAME of a partition but not its parent disk when PKNAME is not supported):
                 parent_device="$( lsblk -inpo PKNAME "$component_device" 2>/dev/null | awk NF | head -n1 )"
                 test $parent_device || parent_device="$( lsblk -inpo KNAME "$component_device" 2>/dev/null | awk NF | head -n1 )"
                 # Without quoting an empty parent_device would result plain "test -b" which would (falsely) succeed:
                 if test -b "$parent_device" ; then
                     # parent_device is usually a disk but in the KNAME fallback case it could be a partition:
-                    DebugPrint "$parent_device is a parent of $raiddevice that should be wiped"
+                    DebugPrint "$parent_device is a parent of component device $component_device of $raiddevice that should be wiped"
                     # Write-protection for the disks in DISKS_TO_BE_WIPED (see above).
                     # When parent_device is a partition the function write_protection_ids() in lib/write-protect-functions.sh
                     # also tries to determine its parent disk if possible to check the disk device in DISKS_TO_BE_WIPED:
@@ -127,7 +130,7 @@ else
                 fi
             done
             if is_false $added_parent_device ; then
-                DebugPrint "Skipping RAID device $raiddevice to be wiped (no parent disk found for it)"
+                DebugPrint "Skipping RAID device $raiddevice to be wiped (no parent disk found for its component devices)"
             fi
         fi
     done

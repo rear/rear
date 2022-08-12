@@ -51,7 +51,7 @@ if ! test "incremental" = "$BACKUP_TYPE" -o "differential" = "$BACKUP_TYPE" ; th
     LogPrint "Using backup archive '$backuparchive'"
     # This script is also run during "rear recover/restoreonly" where RESTORE_ARCHIVES must be set.
     local backup_restore_workflows=( "recover" "restoreonly" )
-    if IsInArray $WORKFLOW ${backup_restore_workflows[@]} ; then
+    if IsInArray "$WORKFLOW" "${backup_restore_workflows[@]}" ; then
         # Only set RESTORE_ARCHIVES when the backup archive is actually accessible
         # cf. https://github.com/rear/rear/issues/1166
         if test -r "$backuparchive" ; then
@@ -163,7 +163,7 @@ local create_backup_type=""
 # Code regarding creating a backup is useless during "rear recover" and
 # messages about creating a backup are misleading during "rear recover":
 local recovery_workflows=( "recover" "layoutonly" "restoreonly" )
-if ! IsInArray $WORKFLOW ${recovery_workflows[@]} ; then
+if ! IsInArray "$WORKFLOW" "${recovery_workflows[@]}" ; then
     # When today is a specified full backup day, do a full backup in any case
     # (regardless if there is already a full backup of this day):
     if IsInArray "$current_weekday" "${FULLBACKUPDAY[@]}" ; then
@@ -187,7 +187,7 @@ if test "$latest_full_backup" ; then
     local full_or_incremental_backup_glob_regex="$date_time_glob_regex-[$full_backup_marker$incremental_backup_marker]$backup_file_suffix"
     # Code regarding creating a backup is useless during "rear recover" and
     # messages about creating a backup are misleading during "rear recover":
-    if ! IsInArray $WORKFLOW ${recovery_workflows[@]} ; then
+    if ! IsInArray "$WORKFLOW" "${recovery_workflows[@]}" ; then
         # There is nothing to do here if it is already decided that
         # a full backup must be created (see "full backup day" above"):
         if ! test "full" = "$create_backup_type" ; then
@@ -233,7 +233,7 @@ if test "$latest_full_backup" ; then
         # Tell the user what will be restored:
         local restore_archives_file_names=""
         for restore_archive in "${RESTORE_ARCHIVES[@]}" ; do
-            restore_archives_file_names="$restore_archives_file_names $( basename "$restore_archive" )"
+            restore_archives_file_names+=" $( basename "$restore_archive" )"
         done
         LogPrint "For backup restore using $restore_archives_file_names"
     fi
@@ -241,7 +241,7 @@ if test "$latest_full_backup" ; then
 else
     # Code regarding creating a backup is useless during "rear recover" and
     # messages about creating a backup are misleading during "rear recover":
-    if ! IsInArray $WORKFLOW ${recovery_workflows[@]} ; then
+    if ! IsInArray "$WORKFLOW" "${recovery_workflows[@]}" ; then
         # If no latest full backup is found create one during "rear mkbackup":
         create_backup_type="full"
         LogPrint "No full backup found (YYYY-MM-DD-HHMM-F.tar.gz) triggers full backup"
@@ -261,7 +261,7 @@ else
 fi
 # Code regarding creating a backup is useless during "rear recover" and
 # messages about creating a backup are misleading during "rear recover":
-if ! IsInArray $WORKFLOW ${recovery_workflows[@]} ; then
+if ! IsInArray "$WORKFLOW" "${recovery_workflows[@]}" ; then
     # Set the right variables for creating a backup (but do not actually do anything at this point):
     case "$create_backup_type" in
         (full)

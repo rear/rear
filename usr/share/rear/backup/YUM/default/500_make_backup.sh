@@ -61,7 +61,14 @@ if is_true "$YUM_BACKUP_FILES_FULL_EXCL" ; then
         	} || {
                 	cmd2=$(echo -n "$cmd2 -samefile $fname")
         	}
-        	curCmdLen=$(echo "$cmd2" | wc -c)
+            # Aviod ShellCheck
+            # SC2000: See if you can use ${#variable} instead
+            # https://github.com/koalaman/shellcheck/wiki/SC2000
+            # The code before was
+            # curCmdLen=$(echo "$cmd2" | wc -c)
+            # so curCmdLen is ${#cmd2} + 1 because of the newline of 'echo'
+            # but I <jsmeix@suse.de> don't know for sure if + 1 is needed or not so I keep it:
+        	curCmdLen=$(( ${#cmd2} + 1 ))
         	[ $curCmdLen -gt $maxArgLen ] && {
 			# Simple "something is still going on" indicator by printing dots
 			# directly to stdout which is fd7 (see lib/_input-output-functions.sh)
@@ -96,7 +103,7 @@ if ! is_true "$BACKUP_SELINUX_DISABLE" ; then
 fi
 
 # Generate the actual backup archive, excluding all of the RPM-provided files which have NOT been modified
-Log tar --preserve-permissions --same-owner --warning=no-xdev --sparse --block-number --totals --no-wildcards-match-slash --one-file-system --ignore-failed-read ${BACKUP_PROG_OPTIONS[@]} --gzip -C / -c -f $backuparchive --exclude-from=$yum_backup_dir/rpm_backup_exclude_files.dat -X $TMP_DIR/backup-exclude.txt $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE
+Log tar --preserve-permissions --same-owner --warning=no-xdev --sparse --block-number --totals --no-wildcards-match-slash --one-file-system --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}" --gzip -C / -c -f $backuparchive --exclude-from=$yum_backup_dir/rpm_backup_exclude_files.dat -X $TMP_DIR/backup-exclude.txt $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE
 tar --preserve-permissions --same-owner --warning=no-xdev --sparse --block-number --totals --no-wildcards-match-slash --one-file-system --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}" --gzip -C / -c -f $backuparchive --exclude-from=$yum_backup_dir/rpm_backup_exclude_files.dat -X $TMP_DIR/backup-exclude.txt $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE
 
 # Restore the ReaR default bash flags and options (see usr/sbin/rear):

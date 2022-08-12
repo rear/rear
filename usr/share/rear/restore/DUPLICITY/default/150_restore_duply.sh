@@ -22,7 +22,7 @@ if [ "$BACKUP_PROG" = "duply" ] && has_binary duply; then
             DUPLY_RESTORE_OK="y"
 
             # we need to move up one dir (to get restore almost empty)
-            cd $TARGET_FS_ROOT
+            pushd $TARGET_FS_ROOT >/dev/null
 
             # file $VAR_DIR/recovery/mountpoint_device contains the mount points in / /boot etc order
             # we need to reverse it - to avoid tac we use sed instead
@@ -36,7 +36,7 @@ if [ "$BACKUP_PROG" = "duply" ] && has_binary duply; then
             [[ ! -d $TARGET_FS_ROOT/proc ]] && mkdir -m 555 $TARGET_FS_ROOT/proc
             [[ ! -d $TARGET_FS_ROOT/tmp ]]  && mkdir -m 4777 $TARGET_FS_ROOT/tmp
 
-            cd - >/dev/null
+            popd >/dev/null
         fi
     fi
 fi

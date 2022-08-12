@@ -134,7 +134,7 @@ function autoresize_last_partition () {
     # because the partitions exist on the RAID device like
     #   disk /dev/sda 12884901888 gpt
     #   disk /dev/sdc 12884901888 gpt
-    #   raid /dev/md127 level=raid1 raid-devices=2 devices=/dev/sda,/dev/sdc name=raid1sdab ...
+    #   raidarray /dev/md127 level=raid1 raid-devices=2 devices=/dev/sda,/dev/sdc name=raid1sdab ...
     #   part /dev/md127 10485760 1048576 rear-noname bios_grub /dev/md127p1
     #   part /dev/md127 12739067392 11534336 rear-noname none /dev/md127p2
     # so this function can be called for all 'disk' entries
@@ -566,16 +566,16 @@ while read layout_type disk_device old_disk_size disk_label junk ; do
     autoresize_last_partition $disk_device $old_disk_size $disk_label $new_disk_size $new_disk_block_size
 done < <( grep "^disk " "$LAYOUT_FILE" )
 
-# Autoresize the last partition for 'raid' entries in disklayout.conf
+# Autoresize the last partition for 'raidarray' entries in disklayout.conf
 #
-# Example 'raid' related entries in disklayout.conf (excerpts) for a RAID1 array:
+# Example 'raidarray' related entries in disklayout.conf (excerpts) for a RAID1 array:
 #
 #   # Format: disk <devname> <size(bytes)> <partition label type>
 #   disk /dev/sda 12884901888 gpt
 #   disk /dev/sdc 12884901888 gpt
 #
-#   # Format: raid /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> ...
-#   raid /dev/md127 level=raid1 raid-devices=2 devices=/dev/sda,/dev/sdc ...
+#   # Format: raidarray /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> ...
+#   raidarray /dev/md127 level=raid1 raid-devices=2 devices=/dev/sda,/dev/sdc ...
 #   # Partitions on /dev/md127
 #   # Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>
 #   part /dev/md127 10485760 1048576 rear-noname bios_grub /dev/md127p1
@@ -586,7 +586,7 @@ done < <( grep "^disk " "$LAYOUT_FILE" )
 #
 #   crypt /dev/mapper/cr_root /dev/md127p2 type=luks1 ...
 #
-# Example 'raid' related entries in disklayout.conf (excerpts) for a RAID0 array
+# Example 'raidarray' related entries in disklayout.conf (excerpts) for a RAID0 array
 # that consists of the partitions /dev/sda3 and /dev/sdb2 and the raw disk /dev/sdc
 #
 #   # Format: disk <devname> <size(bytes)> <partition label type>
@@ -600,8 +600,8 @@ done < <( grep "^disk " "$LAYOUT_FILE" )
 #   part /dev/sdb 1073741824 1048576 rear-noname swap /dev/sdb1
 #   part /dev/sdb 7504658432 1074790400 rear-noname raid /dev/sdb2
 #
-#   # Format: raid /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> ...
-#   raid /dev/md127 level=raid0 raid-devices=3 devices=/dev/sda3,/dev/sdb2,/dev/sdc ...
+#   # Format: raidarray /dev/<kernel RAID device> level=<RAID level> raid-devices=<nr of active devices> devices=<component device1,component device2,...> ...
+#   raidarray /dev/md127 level=raid0 raid-devices=3 devices=/dev/sda3,/dev/sdb2,/dev/sdc ...
 #   # Partitions on /dev/md127
 #   # Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>
 #   part /dev/md127 11810635776 1572864 rear-noname none /dev/md127p1
@@ -615,15 +615,15 @@ done < <( grep "^disk " "$LAYOUT_FILE" )
 #
 while read layout_type raid_device junk ; do
     if ! test "$raid_device" ; then
-        LogPrintError "Cannot autoresize RAID ('raid' entry without RAID device in $LAYOUT_FILE)"
-        # Continue with the next 'raid' entry in disklayout.conf
+        LogPrintError "Cannot autoresize RAID ('raidarray' entry without RAID device in $LAYOUT_FILE)"
+        # Continue with the next 'raidarray' entry in disklayout.conf
         continue
     fi
     message_prefix="Cannot autoresize RAID $raid_device"
 
-    # For each 'raid' entry get its raid_component_devs as a string
+    # For each 'raidarray' entry get its raid_component_devs as a string
     # cf. the code in layout/prepare/GNU/Linux/120_include_raid_code.sh
-    read layout_type raid_device raid_options < <(grep "^raid $raid_device " "$LAYOUT_FILE")
+    read layout_type raid_device raid_options < <(grep "^raidarray $raid_device " "$LAYOUT_FILE")
     for raid_option in $raid_options ; do
         case "$raid_option" in
             (level=*)
@@ -639,8 +639,8 @@ while read layout_type raid_device junk ; do
         esac
     done
     if ! test "$raid_component_devs" ; then
-        LogPrintError "$message_prefix ('raid' entry without RAID component devices in $LAYOUT_FILE)"
-        # Continue with the next 'raid' entry in disklayout.conf
+        LogPrintError "$message_prefix ('raidarray' entry without RAID component devices in $LAYOUT_FILE)"
+        # Continue with the next 'raidarray' entry in disklayout.conf
         continue
     fi
 
@@ -670,7 +670,7 @@ while read layout_type raid_device junk ; do
                     disklayout_entry=( $( grep "^part .* $raid_component_dev\$" "$LAYOUT_FILE" ) )
                     if ! test "$disklayout_entry" ; then
                         LogPrintError "$message_prefix (neither 'disk' nor 'part' entry found $message_suffix)"
-                        # Continue with the next 'raid' entry in disklayout.conf
+                        # Continue with the next 'raidarray' entry in disklayout.conf
                         continue 2
                     fi
                     # Get the disk where the partition is:
@@ -678,7 +678,7 @@ while read layout_type raid_device junk ; do
                     disklayout_entry=( $( grep "^disk $raid_component_dev_disk " "$LAYOUT_FILE" ) )
                     if ! test "$disklayout_entry" ; then
                         LogPrintError "$message_prefix (no 'disk' found for 'part' entry $message_suffix)"
-                        # Continue with the next 'raid' entry in disklayout.conf
+                        # Continue with the next 'raidarray' entry in disklayout.conf
                         continue 2
                     fi
                 fi
@@ -694,18 +694,18 @@ while read layout_type raid_device junk ; do
                 sysfsname=$( get_sysfs_name $raid_component_dev_disk )
                 if ! test "$sysfsname" ; then
                     LogPrintError "$message_prefix (get_sysfs_name failed $message_suffix)"
-                    # Continue with the next 'raid' entry in disklayout.conf
+                    # Continue with the next 'raidarray' entry in disklayout.conf
                     continue 2
                 fi
                 if ! test -d "/sys/block/$sysfsname" ; then
                     LogPrintError "$message_prefix (no '/sys/block/$sysfsname' directory $message_suffix)"
-                    # Continue with the next 'raid' entry in disklayout.conf
+                    # Continue with the next 'raidarray' entry in disklayout.conf
                     continue 2
                 fi
                 new_disk_size=$( get_disk_size "$sysfsname" )
                 if ! is_positive_integer $new_disk_size ; then
                     LogPrintError "$message_prefix (get_disk_size failed $message_suffix)"
-                    # Continue with the next 'raid' entry in disklayout.conf
+                    # Continue with the next 'raidarray' entry in disklayout.conf
                     continue 2
                 fi
                 (( new_disk_sizes_sum += new_disk_size ))
@@ -716,7 +716,7 @@ while read layout_type raid_device junk ; do
                 new_disk_block_size=$( get_block_size "$sysfsname" )
                 if ! is_positive_integer $new_disk_block_size ; then
                     LogPrintError "$message_prefix (get_block_size failed $message_suffix)"
-                    # Continue with the next 'raid' entry in disklayout.conf
+                    # Continue with the next 'raidarray' entry in disklayout.conf
                     continue 2
                 fi
             done
@@ -727,7 +727,7 @@ while read layout_type raid_device junk ; do
                 old_raid_device_size="${disklayout_entry[2]}"
             else
                 LogPrintError "$message_prefix (no 'raiddisk' found $message_suffix)"
-                # Continue with the next 'raid' entry in disklayout.conf
+                # Continue with the next 'raidarray' entry in disklayout.conf
                 continue
             fi
             # The new RAID device size differs from the old RAID device size
@@ -740,7 +740,7 @@ while read layout_type raid_device junk ; do
             # Autoresize the last partition on the RAID0 device like /dev/md127
             # but not on each component device of the array like /dev/sda3 and /dev/sdb2 and /dev/sdc
             autoresize_last_partition $raid_device $old_raid_device_size $disk_label $new_raid_device_size $new_disk_block_size
-            # Continue with the next 'raid' entry in disklayout.conf
+            # Continue with the next 'raidarray' entry in disklayout.conf
             continue
             ;;
         (raid1)
@@ -761,7 +761,7 @@ while read layout_type raid_device junk ; do
                     disklayout_entry=( $( grep "^part .* $raid_component_dev\$" "$LAYOUT_FILE" ) )
                     if ! test "$disklayout_entry" ; then
                         LogPrintError "$message_prefix (neither 'disk' nor 'part' entry found $message_suffix)"
-                        # Continue with the next 'raid' entry in disklayout.conf
+                        # Continue with the next 'raidarray' entry in disklayout.conf
                         continue 2
                     fi
                     # Get the disk where the partition is:
@@ -769,7 +769,7 @@ while read layout_type raid_device junk ; do
                     disklayout_entry=( $( grep "^disk $raid_component_dev_disk " "$LAYOUT_FILE" ) )
                     if ! test "$disklayout_entry" ; then
                         LogPrintError "$message_prefix (no 'disk' found for 'part' entry $message_suffix)"
-                        # Continue with the next 'raid' entry in disklayout.conf
+                        # Continue with the next 'raidarray' entry in disklayout.conf
                         continue 2
                     fi
                 fi
@@ -784,18 +784,18 @@ while read layout_type raid_device junk ; do
                 sysfsname=$( get_sysfs_name $raid_component_dev_disk )
                 if ! test "$sysfsname" ; then
                     LogPrintError "$message_prefix (get_sysfs_name failed $message_suffix)"
-                    # Continue with the next 'raid' entry in disklayout.conf
+                    # Continue with the next 'raidarray' entry in disklayout.conf
                     continue 2
                 fi
                 if ! test -d "/sys/block/$sysfsname" ; then
                     LogPrintError "$message_prefix (no '/sys/block/$sysfsname' directory $message_suffix)"
-                    # Continue with the next 'raid' entry in disklayout.conf
+                    # Continue with the next 'raidarray' entry in disklayout.conf
                     continue 2
                 fi
                 new_disk_size=$( get_disk_size "$sysfsname" )
                 if ! is_positive_integer $new_disk_size ; then
                     LogPrintError "$message_prefix (get_disk_size failed $message_suffix)"
-                    # Continue with the next 'raid' entry in disklayout.conf
+                    # Continue with the next 'raidarray' entry in disklayout.conf
                     continue 2
                 fi
                 # Set the new smallest disk size and use its block size in the autoresize_last_partition() call:
@@ -808,7 +808,7 @@ while read layout_type raid_device junk ; do
                     new_disk_block_size=$( get_block_size "$sysfsname" )
                     if ! is_positive_integer $new_disk_block_size ; then
                         LogPrintError "$message_prefix (get_block_size failed $message_suffix)"
-                        # Continue with the next 'raid' entry in disklayout.conf
+                        # Continue with the next 'raidarray' entry in disklayout.conf
                         continue 2
                     fi
                 fi
@@ -824,23 +824,24 @@ while read layout_type raid_device junk ; do
             # while in practice a RAID0 array of thousands of disks probably will not work reliably:
             if ! test $old_smallest_size -lt $bash_int_max -a $new_smallest_size -lt $bash_int_max ; then
                 LogPrintError "$message_prefix (no disk size found or size not less than 2^63 - 1)"
+                # Continue with the next 'raidarray' entry in disklayout.conf
                 continue
             fi
             # Autoresize the last partition on the RAID1 device like /dev/md127
             # but not on each component device of the array like /dev/sda and /dev/sdc
             autoresize_last_partition $raid_device $old_smallest_size $disk_label $new_smallest_size $new_disk_block_size
-            # Continue with the next 'raid' entry in disklayout.conf
+            # Continue with the next 'raidarray' entry in disklayout.conf
             continue
             ;;
         (*)
             # Currently only RAID1 and RAID0 are supported for autoresize:
             LogPrintError "$message_prefix (autoresizing is not supported for RAID level '$raid_level')"
-            # Continue with the next 'raid' entry in disklayout.conf
+            # Continue with the next 'raidarray' entry in disklayout.conf
             continue
             ;;
     esac
 
-done < <( grep "^raid " "$LAYOUT_FILE" )
+done < <( grep "^raidarray " "$LAYOUT_FILE" )
 
 # Use the new LAYOUT_FILE.resized_last_partition with the resized partitions:
 mv "$disklayout_resized_last_partition" "$LAYOUT_FILE"

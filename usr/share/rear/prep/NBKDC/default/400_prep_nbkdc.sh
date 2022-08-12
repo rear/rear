@@ -30,7 +30,12 @@ fi
 
 CLIENT_INI=$NBKDC_DIR/conf/client.properties
 if [ -r "$CLIENT_INI" ]; then
-  while IFS== read key value ; do
+  # Avoid ShellCheck false error indication
+  # SC1097: Unexpected ==. For assignment, use =
+  # for code like
+  #   while IFS== read key value
+  # by quoting the assigned character:
+  while IFS='=' read key value ; do
       case "$key" in
           hiback_install_dir) NBKDC_HIB_DIR="$value" ;;
           hiback_version) NBKDC_HIB_VER="$value" ;;
@@ -46,7 +51,14 @@ fi
 COND=$NBKDC_HIB_DIR/CONDEV
 [[ -r "$COND" ]] || Error "CONDEV file '$COND' can not be read"
 
-while CDV== read key value ; do
+# TODO: Explain what the CDV variable is
+# cf. https://github.com/rear/rear/commit/4c8fd6f6aafbec9aacc94e704a2227f7fc4e3302#r68375270
+# Avoid ShellCheck false error indication
+# SC1097: Unexpected ==. For assignment, use =
+# for code like
+#   while IFS== read key value
+# by quoting the assigned character:
+while CDV='=' read key value ; do
     case "$key" in
         "&listdir:") NBKDC_HIBLST_DIR="$value" ;;
         "&tmpdir:") NBKDC_HIBTMP_DIR="$value" ;;

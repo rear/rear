@@ -291,12 +291,12 @@ create_lvmvol() {
 $ifline
     LogPrint "Creating LVM volume '$vg/$lvname' (some properties may not be preserved)"
     $warnraidline
-    if ! lvm lvcreate $lvopts $vg <<<y ; then
-        LogPrintError "Failed to create LVM volume '$vg/$lvname' with lvcreate $lvopts $vg"
-        if lvm lvcreate $fallbacklvopts $vg <<<y ; then
-            LogPrintError "Created LVM volume '$vg/$lvname' using fallback options lvcreate $fallbacklvopts $vg"
+    if ! lvm lvcreate -y $lvopts $vg ; then
+        LogPrintError "Failed to create LVM volume '$vg/$lvname' with lvcreate -y $lvopts $vg"
+        if lvm lvcreate -y $fallbacklvopts $vg ; then
+            LogPrintError "Created LVM volume '$vg/$lvname' using fallback options lvcreate -y $fallbacklvopts $vg"
         else
-            LogPrintError "Also failed to create LVM volume '$vg/$lvname' with lvcreate $fallbacklvopts $vg"
+            LogPrintError "Also failed to create LVM volume '$vg/$lvname' with lvcreate -y $fallbacklvopts $vg"
             # Explicit 'false' is needed to let the whole 'if then else fi' command exit with non zero exit state
             # to let diskrestore.sh abort here as usual when a command fails (diskrestore.sh runs with 'set -e'):
             false

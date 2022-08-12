@@ -48,7 +48,7 @@ fi
 #   /dev/sda2 / btrfs rw,relatime,space_cache
 # The sorting relies on that mount and findmnt output the first mounted thing first
 # so that in particular what is mounted at '/' is output before other stuff.
-read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
+read_filesystems_command+=" | sort -t ' ' -k 1,1 -u"
 
 # The Docker daemon mounts file systems for its Docker containers, see also
 # https://docs.docker.com/storage/storagedriver/device-mapper-driver/#configure-direct-lvm-mode-for-production
@@ -232,7 +232,7 @@ fi
                 ;;
             (btrfs)
                 # Remember devices and mountpoints of the btrfs filesystems for the btrfs subvolume layout stuff below:
-                btrfs_devices_and_mountpoints="$btrfs_devices_and_mountpoints $device,$mountpoint"
+                btrfs_devices_and_mountpoints+=" $device,$mountpoint"
                 uuid=$( btrfs filesystem show $device | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )
                 label=$( btrfs filesystem show $device | grep -o 'Label: [^ ]*' | cut -d ':' -f 2 | tr -d '[:space:]' )
                 test "none" = "$label" && label=
@@ -349,7 +349,7 @@ fi
                     # for all devices except '/dev/sda3' where btrfs_subvolumes_setup_SLES() is called to setup that btrfs filesystem
                     # cf. https://github.com/rear/rear/pull/2080#discussion_r265046317 and see the code in the
                     # usr/share/rear/layout/prepare/GNU/Linux/133_include_mount_filesystem_code.sh script:
-                    IsInArray "$btrfs_device" "${BTRFS_SUBVOLUME_SLES_SETUP[@]}" || btrfs_subvolume_sles_setup_devices="$btrfs_subvolume_sles_setup_devices $btrfs_device"
+                    IsInArray "$btrfs_device" "${BTRFS_SUBVOLUME_SLES_SETUP[@]}" || btrfs_subvolume_sles_setup_devices+=" $btrfs_device"
                     # SLES 12 SP1 (or later) normal subvolumes that belong to snapper are excluded from being recreated:
                     # Snapper's base subvolume '/@/.snapshots' is excluded because during "rear recover"
                     # that one will be created by "snapper/installation-helper --step 1" which fails if it already exists
@@ -452,8 +452,10 @@ fi
                     # try to find the mountpoint in /etc/fstab and try to read the subvol=... option value if exists
                     # (using subvolid=... can fail because the subvolume ID can be different during system recovery).
                     # Because both "mount ... -o subvol=/path/to/subvolume" and "mount ... -o subvol=path/to/subvolume" work
-                    # the subvolume path can be specified with or without leading '/':
-                    btrfs_subvolume_path=$( egrep "[[:space:]]$subvolume_mountpoint[[:space:]]+btrfs[[:space:]]" /etc/fstab \
+                    # the subvolume path can be specified with or without leading '/'.
+                    # Aviod SC1087 by using ${subvolume_mountpoint} with curly brackets because
+                    # we need the subsequent square brackets literally (subvolume_mountpoint is a string, not an array):
+                    btrfs_subvolume_path=$( egrep "[[:space:]]${subvolume_mountpoint}[[:space:]]+btrfs[[:space:]]" /etc/fstab \
                                             | egrep -v '^[[:space:]]*#' \
                                             | grep -o 'subvol=[^ ]*' | cut -s -d '=' -f 2 )
                 fi
@@ -545,15 +547,17 @@ grep -q '^fs ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( mkfs )
 # (see above supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"):
 required_mkfs_tools=""
 for filesystem_type in $( echo $supported_filesystems | tr ',' ' ' ) ; do
-    grep -q "^fs .* $filesystem_type " $DISKLAYOUT_FILE && required_mkfs_tools="$required_mkfs_tools mkfs.$filesystem_type"
+    grep -q "^fs .* $filesystem_type " $DISKLAYOUT_FILE && required_mkfs_tools+=" mkfs.$filesystem_type"
 done
 # Remove duplicates because in disklayout.conf there can be many entries with same filesystem type:
 required_mkfs_tools="$( echo $required_mkfs_tools | tr ' ' '\n' | sort -u | tr '\n' ' ' )"
 REQUIRED_PROGS+=( $required_mkfs_tools )
 # mke2fs is also required in the recovery system if any 'mkfs.ext*' filesystem creating tool is required
 # and tune2fs or tune4fs is used to set tunable filesystem parameters on ext2/ext3/ext4
-# see above how $tunefs is set to tune2fs or tune4fs
-echo $required_mkfs_tools | grep -q 'mkfs.ext' && REQUIRED_PROGS+=( mke2fs $tunefs )
+# cf. above how $tunefs is set to tune2fs or tune4fs inside the subshell
+# i.e. $tunefs is not set here so REQUIRED_PROGS+=( $tunefs ) would do nothing
+# but tune2fs and tune4fs get included via PROGS in conf/GNU/Linux.conf which should be sufficient:
+echo $required_mkfs_tools | grep -q 'mkfs.ext' && REQUIRED_PROGS+=( mke2fs )
 # xfs_admin is also required in the recovery system if 'mkfs.xfs' is required:
 echo $required_mkfs_tools | grep -q 'mkfs.xfs' && REQUIRED_PROGS+=( xfs_admin )
 # reiserfstune is also required in the recovery system if 'mkfs.reiserfs' is required:

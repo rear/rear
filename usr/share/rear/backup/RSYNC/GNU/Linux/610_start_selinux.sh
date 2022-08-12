@@ -6,29 +6,29 @@ local backup_prog_rc
 	touch "${TMP_DIR}/selinux.autorelabel"
 	cat $TMP_DIR/selinux.mode > $SELINUX_ENFORCE
 	Log "Restored original SELinux mode"
-	case $RSYNC_PROTO in
+	case $(rsync_proto "$BACKUP_URL") in
 
 	(ssh)
 		# for some reason rsync changes the mode of backup after each run to 666
                 # FIXME: Add an explanatory comment why "2>/dev/null" is useful here
                 # or remove it according to https://github.com/rear/rear/issues/1395
-		ssh $RSYNC_USER@$RSYNC_HOST "chmod $v 755 ${RSYNC_PATH}/${RSYNC_PREFIX}/backup" 2>/dev/null
+		ssh $(rsync_remote_ssh "$BACKUP_URL") "chmod $v 755 $(rsync_path_full "$BACKUP_URL")/backup" 2>/dev/null
 		$BACKUP_PROG -a "${TMP_DIR}/selinux.autorelabel" \
-		 "$RSYNC_USER@$RSYNC_HOST:${RSYNC_PATH}/${RSYNC_PREFIX}/backup/.autorelabel" 2>/dev/null
+		 "$(rsync_remote_full "$BACKUP_URL")/backup/.autorelabel" 2>/dev/null
 		backup_prog_rc=$?
 		if [ $backup_prog_rc -ne 0 ]; then
-			LogPrint "Failed to create .autorelabel on ${RSYNC_PATH}/${RSYNC_PREFIX}/backup [${rsync_err_msg[$backup_prog_rc]}]"
-			#StopIfError "Failed to create .autorelabel on ${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
+			LogPrint "Failed to create .autorelabel on $(rsync_path_full "$BACKUP_URL")/backup [${rsync_err_msg[$backup_prog_rc]}]"
+			#StopIfError "Failed to create .autorelabel on $(rsync_path_full "$BACKUP_URL")/backup"
 		fi
 		;;
 
 	(rsync)
 		$BACKUP_PROG -a "${TMP_DIR}/selinux.autorelabel" "${BACKUP_RSYNC_OPTIONS[@]}" \
-		 "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup/.autorelabel"
+		 "$(rsync_remote_full "$BACKUP_URL")/backup/.autorelabel"
 		backup_prog_rc=$?
 		if [ $backup_prog_rc -ne 0 ]; then
-			LogPrint "Failed to create .autorelabel on ${RSYNC_PATH}/${RSYNC_PREFIX}/backup [${rsync_err_msg[$backup_prog_rc]}]"
-			#StopIfError "Failed to create .autorelabel on ${RSYNC_PATH}/${RSYNC_PREFIX}/backup"
+			LogPrint "Failed to create .autorelabel on $(rsync_path_full "$BACKUP_URL")/backup [${rsync_err_msg[$backup_prog_rc]}]"
+			#StopIfError "Failed to create .autorelabel on $(rsync_path_full "$BACKUP_URL")/backup"
 		fi
 		;;
 

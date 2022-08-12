@@ -158,7 +158,7 @@ function terminate_descendants_from_grandchildren_to_children () {
         if kill -0 $descendant_pid ; then
             # Keep the current ordering also in not_yet_terminated_pids
             # i.e. grandchildren before children:
-            not_yet_terminated_pids="$not_yet_terminated_pids $descendant_pid"
+            not_yet_terminated_pids+=" $descendant_pid"
             LogPrint "Descendant process $descendant_pid not yet terminated"
         fi
     done
@@ -251,7 +251,7 @@ function terminate_descendants_from_children_to_grandchildren () {
         if kill -0 $descendant_pid ; then
             # Keep the current ordering also in not_yet_terminated_pids
             # i.e. children before grandchildren:
-            not_yet_terminated_pids="$not_yet_terminated_pids $descendant_pid"
+            not_yet_terminated_pids+=" $descendant_pid"
             LogPrint "Child process $descendant_pid not yet terminated"
         fi
     done
@@ -322,7 +322,11 @@ function DoExitTasks () {
     done
 }
 
-# The command (actually the function) DoExitTasks is executed on exit from the shell:
+# The command (actually the function) DoExitTasks is executed on exit from the shell.
+# Avoid SC2218 "This function is only defined later. Move the definition up."
+# because it seems ShellCheck falsely thinks 'trap' is the below defined function
+# (i.e. it seems ShellCheck does not recognize 'builtin')
+# shellcheck disable=SC2218
 builtin trap "DoExitTasks" EXIT
 
 # Prepare that STDIN STDOUT and STDERR can be later redirected to anywhere
@@ -360,12 +364,16 @@ QuietAddExitTask "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WO
 
 # USR1 is used to abort on errors.
 # It is not using PrintError but does direct output to the original STDERR.
-# Set EXIT_FAIL_MESSAGE to 0 to avoid an additional failed message via the QuietAddExitTask above:
+# Set EXIT_FAIL_MESSAGE to 0 to avoid an additional failed message via the QuietAddExitTask above.
+# Avoid SC2218 "This function is only defined later. Move the definition up."
+# because it seems ShellCheck falsely thinks 'trap' is the below defined function
+# (i.e. it seems ShellCheck does not recognize 'builtin')
+# shellcheck disable=SC2218
 builtin trap "EXIT_FAIL_MESSAGE=0 ; echo '${MESSAGE_PREFIX}Aborting due to an error, check $RUNTIME_LOGFILE for details' 1>&8 ; kill $MASTER_PID" USR1
 
 # Make sure nobody else can use trap:
 function trap () {
-    BugError "Forbidden usage of trap with '$@'. Use AddExitTask instead."
+    BugError "Forbidden usage of trap with '$*'. Use AddExitTask instead."
 }
 
 # For actually intended user messages output to the original STDOUT
@@ -481,9 +489,16 @@ function LogUserOutput () {
 # LogPrintError does not error out (the Error function is meant to error out).
 # LogPrintError is meant to show error messages when we do not want to error out,
 # (for example when at the end of "rear recover" it failed to install a bootloader).
+# Real error messages should be prefixed with 'Error: ' in the LogPrintError message.
 # LogPrintError is also meant to show important "error-like" messages to the user
 # (for example when the user must decide if that means a real error in his case)
-# and other important messages that must appear on the user's terminal
+# and other important messages that must appear on the user's terminal.
+# In particular when there was already a LogPrintError message
+# subsequent messages that are related to this LogPrintError message
+# must also be shown to the user as LogPrintError messages
+# to ensure the user gets them on his terminal regardless
+# whether or not he launched 'rear' in verbose mode.
+# Messages that are no real error messages should not be prefixed with 'Warning: '
 # cf. https://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
 function LogPrintError () {
     Log "$@"
@@ -502,7 +517,7 @@ function LogToSyslog () {
 # an alias, builtin, function, or a disk file that would be executed
 # see https://github.com/rear/rear/issues/729
 function has_binary () {
-    for bin in $@ ; do
+    for bin in "$@" ; do
         # Suppress success output via stdout which is crucial when has_binary is called
         # in other functions that provide their intended function results via stdout
         # to not pollute intended function results with intermixed has_binary stdout
@@ -563,6 +578,9 @@ function CallerSource () {
 }
 
 # Error exit:
+# It is an Error when the cause is not in ReaR's code
+# for example when the user specified something wrong
+# or when a called program exits with a fatal error.
 function Error () {
     # Get the last sourced script out of the log file:
     # Using the CallerSource function is not sufficient here because CallerSource results
@@ -756,13 +774,16 @@ function Error () {
     fi
 }
 
-# Exit if there is a bug in ReaR:
+# Exit if there is a bug inside ReaR:
+# It is a BugError when the cause is in ReaR's code,
+# for example when a ReaR function is called with wrong
+# or missing required parameters and things like that.
 function BugError () {
     { local caller_source="$( CallerSource )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     Error "
 ====================
 BUG in $caller_source:
-'$@'
+'$*'
 --------------------
 Please report it at $BUG_REPORT_SITE
 and include all related parts from $RUNTIME_LOGFILE
@@ -1020,9 +1041,8 @@ function cleanup_build_area_and_end_program () {
 #   or the user can interupt any automated response within a relatively short time (minimum is only 1 second).
 function UserInput () {
     # First and foremost log that UserInput was called (but be confidential here):
-    # Have caller_source as an array so that plain $caller_source is only the filename (with path):
-    local caller_source=( $( CallerSource ) )
-    Log "UserInput: called in ${caller_source[@]}"
+    local caller_source="$( CallerSource )"
+    Log "UserInput: called in $caller_source"
     # Set defaults or fallback values:
     # Have a relatively big default timeout of 5 minutes to avoid that the timeout interrupts ongoing user input:
     local timeout=300
@@ -1147,7 +1167,7 @@ function UserInput () {
         # Avoid stderr if timeout is not set or empty or not an integer value:
         if test "$timeout" -ge 1 2>/dev/null ; then
             if test "$default_and_timeout" ; then
-                default_and_timeout="$default_and_timeout timeout $timeout seconds"
+                default_and_timeout+=" timeout $timeout seconds"
             else
                 default_and_timeout="timeout $timeout seconds"
             fi
@@ -1156,7 +1176,7 @@ function UserInput () {
     # The actual work:
     # In debug mode show the user the script that called UserInput and what user_input_ID was specified
     # so that the user can prepare an automated response for that UserInput call (without digging in the code):
-    DebugPrint "UserInput -I $user_input_ID needed in ${caller_source[@]}"
+    DebugPrint "UserInput -I $user_input_ID needed in $caller_source"
     # First of all show the prompt unless an empty prompt was specified (via -p '')
     # so that the prompt can be used as some kind of header line that introduces the user input
     # and separates the following user input from arbitrary other output lines before:
@@ -1178,18 +1198,18 @@ function UserInput () {
     fi
     # Prepare the 'read' call:
     local read_options_and_arguments=""
-    is_true "$raw_input" && read_options_and_arguments="$read_options_and_arguments -r"
-    is_true "$silent_input" && read_options_and_arguments="$read_options_and_arguments -s"
+    is_true "$raw_input" && read_options_and_arguments+=" -r"
+    is_true "$silent_input" && read_options_and_arguments+=" -s"
     # When a zero timeout was specified (via -t 0) do not use it.
     # Avoid stderr if timeout is not set or empty or not an integer value:
-    test "$timeout" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -t $timeout"
+    test "$timeout" -ge 1 2>/dev/null && read_options_and_arguments+=" -t $timeout"
     # When no input_words_array_name was specified (via -a myarr) do not use it:
-    test "$input_words_array_name" && read_options_and_arguments="$read_options_and_arguments -a $input_words_array_name"
+    test "$input_words_array_name" && read_options_and_arguments+=" -a $input_words_array_name"
     # When zero input_max_chars was specified (via -n 0) do not use it.
     # Avoid stderr if input_max_chars is not set or empty or not an integer value:
-    test "$input_max_chars" -ge 1 2>/dev/null && read_options_and_arguments="$read_options_and_arguments -n $input_max_chars"
+    test "$input_max_chars" -ge 1 2>/dev/null && read_options_and_arguments+=" -n $input_max_chars"
     # When no input_delimiter was specified (via -d x) do not use it:
-    test "$input_delimiter" && read_options_and_arguments="$read_options_and_arguments -d $input_delimiter"
+    test "$input_delimiter" && read_options_and_arguments+=" -d $input_delimiter"
     # Get the actual user input value:
     local input_string=""
     # When a predefined user input value exists use that as automated user input:
@@ -1246,8 +1266,13 @@ function UserInput () {
         # Regarding how to get all array elements when the array name is in a variable, see
         # https://unix.stackexchange.com/questions/60584/how-to-use-a-variable-as-part-of-an-array-name
         # Assume input_words_array_name="myarr" then input_words_array_name_dereferenced="myarr[*]"
-        # and "${!input_words_array_name_dereferenced}" becomes "${myarr[*]}":
-        local input_words_array_name_dereferenced="$input_words_array_name[*]"
+        # and "${!input_words_array_name_dereferenced}" becomes "${myarr[*]}"
+        # Avoid ShellCheck false error indication for code like
+        #   string_appended="$string[*]"
+        #                    ^-- SC1087: Use braces when expanding arrays, e.g. ${array[idx]}
+        # by appending '[*]' to a string variable in a separated command:
+        local input_words_array_name_dereferenced="$input_words_array_name"
+        input_words_array_name_dereferenced+='[*]'
         input_string="${!input_words_array_name_dereferenced}"
     fi
     # When there is no user input or when the user input is only spaces use the "best" fallback or default that exists.

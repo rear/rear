@@ -1,8 +1,15 @@
-# purpose of the script is to detect some important KERNEL CMDLINE options on the current system
-# we should also use in rescue mode (automatically update KERNEL_CMDLINE array variable).
+# Purpose of the script is to get the COPY_KERNEL_PARAMETERS on the current system
+# to be used in the rescue/recovery system via automated update of KERNEL_CMDLINE.
 
-# Scanning current kernel cmdline to look for important option ($COPY_KERNEL_PARAMETERS) to include in KERNEL_CMDLINE
-for current_kernel_option in $( cat /proc/cmdline ); do
+# Also protect the rescue/recovery system by removing net.ifnames=0 from KERNEL_CMDLINE
+# if net.ifnames=0 is in KERNEL_CMDLINE but persistent network interface naming is used:
+local persistent_naming='no'
+is_persistent_ethernet_name $( ip route | awk '$2 == "dev" && $8 == "src" { print $3 }' | sort -u | head -n1 ) && persistent_naming='yes'
+
+# Scan current kernel cmdline for options in COPY_KERNEL_PARAMETERS to be included in KERNEL_CMDLINE:
+local current_kernel_option
+local new_kernel_options_to_add=()
+for current_kernel_option in $( cat /proc/cmdline ) ; do
     # Get the current kernel option name (part before leftmost "=") and
     # add the whole option (with value) to new_kernel_options_to_add array
     # if the option name is part of COPY_KERNEL_PARAMETERS array:
@@ -11,41 +18,45 @@ for current_kernel_option in $( cat /proc/cmdline ); do
     fi
 done
 
-# Verify if the kernel option we want to add to KERNEL_CMDLINE are not already set/force by the user in the rear configuration.
-# If yes, the parameter set in the configuration file have the priority and superseed the current kernel option.
+# Check if the kernel options we want to add to KERNEL_CMDLINE are already set by the user in KERNEL_CMDLINE.
+# If yes, the user setting has priority and superseds the kernel option from the current system.
+# For the check use the existing KERNEL_CMDLINE when this script is started
+# and not the modified KERNEL_CMDLINE with already added kernel options
+# to make it possible to add several kernel options by this script
+# with same kernel option keyword like console=ttyS0,9600 console=tty0
+# see https://github.com/rear/rear/pull/2749#issuecomment-1197843273
+# and https://github.com/rear/rear/pull/2844
+local existing_kernel_cmdline="$KERNEL_CMDLINE"
+local existing_kernel_option new_kernel_option new_kernel_option_keyword
 for new_kernel_option in "${new_kernel_options_to_add[@]}" ; do
     new_kernel_option_keyword="${new_kernel_option%%=*}"
-
-    for rear_kernel_option in $KERNEL_CMDLINE ; do
-        # Check if a kernel option key without value parameter (everything before =) is not already present in rear KERNEL_CMDLINE array.
-        if test "$new_kernel_option_keyword" = "${rear_kernel_option%%=*}" ; then
-            Log "Current kernel option [$new_kernel_option] supperseeded by [$rear_kernel_option] in your rear configuration: (KERNEL_CMDLINE)"
+    for existing_kernel_option in $existing_kernel_cmdline ; do
+        if test "$new_kernel_option_keyword" = "${existing_kernel_option%%=*}" ; then
+            LogPrint "Not adding '$new_kernel_option' (superseded by existing '$existing_kernel_option' in KERNEL_CMDLINE)"
             # Continue with the next new_kernel_option (i.e. continue the outer 'for' loop):
             continue 2
         fi
     done
-
+    # If we are using persistent naming do not add net.ifnames to KERNEL_CMDLINE
+    # see https://github.com/rear/rear/pull/1874
+    # and continue with the next new_kernel_option:
     if test "net.ifnames" = "$new_kernel_option_keyword" ; then
-        # If we are using persistent naming do not add net.ifnames to KERNEL_CMDLINE
-        # see https://github.com/rear/rear/pull/1874
-        # and continue with the next new_kernel_option:
-        is_persistent_ethernet_name $( ip r | awk '$2 == "dev" && $8 == "src" { print $3 }' | sort -u | head -1 ) && continue
+        if is_true $persistent_naming ; then
+            LogPrint "Not adding '$new_kernel_option' (persistent network interface naming is used)"
+            continue
+        fi
     fi
-
-    LogPrint "Adding $new_kernel_option to KERNEL_CMDLINE"
-    KERNEL_CMDLINE="$KERNEL_CMDLINE $new_kernel_option"
+    LogPrint "Adding '$new_kernel_option' to KERNEL_CMDLINE"
+    KERNEL_CMDLINE+=" $new_kernel_option"
 done
 
-# In case we added 'KERNEL_CMDLINE="$KERNEL_CMDLINE net.ifnames=0"' to /etc/rear/local.conf, but we have no idea if we
-# are using persistent naming or not then we should protect the rescue image from doing stupid things and remove
-# the keyword (and value) in a preventive way in case "persistent naming is in use".
-# And, to be clear the /proc/cmdline did not contain the keyword net.ifnames
-
-if is_persistent_ethernet_name $( ip r | awk '$2 == "dev" && $8 == "src" { print $3 }' | sort -u | head -1 ) ; then
-    # persistent naming is in use
-    # When the KERNEL_CMDLINE does NOT contain net.ifnames=0 silently return
-    echo $KERNEL_CMDLINE | grep -q 'net.ifnames=0' || return
-    # Remove net.ifnames=0 from KERNEL_CMDLINE
-    KERNEL_CMDLINE=$( echo $KERNEL_CMDLINE | sed -e 's/net.ifnames=0//' )
-    LogPrint "Removing net.ifnames=0 from KERNEL_CMDLINE"
+# The user may have added 'net.ifnames=0' to KERNEL_CMDLINE in /etc/rear/local.conf
+# but he may not know whether or not persistent naming is used.
+# So we should protect the rescue/recovery system from doing "stupid things"
+# and remove 'net.ifnames=0' in a preventive way when persistent naming is used:
+if is_true $persistent_naming ; then
+    if echo $KERNEL_CMDLINE | grep -q 'net.ifnames=0' ; then
+        KERNEL_CMDLINE=$( echo $KERNEL_CMDLINE | sed -e 's/net.ifnames=0//' )
+        LogPrint "Removed 'net.ifnames=0' from KERNEL_CMDLINE (persistent network interface naming is used)"
+    fi
 fi

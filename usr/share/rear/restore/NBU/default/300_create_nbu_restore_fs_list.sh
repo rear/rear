@@ -25,7 +25,7 @@ then
 fi
 if [ ${#EXCLUDE_MOUNTPOINTS[@]} -gt 0 ]
 then
-    for FS in ${EXCLUDE_MOUNTPOINTS[@]}
+    for FS in "${EXCLUDE_MOUNTPOINTS[@]}"
     do
         echo "${FS}/" >> $TMP_DIR/restore_fs_list
         echo "!${FS}/*" >> $TMP_DIR/restore_fs_list

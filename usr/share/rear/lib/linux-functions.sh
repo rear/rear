@@ -27,9 +27,9 @@ function have_udev () {
 # see https://github.com/rear/rear/issues/791
 function my_udevtrigger () {
     # first try the most current way, newer systems (e.g. SLES11) have 'udevadm trigger'
-    has_binary udevadm && udevadm trigger $@ && return 0
+    has_binary udevadm && udevadm trigger "$@" && return 0
     # then try an older way, older systems (e.g. SLES10) have 'udevtrigger'
-    has_binary udevtrigger && udevtrigger $@ && return 0
+    has_binary udevtrigger && udevtrigger "$@" && return 0
     # as first fallback do what start_udev does on RHEL 4
     if has_binary udevstart ; then
         local udevd_pid=$( pidof -x udevd )
@@ -45,9 +45,9 @@ function my_udevtrigger () {
 # see https://github.com/rear/rear/issues/791
 function my_udevsettle () {
     # first try the most current way, newer systems (e.g. SLES11) have 'udevadm settle'
-    has_binary udevadm && udevadm settle $@ && return 0
+    has_binary udevadm && udevadm settle "$@" && return 0
     # then try an older way, older systems (e.g. SLES10) have 'udevsettle'
-    has_binary udevsettle && udevsettle $@ && return 0
+    has_binary udevsettle && udevsettle "$@" && return 0
     # as first fallback re-implement udevsettle for older systems
     if [ -e /sys/kernel/uevent_seqnum ] && [ -e /dev/.udev/uevent_seqnum ] ; then
         local tries=0
@@ -177,7 +177,7 @@ function RequiredSharedObjects () {
     local file_for_ldd=""
     local file_owner_name=""
     # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
-    for file_for_ldd in $@ ; do
+    for file_for_ldd in "$@" ; do
         # Skip non-regular files like directories, device files, and non-existent files
         # cf. similar code in build/GNU/Linux/100_copy_as_is.sh
         # but here symbolic links must not be skipped (e.g. /sbin/mkfs.ext2 -> /usr/sbin/mkfs.ext2)

@@ -9,7 +9,7 @@ function find_modules_in_dirs () {
     # and the
     #    ... | sed -e 's/^\(.*\)\.ko.*/\1/'
     # removes the trailing .ko faster via one sed call than many basename calls or shell code:
-    find $@ -type f -name '*.ko*' -printf '%f\n' 2>/dev/null | sed -e 's/^\(.*\)\.ko.*/\1/'
+    find "$@" -type f -name '*.ko*' -printf '%f\n' 2>/dev/null | sed -e 's/^\(.*\)\.ko.*/\1/'
 }
 
 # Include storage drivers

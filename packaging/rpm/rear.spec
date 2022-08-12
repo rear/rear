@@ -8,7 +8,7 @@
 
 Summary: Relax-and-Recover is a Linux disaster recovery and system migration tool
 Name: rear
-Version: 2.6
+Version: 2.7
 Release: 1%{?rpmrelease}%{?dist}
 # Since some time the license value 'GPLv3' causes build failures in the openSUSE Build Service
 # cf. https://github.com/rear/rear/issues/2289#issuecomment-559713101
@@ -41,6 +41,8 @@ Requires: syslinux
 # and on ix86 x86_64 syslinux is explicitly required to make the bootable ISO image
 # (in addition to the default installed bootloader grub2) while on ppc ppc64 the
 # default installed bootloader yaboot is also used to make the bootable ISO image.
+
+BuildRequires: make
 
 ### Mandatory dependencies on all distributions:
 Requires: binutils
@@ -159,6 +161,9 @@ fi
 %install
 %{__rm} -rf %{buildroot}
 %{__make} install DESTDIR="%{buildroot}"
+
+%check
+%{__make} validate
 
 %files
 # defattr: is required for SLES 11 and RHEL/CentOS 5 builds on openSUSE Build Service (#2135)

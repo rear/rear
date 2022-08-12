@@ -1,14 +1,14 @@
 # check the backup archive on remote rsync server
 
-case $RSYNC_PROTO in
+case $(rsync_proto "$BACKUP_URL") in
 
 	(ssh)
-		ssh ${RSYNC_USER}@${RSYNC_HOST} "ls -ld ${RSYNC_PATH}/${RSYNC_PREFIX}/backup" >/dev/null 2>&1 \
-		    || Error "Archive not found on [$RSYNC_USER@$RSYNC_HOST:${RSYNC_PATH}/${RSYNC_PREFIX}]"
+		ssh $(rsync_remote_ssh "$BACKUP_URL") "ls -ld $(rsync_path_full "$BACKUP_URL")/backup" >/dev/null 2>&1 \
+		    || Error "Archive not found on [$(rsync_remote_full "$BACKUP_URL")]"
 		;;
 
 	(rsync)
-		$BACKUP_PROG "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/${RSYNC_PREFIX}/backup" >/dev/null 2>&1 \
-		    || Error "Archive not found on [$RSYNC_USER@$RSYNC_HOST:${RSYNC_PATH}/${RSYNC_PREFIX}]"
+		$BACKUP_PROG "$(rsync_remote_full "$BACKUP_URL")/backup" >/dev/null 2>&1 \
+		    || Error "Archive not found on [$(rsync_remote_full "$BACKUP_URL")]"
 		;;
 esac

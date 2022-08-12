@@ -115,6 +115,15 @@ extract_partitions() {
         parted -s $device print > $TMP_DIR/parted
         disk_label=$(grep -E "Partition Table|Disk label" $TMP_DIR/parted | cut -d ":" -f "2" | tr -d " ")
     fi
+    # Ensure $disk_label is valid to determine the partition name/type in the next step at 'declare type'
+    # cf. https://github.com/rear/rear/issues/2801#issuecomment-1122015129
+    # When a partition type is reported by parted that is not in the supported list
+    # it must error out because our current code here in 200_partition_layout.sh
+    # does not work with partition types that are not in the supported list
+    # cf. https://github.com/rear/rear/pull/2803#issuecomment-1124800884
+    if ! [[ "$disk_label" = "msdos" || "$disk_label" = "gpt" || "$disk_label" = "gpt_sync_mbr" || "$disk_label" = "dasd" ]] ; then
+        Error "Unsupported partition table '$disk_label' (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
+    fi
 
 
     cp $TMP_DIR/partitions $TMP_DIR/partitions-data
@@ -253,7 +262,7 @@ extract_partitions() {
             flags=""
             for flag in $flaglist ; do
                 if [[ "$flag" = boot || "$flag" = esp || "$flag" = root || "$flag" = swap || "$flag" = hidden || "$flag" = raid || "$flag" = lvm || "$flag" = lba || "$flag" = palo || "$flag" = legacy_boot || "$flag" = bios_grub || "$flag" = prep ]] ; then
-                    flags="$flags$flag,"
+                    flags+="$flag,"
                 elif [[ "$flag" = "type=06" ]] ; then
                     flags="${flags}prep,"
                 fi
@@ -284,7 +293,7 @@ extract_partitions() {
             flags=""
             for flag in $flaglist ; do
                 if [[ "$flag" = boot || "$flag" = root || "$flag" = swap || "$flag" = hidden || "$flag" = raid || "$flag" = lvm || "$flag" = lba || "$flag" = palo || "$flag" = legacy_boot || "$flag" = bios_grub || "$flag" = prep ]] ; then
-                    flags="$flags$flag,"
+                    flags+="$flag,"
                 elif [[ "$flag" = "type=06" ]] ; then
                     flags="${flags}prep,"
                 fi
@@ -341,13 +350,23 @@ extract_partitions() {
 
     ### Write to layout file
     while read partition_nr size start type flags junk ; do
-        ### determine the name of the partition using the number
-        ### device=/dev/cciss/c0d0 ; partition_prefix=cciss/c0d0p
-        ### device=/dev/md127 ; partition_prefix=md127p
-        ### device=/dev/sda ; partition_prefix=sda
-        ### device=/dev/mapper/mpathbp1 ; partition_prefix=mpathbp
+        # determine the name of the partition using the number
+        # device=/dev/cciss/c0d0 ; partition_prefix=cciss/c0d0p
+        # device=/dev/md127 ; partition_prefix=md127p
+        # device=/dev/sda ; partition_prefix=sda
+        # device=/dev/mapper/mpathbp1 ; partition_prefix=mpathbp
         partition_name="${device%/*}/${partition_prefix#*/}$partition_nr"
-        echo "part $device $size $start $type $flags $(get_device_name $partition_name)"
+        partition_device="$( get_device_name $partition_name )"
+        test -b "$partition_device" || Error "Invalid 'part $device' entry (partition device '$partition_device' is no block device)"
+        # Ensure syntactically correct 'part' entries of the form
+        #   part disk_device partition_size start_byte partition_label flags partition_device
+        # Each value must exist and each value must be a single non-blank word.
+        # When $junk contains something one of the values before was more than a single word:
+        test "$junk" && Error "Invalid 'part $device' entry (some value is more than a single word)"
+        # When $flags is empty at least one value is missing:
+        test "$flags" || Error "Invalid 'part $device' entry (at least one value is missing)"
+        # Some basic checks on the values happen in layout/save/default/950_verify_disklayout_file.sh
+        echo "part $device $size $start $type $flags $partition_device"
     done < $TMP_DIR/partitions
 }
 
@@ -383,6 +402,16 @@ Log "Saving disks and their partitions"
                 devname=$(get_device_name $disk)
                 devsize=$(get_disk_size ${disk#/sys/block/})
                 disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
+                # Ensure syntactically correct 'disk' entries:
+                # Each value must exist and each value must be a single non-blank word so we 'test' without quoting the value:
+                test $devname || Error "Invalid 'disk' entry (no disk device name for '$disk')"
+                test $devsize || Error "Invalid 'disk $devname' entry (no device size for '$devname')"
+                # We do not error out when there is no partition label type value because
+                # "rear recover" works in a special case without partition label type value when there is
+                # only a 'disk' entry but nothing else for this disk exists in disklayout.conf
+                # which can happen when /dev/sdX is an empty SD card slot without medium,
+                # see https://github.com/rear/rear/issues/2810
+                test $disktype || LogPrintError "No partition label type for 'disk $devname' (may cause 'rear recover' failure)"
 
                 echo "# Disk $devname"
                 echo "# Format: disk <devname> <size(bytes)> <partition label type>"

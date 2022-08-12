@@ -24,15 +24,15 @@ test -e "$DISKLAYOUT_FILE" && LogPrint "Overwriting existing disk layout file $D
 echo "Disk layout dated $START_DATE_TIME_NUMBER (YYYYmmddHHMMSS)" >$DISKLAYOUT_FILE
 # Have the actual storage layout as header comment in disklayout.conf
 # so that it is easier to make sense of the values in the subsequent entries.
-# First try the command
-#   lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID
+# First try the command (which works on SLES12 and SLES15)
+#   lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID,WWN
 # but on older systems (like SLES11) that do not support all that lsblk things
 # cf. https://github.com/rear/rear/pull/2626#issuecomment-856700823
 # try the simpler command
 #   lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID
 # and as fallback try 'lsblk -i' and finally try plain 'lsblk'.
 # When there is no 'lsblk' command there is no output (bad luck, no harm):
-{ lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID || lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID || lsblk -i || lsblk ; } >>$DISKLAYOUT_FILE
+{ lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID,WWN || lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID || lsblk -i || lsblk ; } >>$DISKLAYOUT_FILE
 # Make all lines in disklayout.conf up to now as header comments:
 sed -i -e 's/^/# /' $DISKLAYOUT_FILE
 

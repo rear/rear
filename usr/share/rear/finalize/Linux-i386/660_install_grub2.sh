@@ -28,8 +28,15 @@
 #   This is also the reason why more than one disk can be specified
 #   in GRUB2_INSTALL_DEVICES.
 #
-# * There is no guarantee that GRUB2 was used as bootloader on the original system.
-#   The solution is to specify the BOOTLOADER config variable.
+# * When GRUB2 is used as bootloader on the original system
+#   there is no guarantee that the automatisms in ReaR correctly detect that
+#   cf. layout/save/default/445_guess_bootloader.sh
+#   To avoid that automatisms in ReaR may set a wrong BOOTLOADER value
+#   the solution is to specify the BOOTLOADER config variable.
+#   This script does not check BOOTLOADER because it is also used as fallback
+#   to install the nowadays most often used bootloader GRUB2
+#   unless the BOOTLOADER variable tells to install another bootloader
+#   (other bootloader install scripts check the BOOTLOADER variable).
 #
 # This script does not error out because at this late state of "rear recover"
 # (i.e. after the backup was restored) I <jsmeix@suse.de> consider it too hard

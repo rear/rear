@@ -5,7 +5,6 @@
 
 # Remove symlinks whose targets have been excluded on the PBA system
 local symlinks_to_remove=(
-    bin/vim
     var/lib/rear
 )
 

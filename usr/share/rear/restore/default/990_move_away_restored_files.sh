@@ -46,7 +46,7 @@ for dummy in "once" ; do
     # because the files therein could contain security relevant information:
     mkdir -p -m 0700 $move_away_dir || continue
     # Copy each file or directory in BACKUP_RESTORE_MOVE_AWAY_FILES with full path:
-    for file in ${BACKUP_RESTORE_MOVE_AWAY_FILES[@]} ; do
+    for file in "${BACKUP_RESTORE_MOVE_AWAY_FILES[@]}" ; do
         # Strip leading '/' from $file to get it with relative path that is needed inside the recovery system:
         file_relative="${file#/}"
         # Skip files or directories listed in BACKUP_RESTORE_MOVE_AWAY_FILES that do not actually exist:

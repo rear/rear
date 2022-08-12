@@ -1,4 +1,4 @@
-# 200_check_rsync_relative_option.sh
+# 210_check_rsync_relative_option.sh
 # See issue #871 for details
 
 # check for the --relative option in BACKUP_RSYNC_OPTIONS array

@@ -1,20 +1,32 @@
 # Create RSYNC_PREFIX under the local TMP_DIR and also on remote rsync server
 # RSYNC_PREFIX=$HOSTNAME as set in default.conf
 
-# create temporary local work-spaces to collect files (we already make the remote backup dir with the correct mode!!)
-mkdir -p $v -m0750 "${TMP_DIR}/rsync/${RSYNC_PREFIX}" >&2 || Error "Could not mkdir '${TMP_DIR}/rsync/${RSYNC_PREFIX}'"
-mkdir -p $v -m0755 "${TMP_DIR}/rsync/${RSYNC_PREFIX}/backup" >&2 || Error "Could not mkdir '${TMP_DIR}/rsync/${RSYNC_PREFIX}/backup'"
+local proto host scheme
 
-case $RSYNC_PROTO in
+scheme="$(url_scheme "$OUTPUT_URL")"
+
+# we handle only rsync:// output schemes.
+# ToDo: why does handling of the output URL scheme belong under RSYNC (which is a backup method)?
+# OUTPUT_URL is independent on the chosen backup method, so this code should be moved to be backup-independent.
+test "rsync" = "$scheme" || return 0
+
+proto="$(rsync_proto "$OUTPUT_URL")"
+host="$(rsync_host "$OUTPUT_URL")"
+
+# create temporary local work-spaces to collect files
+mkdir -p $v -m0750 "${TMP_DIR}/rsync/${RSYNC_PREFIX}" >&2 || Error "Could not mkdir '${TMP_DIR}/rsync/${RSYNC_PREFIX}'"
+
+case $proto in
 
 	(ssh)
-		$BACKUP_PROG -a $v -r "${TMP_DIR}/rsync/${RSYNC_PREFIX}" "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PATH}" >/dev/null 2>&1 \
-                    || Error "Could not create '${RSYNC_PATH}/${RSYNC_PREFIX}' on remote ${RSYNC_HOST}"
+		$BACKUP_PROG -a $v -r "${TMP_DIR}/rsync/${RSYNC_PREFIX}" "$(rsync_remote "$OUTPUT_URL")" >/dev/null 2>&1 \
+                    || Error "Could not create '$(rsync_path_full "$OUTPUT_URL")' on remote ${host}"
 		;;
 
 	(rsync)
-		$BACKUP_PROG -a $v -r "${TMP_DIR}/rsync/${RSYNC_PREFIX}" "${BACKUP_RSYNC_OPTIONS[@]}" "${RSYNC_PROTO}://${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_PORT}/${RSYNC_PATH}/" >/dev/null \
-                    || Error "Could not create '${RSYNC_PATH}/${RSYNC_PREFIX}' on remote ${RSYNC_HOST}"
+		# This must run before the backup stage. Otherwise --relative gets added to BACKUP_RSYNC_OPTIONS
+		$BACKUP_PROG -a $v -r "${TMP_DIR}/rsync/${RSYNC_PREFIX}" "${BACKUP_RSYNC_OPTIONS[@]}" "$(rsync_remote "$OUTPUT_URL")/" >/dev/null \
+                    || Error "Could not create '$(rsync_path_full "$OUTPUT_URL")' on remote ${host}"
 		;;
 
 esac

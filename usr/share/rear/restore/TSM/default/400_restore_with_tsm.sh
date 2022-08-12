@@ -32,7 +32,7 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     cat /dev/null >$backup_restore_log_file
     UserOutput "Filespace '$filespace' restore progress can be followed with 'tail -f $backup_restore_log_file'"
     # Make sure filespace has a trailing / (for dsmc):
-    test "${filespace:0-1}" == "/" || filespace="$filespace/"
+    test "${filespace:0-1}" == "/" || filespace+="/"
     Log "Running 'LC_ALL=$LANG_RECOVER dsmc restore $filespace $TARGET_FS_ROOT/$filespace -subdir=yes -replace=all -tapeprompt=no -errorlogname=\"$backup_restore_log_file\" ${TSM_DSMC_RESTORE_OPTIONS[@]}'"
     # Regarding things like '0<&6 1>&7 2>&8' see "What to do with stdin, stdout, and stderr" in https://github.com/rear/rear/wiki/Coding-Style
     # Both stdout and stderr are redirected into the backup restore log file

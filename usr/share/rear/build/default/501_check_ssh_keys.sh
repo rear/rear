@@ -88,7 +88,7 @@ for key_file in "${key_files[@]}" ; do
     if ssh-keygen -q -p -P '' -N '' -f "$ROOTFS_DIR/$key_file" >/dev/null 2>&1 ; then
         rm -v "$ROOTFS_DIR/$key_file" 1>&2
         Log "Removed SSH key file '$key_file' from recovery system because it has no passphrase"
-        removed_key_files="$removed_key_files $key_file"
+        removed_key_files+=" $key_file"
     else
         Log "SSH key file '$key_file' has a passphrase and is allowed in the recovery system"
     fi

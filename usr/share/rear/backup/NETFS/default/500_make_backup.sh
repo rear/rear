@@ -11,7 +11,7 @@ function set_tar_features () {
     local tar_version=$( get_version tar --version )
     if version_newer "$tar_version" 1.23 ; then
         FEATURE_TAR_WARNINGS="y"
-        TAR_OPTIONS="$TAR_OPTIONS --warning=no-xdev"
+        TAR_OPTIONS+=" --warning=no-xdev"
     fi
     FEATURE_TAR_IS_SET=1
 }
@@ -174,7 +174,7 @@ case "$(basename ${BACKUP_PROG})" in
 
         # Variable used to record the short name of piped commands in case of
         # error, e.g. ( "tar" "cat" "dd" ) in case of unencrypted and unsplit backup.
-        for index in ${!backup_prog_shortnames[@]} ; do
+        for index in "${!backup_prog_shortnames[@]}" ; do
             [ -n "${backup_prog_shortnames[$index]}" ] || BugError "No computed shortname for pipe component $index"
         done
 

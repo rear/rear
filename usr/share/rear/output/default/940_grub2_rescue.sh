@@ -53,7 +53,7 @@ local grub_config_dir="$boot_dir/grub${grub_num}"
 
 # Esure there is sufficient disk space available in /boot for the local Relax-and-Recover rescue system:
 function total_filesize {
-    stat --format '%s' $@ 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
+    stat --format '%s' "$@" 2>/dev/null | awk 'BEGIN { t=0 } { t+=$1 } END { print t }'
 }
 # Free space in /boot:
 local free_space=$( df -Pkl $boot_dir | awk 'END { print $4 * 1024 }' )
@@ -229,7 +229,7 @@ else
     fi
       ( echo "          search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
         echo "          echo 'Loading kernel $boot_kernel_file ...'"
-        echo "          linux $grub_boot_dir/$boot_kernel_name $KERNEL_CMDLINE"
+        echo "          linux $grub_boot_dir/$boot_kernel_name root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
         echo "          echo 'Loading initrd $boot_initrd_file (may take a while) ...'"
         echo "          initrd $grub_boot_dir/$boot_initrd_name"
         echo "}"

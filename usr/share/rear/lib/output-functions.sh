@@ -5,7 +5,7 @@
 function FindUsbDevices () {
     local d sysfspath device
     # we use the model to find USB devices
-    for d in $( ls /sys/block/*/device/model ) ; do
+    for d in /sys/block/*/device/model ; do
         grep -q -i -E 'usb|FlashDisk' $d || continue
         # analyzing $d
         # /sys/block/sdb
@@ -28,7 +28,7 @@ function FindUsbDevices () {
 # Error out when files greater or equal ISO_FILE_SIZE_LIMIT should be included in the ISO (cf. default.conf)
 # for files passed as arguments e.g: assert_ISO_FILE_SIZE_LIMIT file1 relative/path/file2 /absolute/path/file3 ...
 # Normally there should be no error exit inside a function but a function should return non-zero exit code
-# and leave it to its caller what to do depending on the callers environment. But this function is an exception.
+# and leave it to its caller what to do depending on the caller's environment. But this function is an exception.
 # It is meant like the "assert" macro in C that outputs a message on stderr and then exits with abort().
 # Furthermore it is less duplicated code to implement the error exit inside this function
 # than to let this function return non-zero exit code and implement the error exit in each caller
@@ -42,7 +42,7 @@ function assert_ISO_FILE_SIZE_LIMIT () {
     # Skip when there is no usable ISO_FILE_SIZE_LIMIT set (in particular for ISO_FILE_SIZE_LIMIT=0):
     is_positive_integer $ISO_FILE_SIZE_LIMIT || return 0
     local file_for_iso file_for_iso_size
-    for file_for_iso in $@ ; do
+    for file_for_iso in "$@" ; do
         file_for_iso_size=$( stat -L -c '%s' $file_for_iso )
         # Continue "bona fide" with testing the next one if size could not be determined (assume the current one is OK):
         is_positive_integer $file_for_iso_size || continue

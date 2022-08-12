@@ -90,10 +90,13 @@ function build_bootx86_efi {
         fi
 
         if [ -n "$gprobe" ]; then
-            # this is unfortunately only a crude approximation of the Grub internal probe_mods() function
+            # This is unfortunately only a crude approximation of the Grub internal probe_mods() function.
+            # $gprobe --target=partmap "$p" | sed -e 's/^/part_/' does not always returns part_msdos
+            # Therefore, we explicit do an echo 'part_msdos' (the sort -u will make sure it is listed only once)
             modules=( $( for p in "${dirs[@]}" ; do
                              $gprobe --target=fs "$p"
                              $gprobe --target=partmap "$p" | sed -e 's/^/part_/'
+                             echo 'part_msdos'
                              $gprobe --target=abstraction "$p"
                          done | sort -u ) )
         fi

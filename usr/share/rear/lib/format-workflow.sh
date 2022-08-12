@@ -19,7 +19,7 @@ WORKFLOW_format () {
 
     # Parse options
     # (do not use OPTS here because that is readonly in the rear main script):
-    format_workflow_opts="$( getopt -n "$PROGRAM format" -o "efhy" -l "efi,force,help,yes" -- "$@" )"
+    format_workflow_opts="$( getopt -n "$PROGRAM format" -o "befhy" -l "bios,efi,force,help,yes" -- "$@" )"
     if (( $? != 0 )) ; then
         LogPrintError "Use '$PROGRAM format -- --help' for more information."
         # TODO: Use proper exit codes cf. https://github.com/rear/rear/issues/1134

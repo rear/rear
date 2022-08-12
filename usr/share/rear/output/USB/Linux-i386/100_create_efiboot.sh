@@ -3,16 +3,29 @@
 # because it sets a hardcoded label REAR-EFI in format/USB/default/300_format_usb_disk.sh
 # for the VFAT EFI filesystem that is needed here.
 
-is_true $USING_UEFI_BOOTLOADER || return 0
-
-local uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
+# Do "the right thing" depending on
+# whether or not there is a partition labeled 'REAR-EFI'
+# and whether or not USING_UEFI_BOOTLOADER is 'true':
 local efi_label="REAR-EFI"
 local efi_part="/dev/disk/by-label/$efi_label"
-
+if ! test -b "$efi_part" ; then
+    if ! is_true $USING_UEFI_BOOTLOADER ; then
+        # There is no partition labeled 'REAR-EFI' and USING_UEFI_BOOTLOADER is not 'true':
+        DebugPrint "No EFI boot (no EFI partition '$efi_part' and USING_UEFI_BOOTLOADER is not 'true')"
+        return 0
+    fi
+    # There is no partition labeled 'REAR-EFI' but USING_UEFI_BOOTLOADER is 'true':
+    Error "USING_UEFI_BOOTLOADER is 'true' but no EFI partition '$efi_part' block device (did you prepare with 'rear format'?)"
+fi
+# There is a is a partition labeled 'REAR-EFI':
+if ! is_true $USING_UEFI_BOOTLOADER ; then
+    # There is a is a partition labeled 'REAR-EFI' and USING_UEFI_BOOTLOADER is not 'true':
+    DebugPrint "Skip configuring EFI partition '$efi_part' for EFI boot (USING_UEFI_BOOTLOADER is not 'true')"
+    return 0
+fi
+# There is a is a partition labeled 'REAR-EFI' and USING_UEFI_BOOTLOADER is 'true':
+local uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
 DebugPrint "Configuring EFI partition '$efi_part' for EFI boot with '$uefi_bootloader_basename'"
-
-# Fail if EFI partition is not present
-test -b "$efi_part" || Error "EFI partition '$efi_part' is no block device (did you use 'rear format -- --efi ...' for correct format?)"
 
 # $BUILD_DIR is not present at this stage so TMPDIR (by default /var/tmp see default.conf) will be used instead.
 # Slackware version of mktemp requires 6 Xs in template and
@@ -82,8 +95,8 @@ EOF
             DebugPrint "Configuring GRUB2 for EFI boot"
             # We need to explicitly set GRUB 2 'root' variable to $efi_label (hardcoded "REAR-EFI")
             # because default $root would point to memdisk, where kernel and initrd are NOT present.
-            # GRUB2_SET_USB_ROOT is used in the create_grub2_cfg() function:
-            GRUB2_SET_USB_ROOT="search --no-floppy --set=root --label $efi_label"
+            # GRUB2_SEARCH_ROOT_COMMAND is used in the create_grub2_cfg() function:
+            [[ -z "$GRUB2_SEARCH_ROOT_COMMAND" ]] && GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --label $efi_label"
             # Create config for GRUB 2
             create_grub2_cfg $efi_dir/kernel $efi_dir/$REAR_INITRD_FILENAME > $efi_dst/grub.cfg
             # Create bootloader, this overwrite BOOTX64.efi copied in previous step ...

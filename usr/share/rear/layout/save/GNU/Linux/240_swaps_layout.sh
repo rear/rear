@@ -11,7 +11,7 @@ Log "Saving Swap information."
             continue
         fi
         # if filename is on a lv, try to find the DM name
-        for dlink in $(ls /dev/mapper/*) ; do
+        for dlink in /dev/mapper/* ; do
             target=$(readlink -f $dlink)
             if [ "$target" = "$filename" ] ; then
                 filename=$dlink
