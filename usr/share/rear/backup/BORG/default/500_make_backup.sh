@@ -26,7 +26,7 @@ function check_BORG_create_return_code() {
     #
     # Warning (rc=1) can happen if a file changed while backing it up.
     # $BORGBACKUP_IGNORE_WARNING="yes" makes rear ignoring warnings (rc=1).
-    if test "$BORGBACKUP_IGNORE_WARNING" = "yes" && test $borg_create_exit_code -eq 1; then
+    if is_true "$BORGBACKUP_IGNORE_WARNING" && test $borg_create_exit_code -eq 1; then
         LogUserOutput "[BORG rc=1] borg create backup operation completed with at least one warning message that was ignored (see rear log file)"
         return 0
     fi
