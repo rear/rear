@@ -82,6 +82,9 @@ local lvs_exit_code
         # Skip lines that are not describing physical devices
         # i.e. lines where pdev does not start with a leading / character:
         test "${pdev#/}" = "$pdev" && continue
+        if [[ "${pdev}" =~ '/dev/loop' ]] then
+            continue
+        fi
 
         # Output lvmdev header only once to DISKLAYOUT_FILE:
         if is_false $header_printed ; then
