@@ -104,5 +104,4 @@ else
 fi
 borg_exit_code=$?
 
-check_BORG_create_return_code $borg_exit_code
-StopIfError "Borg failed to create backup archive, borg rc $?!"
+check_BORG_create_return_code $borg_exit_code || Error "Borg failed to create backup archive, borg rc $borg_exit_code"
