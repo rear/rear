@@ -92,7 +92,7 @@ case "$PXE_CREATE_LINKS" in
 		# look at all devices that have link/ether
 		ip l | grep link/ether | \
 			while read link mac junk ; do
-				ln -sf $v "$PXE_CONFIG_FILE" 01-${mac//:/-} >&2
+				ln -sf $v "$PXE_CONFIG_FILE" ${pxe_link_prefix}01-${mac//:/-} >&2
 			done
 		;;
 	"")
