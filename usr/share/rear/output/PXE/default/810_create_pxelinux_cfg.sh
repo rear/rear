@@ -76,9 +76,9 @@ case "$PXE_CREATE_LINKS" in
 				IP=${IP%/*}
                 # check if gethostip is available.
                 if has_binary gethostip &>/dev/null ; then
-    				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP) >&2
+    				ln -sf $v "$PXE_CONFIG_FILE" $pxe_link_prefix$(gethostip -x $IP) >&2
     				# to capture the whole subnet as well
-    				ln -sf $v "$PXE_CONFIG_FILE" $(gethostip -x $IP | cut -c 1-6) >&2
+    				ln -sf $v "$PXE_CONFIG_FILE" $pxe_link_prefix$(gethostip -x $IP | cut -c 1-6) >&2
                 else
                 # if gethostip is not available on your platform (like ppc64),
                 # use awk to generate IP in hex mode.
