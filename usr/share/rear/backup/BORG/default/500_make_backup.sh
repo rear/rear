@@ -12,6 +12,36 @@ if [ ! -r "$TMP_DIR/backup-include.txt" ]; then
     Error "Can't find include list"
 fi
 
+function check_BORG_create_return_code() {
+
+    borg_create_exit_code=$1
+
+    # 'borg_create' function returns one of the following codes:
+    #   0     success
+    #   1     warning (operation reached its normal end, but there were warnings)
+    #   2     error (like a fatal error)
+    #   128+N killed by signal
+    # They corresponde to the borg return codes:
+    # https://borgbackup.readthedocs.io/en/stable/usage/general.html#return-codes
+    #
+    # Warning (rc=1) can happen if a file changed while backing it up.
+    # $BORGBACKUP_IGNORE_WARNING="yes" makes rear ignoring warnings (rc=1).
+    if is_true "$BORGBACKUP_IGNORE_WARNING" && test $borg_create_exit_code -eq 1; then
+        LogUserOutput "[BORG rc=1] borg create backup operation completed with at least one warning message that was ignored (see rear log file)"
+        return 0
+    fi
+
+    if test $borg_create_exit_code -eq 0; then
+        LogUserOutput "[BORG] borg create backup operation completed successfully"
+    else
+        LogUserOutput "[BORG] borg create backup operation completed with 'borg create' exit code $borg_create_exit_code"
+        test $borg_create_exit_code -eq 1 && LogUserOutput "[BORG rc=1] borg create backup operation completed with at least one warning message"
+        test $borg_create_exit_code -eq 2 && LogUserOutput "[BORG rc=2] borg create backup operation completed with at least one error message"
+        test $borg_create_exit_code -ge 128 && LogUserOutput "[BORG rc=$borg_create_exit_code] borg create backup operation was killed by signal"
+        return $borg_create_exit_code
+    fi
+}
+
 # Create Borg friendly include list.
 while IFS= read -r include; do
     include_list+=( "$include" )
@@ -72,5 +102,6 @@ elif is_true "$VERBOSE"; then
 else
     borg_create 0<&6
 fi
+borg_exit_code=$?
 
-StopIfError "Borg failed to create backup archive, borg rc $?!"
+check_BORG_create_return_code $borg_exit_code || Error "Borg failed to create backup archive, borg rc $borg_exit_code"
