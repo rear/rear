@@ -85,6 +85,7 @@ local lvs_exit_code
 
         # Skip physical volumes that are created on loop back devices
         # i.e. /dev/loop0p2:cinder_volume:996853760:-1:8:8:-1:4096:121686:41046:80640:something
+        # See https://github.com/rear/rear/issues/2853
         [[ "$pdev" = /dev/loop* ]] && continue
 
         # Output lvmdev header only once to DISKLAYOUT_FILE:
