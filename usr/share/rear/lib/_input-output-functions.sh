@@ -1053,9 +1053,9 @@ function UserInput () {
     # that would (without the delay) run in a tight loop that wastes resources (CPU, diskspace, and memory)
     # and fills up the ReaR log file (and the disk - which is a ramdisk for 'rear recover')
     # with some KiB data each second that may let 'rear recover' fail with 'out of diskspace/memory'.
-    # The default automated input interrupt timeout is 5 seconds to give the user a reasonable chance
+    # The default automated input interrupt timeout is 10 seconds to give the user a reasonable chance
     # to recognize the right automated input on his screen and interrupt it when needed:
-    local automated_input_interrupt_timeout=5
+    local automated_input_interrupt_timeout=10
     # Avoid stderr if USER_INPUT_INTERRUPT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_INTERRUPT_TIMEOUT:
     test "$USER_INPUT_INTERRUPT_TIMEOUT" -ge 1 2>/dev/null && automated_input_interrupt_timeout=$USER_INPUT_INTERRUPT_TIMEOUT
     local default_prompt="enter your input"
