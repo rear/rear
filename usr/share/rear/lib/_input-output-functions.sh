@@ -1188,14 +1188,14 @@ function UserInput () {
     # up to 1000 characters (so it fails if there are more than 1000 characters in stdin)
     # see https://superuser.com/questions/276531/clear-stdin-before-reading
     # That the 'read' timeout can be a fractional number requires bash 4.x
-    # but in general ReaR should still work with bash 3.x so we use '-t1'
+    # but in general ReaR should still work with bash 3.x so we use '-t 1'
     # which causes a one second delay (in interactive mode) which cannot be avoided,
     # see https://github.com/rear/rear/issues/2866#issuecomment-1254908270
     local discard_stdin=""
     if tty -s ; then
         # This 'read' call usually exits with non-zero exit code
         # (unless it gets valid input terminated by ENTER):
-        read -s -t1 -n 1000 discard_stdin
+        read -s -t 1 -n 1000 discard_stdin
     else
         Log "UserInput: stdin not a tty (using stdin as is without draining)"
     fi
