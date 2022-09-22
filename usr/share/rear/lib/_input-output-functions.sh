@@ -1177,6 +1177,22 @@ function UserInput () {
     # In debug mode show the user the script that called UserInput and what user_input_ID was specified
     # so that the user can prepare an automated response for that UserInput call (without digging in the code):
     DebugPrint "UserInput -I $user_input_ID needed in $caller_source"
+    # Drain stdin if stdin is a terminal i.e. when 'rear' is run in interactive mode
+    # where stdin is all what the user types on his keyboard.
+    # In this case discard possibly already existing characters (in particular ENTER keystrokes) from stdin
+    # to avoid that when the user had accidentally hit ENTER more than once in a previous (UserInput) dialog
+    # then those additional ENTER characters would be already in stdin and let this current UserInput dialog
+    # proceed unintendedly automatically without an explicit ENTER from the user for this current dialog,
+    # see https://github.com/rear/rear/issues/2866
+    # There is no generic way to clear stdin so we 'read' and discard what is already there
+    # up to 1000 characters (so it fails if there are more than 1000 characters in stdin)
+    # see https://superuser.com/questions/276531/clear-stdin-before-reading
+    # That the 'read' timeout can be a fractional number requires bash 4.x
+    # but in general ReaR should still work with bash 3.x so we use '-t1'
+    # which causes a one second delay (in interactive mode) which cannot be avoided,
+    # see https://github.com/rear/rear/issues/2866#issuecomment-1254908270
+    local discard_stdin=""
+    tty -s && read -s -t1 -n 1000 discard_stdin || Log "UserInput: stdin not a tty (using stdin as is without draining)"
     # First of all show the prompt unless an empty prompt was specified (via -p '')
     # so that the prompt can be used as some kind of header line that introduces the user input
     # and separates the following user input from arbitrary other output lines before:
