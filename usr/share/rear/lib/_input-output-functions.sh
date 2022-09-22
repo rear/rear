@@ -1193,6 +1193,8 @@ function UserInput () {
     # see https://github.com/rear/rear/issues/2866#issuecomment-1254908270
     local discard_stdin=""
     if tty -s ; then
+        # This 'read' call usually exits with non-zero exit code
+        # (unless it gets valid input terminated by ENTER):
         read -s -t1 -n 1000 discard_stdin
     else
         Log "UserInput: stdin not a tty (using stdin as is without draining)"
