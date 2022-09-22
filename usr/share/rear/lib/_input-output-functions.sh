@@ -1192,7 +1192,11 @@ function UserInput () {
     # which causes a one second delay (in interactive mode) which cannot be avoided,
     # see https://github.com/rear/rear/issues/2866#issuecomment-1254908270
     local discard_stdin=""
-    tty -s && read -s -t1 -n 1000 discard_stdin || Log "UserInput: stdin not a tty (using stdin as is without draining)"
+    if tty -s ; then
+        read -s -t1 -n 1000 discard_stdin
+    else
+        Log "UserInput: stdin not a tty (using stdin as is without draining)"
+    fi
     # First of all show the prompt unless an empty prompt was specified (via -p '')
     # so that the prompt can be used as some kind of header line that introduces the user input
     # and separates the following user input from arbitrary other output lines before:
