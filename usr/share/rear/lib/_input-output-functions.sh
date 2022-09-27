@@ -1197,11 +1197,13 @@ function UserInput () {
     #   stty $old_tty_settings
     # but we do not like to mess around with the user's terminal settings in ReaR.
     # That the 'read' timeout can be a fractional number requires bash 4.x
-    # but in general ReaR should still work with bash 3.x so we use '-t 1'
-    # which causes a one second delay (in interactive mode) which cannot be avoided,
     # see https://github.com/rear/rear/issues/2866#issuecomment-1254908270
-    # and https://github.com/rear/rear/pull/2868#issuecomment-1257988466
-    test -t 0 && read -s -t 1 -n 1000 -d ''
+    # but in general ReaR should still work with bash 3.x so we use '-t 1'
+    # which would cause a one second delay when there is nothing in stdin
+    # until 'read' timed out which we avoid with 'read -t 0' before
+    # and we keep the '-t 1' in the subsequent 'read' to be fail safe
+    # see https://github.com/rear/rear/pull/2868#issuecomment-1259087491
+    test -t 0 && read -t 0 && read -s -t 1 -n 1000 -d ''
     # First of all show the prompt unless an empty prompt was specified (via -p '')
     # so that the prompt can be used as some kind of header line that introduces the user input
     # and separates the following user input from arbitrary other output lines before:
