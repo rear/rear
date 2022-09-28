@@ -1177,6 +1177,33 @@ function UserInput () {
     # In debug mode show the user the script that called UserInput and what user_input_ID was specified
     # so that the user can prepare an automated response for that UserInput call (without digging in the code):
     DebugPrint "UserInput -I $user_input_ID needed in $caller_source"
+    # Drain stdin if stdin is a terminal i.e. when 'rear' is run in interactive mode
+    # where stdin normally is what the user types on his keyboard.
+    # In this case discard possibly already existing characters (in particular ENTER keystrokes) from stdin
+    # to avoid that when the user had accidentally hit ENTER more than once in a previous (UserInput) dialog
+    # then those additional ENTER characters would be already in stdin and let this current UserInput dialog
+    # proceed unintendedly automatically without an explicit ENTER from the user for this current dialog,
+    # see https://github.com/rear/rear/issues/2866
+    # and https://github.com/rear/rear/pull/2868#issuecomment-1257988466
+    # There is no generic and fail safe working way to clear stdin
+    # cf. https://superuser.com/questions/276531/clear-stdin-before-reading
+    # so we 'read' and discard what is already there up to 1000 characters
+    # which leaves characters in stdin if there are more than 1000 characters in stdin.
+    # It does not get unfinished lines in the terminal buffer which are not yet in stdin.
+    # Draining also the terminal buffer would require special things with 'stty' like
+    #   old_tty_settings=$( stty -g )
+    #   stty -icanon min 0 time 0
+    #   ... [read what is there]
+    #   stty $old_tty_settings
+    # but we do not like to mess around with the user's terminal settings in ReaR.
+    # That the 'read' timeout can be a fractional number requires bash 4.x
+    # see https://github.com/rear/rear/issues/2866#issuecomment-1254908270
+    # but in general ReaR should still work with bash 3.x so we use '-t 1'
+    # which would cause a one second delay when there is nothing in stdin
+    # until 'read' timed out which we avoid with 'read -t 0' before
+    # and we keep the '-t 1' in the subsequent 'read' to be fail safe
+    # see https://github.com/rear/rear/pull/2868#issuecomment-1259087491
+    test -t 0 && read -t 0 && read -s -t 1 -n 1000 -d ''
     # First of all show the prompt unless an empty prompt was specified (via -p '')
     # so that the prompt can be used as some kind of header line that introduces the user input
     # and separates the following user input from arbitrary other output lines before:
