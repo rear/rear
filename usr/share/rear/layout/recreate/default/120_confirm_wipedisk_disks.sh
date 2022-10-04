@@ -1,5 +1,19 @@
 
-# Skip it when the user has explicitly specified to not wipe disks:
+# Show the user what disks will be completely overwritten:
+# The disks that will be completely overwritten are those disks
+# where in diskrestore.sh the create_disk_label function is called
+# (the create_disk_label function calls "parted -s $disk mklabel $label")
+# for example like
+#   create_disk_label /dev/sda gpt
+#   create_disk_label /dev/sdb msdos
+#   create_disk_label /dev/md127 gpt
+# so in this example disks_to_be_recreated="/dev/sda /dev/sdb /dev/md127 "
+local disks_to_be_recreated=""
+disks_to_be_recreated="$( grep '^ *create_disk_label /dev/' $LAYOUT_CODE | grep -o '/dev/[^ ]*' | sort -u | tr -s '[:space:]' ' ' )"
+LogPrint "Disks to be completely overwritten and recreated by $LAYOUT_CODE:"
+LogPrint "  $disks_to_be_recreated"
+
+# Skip wiping disks when the user has explicitly specified to not wipe disks:
 is_false "$DISKS_TO_BE_WIPED" && return 0
 
 # In migration mode let the user confirm the disks
@@ -12,7 +26,8 @@ local disk_to_be_wiped
 local disks_to_be_wiped=""
 if test "$DISKS_TO_BE_WIPED" ; then
     # If the user has specified DISKS_TO_BE_WIPED (i.e. when it is not empty)
-    # use only those that actually exist as block devices in the recovery system:
+    # use only those that actually exist as block devices in the recovery system.
+    # Bash pathname expansion happens here (e.g. when DISKS_TO_BE_WIPED="/dev/sd[a-z]"):
     for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
         # 'test -b' succeeds when there is no argument but fails when the argument is empty:
         test -b "$disk_to_be_wiped" || continue
@@ -23,43 +38,35 @@ if test "$DISKS_TO_BE_WIPED" ; then
             continue
         fi
         # Have a trailing space delimiter to get e.g. disks_to_be_wiped="/dev/sda /dev/sdb "
-        # with a trailing space (looks better in user messages):
+        # (a trailing space looks better in user messages than a preceding space):
         disks_to_be_wiped+="$disk_to_be_wiped "
     done
 else
-    # When the user has not specified DISKS_TO_BE_WIPED use an automatism:
-    # The disks that will be completely overwritten are those disks
-    # where in diskrestore.sh the create_disk_label function is called
-    # (the create_disk_label function calls "parted -s $disk mklabel $label")
-    # for example like
-    #   create_disk_label /dev/sda gpt
-    #   create_disk_label /dev/sdb msdos
-    #   create_disk_label /dev/md127 gpt
-    # so in this example DISKS_TO_BE_WIPED="/dev/sda /dev/sdb /dev/md127 "
-    DISKS_TO_BE_WIPED="$( grep '^ *create_disk_label /dev/' $LAYOUT_CODE | grep -o '/dev/[^ ]*' | sort -u | tr -s '[:space:]' ' ' )"
-    DebugPrint "Disks to be completely overwritten: $DISKS_TO_BE_WIPED"
-    # The above automatism cannot work when the create_disk_label function is called
+    # The above automatism that determines disks_to_be_recreated
+    # cannot work when the create_disk_label function is called
     # for higher level block devices like RAID devices e.g. as 'create_disk_label /dev/md127 gpt'
     # that do not exist as disks on the bare hardware or on a bare virtual machine:
-    for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
+    for disk_to_be_wiped in $disks_to_be_recreated ; do
         # 'test -b' succeeds when there is no argument but fails when the argument is empty:
         if test -b "$disk_to_be_wiped" ; then
-            # Write-protection for the disks in DISKS_TO_BE_WIPED
+            # Write-protection for the disks in disks_to_be_recreated
             # cf. https://github.com/rear/rear/pull/2703#issuecomment-979928423
             if is_write_protected "$disk_to_be_wiped" ; then
                 DebugPrint "Excluding $disk_to_be_wiped to be wiped ($disk_to_be_wiped is write-protected)"
                 continue
             fi
             # Have a trailing space delimiter to get e.g. disks_to_be_wiped="/dev/sda /dev/sdb "
-            # with a trailing space (looks better in user messages):
+            # (a trailing space looks better in user messages than a preceding space):
             disks_to_be_wiped+="$disk_to_be_wiped "
         else
+            # Handle RAID devices like /dev/md127 that do not (yet) exist in the currently running recovery system
+            # (so the above 'test -b "$disk_to_be_wiped"' results false):
             # When the create_disk_label function is called for higher level block devices like RAID devices
             # e.g. as 'create_disk_label /dev/md127 gpt' the RAID device /dev/md127 is a child of a disk like /dev/sdc
             # or the RAID device /dev/md127 is a child of a partition like /dev/sdc1 that is a child of the disk /dev/sdc
             # so we need to find out the parent disk of the RAID device. Because the RAID device does not (yet) exist
-            # in the currently running ReaR recovery system we check disklayout.conf that tells about the original system
-            # but at this point here the devices in disklayout.conf are already migrated to what they are on the recovery system
+            # in the currently running recovery system we check disklayout.conf that tells about the original system
+            # but here the devices in disklayout.conf are already migrated to what they are on the recovery system
             # so we can check disklayout.conf what the parent disk of the RAID device is on the current recovery system,
             # cf. the code in layout/prepare/GNU/Linux/120_include_raid_code.sh
             local keyword raiddevice options
@@ -114,9 +121,9 @@ else
                 if test -b "$parent_device" ; then
                     # parent_device is usually a disk but in the KNAME fallback case it could be a partition:
                     DebugPrint "$parent_device is a parent of component device $component_device of $raiddevice that should be wiped"
-                    # Write-protection for the disks in DISKS_TO_BE_WIPED (see above).
+                    # Write-protection for the disks in disks_to_be_recreated (see above).
                     # When parent_device is a partition the function write_protection_ids() in lib/write-protect-functions.sh
-                    # also tries to determine its parent disk if possible to check the disk device in DISKS_TO_BE_WIPED:
+                    # also tries to determine its parent disk if possible to check the disk device in disks_to_be_recreated:
                     if is_write_protected "$parent_device" ; then
                         DebugPrint "Excluding parent $parent_device to be wiped ($parent_device is write-protected)"
                         # Continue with the next component_device
@@ -124,7 +131,7 @@ else
                     fi
                     DebugPrint "Adding parent $parent_device to be wiped ($parent_device is not write-protected)"
                     # Have a trailing space delimiter to get e.g. disks_to_be_wiped="/dev/sda /dev/sdb "
-                    # with a trailing space (looks better in user messages):
+                    # (a trailing space looks better in user messages than a preceding space):
                     disks_to_be_wiped+="$parent_device "
                     added_parent_device="yes"
                 fi
@@ -147,9 +154,10 @@ is_true "$MIGRATION_MODE" || timeout="$USER_INPUT_INTERRUPT_TIMEOUT"
 rear_workflow="rear $WORKFLOW"
 rear_shell_history="lsblk"
 unset choices
-choices[0]="Confirm disks to be completely overwritten and continue '$rear_workflow'"
-choices[1]="Use Relax-and-Recover shell and return back to here"
-choices[2]="Abort '$rear_workflow'"
+choices[0]="Confirm disks to be wiped and continue '$rear_workflow'"
+choices[1]="Skip wiping disks and continue '$rear_workflow'"
+choices[2]="Use Relax-and-Recover shell and return back to here"
+choices[3]="Abort '$rear_workflow'"
 prompt="Disks to be wiped: $DISKS_TO_BE_WIPED"
 choice=""
 wilful_input=""
@@ -160,15 +168,20 @@ while true ; do
     choice="$( UserInput -I WIPE_DISKS_CONFIRMATION -t "$timeout" -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
     case "$choice" in
         (${choices[0]})
-            # Confirm disk that will be completely overwritten and continue:
+            # Confirm disks to be wiped and continue:
             is_true "$wilful_input" && LogPrint "User confirmed disks to be wiped" || LogPrint "Continuing '$rear_workflow' by default"
             break
             ;;
         (${choices[1]})
+            # Skip wiping disks:
+            DISKS_TO_BE_WIPED="false"
+            break
+            ;;
+        (${choices[2]})
             # rear_shell runs 'bash' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
             rear_shell "" "$rear_shell_history"
             ;;
-        (${choices[2]})
+        (${choices[3]})
             abort_recreate
             Error "User chose to abort '$rear_workflow' in ${BASH_SOURCE[0]}"
             ;;
