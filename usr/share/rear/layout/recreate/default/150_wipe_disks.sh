@@ -1,15 +1,16 @@
 
-# Skip it when the user has explicitly specified to not wipe disks:
+# Skip wiping disks when the user has explicitly specified to not wipe disks
+# or when the user selected "Skip wiping disks" in layout/recreate/default/120_confirm_wipedisk_disks.sh
 is_false "$DISKS_TO_BE_WIPED" && return 0
 
-# The disks that will be completely wiped are those disks
+# The disks that will be wiped are those disks
 # where in diskrestore.sh the create_disk_label function is called
 # (the create_disk_label function calls "parted -s $disk mklabel $label")
 # for those that exist as disks on the bare hardware for example like
 #   create_disk_label /dev/sda gpt
 #   create_disk_label /dev/sdb msdos
 #   create_disk_label /dev/md127 gpt
-# so in this example DISKS_TO_BE_WIPED="/dev/sda /dev/sdb "
+# so in this example by default DISKS_TO_BE_WIPED="/dev/sda /dev/sdb "
 # or if the user has specified DISKS_TO_BE_WIPED use only the existing block devices therein
 # cf. layout/recreate/default/120_confirm_wipedisk_disks.sh
 
