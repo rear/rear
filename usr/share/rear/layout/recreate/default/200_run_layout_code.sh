@@ -33,8 +33,9 @@ choices[3]="Again wipe those disks: $DISKS_TO_BE_WIPED"
 choices[4]="Show what is currently on the disks ('lsblk' block devices list)"
 choices[5]="View original disk space usage ($original_disk_space_usage_file)"
 choices[6]="Use Relax-and-Recover shell and return back to here"
-choices[7]="Abort '$rear_workflow'"
-prompt="The disk layout recreation script failed"
+choices[7]="Confirm what is currently on the disks and continue '$rear_workflow'"
+choices[8]="Abort '$rear_workflow'"
+prompt="Disk layout recreation choices"
 # Do not show choice to wipe disks when whiping disks is switched off:
 is_false "$DISKS_TO_BE_WIPED" && choices[3]="n/a"
 # When 'barrel' is used to recreate the storage layout different choices must be shown:
@@ -48,7 +49,10 @@ fi
 
 choice=""
 # When USER_INPUT_LAYOUT_CODE_RUN has any 'true' value be liberal in what you accept and
-# assume choices[0] 'Rerun disk recreation script' was actually meant:
+# assume choices[0] 'Rerun disk recreation script' was actually meant
+# regardless that this likely lets 'rear recover' run an endless loop
+# of failed disk layout recreation attempts but ReaR must obey what the user specified
+# (perhaps it is intended to let 'rear recover' loop here until an admin intervenes):
 is_true "$USER_INPUT_LAYOUT_CODE_RUN" && USER_INPUT_LAYOUT_CODE_RUN="${choices[0]}"
 
 unset confirm_choices
@@ -64,8 +68,11 @@ is_true "$USER_INPUT_LAYOUT_MIGRATED_CONFIRMATION" && USER_INPUT_LAYOUT_MIGRATED
 
 # Run the disk layout recreation code (diskrestore.sh)
 # or recreate storage layout with 'barrel' devicegraph
-# again and again until it succeeds or the user aborts:
+# again and again until it succeeds or the user aborts
+# or the user confirms to continue with what is currently on the disks
+# (the user may have setup manually what he needs via the Relax-and-Recover shell):
 while true ; do
+    prompt="The disk layout recreation had failed"
     if is_true "$BARREL_DEVICEGRAPH" ; then
         # See https://github.com/rear/rear/pull/2382#discussion_r417852393
         # and https://github.com/rear/rear/pull/2382#discussion_r417998820
@@ -119,6 +126,7 @@ while true ; do
     #   failed
     # See also https://github.com/rear/rear/pull/1573#issuecomment-344303590
     if (( $? == 0 )) ; then
+        prompt="Disk layout recreation had been successful"
         # When LAYOUT_CODE succeeded and when not in migration mode
         # break the outer while loop and continue the "rear recover" workflow
         # which means continue with restoring the backup:
@@ -168,9 +176,14 @@ while true ; do
             esac
         done
     fi
-    # Run an inner while loop with a user dialog so that the user can fix things when LAYOUT_CODE failed.
-    # Such a fix does not necessarily mean the user must change the diskrestore.sh script.
-    # The user might also fix things by only using the Relax-and-Recover shell.
+    # Run an inner while loop with a user dialog so that the user can fix things
+    # when LAYOUT_CODE failed or when recreating with 'barrel' devicegraph failed.
+    # Such a fix does not necessarily mean the user must change
+    # the diskrestore.sh script when LAYOUT_CODE failed.
+    # The user might also fix things by only using the Relax-and-Recover shell
+    # in particular when recreating with 'barrel' devicegraph failed and then
+    # confirm what is on the disks and continue with restoring the backup
+    # or abort this "rear recover" run to re-try from scratch.
     while true ; do
         choice="$( UserInput -I LAYOUT_CODE_RUN -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
         case "$choice" in
@@ -236,9 +249,15 @@ while true ; do
                 rear_shell "" "$rear_shell_history"
                 ;;
             (${choices[7]})
+                # Confirm what is on the disks and continue:
+                # Break the outer while loop and continue with restoring the backup:
+                break 2
+                ;;
+            (${choices[8]})
                 abort_recreate
                 Error "User chose to abort '$rear_workflow' in ${BASH_SOURCE[0]}"
                 ;;
         esac
     done
+# End of the outer while loop:
 done
