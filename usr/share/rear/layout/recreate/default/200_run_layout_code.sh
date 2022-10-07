@@ -20,6 +20,30 @@
 #   fi
 #
 
+function lsblk_output () {
+    # First try the command (which works on SLES15-SP4)
+    #   lsblk -ipo NAME,KNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINTS
+    # (for a btrfs MOUNTPOINTS shows all mountpoints where subvolumes of that btrfs are mounted
+    #  while MOUNTPOINT only shows a random mounted subvolume when more than one is mounted)
+    local lsblk_cols_mountpoints="NAME,KNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINTS"
+    # then try the command (which works in general on SLES12 and SLES15)
+    #   lsblk -ipo NAME,KNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT
+    local lsblk_cols_tran_type="NAME,KNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT"
+    # but on older systems (like SLES11) that do not support all that lsblk things
+    # cf. https://github.com/rear/rear/pull/2626#issuecomment-856700823
+    # try the simpler command
+    #   lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT
+    local lsblk_cols_generic="NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT"
+    # and as fallback try 'lsblk -i' and finally try plain 'lsblk'.
+    # In contrast to the lsblk commands in layout/save/GNU/Linux/100_create_layout_file.sh
+    # skip PKNAME UUID WWN because they are not scrictly needed to check if things look OK
+    # in particular UUID and WWN make the output lines too long for a normal terminal.
+    # Show only lsblk stdout on the user's terminal (and have it also in the log file)
+    # but do not show lsblk stderr on the user's terminal to avoid lsblk error messages
+    # on the user's terminal when older lsblk versions fail with newer lsblk options and columns:
+    { lsblk -ipo $lsblk_cols_mountpoints || lsblk -ipo $lsblk_cols_tran_type || lsblk -io $lsblk_cols_generic || lsblk -i || lsblk || echo "Cannot show disk layout (no 'lsblk' program)" ; } 1>> >( tee -a "$RUNTIME_LOGFILE" 1>&7 )
+}
+
 rear_workflow="rear $WORKFLOW"
 original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
 rear_shell_history="$( echo -e "cd $VAR_DIR/layout/\nvi $LAYOUT_CODE\nless $RUNTIME_LOGFILE" )"
@@ -136,17 +160,7 @@ while true ; do
         # before continuing the "rear recover" workflow with restoring the backup.
         # Show the recreated disk layout to the user on his terminal (and also in the log file):
         LogPrint "Recreated storage layout:"
-        # First try the command (which works on SLES12 and SLES15)
-        #   lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT
-        # but on older systems (like SLES11) that do not support all that lsblk things
-        # cf. https://github.com/rear/rear/pull/2626#issuecomment-856700823
-        # try the simpler command
-        #   lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT
-        # and as fallback try 'lsblk -i' and finally try plain 'lsblk'.
-        # In contrast to the lsblk commands in layout/save/GNU/Linux/100_create_layout_file.sh
-        # skip UUID and WWN because they are not scrictly needed to check if things look OK
-        # but those columns make the output lines too long for a normal terminal:
-        { lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT || lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT || lsblk -i || lsblk ; } 1>> >( tee -a "$RUNTIME_LOGFILE" 1>&7 ) 2>> >( tee -a "$RUNTIME_LOGFILE" 1>&8 )
+        lsblk_output
         # Run an inner while loop with a user dialog so that the user can inspect the recreated disk layout
         # and perhaps even manually fix the recreated disk layout if it is not what the user wants
         # (e.g. by using the Relax-and-Recover shell and returning back to this user dialog):
@@ -228,17 +242,7 @@ while true ; do
                 ;;
             (${choices[4]})
                 LogPrint "This is currently on the disks:"
-                # First try the command (which works on SLES12 and SLES15)
-                #   lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT
-                # but on older systems (like SLES11) that do not support all that lsblk things
-                # cf. https://github.com/rear/rear/pull/2626#issuecomment-856700823
-                # try the simpler command
-                #   lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT
-                # and as fallback try 'lsblk -i' and finally try plain 'lsblk'.
-                # In contrast to the lsblk commands in layout/save/GNU/Linux/100_create_layout_file.sh
-                # skip UUID and WWN because they are not scrictly needed to check if things look OK
-                # but those columns make the output lines too long for a normal terminal:
-                { lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT || lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT || lsblk -i || lsblk ; } 1>> >( tee -a "$RUNTIME_LOGFILE" 1>&7 ) 2>> >( tee -a "$RUNTIME_LOGFILE" 1>&8 )
+                lsblk_output
                 ;;
             (${choices[5]})
                 # Run 'less' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
@@ -261,3 +265,7 @@ while true ; do
     done
 # End of the outer while loop:
 done
+
+# Local functions must be 'unset' because bash does not support 'local function ...'
+# cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
+unset -f lsblk_output
