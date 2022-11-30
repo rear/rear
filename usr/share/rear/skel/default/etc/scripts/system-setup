@@ -42,9 +42,9 @@ function automatic_recovery() {
 
 # The 'sleep 1' is used as workaround to avoid whatever inexplicable actual reason
 # that at least on SLES12 some initial output lines of this script would get lost
-# (perhaps somewhere in systemd's nowhere land) which results that in partricular
+# (perhaps somewhere in systemd's nowhere land) which results that in particular
 # in Relax-and-Recover debug mode the user sits in front of an empty screen wondering
-# why nothing happens because in partricular the read prompt "Press ENTER ..." was lost,
+# why nothing happens because in particular the read prompt "Press ENTER ..." was lost,
 # cf. the 'if rear_debug' part below:
 sleep 1
 
