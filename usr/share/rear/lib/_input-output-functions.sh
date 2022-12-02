@@ -10,7 +10,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# The sequence $'...' is an special bash expansion with backslash-escaped characters
+# The sequence $'...' is a special bash expansion with backslash-escaped characters
 # see "Words of the form $'string' are treated specially" in "man bash"
 # that works at least down to bash 3.1 in SLES10:
 LF=$'\n'
