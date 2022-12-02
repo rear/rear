@@ -953,7 +953,7 @@ function cleanup_build_area_and_end_program () {
 #       Usually this is one of the choice values or one of the a choice numbers '1' '2' '3' ...
 #       that are shown to the user (the choice numbers are shown as in 'select' (i.e. starting at 1)
 #       but the default input can be anything else (in particular for free input without predefined choices)
-#       so that e.g. '-D 0' is not the first choice but lets the default input be '0' (regardles of choices).
+#       so that e.g. '-D 0' is not the first choice but lets the default input be '0' (regardless of choices).
 #   The option '-I user_input_ID' is required so that UserInput can work full automated (e.g. when ReaR runs unattended)
 #       via user-specified variables that get named USER_INPUT_user_input_ID (i.e. prefixed with 'USER_INPUT_')
 #       so that the user can (as he needs it) predefine user input values like
