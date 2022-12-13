@@ -27,7 +27,7 @@ jobs:
 
     steps:
       # Required to access files of this repository
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # Download Shellcheck and add it to the workflow path
       - name: Download Shellcheck
