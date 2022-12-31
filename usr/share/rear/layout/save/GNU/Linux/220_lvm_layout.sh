@@ -70,14 +70,20 @@ local lvs_exit_code
     # Get physical_device configuration.
     # Format: lvmdev <volume_group> <device> [<uuid>] [<size(bytes)>]
     header_printed="no"
-    # Example output of "lvm pvdisplay -c":
-    #   /dev/sda1:system:41940992:-1:8:8:-1:4096:5119:2:5117:7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7
+    # Set pvdisplay separator to '|' to prevent issues with a colon in the path under /dev/disk/by-path
+    # that contains a ':' in the SCSI slot name.
+    # Example output of "lvm pvdisplay -C --separator '|' --noheadings --nosuffix --units=b -o pv_name,vg_name,pv_size,pv_uuid"
+    # on a system where LVM is configured to show the /dev/disk/by-path device names instead of the usual
+    # /dev/sda etc. (by using a setting like
+    # filter = [ "r|/dev/disk/by-path/.*-usb-|", "a|/dev/disk/by-path/pci-.*-nvme-|", "a|/dev/disk/by-path/pci-.*-scsi-|", "a|/dev/disk/by-path/pci-.*-ata-|", "a|/dev/disk/by-path/pci-.*-sas-|", "a|loop|", "r|.*|" ]
+    # in /etc/lvm/lvm.conf):
+    #   /dev/disk/by-path/pci-0000:03:00.0-scsi-0:0:1:0-part1|system|107340627968|7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7
     # There are two leading blanks in the output (at least on SLES12-SP4 with LVM 2.02.180).
-    lvm pvdisplay -c | while read line ; do
+    lvm pvdisplay -C --separator '|' --noheadings --nosuffix --units=b -o pv_name,vg_name,pv_size,pv_uuid | while read line ; do
 
-        # With the above example pdev=/dev/sda1
+        # With the above example pdev=/dev/disk/by-path/pci-0000:03:00.0-scsi-0:0:1:0-part1
         # (the "echo $line" makes the leading blanks disappear)
-        pdev=$( echo $line | cut -d ":" -f "1" )
+        pdev=$( echo $line | cut -d "|" -f "1" )
 
         # Skip lines that are not describing physical devices
         # i.e. lines where pdev does not start with a leading / character:
@@ -91,11 +97,11 @@ local lvs_exit_code
         fi
 
         # With the above example vgrp=system
-        vgrp=$( echo $line | cut -d ":" -f "2" )
-        # With the above example size=41940992
-        size=$( echo $line | cut -d ":" -f "3" )
+        vgrp=$( echo $line | cut -d "|" -f "2" )
+        # With the above example size=107340627968
+        size=$( echo $line | cut -d "|" -f "3" )
         # With the above example uuid=7wwpcO-KmNN-qsTE-7sp7-JBJS-vBdC-Zyt1W7
-        uuid=$( echo $line | cut -d ":" -f "12" )
+        uuid=$( echo $line | cut -d "|" -f "4" )
 
         # Translate pdev through diskbyid_mappings file:
         pdev=$( get_device_mapping $pdev )
