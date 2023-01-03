@@ -51,7 +51,15 @@ if [ ! -d "$usb_boot_dir" ] ; then
     mkdir -p $v "$usb_boot_dir" || Error "Failed to create USB boot dir '$usb_boot_dir'"
 fi
 DebugPrint "Installing GRUB2 as USB bootloader on $RAW_USB_DEVICE"
-$grub_install_binary --boot-directory=$usb_boot_dir --recheck $RAW_USB_DEVICE || Error "Failed to install GRUB2 on $RAW_USB_DEVICE"
+if is_true $USING_UEFI_BOOTLOADER ; then
+    # TODO only call grub-install if legacy boot install is requested
+    # TODO use a switch case based on the target (uname -m) and possibly other info or make this a config option?
+    # Enforce legacy BIOS installation since efi was handled in 100_create_efiboot.sh
+    # see https://github.com/rear/rear/issues/2883
+    $grub_install_binary --target=i386-pc --boot-directory=$usb_boot_dir --recheck $RAW_USB_DEVICE || Error "Failed to install GRUB2 with target=i386-pc on $RAW_USB_DEVICE"
+else
+    $grub_install_binary --boot-directory=$usb_boot_dir --recheck $RAW_USB_DEVICE || Error "Failed to install GRUB2 on $RAW_USB_DEVICE"
+fi
 # grub[2]-install creates the $BUILD_DIR/outputfs/boot/grub[2] sub-directory that is needed
 # to create the GRUB2 config $BUILD_DIR/outputfs/boot/grub[2].cfg in the next step:
 DebugPrint "Creating GRUB2 config for legacy BIOS boot as USB bootloader"
