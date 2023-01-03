@@ -17,7 +17,9 @@ while read fs device mountpoint junk ; do
     done
 done < <(grep ^fs $LAYOUT_FILE)
 
-# Generate the list of mountpoints and devices to exclude from backup
+# Generate the list of mountpoints and devices to include in the backup
+# via backup/NETFS/default/400_create_include_exclude_files.sh
+# except those where the mountpoint is in excluded_mountpoints:
 while read fs device mountpoint junk ; do
     if IsInArray "$mountpoint" "${excluded_mountpoints[@]}" ; then
         continue
