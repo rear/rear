@@ -605,7 +605,7 @@ Lines that start with a # (number sign, hash, or pound sign) are comments.
 All other lines start with a component keyword.
 
 None of the component keywords is a leading substring of another component keyword
-(e.g. disk is not a leading substring of opaldisk) so that one could even get
+(e.g. disk is not a leading substring of raiddisk) so that one could even get
 only those lines that belong to a particular component via sloppy commands like
 ----------------------------------
 grep ^keyword /var/lib/rear/layout/disklayout.conf
