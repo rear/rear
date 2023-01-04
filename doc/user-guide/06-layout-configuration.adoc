@@ -588,16 +588,17 @@ by the user when he upgrades to a newer ReaR version.
 
 The syntax is of the form
 ----------------------------------
-keyword value1 value2 ...
+keyword value1 value2 value3 ...
 ----------------------------------
 where keyword denotes one kind of component (disk, partition, filesystem, ...)
-and keyword and the values are separated by single space characters
+and keyword and all the values are separated by single space characters
+(which means spaces in values are forbidden - there is neither quoting nor escaping)
 so that one can get the lines that belong to a particular component
-with a particular value1 via simple commands like
+with particular value1 and value2 via simple commands like
 ----------------------------------
-grep "^keyword value1 " /var/lib/rear/layout/disklayout.conf
+grep "^keyword value1 value2 " /var/lib/rear/layout/disklayout.conf
 ----------------------------------
-(provided there is a value2 after value1 so there is a space after value1).
+(provided there is a value3 after value2 so there is a space after value2).
 
 No whitespace is allowed at the beginning of lines in the disklayout.conf file.
 Lines that start with a # (number sign, hash, or pound sign) are comments.
