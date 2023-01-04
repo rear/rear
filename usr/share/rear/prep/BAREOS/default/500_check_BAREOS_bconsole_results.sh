@@ -8,11 +8,19 @@ if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
    return
 fi
 
+# Check bconsole version and use appropriate CLI switch
+BCONSOLE_VERSION=$(bconsole --version | awk -F '.' '{print $1}')
+if [ "$BCONSOLE_VERSION" -ge 22 ]; then
+	BCONSOLE_XC="--xc"
+else
+	BCONSOLE_XC="-xc"
+fi
+
 #
 # See if we can ping the director
 #
 # is the director server present? Fetch from /etc/bareos/bconsole.conf file
-BAREOS_DIRECTOR=$(bconsole -xc | grep -i address | awk '{ print $3 }')
+BAREOS_DIRECTOR=$(bconsole "$BCONSOLE_XC" | grep -i address | awk '{ print $3 }')
 [ "${BAREOS_DIRECTOR}" ]
 StopIfError "Director not configured in bconsole"
 
