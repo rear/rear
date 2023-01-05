@@ -30,12 +30,27 @@ LogPrint "Making $RAW_USB_DEVICE bootable with syslinux/extlinux"
 # so we search for " $BUILD_DIR/outputfs " in /proc/mounts to get the filesystem (third field) where the booting related files are:
 usb_filesystem=$( grep " $BUILD_DIR/outputfs " /proc/mounts | cut -d' ' -f3 | tail -1 )
 case "$usb_filesystem" in
-    # Installing extlinux should also be working for a mounted vfat boot partition
-    # see https://github.com/rear/rear/issues/2884
+    # Since SYSLINUX version 4.00 extlinux also works for a mounted vfat boot partition
     # because https://wiki.archlinux.org/title/syslinux reads (excerpts):
     #   For FAT, ext2/3/4, or btrfs boot partition use extlinux, where the device has been mounted:
     #     # extlinux --install ...
     #   Alternatively, for a FAT boot partition use syslinux, where the device is unmounted
+    # and see https://wiki.syslinux.org/wiki/index.php?title=EXTLINUX that reads (excerpt):
+    #   EXTLINUX supports:
+    #   [3.00+] ext2/3,
+    #   [4.00+] FAT12/16/32, ext2/3/4, Btrfs,
+    #   [4.06+] FAT12/16/32, NTFS, ext2/3/4, Btrfs,
+    #   [5.01+] FAT12/16/32, NTFS, ext2/3/4, Btrfs, XFS,
+    #   [6.03+] FAT12/16/32, NTFS, ext2/3/4, Btrfs, XFS, UFS/FFS
+    # and see https://wiki.syslinux.org/wiki/index.php?title=Syslinux_4_Changelog that reads (excerpts):
+    #   Changes in 4.00
+    #   ...
+    #   EXTLINUX is no longer a separate derivative;
+    #   extlinux and syslinux both install the same loader (ldlinux.sys);
+    #   for the Linux-based installers the extlinux binary is used for a mounted filesystem;
+    #   the syslinux binary for an unmounted filesystem.
+    # See https://github.com/rear/rear/issues/2884
+    # and https://github.com/rear/rear/pull/2904
     (ext?|vfat)
         if [[ "$FEATURE_SYSLINUX_EXTLINUX_INSTALL" ]] ; then
             extlinux -i "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" || Error "'extlinux -i $BUILD_DIR/outputfs/$SYSLINUX_PREFIX' failed"
