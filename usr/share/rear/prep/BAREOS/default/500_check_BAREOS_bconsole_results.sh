@@ -8,7 +8,14 @@ if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
    return
 fi
 
-# Check bconsole version and use appropriate CLI switch
+# Check bconsole version and use appropriate CLI switch:
+# Bareos 22 introduced a breaking change how its CLI tools (such as bconsole) parse the arguments.
+# Before it was "bconsole -xc" but since Bareos 22 it must be "bconsole --xc"
+# (otherwise it terminates with exit code 113 so "rear mkrescue" will fail).
+# Before "bconsole ...xc" is called, it now checks the bconsole version
+# and uses the new argument format '--xc' when version >= 22.
+# The backward compatible fallback is "bconsole -xc".
+# See https://github.com/rear/rear/issues/2900
 BCONSOLE_VERSION=$(bconsole --version | awk -F '.' '{print $1}')
 if [ "$BCONSOLE_VERSION" -ge 22 ]; then
 	BCONSOLE_XC="--xc"
