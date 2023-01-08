@@ -957,8 +957,8 @@ function handle_physdev () {
 tmpfile=$( mktemp )
 rc=
 
-# Use output of 'ip r' to keep interfaces with IP addresses and routing only
-for network_interface in $( ip r | awk '$2 == "dev" && $8 == "src" { print $3 }' | sort -u ) ; do
+# Use output of 'ls /sys/class/net/' to select all available interfaces
+for network_interface in $( ls /sys/class/net/ ) ; do
     if ! is_linked_to_physical $network_interface ; then
         LogPrint "Skipping '$network_interface': not bound to any physical interface."
         continue
