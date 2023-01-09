@@ -958,6 +958,8 @@ tmpfile=$( mktemp )
 rc=
 
 # Use output of 'ls /sys/class/net/' to select all available interfaces
+# in particular to make networking also work with IPv6 only NICs
+# see https://github.com/rear/rear/issues/2902
 for network_interface in $( ls /sys/class/net/ ) ; do
     if ! is_linked_to_physical $network_interface ; then
         LogPrint "Skipping '$network_interface': not bound to any physical interface."
