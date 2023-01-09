@@ -63,7 +63,7 @@ if is_true $USING_UEFI_BOOTLOADER ; then
     # TODO: use a switch case based on the target (uname -m) and possibly other info?
     # Enforce legacy BIOS installation since EFI was handled in 100_create_efiboot.sh
     # see https://github.com/rear/rear/issues/2883
-    # Set default GRUB2 target only if there is no '--target=' in USB_GRUB2_INSTALL_OPTIONS
+    # Set a GRUB2 target only if there is no '--target=' in USB_GRUB2_INSTALL_OPTIONS
     # (according to "man grub2-install" of grub2-2.06 on openSUSE Leap 15.4
        '--target=TARGET' is the only possible syntax to specify a GRUB2 target)
     # because a GRUB2 target could be already specified like '--target=i386-qemu'
