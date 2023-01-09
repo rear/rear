@@ -51,15 +51,27 @@ if [ ! -d "$usb_boot_dir" ] ; then
     mkdir -p $v "$usb_boot_dir" || Error "Failed to create USB boot dir '$usb_boot_dir'"
 fi
 DebugPrint "Installing GRUB2 as USB bootloader on $RAW_USB_DEVICE"
+# Set default USB_GRUB2_INSTALL_OPTIONS only if there are no USB_GRUB2_INSTALL_OPTIONS set:
+test "$USB_GRUB2_INSTALL_OPTIONS" || USB_GRUB2_INSTALL_OPTIONS=""
+# grub-install defaults to '--target=x86_64-efi' when the system is booted with EFI.
+# So it would fail to install a legacy BIOS (or 32bit) GRUB2 without setting the --target parameter.
+# ("man grub2-install" tells "TARGET platform [default=i386-pc]" but this is more like a fallback.)
+# So setting explicitly a legacy BIOS target is needed when the system is booted with EFI,
+# see https://github.com/rear/rear/issues/2883
 if is_true $USING_UEFI_BOOTLOADER ; then
-    # TODO only call grub-install if legacy boot install is requested
-    # TODO use a switch case based on the target (uname -m) and possibly other info or make this a config option?
-    # Enforce legacy BIOS installation since efi was handled in 100_create_efiboot.sh
+    # TODO: only call grub-install if legacy boot install is explicitly requested
+    # TODO: use a switch case based on the target (uname -m) and possibly other info?
+    # Enforce legacy BIOS installation since EFI was handled in 100_create_efiboot.sh
     # see https://github.com/rear/rear/issues/2883
-    $grub_install_binary --target=i386-pc --boot-directory=$usb_boot_dir --recheck $RAW_USB_DEVICE || Error "Failed to install GRUB2 with target=i386-pc on $RAW_USB_DEVICE"
-else
-    $grub_install_binary --boot-directory=$usb_boot_dir --recheck $RAW_USB_DEVICE || Error "Failed to install GRUB2 on $RAW_USB_DEVICE"
+    # Set default GRUB2 target only if there is no '--target=' in USB_GRUB2_INSTALL_OPTIONS
+    # (according to "man grub2-install" of grub2-2.06 on openSUSE Leap 15.4
+       '--target=TARGET' is the only possible syntax to specify a GRUB2 target)
+    # because a GRUB2 target could be already specified like '--target=i386-qemu'
+    # cf. https://github.com/rear/rear/pull/2905#discussion_r1062457353
+    [[ "$USB_GRUB2_INSTALL_OPTIONS" == *"--target="* ]] || USB_GRUB2_INSTALL_OPTIONS+=" --target=i386-pc"
 fi
+test "$USB_GRUB2_INSTALL_OPTIONS" && DebugPrint "Using USB_GRUB2_INSTALL_OPTIONS $USB_GRUB2_INSTALL_OPTIONS"
+$grub_install_binary $USB_GRUB2_INSTALL_OPTIONS --boot-directory=$usb_boot_dir --recheck $RAW_USB_DEVICE || Error "Failed to install GRUB2 on $RAW_USB_DEVICE"
 # grub[2]-install creates the $BUILD_DIR/outputfs/boot/grub[2] sub-directory that is needed
 # to create the GRUB2 config $BUILD_DIR/outputfs/boot/grub[2].cfg in the next step:
 DebugPrint "Creating GRUB2 config for legacy BIOS boot as USB bootloader"
