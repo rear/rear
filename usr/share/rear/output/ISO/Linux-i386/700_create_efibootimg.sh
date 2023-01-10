@@ -44,7 +44,11 @@ mount $v -o loop -t vfat $TMP_DIR/efiboot.img $TMP_DIR/efi_virt || Error "Failed
 # Copy files from staging directory into efiboot.img
 cp $v -r $TMP_DIR/mnt/. $TMP_DIR/efi_virt
 
-umount $v $TMP_DIR/efiboot.img
+# When umounting the EFI virtual image fails it is no real error
+# so only inform the user about the umounting failure so he can understand
+# why later cleanup_build_area_and_end_program() "Could not remove build area":
+# cf. https://github.com/rear/rear/issues/2908
+umount $v $TMP_DIR/efiboot.img || LogPrintError "Could not umount EFI virtual image $TMP_DIR/efiboot.img at $TMP_DIR/efi_virt"
 
 # Move efiboot.img into ISO directory:
 mv $v -f $TMP_DIR/efiboot.img $TMP_DIR/isofs/boot/efiboot.img || Error "Failed to move efiboot.img to isofs/boot/efiboot.img"
