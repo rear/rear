@@ -46,7 +46,9 @@ if test -f $TMP_DIR/backup.splitted ; then
             # Wait for the right labelled medium to appear:
             touch $waiting_for_medium_flag_file
             while ! test -f "$backup_file_path" ; do
-                umount "$BUILD_DIR/outputfs"
+                if mountpoint -q "$BUILD_DIR/outputfs" ; then
+                    umount "$BUILD_DIR/outputfs" || LogPrintError "Could not umount what is mounted at $BUILD_DIR/outputfs"
+                fi
                 cdrom_drive_names=$( cat /proc/sys/dev/cdrom/info | grep -i "drive name:" | awk '{print $3 " " $4}' )
                 ProgressInfo "Insert medium labelled $vol_name (containing $backup_file_name) in a CD-ROM drive ($cdrom_drive_names) ..."
                 sleep 3
