@@ -52,6 +52,8 @@ cp $v -r $TMP_DIR/mnt/. $TMP_DIR/efi_virt
 # like lazy or enforced umount which raise their own specific troubles:
 sleep 1
 if ! umount $v $TMP_DIR/efiboot.img ; then
+    Log "$TMP_DIR/efiboot.img at $TMP_DIR/efi_virt still in use by"
+    fuser -v -m $TMP_DIR/efi_virt 1>&2
     DebugPrint "Trying 'umount --lazy $TMP_DIR/efiboot.img' (normal umount failed)"
     # Do only plain 'umount --lazy' without additional '--force'
     # so we don't use the umount_mountpoint_lazy() function here:
