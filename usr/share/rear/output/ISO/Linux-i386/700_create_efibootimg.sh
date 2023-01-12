@@ -44,11 +44,25 @@ mount $v -o loop -t vfat $TMP_DIR/efiboot.img $TMP_DIR/efi_virt || Error "Failed
 # Copy files from staging directory into efiboot.img
 cp $v -r $TMP_DIR/mnt/. $TMP_DIR/efi_virt
 
-# When umounting the EFI virtual image fails it is no real error
-# so only inform the user about the umounting failure so he can understand
-# why later cleanup_build_area_and_end_program() "Could not remove build area":
-# cf. https://github.com/rear/rear/issues/2908
-umount $v $TMP_DIR/efiboot.img || LogPrintError "Could not umount EFI virtual image $TMP_DIR/efiboot.img at $TMP_DIR/efi_virt"
+# Umounting the EFI virtual image:
+# Normal umounting something directly after some I/O command (like 'cp' above)
+# may fail with "target is busy" (see "man umount" about 'busy' and 'lazy')
+# so we wait one second to increase likelihood that normal umount succeeds
+# because normal umount is preferred over more sophisticated attempts
+# like lazy or enforced umount which raise their own specific troubles:
+sleep 1
+if ! umount $v $TMP_DIR/efiboot.img ; then
+    DebugPrint "Trying 'umount --lazy $TMP_DIR/efiboot.img' (normal umount failed)"
+    # Do only plain 'umount --lazy' without additional '--force'
+    # so we don't use the umount_mountpoint_lazy() function here:
+    if ! umount $v --lazy $TMP_DIR/efiboot.img ; then
+        # When umounting the EFI virtual image fails it is no hard error so only inform the user
+        # so he can understand why later cleanup_build_area_and_end_program() may show
+        # "Could not remove build area" (when lazy umount could not clean up things until then)
+        # cf. https://github.com/rear/rear/issues/2908
+        LogPrintError "Could not umount EFI virtual image $TMP_DIR/efiboot.img at $TMP_DIR/efi_virt"
+    fi
+fi
 
 # Move efiboot.img into ISO directory:
 mv $v -f $TMP_DIR/efiboot.img $TMP_DIR/isofs/boot/efiboot.img || Error "Failed to move efiboot.img to isofs/boot/efiboot.img"
