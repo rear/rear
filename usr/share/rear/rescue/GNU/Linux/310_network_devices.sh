@@ -117,6 +117,8 @@ cat - <<EOT >>$network_devices_setup_script
 # - they are UP
 # - they have an IP address
 # - they are somehow linked to a physical device
+# The idea behind is to select only interfaces backed on physical device and
+# which would be useful when starting the recovery (i.e. to fetch the backup).
 # For details see the rescue/GNU/Linux/310_network_devices.sh script.
 EOT
 
