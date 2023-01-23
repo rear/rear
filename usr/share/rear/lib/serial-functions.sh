@@ -12,7 +12,7 @@ function get_serial_console_devices () {
     # cf. "Beware of the emptiness" in https://github.com/rear/rear/wiki/Coding-Style
     # see https://github.com/rear/rear/issues/2914#issuecomment-1396659184
     # and return 0 because it is no error when no serial device node exists
-    test "$( echo -n /dev/ttyQS[0-9]* /dev/hvsi[0-9]* )" || return 0
+    test "$( echo -n /dev/ttyS[0-9]* /dev/hvsi[0-9]* )" || return 0
     # Use plain 'sort' which results /dev/ttyS0 /dev/ttyS1 /dev/ttyS10 ... /dev/ttyS19 /dev/ttyS2 /dev/ttyS20 ...
     # to get at least /dev/ttyS0 and /dev/ttyS1 before the other /dev/ttyS* devices because
     # we cannot use "sort -V" which would result /dev/ttyS0 /dev/ttyS1 ... /dev/ttyS9 /dev/ttyS10 ...
