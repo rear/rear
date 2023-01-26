@@ -57,7 +57,16 @@ if ! umount $v $TMP_DIR/efiboot.img ; then
     if ! umount $v $TMP_DIR/efiboot.img ; then
         Log "Again failed to umount $what_is_mounted"
         Log "$what_is_mounted is still in use by ('kernel mount' is always there)"
-        fuser -v -m $TMP_DIR/efi_virt 1>&2
+        # The -M option avoids that fuser may show all processes using the '/' filesystem
+        # ( $TMP_DIR is $BUILD_DIR/tmp which is /var/tmp/rear.XXXXXXXXXXXXXXX/tmp/ )
+        # when $TMP_DIR/efiboot.img got umounted just before fuser starts, see "man fuser":
+        #   The mount -m option will match any file within the same device as the specified file,
+        #   use the -M option as well if you mean to specify only the mount point.
+        # So when $TMP_DIR/efiboot.img is umounted 'fuser -v -M -m $TMP_DIR/efi_virt' only shows
+        #   "Specified filename /var/tmp/rear.XXXXXXXXXXXXXXX/tmp/efi_virt is not a mountpoint"
+        # instead of all processes using '/' (or /var/ or /var/tmp/ if one is a mountpoint)
+        # which would be misleading information that may even look scaring and cause false alarm:
+        fuser -v -M -m $TMP_DIR/efi_virt 1>&2
         DebugPrint "Trying 'umount --lazy $TMP_DIR/efiboot.img' (normal umount failed)"
         # Do only plain 'umount --lazy' without additional '--force'
         # so we don't use the umount_mountpoint_lazy() function here:
