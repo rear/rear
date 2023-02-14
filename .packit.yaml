@@ -8,7 +8,7 @@ jobs:
   - opensuse-leap-15.3-x86_64
   - opensuse-tumbleweed-x86_64
   trigger: pull_request
-- job: production_build
+- job: upstream_koji_build
   scratch: True
   targets:
   - fedora-latest-stable
