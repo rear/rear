@@ -501,7 +501,9 @@ fi
                     test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
                     if test -n "$btrfs_subvolume_path" ; then
                         # Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
-                        PROGS+=( chattr lsattr )
+                        # See conf/examples/SLE12-SP2-btrfs-example.conf and https://github.com/rear/rear/issues/2927
+                        REQUIRED_PROGS+=( chattr )
+                        PROGS+=( lsattr )
                         echo "btrfsnocopyonwrite $btrfs_subvolume_path"
                     else
                         echo "# $subvolume_mountpoint has the 'no copy on write' attribute set but $findmnt_command does not show its btrfs subvolume path"
