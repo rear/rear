@@ -66,11 +66,11 @@
 # Avoid 'set -e -u' exit e.g. because of "AUTORESIZE_PARTITIONS[@]: unbound variable"
 # note that assigning an empty array like AUTORESIZE_PARTITIONS=() does not help
 # against array elements like AUTORESIZE_PARTITIONS[0] are unbound variables:
-${AUTORESIZE_PARTITIONS:=}
-${AUTORESIZE_EXCLUDE_PARTITIONS:=}
+: ${AUTORESIZE_PARTITIONS:=}
+: ${AUTORESIZE_EXCLUDE_PARTITIONS:=}
 # Set fallbacks (same as default.conf) if mandatory numbers are not set (the user may set them empty):
-${AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE:=2}
-${AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE:=10}
+: ${AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE:=2}
+: ${AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE:=10}
 
 # Skip if not in migration mode:
 is_true "$MIGRATION_MODE" || return 0
