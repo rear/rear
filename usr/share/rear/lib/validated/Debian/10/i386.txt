@@ -1,0 +1,6 @@
+Version:     Relax-and-Recover 2.4 / Git
+Validation:  Debian/10/i386
+Submitted:   andrej.rehak@outlook.com
+Date:        2021-04-15
+Features:    ISO, TAR
+Comment:     It would be great to have rear for raspberri pi as well.

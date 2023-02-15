@@ -1,0 +1,5 @@
+Version:    Relax-and-Recover 2.6 / Git
+Validation: Ubuntu/22.10/i386
+Date:       2022-11-21
+Features:   NETFS, USB
+Comment:    had to search github to find out i had to increase USB_UEFI_PART_SIZE before backup could work

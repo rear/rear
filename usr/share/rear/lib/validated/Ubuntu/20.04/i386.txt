@@ -1,0 +1,5 @@
+Version:    Relax-and-Recover 2.5 / Git
+Validation: Ubuntu/20.04/i386
+Submitted:  bouabida@gmx.net
+Date:       2021-04-06
+Features:   USB

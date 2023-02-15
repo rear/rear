@@ -1,0 +1,6 @@
+Version:     Relax-and-Recover 2.6 / 2020-06-17
+Validation:  RedHatEnterpriseServer/8/i386
+Submitted:   Scott Marshall <esmarshall@esmarshall.com>, N/A, Australia
+Date:        2022-07-20
+Features:    LVM, NETFS, ISO, EFI, /tmp mounted as tmpfs
+Comment:     Needed to install genisoimage, grub2-efi-x64-modules, nfs-utils manually; Minimalist install of Rocky Linux 8

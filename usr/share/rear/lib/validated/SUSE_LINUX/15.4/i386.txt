@@ -1,0 +1,13 @@
+Version:    Relax-and-Recover 2.7 / 2022-07-13
+Validation: SUSE_LINUX/15.4/i386
+Submitted:  Adrian Antal <adrian.antal@itlr.uni-stuttgart.de, ITLR/University. Germany
+Date:       2023-02-15
+Features:   NETFS, ISO, USB
+Comment:    no main modification
+
+            Dear Madam/Sir,
+
+            Thank you very much your great ReaR tool, it saved more times our Server issues, because we could easily recover our Servers.
+
+            Best
+            Adrian Antal
