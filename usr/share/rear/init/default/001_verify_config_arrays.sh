@@ -6,14 +6,14 @@ array_variables=($(
 ))
 
 
-for config in "$CONFIG_DIR"/{site,local,rescue}.conf; do
+for config in "$CONFIG_DIR"/{site,local,rescue}.conf "${CONFIG_APPEND_FILES_PATHS[@]}"; do
     test -r "$config" || continue
     for var in "${array_variables[@]}"; do
         mapfile -t var_assignments < <(
             sed -n -E -e "/$var\+?=/p" "$config"
             )
         for line in "${var_assignments[@]}"; do
-            [[ "$line" == *\(* ]] || Error "Missing array assignment like +=(...) for $var in $config:$LF$line$LF"
+            [[ "$line" == *$var?(+)=\(* ]] || Error "Missing array assignment like +=(...) for $var in $config:$LF$line$LF"
         done
     done
 done

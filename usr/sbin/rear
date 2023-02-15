@@ -620,6 +620,7 @@ for config in site local rescue ; do
     fi
 done
 # Finally source additional configuration files if specified on the command line:
+CONFIG_APPEND_FILES_PATHS=()
 if test "$CONFIG_APPEND_FILES" ; then
     # Treat missing additional config files (almost) same as other missing config files
     # which means that missing additional config files do not let ReaR abort with an Error
@@ -659,14 +660,17 @@ if test "$CONFIG_APPEND_FILES" ; then
         if test -r "$config_append_file_path" ; then
             LogPrint "Sourcing additional configuration file '$config_append_file_path'"
             Source "$config_append_file_path" || Error "Failed to Source $config_append_file_path"
+            CONFIG_APPEND_FILES_PATHS+=( "$config_append_file_path" )
         elif test -r "$config_append_file_path.conf" ; then
             LogPrint "Sourcing additional configuration file '$config_append_file_path.conf'"
             Source "$config_append_file_path.conf" || Error "Failed to Source $config_append_file_path.conf"
+            CONFIG_APPEND_FILES_PATHS+=( "$config_append_file_path.conf" )
         else
             LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
         fi
     done
 fi
+readonly CONFIG_APPEND_FILES_PATHS # nothing else should be able to add more configs
 
 # Now SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR and KERNEL_VERSION should be set to a fixed value:
 readonly SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR KERNEL_VERSION
