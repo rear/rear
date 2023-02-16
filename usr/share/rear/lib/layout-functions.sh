@@ -87,6 +87,12 @@ abort_recreate() {
     restore_original_file "$LAYOUT_FILE"
 }
 
+abort_dasd_format() {
+    Log "Error detected during DASD formatting."
+    Log "Restoring saved original $DASD_FORMAT_FILE"
+    restore_original_file "$DASD_FORMAT_FILE"
+}
+
 # Test and log if a component $1 (type $2) needs to be recreated.
 create_component() {
     local device="$1"
