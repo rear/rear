@@ -734,6 +734,18 @@ get_block_size() {
     fi
 }
 
+# Get the number of cylinders of a DASD.
+# The number of cylinders has the advantage of being fixed - size depends on formatting
+# and number of cylinders is valid even for unformatted DASDs, size is not.
+get_dasd_cylinders() {
+    local disk_name="${1##*/}" # /some/path/dasda -> dasda
+    local dasd_cyls
+
+    dasd_cyls=$(dasdview -i /dev/$disk_name | grep cylinders | cut -d ':' -f2 | awk '{print $4}')
+    ### Make sure we always return a number
+    echo $(( dasd_cyls ))
+}
+
 # Get the UUID of a device.
 # Device is something like /dev/sda1.
 blkid_uuid_of_device() {
