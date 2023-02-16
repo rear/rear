@@ -1,8 +1,13 @@
-# ensure that all array variables defined in default.conf are still array variables after
-# reading the user configuration, fixes common user config error: https://github.com/rear/rear/issues/2930
+# ensure that all array variables have been assigned as Bash arrays in user provided configuration
+# fixes common user config errors: https://github.com/rear/rear/issues/2930
+#
+# Note: Bash variables retain the array attribute even if name=value syntax is used to assign
+#       a new value, as this assignment simply changes the first member of the array.
+#       Therefore it is enough to simply take all the currently defined array variables and check
+#       for any wrong assignment in the user configuration
 
-array_variables=($(
-    sed -n -e '/^[A-Z_]\+=(/s/=.*//p' "$SHARE_DIR"/conf/default.conf
+local var_assignments array_variables=($(
+    declare -p | sed -n -E -e '/^declare -a/s/declare [-arxlu]+ ([A-Za-z0-9_-]+)=.*/\1/p'
 ))
 
 
@@ -13,10 +18,7 @@ for config in "$CONFIG_DIR"/{site,local,rescue}.conf "${CONFIG_APPEND_FILES_PATH
             sed -n -E -e "/$var\+?=/p" "$config"
             )
         for line in "${var_assignments[@]}"; do
-            [[ "$line" == *$var?(+)=\(* ]] || Error "Missing array assignment like +=(...) for $var in $config:$LF$line$LF"
+            [[ "$line" == *$var?(+)=\(* ]] || Error "Syntax error: Variable $var not assigned as Bash array in $config:$LF$line$LF"
         done
     done
 done
-
-
-unset array_variables
