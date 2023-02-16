@@ -1,12 +1,10 @@
-# find isolinux.bin or abort if it cannot be found
+# Find isolinux.bin or abort if it cannot be found
 
-# find isolinux.bin
-if [[ ! -s "$ISO_ISOLINUX_BIN" ]]; then
-    ISO_ISOLINUX_BIN=$(find_syslinux_file isolinux.bin)
-fi
+# Try to find isolinux.bin (in particular when ISO_ISOLINUX_BIN is empty by default):
+test -s "$ISO_ISOLINUX_BIN" || ISO_ISOLINUX_BIN=$( find_syslinux_file isolinux.bin )
 
-[[ -s "$ISO_ISOLINUX_BIN" ]]
-StopIfError "Could not find 'isolinux.bin'. Maybe you have to set ISO_ISOLINUX_BIN [$ISO_ISOLINUX_BIN] or install the syslinux package ?"
+# See https://github.com/rear/rear/issues/2921
+test -s "$ISO_ISOLINUX_BIN" || Error "Could not find 'isolinux.bin' (ISO_ISOLINUX_BIN='$ISO_ISOLINUX_BIN')"
 
-# Define the syslinux directory for later usage
+# Define the syslinux directory for later usage:
 SYSLINUX_DIR=$(dirname $ISO_ISOLINUX_BIN)
