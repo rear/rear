@@ -3,6 +3,7 @@
 /dist/
 build-stamp
 /var
+/etc/rear/os.conf
 /etc/rear/site.conf
 .DS_Store
 .vscode
