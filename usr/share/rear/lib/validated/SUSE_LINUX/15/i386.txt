@@ -1,0 +1,15 @@
+Version:    Relax-and-Recover 2.6 / 2020-06-17
+Validation: SUSE_LINUX/15/i386
+Submitted:  Thomas Hauenstein <th69xx@t-online.de>, Germany
+Date:       2021-03-15
+Features:   tar backup to external USB harddisk
+Comment:    We had to manually include btrfs subvolumes in local.conf with 
+            BACKUP_PROG_INCLUDE; Rest of backup process worked out of the box; 
+            Restore process: The default target disk proposed by rear recover 
+            was the boot disk (same size as system disk that was archived) with 
+            the backup file and rescue system on it. Without interfering 
+            manually the rescue media is destroyed (We tested once and it 
+            was...); Second attempt the target disk (empty, new ssd with 
+            different size as origninal disk) was chosen manually during 
+            the restore process and it finished with a bootable system without 
+            any further problems;

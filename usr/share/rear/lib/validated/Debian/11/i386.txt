@@ -1,0 +1,13 @@
+Version:     Relax-and-Recover 2.6 / Git
+Validation:  Debian/11/i386
+Submitted:   space-look@gmx.net
+Date:        2022-01-14
+Features:    NETFS, USB
+Comment:     Needed to install package psmisc manually
+ 
+ 
+Hi Folks,
+Many thanks for this unique Product. I learned the hard way, that I need to use this!
+Best Regards from Germany,
+ 
+Eckart

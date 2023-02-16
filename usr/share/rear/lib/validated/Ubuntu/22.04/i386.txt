@@ -1,0 +1,8 @@
+Version:    Relax-and-Recover 2.6 / Git
+Validation: Ubuntu/22.04/i386
+Submitted:  Lee Blackwell <lee@leeblackwell.com>
+Date:       2022-07-19
+Features:   ISO, NETFS
+Comment:    Worked OOTB
+
+            Thanks for your work & continued effort; much appreciated.

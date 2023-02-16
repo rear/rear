@@ -1,0 +1,8 @@
+Version:    Relax-and-Recover 2.6 / Git
+Validation: SUSE_LINUX/15.3/i386
+Submitted:  paul revord <prsmokin@msn.com>, Retired, USA
+Date:       2022-04-07
+Features:   LVM, RBME, USB
+Comment:    "BACKUP=RBME"
+
+            Thanks for a great product!
