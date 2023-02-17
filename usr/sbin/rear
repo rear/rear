@@ -666,7 +666,7 @@ if test "$CONFIG_APPEND_FILES" ; then
             Source "$config_append_file_path.conf" || Error "Failed to Source $config_append_file_path.conf"
             CONFIG_APPEND_FILES_PATHS+=( "$config_append_file_path.conf" )
         else
-            LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be read."
+            LogPrintError "There is '-C $config_append_file' but neither '$config_append_file_path' nor '$config_append_file_path.conf' can be sourced."
         fi
     done
 fi
