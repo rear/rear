@@ -1,10 +1,15 @@
+# adapted from 100_confirm_layout_code.sh
 #
-# In migration mode let the user confirm the
+# Let the user confirm the
 # DASD format code (dasdformat.sh) script.
 #
 
-# Skip if not in migration mode:
-is_true "$MIGRATION_MODE" || return 0
+# Show the user confirmation dialog in any case but when not in migration mode
+# automatically proceed with less timeout USER_INPUT_INTERRUPT_TIMEOUT (by default 10 seconds)
+# to avoid longer delays (USER_INPUT_TIMEOUT is by default 300 seconds) in case of unattended recovery:
+# (taken from 120_confirm_wipedisk_disks.sh)
+local timeout="$USER_INPUT_TIMEOUT"
+is_true "$MIGRATION_MODE" || timeout="$USER_INPUT_INTERRUPT_TIMEOUT"
 
 rear_workflow="rear $WORKFLOW"
 original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
@@ -23,7 +28,7 @@ wilful_input=""
 # assume choices[0] 'Confirm DASD format' was actually meant:
 is_true "$USER_INPUT_DASD_FORMAT_CODE_CONFIRMATION" && USER_INPUT_DASD_FORMAT_CODE_CONFIRMATION="${choices[0]}"
 while true ; do
-    choice="$( UserInput -I DASD_FORMAT_CODE_CONFIRMATION -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
+    choice="$( UserInput -I DASD_FORMAT_CODE_CONFIRMATION -t "$timeout" -p "$prompt" -D "${choices[0]}" "${choices[@]}" )" && wilful_input="yes" || wilful_input="no"
     case "$choice" in
         (${choices[0]})
             # Confirm DASD format file and continue:
