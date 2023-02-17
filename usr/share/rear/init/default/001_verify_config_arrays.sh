@@ -6,13 +6,15 @@
 #       Therefore it is enough to simply take all the currently defined array variables and check
 #       for any wrong assignment in the user configuration
 
-local var_assignments array_variables
+# Skip this test when 'mapfile' (a bash 4.x builtin) is not available:
+# sed from such old systems also don't support -E
+type -a mapfile 1>/dev/null || return 0
+
+local -a var_assignments array_variables
 
 mapfile -t array_variables < <(
     declare -p | sed -n -E -e '/^declare -a/s/declare [-arxlu]+ ([A-Za-z0-9_-]+)=.*/\1/p'
 )
-
-declare -p array_variables
 
 for config in "$CONFIG_DIR"/{site,local,rescue}.conf "${CONFIG_APPEND_FILES_PATHS[@]}"; do
     test -r "$config" || continue
