@@ -60,7 +60,7 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
     alternative config directory; instead of /etc/rear
 
  -C CONFIG::
-    additional config file; absolute path or relative to config directory
+    additional config files; absolute path or relative to config directory
 
 -d::
     *debug mode* (run many commands verbosely with debug messages in log file - also sets -v)
@@ -258,16 +258,16 @@ and their arguments as they are executed.
 
 *auto_recover* or *automatic*::
 Launch 'rear recover' automatically (without automated reboot).
-Together with 'debug' it runs 'rear recover' in debug mode.
+Together with 'debug' it runs 'rear recover' in debugscript mode.
 
 *unattended*::
 Launch 'rear recover' automatically as with 'auto_recover'
 plus automated reboot after successful 'rear recover'.
 
 *ip= nm= netdev= gw=*::
-If IP address plus optionally netmask (default 255.255.255.0),
-network device (default eth0), and a default gateway are specified
-only that single network device is set up. Example:
+When IP address plus optionally netmask (default 255.255.255.0),
+network device (default eth0), and default gateway are specified,
+then only that single network device is set up. Example:
 ----
 ip=192.168.100.2 nm=255.255.255.0 netdev=eth0 gw=192.168.100.1
 ----
