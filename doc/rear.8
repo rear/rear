@@ -81,7 +81,7 @@ alternative config directory; instead of /etc/rear
 .sp
 \-C CONFIG
 .RS 4
-additional config file; absolute path or relative to config directory
+additional config files; absolute path or relative to config directory
 .RE
 .sp
 \-d
@@ -409,7 +409,7 @@ and their arguments as they are executed.
 \fBauto_recover\fP or \fBautomatic\fP
 .RS 4
 Launch \(aqrear recover\(aq automatically (without automated reboot).
-Together with \(aqdebug\(aq it runs \(aqrear recover\(aq in debug mode.
+Together with \(aqdebug\(aq it runs \(aqrear recover\(aq in debugscript mode.
 .RE
 .sp
 \fBunattended\fP
@@ -420,9 +420,9 @@ plus automated reboot after successful \(aqrear recover\(aq.
 .sp
 \fBip= nm= netdev= gw=\fP
 .RS 4
-If IP address plus optionally netmask (default 255.255.255.0),
-network device (default eth0), and a default gateway are specified
-only that single network device is set up. Example:
+When IP address plus optionally netmask (default 255.255.255.0),
+network device (default eth0), and default gateway are specified,
+then only that single network device is set up. Example:
 .RE
 .sp
 .if n .RS 4
