@@ -27,6 +27,13 @@ EOF
 
 while read component disk size label junk; do
     if [ "$label" == dasd ]; then
+        # Ignore excluded components.
+        # Normally they are removed in 520_exclude_components.sh,
+        # but we run before it, so we must skip them here as well.
+        if IsInArray "$disk" "${EXCLUDE_RECREATE[@]}" ; then
+            Log "Excluding $disk from DASD reformatting."
+            continue
+        fi
         # dasd has more fields - junk is not junk anymore
         read blocksize layout dasdtype dasdcyls junk2 <<<$junk
         dasd_format_code "$disk" "$size" "$blocksize" "$layout" "$dasdtype" "$dasdcyls" >> "$DASD_FORMAT_CODE" || \
