@@ -1,5 +1,5 @@
 # qlist jobhistory -tf commvtoken -c $HOSTNAME -js Completed -jt Backup -dispJobTime
-# Ask for point in time to recover with Commvault (BACKUP=COMMVAULT).
+# Ask for point in time to recover with Commvault (BACKUP=GALAXY11).
 # One point in time is used for all filespaces.
 
 UserOutput ""
@@ -15,12 +15,12 @@ local commvault_restore_pit_time=""
 # Let the user enter date and time again and again until the input is valid
 # or the user pressed only ENTER to restore the most recent available backup:
 while true ; do
-    answer=$( UserInput -I COMMVAULT_RESTORE_PIT -r -p "Enter date/time (MM/DD/YYYY HH:mm:ss) or press ENTER" )
+    answer=$( UserInput -I GALAXY11_RESTORE_PIT -r -p "Enter date/time (MM/DD/YYYY HH:mm:ss) or press ENTER" )
     # When the user pressed only ENTER leave this script to restore the most recent available backup:
     if test -z "$answer"; then
         UserOutput "Skipping Commvault Point-In-Time restore, will restore most recent backup."
-        COMMVAULT_PIT=""
-        COMMVAULT_ZEIT=""
+        GALAXY11_PIT=""
+        GALAXY11_ZEIT=""
         return
     fi
     # Try to do Commvault Point-In-Time restore provided the user input is valid date and time:
@@ -36,8 +36,8 @@ while true ; do
 done
 
 # Do Commvault Point-In-Time restore:
-COMMVAULT_ZEIT="$answer"
-COMMVAULT_PIT="QR_RECOVER_POINT_IN_TIME"
+GALAXY11_ZEIT="$answer"
+GALAXY11_PIT="QR_RECOVER_POINT_IN_TIME"
 
-UserOutput "Doing Commvault Point-In-Time restore with date and time $COMMVAULT_ZEIT"
+UserOutput "Doing Commvault Point-In-Time restore with date and time $GALAXY11_ZEIT"
 

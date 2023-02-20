@@ -322,6 +322,9 @@ Use CommVault Galaxy 7 to restore the data.
 BACKUP=*GALAXY10*::
 Use CommVault Galaxy 10 (or Simpana 10) to restore the data.
 
+BACKUP=*GALAXY11*::
+Use CommVault Galaxy 11 (or Simpana 11) to restore the data.
+
 BACKUP=*NBU*::
 Use Symantec NetBackup to restore the data.
 

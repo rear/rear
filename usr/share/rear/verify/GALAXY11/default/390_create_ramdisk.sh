@@ -8,23 +8,23 @@
 #
 
 # we want to do this only once ...
-if ! test -d /ramdisk ; then
-	mkdir /ramdisk
-	mount -o size=1500m -t tmpfs none /ramdisk
+if test -d /ramdisk || return 0
 
-	# stop logfile
-	exec 2>&1
+mkdir /ramdisk
+mount -o size=1500m -t tmpfs none /ramdisk
 
-	pushd / >/dev/null
-	for dir in opt var tmp ; do
-		mv "$dir" /ramdisk
-		mkdir "$dir"
-		mount --bind /ramdisk/"$dir" /"$dir"
-	done
-	chmod 1777 /tmp
-	popd >/dev/null
+# stop logfile
+exec 2>&1
+
+pushd / >/dev/null
+for dir in opt var tmp ; do
+	mv "$dir" /ramdisk
+	mkdir "$dir"
+	mount --bind /ramdisk/"$dir" /"$dir"
+done
+chmod 1777 /tmp
+popd >/dev/null
 
 
-	# start logfile
-	exec 2>>"$RUNTIME_LOGFILE"
-fi
+# start logfile
+exec 2>>"$RUNTIME_LOGFILE"
