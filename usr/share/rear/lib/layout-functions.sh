@@ -752,6 +752,34 @@ get_dasd_cylinders() {
     echo $(( dasd_cyls ))
 }
 
+# Sometimes we know what the new device for the original device should be in a more reliable way
+# than by looking at disk sizes. THis information is called "mapping hints". Let's pass them
+# to the mapping code using the DISK_MAPPING_HINTS array. Each element of the array has the form
+# "/dev/source /dev/target" (space-separated).
+
+# Output the mapping hint for the original device.
+function get_mapping_hint () {
+    local device="$1"
+    local hint mapping_hint_source mapping_hint_target
+
+    for hint in "${DISK_MAPPING_HINTS[@]}"; do
+        mapping_hint_source=${hint%% *}
+        mapping_hint_target=${hint##* }
+        if [ "${device}" == "${mapping_hint_source}" ] ; then
+            echo "$mapping_hint_target"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Determine if there is a mapping hint for the original device.
+function has_mapping_hint () {
+    local device="$1"
+
+    get_mapping_hint "$device" > /dev/null
+}
+
 # Get the UUID of a device.
 # Device is something like /dev/sda1.
 blkid_uuid_of_device() {

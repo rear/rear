@@ -121,7 +121,14 @@ while read keyword orig_device orig_size junk ; do
     # considered again during the subsequent "same size" tests:
     excluded_target_device_names=()
     # First, try to find if there is a current disk with same name and same size as the original:
-    sysfs_device_name="$( get_sysfs_name "$orig_device" )"
+    # (possibly influenced by mapping hints if known)
+    if has_mapping_hint "$orig_device" ; then
+        candidate_target_device_name="$( get_mapping_hint "$orig_device" )"
+        Debug "Using mapping hint ${candidate_target_device_name} as candidate for $orig_device mapping"
+    else
+        candidate_target_device_name="$orig_device"
+    fi
+    sysfs_device_name="$( get_sysfs_name "$candidate_target_device_name" )"
     current_device="/sys/block/$sysfs_device_name"
     if test -e $current_device ; then
         current_size=$( get_disk_size $sysfs_device_name )
@@ -129,23 +136,28 @@ while read keyword orig_device orig_size junk ; do
         # its matching actual block device (e.g. /dev/sda) must be determined:
         preferred_target_device_name="$( get_device_name $current_device )"
         # Use the current one if it is of same size as the old one:
-        if test "$orig_size" -eq "$current_size" ; then
+        if has_mapping_hint "$orig_device" || test "$orig_size" -eq "$current_size" ; then
             # Ensure the target device is really a block device on the replacement hardware.
             # Here the target device has same name as the original device which was a block device on the original hardware
             # but it might perhaps happen that this device name is not a block device on the replacement hardware:
             if test -b "$preferred_target_device_name" ; then
+                if has_mapping_hint "$orig_device" ; then
+                    mapping_reason="determined by mapping hint"
+                else
+                    mapping_reason="same name and same size $current_size"
+                fi
                 # Do not map if the current one is already used as target in the mapping file:
                 if is_mapping_target "$preferred_target_device_name" ; then
-                    DebugPrint "Cannot use $preferred_target_device_name (same name and same size) for recreating $orig_device ($preferred_target_device_name already exists as target in $MAPPING_FILE)"
+                    DebugPrint "Cannot use $preferred_target_device_name ($mapping_reason) for recreating $orig_device ($preferred_target_device_name already exists as target in $MAPPING_FILE)"
                     excluded_target_device_names+=( "$preferred_target_device_name" )
                 else
                     # Ensure the determined target device is not write-protected:
                     if is_write_protected "$preferred_target_device_name" ; then
-                        DebugPrint "Cannot use $preferred_target_device_name (same name and same size) for recreating $orig_device ($preferred_target_device_name is write-protected)"
+                        DebugPrint "Cannot use $preferred_target_device_name ($mapping_reason) for recreating $orig_device ($preferred_target_device_name is write-protected)"
                         excluded_target_device_names+=( "$preferred_target_device_name" )
                     else
                         add_mapping "$orig_device" "$preferred_target_device_name"
-                        LogPrint "Using $preferred_target_device_name (same name and same size $current_size) for recreating $orig_device"
+                        LogPrint "Using $preferred_target_device_name ($mapping_reason) for recreating $orig_device"
                         # Continue with next original device because the current one is now mapped:
                         continue
                     fi

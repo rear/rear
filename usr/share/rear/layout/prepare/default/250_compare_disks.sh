@@ -58,7 +58,9 @@ local more_than_one_same_orig_size=''
 while read disk dev size junk ; do
     old_disks_and_sizes+=( "$dev $size" )
     if IsInArray "$size" "${original_system_used_disk_sizes[@]}" ; then
-        more_than_one_same_orig_size='true'
+        if ! has_mapping_hint "$dev" ; then
+            more_than_one_same_orig_size='true'
+        fi
     else
         original_system_used_disk_sizes+=( "$size" )
     fi
@@ -143,8 +145,8 @@ fi
 # No further disk comparisons are needed when MIGRATION_MODE is already set true above:
 if ! is_true "$MIGRATION_MODE" ; then
     # Compare original disks and their possible target disk one by one:
-    while read disk dev size junk ; do
-        dev=$( get_sysfs_name $dev )
+    while read disk devnode size junk ; do
+        dev=$( get_sysfs_name $devnode )
         Log "Comparing $dev"
         if test -e "/sys/block/$dev" ; then
             Log "Device /sys/block/$dev exists"
@@ -155,6 +157,14 @@ if ! is_true "$MIGRATION_MODE" ; then
                     MIGRATION_MODE='true'
                 else
                     LogPrint "Device $dev has expected (same) size $size bytes (will be used for '$WORKFLOW')"
+                fi
+            elif test "$( get_mapping_hint $devnode )" == "$devnode" ; then
+                Debug "Found identical mapping hint ${devnode} -> ${devnode}"
+                if is_write_protected "/sys/block/$dev"; then
+                    LogPrint "Device $dev is designated as write-protected (needs manual configuration)"
+                    MIGRATION_MODE='true'
+                else
+                    LogPrint "Device $dev found according to mapping hints (will be used for '$WORKFLOW')"
                 fi
             else
                 LogPrint "Device $dev has size $newsize bytes but $size bytes is expected (needs manual configuration)"
