@@ -4,6 +4,12 @@
 # again and again until it succeeds or the user aborts.
 #
 
+# Skip DASD formatting when the user has explicitly specified to not format them
+# or when the user selected "Confirm what is currently on the DASDs, skip formatting them"
+# in 370_confirm_dasd_format_code.sh
+
+is_false "$FORMAT_DASDS" && return 0
+
 function lsdasd_output () {
     lsdasd 1>> >( tee -a "$RUNTIME_LOGFILE" 1>&7 )
 }

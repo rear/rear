@@ -4,6 +4,8 @@
 # DASD format code (dasdformat.sh) script.
 #
 
+is_false "$FORMAT_DASDS" && return 0
+
 # Show the user confirmation dialog in any case but when not in migration mode
 # automatically proceed with less timeout USER_INPUT_INTERRUPT_TIMEOUT (by default 10 seconds)
 # to avoid longer delays (USER_INPUT_TIMEOUT is by default 300 seconds) in case of unattended recovery:
@@ -19,8 +21,9 @@ choices[0]="Confirm DASD format script and continue '$rear_workflow'"
 choices[1]="Edit DASD format script ($DASD_FORMAT_CODE)"
 choices[2]="View DASD format script ($DASD_FORMAT_CODE)"
 choices[3]="View original disk space usage ($original_disk_space_usage_file)"
-choices[4]="Use Relax-and-Recover shell and return back to here"
-choices[5]="Abort '$rear_workflow'"
+choices[4]="Confirm what is currently on the DASDs, skip formatting them and continue '$rear_workflow'"
+choices[5]="Use Relax-and-Recover shell and return back to here"
+choices[6]="Abort '$rear_workflow'"
 prompt="Confirm or edit the DASD format script"
 choice=""
 wilful_input=""
@@ -48,10 +51,14 @@ while true ; do
             less $original_disk_space_usage_file 0<&6 1>&7 2>&8
             ;;
         (${choices[4]})
+            # Confirm what is on the disks and continue without formatting
+            FORMAT_DASDS="false"
+            ;;
+        (${choices[5]})
             # rear_shell runs 'bash' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
             rear_shell "" "$rear_shell_history"
             ;;
-        (${choices[5]})
+        (${choices[6]})
             abort_dasd_format
             Error "User chose to abort '$rear_workflow' in ${BASH_SOURCE[0]}"
             ;;
