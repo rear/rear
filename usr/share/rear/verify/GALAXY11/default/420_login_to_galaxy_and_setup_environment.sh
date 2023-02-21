@@ -3,8 +3,6 @@
 # logon. The logon stores a session file on the system (/opt/commvault/qsession.0) so that
 # a session might exist already.
 
-# set path to Commvault
-export PATH=$PATH:/opt/commvault/Base64
 
 # we first try to run a Commvault command and try to logon if it fails
 qlist backupset -c $HOSTNAME -a Q_LINUX_FS >/dev/null

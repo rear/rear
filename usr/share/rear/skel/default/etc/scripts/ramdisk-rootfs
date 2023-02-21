@@ -1,0 +1,17 @@
+#!/bin/bash
+
+echo "Switching Root FS to ramdisk"
+mkdir /ramdisk
+
+mount_opts=""
+if test -s /etc/ramdisk-free-space; then
+    read target_free junk </etc/ramdisk-free-space
+    read data_size junk <<<$(du -xsm /) # don't use <() because /proc is not mounted!
+    ((total_size = data_size + target_free))
+    mount_opts="-o size=${total_size}m"
+    echo "Creating ramdisk of $total_size MB to provide $target_free MB free disk space."
+fi
+mount -t tmpfs $mount_opts none /ramdisk
+cp -ax / /ramdisk/
+cd /ramdisk
+exec switch_root /ramdisk init <dev/console &>dev/console

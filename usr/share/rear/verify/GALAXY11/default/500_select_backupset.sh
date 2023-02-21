@@ -4,22 +4,11 @@
 # if no backupset is defined, query the user for it
 test "$GALAXY11_BACKUPSET" || return 0
 
-let c=0 ; while read ; do backupsets[c++]="$REPLY" ; done < <(
+local backupsets
+IFS=$'\n' read -r -d "" -a backupsets < <(
 	qlist backupset -c $HOSTNAME -a Q_LINUX_FS
 )
 
-LogPrint "
-Found the following backupsets:
-$(
-	for ((d=0 ; d<c ; d++)) ; do
-		echo "     [$d] ${backupsets[d]}"
-	done
-)"
-
-# Use the original STDIN STDOUT and STDERR when rear was launched by the user
-# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
-read -p "Please select the backupset to use: " answer 0<&6 1>&7 2>&8
-test $answer -ge 0 -a $answer -lt $c ||\
-	Error "You must specify the backupset with its number."
-
-GALAXY11_BACKUPSET="${backupsets[answer]}"
+until IsInArray "$GALAXY11_BACKUPSET" "${backupsets[@]}"; do
+	GALAXY11_BACKUPSET=$( UserInput -I GALAXY11_BACKUPSET -p "Select CommVault backupset to use:" "${backupsets[@]}" )
+done

@@ -10,9 +10,7 @@
 # delete problematic symlink
 rm -f /lib/tls
 
-local commvault_base_dir=/opt/commvault/Base64
-
-$commvault_base_dir/Galaxy start
-if $commvault_base_dir/Galaxy list | grep -q N/A ; then
-	Error "CommVault daemon did not start. Check with '$commvault_base_dir/Galaxy list'"
+Galaxy start
+if Galaxy list | grep -q N/A; then
+	Error "CommVault daemon did not start. Check with 'Galaxy list'"
 fi

@@ -44,7 +44,7 @@ case "${reason}" in
 
         exit_with_hooks 0
         ;;
-   PREINIT6)
+    PREINIT6)
         # ensure interface is up
         ip link set ${interface} up
 
@@ -56,7 +56,7 @@ case "${reason}" in
 
     ARPCHECK|ARPSEND)
         if [ -z "${new_ip_address}" ] || [ -z "${interface}" ] ||
-           arping -q -f -c 2 -w 3 -D -I ${interface} ${new_ip_address}; then
+            arping -q -f -c 2 -w 3 -D -I ${interface} ${new_ip_address}; then
             exit_with_hooks 0
         else
             exit_with_hooks 1

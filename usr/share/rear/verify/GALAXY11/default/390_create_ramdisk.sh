@@ -8,7 +8,7 @@
 #
 
 # we want to do this only once ...
-if test -d /ramdisk || return 0
+test -d /ramdisk || return 0
 
 mkdir /ramdisk
 mount -o size=1500m -t tmpfs none /ramdisk
@@ -18,9 +18,9 @@ exec 2>&1
 
 pushd / >/dev/null
 for dir in opt var tmp ; do
-	mv "$dir" /ramdisk
-	mkdir "$dir"
-	mount --bind /ramdisk/"$dir" /"$dir"
+	mv $dir /ramdisk
+	mkdir $dir
+	mount --bind /ramdisk/$dir /$dir
 done
 chmod 1777 /tmp
 popd >/dev/null

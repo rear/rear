@@ -49,7 +49,7 @@ if jobid=$(qoperation restore -af $TMP_DIR/commvault.restore.options); then
 		# STATUS     COMPLETE PERCENTAGE
 		# ------     -------------------
 		# Running
-		jobstatus=$(/opt/commvault/Base64/qlist job -j $jobid -co sc | tail -n 1)
+		jobstatus=$(qlist job -j $jobid -co sc | tail -n 1)
 
 		# stop waiting if the job reached a final status
 		case "$jobstatus" in
