@@ -18,8 +18,7 @@ License: GPL-3.0
 Group: Applications/File
 URL: http://relax-and-recover.org/
 
-# as GitHub stopped with download section we need to go back to Sourceforge for downloads
-Source: https://sourceforge.net/projects/rear/files/rear/%{version}/rear-%{version}.tar.gz
+Source: https://github.com/rear/rear/archive/%{version}.tar.gz#/rear-%{version}.tar.gz
 
 # BuildRoot: is required for SLES 11 and RHEL/CentOS 5 builds on openSUSE Build Service (#2135)
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
