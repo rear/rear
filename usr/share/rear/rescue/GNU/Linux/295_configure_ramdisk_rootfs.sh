@@ -1,13 +1,15 @@
 # prepare rescue system to use ramdisk rootfs
 
-test "$USE_RAMDISK" || return 0
 
-if is_positive_integer "$USE_RAMDISK" && ((USE_RAMDISK > 1000)); then
-    # is a number and greater 1000, use as free space in MB
-    Log "Configuring Rescue system with ramdisk and free disk space of $USE_RAMDISK MB"
+is_false "$USE_RAMDISK" && return
+
+if is_true "$USE_RAMDISK"; then
+    LogPrint "Configuring Rescue system with default ramdisk size"
+elif is_positive_integer "$USE_RAMDISK" ; then
+    LogPrint "Configuring Rescue system with ramdisk and free disk space of $USE_RAMDISK MiB"
     echo $USE_RAMDISK >$ROOTFS_DIR/etc/ramdisk-free-space
 else
-    Log "Configuring Rescue system with default ramdisk size"
+    Error "USE_RAMDISK='$USE_RAMDISK' is not a positive integer"
 fi
 
 REQUIRED_PROGS+=(switch_root du)
