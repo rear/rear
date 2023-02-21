@@ -1,0 +1,77 @@
+#!/bin/bash
+#
+# run given command via Docker on all distros supported by ReaR, or only a single one
+
+# command line args:
+#
+# $0 [os ...] -- <command> [args ...]
+
+DISTROS=(
+    ubuntu:{18.04,20.04,22.04,devel}
+    debian:{8,9,10,11,unstable}
+    opensuse/leap:{15.4,15}
+    registry.suse.com/suse/{sles12sp5,sle15}
+    centos:{6,7,8} # discontinued
+    sl:{6,7}       # discontinued
+    quay.io/centos/centos:stream{8,9}
+    registry.access.redhat.com/ubi{7,8,9}
+    fedora:{29,30,31,32,33,34,35,36,37,38,rawhide}
+)
+
+function die {
+    echo -e "ERROR: $*" 1>&2
+    exit 1
+}
+
+if [[ "$*" == *--help* ]] || [[ "$*" != *"--"* ]]; then
+    if [[ "$*" != *--*--help* ]]; then
+        echo "$0 [os ...] -- <command> [args ...]"
+        echo "omit os to run in all supported ReaR distros:"
+        echo "${DISTROS[@]}"
+        echo "without command it will show the bash version"
+        exit 1
+    fi
+fi
+
+use_distros=()
+command_args=()
+while test $# -gt 0; do
+    if test "$1" != "--"; then
+        # match with patterns to allow specifying substrings or patterns
+        # take not matching arg as distro
+        use_distros+=($(
+            let c=0
+            for distro in "${DISTROS[@]}"; do
+                if [[ "$distro" == *$1* ]]; then
+                    echo "$distro"
+                    let c++
+                fi
+            done
+            if ((c == 0)); then
+                echo "$1"
+            fi
+        ))
+        shift
+    else
+        shift
+        command_args=("$@")
+        break
+    fi
+done
+
+if test -z "$use_distros"; then
+    use_distros=("${DISTROS[@]}")
+fi
+
+if test -z "$command_args"; then
+    command_args='echo Bash is $BASH_VERSION'
+fi
+
+rear_toplevel_dir=$(dirname $(dirname $(readlink -f "$0")))
+
+#declare -p DISTROS use_distros command_args rear_toplevel_dir
+
+for distro in "${use_distros[@]}"; do
+    printf "********** %-40s **********\n" "$distro" 1>&2
+    echo "${command_args[@]}" | docker run --rm -i -v "$rear_toplevel_dir:/rear" -w /rear "$distro" /bin/bash
+done
