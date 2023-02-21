@@ -29,8 +29,8 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 # Of course the rear bash scripts can be installed on any architecture just as any binaries can be installed on any architecture.
 # But the meaning of architecture dependent packages should be on what architectures they will work.
 # Therefore only those architectures that are actually supported are explicitly listed.
-# This avoids that rear can be "just installed" on architectures that are actually not supported (e.g. ARM or IBM z Systems):
-ExclusiveArch: %ix86 x86_64 ppc ppc64 ppc64le ia64
+# This avoids that rear can be "just installed" on architectures that are actually not supported (e.g. ARM):
+ExclusiveArch: %ix86 x86_64 ppc ppc64 ppc64le ia64 s390x
 # Furthermore for some architectures it requires architecture dependent packages (like syslinux for x86 and x86_64)
 # so that rear must be architecture dependent because ifarch conditions never match in case of "BuildArch: noarch"
 # see the GitHub issue https://github.com/rear/rear/issues/629
