@@ -13,22 +13,28 @@ version := $(shell awk 'BEGIN { FS="=" } /^readonly VERSION=/ { print $$2}' $(re
 
 ### Get the branch information from git
 ifeq ($(OFFICIAL),)
-ifneq ($(shell which git),)
-git_date := $(shell git log -n 1 --format="%ai" 2>/dev/null || echo now)
-git_ref := $(shell git rev-parse --short HEAD 2>/dev/null || echo 0)
-git_count := $(shell git rev-list HEAD --count --no-merges 2>/dev/null || echo 0)
-git_branch_suffix = $(shell { git symbolic-ref --short HEAD 2>/dev/null || echo unknown ; } | tr -d /_-)
-git_status := $(shell git status --porcelain 2>/dev/null)
-git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
-ifneq ($(git_status),)
-git_stamp := $(git_stamp).changed
-endif
-endif
-else
-ifneq ($(shell which git),)
-git_date := $(shell git log -n 1 --format="%ai")
-endif
-git_branch = rear-$(version)
+	ifneq ($(shell type -p git),)
+		git_date := $(shell git log -n 1 --format="%ai")
+		git_ref := $(shell git rev-parse --short HEAD)
+		git_count := $(shell git rev-list HEAD --count --no-merges)
+		git_branch_suffix = $(shell git symbolic-ref --short HEAD | tr -d /_-)
+		git_status := $(shell git status --porcelain)
+		git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
+		ifneq ($(git_status),)
+			git_stamp := $(git_stamp).changed
+		endif # git_status
+	else # no git
+		git_date := now
+		git_ref := 0
+		git_count := 0
+		git_branch_suffix := unknown
+		git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
+	endif # has git
+else # official
+	ifneq ($(shell type -p git),)
+		git_date := $(shell git log -n 1 --format="%ai")
+	endif
+	git_branch = rear-$(version)
 endif
 git_branch ?= master
 
@@ -58,7 +64,7 @@ ifeq ($(OFFICIAL),)
     obspackage = $(name)
 endif
 
-.PHONY: doc
+.PHONY: doc dump
 
 all:
 	@echo "Nothing to build. Use \`make help' for more information."
@@ -74,12 +80,18 @@ help:
   rpm             - Create RPM package in dist/\n\
   pacman          - Create Pacman package\n\
   obs             - Initiate OBS builds\n\
+  dump            - Dump Makefile variables\n\
 \n\
 Relax-and-Recover make variables (optional):\n\
 \n\
   DESTDIR=        - Location to install/uninstall\n\
   OFFICIAL=1      - Build an official release\n\
+  \n\
 "
+
+dump:
+# found at https://www.cmcrossroads.com/article/dumping-every-makefile-variable
+	$(foreach V, $(sort $(.VARIABLES)), $(if $(filter-out environment% default automatic, $(origin $V)),$(info $V=$($V) defined as >$(value $V)<)))
 
 clean:
 	rm -Rf dist build
@@ -133,6 +145,7 @@ install-bin:
 
 install-data:
 	@echo -e "\033[1m== Installing scripts ==\033[0;0m"
+	rm -Rf $(DESTDIR)$(datadir)/rear
 	install -d -m0755 $(DESTDIR)$(datadir)/rear/
 	cp -a usr/share/rear/. $(DESTDIR)$(datadir)/rear/
 	-find $(DESTDIR)$(datadir)/rear/ -name '.gitignore' -exec rm -rf {} \; &>/dev/null
