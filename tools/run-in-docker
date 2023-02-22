@@ -23,12 +23,22 @@ function die {
     exit 1
 }
 
+extra_docker_args=()
+if test "$1" == -a ; then
+    shift
+    echo "Using $1 architecture"
+    extra_docker_args+=( --platform linux/"$1" )
+    shift
+fi
+
 if [[ "$*" == *--help* ]] || [[ "$*" != *"--"* ]]; then
     if [[ "$*" != *--*--help* ]]; then
         echo "$0 [os ...] -- <command> [args ...]"
         echo "omit os to run in all supported ReaR distros:"
         echo "${DISTROS[@]}"
         echo "without command it will show the bash version"
+        echo "architecture defaults to the host platform, specify architecture via"
+        echo "-a <architecture> as first command line args, e.g. -a amd64 on M1 Mac"
         exit 1
     fi
 fi
@@ -73,5 +83,12 @@ rear_toplevel_dir=$(dirname $(dirname $(readlink -f "$0")))
 
 for distro in "${use_distros[@]}"; do
     printf "********** %-40s **********\n" "$distro" 1>&2
-    echo "${command_args[@]}" | docker run --rm -i -v "$rear_toplevel_dir:/rear" -w /rear "$distro" /bin/bash
+    echo "${command_args[@]}" | \
+        docker run \
+            --rm -i \
+            -v "$rear_toplevel_dir:/rear" \
+            -w /rear \
+            "${extra_docker_args[@]}" \
+            "$distro" \
+            /bin/bash
 done
