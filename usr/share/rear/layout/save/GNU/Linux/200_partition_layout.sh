@@ -371,7 +371,10 @@ extract_partitions() {
 }
 
 Log "Saving disks and their partitions"
-(   for disk in /sys/block/* ; do
+
+# Begin of group command that appends its stdout to DISKLAYOUT_FILE:
+{
+    for disk in /sys/block/* ; do
         blockd=${disk#/sys/block/}
         if [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = dasd* || $blockd = nvme* || $blockd = mmcblk* ]] ; then
 
@@ -423,7 +426,8 @@ Log "Saving disks and their partitions"
             fi
         fi
     done
-) >> $DISKLAYOUT_FILE
+} 1>>$DISKLAYOUT_FILE
+# End of group command that appends its stdout to DISKLAYOUT_FILE
 
 # parted and partprobe are required in the recovery system if disklayout.conf contains at least one 'disk' or 'part' entry
 # see the create_disk and create_partitions functions in layout/prepare/GNU/Linux/100_include_partition_code.sh
