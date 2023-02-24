@@ -534,7 +534,7 @@ EOF
     # End btrfs subvolume layout if a btrfs filesystem exists:
     fi
 
-} >> $DISKLAYOUT_FILE
+} 1>>$DISKLAYOUT_FILE
 # End of group command that appends its stdout to DISKLAYOUT_FILE
 
 # mkfs is required in the recovery system if disklayout.conf contains at least one 'fs' entry
