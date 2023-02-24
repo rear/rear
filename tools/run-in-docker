@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # run given command via Docker on all distros supported by ReaR, or only a single one
 
@@ -6,7 +6,8 @@
 #
 # $0 [os ...] -- <command> [args ...]
 
-DISTROS=(
+# Define the list of supported images
+declare -r IMAGES=(
     ubuntu:{18.04,20.04,22.04,devel}
     debian:{8,9,10,11,unstable}
     opensuse/leap:{15.4,15}
@@ -20,42 +21,50 @@ DISTROS=(
     manjarolinux/base
 )
 
+declare -r HELP_TEXT="
+$0 [image ...] -- <command> [args ...]
+specify image patterns or omit image to run in all supported images:
+
+$(fold -sw 60 <<<"${IMAGES[*]}")
+
+You can also specify completely different Docker images instead.
+
+Without command it will show the Bash version
+
+Architecture defaults to the host platform, specify architecture via
+-a <architecture>, e.g. -a amd64 on M1 Mac
+"
+
 function die {
     echo -e "ERROR: $*" 1>&2
     exit 1
 }
 
 extra_docker_args=()
-if test "$1" == -a ; then
-    shift
-    echo "Using $1 architecture"
-    extra_docker_args+=( --platform linux/"$1" )
-    shift
-fi
-
-if [[ "$*" == *--help* ]] || [[ "$*" != *"--"* ]]; then
-    if [[ "$*" != *--*--help* ]]; then
-        echo "$0 [os ...] -- <command> [args ...]"
-        echo "omit os to run in all supported ReaR distros:"
-        echo "${DISTROS[@]}"
-        echo "without command it will show the bash version"
-        echo "architecture defaults to the host platform, specify architecture via"
-        echo "-a <architecture> as first command line args, e.g. -a amd64 on M1 Mac"
-        exit 1
-    fi
-fi
-
-use_distros=()
+use_images=()
 command_args=()
 while test $# -gt 0; do
-    if test "$1" != "--"; then
-        # match with patterns to allow specifying substrings or patterns
-        # take not matching arg as distro
-        use_distros+=($(
+    case "$1" in
+    -a)
+        echo "Using architecture $2 instead of default Docker architecture $(docker system info --format '{{.Architecture}}')"
+        extra_docker_args+=("--platform" "linux/$2")
+        shift 2
+        ;;
+    -h|--help)
+        echo "$HELP_TEXT"
+        exit 1
+        ;;
+    --)
+        shift
+        [[ $# -gt 0 ]] && command_args=("$@")
+        break
+        ;;
+    *)
+        use_images+=($(
             let c=0
-            for distro in "${DISTROS[@]}"; do
-                if [[ "$distro" == *$1* ]]; then
-                    echo "$distro"
+            for image in "${IMAGES[@]}"; do
+                if [[ "$image" == *$1* ]]; then
+                    echo "$image"
                     let c++
                 fi
             done
@@ -64,33 +73,30 @@ while test $# -gt 0; do
             fi
         ))
         shift
-    else
-        shift
-        command_args=("$@")
-        break
-    fi
+        ;;
+    esac
 done
 
-if test -z "$use_distros"; then
-    use_distros=("${DISTROS[@]}")
+if test ${#use_images[@]} -eq 0; then
+    use_images=("${IMAGES[@]}")
 fi
 
-if test -z "$command_args"; then
-    command_args='echo Bash is $BASH_VERSION'
+if test ${#command_args[@]} -eq 0; then
+    command_args=("echo" "Bash is \$BASH_VERSION")
 fi
 
 rear_toplevel_dir=$(dirname $(dirname $(readlink -f "$0")))
 
-#declare -p DISTROS use_distros command_args rear_toplevel_dir
+# declare -p IMAGES use_images command_args rear_toplevel_dir ; exit 0
 
-for distro in "${use_distros[@]}"; do
-    printf "********** %-40s **********\n" "$distro" 1>&2
-    echo "${command_args[@]}" | \
-        docker run \
-            --rm -i \
-            -v "$rear_toplevel_dir:/rear" \
-            -w /rear \
-            "${extra_docker_args[@]}" \
-            "$distro" \
-            /bin/bash
+for image in "${use_images[@]}"; do
+    printf "********** %-40s **********\n" "$image" 1>&2
+    docker run \
+        --rm -i \
+        --sig-proxy=false \
+        -v "$rear_toplevel_dir:/rear" \
+        -w /rear \
+        "${extra_docker_args[@]}" \
+        "$image" \
+        /bin/bash <<<"${command_args[@]}"
 done
