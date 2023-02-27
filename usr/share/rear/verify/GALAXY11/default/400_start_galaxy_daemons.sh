@@ -11,6 +11,7 @@
 rm -f /lib/tls
 
 Galaxy start
+sleep 3 # give CommVault 3 seconds to start or to fail
 if Galaxy list | grep -q N/A; then
 	Error "CommVault daemon did not start. Check with 'Galaxy list'"
 fi
