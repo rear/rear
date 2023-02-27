@@ -791,6 +791,34 @@ preferably the whole debug information via 'rear -D $WORKFLOW'
 ===================="
 }
 
+# Error out with a deprecation info
+# first arg is feature keyword
+# everything else is a reason for the deprecation
+function ErrorIfDeprecated () {
+    local feature="$1" ; shift
+
+    if IsInArray "$feature" "${DISABLE_DEPRECATION_ERRORS[@]}" ; then
+        LogPrint "Disabled deprecation error for >$feature<"
+        return 0
+    fi
+
+    local reason="$*"
+
+    local error_text="Deprecation of >$feature<
+        Reason: $reason
+
+        This feature or code path has been deprecated in ReaR and will
+        be removed eventually. If you disagree with that, then please
+        go to https://github.com/rear/rear/issues and create an issue
+        explaining for us why we should not deprecate this code path.
+
+        Meanwhile, in order to continue using this feature, you can add
+        DISABLE_DEPRECATION_ERRORS+=( $feature )
+        to your ReaR configuration to disable this error.
+        
+        "
+    Error "$(sed -e "s/^ *//" <<<"$error_text")"
+}
 # Using the ...IfError functions can result unexpected behaviour in certain cases.
 #
 # Using $? in an ...IfError function message like

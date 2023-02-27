@@ -50,8 +50,11 @@ WORKFLOW_dump () {
         test "$config" || continue
         LogUserOutput "  # $config.conf : $( test -s $SHARE_DIR/conf/$config.conf && echo OK || echo missing/empty )"
     done
-    for config in site local ; do
+    for config in site local; do
         LogUserOutput "  # $config.conf : $( test -s $CONFIG_DIR/"$config".conf && echo OK || echo missing/empty )"
+    done
+    for config in "${CONFIG_APPEND_FILES_PATHS[@]}"; do
+        LogUserOutput "  # $config : OK"
     done
 
     LogUserOutput "# System definition:"
