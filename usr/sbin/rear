@@ -229,7 +229,7 @@ while true ; do
             break
             ;;
         (-*)
-            echo "$PROGNAME: unrecognized option '$option'"
+            echo "$PROGNAME: unrecognized option '$1'"
             echo "$help_note_text"
             exit 1
             ;;
