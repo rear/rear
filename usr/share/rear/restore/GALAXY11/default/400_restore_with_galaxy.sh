@@ -28,7 +28,7 @@ $TARGET_FS_ROOT
 EOF
 
 if [ "x$GALAXY11_ZEIT" != "x" ]; then
-	cat <<EOF >>$TMP_DIR/commvault.restore.options
+    cat <<EOF >>$TMP_DIR/commvault.restore.options
 [browseto]
 $GALAXY11_ZEIT
 EOF
@@ -37,50 +37,50 @@ fi
 local jobstatus=Unknown
 
 if jobid=$(qoperation restore -af $TMP_DIR/commvault.restore.options); then
-	jobid=${jobid// /} # remove trailing blanks
-	prevstatus=
+    jobid=${jobid// /} # remove trailing blanks
+    prevstatus=
 
-	LogPrint "Restoring data with Commvault (job $jobid)"
+    LogPrint "Restoring data with Commvault (job $jobid)"
 
-	while true; do
-		sleep 60
-		# output of qlist job -co sc -j ## :
+    while true; do
+        sleep 60
+        # output of qlist job -co sc -j ## :
 
-		# STATUS     COMPLETE PERCENTAGE
-		# ------     -------------------
-		# Running
-		jobstatus=$(qlist job -j $jobid -co sc | tail -n 1)
+        # STATUS     COMPLETE PERCENTAGE
+        # ------     -------------------
+        # Running
+        jobstatus=$(qlist job -j $jobid -co sc | tail -n 1)
 
-		# stop waiting if the job reached a final status
-		case "$jobstatus" in
-		?omplet*)
-			echo
-			LogPrint "Restore completed successfully."
-			break
-			;;
-		?uspend* | *end* | ?unn* | ?ait*)
-			printf "\r%-79s" "$(date +"%Y-%m-%d %H:%M:%S") job is $jobstatus"
-			[ "$jobstatus" != "$prevstatus" ] && LogPrint $jobstatus
-			prevstatus="$jobstatus"
-			;;
-		?ail* | ?ill*)
-			echo
-			Error "Restore job failed or was killed, aborting recovery."
-			;;
-		*)
-			echo
-			Error "Restore job has an unknown state [$jobstatus], aborting."
-			;;
-		esac
-	done
+        # stop waiting if the job reached a final status
+        case "$jobstatus" in
+        (?omplet*)
+            echo
+            LogPrint "Restore completed successfully."
+            break
+            ;;
+        (?uspend* | *end* | ?unn* | ?ait*)
+            printf "\r%-79s" "$(date +"%Y-%m-%d %H:%M:%S") job is $jobstatus"
+            [ "$jobstatus" != "$prevstatus" ] && LogPrint $jobstatus
+            prevstatus="$jobstatus"
+            ;;
+        (?ail* | ?ill*)
+            echo
+            Error "Restore job failed or was killed, aborting recovery."
+            ;;
+        (*)
+            echo
+            Error "Restore job has an unknown state [$jobstatus], aborting."
+            ;;
+        esac
+    done
 
 else
-	Error "Could not start Commvault restore job. Check log file."
+    Error "Could not start Commvault restore job. Check log file."
 fi
 
 # create missing directories in recovered system
 pushd $TARGET_FS_ROOT >/dev/null
 for dir in opt/commvault/Base64/Temp opt/commvault/Updates opt/commvault/iDataAgent/jobResults; do
-	mkdir -p "$dir"
+    mkdir -p "$dir"
 done
 popd >/dev/null
