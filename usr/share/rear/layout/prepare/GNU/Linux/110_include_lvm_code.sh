@@ -68,7 +68,7 @@ create_lvmgrp() {
 
     # If a volume group name is in one of the following lists, it
     # means that the particular condition is valid for this volume
-    # grup. If it is not in the list, it means that the condition is
+    # group. If it is not in the list, it means that the condition is
     # not valid for this volume group. To set a condition, add the VG
     # name to the list. To unset it, remove it from the list.
 
