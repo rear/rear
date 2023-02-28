@@ -87,6 +87,12 @@ abort_recreate() {
     restore_original_file "$LAYOUT_FILE"
 }
 
+abort_dasd_format() {
+    Log "Error detected during DASD formatting."
+    Log "Restoring saved original $DASD_FORMAT_FILE"
+    restore_original_file "$DASD_FORMAT_FILE"
+}
+
 # Test and log if a component $1 (type $2) needs to be recreated.
 create_component() {
     local device="$1"
@@ -732,6 +738,46 @@ get_block_size() {
     else
         echo "512"
     fi
+}
+
+# Get the number of cylinders of a DASD.
+# The number of cylinders has the advantage of being fixed - size depends on formatting
+# and number of cylinders is valid even for unformatted DASDs, size is not.
+get_dasd_cylinders() {
+    local disk_name="${1##*/}" # /some/path/dasda -> dasda
+    local dasd_cyls
+
+    dasd_cyls=$(dasdview -i /dev/$disk_name | grep cylinders | cut -d ':' -f2 | awk '{print $4}')
+    ### Make sure we always return a number
+    echo $(( dasd_cyls ))
+}
+
+# Sometimes we know what the new device for the original device should be in a more reliable way
+# than by looking at disk sizes. THis information is called "mapping hints". Let's pass them
+# to the mapping code using the DISK_MAPPING_HINTS array. Each element of the array has the form
+# "/dev/source /dev/target" (space-separated).
+
+# Output the mapping hint for the original device.
+function get_mapping_hint () {
+    local device="$1"
+    local hint mapping_hint_source mapping_hint_target
+
+    for hint in "${DISK_MAPPING_HINTS[@]}"; do
+        mapping_hint_source=${hint%% *}
+        mapping_hint_target=${hint##* }
+        if [ "${device}" == "${mapping_hint_source}" ] ; then
+            echo "$mapping_hint_target"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Determine if there is a mapping hint for the original device.
+function has_mapping_hint () {
+    local device="$1"
+
+    get_mapping_hint "$device" > /dev/null
 }
 
 # Get the UUID of a device.

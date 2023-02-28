@@ -377,18 +377,27 @@ Log "Saving disks and their partitions"
 
             if [[ $blockd == dasd* && "$ARCH" == "Linux-s390" ]] ; then
                 devname=$(get_device_name $disk)
+                dasdnum=$( lsdasd | awk "\$3 == \"$blockd\" { print \$1}" )
+                dasdstatus=$( lsdasd | awk "\$3 == \"$blockd\" { print \$2}" )
+                # ECKD or FBA
+                dasdtype=$( lsdasd | awk "\$3 == \"$blockd\" { print \$5}" )
+                if [ "$dasdtype" != ECKD ] && [ "$dasdtype" != FBA ]; then
+                    LogPrint "Type $dasdtype of DASD $blockd unexpected: neither ECKD nor FBA"
+                fi
 
-                echo "# active dasd bus and channel"
-                echo "# bus-id <name device> type"
-                echo "dasd_channel $( lsdasd|grep $blockd|awk '{ print $1 " "  $2 " "  $3 " "  $4}' )"
+                echo "# every DASD bus and channel"
+                echo "# Format: dasd_channel <bus-id> <device name>"
+                echo "dasd_channel $dasdnum $blockd"
 
-                echo "# dasdfmt - disk layout is either cdl for the compatible disk layout (default) or ldl"
-                echo "#  example usage: dasdfmt -b 4096 -d cdl -y /dev/dasda"
-                layout=$(dasdview -x  /dev/$blockd|grep "^format"|awk '{print $7}')
-                blocksize=$( dasdview -i  /dev/$blockd|grep blocksize|awk '{print $6}' )
-                echo "# dasdfmt $devname"
-                echo "# dasdfmt -b <blocksize> -d <layout> -y <devname>"
-                echo "dasdfmt -b $blocksize -d $layout -y $devname"
+                # We need to print the dasd_channel line even for ignored devices,
+                # otherwise we could have naming gaps and naming would change when
+                # recreating layout.
+                # E.g. if dasda is ignored, and dasdb is not, we would create only dasdb
+                # during recreation, but it would be named dasda.
+                if [ "$dasdstatus" != active ]; then
+                    Log "Ignoring $blockd: it is not active (Status is $dasdstatus)"
+                    continue
+                fi
             fi
 
             #FIXME: exclude *rpmb (Replay Protected Memory Block) for nvme*, mmcblk* and uas
@@ -412,11 +421,38 @@ Log "Saving disks and their partitions"
                 # which can happen when /dev/sdX is an empty SD card slot without medium,
                 # see https://github.com/rear/rear/issues/2810
                 test $disktype || LogPrintError "No partition label type for 'disk $devname' (may cause 'rear recover' failure)"
-
-                echo "# Disk $devname"
-                echo "# Format: disk <devname> <size(bytes)> <partition label type>"
-                echo "disk $devname $devsize $disktype"
-
+                if [ "$disktype" != "dasd" ]; then
+                    echo "# Disk $devname"
+                    echo "# Format: disk <devname> <size(bytes)> <partition label type>"
+                    echo "disk $devname $devsize $disktype"
+                elif [[ $blockd == dasd* && "$ARCH" == "Linux-s390" ]] ; then
+                    layout=$(dasdview -x $devname |grep "^format"|awk '{print $7}')
+                    case "$layout" in
+                        (NOT)
+                            # NOT -> dasdview has printed "NOT formatted"
+                            LogPrintError "Ignoring $blockd: it is not formatted"
+                            continue
+                            ;;
+                        (LDL|CDL)
+                            ;;
+                        (*)
+                            BugError "Invalid 'disk $devname' entry (unknown DASD layout $layout)"
+                            ;;
+                    esac
+                    test $disktype || Error "No partition label type for DASD entry 'disk $devname'"
+                    blocksize=$( get_block_size "$blockd" )
+                    if ! test $blocksize ; then
+                        # fallback - ugly method
+                        blocksize=$( dasdview -i $devname |grep blocksize|awk '{print $6}' )
+                        test $blocksize || Error "Unknown block size of DASD $devname"
+                    fi
+                    dasdcyls=$( get_dasd_cylinders "$blockd" )
+                    echo "# Disk $devname"
+                    echo "# Format: disk <devname> <size(bytes)> <partition label type> <logical block size> <DASD layout> <DASD type> <size(cylinders)>"
+                    echo "disk $devname $devsize $disktype $blocksize $layout $dasdtype $dasdcyls"
+                else
+                    Error "Invalid 'disk $devname' entry (DASD partition label on non-s390 arch $ARCH)"
+                fi
                 echo "# Partitions on $devname"
                 echo "# Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>"
                 extract_partitions "$devname"
