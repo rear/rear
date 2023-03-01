@@ -10,8 +10,8 @@
 declare -r IMAGES=(
     ubuntu:{18.04,20.04,22.04,devel}
     debian:{8,9,10,11,unstable}
-    opensuse/leap:{15.4,15}
-    registry.suse.com/suse/{sles12sp5,sle15}
+    opensuse/leap:{42,15.4,15}
+    registry.suse.com/suse/sle15
     centos:{6,7,8} # discontinued
     sl:{6,7}       # discontinued
     quay.io/centos/centos:stream{8,9}
@@ -31,6 +31,10 @@ You can also specify completely different Docker images instead.
 
 Without command it will show the Bash version
 
+Special commands:
+
+--patch     Patch the (given or all) images to contain the ReaR build and run dependencies
+
 Architecture defaults to the host platform, specify architecture via
 -a <architecture>, e.g. -a amd64 on M1 Mac
 "
@@ -42,30 +46,63 @@ function die {
 
 extra_docker_args=()
 use_images=()
+
+
+# patch the images to contain all ReaR build and run dependencies
+function patch_images() {
+    for image in "${use_images[@]}"; do
+        local DOCKERFILE="
+FROM $image
+LABEL description=\"$image patched to build and run ReaR\"
+SHELL [\"/bin/bash\", \"-xc\"]
+
+RUN type -p apt-get &>/dev/null || exit 0 ;\
+    apt-get -qq update ;\
+    DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --allow-unauthenticated </dev/null \
+        sysvinit-utils kbd cpio file procps fdisk ethtool iputils-ping net-tools dosfstools binutils parted openssl gawk attr bc psmisc nfs-client portmap xorriso isolinux gdisk syslinux syslinux-common syslinux-efi iproute2 \
+        make asciidoctor git build-essential
+
+RUN type -p zypper &>/dev/null || exit 0 ;\
+    zypper --no-gpg-checks --quiet --non-interactive install  \
+        sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux portmap rpcbind iproute2 nfs-client xorriso mkisofs util-linux psmisc \
+        make git rpm-build ;\
+    zypper --no-gpg-checks --quiet --non-interactive install 'rubygem(asciidoctor)' || \
+        zypper --no-gpg-checks --quiet --non-interactive install asciidoc xmlto
+"
+
+        # TODO: Add support for GRUB2
+        printf "********** PATCHING %-40s **********\n" "$image" 1>&2
+        docker buildx build -t "$image" \
+            "${extra_docker_args[@]}" \
+            - <<<"$DOCKERFILE"
+    done
+}
+
 command_args=()
 while test $# -gt 0; do
     case "$1" in
-    -a)
+    (-a)
         echo "Using architecture $2 instead of default Docker architecture $(docker system info --format '{{.Architecture}}')"
         extra_docker_args+=("--platform" "linux/$2")
         shift 2
         ;;
-    -h|--help)
+    (-h|--help)
         echo "$HELP_TEXT"
         exit 1
         ;;
-    --)
+    (--)
         shift
         [[ $# -gt 0 ]] && command_args=("$@")
         break
         ;;
-    *)
+    (*)
+        #shellcheck disable=SC2207
         use_images+=($(
-            let c=0
+            ((c=0))
             for image in "${IMAGES[@]}"; do
                 if [[ "$image" == *$1* ]]; then
                     echo "$image"
-                    let c++
+                    ((c++))
                 fi
             done
             if ((c == 0)); then
@@ -89,14 +126,24 @@ rear_toplevel_dir=$(dirname $(dirname $(readlink -f "$0")))
 
 # declare -p IMAGES use_images command_args rear_toplevel_dir ; exit 0
 
-for image in "${use_images[@]}"; do
-    printf "********** %-40s **********\n" "$image" 1>&2
-    docker run \
-        --rm -i \
-        --sig-proxy=false \
-        -v "$rear_toplevel_dir:/rear" \
-        -w /rear \
-        "${extra_docker_args[@]}" \
-        "$image" \
-        /bin/bash <<<"${command_args[@]}"
-done
+case "${command_args[0]}" in
+    (--patch)
+        patch_images
+        exit $?
+    ;;
+    (*)
+
+        for image in "${use_images[@]}"; do
+            printf "********** %-40s **********\n" "$image" 1>&2
+            rm -Rf "$rear_toplevel_dir"/{etc/rear/os.conf,var/log/rear}
+            docker run \
+                --rm -i \
+                --sig-proxy=false \
+                -v "$rear_toplevel_dir:/rear" \
+                -w /rear \
+                "${extra_docker_args[@]}" \
+                "$image" \
+                /bin/bash <<<"${command_args[@]}"
+        done
+    ;;
+esac
