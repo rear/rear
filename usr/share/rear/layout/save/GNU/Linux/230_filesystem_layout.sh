@@ -75,8 +75,8 @@ if service docker status ; then
     fi
 fi
 
-# Begin of the subshell that appends its stdout to DISKLAYOUT_FILE:
-(
+# Begin of group command that appends its stdout to DISKLAYOUT_FILE:
+{
     echo "# Filesystems (only $supported_filesystems are supported)."
     echo "# Format: fs <device> <mountpoint> <fstype> [uuid=<uuid>] [label=<label>] [<attributes>]"
     # Read the output of the read_filesystems_command:
@@ -514,8 +514,6 @@ fi
             echo "# Attributes cannot be determined because no executable 'lsattr' and/or 'findmnt' command(s) found that supports 'FSROOT'."
         fi
 
-        # This needs to be done inside the subshell (that appends its stdout to DISKLAYOUT_FILE)
-        # because outside the subshell the inside the subshell set variables would be lost:
         if test "$btrfs_subvolume_sles_setup_devices" ; then
             # Save the updated BTRFS_SUBVOLUME_SLES_SETUP array variable that is needed in recover mode into the rescue.conf file:
             cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
@@ -536,8 +534,8 @@ EOF
     # End btrfs subvolume layout if a btrfs filesystem exists:
     fi
 
-) >> $DISKLAYOUT_FILE
-# End of the subshell that appends its stdout to DISKLAYOUT_FILE.
+} 1>>$DISKLAYOUT_FILE
+# End of group command that appends its stdout to DISKLAYOUT_FILE
 
 # mkfs is required in the recovery system if disklayout.conf contains at least one 'fs' entry
 # see the create_fs function in layout/prepare/GNU/Linux/130_include_filesystem_code.sh
