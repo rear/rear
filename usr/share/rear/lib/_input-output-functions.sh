@@ -795,16 +795,17 @@ preferably the whole debug information via 'rear -D $WORKFLOW'
 # first arg is feature keyword
 # everything else is a reason for the deprecation
 function ErrorIfDeprecated () {
+    (( $# >= 2 )) || BugError "Must call ErrorIfDeprecated with at least 2 arguments - feature and reason"
     local feature="$1" ; shift
 
     if IsInArray "$feature" "${DISABLE_DEPRECATION_ERRORS[@]}" ; then
-        LogPrint "Disabled deprecation error for >$feature<"
+        LogPrint "Disabled deprecation error for '$feature'"
         return 0
     fi
 
     local reason="$*"
 
-    local error_text="Deprecation of >$feature<
+    local error_text="Deprecation of '$feature'
         Reason: $reason
 
         This feature or code path has been deprecated in ReaR and will
@@ -819,6 +820,7 @@ function ErrorIfDeprecated () {
         "
     Error "$(sed -e "s/^ *//" <<<"$error_text")"
 }
+
 # Using the ...IfError functions can result unexpected behaviour in certain cases.
 #
 # Using $? in an ...IfError function message like
