@@ -55,12 +55,15 @@ function patch_images() {
 FROM $image
 LABEL description=\"$image patched to build and run ReaR\"
 SHELL [\"/bin/bash\", \"-xc\"]
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN type -p apt-get &>/dev/null || exit 0 ;\
-    apt-get -qq update ;\
-    DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --allow-unauthenticated </dev/null \
-        sysvinit-utils kbd cpio file procps fdisk ethtool iputils-ping net-tools dosfstools binutils parted openssl gawk attr bc psmisc nfs-client portmap xorriso isolinux gdisk syslinux syslinux-common syslinux-efi iproute2 \
-        make asciidoctor git build-essential
+    apt-get -qq update --allow-unauthenticated ;\
+    apt-get -qq install -y --allow-unauthenticated </dev/null \
+        sysvinit-utils kbd cpio file procps ethtool iputils-ping net-tools dosfstools binutils parted openssl gawk attr bc psmisc nfs-client portmap xorriso isolinux gdisk syslinux syslinux-common syslinux-efi iproute2 \
+        make asciidoctor git build-essential ;\
+    apt-get -qq install -y --allow-unauthenticated </dev/null fdisk ||\
+        apt-get -qq install -y --allow-unauthenticated </dev/null util-linux
 
 RUN type -p zypper &>/dev/null || exit 0 ;\
     zypper --no-gpg-checks --quiet --non-interactive install  \
