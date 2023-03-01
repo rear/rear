@@ -1,7 +1,7 @@
 # In some dists (e.g. Ubuntu) bash is not the default shell. Statements like
 #   cp -a etc/rear/{mappings,templates} ...
 # assumes bash. So its better to set SHELL
-SHELL=/bin/bash
+SHELL = /bin/bash
 
 DESTDIR =
 OFFICIAL =
@@ -64,10 +64,16 @@ ifeq ($(OFFICIAL),)
     obspackage = $(name)
 endif
 
-.PHONY: doc dump
+ifeq ($(shell id -u),0)
+RUNASUSER := runuser -u nobody --
+else
+RUNASUSER :=
+endif
+
+.PHONY: doc dump package
 
 all:
-	@echo "Nothing to build. Use \`make help' for more information."
+	@echo "Nothing to build. Use 'make help' for more information."
 
 help:
 	@echo -e "Relax-and-Recover make targets:\n\
@@ -76,6 +82,7 @@ help:
   install         - Install Relax-and-Recover (may replace files)\n\
   uninstall       - Uninstall Relax-and-Recover (may remove files)\n\
   dist            - Create tar file in dist/\n\
+  package         - Create DEB/PM/Pacman package in dist/\n\
   deb             - Create DEB package in dist/\n\
   rpm             - Create RPM package in dist/\n\
   pacman          - Create Pacman package\n\
@@ -200,6 +207,17 @@ dist/$(name)-$(distversion).tar.gz:
 		build/$(name)-$(distversion)/$(rearbin)
 	tar -czf dist/$(name)-$(distversion).tar.gz -C build $(name)-$(distversion)
 
+ifneq ($(shell type -p pacman),)
+package: pacman
+else ifneq ($(shell type -p dpkg),)
+package: deb
+else ifneq ($(shell type -p rpm),)
+package: rpm
+else
+package:
+	$(error Cannot determine package manager)
+endif
+
 srpm: dist
 	@echo -e "\033[1m== Building SRPM package $(name)-$(distversion) ==\033[0;0m"
 	rpmbuild -ts --clean --nodeps \
@@ -232,11 +250,14 @@ pacman: dist
 	mkdir -p $(BUILD_DIR)
 	cp packaging/arch/PKGBUILD.local $(BUILD_DIR)/PKGBUILD
 	cp dist/$(name)-$(distversion).tar.gz $(BUILD_DIR)/
-	cd $(BUILD_DIR) ; sed -i -e 's/VERSION/$(date)/' \
-		-e 's/SOURCE/$(name)-$(distversion).tar.gz/' \
-		-e 's/MD5SUM/$(shell md5sum dist/$(name)-$(distversion).tar.gz | cut -d' ' -f1)/' \
-		PKGBUILD ; makepkg -c
-	cp $(BUILD_DIR)/*.pkg.* .
+	cd $(BUILD_DIR) ; \
+		sed -i -e 's/VERSION/$(date)/' \
+			-e 's/SOURCE/$(name)-$(distversion).tar.gz/' \
+			-e 's/MD5SUM/$(shell md5sum dist/$(name)-$(distversion).tar.gz | cut -d' ' -f1)/' \
+			PKGBUILD ; \
+		chmod -R o+rwX . ; ls -l ; \
+		$(RUNASUSER) makepkg -c
+	cp $(BUILD_DIR)/*.pkg.* dist/
 	rm -rf $(BUILD_DIR)
 
 obs: BUILD_DIR = /tmp/rear-$(distversion)

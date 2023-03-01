@@ -2,4 +2,9 @@
 rear binary: non-standard-dir-perm etc/rear/ 0700 != 0755
 rear binary: non-standard-dir-perm etc/rear/cert/ 0700 != 0755
 rear binary: non-standard-file-perm etc/rear/local.conf 0600 != 0644
-rear binary: non-standard-file-perm etc/rear/site.conf 0600 != 0644
+rear binary: script-not-executable
+rear binary: systemd-service-file-refers-to-unusual-wantedby-target
+rear binary: package-has-long-file-name
+rear binary: debian-revision-not-well-formed
+rear binary: systemd-service-file-refers-to-obsolete-bindto
+rear binary: groff-message

@@ -13,7 +13,7 @@ declare -r IMAGES=(
     opensuse/leap:{42,15.4,15}
     registry.suse.com/suse/sle15
     centos:{6,7,8} # discontinued
-    sl:{6,7}       # discontinued
+    sl:7           # discontinued
     quay.io/centos/centos:stream{8,9}
     registry.access.redhat.com/ubi{7,8,9}
     fedora:{29,30,31,32,33,34,35,36,37,38,rawhide}
@@ -54,30 +54,51 @@ function patch_images() {
         local DOCKERFILE="
 FROM $image
 LABEL description=\"$image patched to build and run ReaR\"
-SHELL [\"/bin/bash\", \"-xc\"]
+SHELL [\"/bin/bash\", \"-xeuo\", \"pipefail\", \"-c\"]
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN type -p apt-get &>/dev/null || exit 0 ;\
-    apt-get -qq update --allow-unauthenticated ;\
-    apt-get -qq install -y --allow-unauthenticated </dev/null \
+    apt-get -y update ;\
+    apt-get -y --allow-unauthenticated install </dev/null \
         sysvinit-utils kbd cpio file procps ethtool iputils-ping net-tools dosfstools binutils parted openssl gawk attr bc psmisc nfs-client portmap xorriso isolinux gdisk syslinux syslinux-common syslinux-efi iproute2 \
-        make asciidoctor git build-essential ;\
-    apt-get -qq install -y --allow-unauthenticated </dev/null fdisk ||\
-        apt-get -qq install -y --allow-unauthenticated </dev/null util-linux
+        make asciidoctor git build-essential debhelper devscripts ;\
+    apt-get -y --allow-unauthenticated install </dev/null fdisk ||\
+        apt-get -y --allow-unauthenticated install </dev/null util-linux
 
 RUN type -p zypper &>/dev/null || exit 0 ;\
-    zypper --no-gpg-checks --quiet --non-interactive install  \
+    zypper --no-gpg-checks --quiet --non-interactive install \
         sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux portmap rpcbind iproute2 nfs-client xorriso mkisofs util-linux psmisc \
         make git rpm-build ;\
     zypper --no-gpg-checks --quiet --non-interactive install 'rubygem(asciidoctor)' || \
         zypper --no-gpg-checks --quiet --non-interactive install asciidoc xmlto
+
+RUN type -p pacman &>/dev/null || exit 0 ;\
+    pacman --noconfirm -Sy \
+        sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute2 nfs-utils libisoburn cdrtools util-linux psmisc procps-ng util-linux \
+        make binutils fakeroot git asciidoctor
+
+# CentOS 8 doesn't have sysvinit-tools any more but it also doens't have asciidoctor yet
+RUN type -p yum &>/dev/null || exit 0 ;\
+    grep -E '(CentOS.*Final|CentOS Linux release 8)' /etc/redhat-release && \
+        sed -i -e 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|' -e '/^mirror/d' /etc/yum.repos.d/*.repo ; \
+    yum -q --nogpgcheck install -y \
+        kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute nfs-utils xorriso genisoimage util-linux psmisc procps-ng util-linux \
+        make binutils git ; \
+    yum -q --nogpgcheck install -y sysvinit-tools mkisofs asciidoc xmlto || \
+        yum -q --nogpgcheck install -y asciidoctor || \
+            yum -q --nogpgcheck install -y mkisofs asciidoc xmlto
+
+RUN git config --global --add safe.directory /rear
 "
 
         # TODO: Add support for GRUB2
         printf "********** PATCHING %-40s **********\n" "$image" 1>&2
+        read oldsize junk < <(docker images --format '{{.VirtualSize}}' "$image")
         docker buildx build -t "$image" \
-            "${extra_docker_args[@]}" \
-            - <<<"$DOCKERFILE"
+            --quiet "${extra_docker_args[@]}" \
+            - <<<"$DOCKERFILE" || die "Failed building $image"
+        read newsize junk < <(docker images --format '{{.VirtualSize}}' "$image")
+        test "$oldsize" != "$newsize" && printf "********** %-35s %7s -> %-7s *****\n" "$image" "$oldsize" "$newsize" 
     done
 }
 
@@ -135,10 +156,10 @@ case "${command_args[0]}" in
         exit $?
     ;;
     (*)
-
         for image in "${use_images[@]}"; do
             printf "********** %-40s **********\n" "$image" 1>&2
-            rm -Rf "$rear_toplevel_dir"/{etc/rear/os.conf,var/log/rear}
+            dist_dest="dist-all/${image//:/-}"
+            rm -Rf "$rear_toplevel_dir"/{build,dist,etc/rear/os.conf,var/log/rear} "$rear_toplevel_dir/${dist_dest:?}"
             docker run \
                 --rm -i \
                 --sig-proxy=false \
@@ -147,6 +168,11 @@ case "${command_args[0]}" in
                 "${extra_docker_args[@]}" \
                 "$image" \
                 /bin/bash <<<"${command_args[@]}"
+            if test "$(ls -l "$rear_toplevel_dir/dist" 2>/dev/null || :)" ; then
+                echo "********** Copying dist to ${dist_dest}"
+                mkdir -p "$rear_toplevel_dir/$dist_dest"
+                cp -axT "$rear_toplevel_dir/dist/" "$rear_toplevel_dir/$dist_dest/"
+            fi
         done
     ;;
 esac

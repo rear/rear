@@ -1,6 +1,7 @@
 /test/
 /build/
 /dist/
+/dist-all
 build-stamp
 /var
 var/log/rear
