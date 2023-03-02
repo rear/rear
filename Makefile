@@ -5,6 +5,7 @@ SHELL = /bin/bash
 
 DESTDIR =
 OFFICIAL =
+DIST_CONTENT = COPYING  doc  etc  MAINTAINERS  Makefile  packaging  README.adoc  tests  tools  usr
 
 ### Get version from Relax-and-Recover itself
 rearbin = usr/sbin/rear
@@ -189,7 +190,7 @@ dist/$(name)-$(distversion).tar.gz:
 	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
 	rm -Rf build/$(name)-$(distversion)
 	mkdir -p dist build/$(name)-$(distversion)
-	tar -c --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" * | \
+	tar -c --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" $(DIST_CONTENT) | \
 		tar -C build/$(name)-$(distversion) -x
 	@echo -e "\033[1m== Rewriting build/$(name)-$(distversion)/{$(specfile),$(dscfile),$(rearbin)} ==\033[0;0m"
 	sed -i.orig \
