@@ -1,6 +1,6 @@
 Format: 1.0
 Source: rear
-Version: 2.00
+Version: 2.7
 Binary: rear
 Maintainer: Gratien Dhaese <gratien.dhaese@gmail.com>
 Architecture: all
