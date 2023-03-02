@@ -13,12 +13,13 @@ name = rear
 version := $(shell awk 'BEGIN { FS="=" } /^readonly VERSION=/ { print $$2}' $(rearbin))
 
 ### Get the branch information from git
+# Note: CentOS 6 has ancient git, hence we need to do more processing of the output
 ifeq ($(OFFICIAL),)
 	ifneq ($(shell type -p git),)
 		git_date := $(shell git log -n 1 --format="%ai")
 		git_ref := $(shell git rev-parse --short HEAD)
-		git_count := $(shell git rev-list HEAD --count --no-merges)
-		git_branch_suffix = $(shell git symbolic-ref --short HEAD | tr -d /_-)
+		git_count := $(shell git rev-list HEAD --no-merges | wc -l)
+		git_branch_suffix = $(shell git symbolic-ref HEAD | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
 		git_status := $(shell git status --porcelain)
 		git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
 		ifneq ($(git_status),)

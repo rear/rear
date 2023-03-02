@@ -88,7 +88,7 @@ RUN type -p yum &>/dev/null || exit 0 ;\
         sed -i -e 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|' -e '/^mirror/d' /etc/yum.repos.d/*.repo ; \
     yum -q --nogpgcheck install -y \
         kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute nfs-utils xorriso genisoimage util-linux psmisc procps-ng util-linux \
-        make binutils git ; \
+        make binutils git rpm-build ; \
     yum -q --nogpgcheck install -y sysvinit-tools mkisofs asciidoc xmlto || \
         yum -q --nogpgcheck install -y asciidoctor || \
             yum -q --nogpgcheck install -y mkisofs asciidoc xmlto
@@ -163,7 +163,7 @@ case "${command_args[0]}" in
     (*)
         for image in "${use_images[@]}"; do
             printf "********** %-40s **********\n" "$image" 1>&2
-            dist_dest="dist-all/${image//:/-}"
+            dist_dest="dist-all/$(tr -cs '0-9a-zA-Z-_' - <<<"$image")"
             # BUG: Docker runs as root, creating build and dist as root, too
             # SOLUTION: ?
             rm -Rf "$rear_toplevel_dir"/{build,dist,etc/rear/os.conf,var/log/rear} "$rear_toplevel_dir/${dist_dest:?}" 2>/dev/null ||\

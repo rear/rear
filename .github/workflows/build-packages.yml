@@ -1,0 +1,30 @@
+name: Build Packages
+on: push
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          depth: 0
+
+      - id: setup
+        run: apt-get -qq update && apt-get -qq install asciidoctor
+
+      - id: prepare
+        run: tools/run-in-docker -- --patch
+
+      - id: build
+        run: tools/run-in-docker -- make package
+      
+      - name: Upload WARP Installer Artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ReaR Packages ${{ github.head_ref || github.ref_name }} ${{ github.sha }}
+          path: dist-all/*
+          retention-days: 7
