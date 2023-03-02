@@ -103,7 +103,7 @@ dump:
 	$(foreach V, $(sort $(.VARIABLES)), $(if $(filter-out environment% default automatic, $(origin $V)),$(info $V=$($V) defined as >$(value $V)<)))
 
 clean:
-	rm -Rf dist build
+	rm -Rf dist build etc/os.conf etc/site.conf var
 	rm -f build-stamp
 	$(MAKE) -C doc clean
 
