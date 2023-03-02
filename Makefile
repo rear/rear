@@ -103,8 +103,7 @@ dump:
 	$(foreach V, $(sort $(.VARIABLES)), $(if $(filter-out environment% default automatic, $(origin $V)),$(info $V=$($V) defined as >$(value $V)<)))
 
 clean:
-	rm -Rf dist build etc/os.conf etc/site.conf var
-	rm -f build-stamp
+	rm -Rf dist build etc/os.conf etc/site.conf var build-stamp
 	$(MAKE) -C doc clean
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
