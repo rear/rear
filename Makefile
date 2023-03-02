@@ -171,7 +171,7 @@ dist/$(name)-$(distversion).tar.gz:
 	mkdir -p dist build/$(name)-$(distversion)
 	tar -c --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" * | \
 		tar -C build/$(name)-$(distversion) -x
-	@echo -e "\033[1m== Rewriting $(specfile), $(dscfile) and $(rearbin) ==\033[0;0m"
+	@echo -e "\033[1m== Rewriting build/$(name)-$(distversion)/{$(specfile),$(dscfile),$(rearbin)} ==\033[0;0m"
 	sed -i.orig \
 		-e 's#^Source:.*#Source: $(name)-${distversion}.tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
