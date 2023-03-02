@@ -10,7 +10,7 @@
 declare -r IMAGES=(
     ubuntu:{18.04,20.04,22.04,devel}
     debian:{8,9,10,11,unstable}
-    opensuse/leap:{42,15.4,15}
+    opensuse/leap:{42,15}
     registry.suse.com/suse/sle15
     centos:{6,7,8} # discontinued
     sl:7           # discontinued
