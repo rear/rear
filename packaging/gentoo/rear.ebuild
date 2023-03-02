@@ -6,7 +6,7 @@ EAPI=4
 
 DESCRIPTION="Fully automated disaster recovery supporting a broad variety of backup strategies and scenarios"
 HOMEPAGE="http://relax-and-recover.org/"
-SRC_URI="mirror://sourceforge/${PN}/${P}.tar.gz"
+SRC_URI="https://github.com/rear/rear/archive/${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
