@@ -163,7 +163,7 @@ case "${command_args[0]}" in
     (*)
         for image in "${use_images[@]}"; do
             printf "********** %-40s **********\n" "$image" 1>&2
-            dist_dest="dist-all/$(tr -cs '0-9a-zA-Z-_' - <<<"$image")"
+            dist_dest="dist-all/$(echo -n "$image" | tr -cs '0-9a-zA-Z-_' -)"
             # BUG: Docker runs as root, creating build and dist as root, too
             # SOLUTION: ?
             rm -Rf "$rear_toplevel_dir"/{build,dist,etc/rear/os.conf,var/log/rear} "$rear_toplevel_dir/${dist_dest:?}" 2>/dev/null ||\
