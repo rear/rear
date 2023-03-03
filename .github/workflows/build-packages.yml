@@ -21,6 +21,8 @@ jobs:
       - id: build
         run: tools/run-in-docker -- make package
       
+      - run: ls -lR dist-all
+
       - name: Upload WARP Installer Artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
