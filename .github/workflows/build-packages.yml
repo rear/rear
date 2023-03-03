@@ -13,7 +13,7 @@ jobs:
           depth: 0
 
       - id: setup
-        run: apt-get -qq update && apt-get -qq install asciidoctor
+        run: sudo apt-get -qq update && sudo apt-get -qq install asciidoctor
 
       - id: prepare
         run: tools/run-in-docker -- --patch
