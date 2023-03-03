@@ -176,15 +176,17 @@ uninstall:
 
 dist: clean validate man dist/$(name)-$(distversion).tar.gz
 
+# most of the sed stuff should be skipped if $(distversion) == $(version)
+# except RELEASE_DATE= and perhaps the Version in $(dscfile)
 dist/$(name)-$(distversion).tar.gz:
 	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
 	rm -Rf build/$(name)-$(distversion)
 	mkdir -p dist build/$(name)-$(distversion)
 	tar -c --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" * | \
 		tar -C build/$(name)-$(distversion) -x
-	@echo -e "\033[1m== Rewriting $(specfile), $(dscfile) and $(rearbin) ==\033[0;0m"
+	@echo -e "\033[1m== Rewriting build/$(name)-$(distversion)/{$(specfile),$(dscfile),$(rearbin)} ==\033[0;0m"
 	sed -i.orig \
-		-e 's#^Source:.*#Source: https://sourceforge.net/projects/rear/files/rear/${version}/$(name)-${distversion}.tar.gz#' \
+		-e 's#^Source:.*#Source: $(name)-${distversion}.tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
 		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
 		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
