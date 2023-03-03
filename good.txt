@@ -1,0 +1,201 @@
+********** ubuntu:18.04                             **********
+rm -Rf dist build etc/os.conf etc/site.conf var build-stamp
+make -C doc clean
+make[1]: Entering directory '/rear/doc'
+rm -f unconv.8 *.html *.xml
+make -C user-guide clean
+make[2]: Entering directory '/rear/doc/user-guide'
+rm -f *.html *.svg *.xml
+make[2]: Leaving directory '/rear/doc/user-guide'
+make[1]: Leaving directory '/rear/doc'
+== Validating scripts and configuration ==
+find etc/ usr/share/rear/conf/ -name '*.conf' | xargs -n 1 /bin/bash -n
+/bin/bash -n usr/sbin/rear
+find . -name '*.sh' | xargs -n 1 /bin/bash -O extglob -O nullglob -n
+find usr/share/rear -name '*.sh' | grep -v -E '(lib|skel|conf)' | while read FILE ; do \
+        num=$(echo ${FILE##*/} | cut -c1-3); \
+        if [[ "$num" = "000" || "$num" = "999" ]] ; then \
+                echo "ERROR: script $FILE may not start with $num"; \
+                exit 1; \
+        else \
+                if $( grep '[_[:alpha:]]' <<< $num >/dev/null 2>&1 ) ; then \
+                        echo "ERROR: script $FILE must start with 3 digits"; \
+                        exit 1; \
+                fi; \
+        fi; \
+done
+== Prepare manual ==
+make -C doc man
+make[1]: Entering directory '/rear/doc'
+make[1]: Nothing to be done for 'man'.
+make[1]: Leaving directory '/rear/doc'
+== Building archive rear-2.7-git.4996.e56ef68c.fixpackagedependencies ==
+rm -Rf build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies
+mkdir -p dist build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies
+tar -c --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" COPYING  doc  etc  MAINTAINERS  Makefile  packaging  README.adoc  tests  tools  usr | \
+        tar -C build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies -x
+== Rewriting packaging/rpm/rear.spec, packaging/debian/rear.dsc and usr/sbin/rear ==
+sed -i.orig \
+        -e 's#^Source:.*#Source: https://sourceforge.net/projects/rear/files/rear/2.7/rear-2.7-git.4996.e56ef68c.fixpackagedependencies.tar.gz#' \
+        -e 's#^Version:.*#Version: 2.7#' \
+        -e 's#^%define rpmrelease.*#%define rpmrelease .git.4996.e56ef68c.fixpackagedependencies#' \
+        -e 's#^%setup.*#%setup -q -n rear-2.7-git.4996.e56ef68c.fixpackagedependencies#' \
+        build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/packaging/rpm/rear.spec
+sed -i.orig \
+        -e 's#^Version:.*#Version: 2.7-0git.4996.e56ef68c.fixpackagedependencies#' \
+        build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/packaging/debian/rear.dsc
+sed -i.orig \
+        -e 's#^readonly VERSION=.*#readonly VERSION=2.7-git.4996.e56ef68c.fixpackagedependencies#' \
+        -e 's#^readonly RELEASE_DATE=.*#readonly RELEASE_DATE="2023-03-03"#' \
+        build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/usr/sbin/rear
+tar -czf dist/rear-2.7-git.4996.e56ef68c.fixpackagedependencies.tar.gz -C build rear-2.7-git.4996.e56ef68c.fixpackagedependencies
+== Building DEB package rear-2.7-git.4996.e56ef68c.fixpackagedependencies ==
+cp -r build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/packaging/debian/ build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/
+cd build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies ; dch -v 2.7-git.4996.e56ef68c.fixpackagedependencies -b -M build package
+cd build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies ; debuild -us -uc -i -b --lintian-opts --profile debian
+ dpkg-buildpackage -rfakeroot -us -uc -ui -i -b
+dpkg-buildpackage: warning: using a gain-root-command while being root
+dpkg-buildpackage: info: source package rear
+dpkg-buildpackage: info: source version 2.7-git.4996.e56ef68c.fixpackagedependencies
+dpkg-buildpackage: info: source distribution UNRELEASED
+dpkg-buildpackage: info: source changed by ReaR Team <contact@relax-and-recover.org>
+ dpkg-source -i --before-build rear-2.7-git.4996.e56ef68c.fixpackagedependencies
+dpkg-buildpackage: info: host architecture amd64
+ fakeroot debian/rules clean
+dh clean
+   dh_auto_clean
+        make -j8 -O clean
+make[1]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+rm -Rf dist build etc/os.conf etc/site.conf var build-stamp
+make[1]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+make -C doc clean
+make[2]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/doc'
+rm -f unconv.8 *.html *.xml
+make -C user-guide clean
+make[3]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/doc/user-guide'
+make[3]: warning: jobserver unavailable: using -j1.  Add '+' to parent make rule.
+make[3]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/doc/user-guide'
+make[3]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/doc/user-guide'
+rm -f *.html *.svg *.xml
+make[3]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/doc/user-guide'
+make[2]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/doc'
+   dh_clean
+ debian/rules build
+dh build
+   dh_update_autotools_config
+   dh_autoreconf
+   dh_auto_configure
+   dh_auto_build
+        make -j8 -O
+make[1]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+Nothing to build. Use 'make help' for more information.
+make[1]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+   dh_auto_test
+   create-stamp debian/debhelper-build-stamp
+ fakeroot debian/rules binary
+dh binary
+   dh_testroot
+   dh_prep
+   dh_auto_install
+        make -j8 -O install DESTDIR=/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear AM_UPDATE_INFO_DIR=no
+make[1]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+== Prepare manual ==
+make[1]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+make -C doc man
+make[1]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+== Installing documentation ==
+make[1]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+make -C doc install
+make[2]: Nothing to be done for 'man'.
+make[1]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+== Installing binary ==
+install -Dp -m0755 usr/sbin/rear /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/usr/sbin/rear
+sed -i -e 's,^CONFIG_DIR=.*,CONFIG_DIR="/etc/rear",' \
+        -e 's,^SHARE_DIR=.*,SHARE_DIR="/usr/share/rear",' \
+        -e 's,^VAR_DIR=.*,VAR_DIR="/var/lib/rear",' \
+        /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/usr/sbin/rear
+make[1]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+make[1]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+== Installing working directory ==
+install -d -m0755 /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/var/lib/rear/
+install -d -m0755 /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/var/log/rear/
+make[1]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+make[2]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/doc'
+install -Dp -m0644 rear.8 /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/usr/share/man/man8/rear.8
+make[2]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/doc'
+make[1]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+sed -i -e 's,/etc,/etc,' \
+        -e 's,/usr/sbin,/usr/sbin,' \
+        -e 's,/usr/share,/usr/share,' \
+        -e 's,/usr/share/doc/packages,/usr/share/doc,' \
+        /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/usr/share/man/man8/rear.8
+make[1]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+make[1]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+== Installing configuration ==
+install -d -m0700 /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/etc/rear/
+install -d -m0700 /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/etc/rear/cert/
+[[ ! -e /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/etc/rear/local.conf ]] && \
+        install -Dp -m0600 etc/rear/local.conf /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/etc/rear/local.conf
+[[ ! -e /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/etc/rear/os.conf && -e etc/rear/os.conf ]] && \
+        install -Dp -m0600 etc/rear/os.conf /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/etc/rear/os.conf
+Makefile:137: recipe for target 'install-config' failed
+make[1]: [install-config] Error 1 (ignored)
+find /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/etc/rear/ -name '.gitignore' -exec rm -rf {} \; &>/dev/null
+make[1]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+make[1]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+== Installing scripts ==
+rm -Rf /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/usr/share/rear
+install -d -m0755 /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/usr/share/rear/
+cp -a usr/share/rear/. /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/usr/share/rear/
+find /rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies/debian/rear/usr/share/rear/ -name '.gitignore' -exec rm -rf {} \; &>/dev/null
+make[1]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+make[1]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+== Validating scripts and configuration ==
+find etc/ usr/share/rear/conf/ -name '*.conf' | xargs -n 1 /bin/bash -n
+/bin/bash -n usr/sbin/rear
+find . -name '*.sh' | xargs -n 1 /bin/bash -O extglob -O nullglob -n
+find usr/share/rear -name '*.sh' | grep -v -E '(lib|skel|conf)' | while read FILE ; do \
+        num=$(echo ${FILE##*/} | cut -c1-3); \
+        if [[ "$num" = "000" || "$num" = "999" ]] ; then \
+                echo "ERROR: script $FILE may not start with $num"; \
+                exit 1; \
+        else \
+                if $( grep '[_[:alpha:]]' <<< $num >/dev/null 2>&1 ) ; then \
+                        echo "ERROR: script $FILE must start with 3 digits"; \
+                        exit 1; \
+                fi; \
+        fi; \
+done
+make[1]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+   dh_installdocs
+   dh_installchangelogs
+   dh_installman
+   dh_lintian
+   dh_perl
+   dh_link
+   dh_strip_nondeterminism
+   dh_compress
+   debian/rules override_dh_fixperms
+make[1]: Entering directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+dh_fixperms --exclude debian/rear/etc/rear
+make[1]: Leaving directory '/rear/build/rear-2.7-git.4996.e56ef68c.fixpackagedependencies'
+   dh_missing
+   dh_strip
+   dh_makeshlibs
+   dh_shlibdeps
+   dh_installdeb
+   dh_gencontrol
+   dh_md5sums
+   dh_builddeb
+dpkg-deb: building package 'rear' in '../rear_2.7-git.4996.e56ef68c.fixpackagedependencies_amd64.deb'.
+ dpkg-genbuildinfo --build=binary
+ dpkg-genchanges --build=binary >../rear_2.7-git.4996.e56ef68c.fixpackagedependencies_amd64.changes
+dpkg-genchanges: info: binary-only upload (no source code included)
+ dpkg-source -i --after-build rear-2.7-git.4996.e56ef68c.fixpackagedependencies
+dpkg-buildpackage: info: binary-only upload (no source included)
+Now running lintian --profile debian rear_2.7-git.4996.e56ef68c.fixpackagedependencies_amd64.changes ...
+warning: the authors of lintian do not recommend running it with root privileges!
+W: rear: manpage-has-errors-from-man usr/share/man/man8/rear.8.gz 641: warning [p 7, 6.0i]: can't break line
+N: 12 tags overridden (12 warnings)
+Finished running lintian.
+mv build/rear_*deb dist/

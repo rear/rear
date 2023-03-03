@@ -14,16 +14,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          depth: 0
+          fetch-depth: 0
 
       - id: setup
         run: sudo apt-get -qq update && sudo apt-get -qq install asciidoctor
 
       - id: prepare
-        run: tools/run-in-docker -- --patch
+        run: tools/run-in-docker 18 -- --patch
 
       - id: build
-        run: tools/run-in-docker -- make package
+        run: tools/run-in-docker 18 -- make package
       
       - run: ls -lR dist-all
 
