@@ -1,12 +1,9 @@
-#
-# show the last job that ran
-
 # if no backupset is defined, query the user for it
-test "$GALAXY11_BACKUPSET" || return 0
+contains_visible_char "$GALAXY11_BACKUPSET" && return 0
 
 local backupsets
 IFS=$'\n' read -r -d "" -a backupsets < <(
-	qlist backupset -c $HOSTNAME -a Q_LINUX_FS
+	qlist backupset -c $HOSTNAME -a Q_LINUX_FS | sed -E -e 's/ +$//'
 )
 
 until IsInArray "$GALAXY11_BACKUPSET" "${backupsets[@]}"; do
