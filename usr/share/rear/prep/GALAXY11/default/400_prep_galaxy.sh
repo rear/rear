@@ -9,7 +9,7 @@ function set_variable_from_commvault_status {
 	local match="$1" ; shift
 	var=$(sed -n -E -e "/$match/s/.*= //p" <<<"$commvault_status")
 	var=${var## *} # strip trailing blanks
-	contains_visible_char "$var" || Error "Could not set $var_name variable matching $match from 'commvault status':\n$commvault_status"
+	contains_visible_char "$var" || Error "Could not set $var_name variable matching $match from 'commvault status':$LF$commvault_status"
 }
 
 # CommVault base paths, matching what commvault status knows
