@@ -176,7 +176,7 @@ while true ; do
                 echo "$help_note_text"
                 exit 1
             fi
-            CONFIG_APPEND_FILES="$2"
+            CONFIG_APPEND_FILES+="$2 "
             shift
             ;;
         (-d)
