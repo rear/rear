@@ -8,10 +8,14 @@ alias md='mkdir -p'
 alias which='type -p'
 alias rehash='hash -r'
 
+# ReaR helpers
+alias show='declare -p | grep'
+
 # mandatory for our scripts to work
 shopt -s nullglob extglob
 
 eval "$REAR_EVAL" &>/dev/null
+unset REAR_EVAL # reduce environmental pollution
 
 VERBOSE=1
 
@@ -57,4 +61,5 @@ or source $PRODUCT scripts to test their behaviour.
 SHARE_DIR=$SHARE_DIR BUILD_DIR=$BUILD_DIR
 "
 
+WORKING_DIR=$SHARE_DIR # ensure that we can run Source ...script.sh via tab completion and that the Source function will stay there
 cd $SHARE_DIR

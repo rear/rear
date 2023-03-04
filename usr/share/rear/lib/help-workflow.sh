@@ -32,7 +32,7 @@ Available options:
  -r KERNEL           kernel version to use; currently '$KERNEL_VERSION'
  -s                  simulation mode; show what scripts are run (without executing them)
  -S                  step-by-step mode; acknowledge each script individually
- -v                  verbose mode; show messages what $PRODUCT is doing on the terminal
+ -v                  verbose mode; show messages what $PRODUCT is doing on the terminal or show verbose help
  -V --version        version information
 
 List of commands:
