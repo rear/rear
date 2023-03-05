@@ -84,6 +84,8 @@ help:
   install         - Install Relax-and-Recover (may replace files)\n\
   uninstall       - Uninstall Relax-and-Recover (may remove files)\n\
   dist            - Create tar file in dist/\n\
+  dist-install    - Create tar file in dist and use that to install via make install\n\
+                    We use this to install from checkout with correct version\n\
   package         - Create DEB/PM/Pacman package in dist/\n\
   deb             - Create DEB package in dist/\n\
   rpm             - Create RPM package in dist/\n\
@@ -149,6 +151,7 @@ install-bin:
 	sed -i -e 's,^CONFIG_DIR=.*,CONFIG_DIR="$(sysconfdir)/rear",' \
 		-e 's,^SHARE_DIR=.*,SHARE_DIR="$(datadir)/rear",' \
 		-e 's,^VAR_DIR=.*,VAR_DIR="$(localstatedir)/lib/rear",' \
+		-e 's,^LOG_DIR=.*,LOG_DIR="$(localstatedir)/log/rear",' \
 		$(DESTDIR)$(sbindir)/rear
 
 install-data:
@@ -207,6 +210,11 @@ dist/$(name)-$(distversion).tar.gz:
 		-e 's#^readonly RELEASE_DATE=.*#readonly RELEASE_DATE="$(release_date)"#' \
 		build/$(name)-$(distversion)/$(rearbin)
 	tar -czf dist/$(name)-$(distversion).tar.gz -C build $(name)-$(distversion)
+
+dist-install: dist/$(name)-$(distversion).tar.gz
+	mkdir -p build/dist-install
+	tar -C build/dist-install -xvzf dist/$(name)-$(distversion).tar.gz --strip-components 1
+	$(MAKE) -C build/dist-install install
 
 ifneq ($(shell type -p pacman),)
 package: pacman
