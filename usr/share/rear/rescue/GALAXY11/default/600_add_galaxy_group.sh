@@ -3,7 +3,7 @@
 #
 
 # append group info to /etc/group if it is not root (0)
-galaxy_group=$(stat -L -c "%g" /opt/commvault/Base64/Galaxy)
+galaxy_group=$(stat -L -c "%g" "$GALAXY11_HOME_DIRECTORY/Galaxy")
 if test "$galaxy_group" && (( galaxy_group > 0 )) ; then
     getent group $galaxy_group >>$ROOTFS_DIR/etc/group
 fi
