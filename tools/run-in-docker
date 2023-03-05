@@ -157,7 +157,7 @@ fi
 
 rear_toplevel_dir=$(dirname $(dirname $(readlink -f "$0")))
 bash_script=tools/run-in-docker-script.sh
-bash_args="--rcfile tools/run-in-docker.bashrc -i $bash_script"
+bash_args="-c echo 'BUG: CONFIGURATION ERROR"
 
 # declare -p IMAGES use_images command_args rear_toplevel_dir ; exit 0
 
@@ -174,23 +174,28 @@ case "${command_args[0]}" in
     ;;
 *)
     echo "${command_args[*]}" >"$rear_toplevel_dir/$bash_script"
+    bash_args="$bash_script"
     ;;
 esac
 
+# Note: bash reads --rcfile <file> for interactive shells
+#       bash reads the file specified in BASH_ENV for non-interactive shells
+#       we set both so that our startup file run-in-docker.bashrc is ALWAYS read as it sets the PATH
 for image in "${use_images[@]}"; do
     printf "********** %-40s **********\n" "$image" 1>&2
     dist_dest="dist-all/$(echo -n "$image" | tr -cs '0-9a-zA-Z-_' -)"
-    # BUG: Docker runs as root, creating build and dist as root, too
-    # SOLUTION: ?
+    # BUG/PROBLEM: Docker runs as root, creating build and dist as root, too
+    # SOLUTION: change ReaR code and Makefile to never write to the source tree (TODO)
     rm -Rf "$rear_toplevel_dir"/{build,dist,etc/rear/os.conf,var/log/rear} "$rear_toplevel_dir/${dist_dest:?}" 2>/dev/null ||
         sudo rm -Rf "$rear_toplevel_dir"/{build,dist,etc/rear/os.conf,var/log/rear} "$rear_toplevel_dir/${dist_dest:?}" ||
         die "Cannot clean up ReaR directory"
     docker run \
-        --rm -i -t \
+        --rm $(test -t 0 && echo -i -t) \
         --sig-proxy=false \
         -h "$image" \
         -v "$rear_toplevel_dir:/rear" \
         -e REAR_VAR=/tmp/rear \
+        -e BASH_ENV=tools/run-in-docker.bashrc \
         -w /rear \
         "${extra_docker_args[@]}" \
         "$image" \

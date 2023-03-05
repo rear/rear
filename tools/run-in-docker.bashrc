@@ -8,7 +8,7 @@ alias ll='ls -alF'
 alias ls='ls --color=auto'
 
 _t=""
-if test "$UID" = 0 ; then
+if test "$UID" = 0; then
     _u="\h"
     _p=" #"
 else
