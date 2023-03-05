@@ -29,14 +29,15 @@ $(fold -sw 60 <<<"${IMAGES[*]}")
 
 You can also specify completely different Docker images instead.
 
-Without command it will show the Bash version
+Without command it will show the Bash version in all images
 
 Special commands:
 
 --patch     Patch the (given or all) images to contain the ReaR build and run dependencies
+-i          Interactive shell, used by default if image selection yields only a single image
 
 Architecture defaults to the host platform, specify architecture via
--a <architecture>, e.g. -a amd64 on M1 Mac
+-a <architecture>, e.g. -a amd64 on M1 Mac as part of the image selection
 "
 
 function die {
@@ -51,7 +52,6 @@ trap exit_handler EXIT
 
 extra_docker_args=()
 use_images=()
-
 
 # patch the images to contain all ReaR build and run dependencies
 function patch_images() {
@@ -103,31 +103,31 @@ RUN git config --global --add safe.directory /rear
             "${extra_docker_args[@]}" \
             - <<<"$DOCKERFILE" || die "Failed building $image"
         read newsize junk < <(docker images --format '{{.VirtualSize}}' "$image")
-        test "$oldsize" != "$newsize" && printf "********** %-35s %7s -> %-7s *****\n" "$image" "$oldsize" "$newsize" 
+        test "$oldsize" != "$newsize" && printf "********** %-35s %7s -> %-7s *****\n" "$image" "$oldsize" "$newsize"
     done
 }
 
 command_args=()
 while test $# -gt 0; do
     case "$1" in
-    (-a)
+    -a)
         echo "Using architecture $2 instead of default Docker architecture $(docker system info --format '{{.Architecture}}')"
         extra_docker_args+=("--platform" "linux/$2")
         shift 2
         ;;
-    (-h|--help)
+    -h | --help)
         echo "$HELP_TEXT"
         exit 1
         ;;
-    (--)
+    --)
         shift
         [[ $# -gt 0 ]] && command_args=("$@")
         break
         ;;
-    (*)
+    *)
         #shellcheck disable=SC2207
         use_images+=($(
-            ((c=0))
+            ((c = 0))
             for image in "${IMAGES[@]}"; do
                 if [[ "$image" == *$1* ]]; then
                     echo "$image"
@@ -148,43 +148,56 @@ if test ${#use_images[@]} -eq 0; then
 fi
 
 if test ${#command_args[@]} -eq 0; then
-    command_args=("echo" "Bash is \$BASH_VERSION")
+    if test ${#use_images[@]} -eq 1; then # if only one image is given and no command then go interactive
+        command_args=(-i)
+    else
+        command_args=("echo" "Bash is \$BASH_VERSION")
+    fi
 fi
 
 rear_toplevel_dir=$(dirname $(dirname $(readlink -f "$0")))
+bash_script=tools/run-in-docker-script.sh
+bash_args="--rcfile tools/run-in-docker.bashrc -i $bash_script"
 
 # declare -p IMAGES use_images command_args rear_toplevel_dir ; exit 0
 
 case "${command_args[0]}" in
-    (--patch)
-        patch_images
-        exit $?
+--patch)
+    patch_images
+    exit $?
     ;;
-    (*)
-        for image in "${use_images[@]}"; do
-            printf "********** %-40s **********\n" "$image" 1>&2
-            dist_dest="dist-all/$(echo -n "$image" | tr -cs '0-9a-zA-Z-_' -)"
-            # BUG: Docker runs as root, creating build and dist as root, too
-            # SOLUTION: ?
-            rm -Rf "$rear_toplevel_dir"/{build,dist,etc/rear/os.conf,var/log/rear} "$rear_toplevel_dir/${dist_dest:?}" 2>/dev/null ||\
-                sudo rm -Rf "$rear_toplevel_dir"/{build,dist,etc/rear/os.conf,var/log/rear} "$rear_toplevel_dir/${dist_dest:?}" ||\
-                    die "Cannot clean up ReaR directory"
-            docker run \
-                --rm -i \
-                --sig-proxy=false \
-                -v "$rear_toplevel_dir:/rear" \
-		-e REAR_VAR=/tmp/rear \
-                -w /rear \
-                "${extra_docker_args[@]}" \
-                "$image" \
-                /bin/bash <<<"${command_args[@]}" || die "############### DOCKER RUN FAILED FOR $image"
-            if test "$(ls -l "$rear_toplevel_dir/dist" 2>/dev/null || :)" ; then
-                echo "********** Copying dist to ${dist_dest}"
-                mkdir -p "$rear_toplevel_dir/$dist_dest" || die "Could not mkdir $rear_toplevel_dir/$dist_dest"
-                cp -rxT "$rear_toplevel_dir/dist/" "$rear_toplevel_dir/$dist_dest/" || die "Could not copy dist to $dist_dest"
-            fi
-        done
+-i)
+    bash_args="--rcfile tools/run-in-docker.bashrc -i"
+    ;;
+-*)
+    bash_args="${command_args[*]}"
+    ;;
+*)
+    echo "${command_args[*]}" >"$rear_toplevel_dir/$bash_script"
     ;;
 esac
 
-
+for image in "${use_images[@]}"; do
+    printf "********** %-40s **********\n" "$image" 1>&2
+    dist_dest="dist-all/$(echo -n "$image" | tr -cs '0-9a-zA-Z-_' -)"
+    # BUG: Docker runs as root, creating build and dist as root, too
+    # SOLUTION: ?
+    rm -Rf "$rear_toplevel_dir"/{build,dist,etc/rear/os.conf,var/log/rear} "$rear_toplevel_dir/${dist_dest:?}" 2>/dev/null ||
+        sudo rm -Rf "$rear_toplevel_dir"/{build,dist,etc/rear/os.conf,var/log/rear} "$rear_toplevel_dir/${dist_dest:?}" ||
+        die "Cannot clean up ReaR directory"
+    docker run \
+        --rm -i -t \
+        --sig-proxy=false \
+        -h "$image" \
+        -v "$rear_toplevel_dir:/rear" \
+        -e REAR_VAR=/tmp/rear \
+        -w /rear \
+        "${extra_docker_args[@]}" \
+        "$image" \
+        /bin/bash $bash_args || die "############### DOCKER RUN FAILED FOR $image"
+    if test "$(ls -l "$rear_toplevel_dir/dist" 2>/dev/null || :)"; then
+        echo "********** Copying dist to ${dist_dest}"
+        mkdir -p "$rear_toplevel_dir/$dist_dest" || die "Could not mkdir $rear_toplevel_dir/$dist_dest"
+        cp -rxT "$rear_toplevel_dir/dist/" "$rear_toplevel_dir/$dist_dest/" || die "Could not copy dist to $dist_dest"
+    fi
+done
