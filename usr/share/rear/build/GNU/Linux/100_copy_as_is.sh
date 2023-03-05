@@ -160,10 +160,8 @@ done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 Log "LIBS = ${LIBS[@]}"
 
 # Fix ReaR directories when running from checkout or REAR_VAR configuration:
-if test "$REAR_DIR_PREFIX" ; then
-    Log "Fixing ReaR directories for non-default paths"
-    test "$VAR_DIR" != /var/lib/rear && ln $v -sf "$VAR_DIR" $ROOTFS_DIR/var/lib/rear
-    test "$SHARE_DIR" != /usr/share/rear && ln $v -sf "$SHARE_DIR" $ROOTFS_DIR/usr/share/rear
-fi
+Log "Validating and fixing ReaR directories for non-default paths"
+test "$VAR_DIR" != /var/lib/rear && ln -v -sf "$VAR_DIR" $ROOTFS_DIR/var/lib/rear
+test "$SHARE_DIR" != /usr/share/rear && ln -v -sf "$SHARE_DIR" $ROOTFS_DIR/usr/share/rear
 
 
