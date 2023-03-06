@@ -26,6 +26,6 @@
 # see https://github.com/rear/rear/issues/2951
 
 test "$( ls -A $ROOTFS_DIR )" || return 0
-LogPrintError "Modified ReaR recovery system area after 'prep' stage ($ROOTFS_DIR not empty)"
-DebugPrint "$( find $ROOTFS_DIR )"
+DebugPrint "Modified ReaR recovery system area after 'prep' stage ($ROOTFS_DIR not empty)"
+Debug "$( find $ROOTFS_DIR )"
 return 1
