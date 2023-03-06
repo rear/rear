@@ -1,10 +1,12 @@
-# ensure that all array variables have been assigned as Bash arrays in user provided configuration
-# fixes common user config errors: https://github.com/rear/rear/issues/2930
+# Ensure that all array variables are assigned as arrays in user provided configuration.
+# This avoids user config mistakes which can lead to obscure and severe errors,
+# see https://github.com/rear/rear/issues/2930 and for an example
+# see https://github.com/rear/rear/issues/2911
 #
-# Note: Bash variables retain the array attribute even if name=value syntax is used to assign
-#       a new value, as this assignment simply changes the first member of the array.
-#       Therefore it is enough to simply take all the currently defined array variables and check
-#       for any wrong assignment in the user configuration
+# Bash variables retain the array attribute even if name=value syntax is used to assign
+# a new value because the new assignment changes the first member of the array.
+# Therefore it is enough to take all currently defined array variables
+# and check for wrong assignments in the user configuration.
 
 # Skip this test when 'mapfile' (a bash 4.x builtin) is not available:
 # sed from such old systems also don't support -E
@@ -19,8 +21,9 @@ mapfile -t array_variables < <(
 for config in "$CONFIG_DIR"/{site,local,rescue}.conf "${CONFIG_APPEND_FILES_PATHS[@]}"; do
     test -r "$config" || continue
     for var in "${array_variables[@]}"; do
+        # Do not check comment lines for falsely assigned array variables:
         mapfile -t var_assignments < <(
-            sed -n -E -e "/(^|\W+)$var\+?=/p" "$config"
+            grep -v '^[[:space:]]*#' "$config" | sed -n -E -e "/(^|\W+)$var\+?=/p"
             )
         for line in "${var_assignments[@]}"; do
             [[ "$line" == *$var?(+)=\(* ]] || Error "Syntax error: Variable $var not assigned as Bash array in $config:$LF$line$LF"
