@@ -1,7 +1,29 @@
-This is the preparation part of ReaR before starting the rescue build phase.
 
-Please note that you should not put any scripts that reference
-$ROOTFS_DIR or $VAR_DIR/recovery into this section. Scripts for $ROOTFS_DIR
-go to rescue/ and for $VAR_DIR/recovery go to layout/ respectively
+This is the preparation part of ReaR (i.e. the 'prep' stage)
+before starting the rescue/recovery system build phase.
 
-That way we keep only the real prep stuff here in the prep section.
+You should not put scripts into this 'prep' stage that modify things
+in $ROOTFS_DIR or $VAR_DIR/recovery and $VAR_DIR/layout because
+scripts for $ROOTFS_DIR belong to the 'rescue' stage and scripts
+for $VAR_DIR/recovery and $VAR_DIR/layout belong to the 'layout' stages.
+
+We have only the real preparation tasks in the 'prep' stage
+so that the 'prep' stage can also be run by workflows which
+do not make a rescue/recovery system.
+
+Reasoning for ROOTFS_DIR:
+Only those workflows that actually make a rescue/recovery system
+by running the stages 'rescue', 'build', 'pack', and 'output'
+(in particular the workflows mkrescue, mkbackup and mkopalpba)
+should modify something in ROOTFS_DIR.
+In contrast when other workflows that run the 'prep' stage (e.g. mkbackuponly)
+modify something in ROOTFS_DIR then all those modifications will be lost
+because no rescue/recovery system with those modifications is made.
+So the problem is possible inconsistencies between what gets actually used
+during "rear recover" (i.e. the last actually made rescue/recovery system)
+versus what other workflows that run the 'prep' stage may need to have.
+For example mkbackuponly may need a modified rescue/recovery system
+when backup config variables need updated values in the recovery system
+(e.g. an updated value for BACKUP_PROG_EXCLUDE or something similar).
+The prep/default/990_verify_empty_rootfs.sh scrip checks at the end
+of the 'prep' stage that ROOTFS_DIR is unmodified (i.e. still empty).
