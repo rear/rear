@@ -3,13 +3,15 @@ This is the preparation part of ReaR (i.e. the 'prep' stage)
 before starting the rescue/recovery system build phase.
 
 You should not put scripts into this 'prep' stage that modify things
-in $ROOTFS_DIR or $VAR_DIR/recovery and $VAR_DIR/layout because
-scripts for $ROOTFS_DIR belong to the 'rescue' stage and scripts
-for $VAR_DIR/recovery and $VAR_DIR/layout belong to the 'layout' stages.
+in ROOTFS_DIR or in VAR_DIR/recovery and VAR_DIR/layout because
+scripts for ROOTFS_DIR belong to the 'rescue' stage and scripts
+for VAR_DIR/recovery and VAR_DIR/layout belong to the 'layout' stages.
 
-The prep stage is used for preparing and configuring ReaR for the later stages, e.g. auto-detect features or settings.
+The 'prep' stage is used for preparing and configuring ReaR
+for the later stages, e.g. auto-detect features or settings.
 
-Therefore code in prep should not modify ROOTFS_DIR (the rescue system) but only manipulate ReaR variables.
+Therefore code in 'prep' should not modify ROOTFS_DIR (the rescue/recovery system)
+but only manipulate ReaR variables or check and prepare requirements
 so that the 'prep' stage can also be run by workflows which
 do not make a rescue/recovery system.
 
