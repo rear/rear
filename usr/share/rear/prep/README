@@ -7,7 +7,9 @@ in $ROOTFS_DIR or $VAR_DIR/recovery and $VAR_DIR/layout because
 scripts for $ROOTFS_DIR belong to the 'rescue' stage and scripts
 for $VAR_DIR/recovery and $VAR_DIR/layout belong to the 'layout' stages.
 
-We have only the real preparation tasks in the 'prep' stage
+The prep stage is used for preparing and configuring ReaR for the later stages, e.g. auto-detect features or settings.
+
+Therefore code in prep should not modify ROOTFS_DIR (the rescue system) but only manipulate ReaR variables.
 so that the 'prep' stage can also be run by workflows which
 do not make a rescue/recovery system.
 
