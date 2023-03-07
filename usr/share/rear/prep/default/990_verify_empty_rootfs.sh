@@ -1,14 +1,11 @@
 
-# Verify that at the end of the 'prep' stage
-# the ReaR recovery system area (i.e. ROOTFS_DIR)
+# Verify at the end of the 'prep' stage
+# that the ReaR recovery system area (i.e. ROOTFS_DIR)
 # is still empty, see prep/README
 #
-# Only those workflows that actually make a ReaR recovery system via
-#   SourceStage "rescue"
-#   SourceStage "build"
-#   SourceStage "pack"
-#   SourceStage "output"
-# (currently those workflows are mkrescue, mkbackup and mkopalpba)
+# Only those workflows that actually make a ReaR recovery system
+# by running the stages 'rescue', 'build', 'pack', and 'output'
+# (in particular the workflows mkrescue, mkbackup and mkopalpba)
 # should modify something in ROOTFS_DIR.
 #
 # In contrast when other workflows that run the 'prep' stage (e.g. mkbackuponly)
