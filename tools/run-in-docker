@@ -178,12 +178,14 @@ case "${command_args[0]}" in
     ;;
 esac
 
+
 # Note: bash reads --rcfile <file> for interactive shells
 #       bash reads the file specified in BASH_ENV for non-interactive shells
 #       we set both so that our startup file run-in-docker.bashrc is ALWAYS read as it sets the PATH
 for image in "${use_images[@]}"; do
     printf "********** %-40s **********\n" "$image" 1>&2
     dist_dest="dist-all/$(echo -n "$image" | tr -cs '0-9a-zA-Z-_' -)"
+    mkdir -p "$rear_toplevel_dir/$dist_dest" || die "Could not mkdir $rear_toplevel_dir/$dist_dest"
     # BUG/PROBLEM: Docker runs as root, creating build and dist as root, too
     # SOLUTION: change ReaR code and Makefile to never write to the source tree (TODO)
     rm -Rf "$rear_toplevel_dir"/{build,dist,etc/rear/os.conf,var/log/rear} "$rear_toplevel_dir/${dist_dest:?}" 2>/dev/null ||
@@ -202,7 +204,6 @@ for image in "${use_images[@]}"; do
         /bin/bash --rcfile tools/run-in-docker.bashrc "${bash_args[@]}" || die "############### DOCKER RUN FAILED FOR $image"
     if test "$(ls -l "$rear_toplevel_dir/dist" 2>/dev/null || :)"; then
         echo "********** Copying dist to ${dist_dest}"
-        mkdir -p "$rear_toplevel_dir/$dist_dest" || die "Could not mkdir $rear_toplevel_dir/$dist_dest"
         cp -rxT "$rear_toplevel_dir/dist/" "$rear_toplevel_dir/$dist_dest/" || die "Could not copy dist to $dist_dest"
     fi
 done
