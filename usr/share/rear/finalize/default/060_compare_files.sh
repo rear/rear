@@ -6,7 +6,7 @@ local md5sum_output
 # The exit status of the assignment is the exit status of the command substitution
 # which is usually the exit status of 'md5sum' that is forwared by 'chroot'
 # except 'chroot' fails (e.g. with 127 if 'md5sum' cannot be found):
-if ! md5sum_output="$( chroot $TARGET_FS_ROOT md5sum -c --quiet 2>&1 )" ; then
+if ! md5sum_output="$( chroot $TARGET_FS_ROOT md5sum -c --quiet < $VAR_DIR/layout/config/files.md5sum 2>&1 )" ; then
     LogPrintError "Error: Restored files do not match the recreated system in $TARGET_FS_ROOT"
     # Add two spaces indentation for better readability what the md5sum output lines are.
     # This 'sed' call must not be done in the above command substitution as a pipe
