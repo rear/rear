@@ -157,7 +157,7 @@ fi
 
 rear_toplevel_dir=$(dirname $(dirname $(readlink -f "$0")))
 bash_script=tools/run-in-docker-script.sh
-bash_args="-c echo 'BUG: CONFIGURATION ERROR"
+bash_args=(-c "echo BUG: CONFIGURATION ERROR" )
 
 # declare -p IMAGES use_images command_args rear_toplevel_dir ; exit 0
 
@@ -167,14 +167,14 @@ case "${command_args[0]}" in
     exit $?
     ;;
 -i)
-    bash_args="--rcfile tools/run-in-docker.bashrc -i"
+    bash_args=( -i )
     ;;
 -*)
-    bash_args="${command_args[*]}"
+    bash_args=( "${command_args[@]}" )
     ;;
 *)
     echo "${command_args[*]}" >"$rear_toplevel_dir/$bash_script"
-    bash_args="$bash_script"
+    bash_args=("$bash_script")
     ;;
 esac
 
@@ -199,7 +199,7 @@ for image in "${use_images[@]}"; do
         -w /rear \
         "${extra_docker_args[@]}" \
         "$image" \
-        /bin/bash $bash_args || die "############### DOCKER RUN FAILED FOR $image"
+        /bin/bash --rcfile tools/run-in-docker.bashrc "${bash_args[@]}" || die "############### DOCKER RUN FAILED FOR $image"
     if test "$(ls -l "$rear_toplevel_dir/dist" 2>/dev/null || :)"; then
         echo "********** Copying dist to ${dist_dest}"
         mkdir -p "$rear_toplevel_dir/$dist_dest" || die "Could not mkdir $rear_toplevel_dir/$dist_dest"

@@ -23,7 +23,7 @@ jobs:
         run: tools/run-in-docker -- --patch
 
       - id: build
-        run: tools/run-in-docker -- "make package || ls -lR build"
+        run: tools/run-in-docker -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz build'
       
       - run: ls -lR dist-all
         if: always()
