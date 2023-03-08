@@ -184,7 +184,8 @@ esac
 #       we set both so that our startup file run-in-docker.bashrc is ALWAYS read as it sets the PATH
 for image in "${use_images[@]}"; do
     printf "********** %-40s **********\n" "$image" 1>&2
-    dist_dest="dist-all/$(echo -n "$image" | tr -cs '0-9a-zA-Z-_' -)"
+    image_name="$(echo -n "$image" | tr -cs '0-9a-zA-Z-_' -)"
+    dist_dest="dist-all/$image_name"
     mkdir -p "$rear_toplevel_dir/$dist_dest" || die "Could not mkdir $rear_toplevel_dir/$dist_dest"
     # BUG/PROBLEM: Docker runs as root, creating build and dist as root, too
     # SOLUTION: change ReaR code and Makefile to never write to the source tree (TODO)
@@ -194,7 +195,7 @@ for image in "${use_images[@]}"; do
     docker run \
         --rm $(test -t 0 && echo -i -t) \
         --sig-proxy=false \
-        -h "$image" \
+        -h "$image_name" \
         -v "$rear_toplevel_dir:/rear" \
         -e REAR_VAR=/tmp/rear \
         -e BASH_ENV=tools/run-in-docker.bashrc \
