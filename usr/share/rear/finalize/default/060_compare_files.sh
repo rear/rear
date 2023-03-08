@@ -11,6 +11,6 @@ if ! md5sum_output="$( chroot $TARGET_FS_ROOT md5sum -c --quiet < $VAR_DIR/layou
     # Add two spaces indentation for better readability what the md5sum output lines are.
     # This 'sed' call must not be done in the above command substitution as a pipe
     # because then the command substitution exit status would be the one of 'sed'.
-    LogPrintError "$( sed -e 's/^/  /' <<< "$md5sum_out" )"
+    LogPrintError "$( sed -e 's/^/  /' <<< "$md5sum_output" )"
     return 1
 fi
