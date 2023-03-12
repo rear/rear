@@ -395,18 +395,20 @@ while (( unlocked_device_count == 0 && attempt < max_authentications )); do
 done
 
 if (( unlocked_device_count > 0 )); then
-	if (( device_count == 1 && unlocked_device_count == 1 )); then
-		display_message "Disk $result_state_message, rebooting..."
-	else
-		display_message "$unlocked_device_count of $device_count disks $result_state_message, rebooting..."
-	fi
-	sleep 1
-	is_true "$OPAL_PBA_TKNDBG" && sleep 5 && emergency_shell || instant_reboot
+    if ! is_true "$OPAL_PBA_NOSUCCESSMSG"; then
+        if (( device_count == 1 && unlocked_device_count == 1 )); then
+            display_message "Disk $result_state_message, rebooting..."
+        else
+            display_message "$unlocked_device_count of $device_count disks $result_state_message, rebooting..."
+        fi
+        sleep 1
+    fi
+	is_true "$OPAL_PBA_TKNDBG" && emergency_shell || instant_reboot
 else
 	display_message "$unsuccessful_unlock_response"
 	# If finally unsuccessful, power off.
 	# This is required as TCG Opal 2-compliant disks will refuse further authentication attempts before being reset.
 	display_message "Powering off after $attempt unsuccessful attempts..."
 	sleep 3
-	is_true "$OPAL_PBA_TKNDBG" && sleep 5 && emergency_shell || instant_poweroff
+	is_true "$OPAL_PBA_TKNDBG" && emergency_shell || instant_poweroff
 fi
