@@ -21,7 +21,7 @@
 #
 
 function lsblk_output () {
-    # First try the command (which works on SLES15-SP4)
+    # First try the command (which works on SLES15-SP4 but not on SLES15-SP3)
     #   lsblk -ipo NAME,KNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINTS
     # (for a btrfs MOUNTPOINTS shows all mountpoints where subvolumes of that btrfs are mounted
     #  while MOUNTPOINT only shows a random mounted subvolume when more than one is mounted)
