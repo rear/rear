@@ -42,12 +42,12 @@ LIBS+=( "${OPAL_PBA_LIBS[@]}" )
 
 is_false "$OPAL_PBA_SBWARN" || REQUIRED_PROGS+=( 'od' )
 if [ -n "$OPAL_PBA_TKNPATH" ]; then # AuthToken support
-	REQUIRED_PROGS+=( 'openssl' 'base64' 'dd' 'lsblk' )
-	is_true "$OPAL_PBA_TKNBIND" && REQUIRED_PROGS+=( 'b2sum' )
-	if [ "${OPAL_PBA_TKNKEY:0:4}" == "tpm:" ]; then # TPM2-assisted encryption
-		REQUIRED_PROGS+=( 'systemd-creds' )
-		LIBS+=( /usr/lib/x86_64-linux-gnu/libtss2-*.so* )
-	fi
+    REQUIRED_PROGS+=( 'openssl' 'base64' 'dd' 'lsblk' )
+    is_true "$OPAL_PBA_TKNBIND" && REQUIRED_PROGS+=( 'b2sum' )
+    if [ "${OPAL_PBA_TKNKEY:0:4}" == "tpm:" ]; then # TPM2-assisted encryption
+        REQUIRED_PROGS+=( 'systemd-creds' )
+        LIBS+=( /usr/lib/x86_64-linux-gnu/libtss2-*.so* )
+    fi
 fi
 
 # Redirect output

@@ -403,12 +403,12 @@ if (( unlocked_device_count > 0 )); then
         fi
         sleep 1
     fi
-	is_true "$OPAL_PBA_TKNDBG" && emergency_shell || instant_reboot
+    is_true "$OPAL_PBA_TKNDBG" && emergency_shell || instant_reboot
 else
-	display_message "$unsuccessful_unlock_response"
-	# If finally unsuccessful, power off.
-	# This is required as TCG Opal 2-compliant disks will refuse further authentication attempts before being reset.
-	display_message "Powering off after $attempt unsuccessful attempts..."
-	sleep 3
-	is_true "$OPAL_PBA_TKNDBG" && emergency_shell || instant_poweroff
+    display_message "$unsuccessful_unlock_response"
+    # If finally unsuccessful, power off.
+    # This is required as TCG Opal 2-compliant disks will refuse further authentication attempts before being reset.
+    display_message "Powering off after $attempt unsuccessful attempts..."
+    sleep 3
+    is_true "$OPAL_PBA_TKNDBG" && emergency_shell || instant_poweroff
 fi
