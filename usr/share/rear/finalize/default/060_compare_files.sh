@@ -23,10 +23,11 @@ local md5sum_stdout
 if ! md5sum_stdout="$( chroot $TARGET_FS_ROOT md5sum -c --quiet < $VAR_DIR/layout/config/files.md5sum )" ; then
     LogPrintError "Restored files do not fully match the recreated system in $TARGET_FS_ROOT"
     LogPrintError "(files in the backup are not same as when the ReaR rescue/recovery system was made)"
-    # Add two spaces indentation for better readability what the 'md5sum' output lines are.
+    # Add two spaces indentation for better readability what the 'md5sum' stdout lines are.
     # This 'sed' call must not be done in the above command substitution as a pipe
     # because then the command substitution exit status would be the one of 'sed'.
-    # Also prefix the reported files in the 'md5sum' output lines with '/mnt/local'
+    # Also prefix the reported files in the 'md5sum' stdout lines with '/mnt/local'
+    # (so an implicit condition is that only files '/path/...' appear as 'md5sum' stdout lines)
     # because this is the right path for the user in the currently running ReaR recovery system
     # for the restored files that do not match the md5sums that were saved at "rear mkrescue" time,
     # cf. https://github.com/rear/rear/pull/2954#issuecomment-1467645338 and subsequent comments:
