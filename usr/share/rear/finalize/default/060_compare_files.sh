@@ -21,7 +21,7 @@ local md5sum_stdout
 #   md5sum: WARNING: 1 computed checksum did NOT match
 # on the user's terminal but have them only in the log file as usual via stderr:
 if ! md5sum_stdout="$( chroot $TARGET_FS_ROOT md5sum -c --quiet < $VAR_DIR/layout/config/files.md5sum )" ; then
-    LogPrintError "Restored files do not fully match the recreated system in $TARGET_FS_ROOT"
+    LogPrintError "Restored files in $TARGET_FS_ROOT do not fully match the recreated system"
     LogPrintError "(files in the backup are not same as when the ReaR rescue/recovery system was made)"
     # Add two spaces indentation for better readability what the 'md5sum' stdout lines are.
     # This 'sed' call must not be done in the above command substitution as a pipe
