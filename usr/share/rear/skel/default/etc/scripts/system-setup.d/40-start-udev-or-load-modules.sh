@@ -24,11 +24,13 @@ test "$systemd_version" || systemd_version=0
 if [[ $systemd_version -gt 190 ]] || [[ -s /etc/udev/rules.d/00-rear.rules ]] ; then
     # systemd-udevd case: systemd-udevd is started by systemd
     # Wait up to 10 seconds for systemd-udevd:
-    for countdown in 10 9 8 7 6 5 4 3 2 1; do
-        # On modern systems systemd-udevd is already there at the very first iter
-        # So there may be no 'Waiting for systemd-udevd ($countdown) ... ' message at all 
+    for countdown in 4 3 2 1 0 ; do
+        # The first sleep waits one second in any case so that systemd-udevd should be usually there
+        # when 'pidof' test for it so that usually there is no "Waiting for systemd-udevd" message:
+        sleep 1
         pidof systemd-udevd &>/dev/null && break
         echo "Waiting for systemd-udevd ($countdown) ... "
+        # The second sleep results a total wait of two seconds for each for loop run:
         sleep 1
     done
     if pidof -s systemd-udevd &>/dev/null ; then
