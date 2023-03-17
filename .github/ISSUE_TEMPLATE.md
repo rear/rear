@@ -3,8 +3,8 @@
 Fill in the following items before submitting a new issue.
 (quick response is not guaranteed with free support):
 
-Please use proper GitHub Flavoured Markdown, see
-https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
+Please use proper GitHub Flavoured Markdown,
+see [Basic writing and formatting syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
 
 -- You can safely remove this comment block
 -->
@@ -25,7 +25,7 @@ https://docs.github.com/en/get-started/writing-on-github/getting-started-with-wr
 
 * Storage (local disk or SSD) and/or SAN (FC or iSCSI or FCoE) and/or multipath (DM or NVMe):
 
-* Storage layout (`lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT`):
+* Storage layout ("lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT"):
 
 * Description of the issue (ideally so that others can reproduce it):
 
