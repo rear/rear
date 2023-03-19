@@ -1,4 +1,5 @@
 name: Build Packages
+
 on: push
 
 concurrency:
@@ -22,13 +23,16 @@ jobs:
       - id: prepare
         run: tools/run-in-docker -- --patch
 
+      - id: dist
+        run: make dist
+      
       - id: build
-        run: tools/run-in-docker -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz build'
+        run: tools/run-in-docker -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz /var/tmp/build-rear*'
       
       - run: ls -lR dist-all
         if: always()
 
-      - name: Upload WARP Installer Artifacts
+      - name: Upload Artifacts
         if: always()
         uses: actions/upload-artifact@v3
         with:

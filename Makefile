@@ -12,36 +12,52 @@ rearbin = usr/sbin/rear
 name = rear
 version := $(shell awk 'BEGIN { FS="=" } /^readonly VERSION=/ { print $$2}' $(rearbin))
 
-### Get the branch information from git
-# Note: CentOS 6 has ancient git, hence we need to do more processing of the output
-ifeq ($(OFFICIAL),)
-	ifneq ($(shell type -p git),)
-		git_date := $(shell git log -n 1 --format="%ai")
-		git_ref := $(shell git rev-parse --short HEAD)
-		git_count := $(shell git rev-list HEAD --no-merges | wc -l)
-		git_branch_suffix = $(shell git symbolic-ref HEAD | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
-		git_status := $(shell git status --porcelain)
-		git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
-		ifneq ($(git_status),)
-			git_stamp := $(git_stamp).changed
-		endif # git_status
-	else # no git
-		git_date := now
-		git_ref := 0
-		git_count := 0
-		git_branch_suffix := unknown
-		git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
-	endif # has git
-else # official
-	ifneq ($(shell type -p git),)
-		git_date := $(shell git log -n 1 --format="%ai")
-	endif
-	git_branch = rear-$(version)
-endif
-git_branch ?= master
+BUILD_DIR = /var/tmp/build-$(name)-$(version)
 
-date := $(shell date --date="$(git_date)" +%Y%m%d%H%M)
-release_date := $(shell date --date="$(git_date)" +%Y-%m-%d)
+ifneq ($(OFFICIAL),)
+	distversion = $(version)
+	debrelease = 0
+	rpmrelease = %nil
+	obsproject = Archiving:Backup:Rear
+	obspackage = $(name)-$(version)
+
+	date := $(shell date +%Y%m%d%H%M)
+	release_date := $(shell date +%Y-%m-%d)
+else
+# Not official build, so we need to get the git info
+# Some distros have older git, hence we need to do more processing
+# of the output to get the exact same output on all the distros
+	ifneq ($(wildcard .git),)
+		ifneq ($(shell type -p git),)
+			git_date := $(shell git log -n 1 --format="%ai")
+			git_ref := $(shell git rev-parse HEAD | cut -c 1-8)
+			git_count := $(shell git rev-list HEAD --no-merges | wc -l)
+			git_branch_suffix = $(shell git symbolic-ref HEAD | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
+			git_status := $(shell git status --porcelain)
+			git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
+			ifneq ($(git_status),)
+				git_stamp := $(git_stamp).changed
+			endif # git_status
+		else # no git
+			git_date := now
+			git_ref := 0
+			git_count := 0
+			git_branch_suffix := unknown
+			git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
+		endif # has git
+	endif # has .git
+	git_stamp ?= 0.0.unknown
+
+    distversion = $(version)-git.$(git_stamp)
+    debrelease = 0git.$(git_stamp)
+    rpmrelease = .git.$(git_stamp)
+    obsproject = Archiving:Backup:Rear:Snapshot
+    obspackage = $(name)
+
+	date := $(shell date --date="$(git_date)" +%Y%m%d%H%M)
+	release_date := $(shell date --date="$(git_date)" +%Y-%m-%d)
+endif
+
 
 prefix = /usr
 sysconfdir = /etc
@@ -53,18 +69,6 @@ localstatedir = /var
 specfile = packaging/rpm/$(name).spec
 dscfile = packaging/debian/$(name).dsc
 
-distversion = $(version)
-debrelease = 0
-rpmrelease = %nil
-obsproject = Archiving:Backup:Rear
-obspackage = $(name)-$(version)
-ifeq ($(OFFICIAL),)
-    distversion = $(version)-git.$(git_stamp)
-    debrelease = 0git.$(git_stamp)
-    rpmrelease = .git.$(git_stamp)
-    obsproject = Archiving:Backup:Rear:Snapshot
-    obspackage = $(name)
-endif
 
 ifeq ($(shell id -u),0)
 RUNASUSER := runuser -u nobody --
@@ -105,7 +109,7 @@ dump:
 	$(foreach V, $(sort $(.VARIABLES)), $(if $(filter-out environment% default automatic, $(origin $V)),$(info $V=$($V) defined as >$(value $V)<)))
 
 clean:
-	rm -Rf dist build etc/os.conf etc/site.conf var build-stamp
+	rm -Rf dist $(BUILD_DIR) etc/os.conf etc/site.conf var build-stamp
 	$(MAKE) -C doc clean
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
@@ -191,69 +195,80 @@ dist: clean validate man dist/$(name)-$(distversion).tar.gz
 # except RELEASE_DATE= and perhaps the Version in $(dscfile)
 dist/$(name)-$(distversion).tar.gz:
 	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
-	rm -Rf build/$(name)-$(distversion)
-	mkdir -p dist build/$(name)-$(distversion)
+	rm -Rf $(BUILD_DIR)/$(name)-$(distversion)
+	mkdir -p dist $(BUILD_DIR)/$(name)-$(distversion)
 	tar -c --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" $(DIST_CONTENT) | \
-		tar -C build/$(name)-$(distversion) -x
-	@echo -e "\033[1m== Rewriting build/$(name)-$(distversion)/{$(specfile),$(dscfile),$(rearbin)} ==\033[0;0m"
-	sed -i.orig \
+		tar -C $(BUILD_DIR)/$(name)-$(distversion) -x
+	@echo -e "\033[1m== Rewriting $(BUILD_DIR)/$(name)-$(distversion)/{$(specfile),$(dscfile),$(rearbin)} ==\033[0;0m"
+	sed -i \
 		-e 's#^Source:.*#Source: $(name)-${distversion}.tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
 		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
 		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
-		build/$(name)-$(distversion)/$(specfile)
-	sed -i.orig \
+		$(BUILD_DIR)/$(name)-$(distversion)/$(specfile)
+	sed -i \
 		-e 's#^Version:.*#Version: $(version)-$(debrelease)#' \
-		build/$(name)-$(distversion)/$(dscfile)
-	sed -i.orig \
+		$(BUILD_DIR)/$(name)-$(distversion)/$(dscfile)
+	sed -i \
 		-e 's#^readonly VERSION=.*#readonly VERSION=$(distversion)#' \
 		-e 's#^readonly RELEASE_DATE=.*#readonly RELEASE_DATE="$(release_date)"#' \
-		build/$(name)-$(distversion)/$(rearbin)
-	tar -czf dist/$(name)-$(distversion).tar.gz -C build $(name)-$(distversion)
+		$(BUILD_DIR)/$(name)-$(distversion)/$(rearbin)
+	tar -czf dist/$(name)-$(distversion).tar.gz -C $(BUILD_DIR) $(name)-$(distversion)
 
+# make install from dist tarball, to get a clean install without any build artifacts
 dist-install: dist/$(name)-$(distversion).tar.gz
-	mkdir -p build/dist-install
-	tar -C build/dist-install -xvzf dist/$(name)-$(distversion).tar.gz --strip-components 1
-	$(MAKE) -C build/dist-install install
+	mkdir -p $(BUILD_DIR)/dist-install
+	tar -C $(BUILD_DIR)/dist-install -xvzf dist/$(name)-$(distversion).tar.gz --strip-components 1
+	$(MAKE) -C $(BUILD_DIR)/dist-install install
+
+package-clean:
+	rm -f dist/*.rpm dist/*.deb dist/*.pkg.*
 
 ifneq ($(shell type -p pacman),)
-package: pacman
+package: package-clean pacman
 else ifneq ($(shell type -p dpkg),)
-package: deb
+package: package-clean deb
 else ifneq ($(shell type -p rpm),)
-package: rpm
+package: package-clean rpm
 else
 package:
 	$(error Cannot determine package manager)
 endif
 
-srpm: dist
+# Note, older rpm checks file ownership, so we copy dist tarball to build dir first for Docker builds
+srpm: dist/$(name)-$(distversion).tar.gz
 	@echo -e "\033[1m== Building SRPM package $(name)-$(distversion) ==\033[0;0m"
+	rm -rf $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)
+	cp dist/$(name)-$(distversion).tar.gz $(BUILD_DIR)/
 	rpmbuild -ts --clean --nodeps \
-		--define="_topdir $(CURDIR)/build/rpmbuild" \
+		--define="_topdir $(BUILD_DIR)/rpmbuild" \
 		--define="_sourcedir $(CURDIR)/dist" \
 		--define="_srcrpmdir $(CURDIR)/dist" \
 		--define "debug_package %{nil}" \
-		dist/$(name)-$(distversion).tar.gz
+		$(BUILD_DIR)/$(name)-$(distversion).tar.gz
 
 rpm: srpm
 	@echo -e "\033[1m== Building RPM package $(name)-$(distversion) ==\033[0;0m"
 	rpmbuild --rebuild --clean \
-		--define="_topdir $(CURDIR)/build/rpmbuild" \
+		--define="_topdir $(BUILD_DIR)/rpmbuild" \
 		--define="_rpmdir $(CURDIR)/dist" \
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
 		--define "debug_package %{nil}" \
-		dist/$(name)-$(version)-1*.src.rpm
+		dist/$(name)-$(version)-*.src.rpm
 
-deb: dist
+deb: dist/$(name)-$(distversion).tar.gz
 	@echo -e "\033[1m== Building DEB package $(name)-$(distversion) ==\033[0;0m"
-	cp -r build/$(name)-$(distversion)/packaging/debian/ build/$(name)-$(distversion)/
-	cd build/$(name)-$(distversion) ; dch -v $(distversion) -b -M build package
-	cd build/$(name)-$(distversion) ; debuild -us -uc -i -b --lintian-opts --profile debian
-	mv build/$(name)_*deb dist/
+	rm -rf $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)
+	tar -C $(BUILD_DIR) -xzf dist/$(name)-$(distversion).tar.gz
+	cd $(BUILD_DIR)/$(name)-$(distversion) ; mv packaging/debian/ .
+	cd $(BUILD_DIR)/$(name)-$(distversion) ; dch -v $(distversion) -b -M $(BUILD_DIR) package
+	cd $(BUILD_DIR)/$(name)-$(distversion) ; debuild -us -uc -i -b --lintian-opts --profile debian
+	mv $(BUILD_DIR)/$(name)_*.deb dist/
 
 pacman: BUILD_DIR = /tmp/rear-$(distversion)
-pacman: dist
+pacman: dist/$(name)-$(distversion).tar.gz
 	@echo -e "\033[1m== Building Pacman package $(name)-$(distversion) ==\033[0;0m"
 	rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
@@ -271,7 +286,7 @@ pacman: dist
 
 obs: BUILD_DIR = /tmp/rear-$(distversion)
 obs: obsname = $(shell osc ls $(obsproject) $(obspackage) | awk '/.tar.gz$$/ { gsub(".tar.gz$$","",$$1); print }')
-obs: dist
+obs: dist/$(name)-$(distversion).tar.gz
 	@echo -e "\033[1m== Updating OBS from $(obsname) to $(name)-$(distversion)== \033[0;0m"
 ifneq ($(obsname),$(name)-$(distversion))
 	-rm -rf $(BUILD_DIR)
