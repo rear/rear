@@ -10,7 +10,7 @@
 shopt -s nullglob extglob  # Enable pattern matching extensions required for 'opal-functions.sh'
 source /usr/share/rear/lib/opal-functions.sh
 [[ -f /.OPAL_PBA_SETTINGS.sh ]] && source /.OPAL_PBA_SETTINGS.sh
-[[ -n "$OPAL_PBA_TKNPATH" ]] && source /usr/share/rear/lib/authtoken-functions.sh
+[[ ${#OPAL_PBA_TKNPATH[@]} -gt 0 ]] && source /usr/share/rear/lib/authtoken-functions.sh
 
 
 function use_plymouth() {
@@ -292,42 +292,49 @@ declare -i unlocked_device_count=0
 
 while (( unlocked_device_count == 0 && attempt < max_authentications )); do
     at_password="" #resetting
-    if [ -z "$OPAL_PBA_TKNPATH" ] || [ -n "$authtkn_rejected" ]; then
+    if [ ${#OPAL_PBA_TKNPATH[@]} -eq 0 ] || [ -n "$authtkn_rejected" ]; then
         # AuthToken not configured or disabled
         ask_for_password "$password_prompt" #require non-empty
-    elif [ -z "$password" ] && blkdev_wait "$OPAL_PBA_TKNPATH" 4 1 2>>$authtkn_stderr; then
+    elif [ -z "$password" ]; then
         # just booted or user has explicitly requested AuthToken-load by supplying an empty password
-        # AuthToken container is present
-        is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken container[$OPAL_PBA_TKNPATH] present as $(blkdev_model $OPAL_PBA_TKNPATH 2>>$authtkn_stderr)"
-        at_password=$(authtkn_load "$OPAL_PBA_TKNPATH" "$OPAL_PBA_TKNOFFSET" "$OPAL_PBA_TKNKEY" "$authtkn_bind2dev" 2>>$authtkn_stderr)
-        if [ $? -eq 0 ]; then #loaded & decrypted successfully
-            is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken successfully loaded"
-            if [ -n "$authtkn_2famkr" ] && [ "${at_password:0:${#authtkn_2famkr}}" == "$authtkn_2famkr" ]; then
-                # AuthToken is 2FA protected
-                is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken is 2FA-protected"
-                at_password="${at_password:${#authtkn_2famkr}}"
-                attempts2fa=${OPAL_PBA_TKN2FAMAXTRIES:-3}
-                while (( attempts2fa > 0 )); do
-                    is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken 2FA attempt $attempts2fa"
-                    ask_for_password "Please, type your 2FA password"
-                    password=$(decrypt_base64 "$at_password" "$password" 2>>$authtkn_stderr)
-                    [[ $? -eq 0 ]] && break || (( attempts2fa -= 1 ))
-                done
+        for authtkn_path in "${OPAL_PBA_TKNPATH[@]}"; do
+            blkdev_wait "$authtkn_path" 4 1 2>>$authtkn_stderr && break
+            authtkn_path=""
+        done
 
-                if [ -z "$password" ]; then # user failed to provide correct 2FA password
-                    is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken 2FA failed, disabling AT"
-                    authtkn_rejected="Y" # disabling AT
-                    if is_true "$OPAL_PBA_TKN2FAFAILWIPE"; then
-                        is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken 2FA-FAIL-WIPE enabled, wiping token"
-                        at_password="${authtkn_2famkr}${at_password}" #restoring full token for len calc
-                        authtkn_wipe "$OPAL_PBA_TKNPATH" "$OPAL_PBA_TKNOFFSET" ${#at_password} >>$authtkn_stderr
+        if [ -n "$authtkn_path" ]; then
+            # AuthToken container is present
+            is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken container[$authtkn_path] present as $(blkdev_model $authtkn_path 2>>$authtkn_stderr)"
+            at_password=$(authtkn_load "$authtkn_path" "$OPAL_PBA_TKNOFFSET" "$OPAL_PBA_TKNKEY" "$authtkn_bind2dev" 2>>$authtkn_stderr)
+            if [ $? -eq 0 ]; then #loaded & decrypted successfully
+                is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken successfully loaded"
+                if [ -n "$authtkn_2famkr" ] && [ "${at_password:0:${#authtkn_2famkr}}" == "$authtkn_2famkr" ]; then
+                    # AuthToken is 2FA protected
+                    is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken is 2FA-protected"
+                    at_password="${at_password:${#authtkn_2famkr}}"
+                    attempts2fa=${OPAL_PBA_TKN2FAMAXTRIES:-3}
+                    while (( attempts2fa > 0 )); do
+                        is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken 2FA attempt $attempts2fa"
+                        ask_for_password "Please, type your 2FA password"
+                        password=$(decrypt_base64 "$at_password" "$password" 2>>$authtkn_stderr)
+                        [[ $? -eq 0 ]] && break || (( attempts2fa -= 1 ))
+                    done
+
+                    if [ -z "$password" ]; then # user failed to provide correct 2FA password
+                        is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken 2FA failed, disabling AT"
+                        authtkn_rejected="Y" # disabling AT
+                        if is_true "$OPAL_PBA_TKN2FAFAILWIPE"; then
+                            is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken 2FA-FAIL-WIPE enabled, wiping token"
+                            at_password="${authtkn_2famkr}${at_password}" #restoring full token for len calc
+                            authtkn_wipe "$authtkn_path" "$OPAL_PBA_TKNOFFSET" ${#at_password} >>$authtkn_stderr
+                        fi
                     fi
+                elif [ -z "$sb_fail_status" ]; then # SecBoot is active or user explicitly doesn't care, allowing unattended boot
+                    password="$at_password"
+                else # SecBoot disabled or unavailable, ensure user is aware of that
+                    ask_question "SecureBoot is DISABLED or UNAVAILABLE! Continue anyway [Y/N]?"
+                    is_true "$answer" && password="$at_password" || instant_reboot
                 fi
-            elif [ -z "$sb_fail_status" ]; then # SecBoot is active or user explicitly doesn't care, allowing unattended boot
-                password="$at_password"
-            else # SecBoot disabled or unavailable, ensure user is aware of that
-                ask_question "SecureBoot is DISABLED or UNAVAILABLE! Continue anyway [Y/N]?"
-                is_true "$answer" && password="$at_password" || instant_reboot
             fi
         fi
 
@@ -362,35 +369,42 @@ while (( unlocked_device_count == 0 && attempt < max_authentications )); do
         fi
     fi
 
-    if (( unlocked_device_count > 0 )) && [ -z "$at_password" ] && [ -n "$OPAL_PBA_TKNPATH" ] && blkdev_wait "$OPAL_PBA_TKNPATH" 4 1 2>>$authtkn_stderr; then
-        # password is user-supplied & valid, AuthToken container is present
-        is_true "$OPAL_PBA_TKNDBG" && echo "Offering to store AuthToken onto ${OPAL_PBA_TKNPATH} at offset ${OPAL_PBA_TKNOFFSET}"
-        at_password="$password"
-        ask_question "Want to use $(blkdev_model $OPAL_PBA_TKNPATH 2>>$authtkn_stderr) as AuthToken media [Y/N]?"
-        if is_true "$answer"; then
-            if [ -n "$authtkn_2famkr" ]; then
-                ask_for_password "Please, type optional 2FA password (or leave empty)" "Y" #allow empty
-                if [ -n "$password" ]; then
-                    is_true "$OPAL_PBA_TKNDBG" && echo "Encrypting AuthToken with 2FA password..."
-                    at_password=$(encrypt_base64 "$at_password" "$password" 2>>$authtkn_stderr)
-                    if [ $? -eq 0 ]; then
-                        at_password="${authtkn_2famkr}${at_password}"
+    if (( unlocked_device_count > 0 )) && [ -z "$at_password" ] && [ ${#OPAL_PBA_TKNPATH[@]} -gt 0 ]; then
+        # password is user-supplied & valid
+        opal_password="$password"
+        for authtkn_path in "${OPAL_PBA_TKNPATH[@]}"; do
+            blkdev_wait "$authtkn_path" 4 1 2>>$authtkn_stderr || continue
+            # AuthToken container present
+
+            is_true "$OPAL_PBA_TKNDBG" && echo "Offering to store AuthToken onto $authtkn_path at offset ${OPAL_PBA_TKNOFFSET}"
+            ask_question "Want to use $(blkdev_model $authtkn_path 2>>$authtkn_stderr) as AuthToken media [Y/N]?"
+            if is_true "$answer"; then
+                if [ -n "$authtkn_2famkr" ]; then
+                    ask_for_password "Please, type optional 2FA password (or leave empty)" "Y" #allow empty
+                    if [ -n "$password" ]; then
+                        is_true "$OPAL_PBA_TKNDBG" && echo "Encrypting AuthToken with 2FA password..."
+                        at_password=$(encrypt_base64 "$opal_password" "$password" 2>>$authtkn_stderr)
+                        if [ $? -eq 0 ]; then
+                            at_password="${authtkn_2famkr}${at_password}"
+                        else
+                            display_message "2FA-encrypt failed, AuthToken NOT generated"
+                        fi
                     else
-                        display_message "2FA-encrypt failed, AuthToken NOT generated"
+                        at_password="$opal_password"
                     fi
                 fi
-            fi
-            if [ -n "$at_password" ]; then
-                is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken generated, storing..."
-                len=$(authtkn_store "$OPAL_PBA_TKNPATH" "$OPAL_PBA_TKNOFFSET" "$at_password" "$OPAL_PBA_TKNKEY" "$authtkn_bind2dev" 2>>$authtkn_stderr)
-                if [ $? -eq 0 ]; then
-                    display_message "Success! $(blkdev_model $OPAL_PBA_TKNPATH 2>>$authtkn_stderr) is now your AuthToken media for this PBA"
-                else
-                    display_message "Failed to generate/store AuthToken onto $(blkdev_model $OPAL_PBA_TKNPATH 2>>$authtkn_stderr)"
+                if [ -n "$at_password" ]; then
+                    is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken generated, storing..."
+                    len=$(authtkn_store "$authtkn_path" "$OPAL_PBA_TKNOFFSET" "$at_password" "$OPAL_PBA_TKNKEY" "$authtkn_bind2dev" 2>>$authtkn_stderr)
+                    if [ $? -eq 0 ]; then
+                        display_message "Success! $(blkdev_model $authtkn_path 2>>$authtkn_stderr) is now your AuthToken media for this PBA"
+                    else
+                        display_message "Failed to generate/store AuthToken onto $(blkdev_model $authtkn_path 2>>$authtkn_stderr)"
+                    fi
                 fi
+                sleep 3
             fi
-            sleep 3
-        fi
+        done
     fi
 done
 
