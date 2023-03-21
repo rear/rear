@@ -4,6 +4,24 @@
 # Check also for library dependencies of executables in all the copied files and
 # add them to the LIBS list if they are not yet included in the copied files.
 
+# Note: We first copy the ReaR configuration and then COPY_AS_IS to cover the special case
+#       of running ReaR from checkout and specifying -C /etc/rear/local.conf to try a
+#       checkout build with the regular configuration
+
+Log "Copying ReaR configuration directory"
+# Copy ReaR configuration directory:
+mkdir $v -p $ROOTFS_DIR/etc/rear
+# This will do same job as lines below.
+# On top of that, it does not throw log warning like:
+# "cp: missing destination file operand after"
+# if hidden file (.<filename>) is missing in $CONFIG_DIR.
+# To avoid dangling symlinks copy the content of the symlink target via '-L'
+# which could lead to same content that exists in two independent regular files but
+# for configuration files there is no other option than copying dereferenced files
+# since files in $CONFIG_DIR specified with '-c /path' get copied into '/etc/rear'
+# in the ReaR recovery system, cf. https://github.com/rear/rear/issues/1923
+cp $v -r -L $CONFIG_DIR/. $ROOTFS_DIR/etc/rear/
+
 LogPrint "Copying files and directories"
 
 # Filter out duplicate entries in COPY_AS_IS but keep the ordering of the elements
@@ -146,21 +164,8 @@ if test "$REAR_DIR_PREFIX" ; then
     Log "Fixing ReaR directories when running from checkout"
     local rear_dir=""
     for rear_dir in /usr/share/rear /var/lib/rear ; do
-        ln $v -sf $REAR_DIR_PREFIX$rear_dir $ROOTFS_DIR$rear_dir 1>/dev/null
+        ln $v -sf $REAR_DIR_PREFIX$rear_dir $ROOTFS_DIR$rear_dir
     done
 fi
 
-Log "Copying ReaR configuration directory"
-# Copy ReaR configuration directory:
-mkdir $v -p $ROOTFS_DIR/etc/rear
-# This will do same job as lines below.
-# On top of that, it does not throw log warning like:
-# "cp: missing destination file operand after"
-# if hidden file (.<filename>) is missing in $CONFIG_DIR.
-# To avoid dangling symlinks copy the content of the symlink target via '-L'
-# which could lead to same content that exists in two independent regular files but
-# for configuration files there is no other option than copying dereferenced files
-# since files in $CONFIG_DIR specified with '-c /path' get copied into '/etc/rear'
-# in the ReaR recovery system, cf. https://github.com/rear/rear/issues/1923
-cp $v -r -L $CONFIG_DIR/. $ROOTFS_DIR/etc/rear/
 

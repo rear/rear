@@ -176,7 +176,7 @@ while true ; do
                 echo "$help_note_text"
                 exit 1
             fi
-            CONFIG_APPEND_FILES="$2"
+            CONFIG_APPEND_FILES+="$2 "
             shift
             ;;
         (-d)
@@ -671,6 +671,7 @@ if test "$CONFIG_APPEND_FILES" ; then
     done
 fi
 readonly CONFIG_APPEND_FILES_PATHS # nothing else should be able to add more configs
+COPY_AS_IS+=("${CONFIG_APPEND_FILES_PATHS[@]}") # copy also to rescue system
 
 # Now SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR and KERNEL_VERSION should be set to a fixed value:
 readonly SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR KERNEL_VERSION

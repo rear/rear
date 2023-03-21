@@ -46,6 +46,12 @@ alias rehash='hash -r'
 alias more='less'
 export TERM=ansi
 
+for script in /etc/profile.d/*.sh; do
+    if [ -r "$script" ]; then
+        source "$script"
+    fi
+done
+
 # print motd for interactive shells
 tty -s && test -s /etc/motd && cat /etc/motd
 

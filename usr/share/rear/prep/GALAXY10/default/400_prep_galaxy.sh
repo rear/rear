@@ -7,6 +7,8 @@ COPY_AS_IS_EXCLUDE+=( "${COPY_AS_IS_EXCLUDE_GALAXY10[@]}" )
 
 PROGS+=( chgrp touch )
 
+USE_RAMDISK=1500
+
 # include argument file if specified
 if test "$GALAXY10_Q_ARGUMENTFILE" ; then
 	COPY_AS_IS+=( "$GALAXY10_Q_ARGUMENTFILE" )

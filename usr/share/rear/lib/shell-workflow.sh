@@ -9,5 +9,5 @@ WORKFLOW_shell () {
     fi
     export REAR_EVAL="$(declare -p | sed -e 's/^declare .. //' -e '/MASKS=/d' )"
     # Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
-    bash --rcfile $SHARE_DIR/lib/bashrc.rear -i 0<&6 1>&7 2>&8
+    bash --rcfile $SHARE_DIR/lib/rear-shell.bashrc -i 0<&6 1>&7 2>&8
 }
