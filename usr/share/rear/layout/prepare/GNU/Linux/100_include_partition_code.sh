@@ -25,7 +25,10 @@ fi
 create_disk() {
     local component disk size label junk
     local blocksize layout dasdtype dasdcyls junk2
+
+    disk=''
     read component disk size label junk < <(grep "^disk $1 " "$LAYOUT_FILE")
+    test $disk || BugError "No 'disk $1 ' entry in $LAYOUT_FILE"
 
     cat >> "$LAYOUT_CODE" <<EOF
 
@@ -34,7 +37,7 @@ create_disk() {
 #
 
 ### Disks should be block devices.
-[ -b "$disk" ] || BugError "Disk $disk is not a block device."
+test -b "$disk" || BugError "Disk '$disk' is not a block device"
 
 Log "Stop mdadm"
 if grep -q md /proc/mdstat 2>/dev/null; then
