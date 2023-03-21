@@ -175,7 +175,7 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
                 fi
                 ;;
             (*)
-                broken_disk_errors+=( "$disk_dev partitioning scheme '$parted_mklabel' is neither 'gpt' nor 'msdos'" )
+                broken_disk_errors+=( "$disk_dev partitioning scheme '$parted_mklabel' is neither 'gpt' or 'dasd' nor 'msdos'" )
                 ;;
         esac
     fi
