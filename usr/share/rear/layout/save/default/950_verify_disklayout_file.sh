@@ -259,8 +259,7 @@ is_true "$non_consecutive_partitions" && Error "There are non consecutive partit
 
 # Matching message to "Creating disk layout" in layout/save/GNU/Linux/100_create_layout_file.sh
 LogPrint "Created disk layout (check the results in $DISKLAYOUT_FILE)"
-
-# Finish this script successfully in the normal case (i.e. when both 'is_true' above result non zero return code):
-true
+# The last command LogPrint lets it finish successfully in the normal case
+# (i.e. after the 'is_true' above results non zero return code).
 
 # vim: set et ts=4 sw=4:
