@@ -50,8 +50,11 @@ if ! umount $v $TMP_DIR/efiboot.img ; then
     # Normal umounting something directly after some I/O command (like 'cp' above)
     # may sometimes fail with "target is busy" (cf. 'busy' and 'lazy' in "man umount")
     # so we retry after one second to increase likelihood that it then succeeds
+    # cf. https://github.com/rear/rear/issues/2908#issuecomment-1382000811 ("sleep 1 works fine")
     # because normal umount is preferred over more sophisticated attempts
-    # like lazy or enforced umount which raise their own specific troubles:
+    # like lazy umount or enforced umount which raise their own specific troubles
+    # and the -M option for fuser which is used below is not available on older
+    # Linux distributions like RHEL6 and SLES11 so 'sleep 1' and retry is best:
     Log "Failed to umount $what_is_mounted (will retry after one second)"
     sleep 1
     if ! umount $v $TMP_DIR/efiboot.img ; then
@@ -65,11 +68,14 @@ if ! umount $v $TMP_DIR/efiboot.img ; then
         # So when $TMP_DIR/efiboot.img is umounted 'fuser -v -M -m $TMP_DIR/efi_virt' only shows
         #   "Specified filename /var/tmp/rear.XXXXXXXXXXXXXXX/tmp/efi_virt is not a mountpoint"
         # instead of all processes using '/' (or /var/ or /var/tmp/ if one is a mountpoint)
-        # which would be misleading information that may even look scaring and cause false alarm:
-        fuser -v -M -m $TMP_DIR/efi_virt 1>&2
+        # which would be misleading information that may even look scaring and cause false alarm.
+        # Older systems do not support -M but we must use it to avoid misleading information or false alarm.
+        # Since this code path is exceptional and the output is used only for information purposes,
+        # we do not care when fuser fails with "M: unknown signal; fuser -l lists signals":
+        fuser -v -M -m $TMP_DIR/efi_virt 1>&2 || Log "Presumably 'fuser' does not support the -M option"
         DebugPrint "Trying 'umount --lazy $TMP_DIR/efiboot.img' (normal umount failed)"
         # Do only plain 'umount --lazy' without additional '--force'
-        # so we don't use the umount_mountpoint_lazy() function here:
+        # so we do not use the umount_mountpoint_lazy() function here:
         if ! umount $v --lazy $TMP_DIR/efiboot.img ; then
             # When umounting the EFI virtual image fails it is no hard error so only inform the user
             # so he can understand why later cleanup_build_area_and_end_program() may show
