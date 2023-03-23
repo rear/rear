@@ -3,6 +3,9 @@
 # assumes bash. So its better to set SHELL
 SHELL = /bin/bash
 
+# disable parallel execution of make
+.NOTPARALLEL:
+
 DESTDIR =
 OFFICIAL =
 DIST_CONTENT = COPYING  doc  etc  MAINTAINERS  Makefile  packaging  README.adoc  tests  tools  usr
