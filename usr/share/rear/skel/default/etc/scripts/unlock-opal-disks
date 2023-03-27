@@ -10,6 +10,7 @@
 shopt -s nullglob extglob  # Enable pattern matching extensions required for 'opal-functions.sh'
 source /usr/share/rear/lib/opal-functions.sh
 [[ -f /.OPAL_PBA_SETTINGS.sh ]] && source /.OPAL_PBA_SETTINGS.sh
+[[ ${#OPAL_PBA_TKNPATH[@]} -gt 0 ]] && source /usr/share/rear/lib/authtoken-functions.sh
 
 
 function use_plymouth() {
@@ -29,13 +30,22 @@ function enter_plymouth_shutdown_mode() {
 
 function display_message() {
     local message="${1:?}"
-
     (use_plymouth && plymouth display-message --text="$message") || echo -e "\n$message"
+}
+
+function hide_message() {
+    #local message="${1:?}"
+    #use_plymouth && plymouth hide-message --text="$message"
+    # hide-message doesn't work, at least with two-step plugin
+    use_plymouth && plymouth display-message --text=""
+    return 0
 }
 
 function ask_for_password() {
     local prompt="${1:?}"  # a colon will be appended implicitly
+    local allow_empty="$2"
     # asks for a password, setting the variable $password.
+    local msg_req="Please enter a non-empty password"
 
     while true; do
         if ! password="$(use_plymouth && plymouth ask-for-password --prompt="$prompt")"; then
@@ -43,14 +53,30 @@ function ask_for_password() {
             read -r -s -p "$prompt: " password 2>&1
             echo ""
         fi
-
-        if [[ -n "$password" ]]; then
-            is_debug_password "$password" && emergency_shell
-            break
-        else
-            display_message "Please enter a non-empty password."
-        fi
+        [[ -n "$password" || -n "$allow_empty" ]] && break || display_message "$msg_req"
     done
+    hide_message "$msg_req"
+
+    [[ -n "$password" ]] && is_debug_password "$password" && emergency_shell
+    return 0
+}
+
+function ask_question() {
+    local prompt="${1:?}"
+    local allow_empty="$2"
+    # asks question, setting the variable $answer.
+    local msg_req="Answer is required"
+
+    while true; do
+        if ! answer="$(use_plymouth && plymouth ask-question --prompt="$prompt")"; then
+            echo ""
+            read -r -p "$prompt " answer 2>&1
+            echo ""
+        fi
+        [[ -n "$answer" || -n "$allow_empty" ]] && break || display_message "$msg_req"
+    done
+    hide_message "$msg_req"
+    return 0
 }
 
 function is_debug_password() {
@@ -70,6 +96,21 @@ function is_debug_password() {
 
     # Return the verification result
     [[ "$password_signature" == "$OPAL_PBA_DEBUG_PASSWORD" ]]
+}
+
+function is_secboot() {
+    #return: 0=enabled, 1=disabled, 2=undef/unsupported
+
+    # 8be4df61-93ca-11d2-aa0d-00e098032b8c is the global ns GUID
+    local efi_var="/sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c"
+    local tmp
+
+    if [ -r "$efi_var" ]; then
+        tmp="$(od -An -tu1 -j4 $efi_var)"
+        [[ "${tmp//[[:space:]]/}" == "1" ]] && return 0 || return 1
+    else
+        return 2
+    fi
 }
 
 error_log="/error-log.$$"
@@ -181,7 +222,6 @@ for system_setup_script in 00-functions.sh 10-console-setup.sh 40-start-udev-or-
     source "/etc/scripts/system-setup.d/$system_setup_script"
 done
 
-
 # Find TCG Opal 2-compliant disks
 devices=( $(opal_devices) )
 declare -i device_count=${#devices[@]}
@@ -222,35 +262,158 @@ else
     unsuccessful_unlock_response="Could not unlock any of $device_count disks."
 fi
 
+# OPAL_PBA_SBWARN is either "pseudo-bool" or string warning message to show
+# Newer Plymouth with two-step plugin has similar check built-in and can show a warning-image
+if ! is_false "$OPAL_PBA_SBWARN" && ! is_secboot; then
+    sb_fail_status=$?
+    if is_true "$OPAL_PBA_SBWARN"; then
+        # Plymouth itself is responsible for displaying a warning in this case
+        # Showing default warning msg if Plymouth not available
+        use_plymouth || display_message "WARNING! SecureBoot is DISABLED or UNAVAILABLE"
+    else
+        display_message "${OPAL_PBA_SBWARN:-WARNING! SecureBoot is DISABLED or UNAVAILABLE}"
+    fi
+fi
+
+authtkn_bind2dev=""
+is_true "$OPAL_PBA_TKNBIND" && authtkn_bind2dev="/dev/disk/by-partlabel/${OPAL_PBA_GPT_PARTITION_NAME// /\\x20}"
+authtkn_2famkr=$'\005' #ASCII non-printable 'enquiry'
+
+authtkn_allowed=""
+[[ ${#OPAL_PBA_TKNPATH[@]} -gt 0 ]] && authtkn_allowed="Y"
+
+authtkn_stderr="/dev/null"
+if is_true "$OPAL_PBA_TKNDBG"; then
+    echo "AuthToken bind: [$OPAL_PBA_TKNBIND] -> $authtkn_bind2dev"
+    authtkn_stderr="/.authtkn.stderr.$$"
+fi
+
 declare -i attempt=0
-while (( attempt < max_authentications )); do
-    attempt+=1
+declare -i attempts2fa=0
+declare -i unlocked_device_count=0
 
-    ask_for_password "$password_prompt"
+while (( unlocked_device_count == 0 && attempt < max_authentications )); do
+    if [ -n "$authtkn_allowed" ] && [ -z "$password" ]; then
+        # just booted or user has explicitly requested AuthToken-load by supplying an empty password
+        for authtkn_path in "${OPAL_PBA_TKNPATH[@]}"; do
+            blkdev_wait "$authtkn_path" 4 1 2>>$authtkn_stderr && break
+            authtkn_path=""
+        done
 
-    # Success in this case is achieved if at least one device can be unlocked.
-    # If other devices require different passwords for unlocking, we assume
-    # that this is intentional and will be dealt with by other means.
-    declare -i unlocked_device_count=0
-    for device in "${devices[@]}"; do
-        "$unlock_command" "$device" "$password" >/dev/null && unlocked_device_count+=1
-    done
+        if [ -n "$authtkn_path" ]; then # AuthToken container is present
+            is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken container[$authtkn_path] present as $(blkdev_model $authtkn_path 2>>$authtkn_stderr)"
+            at_password=$(authtkn_load "$authtkn_path" "$OPAL_PBA_TKNOFFSET" "$OPAL_PBA_TKNKEY" "$authtkn_bind2dev" 2>>$authtkn_stderr)
+            if [ $? -eq 0 ]; then #loaded & decrypted successfully
+                is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken successfully loaded"
+                if [ "${at_password:0:${#authtkn_2famkr}}" == "$authtkn_2famkr" ]; then # AuthToken is 2FA protected
+                    is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken is 2FA-protected"
+                    attempts2fa=${OPAL_PBA_TKN2FAMAXTRIES:-3}
+                    while (( attempts2fa > 0 )); do
+                        is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken 2FA attempt $attempts2fa"
+                        ask_for_password "Please, type your 2FA password"
+                        password=$(decrypt_base64 "${at_password:${#authtkn_2famkr}}" "$password" 2>>$authtkn_stderr)
+                        [[ $? -eq 0 ]] && break || (( attempts2fa -= 1 ))
+                    done
 
-    if (( unlocked_device_count > 0 )); then
+                    if [ -z "$password" ]; then # user failed to provide correct 2FA password
+                        is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken 2FA failed, disabling AT"
+                        authtkn_allowed="" # disabling AT
+                        if is_true "$OPAL_PBA_TKN2FAFAILWIPE"; then
+                            is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken 2FA-FAIL-WIPE enabled, wiping token"
+                            authtkn_wipe "$authtkn_path" "$OPAL_PBA_TKNOFFSET" >>$authtkn_stderr 2>&1
+                        fi
+                    fi
+                elif [ -z "$sb_fail_status" ]; then # SecBoot is active or user explicitly doesn't care, allowing unattended boot
+                    password="$at_password"
+                else # SecBoot disabled or unavailable, ensure user is aware of that
+                    ask_question "SecureBoot is DISABLED or UNAVAILABLE! Continue anyway [Y/N]?"
+                    is_true "$answer" && password="$at_password" || instant_reboot
+                fi
+            fi
+        fi
+    else
+        # this is to cover multiple paths with the single [ -z "$password" ] block below
+        password=""
+    fi
+
+    if [ -z "$password" ]; then
+        # AuthToken not-configured/runtime-disabled/otherwise-failed or prev-iter $password was rejected
+        at_password="" #this var also acts as indicator that password is AT-derived
+        ask_for_password "$password_prompt" "$authtkn_allowed"
+    fi
+
+    if [ -n "$password" ]; then
+        # Success in this case is achieved if at least one device can be unlocked.
+        # If other devices require different passwords for unlocking, we assume
+        # that this is intentional and will be dealt with by other means.
+        attempt+=1
+        if is_true "$OPAL_PBA_TKNDBG"; then
+            # acceptable typed-in only
+            [[ "$password" == "dbgpass" ]] && [[ -z "$at_password" ]] && unlocked_device_count+=1
+            # acceptable both AT-sourced or typed-in
+            [[ "$password" == "dbgpasstkn" ]] && unlocked_device_count+=1
+        else
+            for device in "${devices[@]}"; do
+                "$unlock_command" "$device" "$password" >/dev/null && unlocked_device_count+=1
+            done
+        fi
+        if [ -n "$at_password" ] && (( unlocked_device_count == 0 )); then
+            # AuthToken-derived password unlocked nothing -> stop considering AT as unlock option
+            authtkn_allowed="" # disabling AT
+            is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken-derived password REJECTED"
+        fi
+    fi
+done
+
+if (( unlocked_device_count > 0 )); then
+    if [ -z "$at_password" ] && [ ${#OPAL_PBA_TKNPATH[@]} -gt 0 ]; then
+        # password is user-supplied & valid
+        opal_password="$password"
+        for authtkn_path in "${OPAL_PBA_TKNPATH[@]}"; do
+            blkdev_wait "$authtkn_path" 4 1 2>>$authtkn_stderr || continue
+            # AuthToken container present
+
+            is_true "$OPAL_PBA_TKNDBG" && echo "Offering to store AuthToken onto $authtkn_path at offset ${OPAL_PBA_TKNOFFSET}"
+            ask_question "Want to use $(blkdev_model $authtkn_path 2>>$authtkn_stderr) as AuthToken media [Y/N]?"
+            if is_true "$answer"; then
+                ask_for_password "Please, type optional 2FA password (or leave empty)" "Y" #allow empty
+                if [ -n "$password" ]; then
+                    is_true "$OPAL_PBA_TKNDBG" && echo "Encrypting AuthToken with 2FA password..."
+                    if at_password=$(encrypt_base64 "$opal_password" "$password" 2>>$authtkn_stderr); then
+                        at_password="${authtkn_2famkr}${at_password}"
+                    else
+                        display_message "2FA-encrypt failed, AuthToken NOT generated"
+                    fi
+                else
+                    at_password="$opal_password"
+                fi
+                if [ -n "$at_password" ]; then
+                    is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken generated, storing..."
+                    if authtkn_store "$authtkn_path" "$OPAL_PBA_TKNOFFSET" "$at_password" "$OPAL_PBA_TKNKEY" "$authtkn_bind2dev" >>$authtkn_stderr 2>&1; then
+                        display_message "Success! $(blkdev_model $authtkn_path 2>>$authtkn_stderr) is now your AuthToken media for this PBA"
+                    else
+                        display_message "Failed to generate/store AuthToken onto $(blkdev_model $authtkn_path 2>>$authtkn_stderr)"
+                    fi
+                fi
+                sleep 3
+            fi
+        done
+    fi
+
+    if ! is_true "$OPAL_PBA_NOSUCCESSMSG"; then
         if (( device_count == 1 && unlocked_device_count == 1 )); then
             display_message "Disk $result_state_message, rebooting..."
         else
             display_message "$unlocked_device_count of $device_count disks $result_state_message, rebooting..."
         fi
         sleep 1
-        instant_reboot
-    else
-        display_message "$unsuccessful_unlock_response"
     fi
-done
-
-# If finally unsuccessful, power off.
-# This is required as TCG Opal 2-compliant disks will refuse further authentication attempts before being reset.
-display_message "Powering off after $attempt unsuccessful attempts..."
-sleep 3
-instant_poweroff
+    is_true "$OPAL_PBA_TKNDBG" && emergency_shell || instant_reboot
+else
+    display_message "$unsuccessful_unlock_response"
+    # If finally unsuccessful, power off.
+    # This is required as TCG Opal 2-compliant disks will refuse further authentication attempts before being reset.
+    display_message "Powering off after $attempt unsuccessful attempts..."
+    sleep 3
+    is_true "$OPAL_PBA_TKNDBG" && emergency_shell || instant_poweroff
+fi
