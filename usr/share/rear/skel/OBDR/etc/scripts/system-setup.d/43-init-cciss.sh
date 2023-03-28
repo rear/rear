@@ -29,7 +29,7 @@ if [[ "$CDROM_DEVICE" && -b $CDROM_DEVICE ]]; then
 fi
 
 ### Find Host/Channel/Id/Lun of device
-HCIL="$(lsscsi | awk 'BEGIN {FS=""} / +cd\/dvd +HP +Ultrium/ { print $2, $4, $6, $8; exit }')"
+HCIL="$(lsscsi | awk 'BEGIN {FS="[\\]|\\[|:]"} / +cd\/dvd +HP +Ultrium/ { print $2, $3, $4, $5; exit }')"
 
 ### Rescan device to turn cdrom into tape device
 if [[ "$HCIL" ]]; then
