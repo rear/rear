@@ -1,4 +1,7 @@
 
+DebugPrint "skipping usr/share/rear/rescue/GNU/Linux/400_use_serial_console.sh"
+return 0
+
 # Nothing to do when using serial console is not wanted:
 is_true "$USE_SERIAL_CONSOLE" || return 0
 
