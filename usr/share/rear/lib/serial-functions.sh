@@ -14,8 +14,8 @@ function get_serial_console_devices () {
         # Continue with next kernel option when the option name (part before leftmost "=") is not 'console':
         test "${kernel_option%%=*}" = "console" || continue
         # Get the console option value (part after leftmost "=") e.g. 'ttyS1,9600n8' 'ttyS3' 'tty0'
-        console_option_value="${kernel_option%%=*}"
-        # Get the console option device (part up to first optional comma separator) e.g. 'ttyS1' 'ttyS3' 'tty0'
+        console_option_value="${kernel_option#*=}"
+        # Get the console option device (part before leftmost optional ',' separator) e.g. 'ttyS1' 'ttyS3' 'tty0'
         console_option_device="${console_option_value%%,*}"
         # Continue with next kernel option when the current console option device is no serial device.
         # The special /dev/hvsi* devices should exist only on systems that have the HVSI driver loaded
@@ -31,7 +31,7 @@ function get_serial_console_devices () {
         # Intentionally /dev/$console_option_device is unquoted to let the test also fail
         # when $console_option_device is not a single non-empty word (then something is wrong):
         if ! test -c /dev/$console_option_device ; then
-            LogPrintError "Found 'console=$console_option_device' in /proc/cmdline but /dev/$console_option_device is no character device"
+            LogPrintError "Found '$kernel_option' in /proc/cmdline but /dev/$console_option_device is no character device"
             continue
         fi
         echo /dev/$console_option_device
