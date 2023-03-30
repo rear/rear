@@ -1,4 +1,20 @@
+# Older CommVault used this
 # qlist jobhistory -tf commvtoken -c $HOSTNAME -js Completed -jt Backup -dispJobTime
+# GALAXY11 seems to use this
+# qlist jobhistory -c <rechner> -js Completed -jt Backup -dispJobTime
+# JOBID       STATUS       STORAGE POLICY                   APPTYPE              BACKUPSET           SUBCLIENT    INSTANCE     StartTime               EndTime
+# -----       ------       --------------                   -------              ---------           ---------    --------     ---------               -------
+# 31111315    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/06 19:05:16     2023/03/06 19:06:07
+# 31099537    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/05 19:05:18     2023/03/05 19:06:17
+# 31088336    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/04 19:05:10     2023/03/04 19:08:29
+# 31076891    Completed    SOME_OTHER_CRYPTIC_NAME          Linux File System    defaultBackupSet    default      <default>    2023/03/03 19:30:21     2023/03/03 19:33:25
+# 31076703    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/03 19:05:17     2023/03/03 19:08:16
+# 31064918    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/02 19:05:11     2023/03/02 19:06:12
+# 31052737    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/01 19:05:17     2023/03/01 19:06:49
+# 31027598    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/02/27 19:05:13     2023/03/01 10:57:46
+# 31015949    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/02/26 19:05:16     2023/02/26 19:06:17
+# 31004755    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/02/25 19:05:13     2023/02/25 19:06:23
+# 30993155    Completed    SOME_OTHER_CRYPTIC_NAME          Linux File System    defaultBackupSet    default      <default>    2023/02/24 19:05:18     2023/02/24 19:07:35
 # Ask for point in time to recover with Commvault (BACKUP=GALAXY11).
 # One point in time is used for all filespaces.
 
