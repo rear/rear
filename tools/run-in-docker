@@ -9,7 +9,7 @@
 # Define the list of supported images
 declare -r IMAGES=(
     ubuntu:{18.04,20.04,22.04,devel}
-    debian:{8,9,10,11,unstable}
+#    debian:{8,9,10,11,unstable} # can't download package index 31.03.2023
     opensuse/leap:{42,15}
     registry.suse.com/suse/sle15
     centos:{6,7,8} # discontinued
