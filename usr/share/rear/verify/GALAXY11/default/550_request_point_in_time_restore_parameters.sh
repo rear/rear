@@ -1,59 +1,39 @@
-# Older CommVault used this
-# qlist jobhistory -tf commvtoken -c $HOSTNAME -js Completed -jt Backup -dispJobTime
-# GALAXY11 seems to use this
-# qlist jobhistory -c <rechner> -js Completed -jt Backup -dispJobTime
-# JOBID       STATUS       STORAGE POLICY                   APPTYPE              BACKUPSET           SUBCLIENT    INSTANCE     StartTime               EndTime
-# -----       ------       --------------                   -------              ---------           ---------    --------     ---------               -------
-# 31111315    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/06 19:05:16     2023/03/06 19:06:07
-# 31099537    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/05 19:05:18     2023/03/05 19:06:17
-# 31088336    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/04 19:05:10     2023/03/04 19:08:29
-# 31076891    Completed    SOME_OTHER_CRYPTIC_NAME          Linux File System    defaultBackupSet    default      <default>    2023/03/03 19:30:21     2023/03/03 19:33:25
-# 31076703    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/03 19:05:17     2023/03/03 19:08:16
-# 31064918    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/02 19:05:11     2023/03/02 19:06:12
-# 31052737    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/03/01 19:05:17     2023/03/01 19:06:49
-# 31027598    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/02/27 19:05:13     2023/03/01 10:57:46
-# 31015949    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/02/26 19:05:16     2023/02/26 19:06:17
-# 31004755    Completed    SOME_CRYPTIC_NAME                Linux File System    defaultBackupSet    default      <default>    2023/02/25 19:05:13     2023/02/25 19:06:23
-# 30993155    Completed    SOME_OTHER_CRYPTIC_NAME          Linux File System    defaultBackupSet    default      <default>    2023/02/24 19:05:18     2023/02/24 19:07:35
+
+# qlist jobhistory -c $HOSTNAME -js Completed -jt Backup -dispJobTime -b defaultBackupSet -a Q_LINUX_FS
+# JOBID       STATUS       STORAGE POLICY                   SUBCLIENT    INSTANCE     StartTime               EndTime                 
+# -----       ------       --------------                   ---------    --------     ---------               -------                 
+# 31439021    Completed    RZ1_RZ2_BB14_DD_FS_028d_NoAux    default      <default>    2023/04/02 17:30:09     2023/04/02 17:31:09     
+# 31427228    Completed    RZ1_RZ2_BB14_DD_FS_028d_NoAux    default      <default>    2023/04/01 17:30:16     2023/04/01 17:30:55     
+# 31415158    Completed    RZ1_RZ2_BB14_DD_FS_028d_NoAux    default      <default>    2023/03/31 17:30:10     2023/03/31 17:31:15     
+# 31411972    Completed    RZ1_RZ2_BB14_DD_FS_112d_NoAux    default      <default>    2023/03/31 07:01:13     2023/03/31 07:03:31     
+# 31212435    Completed    RZ1_RZ2_BB14_DD_FS_112d_NoAux    default      <default>    2023/03/14 23:00:14     2023/03/14 23:03:50     
+# 31194138    Completed    RZ1_RZ2_BB14_DD_FS_028d_NoAux    default      <default>    2023/03/13 17:30:09     2023/03/13 17:31:25
+
 # Ask for point in time to recover with Commvault (BACKUP=GALAXY11).
 # One point in time is used for all filespaces.
+
+local commvault_jobhistory="$(qlist jobhistory -c $HOSTNAME -js Completed -jt Backup -dispJobTime -b "$GALAXY11_BACKUPSET" -a Q_LINUX_FS)"
 
 UserOutput ""
 UserOutput "Commvault restores by default the latest backup data."
 UserOutput "Press only ENTER to restore the most recent available backup."
-UserOutput "Alternatively specify date and time for Point-In-Time restore."
+UserOutput "Alternatively select one of the backups to restore"
+UserOutput ""
+UserOutput "$commvault_jobhistory"
 
-local answer=""
-local valid_date_and_time_input=""
-local commvault_restore_pit_date=""
-local commvault_restore_pit_time=""
+local job_end_times=()
+while IFS="|" read job_id job_status job_storage_policy job_subclient job_instance job_start_time job_end_time junk ; do
+    job_end_times+=( "$job_end_time" )
+done < <(sed -E -e '1,2d' -e 's/  +/|/g' <<<"$commvault_jobhistory")
 
-# Let the user enter date and time again and again until the input is valid
-# or the user pressed only ENTER to restore the most recent available backup:
-while true ; do
-    answer=$( UserInput -I GALAXY11_RESTORE_PIT -r -p "Enter date/time (MM/DD/YYYY HH:mm:ss) or press ENTER" )
-    # When the user pressed only ENTER leave this script to restore the most recent available backup:
-    if test -z "$answer"; then
-        UserOutput "Skipping Commvault Point-In-Time restore, will restore most recent backup."
-        GALAXY11_PIT=""
-        GALAXY11_ZEIT=""
-        return
-    fi
-    # Try to do Commvault Point-In-Time restore provided the user input is valid date and time:
-    valid_date_and_time_input="yes"
-    # Validate date:
-    commvault_restore_pit_date=$( date -d "$answer" +%Y.%m.%d ) || valid_date_and_time_input="no"
-    # Validate time:
-    commvault_restore_pit_time=$( date -d "$answer" +%T ) || valid_date_and_time_input="no"
-    # Exit the while loop when the user input is valid date and time:
-    is_true $valid_date_and_time_input && break
-    # Show the user that his input is invalid and do the the while loop again:
-    LogPrintError "Invalid date and/or time '$answer' specified."
+until IsInArray "$GALAXY11_PIT_RECOVERY" "${job_end_times[@]}"; do
+	GALAXY11_PIT_RECOVERY=$( UserInput -I GALAXY11_PIT_RECOVERY -p "Select point-in-time restore to use (ENTER for latest):" "${job_end_times[@]}" )
 done
 
-# Do Commvault Point-In-Time restore:
-GALAXY11_ZEIT="$answer"
-GALAXY11_PIT="QR_RECOVER_POINT_IN_TIME"
+if test "$GALAXY11_PIT_RECOVERY" ; then
+    UserOutput "Doing Commvault Point-In-Time restore with date and time $GALAXY11_PIT_RECOVERY"
+else
+    UserOutput "Doing Commvault latest backup restore"
+fi
 
-UserOutput "Doing Commvault Point-In-Time restore with date and time $GALAXY11_ZEIT"
 

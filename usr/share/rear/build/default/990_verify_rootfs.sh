@@ -100,6 +100,11 @@ if test "$BACKUP" = "DP" ; then
     # see https://github.com/rear/rear/pull/2549
     test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DP_LD_LIBRARY_PATH || backup_tool_LD_LIBRARY_PATH=$DP_LD_LIBRARY_PATH
 fi
+if test "$BACKUP" = GALAXY11 ; then
+    # Use a Galaxy-specific LD_LIBRARY_PATH to find Galaxy libraries
+    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GALAXY11_HOME_DIRECTORY || backup_tool_LD_LIBRARY_PATH=$GALAXY11_HOME_DIRECTORY
+fi
+
 # Actually test all binaries for 'not found' libraries.
 # Find all binaries and libraries (in particular what is copied via COPY_AS_IS into arbitrary paths)
 # so find what is a regular file and which is executable or its name is '*.so' or '*.so.[0-9]*'

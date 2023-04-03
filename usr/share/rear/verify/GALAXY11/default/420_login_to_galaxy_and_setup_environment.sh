@@ -14,10 +14,11 @@ elif test $qlist_ret -eq 2; then
 		# try to login with Credentials from env
 		qlogin -u "${GALAXY11_USER}" -clp "${GALAXY11_PASSWORD}" || \
 			Error "Could not logon to Commvault CommServe with credentials from GALAXY11_USER ($GALAXY11_USER) and GALAXY11_PASSWORD. Check the log file."
+		LogPrint "CommVault client logged in with credentials from GALAXY11_USER ($GALAXY11_USER) and GALAXY11_PASSWORD"
 	else
 		# try to logon manually
 		Print "Please logon to your Commvault CommServe with suitable credentials:"
-		qlogin $(test "$GALAXY11_Q_ARGUMENTFILE" && echo "-af $GALAXY11_Q_ARGUMENTFILE") || \
+		qlogin $(test "$GALAXY11_Q_ARGUMENTFILE" && echo "-af $GALAXY11_Q_ARGUMENTFILE") 0<&6 1>&7 2>&8 || \
 			Error "Could not logon to Commvault CommServe. Check the log file."
 	fi
 else
