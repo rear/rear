@@ -102,8 +102,10 @@ readonly REAR_DIR_PREFIX
 # and CONFIG_DIR can also be changed via '-c' command line option:
 SHARE_DIR="$REAR_DIR_PREFIX/usr/share/rear"
 CONFIG_DIR="$REAR_DIR_PREFIX/etc/rear"
-VAR_DIR="$REAR_DIR_PREFIX/var/lib/rear"
-LOG_DIR="$REAR_DIR_PREFIX/var/log/rear"
+# Use REAR_VAR=/tmp/rear rear <workflow> to redirect ReaR VAR_DIR for one invocation,
+# primarily used by tools/run-in-docker and development
+VAR_DIR="${REAR_VAR:-$REAR_DIR_PREFIX/var}/lib/rear"
+LOG_DIR="${REAR_VAR:-$REAR_DIR_PREFIX/var}/log/rear"
 
 # The current working directory when this script (usr/sbin/rear) is launched
 # is also the working directory of all the other scripts and config files

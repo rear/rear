@@ -1,5 +1,8 @@
 #!/usr/bin/make -f
 
+# disable parallel execution of make
+.NOTPARALLEL:
+
 %:
 	dh $@
 

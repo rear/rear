@@ -1,0 +1,41 @@
+name: Build Packages
+
+on: push
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - id: setup
+        run: sudo apt-get -qq update && sudo apt-get -qq install asciidoctor
+
+      - id: prepare
+        run: tools/run-in-docker -- --patch
+
+      - id: dist
+        run: make dist
+      
+      - id: build
+        run: tools/run-in-docker -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz /var/tmp/build-rear*'
+      
+      - run: ls -lR dist-all
+        if: always()
+
+      - name: Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ReaR Packages ${{ github.head_ref || github.ref_name }} ${{ github.sha }}
+          path: dist-all/*
+          retention-days: 7

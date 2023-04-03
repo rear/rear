@@ -1,5 +1,8 @@
 SHELL=/bin/bash
 
+# disable parallel execution of make
+.NOTPARALLEL:
+
 prefix = /usr
 datadir = $(prefix)/share
 mandir = $(datadir)/man

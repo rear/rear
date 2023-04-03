@@ -1,5 +1,8 @@
 SHELL=/bin/bash
 
+# disable parallel execution of make
+.NOTPARALLEL:
+
 prefix = /usr
 datadir = $(prefix)/share
 mandir = $(datadir)/man
@@ -7,6 +10,8 @@ mandir = $(datadir)/man
 adoctargets = $(shell echo *.adoc)
 htmltargets = $(patsubst %.adoc, %.html, $(adoctargets))
 
+# asciidoctor is in Ruby and used on Debian and SUSE and can generate manpages directly
+# asciidoc is in Python and used on Fedora and RHEL and cannot generate manpages, so we use xmlto to convert docbooc to manpage
 asciidoc := $(shell if type -p asciidoctor >/dev/null; then echo asciidoctor; else echo asciidoc; fi)
 
 all: docs

@@ -5,14 +5,12 @@ pkgrel=1
 pkgdesc="Linux Disaster Recovery"
 arch=(any)
 url="http://relax-and-recover.org/"
-license=('GPL')
-depends=(lsb-release iproute2 parted cpio openssl gawk)
-optdepends=( 'nfs-utils: to save images to NFS shares'
-             'cdrkit: to create ISO images'
-             'syslinux: to create bootable media')
-makedepends=('git' 'asciidoc' 'xmlto')
-provides=('rear')
-backup=('etc/rear/local.conf')
+license=(GPL)
+depends=(sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute2 nfs-utils libisoburn cdrtools util-linux psmisc procps-ng util-linux)
+optdepends=( )
+makedepends=(git asciidoctor)
+provides=(rear)
+backup=(etc/rear/local.conf)
 source=(SOURCE)
 md5sums=(MD5SUM)
 

@@ -159,13 +159,9 @@ for required_library in $( RequiredSharedObjects "${copy_as_is_executables[@]}" 
 done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 Log "LIBS = ${LIBS[@]}"
 
-# Fix ReaR directories when running from checkout:
-if test "$REAR_DIR_PREFIX" ; then
-    Log "Fixing ReaR directories when running from checkout"
-    local rear_dir=""
-    for rear_dir in /usr/share/rear /var/lib/rear ; do
-        ln $v -sf $REAR_DIR_PREFIX$rear_dir $ROOTFS_DIR$rear_dir
-    done
-fi
+# Fix ReaR directories when running from checkout or REAR_VAR configuration:
+Log "Validating and fixing ReaR directories for non-default paths"
+test "$VAR_DIR" != /var/lib/rear && ln -v -sf "$VAR_DIR" $ROOTFS_DIR/var/lib/rear
+test "$SHARE_DIR" != /usr/share/rear && ln -v -sf "$SHARE_DIR" $ROOTFS_DIR/usr/share/rear
 
 

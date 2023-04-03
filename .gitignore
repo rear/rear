@@ -1,6 +1,7 @@
 /test/
 /build/
 /dist/
+/dist-all
 build-stamp
 /var
 var/log/rear
@@ -9,3 +10,4 @@ var/log/rear
 .DS_Store
 .vscode
 servers
+/tools/run-in-docker-script.sh

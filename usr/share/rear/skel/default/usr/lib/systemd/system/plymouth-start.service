@@ -13,5 +13,5 @@ ConditionFileIsExecutable=/bin/plymouth
 ExecStart=/sbin/plymouthd --mode=boot --pid-file=/run/plymouth/pid --attach-to-session
 ExecStartPost=-/bin/plymouth show-splash
 Type=forking
-KillMode=none
+KillMode=mixed
 SendSIGKILL=no
