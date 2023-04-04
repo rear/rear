@@ -417,6 +417,10 @@ Log "Saving disks and their partitions"
                 # Each value must exist and each value must be a single non-blank word so we 'test' without quoting the value:
                 test $devname || Error "Invalid 'disk' entry (no disk device name for '$disk')"
                 test $devsize || Error "Invalid 'disk $devname' entry (no device size for '$devname')"
+                if ! validation_error=$(is_disk_valid $devname) ; then
+                    LogPrintError "Ignoring $blockd: $validation_error"
+                    continue
+                fi
                 disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
                 # We do not error out when there is no partition label type value because
                 # "rear recover" works in a special case without partition label type value when there is
