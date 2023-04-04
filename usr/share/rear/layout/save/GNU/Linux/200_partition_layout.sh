@@ -413,11 +413,11 @@ Log "Saving disks and their partitions"
             elif [[ ! ($blockd = *rpmb || $blockd = *[0-9]boot[0-9]) ]]; then # Silently skip Replay Protected Memory Blocks and others  
                 devname=$(get_device_name $disk)
                 devsize=$(get_disk_size ${disk#/sys/block/})
-                disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
                 # Ensure syntactically correct 'disk' entries:
                 # Each value must exist and each value must be a single non-blank word so we 'test' without quoting the value:
                 test $devname || Error "Invalid 'disk' entry (no disk device name for '$disk')"
                 test $devsize || Error "Invalid 'disk $devname' entry (no device size for '$devname')"
+                disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
                 # We do not error out when there is no partition label type value because
                 # "rear recover" works in a special case without partition label type value when there is
                 # only a 'disk' entry but nothing else for this disk exists in disklayout.conf
