@@ -2,7 +2,7 @@
 REQUIRED_PROGS+=( mt )
 
 # Test for cciss driver and include the necessary tools
-if grep -q -e '^cciss ' -e '^hpsa' /proc/modules; then
+if grep -q -e '^cciss ' -e '^hpsa ' /proc/modules; then
     PROGS+=( "${PROGS_OBDR[@]}" )
     REQUIRED_PROGS+=( "${REQUIRED_PROGS_OBDR[@]}" )
 fi
