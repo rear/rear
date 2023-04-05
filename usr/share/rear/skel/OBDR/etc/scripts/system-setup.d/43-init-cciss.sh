@@ -1,7 +1,7 @@
 ### Disable OBDR mode
 ###
 
-if ! grep -q '^cciss ' -e '^hpsa' /proc/modules; then
+if ! grep -q '^cciss ' -e '^hpsa ' /proc/modules; then
     return
 fi
 
