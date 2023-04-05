@@ -1,7 +1,7 @@
 
 # Output all variable values into the log file
 # which may also output possibly confidential values 
-# so do this only in debugscripts mode where the 'set -x' output
+# so do this only in debugscript mode where the 'set -x' output
 # in general already reveals possibly confidential information:
 test "$DEBUGSCRIPTS" || return 0
 
