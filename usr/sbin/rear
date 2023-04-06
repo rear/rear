@@ -546,7 +546,9 @@ if test "$DEBUG" ; then
     # because both stdout and stderr use one same file descriptor:
     exec 1>&2
 else
-    if test -d $TMP_DIR ; then
+    # Quoting is mandatory otherwise 'test -d' falsely succeeds if $TMP_DIR is empty, cf.
+    # https://github.com/rear/rear/issues/2966#issuecomment-1497825493
+    if test -d "$TMP_DIR" ; then
         STDOUT_STDERR_FILE="$TMP_DIR/$PROGRAM.$WORKFLOW.stdout_stderr"
         # The stdout and stderr file that is used during runtime must not be changed:
         readonly STDOUT_STDERR_FILE
