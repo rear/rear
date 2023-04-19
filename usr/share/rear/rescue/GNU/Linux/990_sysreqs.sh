@@ -84,7 +84,7 @@ echo "Disk space requirements:"
 while read junk dev size label
 do
    echo "Device $dev has a size of $((size/1024/1024/1024)) Gib (label $label)"
-done < <(grep "^disk" $LAYOUT_FILE)
+done < <(grep "^disk" "$LAYOUT_FILE")
 echo
 
 #

@@ -8,7 +8,9 @@ test "$GALAXY11_BACKUPSET" || Error "Commvault Backup Set not defined [GALAXY11_
 # create argument file
 
 cat <<EOF >$TMP_DIR/commvault.restore.options
-$(test -r "$GALAXY11_Q_ARGUMENTFILE" && cat "$GALAXY11_Q_ARGUMENTFILE")
+$(
+    test -r "$GALAXY11_Q_ARGUMENTFILE" && cat "$GALAXY11_Q_ARGUMENTFILE"
+)
 [sourceclient]
 $HOSTNAME
 [level]
@@ -16,7 +18,9 @@ $HOSTNAME
 [options]
 QR_PRESERVE_LEVEL
 QR_DO_NOT_OVERWRITE_FILE_ON_DISK
-$GALAXY11_PIT
+$(  
+    test "$GALAXY11_PIT_RECOVERY" && echo QR_RECOVER_POINT_IN_TIME
+)
 [dataagent]
 Q_LINUX_FS
 [backupset]
@@ -25,14 +29,10 @@ $GALAXY11_BACKUPSET
 /
 [destinationpath]
 $TARGET_FS_ROOT
+$(
+    test "$GALAXY11_PIT_RECOVERY" && echo -e "[browseto]\n$GALAXY11_PIT_RECOVERY"
+)
 EOF
-
-if [ "x$GALAXY11_ZEIT" != "x" ]; then
-    cat <<EOF >>$TMP_DIR/commvault.restore.options
-[browseto]
-$GALAXY11_ZEIT
-EOF
-fi
 
 local jobstatus=Unknown
 
