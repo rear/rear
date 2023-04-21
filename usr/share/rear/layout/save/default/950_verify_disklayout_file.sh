@@ -79,7 +79,10 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
     for partition in "${partitions[@]}" ; do
         # We test only partitions of the form /dev/sdX1 /dev/sdX2 /dev/sdX3 (i.e. of the form $disk_dev$part_num).
         part_num=${partition#$disk_dev}
-        test $part_num -gt $highest_used_part_num && highest_used_part_num=$part_num
+        # Suppress unhelpful stderr messages like "test: p1: integer expression expected"
+        # that appear for partitions of the form /dev/mmcblk0p1 (i.e. of the form ${disk_dev}p$part_num)
+        # cf. https://github.com/rear/rear/issues/2971#issuecomment-1517351303
+        test $part_num -gt $highest_used_part_num 2>/dev/null && highest_used_part_num=$part_num
     done
     # Skip testing for non consecutive partitions when no highest used partition number > 0 was found
     # because that indicates partitions of another form than /dev/sdX1 /dev/sdX2 /dev/sdX3 are used:
