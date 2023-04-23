@@ -1,7 +1,7 @@
 ### Disable OBDR mode
 ###
 
-if ! grep -q '^cciss ' /proc/modules; then
+if ! grep -q '^cciss ' -e '^hpsa ' /proc/modules; then
     return
 fi
 
@@ -29,7 +29,11 @@ if [[ "$CDROM_DEVICE" && -b $CDROM_DEVICE ]]; then
 fi
 
 ### Find Host/Channel/Id/Lun of device
-HCIL="$(lsscsi | awk 'BEGIN {FS=""} / +cd\/dvd +HP +Ultrium/ { print $2, $4, $6, $8; exit }')"
+### On systems with large number of connected perhepials, we need to find proper HCIL from lsscsi, f.x.
+### [2:0:10:0]   tape    HP       Ultrium 6-SCSI   25MW  /dev/st6
+### As awk's Field Separator use three characters '] [ :' , but we have to double escape brackets 
+### Ref. https://www.gnu.org/software/gawk/manual/html_node/Command-Line-Field-Separator.html
+HCIL="$(lsscsi | awk 'BEGIN {FS="[\\]|\\[|:]"} / +cd\/dvd +HP +Ultrium/ { print $2, $3, $4, $5; exit }')"
 
 ### Rescan device to turn cdrom into tape device
 if [[ "$HCIL" ]]; then
