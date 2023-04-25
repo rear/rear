@@ -26,7 +26,7 @@ EOF
 
 done < "${VAR_DIR}/recovery/mountpoint_device"
 
-Debug $(cat /etc/exports)
+Debug "$(cat /etc/exports)"
 exportfs -ra || Error "exportfs failed!"
 
 rpc.nfsd --debug 8 $NFSD_OPTS || Error "rpc.nfsd failed!"
