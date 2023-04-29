@@ -209,17 +209,18 @@ Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:
- -h --help           usage information
- -c DIR              alternative config directory; instead of /etc/rear
- -C CONFIG           additional config file; absolute path or relative to config directory
- -d                  debug mode; log debug messages
- -D                  debugscript mode; log every function call (via 'set -x')
- --debugscripts SET  same as -d -v -D but debugscript mode with 'set -SET'
- -r KERNEL           kernel version to use; current: '3.12.49-3-default'
- -s                  simulation mode; show what scripts rear would include
- -S                  step-by-step mode; acknowledge each script individually
- -v                  verbose mode; show more output
- -V --version        version information
+ -h --help              usage information
+ -c DIR                 alternative config directory; instead of /etc/rear
+ -C CONFIG              additional config file; absolute path or relative to config directory
+ -d                     debug mode; log debug messages
+ -D                     debugscript mode; log every function call (via 'set -x')
+ --debugscripts SET     same as -d -v -D but debugscript mode with 'set -SET'
+ -r KERNEL              kernel version to use; current: '3.12.49-3-default'
+ -s                     simulation mode; show what scripts rear would include
+ -S                     step-by-step mode; acknowledge each script individually
+ -v                     verbose mode; show more output
+ -V --version           version information
+ -n --non-interactive   non-interactive mode; aborts when any user input is required
 
 List of commands:
  checklayout     check if the disk layout has changed

@@ -1069,6 +1069,13 @@ function cleanup_build_area_and_end_program () {
 #   which lets a 'UserInput -I BAR_CHOICE' call autorespond with 'third choice'.
 #   No USER_INPUT_BAR_CHOICE variable should exist to get real user input for a 'UserInput -I BAR_CHOICE' call
 #   or the user can interupt any automated response within a relatively short time (minimum is only 1 second).
+# * The non-interactive feature works by erroring out in UserInput if the same user input ID is used more than once and
+#   if the first call to UserInput was not met by a human response. The idea is that if the first call ran into the
+#   timeout then the second call will not have a better chance of success and should be treated as an error.
+#   That way, ReaR will quickly abort in situations where human intervention is required but not provided.
+#   This is implemented via an associative Bash array USER_INPUT_SEEN_WITH_TIMEOUT which tracks which user input IDs
+#   were already used and ran into the timeout.
+declare -A USER_INPUT_SEEN_WITH_TIMEOUT
 function UserInput () {
     # First and foremost log that UserInput was called (but be confidential here):
     local caller_source="$( CallerSource )"
@@ -1088,6 +1095,8 @@ function UserInput () {
     local automated_input_interrupt_timeout=10
     # Avoid stderr if USER_INPUT_INTERRUPT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_INTERRUPT_TIMEOUT:
     test "$USER_INPUT_INTERRUPT_TIMEOUT" -ge 1 2>/dev/null && automated_input_interrupt_timeout=$USER_INPUT_INTERRUPT_TIMEOUT
+    # set timeouts to low but acceptable 3 seconds for non-interactive mode:
+    is_true "$NON_INTERACTIVE" && timeout=3 && automated_input_interrupt_timeout=3
     local default_prompt="enter your input"
     local prompt="$default_prompt"
     # Avoid stderr if USER_INPUT_PROMPT is not set or empty:
@@ -1111,7 +1120,11 @@ function UserInput () {
         case $option in
             (t)
                 # Avoid stderr if OPTARG is not set or empty or not an integer value:
-                test "$OPTARG" -ge 0 2>/dev/null && timeout=$OPTARG || Log "UserInput: Invalid -$option argument '$OPTARG' using fallback '$timeout'"
+                if test "$OPTARG" -ge 0 2>/dev/null ; then
+                    timeout=$OPTARG
+                else
+                    Log "UserInput: Invalid -$option argument '$OPTARG' using fallback '$timeout'"
+                fi
                 ;;
             (p)
                 prompt="$OPTARG"
@@ -1121,7 +1134,11 @@ function UserInput () {
                 ;;
             (n)
                 # Avoid stderr if OPTARG is not set or empty or not an integer value:
-                test "$OPTARG" -ge 0 2>/dev/null && input_max_chars=$OPTARG || Log "UserInput: Invalid -$option argument '$OPTARG' using fallback '$input_max_chars'"
+                if test "$OPTARG" -ge 0 2>/dev/null ; then
+                    input_max_chars=$OPTARG
+                else
+                    Log "UserInput: Invalid -$option argument '$OPTARG' using fallback '$input_max_chars'"
+                fi
                 ;;
             (d)
                 input_delimiter="$OPTARG"
@@ -1151,7 +1168,11 @@ function UserInput () {
     done
     test $user_input_ID || BugError "UserInput: Option '-I user_input_ID' required"
     test "$( echo $user_input_ID | tr -c -d '[:lower:]' )" && BugError "UserInput: Option '-I' argument '$user_input_ID' must not contain lower case letters"
-    declare $user_input_ID="dummy" || BugError "UserInput: Option '-I' argument '$user_input_ID' not a valid variable name"
+    declare $user_input_ID="dummy" 2>/dev/null || BugError "UserInput: Option '-I' argument '$user_input_ID' not a valid variable name"
+    # Check the non-interactive mode and throw an error if default_input was not set
+    if is_true "$NON_INTERACTIVE" && is_true "${USER_INPUT_SEEN_WITH_TIMEOUT[$user_input_ID]}" 2>/dev/null; then
+        Error "UserInput: non-interactive mode and repeat input for '$user_input_ID' requested while the previous attempt was answered with the default or timed out"
+    fi
     # Shift away the options and arguments:
     shift "$(( OPTIND - 1 ))"
     # Everything that is now left in "$@" is neither an option nor an option argument
@@ -1294,6 +1315,8 @@ function UserInput () {
             fi
         else
             input_string="${!predefined_input_variable_name}"
+            # non-interactive - remember that UserInput didn't get interactive user input
+            is_true "$NON_INTERACTIVE" && USER_INPUT_SEEN_WITH_TIMEOUT[$user_input_ID]=true
             # When a (non empty) input_words_array_name was specified it must contain all user input words:
             test "$input_words_array_name" && read -a "$input_words_array_name" <<<"$input_string"
         fi
@@ -1308,6 +1331,8 @@ function UserInput () {
             is_true "$confidential_mode" && Log "UserInput: 'read' got user input" || Log "UserInput: 'read' got as user input '$input_string'"
         else
             return_code=1
+            # non-interactive - remember that UserInput didn't get interactive user input
+            is_true "$NON_INTERACTIVE" && USER_INPUT_SEEN_WITH_TIMEOUT[$user_input_ID]=true
             # Continue in any case because in case of errors the default input is used.
             # Avoid stderr if timeout is not set or empty or not an integer value:
             if test "$timeout" -ge 1 2>/dev/null ; then
