@@ -1,42 +1,35 @@
 # 300_start_nfs_server.sh
 
 # same options works for mountd
-NFSD_OPTS="--no-udp --no-nfs-version 3" 
-
-rpcbind -w || Error "rpcbind failed!"
-Debug "$(rpcinfo)"
-
-# for older nfs versions
-if is_false $NFS_SERVER_V4_ONLY; then
-    rpc.idmapd || Error "rpc.idmapd failed!"
-    rpc.gssd -v || Error "rpc.gssd failed!"
-    rpc.statd --no-syslog || Error "rpc.statd failed!"
-    NFSD_OPTS=""
-fi
+local nfsd_opts="--no-udp --no-nfs-version 3"
+local cpu_cores=$(grep ^cpu\\scores /proc/cpuinfo | uniq | cut -d ':' -f 2 | xargs)
+# 4 threads per cpu core
+local nfs_threads=$(( $cpu_cores * 4 ))
+# 8 are the standard and should be the minumun
+if [[ "$nfs_threads" -lt 8 ]]; then nfs_threads=8; fi
 
 # add all mountpoints to /etc/exports
 while read mountpoint junk ; do
-    options="$NFS_SERVER_EXPORT_OPTS,nohide"
-
-    if [[ ! $mountpoint == "/" ]]; then
-cat << EOF >> /etc/exports
-${TARGET_FS_ROOT}${mountpoint} $NFS_SERVER_TRUSTED($options)
-EOF
+    options="$NFS_SERVER_EXPORT_OPTS"
+    if [[ $mountpoint == "/" ]]; then
+        options+=",fsid=0"
+    else
+        options+=",nohide"
     fi
 
+    if ! grep -q "${TARGET_FS_ROOT}${mountpoint}" /etc/exports; then
+        echo "${TARGET_FS_ROOT}${mountpoint} $NFS_SERVER_TRUSTED($options)" >> /etc/exports
+    fi
 done < "${VAR_DIR}/recovery/mountpoint_device"
-
 Debug "$(cat /etc/exports)"
-exportfs -ra || Error "exportfs failed!"
 
-rpc.nfsd --debug 8 $NFSD_OPTS || Error "rpc.nfsd failed!"
-rpc.mountd --debug all $NFSD_OPTS || Error "rpc.mountd failed!"
+exportfs $v -ra || Error "exportfs failed!"
 
-# Check mountd is running with a valid pid
+rpc.nfsd --debug $nfs_threads $nfsd_opts || Error "rpc.nfsd failed!"
+Debug "nfsd startet with $nfs_threads threads."
+
 if [ -z "$(pidof rpc.mountd)" ]; then
-    Error "NFS-Server startup failed!"
+    rpc.mountd --debug all $nfsd_opts || Error "rpc.mountd failed!"
 fi
 
-Print "NFS-Server started successfully"
-
-unset $NFSD_OPTS
+Print "NFS-Server started successfully."
