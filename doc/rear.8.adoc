@@ -366,6 +366,11 @@ Use BorgBackup (short Borg) a deduplicating backup program to restore the data.
 Executing 'rear mkbackup' will create a Borg backup,
 see the section 'ReaR with Borg back end' in the ReaR user-guide 'Scenarios' documentation.
 
+BACKUP=*NFS4SERVER*::
+This is a restore only method. ReaR starts a NFSv4 server in the restore stage and
+provides the to be restored filesystems as NFSv4 share. Another
+server (with a special backup sotware) can mount this share and can push the backup data into it.
+
 The following +BACKUP+ methods are _internal_ of Relax-and-Recover:
 
 BACKUP=*NETFS*::
