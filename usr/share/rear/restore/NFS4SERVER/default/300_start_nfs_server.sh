@@ -2,7 +2,8 @@
 
 # same options works for mountd
 local nfsd_opts=(--no-udp --no-nfs-version 3 -V 4.2)
-local cpu_cores=$(nproc)
+local cpu_cores
+cpu_cores=$(nproc) || Error "Could not determine CPU details via nproc"
 # 4 threads per cpu core
 local nfs_threads=$(( $cpu_cores * 4 ))
 # 8 are the standard and should be the minumun
