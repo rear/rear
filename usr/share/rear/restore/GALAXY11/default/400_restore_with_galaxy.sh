@@ -34,6 +34,8 @@ $(
 )
 EOF
 
+Debug "$(cat $TMP_DIR/commvault.restore.options)"
+
 local jobstatus=Unknown
 
 if jobid=$(qoperation restore -af $TMP_DIR/commvault.restore.options); then
