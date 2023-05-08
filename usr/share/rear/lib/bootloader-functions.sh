@@ -283,7 +283,7 @@ function make_syslinux_config {
         syslinux_menu "TABMSG Press [Tab] to edit options and [F1] for version info"
     fi
 
-    echo "timeout 300"
+    echo "timeout ${ISO_SYSLINUX_TIMEOUT:-$(( $USER_INPUT_TIMEOUT * 10 ))}"
     echo "#noescape 1"
     syslinux_menu title $PRODUCT v$VERSION
 
