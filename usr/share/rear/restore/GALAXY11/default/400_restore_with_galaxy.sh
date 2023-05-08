@@ -34,55 +34,74 @@ $(
 )
 EOF
 
-Debug "$(cat $TMP_DIR/commvault.restore.options)"
+Log "Restoring from CommVault with the following restore options:"
+Log "$(cat $TMP_DIR/commvault.restore.options)"
 
-local jobstatus=Unknown
+local jobstatus=Unknown jobstatus_output prevstatus jobid job_errors
 
-if jobid=$(qoperation restore -af $TMP_DIR/commvault.restore.options); then
-    jobid=${jobid// /} # remove trailing blanks
-    prevstatus=
-
-    LogPrint "Restoring data with Commvault (job $jobid)"
-
-    while true; do
-        sleep 60
-        # output of qlist job -co sc -j ## :
-
-        # STATUS     COMPLETE PERCENTAGE
-        # ------     -------------------
-        # Running
-        jobstatus=$(qlist job -j $jobid -co sc | tail -n 1)
-
-        # stop waiting if the job reached a final status
-        case "$jobstatus" in
-        (?omplet*)
-            echo
-            LogPrint "Restore completed successfully."
-            break
-            ;;
-        (?uspend* | *end* | ?unn* | ?ait*)
-            printf "\r%-79s" "$(date +"%Y-%m-%d %H:%M:%S") job is $jobstatus"
-            [ "$jobstatus" != "$prevstatus" ] && LogPrint $jobstatus
-            prevstatus="$jobstatus"
-            ;;
-        (?ail* | ?ill*)
-            echo
-            Error "Restore job failed or was killed, aborting recovery."
-            ;;
-        (*)
-            echo
-            Error "Restore job has an unknown state [$jobstatus], aborting."
-            ;;
-        esac
-    done
-
-else
+jobid=$(qoperation restore -af $TMP_DIR/commvault.restore.options) || \
     Error "Could not start Commvault restore job. Check log file."
-fi
 
-# create missing directories in recovered system
-pushd $TARGET_FS_ROOT >/dev/null
-for dir in opt/commvault/Base64/Temp opt/commvault/Updates opt/commvault/iDataAgent/jobResults; do
-    mkdir -p "$dir"
+jobid=${jobid// /} # remove trailing blanks
+prevstatus=
+
+LogPrint "Restoring data with Commvault (job $jobid)"
+
+sleep 10 # wait for job to be created
+
+while true; do
+    # every 60 seconds, first check for an error condition on our job and
+    # then check for the current status of the job
+
+    # qlist job -j 31900347 -co sr
+    # STATUS    FAILURE REASON          
+    # ------    --------------          
+    # Killed    318767965, 402653226    
+
+    # Messages for Job failure/pending reasons:
+    # 31900347	318767965 -> Killed by svc_ansible_commvault_test. Reason:[].
+    # 	402653226 -> Cannot start restore program on host [FQDN*HOST*8400*8402] - a network error occurred or the product's services are not running.
+
+    jobstatus_output=$(qlist job -j $jobid -co sr) || Error "Could not get job status output."
+    jobstatus=$(sed -n 3p <<<"$jobstatus_output")
+    read -r job_status_name job_errors <<<"$jobstatus"
+
+    if contains_visible_char "$job_errors"; then
+        Log "$jobstatus_output"
+        # kill problematic job to clean up resources on backup server
+        qoperation jobcontrol -o kill -j $jobid && Log "Job $jobid was successfully killed."
+        echo
+        Error "Job $jobid has status $job_status_name with errors. Check log file."
+    fi
+
+    # stop waiting if the job reached a final status
+    case "$job_status_name" in
+    (?omplet*)
+        echo
+        LogPrint "Restore completed successfully."
+        break
+        ;;
+    (?uspend* | *end* | ?unn* | ?ait*)
+        ProgressInfo "$(date +"%Y-%m-%d %H:%M:%S") job is $jobstatus"
+        [ "$jobstatus" != "$prevstatus" ] && Log "$jobstatus"
+        prevstatus="$jobstatus"
+        ;;
+    (?ail* | ?ill*)
+        echo
+        Error "Restore job failed or was killed, aborting recovery."
+        ;;
+    (*)
+        echo
+        LogPrint "$jobstatus_output"
+        Error "Restore job has an unknown state [$job_status_name], aborting."
+        ;;
+    esac
+
+    sleep 60
+
 done
-popd >/dev/null
+
+
+for dir in "$TARGET_FS_ROOT/$GALAXY11_TEMP_DIRECTORY" "$TARGET_FS_ROOT/$GALAXY11_CORE_DIRECTORY"/Updates "$TARGET_FS_ROOT/$GALAXY11_JOBS_RESULTS_DIRECTORY"; do
+    mkdir -p $v "$dir"
+done

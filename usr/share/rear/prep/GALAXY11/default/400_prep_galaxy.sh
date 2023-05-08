@@ -33,7 +33,8 @@ function set_variable_from_commvault_status {
 #   - Client Hostname = client.some.domain
 #   - Job Results Directory = /opt/commvault/iDataAgent/jobResults
 
-local commvault_status=$(commvault status) || Error "Cannot determine CommVault status, check 'commvault status'"
+local commvault_status
+commvault_status=$(commvault status) || Error "Cannot determine CommVault status, check 'commvault status'"
 Log "CommVault Status:\n$commvault_status"
 
 if ! test "$GALAXY11_CORE_DIRECTORY" \
