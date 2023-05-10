@@ -66,7 +66,13 @@ while true; do
     jobstatus=$(sed -n 3p <<<"$jobstatus_output")
     read -r job_status_name job_errors <<<"$jobstatus"
 
-    if contains_visible_char "$job_errors"; then
+    # check success or errors first
+    if [[ "$job_status_name" == ?omplete* ]] ; then
+        echo
+        # jobstatus is "Completed" or "Completed w/ one or more errors" which we ignore
+        LogPrint "Restore $jobstatus"
+        break
+    elif contains_visible_char "$job_errors"; then
         Log "$jobstatus_output"
         # kill problematic job to clean up resources on backup server
         qoperation jobcontrol -o kill -j $jobid && Log "Job $jobid was successfully killed."
@@ -74,13 +80,9 @@ while true; do
         Error "Job $jobid has status $job_status_name with errors. Check log file."
     fi
 
-    # stop waiting if the job reached a final status
+    # handle all other job states
     case "$job_status_name" in
-    (?omplet*)
-        echo
-        LogPrint "Restore completed successfully."
-        break
-        ;;
+    # (?omplete*) handled above already
     (?uspend* | *end* | ?unn* | ?ait*)
         ProgressInfo "$(date +"%Y-%m-%d %H:%M:%S") job is $jobstatus"
         [ "$jobstatus" != "$prevstatus" ] && Log "$jobstatus"
