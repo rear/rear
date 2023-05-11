@@ -48,9 +48,13 @@ It gets removed because the ReaR rescue/recovery system must be free of secrets.
 Otherwise the rescue system ISO image and any recovery medium that is made from it
 would have to be carefully protected against any unwanted access.
 Therefore BACKUP_PROG_CRYPT_KEY must be manually set before running "rear recover".
-For example via `export BACKUP_PROG_CRYPT_KEY='my_secret_passphrase'`
-before calling "rear recover" and/or also before calling "rear mkbackup"
-so that there is no need to store it ever in a ReaR config file.
+For example in the running ReaR rescue system via
+`export BACKUP_PROG_CRYPT_KEY='my_secret_passphrase'`
+before calling "rear recover".
+You may also do this on the original system before calling "rear mkbackup"
+so that there is no need to store it ever in a ReaR config file
+but then ensure to run commands that contain 'my_secret_passphrase'
+without keeping the command in a history file (e.g. ~/.bash_history).
 On the other hand it is crucial to remember the BACKUP_PROG_CRYPT_KEY value
 that was used during "rear mkbackup" so that possibly a long time later that
 rescue image can be used (possibly by someone else) to recover from a disaster.
@@ -60,8 +64,8 @@ when 'rear' is run in debugscript mode (where 'set -x' is set) by redirecting
 STDERR to /dev/null via `{ command confidential_argument ; } 2>/dev/null`
 where the redirection must be done via a compound group command even for
 a single confidential command to let the redirection also apply for 'set -x'.
-See the comment of the UserInput function in lib/_input-output-functions.sh
-how to keep things confidential when 'rear' is run in debugscript mode.
+See the description in /usr/share/rear/conf/default.conf
+how to set variables for secret values in a confidential way.
 
 
 == Bootable USB device with backup to USB
