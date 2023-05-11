@@ -10,7 +10,7 @@ let qlist_ret=$?
 if test $qlist_ret -eq 0; then
 	Log "CommVault client logged in automatically"
 elif test $qlist_ret -eq 2; then
-	if { test "$GALAXY11_USER" && test "$GALAXY11_PASSWORD" ; } 2>/dev/null ; then
+	if test "$GALAXY11_USER" && { test "$GALAXY11_PASSWORD" ; } 2>/dev/null ; then
 		# try to login with Credentials from env
 		{ qlogin -u "${GALAXY11_USER}" -clp "${GALAXY11_PASSWORD}" ; } 2>/dev/null || \
 			Error "Could not logon to Commvault CommServe with credentials from GALAXY11_USER ($GALAXY11_USER) and GALAXY11_PASSWORD. Check the log file."
