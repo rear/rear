@@ -19,11 +19,12 @@ set -e -u -o pipefail
 
 # As fallback use 'root' as root password in the target system.
 # A non-empty fallback is needed because 'passwd' does not accept empty input:
-local root_password="root"
-# If SSH_ROOT_PASSWORD is specified used that as root password in the target system:
-test "$SSH_ROOT_PASSWORD" && root_password="$SSH_ROOT_PASSWORD"
-# If ZYPPER_ROOT_PASSWORD is specified used that as root password in the target system:
-test "$ZYPPER_ROOT_PASSWORD" && root_password="$ZYPPER_ROOT_PASSWORD"
+{ local root_password="root"
+  # If SSH_ROOT_PASSWORD is specified used that as root password in the target system:
+  test "$SSH_ROOT_PASSWORD" && root_password="$SSH_ROOT_PASSWORD"
+  # If ZYPPER_ROOT_PASSWORD is specified used that as root password in the target system:
+  test "$ZYPPER_ROOT_PASSWORD" && root_password="$ZYPPER_ROOT_PASSWORD"
+} 2>/dev/null
 
 # Set the root password in the target system.
 # Use a login shell in between so that one has in the chrooted environment
@@ -31,7 +32,7 @@ test "$ZYPPER_ROOT_PASSWORD" && root_password="$ZYPPER_ROOT_PASSWORD"
 # the commands inside 'chroot' as one would type them in a normal working shell.
 # In particular one can call programs (like 'passwd') by their basename without path
 # cf. https://github.com/rear/rear/issues/862#issuecomment-274068914
-chroot $TARGET_FS_ROOT /bin/bash --login -c "echo -e '$root_password\n$root_password' | passwd root"
+{ chroot $TARGET_FS_ROOT /bin/bash --login -c "echo -e '$root_password\n$root_password' | passwd root" ; } 2>/dev/null
 
 # Restore the ReaR default bash flags and options (see usr/sbin/rear):
 apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"
