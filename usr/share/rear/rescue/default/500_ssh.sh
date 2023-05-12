@@ -9,7 +9,7 @@ has_binary ssh || has_binary sshd || return 0
 # Do nothing when not any SSH file should be copied into the recovery system:
 if is_false "$SSH_FILES" ; then
     # Print an info if SSH_ROOT_PASSWORD is set but that cannot work when SSH_FILES is set to a 'false' value:
-    test "$SSH_ROOT_PASSWORD" && LogPrintError "SSH_ROOT_PASSWORD cannot work when SSH_FILES is set to a 'false' value"
+    { test "$SSH_ROOT_PASSWORD" ; } 2>/dev/null && LogPrintError "SSH_ROOT_PASSWORD cannot work when SSH_FILES is set to a 'false' value"
     return 0
 fi
 
@@ -85,15 +85,16 @@ fi
 echo "ssh:23:respawn:/etc/scripts/run-sshd" >>$ROOTFS_DIR/etc/inittab
 
 # Print an info if there is no authorized_keys file for root and no SSH_ROOT_PASSWORD set:
-if ! test -f "$ROOT_HOME_DIR/.ssh/authorized_keys" -o "$SSH_ROOT_PASSWORD" ; then
+{ if ! test -f "$ROOT_HOME_DIR/.ssh/authorized_keys" -o "$SSH_ROOT_PASSWORD" ; then
     LogPrintError "To log into the recovery system via ssh set up $ROOT_HOME_DIR/.ssh/authorized_keys or specify SSH_ROOT_PASSWORD"
-fi
+  fi
+} 2>/dev/null
 
 # Set the SSH root password; if pw is encrypted just copy it otherwise use openssl (for backward compatibility)
 # Encryption syntax is detected as a '$D$' or '$Dx$' prefix in the password, where D is a single digit and x is one lowercase character.
 # For more information on encryption IDs, check out the NOTES section of the man page for crypt(3).
 # The extglob shell option is required for this to work.
-if test "$SSH_ROOT_PASSWORD" ; then
+{ if test "$SSH_ROOT_PASSWORD" ; then
     case "$SSH_ROOT_PASSWORD" in
         (\$[0-9]?([a-z])\$*)
             echo "root:$SSH_ROOT_PASSWORD:::::::" > $ROOTFS_DIR/etc/shadow
@@ -102,5 +103,5 @@ if test "$SSH_ROOT_PASSWORD" ; then
             echo "root:$( echo $SSH_ROOT_PASSWORD | openssl passwd -1 -stdin ):::::::" > $ROOTFS_DIR/etc/shadow
             ;;
     esac
-fi
-
+  fi
+} 2>/dev/null
