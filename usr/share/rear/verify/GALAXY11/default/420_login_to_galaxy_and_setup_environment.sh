@@ -14,7 +14,7 @@ elif test $qlist_ret -eq 2; then
 		# try to login with Credentials from env
         # Using "if COMMAND ; then ... ; else echo COMMAND failed with $? ; fi" is mandatory
         # because "if ! COMMAND ; then echo COMMAND failed with $? ..." shows wrong $? because '!' results $?=0
-		if { qlogin -u "${GALAXY11_USER}" -clp "${GALAXY11_PASSWORD}" ; } 2>/dev/null ; then
+		if { qlogin -u "$GALAXY11_USER" -clp "$GALAXY11_PASSWORD" ; } 2>/dev/null ; then
             LogPrint "CommVault client logged in with credentials from GALAXY11_USER '$GALAXY11_USER' and GALAXY11_PASSWORD"
         else
             Error "CommVault 'qlogin -u $GALAXY11_USER -clp GALAXY11_PASSWORD' failed with exit code $? (retry on command line to see error messages)"
