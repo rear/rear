@@ -12,9 +12,13 @@ if test $qlist_ret -eq 0; then
 elif test $qlist_ret -eq 2; then
 	if test "$GALAXY11_USER" && { test "$GALAXY11_PASSWORD" ; } 2>/dev/null ; then
 		# try to login with Credentials from env
-		{ qlogin -u "${GALAXY11_USER}" -clp "${GALAXY11_PASSWORD}" ; } 2>/dev/null || \
-			Error "Could not logon to Commvault CommServe with credentials from GALAXY11_USER ($GALAXY11_USER) and GALAXY11_PASSWORD. Check the log file."
-		LogPrint "CommVault client logged in with credentials from GALAXY11_USER ($GALAXY11_USER) and GALAXY11_PASSWORD"
+        # Using "if COMMAND ; then ... ; else echo COMMAND failed with $? ; fi" is mandatory
+        # because "if ! COMMAND ; then echo COMMAND failed with $? ..." shows wrong $? because '!' results $?=0
+		if { qlogin -u "${GALAXY11_USER}" -clp "${GALAXY11_PASSWORD}" ; } 2>/dev/null ; then
+            LogPrint "CommVault client logged in with credentials from GALAXY11_USER '$GALAXY11_USER' and GALAXY11_PASSWORD"
+        else
+            Error "CommVault 'qlogin -u $GALAXY11_USER -clp GALAXY11_PASSWORD' failed with exit code $? (retry on command line to see error messages)"
+		fi
 	else
 		# try to logon manually
 		Print "Please logon to your Commvault CommServe with suitable credentials:"
