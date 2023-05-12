@@ -36,7 +36,7 @@ if (( ${#OPAL_PBA_PROGS[@]} == 0 && ${#OPAL_PBA_COPY_AS_IS[@]} == 0)) && has_bin
     LogPrintError "     interface for the PBA by setting OPAL_PBA_{PROGS,COPY_AS_IS,LIBS} to include Plymouth components."
 fi
 PROGS+=( "${OPAL_PBA_PROGS[@]}" clear )
-[[ -n "$OPAL_PBA_DEBUG_PASSWORD" ]] && REQUIRED_PROGS+=( openssl )
+{ test "$OPAL_PBA_DEBUG_PASSWORD" ; } 2>/dev/null && REQUIRED_PROGS+=( openssl )
 COPY_AS_IS+=( "${OPAL_PBA_COPY_AS_IS[@]}" )
 LIBS+=( "${OPAL_PBA_LIBS[@]}" )
 
