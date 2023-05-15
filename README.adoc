@@ -203,7 +203,7 @@ To use Relax-and-Recover you always call the main script '/usr/sbin/rear':
 ----
 # rear help
 
-Usage: rear [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [--] COMMAND [ARGS...]
+Usage: rear [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [-n|--non-interactive] [--] COMMAND [ARGS...]
 
 Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
@@ -220,7 +220,7 @@ Available options:
  -S                     step-by-step mode; acknowledge each script individually
  -v                     verbose mode; show more output
  -V --version           version information
- -n --non-interactive   non-interactive mode; aborts when any user input is required
+ -n --non-interactive   non-interactive mode; aborts when any user input is required (experimental)
 
 List of commands:
  checklayout     check if the disk layout has changed
