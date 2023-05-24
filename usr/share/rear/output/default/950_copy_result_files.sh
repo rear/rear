@@ -46,6 +46,15 @@ cat "$RUNTIME_LOGFILE" > "$TMP_DIR/$final_logfile_name" || Error "Could not copy
 RESULT_FILES+=( "$TMP_DIR/$final_logfile_name" )
 LogPrint "Saving $RUNTIME_LOGFILE as $final_logfile_name to $scheme location"
 
+# Filter Output URL Files
+if contains_visible_char "$OUTPUT_URL_FILES_FILTER" ; then
+    local result_files_filtered=()
+    for result_file in "${RESULT_FILES[@]}"; do
+        [[ "$result_file" == $OUTPUT_URL_FILES_FILTER ]] && result_files_filtered+="$result_file"
+    done
+    RESULT_FILES=("${result_files_filtered[@]}")
+fi
+
 # The real work (actually copying resulting files to the output location):
 if scheme_supports_filesystem $scheme ; then
     # We can access the destination as a mounted filesystem. Do nothing special,
@@ -118,14 +127,30 @@ fi
 case "$scheme" in
     (fish|ftp|ftps|hftp|http|https|sftp)
         LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
-        Log "lftp -c $OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mput ${RESULT_FILES[*]}"
 
-        # Make sure that destination directory exists, otherwise lftp would copy
-        # RESULT_FILES into last available directory in the path.
-        # e.g. OUTPUT_URL=sftp://<host_name>/iso/server1 and have "/iso/server1"
-        # directory missing, would upload RESULT_FILES into sftp://<host_name>/iso/
-        lftp -c "$OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mkdir -fp ${path}"
-        lftp -c "$OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mput ${RESULT_FILES[*]}" || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
+        if contains_visible_char "$OUTPUT_LFTP_USERNAME" ; then
+            local lftp_cmds=
+    	    read -r -d '' lftp_cmds <<EOF
+$OUTPUT_LFTP_OPTIONS
+mkdir -fp ${path}
+mput ${RESULT_FILES[*]}
+EOF
+            Log "lftp -u $OUTPUT_LFTP_USERNAME,******* $OUTPUT_URL"
+            Log "$lftp_cmds"
+
+            { lftp -u "$OUTPUT_LFTP_USERNAME","$OUTPUT_LFTP_PASSWORD" "$OUTPUT_URL" <<< $lftp_cmds 
+            } 2>/dev/null || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
+
+        else
+            Log "lftp -c $OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mput ${RESULT_FILES[*]}"
+            # Make sure that destination directory exists, otherwise lftp would copy
+            # RESULT_FILES into last available directory in the path.
+            # e.g. OUTPUT_URL=sftp://<host_name>/iso/server1 and have "/iso/server1"
+            # directory missing, would upload RESULT_FILES into sftp://<host_name>/iso/
+            lftp -c "$OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mkdir -fp ${path}"
+            lftp -c "$OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mput ${RESULT_FILES[*]}" || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
+        fi
+
         ;;
     (rsync)
         # If BACKUP = RSYNC output/RSYNC/default/900_copy_result_files.sh took care of it:
