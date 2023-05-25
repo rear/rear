@@ -150,7 +150,7 @@ EOF
         # directory missing, would upload RESULT_FILES into sftp://<host_name>/iso/
         { lftp $lftp_user_opts "$OUTPUT_URL" <<< $lftp_cmds 
         } 2>/dev/null \
-            || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)" || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
+            || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
 
 
         ;;
