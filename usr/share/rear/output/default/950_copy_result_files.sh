@@ -46,6 +46,7 @@ cat "$RUNTIME_LOGFILE" > "$TMP_DIR/$final_logfile_name" || Error "Could not copy
 RESULT_FILES+=( "$TMP_DIR/$final_logfile_name" )
 LogPrint "Saving $RUNTIME_LOGFILE as $final_logfile_name to $scheme location"
 
+local result_file
 # Filter Output URL Files
 if contains_visible_char "$OUTPUT_URL_FILES_FILTER" ; then
     local result_files_filtered=()
