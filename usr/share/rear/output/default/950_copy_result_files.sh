@@ -48,10 +48,17 @@ LogPrint "Saving $RUNTIME_LOGFILE as $final_logfile_name to $scheme location"
 
 local result_file
 # Filter Output URL Files
-if contains_visible_char "$OUTPUT_URL_FILES_FILTER" ; then
+if (( "${#OUTPUT_URL_FILES_PATTERNS[@]}" > 0 )) ; then
     local result_files_filtered=()
     for result_file in "${RESULT_FILES[@]}"; do
-        [[ "$result_file" == $OUTPUT_URL_FILES_FILTER ]] && result_files_filtered+="$result_file"
+        local pattern
+        # interate over patterns
+        for pattern in "${OUTPUT_URL_FILES_PATTERNS[@]}"; do
+            if [[ "$result_file" == $pattern ]]; then
+                result_files_filtered+=("$result_file")
+                break
+            fi
+        done
     done
     RESULT_FILES=("${result_files_filtered[@]}")
 fi
@@ -152,8 +159,6 @@ EOF
         { lftp $lftp_user_opts "$OUTPUT_URL" <<< $lftp_cmds 
         } 2>/dev/null \
             || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
-
-
         ;;
     (rsync)
         # If BACKUP = RSYNC output/RSYNC/default/900_copy_result_files.sh took care of it:
