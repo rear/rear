@@ -1,4 +1,4 @@
-local check_file abort_file nfs_connections used_space
+local check_file abort_file nfs_connections used_space duration start runtime
 
 check_file="$TARGET_FS_ROOT/$NFS4SERVER_RESTORE_FINISHED_FILE"
 abort_file="$TARGET_FS_ROOT/$NFS4SERVER_RESTORE_ABORT_FILE"
@@ -10,16 +10,16 @@ rm -f "$check_file" "$abort_file" || Error "Couldn't delete restore finished fil
 
 LogPrint "Waiting until $check_file was created and there is no active connection on the NFS port 2049."
 
+(( start = SECONDS ))
 nfs_connections=1
 while [ ! -f "$check_file" ] || [ "$nfs_connections" -gt 0 ]; do
     if [ -f "$abort_file" ]; then
         echo ""
         Error "Restore aborted by abort file $abort_file. Reason given:$LF$(< "$abort_file"))"
     fi
-    used_space=$(
-        df --total --local -h --exclude-type=tmpfs --exclude-type=devtmpfs | awk 'END{print $3}'
-        ) && \
-        ProgressInfo "      Used storage space: $used_space"
+    (( duration = SECONDS - start ))
+    printf -v runtime "%02d:%02d" $(( duration/60 )) $(( duration % 60 ))
+    ProgressInfo "Waiting for $runtime minutes, total used storage space: $(total_target_fs_used_disk_space)"
     sleep 5
     nfs_connections=$(ss -tanpH state established "( sport = 2049 )" | wc -l)
 done
