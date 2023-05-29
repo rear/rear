@@ -1095,8 +1095,6 @@ function UserInput () {
     local automated_input_interrupt_timeout=10
     # Avoid stderr if USER_INPUT_INTERRUPT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_INTERRUPT_TIMEOUT:
     test "$USER_INPUT_INTERRUPT_TIMEOUT" -ge 1 2>/dev/null && automated_input_interrupt_timeout=$USER_INPUT_INTERRUPT_TIMEOUT
-    # set timeouts to low but acceptable 3 seconds for non-interactive mode:
-    is_true "$NON_INTERACTIVE" && timeout=3 && automated_input_interrupt_timeout=3
     local default_prompt="enter your input"
     local prompt="$default_prompt"
     # Avoid stderr if USER_INPUT_PROMPT is not set or empty:
@@ -1170,8 +1168,13 @@ function UserInput () {
     test "$( echo $user_input_ID | tr -c -d '[:lower:]' )" && BugError "UserInput: Option '-I' argument '$user_input_ID' must not contain lower case letters"
     declare $user_input_ID="dummy" 2>/dev/null || BugError "UserInput: Option '-I' argument '$user_input_ID' not a valid variable name"
     # Check the non-interactive mode and throw an error if default_input was not set
-    if is_true "$NON_INTERACTIVE" && is_true "${USER_INPUT_SEEN_WITH_TIMEOUT[$user_input_ID]}" 2>/dev/null; then
-        Error "UserInput: non-interactive mode and repeat input for '$user_input_ID' requested while the previous attempt was answered with the default or timed out"
+    if is_true "$NON_INTERACTIVE" ; then
+        if is_true "${USER_INPUT_SEEN_WITH_TIMEOUT[$user_input_ID]}" 2>/dev/null; then
+            Error "UserInput: non-interactive mode and repeat input for '$user_input_ID' requested while the previous attempt was answered with the default or timed out"
+        fi
+        # set timeouts to low but acceptable 3 seconds for non-interactive mode:
+        timeout=3
+        automated_input_interrupt_timeout=3
     fi
     # Shift away the options and arguments:
     shift "$(( OPTIND - 1 ))"
