@@ -242,5 +242,6 @@ function xfs_parse
 
 # return the total used disk space of the target file systems
 function total_target_fs_used_disk_space() {
-    df --total --local -h --exclude-type=tmpfs --exclude-type=devtmpfs $(mount | grep "$TARGET_FS_ROOT" | cut -f 1 -d " ") | awk 'END{print $3}'
+    df --total --local -h --exclude-type=tmpfs --exclude-type=devtmpfs \
+        $(mount | grep "$TARGET_FS_ROOT" | cut -f 1 -d " ") | awk 'END{print $3}'
 }
