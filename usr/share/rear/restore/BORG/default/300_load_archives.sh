@@ -63,13 +63,15 @@ while true ; do
         LogUserOutput "[0] Show all archives again"
     fi
 
+    local abort_choice
+    (( abort_choice = archive_cache_lines_total + 1 ))
     # Show "Exit" option.
     UserOutput ""
-    LogUserOutput "[$(( archive_cache_lines_total + 1 ))]" Exit
+    LogUserOutput "[$abort_choice]" Exit
     UserOutput ""
 
     # Read user input.
-    choice="$( UserInput -I BORGBACKUP_ARCHIVE_TO_RECOVER -p "Choose archive to recover from" )"
+    choice="$( UserInput -I BORGBACKUP_ARCHIVE_TO_RECOVER -D "$abort_choice" -p "Choose archive to recover from" )"
 
     # Evaluate user selection and save archive name to restore.
     # Valid pick
@@ -79,7 +81,7 @@ while true ; do
             | awk '{ print $1 }' )
         break
     # Exit
-    elif [[ $choice -eq $(( archive_cache_lines_total + 1 )) ]]; then
+    elif [[ $choice -eq $abort_choice ]]; then
         Error "Operation aborted by user"
     fi
 done
