@@ -136,13 +136,12 @@ case "$scheme" in
     (fish|ftp|ftps|hftp|http|https|sftp)
         LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
 
-        local lftp_cmds=
-        local lftp_user_opts=
-    	read -r -d '' lftp_cmds <<EOF
-$OUTPUT_LFTP_OPTIONS
-mkdir -fp ${path}
-mput ${RESULT_FILES[*]}
-EOF
+        local lftp_user_opts lftp_cmds_heredoc
+        local lftp_cmds=("${OUTPUT_LFTP_OPTIONS[@]}")
+        lftp_cmds+=("mkdir -fp ${path}" \
+            "mput ${RESULT_FILES[*]}")
+
+    	lftp_cmds_heredoc=$(IFS=$'\n'; echo "${lftp_cmds[*]}")
 
         if contains_visible_char "$OUTPUT_LFTP_USERNAME" ; then
             { lftp_user_opts="-u $OUTPUT_LFTP_USERNAME,$OUTPUT_LFTP_PASSWORD" ; } 2>/dev/null
@@ -151,12 +150,12 @@ EOF
             Log "lftp $lftp_user_opts $OUTPUT_URL"
         fi
 
-        Log "$lftp_cmds"
+        Log "$lftp_cmds_heredoc"
         # Make sure that destination directory exists, otherwise lftp would copy
         # RESULT_FILES into last available directory in the path.
         # e.g. OUTPUT_URL=sftp://<host_name>/iso/server1 and have "/iso/server1"
         # directory missing, would upload RESULT_FILES into sftp://<host_name>/iso/
-        { lftp $lftp_user_opts "$OUTPUT_URL" <<< $lftp_cmds 
+        { lftp $lftp_user_opts "$OUTPUT_URL" <<< "$lftp_cmds_heredoc" 
         } 2>/dev/null \
             || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
         ;;
