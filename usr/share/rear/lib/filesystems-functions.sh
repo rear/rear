@@ -242,6 +242,17 @@ function xfs_parse
 
 # return the total used disk space of the target file systems
 function total_target_fs_used_disk_space() {
-    df --total --local -h --exclude-type=tmpfs --exclude-type=devtmpfs \
-        $(mount | grep "$TARGET_FS_ROOT" | cut -f 1 -d " ") | awk 'END{print $3}'
+    # get all mounted file systems for TARGET_FS_ROOT that are mounted on a local device (starting with /)
+    # and exclude virtual filesystems like tmpfs, devtmpfs, sysfs, none
+    # and return the 3rd column of the last line of the df output that looks like this:
+    # Filesystem                         Size  Used Avail Use% Mounted on
+    # /dev/mapper/ubuntu--vg-ubuntu--lv  5.6G  4.2G  1.2G  78% /mnt/local
+    # /dev/sda2                          1.7G  277M  1.4G  17% /mnt/local/boot
+    # /dev/sda1                          537M  6.1M  531M   2% /mnt/local/boot/efi
+    # total                              7.8G  4.4G  3.1G  60% -
+    #
+    # shellcheck disable=SC2046
+    df --total --local -h \
+        --exclude-type=tmpfs --exclude-type=devtmpfs --exclude-type=sysfs --exclude-type=none \
+        $(mount | sed -n -e "\#^/.*$TARGET_FS_ROOT#s/ .*//p") | sed -E -n -e '$s/[^ ]+ +[^ ]+ +([^ ]+).*/\1/p'
 }
