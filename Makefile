@@ -79,7 +79,7 @@ else
 RUNASUSER :=
 endif
 
-.PHONY: doc dump package
+.PHONY: doc dump package dist/$(name)-$(distversion).tar.gz
 
 all:
 	@echo "Nothing to build. Use 'make help' for more information."
