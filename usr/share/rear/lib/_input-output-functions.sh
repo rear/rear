@@ -1073,9 +1073,9 @@ function cleanup_build_area_and_end_program () {
 #   if the first call to UserInput was not met by a human response. The idea is that if the first call ran into the
 #   timeout then the second call will not have a better chance of success and should be treated as an error.
 #   That way, ReaR will quickly abort in situations where human intervention is required but not provided.
-#   This is implemented via an associative Bash array USER_INPUT_SEEN_WITH_TIMEOUT which tracks which user input IDs
+#   This is implemented via the Bash array USER_INPUT_SEEN_WITH_TIMEOUT which tracks which user input IDs
 #   were already used and ran into the timeout.
-declare -A USER_INPUT_SEEN_WITH_TIMEOUT
+declare -a USER_INPUT_SEEN_WITH_TIMEOUT
 function UserInput () {
     # First and foremost log that UserInput was called (but be confidential here):
     local caller_source="$( CallerSource )"
@@ -1169,7 +1169,7 @@ function UserInput () {
     declare $user_input_ID="dummy" 2>/dev/null || BugError "UserInput: Option '-I' argument '$user_input_ID' not a valid variable name"
     # Check the non-interactive mode and throw an error if default_input was not set
     if is_true "$NON_INTERACTIVE" ; then
-        if is_true "${USER_INPUT_SEEN_WITH_TIMEOUT[$user_input_ID]}" 2>/dev/null; then
+        if IsInArray "$user_input_ID" "${USER_INPUT_SEEN_WITH_TIMEOUT[@]}" 2>/dev/null; then
             Error "UserInput: non-interactive mode and repeat input for '$user_input_ID' requested while the previous attempt was answered with the default or timed out"
         fi
         # set timeouts to low but acceptable 3 seconds for non-interactive mode:
@@ -1319,7 +1319,7 @@ function UserInput () {
         else
             input_string="${!predefined_input_variable_name}"
             # non-interactive - remember that UserInput didn't get interactive user input
-            is_true "$NON_INTERACTIVE" && USER_INPUT_SEEN_WITH_TIMEOUT[$user_input_ID]=true
+            is_true "$NON_INTERACTIVE" && USER_INPUT_SEEN_WITH_TIMEOUT+=( "$user_input_ID" )
             # When a (non empty) input_words_array_name was specified it must contain all user input words:
             test "$input_words_array_name" && read -a "$input_words_array_name" <<<"$input_string"
         fi
@@ -1335,7 +1335,7 @@ function UserInput () {
         else
             return_code=1
             # non-interactive - remember that UserInput didn't get interactive user input
-            is_true "$NON_INTERACTIVE" && USER_INPUT_SEEN_WITH_TIMEOUT[$user_input_ID]=true
+            is_true "$NON_INTERACTIVE" && USER_INPUT_SEEN_WITH_TIMEOUT+=( "$user_input_ID" )
             # Continue in any case because in case of errors the default input is used.
             # Avoid stderr if timeout is not set or empty or not an integer value:
             if test "$timeout" -ge 1 2>/dev/null ; then
