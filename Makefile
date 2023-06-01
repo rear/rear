@@ -77,6 +77,7 @@ dscfile = packaging/debian/$(name).dsc
 effectivespecfile = $(BUILD_DIR)/$(name)-$(distversion)/$(specfile)
 
 rpmdefines =    --define="_topdir $(BUILD_DIR)/rpmbuild" \
+		--define="rpmrelease $(rpmrelease)" \
 		--define="debug_package %{nil}"
 
 ifeq ($(shell id -u),0)
@@ -212,7 +213,6 @@ dist/$(name)-$(distversion).tar.gz:
 	sed -i \
 		-e 's#^Source:.*#Source: $(name)-${distversion}.tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
-		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
 		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
 		$(effectivespecfile)
 	sed -i \
