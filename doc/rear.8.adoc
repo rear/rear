@@ -12,7 +12,7 @@ rear - bare metal disaster recovery and system migration tool
 
 
 == SYNOPSIS
-*rear* [*-h*|*--help*] [*-V*|*--version*] [*-dsSv*] [*-D*|*--debugscripts* _SET_] [*-c* _DIR_] [*-C* _CONFIG_] [*-r* _KERNEL_] [--] _COMMAND_ [_ARGS_...]
+*rear* [*-h*|*--help*] [*-V*|*--version*] [*-dsSv*] [*-D*|*--debugscripts* _SET_] [*-c* _DIR_] [*-C* _CONFIG_] [*-r* _KERNEL_] [*-n*|*--non-interactive*] [--] _COMMAND_ [_ARGS_...]
 
 
 == DESCRIPTION
@@ -82,6 +82,9 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 -v::
     *verbose mode* (show messages what ReaR is doing on the terminal)
+
+-n --non-interactive::
+    *non-interactive mode* (aborts when any user input is required, experimental)
 
 -V --version::
     version information

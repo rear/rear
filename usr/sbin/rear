@@ -130,6 +130,7 @@ DEBUG=""
 DEBUGSCRIPTS=""
 DEBUGSCRIPTS_ARGUMENT="x"
 DEBUG_OUTPUT_DEV="null"
+NON_INTERACTIVE=""
 DISPENSABLE_OUTPUT_DEV="null"
 KEEP_BUILD_DIR=""
 KERNEL_VERSION=""
@@ -141,7 +142,7 @@ WORKFLOW=""
 
 # Parse options
 help_note_text="Use '$PROGRAM --help' or 'man $PROGRAM' for more information."
-if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:" -l "help,version,debugscripts:" -- "$@" )" ; then
+if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVrn:" -l "help,version,non-interactive,debugscripts:" -- "$@" )" ; then
     echo "$help_note_text"
     exit 1
 fi
@@ -158,6 +159,9 @@ while true ; do
             ;;
         (-v)
             VERBOSE=1
+            ;;
+        (-n|--non-interactive)
+            NON_INTERACTIVE=1
             ;;
         (-c)
             if [[ "$2" == -* ]] ; then

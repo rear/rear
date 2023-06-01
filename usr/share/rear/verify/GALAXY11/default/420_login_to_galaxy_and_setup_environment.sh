@@ -20,6 +20,9 @@ elif test $qlist_ret -eq 2; then
             Error "CommVault 'qlogin -u $GALAXY11_USER -clp GALAXY11_PASSWORD' failed with exit code $? (retry on command line to see error messages)"
 		fi
 	else
+        is_true "$NON_INTERACTIVE" && \
+            Error "Login is not possible in non-interactive mode. Set variables GALAXY11_USER and GALAXY11_PASSWORD."
+        
 		# try to logon manually
 		Print "Please logon to your Commvault CommServe with suitable credentials:"
 		qlogin $(test "$GALAXY11_Q_ARGUMENTFILE" && echo "-af $GALAXY11_Q_ARGUMENTFILE") 0<&6 1>&7 2>&8 || \
