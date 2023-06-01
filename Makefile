@@ -72,6 +72,8 @@ localstatedir = /var
 specfile = packaging/rpm/$(name).spec
 dscfile = packaging/debian/$(name).dsc
 
+rpmdefines =    --define="_topdir $(BUILD_DIR)/rpmbuild" \
+		--define="debug_package %{nil}"
 
 ifeq ($(shell id -u),0)
 RUNASUSER := runuser -u nobody --
@@ -245,19 +247,17 @@ srpm: dist/$(name)-$(distversion).tar.gz
 	mkdir -p $(BUILD_DIR)
 	cp dist/$(name)-$(distversion).tar.gz $(BUILD_DIR)/
 	rpmbuild -ts --clean --nodeps \
-		--define="_topdir $(BUILD_DIR)/rpmbuild" \
 		--define="_sourcedir $(CURDIR)/dist" \
 		--define="_srcrpmdir $(CURDIR)/dist" \
-		--define "debug_package %{nil}" \
+		$(rpmdefines) \
 		$(BUILD_DIR)/$(name)-$(distversion).tar.gz
 
 rpm: srpm
 	@echo -e "\033[1m== Building RPM package $(name)-$(distversion) ==\033[0;0m"
 	rpmbuild --rebuild --clean \
-		--define="_topdir $(BUILD_DIR)/rpmbuild" \
 		--define="_rpmdir $(CURDIR)/dist" \
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
-		--define "debug_package %{nil}" \
+		$(rpmdefines) \
 		dist/$(name)-$(version)-*.src.rpm
 
 deb: dist/$(name)-$(distversion).tar.gz
