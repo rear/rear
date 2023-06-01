@@ -138,8 +138,10 @@ case "$scheme" in
 
         local lftp_user_opts lftp_cmds_heredoc
         local lftp_cmds=("${OUTPUT_LFTP_OPTIONS[@]}")
-        lftp_cmds+=("mkdir -fp ${path}" \
-            "mput ${RESULT_FILES[*]}")
+        lftp_cmds+=(
+            "mkdir -fp ${path}"
+            "mput ${RESULT_FILES[*]}"
+        )
 
     	lftp_cmds_heredoc=$(IFS=$'\n'; echo "${lftp_cmds[*]}")
 
