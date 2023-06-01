@@ -72,6 +72,10 @@ localstatedir = /var
 specfile = packaging/rpm/$(name).spec
 dscfile = packaging/debian/$(name).dsc
 
+# Spec file that will be actually used to build the package
+# - a bit modified from the source $(specfile)
+effectivespecfile = $(BUILD_DIR)/$(name)-$(distversion)/$(specfile)
+
 rpmdefines =    --define="_topdir $(BUILD_DIR)/rpmbuild" \
 		--define="debug_package %{nil}"
 
@@ -210,7 +214,7 @@ dist/$(name)-$(distversion).tar.gz:
 		-e 's#^Version:.*#Version: $(version)#' \
 		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
 		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
-		$(BUILD_DIR)/$(name)-$(distversion)/$(specfile)
+		$(effectivespecfile)
 	sed -i \
 		-e 's#^Version:.*#Version: $(version)-$(debrelease)#' \
 		$(BUILD_DIR)/$(name)-$(distversion)/$(dscfile)
@@ -243,6 +247,7 @@ endif
 # Note, older rpm checks file ownership, so we copy dist tarball to build dir first for Docker builds
 srpm: dist/$(name)-$(distversion).tar.gz
 	@echo -e "\033[1m== Building SRPM package $(name)-$(distversion) ==\033[0;0m"
+	if test "$(savedspecfile)"; then cp $(effectivespecfile) $(savedspecfile); fi
 	rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
 	cp dist/$(name)-$(distversion).tar.gz $(BUILD_DIR)/
@@ -252,13 +257,18 @@ srpm: dist/$(name)-$(distversion).tar.gz
 		$(rpmdefines) \
 		$(BUILD_DIR)/$(name)-$(distversion).tar.gz
 
+# Temporary file passed to 'srpm', where the spec file will be available
+# even after removing BUILD_DIR
+rpm: savedspecfile := $(shell mktemp --suffix .spec)
+rpm: NEVR = $(shell rpmspec -q $(rpmdefines) --queryformat '%{NEVR}' --srpm "$(savedspecfile)")
 rpm: srpm
-	@echo -e "\033[1m== Building RPM package $(name)-$(distversion) ==\033[0;0m"
+	@echo -e "\033[1m== Building RPM package $(NEVR) ==\033[0;0m"
 	rpmbuild --rebuild --clean \
 		--define="_rpmdir $(CURDIR)/dist" \
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
 		$(rpmdefines) \
-		dist/$(name)-$(version)-*.src.rpm
+		dist/$(NEVR).src.rpm
+	rm -f $(savedspecfile)
 
 deb: dist/$(name)-$(distversion).tar.gz
 	@echo -e "\033[1m== Building DEB package $(name)-$(distversion) ==\033[0;0m"
