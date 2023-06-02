@@ -90,7 +90,7 @@ create_raidarray() {
 LogPrint "Creating software RAID $raiddevice"
 test -b $raiddevice && mdadm --stop $raiddevice
 for component_device in ${component_devices[@]} ; do
-    wipefs -a \$component_device
+    wipefs -af \$component_device || wipefs -a \$component_device
 done
 $mdadmcmd >&2
 EOF
