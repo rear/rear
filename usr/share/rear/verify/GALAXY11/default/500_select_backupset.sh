@@ -7,5 +7,5 @@ IFS=$'\n' read -r -d "" -a backupsets < <(
 )
 
 until IsInArray "$GALAXY11_BACKUPSET" "${backupsets[@]}"; do
-	GALAXY11_BACKUPSET=$( UserInput -I GALAXY11_BACKUPSET -p "Select CommVault backupset to use:" "${backupsets[@]}" )
+	GALAXY11_BACKUPSET=$( UserInput -I GALAXY11_BACKUPSET -D "${backupsets[0]}" -p "Select CommVault backupset to use (ENTER for first one):" "${backupsets[@]}" )
 done

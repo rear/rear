@@ -29,8 +29,8 @@ while read status name type junk ; do
         # hopefully only uppercase letters and digits are sufficient to distinguish different missing components:
         current_missing_component_alnum_uppercase="$( echo "$missing_component" | tr -d -c '[:alnum:]' | tr '[:lower:]' '[:upper:]' )"
         test "$current_missing_component_alnum_uppercase" || current_missing_component_alnum_uppercase="COMPONENT"
-        user_input_ID="ADD_CODE_TO_RECREATE_MISSING_$current_missing_component_alnum_uppercase"
-        case "$( UserInput -I $user_input_ID -p "Manually add code that recreates $missing_component" -D "${choices[3]}" "${choices[@]}" )" in
+        local user_input_ID="ADD_CODE_TO_RECREATE_MISSING_$current_missing_component_alnum_uppercase"
+        case "$( UserInput -I "$user_input_ID" -p "Manually add code that recreates $missing_component" -D "${choices[3]}" "${choices[@]}" )" in
             (${choices[0]})
                 # Run 'less' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user:
                 less $LAYOUT_CODE 0<&6 1>&7 2>&8

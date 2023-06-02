@@ -122,7 +122,7 @@ extract_partitions() {
     # does not work with partition types that are not in the supported list
     # cf. https://github.com/rear/rear/pull/2803#issuecomment-1124800884
     if ! [[ "$disk_label" = "msdos" || "$disk_label" = "gpt" || "$disk_label" = "gpt_sync_mbr" || "$disk_label" = "dasd" ]] ; then
-        Error "Unsupported partition table '$disk_label' (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
+        Error "Unsupported partition table '$disk_label' on $device (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
     fi
 
 

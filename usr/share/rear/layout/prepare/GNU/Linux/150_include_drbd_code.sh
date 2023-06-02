@@ -22,7 +22,7 @@ EOF
     # Ask if we need to become primary.
     # When USER_INPUT_DRBD_RESOURCE_BECOMES_PRIMARY has any 'true' value be liberal in what you accept and assume exactly 'yes' was actually meant:
     is_true "$USER_INPUT_DRBD_RESOURCE_BECOMES_PRIMARY" && USER_INPUT_DRBD_RESOURCE_BECOMES_PRIMARY="yes"
-    user_input="$( UserInput -I DRBD_RESOURCE_BECOMES_PRIMARY -p "Type 'yes' if you want DRBD resource $resource to become primary" )"
+    user_input="$( UserInput -I DRBD_RESOURCE_BECOMES_PRIMARY -D no -p "Type 'yes' if you want DRBD resource $resource to become primary" )"
     if [ "$user_input" = "yes" ] ; then
         cat >> "$LAYOUT_CODE" <<-EOF
         if ! drbdadm role $resource &>/dev/null ; then
