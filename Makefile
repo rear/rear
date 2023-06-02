@@ -86,7 +86,11 @@ else
 RUNASUSER :=
 endif
 
-.PHONY: doc dump package dist/$(name)-$(distversion).tar.gz
+tarparams = --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" $(DIST_CONTENT)
+
+DIST_FILES := $(shell tar -cv -f /dev/null $(tarparams))
+
+.PHONY: doc dump package
 
 all:
 	@echo "Nothing to build. Use 'make help' for more information."
@@ -203,12 +207,11 @@ dist: clean validate man dist/$(name)-$(distversion).tar.gz
 
 # most of the sed stuff should be skipped if $(distversion) == $(version)
 # except RELEASE_DATE= and perhaps the Version in $(dscfile)
-dist/$(name)-$(distversion).tar.gz:
+dist/$(name)-$(distversion).tar.gz: $(DIST_FILES)
 	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
 	rm -Rf $(BUILD_DIR)/$(name)-$(distversion)
 	mkdir -p dist $(BUILD_DIR)/$(name)-$(distversion)
-	tar -c --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" $(DIST_CONTENT) | \
-		tar -C $(BUILD_DIR)/$(name)-$(distversion) -x
+	tar -c $(tarparams) | tar -C $(BUILD_DIR)/$(name)-$(distversion) -x
 	@echo -e "\033[1m== Rewriting $(BUILD_DIR)/$(name)-$(distversion)/{$(specfile),$(dscfile),$(rearbin)} ==\033[0;0m"
 	sed -i \
 		-e 's#^Source:.*#Source: $(name)-${distversion}.tar.gz#' \
