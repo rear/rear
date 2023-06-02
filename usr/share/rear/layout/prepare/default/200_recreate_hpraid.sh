@@ -55,8 +55,8 @@ while read type name junk ; do
     # hopefully only uppercase letters and digits are sufficient to distinguish different controllers:
     controller_basename_alnum_uppercase="$( basename "$name" | tr -d -c '[:alnum:]' | tr '[:lower:]' '[:upper:]' )"
     test "$controller_basename_alnum_uppercase" || controller_basename_alnum_uppercase="CONTROLLER"
-    user_input_ID="HP_SMART_ARRAY_$controller_basename_alnum_uppercase"
-    input_value="$( UserInput -I $user_input_ID -p "$prompt" -D 'YES' )" && wilful_input="yes" || wilful_input="no"
+    local user_input_ID="HP_SMART_ARRAY_$controller_basename_alnum_uppercase"
+    input_value="$( UserInput -I "$user_input_ID" -p "$prompt" -D 'YES' )" && wilful_input="yes" || wilful_input="no"
     if is_true "$input_value" ; then
         is_true "$wilful_input" && LogPrint "User confirmed recreating HP Smart Array controller '$name'" || LogPrint "Recreating HP Smart Array controller '$name' by default"
         echo "# Recreate HP Smart Array controller '$name'" >>$LAYOUT_CODE

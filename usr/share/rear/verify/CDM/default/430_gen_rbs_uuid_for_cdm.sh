@@ -13,7 +13,7 @@ is_true "$USER_INPUT_CDM_SAME_AGENT_UUID" && USER_INPUT_SAME_AGENT_UUID="y"
 while true ; do
     # Find out if the IP address has changed from the original. If so generate a new UUID.
     # the default (i.e. the automated response after the timeout) should be 'n':
-    answer="$( UserInput -I CDM_SAME_AGENT_UUID -p "Does this client have the same IP address as the original? (y/n)" -D 'y' -t 300 )"
+    answer="$( UserInput -I CDM_SAME_AGENT_UUID -p "Does this client have the same IP address as the original? (y/n)" -D 'y' )"
     is_true "$answer" && return 0
     if is_false "$answer" ; then
         break

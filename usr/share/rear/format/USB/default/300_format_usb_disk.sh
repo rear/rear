@@ -129,9 +129,7 @@ if is_true "$FORMAT_EFI" ; then
     while ! is_positive_integer $USB_UEFI_PART_SIZE ; do
         # When USB_UEFI_PART_SIZE is empty, do not falsely complain about "Invalid EFI partition size":
         test "$USB_UEFI_PART_SIZE" && LogPrintError "Invalid EFI system partition size USB_UEFI_PART_SIZE='$USB_UEFI_PART_SIZE' (must be positive integer)"
-        USB_UEFI_PART_SIZE="$( UserInput -I USB_DEVICE_EFI_PARTITION_MIBS -p "Enter size for EFI system partition on $RAW_USB_DEVICE in MiB (default 512 MiB)" )"
-        # Plain 'Enter' defaults to 512 MiB (same as the default value in default.conf):
-        test "$USB_UEFI_PART_SIZE" || USB_UEFI_PART_SIZE="512"
+        USB_UEFI_PART_SIZE="$( UserInput -I USB_DEVICE_EFI_PARTITION_MIBS -D "$USB_UEFI_PART_SIZE" -p "Enter size for EFI system partition on $RAW_USB_DEVICE in MiB (default $USB_UEFI_PART_SIZE MiB)" )"
     done
 
     # Round UEFI partition size to nearest block size to make the 2nd partition (the data partition) also align to the block size:

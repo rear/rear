@@ -151,7 +151,6 @@ if automatic_recovery ; then
               "Go to Relax-and-Recover shell"
             )
     echo -e "\nLaunching 'rear recover' automatically\n"
-    # The recover workflow is always verbose (see usr/sbin/rear):
     if rear $rear_debug_options recover ; then
         echo -e "\n'rear recover' finished successfully\n"
         choices+=( "Reboot" )
@@ -188,8 +187,7 @@ if unattended_recovery ; then
               "Go to Relax-and-Recover shell"
             )
     echo -e "\nLaunching 'rear recover' automatically in unattended mode\n"
-    # The recover workflow is always verbose (see usr/sbin/rear):
-    if rear $rear_debug_options recover ; then
+    if rear $rear_debug_options --non-interactive recover ; then
         echo -e "\n'rear recover' finished successfully\n"
         echo -e "\nRebooting in 30 seconds (Ctrl-C to interrupt)\n"
         sleep 30
