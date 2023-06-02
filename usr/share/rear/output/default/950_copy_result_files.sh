@@ -46,6 +46,23 @@ cat "$RUNTIME_LOGFILE" > "$TMP_DIR/$final_logfile_name" || Error "Could not copy
 RESULT_FILES+=( "$TMP_DIR/$final_logfile_name" )
 LogPrint "Saving $RUNTIME_LOGFILE as $final_logfile_name to $scheme location"
 
+local result_file
+# Filter Output URL Files
+if (( "${#OUTPUT_URL_FILES_PATTERNS[@]}" > 0 )) ; then
+    local result_files_filtered=()
+    for result_file in "${RESULT_FILES[@]}"; do
+        local pattern
+        # interate over patterns
+        for pattern in "${OUTPUT_URL_FILES_PATTERNS[@]}"; do
+            if [[ "$result_file" == $pattern ]]; then
+                result_files_filtered+=("$result_file")
+                break
+            fi
+        done
+    done
+    RESULT_FILES=("${result_files_filtered[@]}")
+fi
+
 # The real work (actually copying resulting files to the output location):
 if scheme_supports_filesystem $scheme ; then
     # We can access the destination as a mounted filesystem. Do nothing special,
@@ -118,14 +135,31 @@ fi
 case "$scheme" in
     (fish|ftp|ftps|hftp|http|https|sftp)
         LogPrint "Copying result files '${RESULT_FILES[*]}' to $scheme location"
-        Log "lftp -c $OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mput ${RESULT_FILES[*]}"
 
+        local lftp_user_opts lftp_cmds_heredoc
+        local lftp_cmds=("${OUTPUT_LFTP_OPTIONS[@]}")
+        lftp_cmds+=(
+            "mkdir -fp ${path}"
+            "mput ${RESULT_FILES[*]}"
+        )
+
+    	lftp_cmds_heredoc=$(IFS=$'\n'; echo "${lftp_cmds[*]}")
+
+        if contains_visible_char "$OUTPUT_LFTP_USERNAME" ; then
+            { lftp_user_opts="-u $OUTPUT_LFTP_USERNAME,$OUTPUT_LFTP_PASSWORD" ; } 2>/dev/null
+            Log "lftp -u $OUTPUT_LFTP_USERNAME,******* $OUTPUT_URL"
+        else
+            Log "lftp $lftp_user_opts $OUTPUT_URL"
+        fi
+
+        Log "$lftp_cmds_heredoc"
         # Make sure that destination directory exists, otherwise lftp would copy
         # RESULT_FILES into last available directory in the path.
         # e.g. OUTPUT_URL=sftp://<host_name>/iso/server1 and have "/iso/server1"
         # directory missing, would upload RESULT_FILES into sftp://<host_name>/iso/
-        lftp -c "$OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mkdir -fp ${path}"
-        lftp -c "$OUTPUT_LFTP_OPTIONS; open $OUTPUT_URL; mput ${RESULT_FILES[*]}" || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
+        { lftp $lftp_user_opts "$OUTPUT_URL" <<< "$lftp_cmds_heredoc" 
+        } 2>/dev/null \
+            || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
         ;;
     (rsync)
         # If BACKUP = RSYNC output/RSYNC/default/900_copy_result_files.sh took care of it:
