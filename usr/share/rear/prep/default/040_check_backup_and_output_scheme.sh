@@ -24,10 +24,10 @@ if test "$BACKUP_URL" ; then
                    # to provide a ready for use mean of final power to the user to enforce what ReaR must do:
                    prompt="Proceed regardless that '$WORKFLOW' could be destructive with a '$backup_scheme' BACKUP_URL ?"
                    workflow_uppercase="$( tr '[:lower:]' '[:upper:]' <<< $WORKFLOW )"
-                   user_input_ID="BACKUP_URL_ISO_PROCEED_$workflow_uppercase"
+                   local user_input_ID="BACKUP_URL_ISO_PROCEED_$workflow_uppercase"
                    input_value=""
                    wilful_input=""
-                   input_value="$( UserInput -I $user_input_ID -p "$prompt" -D 'No' )" && wilful_input="yes" || wilful_input="no"
+                   input_value="$( UserInput -I "$user_input_ID" -p "$prompt" -D 'No' )" && wilful_input="yes" || wilful_input="no"
                    if ! is_true "$input_value" ; then
                        if is_true "$wilful_input" ; then
                            LogPrint "User confirmed to not proceed '$WORKFLOW' with a '$backup_scheme' BACKUP_URL"

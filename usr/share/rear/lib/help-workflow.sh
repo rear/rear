@@ -17,23 +17,24 @@ fi
 
 # Output the help text to the original STDOUT but keep STDERR in the log file:
 cat 1>&7 <<EOF
-Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [--] COMMAND [ARGS...]
+Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [-n|--non-interactive] [--] COMMAND [ARGS...]
 
 $PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:
- -h --help           usage information (this text)
- -c DIR              alternative config directory; instead of $CONFIG_DIR
- -C CONFIG           additional config files; absolute path or relative to config directory
- -d                  debug mode; run many commands verbosely with debug messages in log file (also sets -v)
- -D                  debugscript mode; log executed commands via 'set -x' (also sets -v and -d)
- --debugscripts SET  same as -d -v -D but debugscript mode with 'set -SET'
- -r KERNEL           kernel version to use; currently '$KERNEL_VERSION'
- -s                  simulation mode; show what scripts are run (without executing them)
- -S                  step-by-step mode; acknowledge each script individually
- -v                  verbose mode; show messages what $PRODUCT is doing on the terminal or show verbose help
- -V --version        version information
+ -h --help              usage information (this text)
+ -c DIR                 alternative config directory; instead of $CONFIG_DIR
+ -C CONFIG              additional config files; absolute path or relative to config directory
+ -d                     debug mode; run many commands verbosely with debug messages in log file (also sets -v)
+ -D                     debugscript mode; log executed commands via 'set -x' (also sets -v and -d)
+ --debugscripts SET     same as -d -v -D but debugscript mode with 'set -SET'
+ -r KERNEL              kernel version to use; currently '$KERNEL_VERSION'
+ -s                     simulation mode; show what scripts are run (without executing them)
+ -S                     step-by-step mode; acknowledge each script individually
+ -v                     verbose mode; show messages what $PRODUCT is doing on the terminal or show verbose help
+ -V --version           version information
+ -n --non-interactive   non-interactive mode; aborts when any user input is required (experimental)
 
 List of commands:
 EOF
