@@ -142,7 +142,7 @@ WORKFLOW=""
 
 # Parse options
 help_note_text="Use '$PROGRAM --help' or 'man $PROGRAM' for more information."
-if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVrn:" -l "help,version,non-interactive,debugscripts:" -- "$@" )" ; then
+if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:n" -l "help,version,non-interactive,debugscripts:" -- "$@" )" ; then
     echo "$help_note_text"
     exit 1
 fi
