@@ -16,7 +16,7 @@ declare -r IMAGES=(
     sl:7           # discontinued
     quay.io/centos/centos:stream{8,9}
     # registry.access.redhat.com/ubi{7,8,9} basic packages like parted are missing
-    fedora:{29,31,34,37,38,rawhide}
+    fedora:{29,31,34,37,38} # rawhide Docker image is broken, see https://github.com/fedora-cloud/docker-brew-fedora/issues/109
     archlinux
     manjarolinux/base
 )
