@@ -74,7 +74,7 @@ dscfile = packaging/debian/$(name).dsc
 
 # Spec file that will be actually used to build the package
 # - a bit modified from the source $(specfile)
-effectivespecfile = $(BUILD_DIR)/$(name)-$(distversion)/$(specfile)
+effectivespecfile = $(name)-$(distversion)/$(specfile)
 
 rpmdefines =    --define="_topdir $(BUILD_DIR)/rpmbuild" \
 		--define="rpmrelease $(rpmrelease)" \
@@ -217,7 +217,7 @@ dist/$(name)-$(distversion).tar.gz: $(DIST_FILES)
 		-e 's#^Source:.*#Source: $(name)-${distversion}.tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
 		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
-		$(effectivespecfile)
+		$(BUILD_DIR)/$(effectivespecfile)
 	sed -i \
 		-e 's#^Version:.*#Version: $(version)-$(debrelease)#' \
 		$(BUILD_DIR)/$(name)-$(distversion)/$(dscfile)
@@ -250,7 +250,7 @@ endif
 # Note, older rpm checks file ownership, so we copy dist tarball to build dir first for Docker builds
 srpm: dist/$(name)-$(distversion).tar.gz
 	@echo -e "\033[1m== Building SRPM package $(name)-$(distversion) ==\033[0;0m"
-	if test "$(savedspecfile)"; then cp $(effectivespecfile) $(savedspecfile); fi
+	if test "$(savedspecfile)"; then tar -xzOf dist/$(name)-$(distversion).tar.gz $(effectivespecfile) > "$(savedspecfile)"; fi
 	rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
 	cp dist/$(name)-$(distversion).tar.gz $(BUILD_DIR)/
