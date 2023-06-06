@@ -130,8 +130,10 @@ DEBUG=""
 DEBUGSCRIPTS=""
 DEBUGSCRIPTS_ARGUMENT="x"
 DEBUG_OUTPUT_DEV="null"
-NON_INTERACTIVE=""
 DISPENSABLE_OUTPUT_DEV="null"
+SECRET_OUTPUT_DEV="null"
+EXPOSE_SECRETS=""
+NON_INTERACTIVE=""
 KEEP_BUILD_DIR=""
 KERNEL_VERSION=""
 RECOVERY_MODE=""
@@ -142,7 +144,7 @@ WORKFLOW=""
 
 # Parse options
 help_note_text="Use '$PROGRAM --help' or 'man $PROGRAM' for more information."
-if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:n" -l "help,version,non-interactive,debugscripts:" -- "$@" )" ; then
+if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:ne" -l "help,version,non-interactive,debugscripts:,expose-secrets" -- "$@" )" ; then
     echo "$help_note_text"
     exit 1
 fi
@@ -162,6 +164,9 @@ while true ; do
             ;;
         (-n|--non-interactive)
             NON_INTERACTIVE=1
+            ;;
+        (-e|--expose-secrets)
+            EXPOSE_SECRETS=1
             ;;
         (-c)
             if [[ "$2" == -* ]] ; then
@@ -284,6 +289,18 @@ if test "$DEBUG" ; then
     verbose="--verbose"
 fi
 
+# By default SECRET_OUTPUT_DEV="null"
+# but if '--expose-secrets' is set we set SECRET_OUTPUT_DEV="stderr"
+# in particular to get commands with secret arguments of the form
+#   { COMMAND $SECRET_ARGUMENT ; } 2>>/dev/$SECRET_OUTPUT_DEV
+# in the log file via 'set -x' when DEBUGSCRIPTS is set
+# but also in non-debugscript mode '--expose-secrets'
+# could show secrets where /dev/stderr points to
+# which is STDOUT_STDERR_FILE in normal modes
+# and RUNTIME_LOGFILE in debug modes
+# cf. https://github.com/rear/rear/issues/2967#issuecomment-1562732484
+test "$EXPOSE_SECRETS" && SECRET_OUTPUT_DEV="stderr"
+
 # Mark variables that are not meant to be changed later as constants (i.e. readonly).
 # Exceptions here:
 # CONFIG_DIR because "rear recover" sets it in /etc/rear/rescue.conf in the recovery system
@@ -292,6 +309,7 @@ fi
 readonly ARGS
 readonly CONFIG_APPEND_FILES
 readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DEBUG_OUTPUT_DEV DISPENSABLE_OUTPUT_DEV
+readonly EXPOSE_SECRETS SECRET_OUTPUT_DEV
 readonly SIMULATE STEPBYSTEP VERBOSE
 
 # The udev workflow is a special case because it is only a wrapper workflow
