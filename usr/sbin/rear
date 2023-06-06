@@ -289,16 +289,16 @@ if test "$DEBUG" ; then
     verbose="--verbose"
 fi
 
-# By default SECRET_OUTPUT_DEV="null"
-# but if '--expose-secrets' is set we set SECRET_OUTPUT_DEV="stderr"
+# By default SECRET_OUTPUT_DEV="null".
+# But if '--expose-secrets' is set we set SECRET_OUTPUT_DEV="stderr"
 # in particular to get commands with secret arguments of the form
 #   { COMMAND $SECRET_ARGUMENT ; } 2>>/dev/$SECRET_OUTPUT_DEV
-# in the log file via 'set -x' when DEBUGSCRIPTS is set
-# but also in non-debugscript mode '--expose-secrets'
+# in the log file via 'set -x' when DEBUGSCRIPTS is set.
+# But also in non-debugscript modes '--expose-secrets'
 # could show secrets where /dev/stderr points to
 # which is STDOUT_STDERR_FILE in normal modes
-# and RUNTIME_LOGFILE in debug modes
-# cf. https://github.com/rear/rear/issues/2967#issuecomment-1562732484
+# and RUNTIME_LOGFILE in debug modes.
+# Cf. https://github.com/rear/rear/issues/2967#issuecomment-1562732484
 test "$EXPOSE_SECRETS" && SECRET_OUTPUT_DEV="stderr"
 
 # Mark variables that are not meant to be changed later as constants (i.e. readonly).
