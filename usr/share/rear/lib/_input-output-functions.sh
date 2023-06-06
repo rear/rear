@@ -458,28 +458,30 @@ function Log () {
     echo "$log_message" >>"$RUNTIME_LOGFILE" || true
 }
 
-# For messages that should only appear in the log file if EXPOSE_SECRETS is set.
+# For messages that should only appear in the log file when EXPOSE_SECRETS is set.
 # Usage example:
 #   if { COMMAND $SECRET_ARGUMENT ; } 2>>/dev/$SECRET_OUTPUT_DEV ; then
-#       Log "COMMAND succeeded"
+#       { LogSecret "'COMMAND $SECRET_ARGUMENT' succeeded" || Log "COMMAND succeeded" ; } 2>>/dev/$SECRET_OUTPUT_DEV
 #   else
 #       { LogSecret "'COMMAND $SECRET_ARGUMENT' failed with exit code $?" ; } 2>>/dev/$SECRET_OUTPUT_DEV
 #       Error "COMMAND failed"
 #   fi
-# The LogSecret command itself must be within '{ ... ; } 2>>/dev/$SECRET_OUTPUT_DEV'
+# The LogSecret function call must be within '{ ... ; } 2>>/dev/$SECRET_OUTPUT_DEV'
 # because otherwise $SECRET_ARGUMENT in the LogSecret function call
 # would leak into the log file in debuscript mode via 'set -x'.
-# The
-#   Log "COMMAND succeeded"
-# is needed to have something in the log about COMMAND because the command call itself
+# The "COMMAND ... succeeded" log messages are needed
+# to have something in the log about COMMAND because the command call itself
 # gets not logged (also not in debugscript mode) unless EXPOSE_SECRETS is set,
 # cf. https://github.com/rear/rear/issues/2967
 # The command's failure exit code '$?' is only available when
 #   if COMMAND ; then ... ; else Log "COMMAND failed with exit code $?" ; fi
-# is used because when 'if ! COMMAND' is used the '!' results $?=0
+# is used because when 'if ! COMMAND' would be used then '!' results $?=0
 # cf. https://github.com/rear/rear/pull/2985#issuecomment-1545455356
 function LogSecret () {
-    test "$EXPOSE_SECRETS" && Log "$@" || true
+    # The LogSecret function returns a non-zero exit code (the exit code of 'test "$EXPOSE_SECRETS"')
+    # when EXPOSE_SECRETS is not set which can be used to log a generic fallback message like:
+    #   { LogSecret "SECRET message" || Log "generic message" ; } 2>>/dev/$SECRET_OUTPUT_DEV
+    test "$EXPOSE_SECRETS" && Log "$@"
 }
 
 # For messages that should only appear in the log file when the user launched 'rear -d' in debug mode:
