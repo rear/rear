@@ -263,7 +263,10 @@ srpm: dist/$(name)-$(distversion).tar.gz
 # Temporary file passed to 'srpm', where the spec file will be available
 # even after removing BUILD_DIR
 rpm: savedspecfile := $(shell mktemp --suffix .spec)
-rpm: NEVR = $(shell rpmspec -q $(rpmdefines) --queryformat '%{NEVR}' --srpm "$(savedspecfile)")
+# uniq because if we ever use subpackages, there will be multiple identical lines, one per each subpackage
+# the rpmspec tool with --srpm would be preferable - it queries the source RPM information,
+# but unfortunately it does not exist yet on EL6.
+rpm: NEVR = $(name)-$(shell rpm -q $(rpmdefines) --queryformat '%{EVR}' --specfile "$(savedspecfile)" | uniq)
 rpm: srpm
 	@echo -e "\033[1m== Building RPM package $(NEVR) ==\033[0;0m"
 	rpmbuild --rebuild --clean \
