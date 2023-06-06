@@ -72,12 +72,23 @@ localstatedir = /var
 specfile = packaging/rpm/$(name).spec
 dscfile = packaging/debian/$(name).dsc
 
+# Spec file that will be actually used to build the package
+# - a bit modified from the source $(specfile)
+effectivespecfile = $(name)-$(distversion)/$(specfile)
+
+rpmdefines =    --define="_topdir $(BUILD_DIR)/rpmbuild" \
+		--define="rpmrelease $(rpmrelease)" \
+		--define="debug_package %{nil}"
 
 ifeq ($(shell id -u),0)
 RUNASUSER := runuser -u nobody --
 else
 RUNASUSER :=
 endif
+
+tarparams = --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" $(DIST_CONTENT)
+
+DIST_FILES := $(shell tar -cv -f /dev/null $(tarparams))
 
 .PHONY: doc dump package
 
@@ -196,19 +207,17 @@ dist: clean validate man dist/$(name)-$(distversion).tar.gz
 
 # most of the sed stuff should be skipped if $(distversion) == $(version)
 # except RELEASE_DATE= and perhaps the Version in $(dscfile)
-dist/$(name)-$(distversion).tar.gz:
+dist/$(name)-$(distversion).tar.gz: $(DIST_FILES)
 	@echo -e "\033[1m== Building archive $(name)-$(distversion) ==\033[0;0m"
 	rm -Rf $(BUILD_DIR)/$(name)-$(distversion)
 	mkdir -p dist $(BUILD_DIR)/$(name)-$(distversion)
-	tar -c --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" $(DIST_CONTENT) | \
-		tar -C $(BUILD_DIR)/$(name)-$(distversion) -x
+	tar -c $(tarparams) | tar -C $(BUILD_DIR)/$(name)-$(distversion) -x
 	@echo -e "\033[1m== Rewriting $(BUILD_DIR)/$(name)-$(distversion)/{$(specfile),$(dscfile),$(rearbin)} ==\033[0;0m"
 	sed -i \
 		-e 's#^Source:.*#Source: $(name)-${distversion}.tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
-		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
 		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
-		$(BUILD_DIR)/$(name)-$(distversion)/$(specfile)
+		$(BUILD_DIR)/$(effectivespecfile)
 	sed -i \
 		-e 's#^Version:.*#Version: $(version)-$(debrelease)#' \
 		$(BUILD_DIR)/$(name)-$(distversion)/$(dscfile)
@@ -241,24 +250,31 @@ endif
 # Note, older rpm checks file ownership, so we copy dist tarball to build dir first for Docker builds
 srpm: dist/$(name)-$(distversion).tar.gz
 	@echo -e "\033[1m== Building SRPM package $(name)-$(distversion) ==\033[0;0m"
+	if test "$(savedspecfile)"; then tar -xzOf dist/$(name)-$(distversion).tar.gz $(effectivespecfile) > "$(savedspecfile)"; fi
 	rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
 	cp dist/$(name)-$(distversion).tar.gz $(BUILD_DIR)/
 	rpmbuild -ts --clean --nodeps \
-		--define="_topdir $(BUILD_DIR)/rpmbuild" \
 		--define="_sourcedir $(CURDIR)/dist" \
 		--define="_srcrpmdir $(CURDIR)/dist" \
-		--define "debug_package %{nil}" \
+		$(rpmdefines) \
 		$(BUILD_DIR)/$(name)-$(distversion).tar.gz
 
+# Temporary file passed to 'srpm', where the spec file will be available
+# even after removing BUILD_DIR
+rpm: savedspecfile := $(shell mktemp --suffix .spec)
+# uniq because if we ever use subpackages, there will be multiple identical lines, one per each subpackage
+# the rpmspec tool with --srpm would be preferable - it queries the source RPM information,
+# but unfortunately it does not exist yet on EL6.
+rpm: NEVR = $(name)-$(shell rpm -q $(rpmdefines) --queryformat '%{EVR}' --specfile "$(savedspecfile)" | uniq)
 rpm: srpm
-	@echo -e "\033[1m== Building RPM package $(name)-$(distversion) ==\033[0;0m"
+	@echo -e "\033[1m== Building RPM package $(NEVR) ==\033[0;0m"
 	rpmbuild --rebuild --clean \
-		--define="_topdir $(BUILD_DIR)/rpmbuild" \
 		--define="_rpmdir $(CURDIR)/dist" \
 		--define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
-		--define "debug_package %{nil}" \
-		dist/$(name)-$(version)-*.src.rpm
+		$(rpmdefines) \
+		dist/$(NEVR).src.rpm
+	rm -f $(savedspecfile)
 
 deb: dist/$(name)-$(distversion).tar.gz
 	@echo -e "\033[1m== Building DEB package $(name)-$(distversion) ==\033[0;0m"
