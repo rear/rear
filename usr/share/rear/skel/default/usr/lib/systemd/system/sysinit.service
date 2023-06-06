@@ -1,9 +1,13 @@
 [Unit]
 Description=Initialize Rescue System
 After=systemd-udevd.service
+Before=network-online.target
 
 [Service]
 Type=oneshot
 ExecStart=/etc/scripts/system-setup
 StandardInput=tty
 RemainAfterExit=yes
+
+[Install]
+WantedBy=network-online.target
