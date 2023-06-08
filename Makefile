@@ -249,17 +249,21 @@ package:
 endif
 
 # Note, older rpm checks file ownership, so we copy dist tarball to build dir first for Docker builds
+# and we also copy the extracted files to build dir
+# (tar -x preserves file ownership and with Docker the ownership is wrong, cp resets it)
 srpm: dist/$(name)-$(distversion).tar.gz
 	@echo -e "\033[1m== Building SRPM package $(name)-$(distversion) ==\033[0;0m"
-	if test "$(savedspecfile)"; then tar -xzOf dist/$(name)-$(distversion).tar.gz $(effectivespecfile) > "$(savedspecfile)"; fi
 	rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
 	cp dist/$(name)-$(distversion).tar.gz $(BUILD_DIR)/
-	rpmbuild -ts --clean --nodeps \
-		--define="_sourcedir $(CURDIR)/dist" \
+	tar -xz -C $(BUILD_DIR)/ -f dist/$(name)-$(distversion).tar.gz $(dir $(effectivespecfile))
+	cp $(BUILD_DIR)/$(dir $(effectivespecfile))/* $(BUILD_DIR)/
+	if test "$(savedspecfile)"; then cp $(BUILD_DIR)/$(notdir $(effectivespecfile)) "$(savedspecfile)"; fi
+	rpmbuild -bs --clean --nodeps \
+		--define="_sourcedir $(BUILD_DIR)/" \
 		--define="_srcrpmdir $(CURDIR)/dist" \
 		$(rpmdefines) \
-		$(BUILD_DIR)/$(name)-$(distversion).tar.gz
+		$(BUILD_DIR)/$(notdir $(effectivespecfile))
 
 # Temporary file passed to 'srpm', where the spec file will be available
 # even after removing BUILD_DIR
