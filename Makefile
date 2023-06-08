@@ -217,6 +217,7 @@ dist/$(name)-$(distversion).tar.gz: $(DIST_FILES)
 		-e 's#^Source:.*#Source: $(name)-${distversion}.tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
 		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
+		-e 's#^%\(autosetup.*\)#%\1 -n $(name)-$(distversion)#' \
 		$(BUILD_DIR)/$(effectivespecfile)
 	sed -i \
 		-e 's#^Version:.*#Version: $(version)-$(debrelease)#' \
