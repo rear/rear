@@ -1,3 +1,4 @@
+%define rpmrelease %{nil}
 %define debug_package %{nil}
 
 ### Work-around the fact that openSUSE/SLES _always_ defined both :-/
