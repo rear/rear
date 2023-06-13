@@ -77,7 +77,6 @@ dscfile = packaging/debian/$(name).dsc
 effectivespecfile = $(name)-$(distversion)/$(specfile)
 
 rpmdefines =    --define="_topdir $(BUILD_DIR)/rpmbuild" \
-		--define="rpmrelease $(rpmrelease)" \
 		--define="debug_package %{nil}"
 
 ifeq ($(shell id -u),0)
@@ -214,9 +213,11 @@ dist/$(name)-$(distversion).tar.gz: $(DIST_FILES)
 	tar -c $(tarparams) | tar -C $(BUILD_DIR)/$(name)-$(distversion) -x
 	@echo -e "\033[1m== Rewriting $(BUILD_DIR)/$(name)-$(distversion)/{$(specfile),$(dscfile),$(rearbin)} ==\033[0;0m"
 	sed -i \
-		-e 's#^Source:.*#Source: $(name)-${distversion}.tar.gz#' \
+		-e 's#^\(Source0\?\):.*#\1: $(name)-${distversion}.tar.gz#' \
 		-e 's#^Version:.*#Version: $(version)#' \
+		-e 's#^%define rpmrelease.*#%define rpmrelease $(rpmrelease)#' \
 		-e 's#^%setup.*#%setup -q -n $(name)-$(distversion)#' \
+		-e 's#^%\(autosetup.*\)#%\1 -n $(name)-$(distversion)#' \
 		$(BUILD_DIR)/$(effectivespecfile)
 	sed -i \
 		-e 's#^Version:.*#Version: $(version)-$(debrelease)#' \
@@ -248,17 +249,21 @@ package:
 endif
 
 # Note, older rpm checks file ownership, so we copy dist tarball to build dir first for Docker builds
+# and we also copy the extracted files to build dir
+# (tar -x preserves file ownership and with Docker the ownership is wrong, cp resets it)
 srpm: dist/$(name)-$(distversion).tar.gz
 	@echo -e "\033[1m== Building SRPM package $(name)-$(distversion) ==\033[0;0m"
-	if test "$(savedspecfile)"; then tar -xzOf dist/$(name)-$(distversion).tar.gz $(effectivespecfile) > "$(savedspecfile)"; fi
 	rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
 	cp dist/$(name)-$(distversion).tar.gz $(BUILD_DIR)/
-	rpmbuild -ts --clean --nodeps \
-		--define="_sourcedir $(CURDIR)/dist" \
+	tar -xz -C $(BUILD_DIR)/ -f dist/$(name)-$(distversion).tar.gz $(dir $(effectivespecfile))
+	cp $(BUILD_DIR)/$(dir $(effectivespecfile))/* $(BUILD_DIR)/
+	if test "$(savedspecfile)"; then cp $(BUILD_DIR)/$(notdir $(effectivespecfile)) "$(savedspecfile)"; fi
+	rpmbuild -bs --clean --nodeps \
+		--define="_sourcedir $(BUILD_DIR)/" \
 		--define="_srcrpmdir $(CURDIR)/dist" \
 		$(rpmdefines) \
-		$(BUILD_DIR)/$(name)-$(distversion).tar.gz
+		$(BUILD_DIR)/$(notdir $(effectivespecfile))
 
 # Temporary file passed to 'srpm', where the spec file will be available
 # even after removing BUILD_DIR
