@@ -44,7 +44,7 @@ jobs:
         if: github.ref == 'refs/heads/master'
         run: |
           # store commit date for GH release name
-          echo "commit_date=$(git show -s --format="%ci)" >> "$GITHUB_ENV"
+          echo "commit_date=$(git show -s --format="%ci")" >> "$GITHUB_ENV"
 
           # put commit details into ZIP comment as the files allways have the same names
           COMMENT=$(git show -s --format="ReaR snapshot %h %ci%nhttps://github.com/rear/rear/tree/%H")
