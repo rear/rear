@@ -57,7 +57,7 @@ jobs:
           done
 
           gh release delete snapshot -y || :
-          git push --delete origin || :
+          git push --delete origin snapshot || :
           gh release create snapshot \
             --title "ReaR Snapshot $(git show -s --format="%ci")" \
             --notes "Automatically built installation packages for testing purposes" \
