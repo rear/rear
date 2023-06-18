@@ -40,11 +40,13 @@ jobs:
           path: dist-all/*
           retention-days: 7
       
-      - name: Create Release Archives
+      - name: Create Release Archives and Update GitHub Release
         if: github.ref == 'refs/heads/master'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          # store commit date for GH release name
-          echo "commit_date=$(git show -s --format="%ci")" >> "$GITHUB_ENV"
+          #
+          set -e
 
           # put commit details into ZIP comment as the files allways have the same names
           COMMENT=$(git show -s --format="ReaR snapshot %h %ci%nhttps://github.com/rear/rear/tree/%H")
@@ -54,15 +56,9 @@ jobs:
             zip -0 -j -z "$distro.zip" "$distro"/* <<< "$COMMENT"
           done
 
-      - name: Create GitHub Release
-        if: github.ref == 'refs/heads/master'
-        uses: ncipollo/release-action@v1
-        with:
-          tag: autobuild
-          commit: ${{ github.sha }}
-          allowUpdates: true
-          removeArtifacts: true
-          replacesArtifacts: true
-          generateReleaseNotes: true
-          name: ReaR Snapshot ${{ env.commit_date || github.sha }}
-          artifacts: dist-all/*.zip,dist/*.tar.gz
+          gh release delete snapshot -y || :
+          git push --delete origin || :
+          gh release create snapshot \
+            --title "ReaR Snapshot $(git show -s --format="%ci")" \
+            --notes "Automatically built installation packages for testing purposes" \
+            dist-all/*.zip dist/*.tar.gz
