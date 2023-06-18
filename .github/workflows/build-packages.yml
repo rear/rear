@@ -41,14 +41,21 @@ jobs:
           retention-days: 7
       
       - name: Create Release Archives
-        if: always() && github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         run: |
+          # store commit date for GH release name
+          echo "commit_date=$(git show -s --format="%ci)" >> "$GITHUB_ENV"
+
+          # put commit details into ZIP comment as the files allways have the same names
+          COMMENT=$(git show -s --format="ReaR snapshot %h %ci%nhttps://github.com/rear/rear/tree/%H")
+
           for distro in dist-all/* ; do
             test -d "$distro" || continue
-            tar -c -v -z -f "$distro.tar.gz" -C "$distro" --transform=s,./,, .
+            zip -0 -j -z "$distro.zip" "$distro"/* <<< "$COMMENT"
           done
+
       - name: Create GitHub Release
-        if: always() && github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         uses: ncipollo/release-action@v1
         with:
           tag: autobuild
@@ -56,5 +63,5 @@ jobs:
           removeArtifacts: true
           replacesArtifacts: true
           generateReleaseNotes: true
-          name: ReaR Packages ${{ github.head_ref || github.ref_name }} ${{ github.sha }}
-          artifacts: dist-all/*.tar.gz
+          name: ReaR Snapshot ${{ env.commit_date || github.sha }}
+          artifacts: dist-all/*.zip,dist/*.tar.gz
