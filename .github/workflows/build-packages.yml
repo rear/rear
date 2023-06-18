@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v3
@@ -39,3 +39,22 @@ jobs:
           name: ReaR Packages ${{ github.head_ref || github.ref_name }} ${{ github.sha }}
           path: dist-all/*
           retention-days: 7
+      
+      - name: Create Release Archives
+        if: always() && github.ref == 'refs/heads/master'
+        run: |
+          for distro in dist-all/* ; do
+            test -d "$distro" || continue
+            tar -c -v -z -f "$distro.tar.gz" -C "$distro" --transform=s,./,, .
+          done
+      - name: Create GitHub Release
+        if: always() && github.ref == 'refs/heads/master'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: autobuild
+          allowUpdates: true
+          removeArtifacts: true
+          replacesArtifacts: true
+          generateReleaseNotes: true
+          name: ReaR Packages ${{ github.head_ref || github.ref_name }} ${{ github.sha }}
+          artifacts: dist-all/*.tar.gz
