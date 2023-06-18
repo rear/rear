@@ -59,6 +59,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: autobuild
+          commit: ${{ github.sha }}
           allowUpdates: true
           removeArtifacts: true
           replacesArtifacts: true
