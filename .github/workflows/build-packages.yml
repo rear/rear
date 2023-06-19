@@ -59,6 +59,7 @@ jobs:
           gh release delete snapshot -y || :
           git push --delete origin snapshot || :
           gh release create snapshot \
+            --target ${{ github.sha }} \
             --title "ReaR Snapshot $(git show -s --format="%ci")" \
             --notes "Automatically built installation packages for testing purposes" \
             dist-all/*.zip dist/*.tar.gz
