@@ -422,12 +422,7 @@ Log "Saving disks and their partitions"
                     continue
                 fi
                 disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
-                # We do not error out when there is no partition label type value because
-                # "rear recover" works in a special case without partition label type value when there is
-                # only a 'disk' entry but nothing else for this disk exists in disklayout.conf
-                # which can happen when /dev/sdX is an empty SD card slot without medium,
-                # see https://github.com/rear/rear/issues/2810
-                test $disktype || LogPrintError "No partition label type for 'disk $devname' (may cause 'rear recover' failure)"
+                test $disktype || Error "Invalid 'disk $devname' entry (no partition table type for '$devname')"
                 if [ "$disktype" != "dasd" ]; then
                     echo "# Disk $devname"
                     echo "# Format: disk <devname> <size(bytes)> <partition label type>"
