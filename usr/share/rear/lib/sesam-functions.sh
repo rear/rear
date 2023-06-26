@@ -26,12 +26,12 @@ while IFS='=' read key value ; do
     case "$key" in
         (gv_ro) SESAM_BIN_DIR="$value" ;;
         (gv_rw) SESAM_VAR_DIR="$value" ;;
-        (gv_rw_work) SESAM_WORK_DIR="$value" ;;
-        (gv_rw_tmp) SESAM_TMP_DIR="$value" ;;
-        (gv_rw_lis) SESAM_LIS_DIR="$value" ;;
-        (gv_rw_lgc) SESAM_LGC_DIR="$value" ;;
-        (gv_rw_stpd) SESAM_SMS_DIR="$value" ;;
-        (gv_rw_prot) SESAM_PROT_DIR="$value" ;;
     esac
 done <"$SM_INI"
 
+SESAM_WORK_DIR="${SESAM_VAR_DIR%%/}/var/work/*"
+SESAM_TMP_DIR="${SESAM_VAR_DIR%%/}/var/tmp/*"
+SESAM_LIS_DIR="${SESAM_VAR_DIR%%/}/var/lis"
+SESAM_LGC_DIR="${SESAM_VAR_DIR%%/}/var/log/lgc/*"
+SESAM_SMS_DIR="${SESAM_VAR_DIR%%/}/var/log/sms/*"
+SESAM_PROT_DIR="${SESAM_VAR_DIR%%/}/var/prot/*"
