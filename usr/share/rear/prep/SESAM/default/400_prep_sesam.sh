@@ -29,6 +29,7 @@ if [ -e /etc/sesam2000.ini ]; then
             $SESAM_TMP_DIR 
             $SESAM_LIS_DIR 
             $SESAM_LGC_DIR 
+            $SESAM_SMS_DIR
             $SESAM_PROT_DIR 
         )
 
