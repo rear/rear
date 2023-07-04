@@ -25,7 +25,6 @@ if [ -e /etc/sesam2000.ini ]; then
         # files are included
         COPY_AS_IS_EXCLUDE+=(
             "${COPY_AS_IS_EXCLUDE_SESAM[@]}" 
-            $SESAM_WORK_DIR 
             $SESAM_TMP_DIR 
             $SESAM_LIS_DIR 
             $SESAM_LGC_DIR 
