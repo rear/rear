@@ -547,11 +547,16 @@ function create_grub2_cfg {
     test "$grub2_initrd" || BugError "create_grub2_cfg function called without grub2_initrd argument"
     DebugPrint "Configuring GRUB2 initrd $grub2_initrd"
     local grub2_search_root_command="$3"
-    if ! test "$grub2_search_root_command" ; then
-        test "$grub2_set_root" && grub2_search_root_command="set root=$grub2_set_root"
-    fi
+    # Because GRUB2_SEARCH_ROOT_COMMAND is empty in default.conf
+    # we can provide final power to the user and always respect
+    # GRUB2_SEARCH_ROOT_COMMAND when the user has set it
+    # cf. https://github.com/rear/rear/issues/3024#issuecomment-1630963778
     if ! test "$grub2_search_root_command" ; then
         test "$GRUB2_SEARCH_ROOT_COMMAND" && grub2_search_root_command="$GRUB2_SEARCH_ROOT_COMMAND"
+    fi
+    # grub2_set_root is used only in output/ISO/Linux-i386/250_populate_efibootimg.sh as grub2_set_root=cd0
+    if ! test "$grub2_search_root_command" ; then
+        test "$grub2_set_root" && grub2_search_root_command="set root=$grub2_set_root"
     fi
     test "$grub2_search_root_command" || grub2_search_root_command="search --no-floppy --set=root --file /boot/efiboot.img"
     DebugPrint "Configuring GRUB2 root device as '$grub2_search_root_command'"
