@@ -85,4 +85,4 @@ test "$USB_DEVICE_BOOT_LABEL" || USB_DEVICE_BOOT_LABEL="REARBOOT"
 # GRUB2_SEARCH_ROOT_COMMAND when the user has set it
 # cf. https://github.com/rear/rear/issues/3024#issuecomment-1630963778
 test "$GRUB2_SEARCH_ROOT_COMMAND" || GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --label $USB_DEVICE_BOOT_LABEL"
-create_grub2_cfg /$USB_PREFIX/kernel /$USB_PREFIX/$REAR_INITRD_FILENAME > $usb_boot_dir/$grub_cfg || Error "Failed to create $usb_boot_dir/$grub_cfg"
+create_grub2_cfg /$USB_PREFIX/kernel /$USB_PREFIX/$REAR_INITRD_FILENAME > $usb_boot_dir/$grub_cfg
