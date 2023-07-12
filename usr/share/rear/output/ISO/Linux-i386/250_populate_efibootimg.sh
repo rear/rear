@@ -67,10 +67,16 @@ else
     # This was seen at least in Debian Buster running in Qemu
     # (VirtualBox works fine, RHEL/CentOS in Qemu works fine as well).
     # The GRUB2 image created by grub-mkstandalone has 'root' set to memdisk, which can't work.
-    # To make ReaR work in this case, set 'root' to a sensible value 'cd0' before trying search
-    # (via ${grub2_set_root:+"set root=$grub2_set_root"} in the create_grub2_cfg function)
+    # To make ReaR work in this case, set 'root' to a sensible default value 'cd0'
+    # before trying to search via GRUB2_SEARCH_ROOT_COMMAND in the create_grub2_cfg function
     # cf. https://github.com/rear/rear/issues/2434 and https://github.com/rear/rear/pull/2453
-    grub2_set_root=cd0
+    test "$GRUB2_SET_ROOT_COMMAND" || GRUB2_SET_ROOT_COMMAND="set root=cd0"
+    # GRUB2_SEARCH_ROOT_COMMAND is used in the create_grub2_cfg() function.
+    # Because GRUB2_SEARCH_ROOT_COMMAND is empty in default.conf
+    # we can provide final power to the user and always respect
+    # GRUB2_SEARCH_ROOT_COMMAND when the user has set it
+    # cf. https://github.com/rear/rear/issues/3024#issuecomment-1630963778
+    test "$GRUB2_SEARCH_ROOT_COMMAND" || GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --file /boot/efiboot.img"
     create_grub2_cfg /isolinux/kernel /isolinux/$REAR_INITRD_FILENAME > $efi_boot_tmp_dir/grub.cfg
 fi
 
