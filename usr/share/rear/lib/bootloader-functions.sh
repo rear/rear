@@ -536,30 +536,34 @@ function get_root_disk_UUID {
 # so that kernel and initrd are /boot_mountpoint/path/to/kernel and /boot_mountpoint/path/to/initrd
 # and that boot partition gets set as root device name for GRUB2's
 # then $1 would have to be /path/to/kernel and $2 would have to be /path/to/initrd
-# $3 is an appropriate GRUB2 command to set its root device (usually via GRUB2's 'root' environment variable)
+# $3 is an appropriate GRUB2 command to set its root device (e.g. "set root=cd0")
+# in particular to set a reasonable default root device before trying to search for it
+# $4 is an appropriate GRUB2 command to search for its root device
 # e.g. when the filesystem that contains kernel and initrd has the filesystem label REARBOOT
-# then $3 could be something like 'search --no-floppy --set root --label REARBOOT'
+# then $4 could be something like "search --no-floppy --set root --label REARBOOT"
 function create_grub2_cfg {
     local grub2_kernel="$1"
     test "$grub2_kernel" || BugError "create_grub2_cfg function called without grub2_kernel argument"
-    DebugPrint "Configuring GRUB2 kernel $grub2_kernel"
+    DebugPrint "Let GRUB2 load kernel $grub2_kernel"
     local grub2_initrd="$2"
     test "$grub2_initrd" || BugError "create_grub2_cfg function called without grub2_initrd argument"
-    DebugPrint "Configuring GRUB2 initrd $grub2_initrd"
-    local grub2_search_root_command="$3"
-    # Because GRUB2_SEARCH_ROOT_COMMAND is empty in default.conf
-    # we can provide final power to the user and always respect
-    # GRUB2_SEARCH_ROOT_COMMAND when the user has set it
-    # cf. https://github.com/rear/rear/issues/3024#issuecomment-1630963778
+    DebugPrint "Let GRUB2 load initrd $grub2_initrd"
+    
+    local grub2_set_root_command="$3"
+    if ! test "$grub2_set_root_command" ; then
+        test "$GRUB2_SET_ROOT_COMMAND" && grub2_set_root_command="$GRUB2_SET_ROOT_COMMAND"
+    fi
+    local grub2_search_root_command="$4"
     if ! test "$grub2_search_root_command" ; then
         test "$GRUB2_SEARCH_ROOT_COMMAND" && grub2_search_root_command="$GRUB2_SEARCH_ROOT_COMMAND"
     fi
-    # grub2_set_root is used only in output/ISO/Linux-i386/250_populate_efibootimg.sh as grub2_set_root=cd0
-    if ! test "$grub2_search_root_command" ; then
-        test "$grub2_set_root" && grub2_search_root_command="set root=$grub2_set_root"
+    test "$grub2_set_root_command" || test "$grub2_search_root_command" || BugError "create_grub2_cfg function called without 'set' or 'search' the 'root' device"
+    if test "$grub2_search_root_command" ; then
+        test "$grub2_set_root_command" && DebugPrint "Set GRUB2 default root device via '$grub2_set_root_command'"
+        DebugPrint "Let GRUB2 search its root device via '$grub2_search_root_command'"
+    else
+        DebugPrint "Set GRUB2 root device via '$grub2_set_root_command'"
     fi
-    test "$grub2_search_root_command" || grub2_search_root_command="search --no-floppy --set=root --file /boot/efiboot.img"
-    DebugPrint "Configuring GRUB2 root device as '$grub2_search_root_command'"
 
     local grub2_default_menu_entry="$GRUB2_DEFAULT_BOOT"
     test "$grub2_default_menu_entry" || grub2_default_menu_entry="chainloader"
@@ -722,6 +726,7 @@ EOF
     # Sleep 3 seconds before the GRUB2 menu replaces what there is on the screen
     # so that the user has a chance to see possible (error) messages on the screen.
     cat << EOF
+$grub2_set_root_command
 $grub2_search_root_command
 insmod all_video
 set gfxpayload=keep
