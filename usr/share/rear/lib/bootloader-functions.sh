@@ -560,7 +560,7 @@ function create_grub2_cfg {
     test "$grub2_set_root_command" || test "$grub2_search_root_command" || BugError "create_grub2_cfg function called without 'set' or 'search' the 'root' device"
     if test "$grub2_search_root_command" ; then
         test "$grub2_set_root_command" && DebugPrint "Set GRUB2 default root device via '$grub2_set_root_command'"
-        DebugPrint "Let GRUB2 search its root device via '$grub2_search_root_command'"
+        DebugPrint "Let GRUB2 search root device via '$grub2_search_root_command'"
     else
         DebugPrint "Set GRUB2 root device via '$grub2_set_root_command'"
     fi
@@ -622,6 +622,9 @@ function create_grub2_cfg {
                 echo "terminal_input serial"
                 echo "terminal_output serial"
             fi
+        else
+            DebugPrint "No serial console in GRUB2 (USE_SERIAL_CONSOLE is not true)"
+            echo "echo 'No serial console (USE_SERIAL_CONSOLE was not true)'"
         fi
     }
 
@@ -641,7 +644,6 @@ menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear {
     echo 'Loading initial ramdisk $grub2_initrd ...'
     initrd $grub2_initrd
 }
-
 menuentry "Relax-and-Recover (UEFI and Secure Boot)" --id=rear_secure_boot {
     insmod gzio
     insmod xzio
@@ -723,11 +725,14 @@ EOF
 
     # The actual work starts here.
     # Create and output GRUB2 configuration.
-    # Sleep 3 seconds before the GRUB2 menu replaces what there is on the screen
-    # so that the user has a chance to see possible (error) messages on the screen.
+    # Sleep (interruptible) USER_INPUT_INTERRUPT_TIMEOUT seconds (by default 30 seconds)
+    # before the GRUB2 menu replaces what there is on the screen
+    # so that the user can read and understand possible (error) messages on the screen.
     cat << EOF
 $grub2_set_root_command
 $grub2_search_root_command
+echo "Using root device \$root from those available devices:"
+ls
 insmod all_video
 set gfxpayload=keep
 insmod part_gpt
@@ -737,8 +742,8 @@ $( create_grub2_serial_entry )
 set timeout="$grub2_timeout"
 set default="$grub2_default_menu_entry"
 set fallback="chainloader"
-echo 'Switching to GRUB2 boot menu...'
-sleep --verbose --interruptible 3
+echo 'Switching to GRUB boot menu...'
+sleep --verbose --interruptible $USER_INPUT_INTERRUPT_TIMEOUT
 $( create_grub2_rear_boot_entry )
 $( create_grub2_boot_next_entry )
 $( create_grub2_reboot_entry )
