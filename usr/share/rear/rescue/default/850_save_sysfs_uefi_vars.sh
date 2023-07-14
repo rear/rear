@@ -135,7 +135,11 @@ for dummy in "once" ; do
 done
 
 # Show to the user what will actually be used as UEFI bootloader file:
-LogPrint "Using '$UEFI_BOOTLOADER' as UEFI bootloader file"
+if test -f "$SECURE_BOOT_BOOTLOADER" ; then
+    LogPrint "Using '$UEFI_BOOTLOADER' as UEFI Secure Boot bootloader file"
+else
+    LogPrint "Using '$UEFI_BOOTLOADER' as UEFI bootloader file (non Secure Boot)"
+fi
 
 # Save the variables we need in recover mode into the rescue.conf file:
 cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
