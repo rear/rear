@@ -536,11 +536,6 @@ function get_root_disk_UUID {
 # so that kernel and initrd are /boot_mountpoint/path/to/kernel and /boot_mountpoint/path/to/initrd
 # and that boot partition gets set as root device name for GRUB2's
 # then $1 would have to be /path/to/kernel and $2 would have to be /path/to/initrd
-# $3 is an appropriate GRUB2 command to set its root device (e.g. "set root=cd0")
-# in particular to set a reasonable default root device before trying to search for it
-# $4 is an appropriate GRUB2 command to search for its root device
-# e.g. when the filesystem that contains kernel and initrd has the filesystem label REARBOOT
-# then $4 could be something like "search --no-floppy --set root --label REARBOOT"
 function create_grub2_cfg {
     local grub2_kernel="$1"
     test "$grub2_kernel" || BugError "create_grub2_cfg function called without grub2_kernel argument"
@@ -548,21 +543,17 @@ function create_grub2_cfg {
     local grub2_initrd="$2"
     test "$grub2_initrd" || BugError "create_grub2_cfg function called without grub2_initrd argument"
     DebugPrint "Let GRUB2 load initrd $grub2_initrd"
-    
-    local grub2_set_root_command="$3"
-    if ! test "$grub2_set_root_command" ; then
-        test "$GRUB2_SET_ROOT_COMMAND" && grub2_set_root_command="$GRUB2_SET_ROOT_COMMAND"
-    fi
-    local grub2_search_root_command="$4"
-    if ! test "$grub2_search_root_command" ; then
-        test "$GRUB2_SEARCH_ROOT_COMMAND" && grub2_search_root_command="$GRUB2_SEARCH_ROOT_COMMAND"
-    fi
-    test "$grub2_set_root_command" || test "$grub2_search_root_command" || BugError "create_grub2_cfg function called without 'set' or 'search' the 'root' device"
-    if test "$grub2_search_root_command" ; then
-        test "$grub2_set_root_command" && DebugPrint "Set GRUB2 default root device via '$grub2_set_root_command'"
-        DebugPrint "Let GRUB2 search root device via '$grub2_search_root_command'"
+
+    # Before https://github.com/rear/rear/pull/3025 it was possible to call create_grub2_cfg()
+    # with a third argument that is a "search GRUB2 'root' device command" string:
+    test "$3" && BugError "create_grub2_cfg function must not be called with a third argument"
+    # Since https://github.com/rear/rear/pull/3025 GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND must be specified:
+    if contains_visible_char "$GRUB2_SEARCH_ROOT_COMMAND" ; then
+        contains_visible_char "$GRUB2_SET_ROOT_COMMAND" && DebugPrint "Set GRUB2 default root device via '$GRUB2_SET_ROOT_COMMAND'"
+        DebugPrint "Let GRUB2 search root device via '$GRUB2_SEARCH_ROOT_COMMAND'"
     else
-        DebugPrint "Set GRUB2 root device via '$grub2_set_root_command'"
+        contains_visible_char "$GRUB2_SET_ROOT_COMMAND" || BugError "create_grub2_cfg function called but neither GRUB2_SET_ROOT_COMMAND nor GRUB2_SEARCH_ROOT_COMMAND is specified"
+        DebugPrint "Set GRUB2 root device via '$GRUB2_SET_ROOT_COMMAND'"
     fi
 
     local grub2_default_menu_entry="$GRUB2_DEFAULT_BOOT"
@@ -729,8 +720,8 @@ EOF
     # before the GRUB2 menu replaces what there is on the screen
     # so that the user can read and understand possible (error) messages on the screen.
     cat << EOF
-$grub2_set_root_command
-$grub2_search_root_command
+$GRUB2_SET_ROOT_COMMAND
+$GRUB2_SEARCH_ROOT_COMMAND
 echo "Using root device \$root from those available devices:"
 ls
 insmod all_video
