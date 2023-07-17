@@ -57,8 +57,12 @@ if test "ebiso" = "$( basename $ISO_MKISOFS_BIN )" ; then
         cp -pL $v $KERNEL_FILE $efi_boot_tmp_dir/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE' to $efi_boot_tmp_dir/kernel"
         cp $v $TMP_DIR/$REAR_INITRD_FILENAME $efi_boot_tmp_dir/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME' into $efi_boot_tmp_dir"
         create_ebiso_elilo_conf > $efi_boot_tmp_dir/elilo.conf
-        # create_grub2_cfg() needs at least one of GRUB2_SET_ROOT_COMMAND or GRUB2_SEARCH_ROOT_COMMAND
-        test "$GRUB2_SET_ROOT_COMMAND" || GRUB2_SET_ROOT_COMMAND="set root=cd0"
+        # We need to set the GRUB environment variable 'root' to a reasonable default/fallback value
+        # because GRUB's default 'root' (or GRUB's 'root' identifcation heuristics) would point to the ramdisk
+        # but neither kernel nor initrd are located on the ramdisk but on the device where the recovery system was booted from.
+        # GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND is needed by the create_grub2_cfg() function.
+        # Set GRUB2_SET_ROOT_COMMAND if not specified by the user:
+        contains_visible_char "$GRUB2_SET_ROOT_COMMAND" || GRUB2_SET_ROOT_COMMAND="set root=cd0"
         create_grub2_cfg /isolinux/kernel /isolinux/$REAR_INITRD_FILENAME > $efi_boot_tmp_dir/grub.cfg
     fi
 fi
@@ -82,8 +86,9 @@ else
     # To make ReaR work in this case, set 'root' to a sensible default value 'cd0'
     # before trying to search via GRUB2_SEARCH_ROOT_COMMAND in the create_grub2_cfg function
     # cf. https://github.com/rear/rear/issues/2434 and https://github.com/rear/rear/pull/2453
-    test "$GRUB2_SET_ROOT_COMMAND" || GRUB2_SET_ROOT_COMMAND="set root=cd0"
-    test "$GRUB2_SEARCH_ROOT_COMMAND" || GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --file /boot/efiboot.img"
+    # Set GRUB2_SET_ROOT_COMMAND and GRUB2_SEARCH_ROOT_COMMAND if not specified by the user:
+    contains_visible_char "$GRUB2_SET_ROOT_COMMAND" || GRUB2_SET_ROOT_COMMAND="set root=cd0"
+    contains_visible_char "$GRUB2_SEARCH_ROOT_COMMAND" || GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --file /boot/efiboot.img"
     create_grub2_cfg /isolinux/kernel /isolinux/$REAR_INITRD_FILENAME > $efi_boot_tmp_dir/grub.cfg
 fi
 
