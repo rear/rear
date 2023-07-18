@@ -722,7 +722,7 @@ EOF
     cat << EOF
 $GRUB2_SET_ROOT_COMMAND
 $GRUB2_SEARCH_ROOT_COMMAND
-echo "Using root device \$root from those available devices:"
+echo "Using root device (\$root) - available devices are:"
 ls
 insmod all_video
 set gfxpayload=keep
