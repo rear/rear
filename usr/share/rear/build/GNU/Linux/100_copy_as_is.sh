@@ -112,7 +112,11 @@ done >$copy_as_is_exclude_file
 # cf. https://github.com/rear/rear/pull/2405#issuecomment-633512932
 # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
 # cf. https://github.com/rear/rear/issues/1372
-if ! tar -v -X $copy_as_is_exclude_file -P -C / -c ${COPY_AS_IS[*]} 2>$copy_as_is_filelist_file | tar $v -C $ROOTFS_DIR/ -x 1>/dev/null ; then
+#
+# Note the usage of '-i' when extracting the archive, this is necessary to
+# avoid tar from exiting due to padding zeros getting added when a file being
+# read shrinks, cf. https://github.com/rear/rear/pull/3027
+if ! tar -v -X $copy_as_is_exclude_file -P -C / -c ${COPY_AS_IS[*]} 2>$copy_as_is_filelist_file | tar $v -C $ROOTFS_DIR/ -x -i 1>/dev/null ; then
     Error "Failed to copy files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLUDE"
 fi
 Log "Finished copying files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLUDE"
