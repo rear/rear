@@ -110,9 +110,13 @@ done >$copy_as_is_exclude_file
 # COPY_AS_IS+=( /path/to/directory/* )
 # which are used in our scripts and by users in their etc/rear/local.conf
 # cf. https://github.com/rear/rear/pull/2405#issuecomment-633512932
+# Using '-i' when extracting is necessary to avoid a false regular exit of 'tar'
+# in particular when padding zeroes get added when a file being read shrinks
+# because for 'tar' (without '-i') two consecutive 512-blocks of zeroes mean EOF,
+# cf. https://github.com/rear/rear/pull/3027
 # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
 # cf. https://github.com/rear/rear/issues/1372
-if ! tar -v -X $copy_as_is_exclude_file -P -C / -c ${COPY_AS_IS[*]} 2>$copy_as_is_filelist_file | tar $v -C $ROOTFS_DIR/ -x 1>/dev/null ; then
+if ! tar -v -X $copy_as_is_exclude_file -P -C / -c ${COPY_AS_IS[*]} 2>$copy_as_is_filelist_file | tar $v -C $ROOTFS_DIR/ -x -i 1>/dev/null ; then
     Error "Failed to copy files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLUDE"
 fi
 Log "Finished copying files and directories in COPY_AS_IS minus COPY_AS_IS_EXCLUDE"
