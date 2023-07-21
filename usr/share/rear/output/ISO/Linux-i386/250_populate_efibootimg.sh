@@ -13,22 +13,32 @@ mkdir $v -p $efi_boot_tmp_dir || Error "Could not create $efi_boot_tmp_dir"
 mkdir $v -p $efi_boot_tmp_dir/fonts || Error "Could not create $efi_boot_tmp_dir/fonts"
 mkdir $v -p $efi_boot_tmp_dir/locale || Error "Could not create $efi_boot_tmp_dir/locale"
 
-# Copy the grub*.efi executable to EFI/BOOT/BOOTX64.efi
+# Copy the grub*.efi or shim.efi executable to EFI/BOOT/BOOTX64.efi
 # Intentionally an empty UEFI_BOOTLOADER results an invalid "cp -v /tmp/.../mnt/EFI/BOOT/BOOTX64.efi" command that fails:
 cp $v "$UEFI_BOOTLOADER" $efi_boot_tmp_dir/BOOTX64.efi || Error "Could not find UEFI_BOOTLOADER '$UEFI_BOOTLOADER'"
 local uefi_bootloader_dirname="$( dirname $UEFI_BOOTLOADER )"
 if test -f "$SECURE_BOOT_BOOTLOADER" ; then
-    # FIXME: Explain why it tests that a SECURE_BOOT_BOOTLOADER file exists
-    #        but then it copies any grub*.efi files and ignores if there are none.
-    #        Why does it not copy SECURE_BOOT_BOOTLOADER and errors out if that fails?
-    # If shim is used, bootloader can be actually anything
-    # named as grub*.efi (follow-up loader is shim compile time option), see
+    # For a technical description of Shim see https://mjg59.dreamwidth.org/19448.html
+    # Shim is a signed EFI binary that is a first stage bootloader
+    # that loads and executes another (signed) EFI binary
+    # which normally is a second stage bootloader
+    # which normally is a GRUB EFI binary
+    # which normally is available as a file named grub*.efi
+    # so when SECURE_BOOT_BOOTLOADER is used as UEFI_BOOTLOADER
+    # (cf. rescue/default/850_save_sysfs_uefi_vars.sh)
+    # then Shim (usually shim.efi) was copied above as efi_boot_tmp_dir/BOOTX64.efi
+    # and Shim's second stage bootloader must be also copied where Shim already is.
+    DebugPrint "Using Shim '$SECURE_BOOT_BOOTLOADER' as first stage UEFI bootloader BOOTX64.efi"
+    # When Shim is used, its second stage bootloader can be actually anything
+    # named grub*.efi (second stage bootloader is Shim compile time option), see
     # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
+    local second_stage_UEFI_bootloader_files="$( echo $uefi_bootloader_dirname/grub*.efi )"
     # Avoid 'nullglob' pitfall when nothing matches .../grub*.efi which results
     # an invalid "cp -v /tmp/.../mnt/EFI/BOOT/" command that fails
     # cf. https://github.com/rear/rear/issues/1921
-    local shim_files="$( echo $uefi_bootloader_dirname/grub*.efi )"
-    test "$shim_files" && cp $v $shim_files $efi_boot_tmp_dir/
+    test "$second_stage_UEFI_bootloader_files" || Error "Could not find second stage bootloader '$uefi_bootloader_dirname/grub*.efi' for Shim"
+    DebugPrint "Using second stage UEFI bootloader files for Shim: $second_stage_UEFI_bootloader_files"
+    cp $v $second_stage_UEFI_bootloader_files $efi_boot_tmp_dir/ || Error "Failed to copy second stage bootloader files for Shim"
 fi
 
 # FIXME: Do we need to test if we are ebiso at all?
@@ -47,6 +57,12 @@ if test "ebiso" = "$( basename $ISO_MKISOFS_BIN )" ; then
         cp -pL $v $KERNEL_FILE $efi_boot_tmp_dir/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE' to $efi_boot_tmp_dir/kernel"
         cp $v $TMP_DIR/$REAR_INITRD_FILENAME $efi_boot_tmp_dir/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME' into $efi_boot_tmp_dir"
         create_ebiso_elilo_conf > $efi_boot_tmp_dir/elilo.conf
+        # We need to set the GRUB environment variable 'root' to a reasonable default/fallback value
+        # because GRUB's default 'root' (or GRUB's 'root' identifcation heuristics) would point to the ramdisk
+        # but neither kernel nor initrd are located on the ramdisk but on the device where the recovery system was booted from.
+        # GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND is needed by the create_grub2_cfg() function.
+        # Set GRUB2_SET_ROOT_COMMAND if not specified by the user:
+        contains_visible_char "$GRUB2_SET_ROOT_COMMAND" || GRUB2_SET_ROOT_COMMAND="set root=cd0"
         create_grub2_cfg /isolinux/kernel /isolinux/$REAR_INITRD_FILENAME > $efi_boot_tmp_dir/grub.cfg
     fi
 fi
@@ -67,10 +83,12 @@ else
     # This was seen at least in Debian Buster running in Qemu
     # (VirtualBox works fine, RHEL/CentOS in Qemu works fine as well).
     # The GRUB2 image created by grub-mkstandalone has 'root' set to memdisk, which can't work.
-    # To make ReaR work in this case, set 'root' to a sensible value 'cd0' before trying search
-    # (via ${grub2_set_root:+"set root=$grub2_set_root"} in the create_grub2_cfg function)
+    # To make ReaR work in this case, set 'root' to a sensible default value 'cd0'
+    # before trying to search via GRUB2_SEARCH_ROOT_COMMAND in the create_grub2_cfg function
     # cf. https://github.com/rear/rear/issues/2434 and https://github.com/rear/rear/pull/2453
-    grub2_set_root=cd0
+    # Set GRUB2_SET_ROOT_COMMAND and GRUB2_SEARCH_ROOT_COMMAND if not specified by the user:
+    contains_visible_char "$GRUB2_SET_ROOT_COMMAND" || GRUB2_SET_ROOT_COMMAND="set root=cd0"
+    contains_visible_char "$GRUB2_SEARCH_ROOT_COMMAND" || GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --file /boot/efiboot.img"
     create_grub2_cfg /isolinux/kernel /isolinux/$REAR_INITRD_FILENAME > $efi_boot_tmp_dir/grub.cfg
 fi
 

@@ -536,25 +536,25 @@ function get_root_disk_UUID {
 # so that kernel and initrd are /boot_mountpoint/path/to/kernel and /boot_mountpoint/path/to/initrd
 # and that boot partition gets set as root device name for GRUB2's
 # then $1 would have to be /path/to/kernel and $2 would have to be /path/to/initrd
-# $3 is an appropriate GRUB2 command to set its root device (usually via GRUB2's 'root' environment variable)
-# e.g. when the filesystem that contains kernel and initrd has the filesystem label REARBOOT
-# then $3 could be something like 'search --no-floppy --set root --label REARBOOT'
 function create_grub2_cfg {
     local grub2_kernel="$1"
     test "$grub2_kernel" || BugError "create_grub2_cfg function called without grub2_kernel argument"
-    DebugPrint "Configuring GRUB2 kernel $grub2_kernel"
+    DebugPrint "Let GRUB2 load kernel $grub2_kernel"
     local grub2_initrd="$2"
     test "$grub2_initrd" || BugError "create_grub2_cfg function called without grub2_initrd argument"
-    DebugPrint "Configuring GRUB2 initrd $grub2_initrd"
-    local grub2_search_root_command="$3"
-    if ! test "$grub2_search_root_command" ; then
-        test "$grub2_set_root" && grub2_search_root_command="set root=$grub2_set_root"
+    DebugPrint "Let GRUB2 load initrd $grub2_initrd"
+
+    # Before https://github.com/rear/rear/pull/3025 it was possible to call create_grub2_cfg()
+    # with a third argument that is a "search GRUB2 'root' device command" string:
+    test "$3" && BugError "create_grub2_cfg function must not be called with a third argument"
+    # Since https://github.com/rear/rear/pull/3025 GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND must be specified:
+    if contains_visible_char "$GRUB2_SEARCH_ROOT_COMMAND" ; then
+        contains_visible_char "$GRUB2_SET_ROOT_COMMAND" && DebugPrint "Set GRUB2 default root device via '$GRUB2_SET_ROOT_COMMAND'"
+        DebugPrint "Let GRUB2 search root device via '$GRUB2_SEARCH_ROOT_COMMAND'"
+    else
+        contains_visible_char "$GRUB2_SET_ROOT_COMMAND" || BugError "create_grub2_cfg function called but neither GRUB2_SET_ROOT_COMMAND nor GRUB2_SEARCH_ROOT_COMMAND is specified"
+        DebugPrint "Set GRUB2 root device via '$GRUB2_SET_ROOT_COMMAND'"
     fi
-    if ! test "$grub2_search_root_command" ; then
-        test "$GRUB2_SEARCH_ROOT_COMMAND" && grub2_search_root_command="$GRUB2_SEARCH_ROOT_COMMAND"
-    fi
-    test "$grub2_search_root_command" || grub2_search_root_command="search --no-floppy --set=root --file /boot/efiboot.img"
-    DebugPrint "Configuring GRUB2 root device as '$grub2_search_root_command'"
 
     local grub2_default_menu_entry="$GRUB2_DEFAULT_BOOT"
     test "$grub2_default_menu_entry" || grub2_default_menu_entry="chainloader"
@@ -613,6 +613,9 @@ function create_grub2_cfg {
                 echo "terminal_input serial"
                 echo "terminal_output serial"
             fi
+        else
+            DebugPrint "No serial console in GRUB2 (USE_SERIAL_CONSOLE is not true)"
+            echo "echo 'No serial console (USE_SERIAL_CONSOLE was not true)'"
         fi
     }
 
@@ -632,7 +635,6 @@ menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear {
     echo 'Loading initial ramdisk $grub2_initrd ...'
     initrd $grub2_initrd
 }
-
 menuentry "Relax-and-Recover (UEFI and Secure Boot)" --id=rear_secure_boot {
     insmod gzio
     insmod xzio
@@ -714,10 +716,14 @@ EOF
 
     # The actual work starts here.
     # Create and output GRUB2 configuration.
-    # Sleep 3 seconds before the GRUB2 menu replaces what there is on the screen
-    # so that the user has a chance to see possible (error) messages on the screen.
+    # Sleep (interruptible) USER_INPUT_INTERRUPT_TIMEOUT seconds (by default 30 seconds)
+    # before the GRUB2 menu replaces what there is on the screen
+    # so that the user can read and understand possible (error) messages on the screen.
     cat << EOF
-$grub2_search_root_command
+$GRUB2_SET_ROOT_COMMAND
+$GRUB2_SEARCH_ROOT_COMMAND
+echo "Using root device (\$root) - available devices are:"
+ls
 insmod all_video
 set gfxpayload=keep
 insmod part_gpt
@@ -727,8 +733,8 @@ $( create_grub2_serial_entry )
 set timeout="$grub2_timeout"
 set default="$grub2_default_menu_entry"
 set fallback="chainloader"
-echo 'Switching to GRUB2 boot menu...'
-sleep --verbose --interruptible 3
+echo 'Switching to GRUB boot menu...'
+sleep --verbose --interruptible $USER_INPUT_INTERRUPT_TIMEOUT
 $( create_grub2_rear_boot_entry )
 $( create_grub2_boot_next_entry )
 $( create_grub2_reboot_entry )

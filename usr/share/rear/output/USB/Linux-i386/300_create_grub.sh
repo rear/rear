@@ -70,15 +70,16 @@ if is_true $USING_UEFI_BOOTLOADER ; then
     # cf. https://github.com/rear/rear/pull/2905#discussion_r1062457353
     [[ "$USB_GRUB2_INSTALL_OPTIONS" == *"--target="* ]] || USB_GRUB2_INSTALL_OPTIONS+=" --target=i386-pc"
 fi
-test "$USB_GRUB2_INSTALL_OPTIONS" && DebugPrint "Using USB_GRUB2_INSTALL_OPTIONS $USB_GRUB2_INSTALL_OPTIONS"
+test "$USB_GRUB2_INSTALL_OPTIONS" && DebugPrint "Using USB_GRUB2_INSTALL_OPTIONS '$USB_GRUB2_INSTALL_OPTIONS'"
 $grub_install_binary $USB_GRUB2_INSTALL_OPTIONS --boot-directory=$usb_boot_dir --recheck $RAW_USB_DEVICE || Error "Failed to install GRUB2 on $RAW_USB_DEVICE"
 # grub[2]-install creates the $BUILD_DIR/outputfs/boot/grub[2] sub-directory that is needed
 # to create the GRUB2 config $BUILD_DIR/outputfs/boot/grub[2].cfg in the next step:
 DebugPrint "Creating GRUB2 config for legacy BIOS boot as USB bootloader"
-test "$USB_DEVICE_BOOT_LABEL" || USB_DEVICE_BOOT_LABEL="REARBOOT"
+contains_visible_char "$USB_DEVICE_BOOT_LABEL" || USB_DEVICE_BOOT_LABEL="REARBOOT"
 # We need to set the GRUB environment variable 'root' to the partition device with filesystem label USB_DEVICE_BOOT_LABEL
 # because GRUB's default 'root' (or GRUB's 'root' identifcation heuristics) would point to the ramdisk but neither kernel
 # nor initrd are located on the ramdisk but on the partition device with filesystem label USB_DEVICE_BOOT_LABEL.
-# GRUB2_SEARCH_ROOT_COMMAND is used in the create_grub2_cfg() function:
-GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --label $USB_DEVICE_BOOT_LABEL"
-create_grub2_cfg /$USB_PREFIX/kernel /$USB_PREFIX/$REAR_INITRD_FILENAME > $usb_boot_dir/$grub_cfg || Error "Failed to create $usb_boot_dir/$grub_cfg"
+# GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND is needed by the create_grub2_cfg() function.
+# Set GRUB2_SEARCH_ROOT_COMMAND if not specified by the user:
+contains_visible_char "$GRUB2_SEARCH_ROOT_COMMAND" || GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --label $USB_DEVICE_BOOT_LABEL"
+create_grub2_cfg /$USB_PREFIX/kernel /$USB_PREFIX/$REAR_INITRD_FILENAME > $usb_boot_dir/$grub_cfg
