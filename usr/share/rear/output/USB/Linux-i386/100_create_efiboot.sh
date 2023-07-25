@@ -51,8 +51,34 @@ mkdir -p $efi_dst || Error "Failed to create directory '$efi_dst'"
 # "cp: failed to preserve ownership for '/tmp/rear-efi.XXXXXXXXXX/EFI/BOOT/kernel': Operation not permitted"
 # because it copies to a VFAT filesystem on the EFI partition (see format/USB/default/300_format_usb_disk.sh)
 # cf. https://github.com/rear/rear/issues/2683
-# Copy boot loader:
-cp -L $v "$UEFI_BOOTLOADER" "$efi_dst/BOOTX64.efi" || Error "Failed to copy UEFI_BOOTLOADER '$UEFI_BOOTLOADER' to $efi_dst/BOOTX64.efi"
+# Copy UEFI bootloader:
+if test -f "$SECURE_BOOT_BOOTLOADER" ; then
+    # For a technical description of Shim see https://mjg59.dreamwidth.org/19448.html
+    # Shim is a signed EFI binary that is a first stage bootloader
+    # that loads and executes another (signed) EFI binary
+    # which normally is a second stage bootloader
+    # which normally is a GRUB EFI binary
+    # which normally is available as a file named grub*.efi
+    # so when SECURE_BOOT_BOOTLOADER is used as UEFI_BOOTLOADER
+    # (cf. rescue/default/850_save_sysfs_uefi_vars.sh)
+    # then Shim (usually shim.efi) was copied above as efi_boot_tmp_dir/BOOTX64.efi
+    # and Shim's second stage bootloader must be also copied where Shim already is.
+    DebugPrint "Using '$SECURE_BOOT_BOOTLOADER' as first stage Secure Boot bootloader BOOTX64.efi"
+    cp -L $v "$SECURE_BOOT_BOOTLOADER" "$efi_dst/BOOTX64.efi" || Error "Failed to copy SECURE_BOOT_BOOTLOADER '$SECURE_BOOT_BOOTLOADER' to $efi_dst/BOOTX64.efi"
+    # When Shim is used, its second stage bootloader can be actually anything
+    # named grub*.efi (second stage bootloader is Shim compile time option), see
+    # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
+    local uefi_bootloader_dirname="$( dirname $SECURE_BOOT_BOOTLOADER )"
+    local second_stage_UEFI_bootloader_files="$( echo $uefi_bootloader_dirname/grub*.efi )"
+    # Avoid 'nullglob' pitfall when nothing matches .../grub*.efi which would result
+    # an invalid "cp -v /var/tmp/.../EFI/BOOT/" command that fails
+    # cf. https://github.com/rear/rear/issues/1921
+    test "$second_stage_UEFI_bootloader_files" || Error "Could not find second stage Secure Boot bootloader $uefi_bootloader_dirname/grub*.efi"
+    DebugPrint "Using second stage Secure Boot bootloader files: $second_stage_UEFI_bootloader_files"
+    cp -L $v $second_stage_UEFI_bootloader_files $efi_dst/ || Error "Failed to copy second stage Secure Boot bootloader files"
+else
+    cp -L $v "$UEFI_BOOTLOADER" "$efi_dst/BOOTX64.efi" || Error "Failed to copy UEFI_BOOTLOADER '$UEFI_BOOTLOADER' to $efi_dst/BOOTX64.efi"
+fi
 # Copy kernel:
 cp -L $v "$KERNEL_FILE" "$efi_dst/kernel" || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE' to $efi_dst/kernel"
 # Copy initrd:
@@ -101,8 +127,8 @@ EOF
             contains_visible_char "$GRUB2_SEARCH_ROOT_COMMAND" || GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --label $efi_label"
             # Create config for GRUB2:
             create_grub2_cfg $efi_dir/kernel $efi_dir/$REAR_INITRD_FILENAME > $efi_dst/grub.cfg
-            # Create bootloader, this overwrites BOOTX64.efi copied in previous step:
-            build_bootx86_efi $efi_dst/BOOTX64.efi $efi_dst/grub.cfg "/boot" "$UEFI_BOOTLOADER"
+            # Create bootloader unless Secure Boot is used, this overwrites BOOTX64.efi copied in previous step:
+            test -f "$SECURE_BOOT_BOOTLOADER" || build_bootx86_efi $efi_dst/BOOTX64.efi $efi_dst/grub.cfg "/boot" "$UEFI_BOOTLOADER"
         ;;
         (*)
             Error "GRUB version '$grub_version' is neither '0' (legacy GRUB) nor '2' (GRUB 2)"
