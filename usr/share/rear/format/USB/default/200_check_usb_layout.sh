@@ -33,7 +33,14 @@ test -b "$RAW_USB_DEVICE" || Error "Raw device $RAW_USB_DEVICE of $REAL_USB_DEVI
 # USB_FORMAT_ANSWER is also used in format/USB/default/300_format_usb_disk.sh
 USB_FORMAT_ANSWER=""
 
-test "ext3" = "$USB_DEVICE_FILESYSTEM" -o "ext4" = "$USB_DEVICE_FILESYSTEM" || USB_DEVICE_FILESYSTEM="ext3"
+case "$USB_DEVICE_FILESYSTEM" in
+    ("")
+        USB_DEVICE_FILESYSTEM="ext3";;
+    (ext3|ext4)
+        :;;
+    (*)
+        Error "Invalid USB_DEVICE_FILESYSTEM value '$USB_DEVICE_FILESYSTEM'. Must be 'ext3' or 'ext4'.";;
+esac
 
 local file_output=$( file -sbL "$REAL_USB_DEVICE" )
 # ID_FS_TYPE is also used in format/USB/default/350_label_usb_disk.sh
