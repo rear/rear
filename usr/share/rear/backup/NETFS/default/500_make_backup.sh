@@ -35,8 +35,8 @@ if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
     # Avoid that the BACKUP_PROG_CRYPT_KEY value is shown in debugscript mode
     # cf. the comment of the UserInput function in lib/_input-output-functions.sh
     # how to keep things confidential when usr/sbin/rear is run in debugscript mode
-    # ('2>/dev/null' should be sufficient here because 'test' does not output on stdout):
-    { test "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null || Error "BACKUP_PROG_CRYPT_KEY must be set for backup archive encryption"
+    # ('2>>/dev/$SECRET_OUTPUT_DEV' should be sufficient here because 'test' does not output on stdout):
+    { test "$BACKUP_PROG_CRYPT_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV || Error "BACKUP_PROG_CRYPT_KEY must be set for backup archive encryption"
     LogPrint "Encrypting backup archive with key defined in BACKUP_PROG_CRYPT_KEY"
 fi
 
@@ -144,15 +144,15 @@ case "$(basename ${BACKUP_PROG})" in
                 "$(basename $(echo "$BACKUP_PROG_CRYPT_OPTIONS" | awk '{ print $1 }'))"
                 "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
             )
-            $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
-                --no-wildcards-match-slash --one-file-system                        \
-                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
-                $BACKUP_PROG_CREATE_NEWER_OPTIONS                                   \
-                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                       \
-                "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                \
-                -X $TMP_DIR/backup-exclude.txt -C / -c -f -                         \
-                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |               \
-            { $BACKUP_PROG_CRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null | \
+            $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose                   \
+                --no-wildcards-match-slash --one-file-system                                       \
+                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                                   \
+                $BACKUP_PROG_CREATE_NEWER_OPTIONS                                                  \
+                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                                      \
+                "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                               \
+                -X $TMP_DIR/backup-exclude.txt -C / -c -f -                                        \
+                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |                              \
+            { $BACKUP_PROG_CRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV | \
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         else
@@ -160,14 +160,14 @@ case "$(basename ${BACKUP_PROG})" in
                 "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
                 "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
             )
-            $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose    \
-                --no-wildcards-match-slash --one-file-system                        \
-                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                    \
-                $BACKUP_PROG_CREATE_NEWER_OPTIONS                                   \
-                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                       \
-                "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                \
-                -X $TMP_DIR/backup-exclude.txt -C / -c -f -                         \
-                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |               \
+            $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
+                --no-wildcards-match-slash --one-file-system                     \
+                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                 \
+                $BACKUP_PROG_CREATE_NEWER_OPTIONS                                \
+                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                    \
+                "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                             \
+                -X $TMP_DIR/backup-exclude.txt -C / -c -f -                      \
+                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |            \
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         fi
