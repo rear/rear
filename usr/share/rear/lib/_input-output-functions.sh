@@ -1036,11 +1036,17 @@ function cleanup_build_area_and_end_program () {
 #       If confidential user input is needed also in debugscript mode the caller of the UserInput function
 #       must call it in an appropriate (temporary) environment e.g. with STDERR redirected to /dev/null like
 #           { password="$( UserInput -I PASSWORD -C -r -s -p 'Enter the pasword' )" ; } 2>/dev/null
-#       The redirection must be done via a compound group command { confidential_command ; } 2>/dev/null
+#       or since https://github.com/rear/rear/pull/3006 probably better as
+#           { password="$( UserInput -I PASSWORD -C -r -s -p 'Enter the pasword' )" ; } 2>>/dev/$SECRET_OUTPUT_DEV
+#       to still make debugging possible for the user by calling rear with the --expose-secrets option.
+#       The redirection must be done via a compound group command like
+#           { confidential_command ; } 2>/dev/null
 #       even for a single confidential command to ensure STDERR is redirected to /dev/null also for 'set -x'
 #       otherwise the confidential command and its arguments would be shown in the log file, for example
 #           { openssl des3 -salt -k secret_passphrase ; } 2>/dev/null
-#       where the secret passphrase must not appear in the log, cf. https://github.com/rear/rear/issues/2155
+#       where the secret passphrase must not appear in the log,
+#       cf. https://github.com/rear/rear/issues/2155
+#       and https://github.com/rear/rear/issues/2967
 # Result:
 #   Any actual user input or an automated user input or the default response is output via STDOUT.
 # Return code:
