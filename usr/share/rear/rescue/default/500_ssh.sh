@@ -9,7 +9,7 @@ has_binary ssh || has_binary sshd || return 0
 # Do nothing when not any SSH file should be copied into the recovery system:
 if is_false "$SSH_FILES" ; then
     # Print an info if SSH_ROOT_PASSWORD is set but that cannot work when SSH_FILES is set to a 'false' value:
-    { test "$SSH_ROOT_PASSWORD" ; } 2>/dev/null && LogPrintError "SSH_ROOT_PASSWORD cannot work when SSH_FILES is set to a 'false' value"
+    { test "$SSH_ROOT_PASSWORD" ; } 2>>/dev/$SECRET_OUTPUT_DEV && LogPrintError "SSH_ROOT_PASSWORD cannot work when SSH_FILES is set to a 'false' value"
     return 0
 fi
 
@@ -88,7 +88,7 @@ echo "ssh:23:respawn:/etc/scripts/run-sshd" >>$ROOTFS_DIR/etc/inittab
 { if ! test -f "$ROOT_HOME_DIR/.ssh/authorized_keys" -o "$SSH_ROOT_PASSWORD" ; then
     LogPrintError "To log into the recovery system via ssh set up $ROOT_HOME_DIR/.ssh/authorized_keys or specify SSH_ROOT_PASSWORD"
   fi
-} 2>/dev/null
+} 2>>/dev/$SECRET_OUTPUT_DEV
 
 # Set the SSH root password; if pw is encrypted just copy it otherwise use openssl (for backward compatibility)
 # Encryption syntax is detected as a '$D$' or '$Dx$' prefix in the password, where D is a single digit and x is one lowercase character.
@@ -104,4 +104,4 @@ echo "ssh:23:respawn:/etc/scripts/run-sshd" >>$ROOTFS_DIR/etc/inittab
             ;;
     esac
   fi
-} 2>/dev/null
+} 2>>/dev/$SECRET_OUTPUT_DEV
