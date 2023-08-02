@@ -61,7 +61,7 @@ if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     # which normally is available as a file named grub*.efi
     # so when SECURE_BOOT_BOOTLOADER is used as UEFI_BOOTLOADER
     # (cf. rescue/default/850_save_sysfs_uefi_vars.sh)
-    # then Shim (usually shim.efi) was copied above as efi_boot_tmp_dir/BOOTX64.efi
+    # then Shim (usually shim.efi) must be copied as EFI/BOOT/BOOTX64.efi
     # and Shim's second stage bootloader must be also copied where Shim already is.
     DebugPrint "Using '$SECURE_BOOT_BOOTLOADER' as first stage Secure Boot bootloader BOOTX64.efi"
     cp -L $v "$SECURE_BOOT_BOOTLOADER" "$efi_dst/BOOTX64.efi" || Error "Failed to copy SECURE_BOOT_BOOTLOADER '$SECURE_BOOT_BOOTLOADER' to $efi_dst/BOOTX64.efi"
