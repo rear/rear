@@ -146,7 +146,7 @@ case "$scheme" in
     	lftp_cmds_heredoc=$(IFS=$'\n'; echo "${lftp_cmds[*]}")
 
         if contains_visible_char "$OUTPUT_LFTP_USERNAME" ; then
-            { lftp_user_opts="-u $OUTPUT_LFTP_USERNAME,$OUTPUT_LFTP_PASSWORD" ; } 2>/dev/null
+            { lftp_user_opts="-u $OUTPUT_LFTP_USERNAME,$OUTPUT_LFTP_PASSWORD" ; } 2>>/dev/$SECRET_OUTPUT_DEV
             Log "lftp -u $OUTPUT_LFTP_USERNAME,******* $OUTPUT_URL"
         else
             Log "lftp $lftp_user_opts $OUTPUT_URL"

@@ -27,7 +27,7 @@ fi
 # therefore 'Log ... BACKUP_PROG_CRYPT_KEY ...' is used (and not '$BACKUP_PROG_CRYPT_KEY')
 # but '$BACKUP_PROG_CRYPT_KEY' must be used in the actual command call which means
 # the BACKUP_PROG_CRYPT_KEY value would appear in the log when rear is run in debugscript mode
-# so that stderr of the confidential command is redirected to /dev/null
+# so that stderr of the confidential command is redirected to SECRET_OUTPUT_DEV (normally /dev/null)
 # cf. the comment of the UserInput function in lib/_input-output-functions.sh
 # how to keep things confidential when rear is run in debugscript mode
 # because it is more important to not leak out user secrets into a log file
@@ -37,7 +37,7 @@ fi
 # cf. https://github.com/rear/rear/issues/2369 and https://github.com/rear/rear/issues/2458
 if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
     dd if=$backuparchive bs=1M | \
-        { $BACKUP_PROG_DECRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>/dev/null | \
+        { $BACKUP_PROG_DECRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV | \
         $BACKUP_PROG --acls --preserve-permissions --same-owner --block-number --totals --verbose "${BACKUP_PROG_OPTIONS[@]}" "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" -C $tmp_dir -x -f - $passwd_group_shadow_files
 else
     dd if=$backuparchive bs=1M | \
