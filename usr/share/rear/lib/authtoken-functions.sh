@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# This file is part of Relax-and-Recover, licensed under the GNU General
+# Public License. Refer to the included COPYING for full text of license.
+
+# As of this writing (August 2023) the functions in this authtoken-functions.sh file
+# are only called by the ReaR system startup script /etc/scripts/unlock-opal-disks
+# (its source code is usr/share/rear/skel/default/etc/scripts/unlock-opal-disks)
+# so that this functions are meant to be executed only
+# within the environment where /etc/scripts/unlock-opal-disks is running.
+# This 'unlock-opal-disks' environment is a pre-boot volatile environment
+# where all secret user input happens only in that pre-boot environment,
+# and the image is immutable (PBA-area is RO on locked drive),
+# see https://github.com/rear/rear/issues/3035#issuecomment-1662239427
+# so secrets could not leak out from that environment.
+# This functions are not properly implemeted to be executed within other environments
+# e.g. when called by other ReaR scripts during "rear mkrescue/mkbackup" or "rear recover".
+# The main reason is that this functions could leak secrets when executed,
+# in particular with 'set -x' (e.g. when rear is run in debugscript mode),
+# see https://github.com/rear/rear/issues/3035
+
 function authtkn_load() {
     # $1 container path
     # $2 container offset
