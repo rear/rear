@@ -1,16 +1,16 @@
 
-# Output all variable values into the log file
-# which may also output possibly confidential values 
-# so do this only in debugscript mode where the 'set -x' output
-# in general already reveals possibly confidential information:
-test "$DEBUGSCRIPTS" || return 0
+# This file is part of Relax-and-Recover, licensed under the GNU General
+# Public License. Refer to the included COPYING for full text of license.
 
-# For now disable this script until https://github.com/rear/rear/issues/2967 is solved.
-# Users who need this script can disable the next two lines:
-DebugPrint "Skipped init/default/998_dump_variables.sh for legal liability worries, see https://github.com/rear/rear/issues/2967"
-return 1
-
-# Suppress output that contains 'pass' or 'key' or 'crypt' (ignore case) to skip output
-# e.g. for BACKUP_PROG_CRYPT_KEY or SSH_ROOT_PASSWORD or LUKS_CRYPTSETUP_OPTIONS
-# cf. https://github.com/rear/rear/issues/2967
-Debug "Runtime Configuration (except what contains 'pass' or 'key' or 'crypt'):$LF$( declare -p | egrep -vi 'pass|key|crypt' )"
+# To help with debugging dump all currently existing variable values into the log file.
+#
+# Because this will also output possibly confidential values into the log file
+# (like passwords, encryption keys, authentication tokens, ...)
+# this happens only if rear is run by the user with the 'expose-secrets' option
+# see https://github.com/rear/rear/issues/2967
+if LogSecret "Runtime Configuration:$LF$( declare -p )" ; then
+    # Show the log file name here in any case because sbin/rear shows "Using log file ..." only in verbose mode:
+    LogUserOutput "Dumped all variable values (including possibly confidential values) into $RUNTIME_LOGFILE"
+else
+    Debug "Skipped dumping all variable values into the log file (use 'expose-secrets' for that)"
+fi
