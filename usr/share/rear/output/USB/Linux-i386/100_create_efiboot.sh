@@ -51,6 +51,16 @@ mkdir -p $efi_dst || Error "Failed to create directory '$efi_dst'"
 # "cp: failed to preserve ownership for '/tmp/rear-efi.XXXXXXXXXX/EFI/BOOT/kernel': Operation not permitted"
 # because it copies to a VFAT filesystem on the EFI partition (see format/USB/default/300_format_usb_disk.sh)
 # cf. https://github.com/rear/rear/issues/2683
+# The SECURE_BOOT_BOOTLOADER related code below is based on the code in output/ISO/Linux-i386/250_populate_efibootimg.sh
+# because I <jsmeix@suse.de> noticed that Secure Boot works with ISO at least for me, cf.
+# https://github.com/rear/rear/pull/3025#issuecomment-1635876186
+# but not with USB, cf.
+# https://github.com/rear/rear/pull/3025#issuecomment-1643774477
+# so I tried to re-use the ISO Secure Boot code for USB
+# which made Secure Boot "just work" for me with USB
+# but I had to do some (minor) adaptions to make it work
+# within the existing USB code, cf.
+# https://github.com/rear/rear/pull/3031#issuecomment-1653443454
 # Copy UEFI bootloader:
 if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     # For a technical description of Shim see https://mjg59.dreamwidth.org/19448.html
@@ -127,8 +137,14 @@ EOF
             contains_visible_char "$GRUB2_SEARCH_ROOT_COMMAND" || GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --label $efi_label"
             # Create config for GRUB2:
             create_grub2_cfg $efi_dir/kernel $efi_dir/$REAR_INITRD_FILENAME > $efi_dst/grub.cfg
-            # Create bootloader unless Secure Boot is used, this overwrites BOOTX64.efi copied in previous step:
-            test -f "$SECURE_BOOT_BOOTLOADER" || build_bootx86_efi $efi_dst/BOOTX64.efi $efi_dst/grub.cfg "/boot" "$UEFI_BOOTLOADER"
+            # Create BOOTX86.efi but only if we are NOT secure booting.
+            # We are not able to create signed boot loader
+            # so we need to reuse existing one.
+            # See issue #1374
+            # build_bootx86_efi () can be safely used for other scenarios.
+            if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
+                build_bootx86_efi $efi_dst/BOOTX64.efi $efi_dst/grub.cfg "/boot" "$UEFI_BOOTLOADER"
+            fi
         ;;
         (*)
             Error "GRUB version '$grub_version' is neither '0' (legacy GRUB) nor '2' (GRUB 2)"
