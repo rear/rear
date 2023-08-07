@@ -303,8 +303,9 @@ function DoExitTasks () {
     # terminate_descendants_from_children_to_grandchildren that sleeps two times one second
     # so that we wait here three seconds to be on the safe side that a possibly running
     # terminate_descendants_from_children_to_grandchildren has done its job and finished
-    # to avoid that two functions run in parallel that terminate descendant processes:
-    sleep 3
+    # to avoid that two functions run in parallel that terminate descendant processes.
+    # Skip sleeping when all went well and DoExitTasks is called at normal exit:
+    (( EXIT_FAIL_MESSAGE )) && sleep 3
     # Show descendant processes PIDs with their commands in the log
     # so that the plain PIDs in the log get more comprehensible
     # when terminate_descendants_from_grandchildren_to_children is called afterwards:
