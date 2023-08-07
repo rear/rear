@@ -12,7 +12,7 @@ rear - bare metal disaster recovery and system migration tool
 
 
 == SYNOPSIS
-*rear* [*-h*|*--help*] [*-V*|*--version*] [*-dsSv*] [*-D*|*--debugscripts* _SET_] [*-c* _DIR_] [*-C* _CONFIG_] [*-r* _KERNEL_] [*-n*|*--non-interactive*] [--] _COMMAND_ [_ARGS_...]
+*rear* [*-h*|*--help*] [*-V*|*--version*] [*-dsSv*] [*-D*|*--debugscripts* _SET_] [*-c* _DIR_] [*-C* _CONFIG_] [*-r* _KERNEL_] [*-n*|*--non-interactive*] [*-e*|*--expose-secrets*] [--] _COMMAND_ [_ARGS_...]
 
 
 == DESCRIPTION
@@ -57,34 +57,37 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
     usage information
 
 -c DIR::
-    alternative config directory; instead of /etc/rear
+    alternative config directory instead of /etc/rear
 
- -C CONFIG::
-    additional config files; absolute path or relative to config directory
+-C CONFIG::
+    additional config files (absolute path or relative to config directory)
 
 -d::
-    *debug mode* (run many commands verbosely with debug messages in log file - also sets -v)
+    *debug mode*: run many commands verbosely with debug messages in the log file (also sets -v)
 
 -D::
-    *debugscript mode* (log executed commands via 'set -x' - also sets -v and -d)
+    *debugscript mode*: log executed commands via 'set -x' (also sets -v and -d)
 
 --debugscripts SET::
-    same as -d -v -D but *debugscript mode* with 'set -SET'
+    same as -D but *debugscript mode* with 'set -SET'
 
 -r KERNEL::
-    kernel version to use (by default use running kernel)
+    kernel version to use (by default the version of the running kernel)
 
 -s::
-    *simulation mode* (show what scripts are run without executing them)
+    *simulation mode*: show what scripts are run without executing them
 
 -S::
-    *step-by-step mode* (acknowledge each script individually)
+    *step-by-step mode*: acknowledge each script individually
 
 -v::
-    *verbose mode* (show messages what ReaR is doing on the terminal)
+    *verbose mode*: show messages what ReaR is doing on the terminal
 
 -n --non-interactive::
-    *non-interactive mode* (aborts when any user input is required, experimental)
+    *non-interactive mode*: abort in UserInput() if default input does not make ReaR proceed (experimental)
+
+-e --expose-secrets::
+    do not suppress output of confidential values (passwords, encryption keys) in particular in the log file
 
 -V --version::
     version information
