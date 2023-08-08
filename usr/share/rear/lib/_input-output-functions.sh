@@ -466,9 +466,13 @@ function Log () {
 #       { LogSecret "'COMMAND $SECRET_ARGUMENT' failed with exit code $?" ; } 2>>/dev/$SECRET_OUTPUT_DEV
 #       Error "COMMAND failed"
 #   fi
-# The LogSecret function call must be within '{ ... ; } 2>>/dev/$SECRET_OUTPUT_DEV'
+# Every LogSecret function call must be within '{ ... ; } 2>>/dev/$SECRET_OUTPUT_DEV'
 # because otherwise $SECRET_ARGUMENT in the LogSecret function call
-# would leak into the log file in debuscript mode via 'set -x'.
+# would leak into the log file in debuscript mode via 'set -x'
+# in particular also when there is no directly visible secret argument
+# but command substitution may result confidential information like
+#   { LogSecret "The value is: $( COMMAND )" ; } 2>>/dev/$SECRET_OUTPUT_DEV
+# because 'set -x' prints the result of COMMAND as part of the LogSecret argument.
 # The "COMMAND ... succeeded" log messages are needed
 # to have something in the log about COMMAND because the command call itself
 # gets not logged (also not in debugscript mode) unless EXPOSE_SECRETS is set,
