@@ -449,13 +449,13 @@ function Log () {
       #                                                third line
       # to make that parameter expansion also works with bash version 3.1.17 in SLES10:
       log_message="${MESSAGE_PREFIX}${timestamp}${message//$LF/$LF$prefix_blanks}"
+      # Append the log message explicitly to the log file to ensure that intended log messages
+      # actually appear in the log file even inside { ... } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+      # e.g. as in { COMMAND || Log "COMMAND failed" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+      # cf. the 2>>/dev/$DISPENSABLE_OUTPUT_DEV usage in the RequiredSharedObjects function
+      # and in build/GNU/Linux/100_copy_as_is.sh and build/GNU/Linux/390_copy_binaries_libraries.sh
+      echo "$log_message" >>"$RUNTIME_LOGFILE" || true
     } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
-    # Append the log message explicitly to the log file to ensure that intended log messages
-    # actually appear in the log file even inside { ... } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
-    # e.g. as in { COMMAND || Log "COMMAND failed" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
-    # cf. the 2>>/dev/$DISPENSABLE_OUTPUT_DEV usage in the RequiredSharedObjects function
-    # and in build/GNU/Linux/100_copy_as_is.sh and build/GNU/Linux/390_copy_binaries_libraries.sh
-    echo "$log_message" >>"$RUNTIME_LOGFILE" || true
 }
 
 # For messages that should only appear in the log file when EXPOSE_SECRETS is set.
@@ -485,33 +485,36 @@ function LogSecret () {
     # The LogSecret function returns a non-zero exit code (the exit code of 'test "$EXPOSE_SECRETS"')
     # when EXPOSE_SECRETS is not set which can be used to log a generic fallback message like:
     #   { LogSecret "SECRET message" || Log "generic message" ; } 2>>/dev/$SECRET_OUTPUT_DEV
-    test "$EXPOSE_SECRETS" && Log "$@"
+    { test "$EXPOSE_SECRETS" && Log "$@" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # For messages that should only appear in the log file when the user launched 'rear -d' in debug mode:
 function Debug () {
-    test "$DEBUG" && Log "$@" || true
+    { test "$DEBUG" && Log "$@" || true ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # For messages that should appear in the log file when the user launched 'rear -d' in debug mode and
 # that also appear on the user's terminal (in debug mode the verbose mode is set automatically):
 function DebugPrint () {
-    Debug "$@"
-    test "$DEBUG" && Print "$@" || true
+    { Debug "$@"
+      test "$DEBUG" && Print "$@" || true
+    } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # For messages that should appear in the log file and also
 # on the user's terminal when the user launched 'rear -v' in verbose mode:
 function LogPrint () {
-    Log "$@"
-    Print "$@"
+    { Log "$@"
+      Print "$@"
+    } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # For output plus logging that is intended for user dialogs.
 # 'LogUserOutput' belongs to 'UserOutput' like 'LogPrint' belongs to 'Print':
 function LogUserOutput () {
-    Log "$@"
-    UserOutput "$@"
+    { Log "$@"
+      UserOutput "$@"
+    } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # For important messages that should appear in the log file and also
@@ -531,14 +534,15 @@ function LogUserOutput () {
 # Messages that are no real error messages should not be prefixed with 'Warning: '
 # cf. https://blog.schlomo.schapiro.org/2015/04/warning-is-waste-of-my-time.html
 function LogPrintError () {
-    Log "$@"
-    PrintError "$@"
+    { Log "$@"
+      PrintError "$@"
+    } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # For messages that should only appear in the syslog:
 function LogToSyslog () {
     # Send a line to syslog or messages file with input string with the tag 'rear':
-    logger -t rear -i "${MESSAGE_PREFIX}$*"
+    { logger -t rear -i "${MESSAGE_PREFIX}$*" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # Check if any of the arguments is executable (logical OR condition).
