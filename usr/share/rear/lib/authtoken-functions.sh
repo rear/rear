@@ -18,6 +18,15 @@
 # The main reason is that this functions could leak secrets when executed,
 # in particular with 'set -x' (e.g. when rear is run in debugscript mode),
 # see https://github.com/rear/rear/issues/3035
+# Another reason is that user output and input is done via 'echo' and 'read'
+# instead of using ReaR functions like LogPrint, UserOutput,... and UserInput
+# which is correct here because those ReaR user input/output functions
+# cannot be made available at ReaR system startup time
+# because lib/lib/_input-output-functions.sh cannot be sourced there
+# because lib/_input-output-functions.sh does also some special stuff
+# (like adding EXIT_TASKS and STDIN STDOUT and STDERR redirections)
+# cf. https://github.com/rear/rear/pull/2956#discussion_r1133701768
+# and https://github.com/rear/rear/pull/2956#discussion_r1133714369
 
 function authtkn_load() {
     # $1 container path
