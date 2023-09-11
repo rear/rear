@@ -21,7 +21,7 @@
 
 FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg /boot/grub/device.map /boot/efi/*/*/grub.cfg /etc/lvm/lvm.conf /etc/lilo.conf /etc/yaboot.conf /etc/default/grub_installdevice"
 
-OLD_ID_FILE="${VAR_DIR}/recovery/diskbyid_mappings"
+OLD_ID_FILE="$VAR_DIR/recovery/diskbyid_mappings"
 NEW_ID_FILE="$TMP_DIR/diskbyid_mappings"
 
 [ ! -s "$OLD_ID_FILE" ] && return 0
@@ -109,7 +109,7 @@ for file in $FILES; do
         fi
     fi
     # keep backup
-    cp $v "$realfile" "${realfile}.rearbak"
+    cp $v "$realfile" "$realfile.rearbak"
     # we should consider creating a sed script within a string
     # and then call sed once (as done other times)
     while read ID DEV_NAME ID_NEW; do
