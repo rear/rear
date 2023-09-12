@@ -417,6 +417,11 @@ Log "Saving disks and their partitions"
                 # Each value must exist and each value must be a single non-blank word so we 'test' without quoting the value:
                 test $devname || Error "Invalid 'disk' entry (no disk device name for '$disk')"
                 test $devsize || Error "Invalid 'disk $devname' entry (no device size for '$devname')"
+                # Validation error can happen when /dev/sdX is an empty SD card slot without medium,
+                # see https://github.com/rear/rear/issues/2810 https://github.com/rear/rear/issues/2958
+                # this is normal, but such device must be skipped and not be added to the layout
+                # - it does not contain any data anyway.
+                # See https://github.com/rear/rear/pull/3047
                 if ! validation_error=$(is_disk_valid $devname) ; then
                     LogPrintError "Ignoring $blockd: $validation_error"
                     continue
