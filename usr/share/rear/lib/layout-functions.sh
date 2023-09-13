@@ -819,6 +819,41 @@ is_disk_a_pv() {
     return 0
 }
 
+# Check whether disk is suitable for being added to layout
+# Can be used to skip obviously unsuitable/broken devices
+# (missing device node, zero size, device can't be opened).
+# Should not be used to skip potential mapping targets before layout restoration
+# - an invalid disk may become valid later, for example if it is a DASD that needs
+# low-level formatting (see 090_include_dasd_code.sh and 360_generate_dasd_format_code.sh),
+# unformatted DASDs show zero size.
+# Returns 0 if the device is ok
+# Returns nonzero code if it should be skipped, and a text describing the error
+# on stdout
+# usage example:
+# local err
+# if ! err=$(is_disk_valid /dev/sda); then
+
+function is_disk_valid {
+    local disk="$1"
+    local size
+
+    if ! test -b "$disk" ; then
+        echo "$disk is not a block device"
+        return 1
+    fi
+    # capture stdout in a variable and redirect stderr to stdout - the error message
+    # will be our output
+    if { size=$(blockdev --getsize64 "$disk") ; } 2>&1 ; then
+        if ! test "$size" -gt 0 2>/dev/null ; then
+            echo "$disk has invalid size $size"
+            return 1
+        fi
+        return 0
+    else
+        return 1
+    fi
+}
+
 function is_multipath_used {
     # Return 'false' if there is no multipath command:
     type multipath &>/dev/null || return 1
