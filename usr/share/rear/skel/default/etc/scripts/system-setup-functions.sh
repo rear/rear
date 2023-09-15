@@ -16,7 +16,8 @@ function unattended_recovery() {
 }
 
 function automatic_recovery() {
-    # The unattended recovery mode implies automatic recovery (see the implementations below)
+    # The unattended recovery mode implies automatic recovery
+    # (see the implementation in skel/default/etc/scripts/run-automatic-rear)
     # so that in unattended mode the automatic recovery code below must not be run
     # otherwise first the automatic recovery code and then the unattended recovery code
     # get run automatically one after the other where the unattended recovery fails
