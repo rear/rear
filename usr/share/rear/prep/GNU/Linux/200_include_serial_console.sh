@@ -59,6 +59,7 @@ if test "$serial_console_devices" ; then
     if test "$cmdline_add_console" ; then
         KERNEL_CMDLINE+="$cmdline_add_console"
         DebugPrint "Appended '$cmdline_add_console' to KERNEL_CMDLINE"
+        USE_SERIAL_CONSOLE="yes"
         # No further automatisms when a 'console=...' kernel cmd parameter was set
         # via SERIAL_CONSOLE_DEVICES_KERNEL or SERIAL_CONSOLE_DEVICES:
         return
