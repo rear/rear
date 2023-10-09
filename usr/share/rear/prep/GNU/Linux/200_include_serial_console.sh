@@ -12,6 +12,7 @@ elif has_binary agetty ; then
     # Fedora, RHEL, SLES,...
     getty_binary="agetty"
 else
+    is_true "$USE_SERIAL_CONSOLE" && Error "Failed to find 'getty' or 'agetty' (USE_SERIAL_CONSOLE is 'true')"
     LogPrintError "No serial console support (failed to find 'getty' or 'agetty')"
     USE_SERIAL_CONSOLE="no"
 fi
@@ -23,6 +24,7 @@ PROGS+=( "$getty_binary" )
 if has_binary stty ; then
     PROGS+=( stty )
 else
+    is_true "$USE_SERIAL_CONSOLE" && Error "Failed to find 'stty' (USE_SERIAL_CONSOLE is 'true')"
     LogPrintError "No serial console support (failed to find 'stty')"
     USE_SERIAL_CONSOLE="no"
 fi
