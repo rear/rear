@@ -12,5 +12,5 @@ Please fill in the following items before submitting a new pull request:
 
 * How was this pull request tested?
 
-* Brief description of the changes in this pull request:
+* Description of the changes in this pull request:
 
