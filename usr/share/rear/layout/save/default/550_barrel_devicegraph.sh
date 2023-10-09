@@ -8,7 +8,11 @@ is_false "$BARREL_DEVICEGRAPH" && return 0
 # Skip it when there is no 'barrel' program
 # but error out when the user has explicitly specified to use barrel:
 if has_binary barrel ; then
-    LogPrint "Also saving storage layout as 'barrel' devicegraph"
+    if is_true "$BARREL_DEVICEGRAPH" ; then
+        LogPrint "Also saving storage layout as 'barrel' devicegraph"
+    else
+        LogPrint "Trying to also save storage layout as 'barrel' devicegraph (found 'barrel' command)"
+    fi
 else
     is_true "$BARREL_DEVICEGRAPH" && Error "Cannot find 'barrel' command (BARREL_DEVICEGRAPH is 'true')"
     DebugPrint "Skip saving storage layout as 'barrel' devicegraph (no 'barrel' command)"
