@@ -95,8 +95,7 @@ for kernel_option in $( cat /proc/cmdline ) ; do
         # copied from the currently running original system
         # via rescue/GNU/Linux/290_kernel_cmdline.sh that runs later:
         COPY_KERNEL_PARAMETERS+=( console )
-        kernel_option="console_found"
-        break
+        return
     fi
 done
-test "$kernel_option" = "console_found" || DebugPrint "No 'console=...' setting for recovery system kernel (none in /proc/cmdline)"
+DebugPrint "No 'console=...' setting for recovery system kernel (none in /proc/cmdline)"
