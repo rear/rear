@@ -75,7 +75,25 @@ $grub_install_binary $USB_GRUB2_INSTALL_OPTIONS --boot-directory=$usb_boot_dir -
 # grub[2]-install creates the $BUILD_DIR/outputfs/boot/grub[2] sub-directory that is needed
 # to create the GRUB2 config $BUILD_DIR/outputfs/boot/grub[2].cfg in the next step:
 DebugPrint "Creating GRUB2 config for legacy BIOS boot as USB bootloader"
+# In default.conf there is USB_BOOT_PART_SIZE="0" i.e. no (optional) boot partition
+# and USB_DEVICE_BOOT_LABEL="REARBOOT" which conflicts with "no boot partition"
+# so we need to use the ReaR data partition label as fallback
+# when "lsblk" shows nothing with a USB_DEVICE_BOOT_LABEL.
+# USB_DEVICE_BOOT_LABEL must not be empty (otherwise grep "" falsely succeeds):
 contains_visible_char "$USB_DEVICE_BOOT_LABEL" || USB_DEVICE_BOOT_LABEL="REARBOOT"
+if lsblk -no LABEL $RAW_USB_DEVICE | grep "$USB_DEVICE_BOOT_LABEL" ; then
+    DebugPrint "Found USB_DEVICE_BOOT_LABEL '$USB_DEVICE_BOOT_LABEL' on $RAW_USB_DEVICE"
+else
+    LogPrintError "Could not find USB_DEVICE_BOOT_LABEL '$USB_DEVICE_BOOT_LABEL' on $RAW_USB_DEVICE"
+    # USB_DEVICE_FILESYSTEM_LABEL must not be empty (otherwise grep "" falsely succeeds):
+    contains_visible_char "$USB_DEVICE_FILESYSTEM_LABEL" || USB_DEVICE_FILESYSTEM_LABEL="REAR-000"
+    if lsblk -no LABEL $RAW_USB_DEVICE | grep "$USB_DEVICE_FILESYSTEM_LABEL" ; then
+        LogPrintError "Using USB_DEVICE_FILESYSTEM_LABEL '$USB_DEVICE_FILESYSTEM_LABEL' as USB_DEVICE_BOOT_LABEL"
+        USB_DEVICE_BOOT_LABEL="$USB_DEVICE_FILESYSTEM_LABEL"
+    else
+        Error "Found neither USB_DEVICE_BOOT_LABEL '$USB_DEVICE_BOOT_LABEL' nor USB_DEVICE_FILESYSTEM_LABEL '$USB_DEVICE_FILESYSTEM_LABEL' on $RAW_USB_DEVICE"
+    fi
+fi
 # We need to set the GRUB environment variable 'root' to the partition device with filesystem label USB_DEVICE_BOOT_LABEL
 # because GRUB's default 'root' (or GRUB's 'root' identifcation heuristics) would point to the ramdisk but neither kernel
 # nor initrd are located on the ramdisk but on the partition device with filesystem label USB_DEVICE_BOOT_LABEL.
