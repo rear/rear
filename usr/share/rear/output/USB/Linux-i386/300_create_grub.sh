@@ -78,7 +78,11 @@ DebugPrint "Creating GRUB2 config for legacy BIOS boot as USB bootloader"
 # In default.conf there is USB_BOOT_PART_SIZE="0" i.e. no (optional) boot partition
 # and USB_DEVICE_BOOT_LABEL="REARBOOT" which conflicts with "no boot partition"
 # so we need to use the ReaR data partition label as fallback
-# when "lsblk" shows nothing with a USB_DEVICE_BOOT_LABEL.
+# when 'lsblk' shows nothing with a USB_DEVICE_BOOT_LABEL.
+# Very old Linux distributions that do not contain lsblk (e.g. SLES10)
+# are not supported by ReaR and the code below will error out there.
+# "lsblk -no LABEL /dev/..." works e.g. on SLES11 SP3 (which is also not supported)
+# so the code should work on all Linux distributions that are supported by ReaR.
 # USB_DEVICE_BOOT_LABEL must not be empty (otherwise grep "" falsely succeeds):
 contains_visible_char "$USB_DEVICE_BOOT_LABEL" || USB_DEVICE_BOOT_LABEL="REARBOOT"
 if lsblk -no LABEL $RAW_USB_DEVICE | grep "$USB_DEVICE_BOOT_LABEL" ; then
