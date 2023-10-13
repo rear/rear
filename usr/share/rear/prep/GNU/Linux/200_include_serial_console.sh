@@ -1,4 +1,21 @@
 
+# This script prep/GNU/Linux/200_include_serial_console.sh
+# is the first ...console... script that is run for "rear mkrescue/mkbackup".
+#
+# When USE_SERIAL_CONSOLE is empty then this script decides
+# if USE_SERIAL_CONSOLE is kept empty
+# or (provided there is sufficient reason)
+# it sets USE_SERIAL_CONSOLE to 'no' or 'yes'.
+# It sets USE_SERIAL_CONSOLE to 'no'
+# when serial consoles cannot work in the recovery system.
+# It sets USE_SERIAL_CONSOLE to 'yes'
+# when a serial console will be set up for the recovery system kernel.
+# Only when a serial console will be actually set up for the recovery system kernel,
+# then it makes sense to also set up a serial console for the recovery system bootloader.
+# So serial console setup for the recovery system bootloader is only done if USE_SERIAL_CONSOLE="yes"
+# because an empty USE_SERIAL_CONSOLE must not result serial console setup for the recovery system bootloader
+# (without actual serial console setup for the recovery system kernel).
+
 # Always try to include getty or agetty as we do not know in advance whether they are needed
 # (the user may boot the recovery system with manually specified kernel options
 # to get serial console support in his recovery system).
