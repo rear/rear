@@ -19,23 +19,20 @@
 # Always try to include getty or agetty as we do not know in advance whether they are needed
 # (the user may boot the recovery system with manually specified kernel options
 # to get serial console support in his recovery system).
-# For serial support we need to include the agetty binary,
-# but Debian distro's use getty instead of agetty:
-local getty_binary=""
+# For serial console support we need to include 'getty' or 'agetty'.
+# Debian distributions (in particular Ubuntu) use 'getty'.
+# Fedora, RHEL, SLES,... use 'agetty'.
 if has_binary getty ; then
-    # Debian, Ubuntu,...
-    getty_binary="getty"
+    PROGS+=( getty )
 elif has_binary agetty ; then
-    # Fedora, RHEL, SLES,...
-    getty_binary="agetty"
+    PROGS+=( agetty )
 else
     is_true "$USE_SERIAL_CONSOLE" && Error "Failed to find 'getty' or 'agetty' (USE_SERIAL_CONSOLE is 'true')"
     LogPrintError "No serial console support (failed to find 'getty' or 'agetty')"
     USE_SERIAL_CONSOLE="no"
 fi
-PROGS+=( "$getty_binary" )
 
-# Also try to include stty which is (currently) only needed for serial console support
+# Also try to include 'stty' which is (currently) only needed for serial console support
 # in skel/default/etc/scripts/system-setup.d/45-serial-console.sh
 # and lib/serial-functions.sh
 if has_binary stty ; then
