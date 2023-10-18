@@ -5,6 +5,8 @@
 # Save the current disk usage (in POSIX output format) in the rescue image
 # excluding possibly mounted ReaR target USB data and USB ESP partitions:
 local original_disk_space_usage_file="$VAR_DIR/layout/config/df.txt"
+# USB_DEVICE_FILESYSTEM_LABEL must not be empty (otherwise 'readlink -f "/dev/disk/by-label/"' would result '/dev/disk/by-label'):
+contains_visible_char "$USB_DEVICE_FILESYSTEM_LABEL" || USB_DEVICE_FILESYSTEM_LABEL="REAR-000"
 local rear_USB_data_partition="$( readlink -f "/dev/disk/by-label/$USB_DEVICE_FILESYSTEM_LABEL" )"
 local rear_USB_ESP_partition="$( readlink -f /dev/disk/by-label/REAR-EFI )"
 # Careful with "egrep -v" patterns because with an empty pattern egrep -v '' discards all lines:
