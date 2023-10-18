@@ -59,8 +59,9 @@ if test "$autofs_mountpoints" ; then
     done
     exclude_autofs_and_below_mountpoints="$( tr ' ' '|' <<<"${autofs_and_below_mountpoints[@]}" )"
 fi
-# BUILD_DIR can be used in 'grep -vE "this|$BUILD_DIR|that"' because it is never empty (see usr/sbin/rear)
-# because with any empty part 'grep -vE "this||that"' would output nothing at all:
+# BUILD_DIR can be used in 'grep -vE "this|$BUILD_DIR|that"' because it is never empty (see usr/sbin/rear).
+# USB_DEVICE_FILESYSTEM_LABEL must not be empty otherwise 'grep -vE "this|that|"' would output nothing at all:
+contains_visible_char "$USB_DEVICE_FILESYSTEM_LABEL" || USB_DEVICE_FILESYSTEM_LABEL="REAR-000"
 local excluded_other_stuff="/sys/|$BUILD_DIR|$USB_DEVICE_FILESYSTEM_LABEL"
 # The trailing space in 'type ($excluded_fs_types) |' is intentional:
 local mountpoints
