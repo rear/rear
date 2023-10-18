@@ -29,7 +29,7 @@ function get_serial_console_devices () {
         # cf. https://github.com/rear/rear/pull/2749#issuecomment-1196650631
         # (if needed the user can specify what he wants via SERIAL_CONSOLE_DEVICES, see above):
         if ! test -c "/dev/$console_option_device" ; then
-            LogPrintError "Found '$kernel_option' in /proc/cmdline but /dev/$console_option_device is no character device"
+            LogPrintError "Found '$kernel_option' in /proc/cmdline but '/dev/$console_option_device' is no character device"
             continue
         fi
         echo /dev/$console_option_device
