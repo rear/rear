@@ -27,10 +27,8 @@ function get_serial_console_devices () {
         # in the currently running original system because the default assumption is
         # that the replacement system has same hardware as the original system,
         # cf. https://github.com/rear/rear/pull/2749#issuecomment-1196650631
-        # (if needed the user can specify what he wants via SERIAL_CONSOLE_DEVICES, see above).
-        # Intentionally /dev/$console_option_device is unquoted to let the test also fail
-        # when $console_option_device is not a single non-empty word (then something is wrong):
-        if ! test -c /dev/$console_option_device ; then
+        # (if needed the user can specify what he wants via SERIAL_CONSOLE_DEVICES, see above):
+        if ! test -c "/dev/$console_option_device" ; then
             LogPrintError "Found '$kernel_option' in /proc/cmdline but /dev/$console_option_device is no character device"
             continue
         fi
