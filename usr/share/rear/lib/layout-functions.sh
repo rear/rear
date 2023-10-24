@@ -962,6 +962,8 @@ function UdevQueryName() {
 }
 
 # Guess the part device name from a device, based on the OS distro Level.
+# See https://github.com/rear/rear/commit/14c062627e15d3be799b1a8bd220634a0aa032b9
+# which belongs to https://github.com/rear/rear/pull/1450
 function get_part_device_name_format() {
     if [ -z "$1" ] ; then
         BugError "get_part_device_name_format function called without argument (device)"
@@ -1121,10 +1123,10 @@ function apply_layout_mappings() {
     # Step 0:
     # For each original device in the mapping file generate a unique word (the "replacement").
     # Step 1:
-    # In file_to_migrate temporarily replace all original devices with their matching unique word.
+    # In file_to_migrate replace (temporarily) all original devices with their matching unique word.
     # E.g. "disk sda and disk sdb" would become "disk _REAR0_ and disk _REAR1_" temporarily in file_to_migrate.
     # Step 2:
-    # In file_to_migrate replace all unique replacement words with the matching target device of the source device.
+    # In file_to_migrate re-replace all unique replacement words with the matching target device of the source device.
     # E.g. for "sda -> sdb and sdb -> sda" in the mapping file and the unique words _REAR0_ for sda and _REAR1_ for sdb
     # "disk _REAR0_ and disk _REAR1_" would become "disk sdb and disk sda" in the final file_to_migrate
     # so that the circular replacement "sda -> sdb and sdb -> sda" is done in file_to_migrate.
@@ -1186,22 +1188,32 @@ function apply_layout_mappings() {
     while read original replacement junk ; do
         # Skip lines that have wrong syntax:
         test "$original" -a "$replacement" || continue
-        # Replace partitions with unique replacement PATTERN (we normalize cciss/c0d0p1 to _REAR5_1)
-        # Due to multipath partion naming complexity, all known partition naming type (mpatha1,mpathap1,mpatha-part1,mpatha_part1) will be replaced by _REAR"X"_1
+        # Replace partitions with unique replacement words:
+        # For example we normalize /dev/cciss/c0d1p2 to something like _REAR5_2
+        # (therein the '5' is arbitrary but the '2' is the actual partition number).
+        # Due to multipath partion naming complexity, all known partition naming types for example
+        # /dev/mapper/mpatha4 /dev/mapper/mpathap4 /dev/mapper/mpatha-part4 /dev/mapper/mpatha_part4
+        # are replaced by the same normalized replacement word like _REAR7_4
+        # (therein the '7' is arbitrary but the '4' is the actual partition number)
+        # that is then in step 2 re-replaced with the right partion naming scheme
+        # via the get_part_device_name_format() function,
+        # cf. https://github.com/rear/rear/pull/1765
+        # Because $original (e.g. /dev/sda1) contains slashes sed '/regexp/' cannot be used
+        # so sed '\|regexp|' is used (under the assumption that no | characters are in $original):
         sed -i -r "\|$original|s|$original(p)*([-_]part)*([0-9]+)|$replacement\3|g" "$file_to_migrate"
-        # Replace whole devices
+        # Replace whole devices with unique replacement words:
         # Note that / is a word boundary, so is matched by \<, hence the extra /
         sed -i -r "\|$original|s|/\<${original#/}\>|${replacement}|g" "$file_to_migrate"
     done < "$replacement_file"
 
     # Step 2:
-    # Replace all unique replacement words with the matching target device of the source device in the mapping file.
+    # Re-replace all unique replacement words with the matching target device of the source device in the mapping file.
     # E.g. when the file_to_migrate content was in step 1 above temporarily changed to
     #   disk _REAR0_
     #   disk _REAR1_
     #   disk _REAR3_
     #   disk _REAR2_
-    # it will now get finally replaced (with the replacement file and mapping file contents in step 0 above) by
+    # it will now get finally re-replaced (with the replacement file and mapping file contents in step 0 above) by
     #   disk /dev/sdb
     #   disk /dev/sda
     #   disk _REAR3_
@@ -1213,9 +1225,11 @@ function apply_layout_mappings() {
         test "$source" -a "$target" || continue
         # Skip when there is no replacement:
         replacement=$( get_replacement "$source" ) || continue
-        # Replace whole device:
+        # Re-replace whole devices:
+        # Use the same sed '\|regexp|s...' syntax as in step 1 above also here to be on the safe side
+        # (there are no slashes in $replacement like '_REAR0_' but $target like '/dev/sda' contains slashes):
         sed -i -r "\|$replacement|s|$replacement\>|$target|g" "$file_to_migrate"
-        # Replace partitions:
+        # Re-replace partitions:
         target=$( get_part_device_name_format "$target" )
         sed -i -r "\|$replacement|s|$replacement([0-9]+)|$target\1|g" "$file_to_migrate"
     done < <( grep -v '^#' "$MAPPING_FILE" )
