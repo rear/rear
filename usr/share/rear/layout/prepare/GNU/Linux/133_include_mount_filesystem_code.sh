@@ -36,13 +36,8 @@ mount_fs() {
                 # so that those mount options are removed here. All btrfs subvolume handling
                 # happens in the btrfs_subvolumes_setup_SLES function in 136_include_btrfs_subvolumes_SLES_code.sh
                 # or in the btrfs_subvolumes_setup_generic function in 135_include_btrfs_subvolumes_generic_code.sh
-                # First add a comma at the end so that it is easier to remove a mount option at the end:
-                value=${value/%/,}
-                # Remove all subvolid= and subvol= mount options (the extglob shell option is enabled in rear):
-                value=${value//subvolid=*([^,]),/}
-                value=${value//subvol=*([^,]),/}
-                # Remove all commas at the end:
-                mountopts=${value/%,/}
+                # Remove all subvolid= and subvol= mount options:
+                mountopts="$( remove_mount_options_values $value subvolid subvol )"
                 ;;
         esac
     done
