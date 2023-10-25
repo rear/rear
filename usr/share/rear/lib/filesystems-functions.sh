@@ -256,3 +256,40 @@ function total_target_fs_used_disk_space() {
         --exclude-type=tmpfs --exclude-type=devtmpfs --exclude-type=sysfs --exclude-type=none \
         $(mount | sed -n -e "\#^/.*$TARGET_FS_ROOT#s/ .*//p") | sed -E -n -e '$s/[^ ]+ +[^ ]+ +([^ ]+).*/\1/p'
 }
+
+
+# $1 is a mount command argument (string containing comma-separated
+# mount options). The remaining arguments to the function ($2 ... )
+# specify the mount options to remove from $1, together with a trailing "="
+# and any value that follows each option.
+# For example, the call
+# "remove_mount_options_values nodev,uid=1,rw,gid=1 uid gid"
+# returns "nodev,rw".
+# There is no support for removing a mount option without a value and "=",
+# so "remove_mount_options_values nodev,uid=1,rw,gid=1 rw" will not work.
+# The function will return the modified string on stdout.
+
+function remove_mount_options_values () {
+    local str="$1"
+
+    shift
+    # First add a comma at the end so that it is easier to remove a mount option at the end:
+    str="${str/%/,}"
+    for i in "$@" ; do
+        # FIXME this also removes trailing strings at the end of longer words
+        # For example if one wants to remove any id=... option,
+        # the function will also replace "uid=1" by "u" by removing
+        # the trailing "id=1", which is not intended.
+        # Not easy to fix because $str can contain prefixes which are not
+        # mount options but arguments to the mount command itself
+        # (in particluar, "-o ").
+        # FIXME this simple approach would fail in case of mount options
+        # containing commas, for example the "context" option values,
+        # see mount(8)
+
+        # the extglob shell option is enabled in rear
+        str="${str//$i=*([^,]),/}"
+    done
+    # Remove all commas at the end:
+    echo "${str/%,/}"
+}
