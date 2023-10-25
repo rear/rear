@@ -29,6 +29,7 @@ mount_fs() {
         case $name in
             (options)
                 # Do not mount nodev, as chrooting later on would fail:
+                # FIXME: naive approach, will replace any "nodev" inside longer options/values
                 value=${value//nodev/dev}
                 # btrfs mount options like subvolid=259 or subvol=/@/.snapshots/1/snapshot
                 # from the old system cannot work here for recovery because btrfs subvolumes
