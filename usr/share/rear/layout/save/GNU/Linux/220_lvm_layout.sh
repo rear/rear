@@ -18,7 +18,7 @@ local already_processed_lvs=()
 local lv_layout_supported lvs_fields
 local origin lv vg
 local layout modules
-local thinpool chunksize stripes stripesize segmentsize
+local thinpool chunksize stripes stripesize segmentsize poolmetadatasize
 local kval infokval
 local lvs_exit_code
 
@@ -200,18 +200,18 @@ local lvs_exit_code
 
     # Specify the fields for the lvs command depending on whether or not the 'lv_layout' field is supported:
     if is_true $lv_layout_supported ; then
-        lvs_fields="origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size"
+        lvs_fields="origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size,lv_metadata_size"
     else
         # Use the 'modules' field as fallback replacement when the 'lv_layout' field is not supported:
-        lvs_fields="origin,lv_name,vg_name,lv_size,modules,pool_lv,chunk_size,stripes,stripe_size,seg_size"
+        lvs_fields="origin,lv_name,vg_name,lv_size,modules,pool_lv,chunk_size,stripes,stripe_size,seg_size,lv_metadata_size"
     fi
 
     # Example output of "lvs --separator=':' --noheadings --units b --nosuffix -o $lvs_fields"
-    # with lvs_fields="origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size"
+    # with lvs_fields="origin,lv_name,vg_name,lv_size,lv_layout,pool_lv,chunk_size,stripes,stripe_size,seg_size,lv_metadata_size"
     # i.e. when the 'lv_layout' field is supported:
-    #   :home:system:6148849664:linear::0:1:0:6148849664
-    #   :root:system:14050918400:linear::0:1:0:14050918400
-    #   :swap:system:1262485504:linear::0:1:0:1262485504
+    #   :home:system:6148849664:linear::0:1:0:6148849664:
+    #   :root:system:14050918400:linear::0:1:0:14050918400:
+    #   :swap:system:1262485504:linear::0:1:0:1262485504:
     # There are two leading blanks in the output (at least on SLES12-SP4 with LVM 2.02.180 and SLES15-SP3 with LVM 2.03.05).
     # The 'lvs' output lines ordering does not match the ordering of the LVs kernel device nodes /dev/dm-N
     #   # lsblk -ipbo NAME,KNAME,TYPE,FSTYPE,SIZE,MOUNTPOINT /dev/sda2
@@ -251,9 +251,9 @@ local lvs_exit_code
     # that the recreated system did not boot (boot screen showed GRUB but there it hung with constant 100% CPU usage)
     # so automatically shrinking only the biggest LVs avoids that a relatively small 'swap' LV gets shrinked.
     # With 'sort -n -t ':' -k 4' the above 'lvs' output lines become
-    #   :swap:system:1262485504:linear::0:1:0:1262485504
-    #   :home:system:6148849664:linear::0:1:0:6148849664
-    #   :root:system:14050918400:linear::0:1:0:14050918400
+    #   :swap:system:1262485504:linear::0:1:0:1262485504:
+    #   :home:system:6148849664:linear::0:1:0:6148849664:
+    #   :root:system:14050918400:linear::0:1:0:14050918400:
     # so only the 'root' LV may get automatically shrinked if needed.
     lvm lvs --separator=':' --noheadings --units b --nosuffix -o $lvs_fields | sort -n -t ':' -k 4 | while read line ; do
 
@@ -304,6 +304,9 @@ local lvs_exit_code
         # With the above example segmentsize=19927138304 and segmentsize=1535115264
         segmentsize="$( echo "$line" | awk -F ':' '{ print $10 }' )"
 
+        # With the above example poolmetadatasize=""
+        poolmetadatasize="$( echo "$line" | awk -F ':' '{ print $11 }' )"
+
         # TODO: Explain what that code is meant to do.
         # In particular a more explanatory variable name than 'kval' might help.
         # In 110_include_lvm_code.sh there is a comment what 'kval' means there
@@ -312,6 +315,7 @@ local lvs_exit_code
         kval=""
         infokval=""
         [ -z "$thinpool" ] || kval="${kval:+$kval }thinpool:$thinpool"
+        [ -z "$poolmetadatasize" ] || kval="${kval:+$kval }poolmetadatasize:${poolmetadatasize}b"
         [ $chunksize -eq 0 ] || kval="${kval:+$kval }chunksize:${chunksize}b"
         [ $stripesize -eq 0 ] || kval="${kval:+$kval }stripesize:${stripesize}b"
         [ $segmentsize -eq $size ] || infokval="${infokval:+$infokval }segmentsize:${segmentsize}b"
