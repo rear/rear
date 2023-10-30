@@ -1,14 +1,8 @@
 <!-- Relax-and-Recover (ReaR) Issue Template
-
-Fill in the following items before submitting a new issue.
-(quick response is not guaranteed with free support):
-
-Please use proper GitHub Flavoured Markdown,
-see "Basic writing and formatting syntax" at
+Fill in the following items when submitting a new issue.
+Use GitHub Markdown, see "Basic writing and formatting syntax" at
 https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
-
--- You can safely remove this comment block
--->
+Support is voluntary without guarantee/warranty/liability -->
 
 * ReaR version ("/usr/sbin/rear -V"):
 
