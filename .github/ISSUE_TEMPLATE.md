@@ -1,7 +1,7 @@
 <!-- Relax-and-Recover (ReaR) Issue Template
 Fill in the following items when submitting a new issue.
-Use GitHub Markdown, see "Basic writing and formatting syntax" at
-https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
+Use GitHub Markdown, see "Basic writing and formatting syntax" on
+https://docs.github.com/en/get-started/writing-on-github
 Support is voluntary without guarantee/warranty/liability -->
 
 * ReaR version ("/usr/sbin/rear -V"):
