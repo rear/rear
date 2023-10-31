@@ -307,11 +307,16 @@ local lvs_exit_code
         # With the above example poolmetadatasize=""
         poolmetadatasize="$( echo "$line" | awk -F ':' '{ print $11 }' )"
 
-        # TODO: Explain what that code is meant to do.
-        # In particular a more explanatory variable name than 'kval' might help.
-        # In 110_include_lvm_code.sh there is a comment what 'kval' means there
-        #   # kval: "key:value" pairs, separated by spaces
-        # so probably 'kval' means the same here, but what is 'infokval'?
+        # kval is a string of space-separated key:value pairs. Key names are chosen to represent
+        # long options to lvcreate, and value will be the parameter for each long option.
+        # e.g. "chunksize:${chunksize}b" will eventually become a --chunksize=${chunksize}b
+        # argument to lvcreate.
+        # This way 110_include_lvm_code.sh which constructs the arguments to lvcreate
+        # can be kept generic and does not need to be updated every time an argument is added,
+        # as long as the argument can follow this generic scheme.
+        # infokval are key:value pairs that are not used when restoring the layout
+        # and are kept in disklayout.conf only as comments for information
+        # (because the setting is not easy or desirable to preserve).
         kval=""
         infokval=""
         [ -z "$thinpool" ] || kval="${kval:+$kval }thinpool:$thinpool"
