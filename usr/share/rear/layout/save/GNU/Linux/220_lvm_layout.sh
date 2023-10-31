@@ -130,7 +130,7 @@ local lvs_exit_code
             echo "# Skipping PV $pdev that is not part of a valid VG (VG '$vgrp' empty or more than one word):"
             contains_visible_char "$vgrp" || vgrp='<missing_VG>'
             echo "# lvmdev /dev/$vgrp $pdev $uuid $size"
-            # Continue with the next line in the output of "lvm pvdisplay -c"
+            # Continue with the next line in the output of "lvm pvdisplay -C"
             continue
         fi
         # With the above example the output is:
@@ -138,10 +138,10 @@ local lvs_exit_code
         echo "lvmdev /dev/$vgrp $pdev $uuid $size"
 
     done
-    # Check the exit code of "lvm pvdisplay -c"
-    # in the "lvm pvdisplay -c | while read line ; do ... done" pipe:
+    # Check the exit code of "lvm pvdisplay -C"
+    # in the "lvm pvdisplay -C ... | while read line ; do ... done" pipe:
     pvdisplay_exit_code=${PIPESTATUS[0]}
-    test $pvdisplay_exit_code -eq 0 || Error "LVM command 'lvm pvdisplay -c' failed with exit code $pvdisplay_exit_code"
+    test $pvdisplay_exit_code -eq 0 || Error "LVM command 'lvm pvdisplay -C ... -o pv_name,vg_name,pv_size,pv_uuid' failed with exit code $pvdisplay_exit_code"
 
     # Get the volume group configuration:
     # Format: lvmgrp <volume_group> <extentsize> [<size(extents)>] [<size(bytes)>]
