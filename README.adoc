@@ -49,59 +49,36 @@ All other required programs (like sort, dd, grep, etc.) are so common, that
 we don't list them as requirements. In case your specific workflow requires
 additional tools, Relax-and-Recover will tell you.
 
-
-INSTALLATION
-------------
-On RPM based systems you should use the rear RPM package. Either obtain it
-from the Relax-and-Recover homepage or build it yourself from the source
-tree with:
-
-   make rpm
-
-This will create an RPM for your distribution. The RPM is not platform-
-dependent and should work also on other RPM based distributions.
-
-On DEB based systems you can execute the command:
-
-  make deb
-
-You can also simply install manually via
-
-  make install
-
-however, please don't mix installation methods so you should remove a package
-before doing a manual installation
-
 QUICK START GUIDE
 -----------------
-This quick start guide will show you how to run Relax-and-Recover from the git
-checkout and create a bootable USB backup.
+This quick start guide shows how to run Relax-and-Recover from the git checkout
+and create a bootable USB backup and rescue medium.
 
-Start by cloning the Relax-and-Recover sources from Github:
+Start by cloning the Relax-and-Recover sources from GitHub:
 
     git clone https://github.com/rear/rear.git
 
-Move into the rear/ directory:
+Move into the 'rear/' directory (it gets created by 'git clone'):
 
     cd rear/
 
-Prepare your USB media. Change /dev/sdb to the correct device in your situation.
-Relax-and-Recover will 'own' the device in this example.
+Prepare your USB medium.
+Change /dev/sdX to the correct device in your environment.
+Relax-and-Recover will 'own' the whole device.
 
 ***This will destroy all data on that device.***
 
-    sudo usr/sbin/rear format /dev/sdb
+    sudo usr/sbin/rear format /dev/sdX
 
-Relax-and-Recover asks you to confirm that you want to format the device:
+Relax-and-Recover asks you to confirm that you want to format your USB device:
 
     Yes
 
-The device has been labeled REAR-000 by the 'format' workflow.
+The device gets labeled REAR-000 by the 'rear format' workflow.
 
 Now edit the 'etc/rear/local.conf' configuration file:
 
 ----
-    cat > etc/rear/local.conf <<EOF
 ### write the rescue initramfs to USB and update the USB bootloader
 OUTPUT=USB
 
@@ -110,17 +87,16 @@ BACKUP=NETFS
 
 ### write both rescue image and backup to the device labeled REAR-000
 BACKUP_URL=usb:///dev/disk/by-label/REAR-000
-EOF
 ----
 
-Please make sure you have at least defined an +OUTPUT+, +BACKUP+ and a
-+BACKUP_URL+ variable.
+Ensure you have at least defined the +OUTPUT+, +BACKUP+ and +BACKUP_URL+ variables.
 
-Now you are ready to create a rescue image. We want verbose output (-v option).
+Now you are ready to create a ReaR rescue image on your USB device.
+We want verbose output (-v option):
 
     sudo usr/sbin/rear -v mkrescue
 
-The output I get is:
+The output you get will look like this:
 ----
 Relax-and-Recover <version>
 Using log file: /var/log/rear/rear-<hostname>.log
@@ -130,22 +106,60 @@ Copying files and directories
 Copying binaries and libraries
 Copying kernel modules
 Creating initramfs
-Writing MBR to /dev/sdb
+Writing MBR to /dev/sdX
 Copying resulting files to usb location
 ----
 
-You might want to check the log file for possible errors or see what
-Relax-and-Recover is doing.
+You may check the log file for possible errors or see more details what Relax-and-Recover is doing.
 
-Now reboot your system and try to boot from the USB device.
+Now reboot your system and verify that you can boot the ReaR rescue environment from your USB device as a test.
+In the ReaR rescue environment log in as 'root' (no password) and directly shut it down (it was only a test).
+Again boot your normal system.
 
-If that worked, you can dive into the advanced Relax-and-Recover options and
-start creating full backups. If your USB device has enough space, initiate a
-backup using:
+In your normal system (with your 'REAR-000' labeled USB rescue device connected)
+create a backup of your system (provided your USB device has enough space) by using:
 
     sudo usr/sbin/rear -v mkbackup
 
-That is it. You are now better prepared for failure !
+The output you get will look like the above but now with a backup done at the end.
+
+When all went well (also check the log file),
+you have a bootable USB rescue medium with a backup of your system.
+
+You are now better prepared for disaster recovery.
+
+If your system got destroyed you can boot from your USB backup and rescue medium,
+log in as 'root' into the ReaR rescue environment and call 'rear -v recover'.
+This will completely re-create your system from scratch and restore your backup
+which will destroy and overwrite all previously existing data on your system disk.
+So to test if 'rear recover' works, you need fully compatible replacement hardware
+where you can verify that 'rear recover' works (at least on your replacement hardware).
+
+INSTALLATION
+------------
+On RPM based systems you should use the 'rear' RPM package.
+
+Preferably obtain it as described on the Relax-and-Recover homepage
+http://relax-and-recover.org/download/
+
+Alternatively as a software developer you may manually build it from the source tree with:
+
+   make rpm
+
+This will create an RPM for your distribution.
+The RPM is not platform-dependent and should work also on other RPM based distributions.
+
+On DEB based systems you can execute the command:
+
+  make deb
+
+Alternatively as a software developer you may install manually via:
+
+  make install
+
+Do not mix different installation methods.
+You should remove a package before doing a manual installation.
+
 
 CONFIGURATION
 -------------
