@@ -66,13 +66,13 @@ if rear_debug ; then
     esac
 fi
 
+# Set SECRET_OUTPUT_DEV because secret default values are set via
+#   { VARIABLE='secret value' ; } 2>>/dev/$SECRET_OUTPUT_DEV
+# cf. https://github.com/rear/rear/pull/3034#issuecomment-1691609782
+SECRET_OUTPUT_DEV="null"
 # Sourcing of the conf/default.conf file as we may use some defined variables or arrays
 # E.g. UDEV_NET_MAC_RULE_FILES is used by script 55-migrate-network-devices.sh
 if test -f /usr/share/rear/conf/default.conf ; then
-    # Set SECRET_OUTPUT_DEV because secret default values are set via
-    #   { VARIABLE='secret value' ; } 2>>/dev/$SECRET_OUTPUT_DEV
-    # cf. https://github.com/rear/rear/pull/3034#issuecomment-1691609782
-    SECRET_OUTPUT_DEV="null"
     source /usr/share/rear/conf/default.conf
 fi
 # Sourcing user and rescue configuration as we need some variables
@@ -159,7 +159,7 @@ if automatic_recovery ; then
     echo -e "\nLaunching 'rear recover' automatically\n"
     if rear $rear_debug_options recover ; then
         echo -e "\n'rear recover' finished successfully\n"
-        choices+=( "Reboot" )
+        choices+=( "$RECOVERY_REBOOT_COMMAND" )
     else
         echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
     fi
@@ -177,7 +177,7 @@ if automatic_recovery ; then
                 break
                 ;;
             (3)
-                reboot
+                $RECOVERY_REBOOT_COMMAND
                 ;;
         esac
         for (( i=1 ; i <= ${#choices[@]} ; i++ )) ; do
@@ -195,9 +195,9 @@ if unattended_recovery ; then
     echo -e "\nLaunching 'rear recover' automatically in unattended mode\n"
     if rear $rear_debug_options --non-interactive recover ; then
         echo -e "\n'rear recover' finished successfully\n"
-        echo -e "\nRebooting in 30 seconds (Ctrl-C to interrupt)\n"
+        echo -e "\n'$RECOVERY_REBOOT_COMMAND' in 30 seconds (Ctrl-C to interrupt)\n"
         sleep 30
-        reboot
+        $RECOVERY_REBOOT_COMMAND
     else
         echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
         PS3="Select what to do "
