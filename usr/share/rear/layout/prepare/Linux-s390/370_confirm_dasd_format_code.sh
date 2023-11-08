@@ -7,7 +7,7 @@
 is_false "$FORMAT_DASDS" && return 0
 
 # Show the user confirmation dialog in any case but when not in migration mode
-# automatically proceed with less timeout USER_INPUT_INTERRUPT_TIMEOUT (by default 10 seconds)
+# automatically proceed with less timeout USER_INPUT_INTERRUPT_TIMEOUT (by default 30 seconds)
 # to avoid longer delays (USER_INPUT_TIMEOUT is by default 300 seconds) in case of unattended recovery:
 # (taken from 120_confirm_wipedisk_disks.sh)
 local timeout="$USER_INPUT_TIMEOUT"
