@@ -116,9 +116,10 @@ if test -s "/md5sums.txt" ; then
             # In debug mode let the user confirm to proceed:
             read -p "Press ENTER to proceed 'bona fide' nevertheless "
         else
-            # In non-debug mode wait 10 seconds so that the user can read the md5sum output:
+            # In non-debug mode wait 10 seconds so that the user can read the md5sum output
+            # unless in unattended_recovery mode where there is no user who reads something:
             echo -e "Proceeding 'bona fide' nevertheless...\n"
-            sleep 10
+            unattended_recovery || sleep 10
         fi
     fi
 fi
@@ -151,7 +152,9 @@ else
     rear_debug_options=''
 fi
 
-# Launch rear recover automatically:
+reboot_command="${RECOVERY_REBOOT_COMMAND:-reboot}"
+
+# Launch "rear recover" automatically:
 if automatic_recovery ; then
     choices=( "View Relax-and-Recover log file(s)"
               "Go to Relax-and-Recover shell"
@@ -159,7 +162,7 @@ if automatic_recovery ; then
     echo -e "\nLaunching 'rear recover' automatically\n"
     if rear $rear_debug_options recover ; then
         echo -e "\n'rear recover' finished successfully\n"
-        choices+=( "$RECOVERY_REBOOT_COMMAND" )
+        choices+=( "$reboot_command" )
     else
         echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
     fi
@@ -177,7 +180,7 @@ if automatic_recovery ; then
                 break
                 ;;
             (3)
-                $RECOVERY_REBOOT_COMMAND
+                $reboot_command
                 ;;
         esac
         for (( i=1 ; i <= ${#choices[@]} ; i++ )) ; do
@@ -186,18 +189,19 @@ if automatic_recovery ; then
     done 2>&1
 fi
 
-# Launch rear recover automatically in unattended mode
-# i.e. with automated reboot after successful 'rear recover':
+# In unattended mode launch "rear --non-interactive recover" automatically 
+# i.e. with automated "reboot" (reboot_command) after successful recovery:
 if unattended_recovery ; then
+    timeout="${USER_INPUT_INTERRUPT_TIMEOUT:-30}"
     choices=( "View Relax-and-Recover log file(s)"
               "Go to Relax-and-Recover shell"
             )
-    echo -e "\nLaunching 'rear recover' automatically in unattended mode\n"
+    echo -e "\nLaunching 'rear recover' automatically in unattended (non-interactive) mode\n"
     if rear $rear_debug_options --non-interactive recover ; then
         echo -e "\n'rear recover' finished successfully\n"
-        echo -e "\n'$RECOVERY_REBOOT_COMMAND' in 30 seconds (Ctrl-C to interrupt)\n"
-        sleep 30
-        $RECOVERY_REBOOT_COMMAND
+        echo -e "\n'$reboot_command' in $timeout seconds (Ctrl-C to interrupt)\n"
+        sleep $timeout
+        $reboot_command
     else
         echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
         PS3="Select what to do "
