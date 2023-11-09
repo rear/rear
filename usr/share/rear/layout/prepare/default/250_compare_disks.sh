@@ -225,10 +225,10 @@ else
     # but sufficient time for the user to read and understand the message
     # so that the user could deliberately intervene and enforce MIGRATION_MODE:
     local timeout=30
-    # Have that timeout not bigger than USER_INPUT_TIMEOUT
-    # e.g. for automated testing a small USER_INPUT_TIMEOUT may be specified and
-    # we do not want to delay it here more than what USER_INPUT_TIMEOUT specifies:
-    test "$timeout" -gt "$USER_INPUT_TIMEOUT" && timeout="$USER_INPUT_TIMEOUT"
+    # Have that timeout not bigger than USER_INPUT_INTERRUPT_TIMEOUT (by default 30 seconds)
+    # e.g. for automated testing a small USER_INPUT_INTERRUPT_TIMEOUT may be specified and
+    # we do not want to delay it here more than what USER_INPUT_INTERRUPT_TIMEOUT specifies:
+    test "$timeout" -gt "$USER_INPUT_INTERRUPT_TIMEOUT" && timeout="$USER_INPUT_INTERRUPT_TIMEOUT"
     local prompt="Proceed with '$WORKFLOW' (yes) otherwise manual disk layout configuration is enforced"
     local input_value=""
     local wilful_input=""
