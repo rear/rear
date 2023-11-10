@@ -135,10 +135,11 @@ local copy_as_is_file=""
 # cf. https://github.com/rear/rear/pull/2378
 # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
 while read -r copy_as_is_file ; do
-    # Skip non-regular files like directories, device files, and 'tar' error messages (e.g. in case of non-existent files, see above):
+    # Skip non-regular files like directories, device files, and 'tar' error messages (e.g. in case of non-existent files, see above)
+    # but do not skip symbolic links. Their targets will be copied later by build/default/490_fix_broken_links.sh.
+    # We thus need library dependencies for symlinked executables just like for normal executables
+    # and build/default/490_fix_broken_links.sh does not perform library dependency scan.
     test -f "$copy_as_is_file" || continue
-    # Skip symbolic links (only care about symbolic link targets):
-    test -L "$copy_as_is_file" && continue
     # Remember actual regular files that are executable:
     test -x "$copy_as_is_file" && copy_as_is_executables+=( "$copy_as_is_file" )
 done < <( sort -u $copy_as_is_filelist_file ) 2>>/dev/$DISPENSABLE_OUTPUT_DEV
