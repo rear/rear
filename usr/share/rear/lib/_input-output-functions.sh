@@ -1131,11 +1131,15 @@ function UserInput () {
     # that would (without the delay) run in a tight loop that wastes resources (CPU, diskspace, and memory)
     # and fills up the ReaR log file (and the disk - which is a ramdisk for 'rear recover')
     # with some KiB data each second that may let 'rear recover' fail with 'out of diskspace/memory'.
-    # The default automated input interrupt timeout is 10 seconds to give the user a reasonable chance
+    # The default automated input interrupt timeout is 30 seconds to give the user a reasonable chance
     # to recognize the right automated input on his screen and interrupt it when needed:
-    local automated_input_interrupt_timeout=10
+    local automated_input_interrupt_timeout=30
     # Avoid stderr if USER_INPUT_INTERRUPT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_INTERRUPT_TIMEOUT:
     test "$USER_INPUT_INTERRUPT_TIMEOUT" -ge 1 2>/dev/null && automated_input_interrupt_timeout=$USER_INPUT_INTERRUPT_TIMEOUT
+    # Have at least one second timeout when ReaR runs unattended (in particular in non-interactive mode)
+    # because 'read -t 0' would return immediately without trying to read any data:
+    local unattended_timeout=3
+    test "$USER_INPUT_UNATTENDED_TIMEOUT" -ge 1 2>/dev/null && unattended_timeout=$USER_INPUT_UNATTENDED_TIMEOUT
     local default_prompt="enter your input"
     local prompt="$default_prompt"
     # Avoid stderr if USER_INPUT_PROMPT is not set or empty:
@@ -1208,14 +1212,10 @@ function UserInput () {
     test $user_input_ID || BugError "UserInput: Option '-I user_input_ID' required"
     test "$( echo $user_input_ID | tr -c -d '[:lower:]' )" && BugError "UserInput: Option '-I' argument '$user_input_ID' must not contain lower case letters"
     declare $user_input_ID="dummy" 2>/dev/null || BugError "UserInput: Option '-I' argument '$user_input_ID' not a valid variable name"
-    # Check the non-interactive mode and throw an error if default_input was not set
+    # In non-interactive mode use a short timeout (by default 3 seconds):
     if is_true "$NON_INTERACTIVE" ; then
-        if IsInArray "$user_input_ID" "${USER_INPUT_SEEN_WITH_TIMEOUT[@]}" 2>/dev/null; then
-            Error "UserInput: non-interactive mode and repeat input for '$user_input_ID' requested while the previous attempt was answered with the default or timed out"
-        fi
-        # set timeouts to low but acceptable 3 seconds for non-interactive mode:
-        timeout=3
-        automated_input_interrupt_timeout=3
+        timeout=$unattended_timeout
+        automated_input_interrupt_timeout=$unattended_timeout
     fi
     # Shift away the options and arguments:
     shift "$(( OPTIND - 1 ))"
@@ -1318,7 +1318,13 @@ function UserInput () {
     if test "$default_and_timeout" ; then
         is_true "$confidential_mode" && UserOutput "($default_and_timeout)" || LogUserOutput "($default_and_timeout)"
     fi
-    # Prepare the 'read' call:
+    # In non-interactive mode error out if things do not proceed with default or automated input or without input and timeout:
+    if is_true "$NON_INTERACTIVE" ; then
+        if IsInArray "$user_input_ID" "${USER_INPUT_SEEN_WITH_TIMEOUT[@]}" 2>/dev/null ; then
+            Error "UserInput: non-interactive mode and repeat input request for '$user_input_ID' (previous attempt got default or automated input or timed out)"
+        fi
+    fi
+    # Prepare the 'read $read_options_and_arguments ...' call:
     local read_options_and_arguments=""
     is_true "$raw_input" && read_options_and_arguments+=" -r"
     is_true "$silent_input" && read_options_and_arguments+=" -s"
