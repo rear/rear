@@ -1,0 +1,1 @@
+COPY_AS_IS+=("${VEEAM_COPY_AS_IS[@]}")
