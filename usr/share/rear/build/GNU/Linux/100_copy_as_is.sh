@@ -139,6 +139,8 @@ while read -r copy_as_is_file ; do
     # but do not skip symbolic links. Their targets will be copied later by build/default/490_fix_broken_links.sh.
     # We thus need library dependencies for symlinked executables just like for normal executables
     # and build/default/490_fix_broken_links.sh does not perform library dependency scan.
+    # See GitHub PR https://github.com/rear/rear/pull/3073
+    # and issue https://github.com/rear/rear/issues/3064 for details.
     test -f "$copy_as_is_file" || continue
     # Remember actual regular files that are executable:
     test -x "$copy_as_is_file" && copy_as_is_executables+=( "$copy_as_is_file" )
