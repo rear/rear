@@ -40,11 +40,13 @@ function automatic_recovery() {
     return 1
 }
 
-# The 'sleep 1' is used as workaround to avoid whatever inexplicable actual reason
+# The hardcoded 'sleep 1' is used as workaround to avoid whatever inexplicable actual reason
 # that at least on SLES12 some initial output lines of this script would get lost
-# (perhaps somewhere in systemd's nowhere land) which results that in particular
-# in Relax-and-Recover debug mode the user sits in front of an empty screen wondering
-# why nothing happens because in particular the read prompt "Press ENTER ..." was lost,
+# (perhaps somewhere in systemd's nowhere land) and even in unattended_recovery mode
+# all output should always appear regardless if someone is actually watching.
+# In particular in Relax-and-Recover debug mode missing initial output lines results
+# that the user sits in front of an empty screen wondering why nothing happens
+# because in particular the read prompt "Press ENTER ..." was lost,
 # cf. the 'if rear_debug' part below:
 sleep 1
 
@@ -128,7 +130,7 @@ if test -s "/md5sums.txt" ; then
             # so that the user can read and understand the md5sum output (could be several lines)
             # unless in unattended_recovery mode where there is normally no user who reads something:
             echo -e "Proceeding 'bona fide' nevertheless...\n"
-            unattended_recovery && sleep $USER_INPUT_UNATTENDED_TIMEOUT || sleep $USER_INPUT_INTERRUPT_TIMEOUT
+            unattended_recovery || sleep $USER_INPUT_INTERRUPT_TIMEOUT
         fi
     fi
 fi
@@ -138,20 +140,29 @@ for system_setup_script in /etc/scripts/system-setup.d/*.sh ; do
     if rear_debug ; then
         read -p "Press ENTER to run $( basename $system_setup_script ) "
         set -x
-        source $system_setup_script || echo -e "\n'source $system_setup_script' exited with $?\n"
+        source $system_setup_script || echo -e "\n'source $system_setup_script' results exit code $?\n"
         # The only known way how to do 'set +x' after 'set -x' without a '+ set +x' output:
         { set +x ; } 2>/dev/null
         echo
     else
         echo "Running $( basename $system_setup_script )..."
-        source $system_setup_script || echo -e "\n'source $system_setup_script' exited with $?\n"
+        # In non-debug mode when a system setup script results non-zero exit code
+        # do not show an 'exit code' message (like the above) to avoid false alarm
+        # cf. https://github.com/rear/rear/pull/3070#discussion_r1393738863
+        # but just wait USER_INPUT_UNATTENDED_TIMEOUT (by default 3 seconds)
+        # so that the user could at least notice potential error messages from the script
+        # unless in unattended_recovery mode where there is normally no watching user:
+        if ! source $system_setup_script ; then
+            unattended_recovery || sleep $USER_INPUT_UNATTENDED_TIMEOUT
+        fi
     fi
 done
 echo -e "\nRelax-and-Recover rescue system is ready\n"
 # Wait USER_INPUT_UNATTENDED_TIMEOUT (by default 3 seconds)
-# so that the user can read the 'Relax-and-Recover rescue system is ready' message
-# on his screen before the screen gets cleared and replaced by the login screen:
-sleep $USER_INPUT_UNATTENDED_TIMEOUT
+# so that the user can notice the 'Relax-and-Recover rescue system is ready' message
+# on his screen before the screen gets cleared and replaced by the login screen
+# unless in unattended_recovery mode where there is normally no watching user:
+unattended_recovery || sleep $USER_INPUT_UNATTENDED_TIMEOUT
 
 # In debug mode run the automated 'rear recover' also with debug options.
 # Because the kernel command line option 'debug' means 'set -x' for the system setup scripts
@@ -190,7 +201,7 @@ if automatic_recovery ; then
             (3)
                 for command in "${REBOOT_COMMANDS[@]}" ; do
                     echo "Running REBOOT_COMMANDS '$command'"
-                    eval "$command" || echo -e "\n'eval $command' exited with $?\n"
+                    eval "$command" || echo -e "\n'eval $command' results exit code $?\n"
                 done
                 ;;
         esac
@@ -213,7 +224,7 @@ if unattended_recovery ; then
         sleep $USER_INPUT_INTERRUPT_TIMEOUT
         for command in "${REBOOT_COMMANDS[@]}" ; do
             echo "Running REBOOT_COMMANDS '$command'"
-            eval "$command" || echo -e "\n'eval $command' exited with $?\n"
+            eval "$command" || echo -e "\n'eval $command' results exit code $?\n"
         done
     else
         echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
