@@ -170,7 +170,7 @@ if automatic_recovery ; then
     echo -e "\nLaunching 'rear recover' automatically\n"
     if rear $rear_debug_options recover ; then
         echo -e "\n'rear recover' finished successfully\n"
-        choices+=( "Reboot" )
+        choices+=( "$REBOOT_COMMANDS_LABEL" )
     else
         echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
     fi
@@ -209,7 +209,7 @@ if unattended_recovery ; then
     echo -e "\nLaunching 'rear recover' automatically in unattended (non-interactive) mode\n"
     if rear $rear_debug_options --non-interactive recover ; then
         echo -e "\n'rear recover' finished successfully\n"
-        echo -e "\n'$reboot_command' in $timeout seconds (Ctrl-C to interrupt)\n"
+        echo -e "\n'$REBOOT_COMMANDS_LABEL' in $USER_INPUT_INTERRUPT_TIMEOUT seconds (Ctrl-C to interrupt)\n"
         sleep $USER_INPUT_INTERRUPT_TIMEOUT
         for command in "${REBOOT_COMMANDS[@]}" ; do
             echo "Running REBOOT_COMMANDS '$command'"
