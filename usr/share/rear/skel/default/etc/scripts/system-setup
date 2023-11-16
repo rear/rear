@@ -72,7 +72,17 @@ fi
 # we abort when there is no default.conf (or when it is empty),
 # cf. https://github.com/rear/rear/pull/3070#discussion_r1389361339
 if ! test -s /usr/share/rear/conf/default.conf ; then
-    echo -e "\nERROR: ReaR recovery cannot work without /usr/share/rear/conf/default.conf - exiting\n"
+    echo -e "\nERROR: ReaR recovery cannot work without /usr/share/rear/conf/default.conf\n"
+    # Wait hardcoded 10 seconds in any case so that the user can notice the
+    # 'ERROR: ReaR recovery cannot work without /usr/share/rear/conf/default.conf'
+    # on his screen before the screen gets cleared and replaced by the login screen
+    # also in unattended mode regardless if someone is actually watching:
+    sleep 10
+    # Replace the usual /etc/motd message
+    # 'Welcome to Relax-and-Recover. Run "rear recover" to restore your system !'
+    # because it does not make sense to run "rear recover" without default.conf:
+    echo -e "\nRelax-and-Recover cannot work without /usr/share/rear/conf/default.conf\n" >/etc/motd
+    # exiting this script proceeds directly to the login screen:
     exit 1
 fi
 
@@ -104,17 +114,18 @@ done
 # during "rear mkrescue/mkbackup" by the build/default/995_md5sums_rootfs.sh script:
 if test -s "/md5sums.txt" ; then
     echo -e "\nVerifying md5sums of the files in the Relax-and-Recover rescue system\n"
-    # /etc/issue is always excluded to avoid that verifying its md5sum fails with "./etc/issue: FAILED"
+    # /etc/motd is excluded because it was changed above when default.conf is missing.
+    # /etc/issue is excluded to avoid that verifying its md5sum fails with "./etc/issue: FAILED"
     # when there is no rsa SSH host key /etc/ssh/ssh_host_rsa_key in the recovery system
     # because then /etc/scripts/run-sshd creates one and adds its SSH fingerprint to /etc/issue
     # and /etc/scripts/run-sshd is run by SysVinit or systemd
     # (via /etc/inittab and /etc/init/start-sshd.conf or /usr/lib/systemd/system/sshd.service)
     # so that /etc/issue may get modified before its md5sum is verified here.
     # run-sshd also modifies /etc/ssh/sshd_config, so this is excluded as well.
-    # Also /etc/udev/rules.d/70-persistent-net.rules is always excluded to avoid false alarm
+    # Also /etc/udev/rules.d/70-persistent-net.rules is excluded to avoid false alarm
     # because it seems it can be modified even before this md5sum verification here runs,
     # see https://github.com/rear/rear/issues/1883#issuecomment-409875733
-    egrep_pattern="/etc/issue|/etc/ssh/sshd_config|/etc/udev/rules.d/70-persistent-net.rules"
+    egrep_pattern="/etc/motd|/etc/issue|/etc/ssh/sshd_config|/etc/udev/rules.d/70-persistent-net.rules"
     test "$EXCLUDE_MD5SUM_VERIFICATION" && egrep_pattern+="|$EXCLUDE_MD5SUM_VERIFICATION"
     # Regardless of '--quiet' md5sum shows "FAILED" messages nevertheless (cf. 'man md5sum'):
     if grep -E -v "$egrep_pattern" md5sums.txt | md5sum --quiet --check ; then
