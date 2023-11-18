@@ -4,8 +4,8 @@
 dmesg -n1
 
 # basic mounts
-mount -t proc -n none /proc
-mount -t sysfs none /sys
+mountpoint /proc || mount -t proc -n none /proc
+mountpoint /sys || mount -t sysfs none /sys
 
 if type udevd &>/dev/null && ! type udevinfo &>/dev/null; then
     ### we use udevinfo to filter out old udev versions (<106) that don't
@@ -13,7 +13,7 @@ if type udevd &>/dev/null && ! type udevinfo &>/dev/null; then
     udev_version=$(udevd --version)
     if [[ "$udev_version" -gt 175 ]]; then
         ### udev > 175 needs devtmpfs
-        mount -t devtmpfs none /dev
+        mountpoint /dev || mount -t devtmpfs none /dev
     fi
 fi
 
@@ -26,7 +26,7 @@ if [[ ! -L /dev/fd ]] ; then
     ln -s /proc/self/fd /dev/fd
 fi
 
-mount -t devpts -o gid=5,mode=620 none /dev/pts
+mountpoint /dev/pts || mount -t devpts -o gid=5,mode=620 none /dev/pts
 
 cat /proc/mounts >/etc/mtab 2>/dev/null
 
