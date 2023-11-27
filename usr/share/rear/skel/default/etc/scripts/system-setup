@@ -186,7 +186,7 @@ rear_options='-v'
 # In debug mode run an automated 'rear $rear_options recover' command in debugscript mode.
 # Because the kernel command line option 'debug' means 'set -x' for the system setup scripts
 # it should also mean '-D' (i.e. 'set -x') for an automated 'rear $rear_options recover' run:
-rear_debug && rear_options+=' -D'
+rear_debug && rear_options='-D'
 # In unattended_recovery mode run an automated 'rear $rear_options recover' in non-interactive mode:
 unattended_recovery && rear_options+=' --non-interactive'
 
