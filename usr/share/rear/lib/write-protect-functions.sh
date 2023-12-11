@@ -24,6 +24,9 @@ function is_write_protected() {
     fi
 
     # Determine the matching device node, translate it if given as /sys/block/*
+    # But $device_node could be also symlink to the actual device node, for example
+    # for OUTPUT=USB $given_device is of the form /dev/disk/by-label/$USB_DEVICE_FILESYSTEM_LABEL
+    # which is a symlink to the ReaR data partition (e.g. /dev/sdb3 on a USB disk /dev/sdb).
     local device_node="$given_device"
     [[ "$given_device" == /sys/block/* ]] && device_node="$( get_device_name "$given_device" )"
 
@@ -95,28 +98,29 @@ function is_write_protected() {
         # But in practice that does not work sufficiently well because it can happen
         # that a disk has no ID (by default non of UUID PTUUID PARTUUID WWN)
         # which usually means there is nothing on the disk so that empty disks
-        # get excluded as write-protected from being used to recreate the system
+        # would get excluded as write-protected from being used to recreate the system
         # cf. https://github.com/rear/rear/pull/2703#discussion_r757393547
         # By default we write protect ReaR's own disk where the recovery system is and
         # we assume it cannot happen that this disk has none of UUID PTUUID PARTUUID WWN
         # so it should be safe to assume a disk without UUID PTUUID PARTUUID WWN is empty
-        # and meant to be used to recreate the system so it should not be write-protected:
+        # and meant to be used to recreate the system so it should not be write-protected by ID.
     fi
 
     # Determine if it is write-protected by file system labels
-    # i.e. return 0 if one of the device's file system labels
-    # matches a prefix from the list of write-protected label prefixes.
-    local write_protected_pattern
-    # Check all partitions of a device for a matching label:
-    while read -r partition_label ; do
-        test -n "$partition_label" || continue
-        for write_protected_pattern in "${WRITE_PROTECTED_FS_LABEL_PATTERNS[@]}" ; do
-            if [[ "$partition_label" == $write_protected_pattern ]] ; then
-                Log "$given_device is designated as write-protected (its label '$partition_label' matches '$write_protected_pattern')"
+    # i.e. return 0 if one of the device file system labels
+    # matches one of the WRITE_PROTECTED_FS_LABEL_PATTERNS.
+    # lsblk in util-linux 2.19.1 in SLES11 supports '-ino LABEL'
+    # cf. https://github.com/rear/rear/pull/2626#issuecomment-856700823
+    local device_label fs_label_pattern
+    while read -r device_label ; do
+        test "$device_label" || continue
+        for fs_label_pattern in "${WRITE_PROTECTED_FS_LABEL_PATTERNS[@]}" ; do
+            if [[ "$device_label" == $fs_label_pattern ]] ; then
+                Log "$given_device is designated as write-protected (its label '$device_label' matches '$fs_label_pattern')"
                 return 0
             fi
         done
-    done < <( lsblk --output LABEL --noheadings "$device_node" )
+    done < <( lsblk -ino LABEL "$device_node" )
     Log "$given_device is not write-protected by file system label"
 
     # The given device is neither write-protected by ID
