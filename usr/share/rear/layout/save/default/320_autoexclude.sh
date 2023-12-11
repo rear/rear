@@ -15,7 +15,7 @@ if [[ "$AUTOEXCLUDE_PATH" ]] ; then
     for exclude in "${AUTOEXCLUDE_PATH[@]}" ; do
         while read fs device mountpoint junk ; do
             if [[ "${mountpoint#${exclude%/}/}" != "$mountpoint" ]] ; then
-                DebugPrint "Automatically excluding filesystem $mountpoint"
+                DebugPrint "Automatically excluding filesystem $mountpoint (belogs to $exclude in AUTOEXCLUDE_PATH)"
                 mark_as_done "fs:$mountpoint"
                 mark_tree_as_done "fs:$mountpoint"
                 ### by excluding the filesystem, the device will be excluded by the
