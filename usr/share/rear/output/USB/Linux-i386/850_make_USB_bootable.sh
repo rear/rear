@@ -59,10 +59,11 @@ case "$usb_filesystem" in
         fi
         ;;
     ("")
-        BugError "Filesystem where the booting related files are on $RAW_USB_DEVICE could not be found"
+        LogPrintError "Could not find a filesystem for $BUILD_DIR/outputfs in /proc/mounts"
+        Error "An ext2/3/4 or vfat filesystem must be mounted for the booting related files on $RAW_USB_DEVICE"
         ;;
     (*)
-        Error "Filesystem $usb_filesystem for the booting related files is not supported"
+        Error "Unsupported filesystem $usb_filesystem for the booting related files on $RAW_USB_DEVICE"
         ;;
 esac
 
