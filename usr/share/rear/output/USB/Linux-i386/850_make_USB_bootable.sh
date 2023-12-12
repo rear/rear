@@ -59,11 +59,12 @@ case "$usb_filesystem" in
         fi
         ;;
     ("")
-        LogPrintError "Could not find a filesystem for $BUILD_DIR/outputfs in /proc/mounts"
+        LogPrintError "Could not find a filesystem in /proc/mounts for $BUILD_DIR/outputfs"
         Error "An ext2/3/4 or vfat filesystem must be mounted for the booting related files on $RAW_USB_DEVICE"
         ;;
     (*)
-        Error "Unsupported filesystem $usb_filesystem for the booting related files on $RAW_USB_DEVICE"
+        LogPrintError "Filesystem $usb_filesystem is mounted at $BUILD_DIR/outputfs"
+        Error "Only ext2/3/4 and vfat are supported for the booting related files on $RAW_USB_DEVICE"
         ;;
 esac
 
