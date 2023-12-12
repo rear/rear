@@ -63,8 +63,8 @@ case "$usb_filesystem" in
         Error "An ext2/3/4 or vfat filesystem must be mounted for the booting related files on $RAW_USB_DEVICE"
         ;;
     (*)
-        LogPrintError "Filesystem $usb_filesystem is mounted at $BUILD_DIR/outputfs"
-        Error "Only ext2/3/4 and vfat are supported for the booting related files on $RAW_USB_DEVICE"
+        LogPrintError "Only ext2/3/4 and vfat are supported for the booting related files on $RAW_USB_DEVICE"
+        Error "Unsupported filesystem $usb_filesystem is mounted at $BUILD_DIR/outputfs"
         ;;
 esac
 
