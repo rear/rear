@@ -818,7 +818,7 @@ function BugError () {
     Error "
 ====================
 BUG in $caller_source:
-'$*'
+$*
 --------------------
 Please report it at $BUG_REPORT_SITE
 and include all related parts from $RUNTIME_LOGFILE
