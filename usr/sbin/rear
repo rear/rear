@@ -356,6 +356,40 @@ hash -r
 # Make sure that we use only English:
 export LC_CTYPE=C LC_ALL=C LANG=C
 
+# Find out if we're running inside the ReaR rescue/recovery system:
+INSIDE_RECOVERY_SYSTEM=""
+# /etc/rear/rescue.conf exists only in the ReaR recovery system
+# and it was initialized by prep/default/100_init_workflow_conf.sh
+test -s /etc/rear/rescue.conf && INSIDE_RECOVERY_SYSTEM=1
+readonly INSIDE_RECOVERY_SYSTEM
+
+# In the ReaR recovery system /etc/scripts/boot calls hardcoded 'dmesg -n 5'
+# to limit console logging for kernel messages to level 5 during recovery system startup
+# (the usual default shows too many kernel messages that disturb the intended ReaR messages)
+# so that kernel error and warning messages appear (intermixed with ReaR messages) on the console
+# so the user can notice when things go wrong in kernel area which helps to understand problems,
+# see https://github.com/rear/rear/issues/3107 and https://github.com/rear/rear/pull/3108
+# Additionally call 'dmesg -n [4-7]' here in sbin/rear depending on verbose and debug modes for ReaR
+# if we're running inside our recovery system (we must not change things on the original system),
+# see https://github.com/rear/rear/issues/3107#issuecomment-1855797222
+if test "$INSIDE_RECOVERY_SYSTEM" ; then
+    # Set minimum dmesg log level to 4 to show at least kernel error conditions and more severe issues on the console
+    dmesg_log_level=4
+    # In verbose and debug mode increase dmesg log level to 5 to also show kernel warnings on the console
+    # (kernel warning messages are usually needed because some errors are reported as warning)
+    # and because 'rear recover' is always verbose this matches what is set in /etc/scripts/boot
+    test "$VERBOSE" && dmesg_log_level=5
+    # In debugscript mode increase dmesg log level to 6 to also show significant kernel conditions
+    test "$DEBUGSCRIPTS" && dmesg_log_level=6
+    # Only with '--debugscripts' increase dmesg log level to 7 to also show (lots of) informational messages
+    test "$DEBUGSCRIPTS_ARGUMENT" && dmesg_log_level=7
+    # dmesg log level 8 (kernel debug-level messages) is over the top for 'rear recover'
+    # see https://github.com/rear/rear/issues/3107#issuecomment-1855831572
+    # and if 'dmesg -n 8' (or something else) is needed it can be called via PRE_RECOVERY_COMMANDS
+    # so what we set here is only the default behaviour
+    dmesg -n $dmesg_log_level    
+fi    
+
 # Include default config before the RUNTIME_LOGFILE value is set because
 # setting the right RUNTIME_LOGFILE value requires values from default.conf
 # in particular the default LOGFILE value and the values of the
