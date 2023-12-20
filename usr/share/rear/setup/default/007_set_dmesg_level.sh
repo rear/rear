@@ -20,20 +20,20 @@ test "$RECOVERY_MODE" || return 0
 # see https://github.com/rear/rear/pull/3112#issuecomment-1862770147
 # so for those workflows 'dmesg -n [4-6]' is set depending on verbose and debug modes for ReaR.
 
-# Set minimum dmesg log level to 4 to show at least kernel error conditions and more severe issues on the console
-dmesg_log_level=4
-# In verbose and debug mode increase dmesg log level to 5 to also show kernel warnings on the console
+# Set minimum dmesg level to 4 to show at least kernel error conditions and more severe issues on the console
+dmesg_level=4
+# In verbose and debug mode increase dmesg level to 5 to also show kernel warnings on the console
 # (kernel warning messages are usually needed because some errors are reported as warning)
 # and because 'rear recover' is always verbose this matches what is set in /etc/scripts/boot
-test "$VERBOSE" && dmesg_log_level=5
-# In debugscript mode increase dmesg log level to 6 to also show significant kernel conditions
-test "$DEBUGSCRIPTS" && dmesg_log_level=6
-# dmesg log level 7 shows lots of informational messages
+test "$VERBOSE" && dmesg_level=5
+# In debugscript mode increase dmesg level to 6 to also show significant kernel conditions
+test "$DEBUGSCRIPTS" && dmesg_level=6
+# dmesg level 7 shows lots of informational messages
 # that are normally not helpful for debugging issues during 'rear recover'
 # see https://github.com/rear/rear/pull/3112#issue-2048550351
-# and dmesg log level 8 (kernel debug-level messages) is over the top for 'rear recover'
+# and dmesg level 8 (kernel debug-level messages) is over the top for 'rear recover'
 # see https://github.com/rear/rear/issues/3107#issuecomment-1855831572
 # and if 'dmesg -n 7' (or something else) is needed it can be called via PRE_RECOVERY_COMMANDS
 # (therefore this script must run before setup/default/010_pre_recovery_script.sh)
 # so what we set here is only the default behaviour
-dmesg -n $dmesg_log_level
+dmesg -n $dmesg_level
