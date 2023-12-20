@@ -27,3 +27,6 @@ files_to_sync:
 - dest: rear.spec
   src: packaging/rpm/rear.spec
 upstream_package_name: rear
+actions:
+  get-current-version:
+  - grep -oP '^Version:\s+\K\S+' packaging/rpm/rear.spec
