@@ -407,11 +407,11 @@ function PrintError () {
 # For messages that should only appear in the log file output to the current STDERR
 # because (usually) the current STDERR is redirected to the log file:
 function Log () {
-    # RUNTIME_LOGFILE does not yet exists in case of early Error() in usr/sbin/rear
-    test -w "$RUNTIME_LOGFILE" || return 0
-    # Have a timestamp with nanoseconds precision in any case
-    # so that any subsequent Log() calls get logged with precise timestamps:
-    { local timestamp=$( date +"%Y-%m-%d %H:%M:%S.%N " )
+    { # RUNTIME_LOGFILE does not yet exists in case of early Error() in usr/sbin/rear
+      test -w "$RUNTIME_LOGFILE" || return 0
+      # Have a timestamp with nanoseconds precision in any case
+      # so that any subsequent Log() calls get logged with precise timestamps:
+      local timestamp=$( date +"%Y-%m-%d %H:%M:%S.%N " )
       local prefix="${MESSAGE_PREFIX}${timestamp}"
       # prefix_blanks has the printable characters in prefix replaced with blanks for indentation:
       local prefix_blanks="$( tr '[:print:]' ' ' <<<"$prefix" )"
