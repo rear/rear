@@ -40,5 +40,6 @@ test "$DEBUGSCRIPTS" && dmesg_level=6
 # and if 'dmesg -n 7' (or something else) is needed it can be called via PRE_RECOVERY_COMMANDS
 # (therefore this script must run before setup/default/010_pre_recovery_script.sh)
 # so what we set here is only the default behaviour
+DebugPrint "Setting dmesg level $dmesg_level"
 dmesg -n $dmesg_level
 
