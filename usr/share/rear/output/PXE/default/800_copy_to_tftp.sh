@@ -16,7 +16,7 @@ if [[ ! -z "$PXE_TFTP_URL" ]] ; then
 
     mount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs $BACKUP_OPTIONS
     # However, we copy under $OUTPUT_PREFIX_PXE directory (usually HOSTNAME) to have different clients on one pxe server
-    PXE_TFTP_LOCAL_PATH=$BUILD_DIR/tftpbootfs
+    pxe_tftp_local_path=$BUILD_DIR/tftpbootfs
     # mode must readable for others for pxe and we copy under the client HOSTNAME (=OUTPUT_PREFIX_PXE)
     mkdir -m 755 -p $v "$BUILD_DIR/tftpbootfs/$OUTPUT_PREFIX_PXE" >&2
     StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs/$OUTPUT_PREFIX_PXE'"
@@ -24,25 +24,25 @@ if [[ ! -z "$PXE_TFTP_URL" ]] ; then
     PXE_INITRD="$OUTPUT_PREFIX_PXE/$PXE_TFTP_PREFIX$REAR_INITRD_FILENAME"
     PXE_MESSAGE="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}message"
 else
-    PXE_TFTP_LOCAL_PATH="$PXE_TFTP_PATH"
+    pxe_tftp_local_path="$PXE_TFTP_PATH"
     # By default PXE_TFTP_PREFIX=$HOSTNAME. (see conf/default.conf)
     PXE_KERNEL="${PXE_TFTP_PREFIX}kernel"
     PXE_INITRD="$PXE_TFTP_PREFIX$REAR_INITRD_FILENAME"
     PXE_MESSAGE="${PXE_TFTP_PREFIX}message"
-    [[ ! -d "$PXE_TFTP_LOCAL_PATH" ]] && mkdir $v -m 750 "$PXE_TFTP_LOCAL_PATH" >&2
+    [[ ! -d "$pxe_tftp_local_path" ]] && mkdir $v -m 750 "$pxe_tftp_local_path" >&2
 fi
 
 # Follow symbolic links to ensure the real content gets copied
 # but do not preserve mode,ownership,timestamps (i.e. no -p option) because that may fail (on sshfs) like
 # "cp: failed to preserve ownership for '/tmp/rear-efi.XXXXXXXXXX/EFI/BOOT/kernel': Operation not permitted"
-cp -L $v "$KERNEL_FILE" "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL" || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE'"
-cp -L $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$PXE_TFTP_LOCAL_PATH/$PXE_INITRD" || Error "Failed to copy initrd '$REAR_INITRD_FILENAME'"
-echo "$VERSION_INFO" >"$PXE_TFTP_LOCAL_PATH/$PXE_MESSAGE"
+cp -L $v "$KERNEL_FILE" "$pxe_tftp_local_path/$PXE_KERNEL" || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE'"
+cp -L $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$pxe_tftp_local_path/$PXE_INITRD" || Error "Failed to copy initrd '$REAR_INITRD_FILENAME'"
+echo "$VERSION_INFO" >"$pxe_tftp_local_path/$PXE_MESSAGE"
 # files must be readable for others for PXE
 # files should be writebale by owner or overwriting it on later runs will fail
-chmod 644 "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL"
-chmod 644 "$PXE_TFTP_LOCAL_PATH/$PXE_INITRD"
-chmod 644 "$PXE_TFTP_LOCAL_PATH/$PXE_MESSAGE"
+chmod 644 "$pxe_tftp_local_path/$PXE_KERNEL"
+chmod 644 "$pxe_tftp_local_path/$PXE_INITRD"
+chmod 644 "$pxe_tftp_local_path/$PXE_MESSAGE"
 
 if [[ ! -z "$PXE_TFTP_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
     # If we have chosen for "unattended" recover mode then we also copy the
@@ -83,7 +83,7 @@ else
     # legacy way PXE_TFTP_PATH
     LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_TFTP_PATH"
     # Add to result files
-    RESULT_FILES+=( "$PXE_TFTP_LOCAL_PATH/$PXE_KERNEL" "$PXE_TFTP_LOCAL_PATH/$PXE_INITRD" "$PXE_TFTP_LOCAL_PATH/$PXE_MESSAGE" )
+    RESULT_FILES+=( "$pxe_tftp_local_path/$PXE_KERNEL" "$pxe_tftp_local_path/$PXE_INITRD" "$pxe_tftp_local_path/$PXE_MESSAGE" )
 fi
 
 # vim: set et ts=4 sw=4
