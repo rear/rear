@@ -895,11 +895,11 @@ function make_pxelinux_config {
 function make_pxelinux_config_grub {
     net_default_server_opt=""
 
-    # Be sure that TFTP Server IP is set with TFTP_SERVER_IP Variable.
+    # Be sure that TFTP Server IP is set with PXE_TFTP_IP Variable.
     # else set it based on PXE_TFTP_UR variable.
     if [[ -z $PXE_TFTP_IP ]] ; then
         if [[ -z $PXE_TFTP_URL ]] ; then
-            LogPrintError "Can't find TFTP IP information. Variable TFTP_SERVER_IP or PXE_TFTP_URL with clear IP address must be set."
+            LogPrintError "Can't find TFTP IP information. Variable PXE_TFTP_IP or PXE_TFTP_URL with clear IP address must be set."
             return
         else
             # Get IP address from PXE_TFTP_URL (ex:http://xx.yy.zz.aa:port/foo/bar)
