@@ -101,7 +101,7 @@ popd >/dev/null
 
 if test "$PXE_CONFIG_URL" ; then
     LogPrint "Created PXELINUX config '$pxe_config_file' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_URL"
-    umount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs
+    umount_url $PXE_TFTP_UPLOAD_URL $BUILD_DIR/tftpbootfs
 else
     LogPrint "Created PXELINUX config '$pxe_config_file' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
     RESULT_FILES+=( "$pxe_local_path/$pxe_config_file" )

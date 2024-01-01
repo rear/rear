@@ -5,16 +5,16 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-if [[ ! -z "$PXE_TFTP_URL" ]] ; then
-    # E.g. PXE_TFTP_URL=nfs://server/export/nfs/tftpboot
-    local scheme=$( url_scheme $PXE_TFTP_URL )
+if [[ ! -z "$PXE_TFTP_UPLOAD_URL" ]] ; then
+    # E.g. PXE_TFTP_UPLOAD_URL=nfs://server/export/nfs/tftpboot
+    local scheme=$( url_scheme $PXE_TFTP_UPLOAD_URL )
 
     # We need filesystem access to the destination (schemes like ftp:// are not supported)
     if ! scheme_supports_filesystem $scheme ; then
         Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
     fi
 
-    mount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs $BACKUP_OPTIONS
+    mount_url $PXE_TFTP_UPLOAD_URL $BUILD_DIR/tftpbootfs $BACKUP_OPTIONS
     # However, we copy under $OUTPUT_PREFIX_PXE directory (usually HOSTNAME) to have different clients on one pxe server
     pxe_tftp_local_path=$BUILD_DIR/tftpbootfs
     # mode must readable for others for pxe and we copy under the client HOSTNAME (=OUTPUT_PREFIX_PXE)
@@ -44,7 +44,7 @@ chmod 644 "$pxe_tftp_local_path/$PXE_KERNEL"
 chmod 644 "$pxe_tftp_local_path/$PXE_INITRD"
 chmod 644 "$pxe_tftp_local_path/$PXE_MESSAGE"
 
-if [[ ! -z "$PXE_TFTP_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
+if [[ ! -z "$PXE_TFTP_UPLOAD_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
     # If we have chosen for "unattended" recover mode then we also copy the
     # required pxe modules (and we assume that the PXE server run the same OS)
     # copy pxelinux.0 and friends
@@ -76,9 +76,9 @@ if [[ ! -z "$PXE_TFTP_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
 fi
 
 
-if [[ ! -z "$PXE_TFTP_URL" ]] ; then
-    LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_TFTP_URL/$OUTPUT_PREFIX_PXE"
-    umount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs
+if [[ ! -z "$PXE_TFTP_UPLOAD_URL" ]] ; then
+    LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_TFTP_UPLOAD_URL/$OUTPUT_PREFIX_PXE"
+    umount_url $PXE_TFTP_UPLOAD_URL $BUILD_DIR/tftpbootfs
 else
     # legacy way PXE_TFTP_PATH
     LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_TFTP_PATH"
