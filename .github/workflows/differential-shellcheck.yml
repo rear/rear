@@ -31,7 +31,7 @@ jobs:
 
       - if: ${{ always() }}
         name: Upload artifact with ShellCheck defects in SARIF format
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce
+        uses: actions/upload-artifact@cf8714cfeaba5687a442b9bcb85b29e23f468dfa
         with:
           name: Differential ShellCheck SARIF
           path: ${{ steps.ShellCheck.outputs.sarif }}
