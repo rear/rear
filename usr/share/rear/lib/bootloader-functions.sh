@@ -766,7 +766,7 @@ function make_pxelinux_config {
     echo "MENU title Relax-and-Recover v$VERSION"
 
     # Display message now:
-    echo "display $PXE_SCHEME$PXE_MESSAGE"
+    echo "display $PXE_MESSAGE"
     echo "say ----------------------------------------------------------"
 
     # start with rear entry
@@ -791,8 +791,8 @@ function make_pxelinux_config {
     echo "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)"
     echo "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
     echo "ENDTEXT"
-    echo "    kernel $PXE_SCHEME$PXE_KERNEL"
-    echo "    append initrd=$PXE_SCHEME$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
+    echo "    kernel $PXE_KERNEL"
+    echo "    append initrd=$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
     echo "say ----------------------------------------------------------"
 
     # start with optional rear http entry if specified
