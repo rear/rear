@@ -5,21 +5,18 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-if [[ ! -z "$PXE_TFTP_UPLOAD_URL" ]] ; then
+if [[ -n "$PXE_TFTP_UPLOAD_URL" ]] ; then
     # E.g. PXE_TFTP_UPLOAD_URL=nfs://server/export/nfs/tftpboot
     local scheme=$( url_scheme $PXE_TFTP_UPLOAD_URL )
 
     # We need filesystem access to the destination (schemes like ftp:// are not supported)
-    if ! scheme_supports_filesystem $scheme ; then
-        Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
-    fi
+    scheme_supports_filesystem $scheme || Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
 
     mount_url $PXE_TFTP_UPLOAD_URL $BUILD_DIR/tftpbootfs $BACKUP_OPTIONS
     # However, we copy under $OUTPUT_PREFIX_PXE directory (usually HOSTNAME) to have different clients on one pxe server
     pxe_tftp_local_path=$BUILD_DIR/tftpbootfs
     # mode must readable for others for pxe and we copy under the client HOSTNAME (=OUTPUT_PREFIX_PXE)
-    mkdir -m 755 -p $v "$BUILD_DIR/tftpbootfs/$OUTPUT_PREFIX_PXE" >&2
-    StopIfError "Could not mkdir '$BUILD_DIR/tftpbootfs/$OUTPUT_PREFIX_PXE'"
+    mkdir $v -m 755 -p "$BUILD_DIR/tftpbootfs/$OUTPUT_PREFIX_PXE" || Error "Could not mkdir '$BUILD_DIR/tftpbootfs/$OUTPUT_PREFIX_PXE'"
     PXE_KERNEL="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}kernel"
     PXE_INITRD="$OUTPUT_PREFIX_PXE/$PXE_TFTP_PREFIX$REAR_INITRD_FILENAME"
     PXE_MESSAGE="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}message"
@@ -29,7 +26,7 @@ else
     PXE_KERNEL="${PXE_TFTP_PREFIX}kernel"
     PXE_INITRD="$PXE_TFTP_PREFIX$REAR_INITRD_FILENAME"
     PXE_MESSAGE="${PXE_TFTP_PREFIX}message"
-    [[ ! -d "$pxe_tftp_local_path" ]] && mkdir $v -m 750 "$pxe_tftp_local_path" >&2
+    [[ -d "$pxe_tftp_local_path" ]] || mkdir $v -m 750 "$pxe_tftp_local_path" >&2
 fi
 
 # Follow symbolic links to ensure the real content gets copied
@@ -44,7 +41,7 @@ chmod 644 "$pxe_tftp_local_path/$PXE_KERNEL"
 chmod 644 "$pxe_tftp_local_path/$PXE_INITRD"
 chmod 644 "$pxe_tftp_local_path/$PXE_MESSAGE"
 
-if [[ ! -z "$PXE_TFTP_UPLOAD_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
+if [[ -n "$PXE_TFTP_UPLOAD_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
     # If we have chosen for "unattended" recover mode then we also copy the
     # required pxe modules (and we assume that the PXE server run the same OS)
     # copy pxelinux.0 and friends
@@ -54,7 +51,7 @@ if [[ ! -z "$PXE_TFTP_UPLOAD_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]]
         # perhaps Debian/Ubuntu and friends
         [[ -f /usr/lib/PXELINUX/pxelinux.0 ]] && PXELINUX_BIN=/usr/lib/PXELINUX/pxelinux.0
     fi
-    if [[ ! -z "$PXELINUX_BIN" ]] ; then
+    if [[ -n "$PXELINUX_BIN" ]] ; then
         cp $v "$PXELINUX_BIN" $BUILD_DIR/tftpbootfs >&2
     fi
     syslinux_modules_dir=$( find_syslinux_modules_dir menu.c32 )
@@ -76,7 +73,7 @@ if [[ ! -z "$PXE_TFTP_UPLOAD_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]]
 fi
 
 
-if [[ ! -z "$PXE_TFTP_UPLOAD_URL" ]] ; then
+if [[ -n "$PXE_TFTP_UPLOAD_URL" ]] ; then
     LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_TFTP_UPLOAD_URL/$OUTPUT_PREFIX_PXE"
     umount_url $PXE_TFTP_UPLOAD_URL $BUILD_DIR/tftpbootfs
 else

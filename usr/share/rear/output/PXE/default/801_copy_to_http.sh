@@ -23,16 +23,13 @@ fi
 local scheme=$( url_scheme $PXE_HTTP_UPLOAD_URL )
 
 # We need filesystem access to the destination (schemes like ftp:// are not supported)
-if ! scheme_supports_filesystem $scheme ; then
-    Error "Scheme $scheme from PXE_HTTP_UPLOAD_URL not supported, use a scheme that supports mounting (like nfs: )"
-fi
+scheme_supports_filesystem $scheme || Error "Scheme $scheme from PXE_HTTP_UPLOAD_URL not supported, use a scheme that supports mounting (like nfs: )"
 
 mount_url $PXE_HTTP_UPLOAD_URL $BUILD_DIR/httpbootfs $BACKUP_OPTIONS
 # However, we copy under $OUTPUT_PREFIX_PXE directory (usually HOSTNAME) to have different clients on one pxe server
 pxe_http_local_path=$BUILD_DIR/httpbootfs
 # mode must readable for others for pxe and we copy under the client HOSTNAME (=OUTPUT_PREFIX_PXE)
-mkdir -m 755 -p $v "$BUILD_DIR/httpbootfs/$OUTPUT_PREFIX_PXE" >&2
-StopIfError "Could not mkdir '$BUILD_DIR/httpbootfs/$OUTPUT_PREFIX_PXE'"
+mkdir $v -m 755 -p "$BUILD_DIR/httpbootfs/$OUTPUT_PREFIX_PXE" || Error "Could not mkdir '$BUILD_DIR/httpbootfs/$OUTPUT_PREFIX_PXE'"
 PXE_KERNEL="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}kernel"
 PXE_INITRD="$OUTPUT_PREFIX_PXE/$PXE_TFTP_PREFIX$REAR_INITRD_FILENAME"
 PXE_MESSAGE="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}message"
