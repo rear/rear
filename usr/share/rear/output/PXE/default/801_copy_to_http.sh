@@ -7,7 +7,7 @@
 
 # Nothing to do here when PXE_HTTP_UPLOAD_URL is not set
 if [[ -z "$PXE_HTTP_UPLOAD_URL" ]] ; then
-    LogPrint "PXE_HTTP_UPLOAD_URL not set, skipping copy"
+    DebugPrint "PXE_HTTP_UPLOAD_URL not set, skipping copy"
     return
 fi
 
