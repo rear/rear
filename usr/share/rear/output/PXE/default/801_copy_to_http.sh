@@ -15,17 +15,17 @@ fi
 # already been uploaded by 800_copy_to_tftp.sh and we don't need to do
 # anything here.
 if [[ "$PXE_HTTP_UPLOAD_URL" = "$PXE_TFTP_UPLOAD_URL" ]] ; then
-    LogPrint "PXE_HTTP_UPLOAD_URL = PXE_TFTP_UPLOAD_URL, skipping copy to PXE_HTTP_UPLOAD_URL"
+    Debug "PXE_HTTP_UPLOAD_URL = PXE_TFTP_UPLOAD_URL, upload already done by TFTP code in 800_copy_to_tftp.sh"
     return
 fi
 
 # E.g. PXE_HTTP_UPLOAD_URL=nfs://server/export/nfs/www
-local scheme=$( url_scheme $PXE_HTTP_UPLOAD_URL )
+local scheme=$( url_scheme "$PXE_HTTP_UPLOAD_URL" )
 
 # We need filesystem access to the destination (schemes like ftp:// are not supported)
 scheme_supports_filesystem $scheme || Error "Scheme $scheme from PXE_HTTP_UPLOAD_URL not supported, use a scheme that supports mounting (like nfs: )"
 
-mount_url $PXE_HTTP_UPLOAD_URL $BUILD_DIR/httpbootfs $BACKUP_OPTIONS
+mount_url "$PXE_HTTP_UPLOAD_URL" $BUILD_DIR/httpbootfs $BACKUP_OPTIONS
 # However, we copy under $OUTPUT_PREFIX_PXE directory (usually HOSTNAME) to have different clients on one pxe server
 pxe_http_local_path=$BUILD_DIR/httpbootfs
 # mode must readable for others for pxe and we copy under the client HOSTNAME (=OUTPUT_PREFIX_PXE)
@@ -42,11 +42,9 @@ cp -L $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$pxe_http_local_path/$PXE_INITRD" || 
 echo "$VERSION_INFO" >"$pxe_http_local_path/$PXE_MESSAGE"
 # files must be readable for others for PXE
 # files should be writebale by owner or overwriting it on later runs will fail
-chmod 644 "$pxe_http_local_path/$PXE_KERNEL"
-chmod 644 "$pxe_http_local_path/$PXE_INITRD"
-chmod 644 "$pxe_http_local_path/$PXE_MESSAGE"
+chmod 644 "$pxe_http_local_path/$PXE_KERNEL" "$pxe_http_local_path/$PXE_INITRD" "$pxe_http_local_path/$PXE_MESSAGE"
 
 LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_HTTP_UPLOAD_URL/$OUTPUT_PREFIX_PXE"
-umount_url $PXE_HTTP_UPLOAD_URL $BUILD_DIR/httpbootfs
+umount_url "$PXE_HTTP_UPLOAD_URL" $BUILD_DIR/httpbootfs
 
 # vim: set et ts=4 sw=4

@@ -796,7 +796,7 @@ function make_pxelinux_config {
     echo "say ----------------------------------------------------------"
 
     # start with optional rear http entry if specified
-    if [[ ! -z $PXE_HTTP_DOWNLOAD_URL ]] ; then    
+    if [[ "$PXE_HTTP_DOWNLOAD_URL" ]] ; then    
         case "$PXE_RECOVER_MODE" in
         "automatic")
             echo "say rear-automatic-http - Recover $HOSTNAME (HTTP) with auto-recover kernel option"
@@ -898,7 +898,7 @@ function make_pxelinux_config_grub {
     # Be sure that TFTP Server IP is set with PXE_TFTP_IP Variable.
     # else set it based on PXE_TFTP_UPLOAD_URL variable.
     if [[ -z $PXE_TFTP_IP ]] ; then
-        if [[ -z $PXE_TFTP_UPLOAD_URL ]] ; then
+        if [[ -z "$PXE_TFTP_UPLOAD_URL" ]] ; then
             LogPrintError "Can't find TFTP IP information. Variable PXE_TFTP_IP or PXE_TFTP_UPLOAD_URL with clear IP address must be set."
             return
         else

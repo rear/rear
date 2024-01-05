@@ -1,7 +1,7 @@
 # Ensure that PXE settings have sane values
 
-if [[ ! -z "$PXE_TFTP_URL" ]] ; then
-    if [[ ! -z "$PXE_TFTP_UPLOAD_URL" ]] ; then
+if [[ "$PXE_TFTP_URL" ]] ; then
+    if [[ "$PXE_TFTP_UPLOAD_URL" ]] ; then
         if [[ "$PXE_TFTP_URL" = "$PXE_TFTP_UPLOAD_URL" ]] ; then
 	    LogPrintError "-----------------------------------------------------------"
 	    LogPrintError "Configuration warning:"
@@ -20,12 +20,12 @@ if [[ ! -z "$PXE_TFTP_URL" ]] ; then
 	LogPrintError "Setting PXE_TFTP_UPLOAD_URL to the value of PXE_TFTP_URL and continuing."
 	LogPrintError "Please fix your configuration."
 	LogPrintError "-------------------------------------------------------------------------"
-	PXE_TFTP_UPLOAD_URL=$PXE_TFTP_URL
+	PXE_TFTP_UPLOAD_URL="$PXE_TFTP_URL"
     fi
 fi
 
-if [[ ! -z "$PXE_HTTP_URL" ]] ; then
-    if [[ ! -z "$PXE_HTTP_DOWNLOAD_URL" ]] ; then
+if [[ "$PXE_HTTP_URL" ]] ; then
+    if [[ "$PXE_HTTP_DOWNLOAD_URL" ]] ; then
         if [[ "$PXE_HTTP_URL" = "$PXE_HTTP_DOWNLOAD_URL" ]] ; then
 	    LogPrintError "-----------------------------------------------------------"
 	    LogPrintError "Configuration warning:"
@@ -44,18 +44,18 @@ if [[ ! -z "$PXE_HTTP_URL" ]] ; then
 	LogPrintError "Setting PXE_HTTP_DOWNLOAD_URL to the value of PXE_HTTP_URL and continuing."
 	LogPrintError "Please fix your configuration."
 	LogPrintError "-------------------------------------------------------------------------"
-	PXE_HTTP_DOWNLOAD_URL=$PXE_HTTP_URL
+	PXE_HTTP_DOWNLOAD_URL="$PXE_HTTP_URL"
     fi
 fi
 
-if [[ ! -z "$PXE_HTTP_DOWNLOAD_URL" ]] ; then
+if [[ "$PXE_HTTP_DOWNLOAD_URL" ]] ; then
     if [[ -z "$PXE_HTTP_UPLOAD_URL" ]] ; then
 	LogPrintError "----------------------------------------------------------------------------"
         LogPrintError "Configuration warning:"
 	LogPrintError "PXE_HTTP_DOWNLOAD_URL is set and PXE_HTTP_UPLOAD_URL is not set."
 	LogPrintError "This probably means that later you will try to download something"
 	LogPrintError "that never got uploaded."
-	LogPrintError "If you know what you are doing set PXE_HTTP_UPLOAD_URL=\$PXE_TFTP_UPLOAD_URL"
+	LogPrintError 'If you know what you are doing set PXE_HTTP_UPLOAD_URL="$PXE_TFTP_UPLOAD_URL"'
 	LogPrintError "to get rid of this warning."
 	LogPrintError "----------------------------------------------------------------------------"
     fi

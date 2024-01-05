@@ -9,7 +9,7 @@ fi
 # When PXE_TFTP_UPLOAD_URL is defined, result files are directly copied on the remote
 # PXE/TFTP server, and the local files are deleted (800_copy_to_tftp.sh).
 # So, no need to backup RESULT_FILES when PXE_TFTP_UPLOAD_URL is defined.
-[[ ! -z "$PXE_TFTP_UPLOAD_URL" ]] && return
+[[ "$PXE_TFTP_UPLOAD_URL" ]] && return
 
 [ ${#RESULT_FILES[@]} -gt 0 ]
 StopIfError "No files to copy (RESULT_FILES is empty)"
