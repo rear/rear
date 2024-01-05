@@ -5,6 +5,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
+local pxe_tftp_local_path
 if [[ -n "$PXE_TFTP_UPLOAD_URL" ]] ; then
     # E.g. PXE_TFTP_UPLOAD_URL=nfs://server/export/nfs/tftpboot
     local scheme=$( url_scheme $PXE_TFTP_UPLOAD_URL )

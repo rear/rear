@@ -7,6 +7,7 @@
 
 # We got PXE_KERNEL and PXE_INITRD set in the previous script.
 
+local pxe_local_path
 if test "$PXE_CONFIG_URL" ; then
     # E.g. PXE_CONFIG_URL=nfs://server/export/nfs/tftpboot/pxelinux.cfg
     # On 'server' the directory /export/nfs/tftpboot/pxelinux.cfg must exist.
@@ -24,7 +25,7 @@ fi
 
 # PXE_CONFIG_PREFIX is by default 'rear-' (see default.conf).
 # pxe_config_file contains the PXELINUX boot configuration of $HOSTNAME
-pxe_config_file="${PXE_CONFIG_PREFIX}$HOSTNAME"
+local pxe_config_file="${PXE_CONFIG_PREFIX}$HOSTNAME"
 if test "$PXE_CONFIG_URL" ; then
     if is_true "$PXE_CONFIG_GRUB_STYLE" ; then
         make_pxelinux_config_grub >"$pxe_local_path/$pxe_config_file"
