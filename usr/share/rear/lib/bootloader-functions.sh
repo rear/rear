@@ -896,7 +896,7 @@ function make_pxelinux_config_grub {
     net_default_server_opt=""
 
     # Be sure that TFTP Server IP is set with PXE_TFTP_IP Variable.
-    # else set it based on PXE_TFTP_UR variable.
+    # else set it based on PXE_TFTP_UPLOAD_URL variable.
     if [[ -z $PXE_TFTP_IP ]] ; then
         if [[ -z $PXE_TFTP_UPLOAD_URL ]] ; then
             LogPrintError "Can't find TFTP IP information. Variable PXE_TFTP_IP or PXE_TFTP_UPLOAD_URL with clear IP address must be set."
