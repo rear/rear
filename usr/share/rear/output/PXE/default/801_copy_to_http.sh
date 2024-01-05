@@ -5,11 +5,7 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-# Nothing to do here when PXE_HTTP_UPLOAD_URL is not set
-if [[ -z "$PXE_HTTP_UPLOAD_URL" ]] ; then
-    DebugPrint "PXE_HTTP_UPLOAD_URL not set, skipping copy"
-    return
-fi
+[[ "$PXE_HTTP_UPLOAD_URL" ]] || return
 
 # When PXE_HTTP_UPLOAD_URL equals PXE_TFTP_UPLOAD_URL then the files have
 # already been uploaded by 800_copy_to_tftp.sh and we don't need to do
