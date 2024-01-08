@@ -146,17 +146,10 @@ we mount the +/dev/mapper/backup-backup+ filesystem on
 === Manual excludes
 It seems prudent to prevent the external drives from ever being backed-up or overwritten. The default configuration contains these lines:
 ----------------------------------
-# Exclude components from being backed up, recreation information is active
-EXCLUDE_BACKUP=()
-
 # Exclude components during component recreation
 # will be added to EXCLUDE_BACKUP (it is not backed up)
 # recreation information gathered, but commented out
 EXCLUDE_RECREATE=()
-
-# Exclude components during the backup restore phase
-# only used to exclude files from the restore.
-EXCLUDE_RESTORE=()
 ----------------------------------
 
 To prevent the mounted backup filesystem from being added to
