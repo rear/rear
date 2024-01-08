@@ -125,4 +125,10 @@ case "$REAR_INITRD_COMPRESSION" in
         fi
         ;;
 esac
+
+# Only root should allowed to access the initrd
+# because the ReaR recovery system can contain secrets
+# cf. https://github.com/rear/rear/issues/3122
+test -s "$TMP_DIR/$REAR_INITRD_FILENAME" && chmod 0600 "$TMP_DIR/$REAR_INITRD_FILENAME"
+
 popd >/dev/null
