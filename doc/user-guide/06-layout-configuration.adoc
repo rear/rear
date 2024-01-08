@@ -35,22 +35,22 @@ Layout information is stored in +/var/lib/rear/layout/disklayout.conf+. The term
 Consider the information from the following system as an example:
 ----------------------------------
 disk /dev/sda 160041885696 msdos
-# disk /dev/sdb 320072933376 msdos
-# disk /dev/sdc 1999696297984 msdos
+#disk /dev/sdb 320072933376 msdos
+#disk /dev/sdc 1999696297984 msdos
 part /dev/sda 209682432 32768 primary boot /dev/sda1
 part /dev/sda 128639303680 209719296 primary lvm /dev/sda2
 part /dev/sda 31192862720 128849022976 primary none /dev/sda3
-# part /dev/sdb 162144912384 32256 primary none /dev/sdb1
-# part /dev/sdb 152556666880 162144944640 primary none /dev/sdb2
-# part /dev/sdb 5371321856 314701611520 primary boot /dev/sdb3
-# part /dev/sdc 1073741824000 1048576 primary boot /dev/sdc1
-# part /dev/sdc 925953425408 1073742872576 primary lvm /dev/sdc2
-# lvmdev /dev/backup /dev/sdc2 cJp4Mt-Vkgv-hVlr-wTMb-0qeA-FX7j-3C60p5 1808502784
+#part /dev/sdb 162144912384 32256 primary none /dev/sdb1
+#part /dev/sdb 152556666880 162144944640 primary none /dev/sdb2
+#part /dev/sdb 5371321856 314701611520 primary boot /dev/sdb3
+#part /dev/sdc 1073741824000 1048576 primary boot /dev/sdc1
+#part /dev/sdc 925953425408 1073742872576 primary lvm /dev/sdc2
+#lvmdev /dev/backup /dev/sdc2 cJp4Mt-Vkgv-hVlr-wTMb-0qeA-FX7j-3C60p5 1808502784
 lvmdev /dev/system /dev/mapper/disk N4Hpdc-DkBP-Hdm6-Z6FH-VixZ-7tTb-LiRt0w 251244544
-# lvmgrp /dev/backup 4096 220764 904249344
+#lvmgrp /dev/backup 4096 220764 904249344
 lvmgrp /dev/system 4096 30669 125620224
-# lvmvol /dev/backup backup 12800 104857600 
-# lvmvol /dev/backup externaltemp 38400 314572800 
+#lvmvol /dev/backup backup 12800 104857600 
+#lvmvol /dev/backup externaltemp 38400 314572800 
 lvmvol /dev/system root 2560 20971520 
 lvmvol /dev/system home 5120 41943040 
 lvmvol /dev/system var 2560 20971520 
@@ -140,18 +140,18 @@ EXCLUDE_RECREATE+=( "fs:/backup" )
 
 The layout file is as expected:
 ----------------------------------
-# disk /dev/sdc 1999696297984 msdos
+#disk /dev/sdc 1999696297984 msdos
 ...
-# part /dev/sdc 1073741824000 1048576 primary boot /dev/sdc1
-# part /dev/sdc 925953425408 1073742872576 primary lvm /dev/sdc2
-# lvmdev /dev/backup /dev/sdc2 cJp4Mt-Vkgv-hVlr-wTMb-0qeA-FX7j-3C60p5 1808502784
+#part /dev/sdc 1073741824000 1048576 primary boot /dev/sdc1
+#part /dev/sdc 925953425408 1073742872576 primary lvm /dev/sdc2
+#lvmdev /dev/backup /dev/sdc2 cJp4Mt-Vkgv-hVlr-wTMb-0qeA-FX7j-3C60p5 1808502784
 ...
-# lvmgrp /dev/backup 4096 220764 904249344
+#lvmgrp /dev/backup 4096 220764 904249344
 ...
-# lvmvol /dev/backup backup 12800 104857600 
-# lvmvol /dev/backup externaltemp 38400 314572800 
+#lvmvol /dev/backup backup 12800 104857600 
+#lvmvol /dev/backup externaltemp 38400 314572800 
 ...
-# fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
+#fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
 ----------------------------------
 
 Another approach would be to exclude the backup volume group. This is achieved by adding this line to the local configuration:
@@ -261,22 +261,22 @@ checking the disklayout file, we'd better do that.
 ----------------------------------
 #? 1
 disk /dev/sdb 160041885696 msdos
-# disk _REAR1_ 320072933376 msdos
-# disk /dev/sdc 1999696297984 msdos
+#disk _REAR1_ 320072933376 msdos
+#disk /dev/sdc 1999696297984 msdos
 part /dev/sdb 209682432 32768 primary boot /dev/sdb1
 part /dev/sdb -20916822016 209719296 primary lvm /dev/sdb2
 part /dev/sdb 31192862720 128849022976 primary none /dev/sdb3
-# part _REAR1_ 162144912384 32256 primary none _REAR1_1
-# part _REAR1_ 152556666880 162144944640 primary none _REAR1_2
-# part _REAR1_ 5371321856 314701611520 primary boot _REAR1_3
-# part /dev/sdc 1073741824000 1048576 primary boot /dev/sdc1
-# part /dev/sdc 925953425408 1073742872576 primary lvm /dev/sdc2
-# lvmdev /dev/backup /dev/sdc2 cJp4Mt-Vkgv-hVlr-wTMb-0qeA-FX7j-3C60p5 1808502784
+#part _REAR1_ 162144912384 32256 primary none _REAR1_1
+#part _REAR1_ 152556666880 162144944640 primary none _REAR1_2
+#part _REAR1_ 5371321856 314701611520 primary boot _REAR1_3
+#part /dev/sdc 1073741824000 1048576 primary boot /dev/sdc1
+#part /dev/sdc 925953425408 1073742872576 primary lvm /dev/sdc2
+#lvmdev /dev/backup /dev/sdc2 cJp4Mt-Vkgv-hVlr-wTMb-0qeA-FX7j-3C60p5 1808502784
 lvmdev /dev/system /dev/mapper/disk N4Hpdc-DkBP-Hdm6-Z6FH-VixZ-7tTb-LiRt0w 251244544
-# lvmgrp /dev/backup 4096 220764 904249344
+#lvmgrp /dev/backup 4096 220764 904249344
 lvmgrp /dev/system 4096 30669 125620224
-# lvmvol /dev/backup backup 12800 104857600 
-# lvmvol /dev/backup externaltemp 38400 314572800 
+#lvmvol /dev/backup backup 12800 104857600 
+#lvmvol /dev/backup externaltemp 38400 314572800 
 lvmvol /dev/system root 2560 20971520 
 lvmvol /dev/system home 5120 41943040 
 lvmvol /dev/system var 2560 20971520 
@@ -289,7 +289,7 @@ fs /dev/mapper/system-var /var ext4 uuid=a12bb95f-99f2-42c6-854f-1cb3f144d662 la
 fs /dev/mapper/system-vmxfs /vmware xfs uuid=7457d2ab-8252-4f41-bab6-607316259975 label=  options=rw,noatime
 fs /dev/mapper/system-kvm /kvm ext4 uuid=173ab1f7-8450-4176-8cf7-c09b47f5e3cc label= blocksize=4096 reserved_blocks=256000 max_mounts=21 check_interval=180d options=rw,noatime,commit=0
 fs /dev/sdb1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksize=1024 reserved_blocks=10238 max_mounts=35 check_interval=180d options=rw,commit=0
-# fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
+#fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
 crypt /dev/mapper/disk /dev/sdb2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 
@@ -310,22 +310,22 @@ The /kvm and /vmware filesystems are quite big. We don't care about them, so jus
 The resulting layout file looks like this:
 ----------------------------------
 disk /dev/sdb 160041885696 msdos
-# disk _REAR1_ 320072933376 msdos
-# disk /dev/sdc 1999696297984 msdos
+#disk _REAR1_ 320072933376 msdos
+#disk /dev/sdc 1999696297984 msdos
 part /dev/sdb 209682432 32768 primary boot /dev/sdb1
 part /dev/sdb -20916822016 209719296 primary lvm /dev/sdb2
 part /dev/sdb 31192862720 128849022976 primary none /dev/sdb3
-# part _REAR1_ 162144912384 32256 primary none _REAR1_1
-# part _REAR1_ 152556666880 162144944640 primary none _REAR1_2
-# part _REAR1_ 5371321856 314701611520 primary boot _REAR1_3
-# part /dev/sdc 1073741824000 1048576 primary boot /dev/sdc1
-# part /dev/sdc 925953425408 1073742872576 primary lvm /dev/sdc2
-# lvmdev /dev/backup /dev/sdc2 cJp4Mt-Vkgv-hVlr-wTMb-0qeA-FX7j-3C60p5 1808502784
+#part _REAR1_ 162144912384 32256 primary none _REAR1_1
+#part _REAR1_ 152556666880 162144944640 primary none _REAR1_2
+#part _REAR1_ 5371321856 314701611520 primary boot _REAR1_3
+#part /dev/sdc 1073741824000 1048576 primary boot /dev/sdc1
+#part /dev/sdc 925953425408 1073742872576 primary lvm /dev/sdc2
+#lvmdev /dev/backup /dev/sdc2 cJp4Mt-Vkgv-hVlr-wTMb-0qeA-FX7j-3C60p5 1808502784
 lvmdev /dev/system /dev/mapper/disk N4Hpdc-DkBP-Hdm6-Z6FH-VixZ-7tTb-LiRt0w 251244544
-# lvmgrp /dev/backup 4096 220764 904249344
+#lvmgrp /dev/backup 4096 220764 904249344
 lvmgrp /dev/system 4096 30669 125620224
-# lvmvol /dev/backup backup 12800 104857600 
-# lvmvol /dev/backup externaltemp 38400 314572800 
+#lvmvol /dev/backup backup 12800 104857600 
+#lvmvol /dev/backup externaltemp 38400 314572800 
 lvmvol /dev/system root 2560 20971520 
 lvmvol /dev/system home 5120 41943040 
 lvmvol /dev/system var 2560 20971520 
@@ -338,7 +338,7 @@ fs /dev/mapper/system-var /var ext4 uuid=a12bb95f-99f2-42c6-854f-1cb3f144d662 la
 #fs /dev/mapper/system-vmxfs /vmware xfs uuid=7457d2ab-8252-4f41-bab6-607316259975 label=  options=rw,noatime
 #fs /dev/mapper/system-kvm /kvm ext4 uuid=173ab1f7-8450-4176-8cf7-c09b47f5e3cc label= blocksize=4096 reserved_blocks=256000 max_mounts=21 check_interval=180d options=rw,noatime,commit=0
 fs /dev/sdb1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksize=1024 reserved_blocks=10238 max_mounts=35 check_interval=180d options=rw,commit=0
-# fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
+#fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
 crypt /dev/mapper/disk /dev/sdb2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 ----------------------------------
