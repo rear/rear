@@ -84,6 +84,28 @@ component that's part of it. The reason is that no mounted filesystem
 uses these two disks. After all, you don't want to recreate your
 backup disk when you're recovering your system.
 
+This behavior is controlled by the +AUTOEXCLUDE_DISKS=y+ parameter in
++default.conf+. If we unset it in the local configuration, Relax-and-Recover
+will no longer exclude it automatically.
+
+A similar mechanism exists for multipath disks. The +AUTOEXCLUDE_MULTIPATH=y+
+variable in +default.conf+ prevents Relax-and-Recover from overwriting
+multipath disks. Typically, they are part of the SAN disaster recovery
+strategy. However, there can be cases where you want to recover them. The
+information is retained in +disklayout.conf+.
+
+Some filesystems are excluded from the layout file by default if their
+mountpoints are located under certain directories. This behavior is
+controlled by the +AUTOEXCLUDE_PATH+ variable. It is an array of
+paths. If a mountpoint of a filesystem is under one of the paths, the
+filesystem is excluded. The default value includes +/media+, +/mnt+
+and +/tmp+. See +default.conf+ for the full list. Note that if one of
+the paths is itself a mountpoint, the filesystem is not excluded. So,
+if +/media+ is a mounted filesystem, it will not be excluded, but if
+we mount the +/dev/mapper/backup-backup+ filesystem on
++/media/backup+, it will get excluded, as the mountpoint is under
++/media+.
+
 If we mount the filesystem on +/dev/mapper/backup-backup+ on +/backup+,
 Relax-and-Recover will think that it's necessary to recreate the filesystem:
 ----------------------------------
@@ -120,28 +142,6 @@ fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
 crypt /dev/mapper/disk /dev/sda2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 ----------------------------------
-
-This behavior is controlled by the +AUTOEXCLUDE_DISKS=y+ parameter in
-+default.conf+. If we unset it in the local configuration, Relax-and-Recover
-will no longer exclude it automatically.
-
-A similar mechanism exists for multipath disks. The +AUTOEXCLUDE_MULTIPATH=y+
-variable in +default.conf+ prevents Relax-and-Recover from overwriting
-multipath disks. Typically, they are part of the SAN disaster recovery
-strategy. However, there can be cases where you want to recover them. The
-information is retained in +disklayout.conf+.
-
-Some filesystems are excluded from the layout file by default if their
-mountpoints are located under certain directories. This behavior is
-controlled by the +AUTOEXCLUDE_PATH+ variable. It is an array of
-paths. If a mountpoint of a filesystem is under one of the paths, the
-filesystem is excluded. The default value includes +/media+, +/mnt+
-and +/tmp+. See +default.conf+ for the full list. Note that if one of
-the paths is itself a mountpoint, the filesystem is not excluded. So,
-if +/media+ is a mounted filesystem, it will not be excluded, but if
-we mount the +/dev/mapper/backup-backup+ filesystem on
-+/media/backup+, it will get excluded, as the mountpoint is under
-+/media+.
 
 === Manual excludes
 It seems prudent to prevent the external drives from ever being backed-up or overwritten. The default configuration contains these lines:
