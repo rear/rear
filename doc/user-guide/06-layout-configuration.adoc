@@ -124,13 +124,21 @@ fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb
 ----------------------------------
 
 === Manual excludes
-It seems prudent to prevent the external drives from ever being backed-up or overwritten. The default configuration contains these lines:
-----------------------------------
-# Exclude components during component recreation
-# will be added to EXCLUDE_BACKUP (it is not backed up)
-# recreation information gathered, but commented out
-EXCLUDE_RECREATE=()
-----------------------------------
+It seems prudent to prevent the external drives from ever being backed-up or overwritten.
+The most generic mechanism for doing this is the +EXCLUDE_RECREATE+
+variable. It can contain a list of storage components that will be
+excluded from the layout (will be present in the layout file, but
+commented out) recursively together with their descendands (components
+that depend on the excluded component, like a filesystem on the
+underlying logical volume). Each component in the list corresponds to
+a component in the layout file, but the syntax is different. To
+specify a mounted filesystem, use the +fs:+ prefix:
++fs:+<mountpoint>. To specify swap, use the +swap:+ prefix. The syntax
+to specify a volume group to exclude (together with all its logical
+volumes and filesystems on them) is +/dev/+<volume group name>. Consult
+the +/var/lib/rear/layout/disktodo.conf+ file created together with
+the layout file for the full list of components in a compatible
+syntax.
 
 To prevent the mounted backup filesystem from being added to
 the layout file and recreated, one may add the filesystem to the +EXCLUDE_RECREATE+ array.
