@@ -54,7 +54,9 @@ The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices a
 |NETFS       | BACKUP  | Copy files to NFS/CIFS share             | done
 |TAPE        | BACKUP  | Copy files to tape(s)                    | done
 |DUPLICITY   | BACKUP  | Copy files to the Cloud                  | done
+|GALAXY      | BACKUP  | Use CommVault Galaxy (Simpana)           | done
 |NSR         | BACKUP  | Use Legato Networker                     | done
+|PPDM        | BACKUP  | Use Dell PowerProtect Data Manager       | done
 |TSM         | BACKUP  | Use Tivoli Storage Manager               | done
 |DP          | BACKUP  | Use Micro Focus Data Protector           | done
 |NBU         | BACKUP  | Use Symantec NetBackup                   | done

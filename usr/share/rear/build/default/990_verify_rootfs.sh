@@ -74,35 +74,14 @@ local broken_binaries="no"
 local fatal_missing_library="no"
 local ldd_output=""
 # Third-party backup tools may use LD_LIBRARY_PATH to find their libraries
-# so that for testing such third-party backup tools we must also use their special LD_LIBRARY_PATH here:
-if test "$BACKUP" = "TSM" ; then
-    # Use a TSM-specific LD_LIBRARY_PATH to find TSM libraries
-    # see https://github.com/rear/rear/issues/1533
-    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TSM_LD_LIBRARY_PATH || backup_tool_LD_LIBRARY_PATH=$TSM_LD_LIBRARY_PATH
-fi
-if test "$BACKUP" = "SESAM" ; then
-    # Use a SEP sesam-specific LD_LIBRARY_PATH to find sesam client related libraries
-    # see https://github.com/rear/rear/pull/1817
-    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SESAM_LD_LIBRARY_PATH || backup_tool_LD_LIBRARY_PATH=$SESAM_LD_LIBRARY_PATH
-fi
-if test "$BACKUP" = "NBU" ; then
-    # Use a NBU-specific LD_LIBRARY_PATH to find NBU libraries
-    # see https://github.com/rear/rear/issues/1974
-    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NBU_LD_LIBRARY_PATH || backup_tool_LD_LIBRARY_PATH=$NBU_LD_LIBRARY_PATH
-fi
-if test "$BACKUP" = "FDRUPSTREAM" ; then
-    # Use a FDRUPSTREAM-specific LD_LIBRARY_PATH to find FDR libraries
-    # see https://github.com/rear/rear/pull/2296
-    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$FDRUPSTREAM_INSTALL_PATH/bin || backup_tool_LD_LIBRARY_PATH=$FDRUPSTREAM_INSTALL_PATH/bin
-fi
-if test "$BACKUP" = "DP" ; then
-    # Use a DP-specific LD_LIBRARY_PATH to find DP libraries
-    # see https://github.com/rear/rear/pull/2549
-    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DP_LD_LIBRARY_PATH || backup_tool_LD_LIBRARY_PATH=$DP_LD_LIBRARY_PATH
-fi
-if test "$BACKUP" = GALAXY11 ; then
-    # Use a Galaxy-specific LD_LIBRARY_PATH to find Galaxy libraries
-    test $LD_LIBRARY_PATH && backup_tool_LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GALAXY11_HOME_DIRECTORY || backup_tool_LD_LIBRARY_PATH=$GALAXY11_HOME_DIRECTORY
+# so that for testing such third-party backup tools we must also use their
+# special LD_LIBRARY_PATH here, otherwise just use the default:
+if contains_visible_char "$LD_LIBRARY_PATH_FOR_BACKUP_TOOL" ; then
+    if test $LD_LIBRARY_PATH; then
+        backup_tool_LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$LD_LIBRARY_PATH_FOR_BACKUP_TOOL"
+    else
+        backup_tool_LD_LIBRARY_PATH="$LD_LIBRARY_PATH_FOR_BACKUP_TOOL"
+    fi
 fi
 
 # Actually test all binaries for 'not found' libraries.

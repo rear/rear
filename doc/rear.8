@@ -1,7 +1,7 @@
 '\" t
 .\"     Title: rear
 .\"    Author: [see the "AUTHORS" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 09 June 2022
 .\"    Manual: \ \&
 .\"    Source: \ \&
@@ -31,7 +31,7 @@
 rear \- bare metal disaster recovery and system migration tool
 .SH "SYNOPSIS"
 .sp
-\fBrear\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fB\-dsSv\fR] [\fB\-D\fR|\fB\-\-debugscripts\fR \fISET\fR] [\fB\-c\fR \fIDIR\fR] [\fB\-C\fR \fICONFIG\fR] [\fB\-r\fR \fIKERNEL\fR] [\-\-] \fICOMMAND\fR [\fIARGS\fR\&...]
+\fBrear\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] [\fB\-dsSv\fR] [\fB\-D\fR|\fB\-\-debugscripts\fR \fISET\fR] [\fB\-c\fR \fIDIR\fR] [\fB\-C\fR \fICONFIG\fR] [\fB\-r\fR \fIKERNEL\fR] [\fB\-n\fR|\fB\-\-non\-interactive\fR] [\fB\-e\fR|\fB\-\-expose\-secrets\fR] [\-\-] \fICOMMAND\fR [\fIARGS\fR\&...]
 .SH "DESCRIPTION"
 .sp
 Relax\-and\-Recover (abbreviated ReaR) is the leading Open Source disaster recovery solution\&. It is a modular framework with many ready\-to\-go workflows for common situations\&.
@@ -57,31 +57,29 @@ usage information
 .PP
 \-c DIR
 .RS 4
-alternative config directory; instead of /etc/rear
+alternative config directory instead of /etc/rear
 .RE
 .PP
 \-C CONFIG
 .RS 4
-additional config files; absolute path or relative to config directory
+additional config files (absolute path or relative to config directory)
 .RE
 .PP
 \-d
 .RS 4
-\fBdebug mode\fR
-(run many commands verbosely with debug messages in log file \- also sets \-v)
+\fBdebug mode\fR: run many commands verbosely with debug messages in the log file (also sets \-v)
 .RE
 .PP
 \-D
 .RS 4
-\fBdebugscript mode\fR
-(log executed commands via
+\fBdebugscript mode\fR: log executed commands via
 \fIset \-x\fR
-\- also sets \-v and \-d)
+(also sets \-v and \-d)
 .RE
 .PP
 \-\-debugscripts SET
 .RS 4
-same as \-d \-v \-D but
+same as \-D but
 \fBdebugscript mode\fR
 with
 \fIset \-SET\fR
@@ -89,25 +87,32 @@ with
 .PP
 \-r KERNEL
 .RS 4
-kernel version to use (by default use running kernel)
+kernel version to use (by default the version of the running kernel)
 .RE
 .PP
 \-s
 .RS 4
-\fBsimulation mode\fR
-(show what scripts are run without executing them)
+\fBsimulation mode\fR: show what scripts are run without executing them
 .RE
 .PP
 \-S
 .RS 4
-\fBstep\-by\-step mode\fR
-(acknowledge each script individually)
+\fBstep\-by\-step mode\fR: acknowledge each script individually
 .RE
 .PP
 \-v
 .RS 4
-\fBverbose mode\fR
-(show messages what ReaR is doing on the terminal)
+\fBverbose mode\fR: show messages what ReaR is doing on the terminal
+.RE
+.PP
+\-n \-\-non\-interactive
+.RS 4
+\fBnon\-interactive mode\fR: abort in UserInput() if default input does not make ReaR proceed (experimental)
+.RE
+.PP
+\-e \-\-expose\-secrets
+.RS 4
+do not suppress output of confidential values (passwords, encryption keys) in particular in the log file
 .RE
 .PP
 \-V \-\-version
@@ -508,6 +513,11 @@ BACKUP=\fBNSR\fR
 Using EMC NetWorker (Legato) to restore the data\&.
 .RE
 .PP
+BACKUP=\fBPPDM\fR
+.RS 4
+Using Dell PowerProtect Data Manager to restore the data\&.
+.RE
+.PP
 BACKUP=\fBAVA\fR
 .RS 4
 Using EMC Avamar to restore the data\&.
@@ -557,6 +567,11 @@ will create a Borg backup, see the section
 in the ReaR user\-guide
 \fIScenarios\fR
 documentation\&.
+.RE
+.PP
+BACKUP=\fBNFS4SERVER\fR
+.RS 4
+This is a restore only method\&. ReaR starts a NFSv4 server in the restore stage and provides the to be restored filesystems as NFSv4 share\&. Another server (with a special backup sotware) can mount this share and can push the backup data into it\&.
 .RE
 .sp
 The following BACKUP methods are \fIinternal\fR of Relax\-and\-Recover:

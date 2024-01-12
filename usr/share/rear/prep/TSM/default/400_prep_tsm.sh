@@ -16,3 +16,7 @@ PROGS+=( "${PROGS_TSM[@]}" )
 for gsk_dir in $(ls -d /usr/local/ibm/gsk*/lib* ) ; do
 	TSM_LD_LIBRARY_PATH=$TSM_LD_LIBRARY_PATH:$gsk_dir
 done
+
+# Use a TSM-specific LD_LIBRARY_PATH to find TSM libraries
+# see https://github.com/rear/rear/issues/1533
+LD_LIBRARY_PATH_FOR_BACKUP_TOOL="$TSM_LD_LIBRARY_PATH"

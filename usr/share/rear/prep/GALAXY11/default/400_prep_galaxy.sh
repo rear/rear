@@ -78,4 +78,7 @@ if test "$GALAXY11_Q_ARGUMENTFILE"; then
 	fi
 fi
 
+# Use a Galaxy-specific LD_LIBRARY_PATH to find Galaxy libraries
+LD_LIBRARY_PATH_FOR_BACKUP_TOOL="$GALAXY11_HOME_DIRECTORY"
+
 unset set_variable_from_commvault_status
