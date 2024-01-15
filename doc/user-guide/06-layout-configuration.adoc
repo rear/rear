@@ -133,7 +133,7 @@ excluding a filesystem from the layout file also excludes the files in
 the filesystem from the backup when using a supported backup method,
 which is what we want in this case.) One thus needs to
 exclude the components on the disk from the layout file.
-The most generic mechanism for doing this is the +EXCLUDE_RECREATE+
+A generic mechanism for doing this is the +EXCLUDE_RECREATE+
 variable. It can contain a list of storage components that will be
 excluded from the layout (will be present in the layout file, but
 commented out) recursively together with their descendands (components
