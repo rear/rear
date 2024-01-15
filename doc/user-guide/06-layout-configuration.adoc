@@ -81,8 +81,7 @@ It's easy to see that there are 3 disks attached to the system. +/dev/sda+ is th
 Relax-and-Recover has reasonable defaults when creating the recovery
 information. It has commented out the two external disks and any
 component that's part of it. The reason is that no mounted filesystem
-uses these two disks. After all, you don't want to recreate your
-backup disk when you're recovering your system.
+uses these two disks.
 
 This behavior is controlled by the +AUTOEXCLUDE_DISKS=y+ parameter in
 +default.conf+. If we unset it in the local configuration, Relax-and-Recover
@@ -124,7 +123,16 @@ fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb
 ----------------------------------
 
 === Manual excludes
-It seems prudent to prevent the external drives from ever being backed-up or overwritten.
+In this example, the external drive +/dev/sdc+ contains a volume group
+used for backups outside Relax-and-Recover. It is assumed that one
+does not want to overwrite and recreate the content of the backup disk
+when recovering the system, but one expects the backup disk to survive
+the recovery unchanged, and that one also does not want
+Relax-and-Recover to make a backup of its content. (Note that
+excluding a filesystem from the layout file also excludes the files in
+the filesystem from the backup when using a supported backup method,
+which is what we want in this case.) One thus needs to
+exclude the components on the disk from the layout file.
 The most generic mechanism for doing this is the +EXCLUDE_RECREATE+
 variable. It can contain a list of storage components that will be
 excluded from the layout (will be present in the layout file, but
