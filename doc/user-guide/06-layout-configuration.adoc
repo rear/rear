@@ -159,8 +159,8 @@ EXCLUDE_RECREATE=()
 EXCLUDE_RESTORE=()
 ----------------------------------
 
-To prevent an inadvertently mounted backup filesystem from being added to
-the layout file and recreated, the easiest way is to add the filesystem to the +EXCLUDE_RECREATE+ array.
+To prevent the mounted backup filesystem from being added to
+the layout file and recreated, one may add the filesystem to the +EXCLUDE_RECREATE+ array.
 ----------------------------------
 EXCLUDE_RECREATE+=( "fs:/backup" )
 ----------------------------------
