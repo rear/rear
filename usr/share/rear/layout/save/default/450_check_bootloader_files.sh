@@ -13,10 +13,17 @@ used_bootloader=( $( cat $VAR_DIR/recovery/bootloader ) )
 # so nonexistent files are not appended to CHECK_CONFIG_FILES
 # cf. https://github.com/rear/rear/pull/2796#issuecomment-1117171070
 case $used_bootloader in
+    (GRUB)
+        # GRUB Legacy support should be dropped
+        # so if users still use it we like to get reports via BugError
+        # and when there are no valid use cases its code can be removed
+        # see https://github.com/rear/rear/issues/3127
+        BugError "GRUB Legacy is no longer supported" 
+        ;;
     (EFI|GRUB2-EFI)
         CHECK_CONFIG_FILES+=( /boot/efi/EFI/*/grub*.cfg )
         ;;
-    (GRUB|GRUB2)
+    (GRUB2)
         CHECK_CONFIG_FILES+=( /[e]tc/grub*.cfg /[b]oot/*/grub*.cfg )
         ;;
     (LILO)
