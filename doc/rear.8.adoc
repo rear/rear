@@ -282,7 +282,8 @@ ip=192.168.100.2 nm=255.255.255.0 netdev=eth0 gw=192.168.100.1
 Skip network devices setup by the rescue system start up scripts (overrides ip= nm= netdev= gw=).
 
 == BACKUP SOFTWARE INTEGRATION
-Currently Relax-and-Recover supports the following backup methods.
+Currently Relax-and-Recover supports the below listed backup methods.
+
 There is a distinction between Relax-and-Recover support for 3rd party
 backup software and Relax-and-Recover internal backup methods. The latter
 also creates a backup of your data while the former will only integrate
@@ -293,7 +294,7 @@ backups yourself (unless otherwise noted).
 
 Especially the +rear mkbackup+ command can be confusing as it is only
 useful for the internal backup methods and has usually no function at all with
-the other (external) backup methods.
+the other (external) backup methods where the +rear mkrescue+ command applies.
 
 The following backup methods need to
 be set in Relax-and-Recover with the +BACKUP+ option. As mentioned we have
@@ -498,8 +499,8 @@ In almost all circumstances you have to configure two main settings and their
 parameters: The backup method and the output method.
 
 The backup method defines, how your data is to be saved and whether Relax-and-Recover
-should backup your data as part of the mkrescue process or whether you use an
-external application, e.g. backup software to archive your data.
+should backup your data as part of the mkbackup workflow for internal backup methods
+or whether you use 3rd party backup software to archive your data.
 
 The output method defines how the rescue system is written to disk and how you
 plan to boot the failed computer from the rescue system.
