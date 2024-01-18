@@ -11,7 +11,7 @@ function is_write_protected() {
     # For example /sys/block/sda has matching device node /dev/sda
     # and /sys/block/nvme0n1 has matching device node /dev/nvme0n1
     # but not all /sys/block/* entries have a matching device node
-    # in particular /sys/block/nvme0c0n1 has no /dev/nvme0c0n1
+    # in particular /sys/block/nvme0c0n1 has no /dev/nvme0c0n1 because it is part of NVMe multipathing
     # see https://github.com/rear/rear/issues/3085
 
     # When both WRITE_PROTECTED_IDS and WRITE_PROTECTED_FS_LABEL_PATTERNS are empty
