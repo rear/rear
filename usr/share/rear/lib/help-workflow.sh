@@ -17,7 +17,7 @@ fi
 
 # Output the help text to the original STDOUT but keep STDERR in the log file:
 cat 1>&7 <<EOF
-Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [-n|--non-interactive] [--] COMMAND [ARGS...]
+Usage: $PROGRAM [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [-n|--non-interactive] [-e|--expose-secrets] [--] COMMAND [ARGS...]
 
 $PRODUCT comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
@@ -33,8 +33,10 @@ Available options:
  -s                     simulation mode; show what scripts are run (without executing them)
  -S                     step-by-step mode; acknowledge each script individually
  -v                     verbose mode; show messages what $PRODUCT is doing on the terminal or show verbose help
- -V --version           version information
  -n --non-interactive   non-interactive mode; aborts when any user input is required (experimental)
+ -e --expose-secrets    do not suppress output of confidential values (passwords, encryption keys) in particular in the log file
+ -V --version           version information
+
 
 List of commands:
 EOF
