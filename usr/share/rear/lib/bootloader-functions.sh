@@ -529,6 +529,20 @@ function get_root_disk_UUID {
     ( set -o pipefail ; mount | grep ' on / ' | awk '{print $1}' | xargs blkid -s UUID -o value || Error "Failed to get root disk UUID" )
 }
 
+# Detect whether actually GRUB 2 is installed and that test is to
+# check if grub-probe or grub2-probe is installed because
+# grub-probe or grub2-probe is only installed in case of GRUB 2.
+# Needed because one can't tell the GRUB version by looking at the MBR
+# (both GRUB 2 and GRUB Legacy have the string "GRUB" in their MBR).
+function is_grub2_installed () {
+    if type -p grub-probe >&2 || type -p grub2-probe >&2 ; then
+        Log "GRUB 2 is installed (grub-probe or grub2-probe exist)."
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Output GRUB2 configuration on stdout:
 # $1 is the kernel file with appropriate path for GRUB2 to load the kernel from within GRUB2's root filesystem
 # $2 is the initrd file with appropriate path for GRUB2 to load the initrd from within GRUB2's root filesystem

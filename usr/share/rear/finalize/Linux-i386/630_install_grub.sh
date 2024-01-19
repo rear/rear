@@ -37,14 +37,12 @@ test "GRUB" = "$BOOTLOADER" || return 0
 #    as grub-install also exist in legacy grub
 # so that it seems there are cases where actually GRUB 2 is used
 # but wrongly detected as "GRUB" so that another test is needed
-# to detected if actually GRUB 2 is used and that test is to
-# check if grub-probe or grub2-probe is installed because
-# grub-probe or grub2-probe is only installed in case of GRUB 2
-# and when GRUB 2 is installed we assume GRUB 2 is used as boot loader
+# to detect if actually GRUB 2 is used.
+# When GRUB 2 is installed we assume GRUB 2 is used as boot loader
 # so that then we skip this script (which is only for GRUB Legacy)
 # because finalize/Linux-i386/660_install_grub2.sh is for installing GRUB 2:
-if type -p grub-probe >&2 || type -p grub2-probe >&2 ; then
-    LogPrint "Skip installing GRUB Legacy boot loader because GRUB 2 is installed (grub-probe or grub2-probe exist)."
+if is_grub2_installed ; then
+    LogPrint "Skip installing GRUB Legacy boot loader because GRUB 2 is installed."
     return
 fi
 

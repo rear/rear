@@ -57,7 +57,7 @@ is_true $USING_UEFI_BOOTLOADER && return
 # Only for GRUB2 - GRUB Legacy will be handled by its own script.
 # GRUB2 is detected by testing for grub-probe or grub2-probe which does not exist in GRUB Legacy.
 # If neither grub-probe nor grub2-probe is there assume GRUB2 is not there:
-type -p grub-probe || type -p grub2-probe || return 0
+is_grub2_installed || return 0
 
 LogPrint "Installing GRUB2 boot loader..."
 
