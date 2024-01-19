@@ -36,7 +36,9 @@
 #   This script does not check BOOTLOADER because it is also used as fallback
 #   to install the nowadays most often used bootloader GRUB2
 #   unless the BOOTLOADER variable tells to install another bootloader
-#   (other bootloader install scripts check the BOOTLOADER variable).
+#   (other bootloader install scripts check the BOOTLOADER variable)
+#   and unless we are using UEFI (BOOTLOADER then indicates the BIOS bootloader
+#   in a a hybrid boot setup).
 #
 # This script does not error out because at this late state of "rear recover"
 # (i.e. after the backup was restored) I <jsmeix@suse.de> consider it too hard
@@ -52,7 +54,11 @@ is_true $NOBOOTLOADER || return 0
 
 # For UEFI systems with grub2 we should use efibootmgr instead,
 # cf. finalize/Linux-i386/670_run_efibootmgr.sh
-is_true $USING_UEFI_BOOTLOADER && return
+# but if BOOTLOADER is explicitly set to GRUB2, we are on a hybrid (BIOS/UEFI)
+# boot system and we need to install GRUB to MBR as well
+if is_true $USING_UEFI_BOOTLOADER && [ "GRUB2" != "$BOOTLOADER" ] ; then
+   return 0
+fi
 
 # Only for GRUB2 - GRUB Legacy will be handled by its own script.
 # GRUB2 is detected by testing for grub-probe or grub2-probe which does not exist in GRUB Legacy.
