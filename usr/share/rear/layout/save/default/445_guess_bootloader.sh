@@ -65,37 +65,10 @@ for block_device in /sys/block/* ; do
         # Continue guessing the used bootloader by inspecting the first bytes on the next disk:
         continue
     fi
-    # 'Hah!IdontNeedEFI' is the ASCII representation of the official GUID number
-    # for a GPT BIOS boot partition which is 21686148-6449-6E6F-744E-656564454649
-    # see https://en.wikipedia.org/wiki/BIOS_boot_partition (issue #1752).
-    # Use single quotes for 'Hah!IdontNeedEFI' to be on the safe side
-    # because with double quotes the ! would cause history expansion if that is enabled
-    # (non-interactive shells do not perform history expansion by default but better safe than sorry):
-    if grep -q 'Hah!IdontNeedEFI' $bootloader_area_strings_file ; then
-        # Because 'Hah!IdontNeedEFI' contains the known bootloader 'EFI'
-        # the default code below would falsely guess that 'EFI' is used
-        # but actually another non-EFI bootloader is used here
-        # cf. https://github.com/rear/rear/issues/1752#issue-303856221
-        # so that in the 'Hah!IdontNeedEFI' case only non-EFI bootloaders are tested.
-        # IBM Z (s390) uses zipl boot loader for RHEL and Ubuntu
-        # cf. https://github.com/rear/rear/issues/2137
-        for known_bootloader in GRUB2 GRUB ELILO LILO ZIPL ; do
-            if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
-                LogPrint "Using guessed bootloader '$known_bootloader' for 'rear recover' (found in first bytes on $disk_device with GPT BIOS boot partition)"
-                echo "$known_bootloader" >$bootloader_file
-                return
-            fi
-        done
-        # When in the 'Hah!IdontNeedEFI' case no known non-EFI bootloader is found
-        # continue guessing the used bootloader by inspecting the first bytes on the next disk
-        # because otherwise the default code below would falsely guess that 'EFI' is used
-        # cf. https://github.com/rear/rear/pull/1754#issuecomment-383531597
-        continue
-    fi
     # Check the default cases of known bootloaders.
     # IBM Z (s390) uses zipl boot loader for RHEL and Ubuntu
     # cf. https://github.com/rear/rear/issues/2137
-    for known_bootloader in GRUB2-EFI EFI GRUB2 GRUB ELILO LILO ZIPL ; do
+    for known_bootloader in GRUB2 GRUB LILO ZIPL ; do
         if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
             # If we find "GRUB" (which means GRUB Legacy)
             # do not unconditionally trust that because https://github.com/rear/rear/pull/589
@@ -130,6 +103,26 @@ for block_device in /sys/block/* ; do
     Log "End of strings in the first bytes on $disk_device"
 done
 
+# No bootloader detected, but we are using UEFI - there is probably an EFI bootloader
+if is_true $USING_UEFI_BOOTLOADER ; then
+    if is_grub2_installed ; then
+        echo "GRUB2-EFI" >$bootloader_file
+    elif test -f /sbin/elilo ; then
+        echo "ELILO" >$bootloader_file
+    else
+        # There is an EFI bootloader, we don't know which one exactly.
+        # The value "EFI" is a bit redundant with USING_UEFI_BOOTLOADER=1,
+        # which already indicates that there is an EFI bootloader. We use it as a placeholder
+        # to not leave $bootloader_file empty.
+        # Note that it is legal to have USING_UEFI_BOOTLOADER=1 and e.g. known_bootloader=GRUB2
+        # (i.e. a non=EFI bootloader). This will happen in BIOS/UEFI hybrid boot scenarios.
+        # known_bootloader=GRUB2 indicates that there is a BIOS bootloader and USING_UEFI_BOOTLOADER=1
+        # indicates that there is also an EFI bootloader. Only the EFI one is being used at this
+        # time, but both will need to be restored.
+        echo "EFI" >$bootloader_file
+    fi
+    return 0
+fi
 
 # Error out when no bootloader was specified or could be autodetected:
 Error "Cannot autodetect what is used as bootloader, see default.conf about 'BOOTLOADER'"
