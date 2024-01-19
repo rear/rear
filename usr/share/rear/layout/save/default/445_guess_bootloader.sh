@@ -97,7 +97,26 @@ for block_device in /sys/block/* ; do
     # cf. https://github.com/rear/rear/issues/2137
     for known_bootloader in GRUB2-EFI EFI GRUB2 GRUB ELILO LILO ZIPL ; do
         if grep -q -i "$known_bootloader" $bootloader_area_strings_file ; then
-            LogPrint "Using guessed bootloader '$known_bootloader' for 'rear recover' (found in first bytes on $disk_device)"
+            # If we find "GRUB" (which means GRUB Legacy)
+            # do not unconditionally trust that because https://github.com/rear/rear/pull/589
+            # reads (excerpt):
+            #   Problems found:
+            #   The ..._install_grub.sh checked for GRUB2 which is not part
+            #   of the first 2048 bytes of a disk - only GRUB was present -
+            #   thus the check for grub-probe/grub2-probe
+            # and https://github.com/rear/rear/commit/079de45b3ad8edcf0e3df54ded53fe955abded3b
+            # reads (excerpt):
+            #    replace grub-install by grub-probe
+            #    as grub-install also exist in legacy grub
+            # so that if actually GRUB 2 is used, the string in the bootloader area
+            # is "GRUB" so that another test is needed to detect if actually GRUB 2 is used.
+            # When GRUB 2 is installed we assume GRUB 2 is used as boot loader.
+            if [ "$known_bootloader" = "GRUB" ] && is_grub2_installed ; then
+                known_bootloader=GRUB2
+                LogPrint "GRUB found in first bytes on $disk_device and GRUB 2 is installed, using GRUB2 as a guessed bootloader for 'rear recover'"
+            else
+                LogPrint "Using guessed bootloader '$known_bootloader' for 'rear recover' (found in first bytes on $disk_device)"
+            fi
             echo "$known_bootloader" >$bootloader_file
             return
         fi
