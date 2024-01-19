@@ -1,7 +1,15 @@
 
 # Determine or guess the used bootloader if not specified by the user
 # and save this information into /var/lib/rear/recovery/bootloader
-bootloader_file="$VAR_DIR/recovery/bootloader"
+local bootloader_file="$VAR_DIR/recovery/bootloader"
+
+local sysconfig_bootloader
+local block_device
+local blockd
+local disk_device
+local bootloader_area_strings_file
+local block_size
+local known_bootloader
 
 # When BOOTLOADER is specified use that:
 if test "$BOOTLOADER" ; then
