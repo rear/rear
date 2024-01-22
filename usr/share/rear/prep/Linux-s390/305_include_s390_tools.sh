@@ -1,8 +1,6 @@
 #
 #  s390 zIPL boot loader and grubby for configuring boot loader`
 
-test -d $VAR_DIR/recovery || mkdir -p $VAR_DIR/recovery
-
 # See the code in prep/GNU/Linux/300_include_grub_tools.sh
 # that sets grubdir via
 #   local grubdir="$( echo -n /boot/grub* )"
@@ -21,7 +19,7 @@ local bootdir="/boot/"
 #   findmnt returns --> /dev/dasda3[/@/.snapshots/1/snapshot]
 #   use 300_include_grub_tools.sh instead of this file (grub2-probe)
 if has_binary findmnt ; then
-    findmnt -no SOURCE --target $bootdir >$VAR_DIR/recovery/bootdisk || return 0
+    findmnt -no SOURCE --target $bootdir > /dev/null || return 0
 fi
 
 # Missing programs in the PROGS array are ignored:

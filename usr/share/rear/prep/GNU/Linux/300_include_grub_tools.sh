@@ -1,8 +1,6 @@
 #
 # GRUB2 has much more commands than the legacy grub command, including modules
 
-test -d $VAR_DIR/recovery || mkdir -p $VAR_DIR/recovery
-
 # cf. https://github.com/rear/rear/issues/2137
 # s390 zlinux does not use grub 
 # *********************************************************************************
@@ -19,9 +17,9 @@ test -d "$grubdir" || grubdir='/boot/grub'
 
 # Check if we're using grub or grub2 before doing something.
 if has_binary grub-probe ; then
-    grub-probe -t device $grubdir >$VAR_DIR/recovery/bootdisk 2>/dev/null || return 0
+    grub-probe -t device $grubdir >/dev/null 2>&1 || return 0
 elif has_binary grub2-probe ; then
-    grub2-probe -t device $grubdir >$VAR_DIR/recovery/bootdisk 2>/dev/null || return 0
+    grub2-probe -t device $grubdir >/dev/null 2>&1 || return 0
 fi
 
 # Missing programs in the PROGS array are ignored:
