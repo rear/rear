@@ -100,6 +100,8 @@ function SourceStage () {
     test "$DEBUG" && Print "Running '$stage' stage ======================"
     # We always source scripts in the same subdirectory structure.
     # The {...,...,...} way of writing it is a shell shortcut that expands as intended.
+    # The intent is to only get those scripts that match the specified backup method and output method
+    # and that match the used operating system and architecture and the used Linux distribution.
     # The sed pipe is used to sort the scripts by their 3-digit number independent of the directory depth of the script.
     # Basically sed inserts a ! before and after the number which makes the number field nr. 2
     # when dividing lines into fields by ! so that the subsequent sort can sort by that field.
