@@ -99,16 +99,24 @@ function SourceStage () {
     # In debug modes show what stage is run also on the user's terminal:
     test "$DEBUG" && Print "Running '$stage' stage ======================"
     # We always source scripts in the same subdirectory structure.
-    # The {...,...,...} way of writing it is a shell shortcut that expands as intended.
-    # The intent is to only get those scripts that match the specified backup method and output method
-    # and that match the used operating system and architecture and the used Linux distribution.
-    # The sed pipe is used to sort the scripts by their 3-digit number independent of the directory depth of the script.
-    # Basically sed inserts a ! before and after the number which makes the number field nr. 2
-    # when dividing lines into fields by ! so that the subsequent sort can sort by that field.
+    # The ls -d {...,...,...} within the $SHARE_DIR/$stage directory expands as intended.
+    # The intent is to only list those scripts below the $SHARE_DIR/$stage directory
+    # that match the specified backup method and output method
+    # and that match the used operating system and architecture and Linux distribution.
+    # The pipe sorts the listed scripts by their 3-digit number independent of the directory of the script.
+    # First sed inserts a ! before and after the script number
+    # e.g. default/123_some_script.sh becomes default/!123!_some_script.sh
+    # which makes the script number field nr. 2 when dividing lines into fields by !
+    # so that the subsequent sort can sort by that field.
+    # Numeric sort is not needed because all script numbers have same length
+    # (without numeric sort 2 and 10 get sorted as first 10 then 2).
     # The final tr removes the ! to restore the original script name.
-    # That code would break if ! is used in a directory name of the ReaR subdirectory structure
-    # but those directories below ReaR's $SHARE_DIR/$stage directory are not named by the user
+    # This code breaks if ! or a leading 3-digit number with underscore
+    # is used in a directory name of the ReaR subdirectory structure
+    # but those directories below the $SHARE_DIR/$stage directory are not named by the user
     # so that it even works when a user runs a git clone in his .../ReaRtest!/ directory.
+    # For example a new backup method named '123_backup' is not possible
+    # but a new backup method named '123backup' (without underscore) is possible.
     local scripts=( $( cd $SHARE_DIR/$stage
                  ls -d  {default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
               "$BACKUP"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
