@@ -35,7 +35,7 @@ fi
 # modules are actually included in the rescue system
 if test -s /etc/initramfs-tools/modules ; then
     MODULES_LOAD+=(
-        $( sed -n -e 's/^\([a-z0-9]\+\).*/\1/p' < /etc/initramfs-tools/modules )
+        $( sed -n -e 's/^\([A-Za-z0-9_-]\+\).*/\1/p' < /etc/initramfs-tools/modules )
     )
 fi
 
