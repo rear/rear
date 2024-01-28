@@ -81,6 +81,8 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]] ; then
         # Installing grub on an LVM PV will wipe the metadata so we skip those
         # function is_disk_a_pv returns true if disk is a PV
         is_disk_a_pv "$disk"  &&  continue
+        # Is the disk suitable for GRUB installation at all?
+        is_disk_grub_candidate "$disk" || continue
         # Use first boot partition by default
         part=$( echo $bootparts | cut -d' ' -f1 )
 

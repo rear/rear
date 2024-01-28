@@ -532,6 +532,33 @@ get_component_type() {
     grep -E "^[^ ]+ $1 " $LAYOUT_TODO | cut -d " " -f 3
 }
 
+# Get the disklabel (partition table) type of the disk $1 from the layout file
+# (NOT from the actual disk, so layout file must exist before calling this,
+# and it is useful during recovery even before the disk layout has been recreated)
+function get_disklabel_type () {
+    # from create_disk() in layout/prepare/GNU/Linux/100_include_partition_code.sh
+    local component disk size label junk
+
+    disk=''
+
+    read component disk size label junk < <(grep "^disk $1 " "$LAYOUT_FILE")
+    test $disk || return 1
+
+    echo $label
+}
+
+# Get partition flags from layout (space-separated) of partition given as $1
+function get_partition_flags () {
+    local part disk size pstart name flags partition junk
+
+    while read part disk size pstart name flags partition junk; do
+        if [ "$partition" == "$1" ] ; then
+            echo "$flags" | tr ',' ' '
+            return 0
+        fi
+    done < <(grep "^part " $LAYOUT_FILE)
+}
+
 # Function returns 0 when v1 is greater or equal than v2
 version_newer() {
   local v1list=( ${1//[-.]/ } )

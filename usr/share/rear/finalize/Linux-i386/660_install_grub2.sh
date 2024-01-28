@@ -171,6 +171,8 @@ for disk in $disks ; do
 
     # Install GRUB2 on the boot disk if one was found:
     if test "$bootdisk" ; then
+        # Is the disk suitable for GRUB installation at all?
+        is_disk_grub_candidate "$bootdisk" || continue
         # Continue with the next possible boot disk when GRUB2 was already installed on the current one.
         # When there are more disks like /dev/sda and /dev/sdb it can happen that
         # for /dev/sda bootdisk=/dev/sda and GRUB2 gets installed on /dev/sda and
