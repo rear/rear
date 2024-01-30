@@ -47,6 +47,13 @@
 # so that after "rear recover" finished he can manually install the bootloader
 # as appropriate for his particular system.
 
+local grub_name
+local grub2_install_failed grub2_install_device
+local source_disk target_disk junk
+local grub2_installed_disks
+local part bootparts
+local disk disks bootdisk
+
 # Skip if another bootloader was already installed:
 # In this case NOBOOTLOADER is not true,
 # cf. finalize/default/050_prepare_checks.sh
