@@ -20,6 +20,13 @@
 # Authors:
 # See https://github.com/rear/rear/graphs/contributors for full list of authors
 
+# the following Bash minimum version check is so essential that it has to come first
+# and that is why it doesn't use anything from our framework or functions.
+((BASH_VERSINFO[0] >= 4)) || {
+    echo "ERROR: ReaR needs bash version 4 or higher" >&2
+    exit 1
+}
+
 # Usually functions belong to the library scripts (i.e. $SHARE_DIR/lib/*.sh),
 # but these 2 are exceptions on the rule because the complementary global functions
 # to get and apply bash flags and options commands are needed from the very beginning

@@ -114,6 +114,9 @@ Use Symantec NetBackup programs
 BACKUP=NSR::
 Use EMC NetWorker (Legato)
 
+BACKUP=PPDM::
+Use Dell PowerProtect Data Manager
+
 BACKUP=BACULA::
 Use Bacula programs
 

@@ -9,7 +9,9 @@ alias which='type -p'
 alias rehash='hash -r'
 
 # ReaR helpers
-alias show='declare -p | grep'
+function show {
+    declare -p $(compgen -v | grep -iF "${1:-_}")
+}
 
 # mandatory for our scripts to work
 shopt -s nullglob extglob
@@ -57,6 +59,11 @@ It is intended for development and testing of $PRODUCT
 to find out how things behave within the $PRODUCT environment.
 For example you can call $PRODUCT specific functions
 or source $PRODUCT scripts to test their behaviour.
+
+Helper commands:
+show <var name fragment>    dumps all matching variables
+Source .../script.sh        runs a single ReaR script
+SourceStage stage/subdir    runs an entire stage or a subdir, e.g. verify/PPDM
 
 SHARE_DIR=$SHARE_DIR BUILD_DIR=$BUILD_DIR
 "

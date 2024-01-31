@@ -344,6 +344,9 @@ that a TSM backup is created by calling 'dsmc incremental' during 'rear mkbackup
 BACKUP=*NSR*::
 Using EMC NetWorker (Legato) to restore the data.
 
+BACKUP=*PPDM*::
+Using Dell PowerProtect Data Manager to restore the data.
+
 BACKUP=*AVA*::
 Using EMC Avamar to restore the data.
 

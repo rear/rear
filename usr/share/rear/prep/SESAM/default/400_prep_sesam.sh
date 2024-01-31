@@ -35,3 +35,7 @@ if [ -e /etc/sesam2000.ini ]; then
         # include libssl as it is needed to run sesam sm_sshd if included
         LIBS+=( /usr/lib*/libssl.so.* /usr/lib*/libcrypto.so.* )
 fi
+
+# Use a SEP sesam-specific LD_LIBRARY_PATH to find sesam client related libraries
+# see https://github.com/rear/rear/pull/1817
+LD_LIBRARY_PATH_FOR_BACKUP_TOOL="$SESAM_LD_LIBRARY_PATH"
