@@ -27,29 +27,27 @@ is_true $NOBOOTLOADER || return 0
 test "GRUB" = "$BOOTLOADER" || return 0
 
 # If the BOOTLOADER variable is "GRUB" (which means GRUB Legacy)
-# do not unconditionally trust that because https://github.com/rear/rear/pull/589
-# reads (excerpt):
-#   Problems found:
-#   The ..._install_grub.sh checked for GRUB2 which is not part
-#   of the first 2048 bytes of a disk - only GRUB was present -
-#   thus the check for grub-probe/grub2-probe
-# and https://github.com/rear/rear/commit/079de45b3ad8edcf0e3df54ded53fe955abded3b
-# reads (excerpt):
-#    replace grub-install by grub-probe
-#    as grub-install also exist in legacy grub
-# so that it seems there are cases where actually GRUB 2 is used
-# but wrongly detected as "GRUB" so that another test is needed
-# to detect if actually GRUB 2 is used.
-# When GRUB 2 is installed we assume GRUB 2 is used as boot loader
-# so that then we skip this script (which is only for GRUB Legacy)
-# because finalize/Linux-i386/660_install_grub2.sh is for installing GRUB 2:
+# we could in principle trust that and continue because
+# layout/save/default/445_guess_bootloader.sh (where the value has been set)
+# is now able to distinguish between GRUB Legacy and GRUB 2.
+# But, as this code used to support the value "GRUB" for GRUB 2,
+# the user can have BOOTLOADER=GRUB set explicitly in the configuration file
+# and then it overrides the autodetection in layout/save/default/445_guess_bootloader.sh .
+# The user expects this setting to work with GRUB 2, thus for backward compatibility
+# we need to take into accout the possibility that GRUB actually means GRUB 2.
 if is_grub2_installed ; then
     LogPrint "Skip installing GRUB Legacy boot loader because GRUB 2 is installed."
+    # We have the ErrorIfDeprecated function, but it aborts ReaR by default,
+    # which is not a good thing to do during recovery.
+    # Therefore it better to log a warning and continue.
+    LogPrintError "WARNING: setting BOOTLOADER=GRUB for GRUB 2 is deprecated, set BOOTLOADER=GRUB2 if setting BOOTLOADER explicitly"
     return
 fi
 
 # The actual work:
 LogPrint "Installing GRUB Legacy boot loader:"
+# See above for the reasoning why not to use ErrorIfDeprecated
+LogPrintError "WARNING: support for GRUB Legacy is deprecated"
 
 # Installing GRUB Legacy boot loader requires an executable "grub":
 type -p grub >&2 || Error "Cannot install GRUB Legacy boot loader because there is no 'grub' program."
