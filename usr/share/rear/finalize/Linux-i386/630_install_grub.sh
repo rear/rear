@@ -1,15 +1,9 @@
 # This script is an improvement over the default grub-install '(hd0)'
 #
-# However the following issues still exist:
+# However the following issue still exists:
 #
 #  * We don't know what the first disk will be, so we cannot be sure the MBR
-#    is written to the correct disk(s). That's why we make all disks bootable.
-#
-#  * There is no guarantee that GRUB was the boot loader used originally.
-#    One possible attempt would be to save and restore the MBR for each disk,
-#    but this does not guarantee a correct boot order,
-#    or even a working boot loader config
-#    (eg. GRUB stage2 might not be at the exact same location).
+#    is written to the correct disk(s). That's why we make all suitable disks bootable.
 
 # Skip if another boot loader is already installed
 # (then $NOBOOTLOADER is not a true value cf. finalize/default/010_prepare_checks.sh):
