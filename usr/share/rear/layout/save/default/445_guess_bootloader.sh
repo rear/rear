@@ -13,6 +13,14 @@ local known_bootloader
 
 # When BOOTLOADER is specified use that:
 if test "$BOOTLOADER" ; then
+    # case-insensitive match, as later we conver all to uppercase
+    if [[ "$BOOTLOADER" == [Gg][Rr][Uu][Bb] ]] ; then
+        if is_grub2_installed ; then
+            LogPrintError "BOOTLOADER=GRUB used to mean GRUB 2 if GRUB 2 is installed and GRUB Legacy if not"
+            Error "BOOTLOADER set to '$BOOTLOADER', set it to 'GRUB2' explicitly to avoid the ambiguity"
+        fi
+        # we should add an ErrorIfDeprecated call here or later for GRUB Legacy deprecation
+    fi
     LogPrint "Using specified bootloader '$BOOTLOADER' for 'rear recover'"
     echo "$BOOTLOADER" | tr '[a-z]' '[A-Z]' >$bootloader_file
     return
