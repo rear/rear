@@ -10,10 +10,18 @@
 NOBOOTLOADER=1
 
 # Try to read the BOOTLOADER value if /var/lib/rear/recovery/bootloader is not empty.
-# Currently (June 2016) the used BOOTLOADER values (grep for '$BOOTLOADER') are:
+# Currently (February 2024) the used BOOTLOADER values (grep for '$BOOTLOADER') are:
 #   GRUB  for GRUB Legacy
 #   GRUB2 for GRUB 2
 #   ELILO for elilo
+#   LILO  for lilo
+#   GRUB2-EFI for GRUB 2, EFI version
+#   EFI   for any EFI bootloader, dummy value
+#   ARM   for ARM devices, dummy value
+#   ARM-ALLWINNER for Allwinner devices
+#   ZIPL  for zIPL, on IBM Z (s390x)
+#   PPC   for any bootloader in the PReP boot partition (can be LILO, YABOOT, GRUB2)
+
 local bootloader_file="$VAR_DIR/recovery/bootloader"
 # The output is stored in an artificial bash array so that $BOOTLOADER is the first word:
 test -s $bootloader_file && BOOTLOADER=( $( grep -v '^[[:space:]]*#' $bootloader_file ) )
