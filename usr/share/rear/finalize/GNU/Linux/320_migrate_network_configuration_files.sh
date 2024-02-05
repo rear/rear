@@ -102,7 +102,7 @@ function valid_restored_file_for_patching () {
 # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
 # see https://github.com/rear/rear/pull/1514#discussion_r141031975
 # and for the general issue see https://github.com/rear/rear/issues/1372
-for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
+for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* $TARGET_FS_ROOT/etc/NetworkManager/system-connections/*.nmconnection ; do
     network_config_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
     network_config_files+=( $network_config_file )
 done
