@@ -87,7 +87,3 @@ fi
 DebugPrint "Found EFI system partition ${esp_proc_mounts_line[0]} on ${esp_proc_mounts_line[1]} type ${esp_proc_mounts_line[2]}"
 USING_UEFI_BOOTLOADER=1
 LogPrint "Using UEFI Boot Loader for Linux (USING_UEFI_BOOTLOADER=1)"
-
-# Remember the ESP device node in VAR_DIR/recovery/bootdisk:
-echo "${esp_proc_mounts_line[0]}" >$VAR_DIR/recovery/bootdisk
-
