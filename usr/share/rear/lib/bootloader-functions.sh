@@ -796,7 +796,7 @@ function make_pxelinux_config {
     echo "say ----------------------------------------------------------"
 
     # start with optional rear http entry if specified
-    if [[ ! -z $PXE_HTTP_URL ]] ; then    
+    if [[ "$PXE_HTTP_DOWNLOAD_URL" ]] ; then    
         case "$PXE_RECOVER_MODE" in
         "automatic")
             echo "say rear-automatic-http - Recover $HOSTNAME (HTTP) with auto-recover kernel option"
@@ -818,8 +818,8 @@ function make_pxelinux_config {
         echo "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)"
         echo "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
         echo "ENDTEXT"
-        echo "    kernel $PXE_HTTP_URL/$PXE_KERNEL"
-        echo "    append initrd=$PXE_HTTP_URL/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
+        echo "    kernel $PXE_HTTP_DOWNLOAD_URL/$PXE_KERNEL"
+        echo "    append initrd=$PXE_HTTP_DOWNLOAD_URL/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
         echo "say ----------------------------------------------------------"
     fi
 
@@ -895,15 +895,15 @@ function make_pxelinux_config {
 function make_pxelinux_config_grub {
     net_default_server_opt=""
 
-    # Be sure that TFTP Server IP is set with TFTP_SERVER_IP Variable.
-    # else set it based on PXE_TFTP_UR variable.
+    # Be sure that TFTP Server IP is set with PXE_TFTP_IP Variable.
+    # else set it based on PXE_TFTP_UPLOAD_URL variable.
     if [[ -z $PXE_TFTP_IP ]] ; then
-        if [[ -z $PXE_TFTP_URL ]] ; then
-            LogPrintError "Can't find TFTP IP information. Variable TFTP_SERVER_IP or PXE_TFTP_URL with clear IP address must be set."
+        if [[ -z "$PXE_TFTP_UPLOAD_URL" ]] ; then
+            LogPrintError "Can't find TFTP IP information. Variable PXE_TFTP_IP or PXE_TFTP_UPLOAD_URL with clear IP address must be set."
             return
         else
-            # Get IP address from PXE_TFTP_URL (ex:http://xx.yy.zz.aa:port/foo/bar)
-            PXE_TFTP_IP=$(echo "$PXE_TFTP_URL" | awk -F'[/:]' '{ print $4 }')
+            # Get IP address from PXE_TFTP_UPLOAD_URL (ex:http://xx.yy.zz.aa:port/foo/bar)
+            PXE_TFTP_IP=$(echo "$PXE_TFTP_UPLOAD_URL" | awk -F'[/:]' '{ print $4 }')
 
             # If PXE_TFTP_IP is not an IP, it could be a FQDM that must be resolved to IP.
             # is_ip() function is defined in network-function.sh
