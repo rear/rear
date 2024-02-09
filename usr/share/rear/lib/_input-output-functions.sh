@@ -448,7 +448,7 @@ function Log () {
       #   message prefix 2021-06-24 10:49:39.824719000 fist line
       #                                                second line
       #                                                third line
-      # to make that parameter expansion also works with bash version 3.1.17 in SLES10:
+      # to make that parameter expansion also work with bash version 3.1.17 in SLES10:
       log_message="${MESSAGE_PREFIX}${timestamp}${message//$LF/$LF$prefix_blanks}"
       # Append the log message explicitly to the log file to ensure that intended log messages
       # actually appear in the log file even inside { ... } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
@@ -846,7 +846,7 @@ function ErrorIfDeprecated () {
         This feature or code path has been deprecated in ReaR and will
         be removed eventually. If you disagree with that, then please
         go to https://github.com/rear/rear/issues and create an issue
-        explaining for us why we should not deprecate this code path.
+        explaining to us why we should not deprecate this code path.
 
         Meanwhile, in order to continue using this feature, you can add
         DISABLE_DEPRECATION_ERRORS+=( $feature )
@@ -856,7 +856,14 @@ function ErrorIfDeprecated () {
     Error "$(sed -e "s/^ *//" <<<"$error_text")"
 }
 
+# The ...IfError functions should no longer be used in new code and
+# when existing code is modified the existing ...IfError functions
+# should be replaced by using bash directly (see the examples below).
+#
+# Reason:
 # Using the ...IfError functions can result unexpected behaviour in certain cases.
+#
+# Examples:
 #
 # Using $? in an ...IfError function message like
 #   COMMAND
@@ -870,6 +877,20 @@ function ErrorIfDeprecated () {
 #   cat: QQQ: No such file or directory
 #   ERROR 1
 # works as expected.
+# By the way:
+# Using $? with 'if ! ...' like
+#   if ! COMMAND ; then echo "COMMAND failed with $?" ; fi
+# does not work because '!' changes/inverts '$?' for example as in
+#   # if ! cat QQQ ; then echo "cat QQQ failed with $?" ; fi
+#   cat: QQQ: No such file or directory
+#   cat QQQ failed with 0
+# cf. https://github.com/rear/rear/pull/2985#issuecomment-1545455356
+# so one should avoid 'if ! ...' like
+#   if COMMAND ; then ... ; else echo "COMMAND failed with $?" ; fi
+# for example as in
+#   # if cat QQQ ; then : ; else echo "cat QQQ failed with $?" ; fi
+#   cat: QQQ: No such file or directory
+#   cat QQQ failed with 1
 #
 # The ...IfError functions fail when 'set -e' is set
 # cf. https://github.com/rear/rear/issues/534
