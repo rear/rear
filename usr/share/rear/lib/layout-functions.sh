@@ -532,6 +532,33 @@ get_component_type() {
     grep -E "^[^ ]+ $1 " $LAYOUT_TODO | cut -d " " -f 3
 }
 
+# Get the disklabel (partition table) type of the disk $1 from the layout file
+# (NOT from the actual disk, so layout file must exist before calling this,
+# and it is useful during recovery even before the disk layout has been recreated)
+function get_disklabel_type () {
+    # from create_disk() in layout/prepare/GNU/Linux/100_include_partition_code.sh
+    local component disk size label junk
+
+    disk=''
+
+    read component disk size label junk < <(grep "^disk $1 " "$LAYOUT_FILE")
+    test $disk || return 1
+
+    echo $label
+}
+
+# Get partition flags from layout (space-separated) of partition given as $1
+function get_partition_flags () {
+    local part disk size pstart name flags partition junk
+
+    while read part disk size pstart name flags partition junk; do
+        if [ "$partition" == "$1" ] ; then
+            echo "$flags" | tr ',' ' '
+            return 0
+        fi
+    done < <(grep "^part " $LAYOUT_FILE)
+}
+
 # Function returns 0 when v1 is greater or equal than v2
 version_newer() {
   local v1list=( ${1//[-.]/ } )
@@ -806,17 +833,17 @@ blkid_label_of_device() {
     echo "$label"
 }
 
-# Returns 1 if the device is an LVM physical volume
-# Returns 0 otherwise or if the device doesn't exists
+# Returns true if the device is an LVM physical volume
+# Returns false otherwise or if the device doesn't exist
 is_disk_a_pv() {
     disk=$1
 
     # Using awk, select the 'lvmdev' line for which $disk is the device (column 3),
     # cf. https://github.com/rear/rear/pull/1897
     # If exit == 1, then there is such line (so $disk is a PV),
-    # otherwise exit with default value '0', which falls through to 'return 0' below.
-    awk "\$1 == \"lvmdev\" && \$3 == \"${disk}\" { exit 1 }" "$LAYOUT_FILE" >/dev/null || return 1
-    return 0
+    # otherwise exit with default value '0', which falls through to 'return 1' below.
+    awk "\$1 == \"lvmdev\" && \$3 == \"${disk}\" { exit 1 }" "$LAYOUT_FILE" >/dev/null || return 0
+    return 1
 }
 
 # Check whether disk is suitable for being added to layout

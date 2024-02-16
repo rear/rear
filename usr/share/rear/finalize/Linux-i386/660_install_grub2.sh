@@ -36,7 +36,9 @@
 #   This script does not check BOOTLOADER because it is also used as fallback
 #   to install the nowadays most often used bootloader GRUB2
 #   unless the BOOTLOADER variable tells to install another bootloader
-#   (other bootloader install scripts check the BOOTLOADER variable).
+#   (other bootloader install scripts check the BOOTLOADER variable)
+#   and unless we are using UEFI (BOOTLOADER then indicates the BIOS bootloader
+#   in a a hybrid boot setup).
 #
 # This script does not error out because at this late state of "rear recover"
 # (i.e. after the backup was restored) I <jsmeix@suse.de> consider it too hard
@@ -45,6 +47,37 @@
 # so that after "rear recover" finished he can manually install the bootloader
 # as appropriate for his particular system.
 
+local grub_name
+local grub2_install_failed grub2_install_device
+local source_disk target_disk junk
+local grub2_installed_disks
+local part bootparts
+local disk disks bootdisk
+
+function bios_grub_install ()
+{
+    local grub2_install_device="$1"
+
+    if is_true $USING_UEFI_BOOTLOADER ; then
+        # If running under UEFI, we need to specify the target explicitly, otherwise grub-install thinks
+        # that we are installing the EFI bootloader.
+        if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install --target=i386-pc $grub2_install_device" ; then
+            LogPrintError "Failed to install GRUB2 for BIOS boot (target i386-pc) on $bootdisk"
+            # purely informational test that may help to explain the reason for the error
+            if ! test -d "$TARGET_FS_ROOT/boot/$grub_name/i386-pc" ; then
+                LogPrintError "GRUB2 module dir for BIOS boot (boot/$grub_name/i386-pc in $TARGET_FS_ROOT) does not exist, is GRUB2 for BIOS (target i386-pc) installed?"
+            fi
+            return 1
+        fi
+    else
+        if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_install_device" ; then
+            LogPrintError "Failed to install GRUB2 on $grub2_install_device"
+            return 1
+        fi
+    fi
+    return 0
+}
+
 # Skip if another bootloader was already installed:
 # In this case NOBOOTLOADER is not true,
 # cf. finalize/default/050_prepare_checks.sh
@@ -52,12 +85,16 @@ is_true $NOBOOTLOADER || return 0
 
 # For UEFI systems with grub2 we should use efibootmgr instead,
 # cf. finalize/Linux-i386/670_run_efibootmgr.sh
-is_true $USING_UEFI_BOOTLOADER && return
+# but if BOOTLOADER is explicitly set to GRUB2, we are on a hybrid (BIOS/UEFI)
+# boot system and we need to install GRUB to MBR as well
+if is_true $USING_UEFI_BOOTLOADER && [ "GRUB2" != "$BOOTLOADER" ] ; then
+   return 0
+fi
 
 # Only for GRUB2 - GRUB Legacy will be handled by its own script.
 # GRUB2 is detected by testing for grub-probe or grub2-probe which does not exist in GRUB Legacy.
 # If neither grub-probe nor grub2-probe is there assume GRUB2 is not there:
-type -p grub-probe || type -p grub2-probe || return 0
+is_grub2_installed || return 0
 
 LogPrint "Installing GRUB2 boot loader..."
 
@@ -101,7 +138,7 @@ if test "$GRUB2_INSTALL_DEVICES" ; then
         else
             LogPrint "Installing GRUB2 on $grub2_install_device (specified in GRUB2_INSTALL_DEVICES)"
         fi
-        if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_install_device" ; then
+        if ! bios_grub_install "$grub2_install_device" ; then
             LogPrintError "Failed to install GRUB2 on $grub2_install_device"
             grub2_install_failed="yes"
         fi
@@ -145,8 +182,8 @@ fi
 grub2_installed_disks=()
 for disk in $disks ; do
     # Installing GRUB2 on an LVM PV will wipe the metadata so we skip those:
-    # function is_disk_a_pv returns with 1 if disk is a PV
-    is_disk_a_pv "$disk" || continue
+    # function is_disk_a_pv returns true if disk is a PV
+    is_disk_a_pv "$disk" && continue
 
     # Use first boot partition by default:
     part=$( echo $bootparts | cut -d' ' -f1 )
@@ -165,6 +202,8 @@ for disk in $disks ; do
 
     # Install GRUB2 on the boot disk if one was found:
     if test "$bootdisk" ; then
+        # Is the disk suitable for GRUB installation at all?
+        is_disk_grub_candidate "$bootdisk" || continue
         # Continue with the next possible boot disk when GRUB2 was already installed on the current one.
         # When there are more disks like /dev/sda and /dev/sdb it can happen that
         # for /dev/sda bootdisk=/dev/sda and GRUB2 gets installed on /dev/sda and
@@ -172,7 +211,7 @@ for disk in $disks ; do
         # so we avoid that GRUB2 gets needlessly installed two times on the same device:
         IsInArray "$bootdisk" "${grub2_installed_disks[@]}" && continue
         LogPrint "Found possible boot disk $bootdisk - installing GRUB2 there"
-        if chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $bootdisk" ; then
+        if bios_grub_install "$bootdisk" ; then
             grub2_installed_disks+=( "$bootdisk" )
             # In contrast to the above behaviour when GRUB2_INSTALL_DEVICES is specified
             # consider it here as a successful bootloader installation when GRUB2
@@ -181,11 +220,14 @@ for disk in $disks ; do
             # Continue with the next possible boot disk:
             continue
         fi
-        LogPrintError "Failed to install GRUB2 on possible boot disk $bootdisk"
     fi
 done
 
 is_true $NOBOOTLOADER || return 0
-LogPrintError "Failed to install GRUB2 - you may have to manually install it"
+if is_true $USING_UEFI_BOOTLOADER ; then
+    LogPrintError "Failed to install GRUB2 for BIOS boot - you may have to manually install it to preserve the hybrid BIOS/UEFI boot support, otherwise only UEFI boot will work"
+else
+    LogPrintError "Failed to install GRUB2 - you may have to manually install it"
+fi
 return 1
 

@@ -529,6 +529,53 @@ function get_root_disk_UUID {
     ( set -o pipefail ; mount | grep ' on / ' | awk '{print $1}' | xargs blkid -s UUID -o value || Error "Failed to get root disk UUID" )
 }
 
+# Detect whether actually GRUB 2 is installed and that test is to
+# check if grub-probe or grub2-probe is installed because
+# grub-probe or grub2-probe is only installed in case of GRUB 2.
+# Needed because one can't tell the GRUB version by looking at the MBR
+# (both GRUB 2 and GRUB Legacy have the string "GRUB" in their MBR).
+function is_grub2_installed () {
+    if type -p grub-probe >&2 || type -p grub2-probe >&2 ; then
+        Log "GRUB 2 is installed (grub-probe or grub2-probe exist)."
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Determine whether a disk is worth detecting or installing GRUB on
+function is_disk_grub_candidate () {
+    local disk="$1"
+    local disk_partitions part
+    local label flags
+
+    # ToDo : validate $disk (does it even exist? Isn't it write-protected?)
+
+    # Installing grub on an LVM PV will wipe the metadata so we skip those
+    is_disk_a_pv "$disk" && return 1
+
+    label="$( get_disklabel_type "$disk" )" || return 1
+    # We don't care about the SUSE-specific 'gpt_sync_mbr' partition scheme
+    # anymore: https://github.com/rear/rear/pull/3145#discussion_r1481388431
+    if [ "$label" == gpt ] ; then
+        # GPT needs a special BIOS boot partition to store GRUB (BIOS version).
+        # Let's try to find it. It can be recognized as having the bios_grub flag.
+        disk_partitions=( $( get_child_components "$disk" "part" ) )
+        for part in "${disk_partitions[@]}" ; do
+            flags=( $( get_partition_flags "$part" ) )
+            IsInArray bios_grub "${flags[@]}" && return 0 # found!
+        done
+        # If a given GPT-partitioned disk does not contain a BIOS boot partition,
+        # GRUB for BIOS booting can not be installed into its MBR (grub-install errors out).
+        return 1
+    else
+        # Other disklabel types don't need anything special to install GRUB.
+        # The test for the PReP boot partition (finalize/Linux-ppc64le/660_install_grub2.sh)
+        # is a bit similar, but operates on the partition itself, not on the uderlying disk.
+        return 0
+    fi
+}
+
 # Output GRUB2 configuration on stdout:
 # $1 is the kernel file with appropriate path for GRUB2 to load the kernel from within GRUB2's root filesystem
 # $2 is the initrd file with appropriate path for GRUB2 to load the initrd from within GRUB2's root filesystem
