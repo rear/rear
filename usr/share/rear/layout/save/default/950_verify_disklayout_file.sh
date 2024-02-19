@@ -70,7 +70,11 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
     Log "Verifying that the 'part' entries for $disk_dev in $DISKLAYOUT_FILE specify consecutive partitions"
     # The SUSE specific gpt_sync_mbr partitioning scheme is actually a GPT partitioning (plus some compatibility stuff in MBR)
     # see create_partitions() in prepare/GNU/Linux/100_include_partition_code.sh
-    test "gpt_sync_mbr" = "$parted_mklabel" && parted_mklabel="gpt"
+    if test "gpt_sync_mbr" = "$parted_mklabel" ; then
+        ErrorIfDeprecated gpt_sync_mbr "The 'gpt_sync_mbr' partitioning is no longer supported by SUSE since 2016
+                                        see https://github.com/rear/rear/issues/3148"
+        parted_mklabel="gpt"
+    fi
     # Using the parted_mklabel fallback behaviour in create_partitions() in prepare/GNU/Linux/100_include_partition_code.sh
     # only when there is no parted_mklabel value, but when there is a parted_mklabel value use it as is:
     test "$parted_mklabel" || parted_mklabel="gpt"
