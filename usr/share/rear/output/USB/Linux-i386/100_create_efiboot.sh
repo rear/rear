@@ -80,6 +80,22 @@ if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
     local uefi_bootloader_dirname="$( dirname $SECURE_BOOT_BOOTLOADER )"
     local second_stage_UEFI_bootloader_files=( $uefi_bootloader_dirname/grub*.efi )
+    local second_stage_UEFI_bootloader_file
+    local uefi_bootloader_found # empty
+    if ! IsInArray "$UEFI_BOOTLOADER" "${second_stage_UEFI_bootloader_files[@]}" ; then
+        for second_stage_UEFI_bootloader_file in "${second_stage_UEFI_bootloader_files[@]}" ; do
+            # avoid attempt to overwrite of one of the files by UEFI_BOOTLOADER (cp would refuse to do it)
+            if [ "$(basename "$UEFI_BOOTLOADER")" = "$(basename "$second_stage_UEFI_bootloader_file")" ] ; then
+                LogPrintError "Not using UEFI_BOOTLOADER '$UEFI_BOOTLOADER' as second stage Secure Boot bootloader: name conflicts with $(basename "$second_stage_UEFI_bootloader_file") in Shim directory $uefi_bootloader_dirname"
+                uefi_bootloader_found=1
+                break
+            fi
+        done
+        if ! test "$uefi_bootloader_found" ; then
+            LogPrint "Adding UEFI_BOOTLOADER '$UEFI_BOOTLOADER' to second stage Secure Boot bootloader files"
+            second_stage_UEFI_bootloader_files+=( "$UEFI_BOOTLOADER" )
+        fi
+    fi
     # Avoid 'nullglob' pitfall when nothing matches .../grub*.efi which would result
     # an invalid "cp -v /var/tmp/.../EFI/BOOT/" command that fails
     # cf. https://github.com/rear/rear/issues/1921
