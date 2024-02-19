@@ -79,13 +79,13 @@ if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     # named grub*.efi (second stage bootloader is Shim compile time option), see
     # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
     local uefi_bootloader_dirname="$( dirname $SECURE_BOOT_BOOTLOADER )"
-    local second_stage_UEFI_bootloader_files="$( echo $uefi_bootloader_dirname/grub*.efi )"
+    local second_stage_UEFI_bootloader_files=( $uefi_bootloader_dirname/grub*.efi )
     # Avoid 'nullglob' pitfall when nothing matches .../grub*.efi which would result
     # an invalid "cp -v /var/tmp/.../EFI/BOOT/" command that fails
     # cf. https://github.com/rear/rear/issues/1921
-    test "$second_stage_UEFI_bootloader_files" || Error "Could not find second stage Secure Boot bootloader $uefi_bootloader_dirname/grub*.efi"
-    DebugPrint "Using second stage Secure Boot bootloader files: $second_stage_UEFI_bootloader_files"
-    cp -L $v $second_stage_UEFI_bootloader_files $efi_dst/ || Error "Failed to copy second stage Secure Boot bootloader files"
+    test ${#second_stage_UEFI_bootloader_files[@]} -gt 0 || Error "Could not find second stage Secure Boot bootloader $uefi_bootloader_dirname/grub*.efi"
+    DebugPrint "Using second stage Secure Boot bootloader files: ${second_stage_UEFI_bootloader_files[*]}"
+    cp -L $v "${second_stage_UEFI_bootloader_files[@]}" $efi_dst/ || Error "Failed to copy second stage Secure Boot bootloader files"
 else
     cp -L $v "$UEFI_BOOTLOADER" "$efi_dst/BOOT${EFI_ARCH_UPPER}.efi" || Error "Failed to copy UEFI_BOOTLOADER '$UEFI_BOOTLOADER' to $efi_dst/BOOT${EFI_ARCH_UPPER}.efi"
 fi
