@@ -18,9 +18,9 @@ Log "Creating or appending to $ROOTFS_DIR/$ROOT_HOME_DIR/.bash_history"
 # Use the |--...--| ruler below so entries fit in a 80 characters line
 # so that it looks OK even on a console with 80 characters per line.
 # The ReaR recovery system bash prompt is: 'RESCUE $HOSTNAME:~ # '
-# that has about 21 characters (depending on $HOSTNAME length)
-# so about 59 characters are left to show bash history entries
-#        |-----------------------------------------------------------|
+# that has about 20 characters (depending on $HOSTNAME length)
+# so about 60 characters are left to show bash history entries
+#        |------------------------------------------------------------|
 {   echo ": # no more predefined ReaR entries in the bash history"
     echo "systemctl start sshd.service              # start SSH"
     echo "ip -4 addr                                # IPv4 address"
