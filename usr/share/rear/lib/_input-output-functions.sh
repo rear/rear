@@ -841,19 +841,18 @@ function ErrorIfDeprecated () {
     local reason="$*"
 
     local error_text="Deprecation of '$feature'
-        Reason: $reason
+        Reason:
+        $reason
 
-        This feature or code path has been deprecated in ReaR and will
-        be removed eventually. If you disagree with that, then please
-        go to https://github.com/rear/rear/issues and create an issue
-        explaining to us why we should not deprecate this code path.
+        This feature is phased out in ReaR and will be eventually removed.
+        If it is indispensable, go to https://github.com/rear/rear/issues
+        and create an issue that explains why there is no alternative to it.
 
-        Meanwhile, in order to continue using this feature, you can add
+        To disable this error and continue using this feature for now, set
         DISABLE_DEPRECATION_ERRORS+=( $feature )
-        to your ReaR configuration to disable this error.
-        
         "
-    Error "$(sed -e "s/^ *//" <<<"$error_text")"
+    # Remove leading space and tab characters (fail-safe if $reason lines are indented with tabs):
+    Error "$( sed -e 's/^[ \t]*//' <<<"$error_text" )"
 }
 
 # The ...IfError functions should no longer be used in new code and
