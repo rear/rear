@@ -124,13 +124,13 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
                 fi
                 ;;
             (msdos)
-                # For the MBR partitioning scheme the partitions must not have consecutive numbers.
+                # For the MBR partitioning scheme not all partitions may have consecutive numbers.
                 # Only primary partitions and a possible extended partition must have consecutive numbers from 1 up to 4.
                 # Possible logical partitions must have consecutive numbers 5 6 7 ...
                 # There can be a gap between the primary/extended partitions e.g. with number 1 and 2
                 # and the logical partitions starting at 5 (there are no partitions with numbers 3 and 4)
                 # cf. https://github.com/rear/rear/issues/1681#issue-286345908
-                # Testing consecutive partitions from number 1 up to 4 (i.e. testing consecutive primary an extended partitions):
+                # Testing consecutive partitions from number 1 up to 4 (i.e. testing consecutive primary/extended partitions):
                 non_consecutive_part_found=""
                 unused_part_nums=()
                 # Determine the highest used MBR primary or extended partition number:
