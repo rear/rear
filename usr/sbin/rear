@@ -524,6 +524,10 @@ fi
 # "exec 7>&-"
 # "exec 6<&-"
 
+# Used to determine whether TMPDIR has been changed in user config.
+# After the `mktemp` below, changing TMPDIR does not have the intended effect.
+# Save the current value to detect changes.
+saved_tmpdir="${TMPDIR-}"
 if test "$WORKFLOW" != "help" ; then
     # Prepend temporary working area (BUILD_DIR) removal exit task
     # so it gets executed directly before the above listed exit tasks.
@@ -703,6 +707,11 @@ if test "$CONFIG_APPEND_FILES" ; then
         fi
     done
 fi
+
+if [ "$saved_tmpdir" != "${TMPDIR-}" ] ; then
+    Error "Setting TMPDIR in a configuration file is not supported. To specify a working area directory prefix, export TMPDIR before executing '$PROGRAM'"
+fi
+
 readonly CONFIG_APPEND_FILES_PATHS # nothing else should be able to add more configs
 COPY_AS_IS+=("${CONFIG_APPEND_FILES_PATHS[@]}") # copy also to rescue system
 
