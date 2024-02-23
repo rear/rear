@@ -546,6 +546,27 @@ function LogToSyslog () {
     { logger -t rear -i "${MESSAGE_PREFIX}$*" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
+# Remove leading space and tab characters from input lines
+# and prefix each line with the argument string if specified.
+# When no argument is specified each line is prefixed/indented with two spaces.
+# When an empty argument is specified only leading space and tab characters are removed.
+# The intent is to be able to properly indent multi-line message strings in the code and
+# output the message without the code indentation but prefixed as needed for example like
+#   message="first line
+#            second line
+#            last line"
+#   LogPrint "Message text:$LF$( TextPrefix ' | ' <<<"$message" )"
+# which results the following output
+# Message text:
+#  | first line
+#  | second line
+#  | last line
+function TextPrefix () {
+    { local prefix="${1-  }"
+      sed -e "s/^[ \t]*/$prefix/"
+    } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+}
+
 # Check if any of the arguments is executable (logical OR condition).
 # Using plain "type" without any option because has_binary is intended
 # to know if there is a program that one can call regardless if it is
