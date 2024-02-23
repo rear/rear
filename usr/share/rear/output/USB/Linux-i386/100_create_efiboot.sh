@@ -78,7 +78,8 @@ if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     # When Shim is used, its second stage bootloader can be actually anything
     # named grub*.efi (second stage bootloader is Shim compile time option), see
     # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
-    local uefi_bootloader_dirname="$( dirname $SECURE_BOOT_BOOTLOADER )"
+    local uefi_bootloader_dirname
+    uefi_bootloader_dirname="$( dirname $SECURE_BOOT_BOOTLOADER )"
     local second_stage_UEFI_bootloader_files=( $uefi_bootloader_dirname/grub*.efi )
     local second_stage_UEFI_bootloader_file
     local uefi_bootloader_found # empty
