@@ -692,7 +692,7 @@ function Error () {
     # Add two spaces indentation for better readability what those extracted log file lines are.
     # Some messages could be too long to be usefully shown on the user's terminal so that they are truncated after 200 bytes:
     if test -s "$RUNTIME_LOGFILE" ; then
-        { local last_sourced_script_log_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+        { local last_sourced_script_log_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | TextPrefix | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
         if test "$last_sourced_script_log_messages" ; then
             PrintError "Some latest log messages since the last called script $last_sourced_script_filename:"
             PrintError "$last_sourced_script_log_messages"
@@ -704,7 +704,7 @@ function Error () {
     if test -f "$STDOUT_STDERR_FILE" ; then
         # We use the same extraction pipe as above because STDOUT_STDERR_FILE may also contain 'set -x' and things like that
         # because scripts could use 'set -x' and things like that as needed (e.g. diskrestore.sh runs with 'set -x'):
-        { local last_sourced_script_stdout_stderr_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $STDOUT_STDERR_FILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+        { local last_sourced_script_stdout_stderr_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $STDOUT_STDERR_FILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | TextPrefix | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
         if test "$last_sourced_script_stdout_stderr_messages" ; then
             # When stdout and stderr are redirected to STDOUT_STDERR_FILE messages of the last called programs cannot be in the log
             # so we use LogPrintError and 'echo "string of messages" >>$RUNTIME_LOGFILE' (the latter avoids the timestamp prefix)
@@ -851,29 +851,27 @@ preferably the whole debug information via 'rear -D $WORKFLOW'
 # first arg is feature keyword
 # everything else is a reason for the deprecation
 function ErrorIfDeprecated () {
-    (( $# >= 2 )) || BugError "Must call ErrorIfDeprecated with at least 2 arguments - feature and reason"
-    local feature="$1" ; shift
+    { (( $# >= 2 )) || BugError "Must call ErrorIfDeprecated with at least 2 arguments - feature and reason"
+      local feature="$1" ; shift
+      local reason="$*"
 
-    if IsInArray "$feature" "${DISABLE_DEPRECATION_ERRORS[@]}" ; then
-        LogPrint "Disabled deprecation error for '$feature'"
-        return 0
-    fi
+      if IsInArray "$feature" "${DISABLE_DEPRECATION_ERRORS[@]}" ; then
+          LogPrint "Disabled deprecation error for '$feature'"
+          return 0
+      fi
 
-    local reason="$*"
+      local text="Reason:
+                  $reason
 
-    local error_text="Deprecation of '$feature'
-        Reason:
-        $reason
+                  This feature is phased out in ReaR and will be eventually removed.
+                  If it is indispensable, go to https://github.com/rear/rear/issues
+                  and create an issue that explains why there is no alternative to it.
 
-        This feature is phased out in ReaR and will be eventually removed.
-        If it is indispensable, go to https://github.com/rear/rear/issues
-        and create an issue that explains why there is no alternative to it.
-
-        To disable this error and continue using this feature for now, set
-        DISABLE_DEPRECATION_ERRORS+=( $feature )
-        "
-    # Remove leading space and tab characters (fail-safe if $reason lines are indented with tabs):
-    Error "$( sed -e 's/^[ \t]*//' <<<"$error_text" )"
+                  To disable this error and continue using this feature for now, set
+                  DISABLE_DEPRECATION_ERRORS+=( $feature )
+                 "
+    } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    Error "Deprecation of '$feature'$LF$( TextPrefix '' <<<"$text" )"
 }
 
 # The ...IfError functions should no longer be used in new code and
@@ -999,7 +997,7 @@ function cleanup_build_area_and_end_program () {
     Log "Finished $PROGRAM $WORKFLOW in $(( $( date +%s ) - START_SECONDS )) seconds"
     # is_true is in lib/global-functions.sh which is not yet sourced in case of early Error() in usr/sbin/rear
     if has_binary is_true && is_true "$KEEP_BUILD_DIR" ; then
-        mounted_in_BUILD_DIR="$( mount | grep "$BUILD_DIR" | sed -e 's/^/  /' )"
+        mounted_in_BUILD_DIR="$( mount | grep "$BUILD_DIR" | TextPrefix )"
         if test "$mounted_in_BUILD_DIR" ; then
             LogPrintError "Caution - there is something mounted within the build area"
             LogPrintError "$mounted_in_BUILD_DIR"
@@ -1034,7 +1032,7 @@ function cleanup_build_area_and_end_program () {
         fi
         if ! rmdir $v "$BUILD_DIR" ; then
             LogPrintError "Could not remove build area $BUILD_DIR (something still exists therein)"
-            mounted_in_BUILD_DIR="$( mount | grep "$BUILD_DIR" | sed -e 's/^/  /' )"
+            mounted_in_BUILD_DIR="$( mount | grep "$BUILD_DIR" | TextPrefix )"
             if test "$mounted_in_BUILD_DIR" ; then
                 LogPrintError "Something is still mounted within the build area"
                 LogPrintError "$mounted_in_BUILD_DIR"
