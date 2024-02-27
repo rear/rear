@@ -563,7 +563,15 @@ function LogToSyslog () {
 #  | last line
 function TextPrefix () {
     { local prefix="${1-  }"
-      sed -e "s/^[ \t]*/$prefix/"
+      # In prefix escape all / by \/ (otherwise sed -e "/.../.../" gets invalid syntax)
+      # via ${prefix//\//\\/} bash parameter expansion (pattern substitution)
+      #       prefix          - name of the variable containing the content
+      #             //...     - replace all instances of ...
+      #               \/      - the / character (/ escaped as \/)
+      #                 /...  - replace with ...
+      #                  \\/  - the \/ characters (\ escaped as \\ plus /)
+      # see https://github.com/rear/rear/pull/3160#issuecomment-1966495212
+      sed -e "s/^[ \t]*/${prefix//\//\\/}/"
     } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
