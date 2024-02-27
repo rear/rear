@@ -25,8 +25,10 @@ function SetOSVendorAndVersion () {
             grep -q -i 'debian' /etc/os-release && OS_VENDOR=Debian
             grep -q -i -E '(ubuntu|linuxmint)' /etc/os-release && OS_VENDOR=Ubuntu
             grep -q -i 'arch' /etc/os-release && OS_VENDOR=Arch
-            local version_id=$(grep "^VERSION_ID=" /etc/os-release | cut -d\" -f2 ) # 7
-            contains_visible_char "$version_id" && OS_VERSION="$version_id"
+
+            local VERSION_ID
+            eval "$(grep "^VERSION_ID=" /etc/os-release)"
+            contains_visible_char "$VERSION_ID" && OS_VERSION="$VERSION_ID"
         fi
 
         # For non-systemd distro's try the /etc/system-release file
