@@ -34,14 +34,13 @@ enable_s390_disk() {
                   done | sort -k1n -k2 )
 }
 
-# May need to look at $OS_VENDOR also as DASD disk layout is distro specific:
-case $OS_MASTER_VENDOR in
+case "${OS_MASTER_VENDOR:-$OS_VENDOR}" in
     (SUSE|Fedora|Debian)
         # "Fedora" also handles Red Hat
         # "Debian" also handles Ubuntu
         enable_s390_disk
         ;;
     (*)
-        LogPrintError "No code for DASD disk device enablement on $OS_MASTER_VENDOR"
+        LogPrintError "No code for DASD disk device enablement on ${OS_MASTER_VENDOR:-$OS_VENDOR}"
         ;;
 esac
