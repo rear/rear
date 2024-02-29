@@ -35,7 +35,7 @@ enable_s390_disk() {
 }
 
 case "${OS_MASTER_VENDOR:-$OS_VENDOR}" in
-    (SUSE|Fedora|Debian)
+    (SUSE_LINUX|Fedora|Debian)
         # "Fedora" also handles Red Hat
         # "Debian" also handles Ubuntu
         enable_s390_disk

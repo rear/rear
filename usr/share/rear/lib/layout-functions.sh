@@ -1027,7 +1027,7 @@ function get_part_device_name_format() {
 
             case "${OS_MASTER_VENDOR:-$OS_VENDOR}" in
 
-                (SUSE)
+                (SUSE_LINUX)
                     # No need to check if user_friendly_names is activated or not as Suse always apply the same naming convention.
 
                     # SUSE Linux SLE12 put a "-part" between [mpath device name] and [part number].

@@ -151,24 +151,13 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
     OS_VENDOR_ARCH="$OS_VENDOR/$MACHINE"
     OS_VENDOR_VERSION_ARCH="$OS_VENDOR/$OS_VERSION/$MACHINE"
 
-    # add OS_MASTER_* vars in case this is a derived OS
-    case "$( echo $OS_VENDOR_VERSION | tr '[A-Z]' '[a-z]' )" in
-        (*oracle*|*centos*|*fedora*|*redhat*|*scientific*)
+    # set OS_MASTER_VENDOR in case this is a derived OS and ReaR differentiates it
+    case "${OS_VENDOR,,}" in
+        (*redhat*)
             OS_MASTER_VENDOR="Fedora"
             ;;
-        (*ubuntu*|*linuxmint*)
+        (*ubuntu*)
             OS_MASTER_VENDOR="Debian"
-            ;;
-        (*archlinux*)
-            OS_MASTER_VENDOR="Arch"
-            ;;
-        (*suse*)
-            # When OS_VENDOR_VERSION contains 'SUSE', set OS_MASTER_VENDOR to 'SUSE'
-            # but do not set OS_MASTER_VENDOR same as OS_VENDOR (i.e. 'SUSE_LINUX')
-            # (cf. above: all SUSE distributions ... must be unified to 'SUSE_LINUX')
-            # because then scripts in a .../SUSE_LINUX/... sub-directoriy and conf/SUSE_LINUX.conf
-            # get sourced twice by the (buggy) SourceStage function in lib/framework-functions.sh
-            OS_MASTER_VENDOR="SUSE"
             ;;
         (*)
             # set fallback values to avoid error exit for 'set -eu' because of unbound variables:
