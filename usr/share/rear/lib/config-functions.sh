@@ -24,7 +24,7 @@ function SetOSVendorAndVersion () {
             grep -q -i 'suse' /etc/os-release && OS_VENDOR=SUSE_LINUX
             grep -q -i 'debian' /etc/os-release && OS_VENDOR=Debian
             grep -q -i -E '(ubuntu|linuxmint)' /etc/os-release && OS_VENDOR=Ubuntu
-            grep -q -i 'arch' /etc/os-release && OS_VENDOR=Arch
+            grep -q -i 'arch' /etc/os-release && OS_VENDOR=Arch_Linux
 
             local VERSION_ID
             eval "$(grep "^VERSION_ID=" /etc/os-release)"
@@ -115,7 +115,7 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
             OS_MASTER_VENDOR="Debian"
             ;;
         (*archlinux*)
-            OS_MASTER_VENDOR="Arch"
+            OS_MASTER_VENDOR="Arch_Linux"
             ;;
         (*suse*)
             # When OS_VENDOR_VERSION contains 'SUSE', set OS_MASTER_VENDOR to 'SUSE'
