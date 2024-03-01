@@ -35,8 +35,8 @@ elif test -f /etc/redhat-release ; then
     cat /etc/redhat-release
 elif test -f /etc/rear/os.conf ; then
     # The following 2 variables are listed as an example, and are already known by ReaR
-    # OS_VENDOR=RedHatEnterpriseServer
-    # OS_VERSION=6
+    # OS_VENDOR=Fedora
+    # OS_VERSION=36
     echo "${OS_VENDOR} ${OS_VERSION}"
 else
     /usr/bin/lsb_release  --short --description

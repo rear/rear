@@ -123,8 +123,8 @@ Dumping out configuration and system information
 System definition:
                                     ARCH = Linux-x86_64
                                       OS = GNU/Linux
-                               OS_VENDOR = RedHatEnterpriseServer
-                              OS_VERSION = 5.6
+                               OS_VENDOR = Fedora
+                              OS_VERSION = 20
 ...
 ----
 
