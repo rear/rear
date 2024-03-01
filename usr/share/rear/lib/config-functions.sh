@@ -26,7 +26,7 @@ function SetOSVendorAndVersion () {
             # Deal with derivatives first:
             case "$id_like" in
                 (*arch*)
-                    OS_VENDOR=Arch
+                    OS_VENDOR=Arch_Linux
                     ;;
                 (*centos*|*rhel*)
                     OS_VENDOR=RedHatEnterpriseServer
@@ -51,7 +51,7 @@ function SetOSVendorAndVersion () {
             # a separate OS_VENDOR.
             case "$id" in
                 (arch)
-                    OS_VENDOR=Arch
+                    OS_VENDOR=Arch_Linux
                     ;;
                 (debian)
                     OS_VENDOR=Debian
