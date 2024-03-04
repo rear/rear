@@ -36,7 +36,7 @@ function trim {
     echo -n "$var"
 }
 
-function build_bootx86_efi {
+function build_boot_efi {
     local outfile="$1"
     local embedded_config=""
     local gmkstandalone=""
@@ -62,8 +62,8 @@ function build_bootx86_efi {
         # At least SUSE systems use 'grub2' prefixed names for GRUB2 programs:
         gmkstandalone=grub2-mkstandalone
     else
-        # This build_bootx86_efi function is only called in output/ISO/Linux-i386/250_populate_efibootimg.sh
-        # and output/USB/Linux-i386/100_create_efiboot.sh and output/default/940_grub2_rescue.sh
+        # This build_boot_efi function is only called in 250_populate_efibootimg.sh
+        # and 100_create_efiboot.sh and 940_grub2_rescue.sh
         # only if UEFI is used so that we simply error out here if we cannot make a bootable EFI image of GRUB2
         # (normally a function should not exit but return to its caller with a non-zero return code):
         Error "Cannot make bootable EFI image of GRUB2 (neither grub-mkstandalone nor grub2-mkstandalone found)"

@@ -96,9 +96,9 @@ fi
 # We are not able to create signed boot loader
 # so we need to reuse existing one.
 # See issue #1374
-# build_bootx86_efi () can be safely used for other scenarios.
+# build_boot_efi () can be safely used for other scenarios.
 if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
-    build_bootx86_efi $TMP_DIR/mnt/EFI/BOOT/BOOT$EFI_ARCH_UPPER.efi $efi_boot_tmp_dir/grub.cfg "$boot_dir" "$UEFI_BOOTLOADER"
+    build_boot_efi $TMP_DIR/mnt/EFI/BOOT/BOOT$EFI_ARCH_UPPER.efi $efi_boot_tmp_dir/grub.cfg "$boot_dir" "$UEFI_BOOTLOADER"
 fi
 
 # We will be using grub-efi or grub2 (with efi capabilities) to boot from ISO.

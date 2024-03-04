@@ -141,9 +141,9 @@ EOF
             # We are not able to create signed boot loader
             # so we need to reuse existing one.
             # See issue #1374
-            # build_bootx86_efi () can be safely used for other scenarios.
+            # build_boot_efi () can be safely used for other scenarios.
             if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
-                build_bootx86_efi $efi_dst/BOOT$EFI_ARCH_UPPER.efi $efi_dst/grub.cfg "/boot" "$UEFI_BOOTLOADER"
+                build_boot_efi $efi_dst/BOOT$EFI_ARCH_UPPER.efi $efi_dst/grub.cfg "/boot" "$UEFI_BOOTLOADER"
             fi
         ;;
         (*)
