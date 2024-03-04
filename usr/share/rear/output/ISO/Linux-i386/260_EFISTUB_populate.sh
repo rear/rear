@@ -33,7 +33,7 @@ else
     Error "EFI_STUB: EFI executable $OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER not found"
 fi
 
-cp $v "$OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER" $efi_boot_tmp_dir/BOOTX64.efi
+cp $v "$OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER" $efi_boot_tmp_dir/BOOT${EFI_ARCH_UPPER}.efi
 
 
 # Create boot menu entries for systemd-bootx64.efi.
