@@ -7,9 +7,11 @@
 case "$REAL_MACHINE" in
     (arm64|aarch64)
         EFI_ARCH=aa64
+        GRUB2_IMAGE_FORMAT=arm64-efi
         ;;
     (arm*)
         EFI_ARCH=arm
+        GRUB2_IMAGE_FORMAT=arm-efi
         ;;
     (*)
         BugError "Unknown architecture $REAL_MACHINE"

@@ -21,7 +21,7 @@ fi
 # cf. https://github.com/rear/rear/issues/2338#issuecomment-594432946
 local efi_modules_directory
 local dir
-for dir in /usr/lib/grub/x86_64-efi /usr/lib/grub2/x86_64-efi /usr/share/grub2/x86_64-efi; do
+for dir in "/usr/lib/grub/$GRUB2_IMAGE_FORMAT" "/usr/lib/grub2/$GRUB2_IMAGE_FORMAT" "/usr/share/grub2/$GRUB2_IMAGE_FORMAT"; do
     if [[ -d "$dir" ]]; then
         efi_modules_directory="$dir"
         break
@@ -71,7 +71,7 @@ if [[ -n "$SECURE_BOOT_BOOTLOADER" ]]; then
     # If /boot/$grub2_name exists, it contains additional Grub modules, which are not compiled into the grub core image.
     # Pick required ones from there, too.
     local additional_grub_directory="/boot/$grub2_name"
-    local grub_modules_directory="x86_64-efi"
+    local grub_modules_directory="$GRUB2_IMAGE_FORMAT"
     local additional_grub_modules=( all_video.mod )
     if [[ -d "$additional_grub_directory/$grub_modules_directory" ]]; then
         local grub_target_directory="$(dirname "$(find "$RAWDISK_BOOT_EFI_STAGING_ROOT" -iname grubx64.efi -print)")"
@@ -105,6 +105,6 @@ else
     local boot_loader="$efi_boot_directory/BOOTX64.EFI"
     local grub_modules=( part_gpt fat normal configfile linux video all_video )
     [[ -f "$efi_modules_directory/linuxefi.mod" ]] && grub_modules+=("$efi_modules_directory/linuxefi.mod")
-    $grub2_name-mkimage -O x86_64-efi -o "$boot_loader" -p "/EFI/BOOT" "${grub_modules[@]}"
+    $grub2_name-mkimage -O "$GRUB2_IMAGE_FORMAT" -o "$boot_loader" -p "/EFI/BOOT" "${grub_modules[@]}"
     StopIfError "Error occurred during $grub2_name-mkimage of $boot_loader"
 fi

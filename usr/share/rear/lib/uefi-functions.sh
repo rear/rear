@@ -81,9 +81,9 @@ function build_bootx86_efi {
             LogPrint "Neither grub-probe nor grub2-probe found"
             # Since openSUSE Leap 15.1 things were moved from /usr/lib/grub2/ to /usr/share/grub2/
             # cf. https://github.com/rear/rear/issues/2338#issuecomment-594432946
-            if test /usr/*/grub*/x86_64-efi/partmap.lst ; then
+            if test /usr/*/grub*/"$GRUB2_IMAGE_FORMAT"/partmap.lst ; then
                 LogPrint "including all partition modules"
-                modules=( $( cat /usr/*/grub*/x86_64-efi/partmap.lst ) )
+                modules=( $( cat /usr/*/grub*/"$GRUB2_IMAGE_FORMAT"/partmap.lst ) )
             else
                 Error "Can not determine partition modules, ${dirs[*]} would be likely inaccessible in GRUB2"
             fi
@@ -102,25 +102,25 @@ function build_bootx86_efi {
         fi
     fi
 
-    # grub-mkstandalone needs a .../grub*/x86_64-efi/moddep.lst file (cf. https://github.com/rear/rear/issues/1193)
+    # grub-mkstandalone needs a .../grub*/$GRUB2_IMAGE_FORMAT/moddep.lst file (cf. https://github.com/rear/rear/issues/1193)
     # At least on SUSE systems that is in different 'grub2' directories (cf. https://github.com/rear/rear/issues/2338)
     # e.g. on openSUSE Leap 15.0 it is in /usr/lib/grub2/x86_64-efi/moddep.lst
     # but on openSUSE Leap 15.1 that was moved to /usr/share/grub2/x86_64-efi/moddep.lst
     # and the one in /boot/grub2/x86_64-efi/moddep.lst is a copy of the one in /usr/*/grub2/x86_64-efi/moddep.lst
     # so we do not error out if we do not find a /x86_64-efi/moddep.lst file because it could be "anywhere else" in the future
     # but we inform the user here in advance about possible problems when there is no /x86_64-efi/moddep.lst file.
-    # Careful: usr/sbin/rear sets nullglob so that /usr/*/grub*/x86_64-efi/moddep.lst gets empty if nothing matches
-    # and 'test -f' succeeds with empty argument so that we cannot use 'test -f /usr/*/grub*/x86_64-efi/moddep.lst'
+    # Careful: usr/sbin/rear sets nullglob so that /usr/*/grub*/$GRUB2_IMAGE_FORMAT/moddep.lst gets empty if nothing matches
+    # and 'test -f' succeeds with empty argument so that we cannot use 'test -f /usr/*/grub*/$GRUB2_IMAGE_FORMAT/moddep.lst'
     # also 'test -n' succeeds with empty argument but (fortunately/intentionally?) plain 'test' fails with empty argument.
-    # Another implicit condition that this 'test' works is that '/usr/*/grub*/x86_64-efi/moddep.lst' matches at most one file
-    # because otherwise e.g. "test /usr/*/grub*/x86_64-efi/mod*" where two files moddep.lst and modinfo.sh match
+    # Another implicit condition that this 'test' works is that '/usr/*/grub*/$GRUB2_IMAGE_FORMAT/moddep.lst' matches at most one file
+    # because otherwise e.g. "test /usr/*/grub*/$GRUB2_IMAGE_FORMAT/mod*" where two files moddep.lst and modinfo.sh match
     # would falsely fail with "bash: test: ... unary operator expected":
-    test /usr/*/grub*/x86_64-efi/moddep.lst || LogPrintError "$gmkstandalone may fail to make a bootable EFI image of GRUB2 (no /usr/*/grub*/x86_64-efi/moddep.lst file)"
+    test /usr/*/grub*/"$GRUB2_IMAGE_FORMAT"/moddep.lst || LogPrintError "$gmkstandalone may fail to make a bootable EFI image of GRUB2 (no /usr/*/grub*/$GRUB2_IMAGE_FORMAT/moddep.lst file)"
 
     (( ${#GRUB2_MODULES_UEFI[@]} )) && LogPrint "Installing only ${GRUB2_MODULES_UEFI[*]} modules into $outfile memdisk"
     (( ${#modules[@]} )) && LogPrint "GRUB2 modules to load: ${modules[*]}"
 
-    if ! $gmkstandalone $v ${GRUB2_MODULES_UEFI:+"--install-modules=${GRUB2_MODULES_UEFI[*]}"} ${modules:+"--modules=${modules[*]}"} -O x86_64-efi -o $outfile $embedded_config ; then
+    if ! $gmkstandalone $v ${GRUB2_MODULES_UEFI:+"--install-modules=${GRUB2_MODULES_UEFI[*]}"} ${modules:+"--modules=${modules[*]}"} -O "$GRUB2_IMAGE_FORMAT" -o $outfile $embedded_config ; then
         Error "Failed to make bootable EFI image of GRUB2 (error during $gmkstandalone of $outfile)"
     fi
 }
