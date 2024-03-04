@@ -74,7 +74,7 @@ if [[ -n "$SECURE_BOOT_BOOTLOADER" ]]; then
     local grub_modules_directory="$GRUB2_IMAGE_FORMAT"
     local additional_grub_modules=( all_video.mod )
     if [[ -d "$additional_grub_directory/$grub_modules_directory" ]]; then
-        local grub_target_directory="$(dirname "$(find "$RAWDISK_BOOT_EFI_STAGING_ROOT" -iname grubx64.efi -print)")"
+        local grub_target_directory="$(dirname "$(find "$RAWDISK_BOOT_EFI_STAGING_ROOT" -iname grub${EFI_ARCH}.efi -print)")"
         [[ "$grub_target_directory" == "." ]] && Error "Could not find Grub executable"  # dirname "" returns "."
 
         mkdir "$grub_target_directory/$grub_modules_directory" || Error "Could not create Grub modules directory"
@@ -102,7 +102,7 @@ else
 
     # Create a Grub 2 EFI core image and install it as boot loader. (NOTE: This version will not be signed.)
     # Use the UEFI default boot loader name, so that firmware will find it without an existing boot entry.
-    local boot_loader="$efi_boot_directory/BOOTX64.EFI"
+    local boot_loader="$efi_boot_directory/BOOT${EFI_ARCH_UPPER}.EFI"
     local grub_modules=( part_gpt fat normal configfile linux video all_video )
     [[ -f "$efi_modules_directory/linuxefi.mod" ]] && grub_modules+=("$efi_modules_directory/linuxefi.mod")
     $grub2_name-mkimage -O "$GRUB2_IMAGE_FORMAT" -o "$boot_loader" -p "/EFI/BOOT" "${grub_modules[@]}"

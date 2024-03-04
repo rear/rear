@@ -35,7 +35,7 @@ local efi_boot_directory="$RAWDISK_BOOT_EFI_STAGING_ROOT/BOOT"
 
 mkdir $v -p "$efi_boot_directory" || Error "Could not create $efi_boot_directory"
 
-cp $v "$syslinux_efi" "$efi_boot_directory/BOOTX64.EFI" >&2
+cp $v "$syslinux_efi" "$efi_boot_directory/BOOT${EFI_ARCH_UPPER}.EFI" >&2
 cp $v "$ldlinux_e64" "$efi_boot_directory" >&2
 
 
