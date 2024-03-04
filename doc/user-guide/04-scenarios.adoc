@@ -288,28 +288,14 @@ Syncing disks.
 == Using Relax-and-Recover with USB storage devices
 Using USB devices with Relax-and-Recover can be appealing for several reasons:
 
- - If you only need to have a bootable rescue environment, a USB device is
-   a *cheap device* for storing only 25 to 60MB to boot from
+ - If you only need to have a bootable rescue environment,
+   a USB device is a cheap device to store it (needs up to about 1 GB)
 
- - You can leave the USB device inserted in the system and *opt-in booting*
-   from it only when disaster hits (although we do recommend storing rescue
-   environments off-site)
+ - When you have plenty of space, it could be a simple solution
+   to store complete disaster recovery images (rescue environment + backup)
 
- - You can *store multiple systems and multiple snapshots* on a single device
-
- - In case you have plenty of space, it might be a simple solution to store
-   complete Disaster Recovery images (rescue + backup) on a single device for
-   a set of systems
-
- - For migrating a bunch of servers having a single device to boot from might
-   be very appealing
-
- - We have implemented a specific workflow: inserting a REAR-000 labeled USB
-   stick will invoke +rear udev+ and adds a rescue environment to the USB
-   stick (updating the bootloader if needed)
-
-However USB devices may be slow for backup purposes, especially on older
-systems or with unreliable/cheap devices.
+However USB devices may be slow for backup purposes,
+especially on older systems and/or with cheap devices.
 
 === Configuring Relax-and-Recover for USB storage devices
 The below configuration (_/etc/rear/local.conf_) gives a list of possible
@@ -322,20 +308,14 @@ OUTPUT=USB
 USB_DEVICE=/dev/disk/by-label/REAR-000
 ----
 
-IMPORTANT: On RHEL4 or older there are no _/dev/disk/by-label/_ udev aliases,
-           which means we cannot use device by label. However it is possible
-           to use +by-path+ references, however this makes it very specific
-           to the USB port used.  We opted to use the complete device-name,
-           which can be dangerous if you may have other _/dev/sdX_ devices
-           (luckily we have CCISS block devices in _/dev/cciss/_).
-
 
 === Preparing your USB storage device
 To prepare your USB device for use with Relax-and-Recover, do: +rear format /dev/sdX+
 
-This will create a single partition, make it bootable, format it with ext3,
-label it +REAR-000+ and disable warnings related filesystem check for the
-device.
+This will will destroy all existing data on that device,
+create new partitions and filesystems,
+make it bootable,
+and label it +REAR-000+
 
 
 === USB storage as rescue media
@@ -354,8 +334,7 @@ USB_DEVICE=/dev/disk/by-label/REAR-000
 
 ==== Making the rescue USB storage device
 To create a rescue USB device, run +rear -v mkrescue+ as shown below after
-you have inserted a *REAR-000* labeled USB device. Make sure the device name
-for the USB device is what is configured for +USB_DEVICE+.
+you have inserted a *REAR-000* labeled USB device.
 
 ----
 [root@system ~]# rear -v mkrescue
@@ -368,9 +347,6 @@ Copying kernel modules
 Creating initramfs
 Finished in 72 seconds.
 ----
-
-WARNING: Doing the above may replace the existing MBR of the USB device.
-         However any other content on the device is retained.
 
 
 [[booting-from-usb]]
@@ -436,9 +412,7 @@ boot from the local disk.
 WARNING: Booting from a local disk may fail when booting from a USB device.
          This is caused by the fact that the GRUB bootloader on the local
          disk is configured as if it is being the first drive +(hd0)+ but
-         it is in fact the second disk +(hd1)+. If you do find menu entries
-         not working from GRUB, please remove the +root (hd0,0)+ line from
-         the entry.
+         it is in fact the second disk +(hd1)+.
 
 Then select the image you would like to recover.
 
