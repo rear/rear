@@ -21,10 +21,9 @@ for component in "${EXCLUDE_RESTORE[@]}" ; do
             echo "${child#/}" >> "$RESTORE_EXCLUDE_FILE"
             echo "${child#/}/*" >> "$RESTORE_EXCLUDE_FILE"
         done
-    else
-        # if there are no fs deps, assume it is a wildcard path
-        component=${component#fs:}
-        echo "${component#/}" >> "$RESTORE_EXCLUDE_FILE"
-        echo "${component#/}/*" >> "$RESTORE_EXCLUDE_FILE"
-    fi
+
+    # exclude the component itself
+    component=${component#fs:}
+    echo "${component#/}" >> "$RESTORE_EXCLUDE_FILE"
+    echo "${component#/}/*" >> "$RESTORE_EXCLUDE_FILE"
 done
