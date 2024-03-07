@@ -7,23 +7,33 @@ RESTORE_EXCLUDE_FILE="$TMP_DIR/restore-exclude-list.txt"
 
 : >"$RESTORE_EXCLUDE_FILE"
 
+local component
+
 for component in "${EXCLUDE_RECREATE[@]}" ; do
     if ! IsInArray "$component" "${EXCLUDE_RESTORE[@]}" ; then
         EXCLUDE_RESTORE+=( "$component" )
     fi
 done
 
+local comp_type children child
+local comp_types=( "btrfsmountedsubvol" "fs" )
+
 for component in "${EXCLUDE_RESTORE[@]}" ; do
-    fs_children=$(get_child_components "$component" "fs" | sort -u)
-    if [ -n "$fs_children" ] ; then
-        for child in $fs_children ; do
-            child=${child#fs:}
-            echo "${child#/}" >> "$RESTORE_EXCLUDE_FILE"
-            echo "${child#/}/*" >> "$RESTORE_EXCLUDE_FILE"
-        done
+    for comp_type in "${comp_types[@]}"; do
+        children=$(get_child_components "$component" "$comp_type" | sort -u)
+        if [ -n "$children" ] ; then
+            for child in $children ; do
+                child=${child#$comp_type:}
+                echo "${child#/}" >> "$RESTORE_EXCLUDE_FILE"
+                echo "${child#/}/*" >> "$RESTORE_EXCLUDE_FILE"
+            done
+        fi
+    done
 
     # exclude the component itself
-    component=${component#fs:}
+    for comp_type in "${comp_types[@]}"; do
+        component=${component#$comp_type:}
+    done
     echo "${component#/}" >> "$RESTORE_EXCLUDE_FILE"
     echo "${component#/}/*" >> "$RESTORE_EXCLUDE_FILE"
 done
