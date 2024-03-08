@@ -2,10 +2,12 @@
 # - 'recover' and its partial workflows 'layoutonly' 'restoreonly' 'finalizeonly'
 # - 'mountonly'
 # - 'opaladmin'
+# - 'shell'
 # - 'help'
 # cf. https://github.com/rear/rear/issues/719
 # and https://github.com/rear/rear/issues/987
 # and https://github.com/rear/rear/issues/1088
+# and https://github.com/rear/rear/issues/3170#issuecomment-1981222992
 # and https://github.com/rear/rear/issues/1901
 # In particular in the normal/original system the workflows
 # recover layoutonly restoreonly finalizeonly and mountonly
@@ -15,7 +17,7 @@
 if test -f /etc/rear-release ; then
     # We are in the ReaR rescue/recovery system:
     case "$WORKFLOW" in
-        (recover|layoutonly|restoreonly|finalizeonly|mountonly|opaladmin|help)
+        (recover|layoutonly|restoreonly|finalizeonly|mountonly|opaladmin|shell|help)
             LogPrint "Running workflow $WORKFLOW within the ReaR rescue/recovery system"
             ;;
         (*)
