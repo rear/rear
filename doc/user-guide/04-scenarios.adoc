@@ -67,6 +67,123 @@ a single confidential command to let the redirection also apply for 'set -x'.
 See the description in /usr/share/rear/conf/default.conf
 how to set variables for secret values in a confidential way.
 
+== Bootable ReaR rescue initramfs on IBM Z (s390x) under z/VM
+
+If you want to create the rescue initramfs with a (tar) backup stored on NFS
+server, add the following settings to `/etc/rear/local.conf`:
+
+[source,bash]
+----
+OUTPUT=RAMDISK
+OUTPUT_URL=file:///path/to/initramfs
+BACKUP=NETFS
+BACKUP_URL=nfs://NFS.server.IP/path/to/backup
+----
+
+Make sure that the path in `OUTPUT_URL` exists and create the rescue initramfs
+and backup using `rear mkbackup`.
+
+There are two options how to boot the rescue environment on IBM Z (s390x) under
+z/VM created using the `OUTPUT=RAMDISK` setting.
+
+1. Using the `kexec` tool as described in link:../../usr/share/rear/conf/templates/RESULT_usage_RAMDISK.txt[RESULT_usage_RAMDISK.txt],
+   if you have access to a running Linux instance.
+
+2. Using the `zipl` tool for management of boot devices on s390/s390x.
+
+=== Booting ReaR rescue initramfs on IBM Z (s390x) under z/VM with `zipl`
+
+First, we have to select a partition on the disk that we want to make bootable.
+Assume that the disk is called `/dev/dasda` and the partition with the filesystem
+that will contain the kernel and initramfs is `/dev/dasda1`.
+
+We mount this partition to `/mnt/bootdisk` and copy there the kernel and initramfs
+created in the previous section:
+```
+# mount /dev/dasda1 /mnt/bootdisk
+# cp /path/to/initramfs/HOSTNAME/* /mnt/bootdisk/
+```
+
+NOTE: See `zipl(8)` for all device types supported by the `--target` option
+      (e.g. DASD, SCSI, ...). If you want to use a tape device, see `zipl(8)`
+      to use the `--tape` option instead. Note that the `--tape` option with
+      ReaR is untested so contributions to this guide are welcome! Also, it is
+      not possible to use `zipl` with the z/VM reader device.
+
+IMPORTANT: The following method will overwrite the boot configuration on a device
+           which contains the given `--target` directory, in our case
+           `/dev/dasda`!
+
+Use the following command to make the device mounted at `/mnt/bootdisk` bootable
+with `zipl`:
+```
+# zipl --target=/mnt/bootdisk \
+       --parameters='root=/dev/ram0 ro' \
+       --image=/mnt/bootdisk/kernel-HOSTNAME \
+       --ramdisk=/mnt/bootdisk/initramfs-HOSTNAME.img
+
+Run /lib/s390-tools//zipl_helper.device-mapper /mnt/bootdisk/
+Building bootmap in '/mnt/bootdisk/'
+Adding IPL section
+  initial ramdisk...: /mnt/bootdisk/initramfs-HOSTNAME.img
+  kernel image......: /mnt/bootdisk/kernel-HOSTNAME
+  kernel parmline...: 'root=/dev/ram0 ro'
+  component address:
+    internal loader.: 0x0000a000-0x0000dfff
+    parameters......: 0x00009000-0x00009fff
+    kernel image....: 0x00010000-0x0076afff
+    parmline........: 0x0076c000-0x0076cfff
+    initial ramdisk.: 0x00780000-0x28708fff
+    environment blk.: 0x0077c000-0x0077cfff
+Preparing boot device for CCW- and LD-IPL: dasda.
+Done.
+```
+
+If you want to boot the device with ReaR recovery from a running Linux
+instance, you can use the `chreipl` tool to select a new default boot device
+and reboot:
+```
+# chreipl /mnt/bootdisk
+Re-IPL type: ccw
+Device:      0.0.0120
+Loadparm:    ""
+Bootparms:   ""
+clear:       0
+# reboot
+...
+```
+
+If you do not have a running Linux instance at hand, you can force the boot
+from the given device using the z/VM Control Program (CP) directly, e.g. through
+a terminal connection.
+
+The following example only considers DASD disk devices. Consult the official
+z/VM CP Manual for booting from other devices (e.g. FCP attached SCSI) or for
+additional details in general.
+
+Use the following command to boot from a DASD boot device through z/VM CP,
+where the last argument corresponds to the virtual device number (`vdev`).
+```
+CP IPL 0120
+```
+
+The virtual device number can be either obtained from the `Bus-ID` column using
+the `lsdasd -s` command from a running Linux instance:
+```
+# lsdasd -s
+Bus-ID    Status    Name      Device  Type         BlkSz  Size      Blocks
+================================================================================
+0120      active    dasda     94:0    ECKD         4096   39128MB   10017000
+```
+or directly from z/VM CP with the following query:
+```
+CP QUERY VIRTUAL DASD
+00:
+00: CP QUERY VIRTUAL DASD
+00: DASD 0120 ON DASD  2213 R/W 0X0120 SUBCHANNEL = 0004
+00: DASD 0121 ON DASD  201A R/W 0X0121 SUBCHANNEL = 0005
+...
+```
 
 == Bootable USB device with backup to USB
 If you want a bootable USB device with a (tar) backup to USB as well, you
