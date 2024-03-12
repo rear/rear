@@ -524,7 +524,7 @@ fi
 # "exec 7>&-"
 # "exec 6<&-"
 
-# Set RECOVERY_MODE only if we are running inside the rescue/recovery system.
+# Set RECOVERY_MODE when we are running inside the rescue/recovery system.
 # RECOVERY_MODE is a boolean variable (cf. conf/default.conf) because we need it below
 # to set TMPDIR to ReaR's TMP_DIR only when we are not running inside the recovery system
 # but we do not yet have lib/global-functions.sh (which contains is_false) sourced here.
@@ -565,13 +565,24 @@ if test "$WORKFLOW" != "help" ; then
     # via 'mktemp -d' where BUILD_DIR and implicitly TMP_DIR=$BUILD_DIR/tmp
     # has permissions only for root but none for the group or others,
     # see https://github.com/rear/rear/issues/3167
-    # We export TMPDIR to ReaR's TMP_DIR only when we are not in RECOVERY_MODE
-    # because TMP_DIR does not exist in the recreated/restored system
-    # i.e. there is no /mnt/local/var/tmp/rear.XXXXXXXXXXXXXXX/tmp so that
-    #   chroot /mnt/local COMMAND
-    # fails when COMMAND uses TMPDIR - in particular "chroot /mnt/local dracut" fails
-    # see https://github.com/rear/rear/pull/3168#issuecomment-1983377528
-    test "$RECOVERY_MODE" || export TMPDIR="$TMP_DIR"
+    if ! test "$RECOVERY_MODE" ; then
+        # We export TMPDIR to ReaR's TMP_DIR only when we are not in RECOVERY_MODE
+        # because TMP_DIR does not exist in the recreated/restored system
+        # i.e. there is no /mnt/local/var/tmp/rear.XXXXXXXXXXXXXXX/tmp so that
+        #   chroot /mnt/local COMMAND
+        # fails when COMMAND uses TMPDIR - in particular "chroot /mnt/local dracut" fails
+        # see https://github.com/rear/rear/pull/3168#issuecomment-1983377528
+        export TMPDIR="$TMP_DIR"
+        # We create TMPDIR inside ROOTFS_DIR i.e. we create $ROOTFS_DIR$TMP_DIR which is
+        # /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/var/tmp/rear.XXXXXXXXXXXXXXX/tmp
+        # (with same 'XXXXXXXXXXXXXXX' characters for both parts) so that
+        #   chroot $ROOTFS_DIR COMMAND
+        # will not fail when COMMAND uses TMPDIR - e.g. build/default/490_fix_broken_links.sh
+        # and build/default/990_verify_rootfs.sh run "chroot $ROOTFS_DIR COMMAND"
+        # see https://github.com/rear/rear/pull/3168#issuecomment-1991356186
+        # We create with default mode because all in BUILD_DIR is sufficiently safe:
+        mkdir -p $ROOTFS_DIR$TMP_DIR || Error "Could not create $ROOTFS_DIR$TMP_DIR"
+    fi
     # Since the above BUILD_DIR="$( mktemp ... )" does not always return a path under /tmp
     # the build directory must be excluded from the backup to be on the safe side:
     BACKUP_PROG_EXCLUDE+=( "$BUILD_DIR" )
