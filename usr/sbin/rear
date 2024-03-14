@@ -590,8 +590,8 @@ if test "$WORKFLOW" != "help" ; then
     # We create TMPDIR inside ROOTFS_DIR i.e. we create $ROOTFS_DIR$TMPDIR which is
     # usually /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/var/tmp/rear.XXXXXXXXXXXXXXX/tmp
     # (with same 'XXXXXXXXXXXXXXX' characters for both parts)
-    # or when TMPDIR was set via export TMPDIR="/path/to/tmpdir" before ReaR was launched
-    # then $ROOTFS_DIR$TMPDIR is /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/path/to/tmpdir
+    # or when TMPDIR was set via "export TMPDIR=/path/to/tmpdir" before ReaR was launched
+    # then $ROOTFS_DIR$TMPDIR is /path/to/tmpdir/rear.XXXXXXXXXXXXXXX/rootfs/path/to/tmpdir
     # so that "chroot $ROOTFS_DIR COMMAND" will not fail when COMMAND uses TMPDIR.
     # For example build/default/490_fix_broken_links.sh
     # and build/default/990_verify_rootfs.sh run "chroot $ROOTFS_DIR COMMAND".
