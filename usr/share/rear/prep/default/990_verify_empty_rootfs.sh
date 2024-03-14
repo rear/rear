@@ -27,5 +27,5 @@
 # cf. https://github.com/rear/rear/commit/9b4efb2469b8cf3585206dbb10700960b480008e#r139765325
 test "$( find $ROOTFS_DIR -type f )" || return 0
 DebugPrint "Modified ReaR recovery system area after 'prep' stage ($ROOTFS_DIR contains regular files)"
-Debug "$( find $ROOTFS_DIR )"
+Debug "$( find $ROOTFS_DIR -ls )"
 return 1
