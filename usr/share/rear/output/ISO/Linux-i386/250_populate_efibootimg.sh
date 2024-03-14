@@ -15,7 +15,7 @@ mkdir $v -p $efi_boot_tmp_dir/locale || Error "Could not create $efi_boot_tmp_di
 
 # Copy the grub*.efi or shim.efi executable to EFI/BOOT/BOOTX64.efi
 # Intentionally an empty UEFI_BOOTLOADER results an invalid "cp -v /tmp/.../mnt/EFI/BOOT/BOOTX64.efi" command that fails:
-cp $v "$UEFI_BOOTLOADER" $efi_boot_tmp_dir/BOOTX64.efi || Error "Could not find UEFI_BOOTLOADER '$UEFI_BOOTLOADER'"
+cp $v "$UEFI_BOOTLOADER" $efi_boot_tmp_dir/BOOT$EFI_ARCH_UPPER.efi || Error "Could not find UEFI_BOOTLOADER '$UEFI_BOOTLOADER'"
 local uefi_bootloader_dirname="$( dirname $UEFI_BOOTLOADER )"
 if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     # For a technical description of Shim see https://mjg59.dreamwidth.org/19448.html
@@ -28,7 +28,7 @@ if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     # (cf. rescue/default/850_save_sysfs_uefi_vars.sh)
     # then Shim (usually shim.efi) was copied above as efi_boot_tmp_dir/BOOTX64.efi
     # and Shim's second stage bootloader must be also copied where Shim already is.
-    DebugPrint "Using Shim '$SECURE_BOOT_BOOTLOADER' as first stage UEFI bootloader BOOTX64.efi"
+    DebugPrint "Using Shim '$SECURE_BOOT_BOOTLOADER' as first stage UEFI bootloader BOOT${EFI_ARCH_UPPER}.efi"
     # When Shim is used, its second stage bootloader can be actually anything
     # named grub*.efi (second stage bootloader is Shim compile time option), see
     # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
@@ -68,7 +68,7 @@ if test "ebiso" = "$( basename $ISO_MKISOFS_BIN )" ; then
 fi
 
 if [[ -n "$(type -p grub)" ]]; then
-    cat > $efi_boot_tmp_dir/BOOTX64.conf << EOF
+    cat > $efi_boot_tmp_dir/BOOT$EFI_ARCH_UPPER.conf << EOF
 default=0
 timeout 5
 splashimage=/EFI/BOOT/splash.xpm.gz
@@ -96,9 +96,9 @@ fi
 # We are not able to create signed boot loader
 # so we need to reuse existing one.
 # See issue #1374
-# build_bootx86_efi () can be safely used for other scenarios.
+# build_boot_efi () can be safely used for other scenarios.
 if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
-    build_bootx86_efi $TMP_DIR/mnt/EFI/BOOT/BOOTX64.efi $efi_boot_tmp_dir/grub.cfg "$boot_dir" "$UEFI_BOOTLOADER"
+    build_boot_efi $TMP_DIR/mnt/EFI/BOOT/BOOT$EFI_ARCH_UPPER.efi $efi_boot_tmp_dir/grub.cfg "$boot_dir" "$UEFI_BOOTLOADER"
 fi
 
 # We will be using grub-efi or grub2 (with efi capabilities) to boot from ISO.
@@ -137,7 +137,7 @@ cp $v -r $TMP_DIR/mnt/EFI $TMP_DIR/isofs/ || Error "Could not create the isofs/E
 # Make /boot/grub/grub.cfg available on isofs/
 mkdir $v -p -m 755 $TMP_DIR/isofs/boot/grub
 if test "$( type -p grub )" ; then
-    cp $v $TMP_DIR/isofs/EFI/BOOT/BOOTX64.conf $TMP_DIR/isofs/boot/grub/ || Error "Could not copy EFI/BOOT/BOOTX64.conf to isofs/boot/grub"
+    cp $v $TMP_DIR/isofs/EFI/BOOT/BOOT$EFI_ARCH_UPPER.conf $TMP_DIR/isofs/boot/grub/ || Error "Could not copy EFI/BOOT/BOOT${EFI_ARCH_UPPER}.conf to isofs/boot/grub"
 else
     cp $v $TMP_DIR/isofs/EFI/BOOT/grub.cfg $TMP_DIR/isofs/boot/grub/ || Error "Could not copy EFI/BOOT/grub.cfg to isofs/boot/grub"
 fi

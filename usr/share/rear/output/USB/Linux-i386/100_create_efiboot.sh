@@ -73,8 +73,8 @@ if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     # (cf. rescue/default/850_save_sysfs_uefi_vars.sh)
     # then Shim (usually shim.efi) must be copied as EFI/BOOT/BOOTX64.efi
     # and Shim's second stage bootloader must be also copied where Shim already is.
-    DebugPrint "Using '$SECURE_BOOT_BOOTLOADER' as first stage Secure Boot bootloader BOOTX64.efi"
-    cp -L $v "$SECURE_BOOT_BOOTLOADER" "$efi_dst/BOOTX64.efi" || Error "Failed to copy SECURE_BOOT_BOOTLOADER '$SECURE_BOOT_BOOTLOADER' to $efi_dst/BOOTX64.efi"
+    DebugPrint "Using '$SECURE_BOOT_BOOTLOADER' as first stage Secure Boot bootloader BOOT${EFI_ARCH_UPPER}.efi"
+    cp -L $v "$SECURE_BOOT_BOOTLOADER" "$efi_dst/BOOT${EFI_ARCH_UPPER}.efi" || Error "Failed to copy SECURE_BOOT_BOOTLOADER '$SECURE_BOOT_BOOTLOADER' to $efi_dst/BOOT${EFI_ARCH_UPPER}.efi"
     # When Shim is used, its second stage bootloader can be actually anything
     # named grub*.efi (second stage bootloader is Shim compile time option), see
     # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
@@ -87,7 +87,7 @@ if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     DebugPrint "Using second stage Secure Boot bootloader files: $second_stage_UEFI_bootloader_files"
     cp -L $v $second_stage_UEFI_bootloader_files $efi_dst/ || Error "Failed to copy second stage Secure Boot bootloader files"
 else
-    cp -L $v "$UEFI_BOOTLOADER" "$efi_dst/BOOTX64.efi" || Error "Failed to copy UEFI_BOOTLOADER '$UEFI_BOOTLOADER' to $efi_dst/BOOTX64.efi"
+    cp -L $v "$UEFI_BOOTLOADER" "$efi_dst/BOOT${EFI_ARCH_UPPER}.efi" || Error "Failed to copy UEFI_BOOTLOADER '$UEFI_BOOTLOADER' to $efi_dst/BOOT${EFI_ARCH_UPPER}.efi"
 fi
 # Copy kernel:
 cp -L $v "$KERNEL_FILE" "$efi_dst/kernel" || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE' to $efi_dst/kernel"
@@ -120,7 +120,7 @@ else
     case $grub_version in
         (0)
             DebugPrint "Configuring legacy GRUB for EFI boot"
-            cat > $efi_dst/BOOTX64.conf << EOF
+            cat > $efi_dst/BOOT${EFI_ARCH_UPPER}.conf << EOF
 default=0
 timeout=5
 title Relax-and-Recover (no Secure Boot)
@@ -141,9 +141,9 @@ EOF
             # We are not able to create signed boot loader
             # so we need to reuse existing one.
             # See issue #1374
-            # build_bootx86_efi () can be safely used for other scenarios.
+            # build_boot_efi () can be safely used for other scenarios.
             if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
-                build_bootx86_efi $efi_dst/BOOTX64.efi $efi_dst/grub.cfg "/boot" "$UEFI_BOOTLOADER"
+                build_boot_efi $efi_dst/BOOT$EFI_ARCH_UPPER.efi $efi_dst/grub.cfg "/boot" "$UEFI_BOOTLOADER"
             fi
         ;;
         (*)
