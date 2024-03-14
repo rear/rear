@@ -363,6 +363,15 @@ hash -r
 # Make sure that we use only English:
 export LC_CTYPE=C LC_ALL=C LANG=C
 
+# Remember if TMPDIR was unset when ReaR was launched
+# before TMPDIR may be set to /var/tmp in default.conf
+# because testing if TMPDIR is '/var/tmp' is insufficient
+# to determine if TMPDIR was unset when the user called 'rear'
+# because the user may have specified TMPDIR to be '/var/tmp'
+# cf. https://github.com/rear/rear/pull/3168#issuecomment-1997057144
+test -v TMPDIR && TMPDIR_WAS_UNSET='' || TMPDIR_WAS_UNSET='y'
+readonly TMPDIR_WAS_UNSET
+
 # Include default config before the RUNTIME_LOGFILE value is set because
 # setting the right RUNTIME_LOGFILE value requires values from default.conf
 # in particular the default LOGFILE value and the values of the
@@ -535,7 +544,8 @@ readonly RECOVERY_MODE
 
 # Create a sufficiently safe temporary working area BUILD_DIR for ReaR and
 # additionally set TMPDIR to TMP_DIR within BUILD_DIR for programs that are called by ReaR
-# (the latter only when ReaR runs on the original system i.e. when we are not in RECOVERY_MODE):
+# (the latter only when ReaR runs on the original system i.e. when we are not in RECOVERY_MODE
+#  and when TMPDIR was not set before ReaR was launched by the user via export TMPDIR="..."):
 if test "$WORKFLOW" != "help" ; then
     # Prepend temporary working area (BUILD_DIR) removal exit task
     # so it gets executed directly before the above listed exit tasks.
@@ -553,36 +563,41 @@ if test "$WORKFLOW" != "help" ; then
     TMP_DIR=$BUILD_DIR/tmp
     mkdir -p $ROOTFS_DIR || Error "Could not create $ROOTFS_DIR"
     mkdir -p $TMP_DIR || Error "Could not create $TMP_DIR"
-    # For programs that are called by ReaR set TMPDIR to ReaR's TMP_DIR
-    # regardless what TMPDIR was or what it currently is, for example when
-    # TMPDIR was initially unset so it is now ReaR's default /var/tmp
-    # or when TMPDIR is exported by the user like TMPDIR=/somewhere
-    # to ensure in any case that also for programs that are called by ReaR
-    # ReaR will clean up all temporary stuff carefully and completely
-    # via the function cleanup_build_area_and_end_program()
-    # and that temporary files from programs that are called by ReaR
+    # Normally set TMPDIR to ReaR's TMP_DIR which is /var/tmp/rear.XXXXXXXXXXXXXXX/tmp
+    # to ensure that temporary files from programs that are called by ReaR
     # are sufficiently safe against unwanted access by non-root users
-    # via 'mktemp -d' where BUILD_DIR and implicitly TMP_DIR=$BUILD_DIR/tmp
-    # has permissions only for root but none for the group or others,
+    # (only 'root' has permissions to access ReaR's working area)
+    # and that those temporary files will get cleaned up "by the way"
+    # via the cleanup_build_area_and_end_program() function,
     # see https://github.com/rear/rear/issues/3167
     if ! test "$RECOVERY_MODE" ; then
-        # We export TMPDIR to ReaR's TMP_DIR only when we are not in RECOVERY_MODE
+        # We set TMPDIR to ReaR's TMP_DIR only when we are not in RECOVERY_MODE
         # because TMP_DIR does not exist in the recreated/restored system
         # i.e. there is no /mnt/local/var/tmp/rear.XXXXXXXXXXXXXXX/tmp so that
         #   chroot /mnt/local COMMAND
         # fails when COMMAND uses TMPDIR - in particular "chroot /mnt/local dracut" fails
         # see https://github.com/rear/rear/pull/3168#issuecomment-1983377528
-        export TMPDIR="$TMP_DIR"
-        # We create TMPDIR inside ROOTFS_DIR i.e. we create $ROOTFS_DIR$TMP_DIR which is
-        # /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/var/tmp/rear.XXXXXXXXXXXXXXX/tmp
-        # (with same 'XXXXXXXXXXXXXXX' characters for both parts) so that
-        #   chroot $ROOTFS_DIR COMMAND
-        # will not fail when COMMAND uses TMPDIR - e.g. build/default/490_fix_broken_links.sh
-        # and build/default/990_verify_rootfs.sh run "chroot $ROOTFS_DIR COMMAND"
-        # see https://github.com/rear/rear/pull/3168#issuecomment-1991356186
-        # We create with default mode because all in BUILD_DIR is sufficiently safe:
-        mkdir -p $ROOTFS_DIR$TMP_DIR || Error "Could not create $ROOTFS_DIR$TMP_DIR"
+        if test "$TMPDIR_WAS_UNSET" ; then
+            # We set TMPDIR to ReaR's TMP_DIR only when TMPDIR was not set
+            # before ReaR was launched by the user via export TMPDIR="..."
+            # to provide final power to the user so that a specific TMPDIR can be specified
+            # e.g. for certain third-party backup tools that may need a specific TMPDIR
+            # cf. https://github.com/rear/rear/pull/3168#issuecomment-1997014841
+            # and https://github.com/rear/rear/pull/3168#issuecomment-1997057144
+            export TMPDIR="$TMP_DIR"
+        fi
     fi
+    # We create TMPDIR inside ROOTFS_DIR i.e. we create $ROOTFS_DIR$TMPDIR which is
+    # usually /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/var/tmp/rear.XXXXXXXXXXXXXXX/tmp
+    # (with same 'XXXXXXXXXXXXXXX' characters for both parts)
+    # or when TMPDIR was set via export TMPDIR="/path/to/tmpdir" before ReaR was launched
+    # then $ROOTFS_DIR$TMPDIR is /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/path/to/tmpdir
+    # so that "chroot $ROOTFS_DIR COMMAND" will not fail when COMMAND uses TMPDIR.
+    # For example build/default/490_fix_broken_links.sh
+    # and build/default/990_verify_rootfs.sh run "chroot $ROOTFS_DIR COMMAND".
+    # See https://github.com/rear/rear/pull/3168#issuecomment-1991356186
+    # We create with default mode because all in BUILD_DIR is sufficiently safe:
+    mkdir -p $ROOTFS_DIR$TMPDIR || Error "Could not create $ROOTFS_DIR$TMPDIR"
     # Since the above BUILD_DIR="$( mktemp ... )" does not always return a path under /tmp
     # the build directory must be excluded from the backup to be on the safe side:
     BACKUP_PROG_EXCLUDE+=( "$BUILD_DIR" )
