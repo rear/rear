@@ -175,9 +175,9 @@ if test -s $TMP_DIR/mappings/mac ; then
         for network_config_file in "${network_config_files[@]}" ; do
             # The network_config_files array contains only existing files (cf. above how it is set).
             if sed -i -e "$sed_script" "$network_config_file" ; then
-                Log "Wrote new MAC addresses and network interfaces in $network_config_file"
+                Log "Wrote new MAC addresses and network interfaces in '$network_config_file'"
             else
-                LogPrintError "Failed to rewrite MAC addresses and network interfaces in $network_config_file"
+                LogPrintError "Failed to rewrite MAC addresses and network interfaces in '$network_config_file'"
             fi
         done
     else
