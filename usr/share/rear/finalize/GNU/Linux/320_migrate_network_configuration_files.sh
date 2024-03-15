@@ -108,8 +108,7 @@ for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc
 done
 
 # Skip if no valid restored network configuration files are found
-# i.e. when the network_config_files array does not even have a first (non empty) element:
-test $network_config_files || return 0
+test ${#network_config_files[@]} -gt 0 || return 0
 
 # Create a temporary directory for plain mapping files content without comments and empty lines.
 # Do not error out at this late state of "rear recover" (after the backup was restored) but inform the user:
