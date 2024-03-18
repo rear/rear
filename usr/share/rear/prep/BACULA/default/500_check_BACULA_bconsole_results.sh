@@ -17,8 +17,8 @@ BACULA_DIRECTOR=$(grep -i address $BACULA_CONF_DIR/bconsole.conf | awk '{ print 
 
 # check if the director is responding?
 if has_binary nc; then
-   DIRECTOR_RESULT=$(nc -vz "${BACULA_DIRECTOR}" 9101 2>&1 | grep -i connected | wc -l)
-   [[ $DIRECTOR_RESULT -eq 0 ]] && Error "Bacula director ${BACULA_DIRECTOR} is not responding."
+   DIRECTOR_RESULT=$(nc -vz "${BACULA_DIRECTOR}" 9101 2>&1 ; echo $?)
+   [[ $DIRECTOR_RESULT -ne 0 ]] && Error "Bacula director ${BACULA_DIRECTOR} is not responding."
 fi
 
 # does the director allow connections from this client? bconsole knows!
