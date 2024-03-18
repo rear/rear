@@ -363,14 +363,13 @@ hash -r
 # Make sure that we use only English:
 export LC_CTYPE=C LC_ALL=C LANG=C
 
-# Remember if TMPDIR was unset when ReaR was launched
-# before TMPDIR may be set to /var/tmp in default.conf
-# because testing if TMPDIR is '/var/tmp' is insufficient
-# to determine if TMPDIR was unset when the user called 'rear'
+# Remember what TMPDIR was originally set when ReaR was launched
+# before TMPDIR may be set (if unset) to /var/tmp in default.conf
+# because testing if TMPDIR is '/var/tmp' would be insufficient
+# to determine if TMPDIR was set or unset when the user called 'rear'
 # because the user may have specified TMPDIR to be '/var/tmp'
 # cf. https://github.com/rear/rear/pull/3168#issuecomment-1997057144
-test -v TMPDIR && TMPDIR_WAS_UNSET='' || TMPDIR_WAS_UNSET='y'
-readonly TMPDIR_WAS_UNSET
+readonly TMPDIR_ORIG="${TMPDIR-}"
 
 # Include default config before the RUNTIME_LOGFILE value is set because
 # setting the right RUNTIME_LOGFILE value requires values from default.conf
@@ -519,15 +518,15 @@ fi
 # Source usr/share/rear/lib/_input-output-functions.sh because therein
 # the original STDIN STDOUT and STDERR file descriptors are saved as fd6 fd7 and fd8
 # so that ReaR functions for actually intended user messages can use fd7 and fd8
-# to show messages to the user regardless where to STDOUT and STDERR are redirected
-# and fd6 to get input from the user regardless where to STDIN is redirected:
+# to show messages to the user regardless where STDOUT and STDERR are redirected
+# and fd6 to get input from the user regardless where STDIN is redirected:
 if ! source $SHARE_DIR/lib/_input-output-functions.sh ; then
     echo -e "ERROR: BUG in $PRODUCT\nFailed to source $SHARE_DIR/lib/_input-output-functions.sh\nPlease report it at $BUG_REPORT_SITE" >&2
     exit 1
 fi
 
 # Via source usr/share/rear/lib/_input-output-functions.sh
-# those exit tasks are now set to be executed (via bash EXIT trap) in the following order:
+# those final exit tasks are now set to be executed (via bash EXIT trap) in the following order:
 # "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WORKFLOW failed, check $RUNTIME_LOGFILE for details' 1>&8"
 # "exec 8>&-"
 # "exec 7>&-"
@@ -544,24 +543,46 @@ readonly RECOVERY_MODE
 
 # Create a sufficiently safe temporary working area BUILD_DIR for ReaR and
 # additionally set TMPDIR to TMP_DIR within BUILD_DIR for programs that are called by ReaR
-# (the latter only when ReaR runs on the original system i.e. when we are not in RECOVERY_MODE
-#  and when TMPDIR was not set before ReaR was launched by the user via export TMPDIR="..."):
+# (the latter only when ReaR runs on the original system i.e. when we are not in RECOVERY_MODE):
 if test "$WORKFLOW" != "help" ; then
-    # Prepend temporary working area (BUILD_DIR) removal exit task
-    # so it gets executed directly before the above listed exit tasks.
-    # This must be done before the first possible call of the 'Error' function
-    # otherwise we may error out but leave the build area behind:
-    QuietAddExitTask cleanup_build_area_and_end_program
+    # ReaR fails when TMPDIR is a relative directory, see
+    # https://github.com/rear/rear/pull/3168#issuecomment-1999996162
+    # so we set TMPDIR to its resolved absolute path.
+    # Ignore when 'readlink -e' fails (e.g. it won't fail when TMPDIR is a regular file)
+    # and verify afterwards that the 'readlink -e' result is a directory:
+    export TMPDIR="$( readlink -e "${TMPDIR-}" || true )"
+    if ! test -d "$TMPDIR" ; then
+        # Don't use Error() unless "QuietAddExitTask cleanup_build_area_and_end_program" was done:
+        echo -e "ERROR: TMPDIR '$TMPDIR' is no directory" >&2
+        exit 1
+    fi
     # We rely on sufficiently safe 'mktemp -d' behaviour
     # that the BUILD_DIR directory will have read, write, and search permissions
     # for the current user (i.e. for root), but no permissions for the group or others
     # (i.e. BUILD_DIR is "drwx------ root root /var/tmp/rear.XXXXXXXXXXXXXXX"), cf.
     # https://www.gnu.org/software/coreutils/manual/html_node/mktemp-invocation.html#mktemp-invocation
-    # as of this writing in Feb. 2024, see also https://github.com/rear/rear/issues/3167
-    BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
+    # Create ReaR's working area BUILD_DIR:
+    if ! BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX )" ; then
+        # Don't use Error() unless "QuietAddExitTask cleanup_build_area_and_end_program" was done:
+        echo -e "ERROR: Could not create build area '$BUILD_DIR'" >&2
+        exit 1
+    fi
+    # Prepend working area (BUILD_DIR) removal exit task
+    # so it gets executed last directly before the above listed final exit tasks.
+    # On the one hand this must be done after the build area was successfully created,
+    # otherwise cleanup_build_area_and_end_program would try to remove a nonexistent build area
+    # by calling plain 'rm -Rf --one-file-system' where nothing is specified to be removed
+    # where (fortunately) 'rm' does not remove anything when nothing is specified to be removed,
+    # see https://github.com/rear/rear/issues/3180
+    # On the other hand this must be done before the first possible call of the 'Error' function,
+    # otherwise we may error out but leave the build area behind,
+    # see https://github.com/rear/rear/pull/2633
+    QuietAddExitTask cleanup_build_area_and_end_program
+    # Create ROOTFS_DIR in ReaR's working area:
     ROOTFS_DIR=$BUILD_DIR/rootfs
-    TMP_DIR=$BUILD_DIR/tmp
     mkdir -p $ROOTFS_DIR || Error "Could not create $ROOTFS_DIR"
+    # Create TMP_DIR in ReaR's working area:
+    TMP_DIR=$BUILD_DIR/tmp
     mkdir -p $TMP_DIR || Error "Could not create $TMP_DIR"
     # Normally set TMPDIR to ReaR's TMP_DIR which is /var/tmp/rear.XXXXXXXXXXXXXXX/tmp
     # to ensure that temporary files from programs that are called by ReaR
@@ -577,14 +598,18 @@ if test "$WORKFLOW" != "help" ; then
         #   chroot /mnt/local COMMAND
         # fails when COMMAND uses TMPDIR - in particular "chroot /mnt/local dracut" fails
         # see https://github.com/rear/rear/pull/3168#issuecomment-1983377528
-        if test "$TMPDIR_WAS_UNSET" ; then
-            # We set TMPDIR to ReaR's TMP_DIR only when TMPDIR was not set
-            # before ReaR was launched by the user via export TMPDIR="..."
-            # to provide final power to the user so that a specific TMPDIR can be specified
-            # e.g. for certain third-party backup tools that may need a specific TMPDIR
-            # cf. https://github.com/rear/rear/pull/3168#issuecomment-1997014841
-            # and https://github.com/rear/rear/pull/3168#issuecomment-1997057144
-            export TMPDIR="$TMP_DIR"
+        if test "$TMPDIR_ORIG" ; then
+            tmpdir_debug_info="Changing TMPDIR to '$TMP_DIR' (was '$TMPDIR_ORIG' when ReaR was launched)"
+        else
+            tmpdir_debug_info="Setting TMPDIR to '$TMP_DIR' (was unset when ReaR was launched)"
+        fi
+        export TMPDIR="$TMP_DIR"
+    else
+        # Also in RECOVERY_MODE provide debug info what TMPDIR is:
+        if test "$TMPDIR_ORIG" ; then
+            tmpdir_debug_info="Using TMPDIR '$TMPDIR' (was '$TMPDIR_ORIG' when ReaR was launched)"
+        else
+            tmpdir_debug_info="Setting TMPDIR to '$TMPDIR' (was unset when ReaR was launched)"
         fi
     fi
     # We create TMPDIR inside ROOTFS_DIR i.e. we create $ROOTFS_DIR$TMPDIR which is
