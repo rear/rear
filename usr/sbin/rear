@@ -528,17 +528,27 @@ fi
 # After the `mktemp` below, changing TMPDIR does not have the intended effect.
 # Save the current value to detect changes.
 saved_tmpdir="${TMPDIR-}"
+
 if test "$WORKFLOW" != "help" ; then
-    # Prepend temporary working area (BUILD_DIR) removal exit task
-    # so it gets executed directly before the above listed exit tasks.
-    # This must be done before the first possible call of the 'Error' function
-    # otherwise we may error out but leave the build area behind:
-    QuietAddExitTask cleanup_build_area_and_end_program
     # Create temporary working area:
-    BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
+    if ! BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX )" ; then
+        echo -e "ERROR: Could not create build area '$BUILD_DIR'" >&2
+        exit 1
+    fi
+    # Prepend temporary working area (BUILD_DIR) removal exit task
+    # so it gets executed last directly before the above listed final exit tasks.
+    # On the one hand this must be done after the build area was successfully created.
+    # Otherwise cleanup_build_area_and_end_program would try to remove a nonexistent build area
+    # by calling plain 'rm -Rf --one-file-system' where nothing is specified to be removed
+    # where (fortunately) 'rm' does not remove anything when nothing is specified to be removed,
+    # see https://github.com/rear/rear/issues/3180
+    # On the other hand this must be done before the first possible call of the 'Error' function.
+    # Otherwise we may error out but leave the build area behind,
+    # see https://github.com/rear/rear/pull/2633
+    QuietAddExitTask cleanup_build_area_and_end_program
     ROOTFS_DIR=$BUILD_DIR/rootfs
-    TMP_DIR=$BUILD_DIR/tmp
     mkdir -p $ROOTFS_DIR || Error "Could not create $ROOTFS_DIR"
+    TMP_DIR=$BUILD_DIR/tmp
     mkdir -p $TMP_DIR || Error "Could not create $TMP_DIR"
     # Since the above BUILD_DIR="$( mktemp ... )" does not always return a path under /tmp
     # the build directory must be excluded from the backup to be on the safe side:
