@@ -700,6 +700,7 @@ if test "$WORKFLOW" != "help" ; then
     DebugPrint "Command line options: $0 ${CMD_OPTS[*]}"
     LogPrint "Using log file: $RUNTIME_LOGFILE"
     DebugPrint "Using build area: $BUILD_DIR"
+    DebugPrint "$tmpdir_debug_info"
 fi
 
 # In DEBUG mode keep by default the build area but that can be overridden in user config files
