@@ -16,15 +16,60 @@ function SetOSVendorAndVersion () {
     # The test must match OS_VENDOR=generic or OS_VERSION=none in default.conf:
     if test "$OS_VENDOR" = generic -o "$OS_VERSION" = none ; then
 
-        # Recent Linux distro's with systemd has the /etc/os-release file
+        # Recent Linux distros with systemd has the /etc/os-release file
         # Try to find all the required information from that file
         if [[ -f /etc/os-release ]] ; then
-            grep -q -i 'fedora' /etc/os-release && OS_VENDOR=Fedora
-            grep -q -i -E '(centos|redhat|scientific|oracle)' /etc/os-release && OS_VENDOR=RedHatEnterpriseServer
-            grep -q -i 'suse' /etc/os-release && OS_VENDOR=SUSE_LINUX
-            grep -q -i 'debian' /etc/os-release && OS_VENDOR=Debian
-            grep -q -i -E '(ubuntu|linuxmint)' /etc/os-release && OS_VENDOR=Ubuntu
-            grep -q -i 'arch' /etc/os-release && OS_VENDOR=Arch
+            local id id_like
+            id="$(get_var_from_file /etc/os-release ID)"
+            id_like="$(get_var_from_file /etc/os-release ID_LIKE)"
+
+            # Deal with derivatives first:
+            case "$id_like" in
+                (*arch*)
+                    OS_VENDOR=Arch
+                    ;;
+                (*centos*|*rhel*)
+                    OS_VENDOR=RedHatEnterpriseServer
+                    ;;
+                (*debian*)
+                    OS_VENDOR=Debian
+                    ;;
+                # Fedora must be after RHEL to distinguish RHEL derivatives.
+                (*fedora*)
+                    OS_VENDOR=Fedora
+                    ;;
+                (*suse*)
+                    OS_VENDOR=SUSE_LINUX
+                    ;;
+                (*ubuntu*)
+                    OS_VENDOR=Ubuntu
+                    ;;
+            esac
+
+            # And then use the actual ID.  This may reset OS_VENDOR if it was
+            # already set. E.g. Ubuntu is like Debian but ReaR treats it as
+            # a separate OS_VENDOR.
+            case "$id" in
+                (arch)
+                    OS_VENDOR=Arch
+                    ;;
+                (debian)
+                    OS_VENDOR=Debian
+                    ;;
+                (fedora)
+                    OS_VENDOR=Fedora
+                    ;;
+                (rhel|ol)
+                    # Oracle Linux specifies only Fedora and not RHEL in ID_LIKE=
+                    OS_VENDOR=RedHatEnterpriseServer
+                    ;;
+                (suse)
+                    OS_VENDOR=SUSE_LINUX
+                    ;;
+                (ubuntu)
+                    OS_VENDOR=Ubuntu
+                    ;;
+            esac
 
             local version_id
             version_id="$(get_var_from_file /etc/os-release VERSION_ID)"
