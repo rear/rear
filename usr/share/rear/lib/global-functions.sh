@@ -14,6 +14,16 @@ function read_and_strip_file () {
     sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$filename"
 }
 
+# Obtain value of a non-array variable defined in external "sourceable" file,
+# e.g. /etc/os-release.
+function get_var_from_file() {
+    # It is necessary to spawn a new bash process!  Otherwise, source will fail
+    # when setting variables that are already defined by ReaR as readonly,
+    # e.g. VERSION.
+    # See: https://github.com/rear/rear/pull/3165#discussion_r1504116328
+    bash -c 'source "$0"; echo "${!1}"' "$1" "$2"
+}
+
 # Three functions to test
 #   if the argument is an integer
 #   if the argument is a positive integer (i.e. test for '> 0')
