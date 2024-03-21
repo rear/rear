@@ -12,7 +12,8 @@ fi
 # See if we can ping the director
 #
 # is the director server present? Fetch from $BACULA_CONF_DIR/bconsole.conf file
-BACULA_DIRECTOR=$(grep -i address $BACULA_CONF_DIR/bconsole.conf | awk '{ print $3 }')
+# For issue #3082 collect the BACULA_DIRECTOR in a more error proof way
+BACULA_DIRECTOR=$(grep -i '[[:space:]]address[[:space:]]=' $BACULA_CONF_DIR/bconsole.conf | sed -e 's/[ ]*#.*//' -e 's/[ \t]address[ \t]=[ \t]//')
 [ "${BACULA_DIRECTOR}" ] || Error "Director not defined in $BACULA_CONF_DIR/bconsole.conf"
 
 # check if the director is responding?
@@ -27,7 +28,9 @@ fi
 # and that the director can connect to the file daemon on this system.
 # "Connecting to Director 'director_name-fd:9101'"
 # "Connecting to Client 'bacula_client_name-fd at FQDN:9102"
-BACULA_CLIENT=$(grep $(hostname -s) $BACULA_CONF_DIR/bacula-fd.conf | grep "\-fd" | awk '{print $3}' | sed -e "s/-fd//g")
+# For issue #3082 collect the BACULA_CLIENT in a more error proof way
+BACULA_CLIENT=$(grep -i 'Name[[:space:]]' $BACULA_CONF_DIR/bacula-fd.conf | sed -e 's/[ ]*#.*//' -e 's/[ \t]Name[ \t]=[ \t]//' | cut -d'-' -f1)
+
 [ "${BACULA_CLIENT}" ] || Error "Client $(hostname -s) not defined in $BACULA_CONF_DIR/bacula-fd.conf"
 
 BACULA_RESULT=( $(echo -e " status client=${BACULA_CLIENT}-fd" | bconsole | grep Connect) )
