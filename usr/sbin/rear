@@ -553,7 +553,7 @@ if test "$WORKFLOW" != "help" ; then
     export TMPDIR="$( readlink -e "${TMPDIR-}" || true )"
     if ! test -d "$TMPDIR" ; then
         # Don't use Error() unless "QuietAddExitTask cleanup_build_area_and_end_program" was done:
-        echo -e "ERROR: TMPDIR '$TMPDIR' is no directory" >&2
+        echo "ERROR: TMPDIR '$TMPDIR' is no directory" >&2
         exit 1
     fi
     # We rely on sufficiently safe 'mktemp -d' behaviour
@@ -564,7 +564,7 @@ if test "$WORKFLOW" != "help" ; then
     # Create ReaR's working area BUILD_DIR:
     if ! BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX )" ; then
         # Don't use Error() unless "QuietAddExitTask cleanup_build_area_and_end_program" was done:
-        echo -e "ERROR: Could not create build area '$BUILD_DIR'" >&2
+        echo "ERROR: Could not create build area '$BUILD_DIR'" >&2
         exit 1
     fi
     # Prepend working area (BUILD_DIR) removal exit task
