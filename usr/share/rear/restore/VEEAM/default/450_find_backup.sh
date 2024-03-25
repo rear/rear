@@ -5,7 +5,7 @@
 # TODO: Support point-in-time restore similar to GALAXY11
 
 local backuplist
-LogPrint "Query the latest full backup for this Veeam client: $(hostname)"
+LogPrint "Query the latest full backup for Veeam client: $(hostname)"
 # output of veeamconfig backup list --all looks like this:
 # Job name Backup ID Repository Created at
 # Linux_FS01_nosnap_filelevel - 192.168.107.211 {7eb175f2-b006-4440-9b4f-c4be407c8dd5} [qlveeam11] Default Backup Repository 2023-12-23 07:33
