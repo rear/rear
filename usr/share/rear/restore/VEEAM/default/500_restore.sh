@@ -1,9 +1,6 @@
 #!/bin/bash
 
 # Veeam restore to last backup
-
-rmdir $v /mnt/backup || Error "Could not rmdir /mnt/backup in preparation for Veeam mount"
-
 LogPrint "Mounting latest Veeam full backup (ID '$VEEAM_BACKUPID') to /mnt/backup"
 veeamconfig backup mount --id "$VEEAM_BACKUPID" || Error "Failed to mount backup ID: '$VEEAM_BACKUPID'"
 
