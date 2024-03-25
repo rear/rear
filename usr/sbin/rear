@@ -550,10 +550,13 @@ if test "$WORKFLOW" != "help" ; then
     # so we set TMPDIR to its resolved absolute path.
     # Ignore when 'readlink -e' fails (e.g. it won't fail when TMPDIR is a regular file)
     # and verify afterwards that the 'readlink -e' result is a directory:
-    export TMPDIR="$( readlink -e "${TMPDIR-}" || true )"
+    export TMPDIR="$( readlink -e "$TMPDIR" || true )"
+    # TMPDIR must be a directory to make 'mktemp' work below.
+    # When TMPDIR was unset by the user it is set to '/var/tmp' in default.conf
+    # but it is an error when TMPDIR is set by the user to an empty or blank value:
     if ! test -d "$TMPDIR" ; then
         # Don't use Error() unless "QuietAddExitTask cleanup_build_area_and_end_program" was done:
-        echo "ERROR: TMPDIR '$TMPDIR' is no directory" >&2
+        echo "ERROR: TMPDIR '$TMPDIR' is not a directory" >&2
         exit 1
     fi
     # We rely on sufficiently safe 'mktemp -d' behaviour
@@ -564,7 +567,7 @@ if test "$WORKFLOW" != "help" ; then
     # Create ReaR's working area BUILD_DIR:
     if ! BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX )" ; then
         # Don't use Error() unless "QuietAddExitTask cleanup_build_area_and_end_program" was done:
-        echo "ERROR: Could not create build area '$BUILD_DIR'" >&2
+        echo "ERROR: Could not create working area ('mktemp -d -t rear.XXXXXXXXXXXXXXX' failed)" >&2
         exit 1
     fi
     # Prepend working area (BUILD_DIR) removal exit task
@@ -632,7 +635,7 @@ fi
 # After the 'mktemp' above, changing TMPDIR does not have the intended effect.
 # Save the current value to detect TMPDIR changes regardless if 'mktemp' above was called
 # so even the help workflow would report that error, see https://github.com/rear/rear/pull/3163
-saved_tmpdir="${TMPDIR-}"
+saved_tmpdir="$TMPDIR"
 
 # Keep old log file:
 test -r "$RUNTIME_LOGFILE" && mv -f "$RUNTIME_LOGFILE" "$RUNTIME_LOGFILE".old 2>/dev/null
@@ -794,7 +797,7 @@ if test "$CONFIG_APPEND_FILES" ; then
     done
 fi
 
-if [ "$saved_tmpdir" != "${TMPDIR-}" ] ; then
+if [ "$saved_tmpdir" != "$TMPDIR" ] ; then
     Error "Setting TMPDIR in a configuration file is not supported. To specify a working area directory prefix, export TMPDIR before executing '$PROGRAM'"
 fi
 
