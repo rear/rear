@@ -14,6 +14,35 @@ function read_and_strip_file () {
     sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$filename"
 }
 
+# Output lines in STDIN or in a file without subsequent duplicate lines
+# i.e. for each line that was seen (and output) do not output subsequent duplicates of that line.
+# This keeps the ordering of the lines so the input
+#   one
+#   two
+#   one
+#   three
+#   two
+#   one
+# gets output as
+#   one
+#   two
+#   three
+# To remove duplicate lines and keep the ordering one could use ... | cat -n | sort -uk2 | sort -nk1 | cut -f2-
+# cf. https://stackoverflow.com/questions/11532157/remove-duplicate-lines-without-sorting/11532197#11532197
+# that also explains an awk command that prints each line provided the line was not seen before.
+# The awk variable $0 holds an entire line and square brackets is associative array access in awk.
+# For each line the node of the associative array 'seen' is incremented and the line is printed
+# if the content of that node was not '!' previously set (i.e. if the line was not previously seen)
+# cf. https://www.thegeekstuff.com/2010/03/awk-arrays-explained-with-5-practical-examples/
+function without_subsequent_duplicates () {
+    local filename="$1"
+    if test "$filename" ; then
+        test -r "$filename" && awk '!seen[$0]++' "$filename" || return 1
+    else
+        awk '!seen[$0]++'
+    fi
+}
+
 # Three functions to test
 #   if the argument is an integer
 #   if the argument is a positive integer (i.e. test for '> 0')
