@@ -16,7 +16,7 @@ rm -rf $v /var/lib/veeam/*
 # check linux distribution and change the veeamservice systemd unit file for correct startup
 if ( egrep -q "Debian|Ubuntu" /etc/os-release ) ; then 
     sed -i 's/\/var//g' /usr/lib/systemd/system/veeamservice.service
-    else Error
+    else :
 fi
 
 LogPrint "Starting veeamservice agent for linux"
