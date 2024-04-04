@@ -12,11 +12,11 @@ case "$REAL_MACHINE" in
         # (but ia64 is not x86_64 aka amd64, it is the architecture of Itanium)
         EFI_ARCH=ia32
         # argument for grub2-mkstandalone -O ...
-        GRUB2_IMAGE_FORMAT=x86_64-efi
+        GRUB2_IMAGE_FORMAT=i386-efi
         ;;
     (x86_64)
         EFI_ARCH=x64
-        GRUB2_IMAGE_FORMAT=i386-efi
+        GRUB2_IMAGE_FORMAT=x86_64-efi
         ;;
     (*)
         BugError "Unknown architecture $REAL_MACHINE"
