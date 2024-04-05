@@ -13,12 +13,6 @@ fi
 Log "Deleting Veeam SQLite Linux Agent Database"
 rm -rf $v /var/lib/veeam/*
 
-# check linux distribution and change the veeamservice systemd unit file for correct startup
-if ( egrep -q "Debian|Ubuntu" /etc/os-release ) ; then 
-    sed -i 's/\/var//g' /usr/lib/systemd/system/veeamservice.service
-    else :
-fi
-
 LogPrint "Starting veeamservice agent for linux"
 systemctl start veeamservice || Error "Failed to start veeamservice Agent for Linux"
 
