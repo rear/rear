@@ -10,6 +10,7 @@
 # and output/RAWDISK/Linux-i386/270_create_grub2_efi_bootloader.sh
 # see https://github.com/rear/rear/pull/3157
 # and https://github.com/rear/rear/issues/3191
+# and https://github.com/rear/rear/issues/3195
 
 case "$REAL_MACHINE" in
     # cf. the seting of REAL_MACHINE ('uname -m') and MACHINE in default.conf
