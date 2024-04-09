@@ -1,6 +1,0 @@
-Relax-and-Recover Version 1.7.11 / 2008-12-30
-Validation:	Fedora/9/i386
-Submitted:	Gratien D'haese
-Date:		2008-12-30
-Features:	LVM, DP, ISO
-Comment:	local DP (data protector) client needs DP GUI component for omnir

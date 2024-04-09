@@ -1,6 +1,0 @@
-Version:     Relax-and-Recover 1.15 / Git
-Validation:  Debian/7.3/i386
-Submitted:   service@elektronit.de
-Date:        2014-01-09
-Features:    NETFS,ISO
-Comment:     Some Packages install needed, smb_fs is under debian 7 not available -> is now cifs-utils"

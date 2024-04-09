@@ -1,6 +1,0 @@
-Relax-and-Recover 1.11.0 (trunk 465)
-Validation:     Ubuntu/10.04/i386
-Submitted:      Schlomo Schapiro
-Date:           2011-05-19
-Features:       NETFS, rsync, eSATA (USB), LVM
-Comment:	My home server

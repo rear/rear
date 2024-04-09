@@ -1,6 +1,0 @@
-Version:     Relax-and-Recover 1.18 / Git
-Validation:  LinuxMint/17.3/i386
-Submitted:   Moritz Hoevels, m.hoevels@uni-koeln.de, Germany
-Date:        2016-09-29
-Features:    LVM, MD, NETFS, ISO
-Comment:     Many thanx, works out of the box, fantastic software!
