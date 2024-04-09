@@ -47,7 +47,7 @@ function get_var_from_file() {
     # the variable was set in the file (it could be also set to an empty or blank value).
     # For details about the reasons behind the get_var_from_file implementation see
     # https://github.com/rear/rear/pull/3171
-    bash -c 'unset $1 || exit 1 ; source "$0" >/dev/null ; set -u ; echo "${!1}"' "$1" "$2" || return 1
+    bash -c 'unset $1 || exit 1 ; source "$0" >/dev/null ; set -u ; echo "${!1}"' "$1" "$2"
 }
 
 # Three functions to test
