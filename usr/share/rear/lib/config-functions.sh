@@ -124,6 +124,14 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
                     # map all RHEL 7.x and clones to Fedora/7
                     OS_MASTER_VERSION="7"
                     ;;
+                (8.*)
+                    # map all RHEL 7.x and clones to Fedora/8
+                    OS_MASTER_VERSION="8"
+                    ;;
+                (9.*)
+                    # map all RHEL 7.x and clones to Fedora/9
+                    OS_MASTER_VERSION="9"
+                    ;;
                 (*)
                 OS_MASTER_VERSION="$OS_VERSION"
                 ;;
