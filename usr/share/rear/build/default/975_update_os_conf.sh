@@ -6,7 +6,7 @@
 
 local rescue_system_os_conf_file="$ROOTFS_DIR/etc/rear/os.conf"
 echo "# The following information was added automatically by the $WORKFLOW workflow:" >> $rescue_system_os_conf_file
-for var in ARCH OS OS_VERSION OS_VENDOR OS_VENDOR_VERSION OS_VENDOR_ARCH OS_MASTER_VENDOR ; do
+for var in ARCH OS OS_VERSION OS_VENDOR OS_VENDOR_VERSION OS_VENDOR_ARCH OS_MASTER_VENDOR OS_MASTER_VENDOR_ARCH OS_MASTER_VENDOR_VERSION ; do
     echo "$var='${!var}'"
 done >> $rescue_system_os_conf_file
 echo "# End of what was added automatically by the $WORKFLOW workflow." >> $rescue_system_os_conf_file
