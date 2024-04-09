@@ -1,7 +1,0 @@
-Version:     Relax-and-Recover 2.2-git.2501.0f5220ec.master / 2017-09-20
-Validation:  Debian/9.1/i386
-Submitted:   Veselin Mihaylov <vm@angband.eu>
-Date:        2017-09-20
-Features:    LVM, USB
-Comment:     Works out-of-the-box without issues. The only extra config was to exclude one of the filesystems from the backup.
-

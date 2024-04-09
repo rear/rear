@@ -1,6 +1,0 @@
-Version:     Relax-and-Recover 1.14 / Git
-Validation:  Ubuntu/12.04/i386
-Submitted:   Andreas Lemke <andreas.lemke@tu-bs.de>, TU Braunschweig/Sprachenzentrum, Germany
-Date:        2013-07-17
-Features:    PXE
-Comment:     We added /usr/share/rear/output/PXE/default/82_copy_to_net.sh to transfer the PXE files to the PXE server.

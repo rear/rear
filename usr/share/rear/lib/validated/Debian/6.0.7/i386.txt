@@ -1,6 +1,0 @@
-Version:     Relax-and-Recover 1.14 / Git
-Validation:  Debian/6.0.7/i386
-Submitted:   Richard Clark, Kerkhoff Technologies Inc., Canada
-Date:        2013-06-21
-Features:    ISO, NETFS, NFS
-Comment:     After installing the dependencies, it worked well.  Needed to refer to the /usr/share/doc as the website didn't have all the juicy details.  Website needs to be more clear on the two distinct parts - A rescue image, and a backup image.  Other than that, great work !  Doing a small deploy, and will then try some disaster recovery.
