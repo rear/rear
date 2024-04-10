@@ -2,7 +2,7 @@
 # check that veeam vbrserver is actually reachable on port 10006
 test "${VEEAM_SERVER_HOSTNAME}" || Error "Define VEEAM_SERVER_HOSTNAME (hostname or IP address)"
 
-if nc -w 3 -z "$VEEAM_SERVER_HOSTNAME" 10006; then
+if netcat -w 3 -z "$VEEAM_SERVER_HOSTNAME" 10006; then
     LogPrint "Veeam VBR Server: '$VEEAM_SERVER_HOSTNAME' seems to be up and running."
 else
     Error "Unable to contact Veeam VBR Server: '$VEEAM_SERVER_HOSTNAME' on port 10006"
