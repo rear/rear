@@ -55,7 +55,7 @@ function get_var_from_file() {
     # (see https://github.com/rear/rear/pull/3171#issuecomment-2018002598).
     # The 'source' return code is ignored because 'source' returns the status of the last sourced command
     # (see https://github.com/rear/rear/pull/3171#issuecomment-2019531750).
-    # but we are not interested in the the status of the last command in the file but only whether or not
+    # but we are not interested in the status of the last command in the file but only whether or not
     # the variable was set in the file (it could be also set to an empty or blank value).
     # For details about the reasons behind the get_var_from_file implementation see
     # https://github.com/rear/rear/pull/3171
