@@ -34,7 +34,7 @@ function read_and_strip_file () {
 # For each line the node of the associative array 'seen' is incremented and the line is printed
 # if the content of that node was not '!' previously set (i.e. if the line was not previously seen)
 # cf. https://www.thegeekstuff.com/2010/03/awk-arrays-explained-with-5-practical-examples/
-function without_subsequent_duplicates () {
+function unique_unsorted () {
     local filename="$1"
     if test "$filename" ; then
         test -r "$filename" && awk '!seen[$0]++' "$filename" || return 1
