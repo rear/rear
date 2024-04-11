@@ -36,7 +36,7 @@ function get_var_from_file() {
     # The first argument $1 is the file name.
     # The second argument $2 is the name of the variable.
     # We source the file in a separated shell to avoid failures when the variable is readonly in the current shell
-    # so the variable cannot be set in the current shell or in a subshell (a subshell interits 'readonly')
+    # so the variable cannot be set in the current shell or in a subshell (a subshell inherits 'readonly')
     # (see https://github.com/rear/rear/pull/3171#discussion_r1521750947)
     # and to avoid failures when any other variable that is set in the file is readonly in the current shell
     # because sourcing a file where a readonly variable is set causes a panic abort of 'source' at that place
