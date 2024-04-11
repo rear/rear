@@ -35,14 +35,26 @@ function read_and_strip_file () {
 function get_var_from_file() {
     # The first argument $1 is the file name.
     # The second argument $2 is the name of the variable.
+    # We source the file in a separated shell to avoid failures when the variable is readonly in the current shell
+    # so the variable cannot be set in the current shell or in a subshell (a subshell interits 'readonly')
+    # (see https://github.com/rear/rear/pull/3171#discussion_r1521750947)
+    # and to avoid failures when any other variable that is set in the file is readonly in the current shell
+    # because sourcing a file where a readonly variable is set causes a panic abort of 'source' at that place
+    # when sourcing in a subshell i.e. when get_var_from_file is called as in the above usage example
+    # (see https://github.com/rear/rear/pull/3165#discussion_r1505473662
+    # and https://github.com/rear/rear/pull/3165#discussion_r1505520542).
     # Via 'bash -c' $0 in that bash is set to the first argument so $0 in that bash is the file name
     # and $1 in that bash is set to the second argument so $1 in that bash is the name of the variable.
     # The inital "unset $1 || exit 1" ensures that the variable can be set in the file
     # in particular it exits if the variable is readonly within that 'bash -c'
-    # e.g. "get_var_from_file some_file UID" results non-zero return code.
+    # e.g. "get_var_from_file some_file UID" results non-zero return code
+    # (see https://github.com/rear/rear/pull/3171#issuecomment-2022625255).
     # The "set -u" after the file was sourced lets the subsequent access of the variable "${!1}"
     # exit with non-zero return code when the variable was not set in the file.
+    # The 'source' stdout must be discarded because the get_var_from_file stdout must be only the variable value
+    # (see https://github.com/rear/rear/pull/3171#issuecomment-2018002598).
     # The 'source' return code is ignored because 'source' returns the status of the last sourced command
+    # (see https://github.com/rear/rear/pull/3171#issuecomment-2019531750).
     # but we are not interested in the the status of the last command in the file but only whether or not
     # the variable was set in the file (it could be also set to an empty or blank value).
     # For details about the reasons behind the get_var_from_file implementation see
