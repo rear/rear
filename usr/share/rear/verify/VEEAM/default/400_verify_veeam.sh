@@ -11,16 +11,16 @@ fi
 # Veeam linux client agent registration
 
 Log "Deleting Veeam SQLite Linux Agent Database"
-rm -rf $v /var/lib/veeam/*
+rm -rf /var/lib/veeam/*
 
 LogPrint "Starting veeamservice agent for linux"
 systemctl start veeamservice || Error "Failed to start veeamservice Agent for Linux"
 
 Log "Accept Veeam EULA agreement"
 # create directories for EULA agreement
-mkdir -p $v /usr/share/doc/veeam/
-touch $v /usr/share/doc/veeam/EULA
-touch $v /usr/share/doc/veeam/3rdPartyNotices.txt
+mkdir -p /usr/share/doc/veeam/
+touch /usr/share/doc/veeam/EULA
+touch /usr/share/doc/veeam/3rdPartyNotices.txt
 
 Log "Query available Veeam VBR Server to trigger license agreement"
 yes yes | veeamconfig vbrServer list 1>/dev/null || Error "Unable to query a Veeam VBR server"
