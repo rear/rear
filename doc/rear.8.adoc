@@ -89,6 +89,9 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 -e --expose-secrets::
     do not suppress output of confidential values (passwords, encryption keys) in particular in the log file
 
+-p --portable::
+    allow running any ReaR workflow, especially recover, from a git checkout or rear source archive
+
 -V --version::
     version information
 
@@ -194,7 +197,12 @@ Create a bootable image file named "rear-$(hostname).raw.gz", which
 * supports UEFI/Legacy BIOS dual boot if syslinux *and* one of the supported EFI
   bootloaders are installed.
 
-When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+, +USB+, or +RAWDISK+ you should
+OUTPUT=*PORTABLE*::
+Create a portable ReaR archive that can be used on any rescue system to run
+any ReaR workflow, especially recover. Assumes that all required software is
+installed and usable there. This is experimental, please report any issues.
+
+When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+, +USB+, +PORTABLE+ or +RAWDISK+ you should
 provide the backup target location through the +OUTPUT_URL+ variable. Possible
 +OUTPUT_URL+ settings are:
 

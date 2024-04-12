@@ -217,24 +217,27 @@ To use Relax-and-Recover you always call the main script '/usr/sbin/rear':
 ----
 # rear help
 
-Usage: rear [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [-n|--non-interactive] [--] COMMAND [ARGS...]
+Usage: rear [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [-n|--non-interactive] [-e|--expose-secrets] [-p|--portable] [--] COMMAND [ARGS...]
 
 Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details see
 the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:
- -h --help              usage information
- -c DIR                 alternative config directory; instead of /etc/rear
- -C CONFIG              additional config file; absolute path or relative to config directory
- -d                     debug mode; log debug messages
- -D                     debugscript mode; log every function call (via 'set -x')
+ -h --help              usage information (this text)
+ -c DIR                 alternative config directory; instead of /src/rear/etc/rear
+ -C CONFIG              additional config files; absolute path or relative to config directory
+ -d                     debug mode; run many commands verbosely with debug messages in log file (also sets -v)
+ -D                     debugscript mode; log executed commands via 'set -x' (also sets -v and -d)
  --debugscripts SET     same as -d -v -D but debugscript mode with 'set -SET'
- -r KERNEL              kernel version to use; current: '3.12.49-3-default'
- -s                     simulation mode; show what scripts rear would include
+ -r KERNEL              kernel version to use; currently '5.15.0-204.147.6.3.el9uek.x86_64'
+ -s                     simulation mode; show what scripts are run (without executing them)
  -S                     step-by-step mode; acknowledge each script individually
- -v                     verbose mode; show more output
- -V --version           version information
+ -v                     verbose mode; show messages what Relax-and-Recover is doing on the terminal or show verbose help
  -n --non-interactive   non-interactive mode; aborts when any user input is required (experimental)
+ -e --expose-secrets    do not suppress output of confidential values (passwords, encryption keys) in particular in the log file
+ -p --portable          allow running any ReaR workflow, especially recover, from a git checkout or rear source archive
+ -V --version           version information
+
 
 List of commands:
  checklayout     check if the disk layout has changed
@@ -249,7 +252,6 @@ List of commands:
  recover         recover the system
  restoreonly     only restore the backup
  validate        submit validation information
-
 Use 'rear -v help' for more advanced commands.
 ----
 

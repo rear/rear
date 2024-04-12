@@ -1,3 +1,5 @@
+is_true "$PORTABLE" && return
+
 # In the ReaR rescue/recovery system the only possible workflows are
 # - 'recover' and its partial workflows 'layoutonly' 'restoreonly' 'finalizeonly'
 # - 'mountonly'
@@ -17,18 +19,18 @@
 if test -f /etc/rear-release ; then
     # We are in the ReaR rescue/recovery system:
     case "$WORKFLOW" in
-        (recover|layoutonly|restoreonly|finalizeonly|mountonly|opaladmin|shell|help)
+        (recover|layoutonly|restoreonly|finalizeonly|mountonly|opaladmin|shell|dump|help)
             LogPrint "Running workflow $WORKFLOW within the ReaR rescue/recovery system"
             ;;
         (*)
-            Error "The workflow $WORKFLOW is not supported in the ReaR rescue/recovery system"
+            Error "The workflow $WORKFLOW is not supported in the ReaR rescue/recovery system,${LF}use --portable to disable this check at your own risk.${LF}ReaR will probably not work as expected and potentially${LF}destroy your backup data,${LF}if you run these workflows in the rescue system!"
             ;;
     esac
 else
     # We are in the normal/original system:
     case "$WORKFLOW" in
         (recover|layoutonly|restoreonly|finalizeonly|mountonly)
-            Error "The workflow $WORKFLOW is only supported in the ReaR rescue/recovery system"
+            Error "The workflow $WORKFLOW is only supported in the ReaR rescue/recovery system,${LF}use --portable to disable this check at your own risk.${LF}ReaR will destroy your system if you run these workflows in the normal/original system!"
             ;;
         (*)
             LogPrint "Running workflow $WORKFLOW on the normal/original system"

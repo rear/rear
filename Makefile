@@ -85,7 +85,8 @@ else
 RUNASUSER :=
 endif
 
-tarparams = --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" $(DIST_CONTENT)
+# .gitignore is optional, avoid tar errors if it does not exist, e.g. in a dist archive
+tarparams = $(shell test -f .gitignore && echo --exclude-from=.gitignore --exclude=.gitignore) --exclude=".??*" $(DIST_CONTENT)
 
 DIST_FILES := $(shell tar -cv -f /dev/null $(tarparams))
 
@@ -165,10 +166,10 @@ install-config:
 install-bin:
 	@echo -e "\033[1m== Installing binary ==\033[0;0m"
 	install -Dp -m0755 $(rearbin) $(DESTDIR)$(sbindir)/rear
-	sed -i -e 's,^CONFIG_DIR=.*,CONFIG_DIR="$(sysconfdir)/rear",' \
-		-e 's,^SHARE_DIR=.*,SHARE_DIR="$(datadir)/rear",' \
-		-e 's,^VAR_DIR=.*,VAR_DIR="$(localstatedir)/lib/rear",' \
-		-e 's,^LOG_DIR=.*,LOG_DIR="$(localstatedir)/log/rear",' \
+	sed -i -e 's,^CONFIG_DIR=.*,CONFIG_DIR="$$REAR_DIR_PREFIX$(sysconfdir)/rear",' \
+		-e 's,^SHARE_DIR=.*,SHARE_DIR="$$REAR_DIR_PREFIX$(datadir)/rear",' \
+		-e 's,^VAR_DIR=.*,VAR_DIR="$$REAR_DIR_PREFIX$(localstatedir)/lib/rear",' \
+		-e 's,^LOG_DIR=.*,LOG_DIR="$$REAR_DIR_PREFIX$(localstatedir)/log/rear",' \
 		$(DESTDIR)$(sbindir)/rear
 
 install-data:
