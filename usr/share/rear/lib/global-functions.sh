@@ -37,7 +37,7 @@ function read_and_strip_file () {
 function unique_unsorted () {
     local filename="$1"
     if test "$filename" ; then
-        test -r "$filename" && awk '!seen[$0]++' "$filename" || return 1
+        test -r "$filename" && awk '!seen[$0]++' "$filename"
     else
         awk '!seen[$0]++'
     fi
