@@ -39,10 +39,7 @@ function unique_unsorted () {
     if test "$filename" ; then
         test -r "$filename" && awk '!seen[$0]++' "$filename" || return 1
     else
-        # Timeout after 5 seconds when there is nothing at STDIN or when STDIN does not get closed
-        # to avoid that 'awk' waits endlessly for (further) input which makes ReaR behave as if it hung up
-        # cf. https://github.com/rear/rear/wiki/Coding-Style#beware-of-the-emptiness
-        timeout 5 awk '!seen[$0]++'
+        awk '!seen[$0]++'
     fi
 }
 
