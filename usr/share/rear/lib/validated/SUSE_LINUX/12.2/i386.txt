@@ -1,6 +1,0 @@
-Version:     Relax-and-Recover 1.14-git201308130912 / 2013-08-13
-Validation:  SUSE_LINUX/12.2/i386
-Submitted:   Andreas Meyer <ameyer@bitcorner.de> bitcorner - Computertechnik
-Date:        2013-08-16
-Features:    NETFS, ISO
-Comment:     Had to install Tex as a dependency of asciidoc in a openSUSE 12.2 to be able to build a rpm-package.

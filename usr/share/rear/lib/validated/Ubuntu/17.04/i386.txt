@@ -1,7 +1,0 @@
-Version:     Relax-and-Recover 2.00 / Git
-Validation:  Ubuntu/17.04/i386
-Submitted:   Robert Grasso <robert.grasso@modulonet.fr>, Home user, France
-Date:        2017-06-18
-Features:    LVM,NETFS,ISO,local incremental backup
-Comment:     needed to use NETFS in order to enable local incremental backup (home usage - thus backing up toward 127.0.0.1)"
-

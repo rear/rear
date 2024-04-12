@@ -1,6 +1,0 @@
-Relax-and-Recover Version 1.13.0 / $Date$
-Validation:     RedHatEnterpriseServer/6/i386
-Submitted:      tdec0909@yahoo.com, Marcel Keil <marcelk@tim.de>
-Date:           2013-05-21, 2014-03-18
-Features:       LVM, VMware guest, ISO, NETFS, NSR
-Comment:        

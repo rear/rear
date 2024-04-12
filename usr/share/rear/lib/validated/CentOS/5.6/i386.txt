@@ -1,6 +1,0 @@
-Relax-and-Recover 1.11.0 (trunk 465)
-Validation:     CentOS/5.6/i386
-Submitted:      Schlomo Schapiro
-Date:           2011-05-19
-Features:       XEN PV, LVM, EXTERNAL
-Comment:	XEN PV development system

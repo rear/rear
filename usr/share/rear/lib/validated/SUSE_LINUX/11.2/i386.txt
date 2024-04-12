@@ -1,3 +1,0 @@
-Submitted:      Schlomo Schapiro
-Date:           2009-12-09
-Features:       NETFS, ISO, LVM, EMAIL

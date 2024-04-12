@@ -1,4 +1,0 @@
-Submitted:	Schlomo Schapiro <rear@schlomo.schapiro.org>
-Date:		2008-08-08, 2009-01-29
-Features:	LVM, MD, SCSI, IDE, ISO, USB, GALAXY7, TSM, BONDING, hpacucli, CCISS
-Comment:
