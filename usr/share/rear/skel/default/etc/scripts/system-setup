@@ -78,6 +78,12 @@ source /usr/share/rear/conf/default.conf || echo -e "\n'source /usr/share/rear/c
 # Sourcing user and rescue configuration as we need some variables
 # (EXCLUDE_MD5SUM_VERIFICATION right now and other variables in the system setup scripts):
 # The order of sourcing should be 'site' then 'local' and as last 'rescue'
+
+# In the rescue system these paths are always like this, either for real or as a symlink to the actual paths
+CONFIG_DIR=/etc/rear
+SHARE_DIR=/usr/share/rear
+VAR_DIR=/var/lib/rear
+LOG_DIR=/var/log/rear
 for conf in site local rescue ; do
     if test -s /etc/rear/$conf.conf ; then
         source /etc/rear/$conf.conf || echo -e "\n'source /etc/rear/$conf.conf' failed with exit code $?"

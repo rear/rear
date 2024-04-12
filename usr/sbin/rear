@@ -140,6 +140,7 @@ DEBUG_OUTPUT_DEV="null"
 DISPENSABLE_OUTPUT_DEV="null"
 SECRET_OUTPUT_DEV="null"
 EXPOSE_SECRETS=""
+PORTABLE=""
 NON_INTERACTIVE=""
 KEEP_BUILD_DIR=""
 KERNEL_VERSION=""
@@ -151,7 +152,7 @@ WORKFLOW=""
 
 # Parse options
 help_note_text="Use '$PROGRAM --help' or 'man $PROGRAM' for more information."
-if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:ne" -l "help,version,non-interactive,debugscripts:,expose-secrets" -- "$@" )" ; then
+if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:nep" -l "help,version,non-interactive,debugscripts:,expose-secrets,portable" -- "$@" )" ; then
     echo "$help_note_text"
     exit 1
 fi
@@ -174,6 +175,9 @@ while true ; do
             ;;
         (-e|--expose-secrets)
             EXPOSE_SECRETS=1
+            ;;
+        (-p|--portable)
+            PORTABLE=1
             ;;
         (-c)
             if [[ "$2" == -* ]] ; then
@@ -594,9 +598,10 @@ if test "$WORKFLOW" != "help" ; then
     # and that those temporary files will get cleaned up "by the way"
     # via the cleanup_build_area_and_end_program() function,
     # see https://github.com/rear/rear/issues/3167
-    if ! test "$RECOVERY_MODE" ; then
-        # We set TMPDIR to ReaR's TMP_DIR only when we are not in RECOVERY_MODE
-        # because TMP_DIR does not exist in the recreated/restored system
+    if ! [[ "$RECOVERY_MODE" || "$PORTABLE" ]] ; then
+        # We set TMPDIR to ReaR's TMP_DIR only when we are not in RECOVERY_MODE and also not in PORTABLE mode
+        # because TMP_DIR does not exist in the recreated/restored system or in the foreign rescue system where
+        # the portable mode should be able to work without the need to have a TMP_DIR in the rescue system.
         # i.e. there is no /mnt/local/var/tmp/rear.XXXXXXXXXXXXXXX/tmp so that
         #   chroot /mnt/local COMMAND
         # fails when COMMAND uses TMPDIR - in particular "chroot /mnt/local dracut" fails
