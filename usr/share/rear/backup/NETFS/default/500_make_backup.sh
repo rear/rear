@@ -42,10 +42,10 @@ fi
 
 # Log what is included in the backup and what is excluded from the backup
 # cf. backup/NETFS/default/400_create_include_exclude_files.sh
-Log "Backup include list (backup-include.txt contents):"
+Log "Backup include list (backup-include.txt contents without subsequent duplicates):"
 while read -r backup_include_item ; do
     test "$backup_include_item" && Log "  $backup_include_item"
-done < $TMP_DIR/backup-include.txt
+done < <( unique_unsorted $TMP_DIR/backup-include.txt )
 Log "Backup exclude list (backup-exclude.txt contents):"
 while read -r backup_exclude_item ; do
     test "$backup_exclude_item" && Log "  $backup_exclude_item"
@@ -127,7 +127,7 @@ case "$(basename ${BACKUP_PROG})" in
                 $BACKUP_PROG_CREATE_NEWER_OPTIONS \
                 ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
                 -X $TMP_DIR/backup-exclude.txt -C / -c -f - \
-                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
+                $(unique_unsorted $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $BACKUP_PROG_CRYPT_OPTIONS BACKUP_PROG_CRYPT_KEY \| $SPLIT_COMMAND
         else
             Log $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
                 --no-wildcards-match-slash --one-file-system \
@@ -135,7 +135,7 @@ case "$(basename ${BACKUP_PROG})" in
                 $BACKUP_PROG_CREATE_NEWER_OPTIONS \
                 ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS} "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
                 -X $TMP_DIR/backup-exclude.txt -C / -c -f - \
-                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $SPLIT_COMMAND
+                $(unique_unsorted $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE \| $SPLIT_COMMAND
         fi
 
         if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
@@ -151,7 +151,7 @@ case "$(basename ${BACKUP_PROG})" in
                 ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                                      \
                 "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                               \
                 -X $TMP_DIR/backup-exclude.txt -C / -c -f -                                        \
-                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |                              \
+                $(unique_unsorted $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |                  \
             { $BACKUP_PROG_CRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV | \
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
@@ -160,14 +160,14 @@ case "$(basename ${BACKUP_PROG})" in
                 "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
                 "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
             )
-            $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
-                --no-wildcards-match-slash --one-file-system                     \
-                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                 \
-                $BACKUP_PROG_CREATE_NEWER_OPTIONS                                \
-                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                    \
-                "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                             \
-                -X $TMP_DIR/backup-exclude.txt -C / -c -f -                      \
-                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |            \
+            $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose  \
+                --no-wildcards-match-slash --one-file-system                      \
+                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                  \
+                $BACKUP_PROG_CREATE_NEWER_OPTIONS                                 \
+                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                     \
+                "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                              \
+                -X $TMP_DIR/backup-exclude.txt -C / -c -f -                       \
+                $(unique_unsorted $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE | \
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         fi
@@ -213,21 +213,21 @@ case "$(basename ${BACKUP_PROG})" in
         mkdir -p $v "$backuparchive" >&2
         Log $BACKUP_PROG --verbose "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete \
             --exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded \
-            $(cat $TMP_DIR/backup-include.txt) "$backuparchive"
+            $(unique_unsorted $TMP_DIR/backup-include.txt) "$backuparchive"
         $BACKUP_PROG --verbose "${BACKUP_RSYNC_OPTIONS[@]}" --one-file-system --delete \
             --exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded \
-            $(cat $TMP_DIR/backup-include.txt) "$backuparchive" >&2
+            $(unique_unsorted $TMP_DIR/backup-include.txt) "$backuparchive" >&2
     ;;
     (*)
         Log "Using unsupported backup program '$BACKUP_PROG'"
         Log $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
             $BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $TMP_DIR/backup-exclude.txt \
             "${BACKUP_PROG_OPTIONS[@]}" $backuparchive \
-            $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
+            $(unique_unsorted $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
         $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
             $BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $TMP_DIR/backup-exclude.txt \
             "${BACKUP_PROG_OPTIONS[@]}" $backuparchive \
-            $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
+            $(unique_unsorted $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
     ;;
 esac 2> "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
 # For the rsync and default case the backup prog is the last in the case entry
