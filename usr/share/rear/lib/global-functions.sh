@@ -15,24 +15,24 @@ function read_and_strip_file () {
 }
 
 # Get the value of a non-array variable that is set in a shell-syntax file.
-# The get_shell_file_config_variable function is meant to be used with files
+# The source_variable_from_file function is meant to be used with files
 # like /etc/os-release or certain files in /etc/sysconfig or /etc/default
 # that basically only do shell-compatible variable assignments (VAR="value").
-# get_shell_file_config_variable must not be used with arbitrary shell scripts
+# source_variable_from_file must not be used with arbitrary shell scripts
 # because commands in the file are executed via 'source' so any effects of
 # executing those commands will happen like changing things in the system.
 # Zero return code means the variable was set in the file and then
 # stdout is the value of the variable (could be empty or blank).
 # Non-zero return code in all other cases.
 # Usage example:
-#   if my_var="$( get_shell_file_config_variable FILE_NAME VAR_NAME )" ; then
+#   if my_var="$( source_variable_from_file FILE_NAME VAR_NAME )" ; then
 #       # Code when VAR_NAME was set in FILE_NAME
 #       ...
 #   else
 #       # Code when the value of VAR_NAME is unknown
 #       ...
 #   fi
-function get_shell_file_config_variable() {
+function source_variable_from_file() {
     # The first argument $1 is the file name.
     # The second argument $2 is the name of the variable.
     # We source the file in a separated shell to avoid failures when the variable is readonly in the current shell
@@ -40,24 +40,24 @@ function get_shell_file_config_variable() {
     # (see https://github.com/rear/rear/pull/3171#discussion_r1521750947)
     # and to avoid failures when any other variable that is set in the file is readonly in the current shell
     # because sourcing a file where a readonly variable is set causes immediate exit of a subshell at that place
-    # when sourcing in a subshell i.e. when get_shell_file_config_variable is called as in the above usage example
+    # when sourcing in a subshell i.e. when source_variable_from_file is called as in the usage example above
     # (see https://github.com/rear/rear/pull/3165#discussion_r1505473662
-    # and https://github.com/rear/rear/pull/3165#discussion_r1505520542).
+    #  and https://github.com/rear/rear/pull/3165#discussion_r1505520542).
     # Via 'bash -c' $0 in that bash is set to the first argument so $0 in that bash is the file name
     # and $1 in that bash is set to the second argument so $1 in that bash is the name of the variable.
     # The inital "unset $1 || exit 1" ensures that the variable can be set and is set in the file
     # in particular it exits if the variable is readonly within that 'bash -c'
-    # e.g. "get_shell_file_config_variable some_file UID" results non-zero return code
+    # e.g. "source_variable_from_file some_file UID" results non-zero return code
     # (see https://github.com/rear/rear/pull/3171#issuecomment-2022625255).
     # The "set -u" after the file was sourced lets the subsequent access of the variable "${!1}"
     # exit with non-zero return code when the variable was not set in the file.
-    # The 'source' stdout is discarded because the get_shell_file_config_variable stdout must be only the variable value
+    # The 'source' stdout is discarded because the source_variable_from_file stdout must be only the variable value
     # (see https://github.com/rear/rear/pull/3171#issuecomment-2018002598).
     # The 'source' return code is ignored because 'source' returns the status of the last sourced command
     # (see https://github.com/rear/rear/pull/3171#issuecomment-2019531750)
     # but we are not interested in the status of the last command in the file but only whether or not
     # the variable was set in the file (it could be also set to an empty or blank value).
-    # For details about the reasons behind the get_shell_file_config_variable implementation
+    # For details about the reasons behind the source_variable_from_file implementation
     # see https://github.com/rear/rear/pull/3171 (there the function name had been get_var_from_file)
     # and https://github.com/rear/rear/pull/3203
     bash -c 'unset $1 || exit 1 ; source "$0" >/dev/null ; set -u ; echo "${!1}"' "$1" "$2"
