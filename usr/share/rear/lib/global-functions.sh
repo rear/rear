@@ -6,7 +6,7 @@
 # Public License. Refer to the included COPYING for full text of license.
 
 # A generic method how to avoid problems
-# with safely using untrustworthy files, for example
+# how to safely use untrustworthy files, for example
 # safely processing/interpreting untrustworthy files
 # or safely using data from untrustworthy files,
 # is to not use untrustworthy files.
@@ -18,20 +18,23 @@
 # where only that particular user could have written the file.
 # For ReaR this means:
 # Only those files are trustworthy to be used by ReaR
-# where only 'root' could have written the file.
+# when only 'root' could have written the file.
 # To check if only 'root' could have written a file
-# the only possible way in practice is
+# the only possible way in practice (there is no history) is
 # to check the current file owner, group, and permissions:
 function is_trustworthy_for_root () {
     local filename="$1"
     local resolved_file
     resolved_file="$( readlink -e "$filename" )" || return 1
-    # Owner name and group name must be 'root root':
-    test "$( stat -c '%U %G' $resolved_file )" = "root root" || return 1
+    # ACLs are not checked so treat files with ACL as untrustworthy to be on the safe side.
+    # It seems only 'ls -l' shows when there is an ACL (by '+' appended to the permissions):
+    test "$( ls -ld1 "$resolved_file" | cut -b11 )" = "+" && return 1
+    # Owner name must be 'root':
+    test "$( stat -c '%U' "$resolved_file" )" = "root" || return 1
     # Neither group nor others must have write permissions
-    # so the human readable permission string must be '-'
-    # for group and others for example like "-rwxr-xr-x"
-    [[ "$( stat -c '%A' $resolved_file )" == ?????-??-? ]]
+    # so the human readable permissions string must be '-'
+    # for group and others, for example as in "-rwxr-xr-x"
+    [[ "$( stat -c '%A' "$resolved_file" )" == ?????-??-? ]]
 }
 
 # Extract the real content from a config file provided as argument.
