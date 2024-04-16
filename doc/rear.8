@@ -2,12 +2,12 @@
 .\"     Title: rear
 .\"    Author: [see the "AUTHOR(S)" section]
 .\" Generator: Asciidoctor 2.0.16
-.\"      Date: 2024-04-09
+.\"      Date: 2024-04-16
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "REAR" "8" "2024-04-09" "\ \&" "\ \&"
+.TH "REAR" "8" "2024-04-16" "\ \&" "\ \&"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -595,6 +595,11 @@ BACKUP=\fBBORG\fP
 Use BorgBackup (short Borg) a deduplicating backup program to restore the data.
 Executing \*(Aqrear mkbackup\*(Aq will create a Borg backup,
 see the section \*(AqReaR with Borg back end\*(Aq in the ReaR user\-guide \*(AqScenarios\*(Aq documentation.
+.RE
+.sp
+BACKUP=\fBVEEAM\fP
+.RS 4
+Use Veeam Backup to restore data.
 .RE
 .sp
 BACKUP=\fBNFS4SERVER\fP
