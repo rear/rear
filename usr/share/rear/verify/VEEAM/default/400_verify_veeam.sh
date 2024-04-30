@@ -13,6 +13,9 @@ fi
 Log "Deleting Veeam SQLite Linux Agent Database"
 rm -rf /var/lib/veeam/*
 
+LogPrint "Mounting /tmp with tmpfs"
+mount tmpfs /tmp -t tmpfs -o mode=1777,strictatime,nosuid,nodev || Error "Failed to mount /tmp with tmpfs"
+
 LogPrint "Starting veeamservice agent for linux"
 systemctl start veeamservice || Error "Failed to start veeamservice Agent for Linux"
 
