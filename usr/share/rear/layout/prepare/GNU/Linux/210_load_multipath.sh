@@ -68,7 +68,7 @@ blacklist {
             (${choices[0]})
                 # continue recovery without multipath
                 is_true "$wilful_input" && LogPrint "User confirmed continuing without multipath" || LogPrint "Continuing '$rear_workflow' by default"
-                LogPrint "You should consider removing BOOT_ON_SAN parameter from your rear configuration file if you don't need multipath on this server."
+                LogPrint "You may remove BOOT_OVER_SAN from your ReaR configuration when you do not need multipath"
 
                 # Avoid to list mpath device.
                 list_mpath_device=0
