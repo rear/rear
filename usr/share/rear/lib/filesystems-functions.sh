@@ -3,16 +3,27 @@
 #
 # File system support functions
 
+function btrfs_snapshot_subvolume_exists() {
+    # returns true if the btrfs snapshot subvolume ($2) exists in the Btrfs
+    # file system at the mount point ($1).
+
+    # Use -s so that btrfs subvolume list considers snapshots only
+    btrfs_subvolume_exists "$1" "$2" "-s"
+}
+
 function btrfs_subvolume_exists() {
     # returns true if the btrfs subvolume ($2) exists in the Btrfs file system at the mount point ($1).
     local subvolume_mountpoint="$1" btrfs_subvolume_path="$2"
+
+    # extra options for the btrfs subvolume list command ($3)
+    local btrfs_extra_opts="$3"
 
     # A root subvolume can be assumed to always exist
     [ "$btrfs_subvolume_path" == "/" ] && return 0
 
     # A non-root subvolume exists if the btrfs subvolume list contains its complete path at the end of one line.
     # This code deliberately uses a plain string comparison rather than a regexp.
-    btrfs subvolume list -a "$subvolume_mountpoint" | sed -e 's; path <FS_TREE>/; path ;' |
+    btrfs subvolume list -a $btrfs_extra_opts "$subvolume_mountpoint" | sed -e 's; path <FS_TREE>/; path ;' |
     awk -v path="$btrfs_subvolume_path" '
         BEGIN {
             match_string = " path " path;
