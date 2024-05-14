@@ -45,7 +45,7 @@ fi
 Log "Backup include list (backup-include.txt contents without subsequent duplicates):"
 while read -r backup_include_item ; do
     test "$backup_include_item" && Log "  $backup_include_item"
-done < <( cat $TMP_DIR/backup-include.txt )
+done < $TMP_DIR/backup-include.txt
 Log "Backup exclude list (backup-exclude.txt contents):"
 while read -r backup_exclude_item ; do
     test "$backup_exclude_item" && Log "  $backup_exclude_item"
@@ -151,7 +151,7 @@ case "$(basename ${BACKUP_PROG})" in
                 ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                                      \
                 "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                                               \
                 -X $TMP_DIR/backup-exclude.txt -C / -c -f -                                        \
-                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |                  \
+                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |                              \
             { $BACKUP_PROG_CRYPT_OPTIONS "$BACKUP_PROG_CRYPT_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV | \
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
@@ -160,14 +160,14 @@ case "$(basename ${BACKUP_PROG})" in
                 "$(basename $(echo "$BACKUP_PROG" | awk '{ print $1 }'))"
                 "$(basename $(echo "$SPLIT_COMMAND" | awk '{ print $1 }'))"
             )
-            $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose  \
-                --no-wildcards-match-slash --one-file-system                      \
-                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                  \
-                $BACKUP_PROG_CREATE_NEWER_OPTIONS                                 \
-                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                     \
-                "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                              \
-                -X $TMP_DIR/backup-exclude.txt -C / -c -f -                       \
-                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE | \
+            $BACKUP_PROG $TAR_OPTIONS --sparse --block-number --totals --verbose \
+                --no-wildcards-match-slash --one-file-system                     \
+                --ignore-failed-read "${BACKUP_PROG_OPTIONS[@]}"                 \
+                $BACKUP_PROG_CREATE_NEWER_OPTIONS                                \
+                ${BACKUP_PROG_BLOCKS:+-b $BACKUP_PROG_BLOCKS}                    \
+                "${BACKUP_PROG_COMPRESS_OPTIONS[@]}"                             \
+                -X $TMP_DIR/backup-exclude.txt -C / -c -f -                      \
+                $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE |            \
             $SPLIT_COMMAND
             pipes_rc=( ${PIPESTATUS[@]} )
         fi
