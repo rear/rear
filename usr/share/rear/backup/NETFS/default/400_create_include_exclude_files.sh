@@ -2,7 +2,7 @@
 # What to include in the backup:
 cat /dev/null > "$TMP_DIR/backup-includes.txt"
 
-# First by default backup of the mounted filesystems in disklayout.conf
+# First by default backup the mounted filesystems in disklayout.conf
 # (except BACKUP_ONLY_INCLUDE or MANUAL_INCLUDE is set)
 # as defined in var/lib/rear/recovery/mountpoint_device which contains at least '/'
 # where usually '/' is first because "fs ... /" is first in disklayout.conf
