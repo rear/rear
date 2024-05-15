@@ -42,11 +42,11 @@ fi
 
 # Log what is included in the backup and what is excluded from the backup
 # cf. backup/NETFS/default/400_create_include_exclude_files.sh
-Log "Backup include list (backup-include.txt contents without subsequent duplicates):"
+Log "Backup include list $TMP_DIR/backup-include.txt"
 while read -r backup_include_item ; do
     test "$backup_include_item" && Log "  $backup_include_item"
 done < $TMP_DIR/backup-include.txt
-Log "Backup exclude list (backup-exclude.txt contents):"
+Log "Backup exclude list $TMP_DIR/backup-exclude.txt"
 while read -r backup_exclude_item ; do
     test "$backup_exclude_item" && Log "  $backup_exclude_item"
 done < $TMP_DIR/backup-exclude.txt
