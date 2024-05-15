@@ -22,7 +22,7 @@ if ! is_true "$BACKUP_ONLY_INCLUDE" ; then
                 continue
             fi
             if ! mountpoint "$mountpoint" ; then
-                LogPrintError "Mountpoint '$mountpoint' in $VAR_DIR/recovery/mountpoint_device is no mountpoint"
+                LogPrintError "Mountpoint '$mountpoint' in $VAR_DIR/recovery/mountpoint_device is not a mountpoint"
                 continue
             fi
             echo "$mountpoint" >> "$TMP_DIR/backup-includes.txt"
