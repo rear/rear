@@ -25,10 +25,10 @@ jobs:
 
       - id: dist
         run: make dist
-      
+
       - id: build
         run: tools/run-in-docker -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz /var/tmp/build-rear*'
-      
+
       - run: ls -lR dist-all
         if: always()
 
@@ -39,7 +39,10 @@ jobs:
           name: ReaR Packages ${{ github.head_ref || github.ref_name }} ${{ github.sha }}
           path: dist-all/*
           retention-days: 7
-      
+
+      - name: Check rear dump
+        run: tools/run-in-docker -- rear dump
+
       - name: Create Release Archives and Update GitHub Release
         if: github.ref == 'refs/heads/master'
         env:
@@ -48,7 +51,7 @@ jobs:
           #
           set -e
 
-          # put commit details into ZIP comment as the files allways have the same names
+          # put commit details into ZIP comment as the files always have the same names
           COMMENT=$(git show -s --format="ReaR snapshot %h %ci%nhttps://github.com/rear/rear/tree/%H")
 
           for distro in dist-all/* ; do
