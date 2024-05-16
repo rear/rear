@@ -604,12 +604,12 @@ if test "$WORKFLOW" != "help" ; then
         # the portable mode should be able to work without the need to have a TMP_DIR in the rescue system.
         # i.e. there is no /mnt/local/var/tmp/rear.XXXXXXXXXXXXXXX/tmp so that
         #   chroot /mnt/local COMMAND
-        # fails when COMMAND uses TMPDIR - in particular "chroot /mnt/local dracut" fails
+        # fails when COMMAND uses TMPDIR = TMP_DIR - in particular "chroot /mnt/local dracut" fails
         # see https://github.com/rear/rear/pull/3168#issuecomment-1983377528
         if test "$TMPDIR_ORIG" ; then
-            tmpdir_debug_info="Changing TMPDIR to '$TMP_DIR' (was '$TMPDIR_ORIG' when ReaR was launched)"
+            tmpdir_debug_info="Changing TMPDIR to ReaR's '$TMP_DIR' (was '$TMPDIR_ORIG' when ReaR was launched)"
         else
-            tmpdir_debug_info="Setting TMPDIR to '$TMP_DIR' (was unset when ReaR was launched)"
+            tmpdir_debug_info="Setting TMPDIR to ReaR's '$TMP_DIR' (was unset when ReaR was launched)"
         fi
         export TMPDIR="$TMP_DIR"
     else
