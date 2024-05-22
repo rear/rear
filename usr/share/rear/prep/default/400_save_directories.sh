@@ -8,6 +8,16 @@
 # those directories if they were not already recreated (e.g. via backup restore)
 # and all other code or scripts that also does this could/should be deleted.
 
+# FIXME: Dirty hack to fix https://github.com/rear/rear/issues/3222 for now
+# until a proper solution is found, cf. https://github.com/rear/rear/pull/3223
+# When "rear mkrescue" is run for the very first time on a system or within a 'git clone' directory
+# this script would fail because $VAR_DIR/recovery/ is not yet created when this script runs
+# because $VAR_DIR/recovery/ gets normally created later in
+# layout/save/GNU/Linux/100_create_layout_file.sh ('prep' runs before 'layout/save')
+# so we create $VAR_DIR/recovery here same as it is done in 100_create_layout_file.sh
+Log "Creating recovery directory (when not existing)"
+mkdir -p $v $VAR_DIR/recovery
+
 local directories_permissions_owner_group_file="$VAR_DIR/recovery/directories_permissions_owner_group"
 : >"$directories_permissions_owner_group_file"
 
