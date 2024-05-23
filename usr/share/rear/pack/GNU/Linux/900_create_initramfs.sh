@@ -132,3 +132,43 @@ esac
 test -s "$TMP_DIR/$REAR_INITRD_FILENAME" && chmod 0600 "$TMP_DIR/$REAR_INITRD_FILENAME"
 
 popd >/dev/null
+
+# On POWER architecture there could be an initrd size limit depending on the boot method
+# which is 128 MiB minus some MiBs for IBM's prep boot service data
+# so in practice what is left for the initrd is about 120 MiB or even less,
+# cf. the somewhat related IBM article
+# https://www.ibm.com/support/pages/system-boot-ends-grub-out-memory-oom
+# which talks about other limit values but it describes the general idea behind.
+# This article tells that one gets an "out of memory" error when the limit is exceeded
+# but in practice it also happens that the kernel starts up but fails with something like
+# "Kernel panic - not syncing: VFS: Unable to mount root fs ..."
+# cf. the 'boot.log' attachment in https://github.com/rear/rear/issues/3189
+# and then it is almost impossible to imagine that the root cause of such a kernel panic
+# is a too big initrd.
+# So to be a bit more on the safe side we at least tell the user here
+# when the initrd is bigger than 100 MiB that this may cause a boot failure:
+if test "$ARCH" = "Linux-ppc64" || test "$ARCH" = "Linux-ppc64le" ; then
+    initrd_bytes=$( stat -L -c '%s' "$TMP_DIR/$REAR_INITRD_FILENAME" )
+    # Continue "bona fide" if the initrd size could not be determined (assume the initrd size is OK):
+    if is_positive_integer $initrd_bytes ; then
+        initrd_MiB=$( mathlib_calculate "$initrd_bytes / 1048576" )
+        # 100 MiB = 100 * 1 MiB = 100 * 1048576 bytes = 104857600 bytes
+        if test $initrd_bytes -ge 104857600 ; then
+            LogPrintError "On POWER architecture booting may fail when the initrd is too big (initrd size is $initrd_MiB MiB)"
+            if ! test "$REAR_INITRD_COMPRESSION" = "lzma" ; then
+                # For example an initrd with 120 MB with default gzip compression became only 77 MB with lzma
+                # but whith lzma compression "rear mkrescue" needed 2 minutes more time in this particular case,
+                # cf. https://github.com/rear/rear/issues/3189#issuecomment-2079794186
+                LogPrintError "Consider better (but slower) initrd compression with REAR_INITRD_COMPRESSION='lzma'"
+            fi
+            if test "$BACKUP" = "TSM" ; then
+                if ! test "${COPY_AS_IS_EXCLUDE_TSM[*]}" ; then
+                    # See also https://github.com/rear/rear/issues/3189#issuecomment-2079794186
+                    # and https://github.com/rear/rear/issues/3189#issuecomment-2093032268
+                    LogPrintError "Consider using COPY_AS_IS_EXCLUDE_TSM to get a slim TSM client in the initrd"
+                fi
+            fi
+        fi
+    fi
+fi
+
