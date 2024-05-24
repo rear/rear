@@ -161,7 +161,7 @@ if test "$ARCH" = "Linux-ppc64" || test "$ARCH" = "Linux-ppc64le" ; then
         # 100 MiB = 100 * 1 MiB = 100 * 1048576 bytes = 104857600 bytes
         if test $initrd_bytes -gt 104857600 ; then
             LogPrintError "On POWER architecture booting may fail when the initrd is big (about 120 MiB or even less)"
-            LogPrintError "Verify that your ReaR recovery system boots on your replacement hardware."
+            LogPrintError "Verify that your ReaR recovery system boots on your replacement hardware"
             LogPrintError "If it fails to boot consider the following:"
             if ! test "$REAR_INITRD_COMPRESSION" = "lzma" ; then
                 # For example an initrd with 120 MB with default gzip compression became only 77 MB with lzma
