@@ -28,7 +28,7 @@
 # ZVM_NAMING      - set in local.conf, if Y then enable naming override
 # ZVM_KERNEL_NAME - keeps track of kernel name in results array
 # ARCH            - override only if ARCH is Linux-s390
-#       
+#
 # initrd name override is handled in 900_create_initramfs.sh
 # kernel name override is handled in 400_guess_kernel.sh
 # kernel name override is handled in 950_copy_result_files.sh
