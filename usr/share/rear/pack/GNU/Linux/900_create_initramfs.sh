@@ -180,7 +180,7 @@ if test "$ARCH" = "Linux-ppc64" || test "$ARCH" = "Linux-ppc64le" ; then
                 # On POWER FIRMWARE_FILES=( 'no' ) is set in conf/Linux-ppc64.conf and conf/Linux-ppc64le.conf
                 # when the default 'FIRMWARE_FILES=()' is used but if not we should tell the user
                 # cf. https://github.com/rear/rear/issues/3189#issuecomment-2076960341
-                LogPrintError "FIRMWARE_FILES=('no') to excludes all firmware files from the initrd"
+                LogPrintError "FIRMWARE_FILES=('no') to exclude all firmware files from the initrd"
             fi
             if test "$BACKUP" = "TSM" ; then
                 if ! test "${COPY_AS_IS_EXCLUDE_TSM[*]}" ; then
