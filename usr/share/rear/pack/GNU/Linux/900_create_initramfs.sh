@@ -184,7 +184,7 @@ if test "$ARCH" = "Linux-ppc64" || test "$ARCH" = "Linux-ppc64le" ; then
             fi
             if test "$BACKUP" = "TSM" ; then
                 if ! test "${COPY_AS_IS_EXCLUDE_TSM[*]}" ; then
-                    # See also https://github.com/rear/rear/issues/3189#issuecomment-2079794186
+                    # See https://github.com/rear/rear/issues/3189#issuecomment-2079794186
                     # and https://github.com/rear/rear/issues/3189#issuecomment-2093032268
                     LogPrintError "Consider using COPY_AS_IS_EXCLUDE_TSM to get a slim TSM client in the initrd"
                 fi
