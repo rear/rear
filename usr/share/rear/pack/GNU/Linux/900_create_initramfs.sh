@@ -165,7 +165,7 @@ if test "$ARCH" = "Linux-ppc64" || test "$ARCH" = "Linux-ppc64le" ; then
             LogPrintError "If it fails to boot consider the following:"
             if ! test "$REAR_INITRD_COMPRESSION" = "lzma" ; then
                 # For example an initrd with 120 MB with default gzip compression became only 77 MB with lzma
-                # but whith lzma compression "rear mkrescue" needed 2 minutes more time in this particular case,
+                # but whith lzma compression "rear mkrescue" needed 2 minutes more time in this particular case
                 # cf. https://github.com/rear/rear/issues/3189#issuecomment-2079794186
                 LogPrintError "Consider better (but slower) initrd compression with REAR_INITRD_COMPRESSION='lzma'"
             fi
