@@ -159,8 +159,10 @@ if test "$ARCH" = "Linux-ppc64" || test "$ARCH" = "Linux-ppc64le" ; then
     # Continue "bona fide" if the initrd size could not be determined (assume the initrd size is OK):
     if is_positive_integer $initrd_bytes ; then
         # 100 MiB = 100 * 1 MiB = 100 * 1048576 bytes = 104857600 bytes
-        if test $initrd_bytes -ge 104857600 ; then
-            LogPrintError "On POWER architecture booting may fail when the initrd is too big (about 120 MiB or even less)"
+        if test $initrd_bytes -gt 104857600 ; then
+            LogPrintError "On POWER architecture booting may fail when the initrd is big (about 120 MiB or even less)"
+            LogPrintError "Verify that your ReaR recovery system boots on your replacement hardware."
+            LogPrintError "If it fails to boot consider the following:"
             if ! test "$REAR_INITRD_COMPRESSION" = "lzma" ; then
                 # For example an initrd with 120 MB with default gzip compression became only 77 MB with lzma
                 # but whith lzma compression "rear mkrescue" needed 2 minutes more time in this particular case,
@@ -168,12 +170,17 @@ if test "$ARCH" = "Linux-ppc64" || test "$ARCH" = "Linux-ppc64le" ; then
                 LogPrintError "Consider better (but slower) initrd compression with REAR_INITRD_COMPRESSION='lzma'"
             fi
             if IsInArray "all_modules" "${MODULES[@]}" ; then
+                # cf. the same condition in build/GNU/Linux/400_copy_modules.sh
                 # Also on POWER the default MODULES=( 'all_modules' ) is used
                 # cf. https://github.com/rear/rear/issues/3189#issuecomment-2076939562
-                # but FIRMWARE_FILES=( 'no' ) is set in conf/Linux-ppc64.conf and conf/Linux-ppc64le.conf
+                LogPrintError "MODULES=('loaded_modules') to include less kernel modules in the initrd"
+            fi
+            if ! is_false "$FIRMWARE_FILES" ; then
+                # cf. the logical opposite condition in build/GNU/Linux/420_copy_firmware_files.sh
+                # On POWER FIRMWARE_FILES=( 'no' ) is set in conf/Linux-ppc64.conf and conf/Linux-ppc64le.conf
+                # when the default 'FIRMWARE_FILES=()' is used but if not we should tell the user
                 # cf. https://github.com/rear/rear/issues/3189#issuecomment-2076960341
-                # so only less kernel modules in the initrd needs to be considered:
-                LogPrintError "Consider MODULES=( 'loaded_modules' ) to have less kernel modules in the initrd"
+                LogPrintError "FIRMWARE_FILES=('no') to excludes all firmware files from the initrd"
             fi
             if test "$BACKUP" = "TSM" ; then
                 if ! test "${COPY_AS_IS_EXCLUDE_TSM[*]}" ; then
