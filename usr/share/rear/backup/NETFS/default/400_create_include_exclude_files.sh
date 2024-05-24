@@ -45,8 +45,9 @@ unique_unsorted "$TMP_DIR/backup-includes.txt" > "$TMP_DIR/backup-include.txt"
 
 # Verify that at least '/' is in backup-include.txt
 # because ReaR is meant to recreate a system so at least
-# the basic system files in the root filesystem must be backed up.
-# Examples how '/' could be missing in backup-include.txt:
+# the basic system files in the root filesystem must be backed up
+# when "rear mkbackup" is used which is meant to backup at least the basic system.
+# Examples how '/' could be missing in backup-include.txt when "rear mkbackup" is used:
 # - When BACKUP_ONLY_INCLUDE or MANUAL_INCLUDE is set
 #   the user may not have added '/' to BACKUP_PROG_INCLUDE
 #   so the '/' mountpoint will not be written into backup-include.txt
@@ -58,7 +59,21 @@ unique_unsorted "$TMP_DIR/backup-includes.txt" > "$TMP_DIR/backup-include.txt"
 #   so that the above default backup of the mounted local filesystems
 #   will not write the '/' mountpoint into backup-include.txt
 # See https://github.com/rear/rear/issues/3217
-grep -q '^/$' "$TMP_DIR/backup-include.txt" || Error "At least the root filesystem must be backed up (no '/' in $TMP_DIR/backup-include.txt)"
+# A different use case is "rear mkbackuponly" which can be used
+# to backup the (basic) system without creating a rescue medium
+# but "rear mkbackuponly" can also be used to only backup something else
+# in particular via "rear -C something_else_backup mkbackuponly"
+# as documented in doc/user-guide/11-multiple-backups.adoc
+# cf. https://github.com/rear/rear/pull/3221#issuecomment-2129240645
+# So in case of the mkbackuponly workflow we must not error out
+# but (in verbose mode) we inform the user to be more on the safe side:
+if ! grep -q '^/$' "$TMP_DIR/backup-include.txt" ; then
+    if test "$WORKFLOW" = "mkbackuponly" ; then
+        LogPrint "The root filesystem is not backed up (no '/' in $TMP_DIR/backup-include.txt)"
+    else
+        Error "At least the root filesystem must be backed up (no '/' in $TMP_DIR/backup-include.txt)"
+    fi
+fi
 
 # What to exclude from the backup:
 cat /dev/null > "$TMP_DIR/backup-excludes.txt"
