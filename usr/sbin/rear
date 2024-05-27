@@ -536,13 +536,20 @@ fi
 # "exec 7>&-"
 # "exec 6<&-"
 
-# Set RECOVERY_MODE when we are running inside the rescue/recovery system.
+# Set RECOVERY_MODE when we are running inside a rescue/recovery system
+# which is normally ReaR's recovery system or alternatively in PORTABLE mode
+# it is a foreign rescue system like the System Rescue CD or the Ubuntu Desktop Live CD,
+# see doc/user-guide/17-Portable-Mode.adoc
 # RECOVERY_MODE is a boolean variable (cf. conf/default.conf) because we need it below
-# to set TMPDIR to ReaR's TMP_DIR only when we are not running inside the recovery system
+# to set TMPDIR to ReaR's TMP_DIR only when we are not running inside a rescue/recovery system
 # but we do not yet have lib/global-functions.sh (which contains is_false) sourced here.
-# In the recovery system /etc/rear-release is unique (it does not exist otherwise)
-# see build/default/970_add_rear_release.sh that adds it to identify the rescue environment:
-test -e "/etc/rear-release" && RECOVERY_MODE='y' || RECOVERY_MODE=''
+# In ReaR's recovery system /etc/rear-release is unique (it does not exist otherwise)
+# see build/default/970_add_rear_release.sh that adds it to identify ReaR's rescue environment.
+# PORTABLE mode is meant to be used only to run 'rear recover' within a foreign rescue system,
+# see https://github.com/rear/rear/pull/3206#issuecomment-2122173021
+if test -e "/etc/rear-release" || test "$PORTABLE" ; then
+    RECOVERY_MODE='y'
+fi
 readonly RECOVERY_MODE
 
 # Create a sufficiently safe temporary working area BUILD_DIR for ReaR and
@@ -598,14 +605,14 @@ if test "$WORKFLOW" != "help" ; then
     # and that those temporary files will get cleaned up "by the way"
     # via the cleanup_build_area_and_end_program() function,
     # see https://github.com/rear/rear/issues/3167
-    if ! [[ "$RECOVERY_MODE" || "$PORTABLE" ]] ; then
-        # We set TMPDIR to ReaR's TMP_DIR only when we are not in RECOVERY_MODE and also not in PORTABLE mode
-        # because TMP_DIR does not exist in the recreated/restored system or in the foreign rescue system where
-        # the portable mode should be able to work without the need to have a TMP_DIR in the rescue system.
+    if ! test "$RECOVERY_MODE" ; then
+        # We set TMPDIR to ReaR's TMP_DIR only when we are not in RECOVERY_MODE
+        # because TMP_DIR does not exist in the recreated/restored system
         # i.e. there is no /mnt/local/var/tmp/rear.XXXXXXXXXXXXXXX/tmp so that
         #   chroot /mnt/local COMMAND
         # fails when COMMAND uses TMPDIR = TMP_DIR - in particular "chroot /mnt/local dracut" fails
         # see https://github.com/rear/rear/pull/3168#issuecomment-1983377528
+        # and https://github.com/rear/rear/pull/3206#issuecomment-2047273428
         if test "$TMPDIR_ORIG" ; then
             tmpdir_debug_info="Changing TMPDIR to ReaR's '$TMP_DIR' (was '$TMPDIR_ORIG' when ReaR was launched)"
         else
@@ -631,8 +638,8 @@ if test "$WORKFLOW" != "help" ; then
     # See https://github.com/rear/rear/pull/3168#issuecomment-1991356186
     # We create with default mode because all in BUILD_DIR is sufficiently safe:
     mkdir -p $ROOTFS_DIR$TMPDIR || Error "Could not create $ROOTFS_DIR$TMPDIR"
-    # Since the above BUILD_DIR="$( mktemp ... )" does not always return a path under /tmp
-    # the build directory must be excluded from the backup to be on the safe side:
+    # Normally BUILD_DIR="$( mktemp ... )" is not under /tmp (the default TMPDIR is /var/tmp)
+    # so the current build directory needs to be explicitly excluded from the backup:
     BACKUP_PROG_EXCLUDE+=( "$BUILD_DIR" )
 fi
 
