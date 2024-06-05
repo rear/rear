@@ -438,14 +438,14 @@ function Log () {
       #   # prefix_blanks="$( tr '[:print:]' ' ' <<<"$prefix" )"
       #   # log_message="${MESSAGE_PREFIX}${timestamp}${message//$'\n'/$'\n'$prefix_blanks}"
       #   # echo "$log_message"
-      #   message prefix 2021-06-24 10:49:39.824719000 fist line'
+      #   message prefix 2021-06-24 10:49:39.824719000 first line'
       #   '                                             second line'
       #   '                                             third line
       # so we use the LF variable (cf. how LF is set above)
       #   # LF=$'\n'
       #   # log_message="${MESSAGE_PREFIX}${timestamp}${message//$LF/$LF$prefix_blanks}"
       #   # echo "$log_message"
-      #   message prefix 2021-06-24 10:49:39.824719000 fist line
+      #   message prefix 2021-06-24 10:49:39.824719000 first line
       #                                                second line
       #                                                third line
       # to make that parameter expansion also work with bash version 3.1.17 in SLES10:
