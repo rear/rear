@@ -1,9 +1,9 @@
-# In case we have bacula, we could use the device from the bacula configuration
+# In case we have bareos, we could use the device from the bareos configuration
 
-# We construct the TAPE_DEVICE based on the Bacula device name in the bacula
+# We construct the TAPE_DEVICE based on the Bareos device name in the Bareos
 # configuration
 
-if [[ "$BACKUP" != "BACULA" ]]; then
+if [[ "$BACKUP" != "BAREOS" ]]; then
     return
 fi
 
