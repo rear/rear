@@ -17,11 +17,7 @@ fi
 
 # load udev or load modules manually
 # again, check if current systemd is present
-systemd_version=$( systemd-notify --version 2>/dev/null | grep systemd | awk '{ print $2; }' )
-# if $systemd_version is empty we put it 0 (no systemd present)
-test "$systemd_version" || systemd_version=0
-
-if [[ $systemd_version -gt 190 ]] || [[ -s /etc/udev/rules.d/00-rear.rules ]] ; then
+if type systemd-notify 1>/dev/null || [[ -s /etc/udev/rules.d/00-rear.rules ]] ; then
     # systemd-udevd case: systemd-udevd is started by systemd
     # Wait up to 10 seconds for systemd-udevd:
     for countdown in 4 3 2 1 0 ; do
