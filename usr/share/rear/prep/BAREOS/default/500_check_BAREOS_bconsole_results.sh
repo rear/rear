@@ -48,6 +48,7 @@ fi
 # "Connecting to Client 'bareos_client_name-fd at FQDN:9102"
 if [ -z "$BAREOS_CLIENT" ]; then
    BAREOS_CLIENT="$HOSTNAME-fd"
+   echo "BAREOS_CLIENT=$BAREOS_CLIENT" >> $VAR_DIR/bareos.conf
 fi
 
 BAREOS_RESULT=( $(echo -e "status client=${BAREOS_CLIENT}" | bconsole | grep Connect) )

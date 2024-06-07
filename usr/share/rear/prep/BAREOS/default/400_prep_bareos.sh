@@ -8,3 +8,6 @@ PROGS+=( "${PROGS_BAREOS[@]}" )
 if [[ "$TAPE_DEVICE" || "$BEXTRACT_DEVICE" ]] ; then
     PROGS+=( mt )
 fi
+
+### empty config file filled by "prep" (and used by restore)
+> $VAR_DIR/bareos.conf
