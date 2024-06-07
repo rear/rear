@@ -61,7 +61,7 @@ The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices a
 |DP          | BACKUP  | Use Micro Focus Data Protector           | done
 |NBU         | BACKUP  | Use Symantec NetBackup                   | done
 |BACULA      | BACKUP  | Use Bacula                               | done
-|BAREOS      | BACKUP  | Use fork of Bacula                       | done
+|BAREOS      | BACKUP  | Use Bareos (fork of Bacula)              | done
 |RSYNC       | BACKUP  | Use rsync to remote location             | done
 |RBME        | BACKUP  | Use Rsync Backup Made Easy               | done
 |FDRUPSTREAM | BACKUP  | Use FDR/Upstream                         | done
