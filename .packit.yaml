@@ -3,7 +3,6 @@ jobs:
 - job: copr_build
   targets:
   - fedora-all
-  - centos-stream-8-x86_64
   - centos-stream-9-x86_64
   - opensuse-leap-15.3-x86_64
   - opensuse-tumbleweed-x86_64
@@ -19,7 +18,6 @@ jobs:
   metadata:
   targets:
   - fedora-all
-  - centos-stream-8-x86_64
   - centos-stream-9-x86_64
 specfile_path: packaging/rpm/rear.spec
 files_to_sync:
