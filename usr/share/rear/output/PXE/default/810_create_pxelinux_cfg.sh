@@ -11,7 +11,7 @@ local pxe_local_path
 if test "$PXE_CONFIG_URL" ; then
     # E.g. PXE_CONFIG_URL=nfs://server/export/nfs/tftpboot/pxelinux.cfg
     # On 'server' the directory /export/nfs/tftpboot/pxelinux.cfg must exist.
-    local scheme=$( url_scheme $PXE_CONFIG_URL )
+    local scheme="$( url_scheme "$PXE_CONFIG_URL" )"
     # We need filesystem access to the destination (schemes like ftp:// are not supported)
     if ! scheme_supports_filesystem $scheme ; then
         Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
@@ -35,7 +35,7 @@ if test "$PXE_CONFIG_URL" ; then
     chmod 444 "$pxe_local_path/$pxe_config_file"
 else
     # legacy way using pxe_local_path default
-    local pxe_template_file=$( get_template "PXE_pxelinux.cfg" )
+    local pxe_template_file="$( get_template "PXE_pxelinux.cfg" )"
     cat >"$pxe_local_path/$pxe_config_file" <<EOF
     $( test -s "$pxe_template_file" && cat "$pxe_template_file" )
     display $OUTPUT_PREFIX_PXE/$PXE_MESSAGE
@@ -102,7 +102,7 @@ popd >/dev/null
 
 if test "$PXE_CONFIG_URL" ; then
     LogPrint "Created PXELINUX config '$pxe_config_file' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_URL"
-    umount_url $PXE_TFTP_UPLOAD_URL $BUILD_DIR/tftpbootfs
+    umount_url "$PXE_TFTP_UPLOAD_URL" $BUILD_DIR/tftpbootfs
 else
     LogPrint "Created PXELINUX config '$pxe_config_file' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
     RESULT_FILES+=( "$pxe_local_path/$pxe_config_file" )

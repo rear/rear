@@ -4,7 +4,7 @@ fi
 
 local backup_prog_rc
 
-scheme=$(url_scheme "$BACKUP_URL")
+scheme="$( url_scheme "$BACKUP_URL" )"
 
 LogPrint "Restoring from backup $RBME_BACKUP."
 ProgressStart "Preparing restore operation"

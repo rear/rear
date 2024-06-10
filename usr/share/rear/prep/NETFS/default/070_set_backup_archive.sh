@@ -22,12 +22,12 @@ fi
 local backup_file_suffix="$BACKUP_PROG_SUFFIX$BACKUP_PROG_COMPRESS_SUFFIX"
 local backup_file_name="$BACKUP_PROG_ARCHIVE$backup_file_suffix"
 
-local scheme=$( url_scheme $BACKUP_URL )
-local path=$( url_path $BACKUP_URL )
+local scheme="$( url_scheme "$BACKUP_URL" )"
+local path="$( url_path "$BACKUP_URL" )"
 case "$scheme" in
     (file|iso)
         # Define the output path according to the scheme
-        local outputpath=$( backup_path $scheme $path )
+        local outputpath="$( backup_path "$scheme" "$path" )"
         backuparchive="$outputpath/$backup_file_name"
         LogPrint "Using backup archive '$backuparchive'"
         return
@@ -35,7 +35,7 @@ case "$scheme" in
     (tape)
         # TODO: Check if that case is really needed.
         # Perhaps prep/default/030_translate_tape.sh does already all what is needed.
-        backuparchive=$path
+        backuparchive="$path"
         LogPrint "Using backup archive '$backuparchive'"
         return
         ;;

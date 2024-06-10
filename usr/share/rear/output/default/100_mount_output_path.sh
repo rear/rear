@@ -6,4 +6,4 @@ if [[ -z "$OUTPUT_URL" ]] ; then
     return
 fi
 
-mount_url $OUTPUT_URL $BUILD_DIR/outputfs $OUTPUT_OPTIONS
+mount_url "$OUTPUT_URL" "$BUILD_DIR/outputfs" $OUTPUT_OPTIONS

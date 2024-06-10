@@ -7,8 +7,8 @@ if [ -z "$BLOCKCLONE_SAVE_MBR_DEV" ]; then
     return
 fi
 
-local backup_path=$( url_path $BACKUP_URL )
-local opath=$(backup_path $scheme $path)
+local backup_path=$( url_path "$BACKUP_URL" )
+local opath=$( backup_path "$scheme" "$path" )
 
 LogPrint "Copying $VAR_DIR/layout/$BLOCKCLONE_PARTITIONS_CONF_FILE to $opath"
 

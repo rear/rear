@@ -19,9 +19,9 @@
 StopIfError "You must specify either BACKUP_DUPLICITY_URL or BACKUP_DUPLICITY_NETFS_URL or BACKUP_DUPLICITY_NETFS_MOUNTCMD and BACKUP_DUPLICITY_NETFS_UMOUNTCMD !"
 
 if [[ "$BACKUP_DUPLICITY_NETFS_URL" ]] ; then
-    local scheme=$( url_scheme $BACKUP_DUPLICITY_NETFS_URL )
-    local hostname=$( url_hostname $BACKUP_DUPLICITY_NETFS_URL )
-    local path=$( url_path $BACKUP_DUPLICITY_NETFS_URL )
+    local scheme="$( url_scheme "$BACKUP_DUPLICITY_NETFS_URL" )"
+    local hostname="$( url_hostname "$BACKUP_DUPLICITY_NETFS_URL" )"
+    local path="$( url_path "$BACKUP_DUPLICITY_NETFS_URL" )"
 
     ### check for vaild BACKUP_DUPLICITY_NETFS_URL schemes
     ### see https://github.com/rear/rear/issues/842

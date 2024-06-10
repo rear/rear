@@ -8,7 +8,7 @@
 local pxe_tftp_local_path
 if [[ "$PXE_TFTP_UPLOAD_URL" ]] ; then
     # E.g. PXE_TFTP_UPLOAD_URL=nfs://server/export/nfs/tftpboot
-    local scheme=$( url_scheme "$PXE_TFTP_UPLOAD_URL" )
+    local scheme="$( url_scheme "$PXE_TFTP_UPLOAD_URL" )"
 
     # We need filesystem access to the destination (schemes like ftp:// are not supported)
     scheme_supports_filesystem $scheme || Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
@@ -45,7 +45,7 @@ if [[ "$PXE_TFTP_UPLOAD_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; th
     # required pxe modules (and we assume that the PXE server run the same OS)
     # copy pxelinux.0 and friends
     # RHEL/SLES and friends
-    PXELINUX_BIN=$( find_syslinux_file pxelinux.0 )
+    PXELINUX_BIN="$( find_syslinux_file pxelinux.0 )"
     if [[ -z "$PXELINUX_BIN" ]] ; then
         # perhaps Debian/Ubuntu and friends
         [[ -f /usr/lib/PXELINUX/pxelinux.0 ]] && PXELINUX_BIN=/usr/lib/PXELINUX/pxelinux.0
@@ -53,8 +53,8 @@ if [[ "$PXE_TFTP_UPLOAD_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; th
     if [[ "$PXELINUX_BIN" ]] ; then
         cp $v "$PXELINUX_BIN" $BUILD_DIR/tftpbootfs >&2
     fi
-    syslinux_modules_dir=$( find_syslinux_modules_dir menu.c32 )
-    [[ -z "$syslinux_modules_dir" ]] && syslinux_modules_dir=$(dirname $PXELINUX_BIN)
+    syslinux_modules_dir="$( find_syslinux_modules_dir menu.c32 )"
+    [[ -z "$syslinux_modules_dir" ]] && syslinux_modules_dir="$(dirname $PXELINUX_BIN)"
     cp $v $syslinux_modules_dir/ldlinux.c32 $BUILD_DIR/tftpbootfs >&2
     cp $v $syslinux_modules_dir/libcom32.c32 $BUILD_DIR/tftpbootfs >&2
     cp $v $syslinux_modules_dir/libutil.c32 $BUILD_DIR/tftpbootfs >&2

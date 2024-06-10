@@ -2,9 +2,9 @@
 # 400_restore_backup.sh
 #
 
-local scheme=$( url_scheme $BACKUP_URL )
-local path=$( url_path $BACKUP_URL )
-local opath=$( backup_path $scheme $path )
+local scheme="$( url_scheme "$BACKUP_URL" )"
+local path="$( url_path "$BACKUP_URL" )"
+local opath="$( backup_path "$scheme" "$path" )"
 
 # Create backup restore log file name:
 local backup_restore_log_dir="$VAR_DIR/restore"
@@ -54,7 +54,7 @@ if test -f $TMP_DIR/backup.splitted ; then
                 if mountpoint -q "$BUILD_DIR/outputfs" ; then
                     umount "$BUILD_DIR/outputfs" || LogPrintError "Could not umount what is mounted at $BUILD_DIR/outputfs"
                 fi
-                cdrom_drive_names=$( cat /proc/sys/dev/cdrom/info | grep -i "drive name:" | awk '{print $3 " " $4}' )
+                cdrom_drive_names="$( cat /proc/sys/dev/cdrom/info | grep -i "drive name:" | awk '{print $3 " " $4}' )"
                 ProgressInfo "Insert medium labelled $vol_name (containing $backup_file_name) in a CD-ROM drive ($cdrom_drive_names) ..."
                 sleep 3
                 for cdrom_dev in $cdrom_drive_names ; do
@@ -107,7 +107,7 @@ fi
 for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
     # Create backup restore log file name (a different one for each restore_input).
     # Each restore_input is a path like '/var/tmp/rear.XXXX/outputfs/f121/backup.tar.gz':
-    restore_input_basename=$( basename $restore_input )
+    restore_input_basename="$( basename "$restore_input" )"
     backup_restore_log_file=$backup_restore_log_dir/$backup_restore_log_prefix.$restore_input_basename.$MASTER_PID.$backup_restore_log_suffix
     cat /dev/null >$backup_restore_log_file
     LogPrint "Restoring from '$restore_input' (restore log in $backup_restore_log_file) ..."

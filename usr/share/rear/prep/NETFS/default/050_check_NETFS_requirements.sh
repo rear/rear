@@ -16,16 +16,16 @@
 StopIfError "You must specify either BACKUP_URL or BACKUP_MOUNTCMD and BACKUP_UMOUNTCMD !"
 
 # url_scheme results the empty string when $BACKUP_URL is empty:
-local scheme=$( url_scheme $BACKUP_URL )
+local scheme="$( url_scheme "$BACKUP_URL" )"
 
 if [[ "$BACKUP_URL" ]] ; then
 
-    local hostname=$( url_hostname $BACKUP_URL )
-    local path=$( url_path $BACKUP_URL )
+    local hostname="$( url_hostname "$BACKUP_URL" )"
+    local path="$( url_path "$BACKUP_URL" )"
 
     ### check for vaild BACKUP_URL schemes
     ### see https://github.com/rear/rear/issues/842
-    case $scheme in
+    case "$scheme" in
         (nfs|cifs|usb|tape|file|iso|sshfs|ftpfs)
             # do nothing for vaild BACKUP_URL schemes
             :

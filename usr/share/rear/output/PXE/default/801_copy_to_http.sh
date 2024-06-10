@@ -16,7 +16,7 @@ if [[ "$PXE_HTTP_UPLOAD_URL" = "$PXE_TFTP_UPLOAD_URL" ]] ; then
 fi
 
 # E.g. PXE_HTTP_UPLOAD_URL=nfs://server/export/nfs/www
-local scheme=$( url_scheme "$PXE_HTTP_UPLOAD_URL" )
+local scheme="$( url_scheme "$PXE_HTTP_UPLOAD_URL" )"
 
 # We need filesystem access to the destination (schemes like ftp:// are not supported)
 scheme_supports_filesystem $scheme || Error "Scheme $scheme from PXE_HTTP_UPLOAD_URL not supported, use a scheme that supports mounting (like nfs: )"

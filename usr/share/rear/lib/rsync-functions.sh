@@ -39,7 +39,7 @@ function rsync_user () {
     local url="$1"
     local host
 
-    host=$(url_host "$url")
+    host="$(url_host "$url")"
 
     if grep -q '@' <<< $host ; then
         echo "${host%%@*}"    # grab user name
@@ -53,8 +53,8 @@ function rsync_host () {
     local host
     local path
 
-    host=$(url_host "$url")
-    path=$(url_path "$url")
+    host="$(url_host "$url")"
+    path="$(url_path "$url")"
     # remove USER@ if present
     local tmp2="${host#*@}"
 
@@ -77,8 +77,8 @@ function rsync_path () {
     local url_without_scheme
     local url_without_scheme_user
 
-    host=$(url_host "$url")
-    path=$(url_path "$url")
+    host="$(url_host "$url")"
+    path="$(url_path "$url")"
     local tmp2="${host#*@}"
 
     url_without_scheme="${url#*//}"
