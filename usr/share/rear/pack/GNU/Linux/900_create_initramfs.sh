@@ -167,7 +167,7 @@ if test "$ARCH" = "Linux-ppc64" || test "$ARCH" = "Linux-ppc64le" ; then
                 # For example an initrd with 120 MB with default gzip compression became only 77 MB with lzma
                 # but whith lzma compression "rear mkrescue" needed 2 minutes more time in this particular case
                 # cf. https://github.com/rear/rear/issues/3189#issuecomment-2079794186
-                LogPrintError "Consider better (but slower) initrd compression with REAR_INITRD_COMPRESSION='lzma'"
+                LogPrintError "REAR_INITRD_COMPRESSION='lzma' for better (but slower) initrd compression"
             fi
             if IsInArray "all_modules" "${MODULES[@]}" ; then
                 # cf. the same condition in build/GNU/Linux/400_copy_modules.sh
@@ -186,7 +186,7 @@ if test "$ARCH" = "Linux-ppc64" || test "$ARCH" = "Linux-ppc64le" ; then
                 if ! test "${COPY_AS_IS_EXCLUDE_TSM[*]}" ; then
                     # See https://github.com/rear/rear/issues/3189#issuecomment-2079794186
                     # and https://github.com/rear/rear/issues/3189#issuecomment-2093032268
-                    LogPrintError "Consider using COPY_AS_IS_EXCLUDE_TSM to get a slim TSM client in the initrd"
+                    LogPrintError "COPY_AS_IS_EXCLUDE_TSM to get a slim TSM client in the initrd"
                 fi
             fi
         fi
