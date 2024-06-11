@@ -51,14 +51,12 @@ if [ -z "$BAREOS_CLIENT" ]; then
    echo "BAREOS_CLIENT=$BAREOS_CLIENT" >> $VAR_DIR/bareos.conf
 fi
 
-BAREOS_RESULT=( $(echo -e "status client=${BAREOS_CLIENT}" | bconsole | grep Connect) )
+BAREOS_RESULT=( $(echo "status client=${BAREOS_CLIENT}" | bconsole | grep "Connect") )
 director=${BAREOS_RESULT[3]}
 client=${BAREOS_RESULT[9]}
 
-[ "$director" ]
-StopIfError "Bareos director not reachable."
+[ "$director" ] || Error "Bareos director not reachable."
 
-[ "$client" ]
-StopIfError "Bareos client status unknown on director."
+[ "$client" ] || Error "Bareos client status unknown on director."
 
 Log "Bareos director = $director, client = $client"
