@@ -14,7 +14,7 @@ echo '#!/bin/bash' >"$DASD_FORMAT_CODE"
 # (in particular it shows the Linux device name <-> virtual device number mapping,
 # formatted / unformatted status and the number/size of blocks when formatted )
 echo "# Current output of 'lsdasd':" >>"$DASD_FORMAT_CODE"
-lsdasd | sed -e 's/^/# /' >>"$DASD_FORMAT_CODE"
+lsdasd | TextPrefix '# ' >>"$DASD_FORMAT_CODE"
 
 cat <<EOF >>"$DASD_FORMAT_CODE"
 
