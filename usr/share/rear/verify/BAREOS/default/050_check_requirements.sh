@@ -52,7 +52,7 @@ else
     fi
     LogPrint "Connecting to the Bareos Director: OK"
 
-    if ! grep "Connecting to Client $BAREOS_CLIENT" <<< "${bconsole_client_status}"; then
+    if ! grep "Connecting to Client $BAREOS_CLIENT" <<< "$bconsole_client_status"; then
         Error "Failure: The Bareos Director cannot connect to the local filedaemon ($BAREOS_CLIENT)."
     fi
 

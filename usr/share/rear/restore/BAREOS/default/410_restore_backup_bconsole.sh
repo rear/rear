@@ -68,7 +68,7 @@ UserOutput ""
 
 bareos_recovery_mode="$( UserInput -I BAREOS_RECOVERY_MODE -p "Choose restore mode: " -D "automatic" "automatic" "manual" )"
 
-if [ "${bareos_recovery_mode}" == "manual" ]; then
+if [ "$bareos_recovery_mode" == "manual" ]; then
 
     #  fill bconsole history
     echo "exit" >> ~/.bconsole_history
@@ -90,8 +90,8 @@ else
     LogPrint "starting restore using bconsole:"
     LogPrint "$RESTORE_CMD"
 
-    printf "%s\n%s\n" "@tee ${TMP_DIR}/bconsole-restore.log" "$RESTORE_CMD" | bconsole
-    Log "$(cat ${TMP_DIR}/bconsole-restore.log)"
+    printf "%s\n%s\n" "@tee $TMP_DIR/bconsole-restore.log" "$RESTORE_CMD" | bconsole
+    Log "$(cat $TMP_DIR/bconsole-restore.log)"
 fi
 
 LogPrint "waiting for restore job"
