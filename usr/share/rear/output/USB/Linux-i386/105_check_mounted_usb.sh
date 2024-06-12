@@ -14,7 +14,7 @@ local scheme
 
 scheme="$( url_scheme $OUTPUT_URL )"
 
-if ! mountpoint $BUILD_DIR/outputfs ; then
+if ! mountpoint "$BUILD_DIR/outputfs" ; then
     # It should be possible to support OUTPUT_URL=file://...,
     # the user whould have to mount the USB manually.
     # For this to work, one would need to eliminate all the hardcoded
@@ -27,7 +27,7 @@ if ! mountpoint $BUILD_DIR/outputfs ; then
     Error "OUTPUT_URL '$OUTPUT_URL' is not mounted at $BUILD_DIR/outputfs"
 fi
 
-if usbdev="$(findmnt -funo SOURCE --target $BUILD_DIR/outputfs)" ; then
+if usbdev="$(findmnt -funo SOURCE --target "$BUILD_DIR/outputfs")" ; then
     if [ -z "$usbdev" ] ; then
         LogPrintError "'findmnt -funo SOURCE --target $BUILD_DIR/outputfs' returned an empty string"
         Error "Could not check that OUTPUT_URL '$OUTPUT_URL' refers to a block device mounted at $BUILD_DIR/outputfs"

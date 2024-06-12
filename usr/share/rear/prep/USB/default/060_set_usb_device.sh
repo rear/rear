@@ -30,7 +30,7 @@ test "$USB_PREFIX" || USB_PREFIX="rear/$HOSTNAME/$(date +%Y%m%d.%H%M)"
 
 ### Change NETFS_PREFIX to USB_PREFIX if our backup URL is on USB
 if [[ "$BACKUP_URL" ]] ; then
-    local scheme="$( url_scheme "$BACKUP_URL") "
+    local scheme="$( url_scheme "$BACKUP_URL" )"
     case "$scheme" in
         (usb)
             NETFS_PREFIX="$USB_PREFIX"

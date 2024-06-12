@@ -16,11 +16,11 @@ if test "$PXE_CONFIG_URL" ; then
     if ! scheme_supports_filesystem $scheme ; then
         Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
     fi
-    mount_url $PXE_CONFIG_URL $BUILD_DIR/tftpbootfs $BACKUP_OPTIONS
-    pxe_local_path=$BUILD_DIR/tftpbootfs
+    mount_url "$PXE_CONFIG_URL" "$BUILD_DIR/tftpbootfs" $BACKUP_OPTIONS
+    pxe_local_path="$BUILD_DIR/tftpbootfs"
 else
     # legacy way using pxe_local_path default
-    pxe_local_path=$PXE_CONFIG_PATH
+    pxe_local_path="$PXE_CONFIG_PATH"
 fi
 
 # PXE_CONFIG_PREFIX is by default 'rear-' (see default.conf).
@@ -102,7 +102,7 @@ popd >/dev/null
 
 if test "$PXE_CONFIG_URL" ; then
     LogPrint "Created PXELINUX config '$pxe_config_file' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_URL"
-    umount_url "$PXE_TFTP_UPLOAD_URL" $BUILD_DIR/tftpbootfs
+    umount_url "$PXE_TFTP_UPLOAD_URL" "$BUILD_DIR/tftpbootfs"
 else
     LogPrint "Created PXELINUX config '$pxe_config_file' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
     RESULT_FILES+=( "$pxe_local_path/$pxe_config_file" )
