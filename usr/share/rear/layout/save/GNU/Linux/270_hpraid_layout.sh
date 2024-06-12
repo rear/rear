@@ -121,5 +121,5 @@ done
 # see the create_logicaldrive and create_smartarray functions in layout/prepare/GNU/Linux/170_include_hpraid_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-egrep -q '^logicaldrive |^smartarray ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( $HPSSACLI ) || true
+grep -E -q '^logicaldrive |^smartarray ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( $HPSSACLI ) || true
 

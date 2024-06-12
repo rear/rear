@@ -186,7 +186,7 @@ function RequiredSharedObjects () {
         # Skip the ldd test for kernel modules and firmware files
         # which could happen via COPY_AS_IS+=( /lib/firmware/my_hardware )
         # cf. the code in build/default/990_verify_rootfs.sh
-        egrep -q '/lib/modules/|/lib.*/firmware/' <<<"$file_for_ldd" && continue
+        grep -Eq '/lib/modules/|/lib.*/firmware/' <<<"$file_for_ldd" && continue
         # Skip files that are not owned by a trusted user to mitigate possible ldd security issues
         # because some versions of ldd may directly execute the file (see "man ldd")
         # which could lead to the execution of arbitrary programs as user 'root'

@@ -50,6 +50,6 @@ pushd $ROOTFS_DIR 1>&2
     # firmware/brcm/brcmfmac43430a0-sdio.ONDA-V80 PLUS.txt
     # firmware/brcm/brcmfmac43455-sdio.MINIX-NEO Z83-4.txt
     # cf. https://github.com/rear/rear/issues/2407
-    find . -xdev -type f -print0 | egrep -z -v '/md5sums\.txt|/\.gitignore|~$|/dev/' | xargs -0 md5sum -b >>$md5sums_file || cat /dev/null >$md5sums_file
+    find . -xdev -type f -print0 | grep -E -z -v '/md5sums\.txt|/\.gitignore|~$|/dev/' | xargs -0 md5sum -b >>$md5sums_file || cat /dev/null >$md5sums_file
 popd 1>&2
 

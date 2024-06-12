@@ -474,5 +474,5 @@ Log "Saving disks and their partitions"
 # what program calls are written to diskrestore.sh and which programs will be run during "rear recover" in any case
 # e.g. mdadm is not called in any case and sfdisk is only used in case of BLOCKCLONE_STRICT_PARTITIONING
 # cf. https://github.com/rear/rear/issues/1963
-egrep -q '^disk |^part ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( parted partprobe ) || true
+grep -Eq '^disk |^part ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( parted partprobe ) || true
 

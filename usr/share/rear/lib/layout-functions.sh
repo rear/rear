@@ -156,7 +156,7 @@ generate_layout_dependencies() {
                 vgrp=$(echo "$remainder" | cut -d " " -f "1")
                 lvol=$(echo "$remainder" | cut -d " " -f "2")
                 # When a LV is a Thin, then we need to create the Thin Pool first
-                pool=$(echo "$remainder" | egrep -ow "thinpool:\\S+" | cut -d ":" -f 2)
+                pool=$(echo "$remainder" | grep -Eow "thinpool:\\S+" | cut -d ":" -f 2)
 
                 # Vgs and Lvs containing - in their name have a double dash in DM
                 dm_vgrp=${vgrp//-/--}
@@ -195,7 +195,7 @@ generate_layout_dependencies() {
                     if [ "${mp#$temp_dep_mp}" != "${mp}" ] && [ "$mp" != "$dep_mp" ]; then
                         add_dependency "$type:$mp" "$dep_type:$dep_mp"
                     fi
-                done < <( egrep '^fs |^btrfsmountedsubvol ' $LAYOUT_FILE )
+                done < <( grep -E '^fs |^btrfsmountedsubvol ' $LAYOUT_FILE )
                 ;;
             swap)
                 dev=$(echo "$remainder" | cut -d " " -f "1")

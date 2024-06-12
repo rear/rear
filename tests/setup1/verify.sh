@@ -10,7 +10,7 @@ echo
 echo "CASE $CASE"
 echo
 
-DEVICES="$( ls /sys/class/net/ | egrep -wv "(bonding_masters|eth0|lo)" )"
+DEVICES="$( ls /sys/class/net/ | grep -Ewv "(bonding_masters|eth0|lo)" )"
 
 # Cleanup of network interfaces
 for dev in $DEVICES; do
@@ -28,11 +28,11 @@ sleep 3
 tmpfile_ipa=$( mktemp /tmp/REARXXX )
 tmpfile_ipr=$( mktemp /tmp/REARXXX )
 
-DEVICES="$( ls /sys/class/net/ | egrep -wv "(bonding_masters|eth0|lo)" )"
+DEVICES="$( ls /sys/class/net/ | grep -Ewv "(bonding_masters|eth0|lo)" )"
 
 for dev in $DEVICES; do
 	ip addr show dev $dev
-done 2>/dev/null | egrep -w "(mtu|inet)" | sed -e "s/^[0-9]*: //" -e "s/ group \S* / /" > $tmpfile_ipa
+done 2>/dev/null | grep -Ew "(mtu|inet)" | sed -e "s/^[0-9]*: //" -e "s/ group \S* / /" > $tmpfile_ipa
 
 for dev in $DEVICES; do
 	ip r show dev $dev

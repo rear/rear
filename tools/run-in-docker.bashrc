@@ -1,6 +1,6 @@
 PATH=/rear/tools:$PATH:/rear/usr/sbin
 
-alias egrep='egrep --color=auto'
+alias egrep='grep -E --color=auto'
 alias grep='grep --color=auto'
 alias l='ls -CF'
 alias la='ls -A'
