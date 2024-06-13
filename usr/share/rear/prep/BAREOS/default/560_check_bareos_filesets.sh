@@ -1,25 +1,89 @@
 # 560_check_bareos_filesets.sh
 
-[[ ! -z "$BAREOS_FILESET" ]] && return   # variable filled in already (via local.conf?)
+# Select a fileset, for which at least a backup exists for this client.
+# Alternatively, BAREOS_FILESET can be set in the config file.
 
-# echo "show filesets" | bconsole | grep "Name =" | grep $HOSTNAME | cut -d= -f2
-# "client-fileset"
-# "client-fileset-mysql"
+# Get extended list (llist, long list) of backups for a specific client.
+# This description also contains the used fileset.
+# Example:
+#
+# bconsole <<< "llist backups client=client1"
+#            jobid: 3
+#              job: backup-client1.2024-05-29_16.03.47_08
+#             name: backup-client1
+#      purgedfiles: 0
+#             type: B
+#            level: F
+#         clientid: 2
+#           client: client1
+#        jobstatus: T
+#        schedtime: 2024-05-29 16:03:46
+#        starttime: 2024-05-29 16:03:49
+#          endtime: 2024-05-29 16:05:34
+#      realendtime: 2024-05-29 16:05:34
+#         duration: 00:01:45
+#         jobtdate: 1,716,998,734
+#     volsessionid: 3
+#   volsessiontime: 1,716,996,683
+#         jobfiles: 43,785
+#         jobbytes: 2,007,335,334
+#        joberrors: 0
+#  jobmissingfiles: 0
+#           poolid: 3
+#         poolname: Full
+#       priorjobid: 0
+#        filesetid: 2
+#          fileset: LinuxAll
+# 
+#            jobid: 4
+#              job: backup-client1.2024-05-29_16.41.30_21
+#             name: backup-client1
+#      purgedfiles: 0
+#             type: B
+#            level: I
+#         clientid: 2
+#           client: client1
+#        jobstatus: T
+#        schedtime: 2024-05-29 16:41:28
+#        starttime: 2024-05-29 16:41:32
+#          endtime: 2024-05-29 16:41:35
+#      realendtime: 2024-05-29 16:41:35
+#         duration: 00:00:03
+#         jobtdate: 1,717,000,895
+#     volsessionid: 4
+#   volsessiontime: 1,716,996,683
+#         jobfiles: 2,792
+#         jobbytes: 310,942,237
+#        joberrors: 0
+#  jobmissingfiles: 0
+#           poolid: 2
+#         poolname: Incremental
+#       priorjobid: 0
+#        filesetid: 2
+#          fileset: LinuxAll
 
-# if we have more then 1 fileset for a client
-# then we need also to define variable BAREOS_FILESET
+mapfile -t filesets < <( bcommand "llist backups client=$BAREOS_CLIENT" | bcommand_extract_value "fileset" | sort | uniq )
 
-# Save the found fileset names in a file
-echo ".filesets" | bconsole | grep $HOSTNAME > "$TMP_DIR/bareos_filesets"
-nr_of_filesets=( $(wc -l $TMP_DIR/bareos_filesets) )
+LogPrint "available filesets:" "${filesets[@]}"
 
-case "$nr_of_filesets" in
-    0 ) Error "No fileset defined in Bareos for $HOSTNAME" ;;
-    1 ) BAREOS_FILESET="$(cat $TMP_DIR/bareos_filesets)"
-        Log "We found Bareos fileset : $BAREOS_FILESET"
-        echo "BAREOS_FILESET=$BAREOS_FILESET" >> $VAR_DIR/bareos.conf
-        ;;
-    * ) LogPrint "We found several defined Bareos filesets for $HOSTNAME :"
-        LogPrint "$( cat $TMP_DIR/bareos_filesets | sed -e 's/"//g' )"
-        Error "Define variable BAREOS_FILESET in $CONFIG_DIR/local.conf" ;;
-esac
+if (( ${#filesets[@]} == 0 )); then
+    Error "No valid backups found for client $BAREOS_CLIENT"
+fi
+
+if [ "$BAREOS_FILESET" ]; then
+    LogPrint "BAREOS_FILESET=$BAREOS_FILESET"
+    if ! IsInArray "$BAREOS_FILESET" "${filesets[@]}"; then
+        Error "No valid backup for fileset ($BAREOS_FILESET). Successful backups for following filesets: " "{filesets[@]}"
+    fi
+    return
+fi
+
+local userinput_default
+if (( ${#filesets[@]} == 1 )); then
+    userinput_default="-D ${filesets[0]}"
+fi
+
+until IsInArray "$BAREOS_FILESET" "${filesets[@]}" ; do
+    BAREOS_FILESET="$( UserInput -I BAREOS_FILESET $userinput_default -p "Choose Bareos fileset: " "${filesets[@]}" )"
+done
+echo "BAREOS_FILESET=$BAREOS_FILESET" >> "$VAR_DIR/bareos.conf"

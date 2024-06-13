@@ -9,5 +9,7 @@ if [[ "$TAPE_DEVICE" || "$BEXTRACT_DEVICE" ]] ; then
     PROGS+=( mt )
 fi
 
+source $SHARE_DIR/lib/bareos-functions.sh
+
 ### empty config file filled by "prep" (and used by restore)
 > $VAR_DIR/bareos.conf
