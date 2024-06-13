@@ -71,12 +71,14 @@ bareos_recovery_mode="$( UserInput -I BAREOS_RECOVERY_MODE -p "Choose restore mo
 if [ "$bareos_recovery_mode" == "manual" ]; then
 
     #  fill bconsole history
-    echo "exit" >> ~/.bconsole_history
-    echo "list jobs client=$BAREOS_CLIENT jobtype=R" >> ~/.bconsole_history
-    echo "list backups client=$BAREOS_CLIENT" >> ~/.bconsole_history
-    echo "status client=$BAREOS_CLIENT" >> ~/.bconsole_history
-    echo "restore client=$BAREOS_CLIENT $FILESET $RESTOREJOB where=$TARGET_FS_ROOT" >> ~/.bconsole_history
-    echo "restore client=$BAREOS_CLIENT $FILESET $RESTOREJOB where=$TARGET_FS_ROOT select all done" >> ~/.bconsole_history
+    cat <<EOF >~/.bconsole_history
+exit
+list jobs client=$BAREOS_CLIENT jobtype=R
+list backups client=$BAREOS_CLIENT
+status client=$BAREOS_CLIENT
+restore client=$BAREOS_CLIENT $FILESET $RESTOREJOB where=$TARGET_FS_ROOT
+restore client=$BAREOS_CLIENT $FILESET $RESTOREJOB where=$TARGET_FS_ROOT select all done
+EOF
 
     if bconsole 0<&6 1>&7 2>&8 ; then
         Log "bconsole finished with zero exit code"
@@ -110,11 +112,3 @@ fi
 
 UserOutput "Please verify that the backup has been restored correctly to '$TARGET_FS_ROOT'"
 UserOutput "in the provided shell. When finished, type exit in the shell to continue recovery."
-
-local bareos_shell="$( UserInput -I BAREOS_SHELL -p "Continue? " -D "continue" "continue" "shell" )"
-if [ "${bareos_shell}" = "shell" ]; then
-    rear_shell "Did the backup successfully restore to '$TARGET_FS_ROOT' ? Enter 'y' to continue ?" \
-        "bconsole
-# bconsole: ${RESTORE_CMD}
-exit"
-fi
