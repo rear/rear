@@ -2,53 +2,16 @@
 # Restore from Bareos using bconsole (optional)
 #
 
-if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
-    # restore using bextract is handled in another script.
-   return
+if [ "$BAREOS_RESTORE_MODE" != "bconsole" ]; then
+    return
 fi
 
-get_last_restore_jobid()
-{
-    echo "llist jobs ${RESTOREJOB_AS_JOB} client=$BAREOS_CLIENT jobtype=R last" | bconsole | sed -r -n 's/ +jobid: //p'
-}
-
-#
-# wait_restore_job():
-#
-#   return code:
-#     0: OK
-#     1: OK with warnings
-#     >1: Error
-#
-#  Also sets RESTORE_JOBID to the jobid of the restore job.
-#
-wait_restore_job()
-{
-    local last_restore_jobid_old="$1"
-    unset RESTORE_JOBID
-
-    while true; do
-        local last_restore_jobid=$(get_last_restore_jobid)
-        if [ "${last_restore_jobid}" ] && [ "${last_restore_jobid}" != "${last_restore_jobid_old}" ]; then
-            RESTORE_JOBID=${last_restore_jobid}
-            Log "restore exists (${last_restore_jobid}) and differs from previous (${last_restore_jobid_old})."
-            LogPrint "$(bconsole <<< "list jobid=${last_restore_jobid}")"
-            LogPrint "waiting for restore job ${last_restore_jobid} to finish."
-            local last_restore_wait=$(printf ".api 2\nwait jobid=${last_restore_jobid}\n" | bconsole)
-            Log "${last_restore_wait}"
-            LogPrint "$(bconsole <<< "list jobid=${last_restore_jobid}")"
-            local last_restore_exitstatus=$(sed -n -r 's/ *"exitstatus": ([0-9]+)[,]?/\1/p' <<< "${last_restore_wait}")
-            return ${last_restore_exitstatus}
-        fi
-        sleep 1
-    done
-}
-
 # get last restore jobid before starting the restore
-local last_restore_jobid_old=$(get_last_restore_jobid)
+local last_restore_jobid_old
+last_restore_jobid_old=$(get_last_restore_jobid)
 
-echo "status client=$BAREOS_CLIENT" | bconsole > $TMP_DIR/bareos_client_status_before_restore.txt
-LogPrint "$(cat $TMP_DIR/bareos_client_status_before_restore.txt)"
+echo "status client=$BAREOS_CLIENT" | bconsole > "$TMP_DIR/bareos_client_status_before_restore.txt"
+LogPrint "$(cat "$TMP_DIR/bareos_client_status_before_restore.txt")"
 
 RESTORE_CMD="restore client=$BAREOS_CLIENT $RESTORECLIENT $RESTOREJOB $FILESET where=$TARGET_FS_ROOT select all done yes"
 
@@ -92,8 +55,9 @@ else
     LogPrint "starting restore using bconsole:"
     LogPrint "$RESTORE_CMD"
 
-    printf "%s\n%s\n" "@tee $TMP_DIR/bconsole-restore.log" "$RESTORE_CMD" | bconsole
-    Log "$(cat $TMP_DIR/bconsole-restore.log)"
+    local restore_cmd_output
+    restore_cmd_output=$( bcommand "$RESTORE_CMD" )
+    Log "$restore_cmd_output"
 fi
 
 LogPrint "waiting for restore job"
@@ -106,7 +70,7 @@ if [ ${job_exitcode} -eq 0 ]; then
 elif [ ${job_exitcode} -eq 1 ]; then
     LogPrint "WARNING: Restore job finished with warnings."
 else
-    LogPrint "$(bconsole <<< "list joblog jobid=${RESTORE_JOBID}")"
+    LogPrint "$( bcommand "list joblog jobid=${RESTORE_JOBID}" )"
     Error "Bareos Restore failed (${job_exitcode})"
 fi
 

@@ -144,3 +144,41 @@ function get_available_restore_job_names()
     # }
     bcommand_json "show jobs" | jq --raw-output '.result.jobs | with_entries(select(.value.type == "Restore")) | .[].name'
 )}
+
+get_last_restore_jobid()
+{
+    #echo "llist jobs ${RESTOREJOB_AS_JOB} client=$BAREOS_CLIENT jobtype=R last" | bconsole | sed -r -n 's/ +jobid: //p'
+    bcommand "llist jobs ${RESTOREJOB_AS_JOB} client=$BAREOS_CLIENT jobtype=R last" | bcommand_extract_value "jobid"
+}
+
+#
+# wait_restore_job():
+#
+#   return code:
+#     0: OK
+#     1: OK with warnings
+#     >1: Error
+#
+#  Also sets RESTORE_JOBID to the jobid of the restore job.
+#
+wait_restore_job()
+{
+    local last_restore_jobid_old="$1"
+    unset RESTORE_JOBID
+
+    while true; do
+        local last_restore_jobid=$(get_last_restore_jobid)
+        if [ "${last_restore_jobid}" ] && [ "${last_restore_jobid}" != "${last_restore_jobid_old}" ]; then
+            RESTORE_JOBID=${last_restore_jobid}
+            Log "restore exists (${last_restore_jobid}) and differs from previous (${last_restore_jobid_old})."
+            LogPrint "$(bconsole <<< "list jobid=${last_restore_jobid}")"
+            LogPrint "waiting for restore job ${last_restore_jobid} to finish."
+            local last_restore_wait=$( bcommand_json "wait jobid=${last_restore_jobid}" )
+            Log "${last_restore_wait}"
+            LogPrint "$( bcommand "list jobid=${last_restore_jobid}" )"
+            local last_restore_exitstatus=$(sed -n -r 's/ *"exitstatus": ([0-9]+)[,]?/\1/p' <<< "${last_restore_wait}")
+            return ${last_restore_exitstatus}
+        fi
+        sleep 1
+    done
+}
