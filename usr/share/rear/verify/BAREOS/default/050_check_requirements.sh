@@ -35,6 +35,14 @@ else
         Error "bareos-fd.service is not running"
     fi
 
+    while ! systemctl --quiet is-active bareos-fd.service; do 
+        ((count > 3)) && Error "Failed to start bareos-fd.service, giving up." 
+        let count++ 
+        LogPrint "bareos-fd not running, trying to start (attempt $count)" 
+        systemctl --quiet is-active bareos-fd.service
+        sleep 3 
+    done    
+    
     if ! has_binary bconsole; then
         Error "Bareos executable (bconsole) missing or not executable"
     fi
@@ -43,23 +51,5 @@ else
         Error "Bareos bconsole configuration invalid"
     fi
 
-    LogPrint "Connecting to the Bareos Director ..."
-    local bconsole_client_status=$(bconsole <<< "status client=$BAREOS_CLIENT")
-    local rc=$?
-    Log "${bconsole_client_status}"
-    if [ $rc -ne 0 ]; then
-        Error "Failed to connect to Bareos Director."
-    fi
-    LogPrint "Connecting to the Bareos Director: OK"
-
-    if ! grep "Connecting to Client $BAREOS_CLIENT" <<< "$bconsole_client_status"; then
-        Error "Failure: The Bareos Director cannot connect to the local filedaemon ($BAREOS_CLIENT)."
-    fi
-
-    if ! grep "Running Jobs:" <<< "${bconsole_client_status}"; then
-        Error "Failure: The Bareos Director cannot connect to the local filedaemon ($BAREOS_CLIENT)."
-    fi
-
-    LogPrint "Bareos Director: can connect to the local filedaemon ($BAREOS_CLIENT)."
-
+    bcommand_check_client_status "$BAREOS_CLIENT"
 fi
