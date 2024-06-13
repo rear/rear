@@ -2,40 +2,6 @@
 # Restore from Bareos using bextract (optional)
 #
 
-### Create example bootstrap file
-cat <<EOF >$VAR_DIR/bootstrap.txt
-### Example Bareos bootstrap file
-###
-
-### Only the exact Volume name is required, other keywords are optional.
-### The use of FileIndex and Count keywords speeds up the selection enormously.
-
-### The Volume name to use
-Volume=PLEASE-EDIT-BOOTSTRAP
-
-### A (list of) Client name(s) to be matched on the current Volume
-#Client=$(hostname -s)-fd
-
-### A (list or range of) JobId(s) to be selected from the current Volume
-#JobId=18
-
-### A (list of) Job name(s) to be matched on the current Volume
-#Job=Bkp_Daily.2011-06-16
-
-### A (list or range of) Volume session id(s) to be matched from the current Volume
-#VolSessionId=1
-
-### The Volume session time to be matched from the current Volume
-#VolSessionTime=108927638
-
-### A (list or range of) FileIndex(es) to be selected from the current Volume
-#FileIndex=1-157
-
-### The total number of files that will be restored for this Volume.
-#Count=157
-EOF
-#############################################################################
-
 if [[ "$BEXTRACT_DEVICE" || "$BEXTRACT_VOLUME" ]]; then
 
     if [[ -s "$TMP_DIR/restore-exclude-list.txt" ]]; then
@@ -52,7 +18,7 @@ necessary to restore - typically it will be a full backup.
 
 Do not exit 'bextract' until all files are restored.
 
-WARNING: The new root is mounted under '$TARGET_FS_ROOT'.
+Be aware, that the target system is mounted at '$TARGET_FS_ROOT'.
 "
         # Use the original STDIN STDOUT and STDERR when rear was launched by the user
         # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
