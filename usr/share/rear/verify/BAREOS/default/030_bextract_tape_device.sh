@@ -4,7 +4,7 @@
 # configuration
 
 if [[ -z "$TAPE_DEVICE" && "$BEXTRACT_DEVICE" ]]; then
-    TAPE_DEVICE="$(echo cap | btape $BEXTRACT_DEVICE | awk '/^Device name/ { print $3 }')"
+    TAPE_DEVICE="$(echo cap | btape "$BEXTRACT_DEVICE" | awk '/^Device name/ { print $3 }')"
 
     [[ "$TAPE_DEVICE" ]]
     StopIfError "Either tape device $BEXTRACT_DEVICE is missing, or it has no tape inserted."
