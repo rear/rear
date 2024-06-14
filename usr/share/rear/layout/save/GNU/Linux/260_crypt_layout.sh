@@ -84,7 +84,7 @@ while read target_name junk ; do
         #         Cipher key: 512 bits
         # cf. https://github.com/rear/rear/pull/2504#issuecomment-718729198 and subsequent comments
         # so we grep for both lines but use only the first match from the first slot:
-        key_size=$( egrep -m 1 "Key:|Cipher key:" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+) bits$/\1/' )
+        key_size=$( grep -E -m 1 "Key:|Cipher key:" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+) bits$/\1/' )
         hash=$( grep "Hash" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+)$/\1/' )
     fi
 

@@ -396,7 +396,7 @@ Log "End saving LVM layout"
 # see the create_lvmdev create_lvmgrp create_lvmvol functions in layout/prepare/GNU/Linux/110_include_lvm_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-egrep -q '^lvmdev |^lvmgrp |^lvmvol ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( lvm ) || true
+grep -Eq '^lvmdev |^lvmgrp |^lvmvol ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( lvm ) || true
 
 # vim: set et ts=4 sw=4:
 

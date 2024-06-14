@@ -692,7 +692,7 @@ function Error () {
     # Add two spaces indentation for better readability what those extracted log file lines are.
     # Some messages could be too long to be usefully shown on the user's terminal so that they are truncated after 200 bytes:
     if test -s "$RUNTIME_LOGFILE" ; then
-        { local last_sourced_script_log_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+        { local last_sourced_script_log_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | grep -E -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
         if test "$last_sourced_script_log_messages" ; then
             PrintError "Some latest log messages since the last called script $last_sourced_script_filename:"
             PrintError "$last_sourced_script_log_messages"
@@ -704,7 +704,7 @@ function Error () {
     if test -f "$STDOUT_STDERR_FILE" ; then
         # We use the same extraction pipe as above because STDOUT_STDERR_FILE may also contain 'set -x' and things like that
         # because scripts could use 'set -x' and things like that as needed (e.g. diskrestore.sh runs with 'set -x'):
-        { local last_sourced_script_stdout_stderr_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $STDOUT_STDERR_FILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+        { local last_sourced_script_stdout_stderr_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $STDOUT_STDERR_FILE | grep -E -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
         if test "$last_sourced_script_stdout_stderr_messages" ; then
             # When stdout and stderr are redirected to STDOUT_STDERR_FILE messages of the last called programs cannot be in the log
             # so we use LogPrintError and 'echo "string of messages" >>$RUNTIME_LOGFILE' (the latter avoids the timestamp prefix)

@@ -124,7 +124,7 @@ else
         while true
         do
             sleep 3
-            echo "status client=$BAREOS_CLIENT" | bconsole | egrep "^JobId.* running." && break
+            echo "status client=$BAREOS_CLIENT" | bconsole | grep -E "^JobId.* running." && break
         done
 
         # wait for job to finish
@@ -132,7 +132,7 @@ else
         while true
         do
             sleep 10
-            echo "status client=$BAREOS_CLIENT" | bconsole | egrep "^No Jobs running" >/dev/null && break
+            echo "status client=$BAREOS_CLIENT" | bconsole | grep -E "^No Jobs running" >/dev/null && break
         done
         LogPrint "Restore job finished."
     else

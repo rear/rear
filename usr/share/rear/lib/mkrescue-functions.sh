@@ -170,7 +170,7 @@ FixSfdiskPartitionFile () {
 # makes sfdisk fail at restore time (we will remove those lines)
 # parameter: $1 is the sfdisk output file to fix
 
-egrep -vi '(^warning|^dos)'  "$1" > "${TMP_DIR}/partitions.tmp"
+grep -Evi '(^warning|^dos)'  "$1" > "${TMP_DIR}/partitions.tmp"
 
 # If LANG is not set to C (it should be) and sfdisk is producing locale specific comments
 # for example in French something like "N<degree sign (U+00B0)> table de partition de "

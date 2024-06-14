@@ -99,7 +99,7 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
     # Skip the ldd test for ReaR files (mainly bash scripts) where it does not make sense
     # (programs in the recovery system get all copied into /bin/ so it is /bin/rear)
     # cf. https://github.com/rear/rear/issues/2519#issuecomment-731196820
-    egrep -q "/lib/modules/|/lib.*/firmware/|$SHARE_DIR|/bin/rear$" <<<"$binary" && continue
+    grep -Eq "/lib/modules/|/lib.*/firmware/|$SHARE_DIR|/bin/rear$" <<<"$binary" && continue
     # Skip the ldd test for files that are not owned by a trusted user to mitigate possible ldd security issues
     # because some versions of ldd may directly execute the file (see "man ldd") as user 'root' here
     # cf. the RequiredSharedObjects code in usr/share/rear/lib/linux-functions.sh

@@ -25,7 +25,7 @@ function rsync_proto () {
     local url="$1"
 
     rsync_validate "$url"
-    if egrep -q '(::)' <<< $url ; then # new style '::' means rsync protocol
+    if grep -Eq '(::)' <<< $url ; then # new style '::' means rsync protocol
         echo rsync
     else
         echo ssh

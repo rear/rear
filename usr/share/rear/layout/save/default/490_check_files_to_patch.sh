@@ -28,7 +28,7 @@ for file in $FILES_TO_PATCH_PATTERNS ; do
             # the symlink target is considered to not be a restored file that needs to be patched
             # and thus we don't need to generate and check its hash, either
             # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
-            if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
+            if echo $symlink_target | grep -Eq '/proc/|/sys/|/dev/|/run/' ; then
                 Log "Skip adding symlink $final_file target $symlink_target on /proc/ /sys/ /dev/ or /run/ to CHECK_CONFIG_FILES"
                 continue
             fi
