@@ -8,39 +8,50 @@
 #
 function bcommand()
 {
-  local out
-  out=$(mktemp)
-  (
-    for i in "${BCOMMAND_PRE_COMMANDS[@]}"; do
-        echo "$i"
+    local OPTIND=1
+    local pre_commands=()
+    while getopts ":p:" option "$@"; do
+        case $option in
+            (p)
+                pre_commands+=( "$OPTARG" )
+                ;;
+            (\?)
+                BugError "Invalid option: -$OPTARG"
+                ;;
+        esac
     done
-    echo "@tee $out"
+    shift $((OPTIND-1))
+
+    local out
+    out=$(mktemp)
+    local bconsole_full_output
+    bconsole_full_output=$(mktemp)
+    (
+        for i in "${pre_commands[@]}"; do
+            echo "$i"
+        done
+        echo "@tee $out"
+        for i in "$@"; do
+            echo "$i"
+        done
+    ) | bconsole > "$bconsole_full_output"
+    rc=$?
+
+    # remove submitted commands from output.
+    local sed_args="(You have messages."
     for i in "$@"; do
-        echo "$i"
+        sed_args+="|$i"
     done
-  ) | bconsole > /tmp/bconsole.$!
-  rc=$?
-  # BCOMMAND_PRE_COMMANDS have been executed
-  # and are therefore unset.
-  unset BCOMMAND_PRE_COMMANDS
+    sed_args+=")"
 
-  # remove submitted commands from output.
-  local sed_args="(You have messages."
-  for i in "$@"; do
-    sed_args+="|$i"
-  done
-  sed_args+=")"
-
-  sed -r -e "/^${sed_args}$/d" -e "s/${sed_args}$//" < "$out"
-  rm "$out"
-  return $rc
+    sed -r -e "/^${sed_args}$/d" -e "s/${sed_args}$//" < "$out"
+    rm "$out" "$bconsole_full_output"
+    return $rc
 }
 
 function bcommand_json()
 {
-  BCOMMAND_PRE_COMMANDS=( ".api json compact=no" )
-  bcommand "$@"
-  unset BCOMMAND_PRE_COMMANDS
+  bcommand -p ".api json compact=no" "$@"
   return $?
 }
 
