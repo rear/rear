@@ -41,5 +41,6 @@ else
         Error "Bareos bconsole configuration invalid"
     fi
 
+    # status is good or it errors out
     bcommand_check_client_status "$BAREOS_CLIENT"
 fi

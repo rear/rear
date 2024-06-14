@@ -5,7 +5,7 @@
 if [ "$BAREOS_RESTORE_MODE" != "bextract" ]; then
     return
 fi
-
+local exclude_list=()
 if [[ -s "$TMP_DIR/restore-exclude-list.txt" ]]; then
     exclude_list=" -e $TMP_DIR/restore-exclude-list.txt "
 fi

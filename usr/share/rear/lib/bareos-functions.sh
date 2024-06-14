@@ -277,6 +277,7 @@ function wait_restore_job()
     local last_restore_exitstatus=""
     local used_disk_space
     local jobid_info
+    # empty string means no status yet
     while ! [ "$last_restore_exitstatus" ]; do
         # Example output: bcommand "list jobid=59"
         # Automatically selected Catalog: MyCatalog

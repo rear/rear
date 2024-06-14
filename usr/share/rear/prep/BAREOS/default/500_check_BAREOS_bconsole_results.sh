@@ -13,7 +13,7 @@ if (( ${#clients[@]} == 0 )); then
 fi
 
 if [ "$BAREOS_CLIENT" ]; then
-    LogPrint "BAREOS_CLIENT=$BAREOS_CLIENT"
+    LogPrint "Using $BAREOS_CLIENT as BAREOS_CLIENT"
     if ! IsInArray "$BAREOS_CLIENT" "${clients[@]}"; then
         Error "Bareos Client ($BAREOS_CLIENT) is not available. Available clients:" "${clients[@]}"
     fi
