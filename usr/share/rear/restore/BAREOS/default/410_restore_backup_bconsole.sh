@@ -13,6 +13,8 @@ last_restore_jobid_old=$(get_last_restore_jobid)
 echo "status client=$BAREOS_CLIENT" | bconsole > "$TMP_DIR/bareos_client_status_before_restore.txt"
 LogPrint "$(cat "$TMP_DIR/bareos_client_status_before_restore.txt")"
 
+LogPrint "target_fs_used_disk_space=$(total_target_fs_used_disk_space)"
+
 RESTORE_CMD="restore client=$BAREOS_CLIENT $RESTORECLIENT $RESTOREJOB $FILESET where=$TARGET_FS_ROOT select all done yes"
 
 UserOutput ""
