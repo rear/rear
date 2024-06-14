@@ -1,17 +1,28 @@
 #
+# Bareos helper functions.
+#
+
+#
 # helper functions for easier handling bconsole output
 # (remove irrelevant parts of the output).
 #
-
 function bcommand()
 {
-  local out=$(mktemp)
-  local precommand="@output $out\n"
-  if [ "$PRECOMMAND" ]; then
-    precommand="${PRECOMMAND}\n${precommand}"
-  fi
-  (printf "$precommand"; for i in "$@"; do echo "$i"; done) | bconsole > /tmp/bconsole.$!
+  local out
+  out=$(mktemp)
+  (
+    for i in "${BCOMMAND_PRE_COMMANDS[@]}"; do
+        echo "$i"
+    done
+    echo "@tee $out"
+    for i in "$@"; do
+        echo "$i"
+    done
+  ) | bconsole > /tmp/bconsole.$!
   rc=$?
+  # BCOMMAND_PRE_COMMANDS have been executed
+  # and are therefore unset.
+  unset BCOMMAND_PRE_COMMANDS
 
   # remove submitted commands from output.
   local sed_args="(You have messages."
@@ -20,28 +31,24 @@ function bcommand()
   done
   sed_args+=")"
 
-  sed -r -e "/^${sed_args}$/d" -e "s/${sed_args}$//" < $out
-  rm $out
+  sed -r -e "/^${sed_args}$/d" -e "s/${sed_args}$//" < "$out"
+  rm "$out"
   return $rc
 }
 
 function bcommand_json()
 {
-  PRECOMMAND=".api json compact=no" bcommand "$@"
+  BCOMMAND_PRE_COMMANDS=( ".api json compact=no" )
+  bcommand "$@"
+  unset BCOMMAND_PRE_COMMANDS
   return $?
 }
 
 function bcommand_extract_value()
 {
   local key="$1"
-  local sed_arg="$(printf 's/^ *%s: (.*) *$/\\1/p' "$key")"
-  sed -n -r "${sed_arg}"
-}
-
-function bcommand_json_extract_value()
-{
-  local key="$1"
-  local sed_arg="$(printf 's/^ *"%s": "(.*)".*$/\1/p' "$key")"
+  local sed_arg
+  sed_arg="$(printf 's/^ *%s: (.*) *$/\\1/p' "$key")"
   sed -n -r "${sed_arg}"
 }
 
@@ -95,8 +102,10 @@ function bcommand_check_client_status()
     # The "Running Jobs:" headline even shown when no jobs are running.
     # In this case, the additional sentence "No Jobs running." is added.
 
-    local bconsole_client_status=$(bconsole <<< "status client=$client")
-    local rc=$?
+    local rc
+    local bconsole_client_status
+    bconsole_client_status=$(bconsole <<< "status client=$client")
+    rc=$?
     if [ $rc -eq 0 ]; then
         Log "${bconsole_client_status}"
     else
@@ -117,10 +126,7 @@ function bcommand_check_client_status()
 }
 
 function get_available_restore_job_names()
-{(
-    set -e
-    set -o pipefail
-    
+{
     # example output of 'bcommand_json "show jobs"':
     # {
     #   "jsonrpc": "2.0",
@@ -142,13 +148,98 @@ function get_available_restore_job_names()
     #     }
     #   }
     # }
-    bcommand_json "show jobs" | jq --raw-output '.result.jobs | with_entries(select(.value.type == "Restore")) | .[].name'
-)}
+    local show_jobs
+    show_jobs="$( bcommand_json "show jobs" )"
+    jq --exit-status --raw-output '.result.jobs | with_entries(select(.value.type == "Restore")) | .[].name' <<< "$show_jobs"
+}
 
-get_last_restore_jobid()
+function get_last_restore_jobid()
 {
-    #echo "llist jobs ${RESTOREJOB_AS_JOB} client=$BAREOS_CLIENT jobtype=R last" | bconsole | sed -r -n 's/ +jobid: //p'
-    bcommand "llist jobs ${RESTOREJOB_AS_JOB} client=$BAREOS_CLIENT jobtype=R last" | bcommand_extract_value "jobid"
+    # example output of 'bcommand_json "list jobs client=client1-fd jobtype=R last"':
+    # {
+    #   "jsonrpc": "2.0",
+    #   "id": null,
+    #   "result": {
+    #     "jobs": [
+    #       {
+    #         "jobid": "59",
+    #         "name": "RestoreFiles",
+    #         "client": "client1-fd",
+    #         "starttime": "2024-06-14 10:30:06",
+    #         "duration": "00:00:28",
+    #         "type": "R",
+    #         "level": "F",
+    #         "jobfiles": "59653",
+    #         "jobbytes": "2504969851",
+    #         "jobstatus": "T"
+    #       }
+    #     ],
+    #     "meta": {
+    #       "range": {
+    #         "filtered": 0
+    #       }
+    #     }
+    #   }
+    # }
+    local bcommand_result
+    bcommand_result=$( bcommand_json "list jobs ${RESTOREJOB_AS_JOB} client=$BAREOS_CLIENT jobtype=R last" )
+    jq --exit-status --raw-output '.result.jobs[].jobid' <<< "$bcommand_result"
+}
+
+function get_jobid_exitcode()
+{
+    local jobid="$1"
+    # example output of 'bcommand_json "list jobid=56"':
+    # {
+    #   "jsonrpc": "2.0",
+    #   "id": null,
+    #   "result": {
+    #     "jobs": [
+    #       {
+    #         "jobid": "56",
+    #         "name": "RestoreFiles",
+    #         "client": "client1--fd",
+    #         "starttime": "2024-06-14 09:40:33",
+    #         "duration": "00:00:28",
+    #         "type": "R",
+    #         "level": "F",
+    #         "jobfiles": "59653",
+    #         "jobbytes": "2504969851",
+    #         "jobstatus": "T"
+    #       }
+    #     ]
+    #   }
+    # }
+    local jobid_info
+    jobid_info="$( bcommand_json "list jobid=$jobid" )"
+    local job_jobstatus
+    job_jobstatus="$( jq --exit-status --raw-output '.result.jobs[0].jobstatus' <<< "$jobid_info" )"
+
+    # example output of 'bcommand_json ".jobstatus=E"':
+    # {
+    #   "jsonrpc": "2.0",
+    #   "id": null,
+    #   "result": {
+    #     "jobstatus": [
+    #       {
+    #         "jobstatus": "E",
+    #         "jobstatuslong": "Terminated with errors",
+    #         "severity": "25",
+    #         "exitlevel": "2",
+    #         "exitstatus": "Error"
+    #       }
+    #     ]
+    #   }
+    # }
+    # Note:
+    #   exitstatus is
+    #   "" when job is still running,
+    #   "0" on OK,
+    #   "1" OK with Warnings
+    #   "2" Errors
+    local jobstatus_info
+    jobstatus_info="$( bcommand_json ".jobstatus=$job_jobstatus" )"
+    jq --exit-status --raw-output '.result.jobstatus[0].exitlevel' <<< "$jobstatus_info"
 }
 
 #
@@ -161,24 +252,50 @@ get_last_restore_jobid()
 #
 #  Also sets RESTORE_JOBID to the jobid of the restore job.
 #
-wait_restore_job()
+function wait_restore_job()
 {
     local last_restore_jobid_old="$1"
     unset RESTORE_JOBID
 
-    while true; do
-        local last_restore_jobid=$(get_last_restore_jobid)
-        if [ "${last_restore_jobid}" ] && [ "${last_restore_jobid}" != "${last_restore_jobid_old}" ]; then
-            RESTORE_JOBID=${last_restore_jobid}
-            Log "restore exists (${last_restore_jobid}) and differs from previous (${last_restore_jobid_old})."
-            LogPrint "$(bconsole <<< "list jobid=${last_restore_jobid}")"
-            LogPrint "waiting for restore job ${last_restore_jobid} to finish."
-            local last_restore_wait=$( bcommand_json "wait jobid=${last_restore_jobid}" )
-            Log "${last_restore_wait}"
-            LogPrint "$( bcommand "list jobid=${last_restore_jobid}" )"
-            local last_restore_exitstatus=$(sed -n -r 's/ *"exitstatus": ([0-9]+)[,]?/\1/p' <<< "${last_restore_wait}")
-            return ${last_restore_exitstatus}
-        fi
+    ProgressStart "Waiting for Restore Job to start"
+    local last_restore_jobid="${last_restore_jobid_old}"
+    local wait_dots=""
+    while [ "${last_restore_jobid}" = "${last_restore_jobid_old}" ]; do
+        last_restore_jobid=$(get_last_restore_jobid)
+        wait_dots+="."
+        ProgressInfo "$wait_dots"
         sleep 1
     done
+    ProgressStop
+
+    RESTORE_JOBID=${last_restore_jobid}
+    export RESTORE_JOBID
+    Log "restore exists (${last_restore_jobid}) and differs from previous (${last_restore_jobid_old})."
+    LogPrint "waiting for restore job ${last_restore_jobid} to finish."
+
+    ProgressStart "Restoring data"
+    local last_restore_exitstatus=""
+    local used_disk_space
+    local jobid_info
+    while ! [ "$last_restore_exitstatus" ]; do
+        # Example output: bcommand "list jobid=59"
+        # Automatically selected Catalog: MyCatalog
+        # Using Catalog "MyCatalog"
+        # +-------+--------------+------------+---------------------+----------+------+-------+----------+----------+-----------+
+        # | jobid | name         | client     | starttime           | duration | type | level | jobfiles | jobbytes | jobstatus |
+        # +-------+--------------+------------+---------------------+----------+------+-------+----------+----------+-----------+
+        # |    57 | RestoreFiles | client1-fd | 2024-06-14 10:13:48 | 00:00:21 | R    | F     |        0 |        0 | R         |
+        # +-------+--------------+------------+---------------------+----------+------+-------+----------+----------+-----------+
+        used_disk_space="$( total_target_fs_used_disk_space )"
+        jobid_info="$( bcommand "list jobid=$last_restore_jobid" )"
+        ProgressInfo "$( sed -n -r -e "s/  +/ /g" -e "s/^\| +(${last_restore_jobid} \|.*) +\|/| \1 | ${used_disk_space} |/p" <<< "$jobid_info" )"
+        sleep "$PROGRESS_WAIT_SECONDS"
+        last_restore_exitstatus="$( get_jobid_exitcode "${last_restore_jobid}" )"
+    done
+    ProgressStop
+
+    LogPrint "$( bcommand "llist jobid=${last_restore_jobid}" )"
+    LogPrint "Restored $(total_target_fs_used_disk_space)."
+
+    return "${last_restore_exitstatus}"
 }
