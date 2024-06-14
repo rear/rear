@@ -70,9 +70,13 @@ DebugPrint "Testing each binary with 'ldd' and look for 'not found' libraries wi
 local backup_tool_LD_LIBRARY_PATH=""
 local binary=""
 local broken_binary_LD_LIBRARY_PATH=""
-local broken_binaries="no"
 local fatal_missing_library="no"
 local ldd_output=""
+local not_found_output=""
+local not_found_library=""
+local junk=""
+local actually_found_library=""
+local actually_missing_libraries="no"
 # Third-party backup tools may use LD_LIBRARY_PATH to find their libraries
 # so that for testing such third-party backup tools we must also use their
 # special LD_LIBRARY_PATH here, otherwise just use the default:
@@ -159,9 +163,8 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
         broken_binary_LD_LIBRARY_PATH=$backup_tool_LD_LIBRARY_PATH
         Log "$binary requires additional libraries with backup tool specific LD_LIBRARY_PATH=$backup_tool_LD_LIBRARY_PATH"
     fi
-    # All tests had a 'not found' shared object dependency so the binary requires additional libraries
-    # without LD_LIBRARY_PATH and with LD_LIBRARY_PATH and with backup tool specific LD_LIBRARY_PATH:
-    broken_binaries="yes"
+    # At this point all tests had a 'not found' shared object dependency so the binary requires additional libraries
+    # without LD_LIBRARY_PATH and with LD_LIBRARY_PATH and with backup tool specific LD_LIBRARY_PATH.
     # Only for programs (i.e. files in a .../bin/... or .../sbin/... directory) treat a missing library as fatal
     # unless specified when a 'not found' reported library is not fatal (when the 'ldd' test was false alarm):
     if grep -q '/[s]*bin/' <<<"$binary" ; then
@@ -169,17 +172,17 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
         if test "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" ; then
             # A program with missing library is treated as fatal when it does not match the pattern:
             if grep -E -q "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" <<<"$binary" ; then
-                LogPrintError "$binary requires additional libraries (specified as non-fatal)"
+                LogPrintError "$binary requires libraries were 'ldd' shows 'not found' (specified as non-fatal)"
             else
-                LogPrintError "$binary requires additional libraries (fatal error)"
+                LogPrintError "$binary requires libraries were 'ldd' shows 'not found' (fatal error)"
                 fatal_missing_library="yes"
             fi
         else
-            LogPrintError "$binary requires additional libraries (fatal error)"
+            LogPrintError "$binary requires libraries were 'ldd' shows 'not found' (fatal by default)"
             fatal_missing_library="yes"
         fi
     else
-        LogPrintError "$binary requires additional libraries"
+        LogPrintError "$binary requires libraries were 'ldd' shows 'not found'"
     fi
     # Run the same ldd call as above but now keep its whole stdout output.
     # The ldd call that results the final 'not found' shared object is the last of the above ldd calls that was run.
@@ -191,10 +194,27 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
     fi
     # Have the whole ldd output only in the log:
     Log "$ldd_output"
-    # Show only the missing libraries to the user to not flood his screen with tons of other ldd output lines:
-    PrintError "$( grep 'not found' <<<"$ldd_output" )"
+    # For each 'not found' shared object (i.e. a shared object that was 'not found' by 'ldd')
+    # check whether or not the shared object may exist nevertheless in the ReaR recovery system
+    # and if yes, we may sufficiently safely assume things are OK in the ReaR recovery system
+    # so we do not report it as missing to the user (for debugging we have all in the log)
+    # cf. https://github.com/rear/rear/issues/3021#issuecomment-2165453757
+    not_found_output="$( grep 'not found' <<<"$ldd_output" )"
+    # not_found_output is a string of multiple lines (separated by \n) that look e.g. like
+    #   libsystemd-shared-255.4-1.fc40.so => not found
+    #   /path/to/library => not found
+    while read not_found_library junk ; do
+        # We prefer a simple 'grep -q' pipe over dealing with find -name versus -path options:
+        if actually_found_library="$( find $ROOTFS_DIR -xdev | grep "$not_found_library" )" ; then
+            DebugPrint "$not_found_library was not found by 'ldd' but exists as $actually_found_library"
+        else
+            actually_missing_libraries="yes"
+            # Show only the missing libraries to the user to not flood his screen with tons of other ldd output lines:
+            PrintError "Required $not_found_library could not be found in the ReaR recovery system"
+        fi
+    done <<<"$not_found_output"
 done
-is_true $broken_binaries && LogPrintError "ReaR recovery system in '$ROOTFS_DIR' needs additional libraries, check $RUNTIME_LOGFILE for details"
+is_true $actually_missing_libraries && LogPrintError "ReaR recovery system in '$ROOTFS_DIR' needs additional libraries, check $RUNTIME_LOGFILE for details"
 is_true $fatal_missing_library && keep_build_dir
 
 # Testing that each program in the PROGS array can be found as executable command within the recovery system
