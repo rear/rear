@@ -172,17 +172,17 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
         if test "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" ; then
             # A program with missing library is treated as fatal when it does not match the pattern:
             if grep -E -q "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" <<<"$binary" ; then
-                LogPrintError "$binary requires libraries were 'ldd' shows 'not found' (specified as non-fatal)"
+                LogPrint "$binary requires libraries were 'ldd' shows 'not found' (specified as non-fatal)"
             else
-                LogPrintError "$binary requires libraries were 'ldd' shows 'not found' (fatal error)"
+                LogPrint "$binary requires libraries were 'ldd' shows 'not found' (fatal error)"
                 fatal_missing_library="yes"
             fi
         else
-            LogPrintError "$binary requires libraries were 'ldd' shows 'not found' (fatal by default)"
+            LogPrint "$binary requires libraries were 'ldd' shows 'not found' (fatal by default)"
             fatal_missing_library="yes"
         fi
     else
-        LogPrintError "$binary requires libraries were 'ldd' shows 'not found'"
+        LogPrint "$binary requires libraries were 'ldd' shows 'not found'"
     fi
     # Run the same ldd call as above but now keep its whole stdout output.
     # The ldd call that results the final 'not found' shared object is the last of the above ldd calls that was run.
@@ -206,11 +206,11 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
     while read not_found_library junk ; do
         # We prefer a simple 'grep -q' pipe over dealing with find -name versus -path options:
         if actually_found_library="$( find $ROOTFS_DIR -xdev | grep "$not_found_library" )" ; then
-            DebugPrint "$not_found_library was not found by 'ldd' but exists as $actually_found_library"
+            LogPrint "$binary requires $not_found_library which was not found by 'ldd' but exists as $actually_found_library"
         else
             actually_missing_libraries="yes"
             # Show only the missing libraries to the user to not flood his screen with tons of other ldd output lines:
-            PrintError "Required $not_found_library could not be found in the ReaR recovery system"
+            LogPrintError "$binary requires $not_found_library which could not be found in the ReaR recovery system"
         fi
     done <<<"$not_found_output"
 done
