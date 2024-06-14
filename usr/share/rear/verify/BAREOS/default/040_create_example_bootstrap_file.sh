@@ -1,5 +1,5 @@
 ### Create example bootstrap file
-cat <<EOF >$VAR_DIR/bootstrap.txt
+cat <<EOF >"$VAR_DIR/bootstrap.txt"
 ### Example Bareos bootstrap file
 ###
 
