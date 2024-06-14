@@ -27,5 +27,3 @@ else
     PROGS+=( "${PROGS_BAREOS_BCONSOLE[@]}" )
     REQUIRED_PROGS+=( "${REQUIRED_PROGS_BAREOS_BCONSOLE[@]}" )
 fi
-
-source "$SHARE_DIR/lib/bareos-functions.sh"

@@ -52,7 +52,7 @@ function bcommand_extract_value()
   sed -n -r "${sed_arg}"
 }
 
-function bcommand_check_client_status()
+function bareos_ensure_client_is_available()
 {
     local client="$1"
 
@@ -184,7 +184,7 @@ function get_last_restore_jobid()
     # }
     local bcommand_result
     bcommand_result=$( bcommand_json "list jobs ${RESTOREJOB_AS_JOB} client=$BAREOS_CLIENT jobtype=R last" )
-    jq --exit-status --raw-output '.result.jobs[].jobid' <<< "$bcommand_result"
+    jq --exit-status --raw-output '[ .result.jobs[].jobid ] | max' <<< "$bcommand_result"
 }
 
 function get_jobid_exitcode()
@@ -243,6 +243,30 @@ function get_jobid_exitcode()
     jq --exit-status --raw-output '.result.jobstatus[0].exitlevel' <<< "$jobstatus_info"
 }
 
+
+function wait_for_newer_restore_job_to_start()
+{
+    local last_restore_jobid_old="$1"
+
+    ProgressStart "Waiting for Restore Job to start"
+    local last_restore_jobid="$last_restore_jobid_old"
+    declare -i count=60
+    while [ "$last_restore_jobid" = "$last_restore_jobid_old" ]; do
+        last_restore_jobid=$( get_last_restore_jobid )
+        (( count-- ))
+        ProgressInfo "Waiting for Restore Job to start ($count)"
+        if (( count <= 0 )); then
+            # Restore Job did not start!
+            return 1
+        fi
+        sleep 1
+    done
+    ProgressStop
+
+    echo "$last_restore_jobid"
+}
+
+
 #
 # wait_restore_job():
 #
@@ -251,35 +275,18 @@ function get_jobid_exitcode()
 #     1: OK with warnings
 #     >1: Error
 #
-#  Also sets RESTORE_JOBID to the jobid of the restore job.
-#
 function wait_restore_job()
 {
-    local last_restore_jobid_old="$1"
-    unset RESTORE_JOBID
+    local restore_jobid="$1"
 
-    ProgressStart "Waiting for Restore Job to start"
-    local last_restore_jobid="${last_restore_jobid_old}"
-    local wait_dots=""
-    while [ "${last_restore_jobid}" = "${last_restore_jobid_old}" ]; do
-        last_restore_jobid=$(get_last_restore_jobid)
-        wait_dots+="."
-        ProgressInfo "$wait_dots"
-        sleep 1
-    done
-    ProgressStop
-
-    RESTORE_JOBID=${last_restore_jobid}
-    export RESTORE_JOBID
-    Log "restore exists (${last_restore_jobid}) and differs from previous (${last_restore_jobid_old})."
-    LogPrint "waiting for restore job ${last_restore_jobid} to finish."
+    LogPrint "waiting for restore job $restore_jobid to finish."
 
     ProgressStart "Restoring data"
-    local last_restore_exitstatus=""
+    local restore_exitstatus=""
     local used_disk_space
     local jobid_info
     # empty string means no status yet
-    while ! [ "$last_restore_exitstatus" ]; do
+    while ! [ "$restore_exitstatus" ]; do
         # Example output: bcommand "list jobid=59"
         # Automatically selected Catalog: MyCatalog
         # Using Catalog "MyCatalog"
@@ -289,15 +296,15 @@ function wait_restore_job()
         # |    57 | RestoreFiles | client1-fd | 2024-06-14 10:13:48 | 00:00:21 | R    | F     |        0 |        0 | R         |
         # +-------+--------------+------------+---------------------+----------+------+-------+----------+----------+-----------+
         used_disk_space="$( total_target_fs_used_disk_space )"
-        jobid_info="$( bcommand "list jobid=$last_restore_jobid" )"
-        ProgressInfo "$( sed -n -r -e "s/  +/ /g" -e "s/^\| +(${last_restore_jobid} \|.*) +\|/| \1 | ${used_disk_space} |/p" <<< "$jobid_info" )"
+        jobid_info="$( bcommand "list jobid=$restore_jobid" )"
+        ProgressInfo "$( sed -n -r -e "s/  +/ /g" -e "s/^\| +($restore_jobid \|.*) +\|/| \1 | $used_disk_space |/p" <<< "$jobid_info" )"
         sleep "$PROGRESS_WAIT_SECONDS"
-        last_restore_exitstatus="$( get_jobid_exitcode "${last_restore_jobid}" )"
+        restore_exitstatus="$( get_jobid_exitcode "$restore_jobid" )"
     done
     ProgressStop
 
-    LogPrint "$( bcommand "llist jobid=${last_restore_jobid}" )"
+    LogPrint "$( bcommand "llist jobid=$restore_jobid" )"
     LogPrint "Restored $(total_target_fs_used_disk_space)."
 
-    return "${last_restore_exitstatus}"
+    return "$restore_exitstatus"
 }

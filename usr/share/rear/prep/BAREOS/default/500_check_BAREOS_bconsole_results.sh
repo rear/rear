@@ -31,6 +31,6 @@ until IsInArray "$BAREOS_CLIENT" "${clients[@]}" ; do
     BAREOS_CLIENT="$( UserInput -I BAREOS_CLIENT $userinput_default -p "Choose this host as Bareos Client: " "${clients[@]}" )"
 done
 
-# bcommand_check_client_status exists on error.
-bcommand_check_client_status "$BAREOS_CLIENT"
+# bareos_ensure_client_is_available exists on error.
+bareos_ensure_client_is_available "$BAREOS_CLIENT"
 echo "BAREOS_CLIENT=$BAREOS_CLIENT" >> "$VAR_DIR/bareos.conf"

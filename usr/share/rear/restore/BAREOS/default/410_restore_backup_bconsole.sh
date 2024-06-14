@@ -64,17 +64,20 @@ fi
 
 LogPrint "waiting for restore job"
 
-wait_restore_job "${last_restore_jobid_old}"
+local restore_jobid
+if ! restore_jobid=$(wait_for_newer_restore_job_to_start "$last_restore_jobid_old"); then
+    Error "Restore Job did not start!"
+fi
+wait_restore_job "$restore_jobid"
 local job_exitcode=$?
-LogPrint "Restore job ${RESTORE_JOBID} finished."    
+LogPrint "Restore job $restore_jobid finished."
 if [ ${job_exitcode} -eq 0 ]; then
+    Log "$( bcommand "list joblog jobid=$restore_jobid" )"
     LogPrint "Restore job finished successfully."
 elif [ ${job_exitcode} -eq 1 ]; then
+    Log "$( bcommand "list joblog jobid=$restore_jobid" )"
     LogPrint "WARNING: Restore job finished with warnings."
 else
-    LogPrint "$( bcommand "list joblog jobid=${RESTORE_JOBID}" )"
+    LogPrint "$( bcommand "list joblog jobid=$restore_jobid" )"
     Error "Bareos Restore failed (${job_exitcode})"
 fi
-
-UserOutput "Please verify that the backup has been restored correctly to '$TARGET_FS_ROOT'"
-UserOutput "in the provided shell. When finished, type exit in the shell to continue recovery."

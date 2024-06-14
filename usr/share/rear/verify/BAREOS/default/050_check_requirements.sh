@@ -24,13 +24,8 @@ else
         Error "bareos-fd: configuration invalid"
     fi
 
-    if ! systemctl --quiet is-active bareos-fd.service; then
-        Log "$(systemctl status bareos-fd.service)"
-        Error "bareos-fd.service is not running"
-    fi
-
     while ! systemctl is-active bareos-fd.service; do
-        ((count > 3)) && Error "Failed to start bareos-fd.service, giving up."
+        (( count > 3 )) && Error "Failed to start bareos-fd.service, giving up."
         (( count++ ))
         LogPrint "bareos-fd not running, trying to start (attempt $count)"
         systemctl start bareos-fd.service
@@ -42,5 +37,6 @@ else
     fi
 
     # status is good or it errors out
-    bcommand_check_client_status "$BAREOS_CLIENT"
+    bareos_ensure_client_is_available "$BAREOS_CLIENT"
+
 fi
