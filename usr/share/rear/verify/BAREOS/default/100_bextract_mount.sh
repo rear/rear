@@ -1,13 +1,15 @@
 #
-# start the daemons!
+# mount backup device
+#
 
-if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
+if [ "$BEXTRACT_DEVICE" ] || [ "$BEXTRACT_VOLUME" ]; then
 
    ### Bareos support using bextract
    if [ -b "$BEXTRACT_DEVICE" ]; then
       mkdir -p /backup
-      mount $BEXTRACT_DEVICE /backup
-      StopIfError "Could not mount Bareos device $BAREOS_DEVICE at /backup"
+      if ! mount "$BEXTRACT_DEVICE" /backup; then
+        Error "Could not mount Bareos device $BAREOS_DEVICE at /backup"
+      fi
    fi
 
 fi
