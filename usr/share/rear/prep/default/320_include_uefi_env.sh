@@ -54,7 +54,7 @@ test "$( find /boot -maxdepth 1 -iname efi -type d )" || return 0
 # Next step is to get the EFI (Extensible Firmware Interface) system partition (ESP):
 local esp_proc_mounts_line=()
 # The output of
-#   egrep ' /boot/efi | /boot ' /proc/mounts
+#   grep -E ' /boot/efi | /boot ' /proc/mounts
 # may look like the following examples
 # on a openSUSE Leap 15.0 system
 #   /dev/sda1 /boot/efi vfat rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro 0 0
@@ -87,7 +87,3 @@ fi
 DebugPrint "Found EFI system partition ${esp_proc_mounts_line[0]} on ${esp_proc_mounts_line[1]} type ${esp_proc_mounts_line[2]}"
 USING_UEFI_BOOTLOADER=1
 LogPrint "Using UEFI Boot Loader for Linux (USING_UEFI_BOOTLOADER=1)"
-
-# Remember the ESP device node in VAR_DIR/recovery/bootdisk:
-echo "${esp_proc_mounts_line[0]}" >$VAR_DIR/recovery/bootdisk
-

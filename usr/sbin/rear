@@ -20,6 +20,13 @@
 # Authors:
 # See https://github.com/rear/rear/graphs/contributors for full list of authors
 
+# the following Bash minimum version check is so essential that it has to come first
+# and that is why it doesn't use anything from our framework or functions.
+((BASH_VERSINFO[0] >= 4)) || {
+    echo "ERROR: ReaR needs bash version 4 or higher" >&2
+    exit 1
+}
+
 # Usually functions belong to the library scripts (i.e. $SHARE_DIR/lib/*.sh),
 # but these 2 are exceptions on the rule because the complementary global functions
 # to get and apply bash flags and options commands are needed from the very beginning
@@ -133,6 +140,7 @@ DEBUG_OUTPUT_DEV="null"
 DISPENSABLE_OUTPUT_DEV="null"
 SECRET_OUTPUT_DEV="null"
 EXPOSE_SECRETS=""
+PORTABLE=""
 NON_INTERACTIVE=""
 KEEP_BUILD_DIR=""
 KERNEL_VERSION=""
@@ -144,7 +152,7 @@ WORKFLOW=""
 
 # Parse options
 help_note_text="Use '$PROGRAM --help' or 'man $PROGRAM' for more information."
-if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:ne" -l "help,version,non-interactive,debugscripts:,expose-secrets" -- "$@" )" ; then
+if ! OPTS="$( getopt -n $PROGRAM -o "c:C:dDhsSvVr:nep" -l "help,version,non-interactive,debugscripts:,expose-secrets,portable" -- "$@" )" ; then
     echo "$help_note_text"
     exit 1
 fi
@@ -167,6 +175,9 @@ while true ; do
             ;;
         (-e|--expose-secrets)
             EXPOSE_SECRETS=1
+            ;;
+        (-p|--portable)
+            PORTABLE=1
             ;;
         (-c)
             if [[ "$2" == -* ]] ; then
@@ -356,6 +367,14 @@ hash -r
 # Make sure that we use only English:
 export LC_CTYPE=C LC_ALL=C LANG=C
 
+# Remember what TMPDIR was originally set when ReaR was launched
+# before TMPDIR may be set (if unset) to /var/tmp in default.conf
+# because testing if TMPDIR is '/var/tmp' would be insufficient
+# to determine if TMPDIR was set or unset when the user called 'rear'
+# because the user may have specified TMPDIR to be '/var/tmp'
+# cf. https://github.com/rear/rear/pull/3168#issuecomment-1997057144
+readonly TMPDIR_ORIG="${TMPDIR-}"
+
 # Include default config before the RUNTIME_LOGFILE value is set because
 # setting the right RUNTIME_LOGFILE value requires values from default.conf
 # in particular the default LOGFILE value and the values of the
@@ -503,36 +522,132 @@ fi
 # Source usr/share/rear/lib/_input-output-functions.sh because therein
 # the original STDIN STDOUT and STDERR file descriptors are saved as fd6 fd7 and fd8
 # so that ReaR functions for actually intended user messages can use fd7 and fd8
-# to show messages to the user regardless where to STDOUT and STDERR are redirected
-# and fd6 to get input from the user regardless where to STDIN is redirected:
+# to show messages to the user regardless where STDOUT and STDERR are redirected
+# and fd6 to get input from the user regardless where STDIN is redirected:
 if ! source $SHARE_DIR/lib/_input-output-functions.sh ; then
     echo -e "ERROR: BUG in $PRODUCT\nFailed to source $SHARE_DIR/lib/_input-output-functions.sh\nPlease report it at $BUG_REPORT_SITE" >&2
     exit 1
 fi
 
 # Via source usr/share/rear/lib/_input-output-functions.sh
-# those exit tasks are now set to be executed (via bash EXIT trap) in the following order:
+# those final exit tasks are now set to be executed (via bash EXIT trap) in the following order:
 # "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WORKFLOW failed, check $RUNTIME_LOGFILE for details' 1>&8"
 # "exec 8>&-"
 # "exec 7>&-"
 # "exec 6<&-"
 
+# Set RECOVERY_MODE when we are running inside a rescue/recovery system
+# which is normally ReaR's recovery system or alternatively in PORTABLE mode
+# it is a foreign rescue system like the System Rescue CD or the Ubuntu Desktop Live CD,
+# see doc/user-guide/17-Portable-Mode.adoc
+# RECOVERY_MODE is a boolean variable (cf. conf/default.conf) because we need it below
+# to set TMPDIR to ReaR's TMP_DIR only when we are not running inside a rescue/recovery system
+# but we do not yet have lib/global-functions.sh (which contains is_false) sourced here.
+# In ReaR's recovery system /etc/rear-release is unique (it does not exist otherwise)
+# see build/default/970_add_rear_release.sh that adds it to identify ReaR's rescue environment.
+# PORTABLE mode is meant to be used only to run 'rear recover' within a foreign rescue system,
+# see https://github.com/rear/rear/pull/3206#issuecomment-2122173021
+if test -e "/etc/rear-release" || test "$PORTABLE" ; then
+    RECOVERY_MODE='y'
+fi
+readonly RECOVERY_MODE
+
+# Create a sufficiently safe temporary working area BUILD_DIR for ReaR and
+# additionally set TMPDIR to TMP_DIR within BUILD_DIR for programs that are called by ReaR
+# (the latter only when ReaR runs on the original system i.e. when we are not in RECOVERY_MODE):
 if test "$WORKFLOW" != "help" ; then
-    # Prepend temporary working area (BUILD_DIR) removal exit task
-    # so it gets executed directly before the above listed exit tasks.
-    # This must be done before the first possible call of the 'Error' function
-    # otherwise we may error out but leave the build area behind:
+    # ReaR fails when TMPDIR is a relative directory, see
+    # https://github.com/rear/rear/pull/3168#issuecomment-1999996162
+    # so we set TMPDIR to its resolved absolute path.
+    # Ignore when 'readlink -e' fails (e.g. it won't fail when TMPDIR is a regular file)
+    # and verify afterwards that the 'readlink -e' result is a directory:
+    export TMPDIR="$( readlink -e "$TMPDIR" || true )"
+    # TMPDIR must be a directory to make 'mktemp' work below.
+    # When TMPDIR was unset by the user it is set to '/var/tmp' in default.conf
+    # but it is an error when TMPDIR is set by the user to an empty or blank value:
+    if ! test -d "$TMPDIR" ; then
+        # Don't use Error() unless "QuietAddExitTask cleanup_build_area_and_end_program" was done:
+        echo "ERROR: TMPDIR '$TMPDIR' is not a directory" >&2
+        exit 1
+    fi
+    # We rely on sufficiently safe 'mktemp -d' behaviour
+    # that the BUILD_DIR directory will have read, write, and search permissions
+    # for the current user (i.e. for root), but no permissions for the group or others
+    # (i.e. BUILD_DIR is "drwx------ root root /var/tmp/rear.XXXXXXXXXXXXXXX"), cf.
+    # https://www.gnu.org/software/coreutils/manual/html_node/mktemp-invocation.html#mktemp-invocation
+    # Create ReaR's working area BUILD_DIR:
+    if ! BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX )" ; then
+        # Don't use Error() unless "QuietAddExitTask cleanup_build_area_and_end_program" was done:
+        echo "ERROR: Could not create working area ('mktemp -d -t rear.XXXXXXXXXXXXXXX' failed)" >&2
+        exit 1
+    fi
+    # Prepend working area (BUILD_DIR) removal exit task
+    # so it gets executed last directly before the above listed final exit tasks.
+    # On the one hand this must be done after the build area was successfully created,
+    # otherwise cleanup_build_area_and_end_program would try to remove a nonexistent build area
+    # by calling plain 'rm -Rf --one-file-system' where nothing is specified to be removed
+    # where (fortunately) 'rm' does not remove anything when nothing is specified to be removed,
+    # see https://github.com/rear/rear/issues/3180
+    # On the other hand this must be done before the first possible call of the 'Error' function,
+    # otherwise we may error out but leave the build area behind,
+    # see https://github.com/rear/rear/pull/2633
     QuietAddExitTask cleanup_build_area_and_end_program
-    # Create temporary working area:
-    BUILD_DIR="$( mktemp -d -t rear.XXXXXXXXXXXXXXX || Error "Could not create build area '$BUILD_DIR'" )"
+    # Create ROOTFS_DIR in ReaR's working area:
     ROOTFS_DIR=$BUILD_DIR/rootfs
-    TMP_DIR=$BUILD_DIR/tmp
     mkdir -p $ROOTFS_DIR || Error "Could not create $ROOTFS_DIR"
+    # Create TMP_DIR in ReaR's working area:
+    TMP_DIR=$BUILD_DIR/tmp
     mkdir -p $TMP_DIR || Error "Could not create $TMP_DIR"
-    # Since the above BUILD_DIR="$( mktemp ... )" does not always return a path under /tmp
-    # the build directory must be excluded from the backup to be on the safe side:
+    # Normally set TMPDIR to ReaR's TMP_DIR which is /var/tmp/rear.XXXXXXXXXXXXXXX/tmp
+    # to ensure that temporary files from programs that are called by ReaR
+    # are sufficiently safe against unwanted access by non-root users
+    # (only 'root' has permissions to access ReaR's working area)
+    # and that those temporary files will get cleaned up "by the way"
+    # via the cleanup_build_area_and_end_program() function,
+    # see https://github.com/rear/rear/issues/3167
+    if ! test "$RECOVERY_MODE" ; then
+        # We set TMPDIR to ReaR's TMP_DIR only when we are not in RECOVERY_MODE
+        # because TMP_DIR does not exist in the recreated/restored system
+        # i.e. there is no /mnt/local/var/tmp/rear.XXXXXXXXXXXXXXX/tmp so that
+        #   chroot /mnt/local COMMAND
+        # fails when COMMAND uses TMPDIR = TMP_DIR - in particular "chroot /mnt/local dracut" fails
+        # see https://github.com/rear/rear/pull/3168#issuecomment-1983377528
+        # and https://github.com/rear/rear/pull/3206#issuecomment-2047273428
+        if test "$TMPDIR_ORIG" ; then
+            tmpdir_debug_info="Changing TMPDIR to ReaR's '$TMP_DIR' (was '$TMPDIR_ORIG' when ReaR was launched)"
+        else
+            tmpdir_debug_info="Setting TMPDIR to ReaR's '$TMP_DIR' (was unset when ReaR was launched)"
+        fi
+        export TMPDIR="$TMP_DIR"
+    else
+        # Also in RECOVERY_MODE provide debug info what TMPDIR is:
+        if test "$TMPDIR_ORIG" ; then
+            tmpdir_debug_info="Using TMPDIR '$TMPDIR' (was '$TMPDIR_ORIG' when ReaR was launched)"
+        else
+            tmpdir_debug_info="Setting TMPDIR to '$TMPDIR' (was unset when ReaR was launched)"
+        fi
+    fi
+    # We create TMPDIR inside ROOTFS_DIR i.e. we create $ROOTFS_DIR$TMPDIR which is
+    # usually /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/var/tmp/rear.XXXXXXXXXXXXXXX/tmp
+    # (with same 'XXXXXXXXXXXXXXX' characters for both parts)
+    # or when TMPDIR was set via "export TMPDIR=/path/to/tmpdir" before ReaR was launched
+    # then $ROOTFS_DIR$TMPDIR is /path/to/tmpdir/rear.XXXXXXXXXXXXXXX/rootfs/path/to/tmpdir
+    # so that "chroot $ROOTFS_DIR COMMAND" will not fail when COMMAND uses TMPDIR.
+    # For example build/default/490_fix_broken_links.sh
+    # and build/default/990_verify_rootfs.sh run "chroot $ROOTFS_DIR COMMAND".
+    # See https://github.com/rear/rear/pull/3168#issuecomment-1991356186
+    # We create with default mode because all in BUILD_DIR is sufficiently safe:
+    mkdir -p $ROOTFS_DIR$TMPDIR || Error "Could not create $ROOTFS_DIR$TMPDIR"
+    # Normally BUILD_DIR="$( mktemp ... )" is not under /tmp (the default TMPDIR is /var/tmp)
+    # so the current build directory needs to be explicitly excluded from the backup:
     BACKUP_PROG_EXCLUDE+=( "$BUILD_DIR" )
 fi
+
+# Used to determine below whether TMPDIR has been changed in user config.
+# After the 'mktemp' above, changing TMPDIR does not have the intended effect.
+# Save the current value to detect TMPDIR changes regardless if 'mktemp' above was called
+# so even the help workflow would report that error, see https://github.com/rear/rear/pull/3163
+saved_tmpdir="$TMPDIR"
 
 # Keep old log file:
 test -r "$RUNTIME_LOGFILE" && mv -f "$RUNTIME_LOGFILE" "$RUNTIME_LOGFILE".old 2>/dev/null
@@ -600,15 +715,12 @@ if test "$WORKFLOW" != "help" ; then
     DebugPrint "Command line options: $0 ${CMD_OPTS[*]}"
     LogPrint "Using log file: $RUNTIME_LOGFILE"
     DebugPrint "Using build area: $BUILD_DIR"
+    DebugPrint "$tmpdir_debug_info"
 fi
 
 # In DEBUG mode keep by default the build area but that can be overridden in user config files
 # therefore no readonly KEEP_BUILD_DIR (it is also set to 1 in build/default/990_verify_rootfs.sh):
 test "$DEBUG" && KEEP_BUILD_DIR=1 || true
-
-# Check if we are in recovery mode:
-test -e "/etc/rear-release" && RECOVERY_MODE="y" || true
-readonly RECOVERY_MODE
 
 test "$SIMULATE" && LogPrint "Simulation mode activated, Relax-and-Recover base directory: $SHARE_DIR" || true
 
@@ -696,6 +808,11 @@ if test "$CONFIG_APPEND_FILES" ; then
         fi
     done
 fi
+
+if [ "$saved_tmpdir" != "$TMPDIR" ] ; then
+    Error "Setting TMPDIR in a configuration file is not supported. To specify a working area directory prefix, export TMPDIR before executing '$PROGRAM'"
+fi
+
 readonly CONFIG_APPEND_FILES_PATHS # nothing else should be able to add more configs
 COPY_AS_IS+=("${CONFIG_APPEND_FILES_PATHS[@]}") # copy also to rescue system
 

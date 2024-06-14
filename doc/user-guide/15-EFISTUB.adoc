@@ -140,7 +140,7 @@ BACKUP_PROG_EXCLUDE+=( /mnt )
 #BTRFS stuff
 REQUIRED_PROGS+=( snapper chattr lsattr xfs_repair )
 COPY_AS_IS+=( /usr/lib/snapper/installation-helper /etc/snapper/config-templates/default )
-BACKUP_PROG_INCLUDE=( $(findmnt -n -r -t btrfs | cut -d ' ' -f 1 | grep -v '^/$' | egrep -v 'snapshots|crash' ) )
+BACKUP_PROG_INCLUDE=( $(findmnt -n -r -t btrfs | cut -d ' ' -f 1 | grep -v '^/$' | grep -Ev 'snapshots|crash' ) )
 
 EFI_STUB=y
 ```

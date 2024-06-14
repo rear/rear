@@ -70,7 +70,11 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
     Log "Verifying that the 'part' entries for $disk_dev in $DISKLAYOUT_FILE specify consecutive partitions"
     # The SUSE specific gpt_sync_mbr partitioning scheme is actually a GPT partitioning (plus some compatibility stuff in MBR)
     # see create_partitions() in prepare/GNU/Linux/100_include_partition_code.sh
-    test "gpt_sync_mbr" = "$parted_mklabel" && parted_mklabel="gpt"
+    if test "gpt_sync_mbr" = "$parted_mklabel" ; then
+        ErrorIfDeprecated gpt_sync_mbr "The 'gpt_sync_mbr' partitioning is no longer supported by SUSE since 2016
+                                        see https://github.com/rear/rear/issues/3148"
+        parted_mklabel="gpt"
+    fi
     # Using the parted_mklabel fallback behaviour in create_partitions() in prepare/GNU/Linux/100_include_partition_code.sh
     # only when there is no parted_mklabel value, but when there is a parted_mklabel value use it as is:
     test "$parted_mklabel" || parted_mklabel="gpt"
@@ -120,13 +124,13 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
                 fi
                 ;;
             (msdos)
-                # For the MBR partitioning scheme the partitions must not have consecutive numbers.
+                # For the MBR partitioning scheme not all partitions may have consecutive numbers.
                 # Only primary partitions and a possible extended partition must have consecutive numbers from 1 up to 4.
                 # Possible logical partitions must have consecutive numbers 5 6 7 ...
                 # There can be a gap between the primary/extended partitions e.g. with number 1 and 2
                 # and the logical partitions starting at 5 (there are no partitions with numbers 3 and 4)
                 # cf. https://github.com/rear/rear/issues/1681#issue-286345908
-                # Testing consecutive partitions from number 1 up to 4 (i.e. testing consecutive primary an extended partitions):
+                # Testing consecutive partitions from number 1 up to 4 (i.e. testing consecutive primary/extended partitions):
                 non_consecutive_part_found=""
                 unused_part_nums=()
                 # Determine the highest used MBR primary or extended partition number:

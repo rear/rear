@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # system-setup has been split into scripts under /etc/scripts/system-setup.d
-# the purpose is to have different skel areas contribute different scripts into
-# the system-setup stage
+# the purpose is to have different skel areas contribute different scripts
+# into the system-setup stage
 
 # Set null globbing, we need this for our scripts (cf. usr/sbin/rear).
 # With nullglob set when e.g. for foo*bar no file matches are found, then foo*bar is removed
@@ -11,41 +11,77 @@ shopt -s nullglob
 
 source /etc/scripts/system-setup-functions.sh
 
-# The 'sleep 1' is used as workaround to avoid whatever inexplicable actual reason
+# The hardcoded 'sleep 1' is used as workaround to avoid whatever inexplicable actual reason
 # that at least on SLES12 some initial output lines of this script would get lost
-# (perhaps somewhere in systemd's nowhere land) which results that in particular
-# in Relax-and-Recover debug mode the user sits in front of an empty screen wondering
-# why nothing happens because in particular the read prompt "Press ENTER ..." was lost,
+# (perhaps somewhere in systemd's nowhere land) and even in unattended_recovery mode
+# all output should always appear regardless if someone is actually watching.
+# In particular in Relax-and-Recover debug mode missing initial output lines results
+# that the user sits in front of an empty screen wondering why nothing happens
+# because in particular the read prompt "Press ENTER ..." was lost,
 # cf. the 'if rear_debug' part below:
 sleep 1
 
-if rear_debug ; then
-    echo -e "\nIn Relax-and-Recover debug mode a shell will be started by default on tty9\n"
-    read -n 1 -p "Press ENTER or type a digit '2...8' for another tty or '0' to skip it "
-    case "$REPLY" in
-        (0)
-            echo -e "\nNo debug mode shell started\n"
-            ;;
-        ([2-8])
-            /bin/bash </dev/tty$REPLY >/dev/tty$REPLY 2>&1 &
-            echo -e "\nStarted debug mode shell on tty$REPLY\n"
-            ;;
-        (*)
-            /bin/bash </dev/tty9 >/dev/tty9 2>&1 &
-            echo -e "\nStarted debug mode shell on tty9\n"
-            ;;
-    esac
+# Because "rear recover" won't work without default.conf
+# we abort when there is no default.conf (or when it is empty),
+# cf. https://github.com/rear/rear/pull/3070#discussion_r1389361339
+if ! test -s /usr/share/rear/conf/default.conf ; then
+    echo -e "\nERROR: ReaR recovery cannot work without /usr/share/rear/conf/default.conf\n"
+    # Wait hardcoded 10 seconds in any case so that the user can notice the
+    # 'ERROR: ReaR recovery cannot work without /usr/share/rear/conf/default.conf'
+    # on his screen before the screen gets cleared and replaced by the login screen
+    # also in unattended mode regardless if someone is actually watching:
+    sleep 10
+    # Replace the usual /etc/motd message
+    # 'Welcome to Relax-and-Recover. Run "rear recover" to restore your system !'
+    # because it does not make sense to run "rear recover" without default.conf:
+    echo -e "\nRelax-and-Recover cannot work without /usr/share/rear/conf/default.conf\n" >/etc/motd
+    # exiting this script proceeds directly to the login screen:
+    exit 1
 fi
 
+# Set SECRET_OUTPUT_DEV because secret default values are set via
+#   { VARIABLE='secret value' ; } 2>>/dev/$SECRET_OUTPUT_DEV
+# cf. https://github.com/rear/rear/pull/3034#issuecomment-1691609782
+SECRET_OUTPUT_DEV="null"
 # Sourcing of the conf/default.conf file as we may use some defined variables or arrays
 # E.g. UDEV_NET_MAC_RULE_FILES is used by script 55-migrate-network-devices.sh
-test -f /usr/share/rear/conf/default.conf && source /usr/share/rear/conf/default.conf
+source /usr/share/rear/conf/default.conf || echo -e "\n'source /usr/share/rear/conf/default.conf' failed with exit code $?"
 # Sourcing user and rescue configuration as we need some variables
 # (EXCLUDE_MD5SUM_VERIFICATION right now and other variables in the system setup scripts):
 # The order of sourcing should be 'site' then 'local' and as last 'rescue'
+
+# In the rescue system these paths are always like this, either for real or as a symlink to the actual paths
+CONFIG_DIR=/etc/rear
+SHARE_DIR=/usr/share/rear
+VAR_DIR=/var/lib/rear
+LOG_DIR=/var/log/rear
 for conf in site local rescue ; do
-    test -f /etc/rear/$conf.conf && source /etc/rear/$conf.conf
+    if test -s /etc/rear/$conf.conf ; then
+        source /etc/rear/$conf.conf || echo -e "\n'source /etc/rear/$conf.conf' failed with exit code $?"
+    fi
 done
+
+# Default USER_INPUT_INTERRUPT_TIMEOUT is 30 seconds and default USER_INPUT_UNATTENDED_TIMEOUT is 3 seconds:
+unattended_recovery && timeout=$USER_INPUT_UNATTENDED_TIMEOUT || timeout=$USER_INPUT_INTERRUPT_TIMEOUT
+if rear_debug ; then
+    # Messages should not be longer than 80 characters
+    # because this is the usual maximum usable width here:
+    echo -e "\nIn Relax-and-Recover debug mode a shell will be started by default on tty9"
+    read -n 1 -t $timeout -p "Press ENTER or type a tty digit '2...9' or '0' to skip (timeout $timeout) "
+    case "$REPLY" in
+        (0)
+            echo -e "\nNo debug mode shell started"
+            ;;
+        ([2-9])
+            /bin/bash </dev/tty$REPLY >/dev/tty$REPLY 2>&1 &
+            echo -e "\nStarted debug mode shell on tty$REPLY"
+            ;;
+        (*)
+            /bin/bash </dev/tty9 >/dev/tty9 2>&1 &
+            echo -e "\nStarted debug mode shell by default on tty9"
+            ;;
+    esac
+fi
 
 # Verifying md5sums must happen first of all during recovery system startup
 # before files may get changed by the recovery system startup scripts below
@@ -58,32 +94,35 @@ done
 # The /md5sums.txt file would be empty if the md5sums were not successfully created
 # during "rear mkrescue/mkbackup" by the build/default/995_md5sums_rootfs.sh script:
 if test -s "/md5sums.txt" ; then
-    echo -e "\nVerifying md5sums of the files in the Relax-and-Recover rescue system\n"
-    # /etc/issue is always excluded to avoid that verifying its md5sum fails with "./etc/issue: FAILED"
+    echo -e "\nVerifying md5sums of the files in the Relax-and-Recover rescue system"
+    # /etc/motd is excluded because it was changed above when default.conf is missing.
+    # /etc/issue is excluded to avoid that verifying its md5sum fails with "./etc/issue: FAILED"
     # when there is no rsa SSH host key /etc/ssh/ssh_host_rsa_key in the recovery system
     # because then /etc/scripts/run-sshd creates one and adds its SSH fingerprint to /etc/issue
     # and /etc/scripts/run-sshd is run by SysVinit or systemd
     # (via /etc/inittab and /etc/init/start-sshd.conf or /usr/lib/systemd/system/sshd.service)
     # so that /etc/issue may get modified before its md5sum is verified here.
     # run-sshd also modifies /etc/ssh/sshd_config, so this is excluded as well.
-    # Also /etc/udev/rules.d/70-persistent-net.rules is always excluded to avoid false alarm
+    # Also /etc/udev/rules.d/70-persistent-net.rules is excluded to avoid false alarm
     # because it seems it can be modified even before this md5sum verification here runs,
     # see https://github.com/rear/rear/issues/1883#issuecomment-409875733
-    egrep_pattern="/etc/issue|/etc/ssh/sshd_config|/etc/udev/rules.d/70-persistent-net.rules"
+    egrep_pattern="/etc/motd|/etc/issue|/etc/ssh/sshd_config|/etc/udev/rules.d/70-persistent-net.rules"
     test "$EXCLUDE_MD5SUM_VERIFICATION" && egrep_pattern+="|$EXCLUDE_MD5SUM_VERIFICATION"
     # Regardless of '--quiet' md5sum shows "FAILED" messages nevertheless (cf. 'man md5sum'):
     if grep -E -v "$egrep_pattern" md5sums.txt | md5sum --quiet --check ; then
-        echo -e "md5sums are OK\n"
+        echo "md5sums are OK"
     else
         # In case of a FAILED md5sum inform the user:
         echo "Possibly corrupted Relax-and-Recover rescue system"
         if rear_debug ; then
             # In debug mode let the user confirm to proceed:
-            read -p "Press ENTER to proceed 'bona fide' nevertheless "
+            read -t $timeout -p "Press ENTER to proceed 'bona fide' nevertheless (timeout $timeout) "
         else
-            # In non-debug mode wait 10 seconds so that the user can read the md5sum output:
+            # In non-debug mode wait USER_INPUT_INTERRUPT_TIMEOUT (by default 30 seconds)
+            # so that the user can read and understand the md5sum output (could be several lines)
+            # unless in unattended_recovery mode where there is normally no user who reads something:
             echo -e "Proceeding 'bona fide' nevertheless...\n"
-            sleep 10
+            unattended_recovery || sleep $USER_INPUT_INTERRUPT_TIMEOUT
         fi
     fi
 fi
@@ -91,18 +130,149 @@ fi
 echo -e "\nConfiguring Relax-and-Recover rescue system\n"
 for system_setup_script in /etc/scripts/system-setup.d/*.sh ; do
     if rear_debug ; then
-        read -p "Press ENTER to run $( basename $system_setup_script ) "
+        read -t $timeout -p "Press ENTER to run $( basename $system_setup_script ) (timeout $timeout) "
+        echo
         set -x
-        source $system_setup_script
+        source $system_setup_script || echo -e "\n'source $system_setup_script' results exit code $?\n"
         # The only known way how to do 'set +x' after 'set -x' without a '+ set +x' output:
         { set +x ; } 2>/dev/null
         echo
     else
         echo "Running $( basename $system_setup_script )..."
-        source $system_setup_script
+        # In non-debug mode when a system setup script results non-zero exit code
+        # do not show an 'exit code' message (like the above) to avoid false alarm
+        # cf. https://github.com/rear/rear/pull/3070#discussion_r1393738863
+        # but just wait USER_INPUT_UNATTENDED_TIMEOUT (by default 3 seconds)
+        # so that the user could at least notice potential error messages from the script
+        # unless in unattended_recovery mode where there is normally no watching user:
+        if ! source $system_setup_script ; then
+            unattended_recovery || sleep $USER_INPUT_UNATTENDED_TIMEOUT
+        fi
     fi
 done
 echo -e "\nRelax-and-Recover rescue system is ready\n"
+
 # Wait two seconds so that the user can read the 'Relax-and-Recover rescue system is ready' message
 # on his screen before the screen gets cleared and replaced by the login screen:
 sleep 2
+
+# Wait USER_INPUT_UNATTENDED_TIMEOUT (by default 3 seconds)
+# so that the user can notice the 'Relax-and-Recover rescue system is ready' message
+# on his screen before the screen gets cleared and replaced by the login screen
+# unless in unattended_recovery mode where there is normally no watching user:
+unattended_recovery || sleep $USER_INPUT_UNATTENDED_TIMEOUT
+
+# Make it explicit that the 'recover' workflow is always verbose (cf. usr/sbin/rear)
+# so when a 'rear $rear_options recover' command is shown to the user it contains '-v':
+rear_options='-v'
+# In debug mode run an automated 'rear $rear_options recover' command in debugscript mode.
+# Because the kernel command line option 'debug' means 'set -x' for the system setup scripts
+# it should also mean '-D' (i.e. 'set -x') for an automated 'rear $rear_options recover' run:
+rear_debug && rear_options='-D'
+# In unattended_recovery mode run an automated 'rear $rear_options recover' in non-interactive mode:
+unattended_recovery && rear_options+=' --non-interactive'
+
+# In automatic_recovery mode call RECOVERY_COMMANDS automatically
+# but without automated calling REBOOT_COMMANDS after successful recovery:
+if automatic_recovery ; then
+    choices=( "View Relax-and-Recover log file(s)"
+              "Login at the rescue system"
+            )
+    echo "Launching '$RECOVERY_COMMANDS_LABEL' automatically"
+    for command in "${RECOVERY_COMMANDS[@]}" ; do
+        rear_debug && echo "Running RECOVERY_COMMANDS '$command'"
+        eval "$command"
+        recovery_command_exit_code=$?
+        test $recovery_command_exit_code -eq 0 || echo "'eval $command' results exit code $recovery_command_exit_code"
+    done
+    if test $recovery_command_exit_code -eq 0 ; then
+        echo "'$RECOVERY_COMMANDS_LABEL' finished successfully"
+        choices+=( "$REBOOT_COMMANDS_LABEL" )
+    else
+        echo "'$RECOVERY_COMMANDS_LABEL' failed with exit code $recovery_command_exit_code"
+    fi
+    PS3="Select what to do "
+    select choice in "${choices[@]}" ; do
+        case "$REPLY" in
+            (1)
+                # Do not assume the ReaR log file is named rear-$HOSTNAME.log
+                # the user can have specified any name as LOGFILE:
+                less /var/log/rear/*
+                ;;
+            (2)
+                echo "" > /etc/issue
+                echo "" > /etc/motd
+                break
+                ;;
+            (3)
+                for command in "${REBOOT_COMMANDS[@]}" ; do
+                    rear_debug && echo "Running REBOOT_COMMANDS '$command'"
+                    eval "$command" || echo "'eval $command' results exit code $?"
+                done
+                # Wait hardcoded 10 seconds to not let this script "just proceed"
+                # because it would proceed with an iteration of the 'select' loop
+                # which is not wanted for the normal reboot/poweroff cases
+                # so we sleep 10 seconds to give reboot/poweroff some time
+                # to terminate this script while it is idle waiting here
+                # but in exceptional cases (when REBOOT_COMMANDS did not reboot/poweroff)
+                # it proceeds after 10 seconds with an iteration of the 'select' loop:
+                sleep 10
+                ;;
+        esac
+        for (( i=1 ; i <= ${#choices[@]} ; i++ )) ; do
+            echo "$i) ${choices[$i-1]}"
+        done
+    done 2>&1
+fi
+
+# In unattended_recovery mode call RECOVERY_COMMANDS automatically
+# plus automated calling REBOOT_COMMANDS after successful recovery:
+if unattended_recovery ; then
+    choices=( "View Relax-and-Recover log file(s)"
+              "Login at the rescue system"
+            )
+    echo "Launching '$RECOVERY_COMMANDS_LABEL' automatically"
+    for command in "${RECOVERY_COMMANDS[@]}" ; do
+        rear_debug && echo "Running RECOVERY_COMMANDS '$command'"
+        eval "$command"
+        recovery_command_exit_code=$?
+        test $recovery_command_exit_code -eq 0 || echo "'eval $command' results exit code $recovery_command_exit_code"
+    done
+    if test $recovery_command_exit_code -eq 0 ; then
+        echo "'$RECOVERY_COMMANDS_LABEL' finished successfully"
+        echo "'$REBOOT_COMMANDS_LABEL' in $USER_INPUT_INTERRUPT_TIMEOUT seconds (Ctrl-C to interrupt)"
+        sleep $USER_INPUT_INTERRUPT_TIMEOUT
+        for command in "${REBOOT_COMMANDS[@]}" ; do
+            rear_debug && echo "Running REBOOT_COMMANDS '$command'"
+            eval "$command" || echo "'eval $command' results exit code $?"
+        done
+        # Wait hardcoded 10 seconds to not let this script "just proceed"
+        # because it would show the login screen when this script finished
+        # which is not wanted for the normal reboot/poweroff cases
+        # so we sleep 10 seconds to give reboot/poweroff some time
+        # to terminate this script while it is idle waiting here
+        # but in exceptional cases (when REBOOT_COMMANDS did not reboot/poweroff)
+        # it proceeds after 10 seconds with the login screen:
+        sleep 10
+    else
+        echo "'$RECOVERY_COMMANDS_LABEL' failed with exit code $recovery_command_exit_code"
+        PS3="Select what to do "
+        select choice in "${choices[@]}" ; do
+            case "$REPLY" in
+                (1)
+                    # Do not assume the ReaR log file is named rear-$HOSTNAME.log
+                    # the user can have specified any name as LOGFILE:
+                    less /var/log/rear/*
+                    ;;
+                (2)
+                    echo "" > /etc/issue
+                    echo "" > /etc/motd
+                    break
+                    ;;
+            esac
+            for (( i=1 ; i <= ${#choices[@]} ; i++ )) ; do
+                echo "$i) ${choices[$i-1]}"
+            done
+        done 2>&1
+    fi
+fi

@@ -146,7 +146,7 @@ DISKS_TO_BE_WIPED="$disks_to_be_wiped"
 # The DISKS_TO_BE_WIPED string is needed in the subsequent layout/recreate/default/150_wipe_disks.sh script
 
 # Show the user confirmation dialog in any case but when not in migration mode
-# automatically proceed with less timeout USER_INPUT_INTERRUPT_TIMEOUT (by default 10 seconds)
+# automatically proceed with less timeout USER_INPUT_INTERRUPT_TIMEOUT (by default 30 seconds)
 # to avoid longer delays (USER_INPUT_TIMEOUT is by default 300 seconds) in case of unattended recovery:
 local timeout="$USER_INPUT_TIMEOUT"
 is_true "$MIGRATION_MODE" || timeout="$USER_INPUT_INTERRUPT_TIMEOUT"

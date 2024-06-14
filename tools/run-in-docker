@@ -8,15 +8,15 @@
 
 # Define the list of supported images
 declare -r IMAGES=(
-    ubuntu:{18.04,20.04,22.04,23.04,devel}
-#    debian:{8,9,10,11,unstable} # can't download package index 31.03.2023
-    opensuse/leap:{42,15}
+    ubuntu:{20.04,22.04,23.04,devel}
+    debian:{10,11,unstable}
+    opensuse/leap:15
     registry.suse.com/suse/sle15
-    centos:{6,7,8} # discontinued
+    centos:{7,8} # discontinued
     sl:7           # discontinued
-    quay.io/centos/centos:stream{8,9}
+    quay.io/centos/centos:stream9
     # registry.access.redhat.com/ubi{7,8,9} basic packages like parted are missing
-    fedora:{29,31,34,37,38} # rawhide Docker image is broken, see https://github.com/fedora-cloud/docker-brew-fedora/issues/109
+    fedora:{39,40} # rawhide Docker image is broken, see https://github.com/fedora-cloud/docker-brew-fedora/issues/109
     archlinux
     manjarolinux/base
 )
@@ -79,7 +79,7 @@ RUN type -p zypper &>/dev/null || exit 0 ;\
 
 RUN type -p pacman &>/dev/null || exit 0 ;\
     pacman --noconfirm -Sy \
-        sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute2 nfs-utils libisoburn cdrtools util-linux psmisc procps-ng util-linux \
+        sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute2 nfs-utils libisoburn cdrtools util-linux psmisc procps-ng util-linux diffutils less \
         make binutils fakeroot git asciidoctor
 
 # CentOS 8 doesn't have sysvinit-tools any more but it also doens't have asciidoctor yet

@@ -89,6 +89,9 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 -e --expose-secrets::
     do not suppress output of confidential values (passwords, encryption keys) in particular in the log file
 
+-p --portable::
+    allow running any ReaR workflow, especially recover, from a git checkout or rear source archive
+
 -V --version::
     version information
 
@@ -194,7 +197,12 @@ Create a bootable image file named "rear-$(hostname).raw.gz", which
 * supports UEFI/Legacy BIOS dual boot if syslinux *and* one of the supported EFI
   bootloaders are installed.
 
-When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+, +USB+, or +RAWDISK+ you should
+OUTPUT=*PORTABLE*::
+Create a portable ReaR archive that can be used on any rescue system to run
+any ReaR workflow, especially recover. Assumes that all required software is
+installed and usable there. This is experimental, please report any issues.
+
+When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+, +USB+, +PORTABLE+ or +RAWDISK+ you should
 provide the backup target location through the +OUTPUT_URL+ variable. Possible
 +OUTPUT_URL+ settings are:
 
@@ -282,7 +290,8 @@ ip=192.168.100.2 nm=255.255.255.0 netdev=eth0 gw=192.168.100.1
 Skip network devices setup by the rescue system start up scripts (overrides ip= nm= netdev= gw=).
 
 == BACKUP SOFTWARE INTEGRATION
-Currently Relax-and-Recover supports the following backup methods.
+Currently Relax-and-Recover supports the below listed backup methods.
+
 There is a distinction between Relax-and-Recover support for 3rd party
 backup software and Relax-and-Recover internal backup methods. The latter
 also creates a backup of your data while the former will only integrate
@@ -293,7 +302,7 @@ backups yourself (unless otherwise noted).
 
 Especially the +rear mkbackup+ command can be confusing as it is only
 useful for the internal backup methods and has usually no function at all with
-the other (external) backup methods.
+the other (external) backup methods where the +rear mkrescue+ command applies.
 
 The following backup methods need to
 be set in Relax-and-Recover with the +BACKUP+ option. As mentioned we have
@@ -343,6 +352,9 @@ that a TSM backup is created by calling 'dsmc incremental' during 'rear mkbackup
 BACKUP=*NSR*::
 Using EMC NetWorker (Legato) to restore the data.
 
+BACKUP=*PPDM*::
+Using Dell PowerProtect Data Manager to restore the data.
+
 BACKUP=*AVA*::
 Using EMC Avamar to restore the data.
 
@@ -371,6 +383,9 @@ BACKUP=*BORG*::
 Use BorgBackup (short Borg) a deduplicating backup program to restore the data.
 Executing 'rear mkbackup' will create a Borg backup,
 see the section 'ReaR with Borg back end' in the ReaR user-guide 'Scenarios' documentation.
+
+BACKUP=*VEEAM*::
+Use Veeam Backup to restore data.
 
 BACKUP=*NFS4SERVER*::
 This is a restore only method. ReaR starts a NFSv4 server in the restore stage and
@@ -498,8 +513,8 @@ In almost all circumstances you have to configure two main settings and their
 parameters: The backup method and the output method.
 
 The backup method defines, how your data is to be saved and whether Relax-and-Recover
-should backup your data as part of the mkrescue process or whether you use an
-external application, e.g. backup software to archive your data.
+should backup your data as part of the mkbackup workflow for internal backup methods
+or whether you use 3rd party backup software to archive your data.
 
 The output method defines how the rescue system is written to disk and how you
 plan to boot the failed computer from the rescue system.

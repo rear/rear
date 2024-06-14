@@ -5,7 +5,7 @@
 # xorrisofs used as the preferred method for generating the iso image
 # and mkisofs and genisoimage as second and third option
 # but for UEFI bootable systems 'ISO_MKISOFS_BIN=/usr/bin/ebiso' is used.
-test -x "$ISO_MKISOFS_BIN" || Error "Could not find program to make ISO9660 filesystem. Install 'mkisofs', 'genisoimage' or 'ebiso' or specify ISO_MKISOFS_BIN (currently '$ISO_MKISOFS_BIN')"
+test -x "$ISO_MKISOFS_BIN" || Error "Could not find program to make ISO9660 filesystem. Install 'xorrisofs', 'mkisofs', 'genisoimage' or 'ebiso' or specify ISO_MKISOFS_BIN (currently '$ISO_MKISOFS_BIN')"
 DebugPrint "Using '$ISO_MKISOFS_BIN' to create ISO filesystem images"
 
 # Include 'udf' module which is required if backup archive is >= 4GiB and mkisofs/genisoimage is used:

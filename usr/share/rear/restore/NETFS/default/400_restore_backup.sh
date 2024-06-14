@@ -21,8 +21,6 @@ local backup_restore_log_suffix="restore.log"
 test "$CONFIG_APPEND_FILES" && backup_restore_log_prefix=$backup_restore_log_prefix.$( echo -n $CONFIG_APPEND_FILES | tr -d -c '[:alnum:]/[:space:]' | tr -s '/[:space:]' ':_' )
 local restore_input_basename=""
 
-mkdir -p $BUILD_DIR/outputfs/$NETFS_PREFIX
-
 # The RESTORE_ARCHIVES array contains the restore input files.
 # If it is not set, RESTORE_ARCHIVES is only one element which is the backup archive:
 test "$RESTORE_ARCHIVES" || RESTORE_ARCHIVES=( "$backuparchive" )

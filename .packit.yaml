@@ -14,6 +14,13 @@ jobs:
   - fedora-latest-stable
   - epel-all
   trigger: pull_request
+- job: tests
+  trigger: pull_request
+  metadata:
+  targets:
+  - fedora-all
+  - centos-stream-8-x86_64
+  - centos-stream-9-x86_64
 specfile_path: packaging/rpm/rear.spec
 files_to_sync:
 - .packit.yaml

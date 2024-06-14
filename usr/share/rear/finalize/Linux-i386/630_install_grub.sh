@@ -1,22 +1,18 @@
 # This script is an improvement over the default grub-install '(hd0)'
 #
-# However the following issues still exist:
+# However the following issue still exists:
 #
 #  * We don't know what the first disk will be, so we cannot be sure the MBR
-#    is written to the correct disk(s). That's why we make all disks bootable.
-#
-#  * There is no guarantee that GRUB was the boot loader used originally.
-#    One possible attempt would be to save and restore the MBR for each disk,
-#    but this does not guarantee a correct boot order,
-#    or even a working boot loader config
-#    (eg. GRUB stage2 might not be at the exact same location).
+#    is written to the correct disk(s). That's why we make all suitable disks bootable.
 
 # Skip if another boot loader is already installed
 # (then $NOBOOTLOADER is not a true value cf. finalize/default/010_prepare_checks.sh):
 is_true $NOBOOTLOADER || return 0
 
-# For UEFI systems with grub legacy with should use efibootmgr instead:
-is_true $USING_UEFI_BOOTLOADER && return
+# For UEFI systems with grub legacy with should use efibootmgr instead,
+# but if BOOTLOADER is explicitly set to GRUB, we are on a hybrid (BIOS/UEFI)
+# boot system and we need to install GRUB to MBR as well.
+# Therefore, we don't test $USING_UEFI_BOOTLOADER.
 
 # If the BOOTLOADER variable (read by finalize/default/010_prepare_checks.sh)
 # is not "GRUB" (which means GRUB Legacy) skip this script (which is only for GRUB Legacy)
@@ -25,31 +21,27 @@ is_true $USING_UEFI_BOOTLOADER && return
 test "GRUB" = "$BOOTLOADER" || return 0
 
 # If the BOOTLOADER variable is "GRUB" (which means GRUB Legacy)
-# do not unconditionally trust that because https://github.com/rear/rear/pull/589
-# reads (excerpt):
-#   Problems found:
-#   The ..._install_grub.sh checked for GRUB2 which is not part
-#   of the first 2048 bytes of a disk - only GRUB was present -
-#   thus the check for grub-probe/grub2-probe
-# and https://github.com/rear/rear/commit/079de45b3ad8edcf0e3df54ded53fe955abded3b
-# reads (excerpt):
-#    replace grub-install by grub-probe
-#    as grub-install also exist in legacy grub
-# so that it seems there are cases where actually GRUB 2 is used
-# but wrongly detected as "GRUB" so that another test is needed
-# to detected if actually GRUB 2 is used and that test is to
-# check if grub-probe or grub2-probe is installed because
-# grub-probe or grub2-probe is only installed in case of GRUB 2
-# and when GRUB 2 is installed we assume GRUB 2 is used as boot loader
-# so that then we skip this script (which is only for GRUB Legacy)
-# because finalize/Linux-i386/660_install_grub2.sh is for installing GRUB 2:
-if type -p grub-probe >&2 || type -p grub2-probe >&2 ; then
-    LogPrint "Skip installing GRUB Legacy boot loader because GRUB 2 is installed (grub-probe or grub2-probe exist)."
+# we could in principle trust that and continue because
+# layout/save/default/445_guess_bootloader.sh (where the value has been set)
+# is now able to distinguish between GRUB Legacy and GRUB 2.
+# But, as this code used to support the value "GRUB" for GRUB 2,
+# the user can have BOOTLOADER=GRUB set explicitly in the configuration file
+# and then it overrides the autodetection in layout/save/default/445_guess_bootloader.sh .
+# The user expects this setting to work with GRUB 2, thus for backward compatibility
+# we need to take into accout the possibility that GRUB actually means GRUB 2.
+if is_grub2_installed ; then
+    LogPrint "Skip installing GRUB Legacy boot loader because GRUB 2 is installed."
+    # We have the ErrorIfDeprecated function, but it aborts ReaR by default,
+    # which is not a good thing to do during recovery.
+    # Therefore it better to log a warning and continue.
+    LogPrintError "WARNING: setting BOOTLOADER=GRUB for GRUB 2 is deprecated, set BOOTLOADER=GRUB2 if setting BOOTLOADER explicitly"
     return
 fi
 
 # The actual work:
 LogPrint "Installing GRUB Legacy boot loader:"
+# See above for the reasoning why not to use ErrorIfDeprecated
+LogPrintError "WARNING: support for GRUB Legacy is deprecated"
 
 # Installing GRUB Legacy boot loader requires an executable "grub":
 type -p grub >&2 || Error "Cannot install GRUB Legacy boot loader because there is no 'grub' program."
@@ -79,8 +71,10 @@ if [[ -r "$LAYOUT_FILE" && -r "$LAYOUT_DEPS" ]] ; then
 
     for disk in $disks ; do
         # Installing grub on an LVM PV will wipe the metadata so we skip those
-        # function is_disk_a_pv returns with 1 if disk is a PV
-        is_disk_a_pv "$disk"  ||  continue
+        # function is_disk_a_pv returns true if disk is a PV
+        is_disk_a_pv "$disk"  &&  continue
+        # Is the disk suitable for GRUB installation at all?
+        is_disk_grub_candidate "$disk" || continue
         # Use first boot partition by default
         part=$( echo $bootparts | cut -d' ' -f1 )
 

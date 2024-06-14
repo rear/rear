@@ -413,17 +413,21 @@ Log "Saving disks and their partitions"
             elif [[ ! ($blockd = *rpmb || $blockd = *[0-9]boot[0-9]) ]]; then # Silently skip Replay Protected Memory Blocks and others  
                 devname=$(get_device_name $disk)
                 devsize=$(get_disk_size ${disk#/sys/block/})
-                disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
                 # Ensure syntactically correct 'disk' entries:
                 # Each value must exist and each value must be a single non-blank word so we 'test' without quoting the value:
                 test $devname || Error "Invalid 'disk' entry (no disk device name for '$disk')"
                 test $devsize || Error "Invalid 'disk $devname' entry (no device size for '$devname')"
-                # We do not error out when there is no partition label type value because
-                # "rear recover" works in a special case without partition label type value when there is
-                # only a 'disk' entry but nothing else for this disk exists in disklayout.conf
-                # which can happen when /dev/sdX is an empty SD card slot without medium,
-                # see https://github.com/rear/rear/issues/2810
-                test $disktype || LogPrintError "No partition label type for 'disk $devname' (may cause 'rear recover' failure)"
+                # Validation error can happen when /dev/sdX is an empty SD card slot without medium,
+                # see https://github.com/rear/rear/issues/2810 https://github.com/rear/rear/issues/2958
+                # this is normal, but such device must be skipped and not be added to the layout
+                # - it does not contain any data anyway.
+                # See https://github.com/rear/rear/pull/3047
+                if ! validation_error=$(is_disk_valid $devname) ; then
+                    LogPrintError "Ignoring $blockd: $validation_error"
+                    continue
+                fi
+                disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
+                test $disktype || Error "Invalid 'disk $devname' entry (no partition table type for '$devname')"
                 if [ "$disktype" != "dasd" ]; then
                     echo "# Disk $devname"
                     echo "# Format: disk <devname> <size(bytes)> <partition label type>"
@@ -470,5 +474,5 @@ Log "Saving disks and their partitions"
 # what program calls are written to diskrestore.sh and which programs will be run during "rear recover" in any case
 # e.g. mdadm is not called in any case and sfdisk is only used in case of BLOCKCLONE_STRICT_PARTITIONING
 # cf. https://github.com/rear/rear/issues/1963
-egrep -q '^disk |^part ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( parted partprobe ) || true
+grep -Eq '^disk |^part ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( parted partprobe ) || true
 

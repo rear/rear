@@ -1,0 +1,167 @@
+HISTORIC REAR VALIDATIONS - WE THANK ALL CONTRIBUTORS AND HOPE THAT YOU ALSO LIKE
+THE MORE RECENT VERSIONS OF REAR, PLEASE CONTINUE SENDING VALIDATIONS.
+---------------------------------------------------------------------------------
+
+Relax-and-Recover Version 1.7.11 / 2008-12-30
+Validation:	Fedora/9/i386
+Submitted:	Gratien D'haese
+Date:		2008-12-30
+Features:	LVM, DP, ISO
+Comment:	local DP (data protector) client needs DP GUI component for omnir
+
+Relax-and-Recover Version 1.10.00 /
+Validation:     RedHatEnterpriseServer/5.6/i386
+Submitted:      Michael Orlov ACMS, Canada
+Date:           2011-03-30
+Features:       LVM,NETFS,PXE
+Comment:        ext4 support needed, restore working only with -S flag.
+
+Relax-and-Recover Version trunk>1.10.0
+Validation:     CentOS/5.5/i386
+Submitted:      Schlomo Schapiro
+Date:           2011-04-08
+Features:       LVM, XEN PV
+Comment:        I did only basic tests
+
+Relax-and-Recover 1.11.0 (trunk 465)
+Validation:     CentOS/5.6/i386
+Submitted:      Schlomo Schapiro
+Date:           2011-05-19
+Features:       XEN PV, LVM, EXTERNAL
+Comment:	XEN PV development system
+
+Relax-and-Recover 1.11.0 (trunk 465)
+Validation:     Ubuntu/10.04/i386
+Submitted:      Schlomo Schapiro
+Date:           2011-05-19
+Features:       NETFS, rsync, eSATA (USB), LVM
+Comment:	My home server
+
+Relax-and-Recover Release 1.11.0 (trunk 464)
+Validation:     Fedora/14/i386
+Submitted:	Gratien D'haese
+Date:           2011-05-23
+Features:       LVM, NETFS, ISO, CIFS, NFS
+Comment:	dr (default) and USE_LAYOUT mode worked fine
+
+Version:     Relax-and-Recover 1.14 / Git
+Validation:  RedHatEnterpriseServer/5/i386
+Submitted:   Lucky leavell <lucky.william.leavell@crnsus.gov>, US Census Bureau, USA
+Date:        2013-03-14
+Features:    NBU, ISO, VMware VM
+Comment:     Need to set partition type on swap (82)"
+Comment:     OS is 64-bit
+Comment:     Initial boot hung on NTP, CTRL-C canceled NTP attempt
+Comment:     Otherwise flawless recovery
+
+Version:     Relax-and-Recover 1.14 / Git
+Validation:  Debian/6.0.7/i386
+Submitted:   Richard Clark, Kerkhoff Technologies Inc., Canada
+Date:        2013-06-21
+Features:    ISO, NETFS, NFS
+Comment:     After installing the dependencies, it worked well.  Needed to refer to the /usr/share/doc as the website didn't have all the juicy details.  Website needs to be more clear on the two distinct parts - A rescue image, and a backup image.  Other than that, great work !  Doing a small deploy, and will then try some disaster recovery.
+
+Version:     Relax-and-Recover 1.14 / Git
+Validation:  Ubuntu/12.04/i386
+Submitted:   Andreas Lemke <andreas.lemke@tu-bs.de>, TU Braunschweig/Sprachenzentrum, Germany
+Date:        2013-07-17
+Features:    PXE
+Comment:     We added /usr/share/rear/output/PXE/default/82_copy_to_net.sh to transfer the PXE files to the PXE server.
+
+Version:     Relax-and-Recover 1.14-git201308130912 / 2013-08-13
+Validation:  SUSE_LINUX/12.2/i386
+Submitted:   Andreas Meyer <ameyer@bitcorner.de> bitcorner - Computertechnik
+Date:        2013-08-16
+Features:    NETFS, ISO
+Comment:     Had to install Tex as a dependency of asciidoc in a openSUSE 12.2 to be able to build a rpm-package.
+
+Version:     Relax-and-Recover 1.15 / Git
+Validation:  Debian/7.3/i386
+Submitted:   service@elektronit.de
+Date:        2014-01-09
+Features:    NETFS,ISO
+Comment:     Some Packages install needed, smb_fs is under debian 7 not available -> is now cifs-utils"
+
+Relax-and-Recover Version 1.13.0 / $Date$
+Validation:     RedHatEnterpriseServer/6/i386
+Submitted:      tdec0909@yahoo.com, Marcel Keil <marcelk@tim.de>
+Date:           2013-05-21, 2014-03-18
+Features:       LVM, VMware guest, ISO, NETFS, NSR
+Comment:        
+
+Version:     Relax-and-Recover 1.17.0 / Git
+Validation:  Fedora/21/i386
+Submitted:   Frank Crawford <frank@crawford.emu.id.au>, Australia
+Date:        2015-03-29
+Features:    LVM, MD, REQUESTRESTORE, ISO, EMAIL
+Comment:     Works, with standard Fedora RPM installation. The documentation could be a little better.
+
+Version:     Relax-and-Recover 1.17.1 / Git
+Validation:  SUSE_LINUX/12/i386
+Submitted:   Werner Flamme <werner.flamme@ufz.de>, Helmholtz-Zentrum fuer Umweltforschung GmbH - UFZ, DE
+Date:        2015-07-21
+Features:    PXE, EXTERNAL
+Comment:     adapted local.conf, copied site.conf, then everything worked fine
+
+Version:     Relax-and-Recover 1.18-git201607211617 / 2016-07-21
+Validation:  Gentoo/2.2/i386
+Submitted:   mitch@bashworks.de, Germany
+Date:        2016-07-22
+Features:    USB, NETFS
+Comment:     Modified /usr/share/rear/finalize/Linux-i386/22_install_grub2.sh, grub2 is installed, but grub2-install failed. chroot to recovered system and grub2-install worked."
+
+Version:     Relax-and-Recover 1.18 / Git
+Validation:  LinuxMint/17.3/i386
+Submitted:   Moritz Hoevels, m.hoevels@uni-koeln.de, Germany
+Date:        2016-09-29
+Features:    LVM, MD, NETFS, ISO
+Comment:     Many thanx, works out of the box, fantastic software!
+
+Version:     Relax-and-Recover 1.19 / 2016-10-03
+Validation:  RedHatEnterpriseServer/7/i386
+Submitted:   Gratien Dhaese
+Date:        2016-10-03
+Features:    LVM, RSYNC, ISO, NETFS, BAREOS
+Comment:     No issues encountered
+
+Version:     Relax-and-Recover 1.17.2 / Git
+Validation:  RedHatEnterpriseServer/7/i386
+Submitted:   JP jason@thescreaminggoat.net, Screaming Goat Networks LLC, US
+Date:        2016-11-12
+Features:    LVM, NETFS, ISO
+Comment:     Needed to install genisoimage for CentOS/RHEL 7
+
+Version:     Relax-and-Recover 2.00 / Git
+Validation:  Ubuntu/17.04/i386
+Submitted:   Robert Grasso <robert.grasso@modulonet.fr>, Home user, France
+Date:        2017-06-18
+Features:    LVM,NETFS,ISO,local incremental backup
+Comment:     needed to use NETFS in order to enable local incremental backup (home usage - thus backing up toward 127.0.0.1)"
+
+Version:     Relax-and-Recover 2.1 / 2017-06-07 
+Validation:  Debian/8.8/i386 
+Submitted:   Sayyed-Mahmoud.Ketabi@kisters.de, KISTERS AG, Germany 
+Date:        2017-06-28 
+Features:    NETFS, ISO 
+Comment:     We need a German manual for rear 
+
+Version:     Relax-and-Recover 2.1 / 2017-06-07
+Validation:  Ubuntu/16.04/i386
+Submitted:   Phil Dobbin <phildobbin@gmail.com> HorseLatitudes UK
+Date:        2017-08-20
+Features:    LVM
+Comment:     Works out-of-the-box flawless with all features
+
+Version:     Relax-and-Recover 2.2-git.2501.0f5220ec.master / 2017-09-20
+Validation:  Debian/9.1/i386
+Submitted:   Veselin Mihaylov <vm@angband.eu>
+Date:        2017-09-20
+Features:    LVM, USB
+Comment:     Works out-of-the-box without issues. The only extra config was to exclude one of the filesystems from the backup.
+
+Version:     Relax-and-Recover 2.2 / 2017-07-20
+Validation:  Debian/8.9/i386
+Submitted:   Andreas Lemke <andreas.lemke@tu-braunschweig.de>, TU Braunschweig Sprachenzentrum, Germany
+Date:        2017-09-21
+Features:    BAREOS
+Comment:

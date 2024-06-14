@@ -11,3 +11,4 @@ var/log/rear
 .vscode
 servers
 /tools/run-in-docker-script.sh
+*.html

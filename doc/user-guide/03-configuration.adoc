@@ -114,6 +114,9 @@ Use Symantec NetBackup programs
 BACKUP=NSR::
 Use EMC NetWorker (Legato)
 
+BACKUP=PPDM::
+Use Dell PowerProtect Data Manager
+
 BACKUP=BACULA::
 Use Bacula programs
 
@@ -218,19 +221,6 @@ NETFS_KEEP_OLD_BACKUP_COPY=y::
 If you want to keep the previous backup archive.
 Incremental or differential backup and NETFS_KEEP_OLD_BACKUP_COPY contradict each other so that
 +NETFS_KEEP_OLD_BACKUP_COPY+ must not be 'true' in case of incremental or differential backup.
-
-TMPDIR=/bigdisk::
-Define this variable in +/etc/rear/local.conf+ if directory +/tmp+ is too small to contain the ISO image, e.g. when using
-
-    OUTPUT=ISO
-    BACKUP=NETFS
-    BACKUP_URL=iso://backup
-    ISO_MAX_SIZE=4500
-    OUTPUT_URL=nfs://lnx01/vol/lnx01/linux_images_dr
-
-The +TMPDIR+ is picked up by the +mktemp+ command to create the +BUILD_DIR+ under +/bigdisk/tmp/rear.XXXX+
-Please be aware, that directory +/bigdisk+ must exist, otherwise, +rear+ will bail out when executing the +mktemp+ command.
-The default value of +TMPDIR+ is an empty string, therefore, by default +BUILD_DIR+ is +/tmp/rear.XXXX+
 
 Another point of interest is the +ISO_DIR+ variable to choose another location of the ISO image instead of the default location (+/var/lib/rear/output+).
 

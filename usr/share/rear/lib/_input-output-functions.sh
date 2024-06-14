@@ -407,11 +407,11 @@ function PrintError () {
 # For messages that should only appear in the log file output to the current STDERR
 # because (usually) the current STDERR is redirected to the log file:
 function Log () {
-    # RUNTIME_LOGFILE does not yet exists in case of early Error() in usr/sbin/rear
-    test -w "$RUNTIME_LOGFILE" || return 0
-    # Have a timestamp with nanoseconds precision in any case
-    # so that any subsequent Log() calls get logged with precise timestamps:
-    { local timestamp=$( date +"%Y-%m-%d %H:%M:%S.%N " )
+    { # RUNTIME_LOGFILE does not yet exists in case of early Error() in usr/sbin/rear
+      test -w "$RUNTIME_LOGFILE" || return 0
+      # Have a timestamp with nanoseconds precision in any case
+      # so that any subsequent Log() calls get logged with precise timestamps:
+      local timestamp=$( date +"%Y-%m-%d %H:%M:%S.%N " )
       local prefix="${MESSAGE_PREFIX}${timestamp}"
       # prefix_blanks has the printable characters in prefix replaced with blanks for indentation:
       local prefix_blanks="$( tr '[:print:]' ' ' <<<"$prefix" )"
@@ -448,7 +448,7 @@ function Log () {
       #   message prefix 2021-06-24 10:49:39.824719000 fist line
       #                                                second line
       #                                                third line
-      # to make that parameter expansion also works with bash version 3.1.17 in SLES10:
+      # to make that parameter expansion also work with bash version 3.1.17 in SLES10:
       log_message="${MESSAGE_PREFIX}${timestamp}${message//$LF/$LF$prefix_blanks}"
       # Append the log message explicitly to the log file to ensure that intended log messages
       # actually appear in the log file even inside { ... } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
@@ -544,6 +544,27 @@ function LogPrintError () {
 function LogToSyslog () {
     # Send a line to syslog or messages file with input string with the tag 'rear':
     { logger -t rear -i "${MESSAGE_PREFIX}$*" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+}
+
+# Remove leading space and tab characters from input lines
+# and prefix each line with the argument string if specified.
+# When no argument is specified each line is prefixed/indented with two spaces.
+# When an empty argument is specified only leading space and tab characters are removed.
+# The intent is to be able to properly indent multi-line message strings in the code and
+# output the message without the code indentation but prefixed as needed for example like
+#   message="first line
+#            second line
+#            last line"
+#   LogPrint "Message text:$LF$( TextPrefix ' | ' <<<"$message" )"
+# which results the following output
+# Message text:
+#  | first line
+#  | second line
+#  | last line
+function TextPrefix () {
+    { local prefix="${1-  }"
+      sed -e "s/^[ \t]*/$prefix/"
+    } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # Check if any of the arguments is executable (logical OR condition).
@@ -671,7 +692,7 @@ function Error () {
     # Add two spaces indentation for better readability what those extracted log file lines are.
     # Some messages could be too long to be usefully shown on the user's terminal so that they are truncated after 200 bytes:
     if test -s "$RUNTIME_LOGFILE" ; then
-        { local last_sourced_script_log_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+        { local last_sourced_script_log_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $RUNTIME_LOGFILE | grep -E -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
         if test "$last_sourced_script_log_messages" ; then
             PrintError "Some latest log messages since the last called script $last_sourced_script_filename:"
             PrintError "$last_sourced_script_log_messages"
@@ -683,7 +704,7 @@ function Error () {
     if test -f "$STDOUT_STDERR_FILE" ; then
         # We use the same extraction pipe as above because STDOUT_STDERR_FILE may also contain 'set -x' and things like that
         # because scripts could use 'set -x' and things like that as needed (e.g. diskrestore.sh runs with 'set -x'):
-        { local last_sourced_script_stdout_stderr_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $STDOUT_STDERR_FILE | egrep -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+        { local last_sourced_script_stdout_stderr_messages="$( sed -n -e "/Including .*$last_sourced_script_filename/,/+ [Bug]*Error /p" $STDOUT_STDERR_FILE | grep -E -v "^\+|Including .*$last_sourced_script_filename" | tail -n 8 | sed -e 's/^/  /' | cut -b-200 )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
         if test "$last_sourced_script_stdout_stderr_messages" ; then
             # When stdout and stderr are redirected to STDOUT_STDERR_FILE messages of the last called programs cannot be in the log
             # so we use LogPrintError and 'echo "string of messages" >>$RUNTIME_LOGFILE' (the latter avoids the timestamp prefix)
@@ -818,7 +839,7 @@ function BugError () {
     Error "
 ====================
 BUG in $caller_source:
-'$*'
+$*
 --------------------
 Please report it at $BUG_REPORT_SITE
 and include all related parts from $RUNTIME_LOGFILE
@@ -841,22 +862,28 @@ function ErrorIfDeprecated () {
     local reason="$*"
 
     local error_text="Deprecation of '$feature'
-        Reason: $reason
+        Reason:
+        $reason
 
-        This feature or code path has been deprecated in ReaR and will
-        be removed eventually. If you disagree with that, then please
-        go to https://github.com/rear/rear/issues and create an issue
-        explaining for us why we should not deprecate this code path.
+        This feature is phased out in ReaR and will be eventually removed.
+        If it is indispensable, go to https://github.com/rear/rear/issues
+        and create an issue that explains why there is no alternative to it.
 
-        Meanwhile, in order to continue using this feature, you can add
+        To disable this error and continue using this feature for now, set
         DISABLE_DEPRECATION_ERRORS+=( $feature )
-        to your ReaR configuration to disable this error.
-        
         "
-    Error "$(sed -e "s/^ *//" <<<"$error_text")"
+    # Remove leading space and tab characters (fail-safe if $reason lines are indented with tabs):
+    Error "$( sed -e 's/^[ \t]*//' <<<"$error_text" )"
 }
 
+# The ...IfError functions should no longer be used in new code and
+# when existing code is modified the existing ...IfError functions
+# should be replaced by using bash directly (see the examples below).
+#
+# Reason:
 # Using the ...IfError functions can result unexpected behaviour in certain cases.
+#
+# Examples:
 #
 # Using $? in an ...IfError function message like
 #   COMMAND
@@ -870,6 +897,20 @@ function ErrorIfDeprecated () {
 #   cat: QQQ: No such file or directory
 #   ERROR 1
 # works as expected.
+# By the way:
+# Using $? with 'if ! ...' like
+#   if ! COMMAND ; then echo "COMMAND failed with $?" ; fi
+# does not work because '!' changes/inverts '$?' for example as in
+#   # if ! cat QQQ ; then echo "cat QQQ failed with $?" ; fi
+#   cat: QQQ: No such file or directory
+#   cat QQQ failed with 0
+# cf. https://github.com/rear/rear/pull/2985#issuecomment-1545455356
+# so one should avoid 'if ! ...' like
+#   if COMMAND ; then ... ; else echo "COMMAND failed with $?" ; fi
+# for example as in
+#   # if cat QQQ ; then : ; else echo "cat QQQ failed with $?" ; fi
+#   cat: QQQ: No such file or directory
+#   cat QQQ failed with 1
 #
 # The ...IfError functions fail when 'set -e' is set
 # cf. https://github.com/rear/rear/issues/534
@@ -1131,11 +1172,15 @@ function UserInput () {
     # that would (without the delay) run in a tight loop that wastes resources (CPU, diskspace, and memory)
     # and fills up the ReaR log file (and the disk - which is a ramdisk for 'rear recover')
     # with some KiB data each second that may let 'rear recover' fail with 'out of diskspace/memory'.
-    # The default automated input interrupt timeout is 10 seconds to give the user a reasonable chance
+    # The default automated input interrupt timeout is 30 seconds to give the user a reasonable chance
     # to recognize the right automated input on his screen and interrupt it when needed:
-    local automated_input_interrupt_timeout=10
+    local automated_input_interrupt_timeout=30
     # Avoid stderr if USER_INPUT_INTERRUPT_TIMEOUT is not set or empty and ignore wrong USER_INPUT_INTERRUPT_TIMEOUT:
     test "$USER_INPUT_INTERRUPT_TIMEOUT" -ge 1 2>/dev/null && automated_input_interrupt_timeout=$USER_INPUT_INTERRUPT_TIMEOUT
+    # Have at least one second timeout when ReaR runs unattended (in particular in non-interactive mode)
+    # because 'read -t 0' would return immediately without trying to read any data:
+    local unattended_timeout=3
+    test "$USER_INPUT_UNATTENDED_TIMEOUT" -ge 1 2>/dev/null && unattended_timeout=$USER_INPUT_UNATTENDED_TIMEOUT
     local default_prompt="enter your input"
     local prompt="$default_prompt"
     # Avoid stderr if USER_INPUT_PROMPT is not set or empty:
@@ -1208,14 +1253,10 @@ function UserInput () {
     test $user_input_ID || BugError "UserInput: Option '-I user_input_ID' required"
     test "$( echo $user_input_ID | tr -c -d '[:lower:]' )" && BugError "UserInput: Option '-I' argument '$user_input_ID' must not contain lower case letters"
     declare $user_input_ID="dummy" 2>/dev/null || BugError "UserInput: Option '-I' argument '$user_input_ID' not a valid variable name"
-    # Check the non-interactive mode and throw an error if default_input was not set
+    # In non-interactive mode use a short timeout (by default 3 seconds):
     if is_true "$NON_INTERACTIVE" ; then
-        if IsInArray "$user_input_ID" "${USER_INPUT_SEEN_WITH_TIMEOUT[@]}" 2>/dev/null; then
-            Error "UserInput: non-interactive mode and repeat input for '$user_input_ID' requested while the previous attempt was answered with the default or timed out"
-        fi
-        # set timeouts to low but acceptable 3 seconds for non-interactive mode:
-        timeout=3
-        automated_input_interrupt_timeout=3
+        timeout=$unattended_timeout
+        automated_input_interrupt_timeout=$unattended_timeout
     fi
     # Shift away the options and arguments:
     shift "$(( OPTIND - 1 ))"
@@ -1318,7 +1359,13 @@ function UserInput () {
     if test "$default_and_timeout" ; then
         is_true "$confidential_mode" && UserOutput "($default_and_timeout)" || LogUserOutput "($default_and_timeout)"
     fi
-    # Prepare the 'read' call:
+    # In non-interactive mode error out if things do not proceed with default or automated input or without input and timeout:
+    if is_true "$NON_INTERACTIVE" ; then
+        if IsInArray "$user_input_ID" "${USER_INPUT_SEEN_WITH_TIMEOUT[@]}" 2>/dev/null ; then
+            Error "UserInput: non-interactive mode and repeat input request for '$user_input_ID' (previous attempt got default or automated input or timed out)"
+        fi
+    fi
+    # Prepare the 'read $read_options_and_arguments ...' call:
     local read_options_and_arguments=""
     is_true "$raw_input" && read_options_and_arguments+=" -r"
     is_true "$silent_input" && read_options_and_arguments+=" -s"

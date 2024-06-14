@@ -55,11 +55,11 @@ for dummy in "once" ; do
     UEFI_BOOTLOADER=$( find /boot/efi -name 'elilo.efi' | tail -1 )
     test -f "$UEFI_BOOTLOADER" && continue
     # In case we have a 64-bit systemd bootloader we might be lucky with next statement:
-    UEFI_BOOTLOADER=$( find /boot/EFI -name 'BOOTX64.EFI' | tail -1 )
+    UEFI_BOOTLOADER=$( find /boot/EFI -name "BOOT${EFI_ARCH_UPPER}.EFI" | tail -1 )
     test -f "$UEFI_BOOTLOADER" && continue
     # Try more generic finds in whole /boot with case insensitive filename matching.
     # On older systems where 'find' does not support '-iname' this does not make it really worse because there 'find' just fails.
-    for find_name_pattern in 'grub*.efi' 'elilo.efi' 'BOOTX64.EFI' ; do
+    for find_name_pattern in 'grub*.efi' 'elilo.efi' "BOOT${EFI_ARCH_UPPER}.EFI" ; do
         # No need to test if find_name_pattern is empty because 'find' does not find anything with empty '-iname':
         UEFI_BOOTLOADER=$( find /boot -iname "$find_name_pattern" | tail -1 )
         # Continue with the code after the outer 'for' loop:
@@ -120,7 +120,7 @@ for dummy in "once" ; do
             LogPrint "EFI variables directory $SYSFS_DIR_EFI_VARS is neither /sys/firmware/efi/vars nor /sys/firmware/efi/efivars (ReaR supports only those)"
             LogPrint "This is expected if you try to make a UEFI boot media on a BIOS system"
             # try some path guessing now
-            UEFI_BOOTLOADER=$( find /usr/lib/grub -iname "grubx64.efi" | tail -1 )
+            UEFI_BOOTLOADER=$( find /usr/lib/grub -iname "grub${EFI_ARCH}.efi" | tail -1 )
             # Continue with the code after the outer 'for' loop:
             test -f "$UEFI_BOOTLOADER" && continue 2
             ;;

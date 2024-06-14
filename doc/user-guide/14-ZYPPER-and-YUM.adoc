@@ -95,7 +95,7 @@ longer required after other RPMs had been removed (those are probably orphans).
 *Option: COPY_AS_IS_ZYPPER and COPY_AS_IS_EXCLUDE_ZYPPER*
 
 The COPY_AS_IS_ZYPPER array contains by default basically what `rpm -qc 
-zypper ; rpm -ql libzypp | egrep -v 'locale|man'` shows (currently determined 
+zypper ; rpm -ql libzypp | grep -Ev 'locale|man'` shows (currently determined 
 on openSUSE Leap 42.1) plus the special _/etc/products.d/baseproduct_ link 
 and whereto it points and rpm because that is required by zypper/libzypp and
 finally all kernel modules because otherwise modules like 'isofs' and some 

@@ -1,0 +1,7 @@
+summary:
+    Backup and restore tests
+
+discover:
+    how: fmf
+    url: https://github.com/rear/rear-integration-tests
+    path: tests

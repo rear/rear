@@ -21,7 +21,7 @@
 
 FILES="/etc/fstab /boot/grub/menu.lst /boot/grub2/grub.cfg /boot/grub/device.map /boot/efi/*/*/grub.cfg /etc/lvm/lvm.conf /etc/lilo.conf /etc/yaboot.conf /etc/default/grub_installdevice"
 
-OLD_ID_FILE="${VAR_DIR}/recovery/diskbyid_mappings"
+OLD_ID_FILE="$VAR_DIR/recovery/diskbyid_mappings"
 NEW_ID_FILE="$TMP_DIR/diskbyid_mappings"
 
 [ ! -s "$OLD_ID_FILE" ] && return 0
@@ -97,7 +97,7 @@ for file in $FILES; do
             # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
             # the symlink target is considered to not be a restored file that needs to be patched
             # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
-            if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
+            if echo $symlink_target | grep -Eq '/proc/|/sys/|/dev/|/run/' ; then
                 LogPrint "Skip patching symlink $realfile target $symlink_target on /proc/ /sys/ /dev/ or /run/"
                 continue
             fi
@@ -109,7 +109,7 @@ for file in $FILES; do
         fi
     fi
     # keep backup
-    cp $v "$realfile" "${realfile}.rearbak"
+    cp $v "$realfile" "$realfile.rearbak"
     # we should consider creating a sed script within a string
     # and then call sed once (as done other times)
     while read ID DEV_NAME ID_NEW; do

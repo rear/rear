@@ -84,7 +84,7 @@ component that's part of it. The reason is that no mounted filesystem
 uses these two disks. After all, you don't want to recreate your
 backup disk when you're recovering your system.
 
-If we mount the filesystem on +/dev/mapper/backup-backup+ on +/media/backup+,
+If we mount the filesystem on +/dev/mapper/backup-backup+ on +/backup+,
 Relax-and-Recover will think that it's necessary to recreate the filesystem:
 ----------------------------------
 disk /dev/sda 160041885696 msdos
@@ -116,7 +116,7 @@ fs /dev/mapper/system-var /var ext4 uuid=a12bb95f-99f2-42c6-854f-1cb3f144d662 la
 fs /dev/mapper/system-vmxfs /vmware xfs uuid=7457d2ab-8252-4f41-bab6-607316259975 label=  options=rw,noatime
 fs /dev/mapper/system-kvm /kvm ext4 uuid=173ab1f7-8450-4176-8cf7-c09b47f5e3cc label= blocksize=4096 reserved_blocks=256000 max_mounts=21 check_interval=180d options=rw,noatime,commit=0
 fs /dev/sda1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksize=1024 reserved_blocks=10238 max_mounts=35 check_interval=180d options=rw,commit=0
-fs /dev/mapper/backup-backup /media/backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
+fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
 crypt /dev/mapper/disk /dev/sda2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 ----------------------------------
@@ -130,6 +130,18 @@ variable in +default.conf+ prevents Relax-and-Recover from overwriting
 multipath disks. Typically, they are part of the SAN disaster recovery
 strategy. However, there can be cases where you want to recover them. The
 information is retained in +disklayout.conf+.
+
+Some filesystems are excluded from the layout file by default if their
+mountpoints are located under certain directories. This behavior is
+controlled by the +AUTOEXCLUDE_PATH+ variable. It is an array of
+paths. If a mountpoint of a filesystem is under one of the paths, the
+filesystem is excluded. The default value includes +/media+, +/mnt+
+and +/tmp+. See +default.conf+ for the full list. Note that if one of
+the paths is itself a mountpoint, the filesystem is not excluded. So,
+if +/media+ is a mounted filesystem, it will not be excluded, but if
+we mount the +/dev/mapper/backup-backup+ filesystem on
++/media/backup+, it will get excluded, as the mountpoint is under
++/media+.
 
 === Manual excludes
 It seems prudent to prevent the external drives from ever being backed-up or overwritten. The default configuration contains these lines:
@@ -149,7 +161,7 @@ EXCLUDE_RESTORE=()
 
 To prevent an inadvertently mounted backup filesystem being added to the restore list, the easiest way is to add the filesystem to the +EXCLUDE_RECREATE+ array.
 ----------------------------------
-EXCLUDE_RECREATE+=( "fs:/media/backup" )
+EXCLUDE_RECREATE+=( "fs:/backup" )
 ----------------------------------
 
 The layout file is as expected:
@@ -183,7 +195,7 @@ fs /dev/mapper/system-var /var ext4 uuid=a12bb95f-99f2-42c6-854f-1cb3f144d662 la
 fs /dev/mapper/system-vmxfs /vmware xfs uuid=7457d2ab-8252-4f41-bab6-607316259975 label=  options=rw,noatime
 fs /dev/mapper/system-kvm /kvm ext4 uuid=173ab1f7-8450-4176-8cf7-c09b47f5e3cc label= blocksize=4096 reserved_blocks=256000 max_mounts=21 check_interval=180d options=rw,noatime,commit=0
 fs /dev/sda1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksize=1024 reserved_blocks=10238 max_mounts=35 check_interval=180d options=rw,commit=0
-# fs /dev/mapper/backup-backup /media/backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
+# fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
 crypt /dev/mapper/disk /dev/sda2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 ----------------------------------
@@ -323,7 +335,7 @@ fs /dev/mapper/system-var /var ext4 uuid=a12bb95f-99f2-42c6-854f-1cb3f144d662 la
 fs /dev/mapper/system-vmxfs /vmware xfs uuid=7457d2ab-8252-4f41-bab6-607316259975 label=  options=rw,noatime
 fs /dev/mapper/system-kvm /kvm ext4 uuid=173ab1f7-8450-4176-8cf7-c09b47f5e3cc label= blocksize=4096 reserved_blocks=256000 max_mounts=21 check_interval=180d options=rw,noatime,commit=0
 fs /dev/sdb1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksize=1024 reserved_blocks=10238 max_mounts=35 check_interval=180d options=rw,commit=0
-# fs /dev/mapper/backup-backup /media/backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
+# fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
 crypt /dev/mapper/disk /dev/sdb2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 
@@ -372,7 +384,7 @@ fs /dev/mapper/system-var /var ext4 uuid=a12bb95f-99f2-42c6-854f-1cb3f144d662 la
 #fs /dev/mapper/system-vmxfs /vmware xfs uuid=7457d2ab-8252-4f41-bab6-607316259975 label=  options=rw,noatime
 #fs /dev/mapper/system-kvm /kvm ext4 uuid=173ab1f7-8450-4176-8cf7-c09b47f5e3cc label= blocksize=4096 reserved_blocks=256000 max_mounts=21 check_interval=180d options=rw,noatime,commit=0
 fs /dev/sdb1 /boot ext3 uuid=f6b08566-ea5e-46f9-8f73-5e8ffdaa7be6 label= blocksize=1024 reserved_blocks=10238 max_mounts=35 check_interval=180d options=rw,commit=0
-# fs /dev/mapper/backup-backup /media/backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
+# fs /dev/mapper/backup-backup /backup ext4 uuid=da20354a-dc4c-4bef-817c-1c92894bb002 label= blocksize=4096 reserved_blocks=655360 max_mounts=24 check_interval=180d options=rw
 swap /dev/mapper/system-swap uuid=9f347fc7-1605-4788-98fd-fca828beedf1 label=
 crypt /dev/mapper/disk /dev/sdb2 cipher=aes-xts-plain hash=sha1 uuid=beafe67c-d9a4-4992-80f1-e87791a543bb
 ----------------------------------

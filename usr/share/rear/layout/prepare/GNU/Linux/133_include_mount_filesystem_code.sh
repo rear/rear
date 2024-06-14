@@ -29,6 +29,7 @@ mount_fs() {
         case $name in
             (options)
                 # Do not mount nodev, as chrooting later on would fail:
+                # FIXME: naive approach, will replace any "nodev" inside longer options/values
                 value=${value//nodev/dev}
                 # btrfs mount options like subvolid=259 or subvol=/@/.snapshots/1/snapshot
                 # from the old system cannot work here for recovery because btrfs subvolumes
@@ -36,13 +37,8 @@ mount_fs() {
                 # so that those mount options are removed here. All btrfs subvolume handling
                 # happens in the btrfs_subvolumes_setup_SLES function in 136_include_btrfs_subvolumes_SLES_code.sh
                 # or in the btrfs_subvolumes_setup_generic function in 135_include_btrfs_subvolumes_generic_code.sh
-                # First add a comma at the end so that it is easier to remove a mount option at the end:
-                value=${value/%/,}
-                # Remove all subvolid= and subvol= mount options (the extglob shell option is enabled in rear):
-                value=${value//subvolid=*([^,]),/}
-                value=${value//subvol=*([^,]),/}
-                # Remove all commas at the end:
-                mountopts=${value/%,/}
+                # Remove all subvolid= and subvol= mount options:
+                mountopts="$( remove_mount_options_values $value subvolid subvol )"
                 ;;
         esac
     done
@@ -145,6 +141,27 @@ mount_fs() {
             # the first mount will do perform the basic mount, the second mount (remount) will try for xattr
             # if xattr are not support, the mount will fail, however, the first mount will still be in effect and not cause any errors
             echo "mount $mountopts,remount,user_xattr $device $TARGET_FS_ROOT$mountpoint"
+            ) >> "$LAYOUT_CODE"
+            ;;
+        (xfs)
+            # remove logbsize=... mount option. It is a purely performance/memory usage optimization option,
+            # which can lead to mount failures, because it must be an integer multiple of the log stripe unit
+            # and the log stripe unit can be different in the recreated filesystem from the original filesystem
+            # (for example when using MKFS_XFS_OPTIONS, or in some exotic situations involving an old filesystem,
+            # see GitHub issue #2777 ).
+            # If logbsize is not an integer multiple of the log stripe unit, mount fails with the warning
+            # "XFS (...): logbuf size must be greater than or equal to log stripe size"
+            # in the kernel log
+            # (and a confusing error message
+            # "mount: ...: wrong fs type, bad option, bad superblock on ..., missing codepage or helper program, or other error."
+            # from the mount command), causing the layout restoration in the recovery process to fail.
+            # Wrong sunit/swidth can cause mount to fail as well, with this in the kernel log:
+            # "kernel: XFS (...): alignment check failed: sunit/swidth vs. agsize",
+            # so remove the sunit=.../swidth=... mount options as well.
+            mountopts="$( remove_mount_options_values "$mountopts" logbsize sunit swidth )"
+            (
+            echo "mkdir -p $TARGET_FS_ROOT$mountpoint"
+            echo "mount $mountopts $device $TARGET_FS_ROOT$mountpoint"
             ) >> "$LAYOUT_CODE"
             ;;
         (*)

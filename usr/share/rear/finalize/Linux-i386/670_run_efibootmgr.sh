@@ -47,7 +47,10 @@ fi
 # accounting for possible trailing slashes in TARGET_FS_ROOT
 esp_mountpoint_inside="${esp_mountpoint#${TARGET_FS_ROOT%%*(/)}}"
 
-boot_efi_parts=$( find_partition "fs:$esp_mountpoint_inside" fs )
+# Find all partitions with the ESP mount point and skip all other transitive
+# 'fs' and 'btrfsmountedsubvol' components in LAYOUT_DEPS (var/lib/rear/layout/diskdeps.conf)
+# to support ESP on software RAID (cf. https://github.com/rear/rear/pull/2608).
+boot_efi_parts=$( find_partition "fs:$esp_mountpoint_inside" 'btrfsmountedsubvol fs' )
 if ! test "$boot_efi_parts" ; then
     LogPrint "Unable to find ESP $esp_mountpoint_inside in layout"
     LogPrint "Trying to determine device currently mounted at $esp_mountpoint as fallback"

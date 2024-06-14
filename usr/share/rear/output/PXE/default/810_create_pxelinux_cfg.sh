@@ -7,6 +7,7 @@
 
 # We got PXE_KERNEL and PXE_INITRD set in the previous script.
 
+local pxe_local_path
 if test "$PXE_CONFIG_URL" ; then
     # E.g. PXE_CONFIG_URL=nfs://server/export/nfs/tftpboot/pxelinux.cfg
     # On 'server' the directory /export/nfs/tftpboot/pxelinux.cfg must exist.
@@ -16,26 +17,26 @@ if test "$PXE_CONFIG_URL" ; then
         Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
     fi
     mount_url $PXE_CONFIG_URL $BUILD_DIR/tftpbootfs $BACKUP_OPTIONS
-    PXE_LOCAL_PATH=$BUILD_DIR/tftpbootfs
+    pxe_local_path=$BUILD_DIR/tftpbootfs
 else
-    # legacy way using PXE_LOCAL_PATH default
-    PXE_LOCAL_PATH=$PXE_CONFIG_PATH
+    # legacy way using pxe_local_path default
+    pxe_local_path=$PXE_CONFIG_PATH
 fi
 
 # PXE_CONFIG_PREFIX is by default 'rear-' (see default.conf).
-# PXE_CONFIG_FILE contains the PXELINUX boot configuration of $HOSTNAME
-PXE_CONFIG_FILE="${PXE_CONFIG_PREFIX}$HOSTNAME"
+# pxe_config_file contains the PXELINUX boot configuration of $HOSTNAME
+local pxe_config_file="${PXE_CONFIG_PREFIX}$HOSTNAME"
 if test "$PXE_CONFIG_URL" ; then
     if is_true "$PXE_CONFIG_GRUB_STYLE" ; then
-        make_pxelinux_config_grub >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE"
+        make_pxelinux_config_grub >"$pxe_local_path/$pxe_config_file"
     else
-        make_pxelinux_config >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE"
+        make_pxelinux_config >"$pxe_local_path/$pxe_config_file"
     fi
-    chmod 444 "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE"
+    chmod 444 "$pxe_local_path/$pxe_config_file"
 else
-    # legacy way using PXE_LOCAL_PATH default
+    # legacy way using pxe_local_path default
     local pxe_template_file=$( get_template "PXE_pxelinux.cfg" )
-    cat >"$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" <<EOF
+    cat >"$pxe_local_path/$pxe_config_file" <<EOF
     $( test -s "$pxe_template_file" && cat "$pxe_template_file" )
     display $OUTPUT_PREFIX_PXE/$PXE_MESSAGE
     say ----------------------------------------------------------
@@ -46,13 +47,13 @@ else
 EOF
 fi
 
-pushd "$PXE_LOCAL_PATH" >/dev/null || Error "PXE_LOCAL_PATH '$PXE_LOCAL_PATH' does not exist"
+pushd "$pxe_local_path" >/dev/null || Error "pxe_local_path '$pxe_local_path' does not exist"
 
 if test "$PXE_CREATE_LINKS" -a "$PXE_REMOVE_OLD_LINKS" ; then
     # remove old symlinks
     local symlink
     find . -maxdepth 1 -type l | while read symlink ; do
-        test "$( readlink -s $symlink )" = "$PXE_CONFIG_FILE" && rm -f $symlink
+        test "$( readlink -s $symlink )" = "$pxe_config_file" && rm -f $symlink
     done
 fi
 
@@ -70,15 +71,15 @@ case "$PXE_CREATE_LINKS" in
             # cut trailing CIDR or netmask e.g. '192.168.100.101/24' -> '192.168.100.101'
             IP=${IP%/*}
             if has_binary gethostip &>/dev/null ; then
-                ln -sf $v "$PXE_CONFIG_FILE" $pxe_link_prefix$( gethostip -x $IP )
+                ln -sf $v "$pxe_config_file" $pxe_link_prefix$( gethostip -x $IP )
                 # to capture the whole subnet as well
-                ln -sf $v "$PXE_CONFIG_FILE" $pxe_link_prefix$( gethostip -x $IP | cut -c 1-6 )
+                ln -sf $v "$pxe_config_file" $pxe_link_prefix$( gethostip -x $IP | cut -c 1-6 )
             else
                 # if gethostip is not available on your platform like ppc64,
                 # use printf to output IP in hex mode
-                ln -sf $v "$PXE_CONFIG_FILE" $pxe_link_prefix$( printf '%02X' ${IP//./ } )
+                ln -sf $v "$pxe_config_file" $pxe_link_prefix$( printf '%02X' ${IP//./ } )
                 # to capture the whole subnet as well
-                ln -sf $v "$PXE_CONFIG_FILE" $pxe_link_prefix$( printf '%02X' ${IP//./ } | cut -c 1-6 )
+                ln -sf $v "$pxe_config_file" $pxe_link_prefix$( printf '%02X' ${IP//./ } | cut -c 1-6 )
             fi
         done
         ;;
@@ -86,11 +87,11 @@ case "$PXE_CREATE_LINKS" in
         # look at all devices that have link/ether
 		ip link | grep 'link/ether' | while read headword MAC junk ; do
             # in MAC replace ':' with '-' e.g. 'a1:b2:c3:d4:e5:f6' -> 'a1-b2-c3-d4-e5-f6'
-            ln -sf $v "$PXE_CONFIG_FILE" ${pxe_link_prefix}01-${MAC//:/-}
+            ln -sf $v "$pxe_config_file" ${pxe_link_prefix}01-${MAC//:/-}
         done
         ;;
     ("")
-        Log "Not creating symlinks to PXELINUX config file '$PXE_CONFIG_FILE' (empty PXE_CREATE_LINKS)"
+        Log "Not creating symlinks to PXELINUX config file '$pxe_config_file' (empty PXE_CREATE_LINKS)"
         ;;
     (*)
         Error "Invalid PXE_CREATE_LINKS '$PXE_CREATE_LINKS' (must be MAC or IP or '')"
@@ -100,9 +101,9 @@ esac
 popd >/dev/null
 
 if test "$PXE_CONFIG_URL" ; then
-    LogPrint "Created PXELINUX config '$PXE_CONFIG_FILE' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_URL"
-    umount_url $PXE_TFTP_URL $BUILD_DIR/tftpbootfs
+    LogPrint "Created PXELINUX config '$pxe_config_file' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_URL"
+    umount_url $PXE_TFTP_UPLOAD_URL $BUILD_DIR/tftpbootfs
 else
-    LogPrint "Created PXELINUX config '$PXE_CONFIG_FILE' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
-    RESULT_FILES+=( "$PXE_LOCAL_PATH/$PXE_CONFIG_FILE" )
+    LogPrint "Created PXELINUX config '$pxe_config_file' and symlinks for $PXE_CREATE_LINKS adresses in $PXE_CONFIG_PATH"
+    RESULT_FILES+=( "$pxe_local_path/$pxe_config_file" )
 fi

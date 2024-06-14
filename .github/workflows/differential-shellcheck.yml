@@ -18,20 +18,20 @@ jobs:
 
     steps:
       - name: Repository checkout
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
         with:
           fetch-depth: 0
 
       - id: ShellCheck
         name: Differential ShellCheck
-        uses: redhat-plumbers-in-action/differential-shellcheck@ac4483d8c6713bd2011037f44fe626989468af74
+        uses: redhat-plumbers-in-action/differential-shellcheck@60c9f2b924a9c5a2ddbb25e7b23e8e11b56faab9
         with:
           severity: error
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - if: ${{ always() }}
         name: Upload artifact with ShellCheck defects in SARIF format
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce
+        uses: actions/upload-artifact@cf8714cfeaba5687a442b9bcb85b29e23f468dfa
         with:
           name: Differential ShellCheck SARIF
           path: ${{ steps.ShellCheck.outputs.sarif }}

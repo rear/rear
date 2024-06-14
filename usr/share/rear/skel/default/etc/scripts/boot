@@ -1,11 +1,21 @@
 #!/bin/bash
 # Relax-and-Recover
-# disable console logging for kernel messages
-dmesg -n1
+
+# Limit console logging for 'dmesg' messages to level 5
+# (i.e. what kernel messages appear intermixed with ReaR messages on the console)
+# where level 5 means to show only the following kernel messages (cf. 'dmesg -h')
+#   emerg - system is unusable
+#   alert - action must be taken immediately
+#    crit - critical conditions
+#     err - error conditions
+#    warn - warning conditions
+# We need also kernel warning messages because some errors are reported as warning
+# cf. https://github.com/rear/rear/issues/3107#issuecomment-1855560152
+dmesg -n 5
 
 # basic mounts
-mount -t proc -n none /proc
-mount -t sysfs none /sys
+mountpoint /proc || mount -t proc -n none /proc
+mountpoint /sys || mount -t sysfs none /sys
 
 if type udevd &>/dev/null && ! type udevinfo &>/dev/null; then
     ### we use udevinfo to filter out old udev versions (<106) that don't
@@ -13,7 +23,7 @@ if type udevd &>/dev/null && ! type udevinfo &>/dev/null; then
     udev_version=$(udevd --version)
     if [[ "$udev_version" -gt 175 ]]; then
         ### udev > 175 needs devtmpfs
-        mount -t devtmpfs none /dev
+        mountpoint /dev || mount -t devtmpfs none /dev
     fi
 fi
 
@@ -26,7 +36,7 @@ if [[ ! -L /dev/fd ]] ; then
     ln -s /proc/self/fd /dev/fd
 fi
 
-mount -t devpts -o gid=5,mode=620 none /dev/pts
+mountpoint /dev/pts || mount -t devpts -o gid=5,mode=620 none /dev/pts
 
 cat /proc/mounts >/etc/mtab 2>/dev/null
 
