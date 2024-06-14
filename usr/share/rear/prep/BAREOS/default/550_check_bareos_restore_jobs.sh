@@ -8,7 +8,7 @@ mapfile -t restore_jobs < <( get_available_restore_job_names )
 LogPrint "available restore jobs:" "${restore_jobs[@]}"
 
 if (( ${#restore_jobs[@]} == 0 )); then
-    Error "No Bareos restore job found"
+    Error "No Bareos restore jobs found"
 fi
 
 if [ "$BAREOS_RESTORE_JOB" ]; then
@@ -19,12 +19,10 @@ if [ "$BAREOS_RESTORE_JOB" ]; then
     return
 fi
 
-local userinput_default
 if (( ${#restore_jobs[@]} == 1 )); then
-    userinput_default="-D ${restore_jobs[0]}"
+    BAREOS_RESTORE_JOB="${restore_jobs[0]}"
+    echo "BAREOS_RESTORE_JOB=$BAREOS_RESTORE_JOB" >> "$VAR_DIR/bareos.conf"
+    return
 fi
 
-until IsInArray "$BAREOS_RESTORE_JOB" "${restore_jobs[@]}" ; do
-    BAREOS_RESTORE_JOB="$( UserInput -I BAREOS_RESTORE_JOB $userinput_default -p "Choose Bareos restore jobs: " "${restore_jobs[@]}" )"
-done
-echo "BAREOS_RESTORE_JOB=$BAREOS_RESTORE_JOB" >> "$VAR_DIR/bareos.conf"
+Error "Could not determine which restore job to use. Please configure it using BAREOS_RESTORE_JOB in $CONFIG_DIR/local.conf"

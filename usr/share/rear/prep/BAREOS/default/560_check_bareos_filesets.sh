@@ -7,7 +7,7 @@
 # This description also contains the used fileset.
 # Example:
 #
-# bconsole <<< "llist backups client=client1"
+# bcommand "llist backups client=client1"
 #            jobid: 3
 #              job: backup-client1.2024-05-29_16.03.47_08
 #             name: backup-client1
@@ -78,12 +78,10 @@ if [ "$BAREOS_FILESET" ]; then
     return
 fi
 
-local userinput_default
 if (( ${#filesets[@]} == 1 )); then
-    userinput_default="-D ${filesets[0]}"
+    BAREOS_FILESET="${filesets[0]}"
+    echo "BAREOS_FILESET=$BAREOS_FILESET" >> "$VAR_DIR/bareos.conf"
+    return
 fi
 
-until IsInArray "$BAREOS_FILESET" "${filesets[@]}" ; do
-    BAREOS_FILESET="$( UserInput -I BAREOS_FILESET $userinput_default -p "Choose Bareos fileset: " "${filesets[@]}" )"
-done
-echo "BAREOS_FILESET=$BAREOS_FILESET" >> "$VAR_DIR/bareos.conf"
+Error "Could not determine which restore fileset to use. Please configure it using BAREOS_FILESET in $CONFIG_DIR/local.conf"
