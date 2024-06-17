@@ -80,7 +80,11 @@ fi
 
 if (( ${#filesets[@]} == 1 )); then
     BAREOS_FILESET="${filesets[0]}"
-    echo "BAREOS_FILESET=$BAREOS_FILESET" >> "$VAR_DIR/bareos.conf"
+    {
+        echo "# added by prep/BAREOS/default/560_check_bareos_filesets.sh"
+        echo "BAREOS_FILESET=$BAREOS_FILESET"
+        echo
+    } >> "$ROOTFS_DIR/etc/rear/rescue.conf"
     return
 fi
 

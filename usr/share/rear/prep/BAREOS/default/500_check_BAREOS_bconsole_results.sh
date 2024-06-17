@@ -25,7 +25,11 @@ else
     else
         Error "Could not determine this system as Bareos client. Please configure it using BAREOS_CLIENT in $CONFIG_DIR/local.conf"
     fi
-    echo "BAREOS_CLIENT=$BAREOS_CLIENT" >> "$VAR_DIR/bareos.conf"
+    {
+        echo "# added by prep/BAREOS/default/500_check_bareos_client_configured.sh"
+        echo "BAREOS_CLIENT=$BAREOS_CLIENT"
+        echo
+    } >> "$ROOTFS_DIR/etc/rear/rescue.conf"
 fi
 
 # bareos_ensure_client_is_available exists on error.

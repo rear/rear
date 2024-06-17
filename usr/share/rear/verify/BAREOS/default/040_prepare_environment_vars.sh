@@ -1,10 +1,3 @@
-# read config vars defined during prep.
-source "$VAR_DIR/bareos.conf"
-
-if [ -z "$BAREOS_CLIENT" ]; then
-    export BAREOS_CLIENT="$HOSTNAME-fd"
-fi
-
 if [ -n "$BAREOS_FILESET" ]; then
     export FILESET="fileset=\"$BAREOS_FILESET\""
 fi

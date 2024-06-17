@@ -21,7 +21,11 @@ fi
 
 if (( ${#restore_jobs[@]} == 1 )); then
     BAREOS_RESTORE_JOB="${restore_jobs[0]}"
-    echo "BAREOS_RESTORE_JOB=$BAREOS_RESTORE_JOB" >> "$VAR_DIR/bareos.conf"
+    {
+        echo "# added by prep/BAREOS/default/550_check_bareos_restore_jobs.sh"
+        echo "BAREOS_RESTORE_JOB=$BAREOS_RESTORE_JOB"
+        echo
+    } >> "$ROOTFS_DIR/etc/rear/rescue.conf"
     return
 fi
 

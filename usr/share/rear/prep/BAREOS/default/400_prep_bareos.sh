@@ -6,16 +6,17 @@ COPY_AS_IS_EXCLUDE+=( "${COPY_AS_IS_EXCLUDE_BAREOS[@]}" )
 PROGS+=( "${PROGS_BAREOS[@]}" )
 REQUIRED_PROGS+=( "${REQUIRED_PROGS_BAREOS[@]}" )
 
-### empty config file filled by "prep" (and used by restore)
-true > "$VAR_DIR/bareos.conf"
-
 if [ -z "$BAREOS_RESTORE_MODE" ]; then
     if [ "$BEXTRACT_DEVICE" ] || [ "$BEXTRACT_VOLUME" ]; then
         BAREOS_RESTORE_MODE="bextract"
     else
         BAREOS_RESTORE_MODE="bconsole"
     fi
-    echo "BAREOS_RESTORE_MODE=$BAREOS_RESTORE_MODE" >> "$VAR_DIR/bareos.conf"
+    {
+        echo "# added by prep/BAREOS/default/400_prep_bareos.sh"
+        echo "BAREOS_RESTORE_MODE=$BAREOS_RESTORE_MODE"
+        echo
+    } >> "$ROOTFS_DIR/etc/rear/rescue.conf"
 fi
 
 LogPrint "BAREOS_RESTORE_MODE=$BAREOS_RESTORE_MODE"
