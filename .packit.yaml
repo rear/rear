@@ -6,12 +6,6 @@ jobs:
   - centos-stream-8-x86_64
   - centos-stream-9-x86_64
   trigger: pull_request
-- job: upstream_koji_build
-  scratch: True
-  targets:
-  - fedora-latest-stable
-  - epel-all
-  trigger: pull_request
 - job: tests
   trigger: pull_request
   metadata:
