@@ -88,4 +88,4 @@ if (( ${#filesets[@]} == 1 )); then
     return
 fi
 
-Error "Could not determine which restore fileset to use. Please configure it using BAREOS_FILESET in $CONFIG_DIR/local.conf"
+Error "Could not determine which restore fileset to use, no BAREOS_FILESET specified."

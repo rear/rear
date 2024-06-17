@@ -23,7 +23,7 @@ else
     elif IsInArray "$HOSTNAME-fd" "${clients[@]}"; then
         BAREOS_CLIENT="$HOSTNAME-fd"
     else
-        Error "Could not determine this system as Bareos client. Please configure it using BAREOS_CLIENT in $CONFIG_DIR/local.conf"
+        Error "Could not determine this system as Bareos client, no BAREOS_CLIENT specified."
     fi
     {
         echo "# added by prep/BAREOS/default/500_check_bareos_client_configured.sh"

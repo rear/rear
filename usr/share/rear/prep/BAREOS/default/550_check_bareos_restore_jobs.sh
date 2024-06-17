@@ -29,4 +29,4 @@ if (( ${#restore_jobs[@]} == 1 )); then
     return
 fi
 
-Error "Could not determine which restore job to use. Please configure it using BAREOS_RESTORE_JOB in $CONFIG_DIR/local.conf"
+Error "Could not determine which restore job to use, no BAREOS_RESTORE_JOB specified."
