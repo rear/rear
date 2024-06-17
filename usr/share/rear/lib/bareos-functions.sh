@@ -113,7 +113,8 @@ function bareos_ensure_client_is_available()
 
     local rc
     local bconsole_client_status
-    # With bcommand the strip information normally not relevant ("Connecting to the Bareos Director", ...). To get all status information we use the plain bconsole command here.
+    # With bcommand the strip information normally not relevant ("Connecting to the Bareos Director", ...).
+    # To get all status information we use the plain bconsole command here.
     bconsole_client_status=$(bconsole <<< "status client=$client")
     rc=$?
     if [ $rc -eq 0 ]; then

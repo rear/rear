@@ -24,13 +24,9 @@ else
         Error "bareos-fd: configuration invalid"
     fi
 
-    while ! systemctl is-active bareos-fd.service; do
-        (( count > 3 )) && Error "Failed to start bareos-fd.service, giving up."
-        (( count++ ))
-        LogPrint "bareos-fd not running, trying to start (attempt $count)"
-        systemctl start bareos-fd.service
-        sleep 3
-    done    
+    if ! systemctl start bareos-fd.service; then
+        Error "Failed to start bareos-fd.service"
+    fi
 
     if ! bconsole -t; then
         Error "Bareos bconsole configuration invalid"
