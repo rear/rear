@@ -10,7 +10,7 @@ cat <<EOF >"$VAR_DIR/bootstrap.txt"
 Volume=PLEASE-EDIT-BOOTSTRAP
 
 ### A (list of) Client name(s) to be matched on the current Volume
-#Client=$(hostname -s)-fd
+#Client=$BAREOS_CLIENT
 
 ### A (list or range of) JobId(s) to be selected from the current Volume
 #JobId=18
@@ -30,4 +30,3 @@ Volume=PLEASE-EDIT-BOOTSTRAP
 ### The total number of files that will be restored for this Volume.
 #Count=157
 EOF
-#############################################################################

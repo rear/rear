@@ -7,5 +7,5 @@
 #
 
 local bareos_fd_service
-bareos_fd_service="$(systemctl cat bareos-fd.service)"
+bareos_fd_service="$( systemctl cat bareos-fd.service )"
 sed -r -e '/^Requires=/d' -e 's|^(ExecStart=.*bareos-fd .*)$|\1 -r|' <<< "$bareos_fd_service" > "$ROOTFS_DIR/usr/lib/systemd/system/bareos-fd.service"
