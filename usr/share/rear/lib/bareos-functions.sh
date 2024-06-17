@@ -24,8 +24,6 @@ function bcommand()
 
     local out
     out=$(mktemp)
-    local bconsole_full_output
-    bconsole_full_output=$(mktemp)
     (
         for i in "${pre_commands[@]}"; do
             echo "$i"
@@ -34,7 +32,7 @@ function bcommand()
         for i in "$@"; do
             echo "$i"
         done
-    ) | bconsole > "$bconsole_full_output"
+    ) | bconsole 1>&2
     rc=$?
 
     # remove submitted commands from output.
@@ -45,7 +43,7 @@ function bcommand()
     sed_args+=")"
 
     sed -r -e "/^${sed_args}$/d" -e "s/${sed_args}$//" < "$out"
-    rm "$out" "$bconsole_full_output"
+    rm "$out"
     return $rc
 }
 
