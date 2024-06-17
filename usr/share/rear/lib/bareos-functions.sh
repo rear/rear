@@ -197,6 +197,37 @@ function get_last_restore_jobid()
     jq --exit-status --raw-output '[ .result.jobs[].jobid ] | max' <<< "$bcommand_result"
 }
 
+function get_jobstatus_exitcode()
+{
+    local jobstatus="$1"
+
+    # example output of 'bcommand_json ".jobstatus=E"':
+    # {
+    #   "jsonrpc": "2.0",
+    #   "id": null,
+    #   "result": {
+    #     "jobstatus": [
+    #       {
+    #         "jobstatus": "E",
+    #         "jobstatuslong": "Terminated with errors",
+    #         "severity": "25",
+    #         "exitlevel": "2",
+    #         "exitstatus": "Error"
+    #       }
+    #     ]
+    #   }
+    # }
+    # Note:
+    #   exitstatus is
+    #   "" when job is still running,
+    #   "0" on OK,
+    #   "1" OK with Warnings
+    #   "2" Errors
+    local jobstatus_info
+    jobstatus_info="$( bcommand_json ".jobstatus=$jobstatus" )"
+    jq --exit-status --raw-output '.result.jobstatus[0].exitlevel' <<< "$jobstatus_info"
+}
+
 function get_jobid_exitcode()
 {
     local jobid="$1"
@@ -226,31 +257,7 @@ function get_jobid_exitcode()
     local job_jobstatus
     job_jobstatus="$( jq --exit-status --raw-output '.result.jobs[0].jobstatus' <<< "$jobid_info" )"
 
-    # example output of 'bcommand_json ".jobstatus=E"':
-    # {
-    #   "jsonrpc": "2.0",
-    #   "id": null,
-    #   "result": {
-    #     "jobstatus": [
-    #       {
-    #         "jobstatus": "E",
-    #         "jobstatuslong": "Terminated with errors",
-    #         "severity": "25",
-    #         "exitlevel": "2",
-    #         "exitstatus": "Error"
-    #       }
-    #     ]
-    #   }
-    # }
-    # Note:
-    #   exitstatus is
-    #   "" when job is still running,
-    #   "0" on OK,
-    #   "1" OK with Warnings
-    #   "2" Errors
-    local jobstatus_info
-    jobstatus_info="$( bcommand_json ".jobstatus=$job_jobstatus" )"
-    jq --exit-status --raw-output '.result.jobstatus[0].exitlevel' <<< "$jobstatus_info"
+    get_jobstatus_exitcode "$job_jobstatus"
 }
 
 
@@ -264,7 +271,7 @@ function wait_for_newer_restore_job_to_start()
     while [ "$last_restore_jobid" = "$last_restore_jobid_old" ]; do
         last_restore_jobid=$( get_last_restore_jobid )
         (( count-- ))
-        ProgressInfo "Waiting for Restore Job to start ($count)"
+        ProgressInfo "Waiting for Restore Job to start (${count}s) "
         if (( count <= 0 )); then
             # Restore Job did not start!
             return 1
@@ -289,27 +296,47 @@ function wait_restore_job()
 {
     local restore_jobid="$1"
 
-    LogPrint "waiting for restore job $restore_jobid to finish."
+    LogPrint "$( bcommand "llist jobid=$restore_jobid" )"
+    LogPrint "Waiting for restore job $restore_jobid to finish."
 
     ProgressStart "Restoring data"
     local restore_exitstatus=""
     local used_disk_space
     local jobid_info
+    local starttime
+    local duration
+    local jobstatus
     # empty string means no status yet
     while ! [ "$restore_exitstatus" ]; do
-        # Example output: bcommand "list jobid=59"
-        # Automatically selected Catalog: MyCatalog
-        # Using Catalog "MyCatalog"
-        # +-------+--------------+------------+---------------------+----------+------+-------+----------+----------+-----------+
-        # | jobid | name         | client     | starttime           | duration | type | level | jobfiles | jobbytes | jobstatus |
-        # +-------+--------------+------------+---------------------+----------+------+-------+----------+----------+-----------+
-        # |    57 | RestoreFiles | client1-fd | 2024-06-14 10:13:48 | 00:00:21 | R    | F     |        0 |        0 | R         |
-        # +-------+--------------+------------+---------------------+----------+------+-------+----------+----------+-----------+
+        # example output of 'bcommand_json "list jobid=56"':
+        # {
+        #   "jsonrpc": "2.0",
+        #   "id": null,
+        #   "result": {
+        #     "jobs": [
+        #       {
+        #         "jobid": "56",
+        #         "name": "RestoreFiles",
+        #         "client": "client1--fd",
+        #         "starttime": "2024-06-14 09:40:33",
+        #         "duration": "00:00:28",
+        #         "type": "R",
+        #         "level": "F",
+        #         "jobfiles": "59653",
+        #         "jobbytes": "2504969851",
+        #         "jobstatus": "T"
+        #       }
+        #     ]
+        #   }
+        # }
         used_disk_space="$( total_target_fs_used_disk_space )"
-        jobid_info="$( bcommand "list jobid=$restore_jobid" )"
-        ProgressInfo "$( sed -n -r -e "s/  +/ /g" -e "s/^\| +($restore_jobid \|.*) +\|/| \1 | $used_disk_space |/p" <<< "$jobid_info" )"
+        jobid_info="$( bcommand_json "list jobid=$restore_jobid" )"
+        starttime="$( jq -r '.result.jobs[0].starttime' <<< "$jobid_info" )"
+        duration="$( jq -r '.result.jobs[0].duration' <<< "$jobid_info" )"
+        jobstatus="$( jq -r '.result.jobs[0].jobstatus' <<< "$jobid_info" )"
+        restore_exitstatus="$( get_jobstatus_exitcode "$jobstatus" )"
+        ProgressInfo "Start: [$starttime], Duration: [$duration], Status: [$jobstatus], Restored: [$used_disk_space] "
         sleep "$PROGRESS_WAIT_SECONDS"
-        restore_exitstatus="$( get_jobid_exitcode "$restore_jobid" )"
     done
     ProgressStop
 
