@@ -106,7 +106,7 @@ fi
 # The actual restoring:
 for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
     # Create backup restore log file name (a different one for each restore_input).
-    # Each restore_input is a path like '/tmp/rear.XXXX/outputfs/f121/backup.tar.gz':
+    # Each restore_input is a path like '/var/tmp/rear.XXXX/outputfs/f121/backup.tar.gz':
     restore_input_basename=$( basename $restore_input )
     backup_restore_log_file=$backup_restore_log_dir/$backup_restore_log_prefix.$restore_input_basename.$MASTER_PID.$backup_restore_log_suffix
     cat /dev/null >$backup_restore_log_file
