@@ -77,7 +77,7 @@ if scheme_supports_filesystem $scheme ; then
     # Copy each result file one by one to avoid usually false error exits as in
     # https://github.com/rear/rear/issues/1711#issuecomment-380009044
     # where in case of an improper RESULT_FILES array member 'cp' can error out with something like
-    #   cp: will not overwrite just-created '/tmp/rear.XXX/outputfs/f121/rear-f121.log' with '/tmp/rear.XXX/tmp/rear-f121.log'
+    #   cp: will not overwrite just-created '/var/tmp/rear.XXX/outputfs/f121/rear-f121.log' with '/var/tmp/rear.XXX/tmp/rear-f121.log'
     # See
     # https://stackoverflow.com/questions/4669420/have-you-ever-got-this-message-when-moving-a-file-mv-will-not-overwrite-just-c
     # which is about the same for 'mv', how to reproduce it:
