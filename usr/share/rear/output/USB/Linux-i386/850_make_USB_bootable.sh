@@ -26,7 +26,7 @@ LogPrint "Making $RAW_USB_DEVICE bootable with syslinux/extlinux"
 # and USB_DEVICE is e.g. /dev/disk/by-label/REAR-000 (from BACKUP_URL=usb:///dev/disk/by-label/REAR-000) which is also the data partition
 # but here we need the filesystem where the booting related files are which are on the data partition or on the boot partition if exists
 # and that filesystem was mounted by output/default/100_mount_output_path.sh at $BUILD_DIR/outputfs which is shown in /proc/mounts like
-# /dev/sdb1 /tmp/rear.gfYZXbLIa2Xjult/outputfs ext2 rw,noatime 0 0
+# /dev/sdb1 /var/tmp/rear.XXXXXXXXXXXXXXX/outputfs ext2 rw,noatime 0 0
 # so we search for " $BUILD_DIR/outputfs " in /proc/mounts to get the filesystem (third field) where the booting related files are:
 usb_filesystem=$( grep " $BUILD_DIR/outputfs " /proc/mounts | cut -d' ' -f3 | tail -1 )
 case "$usb_filesystem" in
