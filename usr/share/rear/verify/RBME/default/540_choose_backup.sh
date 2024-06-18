@@ -1,6 +1,6 @@
 
-scheme=$(url_scheme "$BACKUP_URL")
-case $scheme in
+scheme="$( url_scheme "$BACKUP_URL" )"
+case "$scheme" in
     (local|nfs)
         :
         ;;

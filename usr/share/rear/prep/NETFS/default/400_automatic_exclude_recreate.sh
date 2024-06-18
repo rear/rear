@@ -5,8 +5,8 @@
 # Verify a local backup directory in BACKUP_URL=file:///path and
 # add its mountpoint to the EXCLUDE_RECREATE array (if necessary).
 
-local scheme=$( url_scheme $BACKUP_URL )
-local backup_directory=$( url_path $BACKUP_URL )
+local scheme="$( url_scheme "$BACKUP_URL" )"
+local backup_directory="$( url_path "$BACKUP_URL" )"
 local backup_directory_mountpoint=""
 
 case $scheme in
@@ -28,7 +28,7 @@ case $scheme in
             mkdir $v -p "$backup_directory" >&2 || Error "Could not create backup directory '$backup_directory' (from URL '$BACKUP_URL')."
         fi
         test -d "$backup_directory" || Error "URL '$BACKUP_URL' specifies '$backup_directory' which is not a directory."
-        backup_directory_mountpoint=$( df -P "$backup_directory" | tail -1 | awk '{print $6}' )
+        backup_directory_mountpoint="$( df -P "$backup_directory" | tail -1 | awk '{print $6}' )"
         test "/" = "$backup_directory_mountpoint" && Error "URL '$BACKUP_URL' has the backup directory '$backup_directory' in the '/' filesystem which is forbidden."
         # When the mountpoint of the backup directory is not yet excluded add its mountpoint to the EXCLUDE_RECREATE array:
         if ! grep -q "$backup_directory_mountpoint" <<< "${EXCLUDE_RECREATE[*]}" ; then

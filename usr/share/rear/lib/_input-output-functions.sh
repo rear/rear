@@ -1024,7 +1024,7 @@ function cleanup_build_area_and_end_program () {
             sleep 2
             # umount_mountpoint_lazy is in lib/global-functions.sh
             # which is not yet sourced in case of early Error() in usr/sbin/rear
-            has_binary umount_mountpoint_lazy && umount_mountpoint_lazy $BUILD_DIR/outputfs
+            has_binary umount_mountpoint_lazy && umount_mountpoint_lazy "$BUILD_DIR/outputfs"
         fi
         # remove_temporary_mountpoint is in lib/global-functions.sh
         # which is not yet sourced in case of early Error() in usr/sbin/rear

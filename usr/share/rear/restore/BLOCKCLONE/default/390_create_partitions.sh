@@ -9,8 +9,8 @@ if [ -z "$BLOCKCLONE_SAVE_MBR_DEV" ]; then
     return
 fi
 
-local backup_path=$( url_path $BACKUP_URL )
-local opath=$( backup_path $scheme $path )
+local backup_path="$( url_path "$BACKUP_URL" )"
+local opath="$( backup_path "$scheme" "$path" )"
 
 # Destination partition is not present, try to recreate.
 if [ ! -b "$BLOCKCLONE_SOURCE_DEV" ]; then

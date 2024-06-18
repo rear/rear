@@ -3,7 +3,7 @@
 # This script is only run during a backup restore workflow (recover/restoreoly)
 # so that RESTORE_ARCHIVES is set in this script.
 
-scheme=$( url_scheme "$BACKUP_URL" )
+scheme="$( url_scheme "$BACKUP_URL" )"
 # Skip if not backup on USB:
 test "usb" = "$scheme" || return 0
 

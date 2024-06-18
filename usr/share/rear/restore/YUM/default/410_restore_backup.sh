@@ -12,9 +12,9 @@ LogPrint "Restoring system files (YUM_BACKUP_FILES=$YUM_BACKUP_FILES)"
 # see https://github.com/rear/rear/wiki/Coding-Style
 set -e -u -o pipefail
 
-local scheme=$(url_scheme $BACKUP_URL)
-local path=$(url_path $BACKUP_URL)
-local opath=$(backup_path $scheme $path)
+local scheme="$( url_scheme "$BACKUP_URL" )"
+local path="$( url_path "$BACKUP_URL" )"
+local opath="$( backup_path "$scheme" "$path" )"
 
 # The RESTORE_ARCHIVES array contains the restore input files.
 # If it is not set, RESTORE_ARCHIVES is only one element which is the backup archive:

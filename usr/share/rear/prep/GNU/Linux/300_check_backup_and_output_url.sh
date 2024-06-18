@@ -16,9 +16,9 @@
 local url=""
 for url in "$BACKUP_URL" "$OUTPUT_URL" ; do
     test "$url" || continue
-    local scheme=$( url_scheme $url )
-    local authority=$( url_host $url )
-    local path=$( url_path $url )
+    local scheme="$( url_scheme "$url" )"
+    local authority="$( url_host "$url" )"
+    local path="$( url_path "$url" )"
     case "$scheme" in
         (file|tape|usb)
             # file:// tape:// usb:// URLs must not have an authority part (scheme://authority/path)

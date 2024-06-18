@@ -2,7 +2,7 @@
 # loopback mount the ISO containing the backup
 # BACKUP_URL=iso://backup
 
-local scheme=$(url_scheme $BACKUP_URL)
+local scheme="$( url_scheme "$BACKUP_URL" )"
 
 case "$scheme" in
     (iso)

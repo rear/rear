@@ -7,17 +7,17 @@ if [ -z "$BLOCKCLONE_SAVE_MBR_DEV" ]; then
     return
 fi
 
-local backup_path=$( url_path $BACKUP_URL )
-local opath=$(backup_path $scheme $path)
+local backup_path="$( url_path "$BACKUP_URL" )"
+local opath="$( backup_path "$scheme" "$path" )"
 
 LogPrint "Copying $VAR_DIR/layout/$BLOCKCLONE_PARTITIONS_CONF_FILE to $opath"
 
-cp $v $VAR_DIR/layout/$BLOCKCLONE_PARTITIONS_CONF_FILE $opath
+cp $v "$VAR_DIR/layout/$BLOCKCLONE_PARTITIONS_CONF_FILE" "$opath"
 StopIfError "Failed to copy \
 $VAR_DIR/layout/$BLOCKCLONE_PARTITIONS_CONF_FILE to $opath"
 
 LogPrint "Copying $VAR_DIR/layout/$BLOCKCLONE_MBR_FILE to $opath"
 
-cp $v $VAR_DIR/layout/$BLOCKCLONE_MBR_FILE $opath
+cp $v "$VAR_DIR/layout/$BLOCKCLONE_MBR_FILE" "$opath"
 
 StopIfError "Failed to copy $VAR_DIR/layout/$BLOCKCLONE_MBR_FILE to $opath"

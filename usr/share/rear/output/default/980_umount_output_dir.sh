@@ -8,4 +8,4 @@ if [[ -z "$OUTPUT_URL" ]] ; then
     return
 fi
 
-umount_url $OUTPUT_URL $BUILD_DIR/outputfs
+umount_url "$OUTPUT_URL" "$BUILD_DIR/outputfs"

@@ -299,17 +299,17 @@ function percent_decode() {
 # cf. http://bugzilla.opensuse.org/show_bug.cgi?id=561626#c7
 
 function url_scheme() {
-    local url=$1
+    local url="$1"
     # the scheme is the leading part up to '://'
-    local scheme=${url%%://*}
+    local scheme="${url%%://*}"
     # rsync scheme does not have to start with rsync:// it can also be scp style
     # see the comments in usr/share/rear/lib/rsync-functions.sh
-    echo $scheme | grep -q ":" && echo rsync || echo $scheme
+    echo "$scheme" | grep -q ":" && echo rsync || echo "$scheme"
 }
 
 function url_host() {
-    local url=$1
-    local url_without_scheme=${url#*//}
+    local url="$1"
+    local url_without_scheme="${url#*//}"
     # the authority part is the part after the scheme (e.g. 'host' or 'user@host')
     # i.e. after 'scheme://' all up to but excluding the next '/'
     # which means it breaks if there is a username that contains a '/'
@@ -317,73 +317,73 @@ function url_host() {
     # should have only characters from the portable filename character set
     # which is ASCII letters, digits, dot, hyphen, and underscore
     # (a hostname must not contain a '/' see RFC 952 and RFC 1123)
-    local authority_part=${url_without_scheme%%/*}
+    local authority_part="${url_without_scheme%%/*}"
     # for backward compatibility the url_host function returns the whole authority part
     # see https://github.com/rear/rear/issues/856
     # to get only hostname or username use the url_hostname and url_username functions
-    echo $authority_part
+    echo "$authority_part"
 }
 
 function url_hostname() {
-    local url=$1
-    local url_without_scheme=${url#*//}
-    local authority_part=${url_without_scheme%%/*}
+    local url="$1"
+    local url_without_scheme="${url#*//}"
+    local authority_part="${url_without_scheme%%/*}"
     # if authority_part contains a '@' we assume the 'user@host' format and
     # then we remove the 'user@' part (i.e. all up to and including the last '@')
     # so that it also works when the username contains a '@'
     # like 'john@doe' in BACKUP_URL=sshfs://john@doe@host/G/rear/
     # (a hostname must not contain a '@' see RFC 952 and RFC 1123)
-    local host_and_port=${authority_part##*@}
+    local host_and_port="${authority_part##*@}"
     # if host_and_port contains a ':' we assume the 'host:port' format and
     # then we remove the ':port' part (i.e. all from and including the last ':')
     # so that it even works when the hostname contains a ':' (in spite of RFC 952 and RFC 1123)
-    echo ${host_and_port%:*}
+    echo "${host_and_port%:*}"
 }
 
 function url_username() {
-    local url=$1
-    local url_without_scheme=${url#*//}
-    local authority_part=${url_without_scheme%%/*}
+    local url="$1"
+    local url_without_scheme="${url#*//}"
+    local authority_part="${url_without_scheme%%/*}"
     # authority_part must contain a '@' when a username is specified
-    echo $authority_part | grep -q '@' || return 0
+    echo "$authority_part" | grep -q '@' || return 0
     # we remove the '@host' part (i.e. all from and including the last '@')
     # so that it also works when the username contains a '@'
     # like 'john@doe' in BACKUP_URL=sshfs://john@doe@host/G/rear/
     # (a hostname must not contain a '@' see RFC 952 and RFC 1123)
-    local user_and_password=${authority_part%@*}
+    local user_and_password="${authority_part%@*}"
     # if user_and_password contains a ':' we assume the 'user:password' format and
     # then we remove the ':password' part (i.e. all from and including the first ':')
     # so that it works when the password contains a ':'
     # (a POSIX-compliant username should not contain a ':')
-    echo $user_and_password | grep -q ':' && echo ${user_and_password%%:*} || echo $user_and_password
+    echo "$user_and_password" | grep -q ':' && echo "${user_and_password%%:*}" || echo "$user_and_password"
 }
 
 function url_password() {
-    local url=$1
-    local url_without_scheme=${url#*//}
-    local authority_part=${url_without_scheme%%/*}
+    local url="$1"
+    local url_without_scheme="${url#*//}"
+    local authority_part="${url_without_scheme%%/*}"
     # authority_part must contain a '@' when a username is specified
-    echo $authority_part | grep -q '@' || return 0
+    echo "$authority_part" | grep -q '@' || return 0
     # we remove the '@host' part (i.e. all from and including the last '@')
     # so that it also works when the username contains a '@'
     # like 'john@doe' in BACKUP_URL=sshfs://john@doe@host/G/rear/
     # (a hostname must not contain a '@' see RFC 952 and RFC 1123)
-    local user_and_password=${authority_part%@*}
+    local user_and_password="${authority_part%@*}"
     # user_and_password must contain a ':' when a password is specified
-    echo $user_and_password | grep -q ':' || return 0
+    echo "$user_and_password" | grep -q ':' || return 0
     # we remove the 'user:' part (i.e. all up to and including the first ':')
     # so that it works when the password contains a ':'
     # (a POSIX-compliant username should not contain a ':')
-    echo ${user_and_password#*:}
+    echo "${user_and_password#*:}"
 }
 
 function url_path() {
-    local url=$1
-    local url_without_scheme=${url#*//}
+    local url="$1"
+    local url_without_scheme="${url#*//}"
     # the path is all from and including the first '/' in url_without_scheme
     # i.e. the whole rest after the authority part so that
     # it may contain an optional trailing '?query' and '#fragment'
-    echo /${url_without_scheme#*/}
+    echo "/${url_without_scheme#*/}"
 }
 
 ### Returns true if one can upload files to the URL
@@ -395,14 +395,14 @@ function scheme_accepts_files() {
     # (then it would still exit with "bash: $1: cannot assign in this way")
     # but using a default value is practicable here because $1 is used only once
     # cf. https://github.com/rear/rear/pull/2675#discussion_r705018956
-    local scheme=${1:-}
+    local scheme="${1:-}"
     # Return false if scheme is empty or blank (e.g. when OUTPUT_URL is unset or empty or blank)
     # cf. https://github.com/rear/rear/issues/2676
     # and https://github.com/rear/rear/issues/2667#issuecomment-914447326
     # also return false if scheme is more than one word (so no quoted "$scheme" here)
     # cf. https://github.com/rear/rear/pull/2675#discussion_r704401462
-    test $scheme || return 1
-    case $scheme in
+    test "$scheme" || return 1
+    case "$scheme" in
         (null|tape|obdr)
             # tapes do not support uploading arbitrary files, one has to handle them
             # as special case (usually passing the tape device as argument to tar)
@@ -426,10 +426,10 @@ function scheme_accepts_files() {
 ### only that it can be mounted (use mount_url() first)
 function scheme_supports_filesystem() {
     # Be safe against 'set -eu' exit if scheme_supports_filesystem is called without argument
-    local scheme=${1:-}
+    local scheme="${1:-}"
     # Return false if scheme is empty or blank or more than one word, cf. scheme_accepts_files() above
-    test $scheme || return 1
-    case $scheme in
+    test "$scheme" || return 1
+    case "$scheme" in
         (null|tape|obdr|rsync|fish|ftp|ftps|hftp|http|https|sftp)
             return 1
             ;;
@@ -440,9 +440,9 @@ function scheme_supports_filesystem() {
 }
 
 function backup_path() {
-    local scheme=$1
-    local path=$2
-    case $scheme in
+    local scheme="$1"
+    local path="$2"
+    case "$scheme" in
        (tape)  # no path for tape required
            path=""
            ;;
@@ -466,8 +466,8 @@ function backup_path() {
 }
 
 function output_path() {
-    local scheme=$1
-    local path=$2
+    local scheme="$1"
+    local path="$2"
 
     # Abort for unmountable schemes ("tape-like" or "ftp-like" schemes).
     # Returning an empty string for them is not satisfactory: it could lead to caller putting its files
@@ -477,9 +477,9 @@ function output_path() {
     # but if the directory is not a mountpoint, they would get silently lost.
     # The caller needs to check the URL/scheme using scheme_supports_filesystem()
     # before calling this function.
-    scheme_supports_filesystem $scheme || BugError "output_path() called with scheme $scheme that does not support filesystem access"
+    scheme_supports_filesystem "$scheme" || BugError "output_path() called with scheme $scheme that does not support filesystem access"
 
-    case $scheme in
+    case "$scheme" in
        (file)  # type file needs a local path (must be mounted by user)
            path+="/${OUTPUT_PREFIX}"
            ;;
@@ -493,19 +493,19 @@ function output_path() {
 
 ### Mount URL $1 at mountpoint $2[, with options $3]
 function mount_url() {
-    local url=$1
-    local mountpoint=$2
+    local url="$1"
+    local mountpoint="$2"
     local defaultoptions="rw,noatime"
-    local options=${3:-"$defaultoptions"}
+    local options="${3:-"$defaultoptions"}"
     local scheme
 
-    scheme=$( url_scheme $url )
+    scheme="$( url_scheme "$url" )"
 
     # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
     # They thus need to be kept in sync with umount_url() so that RemoveExitTasks is used
     # iff AddExitTask was used in mount_url().
 
-    if ! scheme_supports_filesystem $scheme ; then
+    if ! scheme_supports_filesystem "$scheme" ; then
         ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
         ### Don't need to umount anything for these.
         ### file: supports filesystem access, but is not mounted and unmounted,
@@ -516,7 +516,7 @@ function mount_url() {
 
     ### Generate a mount command
     local mount_cmd
-    case $scheme in
+    case "$scheme" in
         (file)
             ### Don't need to mount anything for file:, it is already mounted by user
             return 0
@@ -626,39 +626,39 @@ function mount_url() {
             ;;
         (var)
             ### The mount command is given by variable in the url host
-            local var=$(url_host $url)
+            local var="$(url_host "$url")"
             mount_cmd="${!var} $mountpoint"
             ;;
         (cifs)
             if [ x"$options" = x"$defaultoptions" ];then
                 # defaultoptions contains noatime which is not valid for cifs (issue #752)
-                mount_cmd="mount $v -o rw,guest //$(url_host $url)$(url_path $url) $mountpoint"
+                mount_cmd="mount $v -o rw,guest //$(url_host "$url")$(url_path "$url") $mountpoint"
             else
-                mount_cmd="mount $v -o $options //$(url_host $url)$(url_path $url) $mountpoint"
+                mount_cmd="mount $v -o $options //$(url_host "$url")$(url_path "$url") $mountpoint"
             fi
             ;;
         (usb)
-            mount_cmd="mount $v -o $options $(url_path $url) $mountpoint"
+            mount_cmd="mount $v -o $options $(url_path "$url") $mountpoint"
             ;;
         (sshfs)
-            local authority=$( url_host $url )
+            local authority="$( url_host "$url" )"
             test "$authority" || Error "Cannot run 'sshfs' because no authority '[user@]host' found in URL '$url'."
-            local path=$( url_path $url )
+            local path="$( url_path "$url" )"
             test "$path" || Error "Cannot run 'sshfs' because no path found in URL '$url'."
             # ensure the fuse kernel module is loaded because sshfs is based on FUSE
             lsmod | grep -q '^fuse' || modprobe $verbose fuse || Error "Cannot run 'sshfs' because 'fuse' kernel module is not loadable."
-            mount_cmd="sshfs $authority:$path $mountpoint -o $options"
+            mount_cmd="sshfs \"$authority\":\"$path\" $mountpoint -o $options"
             ;;
         (ftpfs)
-            local hostname=$( url_hostname $url )
+            local hostname="$( url_hostname "$url" )"
             test "$hostname" || Error "Cannot run 'curlftpfs' because no hostname found in URL '$url'."
-            local path=$( url_path $url )
+            local path="$( url_path "$url" )"
             test "$path" || Error "Cannot run 'curlftpfs' because no path found in URL '$url'."
-            local username=$( url_username $url )
+            local username="$( url_username "$url" )"
             # ensure the fuse kernel module is loaded because ftpfs (via CurlFtpFS) is based on FUSE
             lsmod | grep -q '^fuse' || modprobe $verbose fuse || Error "Cannot run 'curlftpfs' because 'fuse' kernel module is not loadable."
             if test "$username" ; then
-                local password=$( url_password $url )
+                local password="$( url_password "$url" )"
                 if test "$password" ; then
                     # single quoting is a must for the password
                     mount_cmd="curlftpfs $verbose -o user='$username:$password' ftp://$hostname$path $mountpoint"
@@ -672,10 +672,10 @@ function mount_url() {
             fi
             ;;
         (davfs)
-            mount_cmd="mount $v -t davfs http://$(url_host $url)$(url_path $url) $mountpoint"
+            mount_cmd="mount $v -t davfs http://$(url_host "$url")$(url_path "$url") $mountpoint"
             ;;
         (*)
-            mount_cmd="mount $v -t $(url_scheme $url) -o $options $(url_host $url):$(url_path $url) $mountpoint"
+            mount_cmd="mount $v -t $(url_scheme "$url") -o $options \"$(url_host "$url")\":\"$(url_path "$url")\" $mountpoint"
             ;;
     esac
 
@@ -685,7 +685,7 @@ function mount_url() {
 
     Log "Mounting with '$mount_cmd'"
     # eval is required when mount_cmd contains single quoted stuff (e.g. see the above mount_cmd for curlftpfs)
-    eval $mount_cmd || Error "Mount command '$mount_cmd' failed."
+    eval "$mount_cmd" || Error "Mount command '$mount_cmd' failed."
 
     AddExitTask "perform_umount_url '$url' '$mountpoint' lazy"
     return 0
@@ -699,17 +699,17 @@ function remove_temporary_mountpoint() {
 
 ### Unmount url $1 at mountpoint $2, perform mountpoint cleanup and exit task + error handling
 function umount_url() {
-    local url=$1
-    local mountpoint=$2
+    local url="$1"
+    local mountpoint="$2"
     local scheme
 
-    scheme=$( url_scheme $url )
+    scheme="$( url_scheme "$url" )"
 
     # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
     # They thus need to be kept in sync with mount_url() so that RemoveExitTasks is used
     # iff AddExitTask was used in mount_url().
 
-    if ! scheme_supports_filesystem $scheme ; then
+    if ! scheme_supports_filesystem "$scheme" ; then
         ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
         ### Don't need to umount anything for these.
         ### file: supports filesystem access, but is not mounted and unmounted,
@@ -718,7 +718,7 @@ function umount_url() {
         return 0
     fi
 
-    case $scheme in
+    case "$scheme" in
         (file)
             return 0
             ;;
@@ -738,7 +738,7 @@ function umount_url() {
     # Therefore it also determines if exit task and mountpoint handling is required and returns early if not.
     # The actual umount job is performed inside perform_umount_url().
     # We do not request lazy umount here because we want umount errors to be reliably reported.
-    perform_umount_url $url $mountpoint || Error "Unmounting '$mountpoint' failed."
+    perform_umount_url "$url" "$mountpoint" || Error "Unmounting '$mountpoint' failed."
 
     RemoveExitTask "perform_umount_url '$url' '$mountpoint' lazy"
 
@@ -748,9 +748,9 @@ function umount_url() {
 
 ### Unmount url $1 at mountpoint $2 [ lazily if $3 is set to 'lazy' and normal unmount fails ]
 function perform_umount_url() {
-    local url=$1
-    local mountpoint=$2
-    local lazy=${3:-}
+    local url="$1"
+    local mountpoint="$2"
+    local lazy="${3:-}"
 
     if test $lazy ; then
         if test $lazy != "lazy" ; then
@@ -758,24 +758,24 @@ function perform_umount_url() {
         fi
     fi
 
-    case $(url_scheme $url) in
+    case "$(url_scheme "$url")" in
         (sshfs)
             # does ftpfs need this special case as well?
-            fusermount -u ${lazy:+'-z'} $mountpoint
+            fusermount -u ${lazy:+'-z'} "$mountpoint"
             ;;
         (davfs)
-            umount_davfs $mountpoint $lazy
+            umount_davfs "$mountpoint" $lazy
             ;;
         (var)
             local var
-            var=$(url_host $url)
+            var="$(url_host "$url")"
             Log "Unmounting with '${!var} $mountpoint'"
             # lazy unmount not supported with custom umount command
-            ${!var} $mountpoint
+            ${!var} "$mountpoint"
             ;;
         (*)
             # usual umount command
-            umount_mountpoint $mountpoint $lazy
+            umount_mountpoint "$mountpoint" $lazy
     esac
     # The switch above must be the last statement in this function and the umount commands must be
     # the last commands (or part of) in each branch. This ensures proper exit code propagation
@@ -785,7 +785,7 @@ function perform_umount_url() {
 ### Helper which unmounts davfs mountpoint $1 and cleans up the cache,
 ### performing lazy unmount if $2 = 'lazy' and normal unmount fails.
 function umount_davfs() {
-    local mountpoint=$1
+    local mountpoint="$1"
     local lazy="${2:-}"
 
     if test $lazy ; then
@@ -794,7 +794,7 @@ function umount_davfs() {
         fi
     fi
 
-    if umount_mountpoint $mountpoint ; then
+    if umount_mountpoint "$mountpoint" ; then
         # Wait for 3 sek. then remove the cache-dir /var/cache/davfs
         sleep 30
         # TODO: put in here the cache-dir from /etc/davfs2/davfs.conf
@@ -807,7 +807,7 @@ function umount_davfs() {
         if test $lazy ; then
             # try again to unmount lazily and this time do not delete the cache, it is still in use.
             LogPrintError "davfs cache /var/cache/davfs2/*outputfs* needs to be cleaned up manually after the lazy unmount finishes"
-            umount_mountpoint_lazy $mountpoint
+            umount_mountpoint_lazy "$mountpoint"
         else
             # propagate errors from umount
             return $retval
@@ -819,8 +819,8 @@ function umount_davfs() {
 ### Default implementation for filesystems that don't need anything fancy
 ### For special umount commands use perform_umount_url()
 function umount_mountpoint() {
-    local mountpoint=$1
-    local lazy=${2:-}
+    local mountpoint="$1"
+    local lazy="${2:-}"
 
     if test $lazy ; then
         if test $lazy != "lazy" ; then
@@ -830,7 +830,7 @@ function umount_mountpoint() {
 
     ### First, try a normal unmount,
     Log "Unmounting '$mountpoint'"
-    umount $v $mountpoint >&2
+    umount $v "$mountpoint" >&2
     if [[ $? -eq 0 ]] ; then
         return 0
     fi
@@ -840,7 +840,7 @@ function umount_mountpoint() {
 
     ### If that still fails, force unmount.
     Log "Forced unmount of '$mountpoint'"
-    umount $v -f $mountpoint >&2
+    umount $v -f "$mountpoint" >&2
     if [[ $? -eq 0 ]] ; then
         return 0
     fi
@@ -848,7 +848,7 @@ function umount_mountpoint() {
     Log "Unmounting '$mountpoint' failed."
 
     if test $lazy ; then
-        umount_mountpoint_lazy $mountpoint
+        umount_mountpoint_lazy "$mountpoint"
     else
         return 1
     fi
@@ -857,10 +857,10 @@ function umount_mountpoint() {
 ### Unmount mountpoint $1 lazily
 ### Preferably use "umount_mountpoint $mountpoint lazy", which attempts non-lazy unmount first.
 function umount_mountpoint_lazy() {
-    local mountpoint=$1
+    local mountpoint="$1"
 
     LogPrint "Directory $mountpoint still mounted - trying lazy umount"
-    umount $v -f -l $mountpoint >&2
+    umount $v -f -l "$mountpoint" >&2
 }
 
 # Change $1 to user input or leave default value on empty input
@@ -884,9 +884,9 @@ function is_device_mounted()
    local disk=$1
    [ -z "$disk" ] && echo 0 && return
 
-   local m=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
+   local m="$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)"
 
-   if [ -z $m ]; then
+   if [ -z "$m" ]; then
       echo 0
    else
       echo 1
@@ -900,7 +900,7 @@ function get_mountpoint()
    local disk=$1
    [ -z "$disk" ] && return 1
 
-   local mp=$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)
+   local mp="$(lsblk -n -o MOUNTPOINT $disk 2> /dev/null)"
 
    echo $mp
 }
@@ -909,12 +909,12 @@ function get_mountpoint()
 # to re-mount the given mountpoint
 function build_remount_cmd()
 {
-   local mp=$1
+   local mp="$1"
    [ -z "$mp" ] && return 1
   
    local -a allopts=()
    # Get: device, mountpoint, FS type, mount options as string
-   local opt_string=$(mount | grep " $mp " | awk '{ print $1 " " $3 " " $5 " " $6 }')
+   local opt_string="$(mount | grep " $mp " | awk '{ print $1 " " $3 " " $5 " " $6 }')"
    [ -z "$opt_string" ] && return 1
 
    # Split string, store in array

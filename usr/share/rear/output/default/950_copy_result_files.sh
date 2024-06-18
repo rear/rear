@@ -7,11 +7,11 @@
 # that would need to be copied here to the output location:
 test "${RESULT_FILES[*]:-}" || return 0
 
-local scheme=$( url_scheme $OUTPUT_URL )
-local host=$( url_host $OUTPUT_URL )
-local path=$( url_path $OUTPUT_URL )
+local scheme="$( url_scheme "$OUTPUT_URL" )"
+local host="$( url_host "$OUTPUT_URL" )"
+local path="$( url_path "$OUTPUT_URL" )"
 
-if [ -z "$OUTPUT_URL" ] || ! scheme_accepts_files $scheme ; then
+if [ -z "$OUTPUT_URL" ] || ! scheme_accepts_files "$scheme" ; then
     if [ "$scheme" == "null" -o -z "$OUTPUT_URL" ] ; then
         # There are result files to copy, but OUTPUT_URL=null indicates that we are not interested in them
         # TODO: empty OUTPUT_URL seems to be equivalent to null, should we continue to allow that,

@@ -7,7 +7,7 @@ if test -z "$BACKUP_URL" ; then
     Error "Missing BACKUP_URL=rsync://[USER@]HOST[:PORT][::]/PATH !"
 fi
 
-local scheme=$(url_scheme $BACKUP_URL)  # url_scheme still recognizes old style
+local scheme="$(url_scheme "$BACKUP_URL")"  # url_scheme still recognizes old style
 
 if [[ "$scheme" != "rsync" ]]; then
     Error "Missing BACKUP_URL=rsync://[USER@]HOST[:PORT][::]/PATH !"

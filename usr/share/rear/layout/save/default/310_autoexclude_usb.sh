@@ -6,9 +6,9 @@
 
 for URL in "$OUTPUT_URL" "$BACKUP_URL" ; do
     if [[ ! -z "$URL" ]] ; then
-        local host=$(url_host $URL)
-        local scheme=$(url_scheme $URL)
-        local path=$(url_path $URL)
+        local host="$(url_host "$URL")"
+        local scheme="$(url_scheme "$URL")"
+        local path="$(url_path "$URL")"
 
         case $scheme in
             (usb)
@@ -35,9 +35,9 @@ for URL in "$OUTPUT_URL" "$BACKUP_URL" ; do
 
     grep -q "^$REAL_USB_DEVICE " /proc/mounts
     if [[ $? -eq 0 ]] ; then
-        local usb_mntpt=$( grep "^$REAL_USB_DEVICE " /proc/mounts | cut -d" " -f2 | tail -1 )
+        local usb_mntpt="$( grep "^$REAL_USB_DEVICE " /proc/mounts | cut -d" " -f2 | tail -1 )"
         if ! IsInArray "$usb_mntpt" "${AUTOEXCLUDE_USB_PATH[@]}" ; then
-            AUTOEXCLUDE_USB_PATH+=( $usb_mntpt )
+            AUTOEXCLUDE_USB_PATH+=( "$usb_mntpt" )
             Log "Auto-excluding USB path $usb_mntpt [device $REAL_USB_DEVICE]"
         fi
     fi

@@ -24,11 +24,11 @@ is_true "$ZVM_NAMING" || return 0
 VM_UID=( $( vmcp q userid ) )
 test $VM_UID || Error "Could not set VM_UID ('vmcp q userid' did not return the VM user id)"
 
-scheme=$( url_scheme $OUTPUT_URL )
-path=$( url_path $OUTPUT_URL )
-opath=$( output_path $scheme $path )
+scheme="$( url_scheme "$OUTPUT_URL" )"
+path="$( url_path "$OUTPUT_URL" )"
+opath="$( output_path "$scheme" "$path" )"
 test $opath || Error "Could not determine output path from OUTPUT_URL='$OUTPUT_URL'"
 
 LogPrint "s390 disklayout.conf will be saved as $opath/$VM_UID.disklayout.conf"
-mkdir $v -p $opath
+mkdir $v -p "$opath"
 cp $v $DISKLAYOUT_FILE $opath/$VM_UID.disklayout.conf || Error "Failed to copy '$DISKLAYOUT_FILE' to $opath/$VM_UID.disklayout.conf"
