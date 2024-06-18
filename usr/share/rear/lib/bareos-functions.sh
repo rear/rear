@@ -42,7 +42,11 @@ function bcommand()
     done
     sed_args+=")"
 
-    sed -r -e "/^${sed_args}$/d" -e "s/${sed_args}$//" < "$out"
+    # using the unprintable char $'\001' as sed separator, as the normal '/' causes problems with paths.
+    local s=$'\001'
+    # remove all lines that only contain on of the strings (.api 0)
+    # and/or removing just the string (but keeping the line) (.api json)
+    sed -r -e "\\${s}^${sed_args}\$${s}d" -e "s${s}${sed_args}${s}${s}" < "$out"
     rm "$out"
     return $rc
 }
@@ -296,6 +300,11 @@ function wait_restore_job()
 {
     local restore_jobid="$1"
 
+    if [ -z "$restore_jobid" ]; then
+        Error "No restore jobid given"
+    fi
+
+    LogPrint "Information about restore job $restore_jobid:"
     LogPrint "$( bcommand "llist jobid=$restore_jobid" )"
     LogPrint "Waiting for restore job $restore_jobid to finish."
 
@@ -340,8 +349,9 @@ function wait_restore_job()
     done
     ProgressStop
 
+    LogPrint "Information about finished job:"
     LogPrint "$( bcommand "llist jobid=$restore_jobid" )"
-    LogPrint "Restored $(total_target_fs_used_disk_space)."
+    LogPrint "Restored $(total_target_fs_used_disk_space)"
 
     return "$restore_exitstatus"
 }

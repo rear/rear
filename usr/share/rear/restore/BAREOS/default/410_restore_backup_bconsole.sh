@@ -9,6 +9,7 @@ fi
 # get last restore jobid before starting the restore
 local last_restore_jobid_old
 last_restore_jobid_old=$(get_last_restore_jobid)
+local restore_jobid
 
 echo "status client=$BAREOS_CLIENT" | bconsole > "$TMP_DIR/bareos_client_status_before_restore.txt"
 LogPrint "$(cat "$TMP_DIR/bareos_client_status_before_restore.txt")"
@@ -51,26 +52,56 @@ EOF
         Log "bconsole finished with non-zero exit code $?"
     fi
 
+    LogPrint "determine restore jobid"
+    if ! restore_jobid=$(wait_for_newer_restore_job_to_start "$last_restore_jobid_old"); then
+        Error "Failed to determine Restore Job."
+    fi
+
 else
     # bareos_recovery_mode == automatic: restore most recent backup automatically
     
     LogPrint "starting restore using bconsole:"
     LogPrint "$RESTORE_CMD"
 
-    local restore_cmd_output
-    restore_cmd_output=$( bcommand "$RESTORE_CMD" )
-    Log "$restore_cmd_output"
+    # example output of 'bcommand_json "$RESTORE_CMD"':
+    # {
+    #   "jsonrpc": "2.0",
+    #   "id": null,
+    #   "result": {
+    #     "query": [
+    #       {
+    #         "jobid": "18",
+    #         "level": "F",
+    #         "jobfiles": "59653",
+    #         "jobbytes": "2504970763",
+    #         "starttime": "2024-06-05 13:58:31",
+    #         "volumename": "Full-0001"
+    #       },
+    #        {
+    #         "jobid": "90",
+    #         "level": "I",
+    #         "jobfiles": "6553",
+    #         "jobbytes": "284336784",
+    #         "starttime": "2024-06-18 14:08:40",
+    #         "volumename": "Incremental-0009"
+    #       }
+    #     ],
+    #     "run": {
+    #       "jobid": "103"
+    #     }
+    #   }
+    # }
+    local restore_cmd_result
+    restore_cmd_result="$( bcommand_json "$RESTORE_CMD" )"
+    Log "$restore_cmd_result"
+    if ! restore_jobid="$( jq  --exit-status --raw-output '.result.run.jobid' <<< "$restore_cmd_result" )"; then
+        Error "Failed to determine Restore Job."
+    fi
+    LogPrint "JobId of restore job is $restore_jobid"
 fi
 
-LogPrint "waiting for restore job"
-
-local restore_jobid
-if ! restore_jobid=$(wait_for_newer_restore_job_to_start "$last_restore_jobid_old"); then
-    Error "Restore Job did not start!"
-fi
 wait_restore_job "$restore_jobid"
 local job_exitcode=$?
-LogPrint "Restore job $restore_jobid finished."
 if [ ${job_exitcode} -eq 0 ]; then
     Log "$( bcommand "list joblog jobid=$restore_jobid" )"
     LogPrint "Restore job finished successfully."
