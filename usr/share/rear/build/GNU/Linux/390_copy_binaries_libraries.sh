@@ -21,12 +21,12 @@ function copy_binaries () {
         contains_visible_char "$binary" || continue
         if ! cp $verbose --archive --dereference --force "$binary" "$destdir" 1>&2 ; then
             # When a binary should be copied where its target already exists as dangling symlink
-            # e.g. when /sbin/lvcreate should be copied to /tmp/rear.XXX/rootfs/bin/lvcreate
-            # but there is already the dangling symlink /tmp/rear.XXX/rootfs/bin/lvcreate -> lvm
+            # e.g. when /sbin/lvcreate should be copied to /var/tmp/rear.XXX/rootfs/bin/lvcreate
+            # but there is already the dangling symlink /var/tmp/rear.XXX/rootfs/bin/lvcreate -> lvm
             # because its link target was not yet copied into the recovery system
             # cf. "create LVM symlinks" in build/GNU/Linux/005_create_symlinks.sh
             # then cp fails (regardless of the --force option) with an error message like
-            # cp: not writing through dangling symlink '/tmp/rear.XXX/rootfs/bin/lvcreate'
+            # cp: not writing through dangling symlink '/var/tmp/rear.XXX/rootfs/bin/lvcreate'
             # so we silently skip cp errors here regardless what the reason is why cp failed here
             # and add it to REQUIRED_PROGS to error out later if it is actually missing in the recovery system
             # (for binaries in PROGS copy_binaries is only called when it exists in the original system)
