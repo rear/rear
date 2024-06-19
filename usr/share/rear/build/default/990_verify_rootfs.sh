@@ -172,17 +172,17 @@ for binary in $( find $ROOTFS_DIR -type f \( -executable -o -name '*.so' -o -nam
         if test "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" ; then
             # A program with missing library is treated as fatal when it does not match the pattern:
             if grep -E -q "$NON_FATAL_BINARIES_WITH_MISSING_LIBRARY" <<<"$binary" ; then
-                LogPrint "$binary requires libraries were 'ldd' shows 'not found' (specified as non-fatal)"
+                LogPrint "$binary requires libraries where 'ldd' shows 'not found' (specified as non-fatal)"
             else
-                LogPrint "$binary requires libraries were 'ldd' shows 'not found' (fatal error)"
+                LogPrint "$binary requires libraries where 'ldd' shows 'not found' (fatal error)"
                 fatal_missing_library="yes"
             fi
         else
-            LogPrint "$binary requires libraries were 'ldd' shows 'not found' (fatal by default)"
+            LogPrint "$binary requires libraries where 'ldd' shows 'not found' (fatal by default)"
             fatal_missing_library="yes"
         fi
     else
-        LogPrint "$binary requires libraries were 'ldd' shows 'not found'"
+        LogPrint "$binary requires libraries where 'ldd' shows 'not found'"
     fi
     # Run the same ldd call as above but now keep its whole stdout output.
     # The ldd call that results the final 'not found' shared object is the last of the above ldd calls that was run.
