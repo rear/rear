@@ -102,14 +102,13 @@ function valid_restored_file_for_patching () {
 # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
 # see https://github.com/rear/rear/pull/1514#discussion_r141031975
 # and for the general issue see https://github.com/rear/rear/issues/1372
-for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
+for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* $TARGET_FS_ROOT/etc/NetworkManager/system-connections/*.nmconnection ; do
     network_config_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
-    network_config_files+=( $network_config_file )
+    network_config_files+=( "$network_config_file" )
 done
 
 # Skip if no valid restored network configuration files are found
-# i.e. when the network_config_files array does not even have a first (non empty) element:
-test $network_config_files || return 0
+test ${#network_config_files[@]} -gt 0 || return 0
 
 # Create a temporary directory for plain mapping files content without comments and empty lines.
 # Do not error out at this late state of "rear recover" (after the backup was restored) but inform the user:
@@ -175,9 +174,9 @@ if test -s $TMP_DIR/mappings/mac ; then
         for network_config_file in "${network_config_files[@]}" ; do
             # The network_config_files array contains only existing files (cf. above how it is set).
             if sed -i -e "$sed_script" "$network_config_file" ; then
-                Log "Wrote new MAC addresses and network interfaces in $network_config_file"
+                Log "Wrote new MAC addresses and network interfaces in '$network_config_file'"
             else
-                LogPrintError "Failed to rewrite MAC addresses and network interfaces in $network_config_file"
+                LogPrintError "Failed to rewrite MAC addresses and network interfaces in '$network_config_file'"
             fi
         done
     else
