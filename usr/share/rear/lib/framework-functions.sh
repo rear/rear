@@ -9,33 +9,25 @@
 
 # source only a trustworthy file given in $1
 # A file is considered trustworthy to be sourced
-# when its file owner is one of the TRUSTED_FILE_OWNERS
-# because only the file owner can 'chmod' we can sufficiently safely assume
-# that a file which is onwed by one of the TRUSTED_FILE_OWNERS
-# can be trusted to be sourced without further additional checks
-# (e.g. if other users may have permissions to modify the file)
-# and it should not be ReaR's task to prevent TRUSTED_FILE_OWNERS
-# from doing what they want (a.k.a. "final power to the user").
+# when its file owner is one of the TRUSTED_FILE_OWNERS.
+# Because only the file owner can 'chmod' (cf. "man 2 chmod": caller's EUID must match owner)
+# we can sufficiently safely assume that a file which is onwed by one of the TRUSTED_FILE_OWNERS
+# is sufficiently trustworthy to be sourced without further additional checks
+# (e.g. if other users have permissions to modify the file or special ACLs).
+# Furthermore it should not be ReaR's task to prevent TRUSTED_FILE_OWNERS
+# from doing what they want (a.k.a. "final power to the user")
+# or simply put: TRUSTED_FILE_OWNERS means we do trust them.
 function SourceTrustworthy () {
     local source_file="$1"
     local source_return_code=0
     local source_file_owner_name=""
     local saved_bash_flags_and_options_commands=""
-    # Do basically same checks here as in the Source function below
-    # because the SourceTrustworthy function is called directly by various scripts.
-    # Ensure a source file name ($1) was provided:
-    if test -z "$source_file" ; then
-        Debug "Skipping SourceTrustworthy() because it was called with empty source file name"
-        return 1
-    fi
-    # Ensure source file is not a directory:
-    if test -d "$source_file" ; then
-        Debug "Skipping SourceTrustworthy() because source file '$source_file' is a directory"
-        return 1
-    fi
-    # Ensure source file exists and is not empty:
-    if ! test -s "$source_file" ; then
-        Debug "Skipping SourceTrustworthy() because source file '$source_file' not found or empty"
+    # Ensure source file is a regular file (or a link to a regular file).
+    # I.e. skip non-regular files like directories, device nodes, or file not found.
+    # It also returns here when no source file was specified (i.e. when $1 is empty).
+    if ! test -f "$source_file" ; then
+        # Show the source file name separated as '$source_file' to make it clear when it is empty:
+        Debug "Skipped 'SourceTrustworthy' because '$source_file' is not a regular file"
         return 1
     fi
     # Ensure source file owner is one of the TRUSTED_FILE_OWNERS
@@ -45,18 +37,18 @@ function SourceTrustworthy () {
         if ! IsInArray "$source_file_owner_name" "${TRUSTED_FILE_OWNERS[@]}" ; then
             # When the source file is not sourced because its owner is not one of the TRUSTED_FILE_OWNERS
             # we ensure the user is notified because this reason is likely unexpected by the user:
-            LogPrintError "Skipped SourceTrustworthy() because source file '$source_file' owner '$source_file_owner_name' is not in TRUSTED_FILE_OWNERS"
+            LogPrintError "Refused 'SourceTrustworthy $source_file' because file owner '$source_file_owner_name' is not in TRUSTED_FILE_OWNERS"
             return 1
         fi
     fi
     # Save the bash flags and options settings so we can restore them after sourcing the source file:
-    { saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )" ; } 2>/dev/null
+    { saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # The actual work (source the source file):
     source "$source_file"
     source_return_code=$?
-    test "0" -eq "$source_return_code" || Debug "SourceTrustworthy function: 'source $source_file' returns $source_return_code"
+    test "0" -eq "$source_return_code" && Debug "SourceTrustworthy: 'source $source_file' returns $source_return_code" || Debug "SourceTrustworthy function: 'source $source_file' returns $source_return_code"
     # Restore the bash flags and options settings to what they have been before sourcing the source file:
-    { apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands" ; } 2>/dev/null
+    { apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # Ensure that after each sourced file we are back in ReaR's usual working directory
     # that is WORKING_DIR="$( pwd )" when usr/sbin/rear was launched
     # cf. https://github.com/rear/rear/issues/2461
@@ -73,8 +65,6 @@ function SourceTrustworthy () {
 function Source () {
     local source_file="$1"
     local source_return_code=0
-    # Do basically same checks here as in the SourceTrustworthy function above
-    # because the checks here behave a bit different than those in SourceTrustworthy.
     # Skip if source file name is empty:
     if test -z "$source_file" ; then
         Debug "Skipping Source() because it was called with empty source file name"
