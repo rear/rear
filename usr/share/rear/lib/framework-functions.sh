@@ -46,7 +46,7 @@ function SourceTrustworthy () {
     # The actual work (source the source file):
     source "$source_file"
     source_return_code=$?
-    test "0" -eq "$source_return_code" && Debug "SourceTrustworthy: 'source $source_file' returns $source_return_code" || Debug "SourceTrustworthy function: 'source $source_file' returns $source_return_code"
+    test "0" -eq "$source_return_code" || Debug "SourceTrustworthy function: 'source $source_file' returns $source_return_code"
     # Restore the bash flags and options settings to what they have been before sourcing the source file:
     { apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # Ensure that after each sourced file we are back in ReaR's usual working directory
