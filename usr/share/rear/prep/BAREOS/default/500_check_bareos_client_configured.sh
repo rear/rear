@@ -1,10 +1,6 @@
+#
 # Check that Bareos is installed and configured
 #
-
-if [ "$BAREOS_RESTORE_MODE" != "bconsole" ]; then
-   ### restore using bextract, no need for a director
-   return
-fi
 
 mapfile -t clients < <( bcommand ".clients" )
 

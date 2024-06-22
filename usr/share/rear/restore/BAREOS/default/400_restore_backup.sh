@@ -2,10 +2,6 @@
 # Restore from Bareos using bconsole (optional)
 #
 
-if [ "$BAREOS_RESTORE_MODE" != "bconsole" ]; then
-    return
-fi
-
 # get last restore jobid before starting the restore
 local last_restore_jobid_old
 last_restore_jobid_old=$(get_last_restore_jobid)
@@ -94,7 +90,7 @@ else
     local restore_cmd_result
     restore_cmd_result="$( bcommand_json "$RESTORE_CMD" )"
     Log "$restore_cmd_result"
-    if ! restore_jobid="$( jq  --exit-status --raw-output '.result.run.jobid' <<< "$restore_cmd_result" )"; then
+    if [ -z "$restore_cmd_result" ] || ! restore_jobid="$( jq  --exit-status --raw-output '.result.run.jobid' <<< "$restore_cmd_result" )"; then
         Error "Failed to determine Restore Job."
     fi
     LogPrint "JobId of restore job is $restore_jobid"
@@ -110,5 +106,9 @@ elif [ ${job_exitcode} -eq 1 ]; then
     LogPrint "WARNING: Restore job finished with warnings."
 else
     LogPrint "$( bcommand "list joblog jobid=$restore_jobid" )"
-    Error "Bareos Restore failed (${job_exitcode})"
+    Error "Bareos restore failed (${job_exitcode})"
 fi
+
+mkdir "$TARGET_FS_ROOT/var/lib/bareos" && chroot "$TARGET_FS_ROOT" chown bareos: /var/lib/bareos
+
+LogPrint "Bareos restore finished."
