@@ -1,6 +1,7 @@
 ### prepare stuff for BAREOS
 
-CLONE_GROUPS+=( bareos )
+CLONE_GROUPS+=( "bareos" )
+TRUSTED_FILE_OWNERS+=( "bareos" )
 COPY_AS_IS+=( "${COPY_AS_IS_BAREOS[@]}" )
 COPY_AS_IS_EXCLUDE+=( "${COPY_AS_IS_EXCLUDE_BAREOS[@]}" )
 PROGS+=( "${PROGS_BAREOS[@]}" )
