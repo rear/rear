@@ -9,7 +9,7 @@
 function bcommand()
 {
     local OPTIND=1
-    local pre_commands=()
+    local pre_commands=( "." )
     while getopts ":p:" option "$@"; do
         case $option in
             (p)
@@ -21,39 +21,31 @@ function bcommand()
         esac
     done
     shift $((OPTIND-1))
+    local command="$1"
 
-    local out
-    out=$(mktemp)
-    (
-        for i in "${pre_commands[@]}"; do
-            echo "$i"
-        done
-        echo "@tee $out"
-        for i in "$@"; do
-            echo "$i"
-        done
-    ) | bconsole 1>&2
-    rc=$?
+    local output
+    output=$(
+        (
+            for i in "${pre_commands[@]}"; do
+                echo "$i"
+            done
+            echo "$command"
+        ) | bconsole
+    )
+    local rc=$?
+    (( rc > 0 )) && return $rc
 
-    # remove submitted commands from output.
-    local sed_args="(You have messages."
-    for i in "$@"; do
-        sed_args+="|$i"
-    done
-    sed_args+=")"
+    local command_as_regex
+    command_as_regex=$( sed -e 's/\./\\./g' -e 's/\//\\\//g' <<< "$command" )
 
-    # using the unprintable char $'\001' as sed separator, as the normal '/' causes problems with paths.
-    local s=$'\001'
-    # remove all lines that only contain on of the strings (.api 0)
-    # and/or removing just the string (but keeping the line) (.api json)
-    sed -r -e "\\${s}^${sed_args}\$${s}d" -e "s${s}${sed_args}${s}${s}" < "$out"
-    rm "$out"
-    return $rc
+    # Remove all header lines, by searching when the provided command appears in the output.
+    # In api mode json, a "}" may appear at the start of the line.
+    sed -r "0,/^[}]?${command_as_regex}$/d" <<< "$output"
 }
 
 function bcommand_json()
 {
-  bcommand -p ".api json compact=no" "$@"
+  bcommand -p ".api json compact=no" "$1"
   return $?
 }
 
