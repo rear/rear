@@ -292,9 +292,7 @@ function wait_restore_job()
 {
     local restore_jobid="$1"
 
-    if [ -z "$restore_jobid" ]; then
-        Error "No restore jobid given"
-    fi
+    [ "$restore_jobid" ] || Error "No restore jobid given"
 
     LogPrint "Information about restore job $restore_jobid:"
     LogPrint "$( bcommand "llist jobid=$restore_jobid" )"
