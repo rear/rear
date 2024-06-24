@@ -103,7 +103,7 @@ if (( job_exitcode == 0 )); then
     LogPrint "Restore job finished successfully."
 elif (( job_exitcode == 1 )); then
     Log "$( bcommand "list joblog jobid=$restore_jobid" )"
-    LogPrint "WARNING: Restore job finished with warnings."
+    LogPrint "WARNING: Restore job finished with warnings. Please check the ReaR and Bareos logs."
 else
     LogPrint "$( bcommand "list joblog jobid=$restore_jobid" )"
     Error "Bareos restore failed (${job_exitcode})"
