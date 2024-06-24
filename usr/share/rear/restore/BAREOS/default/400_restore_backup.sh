@@ -1,178 +1,114 @@
-### Restore from bareos
-###
+#
+# Restore from Bareos using bconsole (optional)
+#
 
-### Create example bootstrap file
-cat <<EOF >$VAR_DIR/bootstrap.txt
-### Example Bareos bootstrap file
-###
+# get last restore jobid before starting the restore
+local last_restore_jobid_old
+last_restore_jobid_old=$(get_last_restore_jobid)
+local restore_jobid
 
-### Only the exact Volume name is required, other keywords are optional.
-### The use of FileIndex and Count keywords speeds up the selection enormously.
+echo "status client=$BAREOS_CLIENT" | bconsole > "$TMP_DIR/bareos_client_status_before_restore.txt"
+LogPrint "$(cat "$TMP_DIR/bareos_client_status_before_restore.txt")"
 
-### The Volume name to use
-Volume=PLEASE-EDIT-BOOTSTRAP
+LogPrint "target_fs_used_disk_space=$(total_target_fs_used_disk_space)"
 
-### A (list of) Client name(s) to be matched on the current Volume
-#Client=$(hostname -s)-fd
+RESTORE_CMD="restore client=$BAREOS_CLIENT $RESTOREJOB $FILESET where=$TARGET_FS_ROOT select all done yes"
 
-### A (list or range of) JobId(s) to be selected from the current Volume
-#JobId=18
+UserOutput ""
+UserOutput "The system is now ready for a restore via Bareos."
+UserOutput ""
+UserOutput "When choosing 'automatic' a Bareos restore without user interaction"
+UserOutput "will be started with following options:"
+UserOutput "${RESTORE_CMD}"
+UserOutput ""
+UserOutput "When choosing 'manual', bconsole will be started"
+UserOutput "and let you choose the restore options yourself."
+UserOutput "Keep in mind, that the new root is mounted under '$TARGET_FS_ROOT',"
+UserOutput "so use where=$TARGET_FS_ROOT on restore."
+UserOutput "The bconsole history contains the preconfigured restore command."
+UserOutput ""
 
-### A (list of) Job name(s) to be matched on the current Volume
-#Job=Bkp_Daily.2011-06-16
+bareos_recovery_mode="$( UserInput -I BAREOS_RECOVERY_MODE -p "Choose restore mode: " -D "automatic" "automatic" "manual" )"
 
-### A (list or range of) Volume session id(s) to be matched from the current Volume
-#VolSessionId=1
+if [ "$bareos_recovery_mode" == "manual" ]; then
 
-### The Volume session time to be matched from the current Volume
-#VolSessionTime=108927638
-
-### A (list or range of) FileIndex(es) to be selected from the current Volume
-#FileIndex=1-157
-
-### The total number of files that will be restored for this Volume.
-#Count=157
+    #  fill bconsole history
+    cat <<EOF >~/.bconsole_history
+exit
+list jobs client=$BAREOS_CLIENT jobtype=R
+list backups client=$BAREOS_CLIENT
+status client=$BAREOS_CLIENT
+restore client=$BAREOS_CLIENT $FILESET $RESTOREJOB where=$TARGET_FS_ROOT
+restore client=$BAREOS_CLIENT $FILESET $RESTOREJOB where=$TARGET_FS_ROOT select all done
 EOF
-#############################################################################
 
-if [[ "$BEXTRACT_DEVICE" || "$BEXTRACT_VOLUME" ]]; then
-
-    if [[ -s "$TMP_DIR/restore-exclude-list.txt" ]]; then
-        exclude_list=" -e $TMP_DIR/restore-exclude-list.txt "
+    if bconsole 0<&6 1>&7 2>&8 ; then
+        Log "bconsole finished with zero exit code"
+    else
+        Log "bconsole finished with non-zero exit code $?"
     fi
 
-    if [[ -b "$BEXTRACT_DEVICE" && -d "/backup" ]]; then
-
-        ### Bareos support using bextract and disk archive
-        LogPrint "
-The system is now ready to restore from Bareos. bextract will be started for
-you to restore the required files. It's assumed that you know what is
-necessary to restore - typically it will be a full backup.
-
-Do not exit 'bextract' until all files are restored.
-
-WARNING: The new root is mounted under '$TARGET_FS_ROOT'.
-"
-        # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-        # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
-        read -p "Press ENTER to start bextract" 0<&6 1>&7 2>&8
-
-        bextract$exclude_list -V$BEXTRACT_VOLUME /backup $TARGET_FS_ROOT
-
-        LogPrint "
-Please verify that the backup has been restored correctly to '$TARGET_FS_ROOT'
-in the provided shell. When finished, type exit in the shell to continue
-recovery.
-"
-        rear_shell "Did the backup successfully restore to '$TARGET_FS_ROOT' ? Ready to continue ?" \
-            "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
-vi bootstrap.txt
-bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE $TARGET_FS_ROOT"
-
-    else
-
-        ### Bareos support using bextract and tape archive
-        LogPrint "$REQUESTRESTORE_TEXT"
-
-        LogPrint "The bextract command looks like:
-
-   bextract$exclude_list -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE $TARGET_FS_ROOT
-
-Where '$BEXTRACT_VOLUME' is the required Volume name of the tape,
-alternatively, use '*' if you don't know the volume,
-and '$BEXTRACT_DEVICE' is the Bareos device name of the tape drive.
-"
-
-        LogPrint "Please restore your backup in the provided shell, use the shell history to
-access the above command and, when finished, type exit in the shell to continue recovery.
-"
-        rear_shell "Did you restore the backup to '$TARGET_FS_ROOT' ? Ready to continue ?" \
-            "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
-vi bootstrap.txt
-bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE $TARGET_FS_ROOT"
-
+    LogPrint "determine restore jobid"
+    if ! restore_jobid=$(wait_for_newer_restore_job_to_start "$last_restore_jobid_old"); then
+        Error "Failed to determine Restore Job."
     fi
 
 else
-    ### Bareos support using bconsole
+    # bareos_recovery_mode == automatic: restore most recent backup automatically
+    
+    LogPrint "starting restore using bconsole:"
+    LogPrint "$RESTORE_CMD"
 
-    if [ "$BAREOS_RECOVERY_MODE" != "manual" ]
-    then
-        # restore most recent backup automatically
-
-        if [ -z "$BAREOS_CLIENT" ]
-        then
-            BAREOS_CLIENT="$HOSTNAME-fd"
-        fi
-
-        if [ -n "$BAREOS_FILESET" ]
-        then
-            FILESET="fileset=\"$BAREOS_FILESET\""
-        fi
-
-        if [ -n "$BAREOS_RESTORE_JOB" ]
-        then
-            RESTOREJOB="restorejob=$BAREOS_RESTORE_JOB"
-        fi
-
-        echo "restore client=$BAREOS_CLIENT $RESTOREJOB $FILESET where=$TARGET_FS_ROOT select all done
-
-" |     bconsole
-
-        # wait for job to start
-        LogPrint "waiting for job to start"
-        while true
-        do
-            sleep 3
-            echo "status client=$BAREOS_CLIENT" | bconsole | grep -E "^JobId.* running." && break
-        done
-
-        # wait for job to finish
-        LogPrint "waiting for job to finish"
-        while true
-        do
-            sleep 10
-            echo "status client=$BAREOS_CLIENT" | bconsole | grep -E "^No Jobs running" >/dev/null && break
-        done
-        LogPrint "Restore job finished."
-    else
-
-    # Prompt the user that the system recreation has been done and that
-    # bconsole is about to be started.
-        LogPrint "
-The system is now ready for a restore via Bareos. bconsole will be started for
-you to restore the required files. It's assumed that you know what is necessary
-to restore - typically it will be a full backup.
-
-Do not exit 'bconsole' until all files are restored
-
-WARNING: The new root is mounted under '$TARGET_FS_ROOT'.
-
-Press ENTER to start bconsole"
-        read
-
-        bconsole
+    # example output of 'bcommand_json "$RESTORE_CMD"':
+    # {
+    #   "jsonrpc": "2.0",
+    #   "id": null,
+    #   "result": {
+    #     "query": [
+    #       {
+    #         "jobid": "18",
+    #         "level": "F",
+    #         "jobfiles": "59653",
+    #         "jobbytes": "2504970763",
+    #         "starttime": "2024-06-05 13:58:31",
+    #         "volumename": "Full-0001"
+    #       },
+    #        {
+    #         "jobid": "90",
+    #         "level": "I",
+    #         "jobfiles": "6553",
+    #         "jobbytes": "284336784",
+    #         "starttime": "2024-06-18 14:08:40",
+    #         "volumename": "Incremental-0009"
+    #       }
+    #     ],
+    #     "run": {
+    #       "jobid": "103"
+    #     }
+    #   }
+    # }
+    local restore_cmd_result
+    restore_cmd_result="$( bcommand_json "$RESTORE_CMD" )"
+    Log "$restore_cmd_result"
+    if [ -z "$restore_cmd_result" ] || ! restore_jobid="$( jq  --exit-status --raw-output '.result.run.jobid' <<< "$restore_cmd_result" )"; then
+        Error "Failed to determine Restore Job."
     fi
-    LogPrint "
-Please verify that the backup has been restored correctly to '$TARGET_FS_ROOT'
-in the provided shell. When finished, type exit in the shell to continue
-recovery.
-"
-
-if [[ "$ISO_RECOVER_MODE" = "unattended" ]] || [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
-    Log "Unattended mode selected"
-else
-    rear_shell "Did the backup successfully restore to '$TARGET_FS_ROOT' ? Ready to continue ?" \
-            "bls -j -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE
-vi bootstrap.txt
-bextract$exclude_list -b bootstrap.txt -V$BEXTRACT_VOLUME $BEXTRACT_DEVICE $TARGET_FS_ROOT"
+    LogPrint "JobId of restore job is $restore_jobid"
 fi
 
-fi # end of [[ "$BEXTRACT_DEVICE" || "$BEXTRACT_VOLUME" ]]
+wait_restore_job "$restore_jobid"
+local job_exitcode=$?
+if (( job_exitcode == 0 )); then
+    Log "$( bcommand "list joblog jobid=$restore_jobid" )"
+    LogPrint "Restore job finished successfully."
+elif (( job_exitcode == 1 )); then
+    Log "$( bcommand "list joblog jobid=$restore_jobid" )"
+    LogPrint "WARNING: Restore job finished with warnings. Please check the ReaR and Bareos logs."
+else
+    LogPrint "$( bcommand "list joblog jobid=$restore_jobid" )"
+    Error "Bareos restore failed (${job_exitcode})"
+fi
 
-
-mkdir $TARGET_FS_ROOT/var/lib/bareos && chroot $TARGET_FS_ROOT chown bareos: /var/lib/bareos
+mkdir "$TARGET_FS_ROOT/var/lib/bareos" && chown bareos:bareos "$TARGET_FS_ROOT/var/lib/bareos"
 
 LogPrint "Bareos restore finished."
-
-# continue with next script

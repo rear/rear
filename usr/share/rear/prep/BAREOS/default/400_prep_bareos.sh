@@ -1,10 +1,8 @@
 ### prepare stuff for BAREOS
-CLONE_GROUPS+=( bareos )
+
+CLONE_GROUPS+=( "bareos" )
+TRUSTED_FILE_OWNERS+=( "bareos" )
 COPY_AS_IS+=( "${COPY_AS_IS_BAREOS[@]}" )
 COPY_AS_IS_EXCLUDE+=( "${COPY_AS_IS_EXCLUDE_BAREOS[@]}" )
 PROGS+=( "${PROGS_BAREOS[@]}" )
-
-### Include mt when we are restoring from Bareos tape (for troubleshooting)
-if [[ "$TAPE_DEVICE" || "$BEXTRACT_DEVICE" ]] ; then
-    PROGS+=( mt )
-fi
+REQUIRED_PROGS+=( "${REQUIRED_PROGS_BAREOS[@]}" )

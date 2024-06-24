@@ -438,14 +438,14 @@ function Log () {
       #   # prefix_blanks="$( tr '[:print:]' ' ' <<<"$prefix" )"
       #   # log_message="${MESSAGE_PREFIX}${timestamp}${message//$'\n'/$'\n'$prefix_blanks}"
       #   # echo "$log_message"
-      #   message prefix 2021-06-24 10:49:39.824719000 fist line'
+      #   message prefix 2021-06-24 10:49:39.824719000 first line'
       #   '                                             second line'
       #   '                                             third line
       # so we use the LF variable (cf. how LF is set above)
       #   # LF=$'\n'
       #   # log_message="${MESSAGE_PREFIX}${timestamp}${message//$LF/$LF$prefix_blanks}"
       #   # echo "$log_message"
-      #   message prefix 2021-06-24 10:49:39.824719000 fist line
+      #   message prefix 2021-06-24 10:49:39.824719000 first line
       #                                                second line
       #                                                third line
       # to make that parameter expansion also work with bash version 3.1.17 in SLES10:
@@ -1085,9 +1085,9 @@ function cleanup_build_area_and_end_program () {
 #       appear in the log file so that the confidential user input mode does not help in debugscript mode.
 #       If confidential user input is needed also in debugscript mode the caller of the UserInput function
 #       must call it in an appropriate (temporary) environment e.g. with STDERR redirected to /dev/null like
-#           { password="$( UserInput -I PASSWORD -C -r -s -p 'Enter the pasword' )" ; } 2>/dev/null
+#           { password="$( UserInput -I PASSWORD -C -r -s -p 'Enter the password' )" ; } 2>/dev/null
 #       or since https://github.com/rear/rear/pull/3006 probably better as
-#           { password="$( UserInput -I PASSWORD -C -r -s -p 'Enter the pasword' )" ; } 2>>/dev/$SECRET_OUTPUT_DEV
+#           { password="$( UserInput -I PASSWORD -C -r -s -p 'Enter the password' )" ; } 2>>/dev/$SECRET_OUTPUT_DEV
 #       to still make debugging possible for the user by calling rear with the --expose-secrets option.
 #       The redirection must be done via a compound group command like
 #           { confidential_command ; } 2>/dev/null
@@ -1150,7 +1150,7 @@ function cleanup_build_area_and_end_program () {
 #       USER_INPUT_BAR_CHOICE='third choice'
 #   which lets a 'UserInput -I BAR_CHOICE' call autorespond with 'third choice'.
 #   No USER_INPUT_BAR_CHOICE variable should exist to get real user input for a 'UserInput -I BAR_CHOICE' call
-#   or the user can interupt any automated response within a relatively short time (minimum is only 1 second).
+#   or the user can interrupt any automated response within a relatively short time (minimum is only 1 second).
 # * The non-interactive feature works by erroring out in UserInput if the same user input ID is used more than once and
 #   if the first call to UserInput was not met by a human response. The idea is that if the first call ran into the
 #   timeout then the second call will not have a better chance of success and should be treated as an error.
