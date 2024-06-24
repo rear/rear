@@ -64,14 +64,13 @@
 
 mapfile -t filesets < <( bcommand "llist backups client=$BAREOS_CLIENT" | bcommand_extract_value "fileset" | sort | uniq )
 
-LogPrint "available filesets:" "${filesets[@]}"
+Log "available filesets:" "${filesets[@]}"
 
 if (( ${#filesets[@]} == 0 )); then
     Error "No valid backups found for client $BAREOS_CLIENT"
 fi
 
 if [ "$BAREOS_FILESET" ]; then
-    LogPrint "BAREOS_FILESET=$BAREOS_FILESET"
     if ! IsInArray "$BAREOS_FILESET" "${filesets[@]}"; then
         Error "No valid backup for fileset ($BAREOS_FILESET). Successful backups for following filesets: " "{filesets[@]}"
     fi
@@ -85,6 +84,7 @@ if (( ${#filesets[@]} == 1 )); then
         echo "BAREOS_FILESET=$BAREOS_FILESET"
         echo
     } >> "$ROOTFS_DIR/etc/rear/rescue.conf"
+    LogPrint "Using '$BAREOS_FILESET' as BAREOS_FILESET. For automatic restore, recreate the rescue image when changing the clients fileset."
     return
 fi
 

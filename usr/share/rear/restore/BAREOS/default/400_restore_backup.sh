@@ -98,10 +98,10 @@ fi
 
 wait_restore_job "$restore_jobid"
 local job_exitcode=$?
-if [ ${job_exitcode} -eq 0 ]; then
+if (( job_exitcode == 0 )); then
     Log "$( bcommand "list joblog jobid=$restore_jobid" )"
     LogPrint "Restore job finished successfully."
-elif [ ${job_exitcode} -eq 1 ]; then
+elif (( job_exitcode == 1 )); then
     Log "$( bcommand "list joblog jobid=$restore_jobid" )"
     LogPrint "WARNING: Restore job finished with warnings."
 else
@@ -109,6 +109,6 @@ else
     Error "Bareos restore failed (${job_exitcode})"
 fi
 
-mkdir "$TARGET_FS_ROOT/var/lib/bareos" && chroot "$TARGET_FS_ROOT" chown bareos: /var/lib/bareos
+mkdir "$TARGET_FS_ROOT/var/lib/bareos" && chown bareos:bareos "$TARGET_FS_ROOT/var/lib/bareos"
 
 LogPrint "Bareos restore finished."

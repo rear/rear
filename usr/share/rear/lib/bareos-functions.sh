@@ -54,7 +54,7 @@ function bcommand_extract_value()
   local key="$1"
   local sed_arg
   sed_arg="$(printf 's/^ *%s: (.*) *$/\\1/p' "$key")"
-  sed -n -r "${sed_arg}"
+  sed -n -r "$sed_arg"
 }
 
 function bareos_ensure_client_is_available()
@@ -114,9 +114,9 @@ function bareos_ensure_client_is_available()
     bconsole_client_status=$(bconsole <<< "status client=$client")
     rc=$?
     if [ $rc -eq 0 ]; then
-        Log "${bconsole_client_status}"
+        Log "$bconsole_client_status"
     else
-        LogPrint "${bconsole_client_status}"
+        LogPrint "$bconsole_client_status"
         Error "Failed to connect to Bareos Director."
     fi
     LogPrint "Connecting to the Bareos Director: OK"
@@ -125,7 +125,7 @@ function bareos_ensure_client_is_available()
         Error "Failure: The Bareos Director cannot connect to the local filedaemon ($client)."
     fi
 
-    if ! grep "Running Jobs:" <<< "${bconsole_client_status}"; then
+    if ! grep "Running Jobs:" <<< "$bconsole_client_status"; then
         Error "Failure: The Bareos Director cannot connect to the local filedaemon ($client)."
     fi
 
@@ -189,7 +189,7 @@ function get_last_restore_jobid()
     #   }
     # }
     local bcommand_result
-    bcommand_result=$( bcommand_json "list jobs ${RESTOREJOB_AS_JOB} client=$BAREOS_CLIENT jobtype=R last" )
+    bcommand_result=$( bcommand_json "list jobs $RESTOREJOB_AS_JOB client=$BAREOS_CLIENT jobtype=R last" )
     jq --exit-status --raw-output '[ .result.jobs[].jobid ] | max' <<< "$bcommand_result"
 }
 
