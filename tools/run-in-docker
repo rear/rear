@@ -72,7 +72,7 @@ RUN type -p apt-get &>/dev/null || exit 0 ;\
 
 RUN type -p zypper &>/dev/null || exit 0 ;\
     zypper --no-gpg-checks --quiet --non-interactive install \
-        sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux portmap rpcbind iproute2 nfs-client xorriso mkisofs util-linux psmisc \
+        sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux portmap rpcbind iproute2 nfs-client xorriso mkisofs util-linux psmisc procps \
         make git rpm-build ;\
     zypper --no-gpg-checks --quiet --non-interactive install 'rubygem(asciidoctor)' || \
         zypper --no-gpg-checks --quiet --non-interactive install asciidoc xmlto
