@@ -3,7 +3,7 @@
 #
 
 if ! bareos-fd -t; then
-    Error "Bareos-fd configuration invalid"
+    Error "bareos-fd configuration invalid"
 fi
 
 if ! systemctl status bareos-fd.service; then
@@ -11,5 +11,6 @@ if ! systemctl status bareos-fd.service; then
 fi
 
 if ! bconsole -t; then
-    Error "Bareos bconsole invalid"
+    Error "Bareos bconsole configuration invalid"
 fi
+

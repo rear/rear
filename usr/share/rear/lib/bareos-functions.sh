@@ -61,8 +61,6 @@ function bareos_ensure_client_is_available()
 {
     local client="$1"
 
-    LogPrint "Connecting to the Bareos Director ..."
-
     [ "$client" ] || Error "No client name given"
 
     # With
@@ -119,7 +117,6 @@ function bareos_ensure_client_is_available()
         LogPrint "$bconsole_client_status"
         Error "Failed to connect to Bareos Director."
     fi
-    LogPrint "Connecting to the Bareos Director: OK"
 
     if ! grep "Connecting to Client $client" <<< "$bconsole_client_status"; then
         Error "Failure: The Bareos Director cannot connect to the local filedaemon ($client)."
