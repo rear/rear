@@ -434,6 +434,7 @@ fi
                     # Output header only once:
                     btrfsmountedsubvol_entry_exists="yes"
                     echo "# All mounted btrfs subvolumes (including mounted btrfs default subvolumes and mounted btrfs snapshot subvolumes)."
+                    echo "# Mounted btrfs snapshot subvolumes are autoexcluded."
                     if test "$findmnt_FSROOT_works" ; then
                         echo "# Determined by the findmnt command that shows the mounted btrfs_subvolume_path."
                         echo "# Format: btrfsmountedsubvol <device> <subvolume_mountpoint> <mount_options> <btrfs_subvolume_path>"
@@ -469,7 +470,10 @@ fi
                 # Finally, test whether the btrfs subvolume listed as mounted actually exists. A running docker
                 # daemon apparently can convince the system to list a non-existing btrfs volume as mounted.
                 # See https://github.com/rear/rear/issues/1496
-                if btrfs_subvolume_exists "$subvolume_mountpoint" "$btrfs_subvolume_path"; then
+                if btrfs_snapshot_subvolume_exists "$subvolume_mountpoint" "$btrfs_subvolume_path"; then
+                    # Exclude mounted snapshot subvolumes
+                    echo "#btrfsmountedsubvol $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
+                elif btrfs_subvolume_exists "$subvolume_mountpoint" "$btrfs_subvolume_path"; then
                     echo "btrfsmountedsubvol $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
                 else
                     LogPrintError "Ignoring non-existing btrfs subvolume listed as mounted: $subvolume_mountpoint"
