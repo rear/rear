@@ -1,7 +1,0 @@
-[Unit]
-Description=Relax-and-Recover system setup script
-DefaultDependencies=no
-
-[Service]
-Type=oneshot
-ExecStart=/etc/scripts/system-setup
