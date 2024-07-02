@@ -16,15 +16,60 @@ function SetOSVendorAndVersion () {
     # The test must match OS_VENDOR=generic or OS_VERSION=none in default.conf:
     if test "$OS_VENDOR" = generic -o "$OS_VERSION" = none ; then
 
-        # Recent Linux distro's with systemd has the /etc/os-release file
+        # Recent Linux distros with systemd have the /etc/os-release file
         # Try to find all the required information from that file
         if [[ -f /etc/os-release ]] ; then
-            grep -q -i 'fedora' /etc/os-release && OS_VENDOR=Fedora
-            grep -q -i -E '(centos|redhat|scientific|oracle)' /etc/os-release && OS_VENDOR=RedHatEnterpriseServer
-            grep -q -i 'suse' /etc/os-release && OS_VENDOR=SUSE_LINUX
-            grep -q -i 'debian' /etc/os-release && OS_VENDOR=Debian
-            grep -q -i -E '(ubuntu|linuxmint)' /etc/os-release && OS_VENDOR=Ubuntu
-            grep -q -i 'arch' /etc/os-release && OS_VENDOR=Arch
+            local ID ID_LIKE
+            eval "$(grep "^ID=" /etc/os-release)"
+            eval "$(grep "^ID_LIKE=" /etc/os-release)"
+
+            # Deal with derivatives first:
+            case "$ID_LIKE" in
+                (*arch*)
+                    OS_VENDOR=Arch_Linux
+                    ;;
+                (*centos*|*rhel*)
+                    OS_VENDOR=RedHatEnterpriseServer
+                    ;;
+                (*debian*)
+                    OS_VENDOR=Debian
+                    ;;
+                # Fedora must be after RHEL to distinguish RHEL derivatives.
+                (*fedora*)
+                    OS_VENDOR=Fedora
+                    ;;
+                (*suse*)
+                    OS_VENDOR=SUSE_LINUX
+                    ;;
+                (*ubuntu*)
+                    OS_VENDOR=Ubuntu
+                    ;;
+            esac
+
+            # And then use the actual ID.  This may reset OS_VENDOR if it was
+            # already set. E.g. Ubuntu is like Debian but ReaR treats it as
+            # a separate OS_VENDOR.
+            case "$ID" in
+                (arch)
+                    OS_VENDOR=Arch_Linux
+                    ;;
+                (debian)
+                    OS_VENDOR=Debian
+                    ;;
+                (fedora)
+                    OS_VENDOR=Fedora
+                    ;;
+                (rhel|ol)
+                    # Oracle Linux specifies only Fedora and not RHEL in ID_LIKE=
+                    OS_VENDOR=RedHatEnterpriseServer
+                    ;;
+                (suse)
+                    OS_VENDOR=SUSE_LINUX
+                    ;;
+                (ubuntu)
+                    OS_VENDOR=Ubuntu
+                    ;;
+            esac
 
             local VERSION_ID
             eval "$(grep "^VERSION_ID=" /etc/os-release)"
@@ -106,63 +151,24 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
     OS_VENDOR_ARCH="$OS_VENDOR/$MACHINE"
     OS_VENDOR_VERSION_ARCH="$OS_VENDOR/$OS_VERSION/$MACHINE"
 
-    # add OS_MASTER_* vars in case this is a derived OS
-    case "$( echo $OS_VENDOR_VERSION | tr '[A-Z]' '[a-z]' )" in
-        (*oracle*|*centos*|*fedora*|*redhat*|*scientific*)
+    # set OS_MASTER_VENDOR in case this is a derived OS and ReaR differentiates it
+    case "${OS_VENDOR,,}" in
+        (*redhat*)
             OS_MASTER_VENDOR="Fedora"
-            case "$OS_VERSION" in
-                (5.*)
-                    # map all RHEL 5.x and clones to Fedora/5
-                    # this is safe because FedoraCore 5 never existed
-                    OS_MASTER_VERSION="5"
-                    ;;
-                (6.*)
-                    # map all RHEL 6.x and clones to Fedora/6
-                    OS_MASTER_VERSION="6"
-                    ;;
-                (7.*)
-                    # map all RHEL 7.x and clones to Fedora/7
-                    OS_MASTER_VERSION="7"
-                    ;;
-                (8.*)
-                    # map all RHEL 7.x and clones to Fedora/8
-                    OS_MASTER_VERSION="8"
-                    ;;
-                (9.*)
-                    # map all RHEL 7.x and clones to Fedora/9
-                    OS_MASTER_VERSION="9"
-                    ;;
-                (*)
-                OS_MASTER_VERSION="$OS_VERSION"
-                ;;
-            esac
             ;;
-        (*ubuntu*|*linuxmint*)
+        (*ubuntu*)
             OS_MASTER_VENDOR="Debian"
-            OS_MASTER_VERSION="$OS_VERSION"
-            ;;
-        (*archlinux*)
-            OS_MASTER_VENDOR="Arch"
-            OS_MASTER_VERSION="$OS_VERSION"
-            ;;
-        (*suse*)
-            # When OS_VENDOR_VERSION contains 'SUSE', set OS_MASTER_VENDOR to 'SUSE'
-            # but do not set OS_MASTER_VENDOR same as OS_VENDOR (i.e. 'SUSE_LINUX')
-            # (cf. above: all SUSE distributions ... must be unified to 'SUSE_LINUX')
-            # because then scripts in a .../SUSE_LINUX/... sub-directoriy and conf/SUSE_LINUX.conf
-            # get sourced twice by the (buggy) SourceStage function in lib/framework-functions.sh
-            OS_MASTER_VENDOR="SUSE"
-            # If OS_VERSION is of the form 12.34.56 OS_MASTER_VERSION is only the first part '12'.
-            # Because openSUSE Tumbleweed has rolling releases OS_VERSION is a date of the form YYYYMMDD
-            # so that there is no real OS_MASTER_VERSION which is then the the same as OS_VERSION:
-            OS_MASTER_VERSION="${OS_VERSION%%.*}"
             ;;
         (*)
             # set fallback values to avoid error exit for 'set -eu' because of unbound variables:
             OS_MASTER_VENDOR=""
-            OS_MASTER_VERSION="$OS_VERSION"
             ;;
     esac
+
+    # Set master version to the MAJOR release version. ReaR assumes that OS_MASTER_VERSION
+    # is just the major release number extracted from OS_VERSION and not the version of the derived OS.
+    # TODO: Rename the variable to be less confusing.
+    OS_MASTER_VERSION="${OS_VERSION%%.*}"
 
     # combined stuff for OS_MASTER_*
     if [ "$OS_MASTER_VENDOR" ] ; then
