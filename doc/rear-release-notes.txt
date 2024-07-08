@@ -2830,7 +2830,7 @@ Details (mostly in chronological order):
 
 -   Do not start multipathd when not needed (issue #1804)
 
--   Better way to get multipath partion name (issue #1802)
+-   Better way to get multipath partition name (issue #1802)
 
 -   Exclude multipath device that does not have mounted fs (issue #1801)
 

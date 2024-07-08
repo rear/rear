@@ -1218,7 +1218,7 @@ function apply_layout_mappings() {
         # Replace partitions with unique replacement words:
         # For example we normalize /dev/cciss/c0d1p2 to something like _REAR5_2
         # (therein the '5' is arbitrary but the '2' is the actual partition number).
-        # Due to multipath partion naming complexity, all known partition naming types for example
+        # Due to multipath partition naming complexity, all known partition naming types for example
         # /dev/mapper/mpatha4 /dev/mapper/mpathap4 /dev/mapper/mpatha-part4 /dev/mapper/mpatha_part4
         # are replaced by the same normalized replacement word like _REAR7_4
         # (therein the '7' is arbitrary but the '4' is the actual partition number)

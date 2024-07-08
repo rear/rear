@@ -21,7 +21,7 @@
 # The list of file systems to restore is listed in file ${TMP_DIR}/list_of_fs_objects
 # per line we have something like: test.internal.it3.be:/ '/'
 
-[ -f ${TMP_DIR}/DP_GUI_RESTORE ] && return # GUI restore explicitily requested
+[ -f ${TMP_DIR}/DP_GUI_RESTORE ] && return # GUI restore explicitly requested
 
 OMNIR=/opt/omni/bin/omnir
 echo -n ${OMNIR} > ${TMP_DIR}/restore_cmd

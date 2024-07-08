@@ -4,7 +4,7 @@
 # $ /opt/omni/bin/omnidb -filesystem | grep $(hostname)
 # test.internal.it3.be:/ '/'                                      FileSystem
 
-[ -f $TMP_DIR/DP_GUI_RESTORE ] && return # GUI restore explicitily requested
+[ -f $TMP_DIR/DP_GUI_RESTORE ] && return # GUI restore explicitly requested
 
 OMNIDB=/opt/omni/bin/omnidb
 

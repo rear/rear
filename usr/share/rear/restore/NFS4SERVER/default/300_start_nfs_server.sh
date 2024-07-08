@@ -6,7 +6,7 @@ local cpu_cores
 cpu_cores=$(nproc) || Error "Could not determine CPU details via nproc"
 # 4 threads per cpu core
 local nfs_threads=$(( $cpu_cores * 4 ))
-# 8 are the standard and should be the minimun
+# 8 are the standard and should be the minimum
 if (( nfs_threads < 8 )); then nfs_threads=8; fi
 
 # clear /etc/exports if the user rerun the restore with other options
