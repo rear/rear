@@ -6,7 +6,7 @@ LogPrint "Checking if certain restored files are consistent with the recreated s
 DebugPrint "See $VAR_DIR/layout/config/files.md5sum what files are checked"
 local md5sum_stdout
 # The exit status of the assignment is the exit status of the command substitution
-# which is usually the exit status of 'md5sum' that is forwared by 'chroot'
+# which is usually the exit status of 'md5sum' that is forwarded by 'chroot'
 # except 'chroot' fails (e.g. with 127 if 'md5sum' cannot be found).
 # Because the redirections are done before chroot is run
 # (in chroot plain 'md5sum -c --quiet' is run with redirected stdin)

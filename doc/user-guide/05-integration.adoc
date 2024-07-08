@@ -11,8 +11,8 @@ at the same time, you have both parts (recovery system and backup) in sync
 which is a prerequirement to properly recreate the system with "rear recover".
 
 But when you use "rear mkrescue" to create the ReaR rescue/recovery system
-and call "rear mkbackuponly" separatedly to create the backup
-or you call a third party backup tool separatedly,
+and call "rear mkbackuponly" separately to create the backup
+or you call a third party backup tool separately,
 you may not have both parts (recovery system and backup) in sync
 so "rear recover" may not properly recreate the system
 or it may even completely fail to do it.

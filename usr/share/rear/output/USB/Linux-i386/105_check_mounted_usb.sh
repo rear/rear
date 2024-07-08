@@ -16,7 +16,7 @@ scheme="$( url_scheme $OUTPUT_URL )"
 
 if ! mountpoint "$BUILD_DIR/outputfs" ; then
     # It should be possible to support OUTPUT_URL=file://...,
-    # the user whould have to mount the USB manually.
+    # the user would have to mount the USB manually.
     # For this to work, one would need to eliminate all the hardcoded
     # $BUILD_DIR/outputfs in the OUTPUT=USB code, incl. the one above
     # (replace by url_path $OUTPUT_URL).

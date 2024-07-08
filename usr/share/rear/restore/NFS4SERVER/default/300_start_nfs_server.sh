@@ -6,7 +6,7 @@ local cpu_cores
 cpu_cores=$(nproc) || Error "Could not determine CPU details via nproc"
 # 4 threads per cpu core
 local nfs_threads=$(( $cpu_cores * 4 ))
-# 8 are the standard and should be the minumun
+# 8 are the standard and should be the minimun
 if (( nfs_threads < 8 )); then nfs_threads=8; fi
 
 # clear /etc/exports if the user rerun the restore with other options
@@ -33,7 +33,7 @@ Debug "$(cat /etc/exports)"
 exportfs $v -ra || Error "exportfs failed!"
 
 rpc.nfsd --debug "$nfs_threads" "${nfsd_opts[@]}" || Error "rpc.nfsd failed!"
-Debug "nfsd startet with $nfs_threads threads."
+Debug "nfsd started with $nfs_threads threads."
 
 if [ -z "$(pidof rpc.mountd)" ]; then
     rpc.mountd --debug all "${nfsd_opts[@]}" || Error "rpc.mountd failed!"

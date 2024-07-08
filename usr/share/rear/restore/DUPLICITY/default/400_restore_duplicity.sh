@@ -30,7 +30,7 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
 
     starttime=$SECONDS
 
-    # ensure we have enougth space to unpack the backups (they are 100M, but neet up to 1G to unpack!)
+    # ensure we have enough space to unpack the backups (they are 100M, but need up to 1G to unpack!)
     if is_true "$BACKUP_DUPLICITY_TEMP_RAMDISK" ; then
         mkdir -p /mnt/tmp
         mount -t tmpfs none /mnt/tmp -o size=100%

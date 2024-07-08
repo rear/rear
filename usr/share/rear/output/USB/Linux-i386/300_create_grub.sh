@@ -99,7 +99,7 @@ else
     fi
 fi
 # We need to set the GRUB environment variable 'root' to the partition device with filesystem label USB_DEVICE_BOOT_LABEL
-# because GRUB's default 'root' (or GRUB's 'root' identifcation heuristics) would point to the ramdisk but neither kernel
+# because GRUB's default 'root' (or GRUB's 'root' identification heuristics) would point to the ramdisk but neither kernel
 # nor initrd are located on the ramdisk but on the partition device with filesystem label USB_DEVICE_BOOT_LABEL.
 # GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND is needed by the create_grub2_cfg() function.
 # Set GRUB2_SEARCH_ROOT_COMMAND if not specified by the user:

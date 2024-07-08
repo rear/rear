@@ -73,10 +73,10 @@ functionality:
         Backups for Relax-and-Recover
         https://github.com/rear/rear/blob/master/doc/user-guide/11-multiple-backups.adoc
     -   Any partition (e.g. a Windows partition) via BACKUP=BLOCKCLONE. See
-        the documention about BLOCKCLONE
+        the documentation about BLOCKCLONE
         https://github.com/rear/rear/blob/master/doc/user-guide/12-BLOCKCLONE.adoc
     -   BACKUP=ZYPPER is for SUSE systems only (Experimental)
-    -   BACKUP=YUM is for RedHat architectures ony (Experimental)
+    -   BACKUP=YUM is for RedHat architectures only (Experimental)
 
 -   Integrates with external backup solutions such as:
 
@@ -511,7 +511,7 @@ Details (mostly in chronological order - newest topmost):
 -   In lib/_input-output-functions.sh disable SC2218
     cf. https://github.com/rear/rear/issues/1040
 
--   In layout/save/GNU/Linux/230_filesystem_layout.sh aviod SC1087
+-   In layout/save/GNU/Linux/230_filesystem_layout.sh avoid SC1087
     cf. https://github.com/rear/rear/issues/1040
 
 -   In default.conf tell that USB_RETAIN_BACKUP_NR is only supported when
@@ -742,7 +742,7 @@ Details (mostly in chronological order - newest topmost):
 
 -   Fix modinfo_filename() in build/GNU/Linux/400_copy_modules.sh Output the
     original $module_filename also when it is a symlink because in the code
-    below 'cp -L' copies the symlink taget content as a new regular file with
+    below 'cp -L' copies the symlink target content as a new regular file with
     file name as the name of the symlink so the copied content can be still
     found under its original name, cf.
     https://github.com/rear/rear/issues/2677#issuecomment-997859219
@@ -907,7 +907,7 @@ Details (mostly in chronological order - newest topmost):
     https://github.com/rear/rear/pull/2684
 
 -   Overhauled the description in user-guide/05-integration.adoc what "rear
-    savelayout" and "rear checklayout" are menat to do, cf.
+    savelayout" and "rear checklayout" are meant to do, cf.
     https://github.com/rear/rear/commit/7a3884bed1fb6cb61654c4e266ba4c35094bd9f4#r56879062
 
 -   Fixed https://github.com/rear/rear/issues/2667 "rear does not entirely
@@ -942,7 +942,7 @@ Details (mostly in chronological order - newest topmost):
     helper functions inside create_grub2_cfg to make them not globally
     accessible. Initial steps to clean up how the GRUB root device is set via
     one single method. DebugPrint output how GRUB2 is configured to help the
-    user to find errors or bugs. Better GRUB2 menue entry names. Consistent
+    user to find errors or bugs. Better GRUB2 menu entry names. Consistent
     calling of the create_grub2_cfg function always as create_grub2_cfg
     "/path/to/kernel" "/path/to/initrd" >/path/to/grub.cfg also in
     output/ISO/Linux-i386/250_populate_efibootimg.sh. Set GRUB2 timeout to new
@@ -1078,7 +1078,7 @@ Details (mostly in chronological order - newest topmost):
     https://github.com/rear/rear/commit/a8fdc445d0d6f7f9184dc6633817928f96aae9bc
 
 -   Add BACKUP_DUPLICITY_OPTIONS to
-    restore/DUPLICITY/default/400_restore_duplicity.sh Additionnal
+    restore/DUPLICITY/default/400_restore_duplicity.sh Additional
     BACKUP_DUPLICITY_OPTIONS options were missing which can cause the recover
     to fail (options may contain endpoint information for example), see
     https://github.com/rear/rear/issues/2619
@@ -1134,9 +1134,9 @@ Details (mostly in chronological order - newest topmost):
     ... has insufficient free space" and then try as fallback attempt using all
     remaining free space in the VG via "lvcreate -l 100%FREE -n LV VG". In
     layout/save/GNU/Linux/220_lvm_layout.sh sort the 'lvs' output lines by
-    size of the LVs so only some biggest LVs may get automatically shrinked
+    size of the LVs so only some biggest LVs may get automatically shrunk
     (if needed) because we assume that the data of the backup can still be
-    restored into a big LV after it was shrinked a bit. See
+    restored into a big LV after it was shrunk a bit. See
     https://github.com/rear/rear/pull/2591
 
 -   Replaced possibly misleading "USB device" by generic "USB or disk device"
@@ -1262,14 +1262,14 @@ Details (mostly in chronological order - newest topmost):
     the assert_ISO_FILE_SIZE_LIMIT function when there is no usable
     ISO_FILE_SIZE_LIMIT set so the user could specify ISO_FILE_SIZE_LIMIT=0 in
     his etc/rear/local.conf if he wants to skip the ISO_FILE_SIZE_LIMIT test.
-    Aditionally enforce maximum 2GiB ISO_FILE_SIZE_LIMIT when the MODULES
+    Additionally enforce maximum 2GiB ISO_FILE_SIZE_LIMIT when the MODULES
     array contains 'loaded_modules' because MODULES+=( udf ) has no effect in
     this case unless it is loaded (which normally isn't).
 
 -   Error out when files greater or equal ISO_FILE_SIZE_LIMIT should be
     included in the ISO: See the reasoning in default.conf why the default
     ISO_FILE_SIZE_LIMIT is 2GiB and why we error out when files >=
-    ISO_FILE_SIZE_LIMIT should be included in the ISO. It is needed to aviod
+    ISO_FILE_SIZE_LIMIT should be included in the ISO. It is needed to avoid
     possibly disastrous failures later during "rear recover" that users who
     exceed that limit in exceptional cases get a hard (error) info to
     thoroughly test and verify whether or not things actually work for them.
@@ -1454,7 +1454,7 @@ Details (mostly in chronological order - newest topmost):
     accepted to help the user what the right syntax is (e.g. "rear format
     help" and "rear format - help" do not work, only "rear format - -help"
     works) and provide a more helpful example "rear -v format - -efi /dev/sdX"
-    that is actually neded for UEFI.
+    that is actually needed for UEFI.
 
 -   Support for systemd and parallel restore with Data Protector BACKUP=DP:
     Support starting Data Protector daemon 'omni.socket' via systemd in the
@@ -1629,7 +1629,7 @@ Details (mostly in chronological order - newest topmost):
 
 -   For BACKUP=BORG implemented pagination when selecting the Borg archive to
     restore from: During "rear recover" all Borg archives are shown. In case
-    of a long list only the last items had been visble to the user. Now
+    of a long list only the last items had been visible to the user. Now
     pagination happens with a configurable number of Borg archives, see
     BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX in default.conf (issue #2408).
 
@@ -1655,7 +1655,7 @@ Details (mostly in chronological order - newest topmost):
 
 -   No longer load GRUB2 modules efi_gop and efi_uga in function
     create_grub2_cfg: In the create_grub2_cfg function in
-    lib/bootloader-functions.sh do no longer enfore loading the GRUB2 modules
+    lib/bootloader-functions.sh do no longer enforce loading the GRUB2 modules
     efi_gop and efi_uga because loading only the module all_video is
     sufficient and fail-safe because moddep.lst contains "all_video: efi_gop
     efi_uga" (issue #2388).
@@ -1725,7 +1725,7 @@ Details (mostly in chronological order - newest topmost):
     its full capacity (issue #2369).
 
 -   Error out during "rear mkrescue/mkbackup" when LUKS version 2 is used
-    because LUKS version 2 is not suppported. When LUKS version 2 is used it
+    because LUKS version 2 is not supported. When LUKS version 2 is used it
     fails at least to determine the hash value so we use an empty hash value
     as a simple test if gathering crypt information was successful and error
     out if not. (issues #2204 #2381)
@@ -1942,7 +1942,7 @@ Details (mostly in chronological order - newest topmost):
     for 'not found' libraries. Furthermore use
     '2>>/dev/$DISPENSABLE_OUTPUT_DEV' at more places to avoid that the "rear
     -D mkrescue" log file size would grow from about 5 MiB to about 17 MiB so
-    that now that log file size even shrinked to about 2 MiB. (issue #2279)
+    that now that log file size even shrink to about 2 MiB. (issue #2279)
 
 -   Initial draft implementation of the new 'mountonly' workflow to use ReaR
     as rescue system, therein mount the filesystems of the target system so
@@ -2013,7 +2013,7 @@ Details (mostly in chronological order - newest topmost):
     normal disk D, the code first established that fs:/A depends on fs:/
     resulting in marking D as used and then short-circuited processing of
     multipath devices. This resulted in MP not being considered as a used
-    device and removed from the backup. The problem is fxed by removing the
+    device and removed from the backup. The problem is fixed by removing the
     short-circuit logic in find_disk_and_multipath() so multipath devices get
     processed too unless AUTOEXCLUDE_MULTIPATH is true (issue #2236).
 
@@ -2064,11 +2064,11 @@ Details (mostly in chronological order - newest topmost):
 
 -   Update default.conf: At AUTOEXCLUDE_DISKS removed the comment
     Explicitly excluding/including devices is generally a safer option because
-    it is not acually helpful and even misleading because there is currently
+    it is not actually helpful and even misleading because there is currently
     no config variable to explicitly include devices (issue #2229).
 
 -   Do not keep the build dir when ReaR is run noninteractively by additional
-    special values for the KEEP_BUILD_DIR config variable, see its desctiption
+    special values for the KEEP_BUILD_DIR config variable, see its description
     in default.conf (issue #2218).
 
 -   Fix LVM2 thin pool recreation logic / use of vgcfgrestore is broken:
@@ -2095,7 +2095,7 @@ Details (mostly in chronological order - newest topmost):
     (issue #2220).
 
 -   New use-case for BLOCKCLONE backup method for complex LUKS-encrypted
-    filesystems by usinng the "multiple backups" approach with a second
+    filesystems by using the "multiple backups" approach with a second
     BLOCKCLONE phase with a dd image that contains the encrypted filesystem
     where unmounting the encrypted filesystem before creating its image and
     before restoring it has to be done via the new config variable
@@ -2242,11 +2242,11 @@ New features, bigger enhancements, and possibly backward incompatible changes:
 -   Now there is in default.conf MODULES=( 'all_modules' ) which means that
     now by default all kernel modules get included in the recovery system
     (issue #2041). Usually this is required when migrating to different
-    hardware. Additionaly it makes the recovery system better prepared when
+    hardware. Additionally it makes the recovery system better prepared when
     this or that additional kernel module is needed, e.g. to ensure a USB
     keyboard is usable in the recovery system (issue #1870) or to ensure data
     on external medium (e.g. iso9660) can be read (issue #1202). Furthermore
-    this is helpful to be on the safe side against possibly missing dependant
+    this is helpful to be on the safe side against possibly missing dependent
     kernel modules that are not automatically found (issue #1355). The
     drawback of MODULES=( 'all_modules' ) is that it makes the recovery system
     (and its ISO image) somewhat bigger (see issue #2041 for some numbers).
@@ -2386,7 +2386,7 @@ Details (mostly in chronological order - newest topmost):
     "nameserver 127.0.0.53" and only /run/systemd/resolve/resolv.conf contains
     a real nameserver (issues #2018 #2101)
 
--   When mktemp needs to be called with a TEMPLATE call it with sufficent
+-   When mktemp needs to be called with a TEMPLATE call it with sufficient
     XXXXXXXXXX in the TEMPLATE, otherwise use the mktemp default (issue #2092)
 
 -   LPAR/PPC64 bootlist was incorrectly set when having multiple 'prep'
@@ -2483,7 +2483,7 @@ Details (mostly in chronological order - newest topmost):
     $VAR_DIR/recovery/nsr_paths within the recovery image one is able to
     retrieve/read this information during a recovery process i.e. for advising
     the EMC networker server team to recover the appropriate
-    filesystem(-structure) from the backups beeing made (issue #2058)
+    filesystem(-structure) from the backups being made (issue #2058)
 
 -   Skip patching absolute symlinks during finalize stage (issue #2055). That
     does not actually fix issue #1338 but for now it should at least avoid
@@ -2545,7 +2545,7 @@ Details (mostly in chronological order - newest topmost):
     contains only loopback IP addresses (which happens when the stub resolver
     systemd-resolved is used) or when there is no nameserver entry so that
     "rear mkrescue/mkbackup" errors out in this case. In contrast when
-    USE_DHCLIENT is ture (e.g. when DHCP is used on the original system) then
+    USE_DHCLIENT is true (e.g. when DHCP is used on the original system) then
     during recovery system startup /etc/resolv.conf will be generated by
     /bin/dhclient-script so that it does not matter what its content was
     before. For special cases the user can specify what he wants via the new
@@ -2584,7 +2584,7 @@ Details (mostly in chronological order - newest topmost):
     device is found on the system with same MAC address but different name
     (issue #2004)
 
--   It is no BugError when neither getty nor agetty are avaiable. Such a case
+-   It is no BugError when neither getty nor agetty are available. Such a case
     it is an Error because the user must have the programs in REQUIRED_PROGS
     installed on his system
 
@@ -2743,7 +2743,7 @@ Details (mostly in chronological order - newest topmost):
 -   Wait for systemd-udevd to avoid broken pipe error in
     40-start-udev-or-load-modules.sh (issue #1832)
 
--   Aviod duplicate UUID in boot menuentry when snapper is used (issue #1871)
+-   Avoid duplicate UUID in boot menuentry when snapper is used (issue #1871)
 
 -   Added choice to confirm identical layout mapping only once plus disabling
     MIGRATION_MODE (issue #1857)
@@ -2830,7 +2830,7 @@ Details (mostly in chronological order):
 
 -   Do not start multipathd when not needed (issue #1804)
 
--   Better way to get multiapth partion name (issue #1802)
+-   Better way to get multipath partion name (issue #1802)
 
 -   Exclude multipath device that does not have mounted fs (issue #1801)
 
@@ -2859,7 +2859,7 @@ Details (mostly in chronological order):
 
 -   Exclude docker file systems from layout (issue #1749)
 
--   Added migation mode confirmation at beginning of finalize stage (issue
+-   Added migration mode confirmation at beginning of finalize stage (issue
     #1758)
 
 -   Show descendant processes PIDs with their commands in the log via pstree
@@ -2990,7 +2990,7 @@ Possibly backward incompatible changes:
     file. Accordingly all output of programs that are called by ReaR is now in
     the log file so that the log file content is more complete and there is no
     longer unintended verbose information from programs on the terminal where
-    ReaR was lauched. On the other hand this means when programs prompt via
+    ReaR was launched. On the other hand this means when programs prompt via
     STDOUT to get some user input (e.g. a program prompts for a user
     confirmation under this or that circumstances) the program's STDOUT prompt
     is no longer visible to the user when the program was not called properly
@@ -3056,7 +3056,7 @@ Details (mostly in chronological order):
     libraries are non-fatal so that those programs in the recovery system do
     not lead to an Error abort of "rear mkrescue/mkbackup". This is a generic
     method so that the user can avoid issues in particular with third-party
-    backup tools that soemtimes have unexpected ways to use their specific
+    backup tools that sometimes have unexpected ways to use their specific
     libraries like https://github.com/rear/rear/issues/1533 (for TSM) and
     https://github.com/rear/rear/pull/1560 (for FDR/Upstream).
 
@@ -3545,7 +3545,7 @@ Version 1.18.0 (March 2016)
 
 -   Run ldconfig -X before dhclient gets started at boot time (issue #772)
 
--   Remove the "-c3" option fron rsyslogd start-up (issue #773)
+-   Remove the "-c3" option from rsyslogd start-up (issue #773)
 
 -   Add example configuration for NetBackup Master/Media server
 
@@ -3570,10 +3570,10 @@ Version 1.18.0 (March 2016)
 -   Replace option 'grep -P' to 'grep -E' due to SELinux errors (issues #565,
     #737)
 
--   Hidding the encryption key while doing the restore in the rear.log (issue
+-   Hiding the encryption key while doing the restore in the rear.log (issue
     #749)
 
--   is_true function was to uniform the different ways of enable/disble
+-   is_true function was to uniform the different ways of enable/disable
     variable settings (issue #625)
 
 -   Added and use sysctl.conf; rescue mode should honor these settings (issue
@@ -3635,7 +3635,7 @@ Version 1.18.0 (March 2016)
 -   Adding -scrollprompt=no to dsmc query in script
     verify/TSM/default/40_verify_tsm.sh (issue #667)
 
--   Fixed a bug around USB_DEVICE and OUTPUT_URL mis-match (issue #579)
+-   Fixed a bug around USB_DEVICE and OUTPUT_URL mismatch (issue #579)
 
 -   grub support for ppc64 (issue #673)
 
@@ -3720,7 +3720,7 @@ Version 1.17.2 (August 2015)
 -   FIX the hashed password (SSH_ROOT_PASSWORD variable) and added a missing
     library libfreeblpriv3 (issue #560)
 
--   Insert a 3 seconds sleep after a volume group restauration to give udevd
+-   Insert a 3 seconds sleep after a volume group restoration to give udevd
     or systemd-udevd time to create needed devices (issue #608 and #617)
 
 -   Variable MANUAL_INCLUDE=YES has been introduced to work with array
@@ -3736,7 +3736,7 @@ Version 1.17.2 (August 2015)
 -   new document 10-integrating-external-backup.adoc which explains the steps
     to take for a new backup integration into ReaR
 
--   All AsciiDoc documentation changed extention from .txt to .adoc
+-   All AsciiDoc documentation changed extension from .txt to .adoc
 
 Version 1.17.1 (June 2015)
 
@@ -3752,7 +3752,7 @@ Version 1.17.1 (June 2015)
 -   Grub2 rescue menu has been added (enable this feature with
     GRUB_RESCUE=y) - issue #589
 
--   splitted script 31_include_uefi_tools.sh in two pieces:
+-   split script 31_include_uefi_tools.sh in two pieces:
     31_include_uefi_tools.sh: to grab the UEFI tools (as long as /boot/efi is
     mounted), and 32_include_uefi_env.sh: to dig deeper into the configuration
     when UEFI is active (related to issue #214)

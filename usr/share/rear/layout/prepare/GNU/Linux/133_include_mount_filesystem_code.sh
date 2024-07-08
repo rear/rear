@@ -52,7 +52,7 @@ mount_fs() {
     case $fstype in
         (btrfs)
             # The following commands are basically the same as in the default/fallback case.
-            # The explicite case for btrfs is only there to be prepared for special adaptions for btrfs related file systems.
+            # The explicit case for btrfs is only there to be prepared for special adaptions for btrfs related file systems.
             # Because the btrfs filesystem was created anew just before by the create_fs function in 131_include_filesystem_code.sh
             # the code here mounts the whole btrfs filesystem because by default when creating a btrfs filesystem
             # its top-level/root subvolume is the btrfs default subvolume which gets mounted when no other subvolume is specified.
@@ -100,7 +100,7 @@ mount_fs() {
                 # Then test if it is explicitly specified to do nothing at all.
                 # When both BTRFS_SUBVOLUME_GENERIC_SETUP and BTRFS_SUBVOLUME_SLES_SETUP are explicitly set to false
                 # no special btrfs subvolumes setup is done which may lead to a falsely recreated system
-                # but we do what the user has explicity specified:
+                # but we do what the user has explicitly specified:
                 if is_false "$BTRFS_SUBVOLUME_GENERIC_SETUP" && is_false "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
                     LogPrint "Skipping btrfs subvolumes setup for $device on $mountpoint (BTRFS_SUBVOLUME_GENERIC_SETUP and BTRFS_SUBVOLUME_SLES_SETUP false)"
                     continue

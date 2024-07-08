@@ -94,7 +94,7 @@ else
     fi
 fi
 
-# NFSv4 related daemons: rpc.idmapd is the bare mininum when dealing with nfsv4 and security 'sys'
+# NFSv4 related daemons: rpc.idmapd is the bare minimum when dealing with nfsv4 and security 'sys'
 if has_binary rpc.idmapd ; then
     # so far it is always a daemon process
     rpc.idmapd $RPCIDMAPDARGS && LogPrint "Started rpc.idmapd." || LogPrint "Starting rpc.idmapd failed."

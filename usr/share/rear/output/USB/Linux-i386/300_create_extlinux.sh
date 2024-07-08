@@ -395,7 +395,7 @@ EOF
 
     # Use chain booting for booting disk, if chain.c32 is available
     if syslinux_has "chain.c32" ; then
-        # Boot from boothd0 (which is usually the same USB disk where this syslinux boot menue is currently shown)
+        # Boot from boothd0 (which is usually the same USB disk where this syslinux boot menu is currently shown)
         # only as boot default when that was explicitly specified by the user (results usually a boot loop):
         if test "boothd0" = "$USB_BIOS_BOOT_DEFAULT" ; then
             syslinux_write <<EOF

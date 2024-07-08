@@ -1,6 +1,6 @@
 # 500_restore_ssc.sh
 # Purpose:
-# Make Secure Socket Communication useable after restoring the client system.
+# Make Secure Socket Communication usable after restoring the client system.
 # Reasoning:
 # The client certificate is currently excluded from a Data Protector backup due to security concerns.
 # This means it is not restored using BACKUP=DP. This might change within Data Protector (in the future).

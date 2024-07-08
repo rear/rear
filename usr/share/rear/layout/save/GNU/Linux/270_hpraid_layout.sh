@@ -14,7 +14,7 @@ has_binary $HPSSACLI || return 0
 # Add $HPSSACLI to the rescue image (and added to REQUIRED_PROGS below when it is actually required):
 PROGS+=( $HPSSACLI )
 # How the "eval $(grep ON_DIR= $(get_path $HPSSACLI))" command works:
-# Prerequisit: $HPSSACLI (e.g. /sbin/ssacli) is a shell script.
+# Prerequisite: $HPSSACLI (e.g. /sbin/ssacli) is a shell script.
 # That $HPSSACLI script contains a command (e.g. in case of /sbin/ssacli) like
 #   export SSACLI_BIN_INSTALLATION_DIR=/opt/smartstorageadmin/ssacli/bin/
 # This command is searched for with "grep ON_DIR="

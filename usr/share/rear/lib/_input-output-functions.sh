@@ -740,7 +740,7 @@ function Error () {
     # We must send USR1 to MASTER_PID before we terminate all still running descendant processes of MASTER_PID below
     # because when the Error function is called from a subshell we are one of those still running descendant processes:
     kill -USR1 $MASTER_PID
-    # That USR1 has a trap (see above) that does 'kill MASTER_PID' whicht triggers another trap on EXIT that calls DoExitTasks().
+    # That USR1 has a trap (see above) that does 'kill MASTER_PID' which triggers another trap on EXIT that calls DoExitTasks().
     # When the Error function is called from within a subshell (cf. layout/save/GNU/Linux/230_filesystem_layout.sh) like 
     #   ( echo "additional content for file" || Error "failed to append content to file" ) >> file
     # the Error function does not let MASTER_PID exit because the parent shell waits until its subshell has finished
@@ -821,7 +821,7 @@ function Error () {
     terminate_descendants_from_children_to_grandchildren
     # Now only the process that runs this code here is left.
     # If that process is MASTER_PID all is o.k. but if that process is run within a subshell
-    # we must not return here from the Error funtion to its caller because that would let
+    # we must not return here from the Error function to its caller because that would let
     # the subshell continue with all its code after the Error function until the subshell finishes
     # so that if we are in a subshell here we exit from that subshell here:
     if test $BASH_SUBSHELL -gt 0 ; then

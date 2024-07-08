@@ -74,7 +74,7 @@ function output_valid_mappings () {
 
 # Output unmapped 'disk' devices and 'multipath' devices that will not be recreated:
 function output_not_recreated_devices () {
-    local header_lines='Currently unmapped disks and dependant devices will not be recreated\n(unless identical disk mapping and proceeding without manual configuration):'
+    local header_lines='Currently unmapped disks and dependent devices will not be recreated\n(unless identical disk mapping and proceeding without manual configuration):'
     while read keyword device junk ; do
         # Continue until an unmapped disk device is found:
         is_mapping_source "$device" && continue
@@ -83,7 +83,7 @@ function output_not_recreated_devices () {
             echo -e "$header_lines"
             header_lines=''
         fi
-        # The get_child_components function outputs each dependant device on a new line
+        # The get_child_components function outputs each dependent device on a new line
         # but the echo command outputs all its command line arguments on one line
         # each one separated by a single space e.g. the command
         #   echo ' ' foo $( echo -e ' bar \n baz ' )
@@ -202,7 +202,7 @@ while read keyword orig_device orig_size junk ; do
     # The original device could not be automapped because there is
     # neither a current disk with same name and same size as the original
     # nor is there a current disk with different name but same size as the original
-    # so the user must maually specify the right mapping target:
+    # so the user must manually specify the right mapping target:
     DebugPrint "Could not automap $orig_device (no disk with same size $orig_size found)"
 done < <( grep -E "^disk |^multipath " "$LAYOUT_FILE" )
 
@@ -380,7 +380,7 @@ if is_true "$MIGRATION_MODE" ; then
             # Note: dependent devices might still be recreated if $device is mapped as a (non-encrypting) disk
             mark_as_done "opaldisk:$device"
         else
-            LogUserOutput "Disk $device and all dependant devices will not be recreated"
+            LogUserOutput "Disk $device and all dependent devices will not be recreated"
             mark_as_done "$device"
             mark_tree_as_done "$device"
         fi

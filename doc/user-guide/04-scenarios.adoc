@@ -957,7 +957,7 @@ Relax-and-Recover and run the +rear format /dev/stX+ command.
 
 ==== Configuring Relax-and-Recover to have Bacula tools
 If the rescue environment needs additional tools and workflow, this can be
-spcified by using +BACKUP=BACULA+ in the configuration file
+specified by using +BACKUP=BACULA+ in the configuration file
 _/etc/rear/local.conf_:
 
 [source,bash]

@@ -10,7 +10,7 @@
 
 #set -e
 
-[ -f $TMP_DIR/DP_GUI_RESTORE ] && return # GUI restore explicetely requested
+[ -f $TMP_DIR/DP_GUI_RESTORE ] && return # GUI restore explicitily requested
 
 
 OMNIDB=/opt/omni/bin/omnidb

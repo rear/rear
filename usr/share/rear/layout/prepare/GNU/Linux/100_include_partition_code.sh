@@ -69,7 +69,7 @@ EOF
 my_udevtrigger
 my_udevsettle
 
-# Clean up transient partitions and resize shrinked ones
+# Clean up transient partitions and resize shrunk ones
 delete_dummy_partitions_and_resize_real_ones
 
 #
@@ -144,7 +144,7 @@ EOF
             #if [[ "$label" == "gpt" || "$label" == "gpt_sync_mbr" || "$label" == "dasd" ]] ; then
             if [[ "$label" == "gpt" || "$label" == "gpt_sync_mbr" ]] ; then
                 device_size=$( mathlib_calculate "$device_size - 33*$block_size" )
-                # Only if resizing all partitions is explicity wanted
+                # Only if resizing all partitions is explicitly wanted
                 # resizing of arbitrary partitions may also happen via the code below
                 # in addition to layout/prepare/default/430_autoresize_all_partitions.sh
                 if is_true "$autoresize_partitions" ; then
@@ -189,7 +189,7 @@ EOF
         name=$( percent_decode "$name" )
 
         # Use the partition start value in disklayout.conf
-        # unless resizing all partitions is explicity wanted:
+        # unless resizing all partitions is explicitly wanted:
         if ! is_true "$autoresize_partitions" && test "$pstart" != "unknown" ; then
             start="$pstart"
         fi
@@ -204,7 +204,7 @@ EOF
         fi
 
         # Extended partitions run to the end of disk (we assume)
-        # only if resizing all partitions is explicity wanted:
+        # only if resizing all partitions is explicitly wanted:
         if is_true "$autoresize_partitions" ; then
             if [[ "$name" = "extended" ]] ; then
                 if [[ "$device_size" ]] ; then
@@ -266,7 +266,7 @@ my_udevsettle
 EOF
         fi
 
-        # Only if resizing all partitions is explicity wanted
+        # Only if resizing all partitions is explicitly wanted
         # the start of the next partition is where this one ends.
         # We can't use $end for extended partitions
         # extended partitions have a small actual size as reported by sysfs
@@ -295,7 +295,7 @@ EOF
 
         # round starting size to next multiple of 4096
         # 4096 is a good match for most device's block size
-        # only if resizing all partitions is explicity wanted:
+        # only if resizing all partitions is explicitly wanted:
         if is_true "$autoresize_partitions" ; then
             start=$(( $start + 4096 - ( $start % 4096 ) ))
         fi
@@ -322,7 +322,7 @@ EOF
         # like 'EFI System Partition' cf. https://github.com/rear/rear/issues/1563
         # so that when calling parted on command line it must be done like
         #    parted -s /dev/sdb unit MiB mkpart "'partition name'" 12 34
-        # where the outer quoting "..." is for bash which neeeds to be quoted \"...\" here
+        # where the outer quoting "..." is for bash which needs to be quoted \"...\" here
         # because there is a outermost quoting "..." of the echo command
         # and the inner quoting '...' is preserved for parted's internal parser:
         if [[ "$label" = "gpt" || "$label" == "gpt_sync_mbr" ]] && [[ "$name" != "rear-noname" ]] ; then

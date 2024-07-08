@@ -13,7 +13,7 @@
 # and https://github.com/rear/rear/issues/3195
 
 case "$REAL_MACHINE" in
-    # cf. the seting of REAL_MACHINE ('uname -m') and MACHINE in default.conf
+    # cf. the setting of REAL_MACHINE ('uname -m') and MACHINE in default.conf
     (i686|i586|i386)
         # all these behave exactly like i386.
         # ia32 is another name for i386, used by EFI

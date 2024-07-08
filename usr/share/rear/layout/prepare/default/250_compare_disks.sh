@@ -29,7 +29,7 @@
 # more than one disk with same size is found on the replacement hardware
 # i.e. when there is more than one possible target disk.
 # Accordingly ReaR goes by default not into its MIGRATION_MODE
-# only if for each used disk size on the original system eaxctly one
+# only if for each used disk size on the original system exactly one
 # possible target disk with same size is found on the replacement hardware.
 
 # Nothing to do when MIGRATION_MODE is already set:

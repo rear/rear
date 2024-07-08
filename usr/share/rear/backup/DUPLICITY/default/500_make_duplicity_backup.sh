@@ -51,7 +51,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
         EXCLUDES+=" --exclude $EXDIR"
     done
     if ! is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
-        set +f # Reenable Evaluation of Patterns By the Shell
+        set +f # Re-enable Evaluation of Patterns By the Shell
     fi
 
     LogUserOutput "EXCLUDES = $EXCLUDES"
@@ -106,7 +106,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     fi
 
     if ! is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
-        set +f # Reenable Evaluation of Patterns By the Shell
+        set +f # Re-enable Evaluation of Patterns By the Shell
     fi
 
     RC_DUP=$?

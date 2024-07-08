@@ -82,7 +82,7 @@ RUN type -p pacman &>/dev/null || exit 0 ;\
         sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute2 nfs-utils libisoburn cdrtools util-linux psmisc procps-ng util-linux diffutils less \
         make binutils fakeroot git asciidoctor
 
-# CentOS 8 doesn't have sysvinit-tools any more but it also doens't have asciidoctor yet
+# CentOS 8 doesn't have sysvinit-tools any more but it also doesn't have asciidoctor yet
 RUN type -p yum &>/dev/null || exit 0 ;\
     grep -E '(CentOS.*Final|CentOS Linux release 8)' /etc/redhat-release && \
         sed -i -e 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|' -e '/^mirror/d' /etc/yum.repos.d/*.repo ; \

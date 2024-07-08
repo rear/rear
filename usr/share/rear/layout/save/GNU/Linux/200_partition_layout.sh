@@ -61,7 +61,7 @@ extract_partitions() {
                     fi
                 done
             else
-                ### if the holders directory does not exisits 
+                ### if the holders directory does not exists 
                 ### failback to partition name guessing method.
                 ### try to find partitions like /dev/mapper/datalun1p1
                 for path in ${device}p[0-9]* ${device}[0-9]* ${device}-part* ${device}_part*; do

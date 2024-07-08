@@ -132,9 +132,9 @@ function SourceStage () {
     local script=''
     for script in "${scripts[@]}" ; do
         # Tell the user about unexpected named scripts.
-        # All sripts must be named with a leading three-digit number NNN_something.sh
+        # All scripts must be named with a leading three-digit number NNN_something.sh
         # otherwise the above sorting by the 3-digit number may not work as intended
-        # so that sripts without leading 3-digit number are likely run in wrong order:
+        # so that scripts without leading 3-digit number are likely run in wrong order:
         grep -q '^[0-9][0-9][0-9]_' <<< $( basename $script ) || LogPrintError "Script '$script' without leading 3-digit number 'NNN_' is likely run in wrong order"
         Source $SHARE_DIR/$stage/"$script"
     done

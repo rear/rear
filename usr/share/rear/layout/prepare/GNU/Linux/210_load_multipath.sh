@@ -148,7 +148,7 @@ EOF
 my_udevtrigger
 my_udevsettle
 
-# Clean up transient partitions and resize shrinked ones
+# Clean up transient partitions and resize shrunk ones
 delete_dummy_partitions_and_resize_real_ones
 
 #

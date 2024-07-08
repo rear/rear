@@ -274,7 +274,7 @@ mark_as_done() {
 # Mark all components that depend on component $1 as done.
 mark_tree_as_done() {
     for component in $( get_child_components "$1" ) ; do
-        DebugPrint "Dependant component $component is a child of component $1"
+        DebugPrint "Dependent component $component is a child of component $1"
         mark_as_done "$component"
     done
 }
@@ -884,7 +884,7 @@ function is_disk_valid {
 function is_multipath_used {
     # Return 'false' if there is no multipath command:
     type multipath &>/dev/null || return 1
-    # 'multipath -l' is the only simple and reliably working commad
+    # 'multipath -l' is the only simple and reliably working command
     # to find out in general whether or not multipath is used at all.
     # But 'multipath -l' scans all devices and the time it takes is proportional
     # to their number so that time would become rather long (seconds up to minutes)
@@ -1005,7 +1005,7 @@ function get_part_device_name_format() {
             part_name="${device_name}p" # append p between main device and partitions
             ;;
         (*mapper[/!]*)
-            # Every Linux distribution / version has their own rule to name the multipthed partion device.
+            # Every Linux distribution / version has their own rule to name the multipthed partition device.
             #
             # Suse:
             #     Version <12 : always <device>_part<part_num> (same with/without user_friendly_names)
@@ -1055,7 +1055,7 @@ function get_part_device_name_format() {
                         # option is used (default).
                         # For example: /dev/mapper/mpatha1
                         # But the scheme in RHEL 6 need a "p" between [mpath device name] and [part number].
-                        # For exemple: /dev/mapper/mpathap1
+                        # For example: /dev/mapper/mpathap1
                         if (( $OS_MASTER_VERSION < 7 )) ; then
                             part_name="${device_name}p" # append p between main device and partitions
                         else
@@ -1222,7 +1222,7 @@ function apply_layout_mappings() {
         # /dev/mapper/mpatha4 /dev/mapper/mpathap4 /dev/mapper/mpatha-part4 /dev/mapper/mpatha_part4
         # are replaced by the same normalized replacement word like _REAR7_4
         # (therein the '7' is arbitrary but the '4' is the actual partition number)
-        # that is then in step 2 re-replaced with the right partion naming scheme
+        # that is then in step 2 re-replaced with the right partition naming scheme
         # via the get_part_device_name_format() function,
         # cf. https://github.com/rear/rear/pull/1765
         # Because $original (e.g. /dev/sda1) contains slashes sed '/regexp/' cannot be used
@@ -1486,7 +1486,7 @@ create_disk_partition() {
 # delete_dummy_partitions_and_resize_real_ones()
 #
 # When current disk has non-consecutive partitions, delete temporary partitions
-# that have been created and resize the temporary shrinked partitions to their
+# that have been created and resize the temporary shrunk partitions to their
 # expected size.
 #
 delete_dummy_partitions_and_resize_real_ones() {
@@ -1509,7 +1509,7 @@ delete_dummy_partitions_and_resize_real_ones() {
     dummy_partitions_to_delete=()
     my_udevsettle
 
-    # Resize previously shrinked partitions (to make place for dummy
+    # Resize previously shrunk partitions (to make place for dummy
     # partitions) to expected size
     local -i endB
     while read num endB ; do

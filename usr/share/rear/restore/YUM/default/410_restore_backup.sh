@@ -21,7 +21,7 @@ local opath="$( backup_path "$scheme" "$path" )"
 test "$RESTORE_ARCHIVES" || RESTORE_ARCHIVES=( "$backuparchive" )
 
 # In case of 'tar' the backup restore prog needs to be feed by another program
-# if the backup is splitted and then restore input is not a file but a FIFO
+# if the backup is split and then restore input is not a file but a FIFO
 # i.e. RESTORE_ARCHIVES is then only one element which is the FIFO
 # In this case launch another subshell that runs the feeder program:
 waiting_for_medium_flag_file=$TMP_DIR/waiting_for_restore_medium
@@ -128,7 +128,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                     fi
                 fi
                 if [ -s $TMP_DIR/restore-exclude-list.txt ] ; then
-                    LogPrint "Copying restore exlusion file from $TMP_DIR/restore-exclude-list.txt to $TARGET_FS_ROOT/tmp"
+                    LogPrint "Copying restore exclusion file from $TMP_DIR/restore-exclude-list.txt to $TARGET_FS_ROOT/tmp"
                     cp -a $TMP_DIR/restore-exclude-list.txt $TARGET_FS_ROOT/tmp
                     BACKUP_PROG_OPTIONS+=( --exclude-from=/tmp/restore-exclude-list.txt )
                 fi
@@ -252,7 +252,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                     restored_KiB_per_second=$(( restored_KiB / restore_seconds ))
                     LogPrint "Restored $restored_MiB MiB in $restore_seconds seconds [avg. $restored_KiB_per_second KiB/sec]"
                 else
-                    # A 'tar -x --totals' stderr messsage should look like 'Total bytes read: 7924664320 (7.4GiB, 95MiB/s)'
+                    # A 'tar -x --totals' stderr message should look like 'Total bytes read: 7924664320 (7.4GiB, 95MiB/s)'
                     # cf. https://www.gnu.org/software/tar/manual/html_section/tar_25.html
                     # in the rear runtime logfile it appears like (without leading blanks):
                     #   3823429+1 records in

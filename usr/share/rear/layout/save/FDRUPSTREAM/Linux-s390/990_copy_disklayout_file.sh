@@ -2,7 +2,7 @@
 # layout/save/FDRUPSTREAM/Linux-s390/990_copy_disklayout_file.sh
 #
 # For s390 if ZVM naming is setup, then copy the disklayout.conf to the output location
-# s390 optional naming override of dsklayout.conf to match the s390 filesytem naming conventions
+# s390 optional naming override of dsklayout.conf to match the s390 filesystem naming conventions
 # example:
 # if the VM name / VM user id ('vmcp q userid') is HOSTA then conf is written as HOSTA.disklayout
 # vars needed:

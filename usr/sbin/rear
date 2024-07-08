@@ -766,7 +766,7 @@ if test "$CONFIG_APPEND_FILES" ; then
     # are reported to the user via 'LogPrintError' so that the user is at least informed
     # if what he requested via the '-C' command line option cannot be fulfilled.
     # An intended positive side-effect when missing additional config files are no Error
-    # is that then it also works (not relly cleanly but it works) for DRLM_MANAGED=y
+    # is that then it also works (not really cleanly but it works) for DRLM_MANAGED=y
     # which requires that missing local config files must not let ReaR abort with an Error
     # because the needed config files get later downloaded from the DRLM server and applied
     # (cf. the drlm_import_runtime_config function in lib/drlm-functions.sh)

@@ -15,7 +15,7 @@ part=$( awk -F '=' '/^boot/ {print $2}' $TARGET_FS_ROOT/etc/lilo.conf )
 
 # test $part is not null and is an existing partition on the current system.
 if ( test -n "$part" ) && ( fdisk -l | grep -q "$part" ) ; then
-    LogPrint "Boot partion found in lilo.conf: $part"
+    LogPrint "Boot partition found in lilo.conf: $part"
     # Run lilo directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
 else
     # If the device found in lilo.conf is not valid, find prep partition in

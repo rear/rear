@@ -212,7 +212,7 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
     # so for the above examples the layout string becomes:
     # near=2
     # far=3
-    # offest=4
+    # offset=4
     # near=2,far=3
     # near=2,far=3,offset=4
     layout="${line[2]}${line[3]:-}${line[4]:-}"

@@ -9,7 +9,7 @@ if PASSWD_VAGRANT=$(grep vagrant /etc/passwd) ; then
     mkdir -p $v -m 0700 "$ROOTFS_DIR$homedir"
     chown $v ${user}:${gid} "$ROOTFS_DIR$homedir"
     COPY_AS_IS+=( $homedir/.s[s]h ) 
-    # grab the shadow entry - if hashed use that one otherwise generate genric entry with password vagrant
+    # grab the shadow entry - if hashed use that one otherwise generate generic entry with password vagrant
     IFS=: read user hash junk <<<$(grep $user /etc/shadow)
     case "$hash" in
        '$1$'*) echo "$user:$hash:$junk" >> $ROOTFS_DIR/etc/shadow ;;

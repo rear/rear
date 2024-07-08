@@ -33,7 +33,7 @@ for dummy in "once" ; do
 
     # Try /boot/vmlinuz-$KERNEL_VERSION:
     KERNEL_FILE="/boot/vmlinuz-$KERNEL_VERSION"
-    # s390 optional naming override of initrd and kernel to match the s390 filesytem naming conventions
+    # s390 optional naming override of initrd and kernel to match the s390 filesystem naming conventions
     # on s390a there is an option to name the initrd and kernel in the form of
     # file name on s390 are in the form of name type mode
     # the name is the userid or vm name and the type is initrd or kernel
