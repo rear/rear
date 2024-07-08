@@ -1,0 +1,82 @@
+#!/bin/bash
+
+source /etc/scripts/system-setup-functions.sh
+
+# In debug mode run the automated 'rear recover' also with debug options.
+# Because the kernel command line option 'debug' means 'set -x' for the system setup scripts
+# it also means '-D' (i.e. 'set -x') for the automated 'rear recover' run:
+if rear_debug ; then
+    rear_debug_options='-D'
+else
+    rear_debug_options=''
+fi
+
+# Launch rear recover automatically:
+if automatic_recovery ; then
+    choices=( "View Relax-and-Recover log file(s)"
+              "Go to Relax-and-Recover shell"
+            )
+    echo -e "\nLaunching 'rear recover' automatically\n"
+    if rear $rear_debug_options recover ; then
+        echo -e "\n'rear recover' finished successfully\n"
+        choices+=( "Reboot" )
+    else
+        echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
+    fi
+    PS3="Select what to do "
+    select choice in "${choices[@]}" ; do
+        case "$REPLY" in
+            (1)
+                # Do not assume the ReaR log file is named rear-$HOSTNAME.log
+                # the user can have specified any name as LOGFILE:
+                less /var/log/rear/*
+                ;;
+            (2)
+                echo "" > /etc/issue
+                echo "" > /etc/motd
+                break
+                ;;
+            (3)
+                reboot
+                ;;
+        esac
+        for (( i=1 ; i <= ${#choices[@]} ; i++ )) ; do
+            echo "$i) ${choices[$i-1]}"
+        done
+    done 2>&1
+fi
+
+# Launch rear recover automatically in unattended mode
+# i.e. with automated reboot after successful 'rear recover':
+if unattended_recovery ; then
+    choices=( "View Relax-and-Recover log file(s)"
+              "Go to Relax-and-Recover shell"
+            )
+    echo -e "\nLaunching 'rear recover' automatically in unattended mode\n"
+    if rear $rear_debug_options --non-interactive recover ; then
+        echo -e "\n'rear recover' finished successfully\n"
+        echo -e "\nRebooting in 30 seconds (Ctrl-C to interrupt)\n"
+        sleep 30
+        reboot
+    else
+        echo -e "\n'rear recover' failed, check the Relax-and-Recover log file(s)\n"
+        PS3="Select what to do "
+        select choice in "${choices[@]}" ; do
+            case "$REPLY" in
+                (1)
+                    # Do not assume the ReaR log file is named rear-$HOSTNAME.log
+                    # the user can have specified any name as LOGFILE:
+                    less /var/log/rear/*
+                    ;;
+                (2)
+                    echo "" > /etc/issue
+                    echo "" > /etc/motd
+                    break
+                    ;;
+            esac
+            for (( i=1 ; i <= ${#choices[@]} ; i++ )) ; do
+                echo "$i) ${choices[$i-1]}"
+            done
+        done 2>&1
+    fi
+fi

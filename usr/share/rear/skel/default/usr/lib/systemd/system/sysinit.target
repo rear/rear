@@ -4,3 +4,5 @@
 
 [Unit]
 Description=System Initialization
+Wants=sysinit.service rear-boot-helper.service
+After=sysinit.service rear-boot-helper.service

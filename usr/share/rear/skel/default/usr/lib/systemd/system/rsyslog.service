@@ -1,6 +1,5 @@
 [Unit]
 Description=Relax-and-Recover run-syslog script
-DefaultDependencies=no
 
 [Service]
 Type=simple

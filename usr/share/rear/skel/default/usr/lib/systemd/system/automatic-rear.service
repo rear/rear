@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Relax-and-Recover recovery automatically if requested
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/etc/scripts/run-automatic-rear
+StandardInput=tty
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

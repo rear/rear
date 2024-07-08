@@ -1,4 +1,4 @@
-start on running
+start on running and automatic-rear-complete
 stop on runlevel 0
 stop on runlevel 6
 

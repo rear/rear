@@ -4,7 +4,6 @@
 
 [Unit]
 Description=Syslog Socket
-DefaultDependencies=no
 Before=sockets.target syslog.target
 
 [Socket]
