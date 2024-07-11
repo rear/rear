@@ -23,11 +23,11 @@ if [[ "$BACKUP_URL" ]] ; then
     local hostname="$( url_hostname "$BACKUP_URL" )"
     local path="$( url_path "$BACKUP_URL" )"
 
-    ### check for vaild BACKUP_URL schemes
+    ### check for valid BACKUP_URL schemes
     ### see https://github.com/rear/rear/issues/842
     case "$scheme" in
         (nfs|cifs|usb|tape|file|iso|sshfs|ftpfs)
-            # do nothing for vaild BACKUP_URL schemes
+            # do nothing for valid BACKUP_URL schemes
             :
             ;;
         (*)

@@ -12,10 +12,10 @@ test "$ISO_MAX_SIZE" || return 0
 # When the backup is split on multiple ISOs, then "rear mkrescue" would destroy it
 # because in the first ISO that is named "rear-HOSTNAME.iso" there is
 # in case of "rear mkbackup" the (bootable) ReaR recovery system
-# plus the first part of the splitted backup (usually named "backup.tar.gz.00")
-# plus the backup.splitted file that contains information about the splitted backup.
+# plus the first part of the split backup (usually named "backup.tar.gz.00")
+# plus the backup.splitted file that contains information about the split backup.
 # But "rear mkrescue" would overwrite that first ISO with one that contains only
-# the new ReaR recovery system but no longer the first part of the splitted backup
+# the new ReaR recovery system but no longer the first part of the split backup
 # nor the backup.splitted file so that then "rear recover" fails with
 # "ERROR: Backup archive 'backup.tar.gz' not found"
 # see https://github.com/rear/rear/issues/1545

@@ -165,7 +165,7 @@ if test -s $TMP_DIR/mappings/mac ; then
         test "$interface" -a "$new_interface" -a "$interface" != "$new_interface" && sed_script+=" ; s/$interface/$new_interface/g"
         # The "sed -e 'p ; y/abcdef/ABCDEF/'" hack prints each line as is and once again with upper case hex letters.
         # The reason is that .../mappings/mac has lower case hex letters (cf. doc/mappings/mac.example)
-        # but some systems seem to have MAC adresses with upper case hex letters in the config files.
+        # but some systems seem to have MAC addresses with upper case hex letters in the config files.
         # We do not want to mess around with that so we do each replacement two times both case-sensitive
         # one with lower case hex letters and the other one with upper case hex letters in the sed script:
     done < <( sed -e 'p ; y/abcdef/ABCDEF/' $TMP_DIR/mappings/mac )
@@ -204,7 +204,7 @@ else
             current_mac=$( cat /sys/class/net/$interface/address )
             echo "$current_mac $current_mac $interface" >> $TMP_DIR/mappings/mac
         done
-        # Verify we could generate a fallback $TMP_DIR/mappings/mac file with acual content (i.e. non-empty):
+        # Verify we could generate a fallback $TMP_DIR/mappings/mac file with actual content (i.e. non-empty):
         if test -s $TMP_DIR/mappings/mac ; then
             Log "Using generated fallback $TMP_DIR/mappings/mac file (/etc/rear/mappings/mac is missing or has no content)"
         else
@@ -307,7 +307,7 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
             # like '1080::8:800:200C:417A' where '::' is the shortest possible IPv6 address,
             # cf. "Current formats" in https://tools.ietf.org/html/rfc1924
             # so ':' can be the first (and only) character in an IPv6 address.
-            # In ifcfg configuration files the vaule can be in single quotes like KEYWORD='VALUE':
+            # In ifcfg configuration files the value can be in single quotes like KEYWORD='VALUE':
             if grep -q "^IPADDR=[':0-9A-Fa-f][.:0-9A-Fa-f]*/[0-9'][0-9']*" $ifcfg_file ; then
                 # Case 1) where the syntax is like IPADDR=192.168.1.1/24 or IPADDR='192.168.1.1/24'
                 # replace the old IPADDR value with the new_ip_cidr value (always in the IPADDR='...' form) and

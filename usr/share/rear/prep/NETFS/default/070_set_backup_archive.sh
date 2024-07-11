@@ -99,7 +99,7 @@ fi
 # a small probability that e.g. weekday, YYYY-MM-DD, HHMM do not match
 # one single point in time (in particular when midnight passes in between).
 # Therefore the output of one single 'date' call is storend in an array and
-# the array elements are then assinged to individual variables as needed:
+# the array elements are then assigned to individual variables as needed:
 local current_date_output=( $( date '+%a %Y-%m-%d %H%M' ) )
 local current_weekday="${current_date_output[0]}"
 local current_yyyy_mm_dd="${current_date_output[1]}"

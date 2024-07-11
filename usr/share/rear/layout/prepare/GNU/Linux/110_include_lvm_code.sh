@@ -281,7 +281,7 @@ create_lvmvol() {
     # which usually happens when the replacement disk is a bit smaller than the original disk
     # so that the following fallback attempt to create a LV could work at least once per VG
     # which is sufficient when the replacement disk is a bit smaller than the original disk
-    # because then the last LV that is created gets shrinked to the remaining space in the VG.
+    # because then the last LV that is created gets shrunk to the remaining space in the VG.
     # In the lvopts string replace the exact size option of the form '-L 123456b'
     # with an option to use all remaining free space in the VG via '-l 100%FREE'
     # so e.g. 'lvcreate -L 123456b -n LV VG' becomes 'lvcreate -l 100%FREE -n LV VG'

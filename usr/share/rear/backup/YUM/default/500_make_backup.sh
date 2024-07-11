@@ -36,7 +36,7 @@ LogPrint "Cataloging all unmodified files provided by RPM packages"
 for file in $(rpm -Vva | grep '^\.\.\.\.\.\.\.\.\.' | grep -v '^...........c' | cut -c 14-); do [ -f $file ] && echo $file; done | sort | uniq > $yum_backup_dir/rpm_provided_files.dat
 
 # Gather RPM verification data
-rpm -Va > $yum_backup_dir/rpm_verification.dat || true		# don't fail - we're just capturing RPM file verfication
+rpm -Va > $yum_backup_dir/rpm_verification.dat || true		# don't fail - we're just capturing RPM file verification
 
 # Use the RPM verification data to catalog RPM-provided files which have been modified...
 grep -v ^missing $yum_backup_dir/rpm_verification.dat | cut -c 14- > $yum_backup_dir/rpm_modified_files.dat
@@ -61,7 +61,7 @@ if is_true "$YUM_BACKUP_FILES_FULL_EXCL" ; then
         	} || {
                 	cmd2=$(echo -n "$cmd2 -samefile $fname")
         	}
-            # Aviod ShellCheck
+            # Avoid ShellCheck
             # SC2000: See if you can use ${#variable} instead
             # https://github.com/koalaman/shellcheck/wiki/SC2000
             # The code before was

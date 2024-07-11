@@ -180,7 +180,7 @@ function set_syslinux_features {
 
 # Create a suitable syslinux configuration based on capabilities
 # the mandatory first argument is the full path to an existing directory where required binaries will be copied to
-# the optional second argment is the target flavour and defaults to isolinux
+# the optional second argument is the target flavour and defaults to isolinux
 function make_syslinux_config {
     test -d "$1" || BugError "make_syslinux_config: required first argument for BOOT_DIR missing"
     test -d "$SYSLINUX_DIR" || BugError "make_syslinux_config: required environment SYSLINUX_DIR '$SYSLINUX_DIR' not set or not a directory"
@@ -571,7 +571,7 @@ function is_disk_grub_candidate () {
     else
         # Other disklabel types don't need anything special to install GRUB.
         # The test for the PReP boot partition (finalize/Linux-ppc64le/660_install_grub2.sh)
-        # is a bit similar, but operates on the partition itself, not on the uderlying disk.
+        # is a bit similar, but operates on the partition itself, not on the underlying disk.
         return 0
     fi
 }

@@ -52,7 +52,7 @@ if (( "${#OUTPUT_URL_FILES_PATTERNS[@]}" > 0 )) ; then
     local result_files_filtered=()
     for result_file in "${RESULT_FILES[@]}"; do
         local pattern
-        # interate over patterns
+        # iterate over patterns
         for pattern in "${OUTPUT_URL_FILES_PATTERNS[@]}"; do
             if [[ "$result_file" == $pattern ]]; then
                 result_files_filtered+=("$result_file")
@@ -92,7 +92,7 @@ if scheme_supports_filesystem $scheme ; then
 
         # note: s390 kernel copy is only through nfs
         #
-        # s390 optional naming override of initrd and kernel to match the s390 filesytem naming conventions
+        # s390 optional naming override of initrd and kernel to match the s390 filesystem naming conventions
         # on s390a there is an option to name the initrd and kernel in the form of
         # file name on s390 are in the form of name type mode
         # the name is the userid or vm name and the type is initrd or kernel

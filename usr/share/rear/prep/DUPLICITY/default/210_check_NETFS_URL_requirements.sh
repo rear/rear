@@ -23,11 +23,11 @@ if [[ "$BACKUP_DUPLICITY_NETFS_URL" ]] ; then
     local hostname="$( url_hostname "$BACKUP_DUPLICITY_NETFS_URL" )"
     local path="$( url_path "$BACKUP_DUPLICITY_NETFS_URL" )"
 
-    ### check for vaild BACKUP_DUPLICITY_NETFS_URL schemes
+    ### check for valid BACKUP_DUPLICITY_NETFS_URL schemes
     ### see https://github.com/rear/rear/issues/842
     case $scheme in
         (nfs|cifs|usb|tape|file|iso|sshfs|ftpfs)
-            # do nothing for vaild BACKUP_DUPLICITY_NETFS_URL schemes
+            # do nothing for valid BACKUP_DUPLICITY_NETFS_URL schemes
             :
             ;;
         (*)

@@ -6,7 +6,7 @@
 have_udev || return 0
 
 # we treat only these rules
-# RULE_FILES array has been replaced bu UDEV_NET_MAC_RULE_FILES which is defined in the default.conf file
+# RULE_FILES array has been replaced by UDEV_NET_MAC_RULE_FILES which is defined in the default.conf file
 # RULE_FILES=( /etc/udev/rules.d/*persistent*{names,net,cd}.rules /etc/udev/rules.d/*eno-fix.rules )
 # the result looks like this on various systems:
 #   rear-centos4: ERROR

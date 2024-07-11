@@ -1,7 +1,7 @@
 # remove existing disk-by-id mappings
 # FIXME: Don't we actually not 'remove' but 'replace' or 'migrate' disk-by-id mappings?
 #
-# We call sed once for each substituation
+# We call sed once for each substitution
 # it would be better to build one sed script and use this later
 #  (like finalize/GNU/Linux/250_migrate_disk_devices_layout.sh)
 #

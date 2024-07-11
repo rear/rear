@@ -2,7 +2,7 @@ Log "Fixup debian jessie systemd files"
 
 # on debian jessie systemd files are located in /lib/systemd not
 # /usr/lib/systemd, as such symlink then within the $ROOTFS_DIR
-# otherwise certain servises won't come up.
+# otherwise certain services won't come up.
 
 if [ -e "$ROOTFS_DIR/lib/systemd/" ]; then
     cd  $ROOTFS_DIR/lib/systemd/

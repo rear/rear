@@ -229,32 +229,32 @@ local lvs_exit_code
     # /dev/mapper/system-swap /dev/mapper/system-root /dev/mapper/system-home
     # cf. https://github.com/rear/rear/pull/2291#issuecomment-567933705
     # Therefore we can re-order the 'lvs' output lines as we need it to make "rear recover" behave more fail safe
-    # when it is run on a bit smaller replacement disk(s) so one or more LVs need to be automatically shrinked a bit.
+    # when it is run on a bit smaller replacement disk(s) so one or more LVs need to be automatically shrink a bit.
     # The automated LVs shrinking is not intended when replacement disk(s) are substantially smaller.
     # To migrate onto a substantially smaller replacement disk the user must in advance
     # manually adapt his disklayout.conf file before he runs "rear recover".
     # The basic idea to automatically shrink LVs is to implement a "minimal changes" approach
     # cf. "minimal changes" in layout/prepare/default/420_autoresize_last_partitions.sh
     # where the "minimal changes" approach is here to only shrink one single LV per disk if needed.
-    # A LV needs to be shrinked only if it is not possible to recreate all LVs with their specified size
+    # A LV needs to shrink only if it is not possible to recreate all LVs with their specified size
     # i.e. when during "rear recover" 'lvcreate' fails with "Volume group ... has insufficient free space".
     # In this case 'lvcreate' is called again where the exact size option of the form '-L 123456b'
     # is replaced with an option to use all remaining free space in the VG via '-l 100%FREE'
     # so e.g. 'lvcreate -L 123456b -n LV VG' becomes 'lvcreate -l 100%FREE -n LV VG'
     # see layout/prepare/GNU/Linux/110_include_lvm_code.sh
-    # The most reasonable LVs that can be shrinked a bit with a "minimal changes" approach are the biggest LVs
-    # because we assume that the data of the backup can still be restored into a big LV after it was shrinked a bit.
+    # The most reasonable LVs that can shrink a bit with a "minimal changes" approach are the biggest LVs
+    # because we assume that the data of the backup can still be restored into a big LV after it was shrunk a bit.
     # So we sort the 'lvs' output lines by the size of the LVs (4th field in the output lines, 1st field is two blanks)
     # so that the biggest LVs get listed last in disklayout.conf and get recreated last during "rear recover"
     # so 'lvcreate' may only fail with "Volume group ... has insufficient free space" for some of the biggest LVs.
     # Additionally it had happened during my <jsmeix@suse.de> initial tests that shrinking the 'swap' LV somehow caused
     # that the recreated system did not boot (boot screen showed GRUB but there it hung with constant 100% CPU usage)
-    # so automatically shrinking only the biggest LVs avoids that a relatively small 'swap' LV gets shrinked.
+    # so automatically shrinking only the biggest LVs avoids that a relatively small 'swap' LV gets shrunk.
     # With 'sort -n -t ':' -k 4' the above 'lvs' output lines become
     #   :swap:system:1262485504:linear::0:1:0:1262485504:
     #   :home:system:6148849664:linear::0:1:0:6148849664:
     #   :root:system:14050918400:linear::0:1:0:14050918400:
-    # so only the 'root' LV may get automatically shrinked if needed.
+    # so only the 'root' LV may get automatically shrink if needed.
     lvm lvs --separator=':' --noheadings --units b --nosuffix -o $lvs_fields | sort -n -t ':' -k 4 | while read line ; do
 
         # Output lvmvol header only once to DISKLAYOUT_FILE:

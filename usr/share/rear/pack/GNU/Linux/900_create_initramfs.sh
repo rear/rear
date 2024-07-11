@@ -19,7 +19,7 @@
 
 # for zvm name override -  see REAR_INITRD_FILENAME override for lz4, xz and gz compression below
 # -------------------------------------------------------------------------------------------------
-# s390 optional naming override of initrd and kernel to match the s390 filesytem naming conventions
+# s390 optional naming override of initrd and kernel to match the s390 filesystem naming conventions
 # on s390a there is an option to name the initrd and kernel in the form of
 # file name on s390 are in the form of name type mode
 # the name is the userid or vm name and the type is initrd or kernel
@@ -165,7 +165,7 @@ if test "$ARCH" = "Linux-ppc64" || test "$ARCH" = "Linux-ppc64le" ; then
             LogPrintError "If it fails to boot consider the following:"
             if ! test "$REAR_INITRD_COMPRESSION" = "lzma" ; then
                 # For example an initrd with 120 MB with default gzip compression became only 77 MB with lzma
-                # but whith lzma compression "rear mkrescue" needed 2 minutes more time in this particular case
+                # but with lzma compression "rear mkrescue" needed 2 minutes more time in this particular case
                 # cf. https://github.com/rear/rear/issues/3189#issuecomment-2079794186
                 LogPrintError "REAR_INITRD_COMPRESSION='lzma' for better (but slower) initrd compression"
             fi

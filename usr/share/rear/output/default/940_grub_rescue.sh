@@ -87,7 +87,7 @@ END {
 EOF
 
 [[ -s $grub_conf ]]
-BugIfError "Mofified GRUB is empty !"
+BugIfError "Modified GRUB is empty !"
 
 if ! diff -u $grub_conf $TMP_DIR/menu.lst >&2; then
     LogPrint "Modifying local GRUB configuration"

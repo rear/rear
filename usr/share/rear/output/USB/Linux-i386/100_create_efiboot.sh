@@ -56,7 +56,7 @@ mkdir -p $efi_dst || Error "Failed to create directory '$efi_dst'"
 # https://github.com/rear/rear/pull/3025#issuecomment-1635876186
 # but not with USB, cf.
 # https://github.com/rear/rear/pull/3025#issuecomment-1643774477
-# so I tried to re-use the ISO Secure Boot code for USB
+# so I tried to reuse the ISO Secure Boot code for USB
 # which made Secure Boot "just work" for me with USB
 # but I had to do some (minor) adaptions to make it work
 # within the existing USB code, cf.
@@ -130,7 +130,7 @@ EOF
         (2)
             DebugPrint "Configuring GRUB2 for EFI boot"
             # We need to set the GRUB environment variable 'root' to the partition device with label $efi_label (hardcoded "REAR-EFI")
-            # because GRUB's default 'root' (or GRUB's 'root' identifcation heuristics) would point to the ramdisk but neither kernel
+            # because GRUB's default 'root' (or GRUB's 'root' identification heuristics) would point to the ramdisk but neither kernel
             # nor initrd are located on the ramdisk but on the partition device with label $efi_label.
             # GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND is needed by the create_grub2_cfg() function.
             # Set GRUB2_SEARCH_ROOT_COMMAND if not specified by the user:

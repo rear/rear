@@ -13,14 +13,14 @@
 # by the separated 420_autoresize_last_partitions.sh script.
 #
 # To automatically resize all active partitions on all active disks
-# AUTORESIZE_PARTITIONS must be explicity set to true.
+# AUTORESIZE_PARTITIONS must be explicitly set to true.
 #
 # A true or false value must be the first one in the AUTORESIZE_PARTITIONS array.
 
 # Skip if not in migration mode:
 is_true "$MIGRATION_MODE" || return 0
 
-# Skip if resizing all partitions is not explicity wanted:
+# Skip if resizing all partitions is not explicitly wanted:
 is_true "$AUTORESIZE_PARTITIONS" || return 0
 
 cp "$LAYOUT_FILE" "$LAYOUT_FILE.tmp"

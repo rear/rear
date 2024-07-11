@@ -25,7 +25,7 @@ PREP_BOOT_PART=$( awk -F '=' '/^boot/ {print $2}' $TARGET_FS_ROOT/etc/yaboot.con
 
 # test $PREP_BOOT_PART is not null and is an existing partition on the current system.
 if ( test -n "$PREP_BOOT_PART" ) && ( fdisk -l 2>/dev/null | grep -q "$PREP_BOOT_PART" ) ; then
-    LogPrint "Boot partion found in yaboot.conf: $PREP_BOOT_PART"
+    LogPrint "Boot partition found in yaboot.conf: $PREP_BOOT_PART"
     # Run mkofboot directly in chroot without a login shell in between, see https://github.com/rear/rear/issues/862
 else
     # If the device found in yaboot.conf is not valid, find prep partition in

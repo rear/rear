@@ -652,12 +652,12 @@ In this example we will split the backup of a Linux-only machine into two parts.
  then we'll process that special filesystem (_/dev/vg00/lvol4_, mounted as 
  _/products_) using BLOCKCLONE and `dd`. +
 As you will see, during the base OS restore phase, the encrypted filesystem will be
- recreated with new encyption keys (although empty, as _/products_ was ignored during
+ recreated with new encryption keys (although empty, as _/products_ was ignored during
  the backup phase), but it will then be completely overwritten when we use `dd` to 
  restore the image in the last phase. +
 The _BLOCKCLONE_TRY_UNMOUNT_ is important here: it will attempt to unmount the
  encrypted filesystem before creating its image and before restoring it. If 
- unmounting is impossible, do not dispair, the recovery should still work but
+ unmounting is impossible, do not despair, the recovery should still work but
  you may need to manually repair the filesystem before you can mount it, and you 
  run the risk that the data may be inconsistent.
  

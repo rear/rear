@@ -219,7 +219,7 @@ if is_true "$FORMAT_EFI" ; then
     if is_true "$FORMAT_BIOS" && [[ "$USB_DEVICE_PARTED_LABEL" == "gpt" ]] ; then
         rear_efi_partition_number="2"
     fi
-    # Detect loopback device parition naming
+    # Detect loopback device partition naming
     # on loop devices the first partition is named e.g. loop0p1
     # instead of e.g. sdb1 on usual (USB) disks
     # cf. https://github.com/rear/rear/pull/2555
@@ -249,7 +249,7 @@ if is_positive_integer $USB_BOOT_PART_SIZE ; then
     fi
 fi
 
-# Detect loopback device parition naming (same logic as above)
+# Detect loopback device partition naming (same logic as above)
 local data_partition_device="$RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER"
 if [ ! -b "$data_partition_device" ] && [ -b "${RAW_USB_DEVICE}p${USB_DATA_PARTITION_NUMBER}" ] ; then
     data_partition_device="${RAW_USB_DEVICE}p${USB_DATA_PARTITION_NUMBER}"

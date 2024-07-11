@@ -64,7 +64,7 @@ function modinfo_filename () {
     # 'readlink -e something' shows nothing when something is no file or a broken symlink and exits with exit code 1
     # 'readlink -e something' shows nothing on stdout but an error on stderr when something is empty and exits with exit code 1
     # It is crucial to output the original module_filename also when it is a symlink
-    # because in the code below 'cp -L' copies the symlink taget content
+    # because in the code below 'cp -L' copies the symlink target content
     # as a new regular file with file name as the name of the symlink
     # so the copied content can be still found under its original name,
     # cf. https://github.com/rear/rear/issues/2677#issuecomment-997859219
@@ -180,7 +180,7 @@ for dummy in "once" ; do
                sr_mod ide_cd cdrom
                zlib zlib-inflate zlib-deflate
                libcrc32c crc32c crc32c-intel )
-    # Include the modules in MODULES plus their dependant modules.
+    # Include the modules in MODULES plus their dependent modules.
     for module in "${MODULES[@]}" ; do
         # Strip trailing ".o" if there:
         module=${module#.o}

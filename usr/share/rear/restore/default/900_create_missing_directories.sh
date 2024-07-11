@@ -32,10 +32,10 @@ if test -f "$directories_permissions_owner_group_file" ; then
         test $directory || continue
         # Strip leading slash from directory because we need a relative directory inside TARGET_FS_ROOT:
         directory=${directory#/}
-        # Normal directories are strored in lines like (e.g. on a SLES12 system):
+        # Normal directories are stored in lines like (e.g. on a SLES12 system):
         # /tmp 1777 root root
         # /usr 755 root root
-        # Symbolic links are strored in lines like (e.g. on a SLES12 system)
+        # Symbolic links are stored in lines like (e.g. on a SLES12 system)
         # note the difference between absolute and relative symbolic link target:
         # /var/lock -> /run/lock
         # /var/mail -> spool/mail

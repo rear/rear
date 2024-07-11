@@ -61,7 +61,7 @@ function create_opaldisk() {
             echo "opaldisk_password='$password'"
         else
             local prompt="password for self-encrypting disk $device"
-            echo "# Re-use OPAL_DISK_PASSWORD if multiple self-encrypting disks are present"
+            echo "# Reuse OPAL_DISK_PASSWORD if multiple self-encrypting disks are present"
             echo ": \${OPAL_DISK_PASSWORD:=\"\$(opal_checked_password_input \"OPAL_DISK_PASSWORD\" \"$prompt\")\"}"
             echo "opaldisk_password=\"\$OPAL_DISK_PASSWORD\""
         fi

@@ -228,7 +228,7 @@ OUTPUT_URL=*hftp://*::
 Write the image using +lftp+ and the HFTP protocol.
 
 OUTPUT_URL=*http://*::
-Write the image using +lftp+ and the HTTP (PUT) procotol.
+Write the image using +lftp+ and the HTTP (PUT) protocol.
 
 OUTPUT_URL=*https://*::
 Write the image using +lftp+ and the HTTPS (PUT) protocol.

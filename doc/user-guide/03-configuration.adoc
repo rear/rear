@@ -63,7 +63,7 @@ OUTPUT_URL=hftp://::
 Write the ISO image using +lftp+ and the HFTP protocol.
 
 OUTPUT_URL=http://::
-Write the ISO image using +lftp+ and the HTTP (PUT) procotol.
+Write the ISO image using +lftp+ and the HTTP (PUT) protocol.
 
 OUTPUT_URL=https://::
 Write the ISO image using +lftp+ and the HTTPS (PUT) protocol.

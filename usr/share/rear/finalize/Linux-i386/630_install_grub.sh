@@ -28,7 +28,7 @@ test "GRUB" = "$BOOTLOADER" || return 0
 # the user can have BOOTLOADER=GRUB set explicitly in the configuration file
 # and then it overrides the autodetection in layout/save/default/445_guess_bootloader.sh .
 # The user expects this setting to work with GRUB 2, thus for backward compatibility
-# we need to take into accout the possibility that GRUB actually means GRUB 2.
+# we need to take into account the possibility that GRUB actually means GRUB 2.
 if is_grub2_installed ; then
     LogPrint "Skip installing GRUB Legacy boot loader because GRUB 2 is installed."
     # We have the ErrorIfDeprecated function, but it aborts ReaR by default,

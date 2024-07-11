@@ -11,7 +11,7 @@
 # with COMMAND || Error ...
 
 # See lib/global-functions.sh what the url_* functions actually result and
-# see prep/NETFS/default/050_check_NETFS_requirements.sh for vaild BACKUP_URLs
+# see prep/NETFS/default/050_check_NETFS_requirements.sh for valid BACKUP_URLs
 
 local url=""
 for url in "$BACKUP_URL" "$OUTPUT_URL" ; do
@@ -23,7 +23,7 @@ for url in "$BACKUP_URL" "$OUTPUT_URL" ; do
         (file|tape|usb)
             # file:// tape:// usb:// URLs must not have an authority part (scheme://authority/path)
             # i.e. file:// tape:// usb:// URLs must have an empty authority part (scheme:///path)
-            test "$authority" && Error "BACKUP_URL or OUTPUT_URL '$url' requires tripple slash (i.e. '$scheme:///path')"
+            test "$authority" && Error "BACKUP_URL or OUTPUT_URL '$url' requires triple slash (i.e. '$scheme:///path')"
             # file:// tape:// usb:// URLs must have a non-empty path
             test "$path" || Error "BACKUP_URL or OUTPUT_URL '$url' is missing a path (i.e. '$scheme:///path')"
             ;;

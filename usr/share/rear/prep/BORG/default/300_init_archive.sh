@@ -16,7 +16,7 @@ is_true "$BORGBACKUP_INIT_MAKE_PARENT_DIRS" && borg_additional_options+=( --make
 
 # Query Borg server for repository information
 # and store it to BORGBACKUP_ARCHIVE_CACHE.
-# This should avoid repeatingly quering Borg server, which could be slow.
+# This should avoid repeatingly querying Borg server, which could be slow.
 borg_archive_cache_create
 rc=$?
 

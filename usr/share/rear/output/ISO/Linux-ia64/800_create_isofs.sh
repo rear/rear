@@ -14,7 +14,7 @@ Log "Starting '$ISO_MKISOFS_BIN'"
 LogPrint "Making ISO image"
 
 mkdir -p $v "$ISO_DIR"
-StopIfError "Could not create ISO ouput directory ($ISO_DIR)"
+StopIfError "Could not create ISO output directory ($ISO_DIR)"
 
 # move $TMP_DIR/boot.img to $TMP_DIR/isofs/boot
 mkdir -p $v "$TMP_DIR/isofs"

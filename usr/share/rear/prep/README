@@ -29,5 +29,5 @@ versus what other workflows that run the 'prep' stage may need to have.
 For example mkbackuponly may need a modified rescue/recovery system
 when backup config variables need updated values in the recovery system
 (e.g. an updated value for BACKUP_PROG_EXCLUDE or something similar).
-The prep/default/990_verify_empty_rootfs.sh scrip checks at the end
+The prep/default/990_verify_empty_rootfs.sh script checks at the end
 of the 'prep' stage that ROOTFS_DIR is unmodified (i.e. still empty).

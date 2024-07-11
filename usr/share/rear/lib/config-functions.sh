@@ -44,7 +44,7 @@ function SetOSVendorAndVersion () {
             fi
         fi
 
-        # For older distro's we try to interprete the /etc/SuSE-release or /etc/redhat-release file
+        # For older distro's we try to interpret the /etc/SuSE-release or /etc/redhat-release file
         # The /etc/issue file cannot be trusted as it can contain customer related info instead of release info
         if test "$OS_VENDOR" = generic ; then
             if [[ -f /etc/SuSE-release ]] ; then

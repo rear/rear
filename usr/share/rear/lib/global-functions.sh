@@ -47,7 +47,7 @@ function unique_unsorted () {
 #   if the argument is an integer
 #   if the argument is a positive integer (i.e. test for '> 0')
 #   if the argument is a nonnegative integer (i.e. test for '>= 0')
-# where the argument is limted by the bash integer arithmetic range limitation
+# where the argument is limited by the bash integer arithmetic range limitation
 # from - ( 2^63 ) = -9223372036854775808 to 9223372036854775807 = + ( 2^63 - 1 )
 # e.g. "is_nonnegative_integer 9223372036854775807" works (tested down to SLES11 on 32-bit x86)
 # but "is_nonnegative_integer 9223372036854775808" is out of range and returns a wrong result, cf.
@@ -417,7 +417,7 @@ function scheme_accepts_files() {
 }
 
 ### Returns true if URLs with the given scheme corresponds to a path inside
-### a mountable fileystem and one can put files directly into it.
+### a mountable filesystem and one can put files directly into it.
 ### The actual path will be returned by backup_path() / output_path().
 ### If returns false, using backup_path() / output_path() has no sense
 ### and one must use a scheme-specific method (like lftp or writing them to a tape)
@@ -957,7 +957,7 @@ function mathlib_calculate()
 # Duply is a wrapper script around duplicity - this function is
 # used in the prep phase (for mkbackup) and in the verify phase
 # (to check the TEMP_DIR directory - it must be defined and cannot
-# be /tmp as this is usally a tmpfs file system which is too small)
+# be /tmp as this is usually a tmpfs file system which is too small)
 function find_duply_profile ()
 {
     # there could be more then one profile present - select where SOURCE='/'

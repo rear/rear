@@ -41,7 +41,7 @@
 # Accordingly this automated resizing implements a "minimal changes" approach:
 #
 # When the new disk is a bit smaller (at most AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE percent),
-# only the last (active) partition gets shrinked but all other partitions are not changed.
+# only the last (active) partition gets shrunk but all other partitions are not changed.
 # When the new disk is smaller than AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE percent it errors out.
 # To migrate onto a substantially smaller new disk the user must in advance
 # manually adapt his disklayout.conf file before he runs "rear recover".
@@ -75,10 +75,10 @@
 # Skip if not in migration mode:
 is_true "$MIGRATION_MODE" || return 0
 
-# Skip if automatically resize partitions is explicity unwanted:
+# Skip if automatically resize partitions is explicitly unwanted:
 is_false "$AUTORESIZE_PARTITIONS" && return
 
-# Skip resizing only the last partition if resizing all partitions is explicity wanted
+# Skip resizing only the last partition if resizing all partitions is explicitly wanted
 # which is done by the separated 430_autoresize_all_partitions.sh script:
 is_true "$AUTORESIZE_PARTITIONS" && return
 
@@ -354,7 +354,7 @@ function autoresize_last_partition () {
     new_last_part_size=$( mathlib_calculate "$new_disk_remainder_start - $last_part_start" )
 
     # When the desired new size of the last partition (with 1 MiB alignment) is not at least 1 MiB
-    # the last partition can no longer be on the new device (when only the last partition is shrinked):
+    # the last partition can no longer be on the new device (when only the last partition is shrunk):
     test $new_last_part_size -ge $MiB || Error "No space for last partition $last_part_dev on new device (new last partition size would be less than 1 MiB)"
 
     # When the last partition is a logical partition determine the desired new size
@@ -404,21 +404,21 @@ function autoresize_last_partition () {
         test $new_last_part_size -ge $last_part_used_bytes || LogUserOutput "WARNING: New size of last partition $last_part_dev will be smaller than its disk usage was"
     fi
 
-    # Determine if an extended partition actually needs to be shrinked or should be increased and do it if needed.
+    # Determine if an extended partition actually needs to shrink or should be increased and do it if needed.
     # If new_extended_part_size has a positive value it means the last partition is a logical partition (cf. above)
     # which means there is no further partition beyond the end of the extended partition
     # (only one extended partition is allowed so that all logical partitions must be in one extended partition)
-    # so that the extended partition can actually be shrinked or increased:
+    # so that the extended partition can actually shrink or increase:
     if is_positive_integer $new_extended_part_size ; then
-        # The extended partition actually needs to be shrinked (regardless if the last partition needs to be shrinked)
+        # The extended partition actually needs to shrink (regardless if the last partition needs to shrink)
         # if the new size (which is up to the end of the new device) is smaller than it was on the old device because
         # otherwise the end of the extended partition would be beyond the end of the new device (with 1 MiB alignment):
         if test $new_extended_part_size -lt $extended_part_size ; then
             LogPrint "Shrinking extended partition $extended_part_dev to end of device"
             sed -r -i "s|^part $partitions_device $extended_part_size $extended_part_start (.+) $extended_part_dev\$|part $partitions_device $new_extended_part_size $extended_part_start \1 $extended_part_dev|" "$disklayout_resized_last_partition"
-            LogPrint "Shrinked extended partition $extended_part_dev size from $extended_part_size to $new_extended_part_size bytes"
+            LogPrint "Shrunk extended partition $extended_part_dev size from $extended_part_size to $new_extended_part_size bytes"
             # Set new_extended_part_size to zero to avoid that the extended partition
-            # will be also shrinked when the last partition gets actually shrinked below:
+            # will be also shrink when the last partition gets actually shrunk below:
             new_extended_part_size=0
         fi
         # The extended partition should be increased independent of whether or not the last partition will be also increased:
@@ -439,9 +439,9 @@ function autoresize_last_partition () {
         fi
     fi
 
-    # Determine if the last partition actually needs to be increased or shrinked and
+    # Determine if the last partition actually needs to increase or shrink and
     # go on or error out or skip the rest (i.e. return) depending on the particular case:
-    DebugPrint "Determining if last partition $last_part_dev actually needs to be increased or shrinked"
+    DebugPrint "Determining if last partition $last_part_dev actually needs to increase or shrink"
     if test $disk_size_difference -gt 0 ; then
         # The size of the new partitions device is bigger than the size of the old one:
         increase_threshold_difference=$( mathlib_calculate "$old_disk_size / 100 * $AUTOINCREASE_DISK_SIZE_THRESHOLD_PERCENTAGE" )
@@ -479,12 +479,12 @@ function autoresize_last_partition () {
             return
         fi
         last_part_shrink_difference=$( mathlib_calculate "$last_part_size - $new_last_part_size" )
-        LogPrint "Last partition $last_part_dev must be shrinked by $last_part_shrink_difference bytes to still fit on device"
+        LogPrint "Last partition $last_part_dev must shrink by $last_part_shrink_difference bytes to still fit on device"
         max_shrink_difference=$( mathlib_calculate "$old_disk_size / 100 * $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE" )
         if test $disk_size_difference -gt $max_shrink_difference ; then
             # Show also the config variable name AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE (not only its value)
             # so the user knows what he could change which helps to move forward when "rear recover" errors out here:
-            Error "Last partition $last_part_dev cannot be shrinked (new device more than $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE% smaller, see AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE)"
+            Error "Last partition $last_part_dev cannot shrink (new device more than $AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE% smaller, see AUTOSHRINK_DISK_SIZE_LIMIT_PERCENTAGE)"
         fi
         if is_false "$last_part_is_resizeable" ; then
             # Show also the config variable name AUTORESIZE_EXCLUDE_PARTITIONS so the user knows what he could change:

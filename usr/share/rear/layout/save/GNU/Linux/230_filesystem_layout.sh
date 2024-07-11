@@ -453,7 +453,7 @@ fi
                     # (using subvolid=... can fail because the subvolume ID can be different during system recovery).
                     # Because both "mount ... -o subvol=/path/to/subvolume" and "mount ... -o subvol=path/to/subvolume" work
                     # the subvolume path can be specified with or without leading '/'.
-                    # Aviod SC1087 by using ${subvolume_mountpoint} with curly brackets because
+                    # Avoid SC1087 by using ${subvolume_mountpoint} with curly brackets because
                     # we need the subsequent square brackets literally (subvolume_mountpoint is a string, not an array):
                     btrfs_subvolume_path=$( grep -E "[[:space:]]${subvolume_mountpoint}[[:space:]]+btrfs[[:space:]]" /etc/fstab \
                                             | grep -E -v '^[[:space:]]*#' \
@@ -500,7 +500,7 @@ fi
                     # see https://btrfs.wiki.kernel.org/index.php/Mount_options
                     test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
                     if test -n "$btrfs_subvolume_path" ; then
-                        # Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
+                        # Add the following binaries to the rescue image in order to be able to change required attrs upon recovery.
                         # See conf/examples/SLE12-SP2-btrfs-example.conf and https://github.com/rear/rear/issues/2927
                         REQUIRED_PROGS+=( chattr )
                         PROGS+=( lsattr )

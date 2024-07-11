@@ -34,16 +34,16 @@ local rpm_package_name="basesystem"
 LogPrint "Installing the very basic stuff ('$rpm_package_name' and what it requires)"
 yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT --releasever=$(cat $yum_backup_dir/releasever.dat) -y install "$rpm_package_name" 1>&2
 # aaa_base requires filesystem so that yum installs filesystem before aaa_base
-# but for a clean filesystem installation YUM needs users and gropus
+# but for a clean filesystem installation YUM needs users and groups
 # as shown by RPM as warnings like (excerpt):
 #   warning: user news does not exist - using root
 #   warning: group news does not exist - using root
 #   warning: group dialout does not exist - using root
 #   warning: user uucp does not exist - using root
-# Because those users and gropus are created by aaa_base scriptlets and
+# Because those users and groups are created by aaa_base scriptlets and
 # also RPM installation of permissions pam libutempter0 shadow util-linux
 # (that get also installed before aaa_base by yum installation of aaa_base)
-# needs users and gropus that are created by aaa_base scriptlets so that
+# needs users and groups that are created by aaa_base scriptlets so that
 # those packages are enforced installed a second time after aaa_base was installed.
 # To be safe against changes in the list of packages that need to be
 # enforced installed a second time after aaa_base was installed

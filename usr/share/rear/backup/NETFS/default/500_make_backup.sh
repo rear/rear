@@ -51,8 +51,8 @@ while read -r backup_exclude_item ; do
     test "$backup_exclude_item" && Log "  $backup_exclude_item"
 done < $TMP_DIR/backup-exclude.txt
 
-# Check if the backup needs to be splitted or not (on multiple ISOs).
-# Dummy split command when the backup is not splitted (the default case).
+# Check if the backup needs to be split or not (on multiple ISOs).
+# Dummy split command when the backup is not split (the default case).
 # Let 'dd' read and write up to 1M=1024*1024 bytes at a time to speed up things
 # for example from only 500KiB/s (with the 'dd' default of 512 bytes)
 # via a 100MBit network connection to about its full capacity
@@ -265,7 +265,7 @@ case "$( basename $BACKUP_PROG )" in
         # this obviously leads to wrong results in case something else is writing to the same
         # disk at the same time as is very likely with a networked file system. For local disks
         # this should be good enough and in any case this is only some eye candy.
-        # TODO: Find a fast way to count the actual transfer data, preferrable getting the info from rsync.
+        # TODO: Find a fast way to count the actual transfer data, preferable getting the info from rsync.
         let old_disk_used="$(get_disk_used "$backuparchive")"
         while sleep $PROGRESS_WAIT_SECONDS ; kill -0 $BackupPID 2>/dev/null; do
             let disk_used="$(get_disk_used "$backuparchive")" size=disk_used-old_disk_used
