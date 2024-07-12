@@ -8,7 +8,7 @@
 
 # Define the list of supported images
 declare -r IMAGES=(
-    ubuntu:{20.04,22.04,23.04,devel}
+    ubuntu:{20.04,22.04,23.04,24.04}
     debian:{10,11,unstable}
     opensuse/leap:15
     registry.suse.com/suse/sle15
@@ -34,6 +34,8 @@ Without command it will show the Bash version in all images
 Special commands:
 
 --patch     Patch the (given or all) images to contain the ReaR build and run dependencies
+            Add --continue-and-record-successful FILE to continue after a failure and record
+            the successful images in FILE
 -i          Interactive shell, used by default if image selection yields only a single image
 
 Architecture defaults to the host platform, specify architecture via
@@ -55,6 +57,21 @@ use_images=()
 
 # patch the images to contain all ReaR build and run dependencies
 function patch_images() {
+    local continue_and_record_successful_file=""
+    while test $# -gt 0; do
+        case "$1" in
+        --continue-and-record-successful)
+            test $# -lt 2 && die "Missing filename for $1 argument"
+            continue_and_record_successful_file="$2"
+            rm -vf "$continue_and_record_successful_file"
+            shift 2
+            ;;
+        *)
+            die "Unknown option $1"
+            ;;
+        esac
+    done
+
     for image in "${use_images[@]}"; do
         local DOCKERFILE="
 FROM $image
@@ -101,7 +118,18 @@ RUN git config --global --add safe.directory /rear
         read oldsize junk < <(docker images --format '{{.VirtualSize}}' "$image")
         docker buildx build -t "$image" \
             "${extra_docker_args[@]}" \
-            - <<<"$DOCKERFILE" || die "Failed building $image"
+            - <<<"$DOCKERFILE"
+        local docker_build_ret=$?
+        if test "$continue_and_record_successful_file" ; then
+            if test $docker_build_ret -eq 0 ; then
+                echo "$image" >> "$continue_and_record_successful_file"
+            else
+                printf "********** FAILED   %-40s **********\n" "$image" 1>&2
+                continue
+            fi
+        else
+            test $docker_build_ret -eq 0 || die "Failed building $image"
+        fi
         read newsize junk < <(docker images --format '{{.VirtualSize}}' "$image")
         test "$oldsize" != "$newsize" && printf "********** %-35s %7s -> %-7s *****\n" "$image" "$oldsize" "$newsize"
     done
@@ -163,7 +191,7 @@ bash_args=(-c "echo BUG: CONFIGURATION ERROR" )
 
 case "${command_args[0]}" in
 --patch)
-    patch_images
+    patch_images "${command_args[@]:1}"
     exit $?
     ;;
 -i)

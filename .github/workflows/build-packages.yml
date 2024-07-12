@@ -21,13 +21,18 @@ jobs:
         run: sudo apt-get -qq update && sudo apt-get -qq install asciidoctor
 
       - id: prepare
-        run: tools/run-in-docker -- --patch
+        run: tools/run-in-docker -- --patch --continue-and-record-successful images
+
+      - id: images
+        run: cat images
+        if: always()
 
       - id: dist
         run: make dist
 
       - id: build
-        run: tools/run-in-docker -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz /var/tmp/build-rear*'
+        # make package only for images that we patched successfully
+        run: tools/run-in-docker $(<images) -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz /var/tmp/build-rear*'
 
       - run: ls -lR dist-all
         if: always()
