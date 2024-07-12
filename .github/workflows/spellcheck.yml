@@ -1,6 +1,9 @@
 name: 🚥 Codespell
 
-# workflow to check spelling errors on the changed files within the current pull request
+# Workflow to check spelling errors on the changed files within the current pull request.
+#
+# The previous version already did a complete check on the whole repository, therefore,
+# we prefer only to check the added/changed files for spelling errors.
 
 on:
   pull_request:
