@@ -23,8 +23,8 @@ jobs:
           #files=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | xargs -I {} sh -c "echo \'./{}\'" | tr '\n' ' ')
           gh pr diff ${{ github.event.pull_request.number }} --name-only | xargs -I {} sh -c 'echo ./{}' | sort >/tmp/changed
           gh api '/repos/rear/rear/git/trees/master?recursive=true' -q '.tree[]|.path' | xargs -I {} sh -c 'echo ./{}' | sort >/tmp/full
-          comm -23 /tmp/full /tmp/changed > /tmp/exclude_file
-          echo "EXCLUDE_FILE=/tmp/exclude_file" >> "$GITHUB_ENV"          
+          comm -23 /tmp/full /tmp/changed > ./exclude_file
+          echo "EXCLUDE_FILE=./exclude_file" >> "$GITHUB_ENV"          
 
       - name: 🔸 Output Exclude Filename
         run: echo ${{ env.EXCLUDE_FILE }}
