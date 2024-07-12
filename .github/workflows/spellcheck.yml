@@ -20,11 +20,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # get file names and separate them with space ' '
-          files=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | xargs -I {} sh -c "echo \'./{}\'" | tr '\n' ' ')
-          echo "CHANGED_FILES=$files" >> "$GITHUB_ENV"          
+          #files=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | xargs -I {} sh -c "echo \'./{}\'" | tr '\n' ' ')
+          gh pr diff ${{ github.event.pull_request.number }} --name-only | xargs -I {} sh -c 'echo ./{}' | sort >/tmp/changed
+          gh api '/repos/rear/rear/git/trees/master?recursive=true' -q '.tree[]|.path' | xargs -I {} sh -c 'echo ./{}' | sort >/tmp/full
+          comm -23 /tmp/full /tmp/changed > /tmp/exclude_file
+          #echo "CHANGED_FILES=$files" >> "$GITHUB_ENV"          
 
-      - name: 🔸 Output Changed Files
-        run: echo ${{ env.CHANGED_FILES }}
+          #- name: 🔸 Output Changed Files
+          #run: echo ${{ env.CHANGED_FILES }}
           
       - name: 🔸 Check for Spelling Errors for Changed Files
         uses: codespell-project/actions-codespell@v2
@@ -32,6 +35,7 @@ jobs:
           check_filenames: true
           check_hidden: true
           ignore_words_file: .codespellignore
-          skip: nothing
-          path: ${{ env.CHANGED_FILES }}
+          skip: .git,./renovate.json,./LICENSE,./MAINTAINERS,*.8,*.pdf,*.html,*.yml
+          exclude_file: /tmp/exclude_file
+          #path: ${{ env.CHANGED_FILES }}
 
