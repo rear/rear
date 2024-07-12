@@ -12,28 +12,28 @@ LogPrint "Creating EFI Boot Manager entries..."
 
 local esp_mountpoint esp_mountpoint_inside boot_efi_parts boot_efi_dev
 
-# When UEFI_BOOTLOADER is not a regular file in the restored target system
+# When INITIAL_UEFI_BOOTLOADER is not a regular file in the restored target system
 # (cf. how esp_mountpoint is set below) it means BIOS is used
 # (cf. rescue/default/850_save_sysfs_uefi_vars.sh)
-# which includes that also an empty UEFI_BOOTLOADER means using BIOS
-# because when UEFI_BOOTLOADER is empty the test below evaluates to
+# which includes that also an empty INITIAL_UEFI_BOOTLOADER means using BIOS
+# because when INITIAL_UEFI_BOOTLOADER is empty the test below evaluates to
 #   test -f /mnt/local/
 # which also returns false because /mnt/local/ is a directory
 # (cf. https://github.com/rear/rear/pull/2051/files#r258826856)
 # but using BIOS conflicts with USING_UEFI_BOOTLOADER is true
 # i.e. we should create EFI Boot Manager entries but we cannot:
-if ! test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" ; then
-    LogPrintError "Failed to create EFI Boot Manager entries (UEFI bootloader '$UEFI_BOOTLOADER' not found under target $TARGET_FS_ROOT)"
+if ! test -f "$TARGET_FS_ROOT/$INITIAL_UEFI_BOOTLOADER" ; then
+    LogPrintError "Failed to create EFI Boot Manager entries (UEFI bootloader '$INITIAL_UEFI_BOOTLOADER' not found under target $TARGET_FS_ROOT)"
     return 1
 fi
 
 # Determine where the EFI System Partition (ESP) is mounted in the currently running recovery system:
-esp_mountpoint=$( filesystem_name "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" )
+esp_mountpoint=$( filesystem_name "$TARGET_FS_ROOT/$INITIAL_UEFI_BOOTLOADER" )
 # Use TARGET_FS_ROOT/boot/efi as fallback ESP mountpoint (filesystem_name returns "/"
 # if mountpoint not found otherwise):
 if [ "$esp_mountpoint" = "/" ] ; then
     esp_mountpoint="$TARGET_FS_ROOT/boot/efi"
-    LogPrint "Mountpoint of $TARGET_FS_ROOT/$UEFI_BOOTLOADER not found, trying $esp_mountpoint"
+    LogPrint "Mountpoint of $TARGET_FS_ROOT/$INITIAL_UEFI_BOOTLOADER not found, trying $esp_mountpoint"
 fi
 
 # Skip if there is no esp_mountpoint directory (e.g. the fallback ESP mountpoint may not exist).
@@ -74,7 +74,7 @@ fi
 local bootloader partition_block_device partition_number disk efipart
 
 # EFI\fedora\shim.efi
-bootloader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
+bootloader=$( echo $INITIAL_UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
 
 for efipart in $boot_efi_parts ; do
     # /dev/sda1 or /dev/mapper/vol34_part2 or /dev/mapper/mpath99p4
@@ -86,7 +86,7 @@ for efipart in $boot_efi_parts ; do
         # do not error out - we may be able to locate other disks if there are more of them
         continue
     fi
-    LogPrint "Creating  EFI Boot Manager entry '$OS_VENDOR $OS_VERSION' for '$bootloader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER') "
+    LogPrint "Creating  EFI Boot Manager entry '$OS_VENDOR $OS_VERSION' for '$bootloader'"
     Log efibootmgr --create --gpt --disk $disk --part $partition_number --write-signature --label \"${OS_VENDOR} ${OS_VERSION}\" --loader \"\\${bootloader}\"
     if efibootmgr --create --gpt --disk $disk --part $partition_number --write-signature --label "${OS_VENDOR} ${OS_VERSION}" --loader "\\${bootloader}" ; then
         # ok, boot loader has been set-up - continue with other disks (ESP can be on RAID)
@@ -97,5 +97,5 @@ for efipart in $boot_efi_parts ; do
 done
 
 is_true $NOBOOTLOADER || return 0
-LogPrintError "efibootmgr failed to create EFI Boot Manager entry for '$bootloader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER')"
+LogPrintError "efibootmgr failed to create EFI Boot Manager entry for '$bootloader'"
 return 1
