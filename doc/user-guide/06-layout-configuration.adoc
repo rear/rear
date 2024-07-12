@@ -136,7 +136,7 @@ exclude the components on the disk from the layout file.
 A generic mechanism for doing this is the +EXCLUDE_RECREATE+
 variable. It can contain a list of storage components that will be
 excluded from the layout (will be present in the layout file, but
-commented out) recursively together with their descendands (components
+commented out) recursively together with their descendants (components
 that depend on the excluded component, like a filesystem on the
 underlying logical volume). Each component in the list corresponds to
 a component in the layout file, but the syntax is different. To
