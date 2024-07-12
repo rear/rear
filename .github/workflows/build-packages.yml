@@ -46,7 +46,7 @@ jobs:
           retention-days: 7
 
       - name: Check rear dump
-        run: tools/run-in-docker -- rear dump
+        run: tools/run-in-docker $(<images) -- rear dump
 
       - name: Create Release Archives and Update GitHub Release
         if: github.ref == 'refs/heads/master'
