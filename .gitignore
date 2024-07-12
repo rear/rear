@@ -12,3 +12,4 @@ var/log/rear
 servers
 /tools/run-in-docker-script.sh
 *.html
+images
