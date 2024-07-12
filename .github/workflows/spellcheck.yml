@@ -26,8 +26,8 @@ jobs:
           comm -23 /tmp/full /tmp/changed > ./exclude_file
           echo "EXCLUDE_FILE=./exclude_file" >> "$GITHUB_ENV"          
 
-      - name: 🔸 Output Exclude Filename
-        run: echo ${{ env.EXCLUDE_FILE }}
+      - name: 🔸 Output the Exclude File
+        run: cat ${{ env.EXCLUDE_FILE }}
           
       - name: 🔸 Check for Spelling Errors for Changed Files
         uses: codespell-project/actions-codespell@v2
