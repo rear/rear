@@ -1,7 +1,8 @@
 # In some dists (e.g. Ubuntu) bash is not the default shell. Statements like
 #   cp -a etc/rear/{mappings,templates} ...
-# assumes bash. So its better to set SHELL
-SHELL = /bin/bash
+# assumes bash. So its better to set SHELL to bash explicitly, using the one from PATH
+# to also work on MacOS with Homebrew-installed bash
+SHELL = bash
 
 # disable parallel execution of make
 .NOTPARALLEL:

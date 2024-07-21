@@ -5,6 +5,9 @@
 # command line args:
 #
 # $0 [os ...] -- <command> [args ...]
+#
+# Note: This script works also on MacOS and makes an effort to use cross-platform
+# compatible options for tools like cp
 
 # Define the list of supported images
 declare -r IMAGES=(
@@ -97,7 +100,7 @@ RUN type -p zypper &>/dev/null || exit 0 ;\
 RUN type -p pacman &>/dev/null || exit 0 ;\
     pacman --noconfirm -Sy \
         sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute2 nfs-utils libisoburn cdrtools util-linux psmisc procps-ng util-linux diffutils less \
-        make binutils fakeroot git asciidoctor
+        make binutils fakeroot git asciidoctor debugedit
 
 # CentOS 8 doesn't have sysvinit-tools any more but it also doesn't have asciidoctor yet
 RUN type -p yum &>/dev/null || exit 0 ;\
@@ -228,6 +231,6 @@ for image in "${use_images[@]}"; do
         /bin/bash --rcfile tools/run-in-docker.bashrc "${bash_args[@]}" || die "############### DOCKER RUN FAILED FOR $image"
     if test "$(ls -l "$rear_toplevel_dir/dist" 2>/dev/null || :)"; then
         echo "********** Copying dist to ${dist_dest}"
-        cp -rxT "$rear_toplevel_dir/dist/" "$rear_toplevel_dir/$dist_dest/" || die "Could not copy dist to $dist_dest"
+        cp -R -x "$rear_toplevel_dir/dist/" "$rear_toplevel_dir/$dist_dest/" || die "Could not copy dist to $dist_dest"
     fi
 done
