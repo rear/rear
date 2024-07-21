@@ -231,6 +231,6 @@ for image in "${use_images[@]}"; do
         /bin/bash --rcfile tools/run-in-docker.bashrc "${bash_args[@]}" || die "############### DOCKER RUN FAILED FOR $image"
     if test "$(ls -l "$rear_toplevel_dir/dist" 2>/dev/null || :)"; then
         echo "********** Copying dist to ${dist_dest}"
-        cp -R -x "$rear_toplevel_dir/dist/" "$rear_toplevel_dir/$dist_dest/" || die "Could not copy dist to $dist_dest"
+        cp -R -x "$rear_toplevel_dir/dist/." "$rear_toplevel_dir/$dist_dest/" || die "Could not copy dist to $dist_dest"
     fi
 done
