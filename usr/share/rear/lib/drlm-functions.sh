@@ -19,6 +19,9 @@ function drlm_import_runtime_config() {
         Error "DRLM_MANAGED: Need 'curl' to download DRLM dynamic configuration. Please install curl and try again."
     fi
 
+    # Source ReaR config files (same as a local etc/rear/local.conf file and other usual ReaR config files)
+    # which are stored on a DRLM server where various ReaR configs of various clients are managed centrally
+    # cf. https://github.com/rear/rear/issues/3294
     if [[ "$DRLM_SERVER" && "$DRLM_REST_OPTS" && "$DRLM_ID" ]]; then
         if [ "$CONFIG_APPEND_FILES" ]; then
             for config_append_file in $CONFIG_APPEND_FILES ; do
