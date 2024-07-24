@@ -23,7 +23,7 @@ prepare_network_devices_script=$ROOTFS_DIR/etc/scripts/system-setup.d/50-prepare
 # Example:  on s390 (zLinux) network devices must be removed from the ignore list and configured
 # cf. https://github.com/rear/rear/pull/2142
 # TODO: add case statement for different os vendors
-if [[ "$ARCH" == "Linux-s390" && "$OS_MASTER_VENDOR" != "SUSE_LINUX" ]] ; then
+if [[ "$ARCH" == "Linux-s390" ]] ; then
 cat >$prepare_network_devices_script << 'EOF'
 
 echo "run cio_ignore -R"
