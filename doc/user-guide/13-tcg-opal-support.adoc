@@ -32,7 +32,7 @@ NOTE: This section assumes that ReaR was installed from a package repository. If
 === Step 1: Install Prerequisites
 [arabic]
 . Download the low-level utility `sedutil-cli` (version 1.15.1) from https://github.com/Drive-Trust-Alliance/exec/blob/master/sedutil_LINUX.tgz?raw=true[Drive-Trust-Alliance on GitHub].
-. Install it into a directory within root’s search path (e.g. `/usr/local/sbin`).
+. Install it into a directory within root's search path (e.g. `/usr/local/sbin`).
 
 === Step 2: Create Disk Images for PBA and Rescue System
 [arabic]
@@ -57,7 +57,7 @@ SECURE_BOOT_BOOTLOADER="/boot/efi/EFI/ubuntu/shimx64.efi"
 . Plug in the USB stick to use.
 . Use `lsblk -o +MODEL` to find the correct disk device path for your USB stick (typically `/dev/sdX`).
 . *RE-CHECK. The following command will overwrite the entire USB stick.*
-. Use the following command, replacing `USB-DEVICE` with the USB stick’s device name.
+. Use the following command, replacing `USB-DEVICE` with the USB stick's device name.
 +
 [source,bash]
 ----
