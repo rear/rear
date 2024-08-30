@@ -818,7 +818,7 @@ while read layout_type raid_device junk ; do
             # and https://en.wikipedia.org/wiki/History_of_hard_disk_drives reads (excerpt dated Dec. 2021)
             # "As of August 2020, the largest hard drive is 20 TB (while SSDs can be much bigger at 100 TB"
             # and https://www.alphr.com/largest-hard-drive-you-can-buy/ reads (excerpt dated Dec. 2021)
-            # "There’s a lot of talk right now about 200TB drives and even 1,000TB drives"
+            # "There's a lot of talk right now about 200TB drives and even 1,000TB drives"
             # which is still several thousand times smaller than 2^63 - 1
             # but a RAID0 array of very many such drives could exceed the 2^63 - 1 limit in theory
             # while in practice a RAID0 array of thousands of disks probably will not work reliably:
