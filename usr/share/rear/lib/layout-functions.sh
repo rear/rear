@@ -428,8 +428,9 @@ get_partition_number() {
     # I <jsmeix@suse.de> found https://github.com/rear/rear/commit/e758bba0a415173952cc588e5cf80570a6385f7e that links to
     # https://github.com/rear/rear/issues/263 that contains https://github.com/rear/rear/issues/263#issuecomment-20464763
     # which reads (excerpt): "The GPT standard allows maximum of 128 partitions per disk" which is not true
-    # according to how I understand the German https://de.wikipedia.org/wiki/GUID_Partition_Table that reads (excerpt)
-    # "Die EFI-Spezifikationen schreiben ein Minimum von 16384 Bytes für die Partitionstabelle vor, so dass es Platz für 128 Einträge gibt."
+    # according to how I understand the German https://de.wikipedia.org/wiki/GUID_Partition_Table that reads
+    # (excerpt, umlauts written as 'ae' and 'ue' to get ASCII see https://github.com/rear/rear/wiki/Coding-Style#character-encoding)
+    # "Die EFI-Spezifikationen schreiben ein Minimum von 16384 Bytes fuer die Partitionstabelle vor, so dass es Platz fuer 128 Eintraege gibt."
     # in English "EFI specification mandate a minimum of 16384 bytes for the partition table so that there is space for 128 entries"
     # which matches the English https://en.wikipedia.org/wiki/GUID_Partition_Table that reads (excerpt)
     # "The UEFI specification stipulates that a minimum of 16384 bytes ... are allocated for the Partition Entry Array. Each entry has a size of 128 bytes."
