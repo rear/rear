@@ -98,7 +98,7 @@ fi
 # Get what the full path is from within the recovery system i.e. without leading ROOTFS_DIR but with leading slash
 # so e.g. /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/bin/parted is output as /bin/parted
 # to use file names which are unambiguous within the recovery system:
-for binary in $( find "$ROOTFS_DIR" -type f \( -executable -o -name '*.so' -o -name '*.so.[0-9]*' \) -printf '/%P\n' ) ; do
+for binary in $( find "$ROOTFS_DIR" -xdev -type f \( -executable -o -name '*.so' -o -name '*.so.[0-9]*' \) -printf '/%P\n' ) ; do
     # In user messages it is misleading to show the full path from within the recovery system without leading ROOTFS_DIR
     # e.g. show /bin/parted for what actually is /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/bin/parted
     # because for the user /bin/parted means the full path on his original system
@@ -220,20 +220,22 @@ for binary in $( find "$ROOTFS_DIR" -type f \( -executable -o -name '*.so' -o -n
     #   libsystemd-shared-255.4-1.fc40.so => not found
     #   /path/to/library => not found
     while read not_found_library junk ; do
-        # We prefer a simple grep pipe over dealing with 'find' and its -name versus -path options:
-        # Get what the full path is from within the recovery system i.e. without leading ROOTFS_DIR but with leading slash
+        # Show files from inside the recovery system to the user as relative path without leading slashes
+        # (extglob is set in usr/sbin/rear):
+        not_found_library_relpath="${not_found_library##+(/)}"
+        # We prefer a simple grep pipe over dealing with 'find' and its -name versus -path options.
+        # 'find' what the full path is from within the recovery system i.e. without leading ROOTFS_DIR but with leading slash
         # so e.g. /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/usr/lib64/libparted.so.2.0.1 is output as /usr/lib64/libparted.so.2.0.1
-        # to ensure that grep matches e.g. when not_found_library="/usr/lib64/libparted.so.2.0.1" (has a leading slash):
-        if actually_found_library="$( find "$ROOTFS_DIR" -xdev -printf '/%P\n' | grep "$not_found_library" )" ; then
-            # Show files from inside the recovery system to the user without (the long) leading ROOTFS_DIR
-            # as relative path i.e. without leading slashes e.g. as usr/lib64/libparted.so.2.0.1
+        # to ensure that grep matches e.g. when not_found_library="/usr/lib64/libparted.so.2.0.1" (has a leading slash).
+        # Let grep match to the end of the line to avoid that falsely a prefix matches
+        # e.g. when not_found_library="libparted.so.2" does not exist but libparted.so.2.0.1 exists:
+        if actually_found_library="$( find "$ROOTFS_DIR" -xdev -printf '/%P\n' | grep "$not_found_library\$" )" ; then
+            # Show files from inside the recovery system to the user as relative path without leading slashes
             # (extglob is set in usr/sbin/rear):
-            not_found_library_relpath="${not_found_library##+(/)}" 
             actually_found_library_relpath="${actually_found_library##+(/)}"
             LogPrint "$binary_relpath requires $not_found_library_relpath which exists as $actually_found_library_relpath"
         else
             actually_missing_libraries="yes"
-            not_found_library_relpath="${not_found_library##+(/)}"
             # Show only the missing libraries to the user to not flood his screen with tons of other ldd output lines:
             LogPrintError "$binary_relpath requires $not_found_library_relpath which could not be found in the ReaR recovery system"
         fi
