@@ -19,7 +19,7 @@ fi
 # As a consequence this check always results exit code 1 (at least in some cases)
 # for "rear checklayout" even if nothing of the disk layout had changed
 # see https://github.com/rear/rear/issues/3069
-ErrorIfDeprecated nsr_check_iso_recoverable "Check for Networker Backups conflicts with 'rear checklayout'"
+ErrorIfDeprecated nsr_check_iso_recoverable "Check for Networker Backups conflicts with 'rear checklayout', see https://github.com/rear/rear/issues/3069"
     
 CLIENTNAME=$(hostname)
 
