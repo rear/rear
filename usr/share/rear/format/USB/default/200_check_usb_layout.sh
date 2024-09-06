@@ -22,7 +22,7 @@ elif [[ "$TEMP_USB_DEVICE" && -d "/sys/block/$TEMP_USB_DEVICE" ]] ; then
 elif [[ -z "$TEMP_USB_DEVICE" ]] ; then
     RAW_USB_DEVICE="/dev/$( my_udevinfo -q name -n "$REAL_USB_DEVICE" )"
 elif [[ -n "$( lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep "$(basename $REAL_USB_DEVICE)" | grep part )" ]]; then
-    RAW_USB_DEVICE="/dev/$( lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep "$(basename $REAL_USB_DEVICE)" | grep part | awk '{print $4}' )"
+    RAW_USB_DEVICE="/dev/$( lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep "$(basename $REAL_USB_DEVICE)" | grep part | awk '{print $4}' | uniq )"
 elif [[ -n "$( lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep "$(basename $REAL_USB_DEVICE)" | grep disk )" ]]; then
     RAW_USB_DEVICE="$REAL_USB_DEVICE"
 else
