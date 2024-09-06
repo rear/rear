@@ -9,9 +9,6 @@ REAL_USB_DEVICE=$( readlink -f $FORMAT_DEVICE )
 
 test -b "$REAL_USB_DEVICE" || Error "Real device $REAL_USB_DEVICE of $FORMAT_DEVICE is no block device"
 
-# We cannot use the layout dependency code in the backup phase (yet)
-#RAW_USB_DEVICE=$( find_disk $REAL_USB_DEVICE )
-
 # Try to find the parent device (as we don't want to write MBR to a partition)
 # the udevinfo query yields something like /devices/pci0000:00/0000:00:10.0/host2/target2:0:1/2:0:1:0/block/sdb/sdb1
 # we want the "sdb" part of it.
@@ -24,6 +21,10 @@ elif [[ "$TEMP_USB_DEVICE" && -d "/sys/block/$TEMP_USB_DEVICE" ]] ; then
     RAW_USB_DEVICE="/dev/$( my_udevinfo -q name -p "$TEMP_USB_DEVICE" )"
 elif [[ -z "$TEMP_USB_DEVICE" ]] ; then
     RAW_USB_DEVICE="/dev/$( my_udevinfo -q name -n "$REAL_USB_DEVICE" )"
+elif [[ -n "$( lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep "$(basename $REAL_USB_DEVICE)" | grep part )" ]]; then
+    RAW_USB_DEVICE="/dev/$( lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep "$(basename $REAL_USB_DEVICE)" | grep part | awk '{print $4}' )"
+elif [[ -n "$( lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep "$(basename $REAL_USB_DEVICE)" | grep disk )" ]]; then
+    RAW_USB_DEVICE="$REAL_USB_DEVICE"
 else
     BugError "Unable to determine raw device for $REAL_USB_DEVICE"
 fi
