@@ -166,7 +166,7 @@ if is_positive_integer $USB_BOOT_PART_SIZE ; then
     # Create a boot partition for the bootloader config/plugins/modules, the kernel and the ReaR recovery system initrd.
     # Round boot partition size to nearest block size to make the next partition (the data partition) also align to the block size:
     USB_BOOT_PART_SIZE=$(( ( USB_BOOT_PART_SIZE + ( USB_PARTITION_ALIGN_BLOCK_SIZE / 2 ) ) / USB_PARTITION_ALIGN_BLOCK_SIZE * USB_PARTITION_ALIGN_BLOCK_SIZE ))
-    LogPrint "Creating boot partition $current_partition_number on $RAW_USB_DEVICE with size $USB_BOOT_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB"
+    LogPrint "Creating boot partition $current_partition_number on device $RAW_USB_DEVICE with size $USB_BOOT_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB"
     # Calculate byte values:
     local boot_partition_size_bytes=$(( USB_BOOT_PART_SIZE * MiB_bytes ))
     # The end byte is the last byte that belongs to that partition so that one must be careful to use "start_byte + partition_size_in_bytes - 1":
@@ -176,7 +176,7 @@ if is_positive_integer $USB_BOOT_PART_SIZE ; then
     fi
     # Set the right flag for the boot partition unless no flag should be set:
     if ! is_false $boot_partition_flag ; then
-        LogPrint "Setting '$boot_partition_flag' flag on boot partition $current_partition_number on $RAW_USB_DEVICE"
+        LogPrint "Setting '$boot_partition_flag' flag on boot partition $current_partition_number on device $RAW_USB_DEVICE"
         if ! parted -s $RAW_USB_DEVICE set $current_partition_number $boot_partition_flag on ; then
             Error "Failed to set '$boot_partition_flag' flag on boot partition $current_partition_number on device $RAW_USB_DEVICE"
         fi
@@ -200,7 +200,7 @@ if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $current_partition_start_by
 fi
 # Set the right flag for the data partition unless no flag should be set or when it was already set for the boot partition above:
 if ! is_false $boot_partition_flag ; then
-    LogPrint "Setting '$boot_partition_flag' flag on ReaR data partition $USB_DATA_PARTITION_NUMBER on $RAW_USB_DEVICE"
+    LogPrint "Setting '$boot_partition_flag' flag on ReaR data partition $USB_DATA_PARTITION_NUMBER on device $RAW_USB_DEVICE"
     if ! parted -s $RAW_USB_DEVICE set $USB_DATA_PARTITION_NUMBER $boot_partition_flag on ; then
         Error "Failed to set '$boot_partition_flag' flag on ReaR data partition $USB_DATA_PARTITION_NUMBER on device $RAW_USB_DEVICE"
     fi

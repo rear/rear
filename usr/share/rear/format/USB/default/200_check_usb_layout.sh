@@ -22,6 +22,14 @@ elif [[ "$TEMP_USB_DEVICE" && -d "/sys/block/$TEMP_USB_DEVICE" ]] ; then
 elif [[ -z "$TEMP_USB_DEVICE" ]] ; then
     RAW_USB_DEVICE="/dev/$( my_udevinfo -q name -n "$REAL_USB_DEVICE" )"
 elif [[ -n "$( lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep "$(basename $REAL_USB_DEVICE)" | grep part )" ]]; then
+    # Possible outputs with NVME devices (as an example):
+    #-> lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep nvme0n1
+    # nvme0n1 nvme0n1 disk
+    # nvme0n1p1 nvme0n1p1 part nvme0n1
+    # nvme0n1p2 nvme0n1p2 part nvme0n1
+    #-> lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep nvme0n1p1
+    # nvme0n1p1 nvme0n1p1 part nvme0n1
+
     RAW_USB_DEVICE="/dev/$( lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep "$(basename $REAL_USB_DEVICE)" | grep part | awk '{print $4}' | uniq )"
 elif [[ -n "$( lsblk -r -o NAME,KNAME,TYPE,PKNAME | grep "$(basename $REAL_USB_DEVICE)" | grep disk )" ]]; then
     RAW_USB_DEVICE="$REAL_USB_DEVICE"
