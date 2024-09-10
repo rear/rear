@@ -134,24 +134,24 @@ if is_true "$FORMAT_EFI" ; then
 
     # Round UEFI partition size to nearest block size to make the 2nd partition (the data partition) also align to the block size:
     USB_UEFI_PART_SIZE=$(( ( USB_UEFI_PART_SIZE + ( USB_PARTITION_ALIGN_BLOCK_SIZE / 2 ) ) / USB_PARTITION_ALIGN_BLOCK_SIZE * USB_PARTITION_ALIGN_BLOCK_SIZE ))
-    LogPrint "Creating EFI system partition $RAW_USB_DEVICE$current_partition_number with size $USB_UEFI_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB"
+    LogPrint "Creating EFI system partition $current_partition_number on device $RAW_USB_DEVICE with size $USB_UEFI_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB"
     # Calculate byte values:
     local efi_partition_size_bytes=$(( USB_UEFI_PART_SIZE * MiB_bytes ))
     # The end byte is the last byte that belongs to that partition so that one must be careful to use "start_byte + partition_size_in_bytes - 1":
     local efi_partition_end_byte=$(( current_partition_start_byte + efi_partition_size_bytes - 1 ))
     if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $current_partition_start_byte $efi_partition_end_byte ; then
-        Error "Failed to create EFI system partition $RAW_USB_DEVICE$current_partition_number"
+        Error "Failed to create EFI system partition $current_partition_number on device $RAW_USB_DEVICE"
     fi
     # Set the right flag for the EFI partition:
-    LogPrint "Setting 'esp' flag on EFI partition $RAW_USB_DEVICE$current_partition_number"
+    LogPrint "Setting 'esp' flag on EFI partition $current_partition_number on device $RAW_USB_DEVICE"
     if ! parted -s $RAW_USB_DEVICE set $current_partition_number esp on ; then
-        LogPrintError "Failed to set 'esp' flag on EFI partition $RAW_USB_DEVICE$current_partition_number"
+        LogPrintError "Failed to set 'esp' flag on EFI partition $current_partition_number on device $RAW_USB_DEVICE"
         # parted 3.2 added the support for 'esp' keyword.  Thus, parted 3.1 in RHEL 7 does not support it yet so try a fallback
         # that sets the corresponding partition type using sgdisk.
         if ! sgdisk $RAW_USB_DEVICE --typecode="$current_partition_number:EF00" ; then
-            Error "Failed to set 'esp' flag using sgdisk as fallback on EFI partition $RAW_USB_DEVICE$current_partition_number"
+            Error "Failed to set 'esp' flag using sgdisk as fallback on EFI partition $current_partition_number on device $RAW_USB_DEVICE"
         fi
-        LogPrintError "Set 'esp' flag using sgdisk as fallback on EFI partition $RAW_USB_DEVICE$current_partition_number"
+        LogPrintError "Set 'esp' flag using sgdisk as fallback on EFI partition $current_partition_number on device $RAW_USB_DEVICE"
     fi
     # Partition 1 is the EFI system partition (vfat partition) on which EFI/BOOT/BOOTX86.EFI resides
     # so the number of the partition that can be set up next has to be one more (i.e. now 2):
@@ -166,19 +166,19 @@ if is_positive_integer $USB_BOOT_PART_SIZE ; then
     # Create a boot partition for the bootloader config/plugins/modules, the kernel and the ReaR recovery system initrd.
     # Round boot partition size to nearest block size to make the next partition (the data partition) also align to the block size:
     USB_BOOT_PART_SIZE=$(( ( USB_BOOT_PART_SIZE + ( USB_PARTITION_ALIGN_BLOCK_SIZE / 2 ) ) / USB_PARTITION_ALIGN_BLOCK_SIZE * USB_PARTITION_ALIGN_BLOCK_SIZE ))
-    LogPrint "Creating boot partition $RAW_USB_DEVICE$current_partition_number with size $USB_BOOT_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB"
+    LogPrint "Creating boot partition $current_partition_number on device $RAW_USB_DEVICE with size $USB_BOOT_PART_SIZE MiB aligned at $USB_PARTITION_ALIGN_BLOCK_SIZE MiB"
     # Calculate byte values:
     local boot_partition_size_bytes=$(( USB_BOOT_PART_SIZE * MiB_bytes ))
     # The end byte is the last byte that belongs to that partition so that one must be careful to use "start_byte + partition_size_in_bytes - 1":
     local boot_partition_end_byte=$(( current_partition_start_byte + boot_partition_size_bytes - 1 ))
     if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $current_partition_start_byte $boot_partition_end_byte ; then
-        Error "Failed to create boot partition $RAW_USB_DEVICE$current_partition_number"
+        Error "Failed to create boot partition $current_partition_number on device  $RAW_USB_DEVICE"
     fi
     # Set the right flag for the boot partition unless no flag should be set:
     if ! is_false $boot_partition_flag ; then
-        LogPrint "Setting '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
+        LogPrint "Setting '$boot_partition_flag' flag on boot partition $current_partition_number on device $RAW_USB_DEVICE"
         if ! parted -s $RAW_USB_DEVICE set $current_partition_number $boot_partition_flag on ; then
-            Error "Failed to set '$boot_partition_flag' flag on boot partition $RAW_USB_DEVICE$current_partition_number"
+            Error "Failed to set '$boot_partition_flag' flag on boot partition $current_partition_number on device $RAW_USB_DEVICE"
         fi
         # When the flag was set for the boot partition do not also set this flag for the data partition below:
         boot_partition_flag="false"
@@ -193,16 +193,16 @@ fi
 # USB_DATA_PARTITION_NUMBER is also needed in the subsequent format/USB/default/350_label_usb_disk.sh
 USB_DATA_PARTITION_NUMBER=$current_partition_number
 
-LogPrint "Creating ReaR data partition $RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of $RAW_USB_DEVICE"
+LogPrint "Creating ReaR data partition $USB_DATA_PARTITION_NUMBER on $RAW_USB_DEVICE up to ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% of $RAW_USB_DEVICE"
 # Older parted versions (at least GNU Parted 1.6.25.1 on SLE10) support the '%' unit (cf. https://github.com/rear/rear/issues/1270):
 if ! parted -s $RAW_USB_DEVICE unit B mkpart primary $current_partition_start_byte ${USB_DEVICE_FILESYSTEM_PERCENTAGE}% ; then
-    Error "Failed to create ReaR data partition $RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER"
+    Error "Failed to create ReaR data partition $USB_DATA_PARTITION_NUMBER on device $RAW_USB_DEVICE"
 fi
 # Set the right flag for the data partition unless no flag should be set or when it was already set for the boot partition above:
 if ! is_false $boot_partition_flag ; then
-    LogPrint "Setting '$boot_partition_flag' flag on ReaR data partition $RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER"
+    LogPrint "Setting '$boot_partition_flag' flag on ReaR data partition $USB_DATA_PARTITION_NUMBER on device $RAW_USB_DEVICE"
     if ! parted -s $RAW_USB_DEVICE set $USB_DATA_PARTITION_NUMBER $boot_partition_flag on ; then
-        Error "Failed to set '$boot_partition_flag' flag on ReaR data partition $RAW_USB_DEVICE$USB_DATA_PARTITION_NUMBER"
+        Error "Failed to set '$boot_partition_flag' flag on ReaR data partition $USB_DATA_PARTITION_NUMBER on device $RAW_USB_DEVICE"
     fi
 fi
 
