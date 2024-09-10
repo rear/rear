@@ -10,7 +10,6 @@ jobs:
   trigger: pull_request
   metadata:
   targets:
-  - fedora-39-x86_64
   - centos-stream-8-x86_64
   - centos-stream-9-x86_64
 specfile_path: packaging/rpm/rear.spec
