@@ -1,0 +1,41 @@
+# Create Release Notes on the GitHub Project WIKI pages
+# Some words on how to create and use GH_PAT:
+#  1. Create a new Personal Access Token (PAT) in your 'personal' account
+#     - Make sure the PAT has an expiration date (very important)!
+#     - Give it repo rights
+#  2. Create a secret in your project called GH_PAT and paste the PAT of 1 into it.
+#  3. Now you can use secrets.GH_PAT variable as shown below.
+#
+on:
+  milestone:
+    types: [closed]
+name: Milestone Closure
+jobs:
+  release-notes:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: To avoid fatal could not read Username
+      run: |
+          git config --global user.email "gdha@users.noreply.github.com"
+          git config --global user.name "gdha"
+          git config --global url.https://${{ secrets.GH_PAT }}@github.com/.insteadOf https://github.com/
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
+    - name: Create Release Notes
+      uses: docker://decathlon/release-notes-generator-action:3.1.5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        OUTPUT_FOLDER: temp_release_notes
+        USE_MILESTONE_TITLE: "true"
+        FILENAME_PREFIX: Release-Notes-
+    - name: Upload Release Notes to Wiki
+      uses: docker://decathlon/wiki-page-creator-action:latest
+      env:
+        ACTION_MAIL: gdha@users.noreply.github.com
+        ACTION_NAME: gdha
+        GH_PAT: ${{ secrets.GH_PAT }}
+        MD_FOLDER: temp_release_notes
+        OWNER: rear
+        REPO_NAME: rear
+        SKIP_MD: README.md
