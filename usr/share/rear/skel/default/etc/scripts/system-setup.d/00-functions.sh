@@ -33,7 +33,7 @@ Error() {
 
 
 # source the global functions
-. /usr/share/rear/lib/global-functions.sh
+source /usr/share/rear/lib/global-functions.sh
 
 # source the network functions
-. /usr/share/rear/lib/network-functions.sh
+source /usr/share/rear/lib/network-functions.sh
