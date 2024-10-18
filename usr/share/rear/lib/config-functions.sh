@@ -110,40 +110,12 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
     case "$( echo $OS_VENDOR_VERSION | tr '[A-Z]' '[a-z]' )" in
         (*oracle*|*centos*|*fedora*|*redhat*|*scientific*)
             OS_MASTER_VENDOR="Fedora"
-            case "$OS_VERSION" in
-                (5.*)
-                    # map all RHEL 5.x and clones to Fedora/5
-                    # this is safe because FedoraCore 5 never existed
-                    OS_MASTER_VERSION="5"
-                    ;;
-                (6.*)
-                    # map all RHEL 6.x and clones to Fedora/6
-                    OS_MASTER_VERSION="6"
-                    ;;
-                (7.*)
-                    # map all RHEL 7.x and clones to Fedora/7
-                    OS_MASTER_VERSION="7"
-                    ;;
-                (8.*)
-                    # map all RHEL 7.x and clones to Fedora/8
-                    OS_MASTER_VERSION="8"
-                    ;;
-                (9.*)
-                    # map all RHEL 7.x and clones to Fedora/9
-                    OS_MASTER_VERSION="9"
-                    ;;
-                (*)
-                OS_MASTER_VERSION="$OS_VERSION"
-                ;;
-            esac
             ;;
         (*ubuntu*|*linuxmint*)
             OS_MASTER_VENDOR="Debian"
-            OS_MASTER_VERSION="$OS_VERSION"
             ;;
         (*archlinux*)
             OS_MASTER_VENDOR="Arch"
-            OS_MASTER_VERSION="$OS_VERSION"
             ;;
         (*suse*)
             # When OS_VENDOR_VERSION contains 'SUSE', set OS_MASTER_VENDOR to 'SUSE'
@@ -152,17 +124,23 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
             # because then scripts in a .../SUSE_LINUX/... sub-directoriy and conf/SUSE_LINUX.conf
             # get sourced twice by the (buggy) SourceStage function in lib/framework-functions.sh
             OS_MASTER_VENDOR="SUSE"
-            # If OS_VERSION is of the form 12.34.56 OS_MASTER_VERSION is only the first part '12'.
-            # Because openSUSE Tumbleweed has rolling releases OS_VERSION is a date of the form YYYYMMDD
-            # so that there is no real OS_MASTER_VERSION which is then the the same as OS_VERSION:
-            OS_MASTER_VERSION="${OS_VERSION%%.*}"
             ;;
         (*)
             # set fallback values to avoid error exit for 'set -eu' because of unbound variables:
             OS_MASTER_VENDOR=""
-            OS_MASTER_VERSION="$OS_VERSION"
             ;;
     esac
+
+    # Set master version to the MAJOR release version. ReaR assumes that OS_MASTER_VERSION
+    # is just the major release number extracted from OS_VERSION and not the version of the derived OS.
+    # If OS_VERSION is of the form 12.34.56, OS_MASTER_VERSION is only the first part '12'.
+    #
+    # Because openSUSE Tumbleweed has rolling releases, OS_VERSION is a date of the form YYYYMMDD.
+    # Therefore, there is no real OS_MASTER_VERSION and this variable will be set to the same value
+    # as OS_VERSION.
+    #
+    # TODO: Rename the variable to be less confusing, e.g. to OS_VERSION_MAJOR.
+    OS_MASTER_VERSION="${OS_VERSION%%.*}"
 
     # combined stuff for OS_MASTER_*
     if [ "$OS_MASTER_VENDOR" ] ; then
