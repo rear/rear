@@ -542,7 +542,7 @@ function get_disklabel_type () {
 
     disk=''
 
-    read component disk size label junk < <(grep "^disk $1 " "$LAYOUT_FILE")
+    read component disk size label junk < <(grep -E "^(disk|multipath) $1 " "$LAYOUT_FILE")
     test $disk || return 1
 
     echo $label
