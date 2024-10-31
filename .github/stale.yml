@@ -1,3 +1,6 @@
+# See https://github.com/actions/stale/blob/main/README.md
+# for in-depth explanation of all tunables
+#
 # Number of days of inactivity before an issue becomes stale
 # Let us go for 120 days
 daysUntilStale: 120
@@ -12,6 +15,8 @@ exemptLabels:
   - blocker
   - bug
   - minor bug
+# exempt-all-assignees: If set to true, the issues or the pull requests with an assignee will not be marked as stale automatically.
+exempt-all-assignees: true
 # Label to use when marking an issue as stale
 staleLabel: ready-to-close?
 # Comment to post when marking an issue as stale. Set to `false` to disable
