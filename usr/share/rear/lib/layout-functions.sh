@@ -542,7 +542,7 @@ function get_disklabel_type () {
 
     disk=''
 
-    read component disk size label junk < <(grep "^disk $1 " "$LAYOUT_FILE")
+    read component disk size label junk < <(grep -E "^(disk|multipath) $1 " "$LAYOUT_FILE")
     test $disk || return 1
 
     echo $label
@@ -1044,24 +1044,10 @@ function get_part_device_name_format() {
                 ;;
 
                 (Fedora)
-                    if is_false "$user_friendly_names" ; then
-                        # RHEL 7 and above seems to named partitions on multipathed devices with
-                        # [mpath device UUID/WWID] + p + [part number] when "user_friendly_names"
-                        # option is FALSE.
-                        # For example: /dev/mapper/3600507680c82004cf8000000000000d8p1
-                        part_name="${device_name}p" # append p between main device and partitions
-                    else
-                        # RHEL 7 and above seems to named partitions on multipathed devices with
-                        # [mpath device name] + [part number] like standard disk when "user_friendly_names"
-                        # option is used (default).
-                        # For example: /dev/mapper/mpatha1
-                        # But the scheme in RHEL 6 need a "p" between [mpath device name] and [part number].
-                        # For example: /dev/mapper/mpathap1
-                        if (( $OS_MASTER_VERSION < 7 )) ; then
-                            part_name="${device_name}p" # append p between main device and partitions
-                        else
-                            part_name="${device_name}"
-                        fi
+                    # RHEL 7 and above add a "p" after the device name when the device name ends
+                    # by a digit, see https://access.redhat.com/solutions/2354631.
+                    if (( $OS_MASTER_VERSION < 7 )) || [[ ${device_name: -1} =~ [0-9] ]]; then
+                        part_name="${device_name}p"
                     fi
                 ;;
 
