@@ -118,7 +118,5 @@ COPY_AS_IS_EXCLUDE+=(
 )
 
 # The files of NovaStor DataCenter installation belong to 'novastor'
-TRUSTED_FILE_OWNERS+=(
-    "${TRUSTED_FILE_OWNERS[@]}"
-    novastor
-)
+# (fixed, see https://github.com/rear/rear/commit/8d01a37c8b79a879cea59cb369f7ca8728189b02#commitcomment-148880379)
+TRUSTED_FILE_OWNERS+=( novastor )
