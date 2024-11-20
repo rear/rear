@@ -15,15 +15,20 @@ test "$BACKUP_PROG" = "duplicity" || return 0
 # Nothing to do when we are not using the 'duply' wrapper for 'duplicity':
 has_binary duply || return 0
 
-# If $BACKUP_DUPLICITY_URL has been defined then we assume we are using
-# only 'duplicity' to make the backup and not the wrapper 'duply':
+# If at least one of BACKUP_DUPLICITY_URL BACKUP_DUPLICITY_NETFS_URL BACKUP_DUPLICITY_NETFS_MOUNTCMD
+# is defined then we assume we are using only 'duplicity' and not the wrapper 'duply'
+# cf. the same code in prep/DUPLICITY/default/200_find_duply_profile.sh
 if [[ "$BACKUP_DUPLICITY_URL" || "$BACKUP_DUPLICITY_NETFS_URL" || "$BACKUP_DUPLICITY_NETFS_MOUNTCMD" ]] ; then
     DebugPrint "Assuming 'duplicity' is used and not 'duply' because BACKUP_DUPLICITY_URL or BACKUP_DUPLICITY_NETFS_URL or BACKUP_DUPLICITY_NETFS_MOUNTCMD is set"
     return 0
-else
-    DebugPrint "Assuming 'duply' is used and not 'duplicity' because none of BACKUP_DUPLICITY_URL BACKUP_DUPLICITY_NETFS_URL BACKUP_DUPLICITY_NETFS_MOUNTCMD is set"
 fi
+DebugPrint "Assuming 'duply' is used and not 'duplicity' because none of BACKUP_DUPLICITY_URL BACKUP_DUPLICITY_NETFS_URL BACKUP_DUPLICITY_NETFS_MOUNTCMD is set"
 
+# Only an explicitly user specified DUPLY_PROFILE gets sourced
+# to avoid that some automatism finds and sources whatever it may have found
+# cf. https://github.com/rear/rear/pull/3345
+# Accordingly error out when DUPLY_PROFILE is empty or does not exist
+# to make the user aware that he must explicitly specify his correct DUPLY_PROFILE:
 test -s "$DUPLY_PROFILE" || Error "DUPLY_PROFILE '$DUPLY_PROFILE' empty or does not exist (assuming 'duply' is used and not 'duplicity')"
 
 # Check if we can talk to the remote site:
