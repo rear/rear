@@ -17,7 +17,7 @@ has_binary duply || return 0
 
 # If at least one of BACKUP_DUPLICITY_URL BACKUP_DUPLICITY_NETFS_URL BACKUP_DUPLICITY_NETFS_MOUNTCMD
 # is defined then we assume we are using only 'duplicity' and not the wrapper 'duply'
-# cf. the same code in prep/DUPLICITY/default/200_find_duply_profile.sh
+# cf. the same code in restore/DUPLICITY/default/110_check_temp_dir_with_duply.sh
 if [[ "$BACKUP_DUPLICITY_URL" || "$BACKUP_DUPLICITY_NETFS_URL" || "$BACKUP_DUPLICITY_NETFS_MOUNTCMD" ]] ; then
     DebugPrint "Assuming 'duplicity' is used and not 'duply' because BACKUP_DUPLICITY_URL or BACKUP_DUPLICITY_NETFS_URL or BACKUP_DUPLICITY_NETFS_MOUNTCMD is set"
     return 0
