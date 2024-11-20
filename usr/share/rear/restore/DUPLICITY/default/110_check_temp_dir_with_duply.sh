@@ -22,7 +22,7 @@ test -s "$DUPLY_PROFILE" || Error "DUPLY_PROFILE '$DUPLY_PROFILE' empty or does 
 # should already error out in this case:
 test -d "$TARGET_FS_ROOT" || Error "No TARGET_FS_ROOT '$TARGET_FS_ROOT' directory"
 
-# We need $TARGET_FS_ROOT/tmp as temp dir during the duplicity recovery (where we have enough space).
+# We need $TARGET_FS_ROOT/tmp as temp dir during the duplicity backup restore (where we have enough space).
 # FIXME: Hopefully "mkdir -m 1777 $TARGET_FS_ROOT/tmp" is OK because it creates the /tmp directory 
 # with the usual /tmp directory owner group and permissions "drwxrwxrwt root root" in the target system.
 # But normally "rear recover" should not recreate a system different than it was before.
@@ -33,8 +33,10 @@ test -d "$TARGET_FS_ROOT/tmp" || mkdir -m 1777 "$TARGET_FS_ROOT/tmp"
 # The main task of this script is to verify the setting of TEMP_DIR in DUPLY_PROFILE:
 if grep -q "^TEMP_DIR=" "$DUPLY_PROFILE" ; then
     # When TEMP_DIR is /tmp then change it to /mnt/local/tmp
-    # but if TEMP_DIR is specified different (i.e. not /tmp) we keep it as is:
-    if grep -q "^TEMP_DIR=/tmp" "$DUPLY_PROFILE" ; then
+    # but if TEMP_DIR is specified different (i.e. not /tmp but e.g. /tmp/duply) we keep it as is
+    # (regardless that with e.g. TEMP_DIR=/tmp/duply the duplicity backup restore likely fails
+    # because normally there is no /tmp/duply directory in the ReaR recovery system):
+    if grep -q "^TEMP_DIR=/tmp$" "$DUPLY_PROFILE" ; then
         sed -i -e "s|TEMP_DIR=/tmp|TEMP_DIR=$TARGET_FS_ROOT/tmp|" "$DUPLY_PROFILE"
     fi
 else
