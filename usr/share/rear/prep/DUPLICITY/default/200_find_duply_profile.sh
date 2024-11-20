@@ -5,7 +5,7 @@
 
 # Actually this script sources (i.e. executes) the 'duply' profile.
 # The script file name is misleading because the find_duply_profile function
-# can no longer used because it is insecure to search some directories and
+# can no longer be used because it is insecure to search some directories and
 # then execute some found file which was not explicitly specified by the user,
 # cf. https://github.com/rear/rear/issues/3293
 
