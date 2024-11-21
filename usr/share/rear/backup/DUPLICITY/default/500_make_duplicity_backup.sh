@@ -11,11 +11,11 @@ if [ "$BACKUP_PROG" = "duply" ] ; then
 
     # do the backup
     LogPrint "Starting full backup with duply/duplicity"
-    # redirect command stdout to stderr which appears in the ReaR logfile only in debug modes,
+    # command stdout and stderr output appears in the ReaR logfile only in debug modes,
     # cf. https://github.com/rear/rear/wiki/Coding-Style#what-to-do-with-stdin-stdout-and-stderr
     DebugPrint "Calling 'duply $DUPLY_PROFILE backup'"
     Debug "'duply $DUPLY_PROFILE backup' output:"
-    duply "$DUPLY_PROFILE" backup 1>&2 || Error "'duply $DUPLY_PROFILE backup' returned non-zero exit code, check $RUNTIME_LOGFILE"
+    duply "$DUPLY_PROFILE" backup || Error "'duply $DUPLY_PROFILE backup' returned non-zero exit code, check $RUNTIME_LOGFILE"
 fi
 
 
