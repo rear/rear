@@ -104,6 +104,9 @@ function SourceStage () {
     # that match the specified backup method and output method
     # and that match the used operating system and architecture and Linux distribution.
     # The pipe sorts the listed scripts by their 3-digit number independent of the directory of the script.
+    # We want to make sure that there are no duplicates in the listed scripts
+    # so that each script gets executed at most once.
+    # cf. https://github.com/rear/rear/issues/3149#issuecomment-1935586311
     # First sed inserts a ! before and after the script number
     # e.g. default/123_some_script.sh becomes default/!123!_some_script.sh
     # which makes the script number field nr. 2 when dividing lines into fields by !
@@ -122,7 +125,7 @@ function SourceStage () {
               "$BACKUP"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
               "$OUTPUT"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
     "$OUTPUT"/"$BACKUP"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
-                 | sed -e 's#/\([0-9][0-9][0-9]\)_#/!\1!_#g' | sort -t \! -k 2 | tr -d \! ) )
+                 | sed -e 's#/\([0-9][0-9][0-9]\)_#/!\1!_#g' | sort -t \! -k 2 -u | tr -d \! ) )
     # If no script is found, then the scripts array contains only one element '.'
     if test "$scripts" = '.' ; then
         Log "Finished running empty '$stage' stage"
