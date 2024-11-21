@@ -44,11 +44,11 @@ test -s "$DUPLY_PROFILE" || Error "DUPLY_PROFILE '$DUPLY_PROFILE' empty or does 
 #     status     prints backup sets and chains currently in repository
 #     ...
 # the command "duply /path/to/profile status" prints backup sets and chains currently in repository
-# so we redirect its stdout to stderr which appears in the ReaR logfile only in debug modes,
+# so its stdout and stderr output appears in the ReaR logfile only in debug modes,
 # cf. https://github.com/rear/rear/wiki/Coding-Style#what-to-do-with-stdin-stdout-and-stderr
 DebugPrint "Checking with 'duply $DUPLY_PROFILE status' if 'duply' can talk to the remote site"
 Debug "'duply $DUPLY_PROFILE status' output:"
-echo yes | duply "$DUPLY_PROFILE" status 1>&2 || Error "'duply $DUPLY_PROFILE status' failed, check $RUNTIME_LOGFILE"
+echo yes | duply "$DUPLY_PROFILE" status || Error "'duply $DUPLY_PROFILE status' failed, check $RUNTIME_LOGFILE"
 
 # We use 'duply' as BACKUP_PROG - so define as such (instead of BACKUP_PROG=duplicity above):
 BACKUP_PROG=duply
