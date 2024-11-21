@@ -50,10 +50,13 @@ DebugPrint "Checking with 'duply $DUPLY_PROFILE status' if 'duply' can talk to t
 Debug "'duply $DUPLY_PROFILE status' output:"
 echo yes | duply "$DUPLY_PROFILE" status 1>&2 || Error "'duply $DUPLY_PROFILE status' failed, check $RUNTIME_LOGFILE"
 
-# We seem to use 'duply' as BACKUP_PROG - so define as such (instead of BACKUP_PROG=duplicity above):
+# We use 'duply' as BACKUP_PROG - so define as such (instead of BACKUP_PROG=duplicity above):
 BACKUP_PROG=duply
 
-echo "DUPLY_PROFILE=$DUPLY_PROFILE" >> "$ROOTFS_DIR/etc/rear/rescue.conf" || Error "Failed to add DUPLY_PROFILE to rescue.conf"
+COPY_AS_IS+=( "$DUPLY_PROFILE" )
+
+echo "DUPLY_PROFILE=$DUPLY_PROFILE" >> "$ROOTFS_DIR/etc/rear/rescue.conf" || Error "Failed to add 'DUPLY_PROFILE=$DUPLY_PROFILE' to rescue.conf"
+Log "Added 'DUPLY_PROFILE=$DUPLY_PROFILE' to rescue.conf"
 
 DebugPrint "Sourcing '$DUPLY_PROFILE'"
 source "$DUPLY_PROFILE" || Error "Failed to source $DUPLY_PROFILE"
@@ -74,7 +77,7 @@ source "$DUPLY_PROFILE" || Error "Failed to source $DUPLY_PROFILE"
 # Luckily ReaR uses TMP_DIR so sourcing DUPLY_PROFILE does not overwrite a ReaR variable,
 # cf. https://github.com/rear/rear/issues/3259 "ReaR must not carelessly 'source' files"
 local scheme="$( url_scheme "$TARGET" )"
-    case "$scheme" in
-       (sftp|rsync|scp)
-           REQUIRED_PROGS+=( "$scheme" )
-    esac
+case "$scheme" in
+    (sftp|rsync|scp)
+        REQUIRED_PROGS+=( "$scheme" )
+esac
