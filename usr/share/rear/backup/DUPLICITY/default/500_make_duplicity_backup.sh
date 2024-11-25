@@ -1,17 +1,21 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-if [ "$BACKUP_PROG" = "duply" ] && has_binary duply ; then
-    # we found the duply program; check if a profile was defined
-    [[ -z "$DUPLY_PROFILE" ]] && return
+if [ "$BACKUP_PROG" = "duply" ] ; then
 
-    # a real profile was detected - check if we can talk to the remote site
+    has_binary duply || Error "No 'duply' binary (BACKUP_PROG=duply)"
+
+    # error out when DUPLY_PROFILE is empty or does not exist
+    # cf. the same test in prep/DUPLICITY/default/200_find_duply_profile.sh
+    test -s "$DUPLY_PROFILE" || Error "DUPLY_PROFILE '$DUPLY_PROFILE' empty or does not exist (BACKUP_PROG=duply)"
+
+    # do the backup
     LogPrint "Starting full backup with duply/duplicity"
-    duply "$DUPLY_PROFILE" backup >&2   # output is going to logfile
-    StopIfError "Duply profile $DUPLY_PROFILE backup returned errors - see $RUNTIME_LOGFILE"
-
-    LogPrint "The last full backup taken with duply/duplicity was:"
-    LogPrint "$( tail -50 $RUNTIME_LOGFILE | grep 'Last full backup date:' )"
+    # command stdout and stderr output appears in the ReaR logfile only in debug modes,
+    # cf. https://github.com/rear/rear/wiki/Coding-Style#what-to-do-with-stdin-stdout-and-stderr
+    DebugPrint "Calling 'duply $DUPLY_PROFILE backup'"
+    Debug "'duply $DUPLY_PROFILE backup' output:"
+    duply "$DUPLY_PROFILE" backup || Error "'duply $DUPLY_PROFILE backup' returned non-zero exit code, check $RUNTIME_LOGFILE"
 fi
 
 

@@ -3,78 +3,81 @@
 
 # 200_find_duply_profile.sh
 
-# If $BACKUP_DUPLICITY_URL has been defined then we may assume we are using
-# only 'duplicity' to make the backup and not the wrapper duply
-[[ "$BACKUP_DUPLICITY_URL" || "$BACKUP_DUPLICITY_NETFS_URL" || "$BACKUP_DUPLICITY_NETFS_MOUNTCMD" ]] && return
+# Actually this script sources (i.e. executes) the 'duply' profile.
+# The script file name is misleading because the find_duply_profile function
+# can no longer be used because it is insecure to search some directories and
+# then execute some found file which was not explicitly specified by the user,
+# cf. https://github.com/rear/rear/issues/3293
 
-# purpose is to see we're using duply wrapper and if there is an existing profile defined
-# if that is the case then we define an internal variable DUPLY_PROFILE="profile"
-# the profile is in fact a directory name containing the conf file and exclude file
-# we shall copy this variable, if defined, to our rescue.conf file
+# Nothing to do when BACKUP_PROG is not 'duplicity':
+test "$BACKUP_PROG" = "duplicity" || return 0
 
-if [ "$BACKUP_PROG" = "duplicity" ] && has_binary duply; then
+# Nothing to do when we are not using the 'duply' wrapper for 'duplicity':
+has_binary duply || return 0
 
-    function find_duply_profile ()
-    {
-        # there could be more then one profile present - select where SOURCE='/'
-        for CONF in $(echo "$1")
-        do
-            [[ ! -f $CONF ]] && continue
-            source $CONF    # is a normal shell configuration file
-            LogIfError "Could not source $CONF [duply profile]"
-            [[ -z "$SOURCE" ]] && continue
-            [[ -z "$TARGET" ]] && continue
-            # still here?
-            if [[ "$SOURCE" = "/" ]]; then
-                DUPLY_PROFILE_FILE=$CONF
-                DUPLY_PROFILE="$( dirname "$CONF"  )"   # /root/.duply/mycloud/conf -> /root/.duply/mycloud
-                DUPLY_PROFILE=${DUPLY_PROFILE##*/}  # /root/.duply/mycloud      -> mycloud
-                break # the loop
-            else
-                DUPLY_PROFILE=""
-                continue
-            fi
-        done
-    }
-
-    # we found the duply program; check if we can find a profile defined in ReaR config file
-    if [[ -z "$DUPLY_PROFILE" ]]; then
-        # no profile pre-set in local.conf; let's try to find one
-        DUPLY_PROFILE="$( find /etc/duply $ROOT_HOME_DIR/.duply -name conf 2>&1)"
-        # above result could contain more than one profile
-        [[ -z "$DUPLY_PROFILE" ]] && return
-        find_duply_profile "$DUPLY_PROFILE"
-    fi
-
-    # if DUPLY_PROFILE="" then we only found empty profiles
-    [[ -z "$DUPLY_PROFILE" ]] && return
-
-    # retrieve the real path of DUPLY_PROFILE in case DUPLY_PROFILE was defined local.conf
-    DUPLY_PROFILE_FILE="$( ls /etc/duply/$DUPLY_PROFILE/conf $ROOT_HOME_DIR/.duply/$DUPLY_PROFILE/conf 2>/dev/null )"
-    # Assuming we have a duply configuration we must have a path, right?
-    [[ -z "$DUPLY_PROFILE_FILE" ]] && return
-    find_duply_profile "$DUPLY_PROFILE_FILE"
-
-    # a real profile was detected - check if we can talk to the remote site
-    echo yes | duply "$DUPLY_PROFILE" status >&2   # output is going to logfile
-    StopIfError "Duply profile $DUPLY_PROFILE status returned errors - see $RUNTIME_LOGFILE"
-
-    # we seem to use duply as BACKUP_PROG - so define as such too
-    BACKUP_PROG=duply
-
-    echo "DUPLY_PROFILE=$DUPLY_PROFILE" >> "$ROOTFS_DIR/etc/rear/rescue.conf"
-    LogIfError "Could not add DUPLY_PROFILE variable to rescue.conf"
-
-    LogPrint "The last full backup taken with duply/duplicity was:"
-    LogPrint "$( tail -50 $RUNTIME_LOGFILE | grep 'Last full backup date:' )"
-
-    # check the scheme of the TARGET variable in DUPLY_PROFILE ($CONF has full path)  to be
-    # sure we have all executables we need in the rescue image
-    source $DUPLY_PROFILE_FILE
-    local scheme="$( url_scheme "$TARGET" )"
-    case "$scheme" in
-       (sftp|rsync|scp)
-           PROGS+=( "$scheme" )
-    esac
+# If at least one of BACKUP_DUPLICITY_URL BACKUP_DUPLICITY_NETFS_URL BACKUP_DUPLICITY_NETFS_MOUNTCMD
+# is defined then we assume we are using only 'duplicity' and not the wrapper 'duply'
+# cf. the same code in restore/DUPLICITY/default/110_check_temp_dir_with_duply.sh
+if [[ "$BACKUP_DUPLICITY_URL" || "$BACKUP_DUPLICITY_NETFS_URL" || "$BACKUP_DUPLICITY_NETFS_MOUNTCMD" ]] ; then
+    DebugPrint "Assuming 'duplicity' is used and not 'duply' because BACKUP_DUPLICITY_URL or BACKUP_DUPLICITY_NETFS_URL or BACKUP_DUPLICITY_NETFS_MOUNTCMD is set"
+    return 0
 fi
+DebugPrint "Assuming 'duply' is used and not 'duplicity' because none of BACKUP_DUPLICITY_URL BACKUP_DUPLICITY_NETFS_URL BACKUP_DUPLICITY_NETFS_MOUNTCMD is set"
 
+# Only an explicitly user specified DUPLY_PROFILE gets sourced
+# to avoid that some automatism finds and sources whatever it may have found
+# cf. https://github.com/rear/rear/pull/3345
+# Accordingly error out when DUPLY_PROFILE is empty or does not exist
+# to make the user aware that he must explicitly specify his correct DUPLY_PROFILE:
+test -s "$DUPLY_PROFILE" || Error "DUPLY_PROFILE '$DUPLY_PROFILE' empty or does not exist (assuming 'duply' is used and not 'duplicity')"
+
+# Check if we can talk to the remote site:
+# According to the 'duply' "Manpage" on https://duply.net/Documentation
+# that reads (excerpts)
+#   PROFILE:
+#     Indicated by a path or a profile name
+#     ...
+#     example 2:   duply ~/.duply/humbug backup
+#     ...
+#   COMMANDS:
+#     ...
+#     status     prints backup sets and chains currently in repository
+#     ...
+# the command "duply /path/to/profile status" prints backup sets and chains currently in repository
+# so its stdout and stderr output appears in the ReaR logfile only in debug modes,
+# cf. https://github.com/rear/rear/wiki/Coding-Style#what-to-do-with-stdin-stdout-and-stderr
+DebugPrint "Checking with 'duply $DUPLY_PROFILE status' if 'duply' can talk to the remote site"
+Debug "'duply $DUPLY_PROFILE status' output:"
+echo yes | duply "$DUPLY_PROFILE" status || Error "'duply $DUPLY_PROFILE status' failed, check $RUNTIME_LOGFILE"
+
+# We use 'duply' as BACKUP_PROG - so define as such (instead of BACKUP_PROG=duplicity above):
+BACKUP_PROG=duply
+
+COPY_AS_IS+=( "$DUPLY_PROFILE" )
+
+echo "DUPLY_PROFILE=$DUPLY_PROFILE" >> "$ROOTFS_DIR/etc/rear/rescue.conf" || Error "Failed to add 'DUPLY_PROFILE=$DUPLY_PROFILE' to rescue.conf"
+Log "Added 'DUPLY_PROFILE=$DUPLY_PROFILE' to rescue.conf"
+
+DebugPrint "Sourcing '$DUPLY_PROFILE'"
+source "$DUPLY_PROFILE" || Error "Failed to source $DUPLY_PROFILE"
+
+# Check the scheme of the TARGET variable in DUPLY_PROFILE
+# to ensure we have all executables we need in the rescue image.
+# https://www.it3.be/2015/09/02/rear-using-duply/
+# shows an example of DUPLY_PROFILE content (excerpt):
+#   GPG_KEY='BD4A8DCC'
+#   GPG_PW='my_secret_key_phrase'
+#   TARGET='scp://root:my_secret_password@freedom//exports/archives/ubuntu-15-04'
+#   SOURCE='/'
+#   MAX_AGE=1M
+#   MAX_FULL_BACKUPS=1
+#   MAX_FULLS_WITH_INCRS=1
+#   VERBOSITY=5
+#   TEMP_DIR=/tmp
+# Luckily ReaR uses TMP_DIR so sourcing DUPLY_PROFILE does not overwrite a ReaR variable,
+# cf. https://github.com/rear/rear/issues/3259 "ReaR must not carelessly 'source' files"
+local scheme="$( url_scheme "$TARGET" )"
+case "$scheme" in
+    (sftp|rsync|scp)
+        REQUIRED_PROGS+=( "$scheme" )
+esac
