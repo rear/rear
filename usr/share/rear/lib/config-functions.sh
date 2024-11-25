@@ -20,7 +20,7 @@ function SetOSVendorAndVersion () {
         # Try to find all the required information from that file
         if [[ -f /etc/os-release ]] ; then
             grep -q -i 'fedora' /etc/os-release && OS_VENDOR=Fedora
-            grep -q -i -E '(centos|redhat|scientific|oracle)' /etc/os-release && OS_VENDOR=RedHatEnterpriseServer
+            grep -q -i -E '(centos|rhel|scientific|oracle)' /etc/os-release && OS_VENDOR=RedHatEnterpriseServer
             grep -q -i 'suse' /etc/os-release && OS_VENDOR=SUSE_LINUX
             grep -q -i 'debian' /etc/os-release && OS_VENDOR=Debian
             grep -q -i -E '(ubuntu|linuxmint)' /etc/os-release && OS_VENDOR=Ubuntu
