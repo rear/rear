@@ -25,6 +25,16 @@ if ! is_true "$BACKUP_ONLY_INCLUDE" ; then
                 LogPrintError "Mountpoint '$mountpoint' in $VAR_DIR/recovery/mountpoint_device is not a mountpoint"
                 continue
             fi
+            # Unless it is specified to not do BTRFS_SUBVOLUME_SLES_SETUP i.e. also when BTRFS_SUBVOLUME_SLES_SETUP is empty
+            # (cf. BTRFS_SUBVOLUME_SLES_SETUP related code in layout/prepare/GNU/Linux/133_include_mount_filesystem_code.sh)
+            # skip to add /.snapshots by default to the backup include list (the user can add it via BACKUP_PROG_INCLUDE)
+            # see https://github.com/rear/rear/issues/3346
+            if ! is_false "$BTRFS_SUBVOLUME_SLES_SETUP" ; then
+                if test "$mountpoint" = "/.snapshots" ; then
+                    DebugPrint "By default skip /.snapshots in the backup include list (btrfs snapshots cannot be recreated)"
+                    continue
+                fi
+            fi
             echo "$mountpoint" >> "$TMP_DIR/backup-includes.txt"
         done < "$VAR_DIR/recovery/mountpoint_device"
     fi
