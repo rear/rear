@@ -3,7 +3,8 @@ PROFILEREAD=1
 
 
 # Relax-and-Recover rescue system uses only /bin, all other default bin paths are symlinks
-export PATH=/bin
+# Adding /sbin to PATH as grub2-editenv requires it
+export PATH=/bin:/sbin
 
 spwd () {
   ( IFS=/
