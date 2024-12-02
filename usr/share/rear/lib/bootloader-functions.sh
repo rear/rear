@@ -60,7 +60,8 @@ function find_syslinux_modules_dir {
             # cf. https://github.com/rear/rear/issues/2792
             # tell the user in debug mode what is going on
             DebugPrint "Searching whole /usr for SYSLINUX modules directory (you may specify SYSLINUX_MODULES_DIR)"
-            file=$( find /usr -name "$1" 2>/dev/null | tail -1 )
+	    # issue #3350 - adding -xdev to find to avoid hanging NFS
+            file=$( find /usr -xdev -name "$1" 2>/dev/null | tail -1 )
             syslinux_modules_dir=$( dirname "$file" )        # /usr/lib/syslinux/modules/efi32
             syslinux_modules_dir=${syslinux_modules_dir%/*}  # /usr/lib/syslinux/modules
             if is_true $USING_UEFI_BOOTLOADER ; then
