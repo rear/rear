@@ -22,7 +22,8 @@ PROGS+=( grub-bios-setup      grub2-bios-setup
          grub-probe           grub2-probe
          grub-reboot          grub2-reboot
          grub-set-default     grub2-set-default
-         grub-setup           grub2-setup )
+         grub-setup           grub2-setup
+	 grubby               grub2-editenv )
 
 # Added /etc/tuned/* to the list as /etc/tuned/bootcmdline is read by grub2-mkconfig, but was missing on
 # a rescue image made on RHEL - more details in #1462
