@@ -368,7 +368,7 @@ while (( unlocked_device_count == 0 && attempt < max_authentications )); do
         # If other devices require different passwords for unlocking, we assume
         # that this is intentional and will be dealt with by other means.
         attempt+=1
-        if is_true "$OPAL_PBA_TKNDBG" && is_true "$OPAL_PBA_TPMDBG"; then
+        if is_true "$OPAL_PBA_TKNDBG" || is_true "$OPAL_PBA_TPMDBG"; then
             # acceptable typed-in only
             [[ "$password" == "dbgpass" ]] && [[ -z "$at_password" ]] && unlocked_device_count+=1
             # acceptable both AT-sourced or typed-in
