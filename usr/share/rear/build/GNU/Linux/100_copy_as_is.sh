@@ -166,7 +166,28 @@ for required_library in $( RequiredSharedObjects "${copy_as_is_executables[@]}" 
 done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 Log "LIBS = ${LIBS[@]}"
 
-# Fix ReaR directories when running from checkout or REAR_VAR configuration:
-Log "Validating and fixing ReaR directories for non-default paths"
-test "$VAR_DIR" != /var/lib/rear && ln -v -srf "$ROOTFS_DIR/$VAR_DIR" $ROOTFS_DIR/var/lib/rear
-test "$SHARE_DIR" != /usr/share/rear && ln -v -srf "$ROOTFS_DIR/$SHARE_DIR" $ROOTFS_DIR/usr/share/rear
+# Symlinking non-default VAR_DIR and SHARE_DIR to defaults (e.g. when running from checkout or REAR_VAR configuration):
+Log "In ReaR recovery system symlinking non-default VAR_DIR and SHARE_DIR to defaults if needed (e.g. when running from checkout)"
+# When running with non-default VAR_DIR and/or SHARE_DIR it is mandatory that in the ReaR recovery system
+# all ReaR files are accessible via the default /var/lib/rear and /usr/share/rear directories - otherwise
+# the ReaR recovery system startup fails in usr/share/rear/skel/default/etc/scripts/system-setup with
+# "ERROR: ReaR recovery cannot work without /usr/share/rear/conf/default.conf"
+# so we error out if making a needed symlink fails.
+# On old systems with /bin/ln from coreutils < 8.16 'ln' did not support the '-r/--relative' option
+# but a relative symlink is needed in portable mode, see https://github.com/rear/rear/pull/3206
+if ! test "$VAR_DIR" = /var/lib/rear ; then
+    Log "In ReaR recovery system make symlink /var/lib/rear to VAR_DIR '$VAR_DIR'"
+    if ! ln -v -srf "$ROOTFS_DIR/$VAR_DIR" $ROOTFS_DIR/var/lib/rear ; then
+        is_true "$PORTABLE" && Error "Failed to make relative symlink (needed in portable mode) /var/lib/rear to VAR_DIR '$VAR_DIR'"
+        Log "'ln -srf VAR_DIR' failed, trying without '-r' option"
+        ln -v -sf "$VAR_DIR" $ROOTFS_DIR/var/lib/rear || Error "Failed to make symlink /var/lib/rear to VAR_DIR '$VAR_DIR'"
+    fi
+fi
+if ! test "$SHARE_DIR" = /usr/share/rear ; then
+    Log "In ReaR recovery system make symlink /usr/share/rear to SHARE_DIR '$SHARE_DIR'"
+    if ! ln -v -srf "$ROOTFS_DIR/$SHARE_DIR" $ROOTFS_DIR/usr/share/rear ; then
+        is_true "$PORTABLE" && Error "Failed to make relative symlink (needed in portable mode) /usr/share/rear to SHARE_DIR '$SHARE_DIR'"
+        Log "'ln -srf SHARE_DIR' failed, trying without '-r' option"
+        ln -v -sf "$SHARE_DIR" $ROOTFS_DIR/usr/share/rear || Error "Failed to make symlink /usr/share/rear to SHARE_DIR '$SHARE_DIR'"
+    fi
+fi
