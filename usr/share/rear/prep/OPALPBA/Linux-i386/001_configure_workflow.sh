@@ -50,6 +50,11 @@ if [ -n "$OPAL_PBA_TKNPATH" ]; then # AuthToken support
     fi
 fi
 
+if [ -z "$OPAL_PBA_TKNPATH" ] && [ -n "$OPAL_PBA_TPMNVINDEX" ]; then # TPM support
+    REQUIRED_PROGS+=( 'tpm2_nvundefine' 'tpm2_nvdefine' 'tpm2_nvread' 'tpm2_nvwrite' )
+    LIBS+=( /usr/lib/x86_64-linux-gnu/libtss2-*.so* )
+fi
+
 # Redirect output
 [[ -n "$OPAL_PBA_OUTPUT_URL" ]] || Error "The OPAL_PBA_OUTPUT_URL configuration variable must be set."
 OUTPUT_URL="$OPAL_PBA_OUTPUT_URL"
