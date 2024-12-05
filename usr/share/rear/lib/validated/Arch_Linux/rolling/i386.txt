@@ -1,5 +1,5 @@
 Version:     Relax-and-Recover 2.00 / Git
-Validation:  Arch/rolling/i386
+Validation:  Arch_Linux/rolling/i386
 Date:        2017-03-03
 Submitted:   James An <james@jamesan.ca>, Canada
 Features:    LVM, ISO, USB, RAMDISK, SSHFS, RSYNC, DUPLICITY
