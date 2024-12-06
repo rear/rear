@@ -177,17 +177,9 @@ Log "In ReaR recovery system symlinking non-default VAR_DIR and SHARE_DIR to def
 # but a relative symlink is needed in portable mode, see https://github.com/rear/rear/pull/3206
 if ! test "$VAR_DIR" = /var/lib/rear ; then
     Log "In ReaR recovery system make symlink /var/lib/rear to VAR_DIR '$VAR_DIR'"
-    if ! ln -v -srf "$ROOTFS_DIR/$VAR_DIR" $ROOTFS_DIR/var/lib/rear ; then
-        is_true "$PORTABLE" && Error "Failed to make relative symlink (needed in portable mode) /var/lib/rear to VAR_DIR '$VAR_DIR'"
-        Log "'ln -srf VAR_DIR' failed, trying without '-r' option"
-        ln -v -sf "$VAR_DIR" $ROOTFS_DIR/var/lib/rear || Error "Failed to make symlink /var/lib/rear to VAR_DIR '$VAR_DIR'"
-    fi
+    ln -v -srf "$ROOTFS_DIR/$VAR_DIR" $ROOTFS_DIR/var/lib/rear || Error "Failed to symlink /var/lib/rear to '$VAR_DIR'"
 fi
 if ! test "$SHARE_DIR" = /usr/share/rear ; then
     Log "In ReaR recovery system make symlink /usr/share/rear to SHARE_DIR '$SHARE_DIR'"
-    if ! ln -v -srf "$ROOTFS_DIR/$SHARE_DIR" $ROOTFS_DIR/usr/share/rear ; then
-        is_true "$PORTABLE" && Error "Failed to make relative symlink (needed in portable mode) /usr/share/rear to SHARE_DIR '$SHARE_DIR'"
-        Log "'ln -srf SHARE_DIR' failed, trying without '-r' option"
-        ln -v -sf "$SHARE_DIR" $ROOTFS_DIR/usr/share/rear || Error "Failed to make symlink /usr/share/rear to SHARE_DIR '$SHARE_DIR'"
-    fi
+    ln -v -srf "$ROOTFS_DIR/$SHARE_DIR" $ROOTFS_DIR/usr/share/rear || Error "Failed to symlink /usr/share/rear to '$SHARE_DIR'"
 fi
