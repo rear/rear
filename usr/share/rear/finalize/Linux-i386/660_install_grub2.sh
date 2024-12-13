@@ -38,7 +38,7 @@
 #   unless the BOOTLOADER variable tells to install another bootloader
 #   (other bootloader install scripts check the BOOTLOADER variable)
 #   and unless we are using UEFI (BOOTLOADER then indicates the BIOS bootloader
-#   in a a hybrid boot setup).
+#   in a hybrid boot setup).
 #
 # This script does not error out because at this late state of "rear recover"
 # (i.e. after the backup was restored) I <jsmeix@suse.de> consider it too hard
