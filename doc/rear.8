@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: rear
 .\"    Author: [see the "AUTHOR(S)" section]
-.\" Generator: Asciidoctor 2.0.16
-.\"      Date: 2024-04-16
+.\" Generator: Asciidoctor 2.0.12
+.\"      Date: 2024-12-17
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "REAR" "8" "2024-04-16" "\ \&" "\ \&"
+.TH "REAR" "8" "2024-12-17" "\ \&" "\ \&"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -34,38 +34,301 @@ rear \- bare metal disaster recovery and system migration tool
 \fBrear\fP [\fB\-h\fP|\fB\-\-help\fP] [\fB\-V\fP|\fB\-\-version\fP] [\fB\-dsSv\fP] [\fB\-D\fP|\fB\-\-debugscripts\fP \fISET\fP] [\fB\-c\fP \fIDIR\fP] [\fB\-C\fP \fICONFIG\fP] [\fB\-r\fP \fIKERNEL\fP] [\fB\-n\fP|\fB\-\-non\-interactive\fP] [\fB\-e\fP|\fB\-\-expose\-secrets\fP] [\-\-] \fICOMMAND\fP [\fIARGS\fP...]
 .SH "DESCRIPTION"
 .sp
-Relax\-and\-Recover (abbreviated ReaR) is the leading Open Source disaster recovery solution.
-It is a modular framework with many ready\-to\-go workflows for common situations.
+Relax\-and\-Recover (abbreviated ReaR) is the de facto standard disaster recovery framework on Linux.
 .sp
-Relax\-and\-Recover produces a bootable image. This image can repartition the
-system. Once that is done it initiates a restore from backup. Restores to
-different hardware are possible. Relax\-and\-Recover can therefore be used as a
-migration tool as well.
+It is in particular used on enterprise Linux distributions like Red Hat Enterprise Linux (RHEL)
+and SUSE Linux Enterprise Server (SLES).
 .sp
-Currently Relax\-and\-Recover supports various boot media (incl. ISO, PXE,
-OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
-sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude
-of backup strategies (incl.  IBM Tivoli Storage Manager, MircoFocus Data Protector,
-Symantec NetBackup, EMC NetWorker, EMC Avamar, FDR/Upstream, NovaStor DC, Rubrik Cloud Data Management (CDM),
-Bareos, Bacula, rsync, rbme, Borg). This results in a bootable image that is capable of
-booting via PXE, DVD/CD, bootable tape or virtual provisioning.
+ReaR is a system administrator tool and framework to create a bootable disaster recovery system image
+for bare metal disaster recovery with data backup restore on physical or virtual replacement hardware.
 .sp
-Relax\-and\-Recover was designed to be easy to set up, requires no maintenance
-and is there to assist when disaster strikes. Its setup\-and\-forget nature
-removes any excuses for not having a disaster recovery solution implemented.
+For bare metal disaster recovery the ReaR recovery system is booted on pristine replacement hardware.
+On replacement hardware first the storage setup/layout is recreated (disk partitioning, filesystems, mount points),
+then a backup restore program is called to restore the data (system files) into the recreated storage,
+and finally a boot loader is installed.
 .sp
-Recovering from disaster is made very straight\-forward by a 2\-step recovery
-process so that it can be executed by operational teams when required.
-When used interactively (e.g. when used for migrating systems), menus help
-make decisions to restore to a new (hardware) environment.
+System administrators use the ReaR framework to set up a disaster recovery procedure
+as part of their disaster recovery policy (which complements their existing backup policy).
 .sp
-Extending Relax\-and\-Recover is made possible by its modular framework.
-Consistent logging and optionally extended output help understand the concepts
-behind Relax\-and\-Recover and help debug during development.
+ReaR complements backup and restore of data with bare metal disaster recovery. ReaR can also act as local backup software,
+but ReaR is not a a backup management software. In many enterprise environmentments, data backup and restore happens via dedicated backup software which is integrated by ReaR and used to restore the data onto a replacement system as part of the automated disaster recovery procedure implemented by ReaR.
 .sp
-Relax\-and\-Recover comes with ABSOLUTELY NO WARRANTY; for details see
-the GNU General Public License at: \c
-.URL "http://www.gnu.org/licenses/gpl.html" "" ""
+ReaR has support for built\-in backup methods using \(aqtar\(aq and \(aqrsync\(aq that are used for backup and restore.
+.sp
+ReaR integrates supports the following 3rd party, also commercial, tools for restoring a backup.
+.sp
+The complete list of backup methods (\fBBACKUP=...\fP) is:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBAVA\fP Dell EMC Avamar / EMC Avamar
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBBACULA\fP Bacula
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBBAREOS\fP Bareos
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBBLOCKCLONE\fP block device cloning via \f(CRdd\fP
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBBORG\fP Borg Backup
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBCDM\fP Rubrik Cloud Data Management
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBDP\fP OpenText Data Protector
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBDUPLICITY\fP Duplicity / Duply
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBEXTERNAL\fP External custom restore method
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBFDRUPSTREAM\fP FDR/Upstream
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBGALAXY11\fP Commvault Galaxy 11 / Commvault Simpana
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBNBKDC\fP NovaStor DataCenter
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBNBU\fP Veritas NetBackup / Symantec NetBackup
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBNETFS\fP ReaR built\-in backup and restore via \f(CRrsync\fP or \f(CRtar\fP to a network file system or to a locally attached backup disk (USB, eSATA, ...)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBNFS4SERVER\fP NFS4 server to push data \fBto\fP the rescue system
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBNSR\fP Dell EMC NetWorker / EMC NetWorker / Legato NetWorker
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBOBDR\fP One Button Disaster Recovery via tape
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBPPDM\fP Dell PowerProtect Data Manager
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBRBME\fP Rsync Backup Made Easy
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBREQUESTRESTORE\fP Request restore from a human operator
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBRSYNC\fP ReaR built\-in backup using \f(CRrsync\fP via \f(CRrsync\fP or \f(CRssh\fP protocol
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBSESAM\fP SEP Sesam
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBTSM\fP IBM Storage Protect / Tivoli Storage Manager / IBM Spectrum Protect
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBVEEAM\fP Veeam Backup
+.RE
+.sp
+ReaR integrates well with Disaster Recovery Linux Manager (DRLM, see \c
+.URL "https://drlm.org" "" "),"
+which can act as a central management tool for ReaR deployments.
+.sp
+Professional services and support are available, see \c
+.URL "https://relax\-and\-recover.org/support/" "" ""
 .SH "OPTIONS"
 .SS "GLOBAL OPTIONS"
 .sp
@@ -91,12 +354,12 @@ additional config files (absolute path or relative to config directory)
 .sp
 \-D
 .RS 4
-\fBdebugscript mode\fP: log executed commands via \*(Aqset \-x\*(Aq (also sets \-v and \-d)
+\fBdebugscript mode\fP: log executed commands via \(aqset \-x\(aq (also sets \-v and \-d)
 .RE
 .sp
 \-\-debugscripts SET
 .RS 4
-same as \-D but \fBdebugscript mode\fP with \*(Aqset \-SET\*(Aq
+same as \-D but \fBdebugscript mode\fP with \(aqset \-SET\(aq
 .RE
 .sp
 \-r KERNEL
@@ -211,7 +474,7 @@ administrate TCG Opal 2\-compliant self\-encrypting disks
 submit validation information
 .RE
 .sp
-Use \*(Aqrear \-v help\*(Aq for more advanced commands.
+Use \(aqrear \-v help\(aq for more advanced commands.
 .SH "BACKGROUND INFORMATION"
 .sp
 The process of bare metal disaster recovery consists of two parts:
@@ -373,7 +636,7 @@ Write the image using lftp and the HFTP protocol.
 .sp
 OUTPUT_URL=\fBhttp://\fP
 .RS 4
-Write the image using lftp and the HTTP (PUT) procotol.
+Write the image using lftp and the HTTP (PUT) protocol.
 .RE
 .sp
 OUTPUT_URL=\fBhttps://\fP
@@ -423,21 +686,21 @@ There are some Relax\-and\-Recover specific kernel command line options:
 \fBdebug\fP
 .RS 4
 The rescue system start up scripts in /etc/scripts/system\-setup.d/
-are run one by one each one after pressing \*(AqEnter\*(Aq and
-the scripts are run with \*(Aqset \-x\*(Aq which prints commands
+are run one by one each one after pressing \(aqEnter\(aq and
+the scripts are run with \(aqset \-x\(aq which prints commands
 and their arguments as they are executed.
 .RE
 .sp
 \fBauto_recover\fP or \fBautomatic\fP
 .RS 4
-Launch \*(Aqrear recover\*(Aq automatically (without automated reboot).
-Together with \*(Aqdebug\*(Aq it runs \*(Aqrear recover\*(Aq in debugscript mode.
+Launch \(aqrear recover\(aq automatically (without automated reboot).
+Together with \(aqdebug\(aq it runs \(aqrear recover\(aq in debugscript mode.
 .RE
 .sp
 \fBunattended\fP
 .RS 4
-Launch \*(Aqrear recover\*(Aq automatically as with \*(Aqauto_recover\*(Aq
-plus automated reboot after successful \*(Aqrear recover\*(Aq.
+Launch \(aqrear recover\(aq automatically as with \(aqauto_recover\(aq
+plus automated reboot after successful \(aqrear recover\(aq.
 .RE
 .sp
 \fBip= nm= netdev= gw=\fP
@@ -464,163 +727,25 @@ Skip network devices setup by the rescue system start up scripts (overrides ip= 
 Currently Relax\-and\-Recover supports the below listed backup methods.
 .sp
 There is a distinction between Relax\-and\-Recover support for 3rd party
-backup software and Relax\-and\-Recover internal backup methods. The latter
+backup software and Relax\-and\-Recover built\-in backup methods. The latter
 also creates a backup of your data while the former will only integrate
 Relax\-and\-Recover with the backup software to restore the data with the
 help of the backup software without actually creating backups. This means
-that for all non\-internal backup software you \fBmust\fP take care of creating
+that for all non\-built\-in backup software you \fBmust\fP take care of creating
 backups yourself (unless otherwise noted).
 .sp
 Especially the rear mkbackup command can be confusing as it is only
-useful for the internal backup methods and has usually no function at all with
-the other (external) backup methods where the rear mkrescue command applies.
+useful for the built\-in backup methods and has usually no function at all with
+the other (3rd party / external) backup methods where the rear mkrescue command applies.
 .sp
-The following backup methods need to
-be set in Relax\-and\-Recover with the BACKUP option. As mentioned we have
-two types of BACKUP methods \- \fIinternal\fP and \fIexternal\fP.
+See the full list of supported backup methods above for reference and consult \(aq/usr/share/rear/conf/default.conf\(aq
+for the full list of supported options for each backup method. Also, \(aqrear dump\(aq will
+show you the current settings for BACKUP and OUTPUT methods including all available options.
 .sp
-The following BACKUP methods are \fIexternal\fP of Relax\-and\-Recover meaning
-that usually you are responsible of backups being made:
-.sp
-BACKUP=\fBREQUESTRESTORE\fP
-.RS 4
-\fB(default)\fP Not really a backup method at all, Relax\-and\-Recover simply
-halts the recovery and requests that somebody will restore the data
-to the appropriate location (e.g. via SSH). This method works especially
-well with an rsync based backup that is pushed back to the backup
-client.
-.RE
-.sp
-BACKUP=\fBEXTERNAL\fP
-.RS 4
-Internal backup method that uses an arbitrary external command to
-create a backup and restore the data.
-.RE
-.sp
-BACKUP=\fBDP\fP
-.RS 4
-Use Micro Focus Data Protector to restore the data.
-.RE
-.sp
-BACKUP=\fBFDRUPSTREAM\fP
-.RS 4
-Use FDR/Upstream to restore the data.
-.RE
-.sp
-BACKUP=\fBGALAXY\fP
-.RS 4
-Use CommVault Galaxy 5 to restore the data.
-.RE
-.sp
-BACKUP=\fBGALAXY7\fP
-.RS 4
-Use CommVault Galaxy 7 to restore the data.
-.RE
-.sp
-BACKUP=\fBGALAXY10\fP
-.RS 4
-Use CommVault Galaxy 10 (or Simpana 10) to restore the data.
-.RE
-.sp
-BACKUP=\fBGALAXY11\fP
-.RS 4
-Use CommVault Galaxy 11 (or Simpana 11) to restore the data.
-.RE
-.sp
-BACKUP=\fBNBU\fP
-.RS 4
-Use Symantec NetBackup to restore the data.
-.RE
-.sp
-BACKUP=\fBTSM\fP
-.RS 4
-Use IBM Tivoli Storage Manager to restore the data. The Relax\-and\-Recover
-result files (e.g. ISO image) are also saved into TSM.
-There is a (currently experimental) first draft implementation
-that a TSM backup is created by calling \*(Aqdsmc incremental\*(Aq during \*(Aqrear mkbackup\*(Aq.
-.RE
-.sp
-BACKUP=\fBNSR\fP
-.RS 4
-Using EMC NetWorker (Legato) to restore the data.
-.RE
-.sp
-BACKUP=\fBPPDM\fP
-.RS 4
-Using Dell PowerProtect Data Manager to restore the data.
-.RE
-.sp
-BACKUP=\fBAVA\fP
-.RS 4
-Using EMC Avamar to restore the data.
-.RE
-.sp
-BACKUP=\fBSESAM\fP
-.RS 4
-Using SEP Sesam to restore the data.
-.RE
-.sp
-BACKUP=\fBNBKDC\fP
-.RS 4
-Using NovaStor DC to restore the data.
-.RE
-.sp
-BACKUP=\fBCDM\fP
-.RS 4
-Using Rubrik Cloud Data Management (CDM) to restore the data.
-.RE
-.sp
-BACKUP=\fBRBME\fP
-.RS 4
-Use Rsync Backup Made Easy (rbme) to restore the data.
-.RE
-.sp
-BACKUP=\fBBAREOS\fP
-.RS 4
-Use Open Source backup solution BAREOS (a fork a BACULA) to restore the data.
-.RE
-.sp
-BACKUP=\fBBACULA\fP
-.RS 4
-Use Open Source backup solution BACULA to restore the data.
-.RE
-.sp
-BACKUP=\fBDUPLICITY\fP
-.RS 4
-Use encrypted bandwidth\-efficient backup solution using the rsync algorithm to restore the data.
-.RE
-.sp
-BACKUP=\fBBORG\fP
-.RS 4
-Use BorgBackup (short Borg) a deduplicating backup program to restore the data.
-Executing \*(Aqrear mkbackup\*(Aq will create a Borg backup,
-see the section \*(AqReaR with Borg back end\*(Aq in the ReaR user\-guide \*(AqScenarios\*(Aq documentation.
-.RE
-.sp
-BACKUP=\fBVEEAM\fP
-.RS 4
-Use Veeam Backup to restore data.
-.RE
-.sp
-BACKUP=\fBNFS4SERVER\fP
-.RS 4
-This is a restore only method. ReaR starts a NFSv4 server in the restore stage and
-provides the to be restored filesystems as NFSv4 share. Another
-server (with a special backup sotware) can mount this share and can push the backup data into it.
-.RE
-.sp
-The following BACKUP methods are \fIinternal\fP of Relax\-and\-Recover:
-.sp
-BACKUP=\fBNETFS\fP
-.RS 4
-Internal backup method which can be used to create a simple backup
-(tar archive).
-.RE
-.sp
-BACKUP=\fBRSYNC\fP
-.RS 4
-Use rsync to restore data.
-.RE
+The default \fBBACKUP\fP method is \fBREQUESTRESTORE\fP which is not a backup method at all but simply
+halts the recovery and requests that somebody will restore the data to the appropriate location
+(e.g. via SSH). This method works especially well with an rsync based backup that is pushed
+back to the backup client.
 .sp
 If your favourite backup software is missing from this list, please submit
 a patch or ask us to implement it for you.
@@ -964,7 +1089,7 @@ look at the git history (\c
 We are very thankful to all authors and encourage anybody interested
 to take a look at our source code and to contribute what you find important.
 .sp
-Relax\-and\-Recover is a collaborative process using Github at \c
+Relax\-and\-Recover is a developed with a collaborative process using Github at \c
 .URL "http://github.com/rear/" "" ""
 .sp
 The Relax\-and\-Recover website is located at: \c

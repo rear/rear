@@ -16,38 +16,59 @@ rear - bare metal disaster recovery and system migration tool
 
 
 == DESCRIPTION
-Relax-and-Recover (abbreviated ReaR) is the leading Open Source disaster recovery solution.
-It is a modular framework with many ready-to-go workflows for common situations.
+Relax-and-Recover (abbreviated ReaR) is the de facto standard disaster recovery framework on Linux.
 
-Relax-and-Recover produces a bootable image. This image can repartition the
-system. Once that is done it initiates a restore from backup. Restores to
-different hardware are possible. Relax-and-Recover can therefore be used as a
-migration tool as well.
+It is in particular used on enterprise Linux distributions like Red Hat Enterprise Linux (RHEL)
+and SUSE Linux Enterprise Server (SLES).
 
-Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
-OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
-sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude
-of backup strategies (incl.  IBM Tivoli Storage Manager, MircoFocus Data Protector,
-Symantec NetBackup, EMC NetWorker, EMC Avamar, FDR/Upstream, NovaStor DC, Rubrik Cloud Data Management (CDM),
-Bareos, Bacula, rsync, rbme, Borg). This results in a bootable image that is capable of
-booting via PXE, DVD/CD, bootable tape or virtual provisioning.
+ReaR is a system administrator tool and framework to create a bootable disaster recovery system image
+for bare metal disaster recovery with data backup restore on physical or virtual replacement hardware.
 
-Relax-and-Recover was designed to be easy to set up, requires no maintenance
-and is there to assist when disaster strikes. Its setup-and-forget nature
-removes any excuses for not having a disaster recovery solution implemented.
+For bare metal disaster recovery the ReaR recovery system is booted on pristine replacement hardware.
+On replacement hardware first the storage setup/layout is recreated (disk partitioning, filesystems, mount points),
+then a backup restore program is called to restore the data (system files) into the recreated storage,
+and finally a boot loader is installed.
 
-Recovering from disaster is made very straight-forward by a 2-step recovery
-process so that it can be executed by operational teams when required.
-When used interactively (e.g. when used for migrating systems), menus help
-make decisions to restore to a new (hardware) environment.
+System administrators use the ReaR framework to set up a disaster recovery procedure
+as part of their disaster recovery policy (which complements their existing backup policy).
 
-Extending Relax-and-Recover is made possible by its modular framework.
-Consistent logging and optionally extended output help understand the concepts
-behind Relax-and-Recover and help debug during development.
+ReaR complements backup and restore of data with bare metal disaster recovery. ReaR can also act as local backup software,
+but ReaR is not a a backup management software. In many enterprise environmentments, data backup and restore happens via dedicated backup software which is integrated by ReaR and used to restore the data onto a replacement system as part of the automated disaster recovery procedure implemented by ReaR.
 
-Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details see
-the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
+ReaR has support for built-in backup methods using 'tar' and 'rsync' that are used for backup and restore.
 
+ReaR integrates supports the following 3rd party, also commercial, tools for restoring a backup.
+
+The complete list of backup methods (*BACKUP=...*) is:
+
+* *AVA* Dell EMC Avamar / EMC Avamar
+* *BACULA* Bacula
+* *BAREOS* Bareos
+* *BLOCKCLONE* block device cloning via `dd`
+* *BORG* Borg Backup
+* *CDM* Rubrik Cloud Data Management
+* *DP* OpenText Data Protector
+* *DUPLICITY* Duplicity / Duply
+* *EXTERNAL* External custom restore method
+* *FDRUPSTREAM* FDR/Upstream
+* *GALAXY11* Commvault Galaxy 11 / Commvault Simpana
+* *NBKDC* NovaStor DataCenter
+* *NBU* Veritas NetBackup / Symantec NetBackup
+* *NETFS* ReaR built-in backup and restore via `rsync` or `tar` to a network file system or to a locally attached backup disk (USB, eSATA, ...)
+* *NFS4SERVER* NFS4 server to push data *to* the rescue system
+* *NSR* Dell EMC NetWorker / EMC NetWorker / Legato NetWorker
+* *OBDR* One Button Disaster Recovery via tape
+* *PPDM* Dell PowerProtect Data Manager
+* *RBME* Rsync Backup Made Easy
+* *REQUESTRESTORE* Request restore from a human operator
+* *RSYNC* ReaR built-in backup using `rsync` via `rsync` or `ssh` protocol
+* *SESAM* SEP Sesam
+* *TSM* IBM Storage Protect / Tivoli Storage Manager / IBM Spectrum Protect
+* *VEEAM* Veeam Backup
+
+ReaR integrates well with Disaster Recovery Linux Manager (DRLM, see https://drlm.org), which can act as a central management tool for ReaR deployments.
+
+Professional services and support are available, see https://relax-and-recover.org/support/
 
 == OPTIONS
 
@@ -293,121 +314,31 @@ Skip network devices setup by the rescue system start up scripts (overrides ip= 
 Currently Relax-and-Recover supports the below listed backup methods.
 
 There is a distinction between Relax-and-Recover support for 3rd party
-backup software and Relax-and-Recover internal backup methods. The latter
+backup software and Relax-and-Recover built-in backup methods. The latter
 also creates a backup of your data while the former will only integrate
 Relax-and-Recover with the backup software to restore the data with the
 help of the backup software without actually creating backups. This means
-that for all non-internal backup software you *must* take care of creating
+that for all non-built-in backup software you *must* take care of creating
 backups yourself (unless otherwise noted).
 
 Especially the +rear mkbackup+ command can be confusing as it is only
-useful for the internal backup methods and has usually no function at all with
-the other (external) backup methods where the +rear mkrescue+ command applies.
+useful for the built-in backup methods and has usually no function at all with
+the other (3rd party / external) backup methods where the +rear mkrescue+ command applies.
 
-The following backup methods need to
-be set in Relax-and-Recover with the +BACKUP+ option. As mentioned we have
-two types of +BACKUP+ methods - _internal_ and _external_.
+See the full list of supported backup methods above for reference and consult '/usr/share/rear/conf/default.conf'
+for the full list of supported options for each backup method. Also, 'rear dump' will
+show you the current settings for +BACKUP+ and +OUTPUT+ methods including all available options.
 
-The following +BACKUP+ methods are _external_ of Relax-and-Recover meaning
-that usually you are responsible of backups being made:
-
-BACKUP=*REQUESTRESTORE*::
-*(default)* Not really a backup method at all, Relax-and-Recover simply
-halts the recovery and requests that somebody will restore the data
-to the appropriate location (e.g. via SSH). This method works especially
-well with an rsync based backup that is pushed back to the backup
-client.
-
-BACKUP=*EXTERNAL*::
-Internal backup method that uses an arbitrary external command to
-create a backup and restore the data.
-
-BACKUP=*DP*::
-Use Micro Focus Data Protector to restore the data.
-
-BACKUP=*FDRUPSTREAM*::
-Use FDR/Upstream to restore the data.
-
-BACKUP=*GALAXY*::
-Use CommVault Galaxy 5 to restore the data.
-
-BACKUP=*GALAXY7*::
-Use CommVault Galaxy 7 to restore the data.
-
-BACKUP=*GALAXY10*::
-Use CommVault Galaxy 10 (or Simpana 10) to restore the data.
-
-BACKUP=*GALAXY11*::
-Use CommVault Galaxy 11 (or Simpana 11) to restore the data.
-
-BACKUP=*NBU*::
-Use Symantec NetBackup to restore the data.
-
-BACKUP=*TSM*::
-Use IBM Tivoli Storage Manager to restore the data. The Relax-and-Recover
-result files (e.g. ISO image) are also saved into TSM.
-There is a (currently experimental) first draft implementation
-that a TSM backup is created by calling 'dsmc incremental' during 'rear mkbackup'.
-
-BACKUP=*NSR*::
-Using EMC NetWorker (Legato) to restore the data.
-
-BACKUP=*PPDM*::
-Using Dell PowerProtect Data Manager to restore the data.
-
-BACKUP=*AVA*::
-Using EMC Avamar to restore the data.
-
-BACKUP=*SESAM*::
-Using SEP Sesam to restore the data.
-
-BACKUP=*NBKDC*::
-Using NovaStor DC to restore the data.
-
-BACKUP=*CDM*::
-Using Rubrik Cloud Data Management (CDM) to restore the data.
-
-BACKUP=*RBME*::
-Use Rsync Backup Made Easy (rbme) to restore the data.
-
-BACKUP=*BAREOS*::
-Use Open Source backup solution BAREOS (a fork a BACULA) to restore the data.
-
-BACKUP=*BACULA*::
-Use Open Source backup solution BACULA to restore the data.
-
-BACKUP=*DUPLICITY*::
-Use encrypted bandwidth-efficient backup solution using the rsync algorithm to restore the data.
-
-BACKUP=*BORG*::
-Use BorgBackup (short Borg) a deduplicating backup program to restore the data.
-Executing 'rear mkbackup' will create a Borg backup,
-see the section 'ReaR with Borg back end' in the ReaR user-guide 'Scenarios' documentation.
-
-BACKUP=*VEEAM*::
-Use Veeam Backup to restore data.
-
-BACKUP=*NFS4SERVER*::
-This is a restore only method. ReaR starts a NFSv4 server in the restore stage and
-provides the to be restored filesystems as NFSv4 share. Another
-server (with a special backup sotware) can mount this share and can push the backup data into it.
-
-The following +BACKUP+ methods are _internal_ of Relax-and-Recover:
-
-BACKUP=*NETFS*::
-Internal backup method which can be used to create a simple backup
-(tar archive).
-
-BACKUP=*RSYNC*::
-Use rsync to restore data.
-
+The default *BACKUP* method is *REQUESTRESTORE* which is not a backup method at all but simply 
+halts the recovery and requests that somebody will restore the data to the appropriate location
+(e.g. via SSH). This method works especially well with an rsync based backup that is pushed
+back to the backup client.
 
 If your favourite backup software is missing from this list, please submit
 a patch or ask us to implement it for you.
 
 When using +BACKUP=NETFS+ you must provide the backup target location
 through the +BACKUP_URL+ variable. Possible +BACKUP_URL+ settings are:
-
 
 BACKUP_URL=*file://*::
 To backup to local disk, use +BACKUP_URL=file:///directory/path/+
@@ -474,7 +405,6 @@ at least +BACKUP_URL=usb+ requires USB_SUFFIX to be set
 to work with incremental or differential backup.
 
 == SUPPORT FOR SELF-ENCRYPTING DISKS
-
 Relax-and-Recover supports self-encrypting disks (SEDs) compliant with the TCG
 Opal 2 specification if the `sedutil-cli` executable is installed.
 
@@ -565,7 +495,7 @@ rescue system away so that you can use it in the case of a system failure.
 To create a new rescue image together with a complete archive of your local
 system run the command:
 
-   # rear -v mkbackup
+    # rear -v mkbackup
 
 
 == FILES
@@ -629,7 +559,7 @@ look at the git history (https://github.com/rear/rear/graphs/contributors).
 We are very thankful to all authors and encourage anybody interested
 to take a look at our source code and to contribute what you find important.
 
-Relax-and-Recover is a collaborative process using Github at http://github.com/rear/
+Relax-and-Recover is a developed with a collaborative process using Github at http://github.com/rear/
 
 The Relax-and-Recover website is located at: http://relax-and-recover.org/
 
