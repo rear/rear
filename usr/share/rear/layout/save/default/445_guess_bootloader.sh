@@ -123,7 +123,7 @@ if is_true $USING_UEFI_BOOTLOADER ; then
         # which already indicates that there is an EFI bootloader. We use it as a placeholder
         # to not leave $bootloader_file empty.
         # Note that it is legal to have USING_UEFI_BOOTLOADER=1 and e.g. known_bootloader=GRUB2
-        # (i.e. a non=EFI bootloader). This will happen in BIOS/UEFI hybrid boot scenarios.
+        # (i.e. a non-EFI bootloader). This will happen in BIOS/UEFI hybrid boot scenarios.
         # known_bootloader=GRUB2 indicates that there is a BIOS bootloader and USING_UEFI_BOOTLOADER=1
         # indicates that there is also an EFI bootloader. Only the EFI one is being used at this
         # time, but both will need to be restored.
