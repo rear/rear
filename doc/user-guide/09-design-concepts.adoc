@@ -51,21 +51,30 @@ The configuration must define the +BACKUP+ and +OUTPUT+ methods. Valid choices a
 
 |====
 |NAME        | TYPE    | Description                              | Implement in Phase
-|NETFS       | BACKUP  | Copy files to NFS/CIFS share             | done
-|TAPE        | BACKUP  | Copy files to tape(s)                    | done
-|DUPLICITY   | BACKUP  | Copy files to the Cloud                  | done
-|GALAXY      | BACKUP  | Use CommVault Galaxy (Simpana)           | done
-|NSR         | BACKUP  | Use Legato Networker                     | done
-|PPDM        | BACKUP  | Use Dell PowerProtect Data Manager       | done
-|TSM         | BACKUP  | Use Tivoli Storage Manager               | done
-|DP          | BACKUP  | Use Micro Focus Data Protector           | done
-|NBU         | BACKUP  | Use Symantec NetBackup                   | done
-|BACULA      | BACKUP  | Use Bacula                               | done
-|BAREOS      | BACKUP  | Use Bareos (fork of Bacula)              | done
-|RSYNC       | BACKUP  | Use rsync to remote location             | done
-|RBME        | BACKUP  | Use Rsync Backup Made Easy               | done
-|FDRUPSTREAM | BACKUP  | Use FDR/Upstream                         | done
-|BORG        | BACKUP  | Use Borg                                 | done
+|AVA         | BACKUP  | Dell EMC Avamar / EMC Avamar            | done
+|BACULA      | BACKUP  | Bacula                                  | done
+|BAREOS      | BACKUP  | Bareos                                  | done
+|BLOCKCLONE  | BACKUP  | Block device cloning via dd             | done
+|BORG        | BACKUP  | Borg Backup                             | done
+|CDM         | BACKUP  | Rubrik Cloud Data Management            | done
+|DP          | BACKUP  | OpenText Data Protector                 | done
+|DUPLICITY   | BACKUP  | Duplicity / Duply                       | done
+|EXTERNAL    | BACKUP  | External custom restore method          | done
+|FDRUPSTREAM | BACKUP  | FDR/Upstream                            | done
+|GALAXY11    | BACKUP  | Commvault Galaxy 11 / Commvault Simpana | done
+|NBKDC       | BACKUP  | NovaStor DataCenter                     | done
+|NBU         | BACKUP  | Veritas NetBackup / Symantec NetBackup  | done
+|NETFS       | BACKUP  | ReaR built-in backup and restore via rsync or tar to a network file system or to a locally attached backup disk (USB, eSATA, ...)| done
+|NFS4SERVER  | BACKUP  | NFS4 server to push data to the rescue system| done
+|NSR         | BACKUP  | Dell EMC NetWorker / EMC NetWorker / Legato NetWorker| done
+|OBDR        | BACKUP  | One Button Disaster Recovery via tape    | done
+|PPDM        | BACKUP  | Dell PowerProtect Data Manager          | done
+|RBME        | BACKUP  | Rsync Backup Made Easy                  | done
+|REQUESTRESTORE| BACKUP| Request restore from a human operator   | done
+|RSYNC       | BACKUP  | ReaR built-in backup using rsync via rsync or ssh protocol| done
+|SESAM       | BACKUP  | SEP Sesam                               | done
+|TSM         | BACKUP  | IBM Storage Protect / Tivoli Storage Manager / IBM Spectrum Protect| done
+|VEEAM       | BACKUP  | Veeam Backup                            | done
 |            |         |                                          |
 |ISO         | OUTPUT  | Write result to ISO9660 image            | done
 |OBDR        | OUTPUT  | Create OBDR Tape                         | done

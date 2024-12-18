@@ -167,7 +167,7 @@ fi
 %files
 # defattr: is required for SLES 11 and RHEL/CentOS 5 builds on openSUSE Build Service (#2135)
 %defattr(-, root, root, 0755)
-%doc MAINTAINERS COPYING README.adoc doc/*.txt
+%doc MAINTAINERS COPYING README.md doc/*.txt
 %doc %{_mandir}/man8/rear.8*
 %config(noreplace) %{_sysconfdir}/rear/
 %config(noreplace) %{_sysconfdir}/rear/cert/

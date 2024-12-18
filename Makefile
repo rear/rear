@@ -9,7 +9,7 @@ SHELL = bash
 
 DESTDIR =
 OFFICIAL =
-DIST_CONTENT = COPYING  doc  etc  MAINTAINERS  Makefile  packaging  README.adoc  tests  tools  usr
+DIST_CONTENT = COPYING  doc  etc  MAINTAINERS  Makefile  packaging  README.md  tests  tools  usr
 
 ### Get version from Relax-and-Recover itself
 rearbin = usr/sbin/rear
