@@ -1,6 +1,6 @@
 = rear(8)
-:version: v2.7
-:date: 09 June 2022
+:version: v2.8
+:date: 19 December 2024
 :data-uri:
 :doctype: manpage
 :lang: en
