@@ -8,7 +8,7 @@
 
 Summary: Relax-and-Recover is a Linux disaster recovery and system migration tool
 Name: rear
-Version: 2.7
+Version: 2.8
 Release: 1%{?rpmrelease}%{?dist}
 # Since some time the license value 'GPLv3' causes build failures in the openSUSE Build Service
 # cf. https://github.com/rear/rear/issues/2289#issuecomment-559713101
