@@ -231,6 +231,13 @@ fi
                 echo -n " uuid=$uuid label=$label"
                 ;;
             (btrfs)
+                # FIXME: Support for multi-disk BTRFS should be implemented sooner or later
+                # because it is the default layout for multi-disk Fedora Workstation installations.
+                # See: https://github.com/rear/rear/issues/2028
+                if grep -qE 'Total devices ([2-9]|[1-9][0-9]+) ' <(btrfs filesystem show "$mountpoint"); then
+                    Error "Mounpoint $mountpoint points to a BTRFS filesystem spanning multiple disk devices which is not yet supported. See: https://github.com/rear/rear/issues/2028"
+                fi
+
                 # Remember devices and mountpoints of the btrfs filesystems for the btrfs subvolume layout stuff below:
                 btrfs_devices_and_mountpoints+=" $device,$mountpoint"
                 uuid=$( btrfs filesystem show $device | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )
