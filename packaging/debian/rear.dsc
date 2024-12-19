@@ -1,9 +1,9 @@
 Format: 1.0
 Source: rear
-Version: 2.7
+Version: 2.8
 Binary: rear
 Maintainer: Gratien Dhaese <gratien.dhaese@gmail.com>
 Architecture: all
 Build-Depends: debhelper
 Files:-
- 0d953ed2a2f1fec084a19dcebe560516 580929 rear_1.13.0.orig.tar.gz
+ 2a75df0c3bbdff1d9366ee1b2a86c9aa 1015547 rear-2.8.tar.gz
