@@ -258,6 +258,20 @@ git log --format="%ae %H %ad%n%s :%n%b%n" --graph | fmt -w 160 -u -t
    shows in a local git clone:
 
 
+In default.conf improve the USB_BOOTLOADER description
+to make it clear that for UEFI with GRUB2 also
+USING_UEFI_BOOTLOADER must be set appropriately,
+see https://github.com/rear/rear/issues/3362
+and https://github.com/rear/rear/pull/3364
+
+
+savelayout: error out on mounted multi-disk BTRFS filesystems (#3365) :
+error out on mounted multi-disk BTRFS filesystems
+because ReaR does not support this scenario at the moment, see
+https://github.com/rear/rear.github.com/pull/22#issuecomment-2540763985
+and https://github.com/rear/rear/issues/2028
+
+
 In 100_copy_as_is.sh error out if symlinking VAR_DIR SHARE_DIR fails (#3356) :
 In build/GNU/Linux/100_copy_as_is.sh
 error out if symlinking VAR_DIR and/or SHARE_DIR fails
