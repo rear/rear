@@ -8,55 +8,50 @@
      * [7]Development
      * [8]Events
 
-                Release Notes for Relax-and-Recover Version 2.8
+                          Release Notes for Relax-and-Recover Version 2.8
 
-   This document contains the latest release notes for the Open Source
-   Software project Relax-and-Recover.
+   This document contains the latest release notes for the Open Source Software project
+   Relax-and-Recover.
 
    Relax-and-Recover website: [9]relax-and-recover.org
 
    GitHub project: [10]github.com/rear
 
-   For the release notes of previous Relax-and-Recover versions see the
-   Relax-and-Recover website release notes:
-   [11]relax-and-recover.org/documentation
+   For the release notes of previous Relax-and-Recover versions see the Relax-and-Recover
+   website release notes: [11]relax-and-recover.org/documentation
 
 Overview
 
-   Relax-and-Recover (abbreviated ReaR) is the de facto standard disaster
-   recovery framework on Linux.
+   Relax-and-Recover (abbreviated ReaR) is the de facto standard disaster recovery framework
+   on Linux.
 
-   It is in particular used on enterprise Linux distributions like Red Hat
-   Enterprise Linux (RHEL) and SUSE Linux Enterprise Server (SLES).
+   It is in particular used on enterprise Linux distributions like Red Hat Enterprise Linux
+   (RHEL) and SUSE Linux Enterprise Server (SLES).
 
-   ReaR is a system administrator tool and framework to create a bootable
-   disaster recovery system image for bare metal disaster recovery with
-   data backup restore on physical or virtual replacement hardware.
+   ReaR is a system administrator tool and framework to create a bootable disaster recovery
+   system image for bare metal disaster recovery with data backup restore on physical or
+   virtual replacement hardware.
 
-   For bare metal disaster recovery the ReaR recovery system is booted on
-   pristine replacement hardware. On replacement hardware first the
-   storage setup/layout is recreated (disk partitioning, filesystems,
-   mount points), then a backup restore program is called to restore the
-   data (system files) into the recreated storage, and finally a boot
-   loader is installed.
+   For bare metal disaster recovery the ReaR recovery system is booted on pristine replacement
+   hardware. On replacement hardware first the storage setup/layout is recreated (disk
+   partitioning, filesystems, mount points), then a backup restore program is called to
+   restore the data (system files) into the recreated storage, and finally a boot loader is
+   installed.
 
-   System administrators use the ReaR framework to set up a disaster
-   recovery procedure as part of their disaster recovery policy (which
-   complements their existing backup policy).
+   System administrators use the ReaR framework to set up a disaster recovery procedure as
+   part of their disaster recovery policy (which complements their existing backup policy).
 
-   ReaR complements backup and restore of data with bare metal disaster
-   recovery. ReaR can also act as local backup software, but ReaR is not a
-   a backup management software. In many enterprise environmentments, data
-   backup and restore happens via dedicated backup software which is
-   integrated by ReaR and used to restore the data onto a replacement
-   system as part of the automated disaster recovery procedure implemented
-   by ReaR.
+   ReaR complements backup and restore of data with bare metal disaster recovery. ReaR can
+   also act as local backup software, but ReaR is not a a backup management software. In many
+   enterprise environmentments, data backup and restore happens via dedicated backup software
+   which is integrated by ReaR and used to restore the data onto a replacement system as part
+   of the automated disaster recovery procedure implemented by ReaR.
 
-   ReaR has support for built-in backup methods using `tar' and `rsync'
-   that are used for backup and restore.
+   ReaR has support for built-in backup methods using `tar' and `rsync' that are used for
+   backup and restore.
 
-   ReaR integrates supports the following 3rd party, also commercial,
-   tools for restoring a backup.
+   ReaR integrates supports the following 3rd party, also commercial, tools for restoring a
+   backup.
 
    The complete list of backup methods (BACKUP=...) is:
      * AVA Dell EMC Avamar / EMC Avamar
@@ -72,9 +67,8 @@ Overview
      * GALAXY11 Commvault Galaxy 11 / Commvault Simpana
      * NBKDC NovaStor DataCenter
      * NBU Veritas NetBackup / Symantec NetBackup
-     * NETFS ReaR built-in backup and restore via rsync or tar to a
-       network file system or to a locally attached backup disk (USB,
-       eSATA, ...)
+     * NETFS ReaR built-in backup and restore via rsync or tar to a network file system or to
+       a locally attached backup disk (USB, eSATA, ...)
      * NFS4SERVER NFS4 server to push data to the rescue system
      * NSR Dell EMC NetWorker / EMC NetWorker / Legato NetWorker
      * OBDR One Button Disaster Recovery via tape
@@ -83,114 +77,98 @@ Overview
      * REQUESTRESTORE Request restore from a human operator
      * RSYNC ReaR built-in backup using rsync via rsync or ssh protocol
      * SESAM [15]SEP Sesam
-     * TSM IBM Storage Protect / Tivoli Storage Manager / IBM Spectrum
-       Protect
+     * TSM IBM Storage Protect / Tivoli Storage Manager / IBM Spectrum Protect
      * VEEAM Veeam Backup
 
-   ReaR integrates well with Disaster Recovery Linux Manager (DRLM)
-   [16]drlm.org, which can act as a central management tool for ReaR
-   deployments.
+   ReaR integrates well with Disaster Recovery Linux Manager (DRLM) [16]drlm.org, which can
+   act as a central management tool for ReaR deployments.
 
 System and Software Requirements
 
-   ReaR is written entirely in the native language for system
-   administration: as shell (bash) scripts. The intent is that experienced
-   users and system admins can adapt or extend the ReaR scripts as needed
-   to make things work for their specific cases.
+   ReaR is written entirely in the native language for system administration: as shell (bash)
+   scripts. The intent is that experienced users and system admins can adapt or extend the
+   ReaR scripts as needed to make things work for their specific cases.
 
    We need Bash version 4 which is standard on current GNU/Linux systems.
 
    The default backup software used by ReaR is standard GNU/tar.
 
-   ReaR is known to work on x86 (32bit and 64bit) and ppc64le
-   architectures. ReaR was also ported to ia64 and arm architectures, but
-   these are rarely tested.
+   ReaR is known to work on x86 (32bit and 64bit) and ppc64le architectures. ReaR was also
+   ported to ia64 and arm architectures, but these are rarely tested.
 
 Support
 
-   Relax-and-Recover (ReaR) is a Free and Open Source Software project
-   under GPLv3 license.
+   Relax-and-Recover (ReaR) is a Free and Open Source Software project under GPLv3 license.
 
-   The creators of ReaR have spend many, many hours in development and
-   support. We may give voluntary support, but only as work-life balance
-   allows it. Some of the maintainers also provide paid support as a
-   commercial service.
+   The creators of ReaR have spend many, many hours in development and support. We may give
+   voluntary support, but only as work-life balance allows it. Some of the maintainers also
+   provide paid support as a commercial service.
 
-   ReaR has a long history (since 2006) and we can therefore only support
-   the latest release version. If you have a problem, we urge you to
-   install the latest stable ReaR version or the snapshot (development)
-   version available on GitHub before submitting an issue. We understand
-   that it is not always possible to install the latest version on
-   hundreds of systems, so we are willing to support previous versions of
-   ReaR when you buy a support contract. We cannot handle all those
-   various support requests on a voluntary base and we give paid projects
-   priority, therefore, we urge our customers to buy a support contract
-   for one or more systems. Buying a support contract actually buys time
-   for the core developers to work on ReaR.
+   ReaR has a long history (since 2006) and we can therefore only support the latest release
+   version. If you have a problem, we urge you to install the latest stable ReaR version or
+   the snapshot (development) version available on GitHub before submitting an issue. We
+   understand that it is not always possible to install the latest version on hundreds of
+   systems, so we are willing to support previous versions of ReaR when you buy a support
+   contract. We cannot handle all those various support requests on a voluntary base and we
+   give paid projects priority, therefore, we urge our customers to buy a support contract for
+   one or more systems. Buying a support contract actually buys time for the core developers
+   to work on ReaR.
 
-   See the Relax-and-Recover website support
-   [17]relax-and-recover.org/support
+   See the Relax-and-Recover website support [17]relax-and-recover.org/support
 
 Supported and Unsupported Operating Systems
 
-   We try to keep our "Test Matrix" wiki pages up-to-date with feedback we
-   receive from the community. For example for ReaR 2.8 see
+   We try to keep our "Test Matrix" wiki pages up-to-date with feedback we receive from the
+   community. For example for ReaR 2.8 see
    [18]https://github.com/rear/rear/wiki/Test-Matrix-ReaR-2.8
 
    ReaR 2.8 is supported on the following Linux operating systems:
      * Fedora 40, 41 (Silverblue not supported)
      * RHEL 7, 8, and 9
-     * RHEL clones (CentOS, Scientific Linux, Alma Linux, Oracle Linux) 7,
-       8, and 9
+     * RHEL clones (CentOS, Scientific Linux, Alma Linux, Oracle Linux) 7, 8, and 9
      * SLES 15
      * openSUSE Leap 15.x
      * Debian 10 and 11
      * Ubuntu 20.04, 22.04, 24.04
      * Arch Linux / Manjaro
 
-   ReaR 2.8 dropped official support for the following Linux operating
-   systems:
+   ReaR 2.8 dropped official support for the following Linux operating systems:
      * Fedora < 39
      * RHEL < 7
-     * RHEL clones (CentOS, Scientific Linux, Alma Linux, Oracle Linux) <
-       7
+     * RHEL clones (CentOS, Scientific Linux, Alma Linux, Oracle Linux) < 7
      * SLES < 15
      * openSUSE Leap < 15.x and older openSUSE versions
      * openSUSE Tumbleweed
      * Debian < 10
      * Ubuntu < 20
 
-   Usually ReaR 2.8 should also work on newer versions of the above listed
-   supported Linux operating systems but sometimes arbitrary failures can
-   happen when software that is used by ReaR (like partitioning tools,
-   filesystem tools, bootloader tools, ISO image creating tools,
-   networking tools, and so on) changes in not fully backward compatible
-   ways or when there are innovations of the basic system (like kernel,
-   storage, bootloader, init, networking, and so on) that are not yet
-   supported by ReaR.
+   Usually ReaR 2.8 should also work on newer versions of the above listed supported Linux
+   operating systems but sometimes arbitrary failures can happen when software that is used by
+   ReaR (like partitioning tools, filesystem tools, bootloader tools, ISO image creating
+   tools, networking tools, and so on) changes in not fully backward compatible ways or when
+   there are innovations of the basic system (like kernel, storage, bootloader, init,
+   networking, and so on) that are not yet supported by ReaR.
 
-   In theory ReaR 2.8 should work on openSUSE Tumbleweed but in practice
-   arbitrary failures could happen at any time because the Tumbleweed
-   distribution is a pure rolling release version of openSUSE containing
-   the latest stable versions of all software (cf.
-   [19]https://en.opensuse.org/Portal:Tumbleweed) so arbitrary changes of
-   any software are possible at any time that could arbitrarily break how
-   ReaR works.
+   In theory ReaR 2.8 should work on openSUSE Tumbleweed but in practice arbitrary failures
+   could happen at any time because the Tumbleweed distribution is a pure rolling release
+   version of openSUSE containing the latest stable versions of all software (cf.
+   [19]https://en.opensuse.org/Portal:Tumbleweed) so arbitrary changes of any software are
+   possible at any time that could arbitrarily break how ReaR works.
 
-   ReaR 2.8 may still work for SLES < 15 and openSUSE Leap < 15.x but it
-   is no longer tested there so arbitrary regressions could appear, in
-   particular on systems with Bash before version 4.
+   ReaR 2.8 may still work for SLES < 15 and openSUSE Leap < 15.x but it is no longer tested
+   there so arbitrary regressions could appear, in particular on systems with Bash before
+   version 4.
 
-   ReaR 2.8 and earlier versions are known to no longer work for the
-   following Linux operating systems:
+   ReaR 2.8 and earlier versions are known to no longer work for the following Linux operating
+   systems:
      * RHEL 5 (and probably also CentOS 5): See issue #1766
      * SLES 9 and 10: See issue #1842
 
-   If you need support for an unsupported Linux operating system you must
-   acquire a ReaR support contract.
+   If you need support for an unsupported Linux operating system you must acquire a ReaR
+   support contract.
 
-   Requests to port ReaR to another operating system (not Linux) can only
-   be achieved with serious sponsoring.
+   Requests to port ReaR to another operating system (not Linux) can only be achieved with
+   serious sponsoring.
 
 Supported and Unsupported Architectures
 
@@ -208,43 +186,38 @@ Supported and Unsupported Architectures
    ReaR 2.8 is known to not support:
      * old PPC (32bit) processors
 
-   If you need to get ReaR working on an architecture that is currently
-   not supported, you can buy consultancy from one of our official
-   developers.
+   If you need to get ReaR working on an architecture that is currently not supported, you can
+   buy consultancy from one of our official developers.
 
 Unsupported Features and Known Issues
 
    We are aware of the following issues and limitations in ReaR 2.8:
-     * BTRFS support is limited to single-device configurations and
-       doesn't cover advanced BTRFS features like spanning file systems
-       over multiple devices, BTRFS built-in RAID and multi disk
-       configurations. (#2028)
+     * BTRFS support is limited to single-device configurations and doesn't cover advanced
+       BTRFS features like spanning file systems over multiple devices, BTRFS built-in RAID
+       and multi disk configurations. (#2028)
      * [20]Oracle ASM is not supported by ReaR. (#3284)
 
-   All of those can be resolved via sponsoring or support contracts,
-   unfortunately we cannot handle all those various requests on a
-   voluntary base. Alternatively we'll be very happy to accept
-   contributions to resolve those issues via GitHub pull requests.
+   All of those can be resolved via sponsoring or support contracts, unfortunately we cannot
+   handle all those various requests on a voluntary base. Alternatively we'll be very happy to
+   accept contributions to resolve those issues via GitHub pull requests.
 
 Relax-and-Recover Releases
 
-   The first release of ReaR, version 1.0, was posted to the web in July
-   2006. This document lists new features, backward incompatible changes,
-   and defect fixes for the current release only, please refer to [21]our
-   documentation for the older release notes for previous versions. Unless
-   otherwise noted releases of ReaR are intended to work reasonably
-   backward compatible with previous versions. In addition to the GPL
-   disclaimer of warranty and liability there is no guarantee that all
-   works backward compatible. In general the older a system is the less
-   likely it is that a newer ReaR version works. For each ReaR version
-   upgrade and for each change of a software that is used by ReaR and for
-   each change of your basic system you must re-validate that your
-   disaster recovery procedure still works for you.
+   The first release of ReaR, version 1.0, was posted to the web in July 2006. This document
+   lists new features, backward incompatible changes, and defect fixes for the current release
+   only, please refer to [21]our documentation for the older release notes for previous
+   versions. Unless otherwise noted releases of ReaR are intended to work reasonably backward
+   compatible with previous versions. In addition to the GPL disclaimer of warranty and
+   liability there is no guarantee that all works backward compatible. In general the older a
+   system is the less likely it is that a newer ReaR version works. For each ReaR version
+   upgrade and for each change of a software that is used by ReaR and for each change of your
+   basic system you must re-validate that your disaster recovery procedure still works for
+   you.
 
 Relax-and-Recover Version 2.8 (December 2024)
 
-   Things like `issue NNNN' or only `#NNNN' refer to the GitHub issues
-   tracker [22]https://github.com/rear/rear/issues
+   Things like `issue NNNN' or only `#NNNN' refer to the GitHub issues tracker
+   [22]https://github.com/rear/rear/issues
 
   New features, bigger enhancements, and possibly backward incompatible changes:
 
@@ -254,34 +227,29 @@ Relax-and-Recover Version 2.8 (December 2024)
           + CommvaultGalaxy 11 (Simpana).
      * Bareos integration was rewritten and updated.
      * New portable mode --portable and OUTPUT=PORTABLE, see
-       [23]https://github.com/rear/rear/blob/master/doc/user-guide/17-Port
-       able-Mode.adoc for more information.
-     * Improved handling and protecting of secrets in ReaR configuration
-       variables. New -e/--expose-secrets option to show secrets in
-       configuration variables.
-     * New non-interactive mode -n/--non-interactive to suppress all
-       interactive questions and answers and facilitate truly unattended
-       recovery automation.
-     * NFS4SERVER as new restore method where the rescue systems starts an
-       NFS4 server to push the data to the rescue system.
+       [23]https://github.com/rear/rear/blob/master/doc/user-guide/17-Portable-Mode.adoc for
+       more information.
+     * Improved handling and protecting of secrets in ReaR configuration variables. New
+       -e/--expose-secrets option to show secrets in configuration variables.
+     * New non-interactive mode -n/--non-interactive to suppress all interactive questions and
+       answers and facilitate truly unattended recovery automation.
+     * NFS4SERVER as new restore method where the rescue systems starts an NFS4 server to push
+       the data to the rescue system.
      * New OpalPBA AuthToken feature.
      * Layout changes and fixes for S/390 DASDs (major code overhauling).
-     * Initial basic barrel support, see
-       [24]https://github.com/aschnell/barrel
-     * By default rear recover wipes disks that get completely recreated
-       via DISKS_TO_BE_WIPED="" in default.conf.
+     * Initial basic barrel support, see [24]https://github.com/aschnell/barrel
+     * By default rear recover wipes disks that get completely recreated via
+       DISKS_TO_BE_WIPED="" in default.conf.
 
   Details (mostly in chronological order - newest topmost):
 
-   Only changes of the ReaR software and its documentation that could be
-   of common interest are listed here. For example changes of ReaR GitHub
-   infrastructure things (like GitHub workflows, actions, CI, and package
-   building) or minor changes in documentation (like unimportant typo
-   fixes) are not listed here. To see all changes use the `git log'
-   command on a local git clone/checkout or view the ReaR 2.8 changes at
-   GitHub [25]https://github.com/rear/rear/commits/rear-2.8 or the current
-   ReaR GitHub master code changes
-   [26]https://github.com/rear/rear/commits/master
+   Only changes of the ReaR software and its documentation that could be of common interest
+   are listed here. For example changes of ReaR GitHub infrastructure things (like GitHub
+   workflows, actions, CI, and package building) or minor changes in documentation (like
+   unimportant typo fixes) are not listed here. To see all changes use the `git log' command
+   on a local git clone/checkout or view the ReaR 2.8 changes at GitHub
+   [25]https://github.com/rear/rear/commits/rear-2.8 or the current ReaR GitHub master code
+   changes [26]https://github.com/rear/rear/commits/master
 
    The following entries are basically excerpts of what the command
 
@@ -332,8 +300,7 @@ See https://github.com/rear/rear/pull/3344
 * Remove incorrect check for SUSE_LINUX:
   On SUSE, the OS_MASTER_VENDOR variable is set to SUSE and not SUSE_LINUX.
   Since the code was still executed on this platform and no problems have been
-  reported so far, let's assume that it is safe and remove this redundant condit
-ion.
+  reported so far, let's assume that it is safe and remove this redundant condition.
   Related: https://github.com/rear/rear/issues/3149#issuecomment-1966068640
 * Set OS_VENDOR to Arch_Linux on Arch Linux:
   Because the plain 'Arch' could be confused with 'Architecture'.
@@ -380,8 +347,7 @@ that makes a backup with duply in particular
 regarding command output which appears in the logfile
 only in debug modes.
 Also stdout to stderr redirections are no longer needed, see
-https://github.com/rear/rear/wiki/Coding-Style#what-to-do-with-stdin-stdout-and-
-stderr
+https://github.com/rear/rear/wiki/Coding-Style#what-to-do-with-stdin-stdout-and-stderr
 
 
 Update default.conf :
@@ -427,8 +393,7 @@ Fixes commit: f4932c1cfe13d4a855bec93c1d3aa0b2b9128c6a
 
 Merge pull request #3312 :
 #3178 improve USB device detection
-#3312 improve the text output; add example on how to fetch NVME RAW_USB_DEVICE d
-evice
+#3312 improve the text output; add example on how to fetch NVME RAW_USB_DEVICE device
 #3312 parse string through uniq for RAW_USB_DEVICE
 
 
@@ -438,8 +403,7 @@ because it conflicts with "rear checklayout", see
 https://github.com/rear/rear/issues/3069
 
 
-In 990_verify_rootfs.sh show relative paths in user messages for files in ROOTFS
-_DIR (#3308) :
+In 990_verify_rootfs.sh show relative paths in user messages for files in ROOTFS_DIR (#3308) :
 In build/default/990_verify_rootfs.sh
 enhanced how files from within the ReaR recovery system
 (i.e. files from within ROOTFS_DIR) are shown to the user:
@@ -497,8 +461,7 @@ see https://github.com/rear/rear/issues/3296
 
 Autodetect secure boot via mokutil and guess the secure boot shim (#3278) :
 * Autodetect Secure Boot status via mokutil and guess the secure boot shim
-* Check that a shim is found when Secure Boot is active, improved diagnostic mes
-sages
+* Check that a shim is found when Secure Boot is active, improved diagnostic messages
 Fixes #3276
 
 
@@ -520,14 +483,12 @@ Automatically include mounted btrfs subvolumes in NETFS backups (#3175) :
 Migrate MAC addresses and interface names in NetworkManager keyfiles
 during network configuration migration (#3179) :
 * Migrate NM keyfiles during network conf migration
-  See https://fedoramagazine.org/converting-networkmanager-from-ifcfg-to-keyfile
-s/
+  See https://fedoramagazine.org/converting-networkmanager-from-ifcfg-to-keyfiles/
   for more details on NetworkManager keyfiles.
   Only MAC addresses and interface names are migrated for now.
   TODO: migrate also IP addresses and routes.
 * Quote name when assembling network files to patch
-  Otherwise patching fails on files with spaces in them, often used by NetworkMa
-nager.
+  Otherwise patching fails on files with spaces in them, often used by NetworkManager.
 * Quote network config filenames in log messages
   - especially useful with file names containing spaces.
 
@@ -553,8 +514,7 @@ files during "rear recover".
 Configure network-online.target in rescue system :
 Services that need network to be configured can be made to be run after
 this target.
-This matches the usual systemd setup: https://www.freedesktop.org/wiki/Software/
-systemd/NetworkTarget/
+This matches the usual systemd setup: https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/
 Intended especially for 3rd party network backup solutions where restore
 needs some daemon running and communicating over network in the rescue
 system.
@@ -575,8 +535,7 @@ Major rework of Baros support provided by the Bareos company
 * autoconfigure client, job and fileset if possible
 * automatic (latest) and manual (bconsole commands) restore
 * improved logging of bconsole output
-* start bareos-fd in restore-only mode to prevent accidentally creating a backup
- of the rescue system
+* start bareos-fd in restore-only mode to prevent accidentally creating a backup of the rescue system
 * generate systemd unit for bareos-fd
 * ensure client is fully functional
 * create bareos specific functions to handle bareos tasks
@@ -584,8 +543,7 @@ Major rework of Baros support provided by the Bareos company
 * remove variables not needed any more
 * show progress information during restore
 * get jobid from restore command from returned result
-* bcommand now works without the "@out" command, which might get removed with Ba
-reos >= 24.
+* bcommand now works without the "@out" command, which might get removed with Bareos >= 24.
 
 
 Merge pull request #3242 :
@@ -702,16 +660,11 @@ Update backup/NETFS/default/500_make_backup.sh
 
 
 change find backup procedure for Veeam V12.1 and later (#3214) :
-Running rear recover on different hardware will not show the backups of the orig
-inal system due to the way
-how Veeam registers the rescue system as a new client (under the same name, but
-with different ID).
-This change handles this situation by searching for all backups for HOSTNAME and
- selecting the newest one.
-Searching for HOSTNAME, which is guaranteed to be a short machine name, also to
-matches the fqdn
-in case the system is registered in Veeam under the fqdn instead of the short ma
-chine name.
+Running rear recover on different hardware will not show the backups of the original system due to the way
+how Veeam registers the rescue system as a new client (under the same name, but with different ID).
+This change handles this situation by searching for all backups for HOSTNAME and selecting the newest one.
+Searching for HOSTNAME, which is guaranteed to be a short machine name, also to matches the fqdn
+in case the system is registered in Veeam under the fqdn instead of the short machine name.
 
 
 enable default ramdisk if not set to satisfy Veeam 12.1ff requirements (#3216) :
@@ -755,10 +708,8 @@ at the same place.
 
 Add veeam support (#3150) :
 Initial VEEAM Bare Metal Recovery integration
-Register the Veeam Linux Agent to Veeam VBRServer with Role of Veeam Restore Ope
-rator
-Query latest Fullbackup, mount and copy it to the original restored operating sy
-stem disks
+Register the Veeam Linux Agent to Veeam VBRServer with Role of Veeam Restore Operator
+Query latest Fullbackup, mount and copy it to the original restored operating system disks
 
 
 Implement portable mode --portable and OUTPUT=PORTABLE
@@ -791,19 +742,16 @@ Add OS version mappings for RHEL 8 and RHEL 9 Remember MASTER version
 and combinations so that RHEL 9.3 will be mapped to Fedora/9
 
 
-Check recover mode before applying remote update Remove double check for recover
-y system :
+Check recover mode before applying remote update Remove double check for recovery system :
 Fixes #3198
 
 
-change /var/run to be a symlink to /run accomodating current systemd requirement
-s and FHS recommendation :
+change /var/run to be a symlink to /run accommodating current systemd requirements and FHS recommendation :
 fixes #3197
 maybe also fixes #3139
 
 
-Set GRUB2_IMAGE_FORMAT correctly in prep/Linux-i386/330_set_efi_arch.sh (#3192)
-:
+Set GRUB2_IMAGE_FORMAT correctly in prep/Linux-i386/330_set_efi_arch.sh (#3192) :
 In prep/Linux-i386/330_set_efi_arch.sh
 set GRUB2_IMAGE_FORMAT=i386-efi in case of i686|i586|i386
 and set GRUB2_IMAGE_FORMAT=x86_64-efi in case of x86_64
@@ -930,8 +878,7 @@ for things like a big ISO image
 Update rescue-and-backup-on-same-ISO-image-example.conf :
 In conf/examples/rescue-and-backup-on-same-ISO-image-example.conf
 removed wrong TMPDIR=/mnt2/tmp
-that is no longer needed since the default is /var/tmp which has enough space, c
-f.
+that is no longer needed since the default is /var/tmp which has enough space, cf.
 https://github.com/rear/rear/pull/3163#issuecomment-1965886579
 
 
@@ -968,8 +915,7 @@ and https://github.com/rear/rear/issues/1298 when vi is not available.
 
 
 Merge pull request #3145 :
-Support saving and restoring hybrid BIOS/UEFI bootloader setup and clean up boot
-loader detection.
+Support saving and restoring hybrid BIOS/UEFI bootloader setup and clean up bootloader detection.
 Abort if BOOTLOADER=GRUB and GRUB 2 is installed:
 BOOTLOADER = "GRUB" used to mean GRUB 2 if GRUB 2 was installed and GRUB
 Legacy if not. With the improved GRUB detection, we don't want this
@@ -985,8 +931,7 @@ recovery only to inform about a deprecated setting would be unhelpful.
 Check that disk is suitable before installing GRUB:
 Not all disks are suitable for GRUB installation into their MBR. For
 example, GPT-partitioned disks need a BIOS boot partition
-( https://www.gnu.org/software/grub/manual/grub/html_node/BIOS-installation.html
- )
+( https://www.gnu.org/software/grub/manual/grub/html_node/BIOS-installation.html )
 and attempting to install GRUB on disks without it makes grub-install
 error out. This is shown in the recovery log on a BIOS system with
 GPT-partitioned disks, where /dev/vdb and the following disks are part
@@ -1004,7 +949,7 @@ and BOOTLOADER neither EFI nor GRUB2-EFI nor ELILO. This will happen
 with hybrid BIOS/UEFI booting: BOOTLOADER will be detected as GRUB2, but
 USING_UEFI_BOOTLOADER=1.
 BOOTLOADER=EFI is now intended as a fallback when no other bootloader is
-found to avod an empty BOOTLOADER value.
+found to avoid an empty BOOTLOADER value.
 Detect GRUB2 when saving layout:
 We used to distinguish between GRUB and GRUB2 when reinstalling the
 bootloader. This meant that the saved bootloader was wrong: GRUB for
@@ -1028,8 +973,7 @@ see https://github.com/rear/rear/pull/3100
 
 
 Merge pull request #3136 :
-Include GRUB tools unconditionally and don't create $VAR_DIR/recovery/bootdisk i
-n prep.
+Include GRUB tools unconditionally and don't create $VAR_DIR/recovery/bootdisk in prep.
 Do not detect GRUB before including GRUB tools:
 When there was a file matching grub* in /boot (e.g. /boot/grub2FAIL),
 the code got confused by the glob pattern intended to match /boot/grub
@@ -1053,8 +997,7 @@ Fix module names with underscore bug: Fixes #3137
 Support Bash assoc arrays and improve rear shell.
 
 
-Let is_write_protected() report devices without device node as not write protect
-ed (#3091) :
+Let is_write_protected() report devices without device node as not write protected (#3091) :
 In lib/write-protect-functions.sh
 let the is_write_protected function report candidate devices
 without device node as not write protected
@@ -1165,8 +1108,7 @@ Remove a forgotten mkdir -p $BUILD_DIR/outputfs/$NETFS_PREFIX command in
 restore/NETFS/default/400_restore_backup.sh.
 Should have been deleted in 7dda23d708854db2d09db1308c159aea667763c0
 with other code that touched the backup location.
-For the YUM method, the same change was already done in 6b9d8d8508183144f56eec92
-b828ae037c03a6f7
+For the YUM method, the same change was already done in 6b9d8d8508183144f56eec92b828ae037c03a6f7
 
 
 Merge pull request #3102 :
@@ -1181,14 +1123,13 @@ In layout/save/default/320_autoexclude.sh tell WHY in DebugPrint message:
 Before (e.g. when something is mounted below tmp):
 "Automatically excluding filesystem /tmp/sdb"
 Now:
-"Automatically excluding filesystem /tmp/sdb (belogs to /tmp in AUTOEXCLUDE_PATH
-)"
+"Automatically excluding filesystem /tmp/sdb (belongs to /tmp in AUTOEXCLUDE_PATH)"
 Noticed while reproducing https://github.com/rear/rear/issues/3101
 
 
 New RECOVERY_COMMANDS array (#3089) :
 New RECOVERY_COMMANDS array (plus RECOVERY_COMMANDS_LABEL)
-to specifiy the "rear recover" commands which are automatically called
+to specify the "rear recover" commands which are automatically called
 after the ReaR recovery system has started up to recreate the system
 in 'auto_recover'/'automatic' or 'unattended' mode.
 By default "rear recover" is called (which was hardcoded before).
@@ -1271,7 +1212,7 @@ when ReaR is run in 'unattended' or 'non-interactive' mode.
 Update default.conf :
 In default.conf describe that
 with MIGRATION_MODE='TRUE' ('TRUE' in uppercase letters)
-one can enfore MIGRATION_MODE also when
+one can enforce MIGRATION_MODE also when
 "rear recover" is run in 'unattended' or 'non-interactive' mode.
 
 
@@ -1393,8 +1334,7 @@ all disks in the layout, so if during layout restoration there happens
 to be a medium in the drive that was empty during layout save, the data
 on the medium would get overwritten and lost. And if there is not medium,
 the layout recreation script would fail.
-See the discussion at https://github.com/rear/rear/issues/2958#issuecomment-1479
-588829
+See the discussion at https://github.com/rear/rear/issues/2958#issuecomment-1479588829
 Validate disk when saving layout :
 Introduce checks for disk usability beyond validating the device name.
 In some cases the device name may be valid, but there are no data,
@@ -1423,8 +1363,7 @@ to avoid needless 3 seconds delay of normal end of program.
 
 
 Merge pull request #3037 :
-Avoid multiple 'set -x' messages for one message output function call (like LogP
-rint):
+Avoid multiple 'set -x' messages for one message output function call (like LogPrint):
 In lib/_input-output-functions.sh use '2>>/dev/$DISPENSABLE_OUTPUT_DEV'
 for all functions that output messages (print on the terminal or log something)
 to avoid that in debugscript mode 'set -x' debug messages
@@ -1490,7 +1429,7 @@ Merge pull request #3030 :
 In format/USB/default/200_check_usb_layout.sh
 error out if USB_DEVICE_FILESYSTEM is invalid
 instead of silently using the default value 'ext3'
-because it is clearer to abort for configuation errors
+because it is clearer to abort for configuration errors
 than silently "correcting" a users's specified value,
 see https://github.com/rear/rear/issues/3029
 
@@ -1517,8 +1456,7 @@ Update 830_copy_kernel_initrd.sh :
 In output/USB/Linux-i386/830_copy_kernel_initrd.sh
 make it clear in the log file that the log file on USB is unfinished
 so when one is looking at such a log file on USB from another user
-one gets not confused why things are missing (e.g. the 'backup' stage) in such a
- log file
+one gets not confused why things are missing (e.g. the 'backup' stage) in such a log file
 cf. https://github.com/rear/rear/issues/3017#issuecomment-1620385835
 
 
@@ -1536,7 +1474,7 @@ See https://github.com/rear/rear/issues/3018
 
 Merge pull request #3019 :
 In lib/sesam-functions.sh
-fix default exlude paths for BACKUP=SESAM
+fix default exclude paths for BACKUP=SESAM
 because the exclude paths did contain a trailing '/'
 so 'tar' did not match ('tar' is picky about exclude items)
 and then things ended up in the ISO image,
@@ -1564,10 +1502,8 @@ SYSLINUX timeout is now a configuration item
 
 
 Merge pull request #2988 :
-Implement non-interactive mode to abort on repeated UserInput calls in the absen
-ce of user interaction.
-Add fully automated restore to REQUESTRESTORE, where ReaR waits for a signal fil
-e to appear.
+Implement non-interactive mode to abort on repeated UserInput calls in the absence of user interaction.
+Add fully automated restore to REQUESTRESTORE, where ReaR waits for a signal file to appear.
 Mention experimental state of non-interactive mode in README.
 
 
@@ -1624,7 +1560,7 @@ by setting such variables always via { VAR=... ; } 2>/dev/null
 to mark them for us and our users that they are meant for secret values
 and also to provide templates how to set such variables properly
 in user config files (e.g. local.conf or site.conf).
-In default.conf incresed the default USER_INPUT_INTERRUPT_TIMEOUT
+In default.conf increased the default USER_INPUT_INTERRUPT_TIMEOUT
 from 10 seconds to 30 seconds because 10 seconds is far too little time
 to read and understand the possibly unexpected UserInput() message
 and then some more time to make a decision whether or not
@@ -1643,15 +1579,13 @@ Add ability to abort NFS4SERVER restore.
 
 
 Merge pull request #2878 :
-Exclusions for Veritas Cluster Filesystem, solving https://access.redhat.com/sol
-utions/3214491 by default.
+Exclusions for Veritas Cluster Filesystem, solving https://access.redhat.com/solutions/3214491 by default.
 
 
 Merge pull request #2963 :
 OBDR fixes for modern systems using hpsa driver:
-Add more details in comment why and how we need to better handle output from lss
-csi.
-Previosly we would search only on fixed character possitions 2 4 6 8 in a line,
+Add more details in comment why and how we need to better handle output from lsscsi.
+Previously we would search only on fixed character positions 2 4 6 8 in a line,
 which on some systems with larger nubmber of devices doesn't have to be correct.
 Search exactly only for 'cciss' and 'hpsa' modules.
 We need ISO to be created already in /var/lib/rear/output/rear-${HOSTNAME}.iso,
@@ -1659,8 +1593,7 @@ so add from ISO ../../ISO/Linux-i386/820_create_iso_image.sh.
 Subsequentlyt we'll need to rename writing of ISO to tape to later stage,
 so rename it from 810_write_image.sh to 840_write_image.sh.
 Refactor how we'll look for a device.
-In case of large number of connected devices f.x. [6:0:15:0] tape HP Ultrium 5-S
-CSI Y6PW /dev/st11
+In case of large number of connected devices f.x. [6:0:15:0] tape HP Ultrium 5-SCSI Y6PW /dev/st11
 devices might not be recognized properly.
 HP cciss driver was replaced by hpsa driver so consider it when checking tapes.
 
@@ -1746,16 +1679,13 @@ or why several things got mounted stacked one over the other.
 
 Merge pull request #2937 :
 Add support for Commvault Galaxy 11
-New feature DISABLE_DEPRECATION_ERRORS to error out for deprecated code paths wi
-th option to override this.
-New variable USE_RAMDISK configures rescue system to use a ramdisk for tools tha
-t need to check for free disk space.
+New feature DISABLE_DEPRECATION_ERRORS to error out for deprecated code paths with option to override this.
+New variable USE_RAMDISK configures rescue system to use a ramdisk for tools that need to check for free disk space.
 Rework GALAXY11 to use ramdisk feature and set PATH globally.
 Use Ramdisk for older Galaxy versions too.
 Improve rear shell to stay in SHARE_DIR after using Source and add show helper.
 Support multiple -C options and log runtime configuration.
-Enable running from checkout and specify -C /etc/rear/local.conf to use host Rea
-R configuration.
+Enable running from checkout and specify -C /etc/rear/local.conf to use host ReaR configuration.
 
 
 Update 100_include_partition_code.sh :
@@ -1924,8 +1854,7 @@ see https://github.com/rear/rear/pull/2910
 
 Merge pull request #2905 :
 OUTPUT=USB: Use target=i386-pc for legacy BIOS GRUB2 install on EFI systems:
-grub-install defaults to '--target=x86_64-efi' when the system is booted with EF
-I.
+grub-install defaults to '--target=x86_64-efi' when the system is booted with EFI.
 So setting a legacy BIOS target is needed when the system is booted with EFI.
 See https://github.com/rear/rear/issues/2883
 
@@ -2043,10 +1972,8 @@ by using '####' as indicators where a block begins and ends.
 
 
 Merge pull request #2868 :
-In the UserInput function drain stdin if stdin is a terminal (i.e. in interactiv
-e mode):
-The primarily intended use case is to discard possibly already existing characte
-rs
+In the UserInput function drain stdin if stdin is a terminal (i.e. in interactive mode):
+The primarily intended use case is to discard possibly already existing characters
 (in particular ENTER keystrokes) from stdin to avoid that
 when the user had accidentally hit ENTER more than once
 in (or after) a previous UserInput dialog (or another dialog)
@@ -2079,8 +2006,7 @@ and https://github.com/rear/rear/issues/799
 
 
 Update _input-output-functions.sh :
-Since https://github.com/rear/rear/commit/74de0966a5f21fb41531e9d4711932b6df8385
-6a
+Since https://github.com/rear/rear/commit/74de0966a5f21fb41531e9d4711932b6df83856a
 the default USER_INPUT_INTERRUPT_TIMEOUT is 10 seconds
 so set the same default value in the UserInput() function.
 
