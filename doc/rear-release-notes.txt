@@ -133,7 +133,7 @@ Supported and Unsupported Operating Systems
      * Arch Linux / Manjaro
 
    ReaR 2.8 dropped official support for the following Linux operating systems:
-     * Fedora < 39
+     * Fedora < 40
      * RHEL < 7
      * RHEL clones (CentOS, Scientific Linux, Alma Linux, Oracle Linux) < 7
      * SLES < 15
