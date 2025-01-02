@@ -44,7 +44,11 @@ case "$(basename ${BLOCKCLONE_PROG})" in
         # Have "bs=1M" before BLOCKCLONE_PROG_OPTS because when BLOCKCLONE_PROG_OPTS
         # contains already e.g. "bs=4k" (cf. doc/user-guide/12-BLOCKCLONE.adoc)
         # the last of the two "bs=..." settings wins (at least with 'dd' on openSUSE Leap 15.1)
-        dd bs=1M $BLOCKCLONE_PROG_OPTS if=$BLOCKCLONE_SOURCE_DEV of=$backuparchive
+	if [[ -z  "$BLOCKCLONE_PROG_COMPRESS" ]] ; then
+            dd bs=1M $BLOCKCLONE_PROG_OPTS if=$BLOCKCLONE_SOURCE_DEV of=$backuparchive
+	else
+            dd bs=1M $BLOCKCLONE_PROG_OPTS if=$BLOCKCLONE_SOURCE_DEV | $BLOCKCLONE_PROG_COMPRESS $BLOCKCLONE_PROG_COMPRESS_OPTIONS > $backuparchive
+	fi
     ;;
 esac
 

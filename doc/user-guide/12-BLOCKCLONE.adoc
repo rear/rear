@@ -745,3 +745,73 @@ The recovered machine can now be rebooted. When prompted for the passphrase to
  decrypt your filesystem, you should now provide the original one (the one you used 
  at the time the backup was made), and NOT the new one you typed during the recover
  phase.
+
+=== 6. Backup/restore of Raspberry Pi Linux to an NFS share using `dd`
+
+==== Configuration
+
+In this example we will make an image of the complete disk of a Raspberry Pi system using `dd`.
+As this will be done on-line we cannot unmount the boot/root disk device which is in our example
+/dev/sda.
+
+We do not care about global options, therefore, the `local.conf` and `site.conf` may be empty.
+We use the `blockclone.conf` file only and you will find an example in file 
+`/usr/share/rear/conf/examples/blockclone.conf`.
+
+The `blockclone.conf` file:
+```
+# The OUTPUT must be defined - PXE is currently the only one working with RPi
+OUTPUT=PXE
+# However, when you do not care about actually using PXE to restore define the OUTPUT_URL=null
+OUTPUT_URL=null
+# The location to store the disk image of our RPi - in this example on our local NAS storage
+BACKUP_URL=nfs://nas/volume1/RearSpace
+
+BACKUP=BLOCKCLONE                                        # Define BLOCKCLONE as backup method
+BACKUP_PROG_ARCHIVE="$(hostname -s)"                     # Name of image file (usually the hostname)
+BACKUP_PROG_SUFFIX=".dd.img"                             # Suffix of image file (dd.img indicates we use 'dd')
+BACKUP_PROG_COMPRESS_SUFFIX=""                           # Don't use additional suffixes (keep this one EMPTY)
+
+BLOCKCLONE_PROG="dd"                                     # Use dd for image creation
+BLOCKCLONE_PROG_OPTS="bs=4k"                             # Additional options that will be passed to dd
+BLOCKCLONE_PROG_COMPRESS="gzip"                          # Compress the image (optional - use gzip, ...)
+BLOCKCLONE_PROG_COMPRESS_OPTIONS="-9"                    # Options needed by the compress program (default empty)
+BLOCKCLONE_SOURCE_DEV="/dev/sda"                         # Device that should be backed up
+
+# We will add the compress suffix to the BACKUP_PROG_SUFFIX variable when
+# variable BLOCKCLONE_PROG_COMPRESS was defined
+case $BLOCKCLONE_PROG_COMPRESS in
+   gzip) BACKUP_PROG_SUFFIX+=".gz"  ;;
+     xz) BACKUP_PROG_SUFFIX+=".xz"  ;;
+  bzip2) BACKUP_PROG_SUFFIX+=".bz2" ;;
+   zstd) BACKUP_PROG_SUFFIX+=".zst" ;;
+esac
+
+# We do not care about the MBR on Raspberry PI as we 'dd' the complete disk image
+BLOCKCLONE_SAVE_MBR_DEV=""                               # Device where partitioning information is stored (optional)
+BLOCKCLONE_MBR_FILE=""                                   # Output filename for boot strap code
+BLOCKCLONE_PARTITIONS_CONF_FILE=""                       # Output filename for partition configuration
+
+# We need to define "yes" with variable BLOCKCLONE_ALLOW_MOUNTED as device is mounted when we run ReaR
+BLOCKCLONE_ALLOW_MOUNTED="yes"                           # Device can be mounted during backup (default NO)
+```
+
+==== Running backuponly to save the RPi image
+
+As we are only interested in backup only we use the special option `mkbackuponly` with the ReaR command:
+
+```
+# rear -v -C blockclone mkbackuponly
+```
+
+==== Recover the RPi image on a fresh/new USB device
+
+If your NAS device has an USB port you can do it directly on your NAS system. In our example the /dev/sdq has
+an USB stick inserted with the same size as the original disk device of the RPi system.
+
+```
+# BACKUP_PROG_ARCHIVE="use the hostname of the RPi"
+# gzip -dc /volume1/RearSpace/$BACKUP_PROG_ARCHIVE/$BACKUP_PROG_ARCHIVE.dd.img.gz | dd bs=4k of=/dev/sdq
+```
+
+Remember, replace the copied RPi disk image (the USB stick) on the RPi itself and you are ready to boot from it.
