@@ -21,7 +21,7 @@ readonly MASTER_PID=$$
 # 'source' wrapper function that should implement trustworthy sourcing
 # see https://github.com/rear/rear/issues/3259
 # therein in particular https://github.com/rear/rear/issues/3259#issuecomment-2385745545
-# which is for now only a dummy to test hor far sourcing via a 'source' wrapper function works at all
+# which is for now only a dummy to test how far sourcing via a 'source' wrapper function works at all
 # see also https://github.com/rear/rear/issues/3319#issuecomment-2363556217
 function source () {
     Debug "Trustworthy sourcing '$*'"
