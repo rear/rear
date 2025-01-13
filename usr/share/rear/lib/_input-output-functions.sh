@@ -18,6 +18,16 @@ LF=$'\n'
 # Keep PID of main process (i.e. the main script that the user had launched as 'rear'):
 readonly MASTER_PID=$$
 
+# 'source' wrapper function that should implement trustworthy sourcing
+# see https://github.com/rear/rear/issues/3259
+# therein in particular https://github.com/rear/rear/issues/3259#issuecomment-2385745545
+# which is for now only a dummy to test hor far sourcing via a 'source' wrapper function works at all
+# see also https://github.com/rear/rear/issues/3319#issuecomment-2363556217
+function source () {
+    Debug "Trustworthy sourcing '$*'"
+    builtin source "$@" || Debug "Trustworthy 'source $*' results exit code $?"
+}
+
 # Collect exit tasks in this array.
 # Without the empty string as initial value ${EXIT_TASKS[@]} would be an unbound variable
 # that would result an error exit if 'set -eu' is used:
