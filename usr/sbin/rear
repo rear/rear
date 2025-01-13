@@ -50,6 +50,38 @@ function apply_bash_flags_and_options_commands () {
 #   apply_bash_flags_and_options_commands "$INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS"
 readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_commands )"
 
+# Where users should report bugs:
+readonly BUG_REPORT_SITE="https://github.com/rear/rear/issues"
+
+# To be on the safe side forbid careless/insecure sourcing
+# via plain 'source' and '.' from the very beginning
+# see in general https://relax-and-recover.org/documentation/security-architecture
+# and see in particular https://github.com/rear/rear/issues/3259
+# and https://github.com/rear/rear/issues/3259#issuecomment-2385745545
+# and https://github.com/rear/rear/issues/3319#issuecomment-2360546784
+# and https://github.com/rear/rear/issues/3319#issuecomment-2363556217
+function . () {
+    echo -e "ERROR: BUG in $PRODUCT\nForbidden usage of '.' in\n  . $*\nPlease report it at $BUG_REPORT_SITE" >&2
+    exit 1
+}
+# To be on the safe side sourcing via '.' is kept always forbidden in ReaR because
+# it is basically impossible to reliably find all code places where '.' is used for sourcing
+# see https://github.com/rear/rear/issues/3260#issuecomment-2248252572
+# In contrast to sourcing via '.' for sourcing via 'source'
+# later (see below) trustworthy sourcing gets set up
+# by replacing this 'source' forbid function by a 'source' wrapper function
+# in lib/_input-output-functions.sh which implements trustworthy sourcing
+# which is then the only allowed way to normally source a file in ReaR.
+# For exceptional cases 'builtin source' can still be used to source files
+# that are known to be trustworthy (e.g. with hardcoded trustworthy path).
+# The point is that we can reliably find all code places where 'builtin' is used
+# so we can reliably check such exceptional cases at any time to keep ReaR secure
+# (in particular we can also find where the undesirable form 'builtin .' is used):
+function source () {
+    echo -e "ERROR: BUG in $PRODUCT\nForbidden usage of 'source' in\n  source $*\nPlease report it at $BUG_REPORT_SITE" >&2
+    exit 1
+}
+
 # Enable as needed for development of fail-safe code:
 # set -ue -o pipefail
 # set -xue -o pipefail
@@ -64,9 +96,6 @@ readonly PRODUCT="Relax-and-Recover"
 readonly PROGRAM=${0##*/}
 readonly VERSION=2.8
 readonly RELEASE_DATE="2024-12-19"
-
-# Where users should report bugs:
-readonly BUG_REPORT_SITE="https://github.com/rear/rear/issues"
 
 # Set machine readable and human readable start date and time values.
 # START_SECONDS is set to have a single fixed point in time
@@ -378,8 +407,11 @@ readonly TMPDIR_ORIG="${TMPDIR-}"
 # Include default config before the RUNTIME_LOGFILE value is set because
 # setting the right RUNTIME_LOGFILE value requires values from default.conf
 # in particular the default LOGFILE value and the values of the
-# LOCKLESS_WORKFLOWS and SIMULTANEOUS_RUNNABLE_WORKFLOWS arrays:
-if ! source $SHARE_DIR/conf/default.conf ; then
+# LOCKLESS_WORKFLOWS and SIMULTANEOUS_RUNNABLE_WORKFLOWS arrays.
+# SHARE_DIR/conf/default.conf is considered trustworthy to be sourced
+# because ReaR's SHARE_DIR is considered a trustworthy directory
+# see https://github.com/rear/rear/issues/3259#issuecomment-2385745545
+if ! builtin source $SHARE_DIR/conf/default.conf ; then
     echo -e "ERROR: BUG in $PRODUCT\nFailed to source $SHARE_DIR/conf/default.conf\nPlease report it at $BUG_REPORT_SITE" >&2
     exit 1
 fi
@@ -523,18 +555,25 @@ fi
 # the original STDIN STDOUT and STDERR file descriptors are saved as fd6 fd7 and fd8
 # so that ReaR functions for actually intended user messages can use fd7 and fd8
 # to show messages to the user regardless where STDOUT and STDERR are redirected
-# and fd6 to get input from the user regardless where STDIN is redirected:
-if ! source $SHARE_DIR/lib/_input-output-functions.sh ; then
+# and fd6 to get input from the user regardless where STDIN is redirected.
+# SHARE_DIR/lib/_input-output-functions.sh is considered trustworthy to be sourced
+# because ReaR's SHARE_DIR is considered a trustworthy directory
+# see https://github.com/rear/rear/issues/3259#issuecomment-2385745545
+if ! builtin source $SHARE_DIR/lib/_input-output-functions.sh ; then
     echo -e "ERROR: BUG in $PRODUCT\nFailed to source $SHARE_DIR/lib/_input-output-functions.sh\nPlease report it at $BUG_REPORT_SITE" >&2
     exit 1
 fi
-
 # Via source usr/share/rear/lib/_input-output-functions.sh
 # those final exit tasks are now set to be executed (via bash EXIT trap) in the following order:
 # "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WORKFLOW failed, check $RUNTIME_LOGFILE for details' 1>&8"
 # "exec 8>&-"
 # "exec 7>&-"
 # "exec 6<&-"
+# Via source usr/share/rear/lib/_input-output-functions.sh
+# the above 'source' forbid function is replaced by a 'source' wrapper function
+# which implements trustworthy sourcing so from now on 'source' can be used
+# to source a file provided the sourced file is considered trustworthy
+# see https://github.com/rear/rear/issues/3259#issuecomment-2385745545
 
 # Set RECOVERY_MODE when we are running inside a rescue/recovery system
 # which is normally ReaR's recovery system or alternatively in PORTABLE mode
