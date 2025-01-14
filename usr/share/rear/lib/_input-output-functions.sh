@@ -25,7 +25,8 @@ readonly MASTER_PID=$$
 # see also https://github.com/rear/rear/issues/3319#issuecomment-2363556217
 function source () {
     Debug "Trustworthy sourcing '$*'"
-    builtin source "$@" || Debug "Trustworthy 'source $*' results exit code $?"
+    # The return code of the 'source' wrapper function is the return code of the 'source' builtin:
+    builtin source "$@"
 }
 
 # Collect exit tasks in this array.
