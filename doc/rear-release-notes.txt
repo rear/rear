@@ -133,7 +133,7 @@ Supported and Unsupported Operating Systems
      * Arch Linux / Manjaro
 
    ReaR 2.8 dropped official support for the following Linux operating systems:
-     * Fedora < 39
+     * Fedora < 40
      * RHEL < 7
      * RHEL clones (CentOS, Scientific Linux, Alma Linux, Oracle Linux) < 7
      * SLES < 15
@@ -657,7 +657,7 @@ Overhauled backup/NETFS/default/400_create_include_exclude_files.sh
   see https://github.com/rear/rear/pull/3177#issuecomment-1985926458
   and https://github.com/rear/rear/issues/3217#issue-2277985295
 * Report suspicious cases as LogPrintError to have the user at least informed.
-* Remove duplicates in backup-[in/ex]clude.txt but keep the ordering
+* Remove duplicates in backup-include.txt and backup-exclude.txt but keep the ordering
   to avoid possibly unwanted and unexpected subtle consequences
   see https://github.com/rear/rear/pull/3175#issuecomment-1985382738
 * Verify that at least '/' is in backup-include.txt
