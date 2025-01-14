@@ -7,12 +7,12 @@
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 3 of the License, or
 #    (at your option) any later version.
-
+#
 #    Relax-and-Recover is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-
+#
 #    You should have received a copy of the GNU General Public License
 #    along with Relax-and-Recover; if not, write to the Free Software
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -20,10 +20,28 @@
 # Authors:
 # See https://github.com/rear/rear/graphs/contributors for full list of authors
 
-# the following Bash minimum version check is so essential that it has to come first
+# Enable as needed for development of fail-safe code:
+# set -ue -o pipefail
+# set -xue -o pipefail
+# set -xvue -o pipefail
+# Cf. the Relax-and-Recover Coding Style
+# https://github.com/rear/rear/wiki/Coding-Style
+# that reads (excerpt - dated 18. Nov. 2015):
+# "TODO Use set -eu to die from unset variables and unhandled errors"
+
+# Versioning:
+readonly PRODUCT="Relax-and-Recover"
+readonly PROGRAM=${0##*/}
+readonly VERSION=2.8
+readonly RELEASE_DATE="2024-12-19"
+
+# Where users should report bugs:
+readonly BUG_REPORT_SITE="https://github.com/rear/rear/issues"
+
+# The following Bash minimum version check is so essential that it has to come first
 # and that is why it doesn't use anything from our framework or functions.
 ((BASH_VERSINFO[0] >= 4)) || {
-    echo "ERROR: ReaR needs bash version 4 or higher" >&2
+    echo "ERROR: $PRODUCT needs bash version 4 or higher" >&2
     exit 1
 }
 
@@ -49,9 +67,6 @@ function apply_bash_flags_and_options_commands () {
 # so that exactly the initial bash flags and options can be restored if needed via
 #   apply_bash_flags_and_options_commands "$INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS"
 readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_commands )"
-
-# Where users should report bugs:
-readonly BUG_REPORT_SITE="https://github.com/rear/rear/issues"
 
 # To be on the safe side forbid careless/insecure sourcing
 # via plain 'source' and '.' from the very beginning
@@ -81,21 +96,6 @@ function source () {
     echo -e "ERROR: BUG in $PRODUCT\nForbidden usage of 'source' in\n  source $*\nPlease report it at $BUG_REPORT_SITE" >&2
     exit 1
 }
-
-# Enable as needed for development of fail-safe code:
-# set -ue -o pipefail
-# set -xue -o pipefail
-# set -xvue -o pipefail
-# Cf. the Relax-and-Recover Coding Style
-# https://github.com/rear/rear/wiki/Coding-Style
-# that reads (excerpt - dated 18. Nov. 2015):
-# "TODO Use set -eu to die from unset variables and unhandled errors"
-
-# Versioning
-readonly PRODUCT="Relax-and-Recover"
-readonly PROGRAM=${0##*/}
-readonly VERSION=2.8
-readonly RELEASE_DATE="2024-12-19"
 
 # Set machine readable and human readable start date and time values.
 # START_SECONDS is set to have a single fixed point in time
