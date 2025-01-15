@@ -46,9 +46,9 @@ function source () {
         return 1
     fi
     # Ensure source file owner is 'root' (unless we are running from checkout where REAR_DIR_PREFIX is set):
-    #test "$REAR_DIR_PREFIX" || is_owner_root "$source_file" || Error "Forbidden to 'source $source_file' because its owner is not 'root'"
+    test "$REAR_DIR_PREFIX" || is_owner_root "$source_file" || Error "Forbidden to 'source $source_file' because its owner is not 'root'"
     # Ensure source file owner is 'root' (regardless whether or not we are running from checkout):
-    is_owner_root "$source_file" || Error "Forbidden to 'source $source_file' because its owner is not 'root'"
+    #is_owner_root "$source_file" || Error "Forbidden to 'source $source_file' because its owner is not 'root'"
     # Save the bash flags and options settings so we can restore them after sourcing the source file:
     { saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # The actual work (source the source file):
