@@ -18,15 +18,56 @@ LF=$'\n'
 # Keep PID of main process (i.e. the main script that the user had launched as 'rear'):
 readonly MASTER_PID=$$
 
-# 'source' wrapper function that should implement trustworthy sourcing
+# Trustworthy sourcing helper function
+# which is for now only a simple proof of concept to test how far it works at all:
+function is_owner_root () {
+    local file="$1"
+    local owner_name=""
+    owner_name="$( stat -c %U "$file" )" || Error "is_owner_root(): 'stat -c %U $file' failed"
+    test "$owner_name" = "root"
+}
+
+# 'source' wrapper function that it intended to implement trustworthy sourcing
 # see https://github.com/rear/rear/issues/3259
 # therein in particular https://github.com/rear/rear/issues/3259#issuecomment-2385745545
-# which is for now only a dummy to test how far sourcing via a 'source' wrapper function works at all
+# which is for now only a simple proof of concept to test how far it works at all
 # see also https://github.com/rear/rear/issues/3319#issuecomment-2363556217
 function source () {
+    local source_file="$1"
+    local source_return_code=0
+    local saved_bash_flags_and_options_commands=""
     Debug "Trustworthy sourcing '$*'"
-    # The return code of the 'source' wrapper function is the return code of the 'source' builtin:
+    # Ensure source file is a regular file (or a link to a regular file).
+    # I.e. skip non-regular files like directories, device nodes, or file not found.
+    # It also returns here when no source file was specified (i.e. when $1 is empty).
+    if ! test -f "$source_file" ; then
+        # Show the source file name as '$source_file' to make it clear when it is empty:
+        Debug "Skipped sourcing '$source_file' because it is not a regular file"
+        return 1
+    fi
+    # Ensure source file owner is 'root' (unless we are running from checkout where REAR_DIR_PREFIX is set):
+    #test "$REAR_DIR_PREFIX" || is_owner_root "$source_file" || Error "Forbidden to 'source $source_file' because its owner is not 'root'"
+    # Ensure source file owner is 'root' (regardless whether or not we are running from checkout):
+    is_owner_root "$source_file" || Error "Forbidden to 'source $source_file' because its owner is not 'root'"
+    # Save the bash flags and options settings so we can restore them after sourcing the source file:
+    { saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # The actual work (source the source file):
     builtin source "$@"
+    # The return code of the 'source' wrapper function is the return code of the 'source' builtin:
+    source_return_code=$?
+    test $source_return_code -eq 0 || Debug "'source $*' returns $source_return_code"
+    # Restore the bash flags and options settings to what they have been before sourcing the source file:
+    { apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # Ensure that after each sourced file we are back in our usual working directory
+    # that is WORKING_DIR="$( pwd )" when usr/sbin/rear was launched
+    # cf. https://github.com/rear/rear/issues/2461
+    # Quoting "$WORKING_DIR" is needed to make it behave fail-safe if WORKING_DIR is empty
+    # because cd "" succeeds without changing the current directory
+    # in contrast to plain cd which changes to the home directory (usually /root)
+    # cf. https://github.com/rear/rear/pull/2478#issuecomment-673500099
+    cd "$WORKING_DIR" || Error "Failed to 'cd $WORKING_DIR'"
+    # Return the return value of the actual work (source the source file):
+    return $source_return_code
 }
 
 # Collect exit tasks in this array.
