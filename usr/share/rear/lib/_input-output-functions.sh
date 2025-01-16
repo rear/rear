@@ -18,58 +18,6 @@ LF=$'\n'
 # Keep PID of main process (i.e. the main script that the user had launched as 'rear'):
 readonly MASTER_PID=$$
 
-# Trustworthy sourcing helper function
-# which is for now only a simple proof of concept to test how far it works at all:
-function is_owner_root () {
-    local file="$1"
-    local owner_name=""
-    owner_name="$( stat -c %U "$file" )" || Error "is_owner_root(): 'stat -c %U $file' failed"
-    test "$owner_name" = "root"
-}
-
-# 'source' wrapper function that it intended to implement trustworthy sourcing
-# see https://github.com/rear/rear/issues/3259
-# therein in particular https://github.com/rear/rear/issues/3259#issuecomment-2385745545
-# which is for now only a simple proof of concept to test how far it works at all
-# see also https://github.com/rear/rear/issues/3319#issuecomment-2363556217
-function source () {
-    local source_file="$1"
-    local source_return_code=0
-    local saved_bash_flags_and_options_commands=""
-    Debug "Trustworthy sourcing '$*'"
-    # Ensure source file is a regular file (or a link to a regular file).
-    # I.e. skip non-regular files like directories, device nodes, or file not found.
-    # It also returns here when no source file was specified (i.e. when $1 is empty).
-    if ! test -f "$source_file" ; then
-        # Show the source file name as '$source_file' to make it clear when it is empty:
-        Debug "Skipped sourcing '$source_file' because it is not a regular file"
-        return 1
-    fi
-    # Ensure source file owner is 'root' (unless we are running from checkout where REAR_DIR_PREFIX is set):
-    test "$REAR_DIR_PREFIX" || is_owner_root "$source_file" || Error "Forbidden to 'source $source_file' because its owner is not 'root'"
-    # Ensure source file owner is 'root' (regardless whether or not we are running from checkout):
-    #is_owner_root "$source_file" || Error "Forbidden to 'source $source_file' because its owner is not 'root'"
-    # Save the bash flags and options settings so we can restore them after sourcing the source file:
-    { saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
-    # The actual work (source the source file):
-    builtin source "$@"
-    # The return code of the 'source' wrapper function is the return code of the 'source' builtin:
-    source_return_code=$?
-    test $source_return_code -eq 0 || Debug "'source $*' returns $source_return_code"
-    # Restore the bash flags and options settings to what they have been before sourcing the source file:
-    { apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
-    # Ensure that after each sourced file we are back in our usual working directory
-    # that is WORKING_DIR="$( pwd )" when usr/sbin/rear was launched
-    # cf. https://github.com/rear/rear/issues/2461
-    # Quoting "$WORKING_DIR" is needed to make it behave fail-safe if WORKING_DIR is empty
-    # because cd "" succeeds without changing the current directory
-    # in contrast to plain cd which changes to the home directory (usually /root)
-    # cf. https://github.com/rear/rear/pull/2478#issuecomment-673500099
-    cd "$WORKING_DIR" || Error "Failed to 'cd $WORKING_DIR'"
-    # Return the return value of the actual work (source the source file):
-    return $source_return_code
-}
-
 # Collect exit tasks in this array.
 # Without the empty string as initial value ${EXIT_TASKS[@]} would be an unbound variable
 # that would result an error exit if 'set -eu' is used:
@@ -1045,8 +993,93 @@ function LogPrintIfError () {
     fi
 }
 
+# Trustworthy sourcing functions:
+# Verify file owner is 'root'
+# see https://relax-and-recover.org/documentation/security-architecture
+function is_owner_root () {
+    local file="$1"
+    local owner_name=""
+    # Do not error out in 'stat' when it is neither a regular file nor a link to a regular file:
+    test -f "$file" || return 1
+    # '-L' forces stat to follow symlinks (and error out if that fails):
+    owner_name="$( stat -L -c %U "$file" )" || Error "is_owner_root(): 'stat -L -c %U $file' failed"
+    test "$owner_name" = "root"
+}   
+# Verify file path is trustworthy
+# see https://github.com/rear/rear/issues/3259#issuecomment-2385745545
+function is_trustworthy_path () {
+    local file="$1"
+    local path=""
+    # Trailing / is required to ensure e.g. /libanywhere/ is not falsely regarded as trustworthy path
+    # so in particular /lib64/ is currently not considered as trustworthy path.
+    # SHARE_DIR is first to return early from the 'for' loop because this is the most often case.
+    # CONFIG_DIR is used to source e.g. etc/rear/local.conf
+    # VAR_DIR is used by "rear recover" to source /var/lib/rear/layout/diskrestore.sh in 200_run_layout_code.sh
+    local trustworthy_paths=( "$SHARE_DIR/" "$CONFIG_DIR/" "$VAR_DIR/" '/etc/' '/lib/' '/usr/' )
+    # All files below a Git checkout directory are considered to be trustworthy
+    # see https://relax-and-recover.org/documentation/security-architecture
+    test "$REAR_DIR_PREFIX" && trustworthy_paths+=( "$REAR_DIR_PREFIX/" )
+    local trustworthy_path=""
+    # Do not error out in 'readlink' when it is neither a regular file nor a link to a regular file:
+    test -f "$file" || return 1
+    # Get the full path of the actual file (i.e. with leading / and symlinks resolved)
+    # e.g. /etc/os-release is a symbolic link to /usr/lib/os-release (at least on openSUSE Leap 15.6):
+    path="( readlink -e $file )" || Error "is_trustworthy_path(): 'readlink -e $file' failed"
+    for trustworthy_path in "${trustworthy_paths[@]}" ; do
+        # Skip when trustworthy_path is empty (otherwise the [[ expression ]] would be falsely true):
+        test "$trustworthy_path" || continue
+        [[ $file =~ ^$trustworthy_path ]] && return 0
+    done
+    # The [[ expression ]] is the last command so it returns 1 when file does not start with a trustworthy path.
+}
+# The actual 'source' wrapper function that is intended to implement trustworthy sourcing
+# see https://github.com/rear/rear/issues/3259
+# which is for now only a simple proof of concept to test how far it works at all
+# see also https://github.com/rear/rear/issues/3319#issuecomment-2363556217
+function source () {
+    local source_file="$1"
+    local source_return_code=0
+    local saved_bash_flags_and_options_commands=""
+    Debug "Trustworthy sourcing '$*'"
+    # Ensure source file is a regular file or a link to a regular file.
+    # I.e. skip non-regular files like directories, device nodes, or file not found.
+    # It also returns here when no source file was specified (i.e. when $1 is empty).
+    if ! test -f "$source_file" ; then
+        # Show the source file name as '$source_file' to make it clear when it is empty:
+        Debug "Skipped sourcing '$source_file' because it is not a regular file"
+        return 1
+    fi
+    # Ensure source file owner is 'root'
+    # unless we are running from Git checkout where REAR_DIR_PREFIX is set
+    # see https://github.com/rear/rear/pull/3379#issuecomment-2593491758
+    # and unless we are running in PORTABLE mode
+    # see https://relax-and-recover.org/documentation/security-architecture
+    test "$REAR_DIR_PREFIX" || test "$PORTABLE" || is_owner_root "$source_file" || Error "Forbidden to 'source $source_file' because its owner is not 'root'"
+    # Ensure source file starts with a trustworthy path:
+    is_trustworthy_path "$source_file" || Error "Forbidden to 'source $source_file' because it is not below a trustworthy directory"
+    # Save the bash flags and options settings so we can restore them after sourcing the source file:
+    { saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # The actual work (source the source file):
+    builtin source "$@"
+    # The return code of the 'source' wrapper function is the return code of the 'source' builtin:
+    source_return_code=$?
+    test $source_return_code -eq 0 || Debug "'source $*' returns $source_return_code"
+    # Restore the bash flags and options settings to what they have been before sourcing the source file:
+    { apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # Ensure that after each sourced file we are back in our usual working directory
+    # that is WORKING_DIR="$( pwd )" when usr/sbin/rear was launched
+    # cf. https://github.com/rear/rear/issues/2461
+    # Quoting "$WORKING_DIR" is needed to make it behave fail-safe if WORKING_DIR is empty
+    # because cd "" succeeds without changing the current directory
+    # in contrast to plain cd which changes to the home directory (usually /root)
+    # cf. https://github.com/rear/rear/pull/2478#issuecomment-673500099
+    cd "$WORKING_DIR" || Error "Failed to 'cd $WORKING_DIR'"
+    # Return the return value of the actual work (source the source file):
+    return $source_return_code
+}
+
+# Cleanup build area:
 function cleanup_build_area_and_end_program () {
-    # Cleanup build area
     local mounted_in_BUILD_DIR
     Log "Finished $PROGRAM $WORKFLOW in $(( $( date +%s ) - START_SECONDS )) seconds"
     # is_true is in lib/global-functions.sh which is not yet sourced in case of early Error() in usr/sbin/rear
