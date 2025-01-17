@@ -1010,15 +1010,40 @@ function is_owner_root () {
 function is_trustworthy_path () {
     local file="$1"
     local path=""
-    # Trailing / is required to ensure e.g. /libanywhere/ is not falsely regarded as trustworthy path
-    # so in particular /lib64/ is currently not considered as trustworthy path.
-    # SHARE_DIR is first to return early from the 'for' loop because this is the most often case.
+    local trustworthy_paths=()
+    local trustworthy_path=""
+    # ReaR's basic directories when running /usr/sbin/rear from a normally installed package
+    # (i.e. when ReaR's files are installed in '/' so REAR_DIR_PREFIX is empty):
+    #   REAR_DIR_PREFIX=
+    #   SHARE_DIR=/usr/share/rear
+    #   CONFIG_DIR=/etc/rear
+    #   VAR_DIR=/var/lib/rear
+    # ReaR's basic directories when running usr/sbin/rear from a Git checkout:
+    # (i.e. when ReaR's files are installed in '/some/path/' so REAR_DIR_PREFIX is non-empty '/some/path'):
+    #   REAR_DIR_PREFIX=/some/path
+    #   SHARE_DIR=/some/path/usr/share/rear
+    #   CONFIG_DIR=/some/path/etc/rear
+    #   VAR_DIR=/some/path/var/lib/rear
+    # cf. https://github.com/rear/rear/pull/3379#issuecomment-2598270427
+    # SHARE_DIR is where ReaR's scripts are so it is most often used and
+    # therefore it should be first to return early from the 'for trustworthy_path ...' testing loop below.
     # CONFIG_DIR is used to source e.g. etc/rear/local.conf
     # VAR_DIR is used by "rear recover" to source /var/lib/rear/layout/diskrestore.sh in 200_run_layout_code.sh
-    local trustworthy_paths=( "$SHARE_DIR/" "$CONFIG_DIR/" "$VAR_DIR/" '/etc/' '/lib/' '/usr/' )
-    # All files below a Git checkout directory are considered to be trustworthy
-    # see https://relax-and-recover.org/documentation/security-architecture
-    test "$REAR_DIR_PREFIX" && trustworthy_paths+=( "$REAR_DIR_PREFIX/" )
+    # According to https://github.com/rear/rear/issues/3259#issuecomment-2385745545
+    # '/usr/' '/etc/' '/lib/' should be considered in general to be trustworthy paths
+    # so when SHARE_DIR is a sub-directory of '/usr/' it is needless to also add SHARE_DIR
+    # and when CONFIG_DIR is a sub-directory of '/etc/' it is needless to also add CONFIG_DIR.
+    # The trailing / ensures that e.g. /libanywhere/ is not falsely regarded as trustworthy path
+    # so in particular /lib64/ is currently not considered as trustworthy path.
+    if test "$REAR_DIR_PREFIX" ; then
+        # All files below a Git checkout directory are considered to be trustworthy
+        # see https://relax-and-recover.org/documentation/security-architecture
+        # SHARE_DIR and CONFIG_DIR and VAR_DIR are sub-directories of REAR_DIR_PREFIX:
+        trustworthy_paths=( "$REAR_DIR_PREFIX/" '/usr/' '/etc/' '/lib/' )
+    else
+        # When REAR_DIR_PREFIX is empty SHARE_DIR is a sub-directory of '/usr/' and CONFIG_DIR is a sub-directory of '/etc/':
+        trustworthy_paths=( '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
+    fi
     local trustworthy_path=""
     # Do not error out in 'readlink' when it is neither a regular file nor a link to a regular file:
     test -f "$file" || return 1
