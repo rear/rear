@@ -1054,8 +1054,19 @@ function is_trustworthy_path () {
         # SHARE_DIR and CONFIG_DIR and VAR_DIR are sub-directories of REAR_DIR_PREFIX:
         trustworthy_paths=( "$REAR_DIR_PREFIX/" '/usr/' '/etc/' '/lib/' )
     else
-        # When REAR_DIR_PREFIX is empty SHARE_DIR is a sub-directory of '/usr/' and CONFIG_DIR is a sub-directory of '/etc/':
-        trustworthy_paths=( '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
+        # Find out if we're running inside the ReaR recovery system
+        # when ReaR on the original system was a Git checkout
+        # cf. https://github.com/rear/rear/pull/3379#issuecomment-2601767515
+        if ! test "$REAR_DIR_PREFIX" ; then
+            # cf. the REAR_DIR_PREFIX setting code in sbin/rear
+            script_file="/usr/share/rear/lib/_input-output-functions.sh"
+            actual_path="$( readlink -e $script_file)"
+            test "$actual_path" = "$script_file" || rear_dir_prefix=${actual_path%$script_file}
+            trustworthy_paths=( "$rear_dir_prefix/" '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
+        else
+            # When REAR_DIR_PREFIX is empty SHARE_DIR is a sub-directory of '/usr/' and CONFIG_DIR is a sub-directory of '/etc/':
+            trustworthy_paths=( '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
+        fi
     fi
     local trustworthy_path=""
     # Do not error out in 'readlink' when it is neither a regular file nor a link to a regular file:
