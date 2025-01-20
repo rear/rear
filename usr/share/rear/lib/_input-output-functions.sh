@@ -1005,38 +1005,61 @@ function is_owner_root () {
     owner_name="$( stat -L -c %U "$file" )" || Error "is_owner_root(): 'stat -L -c %U $file' failed"
     test "$owner_name" = "root"
 }   
-# Verify file path is trustworthy
+# Verify the actual file path (i.e. with symlinks resolved) is trustworthy
 # see https://github.com/rear/rear/issues/3259#issuecomment-2385745545
 function is_trustworthy_path () {
     local file="$1"
-    local path=""
+    local test_path=""
+    local actual_path=""
+    local rear_dir_prefix=""
     local trustworthy_paths=()
     local trustworthy_path=""
-    # ReaR's basic directories when running /usr/sbin/rear on the original system from a normally installed package
+    # Do not error out in 'readlink' below when it is neither a regular file nor a link to a regular file:
+    test -f "$file" || return 1
+    # ReaR basic directories cases:
+    # (A1) Normal case (i.e. no Git checkout) on the original system:
+    # ReaR basic directories when running /usr/sbin/rear on the original system from a normally installed package
     # (i.e. when ReaR's files are installed in '/' so REAR_DIR_PREFIX is empty):
     #   REAR_DIR_PREFIX=
     #   SHARE_DIR=/usr/share/rear
     #   CONFIG_DIR=/etc/rear
     #   VAR_DIR=/var/lib/rear
-    # ReaR's basic directories when running usr/sbin/rear on the original system from a Git checkout:
+    #   LOG_DIR=/var/log/rear
+    # (A2 Normal case (i.e. no Git checkout on the original system) in the ReaR recovery system:
+    #   REAR_DIR_PREFIX=
+    #   SHARE_DIR=/usr/share/rear
+    #   CONFIG_DIR=/etc/rear
+    #   VAR_DIR=/var/lib/rear
+    #   LOG_DIR=/var/log/rear
+    # So when there is no Git checkout REAR_DIR_PREFIX is empty and the ReaR basic directories
+    # are same on the original system and in the ReaR recovery system.
+    # (B1) Special case (i.e. Git checkout) on the original system:
+    # ReaR basic directories when running usr/sbin/rear on the original system from a Git checkout:
     # (i.e. when ReaR's files are installed in '/rear/prefix/' so REAR_DIR_PREFIX is non-empty '/rear/prefix'):
     #   REAR_DIR_PREFIX=/rear/prefix
     #   SHARE_DIR=/rear/prefix/usr/share/rear
     #   CONFIG_DIR=/rear/prefix/etc/rear
     #   VAR_DIR=/rear/prefix/var/lib/rear
-    # ReaR's basic directories when running /bin/rear in the ReaR recovery system
+    #   LOG_DIR=/rear/prefix/var/log/rear
+    # (B2) Special case (i.e. Git checkout on the original system) in the ReaR recovery system:
+    # ReaR basic directories when running /bin/rear in the ReaR recovery system
     # when ReaR on the original system was a Git checkout:
     #   REAR_DIR_PREFIX=
     #   SHARE_DIR=/usr/share/rear
     #   CONFIG_DIR=/etc/rear
     #   VAR_DIR=/var/lib/rear
-    # So ReaR's basic directories in the ReaR recovery system are always
-    # the same as for ReaR on the original system from a normally installed package
-    # because in the ReaR recovery system when ReaR on the original system was a Git checkout
+    #   LOG_DIR=/var/log/rear
+    # BUT some of them are symlinks and others are not:
     #   /usr/share/rear is a symbolic link to ../../rear/prefix/usr/share/rear
     #   /etc/rear is a normal directory (no symbolic link to /rear/prefix/etc/rear)
     #   /var/lib/rear is a symbolic link to ../../rear/prefix/var/lib/rear
-    # cf. https://github.com/rear/rear/pull/3379#issuecomment-2598270427
+    #   /var/log/rear is a normal directory (no symbolic link to /rear/prefix/var/log/rear)
+    # so the actual files in /usr/share/rear and /var/lib/rear are under a prefix directory
+    # except the actual files in /etc/rear and /var/log/rear which are really in /etc/rear and /var/log/rear
+    # so the empty REAR_DIR_PREFIX matches where the actual files in CONFIG_DIR and LOG_DIR are
+    # but it does neither match where the actual files in SHARE_DIR are
+    # nor does REAR_DIR_PREFIX match where the actual files in VAR_DIR are.
+    # Cf. https://github.com/rear/rear/pull/3379#issuecomment-2598270427
     # and https://github.com/rear/rear/pull/3379#issuecomment-2601575741 
     # SHARE_DIR is where ReaR's scripts are so it is most often used and therefore it should be first
     # in trustworthy_paths to return early from the 'for trustworthy_path ...' testing loop below.
@@ -1049,35 +1072,42 @@ function is_trustworthy_path () {
     # The trailing / ensures that e.g. /libanywhere/ is not falsely regarded as trustworthy path
     # so in particular /lib64/ is currently not considered as trustworthy path.
     if test "$REAR_DIR_PREFIX" ; then
+        # When REAR_DIR_PREFIX is set it is case (B1) i.e. Git checkout on the original system.
         # All files below a Git checkout directory are considered to be trustworthy
         # see https://relax-and-recover.org/documentation/security-architecture
         # SHARE_DIR and CONFIG_DIR and VAR_DIR are sub-directories of REAR_DIR_PREFIX:
         trustworthy_paths=( "$REAR_DIR_PREFIX/" '/usr/' '/etc/' '/lib/' )
     else
-        # Find out if we're running inside the ReaR recovery system
-        # when ReaR on the original system was a Git checkout
+        # When REAR_DIR_PREFIX is empty it is cases (A1) or (A2) i.e. no Git checkout
+        # or it is case (B2) i.e. in the ReaR recovery system when there was a Git checkout on the original system.
+        # Intentionally we do not test RECOVERY_MODE because this is not needed.
+        # Instead we test directly "the real thing" which is whether or not SHARE_DIR matches where its actual files are
+        # by checking an example (this script) i.e. if the actual path of /usr/share/rear/lib/_input-output-functions.sh
+        # is /usr/share/rear/lib/_input-output-functions.sh or /rear/prefix/usr/share/rear/lib/_input-output-functions.sh
+        # and in the latter case we specify '/rear/prefix/' first in trustworthy_paths
         # cf. https://github.com/rear/rear/pull/3379#issuecomment-2601767515
-        if ! test "$REAR_DIR_PREFIX" ; then
-            # cf. the REAR_DIR_PREFIX setting code in sbin/rear
-            script_file="/usr/share/rear/lib/_input-output-functions.sh"
-            actual_path="$( readlink -e $script_file)"
-            test "$actual_path" = "$script_file" || rear_dir_prefix=${actual_path%$script_file}
+        # cf. the REAR_DIR_PREFIX setting code in sbin/rear
+        # TODO: Perhaps test_path="$SHARE_DIR/lib/_input-output-functions.sh" is better than hardcoded '/usr/share/rear'?
+        test_path="/usr/share/rear/lib/_input-output-functions.sh"
+        # Do not error out when 'readlink /usr/share/rear/lib/_input-output-functions.sh' fails but proceed "bona fide":
+        actual_path="$( readlink -e "$test_path" )"
+        if test "$actual_path" != "$test_path" ; then
+            # This is case (B1) i.e. in the ReaR recovery system when there was a Git checkout on the original system:
+            rear_dir_prefix=${actual_path%$test_path}
             trustworthy_paths=( "$rear_dir_prefix/" '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
         else
-            # When REAR_DIR_PREFIX is empty SHARE_DIR is a sub-directory of '/usr/' and CONFIG_DIR is a sub-directory of '/etc/':
+            # This is cases (A1) or (A2) i.e. no Git checkout:
+            # In case of (A1) or (A2) SHARE_DIR is a sub-directory of '/usr/' and CONFIG_DIR is a sub-directory of '/etc/':
             trustworthy_paths=( '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
         fi
     fi
-    local trustworthy_path=""
-    # Do not error out in 'readlink' when it is neither a regular file nor a link to a regular file:
-    test -f "$file" || return 1
     # Get the full path of the actual file (i.e. with leading / and symlinks resolved)
     # e.g. /etc/os-release is a symbolic link to /usr/lib/os-release (at least on openSUSE Leap 15.6):
-    path="$( readlink -e $file )" || Error "is_trustworthy_path(): 'readlink -e $file' failed"
+    actual_path="$( readlink -e "$file" )" || Error "is_trustworthy_path(): 'readlink -e $file' failed"
     for trustworthy_path in "${trustworthy_paths[@]}" ; do
         # Skip when trustworthy_path is empty (otherwise the [[ expression ]] would be falsely true):
         test "$trustworthy_path" || continue
-        [[ $path =~ ^$trustworthy_path ]] && return 0
+        [[ $actual_path =~ ^$trustworthy_path ]] && return 0
     done
     # The [[ expression ]] is the last command so it returns 1 when file does not start with a trustworthy path.
 }
@@ -1087,8 +1117,6 @@ function is_trustworthy_path () {
 # see also https://github.com/rear/rear/issues/3319#issuecomment-2363556217
 function source () {
     local source_file="$1"
-    local source_return_code=0
-    local saved_bash_flags_and_options_commands=""
     Debug "Trustworthy sourcing '$*'"
     # Ensure source file is a regular file or a link to a regular file.
     # I.e. skip non-regular files like directories, device nodes, or file not found.
@@ -1099,7 +1127,7 @@ function source () {
         return 1
     fi
     # Ensure source file owner is 'root'
-    # unless we are running from Git checkout where REAR_DIR_PREFIX is set
+    # unless we are running from Git checkout on the original system where REAR_DIR_PREFIX is set
     # see https://github.com/rear/rear/pull/3379#issuecomment-2593491758
     # and unless we are running in PORTABLE mode
     # see https://relax-and-recover.org/documentation/security-architecture
