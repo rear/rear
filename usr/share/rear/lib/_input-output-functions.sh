@@ -1062,11 +1062,11 @@ function is_trustworthy_path () {
     test -f "$file" || return 1
     # Get the full path of the actual file (i.e. with leading / and symlinks resolved)
     # e.g. /etc/os-release is a symbolic link to /usr/lib/os-release (at least on openSUSE Leap 15.6):
-    path="( readlink -e $file )" || Error "is_trustworthy_path(): 'readlink -e $file' failed"
+    path="$( readlink -e $file )" || Error "is_trustworthy_path(): 'readlink -e $file' failed"
     for trustworthy_path in "${trustworthy_paths[@]}" ; do
         # Skip when trustworthy_path is empty (otherwise the [[ expression ]] would be falsely true):
         test "$trustworthy_path" || continue
-        [[ $file =~ ^$trustworthy_path ]] && return 0
+        [[ $path =~ ^$trustworthy_path ]] && return 0
     done
     # The [[ expression ]] is the last command so it returns 1 when file does not start with a trustworthy path.
 }
