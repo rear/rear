@@ -1012,21 +1012,34 @@ function is_trustworthy_path () {
     local path=""
     local trustworthy_paths=()
     local trustworthy_path=""
-    # ReaR's basic directories when running /usr/sbin/rear from a normally installed package
+    # ReaR's basic directories when running /usr/sbin/rear on the original system from a normally installed package
     # (i.e. when ReaR's files are installed in '/' so REAR_DIR_PREFIX is empty):
     #   REAR_DIR_PREFIX=
     #   SHARE_DIR=/usr/share/rear
     #   CONFIG_DIR=/etc/rear
     #   VAR_DIR=/var/lib/rear
-    # ReaR's basic directories when running usr/sbin/rear from a Git checkout:
-    # (i.e. when ReaR's files are installed in '/some/path/' so REAR_DIR_PREFIX is non-empty '/some/path'):
-    #   REAR_DIR_PREFIX=/some/path
-    #   SHARE_DIR=/some/path/usr/share/rear
-    #   CONFIG_DIR=/some/path/etc/rear
-    #   VAR_DIR=/some/path/var/lib/rear
+    # ReaR's basic directories when running usr/sbin/rear on the original system from a Git checkout:
+    # (i.e. when ReaR's files are installed in '/rear/prefix/' so REAR_DIR_PREFIX is non-empty '/rear/prefix'):
+    #   REAR_DIR_PREFIX=/rear/prefix
+    #   SHARE_DIR=/rear/prefix/usr/share/rear
+    #   CONFIG_DIR=/rear/prefix/etc/rear
+    #   VAR_DIR=/rear/prefix/var/lib/rear
+    # ReaR's basic directories when running /bin/rear in the ReaR recovery system
+    # when ReaR on the original system was a Git checkout:
+    #   REAR_DIR_PREFIX=
+    #   SHARE_DIR=/usr/share/rear
+    #   CONFIG_DIR=/etc/rear
+    #   VAR_DIR=/var/lib/rear
+    # So ReaR's basic directories in the ReaR recovery system are always
+    # the same as for ReaR on the original system from a normally installed package
+    # because in the ReaR recovery system when ReaR on the original system was a Git checkout
+    #   /usr/share/rear is a symbolic link to ../../rear/prefix/usr/share/rear
+    #   /etc/rear is a normal directory (no symbolic link to /rear/prefix/etc/rear)
+    #   /var/lib/rear is a symbolic link to ../../rear/prefix/var/lib/rear
     # cf. https://github.com/rear/rear/pull/3379#issuecomment-2598270427
-    # SHARE_DIR is where ReaR's scripts are so it is most often used and
-    # therefore it should be first to return early from the 'for trustworthy_path ...' testing loop below.
+    # and https://github.com/rear/rear/pull/3379#issuecomment-2601575741 
+    # SHARE_DIR is where ReaR's scripts are so it is most often used and therefore it should be first
+    # in trustworthy_paths to return early from the 'for trustworthy_path ...' testing loop below.
     # CONFIG_DIR is used to source e.g. etc/rear/local.conf
     # VAR_DIR is used by "rear recover" to source /var/lib/rear/layout/diskrestore.sh in 200_run_layout_code.sh
     # According to https://github.com/rear/rear/issues/3259#issuecomment-2385745545
@@ -1082,25 +1095,9 @@ function source () {
     test "$REAR_DIR_PREFIX" || test "$PORTABLE" || is_owner_root "$source_file" || Error "Forbidden to 'source $source_file' because its owner is not 'root'"
     # Ensure source file starts with a trustworthy path:
     is_trustworthy_path "$source_file" || Error "Forbidden to 'source $source_file' because it is not below a trustworthy directory"
-    # Save the bash flags and options settings so we can restore them after sourcing the source file:
-    { saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # The actual work (source the source file):
     builtin source "$@"
-    # The return code of the 'source' wrapper function is the return code of the 'source' builtin:
-    source_return_code=$?
-    test $source_return_code -eq 0 || Debug "'source $*' returns $source_return_code"
-    # Restore the bash flags and options settings to what they have been before sourcing the source file:
-    { apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
-    # Ensure that after each sourced file we are back in our usual working directory
-    # that is WORKING_DIR="$( pwd )" when usr/sbin/rear was launched
-    # cf. https://github.com/rear/rear/issues/2461
-    # Quoting "$WORKING_DIR" is needed to make it behave fail-safe if WORKING_DIR is empty
-    # because cd "" succeeds without changing the current directory
-    # in contrast to plain cd which changes to the home directory (usually /root)
-    # cf. https://github.com/rear/rear/pull/2478#issuecomment-673500099
-    cd "$WORKING_DIR" || Error "Failed to 'cd $WORKING_DIR'"
-    # Return the return value of the actual work (source the source file):
-    return $source_return_code
+    # The return code of the 'source' wrapper function is the return code of the 'source' builtin.
 }
 
 # Cleanup build area:
