@@ -741,12 +741,6 @@ else
     exec 1>&2
 fi
 
-# Include functions after RUNTIME_LOGFILE is set and readonly
-# so that functions can use a fixed RUNTIME_LOGFILE value:
-for script in $SHARE_DIR/lib/[a-z]*.sh ; do
-    source $script || BugError "Failed to source $script"
-done
-
 # Show initial startup messages:
 if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
@@ -767,6 +761,17 @@ if test "$DEBUGSCRIPTS_ARGUMENT" ; then
     Debug "Current set of flags is '$-'"
     Debug "The debugscripts flags are '$DEBUGSCRIPTS_ARGUMENT'"
 fi
+
+# Show TRUSTWORTHY_OWNERS and TRUSTWORTHY_PATHS before files get sourced:
+Debug "Sourced files must be owned by one of the TRUSTWORTHY_OWNERS ${TRUSTWORTHY_OWNERS[*]}"
+Debug "Sourced files must be below one of the TRUSTWORTHY_PATHS ${TRUSTWORTHY_PATHS[*]}"
+
+# Include functions after RUNTIME_LOGFILE is set and readonly
+# so that functions can use a fixed RUNTIME_LOGFILE value
+# and after the initial startup messages and TRUSTWORTHY_OWNERS and TRUSTWORTHY_PATHS are shown:
+for script in $SHARE_DIR/lib/[a-z]*.sh ; do
+    source $script || BugError "Failed to source $script"
+done
 
 # All workflows need to read the configurations first.
 # Combine configuration files:
