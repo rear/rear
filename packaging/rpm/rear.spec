@@ -159,7 +159,7 @@ fi
 
 %install
 %{__rm} -rf %{buildroot}
-%{__make} install DESTDIR="%{buildroot}"
+%{__make} install DESTDIR="%{buildroot}" sbindir="%{_sbindir}"
 
 %check
 %{__make} validate
