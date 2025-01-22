@@ -17,7 +17,7 @@ test "USB" = "$local_conf_output" && return
 
 # At this point we run this script build/USB/default/800_enforce_usb_output.sh
 # which means there is OUTPUT=USB in etc/rear/local.conf
-# (ortherwise this script is not picked up by the SourceStage function)
+# (otherwise this script is not picked up by the SourceStage function)
 # cf. https://github.com/rear/rear/pull/3103#issuecomment-1860001618
 # and https://github.com/rear/rear/pull/3103#issuecomment-1860169199
 # but in $ROOTFS_DIR/etc/rear/local.conf there is not OUTPUT=USB
