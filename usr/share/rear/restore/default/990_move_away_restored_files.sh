@@ -4,7 +4,7 @@
 # See https://github.com/rear/rear/issues/779
 #
 # After backup restore ReaR should move away files or directories
-# that should not have been restored - maily files or directories
+# that should not have been restored - mainly files or directories
 # that are created and maintained by system tools where
 # a restore from the backup results wrong/outdated
 # content that conflicts with the actual system.
