@@ -29,17 +29,15 @@ jobs:
                   tee -a $GITHUB_ENV <<< "RELEASE_VERSION=${RELEASE#release/}"
                   tee -a $GITHUB_ENV <<< "RELEASE_FILENAME=${RELEASE//\//-}"
 
-            - id: setup
+            - name: Setup build environment
               run: sudo apt-get -qq update && sudo apt-get -qq install asciidoctor
 
             - name: Build Snapshot dist archive
-              id: dist-snapshot
               if: env.RELEASE == 'no-release'
               run: make dist
 
               # check if the release version matches the source version before building official release dist archive
             - name: Check and build Release dist archive
-              id: dist-release
               if: startsWith(env.RELEASE, 'release')
               run: |
                   if [ -z "$RELEASE_VERSION" ] ; then
@@ -51,24 +49,30 @@ jobs:
                   if [ "$SOURCE_VERSION" != "$RELEASE_VERSION" ] ; then
                     # Find the line where VERSION is set
                     VERSION_LINE=$(grep -n "^readonly VERSION=" usr/sbin/rear | cut -d: -f1)
+                    echo "### Version Check Failed" >> $GITHUB_STEP_SUMMARY
+                    echo "* Expected version: $RELEASE_VERSION" >> $GITHUB_STEP_SUMMARY
+                    echo "* Current version: $SOURCE_VERSION" >> $GITHUB_STEP_SUMMARY
                     echo "::error file=usr/sbin/rear,line=$VERSION_LINE::Version mismatch: Source version in rear script ($SOURCE_VERSION) does not match release tag version ($RELEASE_VERSION)"
                     exit 1
                   fi
 
                   make dist OFFICIAL=1
 
-            - id: prepare
+            - name: Prepare Docker images
               run: tools/run-in-docker -- --patch --continue-and-record-successful images
 
-            - id: images
-              run: cat images
+            - name: List available Docker images
               if: always()
+              run: |
+                  test -r images && cat images || :
 
-            - id: build
+            - name: Build packages via Docker
               # make package only for images that we patched successfully
               run: tools/run-in-docker $(<images) -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz /var/tmp/build-rear*'
 
-            - run: ls -lR dist-all
+            - name: List dist-all
+              run: |
+                  test -d dist-all && ls -lR dist-all || :
               if: always()
 
             - name: Upload Artifacts
