@@ -66,9 +66,18 @@ jobs:
               run: |
                   test -r images && cat images || :
 
-            - name: Build packages via Docker
-              # make package only for images that we patched successfully
+            - name: Build snapshot packages via Docker
+              if: env.RELEASE == 'no-release'
+              # make package only for images that we patched successfully - continue despite errors
               run: tools/run-in-docker $(<images) -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz /var/tmp/build-rear*'
+
+            - name: Build release packages via Docker
+              if: startsWith(env.RELEASE, 'release')
+              # make package for all images that we support - fail on errors
+              # we need to specify again OFFICIAL=1 as the Makefile determines the version to use before
+              # building the package, and without it wouldn't match with the dist archive created earlier
+              # TODO: make package should be able to determine the version from the dist archive instead
+              run: tools/run-in-docker -- make package OFFICIAL=1
 
             - name: List dist-all
               run: |
@@ -131,4 +140,4 @@ jobs:
                     --title "ReaR Release $RELEASE_VERSION ($(git show -s --format="%cs"))" \
                     --generate-notes \
                     --draft \
-                    dist-all/*.zip "dist/*.tar.gz#Official ReaR source distribution $RELEASE_VERSION"
+                    dist-all/*.zip dist/*.tar.gz"#Official ReaR source distribution $RELEASE_VERSION"
