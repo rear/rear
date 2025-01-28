@@ -4,7 +4,7 @@ on: push
 
 env:
     # Set RELEASE to the release tag or to snapshot
-    RELEASE: ${{ startsWith(github.ref, 'refs/tags/release/') && github.ref_name || 'snapshot' }}
+    RELEASE: ${{ startsWith(github.ref, 'refs/tags/release/') && github.ref_name || 'no-release' }}
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
@@ -24,7 +24,7 @@ jobs:
             - name: Extract release version
               # Set release version and filename from the release tag
               # e.g. 2.8.0 -> RELEASE_VERSION=2.8.0 RELEASE_FILENAME=release-2.8.0
-              if: startsWith(github.ref, 'refs/tags/release/')
+              if: startsWith(env.RELEASE, 'release')
               run: |
                   tee -a $GITHUB_ENV <<< "RELEASE_VERSION=${RELEASE#release/}"
                   tee -a $GITHUB_ENV <<< "RELEASE_FILENAME=${RELEASE//\//-}"
@@ -41,22 +41,24 @@ jobs:
 
             - name: Build Snapshot dist archive
               id: dist-snapshot
-              if: env.RELEASE == 'snapshot'
+              if: env.RELEASE == 'no-release'
               run: make dist
 
+              # check if the release version matches the source version before building official release dist archive
             - name: Check and build Release dist archive
               id: dist-release
-              # check if the release version matches the source version before building official release dist archive
-              if: env.RELEASE != 'snapshot'
+              if: startsWith(env.RELEASE, 'release')
               run: |
                   if [ -z "$RELEASE_VERSION" ] ; then
-                    echo "ERROR: Release version not set"
+                    echo "::error::Release version not set in RELEASE_VERSION"
                     exit 1
                   fi
 
                   SOURCE_VERSION=$(make version OFFICIAL=1)
                   if [ "$SOURCE_VERSION" != "$RELEASE_VERSION" ] ; then
-                    echo "ERROR: Release version $RELEASE_VERSION does not match source version $SOURCE_VERSION"
+                    # Find the line where VERSION is set
+                    VERSION_LINE=$(grep -n "^readonly VERSION=" usr/sbin/rear | cut -d: -f1)
+                    echo "::error file=usr/sbin/rear,line=$VERSION_LINE::Version mismatch: Source version in rear script ($SOURCE_VERSION) does not match release tag version ($RELEASE_VERSION)"
                     exit 1
                   fi
 
@@ -81,7 +83,8 @@ jobs:
               run: tools/run-in-docker $(<images) -- rear dump
 
             - name: Create Snapshot Archives and Update GitHub Snapshot Release
-              if: env.RELEASE == 'snapshot'
+              # only create snapshot release for master branch
+              if: github.ref == 'refs/heads/master'
               env:
                   GITHUB_TOKEN: ${{ github.token }}
               run: |
@@ -105,7 +108,7 @@ jobs:
                     dist-all/*.zip dist/*.tar.gz
 
             - name: Create Release Archives and Update GitHub Release
-              if: env.RELEASE != 'snapshot'
+              if: startsWith(env.RELEASE, 'release')
               env:
                   GITHUB_TOKEN: ${{ github.token }}
               run: |
@@ -120,8 +123,7 @@ jobs:
                     zip -0 -j -z "$distro.zip" "$distro"/* <<< "$COMMENT"
                   done
 
-                  gh release create snapshot \
-                    --target ${{ github.sha }} \
+                  gh release create "$RELEASE" \
                     --title "ReaR Release $RELEASE_VERSION ($(git show -s --format="%cs"))" \
                     --generate-notes \
                     --draft \
