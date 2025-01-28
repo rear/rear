@@ -99,6 +99,7 @@ all:
 help:
 	@echo -e "Relax-and-Recover make targets:\n\
 \n\
+  version         - Show ReaR version used\n\
   validate        - Check source code\n\
   install         - Install Relax-and-Recover (may replace files)\n\
   uninstall       - Uninstall Relax-and-Recover (may remove files)\n\
@@ -118,6 +119,9 @@ Relax-and-Recover make variables (optional):\n\
   OFFICIAL=1      - Build an official release\n\
   \n\
 "
+
+version:
+	@echo $(distversion)
 
 dump:
 # found at https://www.cmcrossroads.com/article/dumping-every-makefile-variable
