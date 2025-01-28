@@ -15,8 +15,7 @@ declare -r IMAGES=(
     debian:{10,11,unstable}
     opensuse/leap:15
     registry.suse.com/suse/sle15
-    centos:{7,8} # discontinued
-    sl:7           # discontinued
+    centos:8       # discontinued
     quay.io/centos/centos:stream9
     # registry.access.redhat.com/ubi{7,8,9} basic packages like parted are missing
     fedora:{40,41} # rawhide Docker image is broken, see https://github.com/fedora-cloud/docker-brew-fedora/issues/109
