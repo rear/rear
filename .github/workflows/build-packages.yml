@@ -32,13 +32,6 @@ jobs:
             - id: setup
               run: sudo apt-get -qq update && sudo apt-get -qq install asciidoctor
 
-            - id: prepare
-              run: tools/run-in-docker -- --patch --continue-and-record-successful images
-
-            - id: images
-              run: cat images
-              if: always()
-
             - name: Build Snapshot dist archive
               id: dist-snapshot
               if: env.RELEASE == 'no-release'
@@ -63,6 +56,13 @@ jobs:
                   fi
 
                   make dist OFFICIAL=1
+
+            - id: prepare
+              run: tools/run-in-docker -- --patch --continue-and-record-successful images
+
+            - id: images
+              run: cat images
+              if: always()
 
             - id: build
               # make package only for images that we patched successfully
