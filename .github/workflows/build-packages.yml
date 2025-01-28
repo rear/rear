@@ -39,11 +39,13 @@ jobs:
               run: cat images
               if: always()
 
-            - id: dist-snapshot
+            - name: Build Snapshot dist archive
+              id: dist-snapshot
               if: env.RELEASE == 'snapshot'
               run: make dist
 
-            - id: dist-release
+            - name: Check and build Release dist archive
+              id: dist-release
               # check if the release version matches the source version before building official release dist archive
               if: env.RELEASE != 'snapshot'
               run: |
