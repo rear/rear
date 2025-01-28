@@ -62,8 +62,8 @@ readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_
 # Versioning
 readonly PRODUCT="Relax-and-Recover"
 readonly PROGRAM=${0##*/}
-readonly VERSION=2.8
-readonly RELEASE_DATE="2024-12-19"
+readonly VERSION=2.9
+readonly RELEASE_DATE="2025-01-31"
 
 # Where users should report bugs:
 readonly BUG_REPORT_SITE="https://github.com/rear/rear/issues"
