@@ -1,5 +1,11 @@
 name: Build Packages
 
+# this covers the following use cases:
+#
+# 1. build snapshot packages for every push to any branch
+# 2. publish packages as "ReaR Snapshot" for every push to master
+# 3. build official packages for every push of a tag named release/* and publish as "ReaR Release"
+
 on: push
 
 env:
@@ -140,5 +146,4 @@ jobs:
                   gh release create "$RELEASE" \
                     --title "ReaR Release $RELEASE_VERSION ($(git show -s --format="%cs"))" \
                     --generate-notes \
-                    --draft \
-                    dist-all/*.zip "${dist_archive}#Official ReaR source distribution $RELEASE_VERSION"
+                    dist-all/*.zip "${dist_archive}#Official ReaR source distribution ${dist_archive##*/}"
