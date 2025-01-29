@@ -1,10 +1,16 @@
 name: Build Packages
 
+# this covers the following use cases:
+#
+# 1. build snapshot packages for every push to any branch
+# 2. publish packages as "ReaR Snapshot" for every push to master
+# 3. build official packages for every push of a tag named release/* and publish as "ReaR Release"
+
 on: push
 
 env:
     # Set RELEASE to the release tag or to snapshot
-    RELEASE: ${{ startsWith(github.ref, 'refs/tags/release/') && github.ref_name || 'snapshot' }}
+    RELEASE: ${{ startsWith(github.ref, 'refs/tags/release/') && github.ref_name || 'no-release' }}
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
@@ -24,47 +30,64 @@ jobs:
             - name: Extract release version
               # Set release version and filename from the release tag
               # e.g. 2.8.0 -> RELEASE_VERSION=2.8.0 RELEASE_FILENAME=release-2.8.0
-              if: startsWith(github.ref, 'refs/tags/release/')
+              if: startsWith(env.RELEASE, 'release')
               run: |
                   tee -a $GITHUB_ENV <<< "RELEASE_VERSION=${RELEASE#release/}"
                   tee -a $GITHUB_ENV <<< "RELEASE_FILENAME=${RELEASE//\//-}"
 
-            - id: setup
+            - name: Setup build environment
               run: sudo apt-get -qq update && sudo apt-get -qq install asciidoctor
 
-            - id: prepare
-              run: tools/run-in-docker -- --patch --continue-and-record-successful images
-
-            - id: images
-              run: cat images
-              if: always()
-
-            - id: dist-snapshot
-              if: env.RELEASE == 'snapshot'
+            - name: Build Snapshot dist archive
+              if: env.RELEASE == 'no-release'
               run: make dist
 
-            - id: dist-release
               # check if the release version matches the source version before building official release dist archive
-              if: env.RELEASE != 'snapshot'
+            - name: Check and build Release dist archive
+              if: startsWith(env.RELEASE, 'release')
               run: |
                   if [ -z "$RELEASE_VERSION" ] ; then
-                    echo "ERROR: Release version not set"
+                    echo "::error::Release version not set in RELEASE_VERSION"
                     exit 1
                   fi
 
                   SOURCE_VERSION=$(make version OFFICIAL=1)
                   if [ "$SOURCE_VERSION" != "$RELEASE_VERSION" ] ; then
-                    echo "ERROR: Release version $RELEASE_VERSION does not match source version $SOURCE_VERSION"
+                    # Find the line where VERSION is set
+                    VERSION_LINE=$(grep -n "^readonly VERSION=" usr/sbin/rear | cut -d: -f1)
+                    echo "### Version Check Failed" >> $GITHUB_STEP_SUMMARY
+                    echo "* Expected version: $RELEASE_VERSION" >> $GITHUB_STEP_SUMMARY
+                    echo "* Current version: $SOURCE_VERSION" >> $GITHUB_STEP_SUMMARY
+                    echo "::error file=usr/sbin/rear,line=$VERSION_LINE::Version mismatch: Source version in rear script ($SOURCE_VERSION) does not match release tag version ($RELEASE_VERSION)"
                     exit 1
                   fi
 
                   make dist OFFICIAL=1
 
-            - id: build
-              # make package only for images that we patched successfully
+            - name: Prepare Docker images
+              run: tools/run-in-docker -- --patch --continue-and-record-successful images
+
+            - name: List available Docker images
+              if: always()
+              run: |
+                  test -r images && cat images || :
+
+            - name: Build snapshot packages via Docker
+              if: env.RELEASE == 'no-release'
+              # make package only for images that we patched successfully - continue despite errors
               run: tools/run-in-docker $(<images) -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz /var/tmp/build-rear*'
 
-            - run: ls -lR dist-all
+            - name: Build release packages via Docker
+              if: startsWith(env.RELEASE, 'release')
+              # make package for all images that we support - fail on errors
+              # we need to specify again OFFICIAL=1 as the Makefile determines the version to use before
+              # building the package, and without it wouldn't match with the dist archive created earlier
+              # TODO: make package should be able to determine the version from the dist archive instead
+              run: tools/run-in-docker -- make package OFFICIAL=1
+
+            - name: List dist-all
+              run: |
+                  test -d dist-all && ls -lR dist-all || :
               if: always()
 
             - name: Upload Artifacts
@@ -79,7 +102,8 @@ jobs:
               run: tools/run-in-docker $(<images) -- rear dump
 
             - name: Create Snapshot Archives and Update GitHub Snapshot Release
-              if: env.RELEASE == 'snapshot'
+              # only create snapshot release for master branch
+              if: github.ref == 'refs/heads/master'
               env:
                   GITHUB_TOKEN: ${{ github.token }}
               run: |
@@ -103,7 +127,7 @@ jobs:
                     dist-all/*.zip dist/*.tar.gz
 
             - name: Create Release Archives and Update GitHub Release
-              if: env.RELEASE != 'snapshot'
+              if: startsWith(env.RELEASE, 'release')
               env:
                   GITHUB_TOKEN: ${{ github.token }}
               run: |
@@ -118,9 +142,8 @@ jobs:
                     zip -0 -j -z "$distro.zip" "$distro"/* <<< "$COMMENT"
                   done
 
-                  gh release create snapshot \
-                    --target ${{ github.sha }} \
+                  dist_archive=$(ls -1 dist/*.tar.gz)
+                  gh release create "$RELEASE" \
                     --title "ReaR Release $RELEASE_VERSION ($(git show -s --format="%cs"))" \
                     --generate-notes \
-                    --draft \
-                    dist-all/*.zip "dist/*.tar.gz#Official ReaR source distribution $RELEASE_VERSION"
+                    dist-all/*.zip "${dist_archive}#Official ReaR source distribution ${dist_archive##*/}"
