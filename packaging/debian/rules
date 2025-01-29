@@ -17,3 +17,4 @@ override_dh_auto_clean:
 
 override_dh_auto_install:
 	dh_auto_install -- OFFICIAL=1
+
