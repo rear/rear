@@ -136,8 +136,9 @@ jobs:
                     zip -0 -j -z "$distro.zip" "$distro"/* <<< "$COMMENT"
                   done
 
+                  dist_archive=$(ls -1 dist/*.tar.gz)
                   gh release create "$RELEASE" \
                     --title "ReaR Release $RELEASE_VERSION ($(git show -s --format="%cs"))" \
                     --generate-notes \
                     --draft \
-                    dist-all/*.zip dist/*.tar.gz"#Official ReaR source distribution $RELEASE_VERSION"
+                    dist-all/*.zip "${dist_archive}#Official ReaR source distribution $RELEASE_VERSION"
