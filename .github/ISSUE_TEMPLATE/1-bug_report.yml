@@ -1,19 +1,19 @@
 name: 🐛 Bug report
-description: Create a report to help us improve
-labels: bug
+description: Create a report to help us improve ReaR
+labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for reporting an issue.
-
         This issue tracker is for bugs and issues found within ReaR code.
         Please fill in as much of the following form as you're able.
-  - type: input
+  - type: textarea
     attributes:
       label: Version
       description: |
         Output of `/usr/sbin/rear -V`.
+    validations:
+      required: true
   - type: dropdown
     attributes:
       label: Platform
