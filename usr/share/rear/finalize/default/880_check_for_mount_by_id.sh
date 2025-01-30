@@ -18,10 +18,10 @@ grep -v -w 'swap' "$TARGET_FS_ROOT/etc/fstab" | grep -q '^/dev/disk/by-id' || re
 
 # Something is mounted via /dev/disk/by-id in etc/fstab.
 # Tell the user that automatically adjusting /dev/disk/by-id entries is not supported:
-LogPrintError "Automatically adjusting /dev/disk/by-id entries in etc/fstab is not supported."
-LogPrintError "Those IDs could be hardware dependent so check $TARGET_FS_ROOT/etc/fstab"
-LogPrintError "and verify all is correct or manually adjust $TARGET_FS_ROOT/etc/fstab"
-LogPrintError "to the actual values of the recreated system in $TARGET_FS_ROOT"
+LogPrintError "Automatically adjusting /dev/disk/by-id entries in etc/fstab is not supported:"
+LogPrintError "  Those IDs could be hardware dependent so check $TARGET_FS_ROOT/etc/fstab"
+LogPrintError "  and verify all is correct or manually adjust $TARGET_FS_ROOT/etc/fstab"
+LogPrintError "  to the actual values of the recreated system in $TARGET_FS_ROOT"
 
 # The supported options of scsi_id changed over time, so we try two commonly known ways to call it,
 # cf. https://github.com/rear/rear/issues/3383#issuecomment-2618970742
@@ -36,23 +36,28 @@ if ! test -x /usr/lib/udev/scsi_id -o -x /lib/udev/scsi_id ; then
     return 1
 fi
 
-# /proc/partitions looks like:
-# major  minor   #blocks  name
-#   254      0  15728640  sda
-#   254      1      8192  sda1
-#   254      2  13622272  sda2
-#   254      3   2097135  sda3
-#    11      0  16057344  sr0
 local major minor blocks name
 local device_path
+local scsi_id_actual_result
+local scsi_id_actual_results='no'
 # It seems ID_VENDOR ID_MODEL ID_SERIAL are commonly reported values by scsi_id
 # cf. https://github.com/rear/rear/issues/3383#issuecomment-2618157153
 # and https://github.com/rear/rear/issues/3383#issuecomment-2618219758
 # and https://github.com/rear/rear/issues/3383#issuecomment-2618970742
 local ID_VENDOR ID_MODEL ID_SERIAL
-local scsi_id_actual_result
-local scsi_id_actual_results='no'
+# /proc/partitions looks like:
+# major  minor   #blocks  name
+#
+#   254      0  15728640  sda
+#   254      1      8192  sda1
+#   254      2  13622272  sda2
+#   254      3   2097135  sda3
+#    11      0  16057344  sr0
+# So the first two lines in /proc/partitions do not contain useful data.
 while read major minor blocks name ; do
+    # Skip lines in /proc/partitions where 'major' is not a positive integer,
+    # cf. https://www.kernel.org/doc/Documentation/admin-guide/devices.txt
+    is_positive_integer "$major" || continue
     # Get a clean kernel device path,
     # e.g. 'readlink -e /dev//sda1' results '/dev/sda1'
     # and 'readlink -e /dev/mapper/cr_root' would result something like '/dev/dm-0'
@@ -100,7 +105,7 @@ while read major minor blocks name ; do
     # Now we have an actual scsi_id result, i.e. at least one of ID_VENDOR or ID_MODEL or ID_SERIAL is set.
     scsi_id_actual_results='yes'
     # Show the user what scsi_id reports for the current SCSI /proc/partitions device:
-    LogPrint "'scsi_id' reports '$device_path' $((blocks/1024))MiB: ID_VENDOR='$ID_VENDOR' ID_MODEL='$ID_MODEL' ID_SERIAL='$ID_SERIAL'"
+    LogPrint "  'scsi_id' reports '$device_path' $((blocks/1024))MiB: ID_VENDOR='$ID_VENDOR' ID_MODEL='$ID_MODEL' ID_SERIAL='$ID_SERIAL'"
 done </proc/partitions
 
 # return 0 when there was at least one actual scsi_id result, otherwise return 1:
