@@ -15,7 +15,7 @@ body:
       description: |
         Output of `/usr/sbin/rear -V`.
   - type: dropdown
-   attributes:
+    attributes:
       label: Platform
       description: The platform used by ReaR
       multiple: true
