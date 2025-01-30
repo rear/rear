@@ -12,8 +12,6 @@ body:
       label: Version
       description: |
         Output of `/usr/sbin/rear -V`.
-    validations:
-      required: true
   - type: dropdown
     attributes:
       label: Platform
@@ -30,8 +28,6 @@ body:
       label: OS
       description: >
         OS version ("cat /etc/os-release" or "lsb_release -a" or "cat /etc/rear/os.conf")
-    validations:
-      required: true
   - type: dropdown
     attributes:
       label: Backup
@@ -69,21 +65,16 @@ body:
       label: Storahe layout
       description: >
         Storage layout (`lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT`)
-      validations:
-        required: true
   - type: textarea
     attributes:
       label: What steps will reproduce the bug?
       description: >
         Enter details about your bug, preferably a simple code snippet that can
         be run using `rear -D mkrescue/mkbackup` directly
-    validations:
-      required: true
   - type: textarea
     attributes:
       label: Workaround, if any
-    validations:
-      required: true
+      description: Have you found a valid workaround?
   - type: textarea
     attributes:
       label: Additional information
