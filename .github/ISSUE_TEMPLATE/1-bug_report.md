@@ -1,8 +1,16 @@
-<!-- Relax-and-Recover (ReaR) Issue Template
-Fill in the following items when submitting a new issue.
-Use GitHub Markdown, see "Basic writing and formatting syntax" on
-https://docs.github.com/en/get-started/writing-on-github
-Support is voluntary without guarantee/warranty/liability -->
+---
+name: Bug report
+about: Create a report to help us improve
+title: 'Bug - '
+labels: bug
+assignees: ''
+---
+
+## Bug Report
+
+### Describe the bug
+
+A clear and concise description of what the bug is.
 
 * ReaR version ("/usr/sbin/rear -V"):
 
