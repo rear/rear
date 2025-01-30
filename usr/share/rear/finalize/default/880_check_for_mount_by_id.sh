@@ -38,13 +38,13 @@ fi
 
 local major minor blocks name
 local device_path
-local scsi_id_actual_result
-local scsi_id_actual_results='no'
+local scsi_id_output
+local scsi_id_actual_result='no'
 # It seems ID_VENDOR ID_MODEL ID_SERIAL are commonly reported values by scsi_id
 # cf. https://github.com/rear/rear/issues/3383#issuecomment-2618157153
 # and https://github.com/rear/rear/issues/3383#issuecomment-2618219758
 # and https://github.com/rear/rear/issues/3383#issuecomment-2618970742
-local ID_VENDOR ID_MODEL ID_SERIAL
+local egrep_pattern='^ID_VENDOR=|^ID_MODEL=|^ID_SERIAL='
 # /proc/partitions looks like:
 # major  minor   #blocks  name
 #
@@ -66,14 +66,12 @@ while read major minor blocks name ; do
     device_path="$( readlink -e /dev/$name )"
     # Skip when it does not exist (device_path empty) or is no block device:
     test -b "$device_path" || continue
-    ID_VENDOR=''
-    ID_MODEL=''
-    ID_SERIAL=''
-    scsi_id_actual_result=''
+    # Get the scsi_id output of ID_VENDOR ID_MODEL ID_SERIAL for the current device:
+    scsi_id_output=''
     # Try the newer one /usr/lib/udev/scsi_id first and try the older one /lib/udev/scsi_id as fallback
     # cf. the "try several commands with same intent" example in https://github.com/rear/rear/wiki/Coding-Style#dirty-hacks-welcome
     if test -x /usr/lib/udev/scsi_id ; then
-        # /usr/lib/udev/scsi_id on SLES 15 SP6 succeeds with non-existent device:
+        # /usr/lib/udev/scsi_id from udev-254 on SLES 15 SP6 succeeds with non-existent device:
         #   # /usr/lib/udev/scsi_id -x -g -d /dev/QQQ && echo Y || echo N
         #   ID_SCSI=1
         #   ID_VENDOR=
@@ -86,27 +84,26 @@ while read major minor blocks name ; do
         # so we cannot use the /usr/lib/udev/scsi_id exit code
         # to determine whether or not scsi_id was actually successful.
         # Perhaps ID_SERIAL could be used because it is not set for a non-existent device
-        # but it seems it is set for existent devices, see https://github.com/rear/rear/issues/3383
-        # but how far could and/or should we rely on possibly changing scsi_id behaviour in general?
-        # So we keep it simple and straightforward and use only what we are actually interested in
-        # i.e. whether or not at least one of the ID_VENDOR ID_MODEL ID_SERIAL values is set
-        # which also limits what 'eval' gets to the minimum of what needs to be evaluated to maximise security:
-        eval "$( /usr/lib/udev/scsi_id -x -g -d $device_path | grep -E '^ID_VENDOR=|^ID_MODEL=|^ID_SERIAL=' && echo 'scsi_id_actual_result=y' )"
+        # but it seems to be set for existent devices, see https://github.com/rear/rear/issues/3383
+        # but how far could or should we rely on possibly changing scsi_id behaviour in general?
+        # So we keep it simple and straightforward and focus on what we are actually interested in
+        # i.e. only the scsi_id output of ID_VENDOR ID_MODEL ID_SERIAL (as a string without newlines):
+        scsi_id_output="$( /usr/lib/udev/scsi_id -x -g -d $device_path | grep -E "$egrep_pattern" | tr -s '\n' ' ' )"
     else
         # Try the older one /lib/udev/scsi_id as fallback.
-        # Above was already tested that at least /lib/udev/scsi_id is executable:
-        eval "$( /lib/udev/scsi_id --export --whitelisted --device=$device_path | grep -E '^ID_VENDOR=|^ID_MODEL=|^ID_SERIAL=' && echo 'scsi_id_actual_result=y' )"
+        # Above was already tested that /lib/udev/scsi_id is executable when /usr/lib/udev/scsi_id is not executable.
+            scsi_id_output="$( /lib/udev/scsi_id --export --whitelisted --device=$device_path | grep -E "$egrep_pattern" | tr -s '\n' ' ' )"
     fi
-    if ! is_true $scsi_id_actual_result ; then
+    if ! contains_visible_char "$scsi_id_output" ; then
         # Give up with this device and continue with the next one:
-        Debug "scsi_id: none of ID_VENDOR and ID_MODEL and ID_SERIAL is set for '$device_path'"
+        Debug "scsi_id: not any output of ID_VENDOR ID_MODEL ID_SERIAL for '$device_path'"
         continue
     fi
-    # Now we have an actual scsi_id result, i.e. at least one of ID_VENDOR or ID_MODEL or ID_SERIAL is set.
-    scsi_id_actual_results='yes'
+    # Now we have an actual scsi_id result, i.e. at least one of ID_VENDOR or ID_MODEL or ID_SERIAL is output:
+    scsi_id_actual_result='yes'
     # Show the user what scsi_id reports for the current SCSI /proc/partitions device:
-    LogPrint "  'scsi_id' reports '$device_path' $((blocks/1024))MiB: ID_VENDOR='$ID_VENDOR' ID_MODEL='$ID_MODEL' ID_SERIAL='$ID_SERIAL'"
+    LogPrint "  'scsi_id' reports '$device_path' $((blocks/1024))MiB: $scsi_id_output"
 done </proc/partitions
 
 # return 0 when there was at least one actual scsi_id result, otherwise return 1:
-is_true $scsi_id_actual_results
+is_true $scsi_id_actual_result
