@@ -62,7 +62,7 @@ body:
         - No idea
   - type: textarea
     attributes:
-      label: Storahe layout
+      label: Storage layout
       description: >
         Storage layout (`lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT`)
   - type: textarea
