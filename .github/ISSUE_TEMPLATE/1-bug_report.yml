@@ -1,0 +1,89 @@
+name: 🐛 Bug report
+description: Create a report to help us improve
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue.
+
+        This issue tracker is for bugs and issues found within ReaR code.
+        Please fill in as much of the following form as you're able.
+  - type: input
+    attributes:
+      label: Version
+      description: |
+        Output of `/usr/sbin/rear -V`.
+  - type: dropdown
+   attributes:
+      label: Platform
+      description: The platform used by ReaR
+      multiple: true
+      options:
+        - Linux x64
+        - Linux ARM64
+        - Linux PPC64LE
+        - Linux s390x
+        - Other
+  - type: textarea
+    attributes:
+      label: OS
+      description: >
+        OS version ("cat /etc/os-release" or "lsb_release -a" or "cat /etc/rear/os.conf")
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Backup
+      description: If known, please specify affected BACKUP subsystem:
+      multiple: true
+      options:
+        - NETFS
+        - RSYNC
+        - REQUESTRESTORE
+        - EXTERNAL
+        - DP
+        - FDRUPSTREAM
+        - GALAXY
+        - GALAXY7
+        - GALAXY10
+        - GALAXY11
+        - NBU
+        - TSM
+        - NSR
+        - PPDM
+        - AVA
+        - SESAM
+        - NBKDC
+        - CDM
+        - RBME
+        - BAREOS
+        - BACULA
+        - DUPLICITY
+        - BORG
+        - VEEAM
+        - NFS4SERVER
+        - No idea
+  - type: textarea
+    attributes:
+      label: Storahe layout
+      description: >
+        Storage layout (`lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT`)
+      validations:
+        required: true
+  - type: textarea
+    attributes:
+      label: What steps will reproduce the bug?
+      description: >
+        Enter details about your bug, preferably a simple code snippet that can
+        be run using `rear -D mkrescue/mkbackup` directly
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Workaround, if any
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: Tell us anything else you think we should know.
