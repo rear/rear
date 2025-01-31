@@ -1,0 +1,38 @@
+name: Feature request for ReaR
+description: User has an idea or feature request missing in ReaR
+labels: 
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for creating a feature request.
+
+        Please fill in as much of the form below as you're able.
+  - type: dropdown
+    attributes:
+      label: Platform
+      description: The platform used by ReaR
+      multiple: true
+      options:
+        - Linux x64
+        - Linux ARM64
+        - Linux PPC64LE
+        - Linux s390x
+        - Other
+  - type: textarea
+    attributes:
+      label: Is your feature request related to a problem? Please describe.
+      description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+  - type: textarea
+    attributes:
+      label: Describe the solution you'd like
+      description: A clear and concise description of what you want to happen.
+  - type: textarea
+    attributes:
+      label: Describe alternatives you've considered
+      description: A clear and concise description of any alternative solutions or features you've considered.
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context or screenshots about the feature request here.
+
