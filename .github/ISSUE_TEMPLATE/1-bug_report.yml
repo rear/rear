@@ -7,11 +7,23 @@ body:
       value: |
         This issue tracker is for bugs and issues found within ReaR code.
         Please fill in as much of the following form as you're able.
+  - type: input
+    attributes:
+      label: ReaR version
+      description: Output of `/usr/sbin/rear -V`
+      placeholder: Run `/usr/sbin/rear -V`
+    validations:
+      required: true 
   - type: textarea
     attributes:
-      label: Version
+      label: Describe the ReaR bug in detail
       description: |
-        Output of `/usr/sbin/rear -V`.
+        Describe the ReaR bug you encountered as precis as possible.
+        We prefer with output from running ReaR in debug mode, e.g.
+        rear -D mkbackup
+        rear -D mkrescue
+        rear -D savelayout
+        Depending in which workflow you are having the issue.
   - type: dropdown
     attributes:
       label: Platform
@@ -23,11 +35,14 @@ body:
         - Linux PPC64LE
         - Linux s390x
         - Other
-  - type: textarea
+  - type: input
     attributes:
-      label: OS
+      label: OS version
       description: >
         OS version ("cat /etc/os-release" or "lsb_release -a" or "cat /etc/rear/os.conf")
+      placeholder: Run `cat /etc/os-release`
+    validations:
+      required: true
   - type: dropdown
     attributes:
       label: Backup
