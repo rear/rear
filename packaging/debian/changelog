@@ -1,3 +1,10 @@
+rear (2.9-1) stable; urgency=low
+
+  * Avoid symlink<->directory change that broke package upgrades to 2.8
+    from previous versions.
+
+ -- Pavel Cahyna <pcahyna@redhat.com>  Fri, 31 Jan 2025 20:19:40 +0100
+
 rear (2.8-1) stable; urgency=low
 
   * For details see the rear-release-notes.txt file
