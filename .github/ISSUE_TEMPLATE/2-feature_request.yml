@@ -1,6 +1,6 @@
 name: Feature request for ReaR
 description: User has an idea or feature request missing in ReaR
-labels: 
+labels: [enhancement]
 body:
   - type: markdown
     attributes:
