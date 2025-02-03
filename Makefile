@@ -16,8 +16,6 @@ rearbin = usr/sbin/rear
 name = rear
 version := $(shell awk 'BEGIN { FS="=" } /^readonly VERSION=/ { print $$2}' $(rearbin))
 
-BUILD_DIR = /var/tmp/build-$(name)-$(version)
-
 ifneq ($(OFFICIAL),)
 	distversion = $(version)
 	debrelease = 0
@@ -63,6 +61,8 @@ else
 endif
 
 
+BUILD_DIR = /var/tmp/build-$(name)-$(distversion)
+
 prefix = /usr
 sysconfdir = /etc
 sbindir = $(prefix)/sbin
@@ -99,6 +99,7 @@ all:
 help:
 	@echo -e "Relax-and-Recover make targets:\n\
 \n\
+  version         - Show ReaR version used\n\
   validate        - Check source code\n\
   install         - Install Relax-and-Recover (may replace files)\n\
   uninstall       - Uninstall Relax-and-Recover (may remove files)\n\
@@ -119,13 +120,19 @@ Relax-and-Recover make variables (optional):\n\
   \n\
 "
 
+version:
+	@echo $(distversion)
+
 dump:
 # found at https://www.cmcrossroads.com/article/dumping-every-makefile-variable
 	$(foreach V, $(sort $(.VARIABLES)), $(if $(filter-out environment% default automatic, $(origin $V)),$(info $V=$($V) defined as >$(value $V)<)))
 
 clean:
-	rm -Rf dist $(BUILD_DIR) etc/os.conf etc/site.conf var build-stamp
+	rm -Rf dist etc/os.conf etc/site.conf var build-stamp
 	$(MAKE) -C doc clean
+
+clean-all: clean
+	rm -Rf $(BUILD_DIR)
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
@@ -238,6 +245,10 @@ dist-install: dist/$(name)-$(distversion).tar.gz
 
 package-clean:
 	rm -f dist/*.rpm dist/*.deb dist/*.pkg.*
+
+# TODO: It might be better to set BUILD_DIR=/tmp/rear-<packagetype>-$(distversion) to separate
+# outer build dir from the package build dir, thereby enabling the make clean to also delete
+# the BUILD_DIR correctly.
 
 ifneq ($(shell type -p pacman),)
 package: package-clean pacman

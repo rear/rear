@@ -1,73 +1,149 @@
 name: Build Packages
 
+# this covers the following use cases:
+#
+# 1. build snapshot packages for every push to any branch
+# 2. publish packages as "ReaR Snapshot" for every push to master
+# 3. build official packages for every push of a tag named release/* and publish as "ReaR Release"
+
 on: push
 
+env:
+    # Set RELEASE to the release tag or to snapshot
+    RELEASE: ${{ startsWith(github.ref, 'refs/tags/release/') && github.ref_name || 'no-release' }}
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+    cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    build:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            id-token: write
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - id: setup
-        run: sudo apt-get -qq update && sudo apt-get -qq install asciidoctor
+            - name: Extract release version
+              # Set release version and filename from the release tag
+              # e.g. 2.8.0 -> RELEASE_VERSION=2.8.0 RELEASE_FILENAME=release-2.8.0
+              if: startsWith(env.RELEASE, 'release')
+              run: |
+                  tee -a $GITHUB_ENV <<< "RELEASE_VERSION=${RELEASE#release/}"
+                  tee -a $GITHUB_ENV <<< "RELEASE_FILENAME=${RELEASE//\//-}"
 
-      - id: prepare
-        run: tools/run-in-docker -- --patch --continue-and-record-successful images
+            - name: Setup build environment
+              run: sudo apt-get -qq update && sudo apt-get -qq install asciidoctor
 
-      - id: images
-        run: cat images
-        if: always()
+            - name: Build Snapshot dist archive
+              if: env.RELEASE == 'no-release'
+              run: make dist
 
-      - id: dist
-        run: make dist
+              # check if the release version matches the source version before building official release dist archive
+            - name: Check and build Release dist archive
+              if: startsWith(env.RELEASE, 'release')
+              run: |
+                  if [ -z "$RELEASE_VERSION" ] ; then
+                    echo "::error::Release version not set in RELEASE_VERSION"
+                    exit 1
+                  fi
 
-      - id: build
-        # make package only for images that we patched successfully
-        run: tools/run-in-docker $(<images) -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz /var/tmp/build-rear*'
+                  SOURCE_VERSION=$(make version OFFICIAL=1)
+                  if [ "$SOURCE_VERSION" != "$RELEASE_VERSION" ] ; then
+                    # Find the line where VERSION is set
+                    VERSION_LINE=$(grep -n "^readonly VERSION=" usr/sbin/rear | cut -d: -f1)
+                    echo "### Version Check Failed" >> $GITHUB_STEP_SUMMARY
+                    echo "* Expected version: $RELEASE_VERSION" >> $GITHUB_STEP_SUMMARY
+                    echo "* Current version: $SOURCE_VERSION" >> $GITHUB_STEP_SUMMARY
+                    echo "::error file=usr/sbin/rear,line=$VERSION_LINE::Version mismatch: Source version in rear script ($SOURCE_VERSION) does not match release tag version ($RELEASE_VERSION)"
+                    exit 1
+                  fi
 
-      - run: ls -lR dist-all
-        if: always()
+                  make dist OFFICIAL=1
 
-      - name: Upload Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ReaR Packages ${{ github.head_ref || github.ref_name }} ${{ github.sha }}
-          path: dist-all/*
-          retention-days: 7
+            - name: Prepare Docker images
+              run: tools/run-in-docker -- --patch --continue-and-record-successful images
 
-      - name: Check rear dump
-        run: tools/run-in-docker $(<images) -- rear dump
+            - name: List available Docker images
+              if: always()
+              run: |
+                  test -r images && cat images || :
 
-      - name: Create Release Archives and Update GitHub Release
-        if: github.ref == 'refs/heads/master'
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          #
-          set -e
+            - name: Build snapshot packages via Docker
+              if: env.RELEASE == 'no-release'
+              # make package only for images that we patched successfully - continue despite errors
+              run: tools/run-in-docker $(<images) -- 'make package || tar -cvzf dist-all/build-$HOSTNAME.tar.gz /var/tmp/build-rear*'
 
-          # put commit details into ZIP comment as the files always have the same names
-          COMMENT=$(git show -s --format="ReaR snapshot %h %ci%nhttps://github.com/rear/rear/tree/%H")
+            - name: Build release packages via Docker
+              if: startsWith(env.RELEASE, 'release')
+              # make package for all images that we support - fail on errors
+              # we need to specify again OFFICIAL=1 as the Makefile determines the version to use before
+              # building the package, and without it wouldn't match with the dist archive created earlier
+              # TODO: make package should be able to determine the version from the dist archive instead
+              run: tools/run-in-docker -- make package OFFICIAL=1
 
-          for distro in dist-all/* ; do
-            test -d "$distro" || continue
-            zip -0 -j -z "$distro.zip" "$distro"/* <<< "$COMMENT"
-          done
+            - name: List dist-all
+              run: |
+                  test -d dist-all && ls -lR dist-all || :
+              if: always()
 
-          gh release delete snapshot -y || :
-          git push --delete origin snapshot || :
-          gh release create snapshot \
-            --target ${{ github.sha }} \
-            --title "ReaR Snapshot $(git show -s --format="%ci")" \
-            --notes "Automatically built installation packages for testing purposes" \
-            dist-all/*.zip dist/*.tar.gz
+            - name: Upload Artifacts
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ReaR Packages ${{ github.head_ref || env.RELEASE_FILENAME || github.ref_name }} ${{ github.sha }}
+                  path: dist-all/*
+                  retention-days: 7
+
+            - name: Check rear dump
+              run: tools/run-in-docker $(<images) -- rear dump
+
+            - name: Create Snapshot Archives and Update GitHub Snapshot Release
+              # only create snapshot release for master branch
+              if: github.ref == 'refs/heads/master'
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+              run: |
+                  #
+                  set -e
+
+                  # put commit details into ZIP comment as the files always have the same names
+                  COMMENT=$(git show -s --format="ReaR snapshot %h %ci%nhttps://github.com/rear/rear/tree/%H")
+
+                  for distro in dist-all/* ; do
+                    test -d "$distro" || continue
+                    zip -0 -j -z "$distro.zip" "$distro"/* <<< "$COMMENT"
+                  done
+
+                  gh release delete snapshot -y || :
+                  git push --delete origin snapshot || :
+                  gh release create snapshot \
+                    --target ${{ github.sha }} \
+                    --title "ReaR Snapshot $(git show -s --format="%ci")" \
+                    --notes "Automatically built installation packages for testing purposes" \
+                    dist-all/*.zip dist/*.tar.gz
+
+            - name: Create Release Archives and Update GitHub Release
+              if: startsWith(env.RELEASE, 'release')
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+              run: |
+                  #
+                  set -e
+
+                  # put commit details into ZIP comment as the files always have the same names
+                  COMMENT=$(git show -s --format="ReaR release version $RELEASE_VERSION %h %ci%nhttps://github.com/rear/rear/tree/%H")
+
+                  for distro in dist-all/* ; do
+                    test -d "$distro" || continue
+                    zip -0 -j -z "$distro.zip" "$distro"/* <<< "$COMMENT"
+                  done
+
+                  dist_archive=$(ls -1 dist/*.tar.gz)
+                  gh release create "$RELEASE" \
+                    --title "ReaR Release $RELEASE_VERSION ($(git show -s --format="%cs"))" \
+                    --generate-notes \
+                    dist-all/*.zip "${dist_archive}#Official ReaR source distribution ${dist_archive##*/}"

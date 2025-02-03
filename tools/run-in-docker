@@ -15,8 +15,7 @@ declare -r IMAGES=(
     debian:{10,11,unstable}
     opensuse/leap:15
     registry.suse.com/suse/sle15
-    centos:{7,8} # discontinued
-    sl:7           # discontinued
+    centos:8       # discontinued
     quay.io/centos/centos:stream9
     # registry.access.redhat.com/ubi{7,8,9} basic packages like parted are missing
     fedora:{40,41} # rawhide Docker image is broken, see https://github.com/fedora-cloud/docker-brew-fedora/issues/109
@@ -45,7 +44,15 @@ Architecture defaults to the host platform, specify architecture via
 -a <architecture>, e.g. -a amd64 on M1 Mac as part of the image selection
 "
 
+
+function gh_actions_output {
+    if test "$GITHUB_ACTIONS"; then
+        echo "$*"
+    fi
+}
+
 function die {
+    gh_actions_output "::error::$*"
     echo -e "ERROR: $*" 1>&2
     exit 1
 }
@@ -117,6 +124,7 @@ RUN git config --global --add safe.directory /rear
 "
 
         # TODO: Add support for GRUB2
+        gh_actions_output "::group::Patching $image"
         printf "********** PATCHING %-40s **********\n" "$image" 1>&2
         read oldsize junk < <(docker images --format '{{.VirtualSize}}' "$image")
         docker buildx build -t "$image" \
@@ -135,6 +143,7 @@ RUN git config --global --add safe.directory /rear
         fi
         read newsize junk < <(docker images --format '{{.VirtualSize}}' "$image")
         test "$oldsize" != "$newsize" && printf "********** %-35s %7s -> %-7s *****\n" "$image" "$oldsize" "$newsize"
+        gh_actions_output "::endgroup::"
     done
 }
 
@@ -214,6 +223,7 @@ esac
 #       bash reads the file specified in BASH_ENV for non-interactive shells
 #       we set both so that our startup file run-in-docker.bashrc is ALWAYS read as it sets the PATH
 for image in "${use_images[@]}"; do
+    gh_actions_output "::group::Running $image"
     printf "********** %-40s **********\n" "$image" 1>&2
     image_name="$(echo -n "$image" | tr -cs '0-9a-zA-Z-_' -)"
     dist_dest="dist-all/$image_name"
@@ -233,4 +243,5 @@ for image in "${use_images[@]}"; do
         echo "********** Copying dist to ${dist_dest}"
         cp -R -x "$rear_toplevel_dir/dist/." "$rear_toplevel_dir/$dist_dest/" || die "Could not copy dist to $dist_dest"
     fi
+    gh_actions_output "::endgroup::"
 done

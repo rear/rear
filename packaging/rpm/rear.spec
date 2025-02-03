@@ -8,7 +8,7 @@
 
 Summary: Relax-and-Recover is a Linux disaster recovery and system migration tool
 Name: rear
-Version: 2.8
+Version: 2.9
 Release: 1%{?rpmrelease}%{?dist}
 # Since some time the license value 'GPLv3' causes build failures in the openSUSE Build Service
 # cf. https://github.com/rear/rear/issues/2289#issuecomment-559713101
@@ -159,10 +159,10 @@ fi
 
 %install
 %{__rm} -rf %{buildroot}
-%{__make} install DESTDIR="%{buildroot}"
+%{__make} install DESTDIR="%{buildroot}" sbindir="%{_sbindir}" OFFICIAL=1
 
 %check
-%{__make} validate
+%{__make} validate OFFICIAL=1
 
 %files
 # defattr: is required for SLES 11 and RHEL/CentOS 5 builds on openSUSE Build Service (#2135)
@@ -176,6 +176,9 @@ fi
 %{_sbindir}/rear
 
 %changelog
+* Wed Jan 29 2025 Schlomo Schapiro <schlomo@schapiro.org>
+- Always set OFFICIAL=1 to install ReaR from SPEC file, as the git version magic happens earlier
+
 * Thu Jul 30 2015 Johannes Meixner <jsmeix@suse.de>
 - For a changelog see the rear-release-notes.txt file.
 
