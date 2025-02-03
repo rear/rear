@@ -995,14 +995,16 @@ function LogPrintIfError () {
 
 # Trustworthy sourcing functions:
 #
-# Specify TRUSTWORTHY_OWNERS:
-# Normally only 'root' is trusted:
+# Specify default TRUSTWORTHY_OWNERS:
+# By default only 'root' is trusted:
 TRUSTWORTHY_OWNERS=( 'root' )
 # Special case Git checkout on the original system:
 # Then additionally the owner of sbin/rear is trusted:
 sbin_rear_owner_name="$( stat -L -c %U "$SCRIPT_FILE" )"
 test "$sbin_rear_owner_name" = "root" || TRUSTWORTHY_OWNERS+=( "$sbin_rear_owner_name" )
-readonly TRUSTWORTHY_OWNERS
+# 'readonly TRUSTWORTHY_OWNERS' happens in sbin/rear
+# after the normal user configuration files (site.conf local.conf rescue.conf) were sourced
+# so that the user can specify what he needs, e.g. for whatever third-party (backup) software.
 #
 # Verify file owner is trustworthy
 # see https://relax-and-recover.org/documentation/security-architecture
@@ -1020,7 +1022,7 @@ function is_trustworthy_owner () {
     # The owner test is the last command so it returns 1 when file owner is not trustworthy.
 }
 #
-# Specify TRUSTWORTHY_PATHS:
+# Specify default TRUSTWORTHY_PATHS:
 # ReaR basic directories cases:
 # (A1)
 # Normal case (i.e. no Git checkout) on the original system:
@@ -1113,7 +1115,9 @@ if test ${#TRUSTWORTHY_PATHS[@]} -eq 0 ; then
         fi
     fi
 fi
-readonly TRUSTWORTHY_PATHS
+# 'readonly TRUSTWORTHY_PATHS' happens in sbin/rear
+# after the normal user configuration files (site.conf local.conf rescue.conf) were sourced
+# so that the user can specify what he needs, e.g. for whatever third-party (backup) software.
 #
 # Verify the actual file path (i.e. with symlinks resolved) is trustworthy
 # see https://github.com/rear/rear/issues/3259#issuecomment-2385745545
