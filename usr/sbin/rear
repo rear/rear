@@ -570,10 +570,14 @@ fi
 # "exec 7>&-"
 # "exec 6<&-"
 # Via source usr/share/rear/lib/_input-output-functions.sh
-# the above 'source' forbid function is replaced by a 'source' wrapper function
-# which implements trustworthy sourcing so from now on 'source' can be used
-# to source a file provided the sourced file is considered trustworthy
+# the above 'source' forbid function is replaced by a 'source' wrapper function which implements trustworthy sourcing
+# so from now on 'source' can be used to source a file provided the sourced file is considered trustworthy
 # see https://github.com/rear/rear/issues/3259#issuecomment-2385745545
+# Additionally TRUSTWORTHY_OWNERS and TRUSTWORTHY_PATHS are set to default values
+# but TRUSTWORTHY_OWNERS and TRUSTWORTHY_PATHS are not yet set 'readonly' because this is done
+# after the normal user configuration files (site.conf local.conf rescue.conf) were sourced
+# so that the user can specify what he needs, e.g. for whatever third-party (backup) software
+# see https://github.com/rear/rear/pull/3379#issuecomment-2621021213
 
 # Set RECOVERY_MODE when we are running inside a rescue/recovery system
 # which is normally ReaR's recovery system or alternatively in PORTABLE mode
@@ -762,11 +766,11 @@ if test "$DEBUGSCRIPTS_ARGUMENT" ; then
     Debug "The debugscripts flags are '$DEBUGSCRIPTS_ARGUMENT'"
 fi
 
-# Show TRUSTWORTHY_OWNERS and TRUSTWORTHY_PATHS before files get sourced:
-Debug "Sourced files must be owned by one of the TRUSTWORTHY_OWNERS ${TRUSTWORTHY_OWNERS[*]}"
-Debug "Sourced files must be below one of the TRUSTWORTHY_PATHS ${TRUSTWORTHY_PATHS[*]}"
+# Show default TRUSTWORTHY_OWNERS and default TRUSTWORTHY_PATHS before ReaR functions and user config files get sourced:
+Debug "Sourced files must be owned by one of the default TRUSTWORTHY_OWNERS ${TRUSTWORTHY_OWNERS[*]}"
+Debug "Sourced files must be below one of the default TRUSTWORTHY_PATHS ${TRUSTWORTHY_PATHS[*]}"
 
-# Include functions after RUNTIME_LOGFILE is set and readonly
+# Include ReaR functions after RUNTIME_LOGFILE is set and readonly
 # so that functions can use a fixed RUNTIME_LOGFILE value
 # and after the initial startup messages and TRUSTWORTHY_OWNERS and TRUSTWORTHY_PATHS are shown:
 for script in $SHARE_DIR/lib/[a-z]*.sh ; do
@@ -801,6 +805,15 @@ for config in site local rescue ; do
         Source "$CONFIG_DIR/$config.conf" || Error "Failed to Source $CONFIG_DIR/$config.conf"
     fi
 done
+# After the normal user configuration files (site.conf local.conf rescue.conf) were sourced
+# set TRUSTWORTHY_OWNERS and TRUSTWORTHY_PATHS 'readonly' to avoid complicated automatisms for CONFIG_APPEND_FILES
+# but this means when the user needs to source additional configuration files in non-default paths
+# he must add his non-default paths to TRUSTWORTHY_PATHS in a normal user configuration file.
+readonly TRUSTWORTHY_OWNERS TRUSTWORTHY_PATHS
+# Show the final TRUSTWORTHY_OWNERS and TRUSTWORTHY_PATHS to the user in debug mode
+# to help him if he cannot source additional configuration files in non-default paths:
+DebugPrint "Sourced files must be owned by one of the TRUSTWORTHY_OWNERS ${TRUSTWORTHY_OWNERS[*]}"
+DebugPrint "Sourced files must be below one of the TRUSTWORTHY_PATHS ${TRUSTWORTHY_PATHS[*]}"
 # Finally source additional configuration files if specified on the command line:
 CONFIG_APPEND_FILES_PATHS=()
 if test "$CONFIG_APPEND_FILES" ; then
@@ -857,8 +870,10 @@ if [ "$saved_tmpdir" != "$TMPDIR" ] ; then
     Error "Setting TMPDIR in a configuration file is not supported. To specify a working area directory prefix, export TMPDIR before executing '$PROGRAM'"
 fi
 
-readonly CONFIG_APPEND_FILES_PATHS # nothing else should be able to add more configs
-COPY_AS_IS+=("${CONFIG_APPEND_FILES_PATHS[@]}") # copy also to rescue system
+# Nothing else should be able to add more configuration files:
+readonly CONFIG_APPEND_FILES_PATHS
+# Have additional configuration files also in the rescue system:
+COPY_AS_IS+=("${CONFIG_APPEND_FILES_PATHS[@]}")
 
 # Now SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR and KERNEL_VERSION should be set to a fixed value:
 readonly SHARE_DIR CONFIG_DIR VAR_DIR LOG_DIR KERNEL_VERSION
