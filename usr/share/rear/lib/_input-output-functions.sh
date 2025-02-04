@@ -1012,14 +1012,18 @@ function is_trustworthy_owner () {
     local file="$1"
     local owner_name=""
     local trustworthy_owner=""
-    # Do not error out in 'stat' when it is neither a regular file nor a link to a regular file:
+    # Do not error out in 'stat' when it is neither a regular file nor a link to a regular file
+    # but it is not trustworthy when it is neither a regular file nor a link to a regular file:
     test -f "$file" || return 1
+    # Empty TRUSTWORTHY_OWNERS means all regular file owners are blindly trusted,
+    # cf https://github.com/rear/rear/pull/3379#issuecomment-2633123866
+    test ${#TRUSTWORTHY_OWNERS[@]} -eq 0 && return 0
     # '-L' forces stat to follow symlinks (and error out if that fails):
     owner_name="$( stat -L -c %U "$file" )" || Error "is_trustworthy_owner(): 'stat -L -c %U $file' failed"
     for trustworthy_owner in "${TRUSTWORTHY_OWNERS[@]}" ; do
         test "$owner_name" = "$trustworthy_owner" && return 0
     done
-    # The owner test is the last command so it returns 1 when file owner is not trustworthy.
+    return 1
 }
 #
 # Specify default TRUSTWORTHY_PATHS:
@@ -1082,37 +1086,34 @@ function is_trustworthy_owner () {
 # and when CONFIG_DIR is a sub-directory of '/etc/' it is needless to also add CONFIG_DIR.
 # The trailing / ensures that e.g. /libanywhere/ is not falsely regarded as trustworthy path
 # so in particular /lib64/ is currently not considered as trustworthy path.
-if test ${#TRUSTWORTHY_PATHS[@]} -eq 0 ; then
-    # Set default when TRUSTWORTHY_PATHS is empty:
-    if test "$REAR_DIR_PREFIX" ; then
-        # When REAR_DIR_PREFIX is set it is case (B1) i.e. Git checkout on the original system.
-        # All files below a Git checkout directory are considered to be trustworthy
-        # see https://relax-and-recover.org/documentation/security-architecture
-        # SHARE_DIR and CONFIG_DIR and VAR_DIR are sub-directories of REAR_DIR_PREFIX:
-        TRUSTWORTHY_PATHS=( "$REAR_DIR_PREFIX/" '/usr/' '/etc/' '/lib/' )
+if test "$REAR_DIR_PREFIX" ; then
+    # When REAR_DIR_PREFIX is set it is case (B1) i.e. Git checkout on the original system.
+    # All files below a Git checkout directory are considered to be trustworthy
+    # see https://relax-and-recover.org/documentation/security-architecture
+    # SHARE_DIR and CONFIG_DIR and VAR_DIR are sub-directories of REAR_DIR_PREFIX:
+    TRUSTWORTHY_PATHS=( "$REAR_DIR_PREFIX/" '/usr/' '/etc/' '/lib/' )
+else
+    # When REAR_DIR_PREFIX is empty it is cases (A1) or (A2) i.e. no Git checkout
+    # or it is case (B2) i.e. in the ReaR recovery system when there was a Git checkout on the original system.
+    # Intentionally we do not test RECOVERY_MODE because this is not needed.
+    # Instead we test directly "the real thing" which is whether or not SHARE_DIR matches where its actual files are
+    # by checking an example (this script) i.e. if the actual path of /usr/share/rear/lib/_input-output-functions.sh
+    # is /usr/share/rear/lib/_input-output-functions.sh or /rear/prefix/usr/share/rear/lib/_input-output-functions.sh
+    # and in the latter case we specify '/rear/prefix/' first in trustworthy_paths
+    # cf. https://github.com/rear/rear/pull/3379#issuecomment-2601767515
+    # cf. the REAR_DIR_PREFIX setting code in sbin/rear
+    # TODO: Perhaps test_path="$SHARE_DIR/lib/_input-output-functions.sh" is better than hardcoded '/usr/share/rear'?
+    test_path="/usr/share/rear/lib/_input-output-functions.sh"
+    # Fall back to the normal cases (A1) or (A2) if 'readlink -e /usr/share/rear/lib/_input-output-functions.sh' fails:
+    actual_path="$( readlink -e "$test_path" )" || actual_path="$test_path"
+    if test "$actual_path" != "$test_path" ; then
+        # This is case (B1) i.e. in the ReaR recovery system when there was a Git checkout on the original system:
+        rear_dir_prefix=${actual_path%$test_path}
+        TRUSTWORTHY_PATHS=( "$rear_dir_prefix/" '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
     else
-        # When REAR_DIR_PREFIX is empty it is cases (A1) or (A2) i.e. no Git checkout
-        # or it is case (B2) i.e. in the ReaR recovery system when there was a Git checkout on the original system.
-        # Intentionally we do not test RECOVERY_MODE because this is not needed.
-        # Instead we test directly "the real thing" which is whether or not SHARE_DIR matches where its actual files are
-        # by checking an example (this script) i.e. if the actual path of /usr/share/rear/lib/_input-output-functions.sh
-        # is /usr/share/rear/lib/_input-output-functions.sh or /rear/prefix/usr/share/rear/lib/_input-output-functions.sh
-        # and in the latter case we specify '/rear/prefix/' first in trustworthy_paths
-        # cf. https://github.com/rear/rear/pull/3379#issuecomment-2601767515
-        # cf. the REAR_DIR_PREFIX setting code in sbin/rear
-        # TODO: Perhaps test_path="$SHARE_DIR/lib/_input-output-functions.sh" is better than hardcoded '/usr/share/rear'?
-        test_path="/usr/share/rear/lib/_input-output-functions.sh"
-        # Fall back to the normal cases (A1) or (A2) if 'readlink -e /usr/share/rear/lib/_input-output-functions.sh' fails:
-        actual_path="$( readlink -e "$test_path" )" || actual_path="$test_path"
-        if test "$actual_path" != "$test_path" ; then
-            # This is case (B1) i.e. in the ReaR recovery system when there was a Git checkout on the original system:
-            rear_dir_prefix=${actual_path%$test_path}
-            TRUSTWORTHY_PATHS=( "$rear_dir_prefix/" '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
-        else
-            # This is the normal cases (A1) or (A2) i.e. no Git checkout:
-            # In case of (A1) or (A2) SHARE_DIR is a sub-directory of '/usr/' and CONFIG_DIR is a sub-directory of '/etc/':
-            TRUSTWORTHY_PATHS=( '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
-        fi
+        # This is the normal cases (A1) or (A2) i.e. no Git checkout:
+        # In case of (A1) or (A2) SHARE_DIR is a sub-directory of '/usr/' and CONFIG_DIR is a sub-directory of '/etc/':
+        TRUSTWORTHY_PATHS=( '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
     fi
 fi
 # 'readonly TRUSTWORTHY_PATHS' happens in sbin/rear
@@ -1125,8 +1126,12 @@ function is_trustworthy_path () {
     local file="$1"
     local actual_path=""
     local trustworthy_path=""
-    # Do not error out in 'readlink' when it is neither a regular file nor a link to a regular file:
+    # Do not error out in 'readlink' when it is neither a regular file nor a link to a regular file
+    # but it is not trustworthy when it is neither a regular file nor a link to a regular file:
     test -f "$file" || return 1
+    # Empty TRUSTWORTHY_PATHS means all regular file paths are blindly trusted,
+    # cf https://github.com/rear/rear/pull/3379#issuecomment-2633123866
+    test ${#TRUSTWORTHY_PATHS[@]} -eq 0 && return 0
     # Get the full path of the actual file (i.e. with leading / and symlinks resolved)
     # e.g. /etc/os-release is a symbolic link to /usr/lib/os-release (at least on openSUSE Leap 15.6):
     actual_path="$( readlink -e "$file" )" || Error "is_trustworthy_path(): 'readlink -e $file' failed"
@@ -1135,7 +1140,7 @@ function is_trustworthy_path () {
         test "$trustworthy_path" || continue
         [[ $actual_path =~ ^$trustworthy_path ]] && return 0
     done
-    # The [[ expression ]] is the last command so it returns 1 when file does not start with a trustworthy path.
+    return 1
 }
 #
 # The actual 'source' wrapper function that is intended to implement trustworthy sourcing
@@ -1143,7 +1148,7 @@ function is_trustworthy_path () {
 # which is for now only a simple proof of concept to test how far it works at all
 # see also https://github.com/rear/rear/issues/3319#issuecomment-2363556217
 function source () {
-    local source_file="$1"
+  { local source_file="$1"
     Debug "Trustworthy sourcing '$*'"
     # Ensure source file is a regular file or a link to a regular file.
     # I.e. skip non-regular files like directories, device nodes, or file not found.
@@ -1160,6 +1165,7 @@ function source () {
     # The actual work (source the source file):
     builtin source "$@"
     # The return code of the 'source' wrapper function is the return code of the 'source' builtin.
+  } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # Cleanup build area:
