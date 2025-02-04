@@ -8,3 +8,6 @@
 Error "The BACKUP_PROG_OPTIONS variable is now a Bash array and not a string. Please update your configuration to look like this:${IFS}BACKUP_PROG_OPTIONS+=( $BACKUP_PROG_OPTIONS )"
 
 # We can add other checks below (in the future)
+
+# Return successfully when there was no Error() above
+return 0
