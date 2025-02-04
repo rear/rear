@@ -767,8 +767,8 @@ if test "$DEBUGSCRIPTS_ARGUMENT" ; then
 fi
 
 # Show default TRUSTWORTHY_OWNERS and default TRUSTWORTHY_PATHS before ReaR functions and user config files get sourced:
-Debug "Sourced files must be owned by one of the default TRUSTWORTHY_OWNERS ${TRUSTWORTHY_OWNERS[*]}"
-Debug "Sourced files must be below one of the default TRUSTWORTHY_PATHS ${TRUSTWORTHY_PATHS[*]}"
+Debug "Sourced files must be owned by one of the default TRUSTWORTHY_OWNERS: ${TRUSTWORTHY_OWNERS[*]:-all owners are trusted}"
+Debug "Sourced files must be below one of the default TRUSTWORTHY_PATHS: ${TRUSTWORTHY_PATHS[*]:-all paths are trusted}"
 
 # Include ReaR functions after RUNTIME_LOGFILE is set and readonly
 # so that functions can use a fixed RUNTIME_LOGFILE value
@@ -812,8 +812,8 @@ done
 readonly TRUSTWORTHY_OWNERS TRUSTWORTHY_PATHS
 # Show the final TRUSTWORTHY_OWNERS and TRUSTWORTHY_PATHS to the user in debug mode
 # to help him if he cannot source additional configuration files in non-default paths:
-DebugPrint "Sourced files must be owned by one of the TRUSTWORTHY_OWNERS ${TRUSTWORTHY_OWNERS[*]}"
-DebugPrint "Sourced files must be below one of the TRUSTWORTHY_PATHS ${TRUSTWORTHY_PATHS[*]}"
+DebugPrint "Sourced files must be owned by one of the TRUSTWORTHY_OWNERS: ${TRUSTWORTHY_OWNERS[*]:-all owners are trusted}"
+DebugPrint "Sourced files must be below one of the TRUSTWORTHY_PATHS: ${TRUSTWORTHY_PATHS[*]:-all paths are trusted}"
 # Finally source additional configuration files if specified on the command line:
 CONFIG_APPEND_FILES_PATHS=()
 if test "$CONFIG_APPEND_FILES" ; then
