@@ -758,7 +758,7 @@ We do not care about global options, therefore, the `local.conf` and `site.conf`
 We use the `blockclone.conf` file only and you will find an example in file 
 `/usr/share/rear/conf/examples/blockclone.conf`.
 
-The <a href="blockclone.conf">https://github.com/rear/rear/blob/gdha-blockclone/usr/share/rear/conf/examples/blockclone.conf</a> file:
+The https://github.com/rear/rear/blob/gdha-blockclone/usr/share/rear/conf/examples/blockclone.conf[blockclone.conf] file:
 ```
 # The OUTPUT must be defined - PXE is currently the only one working with RPi
 OUTPUT=PXE
