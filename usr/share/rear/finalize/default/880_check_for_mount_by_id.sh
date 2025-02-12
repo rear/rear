@@ -13,16 +13,53 @@ test -e "$TARGET_FS_ROOT/etc/fstab" || return 0
 
 # We ignore swap here because we treat it specially somewhere else.
 # FIXME: Where exactly is that "somewhere else"?
-# Nothing to do when there is no '/dev/disk/by-id' entry in etc/fstab (excluding 'swap'):
-grep -v -w 'swap' "$TARGET_FS_ROOT/etc/fstab" | grep -q '^/dev/disk/by-id' || return 0
+#
+# "man fstab" (from util-linux-2.39.3) tells (excerpts):
+#   Lines starting with '#' are comments. Blank lines are ignored.
+#   first field (fs_spec) ... block special device, remote filesystem or filesystem image for loop device ... or swap file or swap device
+#   second field (fs_file) ...  For swap area, this field should be specified as 'none'
+#   third field (fs_vfstype) ... An entry swap denotes a file or partition to be used for swapping
+# so only the fs_vfstype field can be used to find out if it is a swap area.
+local by_id_no_block_devices=()
+local fs_spec fs_file fs_vfstype junk
+while read fs_spec fs_file fs_vfstype junk ; do
+    # Ignore swap:
+    test "$fs_vfstype" = "swap" && continue
+    # Skip fstab entries which are not /dev/disk/by-id/...:
+    [[ $fs_spec =~ ^/dev/disk/by-id/ ]] || continue
+    # No we have an /dev/disk/by-id/... entry which is not used as swap.
+    # All is well with this one when it exist as block device on the replacement hardware:
+    test -b "$fs_spec" && continue
+    # Remember it when it does not exist as block device on the replacement hardware:
+    by_id_no_block_devices+=( "$fs_spec" )
+done < <( grep -E -v "^#|^[[:space:]]*$" "$TARGET_FS_ROOT/etc/fstab" ) # Ignore comments and blank lines
 
-# Something is mounted via /dev/disk/by-id in etc/fstab.
+if test ${#by_id_no_block_devices[@]} -eq 0 ; then
+    # All is well when all /dev/disk/by-id entries in etc/fstab exist as block devices in the recreated system.
+    # In particular there is no need to show additional 'scsi_id' output.
+    DebugPrint "All /dev/disk/by-id entries in etc/fstab exist as block devices in the recreated system"
+    return 0
+fi
+
+# Something is mounted via /dev/disk/by-id in etc/fstab where its /dev/disk/by-id/...
+# does not exist as block device in the ReaR recovery system on the replacement hardware
+# cf. https://github.com/rear/rear/issues/3383#issuecomment-2652966699
 # Tell the user that automatically adjusting /dev/disk/by-id entries is not supported:
 LogPrintError "Automatically adjusting /dev/disk/by-id entries in etc/fstab is not supported:"
-LogPrintError "  Those IDs could be hardware dependent so check $TARGET_FS_ROOT/etc/fstab"
-LogPrintError "  and verify all is correct or manually adjust $TARGET_FS_ROOT/etc/fstab"
-LogPrintError "  to the actual values of the recreated system in $TARGET_FS_ROOT"
+LogPrintError "  Check $TARGET_FS_ROOT/etc/fstab and manually adjust /dev/disk/by-id entries"
+LogPrintError "  as needed to the actual values of the recreated system in $TARGET_FS_ROOT"
+# Show the user the /dev/disk/by-id entries which are no block devices in the recreated system:
+LogPrintError "  Those /dev/disk/by-id entries are no block devices in the recreated system:"
+local by_id_no_block_device
+for by_id_no_block_device in "${by_id_no_block_devices[@]}" ; do
+    LogPrintError "  $by_id_no_block_device"
+done
 
+# Additional 'scsi_id' output:
+# TODO: I <jsmeix@suse.de> wonder if 'scsi_id' output is still needed nowadays
+# when neither NVMe disks nor KVM 'VirtIO' virtual disks are SCSI disks
+# so perhaps that rather complicated code for 'scsi_id' output could be dropped?
+#
 # The supported options of scsi_id changed over time, so we try two commonly known ways to call it,
 # cf. https://github.com/rear/rear/issues/3383#issuecomment-2618970742
 # scsi_id is usually either /lib/udev/scsi_id (e.g. in SLES 11 SP4 with udev-147)
