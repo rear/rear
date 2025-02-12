@@ -3,7 +3,8 @@
 # because we do not know how to set the original LUN IDs to the new / recovered hardware.
 # To help the user we check for /dev/disk/by-id entries in etc/fstab
 # and show the LUN IDs of SCSI disk devices via 'scsi_id'.
-# TODO: For non-SCSI disk devices we show nothing.
+# For non-SCSI disk devices we only show the etc/fstab '/dev/disk/by-id/...' value
+# when it does not exist as block device on the replacement hardware.
 # Non-SCSI disks are in particular NVMe devices and KVM 'VirtIO' virtual disks,
 # see https://github.com/rear/rear/issues/3383
 #
