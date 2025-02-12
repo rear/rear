@@ -122,6 +122,7 @@ jobs:
                   git push --delete origin snapshot || :
                   gh release create snapshot \
                     --target ${{ github.sha }} \
+                    --prerelease \
                     --title "ReaR Snapshot $(git show -s --format="%ci")" \
                     --notes "Automatically built installation packages for testing purposes" \
                     dist-all/*.zip dist/*.tar.gz
