@@ -27,7 +27,7 @@ while read fs_spec fs_file fs_vfstype junk ; do
     test "$fs_vfstype" = "swap" && continue
     # Skip fstab entries which are not /dev/disk/by-id/...:
     [[ $fs_spec =~ ^/dev/disk/by-id/ ]] || continue
-    # No we have an /dev/disk/by-id/... entry which is not used as swap.
+    # Now we have an /dev/disk/by-id/... entry which is not used as swap.
     # All is well with this one when it exist as block device on the replacement hardware:
     test -b "$fs_spec" && continue
     # Remember it when it does not exist as block device on the replacement hardware:
