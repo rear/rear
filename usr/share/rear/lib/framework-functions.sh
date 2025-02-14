@@ -7,7 +7,61 @@
 #
 # convert tabs into 4 spaces with: expand --tabs=4 file >new-file
 
-# source a file given in $1
+# source only a trustworthy file given in $1
+# A file is considered trustworthy to be sourced
+# when its file owner is one of the TRUSTED_FILE_OWNERS.
+# Because only the file owner can 'chmod' (cf. "man 2 chmod": caller's EUID must match owner)
+# we can sufficiently safely assume that a file which is onwed by one of the TRUSTED_FILE_OWNERS
+# is sufficiently trustworthy to be sourced without further additional checks
+# (e.g. if other users have permissions to modify the file or special ACLs).
+# Furthermore it should not be ReaR's task to prevent TRUSTED_FILE_OWNERS
+# from doing what they want (a.k.a. "final power to the user")
+# or simply put: TRUSTED_FILE_OWNERS means we do trust them.
+function SourceTrustworthy () {
+    local source_file="$1"
+    local source_return_code=0
+    local source_file_owner_name=""
+    local saved_bash_flags_and_options_commands=""
+    # Ensure source file is a regular file (or a link to a regular file).
+    # I.e. skip non-regular files like directories, device nodes, or file not found.
+    # It also returns here when no source file was specified (i.e. when $1 is empty).
+    if ! test -f "$source_file" ; then
+        # Show the source file name separated as '$source_file' to make it clear when it is empty:
+        Debug "Skipped 'SourceTrustworthy' because '$source_file' is not a regular file"
+        return 1
+    fi
+    # Ensure source file owner is one of the TRUSTED_FILE_OWNERS
+    # cf. the TRUSTED_FILE_OWNERS related code in build/default/990_verify_rootfs.sh
+    if test "$TRUSTED_FILE_OWNERS" ; then
+        source_file_owner_name="$( stat -c %U "$source_file" )"
+        if ! IsInArray "$source_file_owner_name" "${TRUSTED_FILE_OWNERS[@]}" ; then
+            # When the source file is not sourced because its owner is not one of the TRUSTED_FILE_OWNERS
+            # we ensure the user is notified because this reason is likely unexpected by the user:
+            LogPrintError "Refused 'SourceTrustworthy $source_file' because file owner '$source_file_owner_name' is not in TRUSTED_FILE_OWNERS"
+            return 1
+        fi
+    fi
+    # Save the bash flags and options settings so we can restore them after sourcing the source file:
+    { saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # The actual work (source the source file):
+    source "$source_file"
+    source_return_code=$?
+    test "0" -eq "$source_return_code" || Debug "SourceTrustworthy function: 'source $source_file' returns $source_return_code"
+    # Restore the bash flags and options settings to what they have been before sourcing the source file:
+    { apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands" ; } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # Ensure that after each sourced file we are back in ReaR's usual working directory
+    # that is WORKING_DIR="$( pwd )" when usr/sbin/rear was launched
+    # cf. https://github.com/rear/rear/issues/2461
+    # Quoting "$WORKING_DIR" is needed to make it behave fail-safe if WORKING_DIR is empty
+    # because cd "" succeeds without changing the current directory
+    # in contrast to plain cd which changes to the home directory (usually /root)
+    # cf. https://github.com/rear/rear/pull/2478#issuecomment-673500099
+    cd "$WORKING_DIR" || LogPrintError "Failed to 'cd $WORKING_DIR'"
+    # Return the return value of the actual work (source the source file):
+    return $source_return_code
+}
+
+# SourceTrustworthy a file given in $1
 function Source () {
     local source_file="$1"
     local source_return_code=0
@@ -46,43 +100,30 @@ function Source () {
     # DEBUGSCRIPTS mode settings:
     if test "$DEBUGSCRIPTS" ; then
         Debug "Entering debugscript mode via 'set -$DEBUGSCRIPTS_ARGUMENT'."
-        local saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )"
         set -$DEBUGSCRIPTS_ARGUMENT
     fi
-    # The actual work (source the source file):
-    # Do not error out here when 'source' fails (i.e. when 'source' returns a non-zero exit code)
+    # The actual work (SourceTrustworthy the source file):
+    # Do not error out here when 'SourceTrustworthy' fails
+    # (e.g. when 'source' in SourceTrustworthy returns a non-zero exit code)
     # because scripts usually return the exit code of their last command
     # cf. https://github.com/rear/rear/issues/1965#issuecomment-439330017
     # and in general ReaR should not error out in a (helper) function but instead
     # a function should return an error code so that its caller can decide what to do
     # cf. https://github.com/rear/rear/pull/1418#issuecomment-316004608
-    source "$source_file"
+    SourceTrustworthy "$source_file"
     source_return_code=$?
-    test "0" -eq "$source_return_code" || Debug "Source function: 'source $source_file' returns $source_return_code"
-    # Ensure that after each sourced file we are back in ReaR's usual working directory
-    # that is WORKING_DIR="$( pwd )" when usr/sbin/rear was launched
-    # cf. https://github.com/rear/rear/issues/2461
-    # Quoting "$WORKING_DIR" is needed to make it behave fail-safe if WORKING_DIR is empty
-    # because cd "" succeeds without changing the current directory
-    # in contrast to plain cd which changes to the home directory (usually /root)
-    # cf. https://github.com/rear/rear/pull/2478#issuecomment-673500099
-    cd "$WORKING_DIR" || LogPrintError "Failed to 'cd $WORKING_DIR'"
-    # Undo DEBUGSCRIPTS mode settings:
-    if test "$DEBUGSCRIPTS" ; then
-        Debug "Leaving debugscript mode (back to previous bash flags and options settings)."
-        # The only known way how to do 'set +x' after 'set -x' without 'set -x' output for the 'set +x' call
-        # is a current shell environment where stderr is redirected to /dev/null before 'set +x' is run via
-        #   { set +x ; } 2>/dev/null
-        # here we avoid much useless 'set -x' debug output for the apply_bash_flags_and_options_commands call:
-        { apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands" ; } 2>/dev/null
-    fi
+    test "0" -eq "$source_return_code" || Debug "Source function: 'SourceTrustworthy $source_file' returns $source_return_code"
+    # After SourceTrustworthy we are back in ReaR's usual working directory
+    # and the bash flags and options settings were restored to what they have been before
+    # so in particular the DEBUGSCRIPTS mode setting is already undone and we only report it:
+    test "$DEBUGSCRIPTS" && Debug "Leaving debugscript mode (back to previous bash flags and options settings)."
     # Breakpoint if needed:
     if [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] ; then
         # Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user
         # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
         read -p "Press ENTER to continue ... " 0<&6 1>&7 2>&8
     fi
-    # Return the return value of the actual work (source the source file):
+    # Return the return value of the actual work (SourceTrustworthy the source file):
     return $source_return_code
 }
 
