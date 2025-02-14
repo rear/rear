@@ -35,20 +35,22 @@ while read fs_spec fs_file fs_vfstype junk ; do
     by_id_no_block_devices+=( "$fs_spec" )
 done < <( grep -E -v "^#|^[[:space:]]*$" "$TARGET_FS_ROOT/etc/fstab" ) # Ignore comments and blank lines
 
+# All is well when all /dev/disk/by-id entries in etc/fstab exist as block devices in the recreated system:
 if test ${#by_id_no_block_devices[@]} -eq 0 ; then
-    # All is well when all /dev/disk/by-id entries in etc/fstab exist as block devices in the recreated system.
-    # In particular there is no need to show additional 'scsi_id' output.
     DebugPrint "All /dev/disk/by-id entries in etc/fstab exist as block devices in the recreated system"
     return 0
 fi
 
-# Something is mounted via /dev/disk/by-id in etc/fstab where its /dev/disk/by-id/...
-# does not exist as block device in the ReaR recovery system on the replacement hardware
+# At this point not all is well because
+# something is mounted via /dev/disk/by-id in etc/fstab
+# where its /dev/disk/by-id/... does not exist as block device
+# in the ReaR recovery system on the replacement hardware
 # cf. https://github.com/rear/rear/issues/3383#issuecomment-2652966699
 # Tell the user that automatically adjusting /dev/disk/by-id entries is not supported:
 LogPrintError "Automatically adjusting /dev/disk/by-id entries in etc/fstab is not supported:"
 LogPrintError "  Check $TARGET_FS_ROOT/etc/fstab and manually adjust /dev/disk/by-id entries"
 LogPrintError "  as needed to the actual values of the recreated system in $TARGET_FS_ROOT"
+
 # Show the user the /dev/disk/by-id entries which are no block devices in the recreated system:
 LogPrintError "  Those /dev/disk/by-id entries are no block devices in the recreated system:"
 local by_id_no_block_device
@@ -69,7 +71,7 @@ done
 # and /usr/lib/udev/scsi_id supports e.g. '/usr/lib/udev/scsi_id -x -g -d /dev/sda'
 # cf. https://github.com/rear/rear/issues/3383#issuecomment-2618970742
 if ! test -x /usr/lib/udev/scsi_id -o -x /lib/udev/scsi_id ; then
-    # Give up. The above LogPrintError should be enough:
+    # Give up. The above LogPrintError messages should be enough:
     Debug "Neither /usr/lib/udev/scsi_id nor /lib/udev/scsi_id is executable"
     return 1
 fi
@@ -130,7 +132,7 @@ while read major minor blocks name ; do
     else
         # Try the older one /lib/udev/scsi_id as fallback.
         # Above was already tested that /lib/udev/scsi_id is executable when /usr/lib/udev/scsi_id is not executable.
-            scsi_id_output="$( /lib/udev/scsi_id --export --whitelisted --device=$device_path | grep -E "$egrep_pattern" | tr -s '\n' ' ' )"
+        scsi_id_output="$( /lib/udev/scsi_id --export --whitelisted --device=$device_path | grep -E "$egrep_pattern" | tr -s '\n' ' ' )"
     fi
     if ! contains_visible_char "$scsi_id_output" ; then
         # Give up with this device and continue with the next one:
