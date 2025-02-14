@@ -530,7 +530,12 @@ get_partition_start() {
 
 # Get the type of a layout component
 get_component_type() {
-    grep -E "^[^ ]+ $1 " $LAYOUT_TODO | cut -d " " -f 3
+    local component="$1"
+    local component_types=()
+    component_types=( $( grep -E "^[^ ]+ $component " $LAYOUT_TODO | cut -d " " -f 3 | uniq ) )
+    test ${#component_types[@]} -lt 1 && return 1
+    test ${#component_types[@]} -gt 1 && BugError "Layout component '$component' has more than one type in $LAYOUT_TODO"
+    echo "${component_types[0]}"
 }
 
 # Get the disklabel (partition table) type of the disk $1 from the layout file
