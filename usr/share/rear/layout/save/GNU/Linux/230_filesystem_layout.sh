@@ -119,7 +119,7 @@ fi
                 fi
             fi
         fi
-	# In case Longhorn is rebuilding a replica device it will show up as a pseudo-device and when that is the
+        # In case Longhorn is rebuilding a replica device it will show up as a pseudo-device and when that is the
         # case then you would find traces of it in the /var/lib/rear/layout/disklayout.conf file, which would
         # break the recovery as Longhorn Engine replica's are under control of Rancher Longhorn software and these are
         # rebuild automatically via kubernetes longhorn-engine pods.
