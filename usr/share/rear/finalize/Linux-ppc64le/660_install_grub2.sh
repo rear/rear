@@ -89,11 +89,14 @@ if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-mkconfig -o /boot/$
     LogPrintError "Failed to generate boot/$grub_name/grub.cfg in $TARGET_FS_ROOT - trying to install GRUB2 nevertheless"
 fi
 
+# Detect plaform, e.g. PowerNV, in advance.
+grub2_ppc_platform="$(awk '/platform/ {print $NF}' < /proc/cpuinfo)"
+
 # Do not update nvram when system is running in PowerNV mode (BareMetal).
 # grub2-install will fail if not run with the --no-nvram option on a PowerNV system,
 # see https://github.com/rear/rear/pull/1742
 grub2_no_nvram_option=""
-if [[ $(awk '/platform/ {print $NF}' < /proc/cpuinfo) == PowerNV ]] ; then
+if [[ "$grub2_ppc_platform" == PowerNV ]] ; then
     grub2_no_nvram_option="--no-nvram"
 fi
 # Also do not update nvram when no character device node /dev/nvram exists.
@@ -173,6 +176,16 @@ LogPrint "Determining where to install GRUB2 (no GRUB2_INSTALL_DEVICES specified
 # Find PPC PReP Boot partitions:
 part_list=$( awk -F ' ' '/^part / {if ($6 ~ /prep/) {print $7}}' $LAYOUT_FILE )
 if ! test "$part_list" ; then
+    # The PReP Boot partitions are not required on PowerNV systems.
+    if [[ "$grub2_ppc_platform" == "PowerNV" ]]; then
+        LogPrint "PPC PReP boot partition not found - GRUB2 installation is not necessary on PowerNV systems"
+
+        # As long as the GRUB 2 configuration was generated successfully, the
+        # system will be bootable using Petitboot.
+        NOBOOTLOADER=''
+        return 0
+    fi
+
     LogPrintError "Cannot install GRUB2 (unable to find a PPC PReP boot partition)"
     return 1
 fi
