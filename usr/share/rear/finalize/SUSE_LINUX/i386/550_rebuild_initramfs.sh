@@ -56,7 +56,7 @@ if test $dracut_binary ; then
     # nevertheless we set PATH to be on the safe side in general.
     # The --force option is needed because plain 'dracut' (at least in SLES15-SP5) fails with a message like
     # "dracut: Will not override existing initramfs (/boot/initrd-5.14.21-150500.55.28-default) without --force"
-    if chroot $TARGET_FS_ROOT /bin/bash -c "PATH=/sbin:/usr/sbin:/usr/bin:/bin $dracut_binary --force" ; then
+    if chroot $TARGET_FS_ROOT /bin/bash -c "PATH=/sbin:/usr/sbin:/usr/bin:/bin $dracut_binary --force --regenerate-all" ; then
         LogPrint "Recreated initrd with $dracut_binary"
     else
         LogPrintError "Warning:
