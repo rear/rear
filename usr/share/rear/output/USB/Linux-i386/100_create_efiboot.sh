@@ -153,8 +153,13 @@ EOF
 fi
 
 # Cleanup of EFI temporary mount point:
-if umount $efi_mpt ; then
-    rmdir $efi_mpt || LogPrintError "Could not remove temporary directory '$efi_mpt' (you should do it manually)"
+local what_is_mounted="EFI partition '$efi_part' at '$efi_mpt'"
+# When umounting the EFI partition fails it is no hard error so only inform the user
+# so he can understand why later cleanup_build_area_and_end_program() may show
+# "Could not remove build area" (when lazy umount could not clean up things until then)
+# cf. https://github.com/rear/rear/issues/3397
+if umount_mountpoint_retry_lazy "$efi_mpt" "$what_is_mounted" ; then
+    rmdir "$efi_mpt" || LogPrintError "Could not remove temporary directory '$efi_mpt' (you should do it manually)"
 else
-    LogPrintError "Could not umount EFI partition '$efi_part' at '$efi_mpt' (you should do it manually)"
+    LogPrintError "Could not umount $what_is_mounted' (you should do it manually)"
 fi
