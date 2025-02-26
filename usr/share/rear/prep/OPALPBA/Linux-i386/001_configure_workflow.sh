@@ -51,7 +51,7 @@ if [ -n "$OPAL_PBA_TKNPATH" ]; then # AuthToken support
 fi
 
 if [ -z "$OPAL_PBA_TKNPATH" ] && [ -n "$OPAL_PBA_TPMNVINDEX" ]; then # TPM support
-    REQUIRED_PROGS+=( 'tpm2_nvundefine' 'tpm2_nvdefine' 'tpm2_nvread' 'tpm2_nvwrite' )
+    REQUIRED_PROGS+=( tpm2_nvundefine tpm2_nvdefine tpm2_nvread tpm2_nvwrite )
     LIBS+=( /usr/lib/x86_64-linux-gnu/libtss2-*.so* )
 fi
 
