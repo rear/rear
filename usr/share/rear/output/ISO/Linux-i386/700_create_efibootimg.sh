@@ -45,7 +45,7 @@ mount $v -o loop -t vfat $TMP_DIR/efiboot.img $TMP_DIR/efi_virt || Error "Failed
 cp $v -r $TMP_DIR/mnt/. $TMP_DIR/efi_virt
 
 # Umounting the EFI virtual image:
-local what_is_mounted="EFI virtual image $TMP_DIR/efiboot.img at $TMP_DIR/efi_virt"
+local what_is_mounted="EFI virtual image $TMP_DIR/efiboot.img on $TMP_DIR/efi_virt"
 # When umounting the EFI virtual image fails it is no hard error so only inform the user
 # so he can understand why later cleanup_build_area_and_end_program() may show
 # "Could not remove build area" (when lazy umount could not clean up things until then)
