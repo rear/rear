@@ -153,7 +153,7 @@ EOF
 fi
 
 # Cleanup of EFI temporary mount point:
-local what_is_mounted="EFI partition '$efi_part' at '$efi_mpt'"
+local what_is_mounted="EFI partition '$efi_part' on '$efi_mpt'"
 # When umounting the EFI partition fails it is no hard error so only inform the user
 # so he can understand why later cleanup_build_area_and_end_program() may show
 # "Could not remove build area" (when lazy umount could not clean up things until then)
