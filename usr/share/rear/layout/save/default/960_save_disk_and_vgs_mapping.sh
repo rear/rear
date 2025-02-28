@@ -23,6 +23,10 @@
 # disk /dev/sdk 536870912000 unknown     /dev/sdk   vg_recovery lvm2 a--   <500.00g 1012.00m
 # disk /dev/sde 17179869184 unknown      /dev/sde   vg_swap     lvm2 a--    <16.00g   <3.00g
 
+# The output is not crucial for recovery, but it may come handy in case you are lost which
+# disk belonged to which Volume Group. As you may know disk names can be different in a DR
+# situation and then the only way to be sure is the "size" of the disk. 
+
 paste <( grep ^disk /var/lib/rear/layout/disklayout.conf) <(pvs 2>/dev/null | grep '/dev/') | \
  column -s $'\t' -t | sort -k6 > /var/lib/rear/recovery/device-mapping-of-$(hostname -s)
 
