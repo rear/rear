@@ -185,17 +185,17 @@ while read keyword orig_device orig_size junk ; do
         IsInArray "$preferred_target_device_name" "${excluded_target_device_names[@]}" && continue
         # Continue with next block device if the current one is already used as target in the mapping file:
         if is_mapping_target "$preferred_target_device_name" ; then
-            DebugPrint "Cannot use $preferred_target_device_name (same $current_size size) for recreating $orig_device ($preferred_target_device_name already exists as target in $MAPPING_FILE)"
+            DebugPrint "Cannot use $preferred_target_device_name (same size $current_size) for recreating $orig_device ($preferred_target_device_name already exists as target in $MAPPING_FILE)"
             continue
         fi
         # Ensure the determined target device is not write-protected (cf. above):
         if is_write_protected "$preferred_target_device_name" ; then
-            DebugPrint "Cannot use $preferred_target_device_name (same $current_size size) for recreating $orig_device ($preferred_target_device_name is write-protected)"
+            DebugPrint "Cannot use $preferred_target_device_name (same size $current_size) for recreating $orig_device ($preferred_target_device_name is write-protected)"
             continue
         fi
         # The first of all current block devices with same size as the original that is not yet used as target gets used:
         add_mapping "$orig_device" "$preferred_target_device_name"
-        LogPrint "Using $preferred_target_device_name (same $current_size size) for recreating $orig_device"
+        LogPrint "Using $preferred_target_device_name (same size $current_size) for recreating $orig_device"
         # Continue the outer while loop with next original device because the current one is now mapped:
         continue 2
     done
