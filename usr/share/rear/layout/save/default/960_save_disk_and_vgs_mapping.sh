@@ -27,7 +27,10 @@
 # disk belonged to which Volume Group. As you may know disk names can be different in a DR
 # situation and then the only way to be sure is the "size" of the disk. 
 
+echo "disk    PV        size       type       PV         VG          Fmt  Attr   PSize     PFree
+------------------------------------------------------------------------------------------------" \
+ > /var/lib/rear/recovery/device-mapping-of-$(hostname -s)
 paste <( grep ^disk /var/lib/rear/layout/disklayout.conf) <(pvs 2>/dev/null | grep '/dev/') | \
- column -s $'\t' -t | sort -k6 > /var/lib/rear/recovery/device-mapping-of-$(hostname -s)
+ column -s $'\t' -t | sort -k6 >> /var/lib/rear/recovery/device-mapping-of-$(hostname -s)
 
 Log "Saved disk device mapping towards VGs into /var/lib/rear/recovery/device-mapping-of-$(hostname -s)"
