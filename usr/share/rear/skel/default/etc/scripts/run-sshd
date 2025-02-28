@@ -13,6 +13,12 @@ if grep -q '^ssh:' /etc/inittab ; then
         ssh-keygen -q -t rsa -N '' -f /etc/ssh/ssh_host_rsa_key
         echo -e "\nSSH fingerprint: $( ssh-keygen -l -f /etc/ssh/ssh_host_rsa_key.pub )\n" >> /etc/issue
     fi
+    if ! test -s /etc/ssh/ssh_host_ed25519_key ; then
+        # Generate the ed25519 SSH host key required on EL9
+        ssh-keygen -q -t ed25519 -N '' -f /etc/ssh/ssh_host_ed25519_key
+        echo -e "\nSSH fingerprint: $( ssh-keygen -l -f /etc/ssh/ssh_host_ed25519_key.pub )\n" >> /etc/issue
+    fi
+    mkdir -p /usr/share/empty.sshd   # required on EL9
     mkdir -p /run/sshd
     # Avoid "Could not load host key: /etc/ssh/ssh_host_..._key" messages
     # that look confusing on the recovery system login screen
