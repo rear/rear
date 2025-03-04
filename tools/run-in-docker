@@ -16,9 +16,9 @@ declare -r IMAGES=(
     opensuse/leap:15
     registry.suse.com/suse/sle15
     centos:8       # discontinued
-    quay.io/centos/centos:stream9
+    quay.io/centos/centos:stream{9,10}
     # registry.access.redhat.com/ubi{7,8,9} basic packages like parted are missing
-    fedora:{40,41} # rawhide Docker image is broken, see https://github.com/fedora-cloud/docker-brew-fedora/issues/109
+    fedora:{41,42} # rawhide Docker image is broken, see https://github.com/fedora-cloud/docker-brew-fedora/issues/109
     archlinux
     manjarolinux/base
 )
