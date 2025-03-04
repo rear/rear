@@ -44,6 +44,12 @@ Architecture defaults to the host platform, specify architecture via
 -a <architecture>, e.g. -a amd64 on M1 Mac as part of the image selection
 "
 
+# Try podman when docker is missing.  This must be at the top because aliases
+# are expanded when a function definition is read, not when it is executed.
+if ! type -a docker &>/dev/null && type -a podman &>/dev/null; then
+    shopt -s expand_aliases
+    alias docker=podman
+fi
 
 function gh_actions_output {
     if test "$GITHUB_ACTIONS"; then
