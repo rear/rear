@@ -114,6 +114,14 @@ for block_device in /sys/block/* ; do
     Log "End of strings in the first bytes on $disk_device"
 done
 
+# Default to GRUB2 on ppc64le PowerNV machines if no PPC PReP Boot partitions
+# were found because it is not manadatory to use them in this setup.
+if [ "$ARCH" = "Linux-ppc64le" ] && [ "$(awk '/platform/ {print $NF}' < /proc/cpuinfo)" = "PowerNV" ] ; then
+    LogPrint "Using guessed bootloader 'GRUB2' for 'rear recover' (default for ppc64le PowerNV machines)"
+    echo "GRUB2" >$bootloader_file
+    return
+fi
+
 # No bootloader detected, but we are using UEFI - there is probably an EFI bootloader
 if is_true $USING_UEFI_BOOTLOADER ; then
     if is_grub2_installed ; then
