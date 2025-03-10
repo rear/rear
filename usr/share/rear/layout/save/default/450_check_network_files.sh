@@ -9,29 +9,29 @@
 
 if [[ -d /etc/sysconfig/network ]] ; then
     # SUSE
-    ls /etc/sysconfig/network/ifcfg-* >/dev/null 2>&1 && CHECK_CONFIG_FILES+=( /etc/sysconfig/network/ifcfg-* )
+    CHECK_CONFIG_FILES+=( /[e]tc/sysconfig/network/ifcfg-* )
 fi
 
 if [[ -d /etc/NetworkManager/system-connections ]] ; then
     # Red Hat >= 8
     # Check if the network interfaces are really present in NetworkManager style and if yes also add nmcli to PROGS array
-    ls /etc/NetworkManager/system-connections/*.nmconnection >/dev/null 2>&1 && CHECK_CONFIG_FILES+=( /etc/NetworkManager/system-connections/*.nmconnection )
+    CHECK_CONFIG_FILES+=( /[e]tc/NetworkManager/system-connections/*.nmconnection )
     PROGS+=( nmcli )
 fi
 
 if [[ -d /etc/sysconfig/network-scripts ]] ; then
     # Red Hat <=8
     # Check if the network interfaces are really present in legacy network configuration files
-    ls /etc/sysconfig/network-scripts/ifcfg-* >/dev/null 2>&1 && CHECK_CONFIG_FILES+=( /etc/sysconfig/network-scripts/ifcfg-* )
+    CHECK_CONFIG_FILES+=( /[e]tc/sysconfig/network-scripts/ifcfg-* )
 fi
 
-if [[ -d /etc/network ]] ; then
+if [[ -f /etc/network/interfaces ]] ; then
     # Debian
     CHECK_CONFIG_FILES+=( /etc/network/interfaces )
 fi
 
 if [[ -d /etc/netplan ]] ; then
    # Ubuntu using NetworkManager
-   CHECK_CONFIG_FILES+=( /etc/network/*.yaml )
+   CHECK_CONFIG_FILES+=( /[e]tc/netplan/*.yaml )
    PROGS+=( nmcli )
 fi
