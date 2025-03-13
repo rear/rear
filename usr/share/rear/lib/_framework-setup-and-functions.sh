@@ -1545,18 +1545,11 @@ function is_trusted_owner () {
 #
 # ReaR basic directories cases:
 #
-# (A1)
+# (A)
 # Normal case (i.e. no Git checkout) on the original system:
 # ReaR basic directories when running /usr/sbin/rear on the original system from a normally installed package
-# (i.e. when ReaR's files are installed in '/' so REAR_DIR_PREFIX is empty):
-#   REAR_DIR_PREFIX=
-#   SHARE_DIR=/usr/share/rear
-#   CONFIG_DIR=/etc/rear
-#   VAR_DIR=/var/lib/rear
-#   LOG_DIR=/var/log/rear
-#
-# (A2)
-# Normal case (i.e. no Git checkout on the original system) in the ReaR recovery system:
+# (i.e. when ReaR's files are installed in '/' so REAR_DIR_PREFIX is empty)
+# and also the normal case (i.e. no Git checkout on the original system) in the ReaR recovery system:
 #   REAR_DIR_PREFIX=
 #   SHARE_DIR=/usr/share/rear
 #   CONFIG_DIR=/etc/rear
@@ -1616,7 +1609,7 @@ if test "$REAR_DIR_PREFIX" ; then
     # SHARE_DIR and CONFIG_DIR and VAR_DIR are sub-directories of REAR_DIR_PREFIX:
     TRUSTED_PATHS=( "$REAR_DIR_PREFIX/" '/usr/' '/etc/' '/lib/' )
 else
-    # When REAR_DIR_PREFIX is empty it is cases (A1) or (A2) i.e. no Git checkout
+    # When REAR_DIR_PREFIX is empty it is case (A) i.e. no Git checkout
     # or it is case (B2) i.e. in the ReaR recovery system when there was a Git checkout on the original system.
     # Intentionally we do not test RECOVERY_MODE because this is not needed.
     # Instead we test directly "the real thing" which is whether or not SHARE_DIR matches where its actual files are
@@ -1626,15 +1619,15 @@ else
     # cf. https://github.com/rear/rear/pull/3379#issuecomment-2601767515
     # cf. the REAR_DIR_PREFIX setting code in sbin/rear
     test_path="/usr/share/rear/lib/_framework-setup-and-functions.sh"
-    # Fall back to the normal cases (A1) or (A2) if 'readlink -e /usr/share/rear/lib/_framework-setup-and-functions.sh' fails:
+    # Fall back to the normal case (A) if 'readlink -e /usr/share/rear/lib/_framework-setup-and-functions.sh' fails:
     actual_path="$( readlink -e "$test_path" )" || actual_path="$test_path"
     if test "$actual_path" != "$test_path" ; then
         # This is case (B1) i.e. in the ReaR recovery system when there was a Git checkout on the original system:
         rear_dir_prefix=${actual_path%$test_path}
         TRUSTED_PATHS=( "$rear_dir_prefix/" '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
     else
-        # This is the normal cases (A1) or (A2) i.e. no Git checkout:
-        # In case of (A1) or (A2) SHARE_DIR is a sub-directory of '/usr/' and CONFIG_DIR is a sub-directory of '/etc/':
+        # This is the normal case (A) i.e. no Git checkout:
+        # In case (A) SHARE_DIR is a sub-directory of '/usr/' and CONFIG_DIR is a sub-directory of '/etc/':
         TRUSTED_PATHS=( '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
     fi
 fi
