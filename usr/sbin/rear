@@ -806,15 +806,6 @@ for config in site local rescue ; do
         Source "$CONFIG_DIR/$config.conf" || Error "Failed to Source $CONFIG_DIR/$config.conf"
     fi
 done
-# After the normal user configuration files (site.conf local.conf rescue.conf) were sourced
-# set TRUSTED_OWNERS and TRUSTED_PATHS 'readonly' to avoid complicated automatisms for CONFIG_APPEND_FILES
-# but this means when the user needs to source additional configuration files in non-default paths
-# he must add his non-default paths to TRUSTED_PATHS in a normal user configuration file.
-readonly TRUSTED_OWNERS TRUSTED_PATHS
-# Show the final TRUSTED_OWNERS and TRUSTED_PATHS to the user in debug mode
-# to help him if he cannot source additional configuration files in non-default paths:
-DebugPrint "Sourced files must be owned by one of the TRUSTED_OWNERS: ${TRUSTED_OWNERS[*]:-all owners are trusted}"
-DebugPrint "Sourced files must be below one of the TRUSTED_PATHS: ${TRUSTED_PATHS[*]:-all paths are trusted}"
 # Finally source additional configuration files if specified on the command line:
 CONFIG_APPEND_FILES_PATHS=()
 if test "$CONFIG_APPEND_FILES" ; then
@@ -866,7 +857,12 @@ if test "$CONFIG_APPEND_FILES" ; then
         fi
     done
 fi
-
+# After the user configuration files were sourced set TRUSTED_OWNERS and TRUSTED_PATHS 'readonly':
+readonly TRUSTED_OWNERS TRUSTED_PATHS
+# Show the final TRUSTED_OWNERS and TRUSTED_PATHS to the user in debug mode
+# to help him if he cannot source additional configuration files in non-default paths:
+DebugPrint "Sourced files must be owned by one of the TRUSTED_OWNERS: ${TRUSTED_OWNERS[*]:-all owners are trusted}"
+DebugPrint "Sourced files must be below one of the TRUSTED_PATHS: ${TRUSTED_PATHS[*]:-all paths are trusted}"
 if [ "$saved_tmpdir" != "$TMPDIR" ] ; then
     Error "Setting TMPDIR in a configuration file is not supported. To specify a working area directory prefix, export TMPDIR before executing '$PROGRAM'"
 fi
