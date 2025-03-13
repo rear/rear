@@ -76,7 +76,7 @@ readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_
 # and https://github.com/rear/rear/issues/3319#issuecomment-2360546784
 # and https://github.com/rear/rear/issues/3319#issuecomment-2363556217
 function . () {
-    echo -e "ERROR: BUG in $PRODUCT\nForbidden usage of '.' in\n  . $*\nPlease report it at $BUG_REPORT_SITE" >&2
+    echo -e "ERROR: BUG in $PRODUCT\nForbidden usage of '.' instead of 'source' in\n  . $*\nPlease report it at $BUG_REPORT_SITE" >&2
     exit 1
 }
 # To be on the safe side sourcing via '.' is kept always forbidden in ReaR because
