@@ -1527,12 +1527,12 @@ function is_trusted_owner () {
     local file="$1"
     local owner_name=""
     local trusted_owner=""
-    # Do not error out in 'stat' when it is neither a regular file nor a link to a regular file
-    # but it is not trusted when it is neither a regular file nor a link to a regular file:
-    test -f "$file" || return 1
     # Empty TRUSTED_OWNERS means all regular file owners are blindly trusted,
     # cf https://github.com/rear/rear/pull/3379#issuecomment-2633123866
     test ${#TRUSTED_OWNERS[@]} -eq 0 && return 0
+    # Do not error out in 'stat' when it is neither a regular file nor a link to a regular file
+    # but it is not trusted when it is neither a regular file nor a link to a regular file:
+    test -f "$file" || return 1
     # '-L' forces stat to follow symlinks (and error out if that fails):
     owner_name="$( stat -L -c %U "$file" )" || Error "is_trusted_owner(): 'stat -L -c %U $file' failed"
     for trusted_owner in "${TRUSTED_OWNERS[@]}" ; do
@@ -1625,7 +1625,6 @@ else
     # and in the latter case we specify '/rear/prefix/' first in trusted_paths
     # cf. https://github.com/rear/rear/pull/3379#issuecomment-2601767515
     # cf. the REAR_DIR_PREFIX setting code in sbin/rear
-    # TODO: Perhaps test_path="$SHARE_DIR/lib/_framework-setup-and-functions.sh" is better than hardcoded '/usr/share/rear'?
     test_path="/usr/share/rear/lib/_framework-setup-and-functions.sh"
     # Fall back to the normal cases (A1) or (A2) if 'readlink -e /usr/share/rear/lib/_framework-setup-and-functions.sh' fails:
     actual_path="$( readlink -e "$test_path" )" || actual_path="$test_path"
@@ -1649,12 +1648,12 @@ function is_trusted_path () {
     local file="$1"
     local actual_path=""
     local trusted_path=""
-    # Do not error out in 'readlink' when it is neither a regular file nor a link to a regular file
-    # but it is not trusted when it is neither a regular file nor a link to a regular file:
-    test -f "$file" || return 1
     # Empty TRUSTED_PATHS means all regular file paths are blindly trusted,
     # cf https://github.com/rear/rear/pull/3379#issuecomment-2633123866
     test ${#TRUSTED_PATHS[@]} -eq 0 && return 0
+    # Do not error out in 'readlink' when it is neither a regular file nor a link to a regular file
+    # but it is not trusted when it is neither a regular file nor a link to a regular file:
+    test -f "$file" || return 1
     # Get the full path of the actual file (i.e. with leading / and symlinks resolved)
     # e.g. /etc/os-release is a symbolic link to /usr/lib/os-release (at least on openSUSE Leap 15.6):
     actual_path="$( readlink -e "$file" )" || Error "is_trusted_path(): 'readlink -e $file' failed"
