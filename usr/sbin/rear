@@ -775,7 +775,7 @@ Debug "Sourced files must be below one of the default TRUSTED_PATHS: ${TRUSTED_P
 # so that functions can use a fixed RUNTIME_LOGFILE value
 # and after the initial startup messages and TRUSTED_OWNERS and TRUSTED_PATHS are shown:
 for script in $SHARE_DIR/lib/[a-z]*.sh ; do
-    source $script || BugError "Failed to source $script"
+    Source $script || BugError "Failed to source $script"
 done
 
 # All workflows need to read the configurations first.
