@@ -1653,7 +1653,7 @@ function is_trusted_path () {
     for trusted_path in "${TRUSTED_PATHS[@]}" ; do
         # Skip when trusted_path is empty (otherwise the [[ expression ]] would be falsely true):
         test "$trusted_path" || continue
-        [[ $actual_path =~ ^$trusted_path ]] && return 0
+        [[ "$actual_path" =~ ^"$trusted_path" ]] && return 0
     done
     return 1
 }
