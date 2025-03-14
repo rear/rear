@@ -244,7 +244,7 @@ In this example we used the `local.conf` file which is intended for local and *m
 
 To use Relax-and-Recover you always call the main script `/usr/sbin/rear`:
 
-```shell
+```
 # rear help
 
 Usage: rear [-h|--help] [-V|--version] [-dsSv] [-D|--debugscripts SET] [-c DIR] [-C CONFIG] [-r KERNEL] [-n|--non-interactive] [-e|--expose-secrets] [-p|--portable] [--] COMMAND [ARGS...]
