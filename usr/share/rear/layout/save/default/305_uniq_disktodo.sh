@@ -1,4 +1,3 @@
-# Script 305_uniq_disktodo.sh
 # make LAYOUT_TODO file uniq, but we do not change the order in any way
 # See details in issue #3400
 unique_unsorted  $LAYOUT_TODO >${LAYOUT_TODO}.new

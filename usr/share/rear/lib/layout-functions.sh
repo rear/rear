@@ -530,10 +530,14 @@ get_partition_start() {
 
 # Get the type of a layout component
 get_component_type() {
+    # function replies with 'disk', 'part', 'lvmgrp', 'lvmvol', 'lvmdev', 'fs'
     local component="$1"
     local component_types=()
+    # component_types array can contain only 'one' entry (hence the 'uniq' parsing)
     component_types=( $( grep -E "^[^ ]+ $component " $LAYOUT_TODO | cut -d " " -f 3 | uniq ) )
+    # if there are no entries in array component_types then return with code 1, but do not exit ReaR
     test ${#component_types[@]} -lt 1 && return 1
+    # if there are more than 1 entries in the array then we hit a bug, therefore, the BugError exit
     test ${#component_types[@]} -gt 1 && BugError "Layout component '$component' has more than one type in $LAYOUT_TODO"
     echo "${component_types[0]}"
 }
