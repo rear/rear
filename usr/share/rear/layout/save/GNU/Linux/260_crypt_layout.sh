@@ -61,12 +61,13 @@ while read target_name junk ; do
     fi
     luks_type=luks$version
 
+    luksDump_cmd="cryptsetup luksDump $source_device"
+
     # Gather crypt information:
-    if ! cryptsetup luksDump $source_device >$TMP_DIR/cryptsetup.luksDump ; then
-        LogPrintError "Error: Cannot get LUKS$version values for $target_name ('cryptsetup luksDump $source_device' failed)"
+    if ! $luksDump_cmd >$TMP_DIR/cryptsetup.luksDump ; then
+        LogPrintError "Error: Cannot get LUKS$version values for $target_name ('$luksDump_cmd' failed)"
         continue
     fi
-    cmd="cryptsetup luksDump $source_device"
 
     uuid=$( grep "UUID" $TMP_DIR/cryptsetup.luksDump | sed -r 's/^.+:\s*(.+)$/\1/' )
     keyfile_option=$( [ -f /etc/crypttab ] && awk '$1 == "'"$target_name"'" && $3 != "none" && $3 != "-" && $3 != "" { print "keyfile=" $3; }' /etc/crypttab )
@@ -84,18 +85,18 @@ while read target_name junk ; do
 
         keyslots_section=$( awk '/^Keyslots:/ {include=1;next} /^[[:upper:]]/ && include {exit} include' $TMP_DIR/cryptsetup.luksDump )
         if [ -z "$keyslots_section" ]; then
-            LogPrintError "Error: No Keyslots section found in '$cmd' output"
+            LogPrintError "Error: No Keyslots section found in '$luksDump_cmd' output"
             continue
         fi
         if [ $( grep -c -P '^\s+\d+: luks2' <<< "$keyslots_section" ) -gt 1 ]; then
-            LogPrintError "Warning: More than one luks2 keyslot found in '$cmd' output, will only consider the first keyslot during recovery"
+            LogPrintError "Warning: More than one luks2 keyslot found in '$luksDump_cmd' output, will only consider the first keyslot during recovery"
         fi
         luks2_section=$( awk '/^[[:blank:]]+[[:digit:]]+:/ && include {exit} /^[[:blank:]]+[[:digit:]]+: luks2/{include=1} include' <<< "$keyslots_section")
 
         cipher=$( grep "Cipher:" <<< "$luks2_section" | sed -r 's/^.+:\s*(.+)$/\1/' )
         pbkdf=$( grep "PBKDF:" <<< "$luks2_section" | sed -r 's/^.+:\s*(.+)$/\1/' )
         if [ -z "$pbkdf" ]; then
-            LogPrintError "Warning: no PBKDF found in luks2 keyslot of '$cmd' output, will use defaults during recovery"
+            LogPrintError "Warning: no PBKDF found in luks2 keyslot of '$luksDump_cmd' output, will use defaults during recovery"
         else
             pbkdf_option="pbkdf=$pbkdf"
         fi
@@ -108,9 +109,9 @@ while read target_name junk ; do
         # cf. https://github.com/rear/rear/pull/2504#issuecomment-718729198 and subsequent comments
         key_size=$( grep -E "Key:|Cipher key:" <<< "$luks2_section" | sed -r 's/^.+:\s*(.+) bits$/\1/' | sort -u )
         if [ -z "$key_size" ]; then
-            LogPrintError "Error: No key size found in luks2 keyslot of '$cmd' output"
+            LogPrintError "Error: No key size found in luks2 keyslot of '$luksDump_cmd' output"
         elif [ $( wc -w <<< "$key_size" ) -gt 1 ]; then
-            LogPrintError "Error: Too many key sizes found in luks2 keyslot of '$cmd' output"
+            LogPrintError "Error: Too many key sizes found in luks2 keyslot of '$luksDump_cmd' output"
             key_size=""
         fi
 
@@ -120,10 +121,10 @@ while read target_name junk ; do
             digests_section=$( awk '/^Digests:/ {include=1;next} /^[[:upper:]]/ && include {exit} include' $TMP_DIR/cryptsetup.luksDump )
             hash=$( grep "Hash:" <<< "$digests_section" | sed -r 's/^.+:\s*(.+)$/\1/' | sort -u )
             if [ -z "$hash" ]; then
-                LogPrintError "Warning: No Hash found in Digests section of '$cmd' output, will use default type during recovery"
+                LogPrintError "Warning: No Hash found in Digests section of '$luksDump_cmd' output, will use default type during recovery"
             elif [ $( wc -w <<< "$hash" ) -gt 1 ]; then
                 hash=$( head -1 <<< "$hash" )
-                LogPrintError "Warning: Too many Hash found in Digests section of '$cmd' output, will use '$hash' during recovery"
+                LogPrintError "Warning: Too many Hash found in Digests section of '$luksDump_cmd' output, will use '$hash' during recovery"
             fi
         fi
 
@@ -137,8 +138,8 @@ while read target_name junk ; do
     # cf. https://github.com/rear/rear/pull/2504#issuecomment-719479724
     # For example a LUKS1 crypt entry in disklayout.conf looks like
     # crypt /dev/mapper/luks1test /dev/sda7 type=luks1 cipher=aes-xts-plain64 key_size=256 hash=sha256 uuid=1b4198c9-d9b0-4c57-b9a3-3433e391e706
-    # and a LUKS1 crypt entry in disklayout.conf looks like
-    # crypt /dev/mapper/luks2test /dev/sda8 type=luks2 cipher=aes-xts-plain64 key_size=256 hash=sha256 uuid=3e874a28-7415-4f8c-9757-b3f28a96c4d2 [pbkdf=argon2id]
+    # and a LUKS2 crypt entry in disklayout.conf looks like
+    # crypt /dev/mapper/luks2test /dev/sda8 type=luks2 cipher=aes-xts-plain64 key_size=256 hash=sha256 uuid=3e874a28-7415-4f8c-9757-b3f28a96c4d2 pbkdf=argon2id
     # Only the keyfile_option value is optional and the luks_type value is already tested above.
     # Using plain test to ensure a value is a single non empty and non blank word
     # without quoting because test " " would return zero exit code
@@ -168,12 +169,12 @@ while read target_name junk ; do
         LogPrintError "Error: No 'uuid' value for LUKS$version volume $target_name in $source_device (mounting it or booting the recreated system may fail)"
     fi
 
-    (
+    {
         echo -n "crypt /dev/mapper/$target_name $source_device type=$luks_type cipher=$cipher key_size=$key_size hash=$hash uuid=$uuid"
         [ -n "$keyfile_option" ] && echo -n " $keyfile_option"
         [ -n "$pbkdf_option" ] && echo -n " $pbkdf_option"
         echo
-    ) >> $DISKLAYOUT_FILE
+    } >> $DISKLAYOUT_FILE
 
 done < <( dmsetup ls --target crypt )
 
