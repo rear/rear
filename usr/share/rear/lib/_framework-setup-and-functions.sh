@@ -1546,10 +1546,10 @@ function is_trusted_owner () {
 # ReaR basic directories cases:
 #
 # (A)
-# Normal case (i.e. no Git checkout) on the original system:
+# Normal case (i.e. no Git checkout) on the original system which results the normal case in the ReaR recovery system:
 # ReaR basic directories when running /usr/sbin/rear on the original system from a normally installed package
 # (i.e. when ReaR's files are installed in '/' so REAR_DIR_PREFIX is empty)
-# and also the normal case (i.e. no Git checkout on the original system) in the ReaR recovery system:
+# and also when running /bin/rear in the ReaR recovery system:
 #   REAR_DIR_PREFIX=
 #   SHARE_DIR=/usr/share/rear
 #   CONFIG_DIR=/etc/rear
