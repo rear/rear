@@ -38,7 +38,7 @@ fi
 # The user has to choose the backup
 LogPrint "Select a backup to restore."
 # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+# to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
 select choice in "${backups[@]}" "Abort"; do
     [ "$choice" != "Abort" ]
     StopIfError "User chose to abort recovery."

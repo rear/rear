@@ -72,7 +72,7 @@ DPChooseBackup() {
     LogPrint ""
     unset REPLY
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
     read -t $WAIT_SECS -r -n 1 -p "press ENTER or choose C,D,S [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
 
     if test -z "${REPLY}"; then
@@ -115,7 +115,7 @@ DPChangeHost() {
   while test $valid -eq 0; do
     UserOutput ""
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
     read -r -p "Enter client name: " 0<&6 1>&7 2>&8
     if test -z "${REPLY}"; then
       DPChooseBackup
@@ -145,7 +145,7 @@ DPChangeDataList() {
     i=$(cat $TMP_DIR/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | wc -l)
     LogPrint ""
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
     read -r -p "Please choose datalist [1-$i]: " 0<&6 1>&7 2>&8
     if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>/dev/null ; then
       DL=$(cat $TMP_DIR/backup.list | while read s; do echo "$s" | cut -f 2; done | sort -u | head -${REPLY} | tail -1)
@@ -172,7 +172,7 @@ DPChangeSession() {
     i=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r -V | wc -l)
     echo
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
     read -r -p "Please choose session [1-$i]: " 0<&6 1>&7 2>&8
     if test "${REPLY}" -ge 1 -a "${REPLY}" -le $i 2>/dev/null ; then
       SESS=$(cat $TMP_DIR/backup.list.part | while read s; do echo "$s" | cut -f 1; done | sort -u -r -V | head -${REPLY} | tail -1)

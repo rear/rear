@@ -71,14 +71,14 @@ LogPrint "Select a backup archive."
 # shows that when 'set -x' is set calling '{ set +x ; } 2>/dev/null' runs silently:
 { set +x ; } 2>/dev/null
 # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+# to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
 select choice in "${backup_times[@]}" ; do
     # trim blanks from reply
     n=( $REPLY )
     # bash arrays count from 0
     let n--
     if [ "$n" -lt 0 ] || [ "$n" -ge "${#backup_times[@]}" ] ; then
-        # direct output to stdout which is fd7 (see lib/_input-output-functions.sh)
+        # direct output to stdout which is fd7 (see lib/_framework-setup-and-functions.sh)
         # and not using a Print function to always print to the original stdout
         # i.e. to the terminal wherefrom the user has started "rear recover":
         echo "Invalid choice $REPLY, try again (or press [Ctrl]+[C] to abort)." >&7

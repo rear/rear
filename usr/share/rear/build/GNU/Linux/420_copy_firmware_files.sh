@@ -28,7 +28,7 @@ if is_true "$FIRMWARE_FILES" ; then
     # Use a simple 'cp -a' for this case to be safe against possible issues
     # with the more complicated 'find ... | xargs cp' method below.
     # The '--parents' is needed to get the '/lib*/' directory in the copy.
-    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
     cp $verbose -t $ROOTFS_DIR -a --parents /lib*/firmware 2>>/dev/$DISPENSABLE_OUTPUT_DEV 1>&2
     return
 fi

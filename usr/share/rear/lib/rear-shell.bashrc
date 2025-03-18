@@ -27,8 +27,8 @@ source $SHARE_DIR/lib/progresssubsystem.nosh
 
 # Set EXIT_FAIL_MESSAGE to 0 to avoid a false exit failure message from the exit task
 # "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WORKFLOW failed, check $RUNTIME_LOGFILE for details' 1>&8"
-# that is set in lib/_input-output-functions.sh which is sourced above for this shell here.
-# Because we have two shells where ReaR's exit tasks are set (both via lib/_input-output-functions.sh)
+# that is set in lib/_framework-setup-and-functions.sh which is sourced above for this shell here.
+# Because we have two shells where ReaR's exit tasks are set (both via lib/_framework-setup-and-functions.sh)
 # exiting this bash here runs ReaR's exit tasks and then this workflow finishes
 # which lets the outer bash that runs rear finish which also runs ReaR's exit tasks:
 #   # usr/sbin/rear -v shell

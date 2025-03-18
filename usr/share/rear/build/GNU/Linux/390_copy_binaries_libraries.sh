@@ -13,7 +13,7 @@ function copy_binaries () {
     local destdir="$1"
     test -d "$destdir" || BugError "copy_binaries destination '$destdir' is not a directory"
     local binary=""
-    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
     while (( $# > 1 )) ; do
         shift
         binary="$1"
@@ -62,7 +62,7 @@ LogPrint "Copying binaries and libraries"
 Log "Determining binaries from PROGS and REQUIRED_PROGS"
 local bin=""
 local bin_path=""
-# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
 local all_binaries=( $( for bin in "${PROGS[@]}" "${REQUIRED_PROGS[@]}" ; do
                             bin_path="$( get_path "$bin" )"
                             if test -x "$bin_path" ; then
@@ -91,7 +91,7 @@ local all_libs=( "${LIBS[@]}" $( RequiredSharedObjects "${all_binaries[@]}" "${L
 Log "Libraries being copied: ${all_libs[@]}"
 local lib=""
 local link_target=""
-# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
 for lib in "${all_libs[@]}" ; do
     if test -L $lib ; then
         # Because $lib is a symbolic link on the original system

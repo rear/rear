@@ -1,6 +1,6 @@
 
 # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-# to get input from the user and to show output to the user (cf. _input-output-functions.sh).
+# to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh).
 ####################### BEGIN Progress Indicator
 # Call StartProgressSubsystem to get more detailed progress reports:
 if tty -s <&7 ; then
