@@ -8,7 +8,10 @@ Log "Saving Swap information."
     echo "# Format: swap <filename> uuid=<uuid> label=<label>"
 
     while read filename type junk ; do
-        if [ "$filename" = "Filename" ] || [ "$type" = "file" ] ; then
+        # "$filename" = "Filename" is the header line of /proc/swaps
+        # "$filename" =~ ^/dev/zram skips /dev/zram* swap entries from disklayout.conf
+        # see https://github.com/rear/rear/issues/3343
+        if [ "$filename" = "Filename" ] || [ "$type" = "file" ] || [[ "$filename" =~ ^/dev/zram ]] ; then
             continue
         fi
         # if filename is on a lv, try to find the DM name
@@ -46,7 +49,7 @@ Log "Saving Swap information."
         fi
 
         echo "swap $filename uuid=$uuid label=$label"
-    done <<< $(cat /proc/swaps | grep -v zram)
+    done < /proc/swaps
 } 1>>$DISKLAYOUT_FILE
 # End of group command that appends its stdout to DISKLAYOUT_FILE
 
