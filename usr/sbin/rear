@@ -145,7 +145,7 @@ LOG_DIR="${REAR_VAR:-$REAR_DIR_PREFIX/var}/log/rear"
 
 # The current working directory when this script (usr/sbin/rear) is launched
 # is also the working directory of all the other scripts and config files
-# that get sourced via the Source() function in lib/framework-functions.sh
+# that get sourced via the Source() function in lib/_framework-setup-and-functions.sh
 # cf. https://github.com/rear/rear/issues/2461
 readonly WORKING_DIR="$( pwd )"
 
