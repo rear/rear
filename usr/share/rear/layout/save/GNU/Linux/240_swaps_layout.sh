@@ -46,7 +46,7 @@ Log "Saving Swap information."
         fi
 
         echo "swap $filename uuid=$uuid label=$label"
-    done < /proc/swaps
+    done <<< $(cat /proc/swaps | grep -v zram)
 } 1>>$DISKLAYOUT_FILE
 # End of group command that appends its stdout to DISKLAYOUT_FILE
 
