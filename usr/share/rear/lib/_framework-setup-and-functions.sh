@@ -645,7 +645,7 @@ function Error () {
     # Each sourced script gets logged as 'timestamp Including sub-path/to/script_file_name.sh' and
     # valid script files names are of the form NNN_script_name.sh (i.e. with leading 3-digit number)
     # but also the outdated scripts with leading 2-digit number get sourced
-    # see the SourceStage function in lib/framework-functions.sh
+    # see the SourceStage function in lib/_framework-setup-and-functions.sh
     # so that we grep for script files names with two or more leading numbers:
     if test -s "$RUNTIME_LOGFILE" ; then
         { local last_sourced_script_log_entry=( $( grep -o ' Including .*/[0-9][0-9].*\.sh' $RUNTIME_LOGFILE | tail -n 1 ) )

@@ -176,7 +176,7 @@ function RequiredSharedObjects () {
     #  6. Line: "        /path/to/lib (mem-addr)"                  -> print $1 '/path/to/lib'
     local file_for_ldd=""
     local file_owner_name=""
-    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
     for file_for_ldd in "$@" ; do
         # Skip non-regular files like directories, device files, and non-existent files
         # cf. similar code in build/GNU/Linux/100_copy_as_is.sh
@@ -240,7 +240,7 @@ alias shutdown=ask_exit
 cd $VAR_DIR
 EOF
     # Run 'bash' with the original STDIN STDOUT and STDERR when 'rear' was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
     HISTFILE="$histfile" bash --noprofile --rcfile $bashrc 0<&6 1>&7 2>&8
 }
 

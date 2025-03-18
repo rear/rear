@@ -33,7 +33,7 @@ if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
     test "tar" = "$BACKUP_PROG" || Error "Backup archive encryption is only supported with BACKUP_PROG=tar"
     # Backup archive encryption is impossible without a BACKUP_PROG_CRYPT_KEY value.
     # Avoid that the BACKUP_PROG_CRYPT_KEY value is shown in debugscript mode
-    # cf. the comment of the UserInput function in lib/_input-output-functions.sh
+    # cf. the comment of the UserInput function in lib/_framework-setup-and-functions.sh
     # how to keep things confidential when usr/sbin/rear is run in debugscript mode
     # ('2>>/dev/$SECRET_OUTPUT_DEV' should be sufficient here because 'test' does not output on stdout):
     { test "$BACKUP_PROG_CRYPT_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV || Error "BACKUP_PROG_CRYPT_KEY must be set for backup archive encryption"
@@ -106,7 +106,7 @@ FAILING_BACKUP_PROG_RC_FILE="$TMP_DIR/failing_backup_prog_rc"
 # but '$BACKUP_PROG_CRYPT_KEY' must be used in the actual command call which means
 # the BACKUP_PROG_CRYPT_KEY value would appear in the log when rear is run in debugscript mode
 # so that stderr of the confidential command is redirected to /dev/null
-# cf. the comment of the UserInput function in lib/_input-output-functions.sh
+# cf. the comment of the UserInput function in lib/_framework-setup-and-functions.sh
 # how to keep things confidential when rear is run in debugscript mode
 # because it is more important to not leak out user secrets into a log file
 # than having stderr error messages when a confidential command fails
