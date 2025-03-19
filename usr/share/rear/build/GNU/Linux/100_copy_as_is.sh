@@ -133,7 +133,7 @@ local copy_as_is_file=""
 # then 'tar' copies things in /path/to/somedir/subdir two times
 # and reports them twice in the copy_as_is_filelist_file
 # cf. https://github.com/rear/rear/pull/2378
-# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
 while read -r copy_as_is_file ; do
     # Skip non-regular files like directories, device files, and 'tar' error messages (e.g. in case of non-existent files, see above)
     # but do not skip symbolic links. Their targets will be copied later by build/default/490_fix_broken_links.sh.
@@ -151,7 +151,7 @@ Log "copy_as_is_executables = ${copy_as_is_executables[@]}"
 # add them to the LIBS list if they are not yet included in the copied files:
 Log "Adding required libraries of executables in all the copied files to LIBS"
 local required_library=""
-# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
 for required_library in $( RequiredSharedObjects "${copy_as_is_executables[@]}" ) ; do
     # Skip when the required library was already actually copied by 'tar' above.
     # grep for a full line (copy_as_is_filelist_file contains 1 file name per line)

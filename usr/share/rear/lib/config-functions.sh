@@ -122,7 +122,7 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
             # but do not set OS_MASTER_VENDOR same as OS_VENDOR (i.e. 'SUSE_LINUX')
             # (cf. above: all SUSE distributions ... must be unified to 'SUSE_LINUX')
             # because then scripts in a .../SUSE_LINUX/... sub-directoriy and conf/SUSE_LINUX.conf
-            # get sourced twice by the (buggy) SourceStage function in lib/framework-functions.sh
+            # get sourced twice by the (buggy) SourceStage function in lib/_framework-setup-and-functions.sh
             OS_MASTER_VENDOR="SUSE"
             ;;
         (*)
