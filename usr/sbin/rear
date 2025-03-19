@@ -75,15 +75,7 @@ readonly INITIAL_BASH_FLAGS_AND_OPTIONS_COMMANDS="$( get_bash_flags_and_options_
 # and https://github.com/rear/rear/issues/3259#issuecomment-2385745545
 # and https://github.com/rear/rear/issues/3319#issuecomment-2360546784
 # and https://github.com/rear/rear/issues/3319#issuecomment-2363556217
-function . () {
-    echo -e "ERROR: BUG in $PRODUCT\nForbidden usage of '.' instead of 'source' in\n  . $*\nPlease report it at $BUG_REPORT_SITE" >&2
-    exit 1
-}
-# To be on the safe side sourcing via '.' is kept always forbidden in ReaR because
-# it is basically impossible to reliably find all code places where '.' is used for sourcing
-# see https://github.com/rear/rear/issues/3260#issuecomment-2248252572
-# In contrast to sourcing via '.' which is kept forbidden
-# for sourcing via 'source' later (see below) trusted sourcing gets set up
+# For sourcing via 'source' later (see below) trusted sourcing gets set up
 # by replacing this 'source' forbid function by a 'source' wrapper function
 # in lib/_framework-setup-and-functions.sh which implements trusted sourcing
 # which is then the only allowed way to normally source a file in ReaR.
@@ -95,6 +87,50 @@ function . () {
 function source () {
     echo -e "ERROR: BUG in $PRODUCT\nForbidden usage of 'source' in\n  source $*\nPlease report it at $BUG_REPORT_SITE" >&2
     exit 1
+}
+# To be on the safe side sourcing via '.' is forbidden in general in ReaR because
+# it is basically impossible to reliably find all code places where '.' is used for sourcing
+# see https://github.com/rear/rear/issues/3260#issuecomment-2248252572
+# except explicitly specified files by TRUSTED_SOURCING_VIA_DOT+=( /path/to/actual_file )
+# where /path/to/actual_file is the actual file with leading / and symlinks resolved
+# i.e. /path/to/actual_file is what 'readlink -e path/to/file' returns when '. path/to/file' is called
+# plus /path/to/actual_file must be located below one of the TRUSTED_PATHS
+# and the owner of /path/to/actual_file must be one of the TRUSTED_OWNERS
+# because this '.' wrapper function calls 'source' which is the 'source' wrapper function:
+TRUSTED_SOURCING_VIA_DOT=()
+function . () {
+    local file="$1"
+    local actual_path=""
+    local trusted_path=""
+    # Empty TRUSTED_SOURCING_VIA_DOT means sourcing via '.' is forbidden:
+    if test ${#TRUSTED_SOURCING_VIA_DOT[@]} -eq 0 ; then
+        echo -e "ERROR: Forbidden usage of '.' instead of 'source' in\n  . $*\nTRUSTED_SOURCING_VIA_DOT is empty" >&2
+        exit 1
+    fi
+    # It is not trusted when it is neither a regular file nor a link to a regular file:
+    if ! test -f "$file" ; then
+        echo -e "ERROR: Forbidden usage of '.' in\n  . $*\n'$file' is neither a regular file nor a link to a regular file" >&2
+        exit 1
+    fi
+    # Get the full path of the actual file (i.e. with leading / and symlinks resolved)
+    # e.g. /etc/os-release is a symbolic link to /usr/lib/os-release (at least on openSUSE Leap 15.6).
+    # It cannot be trusted when readlink fails:
+    if ! actual_path="$( readlink -e "$file" )" ; then
+        echo -e "ERROR: Forbidden usage of '.' in\n  . $*\n'$file' cannot be trusted because 'readlink -e $file' failed" >&2
+        exit 1
+    fi
+    # Check if it can be trusted because TRUSTED_SOURCING_VIA_DOT contains the actual file path:
+    for trusted_path in "${TRUSTED_SOURCING_VIA_DOT[@]}" ; do
+        test "$actual_path" = "$trusted_path" && break
+    done
+    # When after the 'for' loop "$actual_path" = "$trusted_path" then the actual file path is in TRUSTED_SOURCING_VIA_DOT:
+    if ! test "$actual_path" = "$trusted_path" ; then
+        echo -e "ERROR: Forbidden usage of '.' in\n  . $*\nbecause actual path '$actual_path' not in TRUSTED_SOURCING_VIA_DOT" >&2
+        exit 1
+    fi
+    # The actual work (source the file):
+    source "$@"
+    # The return code of this '.' wrapper function is the return code of the 'source' wrapper function.
 }
 
 # Set machine readable and human readable start date and time values.
