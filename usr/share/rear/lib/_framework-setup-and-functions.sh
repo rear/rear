@@ -1676,10 +1676,10 @@ function source () {
     is_trusted_owner "$source_file" || Error "Forbidden to source '$source_file' (not a TRUSTED_OWNERS ${TRUSTED_OWNERS[*]})"
     # Enforce source file starts with a trusted path:
     is_trusted_path "$source_file" || Error "Forbidden to source '$source_file' (not below TRUSTED_PATHS ${TRUSTED_PATHS[*]})"
+  } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # The actual work (source the source file):
     builtin source "$@"
     # The return code of the 'source' wrapper function is the return code of the 'source' builtin.
-  } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 }
 
 # Source a ReaR file (ReaR script or ReaR config file) given in $1
