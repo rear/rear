@@ -16,9 +16,9 @@ declare -r IMAGES=(
     opensuse/leap:15
     registry.suse.com/suse/sle15
     centos:8       # discontinued
-    quay.io/centos/centos:stream9
+    quay.io/centos/centos:stream{9,10}
     # registry.access.redhat.com/ubi{7,8,9} basic packages like parted are missing
-    fedora:{40,41} # rawhide Docker image is broken, see https://github.com/fedora-cloud/docker-brew-fedora/issues/109
+    fedora:{41,42} # rawhide Docker image is broken, see https://github.com/fedora-cloud/docker-brew-fedora/issues/109
     archlinux
     manjarolinux/base
 )
@@ -44,6 +44,12 @@ Architecture defaults to the host platform, specify architecture via
 -a <architecture>, e.g. -a amd64 on M1 Mac as part of the image selection
 "
 
+# Try podman when docker is missing.  This must be at the top because aliases
+# are expanded when a function definition is read, not when it is executed.
+if ! type -a docker &>/dev/null && type -a podman &>/dev/null; then
+    shopt -s expand_aliases
+    alias docker=podman
+fi
 
 function gh_actions_output {
     if test "$GITHUB_ACTIONS"; then
