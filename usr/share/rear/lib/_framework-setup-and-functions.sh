@@ -1517,8 +1517,7 @@ function ProgressInfo () {
 # also 'root' is trusted by default:
 sbin_rear_owner_name="$( stat -L -c %U "$SCRIPT_FILE" )"
 test "$sbin_rear_owner_name" = "root" && TRUSTED_OWNERS=( 'root' ) || TRUSTED_OWNERS=( 'root' "$sbin_rear_owner_name" )
-# 'readonly TRUSTED_OWNERS' happens in sbin/rear
-# after the normal user configuration files (site.conf local.conf rescue.conf) were sourced
+# 'readonly TRUSTED_OWNERS' happens in sbin/rear after the configuration files were sourced
 # so that the user can specify what he needs, e.g. for whatever third-party (backup) software.
 
 # Check file owner is trusted
@@ -1631,8 +1630,7 @@ else
         TRUSTED_PATHS=( '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
     fi
 fi
-# 'readonly TRUSTED_PATHS' happens in sbin/rear
-# after the normal user configuration files (site.conf local.conf rescue.conf) were sourced
+# 'readonly TRUSTED_PATHS' happens in sbin/rear after the configuration files were sourced
 # so that the user can specify what he needs, e.g. for whatever third-party (backup) software.
 
 # Check the actual file path (i.e. with symlinks resolved) is trusted
@@ -1673,9 +1671,9 @@ function source () {
         return 1
     fi
     # Enforce source file owner is trusted:
-    is_trusted_owner "$source_file" || Error "Forbidden to source '$source_file' (not a TRUSTED_OWNERS ${TRUSTED_OWNERS[*]})"
+    is_trusted_owner "$source_file" || Error "Forbidden to source '$source_file' (not a TRUSTED_OWNERS: ${TRUSTED_OWNERS[*]})"
     # Enforce source file starts with a trusted path:
-    is_trusted_path "$source_file" || Error "Forbidden to source '$source_file' (not below TRUSTED_PATHS ${TRUSTED_PATHS[*]})"
+    is_trusted_path "$source_file" || Error "Forbidden to source '$source_file' (not below TRUSTED_PATHS: ${TRUSTED_PATHS[*]})"
   } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # The actual work (source the source file):
     builtin source "$@"
