@@ -1680,6 +1680,64 @@ function source () {
     # The return code of the 'source' wrapper function is the return code of the 'source' builtin.
 }
 
+# Trusted sourcing via '.' for exceptional cases:
+#
+# To be on the safe side sourcing via '.' is forbidden in general in ReaR because
+# it is basically impossible to reliably find all code places where '.' is used for sourcing
+# see https://github.com/rear/rear/issues/3260#issuecomment-2248252572
+#
+# On the other hand 'source' is not POSIX compliant because '.' is the POSIX standard command
+# so ReaR must not forbid using '.' in any case but allow it when really needed.
+#
+# So for exceptional cases (e.g. when '. path/to/file' is called in a third-party script which is sourced in ReaR)
+# the user can specify his specifically needed (third-party) files to be trusted for sourcing via '.' in ReaR by
+# TRUSTED_SOURCING_VIA_DOT+=( /actual_path/to/file )
+# where /actual_path/to/file is the actual file with leading / and symlinks resolved
+# i.e. /actual_path/to/file is what 'readlink -e path/to/file' returns when '. path/to/file' is called.
+#
+# Additionally /actual_path/to/file must be located below one of the TRUSTED_PATHS
+# and the owner of /actual_path/to/file must be one of the TRUSTED_OWNERS
+# because the below '.' wrapper function calls 'source' which is the above 'source' wrapper function.
+# 
+# Those wrappers (the '.' wrapper and the 'source' wrapper)
+# are nice examples how RFC 1925 item 6a
+# "It is always possible to add another level of indirection"
+# is even helpful in this specific case to increase security
+# in contrast to how RFC 1925 items 6 and 6a are normally meant,
+# i.e. normally it is recommended to avoid indirections.
+#
+# Specify default TRUSTED_SOURCING_VIA_DOT:
+TRUSTED_SOURCING_VIA_DOT=()
+# 'readonly TRUSTED_SOURCING_VIA_DOT' happens in sbin/rear after the configuration files were sourced
+# so that the user can specify what he needs, e.g. for whatever third-party (backup) software.
+#
+# The '.' wrapper function to enforce trusted sourcing via '.' for exceptional cases:
+function . () {
+  { local file="$1"
+    local actual_path=""
+    local trusted_path=""
+    Debug "Trusted sourcing via dot '$*'"
+    # Empty TRUSTED_SOURCING_VIA_DOT means sourcing via '.' is forbidden.
+    # Actually it is an Error (there is no bug in ReaR) but BugError is used to let the user report cases to ReaR upstream where '.' is used for sourcing:
+    test ${#TRUSTED_SOURCING_VIA_DOT[@]} -eq 0 && BugError "Forbidden usage of '.' instead of 'source' in${LF}  . $*${LF}TRUSTED_SOURCING_VIA_DOT is empty"
+    # It is not trusted when it is neither a regular file nor a link to a regular file:
+    test -f "$file" || Error "Forbidden usage of '.' in${LF}  . $*${LF}'$file' is neither a regular file nor a link to a regular file"
+    # Get the full path of the actual file (i.e. with leading / and symlinks resolved)
+    # e.g. /etc/os-release is a symbolic link to /usr/lib/os-release (at least on openSUSE Leap 15.6).
+    # It cannot be trusted when readlink fails:
+    actual_path="$( readlink -e "$file" )" || Error "Forbidden usage of '.' in${LF}  . $*{$LF}'$file' cannot be trusted because 'readlink -e $file' failed"
+    # Check if it can be trusted because TRUSTED_SOURCING_VIA_DOT contains the actual file path:
+    for trusted_path in "${TRUSTED_SOURCING_VIA_DOT[@]}" ; do
+        test "$actual_path" = "$trusted_path" && break
+    done
+    # When after the 'for' loop "$actual_path" = "$trusted_path" then the actual file path is in TRUSTED_SOURCING_VIA_DOT:
+    test "$actual_path" = "$trusted_path" || Error "Forbidden usage of '.' in${LF}  . $*${LF}actual path '$actual_path' not in TRUSTED_SOURCING_VIA_DOT"
+  } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # The actual work (source the file):
+    source "$@"
+    # The return code of the '.' wrapper function is the return code of the 'source' wrapper function.
+}
+
 # Source a ReaR file (ReaR script or ReaR config file) given in $1
 function Source () {
     local source_file="$1"
