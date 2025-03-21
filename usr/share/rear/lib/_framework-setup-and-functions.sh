@@ -1736,18 +1736,24 @@ function source () {
 # in contrast to how RFC 1925 items 6 and 6a are normally meant,
 # i.e. normally it is recommended to avoid indirections.
 function . () {
-  { local file="$1"
+  { local source_file="$1"
+    local caller_source=()
     Debug "Trusted sourcing via dot '$*'"
-    # Ensure it is a regular file or a link to a regular file.
+    # Ensure source_file is a regular file or a link to a regular file.
     # I.e. skip non-regular files like directories, device nodes, or file not found.
     # It also returns here when no source file was specified (i.e. when $1 is empty).
-    if ! test -f "$file" ; then
-        # Show the file name as '$file' to make it clear when it is empty:
-        Debug "Skipped sourcing '$file' via dot (no regular file)"
+    if ! test -f "$source_file" ; then
+        # Show the source file name as '$source_file' to make it clear when it is empty:
+        Debug "Skipped sourcing '$source_file' via '.' (no regular file)"
         return 1
     fi
     # Enforce that sourcing via '.' is not used in ReaR scripts or in ReaR config files:
-    is_rear_source "$file" && BugError "Forbidden usage of '.' instead of 'source' in${LF}  . $*${LF}because '$file' belongs to ReaR"
+    caller_source=( $( CallerSource ) )
+    if test "$caller_source" = "Relax-and-Recover" ; then
+        LogPrintError "Could not determine if sourcing via '.' is done in a file that belongs to ReaR"
+    else
+        is_rear_source "$caller_source" && BugError "Forbidden usage of '.' instead of 'source' in${LF}  . $*${LF}'$caller_source' belongs to ReaR"
+    fi
   } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # The actual work (source the file via the 'source' wrapper function to enforce trusted sourcing):
     source "$@"
