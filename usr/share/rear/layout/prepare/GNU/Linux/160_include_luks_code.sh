@@ -62,6 +62,9 @@ create_crypt() {
             (uuid)
                 test $value && cryptsetup_options+=" --uuid $value"
                 ;;
+            (pbkdf)
+                test $value && cryptsetup_options+=" --pbkdf $value"
+                ;;
             (keyfile)
                 test $value && keyfile=$value
                 ;;
