@@ -777,6 +777,16 @@ Debug "Sourced files must be below one of the default TRUSTED_PATHS: ${TRUSTED_P
 for script in $SHARE_DIR/lib/[a-z]*.sh ; do
     Source $script || BugError "Failed to source $script"
 done
+# In simulation mode the workflow scripts $SHARE_DIR/lib/[a-z]*-workflow.sh need to be executed (sourced)
+# to get the WORKFLOW_... functions defined, otherwise the "Check for and run the requested workflow" code below
+# could not run the requested workflow, see https://github.com/rear/rear/pull/3424#issuecomment-2747079736
+# (in simulation mode a WORKFLOW_... function is run but its called scripts are not executed by the Source function):
+if test "$SIMULATE" ; then
+    Debug "In simulation mode the WORKFLOW_... functions are needed so the 'lib/[a-z]*-workflow.sh' scripts get executed"
+    for script in $SHARE_DIR/lib/[a-z]*-workflow.sh ; do
+        source $script || BugError "Failed to source $script"
+    done
+fi
 
 # All workflows need to read the configurations first.
 # Combine configuration files:
