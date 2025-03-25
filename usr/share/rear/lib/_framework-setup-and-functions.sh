@@ -1723,10 +1723,11 @@ function source () {
 # i.e. that the owner of the file must be one of the TRUSTED_OWNERS
 # and that the file must be located below one of the TRUSTED_PATHS
 # (the '.' wrapper calls 'source' which is the 'source' wrapper).
-# But ReaR must not enforce an environment where ReaR decides that
-# executing via the POSIX compliant '.' is forbidden in particular not
-# when ReaR calls an external tool which is a shell script that uses '.'
-# ReaR also enforces that '.' is not used in ReaR scripts or in ReaR config files
+# But ReaR must not enforce an environment where ReaR decides
+# that executing via the POSIX compliant '.' is forbidden
+# in particular not when ReaR sources an external shell script
+# that uses '.' to execute more scripts in the current shell.
+# ReaR enforces that '.' is not used in ReaR scripts or in ReaR config files
 # but ReaR must not do that for (POSIX compliant) external (i.e. non-ReaR) files.
 #
 # Those wrappers (the '.' wrapper and the 'source' wrapper)
