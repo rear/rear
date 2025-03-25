@@ -630,7 +630,7 @@ function CallerSource () {
         return 0
     fi
     # Fallback output:
-    echo "Relax-and-Recover"
+    echo "$PRODUCT"
 }
 
 # Error exit:
@@ -1758,7 +1758,7 @@ function . () {
     # So normally the first element in the caller_source array is the filename where '.' is called
     # and in the fallback case the first element in the caller_source array is 'Relax-and-Recover':
     caller_file="${caller_source[0]}"
-    if test "$caller_file" = "Relax-and-Recover" ; then
+    if test "$caller_file" = "$PRODUCT" ; then
         LogPrintError "Could not determine if sourcing via '.' is done in a file that belongs to ReaR"
     else
         is_rear_source "$caller_file" && BugError "Forbidden usage of '.' instead of 'source' in${LF}  . $*${LF}'$caller_file' belongs to ReaR"
