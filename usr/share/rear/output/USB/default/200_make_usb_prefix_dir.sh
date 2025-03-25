@@ -1,5 +1,5 @@
 # The $BUILD_DIR/outputfs/$USB_PREFIX directory is needed by subsequent scripts
-# like output/USB/Linux-i386/830_copy_kernel_initrd.sh to store kernel and initrd
+# like output/USB/default/830_copy_kernel_initrd.sh to store kernel and initrd
 # and for parts of the syslinux config in 'syslinux.cfg' if syslinux/extlinux is used
 
 USB_REAR_DIR="$BUILD_DIR/outputfs/$USB_PREFIX"
