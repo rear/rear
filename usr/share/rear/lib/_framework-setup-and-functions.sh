@@ -1760,7 +1760,11 @@ function . () {
     # and in the fallback case the first element in the caller_source array is 'Relax-and-Recover':
     caller_file="${caller_source[0]}"
     if test "$caller_file" = "$PRODUCT" ; then
-        LogPrintError "Could not determine if sourcing via '.' is done in a file that belongs to ReaR"
+        # proceeding "bona fide" when CallerSource could not determine the actual caller file
+        # is not less secure than sourcing via '.' for files which do not belong to ReaR
+        # because all sourcing via '.' happens via the 'source' wrapper 
+        # cf. https://github.com/rear/rear/pull/3437#discussion_r2012030154
+        DebugPrint "Could not determine if usage of '.' in${LF}  . $*${LF}happens in a file that belongs to ReaR"
     else
         is_rear_source "$caller_file" && BugError "Forbidden usage of '.' instead of 'source' in${LF}  . $*${LF}'$caller_file' belongs to ReaR"
     fi
