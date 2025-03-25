@@ -1,0 +1,1 @@
+../Linux-i386/610_EFISTUB_run_efibootmgr.sh

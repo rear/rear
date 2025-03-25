@@ -1,0 +1,1 @@
+../Linux-i386/670_run_efibootmgr.sh
