@@ -1738,6 +1738,7 @@ function source () {
 function . () {
   { local source_file="$1"
     local caller_source=()
+    local caller_file
     Debug "Trusted sourcing via dot '$*'"
     # Ensure source_file is a regular file or a link to a regular file.
     # I.e. skip non-regular files like directories, device nodes, or file not found.
@@ -1749,10 +1750,18 @@ function . () {
     fi
     # Enforce that sourcing via '.' is not used in ReaR scripts or in ReaR config files:
     caller_source=( $( CallerSource ) )
-    if test "$caller_source" = "Relax-and-Recover" ; then
+    # CallerSource returns normally a string of three words of the form
+    #   source_filename line line_number
+    # where source_filename is the name of the file where this '.' function is called
+    # then the word 'line' and the line_number in that file where '.' is called.
+    # As fallback CallerSource returns only the word 'Relax-and-Recover'.
+    # So normally the first element in the caller_source array is the filename where '.' is called
+    # and in the fallback case the first element in the caller_source array is 'Relax-and-Recover':
+    caller_file="${caller_source[0]}"
+    if test "$caller_file" = "Relax-and-Recover" ; then
         LogPrintError "Could not determine if sourcing via '.' is done in a file that belongs to ReaR"
     else
-        is_rear_source "$caller_source" && BugError "Forbidden usage of '.' instead of 'source' in${LF}  . $*${LF}'$caller_source' belongs to ReaR"
+        is_rear_source "$caller_file" && BugError "Forbidden usage of '.' instead of 'source' in${LF}  . $*${LF}'$caller_file' belongs to ReaR"
     fi
   } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # The actual work (source the file via the 'source' wrapper function to enforce trusted sourcing):
