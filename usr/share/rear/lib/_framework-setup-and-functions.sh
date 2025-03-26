@@ -630,7 +630,7 @@ function CallerSource () {
         return 0
     fi
     # Fallback output:
-    echo "Relax-and-Recover"
+    echo "$PRODUCT"
 }
 
 # Error exit:
@@ -1509,7 +1509,7 @@ function ProgressInfo () {
 
 # Sourcing functions to enforce trusted sourcing:
 
-# Specify default TRUSTED_OWNERS:
+# Specify default TRUSTED_OWNERS (used by the is_trusted_owner function):
 #
 # The owner of sbin/rear is always trusted.
 # Usually the owner of sbin/rear is 'root'
@@ -1541,7 +1541,8 @@ function is_trusted_owner () {
     return 1
 }
 
-# Specify default TRUSTED_PATHS:
+# Specify default TRUSTED_PATHS (used by the is_trusted_path function) and
+# specify default REAR_SOURCE_PATHS (used by the is_rear_source function):
 #
 # ReaR basic directories cases:
 #
@@ -1608,6 +1609,7 @@ if test "$REAR_DIR_PREFIX" ; then
     # see https://relax-and-recover.org/documentation/security-architecture
     # SHARE_DIR and CONFIG_DIR and VAR_DIR are sub-directories of REAR_DIR_PREFIX:
     TRUSTED_PATHS=( "$REAR_DIR_PREFIX/" '/usr/' '/etc/' '/lib/' )
+    REAR_SOURCE_PATHS=( "$REAR_DIR_PREFIX/" )
 else
     # When REAR_DIR_PREFIX is empty it is case (A) i.e. no Git checkout
     # or it is case (B2) i.e. in the ReaR recovery system when there was a Git checkout on the original system.
@@ -1622,16 +1624,23 @@ else
     # Fall back to the normal case (A) if 'readlink -e /usr/share/rear/lib/_framework-setup-and-functions.sh' fails:
     actual_path="$( readlink -e "$test_path" )" || actual_path="$test_path"
     if test "$actual_path" != "$test_path" ; then
-        # This is case (B1) i.e. in the ReaR recovery system when there was a Git checkout on the original system:
+        # This is case (B2) i.e. in the ReaR recovery system when there was a Git checkout on the original system:
+        # When test_path = /usr/share/rear/lib/_framework-setup-and-functions.sh
+        # and actual_path = /rear/prefix/usr/share/rear/lib/_framework-setup-and-functions.sh
+        # then rear_dir_prefix = /rear/prefix
         rear_dir_prefix=${actual_path%$test_path}
-        TRUSTED_PATHS=( "$rear_dir_prefix/" '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
+        # Both SHARE_DIR and VAR_DIR are sub-directories of rear_dir_prefix
+        # only CONFIG_DIR is /etc/rear
+        TRUSTED_PATHS=( "$rear_dir_prefix/" '/usr/' '/etc/' '/lib/' )
+        REAR_SOURCE_PATHS=( "$rear_dir_prefix/" "$CONFIG_DIR/" )
     else
         # This is the normal case (A) i.e. no Git checkout:
         # In case (A) SHARE_DIR is a sub-directory of '/usr/' and CONFIG_DIR is a sub-directory of '/etc/':
         TRUSTED_PATHS=( '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
+        REAR_SOURCE_PATHS=( "$SHARE_DIR/" "$CONFIG_DIR/" "$VAR_DIR/" )
     fi
 fi
-# 'readonly TRUSTED_PATHS' happens in sbin/rear
+# 'readonly TRUSTED_PATHS' and 'readonly REAR_SOURCE_PATHS' happens in sbin/rear
 # after the normal user configuration files (site.conf local.conf rescue.conf) were sourced
 # so that the user can specify what he needs, e.g. for whatever third-party (backup) software.
 
@@ -1658,6 +1667,28 @@ function is_trusted_path () {
     return 1
 }
 
+# Check the actual file path (i.e. with symlinks resolved)
+# is a ReaR script or a ReaR config file (i.e. a file that belongs to ReaR)
+# see https://github.com/rear/rear/pull/3434#issuecomment-2742598092
+function is_rear_source () {
+    local file="$1"
+    local actual_path=""
+    local rear_source_path=""
+    # Empty REAR_SOURCE_PATHS means all files are considered to not belong to ReaR:
+    test ${#REAR_SOURCE_PATHS[@]} -eq 0 && return 1
+    # Do not error out in 'readlink' when it is neither a regular file nor a link to a regular file
+    # and assume such files do not belong to ReaR:
+    test -f "$file" || return 1
+    # Get the full path of the actual file (i.e. with leading / and symlinks resolved):
+    actual_path="$( readlink -e "$file" )" || Error "is_rear_source(): 'readlink -e $file' failed"
+    for rear_source_path in "${REAR_SOURCE_PATHS[@]}" ; do
+        # Skip when rear_source_path is empty (otherwise the [[ expression ]] would be falsely true):
+        test "$rear_source_path" || continue
+        [[ "$actual_path" =~ ^"$rear_source_path" ]] && return 0
+    done
+    return 1
+}
+
 # The 'source' wrapper function to enforce trusted sourcing
 # see https://github.com/rear/rear/issues/3259
 # and https://github.com/rear/rear/pull/3379
@@ -1673,13 +1704,74 @@ function source () {
         return 1
     fi
     # Enforce source file owner is trusted:
-    is_trusted_owner "$source_file" || Error "Forbidden to source '$source_file' (not a TRUSTED_OWNERS ${TRUSTED_OWNERS[*]})"
+    is_trusted_owner "$source_file" || Error "Forbidden to source '$source_file' (not a TRUSTED_OWNERS: ${TRUSTED_OWNERS[*]})"
     # Enforce source file starts with a trusted path:
-    is_trusted_path "$source_file" || Error "Forbidden to source '$source_file' (not below TRUSTED_PATHS ${TRUSTED_PATHS[*]})"
+    is_trusted_path "$source_file" || Error "Forbidden to source '$source_file' (not below TRUSTED_PATHS: ${TRUSTED_PATHS[*]})"
   } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # The actual work (source the source file):
     builtin source "$@"
     # The return code of the 'source' wrapper function is the return code of the 'source' builtin.
+}
+
+# The '.' wrapper function to enforce trusted sourcing via '.'
+# see https://github.com/rear/rear/issues/3259
+# and https://github.com/rear/rear/pull/3379
+# and https://github.com/rear/rear/pull/3434#issuecomment-2742598092
+#
+# ReaR can enforce an environment where ReaR decides
+# what files ReaR will directly or indirectly execute via 'source' or '.'
+# i.e. that the owner of the file must be one of the TRUSTED_OWNERS
+# and that the file must be located below one of the TRUSTED_PATHS
+# (the '.' wrapper calls 'source' which is the 'source' wrapper).
+# But ReaR must not enforce an environment where ReaR decides
+# that executing via the POSIX compliant '.' is forbidden
+# in particular not when ReaR sources an external shell script
+# that uses '.' to execute more scripts in the current shell.
+# ReaR enforces that '.' is not used in ReaR scripts or in ReaR config files
+# but ReaR must not do that for (POSIX compliant) external (i.e. non-ReaR) files.
+#
+# Those wrappers (the '.' wrapper and the 'source' wrapper)
+# are nice examples how RFC 1925 item 6a
+# "It is always possible to add another level of indirection"
+# is even helpful in this specific case to increase security
+# in contrast to how RFC 1925 items 6 and 6a are normally meant,
+# i.e. normally it is recommended to avoid indirections.
+function . () {
+  { local source_file="$1"
+    local caller_source=()
+    local caller_file
+    Debug "Trusted sourcing via dot '$*'"
+    # Ensure source_file is a regular file or a link to a regular file.
+    # I.e. skip non-regular files like directories, device nodes, or file not found.
+    # It also returns here when no source file was specified (i.e. when $1 is empty).
+    if ! test -f "$source_file" ; then
+        # Show the source file name as '$source_file' to make it clear when it is empty:
+        Debug "Skipped sourcing '$source_file' via '.' (no regular file)"
+        return 1
+    fi
+    # Enforce that sourcing via '.' is not used in ReaR scripts or in ReaR config files:
+    caller_source=( $( CallerSource ) )
+    # CallerSource returns normally a string of three words of the form
+    #   source_filename line line_number
+    # where source_filename is the name of the file where this '.' function is called
+    # then the word 'line' and the line_number in that file where '.' is called.
+    # As fallback CallerSource returns only the word 'Relax-and-Recover'.
+    # So normally the first element in the caller_source array is the filename where '.' is called
+    # and in the fallback case the first element in the caller_source array is 'Relax-and-Recover':
+    caller_file="${caller_source[0]}"
+    if test "$caller_file" = "$PRODUCT" ; then
+        # proceeding "bona fide" when CallerSource could not determine the actual caller file
+        # is not less secure than sourcing via '.' for files which do not belong to ReaR
+        # because all sourcing via '.' happens via the 'source' wrapper 
+        # cf. https://github.com/rear/rear/pull/3437#discussion_r2012030154
+        DebugPrint "Could not determine if usage of '.' in${LF}  . $*${LF}happens in a file that belongs to ReaR"
+    else
+        is_rear_source "$caller_file" && BugError "Forbidden usage of '.' instead of 'source' in${LF}  . $*${LF}'$caller_file' belongs to ReaR"
+    fi
+  } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # The actual work (source the file via the 'source' wrapper function to enforce trusted sourcing):
+    source "$@"
+    # The return code of the '.' wrapper function is the return code of the 'source' wrapper function.
 }
 
 # Source a ReaR file (ReaR script or ReaR config file) given in $1
