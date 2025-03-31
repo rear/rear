@@ -1,1 +1,0 @@
-../Linux-ppc64/350_safeguard_error_out.sh
