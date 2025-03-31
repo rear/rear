@@ -12,16 +12,20 @@
 # Define the list of supported images
 declare -r IMAGES=(
     ubuntu:{20.04,22.04,24.04}
-    debian:{10,11,unstable}
+    debian:{10,11,12,unstable}
     opensuse/leap:15
     registry.suse.com/suse/sle15
-    centos:8       # discontinued
+    centos:8 # discontinued
     quay.io/centos/centos:stream{9,10}
     # registry.access.redhat.com/ubi{7,8,9} basic packages like parted are missing
     fedora:{41,42} # rawhide Docker image is broken, see https://github.com/fedora-cloud/docker-brew-fedora/issues/109
     archlinux
     manjarolinux/base
 )
+
+# images using x86_64-v3 architecture which doesn't work on M1 Mac Rosetta
+# this is regex for grep, remember that MacOS grep is different from Linux grep!
+AMD64_V3_IMAGE_FILTER="centos:stream10"
 
 declare -r HELP_TEXT="
 $0 [image ...] -- <command> [args ...]
@@ -42,6 +46,8 @@ Special commands:
 
 Architecture defaults to the host platform, specify architecture via
 -a <architecture>, e.g. -a amd64 on M1 Mac as part of the image selection
+
+Note: On M1 Mac we automatically remove incompatible Docker images if amd64 is set!
 "
 
 # Try podman when docker is missing.  This must be at the top because aliases
@@ -89,57 +95,18 @@ function patch_images() {
     done
 
     for image in "${use_images[@]}"; do
-        local DOCKERFILE="
-FROM $image
-LABEL description=\"$image patched to build and run ReaR\"
-SHELL [\"/bin/bash\", \"-xeuo\", \"pipefail\", \"-c\"]
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN type -p apt-get &>/dev/null || exit 0 ;\
-    apt-get -y update ;\
-    apt-get -y --allow-unauthenticated install </dev/null \
-        sysvinit-utils kbd cpio file procps ethtool iputils-ping net-tools dosfstools binutils parted openssl gawk attr bc psmisc nfs-client portmap xorriso isolinux gdisk syslinux syslinux-common syslinux-efi iproute2 \
-        make asciidoctor git build-essential debhelper devscripts ;\
-    apt-get -y --allow-unauthenticated install </dev/null fdisk ||\
-        apt-get -y --allow-unauthenticated install </dev/null util-linux
-
-RUN type -p zypper &>/dev/null || exit 0 ;\
-    zypper --no-gpg-checks --quiet --non-interactive install \
-        sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux portmap rpcbind iproute2 nfs-client xorriso mkisofs util-linux psmisc procps \
-        make git rpm-build ;\
-    zypper --no-gpg-checks --quiet --non-interactive install 'rubygem(asciidoctor)' || \
-        zypper --no-gpg-checks --quiet --non-interactive install asciidoc xmlto
-
-RUN type -p pacman &>/dev/null || exit 0 ;\
-    pacman --noconfirm -Sy \
-        sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute2 nfs-utils libisoburn cdrtools util-linux psmisc procps-ng util-linux diffutils less \
-        make binutils fakeroot git asciidoctor debugedit
-
-# CentOS 8 doesn't have sysvinit-tools any more but it also doesn't have asciidoctor yet
-RUN type -p yum &>/dev/null || exit 0 ;\
-    grep -E '(CentOS.*Final|CentOS Linux release 8)' /etc/redhat-release && \
-        sed -i -e 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|' -e '/^mirror/d' /etc/yum.repos.d/*.repo ; \
-    yum -q --nogpgcheck install -y \
-        kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute nfs-utils xorriso genisoimage util-linux psmisc procps-ng util-linux \
-        make binutils git rpm-build ; \
-    yum -q --nogpgcheck install -y sysvinit-tools mkisofs asciidoc xmlto || \
-        yum -q --nogpgcheck install -y asciidoctor || \
-            yum -q --nogpgcheck install -y mkisofs asciidoc xmlto
-
-RUN git config --global --add safe.directory /rear
-"
-
-        # TODO: Add support for GRUB2
         gh_actions_output "::group::Patching $image"
         printf "********** PATCHING %-40s **********\n" "$image" 1>&2
-        read oldsize junk < <(docker images --format '{{.VirtualSize}}' "$image")
-        docker buildx build -t "$image" \
+        read -r oldsize junk < <(docker images --format '{{.VirtualSize}}' "$image")
+        docker buildx build \
+            --tag "$image" \
+            --build-arg "IMAGE=$image" \
             "${extra_docker_args[@]}" \
-            - <<<"$DOCKERFILE"
+            tools
         local docker_build_ret=$?
-        if test "$continue_and_record_successful_file" ; then
-            if test $docker_build_ret -eq 0 ; then
-                echo "$image" >> "$continue_and_record_successful_file"
+        if test "$continue_and_record_successful_file"; then
+            if test $docker_build_ret -eq 0; then
+                echo "$image" >>"$continue_and_record_successful_file"
             else
                 printf "********** FAILED   %-40s **********\n" "$image" 1>&2
                 continue
@@ -147,7 +114,7 @@ RUN git config --global --add safe.directory /rear
         else
             test $docker_build_ret -eq 0 || die "Failed building $image"
         fi
-        read newsize junk < <(docker images --format '{{.VirtualSize}}' "$image")
+        read -r newsize junk < <(docker images --format '{{.VirtualSize}}' "$image")
         test "$oldsize" != "$newsize" && printf "********** %-35s %7s -> %-7s *****\n" "$image" "$oldsize" "$newsize"
         gh_actions_output "::endgroup::"
     done
@@ -193,6 +160,15 @@ if test ${#use_images[@]} -eq 0; then
     use_images=("${IMAGES[@]}")
 fi
 
+if uname -a | grep -q "Darwin.*arm64"; then
+    if echo "${extra_docker_args[*]}" | grep -q amd64; then
+        echo "M1 Mac detected and amd64 architecture specified, removing incompatible Docker images matching $AMD64_V3_IMAGE_FILTER"
+        mapfile -t use_images < <(
+            printf "%s\n" "${use_images[@]}" | grep -v -E "$AMD64_V3_IMAGE_FILTER"
+        )
+    fi
+fi
+
 if test ${#command_args[@]} -eq 0; then
     if test ${#use_images[@]} -eq 1; then # if only one image is given and no command then go interactive
         command_args=(-i)
@@ -201,9 +177,9 @@ if test ${#command_args[@]} -eq 0; then
     fi
 fi
 
-rear_toplevel_dir=$(dirname $(dirname $(readlink -f "$0")))
+rear_toplevel_dir=$(dirname "$(dirname "$(readlink -f "$0")")")
 bash_script=tools/run-in-docker-script.sh
-bash_args=(-c "echo BUG: CONFIGURATION ERROR" )
+bash_args=(-c "echo BUG: CONFIGURATION ERROR")
 
 # declare -p IMAGES use_images command_args rear_toplevel_dir ; exit 0
 
@@ -213,10 +189,10 @@ case "${command_args[0]}" in
     exit $?
     ;;
 -i)
-    bash_args=( -i )
+    bash_args=(-i)
     ;;
 -*)
-    bash_args=( "${command_args[@]}" )
+    bash_args=("${command_args[@]}")
     ;;
 *)
     echo "${command_args[*]}" >"$rear_toplevel_dir/$bash_script"
@@ -224,6 +200,8 @@ case "${command_args[0]}" in
     ;;
 esac
 
+# set Docker interactive if we have interactive terminal
+test -t 0 && extra_docker_args+=(-i -t)
 
 # Note: bash reads --rcfile <file> for interactive shells
 #       bash reads the file specified in BASH_ENV for non-interactive shells
@@ -235,7 +213,7 @@ for image in "${use_images[@]}"; do
     dist_dest="dist-all/$image_name"
     mkdir -p "$rear_toplevel_dir/$dist_dest" || die "Could not mkdir $rear_toplevel_dir/$dist_dest"
     docker run \
-        --rm $(test -t 0 && echo -i -t) \
+        --rm \
         --sig-proxy=false \
         -h "$image_name" \
         -v "$rear_toplevel_dir:/rear" \
