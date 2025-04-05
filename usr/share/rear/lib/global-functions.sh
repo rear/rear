@@ -503,7 +503,7 @@ function mount_url() {
 
     # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
     # They thus need to be kept in sync with umount_url() so that RemoveExitTasks is used
-    # iff AddExitTask was used in mount_url().
+    # if AddExitTask was used in mount_url().
 
     if ! scheme_supports_filesystem "$scheme" ; then
         ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
@@ -707,7 +707,7 @@ function umount_url() {
 
     # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
     # They thus need to be kept in sync with mount_url() so that RemoveExitTasks is used
-    # iff AddExitTask was used in mount_url().
+    # if AddExitTask was used in mount_url().
 
     if ! scheme_supports_filesystem "$scheme" ; then
         ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
@@ -822,6 +822,9 @@ function umount_mountpoint() {
     local mountpoint="$1"
     local lazy="${2:-}"
 
+    contains_visible_char "$mountpoint" || BugError "umount_mountpoint() called with empty mountpoint argument '$mountpoint'"
+    test -d "$mountpoint" -o -b "$mountpoint" || Error "umount_mountpoint mountpoint '$mountpoint' neither directory nor block device"
+
     if test $lazy ; then
         if test $lazy != "lazy" ; then
             BugError "lazy = $lazy, but it must have the value of 'lazy' or empty"
@@ -837,21 +840,58 @@ function umount_mountpoint() {
 
     ### otherwise, try to kill all processes that opened files on the mount.
     # TODO: actually implement this
+    sleep 1
+    # We could use fuser to kill the PID holding the mount?
+    # That would mean that the 'fuser' command would become required, no?
+    # $ fuser -v -M -m /mnt
+    #                 USER        PID ACCESS COMMAND
+    #/mnt:                root     kernel mount /mnt
+    #                 gdhaese1  3408944 ..c.. bash
+    ## The line containing "kernel mount" we may not kill, only processes that occupy the mount point.
+    ## In above example that would be PID 3408944
+    PIDs_2_kill="$(fuser -v -M -m $mountpoint 2>&1 | grep -v -E '(PID|kernel)' | awk '{print $2}')"
+    if [[ -n "$PIDs_2_kill" ]] ; then
+	Log "Kill processes that prevent the umount of $mountpoint - PIDs $PIDs_2_kill"
+        kill -USR1 "$PIDs_2_kill"
+    fi
 
     ### If that still fails, force unmount.
     Log "Forced unmount of '$mountpoint'"
-    umount $v -f "$mountpoint" >&2
+    umount $v --force "$mountpoint" >&2
     if [[ $? -eq 0 ]] ; then
         return 0
     fi
 
     Log "Unmounting '$mountpoint' failed."
 
+    # Verify if mountpoint got stale (stale NFS mounts)
+    # function is_mountpoint_stale with arguments: mountpoint timeout_secs
+    is_mountpoint_stale "$mountpoint" 2
+    if [[ $? -eq 0 ]] ; then
+	LogPrint "Directory $mountpoint still mounted - trying 'force' umount again"
+        umount $v --force "$mountpoint" >&2
+	[[ $? -eq 0 ]] && return 0
+    else
+	LogPrint "Directory $mountpoint still mounted (stale mountpoint) - trying 'forced lazy' umount"
+        umount $v --force --lazy "$mountpoint" >&2
+	[[ $? -eq 0 ]] && return 0
+    fi
+
     if test $lazy ; then
         umount_mountpoint_lazy "$mountpoint"
     else
         return 1
     fi
+}
+
+# Perform a check if mountpoint got stale per accident?
+function is_mountpoint_stale() {
+    local mountpoint="$1"
+    local timeout_secs="$2"
+
+    timeout "$timeout_secs" df "$mountpoint" && return 0
+    # Mountpoint seems to be stale, therefore, return 1
+    return 1
 }
 
 ### Unmount mountpoint $1 lazily
