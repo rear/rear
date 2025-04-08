@@ -26,7 +26,7 @@ for config in "$CONFIG_DIR"/{site,local,rescue}.conf "${CONFIG_APPEND_FILES_PATH
             grep -v '^[[:space:]]*#' "$config" | sed -n -E -e "/(^|\W+)$var\+?=/p"
             )
         for line in "${var_assignments[@]}"; do
-            # Avoid that the [[ expression ]] could leak secrets into the ReaR log file in dbugscript mode
+            # Avoid that the [[ expression ]] could leak secrets into the ReaR log file in debugscript mode
             # for example when the assignment in $line assigns a secret value like
             #   { ARRAY=( 'secret_value' ) ; } 2>>/dev/$SECRET_OUTPUT_DEV
             # this assignment line would get shown in the ReaR log file via 'set -x' as
