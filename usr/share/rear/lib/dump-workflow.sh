@@ -18,7 +18,18 @@ WORKFLOW_dump () {
 
     function output_variable_assignment () {
         local variable_name=$1
+        # Only show variables which are set (could be also set to an empty value).
+        # Ensure '$variable_name' is not empty because 'test -v ""' returns '1'
+        # to avoid that with empty '$variable_name' plain 'declare -p' prints all values
+        # in particular also secret values as in https://github.com/rear/rear/issues/2967
+        # see also https://github.com/rear/rear/wiki/Coding-Style#beware-of-the-emptiness
         test -v "$variable_name" || return 1
+        # Do not show the value of variables which could contain secret values
+        # unless sbin/rear was called with --expose-secrets
+        # see https://github.com/rear/rear/issues/3444
+        if ! is_true "$EXPOSE_SECRETS" ; then
+            IsInArray $variable_name "${SECRET_VARIABLES[@]}" && return 1
+        fi
         if test "$DEBUG" ; then
             # In debug mode show the 'declare -p' output as is (only indented by two spaces):
             LogUserOutput "$( declare -p $variable_name | sed -e 's/^/  /' )"
