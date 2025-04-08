@@ -34,9 +34,11 @@ for config in "$CONFIG_DIR"/{site,local,rescue}.conf "${CONFIG_APPEND_FILES_PATH
             # see https://github.com/rear/rear/issues/3443
             # so avoid that by using $line within { ... } 2>>/dev/$SECRET_OUTPUT_DEV
             { [[ "$line" == *$var?(+)=\(* ]] && continue
-              is_true "$EXPOSE_SECRETS" && Error "Syntax error: Variable $var not assigned as Bash array in $config:$LF  $line$LF"
-              Error "Syntax error: Variable $var not assigned as Bash array in $config"
+              LogSecret "$config : $var not assigned as array : $line"
             } 2>>/dev/$SECRET_OUTPUT_DEV
+            # Do not have secrets in the Error message because Error() calls LogToSyslog()
+            # see https://github.com/rear/rear/pull/3449#issuecomment-2786306795
+            Error "Syntax error: Variable $var not assigned as Bash array in $config"
         done
     done
 done
