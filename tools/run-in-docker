@@ -170,7 +170,7 @@ if uname -a | grep -q "Darwin.*arm64"; then
 fi
 
 # Centos/stream10 requires x86-64-v3 or higher to be useful
-if [[ -f /lib64/ld-linux-x86-64.so.2 ]] ; then
+if [[ -x /lib64/ld-linux-x86-64.so.2 ]] ; then
     /lib64/ld-linux-x86-64.so.2 --help 2>&1 | grep supported | grep -qE '(x86-64-v3|x86-64-v4)'
     if [[ $? -eq 1 ]] ; then
        echo "Hardware architecture not supported, removing incompatible Docker images matching $AMD64_V3_IMAGE_FILTER"
