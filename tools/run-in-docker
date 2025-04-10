@@ -169,6 +169,17 @@ if uname -a | grep -q "Darwin.*arm64"; then
     fi
 fi
 
+# Centos/stream10 requires x86-64-v3 or higher to be useful
+if [[ -x /lib64/ld-linux-x86-64.so.2 ]] ; then
+    /lib64/ld-linux-x86-64.so.2 --help 2>&1 | grep supported | grep -qE '(x86-64-v3|x86-64-v4)'
+    if [[ $? -eq 1 ]] ; then
+       echo "Hardware architecture not supported, removing incompatible Docker images matching $AMD64_V3_IMAGE_FILTER"
+       mapfile -t use_images < <(
+                printf "%s\n" "${use_images[@]}" | grep -v -E "$AMD64_V3_IMAGE_FILTER"
+            )
+    fi
+fi
+
 if test ${#command_args[@]} -eq 0; then
     if test ${#use_images[@]} -eq 1; then # if only one image is given and no command then go interactive
         command_args=(-i)
@@ -208,7 +219,7 @@ test -t 0 && extra_docker_args+=(-i -t)
 #       we set both so that our startup file run-in-docker.bashrc is ALWAYS read as it sets the PATH
 for image in "${use_images[@]}"; do
     gh_actions_output "::group::Running $image"
-    printf "********** %-40s **********\n" "$image" 1>&2
+    printf "\n********** %-40s **********\n" "$image" 1>&2
     image_name="$(echo -n "$image" | tr -cs '0-9a-zA-Z-_' -)"
     dist_dest="dist-all/$image_name"
     mkdir -p "$rear_toplevel_dir/$dist_dest" || die "Could not mkdir $rear_toplevel_dir/$dist_dest"
