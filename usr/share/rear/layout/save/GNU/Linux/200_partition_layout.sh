@@ -412,6 +412,22 @@ Log "Saving disks and their partitions"
                 Log "Ignoring $blockd: it is a path of a multipath device"
             elif [[ ! ($blockd = *rpmb || $blockd = *[0-9]boot[0-9]) ]]; then # Silently skip Replay Protected Memory Blocks and others  
                 devname=$(get_device_name $disk)
+                # TODO: Dirty hack to exclude unwanted disks from the very beginning via EXCLUDE_COMPONENTS
+                # to help the user to avoid issues with unneeded disks where the subsequent code here fails
+                # for example as in https://github.com/rear/rear/issues/2995
+                # where parted did not recognize a partition table that is recognized both by the kernel and fdisk.
+                # The proper solution would be to overhaul the whole exclude functionality
+                # cf. https://github.com/rear/rear/issues/2772#issuecomment-1069119836
+                # and https://github.com/rear/rear/issues/2229#issuecomment-531474858
+                # When $devname is empty IsInArray returns 1 so an empty $devname is not falsely skipped here
+                # but it will error out below at the syntax test ($devname must be a single non-blank word):
+                if IsInArray "$devname" "${EXCLUDE_COMPONENTS[@]}" ; then
+                    # To exclude a disk with mounted filesystems one must also specify the filesystem mountpoints
+                    # for example via EXCLUDE_COMPONENTS+=( /dev/sdX fs:/mountpoint1 fs:/mountpoint2 )
+                    DebugPrint "Skipping $devname in EXCLUDE_COMPONENTS (does not also exclude mounted filesystems on it)"
+                    echo "# Skipped $devname in EXCLUDE_COMPONENTS (does not also exclude mounted filesystems on it)"
+                    continue
+                fi
                 devsize=$(get_disk_size ${disk#/sys/block/})
                 # Ensure syntactically correct 'disk' entries:
                 # Each value must exist and each value must be a single non-blank word so we 'test' without quoting the value:
