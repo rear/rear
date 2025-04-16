@@ -424,8 +424,8 @@ Log "Saving disks and their partitions"
                 if IsInArray "$devname" "${EXCLUDE_COMPONENTS[@]}" ; then
                     # To exclude a disk with mounted filesystems one must also specify the filesystem mountpoints
                     # for example via EXCLUDE_COMPONENTS+=( /dev/sdX fs:/mountpoint1 fs:/mountpoint2 )
-                    DebugPrint "Skipping $devname in EXCLUDE_COMPONENTS (does not also exclude mounted filesystems on it)"
-                    echo "# Skipped $devname in EXCLUDE_COMPONENTS (does not also exclude mounted filesystems on it)"
+                    DebugPrint "Skipping $devname in EXCLUDE_COMPONENTS (does not automatically exclude mounted filesystems on it)"
+                    echo "# Skipped $devname in EXCLUDE_COMPONENTS (does not automatically exclude mounted filesystems on it)"
                     continue
                 fi
                 devsize=$(get_disk_size ${disk#/sys/block/})
