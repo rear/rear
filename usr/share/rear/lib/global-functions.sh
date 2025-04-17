@@ -632,9 +632,12 @@ function mount_url() {
         (cifs)
             if [ x"$options" = x"$defaultoptions" ];then
                 # defaultoptions contains noatime which is not valid for cifs (issue #752)
-                mount_cmd="mount $v -o rw,guest //$(url_host "$url")$(url_path "$url") $mountpoint"
+                mount_cmd="mount $v -t cifs -o rw,guest //$(url_host "$url")$(url_path "$url") $mountpoint"
             else
-                mount_cmd="mount $v -o $options //$(url_host "$url")$(url_path "$url") $mountpoint"
+                # The explicit '-t cifs' seems to be needed to make it work with a Windows 11 share
+                # at least in some cases - with Windows 10 it had worked without explicit '-t cifs',
+                # see https://github.com/rear/rear/issues/3454
+                mount_cmd="mount $v -t cifs -o $options //$(url_host "$url")$(url_path "$url") $mountpoint"
             fi
             ;;
         (usb)
