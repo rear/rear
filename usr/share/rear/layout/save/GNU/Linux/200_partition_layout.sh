@@ -122,7 +122,11 @@ extract_partitions() {
     # does not work with partition types that are not in the supported list
     # cf. https://github.com/rear/rear/pull/2803#issuecomment-1124800884
     if ! [[ "$disk_label" = "msdos" || "$disk_label" = "gpt" || "$disk_label" = "gpt_sync_mbr" || "$disk_label" = "dasd" ]] ; then
-        Error "Unsupported partition table '$disk_label' on $device (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
+        if IsInArray "$device" "${EXCLUDE_COMPONENTS[@]}" ; then
+            DebugPrint "Unsupported partition table '$disk_label' on $device (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
+        else
+            Error "Unsupported partition table '$disk_label' on $device (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
+        fi
     fi
 
 
@@ -357,14 +361,32 @@ extract_partitions() {
         # device=/dev/mapper/mpathbp1 ; partition_prefix=mpathbp
         partition_name="${device%/*}/${partition_prefix#*/}$partition_nr"
         partition_device="$( get_device_name $partition_name )"
-        test -b "$partition_device" || Error "Invalid 'part $device' entry (partition device '$partition_device' is no block device)"
+        if ! test -b "$partition_device" ; then
+            if IsInArray "$device" "${EXCLUDE_COMPONENTS[@]}" ; then
+                DebugPrint "Invalid 'part $device' entry (partition device '$partition_device' is no block device)"
+            else
+                Error "Invalid 'part $device' entry (partition device '$partition_device' is no block device)"
+            fi
+        fi
         # Ensure syntactically correct 'part' entries of the form
         #   part disk_device partition_size start_byte partition_label flags partition_device
         # Each value must exist and each value must be a single non-blank word.
         # When $junk contains something one of the values before was more than a single word:
-        test "$junk" && Error "Invalid 'part $device' entry (some value is more than a single word)"
+        if test "$junk" ; then
+            if IsInArray "$device" "${EXCLUDE_COMPONENTS[@]}" ; then
+                DebugPrint "Invalid 'part $device' entry (some value is more than a single word)"
+            else
+                Error "Invalid 'part $device' entry (some value is more than a single word)"
+            fi
+        fi
         # When $flags is empty at least one value is missing:
-        test "$flags" || Error "Invalid 'part $device' entry (at least one value is missing)"
+        if ! test "$flags" ; then
+            if IsInArray "$device" "${EXCLUDE_COMPONENTS[@]}" ; then
+                DebugPrint "Invalid 'part $device' entry (at least one value is missing)"
+            else
+                Error "Invalid 'part $device' entry (at least one value is missing)"
+            fi
+        fi
         # Some basic checks on the values happen in layout/save/default/950_verify_disklayout_file.sh
         echo "part $device $size $start $type $flags $partition_device"
     done < $TMP_DIR/partitions
@@ -412,22 +434,6 @@ Log "Saving disks and their partitions"
                 Log "Ignoring $blockd: it is a path of a multipath device"
             elif [[ ! ($blockd = *rpmb || $blockd = *[0-9]boot[0-9]) ]]; then # Silently skip Replay Protected Memory Blocks and others  
                 devname=$(get_device_name $disk)
-                # TODO: Dirty hack to exclude unwanted disks from the very beginning via EXCLUDE_COMPONENTS
-                # to help the user to avoid issues with unneeded disks where the subsequent code here fails
-                # for example as in https://github.com/rear/rear/issues/2995
-                # where parted did not recognize a partition table that is recognized both by the kernel and fdisk.
-                # The proper solution would be to overhaul the whole exclude functionality
-                # cf. https://github.com/rear/rear/issues/2772#issuecomment-1069119836
-                # and https://github.com/rear/rear/issues/2229#issuecomment-531474858
-                # When $devname is empty IsInArray returns 1 so an empty $devname is not falsely skipped here
-                # but it will error out below at the syntax test ($devname must be a single non-blank word):
-                if IsInArray "$devname" "${EXCLUDE_COMPONENTS[@]}" ; then
-                    # To exclude a disk with mounted filesystems one must also specify the filesystem mountpoints
-                    # for example via EXCLUDE_COMPONENTS+=( /dev/sdX fs:/mountpoint1 fs:/mountpoint2 )
-                    DebugPrint "Skipping $devname in EXCLUDE_COMPONENTS (does not automatically exclude mounted filesystems on it)"
-                    echo "# Skipped $devname in EXCLUDE_COMPONENTS (does not automatically exclude mounted filesystems on it)"
-                    continue
-                fi
                 devsize=$(get_disk_size ${disk#/sys/block/})
                 # Ensure syntactically correct 'disk' entries:
                 # Each value must exist and each value must be a single non-blank word so we 'test' without quoting the value:
