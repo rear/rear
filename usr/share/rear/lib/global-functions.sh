@@ -839,10 +839,9 @@ function umount_mountpoint() {
     fi
 
     ### otherwise, try to kill all processes that opened files on the mount.
-    # TODO: actually implement this
-    sleep 1
+    # Most of the times it is due hanging NFS mounts (stale?)
     # We could use fuser to kill the PID holding the mount?
-    # That would mean that the 'fuser' command would become required, no?
+    # Therefore, we added 'fuser' to the PROGS array in conf/GNU/Linux.conf
     # $ fuser -v -M -m /mnt
     #                 USER        PID ACCESS COMMAND
     #/mnt:                root     kernel mount /mnt
@@ -851,8 +850,23 @@ function umount_mountpoint() {
     ## In above example that would be PID 3408944
     PIDs_2_kill="$(fuser -v -M -m $mountpoint 2>&1 | grep -v -E '(PID|kernel)' | awk '{print $2}')"
     if [[ -n "$PIDs_2_kill" ]] ; then
-	Log "Kill processes that prevent the umount of $mountpoint - PIDs $PIDs_2_kill"
-        kill -USR1 "$PIDs_2_kill"
+	Log "Kill (with TERM) processes that prevent the umount of $mountpoint - PIDs $PIDs_2_kill"
+        kill -TERM "$PIDs_2_kill"
+        sleep 1 # to give some time for the processes to stop
+    fi
+    # first check it $mountpoint is still mounted
+    grep -i ' nfs' /proc/mounts | grep -q "$mountpoint"
+    if [[ $? -eq 0 ]] ; then
+        # check again if the process(es) holding the mount point are gone or not
+        PIDs_2_kill="$(fuser -v -M -m $mountpoint 2>&1 | grep -v -E '(PID|kernel)' | awk '{print $2}')"
+        if [[ -n "$PIDs_2_kill" ]] ; then
+	    Log "Kill (with KILL) processes that prevent the umount of $mountpoint - PIDs $PIDs_2_kill"
+            kill -KILL "$PIDs_2_kill"
+	    sleep 1
+        fi
+    else
+        # mountpoint seems te be unmounted
+        return 0
     fi
 
     ### If that still fails, force unmount.
