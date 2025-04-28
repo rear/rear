@@ -865,7 +865,7 @@ function umount_mountpoint() {
 	    sleep 1
         fi
     else
-        # mountpoint seems te be unmounted
+        # mountpoint seems to be unmounted in the meantime
         return 0
     fi
 
