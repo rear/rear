@@ -12,7 +12,7 @@ fi
 #
 
 if grep -Eq '^lvmdev |^lvmgrp |^lvmvol ' $DISKLAYOUT_FILE ; then
-    # Same code is also in layout/save/GNU/Linux/220_lvm_layout.sh
+    # Almost same code is also in layout/save/GNU/Linux/220_lvm_layout.sh (there with LogPrintError).
     # When disklayout.conf contains at least one 'lvmdev' or 'lvmgrp' or 'lvmvol' entry
     # LVM things need to be recreated during "rear recover"
     # but this fails if 'use_lvmlockd = 1' is set in /etc/lvm/lvm.conf
@@ -24,7 +24,8 @@ if grep -Eq '^lvmdev |^lvmgrp |^lvmvol ' $DISKLAYOUT_FILE ; then
     # "whitespace is not significant" so it could be e.g. '   use_lvmlockd  = 1 ' or 'use_lvmlockd=1'
     use_lvmlockd_config="$( grep -v '^[[:space:]]*#' /etc/lvm/lvm.conf | grep -o 'use_lvmlockd[[:space:]]*=.*' )"
     use_lvmlockd_config_value="$( echo $use_lvmlockd_config | tr -d '[:space:]' | cut -s -d '=' -f2 )"
-    is_true "$use_lvmlockd_config_value" && LogPrintError "Recreating LVM needs 'use_lvmlockd = 0' (there is '$use_lvmlockd_config' in /etc/lvm/lvm.conf)"
+    # Error out because LVM recreating cannot work with 'use_lvmlockd = 1' (there is no lvmlockd in the recovery system):
+    is_true "$use_lvmlockd_config_value" && Error "Recreating LVM requires 'use_lvmlockd = 0' (there is '$use_lvmlockd_config' in /etc/lvm/lvm.conf)"
 fi
 
 # Test for features in lvm.
