@@ -398,6 +398,7 @@ Log "End saving LVM layout"
 # cf. https://github.com/rear/rear/issues/1963
 if grep -Eq '^lvmdev |^lvmgrp |^lvmvol ' $DISKLAYOUT_FILE ; then
     REQUIRED_PROGS+=( lvm )
+    # Same code is also in layout/prepare/GNU/Linux/110_include_lvm_code.sh
     # When disklayout.conf contains at least one 'lvmdev' or 'lvmgrp' or 'lvmvol' entry
     # LVM things need to be recreated during "rear recover"
     # but this fails if 'use_lvmlockd = 1' is set in /etc/lvm/lvm.conf
