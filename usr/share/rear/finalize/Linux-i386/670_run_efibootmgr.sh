@@ -83,7 +83,7 @@ bootloader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
 # GRUB2_INSTALL_DEVICES="/dev/nvme0n1 /dev/nvme0n2"
 # See also https://github.com/rear/rear/issues/3459
 if test "$GRUB2_INSTALL_DEVICES" ; then
-    if [[ $boot_efi_parts == "/dev/md0p"* ]]; then
+    if [[ $boot_efi_parts == "/dev/md"*"p"* ]]; then
         partition_number=$( get_partition_number $boot_efi_parts )
         for disk in $GRUB2_INSTALL_DEVICES; do
             LogPrint "Creating  EFI Boot Manager entry '$OS_VENDOR $OS_VERSION' for '$bootloader' (UEFI_BOOTLOADER='$UEFI_BOOTLOADER') "
