@@ -889,6 +889,7 @@ function umount_mountpoint_retry_lazy() {
     # and https://github.com/rear/rear/issues/3397#issuecomment-2656911018 (sleep also worked here)
     # because normal umount is preferred over more sophisticated attempts
     # like lazy umount or enforced umount which raise their own specific troubles
+    # for example enforced umount may corrupt data when it disrupts a writing process
     # and the -M option for fuser which is used below is not available on older
     # Linux distributions like RHEL6 and SLES11 so 'sleep 1' and retry is best:
     sleep 1
@@ -913,7 +914,7 @@ function umount_mountpoint_retry_lazy() {
     fuser -v -M -m "$mountpoint" 1>&2 || Log "Presumably 'fuser' does not support the -M option"
     DebugPrint "Trying 'umount --lazy $mountpoint' (normal umount failed)"
     # Do only plain 'umount --lazy' without additional '--force'
-    # because enforced umount raises its own specific troubles
+    # because enforced umount raises its own specific troubles (see above)
     # so we cannot use the umount_mountpoint_lazy() function here:
     umount $v --lazy "$mountpoint" && return 0
     # Lazy umount also failed:
