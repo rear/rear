@@ -890,6 +890,7 @@ function umount_mountpoint_retry_lazy() {
     # because normal umount is preferred over more sophisticated attempts
     # like lazy umount or enforced umount which raise their own specific troubles
     # for example enforced umount may corrupt data when it disrupts a writing process
+    # cf. https://stackoverflow.com/questions/7878707/how-to-unmount-a-busy-device
     # and the -M option for fuser which is used below is not available on older
     # Linux distributions like RHEL6 and SLES11 so 'sleep 1' and retry is best:
     sleep 1
