@@ -2,7 +2,7 @@
 # Check if the Backup Manager is installed
 #
 
-if [ -z "${COVE_INSTALL_DIR}" ]; then
+if [ -z "$COVE_INSTALL_DIR" ]; then
     Error "COVE_INSTALL_DIR cannot be empty. Please define it in local.conf."
 fi
 
