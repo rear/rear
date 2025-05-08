@@ -503,7 +503,7 @@ function mount_url() {
 
     # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
     # They thus need to be kept in sync with umount_url() so that RemoveExitTasks is used
-    # if AddExitTask was used in mount_url().
+    # iff (if and only if) AddExitTask was used in mount_url().
 
     if ! scheme_supports_filesystem "$scheme" ; then
         ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
@@ -707,7 +707,7 @@ function umount_url() {
 
     # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
     # They thus need to be kept in sync with mount_url() so that RemoveExitTasks is used
-    # if AddExitTask was used in mount_url().
+    # iff (if and only if) AddExitTask was used in mount_url().
 
     if ! scheme_supports_filesystem "$scheme" ; then
         ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
@@ -826,7 +826,7 @@ function umount_mountpoint() {
     contains_visible_char "$mountpoint" || BugError "umount_mountpoint() called with empty mountpoint argument '$mountpoint'"
     test -d "$mountpoint" -o -b "$mountpoint" || Error "umount_mountpoint mountpoint '$mountpoint' neither directory nor block device"
 
-    # TODO: remove the test $lazy section?
+    # TODO: remove the test $lazy section after all mount functions and calls are fixed (or removed)
     if test $lazy ; then
         if test $lazy != "lazy" ; then
             BugError "lazy = $lazy, but it must have the value of 'lazy' or empty"
@@ -839,17 +839,11 @@ function umount_mountpoint() {
     ### However, when tar is busy and the NFS becomes stale then ReaR processes will just hang forever
     ### until we kill them manually.
     Log "Unmounting '$mountpoint'"
-    timeout $timeout_secs umount $v "$mountpoint" >&2
-    if [[ $? -eq 0 ]] ; then
-        return 0
-    fi
+    timeout $timeout_secs umount $v "$mountpoint" && return 0
 
     ### If that still fails, force unmount.
     Log "Forcing unmount of '$mountpoint'"
-    timeout $timeout_secs umount $v --force "$mountpoint" >&2
-    if [[ $? -eq 0 ]] ; then
-        return 0
-    fi
+    timeout $timeout_secs umount $v --force "$mountpoint" && return 0
 
     Log "Unmounting '$mountpoint' failed (after force umount)."
 
@@ -866,16 +860,14 @@ function umount_mountpoint() {
     # Older systems do not support -M but we must use it to avoid misleading information or false alarm.
     # Since this code path is exceptional and the output is used only for information and only in the log file
     # we do not care when fuser fails with "M: unknown signal; fuser -l lists signals":
-    fuser -v -M -m "$mountpoint" 1>&2 || Log "Presumably 'fuser' does not support the -M option"
+    fuser -v -M -m "$mountpoint" || Log "'fuser' failed (presumably it may not support the -M option)"
 
     # Lazy umount only hides the filesystem from new processes.
     LogPrint "Trying a 'lazy' umount on '$mountpoint' (as it could be stale)."
-    timeout $timeout_secs umount $v --lazy "$mountpoint" >&2
-    if [[ $? -eq 0 ]] ; then
-	return 0
-    fi
+    timeout $timeout_secs umount $v --lazy "$mountpoint" && return 0
 
-    Error "Unmounting '$mountpoint' failed even after a force and lazy umount."
+    LogPrintError "Unmounting '$mountpoint' failed even after a force and lazy umount."
+    return 1
 }
 
 # Perform a check if mountpoint got stale per accident?
@@ -883,6 +875,7 @@ function is_mountpoint_stale() {
     local mountpoint="$1"
     local timeout_secs="$2"
 
+    test "$timeout_secs" -gt 0 || timeout_secs="5"
     timeout "$timeout_secs" df "$mountpoint" && return 0
     # Mountpoint seems to be stale, therefore, return 1
     return 1
@@ -941,7 +934,7 @@ function umount_mountpoint_retry_lazy() {
     # Older systems do not support -M but we must use it to avoid misleading information or false alarm.
     # Since this code path is exceptional and the output is used only for information and only in the log file
     # we do not care when fuser fails with "M: unknown signal; fuser -l lists signals":
-    fuser -v -M -m "$mountpoint" 1>&2 || Log "Presumably 'fuser' does not support the -M option"
+    fuser -v -M -m "$mountpoint" || Log "'fuser' failed (presumably it may not support the -M option)"
     DebugPrint "Trying 'umount --lazy $mountpoint' (normal umount failed)"
     # Do only plain 'umount --lazy' without additional '--force'
     # because enforced umount raises its own specific troubles
