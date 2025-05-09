@@ -47,6 +47,7 @@ if test "${#EFIBOOTMGR_INSTALL_DEVICES}" -gt 0 ; then
         fi
         if ! test $efibootmgr_part -gt 0 ; then
             LogPrint "efibootmgr will use default partition number 1 (no partition number specified)"
+            efibootmgr_part=1
         fi
         if ! test $efibootmgr_loader ; then
             # FIXME: The hardcoded '-f4-' assumes UEFI_BOOTLOADER is like /boot/efi/EFI/sles/shim.efi (e.g. on SLES15-sp6)
