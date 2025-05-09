@@ -27,6 +27,49 @@ if ! test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" ; then
     return 1
 fi
 
+# When EFIBOOTMGR_INSTALL_DEVICES is specified by the user
+# call 'efibootmgr' only for those devices and nothing else:
+# See https://github.com/rear/rear/issues/3459
+# and https://github.com/rear/rear/pull/3466
+if test "${#EFIBOOTMGR_INSTALL_DEVICES}" -gt 0 ; then
+    local efibootmgr_install_failed="no"
+    local efibootmgr_install_device efibootmgr_disk efibootmgr_part efibootmgr_loader
+    for efibootmgr_install_device in "${EFIBOOTMGR_INSTALL_DEVICES[@]}" ; do
+        efibootmgr_disk=''
+        efibootmgr_part=''
+        efibootmgr_loader=''
+        # The 'read -r' option is mandatory because efibootmgr_loader is e.g. EFI\sles\shim.efi
+        # and without the '-r' option efibootmgr_loader would then become EFIslesshim.efi
+        read -r efibootmgr_disk efibootmgr_part efibootmgr_loader <<<"$efibootmgr_install_device"
+        if ! test -b $efibootmgr_disk ; then
+            LogPrintError "efibootmgr cannot be called for disk '$efibootmgr_disk' (no block device)"
+            continue
+        fi
+        if ! test $efibootmgr_part -gt 0 ; then
+            LogPrint "efibootmgr will use default partition number 1 (no partition number specified)"
+        fi
+        if ! test $efibootmgr_loader ; then
+            # FIXME: The hardcoded '-f4-' assumes UEFI_BOOTLOADER is like /boot/efi/EFI/sles/shim.efi (e.g. on SLES15-sp6)
+            # where exactly the first 3 fields are the ESP mountpoint directory like /boot/efi/
+            # to extract efibootmgr_loader from UEFI_BOOTLOADER which is it without the ESP mountpoint directory
+            # and replace Linux directory separators '/' with VFAT directory separators '\'
+            # so that efibootmgr_loader is the VFAT filesystem path of the EFI binary in the ESP
+            # e.g. from UEFI_BOOTLOADER /boot/efi/EFI/sles/shim.efi efibootmgr_loader becomes EFI\sles\shim.efi
+            efibootmgr_loader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
+            LogPrint "efibootmgr will use loader '$efibootmgr_loader' from UEFI_BOOTLOADER='$UEFI_BOOTLOADER' (no loader specified)"
+        fi
+        LogPrint "Creating EFI Boot Manager entry '$OS_VENDOR $OS_VERSION' using '$efibootmgr_loader' on disk '$efibootmgr_disk' partition $efibootmgr_part"
+        if ! efibootmgr --create --gpt --disk $efibootmgr_disk --part $efibootmgr_part --write-signature --label "$OS_VENDOR $OS_VERSION" --loader "\\$efibootmgr_loader" ; then
+            LogPrintError "efibootmgr failed to create EFI Boot Manager entry using '$efibootmgr_loader' on disk '$efibootmgr_disk' partition $efibootmgr_part"
+            efibootmgr_install_failed="yes"
+        fi
+    done
+    is_false $efibootmgr_install_failed && NOBOOTLOADER=''
+    # return even if it failed to install an EFI Boot Manager entry on one of the specified EFIBOOTMGR_INSTALL_DEVICES
+    # because then the user gets an explicit WARNING via finalize/default/890_finish_checks.sh
+    is_true $NOBOOTLOADER && return 1 || return 0
+fi
+
 # Determine where the EFI System Partition (ESP) is mounted in the currently running recovery system:
 esp_mountpoint=$( filesystem_name "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" )
 # Use TARGET_FS_ROOT/boot/efi as fallback ESP mountpoint (filesystem_name returns "/"
