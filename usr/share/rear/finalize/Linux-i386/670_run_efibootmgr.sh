@@ -31,6 +31,7 @@ fi
 # call 'efibootmgr' only for those devices and nothing else:
 # See https://github.com/rear/rear/issues/3459
 # and https://github.com/rear/rear/pull/3466
+# and https://github.com/rear/rear/pull/3471
 if test "${#EFIBOOTMGR_INSTALL_DEVICES}" -gt 0 ; then
     local efibootmgr_install_failed="no"
     local efibootmgr_install_device efibootmgr_disk efibootmgr_part efibootmgr_loader
