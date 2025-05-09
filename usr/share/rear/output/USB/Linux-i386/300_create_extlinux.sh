@@ -98,11 +98,6 @@ case "$WORKFLOW" in
     (*) BugError "Workflow $WORKFLOW should not run this script."
 esac
 
-USB_REAR_DIR="$BUILD_DIR/outputfs/$USB_PREFIX"
-if [ ! -d "$USB_REAR_DIR" ]; then
-    mkdir -p $v "$USB_REAR_DIR" >/dev/null || Error "Could not create USB ReaR dir [$USB_REAR_DIR] !"
-fi
-
 # We generate a single syslinux.cfg for the current system
 Log "Creating $USB_PREFIX/syslinux.cfg"
 # FIXME: # type -a time
