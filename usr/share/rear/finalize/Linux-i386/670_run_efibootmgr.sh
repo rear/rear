@@ -52,7 +52,7 @@ if test "${#EFIBOOTMGR_CREATE_ENTRIES}" -gt 0 ; then
             LogPrint "efibootmgr will use default partition number 1 (no positive partition number specified)"
             efibootmgr_part=1
         fi
-        if ! test $efibootmgr_loader ; then
+        if ! test $efibootmgr_loader || test "$efibootmgr_loader" = 'automatic' ; then
             # FIXME: The hardcoded '-f4-' assumes UEFI_BOOTLOADER is like /boot/efi/EFI/sles/shim.efi (e.g. on SLES15-SP6)
             # where exactly the first 3 fields are the ESP mountpoint directory like /boot/efi/ (first field is empty)
             # to extract efibootmgr_loader from UEFI_BOOTLOADER which is it without the ESP mountpoint directory
