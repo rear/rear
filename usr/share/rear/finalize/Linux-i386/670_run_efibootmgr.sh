@@ -27,23 +27,24 @@ if ! test -f "$TARGET_FS_ROOT/$UEFI_BOOTLOADER" ; then
     return 1
 fi
 
-# When EFIBOOTMGR_INSTALL_DEVICES is specified by the user
-# call 'efibootmgr' only for those devices and nothing else:
+# When EFIBOOTMGR_CREATE_ENTRIES is specified by the user
+# call 'efibootmgr' only to create the specified UEFI Boot Manager entries and nothing else.
 # See https://github.com/rear/rear/issues/3459
 # and https://github.com/rear/rear/pull/3466
 # and https://github.com/rear/rear/pull/3471
-if test "${#EFIBOOTMGR_INSTALL_DEVICES}" -gt 0 ; then
-    local efibootmgr_install_failed="no"
-    local efibootmgr_install_device efibootmgr_disk efibootmgr_part efibootmgr_loader
-    for efibootmgr_install_device in "${EFIBOOTMGR_INSTALL_DEVICES[@]}" ; do
+if test "${#EFIBOOTMGR_CREATE_ENTRIES}" -gt 0 ; then
+    LogPrint "Creating EFI Boot Manager entries as specified in EFIBOOTMGR_CREATE_ENTRIES"
+    local efibootmgr_create_failed="no"
+    local efibootmgr_create_entry efibootmgr_disk efibootmgr_part efibootmgr_loader
+    for efibootmgr_create_entry in "${EFIBOOTMGR_CREATE_ENTRIES[@]}" ; do
         efibootmgr_disk=''
         efibootmgr_part=''
         efibootmgr_loader=''
-        # The 'read -r' option is mandatory because efibootmgr_loader is e.g. EFI\sles\shim.efi
-        # and without the '-r' option efibootmgr_loader would then become EFIslesshim.efi
-        read -r efibootmgr_disk efibootmgr_part efibootmgr_loader <<<"$efibootmgr_install_device"
+        # The 'read -r' option is mandatory because efibootmgr_loader is e.g. "EFI\sles\shim.efi"
+        # and without the '-r' option efibootmgr_loader would then become "EFIslesshim.efi"
+        read -r efibootmgr_disk efibootmgr_part efibootmgr_loader <<<"$efibootmgr_create_entry"
         if ! test -b $efibootmgr_disk ; then
-            LogPrintError "efibootmgr cannot be called for disk '$efibootmgr_disk' (no block device)"
+            LogPrintError "efibootmgr cannot create entry using disk '$efibootmgr_disk' (no block device)"
             continue
         fi
         if ! test $efibootmgr_part -gt 0 ; then
@@ -65,11 +66,11 @@ if test "${#EFIBOOTMGR_INSTALL_DEVICES}" -gt 0 ; then
         LogPrint "Creating EFI Boot Manager entry '$OS_VENDOR $OS_VERSION' using '$efibootmgr_loader' on disk '$efibootmgr_disk' partition $efibootmgr_part"
         if ! efibootmgr --create --gpt --disk $efibootmgr_disk --part $efibootmgr_part --write-signature --label "$OS_VENDOR $OS_VERSION" --loader "\\$efibootmgr_loader" ; then
             LogPrintError "efibootmgr failed to create EFI Boot Manager entry using '$efibootmgr_loader' on disk '$efibootmgr_disk' partition $efibootmgr_part"
-            efibootmgr_install_failed="yes"
+            efibootmgr_create_failed="yes"
         fi
     done
-    is_false $efibootmgr_install_failed && NOBOOTLOADER=''
-    # return even if it failed to install an EFI Boot Manager entry on one of the specified EFIBOOTMGR_INSTALL_DEVICES
+    is_false $efibootmgr_create_failed && NOBOOTLOADER=''
+    # Return even if it failed to create an EFI Boot Manager entry on one of the specified EFIBOOTMGR_CREATE_ENTRIES
     # because then the user gets an explicit WARNING via finalize/default/890_finish_checks.sh
     is_true $NOBOOTLOADER && return 1 || return 0
 fi
