@@ -47,7 +47,7 @@ if test "${#EFIBOOTMGR_INSTALL_DEVICES}" -gt 0 ; then
             continue
         fi
         if ! test $efibootmgr_part -gt 0 ; then
-            LogPrint "efibootmgr will use default partition number 1 (no partition number specified)"
+            LogPrint "efibootmgr will use default partition number 1 (no positive partition number specified)"
             efibootmgr_part=1
         fi
         if ! test $efibootmgr_loader ; then
