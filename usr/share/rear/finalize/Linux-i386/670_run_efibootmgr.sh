@@ -57,6 +57,8 @@ if test "${#EFIBOOTMGR_INSTALL_DEVICES}" -gt 0 ; then
             # and replace Linux directory separators '/' with VFAT directory separators '\'
             # so that efibootmgr_loader is the VFAT filesystem path of the EFI binary in the ESP
             # e.g. from UEFI_BOOTLOADER /boot/efi/EFI/sles/shim.efi efibootmgr_loader becomes EFI\sles\shim.efi
+            # which gets a leading '\' via "\\$efibootmgr_loader" so \EFI\sles\shim.efi
+            # is the absolute VFAT filesystem path in the ESP to what the UEFI Boot Manager should launch:
             efibootmgr_loader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
             LogPrint "efibootmgr will use loader '$efibootmgr_loader' from UEFI_BOOTLOADER='$UEFI_BOOTLOADER' (no loader specified)"
         fi
