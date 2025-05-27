@@ -841,11 +841,18 @@ function umount_mountpoint() {
     Log "Unmounting '$mountpoint'"
     timeout $timeout_secs umount $v "$mountpoint" && return 0
 
-    ### If that still fails, force unmount.
-    Log "Forcing unmount of '$mountpoint'"
-    timeout $timeout_secs umount $v --force "$mountpoint" && return 0
+    # Give file system some time to unmount
+    sleep $timeout_secs
 
-    Log "Unmounting '$mountpoint' failed (after force umount)."
+    # Then, we can check if file system is still mounted (returns 0 if still mounted)
+    # If file system is NOT mounted anymore we can exit this function
+    is_mounted "$mountpoint" "$timeout_secs" || return 0
+
+    Log "Unmounting '$mountpoint' (second try)"
+    timeout $timeout_secs umount $v "$mountpoint" && return 0
+
+    sleep $timeout_secs
+    is_mounted "$mountpoint" "$timeout_secs" || return 0
 
     Log "$mountpoint is still in use by ('kernel mount' is always there)"
     # The -M option avoids that fuser may show all processes using the '/' filesystem
@@ -866,6 +873,13 @@ function umount_mountpoint() {
     LogPrint "Trying a 'lazy' umount on '$mountpoint' (as it could be stale)."
     timeout $timeout_secs umount $v --lazy "$mountpoint" && return 0
 
+    sleep $timeout_secs
+    is_mounted "$mountpoint" "$timeout_secs" || return 0
+
+    ### If that still fails, force unmount.
+    Log "Forcing unmount of '$mountpoint'"
+    timeout $timeout_secs umount $v --force "$mountpoint" && return 0
+
     LogPrintError "Unmounting '$mountpoint' failed even after a force and lazy umount."
     return 1
 }
@@ -878,6 +892,16 @@ function is_mountpoint_stale() {
     test "$timeout_secs" -gt 0 || timeout_secs="5"
     timeout "$timeout_secs" df "$mountpoint" && return 0
     # Mountpoint seems to be stale, therefore, return 1
+    return 1
+}
+
+# Check if file system is mounted or not. Return 0 if mounted, otherwise 1.
+function is_mounted() {
+    local mountpoint="$1"
+    local timeout_secs="$2"
+
+    test "$timeout_secs" -gt 0 || timeout_secs="5"
+    timeout "$timeout_secs" mountpoint --quiet --nofollow -- "$1" && return 0
     return 1
 }
 
