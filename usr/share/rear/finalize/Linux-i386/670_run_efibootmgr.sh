@@ -35,15 +35,21 @@ fi
 if test "${#EFIBOOTMGR_CREATE_ENTRIES}" -gt 0 ; then
     LogPrint "Creating EFI Boot Manager entries as specified in EFIBOOTMGR_CREATE_ENTRIES"
     local efibootmgr_create_failed="no"
-    local efibootmgr_create_entry efibootmgr_disk efibootmgr_part efibootmgr_loader efibootmgr_label
+    local efibootmgr_create_entry efibootmgr_disk efibootmgr_part efibootmgr_loader efibootmgr_label spillover
     for efibootmgr_create_entry in "${EFIBOOTMGR_CREATE_ENTRIES[@]}" ; do
+        LogPrint "Creating EFI Boot Manager entry as specified in '$efibootmgr_create_entry'"
         efibootmgr_disk=''
         efibootmgr_part=''
         efibootmgr_loader=''
         efibootmgr_label=''
+        spillover=''
         # The 'read -r' option is mandatory because efibootmgr_loader is e.g. "EFI\sles\shim.efi"
         # and without the '-r' option efibootmgr_loader would then become "EFIslesshim.efi"
-        read -r efibootmgr_disk efibootmgr_part efibootmgr_loader efibootmgr_label <<<"$efibootmgr_create_entry"
+        read -r efibootmgr_disk efibootmgr_part efibootmgr_loader efibootmgr_label spillover <<<"$efibootmgr_create_entry"
+            if test "$spillover" ; then
+            LogPrintError "Cannot create EFI Boot Manager entry: more than 4 words in '$efibootmgr_create_entry'"
+            continue
+        fi
         if ! test -b $efibootmgr_disk ; then
             LogPrintError "efibootmgr cannot create entry using disk '$efibootmgr_disk' (no block device)"
             continue
@@ -52,7 +58,7 @@ if test "${#EFIBOOTMGR_CREATE_ENTRIES}" -gt 0 ; then
             LogPrint "efibootmgr will use default partition number 1 (no positive partition number specified)"
             efibootmgr_part=1
         fi
-        if ! test $efibootmgr_loader || test "$efibootmgr_loader" = 'automatic' ; then
+        if ! test "$efibootmgr_loader" || test "$efibootmgr_loader" = 'automatic' ; then
             # FIXME: The hardcoded '-f4-' assumes UEFI_BOOTLOADER is like /boot/efi/EFI/sles/shim.efi (e.g. on SLES15-SP6)
             # where exactly the first 3 fields are the ESP mountpoint directory like /boot/efi/ (first field is empty)
             # to extract efibootmgr_loader from UEFI_BOOTLOADER which is it without the ESP mountpoint directory
@@ -61,12 +67,16 @@ if test "${#EFIBOOTMGR_CREATE_ENTRIES}" -gt 0 ; then
             # e.g. from UEFI_BOOTLOADER /boot/efi/EFI/sles/shim.efi efibootmgr_loader becomes EFI\sles\shim.efi
             # which gets a leading '\' added via "\\$efibootmgr_loader" so in the end \EFI\sles\shim.efi
             # is the absolute VFAT filesystem path in the ESP to what the UEFI Boot Manager should launch:
-            efibootmgr_loader=$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )
+            efibootmgr_loader="$( echo $UEFI_BOOTLOADER | cut -d"/" -f4- | sed -e 's;/;\\;g' )"
             LogPrint "efibootmgr will use loader '$efibootmgr_loader' from UEFI_BOOTLOADER='$UEFI_BOOTLOADER' (no loader specified)"
+        else
+            efibootmgr_loader="$( octal_decode "$efibootmgr_loader" )"
         fi
-        if ! contains_visible_char $efibootmgr_label ; then
+        if ! contains_visible_char "$efibootmgr_label" ; then
             LogPrint "efibootmgr will use default label '$OS_VENDOR $OS_VERSION' (no visible label specified)"
             efibootmgr_label="$OS_VENDOR $OS_VERSION"
+        else
+            efibootmgr_label="$( octal_decode "$efibootmgr_label" )"
         fi
         LogPrint "Creating EFI Boot Manager entry '$efibootmgr_label' for '$efibootmgr_loader' on disk '$efibootmgr_disk' partition $efibootmgr_part"
         if ! efibootmgr --create --gpt --disk $efibootmgr_disk --part $efibootmgr_part --write-signature --label "$efibootmgr_label" --loader "\\$efibootmgr_loader" ; then
