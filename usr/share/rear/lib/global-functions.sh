@@ -261,6 +261,25 @@ function percent_decode() {
     printf '%b' "$backslash_escape_encoded"
 }
 
+# Output a string with decoded backslash-escaped octal-encoded characters by using 'echo -e'
+# but only when the string contains at least one octal-encoded character as '\0...'
+# so only backslash characters do not trigger backslash escapes interpretation via 'echo -e'.
+# For example 'path\to\name\on\VFAT\filesystem' is output without interpretation of '\t' '\n' '\f'
+# while a string where backslash escapes interpretation is needed must contain '\0'
+# so for example 'first\040line\nsecond line' is output as 'first line' newline 'second line'
+# but in contrast 'first line\nsecond line' is output without backslash escapes interpretation
+# because nothing is octal-encoded (use 'echo -e' for 'echo -e' backslash escapes interpretation).
+# Attention with single quotes versus double quotes versus no quotes:
+# octal_decode 'first\040line\nseco\\nd line' outputs 'first line' newline 'seco\nd line'
+# octal_decode "first\040line\nseco\\nd line" outputs 'first line' newline 'seco' newline 'd line'
+# octal_decode "first\040line\nseco\\\nd line" outputs 'first line' newline 'seco\nd line'
+# octal_decode first\040line\nseco\\nd line outputs 'first040linenseco\nd line'
+# octal_decode first\\040line\\nseco\\\\nd line outputs 'first line' newline 'seco\nd line'
+function octal_decode() {
+    local string="$*"
+    grep -q '\\0' <<<"$string" && echo -n -e "$string" || echo -n "$string"
+}
+
 ######
 ### Functions for dealing with URLs
 ######
