@@ -870,17 +870,17 @@ function umount_mountpoint() {
     fuser -v -M -m "$mountpoint" || Log "'fuser' failed (presumably it may not support the -M option)"
 
     # Lazy umount only hides the filesystem from new processes.
-    LogPrint "Trying a 'lazy' umount on '$mountpoint' (as it could be stale)."
-    timeout $timeout_secs umount $v --lazy "$mountpoint" && return 0
+    LogPrint "A final attempt to umount '$mountpoint' (as it could be stale)."
+    timeout $timeout_secs umount $v "$mountpoint" && return 0
 
     sleep $timeout_secs
     is_mounted "$mountpoint" "$timeout_secs" || return 0
 
     ### If that still fails, force unmount.
-    Log "Forcing unmount of '$mountpoint'"
-    timeout $timeout_secs umount $v --force "$mountpoint" && return 0
+    #Log "Forcing unmount of '$mountpoint'"
+    #timeout $timeout_secs umount $v --force "$mountpoint" && return 0
 
-    LogPrintError "Unmounting '$mountpoint' failed even after a force and lazy umount."
+    LogPrintError "Unmounting '$mountpoint' failed even after several retries."
     return 1
 }
 
@@ -890,9 +890,9 @@ function is_mountpoint_stale() {
     local timeout_secs="$2"
 
     test "$timeout_secs" -gt 0 || timeout_secs="5"
-    timeout "$timeout_secs" df "$mountpoint" && return 0
-    # Mountpoint seems to be stale, therefore, return 1
-    return 1
+    timeout "$timeout_secs" df "$mountpoint" && return 1
+    # Mountpoint seems to be stale, therefore, return 0
+    return 0
 }
 
 # Check if file system is mounted or not. Return 0 if mounted, otherwise 1.
@@ -901,7 +901,7 @@ function is_mounted() {
     local timeout_secs="$2"
 
     test "$timeout_secs" -gt 0 || timeout_secs="5"
-    timeout "$timeout_secs" mountpoint --quiet --nofollow -- "$1" && return 0
+    timeout "$timeout_secs" mountpoint --quiet -- "$1" && return 0
     return 1
 }
 
