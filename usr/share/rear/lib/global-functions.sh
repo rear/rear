@@ -826,7 +826,6 @@ function umount_mountpoint() {
     contains_visible_char "$mountpoint" || BugError "umount_mountpoint() called with empty mountpoint argument '$mountpoint'"
     test -d "$mountpoint" -o -b "$mountpoint" || Error "umount_mountpoint mountpoint '$mountpoint' neither directory nor block device"
 
-    # TODO: remove the test $lazy section after all mount functions and calls are fixed (or removed)
     if test $lazy ; then
         if test $lazy != "lazy" ; then
             BugError "lazy = $lazy, but it must have the value of 'lazy' or empty"
@@ -869,19 +868,18 @@ function umount_mountpoint() {
     # we do not care when fuser fails with "M: unknown signal; fuser -l lists signals":
     fuser -v -M -m "$mountpoint" || Log "'fuser' failed (presumably it may not support the -M option)"
 
-    # Lazy umount only hides the filesystem from new processes.
     LogPrint "A final attempt to umount '$mountpoint' (as it could be stale)."
     timeout $timeout_secs umount $v "$mountpoint" && return 0
 
     sleep $timeout_secs
     is_mounted "$mountpoint" "$timeout_secs" || return 0
 
-    ### If that still fails, force unmount.
-    #Log "Forcing unmount of '$mountpoint'"
-    #timeout $timeout_secs umount $v --force "$mountpoint" && return 0
-
-    LogPrintError "Unmounting '$mountpoint' failed even after several retries."
-    return 1
+    if test $lazy ; then
+        umount_mountpoint_lazy "$mountpoint"
+    else
+        LogPrintError "Unmounting '$mountpoint' failed even after several retries."
+        return 1
+    fi
 }
 
 # Perform a check if mountpoint got stale per accident?
