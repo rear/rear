@@ -522,7 +522,7 @@ function mount_url() {
 
     # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
     # They thus need to be kept in sync with umount_url() so that RemoveExitTasks is used
-    # iff AddExitTask was used in mount_url().
+    # iff (if and only if) AddExitTask was used in mount_url().
 
     if ! scheme_supports_filesystem "$scheme" ; then
         ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
@@ -729,7 +729,7 @@ function umount_url() {
 
     # The cases where we return 0 are those that do not need umount and also do not need ExitTask handling.
     # They thus need to be kept in sync with mount_url() so that RemoveExitTasks is used
-    # iff AddExitTask was used in mount_url().
+    # iff (if and only if) AddExitTask was used in mount_url().
 
     if ! scheme_supports_filesystem "$scheme" ; then
         ### Stuff like null|tape|rsync|fish|ftp|ftps|hftp|http|https|sftp
@@ -843,6 +843,10 @@ function umount_davfs() {
 function umount_mountpoint() {
     local mountpoint="$1"
     local lazy="${2:-}"
+    local timeout_secs=2
+
+    contains_visible_char "$mountpoint" || BugError "umount_mountpoint() called with empty mountpoint argument '$mountpoint'"
+    test -d "$mountpoint" -o -b "$mountpoint" || Error "umount_mountpoint mountpoint '$mountpoint' neither directory nor block device"
 
     if test $lazy ; then
         if test $lazy != "lazy" ; then
@@ -850,30 +854,75 @@ function umount_mountpoint() {
         fi
     fi
 
-    ### First, try a normal unmount,
+    ### First, try a normal unmount using a timeout in case mountpoint became unresponsive
+    ### due to QoS squeezing or due to stale NFS as the NFS server became unreachable (during mkbackup)
+    ### That is the reason why we use a timeout in front of the umount command.
+    ### However, when tar is busy and the NFS becomes stale then ReaR processes will just hang forever
+    ### until we kill them manually.
     Log "Unmounting '$mountpoint'"
-    umount $v "$mountpoint" >&2
-    if [[ $? -eq 0 ]] ; then
-        return 0
-    fi
+    timeout $timeout_secs umount $v "$mountpoint" && return 0
 
-    ### otherwise, try to kill all processes that opened files on the mount.
-    # TODO: actually implement this
+    # Give file system some time to unmount
+    sleep $timeout_secs
 
-    ### If that still fails, force unmount.
-    Log "Forced unmount of '$mountpoint'"
-    umount $v -f "$mountpoint" >&2
-    if [[ $? -eq 0 ]] ; then
-        return 0
-    fi
+    # Then, we can check if file system is still mounted (returns 0 if still mounted)
+    # If file system is NOT mounted anymore we can exit this function
+    is_mounted "$mountpoint" "$timeout_secs" || return 0
 
-    Log "Unmounting '$mountpoint' failed."
+    Log "Unmounting '$mountpoint' (second try)"
+    timeout $timeout_secs umount $v "$mountpoint" && return 0
+
+    sleep $timeout_secs
+    is_mounted "$mountpoint" "$timeout_secs" || return 0
+
+    Log "$mountpoint is still in use by ('kernel mount' is always there)"
+    # The -M option avoids that fuser may show all processes using the '/' filesystem
+    # e.g. for mountpoint $TMP_DIR/somedir ($TMP_DIR = $BUILD_DIR/tmp = /var/tmp/rear.XXXXXXXXXXXXXXX/tmp/)
+    # when $TMP_DIR/somedir got umounted just before fuser starts, see "man fuser":
+    #   The mount -m option will match any file within the same device as the specified file,
+    #   use the -M option as well if you mean to specify only the mount point.
+    # So when $TMP_DIR/somedir is umounted 'fuser -v -M -m $TMP_DIR/somedir' only shows
+    #   "Specified filename /var/tmp/rear.XXXXXXXXXXXXXXX/tmp/somedir is not a mountpoint"
+    # instead of all processes using '/' (or /var/ or /var/tmp/ if one is a mountpoint)
+    # which would be misleading information that may even look scaring and cause false alarm.
+    # Older systems do not support -M but we must use it to avoid misleading information or false alarm.
+    # Since this code path is exceptional and the output is used only for information and only in the log file
+    # we do not care when fuser fails with "M: unknown signal; fuser -l lists signals":
+    fuser -v -M -m "$mountpoint" || Log "'fuser' failed (presumably it may not support the -M option)"
+
+    LogPrint "A final attempt to umount '$mountpoint' (as it could be stale)."
+    timeout $timeout_secs umount $v "$mountpoint" && return 0
+
+    sleep $timeout_secs
+    is_mounted "$mountpoint" "$timeout_secs" || return 0
 
     if test $lazy ; then
         umount_mountpoint_lazy "$mountpoint"
     else
+        LogPrintError "Unmounting '$mountpoint' failed even after several retries."
         return 1
     fi
+}
+
+# Perform a check if mountpoint got stale per accident?
+function is_mountpoint_stale() {
+    local mountpoint="$1"
+    local timeout_secs="$2"
+
+    test "$timeout_secs" -gt 0 || timeout_secs="5"
+    timeout "$timeout_secs" df "$mountpoint" && return 1
+    # Mountpoint seems to be stale, therefore, return 0
+    return 0
+}
+
+# Check if file system is mounted or not. Return 0 if mounted, otherwise 1.
+function is_mounted() {
+    local mountpoint="$1"
+    local timeout_secs="$2"
+
+    test "$timeout_secs" -gt 0 || timeout_secs="5"
+    timeout "$timeout_secs" mountpoint --quiet -- "$1" && return 0
+    return 1
 }
 
 ### Unmount mountpoint $1 lazily
@@ -929,7 +978,7 @@ function umount_mountpoint_retry_lazy() {
     # Older systems do not support -M but we must use it to avoid misleading information or false alarm.
     # Since this code path is exceptional and the output is used only for information and only in the log file
     # we do not care when fuser fails with "M: unknown signal; fuser -l lists signals":
-    fuser -v -M -m "$mountpoint" 1>&2 || Log "Presumably 'fuser' does not support the -M option"
+    fuser -v -M -m "$mountpoint" || Log "'fuser' failed (presumably it may not support the -M option)"
     DebugPrint "Trying 'umount --lazy $mountpoint' (normal umount failed)"
     # Do only plain 'umount --lazy' without additional '--force'
     # because enforced umount raises its own specific troubles
