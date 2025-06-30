@@ -199,7 +199,7 @@ function cove_install_bm() {
             local link_name="${COVE_INSTALL_DIR}"
             cove_create_symlink "${target}" "${link_name}" || return $?
         else
-            cove_dirs=(bin etc lib sbin share temp var/log var/storage)
+            cove_dirs=(bin etc lib sbin share var/log var/storage)
             for cove_dir in "${cove_dirs[@]}"; do
                 local target="${target_install_dir}/${cove_dir}"
                 local link_name="${COVE_INSTALL_DIR}/${cove_dir}"
@@ -210,7 +210,7 @@ function cove_install_bm() {
 
     UserOutput ""
     UserOutput "Installing Backup Manager..."
-    "${COVE_INSTALLER_PATH}" --target "${COVE_TMPDIR}/mxb" 1>&7 2>&8 || return $?
+    TMPDIR="$COVE_TMPDIR" "${COVE_INSTALLER_PATH}" --target "${COVE_TMPDIR}/mxb" 1>&7 2>&8 || return $?
 
     # Extract the ReaR tarball because the installer does not do it in the rescue environment
     mkdir -p "${target_install_dir}/rear"
