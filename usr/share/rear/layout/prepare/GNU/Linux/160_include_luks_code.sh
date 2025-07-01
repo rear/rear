@@ -34,7 +34,11 @@ create_crypt() {
         return 1
     fi
 
-    for option in $options ; do
+    # A 'crypt' entry in disklayout.conf may contain optionally password=<password>
+    # see https://github.com/rear/rear/issues/3483
+    # and https://github.com/rear/rear/blob/master/doc/user-guide/06-layout-configuration.adoc#luks-devices
+    # so $option and $value could contain a LUKS password:
+    { for option in $options ; do
         # $option is of the form keyword=value and
         # we assume keyword has no '=' character but value could be anything that may have a '=' character
         # so we split keyword=value at the leftmost '=' character so that
@@ -75,7 +79,8 @@ create_crypt() {
                 LogPrintError "Skipping unsupported LUKS cryptsetup option '$key' in 'crypt $target_device $source_device' entry in $LAYOUT_FILE"
                 ;;
         esac
-    done
+      done
+    } 2>>/dev/$SECRET_OUTPUT_DEV
 
     cryptsetup_options+=" $LUKS_CRYPTSETUP_OPTIONS"
 
@@ -91,9 +96,10 @@ create_crypt() {
         chmod u=rw,go=- "$keyfile"
         echo "cryptsetup luksFormat --batch-mode $cryptsetup_options $source_device $keyfile"
         echo "cryptsetup luksOpen --key-file $keyfile $source_device $mapping_name"
-    elif [ -n "$password" ] ; then
-        echo "echo \"$password\" | cryptsetup luksFormat --batch-mode $cryptsetup_options $source_device"
-        echo "echo \"$password\" | cryptsetup luksOpen $source_device $mapping_name"
+    elif { test "$password" ; } 2>>/dev/$SECRET_OUTPUT_DEV ; then
+        { echo "{ echo \"$password\" | cryptsetup luksFormat --batch-mode $cryptsetup_options $source_device ; } 2>/dev/null"
+          echo "{ echo \"$password\" | cryptsetup luksOpen $source_device $mapping_name ; } 2>/dev/null"
+        } 2>>/dev/$SECRET_OUTPUT_DEV
     else
         echo "LogUserOutput \"Set the password for LUKS volume $mapping_name (for 'cryptsetup luksFormat' on $source_device):\""
         echo "cryptsetup luksFormat --batch-mode $cryptsetup_options $source_device"
@@ -133,7 +139,11 @@ open_crypt() {
         return 1
     fi
 
-    for option in $options ; do
+    # A 'crypt' entry in disklayout.conf may contain optionally password=<password>
+    # see https://github.com/rear/rear/issues/3483
+    # and https://github.com/rear/rear/blob/master/doc/user-guide/06-layout-configuration.adoc#luks-devices
+    # so $option and $value could contain a LUKS password:
+    { for option in $options ; do
         # $option is of the form keyword=value and
         # we assume keyword has no '=' character but value could be anything that may have a '=' character
         # so we split keyword=value at the leftmost '=' character so that
@@ -148,7 +158,8 @@ open_crypt() {
                 test $value && password=$value
                 ;;
         esac
-    done
+      done
+    } 2>>/dev/$SECRET_OUTPUT_DEV
 
     (
     echo "LogPrint \"Opening LUKS volume $mapping_name on $source_device\""
@@ -156,8 +167,9 @@ open_crypt() {
         # During a 'mountonly' workflow, the original keyfile is supposed to be
         # available at this point.
         echo "cryptsetup luksOpen --key-file $keyfile $source_device $mapping_name"
-    elif [ -n "$password" ] ; then
-        echo "echo \"$password\" | cryptsetup luksOpen $source_device $mapping_name"
+    elif { test "$password" ; } 2>>/dev/$SECRET_OUTPUT_DEV ; then
+        { echo "{ echo \"$password\" | cryptsetup luksOpen $source_device $mapping_name ; } 2>/dev/null"
+        } 2>>/dev/$SECRET_OUTPUT_DEV
     else
         echo "LogUserOutput \"Enter the password for LUKS volume $mapping_name (for 'cryptsetup luksOpen' on $source_device):\""
         echo "cryptsetup luksOpen $source_device $mapping_name"
