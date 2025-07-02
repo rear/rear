@@ -191,7 +191,7 @@ for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
         # Get the size of the device in bytes which could be smaller than 16 MiB.
         # For example a 'bios_grub' partition could be smaller (e.g only 8 MiB on SUSE systems)
         # cf. the "lsblk -ipo NAME,KNAME,PKNAME,TYPE,FSTYPE,SIZE,MOUNTPOINT /dev/sda" output above.
-        device_to_be_wiped_size_bytes="$( lsblk -dbnlpo SIZE $device_to_be_wiped )"
+        device_to_be_wiped_size_bytes="$( lsblk -dbnlpo SIZE $device_to_be_wiped | tr -c -d '[:digit:]' )"
         if ! test -b $device_to_be_wiped_size_byte ; then
             LogPrintError "Skip wiping $device_to_be_wiped (no output for 'lsblk -dbnlpo SIZE $device_to_be_wiped' or failed)"
             continue
