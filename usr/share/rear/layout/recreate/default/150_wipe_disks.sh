@@ -213,7 +213,7 @@ for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
         fi
         # Wipe at the end of the device:
         if ! test $device_to_be_wiped_size_bytes -gt $bytes_to_be_wiped ; then
-            DebugPrint "Skip wiping at the end of $device_to_be_wiped (dvice size $device_to_be_wiped_size_bytes not greater than the bytes that were wiped)"
+            DebugPrint "Skip wiping at the end of $device_to_be_wiped (device size $device_to_be_wiped_size_bytes not greater than the bytes that were wiped)"
             continue
         fi
         # The byte whereto dd should seek to wipe to the end of the device from that point:
