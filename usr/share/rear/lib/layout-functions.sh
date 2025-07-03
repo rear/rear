@@ -209,8 +209,12 @@ generate_layout_dependencies() {
                 add_component "$dev" "drbd"
                 ;;
             crypt)
-                name=$(echo "$remainder" | cut -d " " -f "1")
-                dev=$(echo "$remainder" | cut -d " " -f "2")
+                # $remainder may contain optionally password=<password>
+                # see https://github.com/rear/rear/issues/3483
+                # and https://github.com/rear/rear/blob/master/doc/user-guide/06-layout-configuration.adoc#luks-devices
+                { name=$(echo "$remainder" | cut -d " " -f "1")
+                  dev=$(echo "$remainder" | cut -d " " -f "2")
+                } 2>>/dev/$SECRET_OUTPUT_DEV
                 add_dependency "$name" "$dev"
                 add_component "$name" "crypt"
                 ;;
@@ -223,7 +227,10 @@ generate_layout_dependencies() {
                 done
                 ;;
             opaldisk)
-                dev=$(echo "$remainder" | cut -d " " -f "1")
+                # $remainder may contain optionally password=<password>
+                # see https://github.com/rear/rear/issues/3483
+                # and https://github.com/rear/rear/blob/master/doc/user-guide/06-layout-configuration.adoc#tcg-opal-2-compliant-self-encrypting-disks
+                { dev=$(echo "$remainder" | cut -d " " -f "1") ; } 2>>/dev/$SECRET_OUTPUT_DEV
                 add_component "opaldisk:$dev" "opaldisk"
                 for disk in $(opal_device_disks "$dev"); do
                     add_dependency "$disk" "opaldisk:$dev"
