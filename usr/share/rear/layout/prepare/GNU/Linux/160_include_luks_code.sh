@@ -12,7 +12,7 @@ create_crypt() {
     
     local crypt target_device source_device options
     local mapping_name option key value
-    local cryptsetup_options="" keyfile="" password=""
+    local cryptsetup_options="" keyfile="" password_file=""
 
     read crypt target_device source_device options < <( grep "^crypt $device_type " "$LAYOUT_FILE" )
 
@@ -73,7 +73,13 @@ create_crypt() {
                 test $value && keyfile=$value
                 ;;
             (password)
-                test $value && password=$value
+                if test $value ; then
+                    if password_file=$( mktemp $TMPDIR/LUKS_password.XXXXXXXXXXXXXXX ) ; then
+                        echo "$value" >$password_file
+                    else
+                        LogPrintError "Failed to handle LUKS password in 'crypt $target_device $source_device' entry in $LAYOUT_FILE"
+                    fi
+                fi
                 ;;
             (*)
                 LogPrintError "Skipping unsupported LUKS cryptsetup option '$key' in 'crypt $target_device $source_device' entry in $LAYOUT_FILE"
@@ -96,10 +102,9 @@ create_crypt() {
         chmod u=rw,go=- "$keyfile"
         echo "cryptsetup luksFormat --batch-mode $cryptsetup_options $source_device $keyfile"
         echo "cryptsetup luksOpen --key-file $keyfile $source_device $mapping_name"
-    elif { test "$password" ; } 2>>/dev/$SECRET_OUTPUT_DEV ; then
-        { echo "{ echo \"$password\" | cryptsetup luksFormat --batch-mode $cryptsetup_options $source_device ; } 2>/dev/null"
-          echo "{ echo \"$password\" | cryptsetup luksOpen $source_device $mapping_name ; } 2>/dev/null"
-        } 2>>/dev/$SECRET_OUTPUT_DEV
+    elif test -s "$password_file" ; then # Quoting "$password_file" is needed because plain 'test -s' results true.
+        echo "cryptsetup luksFormat --batch-mode $cryptsetup_options $source_device <$password_file"
+        echo "cryptsetup luksOpen $source_device $mapping_name <$password_file"
     else
         echo "LogUserOutput \"Set the password for LUKS volume $mapping_name (for 'cryptsetup luksFormat' on $source_device):\""
         echo "cryptsetup luksFormat --batch-mode $cryptsetup_options $source_device"
@@ -122,7 +127,7 @@ open_crypt() {
 
     local crypt target_device source_device options
     local mapping_name option key value
-    local cryptsetup_options="" keyfile="" password=""
+    local cryptsetup_options="" keyfile="" password_file=""
 
     read crypt target_device source_device options < <( grep "^crypt $device_type " "$LAYOUT_FILE" )
 
@@ -155,7 +160,13 @@ open_crypt() {
                 test $value && keyfile=$value
                 ;;
             (password)
-                test $value && password=$value
+                if test $value ; then
+                    if password_file=$( mktemp $TMPDIR/LUKS_password.XXXXXXXXXXXXXXX ) ; then
+                        echo "$value" >$password_file
+                    else
+                        LogPrintError "Failed to handle LUKS password in 'crypt $target_device $source_device' entry in $LAYOUT_FILE"
+                    fi
+                fi
                 ;;
         esac
       done
@@ -167,9 +178,8 @@ open_crypt() {
         # During a 'mountonly' workflow, the original keyfile is supposed to be
         # available at this point.
         echo "cryptsetup luksOpen --key-file $keyfile $source_device $mapping_name"
-    elif { test "$password" ; } 2>>/dev/$SECRET_OUTPUT_DEV ; then
-        { echo "{ echo \"$password\" | cryptsetup luksOpen $source_device $mapping_name ; } 2>/dev/null"
-        } 2>>/dev/$SECRET_OUTPUT_DEV
+    elif test -s "$password_file" ; then # Quoting "$password_file" is needed because plain 'test -s' results true.
+        echo "cryptsetup luksOpen $source_device $mapping_name <$password_file"
     else
         echo "LogUserOutput \"Enter the password for LUKS volume $mapping_name (for 'cryptsetup luksOpen' on $source_device):\""
         echo "cryptsetup luksOpen $source_device $mapping_name"
