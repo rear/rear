@@ -40,8 +40,8 @@ restore_original_file() {
     test -r "$saved_original_file" || return 1
     if ! is_true "$EXPOSE_SECRETS" ; then
         if test "$filename" = "$LAYOUT_FILE" ; then
-            # Inform the user that LUKS passwords became garbled by save_original_file() before:
-            LogPrintError "LUKS passwords are garbled in 'crypt' entries in restored $filename"
+            # Inform the user that LUKS passwords (if any) became garbled by save_original_file() before:
+            grep '^crypt .*password=XXXXX' $saved_original_file && LogPrintError "LUKS passwords are garbled in 'crypt' entries in restored $filename"
         fi
     fi
     cp -ar $saved_original_file $filename
