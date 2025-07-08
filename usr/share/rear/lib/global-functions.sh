@@ -1082,4 +1082,33 @@ function mathlib_calculate()
     bc -ql <<<"result=$@ ; scale=0 ; result / 1 "
 }
 
+# Store a possibly secret value $1 (could be empty or blank) in a new created temporary file.
+# The temporary file is created in ReaR's $TMP_DIR (which is $BUILD_DIR/tmp - see usr/sbin/rear).
+# The name (full path) of the temporary file is output on stdout.
+# $2 is an optional short string to show the user what kind of value it is, e.g. "LUKS password".
+# When $2 is not specified "some value" is used as fallback (you may specify $2 to be empty).
+function store_value_in_tmp_file()
+{
+    test $# -lt 1 && BugError "store_value_in_tmp_file() called without argument"
+    test $# -gt 2 && BugError "store_value_in_tmp_file() called with more than 2 arguments"
+    local kind_of_value=''
+    local kind_of_value_alnum=''
+    local tmp_file=''
+    test $# -ge 2 && kind_of_value="$2" || kind_of_value="some value"
+    kind_of_value_alnum="$( echo "$kind_of_value" | tr -d -c '[:alnum:]' )"
+    if ! tmp_file=$( mktemp $TMP_DIR/$kind_of_value_alnum.XXXXXXXXXXXXXXX ) ; then
+        LogPrintError "Could not store $kind_of_value into temporary file ('mktemp' failed in $TMP_DIR)"
+        return 1
+    fi
+    # Avoid leaving behind the possibly secret value when KEEP_BUILD_DIR is set
+    # so ensure the temporary file gets removed when sbin/rear exits
+    # except sbin/rear is run with the --expose-secrets option set:
+    is_true "$EXPOSE_SECRETS" || AddExitTask "rm -f $tmp_file"
+    # Avoid leaking out the possibly secret value via 'set -x' in debug mode:
+    if ! { echo "$1" >$tmp_file ; } 2>>/dev/$SECRET_OUTPUT_DEV ; then
+        LogPrintError "Failed to store $kind_of_value into $tmp_file"
+        return 1
+    fi
+    echo "$tmp_file"
+}
 
