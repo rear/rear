@@ -74,6 +74,16 @@ create_crypt() {
                 ;;
             (password)
                 if test $value ; then
+                    # Use a temporary file in the ReaR recovery system which contains the LUKS password value
+                    # to avoid having a password variable where code where that variable gets evaluated
+                    # would need to be protected with { ... ; } 2>>/dev/$SECRET_OUTPUT_DEV
+                    # see https://github.com/rear/rear/issues/3483#issuecomment-3032813389
+                    # Because layout/prepare scripts are only run by the workflows recover layoutonly finalizeonly
+                    # this temporary file exists only within the ReaR recovery system ramdisk
+                    # so its secret content should be sufficiently secure against leaking out
+                    # and all content is completely gone after the ReaR recovery system was shut down
+                    # because nothing gets stored on persistent storage (in particular not on flash memory
+                    # where wear leveling makes it impossible to reliably purge all used storage places):
                     if password_file=$( mktemp $TMP_DIR/LUKS_password.XXXXXXXXXXXXXXX ) ; then
                         echo "$value" >$password_file
                         if ! is_true "$EXPOSE_SECRETS" ; then
@@ -178,6 +188,16 @@ open_crypt() {
                 ;;
             (password)
                 if test $value ; then
+                    # Use a temporary file in the ReaR recovery system which contains the LUKS password value
+                    # to avoid having a password variable where code where that variable gets evaluated
+                    # would need to be protected with { ... ; } 2>>/dev/$SECRET_OUTPUT_DEV
+                    # see https://github.com/rear/rear/issues/3483#issuecomment-3032813389
+                    # Because layout/prepare scripts are only run by the workflows recover layoutonly finalizeonly
+                    # this temporary file exists only within the ReaR recovery system ramdisk
+                    # so its secret content should be sufficiently secure against leaking out
+                    # and all content is completely gone after the ReaR recovery system was shut down
+                    # because nothing gets stored on persistent storage (in particular not on flash memory
+                    # where wear leveling makes it impossible to reliably purge all used storage places):
                     if password_file=$( mktemp $TMP_DIR/LUKS_password.XXXXXXXXXXXXXXX ) ; then
                         echo "$value" >$password_file
                         if ! is_true "$EXPOSE_SECRETS" ; then
