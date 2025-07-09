@@ -122,7 +122,11 @@ extract_partitions() {
     # does not work with partition types that are not in the supported list
     # cf. https://github.com/rear/rear/pull/2803#issuecomment-1124800884
     if ! [[ "$disk_label" = "msdos" || "$disk_label" = "gpt" || "$disk_label" = "gpt_sync_mbr" || "$disk_label" = "dasd" ]] ; then
-        Error "Unsupported partition table '$disk_label' on $device (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
+        if IsInArray "$device" "${EXCLUDE_COMPONENTS[@]}" ; then
+            DebugPrint "Unsupported partition table '$disk_label' on $device (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
+        else
+            Error "Unsupported partition table '$disk_label' on $device (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
+        fi
     fi
 
 
@@ -357,14 +361,32 @@ extract_partitions() {
         # device=/dev/mapper/mpathbp1 ; partition_prefix=mpathbp
         partition_name="${device%/*}/${partition_prefix#*/}$partition_nr"
         partition_device="$( get_device_name $partition_name )"
-        test -b "$partition_device" || Error "Invalid 'part $device' entry (partition device '$partition_device' is no block device)"
+        if ! test -b "$partition_device" ; then
+            if IsInArray "$device" "${EXCLUDE_COMPONENTS[@]}" ; then
+                DebugPrint "Invalid 'part $device' entry (partition device '$partition_device' is no block device)"
+            else
+                Error "Invalid 'part $device' entry (partition device '$partition_device' is no block device)"
+            fi
+        fi
         # Ensure syntactically correct 'part' entries of the form
         #   part disk_device partition_size start_byte partition_label flags partition_device
         # Each value must exist and each value must be a single non-blank word.
         # When $junk contains something one of the values before was more than a single word:
-        test "$junk" && Error "Invalid 'part $device' entry (some value is more than a single word)"
+        if test "$junk" ; then
+            if IsInArray "$device" "${EXCLUDE_COMPONENTS[@]}" ; then
+                DebugPrint "Invalid 'part $device' entry (some value is more than a single word)"
+            else
+                Error "Invalid 'part $device' entry (some value is more than a single word)"
+            fi
+        fi
         # When $flags is empty at least one value is missing:
-        test "$flags" || Error "Invalid 'part $device' entry (at least one value is missing)"
+        if ! test "$flags" ; then
+            if IsInArray "$device" "${EXCLUDE_COMPONENTS[@]}" ; then
+                DebugPrint "Invalid 'part $device' entry (at least one value is missing)"
+            else
+                Error "Invalid 'part $device' entry (at least one value is missing)"
+            fi
+        fi
         # Some basic checks on the values happen in layout/save/default/950_verify_disklayout_file.sh
         echo "part $device $size $start $type $flags $partition_device"
     done < $TMP_DIR/partitions

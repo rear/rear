@@ -21,11 +21,17 @@ source /etc/scripts/system-setup-functions.sh
 # cf. the 'if rear_debug' part below:
 sleep 1
 
+# In the rescue system these paths are always like this, either for real or as a symlink to the actual paths:
+CONFIG_DIR=/etc/rear
+SHARE_DIR=/usr/share/rear
+VAR_DIR=/var/lib/rear
+LOG_DIR=/var/log/rear
+
 # Because "rear recover" won't work without default.conf
 # we abort when there is no default.conf (or when it is empty),
 # cf. https://github.com/rear/rear/pull/3070#discussion_r1389361339
-if ! test -s /usr/share/rear/conf/default.conf ; then
-    echo -e "\nERROR: ReaR recovery cannot work without /usr/share/rear/conf/default.conf\n"
+if ! test -s $SHARE_DIR/conf/default.conf ; then
+    echo -e "\nERROR: ReaR recovery cannot work without $SHARE_DIR/conf/default.conf\n"
     # Wait hardcoded 10 seconds in any case so that the user can notice the
     # 'ERROR: ReaR recovery cannot work without /usr/share/rear/conf/default.conf'
     # on his screen before the screen gets cleared and replaced by the login screen
@@ -34,7 +40,7 @@ if ! test -s /usr/share/rear/conf/default.conf ; then
     # Replace the usual /etc/motd message
     # 'Welcome to Relax-and-Recover. Run "rear recover" to restore your system !'
     # because it does not make sense to run "rear recover" without default.conf:
-    echo -e "\nRelax-and-Recover cannot work without /usr/share/rear/conf/default.conf\n" >/etc/motd
+    echo -e "\nRelax-and-Recover cannot work without $SHARE_DIR/conf/default.conf\n" >/etc/motd
     # exiting this script proceeds directly to the login screen:
     exit 1
 fi
@@ -43,21 +49,16 @@ fi
 #   { VARIABLE='secret value' ; } 2>>/dev/$SECRET_OUTPUT_DEV
 # cf. https://github.com/rear/rear/pull/3034#issuecomment-1691609782
 SECRET_OUTPUT_DEV="null"
-# Sourcing of the conf/default.conf file as we may use some defined variables or arrays
+# Sourcing /usr/share/rear/conf/default.conf as we need some variables or arrays
 # E.g. UDEV_NET_MAC_RULE_FILES is used by script 55-migrate-network-devices.sh
-source /usr/share/rear/conf/default.conf || echo -e "\n'source /usr/share/rear/conf/default.conf' failed with exit code $?"
+source $SHARE_DIR/conf/default.conf || echo -e "\n'source $SHARE_DIR/conf/default.conf' failed with exit code $?"
+
 # Sourcing user and rescue configuration as we need some variables
 # (EXCLUDE_MD5SUM_VERIFICATION right now and other variables in the system setup scripts):
 # The order of sourcing should be 'site' then 'local' and as last 'rescue'
-
-# In the rescue system these paths are always like this, either for real or as a symlink to the actual paths
-CONFIG_DIR=/etc/rear
-SHARE_DIR=/usr/share/rear
-VAR_DIR=/var/lib/rear
-LOG_DIR=/var/log/rear
 for conf in site local rescue ; do
-    if test -s /etc/rear/$conf.conf ; then
-        source /etc/rear/$conf.conf || echo -e "\n'source /etc/rear/$conf.conf' failed with exit code $?"
+    if test -s $CONFIG_DIR/$conf.conf ; then
+        source $CONFIG_DIR/$conf.conf || echo -e "\n'source $CONFIG_DIR/$conf.conf' failed with exit code $?"
     fi
 done
 

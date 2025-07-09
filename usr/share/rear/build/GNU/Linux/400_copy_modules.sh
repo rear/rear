@@ -89,7 +89,7 @@ for dummy in "once" ; do
         # The '--parents' is needed to get the '/lib/modules/' directory in the copy.
         # The '-L' copies the actual content to avoid dangling symlinks in the recovery system
         # cf. https://github.com/rear/rear/issues/2677#issuecomment-997859219
-        # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+        # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
         if ! cp $verbose -t $ROOTFS_DIR -a -L --parents /lib/modules/$KERNEL_VERSION 2>>/dev/$DISPENSABLE_OUTPUT_DEV 1>&2 ; then
             # Do not error out if 'cp -a -L' failed to to copy all contents of /lib/modules/$KERNEL_VERSION
             # because dangling symlinks let 'cp -L' fail and there is no cp option to let it skip broken symlinks

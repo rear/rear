@@ -72,7 +72,7 @@ Please enter the numbers of the filespaces we should restore.
 Pay attention to enter the filesystems in the correct order
 (like restore / before /var/log)"
 # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+# to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
 read -t $WAIT_SECS -p "(default: ${TSM_FILESPACE_INCLUDED_NUMS[*]}): [$WAIT_SECS secs] " -r TSM_RESTORE_FILESPACE_NUMS 0<&6 1>&7 2>&8
 if test -z "$TSM_RESTORE_FILESPACE_NUMS" ; then
     # Set default on ENTER:
@@ -89,7 +89,7 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     LogPrint "${TSM_FILESPACES[$num]}"
 done
 # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+# to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
 read -t $WAIT_SECS -r -p "Is this selection correct ? (Y|n) [$WAIT_SECS secs] " 0<&6 1>&7 2>&8
 case "$REPLY" in
     (""|y|Y)
