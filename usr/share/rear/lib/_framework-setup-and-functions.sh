@@ -1,14 +1,14 @@
-# _input-output-functions.sh
 #
-# NOTE:
-# This is the first file to be sourced (because of _ in the name) which is why
-# it contains some special stuff like EXIT_TASKS that I want to be available everywhere.
-
-# input-output functions for Relax-and-Recover
-# plus some special stuff that should be available everywhere.
+# _framework-setup-and-functions.sh
 #
-# This file is part of Relax-and-Recover, licensed under the GNU General
-# Public License. Refer to the included COPYING for full text of license.
+# Basic ReaR framework setup like EXIT_TASKS setup and STDIN STDOUT STDERR setup
+# and basic ReaR functions like input-output functions and sourcing functions.
+#
+# This is the first script to be sourced in sbin/rear via the special leading '_' in its name.
+#
+# This file is part of Relax-and-Recover, licensed under the GNU General Public License.
+# Refer to the included COPYING for full text of license.
+#
 
 # The sequence $'...' is a special bash expansion with backslash-escaped characters
 # see "Words of the form $'string' are treated specially" in "man bash"
@@ -601,9 +601,9 @@ function CallerSource () {
     # When BugIfError is called the actual caller is the script
     # that had called BugIfError which is ${BASH_SOURCE[3]}
     # because when BugIfError is called from a script
-    # ${BASH_SOURCE[0]} is '_input-output-functions.sh' for the CallerSource call
-    # ${BASH_SOURCE[1]} is '_input-output-functions.sh' for the BugError call
-    # ${BASH_SOURCE[2]} is '_input-output-functions.sh' for the BugIfError call
+    # ${BASH_SOURCE[0]} is '_framework-setup-and-functions.sh' for the CallerSource call
+    # ${BASH_SOURCE[1]} is '_framework-setup-and-functions.sh' for the BugError call
+    # ${BASH_SOURCE[2]} is '_framework-setup-and-functions.sh' for the BugIfError call
     # ${BASH_SOURCE[3]} is the script that had called BugIfError.
     # Currently it is sufficient to inspect the execution call stack up to ${BASH_SOURCE[3]}
     # (i.e. currently there are at most three indirections as described above).
@@ -630,7 +630,7 @@ function CallerSource () {
         return 0
     fi
     # Fallback output:
-    echo "Relax-and-Recover"
+    echo "$PRODUCT"
 }
 
 # Error exit:
@@ -645,7 +645,7 @@ function Error () {
     # Each sourced script gets logged as 'timestamp Including sub-path/to/script_file_name.sh' and
     # valid script files names are of the form NNN_script_name.sh (i.e. with leading 3-digit number)
     # but also the outdated scripts with leading 2-digit number get sourced
-    # see the SourceStage function in lib/framework-functions.sh
+    # see the SourceStage function in lib/_framework-setup-and-functions.sh
     # so that we grep for script files names with two or more leading numbers:
     if test -s "$RUNTIME_LOGFILE" ; then
         { local last_sourced_script_log_entry=( $( grep -o ' Including .*/[0-9][0-9].*\.sh' $RUNTIME_LOGFILE | tail -n 1 ) )
@@ -1506,4 +1506,409 @@ function ProgressStep () {
 function ProgressInfo () {
     : ;
 }
+
+# Sourcing functions to enforce trusted sourcing:
+
+# Specify default TRUSTED_OWNERS (used by the is_trusted_owner function):
+#
+# The owner of sbin/rear is always trusted.
+# Usually the owner of sbin/rear is 'root'
+# but if not (e.g. in case of Git checkout on the original system)
+# also 'root' is trusted by default:
+sbin_rear_owner_name="$( stat -L -c %U "$SCRIPT_FILE" )"
+test "$sbin_rear_owner_name" = "root" && TRUSTED_OWNERS=( 'root' ) || TRUSTED_OWNERS=( 'root' "$sbin_rear_owner_name" )
+# 'readonly TRUSTED_OWNERS' happens in sbin/rear
+# after the normal user configuration files (site.conf local.conf rescue.conf) were sourced
+# so that the user can specify what he needs, e.g. for whatever third-party (backup) software.
+
+# Check file owner is trusted
+# see https://relax-and-recover.org/documentation/security-architecture
+function is_trusted_owner () {
+    local file="$1"
+    local owner_name=""
+    local trusted_owner=""
+    # Empty TRUSTED_OWNERS means all regular file owners are blindly trusted,
+    # cf https://github.com/rear/rear/pull/3379#issuecomment-2633123866
+    test ${#TRUSTED_OWNERS[@]} -eq 0 && return 0
+    # Do not error out in 'stat' when it is neither a regular file nor a link to a regular file
+    # but it is not trusted when it is neither a regular file nor a link to a regular file:
+    test -f "$file" || return 1
+    # '-L' forces stat to follow symlinks (and error out if that fails):
+    owner_name="$( stat -L -c %U "$file" )" || Error "is_trusted_owner(): 'stat -L -c %U $file' failed"
+    for trusted_owner in "${TRUSTED_OWNERS[@]}" ; do
+        test "$owner_name" = "$trusted_owner" && return 0
+    done
+    return 1
+}
+
+# Specify default TRUSTED_PATHS (used by the is_trusted_path function) and
+# specify default REAR_SOURCE_PATHS (used by the is_rear_source function):
+#
+# ReaR basic directories cases:
+#
+# (A)
+# Normal case (i.e. no Git checkout) on the original system which results the normal case in the ReaR recovery system:
+# ReaR basic directories when running /usr/sbin/rear on the original system from a normally installed package
+# (i.e. when ReaR's files are installed in '/' so REAR_DIR_PREFIX is empty)
+# and also when running /bin/rear in the ReaR recovery system:
+#   REAR_DIR_PREFIX=
+#   SHARE_DIR=/usr/share/rear
+#   CONFIG_DIR=/etc/rear
+#   VAR_DIR=/var/lib/rear
+#   LOG_DIR=/var/log/rear
+# So when there is no Git checkout REAR_DIR_PREFIX is empty and the ReaR basic directories
+# are same on the original system and in the ReaR recovery system.
+#
+# (B1)
+# Special case (i.e. Git checkout) on the original system:
+# ReaR basic directories when running usr/sbin/rear on the original system from a Git checkout:
+# (i.e. when ReaR's files are installed in '/rear/prefix/' so REAR_DIR_PREFIX is non-empty '/rear/prefix'):
+#   REAR_DIR_PREFIX=/rear/prefix
+#   SHARE_DIR=/rear/prefix/usr/share/rear
+#   CONFIG_DIR=/rear/prefix/etc/rear
+#   VAR_DIR=/rear/prefix/var/lib/rear
+#   LOG_DIR=/rear/prefix/var/log/rear
+#
+# (B2)
+# Special case (i.e. Git checkout on the original system) in the ReaR recovery system:
+# ReaR basic directories when running /bin/rear in the ReaR recovery system
+# when ReaR on the original system was a Git checkout:
+#   REAR_DIR_PREFIX=
+#   SHARE_DIR=/usr/share/rear
+#   CONFIG_DIR=/etc/rear
+#   VAR_DIR=/var/lib/rear
+#   LOG_DIR=/var/log/rear
+# BUT some of them are symlinks and others are not:
+#   /usr/share/rear is a symbolic link to ../../rear/prefix/usr/share/rear
+#   /etc/rear is a normal directory (no symbolic link to /rear/prefix/etc/rear)
+#   /var/lib/rear is a symbolic link to ../../rear/prefix/var/lib/rear
+#   /var/log/rear is a normal directory (no symbolic link to /rear/prefix/var/log/rear)
+# so the actual files in /usr/share/rear and /var/lib/rear are under a prefix directory
+# except the actual files in /etc/rear and /var/log/rear which are really in /etc/rear and /var/log/rear
+# so the empty REAR_DIR_PREFIX matches where the actual files in CONFIG_DIR and LOG_DIR are
+# but it does neither match where the actual files in SHARE_DIR are
+# nor does REAR_DIR_PREFIX match where the actual files in VAR_DIR are,
+# cf. https://github.com/rear/rear/pull/3379#issuecomment-2598270427
+# and https://github.com/rear/rear/pull/3379#issuecomment-2601575741
+#
+# SHARE_DIR is where ReaR's scripts are so it is most often used and therefore it should be first
+# in TRUSTED_PATHS to return early from the 'for trusted_path ...' testing loop in is_trusted_path().
+# CONFIG_DIR is used to source e.g. etc/rear/local.conf
+# VAR_DIR is used by "rear recover" to source /var/lib/rear/layout/diskrestore.sh in 200_run_layout_code.sh
+#
+# According to https://github.com/rear/rear/issues/3259#issuecomment-2385745545
+# '/usr/' '/etc/' '/lib/' should be considered in general to be trusted paths
+# so when SHARE_DIR is a sub-directory of '/usr/' it is needless to also add SHARE_DIR
+# and when CONFIG_DIR is a sub-directory of '/etc/' it is needless to also add CONFIG_DIR.
+#
+# The trailing / ensures that e.g. /libanywhere/ is not falsely regarded as trusted path
+# so in particular /lib64/ is currently not considered as trusted path.
+if test "$REAR_DIR_PREFIX" ; then
+    # When REAR_DIR_PREFIX is set it is case (B1) i.e. Git checkout on the original system.
+    # All files below a Git checkout directory are considered to be trusted
+    # see https://relax-and-recover.org/documentation/security-architecture
+    # SHARE_DIR and CONFIG_DIR and VAR_DIR are sub-directories of REAR_DIR_PREFIX:
+    TRUSTED_PATHS=( "$REAR_DIR_PREFIX/" '/usr/' '/etc/' '/lib/' )
+    REAR_SOURCE_PATHS=( "$REAR_DIR_PREFIX/" )
+else
+    # When REAR_DIR_PREFIX is empty it is case (A) i.e. no Git checkout
+    # or it is case (B2) i.e. in the ReaR recovery system when there was a Git checkout on the original system.
+    # Intentionally we do not test RECOVERY_MODE because this is not needed.
+    # Instead we test directly "the real thing" which is whether or not SHARE_DIR matches where its actual files are
+    # by checking an example (this script) i.e. if the actual path of /usr/share/rear/lib/_framework-setup-and-functions.sh
+    # is /usr/share/rear/lib/_framework-setup-and-functions.sh or /rear/prefix/usr/share/rear/lib/_framework-setup-and-functions.sh
+    # and in the latter case we specify '/rear/prefix/' first in trusted_paths
+    # cf. https://github.com/rear/rear/pull/3379#issuecomment-2601767515
+    # cf. the REAR_DIR_PREFIX setting code in sbin/rear
+    test_path="/usr/share/rear/lib/_framework-setup-and-functions.sh"
+    # Fall back to the normal case (A) if 'readlink -e /usr/share/rear/lib/_framework-setup-and-functions.sh' fails:
+    actual_path="$( readlink -e "$test_path" )" || actual_path="$test_path"
+    if test "$actual_path" != "$test_path" ; then
+        # This is case (B2) i.e. in the ReaR recovery system when there was a Git checkout on the original system:
+        # When test_path = /usr/share/rear/lib/_framework-setup-and-functions.sh
+        # and actual_path = /rear/prefix/usr/share/rear/lib/_framework-setup-and-functions.sh
+        # then rear_dir_prefix = /rear/prefix
+        rear_dir_prefix=${actual_path%$test_path}
+        # Both SHARE_DIR and VAR_DIR are sub-directories of rear_dir_prefix
+        # only CONFIG_DIR is /etc/rear
+        TRUSTED_PATHS=( "$rear_dir_prefix/" '/usr/' '/etc/' '/lib/' )
+        REAR_SOURCE_PATHS=( "$rear_dir_prefix/" "$CONFIG_DIR/" )
+    else
+        # This is the normal case (A) i.e. no Git checkout:
+        # In case (A) SHARE_DIR is a sub-directory of '/usr/' and CONFIG_DIR is a sub-directory of '/etc/':
+        TRUSTED_PATHS=( '/usr/' '/etc/' "$VAR_DIR/" '/lib/' )
+        REAR_SOURCE_PATHS=( "$SHARE_DIR/" "$CONFIG_DIR/" "$VAR_DIR/" )
+    fi
+fi
+# 'readonly TRUSTED_PATHS' and 'readonly REAR_SOURCE_PATHS' happens in sbin/rear
+# after the normal user configuration files (site.conf local.conf rescue.conf) were sourced
+# so that the user can specify what he needs, e.g. for whatever third-party (backup) software.
+
+# Check the actual file path (i.e. with symlinks resolved) is trusted
+# see https://github.com/rear/rear/issues/3259#issuecomment-2385745545
+function is_trusted_path () {
+    local file="$1"
+    local actual_path=""
+    local trusted_path=""
+    # Empty TRUSTED_PATHS means all regular file paths are blindly trusted,
+    # cf https://github.com/rear/rear/pull/3379#issuecomment-2633123866
+    test ${#TRUSTED_PATHS[@]} -eq 0 && return 0
+    # Do not error out in 'readlink' when it is neither a regular file nor a link to a regular file
+    # but it is not trusted when it is neither a regular file nor a link to a regular file:
+    test -f "$file" || return 1
+    # Get the full path of the actual file (i.e. with leading / and symlinks resolved)
+    # e.g. /etc/os-release is a symbolic link to /usr/lib/os-release (at least on openSUSE Leap 15.6):
+    actual_path="$( readlink -e "$file" )" || Error "is_trusted_path(): 'readlink -e $file' failed"
+    for trusted_path in "${TRUSTED_PATHS[@]}" ; do
+        # Skip when trusted_path is empty (otherwise the [[ expression ]] would be falsely true):
+        test "$trusted_path" || continue
+        [[ "$actual_path" =~ ^"$trusted_path" ]] && return 0
+    done
+    return 1
+}
+
+# Check the actual file path (i.e. with symlinks resolved)
+# is a ReaR script or a ReaR config file (i.e. a file that belongs to ReaR)
+# see https://github.com/rear/rear/pull/3434#issuecomment-2742598092
+function is_rear_source () {
+    local file="$1"
+    local actual_path=""
+    local rear_source_path=""
+    # Empty REAR_SOURCE_PATHS means all files are considered to not belong to ReaR:
+    test ${#REAR_SOURCE_PATHS[@]} -eq 0 && return 1
+    # Do not error out in 'readlink' when it is neither a regular file nor a link to a regular file
+    # and assume such files do not belong to ReaR:
+    test -f "$file" || return 1
+    # Get the full path of the actual file (i.e. with leading / and symlinks resolved):
+    actual_path="$( readlink -e "$file" )" || Error "is_rear_source(): 'readlink -e $file' failed"
+    for rear_source_path in "${REAR_SOURCE_PATHS[@]}" ; do
+        # Skip when rear_source_path is empty (otherwise the [[ expression ]] would be falsely true):
+        test "$rear_source_path" || continue
+        [[ "$actual_path" =~ ^"$rear_source_path" ]] && return 0
+    done
+    return 1
+}
+
+# The 'source' wrapper function to enforce trusted sourcing
+# see https://github.com/rear/rear/issues/3259
+# and https://github.com/rear/rear/pull/3379
+function source () {
+  { local source_file="$1"
+    Debug "Trusted sourcing '$*'"
+    # Ensure source file is a regular file or a link to a regular file.
+    # I.e. skip non-regular files like directories, device nodes, or file not found.
+    # It also returns here when no source file was specified (i.e. when $1 is empty).
+    if ! test -f "$source_file" ; then
+        # Show the source file name as '$source_file' to make it clear when it is empty:
+        Debug "Skipped sourcing '$source_file' (no regular file)"
+        return 1
+    fi
+    # Enforce source file owner is trusted:
+    is_trusted_owner "$source_file" || Error "Forbidden to source '$source_file' (not a TRUSTED_OWNERS: ${TRUSTED_OWNERS[*]})"
+    # Enforce source file starts with a trusted path:
+    is_trusted_path "$source_file" || Error "Forbidden to source '$source_file' (not below TRUSTED_PATHS: ${TRUSTED_PATHS[*]})"
+  } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # The actual work (source the source file):
+    builtin source "$@"
+    # The return code of the 'source' wrapper function is the return code of the 'source' builtin.
+}
+
+# The '.' wrapper function to enforce trusted sourcing via '.'
+# see https://github.com/rear/rear/issues/3259
+# and https://github.com/rear/rear/pull/3379
+# and https://github.com/rear/rear/pull/3434#issuecomment-2742598092
+#
+# ReaR can enforce an environment where ReaR decides
+# what files ReaR will directly or indirectly execute via 'source' or '.'
+# i.e. that the owner of the file must be one of the TRUSTED_OWNERS
+# and that the file must be located below one of the TRUSTED_PATHS
+# (the '.' wrapper calls 'source' which is the 'source' wrapper).
+# But ReaR must not enforce an environment where ReaR decides
+# that executing via the POSIX compliant '.' is forbidden
+# in particular not when ReaR sources an external shell script
+# that uses '.' to execute more scripts in the current shell.
+# ReaR enforces that '.' is not used in ReaR scripts or in ReaR config files
+# but ReaR must not do that for (POSIX compliant) external (i.e. non-ReaR) files.
+#
+# Those wrappers (the '.' wrapper and the 'source' wrapper)
+# are nice examples how RFC 1925 item 6a
+# "It is always possible to add another level of indirection"
+# is even helpful in this specific case to increase security
+# in contrast to how RFC 1925 items 6 and 6a are normally meant,
+# i.e. normally it is recommended to avoid indirections.
+function . () {
+  { local source_file="$1"
+    local caller_source=()
+    local caller_file
+    Debug "Trusted sourcing via dot '$*'"
+    # Ensure source_file is a regular file or a link to a regular file.
+    # I.e. skip non-regular files like directories, device nodes, or file not found.
+    # It also returns here when no source file was specified (i.e. when $1 is empty).
+    if ! test -f "$source_file" ; then
+        # Show the source file name as '$source_file' to make it clear when it is empty:
+        Debug "Skipped sourcing '$source_file' via '.' (no regular file)"
+        return 1
+    fi
+    # Enforce that sourcing via '.' is not used in ReaR scripts or in ReaR config files:
+    caller_source=( $( CallerSource ) )
+    # CallerSource returns normally a string of three words of the form
+    #   source_filename line line_number
+    # where source_filename is the name of the file where this '.' function is called
+    # then the word 'line' and the line_number in that file where '.' is called.
+    # As fallback CallerSource returns only the word 'Relax-and-Recover'.
+    # So normally the first element in the caller_source array is the filename where '.' is called
+    # and in the fallback case the first element in the caller_source array is 'Relax-and-Recover':
+    caller_file="${caller_source[0]}"
+    if test "$caller_file" = "$PRODUCT" ; then
+        # proceeding "bona fide" when CallerSource could not determine the actual caller file
+        # is not less secure than sourcing via '.' for files which do not belong to ReaR
+        # because all sourcing via '.' happens via the 'source' wrapper 
+        # cf. https://github.com/rear/rear/pull/3437#discussion_r2012030154
+        DebugPrint "Could not determine if usage of '.' in${LF}  . $*${LF}happens in a file that belongs to ReaR"
+    else
+        is_rear_source "$caller_file" && BugError "Forbidden usage of '.' instead of 'source' in${LF}  . $*${LF}'$caller_file' belongs to ReaR"
+    fi
+  } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
+    # The actual work (source the file via the 'source' wrapper function to enforce trusted sourcing):
+    source "$@"
+    # The return code of the '.' wrapper function is the return code of the 'source' wrapper function.
+}
+
+# Source a ReaR file (ReaR script or ReaR config file) given in $1
+function Source () {
+    local source_file="$1"
+    local source_return_code=0
+    # Skip if source file name is empty:
+    if test -z "$source_file" ; then
+        Debug "Skipping Source() because it was called with empty source file name"
+        return
+    fi
+    # Ensure source file is not a directory:
+    test -d "$source_file" && Error "Source file '$source_file' is a directory, cannot source"
+    # Skip if source file does not exist of if its content is empty:
+    if ! test -s "$source_file" ; then
+        Debug "Skipping Source() because source file '$source_file' not found or empty"
+        return
+    fi
+    # Clip leading standard path to ReaR files (usually /usr/share/rear/):
+    local relname="${source_file##$SHARE_DIR/}"
+    # Simulate sourcing the scripts in $SHARE_DIR
+    if test "$SIMULATE" && expr "$source_file" : "$SHARE_DIR" >/dev/null; then
+        LogPrint "Source $relname"
+        return
+    fi
+    # Step-by-step mode or breakpoint if needed
+    # Usage of the external variable BREAKPOINT: sudo BREAKPOINT="*foo*" rear mkrescue
+    # an empty default value is set to avoid 'set -eu' error exit if BREAKPOINT is unset:
+    : ${BREAKPOINT:=}
+    if [[ "$STEPBYSTEP" || ( "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ) ]] ; then
+        # Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user
+        # to get input from the user and to show output to the user:
+        read -p "Press ENTER to include '$source_file' ... " 0<&6 1>&7 2>&8
+    fi
+    # The Error function is searching for 'Including .*$last_sourced_script_filename'
+    # in RUNTIME_LOGFILE and/or STDOUT_STDERR_FILE so provide that info in both files:
+    Log "Including $relname"
+    echo "Including $relname" >>$STDOUT_STDERR_FILE
+    # DEBUGSCRIPTS mode settings:
+    if test "$DEBUGSCRIPTS" ; then
+        Debug "Entering debugscript mode via 'set -$DEBUGSCRIPTS_ARGUMENT'."
+        local saved_bash_flags_and_options_commands="$( get_bash_flags_and_options_commands )"
+        set -$DEBUGSCRIPTS_ARGUMENT
+    fi
+    # The actual work (enforce trusted sourcing of the source file):
+    # Do not error out here when 'source' returns a non-zero exit code
+    # because scripts usually return the exit code of their last command
+    # cf. https://github.com/rear/rear/issues/1965#issuecomment-439330017
+    # and in general ReaR should not error out in a (helper) function but instead
+    # a function should return an error code so that its caller can decide what to do
+    # cf. https://github.com/rear/rear/pull/1418#issuecomment-316004608
+    source "$source_file"
+    source_return_code=$?
+    test "0" -eq "$source_return_code" || Debug "Source function: 'source $source_file' returns $source_return_code"
+    # Ensure that after each sourced file we are back in the ReaR working directory
+    # that is WORKING_DIR="$( pwd )" when usr/sbin/rear was launched
+    # cf. https://github.com/rear/rear/issues/2461
+    # Quoting "$WORKING_DIR" is needed to make it behave fail-safe if WORKING_DIR is empty
+    # because cd "" succeeds without changing the current directory
+    # in contrast to plain cd which changes to the home directory (usually /root)
+    # cf. https://github.com/rear/rear/pull/2478#issuecomment-673500099
+    cd "$WORKING_DIR" || LogPrintError "Failed to 'cd $WORKING_DIR'"
+    # Undo DEBUGSCRIPTS mode settings:
+    if test "$DEBUGSCRIPTS" ; then
+        Debug "Leaving debugscript mode (back to previous bash flags and options settings)."
+        # The only known way how to do 'set +x' after 'set -x' without 'set -x' output for the 'set +x' call
+        # is a current shell environment where stderr is redirected to /dev/null before 'set +x' is run via
+        #   { set +x ; } 2>/dev/null
+        # here we avoid much useless 'set -x' debug output for the apply_bash_flags_and_options_commands call:
+        { apply_bash_flags_and_options_commands "$saved_bash_flags_and_options_commands" ; } 2>/dev/null
+    fi
+    # Breakpoint if needed:
+    if [[ "$BREAKPOINT" && "$relname" == "$BREAKPOINT" ]] ; then
+        # Use the original STDIN STDOUT and STDERR when 'rear' was launched by the user
+        # to get input from the user and to show output to the user:
+        read -p "Press ENTER to continue ... " 0<&6 1>&7 2>&8
+    fi
+    # Return the return value of the actual work (sourcing of the source file):
+    return $source_return_code
+}
+
+# Collect scripts given in the stage directory $1
+# therein in the standard subdirectories and
+# sort them by their script file name and
+# Source() the scripts one by one:
+function SourceStage () {
+    local stage="$1"
+    local start_SourceStage=$SECONDS
+    Log "======================"
+    Log "Running '$stage' stage"
+    Log "======================"
+    # In debug modes show what stage is run also on the user's terminal:
+    test "$DEBUG" && Print "Running '$stage' stage ======================"
+    # We always source scripts in the same subdirectory structure.
+    # The ls -d {...,...,...} within the $SHARE_DIR/$stage directory expands as intended.
+    # The intent is to only list those scripts below the $SHARE_DIR/$stage directory
+    # that match the specified backup method and output method
+    # and that match the used operating system and architecture and Linux distribution.
+    # The pipe sorts the listed scripts by their 3-digit number independent of the directory of the script.
+    # We want to make sure that there are no duplicates in the listed scripts
+    # so that each script gets executed at most once.
+    # cf. https://github.com/rear/rear/issues/3149#issuecomment-1935586311
+    # First sed inserts a ! before and after the script number
+    # e.g. default/123_some_script.sh becomes default/!123!_some_script.sh
+    # which makes the script number field nr. 2 when dividing lines into fields by !
+    # so that the subsequent sort can sort by that field.
+    # Numeric sort is not needed because all script numbers have same length
+    # (without numeric sort 2 and 10 get sorted as first 10 then 2).
+    # The final tr removes the ! to restore the original script name.
+    # This code breaks if ! or a leading 3-digit number with underscore
+    # is used in a directory name of the ReaR subdirectory structure
+    # but those directories below the $SHARE_DIR/$stage directory are not named by the user
+    # so that it even works when a user runs a git clone in his .../ReaRtest!/ directory.
+    # For example a new backup method named '123_backup' is not possible
+    # but a new backup method named '123backup' (without underscore) is possible.
+    local scripts=( $( cd $SHARE_DIR/$stage
+                 ls -d  {default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
+              "$BACKUP"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
+              "$OUTPUT"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
+    "$OUTPUT"/"$BACKUP"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
+                 | sed -e 's#/\([0-9][0-9][0-9]\)_#/!\1!_#g' | sort -t \! -k 2 -u | tr -d \! ) )
+    # If no script is found, then the scripts array contains only one element '.'
+    if test "$scripts" = '.' ; then
+        Log "Finished running empty '$stage' stage"
+        return 0
+    fi
+    # Source() the scripts one by one:
+    local script=''
+    for script in "${scripts[@]}" ; do
+        # Tell the user about unexpected named scripts.
+        # All scripts must be named with a leading three-digit number NNN_something.sh
+        # otherwise the above sorting by the 3-digit number may not work as intended
+        # so that scripts without leading 3-digit number are likely run in wrong order:
+        grep -q '^[0-9][0-9][0-9]_' <<< $( basename $script ) || LogPrintError "Script '$script' without leading 3-digit number 'NNN_' is likely run in wrong order"
+        Source $SHARE_DIR/$stage/"$script"
+    done
+    Log "Finished running '$stage' stage in $(( SECONDS - start_SourceStage )) seconds"
+}
+
 

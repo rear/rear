@@ -71,7 +71,7 @@ if is_true "$YUM_BACKUP_FILES_FULL_EXCL" ; then
         	curCmdLen=$(( ${#cmd2} + 1 ))
         	[ $curCmdLen -gt $maxArgLen ] && {
 			# Simple "something is still going on" indicator by printing dots
-			# directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+			# directly to stdout which is fd7 (see lib/_framework-setup-and-functions.sh)
 			# and not using a Print function to always print to the original stdout
 			# i.e. to the terminal wherefrom the user has started "rear recover":
 			echo -n "." >&7

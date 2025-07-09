@@ -8,7 +8,7 @@
 
 # Nothing to do when there is no BACKUP_PROG_CRYPT_KEY value.
 # Avoid that the BACKUP_PROG_CRYPT_KEY value is shown in debugscript mode
-# cf. the comment of the UserInput function in lib/_input-output-functions.sh
+# cf. the comment of the UserInput function in lib/_framework-setup-and-functions.sh
 # how to keep things confidential when usr/sbin/rear is run in debugscript mode
 # ('2>>/dev/$SECRET_OUTPUT_DEV' should be sufficient here because 'test' does not output on stdout):
 { test "$BACKUP_PROG_CRYPT_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV || return 0
