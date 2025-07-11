@@ -15,7 +15,19 @@ save_original_file() {
     local extension="$2"
     test "$extension" || extension=$WORKFLOW.$MASTER_PID
     local saved_original_file="$filename.$START_DATE_TIME_NUMBER.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
-    cp -ar $filename $saved_original_file && SAVED_ORIGINAL_FILES+=( "$filename" )
+    local cp_exit_code=0
+    cp -ar $filename $saved_original_file && SAVED_ORIGINAL_FILES+=( "$filename" ) || cp_exit_code=$?
+    if ! is_true "$EXPOSE_SECRETS" ; then
+        if test "$filename" = "$LAYOUT_FILE" ; then
+            # Garble possible LUKS passwords in a saved disklayout.conf
+            # see https://github.com/rear/rear/pull/3490
+            # and https://github.com/rear/rear/issues/3483
+            if ! sed -i -e "\|^crypt |s|password=[^[:space:]]*|password=XXXXX|" "$saved_original_file" ; then
+                LogPrintError "Failed to garble LUKS passwords in 'crypt' entries in $saved_original_file"
+            fi
+        fi
+    fi
+    return $cp_exit_code
 }
 
 # Restore the saved original content of the original file named $1
@@ -26,6 +38,12 @@ restore_original_file() {
     test "$extension" || extension=$WORKFLOW.$MASTER_PID
     local saved_original_file="$filename.$START_DATE_TIME_NUMBER.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
     test -r "$saved_original_file" || return 1
+    if ! is_true "$EXPOSE_SECRETS" ; then
+        if test "$filename" = "$LAYOUT_FILE" ; then
+            # Inform the user that LUKS passwords (if any) became garbled by save_original_file() before:
+            grep '^crypt .*password=XXXXX' $saved_original_file && LogPrintError "LUKS passwords are garbled in 'crypt' entries in restored $filename"
+        fi
+    fi
     cp -ar $saved_original_file $filename
 }
 

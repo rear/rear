@@ -74,8 +74,25 @@ create_crypt() {
                 ;;
             (password)
                 if test $value ; then
-                    if password_file=$( mktemp $TMPDIR/LUKS_password.XXXXXXXXXXXXXXX ) ; then
-                        echo "$value" >$password_file
+                    if password_file=$( store_value_in_tmp_file "$value" "LUKS password" ) ; then
+                        if ! is_true "$EXPOSE_SECRETS" ; then
+                            AddExitTask "rm -f $password_file"
+                            # Replace the LUKS password value by XXXXX in disklayout.conf after it was copied into a file
+                            # to so it is still visible that some LUKS password was set during "rear recover" but its secret value
+                            # is not visible after "rear recover" in /var/log/rear/recover/layout/disklayout.conf on the recreated system
+                            # see https://github.com/rear/rear/pull/3489#issuecomment-3032804671
+                            # and https://github.com/rear/rear/issues/3483#issuecomment-3032853792
+                            # There is at last password=<password> after $source_device so the 'sed' line matching pattern can have a trailing space
+                            # which is required to ensure that e.g. $source_device /dev/sda1 cannot falsely match another source_device /dev/sda12
+                            # but do not require that password=... must be last regardless that the 'crypt' entry syntax list is last in
+                            # https://github.com/rear/rear/blob/master/doc/user-guide/06-layout-configuration.adoc#disk-layout-file-syntax
+                            # see also https://github.com/rear/rear/pull/3490#issuecomment-3035957764
+                            # Because $target_device and $source_device contain slashes sed '/regexp/' cannot be used
+                            # so sed '\|regexp|' is used (under the assumption that no | character is in $target_device or $source_device):
+                            if ! sed -i -e "\|^crypt $target_device $source_device |s|password=[^[:space:]]*|password=XXXXX|" "$LAYOUT_FILE" ; then
+                                LogPrintError "Failed to garble LUKS password in 'crypt $target_device $source_device' entry in $LAYOUT_FILE"
+                            fi
+                        fi
                     else
                         LogPrintError "Failed to handle LUKS password in 'crypt $target_device $source_device' entry in $LAYOUT_FILE"
                     fi
@@ -161,8 +178,25 @@ open_crypt() {
                 ;;
             (password)
                 if test $value ; then
-                    if password_file=$( mktemp $TMPDIR/LUKS_password.XXXXXXXXXXXXXXX ) ; then
-                        echo "$value" >$password_file
+                    if password_file=$( store_value_in_tmp_file "$value" "LUKS password" ) ; then
+                        if ! is_true "$EXPOSE_SECRETS" ; then
+                            AddExitTask "rm -f $password_file"
+                            # Replace the LUKS password value by XXXXX in disklayout.conf after it was copied into a file
+                            # to so it is still visible that some LUKS password was set during "rear recover" but its secret value
+                            # is not visible after "rear recover" in /var/log/rear/recover/layout/disklayout.conf on the recreated system
+                            # see https://github.com/rear/rear/pull/3489#issuecomment-3032804671
+                            # and https://github.com/rear/rear/issues/3483#issuecomment-3032853792
+                            # There is at last password=<password> after $source_device so the 'sed' line matching pattern can have a trailing space
+                            # which is required to ensure that e.g. $source_device /dev/sda1 cannot falsely match another source_device /dev/sda12
+                            # but do not require that password=... must be last regardless that the 'crypt' entry syntax list is last in
+                            # https://github.com/rear/rear/blob/master/doc/user-guide/06-layout-configuration.adoc#disk-layout-file-syntax
+                            # see also https://github.com/rear/rear/pull/3490#issuecomment-3035957764
+                            # Because $target_device and $source_device contain slashes sed '/regexp/' cannot be used
+                            # so sed '\|regexp|' is used (under the assumption that no | character is in $target_device or $source_device):
+                            if ! sed -i -e "\|^crypt $target_device $source_device |s|password=[^[:space:]]*|password=XXXXX|" "$LAYOUT_FILE" ; then
+                                LogPrintError "Failed to garble LUKS password in 'crypt $target_device $source_device' entry in $LAYOUT_FILE"
+                            fi
+                        fi
                     else
                         LogPrintError "Failed to handle LUKS password in 'crypt $target_device $source_device' entry in $LAYOUT_FILE"
                     fi

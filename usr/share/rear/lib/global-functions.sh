@@ -1082,4 +1082,58 @@ function mathlib_calculate()
     bc -ql <<<"result=$@ ; scale=0 ; result / 1 "
 }
 
-
+# Store a possibly secret value $1 (could be empty or blank) in a new created temporary file.
+# The temporary file is created in ReaR's $TMP_DIR (which is $BUILD_DIR/tmp - see usr/sbin/rear).
+# The name (full path) of the temporary file is output on stdout.
+# $2 is an optional short string to show the user what kind of value it is, e.g. "LUKS password".
+# When $2 is not specified "some value" is used as fallback (you may specify $2 to be empty).
+# You must specify the positional argument $2 when a positional argument $3 should be specified.
+# $3 is the optional word 'AddExitTask_rm_tmp_file' to specify that the temporary file
+# should get removed when sbin/rear exits via 'AddExitTask "rm -f $tmp_file"'
+# except sbin/rear is run with the --expose-secrets option set.
+# 'AddExitTask_rm_tmp_file' requires that store_value_in_tmp_file() is not called in a subshell
+# because AddExitTask() does not work when it is called in a subshell.
+# For example
+#   { password_file=$( store_value_in_tmp_file "$password" 'some password' 'AddExitTask_rm_tmp_file' ) ; } 2>>/dev/$SECRET_OUTPUT_DEV
+# cannot work because $(...) is a subshell so something like
+#   { password_file=$( store_value_in_tmp_file "$password" 'some password' ) && AddExitTask "rm -f $password_file" ; } 2>>/dev/$SECRET_OUTPUT_DEV
+# should be used instead provided this is not called in another subshell
+# cf. https://github.com/rear/rear/pull/3490#issuecomment-3049047773
+function store_value_in_tmp_file()
+{
+    # Avoid leaking out the possibly secret value $1 by not assigning it to a local variable.
+    local rm_tmp_file=''
+    local rm_tmp_file_value='AddExitTask_rm_tmp_file'
+    local kind_of_value='some value'
+    local kind_of_value_alnum=''
+    local tmp_file=''
+    test $# -lt 1 && BugError "store_value_in_tmp_file() called without argument"
+    test $# -gt 3 && BugError "store_value_in_tmp_file() called with more than 3 arguments"
+    if test $# -eq 3 ; then
+        rm_tmp_file="$3"
+        if test "$rm_tmp_file" = "$rm_tmp_file_value" ; then
+            test $BASH_SUBSHELL -eq 0 || BugError "store_value_in_tmp_file() called in subshell where '$rm_tmp_file_value' does not work"
+        else
+            BugError "store_value_in_tmp_file() third argument is not '$rm_tmp_file_value'"
+        fi
+    fi
+    test $# -ge 2 && kind_of_value="$2"
+    test "$kind_of_value" = "$rm_tmp_file_value" && BugError "store_value_in_tmp_file() has '$rm_tmp_file_value' as second argument"
+    kind_of_value_alnum="$( echo "$kind_of_value" | tr -d -c '[:alnum:]' )"
+    if ! tmp_file=$( mktemp $TMP_DIR/$kind_of_value_alnum.XXXXXXXXXXXXXXX ) ; then
+        LogPrintError "Could not store $kind_of_value into temporary file ('mktemp' failed in $TMP_DIR)"
+        return 1
+    fi
+    if test "$rm_tmp_file" = "$rm_tmp_file_value" ; then
+        # Avoid leaving behind the possibly secret value when KEEP_BUILD_DIR is set
+        # so ensure the temporary file gets removed when sbin/rear exits
+        # except sbin/rear is run with the --expose-secrets option set:
+        is_true "$EXPOSE_SECRETS" || AddExitTask "rm -f $tmp_file"
+    fi
+    # Avoid leaking out the possibly secret value via 'set -x' in debug mode:
+    if ! { echo "$1" >$tmp_file ; } 2>>/dev/$SECRET_OUTPUT_DEV ; then
+        LogPrintError "Failed to store $kind_of_value into $tmp_file"
+        return 1
+    fi
+    echo "$tmp_file"
+}
