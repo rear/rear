@@ -141,5 +141,5 @@ fi
 # as DHCP could be activated manually on the rescue system.
 # We made our own /etc/dhclient.conf and /bin/dhclient-script files (no need to copy these
 # from the local Linux system for dhclient). For dhcpcd we have /bin/dhcpcd.sh foreseen.
-COPY_AS_IS+=( "/etc/localtime" "/usr/lib/dhcpcd/*" )
+COPY_AS_IS+=( "/etc/localtime" "/usr/lib/dhcpcd/*" "/etc/dhcpcd.conf" )
 PROGS+=( arping ipcalc usleep "${dhcp_clients[@]}" )
