@@ -25,6 +25,10 @@ EXIT_TASKS=("")
 
 # Add $* as an exit task to be done at the end:
 function AddExitTask () {
+    # AddExitTask() does not work when it is called in a subshell
+    # because adding to the EXIT_TASKS array in a subshell has no effect in the main shell
+    # cf. https://github.com/rear/rear/pull/3490#issuecomment-3049047773
+    test $BASH_SUBSHELL -eq 0 || BugError "AddExitTask called in subshell where it does not work"
     # NOTE: We add the task at the beginning to make sure that they are executed in reverse order.
     # I use $* on purpose because I want to get one string from all args!
     EXIT_TASKS=( "$*" "${EXIT_TASKS[@]}" )
@@ -35,6 +39,10 @@ function AddExitTask () {
 # TODO: I <jsmeix@suse.de> wonder why debug messages are suppressed at all?
 # I.e. I wonder about the reason behind why QuietAddExitTask is needed?
 function QuietAddExitTask () {
+    # QuietAddExitTask() does not work when it is called in a subshell
+    # because adding to the EXIT_TASKS array in a subshell has no effect in the main shell
+    # cf. https://github.com/rear/rear/pull/3490#issuecomment-3049047773
+    test $BASH_SUBSHELL -eq 0 || BugError "QuietAddExitTask called in subshell where it does not work"
     # NOTE: We add the task at the beginning to make sure that they are executed in reverse order.
     # I use $* on purpose because I want to get one string from all args!
     EXIT_TASKS=( "$*" "${EXIT_TASKS[@]}" )
@@ -45,6 +53,10 @@ function RemoveExitTask () {
     local removed="" exit_tasks=""
     for (( c=0 ; c<${#EXIT_TASKS[@]} ; c++ )) ; do
         if test "${EXIT_TASKS[c]}" = "$*" ; then
+            # RemoveExitTask() does not work when it is called in a subshell
+            # because changing the EXIT_TASKS array in a subshell has no effect in the main shell
+            # cf. https://github.com/rear/rear/pull/3490#issuecomment-3049047773
+            test $BASH_SUBSHELL -eq 0 || BugError "RemoveExitTask called in subshell where it does not work"
             # the ' ' protect from bash expansion, however unlikely to have a file named EXIT_TASKS in pwd...
             unset 'EXIT_TASKS[c]'
             removed=yes
