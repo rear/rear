@@ -72,6 +72,11 @@ function cove_get_status() {
     "${COVE_CLIENT_TOOL}" control.status.get
 }
 
+# Shows progress of running session (%, ETA)
+function cove_show_progress() {
+    "${COVE_CLIENT_TOOL}" show.progress-bar 1>&7 2>&8
+}
+
 # Downloads the Backup Manager installer
 function cove_download_bm_installer() {
     if [ -z "${COVE_INSTALLER_URL}" ]; then
@@ -194,7 +199,7 @@ function cove_install_bm() {
             local link_name="${COVE_INSTALL_DIR}"
             cove_create_symlink "${target}" "${link_name}" || return $?
         else
-            cove_dirs=(bin etc lib sbin share temp var/log var/storage)
+            cove_dirs=(bin etc lib sbin share var/log var/storage)
             for cove_dir in "${cove_dirs[@]}"; do
                 local target="${target_install_dir}/${cove_dir}"
                 local link_name="${COVE_INSTALL_DIR}/${cove_dir}"
@@ -205,7 +210,7 @@ function cove_install_bm() {
 
     UserOutput ""
     UserOutput "Installing Backup Manager..."
-    "${COVE_INSTALLER_PATH}" --target "${COVE_TMPDIR}/mxb" 1>&7 2>&8 || return $?
+    TMPDIR="$COVE_TMPDIR" "${COVE_INSTALLER_PATH}" --target "${COVE_TMPDIR}/mxb" 1>&7 2>&8 || return $?
 
     # Extract the ReaR tarball because the installer does not do it in the rescue environment
     mkdir -p "${target_install_dir}/rear"
@@ -308,10 +313,8 @@ cove_print "Waiting for the restore to be started... "
 cove_wait_for 'local status="$(cove_get_status)"; [ "${status}" = "Scanning" -o "${status}" = "Restore" ]' 2 \
     && cove_print_done || { cove_print_error; Error "The restore has not started."; }
 
-# Wait for the restore to be finished
-cove_print "Waiting for the restore to be finished... "
-cove_wait_for 'local status="$(cove_get_status)"; [ "${status}" = "Idle" ]' 15 \
-    && cove_print_done || { cove_print_error; Error "The restore has not finished."; }
+# Show progress bar for restore session
+cove_show_progress || Error "Restore failed."
 
 # Stop ProcessController process
 cove_stop_pc
