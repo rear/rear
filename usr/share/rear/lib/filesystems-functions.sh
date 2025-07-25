@@ -284,6 +284,19 @@ function xfs_parse
 
     done
 
+  if [ "$BACKUP" = "COVE" ]; then
+      # Disable unknown features for source xfs_info in Cove Rescue Media
+      for feat in "rmapbt" "reflink" "bigtime" "inobtcount" "nrext64"; do
+          if [[ ! $xfs_opts =~ $feat ]]; then
+              if [ "$feat" = "nrext64" ]; then
+                  xfs_opts+="-i $feat=0 "
+              else
+                  xfs_opts+="-m $feat=0 "
+              fi
+          fi
+      done
+  fi
+
   # Output xfs options for further use
   echo "$xfs_opts"
 }
