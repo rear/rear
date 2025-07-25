@@ -234,11 +234,11 @@ for binary in $( find "$ROOTFS_DIR" -xdev -type f \( -executable -o -name '*.so'
         if actually_found_library="$( find "$ROOTFS_DIR" -xdev -printf '/%P\n' | grep "$not_found_library\$" )" ; then
             # Show files from inside the recovery system to the user as relative path without leading slashes (extglob is set in usr/sbin/rear):
             actually_found_library_relpath="${actually_found_library##+(/)}"
-
+            # When what was found in the ReaR recovery system is not an actual library but a symlink
+            # verify that its symlink target exist within the ReaR recovery system,
+            # see https://github.com/rear/rear/issues/3414
             if test -L "$actually_found_library" ; then
-                # When what was found in the ReaR recovery system is not an actual library but a symlink
-                # verify that its symlink target exist within the ReaR recovery system, see https://github.com/rear/rear/issues/3414
-                # so "chroot $ROOTFS_DIR" is crucial to avoid a false positive result when the symlink is an absolute path
+                # "chroot $ROOTFS_DIR" is crucial to avoid a false positive result when the symlink is an absolute path
                 # and a file with that absolute path exist on the original system but not within the ReaR recovery system.
                 # 'readlink -e something' shows the filename when something is one or more files and exits with zero exit code
                 # 'readlink -e something' shows the symlink target when something is a symlink and exits with zero exit code
