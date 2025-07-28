@@ -278,24 +278,17 @@ function xfs_parse
 
             # Add option to mkfs.xfs option list
             xfs_opts+="${xfs_param_opt[$i]} $var=$val "
+        elif [ "$BACKUP" = "COVE" ]; then
+            # Disable unknown features for source xfs_info in Cove Rescue Media
+            local xfs_features=("rmapbt" "reflink" "bigtime" "inobtcount" "nrext64")
+            if IsInArray "${xfs_param_name[$i]}" "${xfs_features[@]}"; then
+                xfs_opts+="${xfs_param_opt[$i]} ${xfs_param_name[$i]}=0 "
+            fi
         fi
 
         i=$((i+1))
 
     done
-
-  if [ "$BACKUP" = "COVE" ]; then
-      # Disable unknown features for source xfs_info in Cove Rescue Media
-      for feat in "rmapbt" "reflink" "bigtime" "inobtcount" "nrext64"; do
-          if [[ ! $xfs_opts =~ $feat ]]; then
-              if [ "$feat" = "nrext64" ]; then
-                  xfs_opts+="-i $feat=0 "
-              else
-                  xfs_opts+="-m $feat=0 "
-              fi
-          fi
-      done
-  fi
 
   # Output xfs options for further use
   echo "$xfs_opts"

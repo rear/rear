@@ -49,9 +49,14 @@ function cove_show_progress() {
     "${COVE_CLIENT_TOOL}" show.progress-bar 1>&7 2>&8
 }
 
+# Returns ProcessController's process id
+function get_pc_pid() {
+    ps aux | awk -v pc_name=${PC_NAME} '$0 ~ pc_name && !/awk/ {print $2}'
+}
+
 # Stops ProcessController process
 function cove_stop_pc() {
-    local pid="$(ps aux | awk -v pc_name=ProcessController '$0 ~ pc_name && !/awk/ {print $2}')"
+    local pid="$(get_pc_pid)"
     [ -z "$pid" ] || { /bin/kill -TERM "${pid}" && \
     while [ -n "$pid" ]; do \
         sleep 1; \
