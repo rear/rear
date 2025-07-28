@@ -101,7 +101,7 @@ Finally reboot the recreated system.
 For more internal details and some background information see
 https://github.com/rear/rear/issues/1088
 
-=== How to recover with multiple backups in unattended mode
+=== How to recover with multiple backups in 'auto_recover'/'automatic' or 'unattended' mode
 
 The RECOVERY_COMMANDS array specifies the "rear recover" commands
 that are automatically called after the ReaR recovery system has started up
@@ -113,8 +113,10 @@ rear -C basic_system recover
 rear -C home_backup restoreonly
 rear -C opt_backup restoreonly
 ----
-are manually run one after the other to recover with multiple backups
-those commands need to be specified as RECOVERY_COMMANDS array for example like
+are manually typed in one after the other 
+those commands need to be specified as RECOVERY_COMMANDS array
+to recover with multiple backups in 'auto_recover'/'automatic' or 'unattended' mode
+for example like
 ----
 RECOVERY_COMMANDS=( "echo Unattended recovery starts in $USER_INPUT_INTERRUPT_TIMEOUT seconds"
                     "sleep $USER_INPUT_INTERRUPT_TIMEOUT"
