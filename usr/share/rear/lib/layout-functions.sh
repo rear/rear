@@ -553,7 +553,14 @@ get_partition_start() {
     echo $start
 }
 
-# Get the type of a layout component
+# Get the type of a layout component:
+# It is OK when one same layout component is stored in disktodo.conf
+# several times with one same component type (then 'uniq' results one value)
+# but it is a bug in ReaR when one same layout component is stored
+# in disktodo.conf several times with different component types
+# (then 'uniq' results more than one value),
+# see https://github.com/rear/rear/issues/3400#issuecomment-2659261782
+# and https://github.com/rear/rear/pull/3403
 get_component_type() {
     # function replies with 'disk', 'part', 'lvmgrp', 'lvmvol', 'lvmdev', 'fs'
     local component="$1"
