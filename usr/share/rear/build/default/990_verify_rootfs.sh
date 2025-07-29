@@ -79,6 +79,8 @@ local not_found_library_relpath=""
 local junk=""
 local actually_found_library=""
 local actually_found_library_relpath=""
+local actually_found_library_symlink_target=""
+local actually_found_library_symlink_target_relpath=""
 local actually_missing_libraries="no"
 # Third-party backup tools may use LD_LIBRARY_PATH to find their libraries
 # so that for testing such third-party backup tools we must also use their
@@ -228,12 +230,31 @@ for binary in $( find "$ROOTFS_DIR" -xdev -type f \( -executable -o -name '*.so'
         # so e.g. /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/usr/lib64/libparted.so.2.0.1 is output as /usr/lib64/libparted.so.2.0.1
         # to ensure that grep matches e.g. when not_found_library="/usr/lib64/libparted.so.2.0.1" (has a leading slash).
         # Let grep match to the end of the line to avoid that falsely a prefix matches
-        # e.g. when not_found_library="libparted.so.2" does not exist but libparted.so.2.0.1 exists:
+        # e.g. when not_found_library="/usr/lib64/libparted.so.2" does not exist but /usr/lib64/libparted.so.2.0.1 exists:
         if actually_found_library="$( find "$ROOTFS_DIR" -xdev -printf '/%P\n' | grep "$not_found_library\$" )" ; then
-            # Show files from inside the recovery system to the user as relative path without leading slashes
-            # (extglob is set in usr/sbin/rear):
+            # Show files from inside the recovery system to the user as relative path without leading slashes (extglob is set in usr/sbin/rear):
             actually_found_library_relpath="${actually_found_library##+(/)}"
-            LogPrint "$binary_relpath requires $not_found_library_relpath which exists as $actually_found_library_relpath"
+            # When what was found in the ReaR recovery system is not an actual library but a symlink
+            # verify that its symlink target exist within the ReaR recovery system,
+            # see https://github.com/rear/rear/issues/3414
+            if test -L "$actually_found_library" ; then
+                # "chroot $ROOTFS_DIR" is crucial to avoid a false positive result when the symlink is an absolute path
+                # and a file with that absolute path exist on the original system but not within the ReaR recovery system.
+                # 'readlink -e something' shows the filename when something is one or more files and exits with zero exit code
+                # 'readlink -e something' shows the symlink target when something is a symlink and exits with zero exit code
+                # 'readlink -e something' shows nothing when something is no file or a broken symlink and exits with exit code 1
+                # 'readlink -e something' shows nothing on stdout but an error on stderr when something is empty and exits with exit code 1
+                if actually_found_library_symlink_target="$( chroot "$ROOTFS_DIR" /bin/bash --login -c "readlink -e '$actually_found_library'" )" ; then
+                    # Show files from inside the recovery system to the user as relative path without leading slashes (extglob is set in usr/sbin/rear):
+                    actually_found_library_symlink_target_relpath="${actually_found_library_symlink_target##+(/)}"
+                    LogPrint "$binary_relpath requires $not_found_library_relpath which exists as symlink $actually_found_library_relpath with target $actually_found_library_symlink_target_relpath"
+                else
+                    actually_missing_libraries="yes"
+                    LogPrint "$binary_relpath requires $not_found_library_relpath which exists as dangling symlink $actually_found_library_relpath"
+                fi
+            else
+                LogPrint "$binary_relpath requires $not_found_library_relpath which exists as $actually_found_library_relpath"
+            fi
         else
             actually_missing_libraries="yes"
             # Show only the missing libraries to the user to not flood his screen with tons of other ldd output lines:
