@@ -220,10 +220,10 @@ function create_fs () {
             fi
             ;;
         (btrfs)
-            # Staring with btrfs-progs v5.15, the free space tree (space_cache=v2)
+            # Starting with btrfs-progs v5.15, the free space tree (space_cache=v2)
             # is the default for all newly created filesystems. Since Cove Rescue Media
             # uses btrfs-progs v6.2, it needs to disable the free space tree
-            # in case it wan't enabled on the source system.
+            # in case it wasn't enabled on the source system.
             btrfs_opts=""
             if [ "$BACKUP" = "COVE" ] && [[ ! "$options" == *"space_cache=v2"* ]]; then
                 btrfs_opts+="-R ^free-space-tree "
