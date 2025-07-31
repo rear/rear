@@ -78,7 +78,7 @@ Professional services and support are available, see https://relax-and-recover.o
     usage information
 
 -c DIR::
-    alternative config directory instead of /etc/rear
+    alternative config directory instead of /etc/rear (not supported for recovery)
 
 -C CONFIG::
     additional config files (absolute path or relative to config directory)
