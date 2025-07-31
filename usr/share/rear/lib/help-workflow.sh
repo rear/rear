@@ -23,7 +23,7 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:
  -h --help              usage information (this text)
- -c DIR                 alternative config directory instead of $CONFIG_DIR (not supported for recovery)
+ -c DIR                 alternative config directory instead of $CONFIG_DIR (not supported during recovery)
  -C CONFIG              additional config files (absolute path or relative to config directory)
  -d                     debug mode: run many commands verbosely with debug messages in the log file (also sets -v)
  -D                     debugscript mode: log executed commands via 'set -x' (also sets -v and -d)
