@@ -23,20 +23,19 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 
 Available options:
  -h --help              usage information (this text)
- -c DIR                 alternative config directory; instead of $CONFIG_DIR
- -C CONFIG              additional config files; absolute path or relative to config directory
- -d                     debug mode; run many commands verbosely with debug messages in log file (also sets -v)
- -D                     debugscript mode; log executed commands via 'set -x' (also sets -v and -d)
- --debugscripts SET     same as -d -v -D but debugscript mode with 'set -SET'
- -r KERNEL              kernel version to use; currently '$KERNEL_VERSION'
- -s                     simulation mode; show what scripts are run (without executing them)
- -S                     step-by-step mode; acknowledge each script individually
- -v                     verbose mode; show messages what $PRODUCT is doing on the terminal or show verbose help
- -n --non-interactive   non-interactive mode; aborts when any user input is required (experimental)
+ -c DIR                 alternative config directory instead of $CONFIG_DIR (not supported for recovery)
+ -C CONFIG              additional config files (absolute path or relative to config directory)
+ -d                     debug mode: run many commands verbosely with debug messages in the log file (also sets -v)
+ -D                     debugscript mode: log executed commands via 'set -x' (also sets -v and -d)
+ --debugscripts SET     same as -D but debugscript mode with 'set -SET'
+ -r KERNEL              kernel version to use (by default the version of the running kernel) currently '$KERNEL_VERSION'
+ -s                     simulation mode: show what scripts are run without executing them
+ -S                     step-by-step mode: acknowledge each script individually
+ -v                     verbose mode: show messages what $PRODUCT is doing on the terminal or show verbose help
+ -n --non-interactive   non-interactive mode: abort in UserInput() if default input does not make ReaR proceed (experimental)
  -e --expose-secrets    do not suppress output of confidential values (passwords, encryption keys) in particular in the log file
  -p --portable          allow running any ReaR workflow, especially recover, from a git checkout or rear source archive
  -V --version           version information
-
 
 List of commands:
 EOF
