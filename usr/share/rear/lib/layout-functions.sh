@@ -1556,4 +1556,30 @@ delete_dummy_partitions_and_resize_real_ones() {
     last_partition_number=0
 }
 
+# vgcfgrestore can properly restore only volume groups that do not use
+# any kernel metadata. All volume types except linear and striped use
+# kernel metadata.
+# Check whether a VG (given as /dev/<vgname> in the first argument)
+# doesn't contain any LVs that use kernel metadata.
+# If the function returns true, we can safely use vgcfgrestore to restore the VG.
+function lvmgrp_supports_vgcfgrestore() {
+    if is_true "${FORCE_VGCFGRESTORE-no}"; then
+        # If we are willing to use vgcfgrestore --force and then remove broken volumes,
+        # then everything can be considered supported. Don't do it by default though.
+        return 0
+    fi
+
+    local lvmvol vgrp lvname size layout kval
+
+    local supported_layouts=("linear" "striped")
+
+    while read lvmvol vgrp lvname size layout kval; do
+        [ "$vgrp" == "$1" ] || BugError "vgrp '$vgrp' != '$1'"
+        if ! IsInArray $layout "${supported_layouts[@]}"; then
+            LogPrint "Layout '$layout' of LV '$lvname' in VG '$vgrp' not supported by vgcfgrestore"
+            return 1
+        fi
+    done < <(grep "^lvmvol $1 " "$LAYOUT_FILE")
+}
+
 # vim: set et ts=4 sw=4:
