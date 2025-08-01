@@ -171,6 +171,8 @@ SECRET_OUTPUT_DEV="null"
 EXPOSE_SECRETS=""
 PORTABLE=""
 NON_INTERACTIVE=""
+ALTERNATIVE_CONFIG_DIR=""
+CONFIG_APPEND_FILES=""
 KEEP_BUILD_DIR=""
 KERNEL_VERSION=""
 RECOVERY_MODE=""
@@ -216,7 +218,7 @@ while true ; do
                 echo "$help_note_text"
                 exit 1
             fi
-            CONFIG_DIR="$2"
+            ALTERNATIVE_CONFIG_DIR="$2"
             shift
             ;;
         (-C)
@@ -291,6 +293,45 @@ while true ; do
     shift
 done
 
+# Keep the remaining command line arguments to feed to the workflow:
+ARGS=( "$@" )
+
+# Set RECOVERY_MODE when we are running inside a rescue/recovery system
+# which is normally ReaR's recovery system or alternatively in PORTABLE mode
+# it is a foreign rescue system like the System Rescue CD or the Ubuntu Desktop Live CD,
+# see doc/user-guide/17-Portable-Mode.adoc
+# RECOVERY_MODE is a boolean variable (cf. conf/default.conf) because we need it below
+# to set TMPDIR to ReaR's TMP_DIR only when we are not running inside a rescue/recovery system
+# but we do not yet have lib/global-functions.sh (which contains is_true/is_false) sourced there.
+# In ReaR's recovery system /etc/rear-release is unique (it does not exist otherwise)
+# see build/default/970_add_rear_release.sh that adds it to identify ReaR's rescue environment.
+# PORTABLE mode is meant to be used only to run 'rear recover' within a foreign rescue system,
+# see https://github.com/rear/rear/pull/3206#issuecomment-2122173021
+if test -e "/etc/rear-release" || test "$PORTABLE" ; then
+    RECOVERY_MODE=1
+fi
+
+# Set alternative config directory unless in recovery mode
+# because the contents of an alternative config directory
+# get stored in the ReaR recovery system in /etc/rear
+# so "rear recover" does not work with '-c'
+# see https://github.com/rear/rear/issues/512#issuecomment-68051604
+# and https://github.com/rear/rear/issues/2942#issuecomment-3132425914
+if test "$ALTERNATIVE_CONFIG_DIR" ; then
+    if test "$RECOVERY_MODE" ; then
+        # See the comment about "ReaR basic directories cases" in lib/_framework-setup-and-functions.sh
+        # that within the ReaR recovery system its config directory is always the normal directory /etc/rear
+        echo "ERROR: The '-c' option is not supported within the ReaR rescue/recovery system (its config directory is always $CONFIG_DIR)" >&2
+        exit 1
+    fi
+    if ! test -d "$ALTERNATIVE_CONFIG_DIR" ; then
+        # 'test -d something' is also true when something is a symlink to an existing directory
+        echo "ERROR: The '-c' option argument '$ALTERNATIVE_CONFIG_DIR' is not a directory" >&2
+        exit 1
+    fi
+    CONFIG_DIR="$ALTERNATIVE_CONFIG_DIR"
+fi
+
 # Set workflow to first command line argument or to "help" as fallback:
 if test -z "$WORKFLOW" ; then
     # Usually workflow is now in $1 (after the options and its arguments were shifted above)
@@ -304,9 +345,6 @@ if test -z "$WORKFLOW" ; then
         WORKFLOW=help
     fi
 fi
-
-# Keep the remaining command line arguments to feed to the workflow:
-ARGS=( "$@" )
 
 # The following workflows are always verbose:
 case "$WORKFLOW" in
@@ -347,10 +385,11 @@ test "$EXPOSE_SECRETS" && SECRET_OUTPUT_DEV="stderr"
 # WORKFLOW because for the udev workflow WORKFLOW is set to the actual workflow
 # KERNEL_VERSION because if empty it is set when sourcing config files below:
 readonly ARGS
-readonly CONFIG_APPEND_FILES
+readonly ALTERNATIVE_CONFIG_DIR CONFIG_APPEND_FILES
 readonly DEBUG DEBUGSCRIPTS DEBUGSCRIPTS_ARGUMENT DEBUG_OUTPUT_DEV DISPENSABLE_OUTPUT_DEV
 readonly EXPOSE_SECRETS SECRET_OUTPUT_DEV
 readonly SIMULATE STEPBYSTEP VERBOSE
+readonly RECOVERY_MODE
 
 # The udev workflow is a special case because it is only a wrapper workflow
 # that calls an actual workflow that is specified as $UDEV_WORKFLOW
@@ -580,22 +619,6 @@ fi
 # so that the user can specify what he needs, e.g. for whatever third-party (backup) software
 # see https://github.com/rear/rear/pull/3379#issuecomment-2621021213
 
-# Set RECOVERY_MODE when we are running inside a rescue/recovery system
-# which is normally ReaR's recovery system or alternatively in PORTABLE mode
-# it is a foreign rescue system like the System Rescue CD or the Ubuntu Desktop Live CD,
-# see doc/user-guide/17-Portable-Mode.adoc
-# RECOVERY_MODE is a boolean variable (cf. conf/default.conf) because we need it below
-# to set TMPDIR to ReaR's TMP_DIR only when we are not running inside a rescue/recovery system
-# but we do not yet have lib/global-functions.sh (which contains is_false) sourced here.
-# In ReaR's recovery system /etc/rear-release is unique (it does not exist otherwise)
-# see build/default/970_add_rear_release.sh that adds it to identify ReaR's rescue environment.
-# PORTABLE mode is meant to be used only to run 'rear recover' within a foreign rescue system,
-# see https://github.com/rear/rear/pull/3206#issuecomment-2122173021
-if test -e "/etc/rear-release" || test "$PORTABLE" ; then
-    RECOVERY_MODE='y'
-fi
-readonly RECOVERY_MODE
-
 # Create a sufficiently safe temporary working area BUILD_DIR for ReaR and
 # additionally set TMPDIR to TMP_DIR within BUILD_DIR for programs that are called by ReaR
 # (the latter only when ReaR runs on the original system i.e. when we are not in RECOVERY_MODE):
@@ -751,6 +774,7 @@ if test "$WORKFLOW" != "help" ; then
     LogPrint "$PRODUCT $VERSION / $RELEASE_DATE"
     LogPrint "Running $PROGRAM $WORKFLOW (PID $MASTER_PID date $START_DATE_TIME_STRING)"
     DebugPrint "Command line options: $0 ${CMD_OPTS[*]}"
+    test "$ALTERNATIVE_CONFIG_DIR" && LogPrint "Using config directory '$ALTERNATIVE_CONFIG_DIR'"
     LogPrint "Using log file: $RUNTIME_LOGFILE"
     DebugPrint "Using build area: $BUILD_DIR"
     DebugPrint "$tmpdir_debug_info"
