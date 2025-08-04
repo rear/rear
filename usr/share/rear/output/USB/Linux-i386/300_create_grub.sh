@@ -36,15 +36,6 @@ local grub_version
 grub_version=$( $grub_install_binary --version | awk '{print $NF}' | cut -c1 )
 test "$grub_version" = "2" || Error "Cannot install GRUB as USB bootloader (only GRUB2 is supported, '$grub_install_binary --version' shows '$grub_version')"
 
-# The $BUILD_DIR/outputfs/$USB_PREFIX directory is needed by subsequent scripts
-# like output/USB/Linux-i386/830_copy_kernel_initrd.sh to store kernel and initrd
-# and for parts of the syslinux config in 'syslinux.cfg' if syslinux/extlinux is used
-# but output/USB/Linux-i386/300_create_extlinux.sh also creates it if missing:
-local usb_rear_dir="$BUILD_DIR/outputfs/$USB_PREFIX"
-if [ ! -d "$usb_rear_dir" ] ; then
-    mkdir -p $v "$usb_rear_dir" || Error "Failed to create USB ReaR dir '$usb_rear_dir'"
-fi
-
 # Install and configure GRUB2 as USB bootloader for legacy BIOS boot:
 local usb_boot_dir="$BUILD_DIR/outputfs/boot"
 if [ ! -d "$usb_boot_dir" ] ; then
