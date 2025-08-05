@@ -920,13 +920,15 @@ function is_disk_valid {
     # so both blockdev command stdout and stderr will be in this variable:
     if blockdev_stdout_stderr="$( blockdev --getsize64 "$disk" 2>&1 )" ; then
         if test "$blockdev_stdout_stderr" -gt 0 2>/dev/null ; then
-            # When 'blockdev --getsize64' outputs only a positive integer
+            # When 'blockdev --getsize64' results zero exit code
+            # and when its output is only a positive integer, then
             # we assume this is the correct device size and the device is OK:
             return 0
         fi
     fi
-    # When 'blockdev --getsize64' does not output only a positive integer
-    # things look wrong so we consider the device to be not OK:
+    # When 'blockdev --getsize64' results non-zero exit code
+    # and/or when its output is not only a positive integer, then
+    # things are wrong or look wrong so we consider the device to be not OK:
     echo "$blockdev_stdout_stderr"
     return 1
 }
