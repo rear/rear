@@ -102,8 +102,42 @@ restore_args=(
 )
 [ -z "${COVE_TIMESTAMP}" ] || restore_args+=( -time "${COVE_TIMESTAMP}" )
 
-"${COVE_CLIENT_TOOL}" "${restore_args[@]}"
-StopIfError "Failed to start the restore."
+prompt="Select what to do"
+rear_workflow="rear $WORKFLOW"
+
+unset choices
+choices[0]="Try starting the restore again"
+choices[1]="Use Relax-and-Recover shell and return back to here"
+choices[2]="Abort '$rear_workflow'"
+choice=""
+
+while true; do
+    "${COVE_CLIENT_TOOL}" "${restore_args[@]}" && break || LogPrintError "Failed to start the restore."
+    LogPrint ""
+    while true; do
+        choice="$(UserInput -I COVE_START_RESTORE_CHOICE -p "$prompt" -D "${choices[0]}" "${choices[@]}")"
+        case "$choice" in
+            ("${choices[0]}")
+                break
+                ;;
+            ("${choices[1]}")
+                LogPrint ""
+                LogPrint "Failing to start the restore might be due to unavailable FileSystem"
+                LogPrint "backup sessions or the Backup Manager being in a Suspended state."
+                LogPrint "The following commands might be useful for troubleshooting:"
+                LogPrint "$COVE_CLIENT_TOOL control.status.get"
+                LogPrint "$COVE_CLIENT_TOOL control.session.list"
+                LogPrint ""
+                LogPrint "Type 'exit' to leave the shell and return to the recovery process."
+                LogPrint ""
+                rear_shell ""
+                ;;
+            ("${choices[2]}")
+                Error "Failed to start the restore."
+                ;;
+        esac
+    done
+done
 
 # Wait for the restore to be started
 cove_print "Waiting for the restore to be started... "
@@ -111,7 +145,40 @@ cove_wait_for 'local status="$(cove_get_status)"; [ "${status}" = "Scanning" -o 
     && cove_print_done || { cove_print_error; Error "The restore has not started."; }
 
 # Show progress bar for restore session
-cove_show_progress || Error "Restore failed."
+
+unset choices
+choices[0]="Use Relax-and-Recover shell"
+choices[1]="Abort '$rear_workflow'"
+choice=""
+
+if ! cove_show_progress; then
+    available_disk_space=$(df -hP "$TARGET_FS_ROOT" | tail -1 | awk '{print $4}')
+    LogPrint ""
+    LogPrint "Restore failed."
+    LogPrint "Info: Restore may fail due to insufficient available disk space. Available disk space: $available_disk_space."
+    LogPrint ""
+
+    while true; do
+        choice="$(UserInput -I COVE_FINISH_RESTORE_CHOICE -p "$prompt" -D "${choices[1]}" "${choices[@]}")"
+        case "$choice" in
+            ("${choices[0]}")
+                LogPrint ""
+                LogPrint "The following commands might be useful for troubleshooting:"
+                LogPrint "$COVE_CLIENT_TOOL control.status.get"
+                LogPrint "$COVE_CLIENT_TOOL control.session.list"
+                LogPrint ""
+                LogPrint "Type '$COVE_CLIENT_TOOL show.progress-bar' if a restore session is still in progress."
+                LogPrint "Type 'exit' to leave the shell and return to the recovery process."
+                LogPrint ""
+                rear_shell "Has the restore been completed, and are you ready to continue the recovery?"
+                break
+                ;;
+            ("${choices[1]}")
+                Error "Restore failed."
+                ;;
+        esac
+    done
+fi
 
 # Stop ProcessController process
 cove_stop_pc
