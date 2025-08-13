@@ -1,5 +1,5 @@
 #
-# Create /selinux directory on RHEL 6
+# Create /selinux directory on RHEL and CentOS 6
 #
 
 if [[ "$OS_VENDOR" =~ "RedHat" ]] && [ "${OS_VERSION%%.*}" = "6" ] ; then

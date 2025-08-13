@@ -18,7 +18,7 @@ fi
 
 if [[ "$OS_VENDOR" =~ "RedHat" ]] && [ "${OS_VERSION%%.*}" = "6" ] ; then
     if ! grep -qw "vsyscall=emulate" /proc/cmdline; then
-        Error "RHEL 6 requires enabling vsyscall=emulate in the kernel boot parameters." \
-              "Please reboot the rescue system, press 'e' in GRUB menu, and append 'vsyscall=emulate' in the boot parameters."
+        Error "RHEL and CentOS 6 systems requires enabling vsyscall=emulate in the kernel boot parameters." \
+              "Please reboot the rescue system, press 'e' in the GRUB menu, and append 'vsyscall=emulate' to the boot parameters."
     fi
 fi
