@@ -101,7 +101,7 @@ function create_fs () {
             fi
 
             ext_opts=""
-            if [ "$BACKUP" = "COVE" ] && [[ "$OS_VENDOR" =~ "RedHat" ]] && [ "${OS_VERSION%%.*}" = "6" ] ; then
+            if [ "$BACKUP" = "COVE" ] && [ "$OS_VENDOR" = "RedHatEnterpriseServer" ] && [ "${OS_VERSION%%.*}" = "6" ] ; then
                 if [ "$fstype" = "ext4" ]; then
                     ext_opts="-O ^64bit,^metadata_csum,uninit_bg"
                 fi
