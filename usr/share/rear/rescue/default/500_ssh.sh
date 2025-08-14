@@ -44,6 +44,26 @@ contains_visible_char "${copy_as_is_ssh_files[*]}" && COPY_AS_IS+=( "${copy_as_i
 # Copy the usual SSH programs into the recovery system:
 PROGS+=( ssh sshd scp sftp ssh-agent ssh-keygen ssh-add )
 
+# Copy a helper needed at least on EL 10.
+# Without it, sshd aborts with
+# "/usr/libexec/openssh/sshd-session does not exist or is not executable".
+# sshd -T prints the effective configuration on stdout. This way one
+# does not need to know the path to the sshd configuration file, while
+# avoiding possible issues like the one described in
+# https://github.com/rear/rear/pull/1538#issuecomment-337883867
+# and one also gets automatic support for more complicated setups
+# with configuration snippets like on Debian,
+# see its sshd_config(5) manual page:
+# "Note that the Debian openssh-server package sets several options as stan-
+#  dard in /etc/ssh/sshd_config which are not the default in sshd(8):
+#         -   Include /etc/ssh/sshd_config.d/*.conf
+#  ..."
+# At the same time, the command takes care of removing comments and assigning
+# default values (one would not get them by grepping the configuration file).
+# The path to the helper is the value of the sshdsessionpath option.
+local sshdsessionpath="$( sshd -T | awk '$1=="sshdsessionpath" { print $2 }' )"
+test "$sshdsessionpath" && COPY_AS_IS+=( "$sshdsessionpath" )
+
 # Copy a sftp-server program (e.g. /usr/lib/ssh/sftp-server) into the recovery system (if exists).
 # Because only OpenSSH >= 3.1 is supported where /etc/ssh/ is the default directory for configuration files
 # only /etc/ssh/sshd_config is inspected to grep for a sftp-server program therein
