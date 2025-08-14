@@ -15,10 +15,3 @@ done
 if [[ "${REAR_DIR_PREFIX}/" == "${COVE_INSTALL_DIR}/"* ]]; then
     Error "ReaR can not be executed from COVE_INSTALL_DIR"
 fi
-
-if [[ "$OS_VENDOR" =~ "RedHat" ]] && [ "${OS_VERSION%%.*}" = "6" ] ; then
-    if ! grep -qw "vsyscall=emulate" /proc/cmdline; then
-        Error "RHEL and CentOS 6 systems requires enabling vsyscall=emulate in the kernel boot parameters." \
-              "Please reboot the rescue system, press 'e' in the GRUB menu, and append 'vsyscall=emulate' to the boot parameters."
-    fi
-fi
