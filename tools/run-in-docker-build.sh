@@ -2,6 +2,9 @@
 # TODO: Add support for GRUB2
 # TODO: Use more fine grained OS version detection to install appropriate packages, instead of trial-and-error
 
+# Example to start interactive docker image of sle15:
+# tools/run-in-docker registry.suse.com/suse/sle15  -- -i
+
 exec </dev/null # no interactive input
 
 function die() {
@@ -22,10 +25,12 @@ if type -p apt-get &>/dev/null; then
 elif type -p zypper &>/dev/null; then
     echo "Patching for SUSE"
     zypper --no-gpg-checks --quiet --non-interactive install \
-        "rubygem(ronn)" sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux portmap rpcbind iproute2 nfs-client xorriso mkisofs util-linux psmisc procps \
+        sysvinit-tools kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux portmap rpcbind iproute2 nfs-client xorriso mkisofs util-linux psmisc procps \
         make git rpm-build || die "Failed to install required packages"
     zypper --no-gpg-checks --quiet --non-interactive install 'rubygem(asciidoctor)' ||
         zypper --no-gpg-checks --quiet --non-interactive install asciidoc xmlto || die "Failed to install asciidoctor or asciidoc"
+    zypper --no-gpg-checks --quiet --non-interactive install 'rubygem(ronn)' ||
+	zypper --no-gpg-checks --quiet --non-interactive install ruby2.5-rubygem-ronn || die "Failed to install rubygem-ronn"
 
 elif type -p pacman &>/dev/null; then
     echo "Patching for Arch"

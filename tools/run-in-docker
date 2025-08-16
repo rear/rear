@@ -12,7 +12,7 @@
 # Define the list of supported images
 declare -r IMAGES=(
     ubuntu:{20.04,22.04,24.04}
-    debian:{10,11,12,unstable}
+    debian:{11,12,unstable}
     opensuse/leap:15
     registry.suse.com/suse/sle15
     centos:8 # discontinued
