@@ -1,5 +1,4 @@
-= Support for TCG Opal 2-compliant Self-Encrypting Disks
-:sedutil-cli-version: 1.15.1
+# Support for TCG Opal 2-compliant Self-Encrypting Disks
 
 Beginning with version 2.4, Relax-and-Recover supports self-encrypting disks
 (SEDs) compliant with the TCG Opal 2 specification.
@@ -16,93 +15,84 @@ Self-encrypting disk support includes
 * setting up SEDs, including assigning a disk password,
 * providing a pre-boot authentication (PBA) system to unlock SEDs at boot time.
 
-== Prerequisites
+## Prerequisites
 
 To enable Relax-and-Recover's TCG Opal 2 support, install the `sedutil-cli`
 (version {sedutil-cli-version}) executable into a directory within root's search
 path. `sedutil-cli` is available for
-https://github.com/Drive-Trust-Alliance/exec/blob/master/sedutil_LINUX.tgz?raw=true[download from Drive Trust Alliance]
+[download from Drive Trust Alliance](https://github.com/Drive-Trust-Alliance/exec/blob/master/sedutil_LINUX.tgz?raw=true)
 (check version compatibility), or see
 <<How to Build sedutil-cli Version {sedutil-cli-version}>>.
 
-== Quick Start: Setting up Self-Encrypting Disks
+## Quick Start: Setting up Self-Encrypting Disks
 
 NOTE: This section assumes that ReaR was installed from a package repository. If you are using ReaR locally from GitHub: `cd` into the project's base directory, use the configuration file `etc/rear/local.conf`, invoke `usr/sbin/rear`.
 
-=== Step 1: Install Prerequisites
-[arabic]
-. Download the low-level utility `sedutil-cli` (version 1.15.1) from https://github.com/Drive-Trust-Alliance/exec/blob/master/sedutil_LINUX.tgz?raw=true[Drive-Trust-Alliance on GitHub].
-. Install it into a directory within root's search path (e.g. `/usr/local/sbin`).
+### Step 1: Install Prerequisites
 
-=== Step 2: Create Disk Images for PBA and Rescue System
-[arabic]
-. In `/etc/rear/local.conf` add these two lines:
-+
-[source,bash]
-----
-OUTPUT=RAWDISK
-OUTPUT_URL="file:///var/lib/rear/output"
-----
+* Download the low-level utility `sedutil-cli` (version 1.15.1) from https://github.com/Drive-Trust-Alliance/exec/blob/master/sedutil_LINUX.tgz?raw=true[Drive-Trust-Alliance on GitHub].
+* Install it into a directory within root's search path (e.g. `/usr/local/sbin`).
+
+### Step 2: Create Disk Images for PBA and Rescue System
+
+* In `/etc/rear/local.conf` add these two lines:
+
+    OUTPUT=RAWDISK
+    OUTPUT_URL="file:///var/lib/rear/output"
+
 ** To support secure boot, add another line specifying your secure boot loader, e.g. on Ubuntu:
-+
-[source,bash]
-----
-SECURE_BOOT_BOOTLOADER="/boot/efi/EFI/ubuntu/shimx64.efi"
-----
-. Run `sudo rear mkopalpba` (ignore messages about keyboard mappings)
-. Run `sudo rear mkrescue` (ignore messages about keyboard mappings)
 
-=== Step 3: Create a Bootable USB Stick with the Rescue System
-[arabic]
-. Plug in the USB stick to use.
-. Use `lsblk -o +MODEL` to find the correct disk device path for your USB stick (typically `/dev/sdX`).
-. *RE-CHECK. The following command will overwrite the entire USB stick.*
-. Use the following command, replacing `USB-DEVICE` with the USB stick's device name.
-+
-[source,bash]
-----
-sudo zcat "/var/lib/rear/output/$(hostname)/rear-$(hostname).raw.gz" | sudo dd bs=1M of=/dev/USB-DEVICE
-----
+    SECURE_BOOT_BOOTLOADER="/boot/efi/EFI/ubuntu/shimx64.efi"
 
-=== Step 4: Set up Opal 2 Disk Drives
+* Run `sudo rear mkopalpba` (ignore messages about keyboard mappings)
+* Run `sudo rear mkrescue` (ignore messages about keyboard mappings)
+
+### Step 3: Create a Bootable USB Stick with the Rescue System
+
+* Plug in the USB stick to use.
+* Use `lsblk -o +MODEL` to find the correct disk device path for your USB stick (typically `/dev/sdX`).
+* *RE-CHECK. The following command will overwrite the entire USB stick.*
+* Use the following command, replacing `USB-DEVICE` with the USB stick's device name.
+
+        sudo zcat "/var/lib/rear/output/$(hostname)/rear-$(hostname).raw.gz" | sudo dd bs=1M of=/dev/USB-DEVICE
+
+### Step 4: Set up Opal 2 Disk Drives
 
 WARNING: Setting up an SED normally *ERASES ALL DATA ON THE DISK*, as a new data
 encryption key (DEK) will be generated. While `rear opaladmin` includes safety
 measures to avoid accidentally erasing a partitioned disk, do not rely on this
 solely. *Always back up your data and have a current rescue system available.*
 
-. Boot the rescue system just created.
-. *RE-CHECK. The following command will erase selected disks.*
-. Run `rear opaladmin setupERASE _DEVICE_ ...`
+* Boot the rescue system just created.
+* *RE-CHECK. The following command will erase selected disks.*
+* Run `rear opaladmin setupERASE _DEVICE_ ...`
 * `_DEVICE_` is the disk device path like `/dev/sda`, or `ALL` for all available
 devices.
-. Verify that disk unlocking works:
+* Verify that disk unlocking works:
 .. Turn off power.
 .. Remove the rescue USB stick.
 .. Turn on power.
 .. Check the PBA boots and unlocks disks.
-+
+
 NOTE: After unlocking, there is no OS. This is expected.
 
-=== Step 5: Install the Operating System
-. Boot the rescue system.
-. Deactivate locking:
-+
-[source,bash]
-----
-rear opaladmin deactivate
-----
-. Install the Operating System.
-. Boot the rescue system.
-. Reactivate locking:
-+
-[source,bash]
-----
-rear opaladmin reactivate
-----
-. Remove the rescue USB stick and shutdown the system.
+### Step 5: Install the Operating System
 
-== TCG Opal 2-compliant Self-Encrypting Disks
+* Boot the rescue system.
+* Deactivate locking:
+
+    rear opaladmin deactivate
+
+* Install the Operating System.
+* Boot the rescue system.
+* Reactivate locking:
+
+
+    rear opaladmin reactivate
+
+* Remove the rescue USB stick and shutdown the system.
+
+## TCG Opal 2-compliant Self-Encrypting Disks
 
 NOTE: This is a simplified explanation to help understand self-encrypting disks
 in the context of Relax-and-Recover support.
@@ -112,7 +102,7 @@ hardware. The SED can be configured to store a user-assigned password and to
 lock itself when powered off. Unlocking the disk after powering up requires the
 user to supply the password.
 
-=== Booting From a Self-Encrypting Disk
+### Booting From a Self-Encrypting Disk
 
 How can a system boot from a disk which is locked? The Opal solution is
 metamorphosis. An Opal disk hides or presents different contents depending on
@@ -132,41 +122,39 @@ code residing in the shadow MBR.
 The shadow MBR, when enabled, can be prepared with a _pre-boot authentication_
 (PBA) system. The PBA system is a purpose-built operating system which
 
-. is booted by the firmware like any other operating system,
-. asks the user for the disk password,
-. unlocks the boot disk (and possibly other Opal 2-compliant SEDs as well), and
-. continues to boot the regular operating system.
+    - is booted by the firmware like any other operating system,
+    - asks the user for the disk password,
+    - unlocks the boot disk (and possibly other Opal 2-compliant SEDs as well), and
+    - continues to boot the regular operating system.
 
-== Administering Self-Encrypting Disks
+## Administering Self-Encrypting Disks
 
-=== Creating a Pre-Boot Authentication (PBA) System
+### Creating a Pre-Boot Authentication (PBA) System
 
 NOTE: This is only required if an SED is to be used as boot disk.
 
 To create a pre-boot authentication (PBA) system image:
 
-. Run `sudo rear mkopalpba`
+- Run `sudo rear mkopalpba`
 
 * The PBA image will appear below the `OPAL_PBA_OUTPUT_URL` directory (see
 `default.conf`) as `$HOSTNAME/TCG-Opal-PBA-$HOSTNAME.raw`.
 
-. If you want to test the PBA system image,
-
-* copy it onto a disk boot medium (a USB stick will do) with `dd
+- If you want to test the PBA system image,
+copy it onto a disk boot medium (a USB stick will do) with `dd
 if="$image_file" bs=1MB of="$usb_device"` (use the entire disk device, not a
 partition),
-
-* boot from the medium just created.
+boot from the medium just created.
 
 To create a rescue system with an integrated PBA system image:
 
-. Verify that the `OPAL_PBA_OUTPUT_URL` configuration variable points to a local
+* Verify that the `OPAL_PBA_OUTPUT_URL` configuration variable points to a local
 directory (which is the default), or set `OPAL_PBA_IMAGE_FILE` to the image
 file's full path.
 
-. Run `sudo rear mkrescue`
+* Run `sudo rear mkrescue`
 
-=== Setting Up Self-Encrypting Disks
+### Setting Up Self-Encrypting Disks
 
 WARNING: Setting up an SED normally *ERASES ALL DATA ON THE DISK*, as a new data
 encryption key (DEK) will be generated. While `rear opaladmin` includes safety
@@ -175,12 +163,12 @@ solely. *Always back up your data and have a current rescue system available.*
 
 To set up SEDs:
 
-. Boot the Relax-and-Recover rescue system.
+* Boot the Relax-and-Recover rescue system.
 
 * If SED boot support is required, ensure that the rescue system was built with
 an integrated PBA system image.
 
-. Run `rear opaladmin setupERASE _DEVICE_ ...`
+* Run `rear opaladmin setupERASE _DEVICE_ ...`
 
 * `_DEVICE_` is the disk device path like `/dev/sda`, or `ALL` for all available
 devices
@@ -191,47 +179,43 @@ all disks being set up.
 whether it should act as a boot device for disk unlocking (in which case the PBA
 will be installed).
 * *DISK CONTENTS WILL BE ERASED*, with the following exceptions:
-** If the disk has mounted partitions, the disk's contents will be left
+    * If the disk has mounted partitions, the disk's contents will be left
 untouched.
-** If unmounted disk partitions are detected, you will be asked whether the
+    * If unmounted disk partitions are detected, you will be asked whether the
 disk's contents shall be erased.
 
-. On UEFI systems, see
+* On UEFI systems, see
 <<Setting up UEFI Firmware to Boot From a Self-Encrypting Disk>>.
 
-=== Verifying Disk Setup
+### Verifying Disk Setup
 
 If you want to ensure that disks have been set up correctly:
 
-. Power off, then power on the system.
+* Power off, then power on the system.
 
-. Boot directly into the Relax-and-Recover rescue system.
+* Boot directly into the Relax-and-Recover rescue system.
 
-. Run `rear opaladmin info` and verify that output looks like this:
-+
-[options="nowrap"]
-----
-DEVICE         MODEL                          I/F    FIRMWARE     SETUP  ENCRYPTED  LOCKED  SHADOW MBR
-/dev/sda       Samsung SSD 850 PRO 256GB      ATA    EXM04B6Q     y      y          y       visible
-----
-+
+* Run `rear opaladmin info` and verify that output looks like this:
+
+
+    DEVICE         MODEL                          I/F    FIRMWARE     SETUP  ENCRYPTED  LOCKED  SHADOW MBR
+    /dev/sda       Samsung SSD 850 PRO 256GB      ATA    EXM04B6Q     y      y          y       visible
+
 The device should appear with _SETUP_=`y`, _ENCRYPTED_=`y` and _LOCKED_=`y`,
 _SHADOW MBR_ on boot disks should be `visible`, otherwise `disabled`.
 
-. Run `rear opaladmin unlock`, supplying the correct disk password.
+* Run `rear opaladmin unlock`, supplying the correct disk password.
 
-. Run `rear opaladmin info` and verify that output looks like this:
-+
-[options="nowrap"]
-----
-DEVICE         MODEL                          I/F    FIRMWARE     SETUP  ENCRYPTED  LOCKED  SHADOW MBR
-/dev/sda       Samsung SSD 850 PRO 256GB      ATA    EXM04B6Q     y      y          n       hidden
-----
-+
+* Run `rear opaladmin info` and verify that output looks like this:
+
+    DEVICE         MODEL                          I/F    FIRMWARE     SETUP  ENCRYPTED  LOCKED  SHADOW MBR
+    /dev/sda       Samsung SSD 850 PRO 256GB      ATA    EXM04B6Q     y      y          n       hidden
+
+
 The device should appear with _SETUP_=`y`, _ENCRYPTED_=`y` and _LOCKED_=`n`,
 _SHADOW MBR_ on boot disks should be `hidden`, otherwise `disabled`.
 
-=== Routine Administrative Tasks
+### Routine Administrative Tasks
 
 The following tasks can be safely performed on the original system (with `sudo`)
 or on the rescue system.
@@ -250,13 +234,12 @@ or on the rescue system.
 
 * For help: `rear opaladmin help`
 
-=== Erasing a Self-Encrypting Disk
+### Erasing a Self-Encrypting Disk
 
 To *ERASE ALL DATA ON THE DISK* but retain the setup:
 
-. Boot the Relax-and-Recover rescue system.
-
-. Run `rear opaladmin resetDEK _DEVICE_ ...`
+* Boot the Relax-and-Recover rescue system.
+* Run `rear opaladmin resetDEK _DEVICE_ ...`
 * `_DEVICE_` is the disk device path like `/dev/sda`, or `ALL` for all available
 devices
 * If mounted disk partitions are detected, the disk's contents will not be
@@ -266,9 +249,8 @@ disk's contents shall be erased.
 
 To *ERASE ALL DATA ON THE DISK* and reset the disk to factory settings:
 
-. Boot the Relax-and-Recover rescue system.
-
-. Run `rear opaladmin factoryRESET _DEVICE_ ...`
+* Boot the Relax-and-Recover rescue system.
+* Run `rear opaladmin factoryRESET _DEVICE_ ...`
 * `_DEVICE_` is the disk device path like `/dev/sda`, or `ALL` for all available
 devices
 * If mounted disk partitions are detected, the disk's contents will not be
@@ -276,52 +258,41 @@ erased.
 * If unmounted disk partitions are detected, you will be asked whether the
 disk's contents shall be erased.
 
-== Details
+## Details
 
-=== How to Build sedutil-cli Version {sedutil-cli-version}
+### How to Build sedutil-cli Version [sedutil-cli](https://github.com/Drive-Trust-Alliance/sedutil/tags)
 
-. Download https://github.com/Drive-Trust-Alliance/sedutil/archive/{sedutil-cli-version}.tar.gz[Drive-Trust-Alliance/sedutil version {sedutil-cli-version}] source code.
+* Download [Drive-Trust-Alliance/sedutil version 1.49.13](https://github.com/Drive-Trust-Alliance/sedutil/archive/refs/tags/1.49.13.tar.gz) source code.
 
-. Extract the archive, creating a directory `sedutil-{sedutil-cli-version}`:
-+
-[source,bash,subs="attributes"]
-----
-tar xof sedutil-{sedutil-cli-version}.tar.gz
-----
+* Extract the archive, creating a directory `sedutil-{sedutil-cli-version}`:
 
-. Configure the build system:
-+
-[source,bash,subs="attributes"]
-----
-cd sedutil-{sedutil-cli-version}
-aclocal
-autoconf
-./configure
-----
-+
+    tar xof sedutil-{sedutil-cli-version}.tar.gz
+
+* Configure the build system:
+
+        cd sedutil-{sedutil-cli-version}
+        aclocal
+        autoconf
+        ./configure
+
+
 NOTE: Ignore the following error: `configure: error: cannot find install-sh,
 install.sh, or shtool in "." "./.." "./../.."`
-+
+
 NOTE: If there are any other error messages, you may have to install required
 packages like `build-essential`, then re-run `./configure`.
 
-. Compile the executable (on the x86_64 architecture in this example):
-+
-[source,bash,subs="attributes"]
-----
-cd linux/CLI
-make CONF=Release_x86_64
-----
+* Compile the executable (on the x86_64 architecture in this example):
 
-. Install the executable into a directory root's search path (`/usr/local/bin`
+        cd linux/CLI
+        make CONF=Release_x86_64
+
+* Install the executable into a directory root's search path (`/usr/local/bin`
 in this example):
-+
-[source,bash,subs="attributes"]
-----
-cp dist/Release_x86_64/GNU-Linux/sedutil-cli /usr/local/bin
-----
 
-=== Setting up UEFI Firmware to Boot From a Self-Encrypting Disk
+        cp dist/Release_x86_64/GNU-Linux/sedutil-cli /usr/local/bin
+
+### Setting up UEFI Firmware to Boot From a Self-Encrypting Disk
 
 If the UEFI firmware is configured to boot from the disk _device_ (instead of
 some specific operating system entry), no further configuration is necessary.
@@ -329,33 +300,29 @@ some specific operating system entry), no further configuration is necessary.
 Otherwise, the UEFI firmware (formerly BIOS setup) must be configured to boot two
 different targets:
 
-. The PBA system (which is only accessible while the disk is locked).
+* The PBA system (which is only accessible while the disk is locked).
 
-. The regular operating system (which is only accessible while the disk is
+* The regular operating system (which is only accessible while the disk is
 unlocked).
 
 This can be configured as follows:
 
-. Ensure that the PBA system has been correctly installed to the boot drive.
+* Ensure that the PBA system has been correctly installed to the boot drive.
 
-. Power off, then power on the system.
+* Power off, then power on the system.
 
-. Enter the firmware setup.
+* Enter the firmware setup.
 
-. Configure the firmware to boot from the (only) EFI entry of the boot drive.
+* Configure the firmware to boot from the (only) EFI entry of the boot drive.
 
-. Once a regular operating system has been installed:
-[arabic]
-.. Unlock the disk.
-
-.. Reboot without powering off.
-
-.. Enter the firmware setup.
-
-.. Configure the firmware to boot from the EFI entry of your regular operating
+* Once a regular operating system has been installed:
+    * Unlock the disk.
+    * Reboot without powering off.
+    * Enter the firmware setup.
+    * Configure the firmware to boot from the EFI entry of your regular operating
 system. Do not delete the previously configured boot entry for the PBA system.
 
-=== Automatic Disk Unlock
+### Automatic Disk Unlock
 
 Relax-and-Recover supports automatic unlocking of TCG Opal 2-compliant self-encrypting disks (SED) by storing the disk password securely in one of the following:
 
@@ -364,39 +331,34 @@ Relax-and-Recover supports automatic unlocking of TCG Opal 2-compliant self-encr
 
 This enhancement allows fully unattended disk unlock at boot time, without requiring user password entry.
 
-==== Enabling Automatic Unlock
+#### Enabling Automatic Unlock
 
 To enable automatic unlock, configure the desired key storage method before generating the pre-boot authentication (PBA) environment:
 
-. Edit /etc/rear/local.conf and set one of the following options:
-+
-[source,bash,subs="attributes"]
-----
-# Store password in TPM
-OPAL_PBA_TPMNVINDEX="0xXXXXXXX" # TPM nonvolatile memory index
+* Edit /etc/rear/local.conf and set one of the following options:
 
-# Or store password as Authtoken (see default.conf for more settings)
-OPAL_PBA_TKNPATH=( /dev/xxx ) # Path to linux block device to use as AuthToken container
-----
+        # Store password in TPM
+        OPAL_PBA_TPMNVINDEX="0xXXXXXXX" # TPM nonvolatile memory index
+        
+        # Or store password as Authtoken (see default.conf for more settings)
+        OPAL_PBA_TKNPATH=( /dev/xxx ) # Path to linux block device to use as AuthToken container
+
 NOTE: These options are mutually exclusive. Only one storage method can be selected.
 
-. Then create the PBA image with:
-+
-[source,bash,subs="attributes"]
-----
-sudo rear mkopalpba
-----
+* Then create the PBA image with:
 
-==== Boot-Time Behavior
-[arabic]
-. During boot, the PBA system will:
-. Detect the presence of the selected setting (TPM or USB).
-. Retrieve the stored disk password.
-. Automatically unlock the encrypted disk(s).
-. Proceed with booting the regular operating system.
-. If the key is not found, manual password entry will be required and it will be proposed to store it in the selected means.
+        sudo rear mkopalpba
 
-==== Security Considerations
+#### Boot-Time Behavior
+
+* During boot, the PBA system will:
+* Detect the presence of the selected setting (TPM or USB).
+* Retrieve the stored disk password.
+* Automatically unlock the encrypted disk(s).
+* Proceed with booting the regular operating system.
+* If the key is not found, manual password entry will be required and it will be proposed to store it in the selected means.
+
+#### Security Considerations
 
 If an attacker gains access to a PBA image — for example, by booting the system from a live USB and dumping the shadow MBR — they could extract the Opal password in clear text. Should they also obtain the associated AuthToken (e.g. from a USB key), they would be able to fully recover the original disk password.
 
@@ -408,14 +370,14 @@ Storing the password in the TPM alone is simpler and more convenient. However, s
 
 Note: the entire unlock process is performed locally and offline — no network access or remote dependency is introduced.
 
-==== Tested Environments
+#### Tested Environments
 
 This functionality has been tested successfully on Ubuntu 24.04.1 LTS with TPM 2.0 and various USB storage devices.
 
-=== References
+### References
 
-* https://github.com/Drive-Trust-Alliance/sedutil[Drive-Trust-Alliance/sedutil:DTA sedutil Self encrypting drive software]
+* [Drive-Trust-Alliance/sedutil:DTA sedutil Self encrypting drive software](https://github.com/Drive-Trust-Alliance/sedutil)
 
-* https://trustedcomputinggroup.org/wp-content/uploads/TCG_Storage-Opal_SSC_v2.01_rev1.00.pdf[TCG Storage Security Subsystem Class: Opal Specification Version 2.01]
+* [TCG Storage Security Subsystem Class: Opal Specification Version 2.01](https://trustedcomputinggroup.org/wp-content/uploads/TCG_Storage-Opal_SSC_v2.01_rev1.00.pdf)
 
-* https://trustedcomputinggroup.org[Trusted Computing Group]
+* [Trusted Computing Group](https://trustedcomputinggroup.org)

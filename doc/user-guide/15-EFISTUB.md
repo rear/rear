@@ -1,3 +1,4 @@
+
 # EFISTUB support
 
 EFISTUB booting allows EFI firmware to directly load Linux kernel as an EFI executable. At the time of writing, EFISTUB support in kernel is widely available across all major distributions like SLES, Debian, Ubuntu, Fedora, Arch ...
@@ -16,9 +17,9 @@ There is plenty of ways how EFISTUB can be setup on source system but for the st
 By default EFISTUB is disabled in ReaR and user must explicitly enable this functionality. Detection of EFISTUB booting is quite a problematic topic since it can co-exist with traditional boot loaders. Many Linux distributions are shipping Linux kernels with enabled EFISTUB support despite a fact that it is not used, and OS is using traditional intermediate boot loaders instead. You should enable EFISTUB in ReaR only if your system is really configured to boot this way, otherwise ReaR will try to perform migration.
 
 To enable EFISTUB booting in ReaR one must specify following variable in _local.conf_ or _site.conf_
-```
-EFI_STUB="yes"
-```
+
+    EFI_STUB="yes"
+
 
 ## Migration
 Migrating from traditional boot-loader to EFISTUB is kind of side effect of current implementation. Current EFISTUB code can't reliably determine if system is configured with EFISTUB boot hence user must explicitly specify that he wishes his system is considered EFISTUB bootable by ReaR.
@@ -35,74 +36,65 @@ When user enables EFISTUB, ReaR does some basic checks and tries to ensure that 
 Current code was primarily created and tested with Arch Linux, since most requests for EFISTUB functionality in ReaR keeps coming from this community.
 Test system was running under VirtualBox host with following configuration:
 
-- OS version
-
-```
-arch-efi:(/root)(root)# lsb_release -a
-LSB Version:    1.4
-Distributor ID: Arch
-Description:    Arch Linux
-Release:    rolling
-Codename:   n/a
-
-arch-efi:(/root)(root)# uname -a
-Linux arch-efi.virtual.sk 4.20.5-arch1-1-ARCH #1 SMP PREEMPT Sat Jan 26 12:59:18 UTC 2019 x86_64 GNU/Linux
-```
-
-- boot entry for Arch Linux (_Boot0003_) created in UEFI
+* OS version
 
 
-```
-arch-efi:(/root)(root)# efibootmgr -v
-BootCurrent: 0003
-BootOrder: 0003,0000,0001,0002
-Boot0000* EFI DVD/CDROM PciRoot(0x0)/Pci(0x1,0x1)/Ata(1,0,0)
-Boot0001* EFI Hard Drive    PciRoot(0x0)/Pci(0xd,0x0)/Sata(0,0,0)
-Boot0002* EFI Internal Shell    MemoryMapped(11,0x2100000,0x28fffff)/FvFile(7c04a583-9e3e-4f1c-ad65-e05268d0b4d1)
-Boot0003* Arch Linux    HD(1,GPT,e3b3601c-8037-4bf6-a938-4772cfb1ad9f,0x800,0x113000)/File(vmlinuz-linux)i.n.i.t.r.d.=.i.n.i.t.r.a.m.f.s.-.l.i.n.u.x...i.m.g. .r.o.o.t.=./.d.e.v./.s.d.a.2.
-```
+        arch-efi:(/root)(root)# lsb_release -a
+        LSB Version:    1.4
+        Distributor ID: Arch
+        Description:    Arch Linux
+        Release:    rolling
+        Codename:   n/a
+        
+        arch-efi:(/root)(root)# uname -a
+        Linux arch-efi.virtual.sk 4.20.5-arch1-1-ARCH #1 SMP PREEMPT Sat Jan 26 12:59:18 UTC 2019 x86_64 GNU/Linux
 
-- ReaR configuration
+* boot entry for Arch Linux (_Boot0003_) created in UEFI
 
-```
-arch-efi:(/root)(root)# cat /etc/rear/local.conf
-BACKUP=NETFS
-OUTPUT=ISO
 
-BACKUP_URL=nfs://backup.virtual.sk/mnt/rear
-OUTPUT_URL=nfs://backup.virtual.sk/mnt/rear/iso
+        arch-efi:(/root)(root)# efibootmgr -v
+        BootCurrent: 0003
+        BootOrder: 0003,0000,0001,0002
+        Boot0000* EFI DVD/CDROM PciRoot(0x0)/Pci(0x1,0x1)/Ata(1,0,0)
+        Boot0001* EFI Hard Drive    PciRoot(0x0)/Pci(0xd,0x0)/Sata(0,0,0)
+        Boot0002* EFI Internal Shell    MemoryMapped(11,0x2100000,0x28fffff)/FvFile(7c04a583-9e3e-4f1c-ad65-e05268d0b4d1)
+        Boot0003* Arch Linux    HD(1,GPT,e3b3601c-8037-4bf6-a938-4772cfb1ad9f,0x800,0x113000)/File(vmlinuz-linux)i.n.i.t.r.d.=.i.n.i.t.r.a.m.f.s.-.l.i.n.u.x...i.m.g. .r.o.o.t.=./.d.e.v./.s.d.a.2.
 
-BACKUP_OPTIONS="nfsvers=3,nolock"
+* ReaR configuration
 
-EFI_STUB=yes
-```
+        arch-efi:(/root)(root)# cat /etc/rear/local.conf
+        BACKUP=NETFS
+        OUTPUT=ISO
+        
+        BACKUP_URL=nfs://backup.virtual.sk/mnt/rear
+        OUTPUT_URL=nfs://backup.virtual.sk/mnt/rear/iso
+        
+        BACKUP_OPTIONS="nfsvers=3,nolock"
+        
+        EFI_STUB=yes
 
-- File system layout
+* File system layout
 
-```
-arch-efi:(/root)(root)# df -Th
-Filesystem     Type      Size  Used Avail Use% Mounted on
-dev            devtmpfs  485M     0  485M   0% /dev
-run            tmpfs     492M  404K  491M   1% /run
-/dev/sda2      ext4      7.3G  2.1G  4.9G  30% /
-tmpfs          tmpfs     492M     0  492M   0% /dev/shm
-tmpfs          tmpfs     492M     0  492M   0% /sys/fs/cgroup
-/dev/sda1      vfat      549M   41M  509M   8% /boot
-tmpfs          tmpfs      99M     0   99M   0% /run/user/0
-```
+        arch-efi:(/root)(root)# df -Th
+        Filesystem     Type      Size  Used Avail Use% Mounted on
+        dev            devtmpfs  485M     0  485M   0% /dev
+        run            tmpfs     492M  404K  491M   1% /run
+        /dev/sda2      ext4      7.3G  2.1G  4.9G  30% /
+        tmpfs          tmpfs     492M     0  492M   0% /dev/shm
+        tmpfs          tmpfs     492M     0  492M   0% /sys/fs/cgroup
+        /dev/sda1      vfat      549M   41M  509M   8% /boot
+        tmpfs          tmpfs      99M     0   99M   0% /run/user/0
 
 - Content of /boot
 
-```
-arch-efi:(/root)(root)# ls -l /boot
-total 41684
--rwxr-xr-x 1 root root    31232 Jan 22 10:14 amd-ucode.img
--rwxr-xr-x 1 root root 29094161 Feb  3 09:09 initramfs-linux-fallback.img
--rwxr-xr-x 1 root root  7686652 Feb  3 09:09 initramfs-linux.img
-drwxr-xr-x 2 root root     4096 Jan 31 14:56 syslinux
--rwxr-xr-x 1 root root  5855104 Jan 31 09:17 vmlinuz-linux
+        arch-efi:(/root)(root)# ls -l /boot
+        total 41684
+        -rwxr-xr-x 1 root root    31232 Jan 22 10:14 amd-ucode.img
+        -rwxr-xr-x 1 root root 29094161 Feb  3 09:09 initramfs-linux-fallback.img
+        -rwxr-xr-x 1 root root  7686652 Feb  3 09:09 initramfs-linux.img
+        drwxr-xr-x 2 root root     4096 Jan 31 14:56 syslinux
+        -rwxr-xr-x 1 root root  5855104 Jan 31 09:17 vmlinuz-linux
 
-```
 
 ## Migration from GRUB2 to EFISTUB on SLES12 SP2
 WARNING: Do not start migration to EFISTUB until you are familiar with all the eventualities. It might happen that you end up with un-bootable system. Most of the time it is possible to fix un-bootable system, but some deeper knowledge might be required to succeed.
@@ -110,74 +102,68 @@ WARNING: Do not start migration to EFISTUB until you are familiar with all the e
 When prerequisites are fulfilled one can use ReaR EFISTUB code to migrate system from intermediate boot loaders like GRUB, ELILO to EFISTUB.
 For the demonstration purposes I've tried migration from GRUB2 to EFISTUB on SLES12 SP2.
 
-- OS version
+* OS version
 
-```
-sp2:~ # cat /etc/os-release
-NAME="SLES_SAP"
-VERSION="12-SP2"
-VERSION_ID="12.2"
-PRETTY_NAME="SUSE Linux Enterprise Server for SAP Applications 12 SP2"
-ID="sles_sap"
-ANSI_COLOR="0;32"
-CPE_NAME="cpe:/o:suse:sles_sap:12:sp2"
-```
+        sp2:~ # cat /etc/os-release
+        NAME="SLES_SAP"
+        VERSION="12-SP2"
+        VERSION_ID="12.2"
+        PRETTY_NAME="SUSE Linux Enterprise Server for SAP Applications 12 SP2"
+        ID="sles_sap"
+        ANSI_COLOR="0;32"
+        CPE_NAME="cpe:/o:suse:sles_sap:12:sp2"
 
-- Basic ReaR configuration (does not include all EFISTUB configuration pieces yet)
+* Basic ReaR configuration (does not include all EFISTUB configuration pieces yet)
 
-```
-sp2:~ # cat /etc/rear/local.conf
-BACKUP=NETFS
-OUTPUT=ISO
+        sp2:~ # cat /etc/rear/local.conf
+        BACKUP=NETFS
+        OUTPUT=ISO
+        
+        BACKUP_URL=nfs://backup.virtual.sk/mnt/rear
+        OUTPUT_URL=nfs://backup.virtual.sk/mnt/rear/iso
+        
+        BACKUP_OPTIONS="nfsvers=3,nolock"
+        
+        BACKUP_PROG_EXCLUDE+=( /mnt )
+        
+        #BTRFS stuff
+        REQUIRED_PROGS+=( snapper chattr lsattr xfs_repair )
+        COPY_AS_IS+=( /usr/lib/snapper/installation-helper /etc/snapper/config-templates/default )
+        BACKUP_PROG_INCLUDE=( $(findmnt -n -r -t btrfs | cut -d ' ' -f 1 | grep -v '^/$' | grep -Ev 'snapshots|crash' ) )
+        
+        EFI_STUB=y
 
-BACKUP_URL=nfs://backup.virtual.sk/mnt/rear
-OUTPUT_URL=nfs://backup.virtual.sk/mnt/rear/iso
+* File system layout
 
-BACKUP_OPTIONS="nfsvers=3,nolock"
+        Filesystem              Type      Size  Used Avail Use% Mounted on
+        devtmpfs                devtmpfs  235M     0  235M   0% /dev
+        tmpfs                   tmpfs     8.0G     0  8.0G   0% /dev/shm
+        tmpfs                   tmpfs     244M  4.8M  239M   2% /run
+        tmpfs                   tmpfs     244M     0  244M   0% /sys/fs/cgroup
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/named
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /home
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/pgsql
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/cache
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/tmp
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/mailman
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/log
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/libvirt/images
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /usr/local
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /boot/grub2/x86_64-efi
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/spool
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/crash
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /opt
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/mariadb
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /tmp
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/opt
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /srv
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/mysql
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/machines
+        /dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /boot/grub2/i386-pc
+        /dev/sda1               vfat      156M   26M  131M  17% /boot/efi
+        tmpfs                   tmpfs      49M     0   49M   0% /run/user/0
 
-BACKUP_PROG_EXCLUDE+=( /mnt )
-
-#BTRFS stuff
-REQUIRED_PROGS+=( snapper chattr lsattr xfs_repair )
-COPY_AS_IS+=( /usr/lib/snapper/installation-helper /etc/snapper/config-templates/default )
-BACKUP_PROG_INCLUDE=( $(findmnt -n -r -t btrfs | cut -d ' ' -f 1 | grep -v '^/$' | grep -Ev 'snapshots|crash' ) )
-
-EFI_STUB=y
-```
-
-- File system layout
-
-```
-Filesystem              Type      Size  Used Avail Use% Mounted on
-devtmpfs                devtmpfs  235M     0  235M   0% /dev
-tmpfs                   tmpfs     8.0G     0  8.0G   0% /dev/shm
-tmpfs                   tmpfs     244M  4.8M  239M   2% /run
-tmpfs                   tmpfs     244M     0  244M   0% /sys/fs/cgroup
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/named
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /home
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/pgsql
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/cache
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/tmp
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/mailman
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/log
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/libvirt/images
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /usr/local
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /boot/grub2/x86_64-efi
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/spool
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/crash
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /opt
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/mariadb
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /tmp
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/opt
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /srv
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/mysql
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /var/lib/machines
-/dev/mapper/system-root btrfs     7.8G  3.9G  3.3G  55% /boot/grub2/i386-pc
-/dev/sda1               vfat      156M   26M  131M  17% /boot/efi
-tmpfs                   tmpfs      49M     0   49M   0% /run/user/0
-
-```
 
 Since we don't have condition that active Linux kernel and initrd must reside on vfat file system, we can fulfill this requirement in two ways:
 
@@ -185,18 +171,14 @@ Since we don't have condition that active Linux kernel and initrd must reside on
 
 In this particular case active kernel and initrd image are represented by following files:
 
-```
-sp2:~ # ls -al /boot/vmlinuz-* /boot/initrd-*
--rw------- 1 root root 16365388 Aug 30 17:29 /boot/initrd-4.4.21-69-default
--rw-r--r-- 1 root root  5742352 Oct 25  2016 /boot/vmlinuz-4.4.21-69-default
-```
+        sp2:~ # ls -al /boot/vmlinuz-* /boot/initrd-*
+        -rw------- 1 root root 16365388 Aug 30 17:29 /boot/initrd-4.4.21-69-default
+        -rw-r--r-- 1 root root  5742352 Oct 25  2016 /boot/vmlinuz-4.4.21-69-default
 
 To copy files to vfat file system _/boot/efi_:
 
-```
-sp2:~ # cp /boot/initrd-4.4.21-69-default /boot/efi
-sp2:~ # cp /boot/vmlinuz-4.4.21-69-default /boot/efi
-```
+        sp2:~ # cp /boot/initrd-4.4.21-69-default /boot/efi
+        sp2:~ # cp /boot/vmlinuz-4.4.21-69-default /boot/efi
 
 Now we need to tell ReaR that we have kernel on vfat file system by adding `KERNEL_FILE="/boot/efi/vmlinuz-4.4.21-69-default"` configuration option into _/etc/rear/local.conf_
 
@@ -209,16 +191,12 @@ As to cover this topic can be quite exhausting, it is not part of this document.
 
 Whether you've decided to use _1st_ or _2nd_ method, last thing remaining is to configure custom boot attributes for EFISTUB. Normally when ReaR is configured to backup EFISTUB enabled system, it takes boots option from `/proc/cmdline`. During migration however `/proc/cmdline` does not contain sufficient information for successful EFISTUB boot. In our case:
 
-```
-sp2:~ # cat /proc/cmdline
-BOOT_IMAGE=/boot/vmlinuz-4.4.21-69-default root=/dev/mapper/system-root ro resume=/dev/system/swap splash=silent quiet showopts
+        sp2:~ # cat /proc/cmdline
+        BOOT_IMAGE=/boot/vmlinuz-4.4.21-69-default root=/dev/mapper/system-root ro resume=/dev/system/swap splash=silent quiet showopts
 
-```
 lacks information about which _initrd_ image should be booted. This information can be passed to ReaR by `EFI_STUB_EFIBOOTMGR_ARGS` configuration option. In our case we will add
 
-```
-EFI_STUB_EFIBOOTMGR_ARGS="initrd=initrd-4.4.21-69-default root=/dev/mapper/system-root ro resume=/dev/system/swap splash=silent quiet showopts"
-```
+        EFI_STUB_EFIBOOTMGR_ARGS="initrd=initrd-4.4.21-69-default root=/dev/mapper/system-root ro resume=/dev/system/swap splash=silent quiet showopts"
 
 configuration directive into _/etc/rear/local.conf_.
 
@@ -227,9 +205,7 @@ With ReaR configured as described in previous lines, we can start OS backup with
 When ReaR recovery system is booted, we can start restore process as usual with `rear recover`. Once operation is over and you've used 1st method (_Copy active Linux kernel and initrd files to vfat file system and configure ReaR to use alternate kernel file_) you must copy _initrd_ image file, recently modified by ReaR, from _/mnt/local/boot_ into its alternate location (_/mnt/local/boot/efi_ in our case)
 
 
-```
-RESCUE sp2:~ # cp /mnt/local/boot/initrd-4.4.21-69-default /mnt/local/boot/efi/
-```
+        RESCUE sp2:~ # cp /mnt/local/boot/initrd-4.4.21-69-default /mnt/local/boot/efi/
 
 because of reason mentioned in _WARNING_ section of 1st method. If you've been using 2nd method (_Convert /boot to vfat file system_), you can reboot ReaR recovery system without any further modifications.
 

@@ -1,7 +1,7 @@
 
-= Using Multiple Backups for Relax-and-Recover
+# Using Multiple Backups for Relax-and-Recover
 
-== Basics
+## Basics
 
 Currently multiple backups are only supported for:
 
@@ -13,7 +13,7 @@ In general multiple backups are not supported for
 BACKUP_TYPE=incremental or BACKUP_TYPE=differential
 because those require special backup archive file names.
 
-=== The basic idea behind
+### The basic idea behind
 
 A "rear mkbackup" run can be split into
 a "rear mkrescue" run plus a "rear mkbackuponly" run
@@ -35,39 +35,31 @@ that specifies how that particular "rear mkbackuponly" must be done.
 Therefore the '-C' command line parameter is needed where
 an additional ReaR configuration file can be specified.
 
-=== The basic way how to create multiple backups
+### The basic way how to create multiple backups
 
 Have common settings in /etc/rear/local.conf
 
 For each particular backup specify its parameters in
 separated additional configuration files like
 
-----
-/etc/rear/basic_system.conf
-/etc/rear/home_backup.conf
-/etc/rear/opt_backup.conf
-----
+    /etc/rear/basic_system.conf
+    /etc/rear/home_backup.conf
+    /etc/rear/opt_backup.conf
 
 First create the ReaR recovery/rescue system ISO image
 together with a backup of the files of the basic system:
 
-----
-rear -C basic_system mkbackup
-----
+    rear -C basic_system mkbackup
 
 Then backup the files in the /home directories:
 
-----
-rear -C home_backup mkbackuponly
-----
+    rear -C home_backup mkbackuponly
 
 Afterwards backup the files in the /opt directory:
 
-----
-rear -C opt_backup mkbackuponly
-----
+    rear -C opt_backup mkbackuponly
 
-=== The basic way how to recover with multiple backups
+### The basic way how to recover with multiple backups
 
 The basic idea how to recover with multiple backups is
 to split the "rear recover" into an initial recovery
@@ -80,56 +72,49 @@ In the ReaR recovery/rescue system do the following:
 
 First recover the basic system:
 
-----
-rear -C basic_system recover
-----
+    rear -C basic_system recover
 
 Then restore the files in the /home directories:
 
-----
-rear -C home_backup restoreonly
-----
+    rear -C home_backup restoreonly
 
 Afterwards restore the files in the /opt directory:
 
-----
-rear -C opt_backup restoreonly
-----
+    rear -C opt_backup restoreonly
 
 Finally reboot the recreated system.
 
 For more internal details and some background information see
-https://github.com/rear/rear/issues/1088
+[https://github.com/rear/rear/issues/1088](https://github.com/rear/rear/issues/1088)
 
-=== How to recover with multiple backups in 'auto_recover'/'automatic' or 'unattended' mode
+### How to recover with multiple backups in 'auto_recover'/'automatic' or 'unattended' mode
 
 The RECOVERY_COMMANDS array specifies the "rear recover" commands
 that are automatically called after the ReaR recovery system has started up
 to recreate the system in 'auto_recover'/'automatic' or 'unattended' mode.
 
 So in the above example where the commands
-----
-rear -C basic_system recover
-rear -C home_backup restoreonly
-rear -C opt_backup restoreonly
-----
+
+    rear -C basic_system recover
+    rear -C home_backup restoreonly
+    rear -C opt_backup restoreonly
+
 are manually typed in one after the other 
 those commands need to be specified as RECOVERY_COMMANDS array
 to recover with multiple backups in 'auto_recover'/'automatic' or 'unattended' mode
 for example like
-----
-RECOVERY_COMMANDS=( "echo Unattended recovery starts in $USER_INPUT_INTERRUPT_TIMEOUT seconds"
-                    "sleep $USER_INPUT_INTERRUPT_TIMEOUT"
-                    "rear -n -C basic_system recover"
-                    "rear -n -C home_backup restoreonly"
-                    "rear -n -C opt_backup restoreonly" )
-RECOVERY_COMMANDS_LABEL="Recovery of basic_system with home_backup and opt_backup restore"
-----
+
+    RECOVERY_COMMANDS=( "echo Unattended recovery starts in $USER_INPUT_INTERRUPT_TIMEOUT seconds"
+                        "sleep $USER_INPUT_INTERRUPT_TIMEOUT"
+                        "rear -n -C basic_system recover"
+                        "rear -n -C home_backup restoreonly"
+                        "rear -n -C opt_backup restoreonly" )
+    RECOVERY_COMMANDS_LABEL="Recovery of basic_system with home_backup and opt_backup restore"
 
 See the RECOVERY_COMMANDS description in usr/share/rear/conf/default.conf
 (and as needed also the REBOOT_COMMANDS description therein).
 
-== Relax-and-Recover Setup for Multiple Backups
+## Relax-and-Recover Setup for Multiple Backups
 
 Assume for example multiple backups should be done
 using the NETFS backup method with 'tar' as backup program
@@ -141,64 +126,53 @@ to get separated backups for:
 
 Those four configuration files could be used:
 
-./etc/rear/local.conf
-[source,bash]
-----
-OUTPUT=ISO
-BACKUP=NETFS
-BACKUP_OPTIONS="nfsvers=3,nolock"
-BACKUP_URL=nfs://your.NFS.server.IP/path/to/your/rear/backup
-----
+`./etc/rear/local.conf`
 
-./etc/rear/basic_system.conf
-[source,bash]
-----
-this_file_name=$( basename ${BASH_SOURCE[0]} )
-LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
-BACKUP_PROG_EXCLUDE+=( '/home/*' '/opt/*' )
-BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
-----
+    OUTPUT=ISO
+    BACKUP=NETFS
+    BACKUP_OPTIONS="nfsvers=3,nolock"
+    BACKUP_URL=nfs://your.NFS.server.IP/path/to/your/rear/backup
 
-./etc/rear/home_backup.conf
-[source,bash]
-----
-this_file_name=$( basename ${BASH_SOURCE[0]} )
-LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
-BACKUP_ONLY_INCLUDE="yes"
-BACKUP_PROG_INCLUDE=( '/home/*' )
-BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
-----
+`./etc/rear/basic_system.conf`
 
-./etc/rear/opt_backup.conf
-[source,bash]
-----
-this_file_name=$( basename ${BASH_SOURCE[0]} )
-LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
-BACKUP_ONLY_INCLUDE="yes"
-BACKUP_PROG_INCLUDE=( '/opt/*' )
-BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
-----
+
+    this_file_name=$( basename ${BASH_SOURCE[0]} )
+    LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
+    BACKUP_PROG_EXCLUDE+=( '/home/*' '/opt/*' )
+    BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
+
+`./etc/rear/home_backup.conf`
+
+    this_file_name=$( basename ${BASH_SOURCE[0]} )
+    LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
+    BACKUP_ONLY_INCLUDE="yes"
+    BACKUP_PROG_INCLUDE=( '/home/*' )
+    BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
+
+`./etc/rear/opt_backup.conf`
+
+    this_file_name=$( basename ${BASH_SOURCE[0]} )
+    LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
+    BACKUP_ONLY_INCLUDE="yes"
+    BACKUP_PROG_INCLUDE=( '/opt/*' )
+    BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 
 The BACKUP_ONLY_INCLUDE setting is described in conf/default.conf.
 
 With those config files creating the ReaR recovery/rescue system ISO image
 and subsequently backup the files of the system could be done like:
 
-----
-rear mkrescue
-rear -C basic_system mkbackuponly
-rear -C home_backup mkbackuponly
-rear -C opt_backup mkbackuponly
-----
+    rear mkrescue
+    rear -C basic_system mkbackuponly
+    rear -C home_backup mkbackuponly
+    rear -C opt_backup mkbackuponly
 
 Recovery of that system could be done by calling in the
 ReaR recovery/rescue system:
 
-----
-rear -C basic_system recover
-rear -C home_backup restoreonly
-rear -C opt_backup restoreonly
-----
+    rear -C basic_system recover
+    rear -C home_backup restoreonly
+    rear -C opt_backup restoreonly
 
 Note that system recovery with multiple backups requires that
 first and foremost the basic system is recovered where all files
@@ -215,7 +189,7 @@ into several backups. The files of the basic system must be in one
 single backup and that backup must be restored during the initial
 recovery of the basic system.
 
-== Relax-and-Recover Setup for Different Backup Methods
+## Relax-and-Recover Setup for Different Backup Methods
 
 Because multiple backups are used via separated additional
 configuration files, different backup methods can be used.
@@ -228,49 +202,43 @@ using the BORG backup method.
 
 The configuration files could be like the following:
 
-./etc/rear/local.conf
-[source,bash]
-----
-OUTPUT=ISO
-REQUIRED_PROGS+=( borg locale )
-COPY_AS_IS+=( "/borg/keys" )
-----
+`./etc/rear/local.conf`
 
-./etc/rear/basic_system.conf
-[source,bash]
-----
-this_file_name=$( basename ${BASH_SOURCE[0]} )
-LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
-BACKUP_PROG_EXCLUDE+=( '/home/*' )
-BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
-BACKUP=NETFS
-BACKUP_OPTIONS="nfsvers=3,nolock"
-BACKUP_URL=nfs://your.NFS.server.IP/path/to/your/rear/backup
-----
+    OUTPUT=ISO
+    REQUIRED_PROGS+=( borg locale )
+    COPY_AS_IS+=( "/borg/keys" )
 
-./etc/rear/home_backup.conf
-[source,bash]
-----
-this_file_name=$( basename ${BASH_SOURCE[0]} )
-LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
-BACKUP=BORG
-BACKUP_ONLY_INCLUDE="yes"
-BACKUP_PROG_INCLUDE=( '/home/*' )
-BORGBACKUP_ARCHIVE_PREFIX="rear"
-BORGBACKUP_HOST="borg.server.name"
-BORGBACKUP_USERNAME="borg_server_username"
-BORGBACKUP_REPO="/path/to/borg/repository/on/borg/server"
-BORGBACKUP_PRUNE_KEEP_HOURLY=5
-BORGBACKUP_PRUNE_KEEP_WEEKLY=2
-BORGBACKUP_COMPRESSION="zlib,9"
-BORGBACKUP_ENC_TYPE="keyfile"
-export BORG_KEYS_DIR="/borg/keys"
-export BORG_CACHE_DIR="/borg/cache"
-export BORG_PASSPHRASE='a1b2c3_d4e5f6'
-export BORG_RELOCATED_REPO_ACCESS_IS_OK="yes"
-export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK="yes"
-export BORG_REMOTE_PATH="/usr/local/bin/borg"
-----
+`./etc/rear/basic_system.conf`
+
+    this_file_name=$( basename ${BASH_SOURCE[0]} )
+    LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
+    BACKUP_PROG_EXCLUDE+=( '/home/*' )
+    BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
+    BACKUP=NETFS
+    BACKUP_OPTIONS="nfsvers=3,nolock"
+    BACKUP_URL=nfs://your.NFS.server.IP/path/to/your/rear/backup
+
+`./etc/rear/home_backup.conf`
+
+    this_file_name=$( basename ${BASH_SOURCE[0]} )
+    LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}.log"
+    BACKUP=BORG
+    BACKUP_ONLY_INCLUDE="yes"
+    BACKUP_PROG_INCLUDE=( '/home/*' )
+    BORGBACKUP_ARCHIVE_PREFIX="rear"
+    BORGBACKUP_HOST="borg.server.name"
+    BORGBACKUP_USERNAME="borg_server_username"
+    BORGBACKUP_REPO="/path/to/borg/repository/on/borg/server"
+    BORGBACKUP_PRUNE_KEEP_HOURLY=5
+    BORGBACKUP_PRUNE_KEEP_WEEKLY=2
+    BORGBACKUP_COMPRESSION="zlib,9"
+    BORGBACKUP_ENC_TYPE="keyfile"
+    export BORG_KEYS_DIR="/borg/keys"
+    export BORG_CACHE_DIR="/borg/cache"
+    export BORG_PASSPHRASE='a1b2c3_d4e5f6'
+    export BORG_RELOCATED_REPO_ACCESS_IS_OK="yes"
+    export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK="yes"
+    export BORG_REMOTE_PATH="/usr/local/bin/borg"
 
 Using different backup methods requires to get all the binaries
 and all other needed files of all used backup methods into the
@@ -284,10 +252,8 @@ With those config files creating the ReaR recovery/rescue system ISO image
 together with a 'tar' backup of the files of the basic system and
 a separated Borg backup of the files in /home could be done like:
 
-----
-rear -C home_backup mkbackuponly
-rear -C basic_system mkbackup
-----
+    rear -C home_backup mkbackuponly
+    rear -C basic_system mkbackup
 
 In contrast to the other examples above the Borg backup is run first
 because Borg creates encryption keys during repository initialization.
@@ -296,21 +262,17 @@ the ReaR recovery/rescue system by the subsequent "rear mkbackup/mkrescue".
 Alternatively the ReaR recovery/rescue system could be created again
 after the Borg backup is done like:
 
-----
-rear -C basic_system mkbackup
-rear -C home_backup mkbackuponly
-rear -C basic_system mkrescue
-----
+    rear -C basic_system mkbackup
+    rear -C home_backup mkbackuponly
+    rear -C basic_system mkrescue
 
 Recovery of that system could be done by calling in the
 ReaR recovery/rescue system:
 
-----
-rear -C basic_system recover
-rear -C home_backup restoreonly
-----
+    rear -C basic_system recover
+    rear -C home_backup restoreonly
 
-== Running Multiple Backups and Restores in Parallel
+## Running Multiple Backups and Restores in Parallel
 
 When the files in multiple backups are separated from each other
 it should work to run multiple backups or multiple restores in parallel.
@@ -321,15 +283,11 @@ depends on how you made the backups in your particular case.
 For sufficiently well separated backups it should work
 to run multiple different
 
-----
-rear -C backup_config mkbackuponly
-----
+    rear -C backup_config mkbackuponly
 
 or multiple different
 
-----
-rear -C backup_config restoreonly
-----
+    rear -C backup_config restoreonly
 
 in parallel.
 
@@ -337,15 +295,11 @@ Running in parallel is only supported for mkbackuponly and restoreonly.
 
 For example like
 
-----
-rear -C backup1 mkbackuponly & rear -C backup2 mkbackuponly & wait
-----
+    rear -C backup1 mkbackuponly & rear -C backup2 mkbackuponly & wait
 
 or
 
-----
-rear -C backup1 restoreonly & rear -C backup2 restoreonly & wait
-----
+    rear -C backup1 restoreonly & rear -C backup2 restoreonly & wait
 
 ReaR's default logging is not prepared for multiple simultaneous runs
 and also ReaR's current progress subsystem is not prepared for that.
@@ -369,62 +323,50 @@ are described in conf/default.conf.
 For example a setup for parallel runs of mkbackuponly and restoreonly
 could look like the following:
 
-./etc/rear/local.conf
-[source,bash]
-----
-OUTPUT=ISO
-BACKUP=NETFS
-BACKUP_OPTIONS="nfsvers=3,nolock"
-BACKUP_URL=nfs://your.NFS.server.IP/path/to/your/rear/backup
-MESSAGE_PREFIX="$$: "
-PROGRESS_MODE="plain"
-PROGRESS_WAIT_SECONDS="3"
-----
+`./etc/rear/local.conf`
 
-./etc/rear/basic_system.conf
-[source,bash]
-----
-this_file_name=$( basename ${BASH_SOURCE[0]} )
-LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
-BACKUP_PROG_EXCLUDE+=( '/home/*' '/opt/*' )
-BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
-----
+    OUTPUT=ISO
+    BACKUP=NETFS
+    BACKUP_OPTIONS="nfsvers=3,nolock"
+    BACKUP_URL=nfs://your.NFS.server.IP/path/to/your/rear/backup
+    MESSAGE_PREFIX="$$: "
+    PROGRESS_MODE="plain"
+    PROGRESS_WAIT_SECONDS="3"
 
-./etc/rear/home_backup.conf
-----
-this_file_name=$( basename ${BASH_SOURCE[0]} )
-LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
-BACKUP_ONLY_INCLUDE="yes"
-BACKUP_PROG_INCLUDE=( '/home/*' )
-BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
-----
+`./etc/rear/basic_system.conf`
 
-./etc/rear/opt_backup.conf
-[source,bash]
-----
-this_file_name=$( basename ${BASH_SOURCE[0]} )
-LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
-BACKUP_ONLY_INCLUDE="yes"
-BACKUP_PROG_INCLUDE=( '/opt/*' )
-BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
-----
+    this_file_name=$( basename ${BASH_SOURCE[0]} )
+    LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
+    BACKUP_PROG_EXCLUDE+=( '/home/*' '/opt/*' )
+    BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
+
+`./etc/rear/home_backup.conf`
+
+    LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
+    BACKUP_ONLY_INCLUDE="yes"
+    BACKUP_PROG_INCLUDE=( '/home/*' )
+    BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
+
+`./etc/rear/opt_backup.conf`
+
+    this_file_name=$( basename ${BASH_SOURCE[0]} )
+    LOGFILE="$LOG_DIR/rear-$HOSTNAME-$WORKFLOW-${this_file_name%.*}-$$.log"
+    BACKUP_ONLY_INCLUDE="yes"
+    BACKUP_PROG_INCLUDE=( '/opt/*' )
+    BACKUP_PROG_ARCHIVE="backup-${this_file_name%.*}"
 
 With those config files creating the ReaR recovery/rescue system ISO image
 together with a backup of the files of the basic system and then
 backup the files in /home and /opt in parallel could be done like:
 
-----
-rear -C basic_system mkbackup
-rear -C home_backup mkbackuponly & rear -C opt_backup mkbackuponly & wait
-----
+    rear -C basic_system mkbackup
+    rear -C home_backup mkbackuponly & rear -C opt_backup mkbackuponly & wait
 
 Recovery of that system could be done by calling in the
 ReaR recovery/rescue system:
 
-----
-rear -C basic_system recover
-rear -C home_backup restoreonly & rear -C opt_backup restoreonly & wait
-----
+    rear -C basic_system recover
+    rear -C home_backup restoreonly & rear -C opt_backup restoreonly & wait
 
 Even on a relatively small system with a single CPU
 running multiple backups and restores in parallel

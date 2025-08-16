@@ -1,4 +1,5 @@
-= Tips and Tricks using Relax-and-Recover
+
+# Tips and Tricks using Relax-and-Recover
 
 Recovering a system should not be a struggle against time with poor
 tools weighing against you. Relax-and-Recover emphasizes on a relaxing
@@ -12,8 +13,6 @@ recovery, and for this it follows three distinct rules:
 
 This results in the following useful tips and tricks:
 
-[TIP]
-====
  1. Relax-and-Recover can add its own GRUB menu entry to your local system's
     GRUB, which is convenient to restore a system without the need for an
     additional boot media. This only works if your system can (still)
@@ -40,4 +39,3 @@ This results in the following useful tips and tricks:
  6. During recovery at any stage you can re-run Relax-and-Recover, modify
     the layout file for recreating the structure and intervene when restoring
     the backup.
-====

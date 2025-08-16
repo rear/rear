@@ -1,4 +1,5 @@
-= Integrating external backup programs into ReaR
+
+# Integrating external backup programs into ReaR
 
 Relax-and-Recover can be used only to restore the disk layout of your system and boot loader. However, that means you are responsible for taking backups. And, more important, to restore these before you reboot recovered system.
 
@@ -8,7 +9,7 @@ Ah, my backup program which is the best of course, is not yet integrated within 
 
 The work-flow `mkrescue` is the only needed as `mkbackup` will not create any backup as it is done outside ReaR anyhow. Very important to know.
 
-== Think before coding
+## Think before coding
 
 Well, what does this mean? Is my backup program capable of making full backups of my root disks, including ACLs? And, as usual, did we test a restore of a complete system already? Can we do a restore via the command line, or do we need a graphical user interface to make this happen?
 If the CLI approach is working then this would be the preferred manor for ReaR. If on the other hand only GUI approach is possible, then can you initiate a push from the media server instead of the pull method (which we could program within ReaR)?
@@ -24,7 +25,7 @@ What does ReaR need to have on board before we can initiate a restore from your 
  * configuration files required by above executables?
  * most likely you need the manuals a bit to gather some background information of your backup program around its minimum requirements
 
-== Steal code from previous backup integrations
+## Steal code from previous backup integrations
 
 Do not make your life too difficult by re-invented the wheel. Have a look at existing integrations. How?
 
