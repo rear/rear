@@ -44,7 +44,7 @@ elif type -p yum &>/dev/null; then
         sed -i -e 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|' -e '/^mirror/d' /etc/yum.repos.d/*.repo
     fi
     yum -q --nogpgcheck install -y \
-        rubygem-ronn-ng kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute nfs-utils xorriso util-linux psmisc procps-ng util-linux \
+        kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute nfs-utils xorriso util-linux psmisc procps-ng util-linux \
         make binutils git rpm-build || die "Failed to install required packages"
     # CentOS 8 doesn't have sysvinit-tools any more but it also doesn't have asciidoctor yet
     # CentOS 10 uses asciidoc and doesn't have sysvinit-tools and also not mkisofs
@@ -53,6 +53,9 @@ elif type -p yum &>/dev/null; then
         yum -q --nogpgcheck install -y mkisofs asciidoc xmlto ||
         yum -q --nogpgcheck install -y asciidoc xmlto ||
         die "Failed to install asciidoctor or asciidoc"
+    yum -q --nogpgcheck install -y ronn ||
+	yum -q --nogpgcheck install -y rubygem-ronn-ng ||
+	die "Failed to install ronn"
 fi
 
 git config --global --add safe.directory /rear || die "Failed to configure git"
