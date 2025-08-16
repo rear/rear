@@ -1,7 +1,7 @@
 
 # Configuration
 
-![ReaR BACUP/OUTPUT flow](pictures/rear_backup_output.png)
+![ReaR BACKUP/OUTPUT flow](pictures/rear_backup_output.png)
 
 The configuration is performed by changing _/etc/rear/local.conf_ or
 _/etc/rear/site.conf_.
