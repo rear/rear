@@ -1,6 +1,7 @@
-= Integration
 
-== Monitoring your disk layout with Relax-and-Recover (ReaR)
+# Integration
+
+## Monitoring your disk layout with Relax-and-Recover (ReaR)
 
 A crucial part to properly recreate the system is the disk layout,
 i.e. the disk partitioning with filesystems and mount points.
@@ -35,26 +36,26 @@ The disk layout information is stored in var/lib/rear/layout/disklayout.conf
 
 ReaR provides two specific workflows regarding the disk layout:
 
-=== Saving the current disk layout of the system
+### Saving the current disk layout of the system
 
 ReaR automatically saves the current disk layout of the system
 when it creates a new ReaR rescue/recovery system.
 However if you want to only save the current disk layout manually,
 use "rear savelayout" (this does not update the recovery system).
 
-=== Checking if the disk layout has changed
+### Checking if the disk layout has changed
 
 When you want to know if the current disk layout of the system
 has changed compared to the latest saved disk layout,
 use "rear checklayout".
 If the disk layout has changed, "rear checklayout" results a non-zero return code
 so you could use something like
-----
-# rear checklayout || rear mkrescue
-----
+
+    # rear checklayout || rear mkrescue
+
 to create a new ReaR recovery system when the disk layout has changed.
 
-== Integration with Nagios and Opsview
+## Integration with Nagios and Opsview
 
 If having current DR rescue images is important to your organization, but they
 cannot be automated (eg. a tape or USB device needs inserting), we provide a
@@ -72,30 +73,27 @@ Changes to the system requiring an update are:
 
 The integration is done using our own _check_rear_ plugin for Nagios.
 
-[source,bash]
-----
-#!/bin/bash
-#
-# Purpose: Checks if disaster recovery usb stick is up to date
+    #!/bin/bash
+    #
+    # Purpose: Checks if disaster recovery usb stick is up to date
+    
+    # Check if ReaR is installed
+    if [[ ! -x /usr/sbin/rear ]]; then
+        echo "REAR IS NOT INSTALLED"
+        exit 2
+    fi
+    
+    # ReaR disk layout status can be identical or changed
+    # returncode: 0 = ok
+    if ! /usr/sbin/rear checklayout; then
+        echo "Disk layout has changed. Please insert Disaster Recovery USB stick into system !"
+        exit 2
+    fi
 
-# Check if ReaR is installed
-if [[ ! -x /usr/sbin/rear ]]; then
-    echo "REAR IS NOT INSTALLED"
-    exit 2
-fi
-
-# ReaR disk layout status can be identical or changed
-# returncode: 0 = ok
-if ! /usr/sbin/rear checklayout; then
-    echo "Disk layout has changed. Please insert Disaster Recovery USB stick into system !"
-    exit 2
-fi
-----
-
-We also monitor the _/var/log/rear/rear-system.log_ file for +ERROR:+ and +BUG+
+We also monitor the _/var/log/rear/rear-system.log_ file for `ERROR:` and `BUG`
 strings, so that in case of problems the operator is notified immediately.
 
 Note that error messages may not come from ReaR itself but from programs that are called by ReaR
 because stdout and stderr are redirected into ReaR's log file (see the section
-"What to do with stdin, stdout, and stderr" in https://github.com/rear/rear/wiki/Coding-Style)
+"What to do with stdin, stdout, and stderr" in [https://github.com/rear/rear/wiki/Coding-Style](https://github.com/rear/rear/wiki/Coding-Style))
 so in case of error messages one must check if that is actually an error or only false alarm.

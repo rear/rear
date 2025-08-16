@@ -1,14 +1,13 @@
-// FIXME: Make this part more generic and add distribution information
 
-= Getting started
+# Getting started
 
-== Software requirements
+## Software requirements
 Relax-and-Recover aims to have as little dependencies as possible, however
 over time certain capabilities were added using utilities and specific
 features, causing older distributions to fall out of support. We try to avoid
 this where practically possible and be conservative to add new dependencies.
 
-The most basic requirement for Relax-and-Recover is having +bash+, and
+The most basic requirement for Relax-and-Recover is having `bash`, and
 ubiquitous Linux tools like:
 
  - dd (coreutils)
@@ -38,12 +37,13 @@ In some cases having newer versions of tools may provide better support:
  - syslinux >= 4.00 (provides menu support)
  - parted
 
-In case we are using +BACKUP=NETFS+ with nfs or cifs we might need also:
+In case we are using `BACKUP=NETFS` with nfs or cifs we might need also:
 
  - nfs-client
  - cifs-utils
 
-== Distribution support
+## Distribution support
+
 As a project our aim is not to exclude any distribution from being supported,
 however (as already noted) some older distributions fell out of support over
 time and there is little interest from the project or the community to spend
@@ -56,35 +56,32 @@ testing and contributing to support those distributions.
 Currently we aim to support the following distributions by testing them
 regularly:
 
- - Red Hat Enterprise Linux and derivatives: RHEL5, RHEL6 and RHEL7
- - SUSE Linux Enterprise Server 11 and 12
- - Ubuntu LTS: 12, 13, 14 and 15
+ - Red Hat Enterprise Linux and derivatives: RHEL7 and higher
+ - SUSE Linux Enterprise Server 15 and higher
+ - Ubuntu LTS: 20 and higher
 
 Distributions dropped as supported:
 
- - Ubuntu LTS <12
- - Fedora <21
- - RHEL 3 and 4
- - SLES 9 and 10
- - openSUSE <11
+ - Ubuntu LTS <20
+ - Fedora <30
+ - RHEL <7
+ - SLES <15
+ - openSUSE <15
  - Debian <6
 
 Distributions known to be 'unsupported' are:
 
- - Ubuntu LTS 8.04 (as it does not implement +grep -P+)
+ - Ubuntu LTS 8.04 (as it does not implement `grep -P`)
 
 
-== Known limitations
+## Known limitations
+
 Relax-and-Recover offers a lot of flexibility in various use-cases, however it
 does have some limitations under certain circumstances:
 
  - Relax-and-Recover depends on the software of the running system. When
    recovering this system to newer hardware, it is possible that the hardware
    support of the original system does not support the newer hardware.
-+
-This problem has been seen when restoring an older RHEL4 with an older HP
-Proliant Support Pack (PSP) to more recent hardware. This PSP did not detect
-the newer HP SmartArray controller or its firmware.
 
  - Relax-and-Recover supports recovering to different hardware, but it cannot
    always automatically adapt to this new environment. In such cases it
@@ -104,56 +101,49 @@ the newer HP SmartArray controller or its firmware.
    * perform commands to restore the backup
 
 
-== Installation
+## Installation
 
 You can find the RPM and DEB packages from our web site at http://relax-and-recover.org/download/
 
-The latest stable versions of Fedora and SLES can be installed via +yum+ and +zypper+
+The latest stable versions of Fedora and SLES can be installed via `yum` and `zypper`
 
-=== From RPM packages
+## From RPM packages
+
 Simply install (or update) the provided packages using
-the command: +rpm -Uhv rear-1.17-1.fc20.noarch.rpm+
+the command: `rpm -Uhv rear-1.17-1.fc20.noarch.rpm`
 
-You can test your installation by running +rear dump+:
+You can test your installation by running `rear dump`:
 
-----
-[root@system ~]# rear dump
-Relax-and-Recover 1.12.0svn497 / 2011-07-11
-Dumping out configuration and system information
-System definition:
-                                    ARCH = Linux-x86_64
-                                      OS = GNU/Linux
-                               OS_VENDOR = RedHatEnterpriseServer
-                              OS_VERSION = 5.6
-...
-----
+    [root@system ~]# rear dump
+    Relax-and-Recover 1.12.0svn497 / 2011-07-11
+    Dumping out configuration and system information
+    System definition:
+                                        ARCH = Linux-x86_64
+                                          OS = GNU/Linux
+                                   OS_VENDOR = RedHatEnterpriseServer
+                                  OS_VERSION = 5.6
+    ...
 
-=== From DEB packages
+### From DEB packages
 
 On a Debian system (or Ubuntu) you can download the DEB packages from our download page and install it with the command:
 
-----
-dpkg -i rear*.deb
-----
+    dpkg -i rear*.deb
 
 On Debian (Ubuntu) use the following command to install missing dependencies:
 
-----
-apt-get -f install
-----
+    apt-get -f install
 
-=== From source
+### From source
 
-The latest and greatest sources are available at GitHub location : https://github.com/rear/rear
+The latest and greatest sources are available at GitHub location : [https://github.com/rear/rear](https://github.com/rear/rear)
 
 To make local copy with our github repository just type:
 
-----
-git clone git@github.com:rear/rear.git
-----
+    git clone git@github.com:rear/rear.git
 
-== File locations
+## File locations
 
-Remember the general configuration file is found at +/usr/share/rear/conf/default.conf+. In that file you find all variables used by +rear+ which can be overruled by redefining these in the +/etc/rear/site.conf+ or +/etc/rear/local.conf+ files. Please do not modify the +default.conf+ file itself, but use the +site.conf+ or +local.conf+ for this purpose.
+Remember the general configuration file is found at `/usr/share/rear/conf/default.conf`. In that file you find all variables used by `rear` which can be overruled by redefining these in the `/etc/rear/site.conf` or `/etc/rear/local.conf` files. Please do not modify the `default.conf` file itself, but use the `site.conf` or `local.conf` for this purpose.
 
 NOTE: Important note about the configuration files inside ReaR. Treat these as Bash scripts! ReaR will source these configuration files, and therefore, if you make any syntax error against Bash scripting rules ReaR will break.

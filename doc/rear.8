@@ -1,1106 +1,451 @@
-'\" t
-.\"     Title: rear
-.\"    Author: [see the "AUTHOR(S)" section]
-.\" Generator: Asciidoctor 2.0.12
-.\"      Date: 2024-12-17
-.\"    Manual: \ \&
-.\"    Source: \ \&
-.\"  Language: English
-.\"
-.TH "REAR" "8" "2024-12-17" "\ \&" "\ \&"
-.ie \n(.g .ds Aq \(aq
-.el       .ds Aq '
-.ss \n[.ss] 0
-.nh
-.ad l
-.de URL
-\fI\\$2\fP <\\$1>\\$3
-..
-.als MTO URL
-.if \n[.g] \{\
-.  mso www.tmac
-.  am URL
-.    ad l
-.  .
-.  am MTO
-.    ad l
-.  .
-.  LINKSTYLE blue R < >
-.\}
+.\" generated with Ronn-NG/v0.9.1
+.\" http://github.com/apjanke/ronn-ng/tree/0.9.1
+.TH "REAR" "8" "August 2025" ""
 .SH "NAME"
-rear \- bare metal disaster recovery and system migration tool
+\fBrear\fR \- bare metal disaster recovery and system migration tool
 .SH "SYNOPSIS"
-.sp
-\fBrear\fP [\fB\-h\fP|\fB\-\-help\fP] [\fB\-V\fP|\fB\-\-version\fP] [\fB\-dsSv\fP] [\fB\-D\fP|\fB\-\-debugscripts\fP \fISET\fP] [\fB\-c\fP \fIDIR\fP] [\fB\-C\fP \fICONFIG\fP] [\fB\-r\fP \fIKERNEL\fP] [\fB\-n\fP|\fB\-\-non\-interactive\fP] [\fB\-e\fP|\fB\-\-expose\-secrets\fP] [\-\-] \fICOMMAND\fP [\fIARGS\fP...]
+\fBrear\fR [\fB\-h|\-\-help\fR] [\fB\-V|\-\-version\fR] [\fB\-dsSv\fR] [\fB\-D|\-\-debugscripts\fR \fISET\fR] [\fB\-c\fR \fIDIR\fR] [\fB\-C\fR \fICONFIG\fR] [\fB\-r\fR \fIKERNEL\fR] [\fB\-n|\-\-non\-interactive\fR] [\fB\-e|\-\-expose\-secrets\fR] [\-\-] \fICOMMAND\fR [\fIARGS\fR\|\.\|\.\|\.]
 .SH "DESCRIPTION"
-.sp
-Relax\-and\-Recover (abbreviated ReaR) is the de facto standard disaster recovery framework on Linux.
-.sp
-It is in particular used on enterprise Linux distributions like Red Hat Enterprise Linux (RHEL)
-and SUSE Linux Enterprise Server (SLES).
-.sp
-ReaR is a system administrator tool and framework to create a bootable disaster recovery system image
-for bare metal disaster recovery with data backup restore on physical or virtual replacement hardware.
-.sp
-For bare metal disaster recovery the ReaR recovery system is booted on pristine replacement hardware.
-On replacement hardware first the storage setup/layout is recreated (disk partitioning, filesystems, mount points),
-then a backup restore program is called to restore the data (system files) into the recreated storage,
-and finally a boot loader is installed.
-.sp
-System administrators use the ReaR framework to set up a disaster recovery procedure
-as part of their disaster recovery policy (which complements their existing backup policy).
-.sp
-ReaR complements backup and restore of data with bare metal disaster recovery. ReaR can also act as local backup software,
-but ReaR is not a a backup management software. In many enterprise environmentments, data backup and restore happens via dedicated backup software which is integrated by ReaR and used to restore the data onto a replacement system as part of the automated disaster recovery procedure implemented by ReaR.
-.sp
-ReaR has support for built\-in backup methods using \(aqtar\(aq and \(aqrsync\(aq that are used for backup and restore.
-.sp
-ReaR integrates supports the following 3rd party, also commercial, tools for restoring a backup.
-.sp
-The complete list of backup methods (\fBBACKUP=...\fP) is:
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBAVA\fP Dell EMC Avamar / EMC Avamar
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBBACULA\fP Bacula
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBBAREOS\fP Bareos
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBBLOCKCLONE\fP block device cloning via \f(CRdd\fP
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBBORG\fP Borg Backup
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBCDM\fP Rubrik Cloud Data Management
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBDP\fP OpenText Data Protector
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBDUPLICITY\fP Duplicity / Duply
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBEXTERNAL\fP External custom restore method
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBFDRUPSTREAM\fP FDR/Upstream
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBGALAXY11\fP Commvault Galaxy 11 / Commvault Simpana
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBNBKDC\fP NovaStor DataCenter
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBNBU\fP Veritas NetBackup / Symantec NetBackup
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBNETFS\fP ReaR built\-in backup and restore via \f(CRrsync\fP or \f(CRtar\fP to a network file system or to a locally attached backup disk (USB, eSATA, ...)
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBNFS4SERVER\fP NFS4 server to push data \fBto\fP the rescue system
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBNSR\fP Dell EMC NetWorker / EMC NetWorker / Legato NetWorker
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBOBDR\fP One Button Disaster Recovery via tape
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBPPDM\fP Dell PowerProtect Data Manager
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBRBME\fP Rsync Backup Made Easy
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBREQUESTRESTORE\fP Request restore from a human operator
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBRSYNC\fP ReaR built\-in backup using \f(CRrsync\fP via \f(CRrsync\fP or \f(CRssh\fP protocol
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBSESAM\fP SEP Sesam
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBTSM\fP IBM Storage Protect / Tivoli Storage Manager / IBM Spectrum Protect
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-\fBVEEAM\fP Veeam Backup
-.RE
-.sp
-ReaR integrates well with Disaster Recovery Linux Manager (DRLM, see \c
-.URL "https://drlm.org" "" "),"
-which can act as a central management tool for ReaR deployments.
-.sp
-Professional services and support are available, see \c
-.URL "https://relax\-and\-recover.org/support/" "" ""
+Relax\-and\-Recover (abbreviated ReaR) is the de facto standard disaster recovery framework on Linux\.
+.P
+It is in particular used on enterprise Linux distributions like Red Hat Enterprise Linux (RHEL) and SUSE Linux Enterprise Server (SLES)\.
+.P
+ReaR is a system administrator tool and framework to create a bootable disaster recovery system image for bare metal disaster recovery with data backup restore on physical or virtual replacement hardware\.
+.P
+For bare metal disaster recovery the ReaR recovery system is booted on pristine replacement hardware\. On replacement hardware first the storage setup/layout is recreated (disk partitioning, filesystems, mount points), then a backup restore program is called to restore the data (system files) into the recreated storage, and finally a boot loader is installed\.
+.P
+System administrators use the ReaR framework to set up a disaster recovery procedure as part of their disaster recovery policy (which complements their existing backup policy)\.
+.P
+ReaR complements backup and restore of data with bare metal disaster recovery\. ReaR can also act as local backup software, but ReaR is not a a backup management software\. In many enterprise environmentments, data backup and restore happens via dedicated backup software which is integrated by ReaR and used to restore the data onto a replacement system as part of the automated disaster recovery procedure implemented by ReaR\.
+.P
+ReaR has support for built\-in backup methods using \'tar\' and \'rsync\' that are used for backup and restore\.
+.P
+ReaR integrates supports the following 3rd party, also commercial, tools for restoring a backup\.
+.P
+The complete list of backup methods (\fIBACKUP=\|\.\|\.\|\.\fR) is:
+.IP "\[ci]" 4
+\fIAVA\fR Dell EMC Avamar / EMC Avamar
+.IP "\[ci]" 4
+\fIBACULA\fR Bacula
+.IP "\[ci]" 4
+\fIBAREOS\fR Bareos
+.IP "\[ci]" 4
+\fIBLOCKCLONE\fR block device cloning via \fBdd\fR
+.IP "\[ci]" 4
+\fIBORG\fR Borg Backup
+.IP "\[ci]" 4
+\fICDM\fR Rubrik Cloud Data Management
+.IP "\[ci]" 4
+\fIDP\fR OpenText Data Protector
+.IP "\[ci]" 4
+\fIDUPLICITY\fR Duplicity / Duply
+.IP "\[ci]" 4
+\fIEXTERNAL\fR External custom restore method
+.IP "\[ci]" 4
+\fIFDRUPSTREAM\fR FDR/Upstream
+.IP "\[ci]" 4
+\fIGALAXY11\fR Commvault Galaxy 11 / Commvault Simpana
+.IP "\[ci]" 4
+\fINBKDC\fR NovaStor DataCenter
+.IP "\[ci]" 4
+\fINBU\fR Veritas NetBackup / Symantec NetBackup
+.IP "\[ci]" 4
+\fINETFS\fR ReaR built\-in backup and restore via \fBrsync\fR or \fBtar\fR to a network file system or to a locally attached backup disk (USB, eSATA, \|\.\|\.\|\.)
+.IP "\[ci]" 4
+\fINFS4SERVER\fR NFS4 server to push data \fIto\fR the rescue system
+.IP "\[ci]" 4
+\fINSR\fR Dell EMC NetWorker / EMC NetWorker / Legato NetWorker
+.IP "\[ci]" 4
+\fIOBDR\fR One Button Disaster Recovery via tape
+.IP "\[ci]" 4
+\fIPPDM\fR Dell PowerProtect Data Manager
+.IP "\[ci]" 4
+\fIRBME\fR Rsync Backup Made Easy
+.IP "\[ci]" 4
+\fIREQUESTRESTORE\fR Request restore from a human operator
+.IP "\[ci]" 4
+\fIRSYNC\fR ReaR built\-in backup using \fBrsync\fR via \fBrsync\fR or \fBssh\fR protocol
+.IP "\[ci]" 4
+\fISESAM\fR SEP Sesam
+.IP "\[ci]" 4
+\fITSM\fR IBM Storage Protect / Tivoli Storage Manager / IBM Spectrum Protect
+.IP "\[ci]" 4
+\fIVEEAM\fR Veeam Backup
+.IP "" 0
+.P
+ReaR integrates well with Disaster Recovery Linux Manager (DRLM, see \fIhttps://drlm\.org\fR), which can act as a central management tool for ReaR deployments\.
+.P
+Professional services and support are available, see \fIhttps://relax\-and\-recover\.org/support/\fR
 .SH "OPTIONS"
 .SS "GLOBAL OPTIONS"
-.sp
+.TP
 \-h \-\-help
-.RS 4
 usage information
-.RE
-.sp
+.TP
 \-c DIR
-.RS 4
 alternative config directory instead of /etc/rear (not supported during recovery)
-.RE
-.sp
+.TP
 \-C CONFIG
-.RS 4
 additional config files (absolute path or relative to config directory)
-.RE
-.sp
+.TP
 \-d
-.RS 4
-\fBdebug mode\fP: run many commands verbosely with debug messages in the log file (also sets \-v)
-.RE
-.sp
+\fIdebug mode\fR: run many commands verbosely with debug messages in the log file (also sets \-v)
+.TP
 \-D
-.RS 4
-\fBdebugscript mode\fP: log executed commands via \(aqset \-x\(aq (also sets \-v and \-d)
-.RE
-.sp
+\fIdebugscript mode\fR: log executed commands via \'set \-x\' (also sets \-v and \-d)
+.TP
 \-\-debugscripts SET
-.RS 4
-same as \-D but \fBdebugscript mode\fP with \(aqset \-SET\(aq
-.RE
-.sp
+same as \-D but \fIdebugscript mode\fR with \'set \-SET\'
+.TP
 \-r KERNEL
-.RS 4
 kernel version to use (by default the version of the running kernel)
-.RE
-.sp
+.TP
 \-s
-.RS 4
-\fBsimulation mode\fP: show what scripts are run without executing them
-.RE
-.sp
+\fIsimulation mode\fR: show what scripts are run without executing them
+.TP
 \-S
-.RS 4
-\fBstep\-by\-step mode\fP: acknowledge each script individually
-.RE
-.sp
+\fIstep\-by\-step mode\fR: acknowledge each script individually
+.TP
 \-v
-.RS 4
-\fBverbose mode\fP: show messages what ReaR is doing on the terminal
-.RE
-.sp
+\fIverbose mode\fR: show messages what ReaR is doing on the terminal
+.TP
 \-n \-\-non\-interactive
-.RS 4
-\fBnon\-interactive mode\fP: abort in UserInput() if default input does not make ReaR proceed (experimental)
-.RE
-.sp
+\fInon\-interactive mode\fR: abort in UserInput() if default input does not make ReaR proceed (experimental)
+.TP
 \-e \-\-expose\-secrets
-.RS 4
 do not suppress output of confidential values (passwords, encryption keys) in particular in the log file
-.RE
-.sp
+.TP
 \-p \-\-portable
-.RS 4
 allow running any ReaR workflow, especially recover, from a git checkout or rear source archive
-.RE
-.sp
+.TP
 \-V \-\-version
-.RS 4
 version information
-.RE
 .SS "COMMANDS"
-.sp
-\fBchecklayout\fP
-.RS 4
-check if the disk layout has changed since the last run of
-mkbackup/mkrescue
-.RE
-.sp
-\fBdump\fP
-.RS 4
-dump configuration and system information; run this to verify
-your setup
-.RE
-.sp
-\fBformat\fP
-.RS 4
-format and label USB or tape media to be used with rear;
-first argument is the USB or tape device to use, eg. \fI/dev/sdX\fP or
-\fI/dev/stX\fP
-.RE
-.sp
-\fBhelp\fP
-.RS 4
+.TP
+\fIchecklayout\fR
+check if the disk layout has changed since the last run of mkbackup/mkrescue
+.TP
+\fIdump\fR
+dump configuration and system information; run this to verify your setup
+.TP
+\fIformat\fR
+format and label USB or tape media to be used with rear; first argument is the USB or tape device to use, eg\. \fI/dev/sdX\fR or \fI/dev/stX\fR
+.TP
+\fIhelp\fR
 print full list of commands and options
-.RE
-.sp
-\fBmkbackup\fP
-.RS 4
-create rescue media and backup the system (only for internal backup
-methods)
-.RE
-.sp
-\fBmkbackuponly\fP
-.RS 4
-backup the system (only for internal backup methods) without creating
-rescue media
-.RE
-.sp
-\fBmkrescue\fP
-.RS 4
+.TP
+\fImkbackup\fR
+create rescue media and backup the system (only for internal backup methods)
+.TP
+\fImkbackuponly\fR
+backup the system (only for internal backup methods) without creating rescue media
+.TP
+\fImkrescue\fR
 create rescue media only
-.RE
-.sp
-\fBmountonly\fP
-.RS 4
+.TP
+\fImountonly\fR
 use ReaR as live media to mount and repair the system
-.RE
-.sp
-\fBrecover\fP
-.RS 4
+.TP
+\fIrecover\fR
 recover the system; can be used only when running from the rescue media
-.RE
-.sp
-\fBrestoreonly\fP
-.RS 4
+.TP
+\fIrestoreonly\fR
 only restore the backup; can be used only when running from the rescue media
-.RE
-.sp
-\fBmkopalpba\fP
-.RS 4
+.TP
+\fImkopalpba\fR
 create a pre\-boot authentication (PBA) image to boot from TCG Opal 2\-compliant self\-encrypting disks
-.RE
-.sp
-\fBopaladmin\fP
-.RS 4
+.TP
+\fIopaladmin\fR
 administrate TCG Opal 2\-compliant self\-encrypting disks
-.RE
-.sp
-\fBvalidate\fP
-.RS 4
+.TP
+\fIvalidate\fR
 submit validation information
-.RE
-.sp
-Use \(aqrear \-v help\(aq for more advanced commands.
+.P
+Use \fBrear \-v help\fR for more advanced commands\.
 .SH "BACKGROUND INFORMATION"
-.sp
 The process of bare metal disaster recovery consists of two parts:
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
+.IP "\[ci]" 4
 Recreate the system layout
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
+.IP "\[ci]" 4
 Restore the data to the system
-.RE
-.sp
-Most backup software solutions are very good at restoring data but do not
-support recreating the system layout. Relax\-and\-Recover is very good at
-recreating the system layout but works best when used together with
-supported backup software.
-.sp
-In this combination Relax\-and\-Recover recreates the system layout and calls
-the backup software to restore the actual data. Thus there is no unnecessary
-duplicate data storage and the Relax\-and\-Recover rescue media can be very small.
-.sp
-For demonstration and special use purposes Relax\-and\-Recover also includes
-an internal backup method, NETFS, which can be used to create a simple tar.gz
-archive of the system. For all permanent setups we recommend using something
-more professional for backup, either a traditional backup software (open
-source or commercial) or rsync with hardlink based solutions, e.g. RSYNC
-BACKUP MADE EASY.
+.IP "" 0
+.P
+Most backup software solutions are very good at restoring data but do not support recreating the system layout\. Relax\-and\-Recover is very good at recreating the system layout but works best when used together with supported backup software\.
+.P
+In this combination Relax\-and\-Recover recreates the system layout and calls the backup software to restore the actual data\. Thus there is no unnecessary duplicate data storage and the Relax\-and\-Recover rescue media can be very small\.
+.P
+For demonstration and special use purposes Relax\-and\-Recover also includes an internal backup method, NETFS, which can be used to create a simple tar\.gz archive of the system\. For all permanent setups we recommend using something more professional for backup, either a traditional backup software (open source or commercial) or rsync with hardlink based solutions, e\.g\. RSYNC BACKUP MADE EASY\.
 .SH "RESCUE IMAGE CONFIGURATION"
-.sp
-The OUTPUT variable defines from where our bootable rescue image will be
-booted and the OUTPUT_URL variable defines where the rescue image should be
-send to. Possible OUTPUT settings are:
-.sp
-OUTPUT=\fBRAMDISK\fP
-.RS 4
-Create only the Relax\-and\-Recover initramfs.
-.RE
-.sp
-OUTPUT=\fBISO\fP
-.RS 4
-\fB(Default)\fP Create a bootable ISO9660 image on disk as \fIrear\-$(hostname).iso\fP
-.RE
-.sp
-OUTPUT=\fBPXE\fP
-.RS 4
-Create on a remote PXE/NFS server the required files (such as
-configuration file, kernel and initrd image)
-.RE
-.sp
-OUTPUT=\fBOBDR\fP
-.RS 4
-Create a bootable OBDR tape (optionally including the backup archive).
-Specify the OBDR tape device by using TAPE_DEVICE.
-.RE
-.sp
-OUTPUT=\fBUSB\fP
-.RS 4
-Create a bootable USB disk.
-.RE
-.sp
-OUTPUT=\fBRAWDISK\fP
-.RS 4
-Create a bootable image file named "rear\-$(hostname).raw.gz", which
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
+The \fBOUTPUT\fR variable defines from where our bootable rescue image will be booted and the \fBOUTPUT_URL\fR variable defines where the rescue image should be send to\. Possible \fBOUTPUT\fR settings are:
+.IP "\[ci]" 4
+OUTPUT=\fIRAMDISK\fR: Create only the Relax\-and\-Recover initramfs\.
+.IP "\[ci]" 4
+OUTPUT=\fIISO\fR: \fI(Default)\fR Create a bootable ISO9660 image on disk as \fIrear\-$(hostname)\.iso\fR
+.IP "\[ci]" 4
+OUTPUT=\fIPXE\fR: Create on a remote PXE/NFS server the required files (such as configuration file, kernel and initrd image)
+.IP "\[ci]" 4
+OUTPUT=\fIOBDR\fR: Create a bootable OBDR tape (optionally including the backup archive)\. Specify the OBDR tape device by using \fBTAPE_DEVICE\fR\.
+.IP "\[ci]" 4
+OUTPUT=\fIUSB\fR: Create a bootable USB disk\.
+.IP "\[ci]" 4
+OUTPUT=\fIRAWDISK\fR: Create a bootable image file named "rear\-$(hostname)\.raw\.gz", which
+.IP "\[ci]" 4
 supports UEFI boot if syslinux/EFI or Grub 2/EFI is installed,
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
+.IP "\[ci]" 4
 supports Legacy BIOS boot if syslinux is installed,
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-supports UEFI/Legacy BIOS dual boot if syslinux \fBand\fP one of the supported EFI
-bootloaders are installed.
-.RE
-.RE
-.sp
-OUTPUT=\fBPORTABLE\fP
-.RS 4
-Create a portable ReaR archive that can be used on any rescue system to run
-any ReaR workflow, especially recover. Assumes that all required software is
-installed and usable there. This is experimental, please report any issues.
-.RE
-.sp
-When using OUTPUT=ISO, RAMDISK, OBDR, USB, PORTABLE or RAWDISK you should
-provide the backup target location through the OUTPUT_URL variable. Possible
-OUTPUT_URL settings are:
-.sp
-OUTPUT_URL=\fBfile://\fP
-.RS 4
-Write the image to disk. The default is in \fI/var/lib/rear/output/\fP.
-.RE
-.sp
-OUTPUT_URL=\fBnfs://\fP
-.RS 4
-Write the image by mounting the target filesystem via NFS.
-.RE
-.sp
-OUTPUT_URL=\fBcifs://\fP
-.RS 4
-Write the image by mounting the target filesystem via CIFS.
-.RE
-.sp
-OUTPUT_URL=\fBfish://\fP
-.RS 4
-Write the image using lftp and the FISH protocol.
-.RE
-.sp
-OUTPUT_URL=\fBftp://\fP
-.RS 4
-Write the image using lftp and the FTP protocol.
-.RE
-.sp
-OUTPUT_URL=\fBftps://\fP
-.RS 4
-Write the image using lftp and the FTPS protocol.
-.RE
-.sp
-OUTPUT_URL=\fBhftp://\fP
-.RS 4
-Write the image using lftp and the HFTP protocol.
-.RE
-.sp
-OUTPUT_URL=\fBhttp://\fP
-.RS 4
-Write the image using lftp and the HTTP (PUT) protocol.
-.RE
-.sp
-OUTPUT_URL=\fBhttps://\fP
-.RS 4
-Write the image using lftp and the HTTPS (PUT) protocol.
-.RE
-.sp
-OUTPUT_URL=\fBsftp://\fP
-.RS 4
-Write the image using lftp and the secure FTP (SFTP) protocol.
-.RE
-.sp
-OUTPUT_URL=\fBrsync://\fP
-.RS 4
-Write the image using rsync and the RSYNC protocol.
-.RE
-.sp
-OUTPUT_URL=\fBsshfs://\fP
-.RS 4
-Write the image using sshfs and the SSH protocol.
-.RE
-.sp
-OUTPUT_URL=\fBnull\fP
-.RS 4
-Do not copy the rescue image from \fI/var/lib/rear/output/\fP to a remote output location.
-OUTPUT_URL=null is useful when another program (e.g. an \fIexternal\fP backup program)
-is used to save the rescue image from the local system to a remote place,
-or with BACKUP_URL=iso:///backup when the backup is included in the rescue image
-to avoid a (big) copy of the rescue image at a remote output location.
-In the latter case the rescue image must be manually saved from the local system to a remote place.
-OUTPUT_URL=null is only supported together with BACKUP=NETFS.
-.RE
-.sp
-If you do not specify OUTPUT_URL variable then by default it will be aligned to what
-was defined by variable BACKUP_URL. And, the rescue image will then be copied to the same
-location as your backup of the system disk(s).
-.sp
-The ISO_DEFAULT variable defines what default boot option is used on the rescue image.
-Possible values are \f(CRmanual\fP, \f(CRboothd\fP or \f(CRautomatic\fP. Manual will make you boot into
-the shell directly by default, boothd will boot to the first disk (default) or automatic
-will automatically start in recovery mode.
+.IP "\[ci]" 4
+supports UEFI/Legacy BIOS dual boot if syslinux \fIand\fR one of the supported EFI bootloaders are installed\.
+.IP "\[ci]" 4
+OUTPUT=\fIPORTABLE\fR: Create a portable ReaR archive that can be used on any rescue system to run any ReaR workflow, especially recover\. Assumes that all required software is installed and usable there\. This is experimental, please report any issues\.
+.IP "" 0
+.P
+When using \fBOUTPUT=ISO\fR, \fBRAMDISK\fR, \fBOBDR\fR, \fBUSB\fR, \fBPORTABLE\fR or \fBRAWDISK\fR you should provide the backup target location through the \fBOUTPUT_URL\fR variable\. Possible \fBOUTPUT_URL\fR settings are:
+.TP
+OUTPUT_URL=\fIfile://\fR
+Write the image to disk\. The default is in \fI/var/lib/rear/output/\fR\.
+.TP
+OUTPUT_URL=\fInfs://\fR
+Write the image by mounting the target filesystem via NFS\.
+.TP
+OUTPUT_URL=\fIcifs://\fR
+Write the image by mounting the target filesystem via CIFS\.
+.TP
+OUTPUT_URL=\fIfish://\fR
+Write the image using \fBlftp\fR and the FISH protocol\.
+.TP
+OUTPUT_URL=\fIftp://\fR
+Write the image using \fBlftp\fR and the FTP protocol\.
+.TP
+OUTPUT_URL=\fIftps://\fR
+Write the image using \fBlftp\fR and the FTPS protocol\.
+.TP
+OUTPUT_URL=\fIhftp://\fR
+Write the image using \fBlftp\fR and the HFTP protocol\.
+.TP
+OUTPUT_URL=\fIhttp://\fR
+Write the image using \fBlftp\fR and the HTTP (PUT) protocol\.
+.TP
+OUTPUT_URL=\fIhttps://\fR
+Write the image using \fBlftp\fR and the HTTPS (PUT) protocol\.
+.TP
+OUTPUT_URL=\fIsftp://\fR
+Write the image using \fBlftp\fR and the secure FTP (SFTP) protocol\.
+.TP
+OUTPUT_URL=\fIrsync://\fR
+Write the image using \fBrsync\fR and the RSYNC protocol\.
+.TP
+OUTPUT_URL=\fIsshfs://\fR
+Write the image using sshfs and the SSH protocol\.
+.TP
+OUTPUT_URL=\fInull\fR
+Do not copy the rescue image from \fI/var/lib/rear/output/\fR to a remote output location\. \fBOUTPUT_URL=null\fR is useful when another program (e\.g\. an \fIexternal\fR backup program) is used to save the rescue image from the local system to a remote place, or with \fBBACKUP_URL=iso:///backup\fR when the backup is included in the rescue image to avoid a (big) copy of the rescue image at a remote output location\. In the latter case the rescue image must be manually saved from the local system to a remote place\. \fBOUTPUT_URL=null\fR is only supported together with \fBBACKUP=NETFS\fR\.
+.P
+If you do not specify \fBOUTPUT_URL\fR variable then by default it will be aligned to what was defined by variable \fBBACKUP_URL\fR\. And, the rescue image will then be copied to the same location as your backup of the system disk(s)\.
+.P
+The \fBISO_DEFAULT\fR variable defines what default boot option is used on the rescue image\. Possible values are \fBmanual\fR, \fBboothd\fR or \fBautomatic\fR\. Manual will make you boot into the shell directly by default, boothd will boot to the first disk (default) or automatic will automatically start in recovery mode\.
 .SH "RESCUE IMAGE KERNEL COMMAND LINE OPTIONS"
-.sp
-When booting the rescue image you can edit the kernel command line.
-There are some Relax\-and\-Recover specific kernel command line options:
-.sp
-\fBdebug\fP
-.RS 4
-The rescue system start up scripts in /etc/scripts/system\-setup.d/
-are run one by one each one after pressing \(aqEnter\(aq and
-the scripts are run with \(aqset \-x\(aq which prints commands
-and their arguments as they are executed.
-.RE
-.sp
-\fBauto_recover\fP or \fBautomatic\fP
-.RS 4
-Launch \(aqrear recover\(aq automatically (without automated reboot).
-Together with \(aqdebug\(aq it runs \(aqrear recover\(aq in debugscript mode.
-.RE
-.sp
-\fBunattended\fP
-.RS 4
-Launch \(aqrear recover\(aq automatically as with \(aqauto_recover\(aq
-plus automated reboot after successful \(aqrear recover\(aq.
-.RE
-.sp
-\fBip= nm= netdev= gw=\fP
-.RS 4
-When IP address plus optionally netmask (default 255.255.255.0),
-network device (default eth0), and default gateway are specified,
-then only that single network device is set up. Example:
-.RE
-.sp
-.if n .RS 4
-.nf
-.fam C
-ip=192.168.100.2 nm=255.255.255.0 netdev=eth0 gw=192.168.100.1
-.fam
-.fi
-.if n .RE
-.sp
-\fBnoip\fP
-.RS 4
-Skip network devices setup by the rescue system start up scripts (overrides ip= nm= netdev= gw=).
-.RE
+When booting the rescue image you can edit the kernel command line\. There are some Relax\-and\-Recover specific kernel command line options:
+.TP
+\fIdebug\fR
+The rescue system start up scripts in /etc/scripts/system\-setup\.d/ are run one by one each one after pressing \'Enter\' and the scripts are run with \'set \-x\' which prints commands and their arguments as they are executed\.
+.TP
+\fIauto_recover\fR or \fIautomatic\fR
+Launch \'rear recover\' automatically (without automated reboot)\. Together with \'debug\' it runs \'rear recover\' in debugscript mode\.
+.TP
+\fIunattended\fR
+Launch \'rear recover\' automatically as with \'auto_recover\' plus automated reboot after successful \'rear recover\'\.
+.TP
+\fIip= nm= netdev= gw=\fR
+When IP address plus optionally netmask (default 255\.255\.255\.0), network device (default eth0), and default gateway are specified, then only that single network device is set up\. Example:
+.IP
+ip=192\.168\.100\.2 nm=255\.255\.255\.0 netdev=eth0 gw=192\.168\.100\.1
+.TP
+\fInoip\fR
+Skip network devices setup by the rescue system start up scripts (overrides ip= nm= netdev= gw=)\.
 .SH "BACKUP SOFTWARE INTEGRATION"
-.sp
-Currently Relax\-and\-Recover supports the below listed backup methods.
-.sp
-There is a distinction between Relax\-and\-Recover support for 3rd party
-backup software and Relax\-and\-Recover built\-in backup methods. The latter
-also creates a backup of your data while the former will only integrate
-Relax\-and\-Recover with the backup software to restore the data with the
-help of the backup software without actually creating backups. This means
-that for all non\-built\-in backup software you \fBmust\fP take care of creating
-backups yourself (unless otherwise noted).
-.sp
-Especially the rear mkbackup command can be confusing as it is only
-useful for the built\-in backup methods and has usually no function at all with
-the other (3rd party / external) backup methods where the rear mkrescue command applies.
-.sp
-See the full list of supported backup methods above for reference and consult \(aq/usr/share/rear/conf/default.conf\(aq
-for the full list of supported options for each backup method. Also, \(aqrear dump\(aq will
-show you the current settings for BACKUP and OUTPUT methods including all available options.
-.sp
-The default \fBBACKUP\fP method is \fBREQUESTRESTORE\fP which is not a backup method at all but simply
-halts the recovery and requests that somebody will restore the data to the appropriate location
-(e.g. via SSH). This method works especially well with an rsync based backup that is pushed
-back to the backup client.
-.sp
-If your favourite backup software is missing from this list, please submit
-a patch or ask us to implement it for you.
-.sp
-When using BACKUP=NETFS you must provide the backup target location
-through the BACKUP_URL variable. Possible BACKUP_URL settings are:
-.sp
-BACKUP_URL=\fBfile://\fP
-.RS 4
-To backup to local disk, use BACKUP_URL=file:///directory/path/
-.RE
-.sp
-BACKUP_URL=\fBnfs://\fP
-.RS 4
-To backup to NFS disk, use BACKUP_URL=nfs://nfs\-server\-name/share/path
-.RE
-.sp
-BACKUP_URL=\fBtape://\fP
-.RS 4
-To backup to tape device, use BACKUP_URL=tape:///dev/nst0 or alternatively,
-simply define TAPE_DEVICE=/dev/nst0
-.RE
-.sp
-BACKUP_URL=\fBrsync://\fP
-.RS 4
-When backup method BACKUP=RSYNC is chosen then we need to define a corresponding BACKUP_URL rule:
-.sp
-.if n .RS 4
-.nf
-.fam C
-BACKUP_URL=rsync://[user@]host[:port]/path
-BACKUP_URL=rsync://[user@]host[:port]::/path
-.fam
-.fi
-.if n .RE
-.RE
-.sp
-BACKUP_URL=\fBcifs://\fP
-.RS 4
-To backup to a Samba share (CIFS), use
-BACKUP_URL=cifs://cifs\-server\-name/share/path. To provide credentials for
-CIFS mounting use a \fI/etc/rear/cifs\fP credentials file and define
-BACKUP_OPTIONS="cred=/etc/rear/cifs" and pass along:
-.sp
-.if n .RS 4
-.nf
-.fam C
-username=_username_
-password=_secret password_
-domain=_domain_
-.fam
-.fi
-.if n .RE
-.RE
-.sp
-BACKUP_URL=\fBusb://\fP
-.RS 4
-To backup to USB storage device, use BACKUP_URL=usb:///dev/disk/by\-label/REAR\-000
-or use a partition device node or a specific filesystem label. Alternatively, you
-may specify the partition device using USB_DEVICE=/dev/disk/by\-label/REAR\-000 if needed.
-.sp
-If you combine this with OUTPUT=USB you will end up with a bootable USB
-device.
-.RE
-.sp
-BACKUP_URL=\fBsshfs://\fP
-.RS 4
-To backup to a remote server via sshfs (SSH protocol), use
-BACKUP_URL=sshfs://user@remote\-system.name.org/home/user/backup\-dir/
-.sp
-It is advisable to add \fBServerAliveInterval 15\fP in the /root/.ssh/config
-file for the remote system (remote\-system.name.org).
-.RE
-.sp
-BACKUP_URL=\fBiso://\fP
-.RS 4
-To include the backup within the ISO image. It is important that the BACKUP_URL and
-OUTPUT_URL variables are different. E.g.
-.sp
-.if n .RS 4
-.nf
-.fam C
-BACKUP_URL=iso:///backup/
-OUTPUT_URL=nfs://server/path/
-.fam
-.fi
-.if n .RE
-.RE
-.sp
-When using BACKUP=NETFS and BACKUP_PROG=tar there is an option to select
-BACKUP_TYPE=incremental or BACKUP_TYPE=differential to let rear make
-incremental or differential backups until the next full backup day
-e.g. via FULLBACKUPDAY="Mon" is reached or when the last full backup
-is too old after FULLBACKUP_OUTDATED_DAYS has passed.
-Incremental or differential backup is currently only known to work
-with BACKUP_URL=nfs. Other BACKUP_URL schemes may work but
-at least BACKUP_URL=usb requires USB_SUFFIX to be set
-to work with incremental or differential backup.
+Currently Relax\-and\-Recover supports the below listed backup methods\.
+.P
+There is a distinction between Relax\-and\-Recover support for 3rd party backup software and Relax\-and\-Recover built\-in backup methods\. The latter also creates a backup of your data while the former will only integrate Relax\-and\-Recover with the backup software to restore the data with the help of the backup software without actually creating backups\. This means that for all non\-built\-in backup software you \fImust\fR take care of creating backups yourself (unless otherwise noted)\.
+.P
+Especially the \fBrear mkbackup\fR command can be confusing as it is only useful for the built\-in backup methods and has usually no function at all with the other (3rd party / external) backup methods where the \fBrear mkrescue\fR command applies\.
+.P
+See the full list of supported backup methods above for reference and consult \'/usr/share/rear/conf/default\.conf\' for the full list of supported options for each backup method\. Also, \'rear dump\' will show you the current settings for \fBBACKUP\fR and \fBOUTPUT\fR methods including all available options\.
+.P
+The default \fIBACKUP\fR method is \fIREQUESTRESTORE\fR which is not a backup method at all but simply halts the recovery and requests that somebody will restore the data to the appropriate location (e\.g\. via SSH)\. This method works especially well with an rsync based backup that is pushed back to the backup client\.
+.P
+If your favourite backup software is missing from this list, please submit a patch or ask us to implement it for you\.
+.P
+When using \fBBACKUP=NETFS\fR you must provide the backup target location through the \fBBACKUP_URL\fR variable\. Possible \fBBACKUP_URL\fR settings are:
+.TP
+BACKUP_URL=\fIfile://\fR
+To backup to local disk, use \fBBACKUP_URL=file:///directory/path/\fR
+.TP
+BACKUP_URL=\fInfs://\fR
+To backup to NFS disk, use \fBBACKUP_URL=nfs://nfs\-server\-name/share/path\fR
+.TP
+BACKUP_URL=\fItape://\fR
+To backup to tape device, use \fBBACKUP_URL=tape:///dev/nst0\fR or alternatively, simply define \fBTAPE_DEVICE=/dev/nst0\fR
+.TP
+BACKUP_URL=\fIrsync://\fR
+When backup method \fBBACKUP=RSYNC\fR is chosen then we need to define a corresponding \fBBACKUP_URL\fR rule:
+.IP
+BACKUP_URL=rsync://[user@]host[:port]/path BACKUP_URL=rsync://[user@]host[:port]::/path
+.TP
+BACKUP_URL=\fIcifs://\fR
+To backup to a Samba share (CIFS), use \fBBACKUP_URL=cifs://cifs\-server\-name/share/path\fR\. To provide credentials for CIFS mounting use a \fI/etc/rear/cifs\fR credentials file and define \fBBACKUP_OPTIONS="cred=/etc/rear/cifs"\fR and pass along:
+.IP
+username=\fIusername\fR password=\fIsecret password\fR domain=\fIdomain\fR
+.TP
+BACKUP_URL=\fIusb://\fR
+To backup to USB storage device, use \fBBACKUP_URL=usb:///dev/disk/by\-label/REAR\-000\fR or use a partition device node or a specific filesystem label\. Alternatively, you may specify the partition device using \fBUSB_DEVICE=/dev/disk/by\-label/REAR\-000\fR if needed\.
+.P
+If you combine this with \fBOUTPUT=USB\fR you will end up with a bootable USB device\.
+.TP
+BACKUP_URL=\fIsshfs://\fR
+To backup to a remote server via sshfs (SSH protocol), use \fBBACKUP_URL=sshfs://user@remote\-system\.name\.org/home/user/backup\-dir/\fR
+.P
+It is advisable to add \fIServerAliveInterval 15\fR in the \fB/root/\.ssh/config\fR file for the remote system (remote\-system\.name\.org)\.
+.TP
+BACKUP_URL=\fIiso://\fR
+To include the backup within the ISO image\. It is important that the \fBBACKUP_URL\fR and \fBOUTPUT_URL\fR variables are different\. E\.g\.
+.IP
+BACKUP_URL=iso:///backup/ OUTPUT_URL=nfs://server/path/
+.P
+When using \fBBACKUP=NETFS\fR and BACKUP_PROG=tar there is an option to select \fBBACKUP_TYPE=incremental\fR or \fBBACKUP_TYPE=differential\fR to let \fBrear\fR make incremental or differential backups until the next full backup day e\.g\. via \fBFULLBACKUPDAY="Mon"\fR is reached or when the last full backup is too old after FULLBACKUP_OUTDATED_DAYS has passed\. Incremental or differential backup is currently only known to work with \fBBACKUP_URL=nfs\fR\. Other BACKUP_URL schemes may work but at least \fBBACKUP_URL=usb\fR requires USB_SUFFIX to be set to work with incremental or differential backup\.
 .SH "SUPPORT FOR SELF\-ENCRYPTING DISKS"
-.sp
-Relax\-and\-Recover supports self\-encrypting disks (SEDs) compliant with the TCG
-Opal 2 specification if the \f(CRsedutil\-cli\fP executable is installed.
-.sp
+Relax\-and\-Recover supports self\-encrypting disks (SEDs) compliant with the TCG Opal 2 specification if the \fBsedutil\-cli\fR executable is installed\.
+.P
 Self\-encrypting disk support includes
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-recovery (saving and restoring the system\(cqs SED configuration),
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
+.IP "\[ci]" 4
+recovery (saving and restoring the system\'s SED configuration),
+.IP "\[ci]" 4
 setting up SEDs, including assigning a disk password,
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-providing a pre\-boot authentication (PBA) system to unlock SEDs at boot time.
-.RE
-.sp
-To prepare booting from an SED, run rear mkopalpba, then create the rescue
-system.
-.sp
-To set up an SED, boot the Relax\-and\-Recover rescue system and run \f(CRrear
-opaladmin setupERASE DEVICE\fP (\fIDEVICE\fP being the disk device path like
-\f(CR/dev/sda\fP).
-.sp
-For complete information, consult the section "Support for TCG Opal 2\-compliant
-Self\-Encrypting Disks" in the Relax\-and\-Recover user guide.
+.IP "\[ci]" 4
+providing a pre\-boot authentication (PBA) system to unlock SEDs at boot time\.
+.IP "" 0
+.P
+To prepare booting from an SED, run \fBrear mkopalpba\fR, then create the rescue system\.
+.P
+To set up an SED, boot the Relax\-and\-Recover rescue system and run \fBrear opaladmin setupERASE DEVICE\fR (\fIDEVICE\fR being the disk device path like \fB/dev/sda\fR)\.
+.P
+For complete information, consult the section "Support for TCG Opal 2\-compliant Self\-Encrypting Disks" in the Relax\-and\-Recover user guide\.
 .SH "CONFIGURATION"
-.sp
-To configure Relax\-and\-Recover you have to edit the configuration files in
-\fI/etc/rear/\fP.  All \fI*.conf\fP files there are part of the configuration, but
-only \fIsite.conf\fP and \fIlocal.conf\fP are intended for the user configuration.
-All other configuration files hold defaults for various distributions and
-should not be changed.
-.sp
-In \fI/etc/rear/templates/\fP there are also some template files which are used
-by Relax\-and\-Recover to create configuration files (mostly for the boot
-environment).  Modify the templates to adjust the information contained in
-the emails produced by Relax\-and\-Recover. You can use these templates to
-prepend your own configurations to the configuration files created by
-Relax\-and\-Recover, for example you can edit \fIPXE_pxelinux.cfg\fP to add some
-general pxelinux configuration you use.
-.sp
-In almost all circumstances you have to configure two main settings and their
-parameters: The backup method and the output method.
-.sp
-The backup method defines, how your data is to be saved and whether Relax\-and\-Recover
-should backup your data as part of the mkbackup workflow for internal backup methods
-or whether you use 3rd party backup software to archive your data.
-.sp
-The output method defines how the rescue system is written to disk and how you
-plan to boot the failed computer from the rescue system.
-.sp
-See the default configuration file \fI/usr/share/rear/conf/default.conf\fP for
-an overview of the possible methods and their options.
-.sp
-An example to use TSM for backup and ISO for output would be to add
-these lines to \fI/etc/rear/local.conf\fP (no need to define a BACKUP_URL
-when using an external backup solution):
-.sp
-.if n .RS 4
+To configure Relax\-and\-Recover you have to edit the configuration files in \fI/etc/rear/\fR\. All \fI*\.conf\fR files there are part of the configuration, but only \fIsite\.conf\fR and \fIlocal\.conf\fR are intended for the user configuration\. All other configuration files hold defaults for various distributions and should not be changed\.
+.P
+In \fI/etc/rear/templates/\fR there are also some template files which are used by Relax\-and\-Recover to create configuration files (mostly for the boot environment)\. Modify the templates to adjust the information contained in the emails produced by Relax\-and\-Recover\. You can use these templates to prepend your own configurations to the configuration files created by Relax\-and\-Recover, for example you can edit \fIPXE_pxelinux\.cfg\fR to add some general pxelinux configuration you use\.
+.P
+In almost all circumstances you have to configure two main settings and their parameters: the backup method and the output method\.
+.P
+The \fIbackup method\fR defines, how your data is to be saved and whether Relax\-and\-Recover should backup your data as part of the mkbackup workflow for internal backup methods or whether you use 3rd party backup software to archive your data\.
+.P
+The \fIoutput method\fR defines how the rescue system is written to disk and how you plan to boot the failed computer from the rescue system\.
+.P
+See the default configuration file \fI/usr/share/rear/conf/default\.conf\fR for an overview of the possible methods and their options\.
+.P
+An example to use TSM for backup and ISO for output would be to add these lines to \fI/etc/rear/local\.conf\fR (no need to define a \fBBACKUP_URL\fR when using an external backup solution):
+.IP "" 4
 .nf
-.fam C
 BACKUP=TSM
 OUTPUT=ISO
-.fam
 .fi
-.if n .RE
-.sp
-And if all your systems use NTP for time synchronisation, you can also
-add these lines to \fI/etc/rear/site.conf\fP
-.sp
-.if n .RS 4
+.IP "" 0
+.P
+And if all your systems use NTP for time synchronisation, you can also add these lines to \fI/etc/rear/site\.conf\fR
+.IP "" 4
 .nf
-.fam C
 TIMESYNC=NTP
-.fam
 .fi
-.if n .RE
-.sp
-Do not forget to distribute the \fIsite.conf\fP to all your systems.
-.sp
-The resulting ISO image will be created in \fI/var/lib/rear/output/\fP.
-You can now modify the behaviour by copying the appropriate
-configuration variables from \fIdefault.conf\fP to \fIlocal.conf\fP and
-changing them to suit your environment.
+.IP "" 0
+.P
+Do not forget to distribute the \fIsite\.conf\fR to all your systems\.
+.P
+The resulting ISO image will be created in \fI/var/lib/rear/output/\fR\. You can now modify the behaviour by copying the appropriate configuration variables from \fIdefault\.conf\fR to \fIlocal\.conf\fR and changing them to suit your environment\.
 .SH "EXIT STATUS"
-.sp
-0
-.RS 4
-Successful program execution.
-.RE
-.sp
->0
-.RS 4
-Usage, syntax or execution errors. Check the log file in
-\fI/var/log/rear/\fP for more information.
-.RE
+.TP
+\fB0\fR
+Successful program execution\.
+.TP
+\fB>0\fR
+Usage, syntax or execution errors\. Check the log file in \fI/var/log/rear/\fR for more information\.
 .SH "EXAMPLES"
-.sp
-To print out the current settings for BACKUP and OUTPUT methods and some
-system information. This command can be used to see the supported features
-for the given release and platform.
-.sp
-.if n .RS 4
+To print out the current settings for \fBBACKUP\fR and \fBOUTPUT\fR methods and some system information\. This command can be used to see the supported features for the given release and platform\.
+.IP "" 4
 .nf
-.fam C
 # rear dump
-.fam
 .fi
-.if n .RE
-.sp
-To create a new rescue environment. Do not forget to copy the resulting
-rescue system away so that you can use it in the case of a system failure.
-.sp
-.if n .RS 4
+.IP "" 0
+.P
+To create a new rescue environment\. Do not forget to copy the resulting rescue system away so that you can use it in the case of a system failure\.
+.IP "" 4
 .nf
-.fam C
 # rear \-v mkrescue
-.fam
 .fi
-.if n .RE
-.sp
-To create a new rescue image together with a complete archive of your local
-system run the command:
-.sp
-.if n .RS 4
+.IP "" 0
+.P
+To create a new rescue image together with a complete archive of your local system run the command:
+.IP "" 4
 .nf
-.fam C
 # rear \-v mkbackup
-.fam
 .fi
-.if n .RE
+.IP "" 0
 .SH "FILES"
-.sp
+.TP
 /usr/sbin/rear
-.RS 4
-The program itself.
-.RE
-.sp
-/etc/rear/local.conf
-.RS 4
-System specific configuration can be set here.
-.RE
-.sp
-/etc/rear/site.conf
-.RS 4
-Site specific configuration can be set here (not created by default).
-.RE
-.sp
+The program itself\.
+.TP
+/etc/rear/local\.conf
+System specific configuration can be set here\.
+.TP
+/etc/rear/site\.conf
+Site specific configuration can be set here (not created by default)\.
+.TP
 /var/log/rear/
-.RS 4
-Directory holding the log files.
-.RE
-.sp
-/tmp/rear.####
-.RS 4
-Relax\-and\-Recover working directory. If Relax\-and\-Recover exits with an error,
-you must remove this directory manually.
-.RE
-.sp
+Directory holding the log files\.
+.TP
+/tmp/rear\.##############
+Relax\-and\-Recover working directory\. If Relax\-and\-Recover exits with an error, you must remove this directory manually\.
+.TP
 /usr/share/rear
-.RS 4
-Relax\-and\-Recover script components.
-.RE
-.sp
-/usr/share/rear/conf/default.conf
-.RS 4
-Relax\-and\-Recover default values. Contains a complete set of parameters
-and its explanation. Do not edit or modify things therein but
-use \fIlocal.conf\fP or \fIsite.conf\fP for specific settings.
-.RE
+Relax\-and\-Recover script components\.
+.TP
+/usr/share/rear/conf/default\.conf
+Relax\-and\-Recover default values\. Contains a complete set of parameters and its explanation\. Do not edit or modify things therein but use \fIlocal\.conf\fR or \fIsite\.conf\fR for specific settings\.
 .SH "BUGS"
-.sp
-Feedback is welcome, please report issues or improvements to our
-issue\-tracker at: \c
-.URL "http://github.com/rear/issues/" "" ""
-.sp
-Furthermore, we welcome pull requests via GitHub.
+Feedback is welcome, please report issues or improvements to our issue\-tracker at: \fIhttp://github\.com/rear/issues/\fR
+.P
+Furthermore, we welcome pull requests via GitHub\.
 .SH "SEE ALSO"
-.sp
-Relax\-and\-Recover comes with extensive documentation located in
-\fI/usr/share/doc\fP.
+Relax\-and\-Recover comes with extensive documentation located in \fI/usr/share/doc\fR\.
 .SH "AUTHORS"
-.sp
-The ReaR project was initiated in 2006 by Schlomo Schapiro (\c
-.URL "https://github.com/schlomo" "" ")"
-and
-Gratien D\(cqhaese (\c
-.URL "https://github.com/gdha" "" ")"
-and has since then seen a lot of contributions by many authors.
-As ReaR deals with bare metal disaster recovery, there is a large amount of code
-that was contributed by owners and users of specialized hardware and software.
-Without their combined efforts and contributions ReaR would not be
-the universal Linux bare metal disaster recovery solution that it is today.
-.sp
+The ReaR project was initiated in 2006 by Schlomo Schapiro (\fIhttps://github\.com/schlomo\fR) and Gratien D\'haese (\fIhttps://github\.com/gdha\fR) and has since then seen a lot of contributions by many authors\. As ReaR deals with bare metal disaster recovery, there is a large amount of code that was contributed by owners and users of specialized hardware and software\. Without their combined efforts and contributions ReaR would not be the universal Linux bare metal disaster recovery solution that it is today\.
+.P
 As time passed the project was lucky to get the support of additional developers to also help as maintainers:
-Dag Wieers (\c
-.URL "https://github.com/dagwieers" "" "),"
-Jeroen Hoekx (\c
-.URL "https://github.com/jhoekx" "" "),"
-Johannes Meixner (\c
-.URL "https://github.com/jsmeix" "" "),"
-Vladimir Gozora (\c
-.URL "https://github.com/gozora" "" "),"
-Sebastien Chabrolles (\c
-.URL "https://github.com/schabrolles" "" "),"
-Renaud Metrich (\c
-.URL "https://github.com/rmetrich" "" ")"
-and
-Pavel Cahyna (\c
-.URL "https://github.com/pcahyna" "" ")."
-We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers.
-Refer to the MAINTAINERS (\c
-.URL "https://github.com/rear/rear/blob/master/MAINTAINERS" "" ")"
-file for the list of active and past maintainers.
-.sp
-To see the full list of authors and their contributions
-look at the git history (\c
-.URL "https://github.com/rear/rear/graphs/contributors" "" ")."
-We are very thankful to all authors and encourage anybody interested
-to take a look at our source code and to contribute what you find important.
-.sp
-Relax\-and\-Recover is a developed with a collaborative process using Github at \c
-.URL "http://github.com/rear/" "" ""
-.sp
-The Relax\-and\-Recover website is located at: \c
-.URL "http://relax\-and\-recover.org/" "" ""
+.IP "\[ci]" 4
+Dag Wieers (\fIhttps://github\.com/dagwieers\fR),
+.IP "\[ci]" 4
+Jeroen Hoekx (\fIhttps://github\.com/jhoekx\fR),
+.IP "\[ci]" 4
+Johannes Meixner (\fIhttps://github\.com/jsmeix\fR),
+.IP "\[ci]" 4
+Vladimir Gozora (\fIhttps://github\.com/gozora\fR),
+.IP "\[ci]" 4
+Sebastien Chabrolles (\fIhttps://github\.com/schabrolles\fR),
+.IP "\[ci]" 4
+Renaud Metrich (\fIhttps://github\.com/rmetrich\fR) and
+.IP "\[ci]" 4
+Pavel Cahyna (\fIhttps://github\.com/pcahyna\fR)\.
+.IP "" 0
+.P
+We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers\. Refer to the MAINTAINERS (\fIhttps://github\.com/rear/rear/blob/master/MAINTAINERS\fR) file for the list of active and past maintainers\.
+.P
+To see the full list of authors and their contributions look at the git history (\fIhttps://github\.com/rear/rear/graphs/contributors\fR)\. We are very thankful to all authors and encourage anybody interested to take a look at our source code and to contribute what you find important\.
+.P
+Relax\-and\-Recover is a developed with a collaborative process using Github at \fIhttp://github\.com/rear/\fR
+.P
+The Relax\-and\-Recover website is located at: \fIhttp://relax\-and\-recover\.org/\fR
 .SH "COPYRIGHT"
-.sp
-(c) 2006\-2022
-.sp
-The copyright is held by the original authors of the respective code pieces as can be seen in the git history at \c
-.URL "https://github.com/rear/rear/graphs/contributors" "" ""
-.sp
-Relax\-and\-Recover comes with ABSOLUTELY NO WARRANTY; for details
-see the GNU General Public License at \c
-.URL "http://www.gnu.org/licenses/gpl.html" "" ""
+(c) 2006\-2025
+.P
+The copyright is held by the original authors of the respective code pieces as can be seen in the git history at \fIhttps://github\.com/rear/rear/graphs/contributors\fR
+.P
+Relax\-and\-Recover comes with ABSOLUTELY NO WARRANTY; for details see the GNU General Public License at \fIhttps://www\.gnu\.org/licenses/gpl\-3\.0\.html\fR

@@ -1,4 +1,5 @@
-= Introduction
+
+# Introduction
 
 Relax-and-Recover is the leading Open Source bare metal disaster recovery
 solution. It is a modular framework with many ready-to-go workflows for
@@ -34,26 +35,23 @@ during initial configuration and help debug during integration.
 Professional services and support are available.
 
 
-== Relax-and-Recover project
+## Relax-and-Recover project
+
 The support and development of the Relax-and-Recover project takes place
 on Github:
 
-Relax-and-Recover website::
-    http://relax-and-recover.org/
+* Relax-and-Recover website:
+    [https://relax-and-recover.org/](https://relax-and-recover.org/)
 
-Github project::
-    http://github.com/rear/rear/
+* Github project:
+    [https://github.com/rear/rear/](https://github.com/rear/rear/)
 
 In case you have questions, ideas or feedback about this document, you
-can contact the development team on the Relax-and-Recover mailinglist at:
-rear-users@lists.relax-and-recover.org.
-
-NOTE: Note that you have to be subscribed to be able to send mails to the
-Relax-and-Recover mailinglist. You can subscribe to the list at:
-http://lists.relax-and-recover.org/mailman/listinfo/rear-users
+can contact the development team via creating a [GitHub Issues](https://github.com/rear/rear-user-guide/issues)
 
 
-== Design concepts
+## Design concepts
+
 Based on experience from previous projects, a set of design principles were
 defined, and improved over time:
 
@@ -73,13 +71,9 @@ install just as a set of scripts that utilizes everything that the Linux
 operating system provides.
 
 
-== Features and functionality
-Relax-and-Recover has a wide range of features:
+## Features and functionality
 
-// FIXME: Insert the various features from the Release Notes +
-//        include the information from the presentations +
-//        and optionally the rescue creation and recovery workflow
-// FIXME: Get rid of the below list when everything is in the feature set
+Relax-and-Recover has a wide range of features:
 
  - Improvements to HP SmartArray and CCISS driver integration
  - Improvements to software RAID integration
@@ -97,8 +91,8 @@ Relax-and-Recover has a wide range of features:
  - Syslinux boot menu
  - Storing rescue/backup logfile on rescue media
  - Restoring to different hardware
- - RHEL5, RHEL6 and RHEL7 support
- - SLES 11 and SLES 12 support
+ - RHEL6, RHEL7, RHEL8, RHEL9 and RHEL10 support
+ - SLES 15 support
  - Debian and Ubuntu support
  - Various usability improvements
  - Serial console support auto-detected

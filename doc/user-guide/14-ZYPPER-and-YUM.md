@@ -1,6 +1,7 @@
-== Documentation for the ZYPPER and YUM Methods
 
-=== Background
+# The ZYPPER and YUM Methods
+
+### Background
 
 Both the ZYPPER and YUM methods are used to recreate a system "from scratch" by
 capturing a list of RPMs installed on the source system and installing those RPMs
@@ -9,7 +10,7 @@ on the target system during the restore phase.
 As of ReaR 2.4, the YUM method also includes the option to backup certain files.
 
 
-== ZYPPER
+## ZYPPER
 
 NOTE: ZYPPER method support was added to Relax-and-Recover 2.1.
 
@@ -20,9 +21,9 @@ This new kind of "backup" method does not work on files but on RPM packages and
 is intended for use with Linux distributions which use the zypper package
 manager (SUSE, openSUSE, etc).
 
-=== Configuration
+### Configuration
 
-*Option: ZYPPER REPOSITORIES*
+* *Option: ZYPPER REPOSITORIES*
 
 During `rear mkbackup` it will basically only save a list of installed RPM 
 packages into _var/lib/rear/backup/ZYPPER/installed_RPM_packages_ and during 
@@ -44,7 +45,7 @@ repository URI.
 See what `zypper repos -u` shows as URI and what `zypper repos -u -` returns.  
 Also see `man zypper`.
 
-.Automatic zypper repo detection
+* Automatic zypper repo detection
 
 The default empty _ZYPPER_REPOSITORIES_ array means that, during `rear mkbackup`, the command
    `zypper repos --export var/lib/rear/backup/ZYPPER/zypper_repositories.repo`
@@ -67,7 +68,7 @@ implemented.
 The current default is to use a SUSE installation DVD in the first CDROM drive: +
 `ZYPPER_REPOSITORIES=( "cd:///?devices=/dev/sr0" )`
 
-*Option: ZYPPER_INSTALL_RPMS*
+* *Option: ZYPPER_INSTALL_RPMS*
 
 ZYPPER_INSTALL_RPMS specifies which kind of RPM packages are installed in which
 way for BACKUP=ZYPPER.  The by default empty ZYPPER_INSTALL_RPMS means that, 
@@ -92,7 +93,7 @@ installed by the admin (the ones that are really wanted) or got unintentionally
 installed as recommended by other RPMs (those are perhaps needed) or are no 
 longer required after other RPMs had been removed (those are probably orphans).
 
-*Option: COPY_AS_IS_ZYPPER and COPY_AS_IS_EXCLUDE_ZYPPER*
+* *Option: COPY_AS_IS_ZYPPER and COPY_AS_IS_EXCLUDE_ZYPPER*
 
 The COPY_AS_IS_ZYPPER array contains by default basically what `rpm -qc 
 zypper ; rpm -ql libzypp | grep -Ev 'locale|man'` shows (currently determined 
@@ -106,7 +107,7 @@ system which can be a dead end for `rear recover`.
 COPY_AS_IS_EXCLUDE_ZYPPER behaves the same as COPY_AS_IS_EXCLUDE, but 
 specifically for the ZYPPER method.
 
-*Option: REQUIRED_PROGS_ZYPPER and PROGS_ZYPPER*
+* *Option: REQUIRED_PROGS_ZYPPER and PROGS_ZYPPER*
 
 By default, the REQUIRED_PROGS_ZYPPER array contains all zypper, libzypp 
 and libsolv-tools binaries - i.e. all what `rpm -ql zypper | grep bin ; rpm -ql libzypp | grep bin ; rpm -ql libsolv-tools | grep bin`
@@ -117,7 +118,7 @@ The PROGS_ZYPPER array is empty by default and intended to contain additional
 useful programs that are not strictly required in the ReaR recovery system to 
 run `rear recover`.
 
-*Option: ZYPPER_ROOT_PASSWORD*
+* *Option: ZYPPER_ROOT_PASSWORD*
 
 ZYPPER_ROOT_PASSWORD specifies the initial root password in the target system.
 This initial root password should not be the actually intended root password
@@ -133,7 +134,7 @@ If SSH_ROOT_PASSWORD is specified it is used as root password in the target
 system unless ZYPPER_ROOT_PASSWORD is specified, which is used with highest 
 priority.
 
-*Option: ZYPPER_NETWORK_SETUP_COMMANDS*
+* *Option: ZYPPER_NETWORK_SETUP_COMMANDS*
 
 ZYPPER_NETWORK_SETUP_COMMANDS specifies the initial network setup for the 
 target system.
@@ -159,16 +160,16 @@ calling the hardcoded command `yast2 --ncurses lan add name=eth0 ethdevice=eth0 
 
 If something else is needed, an appropriate yast2 command can be manually specified.
 
-=== Example
-[source,bash]
-OUTPUT=ISO
-BACKUP=ZYPPER
-BACKUP_OPTIONS="nfsvers=3,nolock"
-BACKUP_URL=nfs://10.160.4.244/nfs
-SSH_ROOT_PASSWORD='password_on_the_rear_recovery_system'
-USE_DHCLIENT="yes"
+### Example
 
-== YUM
+    OUTPUT=ISO
+    BACKUP=ZYPPER
+    BACKUP_OPTIONS="nfsvers=3,nolock"
+    BACKUP_URL=nfs://10.160.4.244/nfs
+    SSH_ROOT_PASSWORD='password_on_the_rear_recovery_system'
+    USE_DHCLIENT="yes"
+
+## YUM
 
 NOTE: YUM method support was added to Relax-and-Recover 2.3.
 
@@ -179,7 +180,7 @@ Most options are the similar to, or the same as, the ZYPPER options.  If a
 particular option is not documented here, look at the equivalent ZYPPER_*
 option.
 
-*Option: YUM_EXCLUDE_PKGS*
+* *Option: YUM_EXCLUDE_PKGS*
 
 Packages listed in this array will not be installed on the target
 system, even if they are present on the source system.
@@ -188,16 +189,16 @@ This can be useful if, for instance, more than one kernel is installed
 and you want to exclude the older kernel(s) from being installed on
 the target system.
 
-=== Example
-[source,bash]
-OUTPUT=ISO
-BACKUP=YUM
-BACKUP_URL=iso://backup
-OUTPUT_URL=null
-YUM_EXCLUDE_PKGS=( 'kernel*327*' 'tree' )
-export http_proxy="http://10.0.2.2:8080"
+### Example
 
-== YUM+backup
+    OUTPUT=ISO
+    BACKUP=YUM
+    BACKUP_URL=iso://backup
+    OUTPUT_URL=null
+    YUM_EXCLUDE_PKGS=( 'kernel*327*' 'tree' )
+    export http_proxy="http://10.0.2.2:8080"
+
+## YUM+backup
 
 NOTE: YUM with file backup support was added to Relax-and-Recover 2.4.
 
@@ -223,18 +224,18 @@ default, be included in the backup archive which is stored in the ISO.
 with YUM+backup or NETFS, it is prudent to exercise proper security 
 so that the contents of the ISO do not fall into the wrong hands!*
 
-=== Configuration
+### Configuration
 
-*Option: YUM_BACKUP_FILES*
+* *Option: YUM_BACKUP_FILES*
 
 When set to a true value (yes, true, 1, etc), ReaR will create a
 backup archive the files on the source which must be restored after
 the packages are installed in order to result in a fully recovered
 system.
 
-=== Options only available with YUM_BACKUP_FILES=yes
+### Options only available with YUM_BACKUP_FILES=yes
 
-*Option: RECREATE_USERS_GROUPS*
+* *Option: RECREATE_USERS_GROUPS*
 
 This option determines if/how users and groups that are present on the 
 source system at the time that the backup is created, are recreated on the 
@@ -250,7 +251,7 @@ Adding "passwords" to the RECREATE_USERS_GROUPS array
 (`RECREATE_USERS_GROUPS=("yes" "passwords")`) will also set the target
 system passwords.
 
-*Option: YUM_BACKUP_FILES_FULL_EXCL*
+* *Option: YUM_BACKUP_FILES_FULL_EXCL*
 
 This option determines if a comprehensive exclusion list is built 
 during backup.
@@ -260,36 +261,35 @@ cause files which have been excluded (usually due to being provided
 when a package is installed) to be implicitly included via the 
 alternate path(s) present on the system.
 
-.Example
+* Example:
 On a system where _/sbin_ is a symlink to _/usr/sbin_,
 _/usr/sbin/ifup_ will be excluded due to being provided by the
 initscripts package, but _/sbin/ifup_ will still be present in the
 archive due to the alternate path.
 
-[source,bash]
-$ ls -ald /sbin
-lrwxrwxrwx. 1 root root 8 Jun 15  2017 /sbin -> usr/sbin
+        $ ls -ald /sbin
+        lrwxrwxrwx. 1 root root 8 Jun 15  2017 /sbin -> usr/sbin
 
 A full, comprehensive exclusion list will find all paths to excluded 
 files, making the backup archive as small as possible, but can
 potentially take a LOT longer due to the file system scans.
 
-*Option: YUM_BACKUP_SELINUX_CONTEXTS*
+* *Option: YUM_BACKUP_SELINUX_CONTEXTS*
 
 ReaR can also capture the SELinux security contexts of every file 
 on the source system and reapply those contexts after the packages 
 have been reinstalled (and the backups, if any, have been extracted).
 
-=== Example
-[source,bash]
-OUTPUT=ISO
-BACKUP=YUM
-BACKUP_URL=iso://backup
-OUTPUT_URL=null
-BACKUP_SELINUX_DISABLE=0
-YUM_BACKUP_FILES=yes
-YUM_BACKUP_FILES_FULL_EXCL=yes
-YUM_BACKUP_SELINUX_CONTEXTS=yes
-RECREATE_USERS_GROUPS=( "yes" "passwords" )
-export http_proxy="http://10.0.2.2:8080"
+### Example
+
+    OUTPUT=ISO
+    BACKUP=YUM
+    BACKUP_URL=iso://backup
+    OUTPUT_URL=null
+    BACKUP_SELINUX_DISABLE=0
+    YUM_BACKUP_FILES=yes
+    YUM_BACKUP_FILES_FULL_EXCL=yes
+    YUM_BACKUP_SELINUX_CONTEXTS=yes
+    RECREATE_USERS_GROUPS=( "yes" "passwords" )
+    export http_proxy="http://10.0.2.2:8080"
 
