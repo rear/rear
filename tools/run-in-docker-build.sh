@@ -45,7 +45,7 @@ elif type -p yum &>/dev/null; then
     fi
     yum -q --nogpgcheck install -y \
         kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute nfs-utils xorriso util-linux psmisc procps-ng util-linux \
-        make binutils git rpm-build epel || die "Failed to install required packages"
+        make binutils git rpm-build epel-release || die "Failed to install required packages"
     # CentOS 8 doesn't have sysvinit-tools any more but it also doesn't have asciidoctor yet
     # CentOS 10 uses asciidoc and doesn't have sysvinit-tools and also not mkisofs
     yum clean all
