@@ -45,14 +45,16 @@ elif type -p yum &>/dev/null; then
     fi
     yum -q --nogpgcheck install -y \
         kbd cpio binutils ethtool gzip iputils parted tar openssl gawk attr bc syslinux rpcbind iproute nfs-utils xorriso util-linux psmisc procps-ng util-linux \
-        make binutils git rpm-build || die "Failed to install required packages"
+        make binutils git rpm-build epel || die "Failed to install required packages"
     # CentOS 8 doesn't have sysvinit-tools any more but it also doesn't have asciidoctor yet
     # CentOS 10 uses asciidoc and doesn't have sysvinit-tools and also not mkisofs
+    yum clean all
     yum -q --nogpgcheck install -y sysvinit-tools mkisofs asciidoc xmlto ||
         yum -q --nogpgcheck install -y asciidoctor ||
         yum -q --nogpgcheck install -y mkisofs asciidoc xmlto ||
         yum -q --nogpgcheck install -y asciidoc xmlto ||
         die "Failed to install asciidoctor or asciidoc"
+    # We need EPEL repo for 'ronn'
     yum -q --nogpgcheck install -y ronn ||
 	yum -q --nogpgcheck install -y rubygem-ronn-ng ||
 	die "Failed to install ronn"
