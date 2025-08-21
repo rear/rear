@@ -293,9 +293,6 @@ while true ; do
     shift
 done
 
-# Keep the remaining command line arguments to feed to the workflow:
-ARGS=( "$@" )
-
 # Set RECOVERY_MODE when we are running inside a rescue/recovery system
 # which is normally ReaR's recovery system or alternatively in PORTABLE mode
 # it is a foreign rescue system like the System Rescue CD or the Ubuntu Desktop Live CD,
@@ -345,6 +342,9 @@ if test -z "$WORKFLOW" ; then
         WORKFLOW=help
     fi
 fi
+
+# Keep the remaining command line arguments to feed to the workflow:
+ARGS=( "$@" )
 
 # The following workflows are always verbose:
 case "$WORKFLOW" in
