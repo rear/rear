@@ -1,7 +1,0 @@
-#
-# Prepare stuff for Cove
-#
-
-REQUIRED_PROGS+=( "${REQUIRED_PROGS_COVE[@]}" )
-
-KERNEL_CMDLINE+=" ${KERNEL_CMDLINE_COVE} "
