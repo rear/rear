@@ -76,7 +76,7 @@ if unattended_recovery ; then
     choices=( "View Relax-and-Recover log file(s)"
               "Login at the rescue system"
             )
-    echo "Launching '$RECOVERY_COMMANDS_LABEL' automatically"
+    echo "Launching '$RECOVERY_COMMANDS_LABEL' automatically in unattended (non-interactive) mode"
     for command in "${RECOVERY_COMMANDS[@]}" ; do
         rear_debug && echo "Running RECOVERY_COMMANDS '$command'"
         eval "$command"
