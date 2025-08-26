@@ -21,11 +21,9 @@ source /etc/scripts/system-setup-functions.sh
 # cf. the 'if rear_debug' part below:
 sleep 1
 
-# In the rescue system these paths are always like this, either for real or as a symlink to the actual paths:
-CONFIG_DIR=/etc/rear
-SHARE_DIR=/usr/share/rear
-VAR_DIR=/var/lib/rear
-LOG_DIR=/var/log/rear
+# Set variables like SHARE_DIR, CONFIG_DIR, we will need them soon
+# (also in source_all_config).
+set_rear_paths
 
 # Because "rear recover" won't work without default.conf
 # we abort when there is no default.conf (or when it is empty),
@@ -45,22 +43,9 @@ if ! test -s $SHARE_DIR/conf/default.conf ; then
     exit 1
 fi
 
-# Set SECRET_OUTPUT_DEV because secret default values are set via
-#   { VARIABLE='secret value' ; } 2>>/dev/$SECRET_OUTPUT_DEV
-# cf. https://github.com/rear/rear/pull/3034#issuecomment-1691609782
-SECRET_OUTPUT_DEV="null"
-# Sourcing /usr/share/rear/conf/default.conf as we need some variables or arrays
-# E.g. UDEV_NET_MAC_RULE_FILES is used by script 55-migrate-network-devices.sh
-source $SHARE_DIR/conf/default.conf || echo -e "\n'source $SHARE_DIR/conf/default.conf' failed with exit code $?"
-
-# Sourcing user and rescue configuration as we need some variables
-# (EXCLUDE_MD5SUM_VERIFICATION right now and other variables in the system setup scripts):
-# The order of sourcing should be 'site' then 'local' and as last 'rescue'
-for conf in site local rescue ; do
-    if test -s $CONFIG_DIR/$conf.conf ; then
-        source $CONFIG_DIR/$conf.conf || echo -e "\n'source $CONFIG_DIR/$conf.conf' failed with exit code $?"
-    fi
-done
+# Source ReaR config files, we need some ReaR variables in this script, even though it is run
+# outside the 'rear' executable itself.
+source_all_config
 
 # Default USER_INPUT_INTERRUPT_TIMEOUT is 30 seconds and default USER_INPUT_UNATTENDED_TIMEOUT is 3 seconds:
 unattended_recovery && timeout=$USER_INPUT_UNATTENDED_TIMEOUT || timeout=$USER_INPUT_INTERRUPT_TIMEOUT

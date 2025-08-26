@@ -29,3 +29,32 @@ function automatic_recovery() {
     done
     return 1
 }
+
+function set_rear_paths() {
+    # In the rescue system these paths are always like this, either for real or as a symlink to the actual paths:
+    CONFIG_DIR=/etc/rear
+    SHARE_DIR=/usr/share/rear
+    VAR_DIR=/var/lib/rear
+    LOG_DIR=/var/log/rear
+}
+
+# Sources all configuration files, including default.conf, for use outside ReaR (in the startup script).
+# Call set_rear_paths before calling this function.
+function source_all_config() {
+    # Set SECRET_OUTPUT_DEV because secret default values are set via
+    #   { VARIABLE='secret value' ; } 2>>/dev/$SECRET_OUTPUT_DEV
+    # cf. https://github.com/rear/rear/pull/3034#issuecomment-1691609782
+    SECRET_OUTPUT_DEV="null"
+    # Sourcing /usr/share/rear/conf/default.conf as we need some variables or arrays
+    # E.g. UDEV_NET_MAC_RULE_FILES is used by script 55-migrate-network-devices.sh
+    source $SHARE_DIR/conf/default.conf || echo -e "\n'source $SHARE_DIR/conf/default.conf' failed with exit code $?"
+
+    # Sourcing user and rescue configuration as we need some variables
+    # (EXCLUDE_MD5SUM_VERIFICATION right now and other variables in the system setup scripts):
+    # The order of sourcing should be 'site' then 'local' and as last 'rescue'
+    for conf in site local rescue ; do
+	if test -s $CONFIG_DIR/$conf.conf ; then
+            source $CONFIG_DIR/$conf.conf || echo -e "\n'source $CONFIG_DIR/$conf.conf' failed with exit code $?"
+	fi
+    done
+}
