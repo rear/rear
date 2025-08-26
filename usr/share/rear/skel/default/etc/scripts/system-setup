@@ -40,6 +40,8 @@ if ! test -s $SHARE_DIR/conf/default.conf ; then
     # because it does not make sense to run "rear recover" without default.conf:
     echo -e "\nRelax-and-Recover cannot work without $SHARE_DIR/conf/default.conf\n" >/etc/motd
     # exiting this script proceeds directly to the login screen:
+    # also execution of unattended/automated recovery is prevented by automatic-rear.service requiring
+    # this one, i.e. depending on its successful execution.
     exit 1
 fi
 
