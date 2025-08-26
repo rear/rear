@@ -2,6 +2,11 @@
 
 source /etc/scripts/system-setup-functions.sh
 
+# Source ReaR config files, we need some ReaR variables in this script, even though it is run
+# outside the 'rear' executable itself.
+set_rear_paths
+source_all_config
+
 # Make it explicit that the 'recover' workflow is always verbose (cf. usr/sbin/rear)
 # so when a 'rear $rear_options recover' command is shown to the user it contains '-v':
 rear_options='-v'
