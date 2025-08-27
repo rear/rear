@@ -22,7 +22,7 @@ function WORKFLOW_recover () {
     if ! is_true "$SIMULATE" ; then
         # In the recovery system /etc/rear-release is unique (it does not exist otherwise)
         # cf. init/default/050_check_rear_recover_mode.sh
-        test -f /etc/rear-release -a -w /etc/motd && echo -e '\nWelcome to Relax-and-Recover.\n' >/etc/motd
+        test -f /etc/rear-release -a -w /etc/motd && [ "$BACKUP" != "COVE" ] && echo -e '\nWelcome to Relax-and-Recover.\n' >/etc/motd
     fi
 
     SourceStage "setup"
