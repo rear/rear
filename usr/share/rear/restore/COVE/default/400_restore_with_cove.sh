@@ -71,7 +71,7 @@ function cove_get_filesystem_restore_sessions() {
     while IFS= read -r session; do
         local datasource
         datasource=$(echo "$session" | awk '{print $1}')
-        [ "$datasource" =  "FileSystem" ] || continue
+        [ "$datasource" = "FileSystem" ] || continue
 
         local type
         type=$(echo "$session" | awk '{print $2}')
