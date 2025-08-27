@@ -67,20 +67,8 @@ function cove_stop_pc() {
 
 # Gets FileSystem restore sessions
 function cove_get_filesystem_restore_sessions() {
-    local sessions=()
-    while IFS= read -r session; do
-        local datasource
-        datasource=$(echo "$session" | awk '{print $1}')
-        [ "$datasource" = "FileSystem" ] || continue
-
-        local type
-        type=$(echo "$session" | awk '{print $2}')
-        [ "$type" = "Restore" ] || continue
-
-        sessions+=("$session")
-    done < <("${COVE_CLIENT_TOOL}" control.session.list -no-header 2>/dev/null)
-
-    printf "%s\n" "${sessions[@]}"
+    "${COVE_CLIENT_TOOL}" control.session.list -no-header 2>/dev/null \
+        | awk '$1 == "FileSystem" && $2 == "Restore"'
 }
 
 # Waits for a new FileSystem restore session and gets its status
