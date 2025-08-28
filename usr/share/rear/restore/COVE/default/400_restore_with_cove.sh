@@ -51,7 +51,8 @@ function cove_show_progress() {
 
 # Returns ProcessController's process id
 function get_pc_pid() {
-    ps aux | awk -v pc_name=${PC_NAME} '$0 ~ pc_name && !/awk/ {print $2}'
+    local pc_name="ProcessController"
+    ps aux | awk -v pc_name=${pc_name} '$0 ~ pc_name && !/awk/ {print $2}'
 }
 
 # Stops ProcessController process
@@ -62,6 +63,31 @@ function cove_stop_pc() {
         sleep 1; \
         pid="$(get_pc_pid)"; \
     done }
+}
+
+# Gets FileSystem restore sessions
+function cove_get_filesystem_restore_sessions() {
+    "${COVE_CLIENT_TOOL}" control.session.list -no-header 2>/dev/null \
+        | awk '$1 == "FileSystem" && $2 == "Restore"'
+}
+
+# Waits for a new FileSystem restore session and gets its status
+# $1: prev sessions
+function cove_wait_for_new_session() {
+    local sessions_prev="$1"
+    local status=""
+    for _ in {1..90}; do
+        local sessions_cur
+        sessions_cur="$(cove_get_filesystem_restore_sessions)"
+        local new_session
+        new_session=$(printf "$sessions_prev$sessions_cur" | sort | uniq -u)
+        if [ -n "$new_session" ]; then
+            status=$(echo "$new_session" | awk '{print $3}')
+            break
+        fi
+        sleep 2
+    done
+    echo "$status"
 }
 
 # Print the welcome message
@@ -111,8 +137,41 @@ choices[1]="Use Relax-and-Recover shell and return back to here"
 choices[2]="Abort '$rear_workflow'"
 choice=""
 
+skip_progress_bar=0
+
 while true; do
-    "${COVE_CLIENT_TOOL}" "${restore_args[@]}" && break || LogPrintError "Failed to start the restore."
+    # Save FileSystem restore sessions before starting a new restore session
+    # in order to find it and check its status
+    sessions_prev="$(cove_get_filesystem_restore_sessions)"
+
+    if "${COVE_CLIENT_TOOL}" "${restore_args[@]}"; then
+        # Wait for the restore to be started
+        cove_print "Waiting for the restore to be started... "
+
+        status="$(cove_wait_for_new_session "$sessions_prev")"
+        if [ -z "$status" ]; then
+            cove_print_error
+            LogPrintError "The restore has not started: timeout expired."
+        else
+            cove_print_done
+            case "$status" in
+                InProcess)
+                    break
+                    ;;
+                Completed)
+                    skip_progress_bar=1
+                    break
+                    ;;
+                *)
+                    LogPrintError "The restore failed: session status '${status}'."
+                    ;;
+            esac
+        fi
+
+    else
+        LogPrintError "Failed to start the restore."
+    fi
+
     LogPrint ""
     while true; do
         choice="$(UserInput -I COVE_START_RESTORE_CHOICE -p "$prompt" -D "${choices[0]}" "${choices[@]}")"
@@ -139,11 +198,6 @@ while true; do
     done
 done
 
-# Wait for the restore to be started
-cove_print "Waiting for the restore to be started... "
-cove_wait_for 'local status="$(cove_get_status)"; [ "${status}" = "Scanning" -o "${status}" = "Restore" ]' 2 \
-    && cove_print_done || { cove_print_error; Error "The restore has not started."; }
-
 # Show progress bar for restore session
 
 unset choices
@@ -151,7 +205,7 @@ choices[0]="Use Relax-and-Recover shell"
 choices[1]="Abort '$rear_workflow'"
 choice=""
 
-if ! cove_show_progress; then
+if [ $skip_progress_bar -eq 0 ] && ! cove_show_progress; then
     available_disk_space=$(df -hP "$TARGET_FS_ROOT" | tail -1 | awk '{print $4}')
     LogPrint ""
     LogPrint "Restore failed."

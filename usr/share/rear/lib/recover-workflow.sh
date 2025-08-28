@@ -19,7 +19,7 @@ function WORKFLOW_recover () {
     # see https://github.com/rear/rear/issues/1670
     # and do not (over)-write /etc/motd in the recovery system in simulation mode
     # which results with the above to never (over)-write /etc/motd in simulation mode:
-    if ! is_true "$SIMULATE" ; then
+    if ! is_true "$SIMULATE" && [ "$BACKUP" != "COVE" ]; then
         # In the recovery system /etc/rear-release is unique (it does not exist otherwise)
         # cf. init/default/050_check_rear_recover_mode.sh
         test -f /etc/rear-release -a -w /etc/motd && echo -e '\nWelcome to Relax-and-Recover.\n' >/etc/motd
