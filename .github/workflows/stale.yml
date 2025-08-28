@@ -22,5 +22,24 @@ jobs:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         stale-issue-message: 'Stale issue message'
         stale-pr-message: 'Stale pull request message'
-        stale-issue-label: 'no-issue-activity'
-        stale-pr-label: 'no-pr-activity'
+        #stale-issue-label: 'no-issue-activity'
+        #stale-pr-label: 'no-pr-activity'
+        # Number of days of inactivity before an issue or pull request becomes stale
+        days-before-issue-stale: 60
+        # If set to a negative number like -1, no issues or pull requests will be marked as stale automatically.
+        days-before-pr-stale: -1
+        # Number of days of inactivity before a stale issue (or pull request) is closed
+        days-before-issue-close: 30
+        days-before-pr-close: 30
+        # Only issues (or pull requests) with these labels will be considered stale after the timer expires
+        only-labels: 'ready-to-close?,waiting for info'
+        # exempt-all-assignees: If set to true, the issues or the pull requests with an assignee will not be marked as stale automatically.
+        exempt-all-assignees: true
+        # Label to use when marking an issue as stale
+        staleLabel: 'ready-to-close?'
+        # Comment to post when marking an issue as stale. Set to `false` to disable
+        markComment: >
+           This issue has been automatically marked as stale
+           because it has not had recent activity for 60 days.
+           It will be closed if no further activity occurs within 30 days.
+           Thank you for your contribution.
