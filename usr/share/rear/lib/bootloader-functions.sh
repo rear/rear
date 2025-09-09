@@ -136,6 +136,7 @@ function make_syslinux_config {
 
     local BOOT_DIR="$1" ; shift
     local flavour="${1:-isolinux}" ; shift
+    local syslinux_version=$(get_syslinux_version)
     # syslinux v5 and higher has now its modules in a separate directory structure
     local syslinux_modules_dir=
 
@@ -191,22 +192,41 @@ function make_syslinux_config {
             done
         fi
     fi
-    
-    # if we have the menu.c32 available we use it
-    # if not we make sure that there will be no menu lines in the result
-    # so that we don't confuse older syslinux
-    if [[ -r "$SYSLINUX_DIR/menu.c32" ]] ; then
-        cp $v "$SYSLINUX_DIR/menu.c32" "$BOOT_DIR/menu.c32" >&2
-        function syslinux_menu {
-            echo "MENU $@"
-        }
-    else
-        # without menu we don't set a default but we ask syslinux to prompt for user input
-        echo "prompt 1"
-        function syslinux_menu {
-            : #noop
-        }
+
+    # Add necessary modules
+    cp $v "$SYSLINUX_DIR/chain.c32" "$BOOT_DIR/chain.c32" >&2
+    cp $v "$SYSLINUX_DIR/hdt.c32" "$BOOT_DIR/hdt.c32" >&2
+    cp $v "$SYSLINUX_DIR/menu.c32" "$BOOT_DIR/menu.c32" >&2
+    cp $v "$SYSLINUX_DIR/reboot.c32" "$BOOT_DIR/reboot.c32" >&2
+
+    # poweroff.c32 was added in 5.10
+    # https://wiki.syslinux.org/wiki/index.php?title=Syslinux_5_Changelog
+    local poweroff_prog="poweroff.com"
+    version_newer "$syslinux_version" 5.10 && poweroff_prog="poweroff.c32"
+    cp $v "$SYSLINUX_DIR/$poweroff_prog" "$BOOT_DIR/" >&2
+
+    # Add needed libraries for syslinux v5 and hdt
+    if version_newer "$syslinux_version" 5.00; then
+        cp $v "$SYSLINUX_DIR/ldlinux.c32" "$BOOT_DIR/ldlinux.c32" >&2
+        cp $v "$SYSLINUX_DIR/libcom32.c32" "$BOOT_DIR/libcom32.c32" >&2
+        cp $v "$SYSLINUX_DIR/libgpl.c32" "$BOOT_DIR/libgpl.c32" >&2
+        cp $v "$SYSLINUX_DIR/libmenu.c32" "$BOOT_DIR/libmenu.c32" >&2
+        cp $v "$SYSLINUX_DIR/libutil.c32" "$BOOT_DIR/libutil.c32" >&2
     fi
+
+    # Add resources for HDT
+    if [[ -r "/usr/share/hwdata/pci.ids" ]]; then
+        cp $v "/usr/share/hwdata/pci.ids" "$BOOT_DIR/pci.ids" >&2
+    elif [[ -r "/usr/share/pci.ids" ]]; then
+        cp $v "/usr/share/pci.ids" "$BOOT_DIR/pci.ids" >&2
+    fi
+    if [[ -r "/lib/modules/$KERNEL_VERSION/modules.pcimap" ]]; then
+        cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BOOT_DIR/modules.pcimap" >&2
+    fi
+
+    function syslinux_menu {
+        echo "MENU $@"
+    }
 
     function syslinux_menu_help {
         echo "TEXT HELP"
@@ -268,72 +288,40 @@ function make_syslinux_config {
     syslinux_menu_help "More information about Relax-and-Recover and the steps for recovering your system"
     syslinux_menu "help rear.help"
 
-    # Use chain booting for booting disk, if chain.c32 is available
-    if [[ -r "$SYSLINUX_DIR/chain.c32" ]]; then
-        cp $v "$SYSLINUX_DIR/chain.c32" "$BOOT_DIR/chain.c32" >&2
-
-        echo "say boothd0 - boot first local disk"
-        echo "label boothd0"
-        syslinux_menu "label Boot First ^Local disk (hd0)"
-        if [[ "$flavour" == "isolinux" ]] && [ "$ISO_DEFAULT" == "boothd" ] ; then
-            # for isolinux local boot means boot from first disk
-            echo "default boothd0"
-            syslinux_menu "default"
-        fi
-        if test "boothd0" = "$ISO_DEFAULT" ; then
-            # the user has explicitly specified to boot via boothd0 by default
-            echo "default boothd0"
-            syslinux_menu "default"
-        fi
-        echo "kernel chain.c32"
-        echo "append hd0"
-        echo ""
-
-        echo "say boothd1 - boot second local disk"
-        echo "label boothd1"
-        syslinux_menu "label Boot ^Second Local disk (hd1)"
-        if [[ "$flavour" == "extlinux" ]] && [ "$ISO_DEFAULT" == "boothd" ]; then
-            # for extlinux local boot means boot from second disk because the boot disk became the first disk
-            # which usually allows us to access the original first disk as second disk
-            echo "default boothd1"
-            syslinux_menu "default"
-        fi
-        if test "boothd1" = "$ISO_DEFAULT" ; then
-            # the user has explicitly specified to boot via boothd1 by default
-            echo "default boothd1"
-            syslinux_menu "default"
-        fi
-        echo "kernel chain.c32"
-        echo "append hd1"
-        echo ""
-
+    echo "say boothd0 - boot first local disk"
+    echo "label boothd0"
+    syslinux_menu "label Boot First ^Local disk (hd0)"
+    if [[ "$flavour" == "isolinux" ]] && [ "$ISO_DEFAULT" == "boothd" ] ; then
+        # for isolinux local boot means boot from first disk
+        echo "default boothd0"
+        syslinux_menu "default"
     fi
-
-    if [[ ! -r "$SYSLINUX_DIR/chain.c32" ]]; then
-        # this should be above under the if chain.c32 section but it comes here because it will work only if localboot is supported
-        # if you use old extlinux then you just cannot boot from other device unless chain.c32 is available :-(
-        echo "say boot80 - Boot from first BIOS disk 0x80"
-        echo "label boot80"
-        syslinux_menu "label Boot First ^Local BIOS disk (0x80)"
-        if [[ "$flavour" == "isolinux" ]]; then
-            # for isolinux local boot means boot from first disk
-            echo "default boot80"
-            syslinux_menu default
-        fi
-        echo "localboot 0x80"
-        echo
-        echo "say boot81 - Boot from second BIOS disk 0x81"
-        echo "label boot81"
-        syslinux_menu "label Boot Second ^Local BIOS disk (0x81)"
-        if [[ "$flavour" == "extlinux" ]]; then
-            # for extlinux local boot means boot from second disk because the boot disk became the first disk
-            # which usually allows us to access the original first disk as second disk
-            echo "default boot81"
-            syslinux_menu default
-        fi
-        echo "localboot 0x81"
-        echo ""
+    if test "boothd0" = "$ISO_DEFAULT" ; then
+        # the user has explicitly specified to boot via boothd0 by default
+        echo "default boothd0"
+        syslinux_menu "default"
     fi
+    echo "kernel chain.c32"
+    echo "append hd0"
+    echo ""
+
+    echo "say boothd1 - boot second local disk"
+    echo "label boothd1"
+    syslinux_menu "label Boot ^Second Local disk (hd1)"
+    if [[ "$flavour" == "extlinux" ]] && [ "$ISO_DEFAULT" == "boothd" ]; then
+        # for extlinux local boot means boot from second disk because the boot disk became the first disk
+        # which usually allows us to access the original first disk as second disk
+        echo "default boothd1"
+        syslinux_menu "default"
+    fi
+    if test "boothd1" = "$ISO_DEFAULT" ; then
+        # the user has explicitly specified to boot via boothd1 by default
+        echo "default boothd1"
+        syslinux_menu "default"
+    fi
+    echo "kernel chain.c32"
+    echo "append hd1"
+    echo ""
 
     echo "say local - Boot from next boot device"
     echo "label local"
@@ -347,43 +335,12 @@ function make_syslinux_config {
     fi
     echo ""
 
-    # Add needed libraries for syslinux v5 and hdt
-    if [[ -r "$SYSLINUX_DIR/ldlinux.c32" ]]; then
-        cp $v "$SYSLINUX_DIR/ldlinux.c32" "$BOOT_DIR/ldlinux.c32" >&2
-    fi
-    if [[ -r "$SYSLINUX_DIR/libcom32.c32" ]]; then
-        cp $v "$SYSLINUX_DIR/libcom32.c32" "$BOOT_DIR/libcom32.c32" >&2
-    fi
-    if [[ -r "$SYSLINUX_DIR/libgpl.c32" ]]; then
-        cp $v "$SYSLINUX_DIR/libgpl.c32" "$BOOT_DIR/libgpl.c32" >&2
-    fi
-    if [[ -r "$SYSLINUX_DIR/libmenu.c32" ]]; then
-        cp $v "$SYSLINUX_DIR/libmenu.c32" "$BOOT_DIR/libmenu.c32" >&2
-    fi
-    if [[ -r "$SYSLINUX_DIR/libutil.c32" ]]; then
-        cp $v "$SYSLINUX_DIR/libutil.c32" "$BOOT_DIR/libutil.c32" >&2
-    fi
-    if [[ -r "$SYSLINUX_DIR/vesamenu.c32" ]]; then
-        cp $v "$SYSLINUX_DIR/vesamenu.c32" "$BOOT_DIR/vesamenu.c32" >&2
-    fi
-
-    if [[ -r "$SYSLINUX_DIR/hdt.c32" ]]; then
-        cp $v "$SYSLINUX_DIR/hdt.c32" "$BOOT_DIR/hdt.c32" >&2
-        if [[ -r "/usr/share/hwdata/pci.ids" ]]; then
-            cp $v "/usr/share/hwdata/pci.ids" "$BOOT_DIR/pci.ids" >&2
-        elif [[ -r "/usr/share/pci.ids" ]]; then
-            cp $v "/usr/share/pci.ids" "$BOOT_DIR/pci.ids" >&2
-        fi
-        if [[ -r "/lib/modules/$KERNEL_VERSION/modules.pcimap" ]]; then
-            cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BOOT_DIR/modules.pcimap" >&2
-        fi
-        echo "say hdt - Hardware Detection Tool"
-        echo "label hdt"
-        syslinux_menu "label ^Hardware Detection Tool"
-        syslinux_menu_help "Information about your current hardware configuration"
-        echo "kernel hdt.c32"
-        echo ""
-    fi
+    echo "say hdt - Hardware Detection Tool"
+    echo "label hdt"
+    syslinux_menu "label ^Hardware Detection Tool"
+    syslinux_menu_help "Information about your current hardware configuration"
+    echo "kernel hdt.c32"
+    echo ""
 
     # Because usr/sbin/rear sets 'shopt -s nullglob' the 'ls' command will list all files
     # in the current working directory if nothing matches the globbing pattern '/boot/memtest86+-*'
@@ -401,36 +358,21 @@ function make_syslinux_config {
         echo ""
     fi
 
-    if [[ -r "$SYSLINUX_DIR/reboot.c32" ]] ; then
-        cp $v "$SYSLINUX_DIR/reboot.c32" "$BOOT_DIR/reboot.c32" >&2
-        echo "say reboot - Reboot the system"
-        echo "label reboot"
-        syslinux_menu "label Re^Boot system"
-        syslinux_menu_help "Reboot the system now"
-        echo "kernel reboot.c32"
-        echo ""
-    fi
+    echo "say reboot - Reboot the system"
+    echo "label reboot"
+    syslinux_menu "label Re^Boot system"
+    syslinux_menu_help "Reboot the system now"
+    echo "kernel reboot.c32"
+    echo ""
 
-    local prog=
-    if [[ -r "$SYSLINUX_DIR/poweroff.com" ]] ; then
-        prog="$SYSLINUX_DIR/poweroff.com"
-    elif [[ -r "$SYSLINUX_DIR/poweroff.c32" ]] ; then
-        prog="$SYSLINUX_DIR/poweroff.c32"
-    fi
+    echo "say poweroff - Poweroff the system"
+    echo "label poweroff"
+    syslinux_menu "label ^Power off system"
+    syslinux_menu_help "Power off the system now"
+    echo "kernel $(basename "$poweroff_prog")"
+    echo ""
 
-    if [[ -n "$prog" ]] ; then
-        cp $v "$prog" "$BOOT_DIR/" >&2
-        echo "say poweroff - Poweroff the system"
-        echo "label poweroff"
-        syslinux_menu "label ^Power off system"
-        syslinux_menu_help "Power off the system now"
-        echo "kernel $(basename "$prog")"
-        echo ""
-    fi
-
-    if [[ -r "$SYSLINUX_DIR/menu.c32" ]]; then
-        echo "default menu.c32"
-    fi
+    echo "default menu.c32"
 }
 
 # Create configuration file for elilo
