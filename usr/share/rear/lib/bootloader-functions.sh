@@ -220,14 +220,10 @@ function make_syslinux_config {
     echo "display message"
     echo "F1 message"
 
-    if [[ -s $(get_template "rear.help") ]]; then
-        cp $v $(get_template "rear.help") "$BOOT_DIR/rear.help" >&2
-        echo "F2 rear.help"
-        echo "say F2 - Show help"
-        syslinux_menu "TABMSG Press [Tab] to edit, [F2] for help, [F1] for version info"
-    else
-        syslinux_menu "TABMSG Press [Tab] to edit options and [F1] for version info"
-    fi
+    cp $v $(get_template "rear.help") "$BOOT_DIR/rear.help" >&2
+    echo "F2 rear.help"
+    echo "say F2 - Show help"
+    syslinux_menu "TABMSG Press [Tab] to edit, [F2] for help, [F1] for version info"
 
     echo "timeout ${ISO_SYSLINUX_TIMEOUT:-$(( $USER_INPUT_TIMEOUT * 10 ))}"
     echo "#noescape 1"
@@ -267,12 +263,10 @@ function make_syslinux_config {
     syslinux_menu "disable"
     echo ""
 
-    if [[ -r $(get_template "rear.help") ]]; then
-        echo "label help"
-        syslinux_menu "label ^Help for $PRODUCT"
-        syslinux_menu_help "More information about Relax-and-Recover and the steps for recovering your system"
-        syslinux_menu "help rear.help"
-    fi
+    echo "label help"
+    syslinux_menu "label ^Help for $PRODUCT"
+    syslinux_menu_help "More information about Relax-and-Recover and the steps for recovering your system"
+    syslinux_menu "help rear.help"
 
     # Use chain booting for booting disk, if chain.c32 is available
     if [[ -r "$SYSLINUX_DIR/chain.c32" ]]; then
