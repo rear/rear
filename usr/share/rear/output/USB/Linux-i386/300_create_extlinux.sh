@@ -303,14 +303,12 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
     syslinux_has "libmenu.c32"
     syslinux_has "libutil.c32"
 
-    if [ -r $(get_template "rear.help") ]; then
-        cp $v $(get_template "rear.help") "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/rear.help" >/dev/null
-        syslinux_write <<EOF
+    cp $v $(get_template "rear.help") "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/rear.help" >/dev/null
+    syslinux_write <<EOF
 say F1 - Show help
 F1 /boot/syslinux/rear.help
 menu tabmsg Press [Tab] to edit options or [F1] for help
 EOF
-    fi
 
     # Use menu system, if menu.c32 is available
     if syslinux_has "menu.c32"; then
@@ -341,8 +339,7 @@ label -
 
 EOF
 
-    if [[ -r $(get_template "rear.help") ]]; then
-        syslinux_write <<EOF
+    syslinux_write <<EOF
 label help
     menu label ^Help for Relax-and-Recover
     text help
@@ -351,7 +348,6 @@ Information about Relax-and-Recover and steps for recovering your system
     menu help rear.help
 
 EOF
-    fi
 
     # Use chain booting for booting disk, if chain.c32 is available
     if syslinux_has "chain.c32" ; then
