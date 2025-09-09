@@ -28,13 +28,12 @@ Optionally, some use-cases require other tools:
 
  - lsscsi and sg3_utils (for OBDR tape support)
  - mkisofs or genisoimage (for ISO output support)
- - syslinux (for ISO or USB output support)
+ - syslinux >= 4.04 (for ISO or USB output support)
  - syslinux-extlinux (for USB support)
  - ebiso (for SLES UEFI booting)
 
 In some cases having newer versions of tools may provide better support:
 
- - syslinux >= 4.00 (provides menu support)
  - parted
 
 In case we are using `BACKUP=NETFS` with nfs or cifs we might need also:
