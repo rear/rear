@@ -52,11 +52,7 @@ case "$usb_filesystem" in
     # See https://github.com/rear/rear/issues/2884
     # and https://github.com/rear/rear/pull/2904
     (ext?|vfat)
-        if [[ "$FEATURE_SYSLINUX_EXTLINUX_INSTALL" ]] ; then
-            extlinux -i "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" || Error "'extlinux -i $BUILD_DIR/outputfs/$SYSLINUX_PREFIX' failed"
-        else
-            extlinux "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" || Error "'extlinux $BUILD_DIR/outputfs/$SYSLINUX_PREFIX' failed"
-        fi
+        extlinux -i "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX" || Error "'extlinux -i $BUILD_DIR/outputfs/$SYSLINUX_PREFIX' failed"
         ;;
     ("")
         LogPrintError "Could not find a filesystem in /proc/mounts for $BUILD_DIR/outputfs"
