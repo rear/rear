@@ -13,7 +13,7 @@ function get_syslinux_version {
     fi
 
     if [[ -z "$syslinux_version" ]]; then
-        Log "Could not detect syslinux version, assuming it is old"
+        Log "Could not detect syslinux version, assuming it is at least 4.04"
     fi
 
     echo "$syslinux_version"
@@ -60,7 +60,7 @@ function find_syslinux_modules_dir {
             # cf. https://github.com/rear/rear/issues/2792
             # tell the user in debug mode what is going on
             DebugPrint "Searching whole /usr for SYSLINUX modules directory (you may specify SYSLINUX_MODULES_DIR)"
-	    # issue #3350 - adding -xdev to find to avoid hanging NFS
+            # issue #3350 - adding -xdev to find to avoid hanging NFS
             file=$( find /usr -xdev -name "$1" 2>/dev/null | tail -1 )
             syslinux_modules_dir=$( dirname "$file" )        # /usr/lib/syslinux/modules/efi32
             syslinux_modules_dir=${syslinux_modules_dir%/*}  # /usr/lib/syslinux/modules
@@ -95,30 +95,9 @@ function find_yaboot_file {
 
 function set_syslinux_features {
     # Test for features in syslinux
-    # true if isolinux supports booting from /boot/syslinux, /boot or only from / of the ISO
-    FEATURE_ISOLINUX_BOOT_SYSLINUX=
-    # true if syslinux supports booting from /boot/syslinux, /boot or only from / of the USB media
-    FEATURE_SYSLINUX_BOOT_SYSLINUX=
-    # true if syslinux and extlinux support localboot
-    FEATURE_SYSLINUX_EXTLINUX_WITH_LOCALBOOT=
-    # true if extlinux supports the -i option
-    FEATURE_SYSLINUX_EXTLINUX_INSTALL=
-    # true if syslinux supports INCLUDE directive
-    FEATURE_SYSLINUX_INCLUDE=
-    # true if syslinux supports advanced label names (eg. linux-2.6.18)
-    FEATURE_SYSLINUX_LABEL_NAMES=
-    # true if syslinux supports MENU DEFAULT directive
-    FEATURE_SYSLINUX_MENU_DEFAULT=
-    # true if syslinux supports MENU HELP directive
-    FEATURE_SYSLINUX_MENU_HELP=
-    # true if syslinux supports MENU BEGIN/MENU END/MENU QUIT directives
-    FEATURE_SYSLINUX_SUBMENU=
-    # true if syslinux supports MENU HIDDEN directive
-    FEATURE_SYSLINUX_MENU_HIDDEN=
-    # true if syslinux supports TEXT HELP directive
-    FEATURE_SYSLINUX_TEXT_HELP=
     # true if syslinux supports modules sub-dir (Version > 5.00)
     FEATURE_SYSLINUX_MODULES=
+
     # If ISO_DEFAULT is not set or empty or only blanks, set it to default 'boothd'
     test $ISO_DEFAULT || ISO_DEFAULT="boothd"
     # Define the syslinux directory for later usage (since version 5 the bins and c32 are in separate dirs)
@@ -137,43 +116,11 @@ function set_syslinux_features {
     fi
     Log "Features based on syslinux version: $syslinux_version"
 
-    if version_newer "$syslinux_version" 4.00; then
-        FEATURE_SYSLINUX_MENU_HELP="y"
-        FEATURE_ISOLINUX_BOOT_SYSLINUX="y"
-    fi
-    if version_newer "$syslinux_version" 3.72; then
-        FEATURE_SYSLINUX_MENU_DEFAULT="y"
-    fi
-    if version_newer "$syslinux_version" 3.70; then
-        FEATURE_SYSLINUX_EXTLINUX_WITH_LOCALBOOT="y"
-    fi
-    if version_newer "$syslinux_version" 3.62; then
-        FEATURE_SYSLINUX_SUBMENU="y"
-    fi
-    if version_newer "$syslinux_version" 3.52; then
-        FEATURE_SYSLINUX_MENU_HIDDEN="y"
-    fi
-    if version_newer "$syslinux_version" 3.50; then
-        FEATURE_SYSLINUX_INCLUDE="y"
-        FEATURE_SYSLINUX_TEXT_HELP="y"
-    fi
-    if version_newer "$syslinux_version" 3.35; then
-        FEATURE_SYSLINUX_BOOT_SYSLINUX="y"
-        FEATURE_SYSLINUX_LABEL_NAMES="y"
-    fi
-    if version_newer "$syslinux_version" 3.20; then
-        FEATURE_SYSLINUX_EXTLINUX_INSTALL="y"
-    fi
-
     if version_newer "$syslinux_version" 5.00; then
         FEATURE_SYSLINUX_MODULES="y"
     fi
 
-    if [[ "$FEATURE_SYSLINUX_BOOT_SYSLINUX" ]]; then
-        SYSLINUX_PREFIX="boot/syslinux"
-    else
-        SYSLINUX_PREFIX=
-    fi
+    SYSLINUX_PREFIX="boot/syslinux"
     Log "Using syslinux prefix: $SYSLINUX_PREFIX"
 
     FEATURE_SYSLINUX_IS_SET=1
@@ -262,11 +209,9 @@ function make_syslinux_config {
     fi
 
     function syslinux_menu_help {
-        if [[ "$FEATURE_SYSLINUX_MENU_HELP" ]]; then
-            echo "TEXT HELP"
-            for line in "$@" ; do echo "$line" ; done
-            echo "ENDTEXT"
-        fi
+        echo "TEXT HELP"
+        for line in "$@" ; do echo "$line" ; done
+        echo "ENDTEXT"
     }
 
     echo "say ENTER - boot local hard disk"
@@ -322,7 +267,7 @@ function make_syslinux_config {
     syslinux_menu "disable"
     echo ""
 
-    if [[ "$FEATURE_SYSLINUX_MENU_HELP" && -r $(get_template "rear.help") ]]; then
+    if [[ -r $(get_template "rear.help") ]]; then
         echo "label help"
         syslinux_menu "label ^Help for $PRODUCT"
         syslinux_menu_help "More information about Relax-and-Recover and the steps for recovering your system"
@@ -370,48 +315,43 @@ function make_syslinux_config {
 
     fi
 
-    if [[ "$flavour" != "extlinux" || "$FEATURE_SYSLINUX_EXTLINUX_WITH_LOCALBOOT" ]]; then
-        # localboot is a isolinux and pxelinux feature only, see http://syslinux.zytor.com/wiki/index.php/SYSLINUX#LOCALBOOT_type_.5BISOLINUX.2C_PXELINUX.5D
-        # but extlinux >= 3.70 actually also supports localboot, see http://syslinux.zytor.com/wiki/index.php/Syslinux_3_Changelog#Changes_in_3.70
-
-        if [[ ! -r "$SYSLINUX_DIR/chain.c32" ]]; then
-            # this should be above under the if chain.c32 section but it comes here because it will work only if localboot is supported
-            # if you use old extlinux then you just cannot boot from other device unless chain.c32 is available :-(
-            echo "say boot80 - Boot from first BIOS disk 0x80"
-            echo "label boot80"
-            syslinux_menu "label Boot First ^Local BIOS disk (0x80)"
-            if [[ "$flavour" == "isolinux" ]]; then
-                # for isolinux local boot means boot from first disk
-                echo "default boot80"
-                syslinux_menu default
-            fi
-            echo "localboot 0x80"
-            echo
-            echo "say boot81 - Boot from second BIOS disk 0x81"
-            echo "label boot81"
-            syslinux_menu "label Boot Second ^Local BIOS disk (0x81)"
-            if [[ "$flavour" == "extlinux" ]]; then
-                # for extlinux local boot means boot from second disk because the boot disk became the first disk
-                # which usually allows us to access the original first disk as second disk
-                echo "default boot81"
-                syslinux_menu default
-            fi
-            echo "localboot 0x81"
-            echo ""
+    if [[ ! -r "$SYSLINUX_DIR/chain.c32" ]]; then
+        # this should be above under the if chain.c32 section but it comes here because it will work only if localboot is supported
+        # if you use old extlinux then you just cannot boot from other device unless chain.c32 is available :-(
+        echo "say boot80 - Boot from first BIOS disk 0x80"
+        echo "label boot80"
+        syslinux_menu "label Boot First ^Local BIOS disk (0x80)"
+        if [[ "$flavour" == "isolinux" ]]; then
+            # for isolinux local boot means boot from first disk
+            echo "default boot80"
+            syslinux_menu default
         fi
-
-        echo "say local - Boot from next boot device"
-        echo "label local"
-        syslinux_menu "label Boot ^Next device"
-        syslinux_menu_help "Boot from the next device in the BIOS boot order list."
-        if [[ "$flavour" == "pxelinux" ]]; then
-            echo "localboot 0"
-        else
-            # iso/extlinux support -1 for try next boot device
-            echo "localboot -1"
+        echo "localboot 0x80"
+        echo
+        echo "say boot81 - Boot from second BIOS disk 0x81"
+        echo "label boot81"
+        syslinux_menu "label Boot Second ^Local BIOS disk (0x81)"
+        if [[ "$flavour" == "extlinux" ]]; then
+            # for extlinux local boot means boot from second disk because the boot disk became the first disk
+            # which usually allows us to access the original first disk as second disk
+            echo "default boot81"
+            syslinux_menu default
         fi
+        echo "localboot 0x81"
         echo ""
     fi
+
+    echo "say local - Boot from next boot device"
+    echo "label local"
+    syslinux_menu "label Boot ^Next device"
+    syslinux_menu_help "Boot from the next device in the BIOS boot order list."
+    if [[ "$flavour" == "pxelinux" ]]; then
+        echo "localboot 0"
+    else
+        # iso/extlinux support -1 for try next boot device
+        echo "localboot -1"
+    fi
+    echo ""
 
     # Add needed libraries for syslinux v5 and hdt
     if [[ -r "$SYSLINUX_DIR/ldlinux.c32" ]]; then
