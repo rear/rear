@@ -224,6 +224,7 @@ function make_syslinux_config {
         cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BOOT_DIR/modules.pcimap" >&2
     fi
 
+    echo "UI menu.c32"
     function syslinux_menu {
         echo "MENU $@"
     }
@@ -246,7 +247,6 @@ function make_syslinux_config {
     syslinux_menu "TABMSG Press [Tab] to edit, [F2] for help, [F1] for version info"
 
     echo "timeout ${ISO_SYSLINUX_TIMEOUT:-$(( $USER_INPUT_TIMEOUT * 10 ))}"
-    echo "#noescape 1"
     syslinux_menu title $PRODUCT v$VERSION
 
     echo "say rear - Recover $HOSTNAME"
@@ -327,12 +327,7 @@ function make_syslinux_config {
     echo "label local"
     syslinux_menu "label Boot ^Next device"
     syslinux_menu_help "Boot from the next device in the BIOS boot order list."
-    if [[ "$flavour" == "pxelinux" ]]; then
-        echo "localboot 0"
-    else
-        # iso/extlinux support -1 for try next boot device
-        echo "localboot -1"
-    fi
+    echo "localboot -1"
     echo ""
 
     echo "say hdt - Hardware Detection Tool"
@@ -371,8 +366,6 @@ function make_syslinux_config {
     syslinux_menu_help "Power off the system now"
     echo "kernel $(basename "$poweroff_prog")"
     echo ""
-
-    echo "default menu.c32"
 }
 
 # Create configuration file for elilo
