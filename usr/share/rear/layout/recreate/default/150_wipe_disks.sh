@@ -191,8 +191,13 @@ for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
         # Get the size of the device in bytes which could be smaller than 16 MiB.
         # For example a 'bios_grub' partition could be smaller (e.g only 8 MiB on SUSE systems)
         # cf. the "lsblk -ipo NAME,KNAME,PKNAME,TYPE,FSTYPE,SIZE,MOUNTPOINT /dev/sda" output above.
-        device_to_be_wiped_size_bytes="$( lsblk -dbnlpo SIZE $device_to_be_wiped )"
-        if ! test -b $device_to_be_wiped_size_byte ; then
+        # On some platforms like Debian 12 the command e.g. "lsblk -dbnlpo SIZE /dev/sda2"
+        # returns a string that starts with space, for example " 1024", so the subsequent
+        # wiping command "dd if=/dev/zero of=/dev/sda2 count= 1024 iflag=count_bytes" fails.
+        # Therefore strip non-digit characters with 'tr' to get a clean numeric value,
+        # see https://github.com/rear/rear/pull/3484
+        device_to_be_wiped_size_bytes="$( lsblk -dbnlpo SIZE $device_to_be_wiped | tr -c -d '[:digit:]' )"
+        if ! test $device_to_be_wiped_size_bytes -gt 0 ; then
             LogPrintError "Skip wiping $device_to_be_wiped (no output for 'lsblk -dbnlpo SIZE $device_to_be_wiped' or failed)"
             continue
         fi
@@ -208,7 +213,7 @@ for disk_to_be_wiped in $DISKS_TO_BE_WIPED ; do
         fi
         # Wipe at the end of the device:
         if ! test $device_to_be_wiped_size_bytes -gt $bytes_to_be_wiped ; then
-            DebugPrint "Skip wiping at the end of $device_to_be_wiped (dvice size $device_to_be_wiped_size_bytes not greater than the bytes that were wiped)"
+            DebugPrint "Skip wiping at the end of $device_to_be_wiped (device size $device_to_be_wiped_size_bytes not greater than the bytes that were wiped)"
             continue
         fi
         # The byte whereto dd should seek to wipe to the end of the device from that point:

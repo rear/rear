@@ -1,0 +1,1 @@
+../../../GNU/Linux/260_collect_initrd_modules.sh

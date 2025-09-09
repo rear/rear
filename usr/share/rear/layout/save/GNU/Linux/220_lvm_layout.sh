@@ -396,7 +396,22 @@ Log "End saving LVM layout"
 # see the create_lvmdev create_lvmgrp create_lvmvol functions in layout/prepare/GNU/Linux/110_include_lvm_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-grep -Eq '^lvmdev |^lvmgrp |^lvmvol ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( lvm ) || true
+if grep -Eq '^lvmdev |^lvmgrp |^lvmvol ' $DISKLAYOUT_FILE ; then
+    REQUIRED_PROGS+=( lvm )
+    # Almost same code is also in layout/prepare/GNU/Linux/110_include_lvm_code.sh (there with Error).
+    # When disklayout.conf contains at least one 'lvmdev' or 'lvmgrp' or 'lvmvol' entry
+    # LVM things need to be recreated during "rear recover"
+    # but this fails if 'use_lvmlockd = 1' is set in /etc/lvm/lvm.conf
+    # so we inform the user (ReaR cannot know what the user wants to do in this case)
+    # see https://github.com/rear/rear/issues/3461
+    local use_lvmlockd_config=""
+    local use_lvmlockd_config_value=""
+    # 'man lvm.conf' tells "comments begin with # and continue to the end of the line" and
+    # "whitespace is not significant" so it could be e.g. '   use_lvmlockd  = 1 ' or 'use_lvmlockd=1'
+    use_lvmlockd_config="$( grep -v '^[[:space:]]*#' /etc/lvm/lvm.conf | grep -o 'use_lvmlockd[[:space:]]*=.*' )"
+    use_lvmlockd_config_value="$( echo $use_lvmlockd_config | tr -d '[:space:]' | cut -s -d '=' -f2 )"
+    is_true "$use_lvmlockd_config_value" && LogPrintError "Recreating LVM needs 'use_lvmlockd = 0' (there is '$use_lvmlockd_config' in /etc/lvm/lvm.conf)"
+fi
 
 # vim: set et ts=4 sw=4:
 

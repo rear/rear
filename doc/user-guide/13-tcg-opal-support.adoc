@@ -355,6 +355,63 @@ This can be configured as follows:
 .. Configure the firmware to boot from the EFI entry of your regular operating
 system. Do not delete the previously configured boot entry for the PBA system.
 
+=== Automatic Disk Unlock
+
+Relax-and-Recover supports automatic unlocking of TCG Opal 2-compliant self-encrypting disks (SED) by storing the disk password securely in one of the following:
+
+* directly on the system’s Trusted Platform Module (TPM), or
+* encrypted on a small partition (removable media is ideal for easier setup and more security).
+
+This enhancement allows fully unattended disk unlock at boot time, without requiring user password entry.
+
+==== Enabling Automatic Unlock
+
+To enable automatic unlock, configure the desired key storage method before generating the pre-boot authentication (PBA) environment:
+
+. Edit /etc/rear/local.conf and set one of the following options:
++
+[source,bash,subs="attributes"]
+----
+# Store password in TPM
+OPAL_PBA_TPMNVINDEX="0xXXXXXXX" # TPM nonvolatile memory index
+
+# Or store password as Authtoken (see default.conf for more settings)
+OPAL_PBA_TKNPATH=( /dev/xxx ) # Path to linux block device to use as AuthToken container
+----
+NOTE: These options are mutually exclusive. Only one storage method can be selected.
+
+. Then create the PBA image with:
++
+[source,bash,subs="attributes"]
+----
+sudo rear mkopalpba
+----
+
+==== Boot-Time Behavior
+[arabic]
+. During boot, the PBA system will:
+. Detect the presence of the selected setting (TPM or USB).
+. Retrieve the stored disk password.
+. Automatically unlock the encrypted disk(s).
+. Proceed with booting the regular operating system.
+. If the key is not found, manual password entry will be required and it will be proposed to store it in the selected means.
+
+==== Security Considerations
+
+If an attacker gains access to a PBA image — for example, by booting the system from a live USB and dumping the shadow MBR — they could extract the Opal password in clear text. Should they also obtain the associated AuthToken (e.g. from a USB key), they would be able to fully recover the original disk password.
+
+In other words, automating the unlocking process introduces certain risks.
+
+Using a USB key as an AuthToken container in combination with TPM2-assisted encryption provides the best security, but requires physical possession of the USB key during boot.
+
+Storing the password in the TPM alone is simpler and more convenient. However, since the password is currently stored in plain text, this method should only be used with Secure Boot enabled and with booting from external media disabled in the BIOS or firmware settings.
+
+Note: the entire unlock process is performed locally and offline — no network access or remote dependency is introduced.
+
+==== Tested Environments
+
+This functionality has been tested successfully on Ubuntu 24.04.1 LTS with TPM 2.0 and various USB storage devices.
+
 === References
 
 * https://github.com/Drive-Trust-Alliance/sedutil[Drive-Trust-Alliance/sedutil:DTA sedutil Self encrypting drive software]

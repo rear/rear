@@ -59,8 +59,13 @@ NEW_INITRD_MODULES=( $( tr " " "\n" <<< "${NEW_INITRD_MODULES[*]}" | sort | uniq
 INITRD_MODULES="${OLD_INITRD_MODULES[*]} ${NEW_INITRD_MODULES[*]}"
 Log "New INITRD_MODULES='$INITRD_MODULES'"
 
-# Do not quote $INITRD_MODULES otherwise printf could not split words as separated arguments on separated lines:
-WITH_INITRD_MODULES=$( printf '%s\n' $INITRD_MODULES | awk '{printf "--add-drivers=%s ", $1}' )
+if [ "$OS_VENDOR" = "RedHatEnterpriseServer" ] && [ "${OS_VERSION%%.*}" = "6" ] ; then
+    # On RHEL and CentOS 6, dracut uses '--add-drivers SPACE-SEPARATED-LIST' syntax.
+    WITH_INITRD_MODULES="--add-drivers $INITRD_MODULES"
+else
+    # Do not quote $INITRD_MODULES otherwise printf could not split words as separated arguments on separated lines:
+    WITH_INITRD_MODULES=$( printf '%s\n' $INITRD_MODULES | awk '{printf "--add-drivers=%s ", $1}' )
+fi
 
 # Recreate any initrd or initramfs image under $TARGET_FS_ROOT/boot/ with new drivers
 # Images ignored:

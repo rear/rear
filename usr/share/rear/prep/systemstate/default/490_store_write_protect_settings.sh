@@ -1,0 +1,1 @@
+../../default/490_store_write_protect_settings.sh

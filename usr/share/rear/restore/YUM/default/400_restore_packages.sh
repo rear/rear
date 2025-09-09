@@ -55,7 +55,7 @@ local rpm_package=""
 local rpm_package_name_version=""
 for rpm_package in $rpms_in_installion_order ; do
     # Simple "something is still going on" indicator by printing dots
-    # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+    # directly to stdout which is fd7 (see lib/_framework-setup-and-functions.sh)
     # and not using a Print function to always print to the original stdout
     # i.e. to the terminal wherefrom the user has started "rear recover":
     echo -n "." >&7
@@ -87,7 +87,7 @@ if test "independent_RPMs" = "$YUM_INSTALL_RPMS" ; then
     # because therein the latest installed RPMs are listed topmost:
     for rpm_package in $( tac $yum_backup_dir/independent_RPMs ) ; do
         # Simple "something is still going on" indicator by printing dots
-        # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+        # directly to stdout which is fd7 (see lib/_framework-setup-and-functions.sh)
         # and not using a Print function to always print to the original stdout
         # i.e. to the terminal wherefrom the user has started "rear recover":
         echo -n "." >&7
@@ -119,7 +119,7 @@ else
     # because therein the latest installed RPMs are listed topmost:
     for rpm_package in $( tac $yum_backup_dir/installed_RPMs | cut -d ' ' -f1 ) ; do
         # Simple "something is still going on" indicator by printing dots
-        # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+        # directly to stdout which is fd7 (see lib/_framework-setup-and-functions.sh)
         # and not using a Print function to always print to the original stdout
         # i.e. to the terminal wherefrom the user has started "rear recover":
         echo -n "." >&7

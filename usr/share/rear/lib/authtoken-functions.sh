@@ -22,8 +22,8 @@
 # instead of using ReaR functions like LogPrint, UserOutput,... and UserInput
 # which is correct here because those ReaR user input/output functions
 # cannot be made available at ReaR system startup time
-# because lib/lib/_input-output-functions.sh cannot be sourced there
-# because lib/_input-output-functions.sh does also some special stuff
+# because lib/lib/_framework-setup-and-functions.sh cannot be sourced there
+# because lib/_framework-setup-and-functions.sh does also some special stuff
 # (like adding EXIT_TASKS and STDIN STDOUT and STDERR redirections)
 # cf. https://github.com/rear/rear/pull/2956#discussion_r1133701768
 # and https://github.com/rear/rear/pull/2956#discussion_r1133714369

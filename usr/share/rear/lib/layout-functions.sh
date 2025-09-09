@@ -209,8 +209,12 @@ generate_layout_dependencies() {
                 add_component "$dev" "drbd"
                 ;;
             crypt)
-                name=$(echo "$remainder" | cut -d " " -f "1")
-                dev=$(echo "$remainder" | cut -d " " -f "2")
+                # $remainder may contain optionally password=<password>
+                # see https://github.com/rear/rear/issues/3483
+                # and https://github.com/rear/rear/blob/master/doc/user-guide/06-layout-configuration.adoc#luks-devices
+                { name=$(echo "$remainder" | cut -d " " -f "1")
+                  dev=$(echo "$remainder" | cut -d " " -f "2")
+                } 2>>/dev/$SECRET_OUTPUT_DEV
                 add_dependency "$name" "$dev"
                 add_component "$name" "crypt"
                 ;;
@@ -223,7 +227,10 @@ generate_layout_dependencies() {
                 done
                 ;;
             opaldisk)
-                dev=$(echo "$remainder" | cut -d " " -f "1")
+                # $remainder may contain optionally password=<password>
+                # see https://github.com/rear/rear/issues/3483
+                # and https://github.com/rear/rear/blob/master/doc/user-guide/06-layout-configuration.adoc#tcg-opal-2-compliant-self-encrypting-disks
+                { dev=$(echo "$remainder" | cut -d " " -f "1") ; } 2>>/dev/$SECRET_OUTPUT_DEV
                 add_component "opaldisk:$dev" "opaldisk"
                 for disk in $(opal_device_disks "$dev"); do
                     add_dependency "$disk" "opaldisk:$dev"
@@ -530,7 +537,16 @@ get_partition_start() {
 
 # Get the type of a layout component
 get_component_type() {
-    grep -E "^[^ ]+ $1 " $LAYOUT_TODO | cut -d " " -f 3
+    # function replies with 'disk', 'part', 'lvmgrp', 'lvmvol', 'lvmdev', 'fs'
+    local component="$1"
+    local component_types=()
+    # component_types array can contain only 'one' entry (hence the 'uniq' parsing)
+    component_types=( $( grep -E "^[^ ]+ $component " $LAYOUT_TODO | cut -d " " -f 3 | uniq ) )
+    # if there are no entries in array component_types then return with code 1, but do not exit ReaR
+    test ${#component_types[@]} -lt 1 && return 1
+    # if there are more than 1 entries in the array then we hit a bug, therefore, the BugError exit
+    test ${#component_types[@]} -gt 1 && BugError "Layout component '$component' has more than one type in $LAYOUT_TODO"
+    echo "${component_types[0]}"
 }
 
 # Get the disklabel (partition table) type of the disk $1 from the layout file

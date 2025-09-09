@@ -1,0 +1,1 @@
+../../default/850_save_sysfs_uefi_vars.sh

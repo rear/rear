@@ -47,6 +47,15 @@ if [ "$ARCH" = "Linux-arm" ] ; then
     return
 fi
 
+# Check if any disk contains a PPC PReP boot partition.
+# Detection taken from usr/share/rear/finalize/Linux-ppc64/680_install_PPC_bootlist.sh
+disk_device="$( awk -F ' ' '/^part / {if ($6 ~ /prep/) {print $2}}' $LAYOUT_FILE )"
+if test "$disk_device" ; then
+   LogPrint "Using guessed bootloader 'PPC' for 'rear recover' (found PPC PReP boot partition on $disk_device)"
+   echo "PPC" >$bootloader_file
+   return
+fi
+
 # Finally guess the used bootloader by inspecting the first bytes on all disks
 # and use the first one that matches a known bootloader string:
 for block_device in /sys/block/* ; do
@@ -54,12 +63,6 @@ for block_device in /sys/block/* ; do
     # Continue with the next block device when the current block device is not a disk that can be used for booting:
     [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = nvme* || $blockd = mmcblk* || $blockd = dasd*  ]] || continue
     disk_device=$( get_device_name $block_device )
-    # Check if the disk contains a PPC PreP boot partition (ID=0x41):
-    if file -s $disk_device | grep -q "ID=0x41" ; then
-       LogPrint "Using guessed bootloader 'PPC' for 'rear recover' (found PPC PreP boot partition 'ID=0x41' on $disk_device)"
-       echo "PPC" >$bootloader_file
-       return
-    fi
     # Get all strings in the first 512*4=2048 bytes on the disk:
     bootloader_area_strings_file="$TMP_DIR/bootloader_area_strings"
     block_size=$( get_block_size ${disk_device##*/} )
@@ -110,6 +113,14 @@ for block_device in /sys/block/* ; do
     cat $bootloader_area_strings_file >&2
     Log "End of strings in the first bytes on $disk_device"
 done
+
+# Default to GRUB2 on ppc64le PowerNV machines if no PPC PReP Boot partitions
+# were found because it is not manadatory to use them in this setup.
+if [ "$ARCH" = "Linux-ppc64le" ] && [ "$(awk '/platform/ {print $NF}' < /proc/cpuinfo)" = "PowerNV" ] ; then
+    LogPrint "Using guessed bootloader 'GRUB2' for 'rear recover' (default for ppc64le PowerNV machines)"
+    echo "GRUB2" >$bootloader_file
+    return
+fi
 
 # No bootloader detected, but we are using UEFI - there is probably an EFI bootloader
 if is_true $USING_UEFI_BOOTLOADER ; then

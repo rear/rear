@@ -11,3 +11,7 @@ for executable in BackupFP ClientTool ProcessController; do
         Error "The Backup Manager is either not installed or corrupted."
     fi
 done
+
+if [[ "${REAR_DIR_PREFIX}/" == "${COVE_INSTALL_DIR}/"* ]]; then
+    Error "ReaR can not be executed from COVE_INSTALL_DIR"
+fi
