@@ -293,8 +293,24 @@ while true ; do
     shift
 done
 
+# Set workflow to first command line argument or to "help" as fallback:
+if test -z "$WORKFLOW" ; then
+    # Usually workflow is now in $1 (after the options and its arguments were shifted above)
+    # but when rear is called without a workflow there exists no $1 here so that
+    # an empty default value is used to avoid 'set -eu' error exit if $1 is unset:
+    if test "${1:-}" ; then
+        # Not "$1" to get rid of compound commands:
+        WORKFLOW=$1
+        shift
+    else
+        WORKFLOW=help
+    fi
+fi
+
 # Keep the remaining command line arguments to feed to the workflow:
 ARGS=( "$@" )
+
+# End of handling command line options and arguments.
 
 # Set RECOVERY_MODE when we are running inside a rescue/recovery system
 # which is normally ReaR's recovery system or alternatively in PORTABLE mode
@@ -330,20 +346,6 @@ if test "$ALTERNATIVE_CONFIG_DIR" ; then
         exit 1
     fi
     CONFIG_DIR="$ALTERNATIVE_CONFIG_DIR"
-fi
-
-# Set workflow to first command line argument or to "help" as fallback:
-if test -z "$WORKFLOW" ; then
-    # Usually workflow is now in $1 (after the options and its arguments were shifted above)
-    # but when rear is called without a workflow there exists no $1 here so that
-    # an empty default value is used to avoid 'set -eu' error exit if $1 is unset:
-    if test "${1:-}" ; then
-        # Not "$1" to get rid of compound commands:
-        WORKFLOW=$1
-        shift
-    else
-        WORKFLOW=help
-    fi
 fi
 
 # The following workflows are always verbose:
