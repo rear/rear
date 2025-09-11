@@ -1,5 +1,5 @@
 [Unit]
-Description=Run Relax-and-Recover recovery automatically if requested
+Description=Automatic recovery if requested
 Wants=network-online.target
 After=network-online.target sysinit.service
 Requires=sysinit.service
