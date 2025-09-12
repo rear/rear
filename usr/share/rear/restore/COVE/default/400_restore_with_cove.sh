@@ -57,12 +57,22 @@ function get_pc_pid() {
 
 # Stops ProcessController process
 function cove_stop_pc() {
-    local pid="$(get_pc_pid)"
+    local pid
+    pid="$(get_pc_pid)"
     [ -z "$pid" ] || { /bin/kill -TERM "${pid}" && \
     while [ -n "$pid" ]; do \
         sleep 1; \
         pid="$(get_pc_pid)"; \
     done }
+}
+
+# Starts ProcessController process
+function cove_start_pc() {
+    local pid
+    pid="$(get_pc_pid)"
+    if [ -z "$pid" ]; then
+        "${COVE_INSTALL_DIR}/bin/ProcessController" serve
+    fi
 }
 
 # Gets FileSystem restore sessions
@@ -80,9 +90,9 @@ function cove_wait_for_new_session() {
         local sessions_cur
         sessions_cur="$(cove_get_filesystem_restore_sessions)"
         local new_session
-        new_session=$(printf "$sessions_prev$sessions_cur" | sort | uniq -u)
+        new_session=$(printf "$sessions_prev\n$sessions_cur" | sort | uniq -u)
         if [ -n "$new_session" ]; then
-            status=$(echo "$new_session" | awk '{print $3}')
+            status=$(echo "$new_session" | awk 'NF > 2 {print $3; exit}')
             break
         fi
         sleep 2
@@ -111,12 +121,12 @@ mv "${COVE_INSTALL_DIR}" "$(dirname "${TARGET_FS_ROOT}/${COVE_INSTALL_DIR#/}")"
 ln -s "${TARGET_FS_ROOT}/${COVE_INSTALL_DIR#/}" "${COVE_INSTALL_DIR}"
 
 # Start Backup Manager
-"${COVE_INSTALL_DIR}/bin/ProcessController" serve
+cove_start_pc
 
-# Wait for the Backup Manager to enter the idle state
-cove_print "Waiting for the Backup Manager to enter the idle state... "
+# Wait for the Backup Manager to enter the Idle state
+cove_print "Waiting for the Backup Manager to enter the Idle state... "
 cove_wait_for 'local status="$(cove_get_status)"; [ "${status}" = "Idle" ]' 2 && \
-    cove_print_done || { cove_print_error; Error "The Backup Manager couldn't enter the idle state."; }
+    cove_print_done || { cove_print_error; Error "The Backup Manager couldn't enter the Idle state."; }
 
 # Initiate the restore Files and folders
 restore_args=(
