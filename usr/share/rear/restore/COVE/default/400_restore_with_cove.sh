@@ -92,7 +92,7 @@ function cove_wait_for_new_session() {
         local new_session
         new_session=$(printf "$sessions_prev\n$sessions_cur" | sort | uniq -u)
         if [ -n "$new_session" ]; then
-            status=$(echo "$new_session" | awk '{print $3}')
+            status=$(echo "$new_session" | awk 'NF > 2 {print $3; exit}')
             break
         fi
         sleep 2
