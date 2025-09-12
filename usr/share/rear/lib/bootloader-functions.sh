@@ -224,145 +224,140 @@ function make_syslinux_config {
         cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BOOT_DIR/modules.pcimap" >&2
     fi
 
-    echo "UI menu.c32"
-    function syslinux_menu {
-        echo "MENU $@"
-    }
-
-    function syslinux_menu_help {
-        echo "TEXT HELP"
-        for line in "$@" ; do echo "$line" ; done
-        echo "ENDTEXT"
-    }
-
-    echo "say ENTER - boot local hard disk"
-    echo "say --------------------------------------------------------------------------------"
-    echo "$VERSION_INFO" >$BOOT_DIR/message
-    echo "display message"
-    echo "F1 message"
-
+    # Add help and version info
     cp $v $(get_template "rear.help") "$BOOT_DIR/rear.help" >&2
-    echo "F2 rear.help"
-    echo "say F2 - Show help"
-    syslinux_menu "TABMSG Press [Tab] to edit, [F2] for help, [F1] for version info"
+    echo "$VERSION_INFO" >$BOOT_DIR/message
 
-    echo "timeout ${ISO_SYSLINUX_TIMEOUT:-$(( $USER_INPUT_TIMEOUT * 10 ))}"
-    syslinux_menu title $PRODUCT v$VERSION
+    # Generate config
+    cat <<EOF
+UI menu.c32
 
-    echo "say rear - Recover $HOSTNAME"
-    echo "label rear"
-    syslinux_menu "label ^Recover $HOSTNAME"
-    syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
-            "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
-    echo "kernel kernel"
-    echo "append initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
-    if [ "$ISO_DEFAULT" == "manual" ] ; then
-        echo "default rear"
-        syslinux_menu "default"
-    fi
-    echo ""
+TIMEOUT ${ISO_SYSLINUX_TIMEOUT:-$(( USER_INPUT_TIMEOUT * 10 ))}
 
-    echo "say rear - Recover $HOSTNAME"
-    echo "label rear-automatic"
-    syslinux_menu "label ^Automatic Recover $HOSTNAME"
-    syslinux_menu_help "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)" \
-            "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
-    echo "kernel kernel"
-    echo "append initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover $ISO_RECOVER_MODE"
+SAY ENTER - boot local hard disk
+SAY --------------------------------------------------------------------------------
+DISPLAY message
+F1 message
 
-    if [ "$ISO_DEFAULT" == "automatic" ] ; then
-        echo "default rear-automatic"
-        syslinux_menu "default"
-        echo "timeout 50"
-    fi
-    echo ""
+F2 rear.help
+SAY F2 - Show help
 
-    syslinux_menu separator
-    echo "label -"
-    syslinux_menu "label Other actions"
-    syslinux_menu "disable"
-    echo ""
+MENU TABMSG Press [Tab] to edit, [F2] for help, [F1] for version info
+MENU TITLE $PRODUCT v$VERSION
 
-    echo "label help"
-    syslinux_menu "label ^Help for $PRODUCT"
-    syslinux_menu_help "More information about Relax-and-Recover and the steps for recovering your system"
-    syslinux_menu "help rear.help"
+SAY rear - Recover $HOSTNAME
+LABEL rear
+    MENU LABEL ^Recover $HOSTNAME
+    TEXT HELP
+        Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)
+        ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
+    ENDTEXT
+    KERNEL kernel
+    APPEND initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
 
-    echo "say boothd0 - boot first local disk"
-    echo "label boothd0"
-    syslinux_menu "label Boot First ^Local disk (hd0)"
-    if [[ "$flavour" == "isolinux" ]] && [ "$ISO_DEFAULT" == "boothd" ] ; then
-        # for isolinux local boot means boot from first disk
-        echo "default boothd0"
-        syslinux_menu "default"
-    fi
-    if test "boothd0" = "$ISO_DEFAULT" ; then
-        # the user has explicitly specified to boot via boothd0 by default
-        echo "default boothd0"
-        syslinux_menu "default"
-    fi
-    echo "kernel chain.c32"
-    echo "append hd0"
-    echo ""
+SAY rear-automatic - Automatic Recover $HOSTNAME
+LABEL rear-automatic
+    MENU LABEL ^Automatic Recover $HOSTNAME
+    TEXT HELP
+        Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)
+        ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
+    ENDTEXT
+    KERNEL kernel
+    APPEND initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover $ISO_RECOVER_MODE
 
-    echo "say boothd1 - boot second local disk"
-    echo "label boothd1"
-    syslinux_menu "label Boot ^Second Local disk (hd1)"
-    if [[ "$flavour" == "extlinux" ]] && [ "$ISO_DEFAULT" == "boothd" ]; then
-        # for extlinux local boot means boot from second disk because the boot disk became the first disk
-        # which usually allows us to access the original first disk as second disk
-        echo "default boothd1"
-        syslinux_menu "default"
-    fi
-    if test "boothd1" = "$ISO_DEFAULT" ; then
-        # the user has explicitly specified to boot via boothd1 by default
-        echo "default boothd1"
-        syslinux_menu "default"
-    fi
-    echo "kernel chain.c32"
-    echo "append hd1"
-    echo ""
+MENU SEPARATOR
+LABEL -
+    MENU LABEL Other actions
+    MENU DISABLE
 
-    echo "say local - Boot from next boot device"
-    echo "label local"
-    syslinux_menu "label Boot ^Next device"
-    syslinux_menu_help "Boot from the next device in the BIOS boot order list."
-    echo "localboot -1"
-    echo ""
+LABEL help
+    MENU LABEL ^Help for $PRODUCT
+    TEXT HELP
+        More information about Relax-and-Recover and the steps
+        for recovering your system
+    ENDTEXT
+    MENU HELP rear.help
 
-    echo "say hdt - Hardware Detection Tool"
-    echo "label hdt"
-    syslinux_menu "label ^Hardware Detection Tool"
-    syslinux_menu_help "Information about your current hardware configuration"
-    echo "kernel hdt.c32"
-    echo ""
+SAY boothd0 - boot first local disk
+LABEL boothd0
+    MENU LABEL Boot First ^Local disk (hd0)
+    KERNEL chain.c32
+    APPEND hd0
+
+SAY boothd1 - boot second local disk
+LABEL boothd1
+    MENU LABEL Boot ^Second Local disk (hd1)
+    KERNEL chain.c32
+    APPEND hd1
+
+SAY local - Boot from next boot device
+LABEl local
+    MENU LABEL Boot ^Next device
+    TEXT HELP
+        Boot from the next device in the BIOS boot order list.
+    ENDTEXT
+    LOCALBOOT -1
+
+SAY hdt - Hardware Detection Tool
+LABEL hdt
+    MENU LABEL ^Hardware Detection Tool
+    TEXT HELP
+        Information about your current hardware configuration
+    ENDTEXT
+    KERNEL hdt.c32
+EOF
 
     # You need the memtest86+ package installed for this to work
     MEMTEST_BIN=$(find /boot -xdev -name 'memtest86+*' 2>/dev/null | tail -1)
     if [[ -r "$MEMTEST_BIN" ]]; then
         cp $v "$MEMTEST_BIN" "$BOOT_DIR/memtest" >&2
-        echo "memtest - Run memtest86+"
-        echo "label memtest"
-        syslinux_menu "label ^Memory test"
-        syslinux_menu_help "Test your memory for problems with memtest86+"
-        echo "kernel memtest"
-        echo "append -"
-        echo ""
+        cat <<EOF
+SAY memtest - Run memtest86+
+LABEL memtest
+    MENU LABEL ^Memory test
+    TEXT HELP
+        Test your memory for problems with memtest86+
+    ENDTEXT
+    KERNEL memtest
+EOF
     fi
 
-    echo "say reboot - Reboot the system"
-    echo "label reboot"
-    syslinux_menu "label Re^Boot system"
-    syslinux_menu_help "Reboot the system now"
-    echo "kernel reboot.c32"
-    echo ""
+    cat <<EOF
+SAY reboot - Reboot the system
+LABEL reboot
+    MENU LABEL Re^Boot system
+    TEXT HELP
+        Reboot the system now
+    ENDTEXT
+    KERNEL reboot.c32
 
-    echo "say poweroff - Poweroff the system"
-    echo "label poweroff"
-    syslinux_menu "label ^Power off system"
-    syslinux_menu_help "Power off the system now"
-    echo "kernel $(basename "$poweroff_prog")"
-    echo ""
+SAY poweroff - Poweroff the system
+LABEL poweroff
+    MENU LABEL ^Power off system
+    TEXT HELP
+        Power off the system now
+    ENDTEXT
+    KERNEL $poweroff_prog
+EOF
+
+    case "$ISO_DEFAULT" in
+        "manual")
+            echo "DEFAULT rear" ;;
+        "automatic")
+            echo "DEFAULT rear-automatic"
+            echo "TIMEOUT 50" ;;
+        "boothd")
+            # for isolinux local boot means boot from first disk
+            [[ "$flavour" == "isolinux" ]] && echo "DEFAULT boothd0"
+            # for extlinux local boot means boot from second disk because the boot disk became the first disk
+            # which usually allows us to access the original first disk as second disk
+            [[ "$flavour" == "extlinux" ]] && echo "DEFAULT boothd1"
+            ;;
+        "boothd0")
+            echo "DEFAULT boothd0" ;;
+        "boothd1")
+            echo "DEFAULT boothd1" ;;
+    esac
 }
 
 # Create configuration file for elilo
