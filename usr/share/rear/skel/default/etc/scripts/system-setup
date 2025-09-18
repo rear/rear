@@ -21,11 +21,9 @@ source /etc/scripts/system-setup-functions.sh
 # cf. the 'if rear_debug' part below:
 sleep 1
 
-# In the rescue system these paths are always like this, either for real or as a symlink to the actual paths:
-CONFIG_DIR=/etc/rear
-SHARE_DIR=/usr/share/rear
-VAR_DIR=/var/lib/rear
-LOG_DIR=/var/log/rear
+# Set variables like SHARE_DIR, CONFIG_DIR, we will need them soon
+# (also in source_all_config).
+set_rear_paths
 
 # Because "rear recover" won't work without default.conf
 # we abort when there is no default.conf (or when it is empty),
@@ -42,25 +40,14 @@ if ! test -s $SHARE_DIR/conf/default.conf ; then
     # because it does not make sense to run "rear recover" without default.conf:
     echo -e "\nRelax-and-Recover cannot work without $SHARE_DIR/conf/default.conf\n" >/etc/motd
     # exiting this script proceeds directly to the login screen:
+    # also execution of unattended/automated recovery is prevented by automatic-rear.service requiring
+    # this one, i.e. depending on its successful execution.
     exit 1
 fi
 
-# Set SECRET_OUTPUT_DEV because secret default values are set via
-#   { VARIABLE='secret value' ; } 2>>/dev/$SECRET_OUTPUT_DEV
-# cf. https://github.com/rear/rear/pull/3034#issuecomment-1691609782
-SECRET_OUTPUT_DEV="null"
-# Sourcing /usr/share/rear/conf/default.conf as we need some variables or arrays
-# E.g. UDEV_NET_MAC_RULE_FILES is used by script 55-migrate-network-devices.sh
-source $SHARE_DIR/conf/default.conf || echo -e "\n'source $SHARE_DIR/conf/default.conf' failed with exit code $?"
-
-# Sourcing user and rescue configuration as we need some variables
-# (EXCLUDE_MD5SUM_VERIFICATION right now and other variables in the system setup scripts):
-# The order of sourcing should be 'site' then 'local' and as last 'rescue'
-for conf in site local rescue ; do
-    if test -s $CONFIG_DIR/$conf.conf ; then
-        source $CONFIG_DIR/$conf.conf || echo -e "\n'source $CONFIG_DIR/$conf.conf' failed with exit code $?"
-    fi
-done
+# Source ReaR config files, we need some ReaR variables in this script, even though it is run
+# outside the 'rear' executable itself.
+source_all_config
 
 # Default USER_INPUT_INTERRUPT_TIMEOUT is 30 seconds and default USER_INPUT_UNATTENDED_TIMEOUT is 3 seconds:
 unattended_recovery && timeout=$USER_INPUT_UNATTENDED_TIMEOUT || timeout=$USER_INPUT_INTERRUPT_TIMEOUT
@@ -152,128 +139,8 @@ for system_setup_script in /etc/scripts/system-setup.d/*.sh ; do
     fi
 done
 echo -e "\nRelax-and-Recover rescue system is ready\n"
-
-# Wait two seconds so that the user can read the 'Relax-and-Recover rescue system is ready' message
-# on his screen before the screen gets cleared and replaced by the login screen:
-sleep 2
-
 # Wait USER_INPUT_UNATTENDED_TIMEOUT (by default 3 seconds)
 # so that the user can notice the 'Relax-and-Recover rescue system is ready' message
 # on his screen before the screen gets cleared and replaced by the login screen
 # unless in unattended_recovery mode where there is normally no watching user:
 unattended_recovery || sleep $USER_INPUT_UNATTENDED_TIMEOUT
-
-# Make it explicit that the 'recover' workflow is always verbose (cf. usr/sbin/rear)
-# so when a 'rear $rear_options recover' command is shown to the user it contains '-v':
-rear_options='-v'
-# In debug mode run an automated 'rear $rear_options recover' command in debugscript mode.
-# Because the kernel command line option 'debug' means 'set -x' for the system setup scripts
-# it should also mean '-D' (i.e. 'set -x') for an automated 'rear $rear_options recover' run:
-rear_debug && rear_options='-D'
-# In unattended_recovery mode run an automated 'rear $rear_options recover' in non-interactive mode:
-unattended_recovery && rear_options+=' --non-interactive'
-
-# In automatic_recovery mode call RECOVERY_COMMANDS automatically
-# but without automated calling REBOOT_COMMANDS after successful recovery:
-if automatic_recovery ; then
-    choices=( "View Relax-and-Recover log file(s)"
-              "Login at the rescue system"
-            )
-    echo "Launching '$RECOVERY_COMMANDS_LABEL' automatically"
-    for command in "${RECOVERY_COMMANDS[@]}" ; do
-        rear_debug && echo "Running RECOVERY_COMMANDS '$command'"
-        eval "$command"
-        recovery_command_exit_code=$?
-        test $recovery_command_exit_code -eq 0 || echo "'eval $command' results exit code $recovery_command_exit_code"
-    done
-    if test $recovery_command_exit_code -eq 0 ; then
-        echo "'$RECOVERY_COMMANDS_LABEL' finished successfully"
-        choices+=( "$REBOOT_COMMANDS_LABEL" )
-    else
-        echo "'$RECOVERY_COMMANDS_LABEL' failed with exit code $recovery_command_exit_code"
-    fi
-    PS3="Select what to do "
-    select choice in "${choices[@]}" ; do
-        case "$REPLY" in
-            (1)
-                # Do not assume the ReaR log file is named rear-$HOSTNAME.log
-                # the user can have specified any name as LOGFILE:
-                less /var/log/rear/*
-                ;;
-            (2)
-                echo "" > /etc/issue
-                echo "" > /etc/motd
-                break
-                ;;
-            (3)
-                for command in "${REBOOT_COMMANDS[@]}" ; do
-                    rear_debug && echo "Running REBOOT_COMMANDS '$command'"
-                    eval "$command" || echo "'eval $command' results exit code $?"
-                done
-                # Wait hardcoded 10 seconds to not let this script "just proceed"
-                # because it would proceed with an iteration of the 'select' loop
-                # which is not wanted for the normal reboot/poweroff cases
-                # so we sleep 10 seconds to give reboot/poweroff some time
-                # to terminate this script while it is idle waiting here
-                # but in exceptional cases (when REBOOT_COMMANDS did not reboot/poweroff)
-                # it proceeds after 10 seconds with an iteration of the 'select' loop:
-                sleep 10
-                ;;
-        esac
-        for (( i=1 ; i <= ${#choices[@]} ; i++ )) ; do
-            echo "$i) ${choices[$i-1]}"
-        done
-    done 2>&1
-fi
-
-# In unattended_recovery mode call RECOVERY_COMMANDS automatically
-# plus automated calling REBOOT_COMMANDS after successful recovery:
-if unattended_recovery ; then
-    choices=( "View Relax-and-Recover log file(s)"
-              "Login at the rescue system"
-            )
-    echo "Launching '$RECOVERY_COMMANDS_LABEL' automatically"
-    for command in "${RECOVERY_COMMANDS[@]}" ; do
-        rear_debug && echo "Running RECOVERY_COMMANDS '$command'"
-        eval "$command"
-        recovery_command_exit_code=$?
-        test $recovery_command_exit_code -eq 0 || echo "'eval $command' results exit code $recovery_command_exit_code"
-    done
-    if test $recovery_command_exit_code -eq 0 ; then
-        echo "'$RECOVERY_COMMANDS_LABEL' finished successfully"
-        echo "'$REBOOT_COMMANDS_LABEL' in $USER_INPUT_INTERRUPT_TIMEOUT seconds (Ctrl-C to interrupt)"
-        sleep $USER_INPUT_INTERRUPT_TIMEOUT
-        for command in "${REBOOT_COMMANDS[@]}" ; do
-            rear_debug && echo "Running REBOOT_COMMANDS '$command'"
-            eval "$command" || echo "'eval $command' results exit code $?"
-        done
-        # Wait hardcoded 10 seconds to not let this script "just proceed"
-        # because it would show the login screen when this script finished
-        # which is not wanted for the normal reboot/poweroff cases
-        # so we sleep 10 seconds to give reboot/poweroff some time
-        # to terminate this script while it is idle waiting here
-        # but in exceptional cases (when REBOOT_COMMANDS did not reboot/poweroff)
-        # it proceeds after 10 seconds with the login screen:
-        sleep 10
-    else
-        echo "'$RECOVERY_COMMANDS_LABEL' failed with exit code $recovery_command_exit_code"
-        PS3="Select what to do "
-        select choice in "${choices[@]}" ; do
-            case "$REPLY" in
-                (1)
-                    # Do not assume the ReaR log file is named rear-$HOSTNAME.log
-                    # the user can have specified any name as LOGFILE:
-                    less /var/log/rear/*
-                    ;;
-                (2)
-                    echo "" > /etc/issue
-                    echo "" > /etc/motd
-                    break
-                    ;;
-            esac
-            for (( i=1 ; i <= ${#choices[@]} ; i++ )) ; do
-                echo "$i) ${choices[$i-1]}"
-            done
-        done 2>&1
-    fi
-fi
