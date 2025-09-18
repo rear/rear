@@ -9,6 +9,8 @@ readonly NC='\033[0m' # No color
 
 readonly COVE_CLIENT_TOOL="${COVE_INSTALL_DIR}/bin/ClientTool"
 
+SKIP_PROGRESS_BAR=0
+
 # Waits until a condition succeeds
 # $1: condition command
 # $2: interval between checks
@@ -41,12 +43,31 @@ function cove_print_error() {
 
 # Gets the BackupFP status
 function cove_get_status() {
-    "${COVE_CLIENT_TOOL}" control.status.get
+    "${COVE_CLIENT_TOOL}" control.status.get 2>/dev/null
 }
 
 # Shows progress of running session (%, ETA)
 function cove_show_progress() {
-    "${COVE_CLIENT_TOOL}" show.progress-bar 1>&7 2>&8
+    [ "${SKIP_PROGRESS_BAR}" -eq 1 ] && return 0
+
+    "${COVE_CLIENT_TOOL}" show.progress-bar 1>&7 2>&8 &
+    local pid=$!
+
+    # Remap interruption hotkey from Ctrl-c to Ctrl-]
+    stty intr ^]
+
+    while kill -0 "$pid" 2>/dev/null; do
+        if read -r -t 0.1 -n 1 key && [ "$key" == $'\x03' ]; then
+            kill -9 "$pid" 2>/dev/null
+            break
+        fi
+    done
+
+    # Remap interruption hotkey back to Ctrl-c
+    stty intr ^C
+
+    wait "$pid"
+    return $?
 }
 
 # Returns ProcessController's process id
@@ -104,17 +125,6 @@ function cove_wait_for_new_session() {
 UserOutput "
 The System is now ready for restore."
 
-# Read parameters from boot options. The existing values can be overridden
-# by values passed via boot options.
-read -r cmdline </proc/cmdline
-for option in $cmdline; do
-    case $option in
-        cove_timestamp=*)
-            COVE_TIMESTAMP="${option#cove_timestamp=}"
-            ;;
-    esac
-done
-
 # Move Backup manager installation files to target file system
 mkdir -p "$(dirname "${TARGET_FS_ROOT}/${COVE_INSTALL_DIR#/}")"
 mv "${COVE_INSTALL_DIR}" "$(dirname "${TARGET_FS_ROOT}/${COVE_INSTALL_DIR#/}")"
@@ -147,8 +157,6 @@ choices[1]="Use Relax-and-Recover shell and return back to here"
 choices[2]="Abort '$rear_workflow'"
 choice=""
 
-skip_progress_bar=0
-
 while true; do
     # Save FileSystem restore sessions before starting a new restore session
     # in order to find it and check its status
@@ -169,7 +177,7 @@ while true; do
                     break
                     ;;
                 Completed)
-                    skip_progress_bar=1
+                    SKIP_PROGRESS_BAR=1
                     break
                     ;;
                 *)
@@ -211,15 +219,22 @@ done
 # Show progress bar for restore session
 
 unset choices
-choices[0]="Use Relax-and-Recover shell"
+choices[0]="Use Relax-and-Recover shell for troubleshooting and then return back to recovery"
 choices[1]="Abort '$rear_workflow'"
 choice=""
 
-if [ $skip_progress_bar -eq 0 ] && ! cove_show_progress; then
-    available_disk_space=$(df -hP "$TARGET_FS_ROOT" | tail -1 | awk '{print $4}')
+cove_show_progress
+rc=$?
+
+if [ $rc -ne 0 ]; then
     LogPrint ""
-    LogPrint "Restore failed."
-    LogPrint "Info: Restore may fail due to insufficient available disk space. Available disk space: $available_disk_space."
+    if [ $rc -ne 137 ]; then
+        available_disk_space=$(df -hP "$TARGET_FS_ROOT" | tail -1 | awk '{print $4}')
+        LogPrint "Restore failed."
+        LogPrint "Info: Restore may fail due to insufficient available disk space. Available disk space: $available_disk_space."
+    else
+        LogPrint "Progress bar has been killed, however, the restore session might be still in progress."
+    fi
     LogPrint ""
 
     while true; do
@@ -234,10 +249,11 @@ if [ $skip_progress_bar -eq 0 ] && ! cove_show_progress; then
                 LogPrint "Type '$COVE_CLIENT_TOOL show.progress-bar' if a restore session is still in progress."
                 LogPrint "Type 'exit' to leave the shell and return to the recovery process."
                 LogPrint ""
-                rear_shell "Has the restore been completed, and are you ready to continue the recovery?"
+                rear_shell "Has the restore been completed, and are you ready to continue the recovery? (y/n)"
                 break
                 ;;
             ("${choices[1]}")
+                "${COVE_CLIENT_TOOL}" control.session.abort || true
                 Error "Restore failed."
                 ;;
         esac
