@@ -272,7 +272,7 @@ srpm: dist/$(name)-$(distversion).tar.gz
 	tar -xz -C $(BUILD_DIR)/ -f dist/$(name)-$(distversion).tar.gz $(dir $(effectivespecfile))
 	cp $(BUILD_DIR)/$(dir $(effectivespecfile))/* $(BUILD_DIR)/
 	if test "$(savedspecfile)"; then cp $(BUILD_DIR)/$(notdir $(effectivespecfile)) "$(savedspecfile)"; fi
-	rpmbuild -bs --clean --nodeps \
+	rpmbuild -bs --nodeps \
 		--define="_sourcedir $(BUILD_DIR)/" \
 		--define="_srcrpmdir $(CURDIR)/dist" \
 		$(rpmdefines) \
