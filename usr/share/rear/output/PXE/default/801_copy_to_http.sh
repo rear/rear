@@ -16,16 +16,11 @@ if [[ "$PXE_HTTP_UPLOAD_URL" = "$PXE_TFTP_UPLOAD_URL" ]] ; then
 fi
 
 # E.g. PXE_HTTP_UPLOAD_URL=nfs://server/export/nfs/www
-local scheme="$( url_scheme "$PXE_HTTP_UPLOAD_URL" )"
+local pxe_http_local_path
+mount_pxe_url "$PXE_HTTP_UPLOAD_URL" "pxe_http_local_path"
 
-# We need filesystem access to the destination (schemes like ftp:// are not supported)
-scheme_supports_filesystem $scheme || Error "Scheme $scheme from PXE_HTTP_UPLOAD_URL not supported, use a scheme that supports mounting (like nfs: )"
-
-mount_url "$PXE_HTTP_UPLOAD_URL" "$BUILD_DIR/httpbootfs" $BACKUP_OPTIONS
-# However, we copy under $OUTPUT_PREFIX_PXE directory (usually HOSTNAME) to have different clients on one pxe server
-pxe_http_local_path=$BUILD_DIR/httpbootfs
 # mode must readable for others for pxe and we copy under the client HOSTNAME (=OUTPUT_PREFIX_PXE)
-mkdir $v -m 755 -p "$BUILD_DIR/httpbootfs/$OUTPUT_PREFIX_PXE" || Error "Could not mkdir '$BUILD_DIR/httpbootfs/$OUTPUT_PREFIX_PXE'"
+mkdir $v -m 755 -p "$pxe_http_local_path/$OUTPUT_PREFIX_PXE" || Error "Could not mkdir '$pxe_http_local_path/$OUTPUT_PREFIX_PXE'"
 PXE_KERNEL="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}kernel"
 PXE_INITRD="$OUTPUT_PREFIX_PXE/$PXE_TFTP_PREFIX$REAR_INITRD_FILENAME"
 PXE_MESSAGE="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}message"
@@ -41,6 +36,6 @@ echo "$VERSION_INFO" >"$pxe_http_local_path/$PXE_MESSAGE"
 chmod 644 "$pxe_http_local_path/$PXE_KERNEL" "$pxe_http_local_path/$PXE_INITRD" "$pxe_http_local_path/$PXE_MESSAGE"
 
 LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_HTTP_UPLOAD_URL/$OUTPUT_PREFIX_PXE"
-umount_url "$PXE_HTTP_UPLOAD_URL" "$BUILD_DIR/httpbootfs"
+umount_url "$PXE_HTTP_UPLOAD_URL" "$pxe_http_local_path"
 
 # vim: set et ts=4 sw=4
