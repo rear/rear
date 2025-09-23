@@ -71,6 +71,12 @@ function is_container() {
         return 0
     fi
 
+    # Kubernetes
+    if grep -qa KUBERNETES_SERVICE_HOST /proc/1/environ ; then
+        echo "Kubernetes"
+        return 0
+    fi
+
     return 1
 }
 
