@@ -14,6 +14,42 @@ test "$PXE_CONFIG_URL" || Error "PXE_CONFIG_URL must be set for PXE output"
 local pxe_cfg_local_path
 mount_pxe_url "$PXE_CONFIG_URL" "pxe_cfg_local_path"
 
+if is_false "$PXE_CONFIG_GRUB_STYLE" && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
+    local pxe_tftp_local_path
+    mount_pxe_url "$PXE_TFTP_UPLOAD_URL" "pxe_tftp_local_path"
+
+    # If we have chosen for "unattended" recover mode then we also copy the
+    # required pxe modules (and we assume that the PXE server run the same OS)
+    # copy pxelinux.0 and friends
+    # RHEL/SLES and friends
+    PXELINUX_BIN="$( find_syslinux_file pxelinux.0 )"
+    if [[ -z "$PXELINUX_BIN" ]] ; then
+        # perhaps Debian/Ubuntu and friends
+        [[ -f /usr/lib/PXELINUX/pxelinux.0 ]] && PXELINUX_BIN=/usr/lib/PXELINUX/pxelinux.0
+    fi
+    if [[ "$PXELINUX_BIN" ]] ; then
+        cp $v "$PXELINUX_BIN" "$pxe_tftp_local_path" >&2
+    fi
+    syslinux_modules_dir="$( find_syslinux_modules_dir menu.c32 )"
+    [[ -z "$syslinux_modules_dir" ]] && syslinux_modules_dir="$(dirname $PXELINUX_BIN)"
+    cp $v $syslinux_modules_dir/ldlinux.c32 "$pxe_tftp_local_path" >&2
+    cp $v $syslinux_modules_dir/libcom32.c32 "$pxe_tftp_local_path" >&2
+    cp $v $syslinux_modules_dir/libutil.c32 "$pxe_tftp_local_path" >&2
+    cp $v $syslinux_modules_dir/menu.c32 "$pxe_tftp_local_path" >&2
+    cp $v $syslinux_modules_dir/chain.c32 "$pxe_tftp_local_path" >&2
+    cp $v $syslinux_modules_dir/hdt.c32 "$pxe_tftp_local_path" >&2
+    cp $v $syslinux_modules_dir/reboot.c32 "$pxe_tftp_local_path" >&2
+    if [[ -r "$syslinux_modules_dir/poweroff.com" ]] ; then
+        cp $v $syslinux_modules_dir/poweroff.com "$pxe_tftp_local_path" >&2
+    elif [[ -r "$syslinux_modules_dir/poweroff.c32" ]] ; then
+        cp $v $syslinux_modules_dir/poweroff.c32 "$pxe_tftp_local_path" >&2
+    fi
+    chmod 644 "$pxe_tftp_local_path"/*.c32
+    chmod 644 "$pxe_tftp_local_path"/*.0
+
+    umount_url "$PXE_TFTP_UPLOAD_URL" "pxe_tftp_local_path"
+fi
+
 # PXE_CONFIG_PREFIX is by default 'rear-' (see default.conf).
 # pxe_config_file contains the PXELINUX boot configuration of $HOSTNAME
 local pxe_config_file="${PXE_CONFIG_PREFIX}$HOSTNAME"
