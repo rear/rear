@@ -1,6 +1,6 @@
-# 810_create_pxelinux_cfg.sh
+# 810_create_pxe_cfg.sh
 #
-# Create PXELINUX config on PXE server for Relax-and-Recover.
+# Create PXE config on PXE server for Relax-and-Recover.
 #
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
