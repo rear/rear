@@ -128,7 +128,7 @@ function set_syslinux_features {
 
 # Create a suitable syslinux configuration based on capabilities
 # the mandatory first argument is the full path to an existing directory where required binaries will be copied to
-# the optional second argument is the target flavour and defaults to isolinux
+# the optional second argument is the target flavour and defaults to isolinux (supports: isolinux and pxelinux)
 function make_syslinux_config {
     test -d "$1" || BugError "make_syslinux_config: required first argument for BOOT_DIR missing"
     test -d "$SYSLINUX_DIR" || BugError "make_syslinux_config: required environment SYSLINUX_DIR '$SYSLINUX_DIR' not set or not a directory"
@@ -193,6 +193,17 @@ function make_syslinux_config {
         fi
     fi
 
+    # Copy pxelinux.0 if necessary
+    if [[ "$flavour" = "pxelinux" ]]; then
+        # HTTP booting requires lpxelinux.0, see https://wiki.syslinux.org/wiki/index.php?title=PXELINUX#HTTP_and_FTP.
+        local pxelinux_bin_name="pxelinux.0"
+        test "$PXE_HTTP_UPLOAD_URL" && pxelinux_bin_name="lpxelinux.0"
+
+        local pxelinux_bin="$( find_syslinux_file $pxelinux_bin_name )"
+        [[ -z "$pxelinux_bin" ]] && Error "Could not find $pxelinux_bin_name"
+        cp $v "$pxelinux_bin" "$BOOT_DIR/$pxelinux_bin_name" >&2
+    fi
+
     # Add necessary modules
     cp $v "$SYSLINUX_DIR/chain.c32" "$BOOT_DIR/chain.c32" >&2
     cp $v "$SYSLINUX_DIR/hdt.c32" "$BOOT_DIR/hdt.c32" >&2
@@ -231,9 +242,34 @@ function make_syslinux_config {
         cp $v "$memtest_bin" "$BOOT_DIR/memtest" >&2
     fi
 
+    # Set semantic variables based on flavour
+    local kernel initrd
+    local message recover_mode
+    case "$flavour" in
+        (pxelinux)
+            kernel="$PXE_KERNEL" initrd="$PXE_INITRD"
+            recover_mode="$PXE_RECOVER_MODE"
+            message="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}message"
+        ;;
+        (*)
+            kernel="kernel" initrd="$REAR_INITRD_FILENAME"
+            recover_mode="$ISO_RECOVER_MODE"
+            message="message"
+        ;;
+    esac
+
     # Add help and version info
     cp $v $(get_template "rear.help") "$BOOT_DIR/rear.help" >&2
-    echo "$VERSION_INFO" >$BOOT_DIR/message
+    echo "$VERSION_INFO" >$BOOT_DIR/$message
+
+    # Generate rescue image help text
+    local rescue_image_help_text
+    read -r -d '' rescue_image_help_text <<EOF
+TEXT HELP
+    Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)
+    ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
+ENDTEXT
+EOF
 
     # Generate config
     cat <<EOF
@@ -243,8 +279,8 @@ TIMEOUT ${ISO_SYSLINUX_TIMEOUT:-$(( USER_INPUT_TIMEOUT * 10 ))}
 
 SAY ENTER - boot local hard disk
 SAY --------------------------------------------------------------------------------
-DISPLAY message
-F1 message
+DISPLAY $message
+F1 $message
 
 F2 rear.help
 SAY F2 - Show help
@@ -255,23 +291,38 @@ MENU TITLE $PRODUCT v$VERSION
 SAY rear - Recover $HOSTNAME
 LABEL rear
     MENU LABEL ^Recover $HOSTNAME
-    TEXT HELP
-        Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)
-        ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
-    ENDTEXT
-    KERNEL kernel
-    APPEND initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
+    $rescue_image_help_text
+    KERNEL $kernel
+    APPEND initrd=$initrd root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
 
 SAY rear-automatic - Automatic Recover $HOSTNAME
 LABEL rear-automatic
     MENU LABEL ^Automatic Recover $HOSTNAME
-    TEXT HELP
-        Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)
-        ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
-    ENDTEXT
-    KERNEL kernel
-    APPEND initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover $([ "$ISO_RECOVER_MODE" = "unattended" ] && echo "unattended")
+    $rescue_image_help_text
+    KERNEL $kernel
+    APPEND initrd=$initrd root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover $([ "$recover_mode" = "unattended" ] && echo "unattended")
+EOF
 
+    # If requested, addPXE HTTP entries
+    if [[ "$flavour" == "pxelinux" && "$PXE_HTTP_DOWNLOAD_URL" ]]; then
+        cat <<EOF
+SAY rear-http - Recover $HOSTNAME (HTTP)
+LABEL rear-http
+    MENU LABEL ^Recover $HOSTNAME (HTTP)
+    $rescue_image_help_text
+    KERNEL $PXE_HTTP_DOWNLOAD_URL/$kernel
+    APPEND initrd=$PXE_HTTP_DOWNLOAD_URL/$initrd root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE
+
+SAY rear-automatic-http - Automatic Recover $HOSTNAME (HTTP)
+LABEL rear-automatic-http
+    MENU LABEL ^Automatic Recover $HOSTNAME (HTTP)
+    $rescue_image_help_text
+    KERNEL $PXE_HTTP_DOWNLOAD_URL/$kernel
+    APPEND initrd=$PXE_HTTP_DOWNLOAD_URL/$initrd root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover $([ "$recover_mode" = "unattended" ] && echo "unattended")
+EOF
+    fi
+
+    cat <<EOF
 MENU SEPARATOR
 LABEL -
     MENU LABEL Other actions
@@ -344,18 +395,20 @@ LABEL poweroff
     KERNEL $poweroff_prog
 EOF
 
-    case "$ISO_RECOVER_MODE" in
+    case "$recover_mode" in
         "manual")
             echo "DEFAULT rear" ;;
         "automatic"|"unattended")
             echo "DEFAULT rear-automatic"
             echo "TIMEOUT 50" ;;
         "boothd")
-            # for isolinux local boot means boot from first disk
-            [[ "$flavour" == "isolinux" ]] && echo "DEFAULT boothd0"
-            # for extlinux local boot means boot from second disk because the boot disk became the first disk
-            # which usually allows us to access the original first disk as second disk
-            [[ "$flavour" == "extlinux" ]] && echo "DEFAULT boothd1"
+            case "$flavour" in
+                # for isolinux and pxelinux local boot means boot from first disk
+                "isolinux"|"pxelinux") echo "DEFAULT boothd0" ;;
+                # for extlinux local boot means boot from second disk because the boot disk became the first disk
+                # which usually allows us to access the original first disk as second disk
+                "extlinux") echo "DEFAULT boothd1" ;;
+            esac
             ;;
         "boothd0")
             echo "DEFAULT boothd0" ;;
@@ -665,146 +718,6 @@ EOF
 # End of function create_grub2_cfg
 }
 
-function make_pxelinux_config {
-    # we use this function in case we are using $PXE_CONFIG_URL style of configuration
-    echo "timeout 300"
-    case "$PXE_RECOVER_MODE" in
-        "automatic"|"unattended" ) echo "prompt 0" ;;
-        * ) # manual mode
-            echo "prompt 1"
-            echo "say ENTER - boot next local device"
-            echo "say --------------------------------------------------------------------------------" ;;
-    esac
-    # Display MENU title first
-    echo "MENU title Relax-and-Recover v$VERSION"
-
-    # Display message now:
-    echo "display $PXE_MESSAGE"
-    echo "say ----------------------------------------------------------"
-
-    # start with rear entry
-    case "$PXE_RECOVER_MODE" in
-        "automatic")
-            echo "say rear-automatic - Recover $HOSTNAME with auto-recover kernel option"
-            echo "label rear-automatic"
-            echo "MENU label ^Automatic Recover $HOSTNAME"
-            ;;
-        "unattended")
-            echo "say rear-unattended - Recover $HOSTNAME with unattended kernel option"
-            echo "label rear-unattended"
-            echo "MENU label ^Unattended Recover $HOSTNAME"
-            ;;
-        *)
-            echo "say rear - Recover $HOSTNAME"
-            echo "label rear"
-            echo "MENU label ^Recover $HOSTNAME"
-            ;;
-    esac
-    echo "TEXT HELP"
-    echo "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)"
-    echo "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
-    echo "ENDTEXT"
-    echo "    kernel $PXE_KERNEL"
-    echo "    append initrd=$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
-    echo "say ----------------------------------------------------------"
-
-    # start with optional rear http entry if specified
-    if [[ "$PXE_HTTP_DOWNLOAD_URL" ]] ; then    
-        case "$PXE_RECOVER_MODE" in
-        "automatic")
-            echo "say rear-automatic-http - Recover $HOSTNAME (HTTP) with auto-recover kernel option"
-            echo "label rear-automatic-http"
-            echo "MENU label ^Automatic Recover $HOSTNAME (HTTP)"
-            ;;
-        "unattended")
-            echo "say rear-unattended-http - Recover $HOSTNAME (HTTP) with unattended kernel option"
-            echo "label rear-unattended-http"
-            echo "MENU label ^Unattended Recover $HOSTNAME (HTTP)"
-            ;;
-        *)
-            echo "say rear-http - Recover $HOSTNAME (HTTP)"
-            echo "label rear-http"
-            echo "MENU label ^Recover $HOSTNAME (HTTP)"
-            ;;
-        esac
-        echo "TEXT HELP"
-        echo "Rescue image kernel $KERNEL_VERSION ${IPADDR:+on $IPADDR} $(date -R)"
-        echo "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
-        echo "ENDTEXT"
-        echo "    kernel $PXE_HTTP_DOWNLOAD_URL/$PXE_KERNEL"
-        echo "    append initrd=$PXE_HTTP_DOWNLOAD_URL/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
-        echo "say ----------------------------------------------------------"
-    fi
-
-    # start the the other entries like local,...
-    echo "say local - Boot from next boot device"
-    echo "label local"
-    echo "MENU label Boot ^Next device"
-    echo "TEXT HELP"
-    echo "Boot from the next device in the BIOS boot order list."
-    echo "ENDTEXT"
-    echo "localboot -1"
-    echo "say ----------------------------------------------------------"
-    if [[ -f $syslinux_modules_dir/chain.c32 ]] ; then
-        echo "say boothd0 - boot first local disk"
-        echo "label boothd0"
-        echo "MENU label Boot First ^Local disk (hd0)"
-        echo "kernel chain.c32"
-        echo "append hd0"
-        echo "say ----------------------------------------------------------"
-        echo "say boothd1 - boot second local disk"
-        echo "label boothd1"
-        echo "MENU label Boot ^Second Local disk (hd1)"
-        echo "kernel chain.c32"
-        echo "append hd1"
-        echo "say ----------------------------------------------------------"
-    fi
-    if [[ -f $syslinux_modules_dir/hdt.c32 ]] ; then
-        echo "say hdt - Hardware Detection Tool"
-        echo "label hdt"
-        echo "MENU label ^Hardware Detection Tool"
-        echo "TEXT HELP"
-        echo "Information about your current hardware configuration"
-        echo "ENDTEXT"
-        echo "kernel hdt.c32"
-        echo "say ----------------------------------------------------------"
-    fi
-    if [[ -f $syslinux_modules_dir/reboot.c32 ]] ; then
-        echo "say reboot - Reboot the system"
-        echo "label reboot"
-        echo "MENU label Re^Boot system"
-        echo "TEXT HELP"
-        echo "Reboot the system now"
-        echo "ENDTEXT"
-        echo "kernel reboot.c32"
-        echo "say ----------------------------------------------------------"
-    fi
-    local prog=
-    if [[ -r "$syslinux_modules_dir/poweroff.com" ]] ; then
-        prog="$syslinux_modules_dir/poweroff.com"
-    elif [[ -r "$syslinux_modules_dir/poweroff.c32" ]] ; then
-        prog="$syslinux_modules_dir/poweroff.c32"
-    fi
-    if [[ -n "$prog" ]] ; then
-        echo "say poweroff - Poweroff the system"
-        echo "label poweroff"
-        echo "MENU label ^Power off system"
-        echo "TEXT HELP"
-        echo "Power off the system now"
-        echo "ENDTEXT"
-        echo "kernel $(basename "$prog")"
-    fi
-
-    # And, finally define the default entry to boot off
-    case "$PXE_RECOVER_MODE" in
-        "automatic") echo "default rear-automatic" ;;
-        "unattended") echo "default rear-unattended" ;;
-        "boothd") echo "default boothd0" ;;
-        *) echo "default local" ;;
-    esac
-    # end of function make_pxelinux_config
-}
-
 function make_pxelinux_config_grub {
     net_default_server_opt=""
 
@@ -838,7 +751,7 @@ function make_pxelinux_config_grub {
     fi
 
     # we use this function only when $PXE_CONFIG_URL is set and $PXE_CONFIG_GRUB_STYLE=y
-    # TODO First Draft. Need to complete with all other options (see make_pxelinux_config).
+    # TODO First Draft. Need to complete with all other options (see make_syslinux_config).
     echo "menuentry 'Relax-and-Recover v$VERSION' {"
     echo "insmod tftp"
     echo "$net_default_server_opt"
