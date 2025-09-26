@@ -224,6 +224,13 @@ function make_syslinux_config {
         cp $v "/lib/modules/$KERNEL_VERSION/modules.pcimap" "$BOOT_DIR/modules.pcimap" >&2
     fi
 
+    # Optionally add memtest
+    # You need the memtest86+ package installed for this to work
+    MEMTEST_BIN=$(find /boot -xdev -name 'memtest86+*' 2>/dev/null | tail -1)
+    if [[ -r "$MEMTEST_BIN" ]]; then
+        cp $v "$MEMTEST_BIN" "$BOOT_DIR/memtest" >&2
+    fi
+
     # Add help and version info
     cp $v $(get_template "rear.help") "$BOOT_DIR/rear.help" >&2
     echo "$VERSION_INFO" >$BOOT_DIR/message
@@ -291,7 +298,7 @@ LABEL boothd1
     APPEND hd1
 
 SAY local - Boot from next boot device
-LABEl local
+LABEL local
     MENU LABEL Boot ^Next device
     TEXT HELP
         Boot from the next device in the BIOS boot order list.
@@ -307,10 +314,7 @@ LABEL hdt
     KERNEL hdt.c32
 EOF
 
-    # You need the memtest86+ package installed for this to work
-    MEMTEST_BIN=$(find /boot -xdev -name 'memtest86+*' 2>/dev/null | tail -1)
     if [[ -r "$MEMTEST_BIN" ]]; then
-        cp $v "$MEMTEST_BIN" "$BOOT_DIR/memtest" >&2
         cat <<EOF
 SAY memtest - Run memtest86+
 LABEL memtest
