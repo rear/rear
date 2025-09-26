@@ -144,5 +144,4 @@ if is_true $USING_UEFI_BOOTLOADER ; then
 fi
 
 # Error out when no bootloader was specified or could be autodetected:
-Error "Cannot autodetect what is used as bootloader, see default.conf about 'BOOTLOADER'"
-
+cove_error_if_container || Error "Cannot autodetect what is used as bootloader, see default.conf about 'BOOTLOADER'"
