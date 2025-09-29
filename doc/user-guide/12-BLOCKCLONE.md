@@ -141,7 +141,7 @@ TIP: You can locate right disk devices using `df` and `os-prober`
 
 
 First we will configure some ReaR backup global options
- (similar to link:12-BLOCKCLONE.adoc#1-backuprestore-of-arbitrary-block-device-with-blockclone-and-dd-on-nfs-server[first example]
+ (similar to link:12-BLOCKCLONE.md#1-backuprestore-of-arbitrary-block-device-with-blockclone-and-dd-on-nfs-server[first example]
  we will do backup/restore with help of NFS server).
 
 

@@ -250,7 +250,7 @@ Relax-and-Recover Version 2.8 (December 2024)
           + CommvaultGalaxy 11 (Simpana).
      * Bareos integration was rewritten and updated.
      * New portable mode --portable and OUTPUT=PORTABLE, see
-       [32]https://github.com/rear/rear/blob/master/doc/user-guide/17-Portable-Mode.adoc for
+       [32]https://github.com/rear/rear/blob/master/doc/user-guide/17-Portable-Mode.md for
        more information.
      * Improved handling and protecting of secrets in ReaR configuration variables. New
        -e/--expose-secrets option to show secrets in configuration variables.
@@ -658,7 +658,7 @@ that errors out in case of
 rear -C something_else_backup mkbackuponly
 when not the basic system but only something else
 should be backed up as documented in
-doc/user-guide/11-multiple-backups.adoc
+doc/user-guide/11-multiple-backups.md
 see https://github.com/rear/rear/pull/3221#issuecomment-2129240645
 
 
@@ -847,7 +847,7 @@ completely unrelated partitions.
 
 
 docs: document booting of ReaR rescue initramfs on s390/s390x (#3158) :
-In doc/user-guide/04-scenarios.adoc
+In doc/user-guide/04-scenarios.md
 document booting of ReaR rescue initramfs on s390/s390x, see the related
 https://github.com/rear/rear/issues/3149#issuecomment-1943375764
 
@@ -859,8 +859,8 @@ because it can be useful for special cases, cf.
 https://github.com/rear/rear/issues/3170#issuecomment-1981222992
 
 
-Update 04-scenarios.adoc :
-In doc/user-guide/04-scenarios.adoc
+Update 04-scenarios.md :
+In doc/user-guide/04-scenarios.md
 removed parts that mention 'udev'
 from the section about USB devices, cf.
 https://github.com/rear/rear/pull/3103#issuecomment-1973785249
@@ -903,8 +903,8 @@ Setting TMPDIR in {site,local}.conf has not worked since
 0022063 (PR #2633), as discussed in #2654.
 
 
-Update 03-configuration.adoc :
-In doc/user-guide/03-configuration.adoc
+Update 03-configuration.md :
+In doc/user-guide/03-configuration.md
 removed the outdated and obsolete part about TMPDIR=/bigdisk
 because since the default is /var/tmp there is enough space
 for things like a big ISO image
@@ -1411,7 +1411,7 @@ Only the first one for the initial message output function call.
 
 
 Merge pull request #3039 :
-In doc/rear.8.adoc describe the new -e/--expose-secrets option
+In doc/rear.8.md describe the new -e/--expose-secrets option
 see https://github.com/rear/rear/pull/3006
 and https://github.com/rear/rear/issues/2967
 Additionally a more exact description what the non-interactive mode does
@@ -1575,8 +1575,8 @@ in a confidential way via { confidential_command ; } 2>/dev/null
 see https://github.com/rear/rear/issues/2967
 
 
-Update 04-scenarios.adoc :
-In doc/user-guide/04-scenarios.adoc
+Update 04-scenarios.md :
+In doc/user-guide/04-scenarios.md
 explain that when a command like
 export VAR='secret_value'
 is run on the original system, then one must ensure
@@ -2116,7 +2116,7 @@ References
   29. https://github.com/rear/rear/issues/3386
   30. https://github.com/rear/rear/commits/rear-2.9
   31. https://github.com/rear/rear/issues
-  32. https://github.com/rear/rear/blob/master/doc/user-guide/17-Portable-Mode.adoc
+  32. https://github.com/rear/rear/blob/master/doc/user-guide/17-Portable-Mode.md
   33. https://github.com/aschnell/barrel
   34. https://github.com/rear/rear/commits/rear-2.8
   35. https://relax-and-recover.org/support/sponsors

@@ -34,7 +34,7 @@ _var/lib/rear/backup/ZYPPER/zypper_repositories.repo_ file.
 
 Any other files that should be restored (e.g. prepared config files or 
 /home directories) must be done by "Using Multiple Backups for 
-Relax-and-Recover", see doc/user-guide/11-multiple-backups.adoc
+Relax-and-Recover", see doc/user-guide/11-multiple-backups.md
 
 For each member _zypper_repository_ in the _ZYPPER_REPOSITORIES_ array, the 
 following command is called
