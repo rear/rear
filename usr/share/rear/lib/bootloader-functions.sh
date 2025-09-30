@@ -226,9 +226,9 @@ function make_syslinux_config {
 
     # Optionally add memtest
     # You need the memtest86+ package installed for this to work
-    MEMTEST_BIN=$(find /boot -xdev -name 'memtest86+*' 2>/dev/null | tail -1)
-    if [[ -r "$MEMTEST_BIN" ]]; then
-        cp $v "$MEMTEST_BIN" "$BOOT_DIR/memtest" >&2
+    local memtest_bin=$(find /boot -xdev -name 'memtest86+*' 2>/dev/null | tail -1)
+    if [[ -r "$memtest_bin" ]]; then
+        cp $v "$memtest_bin" "$BOOT_DIR/memtest" >&2
     fi
 
     # Add help and version info
@@ -314,7 +314,7 @@ LABEL hdt
     KERNEL hdt.c32
 EOF
 
-    if [[ -r "$MEMTEST_BIN" ]]; then
+    if [[ -r "$memtest_bin" ]]; then
         cat <<EOF
 SAY memtest - Run memtest86+
 LABEL memtest
