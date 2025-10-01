@@ -8,6 +8,7 @@ readonly GREEN='\033[0;32m'
 readonly NC='\033[0m' # No color
 
 readonly COVE_CLIENT_TOOL="${COVE_INSTALL_DIR}/bin/ClientTool"
+readonly COVE_AUTH_TOOL_DIR="/root/.auth-tool"
 
 SKIP_PROGRESS_BAR=0
 
@@ -102,6 +103,32 @@ function cove_get_filesystem_restore_sessions() {
         | awk '$1 == "FileSystem" && $2 == "Restore"'
 }
 
+# Moves a directory to target file system and creates a symbolic link back to it
+# $1: source directory path
+function cove_move_dir_to_target() {
+    local source_dir="$1"
+
+    if [ ! -d "${source_dir}" ]; then
+        return 0
+    fi
+
+    local target_parent_dir
+    target_parent_dir="$(dirname "${TARGET_FS_ROOT}/${source_dir#/}")"
+
+    mkdir -p "${target_parent_dir}"
+    mv "${source_dir}" "${target_parent_dir}"
+    ln -s "${TARGET_FS_ROOT}/${source_dir#/}" "${source_dir}"
+}
+
+# Moves Cove installation files and credentials to target file system
+function cove_move_files_to_target() {
+    # Move Backup manager installation files to target file system
+    cove_move_dir_to_target "${COVE_INSTALL_DIR}"
+
+    # Move mTLS credentials to target file system
+    cove_move_dir_to_target "${COVE_AUTH_TOOL_DIR}"
+}
+
 # Waits for a new FileSystem restore session and gets its status
 # $1: prev sessions
 function cove_wait_for_new_session() {
@@ -125,10 +152,8 @@ function cove_wait_for_new_session() {
 UserOutput "
 The System is now ready for restore."
 
-# Move Backup manager installation files to target file system
-mkdir -p "$(dirname "${TARGET_FS_ROOT}/${COVE_INSTALL_DIR#/}")"
-mv "${COVE_INSTALL_DIR}" "$(dirname "${TARGET_FS_ROOT}/${COVE_INSTALL_DIR#/}")"
-ln -s "${TARGET_FS_ROOT}/${COVE_INSTALL_DIR#/}" "${COVE_INSTALL_DIR}"
+# Move Backup manager installation files and credentials to target file system
+cove_move_files_to_target
 
 # Start Backup Manager
 cove_start_pc
