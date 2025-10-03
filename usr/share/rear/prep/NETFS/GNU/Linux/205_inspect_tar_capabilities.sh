@@ -10,7 +10,6 @@
 # Verify extended attributes being present:
 if tar --usage | grep -q -- --xattrs ; then
     BACKUP_PROG_OPTIONS+=( "--xattrs" )
-    PROGS+=( getfattr setfattr )
 fi
 
 # Verify extended capabilities are present (incl. SElinux security capabilities)
@@ -23,11 +22,9 @@ if tar --usage | grep -q -- --xattrs-include ; then
     # prep/GNU/Linux/310_include_cap_utils.sh uses NETFS_RESTORE_CAPABILITIES=( 'Yes' ) to kick in next line, and is
     # meant to save capabilities via rescue/NETFS/default/610_save_capabilities.sh
     # Here we try to achieve the same via the 'tar' program
-    PROGS+=( getcap setcap )
 fi
 if tar --usage | grep -q -- --acls ; then
    BACKUP_PROG_OPTIONS+=( "--acls" )
-   PROGS+=( getfacl setfacl )
 fi
 
 # --selinux option was covered by script 200_selinux_in_use.sh
