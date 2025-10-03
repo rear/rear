@@ -88,3 +88,12 @@ function cove_error_if_container() {
 
     Error "The system is detected as ${container} container. System state is not supported for containers."
 }
+
+function is_cove_rescue_device() {
+    local device_name="$1"
+
+    local label
+    label=$(blkid_label_of_device "$device_name")
+
+    [ "$label" = "COVE_RESCUE" ]
+}
