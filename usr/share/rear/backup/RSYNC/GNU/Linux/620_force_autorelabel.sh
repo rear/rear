@@ -30,18 +30,6 @@ local backup_prog_rc
 		fi
 		;;
 
-	(*)
-		local scheme="$(url_scheme "$BACKUP_URL")"
-		local path="$(url_path "$BACKUP_URL")"
-		local opath="$(backup_path "$scheme" "$path")"
-		# probably using the BACKUP=NETFS workflow instead
-		if [ -d "${opath}" ]; then
-			if [ ! -f "${opath}/selinux.autorelabel" ]; then
-				> "${opath}/selinux.autorelabel" || Error "Failed to create selinux.autorelabel on ${opath}"
-			fi
-		fi
-		;;
-
 	esac
 	Log "Trigger (forced) autorelabel (SELinux) file"
 }
