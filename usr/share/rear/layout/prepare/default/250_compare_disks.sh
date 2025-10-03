@@ -154,7 +154,7 @@ if ! is_true "$MIGRATION_MODE" ; then
         if test -e "/sys/block/$dev" ; then
             Log "Device /sys/block/$dev exists"
             newsize=$( get_disk_size $dev )
-            device_name="$( get_device_name /"sys/block/$dev" )"
+            device_name="$( get_device_name "/sys/block/$dev" )"
             if is_cove_rescue_device "$device_name" ; then
                 LogPrint "Device $dev is the COVE_RESCUE disk (needs manual configuration)"
                 MIGRATION_MODE='true'
