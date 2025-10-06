@@ -111,7 +111,7 @@ for current_device_path in /sys/block/* ; do
     # Continue with next block device if the current one is designated as write-protected:
     is_write_protected $current_device_path && continue
     # Continue with next block device if the current one is the COVE_RESCUE disk
-    device_name="$( get_device_name $current_device_path )"
+    device_name="$( get_device_name "$current_device_path" )"
     is_cove_rescue_device "$device_name" && continue
     # Continue with next block device if no size can be read for the current one:
     test -r $current_device_path/size || continue
