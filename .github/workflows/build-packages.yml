@@ -90,11 +90,15 @@ jobs:
                   test -d dist-all && ls -lR dist-all || :
               if: always()
 
+            - name: Sanitize Artifact Name
+              id: sanitize
+              run: echo "##[set-output name=name;]$(echo '${{ github.head_ref || env.RELEASE_FILENAME || github.ref }}' | tr '/' '-')"
+
             - name: Upload Artifacts
               if: always()
               uses: actions/upload-artifact@v4
               with:
-                  name: ReaR Packages ${{ github.head_ref || env.RELEASE_FILENAME || github.ref_name }} ${{ github.sha }}
+                  name: ReaR Packages ${{ steps.sanitize.outputs.name }} ${{ github.sha }}
                   path: dist-all/*
                   retention-days: 7
 
