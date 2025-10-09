@@ -171,6 +171,9 @@ restore_args=(
     -exclude "${COVE_REAL_INSTALL_DIR}"
     -session-search-policy OldestIfRequestedNotFound
 )
+
+[ -e "${COVE_AUTH_TOOL_DIR}" ] && restore_args+=( -exclude "${COVE_AUTH_TOOL_DIR}" )
+
 [ -z "${COVE_TIMESTAMP}" ] || restore_args+=( -time "${COVE_TIMESTAMP}" )
 
 prompt="Select what to do"
