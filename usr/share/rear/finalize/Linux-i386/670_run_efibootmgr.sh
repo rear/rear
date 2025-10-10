@@ -11,7 +11,7 @@ is_true $EFI_STUB && return
 # Do not create EFI Boot Manager entries in Azure, because these are created
 # for OS disks. Having incorrect EFI entries for the Cove Rescue Media OS disk
 # can make it non-bootable for further use.
-if is_cove_in_azurel; then
+if is_cove_in_azure; then
     LogPrint "Skip creating EFI Boot Manager entries in Azure environments"
     return 0
 fi
