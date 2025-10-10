@@ -48,6 +48,10 @@ function is_cove() {
     [ "$BACKUP" = "COVE" ]
 }
 
+function is_cove_in_azure() {
+    is_cove && grep -qw "cove_azure" /proc/cmdline
+}
+
 # Since there is no reliable way of detecting whether it is running in a container or not,
 # it only tries to guess.
 function is_container() {
