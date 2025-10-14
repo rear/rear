@@ -49,7 +49,9 @@ function is_cove() {
 }
 
 function is_cove_in_azure() {
-    is_cove && grep -qw "cove_azure" /proc/cmdline
+    is_cove && grep -qw "cove_azure" /proc/cmdline && \
+        curl -H "Metadata: true" "http://169.254.169.254/metadata/instance?api-version=2021-02-01" \
+            --connect-timeout 3 1>/dev/null 2>&1
 }
 
 # Since there is no reliable way of detecting whether it is running in a container or not,

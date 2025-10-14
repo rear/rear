@@ -12,7 +12,8 @@ is_true $EFI_STUB && return
 # for OS disks. Having incorrect EFI entries for the Cove Rescue Media OS disk
 # can make it non-bootable for further use.
 if is_cove_in_azure; then
-    LogPrint "Skip creating EFI Boot Manager entries in Azure environments"
+    LogPrint "Skip creating EFI Boot Manager entries in Azure"
+    NOBOOTLOADER=""
     return 0
 fi
 
