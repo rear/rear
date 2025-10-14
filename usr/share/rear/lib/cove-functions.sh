@@ -41,7 +41,7 @@ function cove_print_in_frame() {
         text=$(echo -e "$title\n$text")
     fi
 
-    LogUserOutput "$text"
+    UserOutput "$text"
 }
 
 function is_cove() {
