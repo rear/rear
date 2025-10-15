@@ -2,15 +2,14 @@
 # Check that firmware type is the same on the source and target systems
 #
 
-if [ -z "$COVE_FIRMWARE" ]; then
-    return 0
-fi
-
-local source_firmware_type="$COVE_FIRMWARE"
-
 local target_firmware_type="BIOS"
 if [ -d "/sys/firmware/efi/vars" ] || [ -d "/sys/firmware/efi/efivars" ] ; then
     target_firmware_type="EFI"
+fi
+
+local source_firmware_type="BIOS"
+if is_true "$USING_UEFI_BOOTLOADER"; then
+    source_firmware_type="EFI"
 fi
 
 text="Firmware type mismatch detected. The source system firmware type is ${source_firmware_type}, \
