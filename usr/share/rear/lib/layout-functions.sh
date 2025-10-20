@@ -1531,4 +1531,27 @@ delete_dummy_partitions_and_resize_real_ones() {
     last_partition_number=0
 }
 
+get_partition_guid() {
+    local device=$1
+
+    local guid=""
+    if has_binary blkid; then
+        guid="$(blkid -s PARTUUID -o value "$device" 2>/dev/null)"
+        if [ -n "$guid" ]; then
+            echo "$guid"
+            return 0
+        fi
+    fi
+}
+
+set_partition_guid() {
+    local device=$1
+    local partnum=$2
+    local guid=$3
+
+    if has_binary sgdisk; then
+        sgdisk --partition-guid="$partnum":"$guid" "$device"
+    fi
+}
+
 # vim: set et ts=4 sw=4:
