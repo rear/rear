@@ -1562,11 +1562,16 @@ get_partition_guid() {
     local guid=""
     if has_binary blkid; then
         guid="$(blkid -s PARTUUID -o value "$device" 2>/dev/null)"
-        if [ -n "$guid" ]; then
-            echo "$guid"
-            return 0
-        fi
+    # Fallback for cases when blkid is not available
+    elif [ -d  /dev/disk/by-partuuid ]; then
+        local disk
+        for disk in /dev/disk/by-partuuid/*; do
+            if [ -h "$disk" ] && [ "$(readlink -f "$disk")" = "$device" ]; then
+                guid="${disk#/dev/disk/by-partuuid/}"
+            fi
+        done
     fi
+    echo "$guid"
 }
 
 set_partition_guid() {
