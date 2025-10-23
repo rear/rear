@@ -1563,7 +1563,7 @@ get_partition_guid() {
     if has_binary blkid; then
         guid="$(blkid -s PARTUUID -o value "$device" 2>/dev/null)"
     # Fallback for cases when blkid is not available
-    elif [ -d  /dev/disk/by-partuuid ]; then
+    elif [ -d /dev/disk/by-partuuid ]; then
         local disk
         for disk in /dev/disk/by-partuuid/*; do
             if [ -h "$disk" ] && [ "$(readlink -f "$disk")" = "$device" ]; then
