@@ -353,17 +353,19 @@ extract_partitions() {
     fi
 
     while read -r partition_nr size start type flags junk ; do
-        local partuuid="no-partuuid"
+        local partuuid
         if [ "$disk_label" = "gpt" ]; then
             local partition_name="${device%/*}/${partition_prefix#*/}$partition_nr"
             local partition_device
             partition_device="$(get_device_name "$partition_name")"
             partuuid="$(get_partition_guid "$partition_device")"
-            if [ -z "$partuuid" ]; then
-                partuuid="no-partuuid"
-            fi
         fi
-        sed -i /^$partition_nr\ /s/$/\ $partuuid/ "$TMP_DIR/partitions"
+
+        if [ -z "$partuuid" ]; then
+            partuuid="no-partuuid"
+        fi
+
+        sed -i /^"$partition_nr"\ /s/$/\ $partuuid/ "$TMP_DIR/partitions"
     done < "$TMP_DIR/partitions-data"
 
     ### Write to layout file
