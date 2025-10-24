@@ -1543,6 +1543,7 @@ get_partition_guid() {
         for disk in /dev/disk/by-partuuid/*; do
             if [ -h "$disk" ] && [ "$(readlink -f "$disk")" = "$device" ]; then
                 guid="${disk#/dev/disk/by-partuuid/}"
+                break
             fi
         done
     fi
