@@ -34,7 +34,11 @@ echo "Disk layout dated $START_DATE_TIME_NUMBER (YYYYmmddHHMMSS)" >$DISKLAYOUT_F
 #   lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID
 # and as fallback try 'lsblk -i' and finally try plain 'lsblk'.
 # When there is no 'lsblk' command there is no output (bad luck, no harm):
-{ lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINTS,UUID,PARTUUID,WWN || lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID,PARTUUID,WWN || lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID,PARTUUID || lsblk -i || lsblk ; } >>$DISKLAYOUT_FILE
+{ lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINTS,UUID,PARTUUID,WWN || \
+  lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID,PARTUUID,WWN || \
+  lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID,PARTUUID || \
+  lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID || \
+  lsblk -i || lsblk ; } >>"$DISKLAYOUT_FILE"
 # Make all lines in disklayout.conf up to now as header comments:
 sed -i -e 's/^/# /' $DISKLAYOUT_FILE
 
