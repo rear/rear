@@ -7,7 +7,7 @@ common situations.
 
 Relax-and-Recover produces a bootable image which can recreate the system's
 original storage layout. Once that is done it initiates a restore from backup.
-Since the storage layout can be modified prior to recovery, and disimilar
+Since the storage layout can be modified prior to recovery, and dissimilar
 hardware and virtualization is supported, Relax-and-Recover offers the
 flexibility to be used for complex system migrations.
 
