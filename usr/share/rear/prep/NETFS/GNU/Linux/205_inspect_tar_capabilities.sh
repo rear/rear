@@ -42,8 +42,6 @@ if [[ "$tar_selinux_xattrs_include" == "1" || "$tar_selinux_option" == "1" ]] ; 
     TAR_SELINUX=1
 else
     TAR_SELINUX=0
-    # tar does not support SELinux context preservation, need to relabel after restore
-    is_true "$SELINUX_IN_USE" && touch $TMP_DIR/force.autorelabel
 fi
 
 # save the BACKUP_PROG_OPTIONS array content to the $ROOTFS_DIR/etc/rear/rescue.conf
