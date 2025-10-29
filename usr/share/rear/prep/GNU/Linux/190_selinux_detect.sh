@@ -31,9 +31,3 @@ echo $KERNEL_CMDLINE | grep -q 'selinux=1' || KERNEL_CMDLINE+=" selinux=1"
 KERNEL_CMDLINE=$( echo $KERNEL_CMDLINE | sed -e 's/enforcing=1/enforcing=0/' )
 # Append 'enforcing=0' if no 'enforcing=' exists
 echo $KERNEL_CMDLINE | grep -q 'enforcing=' || KERNEL_CMDLINE+=" enforcing=0"
-
-# Check if SELinux should be disabled during backup
-if is_true "$BACKUP_SELINUX_DISABLE" ; then
-    # Save current SELinux mode to restore it after backup
-    cat $SELINUX_ENFORCE > $TMP_DIR/selinux.mode
-fi
