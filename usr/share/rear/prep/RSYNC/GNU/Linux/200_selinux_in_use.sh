@@ -27,16 +27,6 @@ case $(basename $BACKUP_PROG) in
         fi
         ;;
 
-    (tar)
-        if tar --usage | grep -q selinux ; then
-            # during backup we will NOT disable SELinux
-            BACKUP_PROG_OPTIONS+=( "--selinux" )
-        else
-            # tar does not support --selinux, need to relabel after restore
-            touch $TMP_DIR/force.autorelabel
-        fi
-        ;;
-
     (*)
         # backup program does not support SELinux context preservation
         touch $TMP_DIR/force.autorelabel
