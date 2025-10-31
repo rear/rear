@@ -4,6 +4,13 @@ if ls -l /sys/block/*/ | grep -q xen ; then
     # if some disks are xen related then assume this is a XEN PV VM which boots externally
     LogPrint "This looks like a XEN PV system, ignoring boot loader issues"
 elif test "$NOBOOTLOADER" ; then
+    if is_cove; then
+      text="For this system there is no code to install a boot loader on the recovered system \
+or the code that we failed to install the boot loader correctly."
+      cove_print_in_frame "ERROR" "$text"
+      Error "Bootloader failed to install."
+    fi
+
     LogPrint "WARNING:
 For this system
 $OS_VENDOR_VERSION on $ARCH (based on $OS_MASTER_VENDOR_VERSION_ARCH)
