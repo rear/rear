@@ -6,7 +6,7 @@ if ls -l /sys/block/*/ | grep -q xen ; then
 elif test "$NOBOOTLOADER" ; then
     if is_cove; then
       text="For this system there is no code to install a boot loader on the recovered system \
-or the code that we failed to install the boot loader correctly."
+or the code that we have failed to install the boot loader correctly."
       cove_print_in_frame "ERROR" "$text"
       Error "Bootloader failed to install."
     fi
