@@ -5,8 +5,8 @@ if ls -l /sys/block/*/ | grep -q xen ; then
     LogPrint "This looks like a XEN PV system, ignoring boot loader issues"
 elif test "$NOBOOTLOADER" ; then
     if is_cove; then
-      text="For this system there is no code to install a boot loader on the recovered system \
-or the code that we have failed to install the boot loader correctly."
+      text="For this system, the boot loader cannot be installed on the recovered system \
+because the installation code is either missing or malfunctioning."
       cove_print_in_frame "ERROR" "$text"
       Error "Bootloader failed to install."
     fi
