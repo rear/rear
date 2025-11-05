@@ -48,6 +48,12 @@ function is_cove() {
     [ "$BACKUP" = "COVE" ]
 }
 
+function is_cove_in_azure() {
+    is_cove && grep -qw "cove_azure" /proc/cmdline && \
+        curl -H "Metadata: true" "http://169.254.169.254/metadata/instance?api-version=2021-02-01" \
+            --connect-timeout 3 1>/dev/null 2>&1
+}
+
 # Since there is no reliable way of detecting whether it is running in a container or not,
 # it only tries to guess.
 function is_container() {
@@ -87,4 +93,13 @@ function cove_error_if_container() {
     container=$(is_container) || return 1
 
     Error "The system is detected as ${container} container. System state is not supported for containers."
+}
+
+function is_cove_rescue_device() {
+    local device_name="$1"
+
+    local label
+    label=$(blkid_label_of_device "$device_name")
+
+    [ "$label" = "COVE_RESCUE" ]
 }
