@@ -121,6 +121,8 @@ while true ; do
         # so that it exits the running shell in case of an error
         # but that exit must not exit this running bash here:
         ( source $LAYOUT_CODE )
+
+        touch "${TMP_DIR}/cove_rear_layout_code_done"
     fi
     # One must explicitly test whether or not $? is zero in a separated bash command
     # because with bash 3.x and bash 4.x code like

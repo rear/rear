@@ -1,4 +1,4 @@
-if [ -e /tmp/cove_rear_layout_code_done ]; then
+if [ -e "${TMP_DIR}/cove_rear_layout_code_done" ]; then
     text="A new recovery attempt has been detected. \
 Some devices may have been mounted since the last attempt, \
 which could prevent the recovery from completing. \
