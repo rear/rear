@@ -244,7 +244,9 @@ for error_message in "${broken_part_errors[@]}" ; do
     disklayout_file_is_broken="yes"
 done
 # Non consecutive partitions are supported unless parted tells otherwise:
-if is_false $FEATURE_PARTED_RESIZEPART && is_false $FEATURE_PARTED_RESIZE ; then
+# Cove is an exception because Cove Rescue Media is used during recovery,
+# which provides updated parted tool.
+if is_false "$FEATURE_PARTED_RESIZEPART" && is_false "$FEATURE_PARTED_RESIZE" && ! is_cove; then
     for error_message in "${non_consecutive_part_errors[@]}" ; do
         contains_visible_char "$error_message" || continue
         LogPrintError "$error_message"

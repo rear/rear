@@ -136,7 +136,7 @@ while read keyword orig_device orig_size junk ; do
         # its matching actual block device (e.g. /dev/sda) must be determined:
         preferred_target_device_name="$( get_device_name $current_device )"
         # Use the current one if it is of same size as the old one:
-        if has_mapping_hint "$orig_device" || test "$orig_size" -eq "$current_size" ; then
+        if ! is_cove_rescue_device "$preferred_target_device_name" && { has_mapping_hint "$orig_device" || test "$orig_size" -eq "$current_size"; }; then
             # Ensure the target device is really a block device on the replacement hardware.
             # Here the target device has same name as the original device which was a block device on the original hardware
             # but it might perhaps happen that this device name is not a block device on the replacement hardware:
@@ -177,6 +177,11 @@ while read keyword orig_device orig_size junk ; do
         # The current_device_path (e.g. /sys/block/sdb) is not a block device so that
         # its matching actual block device (e.g. /dev/sdb) must be determined:
         preferred_target_device_name="$( get_device_name $current_device_path )"
+        # Continue with next block device if the current one is the COVE_RESCUE disk
+        if is_cove_rescue_device "$preferred_target_device_name" ; then
+            DebugPrint "Cannot use $preferred_target_device_name for recreating $orig_device ($preferred_target_device_name is COVE_RESCUE)"
+            continue
+        fi
         # Ensure the determined target device is really a block device (cf. above):
         test -b "$preferred_target_device_name" || continue
         # Continue with next block device if the current one is not of same size as the original:
@@ -248,6 +253,11 @@ while read keyword orig_device orig_size junk ; do
         # Continue with next block device if the current one has no queue directory:
         if ! test -d $current_device_path/queue ; then
             Log "$preferred_target_device_name excluded from device mapping choices (has no queue directory)"
+            continue
+        fi
+        # Continue with next block device if the current one is the COVE_RESCUE disk
+        if is_cove_rescue_device "$preferred_target_device_name" ; then
+            Log "$preferred_target_device_name excluded from device mapping choices (is COVE_RESCUE)"
             continue
         fi
         # Continue with next block device if the current one is already used as target in the mapping file:

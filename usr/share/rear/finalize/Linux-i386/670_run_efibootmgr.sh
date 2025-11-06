@@ -8,6 +8,15 @@ is_true $USING_UEFI_BOOTLOADER || return 0
 # (cf. finalize/Linux-i386/610_EFISTUB_run_efibootmgr.sh): 
 is_true $EFI_STUB && return
 
+# Do not create EFI Boot Manager entries in Azure, because these are created
+# for OS disks. Having incorrect EFI entries for the Cove Rescue Media OS disk
+# can make it non-bootable for further use.
+if is_cove_in_azure; then
+    LogPrint "Skip creating EFI Boot Manager entries in Azure"
+    NOBOOTLOADER=""
+    return 0
+fi
+
 LogPrint "Creating EFI Boot Manager entries..."
 
 local esp_mountpoint esp_mountpoint_inside boot_efi_parts boot_efi_dev
