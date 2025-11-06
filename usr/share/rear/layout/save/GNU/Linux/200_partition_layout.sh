@@ -449,7 +449,16 @@ Log "Saving disks and their partitions"
                     continue
                 fi
                 disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
-                test $disktype || Error "Invalid 'disk $devname' entry (no partition table type for '$devname')"
+                if [ -z "$disktype" ]; then
+                    err_msg="Invalid 'disk $devname' entry (no partition table type for '$devname')"
+                    if is_true "$AUTOEXCLUDE_DISKS"; then
+                        disktype="unknown"
+                        LogPrintError "$err_msg"
+                    else
+                        Error "$err_msg"
+                    fi
+                    unset err_msg
+                fi
                 if [ "$disktype" != "dasd" ]; then
                     echo "# Disk $devname"
                     echo "# Format: disk <devname> <size(bytes)> <partition label type>"

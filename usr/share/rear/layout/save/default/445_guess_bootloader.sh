@@ -101,6 +101,21 @@ for block_device in /sys/block/* ; do
             else
                 LogPrint "Using guessed bootloader '$known_bootloader' for 'rear recover' (found in first bytes on $disk_device)"
             fi
+            # In cloud providers such as Azure, VMs can be created from images
+            # that are dual-boot capable — GPT + EFI and GPT + BIOS.
+            if is_true "$USING_UEFI_BOOTLOADER"; then
+                case "$known_bootloader" in
+                    (GRUB2)
+                        known_bootloader="GRUB2-EFI"
+                        ;;
+                    (LILO)
+                        known_bootloader="ELILO"
+                        ;;
+                    (*)
+                        known_bootloader="EFI"
+                        ;;
+                esac
+            fi
             echo "$known_bootloader" >$bootloader_file
             return
         fi

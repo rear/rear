@@ -110,6 +110,9 @@ for current_device_path in /sys/block/* ; do
     test "$( < $current_device_path/removable )" = "1" && continue
     # Continue with next block device if the current one is designated as write-protected:
     is_write_protected $current_device_path && continue
+    # Continue with next block device if the current one is the COVE_RESCUE disk
+    device_name="$( get_device_name "$current_device_path" )"
+    is_cove_rescue_device "$device_name" && continue
     # Continue with next block device if no size can be read for the current one:
     test -r $current_device_path/size || continue
     current_size=$( get_disk_size $current_disk_name )
@@ -151,7 +154,11 @@ if ! is_true "$MIGRATION_MODE" ; then
         if test -e "/sys/block/$dev" ; then
             Log "Device /sys/block/$dev exists"
             newsize=$( get_disk_size $dev )
-            if test "$newsize" -eq "$size" ; then
+            device_name="$( get_device_name "/sys/block/$dev" )"
+            if is_cove_rescue_device "$device_name" ; then
+                LogPrint "Device $dev is the COVE_RESCUE disk (needs manual configuration)"
+                MIGRATION_MODE='true'
+            elif test "$newsize" -eq "$size" ; then
                 if is_write_protected "/sys/block/$dev"; then
                     LogPrint "Device $dev is designated as write-protected (needs manual configuration)"
                     MIGRATION_MODE='true'
