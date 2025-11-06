@@ -1,5 +1,5 @@
 #
-# Check check if layout cove was not executed
+# Check if layout cove was not executed
 #
 
 if [ -e "${TMPDIR}/cove_rear_layout_code_done" ]; then
