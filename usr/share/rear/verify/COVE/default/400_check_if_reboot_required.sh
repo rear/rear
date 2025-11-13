@@ -1,8 +1,8 @@
 #
-# Check if layout code was not executed
+# Check if layout code execution was not started
 #
 
-if [ -e "${TMPDIR}/cove_rear_layout_code_done" ]; then
+if [ -e "${TMPDIR}/cove_rear_layout_code_started" ]; then
     text="A new recovery attempt has been detected. \
 Some devices may have been mounted since the last attempt, \
 which could prevent the recovery from completing. \

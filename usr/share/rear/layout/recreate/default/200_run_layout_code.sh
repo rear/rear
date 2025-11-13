@@ -97,8 +97,6 @@ is_true "$USER_INPUT_LAYOUT_MIGRATED_CONFIRMATION" && USER_INPUT_LAYOUT_MIGRATED
 # (the user may have setup manually what he needs via the Relax-and-Recover shell):
 while true ; do
     prompt="The disk layout recreation had failed"
-
-    local layout_rc = 0
     if is_true "$BARREL_DEVICEGRAPH" ; then
         # See https://github.com/rear/rear/pull/2382#discussion_r417852393
         # and https://github.com/rear/rear/pull/2382#discussion_r417998820
@@ -115,7 +113,6 @@ while true ; do
             # barrel --verbose --yes --prefix /mnt/local load devicegraph --name /etc/barrel-devicegraph.xml
             barrel --verbose --yes --prefix $TARGET_FS_ROOT load devicegraph --name $BARREL_DEVICEGRAPH_FILE 0<&6 1>> >( tee -a "$RUNTIME_LOGFILE" 1>&7 ) 2>> >( tee -a "$RUNTIME_LOGFILE" 1>&8 )
         fi
-        layout_rc="$?"
     else
         # After switching to recreating with disk recreation script
         # change choices[0] from "Run ..." to "Rerun ...":
@@ -123,10 +120,9 @@ while true ; do
         # Run LAYOUT_CODE in a sub-shell because it sets 'set -e'
         # so that it exits the running shell in case of an error
         # but that exit must not exit this running bash here:
-        ( source $LAYOUT_CODE )
-        layout_rc="$?"
+        touch "${TMPDIR}/cove_rear_layout_code_started"
 
-        touch "${TMPDIR}/cove_rear_layout_code_done"
+        ( source $LAYOUT_CODE )
     fi
     # One must explicitly test whether or not $? is zero in a separated bash command
     # because with bash 3.x and bash 4.x code like
@@ -155,7 +151,7 @@ while true ; do
     #   cat: qqq: No such file or directory
     #   failed
     # See also https://github.com/rear/rear/pull/1573#issuecomment-344303590
-    if (( "$layout_rc" == 0 )) ; then
+    if (( $? == 0 )) ; then
         prompt="Disk layout recreation had been successful"
         # When LAYOUT_CODE succeeded and when not in migration mode
         # break the outer while loop and continue the "rear recover" workflow
