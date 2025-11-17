@@ -120,7 +120,7 @@ while true ; do
         # Run LAYOUT_CODE in a sub-shell because it sets 'set -e'
         # so that it exits the running shell in case of an error
         # but that exit must not exit this running bash here:
-        touch "${TMPDIR}/cove_rear_layout_code_started"
+        touch "${LAYOUT_CODE_STARTED}"
 
         ( source $LAYOUT_CODE )
     fi
