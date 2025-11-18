@@ -631,7 +631,7 @@ disk <name> <size(B)> <partition label>
 
 === Partitions ===
 ----------------------------------
-part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <partition name>
+part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <partition name> <partition guid/"no-partuuid">
 ----------------------------------
 
 === Software RAID arrays ===

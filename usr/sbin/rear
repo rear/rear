@@ -361,9 +361,15 @@ test "$WORKFLOW" = "udev" || readonly WORKFLOW
 
 # Make sure we have the necessary paths (eg. in cron), /sbin will be the first path to search.
 # some needed binaries are in /lib/udev or /usr/lib/udev
+parent_command=$(ps -p $PPID -o comm= 2>/dev/null)
+force_prepend=false
+[ "$parent_command" = "BackupFP" ] && force_prepend=true
+
 for path in /usr/bin /bin /usr/sbin /sbin ; do
     case ":$PATH:" in
         (*:"$path":*)
+            # For Cove only: always prepend paths
+            $force_prepend && PATH=$path:$PATH
             ;;
         (*)
             test -d "$path" && PATH=$path:$PATH

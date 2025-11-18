@@ -39,9 +39,9 @@ extract_partitions() {
     ### Therefore we ignore these special partitions, see also
     ### https://github.com/rear/rear/issues/2087
     for possible_sysfs_partition in "${sysfs_paths_unfiltered[@]}"; do
-	if [[ ! ( $possible_sysfs_partition = *'/mmcblk'+([0-9])'rpmb' || $possible_sysfs_partition = *'/mmcblk'+([0-9])'boot'+([0-9]) ) ]] ; then
-	    sysfs_paths+=($possible_sysfs_partition)
-        fi    
+        if [[ ! ( $possible_sysfs_partition = *'/mmcblk'+([0-9])'rpmb' || $possible_sysfs_partition = *'/mmcblk'+([0-9])'boot'+([0-9]) ) ]] ; then
+            sysfs_paths+=($possible_sysfs_partition)
+        fi
     done
 
     declare path sysfs_path
@@ -352,8 +352,24 @@ extract_partitions() {
         done < $TMP_DIR/partitions-data
     fi
 
+    while read -r partition_nr size start type flags junk ; do
+        local partuuid
+        if [ "$disk_label" = "gpt" ]; then
+            local partition_name="${device%/*}/${partition_prefix#*/}$partition_nr"
+            local partition_device
+            partition_device="$(get_device_name "$partition_name")"
+            partuuid="$(get_partition_guid "$partition_device")"
+        fi
+
+        if [ -z "$partuuid" ]; then
+            partuuid="no-partuuid"
+        fi
+
+        sed -i /^"$partition_nr"\ /s/$/\ $partuuid/ "$TMP_DIR/partitions"
+    done < "$TMP_DIR/partitions-data"
+
     ### Write to layout file
-    while read partition_nr size start type flags junk ; do
+    while read partition_nr size start type flags partuuid junk ; do
         # determine the name of the partition using the number
         # device=/dev/cciss/c0d0 ; partition_prefix=cciss/c0d0p
         # device=/dev/md127 ; partition_prefix=md127p
@@ -388,7 +404,7 @@ extract_partitions() {
             fi
         fi
         # Some basic checks on the values happen in layout/save/default/950_verify_disklayout_file.sh
-        echo "part $device $size $start $type $flags $partition_device"
+        echo "part $device $size $start $type $flags $partition_device $partuuid"
     done < $TMP_DIR/partitions
 }
 
@@ -492,7 +508,7 @@ Log "Saving disks and their partitions"
                     Error "Invalid 'disk $devname' entry (DASD partition label on non-s390 arch $ARCH)"
                 fi
                 echo "# Partitions on $devname"
-                echo "# Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>"
+                echo "# Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition> <partition guid|no-partuuid>"
                 extract_partitions "$devname"
             fi
         fi
