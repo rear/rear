@@ -35,6 +35,14 @@ else
 			git_ref := $(shell git rev-parse HEAD | cut -c 1-8)
 			git_count := $(shell git rev-list HEAD --no-merges | wc -l)
 			git_branch_suffix = $(shell git symbolic-ref HEAD | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
+			release_sufix = $(shell git symbolic-ref HEAD | grep -oP "(?<=release/)[\d\-\.]*-cove")
+			ifneq ($(release_sufix),)
+				git_branch_suffix = $(release_sufix)
+			endif
+			feature_sufix = $(shell git symbolic-ref HEAD | grep -oP "(?<=feature/)\w{1,}-\d{1,}|(?<=hotfix/)\w{1,}-\d{1,}")
+			ifneq ($(feature_sufix),)
+				git_branch_suffix = $(feature_sufix)
+			endif
 			git_status := $(shell git status --porcelain)
 			git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
 			ifneq ($(git_status),)
