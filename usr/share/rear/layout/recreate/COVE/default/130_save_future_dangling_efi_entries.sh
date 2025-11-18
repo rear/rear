@@ -90,6 +90,8 @@ if is_true "$COVE_TESTS"; then
     return 0
 fi
 
-FUTURE_DANGLING_EFI_ENTRIES=$(get_future_dangling_efi_entries)
-
-LogPrint "Found future dangling EFI entries: $FUTURE_DANGLING_EFI_ENTRIES"
+if FUTURE_DANGLING_EFI_ENTRIES=$(get_future_dangling_efi_entries); then
+    LogPrint "Found future dangling EFI entries: $FUTURE_DANGLING_EFI_ENTRIES"
+else
+    LogPrint "Failed to identify future dangling EFI entries"
+fi

@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 SCRIPT_DIR="$(dirname "${0}")"
 SCRIPT_DIR="$(realpath "${SCRIPT_DIR}")"
@@ -7,8 +7,6 @@ readonly SCRIPT_DIR
 REAR_SHARE_DIR=$(realpath "$SCRIPT_DIR/../../usr/share/rear")
 readonly REAR_SHARE_DIR
 
-# shellcheck disable=SC1091
-source "$REAR_SHARE_DIR/lib/_010_utils.sh"
 # shellcheck disable=SC1091
 source "$REAR_SHARE_DIR/lib/global-functions.sh"
 
@@ -41,6 +39,8 @@ function find_future_dangling_entry() {
         echo "Boot0002* EFI Network	PcieRoot(0x8)/Pci(0x1,0x0)/MAC(00505698f752,1)"
         # shellcheck disable=SC2028
         echo "Boot0003* Red Hat Enterprise Linux	HD(1,GPT,bc6f95e7-893a-434b-8b76-f3d52e6ad28d,0x800,0x12c000)/\\EFI\\redhat\\shimx64.efi"
+        # shellcheck disable=SC2028
+        echo "Boot0004* Red Hat Enterprise Linux	HD(1,GPT,bc6f95e7-0000-0000-0000-f3d52e6ad28d,0x800,0x12c000)/\\EFI\\redhat\\shimx64.efi"
     }
 
     local boot_number

@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 SCRIPT_DIR="$(dirname "${0}")"
 SCRIPT_DIR="$(realpath "${SCRIPT_DIR}")"
@@ -7,8 +7,6 @@ readonly SCRIPT_DIR
 REAR_SHARE_DIR=$(realpath "$SCRIPT_DIR/../../usr/share/rear")
 readonly REAR_SHARE_DIR
 
-# shellcheck disable=SC1091
-source "$REAR_SHARE_DIR/lib/_010_utils.sh"
 # shellcheck disable=SC1091
 source "$REAR_SHARE_DIR/lib/global-functions.sh"
 
