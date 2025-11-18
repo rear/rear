@@ -69,8 +69,7 @@ get_future_dangling_efi_entries() {
     local entry
     while IFS= read -r entry; do
         local partuuid
-        partuuid=$(echo "$entry" | grep -oP '(?<=GPT,)[0-9a-fA-F-]+') || \
-        partuuid=$(echo "$entry" | grep -oP '(?<=MBR,)[0-9a-fA-F-]+') || continue
+        partuuid=$(echo "$entry" | grep -oP '(?<=GPT,|MBR,)[0-9a-fA-F-]+') || continue
         if echo "$partuuids" | grep -q "^$partuuid$"; then
             local boot_number
             boot_number="$(echo "$entry" | awk '{print $1}' | grep -oP '(?<=Boot)[0-9a-fA-F]+')" || continue
