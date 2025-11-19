@@ -33,7 +33,7 @@ get_disk_partuuids() {
 }
 
 get_partuuids_of_disks_to_be_overwritten() {
-    if is_false "$DISKS_TO_BE_OVERWRITTEN" || [ -z "$DISKS_TO_BE_OVERWRITTEN" ]; then
+    if [ -z "$DISKS_TO_BE_OVERWRITTEN" ]; then
         return 0
     fi
 

@@ -109,5 +109,8 @@ TESTS=(
 for test in "${TESTS[@]}"; do
     # shellcheck disable=SC1091
     source "$REAR_SHARE_DIR/finalize/COVE/default/665_remove_dangling_efi_entries.sh"
-    "$test"
+    if ! "$test"; then
+        echo "$test failed"
+        exit 1
+    fi
 done

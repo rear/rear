@@ -145,9 +145,11 @@ fi
 DISKS_TO_BE_WIPED="$disks_to_be_wiped"
 # The DISKS_TO_BE_WIPED string is needed in the subsequent layout/recreate/default/150_wipe_disks.sh script
 
-# DISKS_TO_BE_OVERWRITTEN is used to save future dangling EFI entries
-# shellcheck disable=SC2034
-DISKS_TO_BE_OVERWRITTEN="$disks_to_be_wiped"
+if is_cove; then
+    # DISKS_TO_BE_OVERWRITTEN is used to save future dangling EFI entries
+    # shellcheck disable=SC2034
+    DISKS_TO_BE_OVERWRITTEN="$disks_to_be_wiped"
+fi
 
 # Show the user confirmation dialog in any case but when not in migration mode
 # automatically proceed with less timeout USER_INPUT_INTERRUPT_TIMEOUT (by default 30 seconds)

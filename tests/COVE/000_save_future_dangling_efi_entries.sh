@@ -21,9 +21,6 @@ function is_cove_in_azure() {
 }
 
 function find_future_dangling_entry() {
-    # shellcheck disable=SC1091
-    source "$REAR_SHARE_DIR/layout/recreate/COVE/default/130_save_future_dangling_efi_entries.sh" || return 1
-
     function get_partuuids_of_disks_to_be_overwritten() {
         echo "368a5c5b-26bf-4a63-b9ae-64a92d79d085"
         echo "9bf08aed-f779-49fe-b310-9c21983289c1"
@@ -54,7 +51,6 @@ function find_future_dangling_entry() {
 }
 
 function find_future_dangling_entries() {
-    unset get_partuuids_of_disks_to_be_overwritten
     function get_partuuids_of_disks_to_be_overwritten() {
         echo "bc6f95e7-893a-434b-8b76-f3d52e6ad28d"
     }
@@ -152,14 +148,11 @@ function one_disk_to_be_overwritten() {
     actual_partuuids="$(get_partuuids_of_disks_to_be_overwritten)"
 
     [ "$expected_partuuids" = "$actual_partuuids" ]
-
 }
 
 function two_disks_to_be_overwritten() {
     # shellcheck disable=SC2034
     DISKS_TO_BE_OVERWRITTEN="/dev/sda /dev/sdb"
-
-    local expected_partuuids="368a5c5b-26bf-4a63-b9ae-64a92d79d085"$'\n'"9bf08aed-f779-49fe-b310-9c21983289c1"
 
     function get_disk_partuuids() {
         local disk=$1
@@ -176,8 +169,9 @@ function two_disks_to_be_overwritten() {
     local actual_partuuids
     actual_partuuids="$(get_partuuids_of_disks_to_be_overwritten)"
 
-    [ "$expected_partuuids" = "$actual_partuuids" ]
+    local expected_partuuids="368a5c5b-26bf-4a63-b9ae-64a92d79d085"$'\n'"9bf08aed-f779-49fe-b310-9c21983289c1"
 
+    [ "$expected_partuuids" = "$actual_partuuids" ]
 }
 
 function no_disks_to_be_overwritten() {
@@ -210,5 +204,8 @@ TESTS=(
 for test in "${TESTS[@]}"; do
     # shellcheck disable=SC1091
     source "$REAR_SHARE_DIR/layout/recreate/COVE/default/130_save_future_dangling_efi_entries.sh"
-    "$test"
+    if ! "$test"; then
+        echo "$test failed"
+        exit 1
+    fi
 done
