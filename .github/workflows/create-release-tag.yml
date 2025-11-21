@@ -1,0 +1,45 @@
+name: Create release tag
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  create-release-tag:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: master
+
+    - name: Configure Git
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+
+    - name: Determine version
+      id: determine_version
+      run: |
+        inc_version=$(git tag \
+          | grep -E '^[0-9]+\.[0-9]+-[0-9]+-cove$' \
+          | awk -F'-' '{print $(NF-1)}' \
+          | sort -n \
+          | tail -1)
+        inc_version=$((inc_version + 1))
+        version="2.9-$inc_version-cove"
+        echo "Version: $version"
+        echo "version=$version" >> $GITHUB_OUTPUT
+
+    - name: Create release tag
+      env:
+        VERSION: ${{ steps.determine_version.outputs.version }}
+      run: |
+        git tag $VERSION
+        git push origin $VERSION
