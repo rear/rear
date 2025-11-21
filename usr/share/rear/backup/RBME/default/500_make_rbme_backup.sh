@@ -1,7 +1,16 @@
 # 500_make_rbme_backup.sh
 LogPrint "Make a backup via RBME"
-echo "BACKUP_PATH=$BUILD_DIR/outputfs" >/etc/rbme.local.conf
-rbme $HOSTNAME 2>&1
+
+# Change the BACKUP_PATH as we want to use the ReaR mount point
+if [[ -f /etc/rbme.local.conf ]]; then
+   grep -q BACKUP_PATH= /etc/rbme.local.conf && \
+       sed -i -e "s;BACKUP_PATH=.*;BACKUP_PATH=$BUILD_DIR/outputfs;" /etc/rbme.local.conf || \
+       echo "BACKUP_PATH=$BUILD_DIR/outputfs" >>/etc/rbme.local.conf
+else
+    echo "BACKUP_PATH=$BUILD_DIR/outputfs" >/etc/rbme.local.conf
+fi
+
+rbme localhost 2>&1
 RC=$?
 # everyone should see this warning
 if [[ $RC -gt 0 ]] ; then
