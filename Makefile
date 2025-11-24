@@ -37,17 +37,22 @@ else
 			git_branch_suffix = $(shell git symbolic-ref HEAD | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
 			release_suffix = $(shell git symbolic-ref HEAD | sed -nE 's/^.*?release\/([0-9.-]*-cove).*/\1/p')
 			ifneq ($(release_suffix),)
-				git_branch_suffix = $(release_suffix)
+				release_tag = $(shell git tag --points-at HEAD)
+				ifneq ($(release_tag),)
+					release_suffix = $(release_tag)
+				else
+					git_branch_suffix = $(release_suffix)
+				endif
 			endif
 			feature_suffix = $(shell git symbolic-ref HEAD | sed -nE 's/^.*?(feature|hotfix)\/([A-Za-z0-9_-]+-[0-9]+).*/\2/p')
 			ifneq ($(feature_suffix),)
 				git_branch_suffix = $(feature_suffix)
 			endif
 			git_status := $(shell git status --porcelain)
-			git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
 			ifneq ($(git_status),)
-				git_stamp := $(git_stamp).changed
-			endif # git_status
+				changed_suffix = .changed
+			endif
+			git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
 		else # no git
 			git_date := now
 			git_ref := 0
@@ -58,9 +63,13 @@ else
 	endif # has .git
 	git_stamp ?= 0.0.unknown
 
-    distversion = $(version)-git.$(git_stamp)
-    debrelease = 0git.$(git_stamp)
-    rpmrelease = .git.$(git_stamp)
+    ifneq ($(release_suffix),)
+        distversion = $(release_suffix)$(changed_suffix)
+    else # is not release version
+        distversion = $(version).$(git_stamp)$(changed_suffix)
+    endif # is release version
+    debrelease = 0git.$(git_stamp)$(changed_suffix)
+    rpmrelease = .git.$(git_stamp)$(changed_suffix)
     obsproject = Archiving:Backup:Rear:Snapshot
     obspackage = $(name)
 
