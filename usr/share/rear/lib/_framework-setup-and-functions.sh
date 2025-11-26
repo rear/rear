@@ -1893,10 +1893,10 @@ function SourceStage () {
     # Numeric sort is not needed because all script numbers have same length
     # (without numeric sort 2 and 10 get sorted as first 10 then 2).
     # Then tr removes the ! to restore the original script name.
-    # Finally duplicates in the listed scripts (duplicates with path to the ecript) get removed by uniq.
-    # It is crucial to not use 'sort ... -k 2 -u' because this ignores when lines differ in the first field
-    # so it would skip scripts with same number and name which are located under different paths
-    # e.g. some/path/123_script.sh and another/path/123_script.sh where only one would be run.
+    # Finally duplicates (duplicates including the path to the script) get removed by uniq.
+    # It is crucial to not use 'sort ... -k 2 -u' because it ignores when lines differ in the first field
+    # so it would falsely skip scripts with same number and name which are located under different paths
+    # e.g. some/path/123_script.sh and another/path/123_script.sh where falsely only one would be run.
     # In contrast 'sort ... -k 2 | uniq' keeps lines which differ anywhere in the whole line
     # so both some/path/123_script.sh and another/path/123_script.sh will be run,
     # cf. https://github.com/rear/rear/pull/3171#issuecomment-3581333934
