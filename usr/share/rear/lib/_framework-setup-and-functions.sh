@@ -1878,7 +1878,7 @@ function SourceStage () {
     # In debug modes show what stage is run also on the user's terminal:
     test "$DEBUG" && Print "Running '$stage' stage ======================"
     # We always source scripts in the same subdirectory structure.
-    # All script in a single stage with a given number get executed before any script with a higher number.
+    # All scripts in a single stage with a given number get executed before any script with a higher number.
     # Within a single stage the order of scripts with same number should not matter.
     # The ls -d {...,...,...} within the $SHARE_DIR/$stage directory expands as intended.
     # The intent is to only list those scripts below the $SHARE_DIR/$stage directory
