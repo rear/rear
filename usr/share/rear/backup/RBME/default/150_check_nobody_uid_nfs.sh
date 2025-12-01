@@ -1,0 +1,1 @@
+../../../verify/RBME/default/150_check_nobody_uid_nfs.sh
