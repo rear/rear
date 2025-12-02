@@ -2,7 +2,7 @@
 #
 [Unit]
 Description=Serial Getty on %I
-BindTo=dev-%i.device
+BindsTo=dev-%i.device
 After=dev-%i.device
 
 # We must wait for ReaR boot script to finish.
