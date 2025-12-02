@@ -1878,21 +1878,30 @@ function SourceStage () {
     # In debug modes show what stage is run also on the user's terminal:
     test "$DEBUG" && Print "Running '$stage' stage ======================"
     # We always source scripts in the same subdirectory structure.
+    # All scripts in a single stage with a given number get executed before any script with a higher number.
+    # Within a single stage the order of scripts with same number should not matter.
     # The ls -d {...,...,...} within the $SHARE_DIR/$stage directory expands as intended.
     # The intent is to only list those scripts below the $SHARE_DIR/$stage directory
     # that match the specified backup method and output method
     # and that match the used operating system and architecture and Linux distribution.
-    # The pipe sorts the listed scripts by their 3-digit number independent of the directory of the script.
-    # We want to make sure that there are no duplicates in the listed scripts
-    # so that each script gets executed at most once.
-    # cf. https://github.com/rear/rear/issues/3149#issuecomment-1935586311
+    # The pipe sorts the listed scripts independent of their directories within the stage.
     # First sed inserts a ! before and after the script number
-    # e.g. default/123_some_script.sh becomes default/!123!_some_script.sh
+    # e.g. path/to/script/123_some_script.sh becomes path/to/script/!123!_some_script.sh
     # which makes the script number field nr. 2 when dividing lines into fields by !
-    # so that the subsequent sort can sort by that field.
+    # so 'sort ... -k 2' uses the script number and the rest of the line for sorting
+    # which results that the scripts are sorted by their number and their name.
     # Numeric sort is not needed because all script numbers have same length
     # (without numeric sort 2 and 10 get sorted as first 10 then 2).
-    # The final tr removes the ! to restore the original script name.
+    # Then tr removes the ! to restore the original script name.
+    # Finally duplicates (duplicates including the path to the script) get removed by uniq
+    # to ensure that each script gets executed at most once,
+    # cf. https://github.com/rear/rear/issues/3149#issuecomment-1935586311
+    # It is crucial to not use 'sort ... -k 2 -u' because it ignores when lines differ in the first field
+    # so it would falsely skip scripts with same number and name which are located under different paths
+    # e.g. only one of some/path/123_script.sh and another/path/123_script.sh would get executed.
+    # In contrast 'sort ... -k 2 | uniq' keeps lines which differ anywhere in the whole line
+    # so both some/path/123_script.sh and another/path/123_script.sh will be run,
+    # cf. https://github.com/rear/rear/pull/3171#issuecomment-3581333934
     # This code breaks if ! or a leading 3-digit number with underscore
     # is used in a directory name of the ReaR subdirectory structure
     # but those directories below the $SHARE_DIR/$stage directory are not named by the user
@@ -1904,7 +1913,7 @@ function SourceStage () {
               "$BACKUP"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
               "$OUTPUT"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
     "$OUTPUT"/"$BACKUP"/{default,"$ARCH","$OS","$OS_MASTER_VENDOR","$OS_MASTER_VENDOR_ARCH","$OS_MASTER_VENDOR_VERSION","$OS_VENDOR","$OS_VENDOR_ARCH","$OS_VENDOR_VERSION"}/*.sh \
-                 | sed -e 's#/\([0-9][0-9][0-9]\)_#/!\1!_#g' | sort -t \! -k 2 -u | tr -d \! ) )
+                 | sed -e 's#/\([0-9][0-9][0-9]\)_#/!\1!_#g' | sort -t \! -k 2 | tr -d \! | uniq ) )
     # If no script is found, then the scripts array contains only one element '.'
     if test "$scripts" = '.' ; then
         Log "Finished running empty '$stage' stage"
