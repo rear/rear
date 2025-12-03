@@ -34,7 +34,7 @@ else
 			git_date := $(shell git log -n 1 --format="%ai")
 			git_ref := $(shell git rev-parse HEAD | cut -c 1-8)
 			git_count := $(shell git rev-list HEAD --no-merges | wc -l)
-			git_branch_suffix = $(shell git symbolic-ref HEAD | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
+			git_branch_suffix = $(shell echo "$${CHANGE_BRANCH:-$${BRANCH_NAME:-$$(git symbolic-ref HEAD || echo unknown)}}" | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
 			git_status := $(shell git status --porcelain)
 			git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
 			ifneq ($(git_status),)
