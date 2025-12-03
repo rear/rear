@@ -91,18 +91,11 @@ pipeline {
                         shellHelper.exec('Validate', """
                             make validate
                         """)
+                        shellHelper.exec('Run unit tests', """
+                            make test-cove
+                        """)
                         shellHelper.exec('Build', """
                             make dist
-                        """)
-                        shellHelper.exec('Run unit tests', """
-                            cd tests/COVE && \
-                                for test_file in *.sh; do \
-                                    echo "Running \$test_file..." && \
-                                    ./"\$test_file" && \
-                                    echo "✓ \$test_file passed" && \
-                                    echo ""; \
-                                done && \
-                                echo "All COVE tests passed!"
                         """)
                         def repository = (envType == 'dev') ? 'cove-generic-develop-local' : 'cove-generic-release-local'
                         shellHelper.exec('Upload', """
