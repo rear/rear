@@ -1,0 +1,47 @@
+#
+# Upgrade Shim and GRUB bootloaders on Debian 10
+#
+# Shim and GRUB are upgraded because Shim from the rescue system
+# which is Debian12-based adds new entries to SBAT that leads to having
+# non-SecureBoot compatible device after BMR.
+#
+
+if [ "$OS_VERSION" != "10" ]; then
+    return 0
+fi
+
+if ! is_true "$USING_UEFI_BOOTLOADER"; then
+    return 0
+fi
+
+if is_cove_in_azure; then
+    return 0
+fi
+
+if is_true "$EFI_STUB"; then
+    return 0
+fi
+
+if [ "${UEFI_BOOTLOADER##*/}" != "shimx64.efi" ]; then
+    return 0
+fi
+
+function upgrade_bootloaders() {
+    local target_bootloder_dir="${UEFI_BOOTLOADER%/*}"
+    target_bootloder_dir="$TARGET_FS_ROOT$target_bootloder_dir"
+
+    local shim="$target_bootloder_dir/shimx64.efi"
+    local grub="$target_bootloder_dir/grubx64.efi"
+
+    cp -b /usr/lib/shim/shimx64.efi.signed "$shim" || return 1
+    cp -b /usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed "$grub" || \
+        { mv "$shim~" "$shim"; return 1; }
+
+    rm "$shim~" "$grub~"
+}
+
+if upgrade_bootloaders; then
+    LogPrint "Upgraded signed Shim and GRUB bootloaders for this system."
+else
+    LogPrint "Failed to upgrade signed Shim and GRUB bootloaders for this system. UEFI Secure Boot might not available."
+fi
