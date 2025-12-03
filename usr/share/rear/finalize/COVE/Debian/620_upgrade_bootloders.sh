@@ -27,11 +27,11 @@ if [ "${UEFI_BOOTLOADER##*/}" != "shimx64.efi" ]; then
 fi
 
 function upgrade_bootloaders() {
-    local target_bootloder_dir="${UEFI_BOOTLOADER%/*}"
-    target_bootloder_dir="$TARGET_FS_ROOT$target_bootloder_dir"
+    local target_bootloader_dir="${UEFI_BOOTLOADER%/*}"
+    target_bootloader_dir="$TARGET_FS_ROOT$target_bootloader_dir"
 
-    local shim="$target_bootloder_dir/shimx64.efi"
-    local grub="$target_bootloder_dir/grubx64.efi"
+    local shim="$target_bootloader_dir/shimx64.efi"
+    local grub="$target_bootloader_dir/grubx64.efi"
 
     cp -b /usr/lib/shim/shimx64.efi.signed "$shim" || return 1
     cp -b /usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed "$grub" || \
@@ -43,5 +43,5 @@ function upgrade_bootloaders() {
 if upgrade_bootloaders; then
     LogPrint "Upgraded signed Shim and GRUB bootloaders for this system."
 else
-    LogPrint "Failed to upgrade signed Shim and GRUB bootloaders for this system. UEFI Secure Boot might not available."
+    LogPrint "Failed to upgrade signed Shim and GRUB bootloaders for this system. UEFI Secure Boot might not be available."
 fi
