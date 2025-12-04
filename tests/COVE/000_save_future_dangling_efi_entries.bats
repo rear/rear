@@ -1,26 +1,27 @@
-#!/usr/bin/env bash
-
-SCRIPT_DIR="$(dirname "${0}")"
-SCRIPT_DIR="$(realpath "${SCRIPT_DIR}")"
-readonly SCRIPT_DIR
-
-REAR_SHARE_DIR=$(realpath "$SCRIPT_DIR/../../usr/share/rear")
-readonly REAR_SHARE_DIR
-
-# shellcheck disable=SC1091
-source "$REAR_SHARE_DIR/lib/global-functions.sh"
-
-# shellcheck disable=SC2034
-readonly USING_UEFI_BOOTLOADER="yes"
-
-# shellcheck disable=SC2034
-readonly COVE_TESTS="yes"
-
-function is_cove_in_azure() {
-    false
+setup_file() {
+    export REAR_SHARE_DIR="$(realpath "$BATS_TEST_DIRNAME/../../usr/share/rear")"
+    export USING_UEFI_BOOTLOADER="yes"
+    export COVE_TESTS="yes"
 }
 
-function find_future_dangling_entry() {
+setup() {
+    function is_cove_in_azure() {
+        false
+    }
+
+    # shellcheck disable=SC1091
+    source "$REAR_SHARE_DIR/lib/global-functions.sh"
+    
+    # shellcheck disable=SC1091
+    source "$REAR_SHARE_DIR/layout/recreate/COVE/default/130_save_future_dangling_efi_entries.sh"
+}
+
+teardown() {
+    # Clean up any test-specific state if needed
+    unset DISKS_TO_BE_OVERWRITTEN
+}
+
+@test "find single future dangling EFI entry" {
     function get_partuuids_of_disks_to_be_overwritten() {
         echo "368a5c5b-26bf-4a63-b9ae-64a92d79d085"
         echo "9bf08aed-f779-49fe-b310-9c21983289c1"
@@ -41,16 +42,12 @@ function find_future_dangling_entry() {
     }
 
     local boot_number
-    boot_number="$(get_future_dangling_efi_entries)" || return 1
-
-    if [ "$boot_number" != "0003" ]; then
-        return 1
-    fi
-
-    return 0
+    boot_number="$(get_future_dangling_efi_entries)"
+    
+    [ "$boot_number" = "0003" ]
 }
 
-function find_future_dangling_entries() {
+@test "find multiple future dangling EFI entries" {
     function get_partuuids_of_disks_to_be_overwritten() {
         echo "bc6f95e7-893a-434b-8b76-f3d52e6ad28d"
     }
@@ -63,16 +60,12 @@ function find_future_dangling_entries() {
     }
 
     local boot_number
-    boot_number="$(get_future_dangling_efi_entries)" || return 1
-
-    if [ "$boot_number" != "0003 0004" ]; then
-        return 1
-    fi
-
-    return 0
+    boot_number="$(get_future_dangling_efi_entries)"
+    
+    [ "$boot_number" = "0003 0004" ]
 }
 
-function unexpected_efi_entry() {
+@test "handle unexpected EFI entry format" {
     function get_partuuids_of_disks_to_be_overwritten() {
         echo "bc6f95e7-893a-434b-8b76-f3d52e6ad28d"
     }
@@ -83,16 +76,12 @@ function unexpected_efi_entry() {
     }
 
     local boot_number
-    boot_number="$(get_future_dangling_efi_entries)" || return 1
-
-    if [ -n "$boot_number" ]; then
-        return 1
-    fi
-
-    return 0
+    boot_number="$(get_future_dangling_efi_entries)"
+    
+    [ -z "$boot_number" ]
 }
 
-function empty_functions() {
+@test "handle empty functions" {
     function get_partuuids_of_disks_to_be_overwritten() {
         :
     }
@@ -102,16 +91,12 @@ function empty_functions() {
     }
 
     local boot_number
-    boot_number="$(get_future_dangling_efi_entries)" || return 1
-
-    if [ -n "$boot_number" ]; then
-        return 1
-    fi
-
-    return 0
+    boot_number="$(get_future_dangling_efi_entries)"
+    
+    [ -z "$boot_number" ]
 }
 
-function get_partuuids_of_disks_to_be_overwritten_exits_with_error() {
+@test "handle get_partuuids_of_disks_to_be_overwritten error" {
     function get_partuuids_of_disks_to_be_overwritten() {
         return 1
     }
@@ -120,18 +105,12 @@ function get_partuuids_of_disks_to_be_overwritten_exits_with_error() {
         :
     }
 
-    local boot_number
-    if boot_number="$(get_future_dangling_efi_entries)"; then
-        return 1
-    fi
-
-    return 0
+    run get_future_dangling_efi_entries
+    [ "$status" -ne 0 ]
 }
 
-function one_disk_to_be_overwritten() {
-    # shellcheck disable=SC2034
+@test "get partuuids for one disk to be overwritten" {
     DISKS_TO_BE_OVERWRITTEN="/dev/sda"
-
     local expected_partuuids="368a5c5b-26bf-4a63-b9ae-64a92d79d085"
 
     function get_disk_partuuids() {
@@ -150,8 +129,7 @@ function one_disk_to_be_overwritten() {
     [ "$expected_partuuids" = "$actual_partuuids" ]
 }
 
-function two_disks_to_be_overwritten() {
-    # shellcheck disable=SC2034
+@test "get partuuids for two disks to be overwritten" {
     DISKS_TO_BE_OVERWRITTEN="/dev/sda /dev/sdb"
 
     function get_disk_partuuids() {
@@ -174,8 +152,7 @@ function two_disks_to_be_overwritten() {
     [ "$expected_partuuids" = "$actual_partuuids" ]
 }
 
-function no_disks_to_be_overwritten() {
-    # shellcheck disable=SC2034
+@test "handle no disks to be overwritten" {
     DISKS_TO_BE_OVERWRITTEN=""
 
     function get_disk_partuuids() {
@@ -187,25 +164,3 @@ function no_disks_to_be_overwritten() {
 
     [ -z "$partuuids" ]
 }
-
-set -e
-
-TESTS=(
-    find_future_dangling_entry
-    find_future_dangling_entries
-    unexpected_efi_entry
-    empty_functions
-    get_partuuids_of_disks_to_be_overwritten_exits_with_error
-    one_disk_to_be_overwritten
-    two_disks_to_be_overwritten
-    no_disks_to_be_overwritten
-)
-
-for test in "${TESTS[@]}"; do
-    # shellcheck disable=SC1091
-    source "$REAR_SHARE_DIR/layout/recreate/COVE/default/130_save_future_dangling_efi_entries.sh"
-    if ! "$test"; then
-        echo "$test failed"
-        exit 1
-    fi
-done

@@ -101,6 +101,7 @@ help:
 \n\
   version         - Show ReaR version used\n\
   validate        - Check source code\n\
+  test-cove       - Run COVE unit tests with bats\n\
   install         - Install Relax-and-Recover (may replace files)\n\
   uninstall       - Uninstall Relax-and-Recover (may remove files)\n\
   dist            - Create tar file in dist/\n\
@@ -151,6 +152,16 @@ validate:
 				exit 1; \
 			fi; \
 		fi; \
+	done
+
+test-cove:
+	@echo "== Running COVE unit tests =="
+	@for test_file in tests/COVE/*.bats; do \
+		echo ""; \
+		echo "========================================"; \
+		echo "Executing: $${test_file}"; \
+		echo "========================================"; \
+		bats "$${test_file}"; \
 	done
 
 man:

@@ -91,6 +91,9 @@ pipeline {
                         shellHelper.exec('Validate', """
                             make validate
                         """)
+                        shellHelper.exec('Run unit tests', """
+                            make test-cove
+                        """)
                         shellHelper.exec('Build', """
                             make dist
                         """)
