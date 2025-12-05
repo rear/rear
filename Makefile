@@ -35,18 +35,14 @@ else
 			git_ref := $(shell git rev-parse HEAD | cut -c 1-8)
 			git_count := $(shell git rev-list HEAD --no-merges | wc -l)
 			git_branch_suffix = $(shell git symbolic-ref HEAD | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
+			cove_suffix = $(git_branch_suffix)
 			release_suffix = $(shell git symbolic-ref HEAD | sed -nE 's/^.*?release\/([0-9.-]*-cove).*/\1/p')
 			ifneq ($(release_suffix),)
-				release_tag = $(shell git tag --points-at HEAD)
-				ifneq ($(release_tag),)
-					release_suffix = $(release_tag)
-				else
-					git_branch_suffix = $(release_suffix)
-				endif
+				cove_suffix = $(release_suffix)
 			endif
 			feature_suffix = $(shell git symbolic-ref HEAD | sed -nE 's/^.*?(feature|hotfix)\/([A-Za-z0-9_-]+-[0-9]+).*/\2/p')
 			ifneq ($(feature_suffix),)
-				git_branch_suffix = $(feature_suffix)
+				cove_suffix = $(feature_suffix)
 			endif
 			git_status := $(shell git status --porcelain)
 			ifneq ($(git_status),)
@@ -64,9 +60,13 @@ else
 	git_stamp ?= 0.0.unknown
 
     ifneq ($(release_suffix),)
-        distversion = $(release_suffix)$(changed_suffix)
-    else # is not release version
-        distversion = $(version).$(git_stamp)$(changed_suffix)
+        distversion = $(cove_suffix)$(changed_suffix)
+    else
+        ifneq ($(feature_suffix),)
+            distversion = $(version)-$(git_count).$(git_ref).$(cove_suffix)$(changed_suffix)
+        else # is not release version
+            distversion = $(version)-$(git_stamp)$(changed_suffix)
+        endif
     endif # is release version
     debrelease = 0git.$(git_stamp)$(changed_suffix)
     rpmrelease = .git.$(git_stamp)$(changed_suffix)
