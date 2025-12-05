@@ -35,13 +35,13 @@ else
 			git_ref := $(shell git rev-parse HEAD | cut -c 1-8)
 			git_count := $(shell git rev-list HEAD --no-merges | wc -l)
 			git_branch_name = $(shell echo "$${CHANGE_BRANCH:-$${BRANCH_NAME:-$$(git symbolic-ref HEAD || echo unknown)}}")
-			git_branch_suffix = $(shell echo "$git_branch_name" | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
+			git_branch_suffix = $(shell echo "$(git_branch_name)" | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
 			cove_suffix = $(git_branch_suffix)
-			release_suffix = $(shell echo "$git_branch_name" | sed -nE 's/^.*?release\/([0-9.-]*-cove).*/\1/p')
+			release_suffix = $(shell echo "$(git_branch_name)" | sed -nE 's/^.*?release\/([0-9.-]*-cove).*/\1/p')
 			ifneq ($(release_suffix),)
 				cove_suffix = $(release_suffix)
 			endif
-			feature_suffix = $(shell echo "$git_branch_name" | sed -nE 's/^.*?(feature|hotfix)\/([A-Za-z0-9_-]+-[0-9]+).*/\2/p')
+			feature_suffix = $(shell echo "$(git_branch_name)" | sed -nE 's/^.*?(feature|hotfix)\/([A-Za-z0-9_-]+-[0-9]+).*/\2/p')
 			ifneq ($(feature_suffix),)
 				cove_suffix = $(feature_suffix)
 			endif
