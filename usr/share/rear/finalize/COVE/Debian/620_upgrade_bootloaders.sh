@@ -33,11 +33,17 @@ declare -F upgrade_bootloaders >/dev/null || function upgrade_bootloaders() {
     local shim="$target_bootloader_dir/shimx64.efi"
     local grub="$target_bootloader_dir/grubx64.efi"
 
+    if [ ! -e "$shim" ] || [ ! -e "$grub" ]; then
+        return 1
+    fi
+
     cp -b /usr/lib/shim/shimx64.efi.signed "$shim" || return 1
     cp -b /usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed "$grub" || \
         { mv "$shim~" "$shim"; return 1; }
 
     rm "$shim~" "$grub~"
+
+    return 0
 }
 
 if upgrade_bootloaders; then
