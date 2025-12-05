@@ -38,24 +38,6 @@ declare -F sb_enabled >/dev/null || function sb_enabled() {
     [ "$sb_var_data" -eq 1 ]
 }
 
-if ! sb_enabled; then
-    return 0
-fi
-
-declare -F upgrade_bootloaders >/dev/null || function upgrade_bootloaders() {
-    local target_bootloader_dir="${UEFI_BOOTLOADER%/*}"
-    target_bootloader_dir="$TARGET_FS_ROOT$target_bootloader_dir"
-
-    local shim="$target_bootloader_dir/shimx64.efi"
-    local grub="$target_bootloader_dir/grubx64.efi"
-
-    cp -b /usr/lib/shim/shimx64.efi.signed "$shim" || return 1
-    cp -b /usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed "$grub" || \
-        { mv "$shim~" "$shim"; return 1; }
-
-    rm "$shim~" "$grub~"
-}
-
 if upgrade_bootloaders; then
     LogPrint "Upgraded signed Shim and GRUB bootloaders for this system."
 else

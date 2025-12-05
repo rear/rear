@@ -22,10 +22,6 @@ function setup() {
     }
     EFI_STUB=no
     UEFI_BOOTLOADER=/boot/efi/EFI/debian/shimx64.efi
-
-    function sb_enabled() {
-        true
-    }
 }
 
 @test "Shim and GRUB are upgraded successfully" {
@@ -100,18 +96,6 @@ function setup() {
 @test "Skip upgrading Shim and GRUB if the bootloader is not shim" {
     # shellcheck disable=SC2034
     UEFI_BOOTLOADER=/boot/efi/EFI/debian/grubx64.efi
-
-    run source "$REAR_SHARE_DIR/finalize/COVE/Debian/620_upgrade_bootloaders.sh"
-    [ "$status" -eq 0 ]
-
-    local expected_output=""
-    [ "$output" = "$expected_output" ]
-}
-
-@test "Skip upgrading Shim and GRUB if SB disabled" {
-    function sb_enabled() {
-        false
-    }
 
     run source "$REAR_SHARE_DIR/finalize/COVE/Debian/620_upgrade_bootloaders.sh"
     [ "$status" -eq 0 ]
