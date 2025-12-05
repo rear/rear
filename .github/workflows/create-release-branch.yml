@@ -1,0 +1,63 @@
+name: Create release branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      jira_ticket:
+        description: "Jira ticket to create PR (e.g. BCF-7777)"
+        type: string
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-release-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: develop
+
+    - name: Configure Git
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+
+    - name: Authenticate GitHub CLI
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+    - name: Determine version
+      id: determine_version
+      run: |
+        inc_version=$(git tag \
+          | grep -E '^[0-9]+\.[0-9]+-[0-9]+-cove$' \
+          | awk -F'-' '{print $(NF-1)}' \
+          | sort -n \
+          | tail -1)
+        inc_version=$((inc_version + 1))
+        version="2.9-$inc_version-cove"
+        echo "Version: $version"
+        echo "version=$version" >> $GITHUB_OUTPUT
+
+    - name: Create release branch
+      env:
+        VERSION: ${{ steps.determine_version.outputs.version }}
+      run: |
+        git checkout -b release/$VERSION
+        git push origin release/$VERSION
+
+    - name: Create PR to master
+      env:
+        VERSION: ${{ steps.determine_version.outputs.version }}
+        JIRA_TICKET: ${{ github.event.inputs.jira_ticket }}
+      run: |
+        gh pr create \
+          --base master \
+          --head release/$VERSION \
+          --title "${JIRA_TICKET}: Merge release/$VERSION to master" \
+          --body "Automated release PR"

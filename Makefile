@@ -34,7 +34,7 @@ else
 			git_date := $(shell git log -n 1 --format="%ai")
 			git_ref := $(shell git rev-parse HEAD | cut -c 1-8)
 			git_count := $(shell git rev-list HEAD --no-merges | wc -l)
-			git_branch_suffix = $(shell git symbolic-ref HEAD | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
+			git_branch_suffix = $(shell echo "$${CHANGE_BRANCH:-$${BRANCH_NAME:-$$(git symbolic-ref HEAD || echo unknown)}}" | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
 			cove_suffix = $(git_branch_suffix)
 			release_suffix = $(shell git symbolic-ref HEAD | sed -nE 's/^.*?release\/([0-9.-]*-cove).*/\1/p')
 			ifneq ($(release_suffix),)
@@ -118,6 +118,7 @@ help:
 \n\
   version         - Show ReaR version used\n\
   validate        - Check source code\n\
+  test-cove       - Run COVE unit tests with bats\n\
   install         - Install Relax-and-Recover (may replace files)\n\
   uninstall       - Uninstall Relax-and-Recover (may remove files)\n\
   dist            - Create tar file in dist/\n\
@@ -168,6 +169,16 @@ validate:
 				exit 1; \
 			fi; \
 		fi; \
+	done
+
+test-cove:
+	@echo "== Running COVE unit tests =="
+	@for test_file in tests/COVE/*.bats; do \
+		echo ""; \
+		echo "========================================"; \
+		echo "Executing: $${test_file}"; \
+		echo "========================================"; \
+		bats "$${test_file}"; \
 	done
 
 man:
