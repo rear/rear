@@ -3,7 +3,9 @@ import nable.cove.helpers.ShellHelper
 import nable.cove.SecretManager
 
 final String jobName = env.JOB_NAME.split('/')[-2]
+final String branchName = env.CHANGE_BRANCH ?: env.BRANCH_NAME
 final boolean isProd = jobName.endsWith('-prd')
+final boolean isProdBranch = branchName == 'master' || branchName.startsWith('release')
 final String envType = isProd ? 'prd' : 'dev'
 
 def String repositoryName = 'rear'
@@ -33,6 +35,7 @@ def secrets = [
 
 def secretManager
 def shellHelper
+def shouldBuild = true
 
 pipeline {
     agent {
@@ -51,6 +54,11 @@ pipeline {
         stage('Prepare') {
             steps {
                 script {
+                    if (isProd != isProdBranch) {
+                        echo "Environment mismatch: isProd=${isProd}, isProdBranch=${isProdBranch}. Skipping build."
+                        shouldBuild = false
+                    }
+
                     secretManager = new SecretManager(
                         this,
                         envType,
@@ -66,6 +74,9 @@ pipeline {
             }
         }
         stage('Load secrets') {
+            when {
+                expression { shouldBuild }
+            }
             agent {
                 kubernetes {
                     cloud "${config.cloud}"
@@ -82,6 +93,9 @@ pipeline {
             }
         }
         stage('Build') {
+            when {
+                expression { shouldBuild }
+            }
             environment {
                 ARTIFACTORY_URL = 'https://mspsolarwinds.jfrog.io/artifactory'
             }
