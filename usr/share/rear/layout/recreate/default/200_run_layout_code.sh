@@ -120,6 +120,8 @@ while true ; do
         # Run LAYOUT_CODE in a sub-shell because it sets 'set -e'
         # so that it exits the running shell in case of an error
         # but that exit must not exit this running bash here:
+        touch "${LAYOUT_CODE_STARTED}"
+
         ( source $LAYOUT_CODE )
     fi
     # One must explicitly test whether or not $? is zero in a separated bash command
