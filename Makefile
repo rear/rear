@@ -34,12 +34,22 @@ else
 			git_date := $(shell git log -n 1 --format="%ai")
 			git_ref := $(shell git rev-parse HEAD | cut -c 1-8)
 			git_count := $(shell git rev-list HEAD --no-merges | wc -l)
-			git_branch_suffix = $(shell echo "$${CHANGE_BRANCH:-$${BRANCH_NAME:-$$(git symbolic-ref HEAD || echo unknown)}}" | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
+			git_branch_name = $(shell echo "$${CHANGE_BRANCH:-$${BRANCH_NAME:-$$(git symbolic-ref HEAD || echo unknown)}}")
+			git_branch_suffix = $(shell echo "$(git_branch_name)" | sed -e 's,^.*/,,' -e "s/[^A-Za-z0-9]//g")
+			cove_suffix = $(git_branch_suffix)
+			release_suffix = $(shell echo "$(git_branch_name)" | sed -nE 's/^.*?release\/([0-9.-]*-cove).*/\1/p')
+			ifneq ($(release_suffix),)
+				cove_suffix = $(release_suffix)
+			endif
+			feature_suffix = $(shell echo "$(git_branch_name)" | sed -nE 's/^.*?(feature|hotfix)\/([A-Za-z0-9_-]+-[0-9]+).*/\2/p')
+			ifneq ($(feature_suffix),)
+				cove_suffix = $(feature_suffix)
+			endif
 			git_status := $(shell git status --porcelain)
-			git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
 			ifneq ($(git_status),)
-				git_stamp := $(git_stamp).changed
-			endif # git_status
+				changed_suffix = .changed
+			endif
+			git_stamp := $(git_count).$(git_ref).$(git_branch_suffix)
 		else # no git
 			git_date := now
 			git_ref := 0
@@ -50,9 +60,17 @@ else
 	endif # has .git
 	git_stamp ?= 0.0.unknown
 
-    distversion = $(version)-git.$(git_stamp)
-    debrelease = 0git.$(git_stamp)
-    rpmrelease = .git.$(git_stamp)
+    ifneq ($(release_suffix),)
+        distversion = $(cove_suffix)$(changed_suffix)
+    else
+        ifneq ($(feature_suffix),)
+            distversion = $(version)-$(git_count).$(git_ref).$(cove_suffix)$(changed_suffix)
+        else # is not release version
+            distversion = $(version)-$(git_stamp)$(changed_suffix)
+        endif
+    endif # is release version
+    debrelease = 0git.$(git_stamp)$(changed_suffix)
+    rpmrelease = .git.$(git_stamp)$(changed_suffix)
     obsproject = Archiving:Backup:Rear:Snapshot
     obspackage = $(name)
 
