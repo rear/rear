@@ -101,7 +101,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     # do the backup
     if [[ "$BACKUP_DUPLICITY_GPG_OPTIONS" ]] ; then
         LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" $EXCLUDES \
+        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} $EXCLUDES \
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
     else
         LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
@@ -132,5 +132,6 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     "
         LogPrint "$LOGAUSZUG"
     fi
+    unset PASSPHRASE # unset the export setting of passphrase
 fi
 

@@ -38,18 +38,26 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     else
         DUPLICITY_TEMPDIR="$( mktemp -d -p $TARGET_FS_ROOT rear-duplicity.XXXXXXXXXXXXXXX || Error 'Could not create Temporary Directory for Duplicity' )"
     fi
-	
+
+    # We need to copy ~/.gnupg directory content to $DUPLICITY_TEMPDIR as duplicty will not find the gpg keys otherwise.
+    if [[ -n "$DUPLICITY_USER" ]] ; then
+	DUPLICITY_USER_HOME_DIR="$(getent passwd $DUPLICITY_USER | cut -d: -f6)"
+        cp -rp "$DUPLICITY_USER_HOME_DIR/.gnupg" "$DUPLICITY_TEMPDIR"/
+    else
+        cp -rp ~/.gnupg "$DUPLICITY_TEMPDIR"/
+    fi
+
     # Duplicity also saves some big files in $HOME
     HOME_TMP="$HOME"
     HOME="$DUPLICITY_TEMPDIR"
 	
     LogPrint "Logging to $TMP_DIR/duplicity-restore.log"
     if [[ -n "${BACKUP_DUPLICITY_GPG_OPTIONS}" ]] ; then
-        LogPrint "with CMD: $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
-        $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" --force --tempdir="$DUPLICITY_TEMPDIR" $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT 0<&6 | tee $TMP_DIR/duplicity-restore.log
+        LogPrint "with CMD: $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} ${BACKUP_DUPLICITY_RESTORE_TIME} --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
+        $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} "${BACKUP_DUPLICITY_RESTORE_TIME}" --force --tempdir="$DUPLICITY_TEMPDIR" $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT 0<&6 | tee $TMP_DIR/duplicity-restore.log
     else
-        LogPrint "with CMD: $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
-        $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --force --tempdir="$DUPLICITY_TEMPDIR" $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT 0<&6 | tee $TMP_DIR/duplicity-restore.log
+        LogPrint "with CMD: $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY ${BACKUP_DUPLICITY_RESTORE_TIME} --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
+        $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY "${BACKUP_DUPLICITY_RESTORE_TIME}" --force --tempdir="$DUPLICITY_TEMPDIR" $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT 0<&6 | tee $TMP_DIR/duplicity-restore.log
     fi
     # FIXME: this collects the exit code from "tee", not from $DUPLICITY_PROG
     backup_prog_rc=$?
