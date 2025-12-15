@@ -1,3 +1,5 @@
+#!/bin/env bats
+
 #
 # Unit tests for upgrading Shim and GRUB bootloaders on Debian 10
 #

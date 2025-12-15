@@ -1,3 +1,5 @@
+#!/bin/env bats
+
 setup_file() {
     export REAR_SHARE_DIR="$(realpath "$BATS_TEST_DIRNAME/../../usr/share/rear")"
     export USING_UEFI_BOOTLOADER="yes"
