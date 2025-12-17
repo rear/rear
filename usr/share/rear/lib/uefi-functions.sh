@@ -130,7 +130,7 @@ declare -F efi_run_efibootmgr >/dev/null || function efi_run_efibootmgr() {
         return 1
     fi
 
-    local efibootmgr_output=$TMP_DIR/efibootmgr_v_output
+    local efibootmgr_output="$TMP_DIR/efibootmgr_v_output"
 
     if [ ! -s "$efibootmgr_output" ]; then
         if ! efibootmgr -v 2>/dev/null > "$efibootmgr_output"; then
@@ -151,7 +151,7 @@ declare -F efi_get_device_path >/dev/null || function efi_get_device_path() {
     local bootnum="Boot$1"
 
     local dp
-    dp="$(efi_run_efibootmgr | sed -n "s|^${bootnum}\* .*\\t||p ")" || return 1
+    dp="$(efi_run_efibootmgr | sed -n "s|^${bootnum}\* .*\\t||p")" || return 1
 
     if [ -z "$dp" ]; then
         return 1
@@ -183,7 +183,7 @@ declare -F efi_get_boot_partuuid >/dev/null || function efi_get_boot_partuuid {
     dp=$(efi_get_device_path "$bootnum") || return 1
 
     local partuuid
-    partuuid=$(echo "$dp" | sed -n 's/^HD([0-9]\+,GPT,\([xX0-9a-fA-F-]\+\),.*/\1/p' ) || return 1
+    partuuid=$(echo "$dp" | sed -n 's/^HD([0-9]\+,GPT,\([0-9a-fA-F-]\+\),.*/\1/p') || return 1
 
     if [ -z "$partuuid" ]; then
         return 1
@@ -192,7 +192,7 @@ declare -F efi_get_boot_partuuid >/dev/null || function efi_get_boot_partuuid {
     echo "$partuuid"
 }
 
-declare -F efi_get_mountpoint || function efi_get_mountpoint {
+declare -F efi_get_mountpoint >/dev/null || function efi_get_mountpoint {
     if ! has_binary findmnt; then
         return 1
     fi
@@ -200,7 +200,7 @@ declare -F efi_get_mountpoint || function efi_get_mountpoint {
     local partuuid=$1
 
     local mnt
-    mnt=$(findmnt -S PARTUUID="$partuuid" -n -o TARGET) || return 2
+    mnt=$(findmnt -S PARTUUID="$partuuid" -n -o TARGET) || return 1
 
     if [ -z "$mnt" ]; then
         return 1
@@ -230,7 +230,7 @@ declare -F efi_get_current_full_bootloader_path >/dev/null || function efi_get_c
 
     local path
     if ! path=$(efi_get_bootloader_path "$current_boot"); then
-        Log "Failed to get bootloader path the current boot '$current_boot'"
+        Log "Failed to get bootloader path for the current boot '$current_boot'"
         return 1
     fi
 

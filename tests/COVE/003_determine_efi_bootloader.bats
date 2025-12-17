@@ -1,4 +1,4 @@
-#!/bin/env bats
+#!/usr/bin/env bats
 
 #
 # Unit tests for determining EFI bootloaders
@@ -16,14 +16,6 @@ function setup() {
     function Log() {
         echo "$@"
     }
-
-    OS_VERSION=10
-    USING_UEFI_BOOTLOADER=yes
-    function is_cove_in_azure() {
-        false
-    }
-    EFI_STUB=no
-    UEFI_BOOTLOADER=/boot/efi/EFI/debian/shimx64.efi
 }
 
 function source_efi_functions {
@@ -33,13 +25,11 @@ function source_efi_functions {
 
 @test "Get current boot entry" {
     function efi_run_efibootmgr {
-        echo "BootCurrent: 0003"
+        echo "BootCurrent: 0001"
         echo "BootOrder: 0003,0000,0001,0002"
         echo "Boot0000* EFI Virtual disk (0.0)	PcieRoot(0x8)/Pci(0x0,0x0)/SCSI(0,0)"
         echo "Boot0001* EFI VMware Virtual SATA CDROM Drive (0.0)	PcieRoot(0x8)/Pci(0x2,0x0)/Sata(0,0,0)"
         echo "Boot0002* EFI Network	PcieRoot(0x8)/Pci(0x1,0x0)/MAC(00505698f752,1)"
-        # shellcheck disable=SC2028
-        echo "Boot0003* Red Hat Enterprise Linux	HD(1,GPT,bc6f95e7-893a-434b-8b76-f3d52e6ad28d,0x800,0x12c000)/\\EFI\\redhat\\shimx64.efi"
     }
 
     source_efi_functions
@@ -47,7 +37,7 @@ function source_efi_functions {
     local current_boot
     current_boot=$(efi_get_current_boot)
 
-    [ "$current_boot" = "0003" ]
+    [ "$current_boot" = "0001" ]
 }
 
 @test "Get EFI device path" {
@@ -253,5 +243,5 @@ function source_efi_functions {
     run efi_get_current_full_bootloader_path
 
     [ $status -eq 1 ]
-    [ "$output" = "Failed to get bootloader path the current boot '0000'" ]
+    [ "$output" = "Failed to get bootloader path for the current boot '0000'" ]
 }
