@@ -37,3 +37,14 @@ if ! md5sum_stdout="$( chroot $TARGET_FS_ROOT md5sum -c --quiet < $VAR_DIR/layou
     LogPrintError "Manually check if those changed files cause issues in your recreated system"
     return 1
 fi
+
+# For COVE backup with binary verification enabled, treat checksum mismatch as fatal error
+if is_true "$COVE_VERIFY_BINARIES" ; then
+    LogPrint "Checking if COVE files are consistent"
+    if ! md5sum_stdout="$( chroot $TARGET_FS_ROOT md5sum -c --quiet < $VAR_DIR/layout/config/cove-files.md5sum )" ; then
+        LogPrintError "Restored files in $TARGET_FS_ROOT do not fully match the recreated system"
+        LogPrintError "$( sed -e "s|^/|$TARGET_FS_ROOT/|" -e 's/^/  /' <<< "$md5sum_stdout" )"
+
+        Error "COVE binary verification failed: checksums do not match"
+    fi
+fi
