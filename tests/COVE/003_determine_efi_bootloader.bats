@@ -13,7 +13,7 @@ function setup() {
     # shellcheck disable=SC1091
     source "$REAR_SHARE_DIR/lib/global-functions.sh"
 
-    function Log() {
+    function LogPrint() {
         echo "$@"
     }
 }
@@ -160,6 +160,10 @@ function source_efi_functions {
         echo "/boot/efi"
     }
 
+    function efi_check_bootloader_path {
+        return 0
+    }
+
     source_efi_functions
 
     local full_path
@@ -178,7 +182,7 @@ function source_efi_functions {
     run efi_get_current_full_bootloader_path
 
     [ $status -eq 1 ]
-    [ "$output" = "EFI: Failed to get current boot" ]
+    [ "$output" = "WARN: EFI: Failed to get current boot" ]
 }
 
 @test "Failed to get current full EFI bootloader path: cannot get partuuid" {
@@ -195,7 +199,7 @@ function source_efi_functions {
     run efi_get_current_full_bootloader_path
 
     [ $status -eq 1 ]
-    [ "$output" = "EFI: Failed to get partuuid for the current boot '0000'" ]
+    [ "$output" = "WARN: EFI: Failed to get partuuid for the current boot '0000'" ]
 }
 
 @test "Failed to get current full EFI bootloader path: cannot get mountpoint" {
@@ -217,7 +221,7 @@ function source_efi_functions {
     run efi_get_current_full_bootloader_path
 
     [ $status -eq 1 ]
-    [ "$output" = "EFI: Failed to get mountpoint for partuuid '$uuid'" ]
+    [ "$output" = "WARN: EFI: Failed to get mountpoint for partuuid '$uuid'" ]
 }
 
 @test "Failed to get current full EFI bootloader path: cannot get bootloader path" {
@@ -243,5 +247,35 @@ function source_efi_functions {
     run efi_get_current_full_bootloader_path
 
     [ $status -eq 1 ]
-    [ "$output" = "Failed to get bootloader path for the current boot '0000'" ]
+    [ "$output" = "WARN: EFI: Failed to get bootloader path for the current boot '0000'" ]
+}
+
+@test "Failed to get current full EFI bootloader path: bootloader path does not exist" {
+    function efi_get_current_boot {
+        echo "0000"
+    }
+
+    local uuid="bc6f95e7-893a-434b-8b76-f3d52e6ad28d"
+    function efi_get_boot_partuuid {
+        echo "$uuid"
+    }
+
+    function efi_get_mountpoint {
+        echo "/boot/efi"
+    }
+
+    function efi_get_bootloader_path {
+        echo "/EFI/redhat/shimx64.efi"
+    }
+
+    function efi_check_bootloader_path {
+        return 1
+    }
+
+    source_efi_functions
+
+    run efi_get_current_full_bootloader_path
+
+    [ $status -eq 1 ]
+    [ "$output" = "WARN: EFI: Bootloader path '/boot/efi/EFI/redhat/shimx64.efi' does not exist" ]
 }
