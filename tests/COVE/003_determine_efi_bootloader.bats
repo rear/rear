@@ -103,6 +103,24 @@ function source_efi_functions {
     [ "$bootloader_path" = "/EFI/redhat/grubx64.efi" ]
 }
 
+@test "Get bootloader path with File(...)" {
+    local num="0003"
+    function efi_get_device_path {
+        if [ "$1" != "$num" ]; then
+            return 1
+        fi
+        # shellcheck disable=SC2028
+        echo "HD(1,GPT,16f5dcec-b713-4d7b-83a3-824c82d95c99,0x800,0x100000)/File(\EFI\debian\shimx64.efi)"
+    }
+
+    source_efi_functions
+
+    local bootloader_path
+    bootloader_path=$(efi_get_bootloader_path "$num")
+
+    [ "$bootloader_path" = "/EFI/debian/shimx64.efi" ]
+}
+
 @test "Failed to get bootloader path" {
     function efi_get_device_path {
         return 1

@@ -169,6 +169,10 @@ declare -F efi_get_bootloader_path >/dev/null || function efi_get_bootloader_pat
     local path
     path=$(echo "$dp" | sed -n 's|HD(.*)/||; s|\\|/|g; p') || return 1
 
+    if [[ $path =~ ^File\((.*)\)$ ]]; then
+        path="${BASH_REMATCH[1]}"
+    fi
+
     if [ -z "$path" ]; then
         return 1
     fi
