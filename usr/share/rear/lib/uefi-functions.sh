@@ -125,3 +125,144 @@ function build_boot_efi {
     fi
 }
 
+declare -F efi_run_efibootmgr >/dev/null || function efi_run_efibootmgr() {
+    if ! has_binary efibootmgr; then
+        return 1
+    fi
+
+    local efibootmgr_output="$TMP_DIR/efibootmgr_v_output"
+
+    if [ ! -s "$efibootmgr_output" ]; then
+        if ! efibootmgr -v 2>/dev/null > "$efibootmgr_output"; then
+            return 1
+        fi
+    fi
+
+    cat "$efibootmgr_output"
+}
+
+declare -F efi_get_current_boot >/dev/null || function efi_get_current_boot() {
+    local boot_current
+    boot_current=$(efi_run_efibootmgr | sed -n 's|^BootCurrent: ||p') || return 1
+    echo "$boot_current"
+}
+
+declare -F efi_get_device_path >/dev/null || function efi_get_device_path() {
+    local bootnum="Boot$1"
+
+    local dp
+    dp="$(efi_run_efibootmgr | sed -n "s|^${bootnum}\* .*\\t||p")" || return 1
+
+    if [ -z "$dp" ]; then
+        return 1
+    fi
+
+    echo "$dp"
+}
+
+declare -F efi_get_bootloader_path >/dev/null || function efi_get_bootloader_path {
+    local bootnum="$1"
+
+    local dp
+    dp=$(efi_get_device_path "$bootnum") || return 1
+
+    local path
+    path=$(echo "$dp" | sed -n 's|HD(.*)/||; s|\\|/|g; p') || return 1
+
+    if [[ $path =~ ^File\((.*)\)$ ]]; then
+        path="${BASH_REMATCH[1]}"
+    fi
+
+    if [ -z "$path" ]; then
+        return 1
+    fi
+
+    echo "$path"
+}
+
+declare -F efi_get_boot_partuuid >/dev/null || function efi_get_boot_partuuid {
+    local bootnum="$1"
+
+    local dp
+    dp=$(efi_get_device_path "$bootnum") || return 1
+
+    local partuuid
+    partuuid=$(echo "$dp" | sed -n 's/^HD([0-9]\+,GPT,\([0-9a-fA-F-]\+\),.*/\1/p') || return 1
+
+    if [ -z "$partuuid" ]; then
+        return 1
+    fi
+
+    echo "$partuuid"
+}
+
+declare -F efi_get_mountpoint >/dev/null || function efi_get_mountpoint {
+    if ! has_binary findmnt; then
+        return 1
+    fi
+
+    local partuuid=$1
+
+    local mnt
+    mnt=$(findmnt -S PARTUUID="$partuuid" -n -o TARGET) || return 1
+
+    if [ -z "$mnt" ]; then
+        return 1
+    fi
+
+    echo "$mnt"
+}
+
+declare -F efi_check_bootloader_path >/dev/null || function efi_check_bootloader_path {
+    [ -f "$1" ]
+}
+
+declare -F efi_get_current_full_bootloader_path >/dev/null || function efi_get_current_full_bootloader_path {
+    local current_boot
+    if ! current_boot=$(efi_get_current_boot); then
+        LogPrint "WARN: EFI: Failed to get current boot"
+        return 1
+    fi
+
+    local partuuid
+    if ! partuuid=$(efi_get_boot_partuuid "$current_boot"); then
+        LogPrint "WARN: EFI: Failed to get partuuid for the current boot '$current_boot'"
+        return 1
+    fi
+
+    local mnt
+    if ! mnt=$(efi_get_mountpoint "$partuuid"); then
+        LogPrint "WARN: EFI: Failed to get mountpoint for partuuid '$partuuid'"
+        return 1
+    fi
+
+    local path
+    if ! path=$(efi_get_bootloader_path "$current_boot"); then
+        LogPrint "WARN: EFI: Failed to get bootloader path for the current boot '$current_boot'"
+        return 1
+    fi
+
+    if [ "${path::1}" != '/' ]; then
+        path="/$path"
+    fi
+
+    local full_path="$mnt$path"
+
+    if ! efi_check_bootloader_path "$full_path"; then
+        LogPrint "WARN: EFI: Bootloader path '$full_path' does not exist"
+        return 1
+    fi
+
+    echo "$full_path"
+}
+
+declare -F efi_sb_enabled >/dev/null || function efi_sb_enabled {
+    if ! has_binary mokutil; then
+        return 1
+    fi
+
+    local sb_state
+    sb_state=$(mokutil --sb-state 2>&1) || return 1
+
+    grep -q "SecureBoot enabled" <<<"$sb_state"
+}
