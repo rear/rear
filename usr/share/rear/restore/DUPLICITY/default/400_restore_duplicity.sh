@@ -4,7 +4,7 @@
 #
 # Restore from remote backup via DUPLICIY over rsync
 
-if [ "$BACKUP_PROG" = "duplicity" ]; then
+if [[ "$BACKUP_PROG" = "duplicity" ]]; then
     local backup_prog_rc
     local restore_log_message
 
@@ -16,17 +16,21 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     if is_true "$BACKUP_DUPLICITY_ASK_PASSPHRASE" ; then
         read -s -t $WAIT_SECS -r -p "Enter 'Passphrase' for the restore [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
         # when REPLY is empty (perhaps due timeout?) we will abort
-        test -z "${REPLY}" && Error "Duplicity restore aborted due to missing 'Passphrase'"
-        BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE="$REPLY"
-    fi
-    if [[ -n "$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE" ]] ; then
-        # we have a encryption passphrase defined (by asking or by configuration)
-        export PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
+	{ test -z "${REPLY}" ; } 2>>/dev/$SECRET_OUTPUT_DEV && Error "Duplicity restore aborted due to missing 'Passphrase'"
+	{ BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE="$REPLY" ; } 2>>/dev/$SECRET_OUTPUT_DEV
     fi
 
-    if [[ -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ]]; then
-        GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY"
-    fi
+    # we have a encryption passphrase defined (by asking or by configuration)
+    { test -n "$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE" ; } 2>>/dev/$SECRET_OUTPUT_DEV && \
+	{ PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE" ; } 2>>/dev/$SECRET_OUTPUT_DEV || Log "No duplicity passphrase was set."
+    export PASSPHRASE
+
+    { test -n "$BACKUP_DUPLICITY_GPG_SIGN_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV && \
+        { SIGN_PASSPHRASE="$BACKUP_DUPLICITY_GPG_SIGN_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV
+    export SIGN_PASSPHRASE
+
+    { test -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV && \
+	{ GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV || Log "No GnuPG encryption key was defined."
 
     starttime=$SECONDS
 
@@ -38,19 +42,22 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     else
         DUPLICITY_TEMPDIR="$( mktemp -d -p $TARGET_FS_ROOT rear-duplicity.XXXXXXXXXXXXXXX || Error 'Could not create Temporary Directory for Duplicity' )"
     fi
-	
+
+    # We need to copy ~/.gnupg directory content to $DUPLICITY_TEMPDIR as duplicty will not find the gpg keys otherwise.
+    if [[ -n "$DUPLICITY_USER" ]] ; then
+	DUPLICITY_USER_HOME_DIR="$(getent passwd $DUPLICITY_USER | cut -d: -f6)"
+        cp -rp "$DUPLICITY_USER_HOME_DIR/.gnupg" "$DUPLICITY_TEMPDIR"/
+    else
+        cp -rp ~/.gnupg "$DUPLICITY_TEMPDIR"/
+    fi
+
     # Duplicity also saves some big files in $HOME
     HOME_TMP="$HOME"
     HOME="$DUPLICITY_TEMPDIR"
 	
     LogPrint "Logging to $TMP_DIR/duplicity-restore.log"
-    if [[ -n "${BACKUP_DUPLICITY_GPG_OPTIONS}" ]] ; then
-        LogPrint "with CMD: $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
-        $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" --force --tempdir="$DUPLICITY_TEMPDIR" $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT 0<&6 | tee $TMP_DIR/duplicity-restore.log
-    else
-        LogPrint "with CMD: $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
-        $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} $GPG_KEY --force --tempdir="$DUPLICITY_TEMPDIR" $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT 0<&6 | tee $TMP_DIR/duplicity-restore.log
-    fi
+    LogPrint "with CMD: $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} <GPG_KEY> ${BACKUP_DUPLICITY_RESTORE_TIME} --force --tempdir=$DUPLICITY_TEMPDIR $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT"
+    $DUPLICITY_PROG -v 5 ${BACKUP_DUPLICITY_OPTIONS} ${GPG_KEY} ${BACKUP_DUPLICITY_RESTORE_TIME} --force --tempdir="$DUPLICITY_TEMPDIR" $BACKUP_DUPLICITY_URL/$HOSTNAME/ $TARGET_FS_ROOT 0<&6 | tee $TMP_DIR/duplicity-restore.log
     # FIXME: this collects the exit code from "tee", not from $DUPLICITY_PROG
     backup_prog_rc=$?
 
@@ -97,4 +104,3 @@ if [ "$BACKUP_PROG" = "duplicity" ]; then
     LogPrint "Transferring Logfile $TMP_DIR/duplicity-restore.log to $TARGET_FS_ROOT/tmp/"
     cp -v $TMP_DIR/duplicity-restore.log $TARGET_FS_ROOT/tmp/
 fi
-
