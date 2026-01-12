@@ -5,6 +5,12 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
+# Which modules should have been copied:
+# Needed in the subsequent 420_copy_firmware_files.sh script
+# to automatically also copy the matching firmware files, see
+# https://github.com/rear/rear/issues/3551
+COPY_MODULES=()
+
 # The special user setting MODULES=( 'no_modules' ) enforces that
 # no kernel modules get included in the rescue/recovery system
 # regardless of what modules are currently loaded.
@@ -86,6 +92,7 @@ for dummy in "once" ; do
     # MODULES array contents like MODULES=( 'moduleX' 'all_modules' 'moduleY' ):
     if IsInArray "all_modules" "${MODULES[@]}" ; then
         LogPrint "Copying all kernel modules in /lib/modules/$KERNEL_VERSION (MODULES contains 'all_modules')"
+        COPY_MODULES=( all_modules )
         # The '--parents' is needed to get the '/lib/modules/' directory in the copy.
         # The '-L' copies the actual content to avoid dangling symlinks in the recovery system
         # cf. https://github.com/rear/rear/issues/2677#issuecomment-997859219
@@ -125,6 +132,7 @@ for dummy in "once" ; do
         loaded_modules="${MODULES_LOAD[@]}"
         # The leading blank before $(...) is mandatory (otherwise the last in MODULES_LOAD is concatenated with the first of lsmod):
         loaded_modules+=" $( lsmod | tail -n +2 | cut -d ' ' -f 1 )"
+        COPY_MODULES=( $loaded_modules )
         # It can happen that a module is loaded or should be loaded but 'modinfo -F filename' cannot show its filename
         # when it is loaded or should be loaded under a module alias name but the above modinfo_filename function
         # could not resolve aliases (when the modprobe command does not support -R).
@@ -220,6 +228,7 @@ for dummy in "once" ; do
         fi
         # $module_files can be empty because modinfo_filename outputs nothing in the builtin kernel "module" case:
         test "$module_files" || continue
+        COPY_MODULES+=( modinfo -F name $module_files )
         if ! cp $verbose -t $ROOTFS_DIR -L --preserve=all --parents $module_files 1>&2 ; then
             Error "Failed to copy '$module_files'"
         fi
@@ -235,6 +244,7 @@ for exclude_module in "${EXCLUDE_MODULES[@]}" ; do
     # so when a module file exists that gets removed regardless if it is also a builtin module
     # cf. https://github.com/rear/rear/issues/2414#issuecomment-669115481
     modinfo $exclude_module 1>/dev/null || continue
+    COPY_MODULES=( $( RmInArray $exclude_module "${COPY_MODULES[@]}" ) )
     # In this case it is ignored when a module exists but 'modinfo -F filename' cannot show its filename
     # because then it is assumed that also no module file had been copied above:
     exclude_module_file="$( modinfo_filename $exclude_module )"
