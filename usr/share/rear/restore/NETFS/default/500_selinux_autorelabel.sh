@@ -1,13 +1,14 @@
-# In some case we re-defined BACKUP_SELINUX_DISABLE=0 in our local.conf file as we want to
-# honor SELinux settings during backup (and restore).
-# However, and this is the main reason of this script, the 'tar' or 'rsync' programs are not
-# capable of correctly handling SELinux labels. This was testing during the the prep phase, e.g. see
-# usr/share/rear/prep/RSYNC/GNU/Linux/200_selinux_in_use.sh script.
-# When proper SELinux handling is not possible above mentioned script will create the file
-# $opath/selinux.autorelabel. Therefore, in this script we check if this file exist and when the
-# answer is yes force auto relabeling the files after the reboot to have a correct SELinux labeled system.
-
-# If selinux was turned off for the backup we have to label the
+# When the backup method does not support SELinux context preservation,
+# backup/*/GNU/Linux/620_force_autorelabel.sh creates a selinux.autorelabel file
+# in the backup location to signal that SELinux relabeling is needed after restore.
+#
+# This happens when:
+# - tar supports neither --selinux nor --xattrs-include options
+# - rsync does not support --xattrs option
+# - custom BACKUP_PROG does not support SELinux context preservation
+#
+# If this file exists, create /.autorelabel in the restored system to trigger
+# SELinux relabeling on the next boot.
 local scheme="$( url_scheme "$BACKUP_URL" )"
 local path="$( url_path "$BACKUP_URL" )"
 local opath="$( backup_path "$scheme" "$path" )"
