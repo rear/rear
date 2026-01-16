@@ -3,9 +3,9 @@ import nable.cove.helpers.ShellHelper
 import nable.cove.SecretManager
 
 final String jobName = env.JOB_NAME.split('/')[-2]
-final String branchName = env.CHANGE_BRANCH ?: env.BRANCH_NAME
+final String branchName = env.CHANGE_TARGET ?: env.BRANCH_NAME
 final boolean isProd = jobName.endsWith('-prd')
-final boolean isProdBranch = branchName == 'master' || branchName.startsWith('release')
+final boolean isProdBranch = branchName == 'master'
 final String envType = isProd ? 'prd' : 'dev'
 
 def String repositoryName = 'rear'
@@ -55,8 +55,10 @@ pipeline {
             steps {
                 script {
                     if (isProd != isProdBranch) {
-                        echo "Environment mismatch: isProd=${isProd}, isProdBranch=${isProdBranch}. Skipping build."
+                        echo "Environment mismatch: target branch is ${branchName}, job is ${jobName}. Skipping build."
                         shouldBuild = false
+                    } else {
+                        echo "Environment match: target branch is ${branchName}, job is ${jobName}. Proceeding with build."
                     }
 
                     secretManager = new SecretManager(
