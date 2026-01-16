@@ -54,7 +54,6 @@ if test "${FIRMWARE_FILES[*]}" ; then
     return
 fi
 
-# Finally the fallback case:
 # FIRMWARE_FILES is not specified and MODULES is not the default 'all_modules'
 # for example when MODULES=( 'loaded_modules' ) and FIRMWARE_FILES is empty.
 # COPY_MODULES contains the kernel module names of the modules
@@ -62,20 +61,24 @@ fi
 # Automatically also copy the matching firmware files here, see
 # https://github.com/rear/rear/issues/3551
 LogPrint "Copying firmware files that belong to the copied kernel modules (FIRMWARE_FILES not specified)"
-firmware_partial_filenames=$( modinfo -k $KERNEL_VERSION -F firmware "${COPY_MODULES[@]}" )
-for firmware_partial_filename in $firmware_partial_filenames ; do
-    # For example the command "modinfo -F firmware amdgpu" may show
-    # amdgpu/cyan_skillfish_gpu_info.bin
-    # amdgpu/navi12_gpu_info.bin
-    # ...
-    # The actual firmware files could be none for amdgpu/cyan_skillfish_gpu_info.bin
-    # because firmware files which are listed by modinfo may not exist on the system
-    # and for amdgpu/navi12_gpu_info.bin the actual firmware files could be
-    # /lib/firmware/amdgpu/navi12_gpu_info.bin.xz
-    # so what is listed by modinfo is only a part of the actual firmware file
-    # without leading path and without suffix so we need to find the actual firmware file:
-    firmware_complete_filename=$( find /lib*/firmware -path "*$firmware_partial_filename*" )
-    test -r "$firmware_complete_filename" || continue
-    cp $verbose -t $ROOTFS_DIR -p -L --parents $firmware_complete_filename
+for module in "${COPY_MODULES[@]}" ; do
+    firmware_partial_filenames=$( modinfo -k $KERNEL_VERSION -F firmware "$module" ) || continue
+    for firmware_partial_filename in $firmware_partial_filenames ; do
+        # For example the command "modinfo -F firmware amdgpu" may show
+        # amdgpu/cyan_skillfish_gpu_info.bin
+        # amdgpu/navi12_gpu_info.bin
+        # ...
+        # The actual firmware files could be none for amdgpu/cyan_skillfish_gpu_info.bin
+        # because firmware files which are listed by modinfo may not exist on the system
+        # and for amdgpu/navi12_gpu_info.bin the actual firmware files could be
+        # /lib/firmware/amdgpu/navi12_gpu_info.bin.xz
+        # so what is listed by modinfo is only a part of the actual firmware file
+        # without leading path and without suffix so we need to find the actual firmware file:
+        firmware_complete_filename=$( find /lib*/firmware -path "*$firmware_partial_filename*" )
+        if ! test -r "$firmware_complete_filename" ; then
+            DebugPrint "No file in /lib*/firmware matching '$firmware_partial_filename' (reported by modinfo for '$module')"
+            continue
+        fi
+        cp $verbose -t $ROOTFS_DIR -p -L --parents $firmware_complete_filename
+    done
 done
-
