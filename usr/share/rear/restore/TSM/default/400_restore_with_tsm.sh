@@ -34,9 +34,9 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     # Make sure filespace has a trailing / (for dsmc):
     test "${filespace:0-1}" == "/" || filespace+="/"
     if test "$TSM_DSMC_OPTFILE" ; then
-        Log "Running 'LC_ALL=$LANG_RECOVER dsmc restore -optfile=$TSM_DSMC_OPTFILE $filespace $TARGET_FS_ROOT/$filespace -subdir=yes -replace=all -tapeprompt=no -errorlogname=\"$backup_restore_log_file\" ${TSM_DSMC_RESTORE_OPTIONS[@]}'"
+        Log "Running 'LC_ALL=$LANG_RECOVER dsmc restore -optfile=$TSM_DSMC_OPTFILE $filespace $TARGET_FS_ROOT/$filespace -subdir=yes -replace=all -tapeprompt=no -errorlogname=\"$backup_restore_log_file\" ${TSM_DSMC_RESTORE_OPTIONS[*]}'"
     else
-        Log "Running 'LC_ALL=$LANG_RECOVER dsmc restore $filespace $TARGET_FS_ROOT/$filespace -subdir=yes -replace=all -tapeprompt=no -errorlogname=\"$backup_restore_log_file\" ${TSM_DSMC_RESTORE_OPTIONS[@]}'"
+        Log "Running 'LC_ALL=$LANG_RECOVER dsmc restore $filespace $TARGET_FS_ROOT/$filespace -subdir=yes -replace=all -tapeprompt=no -errorlogname=\"$backup_restore_log_file\" ${TSM_DSMC_RESTORE_OPTIONS[*]}'"
     fi
     # Regarding things like '0<&6 1>&7 2>&8' see "What to do with stdin, stdout, and stderr" in https://github.com/rear/rear/wiki/Coding-Style
     # Both stdout and stderr are redirected into the backup restore log file
