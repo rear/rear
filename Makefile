@@ -2,6 +2,7 @@
 #   cp -a etc/rear/{mappings,templates} ...
 # assumes bash. So its better to set SHELL to bash explicitly, using the one from PATH
 # to also work on MacOS with Homebrew-installed bash
+# test
 SHELL = bash
 
 # disable parallel execution of make
