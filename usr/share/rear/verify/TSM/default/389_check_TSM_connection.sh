@@ -16,7 +16,7 @@
 # https://github.com/rear/rear/issues/1534#issuecomment-351067465
 LogUserOutput "Testing connection to TSM server"
 if test "$TSM_DSMC_OPTFILE" ; then
-    dsmc query session -optfile=$TSM_DSMC_OPTFILE  0<&6 1>&7 2>&8
+    dsmc query session -optfile="$TSM_DSMC_OPTFILE" 0<&6 1>&7 2>&8
 else
     dsmc query session 0<&6 1>&7 2>&8
 fi
