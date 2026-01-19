@@ -58,9 +58,7 @@ LogUserOutput ""
 LogUserOutput "Starting Incremental Backup with TSM [ ${include_list[@]} ]"
 LogUserOutput "You can follow the backup with [ tail -f ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log ]"
 test "$TSM_DSMC_OPTFILE" && TSM_DSMC_BACKUP_OPTIONS+=( -optfile="$TSM_DSMC_OPTFILE" )
-LC_ALL=${LANG_RECOVER} dsmc incremental \
--verbose -tapeprompt=no "${TSM_DSMC_BACKUP_OPTIONS[@]}" \
-"${include_list[@]}" > "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
+LC_ALL=${LANG_RECOVER} dsmc incremental -verbose -tapeprompt=no "${TSM_DSMC_BACKUP_OPTIONS[@]}" "${include_list[@]}" > "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
 dsmc_exit_code=$?
 check_TSM_dsmc_return_code $dsmc_exit_code
 
