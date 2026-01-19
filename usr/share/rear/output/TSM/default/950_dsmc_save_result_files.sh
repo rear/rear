@@ -55,7 +55,11 @@ if [[ -z "$TSM_ARCHIVE_MGMT_CLASS" ]]; then
         LC_ALL=${LANG_RECOVER} dsmc incremental "${TSM_RESULT_FILES[@]}" >/dev/null
     fi
 else
-    LC_ALL=${LANG_RECOVER} dsmc archive -archmc="$TSM_ARCHIVE_MGMT_CLASS" "${TSM_RESULT_FILES[@]}" >/dev/null
+    if test "$TSM_DSMC_OPTFILE" ; then
+        LC_ALL=${LANG_RECOVER} dsmc archive -optfile="$TSM_DSMC_OPTFILE" -archmc="$TSM_ARCHIVE_MGMT_CLASS" "${TSM_RESULT_FILES[@]}" >/dev/null
+    else
+        LC_ALL=${LANG_RECOVER} dsmc archive -archmc="$TSM_ARCHIVE_MGMT_CLASS" "${TSM_RESULT_FILES[@]}" >/dev/null
+    fi
 fi
 ret=$?
 # Error code 8 can be ignored
