@@ -15,7 +15,11 @@
 # and it is also enough for the prompt of the general TSM password, cf.
 # https://github.com/rear/rear/issues/1534#issuecomment-351067465
 LogUserOutput "Testing connection to TSM server"
-dsmc query session 0<&6 1>&7 2>&8
+if test "$TSM_DSMC_OPTFILE" ; then
+    dsmc query session -optfile=$TSM_DSMC_OPTFILE  0<&6 1>&7 2>&8
+else
+    dsmc query session 0<&6 1>&7 2>&8
+fi
 local dsmc_exit_code=$?
 # When 'dsmc query session' results a non-zero exit code inform the user but do not abort the whole "rear recover" here
 # because it could be an unimportant reason why 'dsmc query session' finished with a non-zero exit code.
