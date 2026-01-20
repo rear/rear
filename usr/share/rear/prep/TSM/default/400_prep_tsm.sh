@@ -8,7 +8,7 @@
 # in https://github.com/rear/rear/wiki/Coding-Style
 # Plain 'readlink' means "readlink mode" where 'readlink' produces no output
 # when its argument is not the name of a symbolic link so for regular files
-# like "readlink /etc/fstab" there is no output (and it results exit code 1).
+# like "readlink /etc/fstab" produces no output (and results exit code 1).
 # So e.g. "readlink /opt/tivoli/tsm/client/ba/bin/dsm.sys" only produces output
 # when /opt/tivoli/tsm/client/ba/bin/dsm.sys is no regular file but a symbolic link.
 # It seems the only possible way how dsm.* files could be not where they should be
