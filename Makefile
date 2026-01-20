@@ -87,7 +87,7 @@ RUNASUSER :=
 endif
 
 # .gitignore is optional, avoid tar errors if it does not exist, e.g. in a dist archive
-tarparams = $(shell test -f .gitignore && echo --exclude-from=.gitignore --exclude=.gitignore) --exclude=".??*" $(DIST_CONTENT)
+tarparams = $(shell test -f .gitignore && echo --exclude-from=.gitignore --exclude=.gitignore) $(DIST_CONTENT)
 
 DIST_FILES := $(shell tar -cv -f /dev/null $(tarparams))
 
