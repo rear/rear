@@ -98,8 +98,8 @@ function set_syslinux_features {
     # true if syslinux supports modules sub-dir (Version > 5.00)
     FEATURE_SYSLINUX_MODULES=
 
-    # If ISO_DEFAULT is not set or empty or only blanks, set it to default 'boothd'
-    test $ISO_DEFAULT || ISO_DEFAULT="boothd"
+    # If ISO_RECOVER_MODE is not set or empty or only blanks, set it to default 'boothd'
+    test $ISO_RECOVER_MODE || ISO_RECOVER_MODE="boothd"
     # Define the syslinux directory for later usage (since version 5 the bins and c32 are in separate dirs)
     if [[ -z "$SYSLINUX_DIR" ]]; then
         ISOLINUX_BIN=$(find_syslinux_file isolinux.bin)
@@ -270,7 +270,7 @@ LABEL rear-automatic
         ${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}
     ENDTEXT
     KERNEL kernel
-    APPEND initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover $ISO_RECOVER_MODE
+    APPEND initrd=$REAR_INITRD_FILENAME root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE auto_recover $([ "$ISO_RECOVER_MODE" = "unattended" ] && echo "unattended")
 
 MENU SEPARATOR
 LABEL -
@@ -344,10 +344,10 @@ LABEL poweroff
     KERNEL $poweroff_prog
 EOF
 
-    case "$ISO_DEFAULT" in
+    case "$ISO_RECOVER_MODE" in
         "manual")
             echo "DEFAULT rear" ;;
-        "automatic")
+        "automatic"|"unattended")
             echo "DEFAULT rear-automatic"
             echo "TIMEOUT 50" ;;
         "boothd")
