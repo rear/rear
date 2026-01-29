@@ -23,7 +23,7 @@ if [[ $? -ne 0 ]] ; then
     return
 fi
 
-# When $TMP_DIR/backup.dirs contains data we will re-use this file later to see if we need to remove an old
+# When $TMP_DIR/backup.dirs contains data we will reuse this file later to see if we need to remove an old
 # backup when we have more backups in the list then BACKUP_RSYNC_RETENTION_DAYS
 rsyncbackup=( $(cat $TMP_DIR/backup.dirs | grep -v $RSYNC_TODAY | sort) ) # array contains full path of all backups
 
