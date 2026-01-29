@@ -23,35 +23,43 @@ LogPrint "Creating $BACKUP_PROG backup on '${host}:${path}'"
 
 ProgressStart "Running backup operation"
 (
-	case "$(basename $BACKUP_PROG)" in
+    case "$(basename $BACKUP_PROG)" in
 
-		(rsync)
-			# We are in a subshell, so this change will not propagate to later scripts
-			BACKUP_RSYNC_OPTIONS+=( --one-file-system --delete --exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded )
+        (rsync)
+            # We are in a subshell, so this change will not propagate to later scripts
+	    BACKUP_RSYNC_OPTIONS+=( --one-file-system --delete --exclude-from=$TMP_DIR/backup-exclude.txt --delete-excluded )
 
-			case $(rsync_proto "$BACKUP_URL") in
+            case $(rsync_proto "$BACKUP_URL") in
 
-				(ssh)
-					Log $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) "$(rsync_remote_full "$BACKUP_URL")/backup"
-					$BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) \
-					"$(rsync_remote_full "$BACKUP_URL")/backup"
-					;;
+                (ssh)
+		    if [[ -z "$BACKUP_RSYNC_RETENTION_DAYS" ]] ; then
+		        # nornal rsync backup with no retention days
+                        Log $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) "$(rsync_remote_full "$BACKUP_URL")/backup"
+                        $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) \
+                            "$(rsync_remote_full "$BACKUP_URL")/backup"
+		    else
+                        # using retention days
+                        Log $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" --link-dest="$lastrsyncbackup/" $(cat $TMP_DIR/backup-include.txt) "$(rsync_remote_full "$BACKUP_URL")/backup/$RSYNC_TODAY"
+			$BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" --link-dest="$lastrsyncbackup/" $(cat $TMP_DIR/backup-include.txt) \
+			    "$(rsync_remote_full "$BACKUP_URL")/backup/$RSYNC_TODAY"
+		    fi
+                    ;;
 
-				(rsync)
-					$BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) \
-					"$(rsync_remote_full "$BACKUP_URL")/backup"
-					;;
+                (rsync)
+                    $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" $(cat $TMP_DIR/backup-include.txt) \
+                        "$(rsync_remote_full "$BACKUP_URL")/backup"
+                    ;;
 
-			esac
-			;;
+            esac
+            ;;
 
-		(*)
-			# no other backup programs foreseen than rsync so far
-			:
-			;;
+            (*)
+                # no other backup programs foreseen than rsync so far
+                :
+            ;;
 
-	esac
-	echo $? >$TMP_DIR/retval
+    esac
+    echo $? >$TMP_DIR/retval
 ) >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" &
 BackupPID=$!
 starttime=$SECONDS

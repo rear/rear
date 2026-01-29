@@ -47,7 +47,8 @@ if [ "$(rsync_user "$BACKUP_URL")" != "root" -a $proto = "ssh" ]; then
                 || Error "Remote file system $remote_mountpoint does not have user_xattr mount option set!"
             #BACKUP_RSYNC_OPTIONS+=( --xattrs --rsync-path="rsync --fake-super" )
             # see issue #366 for explanation of removing --xattrs
-            BACKUP_RSYNC_OPTIONS+=( --rsync-path="rsync --fake-super" )
+            #BACKUP_RSYNC_OPTIONS+=( --rsync-path="rsync --fake-super" )  # the " get lost during the backup operarion, therefore, use -M--fake-super instead
+            BACKUP_RSYNC_OPTIONS+=( -M--fake-super )
         fi
     else
         Error "rsync --fake-super not possible on system ($host) (please upgrade rsync to 3.x)"
