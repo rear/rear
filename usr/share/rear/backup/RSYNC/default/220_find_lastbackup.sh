@@ -25,11 +25,10 @@ fi
 
 # When $TMP_DIR/backup.dirs contains data we will reuse this file later to see if we need to remove an old
 # backup when we have more backups in the list then BACKUP_RSYNC_RETENTION_DAYS
-rsyncbackup=( $(cat $TMP_DIR/backup.dirs | grep -v $RSYNC_TODAY | sort) ) # array contains full path of all backups
+# The 'tail -1' shows the previous backup date (if any)
+lastrsyncbackup="$( cat $TMP_DIR/backup.dirs | grep -v $RSYNC_TODAY | sort | tail -1 )"
 
-if [[ ${#rsyncbackups[@]} -gt 0 ]] ; then
-    lastrsyncbackup="${rsyncbackups[${#rsyncbackups[@]}-1]}" # last value in array
-else
+if [[ -z "$lastrsyncbackup" ]] ; then
     # If no lastrsyncbackup is found, then set the same dir as current backup target (RSYNC_TODAY).
     # In any case we will make a full backup.
     lastrsyncbackup="$(rsync_path "${BACKUP_URL}")"/${RSYNC_PREFIX}/backup/${RSYNC_TODAY}
