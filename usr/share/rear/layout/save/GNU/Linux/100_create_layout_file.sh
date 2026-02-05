@@ -25,12 +25,14 @@ echo "Disk layout dated $START_DATE_TIME_NUMBER (YYYYmmddHHMMSS)" >$DISKLAYOUT_F
 # Have the actual storage layout as header comment in disklayout.conf
 # so that it is easier to make sense of the values in the subsequent entries.
 # First try the command ('MOUNTPOINTS' with plural 'S' shows all mounted btrfs subvolumes)
-#   lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINTS,UUID,WWN
+#   lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINTS,UUID,PARTUUID,WWN
 # then try the command (e.g. on SLES12 only 'MOUNTPOINT' works which shows a random one of the mounted btrfs subvolumes)
-#   lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID,WWN
+#   lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID,PARTUUID,WWN
 # but on older systems (like SLES11) that do not support all that lsblk things
 # cf. https://github.com/rear/rear/pull/2626#issuecomment-856700823
 # try the simpler command
+#   lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID,PARTUUID
+# try the command without PARTUUID (e.g., RHEL 6 is not aware of this)
 #   lsblk -io NAME,KNAME,FSTYPE,LABEL,SIZE,MOUNTPOINT,UUID
 # and as fallback try 'lsblk -i' and finally try plain 'lsblk'.
 # When there is no 'lsblk' command there is no output (bad luck, no harm):
