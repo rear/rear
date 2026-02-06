@@ -499,7 +499,7 @@ Log "Saving disks and their partitions"
                     Error "Invalid 'disk $devname' entry (DASD partition label on non-s390 arch $ARCH)"
                 fi
                 echo "# Partitions on $devname"
-                echo "# Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition> <partition guid|no-partuuid>"
+                echo "# Format: part <device> <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition> <partition uuid|no-partuuid>"
                 extract_partitions "$devname"
             fi
         fi
