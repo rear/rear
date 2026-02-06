@@ -5,6 +5,10 @@
 # and because copy failed with an error "cp: not writing through dangling symlink"
 # we need to put in the link target ...
 
+# Simce rear-2.9 we have prep/default/390_include_python.sh script which resolves all
+# python items (bin, libs and site packages):
+PYTHON_INTERPRETER=true
+
 PYTHON="$(which python)"
 
 if [ -h "$PYTHON" ]; then
@@ -18,6 +22,18 @@ REQUIRED_PROGS+=( gpg duplicity "$PYTHON_BIN" )
 # duply is a really good shell script wrapper for duplicity (and gpg-agent might be required by duplicity)
 PROGS+=( duply gpg-agent )
 
+if [[ -n "$DUPLICITY_USER" ]] ; then
+    # As DUPLICITY_USER can be any user we have to make sure we copy the user details to the rescue image:
+    CLONE_USERS+=( "$DUPLICITY_USER" )
+    CLONE_GROUPS+=( $(groups "$DUPLICITY_USER" | cut -d: -f2-) )
+    COPY_AS_IS+=( "${DUPLICITY_USER}/.ssh" "${DUPLICITY_USER}/.gnupg" )
+fi
+
+# Duplicity highly depends on SecureShell usage and the ssh keys we need to connect password-less to the backup server
+SSH_FILES="yes"
+SSH_UNPROTECTED_PRIVATE_KEYS=true
+
+# The COPY_AS_IS still copies lots of old python 2 which is a bit obsolete, but we keep it for the moment
 COPY_AS_IS+=(
 /etc/duply
 /etc/python
