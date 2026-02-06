@@ -233,5 +233,9 @@ keys, USB disks, eSATA disks, ZIP drives, etc...
 When using `BACKUP=RSYNC` you should provide the backup target location through
 the `BACKUP_URL` variable. Possible `BACKUP_URL` settings are:
 
-    BACKUP_URL=rsync://root@server/export/archives
-    BACKUP_URL=rsync://root@server::/export/archives
+    BACKUP_URL=rsync://root@server/export/archives    (using ssh protocol)
+    BACKUP_URL=rsync://root@server::/export/archives  (using rsync protocol)
+
+Furthermore, with method `BACKUP=RSYNC` you could define the amount of retention days to keep
+with the variable `BACKUP_RSYNC_RETENTION_DAYS` (using rsync hard-links). However, there is one 
+limitation with this variable that it only works with rsync over the ssh protocol.
