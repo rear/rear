@@ -514,3 +514,9 @@ Log "Saving disks and their partitions"
 # cf. https://github.com/rear/rear/issues/1963
 grep -Eq '^disk |^part ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( parted partprobe ) || true
 
+# sgdisk is required if PARTUUIDs must be preserved
+if partuuid_restoration_is_required; then
+    REQUIRED_PROGS+=( sgdisk )
+else
+    PROGS+=( sgdisk )
+fi
