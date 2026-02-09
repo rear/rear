@@ -33,7 +33,11 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     UserOutput "Filespace '$filespace' restore progress can be followed with 'tail -f $backup_restore_log_file'"
     # Make sure filespace has a trailing / (for dsmc):
     test "${filespace:0-1}" == "/" || filespace+="/"
-    Log "Running 'LC_ALL=$LANG_RECOVER dsmc restore $filespace $TARGET_FS_ROOT/$filespace -subdir=yes -replace=all -tapeprompt=no -errorlogname=\"$backup_restore_log_file\" ${TSM_DSMC_RESTORE_OPTIONS[@]}'"
+    if test "$TSM_DSMC_OPTFILE" ; then
+        Log "Running 'LC_ALL=$LANG_RECOVER dsmc restore -optfile=$TSM_DSMC_OPTFILE $filespace $TARGET_FS_ROOT/$filespace -subdir=yes -replace=all -tapeprompt=no -errorlogname=\"$backup_restore_log_file\" ${TSM_DSMC_RESTORE_OPTIONS[*]}'"
+    else
+        Log "Running 'LC_ALL=$LANG_RECOVER dsmc restore $filespace $TARGET_FS_ROOT/$filespace -subdir=yes -replace=all -tapeprompt=no -errorlogname=\"$backup_restore_log_file\" ${TSM_DSMC_RESTORE_OPTIONS[*]}'"
+    fi
     # Regarding things like '0<&6 1>&7 2>&8' see "What to do with stdin, stdout, and stderr" in https://github.com/rear/rear/wiki/Coding-Style
     # Both stdout and stderr are redirected into the backup restore log file
     # to have all backup restore program messages in one same log file and
@@ -48,7 +52,11 @@ for num in $TSM_RESTORE_FILESPACE_NUMS ; do
     # output of a possibly simultaneously running process that likes to append to the log file
     # (e.g. when background processes run that also uses the log file for logging)
     # cf. https://github.com/rear/rear/issues/885#issuecomment-310308763
-    LC_ALL=$LANG_RECOVER dsmc restore "$filespace" "$TARGET_FS_ROOT/$filespace" -subdir=yes -replace=all -tapeprompt=no -errorlogname=\"$backup_restore_log_file\" "${TSM_DSMC_RESTORE_OPTIONS[@]}" 0<&6 1>>"$backup_restore_log_file" 2>&1
+    if test "$TSM_DSMC_OPTFILE" ; then
+        LC_ALL=$LANG_RECOVER dsmc restore -optfile="$TSM_DSMC_OPTFILE" "$filespace" "$TARGET_FS_ROOT/$filespace" -subdir=yes -replace=all -tapeprompt=no -errorlogname=\"$backup_restore_log_file\" "${TSM_DSMC_RESTORE_OPTIONS[@]}" 0<&6 1>>"$backup_restore_log_file" 2>&1
+    else
+        LC_ALL=$LANG_RECOVER dsmc restore "$filespace" "$TARGET_FS_ROOT/$filespace" -subdir=yes -replace=all -tapeprompt=no -errorlogname=\"$backup_restore_log_file\" "${TSM_DSMC_RESTORE_OPTIONS[@]}" 0<&6 1>>"$backup_restore_log_file" 2>&1
+    fi
     dsmc_exit_code=$?
     # When 'dsmc restore' results a non-zero exit code inform the user but do not abort the whole "rear recover" here
     # because it could be an unimportant reason why 'dsmc restore' finished with a non-zero exit code.
