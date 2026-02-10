@@ -336,7 +336,7 @@ EOF
         if [ "$label" = "gpt" ] && [ -n "$partuuid" ] && [ "$partuuid" != "no-partuuid" ]; then
             (
             echo "my_udevsettle"
-            echo "set_partition_guid $device $number $partuuid || true"
+            echo "set_partuuid $device $number $partuuid || true"
             echo "my_udevsettle"
             ) >> "$LAYOUT_CODE"
         fi
