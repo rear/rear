@@ -358,7 +358,7 @@ extract_partitions() {
             local partition_name="${device%/*}/${partition_prefix#*/}$partition_nr"
             local partition_device
             partition_device="$(get_device_name "$partition_name")"
-            partuuid="$(get_partition_guid "$partition_device")"
+            partuuid="$(get_partuuid "$partition_device")"
         fi
 
         if [ -z "$partuuid" ]; then
