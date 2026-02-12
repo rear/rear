@@ -591,9 +591,9 @@ function get_disklabel_type () {
 
 # Get partition flags from layout (space-separated) of partition given as $1
 function get_partition_flags () {
-    local part disk size pstart name flags partition junk
+    local part disk size pstart name flags partition partuuid junk
 
-    while read part disk size pstart name flags partition junk; do
+    while read part disk size pstart name flags partition partuuid junk; do
         if [ "$partition" == "$1" ] ; then
             echo "$flags" | tr ',' ' '
             return 0
