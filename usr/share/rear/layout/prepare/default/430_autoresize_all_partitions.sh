@@ -46,12 +46,12 @@ while read type device size junk ; do
         partitions=()
         resizeable_space=0
         available_space="$newsize"
-        while read type part size start name flags name junk; do
+        while read type part size start name flags name partuuid junk; do
             if [ -n "$(grep "^fs $name /boot\|^swap $name " "$LAYOUT_FILE")" ]; then
                     available_space=$( mathlib_calculate "$available_space - ${size%B}" )
                     Log "Will not resize partition $name."
             else
-                    partitions+=( "$name|${size%B}" )
+                    partitions+=( "$name|${size%B}|$partuuid" )
                     resizeable_space=$( mathlib_calculate "$resizeable_space + ${size%B}" )
 
                     Log "Will resize partition $name."
@@ -87,8 +87,7 @@ while read type device size junk ; do
         ### 3' :  30040653824 * 2936045568 / 158679957504 =  555840384
         ###                                                 2936045567
         for data in "${partitions[@]}" ; do
-            name=${data%|*}
-            partition_size=${data#*|}
+            IFS='|' read -r name partition_size partuuid <<< "$data"
 
             new_size=$( mathlib_calculate "( $partition_size / $resizeable_space ) * $available_space" )
 
@@ -96,7 +95,7 @@ while read type device size junk ; do
             BugIfError "Partition $name resized to a negative number."
 
             nr=$(echo "$name" | sed -r 's/.+([0-9])$/\1/')
-            sed -r -i "s|^(part $device) ${partition_size}(.+)$nr$|\1 ${new_size}\2$nr|" $LAYOUT_FILE.tmp
+            sed -r -i "s|^(part $device) ${partition_size}(.+)$nr $partuuid$|\1 ${new_size}\2$nr $partuuid|" $LAYOUT_FILE.tmp
             Log "Resized partition $name from ${partition_size}B to ${new_size}B."
         done
     fi
