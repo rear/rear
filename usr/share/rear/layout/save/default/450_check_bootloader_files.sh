@@ -16,6 +16,9 @@ case $used_bootloader in
     (EFI|GRUB2-EFI)
         CHECK_CONFIG_FILES+=( /boot/efi/EFI/*/grub*.cfg )
         ;;
+    (GRUB2-BLS)
+        CHECK_CONFIG_FILES+=( /boot/efi/loader/entries/* /boot/loader/loader.conf )
+        ;;
     (GRUB|GRUB2)
         CHECK_CONFIG_FILES+=( /[e]tc/grub*.cfg /[b]oot/*/grub*.cfg )
         ;;
