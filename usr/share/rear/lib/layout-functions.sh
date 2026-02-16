@@ -1581,9 +1581,11 @@ function set_partuuid() {
     local partnum=$2
     local partuuid=$3
 
-    if has_binary sgdisk; then
-        sgdisk --partition-guid="$partnum":"$partuuid" "$device"
+    if ! has_binary sgdisk; then
+        return 1
     fi
+
+    sgdisk --partition-guid="$partnum":"$partuuid" "$device"
 }
 
 # In cases when PARTUUIDs are used to tell the Linux kernel where the root
@@ -1611,5 +1613,11 @@ function partuuid_restoration_is_required() {
 
     return 1
 }
+
+# The regex defines the expected PARTUUID format.
+# Pseudo-UUIDs (not RFC 4122–compliant) are intentionally allowed, as they can
+# be manually assigned as PARTUUID using sgdisk. sgdisk primarily validates
+# the length.
+PARTUUID_REGEX="(no-partuuid|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
 
 # vim: set et ts=4 sw=4:

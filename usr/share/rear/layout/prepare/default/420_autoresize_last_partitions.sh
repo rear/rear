@@ -670,8 +670,7 @@ while read layout_type raid_device junk ; do
                 else
                     message_suffix="for RAID component device $raid_component_dev in $LAYOUT_FILE"
                     # When there is no 'disk' entry try if there is a 'part' entry for the RAID component device.
-                    # The '$' at the end is crucial to distinguish between "part ... /dev/sda1" and "part ... /dev/sda12":
-                    disklayout_entry=( $( grep "^part .* $raid_component_dev\$" "$LAYOUT_FILE" ) )
+                    disklayout_entry=( $( grep -E "^part .* $raid_component_dev $PARTUUID_REGEX\$" "$LAYOUT_FILE" ) )
                     if ! test "$disklayout_entry" ; then
                         LogPrintError "$message_prefix (neither 'disk' nor 'part' entry found $message_suffix)"
                         # Continue with the next 'raidarray' entry in disklayout.conf
@@ -761,8 +760,7 @@ while read layout_type raid_device junk ; do
                 else
                     message_suffix="for RAID component device $raid_component_dev in $LAYOUT_FILE"
                     # When there is no 'disk' entry try if there is a 'part' entry for the RAID component device.
-                    # The '$' at the end is crucial to distinguish between "part ... /dev/sda1" and "part ... /dev/sda12":
-                    disklayout_entry=( $( grep "^part .* $raid_component_dev\$" "$LAYOUT_FILE" ) )
+                    disklayout_entry=( $( grep -E "^part .* $raid_component_dev $PARTUUID_REGEX\$" "$LAYOUT_FILE" ) )
                     if ! test "$disklayout_entry" ; then
                         LogPrintError "$message_prefix (neither 'disk' nor 'part' entry found $message_suffix)"
                         # Continue with the next 'raidarray' entry in disklayout.conf
