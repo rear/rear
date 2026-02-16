@@ -23,9 +23,7 @@ function syslinux_needs_update {
         Log "No need to update syslinux on USB media (at version $usb_syslinux_version)."
         return 1
     else
-        if [[ "$FEATURE_SYSLINUX_SUBMENU" ]]; then
-            Log "Beware that older entries may not appear in the syslinux menu."
-        fi
+        Log "Beware that older entries may not appear in the syslinux menu."
         return 0
     fi
 }
@@ -54,36 +52,11 @@ function syslinux_has {
     fi
 }
 
-# FIXME: Syslinux older than 3.62 do have menu.c32 but not submenu support
-#        We simplify by disabling MENU support for everything older than 3.62
 function syslinux_write {
     if [[ "$*" ]]; then
         echo "$@" | syslinux_write
-    elif [[ "$FEATURE_SYSLINUX_SUBMENU" ]]; then
-        cat >&4
     else
-        awk '
-BEGIN {
-    IGNORECASE=1
-    IN_TEXT=0
-    IGNORE=0
-}
-
-/DEFAULT MENU.C32/ { IGNORE=1 }
-/ENDTEXT/ { IN_TEXT=0 }
-/LABEL -/ { IGNORE=1 }
-/MENU / { IGNORE=1 }
-/TEXT HELP/ { IN_TEXT=1 }
-
-{
-    if (IN_TEXT) { IGNORE=1 }
-    if (! IGNORE) {
-        print
-#    } else {
-#        print "#" $0
-    }
-    if (! IN_TEXT) { IGNORE=0 }
-}' >&4
+        cat >&4
     fi
 }
 
@@ -225,11 +198,7 @@ EOF
         fi
 
         # Include entry
-        if [[ "$FEATURE_SYSLINUX_INCLUDE" ]]; then
-            syslinux_write "    include /$file"
-        else
-            cat $BUILD_DIR/outputfs/$file >&4
-        fi
+        syslinux_write "    include /$file"
         oldsystem=$system
     done
 
@@ -334,14 +303,12 @@ Log "Creating $SYSLINUX_PREFIX/extlinux.conf"
     syslinux_has "libmenu.c32"
     syslinux_has "libutil.c32"
 
-    if [ -r $(get_template "rear.help") ]; then
-        cp $v $(get_template "rear.help") "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/rear.help" >/dev/null
-        syslinux_write <<EOF
+    cp $v $(get_template "rear.help") "$BUILD_DIR/outputfs/$SYSLINUX_PREFIX/rear.help" >/dev/null
+    syslinux_write <<EOF
 say F1 - Show help
 F1 /boot/syslinux/rear.help
 menu tabmsg Press [Tab] to edit options or [F1] for help
 EOF
-    fi
 
     # Use menu system, if menu.c32 is available
     if syslinux_has "menu.c32"; then
@@ -355,7 +322,6 @@ timeout 300
 menu title $PRODUCT v$VERSION
 EOF
 
-if [[ "$FEATURE_SYSLINUX_INCLUDE" ]]; then
     syslinux_write <<EOF
 ### Add custom items to your configuration by creating custom.cfg
 include custom.cfg
@@ -363,9 +329,6 @@ include custom.cfg
 ### Include generated configuration
 include /rear/syslinux.cfg
 EOF
-else
-    cat "$BUILD_DIR/outputfs/rear/syslinux.cfg" >&4
-fi
 
 syslinux_write <<EOF
 menu separator
@@ -376,8 +339,7 @@ label -
 
 EOF
 
-    if [[ "$FEATURE_SYSLINUX_MENU_HELP" && -r $(get_template "rear.help") ]]; then
-        syslinux_write <<EOF
+    syslinux_write <<EOF
 label help
     menu label ^Help for Relax-and-Recover
     text help
@@ -386,7 +348,6 @@ Information about Relax-and-Recover and steps for recovering your system
     menu help rear.help
 
 EOF
-    fi
 
     # Use chain booting for booting disk, if chain.c32 is available
     if syslinux_has "chain.c32" ; then
