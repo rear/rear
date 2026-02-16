@@ -1,1 +1,0 @@
-../../RSYNC/GNU/Linux/200_selinux_in_use.sh
