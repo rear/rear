@@ -116,7 +116,16 @@ fi
 # No bootloader detected, but we are using UEFI - there is probably an EFI bootloader
 if is_true $USING_UEFI_BOOTLOADER ; then
     if is_grub2_installed ; then
-        echo "GRUB2-EFI" >$bootloader_file
+        # The following lines may be present in grub.cfg
+        # insmod blscfg
+        # blscfg
+        # Note: blscfg parses files located in /boot/loader/entries and populates the boot menu.
+        # The presence of blscfg indicates that GRUB2 with BLS is being used.
+        if test -f /boot/grub2/grub.cfg && grep -Eq "^[[:space:]]*blscfg" /boot/grub2/grub.cfg ; then
+            echo "GRUB2-BLS" >"$bootloader_file"
+        else
+            echo "GRUB2-EFI" >"$bootloader_file"
+        fi
     elif test -f /sbin/elilo ; then
         echo "ELILO" >$bootloader_file
     else

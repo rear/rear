@@ -20,7 +20,18 @@ case $used_bootloader in
         CHECK_CONFIG_FILES+=( /[e]tc/grub*.cfg /[b]oot/*/grub*.cfg )
         ;;
     (GRUB2-BLS)
-        CHECK_CONFIG_FILES+=( /boot/efi/loader/entries/* /boot/efi/loader/loader.conf )
+        CHECK_CONFIG_FILES+=(
+            # RHEL-based systems use $BOOT=/boot and call the blscfg command
+            # in grub.cfg to populate the boot menu.
+            # See https://uapi-group.org/specifications/specs/boot_loader_specification/
+            # for more details regarding $BOOT.
+            /boot/loader/entries/*.conf
+            /boot/grub2/grub.cfg
+            # openSUSE Tumbleweed uses $BOOT=/boot/efi and does not have
+            # a grub.cfg at all.
+            /boot/efi/loader/entries/*.conf
+            /boot/efi/loader/loader.conf
+        )
         ;;
     (LILO)
         CHECK_CONFIG_FILES+=( /[e]tc/lilo.conf )
