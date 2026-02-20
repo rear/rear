@@ -64,7 +64,7 @@ PROGS+=( ssh sshd scp sftp ssh-agent ssh-keygen ssh-add )
 local sshdsessionpath="$( sshd -T | awk '$1=="sshdsessionpath" { print $2 }' )"
 test "$sshdsessionpath" && COPY_AS_IS+=( "$sshdsessionpath" )
 
-# Copy a helper needed at least on openSUSE Tumbleweed
+# Copy a helper needed at least on SLES 16
 # Without it, sshd aborts with
 # "/usr/libexec/openssh/sshd-auth does not exist or is not executable".
 local sshdauthpath="$( sshd -T | awk '$1=="sshdauthpath" { print $2 }' )"

@@ -67,14 +67,7 @@ for attempt in $( seq 5 ) ; do
     rpcinfo -p | grep -q 'portmapper' && { attempt="ok" ; break ; }
     sleep 1
 done
-
-if ! test "ok" = $attempt; then
-    if test "$(rpcinfo -p)" = "No remote programs registered."; then
-        LogPrint "rpcbind is running, however, no RPC services have registered."
-    else
-        Error "RPC portmapper '$portmapper_program' unavailable."
-    fi
-fi
+test "ok" = $attempt || Error "RPC portmapper '$portmapper_program' unavailable."
 
 LogPrint "RPC portmapper '$portmapper_program' available."
 # rpc.statd should be started only once
