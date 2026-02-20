@@ -68,7 +68,6 @@ for attempt in $( seq 5 ) ; do
     sleep 1
 done
 test "ok" = $attempt || Error "RPC portmapper '$portmapper_program' unavailable."
-
 LogPrint "RPC portmapper '$portmapper_program' available."
 # rpc.statd should be started only once
 # check if RPC status service is already available
