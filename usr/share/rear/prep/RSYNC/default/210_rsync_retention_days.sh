@@ -10,7 +10,7 @@ if [[ "$proto" == "rsync" ]] ; then
     Error "BACKUP=RSYNC: cannot use retention days with the rsync protocol, use ssh protocol instead."
 fi
 
-if (( $BACKUP_RSYNC_RETENTION_DAYS )) ; then
+if (( BACKUP_RSYNC_RETENTION_DAYS )) ; then
     LogPrint "Using rsync with retention days of $BACKUP_RSYNC_RETENTION_DAYS"
 else
     LogPrint "The BACKUP_RSYNC_RETENTION_DAYS value was non-numeric ($BACKUP_RSYNC_RETENTION_DAYS). Using value 10 days."

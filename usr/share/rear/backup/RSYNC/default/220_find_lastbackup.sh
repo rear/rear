@@ -6,7 +6,6 @@
 # as in prep/RSYNC/GNU/Linux/210_rsync_retention_days.sh we perform the explicit check already.
 
 local fullpath
-local rsyncbackup
 
 fullpath="$(rsync_path "${BACKUP_URL}")"/${RSYNC_PREFIX}/backup/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]
 

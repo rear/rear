@@ -15,7 +15,7 @@ ssh $(rsync_remote_ssh $BACKUP_URL) "ls -d $fullpath" > $TMP_DIR/backup.dirs
 
 # Detect all backups in the specified location
 backups=()
-backup_times=()
+
 for backup in $(cat $TMP_DIR/backup.dirs) ;do
     Debug "RSYNC backup $backup detected."
     backups+=( ${backup##*/} )  # store date into array backups
@@ -24,8 +24,7 @@ done
 (( ${#backups[@]} > 0 ))
 StopIfError "No RSYNC backups available."
 
-
-# The user has to choose the backup
+# The user has to choose from the backup list to overrule default value of RSYNC_BACKUP
 LogPrint "Select a backup to restore."
 # Use the original STDIN STDOUT and STDERR when rear was launched by the user
 # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
