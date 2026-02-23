@@ -8,16 +8,21 @@
 # as this character is used as delimiter in latter `for' loop ...
 # Excluding other non alphanumeric characters is not really necessary,
 # however it looks safer to me.
-# I'm sure archive handling can be done better, but no time for it now ...
-if [[ $BORGBACKUP_ARCHIVE_PREFIX =~ [^a-zA-Z0-9] ]] \
+# We added - and : to the allowed list within the archive names.
+if [[ $BORGBACKUP_ARCHIVE_PREFIX =~ [^a-zA-Z0-9\-:] ]] \
 || [[ -z $BORGBACKUP_ARCHIVE_PREFIX ]]; then
     Error "BORGBACKUP_ARCHIVE_PREFIX must be alphanumeric non-empty value only"
 fi
 
 # Create our own locales, used only for Borg restore.
 mkdir -p "$ROOTFS_DIR/usr/lib/locale"
+# localedef will fail when en_US is not available.
+# Therefore, we should install the english language pack first to fix this.
+locale -a | grep -q en_US
+StopIfError "Please install the English language pack first to have the en_US set"
+
 localedef -f UTF-8 -i en_US "$ROOTFS_DIR/usr/lib/locale/en_US.UTF-8"
-StopIfError "Could not create locales"
+StopIfError "Could not create locales (\"en_US\")"
 
 # Activate $COPY_AS_IS_BORG from default.conf.
 COPY_AS_IS+=( "${COPY_AS_IS_BORG[@]}" )

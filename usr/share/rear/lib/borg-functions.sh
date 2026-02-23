@@ -137,7 +137,7 @@ on ${BORGBACKUP_HOST:-USB}"
     # shellcheck disable=SC2086
     borg prune $verbose "${borg_additional_options[@]}" "${BORGBACKUP_OPT_PRUNE[@]}" \
     "${BORGBACKUP_OPT_REMOTE_PATH[@]}" "${BORGBACKUP_OPT_UMASK[@]}" \
-    --prefix "${BORGBACKUP_ARCHIVE_PREFIX}_" \
+    --glob-archives "${BORGBACKUP_ARCHIVE_PREFIX}_*" \
     "${borg_dst_dev}${BORGBACKUP_REPO}"
 }
 
