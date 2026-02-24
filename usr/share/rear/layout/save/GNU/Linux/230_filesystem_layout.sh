@@ -586,5 +586,19 @@ echo $required_mkfs_tools | grep -q 'mkfs.reiserfs' && REQUIRED_PROGS+=( reiserf
 # cf. what prepare/GNU/Linux/130_include_mount_subvolumes_code.sh writes to diskrestore.sh
 echo $required_mkfs_tools | grep -q 'mkfs.btrfs' && REQUIRED_PROGS+=( btrfs )
 
+# installation-helper is required in the recovery system if disklayout.conf contains
+# a 'btrfsdefaultsubvol' entry. See the btrfs_subvolumes_setup_SLES function in
+# layout/prepare/GNU/Linux/136_include_btrfs_subvolumes_SLES_code.sh for more
+# detail on when it is used.
+if grep -q '^btrfsdefaultsubvol ' "$DISKLAYOUT_FILE"; then
+    COPY_AS_IS+=(
+        /usr/lib/snapper/installation-helper
+        /etc/snapper/config-templates
+        # On SLE16,
+        # /etc/snapper/config-templates was moved to /usr/share/snapper/config-templates
+        /usr/share/snapper/config-templates
+    )
+fi
+
 Log "End saving filesystem layout"
 
