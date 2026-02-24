@@ -405,14 +405,6 @@ fi
                             echo "$subvolume_list" | grep -Ev "$snapshot_subvolumes_pattern" | grep "$snapper_base_subvolume" | sed -e "s/^/#$prefix /"
                         fi
                     fi
-
-                    COPY_AS_IS+=(
-                        /usr/lib/snapper/installation-helper
-                        /etc/snapper/config-templates
-                        # On SLE16,
-                        # /etc/snapper/config-templates was moved to /usr/share/snapper/config-templates
-                        /usr/share/snapper/config-templates
-                    )
                 fi
                 # Output btrfs normal subvolumes:
                 if test -z "$subvolumes_exclude_pattern" ; then
