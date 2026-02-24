@@ -21,7 +21,7 @@ NOBOOTLOADER=1
 #   ARM-ALLWINNER for Allwinner devices
 #   ZIPL  for zIPL, on IBM Z (s390x)
 #   PPC   for any bootloader in the PReP boot partition (can be LILO, YABOOT, GRUB2)
-#   GRUB2-BLS for GRUB2 with BLS
+#   GRUB2-BLS for GRUB 2 with BLS
 
 local bootloader_file="$VAR_DIR/recovery/bootloader"
 # The output is stored in an artificial bash array so that $BOOTLOADER is the first word:

@@ -995,4 +995,30 @@ function make_pxelinux_config_grub {
     echo "}"
 }
 
+function is_grub2_bls_in_use() {
+    # The following lines may be present in grub.cfg
+    #
+    # insmod blscfg
+    # blscfg
+    #
+    # Note: the blscfg command parses files located in /boot/loader/entries and
+    # populates the boot menu.
+    #
+    # The presence of blscfg indicates that GRUB2 with BLS is being used.
+    #
+    # However, the actual grub.cfg file can be placed in different places:
+    # - RHEL 8-based systems use only /boot/efi/EFI/*/grub.cfg
+    # - RHEL 9- and 10-based systems use both /boot/efi/EFI/*/grub.cfg and
+    #   /boot/grub2/grub.cfg. In these systems, /boot/grub2/grub.cfg contains
+    #   the real configuration, and /boot/efi/EFI/*/grub.cfg loads it
+    #   using the configfile command.
+    local grub_cfg
+    for grub_cfg in /boot/grub*/grub.cfg /boot/efi/EFI/*/grub*.cfg ; do
+        if grep -Eq "^[[:space:]]*blscfg" "$grub_cfg" ; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 # vim: set et ts=4 sw=4

@@ -43,8 +43,8 @@ sleep 5
 
 
 # Run 'sdbootutil mkinitrd' to regenerate the initrd on systems that use GRUB2-BLS.
-# sdbootutil runs dracut under the hood and creates a new bootloader entry that 
-# points to the generated initrd.
+# sdbootutil runs dracut under the hood and creates new bootloader entries,
+# along with new initrds used by these entries.
 if [ "$BOOTLOADER" = "GRUB2-BLS" ]; then
     local sdbootutil_binary
     sdbootutil_binary=$( chroot "$TARGET_FS_ROOT" /bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/bin:/bin type -P sdbootutil' )
