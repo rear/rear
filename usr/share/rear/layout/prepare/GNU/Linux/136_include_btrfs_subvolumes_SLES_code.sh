@@ -53,9 +53,8 @@ btrfs_subvolumes_setup_SLES() {
         # has to be controlled by snapper it must be set up by snapper
         # which means that snapper is needed in the ReaR recovery system.
         # For this special setup during installation a special SUSE tool
-        # /usr/lib/snapper/installation-helper is used and copied into /bin
-        # in the rescue system:
-        SLES12SP1_installation_helper_executable="/bin/installation-helper"
+        # /usr/lib/snapper/installation-helper is used:
+        SLES12SP1_installation_helper_executable="/usr/lib/snapper/installation-helper"
         # What "snapper/installation-helper --step 1" basically does is
         # creating a snapshot of the first root filesystem
         # where the first root filesystem must have the btrfs subvolume '@' mounted at '/'
