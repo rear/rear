@@ -8,7 +8,7 @@ if [[ -f "$BORGBACKUP_EXCLUDE_FILE" ]] ; then
     while read -r backup_exclude_item ; do
         test "$backup_exclude_item" || continue
         echo "$backup_exclude_item" >> "$TMP_DIR/backup-excludes.txt"
-    done <<< $(cat "$BORGBACKUP_EXCLUDE_FILE" | grep -v ^\#)
+    done <<< $(grep -v ^\# "$BORGBACKUP_EXCLUDE_FILE")
 fi
 
 # We will append the excludes created by 400_create_include_exclude_files.sh
