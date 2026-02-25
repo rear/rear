@@ -1,8 +1,6 @@
 
 # Rebuild the initrd:
 
-# shellcheck disable=SC2168
-
 # Skip if it is explicitly wanted to not rebuild the initrd:
 if is_false $REBUILD_INITRAMFS ; then
     Log "Skip recreating initrd (REBUILD_INITRAMFS is false)"
@@ -41,11 +39,12 @@ fi
 my_udevtrigger
 sleep 5
 
-
-# Run 'sdbootutil mkinitrd' to regenerate the initrd on systems that use GRUB2-BLS.
-# sdbootutil runs dracut under the hood and creates new bootloader entries,
-# along with new initrds used by these entries.
-if [ "$BOOTLOADER" = "GRUB2-BLS" ]; then
+# Run 'sdbootutil mkinitrd' to regenerate the initrd on systems that use
+# GRUB2 with BLS. sdbootutil runs dracut under the hood and creates new
+# bootloader entries, along with new initrds used by these entries.
+local sysconfig_bootloader
+if sysconfig_bootloader="$(get_sysconfig_bootloader)" \
+    && [ "$sysconfig_bootloader" = "grub2-bls" ] ; then
     local sdbootutil_binary
     sdbootutil_binary=$( chroot "$TARGET_FS_ROOT" /bin/bash -c 'PATH=/sbin:/usr/sbin:/usr/bin:/bin type -P sdbootutil' )
     if test "$sdbootutil_binary" ; then

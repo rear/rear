@@ -27,15 +27,16 @@ if test "$BOOTLOADER" ; then
 fi
 
 # When a bootloader is specified in /etc/sysconfig/bootloader use that:
-if test -f /etc/sysconfig/bootloader ; then
-    # SUSE uses LOADER_TYPE, and others?
-    # Getting values from sysconfig files is like sourcing shell scripts so that the last setting wins:
-    sysconfig_bootloader=$( grep ^LOADER_TYPE /etc/sysconfig/bootloader | cut -d= -f2 | tail -n1 | sed -e 's/"//g' )
-    if test "$sysconfig_bootloader" ; then
-        LogPrint "Using sysconfig bootloader '$sysconfig_bootloader' for 'rear recover'"
-        echo "$sysconfig_bootloader" | tr '[a-z]' '[A-Z]' >$bootloader_file
-        return
-    fi
+#
+# Only GRUB, GRUB2, and GRUB2-EFI are allowed to be used from /etc/sysconfig/bootloader
+# to detect the bootloader. The reason is that it may contain 'grub2-bls', which is not
+# a new bootloader but a patched version of GRUB2 and should be treated as GRUB2 or
+# GRUB2-EFI.
+if sysconfig_bootloader="$(get_sysconfig_bootloader)" \
+    && [[ "$sysconfig_bootloader" =~ ^(grub|grub2|grub2-efi)$ ]] ; then
+    LogPrint "Using sysconfig bootloader '$sysconfig_bootloader' for 'rear recover'"
+    echo "$sysconfig_bootloader" | tr '[a-z]' '[A-Z]' >$bootloader_file
+    return
 fi
 
 # Check if any disk contains a PPC PReP boot partition.
@@ -116,14 +117,7 @@ fi
 # No bootloader detected, but we are using UEFI - there is probably an EFI bootloader
 if is_true $USING_UEFI_BOOTLOADER ; then
     if is_grub2_installed ; then
-        # /etc/sysconfig/bootloader, which might contain LOADER_TYPE="grub2-bls",
-        # is likely missing. Therefore, check whether GRUB2 with BLS is being
-        # used by analyzing grub.cfg.
-        if is_grub2_bls_in_use ; then
-            echo "GRUB2-BLS" >"$bootloader_file"
-        else
-            echo "GRUB2-EFI" >"$bootloader_file"
-        fi
+        echo "GRUB2-EFI" >$bootloader_file
     elif test -f /sbin/elilo ; then
         echo "ELILO" >$bootloader_file
     else
