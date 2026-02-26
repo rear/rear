@@ -1618,6 +1618,9 @@ function partuuid_restoration_is_required() {
 # Pseudo-UUIDs (not RFC 4122–compliant) are intentionally allowed, as they can
 # be manually assigned as PARTUUID using sgdisk. sgdisk primarily validates
 # the length.
+#
+# Extended regular expression (ERE) syntax must be used because this value is
+# used as a pattern for the Bash =~ operator.
 PARTUUID_REGEX="(no-partuuid|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
 
 # vim: set et ts=4 sw=4:
