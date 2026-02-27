@@ -109,7 +109,8 @@ local bash_int_max=9223372036854775807
 function autoresize_last_partition () { 
     local partitions_device disk_size_difference
     local max_part_start last_part_dev last_part_start last_part_size last_part_type last_part_flags last_part_end
-    local extended_part_dev extended_part_start extended_part_size
+    local last_partuuid
+    local extended_part_dev extended_part_start extended_part_size extended_partuuid
     local partitions_dev part_size part_start part_type part_flags part_dev
     local last_part_is_resizeable
     local last_part_crypt_entry last_part_fs_dev last_part_fs_entry last_part_fs_mountpoint
@@ -200,8 +201,9 @@ function autoresize_last_partition () {
     extended_part_dev=""
     extended_part_start=0
     extended_part_size=0
+    extended_partuuid=""
     # partitions_dev gets the same value as partitions_device
-    while read layout_type partitions_dev part_size part_start part_type part_flags part_dev junk ; do
+    while read layout_type partitions_dev part_size part_start part_type part_flags part_dev partuuid junk ; do
         DebugPrint "Checking $part_dev if it is the last partition on $partitions_dev"
         if test $part_start -ge $max_part_start ; then
             max_part_start=$part_start
@@ -210,6 +212,7 @@ function autoresize_last_partition () {
             last_part_size="$part_size"
             last_part_type="$part_type"
             last_part_flags="$part_flags"
+            last_partuuid="$partuuid"
             last_part_end=$( mathlib_calculate "$last_part_start + $last_part_size - 1" )
         fi
         # Remember the values of an extended partition to be able
@@ -224,6 +227,7 @@ function autoresize_last_partition () {
             extended_part_dev="$part_dev"
             extended_part_start="$part_start"
             extended_part_size="$part_size"
+            extended_partuuid="$partuuid"
         fi
     done < <( grep "^part $partitions_device " "$LAYOUT_FILE" )
     test "$last_part_dev" || Error "Failed to determine device node for last partition on $partitions_device"
@@ -415,7 +419,7 @@ function autoresize_last_partition () {
         # otherwise the end of the extended partition would be beyond the end of the new device (with 1 MiB alignment):
         if test $new_extended_part_size -lt $extended_part_size ; then
             LogPrint "Shrinking extended partition $extended_part_dev to end of device"
-            sed -r -i "s|^part $partitions_device $extended_part_size $extended_part_start (.+) $extended_part_dev\$|part $partitions_device $new_extended_part_size $extended_part_start \1 $extended_part_dev|" "$disklayout_resized_last_partition"
+            sed -r -i "s|^part $partitions_device $extended_part_size $extended_part_start (.+) $extended_part_dev $extended_partuuid\$|part $partitions_device $new_extended_part_size $extended_part_start \1 $extended_part_dev $extended_partuuid|" "$disklayout_resized_last_partition"
             LogPrint "Shrunk extended partition $extended_part_dev size from $extended_part_size to $new_extended_part_size bytes"
             # Set new_extended_part_size to zero to avoid that the extended partition
             # will be also shrink when the last partition gets actually shrunk below:
@@ -427,7 +431,7 @@ function autoresize_last_partition () {
             # if the new size (which is up to the end of the new device) is greater than it was on the old device (with 1 MiB alignment):
             if test $new_extended_part_size -gt $extended_part_size ; then
                 LogPrint "Increasing extended partition $extended_part_dev to end of device"
-                sed -r -i "s|^part $partitions_device $extended_part_size $extended_part_start (.+) $extended_part_dev\$|part $partitions_device $new_extended_part_size $extended_part_start \1 $extended_part_dev|" "$disklayout_resized_last_partition"
+                sed -r -i "s|^part $partitions_device $extended_part_size $extended_part_start (.+) $extended_part_dev $extended_partuuid\$|part $partitions_device $new_extended_part_size $extended_part_start \1 $extended_part_dev $extended_partuuid|" "$disklayout_resized_last_partition"
                 LogPrint "Increased extended partition $extended_part_dev size from $extended_part_size to $new_extended_part_size bytes"
                 # Set new_extended_part_size to zero to avoid that the extended partition
                 # will be also increased when the last partition gets actually increased below:
@@ -495,13 +499,13 @@ function autoresize_last_partition () {
     fi
 
     # Replace the size value of the last partition by its new size value in LAYOUT_FILE.resized_last_partition:
-    sed -r -i "s|^part $partitions_device $last_part_size $last_part_start (.+) $last_part_dev\$|part $partitions_device $new_last_part_size $last_part_start \1 $last_part_dev|" "$disklayout_resized_last_partition"
+    sed -r -i "s|^part $partitions_device $last_part_size $last_part_start (.+) $last_part_dev $last_partuuid\$|part $partitions_device $new_last_part_size $last_part_start \1 $last_part_dev $last_partuuid|" "$disklayout_resized_last_partition"
     LogPrint "Changed last partition $last_part_dev size from $last_part_size to $new_last_part_size bytes"
     # When the last partition is a logical partition its extended "container" partition may also need to be resized.
     # The extended partition only needs to be resized if there is a positive new size value for the extended partition (cf. above)
     # and that only happens when the extended partition needs to be increased (shrinking was already done above if needed):
     if is_positive_integer $new_extended_part_size ; then
-        sed -r -i "s|^part $partitions_device $extended_part_size $extended_part_start (.+) $extended_part_dev\$|part $partitions_device $new_extended_part_size $extended_part_start \1 $extended_part_dev|" "$disklayout_resized_last_partition"
+        sed -r -i "s|^part $partitions_device $extended_part_size $extended_part_start (.+) $extended_part_dev $extended_partuuid\$|part $partitions_device $new_extended_part_size $extended_part_start \1 $extended_part_dev $extended_partuuid|" "$disklayout_resized_last_partition"
         LogPrint "Increased extended partition $extended_part_dev size from $extended_part_size to $new_extended_part_size bytes"
     fi
 }
@@ -666,8 +670,7 @@ while read layout_type raid_device junk ; do
                 else
                     message_suffix="for RAID component device $raid_component_dev in $LAYOUT_FILE"
                     # When there is no 'disk' entry try if there is a 'part' entry for the RAID component device.
-                    # The '$' at the end is crucial to distinguish between "part ... /dev/sda1" and "part ... /dev/sda12":
-                    disklayout_entry=( $( grep "^part .* $raid_component_dev\$" "$LAYOUT_FILE" ) )
+                    disklayout_entry=( $( grep -E "^part .* $raid_component_dev $PARTUUID_REGEX\$" "$LAYOUT_FILE" ) )
                     if ! test "$disklayout_entry" ; then
                         LogPrintError "$message_prefix (neither 'disk' nor 'part' entry found $message_suffix)"
                         # Continue with the next 'raidarray' entry in disklayout.conf
@@ -757,8 +760,7 @@ while read layout_type raid_device junk ; do
                 else
                     message_suffix="for RAID component device $raid_component_dev in $LAYOUT_FILE"
                     # When there is no 'disk' entry try if there is a 'part' entry for the RAID component device.
-                    # The '$' at the end is crucial to distinguish between "part ... /dev/sda1" and "part ... /dev/sda12":
-                    disklayout_entry=( $( grep "^part .* $raid_component_dev\$" "$LAYOUT_FILE" ) )
+                    disklayout_entry=( $( grep -E "^part .* $raid_component_dev $PARTUUID_REGEX\$" "$LAYOUT_FILE" ) )
                     if ! test "$disklayout_entry" ; then
                         LogPrintError "$message_prefix (neither 'disk' nor 'part' entry found $message_suffix)"
                         # Continue with the next 'raidarray' entry in disklayout.conf
