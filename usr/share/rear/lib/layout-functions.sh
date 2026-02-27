@@ -1567,7 +1567,7 @@ function get_partuuid() {
         local partition_symlink
         for partition_symlink in /dev/disk/by-partuuid/*; do
             if [ "$(readlink -e "$partition_symlink")" = "$partition_device" ]; then
-                partuuid="${disk#/dev/disk/by-partuuid/}"
+                partuuid="${partition_symlink#/dev/disk/by-partuuid/}"
                 break
             fi
         done
@@ -1605,6 +1605,7 @@ function partuuid_restoration_is_required() {
         /etc/fstab
     )
 
+    local cfg
     for cfg in "${cfgs[@]}"; do
         if test -e "$cfg" && grep -qr "PARTUUID=" "$cfg"; then
             return 0
