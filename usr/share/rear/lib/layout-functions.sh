@@ -891,36 +891,46 @@ is_disk_a_pv() {
 # Check whether disk is suitable for being added to layout
 # Can be used to skip obviously unsuitable/broken devices
 # (missing device node, zero size, device can't be opened).
-# Should not be used to skip potential mapping targets before layout restoration
-# - an invalid disk may become valid later, for example if it is a DASD that needs
-# low-level formatting (see 090_include_dasd_code.sh and 360_generate_dasd_format_code.sh),
-# unformatted DASDs show zero size.
-# Returns 0 if the device is ok
-# Returns nonzero code if it should be skipped, and a text describing the error
-# on stdout
-# usage example:
-# local err
-# if ! err=$(is_disk_valid /dev/sda); then
-
+# In some cases the device name may be valid, but there is no data,
+# typically because it is a drive with removable media and there is no medium in the tray.
+# Happens typically with card (e.g. SD card) readers with empty slot.
+# This is a normal occurrence, so do not Error out, only display a message and skip the device.
+# Should not be used to skip potential mapping targets before layout restoration.
+# An invalid disk may become valid later, for example if it is a DASD that needs low-level formatting
+# (see 090_include_dasd_code.sh and 360_generate_dasd_format_code.sh), unformatted DASDs show zero size.
+# Returns 0 if the device is OK and no output on stdout.
+# Returns 1 if the device should be skipped and a text describing the error on stdout.
+# Usage example:
+#   local validation_error
+#   if ! validation_error="$( is_disk_valid /dev/sda )" ; then
+#       LogPrintError "Skipping /dev/sda: $validation_error"
+#   else
+#       ...
+#   fi
+# For background information see https://github.com/rear/rear/pull/3047
 function is_disk_valid {
     local disk="$1"
-    local size
+    local blockdev_stdout_stderr
 
     if ! test -b "$disk" ; then
         echo "$disk is not a block device"
         return 1
     fi
-    # capture stdout in a variable and redirect stderr to stdout - the error message
-    # will be our output
-    if { size=$(blockdev --getsize64 "$disk") ; } 2>&1 ; then
-        if ! test "$size" -gt 0 2>/dev/null ; then
-            echo "$disk has invalid size $size"
-            return 1
+    # Redirect blockdev command stderr to stdout and capture stdout in a variable
+    # so both blockdev command stdout and stderr will be in this variable:
+    if blockdev_stdout_stderr="$( blockdev --getsize64 "$disk" 2>&1 )" ; then
+        if test "$blockdev_stdout_stderr" -gt 0 2>/dev/null ; then
+            # When 'blockdev --getsize64' results zero exit code
+            # and when its output is only a positive integer, then
+            # we assume this is the correct device size and the device is OK:
+            return 0
         fi
-        return 0
-    else
-        return 1
     fi
+    # When 'blockdev --getsize64' results non-zero exit code
+    # and/or when its output is not only a positive integer, then
+    # things are wrong or look wrong so we consider the device to be not OK:
+    echo "$blockdev_stdout_stderr"
+    return 1
 }
 
 function is_multipath_used {
