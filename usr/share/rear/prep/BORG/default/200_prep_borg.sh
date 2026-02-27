@@ -20,7 +20,7 @@ mkdir -p "$ROOTFS_DIR/usr/lib/locale"
 # Therefore, we should install the english language pack first to fix this.
 locale -a | grep -q en_US || Error "Please install the English language pack first to have the en_US set"
 
-localedef -f UTF-8 -i en_US "$ROOTFS_DIR/usr/lib/locale/en_US.UTF-8" || Error "Could not create locales (\"en_US\")"
+localedef -f UTF-8 -i en_US "$ROOTFS_DIR/usr/lib/locale/en_US.UTF-8" || Error "Could not create locales ('en_US')"
 
 # Activate $COPY_AS_IS_BORG from default.conf.
 COPY_AS_IS+=( "${COPY_AS_IS_BORG[@]}" )
