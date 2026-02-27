@@ -998,7 +998,6 @@ function make_pxelinux_config_grub {
 function get_sysconfig_bootloader() {
     local sysconfig_bootloader_path=/etc/sysconfig/bootloader
     if test "$RECOVERY_MODE" ; then
-        # We are in the ReaR rescue/recovery system
         sysconfig_bootloader_path="$TARGET_FS_ROOT$sysconfig_bootloader_path"
     fi
 
