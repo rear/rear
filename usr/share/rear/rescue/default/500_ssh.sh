@@ -64,6 +64,12 @@ PROGS+=( ssh sshd scp sftp ssh-agent ssh-keygen ssh-add )
 local sshdsessionpath="$( sshd -T | awk '$1=="sshdsessionpath" { print $2 }' )"
 test "$sshdsessionpath" && COPY_AS_IS+=( "$sshdsessionpath" )
 
+# Copy a helper needed at least on SLES 16
+# Without it, sshd aborts with
+# "/usr/libexec/openssh/sshd-auth does not exist or is not executable".
+local sshdauthpath="$( sshd -T | awk '$1=="sshdauthpath" { print $2 }' )"
+test "$sshdauthpath" && COPY_AS_IS+=( "$sshdauthpath" )
+
 # Copy a sftp-server program (e.g. /usr/lib/ssh/sftp-server) into the recovery system (if exists).
 # Because only OpenSSH >= 3.1 is supported where /etc/ssh/ is the default directory for configuration files
 # only /etc/ssh/sshd_config is inspected to grep for a sftp-server program therein
