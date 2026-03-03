@@ -40,7 +40,7 @@ while read source target junk ; do
 
     # Find corresponding partitions to source disk in LAYOUT_FILE
     # and migrate/rename them too if necessary.
-    while read _ layout_device _ _ _ _ layout_partition; do
+    while read _ layout_device _ _ _ _ layout_partition _; do
         if [[ "$source" = "$layout_device" ]]; then
             base_src_layout_partition=$(basename "$layout_partition")
             base_dst_layout_partition=${base_src_layout_partition//$base_source/$base_target}

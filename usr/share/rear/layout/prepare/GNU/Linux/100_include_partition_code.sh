@@ -161,7 +161,7 @@ EOF
     let last_number=0
 
     local flags partition
-    while read part disk size pstart name flags partition junk; do
+    while read part disk size pstart name flags partition partuuid junk; do
 
         # Get the partition number from the name
         number=$( get_partition_number "$partition" )
@@ -331,6 +331,14 @@ EOF
             echo "parted -s $device name $number \"'$name'\" >&2"
             echo "my_udevsettle"
             ) >> $LAYOUT_CODE
+        fi
+
+        if [ "$label" = "gpt" ] && [ -n "$partuuid" ] && [ "$partuuid" != "no-partuuid" ]; then
+            (
+            echo "my_udevsettle"
+            echo "set_partuuid $device $number $partuuid || true"
+            echo "my_udevsettle"
+            ) >> "$LAYOUT_CODE"
         fi
     done < <(grep "^part $device " $LAYOUT_FILE)
 

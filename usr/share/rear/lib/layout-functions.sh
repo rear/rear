@@ -591,9 +591,9 @@ function get_disklabel_type () {
 
 # Get partition flags from layout (space-separated) of partition given as $1
 function get_partition_flags () {
-    local part disk size pstart name flags partition junk
+    local part disk size pstart name flags partition partuuid junk
 
-    while read part disk size pstart name flags partition junk; do
+    while read part disk size pstart name flags partition partuuid junk; do
         if [ "$partition" == "$1" ] ; then
             echo "$flags" | tr ',' ' '
             return 0
@@ -1555,5 +1555,73 @@ delete_dummy_partitions_and_resize_real_ones() {
     disk_label=""
     last_partition_number=0
 }
+
+function get_partuuid() {
+    local partition_device=$1
+
+    local partuuid=""
+    if has_binary blkid; then
+        partuuid="$(blkid -s PARTUUID -o value "$partition_device")"
+    # Fallback for cases when blkid is not available
+    elif [ -d /dev/disk/by-partuuid ]; then
+        local partition_symlink
+        for partition_symlink in /dev/disk/by-partuuid/*; do
+            if [ "$(readlink -e "$partition_symlink")" = "$partition_device" ]; then
+                partuuid="${partition_symlink#/dev/disk/by-partuuid/}"
+                break
+            fi
+        done
+    fi
+
+    echo "$partuuid"
+}
+
+function set_partuuid() {
+    local device=$1
+    local partnum=$2
+    local partuuid=$3
+
+    if ! has_binary sgdisk; then
+        return 1
+    fi
+
+    sgdisk --partition-guid="$partnum":"$partuuid" "$device"
+}
+
+# In cases when PARTUUIDs are used to tell the Linux kernel where the root
+# filesystem live, e.g.,
+#     linux /vmlinuz-... root=PARTUUID=<partition uuid>
+# or when they are used in /etc/fstab to mount devices, e.g.,
+#     PARTUUID=<partition uuid> /boot xfs defaults 0 0
+# changing PARTUUIDs during recovery may lead to a non-bootable system.
+# Therefore, in these cases, PARTUUID restoration is required.
+#
+# In other cases, PARTUUID restoration considered as a nice-to-have.
+function partuuid_restoration_is_required() {
+    local cfgs=(
+        /boot/grub/grub.cfg
+        /boot/grub2/grub.cfg
+        /boot/loader/entries/
+        /etc/fstab
+    )
+
+    local cfg
+    for cfg in "${cfgs[@]}"; do
+        if test -e "$cfg" && grep -qr "PARTUUID=" "$cfg"; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+# The regex defines the expected PARTUUID format.
+# Pseudo-UUIDs (not RFC 4122–compliant) are intentionally allowed, as they can
+# be manually assigned as PARTUUID using sgdisk. sgdisk primarily validates
+# the length.
+#
+# Extended regular expression (ERE) syntax must be used because this value is
+# used as a pattern for the Bash =~ operator.
+PARTUUID_REGEX="(no-partuuid|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
 
 # vim: set et ts=4 sw=4:
