@@ -43,9 +43,10 @@ EOF
     # Output all workflow descriptions of the currently usable workflows
     # to the original STDOUT but keep STDERR in the log file:
     currently_usable_workflows="${WORKFLOWS[@]}"
-    # See init/default/050_check_rear_recover_mode.sh what the usable workflows are in the ReaR rescue/recovery system.
-    # In the ReaR rescue/recovery system /etc/rear-release is unique (it does not exist otherwise):
-    test -f /etc/rear-release && currently_usable_workflows="recover layoutonly restoreonly finalizeonly mountonly opaladmin help"
+    # In the ReaR rescue/recovery system /etc/rear-release is unique (it does not exist otherwise).
+    # In PORTABLE mode all workflows are usable so testing for RECOVERY_MODE cannot be used here.
+    # See init/default/002_check_rear_recover_mode.sh what the usable workflows are in the ReaR rescue/recovery system:
+    test -f /etc/rear-release && currently_usable_workflows="recover layoutonly restoreonly finalizeonly mountonly opaladmin shell dump help"
     for workflow in $currently_usable_workflows ; do
         description_variable_name=WORKFLOW_${workflow}_DESCRIPTION
         # in some workflows WORKFLOW_${workflow}_DESCRIPTION
