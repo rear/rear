@@ -28,12 +28,13 @@ fi
 
 # When a bootloader is specified in /etc/sysconfig/bootloader use that:
 #
-# Only GRUB, GRUB2, and GRUB2-EFI are allowed to be used from /etc/sysconfig/bootloader
-# to detect the bootloader. The reason is that it may contain 'grub2-bls', which is not
-# a new bootloader but a patched version of GRUB2 and should be treated as GRUB2 or
-# GRUB2-EFI.
+# On SUSE, the possible values for BOOTLOADER_TYPE are:
+# grub,grub2,grub2-efi,grub2-bls,systemd-boot,none
+#
+# Proceed to auto-detect the bootloader in the steps below if /etc/sysconfig/bootloader
+# contains 'none' or 'grub2-bls', which should be treated as GRUB2 or GRUB2-EFI.
 if sysconfig_bootloader="$(get_sysconfig_bootloader)" \
-    && [[ "$sysconfig_bootloader" =~ ^(grub|grub2|grub2-efi)$ ]] ; then
+    && [[ ! "$sysconfig_bootloader" =~ ^(grub2-bls|none)$ ]] ; then
     LogPrint "Using sysconfig bootloader '$sysconfig_bootloader' for 'rear recover'"
     echo "$sysconfig_bootloader" | tr '[a-z]' '[A-Z]' >$bootloader_file
     return
