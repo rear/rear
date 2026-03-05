@@ -13,7 +13,11 @@
 # Additionally call 'dmesg -n [4-6]' here depending on verbose and debug modes for ReaR
 # if we are inside the ReaR recovery system (we must not change 'dmesg' on the original system),
 # see https://github.com/rear/rear/issues/3107#issuecomment-1855797222
-test "$RECOVERY_MODE" || return 0
+# In the ReaR rescue/recovery system /etc/rear-release is unique (it does not exist otherwise).
+# In PORTABLE mode changing 'dmesg' could be wrong because
+# PORTABLE mode runs in a foreign rescue system or on the original system
+# so testing for RECOVERY_MODE cannot be used here:
+test -f /etc/rear-release || return 0
 
 # Now we are inside the ReaR recovery system
 # and 'setup' stage scripts are only run by the following workflows
@@ -21,7 +25,7 @@ test "$RECOVERY_MODE" || return 0
 # see https://github.com/rear/rear/pull/3112#issuecomment-1862770147
 # so for those workflows 'dmesg -n [4-6]' is set depending on verbose and debug modes for ReaR.
 # The remaining workflows that can run within the recovery system
-# (cf. init/default/050_check_rear_recover_mode.sh)
+# (cf. init/default/002_check_rear_recover_mode.sh)
 # are opaladmin and help which run with 'dmesg -n 5' from /etc/scripts/boot
 
 # Set minimum dmesg level 4 to show at least kernel error conditions and more severe issues on the console
