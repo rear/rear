@@ -32,9 +32,12 @@ fi
 # grub,grub2,grub2-efi,grub2-bls,systemd-boot,none
 #
 # Proceed to auto-detect the bootloader in the steps below if /etc/sysconfig/bootloader
-# contains 'none' or 'grub2-bls', which should be treated as GRUB2 or GRUB2-EFI.
+# contains 'none', 'grub2-bls' (which should be treated as GRUB2 or GRUB2-EFI),
+# or 'grub2-efi' (which can be used on hybrid systems and leads to losing
+# the capability to boot in a BIOS environment, making the purely EFI after recovery
+# see https://github.com/rear/rear/pull/3128#issuecomment-2176373583)
 if sysconfig_bootloader="$(get_sysconfig_bootloader)" \
-    && [[ ! "$sysconfig_bootloader" =~ ^(grub2-bls|none)$ ]] ; then
+    && [[ ! "$sysconfig_bootloader" =~ ^(grub2-efi|grub2-bls|none)$ ]] ; then
     LogPrint "Using sysconfig bootloader '$sysconfig_bootloader' for 'rear recover'"
     echo "$sysconfig_bootloader" | tr '[a-z]' '[A-Z]' >$bootloader_file
     return
