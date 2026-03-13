@@ -44,7 +44,11 @@ DIRECTORY_ENTRIES_TO_RECOVER+=( "${excluded_mountpoints[@]}" )
 # Find out which filespaces (= mountpoints) are available for restore.
 # Error code 8 can be ignored, see bug report at
 # https://sourceforge.net/tracker/?func=detail&atid=859452&aid=1942895&group_id=171835
-LC_ALL=${LANG_RECOVER} dsmc query filespace -date=2 -time=1 -scrollprompt=no | grep -A 10000 'File' >$TMP_DIR/tsm_filespaces
+if test "$TSM_DSMC_OPTFILE" ; then
+    LC_ALL=${LANG_RECOVER} dsmc query filespace -optfile="$TSM_DSMC_OPTFILE" -date=2 -time=1 -scrollprompt=no | grep -A 10000 'File' >$TMP_DIR/tsm_filespaces
+else
+    LC_ALL=${LANG_RECOVER} dsmc query filespace -date=2 -time=1 -scrollprompt=no | grep -A 10000 'File' >$TMP_DIR/tsm_filespaces
+fi
 [ $PIPESTATUS -eq 0 -o $PIPESTATUS -eq 8 ] || Error "'dsmc query filespace' failed"
 
 TSM_FILESPACE_TEXT="$( cat $TMP_DIR/tsm_filespaces )"
