@@ -20,9 +20,6 @@ URL: http://relax-and-recover.org/
 
 Source: https://github.com/rear/rear/archive/%{version}.tar.gz#/rear-%{version}.tar.gz
 
-# BuildRoot: is required for SLES 11 and RHEL/CentOS 5 builds on openSUSE Build Service (#2135)
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-
 # rear contains only bash scripts plus documentation so that on first glance it could be "BuildArch: noarch"
 # but actually it is not "noarch" because it only works on those architectures that are explicitly supported.
 # Of course the rear bash scripts can be installed on any architecture just as any binaries can be installed on any architecture.
@@ -176,6 +173,9 @@ fi
 %{_sbindir}/rear
 
 %changelog
+* Mon Mar 16 2026 Gratien D'haese <gratien.dhaese@google.com>
+- Remove deprecated BuildRoot: tag that caused empty tag errors with modern specfile parsers
+
 * Wed Jan 29 2025 Schlomo Schapiro <schlomo@schapiro.org>
 - Always set OFFICIAL=1 to install ReaR from SPEC file, as the git version magic happens earlier
 
