@@ -668,28 +668,22 @@ function create_grub2_cfg {
     }
 
     function create_grub2_rear_boot_entry {
-        # "ReaR (BIOS or UEFI without Secure Boot)"
-        # is correct in case you don't use EFI (i.e. for BIOS)
-        # and should work for EFI with secure boot disabled.
-        # "ReaR (UEFI and Secure Boot)"
-        # only works with EFI (and you may need secure boot enabled).
+        # A single boot entry works for BIOS, UEFI, and UEFI with Secure Boot.
+        # The 'linux' and 'initrd' GRUB2 commands are sufficient for all cases.
+        # The older 'linuxefi' and 'initrdefi' commands were deprecated and are
+        # no longer available in modern GRUB2 versions (e.g. Ubuntu 24.04+),
+        # so having a separate "UEFI and Secure Boot" entry with those commands
+        # would only cause boot failures on such systems.
+        # See https://github.com/rear/rear/issues/3468
         if is_true $USING_UEFI_BOOTLOADER ; then
             cat << EOF
-menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear {
+menuentry "Relax-and-Recover" --id=rear {
     insmod gzio
     insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
     linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
     echo 'Loading initial ramdisk $grub2_initrd ...'
     initrd $grub2_initrd
-}
-menuentry "Relax-and-Recover (UEFI and Secure Boot)" --id=rear_secure_boot {
-    insmod gzio
-    insmod xzio
-    echo 'Loading kernel $grub2_kernel ...'
-    linuxefi $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
-    echo 'Loading initial ramdisk $grub2_initrd ...'
-    initrdefi $grub2_initrd
 }
 EOF
         else
