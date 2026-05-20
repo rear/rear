@@ -139,25 +139,25 @@ case "$scheme" in
         local lftp_user_opts lftp_cmds_heredoc
         local lftp_cmds=("${OUTPUT_LFTP_OPTIONS[@]}")
         lftp_cmds+=(
+            "open $OUTPUT_URL"
             "mkdir -fp ${path}"
             "mput ${RESULT_FILES[*]}"
         )
 
-    	lftp_cmds_heredoc=$(IFS=$'\n'; echo "${lftp_cmds[*]}")
+        lftp_cmds_heredoc=$(IFS=$'\n'; echo "${lftp_cmds[*]}")
 
         if contains_visible_char "$OUTPUT_LFTP_USERNAME" ; then
             { lftp_user_opts="-u $OUTPUT_LFTP_USERNAME,$OUTPUT_LFTP_PASSWORD" ; } 2>>/dev/$SECRET_OUTPUT_DEV
-            Log "lftp -u $OUTPUT_LFTP_USERNAME,******* $OUTPUT_URL"
+            Log "lftp -u $OUTPUT_LFTP_USERNAME,******* <<< '$lftp_cmds_heredoc'"
         else
-            Log "lftp $lftp_user_opts $OUTPUT_URL"
+            Log "lftp $lftp_user_opts <<< '$lftp_cmds_heredoc'"
         fi
 
-        Log "$lftp_cmds_heredoc"
         # Make sure that destination directory exists, otherwise lftp would copy
         # RESULT_FILES into last available directory in the path.
         # e.g. OUTPUT_URL=sftp://<host_name>/iso/server1 and have "/iso/server1"
         # directory missing, would upload RESULT_FILES into sftp://<host_name>/iso/
-        { lftp $lftp_user_opts "$OUTPUT_URL" <<< "$lftp_cmds_heredoc" 
+        { lftp $lftp_user_opts <<< "$lftp_cmds_heredoc"
         } 2>/dev/null \
             || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"
         ;;
