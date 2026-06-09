@@ -139,7 +139,7 @@ case "$scheme" in
         local lftp_user_opts lftp_cmds_heredoc
         local lftp_cmds=("${OUTPUT_LFTP_OPTIONS[@]}")
         lftp_cmds+=(
-            "open $OUTPUT_URL"
+            "open \"$OUTPUT_URL\""
             "mkdir -fp ${path}"
             "mput ${RESULT_FILES[*]}"
         )
